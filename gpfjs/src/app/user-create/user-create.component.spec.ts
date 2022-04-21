@@ -8,7 +8,6 @@ import { ConfigService } from 'app/config/config.service';
 import { UsersGroupsService } from 'app/users-groups/users-groups.service';
 import { UsersService } from 'app/users/users.service';
 import { NgMultiSelectDropDownModule } from 'ng-multiselect-dropdown';
-
 import { UserCreateComponent } from './user-create.component';
 
 describe('UserCreateComponent', () => {
@@ -18,7 +17,7 @@ describe('UserCreateComponent', () => {
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       providers: [UsersService, ConfigService, UsersGroupsService],
-      declarations: [ UserCreateComponent ],
+      declarations: [UserCreateComponent],
       imports: [
         HttpClientTestingModule,
         RouterTestingModule,
@@ -27,8 +26,7 @@ describe('UserCreateComponent', () => {
         NgxsModule.forRoot([], {developmentMode: true})
       ],
       schemas: [NO_ERRORS_SCHEMA]
-    })
-    .compileComponents();
+    }).compileComponents();
   }));
 
   beforeEach(() => {

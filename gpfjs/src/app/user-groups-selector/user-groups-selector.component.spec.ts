@@ -10,10 +10,9 @@ describe('UserGroupsSelectorComponent', () => {
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      declarations: [ UserGroupsSelectorComponent ],
+      declarations: [UserGroupsSelectorComponent],
       imports: [FormsModule, NgMultiSelectDropDownModule]
-    })
-    .compileComponents();
+    }).compileComponents();
   }));
 
   beforeEach(() => {

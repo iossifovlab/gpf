@@ -7,8 +7,8 @@ import { GpfTableContentComponent } from './content.component';
   template: '',
 })
 export class GpfTableColumnComponent {
-  @ContentChildren(GpfTableContentHeaderComponent) headerChildren: QueryList<GpfTableContentHeaderComponent>;
-  @ContentChildren(GpfTableContentComponent) contentChildren: QueryList<GpfTableContentComponent>;
-  @Input() columnWidth = '';
-  @Input() columnMaxWidth = '';
+  @ContentChildren(GpfTableContentHeaderComponent) public headerChildren: QueryList<GpfTableContentHeaderComponent>;
+  @ContentChildren(GpfTableContentComponent) public contentChildren: QueryList<GpfTableContentComponent>;
+  @Input() public columnWidth = '';
+  @Input() public columnMaxWidth = '';
 }

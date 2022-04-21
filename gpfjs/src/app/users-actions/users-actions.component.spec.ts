@@ -15,15 +15,14 @@ describe('UsersActionsComponent', () => {
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      declarations: [ UsersActionsComponent ],
+      declarations: [UsersActionsComponent],
       providers: [
         UsersService,
         ConfigService,
         {provide: User, useValue: new User(0, '', '', [''], true, [''])}],
       imports: [HttpClientTestingModule, RouterTestingModule, NgxsModule.forRoot([], {developmentMode: true})],
       schemas: [NO_ERRORS_SCHEMA]
-    })
-    .compileComponents();
+    }).compileComponents();
   }));
 
   beforeEach(() => {

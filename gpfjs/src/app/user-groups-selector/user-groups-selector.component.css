@@ -1,5 +1,5 @@
 .dropdown-toggle::after {
-    position: relative;
-    top: 2px;
-    opacity: 0.45;
+  position: relative;
+  top: 2px;
+  opacity: 45%;
 }

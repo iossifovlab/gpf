@@ -1,8 +1,6 @@
 import { Component, ElementRef, HostListener, OnInit, ViewChild } from '@angular/core';
 import { Router } from '@angular/router';
-
-import {throwError as observableThrowError, Observable , ReplaySubject, BehaviorSubject } from 'rxjs';
-
+import { BehaviorSubject } from 'rxjs';
 import { User } from '../users/users';
 import { UsersService } from '../users/users.service';
 import { UsersGroupsService } from '../users-groups/users-groups.service';
@@ -17,38 +15,29 @@ import { IDropdownSettings } from 'ng-multiselect-dropdown';
   styleUrls: ['../user-edit/user-edit.component.css']
 })
 export class UserCreateComponent implements OnInit {
-
   @ViewChild(UserGroupsSelectorComponent)
   private userGroupsSelectorComponent: UserGroupsSelectorComponent;
-  @ViewChild('ele') ele: ElementRef;
-  @ViewChild('emailInput') emailInput: ElementRef;
+  @ViewChild('ele') public ele: ElementRef;
+  @ViewChild('emailInput') public emailInput: ElementRef;
 
-  lockedOptions = {
-    width: 'style',
-    theme: 'bootstrap',
-    multiple: true,
-    tags: true,
-    disabled: true,
-  };
+  public user$ = new BehaviorSubject<User>(new User(0, '', '', [], false, []));
+  public groups$ = new BehaviorSubject<UserGroup[]>(null);
+  public createUserError = '';
+  public edit = false;
+  public dropdownSettings: IDropdownSettings = {};
 
-  user$ = new BehaviorSubject<User>(new User(0, '', '', [], false, []));
-  groups$ = new BehaviorSubject<UserGroup[]>(null);
-  createUserError = '';
-  edit = false;
-  dropdownSettings: IDropdownSettings = {};
-
-  constructor(
+  public constructor(
     private router: Router,
     private usersService: UsersService,
     private usersGroupsService: UsersGroupsService
   ) { }
 
-  @HostListener('window:popstate', [ '$event' ])
-  unloadHandler() {
+  @HostListener('window:popstate', ['$event'])
+  public unloadHandler(): void {
     this.closeConfirmnationModal();
   }
 
-  ngOnInit() {
+  public ngOnInit(): void {
     this.focusEmailInputArea();
     this.usersGroupsService
       .getAllGroups()
@@ -56,15 +45,15 @@ export class UserCreateComponent implements OnInit {
       .subscribe(groups => this.groups$.next(groups));
   }
 
-  closeConfirmnationModal() {
+  private closeConfirmnationModal(): void {
     this.ele.nativeElement.click();
   }
 
-  getDefaultGroups() {
+  public getDefaultGroups(): string[] {
     return this.user$.value.getDefaultGroups();
   }
 
-  submit(user: User) {
+  public submit(user: User): void {
     const groupsToAdd = this.userGroupsSelectorComponent.displayedGroups;
 
     if (!(groupsToAdd.includes(undefined) || groupsToAdd.length === 0 || this.getDefaultGroups().includes(''))) {
@@ -83,15 +72,11 @@ export class UserCreateComponent implements OnInit {
       );
   }
 
-  goBack() {
+  public goBack(): void {
     this.router.navigate(['/management']);
   }
 
-  /**
-  * Waits email input area element to load.
-  * @returns promise
-  */
-   private async waitForEmailInputAreaToLoad(): Promise<void> {
+  private async waitForEmailInputAreaToLoad(): Promise<void> {
     return new Promise<void>(resolve => {
       const timer = setInterval(() => {
         if (this.emailInput !== undefined) {
@@ -102,7 +87,7 @@ export class UserCreateComponent implements OnInit {
     });
   }
 
-  private focusEmailInputArea() {
+  private focusEmailInputArea(): void {
     this.waitForEmailInputAreaToLoad().then(() => {
       this.emailInput.nativeElement.focus();
     });

@@ -60,7 +60,7 @@
         <gpf-table-header caption="Allowed datasets"></gpf-table-header>
         <gpf-table-content>
           <gpf-table-subcontent>
-            <div *gpfTableCellContent="let user" style="height:150px; overflow: auto">
+            <div *gpfTableCellContent="let user" style="height: 150px; overflow: auto">
               <div *ngFor="let datasetId of user.allowedDatasets">{{ datasetId }}</div>
             </div>
           </gpf-table-subcontent>

@@ -59,7 +59,7 @@ describe('GpfTableColumnComponent', () => {
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      schemas: [ NO_ERRORS_SCHEMA ],
+      schemas: [NO_ERRORS_SCHEMA],
       declarations: [
         TestWrapperComponent,
         GpfTableColumnComponent,
@@ -67,9 +67,8 @@ describe('GpfTableColumnComponent', () => {
         GpfTableContentHeaderComponent,
         GpfTableContentComponent
       ],
-      providers: [ ViewContainerRef ]
-    })
-    .compileComponents();
+      providers: [ViewContainerRef]
+    }).compileComponents();
   }));
 
   beforeEach(() => {

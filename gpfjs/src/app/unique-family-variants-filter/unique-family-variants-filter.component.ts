@@ -10,24 +10,23 @@ import { StatefulComponent } from '../common/stateful-component';
   styleUrls: ['./unique-family-variants-filter.component.css']
 })
 export class UniqueFamilyVariantsFilterComponent extends StatefulComponent implements OnChanges {
-
   @Validate(IsDefined, {message: 'Must have a boolean value.'}) private enabled = false;
 
-  constructor(protected store: Store) {
+  public constructor(protected store: Store) {
     super(store, UniqueFamilyVariantsFilterState, 'uniqueFamilyVariantsFilter');
   }
 
-  ngOnChanges(): void {
+  public ngOnChanges(): void {
     this.store.selectOnce(UniqueFamilyVariantsFilterState).subscribe(state => {
       this.enabled = state.uniqueFamilyVariantsFilter;
     });
   }
 
-  get filterValue(): boolean {
+  public get filterValue(): boolean {
     return this.enabled;
   }
 
-  set filterValue(value: boolean) {
+  public set filterValue(value: boolean) {
     this.enabled = value;
     this.store.dispatch(new SetUniqueFamilyVariantsFilter(this.enabled));
   }

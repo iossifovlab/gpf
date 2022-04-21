@@ -6,11 +6,8 @@ import { UsersService } from './users.service';
   pure: false
 })
 export class UserInfoPipe implements PipeTransform {
-
-  constructor(private usersService: UsersService) { }
-
-  transform(input: string) {
-    let result = this.usersService.cachedUserInfo()
-    return result;
+  public constructor(private usersService: UsersService) { }
+  public transform(input: string) {
+    return this.usersService.cachedUserInfo();
   }
 }

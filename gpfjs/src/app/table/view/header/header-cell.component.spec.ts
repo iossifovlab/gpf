@@ -10,17 +10,17 @@ import { GpfTableCellContentDirective } from 'app/table/component/content.direct
 import { SortInfo } from 'app/table/table.component';
 
 @Component({
-    selector: 'gpf-tgtchc',
-    template: `
-      <gpf-table-header>
-        <gpf-table-subheader caption="caption" field="fieldH">
-          <span *gpfTableCellContent="let data">
-          </span>
-        </gpf-table-subheader>
-      </gpf-table-header>
-    `,
-  })
-  class TestGpfTableContentHeaderComponent { }
+  selector: 'gpf-tgtchc',
+  template: `
+    <gpf-table-header>
+      <gpf-table-subheader caption="caption" field="fieldH">
+        <span *gpfTableCellContent="let data">
+        </span>
+      </gpf-table-subheader>
+    </gpf-table-header>
+  `,
+})
+class TestGpfTableContentHeaderComponent { }
 
 describe('GpfTableHeaderCellComponent', () => {
   let component: GpfTableHeaderCellComponent;
@@ -30,7 +30,7 @@ describe('GpfTableHeaderCellComponent', () => {
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      schemas: [ NO_ERRORS_SCHEMA ],
+      schemas: [NO_ERRORS_SCHEMA],
       declarations: [
         GpfTableHeaderCellComponent,
         TestGpfTableContentHeaderComponent,
@@ -40,9 +40,8 @@ describe('GpfTableHeaderCellComponent', () => {
         GpfTableSubheaderComponent,
         GpfTableCellContentDirective
       ],
-      providers: [ ViewContainerRef ]
-    })
-    .compileComponents();
+      providers: [ViewContainerRef]
+    }).compileComponents();
   }));
 
   beforeEach(() => {

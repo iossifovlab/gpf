@@ -1,4 +1,6 @@
-import { Component, OnInit, Input, Output, EventEmitter, ViewChild, ChangeDetectorRef, ElementRef } from '@angular/core';
+import {
+  Component, OnInit, Input, Output, EventEmitter, ViewChild, ChangeDetectorRef, ElementRef
+} from '@angular/core';
 import { UserGroup } from '../users-groups/users-groups';
 import { IDropdownSettings } from 'ng-multiselect-dropdown';
 import { NgbDropdownMenu } from '@ng-bootstrap/ng-bootstrap';
@@ -9,22 +11,22 @@ import { NgbDropdownMenu } from '@ng-bootstrap/ng-bootstrap';
   styleUrls: ['./user-groups-selector.component.css']
 })
 export class UserGroupsSelectorComponent implements OnInit {
-  @Input() allInputtedGroups: UserGroup[];
-  @Input() defaultGroups: string[] = [];
-  @Input() userGroups;
-  _displayedGroups;
-  @Output() createGroupEvent = new EventEmitter<string>();
-  @ViewChild(NgbDropdownMenu) ngbDropdownMenu: NgbDropdownMenu;
-  @ViewChild('groupInput') groupInputRef: ElementRef;
+  @Input() public allInputtedGroups: UserGroup[];
+  @Input() public defaultGroups: string[] = [];
+  @Input() public userGroups;
+  public _displayedGroups;
+  @Output() public createGroupEvent = new EventEmitter<string>();
+  @ViewChild(NgbDropdownMenu) public ngbDropdownMenu: NgbDropdownMenu;
+  @ViewChild('groupInput') public groupInputRef: ElementRef;
 
-  data: object[];
-  dropdownSettings: IDropdownSettings = {};
+  public data: object[];
+  public dropdownSettings: IDropdownSettings = {};
 
-  constructor(
+  public constructor(
     private changeDetectorRef: ChangeDetectorRef
   ) { }
 
-  ngOnInit() {
+  public ngOnInit(): void {
     this.dropdownSettings = {
       idField: 'id',
       textField: 'text',
@@ -37,7 +39,7 @@ export class UserGroupsSelectorComponent implements OnInit {
     }
   }
 
-  groupsToOptions(groups: UserGroup[]) {
+  private groupsToOptions(groups: UserGroup[]) {
     if (!groups) {
       return null;
     }
@@ -56,12 +58,12 @@ export class UserGroupsSelectorComponent implements OnInit {
     });
   }
 
-  filterOutDefaultGroups(groups: string[]) {
+  private filterOutDefaultGroups(groups: string[]) {
     return groups.filter(group =>
       this.defaultGroups.indexOf(group) === -1);
   }
 
-  createGroup(group: string) {
+  public createGroup(group: string): void {
     if (!group) {
       return;
     }
@@ -73,12 +75,12 @@ export class UserGroupsSelectorComponent implements OnInit {
     this.groupInputRef.nativeElement.value = '';
   }
 
-  focusGroupNameInput() {
+  public focusGroupNameInput(): void {
     this.changeDetectorRef.detectChanges();
     this.groupInputRef.nativeElement.focus();
   }
 
-  get displayedGroups() {
+  public get displayedGroups() {
     const groupsArray = [];
 
     if (!this._displayedGroups) {

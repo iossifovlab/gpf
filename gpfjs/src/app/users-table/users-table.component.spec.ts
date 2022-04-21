@@ -39,8 +39,7 @@ describe('UsersTableComponent', () => {
       ],
       providers: [UsersService, ConfigService, ResizeService],
       imports: [HttpClientTestingModule, RouterTestingModule, NgxsModule.forRoot([], {developmentMode: true})]
-    })
-    .compileComponents();
+    }).compileComponents();
   }));
 
   beforeEach(() => {

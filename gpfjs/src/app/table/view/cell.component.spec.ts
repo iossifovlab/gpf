@@ -8,51 +8,51 @@ import { GpfTableContentComponent } from '../component/content.component';
 import { GenotypePreviewFieldComponent } from 'app/genotype-preview-field/genotype-preview-field.component';
 
 @Component({
-    selector: 'gpf-tgtcc',
-    template: `
-      <gpf-table-column columnWidth="50.0">
-        <gpf-table-header>
-          <gpf-table-subheader caption="caption" field="fieldH">
-            <span *gpfTableCellContent="let data">
-            </span>
-          </gpf-table-subheader>
-        </gpf-table-header>
-        <gpf-table-content>
-          <gpf-table-subcontent [field]="'field'">
-            <gpf-genotype-preview-field
-              *gpfTableCellContent="let data"
-              [field]="'field11'"
-              [value]="'value11'"
-              [format]="'%s'">
-            </gpf-genotype-preview-field>
-            <gpf-genotype-preview-field
-              *gpfTableCellContent="let data"
-              [field]="'field12'"
-              [value]="'value12'"
-              [format]="'%s'">
-            </gpf-genotype-preview-field>
-          </gpf-table-subcontent>
-        </gpf-table-content>
-        <gpf-table-content>
-          <gpf-table-subcontent [field]="'field'">
-            <gpf-genotype-preview-field
-              *gpfTableCellContent="let data"
-              [field]="'field21'"
-              [value]="'value21'"
-              [format]="'%s'">
-            </gpf-genotype-preview-field>
-            <gpf-genotype-preview-field
-              *gpfTableCellContent="let data"
-              [field]="'field22'"
-              [value]="'value22'"
-              [format]="'%s'">
-            </gpf-genotype-preview-field>
-          </gpf-table-subcontent>
-        </gpf-table-content>
-      </gpf-table-column>
-    `,
-  })
-  class TestGpfTableColumnComponent { }
+  selector: 'gpf-tgtcc',
+  template: `
+    <gpf-table-column columnWidth="50.0">
+      <gpf-table-header>
+        <gpf-table-subheader caption="caption" field="fieldH">
+          <span *gpfTableCellContent="let data">
+          </span>
+        </gpf-table-subheader>
+      </gpf-table-header>
+      <gpf-table-content>
+        <gpf-table-subcontent [field]="'field'">
+          <gpf-genotype-preview-field
+            *gpfTableCellContent="let data"
+            [field]="'field11'"
+            [value]="'value11'"
+            [format]="'%s'">
+          </gpf-genotype-preview-field>
+          <gpf-genotype-preview-field
+            *gpfTableCellContent="let data"
+            [field]="'field12'"
+            [value]="'value12'"
+            [format]="'%s'">
+          </gpf-genotype-preview-field>
+        </gpf-table-subcontent>
+      </gpf-table-content>
+      <gpf-table-content>
+        <gpf-table-subcontent [field]="'field'">
+          <gpf-genotype-preview-field
+            *gpfTableCellContent="let data"
+            [field]="'field21'"
+            [value]="'value21'"
+            [format]="'%s'">
+          </gpf-genotype-preview-field>
+          <gpf-genotype-preview-field
+            *gpfTableCellContent="let data"
+            [field]="'field22'"
+            [value]="'value22'"
+            [format]="'%s'">
+          </gpf-genotype-preview-field>
+        </gpf-table-subcontent>
+      </gpf-table-content>
+    </gpf-table-column>
+  `,
+})
+class TestGpfTableColumnComponent { }
 
 describe('GpfTableCellComponent', () => {
   let component: GpfTableCellComponent;
@@ -62,7 +62,7 @@ describe('GpfTableCellComponent', () => {
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      schemas: [ NO_ERRORS_SCHEMA ],
+      schemas: [NO_ERRORS_SCHEMA],
       declarations: [
         GpfTableCellComponent,
         TestGpfTableColumnComponent,
@@ -71,9 +71,8 @@ describe('GpfTableCellComponent', () => {
         GpfTableContentHeaderComponent,
         GpfTableContentComponent
       ],
-      providers: [ ViewContainerRef ]
-    })
-    .compileComponents();
+      providers: [ViewContainerRef]
+    }).compileComponents();
   }));
 
   beforeEach(() => {

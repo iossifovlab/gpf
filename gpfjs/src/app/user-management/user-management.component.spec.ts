@@ -47,8 +47,7 @@ describe('UserManagementComponent', () => {
         FormsModule,
         NgxsModule.forRoot([], {developmentMode: true})
       ]
-    })
-    .compileComponents();
+    }).compileComponents();
   }));
 
   beforeEach(() => {

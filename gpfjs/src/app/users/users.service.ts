@@ -1,19 +1,15 @@
 
-// eslint-disable-next-line no-restricted-imports
 import {throwError as observableThrowError, Observable, Subject, ReplaySubject, of, BehaviorSubject } from 'rxjs';
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-
 import { ConfigService } from '../config/config.service';
 import { CookieService } from 'ngx-cookie-service';
 import { User } from './users';
-
 import { Router } from '@angular/router';
 import { Location, LocationStrategy } from '@angular/common';
 import { Store } from '@ngxs/store';
 import { StateResetAll } from 'ngxs-reset-plugin';
 import { catchError, map, tap } from 'rxjs/operators';
-
 const oboe = require('oboe');
 
 @Injectable()
@@ -36,7 +32,7 @@ export class UsersService {
   public usersStreamingFinishedSubject = new Subject();
   public emailLog: BehaviorSubject<string>;
 
-  constructor(
+  public constructor(
     private http: HttpClient,
     private config: ConfigService,
     private cookieService: CookieService,
@@ -48,7 +44,7 @@ export class UsersService {
     this.emailLog = new BehaviorSubject('');
   }
 
-  logout(): Observable<boolean> {
+  public logout(): Observable<boolean> {
     const csrfToken = this.cookieService.get('csrftoken');
     const headers = { 'X-CSRFToken': csrfToken };
     const options = { headers: headers, withCredentials: true };
@@ -63,7 +59,7 @@ export class UsersService {
     );
   }
 
-  login(username: string, password?: string): Observable<boolean> {
+  public login(username: string, password?: string): Observable<boolean> {
     const csrfToken = this.cookieService.get('csrftoken');
     const headers = { 'X-CSRFToken': csrfToken };
     const options = { headers: headers, withCredentials: true };
@@ -86,21 +82,19 @@ export class UsersService {
     )
   }
 
-  cachedUserInfo() {
+  public cachedUserInfo() {
     return this.lastUserInfo;
   }
 
-  getUserInfoObservable(): Observable<any> {
+  public getUserInfoObservable(): Observable<any> {
     return this.userInfo$.asObservable();
   }
 
-  getUserInfo(): Observable<any> {
+  public getUserInfo(): Observable<any> {
     const options = { withCredentials: true };
 
     return this.http.get(this.config.baseUrl + this.userInfoUrl, options).pipe(
-      map(res => {
-        return res;
-      }),
+      map(res => res),
       tap(userInfo => {
         this.userInfo$.next(userInfo);
         this.lastUserInfo = userInfo;
@@ -108,7 +102,7 @@ export class UsersService {
     );
   }
 
-  isEmailValid(email: string): boolean {
+  public isEmailValid(email: string): boolean {
     const re = new RegExp(
       "[a-z0-9!#$%&\'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&\'*+/=?^_`{" +
       "|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?" +
@@ -117,11 +111,11 @@ export class UsersService {
     return re.test(String(email).toLowerCase());
   }
 
-  isNameValid(name: string): boolean {
+  public isNameValid(name: string): boolean {
     return !(name === undefined || name === '');
   }
 
-  register(email: string, name: string): Observable<boolean> {
+  public register(email: string, name: string): Observable<boolean> {
     const csrfToken = this.cookieService.get('csrftoken');
     const headers = { 'X-CSRFToken': csrfToken };
     const options = { headers: headers, withCredentials: true };
@@ -142,16 +136,14 @@ export class UsersService {
       email: email,
       name: name,
     }, options).pipe(
-      map(() => {
-        return true;
-      }),
+      map(() => true),
       catchError(error => {
         return observableThrowError(new Error(error.error.error_msg));
       })
     );
   }
 
-  resetPassword(email: string): Observable<boolean> {
+  public resetPassword(email: string): Observable<boolean> {
     const csrfToken = this.cookieService.get('csrftoken');
     const headers = { 'X-CSRFToken': csrfToken };
     const options = { headers: headers, withCredentials: true };
@@ -163,16 +155,14 @@ export class UsersService {
     }
 
     return this.http.post(this.config.baseUrl + this.resetPasswordUrl, { email: email }, options).pipe(
-      map(() => {
-        return true;
-      }),
+      map(() => true),
       catchError(error => {
         return observableThrowError(new Error(error.error.error_msg));
       })
     );
   }
 
-  changePassword(password: string, verifPath: string): Observable<boolean | object> {
+  public changePassword(password: string, verifPath: string): Observable<boolean | object> {
     const csrfToken = this.cookieService.get('csrftoken');
     const headers = { 'X-CSRFToken': csrfToken };
     const options = { headers: headers, withCredentials: true };
@@ -180,16 +170,14 @@ export class UsersService {
     return this.http.post(this.config.baseUrl + this.changePasswordUrl, {
       password: password, verifPath: verifPath
     }, options).pipe(
-      map(() => {
-        return true;
-      }),
+      map(() => true),
       catchError(res => {
         return of({error: res.error.error_msg})
       })
     );
   }
 
-  checkVerification(verifPath: string): Observable<boolean> {
+  public checkVerification(verifPath: string): Observable<boolean> {
     const csrfToken = this.cookieService.get('csrftoken');
     const headers = { 'X-CSRFToken': csrfToken };
     const options = { headers: headers, withCredentials: true };
@@ -197,16 +185,14 @@ export class UsersService {
     return this.http.post(this.config.baseUrl + this.checkVerificationUrl, {
       verifPath: verifPath
     }, options).pipe(
-      map(() => {
-        return true;
-      }),
+      map(() => true),
       catchError(() => {
         return of(false);
       })
     );
   }
 
-  getAllUsers() {
+  public getAllUsers(): Observable<User[]> {
     const options = { withCredentials: true };
 
     return this.http.get(this.config.baseUrl + this.usersUrl, options).pipe(
@@ -214,7 +200,7 @@ export class UsersService {
     );
   }
 
-  getUser(id: number) {
+  public getUser(id: number): Observable<User> {
     const options = { withCredentials: true };
     const url = `${this.config.baseUrl}${this.usersUrl}/${id}`;
 
@@ -223,7 +209,7 @@ export class UsersService {
     );
   }
 
-  updateUser(user: User) {
+  public updateUser(user: User): Observable<object> {
     const dto = {
       id: user.id,
       name: user.name,
@@ -241,7 +227,7 @@ export class UsersService {
     return this.http.put(url, dto, options);
   }
 
-  createUser(user: User) {
+  public createUser(user: User): Observable<User> {
     if (user.id) {
       return observableThrowError('Create should not have user id');
     }
@@ -270,7 +256,7 @@ export class UsersService {
     );
   }
 
-  deleteUser(user: User) {
+  public deleteUser(user: User): Observable<object> {
     if (!user.id) {
       return observableThrowError('No user id');
     }
@@ -280,7 +266,7 @@ export class UsersService {
     return this.http.delete(url, options);
   }
 
-  resetUserPassword(user: User) {
+  public resetUserPassword(user: User): Observable<object> {
     if (!user.id) {
       return observableThrowError('No user id');
     }
@@ -290,23 +276,22 @@ export class UsersService {
     return this.http.post(url, null, options);
   }
 
-  removeUserGroup(user: User, group: string) {
+  public removeUserGroup(user: User, group: string): Observable<object> {
     const clone = user.clone();
     clone.groups = clone.groups.filter(grp => grp !== group);
     return this.updateUser(clone);
   }
 
-  searchUsersByGroup(searchTerm: string): Observable<User> {
+  public searchUsersByGroup(searchTerm: string): Observable<User> {
     const csrfToken = this.cookieService.get('csrftoken');
     const headers = { 'X-CSRFToken': csrfToken };
-    const usersSubject: Subject<User> = new Subject()
+    const usersSubject: Subject<User> = new Subject();
 
     let url;
-    if(searchTerm !== null) {
+    if (searchTerm !== null) {
       const searchParams = new HttpParams().set('search', searchTerm);
       url = `${this.config.baseUrl}${this.usersStreamingUrl}?${searchParams.toString()}`;
-    }
-    else {
+    } else {
       url = `${this.config.baseUrl}${this.usersStreamingUrl}`;
     }
 

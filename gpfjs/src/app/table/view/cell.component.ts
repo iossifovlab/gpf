@@ -1,5 +1,6 @@
 import { Input, Component } from '@angular/core';
 import { GpfTableColumnComponent } from '../component/column.component';
+import { GpfTableContentComponent } from '../component/content.component';
 
 @Component({
   selector: 'gpf-table-view-cell',
@@ -7,11 +8,11 @@ import { GpfTableColumnComponent } from '../component/column.component';
   styleUrls: ['./cell.component.css'],
 })
 export class GpfTableCellComponent {
-  @Input() columnInfo: GpfTableColumnComponent;
-  @Input() data: any;
-  @Input() noScrollOptimization: boolean;
+  @Input() public columnInfo: GpfTableColumnComponent;
+  @Input() public data: any;
+  @Input() public noScrollOptimization: boolean;
 
-  get cellContent() {
+  public get cellContent(): GpfTableContentComponent {
     return this.columnInfo.contentChildren.first;
   }
 }

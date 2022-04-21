@@ -8,9 +8,9 @@ gpf-table {
 }
 
 .action-buttons .btn:hover {
-	color: white;
-	background-color: #2a6395;
-	border-color: #2a6395;
+  color: white;
+  background-color: #2a6395;
+  border-color: #2a6395;
 }
 
 .select-unselect-all {

@@ -1,10 +1,5 @@
 <ng-template #confirmation let-options="options">
-  <div [ngClass]="[
-    'popover',
-    'show',
-    'bs-popover-' + options.placement,
-    options.popoverClass
-  ]">
+  <div [ngClass]="['popover', 'show', 'bs-popover-' + options.placement, options.popoverClass]">
     <div style="left: calc(50% - 5px)" class="arrow"></div>
     <h3 class="popover-header" [innerHTML]="options.title"></h3>
     <div class="popover-body">
@@ -15,23 +10,22 @@
             *ngIf="!options.hideConfirmButton"
             [mwlFocus]="options.focusButton === 'confirm'"
             [class]="'btn btn-' + options.confirmButtonType"
-            (click)="options.onConfirm({clickEvent: $event})"
-            [innerHtml]="options.confirmText">
-          </button>
+            (click)="options.onConfirm({ clickEvent: $event })"
+            [innerHtml]="options.confirmText"></button>
           <button
             *ngIf="!options.hideCancelButton"
             [mwlFocus]="options.focusButton === 'cancel'"
             [class]="'btn btn-' + options.cancelButtonType"
-            (click)="options.onCancel({clickEvent: $event})"
-            [innerHtml]="options.cancelText">
-          </button>
+            (click)="options.onCancel({ clickEvent: $event })"
+            [innerHtml]="options.cancelText"></button>
         </div>
       </div>
     </div>
   </div>
 </ng-template>
 
-<a role="button"
+<a
+  role="button"
   tabindex="0"
   class="btn btn-outline-primary btn-sm"
   mwlConfirmationPopover
@@ -43,7 +37,8 @@
   (confirm)="resetPassword(user)">
   <i class="fa fa-refresh fa-lg" aria-hidden="true"></i>
 </a>
-<a *ngIf="showDeleteButton"
+<a
+  *ngIf="showDeleteButton"
   #ele
   role="button"
   tabindex="0"

@@ -1,6 +1,5 @@
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { Component, NO_ERRORS_SCHEMA } from '@angular/core';
-
 import { GpfTableContentComponent } from './content.component';
 import { GpfTableSubcontentComponent } from './subcontent.component';
 import { GenotypePreviewFieldComponent } from 'app/genotype-preview-field/genotype-preview-field.component';
@@ -34,15 +33,14 @@ describe('GpfTableContentComponent', () => {
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      schemas: [ NO_ERRORS_SCHEMA ],
+      schemas: [NO_ERRORS_SCHEMA],
       declarations: [
         TestWrapperComponent,
         GpfTableContentComponent,
         GenotypePreviewFieldComponent,
         GpfTableSubcontentComponent
       ]
-    })
-    .compileComponents();
+    }).compileComponents();
   }));
 
   beforeEach(() => {

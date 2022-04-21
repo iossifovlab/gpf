@@ -10,9 +10,9 @@ import { environment } from '../../../../environments/environment';
   styleUrls: ['./header-cell.component.css']
 })
 export class GpfTableHeaderCellComponent {
-  @Input() columnInfo: GpfTableContentHeaderComponent;
-  @Output() sortingInfoChange = new EventEmitter();
-  @Input() sortingInfo: SortInfo;
+  @Input() public columnInfo: GpfTableContentHeaderComponent;
+  @Output() public sortingInfoChange = new EventEmitter();
+  @Input() public sortingInfo: SortInfo;
   public imgPathPrefix = environment.imgPathPrefix;
 
   public onSortClick(sortBySubcolumn: GpfTableSubheaderComponent): boolean {

@@ -7,20 +7,20 @@ import { ResizeService } from '../resize.service';
   template: ''
 })
 export class GpfTableEmptyCellComponent implements AfterViewInit {
-  @Input() columnInfo: GpfTableColumnComponent;
+  @Input() public columnInfo: GpfTableColumnComponent;
   private nativeElement: any;
   private firstRecalc = true;
   private isCustomWidth = false;
 
-  constructor(
+  public constructor(
     private viewContainer: ViewContainerRef,
     private resizeService: ResizeService
   ) {
     this.nativeElement = viewContainer.element.nativeElement;
   }
 
-  ngAfterViewInit() {
-    this.resizeService.addResizeEventListener(this.nativeElement, (elem) => {
+  public ngAfterViewInit(): void {
+    this.resizeService.addResizeEventListener(this.nativeElement, () => {
       this.recalcWidth();
     });
     setTimeout(() => {
@@ -28,10 +28,10 @@ export class GpfTableEmptyCellComponent implements AfterViewInit {
     });
   }
 
-  recalcWidth() {
+  private recalcWidth(): void {
     if (this.firstRecalc) {
       this.firstRecalc = false;
-      this.isCustomWidth = (this.columnInfo.columnWidth !== '');
+      this.isCustomWidth = this.columnInfo.columnWidth !== '';
     }
 
     if (this.isCustomWidth) {
