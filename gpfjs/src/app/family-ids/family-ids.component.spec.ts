@@ -14,8 +14,7 @@ describe('FamilyIdsComponent', () => {
     TestBed.configureTestingModule({
       declarations: [FamilyIdsComponent, ErrorsAlertComponent],
       imports: [FormsModule, NgxsModule.forRoot([FamilyIdsState], {developmentMode: true})]
-    })
-    .compileComponents();
+    }).compileComponents();
   }));
 
   beforeEach(() => {

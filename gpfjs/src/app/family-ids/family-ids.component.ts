@@ -12,14 +12,14 @@ import { StatefulComponent } from 'app/common/stateful-component';
 })
 export class FamilyIdsComponent extends StatefulComponent implements OnInit {
   @ValidateNested()
-  familyIds = new FamilyIds();
+  public familyIds = new FamilyIds();
   @ViewChild('textArea') private textArea: ElementRef;
 
-  constructor(protected store: Store) {
+  public constructor(protected store: Store) {
     super(store, FamilyIdsState, 'familyIds');
   }
 
-  ngOnInit() {
+  public ngOnInit(): void {
     super.ngOnInit();
     this.focusTextInputArea();
     this.store.selectOnce(state => state.familyIdsState).subscribe(state => {
@@ -28,7 +28,7 @@ export class FamilyIdsComponent extends StatefulComponent implements OnInit {
     });
   }
 
-  setFamilyIds(familyIds: string) {
+  public setFamilyIds(familyIds: string): void {
     const result = familyIds
       .split(/[,\s]/)
       .filter(s => s !== '');
@@ -51,7 +51,7 @@ export class FamilyIdsComponent extends StatefulComponent implements OnInit {
     });
   }
 
-  private focusTextInputArea() {
+  private focusTextInputArea(): void {
     this.waitForTextInputAreaToLoad().then(() => {
       this.textArea.nativeElement.focus();
     });
