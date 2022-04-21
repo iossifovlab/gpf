@@ -270,12 +270,14 @@ EOT'
     build_run_ctx_init "container" "${gpf_dev_image_ref}"
     defer_ret build_run_ctx_reset
 
-    build_run_container bash -c "
+    build_run_container bash -c '
       cd /wd; 
-      flake8 --format=pylint --max-complexity 15 \
-        --inline-quotes 'double' --docstring-quotes 'double' --multiline-quotes 'double' \
-        --output-file=/wd/results/flake8_report \
-        --exclude '*old*,*tmp*,*temp*,data-hg19*,gpf*,*build*' . || true"
+      /opt/conda/bin/conda run --no-capture-output -n gpf flake8 \
+        --exit-zero \
+        --format=pylint --max-complexity 15 \
+        --inline-quotes=double --docstring-quotes=double --multiline-quotes=double \
+        --exclude "*old*,*tmp*,*temp*,data-hg19*,gpf*,*build*" \
+        --output-file=/wd/results/flake8_report . || true'
 
     build_run_local cp ./results/flake8_report ./test-results/
   }
@@ -287,8 +289,10 @@ EOT'
 
     build_run_container bash -c '
       cd /wd/; 
-      wdae_files=$(find wdae/wdae -name "*.py")
-      pylint dae/dae $wdae_files -f parseable --reports=no > /wd/results/pylint_gpf_report || true'
+      wdae_files=$(find wdae/wdae -name "*.py");
+      /opt/conda/bin/conda run --no-capture-output -n gpf 
+      pylint dae/dae $wdae_files -f parseable --reports=no \
+          --exit-zero > /wd/results/pylint_gpf_report || true'
 
     build_run_local cp ./results/pylint_gpf_report ./test-results/
   }
@@ -300,11 +304,21 @@ EOT'
 
     build_run_container bash -c '
       cd /wd/dae; 
-      bandit -r dae/ -o /wd/results/bandit_dae_report.html -f html --exclude "*tests/*" -s B101 || true'
+      /opt/conda/bin/conda run --no-capture-output -n gpf \
+      bandit --exit-zero \
+        -r dae/ -o /wd/results/bandit_dae_report.html \
+        -f html \
+        --exclude "*tests/*" \
+        -s B101 || true'
 
     build_run_container bash -c '
       cd /wd/wdae; 
-      bandit -r wdae/ -o /wd/results/bandit_wdae_report.html -f html --exclude "*tests/*" -s B101 || true'
+      /opt/conda/bin/conda run --no-capture-output -n gpf \
+      bandit --exit-zero \
+        -r wdae/ -o /wd/results/bandit_wdae_report.html \
+        -f html \
+        --exclude "*tests/*" \
+        -s B101 || true'
 
     build_run_local cp ./results/bandit_dae_report.html ./results/bandit_wdae_report.html ./test-results/
   }
