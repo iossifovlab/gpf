@@ -78,7 +78,7 @@ describe('Genotype browser tests', () => {
   });
 
   datasetList.forEach(dataset => {
-    it.only('should display unique family variants block at /' + dataset + '/browser', () => {
+    it('should display unique family variants block at /' + dataset + '/browser', () => {
       const uniqueFamilyVariantsFilterPage = new UniqueFamilyVariantsFilterPage();
       page.navigateToDatasetPage(dataset, toolPageLinks.genotypeBrowser);
       uniqueFamilyVariantsFilterPage.block.should('be.visible');
