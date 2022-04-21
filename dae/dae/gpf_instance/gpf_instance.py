@@ -1,8 +1,8 @@
+"""Defines GPFInstance class that gives access to different parts of GPF"""
+
 import os
 import logging
 import json
-
-from box import Box  # type:ignore
 
 from dae.genomic_resources.reference_genome import ReferenceGenome, \
     open_reference_genome_from_resource
@@ -37,6 +37,8 @@ logger = logging.getLogger(__name__)
 
 
 class GPFInstance(object):
+    """Class to access different parts of a GPF instance"""
+
     def __init__(
             self,
             dae_config=None,
@@ -56,7 +58,6 @@ class GPFInstance(object):
 
         self.dae_config = dae_config
         self.dae_db_dir = work_dir
-        self.__autism_gene_profile_config = None
         self.load_eagerly = load_eagerly
 
         if self.dae_config.grr:
@@ -69,6 +70,7 @@ class GPFInstance(object):
             self.grr_no_cache = build_genomic_resource_repository(
                 use_cache=False
             )
+        self._annotation_pipeline = None
 
         if load_eagerly:
             self.reference_genome
@@ -84,6 +86,7 @@ class GPFInstance(object):
     @property  # type: ignore
     @cached
     def reference_genome(self) -> ReferenceGenome:
+        """Returns reference genome defined in the GPFInstance config"""
         resource = self.grr.get_resource(
             self.dae_config.reference_genome.resource_id)
         result = open_reference_genome_from_resource(resource)
@@ -107,6 +110,7 @@ class GPFInstance(object):
     @property  # type: ignore
     @cached
     def gene_scores_db(self):
+        "Loads and returns gene scores db"
         gene_scores = self.dae_config.gene_scores_db.gene_scores
         result = []
         for gs in gene_scores:
@@ -122,7 +126,7 @@ class GPFInstance(object):
     @property  # type: ignore
     @cached
     def genomic_scores_db(self):
-        "Loads genomic scores db"
+        "Loads and returns genomic scores db"
         scores = []
         if self.dae_config.genomic_scores_db is not None:
             for score_def in self.dae_config.genomic_scores_db:
@@ -132,6 +136,7 @@ class GPFInstance(object):
     @property  # type: ignore
     @cached
     def genotype_storage_db(self):
+        "Constructs and returns genotype storage factory"
         return GenotypeStorageFactory(self.dae_config)
 
     @property  # type: ignore
@@ -191,6 +196,8 @@ class GPFInstance(object):
     @property  # type: ignore
     @cached
     def gene_sets_db(self):
+        """Returns GeneSetsDb populated with gene sets from the GPFInstance"""
+
         logger.debug("creating new instance of GeneSetsDb")
         if "gene_sets_db" in self.dae_config:
             gsc_ids = self.dae_config.gene_sets_db.gene_set_collections
@@ -203,9 +210,9 @@ class GPFInstance(object):
                 gscs.append(GeneSetCollection.from_resource(resource))
 
             return GeneSetsDb(gscs)
-        else:
-            logger.debug("No gene sets DB configured")
-            return GeneSetsDb([])
+
+        logger.debug("No gene sets DB configured")
+        return GeneSetsDb([])
 
     @property  # type: ignore
     @cached
@@ -262,10 +269,7 @@ class GPFInstance(object):
     def get_phenotype_data_config(self, phenotype_data_id):
         return self._pheno_db.get_phenotype_data_config(phenotype_data_id)
 
-    # Pheno browser
-
     # Genomic scores
-
     def get_genomic_scores(self):
         return self.genomic_scores_db.get_scores()
 
