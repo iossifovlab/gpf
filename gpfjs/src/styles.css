@@ -212,6 +212,10 @@ label {
   max-width: 500px;
 }
 
+.modal-backdrop {
+  z-index: 1040 !important;
+}
+
 .modal-backdrop.fade {
   transition: none;
 }
@@ -355,4 +359,8 @@ label {
 
 .gpf-basic-table th, .gpf-basic-table td {
   padding: 5px;
+}
+
+ngb-modal-window {
+  z-index: 1000;
 }
