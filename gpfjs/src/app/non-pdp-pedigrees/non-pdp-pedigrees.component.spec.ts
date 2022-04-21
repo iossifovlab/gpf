@@ -10,7 +10,7 @@ import { NonPdpPedigreesComponent } from './non-pdp-pedigrees.component';
   selector: 'gpf-pedigree-chart',
 })
 class PedigreeChartMockComponent {
-  @Input() family;
+  @Input() public family;
 }
 
 describe('NonPdpPedigreesComponent', () => {
@@ -25,8 +25,7 @@ describe('NonPdpPedigreesComponent', () => {
         ResizeService,
       ],
       imports: [BrowserDynamicTestingModule]
-    })
-    .compileComponents();
+    }).compileComponents();
   }));
 
   beforeEach(() => {
