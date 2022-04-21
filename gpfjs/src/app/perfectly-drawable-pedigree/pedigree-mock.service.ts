@@ -3,8 +3,7 @@ import { PedigreeData } from '../genotype-preview-model/genotype-preview';
 
 @Injectable()
 export class PedigreeMockService {
-
-  complexFamily = [
+  public complexFamily = [
     ['AU0052', '4', '0', '0', '1', '', 'AU005204', 'asd'],
     ['AU0052', '5', '101', '102', '2', '', 'AU005205', 'asd'],
     ['AU0052', '13', '4', '5', '1', 'Autism', 'AU005213', 'asd'],
@@ -21,7 +20,7 @@ export class PedigreeMockService {
     ['AU0052', '314', '211', '212', '1', '', 'AU0052314', 'asd'],
   ].map(person => PedigreeData.fromArray(person));
 
-  simpleFamily = [
+  public simpleFamily = [
     ['AU0052', '211', '0', '0', '1', '', 'AU0052211', 'asd'],
     ['AU0052', '212', '0', '0', '2', '', 'AU0052212', 'asd'],
     ['AU0052', '311', '211', '212', '1', '', 'AU0052311', 'asd'],
@@ -30,20 +29,20 @@ export class PedigreeMockService {
     ['AU0052', '314', '211', '212', '1', '', 'AU0052314', 'asd'],
   ].map(person => PedigreeData.fromArray(person));
 
-  simplestFamily = [
+  public simplestFamily = [
     ['AU0052', '211', '0', '0', '1', '', 'AU0052211', 'asd'],
     ['AU0052', '212', '0', '0', '2', '', 'AU0052212', 'asd'],
     ['AU0052', '311', '211', '212', '1', '', 'AU0052311', 'asd'],
   ].map(person => PedigreeData.fromArray(person));
   // truncated
-  allFamilies = `AU0001,1,0,0,2,,AU000101,,
+  public allFamilies = `AU0001,1,0,0,2,,AU000101,,
 AU0001,2,0,0,1,,AU000102,,
 AU0001,3,2,1,2,Autism,AU000103,,
 AU0001,4,2,1,2,Autism,AU000104,,
 AU0001,5,2,1,2,Autism,AU000105,,
 AU0001,6,2,1,2,Autism,AU000106,,`;
 
-  processAllFamilies() {
+  public processAllFamilies(): object {
     return this.allFamilies.split('\n')
       .map(arr => {
         const result = arr.split(',');
@@ -54,7 +53,7 @@ AU0001,6,2,1,2,Autism,AU000106,,`;
         person[5] = '#ffffff';
 
         person[6] = '';
-        person[4] = (person[4] === '1') ? 'F' : 'M';
+        person[4] = person[4] === '1' ? 'F' : 'M';
         return person;
       })
       .map(person => PedigreeData.fromArray(person))
@@ -68,8 +67,7 @@ AU0001,6,2,1,2,Autism,AU000106,,`;
       }, {});
   }
 
-  getMockFamily(): {} {
+  public getMockFamily(): object {
     return this.processAllFamilies();
   }
-
 }

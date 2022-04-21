@@ -1,5 +1,4 @@
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
-
 import { PerfectlyDrawablePedigreeComponent } from './perfectly-drawable-pedigree.component';
 
 describe('PerfectlyDrawablePedigreeComponent', () => {
@@ -8,9 +7,8 @@ describe('PerfectlyDrawablePedigreeComponent', () => {
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      declarations: [ PerfectlyDrawablePedigreeComponent ]
-    })
-    .compileComponents();
+      declarations: [PerfectlyDrawablePedigreeComponent]
+    }).compileComponents();
   }));
 
   beforeEach(() => {

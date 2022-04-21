@@ -11,8 +11,7 @@ type Edge = GraphEdge<Vertex>;
 
 @Injectable()
 export class PerfectlyDrawablePedigreeService {
-
-  createSandwichInstance(family: PedigreeData[]) {
+  public createSandwichInstance(family: PedigreeData[]): SandwichInstance<IndividualSet> {
     const [idsToIndividualUnit, idsToMatingUnit] = this.getIndividualsAndMatingUnitMaps(family);
 
     const individualVertices = this.getIndividualsFromMap(idsToIndividualUnit) as IndividualSet[];
@@ -68,13 +67,11 @@ export class PerfectlyDrawablePedigreeService {
           sibshipEdges.push([individual, sibshipUnit]);
         } else if (equal(individual.generationRanks(), sibshipUnit.generationRanks())) {
           if (individual.parents) {
-              sameGenerationNotSiblingEdges.push([individual, sibshipUnit]);
+            sameGenerationNotSiblingEdges.push([individual, sibshipUnit]);
           }
         }
       }
     }
-
-
 
     // Ed+
     const matingUnitSibshipUnitEdges: Edge[] = [];
@@ -120,7 +117,7 @@ export class PerfectlyDrawablePedigreeService {
     const idToNodeMap = new Map<string, Individual>();
     const idsToMatingUnit = new Map<string, MatingUnit>();
 
-    const getOrCreateIndividual = (name) => {
+    const getOrCreateIndividual = (name: string): Individual => {
       if (idToNodeMap.has(name)) {
         return idToNodeMap.get(name);
       } else {
@@ -156,7 +153,7 @@ export class PerfectlyDrawablePedigreeService {
     return [idToNodeMap, idsToMatingUnit];
   }
 
-  private getIndividualsFromMap(idToNodeMap: Map<string, Individual>) {
+  private getIndividualsFromMap(idToNodeMap: Map<string, Individual>): Individual[] {
     const individualVertices: Individual[] = [];
     idToNodeMap.forEach(individual => {
       individualVertices.push(individual);
@@ -165,22 +162,21 @@ export class PerfectlyDrawablePedigreeService {
     return individualVertices;
   }
 
-  getIndividuals(family: PedigreeData[]) {
+  public getIndividuals(family: PedigreeData[]): Individual[] {
     const idToNodeMap = this.getIndividualsAndMatingUnitMaps(family)[0];
 
     return this.getIndividualsFromMap(idToNodeMap);
   }
 
-  isPDP(family: PedigreeData[]) {
+  public isPDP(family: PedigreeData[]): [SandwichInstance<Vertex>, IntervalForVertex<Vertex>[]] {
     const sandwichInstance = this.createSandwichInstance(family);
     const result: [SandwichInstance<Vertex>, IntervalForVertex<Vertex>[]] =
       [sandwichInstance, solveSandwich(sandwichInstance)];
 
     return result;
-
   }
 
-  fixRank(intervals: Array<Individual>) {
+  public fixRank(intervals: Array<Individual>): Individual[] {
     if (!intervals) {
       return intervals;
     }
@@ -194,5 +190,4 @@ export class PerfectlyDrawablePedigreeService {
       return interval;
     });
   }
-
 }

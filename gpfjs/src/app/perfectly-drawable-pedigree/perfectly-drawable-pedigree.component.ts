@@ -1,15 +1,4 @@
-import { Component, OnInit, Input } from '@angular/core';
-
-import { Observable, BehaviorSubject } from 'rxjs';
-
-import { PedigreeData } from '../genotype-preview-model/genotype-preview';
-import { Individual, MatingUnitWithIntervals, IndividualSet, ParentalUnit, IndividualWithPosition } from '../pedigree-chart/pedigree-data';
-import {
-  hasIntersection, intersection, equal, isSubset, difference
-} from '../utils/sets-helper';
-
-import { SandwichInstance, solveSandwich, IntervalForVertex } from '../utils/interval-sandwich';
-import { PerfectlyDrawablePedigreeService } from './perfectly-drawable-pedigree.service';
+import { Component } from '@angular/core';
 
 @Component({
   selector: 'gpf-perfectly-drawable-pedigree',
@@ -17,17 +6,4 @@ import { PerfectlyDrawablePedigreeService } from './perfectly-drawable-pedigree.
   styleUrls: ['./perfectly-drawable-pedigree.component.css'],
 })
 export class PerfectlyDrawablePedigreeComponent {
-
-
-
-
-
-
-    // let maxRank = intervals.reduce((acc, i) => Math.max(acc, i.vertex.rank), 0);
-    //
-    // return intervals
-    //   .map(i => [i.left, -(i.vertex.rank - maxRank) * yGap] as [number, number]);
-
-
-
 }
