@@ -11,8 +11,7 @@ xdescribe('FamilyFiltersBlockComponent', () => {
     TestBed.configureTestingModule({
       declarations: [FamilyFiltersBlockComponent],
       imports: [NgbNavModule]
-    })
-    .compileComponents();
+    }).compileComponents();
   }));
 
   beforeEach(() => {
