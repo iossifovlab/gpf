@@ -19,61 +19,61 @@ export class HistogramComponent implements OnInit, OnChanges {
   private internalRangeStartField: number;
   private internalRangeEndField: number;
 
-  @Output() rangeStartChange = new EventEmitter();
-  @Output() rangeEndChange = new EventEmitter();
+  @Output() public rangeStartChange = new EventEmitter();
+  @Output() public rangeEndChange = new EventEmitter();
 
-  @Input() width: number;
-  @Input() height: number;
-  @Input() marginLeft = 100;
-  @Input() marginTop = 10;
-  @ViewChild('histogramContainer', {static: true}) histogramContainer: any;
+  @Input() public width: number;
+  @Input() public height: number;
+  @Input() public marginLeft = 100;
+  @Input() public marginTop = 10;
+  @ViewChild('histogramContainer', {static: true}) public histogramContainer;
 
-  @Input() bins: Array<number>;
-  @Input() bars: Array<number>;
-  @Input() domainMin: number;
-  @Input() domainMax: number;
+  @Input() public bins: Array<number>;
+  @Input() public bars: Array<number>;
+  @Input() public domainMin: number;
+  @Input() public domainMax: number;
 
-  @Input() rangesCounts: Array<number>;
+  @Input() public rangesCounts: Array<number>;
 
-  @Input() logScaleX = false;
-  @Input() logScaleY = false;
-  @Input() showCounts = true;
-  @Input() xLabels: Array<number>;
-  @Input() centerLabels: boolean;
-  @Input() showMinMaxInput: boolean;
+  @Input() public logScaleX = false;
+  @Input() public logScaleY = false;
+  @Input() public showCounts = true;
+  @Input() public xLabels: Array<number>;
+  @Input() public centerLabels: boolean;
+  @Input() public showMinMaxInput: boolean;
 
-  beforeRangeText: string;
-  insideRangeText: string;
-  afterRangeText: string;
+  public beforeRangeText: string;
+  public insideRangeText: string;
+  public afterRangeText: string;
 
-  xScale: d3.ScaleBand<string>;
+  public xScale: d3.ScaleBand<string>;
   private barsTotalSum: number;
 
-  private svg: any;
+  private svg;
 
-  scaledBins: Array<number>;
+  private scaledBins: Array<number>;
   private resetRange = false;
 
-  @Input() isInteractive = true;
-  @Input() singleScoreValue: number;
+  @Input() public isInteractive = true;
+  @Input() public singleScoreValue: number;
 
-  scaleXAxis;
-  scaleYAxis;
+  public scaleXAxis;
+  public scaleYAxis;
 
-  ngOnInit() {
+  public ngOnInit(): void {
     this.rangeStartSubject
-    .pipe(debounceTime(100))
-    .subscribe((start) => {
-      this.rangeStartChange.emit(start);
-    });
+      .pipe(debounceTime(100))
+      .subscribe((start) => {
+        this.rangeStartChange.emit(start);
+      });
 
     this.rangeEndSubject
-    .pipe(debounceTime(100))
-    .subscribe((end) => {
-      this.rangeEndChange.emit(end);
-    });
+      .pipe(debounceTime(100))
+      .subscribe((end) => {
+        this.rangeEndChange.emit(end);
+      });
     this.rangeStartSubject.next(this.rangeStart !== null ? this.rangeStart : this.min_value);
-    this.rangeEndSubject.next(this.rangeEnd !== null ? this.rangeEnd : this.max_value);
+    this.rangeEndSubject.next(this.rangeEnd !== null ? this.rangeEnd : this.maxValue);
 
     if (!this.isInteractive) {
       this.rangeStart = this.bins[0];
@@ -81,11 +81,11 @@ export class HistogramComponent implements OnInit, OnChanges {
     }
   }
 
-  ngOnChanges(changes: SimpleChanges) {
+  public ngOnChanges(changes: SimpleChanges): void {
     if ('bins' in changes || 'bars' in changes) {
       const bins: Array<number> = [];
       const bars: Array<number> = [];
-      for (let i  = 0; i < this.bins.length; i++) {
+      for (let i = 0; i < this.bins.length; i++) {
         if (this.bins[i] < this.domainMin || this.bins[i] > this.domainMax) {
           continue;
         }
@@ -108,16 +108,16 @@ export class HistogramComponent implements OnInit, OnChanges {
       if (this.rangesCounts && this.rangesCounts.length === 3) {
         this.beforeRangeText = this.formatEstimateText(this.rangesCounts[0], false);
         this.insideRangeText = this.formatEstimateText(this.rangesCounts[1], false);
-        this.afterRangeText  = this.formatEstimateText(this.rangesCounts[2], false);
+        this.afterRangeText = this.formatEstimateText(this.rangesCounts[2], false);
       }
     }
   }
 
-  singleScoreValueIsValid(): boolean {
+  public singleScoreValueIsValid(): boolean {
     return this.singleScoreValue !== undefined && this.singleScoreValue !== null && !isNaN(this.singleScoreValue);
   }
 
-  get showMinMaxInputWithDefaultValue() {
+  public get showMinMaxInputWithDefaultValue(): boolean {
     if (this.showMinMaxInput === undefined) {
       if (this.bins.length < 10) {
         return false;
@@ -128,7 +128,7 @@ export class HistogramComponent implements OnInit, OnChanges {
     return this.showMinMaxInput;
   }
 
-  get centerLabelsWithDefaultValue() {
+  public get centerLabelsWithDefaultValue(): boolean {
     if (this.centerLabels === undefined) {
       if (this.bins.length < 10) {
         return true;
@@ -139,7 +139,7 @@ export class HistogramComponent implements OnInit, OnChanges {
     return this.centerLabels;
   }
 
-  get xLabelsWithDefaultValue() {
+  public get xLabelsWithDefaultValue(): number[] {
     if (this.xLabels === undefined) {
       if (this.bins.length < 10) {
         return this.bins.slice(0, -1);
@@ -160,7 +160,7 @@ export class HistogramComponent implements OnInit, OnChanges {
     return this.xLabels;
   }
 
-  onRangeChange() {
+  private onRangeChange(): void {
     if (!this.xScale) {
       return;
     }
@@ -169,36 +169,35 @@ export class HistogramComponent implements OnInit, OnChanges {
     this.colorBars();
   }
 
-  colorBars() {
+  private colorBars(): void {
     this.svg.selectAll('rect').style('fill', (d, index, objects) => {
-      return d.index < this.selectedStartIndex
-          || d.index > this.selectedEndIndex
-           ? 'lightsteelblue' : 'steelblue';
+      return d.index < this.selectedStartIndex || d.index > this.selectedEndIndex
+        ? 'lightsteelblue' : 'steelblue';
     });
   }
 
-  formatEstimateText(count: number, estimate = true) {
+  private formatEstimateText(count: number, estimate = true): string {
     const perc = count / this.barsTotalSum * 100;
 
     if (this.showCounts) {
-      const string = estimate ? '~' : '';
-      return string + count.toFixed(0) + ' (' +  perc.toFixed(2) + '%)';
+      const str = estimate ? '~' : '';
+      return str + count.toFixed(0) + ' (' + perc.toFixed(2) + '%)';
     } else {
       return perc.toFixed(2) + '%';
     }
   }
 
-  estimateRangeTexts() {
+  private estimateRangeTexts(): void {
     const beforeRangeCount = d3.sum(this.bars.slice(0, this.selectedStartIndex));
     const insideRangeCount = d3.sum(this.bars.slice(this.selectedStartIndex, this.selectedEndIndex + 1));
-    const afterRangeCount  = d3.sum(this.bars.slice(this.selectedEndIndex + 1));
+    const afterRangeCount = d3.sum(this.bars.slice(this.selectedEndIndex + 1));
 
     this.beforeRangeText = this.formatEstimateText(beforeRangeCount);
     this.insideRangeText = this.formatEstimateText(insideRangeCount);
-    this.afterRangeText  = this.formatEstimateText(afterRangeCount);
+    this.afterRangeText = this.formatEstimateText(afterRangeCount);
   }
 
-  redrawHistogram() {
+  private redrawHistogram(): void {
     this.barsTotalSum = d3.sum(this.bars);
 
     const barsBinsArray = [];
@@ -220,7 +219,7 @@ export class HistogramComponent implements OnInit, OnChanges {
       .domain(Array.from(this.bars.keys()).map(x => x.toString()))
       .range([0, width]);
 
-    this.scaleYAxis = this.logScaleY ?  d3.scaleLog() : d3.scaleLinear();
+    this.scaleYAxis = this.logScaleY ? d3.scaleLog() : d3.scaleLinear();
     this.scaleYAxis.range([height, 0]).domain([1, d3.max(this.bars)]);
 
     this.redrawXAxis(svg, width, height);
@@ -228,7 +227,7 @@ export class HistogramComponent implements OnInit, OnChanges {
     const leftAxis = d3.axisLeft(this.scaleYAxis);
     leftAxis.ticks(3, '.0f');
     svg.append('g')
-        .call(leftAxis);
+      .call(leftAxis);
     svg.selectAll('bar')
       .data(barsBinsArray)
       .enter().append('rect')
@@ -236,23 +235,23 @@ export class HistogramComponent implements OnInit, OnChanges {
       .attr('x', (d: any) => this.xScale(d.index.toString()))
       .attr('width', this.xScale.bandwidth())
       .attr('y', (d: any) => d.bar === 0 ? height : this.scaleYAxis(d.bar))
-      .attr('height', (d: any) => d.bar === 0 ? 0 : height -  this.scaleYAxis(d.bar));
+      .attr('height', (d: any) => d.bar === 0 ? 0 : height - this.scaleYAxis(d.bar));
     this.svg = svg;
 
     this.colorBars();
     this.scaledBins = barsBinsArray.map(d => d.bin === 0 ? 0 : this.xScale(d.bin));
   }
 
-  redrawXAxis(svg, width, height) {
+  private redrawXAxis(svg, width: number, height: number): void {
     const axisX = [0];
     const axisVals = [];
 
-    for (let i  = 0; i < this.bins.length - 1; i++) {
-      let leftX;
+    for (let i = 0; i < this.bins.length - 1; i++) {
+      let leftX: number;
       if (this.centerLabelsWithDefaultValue) {
-          leftX = this.xScale(i.toString()) + this.xScale.bandwidth() / 2;
+        leftX = this.xScale(i.toString()) + this.xScale.bandwidth() / 2;
       } else {
-          leftX = this.xScale(i.toString()) - this.xScale.step() * this.xScale.paddingOuter() / 2;
+        leftX = this.xScale(i.toString()) - this.xScale.step() * this.xScale.paddingOuter() / 2;
       }
       axisX.push(leftX);
       axisVals.push(this.bins[i]);
@@ -273,21 +272,25 @@ export class HistogramComponent implements OnInit, OnChanges {
       .attr('transform', 'translate(0,' + height + ')')
       .call(
         d3.axisBottom(this.scaleXAxis)
-        .tickValues(this.xLabelsWithDefaultValue as any)
-        .tickFormat((d, i) => formatter(this.xLabelsWithDefaultValue[i]) as any)
+          .tickValues(this.xLabelsWithDefaultValue as any)
+          .tickFormat((d, i) => formatter(this.xLabelsWithDefaultValue[i]) as any)
       ).style('font-size', '12px');
   }
 
   @Input()
-  set rangeStart(rangeStart: any) {
+  public set rangeStart(rangeStart) {
     if (rangeStart !== this.internalRangeStart) {
       this.setRangeStart(rangeStart);
       this.internalRangeStartField = Number(this.transform(this.internalRangeStart));
     }
   }
 
-  setRangeStart(rangeStart: any) {
-    if (rangeStart == null) {
+  public get rangeStart(): number {
+    return this.internalRangeStart;
+  }
+
+  private setRangeStart(rangeStart: number): void {
+    if (rangeStart === null) {
       this.internalRangeStart = this.bins[0];
     } else {
       this.internalRangeStart = rangeStart;
@@ -296,20 +299,20 @@ export class HistogramComponent implements OnInit, OnChanges {
     this.rangeStartSubject.next(this.internalRangeStart);
   }
 
-  get rangeStart() {
-    return this.internalRangeStart;
-  }
-
   @Input()
-  set rangeEnd(rangeEnd: any) {
+  public set rangeEnd(rangeEnd) {
     if (rangeEnd !== this.internalRangeEnd) {
       this.setRangeEnd(rangeEnd);
       this.internalRangeEndField = Number(this.transform(this.internalRangeEnd));
     }
   }
 
-  setRangeEnd(rangeEnd: any) {
-    if (rangeEnd == null) {
+  public get rangeEnd(): number {
+    return this.internalRangeEnd;
+  }
+
+  private setRangeEnd(rangeEnd: number): void {
+    if (rangeEnd === null) {
       this.internalRangeEnd = this.bins[this.bins.length - 1];
     } else {
       this.internalRangeEnd = rangeEnd;
@@ -318,11 +321,7 @@ export class HistogramComponent implements OnInit, OnChanges {
     this.rangeEndSubject.next(this.internalRangeEnd);
   }
 
-  get rangeEnd() {
-    return this.internalRangeEnd;
-  }
-
-  set rangeStartWithoutNull(rangeStart: any) {
+  public set rangeStartWithoutNull(rangeStart: any) {
     const rangeStartFloat = parseFloat(rangeStart);
     if (!isNaN(rangeStartFloat)) {
       this.setRangeStart(parseFloat(rangeStart));
@@ -331,11 +330,11 @@ export class HistogramComponent implements OnInit, OnChanges {
     }
   }
 
-  get rangeStartWithoutNull() {
+  public get rangeStartWithoutNull(): number {
     return this.internalRangeStartField;
   }
 
-  set rangeEndWithoutNull(rangeEnd: any) {
+  public set rangeEndWithoutNull(rangeEnd: any) {
     const rangeEndFloat = parseFloat(rangeEnd);
     if (!isNaN(rangeEndFloat)) {
       this.setRangeEnd(parseFloat(rangeEnd));
@@ -344,42 +343,42 @@ export class HistogramComponent implements OnInit, OnChanges {
     }
   }
 
-  get rangeEndWithoutNull() {
+  public get rangeEndWithoutNull(): number {
     return this.internalRangeEndField;
   }
 
-  get min_value() {
+  public get minValue(): number {
     return Number(this.bins[0].toFixed(4));
   }
 
-  get max_value() {
+  public get maxValue(): number {
     return Number(this.bins[this.bins.length - 1].toFixed(4));
   }
 
-  startStepUp(event: any) {
+  public startStepUp(): void {
     this.selectedStartIndex += 1;
   }
 
-  startStepDown(event: any) {
+  public startStepDown(): void {
     this.selectedStartIndex -= 1;
   }
 
-  endStepUp(event: any) {
+  public endStepUp(): void {
     this.selectedEndIndex += 1;
   }
 
-  endStepDown(event: any) {
+  public endStepDown(): void {
     this.selectedEndIndex -= 1;
   }
 
-  set selectedStartIndex(index: number) {
+  public set selectedStartIndex(index: number) {
     if (index < 0 || index > this.selectedEndIndex) {
       return;
     }
     this.rangeStart = this.bins[index];
   }
 
-  get selectedStartIndex() {
+  public get selectedStartIndex(): number {
     if (this.rangeStart === null) {
       return 0;
     }
@@ -388,37 +387,37 @@ export class HistogramComponent implements OnInit, OnChanges {
     return Math.min(maxIndex, closest);
   }
 
-  set selectedEndIndex(index: number) {
+  public set selectedEndIndex(index: number) {
     if (index < this.selectedStartIndex || index >= this.bars.length) {
       return;
     }
     this.rangeEnd = this.bins[index + 1];
   }
 
-  get selectedEndIndex() {
+  public get selectedEndIndex(): number {
     if (this.rangeEnd === null) {
       return this.bins.length - 2;
     }
     return Math.max(0, this.getClosestIndexByValue(this.rangeEnd) - 1);
   }
 
-  getClosestIndexByX(x) {
+  private getClosestIndexByX(x): number {
     // Domain uses bins count which is larger than bars by 1 element
     const maxIndex = this.xScale.domain().length;
-    for (let i  = 1; i < maxIndex; i++) {
-      const prev_val = (i - 1) * this.xScale.step();
-      const curr_val = i * this.xScale.step();
-      if (curr_val > x) {
-        const prev = Math.abs(x - prev_val);
-        const curr = Math.abs(x - curr_val);
+    for (let i = 1; i < maxIndex; i++) {
+      const prevVal = (i - 1) * this.xScale.step();
+      const currVal = i * this.xScale.step();
+      if (currVal > x) {
+        const prev = Math.abs(x - prevVal);
+        const curr = Math.abs(x - currVal);
         return prev < curr ? i - 1 : i;
       }
     }
     return maxIndex - 1;
   }
 
-  getClosestIndexByValue(val) {
-    for (let i  = 1; i < this.bins.length - 1; i++) {
+  private getClosestIndexByValue(val): number {
+    for (let i = 1; i < this.bins.length - 1; i++) {
       if (this.bins[i] >= val) {
         const prev = Math.abs(val - this.bins[i - 1]);
         const curr = Math.abs(val - this.bins[i]);
@@ -428,27 +427,27 @@ export class HistogramComponent implements OnInit, OnChanges {
     return this.bins.length - 1;
   }
 
-  get startX() {
+  public get startX(): number {
     const distBetweenBars = this.xScale.step() * this.xScale.paddingInner();
     return this.xScale(this.selectedStartIndex.toString()) - distBetweenBars / 2 - 1;
   }
 
-  set startX(newPositionX) {
+  public set startX(newPositionX) {
     const distBetweenBars = this.xScale.step() * this.xScale.paddingInner();
     this.selectedStartIndex = this.getClosestIndexByX(newPositionX + distBetweenBars / 2 + 1);
   }
 
-  get endX() {
+  public get endX(): number {
     const distBetweenBars = this.xScale.step() * this.xScale.paddingInner();
     return this.xScale(this.selectedEndIndex.toString()) + this.xScale.bandwidth() + distBetweenBars / 2 - 1;
   }
 
-  set endX(newPositionX) {
+  public set endX(newPositionX) {
     const distBetweenBars = this.xScale.step() * this.xScale.paddingInner();
     this.selectedEndIndex = this.getClosestIndexByX(newPositionX - this.xScale.bandwidth() - distBetweenBars / 2 + 1);
   }
 
-  get viewBox(): string {
+  public get viewBox(): string {
     const pos = this.showMinMaxInputWithDefaultValue ? '0 0' : '-8 -8';
     return `${pos} ${this.width} ${this.height}`;
   }
@@ -467,7 +466,7 @@ export class HistogramComponent implements OnInit, OnChanges {
   private createFormatterFunction(digitCount: number): (num: any) => any {
     // used to add e-6 scientific notation
     const notations = [
-      { value: 1E-6,  suffix: 'e-6' },
+      { value: 1E-6, suffix: 'e-6' },
     ];
 
     const rx = /\.0+$|(\.[0-9]*[1-9])0+$/;

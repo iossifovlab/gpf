@@ -122,13 +122,15 @@ xdescribe('HistogramComponent', () => {
   }));
 
   it('should render sliders', waitForAsync(() => {
-    const sliderEls = fixture.debugElement.queryAll((el) => el.nativeElement.attributes.getNamedItem('gpf-histogram-range-selector-line'));
+    const sliderEls = fixture.debugElement.queryAll(
+      el => el.nativeElement.attributes.getNamedItem('gpf-histogram-range-selector-line')
+    );
     expect(sliderEls.length).toBe(2);
   }));
 
   it('should set the correct labels to the sliders', () => {
     const sliderLabels = fixture.debugElement.queryAll(By.css('.partitions-text'));
-    const sliderLabelsText = sliderLabels.map((label) => label.nativeElement.textContent.trim());
+    const sliderLabelsText = sliderLabels.map((label) => (label.nativeElement as HTMLElement).textContent.trim());
     expect(sliderLabels.length).toBe(3);
     expect(sliderLabelsText.length).toBe(3);
     expect(sliderLabelsText).toEqual(['2 (14.29%)', '5 (35.71%)', '7 (50.00%)']);
@@ -148,13 +150,12 @@ xdescribe('HistogramComponentManyBins', () => {
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      imports: [ FormsModule ],
+      imports: [FormsModule],
       declarations: [
         HistogramComponent, HistogramRangeSelectorLineComponent,
         TestHostComponentManyBins,
       ]
-    })
-    .compileComponents();
+    }).compileComponents();
   }));
 
   beforeEach(() => {
