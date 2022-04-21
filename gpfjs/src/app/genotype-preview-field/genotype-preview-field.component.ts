@@ -7,41 +7,41 @@ import { sprintf } from 'sprintf-js';
   styleUrls: ['./genotype-preview-field.component.css']
 })
 export class GenotypePreviewFieldComponent implements OnInit, OnChanges {
-  @Input() value: any;
-  @Input() field: string;
-  @Input() format: string;
-  @Input() genome: string;
+  @Input() public value;
+  @Input() public field: string;
+  @Input() public format: string;
+  @Input() public genome: string;
 
-  formattedValue: string;
+  public formattedValue: string;
   public UCSCLink: string;
 
   constructor() { }
 
-  ngOnInit(): void {
+  public ngOnInit(): void {
     this.UCSCLink = this.getUCSCLink();
   }
 
-  ngOnChanges() {
+  public ngOnChanges(): void {
     this.formattedValue = this.formatValue();
   }
 
-  formatValue() {
-      if (this.value) {
-        if (this.format) {
-          if (this.value.constructor === Array) {
-            return this.value.map(x => x === "-" ? "-" : sprintf(this.format, x));
-          }
-          if (typeof this.value === 'string') {
-            return this.value;
-          }
-          return sprintf(this.format, this.value);
+  public formatValue() {
+    if (this.value) {
+      if (this.format) {
+        if (this.value.constructor === Array) {
+          return this.value.map(x => x === "-" ? "-" : sprintf(this.format, x));
         }
-        return this.value;
+        if (typeof this.value === 'string') {
+          return this.value;
+        }
+        return sprintf(this.format, this.value);
       }
-      return '';
+      return this.value;
+    }
+    return '';
   }
 
-  getUCSCLink(): string {
+  public getUCSCLink(): string {
     let link: string;
     if (this.genome === 'hg19') {
       link = `http://genome.ucsc.edu/cgi-bin/hgTracks?db=hg19&position=chr${this.value}`;

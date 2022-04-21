@@ -22,8 +22,7 @@ describe('GenotypePreviewFieldComponent', () => {
       ],
       providers: [DatasetsService, ConfigService, UsersService],
       imports: [HttpClientTestingModule, RouterTestingModule]
-    })
-    .compileComponents();
+    }).compileComponents();
   }));
 
   beforeEach(() => {
