@@ -1,31 +1,25 @@
-import { Component, OnInit, Input } from '@angular/core';
+import { Component, Input } from '@angular/core';
 import { PhenoToolResult } from '../pheno-tool/pheno-tool-results';
 
 @Component({
   selector: '[gpf-pheno-tool-results-chart-per-result]',
   templateUrl: './pheno-tool-results-chart-per-result.component.html',
 })
-export class PhenoToolResultsChartPerResultComponent implements OnInit {
-  @Input() results: PhenoToolResult;
-  @Input() yScale: d3.ScaleLinear<number, number>;
-  @Input() color: string;
-  @Input() fillColor: string;
+export class PhenoToolResultsChartPerResultComponent {
+  @Input() public results: PhenoToolResult;
+  @Input() public yScale: d3.ScaleLinear<number, number>;
+  @Input() public color: string;
+  @Input() public fillColor: string;
 
-  constructor() { }
-
-  ngOnInit() {
-  }
-
-  get startY() {
+  public get startY(): number {
     return this.yScale(this.results.rangeStart);
   }
 
-  get endY() {
+  public get endY(): number {
     return this.yScale(this.results.rangeEnd);
   }
 
-  get centerY() {
+  public get centerY(): number {
     return (this.endY + this.startY) / 2;
   }
-
 }

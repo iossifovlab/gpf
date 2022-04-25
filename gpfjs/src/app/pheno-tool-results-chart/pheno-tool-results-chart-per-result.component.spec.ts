@@ -1,5 +1,4 @@
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
-
 import { PhenoToolResultsChartPerResultComponent } from './pheno-tool-results-chart-per-result.component';
 
 describe('PhenoToolResultsChartPerResultComponent', () => {
@@ -9,8 +8,7 @@ describe('PhenoToolResultsChartPerResultComponent', () => {
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [PhenoToolResultsChartPerResultComponent]
-    })
-    .compileComponents();
+    }).compileComponents();
   }));
 
   beforeEach(() => {
