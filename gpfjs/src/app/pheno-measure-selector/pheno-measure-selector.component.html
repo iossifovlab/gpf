@@ -1,5 +1,6 @@
 <div ngbDropdown class="input-group">
-  <input ngbDropdownAnchor
+  <input
+    ngbDropdownAnchor
     #searchBox
     id="search-box"
     placeholder="Select or start typing to search"
@@ -9,10 +10,12 @@
     (keyup)="openDropdown(); searchBoxChange()"
     (click)="clear(); openDropdown(); searchBoxChange()"
     (keydown.escape)="closeDropdown()"
-   style="min-width: 450px">
+    style="min-width: 450px" />
   <div ngbDropdownMenu style="z-index: 3; min-width: 450px; max-height: 200px; overflow-y: scroll">
-    <button *ngFor="let measure of filteredMeasures"
-      class="dropdown-item" type="button"
+    <button
+      *ngFor="let measure of filteredMeasures"
+      class="dropdown-item"
+      type="button"
       (click)="selectMeasure(measure)"
       (keydown.enter)="selectMeasure(measure)">
       <span innerHtml="{{ measure.name | boldMatching: searchString }}"></span>
