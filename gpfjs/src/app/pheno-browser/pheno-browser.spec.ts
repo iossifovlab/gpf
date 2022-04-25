@@ -87,10 +87,10 @@ describe('pheno measures', () => {
 
   phenoMeasure = PhenoMeasure.addBasePath(phenoMeasure, base_path);
 
-  let phenoMeasures = PhenoMeasures.fromJson({
-    'base_image_url': base_path,
-    'measures': [fakeJsonMeasure],
-    'has_descriptions': true,
+  const phenoMeasures = PhenoMeasures.fromJson({
+    base_image_url: base_path,
+    measures: [fakeJsonMeasure],
+    has_descriptions: true,
   });
 
   it('should be creatable from a given json', () => {

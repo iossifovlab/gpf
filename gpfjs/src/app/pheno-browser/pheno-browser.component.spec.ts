@@ -27,51 +27,49 @@ import { Observable, of } from 'rxjs';
 import { ResizeService } from '../table/resize.service';
 import { By } from '@angular/platform-browser';
 
-let fakeJsonMeasurei1 = JSON.parse(JSON.stringify(fakeJsonMeasureOneRegression));
+const fakeJsonMeasurei1 = JSON.parse(JSON.stringify(fakeJsonMeasureOneRegression));
 fakeJsonMeasurei1.instrument_name = 'i1';
 fakeJsonMeasurei1.measure_id = 'i1.test_measure';
 fakeJsonMeasurei1.measure_name = 'test_measure';
 fakeJsonMeasurei1.regressions[0].measure_id = 'i1.test_measure';
 
 class MockPhenoBrowserService {
-  getInstruments(): Observable<PhenoInstruments> {
+  public getInstruments(): Observable<PhenoInstruments> {
     return of(new PhenoInstruments('i1', ['i1', 'i2', 'i3']));
   }
 
-  getMeasures(): Observable<PhenoMeasure> {
-    let measures = PhenoMeasure.fromJson(fakeJsonMeasurei1);
+  public getMeasures(): Observable<PhenoMeasure> {
+    const measures = PhenoMeasure.fromJson(fakeJsonMeasurei1);
     return of(measures);
   }
 
-  getMeasuresInfo(): Observable<PhenoMeasures> {
-    let measuresInfo = PhenoMeasures.fromJson({'base_image_url': 'base', 'has_descriptions': true, 'regression_names': {'age': 'age'}});
+  public getMeasuresInfo(): Observable<PhenoMeasures> {
+    const measuresInfo = PhenoMeasures.fromJson(
+      {base_image_url: 'base', has_descriptions: true, regression_names: {age: 'age'}}
+    );
     return of(measuresInfo);
   }
 
-  getDownloadLink(instrument: PhenoInstrument, datasetId: string) {
+  public getDownloadLink(instrument: PhenoInstrument, datasetId: string): string {
     return `${environment.apiPath}pheno_browser/download`
            + `?dataset_id=${datasetId}&instrument=${instrument}`;
   }
 }
 
 class MockDatasetsService {
-  getSelectedDataset = function() {
-    return { accessRights: true, id: 'testDatasetId' };
-  };
-  getDatasetsLoadedObservable = function() {
-    return of();
-  };
+  public getSelectedDataset = (): object => ({accessRights: true, id: 'testDatasetId'});
+  public getDatasetsLoadedObservable = (): Observable<void> => of();
 }
 
 class MockActivatedRoute {
-  params = {dataset: 'testDatasetId', get: () => { return '' }};
-  parent = {params: of(this.params)};
+  public params = {dataset: 'testDatasetId', get: (): string => ''};
+  public parent = {params: of(this.params)};
 
-  queryParamMap = of(this.params);
+  public queryParamMap = of(this.params);
 }
 
 class MockRouter {
-  createUrlTree(commands: any[], navigationExtras: any) {
+  public createUrlTree(commands: any[], navigationExtras: any) {
     return `${navigationExtras.queryParams.instrument}/${navigationExtras.queryParams.search}`;
   }
 }
@@ -80,7 +78,6 @@ function setQuery(fixture: ComponentFixture<PhenoBrowserComponent>, instrument: 
   const selectElem = fixture.nativeElement.querySelector('select');
   const searchElem = fixture.nativeElement.querySelector('input');
   const selectedOptionElem = fixture.debugElement.queryAll(By.css('option'))[instrument];
-
   selectElem.value = selectedOptionElem.nativeElement.value;
   selectElem.dispatchEvent(new Event('change'));
   searchElem.value = search;
@@ -93,18 +90,18 @@ describe('PhenoBrowserComponent', () => {
   let fixture: ComponentFixture<PhenoBrowserComponent>;
   let router;
   let location: Location;
-  let activatedRoute = new MockActivatedRoute();
+  const activatedRoute = new MockActivatedRoute();
   const phenoBrowserServiceMock = new MockPhenoBrowserService();
   const datasetServiceMock = new MockDatasetsService();
 
   let locationSpy;
   const resizeSpy = {
-    'addResizeEventListener': jest.fn()
+    addResizeEventListener: jest.fn()
   };
 
   beforeEach(waitForAsync(() => {
     locationSpy = {
-      'replaceState': jest.fn()
+      replaceState: jest.fn()
     };
 
     TestBed.configureTestingModule({
@@ -145,18 +142,16 @@ describe('PhenoBrowserComponent', () => {
 
   it('should list all instruments', waitForAsync(() => {
     const expectedInstruments = ['All instruments', 'i1', 'i2', 'i3'];
-    const selectElem = fixture.nativeElement.querySelector('select');
     const selectElemOptions = fixture.debugElement.queryAll(By.css('option'));
 
-    let receivedInstruments = [];
-    for (let option of selectElemOptions) {
+    const receivedInstruments = [];
+    for (const option of selectElemOptions) {
       receivedInstruments.push(option.nativeElement.textContent);
     }
     expect(receivedInstruments).toEqual(expect.arrayContaining(expectedInstruments));
   }));
 
   it('should set the selected instrument to all instruments by default', (done) => {
-    const selectElem = fixture.nativeElement.querySelector('select');
     fixture.whenStable().then(() => {
       component.selectedInstrument$.subscribe(value => {
         expect(value).toEqual(''),
@@ -182,7 +177,7 @@ describe('PhenoBrowserComponent', () => {
     fixture.whenStable().then(() => {
       component.downloadLink$.subscribe(value => {
         expect(value).toEqual(expectedDownloadLink),
-        done()
+        done();
       });
     });
   });
@@ -232,8 +227,10 @@ describe('PhenoBrowserComponent', () => {
   xit('should color p values appropriately', waitForAsync(() => {
     fixture.detectChanges();
     fixture.whenStable().then(() => {
-      const lowPValueElement = fixture.debugElement.queryAll((dE) => dE.nativeElement.innerText == '1.00e-6')[0].children[0];
-      const highPValueElement = fixture.debugElement.queryAll((dE) => dE.nativeElement.innerText == '0.20')[0].children[0];
+      const lowPValueElement = fixture.debugElement.queryAll(
+        (dE) => dE.nativeElement.innerText === '1.00e-6')[0].children[0];
+      const highPValueElement = fixture.debugElement.queryAll(
+        (dE) => dE.nativeElement.innerText === '0.20')[0].children[0];
       expect(lowPValueElement.nativeElement.style.backgroundColor).toEqual('rgba(255, 0, 0, 0.8)');
       expect(highPValueElement.nativeElement.style.backgroundColor).toEqual('rgba(255, 255, 255, 0.8)');
     });

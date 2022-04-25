@@ -2,10 +2,11 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, Subject } from 'rxjs';
 import { CookieService } from 'ngx-cookie-service';
-const oboe = require('oboe');
 import { PhenoInstruments, PhenoInstrument, PhenoMeasures, PhenoMeasure } from './pheno-browser';
 import { ConfigService } from '../config/config.service';
 import { map } from 'rxjs/operators';
+
+const oboe = require('oboe');
 
 @Injectable()
 export class PhenoBrowserService {
@@ -76,9 +77,7 @@ export class PhenoBrowserService {
       console.warn('oboejs encountered a fail event while streaming');
     });
 
-    return measuresSubject.pipe(map(data => {
-        return PhenoMeasure.fromJson(data['measure']);
-    }));
+    return measuresSubject.pipe(map(data => PhenoMeasure.fromJson(data['measure'] as object)));
   }
 
   public getMeasuresInfo(datasetId: string): Observable<PhenoMeasures> {

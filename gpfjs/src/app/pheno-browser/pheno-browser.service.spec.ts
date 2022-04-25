@@ -47,7 +47,7 @@ describe('pheno browser service', () => {
 
   xit('should fetch measures by parameters', (done) => {
     // Test was very slow >5000ms and Jest failed it, so skipping for now
-    const phenoMeasuresJson = {'base_image_url': 'base', 'has_descriptions': true, 'regression_names': []};
+    const phenoMeasuresJson = {base_image_url: 'base', has_descriptions: true, regression_names: []};
     const expectedMeasure: PhenoMeasure = PhenoMeasure.fromJson(fakeJsonMeasure);
     const response = phenoMeasuresJson;
 

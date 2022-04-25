@@ -40,13 +40,8 @@ export class PhenoBrowserComponent implements OnInit {
   ) { }
 
   public ngOnInit(): void {
-    const datasetId$ = this.route.parent.params.pipe(
-      take(1),
-      map(params => <string>params['dataset'])
-    );
-
     this.route.parent.params.subscribe((params: Params) => {
-      this.selectedDatasetId = params['dataset'];
+      this.selectedDatasetId = params['dataset'] as string;
     });
 
     this.selectedDataset = this.datasetsService.getSelectedDataset();
