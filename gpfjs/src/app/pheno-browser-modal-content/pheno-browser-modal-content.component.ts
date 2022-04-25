@@ -7,7 +7,7 @@ import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
   styleUrls: ['./pheno-browser-modal-content.component.css']
 })
 export class PhenoBrowserModalContentComponent {
-  @Input() imageUrl;
+  @Input() public imageUrl;
 
-  constructor(public activeModal: NgbActiveModal) {}
+  public constructor(public activeModal: NgbActiveModal) {}
 }
