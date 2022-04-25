@@ -1,4 +1,4 @@
-import { Component, HostListener } from '@angular/core';
+import { Component, HostListener, OnInit } from '@angular/core';
 import { trigger, transition, style, animate } from '@angular/animations';
 import { environment } from '../environments/environment';
 import { BnNgIdleService } from 'bn-ng-idle';
@@ -49,20 +49,20 @@ import { AgpTableService } from './autism-gene-profiles-table/autism-gene-profil
     )
   ]
 })
-export class AppComponent {
-  showSidenav = false;
-  title = 'GPF: Genotypes and Phenotypes in Families';
+export class AppComponent implements OnInit {
+  public showSidenav = false;
+  public title = 'GPF: Genotypes and Phenotypes in Families';
   public imgPathPrefix = environment.imgPathPrefix;
-  agpConfig: AgpTableConfig;
+  public agpConfig: AgpTableConfig;
   private sessionTimeoutInSeconds = 7 * 24 * 60 * 60; // 1 week
 
   @HostListener('window:scroll')
-  onWindowScroll() {
+  public onWindowScroll(): void {
     this.hideSidenav();
   }
 
   @HostListener('document:keydown.escape')
-  onEscapeButtonPress() {
+  public onEscapeButtonPress(): void {
     this.hideSidenav();
   }
 
@@ -76,7 +76,7 @@ export class AppComponent {
     window.scrollTo(0, document.body.scrollHeight || document.documentElement.scrollHeight);
   }
 
-  constructor(
+  public constructor(
     private autismGeneProfilesService: AgpTableService,
     private bnIdle: BnNgIdleService,
     private usersService: UsersService,
@@ -85,15 +85,11 @@ export class AppComponent {
     ngbNavConfig.animation = false;
   }
 
-  ngOnInit(): void {
+  public ngOnInit(): void {
     this.bnIdle.startWatching(this.sessionTimeoutInSeconds)
       .pipe(
-        switchMap(() => {
-          return this.usersService.logout();
-        }),
-        switchMap(() => {
-          return this.usersService.getUserInfo();
-        }),
+        switchMap(() => this.usersService.logout()),
+        switchMap(() => this.usersService.getUserInfo()),
       ).subscribe();
 
     this.autismGeneProfilesService.getConfig().subscribe(res => {
@@ -101,11 +97,11 @@ export class AppComponent {
     });
   }
 
-  hideSidenav() {
+  public hideSidenav(): void {
     this.showSidenav = false;
   }
 
-  toggleSidenav() {
+  public toggleSidenav(): void {
     this.showSidenav = !this.showSidenav;
   }
 }

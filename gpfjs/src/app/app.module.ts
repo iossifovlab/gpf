@@ -1,12 +1,10 @@
+/* eslint-disable max-len */
 import { BrowserModule } from '@angular/platform-browser';
 import { NgModule, ErrorHandler } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';
-
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
-
 import { AppComponent } from './app.component';
-
 import { DatasetsService } from './datasets/datasets.service';
 import { ConfigService } from './config/config.service';
 import { GenderComponent } from './gender/gender.component';
@@ -19,7 +17,6 @@ import { EffectTypesComponent } from './effect-types/effect-types.component';
 import { EffecttypesColumnComponent } from './effect-types/effect-types-column.component';
 import { GenotypePreviewTableComponent } from './genotype-preview-table/genotype-preview-table.component';
 import { QueryService } from './query/query.service';
-
 import { GpfTableModule } from './table/table.module';
 import { DatasetsComponent } from './datasets/datasets.component';
 import { PedigreeSelectorComponent } from './pedigree-selector/pedigree-selector.component';
@@ -31,32 +28,23 @@ import { GeneSymbolsState } from './gene-symbols/gene-symbols.state';
 import { RegionsFilterComponent } from './regions-filter/regions-filter.component';
 import { RegionsBlockComponent } from './regions-block/regions-block.component';
 import { PedigreeChartModule } from './pedigree-chart/pedigree-chart.module';
-
 import { HistogramModule } from './histogram/histogram.module';
 import { GeneWeightsComponent } from './gene-weights/gene-weights.component';
 import { GeneWeightsService } from './gene-weights/gene-weights.service';
 import { GeneWeightsState } from './gene-weights/gene-weights.state';
-
 import { GeneSetsComponent } from './gene-sets/gene-sets.component';
 import { GeneSetsState } from './gene-sets/gene-sets.state';
 import { GeneSetsService } from './gene-sets/gene-sets.service';
-
 import { SearchableSelectComponent } from './searchable-select/searchable-select.component';
 import { SearchableSelectTemplateDirective } from './searchable-select/searchable-select-template.directive';
-
 import { UsersComponent } from './users/users.component';
 import { UsersService } from './users/users.service';
-
 import { BoldMatchingPipe } from './utils/bold-matching.pipe';
 import { MinValidatorDirective, MaxValidatorDirective } from './utils/min-max.validator';
-
 import { StudyTypesComponent } from './study-types/study-types.component';
 import { StudyTypesState } from './study-types/study-types.state';
-
 import { CookieService} from 'ngx-cookie-service';
-
 import { GenotypeBrowserComponent } from './genotype-browser/genotype-browser.component';
-
 import { EnrichmentToolComponent } from './enrichment-tool/enrichment-tool.component';
 import { EnrichmentModelsBlockComponent } from './enrichment-models-block/enrichment-models-block.component';
 import { EnrichmentModelsComponent } from './enrichment-models/enrichment-models.component';
@@ -65,14 +53,10 @@ import { EnrichmentModelsState } from './enrichment-models/enrichment-models.sta
 import { EnrichmentQueryService } from './enrichment-query/enrichment-query.service';
 import { EnrichmentTableComponent } from './enrichment-table/enrichment-table.component';
 import { EnrichmentTableRowComponent } from './enrichment-table/enrichment-table-row.component';
-
 import { FullscreenLoadingComponent } from './fullscreen-loading/fullscreen-loading.component';
 import { FullscreenLoadingService } from './fullscreen-loading/fullscreen-loading.service';
-
 import { EncodeUriComponentPipe } from './utils/encode-uri-component.pipe';
-
 import { RouterModule, Routes } from '@angular/router';
-
 import { PersonFiltersComponent } from './person-filters/person-filters.component';
 import { PersonFiltersState } from './person-filters/person-filters.state';
 import { FamilyFiltersBlockComponent } from './family-filters-block/family-filters-block.component';
@@ -82,7 +66,6 @@ import { CategoricalFilterComponent } from './categorical-filter/categorical-fil
 import { MeasuresService } from './measures/measures.service';
 import { FamilyIdsComponent } from './family-ids/family-ids.component';
 import { FamilyIdsState } from './family-ids/family-ids.state';
-
 import { NumberWithExpPipe } from './utils/number-with-exp.pipe';
 import { PhenoToolComponent } from './pheno-tool/pheno-tool.component';
 import { PhenoMeasureSelectorComponent } from './pheno-measure-selector/pheno-measure-selector.component';
@@ -94,7 +77,6 @@ import { PhenoToolResultsChartComponent } from './pheno-tool-results-chart/pheno
 import { PhenoToolResultsChartPerEffectComponent } from './pheno-tool-results-chart/pheno-tool-results-chart-per-effect.component';
 import { PhenoToolResultsChartPerResultComponent } from './pheno-tool-results-chart/pheno-tool-results-chart-per-result.component';
 import { PhenoToolEffectTypesComponent } from './pheno-tool-effect-types/pheno-tool-effect-types.component';
-
 import { RegistrationComponent } from './registration/registration.component';
 import { ForgotPasswordComponent } from './forgot-password/forgot-password.component';
 import { PhenoBrowserComponent } from './pheno-browser/pheno-browser.component';
@@ -102,19 +84,15 @@ import { PhenoBrowserService } from './pheno-browser/pheno-browser.service';
 import { ResetPasswordComponent } from './reset-password/reset-password.component';
 import { PhenoBrowserModalContentComponent } from './pheno-browser-modal-content/pheno-browser-modal-content.component';
 import { PhenoBrowserTableComponent } from './pheno-browser-table/pheno-browser-table.component';
-
 import { PValueIntensityPipe } from './utils/p-value-intensity.pipe';
-
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { PeopleCounterRowPipe, VariantReportsComponent } from './variant-reports/variant-reports.component';
 import { VariantReportsService } from './variant-reports/variant-reports.service';
 import { DatasetDescriptionComponent } from './dataset-description/dataset-description.component';
-
 import { GenomicScoresComponent } from './genomic-scores/genomic-scores.component';
 import { GenomicScoresBlockComponent } from './genomic-scores-block/genomic-scores-block.component';
 import { GenomicScoresBlockState } from './genomic-scores-block/genomic-scores-block.state';
 import { GenomicScoresBlockService } from './genomic-scores-block/genomic-scores-block.service';
-
 import { MarkdownModule } from 'ngx-markdown';
 import { UserManagementComponent } from './user-management/user-management.component';
 import { UserInfoPipe } from './users/user-info.pipe';
@@ -123,7 +101,6 @@ import { GroupsTableComponent } from './groups-table/groups-table.component';
 import { UserEditComponent } from './user-edit/user-edit.component';
 import { ManagementComponent } from './management/management.component';
 import { UsersGroupsService } from './users-groups/users-groups.service';
-
 import { ConfirmationPopoverModule } from 'angular-confirmation-popover';
 import { UserCreateComponent } from './user-create/user-create.component';
 import { UserGroupsSelectorComponent } from './user-groups-selector/user-groups-selector.component';
@@ -403,14 +380,18 @@ const appRoutes: Routes = [
       confirmButtonType: 'danger'
     }),
     NgMultiSelectDropDownModule.forRoot(),
-    NgxsModule.forRoot([
-      VarianttypesState, EffecttypesState, GenderState,
-      InheritancetypesState, PersonIdsState, PresentInChildState, PresentInParentState,
-      GeneSymbolsState, FamilyIdsState, RegionsFilterState, StudyTypesState, GeneSetsState,
-      GeneWeightsState, EnrichmentModelsState, PedigreeSelectorState, FamilyTypeFilterState,
-      StudyFiltersBlockState, PersonFiltersState, GenomicScoresBlockState, PhenoToolMeasureState,
-      UniqueFamilyVariantsFilterState, ErrorsState],
-      {compatibility: { strictContentSecurityPolicy: true }}
+    NgxsModule.forRoot(
+      [
+        VarianttypesState, EffecttypesState, GenderState,
+        InheritancetypesState, PersonIdsState, PresentInChildState, PresentInParentState,
+        GeneSymbolsState, FamilyIdsState, RegionsFilterState, StudyTypesState, GeneSetsState,
+        GeneWeightsState, EnrichmentModelsState, PedigreeSelectorState, FamilyTypeFilterState,
+        StudyFiltersBlockState, PersonFiltersState, GenomicScoresBlockState, PhenoToolMeasureState,
+        UniqueFamilyVariantsFilterState, ErrorsState
+      ],
+      {
+        compatibility: { strictContentSecurityPolicy: true }
+      }
     ),
     NgxsResetPluginModule.forRoot(),
     DragDropModule,

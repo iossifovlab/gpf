@@ -42,7 +42,7 @@
           (click)="onSortClick(child)"
           [class.clickable]="child.sortable"
           style="display: table-cell; vertical-align: middle; text-align: right">
-          <ng-template *ngIf="child.contentTemplateRef" [ngTemplateOutlet]="child.contentTemplateRef"> </ng-template>
+          <ng-template *ngIf="child.contentTemplateRef" [ngTemplateOutlet]="child.contentTemplateRef"></ng-template>
           <span *ngIf="!child.contentTemplateRef">{{ child.caption }}</span>
         </div>
         <div

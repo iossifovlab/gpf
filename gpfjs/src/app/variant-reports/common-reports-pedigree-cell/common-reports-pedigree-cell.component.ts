@@ -1,4 +1,4 @@
-import { Component, OnInit, Input } from '@angular/core';
+import { Component, Input } from '@angular/core';
 import { PedigreeCounter } from '../variant-reports';
 
 @Component({
@@ -6,12 +6,6 @@ import { PedigreeCounter } from '../variant-reports';
   templateUrl: './common-reports-pedigree-cell.component.html',
   styleUrls: ['./common-reports-pedigree-cell.component.css']
 })
-export class CommonReportsPedigreeCellComponent implements OnInit {
-  @Input() pedigree: PedigreeCounter;
-
-  constructor() { }
-
-  ngOnInit(): void {
-  }
-
+export class CommonReportsPedigreeCellComponent {
+  @Input() public pedigree: PedigreeCounter;
 }

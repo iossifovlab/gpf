@@ -11,15 +11,17 @@ import { StatefulComponent } from '../common/stateful-component';
   styleUrls: ['./variant-types.component.css'],
 })
 export class VariantTypesComponent extends StatefulComponent implements OnChanges {
+  @Input() public variantTypes: Set<string> = new Set([]);
 
-  @Input() variantTypes: Set<string> = new Set([]);
-  @Input() @Validate(SetNotEmpty, {message: 'Select at least one.'}) selectedVariantTypes: Set<string> = new Set();
+  @Input()
+  @Validate(SetNotEmpty, {message: 'Select at least one.'})
+  public selectedVariantTypes: Set<string> = new Set();
 
-  constructor(protected store: Store) {
+  public constructor(protected store: Store) {
     super(store, VarianttypesState, 'variantTypes');
   }
 
-  ngOnChanges(): void {
+  public ngOnChanges(): void {
     this.store.selectOnce(VarianttypesState).subscribe(state => {
       // handle selected values input and/or restore state
       if (state.variantTypes.length) {
@@ -31,7 +33,7 @@ export class VariantTypesComponent extends StatefulComponent implements OnChange
     });
   }
 
-  updateVariantTypes(newValues: Set<string>): void {
+  public updateVariantTypes(newValues: Set<string>): void {
     this.selectedVariantTypes = newValues;
     this.store.dispatch(new SetVariantTypes(newValues));
   }

@@ -1,6 +1,6 @@
 import { UndirectedGraph, Graph, getOtherVertex, equalEdges, Edge, Vertex } from '../utils/undirected-graph';
 
-import { hasIntersection, intersection, equal, isSubset } from '../utils/sets-helper';
+import { equal } from '../utils/sets-helper';
 
 export class Interval {
   public constructor(

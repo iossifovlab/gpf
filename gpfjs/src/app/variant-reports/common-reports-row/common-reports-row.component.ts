@@ -1,6 +1,11 @@
-import { Component, OnInit, AfterViewInit, Input, ComponentFactoryResolver, ViewChild, ViewChildren, ComponentFactory, ViewContainerRef, QueryList } from '@angular/core';
+import {
+  Component, OnInit, AfterViewInit, Input, ComponentFactoryResolver,
+  ViewChildren, ComponentFactory, ViewContainerRef, QueryList
+} from '@angular/core';
 import { PedigreeCounter } from '../variant-reports';
-import { CommonReportsPedigreeCellComponent } from '../common-reports-pedigree-cell/common-reports-pedigree-cell.component';
+import {
+  CommonReportsPedigreeCellComponent
+} from '../common-reports-pedigree-cell/common-reports-pedigree-cell.component';
 
 @Component({
   selector: '[gpf-common-reports-row]',
@@ -8,28 +13,29 @@ import { CommonReportsPedigreeCellComponent } from '../common-reports-pedigree-c
   styleUrls: ['./common-reports-row.component.css']
 })
 export class CommonReportsRowComponent implements OnInit, AfterViewInit {
-  @Input() pedigreeGroup: PedigreeCounter[];
-
-  @ViewChildren("gpfPedigreeHost", {read: ViewContainerRef}) gpfPedigreeHost: QueryList<ViewContainerRef>;
+  @Input() public pedigreeGroup: PedigreeCounter[];
+  @ViewChildren('gpfPedigreeHost', {read: ViewContainerRef}) public gpfPedigreeHost: QueryList<ViewContainerRef>;
 
   private componentFactory: ComponentFactory<CommonReportsPedigreeCellComponent>;
 
-  constructor(private componentFactoryResolver: ComponentFactoryResolver) { }
+  public constructor(
+    private componentFactoryResolver: ComponentFactoryResolver
+  ) { }
 
-  ngOnInit(): void {
+  public ngOnInit(): void {
     this.componentFactory = this.componentFactoryResolver.resolveComponentFactory(CommonReportsPedigreeCellComponent);
   }
 
-  ngAfterViewInit() {
+  public ngAfterViewInit(): void {
     const hosts = this.gpfPedigreeHost.toArray();
-    for(let i = 0; i < this.pedigreeGroup.length; i++) {
+    for (let i = 0; i < this.pedigreeGroup.length; i++) {
       setTimeout(() => {
         this.createPedigree(hosts[i], this.pedigreeGroup[i]);
       }, 1);
     }
   }
 
-  async createPedigree(viewContainer: ViewContainerRef, pedigree: PedigreeCounter): Promise<any> {
+  private createPedigree(viewContainer: ViewContainerRef, pedigree: PedigreeCounter): void {
     const component = viewContainer.createComponent<CommonReportsPedigreeCellComponent>(this.componentFactory);
     component.instance.pedigree = pedigree;
   }

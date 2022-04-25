@@ -24,15 +24,12 @@ export function getOtherVertex<T>(vertex: Vertex<T>, edge: Edge<T>) {
 }
 
 export function equalEdges<T>(edge1: Edge<T>, edge2: Edge<T>) {
-  return (edge1[0] === edge2[0] && edge1[1] === edge2[1]) ||
-         (edge1[0] === edge2[1] && edge1[1] === edge2[0]);
+  return (edge1[0] === edge2[0] && edge1[1] === edge2[1]) || (edge1[0] === edge2[1] && edge1[1] === edge2[0]);
 }
 
 export class UndirectedGraph<T> implements Graph<T> {
-
   private vertices = new Array<T>();
   private edges = new Array<Array<Edge<T>>>();
-
 
   addVertex(vertex: Vertex<T>, edges: Array<Edge<T>> = []) {
     this.checkCorrectEdges(vertex, edges);
@@ -115,8 +112,8 @@ export class UndirectedGraph<T> implements Graph<T> {
     for (const edge of edges) {
       const otherVertex: Vertex<T> = getOtherVertex(vertex, edge);
 
-      if (otherVertex == null) {
-        throw new Error(`Edge (${edge[0]}, ${edge[1]}) does not have vertex ${vertex}`);
+      if (otherVertex === null) {
+        throw new Error(`Edge (${ edge[0] }, ${ edge[1] }) does not have vertex ${ vertex }`);
       }
 
       this.checkVertex(otherVertex);
@@ -125,7 +122,7 @@ export class UndirectedGraph<T> implements Graph<T> {
 
   private checkVertex(vertex: Vertex<T>) {
     if (!this.hasVertex(vertex)) {
-      throw new Error(`Graph does not have vertex ${vertex}`);
+      throw new Error(`Graph does not have vertex ${ vertex }`);
     }
   }
 }

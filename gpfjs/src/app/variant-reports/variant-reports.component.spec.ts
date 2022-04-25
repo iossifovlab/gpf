@@ -11,41 +11,41 @@ import { ResizeService } from 'app/table/resize.service';
 import { DenovoReport, PedigreeCounter } from './variant-reports';
 
 class MockDatasetsService {
-  getSelectedDataset() {
+  public getSelectedDataset() {
     return {accessRights: true, commonReport: {enabled: true}};
   }
-  getSelectedDatasetObservable() {
+  public getSelectedDatasetObservable() {
     return of({accessRights: true, commonReport: {enabled: true}});
   }
-  getDatasetsLoadedObservable = function() {
+  public getDatasetsLoadedObservable = function() {
     return of();
   };
-  getDataset(): Observable<any> {
+  public getDataset(): Observable<any> {
     return of({accessRights: true, commonReport: {enabled: true}});
   }
 }
 
 class MockDatasetsDenovoService {
-  getSelectedDataset() {
-    return {id: "Denovo", accessRights: true, commonReport: {enabled: true}};
+  public getSelectedDataset() {
+    return {id: 'Denovo', accessRights: true, commonReport: {enabled: true}};
   }
-  getSelectedDatasetObservable() {
-    return of({id: "Denovo", accessRights: true, commonReport: {enabled: true}});
+  public getSelectedDatasetObservable() {
+    return of({id: 'Denovo', accessRights: true, commonReport: {enabled: true}});
   }
-  getDatasetsLoadedObservable = function() {
+  public getDatasetsLoadedObservable = function() {
     return of();
   };
-  getDataset(): Observable<any> {
-    return of({id: "Denovo", accessRights: true, commonReport: {enabled: true}});
+  public getDataset(): Observable<any> {
+    return of({id: 'Denovo', accessRights: true, commonReport: {enabled: true}});
   }
 }
 
 class ResizeServiceMock {
-  addResizeEventListener(): null{
-    return null
+  public addResizeEventListener(): null {
+    return null;
   }
-  removeResizeEventListener(): null{
-    return null
+  public removeResizeEventListener(): null {
+    return null;
   }
 }
 
@@ -56,7 +56,7 @@ class MockActivatedRoute {
   public parent: object;
   public queryParamMap: Observable<object>;
 
-  constructor(datasetId: string = 'test_dataset') {
+  public constructor(datasetId: string = 'test_dataset') {
     this.datasetId = datasetId;
     this.params = {dataset: this.datasetId, get: () => { return '' }};
     this.parent = {params: of(this.params)};
@@ -69,11 +69,11 @@ class VariantReportsServiceMock {
   private downloadUrl = 'common_reports/families_data/';
   private datasetId: string;
 
-  constructor(datasetId: string = 'test_dataset') {
-    this.datasetId = datasetId
+  public constructor(datasetId: string = 'test_dataset') {
+    this.datasetId = datasetId;
   }
 
-  getVariantReport(datasetId: string): Observable<any> {
+  public getVariantReport(datasetId: string): Observable<any> {
     const pedigreeCounter: PedigreeCounter | null = null;
     const denovoReport: DenovoReport | null = null;
 
@@ -214,7 +214,7 @@ class VariantReportsServiceMock {
       denovoReport: denovoReport
     };
 
-    if(datasetId === 'Denovo') {
+    if (datasetId === 'Denovo') {
       variantReport.denovoReport = {
         tables: [
           {
@@ -262,12 +262,12 @@ class VariantReportsServiceMock {
             effectTypes: ['Missense', 'Synonymous'],
           }
         ]
-      }
+      };
     }
     return of(variantReport);
   }
 
-  getDownloadLink(): string {
+  public getDownloadLink(): string {
     return '';
   }
 }
@@ -281,8 +281,8 @@ describe('VariantReportsComponent', () => {
     const activatedRouteMock = new MockActivatedRoute();
     const datasetsServiceMock = new MockDatasetsService();
     TestBed.configureTestingModule({
-      declarations: [ VariantReportsComponent, PeopleCounterRowPipe ],
-      imports: [ PedigreeChartModule, FormsModule ],
+      declarations: [VariantReportsComponent, PeopleCounterRowPipe],
+      imports: [PedigreeChartModule, FormsModule],
       providers: [
         { provide: VariantReportsService, useValue: variantReportsServiceMock },
         { provide: ActivatedRoute, useValue: activatedRouteMock },
@@ -291,8 +291,7 @@ describe('VariantReportsComponent', () => {
         { provide: PerfectlyDrawablePedigreeService },
         { provide: ResizeService, useClass: ResizeServiceMock }
       ]
-    })
-    .compileComponents();
+    }).compileComponents();
 
     fixture = TestBed.createComponent(VariantReportsComponent);
     component = fixture.componentInstance;
@@ -323,8 +322,8 @@ describe('VariantReportsComponent Denovo', () => {
     const activatedRouteMock = new MockActivatedRoute('Denovo');
     const datasetsServiceMock = new MockDatasetsDenovoService();
     TestBed.configureTestingModule({
-      declarations: [ VariantReportsComponent, PeopleCounterRowPipe ],
-      imports: [ PedigreeChartModule, FormsModule ],
+      declarations: [VariantReportsComponent, PeopleCounterRowPipe],
+      imports: [PedigreeChartModule, FormsModule],
       providers: [
         { provide: VariantReportsService, useValue: variantReportsServiceMock },
         { provide: ActivatedRoute, useValue: activatedRouteMock },
@@ -333,14 +332,13 @@ describe('VariantReportsComponent Denovo', () => {
         { provide: PerfectlyDrawablePedigreeService },
         { provide: ResizeService, useClass: ResizeServiceMock }
       ]
-    })
-    .compileComponents();
+    }).compileComponents();
 
     fixture = TestBed.createComponent(VariantReportsComponent);
     component = fixture.componentInstance;
 
     //Stubbing the function to reduce mock test data
-    component['chunkPedigrees'] = function(a, b) { return null; };
+    component['chunkPedigrees'] = function(a, b): null { return null; };
 
     component.ngOnInit();
     fixture.detectChanges();
@@ -355,6 +353,6 @@ describe('VariantReportsComponent Denovo', () => {
     setTimeout(() => {
       expect(component.currentDenovoReport).toBeDefined();
       done();
-    }, 0)
-  })
+    }, 0);
+  });
 });

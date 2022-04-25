@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, ElementRef, HostListener, Pipe, PipeTransform, Input, Output } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, HostListener, Pipe, PipeTransform } from '@angular/core';
 import { VariantReportsService } from './variant-reports.service';
 import {
   VariantReport, FamilyCounter, PedigreeCounter, EffectTypeTable, DeNovoData, PedigreeTable, PeopleCounter
@@ -92,7 +92,9 @@ export class VariantReportsComponent implements OnInit {
     }
 
     const viewWidth = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
-    const tableWidth = (this.currentDenovoReport.columns.length * this.denovoVariantsTableColumnWidth) + this.denovoVariantsTableColumnWidth;
+    const tableWidth =
+      (this.currentDenovoReport.columns.length * this.denovoVariantsTableColumnWidth)
+      + this.denovoVariantsTableColumnWidth;
     const offset = 75;
 
     this.denovoVariantsTableWidth = viewWidth > tableWidth ? viewWidth - offset : tableWidth;

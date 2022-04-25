@@ -96,7 +96,7 @@ label {
 
 .panel {
   padding: 20px;
-  border-top: 1px solid rgba(0, 0, 0, 12.5%);
+  border-top: 1px solid rgba(0 0 0 12.5%);
 }
 
 .btn {
@@ -189,14 +189,14 @@ label {
 
 .navbar.navbar-custom .nav-link,
 .navbar-nav.navbar-custom .nav-link {
-  color: rgba(0, 0, 0, 50%);
+  color: rgba(0 0 0 50%);
 }
 
 .navbar.navbar-custom .nav-link.active,
 .navbar-nav.navbar-custom .nav-link.active {
   background-color: #2a6395;
   color: #fff;
-  border-radius: .25rem;
+  border-radius: 0.25rem;
 }
 
 .dropdown-menu {
@@ -348,7 +348,9 @@ label {
   width: 100%;
 }
 
-.gpf-basic-table, .gpf-basic-table th, .gpf-basic-table td {
+.gpf-basic-table,
+.gpf-basic-table th,
+.gpf-basic-table td {
   border: 1px solid #dee2e6;
   text-align: center;
 }
@@ -357,7 +359,8 @@ label {
   vertical-align: bottom;
 }
 
-.gpf-basic-table th, .gpf-basic-table td {
+.gpf-basic-table th,
+.gpf-basic-table td {
   padding: 5px;
 }
 
