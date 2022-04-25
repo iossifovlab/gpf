@@ -9,10 +9,9 @@ describe('PhenoToolGenotypeBlockComponent', () => {
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      declarations: [ PhenoToolGenotypeBlockComponent ],
+      declarations: [PhenoToolGenotypeBlockComponent],
       schemas: [NO_ERRORS_SCHEMA]
-    })
-    .compileComponents();
+    }).compileComponents();
   }));
 
   beforeEach(() => {
