@@ -9,7 +9,7 @@ describe('PhenoToolService', () => {
   let service: PhenoToolService;
 
   beforeEach(() => {
-    const configMock = { 'baseUrl': 'testUrl/' };
+    const configMock = { baseUrl: 'testUrl/' };
     TestBed.configureTestingModule({
       providers: [{provide: ConfigService, useValue: configMock}, HttpClientTestingModule, PhenoToolService],
       imports: [HttpClientTestingModule],
@@ -33,10 +33,10 @@ describe('PhenoToolService', () => {
           'testUrl/pheno_tool',
           'filter',
           {
-            'headers': {
+            headers: {
               'Content-Type': 'application/json'
             },
-            'withCredentials': true
+            withCredentials: true
           }
         ]
       ]

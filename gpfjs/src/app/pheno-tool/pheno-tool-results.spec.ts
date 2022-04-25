@@ -1,4 +1,6 @@
-import { PhenoToolResult, PhenoToolResults, PhenoToolResultsPerEffect, PhenoToolResultsPerGender } from './pheno-tool-results';
+import {
+  PhenoToolResult, PhenoToolResults, PhenoToolResultsPerEffect, PhenoToolResultsPerGender
+} from './pheno-tool-results';
 
 const [
   phenoToolResultsPerGenderJson1,
@@ -37,7 +39,7 @@ const [
       count: 18,
       deviation: 19,
       mean: 20
-      }, pValue: 21
+    }, pValue: 21
   },
   {
     positive: {

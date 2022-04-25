@@ -20,14 +20,12 @@ import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { Observable, of } from 'rxjs';
 
 class PhenoToolServiceMock {
-  public getPhenoToolResults(): Observable<any> {
+  public getPhenoToolResults(): Observable<string> {
     return of('fakeValue');
   }
 }
 class MockDatasetsService {
-  getSelectedDataset = function() {
-    return { accessRights: true, id: 'testDatasetId' };
-  };
+  public getSelectedDataset = (): object => ({accessRights: true, id: 'testDatasetId'});
 }
 
 describe('PhenoToolComponent', () => {
@@ -37,7 +35,7 @@ describe('PhenoToolComponent', () => {
   const phenoToolMockService = new PhenoToolServiceMock();
 
   beforeEach(waitForAsync(() => {
-    const configMock = { 'baseUrl': 'testUrl/' };
+    const configMock = { baseUrl: 'testUrl/' };
     TestBed.configureTestingModule({
       declarations: [
         PhenoToolComponent,
@@ -71,7 +69,7 @@ describe('PhenoToolComponent', () => {
       ],
       schemas: [NO_ERRORS_SCHEMA]
     })
-    .compileComponents();
+      .compileComponents();
     store = TestBed.inject(Store);
   }));
 
@@ -102,14 +100,14 @@ describe('PhenoToolComponent', () => {
 
     expect(mockStateSelector).toEqual(
       Object({
-          genesBlockState: 'state1',
-          testGene: 'test1',
-          measureState: 'state2',
-          testMeasure: 'test2',
-          genotypeState: 'state3',
-          testGeno: 'test3',
-          familyFilterState: 'state4',
-          testFamily: 'test4'
+        genesBlockState: 'state1',
+        testGene: 'test1',
+        measureState: 'state2',
+        testMeasure: 'test2',
+        genotypeState: 'state3',
+        testGeno: 'test3',
+        familyFilterState: 'state4',
+        testFamily: 'test4'
       })
     );
   });
@@ -122,7 +120,7 @@ describe('PhenoToolComponent', () => {
 
   it('should test on download event', () => {
     const form = document.createElement('form');
-    form.onsubmit = () => {return false}; // This supresses an error from JSDOM, purely cosmetic
+    form.onsubmit = (): boolean => false; // This supresses an error from JSDOM, purely cosmetic
     const event = {target: form};
     event.target.queryData = {
       value: 'id'
