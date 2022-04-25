@@ -6,7 +6,7 @@ import { MeasuresService } from '../measures/measures.service';
 import { DatasetsService } from '../datasets/datasets.service';
 import { IsNotEmpty } from 'class-validator';
 import { Store } from '@ngxs/store';
-import { SetPhenoToolMeasure, PhenoToolMeasureState } from './pheno-tool-measure.state';
+import { SetPhenoToolMeasure, PhenoToolMeasureState, PhenoToolMeasureModel } from './pheno-tool-measure.state';
 import { StatefulComponent } from 'app/common/stateful-component';
 import { take } from 'rxjs/operators';
 import { Dataset } from 'app/datasets/datasets';
@@ -24,21 +24,21 @@ interface Regression {
   styleUrls: ['./pheno-tool-measure.component.css'],
 })
 export class PhenoToolMeasureComponent extends StatefulComponent implements OnInit {
-  @ViewChildren('checkboxes') inputs: QueryList<ElementRef>;
+  @ViewChildren('checkboxes') public inputs: QueryList<ElementRef>;
 
   @IsNotEmpty({message: 'Please select a measure.'})
-  selectedMeasure: ContinuousMeasure = null;
-  normalizeBy: Regression[] = new Array<Regression>();
+  public selectedMeasure: ContinuousMeasure = null;
+  public normalizeBy: Regression[] = new Array<Regression>();
 
-  measuresLoaded$ = new ReplaySubject<Array<ContinuousMeasure>>();
+  public measuresLoaded$ = new ReplaySubject<Array<ContinuousMeasure>>();
   @ViewChild(PhenoMeasureSelectorComponent) private measureSelectorComponent: PhenoMeasureSelectorComponent;
 
-  regressions: Object = {};
-  regressionNames: string[] = [];
+  public regressions: object = {};
+  public regressionNames: string[] = [];
 
   public dataset: Dataset;
 
-  constructor(
+  public constructor(
     protected store: Store,
     private measuresService: MeasuresService,
     private datasetsService: DatasetsService,
@@ -46,7 +46,7 @@ export class PhenoToolMeasureComponent extends StatefulComponent implements OnIn
     super(store, PhenoToolMeasureState, 'phenoToolMeasure');
   }
 
-  public ngOnInit() {
+  public ngOnInit(): void {
     super.ngOnInit();
 
     this.dataset = this.datasetsService.getSelectedDataset();
@@ -61,18 +61,18 @@ export class PhenoToolMeasureComponent extends StatefulComponent implements OnIn
     }
 
     combineLatest([this.store.selectOnce(PhenoToolMeasureState), this.measuresLoaded$]).pipe(take(1))
-      .subscribe(async ([state, measures]) => {
+      .subscribe(async([state, measures]: [PhenoToolMeasureModel, ContinuousMeasure[]]) => {
         if (state.measureId) {
           this.selectedMeasure = measures.find(m => m.name === state.measureId);
           await this.waitForSelectorComponent();
           this.measureSelectorComponent.selectMeasure(this.selectedMeasure, false);
         }
-        this.normalizeBy = state.normalizeBy.length ? state.normalizeBy : [];
+        this.normalizeBy = state.normalizeBy.length ? state.normalizeBy as Regression[] : [];
         this.updateState();
       });
   }
 
-  private async waitForSelectorComponent() {
+  private async waitForSelectorComponent(): Promise<void> {
     return new Promise<void>(resolve => {
       const timer = setInterval(() => {
         if (this.measureSelectorComponent !== undefined) {
@@ -83,11 +83,11 @@ export class PhenoToolMeasureComponent extends StatefulComponent implements OnIn
     });
   }
 
-  get measure() {
+  public get measure(): ContinuousMeasure {
     return this.selectedMeasure;
   }
 
-  set measure(value) {
+  public set measure(value) {
     this.selectedMeasure = value;
     if (this.selectedMeasure) {
       this.normalizeBy = this.normalizeBy.filter(
@@ -97,17 +97,17 @@ export class PhenoToolMeasureComponent extends StatefulComponent implements OnIn
     this.updateState();
   }
 
-  updateState() {
+  public updateState(): void {
     this.store.dispatch(new SetPhenoToolMeasure(
       this.selectedMeasure?.name, this.normalizeBy,
-    ))
+    ));
   }
 
-  measuresUpdate(measures: Array<ContinuousMeasure>) {
+  public measuresUpdate(measures: Array<ContinuousMeasure>): void {
     this.measuresLoaded$.next(measures);
   }
 
-  onNormalizeByChange(value: Regression, event): void {
+  public onNormalizeByChange(value: Regression, event): void {
     if (event.target.checked) {
       if (!this.normalizeBy.some((reg) => reg.measure_name === value.measure_name)) {
         this.normalizeBy.push(value);
@@ -120,14 +120,14 @@ export class PhenoToolMeasureComponent extends StatefulComponent implements OnIn
     this.updateState();
   }
 
-  isNormalizedBy(reg: string): boolean {
+  public isNormalizedBy(reg: string): boolean {
     return this.normalizeBy.some(norm => norm.measure_name === reg);
   }
 
   public clearCheckbox(): void {
     this.inputs.forEach(checkbox => {
       checkbox.nativeElement.checked = false;
-      checkbox.nativeElement.dispatchEvent(new Event("change"));
+      checkbox.nativeElement.dispatchEvent(new Event('change'));
     });
   }
 }
