@@ -12,10 +12,9 @@ describe('PersonIdsComponent', () => {
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      declarations: [ PersonIdsComponent, ErrorsAlertComponent ],
-      imports: [ FormsModule, NgxsModule.forRoot([PersonIdsState], {developmentMode: true})],
-    })
-    .compileComponents();
+      declarations: [PersonIdsComponent, ErrorsAlertComponent],
+      imports: [FormsModule, NgxsModule.forRoot([PersonIdsState], {developmentMode: true})],
+    }).compileComponents();
   }));
 
   beforeEach(() => {

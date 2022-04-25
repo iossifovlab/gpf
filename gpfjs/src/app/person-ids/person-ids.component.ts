@@ -6,7 +6,7 @@ import { StatefulComponent } from 'app/common/stateful-component';
 
 export class PersonIds {
   @IsNotEmpty({message: 'Please insert at least one person id.'})
-  personIds = '';
+  public personIds = '';
 }
 
 @Component({
@@ -16,14 +16,14 @@ export class PersonIds {
 })
 export class PersonIdsComponent extends StatefulComponent implements OnInit {
   @ValidateNested()
-  personIds = new PersonIds();
+  public personIds = new PersonIds();
   @ViewChild('textArea') private textArea: ElementRef;
 
-  constructor(protected store: Store) {
-    super(store, PersonIdsState, 'personIds')
+  public constructor(protected store: Store) {
+    super(store, PersonIdsState, 'personIds');
   }
 
-  ngOnInit() {
+  public ngOnInit(): void {
     super.ngOnInit();
     this.focusTextInputArea();
     this.store.selectOnce(state => state.personIdsState).subscribe(state => {
@@ -32,7 +32,7 @@ export class PersonIdsComponent extends StatefulComponent implements OnInit {
     });
   }
 
-  setPersonIds(personIds: string) {
+  public setPersonIds(personIds: string): void {
     const result = personIds
       .split(/[,\s]/)
       .filter(s => s !== '');
@@ -40,11 +40,7 @@ export class PersonIdsComponent extends StatefulComponent implements OnInit {
     this.store.dispatch(new SetPersonIds(result));
   }
 
-  /**
-  * Waits text input area element to load.
-  * @returns promise
-  */
-   private async waitForTextInputAreaToLoad(): Promise<void> {
+  private async waitForTextInputAreaToLoad(): Promise<void> {
     return new Promise<void>(resolve => {
       const timer = setInterval(() => {
         if (this.textArea !== undefined) {
@@ -55,7 +51,7 @@ export class PersonIdsComponent extends StatefulComponent implements OnInit {
     });
   }
 
-  private focusTextInputArea() {
+  private focusTextInputArea(): void {
     this.waitForTextInputAreaToLoad().then(() => {
       this.textArea.nativeElement.focus();
     });
