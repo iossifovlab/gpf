@@ -14,17 +14,17 @@ import {
   templateUrl: './pheno-tool-effect-types.component.html',
   providers: [{ provide: Store, useClass: Store }]
 })
-export class PhenoToolEffectTypesComponent extends EffectTypesComponent  {
-  phenoToolOthers: Set<string> = PHENO_TOOL_OTHERS;
-  phenoToolCNV: Set<string> = PHENO_TOOL_CNV;
-  phenoToolLGDs: Set<string> = PHENO_TOOL_LGDS;
+export class PhenoToolEffectTypesComponent extends EffectTypesComponent {
+  public phenoToolOthers: Set<string> = PHENO_TOOL_OTHERS;
+  public phenoToolCNV: Set<string> = PHENO_TOOL_CNV;
+  public phenoToolLGDs: Set<string> = PHENO_TOOL_LGDS;
 
-  constructor(store: Store) {
+  public constructor(store: Store) {
     super(store);
     this.effectTypesButtons.set('PHENO_TOOL_ALL', PHENO_TOOL_ALL);
   }
 
-  selectInitialValues() {
+  public selectInitialValues(): void {
     this.setEffectTypes(PHENO_TOOL_INITIAL_VALUES);
   }
 }
