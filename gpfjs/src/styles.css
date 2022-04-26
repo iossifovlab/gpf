@@ -96,7 +96,7 @@ label {
 
 .panel {
   padding: 20px;
-  border-top: 1px solid rgba(0 0 0 12.5%);
+  border-top: 1px solid rgba(0, 0, 0, 12.5%);
 }
 
 .btn {
@@ -189,7 +189,7 @@ label {
 
 .navbar.navbar-custom .nav-link,
 .navbar-nav.navbar-custom .nav-link {
-  color: rgba(0 0 0 50%);
+  color: rgba(0, 0, 0, 50%);
 }
 
 .navbar.navbar-custom .nav-link.active,

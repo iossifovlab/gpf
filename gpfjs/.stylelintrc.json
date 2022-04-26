@@ -3,6 +3,7 @@
     "defaultSeverity": "warning",
     "rules": {
         "alpha-value-notation": "percentage",
+        "color-function-notation": "legacy",
         "selector-pseudo-element-no-unknown": [true, {"ignorePseudoElements": ["ng-deep"]}]
     }
 }
