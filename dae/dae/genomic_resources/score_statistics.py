@@ -179,9 +179,9 @@ class HistogramBuilder:
             actual_md5 = metadata.get(score_id, {}).get("md5", None)
             expected_md5 = hashes.get(score_id, None)
             if actual_md5 == expected_md5:
-                logger.info(f"Skipping calculation of score "
-                            f"{hist_conf['score']} as it's already calculated"
-                            )
+                logger.info("Skipping calculation of score "
+                            "%s as it's already calculated",
+                            hist_conf['score'])
                 loaded_hists[score_id] = hists[score_id]
             else:
                 configs_to_calculate.append(hist_conf)
@@ -234,7 +234,9 @@ class HistogramBuilder:
         chromosomes = score.get_all_chromosomes()
         for chrom in chromosomes:
             chrom_len = score.table.get_chromosome_length(chrom)
-            logger.debug(f"Chromosome '{chrom}' has length {chrom_len}")
+            logger.debug(
+                "Chromosome '%s' has length %s",
+                chrom, chrom_len)
             i = 1
             while i < chrom_len - region_size:
                 yield chrom, i, i + region_size - 1
@@ -268,7 +270,7 @@ class HistogramBuilder:
         return res
 
     def _score_min_max(self, client, score, score_ids, region_size):
-        logger.info(f"Calculating min max for {score_ids}")
+        logger.info("Calculating min max for %s", score_ids)
 
         min_maxes = []
         futures = []
@@ -288,8 +290,9 @@ class HistogramBuilder:
                 else:
                     res[scr_id] = [i_min, i_max]
 
-        logger.info(f"Done calculating min/max for {score_ids}.\
- res={res}")
+        logger.info(
+            "Done calculating min/max for %s. "
+            "res=%s", score_ids, res)
         return res
 
     def _min_max_for_chrom(self, chrom, score_ids, start, end):
@@ -411,63 +414,64 @@ def _load_histograms(repo, resource_id, version_constraint,
             if 'max' not in hist_config:
                 hist_config['max'] = metadata['calculated_max']
             hist = Histogram.from_config(hist_config)
-            hist.bars = df["bars"].to_numpy()
+            hist.bars = df["bars"].to_numpy()[:-1]
+
             hists[score] = hist
             metadatas[score] = metadata
     return hists, metadatas
 
 
-class ScoreStatistic:
-    def to_dict(self):
-        raise NotImplementedError()
+# class ScoreStatistic:
+#     def to_dict(self):
+#         raise NotImplementedError()
 
-    @classmethod
-    def from_dict(cls, d):
-        raise NotImplementedError()
+#     # @classmethod
+#     # def from_dict(cls, d):
+#     #     raise NotImplementedError()
 
-    @classmethod
-    def from_yaml(cls, filepath):
-        with open(filepath, "r") as file:
-            try:
-                content = yaml.safe_load(file)
-                return cls.from_dict(content)
-            except yaml.YAMLError as exc:
-                logger.error(exc)
-                return None
-
-
-class PositionScoreStatistic(ScoreStatistic):
-    def __init__(self, histogram):
-        self.min_value = None
-        self.max_value = None
-        self.histogram = histogram
-        self.positions_covered = dict()
-        self.positions_covered_all = None
-        self.missing_count = None
-
-    def to_dict(self):
-        return {
-            "min_value": self.min_value,
-            "max_value": self.max_value,
-            "histogram": self.histogram.to_dict(),
-            "positions_covered": self.positions_covered,
-            "positions_covered_all": self.positions_covered_all,
-            "missing_count": self.missing_count
-        }
-
-    @classmethod
-    def from_dict(cls, d):
-        return PositionScoreStatistic(
-            d["min_value"], d["max_value"],
-            Histogram.from_dict(d["histogram"]),
-            d["positions_covered"], d["positions_covered_all"],
-            d["missing_count"]
-        )
+#     # @classmethod
+#     # def from_yaml(cls, filepath):
+#     #     with open(filepath, "r") as file:
+#     #         try:
+#     #             content = yaml.safe_load(file)
+#     #             return cls.from_dict(content)
+#     #         except yaml.YAMLError as exc:
+#     #             logger.error(exc)
+#     #             return None
 
 
-class NPScoreStatistic(ScoreStatistic):
-    pass
+# class PositionScoreStatistic(ScoreStatistic):
+#     def __init__(self, histogram):
+#         self.min_value = None
+#         self.max_value = None
+#         self.histogram = histogram
+#         self.positions_covered = dict()
+#         self.positions_covered_all = None
+#         self.missing_count = None
+
+#     def to_dict(self):
+#         return {
+#             "min_value": self.min_value,
+#             "max_value": self.max_value,
+#             "histogram": self.histogram.to_dict(),
+#             "positions_covered": self.positions_covered,
+#             "positions_covered_all": self.positions_covered_all,
+#             "missing_count": self.missing_count
+#         }
+
+#     # @classmethod
+#     # def from_dict(cls, d):
+#     #     return PositionScoreStatistic(
+#     #         d["min_value"], d["max_value"],
+#     #         Histogram.from_dict(d["histogram"]),
+#     #         d["positions_covered"], d["positions_covered_all"],
+#     #         d["missing_count"]
+#     #     )
 
 
-class AlleleScoreStatistic(ScoreStatistic):
-    pass
+# class NPScoreStatistic(ScoreStatistic):
+#     pass
+
+
+# class AlleleScoreStatistic(ScoreStatistic):
+#     pass
