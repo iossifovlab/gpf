@@ -268,6 +268,22 @@ class ParquetPartitionDescriptor(PartitionDescriptor):
     def family_filename(self, family_allele):
         filepath = os.path.join(self.output, "family") 
         filename = "family"
+         
+        summary_allele = family_allele
+
+        current_bin = self._evaluate_region_bin(summary_allele)
+        filepath = os.path.join(filepath, f"region_bin={current_bin}")
+        filename += f"_region_bin_{current_bin}"
+
+        if self._rare_boundary > 0:
+            current_bin = self._evaluate_frequency_bin(summary_allele)
+            filepath = os.path.join(filepath, f"frequency_bin={current_bin}")
+            filename += f"_frequency_bin_{current_bin}"
+
+        if len(self._coding_effect_types) > 0:
+            current_bin = self._evaluate_coding_bin(summary_allele)
+            filepath = os.path.join(filepath, f"coding_bin={current_bin}")
+            filename += f"_coding_bin_{current_bin}"
 
         if self._family_bin_size > 0:
             current_bin = self._evaluate_family_bin(family_allele)

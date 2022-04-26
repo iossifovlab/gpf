@@ -58,14 +58,13 @@ class ImpalaVariants:
         assert gene_models is not None
         self.gene_models = gene_models
 
-        self.table_properties = dict({
-            "region_length": 3000000000,
-            "chromosomes": list(map(str, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13,
-                                     14, 15, 16, 17, 18, 19, 20, 21, 22, "X"])),
-            "family_bin_size": 2,
-            "coding_effect_types": None,
-            "rare_boundary": 5
-        })
+        self.table_properties = {
+            "region_length": 100000,
+            "chromosomes": list(map(str, [1])),
+            "family_bin_size": 5,
+            "rare_boundary": 5, 
+            "coding_effect_types": set("splice-site,frame-shift,nonsense,no-frame-shift-newStop,noStart,noEnd,missense,no-frame-shift,CDS,synonymous,coding_unknown,regulatory,3'UTR,5'UTR".split(","))
+        }
 
         # self._fetch_tblproperties()
 

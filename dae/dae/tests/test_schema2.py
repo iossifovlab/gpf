@@ -8,6 +8,7 @@ from dae.backends.schema2.bigquery_variants import BigQueryVariants
 from dae.backends.schema2.impala_variants import ImpalaVariants
 from dae.backends.impala.impala_variants import ImpalaVariants as ImpalaVariants1 
 from dae.backends.impala.impala_helpers import ImpalaHelpers
+from dae.utils.regions import Region 
 
 GENE = {'MEGF6'}
 
@@ -168,7 +169,8 @@ if __name__ == "__main__":
 
     queries = [
         {
-            'real_attr_filter':[('cadd_phred', (10, None))]
+            'family_ids':FAMILY_IDS[:1],
+            'regions':[Region.from_str('1:1100001-1210000')]
         }
     ]
 
@@ -179,7 +181,7 @@ if __name__ == "__main__":
 
     for query in queries:
         print("Test:")
-        print(json.dumps(query))
+        print(query)
         print("=" * 40) 
 
         truth = list(i1.query_variants(**query)) 

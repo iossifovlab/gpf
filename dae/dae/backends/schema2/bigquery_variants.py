@@ -75,14 +75,13 @@ class BigQueryVariants:
         # self._fetch_tblproperties()
         # hardcoding relevant for specific dataset
         # pass in table_properties OR table in datastore
-        self.table_properties = dict({
-            "region_length": 3000000000,
-            "chromosomes": list(map(str, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13,
-                                     14, 15, 16, 17, 18, 19, 20, 21, 22, "X"])),
-            "family_bin_size": 2,
-            "coding_effect_types": None,
-            "rare_boundary": 5
-        })
+        self.table_properties = {
+            "region_length": 100000,
+            "chromosomes": list(map(str, [1])),
+            "family_bin_size": 5,
+            "rare_boundary": 5,
+            "coding_effect_types": set("splice-site,frame-shift,nonsense,no-frame-shift-newStop,noStart,noEnd,missense,no-frame-shift,CDS,synonymous,coding_unknown,regulatory,3'UTR,5'UTR".split(","))
+        }
 
     def _fetch_schema(self, table):
         q = """
@@ -93,10 +92,6 @@ class BigQueryVariants:
         )
         df = self.client.query(q).result().to_dataframe()
         
-        print("DEBUG")
-        print("*" * 80)
-        print(df[['column_name', 'data_type']])
-
         records = df[["column_name", "data_type"]].to_records()
         schema = {
             col_name: col_type for (_, col_name, col_type) in records

@@ -257,7 +257,7 @@ class BaseQueryBuilder(ABC):
         )
         where.append(self._build_family_bin_heuristic(family_ids, person_ids))
         where.append(self._build_coding_heuristic(effect_types))
-        # where.append(self._build_region_bin_heuristic(regions))
+        where.append(self._build_region_bin_heuristic(regions))
 
         where = [w for w in where if w]
 
@@ -544,7 +544,7 @@ class BaseQueryBuilder(ABC):
             set(self.table_properties["coding_effect_types"])
 
         logger.debug(
-            f"coding bin heuristic for {self.variants_table}: "
+            f"coding bin heuristic: "
             f"query effect types: {effect_types}; "
             f"coding_effect_types: "
             f"{self.table_properties['coding_effect_types']}; "
