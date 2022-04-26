@@ -161,7 +161,7 @@ import { SplitPipe } from './utils/split.pipe';
 import { MiddleClickDirective } from './autism-gene-profiles-table/middle-click.directive';
 import { AgpTableComponent } from './autism-gene-profiles-table/autism-gene-profiles-table.component';
 import { AutismGeneProfileSingleViewWrapperComponent } from './autism-gene-profiles-single-view-wrapper/autism-gene-profiles-single-view-wrapper.component';
-import { TruncatePipe } from './truncate.pipe';
+import { TruncatePipe } from './utils/truncate.pipe';
 import { UniqueFamilyVariantsFilterComponent } from './unique-family-variants-filter/unique-family-variants-filter.component';
 import { UniqueFamilyVariantsFilterState } from './unique-family-variants-filter/unique-family-variants-filter.state';
 
