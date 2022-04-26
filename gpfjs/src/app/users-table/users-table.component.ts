@@ -1,4 +1,4 @@
-import { Component, OnInit, NgZone, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, OnInit, NgZone, Input } from '@angular/core';
 import { User } from '../users/users';
 import { UsersService } from '../users/users.service';
 import { take } from 'rxjs/operators';
@@ -9,25 +9,25 @@ import { take } from 'rxjs/operators';
   styleUrls: ['./users-table.component.css']
 })
 export class UsersTableComponent implements OnInit {
-  @Input() users: User[];
-  currentUserEmail: string;
+  @Input() public users: User[];
+  public currentUserEmail: string;
 
-  constructor(
+  public constructor(
     private zone: NgZone,
     private usersService: UsersService,
   ) { }
 
-  ngOnInit() {
+  public ngOnInit(): void {
     this.usersService.getUserInfo().pipe(take(1)).subscribe((currentUser) => {
-      this.currentUserEmail = currentUser.email
+      this.currentUserEmail = currentUser.email;
     });
   }
 
-  isDefaultGroup(user: User, group: string) {
+  public isDefaultGroup(user: User, group: string): boolean {
     return user.getDefaultGroups().indexOf(group) !== -1;
   }
 
-  removeGroup(user: User, group: string) {
+  public removeGroup(user: User, group: string): void {
     this.usersService.removeUserGroup(user, group).pipe(take(1))
       .subscribe(() => {
         this.zone.runOutsideAngular(() => {

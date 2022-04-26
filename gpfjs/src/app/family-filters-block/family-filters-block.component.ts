@@ -1,9 +1,8 @@
 import { Component, AfterViewInit, Input, ViewChild, OnInit } from '@angular/core';
-import { DatasetsService } from 'app/datasets/datasets.service';
 import { Dataset } from '../datasets/datasets';
 import { Store, Selector } from '@ngxs/store';
-import { FamilyIdsState } from 'app/family-ids/family-ids.state';
-import { PersonFiltersState, SetFamilyFilters } from 'app/person-filters/person-filters.state';
+import { FamilyIdsModel, FamilyIdsState } from 'app/family-ids/family-ids.state';
+import { PersonFiltersModel, PersonFiltersState, SetFamilyFilters } from 'app/person-filters/person-filters.state';
 import { StateReset } from 'ngxs-reset-plugin';
 import { NgbNav } from '@ng-bootstrap/ng-bootstrap';
 
@@ -13,25 +12,24 @@ import { NgbNav } from '@ng-bootstrap/ng-bootstrap';
   styleUrls: ['./family-filters-block.component.css'],
 })
 export class FamilyFiltersBlockComponent implements OnInit, AfterViewInit {
-  @Input() dataset: Dataset;
-  @Input() genotypeBrowserState: Object;
-  @ViewChild('nav') ngbNav: NgbNav;
-  showFamilyTypeFilter: boolean;
-  showAdvancedButton: boolean;
+  @Input() public dataset: Dataset;
+  @Input() public genotypeBrowserState: object;
+  @ViewChild('nav') public ngbNav: NgbNav;
+  public showFamilyTypeFilter: boolean;
+  public showAdvancedButton: boolean;
 
-  constructor(
+  public constructor(
     private store: Store,
-    private datasetsService: DatasetsService,
   ) { }
 
-  ngOnInit(): void {
+  public ngOnInit(): void {
     this.showFamilyTypeFilter = this.dataset.genotypeBrowserConfig.hasFamilyStructureFilter;
     this.showAdvancedButton =
       this.dataset.genotypeBrowserConfig.familyFilters.length !== 0 ||
       this.dataset.genotypeBrowserConfig.hasFamilyStructureFilter;
   }
 
-  ngAfterViewInit() {
+  public ngAfterViewInit(): void {
     this.store.selectOnce(FamilyFiltersBlockComponent.familyFiltersBlockState).subscribe(state => {
       if (state['familyIds']) {
         setTimeout(() => this.ngbNav.select('familyIds'));
@@ -41,13 +39,15 @@ export class FamilyFiltersBlockComponent implements OnInit, AfterViewInit {
     });
   }
 
-  onNavChange() {
+  public onNavChange(): void {
     this.store.dispatch(new SetFamilyFilters([]));
     this.store.dispatch(new StateReset(FamilyIdsState));
   }
 
   @Selector([FamilyIdsState, PersonFiltersState])
-  static familyFiltersBlockState(familyIdsState, personFiltersState) {
+  public static familyFiltersBlockState(
+    familyIdsState: FamilyIdsModel, personFiltersState: PersonFiltersModel
+  ): object {
     const res = {};
     if (familyIdsState.familyIds.length) {
       res['familyIds'] = familyIdsState.familyIds;

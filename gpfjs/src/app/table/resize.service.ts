@@ -7,19 +7,19 @@ import * as elementResizeDetectorMaker from 'element-resize-detector';
 export class ResizeService {
   private resizeDetector: any;
 
-  constructor(
+  public constructor(
     private zone: NgZone
   ) {
     this.resizeDetector = elementResizeDetectorMaker({ strategy: 'scroll' });
   }
 
-  addResizeEventListener(element: HTMLElement, handler: Function) {
+  public addResizeEventListener(element: HTMLElement, handler: Function): void {
     this.resizeDetector.listenTo(element, () => {
       this.zone.run(() => handler());
     });
   }
 
-  removeResizeEventListener(element: HTMLElement) {
+  public removeResizeEventListener(element: HTMLElement): void {
     this.resizeDetector.uninstall(element);
   }
 }

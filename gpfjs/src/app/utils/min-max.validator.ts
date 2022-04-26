@@ -1,6 +1,5 @@
 import { Input, Directive } from '@angular/core';
-import { NG_VALIDATORS, Validator, Validators, AbstractControl } from '@angular/forms';
-
+import { NG_VALIDATORS, Validator, AbstractControl } from '@angular/forms';
 
 @Directive({
   selector: '[min][formControlName],[min][formControl],[min][ngModel]',
@@ -8,10 +7,10 @@ import { NG_VALIDATORS, Validator, Validators, AbstractControl } from '@angular/
   host: {'[attr.min]': 'min ? min : null'}
 })
 export class MinValidatorDirective implements Validator {
-  @Input() min: number;
+  @Input() public min: number;
 
-  validate(control: AbstractControl): {[key: string]: any} {
-    return +control.value >= +this.min ? null : {'min': true};
+  public validate(control: AbstractControl): {[key: string]: any} {
+    return Number(control.value) >= Number(this.min) ? null : {'min': true};
   }
 }
 
@@ -21,9 +20,9 @@ export class MinValidatorDirective implements Validator {
   host: {'[attr.max]': 'max ? max : null'}
 })
 export class MaxValidatorDirective implements Validator {
-  @Input() max: number;
+  @Input() public max: number;
 
-  validate(control: AbstractControl): {[key: string]: any} {
-    return +control.value <= +this.max ? null : {'max': true};
+  public validate(control: AbstractControl): {[key: string]: any} {
+    return Number(control.value) <= Number(this.max) ? null : {'max': true};
   }
 }

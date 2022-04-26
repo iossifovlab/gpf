@@ -6,5 +6,5 @@ import { GpfTableSubcontentComponent } from './subcontent.component';
   template: '',
 })
 export class GpfTableContentComponent extends GpfTableSubcontentComponent {
-  @ContentChildren(GpfTableSubcontentComponent) subcontentChildren: QueryList<GpfTableSubcontentComponent>;
+  @ContentChildren(GpfTableSubcontentComponent) public subcontentChildren: QueryList<GpfTableSubcontentComponent>;
 }

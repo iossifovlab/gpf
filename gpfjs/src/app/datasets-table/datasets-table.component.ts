@@ -1,7 +1,5 @@
 import { Component, ElementRef, OnInit, ViewChildren } from '@angular/core';
-
 import { combineLatest, Observable, ReplaySubject } from 'rxjs';
-
 import { User } from '../users/users';
 import { UsersService } from '../users/users.service';
 import { Dataset } from '../datasets/datasets';
@@ -17,18 +15,18 @@ import { debounceTime, distinctUntilChanged, map, share, switchMap, take } from 
   styleUrls: ['./datasets-table.component.css']
 })
 export class DatasetsTableComponent implements OnInit {
-  tableData$: Observable<DatasetTableRow[]>;
-  groups: UserGroup[];
+  public tableData$: Observable<DatasetTableRow[]>;
+  public groups: UserGroup[];
   private datasets$: Observable<Dataset[]>;
   private usersToShow: User[];
   private users$: Observable<User[]>;
   private datasetsRefresh$ = new ReplaySubject<boolean>(1);
-  @ViewChildren('errorPopup') errorPopup: ElementRef[];
-  errorDisplayStyles: {[key: string]: string;} = {};
-  errorMessage: String;
-  delay = (ms: number) => new Promise(res => setTimeout(res, ms));
+  @ViewChildren('errorPopup') public errorPopup: ElementRef[];
+  public errorDisplayStyles: {[key: string]: string} = {};
+  public errorMessage: string;
+  public delay = (ms: number): Promise<number> => new Promise(res => setTimeout(res, ms));
 
-  constructor(
+  public constructor(
     private datasetsService: DatasetsService,
     private usersService: UsersService,
     private userGroupsService: UsersGroupsService
@@ -41,11 +39,11 @@ export class DatasetsTableComponent implements OnInit {
     this.datasets$.pipe(take(1)).subscribe(datasets => {
       datasets.forEach(dataset => {
         this.errorDisplayStyles[dataset.id] = 'none';
-      })
+      });
     });
   }
 
-  ngOnInit() {
+  public ngOnInit(): void {
     this.usersToShow = [];
     this.users$ = this.usersService.searchUsersByGroup(null).pipe(
       map(user => {
@@ -66,14 +64,14 @@ export class DatasetsTableComponent implements OnInit {
     this.datasetsRefresh$.next(true);
   }
 
-  datasetComparator(leftDataset: any, rightDataset: any) {
+  public datasetComparator(leftDataset: any, rightDataset: any) {
     return leftDataset.dataset.name.localeCompare(rightDataset.dataset.name);
   }
 
-  toDatasetTableRow(datasets: Dataset[], users: User[]) {
-    let result = new Array<DatasetTableRow>();
-    let groupsToUsers = users.reduce((acc: {[key: string]: string[];}, user) => {
-      for (let group of user.groups) {
+  public toDatasetTableRow(datasets: Dataset[], users: User[]): Array<DatasetTableRow> {
+    const result = new Array<DatasetTableRow>();
+    const groupsToUsers = users.reduce((acc: {[key: string]: string[]}, user) => {
+      for (const group of user.groups) {
         if (acc[group]) {
           acc[group].push(user.email);
         } else {
@@ -83,35 +81,37 @@ export class DatasetsTableComponent implements OnInit {
       return acc;
     }, {});
 
-    for (let dataset of datasets) {
-      let groups = dataset.groups.map(group => group.name);
-      let datasetUsers = users.filter(user => {
-         let hasGroup = dataset.groups.find(group => {
-           return (groupsToUsers[group.name] || []).indexOf(user.email) !== -1;
-         });
-         return !!hasGroup;
+    for (const dataset of datasets) {
+      const groups = dataset.groups.map(group => group.name);
+      const datasetUsers = users.filter(user => {
+        const hasGroup = dataset.groups.find(group => (groupsToUsers[group.name] || []).indexOf(user.email) !== -1);
+        return Boolean(hasGroup);
       });
 
-      let row = new DatasetTableRow(dataset, groups, datasetUsers);
+      const row = new DatasetTableRow(dataset, groups, datasetUsers);
       result.push(row);
     }
 
     return result;
   }
 
-  alwaysSelected(groups: string[]) {
+  public alwaysSelected(groups: string[]): UserGroup[] {
     return (this.groups || []).filter(g => groups.indexOf(g.name) === -1);
   }
 
-  async updatePermissions(dataset: Dataset, groupName: string) {
+  public async updatePermissions(dataset: Dataset, groupName: string): Promise<void> {
     const groupNames = dataset.groups.map(group => group.name);
 
     if (groupNames.indexOf(groupName) !== -1 || groupName === '') {
       this.errorMessage = groupName === '' ? 'Please enter a group!' : 'This group already exists!';
-      this.errorPopup.find(ele => ele.nativeElement.id === dataset.id + '-warning').nativeElement.setAttribute('style', 'display: block');
+      this.errorPopup.find(
+        ele => ele.nativeElement.id === dataset.id + '-warning'
+      ).nativeElement.setAttribute('style', 'display: block');
 
       this.errorDisplayStyles[dataset.id] = 'block';
-      await this.delay(3000).then(() => this.errorDisplayStyles[dataset.id] = 'none');
+      await this.delay(3000).then(() => {
+        this.errorDisplayStyles[dataset.id] = 'none';
+      });
 
       return;
     }
@@ -122,33 +122,30 @@ export class DatasetsTableComponent implements OnInit {
       });
   }
 
-  private search = (datasetGroups: string[], text$: Observable<string>) => {
-    return text$.pipe(
-      debounceTime(200),
-      distinctUntilChanged(),
-      map(groupName => {
-        if (groupName === '') {
-          return [];
-        }
+  private search = (datasetGroups: string[], text$: Observable<string>): Observable<string[]> => text$.pipe(
+    debounceTime(200),
+    distinctUntilChanged(),
+    map(groupName => {
+      if (groupName === '') {
+        return [];
+      }
 
-        return this.groups
-          .map(g => g.name)
-          .filter(g => datasetGroups.indexOf(g) === -1)
-          .filter(g => g.toLowerCase().indexOf(groupName.toLowerCase()) !== -1)
-            .slice(0, 10);
-      })
-    );
-  }
+      return this.groups
+        .map(g => g.name)
+        .filter(g => datasetGroups.indexOf(g) === -1)
+        .filter(g => g.toLowerCase().indexOf(groupName.toLowerCase()) !== -1)
+        .slice(0, 10);
+    })
+  );
 
-  searchGroups = (groups: string[]) => {
-    return (text$: Observable<string>) => this.search(groups, text$);
-  }
+  public searchGroups =
+    (groups: string[]) => (text$: Observable<string>): Observable<string[]> => this.search(groups, text$);
 
-  isDefaultGroup(dataset: Dataset, group: string) {
+  public isDefaultGroup(dataset: Dataset, group: string): boolean {
     return dataset.getDefaultGroups().indexOf(group) !== -1;
   }
 
-  removeGroup(dataset: Dataset, groupName: string) {
+  public removeGroup(dataset: Dataset, groupName: string): void {
     this.userGroupsService.getAllGroups().pipe(
       take(1),
       switchMap(groups => {

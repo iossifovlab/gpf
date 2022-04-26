@@ -6,7 +6,10 @@
     (itemsUpdateEvent)="updatePresentInParent($event)">
   </gpf-checkbox-list>
 
-  <div *ngIf="selectedValues.has('mother only') || selectedValues.has('father only') || selectedValues.has('mother and father')">
+  <div
+    *ngIf="
+      selectedValues.has('mother only') || selectedValues.has('father only') || selectedValues.has('mother and father')
+    ">
     <div>Rarity:</div>
     <div>
       <ng-container *ngFor="let rarityType of rarityTypes">
@@ -15,22 +18,22 @@
             type="radio"
             (change)="updateRarityType(rarityType)"
             value="rarityType"
-            [checked]="selectedRarityType === rarityType">
-          <span style="margin-left: 5px">{{rarityType}}</span>
+            [checked]="selectedRarityType === rarityType" />
+          <span style="margin-left: 5px">{{ rarityType }}</span>
         </label>
-        <br *ngIf="rarityType === 'ultraRare'">
+        <br *ngIf="rarityType === 'ultraRare'" />
       </ng-container>
     </div>
-    <div class="row" style="padding-left: 15px; padding-right: 15px;">
+    <div class="row" style="padding-left: 15px; padding-right: 15px">
       <div *ngIf="selectedRarityType === 'interval'">
         <input
-            type="number"
-            step="0.01"
-            style="width: 63px"
-            [min]="0"
-            [max]="rarityIntervalEnd"
-            [ngModel]="rarityIntervalStart"
-            (ngModelChange)="updateRarityIntervalStart($event)">
+          type="number"
+          step="0.01"
+          style="width: 63px"
+          [min]="0"
+          [max]="rarityIntervalEnd"
+          [ngModel]="rarityIntervalStart"
+          (ngModelChange)="updateRarityIntervalStart($event)" />
         <span>%-</span>
       </div>
       <div *ngIf="selectedRarityType === 'rare' || selectedRarityType === 'interval'">
@@ -42,7 +45,7 @@
           [min]="rarityIntervalStart"
           [max]="100"
           [ngModel]="rarityIntervalEnd"
-          (ngModelChange)="updateRarityIntervalEnd($event)">
+          (ngModelChange)="updateRarityIntervalEnd($event)" />
         <span>%</span>
       </div>
     </div>

@@ -6,11 +6,11 @@ import { GpfTableCellContentDirective } from './content.directive';
   template: '',
 })
 export class GpfTableSubcontentComponent implements AfterContentInit {
-  @ContentChildren(GpfTableCellContentDirective) contentChildren: QueryList<GpfTableCellContentDirective>;
-  @Input() field: string;
-  contentTemplateRef: TemplateRef<any>;
+  @ContentChildren(GpfTableCellContentDirective) public contentChildren: QueryList<GpfTableCellContentDirective>;
+  @Input() public field: string;
+  public contentTemplateRef: TemplateRef<any>;
 
-  ngAfterContentInit() {
+  public ngAfterContentInit(): void {
     if (this.contentChildren.first) {
       this.contentTemplateRef = this.contentChildren.first.templateRef;
     }

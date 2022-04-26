@@ -17,8 +17,7 @@ describe('StudyFilterComponent', () => {
     TestBed.configureTestingModule({
       declarations: [StudyFilterComponent, ErrorsAlertComponent],
       imports: [FormsModule]
-    })
-    .compileComponents();
+    }).compileComponents();
   }));
 
   beforeEach(() => {

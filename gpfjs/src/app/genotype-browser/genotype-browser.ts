@@ -1,5 +1,5 @@
 export class BrowserQueryFilter {
-  constructor(
+  public constructor(
     private datasetId: string,
     private geneSymbols: string[],
     private effectTypes: string[],
@@ -9,7 +9,7 @@ export class BrowserQueryFilter {
     private variantTypes: string[]
   ) { }
 
-  public static fromJson(json: any): BrowserQueryFilter {
+  public static fromJson(json): BrowserQueryFilter {
     return new BrowserQueryFilter(
       json['datasetId'],
       json['geneSymbols'],
@@ -23,12 +23,12 @@ export class BrowserQueryFilter {
 }
 
 export class PersonSetCollection {
-  constructor(
+  public constructor(
     public id: string,
     public checkedValues: string[],
   ) { }
 
-  public static fromJson(json: any): PersonSetCollection {
+  public static fromJson(json): PersonSetCollection {
     return new PersonSetCollection(
       json['id'],
       json['checkedValues']
@@ -37,13 +37,13 @@ export class PersonSetCollection {
 }
 
 export class GenomicScore {
-  constructor(
+  public constructor(
     private metric: string,
     private rangeStart: number,
     private rangeEnd: number,
   ) {}
 
-  public static fromJson(json: any): GenomicScore {
+  public static fromJson(json): GenomicScore {
     return new GenomicScore(
       json['metric'],
       json['rangeStart'],

@@ -1,51 +1,49 @@
 <div class="genome-preview">
-    <div *ngIf="genotypePreviewVariantsArray">
-        <gpf-table [dataSource]="genotypePreviewVariantsArray.genotypePreviews" style="display: inline-block">
-            <gpf-table-column *ngFor="let column of columns" [columnWidth]="singleColumnWidth">
-                <gpf-table-header caption="{{ column.name }}">
-                </gpf-table-header>
-                <gpf-table-header>
-                  <ng-container *ngFor="let slot of column.columns">
-                    <gpf-table-subheader
-                      *ngIf="slot.source !== 'pedigree'"
-                      caption="{{ slot.name }}"
-                      [comparator]="comparator(slot.source)">
-                    </gpf-table-subheader>
-                  </ng-container>
-                </gpf-table-header>
-                <gpf-table-content>
-                    <gpf-table-subcontent *ngIf="column.source; else columns">
-                        <gpf-genotype-preview-field
-                            *gpfTableCellContent="let data"
-                            [field]="column.source"
-                            [value]="data.get(column.source)"
-                            [format]="column.format"
-                            [genome]="data.get('genome')">
-                        </gpf-genotype-preview-field>
-                    </gpf-table-subcontent>
-                    <ng-template #columns>
-                        <gpf-table-subcontent *ngFor="let slot of column.columns">
-                          <ng-container *ngIf="column.name !== 'genotype' || slot.source === 'pedigree'">
-                            <gpf-genotype-preview-field
-                                *gpfTableCellContent="let data"
-                                [field]="slot.source"
-                                [value]="data.get(slot.source)"
-                                [format]="slot.format"
-                                [genome]="data.get('genome')">
-                            </gpf-genotype-preview-field>
-                          </ng-container>
-                        </gpf-table-subcontent>
-                    </ng-template>
-                </gpf-table-content>
-            </gpf-table-column>
+  <div *ngIf="genotypePreviewVariantsArray">
+    <gpf-table [dataSource]="genotypePreviewVariantsArray.genotypePreviews" style="display: inline-block">
+      <gpf-table-column *ngFor="let column of columns" [columnWidth]="singleColumnWidth">
+        <gpf-table-header caption="{{ column.name }}"></gpf-table-header>
+        <gpf-table-header>
+          <ng-container *ngFor="let slot of column.columns">
+            <gpf-table-subheader
+              *ngIf="slot.source !== 'pedigree'"
+              caption="{{ slot.name }}"
+              [comparator]="comparator(slot.source)">
+            </gpf-table-subheader>
+          </ng-container>
+        </gpf-table-header>
+        <gpf-table-content>
+          <gpf-table-subcontent *ngIf="column.source; else columns">
+            <gpf-genotype-preview-field
+              *gpfTableCellContent="let data"
+              [field]="column.source"
+              [value]="data.get(column.source)"
+              [format]="column.format"
+              [genome]="data.get('genome')">
+            </gpf-genotype-preview-field>
+          </gpf-table-subcontent>
+          <ng-template #columns>
+            <gpf-table-subcontent *ngFor="let slot of column.columns">
+              <ng-container *ngIf="column.name !== 'genotype' || slot.source === 'pedigree'">
+                <gpf-genotype-preview-field
+                  *gpfTableCellContent="let data"
+                  [field]="slot.source"
+                  [value]="data.get(slot.source)"
+                  [format]="slot.format"
+                  [genome]="data.get('genome')">
+                </gpf-genotype-preview-field>
+              </ng-container>
+            </gpf-table-subcontent>
+          </ng-template>
+        </gpf-table-content>
+      </gpf-table-column>
 
-            <div *gpfTableLegend style="text-align: left; border: 1px solid #dddddd; padding: 5px">
-              <div *ngFor="let legendItem of legend">
-                <span class="pedigree-icon" [style.background-color]="legendItem.color"></span>
-                <span>{{ legendItem.name }}</span>
-              </div>
-            </div>
-        </gpf-table>
-    </div>
-
+      <div *gpfTableLegend style="text-align: left; border: 1px solid #dddddd; padding: 5px">
+        <div *ngFor="let legendItem of legend">
+          <span class="pedigree-icon" [style.background-color]="legendItem.color"></span>
+          <span>{{ legendItem.name }}</span>
+        </div>
+      </div>
+    </gpf-table>
+  </div>
 </div>

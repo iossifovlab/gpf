@@ -11,8 +11,7 @@ describe('SmallRemoveButtonComponent', () => {
     TestBed.configureTestingModule({
       declarations: [SmallRemoveButtonComponent],
       schemas: [NO_ERRORS_SCHEMA],
-    })
-    .compileComponents();
+    }).compileComponents();
   }));
 
   beforeEach(() => {

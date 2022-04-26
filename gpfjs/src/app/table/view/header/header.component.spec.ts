@@ -73,8 +73,7 @@ describe('GpfTableHeaderComponent', () => {
         GpfTableContentHeaderComponent,
         GpfTableContentComponent
       ]
-    })
-    .compileComponents();
+    }).compileComponents();
   }));
 
   beforeEach(() => {

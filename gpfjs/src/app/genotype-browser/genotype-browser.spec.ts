@@ -10,9 +10,9 @@ describe('BrowserQueryFilter', () => {
 
     const browserQueryFilterMockFromJson = BrowserQueryFilter.fromJson(
       {
-        datasetId: 'name1', geneSymbols: [ 'gene2', 'gene3' ], effectTypes: [ 'effectType4', 'effectType5' ],
-        gender: [ 'gender6', 'gender7' ], peopleGroup: { id: 'id8', checkedValues: [ '9', '10' ] },
-        studyTypes: [ 'studyType11', 'studyType12' ], variantTypes: [ 'variant13', 'variant14' ]
+        datasetId: 'name1', geneSymbols: ['gene2', 'gene3'], effectTypes: ['effectType4', 'effectType5'],
+        gender: ['gender6', 'gender7'], peopleGroup: { id: 'id8', checkedValues: ['9', '10'] },
+        studyTypes: ['studyType11', 'studyType12'], variantTypes: ['variant13', 'variant14']
       }
     );
 
@@ -24,7 +24,7 @@ describe('PersonSetCollection', () => {
   it('should create from json', () => {
     expect(new PersonSetCollection('id1', ['check1', 'check2'])).toEqual(PersonSetCollection.fromJson({
       id: 'id1',
-      checkedValues: [ 'check1', 'check2' ]
+      checkedValues: ['check1', 'check2']
     }));
   });
 });

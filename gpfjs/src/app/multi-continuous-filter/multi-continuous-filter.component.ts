@@ -13,33 +13,33 @@ import { PhenoMeasureSelectorComponent } from 'app/pheno-measure-selector/pheno-
   styleUrls: ['./multi-continuous-filter.component.css'],
 })
 export class MultiContinuousFilterComponent extends StatefulComponent implements OnInit {
-  @Input() datasetId: string;
-  @Input() continuousFilter: PersonFilter;
-  @Input() continuousFilterState: ContinuousFilterState;
-  @Input() isFamilyFilter: boolean;
-  @Output() updateFilterEvent = new EventEmitter();
+  @Input() public datasetId: string;
+  @Input() public continuousFilter: PersonFilter;
+  @Input() public continuousFilterState: ContinuousFilterState;
+  @Input() public isFamilyFilter: boolean;
+  @Output() public updateFilterEvent = new EventEmitter();
 
   @ViewChild(PhenoMeasureSelectorComponent) private measureSelectorComponent: PhenoMeasureSelectorComponent;
-  measures: Array<ContinuousMeasure>;
-  internalSelectedMeasure: ContinuousMeasure;
+  public measures: Array<ContinuousMeasure>;
+  public internalSelectedMeasure: ContinuousMeasure;
 
-  constructor(protected store: Store) {
+  public constructor(protected store: Store) {
     super(store, PersonFiltersState, 'personFilters');
   }
 
-  public ngOnInit() {
+  public ngOnInit(): void {
     this.store.selectOnce(state => state).subscribe(state => {
       this.restoreContinuousFilter(state);
     });
   }
 
-  public async restoreContinuousFilter(state) {
+  public restoreContinuousFilter(state): void {
     if (!state['personFiltersState']) {
       return;
     }
     const filters = state['personFiltersState'][this.isFamilyFilter ? 'familyFilters' : 'personFilters'];
-    filters.forEach(async (filter) => {
-      let selection = {
+    filters.forEach(async(filter) => {
+      const selection = {
         name: filter.source,
         min: filter['selection']['min'],
         max: filter['selection']['max']
@@ -50,7 +50,7 @@ export class MultiContinuousFilterComponent extends StatefulComponent implements
     });
   }
 
-  private async waitForSelectorComponent() {
+  private async waitForSelectorComponent(): Promise<void> {
     return new Promise<void>(resolve => {
       const timer = setInterval(() => {
         if (this.measureSelectorComponent !== undefined) {
@@ -61,9 +61,9 @@ export class MultiContinuousFilterComponent extends StatefulComponent implements
     });
   }
 
-  set selectedMeasure(measure) {
+  public set selectedMeasure(measure) {
     this.internalSelectedMeasure = measure;
-    if (measure)  {
+    if (measure) {
       this.continuousFilterState.source = measure.name;
       this.continuousFilterState.selection['min'] = measure.min;
       this.continuousFilterState.selection['max'] = measure.max;
@@ -73,7 +73,7 @@ export class MultiContinuousFilterComponent extends StatefulComponent implements
     this.updateFilterEvent.emit();
   }
 
-  get selectedMeasure(): ContinuousMeasure {
+  public get selectedMeasure(): ContinuousMeasure {
     return this.internalSelectedMeasure;
   }
 }

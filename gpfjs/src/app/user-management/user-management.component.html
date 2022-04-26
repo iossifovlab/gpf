@@ -7,7 +7,7 @@
         <a ngbNavLink (click)="focusSearchBox()">Users</a>
         <ng-template ngbNavContent>
           <div class="row justify-content-between">
-            <div class="col-7 btn-toolbar" style="padding-top: 15px; padding-left: 25px;">
+            <div class="col-7 btn-toolbar" style="padding-top: 15px; padding-left: 25px">
               <div class="input-group" style="width: 55%">
                 <div class="search-input-wrapper">
                   <input
@@ -21,7 +21,7 @@
                     aria-label="Search"
                     [ngModel]="input$ | async"
                     spellcheck="false" />
-                  <span 
+                  <span
                     class="search-clear-icon"
                     [style.background-image]="'url(' + imgPathPrefix + 'search-clear-icon.png)'"
                     *ngIf="searchBox.value !== ''"
@@ -35,8 +35,7 @@
             </div>
           </div>
 
-          <gpf-users-table [users]="usersToShow$ | async">
-          </gpf-users-table>
+          <gpf-users-table [users]="usersToShow$ | async"></gpf-users-table>
         </ng-template>
       </li>
 

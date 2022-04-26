@@ -16,7 +16,7 @@ export class SummaryAllele {
   public svuid: string;
   public sauid: string;
 
-  public static comparator(a: SummaryAllele, b: SummaryAllele) {
+  public static comparator(a: SummaryAllele, b: SummaryAllele): number {
     if (a.comparisonValue > b.comparisonValue) {
       return 1;
     } else if (a.comparisonValue < b.comparisonValue) {
@@ -28,23 +28,23 @@ export class SummaryAllele {
 
   public static fromRow(row: object, svuid?: string): SummaryAllele {
     const result = new SummaryAllele();
-    result.location = row['location'];
-    result.position = row['position'];
-    result.endPosition = row['end_position'];
-    result.chrom = row['chrom'];
-    result.variant = row['variant'];
-    result.effect = row['effect'];
-    result.frequency = row['frequency'];
-    result.numberOfFamilyVariants = row['family_variants_count'];
-    result.seenAsDenovo = row['is_denovo'];
-    result.seenInAffected = row['seen_in_affected'];
-    result.seenInUnaffected = row['seen_in_unaffected'];
+    result.location = row['location'] as string;
+    result.position = row['position'] as number;
+    result.endPosition = row['end_position'] as number;
+    result.chrom = row['chrom'] as string;
+    result.variant = row['variant'] as string;
+    result.effect = row['effect'] as string;
+    result.frequency = row['frequency'] as number;
+    result.numberOfFamilyVariants = row['family_variants_count'] as number;
+    result.seenAsDenovo = row['is_denovo'] as boolean;
+    result.seenInAffected = row['seen_in_affected'] as boolean;
+    result.seenInUnaffected = row['seen_in_unaffected'] as boolean;
     result.sauid = result.location + ':' + result.variant;
     result.svuid = svuid ? svuid : result.sauid;
     return result;
   }
 
-  public get affectedStatus() {
+  public get affectedStatus(): string {
     if (this.seenInAffected) {
       if (this.seenInUnaffected) {
         return 'Affected and unaffected';
@@ -65,30 +65,34 @@ export class SummaryAllele {
   }
 
   public isMissense(): boolean {
-    return (this.effect === 'missense');
+    return this.effect === 'missense';
   }
 
   public isSynonymous(): boolean {
-    return (this.effect === 'synonymous');
+    return this.effect === 'synonymous';
   }
 
   public isCNVPlus(): boolean {
-    return (this.effect === 'CNV+');
+    return this.effect === 'CNV+';
   }
 
   public isCNVMinus(): boolean {
-    return (this.effect === 'CNV-');
+    return this.effect === 'CNV-';
   }
 
   public isCNV(): boolean {
     return this.isCNVPlus() || this.isCNVMinus();
   }
 
-  get comparisonValue(): number {
+  public get comparisonValue(): number {
     let sum = 0;
     sum += this.seenAsDenovo && !this.isCNV() ? 200 : 100;
-    sum += this.isLGDs() ? 50 : this.isMissense() ? 40 : this.isSynonymous() ? 30 : !this.isCNV() ? 20 : this.seenAsDenovo ? 10 : 5;
-    sum += (this.seenInAffected && this.seenInUnaffected) ? 1 : this.seenInUnaffected ? 2 : 3;
+    sum += this.isLGDs() ? 50 :
+      this.isMissense() ? 40 :
+        this.isSynonymous() ? 30 :
+          !this.isCNV() ? 20 :
+            this.seenAsDenovo ? 10 : 5;
+    sum += this.seenInAffected && this.seenInUnaffected ? 1 : this.seenInUnaffected ? 2 : 3;
     return sum;
   }
 
@@ -106,22 +110,21 @@ export class SummaryAllele {
 }
 
 export class SummaryAllelesArray {
-
   public readonly summaryAlleles: SummaryAllele[] = [];
   public readonly summaryAlleleIds: string[] = [];
 
-  public addSummaryRow(row: object) {
+  public addSummaryRow(row: object): void {
     if (!row) {
       return;
     }
     for (const alleleRow of row['alleles']) {
       if (alleleRow) {
-        this.addSummaryAllele(SummaryAllele.fromRow(alleleRow));
+        this.addSummaryAllele(SummaryAllele.fromRow(alleleRow as object));
       }
     }
   }
 
-  public addSummaryAllele(summaryAllele: SummaryAllele) {
+  public addSummaryAllele(summaryAllele: SummaryAllele): void {
     const alleleIndex = this.summaryAlleleIds.indexOf(summaryAllele.sauid);
     if (alleleIndex !== -1) {
       this.summaryAlleles[alleleIndex].numberOfFamilyVariants =
@@ -140,18 +143,17 @@ export class SummaryAllelesArray {
     }
   }
 
-  get totalFamilyVariantsCount(): number {
+  public get totalFamilyVariantsCount(): number {
     return this.summaryAlleles.reduce((a, b) => a + b.numberOfFamilyVariants, 0);
   }
 
-  get totalSummaryAllelesCount(): number {
+  public get totalSummaryAllelesCount(): number {
     return this.summaryAlleles.length;
   }
 }
 
 export class SummaryAllelesFilter {
-
-  constructor(
+  public constructor(
     public denovo = true,
     public transmitted = true,
     public codingOnly = true,
@@ -187,9 +189,9 @@ export class SummaryAllelesFilter {
     if (
       (!this.denovo && summaryAllele.seenAsDenovo)
       || (!this.transmitted && !summaryAllele.seenAsDenovo)
-      || (!this.selectedAffectedStatus.has(summaryAllele.affectedStatus))
-      || (!this.selectedVariantTypes.has(summaryAllele.variantType))
-      || (!this.isEffectTypeSelected(summaryAllele.effect))
+      || !this.selectedAffectedStatus.has(summaryAllele.affectedStatus)
+      || !this.selectedVariantTypes.has(summaryAllele.variantType)
+      || !this.isEffectTypeSelected(summaryAllele.effect)
     ) {
       return false;
     }
@@ -241,10 +243,10 @@ export class SummaryAllelesFilter {
     }
 
     return {
-      'effectTypes': effects,
-      'inheritanceTypeFilter': inheritanceFilters,
-      'affectedStatus': Array.from(affectedStatus),
-      'variantTypes': Array.from(this.selectedVariantTypes)
+      effectTypes: effects,
+      inheritanceTypeFilter: inheritanceFilters,
+      affectedStatus: Array.from(affectedStatus),
+      variantTypes: Array.from(this.selectedVariantTypes)
     };
   }
 }

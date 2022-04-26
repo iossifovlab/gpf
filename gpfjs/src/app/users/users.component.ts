@@ -1,4 +1,6 @@
-import { Component, OnInit, HostListener, ViewChild, ElementRef, ChangeDetectorRef, EventEmitter, Output } from '@angular/core';
+import {
+  Component, OnInit, HostListener, ViewChild, ElementRef, ChangeDetectorRef, EventEmitter, Output
+} from '@angular/core';
 import { UsersService } from './users.service';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { Observable } from 'rxjs';
@@ -16,25 +18,25 @@ export class UsersComponent implements OnInit {
   public password: string;
   public passwordTimeout = false;
   public loading = false;
-  errorMessage: string;
-  hideDropdown = true;
-  userInfo$: Observable<any>;
-  showPasswordField = false;
+  public errorMessage: string;
+  public hideDropdown = true;
+  public userInfo$: Observable<any>;
+  public showPasswordField = false;
 
-  @ViewChild('dropdownButton') dropdownButton: ElementRef;
-  @ViewChild('dialog') dialog: ElementRef;
-  @ViewChild('emailInput') emailInput: ElementRef;
-  @ViewChild('passwordInput') passwordInput: ElementRef;
+  @ViewChild('dropdownButton') public dropdownButton: ElementRef;
+  @ViewChild('dialog') public dialog: ElementRef;
+  @ViewChild('emailInput') public emailInput: ElementRef;
+  @ViewChild('passwordInput') public passwordInput: ElementRef;
 
   @Output() public loginDropdownClickEvent = new EventEmitter();
 
-  constructor(
+  public constructor(
     private modalService: NgbModal,
     private usersService: UsersService,
     private changeDetectorRef: ChangeDetectorRef
   ) { }
 
-  ngOnInit() {
+  public ngOnInit(): void {
     this.reloadUserData();
     this.userInfo$ = this.usersService.getUserInfoObservable().pipe(share());
     this.usersService.emailLog.subscribe(email => {
@@ -42,7 +44,7 @@ export class UsersComponent implements OnInit {
     });
   }
 
-  reloadUserData() {
+  public reloadUserData(): void {
     this.usersService.getUserInfo().pipe(take(1)).subscribe(() => {
       this.loading = false;
     });
@@ -52,7 +54,7 @@ export class UsersComponent implements OnInit {
     this.showPasswordField = false;
   }
 
-  next() {
+  public next(): void {
     this.usersService.login(this.username).subscribe(
       (res) => {
         if (res === true) {
@@ -66,10 +68,10 @@ export class UsersComponent implements OnInit {
             this.errorMessage = `Too many incorrect attempts! Please wait ${res['error']['lockout_time']} seconds!`;
           }
         }
-    });
+      });
   }
 
-  login() {
+  public login(): void {
     this.loading = true;
     this.usersService.login(this.username, this.password).subscribe(
       (res) => {
@@ -93,34 +95,29 @@ export class UsersComponent implements OnInit {
             this.errorMessage = `Too many incorrect attempts! Please wait ${res['error']['lockout_time']} seconds!`;
           }
         }
-
-    });
+      });
   }
 
-  logout() {
-    this.usersService.logout().subscribe( () => { this.reloadUserData(); });
+  public logout(): void {
+    this.usersService.logout().subscribe(() => this.reloadUserData());
   }
 
-  showRegister() {
+  public showRegister(): void {
     this.usersService.emailLog.next(this.username);
     this.modalService.open(RegistrationComponent);
   }
 
-  showForgotPassword() {
+  public showForgotPassword(): void {
     this.usersService.emailLog.next(this.username);
     this.modalService.open(ForgotPasswordComponent);
   }
 
   @HostListener('document:click', ['$event'])
-  onClick(event) {
+  public onClick(event): void {
     if (
-      !event
-        .composedPath()
-        .find(
-          element =>
-            element.id === 'login-window' ||
-            element.id === 'login-dropdown-toggle-button'
-        )
+      !event.composedPath().find(
+        element => element.id === 'login-window' || element.id === 'login-dropdown-toggle-button'
+      )
     ) {
       this.hideDropdown = true;
     }

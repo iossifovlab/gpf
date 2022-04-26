@@ -1,10 +1,8 @@
 import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { environment } from 'environments/environment';
-
 import { Observable, ReplaySubject } from 'rxjs';
 import { debounceTime, distinctUntilChanged, map, share, switchMap, take, tap } from 'rxjs/operators';
-
 import { User } from '../users/users';
 import { UsersService } from '../users/users.service';
 
@@ -14,20 +12,20 @@ import { UsersService } from '../users/users.service';
   styleUrls: ['./user-management.component.css']
 })
 export class UserManagementComponent implements OnInit {
-  input$ = new ReplaySubject<string>(1);
-  users: User[] = [];
-  usersToShow$: Observable<User[]>;
+  public input$ = new ReplaySubject<string>(1);
+  public users: User[] = [];
+  public usersToShow$: Observable<User[]>;
   @ViewChild('searchBox') private searchBox: ElementRef;
 
   public imgPathPrefix = environment.imgPathPrefix;
 
-  constructor(
+  public constructor(
     private usersService: UsersService,
     private router: Router,
     private route: ActivatedRoute
-    ) { }
+  ) { }
 
-  ngOnInit() {
+  public ngOnInit(): void {
     this.focusSearchBox();
     this.usersToShow$ = this.input$.pipe(
       map(searchTerm => searchTerm.trim()),
@@ -35,9 +33,9 @@ export class UserManagementComponent implements OnInit {
       distinctUntilChanged(),
       tap(searchTerm => {
         this.users = [];
-        let queryParamsObject: any = {};
+        const queryParamsObject: any = {};
         if (searchTerm) {
-          queryParamsObject.search =  searchTerm;
+          queryParamsObject.search = searchTerm;
         }
         this.router.navigate(['.'], {
           relativeTo: this.route,
@@ -61,21 +59,21 @@ export class UserManagementComponent implements OnInit {
     });
   }
 
-  search(value: string) {
+  public search(value: string): void {
     this.input$.next(value);
   }
 
-  sortGroups(user: User): User {
+  private sortGroups(user: User): User {
     if (!user || !user.groups) {
       return user;
     }
-    let defaultGroups = user.groups
+    const defaultGroups = user.groups
       .filter(group => user.getDefaultGroups().indexOf(group) !== -1);
     let otherGroups = user.groups
       .filter(group => user.getDefaultGroups().indexOf(group) === -1);
 
     if (defaultGroups.length === 2 && defaultGroups[0] !== 'any_user') {
-      let group = defaultGroups[0];
+      const group = defaultGroups[0];
       defaultGroups[0] = defaultGroups[1];
       defaultGroups[1] = group;
     }
@@ -87,11 +85,7 @@ export class UserManagementComponent implements OnInit {
     return user;
   }
 
-  /**
-  * Waits search box element to load.
-  * @returns promise
-  */
-   private async waitForSearchBoxToLoad(): Promise<void> {
+  private async waitForSearchBoxToLoad(): Promise<void> {
     return new Promise<void>(resolve => {
       const timer = setInterval(() => {
         if (this.searchBox !== undefined) {
@@ -102,7 +96,7 @@ export class UserManagementComponent implements OnInit {
     });
   }
 
-  public focusSearchBox() {
+  public focusSearchBox(): void {
     this.waitForSearchBoxToLoad().then(() => {
       this.searchBox.nativeElement.focus();
     });

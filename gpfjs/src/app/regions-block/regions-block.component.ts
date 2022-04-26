@@ -1,6 +1,5 @@
 import { Component, ViewChild, AfterViewInit } from '@angular/core';
 import { NgbNav } from '@ng-bootstrap/ng-bootstrap';
-
 import { Store } from '@ngxs/store';
 import { RegionsFilterState } from 'app/regions-filter/regions-filter.state';
 import { StateReset } from 'ngxs-reset-plugin';
@@ -11,11 +10,11 @@ import { StateReset } from 'ngxs-reset-plugin';
   styleUrls: ['./regions-block.component.css'],
 })
 export class RegionsBlockComponent implements AfterViewInit {
-  @ViewChild('nav') ngbNav: NgbNav;
+  @ViewChild('nav') public ngbNav: NgbNav;
 
-  constructor(private store: Store) { }
+  public constructor(private store: Store) { }
 
-  ngAfterViewInit() {
+  public ngAfterViewInit(): void {
     this.store.selectOnce(RegionsFilterState).subscribe(state => {
       if (state.regionsFilters.length) {
         setTimeout(() => this.ngbNav.select('regionsFilter'));
@@ -23,7 +22,7 @@ export class RegionsBlockComponent implements AfterViewInit {
     });
   }
 
-  onNavChange() {
+  public onNavChange(): void {
     this.store.dispatch(new StateReset(RegionsFilterState));
   }
 }

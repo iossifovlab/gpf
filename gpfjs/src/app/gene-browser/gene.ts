@@ -1,5 +1,3 @@
-import { GenotypePreview } from 'app/genotype-preview-model/genotype-preview';
-
 interface Segment {
   chromosome: string;
   start: number;
@@ -39,7 +37,7 @@ function collapseTranscripts(transcripts: Transcript[]): Transcript {
 export class TranscriptSegment {
   public readonly length: number;
 
-  constructor(
+  public constructor(
     public readonly chromosome: string,
     public readonly start: number,
     public readonly stop: number,
@@ -51,7 +49,7 @@ export class TranscriptSegment {
     this.length = (this.stop - this.start) * (this.isSpacer ? 2 : 1);
   }
 
-  get isIntron() {
+  public get isIntron(): boolean {
     return !this.isCDS;
   }
 
@@ -77,7 +75,7 @@ export class Transcript {
   public readonly medianExonLength: number;
   public readonly segments: TranscriptSegment[] = [];
 
-  constructor(
+  public constructor(
     public readonly transcriptId: string,
     public readonly chromosome: string,
     public readonly strand: string,
@@ -111,9 +109,9 @@ export class Transcript {
 
   public static fromJson(json: object): Transcript {
     return new Transcript(
-      json['transcript_id'], json['chrom'], json['strand'],
-      json['cds'].map(exon => ({chromosome: json['chrom'], ...exon})),
-      json['exons'].map(exon => ({chromosome: json['chrom'], ...exon}))
+      json['transcript_id'] as string, json['chrom'] as string, json['strand'] as string,
+      (json['cds'] as Segment[]).map(exon => ({chromosome: json['chrom'] as string, ...exon})),
+      (json['exons'] as Segment[]).map(exon => ({chromosome: json['chrom'] as string, ...exon}))
     );
   }
 
@@ -122,9 +120,7 @@ export class Transcript {
   }
 
   private exonToTranscriptSegments(exon: Segment, exonIndex: number, exonCount: number): TranscriptSegment[] {
-    /*
-      This method splits a single exon segment into multiple sub-segments at CDS transition points.
-    */
+    /* This method splits a single exon segment into multiple sub-segments at CDS transition points. */
     const result: TranscriptSegment[] = [];
     const segmentTransitions = this.codingSequences.map(
       cds => [cds.start, cds.stop]
@@ -157,7 +153,7 @@ export class Gene {
   public readonly collapsedTranscript: Transcript;
   public readonly chromosomes: Map<string, [number, number]>;
 
-  constructor(
+  public constructor(
     public readonly geneSymbol: string,
     public readonly transcripts: Transcript[]
   ) {
@@ -177,7 +173,9 @@ export class Gene {
   }
 
   public static fromJson(json: object): Gene {
-    return new Gene(json['gene'], json['transcripts'].map(t => Transcript.fromJson(t)));
+    return new Gene(
+      json['gene'] as string, (json['transcripts'] as object[]).map(t => Transcript.fromJson(t))
+    );
   }
 
   public getRegionString(start: number, stop: number): string[] {

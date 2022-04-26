@@ -1,6 +1,5 @@
 import { IdName } from '../common/idname';
 import { UserGroup } from '../users-groups/users-groups';
-import * as _ from 'lodash';
 
 export const toolPageLinks = {
   datasetDescription: 'dataset-description',
@@ -13,25 +12,25 @@ export const toolPageLinks = {
 };
 
 export class PersonSet extends IdName {
-  constructor(
-    readonly id: string,
-    readonly name: string,
-    readonly values: Array<string>,
-    readonly color: string,
+  public constructor(
+    public readonly id: string,
+    public readonly name: string,
+    public readonly values: Array<string>,
+    public readonly color: string,
   ) {
     super(id, name);
   }
 
-  public static fromJson(json: any): PersonSet {
+  public static fromJson(json: object): PersonSet {
     if (!json) {
       return undefined;
     }
 
     return new PersonSet(
-      json['id'],
-      json['name'],
-      json['values'],
-      json['color'],
+      json['id'] as string,
+      json['name'] as string,
+      json['values'] as string[],
+      json['color'] as string,
     );
   }
 
@@ -44,18 +43,18 @@ export class PersonSet extends IdName {
 }
 
 export class PersonSetCollection extends IdName {
-  constructor(
-    readonly id: string,
-    readonly name: string,
-    readonly source: string,
-    readonly defaultValue: PersonSet,
-    readonly domain: PersonSet[]
+  public constructor(
+    public readonly id: string,
+    public readonly name: string,
+    public readonly source: string,
+    public readonly defaultValue: PersonSet,
+    public readonly domain: PersonSet[]
   ) {
     super(id, name);
     domain.push(defaultValue);
   }
 
-  public static fromJson(json: any): PersonSetCollection[] {
+  public static fromJson(json: object): PersonSetCollection[] {
     if (!json) {
       return undefined;
     }
@@ -63,13 +62,13 @@ export class PersonSetCollection extends IdName {
     const collections: PersonSetCollection[] = [];
 
     for (const k of Object.keys(json)) {
-      const v = json[k];
+      const v = json[k] as string;
       collections.push(new PersonSetCollection(
         k,
-        v['name'],
+        v['name'] as string,
         k,
-        PersonSet.fromJson(v['default']),
-        PersonSet.fromJsonArray(v['domain']),
+        PersonSet.fromJson(v['default'] as object),
+        PersonSet.fromJsonArray(v['domain'] as object[]),
       ));
     }
     return collections;
@@ -77,8 +76,8 @@ export class PersonSetCollection extends IdName {
 }
 
 export class PersonSetCollections {
-  constructor(
-    readonly collections: PersonSetCollection[],
+  public constructor(
+    public readonly collections: PersonSetCollection[],
   ) { }
 
   public static fromJson(json: object): PersonSetCollections {
@@ -86,7 +85,7 @@ export class PersonSetCollections {
   }
 
   public getLegend(collection: PersonSetCollection): Array<PersonSet> {
-    let result = [];
+    let result: PersonSet[] = [];
     const collectionId = collection ? collection.id : this.collections[0].id;
 
     for (const ps of this.collections) {
@@ -94,66 +93,61 @@ export class PersonSetCollections {
         result = result.concat(ps.domain);
       }
     }
-    result.push({'color': '#E0E0E0', 'id': 'missing-person', 'name': 'missing-person'}); // Default legend value
+    result.push({color: '#E0E0E0', id: 'missing-person', name: 'missing-person'} as PersonSet); // Default legend value
     return result;
   }
 }
 
 export class PersonFilter {
-  constructor(
-    readonly name: string,
-    readonly from: string,
-    readonly source: string,
-    readonly sourceType: string,
-    readonly filterType: string,
-    readonly role: string,
+  public constructor(
+    public readonly name: string,
+    public readonly from: string,
+    public readonly source: string,
+    public readonly sourceType: string,
+    public readonly filterType: string,
+    public readonly role: string,
   ) {}
 
   public static fromJson(json: object): Array<PersonFilter> {
     if (!json) {
       return [];
     }
-    return Object.values(json).map(filter => new PersonFilter(
-      filter['name'], filter['from'], filter['source'],
-      filter['source_type'], filter['filter_type'], filter['role']
+    return Object.values(json).map((filter: object) => new PersonFilter(
+      filter['name'] as string, filter['from'] as string, filter['source'] as string,
+      filter['source_type'] as string, filter['filter_type'] as string, filter['role'] as string
     ));
   }
 }
 
 export class Column {
-  constructor(
-    readonly name: string,
-    readonly source: string,
-    readonly format: string,
+  public constructor(
+    public readonly name: string,
+    public readonly source: string,
+    public readonly format: string,
   ) {}
 
-  static fromJson(json: any): Column {
-    return new Column(
-      json['name'],
-      json['source'],
-      json['format'],
-    );
+  public static fromJson(json: object): Column {
+    return new Column(json['name'] as string, json['source'] as string, json['format'] as string);
   }
 }
 
 export class ColumnGroup {
-  constructor(
-    readonly name: string,
-    readonly columns: Array<Column>,
+  public constructor(
+    public readonly name: string,
+    public readonly columns: Array<Column>,
   ) {}
 
-  static fromJson(json: any): ColumnGroup {
+  public static fromJson(json: object): ColumnGroup {
     return new ColumnGroup(
-      json['name'],
-      json['columns'].map((col: any) => Column.fromJson(col)),
+      json['name'] as string,
+      (json['columns'] as object[]).map((col: object) => Column.fromJson(col)),
     );
   }
 }
 
 export class GenotypeBrowser {
-
-  static tableColumnsFromJson(json: Array<any>): Array<any> {
-    const result = [];
+  public static tableColumnsFromJson(json: Array<object>): Array<object> {
+    const result: object[] = [];
     for (const column of json) {
       if ('columns' in column) {
         result.push(ColumnGroup.fromJson(column));
@@ -164,57 +158,57 @@ export class GenotypeBrowser {
     return result;
   }
 
-  static fromJson(json: any): GenotypeBrowser {
+  public static fromJson(json: object): GenotypeBrowser {
     return new GenotypeBrowser(
-      json['has_pedigree_selector'],
-      json['has_present_in_child'],
-      json['has_present_in_parent'],
-      json['has_present_in_role'],
-      json['has_family_filters'],
-      json['has_family_structure_filter'],
-      json['has_person_filters'],
-      json['has_study_filters'],
-      json['has_study_types'],
-      json['has_graphical_preview'],
-      GenotypeBrowser.tableColumnsFromJson(json['table_columns']),
-      PersonFilter.fromJson(json['person_filters']),
-      PersonFilter.fromJson(json['family_filters']),
-      new Set(json['inheritance_type_filter']),
-      new Set(json['selected_inheritance_type_filter_values']),
-      new Set(json['variant_types']),
-      new Set(json['selected_variant_types']),
-      json['max_variants_count'],
+      json['has_pedigree_selector'] as boolean,
+      json['has_present_in_child'] as boolean,
+      json['has_present_in_parent'] as boolean,
+      json['has_present_in_role'] as boolean,
+      json['has_family_filters'] as boolean,
+      json['has_family_structure_filter'] as boolean,
+      json['has_person_filters'] as boolean,
+      json['has_study_filters'] as boolean,
+      json['has_study_types'] as boolean,
+      json['has_graphical_preview'] as boolean,
+      GenotypeBrowser.tableColumnsFromJson(json['table_columns'] as object[]),
+      PersonFilter.fromJson(json['person_filters'] as object),
+      PersonFilter.fromJson(json['family_filters'] as object),
+      new Set(json['inheritance_type_filter'] as string[]),
+      new Set(json['selected_inheritance_type_filter_values'] as string[]),
+      new Set(json['variant_types'] as string[]),
+      new Set(json['selected_variant_types'] as string[]),
+      json['max_variants_count'] as number,
     );
   }
 
-  constructor(
-    readonly hasPedigreeSelector: boolean,
-    readonly hasPresentInChild: boolean,
-    readonly hasPresentInParent: boolean,
-    readonly hasPresentInRole: boolean,
-    readonly hasFamilyFilters: boolean,
-    readonly hasFamilyStructureFilter: boolean,
-    readonly hasPersonFilters: boolean,
-    readonly hasStudyFilters: boolean,
-    readonly hasStudyTypes: boolean,
-    readonly hasGraphicalPreview: boolean,
-    readonly tableColumns: Array<any>,
-    readonly personFilters: Array<PersonFilter>,
-    readonly familyFilters: Array<PersonFilter>,
-    readonly inheritanceTypeFilter: Set<string>,
-    readonly selectedInheritanceTypeFilterValues: Set<string>,
-    readonly variantTypes: Set<string>,
-    readonly selectedVariantTypes: Set<string>,
-    readonly maxVariantsCount: number,
+  public constructor(
+    public readonly hasPedigreeSelector: boolean,
+    public readonly hasPresentInChild: boolean,
+    public readonly hasPresentInParent: boolean,
+    public readonly hasPresentInRole: boolean,
+    public readonly hasFamilyFilters: boolean,
+    public readonly hasFamilyStructureFilter: boolean,
+    public readonly hasPersonFilters: boolean,
+    public readonly hasStudyFilters: boolean,
+    public readonly hasStudyTypes: boolean,
+    public readonly hasGraphicalPreview: boolean,
+    public readonly tableColumns: Array<object>,
+    public readonly personFilters: Array<PersonFilter>,
+    public readonly familyFilters: Array<PersonFilter>,
+    public readonly inheritanceTypeFilter: Set<string>,
+    public readonly selectedInheritanceTypeFilterValues: Set<string>,
+    public readonly variantTypes: Set<string>,
+    public readonly selectedVariantTypes: Set<string>,
+    public readonly maxVariantsCount: number,
   ) { }
 
-  get columnIds(): Array<string> {
+  public get columnIds(): Array<string> {
     const result: Array<string> = [];
     for (const column of this.tableColumns) {
       if ('columns' in column) {
-        result.push(...column['columns'].map(col => col['source']));
+        result.push(...(column['columns'] as object[]).map(col => col['source'] as string));
       } else {
-        result.push(column['source']);
+        result.push(column['source'] as string);
       }
     }
     return result;
@@ -222,124 +216,126 @@ export class GenotypeBrowser {
 }
 
 export class GeneBrowser {
-  static fromJson(json: any): GeneBrowser {
+  public static fromJson(json: object): GeneBrowser {
     return new GeneBrowser(
-      json['enabled'],
-      json['frequency_column'],
-      json['frequency_name'],
-      json['effect_column'],
-      json['location_column'],
-      json['domain_min'],
-      json['domain_max'],
-      json['has_affected_status']
+      json['enabled'] as boolean,
+      json['frequency_column'] as string,
+      json['frequency_name'] as string,
+      json['effect_column'] as string,
+      json['location_column'] as string,
+      json['domain_min'] as number,
+      json['domain_max'] as number,
+      json['has_affected_status'] as boolean
     );
   }
 
-  constructor(
-    readonly enabled: boolean,
-    readonly frequencyColumn: string,
-    readonly frequencyName: string,
-    readonly effectColumn: string,
-    readonly locationColumn: string,
-    readonly domainMin: number,
-    readonly domainMax: number,
-    readonly hasAffectedStatus: boolean,
+  public constructor(
+    public readonly enabled: boolean,
+    public readonly frequencyColumn: string,
+    public readonly frequencyName: string,
+    public readonly effectColumn: string,
+    public readonly locationColumn: string,
+    public readonly domainMin: number,
+    public readonly domainMax: number,
+    public readonly hasAffectedStatus: boolean,
   ) { }
 }
 
 export class Dataset extends IdName {
-  static fromJson(json: any): Dataset {
+  public static fromJson(json: object): Dataset {
     if (!json) {
       return undefined;
     }
     return new Dataset(
-      json['id'],
-      json['description'],
-      json['name'],
-      json['parents'],
-      json['access_rights'],
-      json['studies'],
-      json['study_names'],
-      json['study_types'],
-      json['phenotype_data'],
-      json['genotype_browser'],
-      json['phenotype_tool'],
-      json['enrichment_tool'],
-      json['phenotype_browser'],
-      json['common_report'],
-      json['genotype_browser_config'] ? GenotypeBrowser.fromJson(json['genotype_browser_config']) : null,
-      json['person_set_collections'] ? PersonSetCollections.fromJson(json['person_set_collections']) : null,
-      UserGroup.fromJsonArray(json['groups']),
-      json['gene_browser'] ? GeneBrowser.fromJson(json['gene_browser']) : null,
-      json['has_denovo'],
-      json['genome']
+      json['id'] as string,
+      json['description'] as string,
+      json['name'] as string,
+      json['parents'] as string[],
+      json['access_rights'] as boolean,
+      json['studies'] as string[],
+      json['study_names'] as string[],
+      json['study_types'] as string[],
+      json['phenotype_data'] as string,
+      json['genotype_browser'] as boolean,
+      json['phenotype_tool'] as boolean,
+      json['enrichment_tool'] as boolean,
+      json['phenotype_browser'] as boolean,
+      json['common_report'] as {enabled: boolean},
+      json['genotype_browser_config'] ? GenotypeBrowser.fromJson(json['genotype_browser_config'] as object) : null,
+      json['person_set_collections'] ? PersonSetCollections.fromJson(json['person_set_collections'] as object) : null,
+      UserGroup.fromJsonArray(json['groups'] as object[]),
+      json['gene_browser'] ? GeneBrowser.fromJson(json['gene_browser'] as object) : null,
+      json['has_denovo'] as boolean,
+      json['genome'] as string
     );
   }
 
-  static fromDatasetAndDetailsJson(datasetJson: any, detailsJson: any): Dataset {
+  public static fromDatasetAndDetailsJson(datasetJson: object, detailsJson: object): Dataset {
     if (!datasetJson || !detailsJson) {
       return undefined;
     }
     return new Dataset(
-      datasetJson['id'],
-      datasetJson['description'],
-      datasetJson['name'],
-      datasetJson['parents'],
-      datasetJson['access_rights'],
-      datasetJson['studies'],
-      datasetJson['study_names'],
-      datasetJson['study_types'],
-      datasetJson['phenotype_data'],
-      datasetJson['genotype_browser'],
-      datasetJson['phenotype_tool'],
-      datasetJson['enrichment_tool'],
-      datasetJson['phenotype_browser'],
-      datasetJson['common_report'],
-      datasetJson['genotype_browser_config'] ? GenotypeBrowser.fromJson(datasetJson['genotype_browser_config']) : null,
-      datasetJson['person_set_collections'] ? PersonSetCollections.fromJson(datasetJson['person_set_collections']) : null,
-      UserGroup.fromJsonArray(datasetJson['groups']),
-      datasetJson['gene_browser'] ? GeneBrowser.fromJson(datasetJson['gene_browser']) : null,
-      detailsJson['has_denovo'],
-      detailsJson['genome']
+      datasetJson['id'] as string,
+      datasetJson['description'] as string,
+      datasetJson['name'] as string,
+      datasetJson['parents'] as string[],
+      datasetJson['access_rights'] as boolean,
+      datasetJson['studies'] as string[],
+      datasetJson['study_names'] as string[],
+      datasetJson['study_types'] as string[],
+      datasetJson['phenotype_data'] as string,
+      datasetJson['genotype_browser'] as boolean,
+      datasetJson['phenotype_tool'] as boolean,
+      datasetJson['enrichment_tool'] as boolean,
+      datasetJson['phenotype_browser'] as boolean,
+      datasetJson['common_report'] as {enabled: boolean},
+      datasetJson['genotype_browser_config'] ?
+        GenotypeBrowser.fromJson(datasetJson['genotype_browser_config'] as object) : null,
+      datasetJson['person_set_collections'] ?
+        PersonSetCollections.fromJson(datasetJson['person_set_collections'] as object) : null,
+      UserGroup.fromJsonArray(datasetJson['groups'] as object[]),
+      datasetJson['gene_browser'] ? GeneBrowser.fromJson(datasetJson['gene_browser'] as object) : null,
+      detailsJson['has_denovo'] as boolean,
+      detailsJson['genome'] as string
     );
   }
 
-  static fromJsonArray(jsonArray: Array<Object>): Array<Dataset> {
+  public static fromJsonArray(jsonArray: Array<object>): Array<Dataset> {
     if (!jsonArray) {
       return undefined;
     }
     return jsonArray.map((json) => Dataset.fromJson(json));
   }
 
-  getDefaultGroups() {
+  public getDefaultGroups(): string[] {
     return ['any_dataset', this.id];
   }
 
-  get defaultPersonSetCollection(): PersonSetCollection {
+  public get defaultPersonSetCollection(): PersonSetCollection {
     return this.personSetCollections.collections[0];
   }
 
-  constructor(
-    readonly id: string,
-    readonly description: string,
-    readonly name: string,
-    readonly parents: string[],
-    readonly accessRights: boolean,
-    readonly studies: string[],
-    readonly studyNames: string[],
-    readonly studyTypes: string[],
-    readonly phenotypeData: string,
-    readonly genotypeBrowser: boolean,
-    readonly phenotypeTool: boolean,
-    readonly enrichmentTool: boolean,
-    readonly phenotypeBrowser: boolean,
-    readonly commonReport: {enabled: boolean},
-    readonly genotypeBrowserConfig: GenotypeBrowser,
-    readonly personSetCollections: PersonSetCollections,
-    readonly groups: UserGroup[],
-    readonly geneBrowser: GeneBrowser,
-    readonly hasDenovo: boolean,
-    readonly genome: string
+  public constructor(
+    public readonly id: string,
+    public readonly description: string,
+    public readonly name: string,
+    public readonly parents: string[],
+    public readonly accessRights: boolean,
+    public readonly studies: string[],
+    public readonly studyNames: string[],
+    public readonly studyTypes: string[],
+    public readonly phenotypeData: string,
+    public readonly genotypeBrowser: boolean,
+    public readonly phenotypeTool: boolean,
+    public readonly enrichmentTool: boolean,
+    public readonly phenotypeBrowser: boolean,
+    public readonly commonReport: {enabled: boolean},
+    public readonly genotypeBrowserConfig: GenotypeBrowser,
+    public readonly personSetCollections: PersonSetCollections,
+    public readonly groups: UserGroup[],
+    public readonly geneBrowser: GeneBrowser,
+    public readonly hasDenovo: boolean,
+    public readonly genome: string
   ) {
     super(id, name);
   }

@@ -33,8 +33,8 @@ import { EffectTypes } from 'app/effect-types/effect-types';
   styleUrls: ['./autism-gene-profile-single-view.component.css']
 })
 export class AutismGeneProfileSingleViewComponent implements OnInit {
-  @ViewChild('stickySpan', {static:false}) menuElement: ElementRef;
-  @ViewChild('wrapperElement')  wrapperElement: ElementRef;
+  @ViewChild('stickySpan', {static: false}) public menuElement: ElementRef;
+  @ViewChild('wrapperElement') public wrapperElement: ElementRef;
 
   @Input() public readonly geneSymbol: string;
   @Input() public config: AgpSingleViewConfig;
@@ -43,8 +43,8 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
 
   public genomicScoresGeneWeights = [];
   public gene$: Observable<AgpGene>;
-  
-  public _histogramOptions = {
+
+  public histogramOptions = {
     width: 525,
     height: 110,
     marginLeft: 50,
@@ -74,7 +74,7 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
     private store: Store
   ) { }
 
-  public errorModal: boolean = false;
+  public errorModal = false;
 
   @HostListener('window:scroll', ['$event'])
   public handleScroll(): void {
@@ -94,13 +94,13 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
         gene.geneSets.forEach(element => {
           if (element.match(/sfari/i)) {
             this.isGeneInSFARI = true;
-          } 
+          }
         });
 
         let scores: string;
         const geneWeightsObservables = [];
-        for (let i = 0; i < gene.genomicScores.length; i++) {
-          scores = [...gene.genomicScores[i].scores.map(score => score.id)].join(',');
+        for (const agpGenomicScores of gene.genomicScores) {
+          scores = [...agpGenomicScores.scores.map(score => score.id)].join(',');
           geneWeightsObservables.push(
             this.geneWeightsService.getGeneWeights(scores)
           );
@@ -118,7 +118,7 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
       switchMap(gene => zip(of(gene), this.datasetsService.getDataset(this.config.defaultDataset)))
     ).subscribe(([gene, dataset]) => {
       this.setLinks(this.geneSymbol, gene, dataset.genome);
-    }, (error) => {
+    }, () => {
       this.errorModal = true;
     });
   }
@@ -170,10 +170,6 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
     return gene.studies.find(study => study.id === studyId).personSets
       .find(genePersonSet => genePersonSet.id === personSetId).effectTypes
       .find(effectType => effectType.id === statisticId);
-  }
-
-  public get histogramOptions() {
-    return this._histogramOptions;
   }
 
   public goToQuery(
@@ -228,11 +224,11 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
     store.selectOnce(state => state).subscribe(state => {
       state['datasetId'] = datasetId;
       queryService.saveQuery(state, 'genotype')
-      .pipe(take(1))
-      .subscribe(urlObject => {
-        const url = queryService.getLoadUrlFromResponse(urlObject);
-        newWindow.location.assign(url);
-      });
+        .pipe(take(1))
+        .subscribe(urlObject => {
+          const url = queryService.getLoadUrlFromResponse(urlObject);
+          newWindow.location.assign(url);
+        });
     });
   }
 

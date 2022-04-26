@@ -1,46 +1,35 @@
 <div *ngIf="showFloatingHeader" class="table-header-sticky-div">
-    <gpf-table-view-header
-        style="display: table-header-group;"
-        [columns]="columnsChildren"
-        [(sortingInfo)]="sortingInfo">
-    </gpf-table-view-header>
+  <gpf-table-view-header style="display: table-header-group" [columns]="columnsChildren" [(sortingInfo)]="sortingInfo">
+  </gpf-table-view-header>
 </div>
 
-<div #table style="width: 100%; display: table; border-collapse: collapse;">
-    <gpf-table-view-header
-        style="display: table-header-group"
-        [columns]="columnsChildren"
-        [(sortingInfo)]="sortingInfo">
-    </gpf-table-view-header>
-    <div
-        [style.display]="beforeDataCellHeight ? 'table-row': 'none'"
-        [style.height]="beforeDataCellHeight + 'px'">
-        <td *ngFor="let column of columnsChildren">
-        </td>
-    </div>
-    <div #rows style="display: table-row;" *ngFor="let data of visibleData">
-        <gpf-table-view-cell #cells *ngFor="let column of columnsChildren"
-            [columnInfo]="column"
-            [data]="data"
-            [noScrollOptimization]="noScrollOptimization"
-            [style.width]="column.columnWidth ? column.columnWidth : null"
-            [style.max-width]="column.columnWidth ? column.columnWidth : null"
-            style="vertical-align: middle">
-        </gpf-table-view-cell>
-    </div>
-    <div style="display: table-row;">
-        <gpf-table-view-empty-cell *ngFor="let column of columnsChildren" [columnInfo]="column">
-        </gpf-table-view-empty-cell>
-    </div>
-    <div
-        [style.display]="afterDataCellHeight ? 'table-row': 'none'"
-        [style.height]="afterDataCellHeight + 'px'">
-        <td *ngFor="let column of columnsChildren">
-        </td>
-    </div>
+<div #table style="width: 100%; display: table; border-collapse: collapse">
+  <gpf-table-view-header style="display: table-header-group" [columns]="columnsChildren" [(sortingInfo)]="sortingInfo">
+  </gpf-table-view-header>
+  <div [style.display]="beforeDataCellHeight ? 'table-row' : 'none'" [style.height]="beforeDataCellHeight + 'px'">
+    <td *ngFor="let column of columnsChildren"></td>
+  </div>
+  <div #rows style="display: table-row" *ngFor="let data of visibleData">
+    <gpf-table-view-cell
+      #cells
+      *ngFor="let column of columnsChildren"
+      [columnInfo]="column"
+      [data]="data"
+      [noScrollOptimization]="noScrollOptimization"
+      [style.width]="column.columnWidth ? column.columnWidth : null"
+      [style.max-width]="column.columnWidth ? column.columnWidth : null"
+      style="vertical-align: middle">
+    </gpf-table-view-cell>
+  </div>
+  <div style="display: table-row">
+    <gpf-table-view-empty-cell *ngFor="let column of columnsChildren" [columnInfo]="column">
+    </gpf-table-view-empty-cell>
+  </div>
+  <div [style.display]="afterDataCellHeight ? 'table-row' : 'none'" [style.height]="afterDataCellHeight + 'px'">
+    <td *ngFor="let column of columnsChildren"></td>
+  </div>
 </div>
 
 <div *ngIf="showFloatingHeader" class="legend-div">
-    <ng-template *ngIf="legend?.templateRef" [ngTemplateOutlet]="legend.templateRef">
-    </ng-template>
+  <ng-template *ngIf="legend?.templateRef" [ngTemplateOutlet]="legend.templateRef"></ng-template>
 </div>

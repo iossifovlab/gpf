@@ -16,17 +16,16 @@ describe('GenotypePreviewTableComponent', () => {
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      schemas: [ CUSTOM_ELEMENTS_SCHEMA ],
+      schemas: [CUSTOM_ELEMENTS_SCHEMA],
       declarations: [
-          GenotypePreviewTableComponent,
-          GpfTableComponent,
-          GpfTableHeaderComponent,
-          GpfTableCellComponent,
-          GpfTableEmptyCellComponent,
-          GpfTableSubheaderComponent
-        ]
-    })
-    .compileComponents();
+        GenotypePreviewTableComponent,
+        GpfTableComponent,
+        GpfTableHeaderComponent,
+        GpfTableCellComponent,
+        GpfTableEmptyCellComponent,
+        GpfTableSubheaderComponent
+      ]
+    }).compileComponents();
   }));
 
   beforeEach(() => {
@@ -140,5 +139,5 @@ describe('GenotypePreviewTableComponent', () => {
     // component.columns = new Array<any>(8);
     // component.onResize();
     // expect((component as any).singleColumnWidth).toEqual('161.375px');
-   });
+  });
 });

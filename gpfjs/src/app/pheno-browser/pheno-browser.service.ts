@@ -1,14 +1,12 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-// eslint-disable-next-line no-restricted-imports
 import { Observable, Subject } from 'rxjs';
 import { CookieService } from 'ngx-cookie-service';
-
-const oboe = require('oboe');
-
 import { PhenoInstruments, PhenoInstrument, PhenoMeasures, PhenoMeasure } from './pheno-browser';
 import { ConfigService } from '../config/config.service';
 import { map } from 'rxjs/operators';
+
+const oboe = require('oboe');
 
 @Injectable()
 export class PhenoBrowserService {
@@ -22,16 +20,16 @@ export class PhenoBrowserService {
   private connectionEstablished = false;
   public measuresStreamingFinishedSubject = new Subject();
 
-  constructor(
+  public constructor(
     private http: HttpClient,
     private cookieService: CookieService,
     private config: ConfigService
   ) {}
 
-  getMeasureDescription(datasetId: string, measureId: string) {
+  public getMeasureDescription(datasetId: string, measureId: string): Observable<object> {
     const headers = this.getHeaders();
     const searchParams = new HttpParams().set('dataset_id', datasetId).set('measure_id', measureId);
-    const options = { headers: headers, withCredentials: true,  params: searchParams };
+    const options = { headers: headers, withCredentials: true, params: searchParams };
     return this.http.get(this.config.baseUrl + this.measureDescription, options).pipe(map(res => res));
   }
 
@@ -42,7 +40,7 @@ export class PhenoBrowserService {
     return headers;
   }
 
-  getInstruments(datasetId: string): Observable<PhenoInstruments> {
+  public getInstruments(datasetId: string): Observable<PhenoInstruments> {
     const headers = this.getHeaders();
     const searchParams = new HttpParams().set('dataset_id', datasetId);
     const options = {headers: headers, withCredentials: true, params: searchParams};
@@ -52,9 +50,13 @@ export class PhenoBrowserService {
       .pipe(map(response => response as PhenoInstruments));
   }
 
-  getMeasures(datasetId: string, instrument: PhenoInstrument, search: string): Observable<PhenoMeasure> {
+  public getMeasures(datasetId: string, instrument: PhenoInstrument, search: string): Observable<PhenoMeasure> {
     const headers = this.getHeaders();
-    const searchParams = new HttpParams().set('dataset_id', datasetId).set('instrument', instrument).set('search', search);
+    const searchParams =
+      new HttpParams()
+        .set('dataset_id', datasetId)
+        .set('instrument', instrument)
+        .set('search', search);
     const measuresSubject: Subject<PhenoMeasure> = new Subject();
 
     this.oboeInstance = oboe({
@@ -75,12 +77,10 @@ export class PhenoBrowserService {
       console.warn('oboejs encountered a fail event while streaming');
     });
 
-    return measuresSubject.pipe(map(data => {
-        return PhenoMeasure.fromJson(data['measure']);
-    }));
+    return measuresSubject.pipe(map(data => PhenoMeasure.fromJson(data['measure'] as object)));
   }
 
-  getMeasuresInfo(datasetId: string): Observable<PhenoMeasures> {
+  public getMeasuresInfo(datasetId: string): Observable<PhenoMeasures> {
     const headers = this.getHeaders();
     const searchParams = new HttpParams().set('dataset_id', datasetId);
     const options = {headers: headers, withCredentials: true, params: searchParams};
@@ -88,10 +88,9 @@ export class PhenoBrowserService {
     return this.http
       .get(this.config.baseUrl + this.measuresInfoUrl, options)
       .pipe(map(response => PhenoMeasures.fromJson(response)));
-
   }
 
-  getDownloadLink(instrument: PhenoInstrument, datasetId: string) {
+  public getDownloadLink(instrument: PhenoInstrument, datasetId: string): string {
     return `${this.config.baseUrl}${this.downloadUrl}`
            + `?dataset_id=${datasetId}&instrument=${instrument}`;
   }

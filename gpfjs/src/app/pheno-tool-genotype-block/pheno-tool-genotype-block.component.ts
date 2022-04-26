@@ -1,5 +1,5 @@
-import { Component, Input, OnInit } from '@angular/core';
-import { PresentInParentState, PresentInParentModel } from 'app/present-in-parent/present-in-parent.state';
+import { Component, Input } from '@angular/core';
+import { PresentInParentState } from 'app/present-in-parent/present-in-parent.state';
 import { EffecttypesState, EffectTypeModel } from 'app/effect-types/effect-types.state';
 import { Selector } from '@ngxs/store';
 
@@ -9,16 +9,13 @@ import { Selector } from '@ngxs/store';
   styleUrls: ['./pheno-tool-genotype-block.component.css'],
 })
 export class PhenoToolGenotypeBlockComponent {
-
-  @Input()
-  variantTypes: Set<string> = new Set([]);
+  @Input() public variantTypes: Set<string> = new Set();
 
   @Selector([PresentInParentState.queryStateSelector, EffecttypesState])
-  public static phenoToolGenotypeBlockQueryState(presentInParentState, phenoEffectTypesState: EffectTypeModel) {
+  public static phenoToolGenotypeBlockQueryState(presentInParentState, phenoEffectTypesState: EffectTypeModel): object {
     return {
-      'presentInParent': presentInParentState,
-      'effectTypes': phenoEffectTypesState.effectTypes,
+      presentInParent: presentInParentState,
+      effectTypes: phenoEffectTypesState.effectTypes,
     };
   }
-
 }

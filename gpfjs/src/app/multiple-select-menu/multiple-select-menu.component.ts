@@ -39,10 +39,14 @@ export class MultipleSelectMenuComponent implements OnChanges {
   public toggleCheckingAll(): void {
     if (this.buttonLabel === 'Uncheck all') {
       this.buttonLabel = 'Check all';
-      this.columns.map(col => col.visibility = false);
+      this.columns.map(col => {
+        col.visibility = false;
+      });
     } else if (this.buttonLabel === 'Check all') {
       this.buttonLabel = 'Uncheck all';
-      this.columns.map(col => col.visibility = true);
+      this.columns.map(col => {
+        col.visibility = true;
+      });
     }
     this.apply();
   }

@@ -9,10 +9,9 @@ describe('PhenoBrowserModalContentComponent', () => {
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      declarations: [ PhenoBrowserModalContentComponent ],
+      declarations: [PhenoBrowserModalContentComponent],
       providers: [NgbActiveModal],
-    })
-    .compileComponents();
+    }).compileComponents();
   }));
 
   beforeEach(() => {

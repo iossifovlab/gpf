@@ -11,22 +11,21 @@ import { StatefulComponent } from 'app/common/stateful-component';
   styleUrls: ['./family-type-filter.component.css'],
 })
 export class FamilyTypeFilterComponent extends StatefulComponent implements OnInit {
+  public allFamilyTypes: Set<string> = new Set(['trio', 'quad', 'multigenerational', 'simplex', 'multiplex', 'other']);
+  @Validate(SetNotEmpty, {message: 'Select at least one.'}) public selectedFamilyTypes: Set<string> = new Set();
 
-  allFamilyTypes: Set<string> = new Set(['trio', 'quad', 'multigenerational', 'simplex', 'multiplex', 'other']);
-  @Validate(SetNotEmpty, {message: 'Select at least one.'}) selectedFamilyTypes: Set<string> = new Set();
-
-  constructor(protected store: Store) {
+  public constructor(protected store: Store) {
     super(store, FamilyTypeFilterState, 'familyTypeFilter');
   }
 
-  ngOnInit(): void {
+  public ngOnInit(): void {
     super.ngOnInit();
     this.store.selectOnce(state => state.familyTypeFilterState).subscribe(state => {
       this.selectedFamilyTypes = new Set(state.familyTypes);
     });
   }
 
-  updateFamilyTypes(newValues: Set<string>): void {
+  public updateFamilyTypes(newValues: Set<string>): void {
     this.selectedFamilyTypes = newValues;
     this.store.dispatch(new SetFamilyTypeFilter(newValues));
   }

@@ -64,22 +64,22 @@ describe('AppComponent', () => {
   });
 
   it('should create the app', () => {
-    let fixture = TestBed.createComponent(AppComponent);
-    let app = fixture.debugElement.componentInstance;
+    const fixture = TestBed.createComponent(AppComponent);
+    const app = fixture.debugElement.componentInstance;
     expect(app).toBeTruthy();
   });
 
   it('should have as title "GPF: Genotypes and Phenotypes in Families"', () => {
-    let fixture = TestBed.createComponent(AppComponent);
-    let app = fixture.debugElement.componentInstance;
+    const fixture = TestBed.createComponent(AppComponent);
+    const app = fixture.debugElement.componentInstance;
     expect(app.title).toEqual(app.title);
   });
 
   it('should render title in a h3 tag', () => {
-    let fixture = TestBed.createComponent(AppComponent);
+    const fixture = TestBed.createComponent(AppComponent);
     fixture.detectChanges();
-    let compiled = fixture.debugElement.nativeElement;
-    let app = fixture.debugElement.componentInstance;
+    const compiled = fixture.debugElement.nativeElement;
+    const app = fixture.debugElement.componentInstance;
     expect(compiled.querySelector('h3').textContent).toContain(app.title);
   });
 });

@@ -2,16 +2,14 @@ import { Transcript, Gene, TranscriptSegment } from './gene';
 
 describe('TranscriptSegment', () => {
   it('should check is intron', () => {
-    let transcriptSegment;
-    transcriptSegment = new TranscriptSegment('chrom', 1, 10, true, true, true, 'label');
+    let transcriptSegment: TranscriptSegment = new TranscriptSegment('chrom', 1, 10, true, true, true, 'label');
     expect(transcriptSegment.isIntron).toBeFalsy();
     transcriptSegment = new TranscriptSegment('chrom', 1, 10, true, false, true, 'label');
     expect(transcriptSegment.isIntron).toBeTruthy();
   });
 
   it('should get intersection length', () => {
-    let transcriptSegment;
-    transcriptSegment = new TranscriptSegment('chrom', 10, 20, true, true, true, 'label');
+    const transcriptSegment = new TranscriptSegment('chrom', 10, 20, true, true, true, 'label');
 
     expect(transcriptSegment.intersectionLength(5, 10)).toBe(0);
     expect(transcriptSegment.intersectionLength(20, 25)).toBe(0);
@@ -24,8 +22,7 @@ describe('TranscriptSegment', () => {
   });
 
   it('should check is sub segment', () => {
-    let transcriptSegment;
-    transcriptSegment = new TranscriptSegment('chrom', 10, 20, true, true, true, 'label');
+    const transcriptSegment = new TranscriptSegment('chrom', 10, 20, true, true, true, 'label');
 
     expect(transcriptSegment.isSubSegment(5, 10)).toBeFalsy();
     expect(transcriptSegment.isSubSegment(5, 15)).toBeFalsy();
@@ -45,8 +42,8 @@ describe('Transcript', () => {
       'id',
       'chrom',
       'strand',
-      [ { chromosome: 'coding1', start: 1, stop: 5 }],
-      [ { chromosome: 'exon1', start: 1, stop: 5 },
+      [{ chromosome: 'coding1', start: 1, stop: 5 }],
+      [{ chromosome: 'exon1', start: 1, stop: 5 },
         { chromosome: 'exon2', start: 7, stop: 12 },
         { chromosome: 'exon3', start: 15, stop: 16 },
         { chromosome: 'exon4', start: 18, stop: 20 }]
@@ -197,10 +194,10 @@ describe('Transcript', () => {
       'id',
       'chrom',
       'strand',
-      [ { chromosome: 'coding1', start: 1, stop: 5 },
+      [{ chromosome: 'coding1', start: 1, stop: 5 },
         { chromosome: 'coding1', start: 7, stop: 12 },
         { chromosome: 'coding1', start: 15, stop: 16 }],
-      [ { chromosome: 'exon1', start: 1, stop: 5 }]
+      [{ chromosome: 'exon1', start: 1, stop: 5 }]
     );
 
     expect(transcript.isAreaInCDS(0, 1)).toBeFalsy();
@@ -221,18 +218,18 @@ describe('Gene', () => {
         'id1',
         'chrom1',
         'strand1',
-        [ { chromosome: 'coding1', start: 1, stop: 5 },
+        [{ chromosome: 'coding1', start: 1, stop: 5 },
           { chromosome: 'coding2', start: 12, stop: 15 }],
-        [ { chromosome: 'exon1', start: 7, stop: 11 },
+        [{ chromosome: 'exon1', start: 7, stop: 11 },
           { chromosome: 'exon2', start: 20, stop: 25 }]
       ),
       new Transcript(
         'id2',
         'chrom2',
         'strand2',
-        [ { chromosome: 'coding3', start: 3, stop: 10 },
+        [{ chromosome: 'coding3', start: 3, stop: 10 },
           { chromosome: 'coding4', start: 18, stop: 20 }],
-        [ { chromosome: 'exon3', start: 13, stop: 16 },
+        [{ chromosome: 'exon3', start: 13, stop: 16 },
           { chromosome: 'exon4', start: 18, stop: 22 }]
       )
     ];
@@ -240,10 +237,10 @@ describe('Gene', () => {
       'collapsed',
       'strand1',
       'chrom1',
-      [ { chromosome: 'coding1', start: 1, stop: 10 },
+      [{ chromosome: 'coding1', start: 1, stop: 10 },
         { chromosome: 'coding2', start: 12, stop: 15 },
         { chromosome: 'coding4', start: 18, stop: 20 }],
-      [ { chromosome: 'exon1', start: 7, stop: 11 },
+      [{ chromosome: 'exon1', start: 7, stop: 11 },
         { chromosome: 'exon3', start: 13, stop: 16 },
         { chromosome: 'exon4', start: 18, stop: 25 }]
     );
@@ -258,25 +255,25 @@ describe('Gene', () => {
         'id1',
         'chrom1',
         'strand1',
-        [ { chromosome: '', start: 0, stop: 0 } ],
-        [ { chromosome: 'exon1', start: 7, stop: 11 },
+        [{ chromosome: '', start: 0, stop: 0 }],
+        [{ chromosome: 'exon1', start: 7, stop: 11 },
           { chromosome: 'exon2', start: 20, stop: 25 }]
       ),
       new Transcript(
         'id2',
         'chrom2',
         'strand2',
-        [ { chromosome: '', start: 0, stop: 0 } ],
-        [ { chromosome: 'exon3', start: 13, stop: 16 },
-          { chromosome: 'exon4', start: 18, stop: 22 } ]
+        [{ chromosome: '', start: 0, stop: 0 }],
+        [{ chromosome: 'exon3', start: 13, stop: 16 },
+          { chromosome: 'exon4', start: 18, stop: 22 }]
       ),
       new Transcript(
         'id1',
         'chrom1',
         'strand1',
-        [ { chromosome: '', start: 0, stop: 0 } ],
-        [ { chromosome: 'exon1', start: 3, stop: 16 },
-          { chromosome: 'exon2', start: 18, stop: 35 } ]
+        [{ chromosome: '', start: 0, stop: 0 }],
+        [{ chromosome: 'exon1', start: 3, stop: 16 },
+          { chromosome: 'exon2', start: 18, stop: 35 }]
       )
     ];
 
@@ -331,25 +328,25 @@ describe('Gene', () => {
         'id1',
         'chrom1',
         'strand1',
-        [ { chromosome: '', start: 0, stop: 0 } ],
-        [ { chromosome: 'exon1', start: 7, stop: 11 },
+        [{ chromosome: '', start: 0, stop: 0 }],
+        [{ chromosome: 'exon1', start: 7, stop: 11 },
           { chromosome: 'exon2', start: 20, stop: 25 }]
       ),
       new Transcript(
         'id2',
         'chrom2',
         'strand2',
-        [ { chromosome: '', start: 0, stop: 0 } ],
-        [ { chromosome: 'exon3', start: 13, stop: 16 },
-          { chromosome: 'exon4', start: 18, stop: 22 } ]
+        [{ chromosome: '', start: 0, stop: 0 }],
+        [{ chromosome: 'exon3', start: 13, stop: 16 },
+          { chromosome: 'exon4', start: 18, stop: 22 }]
       ),
       new Transcript(
         'id3',
         'chrom3',
         'strand3',
-        [ { chromosome: '', start: 0, stop: 0 } ],
-        [ { chromosome: 'exon5', start: 3, stop: 16 },
-          { chromosome: 'exon6', start: 18, stop: 35 } ]
+        [{ chromosome: '', start: 0, stop: 0 }],
+        [{ chromosome: 'exon5', start: 3, stop: 16 },
+          { chromosome: 'exon6', start: 18, stop: 35 }]
       )
     ];
 

@@ -1,6 +1,5 @@
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { SearchableSelectComponent } from 'app/searchable-select/searchable-select.component';
-
 import { CommonReportsRowComponent } from './common-reports-row.component';
 
 describe('CommonReportsRowComponent', () => {
@@ -10,8 +9,7 @@ describe('CommonReportsRowComponent', () => {
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [CommonReportsRowComponent, SearchableSelectComponent]
-    })
-    .compileComponents();
+    }).compileComponents();
   }));
 
   beforeEach(() => {

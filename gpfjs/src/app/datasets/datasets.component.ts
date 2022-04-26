@@ -2,7 +2,6 @@ import { UsersService } from '../users/users.service';
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { DatasetsService } from './datasets.service';
 import { Dataset, toolPageLinks } from './datasets';
-// eslint-disable-next-line no-restricted-imports
 import { Observable, Subscription } from 'rxjs';
 import { ActivatedRoute, Params, Router } from '@angular/router';
 import { isEmpty } from 'lodash';
@@ -29,7 +28,7 @@ export class DatasetsComponent implements OnInit, OnDestroy {
 
   public showNoToolsWarning: boolean;
 
-  constructor(
+  public constructor(
     private usersService: UsersService,
     private datasetsService: DatasetsService,
     private route: ActivatedRoute,
@@ -37,7 +36,7 @@ export class DatasetsComponent implements OnInit, OnDestroy {
     private store: Store,
   ) { }
 
-  public ngOnInit() {
+  public ngOnInit(): void {
     this.datasetTrees = new Array<DatasetNode>();
     this.datasets$ = this.filterHiddenGroups(this.datasetsService.getDatasetsObservable());
     this.subscriptions.push(
@@ -47,7 +46,7 @@ export class DatasetsComponent implements OnInit, OnDestroy {
         }
         // Clear out previous loaded dataset - signifies loading and triggers change detection
         this.selectedDataset = null;
-        this.datasetsService.setSelectedDatasetById(params['dataset']);
+        this.datasetsService.setSelectedDatasetById(params['dataset'] as string);
       }),
       // Create dataset hierarchy
       this.datasets$.subscribe(datasets => {
@@ -57,7 +56,7 @@ export class DatasetsComponent implements OnInit, OnDestroy {
       this.datasetsService.getDatasetsLoadedObservable().subscribe(() => {
         this.setupSelectedDataset();
       }),
-      this.datasets$.pipe(take(1)).subscribe(datasets => {
+      this.datasets$.pipe(take(1)).subscribe(() => {
         if (this.router.url === '/datasets') {
           this.router.navigate(['/', 'datasets', this.datasetTrees[0].dataset.id]);
         }
@@ -65,13 +64,13 @@ export class DatasetsComponent implements OnInit, OnDestroy {
       this.usersService.getUserInfoObservable().subscribe(() => {
         this.datasetsService.reloadSelectedDataset(true);
       }),
-      this.datasetsService.getPermissionDeniedPrompt().subscribe(
-        aprompt => this.permissionDeniedPrompt = aprompt
-      ),
+      this.datasetsService.getPermissionDeniedPrompt().subscribe(aprompt => {
+        this.permissionDeniedPrompt = aprompt as string;
+      }),
     );
   }
 
-  public ngOnDestroy() {
+  public ngOnDestroy(): void {
     this.subscriptions.map(subscription => subscription.unsubscribe());
   }
 
@@ -110,27 +109,27 @@ export class DatasetsComponent implements OnInit, OnDestroy {
   private isToolEnabled(dataset: Dataset, toolName: string): boolean {
     let result: boolean;
     switch (toolName) {
-      case 'dataset-description':
-        result = dataset.description !== undefined ? true : false;
-        break;
-      case 'dataset-statistics':
-        result = dataset.commonReport.enabled;
-        break;
-      case 'genotype-browser':
-        result = (dataset.genotypeBrowser && (dataset.genotypeBrowserConfig !== undefined) !== false) ? true : false;
-        break;
-      case 'phenotype-browser':
-        result = dataset.phenotypeBrowser;
-        break;
-      case 'phenotype-tool':
-        result = dataset.phenotypeTool;
-        break;
-      case 'enrichment-tool':
-        result = dataset.enrichmentTool;
-        break;
-      case 'gene-browser':
-        result = dataset.geneBrowser.enabled;
-        break;
+    case 'dataset-description':
+      result = dataset.description !== undefined;
+      break;
+    case 'dataset-statistics':
+      result = dataset.commonReport.enabled;
+      break;
+    case 'genotype-browser':
+      result = Boolean(dataset.genotypeBrowser && (dataset.genotypeBrowserConfig !== undefined) !== false);
+      break;
+    case 'phenotype-browser':
+      result = dataset.phenotypeBrowser;
+      break;
+    case 'phenotype-tool':
+      result = dataset.phenotypeTool;
+      break;
+    case 'enrichment-tool':
+      result = dataset.enrichmentTool;
+      break;
+    case 'gene-browser':
+      result = dataset.geneBrowser.enabled;
+      break;
     }
 
     return result;
@@ -164,7 +163,7 @@ export class DatasetsComponent implements OnInit, OnDestroy {
 
   private filterHiddenGroups(datasets: Observable<Dataset[]>): Observable<Dataset[]> {
     return datasets.pipe(map((d) =>
-      d.filter((dataset) => dataset.groups.find((g) => g.name === 'hidden') == null || dataset.accessRights)
+      d.filter((dataset) => dataset.groups.find((g) => g.name === 'hidden') === null || dataset.accessRights)
     ));
   }
 

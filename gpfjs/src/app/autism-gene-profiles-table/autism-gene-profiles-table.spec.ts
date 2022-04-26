@@ -300,7 +300,6 @@ describe('AgpTableConfig', () => {
 
   it('should calculate grid column', () => {
     const leaves = Column.leaves(config.columns);
-    const maxDepth = Math.max(...leaves.map(leaf => leaf.depth));
 
     let columnIdx = 0;
     for (const leaf of leaves) {

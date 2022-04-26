@@ -4,6 +4,7 @@ import { UserGroup } from './users-groups';
 import { Dataset } from '../datasets/datasets';
 import { ConfigService } from '../config/config.service';
 import { map } from 'rxjs/operators';
+import { Observable } from 'rxjs';
 
 @Injectable()
 export class UsersGroupsService {
@@ -11,26 +12,26 @@ export class UsersGroupsService {
   private readonly groupGrantPermissionUrl = 'groups/grant-permission';
   private readonly groupRevokePermissionUrl = 'groups/revoke-permission';
 
-  constructor(
+  public constructor(
     private http: HttpClient,
     private config: ConfigService,
   ) {}
 
-  getAllGroups() {
+  public getAllGroups(): Observable<UserGroup[]> {
     const options = { withCredentials: true };
 
     return this.http.get(this.config.baseUrl + this.groupsUrl, options)
       .pipe(map((response: any) => UserGroup.fromJsonArray(response)));
   }
 
-  getGroup(groupId: number) {
+  public getGroup(groupId: number): Observable<UserGroup> {
     const options = { withCredentials: true };
 
     return this.http.get(`${this.config.baseUrl}${this.groupsUrl}/${groupId}`, options)
       .pipe(map((response: any) => UserGroup.fromJson(response)));
   }
 
-  grantPermission(groupName: string, dataset: Dataset) {
+  public grantPermission(groupName: string, dataset: Dataset): Observable<object> {
     const options = { withCredentials: true };
 
     return this.http.post(this.config.baseUrl + this.groupGrantPermissionUrl, {
@@ -39,7 +40,7 @@ export class UsersGroupsService {
     }, options);
   }
 
-  revokePermission(group: UserGroup, dataset: Dataset) {
+  public revokePermission(group: UserGroup, dataset: Dataset): Observable<object> {
     const options = { withCredentials: true };
 
     return this.http.post(this.config.baseUrl + this.groupRevokePermissionUrl, {

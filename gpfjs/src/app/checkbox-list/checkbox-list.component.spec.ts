@@ -8,9 +8,8 @@ describe('CheckboxListComponent', () => {
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      declarations: [ CheckboxListComponent, DisplayNamePipe ]
-    })
-    .compileComponents();
+      declarations: [CheckboxListComponent, DisplayNamePipe]
+    }).compileComponents();
   }));
 
   beforeEach(() => {
@@ -63,7 +62,7 @@ describe('CheckboxListComponent', () => {
 
   it('should select all', () => {
     const emitSpy = jest.spyOn(component, 'emit');
-    component.selectedItems = new Set([]);
+    component.selectedItems = new Set();
 
     component.selectAll();
     expect(component.selectedItems).toEqual(new Set([...component.items]));

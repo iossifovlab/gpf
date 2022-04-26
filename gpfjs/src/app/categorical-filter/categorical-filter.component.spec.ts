@@ -29,15 +29,17 @@ describe('CategoricalFilterComponent', () => {
         ConfigService,
         UsersService
       ],
-      imports: [HttpClientTestingModule, RouterTestingModule, FormsModule, NgxsModule.forRoot([], {developmentMode: true})]
-    })
-    .compileComponents();
+      imports: [
+        HttpClientTestingModule, RouterTestingModule, FormsModule,
+        NgxsModule.forRoot([], {developmentMode: true})
+      ]
+    }).compileComponents();
   }));
 
   beforeEach(() => {
     fixture = TestBed.createComponent(CategoricalFilterComponent);
     component = fixture.componentInstance;
-    (component.categoricalFilter as any) = {'from': 'phenodb'};
+    (component.categoricalFilter as any) = {from: 'phenodb'};
     fixture.detectChanges();
   });
 

@@ -2,8 +2,10 @@ import { Injectable } from '@angular/core';
 import { State, Action, StateContext } from '@ngxs/store';
 
 export class SetUniqueFamilyVariantsFilter {
-  static readonly type = '[Genotype] Set Unique Family Variants Filter';
-  constructor(public uniqueFamilyVariants: boolean) {}
+  public static readonly type = '[Genotype] Set Unique Family Variants Filter';
+  public constructor(
+    public uniqueFamilyVariants: boolean
+  ) {}
 }
 
 export interface UniqueFamilyVariantsFilterModel {
@@ -17,7 +19,10 @@ export interface UniqueFamilyVariantsFilterModel {
 @Injectable()
 export class UniqueFamilyVariantsFilterState {
   @Action(SetUniqueFamilyVariantsFilter)
-  setUniqueFamilyVariantsFilter(ctx: StateContext<UniqueFamilyVariantsFilterModel>, action: SetUniqueFamilyVariantsFilter) {
+  public setUniqueFamilyVariantsFilter(
+    ctx: StateContext<UniqueFamilyVariantsFilterModel>,
+    action: SetUniqueFamilyVariantsFilter
+  ): void {
     ctx.patchState({ uniqueFamilyVariants: action.uniqueFamilyVariants });
   }
 }

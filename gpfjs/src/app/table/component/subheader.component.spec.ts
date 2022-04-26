@@ -1,6 +1,5 @@
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { Component, NO_ERRORS_SCHEMA } from '@angular/core';
-
 import { GpfTableSubheaderComponent } from './subheader.component';
 import { GpfTableCellContentDirective } from './content.directive';
 
@@ -21,14 +20,13 @@ describe('GpfTableSubheaderComponent', () => {
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      schemas: [ NO_ERRORS_SCHEMA ],
+      schemas: [NO_ERRORS_SCHEMA],
       declarations: [
         TestWrapperComponent,
         GpfTableSubheaderComponent,
         GpfTableCellContentDirective
       ]
-    })
-    .compileComponents();
+    }).compileComponents();
   }));
 
   beforeEach(() => {

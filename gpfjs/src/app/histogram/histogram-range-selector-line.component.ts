@@ -11,35 +11,35 @@ import * as d3 from 'd3';
   styleUrls: ['./histogram-range-selector-line.component.css']
 })
 export class HistogramRangeSelectorLineComponent implements OnInit, AfterViewInit {
-  @Input() y = 10;
-  @Input() height = 90;
+  @Input() public y = 10;
+  @Input() public height = 90;
 
-  @Input() minX: number;
-  @Input() maxX: number;
+  @Input() public minX: number;
+  @Input() public maxX: number;
 
-  @ViewChild('draggable', {static: true}) draggable: any;
-  @ViewChildren('triangle') triangles: QueryList<any>;
+  @ViewChild('draggable', {static: true}) public draggable: any;
+  @ViewChildren('triangle') public triangles: QueryList<any>;
 
-  @Input() text: string;
-  @Input() textOnRight = true;
+  @Input() public text: string;
+  @Input() public textOnRight = true;
 
-  @Input() width: any;
-  @Input() x = 0;
-  @Output() xChange = new EventEmitter();
+  @Input() public width: any;
+  @Input() public x = 0;
+  @Output() public xChange = new EventEmitter();
 
-  ngOnInit() {
-    d3.select(this.draggable.nativeElement).
+  public ngOnInit(): void {
+    d3.select(this.draggable.nativeElement as HTMLElement).
       call(d3.drag().on('drag', (event: any, d) => this.onDrag(event.x)));
   }
 
-  ngAfterViewInit() {
+  public ngAfterViewInit(): void {
     this.triangles.forEach((triangle) => {
       d3.select(triangle.nativeElement)
         .attr('d', d3.symbol().type((d3.symbolTriangle)));
     });
   }
 
-  onDrag(newPositionX) {
-      this.xChange.emit(newPositionX);
+  private onDrag(newPositionX): void {
+    this.xChange.emit(newPositionX);
   }
 }

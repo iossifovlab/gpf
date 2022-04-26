@@ -2,8 +2,8 @@ import { Injectable } from '@angular/core';
 import { State, Action, StateContext } from '@ngxs/store';
 
 export class SetFamilyIds {
-  static readonly type = '[Genotype] Set family ids';
-  constructor(public familyIds: string[]) {}
+  public static readonly type = '[Genotype] Set family ids';
+  public constructor(public familyIds: string[]) {}
 }
 
 export interface FamilyIdsModel {
@@ -19,8 +19,7 @@ export interface FamilyIdsModel {
 @Injectable()
 export class FamilyIdsState {
   @Action(SetFamilyIds)
-  changeFamilyIds(ctx: StateContext<FamilyIdsModel>, action: SetFamilyIds) {
-    const state = ctx.getState();
+  public changeFamilyIds(ctx: StateContext<FamilyIdsModel>, action: SetFamilyIds): void {
     ctx.patchState({
       familyIds: action.familyIds
     });

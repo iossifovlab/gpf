@@ -1,11 +1,11 @@
-import {  Directive, TemplateRef, ViewContainerRef } from '@angular/core';
+import { Directive, TemplateRef, ViewContainerRef } from '@angular/core';
 
 @Directive({
   selector: '[gpfTableLegend]'
 })
 export class GpfTableLegendDirective {
-  constructor(
-    readonly templateRef: TemplateRef<any>,
-    readonly viewContainer: ViewContainerRef
+  public constructor(
+    public readonly templateRef: TemplateRef<any>,
+    public readonly viewContainer: ViewContainerRef
   ) { }
 }

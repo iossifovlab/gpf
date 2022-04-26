@@ -8,24 +8,23 @@ import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
   styleUrls: ['./registration.component.css']
 })
 export class RegistrationComponent implements OnInit {
-  email: string;
-  name: string;
+  public email: string;
+  public name: string;
+  public registerError = '';
+  public registerSuccess = false;
 
-  registerError = '';
-  registerSuccess = false;
-
-  constructor(
-    readonly activeModal: NgbActiveModal,
+  public constructor(
+    public readonly activeModal: NgbActiveModal,
     private usersService: UsersService
   ) { }
 
-  ngOnInit() {
+  public ngOnInit(): void {
     this.usersService.emailLog.subscribe(email => {
       this.email = email;
     });
   }
 
-  register() {
+  public register(): void {
     this.usersService.register(
       this.email, this.name
     ).subscribe(
@@ -48,5 +47,4 @@ export class RegistrationComponent implements OnInit {
       }
     );
   }
-
 }

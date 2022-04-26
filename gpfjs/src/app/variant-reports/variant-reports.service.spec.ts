@@ -7,20 +7,20 @@ import { Observable, of } from 'rxjs';
 import { DatasetsService } from 'app/datasets/datasets.service';
 
 class MockDatasetsService {
-  getSelectedDatasetId(): string {
-    return "test_dataset"
+  public getSelectedDatasetId(): string {
+    return 'test_dataset';
   }
-  getSelectedDataset(): Observable<any> {
-    return of({accessRights: true})
+  public getSelectedDataset(): Observable<any> {
+    return of({accessRights: true});
   }
-  getDataset(): Observable<any> {
-    return of({accessRights: true})
+  public getDataset(): Observable<any> {
+    return of({accessRights: true});
   }
 }
 
 describe('VariantReportsService', () => {
   beforeEach(() => {
-    const configMock = { 'baseUrl': 'testUrl/' };
+    const configMock = { baseUrl: 'testUrl/' };
     const datasetsMock = new MockDatasetsService();
     TestBed.configureTestingModule({
       imports: [HttpClientModule],

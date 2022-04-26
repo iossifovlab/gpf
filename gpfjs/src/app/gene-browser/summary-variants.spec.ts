@@ -23,7 +23,7 @@ describe('SummaryAllele', () => {
   });
 
   it('should create from row', () => {
-    let summaryAllele;
+    let summaryAllele: SummaryAllele;
     const row = {
       location: 'location1',
       position: 3,
@@ -596,7 +596,7 @@ describe('SummaryAllelesFilter', () => {
     summaryAllelesFilter.selectedEffectTypes = new Set([...LGDS, ...CODING, ...CNV, ...OTHER]);
     summaryAllelesFilter.selectedVariantTypes = new Set(['sub', 'ins']);
     expect(summaryAllelesFilter.queryParams).toEqual({
-      'effectTypes': [
+      effectTypes: [
         'frame-shift',
         'nonsense',
         'splice-site',
@@ -618,9 +618,9 @@ describe('SummaryAllelesFilter', () => {
         'non-coding-intron',
         'CDS',
       ],
-      'inheritanceTypeFilter': ['denovo', 'mendelian', 'omission', 'missing'],
-      'affectedStatus': ['Affected only'],
-      'variantTypes': ['sub', 'ins']
+      inheritanceTypeFilter: ['denovo', 'mendelian', 'omission', 'missing'],
+      affectedStatus: ['Affected only'],
+      variantTypes: ['sub', 'ins']
     });
   });
 });

@@ -10,19 +10,18 @@ import { StatefulComponent } from 'app/common/stateful-component';
   templateUrl: './present-in-child.component.html',
 })
 export class PresentInChildComponent extends StatefulComponent implements OnInit {
-
-  presentInChildValues: Set<string> = new Set([
+  public presentInChildValues: Set<string> = new Set([
     'proband only', 'sibling only', 'proband and sibling', 'neither'
   ]);
 
   @Validate(SetNotEmpty, { message: 'Select at least one.' })
-  selectedValues = new Set<string>();
+  public selectedValues = new Set<string>();
 
-  constructor(protected store: Store) {
+  public constructor(protected store: Store) {
     super(store, PresentInChildState, 'presentInChild');
   }
 
-  ngOnInit() {
+  public ngOnInit(): void {
     super.ngOnInit();
     this.store.selectOnce(state => state.presentInChildState).subscribe(state => {
       // restore state
@@ -30,7 +29,7 @@ export class PresentInChildComponent extends StatefulComponent implements OnInit
     });
   }
 
-  updatePresentInChild(newValues: Set<string>): void {
+  public updatePresentInChild(newValues: Set<string>): void {
     this.selectedValues = newValues;
     this.store.dispatch(new SetPresentInChildValues(newValues));
   }

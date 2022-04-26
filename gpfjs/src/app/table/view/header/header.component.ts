@@ -8,33 +8,31 @@ import { SortInfo } from '../../table.component';
   styleUrls: ['./header.component.css']
 })
 export class GpfTableHeaderComponent {
-  @Input() columns: any;
-  @Output() sortingInfoChange = new EventEmitter();
-  @Input() sortingInfo: SortInfo;
+  @Input() public columns: any;
+  @Output() public sortingInfoChange = new EventEmitter();
+  @Input() public sortingInfo: SortInfo;
 
-  get subheadersCount() {
+  public get subheadersCount(): number[] {
     if (this.columns.first) {
-        const length = this.columns.first.headerChildren.length;
-        return Array(length).fill(0).map((x, i) => i);
+      const length = this.columns.first.headerChildren.length;
+      return Array(length).fill(0).map((x, i) => i);
     }
     return [];
   }
 
-  getMaxWidth(column) {
-    if(column.columnMaxWidth) {
+  public getMaxWidth(column) {
+    if (column.columnMaxWidth) {
       return column.columnMaxWidth;
     }
   }
 
-  getWidth(column: GpfTableColumnComponent): string {
+  public getWidth(column: GpfTableColumnComponent): string {
     let width: string;
-
     if (column === null) {
       width = null;
     } else if (column.columnWidth) {
       width = column.columnWidth;
     }
-
     return width;
   }
 }

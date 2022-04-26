@@ -1,15 +1,15 @@
 import { Dataset } from '../datasets/datasets';
 
 export class DatasetNode {
-  dataset: Dataset;
-  children: DatasetNode[];
+  public dataset: Dataset;
+  public children: DatasetNode[];
 
-  constructor(dataset: Dataset, readonly allDatasets: readonly Dataset[]) {
+  public constructor(dataset: Dataset, public readonly allDatasets: readonly Dataset[]) {
     this.dataset = dataset;
     this.children = new Array<DatasetNode>();
 
     allDatasets
-        .filter(d => d.parents.indexOf(dataset.id) !== -1)
-        .forEach(d => this.children.push(new DatasetNode(d, allDatasets)));
+      .filter(d => d.parents.indexOf(dataset.id) !== -1)
+      .forEach(d => this.children.push(new DatasetNode(d, allDatasets)));
   }
 }

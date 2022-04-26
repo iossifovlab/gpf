@@ -18,8 +18,7 @@ describe('RegistrationComponent', () => {
       declarations: [RegistrationComponent],
       providers: [NgbActiveModal, UsersService, HttpClient, HttpHandler, ConfigService],
       imports: [RouterTestingModule, FormsModule, NgxsModule.forRoot([], {developmentMode: true})],
-    })
-    .compileComponents();
+    }).compileComponents();
   }));
 
   beforeEach(() => {

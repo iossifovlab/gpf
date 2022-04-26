@@ -11,10 +11,9 @@ describe('PersonFiltersComponent', () => {
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      declarations: [ PersonFiltersComponent, ErrorsAlertComponent ],
+      declarations: [PersonFiltersComponent, ErrorsAlertComponent],
       imports: [NgxsModule.forRoot([PersonFiltersState], {developmentMode: true})],
-    })
-    .compileComponents();
+    }).compileComponents();
   }));
 
   beforeEach(() => {

@@ -1,10 +1,10 @@
-import { Component, OnInit, OnChanges } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { QueryService } from '../query/query.service';
 import { UsersService } from '../users/users.service';
 
 export class UserSavedQuery {
-  constructor(
+  public constructor(
     public name: string,
     public description: string,
     public page: string,
@@ -19,14 +19,13 @@ export class UserSavedQuery {
   styleUrls: ['./saved-queries.component.css']
 })
 export class SavedQueriesComponent implements OnInit {
-
   private subscription;
 
   public genotypeQueries: Array<UserSavedQuery>;
   public phenotoolQueries: Array<UserSavedQuery>;
   public enrichmentQueries: Array<UserSavedQuery>;
 
-  constructor(
+  public constructor(
     private router: Router,
     private queryService: QueryService,
     private usersService: UsersService,

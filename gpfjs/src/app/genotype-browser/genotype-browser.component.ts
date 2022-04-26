@@ -26,20 +26,20 @@ import { take } from 'rxjs/operators';
   styleUrls: ['./genotype-browser.component.css'],
 })
 export class GenotypeBrowserComponent implements OnInit {
-  genotypePreviewVariantsArray: GenotypePreviewVariantsArray;
-  tablePreview: boolean;
-  legend: Array<PersonSet>;
+  public genotypePreviewVariantsArray: GenotypePreviewVariantsArray;
+  public tablePreview: boolean;
+  public legend: Array<PersonSet>;
 
   public disableQueryButtons = false;
 
   @Input()
-  selectedDatasetId: string;
-  selectedDataset: Dataset;
-  public genotypeBrowserState: Object;
+  public selectedDatasetId: string;
+  public selectedDataset: Dataset;
+  public genotypeBrowserState: object;
   public loadingFinished: boolean;
 
-  @Select(GenotypeBrowserComponent.genotypeBrowserStateSelector) state$: Observable<any[]>;
-  @Select(ErrorsState) errorsState$: Observable<ErrorsModel>;
+  @Select(GenotypeBrowserComponent.genotypeBrowserStateSelector) private state$: Observable<any[]>;
+  @Select(ErrorsState) private errorsState$: Observable<ErrorsModel>;
 
   @Selector([
     GenotypeBlockComponent.genotypeBlockQueryState,
@@ -50,7 +50,7 @@ export class GenotypeBrowserComponent implements OnInit {
     PersonFiltersBlockComponent.personFiltersBlockState,
     UniqueFamilyVariantsFilterState,
   ])
-  static genotypeBrowserStateSelector(
+  public static genotypeBrowserStateSelector(
     genotypeBlockState,
     genesBlockState,
     regionsFilterState,
@@ -58,7 +58,7 @@ export class GenotypeBrowserComponent implements OnInit {
     familyFiltersBlockState,
     personFiltersBlockState,
     uniqueFamilyVariantsFilterState,
-  ) {
+  ): object {
     const res = {
       ...genotypeBlockState,
       ...genesBlockState,
@@ -67,15 +67,15 @@ export class GenotypeBrowserComponent implements OnInit {
       ...personFiltersBlockState,
       ...uniqueFamilyVariantsFilterState,
     };
-    if (regionsFilterState['regionsFilters'].length) {
-      res['regions'] = regionsFilterState['regionsFilters'];
+    if (regionsFilterState.regionsFilters.length) {
+      res.regions = regionsFilterState.regionsFilters;
     }
     return res;
   }
 
-  constructor(
+  public constructor(
     private queryService: QueryService,
-    readonly configService: ConfigService,
+    public readonly configService: ConfigService,
     private loadingService: FullscreenLoadingService,
     private datasetsService: DatasetsService,
   ) { }

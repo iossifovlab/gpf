@@ -1,9 +1,10 @@
 /* eslint-disable no-unused-vars, @typescript-eslint/no-unused-vars */
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { GenderComponent } from './gender.component';
+import { GenderState } from './gender.state';
 import { ErrorsAlertComponent } from 'app/errors-alert/errors-alert.component';
 import { NgxsModule } from '@ngxs/store';
-import { of } from 'rxjs';
+
 
 describe('GenderComponent', () => {
   let component: GenderComponent;
@@ -12,7 +13,7 @@ describe('GenderComponent', () => {
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [GenderComponent, ErrorsAlertComponent],
-      imports: [NgxsModule.forRoot([], {developmentMode: true})]
+      imports: [NgxsModule.forRoot([GenderState], {developmentMode: true})]
     })
       .compileComponents();
   }));
@@ -20,12 +21,6 @@ describe('GenderComponent', () => {
   beforeEach(() => {
     fixture = TestBed.createComponent(GenderComponent);
     component = fixture.componentInstance;
-    component['store'] = {
-      selectOnce(f) {
-        return of({genders: ['male', 'female']});
-      },
-      dispatch(set) {}
-    } as any;
     fixture.detectChanges();
   });
 

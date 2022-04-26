@@ -1,9 +1,7 @@
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { NgxsModule } from '@ngxs/store';
-// eslint-disable-next-line no-restricted-imports
 import { of } from 'rxjs';
-
 import { PresentInParentComponent } from './present-in-parent.component';
 import { SetPresentInParentValues } from './present-in-parent.state';
 
@@ -13,11 +11,10 @@ describe('PresentInParentComponent', () => {
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      declarations: [ PresentInParentComponent ],
+      declarations: [PresentInParentComponent],
       imports: [NgxsModule.forRoot([], {developmentMode: true})],
       schemas: [NO_ERRORS_SCHEMA]
-    })
-    .compileComponents();
+    }).compileComponents();
   }));
 
   beforeEach(() => {

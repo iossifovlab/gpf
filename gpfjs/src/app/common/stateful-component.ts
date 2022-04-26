@@ -1,9 +1,9 @@
-import { OnDestroy, OnInit, Directive } from "@angular/core";
-import { Observable, Subscription } from "rxjs";
-import { SetComponentErrors } from "./errors.state";
-import { validate, ValidationError } from "class-validator";
-import { Store } from "@ngxs/store";
-import { StateClass } from "@ngxs/store/internals";
+import { OnDestroy, OnInit, Directive } from '@angular/core';
+import { Observable, Subscription } from 'rxjs';
+import { SetComponentErrors } from './errors.state';
+import { validate, ValidationError } from 'class-validator';
+import { Store } from '@ngxs/store';
+import { StateClass } from '@ngxs/store/internals';
 
 @Directive()
 export abstract class StatefulComponent implements OnInit, OnDestroy {
@@ -11,17 +11,17 @@ export abstract class StatefulComponent implements OnInit, OnDestroy {
   protected state$: Observable<object>;
   public errors: Array<string>;
 
-  constructor(
+  public constructor(
     protected store: Store,
     protected stateSelector: StateClass,
-    readonly componentId: string,
+    public readonly componentId: string,
   ) {
     this.state$ = this.store.select(this.stateSelector);
-    this.errors = new Array();
+    this.errors = [];
   }
 
-  ngOnInit() {
-    this.stateSubscription = this.state$.subscribe(_ => {
+  public ngOnInit(): void {
+    this.stateSubscription = this.state$.subscribe(() => {
       // validate for errors
       validate(this, { forbidUnknownValues: true }).then(errors => {
         this.errors = this.errorsToMessages(errors);
@@ -30,9 +30,9 @@ export abstract class StatefulComponent implements OnInit, OnDestroy {
     });
   }
 
-  ngOnDestroy() {
+  public ngOnDestroy(): void {
     if (this.stateSubscription) {
-      this.store.dispatch(new SetComponentErrors(this.componentId, new Array()));
+      this.store.dispatch(new SetComponentErrors(this.componentId, []));
       this.stateSubscription.unsubscribe();
     }
   }

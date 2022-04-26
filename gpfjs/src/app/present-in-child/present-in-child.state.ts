@@ -2,8 +2,8 @@ import { Injectable } from '@angular/core';
 import { State, Action, StateContext } from '@ngxs/store';
 
 export class SetPresentInChildValues {
-  static readonly type = '[Genotype] Set presentInChild values';
-  constructor(public presentInChild: Set<string>) {}
+  public static readonly type = '[Genotype] Set presentInChild values';
+  public constructor(public presentInChild: Set<string>) {}
 }
 
 export interface PresentInChildModel {
@@ -19,7 +19,7 @@ export interface PresentInChildModel {
 @Injectable()
 export class PresentInChildState {
   @Action(SetPresentInChildValues)
-  setPresentInChildValue(ctx: StateContext<PresentInChildModel>, action: SetPresentInChildValues) {
+  public setPresentInChildValue(ctx: StateContext<PresentInChildModel>, action: SetPresentInChildValues): void {
     ctx.patchState({
       presentInChild: [...action.presentInChild]
     });

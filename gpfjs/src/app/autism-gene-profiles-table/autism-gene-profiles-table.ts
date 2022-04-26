@@ -1,6 +1,5 @@
 import { Type } from 'class-transformer';
 
-
 export class Column {
   @Type(() => Column)
   public columns: Column[];
@@ -48,7 +47,7 @@ export class Column {
   public static leaves(columns: Column[], parent?: Column, depth: number = 1): Column[] {
     const result: Column[] = [];
     for (const column of columns.filter(c => c.visibility)) {
-      column.parent = (parent === null || parent === undefined) ? null : parent;
+      column.parent = parent === null || parent === undefined ? null : parent;
       column.depth = depth;
       if (column.visibleChildren.length > 0) {
         result.push(...Column.leaves(column.visibleChildren, column, depth + 1));
@@ -90,7 +89,7 @@ export class Column {
     }
     let endColIdx = leaves[leaves.length - 1].gridColumn;
     if (leaves.length > 1) {
-      endColIdx = (+endColIdx + 1).toString();
+      endColIdx = (Number(endColIdx) + 1).toString();
     }
     column.gridColumn = `${leaves[0].gridColumn} / ${endColIdx}`;
     for (const child of column.visibleChildren.filter(col => col.columns.length > 0)) {

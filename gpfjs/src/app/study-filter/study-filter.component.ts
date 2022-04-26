@@ -1,15 +1,15 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
-
 import { IsNotEmpty } from 'class-validator';
 import { environment } from 'environments/environment';
 
 export class Study {
-  @IsNotEmpty() studyId: string;
-  @IsNotEmpty() studyName: string;
-  constructor(studyId: string, studyName: string) {
+  @IsNotEmpty() public studyId: string;
+  @IsNotEmpty() public studyName: string;
+
+  public constructor(studyId: string, studyName: string) {
     this.studyId = studyId;
     this.studyName = studyName;
-  };
+  }
 }
 
 @Component({
@@ -18,21 +18,21 @@ export class Study {
   styleUrls: ['./study-filter.component.css']
 })
 export class StudyFilterComponent {
-  @Input() studies: Study[];
-  @Input() selectedStudy: Study;
-  @Input() errors: string[];
-  @Output() changeSelectedStudyEvent = new EventEmitter<object>();
+  @Input() public studies: Study[];
+  @Input() public selectedStudy: Study;
+  @Input() public errors: string[];
+  @Output() public changeSelectedStudyEvent = new EventEmitter<object>();
 
   public imgPathPrefix = environment.imgPathPrefix;
 
-  set selectedStudyNames(selectedStudyId: string) {
+  public set selectedStudyNames(selectedStudyId: string) {
     this.changeSelectedStudyEvent.emit({
       selectedStudy: this.selectedStudy,
       selectedStudyId: selectedStudyId
     });
   }
 
-  get selectedStudyNames() {
+  public get selectedStudyNames(): string {
     return this.selectedStudy.studyId;
   }
 }

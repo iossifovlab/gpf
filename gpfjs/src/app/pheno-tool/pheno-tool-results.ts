@@ -1,73 +1,73 @@
 export class PhenoToolResult {
-  constructor(
-    readonly count: number,
-    readonly deviation: number,
-    readonly mean: number,
+  public constructor(
+    public readonly count: number,
+    public readonly deviation: number,
+    public readonly mean: number,
   ) { }
 
-  get rangeStart() {
+  public get rangeStart(): number {
     return this.mean - this.deviation;
   }
 
-  get rangeEnd() {
+  public get rangeEnd(): number {
     return this.mean + this.deviation;
   }
 
-  static fromJson(json: any): PhenoToolResult {
+  public static fromJson(json: object): PhenoToolResult {
     return new PhenoToolResult(
-      json['count'],
-      json['deviation'],
-      json['mean'],
+      json['count'] as number,
+      json['deviation'] as number,
+      json['mean'] as number,
     );
   }
 }
 
 export class PhenoToolResultsPerGender {
-  constructor(
-    readonly positive: PhenoToolResult,
-    readonly negative: PhenoToolResult,
-    readonly pValue: number,
+  public constructor(
+    public readonly positive: PhenoToolResult,
+    public readonly negative: PhenoToolResult,
+    public readonly pValue: number,
   ) { }
 
-  static fromJson(json: any): PhenoToolResultsPerGender {
+  public static fromJson(json: object): PhenoToolResultsPerGender {
     return new PhenoToolResultsPerGender(
-      PhenoToolResult.fromJson(json['positive']),
-      PhenoToolResult.fromJson(json['negative']),
-      json['pValue'],
+      PhenoToolResult.fromJson(json['positive'] as object),
+      PhenoToolResult.fromJson(json['negative'] as object),
+      json['pValue'] as number,
     );
   }
 }
 
 export class PhenoToolResultsPerEffect {
-  constructor(
-    readonly effect: string,
-    readonly maleResult: PhenoToolResultsPerGender,
-    readonly femaleResult: PhenoToolResultsPerGender
+  public constructor(
+    public readonly effect: string,
+    public readonly maleResult: PhenoToolResultsPerGender,
+    public readonly femaleResult: PhenoToolResultsPerGender
   ) { }
 
-  static fromJson(json: any): PhenoToolResultsPerEffect {
+  public static fromJson(json: object): PhenoToolResultsPerEffect {
     return new PhenoToolResultsPerEffect(
-      json['effect'],
-      PhenoToolResultsPerGender.fromJson(json['maleResults']),
-      PhenoToolResultsPerGender.fromJson(json['femaleResults']),
+      json['effect'] as string,
+      PhenoToolResultsPerGender.fromJson(json['maleResults'] as object),
+      PhenoToolResultsPerGender.fromJson(json['femaleResults'] as object),
     );
   }
 
-  static fromJsonArray(jsonArray: Array<Object>): Array<PhenoToolResultsPerEffect> {
+  public static fromJsonArray(jsonArray: object[]): Array<PhenoToolResultsPerEffect> {
     return jsonArray.map((json) => PhenoToolResultsPerEffect.fromJson(json));
   }
 }
 
 export class PhenoToolResults {
-  constructor(
-    readonly description: string,
-    readonly results: Array<PhenoToolResultsPerEffect>
+  public constructor(
+    public readonly description: string,
+    public readonly results: Array<PhenoToolResultsPerEffect>
   ) { }
 
-  static fromJson(json: any): PhenoToolResults {
+  public static fromJson(json: object): PhenoToolResults {
     return new PhenoToolResults(
-      json['description'],
-      PhenoToolResultsPerEffect.fromJsonArray(json['results'])
+      json['description'] as string,
+      PhenoToolResultsPerEffect.fromJsonArray(json['results'] as object[])
     );
   }
 }

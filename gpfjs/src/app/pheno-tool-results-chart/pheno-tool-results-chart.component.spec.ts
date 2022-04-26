@@ -7,9 +7,8 @@ describe('PhenoToolResultsChartComponent', () => {
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      declarations: [ PhenoToolResultsChartComponent ]
-    })
-    .compileComponents();
+      declarations: [PhenoToolResultsChartComponent]
+    }).compileComponents();
   }));
 
   beforeEach(() => {

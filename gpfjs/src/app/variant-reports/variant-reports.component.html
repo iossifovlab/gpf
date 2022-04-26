@@ -6,7 +6,7 @@
 
     <div class="col-12 mb-1">
       <h5>
-        <span>Total number of families: {{ variantReport.familyReport.familiesTotal }} </span>
+        <span>Total number of families: {{ variantReport.familyReport.familiesTotal }}</span>
         <span>(<a [href]="getDownloadLink()" download>Download</a>)</span>
       </h5>
     </div>
@@ -24,10 +24,7 @@
           <span>{{ peopleCounter.groupName }}</span>
         </option>
       </select>
-      <span
-        class="select-dropdown-icon"
-        [style.content]="'url(' + imgPathPrefix + 'dropdown_icon.png)'">
-      </span>
+      <span class="select-dropdown-icon" [style.content]="'url(' + imgPathPrefix + 'dropdown_icon.png)'"></span>
     </div>
   </div>
 
@@ -70,10 +67,7 @@
           <span>{{ pedigreeTable.groupName }}</span>
         </option>
       </select>
-      <span
-        class="select-dropdown-icon"
-        [style.content]="'url(' + imgPathPrefix + 'dropdown_icon.png)'">
-      </span>
+      <span class="select-dropdown-icon" [style.content]="'url(' + imgPathPrefix + 'dropdown_icon.png)'"></span>
     </div>
   </div>
 
@@ -98,10 +92,10 @@
   <div
     *ngIf="currentPedigreeTable"
     class="legend"
-    style="z-index: 99; opacity:90%;"
+    style="z-index: 99; opacity: 90%"
     #legend
     [style.visibility]="
-      (familiesPedigreeTop - legendTop < 0 && familiesPedigreeBottom - legendTop > 0) ? 'visible' : 'hidden'
+      familiesPedigreeTop - legendTop < 0 && familiesPedigreeBottom - legendTop > 0 ? 'visible' : 'hidden'
     ">
     <div *ngFor="let legendItem of currentPedigreeTable.legend.legendItems">
       <span class="pedigree-icon" [style.background-color]="legendItem.color"></span>
@@ -115,22 +109,25 @@
       <h5 class="legend-report">
         <span>Legend:<br /></span>
         <span style="padding-left: 6px">"number of observed events", "observed rate per individual"</span><br />
-        <span style="padding-left: 6px">("number of individuals with events", "percent of individuals with events")</span>
+        <span style="padding-left: 6px"
+          >("number of individuals with events", "percent of individuals with events")</span
+        >
       </h5>
     </div>
 
     <div class="col-sm-3" class="variants-report-selector">
       <div class="select-wrapper">
-        <select id="denovo-variants-dropdown-button" class="form-control" [(ngModel)]="currentDenovoReport" (change)="calculateDenovoVariantsTableWidth()">
+        <select
+          id="denovo-variants-dropdown-button"
+          class="form-control"
+          [(ngModel)]="currentDenovoReport"
+          (change)="calculateDenovoVariantsTableWidth()">
           <option value="" selected="selected">–</option>
           <option *ngFor="let denovoReport of variantReport.denovoReport.tables" [ngValue]="denovoReport">
             <span>{{ denovoReport.groupName }}</span>
           </option>
         </select>
-        <span
-          class="select-dropdown-icon"
-          [style.content]="'url(' + imgPathPrefix + 'dropdown_icon.png)'">
-        </span>
+        <span class="select-dropdown-icon" [style.content]="'url(' + imgPathPrefix + 'dropdown_icon.png)'"></span>
       </div>
     </div>
 
@@ -146,14 +143,31 @@
           <tbody>
             <tr
               *ngFor="let effectType of getRows(currentDenovoReport.effectGroups, currentDenovoReport.effectTypes)"
-              [ngClass]="{ 'effect-type-group-row' : (currentDenovoReport.effectGroups.indexOf(effectType) !== -1) }">
+              [ngClass]="{ 'effect-type-group-row': currentDenovoReport.effectGroups.indexOf(effectType) !== -1 }">
               <th>{{ effectType }}</th>
-              <td *ngFor="let effectTypeData of getEffectTypeOrderByColumOrder(effectType, currentDenovoReport, currentDenovoReport.columns)">
+              <td
+                *ngFor="
+                  let effectTypeData of getEffectTypeOrderByColumOrder(
+                    effectType,
+                    currentDenovoReport,
+                    currentDenovoReport.columns
+                  )
+                ">
                 <div
                   class="effect-type-data-values"
-                  title="{{ effectType }}&#10;{{ effectTypeData.column }}&#10;number of observed events: {{ effectTypeData.numberOfObservedEvents }}&#10;observed rate per individual: {{ effectTypeData.observedRatePerChild | number}}&#10;number of individuals with events: {{ effectTypeData.numberOfChildrenWithEvent}}&#10;percent of individuals with events: {{ effectTypeData.percentOfChildrenWithEvents | percent }}"
-                  >{{ effectTypeData.numberOfObservedEvents }}, {{ effectTypeData.observedRatePerChild | number }}<br />({{ effectTypeData.numberOfChildrenWithEvent }}, {{ effectTypeData.percentOfChildrenWithEvents | percent }})</div
-                >
+                  title="{{ effectType }}&#10;{{ effectTypeData.column }}&#10;number of observed events: {{
+                    effectTypeData.numberOfObservedEvents
+                  }}&#10;observed rate per individual: {{
+                    effectTypeData.observedRatePerChild | number
+                  }}&#10;number of individuals with events: {{
+                    effectTypeData.numberOfChildrenWithEvent
+                  }}&#10;percent of individuals with events: {{
+                    effectTypeData.percentOfChildrenWithEvents | percent
+                  }}">
+                  {{ effectTypeData.numberOfObservedEvents }}, {{ effectTypeData.observedRatePerChild | number
+                  }}<br />({{ effectTypeData.numberOfChildrenWithEvent }},
+                  {{ effectTypeData.percentOfChildrenWithEvents | percent }})
+                </div>
               </td>
             </tr>
           </tbody>

@@ -1,9 +1,10 @@
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
-
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
-import { fakeJsonMeasure, fakeJsonMeasureOneRegression, fakeJsonMeasureTwoRegressions } from '../pheno-browser/pheno-browser.spec'
+import {
+  fakeJsonMeasure, fakeJsonMeasureOneRegression, fakeJsonMeasureTwoRegressions
+} from '../pheno-browser/pheno-browser.spec';
 import { Component, ViewChild } from '@angular/core';
-import { PhenoMeasures } from '../pheno-browser/pheno-browser'
+import { PhenoMeasures } from '../pheno-browser/pheno-browser';
 import { PhenoBrowserTableComponent } from './pheno-browser-table.component';
 import { GpfTableComponent } from '../table/table.component';
 import { GpfTableCellComponent } from '../table/view/cell.component';
@@ -13,7 +14,7 @@ import { GpfTableHeaderCellComponent } from '../table/view/header/header-cell.co
 import { GpfTableColumnComponent } from '../table/component/column.component';
 import { GpfTableContentHeaderComponent } from '../table/component/header.component';
 import { GpfTableContentComponent } from '../table/component/content.component';
-import { GpfTableCellContentDirective  } from '../table/component/content.directive';
+import { GpfTableCellContentDirective } from '../table/component/content.directive';
 import { GpfTableSubcontentComponent } from '../table/component/subcontent.component';
 import { GpfTableSubheaderComponent } from '../table/component/subheader.component';
 import { NumberWithExpPipe } from '../utils/number-with-exp.pipe';
@@ -24,19 +25,19 @@ import { ResizeService } from '../table/resize.service';
 @Component({
   template:
     `<gpf-pheno-browser-table #table
-      [measures]="testMeasures">
+      [measures]='testMeasures'>
     </gpf-pheno-browser-table>`
 })
 class HostComponentNoRegressions {
-  testMeasures = PhenoMeasures.fromJson(
+  public testMeasures = PhenoMeasures.fromJson(
     {
-      base_image_url: "",
+      base_image_url: '',
       measures: [fakeJsonMeasure],
       has_descriptions: true,
       regression_names: {}
     }
   );
-  @ViewChild('table') table;
+  @ViewChild('table') public table;
 }
 
 describe('PhenoBrowserTableComponent; no regressions', () => {
@@ -45,7 +46,7 @@ describe('PhenoBrowserTableComponent; no regressions', () => {
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      imports: [ NgbModule ],
+      imports: [NgbModule],
       declarations: [
         HostComponentNoRegressions, PhenoBrowserTableComponent,
         GpfTableComponent, GpfTableCellComponent, GpfTableEmptyCellComponent,
@@ -57,8 +58,7 @@ describe('PhenoBrowserTableComponent; no regressions', () => {
         { provide: PValueIntensityPipe, useClass: PValueIntensityPipe },
         { provide: ResizeService, useClass: ResizeService },
       ]
-    })
-    .compileComponents();
+    }).compileComponents();
   }));
 
   beforeEach(() => {
@@ -74,7 +74,10 @@ describe('PhenoBrowserTableComponent; no regressions', () => {
   it('should create the correct amount of regression columns', () => {
     fixture.detectChanges();
     fixture.whenStable().then(() => {
-      const regressionColumns = fixture.debugElement.queryAll((dE) => dE.nativeElement.tagName == "GPF-TABLE-VIEW-HEADER-CELL" && dE.nativeElement.innerText.indexOf("Regression by") != -1);
+      const regressionColumns = fixture.debugElement.queryAll(
+        (dE) => dE.nativeElement.tagName === 'GPF-TABLE-VIEW-HEADER-CELL'
+                && dE.nativeElement.innerText.indexOf('Regression by') !== -1
+      );
       expect(regressionColumns.length).toEqual(0);
     });
   });
@@ -83,19 +86,19 @@ describe('PhenoBrowserTableComponent; no regressions', () => {
 @Component({
   template:
     `<gpf-pheno-browser-table #table
-      [measures]="testMeasures">
+      [measures]='testMeasures'>
     </gpf-pheno-browser-table>`
 })
 class HostComponentOneRegression {
-  testMeasures = PhenoMeasures.fromJson(
+  public testMeasures = PhenoMeasures.fromJson(
     {
-      base_image_url: "",
+      base_image_url: '',
       measures: [fakeJsonMeasureOneRegression],
       has_descriptions: true,
-      regression_names: {"age": "age"}
+      regression_names: {age: 'age'}
     }
   );
-  @ViewChild('table') table;
+  @ViewChild('table') public table;
 }
 
 describe('PhenoBrowserTableComponent; one regression', () => {
@@ -104,7 +107,7 @@ describe('PhenoBrowserTableComponent; one regression', () => {
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      imports: [ NgbModule ],
+      imports: [NgbModule],
       declarations: [
         HostComponentOneRegression, PhenoBrowserTableComponent,
         GpfTableComponent, GpfTableCellComponent, GpfTableEmptyCellComponent,
@@ -116,8 +119,7 @@ describe('PhenoBrowserTableComponent; one regression', () => {
         { provide: PValueIntensityPipe, useClass: PValueIntensityPipe },
         { provide: ResizeService, useClass: ResizeService },
       ]
-    })
-    .compileComponents();
+    }).compileComponents();
   }));
 
   beforeEach(() => {
@@ -133,7 +135,10 @@ describe('PhenoBrowserTableComponent; one regression', () => {
   it('should create the correct amount of regression columns', () => {
     fixture.detectChanges();
     fixture.whenStable().then(() => {
-      const regressionColumns = fixture.debugElement.queryAll((dE) => dE.nativeElement.tagName == "GPF-TABLE-VIEW-HEADER-CELL" && dE.nativeElement.innerText.indexOf("Regression by") != -1);
+      const regressionColumns = fixture.debugElement.queryAll(
+        (dE) => dE.nativeElement.tagName === 'GPF-TABLE-VIEW-HEADER-CELL'
+                && dE.nativeElement.innerText.indexOf('Regression by') !== -1
+      );
       expect(regressionColumns.length).toEqual(1);
       expect(fixture.nativeElement.textContent).toEqual(expect.stringMatching('Regression by age'));
       expect(fixture.nativeElement.textContent).toEqual(expect.stringMatching('age PV'));
@@ -146,19 +151,19 @@ describe('PhenoBrowserTableComponent; one regression', () => {
 @Component({
   template:
     `<gpf-pheno-browser-table #table
-      [measures]="testMeasures">
+      [measures]='testMeasures'>
     </gpf-pheno-browser-table>`
 })
 class HostComponentTwoRegressions {
-  testMeasures = PhenoMeasures.fromJson(
+  public testMeasures = PhenoMeasures.fromJson(
     {
-      base_image_url: "",
+      base_image_url: '',
       measures: [fakeJsonMeasureTwoRegressions],
       has_descriptions: true,
-      regression_names: {"age": "", "iq": ""}
+      regression_names: {age: '', iq: ''}
     }
   );
-  @ViewChild('table') table;
+  @ViewChild('table') public table;
 }
 
 describe('PhenoBrowserTableComponent; two regressions', () => {
@@ -167,7 +172,7 @@ describe('PhenoBrowserTableComponent; two regressions', () => {
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      imports: [ NgbModule ],
+      imports: [NgbModule],
       declarations: [
         HostComponentTwoRegressions, PhenoBrowserTableComponent,
         GpfTableComponent, GpfTableCellComponent, GpfTableEmptyCellComponent,
@@ -179,8 +184,7 @@ describe('PhenoBrowserTableComponent; two regressions', () => {
         { provide: PValueIntensityPipe, useClass: PValueIntensityPipe },
         { provide: ResizeService, useClass: ResizeService },
       ]
-    })
-    .compileComponents();
+    }).compileComponents();
   }));
 
   beforeEach(() => {
@@ -196,7 +200,10 @@ describe('PhenoBrowserTableComponent; two regressions', () => {
   it('should create the correct amount of regression columns', () => {
     fixture.detectChanges();
     fixture.whenStable().then(() => {
-      const regressionColumns = fixture.debugElement.queryAll((dE) => dE.nativeElement.tagName == "GPF-TABLE-VIEW-HEADER-CELL" && dE.nativeElement.innerText.indexOf("Regression by") != -1);
+      const regressionColumns = fixture.debugElement.queryAll(
+        (dE) => dE.nativeElement.tagName === 'GPF-TABLE-VIEW-HEADER-CELL'
+                && dE.nativeElement.innerText.indexOf('Regression by') !== -1
+      );
       expect(regressionColumns.length).toEqual(2);
       expect(fixture.nativeElement.textContent).toEqual(expect.stringMatching('Regression by age'));
       expect(fixture.nativeElement.textContent).toEqual(expect.stringMatching('age PV'));

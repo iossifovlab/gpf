@@ -37,8 +37,7 @@ describe('GroupsTableComponent', () => {
         ResizeService
       ],
       imports: [HttpClientTestingModule]
-    })
-    .compileComponents();
+    }).compileComponents();
   }));
 
   beforeEach(() => {

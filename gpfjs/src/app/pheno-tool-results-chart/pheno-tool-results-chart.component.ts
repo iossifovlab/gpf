@@ -1,4 +1,4 @@
-import { Component, OnInit, Input, ViewChild, SimpleChanges } from '@angular/core';
+import { Component, Input, OnChanges, ViewChild } from '@angular/core';
 import { PhenoToolResults, PhenoToolResult } from '../pheno-tool/pheno-tool-results';
 import * as d3 from 'd3';
 
@@ -7,59 +7,50 @@ import * as d3 from 'd3';
   templateUrl: './pheno-tool-results-chart.component.html',
   styleUrls: ['./pheno-tool-results-chart.component.css']
 })
-export class PhenoToolResultsChartComponent implements OnInit {
-  @ViewChild('innerGroup', {static: true}) innerGroup: any;
-  @Input() phenoToolResults: PhenoToolResults;
-  @Input() width = 1060;
-  @Input() height = 700;
-  @Input() innerHeight = 450;
-  yScale: d3.ScaleLinear<number, number>;
+export class PhenoToolResultsChartComponent implements OnChanges {
+  @ViewChild('innerGroup', {static: true}) public innerGroup: any;
+  @Input() public phenoToolResults: PhenoToolResults;
+  @Input() public width = 1060;
+  @Input() public height = 700;
+  @Input() public innerHeight = 450;
+  public yScale: d3.ScaleLinear<number, number>;
 
-
-  constructor() { }
-
-  ngOnInit() {
-
-  }
-
-  ngOnChanges(changes: SimpleChanges) {
+  public ngOnChanges(): void {
     this.yScale = d3.scaleLinear().range([this.innerHeight, 0]);
     this.calcMinMax();
-
-    let svg = d3.select(this.innerGroup.nativeElement);
-    svg.selectAll(".axis").remove();
-    svg.append("g")
-      .attr("class", "axis")
+    const svg = d3.select(this.innerGroup.nativeElement);
+    svg.selectAll('.axis').remove();
+    svg.append('g')
+      .attr('class', 'axis')
       .call(d3.axisLeft(this.yScale));
   }
 
-  addRange(phenoToolResult: PhenoToolResult, outputValues: Array<number>) {
+  public addRange(phenoToolResult: PhenoToolResult, outputValues: Array<number>): void {
     outputValues.push(phenoToolResult.mean + phenoToolResult.deviation);
     outputValues.push(phenoToolResult.mean - phenoToolResult.deviation);
   }
 
-  calcMinMax() {
-    let values = new Array<number>() ;
+  public calcMinMax(): void {
+    const values = new Array<number>();
 
-    for (let result of this.phenoToolResults.results) {
+    for (const result of this.phenoToolResults.results) {
       this.addRange(result.maleResult.positive, values);
       this.addRange(result.maleResult.negative, values);
       this.addRange(result.femaleResult.positive, values);
       this.addRange(result.femaleResult.negative, values);
     }
 
-    let min = Math.min( ...values );
-    let max = Math.max( ...values );
+    const min = Math.min(...values);
+    const max = Math.max(...values);
 
     this.yScale.domain([min, max]);
   }
 
-  calculateGap() {
+  public calculateGap(): number {
     if (!this.phenoToolResults.results ||
         !this.phenoToolResults.results.length) {
       return 0;
     }
     return (this.width - 200) / this.phenoToolResults.results.length;
   }
-
 }

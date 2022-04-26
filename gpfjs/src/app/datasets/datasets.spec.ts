@@ -7,9 +7,9 @@ import {
   GenotypeBrowser,
   PersonFilter,
   PersonSetCollection,
-  PersonSetCollections
+  PersonSetCollections,
+  PersonSet
 } from './datasets';
-import { PersonSet } from './datasets';
 
 describe('PersonSet', () => {
   const personSetJsons = [
@@ -232,7 +232,7 @@ describe('PersonSetCollections', () => {
     mockPersonSetCollections2.push(new PersonSet('id1', 'name2', ['value2', 'value2'], 'color3'));
     mockPersonSetCollections2.push(new PersonSet('id2', 'name3', ['value2', 'value3'], 'color4'));
     mockPersonSetCollections2.push(new PersonSet('id1', 'name1', ['value1', 'value2'], 'color1'));
-    mockPersonSetCollections2.push({'color': '#E0E0E0', 'id': 'missing-person', 'name': 'missing-person'});
+    mockPersonSetCollections2.push({color: '#E0E0E0', id: 'missing-person', name: 'missing-person'});
 
     expect(mockPersonSetCollections1.getLegend(mockPersonSetCollections1.collections[0]))
       .toEqual(mockPersonSetCollections2);
@@ -241,7 +241,6 @@ describe('PersonSetCollections', () => {
 
 describe('PersonFilter', () => {
   it('should create person filter instance from json', () => {
-
     const mockPersonFilter1 = PersonFilter.fromJson({
       name: {
         name: 'name1',
@@ -272,8 +271,8 @@ describe('PersonFilter', () => {
 
 describe('Column', () => {
   it('should create column from json', () => {
-    expect(new Column('name', 'source',  'format'))
-    .toEqual(Column.fromJson({ name: 'name', source: 'source', format: 'format' }));
+    expect(new Column('name', 'source', 'format'))
+      .toEqual(Column.fromJson({ name: 'name', source: 'source', format: 'format' }));
   });
 });
 
@@ -282,8 +281,8 @@ describe('ColumnGroup', () => {
     const columnGroupMock1 = new ColumnGroup(
       'name1',
       [
-        new Column('name1', 'source1',  'format1'),
-        new Column('name2', 'source2',  'format2')
+        new Column('name1', 'source1', 'format1'),
+        new Column('name2', 'source2', 'format2')
       ]
     );
 
@@ -564,16 +563,16 @@ describe('Dataset', () => {
             new PersonSet('id2', 'name3', ['value2', 'value3'], 'color4')
           ]
         ),
-      new PersonSetCollection(
-        'id2',
-        'name2',
-        'id2',
-        new PersonSet('id2', 'name2', ['value3', 'value4'], 'color2'),
-        [
-          new PersonSet('id2', 'name3', ['value3', 'value3'], 'color5'),
-          new PersonSet('id3', 'name4', ['value3', 'value4'], 'color6')
-        ]
-      )
+        new PersonSetCollection(
+          'id2',
+          'name2',
+          'id2',
+          new PersonSet('id2', 'name2', ['value3', 'value4'], 'color2'),
+          [
+            new PersonSet('id2', 'name3', ['value3', 'value3'], 'color5'),
+            new PersonSet('id3', 'name4', ['value3', 'value4'], 'color6')
+          ]
+        )
       ]
     ),
     [
@@ -630,16 +629,16 @@ describe('Dataset', () => {
       6
     ),
     new PersonSetCollections([
-        new PersonSetCollection(
-          'id4',
-          'name4',
-          'id4',
-          new PersonSet('id4', 'name1', ['value1', 'value2'], 'color1'),
-          [
-            new PersonSet('id4', 'name2', ['value2', 'value2'], 'color3'),
-            new PersonSet('id2', 'name3', ['value2', 'value3'], 'color4')
-          ]
-        ),
+      new PersonSetCollection(
+        'id4',
+        'name4',
+        'id4',
+        new PersonSet('id4', 'name1', ['value1', 'value2'], 'color1'),
+        [
+          new PersonSet('id4', 'name2', ['value2', 'value2'], 'color3'),
+          new PersonSet('id2', 'name3', ['value2', 'value3'], 'color4')
+        ]
+      ),
       new PersonSetCollection(
         'id2',
         'name3',
@@ -978,7 +977,7 @@ describe('Dataset', () => {
   });
 
   it('should create dataset from json array', () => {
-    const datasetMockArray = [ datasetMock1, datasetMock2 ];
+    const datasetMockArray = [datasetMock1, datasetMock2];
     const datasetMockArrayFromJson = Dataset.fromJsonArray([datasetJson1, datasetJson2]);
     expect(datasetMockArray).toEqual(datasetMockArrayFromJson);
   });

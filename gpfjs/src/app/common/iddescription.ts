@@ -1,7 +1,6 @@
 export class IdDescription {
-
-  constructor(
-    readonly id: string,
-    readonly description: string
+  public constructor(
+    public readonly id: string,
+    public readonly description: string
   ) { }
 }

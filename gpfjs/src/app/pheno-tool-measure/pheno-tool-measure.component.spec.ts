@@ -5,10 +5,7 @@ import { RouterTestingModule } from '@angular/router/testing';
 import { NgxsModule } from '@ngxs/store';
 import { ConfigService } from 'app/config/config.service';
 import { DatasetsService } from 'app/datasets/datasets.service';
-import { ErrorsAlertComponent } from 'app/errors-alert/errors-alert.component';
 import { MeasuresService } from 'app/measures/measures.service';
-import { PhenoMeasureSelectorComponent } from 'app/pheno-measure-selector/pheno-measure-selector.component';
-import { SearchableSelectComponent } from 'app/searchable-select/searchable-select.component';
 import { UsersService } from 'app/users/users.service';
 
 import { PhenoToolMeasureComponent } from './pheno-tool-measure.component';
@@ -32,8 +29,7 @@ describe('PhenoToolMeasureComponent', () => {
       ],
       imports: [RouterTestingModule, NgxsModule.forRoot([], {developmentMode: true})],
       schemas: [NO_ERRORS_SCHEMA]
-    })
-    .compileComponents();
+    }).compileComponents();
   }));
 
   beforeEach(() => {

@@ -3,18 +3,16 @@ import { DecimalPipe } from '@angular/common';
 
 @Pipe({name: 'numberWithExp'})
 export class NumberWithExpPipe extends DecimalPipe implements PipeTransform {
-
-  transform(value: string | number, digits?: string): null;
-  transform(value: string | number, digits?: string): string {
+  public transform(value: string | number, digits?: string): null;
+  public transform(value: string | number, digits?: string): string {
     if (typeof value !== 'number') {
       return value;
     }
 
     let digitArgs = digits.split('.');
-    let minIntegerDigits = +digitArgs[0] || 1;
     digitArgs = digitArgs[1].split('-');
-    let minFractionDigits = +digitArgs[0] || 0;
-    let maxFractionDigits = +digitArgs[1] || 3;
+    const minFractionDigits = Number(digitArgs[0]) || 0;
+    const maxFractionDigits = Number(digitArgs[1]) || 3;
 
     if (value >= Math.pow(10, -maxFractionDigits) || value === 0.0) {
       return super.transform(value, digits);

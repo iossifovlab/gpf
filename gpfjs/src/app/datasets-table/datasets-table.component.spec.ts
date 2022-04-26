@@ -17,15 +17,14 @@ import { ResizeService } from 'app/table/resize.service';
 import { GpfTableContentHeaderComponent } from 'app/table/component/header.component';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { NgxsModule } from '@ngxs/store';
-import { of } from 'rxjs';
+import { Observable, of } from 'rxjs';
 
 class MockUsersService {
-  
-  public searchUsersByGroup() {
+  public searchUsersByGroup(): Observable<null> {
     return of(null);
   }
 
-  public getUserInfoObservable() {
+  public getUserInfoObservable(): Observable<null> {
     return of(null);
   }
 }
@@ -62,7 +61,7 @@ describe('DatasetsTableComponent', () => {
         NgxsModule.forRoot([], {developmentMode: true})
       ],
     })
-    .compileComponents();
+      .compileComponents();
   }));
 
   beforeEach(() => {

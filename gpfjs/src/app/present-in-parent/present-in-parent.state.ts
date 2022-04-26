@@ -2,8 +2,8 @@ import { Injectable } from '@angular/core';
 import { State, Action, StateContext, Selector } from '@ngxs/store';
 
 export class SetPresentInParentValues {
-  static readonly type = '[Genotype] Set presentInParent values';
-  constructor(
+  public static readonly type = '[Genotype] Set presentInParent values';
+  public constructor(
     public presentInParent: Set<string>,
     public rarityType: string,
     public rarityIntervalStart: number,
@@ -30,8 +30,7 @@ export interface PresentInParentModel {
 @Injectable()
 export class PresentInParentState {
   @Action(SetPresentInParentValues)
-  setPresentInParentValue(ctx: StateContext<PresentInParentModel>, action: SetPresentInParentValues) {
-    const state = ctx.getState();
+  public setPresentInParentValue(ctx: StateContext<PresentInParentModel>, action: SetPresentInParentValues): void {
     ctx.patchState({
       presentInParent: [...action.presentInParent],
       rarityType: action.rarityType,
@@ -41,14 +40,14 @@ export class PresentInParentState {
   }
 
   @Selector([PresentInParentState])
-  static queryStateSelector(state: PresentInParentModel) {
+  public static queryStateSelector(state: PresentInParentModel) {
     const res = {
-      'presentInParent': state.presentInParent
+      presentInParent: state.presentInParent
     };
     if (state.presentInParent.length === 1 && state.presentInParent[0] === 'neither') {
       return res;
     }
-    res['rarity'] = { 'ultraRare': state.rarityType === 'ultraRare' };
+    res['rarity'] = { ultraRare: state.rarityType === 'ultraRare' };
     if (state.rarityType !== 'ultraRare' && state.rarityType !== 'all') {
       res['rarity']['minFreq'] = state.rarityIntervalStart;
       res['rarity']['maxFreq'] = state.rarityIntervalEnd;

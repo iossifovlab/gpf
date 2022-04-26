@@ -63,7 +63,7 @@ describe('GpfTableEmptyCellComponent', () => {
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      schemas: [ NO_ERRORS_SCHEMA ],
+      schemas: [NO_ERRORS_SCHEMA],
       declarations: [
         GpfTableEmptyCellComponent,
         TestGpfTableColumnComponent,
@@ -76,8 +76,7 @@ describe('GpfTableEmptyCellComponent', () => {
         ViewContainerRef,
         ResizeService
       ]
-    })
-    .compileComponents();
+    }).compileComponents();
   }));
 
   beforeEach(() => {
@@ -99,11 +98,5 @@ describe('GpfTableEmptyCellComponent', () => {
 
   it('should have cell content', () => {
     expect(component.columnInfo.contentChildren.length).toBe(2);
-  });
-
-  xit('should recalculate width', () => {
-    expect(component.columnInfo.columnWidth).toBe('');
-    component.recalcWidth();
-    expect(component.columnInfo.columnWidth.slice(-2)).toBe('px');
   });
 });

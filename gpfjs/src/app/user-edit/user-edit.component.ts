@@ -1,9 +1,6 @@
 import { Component, ElementRef, HostListener, OnInit, ViewChild } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
-
-// eslint-disable-next-line no-restricted-imports
 import { BehaviorSubject } from 'rxjs';
-
 import { User } from '../users/users';
 import { UsersService } from '../users/users.service';
 import { UserGroup } from '../users-groups/users-groups';
@@ -20,39 +17,30 @@ import { map, switchMap, take } from 'rxjs/operators';
 export class UserEditComponent implements OnInit {
   @ViewChild(UserGroupsSelectorComponent)
   private userGroupsSelectorComponent: UserGroupsSelectorComponent;
-  @ViewChild('ele') ele: ElementRef;
-  @ViewChild('nameInput') nameInput: ElementRef;
+  @ViewChild('ele') public ele: ElementRef;
+  @ViewChild('nameInput') public nameInput: ElementRef;
 
-  dropdownSettings: IDropdownSettings = {};
-  createUserError = '';
+  public dropdownSettings: IDropdownSettings = {};
+  public createUserError = '';
+  public user$ = new BehaviorSubject<User>(null);
+  public groups$ = new BehaviorSubject<UserGroup[]>(null);
+  private emailValue: string;
 
-  lockedOptions = {
-    width: 'style',
-    theme: 'bootstrap',
-    multiple: true,
-    tags: true,
-    disabled: true,
-  };
+  public edit = true;
 
-  user$ = new BehaviorSubject<User>(null);
-  groups$ = new BehaviorSubject<UserGroup[]>(null);
-  emailValue: string;
-
-  edit = true;
-
-  constructor(
+  public constructor(
     private router: Router,
     private route: ActivatedRoute,
     private usersService: UsersService,
     private usersGroupsService: UsersGroupsService
   ) { }
 
-  @HostListener('window:popstate', [ '$event' ])
-  unloadHandler() {
+  @HostListener('window:popstate', ['$event'])
+  public unloadHandler(): void {
     this.closeConfirmnationModal();
   }
 
-  ngOnInit() {
+  public ngOnInit(): void {
     this.focusNameInputArea();
 
     this.route.params.pipe(
@@ -64,9 +52,7 @@ export class UserEditComponent implements OnInit {
       this.user$.next(user);
     });
 
-    this.usersGroupsService
-    .getAllGroups()
-    .subscribe(groups => this.groups$.next(groups));
+    this.usersGroupsService.getAllGroups().subscribe(groups => this.groups$.next(groups));
 
     this.dropdownSettings = {
       singleSelection: true,
@@ -76,15 +62,15 @@ export class UserEditComponent implements OnInit {
     };
   }
 
-  closeConfirmnationModal() {
+  private closeConfirmnationModal(): void {
     this.ele.nativeElement.click();
   }
 
-  getDefaultGroups() {
+  public getDefaultGroups(): string[] {
     return ['any_user', this.emailValue];
   }
 
-  submit(user: User) {
+  public submit(user: User): void {
     const groupsToAdd = this.userGroupsSelectorComponent.displayedGroups;
 
     if (!groupsToAdd.includes(undefined)) {
@@ -97,15 +83,11 @@ export class UserEditComponent implements OnInit {
       .subscribe(() => this.router.navigate(['/management']));
   }
 
-  goBack() {
+  public goBack(): void {
     this.router.navigate(['/management']);
   }
 
-  /**
-  * Waits name input area element to load.
-  * @returns promise
-  */
-   private async waitForNameInputAreaToLoad(): Promise<void> {
+  private async waitForNameInputAreaToLoad(): Promise<void> {
     return new Promise<void>(resolve => {
       const timer = setInterval(() => {
         if (this.nameInput !== undefined) {
@@ -116,7 +98,7 @@ export class UserEditComponent implements OnInit {
     });
   }
 
-  private focusNameInputArea() {
+  private focusNameInputArea(): void {
     this.waitForNameInputAreaToLoad().then(() => {
       this.nameInput.nativeElement.focus();
     });

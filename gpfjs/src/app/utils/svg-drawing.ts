@@ -1,4 +1,4 @@
-import { BaseType, Selection } from "d3-selection";
+import { BaseType, Selection } from 'd3-selection';
 
 export const affectedStatusColors: Record<string, string> = {
   'Affected only': '#AA0000',
@@ -87,7 +87,7 @@ export function circle(element: Selection<BaseType, unknown, HTMLElement, any>, 
 }
 
 export function dot(element: Selection<BaseType, unknown, HTMLElement, any>, x: number, y: number, color: string, title: string) {
-    circle(element, x, y, color, title, 3);
+  circle(element, x, y, color, title, 3);
 }
 
 export function rect(element: Selection<BaseType, unknown, HTMLElement, any>, xStart: number, xEnd: number, y: number, height: number, color: string, opacity: number, title: string) {

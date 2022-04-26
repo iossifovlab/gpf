@@ -1,5 +1,4 @@
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
-
 import { PedigreeChartMemberComponent } from './pedigree-chart-member.component';
 
 describe('PedigreeChartMemberComponent', () => {
@@ -8,9 +7,8 @@ describe('PedigreeChartMemberComponent', () => {
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      declarations: [ PedigreeChartMemberComponent ]
-    })
-    .compileComponents();
+      declarations: [PedigreeChartMemberComponent]
+    }).compileComponents();
   }));
 
   beforeEach(() => {

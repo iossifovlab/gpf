@@ -1,5 +1,4 @@
-import { ValidateIf, ValidateNested } from 'class-validator';
-import { IsNumber, IsNotEmpty } from 'class-validator';
+import { ValidateIf, ValidateNested, IsNumber, IsNotEmpty } from 'class-validator';
 import { IsLessThanOrEqual } from '../utils/is-less-than-validator';
 import { IsMoreThanOrEqual } from '../utils/is-more-than-validator';
 
@@ -11,11 +10,11 @@ export class CategoricalSelection implements Selection {
   @IsNotEmpty()
   public selection: string[];
 
-  constructor(selection: string[] = []) {
+  public constructor(selection: string[] = []) {
     this.selection = selection;
   }
 
-  isEmpty() {
+  public isEmpty(): boolean {
     return this.selection.length === 0;
   }
 }
@@ -25,18 +24,18 @@ export class ContinuousSelection implements Selection {
   @IsNumber()
   @IsLessThanOrEqual('max', {message: 'The range beginning must be lesser than the range end.'})
   @IsMoreThanOrEqual('domainMin', {message: 'The range beginning must be within the domain.'})
-  min: number;
+  public min: number;
 
   @ValidateIf(o => o.max !== null)
   @IsNumber()
   @IsMoreThanOrEqual('min', {message: 'The range end must be greater than the range start.'})
   @IsLessThanOrEqual('domainMax', {message: 'The range end must be within the domain.'})
-  max: number;
+  public max: number;
 
-  domainMin: number;
-  domainMax: number;
+  public domainMin: number;
+  public domainMax: number;
 
-  constructor(
+  public constructor(
     min: number, max: number, domainMin: number, domainMax: number,
   ) {
     this.min = min;
@@ -45,21 +44,20 @@ export class ContinuousSelection implements Selection {
     this.domainMax = domainMax;
   }
 
-  isEmpty() {
+  public isEmpty(): boolean {
     return this.min === this.max === null;
   }
 }
 
 export class PersonFilterState {
-
   @ValidateNested()
-  selection: Selection;
+  public selection: Selection;
   public source: string;
 
-  constructor(
-    readonly id: string,
-    readonly sourceType: string,
-    readonly role: string,
+  public constructor(
+    public readonly id: string,
+    public readonly sourceType: string,
+    public readonly role: string,
     source: string,
     public from: string,
     selection: Selection
@@ -68,14 +66,13 @@ export class PersonFilterState {
     this.source = source;
   }
 
-  isEmpty() {
+  public isEmpty(): boolean {
     return this.source && this.source.length === 0;
   }
 }
 
 export class CategoricalFilterState extends PersonFilterState {
-
-  constructor(
+  public constructor(
     id: string,
     type: string,
     role: string,
@@ -86,14 +83,13 @@ export class CategoricalFilterState extends PersonFilterState {
     super(id, type, role, source, from, selection);
   }
 
-  isEmpty() {
+  public isEmpty(): boolean {
     return this.selection.isEmpty() || super.isEmpty();
   }
 }
 
 export class ContinuousFilterState extends PersonFilterState {
-
-  constructor(
+  public constructor(
     id: string,
     type: string,
     role: string,
@@ -104,7 +100,7 @@ export class ContinuousFilterState extends PersonFilterState {
     super(id, type, role, source, from, selection);
   }
 
-  public isEmpty() {
+  public isEmpty(): boolean {
     return !this.source;
   }
 }

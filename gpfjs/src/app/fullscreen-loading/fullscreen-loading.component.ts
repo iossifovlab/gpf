@@ -9,9 +9,9 @@ import { FullscreenLoadingService } from './fullscreen-loading.service';
   styleUrls: ['./fullscreen-loading.component.css']
 })
 export class FullscreenLoadingComponent {
-  showLoading = false;
+  public showLoading = false;
 
-  constructor(
+  public constructor(
     private fullscreenLoadingService: FullscreenLoadingService
   ) {
     fullscreenLoadingService.loadingStateChange.subscribe((state: boolean) => {

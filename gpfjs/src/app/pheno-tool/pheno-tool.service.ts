@@ -12,18 +12,16 @@ export class PhenoToolService {
   private readonly phenoToolUrl = 'pheno_tool';
   private headers = new Headers({ 'Content-Type': 'application/json' });
 
-  constructor(
+  public constructor(
     private http: HttpClient,
     private config: ConfigService
   ) {}
 
   public getPhenoToolResults(filter: object): Observable<PhenoToolResults> {
     const headers = { 'Content-Type': 'application/json' };
-    const options = { headers: headers, withCredentials: true };
+    const options = { headers, withCredentials: true };
 
     return this.http.post(this.config.baseUrl + this.phenoToolUrl, filter, options)
-      .pipe(map(res => {
-        return PhenoToolResults.fromJson(res);
-      }));
+      .pipe(map(res => PhenoToolResults.fromJson(res)));
   }
 }

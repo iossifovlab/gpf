@@ -1,6 +1,4 @@
-/* eslint-disable no-unused-vars, @typescript-eslint/no-unused-vars */
-
-import { TestBed, inject, waitForAsync } from '@angular/core/testing';
+import { TestBed, inject } from '@angular/core/testing';
 import { ConfigService } from './config.service';
 
 describe('ConfigService', () => {

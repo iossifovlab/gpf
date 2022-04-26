@@ -1,156 +1,168 @@
 <div *ngIf="!errorModal">
-<div
-  *ngIf="gene$ | async as gene"
-  [ngClass]="{'compare-div': isInGeneCompare}"
-  [style.height]="showTemplate ? '100%' : '100vh'">
+  <div
+    *ngIf="gene$ | async as gene"
+    [ngClass]="{ 'compare-div': isInGeneCompare }"
+    [style.height]="showTemplate ? '100%' : '100vh'">
+    <ng-container *ngIf="isInGeneCompare">
+      <div style="position: relative" [style.width]="showTemplate ? 'unset' : '30px'">
+        <div [attr.title]="geneSymbol" (click)="showTemplate = !showTemplate" class="minimize-elements-wrapper">
+          <button class="minimize-button">&ndash;</button>
+          <span *ngIf="!showTemplate" class="minimize-gene-symbol">{{ geneSymbol }}</span>
+        </div>
+      </div>
+    </ng-container>
 
-  <ng-container *ngIf="isInGeneCompare">
-    <div style="position: relative" [style.width]="showTemplate ? 'unset' : '30px'">
-      <div [attr.title]="geneSymbol" (click)="showTemplate = !showTemplate" class="minimize-elements-wrapper">
-        <button class="minimize-button" >&ndash;</button>
-        <span *ngIf="!showTemplate" class="minimize-gene-symbol">{{ geneSymbol }}</span>
-      </div>
-    </div>
-  </ng-container>
-  
-  <ng-container *ngIf="showTemplate">
-    <div style="padding: 25px">
-      <div
-        #stickySpan
-        [ngClass]="isInGeneCompare && isHeaderSticky ? 'sticky' : ''"
-        [ngStyle]="{'width' : isInGeneCompare ? '100%' : '1455px'}"
-        style="display: flex; align-items: baseline; height: 58px;">
-        <h2>{{ geneSymbol }}</h2>
-      </div>
-      <div
-        class="wrapper"
-        [ngClass]="{'compare-wrapper': isInGeneCompare}" #wrapperElement>
-        <table id="links-table">
-          <tr>
-            <td style="border-right: 1px solid #dee2e6; padding-right: 25px;">Links</td>
-            <td>
-              <a class="link-external-page" [attr.href]="links.GeneBrowser" id="gene-browser-link" target="_blank">Gene Browser</a>
-            </td>
-            <td>
-              <a class="link-external-page" [attr.href]="links.UCSC" target="_blank">UCSC genome browser</a>
-            </td>
-            <td>
-              <a class="link-external-page" [attr.href]="links.GeneCards" target="_blank">GeneCards</a>
-            </td>
-            <td>
-              <a class="link-external-page" [attr.href]="links.Pubmed" target="_blank">Pubmed</a>
-            </td>
-            <td>
-              <a *ngIf="links.SFARIgene !== ''" class="link-external-page" [attr.href]="links.SFARIgene" target="_blank">SFARI gene</a>
-            </td>
-          </tr>
-        </table>
-      </div>
-
-      <div
-        [ngClass]="{'compare-wrapper': isInGeneCompare}" 
-        class="wrapper">
-        <table
-          *ngFor="let genomicScoreCategory of config.genomicScores"
-          [attr.id]="genomicScoreCategory.category"
-          class="gpf-basic-table genomic-scores-table">
-          <th [attr.colspan]="2">{{ genomicScoreCategory.displayName }}</th>
-          <tr *ngFor="let score of genomicScoreCategory.scores" class="card-block">
-            <td
-              style="height: 135px; max-height: 135px; width: 135px; max-width: 135px; overflow-wrap: break-word"
-              [attr.title]="score.scoreName">{{ score.scoreName }}</td>
-            <ng-container *ngIf="genomicScoresGeneWeights.length === gene.genomicScores.length">
+    <ng-container *ngIf="showTemplate">
+      <div style="padding: 25px">
+        <div
+          #stickySpan
+          [ngClass]="isInGeneCompare && isHeaderSticky ? 'sticky' : ''"
+          [ngStyle]="{ width: isInGeneCompare ? '100%' : '1455px' }"
+          style="display: flex; align-items: baseline; height: 58px">
+          <h2>{{ geneSymbol }}</h2>
+        </div>
+        <div class="wrapper" [ngClass]="{ 'compare-wrapper': isInGeneCompare }" #wrapperElement>
+          <table id="links-table">
+            <tr>
+              <td style="border-right: 1px solid #dee2e6; padding-right: 25px">Links</td>
               <td>
-                <gpf-histogram
-                  *ngIf="
-                    genomicScoresGeneWeights &&
-                    getGeneWeightByKey(genomicScoreCategory.category, score.scoreName) as geneWeight
-                  "
-                  [style.width]="histogramOptions.width"
-                  [style.height]="histogramOptions.height"
-                  [width]="histogramOptions.width"
-                  [height]="histogramOptions.height"
-                  [bins]="geneWeight.bins"
-                  [bars]="geneWeight.bars"
-                  [logScaleX]="geneWeight.logScaleX"
-                  [logScaleY]="geneWeight.logScaleY"
-                  [showMinMaxInput]="false"
-                  [isInteractive]="false"
-                  [singleScoreValue]="
-                    getSingleScoreValue(gene.genomicScores, genomicScoreCategory.category, score.scoreName)
-                  "
-                  [marginLeft]="histogramOptions.marginLeft"
-                  [marginTop]="histogramOptions.marginTop">
-                </gpf-histogram>
+                <a class="link-external-page" [attr.href]="links.GeneBrowser" id="gene-browser-link" target="_blank"
+                  >Gene Browser</a
+                >
               </td>
-            </ng-container>
-          </tr>
-        </table>
-      </div>
-
-      <div
-        [ngClass]="{'compare-wrapper': isInGeneCompare}"
-        class="wrapper">
-        <table
-          *ngFor="let geneSetCategory of config.geneSets"
-          [attr.id]="geneSetCategory.category"
-          class="gpf-basic-table gene-sets-table">
-          <th [attr.colspan]="2">{{ geneSetCategory.displayName }}</th>
-          <tr *ngFor="let set of geneSetCategory.sets" class="card-block">
-            <td style="max-width: 665px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;" [attr.title]="set.setId">{{ set.setId }}</td>
-            <td style="text-align: center; width: 55px">
-              <span style="font-size: 20px;" *ngIf="gene.geneSets.indexOf(set.collectionId + '_' + set.setId) !== -1">&#10003;</span>
-            </td>
-          </tr>
-        </table>
-      </div>
-
-      <div
-        style="display: inline-flex; align-items: stretch; flex-wrap: wrap;"
-        [ngClass]="{'compare-wrapper': isInGeneCompare}"
-        class="wrapper">
-        <ng-container *ngFor="let dataset of config.datasets">
-          <table style="width:100%;" class="gpf-basic-table datasets-table">
-            <thead>
-              <tr class="card-block">
-                <th style="border-bottom: none" [attr.colspan]="dataset.personSets.length + 1">
-                  <span>{{ dataset.displayName }}</span>
-                </th>
-              </tr>
-              <tr class="card-block">
-                <th style="border-bottom: none">Variant Statistics</th>
-                <th *ngFor="let personSet of dataset.personSets" style="text-align: center; border-bottom: none">
-                  <span class="vertical-text">{{ personSet.displayName }} ({{ personSet.childrenCount }})</span>
-                </th>
-              </tr>
-            </thead>
-
-            <tbody>
-              <ng-container *ngFor="let statistic of dataset.statistics">
-                <tr class="card-block" [attr.id]="statistic.id">
-                  <td>{{ statistic.description ? statistic.description : statistic.displayName }}</td>
-                  <td style="text-align: center" *ngFor="let personSet of dataset.personSets">
-                    <ng-container *ngIf="getGeneDatasetValue(gene, dataset.id, personSet.id, statistic.id) as effectType">
-                      <ng-container *ngIf="effectType.value.count !== 0">
-                        <a
-                          class="link-genotype-browser"
-                          (click)="goToQuery(gene.geneSymbol, personSet, dataset.id, statistic)"
-                          (middleclick)="goToQuery(gene.geneSymbol, personSet, dataset.id, statistic)">
-                          <span style="white-space: nowrap">{{ effectType.value.count }} ({{ effectType.value.rate | number: '1.0-3' }})</span>
-                        </a>
-                      </ng-container>
-                      <ng-container *ngIf="effectType.value.count === 0">&ndash;</ng-container>
-                    </ng-container>
-                  </td>
-                </tr>
-              </ng-container>
-            </tbody>
+              <td>
+                <a class="link-external-page" [attr.href]="links.UCSC" target="_blank">UCSC genome browser</a>
+              </td>
+              <td>
+                <a class="link-external-page" [attr.href]="links.GeneCards" target="_blank">GeneCards</a>
+              </td>
+              <td>
+                <a class="link-external-page" [attr.href]="links.Pubmed" target="_blank">Pubmed</a>
+              </td>
+              <td>
+                <a
+                  *ngIf="links.SFARIgene !== ''"
+                  class="link-external-page"
+                  [attr.href]="links.SFARIgene"
+                  target="_blank"
+                  >SFARI gene</a
+                >
+              </td>
+            </tr>
           </table>
-        </ng-container>
+        </div>
+
+        <div [ngClass]="{ 'compare-wrapper': isInGeneCompare }" class="wrapper">
+          <table
+            *ngFor="let genomicScoreCategory of config.genomicScores"
+            [attr.id]="genomicScoreCategory.category"
+            class="gpf-basic-table genomic-scores-table">
+            <th [attr.colspan]="2">{{ genomicScoreCategory.displayName }}</th>
+            <tr *ngFor="let score of genomicScoreCategory.scores" class="card-block">
+              <td
+                style="height: 135px; max-height: 135px; width: 135px; max-width: 135px; overflow-wrap: break-word"
+                [attr.title]="score.scoreName">
+                {{ score.scoreName }}
+              </td>
+              <ng-container *ngIf="genomicScoresGeneWeights.length === gene.genomicScores.length">
+                <td>
+                  <gpf-histogram
+                    *ngIf="
+                      genomicScoresGeneWeights &&
+                      getGeneWeightByKey(genomicScoreCategory.category, score.scoreName) as geneWeight
+                    "
+                    [style.width]="histogramOptions.width"
+                    [style.height]="histogramOptions.height"
+                    [width]="histogramOptions.width"
+                    [height]="histogramOptions.height"
+                    [bins]="geneWeight.bins"
+                    [bars]="geneWeight.bars"
+                    [logScaleX]="geneWeight.logScaleX"
+                    [logScaleY]="geneWeight.logScaleY"
+                    [showMinMaxInput]="false"
+                    [isInteractive]="false"
+                    [singleScoreValue]="
+                      getSingleScoreValue(gene.genomicScores, genomicScoreCategory.category, score.scoreName)
+                    "
+                    [marginLeft]="histogramOptions.marginLeft"
+                    [marginTop]="histogramOptions.marginTop">
+                  </gpf-histogram>
+                </td>
+              </ng-container>
+            </tr>
+          </table>
+        </div>
+
+        <div [ngClass]="{ 'compare-wrapper': isInGeneCompare }" class="wrapper">
+          <table
+            *ngFor="let geneSetCategory of config.geneSets"
+            [attr.id]="geneSetCategory.category"
+            class="gpf-basic-table gene-sets-table">
+            <th [attr.colspan]="2">{{ geneSetCategory.displayName }}</th>
+            <tr *ngFor="let set of geneSetCategory.sets" class="card-block">
+              <td
+                style="max-width: 665px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis"
+                [attr.title]="set.setId">
+                {{ set.setId }}
+              </td>
+              <td style="text-align: center; width: 55px">
+                <span style="font-size: 20px" *ngIf="gene.geneSets.indexOf(set.collectionId + '_' + set.setId) !== -1"
+                  >&#10003;</span
+                >
+              </td>
+            </tr>
+          </table>
+        </div>
+
+        <div
+          style="display: inline-flex; align-items: stretch; flex-wrap: wrap"
+          [ngClass]="{ 'compare-wrapper': isInGeneCompare }"
+          class="wrapper">
+          <ng-container *ngFor="let dataset of config.datasets">
+            <table style="width: 100%" class="gpf-basic-table datasets-table">
+              <thead>
+                <tr class="card-block">
+                  <th style="border-bottom: none" [attr.colspan]="dataset.personSets.length + 1">
+                    <span>{{ dataset.displayName }}</span>
+                  </th>
+                </tr>
+                <tr class="card-block">
+                  <th style="border-bottom: none">Variant Statistics</th>
+                  <th *ngFor="let personSet of dataset.personSets" style="text-align: center; border-bottom: none">
+                    <span class="vertical-text">{{ personSet.displayName }} ({{ personSet.childrenCount }})</span>
+                  </th>
+                </tr>
+              </thead>
+
+              <tbody>
+                <ng-container *ngFor="let statistic of dataset.statistics">
+                  <tr class="card-block" [attr.id]="statistic.id">
+                    <td>{{ statistic.description ? statistic.description : statistic.displayName }}</td>
+                    <td style="text-align: center" *ngFor="let personSet of dataset.personSets">
+                      <ng-container
+                        *ngIf="getGeneDatasetValue(gene, dataset.id, personSet.id, statistic.id) as effectType">
+                        <ng-container *ngIf="effectType.value.count !== 0">
+                          <a
+                            class="link-genotype-browser"
+                            (click)="goToQuery(gene.geneSymbol, personSet, dataset.id, statistic)"
+                            (middleclick)="goToQuery(gene.geneSymbol, personSet, dataset.id, statistic)">
+                            <span style="white-space: nowrap"
+                              >{{ effectType.value.count }} ({{ effectType.value.rate | number: '1.0-3' }})</span
+                            >
+                          </a>
+                        </ng-container>
+                        <ng-container *ngIf="effectType.value.count === 0">&ndash;</ng-container>
+                      </ng-container>
+                    </td>
+                  </tr>
+                </ng-container>
+              </tbody>
+            </table>
+          </ng-container>
+        </div>
       </div>
-    </div>
-  </ng-container>
-</div>
+    </ng-container>
+  </div>
 </div>
 <div *ngIf="errorModal">
   <div style="display: flex; align-items: center" class="modal" role="dialog" aria-hidden="true">
@@ -159,7 +171,7 @@
         <div class="modal-header" style="border-bottom: 0">
           <h5 class="modal-title">Error</h5>
         </div>
-        <div class="modal-body">"{{geneSymbol}}" is not found in the AGP database!</div>
+        <div class="modal-body">"{{ geneSymbol }}" is not found in the AGP database!</div>
         <div class="modal-footer" style="border-top: 0">
           <button type="button" class="btn btn-secondary" (click)="errorModalBack()">Back</button>
         </div>

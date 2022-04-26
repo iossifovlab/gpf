@@ -1,5 +1,5 @@
 <div class="card">
-  <span class="card-header card-title">{{title}}</span>
+  <span class="card-header card-title">{{ title }}</span>
   <div class="card-block">
     <div class="btn-group btn-group-sm">
       <button (click)="selectAll()" class="btn btn-default">All</button>
@@ -9,8 +9,8 @@
     <ng-container *ngFor="let item of items">
       <div class="checkbox">
         <label>
-          <input type="checkbox" [checked]="selectedItems.has(item)" (change)="toggleItem(item)">
-          <span style="margin-left: 5px;">{{item | displayName: displayNames}}</span>
+          <input type="checkbox" [checked]="selectedItems.has(item)" (change)="toggleItem(item)" />
+          <span style="margin-left: 5px">{{ item | displayName: displayNames }}</span>
         </label>
       </div>
     </ng-container>

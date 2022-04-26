@@ -1,9 +1,8 @@
-import { Directive, Component, Input, Output, EventEmitter, TemplateRef, ContentChild } from '@angular/core';
+import { Directive, TemplateRef } from '@angular/core';
 
 @Directive({
   selector: '[gpf-searchable-select-template]',
 })
 export class SearchableSelectTemplateDirective {
-  constructor(
-   readonly templateRef: TemplateRef<any>) {}
+  public constructor(public readonly templateRef: TemplateRef<any>) {}
 }

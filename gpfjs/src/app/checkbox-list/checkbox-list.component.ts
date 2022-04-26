@@ -2,8 +2,8 @@ import { Component, OnInit, Input, Output, EventEmitter, Pipe, PipeTransform } f
 
 @Pipe({name: 'displayName'})
 export class DisplayNamePipe implements PipeTransform {
-  transform(item: string, displayNames: Map<string, string>, args?: any): string {
-    return displayNames[item] || item;
+  public transform(item: string, displayNames: Map<string, string>): string {
+    return (displayNames[item] || item) as string;
   }
 }
 
@@ -13,35 +13,38 @@ export class DisplayNamePipe implements PipeTransform {
   styleUrls: ['./checkbox-list.component.css']
 })
 export class CheckboxListComponent implements OnInit {
+  @Input() public title: string;
+  @Input() public items: Set<string>;
+  @Input() public selectedItems: Set<string>;
+  @Input() public displayNames: Map<string, string> = new Map();
+  @Output() public itemsUpdateEvent = new EventEmitter<Set<string>>();
 
-  @Input() title: string;
-  @Input() items: Set<string>;
-  @Input() selectedItems: Set<string>;
-  @Input() displayNames: Map<string, string> = new Map();
-  @Output() itemsUpdateEvent = new EventEmitter<Set<string>>();
-
-  ngOnInit(): void {
+  public ngOnInit(): void {
     if (!this.selectedItems) {
       this.selectAll();
     }
   }
 
-  emit(): void {
+  public emit(): void {
     this.itemsUpdateEvent.emit(this.selectedItems);
   }
 
-  selectNone(): void {
+  public selectNone(): void {
     this.selectedItems.clear();
     this.emit();
   }
 
-  selectAll(): void {
+  public selectAll(): void {
     this.selectedItems = new Set([...this.items]);
     this.emit();
   }
 
-  toggleItem(item: string): void {
-    this.selectedItems.has(item) ? this.selectedItems.delete(item) : this.selectedItems.add(item);
+  public toggleItem(item: string): void {
+    if (this.selectedItems.has(item)) {
+      this.selectedItems.delete(item);
+    } else {
+      this.selectedItems.add(item);
+    }
     this.emit();
   }
 }

@@ -7,20 +7,35 @@
       [(ngModel)]="_displayedGroups">
     </ng-multiselect-dropdown>
   </div>
-<div>
-
-<div style="margin-top: 5px;">
-  <div class="col-12">
-    <div ngbDropdown class="d-inline-block" autoClose="outside" placement="bottom-left">
-      <button style="border-color: #d3d3d3" class="btn btn-light" (click)="focusGroupNameInput()" ngbDropdownToggle>Create group</button>
-      <div ngbDropdownMenu>
-        <form style="margin: 10px">
-          <div class="form-group">
-            <label for="groupName">Group name</label>
-            <input #groupInput type="text" class="form-control" id="groupName" required autocomplete="off" maxlength=256 style="width: 300px" spellcheck="false">
+  <div>
+    <div style="margin-top: 5px">
+      <div class="col-12">
+        <div ngbDropdown class="d-inline-block" autoClose="outside" placement="bottom-left">
+          <button
+            style="border-color: #d3d3d3"
+            class="btn btn-light"
+            (click)="focusGroupNameInput()"
+            ngbDropdownToggle>Create group</button
+          >
+          <div ngbDropdownMenu>
+            <form style="margin: 10px">
+              <div class="form-group">
+                <label for="groupName">Group name</label>
+                <input
+                  #groupInput
+                  type="text"
+                  class="form-control"
+                  id="groupName"
+                  required
+                  autocomplete="off"
+                  maxlength="256"
+                  style="width: 300px"
+                  spellcheck="false" />
+              </div>
+              <button type="submit" class="btn btn-success" (click)="createGroup(groupInput.value)">Add</button>
+            </form>
           </div>
-          <button type="submit" class="btn btn-success" (click)="createGroup(groupInput.value)">Add</button>
-        </form>
+        </div>
       </div>
     </div>
   </div>

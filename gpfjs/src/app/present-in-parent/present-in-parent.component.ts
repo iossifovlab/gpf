@@ -1,9 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { Store } from '@ngxs/store';
-import { ValidateIf, Min, Max } from 'class-validator';
+import { Validate, ValidateIf, Min, Max } from 'class-validator';
 import { IsLessThanOrEqual } from '../utils/is-less-than-validator';
 import { IsMoreThanOrEqual } from '../utils/is-more-than-validator';
-import { Validate } from 'class-validator';
 import { SetNotEmpty } from '../utils/set.validators';
 import { SetPresentInParentValues, PresentInParentState } from './present-in-parent.state';
 import { StatefulComponent } from 'app/common/stateful-component';
@@ -13,34 +12,33 @@ import { StatefulComponent } from 'app/common/stateful-component';
   templateUrl: './present-in-parent.component.html',
 })
 export class PresentInParentComponent extends StatefulComponent implements OnInit {
-
   @ValidateIf(o => o.selectedRarityType !== 'ultraRare' && o.rarityIntervalStart !== null)
   @Min(0) @Max(100)
   @IsLessThanOrEqual('rarityIntervalEnd')
-  rarityIntervalStart = 0;
+  public rarityIntervalStart = 0;
 
   @ValidateIf(o => o.selectedRarityType !== 'ultraRare')
   @Min(0) @Max(100)
   @IsMoreThanOrEqual('rarityIntervalStart')
-  rarityIntervalEnd = 1;
+  public rarityIntervalEnd = 1;
 
-  presentInParentValues: Set<string> = new Set([
+  public presentInParentValues: Set<string> = new Set([
     'mother only', 'father only', 'mother and father', 'neither'
   ]);
 
   @Validate(SetNotEmpty, { message: 'Select at least one.' })
-  selectedValues: Set<string> = new Set();
+  public selectedValues: Set<string> = new Set();
 
-  rarityTypes: Set<string> = new Set([
+  public rarityTypes: Set<string> = new Set([
     'ultraRare', 'interval', 'rare', 'all'
   ]);
-  selectedRarityType = '';
+  public selectedRarityType = '';
 
-  constructor(protected store: Store) {
+  public constructor(protected store: Store) {
     super(store, PresentInParentState, 'presentInParent');
   }
 
-  ngOnInit() {
+  public ngOnInit(): void {
     super.ngOnInit();
     this.store.selectOnce(PresentInParentState).subscribe(state => {
       // restore state
@@ -52,7 +50,7 @@ export class PresentInParentComponent extends StatefulComponent implements OnIni
     });
   }
 
-  updatePresentInParent(newValues: Set<string>): void {
+  public updatePresentInParent(newValues: Set<string>): void {
     this.selectedValues = newValues;
     if (this.selectedValues.size === 1 && this.selectedValues.has('neither')) {
       // 'neither' does not allow for selecting a rarity type
@@ -64,17 +62,17 @@ export class PresentInParentComponent extends StatefulComponent implements OnIni
     this.updateState();
   }
 
-  updateRarityIntervalStart(newValue: number): void {
+  public updateRarityIntervalStart(newValue: number): void {
     this.rarityIntervalStart = newValue;
     this.updateState();
   }
 
-  updateRarityIntervalEnd(newValue: number): void {
+  public updateRarityIntervalEnd(newValue: number): void {
     this.rarityIntervalEnd = newValue;
     this.updateState();
   }
 
-  updateRarityType(newValue: string): void {
+  public updateRarityType(newValue: string): void {
     this.selectedRarityType = newValue;
     if (this.selectedRarityType === 'rare') {
       this.rarityIntervalStart = null;
@@ -84,7 +82,7 @@ export class PresentInParentComponent extends StatefulComponent implements OnIni
     this.updateState();
   }
 
-  updateState(): void {
+  public updateState(): void {
     this.store.dispatch(new SetPresentInParentValues(
       this.selectedValues, this.selectedRarityType,
       this.rarityIntervalStart, this.rarityIntervalEnd

@@ -12,7 +12,7 @@ tr:hover {
 
 .variant-report-block {
   padding: 20px;
-  border: 1px solid rgba(0, 0, 0, 12.5%);
+  border: 1px solid rgba(0 0 0 12.5%);
   background-color: #fafafa;
 }
 
@@ -84,13 +84,14 @@ table {
 }
 
 .first-header-cell {
-  background-image: linear-gradient(
-    to top right,
-    white 49%,
-    #dee2e6,
-    white 51%
-  );
   border-bottom: 1px;
+  background-image:
+    linear-gradient(
+      to top right,
+      white 49%,
+      #dee2e6,
+      white 51%
+    );
 }
 
 .legend-report span {

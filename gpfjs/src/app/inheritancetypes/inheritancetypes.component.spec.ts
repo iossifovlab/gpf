@@ -1,17 +1,15 @@
-import { NO_ERRORS_SCHEMA } from '@angular/compiler';
-import { Component, ViewChild } from '@angular/core';
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
-import { NgxsModule } from '@ngxs/store';
+import { NgxsModule, Store } from '@ngxs/store';
 import { CheckboxListComponent } from 'app/checkbox-list/checkbox-list.component';
-import { of } from 'rxjs';
 
 import { ErrorsAlertComponent } from '../errors-alert/errors-alert.component';
 import { InheritancetypesComponent } from './inheritancetypes.component';
-import { SetInheritanceTypes } from './inheritancetypes.state';
+import { InheritancetypesState, SetInheritanceTypes } from './inheritancetypes.state';
 
 describe('InheritancetypesComponent', () => {
   let component: InheritancetypesComponent;
   let fixture: ComponentFixture<InheritancetypesComponent>;
+  let store: Store;
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
@@ -20,12 +18,13 @@ describe('InheritancetypesComponent', () => {
         InheritancetypesComponent,
         CheckboxListComponent
       ],
-      imports: [NgxsModule.forRoot([], {developmentMode: true}) ],
-    })
-    .compileComponents();
+      imports: [NgxsModule.forRoot([InheritancetypesState], {developmentMode: true})],
+    }).compileComponents();
   }));
 
   beforeEach(() => {
+    store = TestBed.inject(Store);
+    store.dispatch(new SetInheritanceTypes(new Set(['value1', 'value2'])));
     fixture = TestBed.createComponent(InheritancetypesComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
@@ -36,36 +35,15 @@ describe('InheritancetypesComponent', () => {
   });
 
   it('should handle selected values input and/or restore state', () => {
-    let dispatchSpy;
-
-    component['store'] = {
-      selectOnce(f) {
-        return of({inheritanceTypes: ['value1', 'value2']});
-      },
-      dispatch(set) {}
-    } as any;
-    dispatchSpy = jest.spyOn(component['store'], 'dispatch');
     component.ngOnChanges();
     expect(component.selectedValues).toEqual(new Set(['value1', 'value2']));
-    expect(dispatchSpy).not.toHaveBeenCalled();
-
-    component.selectedValues = new Set(['value3']);
-    component['store'] = {
-      selectOnce(f) {
-        return of({inheritanceTypes: []});
-      },
-      dispatch(set) {}
-    } as any;
-    dispatchSpy = jest.spyOn(component['store'], 'dispatch');
+    component.updateInheritanceTypes(new Set(['value3']));
     component.ngOnChanges();
     expect(component.selectedValues).toEqual(new Set(['value3']));
-    expect(dispatchSpy).toHaveBeenCalled();
-
   });
 
   it('should update variant types', () => {
     component.selectedValues = undefined;
-    component['store'] = { dispatch(set) {} } as any;
     const dispatchSpy = jest.spyOn(component['store'], 'dispatch');
     const mockSet = new Set(['value1', 'value2', 'value3']);
 

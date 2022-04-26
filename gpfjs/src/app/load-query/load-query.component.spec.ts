@@ -16,7 +16,7 @@ describe('LoadQueryComponent', () => {
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      declarations: [ LoadQueryComponent ],
+      declarations: [LoadQueryComponent],
       providers: [
         QueryService,
         HttpClient,
@@ -29,8 +29,7 @@ describe('LoadQueryComponent', () => {
         RouterTestingModule,
         NgxsModule.forRoot([ErrorsState], {developmentMode: true})
       ],
-    })
-    .compileComponents();
+    }).compileComponents();
   }));
 
   beforeEach(() => {

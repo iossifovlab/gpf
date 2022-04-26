@@ -5,7 +5,6 @@ import { NgxsModule } from '@ngxs/store';
 import { ConfigService } from 'app/config/config.service';
 import { UsersGroupsService } from 'app/users-groups/users-groups.service';
 import { UsersService } from 'app/users/users.service';
-
 import { UserEditComponent } from './user-edit.component';
 
 describe('UserEditComponent', () => {
@@ -17,8 +16,7 @@ describe('UserEditComponent', () => {
       declarations: [UserEditComponent],
       providers: [UsersService, ConfigService, UsersGroupsService],
       imports: [RouterTestingModule, HttpClientTestingModule, NgxsModule.forRoot([], {developmentMode: true})]
-    })
-    .compileComponents();
+    }).compileComponents();
   }));
 
   beforeEach(() => {

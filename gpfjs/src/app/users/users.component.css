@@ -5,24 +5,26 @@
   display: block;
   float: left;
   min-width: 300px;
-  margin: .125rem 0 0;
+  margin: 0.125rem 0 0;
   font-size: 1rem;
   color: #292b2c;
   text-align: left;
   list-style: none;
   background-color: #fff;
   background-clip: padding-box;
-  border: 1px solid rgba(0,0,0,.15);
-  border-radius: .25rem;
+  border: 1px solid rgb(0 0 0 / 15%);
+  border-radius: 0.25rem;
   right: 0;
   left: auto;
-  padding: 15px 20px 10px 20px;
+  padding: 15px 20px 10px;
 }
 
 @keyframes spinner {
-  to {transform: rotate(360deg);}
+  to {
+    transform: rotate(360deg);
+  }
 }
- 
+
 .spinner:before {
   content: '';
   box-sizing: border-box;
@@ -34,9 +36,9 @@
   margin-top: -10px;
   margin-left: -10px;
   border-radius: 50%;
-  border: 2px solid #00FF00;
-  border-top-color: #000000;
-  animation: spinner .8s linear infinite;
+  border: 2px solid #0f0;
+  border-top-color: #000;
+  animation: spinner 0.8s linear infinite;
 }
 
 .submitted-email-input {

@@ -44,8 +44,8 @@ describe('AgpTableService', () => {
     service.getGenes(1, 'mockSearch', 'mockSort', 'desc');
     expect(getGenesSpy.mock.calls).toEqual([
       [service['config'].baseUrl + service['genesUrl'] + '?page=1'],
-      [service['config'].baseUrl + service['genesUrl'] + '?page=1' + '&symbol=mockSearch'],
-      [service['config'].baseUrl + service['genesUrl'] + '?page=1' + '&symbol=mockSearch' + '&sortBy=mockSort&order=desc']
+      [service['config'].baseUrl + service['genesUrl'] + '?page=1&symbol=mockSearch'],
+      [service['config'].baseUrl + service['genesUrl'] + '?page=1&symbol=mockSearch&sortBy=mockSort&order=desc']
     ]);
   });
 });

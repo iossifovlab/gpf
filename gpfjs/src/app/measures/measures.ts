@@ -1,52 +1,51 @@
 export class ContinuousMeasure {
-  static fromJson(json: any): ContinuousMeasure {
+  public static fromJson(json: object): ContinuousMeasure {
     return new ContinuousMeasure(
-      json['measure'],
-      json['min'],
-      json['max'],
+      json['measure'] as string,
+      json['min'] as number,
+      json['max'] as number,
     );
   }
 
-  static fromJsonArray(jsonArray: Array<Object>): Array<ContinuousMeasure> {
+  public static fromJsonArray(jsonArray: object[]): Array<ContinuousMeasure> {
     if (!jsonArray) {
       return undefined;
     }
     return jsonArray.map((json) => ContinuousMeasure.fromJson(json));
   }
 
-  constructor(
-    readonly name: string,
-    readonly min: number,
-    readonly max: number
+  public constructor(
+    public readonly name: string,
+    public readonly min: number,
+    public readonly max: number
   ) {}
 }
 
 
 export class HistogramData {
-  static fromJson(json: any): HistogramData {
+  public static fromJson(json: object): HistogramData {
     return new HistogramData(
-      json['bars'],
-      json['measure'],
-      +json['min'],
-      +json['max'],
-      +json['step'],
-      json['bins'],
-      json['desc']
+      json['bars'] as number[],
+      json['measure'] as string,
+      Number(json['min']),
+      Number(json['max']),
+      Number(json['step']),
+      json['bins'] as number[],
+      json['desc'] as string
     );
   }
 
-  static fromJsonArray(jsonArray: Array<Object>): Array<HistogramData> {
+  public static fromJsonArray(jsonArray: Array<object>): Array<HistogramData> {
     return jsonArray.map((json) => HistogramData.fromJson(json));
   }
 
-  constructor(
-    readonly bars: number[],
-    readonly measure: string,
-    readonly min: number,
-    readonly max: number,
-    readonly step: number,
-    readonly bins: number[],
-    readonly desc: string,
+  public constructor(
+    public readonly bars: number[],
+    public readonly measure: string,
+    public readonly min: number,
+    public readonly max: number,
+    public readonly step: number,
+    public readonly bins: number[],
+    public readonly desc: string,
   ) { }
-
 }

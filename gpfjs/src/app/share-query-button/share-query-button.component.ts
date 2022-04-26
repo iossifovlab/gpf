@@ -1,4 +1,4 @@
-import { Component, OnInit, Input, ViewChild } from '@angular/core';
+import { Component, Input, ViewChild } from '@angular/core';
 import { QueryService } from '../query/query.service';
 import { DatasetsService } from '../datasets/datasets.service';
 import { Store } from '@ngxs/store';
@@ -11,17 +11,16 @@ import { take } from 'rxjs/operators';
   styleUrls: ['./share-query-button.component.css']
 })
 export class ShareQueryButtonComponent {
-  @Input() queryType: string;
-  @Input() disabled: boolean;
-  @ViewChild(NgbDropdown)
-  dropdown: NgbDropdown;
+  @Input() public queryType: string;
+  @Input() public disabled: boolean;
+  @ViewChild(NgbDropdown) public dropdown: NgbDropdown;
 
   private urlUUID: string;
   public url: string;
   private savedUrlUUID: string;
-  buttonValue = 'Copy';
+  public buttonValue = 'Copy';
 
-  constructor(
+  public constructor(
     private store: Store,
     private queryService: QueryService,
     private datasetsService: DatasetsService,
@@ -37,21 +36,22 @@ export class ShareQueryButtonComponent {
     this.buttonValue = 'Copy';
     this.store.selectOnce(state => state).subscribe(state => {
       state['datasetId'] = datasetId;
+
       this.queryService.saveQuery(state, this.queryType)
         .pipe(take(1))
         .subscribe(response => {
           this.urlUUID = response['uuid'];
           this.setUrl();
         });
-      },
-      error => {
-        this.resetState();
-        this.dropdown.close();
-      }
+    },
+    error => {
+      this.resetState();
+      this.dropdown.close();
+    }
     );
   }
 
-  private resetState() {
+  private resetState(): void {
     this.savedUrlUUID = null;
     this.url = null;
   }

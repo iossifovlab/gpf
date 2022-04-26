@@ -2,18 +2,18 @@ import { Injectable } from '@angular/core';
 import { State, Action, StateContext } from '@ngxs/store';
 
 export class AddEffectType {
-  static readonly type = '[Genotype] Add EffectType';
-  constructor(public effectType: string) {}
+  public static readonly type = '[Genotype] Add EffectType';
+  public constructor(public effectType: string) {}
 }
 
 export class RemoveEffectType {
-  static readonly type = '[Genotype] Remove EffectType';
-  constructor(public effectType: string) {}
+  public static readonly type = '[Genotype] Remove EffectType';
+  public constructor(public effectType: string) {}
 }
 
 export class SetEffectTypes {
-  static readonly type = '[Genotype] Set effect types';
-  constructor(public effectTypes: Set<string>) {}
+  public static readonly type = '[Genotype] Set effect types';
+  public constructor(public effectTypes: Set<string>) {}
 }
 
 export interface EffectTypeModel {
@@ -29,7 +29,7 @@ export interface EffectTypeModel {
 @Injectable()
 export class EffecttypesState {
   @Action(AddEffectType)
-  addEffectType(ctx: StateContext<EffectTypeModel>, action: AddEffectType) {
+  public addEffectType(ctx: StateContext<EffectTypeModel>, action: AddEffectType): void {
     const state = ctx.getState();
     ctx.patchState({
       effectTypes: [...state.effectTypes, action.effectType]
@@ -37,7 +37,7 @@ export class EffecttypesState {
   }
 
   @Action(RemoveEffectType)
-  removeEffectType(ctx: StateContext<EffectTypeModel>, action: RemoveEffectType) {
+  public removeEffectType(ctx: StateContext<EffectTypeModel>, action: RemoveEffectType): void {
     const state = ctx.getState();
     ctx.patchState({
       effectTypes: state.effectTypes.filter(eff => eff !== action.effectType)
@@ -45,8 +45,7 @@ export class EffecttypesState {
   }
 
   @Action(SetEffectTypes)
-  setEffectTypes(ctx: StateContext<EffectTypeModel>, action: SetEffectTypes) {
-    const state = ctx.getState();
+  public setEffectTypes(ctx: StateContext<EffectTypeModel>, action: SetEffectTypes): void {
     ctx.patchState({
       effectTypes: Array.from(action.effectTypes)
     });

@@ -13,52 +13,52 @@ import { GenomicScoreState } from './genomic-scores-store';
   templateUrl: './genomic-scores.component.html',
 })
 export class GenomicScoresComponent {
-  @Input() index: number;
-  @Input() genomicScoreState: GenomicScoreState;
-  @Input() errors: string[];
-  @Input() genomicScoresArray: GenomicScores[];
-  @Output() updateGenomicScoreEvent = new EventEmitter();
+  @Input() public index: number;
+  @Input() public genomicScoreState: GenomicScoreState;
+  @Input() public errors: string[];
+  @Input() public genomicScoresArray: GenomicScores[];
+  @Output() public updateGenomicScoreEvent = new EventEmitter();
 
   private rangeChanges = new ReplaySubject<[string, number, number]>(1);
 
   public imgPathPrefix = environment.imgPathPrefix;
 
-  constructor(private modalService: NgbModal) {}
+  public constructor(private modalService: NgbModal) {}
 
-  showHelp() {
+  public showHelp(): void {
     const modalRef = this.modalService.open(PopupComponent, {
       size: 'lg'
     });
     modalRef.componentInstance.data = this.genomicScoreState.score.help;
   }
 
-  set rangeStart(range: number) {
+  public set rangeStart(range: number) {
     this.genomicScoreState.rangeStart = range;
     this.updateGenomicScoreEvent.emit();
   }
 
-  get rangeStart() {
+  public get rangeStart(): number {
     return this.genomicScoreState.rangeStart;
   }
 
-  set rangeEnd(range: number) {
+  public set rangeEnd(range: number) {
     this.genomicScoreState.rangeEnd = range;
     this.updateGenomicScoreEvent.emit();
   }
 
-  get rangeEnd() {
+  public get rangeEnd(): number {
     return this.genomicScoreState.rangeEnd;
   }
 
-  get domainMin() {
+  public get domainMin(): number {
     return this.genomicScoreState.domainMin;
   }
 
-  get domainMax() {
+  public get domainMax(): number {
     return this.genomicScoreState.domainMax;
   }
 
-  private updateLabels() {
+  private updateLabels(): void {
     this.rangeChanges.next([
       this.genomicScoreState.score.score,
       this.genomicScoreState.rangeStart,
@@ -66,7 +66,7 @@ export class GenomicScoresComponent {
     ]);
   }
 
-  set selectedGenomicScores(selectedGenomicScores: GenomicScores) {
+  public set selectedGenomicScores(selectedGenomicScores: GenomicScores) {
     this.genomicScoreState.score = selectedGenomicScores;
     this.genomicScoreState.rangeStart = null;
     this.genomicScoreState.rangeEnd = null;
@@ -75,7 +75,7 @@ export class GenomicScoresComponent {
     this.updateGenomicScoreEvent.emit();
   }
 
-  get selectedGenomicScores() {
+  public get selectedGenomicScores(): GenomicScores {
     return this.genomicScoreState.score;
   }
 }

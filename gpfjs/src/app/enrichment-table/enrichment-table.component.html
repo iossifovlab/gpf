@@ -1,5 +1,5 @@
 <div id="enrichment-tool-results">
-  <div style="word-break: break-word;" class="description">{{ enrichmentResults?.description }}</div>
+  <div style="word-break: break-word" class="description">{{ enrichmentResults?.description }}</div>
 
   <table *ngIf="enrichmentResults" class="enrichment-table">
     <tr>
@@ -38,31 +38,44 @@
         <td rowspan="4" class="selector-cell">
           <div [attr.title]="enrichmentResult.selector">{{ enrichmentResult.selector }}</div>
           <div class="children-stats">
-            <span [attr.title]="enrichmentResult?.childrenStats?.female !== undefined ? 'Female: ' + enrichmentResult?.childrenStats?.female : 'Female: -'">
-              F:{{ enrichmentResult?.childrenStats?.female }}
-            </span>
+            <span
+              [attr.title]="
+                enrichmentResult?.childrenStats?.female !== undefined
+                  ? 'Female: ' + enrichmentResult?.childrenStats?.female
+                  : 'Female: -'
+              ">F:{{ enrichmentResult?.childrenStats?.female }}</span
+            >
             <span *ngIf="enrichmentResult?.childrenStats?.female === undefined" title="Female: -">-</span>
-            <br>
+            <br />
 
-            <span [attr.title]="enrichmentResult?.childrenStats?.male !== undefined ? 'Male: ' + enrichmentResult?.childrenStats?.male : 'Male: -'">
-              M:{{ enrichmentResult?.childrenStats?.male }}
-            </span>
+            <span
+              [attr.title]="
+                enrichmentResult?.childrenStats?.male !== undefined
+                  ? 'Male: ' + enrichmentResult?.childrenStats?.male
+                  : 'Male: -'
+              ">M:{{ enrichmentResult?.childrenStats?.male }}</span
+            >
             <span *ngIf="enrichmentResult?.childrenStats?.male === undefined" title="Male: -">-</span>
-            <br>
+            <br />
 
-            <span [attr.title]="enrichmentResult?.childrenStats?.unspecified !== undefined ? 'Unspecified: ' + enrichmentResult?.childrenStats?.unspecified : 'Unspecified: -'">
-              U:{{ enrichmentResult?.childrenStats?.unspecified }}
-            </span>
+            <span
+              [attr.title]="
+                enrichmentResult?.childrenStats?.unspecified !== undefined
+                  ? 'Unspecified: ' + enrichmentResult?.childrenStats?.unspecified
+                  : 'Unspecified: -'
+              ">U:{{ enrichmentResult?.childrenStats?.unspecified }}</span
+            >
             <span *ngIf="enrichmentResult?.childrenStats?.unspecified === undefined" title="Unspecified: -">-</span>
           </div>
         </td>
       </tr>
-      <tr gpf-enrichment-table-row label="LGDs" [effectResult]="enrichmentResult.LGDs" title="LGDs">
-      </tr>
-      <tr gpf-enrichment-table-row label="Missense" [effectResult]="enrichmentResult.missense" title="Missense">
-      </tr>
-      <tr gpf-enrichment-table-row label="Synonymous" [effectResult]="enrichmentResult.synonymous" title="Synonymous">
-      </tr>
+      <tr gpf-enrichment-table-row label="LGDs" [effectResult]="enrichmentResult.LGDs" title="LGDs"></tr>
+      <tr gpf-enrichment-table-row label="Missense" [effectResult]="enrichmentResult.missense" title="Missense"></tr>
+      <tr
+        gpf-enrichment-table-row
+        label="Synonymous"
+        [effectResult]="enrichmentResult.synonymous"
+        title="Synonymous"></tr>
     </ng-container>
   </table>
 </div>

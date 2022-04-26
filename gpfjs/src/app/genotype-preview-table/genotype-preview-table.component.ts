@@ -8,29 +8,28 @@ import { PersonSet } from '../datasets/datasets';
   styleUrls: ['./genotype-preview-table.component.css']
 })
 export class GenotypePreviewTableComponent implements OnInit {
-  @Input() genotypePreviewVariantsArray: GenotypePreviewVariantsArray;
-  @Input() columns: Array<any>;
-  @Input() legend: Array<PersonSet>;
+  @Input() public genotypePreviewVariantsArray: GenotypePreviewVariantsArray;
+  @Input() public columns: Array<any>;
+  @Input() public legend: Array<PersonSet>;
   public singleColumnWidth: string;
 
   @HostListener('window:resize', ['$event'])
-  onResize() {
+  public onResize(): void {
     const screenWidth = window.innerWidth;
     const columnsCount = this.columns.length;
     const padding = 60;
     const scrollSize = 15;
 
-    this.singleColumnWidth = ((screenWidth - padding - scrollSize) / columnsCount) + 'px';
+    this.singleColumnWidth = `${(screenWidth - padding - scrollSize) / columnsCount}px`;
   }
 
-  constructor(
-  ) { }
+  constructor() { }
 
-  ngOnInit(): void {
+  public ngOnInit(): void {
     this.onResize();
   }
 
-  comparator(field: string) {
+  public comparator(field: string) {
     if (field === 'variant.location') {
       return this.locationComparator;
     } else {
@@ -71,8 +70,7 @@ export class GenotypePreviewTableComponent implements OnInit {
     }
   }
 
-
-  locationComparator(a: GenotypePreview, b: GenotypePreview): number {
+  public locationComparator(a: GenotypePreview, b: GenotypePreview): number {
     const XYMStringToNum = (str: string): number => {
       if (str === 'X') {
         return 100;
@@ -83,7 +81,7 @@ export class GenotypePreviewTableComponent implements OnInit {
       if (str === 'M') {
         return 102;
       }
-      return +str;
+      return Number(str);
     };
 
     const leftVar = a.get('variant.location');
@@ -97,6 +95,5 @@ export class GenotypePreviewTableComponent implements OnInit {
     } else {
       return XYMStringToNum(leftArr[0]) - XYMStringToNum(rightArr[0]);
     }
-
   }
 }

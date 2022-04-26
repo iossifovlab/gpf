@@ -34,8 +34,7 @@ describe('DatasetDescriptionComponent', () => {
         ConfigService,
       ],
       imports: [RouterTestingModule, HttpClientTestingModule, NgxsModule.forRoot([], {developmentMode: true})]
-    })
-    .compileComponents();
+    }).compileComponents();
   }));
 
   beforeEach(() => {

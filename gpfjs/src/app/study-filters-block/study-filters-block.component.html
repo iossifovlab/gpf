@@ -4,22 +4,17 @@
       <div class="nav-title-custom">Studies</div>
       <li ngbNavItem>
         <a ngbNavLink>
-          <gpf-add-button
-            (addFilter)="addFilter($event)">
-          </gpf-add-button>
+          <gpf-add-button (addFilter)="addFilter($event)"></gpf-add-button>
         </a>
       </li>
     </ul>
     <div class="card-block">
       <div style="padding: 5px" *ngFor="let study of selectedStudies; trackBy: trackById; let i = index">
         <span style="padding: 5px; display: block; overflow: hidden">
-          <gpf-remove-button
-            [field]="study"
-            (removeFilter)="removeFilter($event)">
-          </gpf-remove-button>
+          <gpf-remove-button [field]="study" (removeFilter)="removeFilter($event)"></gpf-remove-button>
           <gpf-study-filter
             [selectedStudy]="study"
-            (changeSelectedStudyEvent) = "changeSelectedStudy($event)"
+            (changeSelectedStudyEvent)="changeSelectedStudy($event)"
             [errors]="errors"
             [studies]="studies">
           </gpf-study-filter>

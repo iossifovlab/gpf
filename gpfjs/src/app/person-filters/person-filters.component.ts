@@ -5,6 +5,7 @@ import { Store } from '@ngxs/store';
 import { SetFamilyFilters, SetPersonFilters, PersonFiltersState } from './person-filters.state';
 import { StatefulComponent } from 'app/common/stateful-component';
 import { IsNotEmpty, ValidateNested } from 'class-validator';
+import { filter } from 'lodash';
 
 @Component({
   selector: 'gpf-person-filters',
@@ -12,21 +13,21 @@ import { IsNotEmpty, ValidateNested } from 'class-validator';
   styleUrls: ['./person-filters.component.css'],
 })
 export class PersonFiltersComponent extends StatefulComponent implements OnChanges {
-  @Input() dataset: Dataset;
-  @Input() filters: PersonFilter[];
-  @Input() isFamilyFilters: boolean;
+  @Input() public dataset: Dataset;
+  @Input() public filters: PersonFilter[];
+  @Input() public isFamilyFilters: boolean;
 
   @IsNotEmpty({message: 'Select at least one continuous filter.'})
-  selected = false;
+  public selected = false;
 
   @ValidateNested({each: true})
   private personFiltersState = new Map<string, PersonFilterState>();
 
-  constructor(protected store: Store) {
+  public constructor(protected store: Store) {
     super(store, PersonFiltersState, 'personFilters');
   }
 
-  ngOnChanges(changes) {
+  public ngOnChanges(changes): void {
     this.store.selectOnce(PersonFiltersState).subscribe(state => {
       // set default state
       for (const filter of this.filters) {
@@ -47,20 +48,21 @@ export class PersonFiltersComponent extends StatefulComponent implements OnChang
       }
 
       // restore state
-      const filterStates = this.isFamilyFilters ? state.familyFilters : state.personFilters;
+      const filterStates: PersonFilterState[] = this.isFamilyFilters ? state.familyFilters : state.personFilters;
       if (filterStates.length) {
         for (const filterState of filterStates) {
           const filterType = filterState.sourceType === 'continuous' ? ContinuousFilterState : CategoricalFilterState;
           let selection = null;
           if (filterState.sourceType === 'continuous') {
+            const filterStateSelection = filterState.selection as ContinuousSelection;
             selection = new ContinuousSelection(
-              filterState.selection.min,
-              filterState.selection.max,
-              filterState.selection.domainMin,
-              filterState.selection.domainMax,
+              filterStateSelection.min,
+              filterStateSelection.max,
+              filterStateSelection.domainMin,
+              filterStateSelection.domainMax,
             );
           } else {
-            selection = new CategoricalSelection(filterState.selection.selection);
+            selection = new CategoricalSelection((filterState.selection as CategoricalSelection).selection);
           }
           const newFilter = new filterType(
             filterState.id, filterState.sourceType, filterState.role,
@@ -72,24 +74,23 @@ export class PersonFiltersComponent extends StatefulComponent implements OnChang
     });
   }
 
-  get categoricalFilters() {
+  public get categoricalFilters(): PersonFilterState[] {
     return [...this.personFiltersState]
       .map(([_, personFilter]) => personFilter)
       .filter(personFilter => personFilter && personFilter.sourceType === 'categorical');
   }
 
-  get continuousFilters() {
-    const res = [...this.personFiltersState]
+  public get continuousFilters(): PersonFilterState[] {
+    return [...this.personFiltersState]
       .map(([_, personFilter]) => personFilter)
       .filter(personFilter => personFilter && personFilter.sourceType === 'continuous');
-    return res;
   }
 
-  getFilter(filterName: string) {
+  public getFilter(filterName: string): PersonFilter {
     return this.filters.find(f => f.name === filterName);
   }
 
-  updateFilters() {
+  public updateFilters(): void {
     this.updateSelected();
     const filters = [...this.personFiltersState]
       .map(([_, personFilter]) => personFilter)
@@ -101,7 +102,7 @@ export class PersonFiltersComponent extends StatefulComponent implements OnChang
     }
   }
 
-  public updateSelected() {
+  public updateSelected(): void {
     this.selected = null;
     this.personFiltersState.forEach(el => {
       if (!el.isEmpty()) {

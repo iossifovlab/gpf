@@ -11,24 +11,23 @@ import { NgbDropdown } from '@ng-bootstrap/ng-bootstrap';
   styleUrls: ['./pheno-measure-selector.component.css']
 })
 export class PhenoMeasureSelectorComponent implements OnChanges {
+  @Input() public datasetId: string;
+  @Output() public selectedMeasureChange = new EventEmitter(true);
+  @Output() public measuresChange = new EventEmitter(true);
 
-  @Input() datasetId: string;
-  @Output() selectedMeasureChange = new EventEmitter(true);
-  @Output() measuresChange = new EventEmitter(true);
-
-  @ViewChild('searchBox') searchBox: any;
+  @ViewChild('searchBox') private searchBox;
   @ViewChild(NgbDropdown) private dropdown: NgbDropdown;
 
   public measures: Array<ContinuousMeasure> = [];
   public filteredMeasures: Array<ContinuousMeasure> = [];
-  public searchString: string = '';
+  public searchString = '';
   public selectedMeasure: ContinuousMeasure;
 
-  constructor(
+  public constructor(
     private measuresService: MeasuresService
   ) { }
 
-  public ngOnChanges() {
+  public ngOnChanges(): void {
     if (this.datasetId && this.measures.length === 0) {
       this.measuresService.getContinuousMeasures(this.datasetId).pipe(first()).subscribe(measures => {
         this.measures = measures;
@@ -37,7 +36,7 @@ export class PhenoMeasureSelectorComponent implements OnChanges {
     }
   }
 
-  selectMeasure(measure: ContinuousMeasure, sendEvent: boolean = true) {
+  public selectMeasure(measure: ContinuousMeasure, sendEvent: boolean = true): void {
     this.selectedMeasure = measure;
     this.searchString = measure ? measure.name : '';
     if (sendEvent) {
@@ -58,16 +57,16 @@ export class PhenoMeasureSelectorComponent implements OnChanges {
     }
   }
 
-  clear() {
+  public clear(): void {
     this.selectMeasure(null);
     this.searchBoxChange();
   }
 
-  searchBoxChange() {
+  public searchBoxChange(): void {
     if (this.searchString.length) {
-      this.filteredMeasures = this.measures.filter(value => {
-        return value.name.toLowerCase().indexOf(this.searchString.toLowerCase()) !== -1;
-      });
+      this.filteredMeasures = this.measures.filter(value =>
+        value.name.toLowerCase().indexOf(this.searchString.toLowerCase()) !== -1
+      );
     } else {
       this.filteredMeasures = this.measures;
     }

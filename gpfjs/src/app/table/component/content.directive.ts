@@ -4,8 +4,8 @@ import { Directive, TemplateRef, ViewContainerRef } from '@angular/core';
   selector: '[gpfTableCellContent]'
 })
 export class GpfTableCellContentDirective {
-  constructor(
-    readonly templateRef: TemplateRef<any>,
-    readonly viewContainer: ViewContainerRef
+  public constructor(
+    public readonly templateRef: TemplateRef<any>,
+    public readonly viewContainer: ViewContainerRef
   ) { }
 }

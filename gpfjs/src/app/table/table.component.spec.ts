@@ -39,8 +39,7 @@ describe('GpfTableComponent', () => {
         ViewContainerRef,
         ChangeDetectorRef,
       ]
-    })
-    .compileComponents();
+    }).compileComponents();
   }));
 
   beforeEach(() => {

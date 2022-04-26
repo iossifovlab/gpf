@@ -13,12 +13,12 @@ export class UsersActionsComponent implements OnInit {
   @ViewChild('ele') public ele: ElementRef;
   public showDeleteButton = true;
 
-  constructor(
+  public constructor(
     private zone: NgZone,
     private usersService: UsersService,
   ) { }
 
-  public ngOnInit() {
+  public ngOnInit(): void {
     this.usersService.getUserInfo().pipe(take(1)).subscribe((currentUser) => {
       if (currentUser.email === this.user.email) {
         this.showDeleteButton = false;
@@ -45,18 +45,18 @@ export class UsersActionsComponent implements OnInit {
   }
 
   private getUserString(user: User): string {
-    let user_string = `${user.name || user.email}`
+    let userString = `${user.name || user.email}`;
     if (user.name) {
-      user_string = `(${user.email}) ` + user_string
+      userString = `(${user.email}) ` + userString;
     }
-    return user_string;
+    return userString;
   }
 
   public resetPasswordPopoverMessage(user: User): string {
-    return `${this.getUserString(user)}'s password will be reset. An email with reset instructions will be sent and they won't be able to login until they set a new password.`
+    return `${this.getUserString(user)}'s password will be reset. An email with reset instructions will be sent and they won't be able to login until they set a new password.`;
   }
 
   public deleteUserPopoverMessage(user: User): string {
-    return `${this.getUserString(user)} will be deleted. This action is irrevertible!`
+    return `${this.getUserString(user)} will be deleted. This action is irrevertible!`;
   }
 }

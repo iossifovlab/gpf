@@ -1,8 +1,8 @@
 import { Component, AfterViewInit, Input, ViewChild, OnInit } from '@angular/core';
 import { Dataset } from '../datasets/datasets';
 import { Store, Selector } from '@ngxs/store';
-import { PersonIdsState } from 'app/person-ids/person-ids.state';
-import { PersonFiltersState, SetPersonFilters } from 'app/person-filters/person-filters.state';
+import { PersonIdsModel, PersonIdsState } from 'app/person-ids/person-ids.state';
+import { PersonFiltersModel, PersonFiltersState, SetPersonFilters } from 'app/person-filters/person-filters.state';
 import { StateReset } from 'ngxs-reset-plugin';
 import { NgbNav } from '@ng-bootstrap/ng-bootstrap';
 
@@ -12,15 +12,18 @@ import { NgbNav } from '@ng-bootstrap/ng-bootstrap';
   styleUrls: ['./person-filters-block.component.css'],
 })
 export class PersonFiltersBlockComponent implements OnInit, AfterViewInit {
-  @Input() dataset: Dataset;
-  @Input() genotypeBrowserState: Object;
-  @ViewChild('nav') ngbNav: NgbNav;
-  showAdvancedButton: boolean;
+  @Input() public dataset: Dataset;
+  @Input() public genotypeBrowserState: object;
+  @ViewChild('nav') public ngbNav: NgbNav;
+  public showAdvancedButton: boolean;
 
-  constructor(private store: Store) { }
+  public constructor(private store: Store) { }
 
   @Selector([PersonIdsState, PersonFiltersState])
-  static personFiltersBlockState(personIdsState, personFiltersState) {
+  public static personFiltersBlockState(
+    personIdsState: PersonIdsModel,
+    personFiltersState: PersonFiltersModel
+  ): object {
     const res = {};
     if (personIdsState.personIds.length) {
       res['personIds'] = personIdsState.personIds;
@@ -31,11 +34,11 @@ export class PersonFiltersBlockComponent implements OnInit, AfterViewInit {
     return res;
   }
 
-  ngOnInit(): void {
+  public ngOnInit(): void {
     this.showAdvancedButton = this.dataset.genotypeBrowserConfig.personFilters.length !== 0;
   }
 
-  ngAfterViewInit() {
+  public ngAfterViewInit(): void {
     this.store.selectOnce(PersonFiltersBlockComponent.personFiltersBlockState).subscribe(state => {
       if (state['personIds']) {
         setTimeout(() => this.ngbNav.select('personIds'));
@@ -45,7 +48,7 @@ export class PersonFiltersBlockComponent implements OnInit, AfterViewInit {
     });
   }
 
-  onNavChange() {
+  public onNavChange(): void {
     this.store.dispatch(new SetPersonFilters([]));
     this.store.dispatch(new StateReset(PersonIdsState));
   }

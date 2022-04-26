@@ -4,13 +4,13 @@ import { Injectable, EventEmitter } from '@angular/core';
 
 @Injectable()
 export class FullscreenLoadingService {
-  loadingStateChange: EventEmitter<boolean> = new EventEmitter();
+  public loadingStateChange: EventEmitter<boolean> = new EventEmitter<boolean>();
 
-  setLoadingStart() {
+  public setLoadingStart(): void {
     this.loadingStateChange.emit(true);
   }
 
-  setLoadingStop() {
+  public setLoadingStop(): void {
     this.loadingStateChange.emit(false);
   }
 }

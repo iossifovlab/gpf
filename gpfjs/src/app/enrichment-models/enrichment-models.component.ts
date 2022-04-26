@@ -4,7 +4,7 @@ import { IdDescription } from '../common/iddescription';
 import { combineLatest, of } from 'rxjs';
 import { IsNotEmpty } from 'class-validator';
 import { Store } from '@ngxs/store';
-import { SetEnrichmentModels, EnrichmentModelsState } from './enrichment-models.state';
+import { SetEnrichmentModels, EnrichmentModelsState, EnrichmentModelsModel } from './enrichment-models.state';
 import { switchMap, take } from 'rxjs/operators';
 import { StatefulComponent } from 'app/common/stateful-component';
 import { environment } from 'environments/environment';
@@ -14,38 +14,36 @@ import { environment } from 'environments/environment';
   templateUrl: './enrichment-models.component.html',
 })
 export class EnrichmentModelsComponent extends StatefulComponent implements OnInit {
-
   @Input()
   private selectedDatasetId: string;
 
   @IsNotEmpty()
-  background: IdDescription;
+  public background: IdDescription;
 
   @IsNotEmpty()
-  counting: IdDescription;
+  public counting: IdDescription;
 
-  countings: Array<IdDescription>
-  backgrounds: Array<IdDescription>
+  public countings: Array<IdDescription>;
+  public backgrounds: Array<IdDescription>;
 
   public imgPathPrefix = environment.imgPathPrefix;
 
-  constructor(
+  public constructor(
     protected store: Store,
     private enrichmentModelsService: EnrichmentModelsService,
   ) {
     super(store, EnrichmentModelsState, 'enrichmentModels');
   }
 
-  ngOnInit() {
+  public ngOnInit(): void {
     super.ngOnInit();
     this.enrichmentModelsService.getBackgroundModels(this.selectedDatasetId).pipe(
       take(1),
-      switchMap(res => {
-        return combineLatest([of(res), this.store.selectOnce(EnrichmentModelsState)]);
-      })
-    ).subscribe(([res, state]) => {
+      switchMap(res => combineLatest([of(res), this.store.selectOnce(EnrichmentModelsState)]))
+    ).subscribe(([res, enrichmentState]) => {
       this.backgrounds = res.backgrounds;
       this.countings = res.countings;
+      const state = enrichmentState as EnrichmentModelsModel;
       if (state.enrichmentBackgroundModel || state.enrichmentCountingModel) {
         this.background = res.backgrounds.find(bg => bg.id === state.enrichmentBackgroundModel);
         this.counting = res.countings.find(ct => ct.id === state.enrichmentCountingModel);
@@ -57,12 +55,12 @@ export class EnrichmentModelsComponent extends StatefulComponent implements OnIn
     });
   }
 
-  changeBackground(newValue: IdDescription) {
+  public changeBackground(newValue: IdDescription): void {
     this.background = newValue;
     this.store.dispatch(new SetEnrichmentModels(this.background.id, this.counting.id));
   }
 
-  changeCounting(newValue: IdDescription) {
+  public changeCounting(newValue: IdDescription): void {
     this.counting = newValue;
     this.store.dispatch(new SetEnrichmentModels(this.background.id, this.counting.id));
   }

@@ -67,11 +67,8 @@ export const fakeJsonMeasureTwoRegressions = {
 };
 
 describe('pheno measure', () => {
-
   it('should be creatable from a given json', () => {
-
-    let phenoMeasure = PhenoMeasure.fromJson(fakeJsonMeasure);
-
+    const phenoMeasure = PhenoMeasure.fromJson(fakeJsonMeasure);
     expect(phenoMeasure.index).toBe(1);
     expect(phenoMeasure.instrumentName).toBe('test_instrument');
     expect(phenoMeasure.valuesDomain).toBe('0,1');
@@ -85,17 +82,15 @@ describe('pheno measure', () => {
 });
 
 describe('pheno measures', () => {
-
-  let base_path = '/test_base_url/';
-
+  const base_path = '/test_base_url/';
   let phenoMeasure = PhenoMeasure.fromJson(fakeJsonMeasure);
 
   phenoMeasure = PhenoMeasure.addBasePath(phenoMeasure, base_path);
 
-  let phenoMeasures = PhenoMeasures.fromJson({
-    'base_image_url': base_path,
-    'measures': [fakeJsonMeasure],
-    'has_descriptions': true,
+  const phenoMeasures = PhenoMeasures.fromJson({
+    base_image_url: base_path,
+    measures: [fakeJsonMeasure],
+    has_descriptions: true,
   });
 
   it('should be creatable from a given json', () => {
@@ -105,17 +100,16 @@ describe('pheno measures', () => {
   });
 
   it('should be able to add a base path', () => {
-    let bpMeasures = phenoMeasures;
-    let bpMeasure = bpMeasures.measures[0];
+    const bpMeasures = phenoMeasures;
+    const bpMeasure = bpMeasures.measures[0];
     expect(bpMeasure.figureDistribution).toBe(environment.basePath + '/test_base_url/test.jpg');
     expect(bpMeasure.figureDistributionSmall).toBe(null);
   });
 });
 
 describe('PhenoRegression', () => {
-
-  let phenoRegression = new PhenoRegression(fakeJsonMeasureOneRegression.regressions[0]);
-  let phenoRegressionBasePath = new PhenoRegression(fakeJsonMeasureOneRegression.regressions[0]);
+  const phenoRegression = new PhenoRegression(fakeJsonMeasureOneRegression.regressions[0]);
+  const phenoRegressionBasePath = new PhenoRegression(fakeJsonMeasureOneRegression.regressions[0]);
 
   it('should be creatable from a given json', () => {
     expect(phenoRegression.regressionId).toEqual('age');
@@ -131,13 +125,11 @@ describe('PhenoRegression', () => {
     expect(phenoRegressionBasePath.figureRegression).toEqual('a_base_path/imagepath');
     expect(phenoRegressionBasePath.figureRegressionSmall).toEqual('a_base_path/imagepathsmall');
   });
-
 });
 
 describe('PhenoRegressions', () => {
-
-  let phenoRegressions = new PhenoRegressions(fakeJsonMeasureTwoRegressions.regressions);
-  let phenoRegressionsBasePath = new PhenoRegressions(fakeJsonMeasureTwoRegressions.regressions);
+  const phenoRegressions = new PhenoRegressions(fakeJsonMeasureTwoRegressions.regressions);
+  const phenoRegressionsBasePath = new PhenoRegressions(fakeJsonMeasureTwoRegressions.regressions);
 
   it('should be creatable from a given json', () => {
     expect(phenoRegressions['age'].regressionId).toEqual('age');
@@ -162,5 +154,4 @@ describe('PhenoRegressions', () => {
     expect(phenoRegressionsBasePath['iq'].figureRegression).toEqual('a_base_path/imagepathiq');
     expect(phenoRegressionsBasePath['iq'].figureRegressionSmall).toEqual('a_base_path/imagepathiqsmall');
   });
-
 });

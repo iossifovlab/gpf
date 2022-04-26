@@ -1,21 +1,16 @@
-import {
-  UndirectedGraph, Graph, getOtherVertex, equalEdges, Edge, Vertex
-} from '../utils/undirected-graph';
+import { UndirectedGraph, Graph, getOtherVertex, equalEdges, Edge, Vertex } from '../utils/undirected-graph';
 
-import {
-  hasIntersection, intersection, equal, isSubset
-} from '../utils/sets-helper';
+import { equal } from '../utils/sets-helper';
 
 export class Interval {
-  constructor(
+  public constructor(
     public left = 0,
     public right = 1
   ) {}
 }
 
 export class IntervalForVertex<T> extends Interval {
-
-  constructor(
+  public constructor(
     public vertex: Vertex<T>,
     left = 0,
     right = 1
@@ -23,7 +18,7 @@ export class IntervalForVertex<T> extends Interval {
     super(left, right);
   }
 
-  copy() {
+  public copy(): IntervalForVertex<T> {
     return new IntervalForVertex<T>(
       this.vertex,
       this.left,
@@ -31,13 +26,13 @@ export class IntervalForVertex<T> extends Interval {
     );
   }
 
-  toString() {
-      return `i[${this.vertex}> ${this.left}:${this.right}]`;
+  public toString(): string {
+    return `i[${this.vertex}> ${this.left}:${this.right}]`;
   }
 }
 
 export class Realization<T> {
-  constructor(
+  public constructor(
     public graph: Graph<T>,
     public forbiddenGraph: Graph<T>,
     public intervals: Array<IntervalForVertex<T>> = new Array<IntervalForVertex<T>>(),
@@ -45,12 +40,12 @@ export class Realization<T> {
     public maxWidth = 3,
   ) {}
 
-  toString() {
-    let orderedDomain = this.domain.map(v => v.toString()).sort((a, b) => a.localeCompare(b));
+  public toString(): string {
+    const orderedDomain = this.domain.map(v => v.toString()).sort((a, b) => a.localeCompare(b));
     return orderedDomain.join(';');
   }
 
-  clone() {
+  public clone(): Realization<T> {
     return new Realization(
       this.graph,
       this.forbiddenGraph,
@@ -59,22 +54,20 @@ export class Realization<T> {
     );
   }
 
-  extend(vertex: Vertex<T>) {
+  public extend(vertex: Vertex<T>): boolean {
     if (!this.canExtend(vertex)) {
       return false;
     }
 
-    let maxRight = Math.max(...Array.from(this.maximalSet())
-      .map(v => this.getInterval(v).right));
+    const maxRight = Math.max(...Array.from(this.maximalSet()).map(v => this.getInterval(v).right));
+    const p = 0.5 + maxRight;
 
-    let p = 0.5 + maxRight;
-
-    for (let activeVertex of this.getActiveVertices()) {
-      let activeInterval = this.getInterval(activeVertex);
+    for (const activeVertex of this.getActiveVertices()) {
+      const activeInterval = this.getInterval(activeVertex);
       activeInterval.right = p + 1;
     }
 
-    let newInterval = new IntervalForVertex(vertex, p, p + 1);
+    const newInterval = new IntervalForVertex(vertex, p, p + 1);
     this.domain.push(vertex);
     this.intervals.push(newInterval);
 
@@ -83,35 +76,35 @@ export class Realization<T> {
     return true;
   }
 
-  canExtend(newVertex: Vertex<T>) {
-    let tempRealization = new Realization(
+  public canExtend(newVertex: Vertex<T>): boolean {
+    const tempRealization = new Realization(
       this.graph,
       this.forbiddenGraph,
       this.intervals.concat([new IntervalForVertex(newVertex)]), // dummy interval
       this.domain.concat([newVertex]));
 
-    let newActiveVertices = tempRealization.getActiveVertices();
+    const newActiveVertices = tempRealization.getActiveVertices();
     if (newActiveVertices.length >= tempRealization.maxWidth) {
       return false;
     }
 
     // console.log("Checking forbidden");
-    let thisActiveVertices = this.getActiveVertices();
-    let forbiddenEdges = this.forbiddenGraph.getEdgesForVertex(newVertex);
-    for (let activeVertex of thisActiveVertices) {
+    const thisActiveVertices = this.getActiveVertices();
+    const forbiddenEdges = this.forbiddenGraph.getEdgesForVertex(newVertex);
+    for (const activeVertex of thisActiveVertices) {
       if (forbiddenEdges.some(edge => getOtherVertex(newVertex, edge) === activeVertex)) {
         return false;
       }
     }
 
     // console.log("Checking expected dangling");
-    for (let activeVertex of this.getActiveVertices()) {
-      let thisDangling = this.dangling(activeVertex);
-      let otherDangling = tempRealization.dangling(activeVertex);
-      let newEdge: Edge<T> = [activeVertex, newVertex];
+    for (const activeVertex of this.getActiveVertices()) {
+      const thisDangling = this.dangling(activeVertex);
+      const otherDangling = tempRealization.dangling(activeVertex);
+      const newEdge: Edge<T> = [activeVertex, newVertex];
 
-      for (let thisEdge of thisDangling) {
-        let expectedNewDangling = otherDangling.concat([newEdge]);
+      for (const thisEdge of thisDangling) {
+        const expectedNewDangling = otherDangling.concat([newEdge]);
         if (!expectedNewDangling.some(edge => equalEdges(edge, thisEdge))) {
           return false;
         }
@@ -119,22 +112,21 @@ export class Realization<T> {
     }
 
     // console.log("Checking new vertex dangling");
-    let newDangling = tempRealization.dangling(newVertex);
-    let newVertexEdges = this.graph.getEdgesForVertex(newVertex);
-    for (let danglingEdge of newDangling) {
+    const newDangling = tempRealization.dangling(newVertex);
+    const newVertexEdges = this.graph.getEdgesForVertex(newVertex);
+    for (const danglingEdge of newDangling) {
       if (!newVertexEdges.some(
-          edge => equalEdges(edge, danglingEdge) ||
-                  (this.domain.indexOf(getOtherVertex(newVertex, edge)) === -1))
-          ) {
+        edge => equalEdges(edge, danglingEdge) || (this.domain.indexOf(getOtherVertex(newVertex, edge)) === -1))
+      ) {
         return false;
       }
     }
 
     // console.log("Checking active");
-    let activeVerticesNonEmptyDanglingAndNew =
-      thisActiveVertices.filter(v => tempRealization.dangling(v).length !== 0)
-      .concat([newVertex]);
-    for (let newActiveVertex of newActiveVertices) {
+    const activeVerticesNonEmptyDanglingAndNew = thisActiveVertices.filter(
+      v => tempRealization.dangling(v).length !== 0
+    ).concat([newVertex]);
+    for (const newActiveVertex of newActiveVertices) {
       if (activeVerticesNonEmptyDanglingAndNew.indexOf(newActiveVertex) === -1) {
         return false;
       }
@@ -144,63 +136,58 @@ export class Realization<T> {
     return true;
   }
 
-  isEquivalent(other: Realization<T>) {
+  public isEquivalent(other: Realization<T>): boolean {
     if (!equal(new Set(this.domain), new Set(other.domain))) {
       return false;
     }
-    if (!equal(new Set(this.getActiveVertices()),
-               new Set(other.getActiveVertices()))) {
+    if (!equal(new Set(this.getActiveVertices()), new Set(other.getActiveVertices()))) {
       return false;
     }
 
-    for (let activeVertex of Array.from(this.getActiveVertices())) {
-      if (!equal(new Set(this.dangling(activeVertex)),
-                 new Set(other.dangling(activeVertex)))) {
+    for (const activeVertex of Array.from(this.getActiveVertices())) {
+      if (!equal(new Set(this.dangling(activeVertex)), new Set(other.dangling(activeVertex)))) {
         return false;
       }
     }
-
     return true;
   }
 
-  getActiveVertexEdges(vertex: Vertex<T>) {
+  public getActiveVertexEdges(vertex: Vertex<T>): Edge<T>[] {
     return this.graph.getEdgesForVertex(vertex).filter(edge => {
-      let otherVertex = edge[1];
+      const otherVertex = edge[1];
       return this.domain.indexOf(otherVertex) === -1;
     });
   }
 
-  getActiveVertexEdge(vertex: Vertex<T>) {
+  public getActiveVertexEdge(vertex: Vertex<T>): Edge<T> {
     return this.graph.getEdgesForVertex(vertex).find(edge => {
-      let otherVertex = edge[1];
+      const otherVertex = edge[1];
       return otherVertex && this.domain.indexOf(otherVertex) === -1;
     });
   }
 
-  isActiveVertex(vertex: Vertex<T>) {
-    return !!this.getActiveVertexEdge(vertex);
+  public isActiveVertex(vertex: Vertex<T>): boolean {
+    return Boolean(this.getActiveVertexEdge(vertex));
   }
 
-  getActiveVertices() {
-    let result = new Array<Vertex<T>>();
-    for (let vertex of this.domain) {
-
+  public getActiveVertices(): T[] {
+    const result = new Array<Vertex<T>>();
+    for (const vertex of this.domain) {
       if (this.isActiveVertex(vertex) && result.indexOf(vertex) === -1) {
         result.push(vertex);
       }
     }
-
     return result;
   }
 
-  dangling(vertex: Vertex<T>) {
+  public dangling(vertex: Vertex<T>): Edge<T>[] {
     return this.getActiveVertexEdges(vertex);
   }
 
-  maximalSet() {
-    let result = new Set<Vertex<T>>();
+  public maximalSet(): Set<T> {
+    const result = new Set<Vertex<T>>();
 
-    for (let vertex of this.domain) {
+    for (const vertex of this.domain) {
       if (this.isMaximal(vertex)) {
         result.add(vertex);
       }
@@ -209,8 +196,8 @@ export class Realization<T> {
     return result;
   }
 
-  isMaximal(vertex: Vertex<T>) {
-    for (let domainVertex of this.domain) {
+  public isMaximal(vertex: Vertex<T>): boolean {
+    for (const domainVertex of this.domain) {
       if (domainVertex !== vertex && this.isInIntervalOrder(vertex, domainVertex)) {
         return false;
       }
@@ -218,13 +205,13 @@ export class Realization<T> {
     return true;
   }
 
-  isLayout() {
+  public isLayout(): boolean {
     if (this.domain.length === 0) {
       return false;
     }
 
-    let activeVertices = this.getActiveVertices();
-    for (let vertex of activeVertices) {
+    const activeVertices = this.getActiveVertices();
+    for (const vertex of activeVertices) {
       if (!this.isMaximal(vertex)) {
         return false;
       }
@@ -233,14 +220,14 @@ export class Realization<T> {
     return true;
   }
 
-  isMaximum(vertex: Vertex<T>) {
-    let interval = this.getInterval(vertex);
+  public isMaximum(vertex: Vertex<T>): boolean {
+    const interval = this.getInterval(vertex);
     if (!interval) {
       return false;
     }
 
 
-    for (let domainInterval of this.intervals) {
+    for (const domainInterval of this.intervals) {
       if (interval.left < domainInterval.left) {
         return false;
       }
@@ -249,9 +236,9 @@ export class Realization<T> {
     return true;
   }
 
-  isInIntervalOrder(a: Vertex<T>, b: Vertex<T>) {
-    let intervalA = this.getInterval(a);
-    let intervalB = this.getInterval(b);
+  public isInIntervalOrder(a: Vertex<T>, b: Vertex<T>): boolean {
+    const intervalA = this.getInterval(a);
+    const intervalB = this.getInterval(b);
 
     if (intervalA === null || intervalB === null) {
       return false;
@@ -260,8 +247,8 @@ export class Realization<T> {
     return intervalA.right < intervalB.left;
   }
 
-  private getInterval(vertex: T) {
-    let index = this.domain.indexOf(vertex);
+  private getInterval(vertex: T): IntervalForVertex<T> {
+    const index = this.domain.indexOf(vertex);
     if (index === -1) {
       return null;
     }
@@ -270,16 +257,16 @@ export class Realization<T> {
 }
 
 export class SandwichInstance<T> {
-  constructor(
+  public constructor(
     public vertices: Array<Vertex<T>>,
     public required: Set<Edge<T>>,
     public forbidden: Set<Edge<T>>
   ) {}
 }
 
-export function solveSandwich<T>(sandwichInstance: SandwichInstance<T>) {
-  let requiredGraph = new UndirectedGraph<T>();
-  let forbiddenGraph = new UndirectedGraph<T>();
+export function solveSandwich<T>(sandwichInstance: SandwichInstance<T>): IntervalForVertex<T>[] {
+  const requiredGraph = new UndirectedGraph<T>();
+  const forbiddenGraph = new UndirectedGraph<T>();
 
   for (let vertex of sandwichInstance.vertices) {
     requiredGraph.addVertex(vertex);

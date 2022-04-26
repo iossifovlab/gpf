@@ -8,9 +8,8 @@ xdescribe('PersonFiltersBlockComponent', () => {
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      declarations: [ PersonFiltersBlockComponent ]
-    })
-    .compileComponents();
+      declarations: [PersonFiltersBlockComponent]
+    }).compileComponents();
   }));
 
   beforeEach(() => {

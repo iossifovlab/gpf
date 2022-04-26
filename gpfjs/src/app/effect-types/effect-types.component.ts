@@ -2,7 +2,9 @@ import { Component, OnInit, Input } from '@angular/core';
 import { EffectTypes, CODING, NONCODING, CNV, ALL, LGDS, NONSYNONYMOUS, UTRS } from './effect-types';
 import { ValidateNested } from 'class-validator';
 import { Store } from '@ngxs/store';
-import { EffecttypesState, AddEffectType, RemoveEffectType, SetEffectTypes } from './effect-types.state';
+import {
+  EffecttypesState, AddEffectType, RemoveEffectType, SetEffectTypes, EffectTypeModel
+} from './effect-types.state';
 import { StatefulComponent } from 'app/common/stateful-component';
 
 @Component({
@@ -11,27 +13,27 @@ import { StatefulComponent } from 'app/common/stateful-component';
   styleUrls: ['./effect-types.component.css'],
 })
 export class EffectTypesComponent extends StatefulComponent implements OnInit {
+  @Input() public variantTypes: Set<string> = new Set();
 
-  @Input() variantTypes: Set<string> = new Set([]);
-
-  codingColumn: Set<string> = CODING;
-  nonCodingColumn: Set<string> = NONCODING;
-  cnvColumn: Set<string> = CNV;
+  public codingColumn: Set<string> = CODING;
+  public nonCodingColumn: Set<string> = NONCODING;
+  public cnvColumn: Set<string> = CNV;
 
   @ValidateNested()
-  effectTypes = new EffectTypes();
-  effectTypesButtons: Map<string, Set<string>>;
+  public effectTypes = new EffectTypes();
+  public effectTypesButtons: Map<string, Set<string>>;
 
-  constructor(protected store: Store) {
+  public constructor(protected store: Store) {
     super(store, EffecttypesState, 'effectTypes');
     this.initButtonGroups();
   }
 
-  ngOnInit() {
+  public ngOnInit(): void {
     super.ngOnInit();
-    this.store.selectOnce(state => state.effecttypesState).subscribe(state => {
-      if (state.effectTypes.length) {
-        for (const effectType of state.effectTypes) {
+    this.store.selectOnce(EffecttypesState).subscribe(state => {
+      const effectTypes = (state as EffectTypeModel).effectTypes;
+      if (effectTypes.length) {
+        for (const effectType of effectTypes) {
           this.onEffectTypeChange({checked: true, effectType: effectType});
         }
       } else {
@@ -40,7 +42,7 @@ export class EffectTypesComponent extends StatefulComponent implements OnInit {
     });
   }
 
-  selectInitialValues() {
+  public selectInitialValues(): void {
     this.selectButtonGroup('LGDS');
   }
 
@@ -54,17 +56,17 @@ export class EffectTypesComponent extends StatefulComponent implements OnInit {
     this.effectTypesButtons.set('UTRS', new Set(UTRS));
   }
 
-  selectButtonGroup(groupId: string): void {
+  public selectButtonGroup(groupId: string): void {
     const effectTypes: Set<string> = this.effectTypesButtons.get(groupId);
     this.setEffectTypes(effectTypes);
   }
 
-  setEffectTypes(effectTypes: Set<string>) {
+  public setEffectTypes(effectTypes: Set<string>): void {
     this.effectTypes.selected = new Set(effectTypes);
     this.store.dispatch(new SetEffectTypes(this.effectTypes.selected));
   }
 
-  onEffectTypeChange(value: any): void {
+  public onEffectTypeChange(value: {checked: boolean; effectType: string}): void {
     if (value.checked && !this.effectTypes.selected.has(value.effectType)) {
       this.effectTypes.selected.add(value.effectType);
       this.store.dispatch(new AddEffectType(value.effectType));

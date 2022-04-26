@@ -1,7 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { ConfigService } from '../config/config.service';
-// eslint-disable-next-line no-restricted-imports
 import { Observable } from 'rxjs';
 import { ContinuousMeasure, HistogramData } from './measures';
 import { Partitions } from '../gene-weights/gene-weights';
@@ -14,7 +13,7 @@ export class MeasuresService {
   private readonly measurePartitionsUrl = 'measures/partitions';
   private readonly regressionsUrl = 'measures/regressions';
 
-  constructor(
+  public constructor(
     private http: HttpClient,
     private config: ConfigService
   ) {}
@@ -25,11 +24,7 @@ export class MeasuresService {
 
     return this.http
       .get(this.config.baseUrl + this.continuousMeasuresUrl, requestOptions)
-      .pipe(
-        map((res: any) => {
-          return ContinuousMeasure.fromJsonArray(res);
-        })
-      );
+      .pipe(map((res: object[]) => ContinuousMeasure.fromJsonArray(res)));
   }
 
   public getMeasureHistogram(datasetId: string, measureName: string): Observable<HistogramData> {
@@ -43,9 +38,7 @@ export class MeasuresService {
         options
       )
       .pipe(
-        map((res) => {
-          return HistogramData.fromJson(res);
-        })
+        map((res) => HistogramData.fromJson(res))
       );
   }
 
@@ -63,9 +56,7 @@ export class MeasuresService {
       { datasetId: datasetId, measure: measureName, min: rangeStart, max: rangeEnd },
       options
     ).pipe(
-      map((res) => {
-        return Partitions.fromJson(res);
-      })
+      map((res) => Partitions.fromJson(res))
     );
   }
 

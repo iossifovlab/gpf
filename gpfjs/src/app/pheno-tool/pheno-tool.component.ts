@@ -19,21 +19,21 @@ import { ErrorsState, ErrorsModel } from 'app/common/errors.state';
   styleUrls: ['./pheno-tool.component.css'],
 })
 export class PhenoToolComponent implements OnInit {
-  selectedDataset: Dataset;
+  @Select(PhenoToolComponent.phenoToolStateSelector) public state$: Observable<object[]>;
+  @Select(ErrorsState) public errorsState$: Observable<ErrorsModel>;
 
-  @Select(PhenoToolComponent.phenoToolStateSelector) state$: Observable<any[]>;
-  @Select(ErrorsState) errorsState$: Observable<ErrorsModel>;
+  public selectedDataset: Dataset;
 
-  phenoToolResults: PhenoToolResults;
+  public phenoToolResults: PhenoToolResults;
   public phenoToolState: object;
 
   public disableQueryButtons = false;
 
-  constructor(
+  public constructor(
     private datasetsService: DatasetsService,
     private loadingService: FullscreenLoadingService,
     private phenoToolService: PhenoToolService,
-    readonly configService: ConfigService,
+    public readonly configService: ConfigService,
   ) { }
 
   @Selector([
@@ -42,7 +42,9 @@ export class PhenoToolComponent implements OnInit {
     PhenoToolGenotypeBlockComponent.phenoToolGenotypeBlockQueryState,
     FamilyFiltersBlockComponent.familyFiltersBlockState,
   ])
-  public static phenoToolStateSelector(genesBlockState: object, measureState: object, genotypeState: object, familyFiltersState: object) {
+  public static phenoToolStateSelector(
+    genesBlockState: object, measureState: object, genotypeState: object, familyFiltersState: object
+  ): object {
     return {
       ...genesBlockState,
       ...measureState,
@@ -51,7 +53,7 @@ export class PhenoToolComponent implements OnInit {
     };
   }
 
-  public ngOnInit() {
+  public ngOnInit(): void {
     this.selectedDataset = this.datasetsService.getSelectedDataset();
 
     this.state$.subscribe(state => {
@@ -60,18 +62,20 @@ export class PhenoToolComponent implements OnInit {
     });
 
     this.errorsState$.subscribe(state => {
-      setTimeout(() => this.disableQueryButtons = state.componentErrors.size > 0);
+      setTimeout(() => {
+        this.disableQueryButtons = state.componentErrors.size > 0;
+      });
     });
   }
 
   public submitQuery(): void {
     this.loadingService.setLoadingStart();
     this.phenoToolService.getPhenoToolResults(
-      {'datasetId': this.selectedDataset.id, ...this.phenoToolState}
+      {datasetId: this.selectedDataset.id, ...this.phenoToolState}
     ).subscribe((phenoToolResults) => {
       this.phenoToolResults = phenoToolResults;
       this.loadingService.setLoadingStop();
-    }, error => {
+    }, () => {
       this.loadingService.setLoadingStop();
     }, () => {
       this.loadingService.setLoadingStop();
@@ -79,8 +83,8 @@ export class PhenoToolComponent implements OnInit {
   }
 
   public onDownload(event: Event): void {
-    if(event.target instanceof HTMLFormElement) {
-      event.target.queryData.value = JSON.stringify({...this.phenoToolState, 'datasetId': this.selectedDataset.id});
+    if (event.target instanceof HTMLFormElement) {
+      event.target.queryData.value = JSON.stringify({...this.phenoToolState, datasetId: this.selectedDataset.id});
       event.target.submit();
     }
   }

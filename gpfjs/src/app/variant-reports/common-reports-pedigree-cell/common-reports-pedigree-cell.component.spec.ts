@@ -8,9 +8,8 @@ describe('CommonReportsPedigreeCellComponent', () => {
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      declarations: [ CommonReportsPedigreeCellComponent ]
-    })
-    .compileComponents();
+      declarations: [CommonReportsPedigreeCellComponent]
+    }).compileComponents();
   }));
 
   beforeEach(() => {

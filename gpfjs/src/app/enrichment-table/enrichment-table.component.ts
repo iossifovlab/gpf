@@ -7,5 +7,5 @@ import { EnrichmentResults } from '../enrichment-query/enrichment-result';
   styleUrls: ['./enrichment-table.component.css']
 })
 export class EnrichmentTableComponent {
-  @Input() enrichmentResults: EnrichmentResults;
+  @Input() public enrichmentResults: EnrichmentResults;
 }

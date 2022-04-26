@@ -1,4 +1,3 @@
-/* eslint-disable no-unused-vars, @typescript-eslint/no-unused-vars */
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 
@@ -21,8 +20,7 @@ describe('EffectTypesComponent', () => {
       ],
       imports: [NgxsModule.forRoot([EffecttypesState], {developmentMode: true})],
       schemas: [NO_ERRORS_SCHEMA]
-    })
-    .compileComponents();
+    }).compileComponents();
   }));
 
   beforeEach(() => {
@@ -131,5 +129,5 @@ describe('EffectTypesComponent', () => {
     expect(component.effectTypes.selected).toEqual(new Set(['testEffect', 'newTestEffect']));
     // but the original set is not modified
     expect(initial).toEqual(new Set(['testEffect']));
-  })
+  });
 });

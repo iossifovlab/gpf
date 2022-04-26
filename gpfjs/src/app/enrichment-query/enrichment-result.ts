@@ -1,101 +1,96 @@
 import { BrowserQueryFilter } from 'app/genotype-browser/genotype-browser';
 
 export class ChildrenStats {
-
-  static fromJson(json: any): ChildrenStats {
+  public static fromJson(json: object): ChildrenStats {
     return new ChildrenStats(
-      json['M'],
-      json['F'],
-      json['U']
+      json['M'] as number,
+      json['F'] as number,
+      json['U'] as number
     );
   }
 
-  constructor(
-    readonly male: number,
-    readonly female: number,
-    readonly unspecified: number
+  public constructor(
+    public readonly male: number,
+    public readonly female: number,
+    public readonly unspecified: number
   ) { }
 }
 
 export class EnrichmentTestResult {
-
-  static fromJson(json: any): EnrichmentTestResult {
+  public static fromJson(json: object): EnrichmentTestResult {
     return new EnrichmentTestResult(
-      json['name'],
-      json['count'],
-      json['expected'],
-      json['overlapped'],
-      json['pvalue'],
+      json['name'] as string,
+      json['count'] as number,
+      json['expected'] as number,
+      json['overlapped'] as number,
+      json['pvalue'] as number,
       BrowserQueryFilter.fromJson(json['countFilter']),
       BrowserQueryFilter.fromJson(json['overlapFilter'])
     );
   }
 
-  constructor(
-    readonly name: string,
-    readonly count: number,
-    readonly expected: number,
-    readonly overlapped: number,
-    readonly pvalue: number,
-    readonly countFilter: BrowserQueryFilter,
-    readonly overlapFilter: BrowserQueryFilter,
+  public constructor(
+    public readonly name: string,
+    public readonly count: number,
+    public readonly expected: number,
+    public readonly overlapped: number,
+    public readonly pvalue: number,
+    public readonly countFilter: BrowserQueryFilter,
+    public readonly overlapFilter: BrowserQueryFilter,
   ) { }
 }
 
 export class EnrichmentEffectResult {
-
-  static fromJson(json: any): EnrichmentEffectResult {
+  public static fromJson(json: object): EnrichmentEffectResult {
     return new EnrichmentEffectResult(
-      EnrichmentTestResult.fromJson(json['all']),
-      EnrichmentTestResult.fromJson(json['male']),
-      EnrichmentTestResult.fromJson(json['female']),
-      EnrichmentTestResult.fromJson(json['rec'])
+      EnrichmentTestResult.fromJson(json['all'] as object),
+      EnrichmentTestResult.fromJson(json['male'] as object),
+      EnrichmentTestResult.fromJson(json['female'] as object),
+      EnrichmentTestResult.fromJson(json['rec'] as object)
     );
   }
 
-  constructor(
-    readonly all: EnrichmentTestResult,
-    readonly male: EnrichmentTestResult,
-    readonly female: EnrichmentTestResult,
-    readonly rec: EnrichmentTestResult
+  public constructor(
+    public readonly all: EnrichmentTestResult,
+    public readonly male: EnrichmentTestResult,
+    public readonly female: EnrichmentTestResult,
+    public readonly rec: EnrichmentTestResult
   ) { }
 }
 
 export class EnrichmentResult {
-
-  static fromJsonArray(jsonArray: Array<Object>): Array<EnrichmentResult> {
+  public static fromJsonArray(jsonArray: object[]): Array<EnrichmentResult> {
     return jsonArray.map((json) => EnrichmentResult.fromJson(json));
   }
 
-  static fromJson(json: any): EnrichmentResult {
+  public static fromJson(json: object): EnrichmentResult {
     return new EnrichmentResult(
-      json['selector'],
-      EnrichmentEffectResult.fromJson(json['LGDs']),
-      EnrichmentEffectResult.fromJson(json['missense']),
-      EnrichmentEffectResult.fromJson(json['synonymous']),
-      ChildrenStats.fromJson(json['childrenStats'])
+      json['selector'] as string,
+      EnrichmentEffectResult.fromJson(json['LGDs'] as object),
+      EnrichmentEffectResult.fromJson(json['missense'] as object),
+      EnrichmentEffectResult.fromJson(json['synonymous'] as object),
+      ChildrenStats.fromJson(json['childrenStats'] as object)
     );
   }
-  constructor(
-    readonly selector: string,
-    readonly LGDs: EnrichmentEffectResult,
-    readonly missense: EnrichmentEffectResult,
-    readonly synonymous: EnrichmentEffectResult,
-    readonly childrenStats: ChildrenStats
+  public constructor(
+    public readonly selector: string,
+    public readonly LGDs: EnrichmentEffectResult,
+    public readonly missense: EnrichmentEffectResult,
+    public readonly synonymous: EnrichmentEffectResult,
+    public readonly childrenStats: ChildrenStats
   ) { }
-
 }
 
 export class EnrichmentResults {
-  static fromJson(json: any): EnrichmentResults {
+  public static fromJson(json: object): EnrichmentResults {
     return new EnrichmentResults(
-      json['desc'],
-      EnrichmentResult.fromJsonArray(json['result'])
+      json['desc'] as string,
+      EnrichmentResult.fromJsonArray(json['result'] as object[])
     );
   }
 
-  constructor(
-    readonly description: string,
-    readonly results: Array<EnrichmentResult>
+  public constructor(
+    public readonly description: string,
+    public readonly results: Array<EnrichmentResult>
   ) { }
 }

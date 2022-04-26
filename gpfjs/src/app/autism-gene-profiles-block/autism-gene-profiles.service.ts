@@ -34,8 +34,6 @@ export class AutismGeneProfilesService {
   public getGene(geneSymbol: string): Observable<AgpGene> {
     return this.http
       .get(this.config.baseUrl + this.genesUrl + geneSymbol)
-      .pipe(map(res => plainToClass(AgpGene, res)), catchError((err, caught) => {
-        return of(null);
-      }));
+      .pipe(map(res => plainToClass(AgpGene, res)), catchError(() => of(null)));
   }
 }

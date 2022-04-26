@@ -33,7 +33,7 @@ import { GpfTableEmptyCellComponent } from './view/empty-cell.component';
     GpfTableEmptyCellComponent
   ],
   providers: [
-      ResizeService
+    ResizeService
   ],
   exports: [
     GpfTableComponent,

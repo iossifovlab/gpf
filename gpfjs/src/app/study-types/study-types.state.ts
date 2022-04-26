@@ -2,8 +2,8 @@ import { Injectable } from '@angular/core';
 import { State, Action, StateContext } from '@ngxs/store';
 
 export class SetStudyTypes {
-  static readonly type = '[Genotype] Set studyTypes values';
-  constructor(public studyTypes: Set<string>) {}
+  public static readonly type = '[Genotype] Set studyTypes values';
+  public constructor(public studyTypes: Set<string>) {}
 }
 
 export interface StudyTypesModel {
@@ -19,7 +19,7 @@ export interface StudyTypesModel {
 @Injectable()
 export class StudyTypesState {
   @Action(SetStudyTypes)
-  setStudyTypesValue(ctx: StateContext<StudyTypesModel>, action: SetStudyTypes) {
+  public setStudyTypesValue(ctx: StateContext<StudyTypesModel>, action: SetStudyTypes): void {
     ctx.patchState({
       studyTypes: [...action.studyTypes]
     });

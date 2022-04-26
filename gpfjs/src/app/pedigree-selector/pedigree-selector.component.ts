@@ -3,7 +3,7 @@ import { Validate } from 'class-validator';
 import { PersonSet, PersonSetCollection } from '../datasets/datasets';
 import { SetNotEmpty } from '../utils/set.validators';
 import { Store } from '@ngxs/store';
-import { SetPedigreeSelector, PedigreeSelectorState } from './pedigree-selector.state';
+import { SetPedigreeSelector, PedigreeSelectorState, PedigreeSelectorModel } from './pedigree-selector.state';
 import { StatefulComponent } from 'app/common/stateful-component';
 
 @Component({
@@ -12,36 +12,34 @@ import { StatefulComponent } from 'app/common/stateful-component';
   styleUrls: ['./pedigree-selector.component.css'],
 })
 export class PedigreeSelectorComponent extends StatefulComponent implements OnInit, OnChanges {
-  @Input() collections: PersonSetCollection[];
-  selectedCollection: PersonSetCollection = null;
+  @Input() public collections: PersonSetCollection[];
+  public selectedCollection: PersonSetCollection = null;
 
   @Validate(SetNotEmpty, {
     message: 'Select at least one.'
   })
-  selectedValues: Set<string> = new Set();
+  public selectedValues: Set<string> = new Set();
 
-  constructor(protected store: Store) {
+  public constructor(protected store: Store) {
     super(store, PedigreeSelectorState, 'pedigreeSelector');
   }
 
-  ngOnChanges(changes: SimpleChanges) {
+  public ngOnChanges(changes: SimpleChanges): void {
     if (!changes['collections']) {
       return;
     }
-    this.store.selectOnce(state => state.pedigreeSelectorState).subscribe(state => {
+    this.store.selectOnce(state => state.pedigreeSelectorState as PedigreeSelectorModel).subscribe(state => {
       // handle selected values input and/or restore state
       if (state.id && state.checkedValues.length) {
         this.selectedCollection = this.collections.filter(p => p.id === state.id)[0];
         this.selectedValues = new Set(state.checkedValues);
-      } else {
-        if (changes['collections'].currentValue && changes['collections'].currentValue.length !== 0) {
-          this.selectPedigree(0);
-        }
+      } else if (changes['collections'].currentValue && changes['collections'].currentValue.length !== 0) {
+        this.selectPedigree(0);
       }
     });
   }
 
-  ngOnInit() {
+  public ngOnInit(): void {
     super.ngOnInit();
     this.store.selectOnce(state => state.pedigreeSelectorState).subscribe(state => {
       // restore state
@@ -50,7 +48,7 @@ export class PedigreeSelectorComponent extends StatefulComponent implements OnIn
     });
   }
 
-  pedigreeSelectorSwitch(): string {
+  public pedigreeSelectorSwitch(): string {
     if (!this.collections || this.collections.length === 0) {
       return;
     }
@@ -60,29 +58,29 @@ export class PedigreeSelectorComponent extends StatefulComponent implements OnIn
     return 'multi';
   }
 
-  selectPedigreeClicked(index: number, event: any): void {
+  public selectPedigreeClicked(index: number, event: any): void {
     event.preventDefault();
     this.selectPedigree(index);
   }
 
-  selectPedigree(index: number): void {
+  public selectPedigree(index: number): void {
     if (index >= 0 && index < this.collections.length && this.selectedCollection !== this.collections[index]) {
       this.selectedCollection = this.collections[index];
       this.selectAll();
     }
   }
 
-  selectAll() {
+  public selectAll(): void {
     this.selectedValues = new Set(this.selectedCollection.domain.map(sv => sv.id));
     this.store.dispatch(new SetPedigreeSelector(this.selectedCollection.id, this.selectedValues));
   }
 
-  selectNone() {
+  public selectNone(): void {
     this.selectedValues = new Set();
     this.store.dispatch(new SetPedigreeSelector(this.selectedCollection.id, this.selectedValues));
   }
 
-  pedigreeCheckValue(pedigreeSelector: PersonSet, value: boolean): void {
+  public pedigreeCheckValue(pedigreeSelector: PersonSet, value: boolean): void {
     if (value) {
       this.selectedValues.add(pedigreeSelector.id);
     } else {
