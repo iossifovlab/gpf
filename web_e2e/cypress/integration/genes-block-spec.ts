@@ -86,7 +86,8 @@ describe('Genes block gene sets names and count tests', () => {
     {
       collection: 'Main',
       expectedCondition: 'autism candidates from Sanders Neuron 2015 (65): Sanders S., et. al, Insights into ' +
-        'Autism Spectrum Disorder Genomic Architecture and Biology from 71 Risk Loci. Neuron (2015)'},
+        'Autism Spectrum Disorder Genomic Architecture and Biology from 71 Risk Loci. Neuron (2015)'
+    },
     {
       collection: 'Main',
       expectedCondition: 'brain critical genes (1744): Uddin M, et al. Brain-expressed exons under ' +
@@ -94,27 +95,27 @@ describe('Genes block gene sets names and count tests', () => {
     },
     {
       collection: 'SFARI Genes',
-      expectedCondition: 'sfari_all (910): SFARI Genes (2017-09): All genes'
+      expectedCondition: 'SFARI ALL (910): SFARI Genes (2017-09): All genes'
     },
     {
       collection: 'SFARI Genes',
-      expectedCondition: 'sfari_score_1 (24): SFARI Genes (2017-09): Gene score 1'
+      expectedCondition: 'SFARI Score 1 (24): SFARI Genes (2017-09): Gene score 1'
     },
     {
       collection: 'SFARI Genes',
-      expectedCondition: 'sfari_score_2 (55): SFARI Genes (2017-09): Gene score 2'
+      expectedCondition: 'SFARI Score 2 (55): SFARI Genes (2017-09): Gene score 2'
     },
     {
       collection: 'SPARK Gene Lists',
-      expectedCondition: 'SPARK_gene_list_2016 (50): SPARK Gene list 2016'
+      expectedCondition: 'SPARK Gene list 2016 (50): SPARK Gene list 2016'
     },
     {
       collection: 'SPARK Gene Lists',
-      expectedCondition: 'SPARK_gene_list_2017 (27): SPARK Gene list 2017'
+      expectedCondition: 'SPARK Gene list 2017 (27): SPARK Gene list 2017'
     },
     {
       collection: 'SPARK Gene Lists',
-      expectedCondition: 'SPARK_gene_list_all (76): SPARK Gene list ALL (2016, 2017)'
+      expectedCondition: 'SPARK Gene list ALL 2016, 2017 (76): SPARK Gene list ALL (2016, 2017)'
     },
     {
       collection: 'GO Terms',
@@ -207,7 +208,8 @@ describe('Genes block gene set file length tests', () => {
     {
       collection: 'Main',
       expectedCondition: 'autism candidates from Sanders Neuron 2015 (65): Sanders S., et. al, Insights into ' +
-        'Autism Spectrum Disorder Genomic Architecture and Biology from 71 Risk Loci. Neuron (2015)'},
+        'Autism Spectrum Disorder Genomic Architecture and Biology from 71 Risk Loci. Neuron (2015)'
+    },
     {
       collection: 'Main',
       expectedCondition: 'brain critical genes (1744): Uddin M, et al. Brain-expressed exons under ' +
@@ -215,27 +217,27 @@ describe('Genes block gene set file length tests', () => {
     },
     {
       collection: 'SFARI Genes',
-      expectedCondition: 'sfari_all (910): SFARI Genes (2017-09): All genes'
+      expectedCondition: 'SFARI ALL (910): SFARI Genes (2017-09): All genes'
     },
     {
       collection: 'SFARI Genes',
-      expectedCondition: 'sfari_score_1 (24): SFARI Genes (2017-09): Gene score 1'
+      expectedCondition: 'SFARI Score 1 (24): SFARI Genes (2017-09): Gene score 1'
     },
     {
       collection: 'SFARI Genes',
-      expectedCondition: 'sfari_score_2 (55): SFARI Genes (2017-09): Gene score 2'
+      expectedCondition: 'SFARI Score 2 (55): SFARI Genes (2017-09): Gene score 2'
     },
     {
       collection: 'SPARK Gene Lists',
-      expectedCondition: 'SPARK_gene_list_2016 (50): SPARK Gene list 2016'
+      expectedCondition: 'SPARK Gene list 2016 (50): SPARK Gene list 2016'
     },
     {
       collection: 'SPARK Gene Lists',
-      expectedCondition: 'SPARK_gene_list_2017 (27): SPARK Gene list 2017'
+      expectedCondition: 'SPARK Gene list 2017 (27): SPARK Gene list 2017'
     },
     {
       collection: 'SPARK Gene Lists',
-      expectedCondition: 'SPARK_gene_list_all (76): SPARK Gene list ALL (2016, 2017)'
+      expectedCondition: 'SPARK Gene list ALL 2016, 2017 (76): SPARK Gene list ALL (2016, 2017)'
     },
     {
       collection: 'GO Terms',
