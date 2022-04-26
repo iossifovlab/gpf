@@ -84,15 +84,16 @@ class Histogram:
         }
 
     @staticmethod
-    def from_dict(d: Dict[str, Any]) -> Histogram:
+    def from_dict(data: Dict[str, Any]) -> Histogram:
         """Creates a histogram from dict"""
         hist = Histogram(
-            d["bins_count"], d["x_min"], d["x_max"],
-            d["x_scale"], d["y_scale"]
+            data["bins_count"],
+            data["x_min"], data["x_max"],
+            data["x_scale"], data["y_scale"]
         )
 
-        hist.bins = np.array(d["bins"])
-        hist.bars = np.array(d["bars"], dtype=np.int64)
+        hist.bins = np.array(data["bins"])
+        hist.bars = np.array(data["bars"], dtype=np.int64)
 
         return hist
 
@@ -151,14 +152,16 @@ class HistogramBuilder:
     def build(self, client, path="histograms",
               force=False, only_dirty=False,
               region_size=1000000) -> dict[str, Histogram]:
+        """build a genomic score histograms and returns them"""
+
         loaded_hists, computed_hists = self._build(client, path, force,
                                                    region_size)
         if only_dirty:
             return computed_hists
-        else:
-            for k, v in computed_hists.items():
-                loaded_hists[k] = v
-            return loaded_hists
+
+        for key, value in computed_hists.items():
+            loaded_hists[key] = value
+        return loaded_hists
 
     def _build(self, client, path, force, region_size) \
             -> Tuple[Dict[str, Histogram], Dict[str, Histogram]]:
@@ -251,10 +254,10 @@ class HistogramBuilder:
 
         score = open_score_from_resource(self.resource)
         for rec in score.fetch_region(chrom, start, end, score_names):
-            for scr_id, v in rec.items():
+            for scr_id, value in rec.items():
                 hist = histograms[scr_id]
-                if v is not None:  # None designates missing values
-                    hist.add_value(v)
+                if value is not None:  # None designates missing values
+                    hist.add_value(value)
 
         return histograms
 
@@ -301,10 +304,10 @@ class HistogramBuilder:
         res = {scr_id: [limits.max, limits.min] for scr_id in score_ids}
         for rec in score.fetch_region(chrom, start, end, score_ids):
             for scr_id in score_ids:
-                v = rec[scr_id]
-                if v is not None:  # None designates missing values
-                    res[scr_id][0] = min(v, res[scr_id][0])
-                    res[scr_id][1] = max(v, res[scr_id][1])
+                val = rec[scr_id]
+                if val is not None:  # None designates missing values
+                    res[scr_id][0] = min(val, res[scr_id][0])
+                    res[scr_id][1] = max(val, res[scr_id][1])
         return res
 
     def _build_hashes(self):
@@ -331,6 +334,7 @@ class HistogramBuilder:
         return hashes
 
     def save(self, histograms, out_dir):
+        """Saves a histogram in the specified output directory"""
         histogram_desc = self.resource.get_config().get("histograms", [])
         configs = {hist['score']: hist for hist in histogram_desc}
         hist_hashes = self._build_hashes()
@@ -339,11 +343,11 @@ class HistogramBuilder:
             bars = list(histogram.bars)
             bars.append(np.nan)
 
-            df = pd.DataFrame({'bars': bars,
+            data = pd.DataFrame({'bars': bars,
                                'bins': histogram.bins})
             hist_file = os.path.join(out_dir, f"{score}.csv")
-            with self.resource.open_raw_file(hist_file, "wt") as f:
-                df.to_csv(f, index=None)
+            with self.resource.open_raw_file(hist_file, "wt") as outfile:
+                data.to_csv(outfile, index=None)
 
             hist_config = configs.get(score, {})
             metadata = {
@@ -357,8 +361,8 @@ class HistogramBuilder:
             if 'max' not in hist_config:
                 metadata['calculated_max'] = histogram.x_max
             metadata_file = os.path.join(out_dir, f"{score}.metadata.yaml")
-            with self.resource.open_raw_file(metadata_file, "wt") as f:
-                yaml.dump(metadata, f)
+            with self.resource.open_raw_file(metadata_file, "wt") as outfile:
+                yaml.dump(metadata, outfile)
 
             width = histogram.bins[1:] - histogram.bins[:-1]
             plt.bar(
@@ -372,8 +376,8 @@ class HistogramBuilder:
             plt.grid(axis='y')
             plt.grid(axis='x')
             plot_file = os.path.join(out_dir, f"{score}.png")
-            with self.resource.open_raw_file(plot_file, "wb") as f:
-                plt.savefig(f)
+            with self.resource.open_raw_file(plot_file, "wb") as outfile:
+                plt.savefig(outfile)
             plt.clf()
 
         # update manifest with newly written files
@@ -382,6 +386,7 @@ class HistogramBuilder:
 
 def load_histograms(repo, resource_id, version_constraint=None,
                     genomic_repository_id=None, path="histograms"):
+    """Loads genomic scores histograms"""
     hists, _ = _load_histograms(repo, resource_id, version_constraint,
                                 genomic_repository_id, path)
     return hists
@@ -389,6 +394,7 @@ def load_histograms(repo, resource_id, version_constraint=None,
 
 def _load_histograms(repo, resource_id, version_constraint,
                      genomic_repository_id, path):
+
     from dae.genomic_resources.cached_repository import \
         GenomicResourceCachedRepo
     if isinstance(repo, GenomicResourceCachedRepo):
@@ -404,74 +410,18 @@ def _load_histograms(repo, resource_id, version_constraint,
         hist_file = os.path.join(path, f"{score}.csv")
         metadata_file = os.path.join(path, f"{score}.metadata.yaml")
         if res.file_exists(hist_file) and res.file_exists(metadata_file):
-            with res.open_raw_file(hist_file, "rt") as f:
-                df = pd.read_csv(f)
-            with res.open_raw_file(metadata_file, "rt") as f:
-                metadata = yaml.safe_load(f)
+            with res.open_raw_file(hist_file, "rt") as infile:
+                data = pd.read_csv(infile)
+            with res.open_raw_file(metadata_file, "rt") as infile:
+                metadata = yaml.safe_load(infile)
             hist_config = metadata['histogram_config']
             if 'min' not in hist_config:
                 hist_config['min'] = metadata['calculated_min']
             if 'max' not in hist_config:
                 hist_config['max'] = metadata['calculated_max']
             hist = Histogram.from_config(hist_config)
-            hist.bars = df["bars"].to_numpy()[:-1]
+            hist.bars = data["bars"].to_numpy()[:-1]
 
             hists[score] = hist
             metadatas[score] = metadata
     return hists, metadatas
-
-
-# class ScoreStatistic:
-#     def to_dict(self):
-#         raise NotImplementedError()
-
-#     # @classmethod
-#     # def from_dict(cls, d):
-#     #     raise NotImplementedError()
-
-#     # @classmethod
-#     # def from_yaml(cls, filepath):
-#     #     with open(filepath, "r") as file:
-#     #         try:
-#     #             content = yaml.safe_load(file)
-#     #             return cls.from_dict(content)
-#     #         except yaml.YAMLError as exc:
-#     #             logger.error(exc)
-#     #             return None
-
-
-# class PositionScoreStatistic(ScoreStatistic):
-#     def __init__(self, histogram):
-#         self.min_value = None
-#         self.max_value = None
-#         self.histogram = histogram
-#         self.positions_covered = dict()
-#         self.positions_covered_all = None
-#         self.missing_count = None
-
-#     def to_dict(self):
-#         return {
-#             "min_value": self.min_value,
-#             "max_value": self.max_value,
-#             "histogram": self.histogram.to_dict(),
-#             "positions_covered": self.positions_covered,
-#             "positions_covered_all": self.positions_covered_all,
-#             "missing_count": self.missing_count
-#         }
-
-#     # @classmethod
-#     # def from_dict(cls, d):
-#     #     return PositionScoreStatistic(
-#     #         d["min_value"], d["max_value"],
-#     #         Histogram.from_dict(d["histogram"]),
-#     #         d["positions_covered"], d["positions_covered_all"],
-#     #         d["missing_count"]
-#     #     )
-
-
-# class NPScoreStatistic(ScoreStatistic):
-#     pass
-
-
-# class AlleleScoreStatistic(ScoreStatistic):
-#     pass
