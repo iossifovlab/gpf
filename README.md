@@ -15,17 +15,10 @@ Information on how to use GPF can be found in the [GPF documentation](https://io
 We recommend to use [Anaconda environment](https://www.anaconda.com/) as a GPF
 development environment.
 
-We use [pre-commit](https://pre-commit.com/) to enforce formatting and type checking.
-It is included in the conda package dependencies below.
-Once you have cloned the repository, run the following command within it to install the hooks:
-```bash
-pre-commit install
-```
-
 ### Install GPF dependencies
 
 Create a conda `gpf` environment with all of the conda package dependencies
-from `conda-environment.yml` file:
+from `environment.yml` and `dev-environment.yml` files:
 
 ```bash
 conda env create --name gpf --file ./environment.yml
@@ -36,12 +29,6 @@ To use this environment, you need to activate it using the following command:
 
 ```bash
 conda activate gpf
-```
-
-Install patched HTTP Range server into your environment:
-
-```
-pip install rangehttpserver
 ```
 
 The following commands are going to install GPF dae and wdae packages for development

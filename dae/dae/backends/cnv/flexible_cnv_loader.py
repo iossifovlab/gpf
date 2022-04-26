@@ -1,9 +1,9 @@
-import numpy as np
-
 from pathlib import Path
 from copy import deepcopy
 from typing import Callable, List, Optional, Dict, Any, Tuple, \
     Union, Generator, TextIO
+
+import numpy as np
 
 from dae.utils.regions import Region
 from dae.utils.variant_utils import get_interval_locus_ploidy
@@ -24,8 +24,8 @@ def _cnv_location_to_vcf_trasformer() \
     """
     def transformer(result: Dict[str, Any]) -> Dict[str, Any]:
         location = result["location"]
-        chrom, range = location.split(":")
-        beg, end = range.split("-")
+        chrom, pos_range = location.split(":")
+        beg, end = pos_range.split("-")
         result["chrom"] = chrom
         result["pos"] = int(beg)
         result["pos_end"] = int(end)
@@ -250,6 +250,10 @@ def _configure_cnv_variant_type(
         cnv_variant_type: Optional[str] = None,
         cnv_plus_values: Optional[Union[str, List[str]]] = None,
         cnv_minus_values: Optional[Union[str, List[str]]] = None):
+    """
+    This helper function **configures** the header and transformer needed
+    to handle CNV variant type in the input data.
+    """
 
     if cnv_plus_values is None:
         cnv_plus_values = ["CNV+"]
@@ -261,10 +265,6 @@ def _configure_cnv_variant_type(
     if isinstance(cnv_minus_values, str):
         cnv_minus_values = [cnv_minus_values]
 
-    """
-    This helper function **configures** the header and transformer needed
-    to handle CNV variant type in the input data.
-    """
     if cnv_variant_type is None:
         cnv_variant_type = "variant"
 
@@ -352,8 +352,8 @@ def flexible_cnv_loader(
     else:
         infile = filepath_or_buffer
 
-    def line_splitter(ln: str) -> List[str]:
-        return ln.strip("\n\r").split(cnv_sep)
+    def line_splitter(line: str) -> List[str]:
+        return line.strip("\n\r").split(cnv_sep)
 
     with infile as infile:
         line = next(infile)

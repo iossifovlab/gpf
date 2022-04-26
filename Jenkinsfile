@@ -41,11 +41,12 @@ pipeline {
             tools: [
               flake8(pattern: 'test-results/flake8_report', reportEncoding: 'UTF-8'),
               myPy(pattern: 'test-results/mypy_dae_report', reportEncoding: 'UTF-8', id: 'mypy-dae', name: 'MyPy - dae'),
-              myPy(pattern: 'test-results/mypy_wdae_report', reportEncoding: 'UTF-8', id: 'mypy-wdae', name: 'MyPy - wdae')
+              myPy(pattern: 'test-results/mypy_wdae_report', reportEncoding: 'UTF-8', id: 'mypy-wdae', name: 'MyPy - wdae'),
+              pyLint(pattern: 'test-results/pylint_gpf_report', reportEncoding: 'UTF-8')
             ]
           )
 
-          publishHTML (target : [allowMissing: false,
+          publishHTML (target : [allowMissing: true,
             alwaysLinkToLastBuild: true,
             keepAll: true,
             reportDir: 'test-results/coverage-html',
@@ -68,6 +69,21 @@ pipeline {
             reportFiles: 'index.html',
             reportName: 'wdae-mypy-report',
             reportTitles: 'wdae-mypy-report'])
+          publishHTML (target : [allowMissing: true,
+            alwaysLinkToLastBuild: true,
+            keepAll: true,
+            reportDir: 'test-results/',
+            reportFiles: 'bandit_*dae_report.html',
+            reportName: 'bandit-dae-report',
+            reportTitles: 'bandit-dae-report'])
+
+          publishHTML (target : [allowMissing: true,
+            alwaysLinkToLastBuild: true,
+            keepAll: true,
+            reportDir: 'test-results/',
+            reportFiles: 'bandit_wdae_report.html',
+            reportName: 'bandit-wdae-report',
+            reportTitles: 'bandit-wdae-report'])
 
         } finally {
           zulipNotification(
