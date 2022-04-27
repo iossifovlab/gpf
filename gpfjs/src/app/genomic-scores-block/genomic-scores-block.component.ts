@@ -1,5 +1,4 @@
 import { Component, OnInit } from '@angular/core';
-import { environment } from '../../environments/environment';
 
 import { GenomicScoreState, GenomicScoresState } from '../genomic-scores/genomic-scores-store';
 import { GenomicScoresBlockService } from './genomic-scores-block.service';
@@ -19,7 +18,6 @@ import { ValidateNested } from 'class-validator';
 export class GenomicScoresBlockComponent extends StatefulComponent implements OnInit {
   @ValidateNested()
   public genomicScoresState = new GenomicScoresState();
-  private scores = [];
   public genomicScoresArray: GenomicScores[];
 
   public constructor(
@@ -49,21 +47,16 @@ export class GenomicScoresBlockComponent extends StatefulComponent implements On
           genomicScore.domainMin = genomicScore.score.bins[0];
           genomicScore.domainMax =
             genomicScore.score.bins[genomicScore.score.bins.length - 1];
-          this.addFilter(genomicScore);
+          this.genomicScoresState.genomicScoresState.push(genomicScore);
         }
       }
     });
   }
 
-  public trackById(index: number, data: any) {
-    return data.score.score;
-  }
-
-  public addFilter(genomicScoreState: GenomicScoreState = null): void {
-    if (!genomicScoreState) {
-      genomicScoreState = new GenomicScoreState(this.genomicScoresArray[0]);
-    }
-    this.genomicScoresState.genomicScoresState.push(genomicScoreState);
+  public addFilter(): void {
+    this.genomicScoresState.genomicScoresState.push(
+      new GenomicScoreState(this.genomicScoresArray[0])
+    );
   }
 
   public removeFilter(genomicScore: GenomicScoreState): void {

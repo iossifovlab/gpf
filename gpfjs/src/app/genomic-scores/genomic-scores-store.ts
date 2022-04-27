@@ -12,7 +12,7 @@ export class GenomicScoreState {
   @IsLessThanOrEqual('rangeEnd')
   @IsMoreThanOrEqual('domainMin')
   @IsLessThanOrEqual('domainMax')
-    rangeStart: number;
+  public rangeStart: number;
 
 
   @ValidateIf(o => o.rangeEnd !== null)
@@ -20,13 +20,13 @@ export class GenomicScoreState {
   @IsMoreThanOrEqual('rangeStart')
   @IsMoreThanOrEqual('domainMin')
   @IsLessThanOrEqual('domainMax')
-  rangeEnd: number;
+  public rangeEnd: number;
 
-  public domainMin: any;
-  public domainMax: any;
+  public domainMin: number;
+  public domainMax: number;
 
   public changeDomain(score: GenomicScores): void {
-    if (this.score.domain != null) {
+    if (this.score.domain !== null) {
       this.domainMin = score.domain[0];
       this.domainMax = score.domain[1];
     } else {
