@@ -28,7 +28,7 @@ export class ManagementComponent implements OnInit, OnDestroy {
     }
   }
 
-  public checkUserInfo(value): void {
+  private checkUserInfo(value): void {
     if (!value || !value.isAdministrator) {
       this.router.navigate(['/']);
     }

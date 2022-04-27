@@ -1,31 +1,39 @@
-import { HttpClientTestingModule } from '@angular/common/http/testing';
-import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
-import { RouterTestingModule } from '@angular/router/testing';
-import { NgxsModule } from '@ngxs/store';
-import { ConfigService } from 'app/config/config.service';
 import { UsersService } from 'app/users/users.service';
+import { of } from 'rxjs';
 
 import { ManagementComponent } from './management.component';
 
 describe('ManagementComponent', () => {
   let component: ManagementComponent;
-  let fixture: ComponentFixture<ManagementComponent>;
-
-  beforeEach(waitForAsync(() => {
-    TestBed.configureTestingModule({
-      declarations: [ManagementComponent],
-      providers: [UsersService, ConfigService],
-      imports: [HttpClientTestingModule, RouterTestingModule, NgxsModule.forRoot([], {developmentMode: true})]
-    }).compileComponents();
-  }));
+  const usersService = new UsersService(undefined, undefined, undefined, undefined, undefined, undefined, undefined);
+  const routerMock = {
+    navigate: jest.fn()
+  };
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(ManagementComponent);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
+    component = new ManagementComponent(routerMock as any, usersService);
   });
 
   it('should create', () => {
     expect(component).toBeTruthy();
+  });
+
+  it('should initialize', () => {
+    const routerNavigateSpy = jest.spyOn(routerMock, 'navigate');
+    const getUserInfoSpy = jest.spyOn(usersService, 'getUserInfoObservable');
+
+    getUserInfoSpy.mockReturnValue(of({isAdministrator: true}));
+    component.ngOnInit();
+    expect(routerNavigateSpy).not.toBeCalled();
+
+    getUserInfoSpy.mockReturnValue(of({isAdministrator: false}));
+    component.ngOnInit();
+    expect(routerNavigateSpy).toBeCalledWith(['/']);
+
+    routerNavigateSpy.mockReset();
+
+    getUserInfoSpy.mockReturnValue(of(undefined));
+    component.ngOnInit();
+    expect(routerNavigateSpy).toBeCalledWith(['/']);
   });
 });
