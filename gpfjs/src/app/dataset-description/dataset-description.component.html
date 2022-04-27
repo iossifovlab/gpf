@@ -1,17 +1,23 @@
 <div *ngIf="dataset$ | async as dataset" class="container" style="margin-top: 20px">
   <div *ngIf="!editMode">
-    <button *ngIf="('' | userInfo)?.isAdministrator" (click)="edit()">Edit</button>
-    <div class="row">
+    <div class="row" style="position: relative">
+      <i
+        *ngIf="('' | userInfo)?.isAdministrator"
+        (click)="edit()"
+        id="edit-icon"
+        class="fa fa-pencil fa-lg"
+        title="Edit">
+      </i>
       <markdown [data]="dataset.description || ''"></markdown>
     </div>
   </div>
 
   <div *ngIf="editMode">
     <div class="editor">
-      <angular-markdown-editor textareaId="editor1" [options]="editorOptions" [(ngModel)]="markdownText">
+      <angular-markdown-editor textareaId="editor1" [options]="editorOptions" [(ngModel)]="editorText">
       </angular-markdown-editor>
-      <button (click)="save()">Save</button>
-      <button (click)="close()">Close</button>
+      <button (click)="save()" class="btn btn-success" title="Save (ctrl+enter)">Save</button>
+      <button (click)="close()" class="btn" style="margin-left: 8px" tutle="Close">Close</button>
     </div>
   </div>
 </div>

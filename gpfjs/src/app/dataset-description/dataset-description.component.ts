@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, HostListener, OnInit } from '@angular/core';
 import { ActivatedRoute, Params, Router } from '@angular/router';
 import { Observable } from 'rxjs';
 import { DatasetsService } from '../datasets/datasets.service';
@@ -6,6 +6,7 @@ import { Dataset } from '../datasets/datasets';
 import { filter, map, switchMap, take } from 'rxjs/operators';
 import { EditorOption } from 'angular-markdown-editor';
 import { MarkdownService } from 'ngx-markdown';
+import DOMPurify from 'dompurify';
 
 @Component({
   selector: 'gpf-dataset-description',
@@ -17,14 +18,19 @@ export class DatasetDescriptionComponent implements OnInit {
   public datasetId: string;
 
   public editMode = false;
-  public markdownText: string;
+  public editorText: string;
+  private initialDatasetDescription: string;
+
   public editorOptions: EditorOption = {
     autofocus: true,
     iconlibrary: 'fa',
-    width: 700,
+    width: 1140, // should match .container width
     resize: 'both',
     fullscreen: {enable: false, icons: undefined},
-    parser: (val) => this.markdownService.compile(val.trim())
+    parser: (val: string) => {
+      const sanitizedText = DOMPurify.sanitize(val.trim());
+      return this.markdownService.compile(sanitizedText);
+    }
   };
 
   public constructor(
@@ -33,6 +39,12 @@ export class DatasetDescriptionComponent implements OnInit {
     private datasetsService: DatasetsService,
     private markdownService: MarkdownService
   ) { }
+
+  @HostListener('keydown', ['$event']) public onKeyDown($event: KeyboardEvent): void {
+    if ($event.ctrlKey && $event.code === 'Enter') {
+      this.save();
+    }
+  }
 
   public ngOnInit(): void {
     this.dataset$ = this.route.parent.params.pipe(
@@ -46,7 +58,8 @@ export class DatasetDescriptionComponent implements OnInit {
       if (!dataset.description) {
         this.router.navigate(['..', 'browser'], {relativeTo: this.route});
       } else {
-        this.markdownText = dataset.description;
+        this.editorText = dataset.description;
+        this.initialDatasetDescription = dataset.description;
       }
     });
   }
@@ -56,18 +69,20 @@ export class DatasetDescriptionComponent implements OnInit {
   }
 
   public save(): void {
-    this.datasetsService.writeDatasetDescription(this.datasetId, this.markdownText).subscribe(() => {
-      window.location.reload();
-      document.addEventListener('DOMContentLoaded', () => {
-        this.editMode = false;
+    this.editMode = false;
+    if (this.editorText !== this.initialDatasetDescription) {
+      this.datasetsService.writeDatasetDescription(this.datasetId, this.editorText).subscribe(() => {
+        this.ngOnInit();
       });
-    });
+    }
   }
 
   public close(): void {
     this.editMode = false;
-    this.dataset$.pipe(take(1)).subscribe(dataset => {
-      this.markdownText = dataset.description;
-    });
+    if (this.editorText !== this.initialDatasetDescription) {
+      this.dataset$.pipe(take(1)).subscribe(dataset => {
+        this.editorText = dataset.description;
+      });
+    }
   }
 }
