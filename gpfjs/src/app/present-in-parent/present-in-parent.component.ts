@@ -74,9 +74,10 @@ export class PresentInParentComponent extends StatefulComponent implements OnIni
 
   public updateRarityType(newValue: string): void {
     this.selectedRarityType = newValue;
-    if (this.selectedRarityType === 'rare') {
-      this.rarityIntervalStart = null;
-    } else if (this.selectedRarityType === 'interval') {
+    if (this.selectedRarityType !== 'rare' && this.selectedRarityType !== 'interval') {
+      this.rarityIntervalEnd = 1;
+      this.rarityIntervalStart = 0;
+    } else if (this.selectedRarityType === 'rare') {
       this.rarityIntervalStart = 0;
     }
     this.updateState();
