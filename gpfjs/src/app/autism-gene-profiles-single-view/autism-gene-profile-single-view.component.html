@@ -12,84 +12,23 @@
       </div>
     </ng-container>
 
-  <ng-container *ngIf="isInGeneCompare">
-    <div style="position: relative" [style.width]="showTemplate ? 'unset' : '30px'">
-      <div [attr.title]="geneSymbol" (click)="showTemplate = !showTemplate" class="minimize-elements-wrapper">
-        <button class="minimize-button" >&ndash;</button>
-        <span *ngIf="!showTemplate" class="minimize-gene-symbol">{{ geneSymbol }}</span>
-      </div>
-    </div>
-  </ng-container>
-  
-  <ng-container *ngIf="showTemplate">
-    <div style="padding: 25px">
-      <div
-        #stickySpan
-        [ngClass]="isInGeneCompare && isHeaderSticky ? 'sticky' : ''"
-        [ngStyle]="{'width' : isInGeneCompare ? '100%' : '1455px'}"
-        style="display: flex; align-items: baseline; height: 58px;">
-        <h2>{{ geneSymbol }}</h2>
-      </div>
-      <div
-        class="wrapper"
-        [ngClass]="{'compare-wrapper': isInGeneCompare}" #wrapperElement>
-        <table id="links-table">
-          <tr>
-            <td style="border-right: 1px solid #dee2e6; padding-right: 25px;">Links</td>
-            <td>
-              <a class="link-external-page" [attr.href]="links.GeneBrowser" id="gene-browser-link" target="_blank">Gene Browser</a>
-            </td>
-            <td>
-              <a class="link-external-page" [attr.href]="links.UCSC" target="_blank">UCSC genome browser</a>
-            </td>
-            <td>
-              <a class="link-external-page" [attr.href]="links.GeneCards" target="_blank">GeneCards</a>
-            </td>
-            <td>
-              <a class="link-external-page" [attr.href]="links.Pubmed" target="_blank">Pubmed</a>
-            </td>
-            <td>
-              <a *ngIf="links.SFARIgene !== ''" class="link-external-page" [attr.href]="links.SFARIgene" target="_blank">SFARI gene</a>
-            </td>
-          </tr>
-        </table>
-      </div>
-
-      <div
-        [ngClass]="{'compare-wrapper': isInGeneCompare}" 
-        class="wrapper">
-        <table
-          *ngFor="let genomicScoreCategory of config.genomicScores"
-          [attr.id]="genomicScoreCategory.category"
-          class="gpf-basic-table genomic-scores-table">
-          <th [attr.colspan]="2">{{ genomicScoreCategory.displayName }}</th>
-          <tr *ngFor="let score of genomicScoreCategory.scores" class="card-block">
-            <td
-              style="height: 135px; max-height: 135px; width: 135px; max-width: 135px; overflow-wrap: break-word"
-              [attr.title]="score.scoreName">{{ score.scoreName }}</td>
-            <ng-container *ngIf="genomicScoresGeneScores.length === gene.genomicScores.length">
+    <ng-container *ngIf="showTemplate">
+      <div style="padding: 25px">
+        <div
+          #stickySpan
+          [ngClass]="isInGeneCompare && isHeaderSticky ? 'sticky' : ''"
+          [ngStyle]="{ width: isInGeneCompare ? '100%' : '1455px' }"
+          style="display: flex; align-items: baseline; height: 58px">
+          <h2>{{ geneSymbol }}</h2>
+        </div>
+        <div class="wrapper" [ngClass]="{ 'compare-wrapper': isInGeneCompare }" #wrapperElement>
+          <table id="links-table">
+            <tr>
+              <td style="border-right: 1px solid #dee2e6; padding-right: 25px">Links</td>
               <td>
-                <gpf-histogram
-                  *ngIf="
-                  genomicScoresGeneScores &&
-                  getGeneScoreByKey(genomicScoreCategory.category, score.scoreName) as geneScore
-                  "
-                  [style.width]="histogramOptions.width"
-                  [style.height]="histogramOptions.height"
-                  [width]="histogramOptions.width"
-                  [height]="histogramOptions.height"
-                  [bins]="geneScore.bins"
-                  [bars]="geneScore.bars"
-                  [logScaleX]="geneScore.logScaleX"
-                  [logScaleY]="geneScore.logScaleY"
-                  [showMinMaxInput]="false"
-                  [isInteractive]="false"
-                  [singleScoreValue]="
-                    getSingleScoreValue(gene.genomicScores, genomicScoreCategory.category, score.scoreName)
-                  "
-                  [marginLeft]="histogramOptions.marginLeft"
-                  [marginTop]="histogramOptions.marginTop">
-                </gpf-histogram>
+                <a class="link-external-page" [attr.href]="links.GeneBrowser" id="gene-browser-link" target="_blank"
+                  >Gene Browser</a
+                >
               </td>
               <td>
                 <a class="link-external-page" [attr.href]="links.UCSC" target="_blank">UCSC genome browser</a>
@@ -125,21 +64,21 @@
                 [attr.title]="score.scoreName">
                 {{ score.scoreName }}
               </td>
-              <ng-container *ngIf="genomicScoresGeneWeights.length === gene.genomicScores.length">
+              <ng-container *ngIf="genomicScoresGeneScores.length === gene.genomicScores.length">
                 <td>
                   <gpf-histogram
                     *ngIf="
-                      genomicScoresGeneWeights &&
-                      getGeneWeightByKey(genomicScoreCategory.category, score.scoreName) as geneWeight
+                      genomicScoresGeneScores &&
+                      getGeneScoreByKey(genomicScoreCategory.category, score.scoreName) as geneScore
                     "
                     [style.width]="histogramOptions.width"
                     [style.height]="histogramOptions.height"
                     [width]="histogramOptions.width"
                     [height]="histogramOptions.height"
-                    [bins]="geneWeight.bins"
-                    [bars]="geneWeight.bars"
-                    [logScaleX]="geneWeight.logScaleX"
-                    [logScaleY]="geneWeight.logScaleY"
+                    [bins]="geneScore.bins"
+                    [bars]="geneScore.bars"
+                    [logScaleX]="geneScore.logScaleX"
+                    [logScaleY]="geneScore.logScaleY"
                     [showMinMaxInput]="false"
                     [isInteractive]="false"
                     [singleScoreValue]="
