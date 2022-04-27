@@ -164,6 +164,7 @@ import { AutismGeneProfileSingleViewWrapperComponent } from './autism-gene-profi
 import { TruncatePipe } from './utils/truncate.pipe';
 import { UniqueFamilyVariantsFilterComponent } from './unique-family-variants-filter/unique-family-variants-filter.component';
 import { UniqueFamilyVariantsFilterState } from './unique-family-variants-filter/unique-family-variants-filter.state';
+import { AngularMarkdownEditorModule } from 'angular-markdown-editor';
 
 const appRoutes: Routes = [
   {
@@ -391,7 +392,8 @@ const appRoutes: Routes = [
     ),
     NgxsResetPluginModule.forRoot(),
     DragDropModule,
-    ClipboardModule
+    ClipboardModule,
+    AngularMarkdownEditorModule.forRoot()
   ],
   providers: [
     CookieService,

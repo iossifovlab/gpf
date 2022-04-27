@@ -7,7 +7,15 @@ import { NgxsModule } from '@ngxs/store';
 import { ConfigService } from 'app/config/config.service';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { UsersService } from 'app/users/users.service';
+import { MarkdownService } from 'ngx-markdown';
 import { DatasetDescriptionComponent } from './dataset-description.component';
+
+class MarkdownServiceMock {
+  public compile = (): void => null;
+  public getSource = (): void => null;
+  public highlight = (): void => null;
+  public renderKatex = (): void => null;
+}
 
 @Component({
   selector: 'gpf-dataset-description',
@@ -32,6 +40,7 @@ describe('DatasetDescriptionComponent', () => {
         DatasetsService,
         UsersService,
         ConfigService,
+        {provide: MarkdownService, useClass: MarkdownServiceMock},
       ],
       imports: [RouterTestingModule, HttpClientTestingModule, NgxsModule.forRoot([], {developmentMode: true})]
     }).compileComponents();

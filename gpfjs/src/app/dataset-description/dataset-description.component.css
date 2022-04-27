@@ -1,0 +1,52 @@
+.container {
+  width: 1140px;
+}
+
+#edit-icon {
+  position: absolute;
+  right: 0;
+  padding: 6px;
+  cursor: pointer;
+  margin-top: 5px;
+}
+
+::ng-deep.md-header {
+  margin-bottom: 8px;
+}
+
+::ng-deep.btn-sm {
+  background-color: unset;
+  width: 30px;
+  height: 30px;
+  border: 1px solid transparent !important;
+  border-radius: 0%;
+}
+
+::ng-deep.btn-sm:hover {
+  background-color: #eee;
+  border: 1px solid rgb(197, 197, 197) !important;
+  border-radius: 0%;
+}
+
+::ng-deep.btn-sm:disabled {
+  background-color: unset;
+  border: none;
+  outline: none;
+  cursor: not-allowed;
+}
+
+::ng-deep.btn-sm[title="Preview"] {
+  height: 30px;
+  width: 90px;
+  background-color: #2a6395;
+  border: none;
+}
+
+::ng-deep.btn-sm[title="Preview"]:hover,
+::ng-deep.btn-sm[title="Preview"]:focus {
+  background-color: #2a6395;
+}
+
+::ng-deep.btn-sm.active[title="Preview"] {
+  background-color: #0b355a !important;
+}
