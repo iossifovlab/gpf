@@ -197,26 +197,26 @@ class ResponseTransformer:
 
         return pheno_values
 
-    def _get_gene_weights_values(self, allele, default=None):
-        if not self.study_wrapper.gene_weight_column_sources:
+    def _get_gene_scores_values(self, allele, default=None):
+        if not self.study_wrapper.gene_score_column_sources:
             return {}
         genes = gene_effect_get_genes(allele.effects).split(";")
         gene = genes[0]
 
-        gene_weights_values = {}
-        for gwc in self.study_wrapper.gene_weight_column_sources:
-            if gwc not in self.study_wrapper.gene_weights_db:
+        gene_scores_values = {}
+        for gwc in self.study_wrapper.gene_score_column_sources:
+            if gwc not in self.study_wrapper.gene_scores_db:
                 continue
 
-            gene_weights = self.study_wrapper.gene_weights_db[gwc]
+            gene_scores = self.study_wrapper.gene_scores_db[gwc]
             if gene != "":
-                gene_weights_values[gwc] = gene_weights._to_dict().get(
+                gene_scores_values[gwc] = gene_scores._to_dict().get(
                     gene, default
                 )
             else:
-                gene_weights_values[gwc] = default
+                gene_scores_values[gwc] = default
 
-        return gene_weights_values
+        return gene_scores_values
 
     @staticmethod
     def _get_wdae_member(member, person_set_collection, best_st):
@@ -278,9 +278,9 @@ class ResponseTransformer:
 
             for variant in variants_chunk:
                 for allele in variant.alt_alleles:
-                    gene_weights_values = self._get_gene_weights_values(allele)
+                    gene_scores_values = self._get_gene_scores_values(allele)
 
-                    allele.update_attributes(gene_weights_values)
+                    allele.update_attributes(gene_scores_values)
 
                 yield variant
 
@@ -460,10 +460,10 @@ class ResponseTransformer:
 
                 for allele in variant.alt_alleles:
                     if not self.study_wrapper.is_remote:
-                        gene_weights_values = self._get_gene_weights_values(
+                        gene_scores_values = self._get_gene_scores_values(
                             allele
                         )
-                        allele.update_attributes(gene_weights_values)
+                        allele.update_attributes(gene_scores_values)
 
                     if pheno_values:
                         allele.update_attributes(pheno_values)
@@ -480,10 +480,10 @@ class ResponseTransformer:
 
             for allele in variant.alt_alleles:
                 if not self.study_wrapper.is_remote:
-                    gene_weights_values = self._get_gene_weights_values(
+                    gene_scores_values = self._get_gene_scores_values(
                         allele
                     )
-                    allele.update_attributes(gene_weights_values)
+                    allele.update_attributes(gene_scores_values)
 
                 if pheno_values:
                     allele.update_attributes(pheno_values)

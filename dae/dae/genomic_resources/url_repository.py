@@ -78,9 +78,9 @@ class GenomicResourceURLRepo(GenomicResourceRealRepo):
         if filename.endswith(".gz") and uncompress:
             return gzip.open(binary_stream, mode)
 
-        if 't' in mode:
-            return io.TextIOWrapper(binary_stream, encoding=GR_ENCODING)
-        return binary_stream
+        if 'b' in mode:
+            return binary_stream
+        return io.TextIOWrapper(binary_stream, encoding=GR_ENCODING)
 
     def open_tabix_file(self, genomic_resource,  filename,
                         index_filename=None):

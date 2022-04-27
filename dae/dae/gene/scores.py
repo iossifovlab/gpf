@@ -1,63 +1,106 @@
+import os
+import logging
 import pandas as pd
 
+from dae.file_cache.cache import ResourceFileCache
 
-class Scores:
-    def __init__(self, config, config_id):
 
-        self.config = config
-        self.genomic_values_col = "scores"
+logger = logging.getLogger(__name__)
 
-        self.id = config_id
+
+class GenomicScoreHistogram:
+    """Genomic scores histograms"""
+    def __init__(self, resource, score_id, file_cache):
+
+        self.resource = resource
+        self.config = resource.get_config()
+
+        self.id = score_id
         self.df = None
-        self._dict = None
+        self.file_cache = file_cache
 
-        self.desc = self.config.desc
-        self.bins = self.config.bins
-        self.xscale = self.config.xscale
-        self.yscale = self.config.yscale
-        self.filename = self.config.file
-        self.help_filename = self.config.help_file
-        if self.config.range:
-            self.range = (self.config.range.start, self.config.range.end)
-        else:
-            self.range = None
+        self.source = None
+        annotation_conf = self.config["default_annotation"]
+        for attr in annotation_conf["attributes"]:
+            if attr["destination"] == self.id:
+                self.source = attr["source"]
+        assert self.source is not None, f"{score_id} source not found"
+        for score_conf in self.config["scores"]:
+            if score_conf["id"] == self.source:
+                self.score_config = score_conf
+        for hist_conf in self.config["histograms"]:
+            if hist_conf["score"] == self.source:
+                self.histogram_config = hist_conf
 
-        if self.help_filename:
-            with open(self.help_filename, "r") as infile:
-                self.help = infile.read()
-        else:
-            self.help = None
+        self.desc = self.score_config["desc"]
+        self.bins_count = self.histogram_config["bins"]
+        self.min = self.histogram_config.get("min", None)
+        self.max = self.histogram_config.get("max", None)
+        self.xscale = self.histogram_config.get("x_scale", "linear")
+        self.yscale = self.histogram_config.get("y_scale", "linear")
+        self.filename = os.path.join("histograms", f"{self.source}.csv")
+        self.help = self.config.get("meta", None)
+        self.range = None
 
         self._load_data()
         self.df.fillna(value=0, inplace=True)
 
     def _load_data(self):
         assert self.filename is not None
-
-        df = pd.read_csv(self.filename)
-        assert self.id in df.columns, "{} not found in {}".format(
-            self.id, df.columns
+        filepath = self.file_cache.get_file_path_from_resource(
+            self.resource, self.filename
         )
-        self.df = df[[self.genomic_values_col, self.id]].copy()
+        assert filepath is not None, \
+            f"Couldn't find csv {self.filename} in {self.resource.resource_id}"
+
+        df = pd.read_csv(filepath)
+        assert set(df.columns) == set(["bars", "bins"]), "Incorrect CSV file"
+        self.df = df
         return self.df
 
-    def values(self):
-        return self.df[self.id].values
+    @property
+    def bars(self):
+        return self.df["bars"].values
 
-    def get_scores(self):
-        return self.df["scores"].values
+    @property
+    def bins(self):
+        return self.df["bins"].values
 
 
-class ScoresFactory(object):
-    def __init__(self, config):
-        super(ScoresFactory, self).__init__()
-        self.config = config
+class GenomicScoresDb:
+    """Genomic scores DB allowing access to gnomic scores histograms"""
+    def __init__(self, grr, scores, cache_dir=None):
+        self.grr = grr
+        if cache_dir is None:
+            dae_db_dir = os.environ.get("DAE_DB_DIR")
+            cache_dir = os.path.join(
+                dae_db_dir, "file_cache", "genomic_scores_db"
+            )
+        self.file_cache = ResourceFileCache(cache_dir, grr)
 
         self.scores = {}
-
-        self._load()
+        for resource_id, score_id in scores:
+            resource = self.grr.get_resource(resource_id)
+            if resource is None:
+                logger.error(
+                    "unable to find resource %s in GRR", resource_id)
+                continue
+            try:
+                score = GenomicScoreHistogram(
+                    resource, score_id, self.file_cache
+                )
+                self.scores[score_id] = score
+            except KeyError as err:
+                logger.error(
+                    "Failed to load histogram of %s; "
+                    "Couldn't find key %s", resource_id, err)
+            except AssertionError as err:
+                logger.error(
+                    "Incorrect configuration of %s; "
+                    "histogram resource: %s", resource_id, err)
 
     def get_scores(self):
+        "Returns all genomic scores histograms"
         result = []
 
         for score in self.scores.values():
@@ -65,14 +108,6 @@ class ScoresFactory(object):
             result.append(score)
 
         return result
-
-    def _load(self):
-        if not self.config:
-            return
-        for score_id, score_config in self.config.genomic_scores.items():
-            s = Scores(score_config, score_id)
-            if s.id in self.config.scores:
-                self.scores[score_config.id] = s
 
     def __getitem__(self, score_id):
         if score_id not in self.scores:

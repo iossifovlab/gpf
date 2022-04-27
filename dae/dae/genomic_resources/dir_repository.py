@@ -64,6 +64,8 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
 
     def open_raw_file(self, genomic_resource: GenomicResource, filename: str,
                       mode=None, uncompress=False, _seekable=False):
+        if mode is None:
+            mode = "r"
         fullFilePath = self.get_file_path(genomic_resource, filename)
         if 'w' in mode:
             # Create the containing directory if it doesn't exists.

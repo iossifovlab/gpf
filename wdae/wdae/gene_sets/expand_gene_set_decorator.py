@@ -2,17 +2,26 @@ from gpf_instance.gpf_instance import get_gpf_instance
 
 from datasets_api.permissions import IsDatasetAllowed
 
-from dae.utils.gene_utils import GeneSymsMixin
-
 
 def expand_gene_set(request_function):
     def decorated(self, request):
         if "geneSet" in request.data:
-            (
-                gene_sets_collection_id,
-                gene_set_id,
-                denovo_gene_set_spec,
-            ) = GeneSymsMixin.get_gene_set_query(**request.data)
+
+            gene_sets_collection_id = None
+            gene_set_id = None
+            denovo_gene_set_spec = None
+
+            query = request.data.get("geneSet", None)
+            if query is None:
+                query = dict()
+            gene_sets_collection = query.get("geneSetsCollection", None)
+            gene_set = query.get("geneSet", None)
+
+            if gene_sets_collection is not None or gene_set is not None:
+                gene_sets_collection_id = gene_sets_collection
+                gene_set_id = gene_set
+                denovo_gene_set_spec = query.get("geneSetsTypes", [])
+
             gpf_instance = get_gpf_instance()
 
             if gene_sets_collection_id.endswith("denovo"):

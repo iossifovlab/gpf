@@ -16,7 +16,7 @@ logger = logging.getLogger(__file__)
 
 
 def generate_agp(gpf_instance, gene_symbol, collections_gene_sets):
-    gene_weights_db = gpf_instance.gene_weights_db
+    gene_scores_db = gpf_instance.gene_scores_db
     config = gpf_instance._autism_gene_profile_config
     scores = dict()
 
@@ -30,13 +30,13 @@ def generate_agp(gpf_instance, gene_symbol, collections_gene_sets):
         category_name = category["category"]
         scores[category_name] = dict()
         for score in category["scores"]:
-            score_name = score["score_name"]
-            gw = gene_weights_db.get_gene_weight(score["score_name"])
-            if gene_symbol in gw.get_genes():
-                value = gw.get_gene_value(gene_symbol)
+            gene_score_name = score["score_name"]
+            gs = gene_scores_db.get_gene_score(gene_score_name)
+            if gene_symbol in gs.get_genes():
+                value = gs.get_gene_value(gene_symbol)
             else:
                 value = None
-            scores[category_name][score_name] = value
+            scores[category_name][gene_score_name] = value
 
     variant_counts = dict()
 
@@ -282,15 +282,14 @@ def main(gpf_instance=None, argv=None):
         for gs in gs_category.sets:
             gs_id = gs["set_id"]
             collection_id = gs["collection_id"]
+            gene_set = gpf_instance.gene_sets_db.get_gene_set(
+                collection_id, gs_id)
+            if gene_set is None:
+                logger.error("missing gene set: %s, %s", collection_id, gs_id)
+                raise ValueError(
+                    f"missing gene set: {collection_id}: {gs_id}")
 
-            collections_gene_sets.append(
-                (
-                    collection_id,
-                    gpf_instance.gene_sets_db.get_gene_set(
-                        collection_id, gs_id
-                    )
-                )
-            )
+            collections_gene_sets.append((collection_id, gene_set))
 
     logger.info(f"collected gene sets: {len(collections_gene_sets)}")
 

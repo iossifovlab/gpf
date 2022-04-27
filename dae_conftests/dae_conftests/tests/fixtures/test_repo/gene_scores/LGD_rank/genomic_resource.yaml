@@ -1,0 +1,8 @@
+type: gene_score
+id: LGD_rank
+filename: LGD.csv
+desc: LGD rank
+histogram:
+  bins: 150
+  xscale: linear
+  yscale: linear

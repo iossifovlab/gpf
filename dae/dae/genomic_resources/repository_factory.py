@@ -63,7 +63,8 @@ def get_configured_definition():
 
 def build_genomic_resource_repository(
         definition: Optional[dict] = None,
-        file_name: str = None) -> GenomicResourceRepo:
+        file_name: str = None,
+        use_cache: bool = True) -> GenomicResourceRepo:
 
     if not definition:
         if file_name is not None:
@@ -91,13 +92,14 @@ def build_genomic_resource_repository(
             raise ValueError(
                 f"The definition for group repository {definition} "
                 "has no children attiribute.")
-        if not isinstance(definition["children"], list):
+        if not isinstance(definition["children"], list) and \
+                not isinstance(definition["children"], tuple):
             raise ValueError(
                 "The children attribute in the definition of a group "
                 "repository must be a list")
         repo_id = definition.get("repo_id")
         repo = GenomicResourceGroupRepo([
-            build_genomic_resource_repository(child_def)
+            build_genomic_resource_repository(child_def, use_cache=use_cache)
             for child_def in definition["children"]
         ], repo_id=repo_id)
     elif repo_type in _registered_real_genomic_resource_repository_types:
@@ -106,6 +108,6 @@ def build_genomic_resource_repository(
             repo_id, **definition)
     else:
         raise ValueError(f"unknown genomic repository type {repo_type}")
-    if "cache_dir" in definition:
+    if use_cache and "cache_dir" in definition:
         return GenomicResourceCachedRepo(repo, definition["cache_dir"])
     return repo

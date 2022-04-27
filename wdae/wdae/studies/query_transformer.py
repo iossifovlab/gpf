@@ -48,20 +48,20 @@ class QueryTransformer:
 
         return genomic_scores_filter
 
-    def _transform_gene_weights(self, gene_weights):
-        if not self.study_wrapper.gene_weights_db:
+    def _transform_gene_scores(self, gene_scores):
+        if not self.study_wrapper.gene_scores_db:
             return
 
-        weight_name = gene_weights.get("weight", None)
-        range_start = gene_weights.get("rangeStart", None)
-        range_end = gene_weights.get("rangeEnd", None)
+        scores_name = gene_scores.get("score", None)
+        range_start = gene_scores.get("rangeStart", None)
+        range_end = gene_scores.get("rangeEnd", None)
 
-        if weight_name and weight_name in self.study_wrapper.gene_weights_db:
-            weight = self.study_wrapper.gene_weights_db[
-                gene_weights.get("weight")
+        if scores_name and scores_name in self.study_wrapper.gene_scores_db:
+            score = self.study_wrapper.gene_scores_db[
+                scores_name
             ]
 
-            genes = weight.get_genes(range_start, range_end)
+            genes = score.get_genes(range_start, range_end)
 
             return list(genes)
 
@@ -360,9 +360,9 @@ class QueryTransformer:
                 genomic_scores
             )
 
-        if "geneWeights" in kwargs:
-            gene_weights = kwargs.pop("geneWeights", {})
-            genes = self._transform_gene_weights(gene_weights)
+        if "geneScores" in kwargs:
+            gene_scores = kwargs.pop("geneScores", {})
+            genes = self._transform_gene_scores(gene_scores)
             if genes is not None:
                 if "genes" not in kwargs:
                     kwargs["genes"] = []

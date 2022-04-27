@@ -1,9 +1,8 @@
+"""Defines GPFInstance class that gives access to different parts of GPF"""
+
 import os
 import logging
-import pandas as pd
 import json
-
-from box import Box  # type:ignore
 
 from dae.genomic_resources.reference_genome import ReferenceGenome, \
     open_reference_genome_from_resource
@@ -11,9 +10,9 @@ from dae.genomic_resources.gene_models import \
     load_gene_models_from_resource
 from dae.enrichment_tool.background_facade import BackgroundFacade
 
-from dae.gene.weights import GeneWeightsDb
-from dae.gene.scores import ScoresFactory
-from dae.gene.gene_sets_db import GeneSetsDb
+from dae.gene.gene_scores import GeneScoresDb, GeneScore
+from dae.gene.scores import GenomicScoresDb
+from dae.gene.gene_sets_db import GeneSetsDb, GeneSetCollection
 from dae.gene.denovo_gene_sets_db import DenovoGeneSetsDb
 
 from dae.studies.variants_db import VariantsDb
@@ -25,8 +24,6 @@ from dae.backends.storage.genotype_storage_factory import \
 
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.dae_conf import dae_conf_schema
-from dae.configuration.schemas.gene_info import gene_info_conf
-from dae.configuration.schemas.genomic_scores import genomic_scores_schema
 from dae.configuration.schemas.autism_gene_profile import \
     autism_gene_tool_config
 
@@ -39,7 +36,9 @@ from dae.utils.dae_utils import cached, join_line
 logger = logging.getLogger(__name__)
 
 
-class GPFInstance(object):
+class GPFInstance:
+    """Class to access different parts of a GPF instance"""
+
     def __init__(
             self,
             dae_config=None,
@@ -59,30 +58,37 @@ class GPFInstance(object):
 
         self.dae_config = dae_config
         self.dae_db_dir = work_dir
-        self.__autism_gene_profile_config = None
+        # self.__autism_gene_profile_config = None
+
         self.load_eagerly = load_eagerly
 
         if self.dae_config.grr:
             self.grr = build_genomic_resource_repository(self.dae_config.grr)
+            self.grr_no_cache = build_genomic_resource_repository(
+                self.dae_config.grr, use_cache=False
+            )
         else:
             self.grr = build_genomic_resource_repository()
+            self.grr_no_cache = build_genomic_resource_repository(
+                use_cache=False
+            )
+        self._annotation_pipeline = None
 
         if load_eagerly:
             self.reference_genome
             self.gene_models
             self.gene_sets_db
-            self._gene_info_config
             self._pheno_db
             self._variants_db
             self.denovo_gene_sets_db
-            self._score_config
-            self._scores_factory
+            self.genomic_scores_db
             self.genotype_storage_db
             self._background_facade
 
     @property  # type: ignore
     @cached
     def reference_genome(self) -> ReferenceGenome:
+        """Returns reference genome defined in the GPFInstance config"""
         resource = self.grr.get_resource(
             self.dae_config.reference_genome.resource_id)
         result = open_reference_genome_from_resource(resource)
@@ -105,50 +111,34 @@ class GPFInstance(object):
 
     @property  # type: ignore
     @cached
-    def _gene_info_config(self):
-        if self.dae_config.gene_info_db is None or \
-                self.dae_config.gene_info_db.conf_file is None:
-            logger.warning(
-                "gene sets and weights are not configured...")
-            return Box({}, default_box=True)
+    def gene_scores_db(self):
+        "Loads and returns gene scores db"
+        gene_scores = self.dae_config.gene_scores_db.gene_scores
+        result = []
+        for gs in gene_scores:
+            resource = self.grr.get_resource(gs)
+            if resource is None:
+                logger.error("unable to find gene score: %s", gs)
+                continue
+            gene_score = GeneScore.load_gene_score_from_resource(resource)
+            result.append(gene_score)
 
-        conf_file = self.dae_config.gene_info_db.conf_file
-        logger.debug(
-            f"loading gene info config file: {conf_file}")
-        if not os.path.exists(conf_file):
-            return Box({}, default_box=True)
-        return GPFConfigParser.load_config(
-            self.dae_config.gene_info_db.conf_file, gene_info_conf
-        )
+        return GeneScoresDb(result)
 
     @property  # type: ignore
     @cached
-    def gene_weights_db(self):
-        return GeneWeightsDb(self._gene_info_config)
-
-    @property  # type: ignore
-    @cached
-    def _score_config(self):
-        if self.dae_config.genomic_scores_db is None or \
-                self.dae_config.genomic_scores_db.conf_file is None:
-            logger.warning(
-                "scores are not configured...")
-            return Box({}, default_box=True)
-        conf_file = self.dae_config.genomic_scores_db.conf_file
-        if not os.path.exists(conf_file):
-            return Box({}, default_box=True)
-        return GPFConfigParser.load_config(
-            conf_file, genomic_scores_schema
-        )
-
-    @property  # type: ignore
-    @cached
-    def _scores_factory(self):
-        return ScoresFactory(self._score_config)
+    def genomic_scores_db(self):
+        "Loads and returns genomic scores db"
+        scores = []
+        if self.dae_config.genomic_scores_db is not None:
+            for score_def in self.dae_config.genomic_scores_db:
+                scores.append((score_def["resource"], score_def["score"]))
+        return GenomicScoresDb(self.grr_no_cache, scores)
 
     @property  # type: ignore
     @cached
     def genotype_storage_db(self):
+        "Constructs and returns genotype storage factory"
         return GenotypeStorageFactory(self.dae_config)
 
     @property  # type: ignore
@@ -208,9 +198,23 @@ class GPFInstance(object):
     @property  # type: ignore
     @cached
     def gene_sets_db(self):
+        """Returns GeneSetsDb populated with gene sets from the GPFInstance"""
+
         logger.debug("creating new instance of GeneSetsDb")
-        return GeneSetsDb(
-            self._gene_info_config, load_eagerly=self.load_eagerly)
+        if "gene_sets_db" in self.dae_config:
+            gsc_ids = self.dae_config.gene_sets_db.gene_set_collections
+            gscs = []
+            for gsc_id in gsc_ids:
+                resource = self.grr.get_resource(gsc_id)
+                if resource is None:
+                    logger.error("can't find resource %s", gsc_id)
+                    continue
+                gscs.append(GeneSetCollection.from_resource(resource))
+
+            return GeneSetsDb(gscs)
+
+        logger.debug("No gene sets DB configured")
+        return GeneSetsDb([])
 
     @property  # type: ignore
     @cached
@@ -267,46 +271,20 @@ class GPFInstance(object):
     def get_phenotype_data_config(self, phenotype_data_id):
         return self._pheno_db.get_phenotype_data_config(phenotype_data_id)
 
-    # Pheno browser
-
     # Genomic scores
-
     def get_genomic_scores(self):
-        return self._scores_factory.get_scores()
+        return self.genomic_scores_db.get_scores()
 
-    # Gene weights
+    # Gene scores
 
-    def has_gene_weight(self, weight_id):
-        return weight_id in self.gene_weights_db
+    def has_gene_score(self, gene_score_id):
+        return gene_score_id in self.gene_scores_db
 
-    def get_gene_weight(self, weight_id):
-        return self.gene_weights_db[weight_id]
+    def get_gene_score(self, gene_score_id):
+        return self.gene_scores_db[gene_score_id]
 
-    def get_all_gene_weights(self):
-        return self.gene_weights_db.get_gene_weights()
-
-    # Gene info config
-    def get_chromosomes(self):
-        csvfile = self._gene_info_config.chromosomes.file
-        reader = pd.read_csv(csvfile, delimiter="\t")
-
-        reader["#chrom"] = reader["#chrom"].map(lambda x: x[3:])
-        col_rename = {"chromStart": "start", "chromEnd": "end"}
-        reader = reader.rename(columns=col_rename)
-
-        cols = ["start", "end", "name", "gieStain"]
-        reader["start"] = pd.to_numeric(reader["start"], downcast="integer")
-        reader["end"] = pd.to_numeric(reader["end"], downcast="integer")
-        reader = (
-            reader.groupby("#chrom")[cols]
-            .apply(lambda x: x.to_dict(orient="records"))
-            .to_dict()
-        )
-
-        return [{"name": k, "bands": v} for k, v in reader.items()]
-
-    def get_gene_info_gene_weights(self):
-        return self._gene_info_config.gene_weights
+    def get_all_gene_scores(self):
+        return self.gene_scores_db.get_gene_scores()
 
     # Common reports
     def get_common_report(self, study_id):

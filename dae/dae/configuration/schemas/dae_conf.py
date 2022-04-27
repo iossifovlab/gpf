@@ -56,15 +56,27 @@ remote_schema = {
     "password": {"type": "string"},
 }
 
-grr_schema = {
+repository_schema = {
     "id": {"type": "string", },
     "type": {"type": "string", },
     "url": {"type": "string", },
+    "directory": {
+        "type": "string",
+        "required": False,
+        "coerce": "abspath",
+    },
     "cache_dir": {
         "type": "string",
         "check_with": validate_path,
         "coerce": "abspath",
     },
+}
+grr_schema = {
+    **repository_schema,
+    "children": {"type": "list", "schema": {
+        "type": "dict",
+        "schema": repository_schema
+    }}
 
 }
 
@@ -92,6 +104,18 @@ storage_schema = {
     }
 }
 
+gene_scores_db_schema = {
+    "gene_scores": {"type": "list", "schema": {"type": "string"}}
+}
+
+gene_sets_db_schema = {
+    "gene_set_collections": {"type": "list", "schema": {"type": "string"}}
+}
+
+genomic_score_schema = {
+    "resource": {"type": "string"},
+    "score": {"type": "string"}
+}
 
 dae_conf_schema = {
     "dae_data_dir": {
@@ -136,7 +160,10 @@ dae_conf_schema = {
         "schema": config_reference_schema,
         "default": {"dir": "datasets"}
     },
-    "genomic_scores_db": {"type": "dict", "schema": config_reference_schema},
+    "genomic_scores_db": {
+        "type": "list",
+        "valuesrules": {"type": "dict", "schema": genomic_score_schema}
+    },
     "autism_gene_tool_config": {
         "type": "dict", "schema": config_reference_schema
     },
@@ -165,6 +192,8 @@ dae_conf_schema = {
     "gene_models": {"type": "dict", "schema": resource_schema},
 
     "gene_info_db": {"type": "dict", "schema": config_reference_schema},
+    "gene_scores_db": {"type": "dict", "schema": gene_scores_db_schema},
+    "gene_sets_db": {"type": "dict", "schema": gene_sets_db_schema},
     "default_study_config": {
         "type": "dict",
         "schema": config_reference_schema,

@@ -80,10 +80,43 @@ remotes:
 annotation:
   conf_file: "%(wd)s/annotation_pipeline/import_annotation.conf"
 
+grr:
+  id: "root"
+  type: "group"
+  children:
+    - id: "grr_test_repo"
+      type: "directory"
+      directory: "%(wd)s/test_repo"
+    - id: "seqpipe"
+      type: "url"
+      url: "https://grr.seqpipe.org"
+      cache_dir: "%($HOME)s/grrCache"
+
+
+gene_sets_db:
+  gene_set_collections:
+    - gene_sets/main
+    - gene_sets/test_mapping
+    - gene_sets/test_gmt
+
+gene_scores_db:
+  gene_scores:
+    - gene_scores/SFARI_gene_score
+    - gene_scores/LGD_rank
+    - gene_scores/LGD_score
+    - gene_scores/RVIS_rank
+    - gene_scores/RVIS
+
+genomic_scores_db:
+  - resource: genomic_scores/test_scores
+    score: score_raw_rankscore
+  - resource: genomic_scores/test_scores
+    score: score_raw
+  - resource: genomic_scores/test_scores
+    score: score_phred
 
 phenotype_data:
   dir: "%(wd)s/pheno"
-
 
 studies:
   dir: "%(wd)s/studies"
@@ -96,9 +129,6 @@ default_study_config:
 
 gene_info_db:
   conf_file: "%(wd)s/gene_info.conf"
-
-genomic_scores_db:
-  conf_file: "%(wd)s/genomicScores.conf"
 
 enrichment:
   conf_file: "%(wd)s/enrichment.conf"

@@ -298,40 +298,40 @@ def test_query_present_in_parent(
     "option,count",
     [
         (
-            {"weight": "LGD_rank", "rangeStart": None, "rangeEnd": None},
+            {"score": "LGD_rank", "rangeStart": None, "rangeEnd": None},
             16
         ),
         (
-            {"weight": "LGD_rank", "rangeStart": 10.5, "rangeEnd": None},
+            {"score": "LGD_rank", "rangeStart": 10.5, "rangeEnd": None},
             16
         ),
         (
-            {"weight": "LGD_rank", "rangeStart": None, "rangeEnd": 20000.0},
+            {"score": "LGD_rank", "rangeStart": None, "rangeEnd": 20000.0},
             16
         ),
         (
-            {"weight": "LGD_rank", "rangeStart": 2000.0, "rangeEnd": 4000.0},
+            {"score": "LGD_rank", "rangeStart": 2000.0, "rangeEnd": 4000.0},
             0
         ),
         (
-            {"weight": "LGD_rank", "rangeStart": 9000.0, "rangeEnd": 11000.0},
+            {"score": "LGD_rank", "rangeStart": 9000.0, "rangeEnd": 11000.0},
             2
         ),
         (
-            {"weight": "LGD_rank", "rangeStart": 1000.0, "rangeEnd": 2000.0},
+            {"score": "LGD_rank", "rangeStart": 1000.0, "rangeEnd": 2000.0},
             0
         ),
         (
-            {"weight": "ala bala", "rangeStart": 1000.0, "rangeEnd": 2000.0},
+            {"score": "ala bala", "rangeStart": 1000.0, "rangeEnd": 2000.0},
             16
         ),
     ],
 )
-def test_query_gene_weights(
+def test_query_gene_scores(
         iossifov_2014_wrappers, wrapper_type, option, count):
     study_wrapper = iossifov_2014_wrappers[wrapper_type]
     query = {
-        "geneWeights": option
+        "geneScores": option
     }
     variants = list(study_wrapper.query_variants_wdae(
         query, [{"source": "location"}])

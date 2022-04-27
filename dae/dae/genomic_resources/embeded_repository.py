@@ -70,13 +70,13 @@ class GenomicResourceEmbededRepo(GenomicResourceRealRepo):
         content = self.get_file_content(genomic_resource, filename, uncompress)
         if filename.endswith(".gz") and uncompress:
             raise Exception("Can't handle uncompressing zip files yet!")
-        mode = mode if mode else "rb"
+        mode = mode if mode else "r"
         if 'w' in mode:
             raise Exception("Can't handle writable files yet!")
-        if 't' in mode:
-            return io.StringIO(content.decode(GR_ENCODING))
-        else:
+        if 'b' in mode:
             return io.BytesIO(content)
+        else:
+            return io.StringIO(content.decode(GR_ENCODING))
 
     def get_files(self, genomic_resource):
         path_array = genomic_resource.get_genomic_resource_dir().split("/")

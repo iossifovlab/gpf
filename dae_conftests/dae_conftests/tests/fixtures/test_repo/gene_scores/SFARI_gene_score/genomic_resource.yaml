@@ -1,0 +1,8 @@
+type: gene_score
+id: SFARI_gene_score
+filename: SFARI.csv
+desc: SFARI gene score
+histogram:
+  bins: 8
+  xscale: linear
+  yscale: linear

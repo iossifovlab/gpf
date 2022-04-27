@@ -1,0 +1,32 @@
+---
+# Fake scores
+type: position_score
+
+scores:
+  - id: score_raw_rankscore
+    desc: "SCORE raw rankscore"
+  - id: score_raw
+    desc: "SCORE raw"
+  - id: score_phred
+    desc: "SCORE phred"
+histograms:
+  - score: score_raw_rankscore
+    bins: 101
+    yscale: "log"
+    xscale: "linear"
+  - score: score_raw
+    bins: 101
+    yscale: "log"
+    xscale: "linear"
+  - score: score_phred
+    bins: 101
+    yscale: "log"
+    xscale: "linear"
+default_annotation:
+  attributes:
+    - source: score_raw_rankscore
+      destination: score_raw_rankscore
+    - source: score_raw
+      destination: score_raw
+    - source: score_phred
+      destination: score_phred
