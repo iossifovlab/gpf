@@ -1,8 +1,9 @@
-import pytest
 import tempfile
 import shutil
 
-from dae.gene.scores import GenomicScoresDB
+import pytest
+
+from dae.gene.scores import GenomicScoresDb
 from dae.genomic_resources.embeded_repository import GenomicResourceEmbededRepo
 from dae.genomic_resources.repository import GR_CONF_FILE_NAME
 
@@ -74,7 +75,7 @@ def scores_repo():
 
 
 def test_genomic_scores_db(scores_repo, temp_cache_dir):
-    db = GenomicScoresDB(
+    db = GenomicScoresDb(
         scores_repo,
         [("phastCons", "phastCons100")],
         temp_cache_dir

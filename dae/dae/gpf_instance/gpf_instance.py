@@ -11,7 +11,7 @@ from dae.genomic_resources.gene_models import \
 from dae.enrichment_tool.background_facade import BackgroundFacade
 
 from dae.gene.gene_scores import GeneScoresDb, GeneScore
-from dae.gene.scores import GenomicScoresDB
+from dae.gene.scores import GenomicScoresDb
 from dae.gene.gene_sets_db import GeneSetsDb, GeneSetCollection
 from dae.gene.denovo_gene_sets_db import DenovoGeneSetsDb
 
@@ -36,7 +36,7 @@ from dae.utils.dae_utils import cached, join_line
 logger = logging.getLogger(__name__)
 
 
-class GPFInstance(object):
+class GPFInstance:
     """Class to access different parts of a GPF instance"""
 
     def __init__(
@@ -133,7 +133,7 @@ class GPFInstance(object):
         if self.dae_config.genomic_scores_db is not None:
             for score_def in self.dae_config.genomic_scores_db:
                 scores.append((score_def["resource"], score_def["score"]))
-        return GenomicScoresDB(self.grr_no_cache, scores)
+        return GenomicScoresDb(self.grr_no_cache, scores)
 
     @property  # type: ignore
     @cached

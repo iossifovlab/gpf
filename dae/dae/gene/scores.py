@@ -8,7 +8,7 @@ from dae.file_cache.cache import ResourceFileCache
 logger = logging.getLogger(__name__)
 
 
-class GenomicScore:
+class GenomicScoreHistogram:
     """Genomic scores histograms"""
     def __init__(self, resource, score_id, file_cache):
 
@@ -67,7 +67,7 @@ class GenomicScore:
         return self.df["bins"].values
 
 
-class GenomicScoresDB:
+class GenomicScoresDb:
     """Genomic scores DB allowing access to gnomic scores histograms"""
     def __init__(self, grr, scores, cache_dir=None):
         self.grr = grr
@@ -86,7 +86,7 @@ class GenomicScoresDB:
                     "unable to find resource %s in GRR", resource_id)
                 continue
             try:
-                score = GenomicScore(
+                score = GenomicScoreHistogram(
                     resource, score_id, self.file_cache
                 )
                 self.scores[score_id] = score
