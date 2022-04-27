@@ -163,7 +163,7 @@ export class DatasetsComponent implements OnInit, OnDestroy {
 
   private filterHiddenGroups(datasets: Observable<Dataset[]>): Observable<Dataset[]> {
     return datasets.pipe(map((d) =>
-      d.filter((dataset) => dataset.groups.find((g) => g.name === 'hidden') === null || dataset.accessRights)
+      d.filter((dataset) => dataset.groups.find((g) => g.name === 'hidden') === undefined || dataset.accessRights)
     ));
   }
 
