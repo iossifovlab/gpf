@@ -95,7 +95,7 @@ class ImpalaSchema1ImportStorage:
     @classmethod
     def _do_write_variant(cls, project, bucket_id):
         out_dir = cls._variants_dir(project)
-        gpf_instance = project.create_gpf_instance()
+        gpf_instance = project.get_gpf_instance()
         Schema1ParquetWriter.write_variant(
             project.get_variant_loader(bucket_id.type,
                                        gpf_instance.reference_genome),
@@ -105,7 +105,7 @@ class ImpalaSchema1ImportStorage:
 
     @classmethod
     def _do_load_in_hdfs(cls, project):
-        gpf_instance = project.create_gpf_instance()
+        gpf_instance = project.get_gpf_instance()
         genotype_storage_db = gpf_instance.genotype_storage_db
         genotype_storage = genotype_storage_db.get_genotype_storage(
             project.genotype_storage_id
@@ -126,7 +126,7 @@ class ImpalaSchema1ImportStorage:
 
     @classmethod
     def _do_load_in_impala(cls, project):
-        gpf_instance = project.create_gpf_instance()
+        gpf_instance = project.get_gpf_instance()
         genotype_storage_db = gpf_instance.genotype_storage_db
         genotype_storage = genotype_storage_db.get_genotype_storage(
             project.genotype_storage_id)

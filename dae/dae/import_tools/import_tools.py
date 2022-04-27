@@ -61,7 +61,7 @@ class ImportProject():
         assert loader_type in self.import_config["input"],\
             f"No input config for loader {loader_type}"
         if reference_genome is None:
-            reference_genome = self.create_gpf_instance().reference_genome
+            reference_genome = self.get_gpf_instance().reference_genome
 
         loader_config = self.import_config["input"][loader_type]
         variants_params = self._add_loader_prefix(loader_config,
@@ -98,7 +98,7 @@ class ImportProject():
         else:
             return NoPartitionDescriptor(work_dir)
 
-    def create_gpf_instance(self):
+    def get_gpf_instance(self):
         if self._gpf_instance is None:
             instance_config = self.import_config.get("gpf_instance", {})
             self._gpf_instance = GPFInstance(
@@ -171,7 +171,7 @@ class ImportProject():
 
     def _loader_region_bins(self, loader_args, loader_type):
         # TODO pass the gpf instance as argument to this func
-        reference_genome = self.create_gpf_instance().reference_genome
+        reference_genome = self.get_gpf_instance().reference_genome
 
         target_chromosomes = loader_args.get("target_chromosomes", None)
         if target_chromosomes is None:
