@@ -3,12 +3,13 @@
     <ul ngbNav #nav="ngbNav" class="navbar bg-light nav-pills" style="justify-content: flex-start">
       <div class="nav-title-custom">Genomic scores</div>
       <li ngbNavItem>
-        <a ngbNavLink>
+        <a *ngIf="genomicScoresArray?.length > 0" ngbNavLink>
           <gpf-add-button (addFilter)="addFilter()"></gpf-add-button>
         </a>
+        <span *ngIf="genomicScoresArray?.length === 0" style="opacity: 75%"><i>No genomic scores available</i></span>
       </li>
     </ul>
-    <div class="card-block">
+    <div *ngIf="genomicScoresArray?.length > 0" class="card-block">
       <div style="padding: 5px" *ngFor="let score of genomicScoresState.genomicScoresState; let i = index">
         <span style="padding: 5px; display: block; overflow: hidden">
           <gpf-remove-button [field]="score" (removeFilter)="removeFilter($event)"></gpf-remove-button>
