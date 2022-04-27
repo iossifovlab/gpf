@@ -24,6 +24,11 @@ urlpatterns = [
         name="dataset_config",
     ),
     re_path(
+        r"^/description/(?P<dataset_id>.+)$",
+        views.DatasetDescriptionView.as_view(),
+        name="dataset_description"
+    ),
+    re_path(
         r"^/(?P<dataset_id>.+)$",
         views.DatasetView.as_view(),
         name="dataset"

@@ -287,12 +287,10 @@ study_config_schema = {
     "phenotype_data": {"type": "string"},
     "phenotype_browser": {"type": "boolean"},
     "phenotype_tool": {"type": "boolean"},
-    "description": {"type": "string", "excludes": "description_file"},
     "description_file": {
         "type": "string",
         "check_with": validate_existing_path,
         "coerce": "abspath",
-        "excludes": "description",
     },
     "study_type": {"type": "list", "schema": {"type": "string"}},
     "year": {"type": "list", "schema": {"type": "integer"}},

@@ -192,3 +192,29 @@ class DatasetConfigView(DatasetView):
         return Response(
             self.augment_with_parents(genotype_data.config.to_dict())
         )
+
+
+class DatasetDescriptionView(DatasetView):
+    def post(self, request, dataset_id):
+        if not request.user.is_staff:
+            return Response(
+                {"error": "You have no permission to edit the description."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        description = request.data.get('description')
+        if dataset_id is None:
+            return Response(
+                {"error": "No dataset ID given"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if description is None:
+            return Response(
+                {"error": "Dataset does not have a description to edit."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        genotype_data = self.gpf_instance.get_genotype_data(dataset_id)
+        genotype_data.description = description
+
+        return Response(status=status.HTTP_200_OK)
