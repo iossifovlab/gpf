@@ -69,22 +69,24 @@ describe('PresentInParentComponent', () => {
   });
 
   it('should update rarity type', () => {
-    component.selectedRarityType = undefined;
-    component.rarityIntervalStart = undefined;
-    component.rarityIntervalEnd = undefined;
+    component.rarityIntervalStart = 0;
+    component.rarityIntervalEnd = 2;
     const updateStateSpy = jest.spyOn(component, 'updateState');
 
-    component.updateRarityType('fakeRarityType' as any);
-    expect(component.selectedRarityType).toEqual('fakeRarityType');
-    expect(component.rarityIntervalStart).toEqual(undefined);
-    expect(component.rarityIntervalEnd).toEqual(undefined);
+    component.updateRarityType('rare');
+    expect(component.selectedRarityType).toEqual('rare');
+    expect(component.rarityIntervalStart).toEqual(0);
+    expect(component.rarityIntervalEnd).toEqual(2);
     expect(updateStateSpy).toHaveBeenCalledTimes(1);
 
-    component.updateRarityType('rare' as any);
-    expect(component.selectedRarityType).toEqual('rare');
-    expect(component.rarityIntervalStart).toEqual(null);
-    expect(component.rarityIntervalEnd).toEqual(undefined);
+    component.updateRarityIntervalStart(1.23);
     expect(updateStateSpy).toHaveBeenCalledTimes(2);
+
+    component.updateRarityType('ultraRare');
+    expect(component.selectedRarityType).toEqual('ultraRare');
+    expect(component.rarityIntervalStart).toEqual(0);
+    expect(component.rarityIntervalEnd).toEqual(1);
+    expect(updateStateSpy).toHaveBeenCalledTimes(3);
   });
 
   it('should update state', () => {
