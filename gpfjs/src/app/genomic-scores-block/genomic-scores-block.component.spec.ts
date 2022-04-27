@@ -96,10 +96,6 @@ describe('GenomicScoresBlockComponent', () => {
     component.addFilter();
     expect(component.genomicScoresState.genomicScoresState.length).toBe(1);
     expect(component.genomicScoresState.genomicScoresState).toContainEqual(genomicScoreState);
-    component.addFilter(newGenomicScoreState);
-    expect(component.genomicScoresState.genomicScoresState.length).toBe(2);
-    expect(component.genomicScoresState.genomicScoresState).toContainEqual(genomicScoreState);
-    expect(component.genomicScoresState.genomicScoresState).toContain(newGenomicScoreState);
 
     component.removeFilter(newGenomicScoreState);
     expect(component.genomicScoresState.genomicScoresState.length).toBe(1);
