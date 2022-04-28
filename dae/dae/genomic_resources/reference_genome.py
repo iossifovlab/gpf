@@ -146,7 +146,7 @@ def open_reference_genome_from_resource(
     file_name = config["filename"]
     index_file_name = config.get("index_file", f"{file_name}.fai")
 
-    index_content = resource.get_file_str_content(index_file_name)
+    index_content = resource.get_file_content(index_file_name)
 
     ref = ReferenceGenome(
         ('resource', resource.repo.repo_id, resource.resource_id))

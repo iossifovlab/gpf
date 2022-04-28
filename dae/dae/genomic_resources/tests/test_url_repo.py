@@ -7,7 +7,7 @@ from dae.genomic_resources.repository import GR_CONF_FILE_NAME
 def test_url_vs_dir_results(tmp_path):
 
     test_repo_URL = "file://" + str(tmp_path)
-    demo_gtf_content = "TP53\tchr3\t300\t200".encode('utf-8')
+    demo_gtf_content = "TP53\tchr3\t300\t200"
     src_repo = GenomicResourceEmbededRepo("src", content={
         "one": {
             GR_CONF_FILE_NAME: "",

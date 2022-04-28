@@ -8,7 +8,7 @@ from dae.genomic_resources import GenomicResource
 
 def test_dir_repository(tmp_path):
 
-    demo_gtf_content = "TP53\tchr3\t300\t200".encode('utf-8')
+    demo_gtf_content = "TP53\tchr3\t300\t200"
     src_repo = GenomicResourceEmbededRepo("src", content={
         "one": {
             GR_CONF_FILE_NAME: "",

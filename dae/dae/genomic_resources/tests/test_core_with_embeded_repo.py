@@ -42,7 +42,7 @@ def test_md5_checksum():
     }})
 
     gr = repo.get_resource("one")
-    assert gr.get_md5_sum("chrAll.fa") == "a778802ca2a9c24a08981f9be4f2f31f"
+    assert gr.compute_md5_sum("chrAll.fa") == "a778802ca2a9c24a08981f9be4f2f31f"
 
 
 def test_manifest_file_creation():

@@ -14,9 +14,9 @@ def test_s3_url_vs_dir_results(genomic_resource_fixture_dir_repo,
 
     # pick one file at random and assert content is the same
     s3_content = s3_repo.get_resource("hg19/CADD")\
-        .get_file_content("CADD.bedgraph.gz.tbi")
+        .get_file_content("CADD.bedgraph.gz.tbi", mode="b")
     file_content = dir_repo.get_resource("hg19/CADD")\
-        .get_file_content("CADD.bedgraph.gz.tbi")
+        .get_file_content("CADD.bedgraph.gz.tbi", mode="b")
     assert s3_content == file_content
 
 

@@ -73,7 +73,9 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
             if dirname:
                 os.makedirs(dirname, exist_ok=True)
         if filename.endswith(".gz") and uncompress:
-            return gzip.open(full_file_path, "rb")
+            if "w" in mode:
+                raise IOError(f"writing gzip files not supported")
+            return gzip.open(full_file_path, mode)
 
         return open(full_file_path, mode)
 
@@ -89,7 +91,7 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
         mnfst_src = src_gr.get_manifest()
 
         if mnfst_dest == mnfst_src:
-            logger.debug(f"nothing to update {dest_gr.resource_id}")
+            logger.debug("nothing to update %s", dest_gr.resource_id)
             return
 
         manifest_diff = {}
@@ -104,8 +106,10 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
         result_manifest = []
         for dest_file, src_file in manifest_diff.values():
 
-            if dest_file is None and src_file:
-                # copy src_file
+            if (dest_file is None and src_file) or \
+                    (dest_file != src_file and src_file is not None):
+                # copy src_file or
+                # update src_file
                 dest_mnfst = self._copy_manifest_entry(
                     dest_gr, src_gr, src_file)
                 result_manifest.append(dest_mnfst)
@@ -113,12 +117,6 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
                 # delete dest_file
                 self._delete_manifest_entry(
                     dest_gr, dest_file)
-
-            elif dest_file != src_file:
-                # update src_file
-                dest_mnfst = self._copy_manifest_entry(
-                    dest_gr, src_gr, src_file)
-                result_manifest.append(dest_mnfst)
             else:
                 result_manifest.append(dest_file)
 
@@ -163,9 +161,9 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
 
             if src_mnfst_file["md5"] != md5:
                 logger.error(
-                    f"storing {src_gr.resource_id} failed; "
-                    f"expected md5 is {src_mnfst_file['md5']}; "
-                    f"calculated md5 for the stored file is {md5}")
+                    "storing %s failed; expected md5 is %s; "
+                    "calculated md5 for the stored file is %s",
+                    src_gr.resource_id, src_mnfst_file["md5"], md5)
                 raise IOError(f"storing of {src_gr.resource_id} failed")
             src_modtime = datetime.datetime.fromisoformat(
                 src_mnfst_file["time"]).timestamp()
@@ -200,7 +198,7 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
                     "skipping resource: %s", resource.resource_id)
                 self._all_resources = None
                 return
-                
+
             assert dest_mnf_file == mnf_file
 
         temp_gr.save_manifest(manifest)
