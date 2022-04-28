@@ -11,12 +11,13 @@ logger = logging.getLogger(__name__)
 
 
 class ReferenceGenome:
+    """Provides an interface for quering a reference genome."""
 
     def __init__(self, source: Tuple[str, ...]):
         self._index = None
         self._chromosomes = None
         self._sequence = None
-        self.PARS: dict = {}
+        self.pars: dict = {}
         self.source = source
 
     @property
@@ -43,8 +44,8 @@ class ReferenceGenome:
         self._sequence = sequence_file
         self._load_genome_index(index_content)
 
-    def set_pars(self, PARS):
-        self.PARS = PARS
+    def set_pars(self, pars):
+        self.pars = pars
 
     def close(self):
         self._sequence.close()
@@ -61,8 +62,12 @@ class ReferenceGenome:
             for key, value in self._index.items()]
 
     def get_sequence(self, chrom, start, stop):
+        """
+        Returns sequence of nucleotides from specified chromosome region.
+        """
         if chrom not in self.chromosomes:
-            logger.warning(f"chromosome {chrom} not found in {self.get_id()}")
+            logger.warning(
+                "chromosome %s not found in %s", chrom, self.source)
             return None
 
         self._sequence.seek(
@@ -72,14 +77,15 @@ class ReferenceGenome:
             + (start - 1) // self._index[chrom]["seqLineLength"]
         )
 
-        ll = stop - start + 1
-        x = 1 + ll // self._index[chrom]["seqLineLength"]
+        length = stop - start + 1
+        line_feeds = 1 + length // self._index[chrom]["seqLineLength"]
 
-        w = self._sequence.read(ll + x).decode('ascii')
-        w = w.replace("\n", "")[:ll]
-        return w.upper()
+        sequence = self._sequence.read(length + line_feeds).decode('ascii')
+        sequence = sequence.replace("\n", "")[:length]
+        return sequence.upper()
 
     def is_pseudoautosomal(self, chrom: str, pos: int) -> bool:
+        """Returns true if specified position is pseudoautosomal."""
 
         # TODO Handle variants which are both inside and outside a PARs
         # Currently, if the position of the reference is within a PAR,
@@ -88,13 +94,12 @@ class ReferenceGenome:
                 chrom: str, pos: int, regions: List[Region]) -> bool:
             return any(map(lambda reg: reg.isin(chrom, pos), regions))
 
-        pars_regions = self.PARS.get(chrom, None)
+        pars_regions = self.pars.get(chrom, None)
         if pars_regions:
             return in_any_region(
                 chrom, pos, pars_regions  # type: ignore
             )
-        else:
-            return False
+        return False
 
 
 def open_reference_genome_from_file(filename) -> ReferenceGenome:
@@ -107,7 +112,7 @@ def open_reference_genome_from_file(filename) -> ReferenceGenome:
     return ref
 
 
-def _parse_PARS(config) -> Optional[dict]:
+def _parse_pars(config) -> Optional[dict]:
     if "PARS" not in config:
         return None
 
@@ -151,7 +156,7 @@ def open_reference_genome_from_resource(
     ref = ReferenceGenome(
         ('resource', resource.repo.repo_id, resource.resource_id))
 
-    pars = _parse_PARS(config)
+    pars = _parse_pars(config)
     ref.set_pars(pars)
 
     ref.set_open(
