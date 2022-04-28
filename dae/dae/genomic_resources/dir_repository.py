@@ -63,20 +63,19 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
         return os.path.exists(full_file_path)
 
     def open_raw_file(self, genomic_resource: GenomicResource, filename: str,
-                      mode=None, uncompress=False, _seekable=False):
-        if mode is None:
-            mode = "r"
-        fullFilePath = self.get_file_path(genomic_resource, filename)
+                      mode="rt", uncompress=False, _seekable=False):
+
+        full_file_path = self.get_file_path(genomic_resource, filename)
         if 'w' in mode:
             # Create the containing directory if it doesn't exists.
             # This align DireRepo API with URL and fspec APIs
-            dirname = os.path.dirname(fullFilePath)
+            dirname = os.path.dirname(full_file_path)
             if dirname:
                 os.makedirs(dirname, exist_ok=True)
         if filename.endswith(".gz") and uncompress:
-            return gzip.open(fullFilePath, "rb")
-        else:
-            return open(fullFilePath, mode)
+            return gzip.open(full_file_path, "rb")
+
+        return open(full_file_path, mode)
 
     def update_resource(
             self, src_gr: GenomicResource):
@@ -177,13 +176,13 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
             return src_mnfst_file
         except Exception:
             logger.error(
-                "problem copying remote resource file: %s (%s)", 
+                "problem copying remote resource file: %s (%s)",
                 filename, src_gr.resource_id, exc_info=True)
             return None
 
     def store_all_resources(self, source_repo: GenomicResourceRepo):
-        for gr in source_repo.get_all_resources():
-            self.store_resource(gr)
+        for resource in source_repo.get_all_resources():
+            self.store_resource(resource)
 
     def store_resource(self, resource: GenomicResource):
         manifest = resource.get_manifest()
@@ -204,9 +203,6 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
                 
             assert dest_mnf_file == mnf_file
 
-        # new_gr = self.get_resource(
-        #     resource.resource_id,
-        #    f"={resource.get_version_str()}")
         temp_gr.save_manifest(manifest)
         self._all_resources = None
 
@@ -219,10 +215,10 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
 
     def save_content_file(self):
         content_filename = self.directory / GRP_CONTENTS_FILE_NAME
-        logger.debug(f"saving contents file {content_filename}")
+        logger.debug("saving contents file %s", content_filename)
         content = self.build_repo_content()
-        with open(content_filename, "w") as CF:
-            yaml.dump(content, CF)
+        with open(content_filename, "w") as outfile:
+            yaml.dump(content, outfile)
 
     def open_tabix_file(self, genomic_resource,  filename,
                         index_filename=None):
@@ -231,4 +227,4 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
         if index_filename:
             index_path = str(self.get_file_path(
                 genomic_resource, index_filename))
-        return pysam.TabixFile(file_path, index=index_path)
+        return pysam.TabixFile(file_path, index=index_path)  # pylint: disable=no-member

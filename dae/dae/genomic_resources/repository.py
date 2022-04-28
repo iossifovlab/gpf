@@ -139,6 +139,7 @@ class GenomicResource:
         self.version = version
         self.config = config
         self.repo = repo
+        self._manifest = None
 
     @staticmethod
     def get_resource_type():
@@ -250,7 +251,7 @@ class GenomicResource:
         return self.get_file_content(filename, uncompress).decode(GR_ENCODING)
 
     def open_raw_file(
-            self, filename, mode=None, uncompress=False, seekable=False):
+            self, filename, mode="rt", uncompress=False, seekable=False):
         return self.repo.open_raw_file(
             self, filename, mode, uncompress, seekable)
 
@@ -323,18 +324,18 @@ class GenomicResourceRealRepo(GenomicResourceRepo):
             return F.read()
 
     @abc.abstractmethod
-    def get_files(self, genomicResource):
-        raise Exception("Should not be called!")
+    def get_files(self, genomic_resource):
+        pass
 
     def file_exists(self, genomic_resource, filename):
-        raise Exception("Should not be called!")
+        pass
 
     @abc.abstractmethod
     def open_raw_file(self, genomic_resource, filename,
-                      mode=None, uncompress=False, seekable=False):
-        raise Exception("Should not be called!")
+                      mode="rt", uncompress=False, seekable=False):
+        pass
 
     @abc.abstractmethod
     def open_tabix_file(self, genomic_resource,  filename,
                         index_filename=None):
-        raise Exception("Should not be called!")
+        pass
