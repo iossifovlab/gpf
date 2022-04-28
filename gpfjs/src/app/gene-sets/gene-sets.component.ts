@@ -109,10 +109,12 @@ export class GeneSetsComponent extends StatefulComponent implements OnInit {
       for (const geneSetCollection of this.geneSetsCollections) {
         if (geneSetCollection.name === state.geneSetsCollection.name) {
           this.selectedGeneSetsCollection = geneSetCollection;
-          this.selectedGeneSet = state.geneSet;
           if (state.geneSetsTypes) {
             this.restoreGeneTypes(state.geneSetsTypes, geneSetCollection);
           }
+          // the gene set must be restored last, as that triggers the state update
+          // otherwise, sharing a restored state won't work properly
+          this.selectedGeneSet = state.geneSet;
           this.onSearch();
         }
       }
