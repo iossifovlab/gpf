@@ -11,7 +11,6 @@ def test_genotype_data_group_configs_simple(genotype_data_group_configs):
     [
         ("name", "QUADS_COMPOSITE"),
         ("id", "quads_composite_ds"),
-        ("description", "QUADS COMPOSITE DESCRIPTION"),
         ("studies", ("quads_in_child", "quads_in_parent")),
         ("phenotypeTool", None),
         ("phenotypeBrowser", None),
@@ -34,7 +33,6 @@ def test_genotype_data_group_quads_composite_dict(
     [
         ("name", "QUADS_COMPOSITE"),
         ("id", "quads_composite_ds"),
-        ("description", "QUADS COMPOSITE DESCRIPTION"),
         ("studies", ("quads_in_child", "quads_in_parent")),
         ("phenotype_tool", False),
         ("phenotype_browser", False),

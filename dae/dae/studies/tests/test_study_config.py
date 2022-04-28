@@ -25,7 +25,6 @@ def test_quads_f1_config_genotype_storage(quads_f1_config):
     [
         ("name", "QUADS_F1"),
         ("id", "quads_f1"),
-        ("description", "QUADS F1"),
         ("phenotype_tool", True),
         ("phenotype_browser", False),
         ("phenotype_data", "quads_f1"),

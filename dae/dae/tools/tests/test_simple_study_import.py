@@ -577,7 +577,6 @@ def test_import_study_config_arg(
     assert study is not None
     config = gpf_instance_2013.get_genotype_data_config(study_id)
     assert config.name == "asdf"
-    assert config.description == "Description from study config given to tool"
 
     vs = list(study.query_variants())
     assert len(vs) == 30

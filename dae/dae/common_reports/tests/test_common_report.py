@@ -17,6 +17,6 @@ def test_common_report(study4):
     assert common_report.number_of_siblings == 9
     assert common_report.denovo is True
     assert common_report.transmitted is False
-    assert common_report.study_description == "Study 4"
+    assert common_report.study_description is None
 
     assert len(common_report.to_dict()) == 15
