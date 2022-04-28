@@ -1,9 +1,12 @@
+import logging
+
 from dae.gene.denovo_gene_set_collection import cached
 
 from dae.gene.denovo_gene_set_collection import DenovoGeneSetCollection
-from dae.gene.denovo_gene_set_collection_factory import (
-    DenovoGeneSetCollectionFactory,
-)
+from dae.gene.denovo_gene_set_collection_factory import \
+    DenovoGeneSetCollectionFactory
+
+logger = logging.getLogger(__name__)
 
 # TODO Document the denovo gene set spec somehow - what it contains,
 # maybe make it a namedtuple subclass
@@ -86,6 +89,12 @@ class DenovoGeneSetsDb:
         for genotype_data_id in genotype_data_ids:
             gtd_config = \
                 self.gpf_instance.get_genotype_data_config(genotype_data_id)
+            if gtd_config is None:
+                logger.error(
+                    "unable to load genotype data %s", genotype_data_id)
+                raise ValueError(
+                    f"unable to load genotype data {genotype_data_id}")
+
             if (
                 gtd_config.denovo_gene_sets
                 and gtd_config.denovo_gene_sets.enabled
