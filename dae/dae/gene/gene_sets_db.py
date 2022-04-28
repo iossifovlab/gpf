@@ -42,18 +42,16 @@ class GeneSet:
             raise KeyError()
 
 
-class GeneSetCollection(object):
-    collection_id: str
-    gene_sets: Dict[str, GeneSet]
-
+class GeneSetCollection:
+    
     def __init__(
-        self, collection_id: str, gene_sets: List[GeneSet],
-        web_label: str = None, web_format_str: str = None
-    ):
+            self, collection_id: str, gene_sets: List[GeneSet],
+            web_label: str = None, web_format_str: str = None):
+
         assert collection_id != "denovo"
 
-        self.collection_id = collection_id
-        self.gene_sets = dict()
+        self.collection_id: str = collection_id
+        self.gene_sets: Dict[str, GeneSet] = dict()
         self.web_label = web_label
         self.web_format_str = web_format_str
 

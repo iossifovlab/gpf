@@ -44,6 +44,7 @@ def test_gene_sets_collections(db, admin_client):
     assert "TEST_REMOTE_main" == remote_main["name"]
     # self.assertEquals(8, len(denovo['types']))
 
+    print(data)
     assert len(data) == 12, data
 
 
