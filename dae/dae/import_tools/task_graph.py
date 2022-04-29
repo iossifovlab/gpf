@@ -73,9 +73,31 @@ class TaskNode:
 
 
 class SequentialExecutor(TaskGraphExecutor):
-    @abstractmethod
     def queue_task(self, task_node):
         task_node.func(*task_node.args)
 
     def await_tasks(self):
         pass
+
+
+class DaskExecutor(TaskGraphExecutor):
+    def __init__(self, client):
+        self.client = client
+        self.task2future = {}
+
+    def queue_task(self, task_node):
+        deps = [self.task2future[d] for d in task_node.deps]
+        future = self.client.submit(self._exec, task_node, *deps)
+        self.task2future[task_node] = future
+
+    def await_tasks(self):
+        from dask.distributed import as_completed
+
+        futures = list(self.task2future.values())
+        self.task2future = {}
+        for f in as_completed(futures):
+            f.result()
+
+    @staticmethod
+    def _exec(task_node, *deps):
+        task_node.func(*task_node.args)

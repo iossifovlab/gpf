@@ -9,7 +9,7 @@ from dae.backends.raw.loader import AnnotationPipelineDecorator,\
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.import_tools.impala_schema1 import ImpalaSchema1ImportStorage
-from dae.import_tools.task_graph import SequentialExecutor
+from dae.import_tools.task_graph import DaskExecutor, SequentialExecutor
 from dae.pedigrees.family import FamiliesData
 from dae.configuration.schemas.import_config import import_config_schema
 from dae.pedigrees.loader import FamiliesLoader
@@ -101,9 +101,9 @@ class ImportProject():
     def get_gpf_instance(self):
         if self._gpf_instance is None:
             instance_config = self.import_config.get("gpf_instance", {})
-            self._gpf_instance = GPFInstance(
-                work_dir=instance_config.get("path", None))
-        return self._gpf_instance
+            return GPFInstance(work_dir=instance_config.get("path", None))
+        else:
+            return self._gpf_instance
 
     @property
     def work_dir(self):
@@ -198,17 +198,28 @@ def main():
     parser = argparse.ArgumentParser(description="Import datasets into GPF")
     parser.add_argument("-f", "--config", type=str,
                         help="Path to the import configuration")
+    parser.add_argument("-j", "--jobs", type=int, default=None,
+                        help="Number of jobs to run in parallel. \
+ Defaults to the number of processors on the machine")
     args = parser.parse_args()
 
     import_config = GPFConfigParser.parse_and_interpolate_file(args.config)
     import_config = GPFConfigParser.validate_config(import_config,
                                                     import_config_schema)
-    run(import_config)
+    if args.jobs == 1:
+        executor = SequentialExecutor()
+    else:
+        from dask.distributed import Client, LocalCluster
+        import os
+        n_jobs = args.jobs if args.jobs and args.jobs >= 1 else os.cpu_count()
+        cluster = LocalCluster(n_workers=n_jobs, threads_per_worker=1)
+        client = Client(cluster)
+        executor = DaskExecutor(client)
+    run(import_config, executor)
 
 
-def run(import_config, gpf_instance=None):
+def run(import_config, executor=SequentialExecutor(), gpf_instance=None):
     project = ImportProject(import_config, gpf_instance)
     storage = ImpalaSchema1ImportStorage()
     task_graph = storage.generate_import_task_graph(project)
-    task_graph_executor = SequentialExecutor()
-    task_graph_executor.execute(task_graph)
+    executor.execute(task_graph)
