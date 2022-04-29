@@ -34,3 +34,19 @@ def test_denovo_import_config(tmpdir, gpf_instance_2019, config_dir):
     parquet_fns = os.path.join(tmpdir, "test_import_variants", "**/*.parquet")
     variants_bins = glob(parquet_fns, recursive=True)
     assert len(variants_bins) != 0
+
+
+def test_add_chrom_prefix():
+    input_dir = os.path.join(
+        os.path.dirname(os.path.realpath(__file__)),
+        "resources", "vcf_import")
+    config_fn = os.path.join(input_dir, "import_config_add_chrom_prefix.yaml")
+
+    import_config = GPFConfigParser.parse_and_interpolate_file(config_fn)
+    import_config = GPFConfigParser.validate_config(import_config,
+                                                    import_config_schema)
+    import_config["input"]["input_dir"] = input_dir
+
+    project = import_tools.ImportProject(import_config)
+    loader = project.get_variant_loader("vcf")
+    assert loader._chrom_prefix == "chr"
