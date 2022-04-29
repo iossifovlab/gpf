@@ -1,9 +1,9 @@
 export class ContinuousMeasure {
   public static fromJson(json: object): ContinuousMeasure {
     return new ContinuousMeasure(
-      json['measure'] as string,
-      json['min'] as number,
-      json['max'] as number,
+      String(json['measure']),
+      Number(json['min']),
+      Number(json['max']),
     );
   }
 
@@ -25,13 +25,13 @@ export class ContinuousMeasure {
 export class HistogramData {
   public static fromJson(json: object): HistogramData {
     return new HistogramData(
-      json['bars'] as number[],
-      json['measure'] as string,
+      json['bars'].map(bar => Number(bar)),
+      String(json['measure']),
       Number(json['min']),
       Number(json['max']),
       Number(json['step']),
-      json['bins'] as number[],
-      json['desc'] as string
+      json['bins'].map(bin => Number(bin)),
+      String(json['desc'])
     );
   }
 
