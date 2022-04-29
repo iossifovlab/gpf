@@ -1,4 +1,4 @@
-"""Provides caching genomic resources repository."""
+"""Provides caching genomic resources"""
 import os
 import pathlib
 import logging
@@ -57,7 +57,7 @@ class GenomicResourceCachedRepo(GenomicResourceRepo):
         if gr_cache:
             self.refresh_cached_genomic_resource(gr_cache, gr_child)
         else:
-            cached_repo.store_resource(gr_child)
+            cached_repo.store_resource_full(gr_child)
         return cached_repo.get_resource(resource_id,
                                         exact_version_constraint)
 
@@ -69,7 +69,7 @@ class GenomicResourceCachedRepo(GenomicResourceRepo):
                     gr_child.repo.repo_id
             )
             futures.append(
-                executor.submit(cached_repo.store_resource, gr_child)
+                executor.submit(cached_repo.store_resource_full, gr_child)
             )
         for future in as_completed(futures):
             future.result()

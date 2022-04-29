@@ -21,7 +21,7 @@ def test_cli_manage(tmp_path):
         }
     })
     dir_repo = GenomicResourceDirRepo('dir', directory=tmp_path)
-    dir_repo.store_all_resources(src_repo)
+    dir_repo.store_all_resources_full(src_repo)
 
     assert not (tmp_path / GRP_CONTENTS_FILE_NAME).is_file()
     cli_manage(["index", str(tmp_path)])

@@ -131,66 +131,65 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
         dest_gr.save_manifest(result_manifest)
 
     def _delete_manifest_entry(
-            self, dest_gr: GenomicResource, dest_mnfst_file):
-        filename = dest_mnfst_file["name"]
+            self, resource: GenomicResource, manifest_entry):
+        filename = manifest_entry["name"]
 
-        dr = pathlib.Path(
+        filepath = pathlib.Path(
             self.directory /
-            dest_gr.get_genomic_resource_dir() / filename).parent
-
-        dest_path = dr / filename
-        dest_path.unlink()
+            resource.get_genomic_resource_dir()) / filename
+        filepath.unlink()
 
     def _copy_manifest_entry(
-            self, dest_gr: GenomicResource, src_gr: GenomicResource,
-            src_mnfst_file):
+            self, dest_resource: GenomicResource,
+            src_resource: GenomicResource,
+            manifest_entry):
 
-        assert dest_gr.resource_id == src_gr.resource_id
-        filename = src_mnfst_file["name"]
+        assert dest_resource.resource_id == src_resource.resource_id
+        filename = manifest_entry["name"]
 
         dest_filename = pathlib.Path(
             self.directory /
-            dest_gr.get_genomic_resource_dir() / filename)
+            dest_resource.get_genomic_resource_dir() / filename)
         os.makedirs(dest_filename.parent, exist_ok=True)
 
         try:
-            with src_gr.open_raw_file(
+            with src_resource.open_raw_file(
                     filename, "rb",
                     uncompress=False) as infile, \
-                    dest_gr.open_raw_file(
+                    dest_resource.open_raw_file(
                         filename, 'wb',
                         uncompress=False) as outfile:
 
                 md5_hash = hashlib.md5()
-                while b := infile.read(32768):
-                    outfile.write(b)
-                    md5_hash.update(b)
+                while chunk := infile.read(32768):
+                    outfile.write(chunk)
+                    md5_hash.update(chunk)
             md5 = md5_hash.hexdigest()
 
-            if src_mnfst_file["md5"] != md5:
+            if manifest_entry["md5"] != md5:
                 logger.error(
                     "storing %s failed; expected md5 is %s; "
                     "calculated md5 for the stored file is %s",
-                    src_gr.resource_id, src_mnfst_file["md5"], md5)
-                raise IOError(f"storing of {src_gr.resource_id} failed")
+                    src_resource.resource_id, manifest_entry["md5"], md5)
+                raise IOError(f"storing of {src_resource.resource_id} failed")
             src_modtime = datetime.datetime.fromisoformat(
-                src_mnfst_file["time"]).timestamp()
+                manifest_entry["time"]).timestamp()
 
             assert dest_filename.exists()
 
             os.utime(dest_filename, (src_modtime, src_modtime))
-            return src_mnfst_file
+            return manifest_entry
         except Exception:
             logger.error(
                 "problem copying remote resource file: %s (%s)",
-                filename, src_gr.resource_id, exc_info=True)
+                filename, src_resource.resource_id, exc_info=True)
             return None
 
-    def store_all_resources(self, source_repo: GenomicResourceRepo):
+    def store_all_resources_full(self, source_repo: GenomicResourceRepo):
         for resource in source_repo.get_all_resources():
-            self.store_resource(resource)
+            self.store_resource_full(resource)
 
-    def store_resource(self, resource: GenomicResource):
+    def store_resource_full(self, resource: GenomicResource):
         manifest = resource.get_manifest()
 
         temp_gr = GenomicResource(resource.resource_id,

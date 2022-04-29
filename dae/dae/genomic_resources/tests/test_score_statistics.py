@@ -322,7 +322,7 @@ def test_building_already_calculated_histograms(tmpdir, client):
             '''
     })
     repo = GenomicResourceDirRepo("", tmpdir)
-    repo.store_all_resources(embedded_repo)
+    repo.store_all_resources_full(embedded_repo)
 
     resource = repo.get_resource("")
     hbuilder = HistogramBuilder(resource)
