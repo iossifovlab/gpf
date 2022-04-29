@@ -1,3 +1,4 @@
+"""Provides caching genomic resources repository."""
 import os
 import pathlib
 import logging
@@ -15,7 +16,7 @@ logger = logging.getLogger(__name__)
 class GenomicResourceCachedRepo(GenomicResourceRepo):
     def __init__(self, child, cache_dir):
         logger.debug(
-            f"creating cached GRR with cache directory: {cache_dir}")
+            "creating cached GRR with cache directory: %s", cache_dir)
 
         self.child: GenomicResourceRepo = child
         self.cache_dir = pathlib.Path(cache_dir)
@@ -31,7 +32,7 @@ class GenomicResourceCachedRepo(GenomicResourceRepo):
         if repo_id not in self.cache_repos:
             cached_repo_dir = self.cache_dir / repo_id
             logger.debug(
-                f"going to create cached repo directory: {cached_repo_dir}")
+                "going to create cached repo directory: %s", cached_repo_dir)
             os.makedirs(cached_repo_dir, exist_ok=True)
             self.cache_repos[repo_id] = \
                 GenomicResourceDirRepo(f"{repo_id}.cached", cached_repo_dir)

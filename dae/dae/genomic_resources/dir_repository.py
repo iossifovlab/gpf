@@ -1,13 +1,16 @@
+"""Defines directory genomic resources repository."""
+
 import pathlib
-import yaml
 import hashlib
 import os
 import gzip
-import pysam  # type: ignore
 import logging
 import datetime
 
 from typing import Optional
+
+import yaml
+import pysam  # type: ignore
 
 from .repository import GenomicResource
 from .repository import GenomicResourceRepo
@@ -20,23 +23,27 @@ logger = logging.getLogger(__name__)
 
 
 class GenomicResourceDirRepo(GenomicResourceRealRepo):
+    """Provides directory genomic resources repository."""
+
     def __init__(self, repo_id, directory, **atts):
         super().__init__(repo_id)
         self.directory = pathlib.Path(directory)
         self._all_resources = None
 
-    def _dir_to_dict(self, dr):
-        if dr.is_dir():
-            return {ch.name: self._dir_to_dict(ch) for ch in dr.iterdir()}
-        else:
-            return dr
+    def _dir_to_dict(self, directory):
+        if directory.is_dir():
+            return {
+                entry.name: self._dir_to_dict(entry)
+                for entry in directory.iterdir()
+            }
 
-    def get_genomic_resource_dir(self, genomic_resource):
-        return self.directory / genomic_resource.get_genomic_resource_dir()
+        return directory
 
-    def get_file_path(self, genomic_resource, file_name):
-        return self.directory / genomic_resource.get_genomic_resource_dir() / \
-            file_name
+    def get_genomic_resource_dir(self, resource):
+        return self.directory / resource.get_genomic_resource_dir()
+
+    def get_file_path(self, resource, file_name):
+        return self.get_genomic_resource_dir(resource) / file_name
 
     def get_all_resources(self):
         if self._all_resources is None:
@@ -50,11 +57,12 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
         content_dict = self._dir_to_dict(
             self.get_genomic_resource_dir(genomic_resource))
 
-        def my_leaf_to_size_and_time(ff):
-            sts = ff.stat()
-
-            return sts.st_size, \
-                datetime.datetime.fromtimestamp(int(sts.st_mtime)).isoformat()
+        def my_leaf_to_size_and_time(filepath):
+            filestat = filepath.stat()
+            filetimestamp = \
+                datetime.datetime.fromtimestamp(int(filestat.st_mtime)).isoformat()
+            return filestat.st_size, filetimestamp
+                
         yield from find_genomic_resource_files_helper(
             content_dict, my_leaf_to_size_and_time)
 

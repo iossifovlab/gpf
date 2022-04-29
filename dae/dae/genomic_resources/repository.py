@@ -4,9 +4,9 @@ import re
 import logging
 from typing import List, Optional, cast, Tuple
 
-import yaml
 import abc
 import hashlib
+import yaml
 
 logger = logging.getLogger(__name__)
 
@@ -21,45 +21,45 @@ _GR_ID_TOKEN_RE = re.compile('[a-zA-Z0-9._-]+')
 
 
 def is_gr_id_token(token):
-    '''
-        Genomic Resource Id Token is a string with one or more letters,
-        numbers, '.', '_', or '-'. The function checks if the parameter
-        token is a Genomic REsource Id Token.
-    '''
+    """
+    Genomic Resource Id Token is a string with one or more letters,
+    numbers, '.', '_', or '-'. The function checks if the parameter
+    token is a Genomic REsource Id Token.
+    """
     return bool(_GR_ID_TOKEN_RE.fullmatch(token))
 
 
 _GR_ID_WITH_VERSION_TOKEN_RE = re.compile(
-    r'([a-zA-Z0-9._-]+)(?:\[([1-9]\d*(?:\.\d+)*)\])?')
+    r"([a-zA-Z0-9._-]+)(?:\[([1-9]\d*(?:\.\d+)*)\])?")
 
 
 def parse_gr_id_version_token(token):
-    '''
-        Genomic Resource Id Version Token is a Genomic Resource Id Token with
-        an optional version appened. If present, the version suffix has the
-        form "[3.3.2]". The default version is [0].
-        Returns None if s in not a Genomic Resource Id Version. Otherwise
-        returns token,version tupple
-    '''
+    """
+    Genomic Resource Id Version Token is a Genomic Resource Id Token with
+    an optional version appened. If present, the version suffix has the
+    form "[3.3.2]". The default version is [0].
+    Returns None if s in not a Genomic Resource Id Version. Otherwise
+    returns token,version tupple
+    """
     match = _GR_ID_WITH_VERSION_TOKEN_RE.fullmatch(token)
     if not match:
         return None
     token = match[1]
-    versionS = match[2]
-    if versionS:
-        versionT = tuple(map(int, versionS.split(".")))
+    version_string = match[2]
+    if version_string:
+        version = tuple(map(int, version_string.split(".")))
     else:
-        versionT = (0,)
-    return token, versionT
+        version = (0,)
+    return token, version
 
 
-def version_tuple_to_suffix(versionT):
-    if versionT == (0,):
+def version_tuple_to_suffix(version):
+    if version == (0,):
         return ""
-    return "[" + ".".join(map(str, versionT)) + "]"
+    return "[" + ".".join(map(str, version)) + "]"
 
 
-VERSION_CONSTRAINT_RE = re.compile(r'(>=|=)?(\d+(?:\.\d+)*)')
+VERSION_CONSTRAINT_RE = re.compile(r"(>=|=)?(\d+(?:\.\d+)*)")
 
 
 def is_version_constraint_satisfied(version_constraint, version):
@@ -68,32 +68,49 @@ def is_version_constraint_satisfied(version_constraint, version):
     match = VERSION_CONSTRAINT_RE.fullmatch(version_constraint)
     if not match:
         raise ValueError(f'Wrong version constrainted {version_constraint}')
-    op = match[1] if match[1] else '>='
-    constraintVersion = tuple(map(int, match[2].split(".")))
-    if op == '=':
-        return version == constraintVersion
-    if op == '>=':
-        return version >= constraintVersion
+    operator = match[1] if match[1] else ">="
+    constraint_version = tuple(map(int, match[2].split(".")))
+    if operator == "=":
+        return version == constraint_version
+    if operator == ">=":
+        return version >= constraint_version
     raise ValueError(
-        f'worng operation {op} in version constraint {version_constraint}')
+        f"wrong operation {operator} in version constraint "
+        f"{version_constraint}")
 
 
-def find_genomic_resource_files_helper(contentDict, leaf_to_size_and_date,
-                                       pref=[]):
-    for name, content in contentDict.items():
-        if name[0] == '.':
+def find_genomic_resource_files_helper(
+        content_dict, leaf_to_size_and_date, prev=None):
+    """
+    Helper function to iterate over directory yielding
+    (filename, size, timestamp) for each file in directory and its
+    subdirectories.
+    """
+
+    if prev is None:
+        prev= []
+
+    for name, content in content_dict.items():
+        if name[0] == ".":
             continue
-        nxt = pref + [name]
+        nxt = prev+ [name]
         if isinstance(content, dict):
             yield from find_genomic_resource_files_helper(
                 content, leaf_to_size_and_date, nxt)
         else:
-            sz, tm = leaf_to_size_and_date(content)
-            yield "/".join(nxt), sz, tm
+            fsize, ftimestamp = leaf_to_size_and_date(content)
+            yield "/".join(nxt), fsize, ftimestamp
 
 
-def find_genomic_resources_helper(content_dict, id_pref=[]):
-    n_resources = 0
+def find_genomic_resources_helper(content_dict, id_prev=None):
+    """
+    Helper function to iterate over directory and its subdirectories
+    yielding (resource_id, version) for each resource found.
+    """
+    if id_prev is None:
+        id_prev = []
+
+    resources_counter = 0
     unused_dirs = set([])
     if GR_CONF_FILE_NAME in content_dict and \
             not isinstance(content_dict[GR_CONF_FILE_NAME], dict):
@@ -104,32 +121,32 @@ def find_genomic_resources_helper(content_dict, id_pref=[]):
             continue
         idvr = parse_gr_id_version_token(name)
         if isinstance(content, dict) and idvr and \
-           GR_CONF_FILE_NAME in content and \
-           not isinstance(content[GR_CONF_FILE_NAME], dict):
-            GRIdToken, GRVersion = idvr
-            yield "/".join(id_pref + [GRIdToken]), GRVersion
-            n_resources += 1
+                GR_CONF_FILE_NAME in content and \
+                not isinstance(content[GR_CONF_FILE_NAME], dict):
+            resource_id, version = idvr
+            yield "/".join(id_prev + [resource_id]), version
+            resources_counter += 1
         else:
-            currId = id_pref + [name]
-            currIdS = "/".join(currId)
+            curr_id = id_prev + [name]
+            curr_id_path = "/".join(curr_id)
             if not isinstance(content, dict):
-                logger.warning(f"The file {currIdS} is not used.")
+                logger.warning("The file %s is not used.", curr_id_path)
                 continue
             if not is_gr_id_token(name):
                 logger.warning(
-                    f"The directory {currIdS} has a name {name} that is not a "
-                    "valid Genomic Resoruce Id Token.")
+                    "The directory %s has a name %s that is not a "
+                    "valid Genomic Resoruce Id Token.", curr_id_path, name)
                 continue
-            dirNResourceN = 0
-            for grId, grVr in find_genomic_resources_helper(content, currId):
-                yield grId, grVr
-                n_resources += 1
-                dirNResourceN += 1
-            if dirNResourceN == 0:
-                unused_dirs.add(currIdS)
-    if n_resources > 0:
-        for drId in unused_dirs:
-            logger.warning(f"The directory {drId} contains no resources.")
+            dir_resource_counter = 0
+            for resource_id, version in find_genomic_resources_helper(content, curr_id):
+                yield resource_id, version
+                resources_counter += 1
+                dir_resource_counter += 1
+            if dir_resource_counter == 0:
+                unused_dirs.add(curr_id_path)
+    if resources_counter > 0:
+        for dir_id in unused_dirs:
+            logger.warning("The directory %s contains no resources.", dir_id)
 
 
 class GenomicResource:
