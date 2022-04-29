@@ -1,7 +1,9 @@
+"""Defines reference genome class."""
+
 import os
 import logging
 
-from typing import List, Tuple, Optional
+from typing import List, Tuple, Optional, Dict, Any, cast
 
 from dae.utils.regions import Region
 from dae.genomic_resources import GenomicResource
@@ -14,18 +16,18 @@ class ReferenceGenome:
     """Provides an interface for quering a reference genome."""
 
     def __init__(self, source: Tuple[str, ...]):
-        self._index = None
-        self._chromosomes = None
+        self._index: Dict[str, Any] = {}
+        self._chromosomes: List[str] = []
         self._sequence = None
         self.pars: dict = {}
         self.source = source
 
     @property
-    def chromosomes(self):
+    def chromosomes(self) -> List[str]:
+        """Returns a list of all chromosomes of the reference genome"""
         return self._chromosomes
 
     def _load_genome_index(self, index_content):
-        self._index = {}
         for line in index_content.split("\n"):
             line = line.strip()
             if not line:
@@ -41,22 +43,30 @@ class ReferenceGenome:
         self._chromosomes = list(self._index.keys())
 
     def set_open(self, index_content, sequence_file):
+        """
+        Helper method to setup working reference genome instance.
+        """
         self._sequence = sequence_file
         self._load_genome_index(index_content)
 
     def set_pars(self, pars):
+        """Helper method to setup PARS definition in the reference genome."""
         self.pars = pars
 
     def close(self):
+        """Closes reference genome sequence file-like objects"""
         self._sequence.close()
 
-    def get_chrom_length(self, chrom):
+    def get_chrom_length(self, chrom: str) -> int:
+        """Returns the length of a specified chromosome."""
+
         chrom_data = self._index.get(chrom)
         if chrom_data is None:
-            return None
-        return chrom_data["length"]
+            raise ValueError(f"can't fined chromosome {chrom}")
+        return cast(int, chrom_data["length"])
 
     def get_all_chrom_lengths(self):
+        """Returns list of all chromosomes lengths."""
         return [
             (key, value["length"])
             for key, value in self._index.items()]
@@ -87,9 +97,6 @@ class ReferenceGenome:
     def is_pseudoautosomal(self, chrom: str, pos: int) -> bool:
         """Returns true if specified position is pseudoautosomal."""
 
-        # TODO Handle variants which are both inside and outside a PARs
-        # Currently, if the position of the reference is within a PAR,
-        # the whole variant is considered to be within an autosomal region
         def in_any_region(
                 chrom: str, pos: int, regions: List[Region]) -> bool:
             return any(map(lambda reg: reg.isin(chrom, pos), regions))
@@ -103,6 +110,8 @@ class ReferenceGenome:
 
 
 def open_reference_genome_from_file(filename) -> ReferenceGenome:
+    """Opens a reference genome from a file."""
+
     ref = ReferenceGenome(('file', filename))
     index_filename = f"{filename}.fai"
     assert os.path.exists(index_filename)
@@ -137,14 +146,16 @@ def _parse_pars(config) -> Optional[dict]:
 
 def open_reference_genome_from_resource(
         resource: Optional[GenomicResource]) -> ReferenceGenome:
+    """Opens a reference genome from resource."""
 
     if resource is None:
         raise ValueError("None resource passed")
 
     if resource.get_type() != "genome":
         logger.error(
-            f"trying to open a resource {resource.resource_id} of type "
-            f"{resource.get_type()} as reference genome")
+            "trying to open a resource %s of type "
+            "%s as reference genome",
+            resource.resource_id, resource.get_type())
         raise ValueError(f"wrong resource type: {resource.resource_id}")
 
     config = resource.get_config()

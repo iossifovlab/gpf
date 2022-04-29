@@ -1,4 +1,5 @@
 import os
+
 import pytest
 
 from dae.genomic_resources.test_tools import convert_to_tab_separated
@@ -25,7 +26,6 @@ def test_basic_sequence_resoruce():
     assert ref.get_sequence("pesho", 1, 12) == "NNACCCAAACGG"
 
 
-@pytest.mark.fixture_repo
 def test_genomic_sequence_resource(genomic_resource_fixture_dir_repo):
 
     res = genomic_resource_fixture_dir_repo.get_resource(
@@ -37,7 +37,8 @@ def test_genomic_sequence_resource(genomic_resource_fixture_dir_repo):
     assert len(ref.get_all_chrom_lengths()) == 3
 
     assert ref.get_chrom_length("X") == 300_000
-    assert ref.get_chrom_length("alabala") is None
+    with pytest.raises(ValueError):
+        ref.get_chrom_length("alabala")
 
     assert len(ref.chromosomes) == 3
     assert tuple(ref.chromosomes) == ("1", "2", "X")
@@ -54,7 +55,6 @@ def test_genomic_sequence_resource(genomic_resource_fixture_dir_repo):
     ref.close()
 
 
-@pytest.mark.fixture_repo
 def test_genomic_sequence_resource_http(genomic_resource_fixture_http_repo):
 
     res = genomic_resource_fixture_http_repo.get_resource(
@@ -66,7 +66,8 @@ def test_genomic_sequence_resource_http(genomic_resource_fixture_http_repo):
     assert len(ref.get_all_chrom_lengths()) == 3
 
     assert ref.get_chrom_length("X") == 300_000
-    assert ref.get_chrom_length("alabala") is None
+    with pytest.raises(ValueError):
+        ref.get_chrom_length("alabala")
 
     assert len(ref.chromosomes) == 3
     assert tuple(ref.chromosomes) == ("1", "2", "X")
@@ -81,7 +82,6 @@ def test_genomic_sequence_resource_http(genomic_resource_fixture_http_repo):
     assert seq == "ACCCTGACAGCCTCGTTCTAATACTATGAGGCCAAATACACTCACGTTCT"
 
 
-@pytest.mark.fixture_repo
 def test_filesystem_genomic_sequence(fixture_dirname):
     genome = open_reference_genome_from_file(
         os.path.join(
@@ -95,7 +95,8 @@ def test_filesystem_genomic_sequence(fixture_dirname):
     assert len(genome.get_all_chrom_lengths()) == 3
 
     assert genome.get_chrom_length("X") == 300_000
-    assert genome.get_chrom_length("alabala") is None
+    with pytest.raises(ValueError):
+        genome.get_chrom_length("alabala")
 
     assert len(genome.chromosomes) == 3
     assert tuple(genome.chromosomes) == ("1", "2", "X")
