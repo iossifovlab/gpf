@@ -11,7 +11,7 @@ import yaml
 import pysam  # type: ignore
 import fsspec  # type: ignore
 
-from .repository import GenomicResource
+from .repository import GenomicResource, Manifest
 from .repository import GenomicResourceRealRepo
 from .repository import GRP_CONTENTS_FILE_NAME
 from .repository import GR_ENCODING
@@ -39,18 +39,19 @@ class GenomicResourceURLRepo(GenomicResourceRealRepo):
             contents = yaml.safe_load(self.filesystem.open(url))
 
             for rdf in contents:
-                version = tuple(map(int, rdf['version'].split(".")))
+                version = tuple(map(int, rdf["version"].split(".")))
+                manifest = Manifest.from_manifest_entries(rdf["manifest"])
                 resource = self.build_genomic_resource(
-                    rdf['id'], version, config=rdf['config'],
-                    manifest=rdf['manifest'])
+                    rdf["id"], version, config=rdf["config"],
+                    manifest=manifest)
                 logger.debug(
                     "url repo caching resource %s", resource.resource_id)
                 self._all_resources.append(resource)
         yield from self._all_resources
 
     def get_files(self, gr: GenomicResource):
-        for mnfst in gr.get_manifest():
-            yield mnfst['name'], int(mnfst['size']), mnfst['time']
+        for entry in gr.get_manifest():
+            yield entry.name, entry.size, entry.time
 
     def file_exists(self, genomic_resource, filename):
         file_url = self.get_file_url(genomic_resource, filename)

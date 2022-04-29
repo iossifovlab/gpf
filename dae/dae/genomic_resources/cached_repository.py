@@ -42,6 +42,7 @@ class GenomicResourceCachedRepo(GenomicResourceRepo):
 
     def get_resource(self, resource_id, version_constraint=None,
                      genomic_repository_id=None) -> Optional[GenomicResource]:
+
         gr_child = self.child.get_resource(
             resource_id, version_constraint, genomic_repository_id)
 

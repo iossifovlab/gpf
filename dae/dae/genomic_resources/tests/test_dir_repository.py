@@ -121,8 +121,8 @@ def test_dir_repository_resource_update_delete(tmp_path):
     gr2 = dir_repo2.get_resource("one")
 
     assert gr1.get_manifest() == gr2.get_manifest()
-    assert any(["alabala.txt" == f["name"] for f in gr1.get_manifest()])
-    assert any(["alabala.txt" == f["name"] for f in gr2.get_manifest()])
+    assert any([f.name == "alabala.txt" for f in gr1.get_manifest()])
+    assert any([f.name == "alabala.txt" for f in gr2.get_manifest()])
 
     dirname = pathlib.Path(dir_repo1.get_genomic_resource_dir(gr1))
     path = dirname / "alabala.txt"
@@ -130,7 +130,7 @@ def test_dir_repository_resource_update_delete(tmp_path):
 
     manifest = gr1.build_manifest()
     print(manifest)
-    assert any(["alabala.txt" != f["name"] for f in manifest])
+    assert any([f.name != "alabala.txt" for f in manifest])
 
     gr1.save_manifest(manifest)
 

@@ -6,13 +6,13 @@ import os
 import gzip
 import logging
 import datetime
-
+from dataclasses import asdict
 from typing import Optional
 
 import yaml
 import pysam  # type: ignore
 
-from .repository import GenomicResource
+from .repository import GenomicResource, ManifestEntry, Manifest
 from .repository import GenomicResourceRepo
 from .repository import GenomicResourceRealRepo
 from .repository import find_genomic_resources_helper
@@ -104,14 +104,14 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
 
         manifest_diff = {}
         for dest_file in mnfst_dest:
-            manifest_diff[dest_file["name"]] = [dest_file, None]
+            manifest_diff[dest_file.name] = [dest_file, None]
         for source_file in mnfst_src:
-            if source_file["name"] in manifest_diff:
-                manifest_diff[source_file["name"]][1] = source_file
+            if source_file.name in manifest_diff:
+                manifest_diff[source_file.name][1] = source_file
             else:
-                manifest_diff[source_file["name"]] = [None, source_file]
+                manifest_diff[source_file.name] = [None, source_file]
 
-        result_manifest = []
+        result_manifest = Manifest()
         for dest_file, src_file in manifest_diff.values():
 
             if (dest_file is None and src_file) or \
@@ -120,19 +120,19 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
                 # update src_file
                 dest_mnfst = self._copy_manifest_entry(
                     dest_gr, src_gr, src_file)
-                result_manifest.append(dest_mnfst)
+                result_manifest.add(dest_mnfst)
             elif dest_file and src_file is None:
                 # delete dest_file
                 self._delete_manifest_entry(
                     dest_gr, dest_file)
             else:
-                result_manifest.append(dest_file)
+                result_manifest.add(dest_file)
 
         dest_gr.save_manifest(result_manifest)
 
     def _delete_manifest_entry(
             self, resource: GenomicResource, manifest_entry):
-        filename = manifest_entry["name"]
+        filename = manifest_entry.name
 
         filepath = pathlib.Path(
             self.directory /
@@ -142,10 +142,10 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
     def _copy_manifest_entry(
             self, dest_resource: GenomicResource,
             src_resource: GenomicResource,
-            manifest_entry):
+            manifest_entry: ManifestEntry):
 
         assert dest_resource.resource_id == src_resource.resource_id
-        filename = manifest_entry["name"]
+        filename = manifest_entry.name
 
         dest_filename = pathlib.Path(
             self.directory /
@@ -166,14 +166,14 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
                     md5_hash.update(chunk)
             md5 = md5_hash.hexdigest()
 
-            if manifest_entry["md5"] != md5:
+            if manifest_entry.md5 != md5:
                 logger.error(
                     "storing %s failed; expected md5 is %s; "
                     "calculated md5 for the stored file is %s",
-                    src_resource.resource_id, manifest_entry["md5"], md5)
+                    src_resource.resource_id, manifest_entry.md5, md5)
                 raise IOError(f"storing of {src_resource.resource_id} failed")
             src_modtime = datetime.datetime.fromisoformat(
-                manifest_entry["time"]).timestamp()
+                manifest_entry.time).timestamp()
 
             assert dest_filename.exists()
 
@@ -194,27 +194,32 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
 
         temp_gr = GenomicResource(resource.resource_id,
                                   resource.version, self)
-        for mnf_file in manifest:
-            dest_mnf_file = \
-                self._copy_manifest_entry(temp_gr, resource, mnf_file)
-            if dest_mnf_file is None:
+        for manifest_entry in manifest:
+            dest_manifest_entry = \
+                self._copy_manifest_entry(temp_gr, resource, manifest_entry)
+            if dest_manifest_entry is None:
                 logger.error(
                     "unable to copy a (%s) manifest entry: %s",
-                    resource.resource_id, mnf_file["name"])
+                    resource.resource_id, manifest_entry.name)
                 logger.error(
                     "skipping resource: %s", resource.resource_id)
                 self._all_resources = None
                 return
 
-            assert dest_mnf_file == mnf_file
+            assert dest_manifest_entry == manifest_entry
 
         temp_gr.save_manifest(manifest)
         self._all_resources = None
 
     def build_repo_content(self):
-        content = [{"id": gr.resource_id, "version": gr.get_version_str(),
-                    "config": gr.get_config(), "manifest": gr.get_manifest()}
-                   for gr in self.get_all_resources()]
+        content = [
+            {
+                "id": gr.resource_id,
+                "version": gr.get_version_str(),
+                "config": gr.get_config(),
+                "manifest": gr.get_manifest().to_manifest_entries()
+            }
+            for gr in self.get_all_resources()]
         content = sorted(content, key=lambda x: x['id'])
         return content
 

@@ -145,8 +145,8 @@ def test_cached_repository_resource_update_delete(tmp_path):
     gr2 = cached_repo.get_resource("one")
 
     assert gr1.get_manifest() == gr2.get_manifest()
-    assert any(["alabala.txt" == f["name"] for f in gr1.get_manifest()])
-    assert any(["alabala.txt" == f["name"] for f in gr2.get_manifest()])
+    assert any([f.name == "alabala.txt" for f in gr1.get_manifest()])
+    assert any([f.name == "alabala.txt"for f in gr2.get_manifest()])
 
     dirname = pathlib.Path(dir_repo.get_genomic_resource_dir(gr1))
     path = dirname / "alabala.txt"
@@ -154,13 +154,13 @@ def test_cached_repository_resource_update_delete(tmp_path):
 
     manifest = gr1.build_manifest()
     print(manifest)
-    assert any(["alabala.txt" != f["name"] for f in manifest])
+    assert any([f.name != "alabala.txt" for f in manifest])
 
     gr1.save_manifest(manifest)
     assert gr1.get_manifest() != gr2.get_manifest()
 
     gr2 = cached_repo.get_resource("one")
-    assert any(["alabala.txt" != f["name"] for f in gr2.get_manifest()])
+    assert any([f.name != "alabala.txt" for f in gr2.get_manifest()])
 
 
 def test_cached_http_repository_resource_update_delete(
@@ -188,8 +188,8 @@ def test_cached_http_repository_resource_update_delete(
     gr2 = cached_repo.get_resource("one")
 
     assert gr1.get_manifest() == gr2.get_manifest()
-    assert any(["alabala.txt" == f["name"] for f in gr1.get_manifest()])
-    assert any(["alabala.txt" == f["name"] for f in gr2.get_manifest()])
+    assert any([f.name == "alabala.txt" for f in gr1.get_manifest()])
+    assert any([f.name == "alabala.txt" for f in gr2.get_manifest()])
 
     dirname = pathlib.Path(dir_repo.get_genomic_resource_dir(gr1))
     path = dirname / "alabala.txt"
@@ -197,7 +197,7 @@ def test_cached_http_repository_resource_update_delete(
 
     manifest = gr1.build_manifest()
     print(manifest)
-    assert any(["alabala.txt" != f["name"] for f in manifest])
+    assert any([f.name != "alabala.txt" for f in manifest])
 
     gr1.save_manifest(manifest)
     dir_repo.save_content_file()
@@ -212,5 +212,25 @@ def test_cached_http_repository_resource_update_delete(
     gr2 = cached_repo.get_resource("one")
     print(gr2.get_manifest())
 
-    assert any(["alabala.txt" != f["name"] for f in gr2.get_manifest()])
+    assert any([f.name != "alabala.txt"  for f in gr2.get_manifest()])
     assert gr1.get_manifest() == gr2.get_manifest()
+
+
+def test_cached_repository_file_level_cache(tmp_path):
+
+    src_repo = GenomicResourceEmbededRepo("src", content={
+        "one": {
+            GR_CONF_FILE_NAME: "config",
+            "data.txt": "data",
+            "alabala.txt": "alabala",
+        },
+    })
+
+    cached_repo = GenomicResourceCachedRepo(src_repo, tmp_path)
+
+    resource = cached_repo.get_resource("one")
+    assert resource is not None
+
+    assert (tmp_path / "src" / "one").exists()
+    assert (tmp_path / "src" / "one" / GR_CONF_FILE_NAME).exists()
+    # assert not (tmp_path / "src" / "one" / "data.txt").exists()

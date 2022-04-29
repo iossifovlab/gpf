@@ -2,7 +2,8 @@ from __future__ import annotations
 
 import re
 import logging
-from typing import List, Optional, cast, Tuple
+from typing import List, Optional, cast, Tuple, Dict, Any, Union
+from dataclasses import dataclass, asdict
 
 import abc
 import hashlib
@@ -149,6 +150,69 @@ def find_genomic_resources_helper(content_dict, id_prev=None):
             logger.warning("The directory %s contains no resources.", dir_id)
 
 
+@dataclass
+class ManifestEntry:
+    """Provides an entry into manifest object"""
+    name: str
+    size: int
+    time: str
+    md5: Optional[str]
+
+
+class Manifest:
+    """Provides genomic resource manifest object."""
+    def __init__(self):
+        self.entries: Dict[str, ManifestEntry] = {}
+
+    @staticmethod
+    def from_file_content(file_content: str) -> Manifest:
+        """Produces a manifest from manifest file content."""
+        manifest_entries = yaml.safe_load(file_content)
+        return Manifest.from_manifest_entries(manifest_entries)
+
+    @staticmethod
+    def from_manifest_entries(
+            manifest_entries: List[Dict[str, Any]]) -> Manifest:
+        """Produces a manifest from parsed manifest file content."""
+
+        result = Manifest()
+        for data in manifest_entries:
+            entry = ManifestEntry(
+                data["name"], data["size"], data["time"], data["md5"])
+            result.entries[entry.name] = entry
+        return result
+
+    def __getitem__(self, name):
+        return self.entries[name]
+
+    def __contains__(self, name):
+        return name in self.entries
+
+    def __iter__(self):
+        return iter(self.entries.values())
+
+    def __eq__(self, other):
+        if not isinstance(other, Manifest):
+            return False
+        if len(self.entries) != len(other.entries):
+            return False
+
+        for name, entry in self.entries.items():
+            if name not in other:
+                return False
+            other_entry = other[name]
+            if entry != other_entry:
+                return False
+
+        return True
+
+    def to_manifest_entries(self):
+        return [
+            asdict(entry) for entry in self.entries.values()]
+
+    def add(self, entry: ManifestEntry) -> None:
+        self.entries[entry.name] = entry
+
 class GenomicResource:
     def __init__(self, resource_id, version, repo: GenomicResourceRealRepo,
                  config=None):
@@ -156,7 +220,7 @@ class GenomicResource:
         self.version = version
         self.config = config
         self.repo = repo
-        self._manifest = None
+        self._manifest: Optional[Manifest] = None
 
     @staticmethod
     def get_resource_type():
@@ -211,26 +275,31 @@ class GenomicResource:
 
     def build_manifest(self):
         """Builds full manifest for the resource"""
-        self._manifest = None
-        return [{"name": fn, "size": fs, "time": ft,
-                 "md5": self.compute_md5_sum(fn)}
-                for fn, fs, ft in sorted(self.get_files())]
+
+        return Manifest.from_manifest_entries(
+            [
+                {
+                    "name": fn,
+                    "size": fs,
+                    "time": ft,
+                    "md5": self.compute_md5_sum(fn)
+                }
+                for fn, fs, ft in sorted(self.get_files())])
 
     def update_manifest(self):
         """updates resource manifest and stores it"""
         try:
             current_manifest = self.load_manifest()
-            manifest_files = {x['name']: x for x in current_manifest}
-            new_manifest = []
+            new_manifest_entries = []
             for fname, fsize, ftime in sorted(self.get_files()):
                 md5 = None
-                if fname in manifest_files:
-                    entry = manifest_files[fname]
+                if fname in current_manifest:
+                    entry = current_manifest[fname]
                     if entry["size"] == fsize and entry["time"] == ftime:
                         md5 = entry["md5"]
                     else:
                         logger.debug(
-                            "Updating md5 sum for file %s for resource %s",
+                            "md5 sum for file %s for resource %s needs update",
                             fname, self.resource_id)
                 else:
                     logger.debug(
@@ -238,8 +307,10 @@ class GenomicResource:
                         fname, self.resource_id)
                 if not md5:
                     md5 = self.compute_md5_sum(fname)
-                new_manifest.append(
+                new_manifest_entries.append(
                     {"name": fname, "size": fsize, "time": ftime, "md5": md5})
+
+            new_manifest = Manifest.from_manifest_entries(new_manifest_entries)
             if new_manifest != current_manifest:
                 self.save_manifest(new_manifest)
         except Exception:
@@ -249,21 +320,26 @@ class GenomicResource:
             manifest = self.build_manifest()
             self.save_manifest(manifest)
 
-    def load_manifest(self):
+    def load_manifest(self) -> Manifest:
         """Loads resource manifest"""
-        return self.load_yaml(GR_MANIFEST_FILE_NAME)
+        return Manifest.from_manifest_entries(
+            self.load_yaml(GR_MANIFEST_FILE_NAME))
 
-    def save_manifest(self, manifest):
-        with self.open_raw_file(GR_MANIFEST_FILE_NAME, "wt") as MOF:
-            yaml.dump(manifest, MOF)
-        self._manifest = None
+    def save_manifest(self, manifest: Manifest):
+        with self.open_raw_file(GR_MANIFEST_FILE_NAME, "wt") as outfile:
+            yaml.dump(manifest.to_manifest_entries(), outfile)
+        self._manifest = manifest
 
-    def get_manifest(self):
+    def get_manifest(self) -> Manifest:
+
         if self._manifest is None:
             try:
                 self._manifest = self.load_manifest()
+                logger.info("manifest loaded: %s", self._manifest)
             except Exception:
                 self._manifest = self.build_manifest()
+                logger.info("manifest builded: %s", self._manifest)
+        assert isinstance(self._manifest, Manifest), self._manifest
         return self._manifest
 
     def load_yaml(self, filename):
@@ -312,7 +388,9 @@ class GenomicResourceRealRepo(GenomicResourceRepo):
         super().__init__(repo_id)
 
     def build_genomic_resource(
-            self, resource_id, version, config=None, manifest=None):
+            self, resource_id, version, config=None,
+            manifest: Optional[Manifest]=None):
+        
         if not config:
             gr_base = GenomicResource(resource_id, version, self)
             config = gr_base.load_yaml(GR_CONF_FILE_NAME)
