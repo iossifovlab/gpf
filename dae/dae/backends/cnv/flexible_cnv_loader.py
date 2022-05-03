@@ -186,13 +186,13 @@ def _configure_cnv_best_state(
     """
 
     if cnv_person_id is not None:
-        if cnv_family_id is not None or cnv_best_state is not None:
-            raise ValueError(
-                f"mixed configuration of cnv best state: "
-                f"person_id({cnv_person_id}) <-> "
-                f"family_id({cnv_family_id}) and "
-                f"best_state({cnv_best_state})"
-            )
+        # if cnv_family_id is not None and cnv_best_state is not None:
+        #     raise ValueError(
+        #         f"mixed configuration of cnv best state: "
+        #         f"person_id({cnv_person_id}) <-> "
+        #         f"family_id({cnv_family_id}) and "
+        #         f"best_state({cnv_best_state})"
+        #     )
         person_index = header.index(cnv_person_id)
         header[person_index] = "person_id"
 

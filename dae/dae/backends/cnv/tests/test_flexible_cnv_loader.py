@@ -126,22 +126,24 @@ def test_vcf_like_cnv_variants(families, genome, content, params):
 
 @pytest.mark.parametrize(
     "header,params", [
-        # mix family_id/best_state with person_id
-        (
-            "family_id  person_id  location  variant  best_state",
-            {
-                "cnv_family_id": "family_id",
-                "cnv_person_id": "person_id"
-            }
-        ),
-        # mix family_id/best_state with person_id
-        (
-            "family_id  person_id  location  variant  best_state",
-            {
-                "cnv_best_state": "best_state",
-                "cnv_person_id": "person_id"
-            }
-        ),
+        # # mix family_id/best_state with person_id
+        # (
+        #     "family_id  person_id  location  variant  best_state",
+        #     {
+        #         "cnv_family_id": "family_id",
+        #         "cnv_person_id": "person_id"
+        #     }
+        # ),
+
+        # # mix family_id/best_state with person_id
+        # (
+        #     "family_id  person_id  location  variant  best_state",
+        #     {
+        #         "cnv_best_state": "best_state",
+        #         "cnv_person_id": "person_id"
+        #     }
+        # ),
+
         # mix location with vcf-like position
         (
             "person_id  location chrom pos pos_end variant  best_state",

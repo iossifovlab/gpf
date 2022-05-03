@@ -120,19 +120,19 @@ def test_configure_cnv_loader_person_id(
         "person_id", "location", "variant", "extra"]
 
 
-def test_configure_cnv_loader_best_state_mixed(
-        families, gpf_instance_2013):
+# def test_configure_cnv_loader_best_state_mixed(
+#         families, gpf_instance_2013):
 
-    header = ["personId", "location", "variant", "bestState", "extra"]
-    transformers = []
+#     header = ["personId", "location", "variant", "bestState", "extra"]
+#     transformers = []
 
-    with pytest.raises(ValueError):
-        _configure_cnv_best_state(
-            header, transformers,
-            families, gpf_instance_2013.reference_genome,
-            cnv_person_id="personId",
-            cnv_best_state="bestSTate",
-        )
+#     with pytest.raises(ValueError):
+#         _configure_cnv_best_state(
+#             header, transformers,
+#             families, gpf_instance_2013.reference_genome,
+#             cnv_person_id="personId",
+#             cnv_best_state="bestSTate",
+#         )
 
 
 def test_configure_cnv_loader_best_state_person_id_not_found(
