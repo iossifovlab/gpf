@@ -25,29 +25,16 @@ class Schema1ParquetWriter:
             del_chrom_prefix=loader_args.get("del_chrom_prefix", None),
         )
 
-        target_chromosomes = loader_args.get("target_chromosomes", None)
-        if target_chromosomes is None:
-            target_chromosomes = variants_loader.chromosomes
-
-        variants_targets = generator.generate_variants_targets(
-            target_chromosomes
-        )
-
         bucket_index = project.get_default_bucket_index(bucket_id.type)
         if bucket_id.region_bin is not None and bucket_id.region_bin != "none":
-            assert bucket_id.region_bin in variants_targets, (
-                bucket_id.region_bin,
-                list(variants_targets.keys()),
-            )
-
-            regions = variants_targets[bucket_id.region_bin]
             bucket_index = (
                 project.get_default_bucket_index(bucket_id.type)
                 + generator.bucket_index(bucket_id.region_bin)
             )
             logger.info(
-                f"resetting regions (rb: {bucket_id.region_bin}): {regions}")
-            variants_loader.reset_regions(regions)
+                f"resetting regions (rb: {bucket_id.region_bin}): "
+                f"{bucket_id.regions}")
+            variants_loader.reset_regions(bucket_id.regions)
 
         variants_loader = project.build_variants_loader_pipeline(
             variants_loader, gpf_instance
@@ -100,7 +87,7 @@ class ImpalaSchema1ImportStorage:
         out_dir = cls._variants_dir(project)
         gpf_instance = project.get_gpf_instance()
         Schema1ParquetWriter.write_variant(
-            project.get_variant_loader(bucket_id.type,
+            project.get_variant_loader(bucket_id,
                                        gpf_instance.reference_genome),
             bucket_id,
             gpf_instance,
@@ -165,23 +152,23 @@ class ImpalaSchema1ImportStorage:
             partition_description=partition_description,
             variants_schema=variants_schema)
 
-    def generate_import_task_graph(self, project) -> TaskGraph:
+    def generate_import_task_graph(self) -> TaskGraph:
         graph = TaskGraph()
         pedigree_task = graph.create_task("ped task", self._do_write_pedigree,
-                                          [project], [])
+                                          [self.project], [])
 
         bucket_tasks = []
-        for b in project.get_import_variants_bucket_ids():
+        for b in self.project.get_import_variants_bucket_ids():
             task = graph.create_task(f"Task {b}", self._do_write_variant,
-                                     [project, b], [])
+                                     [self.project, b], [])
             bucket_tasks.append(task)
 
-        if project.has_destination():
+        if self.project.has_destination():
             hdfs_task = graph.create_task(
                 "hdfs copy", self._do_load_in_hdfs,
-                [project], [pedigree_task] + bucket_tasks)
+                [self.project], [pedigree_task] + bucket_tasks)
 
             graph.create_task("impala import", self._do_load_in_impala,
-                              [project], [hdfs_task])
+                              [self.project], [hdfs_task])
 
         return graph

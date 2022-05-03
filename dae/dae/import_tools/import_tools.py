@@ -23,7 +23,7 @@ from dae.backends.impala.import_commons import MakefilePartitionHelper,\
 class BucketId:
     type: str
     region_bin: str
-    region: str
+    regions: list[str]
     index: int
 
 
@@ -71,13 +71,13 @@ class ImportProject():
         for type, region_bins_func in types.items():
             config = self.import_config["input"].get(type, None)
             if config is not None:
-                for rb, region in region_bins_func(config):
-                    buckets.append(BucketId(type, rb, region, 0))  #TODO bucket index
+                for rb, regions in region_bins_func(config):
+                    buckets.append(BucketId(type, rb, regions, 0))  #TODO bucket index
         return buckets
 
     def get_variant_loader(self, bucket_id, reference_genome=None):
         loader = self._get_variant_loader(bucket_id.type, reference_genome)
-        loader.reset_regions(bucket_id.region)
+        loader.reset_regions(bucket_id.regions)
         return loader
 
     def _get_variant_loader(self, loader_type, reference_genome=None) \
