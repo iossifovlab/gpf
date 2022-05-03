@@ -20,7 +20,7 @@ from dae.backends.impala.import_commons import MakefilePartitionHelper,\
 
 
 @dataclass(frozen=True)
-class BucketId:
+class Bucket:
     type: str
     region_bin: str
     regions: list[str]
@@ -60,7 +60,7 @@ class ImportProject():
         )
         return families_loader.load()
 
-    def get_import_variants_bucket_ids(self) -> list[BucketId]:
+    def get_import_variants_buckets(self) -> list[Bucket]:
         types = {
             "denovo": self._denovo_region_bins,
             "vcf": self._vcf_region_bins,
@@ -72,12 +72,12 @@ class ImportProject():
             config = self.import_config["input"].get(type, None)
             if config is not None:
                 for rb, regions, bucket_index in region_bins_func(config):
-                    buckets.append(BucketId(type, rb, regions, bucket_index))
+                    buckets.append(Bucket(type, rb, regions, bucket_index))
         return buckets
 
-    def get_variant_loader(self, bucket_id, reference_genome=None):
-        loader = self._get_variant_loader(bucket_id.type, reference_genome)
-        loader.reset_regions(bucket_id.regions)
+    def get_variant_loader(self, bucket, reference_genome=None):
+        loader = self._get_variant_loader(bucket.type, reference_genome)
+        loader.reset_regions(bucket.regions)
         return loader
 
     def _get_variant_loader(self, loader_type, reference_genome=None) \

@@ -11,16 +11,16 @@ logger = logging.getLogger(__file__)
 
 class Schema1ParquetWriter:
     @staticmethod
-    def write_variant(variants_loader, bucket_id, gpf_instance, project,
+    def write_variant(variants_loader, bucket, gpf_instance, project,
                       out_dir):
         partition_description = project.get_partition_description(
             work_dir=out_dir)
 
-        if bucket_id.region_bin is not None and bucket_id.region_bin != "none":
+        if bucket.region_bin is not None and bucket.region_bin != "none":
             logger.info(
-                f"resetting regions (rb: {bucket_id.region_bin}): "
-                f"{bucket_id.regions}")
-            variants_loader.reset_regions(bucket_id.regions)
+                f"resetting regions (rb: {bucket.region_bin}): "
+                f"{bucket.regions}")
+            variants_loader.reset_regions(bucket.regions)
 
         variants_loader = project.build_variants_loader_pipeline(
             variants_loader, gpf_instance
@@ -32,7 +32,7 @@ class Schema1ParquetWriter:
         ParquetManager.variants_to_parquet(
             variants_loader,
             partition_description,
-            bucket_index=bucket_id.index,
+            bucket_index=bucket.index,
             rows=rows,
         )
 
@@ -69,13 +69,13 @@ class ImpalaSchema1ImportStorage:
         )
 
     @classmethod
-    def _do_write_variant(cls, project, bucket_id):
+    def _do_write_variant(cls, project, bucket):
         out_dir = cls._variants_dir(project)
         gpf_instance = project.get_gpf_instance()
         Schema1ParquetWriter.write_variant(
-            project.get_variant_loader(bucket_id,
+            project.get_variant_loader(bucket,
                                        gpf_instance.reference_genome),
-            bucket_id,
+            bucket,
             gpf_instance,
             project, out_dir)
 
@@ -144,7 +144,7 @@ class ImpalaSchema1ImportStorage:
                                           [self.project], [])
 
         bucket_tasks = []
-        for b in self.project.get_import_variants_bucket_ids():
+        for b in self.project.get_import_variants_buckets():
             task = graph.create_task(f"Task {b}", self._do_write_variant,
                                      [self.project, b], [])
             bucket_tasks.append(task)
