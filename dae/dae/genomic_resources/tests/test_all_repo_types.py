@@ -25,19 +25,19 @@ def test_all_repo_types(tmp_path):
     run_test_on_all_repos(
         test_repos, "is_file_content_ok",
         lambda repo: repo.get_resource(
-            "one").get_file_content("data.txt") == b"breh"
+            "one").get_file_content("data.txt") == "breh"
     )
 
     run_test_on_all_repos(
         test_repos, "is_compressed_file_content_ok",
         lambda repo: repo.get_resource("one").get_file_content(
-            "data.txt.gz", uncompress=False) == brehGz
+            "data.txt.gz", uncompress=False, mode="b") == brehGz
     )
 
     run_test_on_all_repos(
         test_repos, "is_uncompressed_file_content_ok",
         lambda repo: repo.get_resource("one").get_file_content(
-            "data.txt.gz", uncompress=True) == b"breh"
+            "data.txt.gz", uncompress=True, mode="t") == "breh"
     )
 
     def is_binary_ok(repo):

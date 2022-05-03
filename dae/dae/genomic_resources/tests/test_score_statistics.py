@@ -283,10 +283,9 @@ def test_histogram_builder_save(tmpdir, client):
 
     # assert the manifest file is updated
     manifest = res.load_manifest()
-    manifest_dict = {x['name']: x for x in manifest}
     for score_id in ['phastCons5way', 'phastCons100way']:
-        assert f'{score_id}.csv' in manifest_dict
-        assert f'{score_id}.metadata.yaml' in manifest_dict
+        assert f'{score_id}.csv' in manifest
+        assert f'{score_id}.metadata.yaml' in manifest
 
 
 def test_building_already_calculated_histograms(tmpdir, client):
@@ -322,7 +321,7 @@ def test_building_already_calculated_histograms(tmpdir, client):
             '''
     })
     repo = GenomicResourceDirRepo("", tmpdir)
-    repo.store_all_resources(embedded_repo)
+    repo.store_all_resources_full(embedded_repo)
 
     resource = repo.get_resource("")
     hbuilder = HistogramBuilder(resource)

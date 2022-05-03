@@ -316,8 +316,8 @@ class HistogramBuilder:
         manifest = self.resource.get_manifest()
         table_hash = None
         for rec in manifest:
-            if rec["name"] == table_filename:
-                table_hash = rec["md5"]
+            if rec.name == table_filename:
+                table_hash = rec.md5
                 break
         if table_hash is None:
             return {}

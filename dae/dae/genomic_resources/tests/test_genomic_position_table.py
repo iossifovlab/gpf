@@ -85,7 +85,7 @@ def test_regions_in_tabix(tmp_path, jump_threshold):
     txt_tab = open_genome_position_table(
         e_gr, e_gr.config["text_table"])
     d_repo = GenomicResourceDirRepo("b", directory=tmp_path)
-    d_repo.store_resource(e_gr)
+    d_repo.store_resource_full(e_gr)
     d_gr = d_repo.get_resource("")
     save_as_tabix_table(txt_tab,
                         str(d_repo.get_file_path(d_gr, "data.bgz")))
@@ -194,7 +194,7 @@ def test_chrom_mapping_file_with_tabix(tmp_path):
                 pesho   chr22
         """)})
     d_repo = GenomicResourceDirRepo("b", directory=tmp_path)
-    d_repo.store_resource(e_gr)
+    d_repo.store_resource_full(e_gr)
     d_gr = d_repo.get_resource("")
     save_as_tabix_table(
         open_genome_position_table(e_gr, e_gr.config["text_table"]),
@@ -415,7 +415,7 @@ def test_tabix_table(tmp_path, jump_threshold):
         })
     d_repo = build_genomic_resource_repository(
         {"id": "d", "type": "directory", "directory": tmp_path})
-    d_repo.store_all_resources(e_repo)
+    d_repo.store_all_resources_full(e_repo)
     e_gr = e_repo.get_resource("one")
     d_gr = d_repo.get_resource("one")
     save_as_tabix_table(
@@ -494,7 +494,7 @@ def tabix_table(tmp_path):
         })
     d_repo = build_genomic_resource_repository(
         {"id": "d", "type": "directory", "directory": tmp_path})
-    d_repo.store_all_resources(e_repo)
+    d_repo.store_all_resources_full(e_repo)
     e_gr = e_repo.get_resource("one")
     d_gr = d_repo.get_resource("one")
     save_as_tabix_table(
@@ -529,7 +529,7 @@ def regions_tabix_table(tmp_path):
         })
     d_repo = build_genomic_resource_repository(
         {"id": "d", "type": "directory", "directory": tmp_path})
-    d_repo.store_all_resources(e_repo)
+    d_repo.store_all_resources_full(e_repo)
     e_gr = e_repo.get_resource("one")
     d_gr = d_repo.get_resource("one")
     save_as_tabix_table(
@@ -651,7 +651,7 @@ def tabix_table_multiline(tmp_path):
         })
     d_repo = build_genomic_resource_repository(
         {"id": "d", "type": "directory", "directory": tmp_path})
-    d_repo.store_all_resources(e_repo)
+    d_repo.store_all_resources_full(e_repo)
     e_gr = e_repo.get_resource("one")
     d_gr = d_repo.get_resource("one")
     save_as_tabix_table(
@@ -731,7 +731,7 @@ def test_tabix_middle_optimization(tmp_path):
         })
     d_repo = build_genomic_resource_repository(
         {"id": "d", "type": "directory", "directory": tmp_path})
-    d_repo.store_all_resources(e_repo)
+    d_repo.store_all_resources_full(e_repo)
     e_gr = e_repo.get_resource("one")
     d_gr = d_repo.get_resource("one")
     save_as_tabix_table(
@@ -777,7 +777,7 @@ def test_tabix_middle_optimization_regions(tmp_path):
         })
     d_repo = build_genomic_resource_repository(
         {"id": "d", "type": "directory", "directory": tmp_path})
-    d_repo.store_all_resources(e_repo)
+    d_repo.store_all_resources_full(e_repo)
     e_gr = e_repo.get_resource("one")
     d_gr = d_repo.get_resource("one")
     save_as_tabix_table(
@@ -845,7 +845,7 @@ def test_tabix_middle_optimization_regions_buggy_1(tmp_path):
         })
     d_repo = build_genomic_resource_repository(
         {"id": "d", "type": "directory", "directory": tmp_path})
-    d_repo.store_all_resources(e_repo)
+    d_repo.store_all_resources_full(e_repo)
     e_gr = e_repo.get_resource("one")
     d_gr = d_repo.get_resource("one")
     save_as_tabix_table(
@@ -895,7 +895,7 @@ def test_buggy_fitcons_e67(tmp_path):
         })
     d_repo = build_genomic_resource_repository(
         {"id": "d", "type": "directory", "directory": tmp_path})
-    d_repo.store_all_resources(e_repo)
+    d_repo.store_all_resources_full(e_repo)
     e_gr = e_repo.get_resource("one")
     d_gr = d_repo.get_resource("one")
     save_as_tabix_table(
@@ -944,7 +944,7 @@ def test_tabix_jump_config(tmp_path, jump_threshold, expected):
         })
     d_repo = build_genomic_resource_repository(
         {"id": "d", "type": "directory", "directory": tmp_path})
-    d_repo.store_all_resources(e_repo)
+    d_repo.store_all_resources_full(e_repo)
     e_gr = e_repo.get_resource("one")
     d_gr = d_repo.get_resource("one")
     save_as_tabix_table(
@@ -995,7 +995,7 @@ def test_tabix_max_buffer(tmp_path, buffer_maxsize, jump_threshold):
         })
     d_repo = build_genomic_resource_repository(
         {"id": "d", "type": "directory", "directory": tmp_path})
-    d_repo.store_all_resources(e_repo)
+    d_repo.store_all_resources_full(e_repo)
     e_gr = e_repo.get_resource("one")
     d_gr = d_repo.get_resource("one")
     save_as_tabix_table(

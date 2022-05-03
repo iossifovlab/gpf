@@ -1,3 +1,4 @@
+"""Provides caching genomic resources"""
 import os
 import pathlib
 import logging
@@ -15,7 +16,7 @@ logger = logging.getLogger(__name__)
 class GenomicResourceCachedRepo(GenomicResourceRepo):
     def __init__(self, child, cache_dir):
         logger.debug(
-            f"creating cached GRR with cache directory: {cache_dir}")
+            "creating cached GRR with cache directory: %s", cache_dir)
 
         self.child: GenomicResourceRepo = child
         self.cache_dir = pathlib.Path(cache_dir)
@@ -31,7 +32,7 @@ class GenomicResourceCachedRepo(GenomicResourceRepo):
         if repo_id not in self.cache_repos:
             cached_repo_dir = self.cache_dir / repo_id
             logger.debug(
-                f"going to create cached repo directory: {cached_repo_dir}")
+                "going to create cached repo directory: %s", cached_repo_dir)
             os.makedirs(cached_repo_dir, exist_ok=True)
             self.cache_repos[repo_id] = \
                 GenomicResourceDirRepo(f"{repo_id}.cached", cached_repo_dir)
@@ -41,6 +42,7 @@ class GenomicResourceCachedRepo(GenomicResourceRepo):
 
     def get_resource(self, resource_id, version_constraint=None,
                      genomic_repository_id=None) -> Optional[GenomicResource]:
+
         gr_child = self.child.get_resource(
             resource_id, version_constraint, genomic_repository_id)
 
@@ -56,7 +58,7 @@ class GenomicResourceCachedRepo(GenomicResourceRepo):
         if gr_cache:
             self.refresh_cached_genomic_resource(gr_cache, gr_child)
         else:
-            cached_repo.store_resource(gr_child)
+            cached_repo.store_resource_full(gr_child)
         return cached_repo.get_resource(resource_id,
                                         exact_version_constraint)
 
@@ -68,7 +70,7 @@ class GenomicResourceCachedRepo(GenomicResourceRepo):
                     gr_child.repo.repo_id
             )
             futures.append(
-                executor.submit(cached_repo.store_resource, gr_child)
+                executor.submit(cached_repo.store_resource_full, gr_child)
             )
         for future in as_completed(futures):
             future.result()

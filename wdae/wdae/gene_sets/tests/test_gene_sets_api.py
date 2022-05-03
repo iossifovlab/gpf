@@ -29,7 +29,6 @@ def test_gene_sets_collections(db, admin_client):
     assert status.HTTP_200_OK == response.status_code, repr(response.content)
 
     data = response.data
-    assert len(data) == 12, data
 
     local_main = data[0]
     assert "main" == local_main["name"]
@@ -44,6 +43,9 @@ def test_gene_sets_collections(db, admin_client):
     remote_main = data[5]
     assert "TEST_REMOTE_main" == remote_main["name"]
     # self.assertEquals(8, len(denovo['types']))
+
+    print(data)
+    assert len(data) == 12, data
 
 
 def test_gene_set_download(db, admin_client):

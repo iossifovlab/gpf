@@ -1,5 +1,5 @@
 from dae.genomic_resources.embeded_repository import GenomicResourceEmbededRepo
-from dae.genomic_resources.repository import GenomicResource
+from dae.genomic_resources.repository import GenomicResource, Manifest
 
 
 def test_the_basic_resource_finding():
@@ -42,7 +42,7 @@ def test_md5_checksum():
     }})
 
     gr = repo.get_resource("one")
-    assert gr.get_md5_sum("chrAll.fa") == "a778802ca2a9c24a08981f9be4f2f31f"
+    assert gr.compute_md5_sum("chrAll.fa") == "a778802ca2a9c24a08981f9be4f2f31f"
 
 
 def test_manifest_file_creation():
@@ -57,7 +57,7 @@ def test_manifest_file_creation():
         }
     })
     gr = repo.get_resource("one")
-    assert gr.get_manifest() == [
+    assert gr.get_manifest() == Manifest.from_manifest_entries([
         {'name': 'data.txt', 'size': 9, 'time': '2000-03-08T10:03:03',
          'md5': '1e50210a0202497fb79bc38b6ade6c34'},
         {'name': 'genomic_resource.yaml', 'size': 0, 'time': '2000-03-03',
@@ -65,7 +65,7 @@ def test_manifest_file_creation():
         {'name': 'stats/hists.png', 'size': 3, 'time': '1999-03-08T10:04:03',
          'md5': '55505ba281b015ec31f03ccb151b2a34'},
         {'name': 'stats/hists.txt', 'size': 5, 'time': '1999-03-08T10:03:03',
-         'md5': '9d9676541599e2054d98df2d361775c0'}]
+         'md5': '9d9676541599e2054d98df2d361775c0'}])
 
 
 def test_type_of_genomic_resoruces():

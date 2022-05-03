@@ -1,15 +1,17 @@
+"""Provides URL genomic resources repository"""
+
 import io
 import gzip
-from urllib.request import urlopen
-import yaml
 import logging
+
+from urllib.request import urlopen
+from urllib.parse import urlparse
+
+import yaml
 import pysam  # type: ignore
 import fsspec  # type: ignore
 
-from urllib.parse import urlparse
-
-
-from .repository import GenomicResource
+from .repository import GenomicResource, Manifest
 from .repository import GenomicResourceRealRepo
 from .repository import GRP_CONTENTS_FILE_NAME
 from .repository import GR_ENCODING
@@ -33,23 +35,23 @@ class GenomicResourceURLRepo(GenomicResourceRealRepo):
         if self._all_resources is None:
             self._all_resources = []
             url = f"{self.url}/{GRP_CONTENTS_FILE_NAME}"
-            logger.debug(f"url repo to open: {url}")
+            logger.debug("url repo to open: %s", url)
             contents = yaml.safe_load(self.filesystem.open(url))
 
             for rdf in contents:
-                version = tuple(map(int, rdf['version'].split(".")))
+                version = tuple(map(int, rdf["version"].split(".")))
+                manifest = Manifest.from_manifest_entries(rdf["manifest"])
                 resource = self.build_genomic_resource(
-                    rdf['id'], version, config=rdf['config'],
-                    manifest=rdf['manifest'])
+                    rdf["id"], version, config=rdf["config"],
+                    manifest=manifest)
                 logger.debug(
-                    f"url repo caching resource {resource.resource_id}")
+                    "url repo caching resource %s", resource.resource_id)
                 self._all_resources.append(resource)
         yield from self._all_resources
 
     def get_files(self, gr: GenomicResource):
-        mnfst = gr.get_manifest()
-        for mnfst in mnfst:
-            yield mnfst['name'], int(mnfst['size']), mnfst['time']
+        for entry in gr.get_manifest():
+            yield entry.name, entry.size, entry.time
 
     def file_exists(self, genomic_resource, filename):
         file_url = self.get_file_url(genomic_resource, filename)
@@ -64,10 +66,10 @@ class GenomicResourceURLRepo(GenomicResourceRealRepo):
                       uncompress=False,
                       seekable=False):
 
-        mode = mode if mode else "rb"
+        mode = mode if mode else "rt"
 
         file_url = self.get_file_url(genomic_resource, filename)
-        logger.debug(f"opening url resource: {file_url}")
+        logger.debug("opening url resource: %s", file_url)
 
         if self.scheme in ["http", "https"] and not seekable:
             binary_stream = urlopen(file_url)
@@ -85,11 +87,11 @@ class GenomicResourceURLRepo(GenomicResourceRealRepo):
     def open_tabix_file(self, genomic_resource,  filename,
                         index_filename=None):
         if self.scheme not in ['http', 'https', 's3']:
-            raise Exception(
+            raise ValueError(
                 f"Tabix files are not supported by GenomicResourceURLRepo "
                 f"for URLs with scheme {self.scheme}. Only http(s) URLs allow "
                 f"the direct access needed by tabix")
         file_url = self.get_file_url(genomic_resource, filename)
         index_url = self.get_file_url(genomic_resource, index_filename) \
             if index_filename else None
-        return pysam.TabixFile(file_url, index=index_url)
+        return pysam.TabixFile(file_url, index=index_url)  # pylint: disable=no-member

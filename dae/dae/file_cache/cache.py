@@ -20,7 +20,7 @@ class ResourceFileCache:
     def get_file_path(self, resource_id, filename, is_binary=False):
         """Given resource_id and filename returns local filesystem path
         to the resource file
-        
+
         In case the specified filename does not belong to the resource
         raises a ValueError exception"""
         resource = self.grr.get_resource(resource_id)
