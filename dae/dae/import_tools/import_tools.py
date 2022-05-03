@@ -71,8 +71,8 @@ class ImportProject():
         for type, region_bins_func in types.items():
             config = self.import_config["input"].get(type, None)
             if config is not None:
-                for rb, regions in region_bins_func(config):
-                    buckets.append(BucketId(type, rb, regions, 0))  #TODO bucket index
+                for rb, regions, bucket_index in region_bins_func(config):
+                    buckets.append(BucketId(type, rb, regions, bucket_index))
         return buckets
 
     def get_variant_loader(self, bucket_id, reference_genome=None):
@@ -172,7 +172,7 @@ class ImportProject():
 
         return variants_loader
 
-    def get_default_bucket_index(self, loader_type):
+    def _get_default_bucket_index(self, loader_type):
         return {
             "denovo": 1,
             "vcf": 1000,
@@ -225,7 +225,11 @@ class ImportProject():
             target_chromosomes
         )
 
-        yield from variants_targets.items()
+        default_bucket_index = self._get_default_bucket_index(loader_type)
+        for rb, regions in variants_targets.items():
+            bucket_index = default_bucket_index + \
+                partition_helper.bucket_index(rb)
+            yield rb, regions, bucket_index
 
 
 def main():

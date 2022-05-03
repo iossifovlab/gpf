@@ -3,7 +3,6 @@ import os
 from dae.backends.impala.parquet_io import ParquetManager
 from dae.import_tools.task_graph import TaskGraph
 from dae.utils import fs_utils
-from dae.backends.impala.import_commons import MakefilePartitionHelper
 import toml
 
 
@@ -17,20 +16,7 @@ class Schema1ParquetWriter:
         partition_description = project.get_partition_description(
             work_dir=out_dir)
 
-        loader_args = project.import_config["input"][bucket_id.type]
-        generator = MakefilePartitionHelper(
-            partition_description,
-            gpf_instance.reference_genome,
-            add_chrom_prefix=loader_args.get("add_chrom_prefix", None),
-            del_chrom_prefix=loader_args.get("del_chrom_prefix", None),
-        )
-
-        bucket_index = project.get_default_bucket_index(bucket_id.type)
         if bucket_id.region_bin is not None and bucket_id.region_bin != "none":
-            bucket_index = (
-                project.get_default_bucket_index(bucket_id.type)
-                + generator.bucket_index(bucket_id.region_bin)
-            )
             logger.info(
                 f"resetting regions (rb: {bucket_id.region_bin}): "
                 f"{bucket_id.regions}")
@@ -46,7 +32,7 @@ class Schema1ParquetWriter:
         ParquetManager.variants_to_parquet(
             variants_loader,
             partition_description,
-            bucket_index=bucket_index,
+            bucket_index=bucket_id.index,
             rows=rows,
         )
 
