@@ -155,19 +155,9 @@
                 ">
                 <div
                   class="effect-type-data-values"
-                  title="{{ effectType }}&#10;{{ effectTypeData.column }}&#10;number of observed events: {{
-                    effectTypeData.numberOfObservedEvents
-                  }}&#10;observed rate per individual: {{
-                    effectTypeData.observedRatePerChild | number
-                  }}&#10;number of individuals with events: {{
-                    effectTypeData.numberOfChildrenWithEvent
-                  }}&#10;percent of individuals with events: {{
-                    effectTypeData.percentOfChildrenWithEvents | percent
-                  }}">
-                  {{ effectTypeData.numberOfObservedEvents }}, {{ effectTypeData.observedRatePerChild | number
-                  }}<br />({{ effectTypeData.numberOfChildrenWithEvent }},
-                  {{ effectTypeData.percentOfChildrenWithEvents | percent }})
-                </div>
+                  title="{{ effectType }}&#10;{{ effectTypeData.column }}&#10;number of observed events: {{ effectTypeData.numberOfObservedEvents }}&#10;observed rate per individual: {{ effectTypeData.observedRatePerChild | number }}&#10;number of individuals with events: {{ effectTypeData.numberOfChildrenWithEvent }}&#10;percent of individuals with events: {{ effectTypeData.percentOfChildrenWithEvents | percent }}"
+                  >{{ effectTypeData.numberOfObservedEvents }}, {{ effectTypeData.observedRatePerChild | number }}<br />({{ effectTypeData.numberOfChildrenWithEvent }}, {{ effectTypeData.percentOfChildrenWithEvents | percent }})</div
+                >
               </td>
             </tr>
           </tbody>
