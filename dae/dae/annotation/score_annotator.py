@@ -118,7 +118,7 @@ def build_position_score_annotator(pipeline: AnnotationPipeline, config: Dict):
     if resource is None:
         logger.error(
             f"can't find resource {resource_id} in "
-            f"genomic resource repository {pipeline.repository.repo_id}")
+            f"genomic resource repository")
         raise ValueError(f"can't find resource {resource_id}")
 
     score = open_position_score_from_resource(resource)
@@ -228,7 +228,7 @@ def build_np_score_annotator(pipeline: AnnotationPipeline, config: Dict):
     if resource is None:
         logger.error(
             f"can't find resource {resource_id} in "
-            f"genomic resource repository {pipeline.repository.repo_id}")
+            f"genomic resource repository")
         raise ValueError(f"can't find resource {resource_id}")
 
     score = open_np_score_from_resource(resource)
@@ -303,7 +303,7 @@ def build_allele_score_annotator(pipeline: AnnotationPipeline, config: Dict):
     if resource is None:
         logger.error(
             f"can't find resource {resource_id} in "
-            f"genomic resource repository {pipeline.repository.repo_id}")
+            f"genomic resource repository")
         raise ValueError(f"can't find resource {resource_id}")
 
     score = open_allele_score_from_resource(resource)
