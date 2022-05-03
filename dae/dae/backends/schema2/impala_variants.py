@@ -1,6 +1,7 @@
 import time 
 import json 
 import logging
+import configparser
 import numpy as np
 from contextlib import closing
 from impala.util import as_pandas
@@ -30,6 +31,7 @@ class ImpalaVariants:
             family_variant_table, 
             summary_allele_table, 
             pedigree_table,
+            meta_table, 
             gene_models=None):
 
         super(ImpalaVariants, self).__init__()
@@ -42,6 +44,7 @@ class ImpalaVariants:
         self.family_variant_table = family_variant_table
         self.summary_allele_table = summary_allele_table
         self.pedigree_table = pedigree_table
+        self.meta_table = meta_table
         self.summary_allele_schema = self._fetch_schema(self.summary_allele_table)
         self.family_variant_schema = self._fetch_schema(self.family_variant_table)
         self.combined_columns = {**self.family_variant_schema, **self.summary_allele_schema}
@@ -58,15 +61,20 @@ class ImpalaVariants:
         assert gene_models is not None
         self.gene_models = gene_models
 
-        self.table_properties = {
-            "region_length": 100000,
-            "chromosomes": list(map(str, [1])),
-            "family_bin_size": 5,
-            "rare_boundary": 5, 
-            "coding_effect_types": set("splice-site,frame-shift,nonsense,no-frame-shift-newStop,noStart,noEnd,missense,no-frame-shift,CDS,synonymous,coding_unknown,regulatory,3'UTR,5'UTR".split(","))
-        }
+        _tbl_props = self._fetch_tblproperties(self.meta_table)
+        
+        # pass config to PartitionDesciption 
 
-        # self._fetch_tblproperties()
+        self.table_properties = {
+            "region_length": int(_tbl_props['region_bin']['region_length']),
+            "chromosomes": list(map(lambda c: c.strip(), _tbl_props['region_bin']['chromosomes'].split(","))),
+            "family_bin_size": int(_tbl_props['family_bin']['family_bin_size']),
+            "rare_boundary": int(_tbl_props['frequency_bin']['rare_boundary']),
+            "coding_effect_types": set([
+                lambda s: s.strip() \
+                for s in _tbl_props['coding_bin']['coding_effect_types'].split(",")
+            ])
+        }
 
     def connection(self):
         conn = self._impala_helpers.connection()
@@ -91,7 +99,22 @@ class ImpalaVariants:
                 col_name: col_type for (_, col_name, col_type) in records
             }
             return schema
-
+    
+    def _fetch_tblproperties(self, meta_table):
+        with closing(self.connection()) as conn:
+            with conn.cursor() as cursor:    
+                q = """SELECT value FROM {db}.{meta_table} 
+                       WHERE key = 'partition_description'
+                       LIMIT 1
+                    """.format(db=self.db, meta_table=meta_table)
+                
+                cursor.execute(q)
+                config = configparser.ConfigParser()
+                
+                for r in cursor:
+                    config.read_string(r[0])
+                    return config           
+                   
     def _summary_variants_iterator(
             self,
             regions=None,

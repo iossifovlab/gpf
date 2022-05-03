@@ -84,6 +84,7 @@ if __name__ == "__main__":
         "imported_family_alleles", 
         "imported_summary_alleles",
         "imported_pedigree",
+        "imported_meta",
         gm)
 
     b2 = BigQueryVariants(
@@ -92,6 +93,7 @@ if __name__ == "__main__":
         "imported_summary_alleles",
         "imported_family_alleles",
         "imported_pedigree",
+        "imported_meta",
         gm)
 
     logger.info("101, gene")

@@ -3,6 +3,7 @@ import json
 import logging
 import numpy as np 
 from contextlib import closing
+import configparser
 from dae.pedigrees.family import FamiliesData
 from dae.variants.attributes import Role, Status, Sex
 from dae.utils.variant_utils import mat2str
@@ -39,6 +40,7 @@ class BigQueryVariants:
             summary_allele_table,
             family_variant_table,
             pedigree_table,
+            meta_table, 
             gene_models=None):
 
         super(BigQueryVariants, self).__init__()
@@ -50,6 +52,9 @@ class BigQueryVariants:
         self.client = bigquery.Client(project=gcp_project_id)
         self.db = db
         self.start_time = time.time()
+
+        # meta table: partition settings 
+        self.meta_table = meta_table 
 
         # family and summary tables
         self.summary_allele_table = summary_allele_table
@@ -75,13 +80,31 @@ class BigQueryVariants:
         # self._fetch_tblproperties()
         # hardcoding relevant for specific dataset
         # pass in table_properties OR table in datastore
+        _tbl_props = self._fetch_tblproperties(self.meta_table) 
+
         self.table_properties = {
-            "region_length": 100000,
-            "chromosomes": list(map(str, [1])),
-            "family_bin_size": 5,
-            "rare_boundary": 5,
-            "coding_effect_types": set("splice-site,frame-shift,nonsense,no-frame-shift-newStop,noStart,noEnd,missense,no-frame-shift,CDS,synonymous,coding_unknown,regulatory,3'UTR,5'UTR".split(","))
+            "region_length": int(_tbl_props['region_bin']['region_length']),
+            "chromosomes": list(map(lambda c: c.strip(), _tbl_props['region_bin']['chromosomes'].split(","))),
+            "family_bin_size": int(_tbl_props['family_bin']['family_bin_size']),
+            "rare_boundary": int(_tbl_props['frequency_bin']['rare_boundary']),
+            "coding_effect_types": set([
+                lambda s: s.strip() \
+                for s in _tbl_props['coding_bin']['coding_effect_types'].split(",")
+            ])
         }
+
+
+    def _fetch_tblproperties(self, meta_table):
+        q = """SELECT value FROM {db}.{meta_table}
+               WHERE key = 'partition_description'
+               LIMIT 1
+            """.format(db=self.db, meta_table=meta_table)
+
+        result = self.client.query(q).result()
+        config = configparser.ConfigParser()
+        for r in result:
+            config.read_string(r[0])
+            return config
 
     def _fetch_schema(self, table):
         q = """

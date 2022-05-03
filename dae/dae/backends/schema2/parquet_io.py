@@ -1,4 +1,5 @@
 import os
+import io
 import sys
 import time
 import re
@@ -157,6 +158,10 @@ class ParquetPartitionDescriptor(PartitionDescriptor):
     @property
     def rare_boundary(self):
         return self._rare_boundary
+
+
+    # reoganize to path 
+    # def from_string 
 
     @staticmethod
     def from_config(config_path, root_dirname=""):
@@ -379,8 +384,25 @@ class ParquetPartitionDescriptor(PartitionDescriptor):
         filename = os.path.join(self.output, "_PARTITION_DESCRIPTION")
         os.makedirs(os.path.dirname(filename), exist_ok=True)
 
+        
         with open(filename, "w") as configfile:
             config.write(configfile)
+        
+        partition_desc_table = pa.Table.from_pydict(
+            {
+                "key": ["partition_description"],
+                "value": [open(filename, "r").read()]
+            },
+            schema = pa.schema({
+                "key": pa.string(),
+                "value":pa.string()
+            })
+        )
+
+        pq.write_table(
+            partition_desc_table, 
+            os.path.join(self.output, "meta.parquet")
+        ) 
 
     def generate_file_access_glob(self):
         """
