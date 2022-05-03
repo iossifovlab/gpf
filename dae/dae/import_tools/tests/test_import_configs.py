@@ -6,7 +6,8 @@ from glob import glob
 from dae.import_tools import import_tools
 
 
-@pytest.mark.parametrize("config_dir", ["denovo_import", "vcf_import"])
+@pytest.mark.parametrize("config_dir", ["denovo_import", "vcf_import",
+                                        "cnv_import"])
 def test_denovo_import_config(tmpdir, gpf_instance_2019, config_dir):
     input_dir = os.path.join(
         os.path.dirname(os.path.realpath(__file__)),
@@ -48,5 +49,5 @@ def test_add_chrom_prefix():
     import_config["input"]["input_dir"] = input_dir
 
     project = import_tools.ImportProject(import_config)
-    loader = project.get_variant_loader("vcf")
+    loader = project._get_variant_loader("vcf")
     assert loader._chrom_prefix == "chr"
