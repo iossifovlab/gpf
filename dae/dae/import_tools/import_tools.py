@@ -89,7 +89,7 @@ class ImportProject():
         variants_filenames = loader_config["files"]
         variants_filenames = [fs_utils.join(self.input_dir, f)
                               for f in variants_filenames]
-        if loader_type in {"denovo", "cnv"}:
+        if loader_type in {"denovo", "cnv", "dae"}:
             assert len(variants_filenames) == 1,\
                 f"Support for multiple {loader_type} files is NYI"
             variants_filenames = variants_filenames[0]

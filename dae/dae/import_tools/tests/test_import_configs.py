@@ -7,7 +7,7 @@ from dae.import_tools import import_tools
 
 
 @pytest.mark.parametrize("config_dir", ["denovo_import", "vcf_import",
-                                        "cnv_import"])
+                                        "cnv_import", "dae_import"])
 def test_denovo_import_config(tmpdir, gpf_instance_2019, config_dir):
     input_dir = os.path.join(
         os.path.dirname(os.path.realpath(__file__)),
