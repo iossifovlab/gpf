@@ -76,6 +76,9 @@ class Schema1ParquetWriter:
 
 
 class ImpalaSchema1ImportStorage:
+    def __init__(self, project):
+        self.project = project
+
     @staticmethod
     def _pedigree_dir(project):
         return fs_utils.join(project.work_dir, f"{project.study_id}_pedigree")
@@ -163,22 +166,22 @@ class ImpalaSchema1ImportStorage:
             variants_schema=variants_schema)
 
     def generate_import_task_graph(self, project) -> TaskGraph:
-        G = TaskGraph()
-        pedigree_task = G.create_task("ped task", self._do_write_pedigree,
-                                      [project], [])
+        graph = TaskGraph()
+        pedigree_task = graph.create_task("ped task", self._do_write_pedigree,
+                                          [project], [])
 
         bucket_tasks = []
-        for b in project.get_import_variants_buckets():
-            task = G.create_task(f"Task {b}", self._do_write_variant,
-                                 [project, b], [])
+        for b in project.get_import_variants_bucket_ids():
+            task = graph.create_task(f"Task {b}", self._do_write_variant,
+                                     [project, b], [])
             bucket_tasks.append(task)
 
         if project.has_destination():
-            hdfs_task = G.create_task(
+            hdfs_task = graph.create_task(
                 "hdfs copy", self._do_load_in_hdfs,
                 [project], [pedigree_task] + bucket_tasks)
 
-            G.create_task("impala import", self._do_load_in_impala,
-                          [project], [hdfs_task])
+            graph.create_task("impala import", self._do_load_in_impala,
+                              [project], [hdfs_task])
 
-        return G
+        return graph

@@ -1,6 +1,7 @@
 import argparse
 from dataclasses import dataclass
-from dae.backends.dae.loader import DenovoLoader
+from dae.backends.cnv.loader import CNVLoader
+from dae.backends.dae.loader import DaeTransmittedLoader, DenovoLoader
 from dae.backends.vcf.loader import VcfLoader
 from dae.backends.impala.parquet_io import ParquetPartitionDescriptor,\
     NoPartitionDescriptor
@@ -22,6 +23,8 @@ from dae.backends.impala.import_commons import MakefilePartitionHelper,\
 class BucketId:
     type: str
     region_bin: str
+    region: str
+    index: int
 
 
 class ImportProject():
@@ -32,6 +35,18 @@ class ImportProject():
             assert len_files == 1, "Support for multiple denovo files is NYI"
 
         self._gpf_instance = gpf_instance
+
+    @staticmethod
+    def build_from_config(import_config, gpf_instance=None):
+        return ImportProject(import_config, gpf_instance)
+
+    @staticmethod
+    def build_from_file(import_filename, gpf_instance=None):
+        import_config = GPFConfigParser.parse_and_interpolate_file(
+            import_filename)
+        import_config = GPFConfigParser.validate_config(import_config,
+                                                        import_config_schema)
+        return ImportProject(import_config, gpf_instance)
 
     def get_pedigree(self) -> FamiliesData:
         families_filename = self.import_config["input"]["pedigree"]["file"]
@@ -45,18 +60,27 @@ class ImportProject():
         )
         return families_loader.load()
 
-    def get_import_variants_buckets(self) -> list[BucketId]:
+    def get_import_variants_bucket_ids(self) -> list[BucketId]:
         types = {
             "denovo": self._denovo_region_bins,
             "vcf": self._vcf_region_bins,
-        }  # TODO add the other two kinds
+            "cnv": self._cnv_region_bins,
+            "dae": self._dae_region_bins,
+        }
+        buckets = []
         for type, region_bins_func in types.items():
             config = self.import_config["input"].get(type, None)
             if config is not None:
-                for rb in region_bins_func(config):
-                    yield BucketId(type, rb)
+                for rb, region in region_bins_func(config):
+                    buckets.append(BucketId(type, rb, region, 0))  #TODO bucket index
+        return buckets
 
-    def get_variant_loader(self, loader_type, reference_genome=None) \
+    def get_variant_loader(self, bucket_id, reference_genome=None):
+        loader = self._get_variant_loader(bucket_id.type, reference_genome)
+        loader.reset_regions(bucket_id.region)
+        return loader
+
+    def _get_variant_loader(self, loader_type, reference_genome=None) \
             -> VariantsLoader:
         assert loader_type in self.import_config["input"],\
             f"No input config for loader {loader_type}"
@@ -70,15 +94,16 @@ class ImportProject():
         variants_filenames = loader_config["files"]
         variants_filenames = [fs_utils.join(self.input_dir, f)
                               for f in variants_filenames]
-        if loader_type == "denovo":
+        if loader_type in {"denovo", "cnv"}:
             assert len(variants_filenames) == 1,\
-                "Support for multiple denovo files is NYI"
+                f"Support for multiple {loader_type} files is NYI"
             variants_filenames = variants_filenames[0]
 
         loader_cls = {
             "denovo": DenovoLoader,
             "vcf": VcfLoader,
-            # TODO add more loaders
+            "cnv": CNVLoader,
+            "dae": DaeTransmittedLoader,
         }[loader_type]
         loader = loader_cls(
             self.get_pedigree(),
@@ -104,6 +129,9 @@ class ImportProject():
             return GPFInstance(work_dir=instance_config.get("path", None))
         else:
             return self._gpf_instance
+
+    def get_storage(self):
+        return ImpalaSchema1ImportStorage(self)
 
     @property
     def work_dir(self):
@@ -169,13 +197,19 @@ class ImportProject():
     def _vcf_region_bins(self, input_config):
         yield from self._loader_region_bins(input_config, "vcf")
 
+    def _cnv_region_bins(self, input_config):
+        yield from self._loader_region_bins(input_config, "cnv")
+
+    def _dae_region_bins(self, input_config):
+        yield from self._loader_region_bins(input_config, "dae")
+
     def _loader_region_bins(self, loader_args, loader_type):
         # TODO pass the gpf instance as argument to this func
         reference_genome = self.get_gpf_instance().reference_genome
 
         target_chromosomes = loader_args.get("target_chromosomes", None)
         if target_chromosomes is None:
-            loader = self.get_variant_loader(loader_type, reference_genome)
+            loader = self._get_variant_loader(loader_type, reference_genome)
             target_chromosomes = loader.chromosomes
 
         partition_description = self.get_partition_description()
@@ -191,7 +225,7 @@ class ImportProject():
             target_chromosomes
         )
 
-        yield from variants_targets.keys()
+        yield from variants_targets.items()
 
 
 def main():
@@ -219,7 +253,7 @@ def main():
 
 
 def run(import_config, executor=SequentialExecutor(), gpf_instance=None):
-    project = ImportProject(import_config, gpf_instance)
-    storage = ImpalaSchema1ImportStorage()
-    task_graph = storage.generate_import_task_graph(project)
+    project = ImportProject.build_from_config(import_config, gpf_instance)
+    storage = project.get_storage()
+    task_graph = storage.generate_import_task_graph()
     executor.execute(task_graph)
