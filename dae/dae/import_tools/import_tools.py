@@ -61,18 +61,13 @@ class ImportProject():
         return families_loader.load()
 
     def get_import_variants_buckets(self) -> list[Bucket]:
-        types = {
-            "denovo": self._denovo_region_bins,
-            "vcf": self._vcf_region_bins,
-            "cnv": self._cnv_region_bins,
-            "dae": self._dae_region_bins,
-        }
+        types = ["denovo", "vcf", "cnv", "dae"]
         buckets = []
-        for type, region_bins_func in types.items():
+        for type in types:
             config = self.import_config["input"].get(type, None)
             if config is not None:
-                for rb, regions, bucket_index in region_bins_func(config):
-                    buckets.append(Bucket(type, rb, regions, bucket_index))
+                for bucket in self._loader_region_bins(config, type):
+                    buckets.append(bucket)
         return buckets
 
     def get_variant_loader(self, bucket, reference_genome=None):
@@ -191,18 +186,6 @@ class ImportProject():
                 res[k] = v
         return res
 
-    def _denovo_region_bins(self, input_config):
-        yield from self._loader_region_bins(input_config, "denovo")
-
-    def _vcf_region_bins(self, input_config):
-        yield from self._loader_region_bins(input_config, "vcf")
-
-    def _cnv_region_bins(self, input_config):
-        yield from self._loader_region_bins(input_config, "cnv")
-
-    def _dae_region_bins(self, input_config):
-        yield from self._loader_region_bins(input_config, "dae")
-
     def _loader_region_bins(self, loader_args, loader_type):
         # TODO pass the gpf instance as argument to this func
         reference_genome = self.get_gpf_instance().reference_genome
@@ -229,7 +212,7 @@ class ImportProject():
         for rb, regions in variants_targets.items():
             bucket_index = default_bucket_index + \
                 partition_helper.bucket_index(rb)
-            yield rb, regions, bucket_index
+            yield Bucket(loader_type, rb, regions, bucket_index)
 
 
 def main():
