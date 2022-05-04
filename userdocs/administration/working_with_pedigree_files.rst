@@ -276,32 +276,6 @@ The canonical pedigree file contains `role` column and so, the GPF system uses t
 column to assign the role of each individual.
 
 
-Prerequisites
-#############
-
-The sample data used in the examples of this guide can be found
-`here <https://iossifovlab.com/distribution/public/tutorial_examples/>`_.
-
-A pedigree file (usually found with a .ped extension) is a text file with
-delimiter-separated values (comma, tab, etc.), that contains the
-following columns:
-
-Family ID:
-  IDs for families.
-Person ID:
-  IDs for separate individuals.
-Father ID:
-  IDs of the individual's father.
-Mother ID:
-  IDs of the individual's mother.
-Sex:
-  The sex of the individual.
-Status:
-  The status of the individual - whether they are affected or not.
-Role:
-  The role of the individual within their family.
-
-
 Preparing the pedigree data
 ###########################
 
@@ -315,14 +289,14 @@ individuals.
 
 We must ensure the values in the sex, status and role columns in the file
 are supported by the GPF system. You can see a list of the supported
-values here - :ref:`sex <allowed_values_sex>`,
-:ref:`status <allowed_values_status>`,
-:ref:`role <allowed_values_role>`.
+values here - :ref:`supported values for sex`,
+:ref:`supported values for status`,
+:ref:`supported values for role`.
 Also these properties support synonyms, which are listed on the tables below:
 
 
 Supported values for sex
-++++++++++++++++++++++++
+========================
 
 ====================================    ================================================
 Sex column canonical values             Synonyms (case insensitive)
@@ -336,7 +310,7 @@ U                                       unspecified, U, 0
 
 
 Supported values for status
-+++++++++++++++++++++++++++
+===========================
 
 ====================================    ================================================
 Sex column canonical values             Synonyms (case insensitive)
@@ -351,7 +325,7 @@ unspecified                             unspecified, -, 0
 
 
 Supported values for role
-+++++++++++++++++++++++++
+=========================
 
 ====================================    ================================================
 Role column canonical values            Synonyms (case insensitive)
