@@ -1,0 +1,11 @@
+vars:
+  wd: "."
+
+annotation:
+  conf_file: "%(wd)s/annotation.yaml"
+
+reference_genome:
+  resource_id: "genomes/mock"
+
+gene_models:
+  resource_id: "gene_models/mock"

@@ -1,0 +1,11 @@
+- position_score: scores/mock1
+
+- liftover_annotator:
+    chain: liftover/mock
+    target_genome: genomes/mock
+
+- position_score:
+    resource_id: scores/mock2
+
+- normalize_allele_annotator:
+    genome: genomes/mock
