@@ -16,8 +16,8 @@ Additionally GPF has a tool `draw_pedigree.py`
 that could generate a PDF file with drawings of all pedigrees loaded from
 the input.
 
-Pedigree file
-#############
+Input pedigree file
+###################
 
 A pedigree file (usually found with a .ped extension) is a text file with
 delimiter-separated values (comma, tab, etc.). Each row in this file
@@ -296,7 +296,7 @@ Also these properties support synonyms, which are listed on the tables below:
 
 
 Supported values for sex
-========================
+########################
 
 ====================================    ================================================
 Sex column canonical values             Synonyms (case insensitive)
@@ -310,7 +310,7 @@ U                                       unspecified, U, 0
 
 
 Supported values for status
-===========================
+###########################
 
 ====================================    ================================================
 Sex column canonical values             Synonyms (case insensitive)
@@ -325,7 +325,7 @@ unspecified                             unspecified, -, 0
 
 
 Supported values for role
-=========================
+#########################
 
 ====================================    ================================================
 Role column canonical values            Synonyms (case insensitive)
