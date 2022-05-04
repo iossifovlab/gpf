@@ -50,6 +50,7 @@ extensions = [
     "sphinx.ext.coverage",
     "sphinx.ext.imgmath",
     "sphinx.ext.viewcode",
+    "sphinx.ext.autosectionlabel",
     "sphinx_copybutton",
     "sphinxcontrib.httpdomain",
     "sphinx_autorun",
