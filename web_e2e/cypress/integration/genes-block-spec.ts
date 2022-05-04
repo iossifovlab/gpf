@@ -115,7 +115,7 @@ describe('Genes block gene sets names and count tests', () => {
     },
     {
       collection: 'SPARK Gene Lists',
-      expectedCondition: 'SPARK Gene list ALL 2016, 2017 (76): SPARK Gene list ALL (2016, 2017)'
+      expectedCondition: 'SPARK Gene list ALL 2016,2017 (76): SPARK Gene list ALL 2016,2017'
     },
     {
       collection: 'GO Terms',
@@ -237,7 +237,7 @@ describe('Genes block gene set file length tests', () => {
     },
     {
       collection: 'SPARK Gene Lists',
-      expectedCondition: 'SPARK Gene list ALL 2016, 2017 (76): SPARK Gene list ALL (2016, 2017)'
+      expectedCondition: 'SPARK Gene list ALL 2016,2017 (76): SPARK Gene list ALL 2016,2017'
     },
     {
       collection: 'GO Terms',
