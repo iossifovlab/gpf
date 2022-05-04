@@ -1,5 +1,6 @@
 import argparse
 from dataclasses import dataclass
+import sys
 from dae.backends.cnv.loader import CNVLoader
 from dae.backends.dae.loader import DaeTransmittedLoader, DenovoLoader
 from dae.backends.vcf.loader import VcfLoader
@@ -17,6 +18,7 @@ from dae.pedigrees.loader import FamiliesLoader
 from dae.utils import fs_utils
 from dae.backends.impala.import_commons import MakefilePartitionHelper,\
     construct_import_annotation_pipeline, construct_import_effect_annotator
+from dae.dask.client_factory import DaskClient
 
 
 @dataclass(frozen=True)
@@ -219,9 +221,7 @@ def main():
     parser = argparse.ArgumentParser(description="Import datasets into GPF")
     parser.add_argument("-f", "--config", type=str,
                         help="Path to the import configuration")
-    parser.add_argument("-j", "--jobs", type=int, default=None,
-                        help="Number of jobs to run in parallel. \
- Defaults to the number of processors on the machine")
+    DaskClient.add_arguments(parser)
     args = parser.parse_args()
 
     import_config = GPFConfigParser.parse_and_interpolate_file(args.config)
@@ -229,14 +229,14 @@ def main():
                                                     import_config_schema)
     if args.jobs == 1:
         executor = SequentialExecutor()
+        run(import_config, executor)
     else:
-        from dask.distributed import Client, LocalCluster
-        import os
-        n_jobs = args.jobs if args.jobs and args.jobs >= 1 else os.cpu_count()
-        cluster = LocalCluster(n_workers=n_jobs, threads_per_worker=1)
-        client = Client(cluster)
-        executor = DaskExecutor(client)
-    run(import_config, executor)
+        dask_client = DaskClient.from_arguments(args)
+        if dask_client is None:
+            sys.exit(1)
+        with dask_client as client:
+            executor = DaskExecutor(client)
+            run(import_config, executor)
 
 
 def run(import_config, executor=SequentialExecutor(), gpf_instance=None):
