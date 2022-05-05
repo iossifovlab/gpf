@@ -132,11 +132,11 @@ class CommonReport(object):
             "study_description": genotype_data_study.description,
         })
 
-    def to_dict(self):
+    def to_dict(self, full=False):
         return {
             "id": self.id,
             "people_report": self.people_report.to_dict(),
-            "families_report": self.families_report.to_dict(),
+            "families_report": self.families_report.to_dict(full=full),
             "denovo_report": (
                 self.denovo_report.to_dict()
                 if not self.denovo_report.is_empty()
