@@ -3,6 +3,7 @@ Created on Feb 13, 2018
 
 @author: lubo
 """
+import enum
 import itertools
 import logging
 
@@ -302,6 +303,37 @@ class SummaryAllele(core.Allele):
     @property
     def allele_index(self) -> int:
         return self._allele_index
+
+    @property
+    def to_record(self):
+
+        def enum_to_value(v):
+            if isinstance(v, enum.IntEnum): return int(v)
+            if isinstance(v, enum.Enum): return str(v)
+            return v
+
+        def encode_attributes(attributes):
+            filtered_attr = {}
+            for k, v in attributes.items():
+                if k is not None:
+                    filtered_attr[k] = enum_to_value(v)
+
+            return filtered_attr
+
+        attributes = encode_attributes(self._attributes)
+
+        return {**attributes, **{
+            "chrom":self.chromosome,
+            "position":self.position,
+            "reference":self.reference,
+            "alternative":self.alternative,
+            "end_position":self.end_position,
+            "summary_index":self.summary_index,
+            "allele_index":self.allele_index,
+            "transmission_type": enum_to_value(self.transmission_type),
+            "variant_type": self.variant_type.value if self.variant_type is not None else None,
+            "effect": str(self.effects) if self.effects is not None else None,
+        }}
 
     @property
     def variant_type(self) -> core.Allele.Type:
@@ -760,6 +792,10 @@ class SummaryVariant:
     def transmission_type(self):
         return self.alleles[-1].transmission_type
 
+    @property
+    def to_record(self):
+        return [allele.to_record for allele in self.alt_alleles]
+
 
 class SummaryVariantFactory(object):
     @staticmethod
@@ -785,17 +821,24 @@ class SummaryVariantFactory(object):
 
         allele_index = record.get("allele_index")
 
+        # DEBUG 
         chrom = record.get("chrom")
         position = record.get("position")
         end_position = record.get("end_position")
         reference = record.get("reference")
         alternative = record.get("alternative")
-        allele_type = record.get("variant_type")
+        allele_type = record.get("variant_type", None)
+        transmission_type = record.get("transmission_type", TransmissionType.transmitted)
 
         if position is not None and end_position is not None and \
                 reference is None and alternative is None and \
                 allele_type is None:
             allele_type = SummaryAllele.Type.position
+         
+     
+        if allele_type is not None:
+            allele_type = core.Allele.Type(allele_type)
+
 
         return SummaryAllele(
             chrom,
@@ -806,9 +849,9 @@ class SummaryVariantFactory(object):
             end_position=record.get("end_position", None),
             allele_type=allele_type,
             allele_index=allele_index,
-            transmission_type=record.get("transmission_type"),
+            transmission_type=transmission_type,
             attributes=attributes,
-        )
+        ) 
 
     @staticmethod
     def summary_variant_from_records(

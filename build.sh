@@ -339,7 +339,7 @@ EOT'
           --warn-redundant-casts \
           --show-error-context \
           --no-incremental \
-          --html-report /wd/results/mypy_dae_html_report \
+          --html-report /wd/results/mypy_wdae_html_report \
           > /wd/results/mypy_dae_report || true'
 
     build_run_container bash -c '

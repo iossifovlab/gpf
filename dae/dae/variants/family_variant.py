@@ -107,6 +107,7 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
         self._variant_in_members_objects = None
         self._variant_in_roles = None
         self._variant_in_sexes = None
+        self._variant_in_statuses = None
         self._family_index = None
         self._family_attributes: dict = {}
 
@@ -296,6 +297,10 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
         return self._variant_in_members
 
     @property
+    def allele_in_members(self):
+        return self.variant_in_members
+
+    @property
     def variant_in_members_objects(self):
         if self._variant_in_members_objects is None:
 
@@ -321,6 +326,27 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
         return self._variant_in_roles
 
     @property
+    def allele_in_roles(self):
+        return self.variant_in_roles
+    
+    @property
+    def variant_in_statuses(self):
+        """
+        Returns list of statuses (or 'None') of the members of the family that are 
+        affected by this family variant
+        """
+        if self._variant_in_statuses is None:
+            self._variant_in_statuses = [
+                self.family.persons[pid].status if pid is not None else None
+                for pid in self.variant_in_members
+            ]
+        return self._variant_in_statuses
+
+    @property
+    def allele_in_statuses(self):
+        return self.variant_in_statuses
+
+    @property
     def variant_in_sexes(self):
         """
         Returns list of sexes (or 'None') of the members of the family that are
@@ -332,6 +358,10 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
                 for pid in self.variant_in_members
             ]
         return self._variant_in_sexes
+
+    @property
+    def allele_in_sexes(self):
+        return self.variant_in_sexes
 
     @staticmethod
     def check_mendelian_trio(p1, p2, ch, allele_index):
@@ -647,3 +677,13 @@ class FamilyVariant(SummaryVariant, FamilyDelegate):
         for a in self.alt_alleles:
             members = members.union(filter(None, a.variant_in_members))
         return members
+
+    @property
+    def to_record(self):
+        return {
+            "family_id": self.family_id,
+            "summary_index":self.summary_index,
+            "family_index":self.family_index,
+            "genotype":self.gt.tolist(),
+            "best_state": self.best_state.tolist()
+        }

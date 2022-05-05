@@ -69,6 +69,7 @@ pipeline {
             reportFiles: 'index.html',
             reportName: 'wdae-mypy-report',
             reportTitles: 'wdae-mypy-report'])
+
           publishHTML (target : [allowMissing: true,
             alwaysLinkToLastBuild: true,
             keepAll: true,
