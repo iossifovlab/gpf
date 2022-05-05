@@ -77,7 +77,7 @@ def main(argv, gpf_instance=None):
                     study.study_id)
                 continue
 
-            common_report = CommonReport(study)
+            common_report = CommonReport.from_genotype_study(study)
             file_path = study.config.common_report.file_path
 
             if not os.path.exists(os.path.dirname(file_path)):

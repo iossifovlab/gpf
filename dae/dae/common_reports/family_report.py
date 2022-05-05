@@ -1,46 +1,33 @@
-from collections import OrderedDict
-
 from dae.common_reports.family_counter import FamiliesGroupCounters
 
 
 class FamiliesReport(object):
-    def __init__(
-        self,
-        families,
-        person_set_collections,
-        draw_all_families=False,
-        families_count_show_id=False,
-    ):
-
-        self.families = families
-
-        self.person_set_collections = person_set_collections
-        self.draw_all_families = draw_all_families
-        self.families_count_show_id = families_count_show_id
-
-        self.families_total = len(self.families.values())
-        self.families_counters = self._build_families_counters()
-
-    def to_dict(self):
-        return OrderedDict(
-            [
-                ("families_total", self.families_total),
-                (
-                    "families_counters",
-                    [fc.to_dict() for fc in self.families_counters],
-                ),
-            ]
-        )
-
-    def _build_families_counters(self):
-        result = [
-            FamiliesGroupCounters(
-                self.families,
-                person_set_collection,
-                self.draw_all_families,
-                self.families_count_show_id,
-            )
-            for person_set_collection in self.person_set_collections
+    def __init__(self, json):
+        families_counters = [
+            FamiliesGroupCounters(fc) for fc in json
         ]
+        self.families_counters = {
+            fc.group_name: fc for fc in families_counters
+        }
 
-        return result
+    @staticmethod
+    def from_genotype_study(genotype_data_study, person_set_collections):
+        families = genotype_data_study.families
+        config = genotype_data_study.config.common_report
+        families_counters = [
+            FamiliesGroupCounters.from_families(
+                families,
+                person_set_collection,
+                config.draw_all_families,
+                config.families_count_show_id
+            )
+            for person_set_collection in person_set_collections
+        ]
+        return FamiliesReport([
+            fc.to_dict(full=True) for fc in families_counters
+        ])
+
+    def to_dict(self, full=False):
+        return [
+            fc.to_dict(full=full) for fc in self.families_counters.values()
+        ]
