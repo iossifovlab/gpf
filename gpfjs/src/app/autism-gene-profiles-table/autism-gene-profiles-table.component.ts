@@ -206,7 +206,13 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
     this.ngbDropdownMenu.dropdown.toggle();
     this.clickedColumnFilteringButton = $event.target;
     this.updateModalPosition();
-    this.multipleSelectMenuComponent.searchPlaceholder = `Search in "${column.displayName}"`;
+
+    let columnDisplayName = column.displayName;
+    if (column.depth !==  1) {
+      columnDisplayName = columnDisplayName.slice(0, columnDisplayName.lastIndexOf('(') - 1);
+    }
+    this.multipleSelectMenuComponent.searchPlaceholder = `Search in "${columnDisplayName}"`;
+
     this.multipleSelectMenuComponent.columns = column.columns;
     this.multipleSelectMenuComponent.refresh();
   }
