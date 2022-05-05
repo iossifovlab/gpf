@@ -39,7 +39,7 @@ dependencies:
   - django-cors-headers=3.7.0
   - django-guardian=2.4.0
   - djangorestframework=3.12.4
-  - openjdk=11.0.13
+  - openjdk=11
   - hadoop=3.3.2
   - deprecation=2.1.0
   - toml=0.10.2
@@ -51,4 +51,4 @@ dependencies:
   - dask-kubernetes=2022.1.0
   - tqdm=4.62.3
   - snakeobjects=3.0.7
-  - google-cloud-bigquery=2.32.0
+  - google-cloud-bigquery=2.34.2
