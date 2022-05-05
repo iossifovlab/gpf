@@ -1,4 +1,14 @@
-.fullscreen {
+.maximized .toggle-maximize {
+  opacity: 0%;
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  z-index: 1000;
+}
+
+.maximized .svg-wrapper {
   position: absolute !important;
   left: 50%;
   margin: 0 auto;
@@ -12,17 +22,7 @@
   border: 1px solid #ddd;
   padding: 10px;
   z-index: 1;
-  transform: translateX(-50%);
-}
-
-.fullscreen-div {
-  opacity: 0%;
-  position: fixed;
-  width: 100%;
-  height: 100%;
-  top: 0;
-  left: 0;
-  z-index: 1000;
+  transform: translate(-50%, -80%);
 }
 
 svg {
@@ -30,6 +30,6 @@ svg {
   margin: auto;
 }
 
-.fullscreen-pedigree {
+.maximized svg {
   max-height: unset;
 }

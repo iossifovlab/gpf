@@ -1,40 +1,46 @@
-<div [ngClass]="{ 'fullscreen-div': maximized }" (click)="toggleMaximize()"></div>
+<ng-template #pedigree>
+  <div class="toggle-maximize" (click)="toggleMaximize()"></div>
+  <div
+    #wrapper
+    class="svg-wrapper clickable"
+    style="display: flex; width: 100%; height: 100%"
+    (click)="toggleMaximize()">
+    <svg [attr.width]="width" [attr.viewBox]="getViewBox()" [ngClass]="{ 'fullscreen-pedigree': maximized }">
+      <svg:line
+        *ngFor="let straightLine of straightLines"
+        [attr.x1]="straightLine.startX"
+        [attr.y1]="straightLine.startY"
+        [attr.x2]="straightLine.endX"
+        [attr.y2]="straightLine.endY"
+        stroke="black"
+        stroke-width="1" />
 
-<div
-  #wrapper
-  class="clickable"
-  style="display: flex; width: 100%; height: 100%"
-  [ngClass]="{ fullscreen: maximized }"
-  (click)="toggleMaximize()">
-  <svg [attr.width]="width" [attr.viewBox]="getViewBox()" [ngClass]="{ 'fullscreen-pedigree': maximized }">
-    <svg:line
-      *ngFor="let straightLine of straightLines"
-      [attr.x1]="straightLine.startX"
-      [attr.y1]="straightLine.startY"
-      [attr.x2]="straightLine.endX"
-      [attr.y2]="straightLine.endY"
-      stroke="black"
-      stroke-width="1" />
+      <svg:path
+        *ngFor="let curveLine of curveLines"
+        [attr.d]="curveLine.path"
+        fill="none"
+        stroke="black"
+        stroke-width="1" />
 
-    <svg:path
-      *ngFor="let curveLine of curveLines"
-      [attr.d]="curveLine.path"
-      fill="none"
-      stroke="black"
-      stroke-width="1" />
+      <svg:g
+        gpf-pedigree-chart-member
+        *ngFor="let pedigree of pedigreeDataWithLayout"
+        [attr.transform]="
+          'translate(' +
+          pedigree.xUpperLeftCorner +
+          ' ' +
+          pedigree.yUpperLeftCorner +
+          ') scale(' +
+          pedigree.scaleFactor +
+          ')'
+        "
+        [pedigreeData]="pedigree.individual.pedigreeData" />
+    </svg>
+  </div>
+</ng-template>
 
-    <svg:g
-      gpf-pedigree-chart-member
-      *ngFor="let pedigree of pedigreeDataWithLayout"
-      [attr.transform]="
-        'translate(' +
-        pedigree.xUpperLeftCorner +
-        ' ' +
-        pedigree.yUpperLeftCorner +
-        ') scale(' +
-        pedigree.scaleFactor +
-        ')'
-      "
-      [pedigreeData]="pedigree.individual.pedigreeData" />
-  </svg>
+<ng-container *ngTemplateOutlet="pedigree"></ng-container>
+
+<div *ngIf="maximized" class="maximized">
+  <ng-container *ngTemplateOutlet="pedigree"></ng-container>
 </div>
