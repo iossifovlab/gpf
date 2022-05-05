@@ -1,5 +1,4 @@
 from dae.configuration.gpf_config_parser import GPFConfigParser
-from dae.configuration.schemas.import_config import import_config_schema
 import pytest
 import os
 from glob import glob
@@ -15,11 +14,9 @@ def test_simple_import_config(tmpdir, gpf_instance_2019, config_dir):
     config_fn = os.path.join(input_dir, "import_config.yaml")
 
     import_config = GPFConfigParser.parse_and_interpolate_file(config_fn)
-    import_config = GPFConfigParser.validate_config(import_config,
-                                                    import_config_schema)
     import_config["input"]["input_dir"] = input_dir
     import_config["processing_config"] = {
-        "work_dir": tmpdir,
+        "work_dir": str(tmpdir),
     }
 
     import_tools.run(import_config, gpf_instance=gpf_instance_2019)
@@ -44,8 +41,6 @@ def test_add_chrom_prefix():
     config_fn = os.path.join(input_dir, "import_config_add_chrom_prefix.yaml")
 
     import_config = GPFConfigParser.parse_and_interpolate_file(config_fn)
-    import_config = GPFConfigParser.validate_config(import_config,
-                                                    import_config_schema)
     import_config["input"]["input_dir"] = input_dir
 
     project = import_tools.ImportProject(import_config)

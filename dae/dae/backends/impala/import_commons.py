@@ -113,13 +113,16 @@ class MakefilePartitionHelper:
             partition_descriptor,
             genome,
             add_chrom_prefix=None,
-            del_chrom_prefix=None):
+            del_chrom_prefix=None,
+            region_length=None):
 
         self.genome = genome
         self.partition_descriptor = partition_descriptor
         self.chromosome_lengths = dict(
             self.genome.get_all_chrom_lengths()
         )
+        self._region_length = region_length or \
+            partition_descriptor.region_length
 
         self._build_adjust_chrom(add_chrom_prefix, del_chrom_prefix)
 
@@ -144,7 +147,7 @@ class MakefilePartitionHelper:
     def region_bins_count(self, chrom):
         result = ceil(
             self.chromosome_lengths[chrom]
-            / self.partition_descriptor.region_length
+            / self._region_length
         )
         return result
 
@@ -177,8 +180,8 @@ class MakefilePartitionHelper:
             return [(f"{target}_0", chrom)]
         result = []
         for region_index in range(region_bins_count):
-            start = region_index * self.partition_descriptor.region_length + 1
-            end = (region_index + 1) * self.partition_descriptor.region_length
+            start = region_index * self._region_length + 1
+            end = (region_index + 1) * self._region_length
             if end > self.chromosome_lengths[target_chrom]:
                 end = self.chromosome_lengths[target_chrom]
             result.append(

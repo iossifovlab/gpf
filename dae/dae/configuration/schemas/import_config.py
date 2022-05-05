@@ -4,6 +4,25 @@ from dae.backends.cnv.loader import CNVLoader
 from dae.pedigrees.loader import FamiliesLoader
 
 
+def _to_list(obj):
+    if isinstance(obj, list):
+        return obj
+    if isinstance(obj, str):
+        return list(
+            map(str.strip, obj.split(","))
+        )
+    return obj
+
+
+_loader_processing_schema = {
+    "region_length": {"type": "integer"},
+    "chromosomes": {
+        "type": "list",
+        "schema": {"type": "string"},
+        "coerce": _to_list,
+    },
+}
+
 import_config_schema = {
     "id": {"type": "string"},
     "input": {
@@ -38,6 +57,24 @@ import_config_schema = {
         "type": "dict",
         "schema": {
             "work_dir": {"type": "string"},
+            "vcf": {
+                "type": "dict",
+                "schema": {
+                    "region_length": {"type": "integer"}
+                }
+            },
+            "denovo": {
+                "type": "dict",
+                "schema": _loader_processing_schema
+            },
+            "cnv": {
+                "type": "dict",
+                "schema": _loader_processing_schema
+            },
+            "dae": {
+                "type": "dict",
+                "schema": _loader_processing_schema
+            },
         },
     },
     "destination": {
@@ -51,10 +88,7 @@ import_config_schema = {
         "schema": {
             "region_bin": {
                 "type": "dict",
-                "schema": {
-                    "chromosomes": {"type": "string"},
-                    "region_length": {"type": "integer"},
-                }
+                "schema": _loader_processing_schema,
             },
             "family_bin": {
                 "type": "dict",

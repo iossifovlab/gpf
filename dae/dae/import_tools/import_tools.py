@@ -1,4 +1,5 @@
 import argparse
+from copy import deepcopy
 from dataclasses import dataclass
 import sys
 from dae.backends.cnv.loader import CNVLoader
@@ -40,15 +41,15 @@ class ImportProject():
 
     @staticmethod
     def build_from_config(import_config, gpf_instance=None):
+        import_config = GPFConfigParser.validate_config(import_config,
+                                                        import_config_schema)
         return ImportProject(import_config, gpf_instance)
 
     @staticmethod
     def build_from_file(import_filename, gpf_instance=None):
         import_config = GPFConfigParser.parse_and_interpolate_file(
             import_filename)
-        import_config = GPFConfigParser.validate_config(import_config,
-                                                        import_config_schema)
-        return ImportProject(import_config, gpf_instance)
+        return ImportProject.build_from_config(import_config, gpf_instance)
 
     def get_pedigree(self) -> FamiliesData:
         families_filename = self.import_config["input"]["pedigree"]["file"]
@@ -113,8 +114,17 @@ class ImportProject():
     def get_partition_description(self, work_dir=None):
         work_dir = work_dir or self.work_dir
         if "partition_description" in self.import_config:
+            partition_desc = self.import_config["partition_description"]
+            chromosomes = partition_desc.get("region_bin", {})\
+                .get("chromosomes", None)
+            if isinstance(chromosomes, list):
+                # ParquetPartitionDescriptor expects a string
+                # that gets parsed internally
+                partition_desc = deepcopy(partition_desc)
+                partition_desc["region_bin"]["chromosomes"] = \
+                    ",".join(chromosomes)
             return ParquetPartitionDescriptor.from_dict(
-                self.import_config["partition_description"],
+                partition_desc,
                 work_dir
             )
         else:
@@ -192,7 +202,7 @@ class ImportProject():
         # TODO pass the gpf instance as argument to this func
         reference_genome = self.get_gpf_instance().reference_genome
 
-        target_chromosomes = loader_args.get("target_chromosomes", None)
+        target_chromosomes = self._get_loader_target_chromosomes(loader_type)
         if target_chromosomes is None:
             loader = self._get_variant_loader(loader_type, reference_genome)
             target_chromosomes = loader.chromosomes
@@ -204,6 +214,7 @@ class ImportProject():
             reference_genome,
             add_chrom_prefix=loader_args.get("add_chrom_prefix", None),
             del_chrom_prefix=loader_args.get("del_chrom_prefix", None),
+            region_length=self._get_processing_region_length(loader_type),
         )
 
         variants_targets = partition_helper.generate_variants_targets(
@@ -211,10 +222,20 @@ class ImportProject():
         )
 
         default_bucket_index = self._get_default_bucket_index(loader_type)
+        index = 0
         for rb, regions in variants_targets.items():
-            bucket_index = default_bucket_index + \
-                partition_helper.bucket_index(rb)
-            yield Bucket(loader_type, rb, regions, bucket_index)
+            for region in regions:
+                bucket_index = default_bucket_index + index
+                yield Bucket(loader_type, rb, [region], bucket_index)
+                index += 1
+
+    def _get_processing_region_length(self, loader_type):
+        return self.import_config.get("processing_config", {})\
+            .get(loader_type, {}).get("region_length", None)
+
+    def _get_loader_target_chromosomes(self, loader_type):
+        return self.import_config.get("processing_config", {})\
+            .get(loader_type, {}).get("chromosomes", None)
 
 
 def main():
@@ -225,8 +246,7 @@ def main():
     args = parser.parse_args()
 
     import_config = GPFConfigParser.parse_and_interpolate_file(args.config)
-    import_config = GPFConfigParser.validate_config(import_config,
-                                                    import_config_schema)
+
     if args.jobs == 1:
         executor = SequentialExecutor()
         run(import_config, executor)

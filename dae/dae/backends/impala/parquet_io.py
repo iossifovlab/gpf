@@ -244,6 +244,7 @@ class ParquetPartitionDescriptor(PartitionDescriptor):
     def variant_filename(self, family_allele):
         current_bin = self._evaluate_region_bin(family_allele)
         filepath = os.path.join(self.output, f"region_bin={current_bin}")
+        bucket_index = family_allele.get_attribute("bucket_index")
 
         filename = f"variants_region_bin_{current_bin}"
         if self._rare_boundary > 0:
@@ -258,6 +259,8 @@ class ParquetPartitionDescriptor(PartitionDescriptor):
             current_bin = self._evaluate_family_bin(family_allele)
             filepath = os.path.join(filepath, f"family_bin={current_bin}")
             filename += f"_family_bin_{current_bin}"
+        if bucket_index is not None:
+            filename += f"_bucket_index_{bucket_index}"
         filename += ".parquet"
 
         return os.path.join(filepath, filename)
