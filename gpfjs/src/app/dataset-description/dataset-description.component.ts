@@ -24,7 +24,7 @@ export class DatasetDescriptionComponent implements OnInit {
   public editorOptions: EditorOption = {
     autofocus: true,
     iconlibrary: 'fa',
-    width: 1140, // should match .container width
+    width: 1120,
     resize: 'both',
     fullscreen: {enable: false, icons: undefined},
     parser: (val: string) => {
