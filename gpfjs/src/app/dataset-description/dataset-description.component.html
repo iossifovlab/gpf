@@ -2,7 +2,7 @@
   <div *ngIf="!editMode">
     <div class="row" style="position: relative">
       <i
-        *ngIf="('' | userInfo)?.isAdministrator"
+        *ngIf="('' | userInfo)?.isAdministrator && dataset.description"
         (click)="edit()"
         id="edit-icon"
         class="fa fa-pencil fa-lg"
@@ -10,6 +10,12 @@
       </i>
       <markdown [data]="dataset.description || ''"></markdown>
     </div>
+    <span
+      *ngIf="!dataset.description"
+      id="add-description"
+      (click)="edit()"
+      type="button">Add description</span
+    >
   </div>
 
   <div *ngIf="editMode">
