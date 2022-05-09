@@ -10,7 +10,7 @@ import { GeneSetsService } from "./gene-sets.service";
 import { NgbAccordionModule } from "@ng-bootstrap/ng-bootstrap"
 import { CommonModule } from "@angular/common";
 import { BrowserModule } from "@angular/platform-browser";
-import { GeneSet } from "./gene-sets";
+import { GeneSet, GeneSetsCollection, GeneSetType } from "./gene-sets";
 
 class MockDatasetsService {
     public getSelectedDataset(): object {
@@ -61,5 +61,25 @@ describe('GeneSetsComponent', () => {
         }));
     });
 
+    it('should test selectedGeneSetsCollection', () => {
+        const geneSetsCollectionMock1 = new GeneSetsCollection('name1', 'desc2', [
+            new GeneSetType('datasetId3', 'datasetName4', 'personSetCollectionId5', 'personSetCollectionName6', ['personSetCollectionLegend7', 'personSetCollectionLegend8']),
+            new GeneSetType('datasetId9', 'datasetName10', 'personSetCollectionId11', 'personSetCollectionName12', ['personSetCollectionLegend13', 'personSetCollectionLegend14'])
+        ]);
+
+        component.selectedGeneSetsCollection = geneSetsCollectionMock1;
+
+        expect(component.selectedGeneSetsCollection).toEqual(GeneSetsCollection.fromJson({
+            'name': 'name1', 'desc':'desc2', 
+            'types': [{
+                    'datasetId': 'datasetId3', 'datasetName': 'datasetName4', 'personSetCollectionId': 'personSetCollectionId5', 'personSetCollectionName': 'personSetCollectionName6',
+                    'personSetCollectionLegend': [ 'personSetCollectionLegend7', 'personSetCollectionLegend8' ] 
+                }, {
+                    'datasetId': 'datasetId9', 'datasetName':'datasetName10', 'personSetCollectionId':'personSetCollectionId11', 'personSetCollectionName': 'personSetCollectionName12', 
+                    'personSetCollectionLegend': [ 'personSetCollectionLegend13', 'personSetCollectionLegend14' ]
+                }
+            ]
+        }))
+    });
 
 });
