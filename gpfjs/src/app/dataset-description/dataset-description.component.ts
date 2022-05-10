@@ -7,6 +7,7 @@ import { filter, map, switchMap, take } from 'rxjs/operators';
 import { EditorOption } from 'angular-markdown-editor';
 import { MarkdownService } from 'ngx-markdown';
 import DOMPurify from 'dompurify';
+import { UsersService } from 'app/users/users.service';
 
 @Component({
   selector: 'gpf-dataset-description',
@@ -37,7 +38,8 @@ export class DatasetDescriptionComponent implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     private datasetsService: DatasetsService,
-    private markdownService: MarkdownService
+    private markdownService: MarkdownService,
+    private usersService: UsersService
   ) { }
 
   @HostListener('keydown', ['$event']) public onKeyDown($event: KeyboardEvent): void {
@@ -55,7 +57,7 @@ export class DatasetDescriptionComponent implements OnInit {
 
     this.dataset$.pipe(take(1)).subscribe(dataset => {
       this.datasetId = dataset.id;
-      if (!dataset.description) {
+      if (!dataset.description && !this.usersService.cachedUserInfo().isAdministrator) {
         this.router.navigate(['..', 'browser'], {relativeTo: this.route});
       } else {
         this.editorText = dataset.description;

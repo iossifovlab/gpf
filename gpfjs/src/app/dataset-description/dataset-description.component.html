@@ -6,9 +6,13 @@
         (click)="edit()"
         id="edit-icon"
         class="fa fa-pencil fa-lg"
+        style="margin-right: 10px"
         title="Edit">
       </i>
       <markdown [data]="dataset.description || ''"></markdown>
+    </div>
+    <div *ngIf="!dataset.description" style="padding-top: 7px">
+      <span id="empty-description">Empty description. Write a description using the pencil button to the right.</span>
     </div>
   </div>
 
@@ -20,4 +24,6 @@
       <button (click)="close()" class="btn" style="margin-left: 8px" tutle="Close">Close</button>
     </div>
   </div>
+
+  <hr *ngIf="!dataset.description && !editMode" style="margin-top: 5px" />
 </div>
