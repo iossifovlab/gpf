@@ -206,14 +206,23 @@ class Manifest:
 
         return True
 
+    def __repr__(self):
+        return str(self.entries)
+
     def to_manifest_entries(self):
+        """Transforms manifest to list of dictionaries.
+
+        Helpfull when storing the manifest."""
         return [
             asdict(entry) for entry in self.entries.values()]
 
     def add(self, entry: ManifestEntry) -> None:
+        """Adds manifest enry to the manifest."""
         self.entries[entry.name] = entry
 
+
 class GenomicResource:
+    """Base class for genomic resources."""
     def __init__(self, resource_id, version, repo: GenomicResourceRealRepo,
                  config=None):
         self.resource_id = resource_id
@@ -222,46 +231,45 @@ class GenomicResource:
         self.repo = repo
         self._manifest: Optional[Manifest] = None
 
-    @staticmethod
-    def get_resource_type():
-        return "Basic"
-
     def get_id(self):
+        """Returns genomic resource ID."""
         return self.resource_id
 
     def get_config(self):
+        """Returns the resouce configuration."""
         return self.config
 
     def get_type(self):
+        """Returns resource type ad defined in 'genomic_resource.yaml'."""
         config_type = self.get_config().get("type")
         if config_type is None:
             return "Basic"
         return config_type
 
     def get_version_str(self) -> str:
-        '''returns string of the form 3.1'''
+        """returns string of the form 3.1"""
         return ".".join(map(str, self.version))
 
     def get_genomic_resource_dir(self) -> str:
-        '''
+        """
         returns a string of the form aa/bb/cc[3.2] for a genomic resource with
         id aa/bb/cc and version 3.2.
         If the version is 0 the string will be aa/bb/cc.
-        '''
+        """
         return f"{self.resource_id}{version_tuple_to_suffix(self.version)}"
 
     def get_files(self) -> List[Tuple[str, int, str]]:
-        '''
+        """
         Returns a generator returning (filename,filesize,filetime) for each of
         the files in the genomic resource.
         Files and directories staring with "." are ignored.
-        '''
+        """
         return self.repo.get_files(self)
 
     def file_exists(self, filename):
-        '''
+        """
         Returns whether filename exists in this resource
-        '''
+        """
         return self.repo.file_exists(self, filename)
 
     def compute_md5_sum(self, filename):
@@ -326,6 +334,8 @@ class GenomicResource:
             self.load_yaml(GR_MANIFEST_FILE_NAME))
 
     def save_manifest(self, manifest: Manifest):
+        """Saves manifest into genomic resources directory."""
+        dirname = self.get_genomic_resource_dir()
         with self.open_raw_file(GR_MANIFEST_FILE_NAME, "wt") as outfile:
             yaml.dump(manifest.to_manifest_entries(), outfile)
         self._manifest = manifest
@@ -358,9 +368,6 @@ class GenomicResource:
     def open_tabix_file(self, filename, index_filename=None):
         return self.repo.open_tabix_file(self, filename, index_filename)
 
-    def update_stats(self):
-        pass
-
 
 class GenomicResourceRepo(abc.ABC):
     def __init__(self, repo_id):
@@ -384,8 +391,6 @@ class GenomicResourceRepo(abc.ABC):
 
 
 class GenomicResourceRealRepo(GenomicResourceRepo):
-    def __init__(self, repo_id):
-        super().__init__(repo_id)
 
     def build_genomic_resource(
             self, resource_id, version, config=None,
@@ -401,6 +406,7 @@ class GenomicResourceRealRepo(GenomicResourceRepo):
 
     def get_resource(self, resource_id, version_constraint=None,
                      genomic_repository_id=None) -> Optional[GenomicResource]:
+
         if genomic_repository_id and self.repo_id != genomic_repository_id:
             return None
 
@@ -451,7 +457,7 @@ class GenomicResourceRealRepo(GenomicResourceRepo):
                         index_filename=None):
         """
         Open a tabix file in a resource and return a pysam tabix file object.
-        
+
         Not all repositories support this method. Repositories that do
         no support this method raise and exception.
         """

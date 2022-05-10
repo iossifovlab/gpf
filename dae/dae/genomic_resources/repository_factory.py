@@ -25,37 +25,38 @@ def register_real_genomic_resource_repository_type(
 DEFAULT_DEFINITION = {
     "id": "default",
     "type": "url",
-    # "url": "https://www.iossifovlab.com/distribution/"
-    #        "public/genomic-resources-repository/"
-    "url": "https://grr.seqpipe.org/"
+    "url": "https://www.iossifovlab.com/distribution/"
+           "public/genomic-resources-repository/",
+    # "url": "https://grr.seqpipe.org/",
 }
 
 
-def load_definition_file(filename) -> dict:
-    with open(filename) as F:
-        return cast(dict, yaml.safe_load(F))
+def load_definition_file(filename):
+    """Loads GRR definition from a YAML file."""
+    with open(filename, "rt", encoding="utf8") as infile:
+        return yaml.safe_load(infile)
 
 
 GRR_DEFINITION_FILE_ENV = "GRR_DEFINITION_FILE"
 
 
 def get_configured_definition():
+    """Returns genomic repository definition."""
     logger.info("using default GRR definitions")
     env_repo_definition_path = os.environ.get(GRR_DEFINITION_FILE_ENV)
     if env_repo_definition_path is not None:
         logger.debug(
-            f"loading GRR definition from environment variable "
-            f"{GRR_DEFINITION_FILE_ENV}="
-            f"{env_repo_definition_path}")
+            "loading GRR definition from environment variable %s=%s",
+            GRR_DEFINITION_FILE_ENV, env_repo_definition_path)
         return load_definition_file(env_repo_definition_path)
 
     default_repo_definition_path = f"{os.environ['HOME']}/.grr_definition.yaml"
     logger.debug(
-        f"checking default repo definition at "
-        f"{default_repo_definition_path}")
+        "checking default repo definition at %s",
+        default_repo_definition_path)
     if pathlib.Path(default_repo_definition_path).exists():
         logger.debug(
-            f"using repo definition at {default_repo_definition_path}")
+            "using repo definition at %s", default_repo_definition_path)
         return load_definition_file(default_repo_definition_path)
 
     return DEFAULT_DEFINITION
@@ -97,7 +98,7 @@ def build_genomic_resource_repository(
             raise ValueError(
                 "The children attribute in the definition of a group "
                 "repository must be a list")
-        repo_id = definition.get("repo_id")
+        repo_id = definition.get("id")
         repo = GenomicResourceGroupRepo([
             build_genomic_resource_repository(child_def, use_cache=use_cache)
             for child_def in definition["children"]

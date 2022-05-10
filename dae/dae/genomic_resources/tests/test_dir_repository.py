@@ -23,7 +23,7 @@ def test_dir_repository(tmp_path):
         }
     })
     dir_repo = GenomicResourceDirRepo('dir', directory=tmp_path)
-    dir_repo.store_all_resources_full(src_repo)
+    dir_repo.store_all_resources(src_repo)
 
     def resource_set(repo):
         return {
@@ -54,11 +54,6 @@ def test_dir_repository(tmp_path):
 
     assert dir_manifest != src_manifest
 
-    dir_repo.update_resource(src_repo.get_resource("sub/two"))
-    dir_manifest = dir_resource.get_manifest()
-
-    assert dir_manifest == src_manifest
-
 
 def test_dir_repository_resource_update(tmp_path):
 
@@ -78,10 +73,10 @@ def test_dir_repository_resource_update(tmp_path):
     })
 
     dir_repo1 = GenomicResourceDirRepo('dir', directory=tmp_path / "t1")
-    dir_repo1.store_all_resources_full(src_repo)
+    dir_repo1.store_all_resources(src_repo)
 
     dir_repo2 = GenomicResourceDirRepo('dir', directory=tmp_path / "t2")
-    dir_repo2.store_all_resources_full(src_repo)
+    dir_repo2.store_all_resources(src_repo)
 
     gr1 = dir_repo1.get_resource("sub/two")
     gr2 = dir_repo2.get_resource("sub/two")
@@ -97,48 +92,6 @@ def test_dir_repository_resource_update(tmp_path):
 
     assert gr1.get_manifest() != gr2.get_manifest()
 
-    dir_repo2.update_resource(gr1)
-    assert gr1.get_manifest() == gr2.get_manifest()
-
-
-def test_dir_repository_resource_update_delete(tmp_path):
-
-    src_repo = GenomicResourceEmbededRepo("src", content={
-        "one": {
-            GR_CONF_FILE_NAME: "",
-            "data.txt": "alabala",
-            "alabala.txt": "alabala",
-        },
-    })
-
-    dir_repo1 = GenomicResourceDirRepo('dir', directory=tmp_path / "t1")
-    dir_repo1.store_all_resources_full(src_repo)
-
-    dir_repo2 = GenomicResourceDirRepo('dir', directory=tmp_path / "t2")
-    dir_repo2.store_all_resources_full(src_repo)
-
-    gr1 = dir_repo1.get_resource("one")
-    gr2 = dir_repo2.get_resource("one")
-
-    assert gr1.get_manifest() == gr2.get_manifest()
-    assert any([f.name == "alabala.txt" for f in gr1.get_manifest()])
-    assert any([f.name == "alabala.txt" for f in gr2.get_manifest()])
-
-    dirname = pathlib.Path(dir_repo1.get_genomic_resource_dir(gr1))
-    path = dirname / "alabala.txt"
-    path.unlink()
-
-    manifest = gr1.build_manifest()
-    print(manifest)
-    assert any([f.name != "alabala.txt" for f in manifest])
-
-    gr1.save_manifest(manifest)
-
-    assert gr1.get_manifest() != gr2.get_manifest()
-
-    dir_repo2.update_resource(gr1)
-    assert gr1.get_manifest() == gr2.get_manifest()
-
 
 def test_dir_repository_file_exists(tmp_path):
     src_repo = GenomicResourceEmbededRepo("src", content={
@@ -150,7 +103,7 @@ def test_dir_repository_file_exists(tmp_path):
     })
 
     repo = GenomicResourceDirRepo('dir', directory=tmp_path / "t1")
-    repo.store_all_resources_full(src_repo)
+    repo.store_all_resources(src_repo)
     res = repo.get_resource("one")
 
     assert repo.file_exists(res, GR_CONF_FILE_NAME)

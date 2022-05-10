@@ -142,10 +142,6 @@ class GenomicScore(abc.ABC):
 
 class PositionScore(GenomicScore):
 
-    @staticmethod
-    def get_resource_type():
-        return "position_score"
-
     def fetch_scores(
             self, chrom: str, position: int, scores: List[str] = None):
 
@@ -227,10 +223,6 @@ class NPScore(GenomicScore):
     @staticmethod
     def get_extra_special_columns():
         return {"reference": str, "alternative": str}
-
-    @staticmethod
-    def get_resource_type():
-        return "np_score"
 
     def fetch_scores(
             self, chrom: str, position: int, reference: str, alternative: str,
@@ -337,10 +329,6 @@ class AlleleScore(GenomicScore):
     @staticmethod
     def get_extra_special_columns():
         return {"reference": str, "alternative": str}
-
-    @staticmethod
-    def get_resource_type():
-        return "allele_score"
 
     def fetch_scores(
             self, chrom: str, position: int, reference: str, alternative: str,
@@ -509,9 +497,9 @@ def open_allele_score_from_resource(
 
 def open_score_from_resource(resource: GenomicResource) -> GenomicScore:
     type_to_ctor = {
-        PositionScore.get_resource_type(): open_position_score_from_resource,
-        NPScore.get_resource_type(): open_np_score_from_resource,
-        AlleleScore.get_resource_type(): open_allele_score_from_resource,
+        "position_score": open_position_score_from_resource,
+        "np_score": open_np_score_from_resource,
+        "allele_score": open_allele_score_from_resource,
     }
     ctor = type_to_ctor.get(resource.get_type())
     if ctor is None:

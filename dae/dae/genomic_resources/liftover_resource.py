@@ -26,10 +26,6 @@ class LiftoverChain:
         self.chain_file = chain_file
         self.liftover = LiftOver(self.chain_file)
 
-    @classmethod
-    def get_resource_type(clazz):
-        return "liftover_chain"
-
     def close(self):
         pass
 
