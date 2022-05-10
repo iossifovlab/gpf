@@ -39,7 +39,7 @@ dependencies:
   - django-cors-headers=3.7.0
   - django-guardian=2.4.0
   - djangorestframework=3.12.4
-  - openjdk=11
+  - openjdk=11.0.9.1
   - hadoop=3.3.2
   - deprecation=2.1.0
   - toml=0.10.2
