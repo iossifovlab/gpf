@@ -52,7 +52,7 @@ class CachingDirectoryRepo(GenomicResourceDirRepo):
 
         logger.debug(
             "genomic resource %s needs refresh", remote_resource.resource_id)
-        assert isinstance(cached_resource.repo, CachingDirectoryRepo)
+        assert cached_resource.repo == self
 
         self._update_resource(remote_resource)
 

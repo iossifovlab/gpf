@@ -27,7 +27,6 @@ django-cors-headers==3.7.0
 django-guardian==2.4.0
 djangorestframework==3.12.4
 openjdk==8.0.312
-openjdk==8
 hadoop==3.1.2
 deprecation==2.1.0
 toml==0.10.2
