@@ -2,20 +2,18 @@
   <div *ngIf="!editMode">
     <div class="row" style="position: relative">
       <i
-        *ngIf="('' | userInfo)?.isAdministrator && dataset.description"
+        *ngIf="('' | userInfo)?.isAdministrator"
         (click)="edit()"
         id="edit-icon"
         class="fa fa-pencil fa-lg"
+        style="margin-right: 10px"
         title="Edit">
       </i>
       <markdown [data]="dataset.description || ''"></markdown>
     </div>
-    <span
-      *ngIf="!dataset.description"
-      id="add-description"
-      (click)="edit()"
-      type="button">Add description</span
-    >
+    <div *ngIf="!dataset.description" style="padding-top: 7px">
+      <span id="empty-description">Empty description. Write a description using the pencil button to the right.</span>
+    </div>
   </div>
 
   <div *ngIf="editMode">
@@ -26,4 +24,6 @@
       <button (click)="close()" class="btn" style="margin-left: 8px" tutle="Close">Close</button>
     </div>
   </div>
+
+  <hr *ngIf="!dataset.description && !editMode" style="margin-top: 5px" />
 </div>

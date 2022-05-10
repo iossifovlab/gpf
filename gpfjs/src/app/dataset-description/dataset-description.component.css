@@ -1,10 +1,6 @@
-#add-description {
+#empty-description {
   font-style: italic;
   opacity: 75%;
-}
-
-#add-description:hover {
-  opacity: 100%;
 }
 
 #edit-icon {
