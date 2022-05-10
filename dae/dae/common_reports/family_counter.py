@@ -58,7 +58,7 @@ class FamilyCounter(object):
             "pedigrees_count": (
                 label if label is not None else family.family_id
             ),
-            "counter_id": family.family_id
+            "counter_id": 0
         })
 
     def to_dict(self, full=False):
