@@ -205,6 +205,9 @@ class DenovoReportTable(object):
                     effect_types.remove(effect_row.effect_type)
                 except ValueError:
                     pass
+        effect_rows = list(filter(
+            lambda effect_row: not effect_row.is_row_empty(), effect_rows
+        ))
 
         rows = effect_rows
 
@@ -255,7 +258,9 @@ class DenovoReportTable(object):
 
 class DenovoReport(object):
     def __init__(self, json):
-        self.tables = [DenovoReportTable(d) for d in json["tables"]]
+        self.tables = []
+        if json is not None:
+            self.tables = [DenovoReportTable(d) for d in json["tables"]]
 
     @staticmethod
     def from_genotype_study(genotype_data, person_set_collections):

@@ -20,3 +20,4 @@ def test_common_report(study4):
     assert common_report.study_description is None
 
     assert len(common_report.to_dict()) == 15
+    print(common_report.to_dict())

@@ -7,14 +7,14 @@ from dae.common_reports.denovo_report import \
 
 def test_denovo_report_table(denovo_variants_ds1, phenotype_role_collection):
 
-    denovo_report_table = DenovoReportTable(
+    denovo_report_table = DenovoReportTable.from_variants(
         denovo_variants_ds1,
         ["Missense", "Splice-site"],
         ["Frame-shift", "Nonsense"],
         phenotype_role_collection,
     )
 
-    assert denovo_report_table.person_set_collection.name == "Diagnosis"
+    assert denovo_report_table.group_name == "Diagnosis"
     assert sorted(denovo_report_table.columns) == \
         ["phenotype 1 (6)", "phenotype 2 (2)", ]
 
@@ -30,14 +30,11 @@ def test_denovo_report_table(denovo_variants_ds1, phenotype_role_collection):
 def test_denovo_report(
         genotype_data_group1, phenotype_role_collection, denovo_variants_ds1):
 
-    denovo_report = DenovoReport(
+    denovo_report = DenovoReport.from_genotype_study(
         genotype_data_group1,
-        ["Missense"],
-        ["Frame-shift"],
         [phenotype_role_collection],
     )
 
-    assert len(denovo_report.denovo_variants) == 8
     # assert denovo_report.denovo_variants == denovo_variants_ds1
     assert len(denovo_report.tables) == 1
 
@@ -48,12 +45,10 @@ def test_denovo_report(
 
 
 def test_denovo_report_empty(study2, phenotype_role_collection):
-    denovo_report = DenovoReport(
-        study2, ["Missense"], ["Frame-shift"], phenotype_role_collection
+    denovo_report = DenovoReport.from_genotype_study(
+        study2, phenotype_role_collection
     )
 
-    assert len(denovo_report.denovo_variants) == 0
-    assert denovo_report.denovo_variants == []
     assert len(denovo_report.tables) == 0
 
     assert denovo_report.is_empty() is True

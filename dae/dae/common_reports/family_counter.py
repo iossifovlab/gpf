@@ -50,6 +50,17 @@ class FamilyCounter(object):
     def family(self):
         return self.families[0]
 
+    @staticmethod
+    def from_family(family, pedigree, label=None):
+        return FamilyCounter({
+            "families": [family.family_id],
+            "pedigree": pedigree,
+            "pedigrees_count": (
+                label if label is not None else family.family_id
+            ),
+            "counter_id": family.family_id
+        })
+
     def to_dict(self, full=False):
         if full:
             return {
