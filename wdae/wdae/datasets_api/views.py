@@ -205,12 +205,7 @@ class DatasetDescriptionView(DatasetView):
         description = request.data.get('description')
         if dataset_id is None:
             return Response(
-                {"error": "No dataset ID given"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        if description is None:
-            return Response(
-                {"error": "Dataset does not have a description to edit."},
+                {"error": "No dataset ID given."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 

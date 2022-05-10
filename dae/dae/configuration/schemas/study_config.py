@@ -289,8 +289,8 @@ study_config_schema = {
     "phenotype_tool": {"type": "boolean"},
     "description_file": {
         "type": "string",
-        "check_with": validate_existing_path,
         "coerce": "abspath",
+        "default": "description.md"
     },
     "study_type": {"type": "list", "schema": {"type": "string"}},
     "year": {"type": "list", "schema": {"type": "integer"}},

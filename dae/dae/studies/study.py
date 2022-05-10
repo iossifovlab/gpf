@@ -3,6 +3,7 @@ import logging
 import functools
 
 from contextlib import closing
+from os.path import basename, exists
 
 from abc import ABC, abstractmethod, abstractproperty
 
@@ -48,9 +49,13 @@ class GenotypeData(ABC):
 
     @property
     def description(self):
-        if self._description is None and self.config.description_file:
-            with open(self.config.description_file, "r") as infile:
-                self._description = infile.read()
+        if self._description is None:
+            if basename(self.config.description_file) != "description.md":
+                # If a non-default description file was given, assert it exists
+                assert exists(self.config.description_file), self.config.description_file
+            if exists(self.config.description_file):  # the default description file may not yet exist
+                with open(self.config.description_file, "r") as infile:
+                    self._description = infile.read()
         return self._description
 
     @description.setter
