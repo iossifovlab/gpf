@@ -1,4 +1,5 @@
 import pytest
+import json
 
 from rest_framework import status
 
@@ -16,6 +17,56 @@ def test_variant_reports(admin_client):
 
     data = response.data
     assert data
+
+
+def test_variant_reports_full(admin_client):
+    url = "/api/v3/common_reports/studies/study4/full"
+    response = admin_client.get(url)
+
+    assert response
+    assert response.status_code == status.HTTP_200_OK
+
+    data = response.data
+    assert data
+
+
+def test_family_counters(admin_client):
+    data = {
+        "study_id": "study4",
+        "group_name": "Phenotype",
+        "counter_id": "0"
+    }
+    url = "/api/v3/common_reports/family_counters"
+    response = admin_client.post(
+        url, json.dumps(data), content_type="application/json"
+    )
+
+    assert response
+    assert response.status_code == status.HTTP_200_OK
+
+    data = response.data
+    print(response.data)
+    assert data == ["f2", "f4"]
+
+
+def test_family_counters_download(admin_client):
+    data = {
+        "study_id": "study4",
+        "group_name": "Phenotype",
+        "counter_id": "0"
+    }
+    url = "/api/v3/common_reports/family_counters/download"
+    response = admin_client.post(
+        url, json.dumps(data), content_type="application/json"
+    )
+
+    assert response
+    assert response.status_code == status.HTTP_200_OK
+
+    res = list(response.streaming_content)
+    print(res)
+    assert len(res) == 1
+    # assert data == ["f2", "f4"]
 
 
 def test_variant_reports_no_permissions(user_client):

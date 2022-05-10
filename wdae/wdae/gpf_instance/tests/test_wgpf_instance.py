@@ -1,6 +1,7 @@
 from dae.studies.study import GenotypeDataStudy
 from studies.study_wrapper import StudyWrapper, RemoteStudyWrapper
 from studies.remote_study import RemoteGenotypeData
+from dae.common_reports.common_report import CommonReport
 from box import Box
 
 
@@ -63,13 +64,13 @@ def test_get_genotype_data_config_nonexistant(wgpf_instance_fixture):
 
 def test_get_common_report(wgpf_instance_fixture, use_common_reports):
     common_report = wgpf_instance_fixture.get_common_report("Study1")
-    assert isinstance(common_report, dict)
+    assert isinstance(common_report, CommonReport)
 
 
 def test_get_common_report_remote(wgpf_instance_fixture):
     common_report = wgpf_instance_fixture.get_common_report(
         "TEST_REMOTE_iossifov_2014")
-    assert isinstance(common_report, dict)
+    assert isinstance(common_report, CommonReport)
 
 
 def test_get_common_report_nonexistant(wgpf_instance_fixture):

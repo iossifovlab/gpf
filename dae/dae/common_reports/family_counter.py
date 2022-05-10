@@ -44,7 +44,7 @@ class FamilyCounter(object):
         self.families = json["families"]
         self.pedigree = json["pedigree"]
         self.pedigrees_count = json["pedigrees_count"]
-        self.counter_id = json["counter_id"]
+        self.counter_id = int(json["counter_id"])
 
     @property
     def family(self):
@@ -95,14 +95,14 @@ class FamiliesGroupCounters(object):
         counters = dict()
 
         if draw_all_families:
-            for family in families.values():
+            for idx, family in enumerate(families.values()):
                 fc = FamilyCounter({
                     "families": [family.family_id],
                     "pedigree": get_family_pedigree(
                         family, person_set_collection
                     ),
                     "pedigrees_count": family.family_id,
-                    "counter_id": family.family_id
+                    "counter_id": idx
                 })
                 counters[family.family_id] = fc
         else:
@@ -124,7 +124,8 @@ class FamiliesGroupCounters(object):
                         key=lambda item: len(item[1]), reverse=True)
             }
 
-            for family_type, families in families_to_types.items():
+            for idx, items in enumerate(families_to_types.items()):
+                family_type, families = items
                 if (
                     families_count_show_id
                     and len(families) <= families_count_show_id
@@ -142,7 +143,7 @@ class FamiliesGroupCounters(object):
                         family, person_set_collection
                     ),
                     "pedigrees_count": pedigree_label,
-                    "counter_id": family_type
+                    "counter_id": idx
                 })
                 counters[family_type] = fc
 

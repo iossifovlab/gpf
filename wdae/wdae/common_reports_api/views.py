@@ -26,11 +26,36 @@ class VariantReportsView(QueryBaseView):
         )
 
 
+class VariantReportsFullView(QueryBaseView):
+    def __init__(self):
+        super(VariantReportsFullView, self).__init__()
+
+    def get(self, request, common_report_id):
+        assert common_report_id
+
+        common_report = self.gpf_instance.get_common_report(
+            common_report_id
+        )
+
+        if common_report is not None:
+            return Response(common_report.to_dict(full=True))
+        return Response(
+            {"error": "Common report {} not found".format(common_report_id)},
+            status=status.HTTP_404_NOT_FOUND,
+        )
+
+
 class FamilyCounterListView(QueryBaseView):
     def __init__(self):
         super().__init__()
 
-    def get(self, request, common_report_id, group_name, counter_id):
+    def post(self, request):
+        data = request.data
+
+        common_report_id = data["study_id"]
+        group_name = data["group_name"]
+        counter_id = int(data["counter_id"])
+
         assert common_report_id
 
         common_report = self.gpf_instance.get_common_report(
@@ -54,7 +79,13 @@ class FamilyCounterDownloadView(QueryBaseView):
     def __init__(self):
         super().__init__()
 
-    def get(self, request, common_report_id, group_name, counter_id):
+    def post(self, request):
+        data = request.data
+
+        common_report_id = data["study_id"]
+        group_name = data["group_name"]
+        counter_id = int(data["counter_id"])
+
         assert common_report_id
 
         common_report = self.gpf_instance.get_common_report(
@@ -72,10 +103,10 @@ class FamilyCounterDownloadView(QueryBaseView):
         counter = group.counters[counter_id]
 
         response = StreamingHttpResponse(
-            ",".join(counter.families),
-            content_type="text/csv"
+            ["\n".join(counter.families)],
+            content_type="text/plain"
         )
-        response["Content-Disposition"] = "attachment; filename=families.csv"
+        response["Content-Disposition"] = "attachment; filename=families.txt"
         response["Expires"] = "0"
 
         return response

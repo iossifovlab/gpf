@@ -8,6 +8,7 @@ from dae.gpf_instance.gpf_instance import GPFInstance, cached
 from studies.study_wrapper import StudyWrapper, RemoteStudyWrapper, \
     StudyWrapperBase
 from studies.remote_study_db import RemoteStudyDB
+from dae.common_reports.common_report import CommonReport
 
 from remote.gene_sets_db import RemoteGeneSetsDb
 from remote.denovo_gene_sets_db import RemoteDenovoGeneSetsDb
@@ -159,8 +160,8 @@ class WGPFInstance(GPFInstance):
 
         client = self.remote_study_clients[common_report_id]
         common_report_id = self.remote_study_ids[common_report_id]
-        common_report = client.get_common_report(common_report_id)
-        return common_report
+        common_report = client.get_common_report(common_report_id, full=True)
+        return CommonReport(common_report)
 
     def get_common_report_families_data(self, common_report_id):
         families_data = \
