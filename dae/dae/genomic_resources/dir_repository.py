@@ -6,13 +6,11 @@ import os
 import gzip
 import logging
 import datetime
-from dataclasses import asdict
-from typing import Optional
 
 import yaml
 import pysam  # type: ignore
 
-from .repository import GenomicResource, ManifestEntry, Manifest
+from .repository import GenomicResource, ManifestEntry
 from .repository import GenomicResourceRepo
 from .repository import GenomicResourceRealRepo
 from .repository import find_genomic_resources_helper
@@ -25,9 +23,10 @@ logger = logging.getLogger(__name__)
 class GenomicResourceDirRepo(GenomicResourceRealRepo):
     """Provides directory genomic resources repository."""
 
-    def __init__(self, repo_id, directory, **atts):
+    def __init__(self, repo_id, directory, **kwargs):  # pylint: disable=unused-argument
         super().__init__(repo_id)
         self.directory = pathlib.Path(directory)
+        self.directory.mkdir(exist_ok=True, parents=True)
         self._all_resources = None
 
     def _dir_to_dict(self, directory):
@@ -39,21 +38,29 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
 
         return directory
 
+    def refresh(self):
+        """Clears the content of the whole repository and trigers rescan."""
+        self._all_resources = None
+
     def get_genomic_resource_dir(self, resource):
+        """Returns directory for specified resources."""
         return self.directory / resource.get_genomic_resource_dir()
 
     def get_file_path(self, resource, file_name):
+        """Returns full filename for a file in a resource."""
         return self.get_genomic_resource_dir(resource) / file_name
 
     def get_all_resources(self):
+        """Returns generator for all resources in the repository."""
         if self._all_resources is None:
-            d = self._dir_to_dict(self.directory)
-            self._all_resources = [self.build_genomic_resource(grId, grVr)
-                                   for grId, grVr in
-                                   find_genomic_resources_helper(d)]
+            dir_content = self._dir_to_dict(self.directory)
+            self._all_resources = [self.build_genomic_resource(gr_id, gr_vr)
+                                   for gr_id, gr_vr in
+                                   find_genomic_resources_helper(dir_content)]
         yield from self._all_resources
 
     def get_files(self, genomic_resource):
+        """Returns a generator for all files in a resources."""
         content_dict = self._dir_to_dict(
             self.get_genomic_resource_dir(genomic_resource))
 
@@ -62,11 +69,12 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
             filetimestamp = \
                 datetime.datetime.fromtimestamp(int(filestat.st_mtime)).isoformat()
             return filestat.st_size, filetimestamp
-                
+
         yield from find_genomic_resource_files_helper(
             content_dict, my_leaf_to_size_and_time)
 
     def file_exists(self, genomic_resource, filename):
+        """Checks if a file exists in a genomic resource."""
         full_file_path = self.get_file_path(genomic_resource, filename)
         return os.path.exists(full_file_path)
 
@@ -82,53 +90,10 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
                 os.makedirs(dirname, exist_ok=True)
         if filename.endswith(".gz") and uncompress:
             if "w" in mode:
-                raise IOError(f"writing gzip files not supported")
+                raise IOError("writing gzip files not supported")
             return gzip.open(full_file_path, mode)
 
-        return open(full_file_path, mode)
-
-    def update_resource(
-            self, src_gr: GenomicResource):
-
-        dest_gr: Optional[GenomicResource] = self.get_resource(
-            src_gr.resource_id, f"={src_gr.get_version_str()}")
-        assert dest_gr is not None
-
-        assert dest_gr.repo == self
-        mnfst_dest = dest_gr.get_manifest()
-        mnfst_src = src_gr.get_manifest()
-
-        if mnfst_dest == mnfst_src:
-            logger.debug("nothing to update %s", dest_gr.resource_id)
-            return
-
-        manifest_diff = {}
-        for dest_file in mnfst_dest:
-            manifest_diff[dest_file.name] = [dest_file, None]
-        for source_file in mnfst_src:
-            if source_file.name in manifest_diff:
-                manifest_diff[source_file.name][1] = source_file
-            else:
-                manifest_diff[source_file.name] = [None, source_file]
-
-        result_manifest = Manifest()
-        for dest_file, src_file in manifest_diff.values():
-
-            if (dest_file is None and src_file) or \
-                    (dest_file != src_file and src_file is not None):
-                # copy src_file or
-                # update src_file
-                dest_mnfst = self._copy_manifest_entry(
-                    dest_gr, src_gr, src_file)
-                result_manifest.add(dest_mnfst)
-            elif dest_file and src_file is None:
-                # delete dest_file
-                self._delete_manifest_entry(
-                    dest_gr, dest_file)
-            else:
-                result_manifest.add(dest_file)
-
-        dest_gr.save_manifest(result_manifest)
+        return open(full_file_path, mode)  # pylint: disable=unspecified-encoding
 
     def _delete_manifest_entry(
             self, resource: GenomicResource, manifest_entry):
@@ -137,7 +102,7 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
         filepath = pathlib.Path(
             self.directory /
             resource.get_genomic_resource_dir()) / filename
-        filepath.unlink()
+        filepath.unlink(missing_ok=True)
 
     def _copy_manifest_entry(
             self, dest_resource: GenomicResource,
@@ -152,44 +117,40 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
             dest_resource.get_genomic_resource_dir() / filename)
         os.makedirs(dest_filename.parent, exist_ok=True)
 
-        try:
-            with src_resource.open_raw_file(
-                    filename, "rb",
-                    uncompress=False) as infile, \
-                    dest_resource.open_raw_file(
-                        filename, 'wb',
-                        uncompress=False) as outfile:
+        with src_resource.open_raw_file(
+                filename, "rb",
+                uncompress=False) as infile, \
+                dest_resource.open_raw_file(
+                    filename, 'wb',
+                    uncompress=False) as outfile:
 
-                md5_hash = hashlib.md5()
-                while chunk := infile.read(32768):
-                    outfile.write(chunk)
-                    md5_hash.update(chunk)
-            md5 = md5_hash.hexdigest()
+            md5_hash = hashlib.md5()
+            while chunk := infile.read(32768):
+                outfile.write(chunk)
+                md5_hash.update(chunk)
+        md5 = md5_hash.hexdigest()
 
-            if manifest_entry.md5 != md5:
-                logger.error(
-                    "storing %s failed; expected md5 is %s; "
-                    "calculated md5 for the stored file is %s",
-                    src_resource.resource_id, manifest_entry.md5, md5)
-                raise IOError(f"storing of {src_resource.resource_id} failed")
-            src_modtime = datetime.datetime.fromisoformat(
-                manifest_entry.time).timestamp()
-
-            assert dest_filename.exists()
-
-            os.utime(dest_filename, (src_modtime, src_modtime))
-            return manifest_entry
-        except Exception:
+        if manifest_entry.md5 != md5:
             logger.error(
-                "problem copying remote resource file: %s (%s)",
-                filename, src_resource.resource_id, exc_info=True)
-            return None
+                "storing %s failed; expected md5 is %s; "
+                "calculated md5 for the stored file is %s",
+                src_resource.resource_id, manifest_entry.md5, md5)
+            raise IOError(f"storing of {src_resource.resource_id} failed")
+        src_modtime = datetime.datetime.fromisoformat(
+            manifest_entry.time).timestamp()
 
-    def store_all_resources_full(self, source_repo: GenomicResourceRepo):
+        assert dest_filename.exists()
+
+        os.utime(dest_filename, (src_modtime, src_modtime))
+        return manifest_entry
+
+    def store_all_resources(self, source_repo: GenomicResourceRepo):
+        """Copies all resources from another genomic resources repository."""
         for resource in source_repo.get_all_resources():
-            self.store_resource_full(resource)
+            self.store_resource(resource)
 
-    def store_resource_full(self, resource: GenomicResource):
+    def store_resource(self, resource: GenomicResource):
+        """Copies a resources and all it's files."""
         manifest = resource.get_manifest()
 
         temp_gr = GenomicResource(resource.resource_id,
@@ -203,15 +164,16 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
                     resource.resource_id, manifest_entry.name)
                 logger.error(
                     "skipping resource: %s", resource.resource_id)
-                self._all_resources = None
+                self.refresh()
                 return
 
             assert dest_manifest_entry == manifest_entry
 
         temp_gr.save_manifest(manifest)
-        self._all_resources = None
+        self.refresh()
 
     def build_repo_content(self):
+        """Builds the content of the .CONTENTS file."""
         content = [
             {
                 "id": gr.resource_id,
@@ -224,10 +186,11 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
         return content
 
     def save_content_file(self):
+        """Creates and saves the content file for the repository."""
         content_filename = self.directory / GRP_CONTENTS_FILE_NAME
         logger.debug("saving contents file %s", content_filename)
         content = self.build_repo_content()
-        with open(content_filename, "w") as outfile:
+        with open(content_filename, "wt", encoding="utf8") as outfile:
             yaml.dump(content, outfile)
 
     def open_tabix_file(self, genomic_resource,  filename,

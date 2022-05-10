@@ -30,16 +30,18 @@ def test_build_a_group_repository():
     assert len(repo.children) == 2
 
 
-def test_build_a_complex_but_realistic_scenario():
+def test_build_a_complex_but_realistic_scenario(tmp_path):
     repo = build_genomic_resource_repository(
         {"type": "group", "children": [
-            {"type": "group", "cache_dir": "/tmp/remotes12Cache", "children": [
+            {"type": "group",
+             "cache_dir": tmp_path / "tmp/remotes12Cache", "children": [
                 {"id": "r1", "type": "url", "url": "http://r1.org/repo"},
                 {"id": "r2", "type": "url", "url": "http://r2.org/repo"}
             ]},
             {"id": "r3", "type": "url", "url": "http://r3.org/repo",
-             "cache_dir": "/tmp/remote3Cache"},
-            {"id": "my", "type": "directory", "directory": "/data/my/grRepo"},
+             "cache_dir": tmp_path / "tmp/remote3Cache"},
+            {"id": "my", "type": "directory", 
+             "directory": tmp_path / "data/my/grRepo"},
             {"id": "mm", "type": "embeded", "content": {}}
         ]})
     # The asserts implicitly test the types of the repositories too:
@@ -48,28 +50,28 @@ def test_build_a_complex_but_realistic_scenario():
     #   * only url       repository has a 'url'                   attribute;
     #   * only directory repository has a 'directory'             attribute;
     #   * only embeded   repository has a 'content'               attribute.
-    assert str(repo.children[0].cache_dir) == "/tmp/remotes12Cache"
+    assert str(repo.children[0].cache_dir) == str(tmp_path / "tmp/remotes12Cache")
     assert repo.children[0].child.children[0].url == "http://r1.org/repo"
     assert repo.children[0].child.children[1].url == "http://r2.org/repo"
-    assert str(repo.children[1].cache_dir) == "/tmp/remote3Cache"
+    assert str(repo.children[1].cache_dir) == str(tmp_path / "tmp/remote3Cache")
     assert repo.children[1].child.url == "http://r3.org/repo"
-    assert str(repo.children[2].directory) == "/data/my/grRepo"
+    assert str(repo.children[2].directory) == str(tmp_path / "data/my/grRepo")
     assert repo.children[3].content == {}
 
 
-def test_build_a_complex_but_realistic_scenario_yaml():
-    definition = yaml.safe_load('''
+def test_build_a_complex_but_realistic_scenario_yaml(tmp_path):
+    definition = yaml.safe_load("""
         {type: group, children: [
-            {type: group, cache_dir: /tmp/remotes12Cache, children: [
+            {type: group, cache_dir: %s/tmp/remotes12Cache, children: [
                 {id: r1, type: url, url: http://r1.org/repo},
                 {id: r2, type: url, url: http://r2.org/repo},
             ]},
             {id: r3, type: url, url: http://r3.org/repo,
-                                cache_dir: /tmp/remote3Cache},
-            {id: my, type: directory, directory: /data/my/grRepo},
+                                cache_dir: %s/tmp/remote3Cache},
+            {id: my, type: directory, directory: %s/data/my/grRepo},
             {id: mm, type: embeded, content: {}}
         ]}
-    ''')
+    """ % (tmp_path, tmp_path, tmp_path))
     repo = build_genomic_resource_repository(definition)
 
     # The asserts implicitly test the types of the repositories too:
@@ -78,12 +80,12 @@ def test_build_a_complex_but_realistic_scenario_yaml():
     #   * only url       repository has a 'url'                   attribute;
     #   * only directory repository has a 'directory'             attribute;
     #   * only embeded   repository has a 'content'               attribute.
-    assert str(repo.children[0].cache_dir) == "/tmp/remotes12Cache"
+    assert str(repo.children[0].cache_dir) == f"{tmp_path}/tmp/remotes12Cache"
     assert repo.children[0].child.children[0].url == "http://r1.org/repo"
     assert repo.children[0].child.children[1].url == "http://r2.org/repo"
-    assert str(repo.children[1].cache_dir) == "/tmp/remote3Cache"
+    assert str(repo.children[1].cache_dir) == f"{tmp_path}/tmp/remote3Cache"
     assert repo.children[1].child.url == "http://r3.org/repo"
-    assert str(repo.children[2].directory) == "/data/my/grRepo"
+    assert str(repo.children[2].directory) == f"{tmp_path}/data/my/grRepo"
     assert repo.children[3].content == {}
 
 

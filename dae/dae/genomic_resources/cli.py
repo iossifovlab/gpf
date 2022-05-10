@@ -48,7 +48,7 @@ def cli_browse(args=None):
     grr = build_genomic_resource_repository()
     for gr in grr.get_all_resources():
         print("%20s %20s %-7s %2d %12d %s" %
-              (gr.repo.repo_id, gr.get_resource_type(), gr.get_version_str(),
+              (gr.repo.repo_id, gr.get_type(), gr.get_version_str(),
                len(list(gr.get_files())),
                   sum([fs for _, fs, _ in gr.get_files()]), gr.get_id()))
 
@@ -128,7 +128,6 @@ the number of workers using -j")
 
     if cmd == "index":
         for gr in GRR.get_all_resources():
-            gr.update_stats()
             gr.update_manifest()
 
         GRR.save_content_file()

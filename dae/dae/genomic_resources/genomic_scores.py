@@ -31,8 +31,8 @@ class ScoreLine:
             return None
         return scr_def.value_parser(str_value)
 
-    def get_special_column_value(self, id):
-        clmn_def = self.special_columns[id]
+    def get_special_column_value(self, col_id):
+        clmn_def = self.special_columns[col_id]
 
         str_value = self.values[clmn_def.col_index]
         return clmn_def.value_parser(str_value)
@@ -86,9 +86,10 @@ class GenomicScore(abc.ABC):
         begin = line.get_pos_begin()
         end = line.get_pos_end()
         if end < begin:
-            raise Exception(f"The resource line {line.values} has a regions "
-                            f" with end {end} smaller that the "
-                            f"begining {end}.")
+            raise IOError(
+                f"The resource line {line.values} has a regions "
+                f" with end {end} smaller that the "
+                f"begining {end}.")
         return begin, end
 
     def _get_header(self):
@@ -136,15 +137,11 @@ class GenomicScore(abc.ABC):
             else:
                 right = line_pos_end
 
-            for i in range(left, right+1):
+            for _ in range(left, right+1):
                 yield val
 
 
 class PositionScore(GenomicScore):
-
-    @staticmethod
-    def get_resource_type():
-        return "position_score"
 
     def fetch_scores(
             self, chrom: str, position: int, scores: List[str] = None):
@@ -167,10 +164,10 @@ class PositionScore(GenomicScore):
         requested_scores = scores if scores else self.get_all_scores()
         return {scr: line.get_score_value(scr) for scr in requested_scores}
 
-    def fetch_scores_agg(
+    def fetch_scores_agg(  # pylint: disable=too-many-arguments,too-many-locals
             self, chrom: str, pos_begin: int, pos_end: int,
             scores: List[str] = None, non_default_pos_aggregators=None):
-        '''
+        """
         # Case 1:
         #    res.fetch_scores_agg("1", 10, 20) -->
         #       all score with default aggregators
@@ -178,12 +175,10 @@ class PositionScore(GenomicScore):
         #    res.fetch_scores_agg("1", 10, 20,
         #                         non_default_aggregators={"bla":"max"}) -->
         #       all score with default aggregators but 'bla' should use 'max'
-        '''
+        """
         if chrom not in self.get_all_chromosomes():
             raise ValueError(
                 f"{chrom} is not among the available chromosomes.")
-
-        score_lines = list(self._fetch_lines(chrom, pos_begin, pos_end))
 
         requested_scores = scores if scores else self.get_all_scores()
         aggregators = {}
@@ -191,12 +186,11 @@ class PositionScore(GenomicScore):
             non_default_pos_aggregators = {}
 
         for scr_id in requested_scores:
-            scr_def = self.score_columns[scr_id]
             aggregator_type = non_default_pos_aggregators.get(
-                scr_id, scr_def.pos_aggregator)
+                scr_id, self.score_columns[scr_id].pos_aggregator)
             aggregators[scr_id] = build_aggregator(aggregator_type)
 
-        for line in score_lines:
+        for line in self._fetch_lines(chrom, pos_begin, pos_end):
             line_pos_begin, line_pos_end = self._line_to_begin_end(line)
 
             for scr_id, aggregator in aggregators.items():
@@ -212,14 +206,10 @@ class PositionScore(GenomicScore):
                     if pos_end <= line_pos_end
                     else line_pos_end
                 )
-                for i in range(left, right+1):
-                    aggregators[scr_id].add(val)
+                for _ in range(left, right+1):
+                    aggregator.add(val)
 
-        return {
-            score_id: aggregator
-            for score_id, aggregator
-            in aggregators.items()
-        }
+        return aggregators
 
 
 class NPScore(GenomicScore):
@@ -227,10 +217,6 @@ class NPScore(GenomicScore):
     @staticmethod
     def get_extra_special_columns():
         return {"reference": str, "alternative": str}
-
-    @staticmethod
-    def get_resource_type():
-        return "np_score"
 
     def fetch_scores(
             self, chrom: str, position: int, reference: str, alternative: str,
@@ -316,7 +302,7 @@ class NPScore(GenomicScore):
                     if pos_end <= line.get_pos_end()
                     else line.get_pos_end()
                 )
-                for i in range(left, right+1):
+                for _ in range(left, right+1):
                     nuc_aggregators[col].add(val)
             last_pos = line.get_pos_begin()
         aggregate_nucleotides()
@@ -337,10 +323,6 @@ class AlleleScore(GenomicScore):
     @staticmethod
     def get_extra_special_columns():
         return {"reference": str, "alternative": str}
-
-    @staticmethod
-    def get_resource_type():
-        return "allele_score"
 
     def fetch_scores(
             self, chrom: str, position: int, reference: str, alternative: str,
@@ -509,9 +491,9 @@ def open_allele_score_from_resource(
 
 def open_score_from_resource(resource: GenomicResource) -> GenomicScore:
     type_to_ctor = {
-        PositionScore.get_resource_type(): open_position_score_from_resource,
-        NPScore.get_resource_type(): open_np_score_from_resource,
-        AlleleScore.get_resource_type(): open_allele_score_from_resource,
+        "position_score": open_position_score_from_resource,
+        "np_score": open_np_score_from_resource,
+        "allele_score": open_allele_score_from_resource,
     }
     ctor = type_to_ctor.get(resource.get_type())
     if ctor is None:

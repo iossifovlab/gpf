@@ -25,7 +25,7 @@ def build_test_repos(pth, content):
     emb_repo = GenomicResourceEmbededRepo("emb", content=content)
 
     dir_repo = GenomicResourceDirRepo("dir", directory=dir_repo_path)
-    dir_repo.store_resource_full(emb_repo.get_resource("one"))
+    dir_repo.store_resource(emb_repo.get_resource("one"))
     dir_repo.save_content_file()
 
     embeded_cached_repo = GenomicResourceCachedRepo(
@@ -43,6 +43,10 @@ def build_test_repos(pth, content):
 def run_test_on_all_repos(all_test_repos, test_name, test_function,
                           repo_names_that_should_fail=[]):
     for test_repo_name, test_repo in all_test_repos.items():
+        print(100*"+")
+        print(
+            test_repo.repo_id, list(test_repo.get_resource("one").get_files()))
+        print(100*"+")
         test_result = test_function(test_repo)
         if test_repo_name in repo_names_that_should_fail:
             assert not test_result, \
