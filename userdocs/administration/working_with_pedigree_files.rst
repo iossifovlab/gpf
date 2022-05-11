@@ -7,12 +7,12 @@ Working With Pedigree Files Guide
 Brief outline
 #############
 
-The GPF system has a flexible support for various input format of pedigree file.
-When loaded the pedigree is kept in an internal representation. The `ped2ped.py`
-tool allows loading the input pedigree file and storing it into the
+The GPF system has flexible support for various input formats of pedigree files.
+When loaded the pedigree is kept in an internal representation.
+The `ped2ped.py` tool allows loading the input pedigree file and storing it into the
 canonical GPF pedigree representation.
 
-Additionally GPF has a tool `draw_pedigree.py`
+Additionally, GPF has a tool `draw_pedigree.py`
 that could generate a PDF file with drawings of all pedigrees loaded from
 the input.
 
