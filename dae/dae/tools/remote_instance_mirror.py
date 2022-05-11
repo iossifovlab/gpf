@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+"""Tool to mirror remote GPF instances."""
 import os
 import re
 import sys
@@ -179,7 +180,7 @@ def run_wdae_bootstrap(work_dir):
     os.environ["DAE_DB_DIR"] = work_dir
     commands = [
         [
-            "wdaemanage.py", "migrate"
+            "wdaemanage.py", "migrate"  # NOSONAR
         ],
         [
             "wdaemanage.py", "user_create", "admin@iossifovlab.com",
@@ -199,7 +200,7 @@ def run_wdae_bootstrap(work_dir):
             logger.error(result.stderr)
 
 
-def main(argv=sys.argv[1:]):
+def main(argv):
     """Main function to run remote instance mirroring tool."""
     argv = parse_cli_arguments(argv)
 
