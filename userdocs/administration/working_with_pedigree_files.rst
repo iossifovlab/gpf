@@ -195,11 +195,14 @@ specifies which individual in the family has the role proband.
   `True` recivies the role `proband`.
 * The roles of all other individuals are inferred with respect to the proband.
 
-* If no proband is indicated, all the roles will be set to unknown. 
+.. note::
+
+    If no proband is indicated, the tools fallback into the strategy described in
+    :ref:`plain pedigree (familyid, personid, momid, dadid, sex, status)`
 
 .. note::
 
-    If more than one proband is selected, the probands are assigned the role prb
+    If more than one proband is selected, the role `prb` is assigned to the first of them
     and the rest of the roles are inferred with respect to the first (in the pedigree file)
     proband. 
 
