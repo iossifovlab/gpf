@@ -159,6 +159,7 @@ def build_setenv(work_dir):
 export GRR_DEFINITION={grr_definition}
 
 export DAE_DB_DIR={work_dir}
+export DAE_PHENODB_DIR={work_dir}
 
 export GPF_PREFIX={gpf_prefix}
 
