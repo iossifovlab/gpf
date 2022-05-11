@@ -175,7 +175,7 @@ export PS1
 
 
 def run_wdae_bootstrap(work_dir):
-
+    """Run wdae migrations and create default users."""
     os.environ["DAE_DB_DIR"] = work_dir
     commands = [
         [
@@ -193,13 +193,14 @@ def run_wdae_bootstrap(work_dir):
     for command in commands:
         result = subprocess.run(
             command,
-            text=True, capture_output=True)
+            text=True, capture_output=True, check=False)
         if result.returncode != 0:
             logger.error(" ".join(result.args))
             logger.error(result.stderr)
 
 
 def main(argv=sys.argv[1:]):
+    """Main function to run remote instance mirroring tool."""
     argv = parse_cli_arguments(argv)
 
     if argv.verbose == 1:
