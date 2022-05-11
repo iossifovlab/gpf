@@ -31,10 +31,10 @@ Person ID:
   Contains person ID for the individual.
 Father ID:
   Contains the person ID of the individual's father. If the individual
-  is without specified father this column contains `0` or is left emtpy.
+  is without a specified father this column contains `0` or is left empty.
 Mother ID:
   Contains the person ID of the individual's mother. If the individual
-  is without specified mother this column contains `0` or is left emtpy.
+  is without a specified mother this column contains `0` or is left empty.
 Sex:
   The sex of the individual.
 Status:
@@ -46,9 +46,9 @@ for individuals.
 Canonical pedigree file
 #######################
 
-Canonical pedigree file matches closely the internal representation of
+The canonical pedigree file matches closely the internal representation of
 the pedigree data. Each line in the pedigree file specifies the attributes
-for an individual. 
+of an individual. 
 
 The columns in a canonical pedigree file are:
 
@@ -57,30 +57,31 @@ familyId:
 
 personId:
     Contains IDs for individuals included in the pedigree file. The assumption is that
-    person IDs are unique acrross the whole pedigree file.
+    person IDs are unique across the whole pedigree file.
 
 momId:
-    Contains the ID of the individual's mother. If mother is not specified this column
+    Contains the ID of the individual's mother. If a mother is not specified this column
     should contain `0` or should left be empty.
 
 dadId:
-    Contains the ID of the individual's father. If father is not specified this column
+    Contains the ID of the individual's father. If a father is not specified this column
     should contain `0` or should be left empty.
 
 sex:
-    The sex of the individual. Spported values for `sex` column are described in
+    The sex of the individual. Supported values for the `sex` column are described in
     :ref:`Supported values for sex`
 
 status:
-    The affected status of the individual. Supported values for `status` column
-    are described in :ref:`supported values for status`
+    The affected status of the individual. Supported values for the `status` column
+    are described in
+    :ref:`supported values for status`
 
 role:
-    The role of the individual. Supported values for `role` column are described
-    in :ref:`supported values for role`
+    The role of the individual. Supported values for the `role` column are described in
+    :ref:`supported values for role`
 
 sampleId:
-    This column is used to map an individual to sample ID used in the genotypes
+    This column is used to map an individual to the sample ID used in the genotypes
     file(s) (e.g a VCF file(s)). If this column is not specified in the input pedigree,
     it will be created and values will coincide with the `personId` column.
 
@@ -88,15 +89,15 @@ layout:
     This column is optional. The suported format is following: `<rank>:<x>,<y>`, where
 
     * `<rank>` is the rank of the individual in the family, where the individuals from 
-      earlies generation in the family has rank of 1, the individuals from the next
-      generation has rank 2, et. For example in a nuclear family, the mother and father have
-      rank 1 and the children have rank 2.
+      the earliest generation in the family have a rank of 1, the individuals from the next
+      generation have a rank of 2, et. For example in a nuclear family, the mother and father have
+      a rank of 1 and the children have a rank of 2.
     * `<x>` is the `x`-coordinate of the individual icon.
     * `<y>` is the `y`-coordinate of the individual icon.
 
 generated:
-    This column specifies if given individual is `generated`. The supported values in this
-    colum are `True` and `False`.
+    This column specifies if a given individual is `generated`. The supported values in this
+    column are `True` and `False`.
 
     When the pedigree file contains not full families, the GPF tools
     add individuals to the family to make the family full. 
@@ -105,40 +106,42 @@ generated:
     contains two individuals - mother and proband, - the GPF adds father to this family
     to make proper visualization of the family.
 
-    This additional individuals are marked as `generated` and are not used in any downstream
-    analysis. There role is purely for visualization purposes.
+    These additional individuals are marked as `generated` and are not used in any downstream
+    analysis. Their use is purely for visualization purposes.
 
-When the input pedigree contains any additional columns the GPF tools keeps these column in the
+When the input pedigree contains any additional columns the GPF tools keep these columns in the
 canonical representation.
 
 
 Possible input pedigree file structures
 #######################################
 
-When input pedigree file is given to the GPF system it tries to transform it into
-the canonical representation described in :ref:`canonical pedigree file`.
-Especially important is the `role` column in the pedigree that specifies the role
-of each individual within their family. 
+When the input pedigree file is given to the GPF system it tries to transform it into
+the canonical representation described in
+:ref:`canonical pedigree file`.
 
-When `role` column is not present in the
-input pedigree file, the GPF system tries to generate this column.
+GPF system uses individuals' roles for various queries. 
+When the `role` column is not present in the
+input pedigree file, the GPF system tries to deduce the role of each individual
+in respect to the family's proband.
 
 The GPF system has different strategies to infer the `role` of each individual.
 Which strategy to use depends on the input data.
 
 
 Plain pedigree (familyId, personId, momId, dadId, sex, status) 
----------------------------------------------------------------------
-Usually the pedigree does not conatin a role column. In this case the 
+--------------------------------------------------------------
+
+Often, the pedigree does not contain a role column. In this case the 
 GPF system uses the following approach:
 
-* First affected child in each family is assigned a role `proband`
+* Assign a role proband to the first affected child in each family.
 * The roles of all other members in the family are inferred with
   respect to the proband.
 
 .. note::
 
-    If no proband is found, all the roles will be set to unkown. 
+    If no proband is found, all the roles will be set to `unknown`. 
 
 Example: simple pedigree file
 """""""""""""""""""""""""""""
@@ -157,11 +160,11 @@ f1        f1.06     f1.01  f1.05  F    unaffected
 ========  ========  =====  =====  ===  ==========
 
 To assign roles to the members of family `f1` the GPF system will look
-for the first affected child in `f1` family - this will be `f1.03` and this
-individual will have a role `proband`. The mother and father of `f1.03`
+for the first affected child in the `f1` family - this will be `f1.03` and this
+individual will get a role `proband`. The mother and father of `f1.03`
 will become with roles `mom` and `dad` and hence `f1.01` is going to have
-role `mom` and `f1.02` - role `dad`. The sibling of `f1.03` will have role
-`sib` and hence `f1.04` is going to have role `sib`. 
+the role `mom` and `f1.02` - role `dad`. The sibling of `f1.03` will have the role
+`sib` and hence `f1.04` is going to have the role `sib`. 
 
 This process
 continues until all individuals in the family have their roles set.
@@ -181,7 +184,7 @@ f1        f1.06     f1.01  f1.05  F    unaffected  maternal_half_sibling
 
 
 Pedigree with proband column (familyId, personId, momId, dadId, sex, status, prb) 
---------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
 
 When the strategy described in
 :ref:`plain pedigree (familyid, personid, momid, dadid, sex, status)`
@@ -220,8 +223,8 @@ f1        f1.06     f1.01  f1.05  F    unaffected  0
 Note the `prb` column that specifies which individual has the role proband.
 So the `f1.04` recivies role `prb`. The mother and father of `f1.04`
 will have roles `mom` and `dad` and hence `f1.01` is going to have
-role `mom` and `f1.02` - role `dad`. The sibling of `f1.04` will have role
-`sib` and hence `f1.03` is going to have role `sib`. 
+the role `mom` and `f1.02` - role `dad`. The sibling of `f1.04` will have the role
+`sib` and hence `f1.03` is going to have the role `sib`. 
 
 This process
 continues until all individuals in the family have their roles set.
@@ -242,18 +245,11 @@ Pedigree with role column (familyId, personId, momId, dadId, sex, status, role)
 -------------------------------------------------------------------------------
 
 When a `role` column is defined in the input pedigree it becomes the source of truth
-about individuals roles. Whatever is saved in ths column is interpreted as role for 
-the individual.
-
-The loader will be upset (ERROR) if role is not one of the recognized, names or synonyms. 
-
-The loader will output WARNING if no proband is assigned for a family (can be suppress with an argument???) OR consider it an ERROR condition that can be suppressed with an argument. 
-
-The loader will output WARNING if more than one proband is assigned for a family?? (can be suppress with an argument???) 
+about individuals' roles. Whatever is saved in this column is interpreted as the role
+of the individual.
 
 Example: pedigree with role column
 """"""""""""""""""""""""""""""""""
-
 
 ========  ========  =====  =====  ===  ==========  =======================
 familyId  personId  momId  dadId  sex  status      role
@@ -267,23 +263,34 @@ f1        f1.06     f1.01  f1.05  F    unaffected  maternal_half_sibling
 ========  ========  =====  =====  ===  ==========  =======================
 
 
-
-
 Full canonical pedigree
 -----------------------
 
-The canonical pedigree file contains `role` column and so, the GPF system uses this
+The canonical pedigree file contains the `role` column and so, the GPF system uses this
 column to assign the role of each individual.
+
+
+.. todo:: 
+    The loader will be upset (ERROR) if the role is not one of the recognized, names
+    or synonyms. 
+
+    The loader will output a WARNING if no proband is assigned for a family
+    (can be suppressed with an argument???) OR consider it an ERROR condition that
+    can be suppressed with an argument. 
+
+    The loader will output a WARNING if more than one proband is assigned for a
+    family??
+    (can be suppressed with an argument???) 
 
 
 Preparing the pedigree data
 ###########################
 
 The pedigree data may require preparation beforehand. This section describes
-the requirements for pedigree data that must be met in order to use the tools.
+the requirements for pedigree data that must be met to use the tools.
 
 In some cases, the initial pedigree file must be expanded with additional
-individuals in order to correctly form some families. Following that,
+individuals to correctly form some families. Following that,
 individuals must be connected to their parents from the newly added
 individuals.
 
@@ -292,7 +299,8 @@ are supported by the GPF system. You can see a list of the supported
 values here - :ref:`supported values for sex`,
 :ref:`supported values for status`,
 :ref:`supported values for role`.
-Also these properties support synonyms, which are listed on the tables below:
+
+Also, these properties support synonyms, which are listed in the tables below:
 
 
 Supported values for sex
@@ -423,8 +431,8 @@ optional arguments:
 
     --ped-proband PED_PROBAND
         specify the name of the column in the pedigree file
-        that specifies persons with role `proband`; this
-        columns is used only when option `--ped-no-role` is
+        that specifies persons with role `proband`;
+        this column is used only when option `--ped-no-role` is
         specified. [default: None]
 
     --ped-no-header
@@ -439,9 +447,10 @@ optional arguments:
     --ped-layout-mode PED_LAYOUT_MODE
         Layout mode specifies how pedigrees drawing of each
         family is handled. Available options are `generate`
-        and `load`. When layout mode option is set to generate
-        the loadertryes to generate a layout for the family
-        pedigree. When `load` is specified, the loader tryes
+        and `load`. When the layout mode option is set to
+        `generate``
+        the loader tries to generate a layout for each family
+        pedigree. When `load` is specified, the loader tries
         to load the layout from the layout column of the
         pedigree. [default: load]
 
@@ -469,12 +478,13 @@ To standardize the ``example_families.ped`` file use:
     ped2ped.py example_families.ped \
     --ped-layout-mode generate -o example_family_standardized.ped
 
-The output ``example_family_standardized.ped`` file has two newly generated columns - `sampleId` and `layout`, which
-are used by the GPF system.
+The output ``example_family_standardized.ped`` file has two newly generated
+columns - `sampleId` and `layout`, which are used by the GPF system.
 
 The `ped2ped.py` tool can also process pedigree files with noncanonical column names.
-For such cases it has arguments that can be used to specify which column contains the
-family id / role / sex / etc. For example, see the case of the ``example_families_with_noncanonical_column_names.ped`` file:
+For such cases, it has arguments that can be used to specify which column contains the
+family id, role, status, sex, etc. For example, see the case of the
+``example_families_with_noncanonical_column_names.ped`` file:
 
 .. code-block:: bash
 
@@ -483,8 +493,9 @@ family id / role / sex / etc. For example, see the case of the ``example_familie
     --ped-sex Sex --ped-status Status --ped-role Role \
     --ped-layout-mode generate -o example_families_from_noncanonical_column_names.ped
 
-The `ped2ped.py` tool can also process pedigree files without headers. One such file is ``example_families_without_header.ped``.
-In this case we have to map the column's index to a specific column name. The same way we mapped
+The `ped2ped.py` tool can also process pedigree files without headers.
+One such file is ``example_families_without_header.ped``.
+In this case, we have to map the column's index to a specific column name. The same way we mapped
 'Family_id' to the family id column in the upper example, here we map the first column to family id
 (Keep in mind the column indices begin from 0). See the example below:
 
@@ -495,8 +506,8 @@ In this case we have to map the column's index to a specific column name. The sa
     --ped-sex 4 --ped-status 5 --ped-role 6 \
     --ped-layout-mode generate -o example_families_from_no_header.ped
 
-Visualize a pedigree file into PDF file
-#######################################
+Visualize a pedigree file into a PDF file
+#########################################
 
 To visualize a pedigree file into a PDF file, containing drawings of the
 family pedigrees you can use the `draw_pedigrees.py` tool.
@@ -504,7 +515,8 @@ To see its full functionality use::
 
     draw_pedigree.py --help
 
-Notice that it shares a lot of common flags with the `ped2ped.py` tool. Similar to the `ped2ped.py` tool,
+Notice that it shares a lot of common flags with the `ped2ped.py` tool.
+Similar to the `ped2ped.py` tool,
 it can also process pedigree files with noncanonically named columns or without a header.
 
 In addition to that, it has a ``--mode`` flag, which supports two values:
@@ -521,4 +533,5 @@ To demonstrate how to use the `draw_pedigree.py` tool we will visualize the ``ex
 
     draw_pedigree.py example_families.ped -o example_families_visualization.pdf
 
-This command outputs ``example_families_visualization.pdf`` file with the pedigree drawings.
+This command outputs the ``example_families_visualization.pdf`` file with the pedigree
+drawings.
