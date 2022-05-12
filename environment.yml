@@ -12,6 +12,7 @@ channels:
   - iossifovlab
 dependencies:
   - python=3.9
+  - importlib_metadata=3.10
   - pysam=0.17.0
   - samtools=1.12
   - impyla=0.16.3
