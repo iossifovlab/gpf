@@ -7,5 +7,6 @@ import { Component, Input } from '@angular/core';
 })
 export class LoadingSpinnerComponent {
   @Input() public loadingFinished: boolean;
+  @Input() public verboseMode = false;
   @Input() public count: string;
 }

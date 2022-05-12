@@ -52,7 +52,8 @@
   <hr />
   <gpf-loading-spinner
     [loadingFinished]="loadingFinished"
-    [count]="genotypePreviewVariantsArray.getVariantsCount(selectedDataset?.genotypeBrowserConfig?.maxVariantsCount)">
+    [count]="genotypePreviewVariantsArray.getVariantsCount(selectedDataset?.genotypeBrowserConfig?.maxVariantsCount)"
+    [verboseMode]="true">
   </gpf-loading-spinner>
 
   <gpf-genotype-preview-table

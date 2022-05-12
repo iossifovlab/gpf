@@ -104,8 +104,11 @@ export class GenotypeBrowserComponent implements OnInit {
     this.legend = this.selectedDataset.personSetCollections.getLegend(this.genotypeBrowserState['personSetCollection']);
 
     this.queryService.streamingSubject.pipe(take(1)).subscribe(() => {
-      this.loadingFinished = true;
       this.loadingService.setLoadingStop();
+    });
+
+    this.queryService.streamingFinishedSubject.pipe(take(1)).subscribe(() => {
+      this.loadingFinished = true;
     });
 
     this.patchState();
