@@ -160,6 +160,10 @@ class ImportProject():
     def has_destination(self):
         return "destination" in self.import_config
 
+    def get_row_group_size(self, bucket):
+        return self.import_config.get("processing_config", {})\
+            .get(bucket.type, {}).get("row_group_size", 20_000)
+
     def build_variants_loader_pipeline(self, variants_loader, gpf_instance):
         effect_annotator = construct_import_effect_annotator(gpf_instance)
 

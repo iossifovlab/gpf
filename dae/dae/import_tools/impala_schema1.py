@@ -26,7 +26,7 @@ class Schema1ParquetWriter:
             variants_loader, gpf_instance
         )
 
-        rows = 20_000  # TODO get this from the config?
+        rows = project.get_row_group_size(bucket)
         logger.debug(f"argv.rows: {rows}")
 
         ParquetManager.variants_to_parquet(

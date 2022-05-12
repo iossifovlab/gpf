@@ -46,3 +46,21 @@ def test_add_chrom_prefix():
     project = import_tools.ImportProject(import_config)
     loader = project._get_variant_loader("vcf")
     assert loader._chrom_prefix == "chr"
+
+
+def test_row_group_size():
+    import_config = dict(
+        input=dict(),
+        processing_config=dict(
+            work_dir="",
+            denovo=dict(
+                row_group_size=10_000
+            ),
+        ),
+    )
+    project = import_tools.ImportProject.build_from_config(import_config)
+    assert project.get_row_group_size(
+        import_tools.Bucket("denovo", "", "", 0)) == 10_000
+    # 20_000 is the default value
+    assert project.get_row_group_size(
+        import_tools.Bucket("vcf", "", "", 0)) == 20_000

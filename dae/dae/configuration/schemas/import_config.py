@@ -14,13 +14,18 @@ def _to_list(obj):
     return obj
 
 
-_loader_processing_schema = {
+_region_chromosomes_schema = {
     "region_length": {"type": "integer"},
     "chromosomes": {
         "type": "list",
         "schema": {"type": "string"},
         "coerce": _to_list,
     },
+}
+
+_loader_processing_schema = {
+    "row_group_size": {"type": "integer"},
+    **_region_chromosomes_schema,
 }
 
 import_config_schema = {
@@ -88,7 +93,7 @@ import_config_schema = {
         "schema": {
             "region_bin": {
                 "type": "dict",
-                "schema": _loader_processing_schema,
+                "schema": _region_chromosomes_schema,
             },
             "family_bin": {
                 "type": "dict",
