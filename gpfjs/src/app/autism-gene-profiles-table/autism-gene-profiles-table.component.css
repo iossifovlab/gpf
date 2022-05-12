@@ -326,3 +326,7 @@
 .multiple-select-menu {
   margin: 0;
 }
+
+.grid-row-2-3 {
+  white-space: nowrap;
+}

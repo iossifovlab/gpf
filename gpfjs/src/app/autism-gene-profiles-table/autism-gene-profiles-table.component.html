@@ -57,7 +57,8 @@
               [attr.title]="column.meta || column.displayName"
               [ngClass]="{
                 'vertical-text': column.displayVertical,
-                'header-gene-symbol-span': column.id === geneSymbolColumnId
+                'header-gene-symbol-span': column.id === geneSymbolColumnId,
+                'grid-row-2-3': column.gridRow === '2 / 3'
               }"
               >{{ column.displayName | truncate: 48 }}</span
             >
