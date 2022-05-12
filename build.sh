@@ -66,9 +66,9 @@ function main() {
   # create gpf docker image
   build_stage "Create gpf-dev docker image"
   {
-    local docker_img_iossifovlab_anaconda_base_tag
-    docker_img_iossifovlab_anaconda_base_tag="$(e docker_img_iossifovlab_anaconda_base_tag)"
-    build_docker_image_create "$gpf_dev_image" . ./Dockerfile "$docker_img_iossifovlab_anaconda_base_tag"
+    local docker_img_iossifovlab_miniconda_base_tag
+    docker_img_iossifovlab_miniconda_base_tag="$(e docker_img_iossifovlab_miniconda_base_tag)"
+    build_docker_image_create "$gpf_dev_image" . ./Dockerfile "$docker_img_iossifovlab_miniconda_base_tag"
     gpf_dev_image_ref="$(e docker_img_gpf_dev)"
   }
 
@@ -140,8 +140,6 @@ EOT
 
     # setup directory structure
     build_run_local mkdir -p \
-      ./data/data-hg19-startup/genomic-scores-hg19 \
-      ./data/data-hg19-startup/genomic-scores-hg38 \
       ./data/data-hg19-startup/wdae
   }
 
@@ -182,8 +180,6 @@ EOT
 
       # setup directory structure
       build_run_local mkdir -p \
-        ./data/data-hg19-remote/genomic-scores-hg19 \
-        ./data/data-hg19-remote/genomic-scores-hg38 \
         ./data/data-hg19-remote/wdae
 
       # prepare phenotype data

@@ -1,6 +1,6 @@
 ARG REGISTRY=""
 ARG BASE_IMAGE_TAG=latest
-FROM ${REGISTRY}iossifovlab-anaconda-base:${BASE_IMAGE_TAG}
+FROM ${REGISTRY}iossifovlab-miniconda-base:${BASE_IMAGE_TAG}
 
 ARG SOURCE_DIR="."
 
