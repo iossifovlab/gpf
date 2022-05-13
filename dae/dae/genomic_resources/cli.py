@@ -41,12 +41,9 @@ class VerbosityConfiguration:
             logging.basicConfig(level=logging.WARNING)
 
 
-def cli_browse(args=None):
-    if not args:
-        args = sys.argv[1:]
-
-    grr = build_genomic_resource_repository()
-    for gr in grr.get_all_resources():
+def cli_browse():
+    repo = build_genomic_resource_repository()
+    for gr in repo.get_all_resources():
         print("%20s %20s %-7s %2d %12d %s" %
               (gr.repo.repo_id, gr.get_type(), gr.get_version_str(),
                len(list(gr.get_files())),
@@ -122,27 +119,27 @@ the number of workers using -j")
     else:
         logging.basicConfig(level=logging.WARNING)
 
-    cmd, dr = args.command, args.repo_dir
+    cmd, repo_dir = args.command, args.repo_dir
 
-    GRR = _create_repo(dr)
+    repo = _create_repo(repo_dir)
 
     if cmd == "index":
-        for gr in GRR.get_all_resources():
+        for gr in repo.get_all_resources():
             gr.update_manifest()
 
-        GRR.save_content_file()
+        repo.save_content_file()
 
     elif cmd == "list":
-        for gr in GRR.get_all_resources():
+        for gr in repo.get_all_resources():
 
             print("%20s %-7s %2d %12d %s" %
                   (gr.get_resource_type(), gr.get_version_str(),
                    len(list(gr.get_files())),
                       sum([fs for _, fs, _ in gr.get_files()]), gr.get_id()))
     elif cmd == "histogram":
-        gr = GRR.get_resource(args.resource)
+        gr = repo.get_resource(args.resource)
         if gr is None:
-            logger.error(f"Cannot find resource {args.resource}")
+            logger.error("Cannot find resource %s", args.resource)
             sys.exit(1)
         builder = HistogramBuilder(gr)
         n_jobs = args.jobs or os.cpu_count()
@@ -162,8 +159,8 @@ the number of workers using -j")
             cluster.scale(n_jobs)
         elif args.sge:
             try:
-                from dask_jobqueue import SGECluster  # type: ignore
-            except Exception:
+                from dask_jobqueue import SGECluster  # type: ignore pylint: disable=import-outside-toplevel
+            except ModuleNotFoundError:
                 logger.error("No dask-jobqueue found. Please install it using:"
                              " mamba install dask-jobqueue -c conda-forge")
                 sys.exit(1)
@@ -199,11 +196,11 @@ the number of workers using -j")
             tmp_dir.cleanup()
 
         hist_out_dir = "histograms"
-        logger.info(f"Saving histograms in {hist_out_dir}")
+        logger.info("Saving histograms in %s", hist_out_dir)
         builder.save(histograms, hist_out_dir)
     else:
-        logger.error(f'Unknown command {cmd}. The known commands are index, '
-                     'list and histogram')
+        logger.error("Unknown command {cmd}. The known commands are index, "
+                     "list and histogram")
 
 
 def _extract_resource_ids_from_annotation_conf(config):
@@ -225,8 +222,8 @@ def cli_cache_repo(argv=None):
     if not argv:
         argv = sys.argv[1:]
 
-    description = "Repository cache tool - caches all resources in a given "
-    "repository"
+    description = "Repository cache tool - caches all resources in a given " \
+        "repository"
     parser = argparse.ArgumentParser(description=description)
     parser.add_argument(
         "--definition", default=None, help="Repository definition file"
@@ -286,21 +283,21 @@ def cli_cache_repo(argv=None):
     else:
         resources = None
 
-    repository.cache_resources(workers=args.jobs, resources=resources)
+    repository.cache_resources(workers=args.jobs, resource_ids=resources)
 
     elapsed = time.time() - start
 
-    logger.info(f"Cached all resources in {elapsed:.2f} secs")
+    logger.info("Cached all resources in %.2f secs", elapsed)
 
 
 def _create_repo(dr):
     repo_url = urlparse(dr)
     if not repo_url.scheme or repo_url.scheme == 'file':
         dr = pathlib.Path(dr)
-        GRR = GenomicResourceDirRepo("", dr)
+        repo = GenomicResourceDirRepo("", dr)
     else:
-        GRR = GenomicResourceURLRepo("", dr)
-    return GRR
+        repo = GenomicResourceURLRepo("", dr)
+    return repo
 
 
 def _get_env_vars(var_names):

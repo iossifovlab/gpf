@@ -295,7 +295,7 @@ class GenomicResource:
                 for fn, fs, ft in sorted(self.get_files())])
 
     def update_manifest(self):
-        """updates resource manifest and stores it"""
+        """Updates resource manifest and stores it."""
         try:
             current_manifest = self.load_manifest()
             new_manifest_entries = []
@@ -335,20 +335,19 @@ class GenomicResource:
 
     def save_manifest(self, manifest: Manifest):
         """Saves manifest into genomic resources directory."""
-        dirname = self.get_genomic_resource_dir()
         with self.open_raw_file(GR_MANIFEST_FILE_NAME, "wt") as outfile:
             yaml.dump(manifest.to_manifest_entries(), outfile)
         self._manifest = manifest
 
     def get_manifest(self) -> Manifest:
-
+        """Loads resource manifest if it exists. Otherwise builds it."""
         if self._manifest is None:
             try:
                 self._manifest = self.load_manifest()
-                logger.info("manifest loaded: %s", self._manifest)
-            except Exception:
+                logger.debug("manifest loaded: %s", self._manifest)
+            except FileNotFoundError:
                 self._manifest = self.build_manifest()
-                logger.info("manifest builded: %s", self._manifest)
+                logger.debug("manifest builded: %s", self._manifest)
         assert isinstance(self._manifest, Manifest), self._manifest
         return self._manifest
 
