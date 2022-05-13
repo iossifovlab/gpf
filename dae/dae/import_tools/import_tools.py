@@ -203,22 +203,24 @@ class ImportProject():
         return res
 
     def _loader_region_bins(self, loader_args, loader_type):
-        # TODO pass the gpf instance as argument to this func
         reference_genome = self.get_gpf_instance().reference_genome
 
+        loader = self._get_variant_loader(loader_type, reference_genome)
+        loader_chromosomes = loader.chromosomes
         target_chromosomes = self._get_loader_target_chromosomes(loader_type)
         if target_chromosomes is None:
-            loader = self._get_variant_loader(loader_type, reference_genome)
-            target_chromosomes = loader.chromosomes
+            target_chromosomes = loader_chromosomes
 
-        partition_description = self.get_partition_description()
+        partition_description = ParquetPartitionDescriptor(
+            target_chromosomes,
+            self._get_processing_region_length(loader_type),
+        )
 
         partition_helper = MakefilePartitionHelper(
             partition_description,
             reference_genome,
             add_chrom_prefix=loader_args.get("add_chrom_prefix", None),
             del_chrom_prefix=loader_args.get("del_chrom_prefix", None),
-            region_length=self._get_processing_region_length(loader_type),
         )
 
         processing_config = self._get_loader_processing_config(loader_type)
@@ -226,7 +228,7 @@ class ImportProject():
         if isinstance(processing_config, str):
             mode = processing_config
         variants_targets = partition_helper.generate_variants_targets(
-            target_chromosomes,
+            loader_chromosomes,
             mode=mode
         )
 
@@ -241,7 +243,7 @@ class ImportProject():
         processing_config = self._get_loader_processing_config(loader_type)
         if isinstance(processing_config, str):
             return None
-        return processing_config.get("region_length", None)
+        return processing_config.get("region_length", sys.maxsize)
 
     def _get_loader_target_chromosomes(self, loader_type):
         processing_config = self._get_loader_processing_config(loader_type)

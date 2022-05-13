@@ -84,28 +84,80 @@ def _assert_variants(parquet_fn, bucket_index, positions):
 
 def test_bucket_generation():
     import_config = dict(
-        input=dict(),
+        input=dict(
+            pedigree=dict(
+                file=join(_input_dir, "pedigree.ped"),
+            ),
+            denovo=dict(
+                files=[join(_input_dir, "variants.tsv")],
+                person_id="spid",
+                chrom="chrom",
+                pos="pos",
+                ref="ref",
+                alt="alt",
+            )
+        ),
         processing_config=dict(
             work_dir="",
             denovo=dict(
-                chromosomes=['chr1'],
-                region_length=70000000
+                chromosomes=['1'],
+                region_length=70_000_000
             )
         ),
         partition_description=dict(
             region_bin=dict(
-                chromosomes=['chr1'],
-                region_length=100000000
+                chromosomes=['1'],
+                region_length=100_000_000
             )
         )
     )
     project = import_tools.ImportProject.build_from_config(import_config)
     buckets = list(project._loader_region_bins({}, "denovo"))
     assert len(buckets) == 4
-    assert buckets[0].regions == ["chr1:1-70000000"]
-    assert buckets[1].regions == ["chr1:70000001-140000000"]
-    assert buckets[2].regions == ["chr1:140000001-210000000"]
-    assert buckets[3].regions == ["chr1:210000001-248956422"]
+    assert buckets[0].regions == ["1:1-70000000"]
+    assert buckets[1].regions == ["1:70000001-140000000"]
+    assert buckets[2].regions == ["1:140000001-210000000"]
+    assert buckets[3].regions == ["1:210000001-249250621"]
+
+
+def test_bucket_generation_chrom_mismatch(gpf_instance_short):
+    import_config = dict(
+        input=dict(
+            pedigree=dict(
+                file=join(_input_dir, "pedigree.ped"),
+            ),
+            denovo=dict(
+                files=[join(_input_dir, "variants.tsv")],
+                person_id="spid",
+                chrom="chrom",
+                pos="pos",
+                ref="ref",
+                alt="alt",
+            )
+        ),
+        processing_config=dict(
+            work_dir="",
+            denovo=dict(
+                chromosomes=['2'],
+                region_length=140_000
+            )
+        ),
+        partition_description=dict(
+            region_bin=dict(
+                chromosomes=['1'],
+                region_length=150_000
+            )
+        )
+    )
+    project = import_tools.ImportProject.build_from_config(
+        import_config, gpf_instance=gpf_instance_short)
+    buckets = list(project._loader_region_bins({}, "denovo"))
+    assert len(buckets) == 3
+    for i in range(3):
+        assert buckets[i].region_bin == f"other_{i}"
+    assert buckets[0].regions == ["1:1-140000"]
+    assert buckets[1].regions == ["1:140001-280000"]
+    assert buckets[2].regions == ["1:280001-300000"]
 
 
 _input_dir = join(
@@ -172,3 +224,19 @@ def test_chromosome_bucket_generation(add_chrom_prefix):
     assert buckets[2].regions == [f"{prefix}3"]
     assert buckets[3].regions == [f"{prefix}4"]
     assert buckets[4].regions == [f"{prefix}5"]
+
+
+def test_chromosome_list_bucket_generation():
+    import_config = deepcopy(_denovo_multi_chrom_config)
+    import_config["processing_config"]["denovo"] = {
+        "chromosomes": ["1", "2", "3"]
+    }
+
+    project = import_tools.ImportProject.build_from_config(import_config)
+    buckets = list(project._loader_region_bins({}, "denovo"))
+    assert len(buckets) == 4
+    assert buckets[0].regions == ["1"]
+    assert buckets[1].regions == ["2"]
+    assert buckets[2].regions == ["3"]
+    assert buckets[3].region_bin == "other_0"
+    assert buckets[3].regions == ["4", "5"]
