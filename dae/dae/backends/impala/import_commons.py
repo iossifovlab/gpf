@@ -215,8 +215,12 @@ class MakefilePartitionHelper:
         if mode == "single_bucket":
             targets = {"all": generated_target_chromosomes}
             return targets
+        elif mode == "chromosome":
+            targets = {chrom: [chrom]
+                       for chrom in generated_target_chromosomes}
+            return targets
         elif mode is not None:
-            raise ValueError(f"Invalid value for mode {mode}")
+            raise ValueError(f"Invalid value for mode '{mode}'")
 
         targets = defaultdict(list)
         for target_chrom in generated_target_chromosomes:

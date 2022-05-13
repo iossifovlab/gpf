@@ -36,7 +36,7 @@ _loader_processing_schema = {
         },
         {
             "type": "string",
-            "allowed": ["single_bucket", "chromsome"],
+            "allowed": ["single_bucket", "chromosome"],
         },
     ],
 }
