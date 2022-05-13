@@ -78,7 +78,7 @@ class CachingDirectoryRepo(GenomicResourceDirRepo):
                     f"remote resource {genomic_resource.resource_id} missing")
             remote_manifest = remote_resource.get_manifest()
             if filename not in remote_manifest:
-                raise ValueError(
+                raise FileNotFoundError(
                     f"remote resource {genomic_resource.resource_id} missing file: "
                     f"{filename}")
 
@@ -96,8 +96,6 @@ class CachingDirectoryRepo(GenomicResourceDirRepo):
     def load_yaml(self, genomic_resource, filename):
         content = self._get_local_file_content(
             genomic_resource, filename, uncompress=True)
-        print(content)
-
         return yaml.safe_load(content)
 
     def _get_local_file_content(
@@ -196,25 +194,25 @@ class GenomicResourceCachedRepo(GenomicResourceRepo):
 
     def cache_resources(
         self, workers=4,
-        resources: Optional[list[str]] = None
+        resource_ids: Optional[list[str]] = None
     ):
         """Caches all resources from a list of remote resource IDs"""
         executor = ThreadPoolExecutor(max_workers=workers)
         futures = []
 
-        if resources is None:
-            grs = self.child.get_all_resources()
+        if resource_ids is None:
+            resources = self.child.get_all_resources()
         else:
-            grs = []
-            for resource_id in resources:
-                r = self.child.get_resource(resource_id)
-                assert r is not None, resource_id
-                grs.append(r)
+            resources = []
+            for resource_id in resource_ids:
+                remote_res = self.child.get_resource(resource_id)
+                assert remote_res is not None, resource_id
+                resources.append(remote_res)
 
-        for gr_child in grs:
-            cached_repo = self._get_or_create_cache_dir_repo(gr_child.repo)
+        for rem_resource in resources:
+            cached_repo = self._get_or_create_cache_dir_repo(rem_resource.repo)
             futures.append(
-                executor.submit(cached_repo.store_resource, gr_child)
+                executor.submit(cached_repo.store_resource, rem_resource)
             )
         for future in as_completed(futures):
             future.result()

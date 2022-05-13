@@ -10,7 +10,7 @@ import datetime
 import yaml
 import pysam  # type: ignore
 
-from .repository import GenomicResource, ManifestEntry
+from .repository import GenomicResource, ManifestEntry, Manifest
 from .repository import GenomicResourceRepo
 from .repository import GenomicResourceRealRepo
 from .repository import find_genomic_resources_helper
@@ -30,6 +30,8 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
         self._all_resources = None
 
     def _dir_to_dict(self, directory):
+        if not directory.exists():
+            return {}
         if directory.is_dir():
             return {
                 entry.name: self._dir_to_dict(entry)
@@ -112,10 +114,23 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
         assert dest_resource.resource_id == src_resource.resource_id
         filename = manifest_entry.name
 
-        dest_filename = pathlib.Path(
+        dest_filepath = pathlib.Path(
             self.directory /
             dest_resource.get_genomic_resource_dir() / filename)
-        os.makedirs(dest_filename.parent, exist_ok=True)
+        os.makedirs(dest_filepath.parent, exist_ok=True)
+
+        if dest_filepath.exists():
+            dest_stat = dest_filepath.stat()
+            dest_timestamp = datetime.datetime.fromtimestamp(
+                int(dest_stat.st_mtime)).isoformat()
+            dest_size = dest_stat.st_size
+            if dest_size == manifest_entry.size and \
+                    dest_timestamp == manifest_entry.time:
+
+                logger.info(
+                    "resource %s file %s already cached",
+                    src_resource.resource_id, filename)
+                return manifest_entry
 
         with src_resource.open_raw_file(
                 filename, "rb",
@@ -139,9 +154,9 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
         src_modtime = datetime.datetime.fromisoformat(
             manifest_entry.time).timestamp()
 
-        assert dest_filename.exists()
+        assert dest_filepath.exists()
 
-        os.utime(dest_filename, (src_modtime, src_modtime))
+        os.utime(dest_filepath, (src_modtime, src_modtime))
         return manifest_entry
 
     def store_all_resources(self, source_repo: GenomicResourceRepo):
@@ -149,27 +164,35 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
         for resource in source_repo.get_all_resources():
             self.store_resource(resource)
 
-    def store_resource(self, resource: GenomicResource):
+    def store_resource(self, remote_resource: GenomicResource):
         """Copies a resources and all it's files."""
-        manifest = resource.get_manifest()
+        remote_manifest = remote_resource.get_manifest()
 
-        temp_gr = GenomicResource(resource.resource_id,
-                                  resource.version, self)
-        for manifest_entry in manifest:
-            dest_manifest_entry = \
-                self._copy_manifest_entry(temp_gr, resource, manifest_entry)
-            if dest_manifest_entry is None:
+        local_resource = self.get_resource(
+            remote_resource.resource_id,
+            f"={remote_resource.get_version_str()}")
+        if local_resource is None:
+            local_resource = GenomicResource(
+                remote_resource.resource_id,
+                remote_resource.version,
+                self)
+
+        for remote_manifest_entry in remote_manifest:
+            local_manifest_entry = \
+                self._copy_manifest_entry(
+                    local_resource, remote_resource, remote_manifest_entry)
+            if local_manifest_entry is None:
                 logger.error(
                     "unable to copy a (%s) manifest entry: %s",
-                    resource.resource_id, manifest_entry.name)
+                    remote_resource.resource_id, remote_manifest_entry.name)
                 logger.error(
-                    "skipping resource: %s", resource.resource_id)
+                    "skipping resource: %s", remote_resource.resource_id)
                 self.refresh()
                 return
 
-            assert dest_manifest_entry == manifest_entry
+            assert local_manifest_entry == remote_manifest_entry
 
-        temp_gr.save_manifest(manifest)
+        local_resource.save_manifest(remote_manifest)
         self.refresh()
 
     def build_repo_content(self):

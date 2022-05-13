@@ -69,7 +69,7 @@ class GenomicResourceEmbededRepo(GenomicResourceRealRepo):
             data = data[t]
         lt = path_array[-1]
         if lt not in data or isinstance(data[lt], dict):
-            raise ValueError("not a valid file name")
+            raise FileNotFoundError(f"not a valid file name {lt}")
 
         return self._get_content_and_time(data[lt])
 
