@@ -33,7 +33,6 @@ class GenomicResourceEmbededRepo(GenomicResourceRealRepo):
                          uncompress=True, mode="t"):
         content, _ = self._get_file_content_and_time(
             genomic_resource, filename)
-        print(genomic_resource.resource_id, filename, uncompress, mode, ">", content)
 
         if uncompress and filename.endswith(".gz"):
             content = gzip.decompress(content)

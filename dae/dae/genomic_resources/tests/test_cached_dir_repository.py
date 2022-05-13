@@ -33,14 +33,14 @@ def test_cached_repository(tmp_path):
         }
 
     assert resource_set(src_repo) == resource_set(cache_repo)
-    assert isinstance(cache_repo.get_resource("sub/two"), GenomicResource)
-    assert cache_repo.get_resource("sub/two").get_file_content("genes.txt") == \
-        demo_gtf_content
 
-    cache_resource = cache_repo.get_resource("sub/two")
+    cached_resource = cache_repo.get_resource("sub/two")
+    assert isinstance(cached_resource, GenomicResource)
+    assert cached_resource.get_file_content("genes.txt") == demo_gtf_content
+
     src_resource = src_repo.get_resource("sub/two")
 
-    cache_manifest = cache_resource.get_manifest()
+    cache_manifest = cached_resource.get_manifest()
     src_manifest = src_resource.get_manifest()
 
     assert cache_manifest == src_manifest

@@ -7,6 +7,7 @@ from typing import Optional, Dict
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import yaml
+import pysam
 
 from .repository import GenomicResource, GR_CONF_FILE_NAME
 from .repository import GenomicResourceRepo
@@ -42,6 +43,12 @@ class CachingDirectoryRepo(GenomicResourceDirRepo):
         return super().get_resource(
             resource_id, version_constraint, genomic_repository_id)
 
+    def load_yaml(self, genomic_resource, filename):
+        full_file_path = self.get_file_path(genomic_resource, filename)
+        with open(full_file_path, "rt", encoding="utf8") as infile:
+            content = infile.read()
+            return yaml.safe_load(content)
+
     def _refresh_cached_genomic_resource(
             self, cached_resource: GenomicResource,
             remote_resource: GenomicResource):
@@ -66,37 +73,53 @@ class CachingDirectoryRepo(GenomicResourceDirRepo):
             cached, resource, resource_config_entry)
         cached.save_manifest(manifest)
 
+    def _copy_or_update_remote_file(
+            self, genomic_resource: GenomicResource, filename: str):
+        remote_resource = self.remote_repo.get_resource(
+            genomic_resource.resource_id)
+        if remote_resource is None:
+            raise ValueError(
+                f"remote resource {genomic_resource.resource_id} missing")
+        remote_manifest = remote_resource.get_manifest()
+        if filename not in remote_manifest:
+            raise FileNotFoundError(
+                f"remote resource {genomic_resource.resource_id} missing file: "
+                f"{filename}")
+
+        file_remote_entry = remote_manifest[filename]
+        self._copy_manifest_entry(
+            genomic_resource, remote_resource, file_remote_entry)
+
+        full_file_path = self.get_file_path(genomic_resource, filename)
+        assert full_file_path.exists()
+
+        return full_file_path
+
     def open_raw_file(self, genomic_resource: GenomicResource, filename: str,
                       mode="rt", uncompress=False, seekable=False):
 
-        full_file_path = self.get_file_path(genomic_resource, filename)
-        if "w" not in mode and not full_file_path.exists():
-            remote_resource = self.remote_repo.get_resource(
-                genomic_resource.resource_id)
-            if remote_resource is None:
-                raise ValueError(
-                    f"remote resource {genomic_resource.resource_id} missing")
-            remote_manifest = remote_resource.get_manifest()
-            if filename not in remote_manifest:
-                raise FileNotFoundError(
-                    f"remote resource {genomic_resource.resource_id} missing file: "
-                    f"{filename}")
-
-            file_remote_entry = remote_manifest[filename]
-            self._copy_manifest_entry(
-                genomic_resource, remote_resource, file_remote_entry)
+        if "w" not in mode:
+            self._copy_or_update_remote_file(genomic_resource, filename)
 
         return super().open_raw_file(
             genomic_resource, filename, mode, uncompress, seekable)
 
+    def open_tabix_file(self, genomic_resource,  filename,
+                        index_filename=None):
+
+        full_file_path = self._copy_or_update_remote_file(
+            genomic_resource, filename)
+
+        if not index_filename:
+            index_filename = f"{filename}.tbi"
+        full_index_path = self._copy_or_update_remote_file(
+            genomic_resource, index_filename)
+
+        return pysam.TabixFile(full_file_path, index=full_index_path)  # pylint: disable=no-member
+
     def get_files(self, genomic_resource: GenomicResource):
         for entry in genomic_resource.get_manifest():
             yield entry.name, entry.size, entry.time
-
-    def load_yaml(self, genomic_resource, filename):
-        content = self._get_local_file_content(
-            genomic_resource, filename, uncompress=True)
-        return yaml.safe_load(content)
 
     def _get_local_file_content(
             self, genomic_resource, filename, uncompress=True, mode="t"):
@@ -191,6 +214,11 @@ class GenomicResourceCachedRepo(GenomicResourceRepo):
         exact_version_constraint = f"={gr_child.get_version_str()}"
         return cached_repo.get_resource(
             resource_id, exact_version_constraint)
+
+    def load_yaml(self, genomic_resource, filename):
+        cached_repo = self._get_or_create_cache_dir_repo(
+            genomic_resource.repo)
+        return cached_repo.load_yaml(genomic_resource, filename)
 
     def cache_resources(
         self, workers=4,
