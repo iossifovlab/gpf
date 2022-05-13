@@ -203,7 +203,7 @@ class MakefilePartitionHelper:
         variants_targets = list(variants_targets.keys())
         return variants_targets.index(region_bin)
 
-    def generate_variants_targets(self, target_chromosomes):
+    def generate_variants_targets(self, target_chromosomes, mode=None):
 
         if len(self.partition_descriptor.chromosomes) == 0:
             return {"none": [self.partition_descriptor.output]}
@@ -211,6 +211,12 @@ class MakefilePartitionHelper:
         generated_target_chromosomes = [
             self._adjust_chrom(tg) for tg in target_chromosomes[:]
         ]
+
+        if mode == "single_bucket":
+            targets = {"all": generated_target_chromosomes}
+            return targets
+        elif mode is not None:
+            raise ValueError(f"Invalid value for mode {mode}")
 
         targets = defaultdict(list)
         for target_chrom in generated_target_chromosomes:

@@ -23,9 +23,22 @@ _region_chromosomes_schema = {
     },
 }
 
-_loader_processing_schema = {
+_loader_processing_params = {
     "row_group_size": {"type": "integer"},
     **_region_chromosomes_schema,
+}
+
+_loader_processing_schema = {
+    "anyof": [
+        {
+            "type": "dict",
+            "schema": _loader_processing_params
+        },
+        {
+            "type": "string",
+            "allowed": ["single_bucket", "chromsome"],
+        },
+    ],
 }
 
 import_config_schema = {
@@ -68,18 +81,9 @@ import_config_schema = {
                     "region_length": {"type": "integer"}
                 }
             },
-            "denovo": {
-                "type": "dict",
-                "schema": _loader_processing_schema
-            },
-            "cnv": {
-                "type": "dict",
-                "schema": _loader_processing_schema
-            },
-            "dae": {
-                "type": "dict",
-                "schema": _loader_processing_schema
-            },
+            "denovo": _loader_processing_schema,
+            "cnv": _loader_processing_schema,
+            "dae": _loader_processing_schema,
         },
     },
     "destination": {

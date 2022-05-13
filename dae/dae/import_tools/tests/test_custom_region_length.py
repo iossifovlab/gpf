@@ -1,3 +1,4 @@
+import pytest
 import os
 from os.path import join
 from dae.configuration.gpf_config_parser import GPFConfigParser
@@ -104,3 +105,46 @@ def test_bucket_generation():
     assert buckets[1].regions == ["chr1:70000001-140000000"]
     assert buckets[2].regions == ["chr1:140000001-210000000"]
     assert buckets[3].regions == ["chr1:210000001-248956422"]
+
+
+@pytest.mark.parametrize("add_chrom_prefix", [None, "chr"])
+def test_single_bucket_generation(add_chrom_prefix):
+    input_dir = join(
+        os.path.dirname(os.path.realpath(__file__)),
+        "resources", "import_task_bin_size")
+    import_config = dict(
+        input=dict(
+            pedigree=dict(
+                file=join(input_dir, "pedigree.ped")
+            ),
+            denovo=dict(
+                files=[join(input_dir, "multi_chromosome_variants.tsv")],
+                person_id="spid",
+                chrom="chrom",
+                pos="pos",
+                ref="ref",
+                alt="alt",
+            )
+        ),
+        processing_config=dict(
+            work_dir="",
+            denovo="single_bucket"
+        ),
+        partition_description=dict(
+            region_bin=dict(
+                chromosomes=['chr1'],
+                region_length=100000000
+            )
+        )
+    )
+    if add_chrom_prefix:
+        import_config["input"]["denovo"]["add_chrom_prefix"] = add_chrom_prefix
+        prefix = add_chrom_prefix
+    else:
+        prefix = ""
+
+    project = import_tools.ImportProject.build_from_config(import_config)
+    buckets = list(project._loader_region_bins({}, "denovo"))
+    assert len(buckets) == 1
+    assert buckets[0].regions == [f"{prefix}1", f"{prefix}2", f"{prefix}3",
+                                  f"{prefix}4", f"{prefix}5"]

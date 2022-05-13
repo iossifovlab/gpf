@@ -146,7 +146,7 @@ class ImportProject():
 
     @property
     def input_dir(self):
-        return self.import_config["input"]["input_dir"]
+        return self.import_config["input"].get("input_dir", "")
 
     @property
     def study_id(self):
@@ -221,25 +221,37 @@ class ImportProject():
             region_length=self._get_processing_region_length(loader_type),
         )
 
+        processing_config = self._get_loader_processing_config(loader_type)
+        mode = None
+        if isinstance(processing_config, str):
+            mode = processing_config
         variants_targets = partition_helper.generate_variants_targets(
-            target_chromosomes
+            target_chromosomes,
+            mode=mode
         )
 
         default_bucket_index = self._get_default_bucket_index(loader_type)
         index = 0
         for rb, regions in variants_targets.items():
-            for region in regions:
-                bucket_index = default_bucket_index + index
-                yield Bucket(loader_type, rb, [region], bucket_index)
-                index += 1
+            bucket_index = default_bucket_index + index
+            yield Bucket(loader_type, rb, regions, bucket_index)
+            index += 1
 
     def _get_processing_region_length(self, loader_type):
-        return self.import_config.get("processing_config", {})\
-            .get(loader_type, {}).get("region_length", None)
+        processing_config = self._get_loader_processing_config(loader_type)
+        if isinstance(processing_config, str):
+            return None
+        return processing_config.get("region_length", None)
 
     def _get_loader_target_chromosomes(self, loader_type):
+        processing_config = self._get_loader_processing_config(loader_type)
+        if isinstance(processing_config, str):
+            return None
+        return processing_config.get("chromosomes", None)
+
+    def _get_loader_processing_config(self, loader_type):
         return self.import_config.get("processing_config", {})\
-            .get(loader_type, {}).get("chromosomes", None)
+            .get(loader_type, {})
 
 
 def main():
