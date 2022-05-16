@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import re
 import logging
-from typing import List, Optional, cast, Tuple, Dict, Any, Union
+from typing import List, Optional, cast, Tuple, Dict, Any
 from dataclasses import dataclass, asdict
 
 import abc
@@ -55,6 +55,7 @@ def parse_gr_id_version_token(token):
 
 
 def version_tuple_to_suffix(version):
+    """Transforms version token into string."""
     if version == (0,):
         return ""
     return "[" + ".".join(map(str, version)) + "]"
@@ -64,11 +65,13 @@ VERSION_CONSTRAINT_RE = re.compile(r"(>=|=)?(\d+(?:\.\d+)*)")
 
 
 def is_version_constraint_satisfied(version_constraint, version):
+    """Checks if a version matches a version constraint."""
     if not version_constraint:
         return True
     match = VERSION_CONSTRAINT_RE.fullmatch(version_constraint)
     if not match:
-        raise ValueError(f'Wrong version constrainted {version_constraint}')
+        raise ValueError(
+            f'Bad sintax of version constraint {version_constraint}')
     operator = match[1] if match[1] else ">="
     constraint_version = tuple(map(int, match[2].split(".")))
     if operator == "=":
@@ -139,7 +142,8 @@ def find_genomic_resources_helper(content_dict, id_prev=None):
                     "valid Genomic Resoruce Id Token.", curr_id_path, name)
                 continue
             dir_resource_counter = 0
-            for resource_id, version in find_genomic_resources_helper(content, curr_id):
+            for resource_id, version in find_genomic_resources_helper(
+                    content, curr_id):
                 yield resource_id, version
                 resources_counter += 1
                 dir_resource_counter += 1
@@ -260,7 +264,7 @@ class GenomicResource:
 
     def get_files(self) -> List[Tuple[str, int, str]]:
         """
-        Returns a generator returning (filename,filesize,filetime) for each of
+        Returns a list of tuples (filename,filesize,filetime) for each of
         the files in the genomic resource.
         Files and directories staring with "." are ignored.
         """
@@ -272,84 +276,16 @@ class GenomicResource:
         """
         return self.repo.file_exists(self, filename)
 
-    def compute_md5_sum(self, filename):
-        """Computes a md5 hash for a file in the resource"""
-
-        with self.open_raw_file(filename, "rb") as infile:
-            md5_hash = hashlib.md5()
-            while d := infile.read(8192):
-                md5_hash.update(d)
-        return md5_hash.hexdigest()
-
-    def build_manifest(self):
-        """Builds full manifest for the resource"""
-
-        return Manifest.from_manifest_entries(
-            [
-                {
-                    "name": fn,
-                    "size": fs,
-                    "time": ft,
-                    "md5": self.compute_md5_sum(fn)
-                }
-                for fn, fs, ft in sorted(self.get_files())])
-
-    def update_manifest(self):
-        """Updates resource manifest and stores it."""
-        try:
-            current_manifest = self.load_manifest()
-            new_manifest_entries = []
-            for fname, fsize, ftime in sorted(self.get_files()):
-                md5 = None
-                if fname in current_manifest:
-                    entry = current_manifest[fname]
-                    if entry["size"] == fsize and entry["time"] == ftime:
-                        md5 = entry["md5"]
-                    else:
-                        logger.debug(
-                            "md5 sum for file %s for resource %s needs update",
-                            fname, self.resource_id)
-                else:
-                    logger.debug(
-                        "found a new file %s for resource %s",
-                        fname, self.resource_id)
-                if not md5:
-                    md5 = self.compute_md5_sum(fname)
-                new_manifest_entries.append(
-                    {"name": fname, "size": fsize, "time": ftime, "md5": md5})
-
-            new_manifest = Manifest.from_manifest_entries(new_manifest_entries)
-            if new_manifest != current_manifest:
-                self.save_manifest(new_manifest)
-        except Exception:
-            logger.info(
-                "building a new manifest for resource %s", self.resource_id,
-                exc_info=True)
-            manifest = self.build_manifest()
-            self.save_manifest(manifest)
-
-    def load_manifest(self) -> Manifest:
-        """Loads resource manifest"""
-        return Manifest.from_manifest_entries(
-            self.load_yaml(GR_MANIFEST_FILE_NAME))
-
-    def save_manifest(self, manifest: Manifest):
-        """Saves manifest into genomic resources directory."""
-        with self.open_raw_file(GR_MANIFEST_FILE_NAME, "wt") as outfile:
-            yaml.dump(manifest.to_manifest_entries(), outfile)
-        self._manifest = manifest
-
     def get_manifest(self) -> Manifest:
         """Loads resource manifest if it exists. Otherwise builds it."""
         if self._manifest is None:
-            try:
-                self._manifest = self.load_manifest()
-                logger.debug("manifest loaded: %s", self._manifest)
-            except FileNotFoundError:
-                self._manifest = self.build_manifest()
-                logger.debug("manifest builded: %s", self._manifest)
+            self._manifest = self.repo.get_manifest(self)
         assert isinstance(self._manifest, Manifest), self._manifest
         return self._manifest
+    
+    def refresh(self):
+        """Clean up cached attributes like manifest, etc."""
+        self._manifest = None
 
     def load_yaml(self, filename):
         """Loads a yaml file and returns its parsed content"""
@@ -422,6 +358,8 @@ class GenomicResourceRealRepo(GenomicResourceRepo):
             max(matching_resources, key=lambda x: x.version))  # type: ignore
 
     def load_yaml(self, genomic_resource, filename):
+        """Returns parsed YAML file."""
+
         content = self.get_file_content(
             genomic_resource, filename, uncompress=True)
         return yaml.safe_load(content)
@@ -434,6 +372,11 @@ class GenomicResourceRealRepo(GenomicResourceRepo):
                 uncompress=uncompress) as infile:
             return infile.read()
 
+    def get_manifest(self, resource):
+        """Loads resource manifest."""
+        content = self.get_file_content(resource, GR_MANIFEST_FILE_NAME)
+        return Manifest.from_file_content(content)
+
     @abc.abstractmethod
     def get_files(self, genomic_resource) -> List[Tuple[str, int, str]]:
         """Returns a list of files for given resource
@@ -443,12 +386,13 @@ class GenomicResourceRealRepo(GenomicResourceRepo):
         """
 
     @abc.abstractmethod
-    def file_exists(self, genomic_resource, filename):
+    def file_exists(self, genomic_resource, filename) -> bool:
         """Check if given file exist in give resource"""
 
     @abc.abstractmethod
-    def open_raw_file(self, genomic_resource, filename,
-                      mode="rt", uncompress=False, seekable=False):
+    def open_raw_file(
+            self, genomic_resource, filename,
+            mode="rt", uncompress=False, seekable=False):
         """Opens file in a resource and returns a file-like object"""
 
     @abc.abstractmethod

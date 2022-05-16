@@ -150,11 +150,11 @@ def test_cached_repository_resource_update_delete(tmp_path):
     path = dirname / "alabala.txt"
     path.unlink()
 
-    manifest = gr1.build_manifest()
+    manifest = dir_repo.build_manifest(gr1)
     print(manifest)
     assert any([f.name != "alabala.txt" for f in manifest])
 
-    gr1.save_manifest(manifest)
+    dir_repo.save_manifest(gr1, manifest)
     assert gr1.get_manifest() != gr2.get_manifest()
 
     gr2 = cached_repo.get_resource("one")
@@ -193,11 +193,11 @@ def test_cached_http_repository_resource_update_delete(
     path = dirname / "alabala.txt"
     path.unlink()
 
-    manifest = gr1.build_manifest()
+    manifest = dir_repo.build_manifest(gr1)
     print(manifest)
     assert any([f.name != "alabala.txt" for f in manifest])
 
-    gr1.save_manifest(manifest)
+    dir_repo.save_manifest(gr1, manifest)
     dir_repo.save_content_file()
     content = dir_repo.build_repo_content()
 

@@ -381,7 +381,7 @@ class HistogramBuilder:
             plt.clf()
 
         # update manifest with newly written files
-        self.resource.update_manifest()
+        self.resource.repo.update_manifest(self.resource)
 
 
 def load_histograms(repo, resource_id, version_constraint=None,

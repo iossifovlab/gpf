@@ -71,7 +71,7 @@ class CachingDirectoryRepo(GenomicResourceDirRepo):
         resource_config_entry = manifest[GR_CONF_FILE_NAME]
         self._copy_manifest_entry(
             cached, resource, resource_config_entry)
-        cached.save_manifest(manifest)
+        self.save_manifest(cached, manifest)
 
     def _copy_or_update_remote_file(
             self, genomic_resource: GenomicResource, filename: str):
@@ -163,7 +163,7 @@ class CachingDirectoryRepo(GenomicResourceDirRepo):
                 self._delete_manifest_entry(
                     dest_gr, dest_file)
 
-        dest_gr.save_manifest(src_manifest)
+        self.save_manifest(dest_gr, src_manifest)
 
 
 class GenomicResourceCachedRepo(GenomicResourceRepo):

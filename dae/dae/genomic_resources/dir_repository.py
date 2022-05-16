@@ -10,7 +10,7 @@ import datetime
 import yaml
 import pysam  # type: ignore
 
-from .repository import GenomicResource, ManifestEntry, Manifest
+from .repository import GR_MANIFEST_FILE_NAME, GenomicResource, ManifestEntry, Manifest
 from .repository import GenomicResourceRepo
 from .repository import GenomicResourceRealRepo
 from .repository import find_genomic_resources_helper
@@ -48,9 +48,9 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
         """Returns directory for specified resources."""
         return self.directory / resource.get_genomic_resource_dir()
 
-    def get_file_path(self, resource, file_name):
+    def get_file_path(self, resource, filename):
         """Returns full filename for a file in a resource."""
-        return self.get_genomic_resource_dir(resource) / file_name
+        return self.get_genomic_resource_dir(resource) / filename
 
     def get_all_resources(self):
         """Returns generator for all resources in the repository."""
@@ -192,7 +192,7 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
 
             assert local_manifest_entry == remote_manifest_entry
 
-        local_resource.save_manifest(remote_manifest)
+        self.save_manifest(local_resource, remote_manifest)
         self.refresh()
 
     def build_repo_content(self):
@@ -224,3 +224,85 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
             index_path = str(self.get_file_path(
                 genomic_resource, index_filename))
         return pysam.TabixFile(file_path, index=index_path)  # pylint: disable=no-member
+
+    def compute_md5_sum(self, resource, filename):
+        """Computes a md5 hash for a file in the resource"""
+        filepath = self.get_file_path(resource, filename)
+        with open(filepath, "rb") as infile:
+            md5_hash = hashlib.md5()
+            while d := infile.read(8192):
+                md5_hash.update(d)
+        return md5_hash.hexdigest()
+
+    def build_manifest(self, resource):
+        """Builds full manifest for the resource"""
+
+        return Manifest.from_manifest_entries(
+            [
+                {
+                    "name": fn,
+                    "size": fs,
+                    "time": ft,
+                    "md5": self.compute_md5_sum(resource, fn)
+                }
+                for fn, fs, ft in sorted(self.get_files(resource))])
+
+    def update_manifest(self, resource):
+        """Updates resource manifest and stores it."""
+        try:
+            current_manifest = self.load_manifest(resource)
+            new_manifest_entries = []
+            for fname, fsize, ftime in sorted(self.get_files(resource)):
+                md5 = None
+                if fname in current_manifest:
+                    entry = current_manifest[fname]
+                    if entry.size == fsize and entry.time == ftime:
+                        md5 = entry.md5
+                    else:
+                        logger.debug(
+                            "md5 sum for file %s for resource %s needs update",
+                            fname, resource.resource_id)
+                else:
+                    logger.debug(
+                        "found a new file %s for resource %s",
+                        fname, resource.resource_id)
+                if not md5:
+                    md5 = self.compute_md5_sum(resource, fname)
+                new_manifest_entries.append(
+                    {"name": fname, "size": fsize, "time": ftime, "md5": md5})
+
+            new_manifest = Manifest.from_manifest_entries(new_manifest_entries)
+            if new_manifest != current_manifest:
+                self.save_manifest(resource, new_manifest)
+        except IOError:
+            logger.info(
+                "building a new manifest for resource %s",
+                resource.resource_id, exc_info=True)
+            manifest = self.build_manifest(resource)
+            self.save_manifest(resource, manifest)
+
+    def load_manifest(self, resource) -> Manifest:
+        """Loads resource manifest"""
+        filename = self.get_file_path(resource, GR_MANIFEST_FILE_NAME)
+        with open(filename, "rt", encoding="utf8") as infile:
+            content = infile.read()
+            return Manifest.from_file_content(content)
+
+    def save_manifest(self, resource, manifest: Manifest):
+        """Saves manifest into genomic resources directory."""
+        filename = self.get_file_path(resource, GR_MANIFEST_FILE_NAME)
+        with open(filename, "wt", encoding="utf8") as outfile:
+            yaml.dump(manifest.to_manifest_entries(), outfile)
+        resource.refresh()
+
+    def get_manifest(self, resource):
+        """Loads or build a resource manifest."""
+        try:
+            manifest = self.load_manifest(resource)
+            logger.debug("manifest loaded: %s", manifest)
+            return manifest
+        except FileNotFoundError:
+            manifest = self.build_manifest(resource)
+            logger.debug("manifest builded: %s", manifest)
+            return manifest
+

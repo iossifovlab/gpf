@@ -124,8 +124,8 @@ the number of workers using -j")
     repo = _create_repo(repo_dir)
 
     if cmd == "index":
-        for gr in repo.get_all_resources():
-            gr.update_manifest()
+        for res in repo.get_all_resources():
+            repo.update_manifest(res)
 
         repo.save_content_file()
 

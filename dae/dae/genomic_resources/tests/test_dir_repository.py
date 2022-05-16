@@ -50,7 +50,7 @@ def test_dir_repository(tmp_path):
         path = dirname / filename
         path.touch()
 
-    dir_manifest = dir_resource.build_manifest()
+    dir_manifest = dir_repo.build_manifest(dir_resource)
 
     assert dir_manifest != src_manifest
 
@@ -88,7 +88,7 @@ def test_dir_repository_resource_update(tmp_path):
         path = dirname / filename
         path.touch()
 
-    gr1.save_manifest(gr1.build_manifest())
+    dir_repo1.save_manifest(gr1, dir_repo1.build_manifest(gr1))
 
     assert gr1.get_manifest() != gr2.get_manifest()
 

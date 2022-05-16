@@ -76,7 +76,6 @@ def test_caching_dir_repository(tmp_path):
 
 def test_caching_dir_repository_resource_update(tmp_path):
 
-    demo_gtf_content = "TP53\tchr3\t300\t200".encode('utf-8')
     src_repo = GenomicResourceEmbededRepo("src", content={
         "one": {
             GR_CONF_FILE_NAME: "",
@@ -84,9 +83,10 @@ def test_caching_dir_repository_resource_update(tmp_path):
         },
         "sub": {
             "two[1.0]": {
-                GR_CONF_FILE_NAME: ["type: gene_models\nfile: genes.gtf",
-                                    '2021-11-19T23:22:51'],
-                "genes.gtf": demo_gtf_content
+                GR_CONF_FILE_NAME: [
+                    "",
+                    "2021-11-19T23:22:51"
+                ],
             }
         }
     })
@@ -105,22 +105,22 @@ def test_caching_dir_repository_resource_update(tmp_path):
 
     assert gr1.get_manifest() == gr2.get_manifest()
 
-    gr = dir_repo.get_resource("sub/two")
-    dirname = pathlib.Path(dir_repo.get_genomic_resource_dir(gr))
-    for filename, _size, _mod_time in gr1.get_files():
+    res = dir_repo.get_resource("sub/two")
+    dirname = pathlib.Path(dir_repo.get_genomic_resource_dir(res))
+    for filename, _size, _mod_time in res.get_files():
         path = dirname / filename
         path.touch()
 
-    gr.save_manifest(gr.build_manifest())
+    dir_repo.save_manifest(res, dir_repo.build_manifest(res))
 
-    assert gr.get_manifest() != gr1.get_manifest()
-    assert gr.get_manifest() != gr2.get_manifest()
+    assert res.get_manifest() != gr1.get_manifest()
+    assert res.get_manifest() != gr2.get_manifest()
 
     gr1 = cache_repo1.get_resource("sub/two")
-    assert gr.get_manifest() == gr1.get_manifest()
+    assert res.get_manifest() == gr1.get_manifest()
 
     gr2 = cache_repo2.get_resource("sub/two")
-    assert gr.get_manifest() == gr2.get_manifest()
+    assert res.get_manifest() == gr2.get_manifest()
 
 # def test_dir_repository_resource_update_delete(tmp_path):
 
