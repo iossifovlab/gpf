@@ -44,7 +44,7 @@ class CachingDirectoryRepo(GenomicResourceDirRepo):
             resource_id, version_constraint, genomic_repository_id)
 
     def load_yaml(self, genomic_resource, filename):
-        full_file_path = self.get_file_path(genomic_resource, filename)
+        full_file_path = self._get_file_path(genomic_resource, filename)
         with open(full_file_path, "rt", encoding="utf8") as infile:
             content = infile.read()
             return yaml.safe_load(content)
@@ -90,13 +90,14 @@ class CachingDirectoryRepo(GenomicResourceDirRepo):
         self._copy_manifest_entry(
             genomic_resource, remote_resource, file_remote_entry)
 
-        full_file_path = self.get_file_path(genomic_resource, filename)
+        full_file_path = self._get_file_path(genomic_resource, filename)
         assert full_file_path.exists()
 
         return full_file_path
 
-    def open_raw_file(self, genomic_resource: GenomicResource, filename: str,
-                      mode="rt", uncompress=False, seekable=False):
+    def open_raw_file(
+            self, genomic_resource: GenomicResource, filename: str,
+            mode="rt", uncompress=False, seekable=False):
 
         if "w" not in mode:
             self._copy_or_update_remote_file(genomic_resource, filename)

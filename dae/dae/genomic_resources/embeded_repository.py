@@ -60,9 +60,9 @@ class GenomicResourceEmbededRepo(GenomicResourceRealRepo):
         return content, timestamp
 
     def _get_file_content_and_time(
-            self, genomic_resource: GenomicResource, filename: str):
+            self, resource: GenomicResource, filename: str):
 
-        path_array = genomic_resource.get_genomic_resource_dir().split("/") + \
+        path_array = resource.get_genomic_resource_id_version().split("/") + \
             filename.split("/")
         data = self.content
         for t in path_array[:-1]:
@@ -93,8 +93,8 @@ class GenomicResourceEmbededRepo(GenomicResourceRealRepo):
 
         return io.StringIO(content.decode(GR_ENCODING))
 
-    def get_files(self, genomic_resource):
-        path_array = genomic_resource.get_genomic_resource_dir().split("/")
+    def get_files(self, resource):
+        path_array = resource.get_genomic_resource_id_version().split("/")
 
         content_dict = self.content
         for token in path_array:

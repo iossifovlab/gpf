@@ -33,10 +33,12 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
         if not directory.exists():
             return {}
         if directory.is_dir():
-            return {
-                entry.name: self._dir_to_dict(entry)
-                for entry in directory.iterdir()
-            }
+            result = {}
+            for entry in directory.iterdir():
+                if entry.name in {".", ".."}:
+                    continue
+                result[entry.name] = self._dir_to_dict(entry)
+            return result
 
         return directory
 
@@ -44,13 +46,13 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
         """Clears the content of the whole repository and trigers rescan."""
         self._all_resources = None
 
-    def get_genomic_resource_dir(self, resource):
+    def _get_genomic_resource_dir(self, resource):
         """Returns directory for specified resources."""
-        return self.directory / resource.get_genomic_resource_dir()
+        return self.directory / resource.get_genomic_resource_id_version()
 
-    def get_file_path(self, resource, filename):
+    def _get_file_path(self, resource, filename):
         """Returns full filename for a file in a resource."""
-        return self.get_genomic_resource_dir(resource) / filename
+        return self._get_genomic_resource_dir(resource) / filename
 
     def get_all_resources(self):
         """Returns generator for all resources in the repository."""
@@ -64,7 +66,7 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
     def get_files(self, genomic_resource):
         """Returns a generator for all files in a resources."""
         content_dict = self._dir_to_dict(
-            self.get_genomic_resource_dir(genomic_resource))
+            self._get_genomic_resource_dir(genomic_resource))
 
         def my_leaf_to_size_and_time(filepath):
             filestat = filepath.stat()
@@ -77,13 +79,13 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
 
     def file_exists(self, genomic_resource, filename):
         """Checks if a file exists in a genomic resource."""
-        full_file_path = self.get_file_path(genomic_resource, filename)
-        return os.path.exists(full_file_path)
+        full_file_path = self._get_file_path(genomic_resource, filename)
+        return full_file_path.exists()
 
     def open_raw_file(self, genomic_resource: GenomicResource, filename: str,
                       mode="rt", uncompress=False, _seekable=False):
 
-        full_file_path = self.get_file_path(genomic_resource, filename)
+        full_file_path = self._get_file_path(genomic_resource, filename)
         if 'w' in mode:
             # Create the containing directory if it doesn't exists.
             # This align DireRepo API with URL and fspec APIs
@@ -101,9 +103,7 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
             self, resource: GenomicResource, manifest_entry):
         filename = manifest_entry.name
 
-        filepath = pathlib.Path(
-            self.directory /
-            resource.get_genomic_resource_dir()) / filename
+        filepath = self._get_file_path(resource, filename)
         filepath.unlink(missing_ok=True)
 
     def _copy_manifest_entry(
@@ -114,9 +114,7 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
         assert dest_resource.resource_id == src_resource.resource_id
         filename = manifest_entry.name
 
-        dest_filepath = pathlib.Path(
-            self.directory /
-            dest_resource.get_genomic_resource_dir() / filename)
+        dest_filepath = self._get_file_path(dest_resource, filename)
         os.makedirs(dest_filepath.parent, exist_ok=True)
 
         if dest_filepath.exists():
@@ -218,16 +216,16 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
 
     def open_tabix_file(self, genomic_resource,  filename,
                         index_filename=None):
-        file_path = str(self.get_file_path(genomic_resource, filename))
+        file_path = str(self._get_file_path(genomic_resource, filename))
         index_path = None
         if index_filename:
-            index_path = str(self.get_file_path(
+            index_path = str(self._get_file_path(
                 genomic_resource, index_filename))
         return pysam.TabixFile(file_path, index=index_path)  # pylint: disable=no-member
 
     def compute_md5_sum(self, resource, filename):
         """Computes a md5 hash for a file in the resource"""
-        filepath = self.get_file_path(resource, filename)
+        filepath = self._get_file_path(resource, filename)
         with open(filepath, "rb") as infile:
             md5_hash = hashlib.md5()
             while d := infile.read(8192):
@@ -283,14 +281,14 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
 
     def load_manifest(self, resource) -> Manifest:
         """Loads resource manifest"""
-        filename = self.get_file_path(resource, GR_MANIFEST_FILE_NAME)
+        filename = self._get_file_path(resource, GR_MANIFEST_FILE_NAME)
         with open(filename, "rt", encoding="utf8") as infile:
             content = infile.read()
             return Manifest.from_file_content(content)
 
     def save_manifest(self, resource, manifest: Manifest):
         """Saves manifest into genomic resources directory."""
-        filename = self.get_file_path(resource, GR_MANIFEST_FILE_NAME)
+        filename = self._get_file_path(resource, GR_MANIFEST_FILE_NAME)
         with open(filename, "wt", encoding="utf8") as outfile:
             yaml.dump(manifest.to_manifest_entries(), outfile)
         resource.refresh()

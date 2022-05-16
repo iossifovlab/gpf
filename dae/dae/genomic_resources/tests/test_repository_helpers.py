@@ -49,7 +49,7 @@ def test_find_genomic_resources_helper(caplog):
                 'group/three2.0:(1, 0, 1)',
                 'group/three3.1:(0,)', 'group/three3.1:(1, 0, 1)',
                 'group/four:(0,)']) == \
-        {f'{rId}:{rVr}' for rId, rVr in find_genomic_resources_helper(
+        {f'{res_id}:{res_ver}' for res_id, res_ver in find_genomic_resources_helper(
             {
                 "one":        {GR_CONF_FILE_NAME: ""},
                 "bla": "",
@@ -71,11 +71,11 @@ def test_find_genomic_resources_helper(caplog):
     assert set(caplog.record_tuples) == \
         {('dae.genomic_resources.repository', logging.WARNING, msg)
          for msg in [
-            'The file bla is not used.',
-            'The directory group/tralala& has a name tralala& that is not a '
-            'valid Genomic Resoruce Id Token.',
-            'The directory tra contains no resources.',
-            'The directory group/bala contains no resources.'
+            'file <bla> is not used.',
+            'directory <group/tralala&> has a name <tralala&> that is not a '
+            'valid Genomic Resource Id Token.',
+            'directory <tra> contains no resources.',
+            'directory <group/bala> contains no resources.'
         ]}
 
 

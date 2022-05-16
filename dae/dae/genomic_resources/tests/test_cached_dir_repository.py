@@ -106,7 +106,8 @@ def test_caching_dir_repository_resource_update(tmp_path):
     assert gr1.get_manifest() == gr2.get_manifest()
 
     res = dir_repo.get_resource("sub/two")
-    dirname = pathlib.Path(dir_repo.get_genomic_resource_dir(res))
+    dirname = pathlib.Path(
+        dir_repo._get_genomic_resource_dir(res))  # pylint: disable=protected-access
     for filename, _size, _mod_time in res.get_files():
         path = dirname / filename
         path.touch()
@@ -121,62 +122,3 @@ def test_caching_dir_repository_resource_update(tmp_path):
 
     gr2 = cache_repo2.get_resource("sub/two")
     assert res.get_manifest() == gr2.get_manifest()
-
-# def test_dir_repository_resource_update_delete(tmp_path):
-
-#     src_repo = GenomicResourceEmbededRepo("src", content={
-#         "one": {
-#             GR_CONF_FILE_NAME: "",
-#             "data.txt": "alabala",
-#             "alabala.txt": "alabala",
-#         },
-#     })
-
-#     dir_repo1 = CachingDirectoryRepo(
-#         'dir1', directory=tmp_path / "t1", remote_repo=src_repo)
-#     dir_repo1.store_all_resources(src_repo)
-
-#     dir_repo2 = CachingDirectoryRepo(
-#         'dir2', directory=tmp_path / "t2", remote_repo=src_repo)
-#     dir_repo2.store_all_resources(src_repo)
-
-#     gr1 = dir_repo1.get_resource("one")
-#     gr2 = dir_repo2.get_resource("one")
-
-#     assert gr1.get_manifest() == gr2.get_manifest()
-#     assert any([f.name == "alabala.txt" for f in gr1.get_manifest()])
-#     assert any([f.name == "alabala.txt" for f in gr2.get_manifest()])
-
-#     dirname = pathlib.Path(dir_repo1.get_genomic_resource_dir(gr1))
-#     path = dirname / "alabala.txt"
-#     path.unlink()
-
-#     manifest = gr1.build_manifest()
-#     print(manifest)
-#     assert any([f.name != "alabala.txt" for f in manifest])
-
-#     gr1.save_manifest(manifest)
-
-#     assert gr1.get_manifest() != gr2.get_manifest()
-
-#     dir_repo2.update_resource(gr1)
-#     assert gr1.get_manifest() == gr2.get_manifest()
-
-
-# def test_dir_repository_file_exists(tmp_path):
-#     src_repo = GenomicResourceEmbededRepo("src", content={
-#         "one": {
-#             GR_CONF_FILE_NAME: "",
-#             "data.txt": "alabala",
-#             "alabala.txt": "alabala",
-#         },
-#     })
-
-#     repo = CachingDirectoryRepo(
-#         'dir', directory=tmp_path / "t1", remote_repo=src_repo)
-#     repo.store_all_resources(src_repo)
-#     res = repo.get_resource("one")
-
-#     assert repo.file_exists(res, GR_CONF_FILE_NAME)
-#     assert not repo.file_exists(res, "missing_file")
-#     assert res.file_exists("data.txt")

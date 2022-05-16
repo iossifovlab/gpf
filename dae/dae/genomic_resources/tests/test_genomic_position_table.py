@@ -8,7 +8,7 @@ from dae.genomic_resources import build_genomic_resource_repository
 from dae.genomic_resources.dir_repository import GenomicResourceDirRepo
 
 from dae.genomic_resources.genome_position_table import \
-    save_as_tabix_table, LineBuffer
+    save_as_tabix_table
 from dae.genomic_resources.test_tools import build_a_test_resource
 from dae.genomic_resources.test_tools import convert_to_tab_separated
 
@@ -87,8 +87,9 @@ def test_regions_in_tabix(tmp_path, jump_threshold):
     d_repo = GenomicResourceDirRepo("b", directory=tmp_path)
     d_repo.store_resource(e_gr)
     d_gr = d_repo.get_resource("")
-    save_as_tabix_table(txt_tab,
-                        str(d_repo.get_file_path(d_gr, "data.bgz")))
+    save_as_tabix_table(
+        txt_tab,
+        str(d_repo._get_file_path(d_gr, "data.bgz")))  # pylint: disable=protected-access
     tab = open_genome_position_table(d_gr, d_gr.config["tabix_table"])
     tab.jump_threshold = jump_threshold
 
@@ -198,7 +199,7 @@ def test_chrom_mapping_file_with_tabix(tmp_path):
     d_gr = d_repo.get_resource("")
     save_as_tabix_table(
         open_genome_position_table(e_gr, e_gr.config["text_table"]),
-        str(d_repo.get_file_path(d_gr, "data.bgz")))
+        str(d_repo._get_file_path(d_gr, "data.bgz")))  # pylint: disable=protected-access
     tab = open_genome_position_table(d_gr, d_gr.config["tabix_table"])
 
     assert tab.get_chromosomes() == ["gosho", "pesho"]
@@ -420,7 +421,7 @@ def test_tabix_table(tmp_path, jump_threshold):
     d_gr = d_repo.get_resource("one")
     save_as_tabix_table(
         open_genome_position_table(e_gr, e_gr.config["text_table"]),
-        str(d_repo.get_file_path(d_gr, "data.bgz")))
+        str(d_repo._get_file_path(d_gr, "data.bgz")))  # pylint: disable=protected-access
 
     table = open_genome_position_table(d_gr, d_gr.config["tabix_table"])
     assert table.get_column_names() == ("chrom", "pos_begin", "c1", "c2")
@@ -499,7 +500,7 @@ def tabix_table(tmp_path):
     d_gr = d_repo.get_resource("one")
     save_as_tabix_table(
         open_genome_position_table(e_gr, e_gr.config["text_table"]),
-        str(d_repo.get_file_path(d_gr, "data.bgz")))
+        str(d_repo._get_file_path(d_gr, "data.bgz")))  # pylint: disable=protected-access
 
     table = open_genome_position_table(d_gr, d_gr.config["tabix_table"])
     return table
@@ -534,7 +535,7 @@ def regions_tabix_table(tmp_path):
     d_gr = d_repo.get_resource("one")
     save_as_tabix_table(
         open_genome_position_table(e_gr, e_gr.config["text_table"]),
-        str(d_repo.get_file_path(d_gr, "data.bgz")))
+        str(d_repo._get_file_path(d_gr, "data.bgz")))  # pylint: disable=protected-access
 
     table = open_genome_position_table(d_gr, d_gr.config["tabix_table"])
     assert table.chrom_column_i == 0
@@ -547,61 +548,36 @@ def test_tabix_table_should_use_sequential(tabix_table):
     table = tabix_table
     assert table.get_column_names() == ("chrom", "pos_begin", "c1")
 
-    assert not table._should_use_sequential("1", 1)
+    assert not table._should_use_sequential("1", 1)  # pylint: disable=protected-access
     for row in table.get_records_in_region("1", 1, 1):
         print(row)
 
-    assert not table._should_use_sequential("1", 1)
+    assert not table._should_use_sequential("1", 1)  # pylint: disable=protected-access
 
-    assert table._should_use_sequential("1", 2)
-    assert table._should_use_sequential("1", 3)
+    assert table._should_use_sequential("1", 2)  # pylint: disable=protected-access
+    assert table._should_use_sequential("1", 3)  # pylint: disable=protected-access
 
     table.jump_threshold = 0
-    assert not table._should_use_sequential("1", 3)
+    assert not table._should_use_sequential("1", 3)  # pylint: disable=protected-access
 
 
 def test_regions_tabix_table_should_use_sequential(regions_tabix_table):
     table = regions_tabix_table
     assert table.get_column_names() == ("chrom", "pos_begin", "pos_end", "c1")
 
-    assert not table._should_use_sequential("1", 1)
+    assert not table._should_use_sequential("1", 1)  # pylint: disable=protected-access
     for row in table.get_records_in_region("1", 2, 2):
         print(row)
 
-    assert not table._should_use_sequential("1", 1)
-    assert not table._should_use_sequential("1", 6)
-    assert table._should_use_sequential("1", 11)
-    assert table._should_use_sequential("1", 21)
+    assert not table._should_use_sequential("1", 1)  # pylint: disable=protected-access
+    assert not table._should_use_sequential("1", 6)  # pylint: disable=protected-access
+    assert table._should_use_sequential("1", 11)  # pylint: disable=protected-access
+    assert table._should_use_sequential("1", 21)  # pylint: disable=protected-access
 
     table.jump_threshold = 0
-    assert not table._should_use_sequential("1", 6)
-    assert not table._should_use_sequential("1", 11)
-    assert not table._should_use_sequential("1", 21)
-
-
-# @pytest.mark.parametrize("pos_beg,pos_end,expected", [
-#     (0, 1, None),
-#     (1, 2, None),
-#     (5, 6, [("1", "6", "10", "2")]),
-#     (9, 15, [("1", "6", "10", "2")]),
-#     (7, 20, [("1", "6", "10", "2")]),
-#     (11, 12, [("1", "11", "15", "3")]),
-# ])
-# def test_regions_tabix_table_sequential_rewind(
-#         regions_tabix_table, pos_beg, pos_end, expected):
-#     table = regions_tabix_table
-#     assert table.get_column_names() == ("chrom", "pos_begin", "pos_end", "c1")
-
-#     assert not table._should_use_sequential("1", 1)
-#     for row in table.get_records_in_region("1", 2, 2):
-#         print(row)
-#     assert table.current_pos()[1] == 6
-#     assert table.current_pos()[2] == 10
-
-#     # buff = table._sequential_rewind("1", pos_beg, pos_end)
-#     # if buff: 
-#     #     buff = [tuple(line) for line in buff]
-#     # assert buff == expected
+    assert not table._should_use_sequential("1", 6)  # pylint: disable=protected-access
+    assert not table._should_use_sequential("1", 11)  # pylint: disable=protected-access
+    assert not table._should_use_sequential("1", 21)  # pylint: disable=protected-access
 
 
 def test_tabix_table_jumper_current_position(tabix_table):
@@ -656,7 +632,7 @@ def tabix_table_multiline(tmp_path):
     d_gr = d_repo.get_resource("one")
     save_as_tabix_table(
         open_genome_position_table(e_gr, e_gr.config["text_table"]),
-        str(d_repo.get_file_path(d_gr, "data.bgz")))
+        str(d_repo._get_file_path(d_gr, "data.bgz")))  # pylint: disable=protected-access
 
     table = open_genome_position_table(d_gr, d_gr.config["tabix_table"])
     return table
@@ -677,7 +653,7 @@ def test_tabix_table_multi_get_regions(
     table = tabix_table_multiline
     assert table.get_column_names() == ("chrom", "pos_begin", "c1")
 
-    assert not table._should_use_sequential("1", 1)
+    assert not table._should_use_sequential("1", 1)  # pylint: disable=protected-access
     for row in table.get_records_in_region("1", 1, 1):
         print(row)
 
@@ -692,7 +668,7 @@ def test_tabix_table_multi_get_regions_partial(tabix_table_multiline):
     table = tabix_table_multiline
     assert table.get_column_names() == ("chrom", "pos_begin", "c1")
 
-    assert not table._should_use_sequential("1", 1)
+    assert not table._should_use_sequential("1", 1)  # pylint: disable=protected-access
     for row in table.get_records_in_region("1", 1, 1):
         print(row)
 
@@ -736,7 +712,7 @@ def test_tabix_middle_optimization(tmp_path):
     d_gr = d_repo.get_resource("one")
     save_as_tabix_table(
         open_genome_position_table(e_gr, e_gr.config["text_table"]),
-        str(d_repo.get_file_path(d_gr, "data.bgz")))
+        str(d_repo._get_file_path(d_gr, "data.bgz")))  # pylint: disable=protected-access
 
     table = open_genome_position_table(d_gr, d_gr.config["tabix_table"])
 
@@ -782,7 +758,7 @@ def test_tabix_middle_optimization_regions(tmp_path):
     d_gr = d_repo.get_resource("one")
     save_as_tabix_table(
         open_genome_position_table(e_gr, e_gr.config["text_table"]),
-        str(d_repo.get_file_path(d_gr, "data.bgz")))
+        str(d_repo._get_file_path(d_gr, "data.bgz")))  # pylint: disable=protected-access
 
     table = open_genome_position_table(d_gr, d_gr.config["tabix_table"])
 
@@ -850,7 +826,7 @@ def test_tabix_middle_optimization_regions_buggy_1(tmp_path):
     d_gr = d_repo.get_resource("one")
     save_as_tabix_table(
         open_genome_position_table(e_gr, e_gr.config["text_table"]),
-        str(d_repo.get_file_path(d_gr, "data.bgz")))
+        str(d_repo._get_file_path(d_gr, "data.bgz")))  # pylint: disable=protected-access
 
     table = open_genome_position_table(d_gr, d_gr.config["tabix_table"])
 
@@ -900,7 +876,7 @@ def test_buggy_fitcons_e67(tmp_path):
     d_gr = d_repo.get_resource("one")
     save_as_tabix_table(
         open_genome_position_table(e_gr, e_gr.config["text_table"]),
-        str(d_repo.get_file_path(d_gr, "data.bgz")))
+        str(d_repo._get_file_path(d_gr, "data.bgz")))  # pylint: disable=protected-access
 
     table = open_genome_position_table(d_gr, d_gr.config["tabix_table"])
 
@@ -949,7 +925,7 @@ def test_tabix_jump_config(tmp_path, jump_threshold, expected):
     d_gr = d_repo.get_resource("one")
     save_as_tabix_table(
         open_genome_position_table(e_gr, e_gr.config["text_table"]),
-        str(d_repo.get_file_path(d_gr, "data.bgz")))
+        str(d_repo._get_file_path(d_gr, "data.bgz")))  # pylint: disable=protected-access
 
     table = open_genome_position_table(d_gr, d_gr.config["tabix_table"])
     assert table.jump_threshold == expected
@@ -1000,7 +976,7 @@ def test_tabix_max_buffer(tmp_path, buffer_maxsize, jump_threshold):
     d_gr = d_repo.get_resource("one")
     save_as_tabix_table(
         open_genome_position_table(e_gr, e_gr.config["text_table"]),
-        str(d_repo.get_file_path(d_gr, "data.bgz")))
+        str(d_repo._get_file_path(d_gr, "data.bgz")))  # pylint: disable=protected-access
 
     TabixGenomicPositionTable.BUFFER_MAXSIZE = buffer_maxsize
 

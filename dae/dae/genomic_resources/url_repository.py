@@ -21,7 +21,9 @@ logger = logging.getLogger(__name__)
 
 
 class GenomicResourceURLRepo(GenomicResourceRealRepo):
-    def __init__(self, repo_id, url, **atts):
+    """Defines URL genomic resources repository."""
+
+    def __init__(self, repo_id, url, **_kwargs):
         super().__init__(repo_id)
         self.url = url
         if self.url.endswith("/"):
@@ -49,26 +51,27 @@ class GenomicResourceURLRepo(GenomicResourceRealRepo):
                 self._all_resources.append(resource)
         yield from self._all_resources
 
-    def get_files(self, gr: GenomicResource):
-        for entry in gr.get_manifest():
+    def get_files(self, resource: GenomicResource):
+        for entry in resource.get_manifest():
             yield entry.name, entry.size, entry.time
 
-    def file_exists(self, genomic_resource, filename):
-        file_url = self.get_file_url(genomic_resource, filename)
+    def file_exists(self, resource, filename):
+        file_url = self._get_file_url(resource, filename)
         return self.filesystem.exists(file_url)
 
-    def get_file_url(self, genomic_resource, filename):
-        return self.url + "/" + genomic_resource.get_genomic_resource_dir() + \
+    def _get_file_url(self, resource, filename):
+        return self.url + "/" + \
+            resource.get_genomic_resource_id_version() + \
             "/" + filename
 
-    def open_raw_file(self, genomic_resource: GenomicResource,
+    def open_raw_file(self, resource: GenomicResource,
                       filename, mode=None,
                       uncompress=False,
                       seekable=False):
 
         mode = mode if mode else "rt"
 
-        file_url = self.get_file_url(genomic_resource, filename)
+        file_url = self._get_file_url(resource, filename)
         logger.debug("opening url resource: %s", file_url)
 
         if self.scheme in ["http", "https"] and not seekable:
@@ -84,14 +87,14 @@ class GenomicResourceURLRepo(GenomicResourceRealRepo):
             return binary_stream
         return io.TextIOWrapper(binary_stream, encoding=GR_ENCODING)
 
-    def open_tabix_file(self, genomic_resource,  filename,
+    def open_tabix_file(self, resource,  filename,
                         index_filename=None):
         if self.scheme not in ['http', 'https', 's3']:
             raise ValueError(
                 f"Tabix files are not supported by GenomicResourceURLRepo "
                 f"for URLs with scheme {self.scheme}. Only http(s) URLs allow "
                 f"the direct access needed by tabix")
-        file_url = self.get_file_url(genomic_resource, filename)
-        index_url = self.get_file_url(genomic_resource, index_filename) \
+        file_url = self._get_file_url(resource, filename)
+        index_url = self._get_file_url(resource, index_filename) \
             if index_filename else None
         return pysam.TabixFile(file_url, index=index_url)  # pylint: disable=no-member
