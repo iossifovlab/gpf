@@ -159,7 +159,8 @@ the number of workers using -j")
             cluster.scale(n_jobs)
         elif args.sge:
             try:
-                from dask_jobqueue import SGECluster  # type: ignore pylint: disable=import-outside-toplevel
+                #  pylint: disable=import-outside-toplevel
+                from dask_jobqueue import SGECluster  # type: ignore
             except ModuleNotFoundError:
                 logger.error("No dask-jobqueue found. Please install it using:"
                              " mamba install dask-jobqueue -c conda-forge")
