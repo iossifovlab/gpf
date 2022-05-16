@@ -50,11 +50,11 @@ def test_build_record_to_annotable_failures():
 
 
 def setup_dir(dir, files):
-    '''
+    """
     TODO: There must be a pytest tool like that.
           If not, we should moved it to a more general location.
           Also, it should be extended to recursivelly build directories.
-    '''
+    """
     for file_name, file_content in files.items():
         with open(dir / file_name, "wt") as F:
             F.write(file_content)
@@ -66,23 +66,23 @@ def get_file_content_as_string(file):
 
 
 def test_basic_setup(tmp_path):
-    in_content = convert_to_tab_separated('''
+    in_content = convert_to_tab_separated("""
             chrom   pos
             chr1    23
             chr1    24
-        ''')
-    out_expected_content = convert_to_tab_separated('''
+        """)
+    out_expected_content = convert_to_tab_separated("""
             chrom   pos score
             chr1    23  0.01
             chr1    24  0.2
-        ''')
+        """)
 
     setup_dir(tmp_path, {
         "in.txt": in_content,
-        "annotation.yaml": '''
+        "annotation.yaml": """
             - position_score: one
-            ''',
-        "grr.yaml": '''
+            """,
+        "grr.yaml": """
             id: mm
             type: embeded
             content:
@@ -103,7 +103,7 @@ def test_basic_setup(tmp_path):
                         chr1   23         0.01
                         chr1   24         0.2
 
-            '''
+            """
     })
     in_file = tmp_path / "in.txt"
     out_file = tmp_path / "out.txt"

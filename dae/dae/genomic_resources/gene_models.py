@@ -1282,44 +1282,43 @@ class GeneModels:
             if parser is None:
                 continue
             try:
-                logger.debug(f"trying file format: {fileformat}...")
+                logger.debug("trying file format: %s...", fileformat)
                 self._reset()
                 infile.seek(0)
                 res = parser(infile, nrows=50)
                 if res:
                     inferred_formats.append(fileformat)
                     logger.debug(
-                        f"gene models format {fileformat} matches input")
+                        "gene models format %s matches input", fileformat)
             except Exception as ex:
                 logger.warning(
-                    f"file format {fileformat} does not match; {ex}")
-                pass
+                    "file format %s does not match; %s",
+                    fileformat, ex, exc_info=True)
 
-        logger.info(f"inferred file formats: {inferred_formats}")
+        logger.info("inferred file formats: %s", inferred_formats)
         if len(inferred_formats) == 1:
             return inferred_formats[0]
 
         logger.error(
-            f"can't find gene model parser; "
-            f"inferred file formats are {inferred_formats}"
-        )
+            "can't find gene model parser; "
+            "inferred file formats are %s", inferred_formats)
         return None
 
     def load(self, infile, fileformat: str = None, gene_mapping_file=None):
         if fileformat is None:
             fileformat = self._infer_gene_model_parser(infile)
-            logger.debug(f"infering gene models file format: {fileformat}")
+            logger.debug("infering gene models file format: %s", fileformat)
             if fileformat is None:
                 logger.error(
-                    f"can't infer gene models file format for "
-                    f"{self.source}...")
+                    "can't infer gene models file format for "
+                    "%s...", self.source)
                 raise ValueError()
 
         parser = self._get_parser(fileformat)
         if parser is None:
             logger.error(
-                f"Unsupported file format '{fileformat}' for "
-                f"gene model file {self.source}.")
+                "Unsupported file format %s for "
+                "gene model file %s.", fileformat, self.source)
             raise ValueError()
 
         gene_mapping = None
@@ -1335,7 +1334,7 @@ class GeneModels:
 def join_gene_models(*gene_models):
 
     if len(gene_models) < 2:
-        raise Exception("The function needs at least 2 arguments!")
+        raise ValueError("The function needs at least 2 arguments!")
 
     gm = GeneModels()
     gm.utr_models = {}
@@ -1356,7 +1355,7 @@ def load_gene_models_from_file(
     fileformat: Optional[str] = None,
     gene_mapping_filename: Optional[str] = None
 ) -> GeneModels:
-    gm = GeneModels(('file', filename, fileformat, gene_mapping_filename))
+    gm = GeneModels(("file", filename, fileformat, gene_mapping_filename))
     with _open_file(filename) as infile:
         gm.load(infile, fileformat=fileformat,
                 gene_mapping_file=gene_mapping_filename)
@@ -1371,27 +1370,27 @@ def load_gene_models_from_resource(
 
     if resource.get_type() != "gene_models":
         logger.error(
-            f"trying to open a resource {resource.resource_id} of type "
-            f"{resource.get_type()} as gene models")
+            "trying to open a resource %s of type "
+            "%s as gene models", resource.resource_id, resource.get_type())
         raise ValueError(f"wrong resource type: {resource.resource_id}")
 
     filename = resource.get_config()["filename"]
     fileformat = resource.get_config().get("format", None)
     gene_mapping_filename = resource.get_config().get("gene_mapping", None)
-    logger.debug(f"loading gene models {filename} ({fileformat})")
+    logger.debug("loading gene models %s (%s)", filename, fileformat)
 
     gm = GeneModels(
-        ('resource', resource.repo.repo_id,
+        ("resource", resource.repo.repo_id,
          resource.resource_id, gene_mapping_filename))
     with resource.open_raw_file(
-            filename, mode='rt',
+            filename, mode="rt",
             uncompress=True, seekable=True) as infile:
         if gene_mapping_filename is not None:
             with resource.open_raw_file(
                     gene_mapping_filename,
                     "rt", uncompress=True) as gene_mapping:
                 logger.debug(
-                    f"loading gene mapping from {gene_mapping_filename}")
+                    "loading gene mapping from %s", gene_mapping_filename)
                 gm.load(infile, fileformat, gene_mapping)
         else:
             gm.load(infile, fileformat)

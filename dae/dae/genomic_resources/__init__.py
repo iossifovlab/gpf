@@ -28,7 +28,7 @@ def _load_plugins():
         return
 
     from importlib_metadata import entry_points
-    discovered_plugins = entry_points(group='dae.genomic_resources.plugins')
+    discovered_plugins = entry_points(group="dae.genomic_resources.plugins")
     for dp in discovered_plugins:
         dp.load()()
     _PLUGINS_LOADED = True

@@ -90,7 +90,7 @@ class ReferenceGenome:
         length = stop - start + 1
         line_feeds = 1 + length // self._index[chrom]["seqLineLength"]
 
-        sequence = self._sequence.read(length + line_feeds).decode('ascii')
+        sequence = self._sequence.read(length + line_feeds).decode("ascii")
         sequence = sequence.replace("\n", "")[:length]
         return sequence.upper()
 
@@ -112,12 +112,12 @@ class ReferenceGenome:
 def open_reference_genome_from_file(filename) -> ReferenceGenome:
     """Opens a reference genome from a file."""
 
-    ref = ReferenceGenome(('file', filename))
+    ref = ReferenceGenome(("file", filename))
     index_filename = f"{filename}.fai"
     assert os.path.exists(index_filename)
-    with open(index_filename) as index_file:
+    with open(index_filename, encoding="utf8") as index_file:
         content = index_file.read()
-    ref.set_open(content, open(filename, 'rb'))
+    ref.set_open(content, open(filename, "rb"))
     return ref
 
 
@@ -165,7 +165,7 @@ def open_reference_genome_from_resource(
     index_content = resource.get_file_content(index_file_name)
 
     ref = ReferenceGenome(
-        ('resource', resource.repo.repo_id, resource.resource_id))
+        ("resource", resource.repo.repo_id, resource.resource_id))
 
     pars = _parse_pars(config)
     ref.set_pars(pars)

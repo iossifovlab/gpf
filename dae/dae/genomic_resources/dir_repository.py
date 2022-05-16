@@ -86,7 +86,7 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
                       mode="rt", uncompress=False, _seekable=False):
 
         full_file_path = self._get_file_path(resource, filename)
-        if 'w' in mode:
+        if "w" in mode:
             # Create the containing directory if it doesn't exists.
             # This align DireRepo API with URL and fspec APIs
             dirname = os.path.dirname(full_file_path)
@@ -134,7 +134,7 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
                 filename, "rb",
                 uncompress=False) as infile, \
                 dest_resource.open_raw_file(
-                    filename, 'wb',
+                    filename, "wb",
                     uncompress=False) as outfile:
 
             md5_hash = hashlib.md5()
@@ -203,7 +203,7 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
                 "manifest": gr.get_manifest().to_manifest_entries()
             }
             for gr in self.get_all_resources()]
-        content = sorted(content, key=lambda x: x['id'])
+        content = sorted(content, key=lambda x: x["id"])
         return content
 
     def save_content_file(self):

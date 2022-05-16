@@ -77,19 +77,19 @@ class GenomicResourceURLRepo(GenomicResourceRealRepo):
         if self.scheme in ["http", "https"] and not seekable:
             binary_stream = urlopen(file_url)
         else:
-            bin_mode = mode.replace('t', 'b')
+            bin_mode = mode.replace("t", "b")
             binary_stream = self.filesystem.open(file_url, bin_mode)
 
         if filename.endswith(".gz") and uncompress:
             return gzip.open(binary_stream, mode)
 
-        if 'b' in mode:
+        if "b" in mode:
             return binary_stream
         return io.TextIOWrapper(binary_stream, encoding=GR_ENCODING)
 
     def open_tabix_file(self, resource,  filename,
                         index_filename=None):
-        if self.scheme not in ['http', 'https', 's3']:
+        if self.scheme not in ["http", "https", "s3"]:
             raise ValueError(
                 f"Tabix files are not supported by GenomicResourceURLRepo "
                 f"for URLs with scheme {self.scheme}. Only http(s) URLs allow "

@@ -93,7 +93,7 @@ def add_record_to_annotable_arguments(parser: argparse.ArgumentParser):
     all_columns = {col for cols in RECORD_TO_ANNOTABALE_CONFIGUATION.keys()
                    for col in cols}
     for col in all_columns:
-        parser.add_argument(f'--col_{col}', default=col,
+        parser.add_argument(f"--col_{col}", default=col,
                             help=f"The column name that stores {col}")
 
 
@@ -103,7 +103,7 @@ def build_record_to_annotatable(parameters: dict[str, str],
     for columns, record_to_annotabale_class in \
             RECORD_TO_ANNOTABALE_CONFIGUATION.items():
         renamed_columns = [parameters.get(
-            f'col_{col}', col) for col in columns]
+            f"col_{col}", col) for col in columns]
         all_available = len(
             [cn for cn in renamed_columns if cn not in available_columns]) == 0
         if all_available:

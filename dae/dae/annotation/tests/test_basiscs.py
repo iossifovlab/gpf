@@ -6,21 +6,21 @@ from dae.annotation.annotation_factory import build_annotation_pipeline
 def test_basic():
     grr_repo = GenomicResourceEmbededRepo("r", {
         "one": {
-            GR_CONF_FILE_NAME: '''
+            GR_CONF_FILE_NAME: """
                 type: position_score
                 table:
                     filename: data.mem
                 scores:
                   - id: s1
                     type: float
-                    name: s1''',
-            "data.mem": '''
+                    name: s1""",
+            "data.mem": """
                 chrom  pos_begin  s1
                 1      10         0.02
                 1      11         0.03
                 1      15         0.46
                 2      8          0.01
-                '''
+                """
         }
     })
     annotation_cofiguration = """

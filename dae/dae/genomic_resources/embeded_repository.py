@@ -88,9 +88,9 @@ class GenomicResourceEmbededRepo(GenomicResourceRealRepo):
         if filename.endswith(".gz") and uncompress:
             raise IOError("Can't handle uncompressing gzip files yet!")
         mode = mode if mode else "r"
-        if 'w' in mode:
+        if "w" in mode:
             raise IOError("Can't handle writable files yet!")
-        if 'b' in mode:
+        if "b" in mode:
             return io.BytesIO(content)
 
         return io.StringIO(content.decode(GR_ENCODING))

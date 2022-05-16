@@ -129,7 +129,7 @@ class Histogram:
                 "value %s out of range: [%s, %s]",
                 value, self.x_min, self.x_max)
             return False
-        index = self.bins.searchsorted(value, side='right')
+        index = self.bins.searchsorted(value, side="right")
         if index == 0:
             logger.warning(
                 "(1) empty index %s for value %s",
@@ -184,7 +184,7 @@ class HistogramBuilder:
             if actual_md5 == expected_md5:
                 logger.info("Skipping calculation of score "
                             "%s as it's already calculated",
-                            hist_conf['score'])
+                            hist_conf["score"])
                 loaded_hists[score_id] = hists[score_id]
             else:
                 configs_to_calculate.append(hist_conf)
@@ -323,7 +323,7 @@ class HistogramBuilder:
             return {}
 
         histogram_desc = config.get("histograms", [])
-        hist_configs = {hist['score']: hist for hist in histogram_desc}
+        hist_configs = {hist["score"]: hist for hist in histogram_desc}
         hashes = {}
         for score_id, hist_config in hist_configs.items():
             md5_hash = hashlib.md5()
@@ -336,30 +336,30 @@ class HistogramBuilder:
     def save(self, histograms, out_dir):
         """Saves a histogram in the specified output directory"""
         histogram_desc = self.resource.get_config().get("histograms", [])
-        configs = {hist['score']: hist for hist in histogram_desc}
+        configs = {hist["score"]: hist for hist in histogram_desc}
         hist_hashes = self._build_hashes()
 
         for score, histogram in histograms.items():
             bars = list(histogram.bars)
             bars.append(np.nan)
 
-            data = pd.DataFrame({'bars': bars,
-                               'bins': histogram.bins})
+            data = pd.DataFrame({"bars": bars,
+                               "bins": histogram.bins})
             hist_file = os.path.join(out_dir, f"{score}.csv")
             with self.resource.open_raw_file(hist_file, "wt") as outfile:
                 data.to_csv(outfile, index=None)
 
             hist_config = configs.get(score, {})
             metadata = {
-                'resource': self.resource.get_id(),
-                'histogram_config': hist_config,
+                "resource": self.resource.get_id(),
+                "histogram_config": hist_config,
             }
             if score in hist_hashes:
-                metadata['md5'] = hist_hashes[score]
-            if 'min' not in hist_config:
-                metadata['calculated_min'] = histogram.x_min
-            if 'max' not in hist_config:
-                metadata['calculated_max'] = histogram.x_max
+                metadata["md5"] = hist_hashes[score]
+            if "min" not in hist_config:
+                metadata["calculated_min"] = histogram.x_min
+            if "max" not in hist_config:
+                metadata["calculated_max"] = histogram.x_max
             metadata_file = os.path.join(out_dir, f"{score}.metadata.yaml")
             with self.resource.open_raw_file(metadata_file, "wt") as outfile:
                 yaml.dump(metadata, outfile)
@@ -373,8 +373,8 @@ class HistogramBuilder:
 
             if histogram.x_scale == "log":
                 plt.xscale("log")
-            plt.grid(axis='y')
-            plt.grid(axis='x')
+            plt.grid(axis="y")
+            plt.grid(axis="x")
             plot_file = os.path.join(out_dir, f"{score}.png")
             with self.resource.open_raw_file(plot_file, "wb") as outfile:
                 plt.savefig(outfile)
@@ -405,8 +405,8 @@ def _load_histograms(repo, resource_id, version_constraint,
                             genomic_repository_id)
     hists = {}
     metadatas = {}
-    for hist_config in res.get_config().get('histograms', []):
-        score = hist_config['score']
+    for hist_config in res.get_config().get("histograms", []):
+        score = hist_config["score"]
         hist_file = os.path.join(path, f"{score}.csv")
         metadata_file = os.path.join(path, f"{score}.metadata.yaml")
         if res.file_exists(hist_file) and res.file_exists(metadata_file):
@@ -414,11 +414,11 @@ def _load_histograms(repo, resource_id, version_constraint,
                 data = pd.read_csv(infile)
             with res.open_raw_file(metadata_file, "rt") as infile:
                 metadata = yaml.safe_load(infile)
-            hist_config = metadata['histogram_config']
-            if 'min' not in hist_config:
-                hist_config['min'] = metadata['calculated_min']
-            if 'max' not in hist_config:
-                hist_config['max'] = metadata['calculated_max']
+            hist_config = metadata["histogram_config"]
+            if "min" not in hist_config:
+                hist_config["min"] = metadata["calculated_min"]
+            if "max" not in hist_config:
+                hist_config["max"] = metadata["calculated_max"]
             hist = Histogram.from_config(hist_config)
             hist.bars = data["bars"].to_numpy()[:-1]
 

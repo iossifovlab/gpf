@@ -76,7 +76,7 @@ class AutismGeneProfileDB:
             for score in gs_category["scores"]:
                 score_name = score["score_name"]
                 value = row[f"{category_name}_{score_name}"]
-                result['.'.join([category_name, score_name])] = value
+                result[".".join([category_name, score_name])] = value
 
         for gs_category in config["gene_sets"]:
             category_name = gs_category["category"]
@@ -84,8 +84,8 @@ class AutismGeneProfileDB:
                 set_id = gene_set["set_id"]
                 collection_id = gene_set["collection_id"]
                 full_gs_id = f"{collection_id}_{set_id}"
-                result['.'.join([f"{category_name}_rank", set_id])] = \
-                    '\u2713' if row[full_gs_id] else None
+                result[".".join([f"{category_name}_rank", set_id])] = \
+                    "\u2713" if row[full_gs_id] else None
         
         for dataset_id, filters in config["datasets"].items():
             for ps in filters["person_sets"]:
@@ -98,7 +98,7 @@ class AutismGeneProfileDB:
                     rate = row[
                         f"{dataset_id}_{person_set}_{statistic_id}_rate"
                     ]
-                    result['.'.join([dataset_id, person_set, statistic_id])] = \
+                    result[".".join([dataset_id, person_set, statistic_id])] = \
                         f"{count} ({round(rate, 2)})" if count else None
 
         return result
@@ -159,7 +159,7 @@ class AutismGeneProfileDB:
         )
 
     def _transform_sort_by(self, sort_by):
-        sort_by_tokens = sort_by.split('.')
+        sort_by_tokens = sort_by.split(".")
         if sort_by.startswith("gene_set_"):
             sort_by = sort_by.replace("gene_set_", "", 1)
         if "_rank" in sort_by_tokens[0]:
@@ -171,7 +171,7 @@ class AutismGeneProfileDB:
                         for gene_set in gs_category["sets"]:
                             if gene_set["set_id"] == sort_by_tokens[1]:
                                 collection_id = gene_set["collection_id"]
-                sort_by = '.'.join((collection_id, sort_by_tokens[1]))
+                sort_by = ".".join((collection_id, sort_by_tokens[1]))
         return sort_by.replace(".", "_")
 
     def query_agps(self, page, symbol_like=None, sort_by=None, order=None):

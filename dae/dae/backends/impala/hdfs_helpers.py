@@ -113,13 +113,13 @@ class HdfsHelpers:
         if not self.exists(hdfs_dirname):
             return False
         info = self.hdfs.info(hdfs_dirname)
-        return info['type'] == 'directory'
+        return info["type"] == "directory"
 
     def isfile(self, hdfs_filename):
         if not self.exists(hdfs_filename):
             return False
         info = self.hdfs.info(hdfs_filename)
-        return info['type'] == 'file'
+        return info["type"] == "file"
 
     def list_parquet_files(self, hdfs_dirname, regexp=r".*\.parquet"):
         regexp = re.compile(regexp)

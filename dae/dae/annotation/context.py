@@ -22,18 +22,18 @@ class Context:
     @staticmethod
     def add_context_arguments(parser: argparse.ArgumentParser):
         parser.add_argument(
-            '-grr', '--grr-file-name', default=None,
+            "-grr", "--grr-file-name", default=None,
             help="The GRR configuration file. If the argument is absent, "
             "the a GRR repository from the current genomic context "
             "(i.e. gpf_instance) will be used or, if that fails, the "
             "default GRR configuration will be used.")
         parser.add_argument(
-            '-ref', '--reference-genome-resource-id', default=None,
+            "-ref", "--reference-genome-resource-id", default=None,
             help="The resource id for the reference genome. If the argument "
                  "is absent the reference genome from the current genomic "
                  "context will be used.")
         parser.add_argument(
-            '-genes', '--gene-models-resource-id', default=None,
+            "-genes", "--gene-models-resource-id", default=None,
             help="The resource is of the gene models resoruce. If the argument"
                  " is absent the gene models from the current genomic "
                  "context will be used.")

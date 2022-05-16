@@ -19,9 +19,9 @@ class LiftoverChain:
             self.chrom_target_coordinates = None
         else:
             self.chrom_variant_coordinates = chrom_prefix.get(
-                'variant_coordinates', None)
+                "variant_coordinates", None)
             self.chrom_target_coordinates = chrom_prefix.get(
-                'target_coordinates', None)
+                "target_coordinates", None)
 
         self.chain_file = chain_file
         self.liftover = LiftOver(self.chain_file)
@@ -50,8 +50,8 @@ class LiftoverChain:
             return None
         if len(lo_coordinates) > 1:
             logger.info(
-                f"liftover_variant: liftover returns more than one target "
-                f"position: {lo_coordinates}")
+                "liftover_variant: liftover returns more than one target "
+                "position: %s", lo_coordinates)
 
         coordinates = list(lo_coordinates[0])
         coordinates[0] = self.map_chromosome(
@@ -67,9 +67,9 @@ def load_liftover_chain_from_resource(
 
     if resource.get_type() != "liftover_chain":
         logger.error(
-            f"trying to use genomic resource {resource.resource_id} "
-            f"as a liftover chaing but its type is {resource.get_type()}; "
-            f"{config}")
+            "trying to use genomic resource %s "
+            "as a liftover chaing but its type is %s; %s",
+            resource.resource_id, resource.get_type(), config)
         raise ValueError(f"wrong resource type: {config}")
 
     filename: str = config["filename"]

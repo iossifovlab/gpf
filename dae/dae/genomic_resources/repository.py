@@ -16,9 +16,9 @@ GR_CONF_FILE_NAME = "genomic_resource.yaml"
 GR_MANIFEST_FILE_NAME = ".MANIFEST"
 GRP_CONTENTS_FILE_NAME = ".CONTENTS"
 
-GR_ENCODING = 'utf-8'
+GR_ENCODING = "utf-8"
 
-_GR_ID_TOKEN_RE = re.compile('[a-zA-Z0-9._-]+')
+_GR_ID_TOKEN_RE = re.compile("[a-zA-Z0-9._-]+")
 
 
 def is_gr_id_token(token):
@@ -319,16 +319,16 @@ class GenomicResourceRepo(abc.ABC):
     @abc.abstractmethod
     def get_resource(self, resource_id, version_constraint=None,
                      genomic_repository_id=None) -> Optional[GenomicResource]:
-        '''
+        """
             Returns one resource with id qual to resource_id. If not found,
             None is returned.
-        '''
+        """
 
     @abc.abstractmethod
     def get_all_resources(self) -> List[GenomicResource]:
-        '''
+        """
         Returns a list of GenomicResource objects stored in the repository.
-        '''
+        """
 
 
 class GenomicResourceRealRepo(GenomicResourceRepo):

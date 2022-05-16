@@ -1,11 +1,11 @@
 import abc
 import collections
-import pysam  # type: ignore
 import os
 import logging
 
-from typing import Optional, Tuple, List, Any, Deque
+from typing import Optional, Tuple, Any, Deque
 
+import pysam  # type: ignore
 from box import Box  # type: ignore
 
 from dae.genomic_resources.repository import GenomicResource
@@ -23,8 +23,14 @@ class GenomicPositionTable(abc.ABC):
 
         self.definition = Box(table_definition)
         self.chrom_map = None
+        self.chrom_order = None
+        self.rev_chrom_map = None
 
-        # handling the 'header' property
+        self.chrom_column_i = None
+        self.pos_begin_column_i = None
+        self.pos_end_column_i = None
+
+        # handling the header property
         self.header: Optional[tuple] = None
 
         self.header_mode = self.definition.get("header_mode", "file")
@@ -75,14 +81,14 @@ class GenomicPositionTable(abc.ABC):
                 chromosomes = self.chrom_order
                 new_chromosomes = chromosomes
 
-                if 'del_prefix' in mapping:
+                if "del_prefix" in mapping:
                     pref = mapping.del_prefix
                     new_chromosomes = [
                         ch[len(pref):] if ch.startswith(pref) else ch
                         for ch in new_chromosomes
                     ]
 
-                if 'add_prefix' in mapping:
+                if "add_prefix" in mapping:
                     pref = mapping.add_prefix
                     new_chromosomes = [
                         f"{pref}{chrom}" for chrom in new_chromosomes]
@@ -97,7 +103,7 @@ class GenomicPositionTable(abc.ABC):
         self.pos_end_column_i = self.pos_begin_column_i
         try:
             self.pos_end_column_i = self.get_special_column_index(self.POS_END)
-        except Exception:
+        except (ValueError, KeyError):
             definition = self.definition.to_dict()
             definition[self.POS_END] = {"index": self.pos_end_column_i}
             self.definition = Box(definition)
@@ -119,9 +125,9 @@ class GenomicPositionTable(abc.ABC):
 
         try:
             return int(self.definition[key].index)
-        except ValueError:
+        except ValueError as ex:
             raise ValueError(f"The {index_prop} property in the table "
-                             f"definition should be an integer.")
+                             f"definition should be an integer.") from ex
 
     def get_special_column_index(self, key):
         if self.header_mode == "none":
@@ -132,17 +138,16 @@ class GenomicPositionTable(abc.ABC):
             column_name = self.get_special_column_name(key)
             try:
                 return self.header.index(column_name)
-            except ValueError:
+            except ValueError as ex:
                 raise ValueError(f"The column {column_name} for the "
                                  f"special column {key} is not in the "
-                                 f"header.")
+                                 f"header.") from ex
 
     def get_special_column_name(self, key):
         if self.header_mode == "none":
             raise AttributeError("The table has no header.")
-        if key in self.definition:
-            if "name" in self.definition[key]:
-                return self.definition[key].name
+        if key in self.definition and "name" in self.definition[key]:
+            return self.definition[key].name
         return key
 
     @abc.abstractmethod
@@ -156,32 +161,30 @@ class GenomicPositionTable(abc.ABC):
     @abc.abstractmethod
     def get_records_in_region(
             self, chrom: str, pos_begin: int = None, pos_end: int = None):
-        '''
+        """
         Returns an iterable over the records in the range [pos_begin, pos_end].
         The interval is closed on both sides and 1-based.
-        '''
-        pass
+        """
 
     @abc.abstractmethod
     def close(self):
-        pass
+        """Close the resource."""
 
     def get_chromosomes(self):
         return self.chrom_order
 
     @abc.abstractmethod
     def get_file_chromosomes(self):
-        '''
+        """
         This is to be overwritten by the subclass. It should return a list of
         the chromomes in the file in the order determinted by the file.
-        '''
-        pass
+        """
 
     def get_chromosome_length(self, chrom, step=1_000_000):
-        '''
+        """
         Returns the length of a chromosome (or contig). The returned value is
         the index of the last record for the chromosome + 1.
-        '''
+        """
         def any_records(riter):
             try:
                 next(riter)
@@ -221,9 +224,10 @@ class FlatGenomicPositionTable(GenomicPositionTable):
     }
 
     def __init__(self, genomic_resource: GenomicResource, table_definition,
-                 str_stream, format):
-        self.format = format
+                 str_stream, fileformat):
+        self.format = fileformat
         self.str_stream = str_stream
+        self.records_by_chr: dict[str, Any] = {}
         super().__init__(genomic_resource, table_definition)
 
     def load(self):
@@ -238,7 +242,7 @@ class FlatGenomicPositionTable(GenomicPositionTable):
                 hcs = line.split(clmn_sep)
                 break
             if not hcs:
-                raise Exception("No header found")
+                raise ValueError("No header found")
 
             self.header = tuple(hcs)
         col_number = len(self.header) if self.header else None
@@ -252,11 +256,11 @@ class FlatGenomicPositionTable(GenomicPositionTable):
                 continue
             cs = tuple(line.split(clmn_sep))
             if col_number and len(cs) != col_number:
-                raise Exception("Inconsistent number of columns")
+                raise ValueError("Inconsistent number of columns")
             else:
                 col_number = len(cs)
             if space_replacement:
-                cs = tuple(["" if v == 'EMPTY' else v for v in cs])
+                cs = tuple(["" if v == "EMPTY" else v for v in cs])
             ch = cs[self.chrom_column_i]
             ps_begin = int(cs[self.pos_begin_column_i])
             ps_end = int(cs[self.pos_end_column_i])
@@ -285,25 +289,27 @@ class FlatGenomicPositionTable(GenomicPositionTable):
                 for _, _, cs in pss:
                     yield cs
 
-    def get_records_in_region(self, ch: str, beg: int = None, end: int = None):
+    def get_records_in_region(
+            self, chrom: str, pos_begin: int = None, pos_end: int = None):
+
         if self.chrom_map:
-            fch = self.chrom_map[ch]
+            fch = self.chrom_map[chrom]
         else:
-            fch = ch
+            fch = chrom
         for ps_begin, ps_end, cs in self.records_by_chr[fch]:
-            if beg and beg > ps_end:
+            if pos_begin and pos_begin > ps_end:
                 continue
-            if end and end < ps_begin:
+            if pos_end and pos_end < ps_begin:
                 continue
             if self.chrom_map:
                 csl = list(cs)
-                csl[self.chrom_column_i] = ch
+                csl[self.chrom_column_i] = chrom
                 yield tuple(csl)
             else:
                 yield cs
 
     def close(self):
-        pass
+        """Nothing to close."""
 
 
 class LineBuffer:
@@ -354,13 +360,13 @@ class LineBuffer:
         if len(self.deque) == 0:
             return
 
-        first_chrom, first_beg, _, _ = self.peek_first()
+        first_chrom, _first_beg, _, _ = self.peek_first()
         if chrom != first_chrom:
             self.clear()
             return
 
         while len(self.deque) > 0:
-            _, first_beg, first_end, _ = self.deque[0]
+            _, _first_beg, first_end, _ = self.deque[0]
 
             if pos <= first_end:
                 break
@@ -397,12 +403,14 @@ class LineBuffer:
 
             if depth >= 100:
                 logger.error(
-                    f"chrom={chrom}; pos={pos}; region={self.region()}; "
-                    f"first_index={first_index}; last_index={last_index}; "
-                    f"mid_index={mid_index}; "
-                    f"mid_beg={mid_beg}; mid_end={mid_end}; "
+                    "chrom=%s; pos=%s; region=%s; "
+                    "first_index=%s; last_index=%s; "
+                    "mid_index=%s; "
+                    "mid_beg=%s; mid_end=%s; ",
+                    chrom, pos, self.region(), first_index, last_index,
+                    mid_index, mid_beg, mid_end
                 )
-                logger.error(f"{self.deque}")
+                logger.error("deque: %s", self.deque)
 
             if pos < mid_beg:
                 last_index = mid_index - 1
@@ -445,7 +453,7 @@ class TabixGenomicPositionTable(GenomicPositionTable):
     BUFFER_MAXSIZE = 20_000
 
     def __init__(self, genomic_resource: GenomicResource, table_definition,
-                 tabix_file: pysam.TabixFile):
+                 tabix_file: pysam.TabixFile):  # pylint: disable=no-member
         super().__init__(genomic_resource, table_definition)
 
         self.jump_threshold: int = 2_500
@@ -458,9 +466,9 @@ class TabixGenomicPositionTable(GenomicPositionTable):
 
         self.jump_threshold = min(self.jump_threshold, self.BUFFER_MAXSIZE//2)
 
-        self.tabix_file: pysam.TabixFile = tabix_file
+        self.tabix_file: pysam.TabixFile = tabix_file  # pylint: disable=no-member
         self.tabix_iterator = None
-    
+
         self._last_call: Tuple[str, int, Optional[int]] = "", -1, -1
         self.buffer = LineBuffer()
 
@@ -505,7 +513,7 @@ class TabixGenomicPositionTable(GenomicPositionTable):
         return tuple(result)
 
     def get_all_records(self):
-        for line in self.tabix_file.fetch(parser=pysam.asTuple()):
+        for line in self.tabix_file.fetch(parser=pysam.asTuple()):  # pylint: disable=no-member
             if self.chrom_map:
                 fchrom = line[self.chrom_column_i]
                 if fchrom not in self.rev_chrom_map:
@@ -583,23 +591,21 @@ class TabixGenomicPositionTable(GenomicPositionTable):
         yield from self._gen_from_tabix(chrom, end, buffering=True)
 
     def get_records_in_region(
-            self, chrom: str, beg: int = None, end: int = None):
+            self, chrom: str, pos_begin: int = None, pos_end: int = None):
 
         if chrom not in self.get_chromosomes():
             logger.error(
-                f"chromosome {chrom} not found in the tabix file "
-                f"from {self.genomic_resource.resource_id}; "
-                f"{self.definition}")
+                "chromosome %s not found in the tabix file "
+                "from %s; %s", 
+                chrom, self.genomic_resource.resource_id, self.definition)
             raise ValueError(
                 f"The chromosome {chrom} is not part of the table.")
 
         fchrom = self._map_file_chrom(chrom)
         buffering = True
-        if beg is None:
-            beg = 1
-        if end is None:
-            buffering = False
-        elif end - beg > self.BUFFER_MAXSIZE:
+        if pos_begin is None:
+            pos_begin = 1
+        if pos_end is None or pos_end - pos_begin > self.BUFFER_MAXSIZE:
             buffering = False
         
         prev_call_chrom, _prev_call_beg, prev_call_end = self._last_call
@@ -608,49 +614,51 @@ class TabixGenomicPositionTable(GenomicPositionTable):
             # no buffering
             self._last_call = "", -1, None
         else:
-            self._last_call = fchrom, beg, end
+            self._last_call = fchrom, pos_begin, pos_end
 
-            first_chrom, first_beg, first_end, _ = self.buffer.peek_first()
+            first_chrom, first_beg, _first_end, _ = self.buffer.peek_first()
             if first_chrom == fchrom and prev_call_end is not None \
-                    and beg > prev_call_end and end < first_beg:
+                    and pos_begin > prev_call_end and pos_end < first_beg:
 
                 assert first_chrom == prev_call_chrom
                 return
 
-            elif self.buffer.contains(fchrom, beg):
-                for row in self._gen_from_buffer_and_tabix(fchrom, beg, end):
+            elif self.buffer.contains(fchrom, pos_begin):
+                for row in self._gen_from_buffer_and_tabix(
+                        fchrom, pos_begin, pos_end):
                     _, _, _, line = row
                     yield line
 
-                self.buffer.prune(fchrom, beg)
+                self.buffer.prune(fchrom, pos_begin)
                 return
 
-            elif self._should_use_sequential(fchrom, beg):
-                self._sequential_rewind(fchrom, beg)
+            elif self._should_use_sequential(fchrom, pos_begin):
+                self._sequential_rewind(fchrom, pos_begin)
 
-                for row in self._gen_from_buffer_and_tabix(fchrom, beg, end):
+                for row in self._gen_from_buffer_and_tabix(
+                        fchrom, pos_begin, pos_end):
                     _, _, _, line = row
                     yield line
 
-                self.buffer.prune(fchrom, beg)
+                self.buffer.prune(fchrom, pos_begin)
                 return
 
         self.tabix_iterator = self.tabix_file.fetch(
-            fchrom, beg - 1, None, parser=pysam.asTuple())
+            fchrom, pos_begin - 1, None, parser=pysam.asTuple())  # pylint: disable=no-member
         self.buffer.clear()
 
-        for row in self._gen_from_tabix(fchrom, end, buffering=buffering):
+        for row in self._gen_from_tabix(fchrom, pos_end, buffering=buffering):
             _, _, _, line = row
             yield line
 
-        self.buffer.prune(fchrom, beg)
+        self.buffer.prune(fchrom, pos_begin)
 
     def close(self):
         self.tabix_file.close()
 
 
 def open_genome_position_table(gr: GenomicResource, table_definition: dict):
-    filename = table_definition['filename']
+    filename = table_definition["filename"]
 
     if filename.endswith(".bgz"):
         default_format = "tabix"
@@ -684,15 +692,15 @@ def open_genome_position_table(gr: GenomicResource, table_definition: dict):
 def save_as_tabix_table(table: GenomicPositionTable,
                         full_file_path: str):
     tmp_file = full_file_path + ".tmp"
-    with open(tmp_file, 'wt') as text_file:
+    with open(tmp_file, "wt", encoding="utf8") as text_file:
         if table.header_mode != "none":
             print("#" + "\t".join(table.get_column_names()), file=text_file)
         for rec in table.get_all_records():
             print(*rec, sep="\t", file=text_file)
-    pysam.tabix_compress(tmp_file, full_file_path, force=True)
+    pysam.tabix_compress(tmp_file, full_file_path, force=True)  # pylint: disable=no-member
     os.remove(tmp_file)
 
-    pysam.tabix_index(full_file_path, force=True,
+    pysam.tabix_index(full_file_path, force=True,  # pylint: disable=no-member
                       seq_col=table.chrom_column_i,
                       start_col=table.pos_begin_column_i,
                       end_col=table.pos_end_column_i)

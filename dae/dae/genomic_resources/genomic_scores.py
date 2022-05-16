@@ -354,10 +354,20 @@ class AlleleScore(GenomicScore):
 def _configure_score_columns(table, config, ):
     # load score configuraton
     scores = {}
-    for score_conf in config['scores']:
+    for score_conf in config["scores"]:
 
         class ScoreDef:
-            pass
+            def __init__(self):
+                self.id = None
+                self.desc = None
+                self.col_index = None
+                self.type = None
+                self.value_parser = None
+                self.na_values = None
+                self.pos_aggregator = None
+                self.nuc_aggregator = None
+                self.description = None
+
         scr_def = ScoreDef()
 
         scr_def.id = score_conf["id"]

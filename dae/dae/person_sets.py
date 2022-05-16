@@ -161,8 +161,9 @@ class PersonSetCollection:
             return matching_person_set.color
 
         logger.warning(
-            f"Person '{person.person_id}' could not be found in any"
-            f" domain of '{person_set_collection.id}'!"
+            "Person <%s> could not be found in any"
+            " domain of <%s>!",
+            person.person_id, person_set_collection.id
         )
         return "#AAAAAA"
 

@@ -16,13 +16,13 @@ def configure_argument_parser() -> argparse.ArgumentParser:
         description="Annotate columns",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
-    parser.add_argument('input', default='-', nargs="?",
+    parser.add_argument("input", default="-", nargs="?",
                         help="the input vcf file")
-    parser.add_argument('pipeline', default="context", nargs="?",
+    parser.add_argument("pipeline", default="context", nargs="?",
                         help="The pipeline definition file. By default, or if "
                         "the value is gpf_instance, the annotation pipeline "
                         "from the configured gpf instance will be used.")
-    parser.add_argument('output', default='-', nargs="?",
+    parser.add_argument("output", default="-", nargs="?",
                         help="the output column file")
 
     Context.add_context_arguments(parser)
@@ -83,5 +83,5 @@ def cli(raw_args: list[str] = None) -> None:
         out_file.close()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     cli(sys.argv[1:])

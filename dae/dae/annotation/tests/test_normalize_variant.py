@@ -20,11 +20,11 @@ def example_1_genome():
     """
     res = build_a_test_resource({
         "genomic_resource.yaml": "{type: genome, filename: chr.fa}",
-        "chr.fa": convert_to_tab_separated('''
+        "chr.fa": convert_to_tab_separated("""
                 >1
                 GGGGCATGGGG
 
-        '''),
+        """),
         "chr.fa.fai": "1\t11\t3\t11\t12\n"
     })
     genome = open_reference_genome_from_resource(res)
@@ -53,11 +53,11 @@ def example_2_genome():
     """
     res = build_a_test_resource({
         "genomic_resource.yaml": "{type: genome, filename: chr.fa}",
-        "chr.fa": convert_to_tab_separated('''
+        "chr.fa": convert_to_tab_separated("""
                 >1
                 GGGCACACACAGGG
 
-        '''),
+        """),
         "chr.fa.fai": "1\t14\t3\t14\t15\n"
     })
     genome = open_reference_genome_from_resource(res)

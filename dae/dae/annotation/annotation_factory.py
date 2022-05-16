@@ -1,4 +1,5 @@
 import logging
+from multiprocessing.sharedctypes import Value
 import yaml
 
 from typing import List, Dict
@@ -65,8 +66,8 @@ class AnnotationConfigParser:
 
     @classmethod
     def parse_config_file(cls, filename: str) -> List[Dict]:
-        logger.info(f"loading annotation pipeline configuration: {filename}")
-        with open(filename, "rt") as infile:
+        logger.info("loading annotation pipeline configuration: %s", filename)
+        with open(filename, "rt", encoding="utf8") as infile:
             content = infile.read()
             return cls.parse(content)
 
@@ -105,12 +106,12 @@ def build_annotation_pipeline(
         try:
             annotator_type = annotator_config["annotator_type"]
         except KeyError:
-            raise Exception(
+            raise ValueError(
                 "The pipeline config element has not annotator_type!")
         try:
             builder = ANNOTATOR_BUILDER_REGISTRY[annotator_type]
         except KeyError:
-            raise Exception(f'Unknonwn annotator type {annotator_type}.')
+            raise ValueError(f"Unknonwn annotator type {annotator_type}.")
         annotator = builder(pipeline, annotator_config)
         pipeline.add_annotator(annotator)
 
