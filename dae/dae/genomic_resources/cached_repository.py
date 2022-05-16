@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 
 class CachingDirectoryRepo(GenomicResourceDirRepo):
-
+    """Provides helper caching directory class for caching repository."""
     def __init__(self, repo_id, directory, remote_repo: GenomicResourceRepo):
         super().__init__(repo_id, directory)
         self.remote_repo = remote_repo
@@ -37,7 +37,7 @@ class CachingDirectoryRepo(GenomicResourceDirRepo):
             self._refresh_cached_genomic_resource(
                 resource, remote_resource)
         else:
-            self._save_cached_resource(remote_resource)            
+            self._save_cached_resource(remote_resource)
         self.refresh()
 
         return super().get_resource(
@@ -96,30 +96,30 @@ class CachingDirectoryRepo(GenomicResourceDirRepo):
         return full_file_path
 
     def open_raw_file(
-            self, genomic_resource: GenomicResource, filename: str,
+            self, resource: GenomicResource, filename: str,
             mode="rt", uncompress=False, seekable=False):
 
         if "w" not in mode:
-            self._copy_or_update_remote_file(genomic_resource, filename)
+            self._copy_or_update_remote_file(resource, filename)
 
         return super().open_raw_file(
-            genomic_resource, filename, mode, uncompress, seekable)
+            resource, filename, mode, uncompress, seekable)
 
-    def open_tabix_file(self, genomic_resource,  filename,
+    def open_tabix_file(self, resource,  filename,
                         index_filename=None):
 
         full_file_path = self._copy_or_update_remote_file(
-            genomic_resource, filename)
+            resource, filename)
 
         if not index_filename:
             index_filename = f"{filename}.tbi"
         full_index_path = self._copy_or_update_remote_file(
-            genomic_resource, index_filename)
+            resource, index_filename)
 
         return pysam.TabixFile(full_file_path, index=full_index_path)  # pylint: disable=no-member
 
-    def get_files(self, genomic_resource: GenomicResource):
-        for entry in genomic_resource.get_manifest():
+    def get_files(self, resource: GenomicResource):
+        for entry in resource.get_manifest():
             yield entry.name, entry.size, entry.time
 
     def _get_local_file_content(
@@ -168,6 +168,7 @@ class CachingDirectoryRepo(GenomicResourceDirRepo):
 
 
 class GenomicResourceCachedRepo(GenomicResourceRepo):
+    """Defines caching genomic resources repository."""
 
     def __init__(self, child, cache_dir):
         repo_id: str = f"{child.repo_id}.caching_repo"

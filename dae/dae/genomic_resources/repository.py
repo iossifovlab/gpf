@@ -373,10 +373,10 @@ class GenomicResourceRealRepo(GenomicResourceRepo):
         return yaml.safe_load(content)
 
     def get_file_content(
-            self, genomic_resource, filename, uncompress=True, mode="t"):
+            self, resource, filename, uncompress=True, mode="t"):
         """Returns content of a file in given resource"""
         with self.open_raw_file(
-                genomic_resource, filename, mode=f"r{mode}",
+                resource, filename, mode=f"r{mode}",
                 uncompress=uncompress) as infile:
             return infile.read()
 

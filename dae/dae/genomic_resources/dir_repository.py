@@ -63,10 +63,10 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
                                    find_genomic_resources_helper(dir_content)]
         yield from self._all_resources
 
-    def get_files(self, genomic_resource):
+    def get_files(self, resource):
         """Returns a generator for all files in a resources."""
         content_dict = self._dir_to_dict(
-            self._get_genomic_resource_dir(genomic_resource))
+            self._get_genomic_resource_dir(resource))
 
         def my_leaf_to_size_and_time(filepath):
             filestat = filepath.stat()
@@ -77,15 +77,15 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
         yield from find_genomic_resource_files_helper(
             content_dict, my_leaf_to_size_and_time)
 
-    def file_exists(self, genomic_resource, filename):
+    def file_exists(self, resource, filename):
         """Checks if a file exists in a genomic resource."""
-        full_file_path = self._get_file_path(genomic_resource, filename)
+        full_file_path = self._get_file_path(resource, filename)
         return full_file_path.exists()
 
-    def open_raw_file(self, genomic_resource: GenomicResource, filename: str,
+    def open_raw_file(self, resource: GenomicResource, filename: str,
                       mode="rt", uncompress=False, _seekable=False):
 
-        full_file_path = self._get_file_path(genomic_resource, filename)
+        full_file_path = self._get_file_path(resource, filename)
         if 'w' in mode:
             # Create the containing directory if it doesn't exists.
             # This align DireRepo API with URL and fspec APIs
@@ -214,13 +214,13 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
         with open(content_filename, "wt", encoding="utf8") as outfile:
             yaml.dump(content, outfile)
 
-    def open_tabix_file(self, genomic_resource,  filename,
+    def open_tabix_file(self, resource,  filename,
                         index_filename=None):
-        file_path = str(self._get_file_path(genomic_resource, filename))
+        file_path = str(self._get_file_path(resource, filename))
         index_path = None
         if index_filename:
             index_path = str(self._get_file_path(
-                genomic_resource, index_filename))
+                resource, index_filename))
         return pysam.TabixFile(file_path, index=index_path)  # pylint: disable=no-member
 
     def compute_md5_sum(self, resource, filename):
@@ -228,8 +228,8 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
         filepath = self._get_file_path(resource, filename)
         with open(filepath, "rb") as infile:
             md5_hash = hashlib.md5()
-            while d := infile.read(8192):
-                md5_hash.update(d)
+            while chunk := infile.read(8192):
+                md5_hash.update(chunk)
         return md5_hash.hexdigest()
 
     def build_manifest(self, resource):
@@ -303,4 +303,3 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
             manifest = self.build_manifest(resource)
             logger.debug("manifest builded: %s", manifest)
             return manifest
-
