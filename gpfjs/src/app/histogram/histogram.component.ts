@@ -388,7 +388,7 @@ export class HistogramComponent implements OnInit, OnChanges {
   }
 
   public set selectedEndIndex(index: number) {
-    if (index < this.selectedStartIndex || index >= this.bars.length) {
+    if (index < this.selectedStartIndex || index >= this.bars.length - 1) {
       return;
     }
     this.rangeEnd = this.bins[index + 1];
