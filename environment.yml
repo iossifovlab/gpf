@@ -38,7 +38,6 @@ dependencies:
   - sqlite=3.36.0
   - django=4.0.4
   - django-cors-headers=3.7.0
-  - django-guardian=2.4.0
   - djangorestframework=3.12.4
   - openjdk=8.0.312
   - hadoop=3.1.2

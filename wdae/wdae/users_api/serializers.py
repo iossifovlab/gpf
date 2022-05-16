@@ -3,7 +3,6 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.db import transaction
 
-from .validators import ProtectedGroupsValidator
 from .validators import SomeSuperuserLeftValidator
 
 
@@ -27,7 +26,7 @@ class UserSerializer(serializers.ModelSerializer):
         child=CreatableSlugRelatedField(
             slug_field="name", queryset=Group.objects.all()
         ),
-        validators=[ProtectedGroupsValidator(), SomeSuperuserLeftValidator()],
+        validators=[SomeSuperuserLeftValidator()],
         default=[],
     )
 

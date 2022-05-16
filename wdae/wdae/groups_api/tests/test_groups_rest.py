@@ -1,12 +1,9 @@
 import json
 
 from django.db.models import Q
-from guardian.models import Group
-from guardian import shortcuts
+from django.contrib.auth.models import Group
 from rest_framework import status
 
-from guardian.shortcuts import assign_perm
-from guardian.shortcuts import get_perms
 from datasets_api.models import Dataset
 
 from utils.email_regex import email_regex

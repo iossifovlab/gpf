@@ -17,8 +17,6 @@ from .serializers import GroupDatasetPermissionSerializer
 from datasets_api.models import Dataset
 from django.contrib.auth.models import Group
 from django.contrib.auth import get_user_model
-from guardian.shortcuts import assign_perm
-from guardian.shortcuts import remove_perm
 
 from utils.email_regex import email_regex
 
@@ -69,7 +67,7 @@ class GrantPermissionToGroupView(views.APIView):
         dataset = Dataset.objects.get(dataset_id=serializer.data["datasetId"])
         group = Group.objects.get(name=serializer.data["groupName"])
 
-        assign_perm("view", group, dataset)
+        dataset.groups.add(group)
 
         return Response(status=status.HTTP_200_OK)
 
@@ -89,7 +87,7 @@ class RevokePermissionToGroupView(views.APIView):
         if group.name in dataset.default_groups:
             return Response(status=status.HTTP_403_FORBIDDEN)
 
-        remove_perm("view", group, dataset)
+        dataset.groups.remove(group)
 
         return Response(status=status.HTTP_200_OK)
 
@@ -144,7 +142,7 @@ class GroupDatasetsManagementView(views.APIView):
         dataset = Dataset.objects.get(dataset_id=dataset_id)
         group = Group.objects.get(pk=group_id)
 
-        assign_perm("view", group, dataset)
+        dataset.groups.add(group)
 
         return Response(status=status.HTTP_200_OK)
 
@@ -162,6 +160,6 @@ class GroupDatasetsManagementView(views.APIView):
         if group.name in dataset.default_groups:
             return Response(status=status.HTTP_403_FORBIDDEN)
 
-        remove_perm("view", group, dataset)
+        dataset.groups.remove(group)
 
         return Response(status=status.HTTP_200_OK)

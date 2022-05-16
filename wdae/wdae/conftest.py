@@ -6,7 +6,7 @@ from box import Box  # type: ignore
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 
-from users_api.models import WdaeUser, get_anonymous_user_instance
+from users_api.models import WdaeUser
 
 from remote.rest_api_client import RESTClient
 

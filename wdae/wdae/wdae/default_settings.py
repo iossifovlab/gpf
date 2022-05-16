@@ -9,11 +9,6 @@ STUDIES_EAGER_LOADING = False
 
 OPEN_REGISTRATION = True
 
-GUARDIAN_GET_INIT_ANONYMOUS_USER = (
-    "users_api.models.get_anonymous_user_instance"
-)
-ANONYMOUS_USER_NAME = "anonymous@seqpipe.org"
-
 SITE_URL = "localhost"
 
 BASE_DIR = os.path.dirname(__file__)
@@ -24,7 +19,6 @@ ADMINS = (
 
 AUTHENTICATION_BACKENDS = (
     "django.contrib.auth.backends.ModelBackend",  # default
-    "guardian.backends.ObjectPermissionBackend",
 )
 
 MANAGERS = ADMINS
@@ -156,7 +150,6 @@ PROJECT_ROOT = os.path.abspath(
     os.path.dirname(os.path.dirname(__file__)))
 
 INSTALLED_APPS = [
-    "guardian",
     "django.contrib.admin",
     "django.contrib.messages",
     "django.contrib.auth",

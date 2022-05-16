@@ -2,7 +2,6 @@ from builtins import object
 from rest_framework import serializers
 from django.contrib.auth.models import Group
 from django.contrib.auth import get_user_model
-from guardian import shortcuts
 from datasets_api.models import Dataset
 from users_api.serializers import CreatableSlugRelatedField
 
@@ -47,10 +46,7 @@ class GroupRetrieveSerializer(GroupSerializer):
         fields = ("id", "name", "users", "datasets")
 
     def get_datasets(self, group):
-        datasets = shortcuts.get_objects_for_group(
-            group, "view", klass=Dataset
-        )
-        return [d.dataset_id for d in datasets]
+        return [d.dataset_id for d in group.dataset_set.all()]
 
 
 class PermissionChangeSerializer(serializers.Serializer):

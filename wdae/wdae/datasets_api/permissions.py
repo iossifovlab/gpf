@@ -6,12 +6,7 @@ from gpf_instance.gpf_instance import get_gpf_instance
 from .models import Dataset
 from utils.datasets import find_dataset_id_in_request
 from dae.studies.study import GenotypeData
-
-from django.contrib.auth.models import Group
 from django.utils.encoding import force_str
-
-from guardian.shortcuts import get_groups_with_perms
-from guardian.shortcuts import assign_perm
 
 
 logger = logging.getLogger(__name__)
@@ -114,9 +109,6 @@ def _user_has_permission_strict(user, dataset):
     if user.is_superuser or user.is_staff:
         return True
 
-    # if get_anonymous_user().has_perm("datasets_api.view", dataset):
-    #     return True
-
     user_groups = get_user_groups(user)
     if "admin" in user_groups:
         return True
@@ -125,10 +117,7 @@ def _user_has_permission_strict(user, dataset):
     if 'any_user' in dataset_groups:
         return True
 
-    if not bool(user_groups & dataset_groups):
-        return False
-
-    return user.has_perm("datasets_api.view", dataset)
+    return bool(user_groups & dataset_groups)
 
 
 def _user_has_permission_up(user, dataset):
@@ -235,27 +224,12 @@ def get_directly_allowed_genotype_data(user):
     )
 
 
-def add_group_perm_to_user(group_name, user):
-    group, _created = Group.objects.get_or_create(name=group_name)
-
-    user.groups.add(group)
-    user.save()
-
-
-def add_group_perm_to_dataset(group_name, dataset_id):
-    dataset, _created = Dataset.objects.get_or_create(dataset_id=dataset_id)
-    group, _created = Group.objects.get_or_create(name=group_name)
-    assign_perm("view", group, dataset)
-
-
 def get_user_groups(user):
     return {g.name for g in user.groups.all()}
 
 
 def get_dataset_groups(dataset):
-    if not isinstance(dataset, Dataset):
-        dataset = Dataset.objects.get(dataset_id=force_str(dataset))
-    return {g.name for g in get_groups_with_perms(dataset)}
+    return {g.name for g in dataset.groups.all()}
 
 
 def handle_partial_permissions(user, dataset_id: str, request_data: dict):

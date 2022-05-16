@@ -2,7 +2,6 @@ import os
 
 from rest_framework.response import Response  # type: ignore
 from rest_framework import status  # type: ignore
-from guardian.shortcuts import get_groups_with_perms  # type: ignore
 
 from query_base.query_base import QueryBaseView
 from studies.study_wrapper import StudyWrapperBase
@@ -17,18 +16,14 @@ class DatasetView(QueryBaseView):
 
     def augment_accessibility(self, dataset, user):
         dataset_object = Dataset.objects.get(dataset_id=dataset["id"])
-
-        dataset["access_rights"] = user_has_permission(
-            user, dataset_object)
-
+        dataset["access_rights"] = user_has_permission(user, dataset_object)
         return dataset
 
     def augment_with_groups(self, dataset):
         dataset_object = Dataset.objects.get(dataset_id=dataset["id"])
-        groups = get_groups_with_perms(dataset_object)
+        groups = dataset_object.groups.all()
         serializer = GroupSerializer(groups, many=True)
         dataset["groups"] = serializer.data
-
         return dataset
 
     def augment_with_parents(self, dataset):
