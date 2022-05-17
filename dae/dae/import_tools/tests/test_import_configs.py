@@ -66,6 +66,20 @@ def test_row_group_size():
         import_tools.Bucket("vcf", "", "", 0)) == 20_000
 
 
+def test_row_group_size_short_config():
+    import_config = dict(
+        input=dict(),
+        processing_config=dict(
+            work_dir="",
+            denovo="single_bucket",
+        ),
+    )
+    project = import_tools.ImportProject.build_from_config(import_config)
+    # 20_000 is the default value
+    assert project.get_row_group_size(
+        import_tools.Bucket("denovo", "", "", 0)) == 20_000
+
+
 # Uncomment when https://github.com/pyeve/cerberus/issues/585 is fixed
 # def test_shorthand_for_large_integers():
 #     config = dict(

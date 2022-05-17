@@ -1,3 +1,4 @@
+from abc import abstractmethod
 import argparse
 from copy import deepcopy
 from dataclasses import dataclass
@@ -11,8 +12,8 @@ from dae.backends.raw.loader import AnnotationPipelineDecorator,\
     EffectAnnotationDecorator, VariantsLoader
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.gpf_instance.gpf_instance import GPFInstance
-from dae.import_tools.impala_schema1 import ImpalaSchema1ImportStorage
-from dae.import_tools.task_graph import DaskExecutor, SequentialExecutor
+from dae.import_tools.task_graph import DaskExecutor, SequentialExecutor,\
+    TaskGraph
 from dae.pedigrees.family import FamiliesData
 from dae.configuration.schemas.import_config import import_config_schema
 from dae.pedigrees.loader import FamiliesLoader
@@ -141,6 +142,8 @@ class ImportProject():
             return self._gpf_instance
 
     def get_storage(self):
+        from dae.import_tools.impala_schema1 import ImpalaSchema1ImportStorage
+
         return ImpalaSchema1ImportStorage(self)
 
     @property
@@ -164,8 +167,10 @@ class ImportProject():
         return "destination" in self.import_config
 
     def get_row_group_size(self, bucket):
-        return self.import_config.get("processing_config", {})\
-            .get(bucket.type, {}).get("row_group_size", 20_000)
+        processing_config = self._get_loader_processing_config(bucket.type)
+        if isinstance(processing_config, dict):
+            return processing_config.get("row_group_size", 20_000)
+        return 20_000
 
     def build_variants_loader_pipeline(self, variants_loader, gpf_instance):
         effect_annotator = construct_import_effect_annotator(gpf_instance)
@@ -275,6 +280,15 @@ class ImportProject():
             else:
                 res.append(chr)
         return res
+
+
+class AbstractImportStorage:
+    def __init__(self, project):
+        pass
+
+    @abstractmethod
+    def generate_import_task_graph(self) -> TaskGraph:
+        pass
 
 
 def main():

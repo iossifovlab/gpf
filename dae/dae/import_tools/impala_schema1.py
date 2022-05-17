@@ -1,6 +1,7 @@
 import logging
 import os
 from dae.backends.impala.parquet_io import ParquetManager
+from dae.import_tools.import_tools import AbstractImportStorage
 from dae.import_tools.task_graph import TaskGraph
 from dae.utils import fs_utils
 import toml
@@ -48,8 +49,9 @@ class Schema1ParquetWriter:
         ParquetManager.families_to_parquet(families, output_filename)
 
 
-class ImpalaSchema1ImportStorage:
+class ImpalaSchema1ImportStorage(AbstractImportStorage):
     def __init__(self, project):
+        super().__init__(project)
         self.project = project
 
     @staticmethod

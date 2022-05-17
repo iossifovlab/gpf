@@ -1,0 +1,3 @@
+defaul value for buckets is single_bucket
+Input directory should be directory containing the import configuration file. If the input configuration is in a external file than input dir is relative to the external file.
+
