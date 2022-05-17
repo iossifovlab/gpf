@@ -66,24 +66,24 @@ class CachingDirectoryRepo(GenomicResourceDirRepo):
             cached, resource, resource_config_entry)
         self.save_manifest(cached, manifest)
 
-    def _copy_or_update_remote_file(
-            self, genomic_resource: GenomicResource, filename: str):
+    def _copy_or_update_local_file(
+            self, local_resource: GenomicResource, filename: str):
         remote_resource = self.remote_repo.get_resource(
-            genomic_resource.resource_id)
+            local_resource.resource_id)
         if remote_resource is None:
             raise ValueError(
-                f"remote resource {genomic_resource.resource_id} missing")
+                f"remote resource {local_resource.resource_id} missing")
         remote_manifest = remote_resource.get_manifest()
         if filename not in remote_manifest:
             raise FileNotFoundError(
-                f"remote resource {genomic_resource.resource_id} missing file: "
+                f"remote resource {local_resource.resource_id} missing file: "
                 f"{filename}")
 
         file_remote_entry = remote_manifest[filename]
         self._copy_manifest_entry(
-            genomic_resource, remote_resource, file_remote_entry)
+            local_resource, remote_resource, file_remote_entry)
 
-        full_file_path = self._get_file_path(genomic_resource, filename)
+        full_file_path = self._get_file_path(local_resource, filename)
         assert full_file_path.exists()
 
         return full_file_path
@@ -93,7 +93,7 @@ class CachingDirectoryRepo(GenomicResourceDirRepo):
             mode="rt", uncompress=False, seekable=False):
 
         if "w" not in mode:
-            self._copy_or_update_remote_file(resource, filename)
+            self._copy_or_update_local_file(resource, filename)
 
         return super().open_raw_file(
             resource, filename, mode, uncompress, seekable)
@@ -101,12 +101,12 @@ class CachingDirectoryRepo(GenomicResourceDirRepo):
     def open_tabix_file(self, resource,  filename,
                         index_filename=None):
 
-        full_file_path = self._copy_or_update_remote_file(
+        full_file_path = self._copy_or_update_local_file(
             resource, filename)
 
         if not index_filename:
             index_filename = f"{filename}.tbi"
-        full_index_path = self._copy_or_update_remote_file(
+        full_index_path = self._copy_or_update_local_file(
             resource, index_filename)
 
         return pysam.TabixFile(full_file_path, index=full_index_path)  # pylint: disable=no-member
@@ -196,17 +196,15 @@ class GenomicResourceCachedRepo(GenomicResourceRepo):
     def get_resource(self, resource_id, version_constraint=None,
                      genomic_repository_id=None) -> Optional[GenomicResource]:
 
-        gr_child = self.child.get_resource(
+        remote_resource = self.child.get_resource(
             resource_id, version_constraint, genomic_repository_id)
 
-        if not gr_child:
+        if not remote_resource:
             return None
 
-        cached_repo = self._get_or_create_cache_dir_repo(gr_child.repo)
-
-        exact_version_constraint = f"={gr_child.get_version_str()}"
-        return cached_repo.get_resource(
-            resource_id, exact_version_constraint)
+        cached_repo = self._get_or_create_cache_dir_repo(remote_resource.repo)
+        version_constraint = f"={remote_resource.get_version_str()}"
+        return cached_repo.get_resource(resource_id, version_constraint)
 
     def cache_resources(
         self, workers=4,

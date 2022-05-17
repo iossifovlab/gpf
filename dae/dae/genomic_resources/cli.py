@@ -271,7 +271,8 @@ def cli_cache_repo(argv=None):
         config = GPFConfigParser.load_config(args.instance, dae_conf_schema)
         resources.add(config.reference_genome.resource_id)
         resources.add(config.gene_models.resource_id)
-        annotation = config.annotation.conf_file
+        if config.annotation is not None:
+            annotation = config.annotation.conf_file
     elif args.annotation is not None:
         annotation = args.annotation
 

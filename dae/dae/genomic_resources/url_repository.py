@@ -64,15 +64,14 @@ class GenomicResourceURLRepo(GenomicResourceRealRepo):
             resource.get_genomic_resource_id_version() + \
             "/" + filename
 
-    def open_raw_file(self, resource: GenomicResource,
-                      filename, mode=None,
-                      uncompress=False,
-                      seekable=False):
+    def open_raw_file(
+            self, resource: GenomicResource, filename,
+            mode=None, uncompress=False, seekable=False):
 
         mode = mode if mode else "rt"
 
         file_url = self._get_file_url(resource, filename)
-        logger.debug("opening url resource: %s", file_url)
+        logger.debug("opening url raw file: %s", file_url)
 
         if self.scheme in ["http", "https"] and not seekable:
             binary_stream = urlopen(file_url)
