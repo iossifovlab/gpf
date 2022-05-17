@@ -185,8 +185,9 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
                     remote_resource.resource_id, remote_manifest_entry.name)
                 logger.error(
                     "skipping resource: %s", remote_resource.resource_id)
-                self.refresh()
-                return
+                raise IOError(
+                    f"unable to copy a ({remote_resource.resource_id}) "
+                    f"manifest entry: {remote_manifest_entry.name}")
 
             assert local_manifest_entry == remote_manifest_entry
 

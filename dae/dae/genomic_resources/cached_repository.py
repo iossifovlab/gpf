@@ -6,7 +6,6 @@ import logging
 from typing import Optional, Dict
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-import yaml
 import pysam
 
 from .repository import GenomicResource, GR_CONF_FILE_NAME
@@ -42,12 +41,6 @@ class CachingDirectoryRepo(GenomicResourceDirRepo):
 
         return super().get_resource(
             resource_id, version_constraint, genomic_repository_id)
-
-    def load_yaml(self, genomic_resource, filename):
-        full_file_path = self._get_file_path(genomic_resource, filename)
-        with open(full_file_path, "rt", encoding="utf8") as infile:
-            content = infile.read()
-            return yaml.safe_load(content)
 
     def _refresh_cached_genomic_resource(
             self, cached_resource: GenomicResource,
@@ -157,9 +150,7 @@ class CachingDirectoryRepo(GenomicResourceDirRepo):
 
         for dest_file, src_file in manifest_diff.values():
 
-            if dest_file is None:
-                continue
-            elif dest_file and src_file is None:
+            if dest_file and src_file is None:
                 # delete dest_file
                 self._delete_manifest_entry(
                     dest_gr, dest_file)
@@ -216,11 +207,6 @@ class GenomicResourceCachedRepo(GenomicResourceRepo):
         exact_version_constraint = f"={gr_child.get_version_str()}"
         return cached_repo.get_resource(
             resource_id, exact_version_constraint)
-
-    def load_yaml(self, genomic_resource, filename):
-        cached_repo = self._get_or_create_cache_dir_repo(
-            genomic_resource.repo)
-        return cached_repo.load_yaml(genomic_resource, filename)
 
     def cache_resources(
         self, workers=4,
