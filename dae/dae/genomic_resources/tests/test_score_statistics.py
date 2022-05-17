@@ -272,7 +272,8 @@ def test_histogram_builder_save(tmpdir, client):
         with open(os.path.join(tmpdir, fn), 'wt') as f:
             f.write(content)
 
-    res = GenomicResourceDirRepo("", tmpdir).get_resource("")
+    repo = GenomicResourceDirRepo("", tmpdir)
+    res = repo.get_resource("")
     hbuilder = HistogramBuilder(res)
     hists = hbuilder.build(client)
     hbuilder.save(hists, "")
@@ -282,7 +283,7 @@ def test_histogram_builder_save(tmpdir, client):
     assert len(files) == 9
 
     # assert the manifest file is updated
-    manifest = res.load_manifest()
+    manifest = repo.load_manifest(res)
     for score_id in ['phastCons5way', 'phastCons100way']:
         assert f'{score_id}.csv' in manifest
         assert f'{score_id}.metadata.yaml' in manifest
@@ -350,7 +351,7 @@ def test_load_histograms(tmpdir, client):
     repo_dir = os.path.join(tmpdir, "repo")
     os.makedirs(repo_dir)
     for fn, content in position_score_test_config.items():
-        with open(os.path.join(repo_dir, fn), 'wt') as f:
+        with open(os.path.join(repo_dir, fn), 'wt', encoding="utf8") as f:
             f.write(content)
 
     repo = GenomicResourceDirRepo("", repo_dir)

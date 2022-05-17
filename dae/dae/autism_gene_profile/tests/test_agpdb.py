@@ -44,30 +44,30 @@ def test_agpdb_insert_and_get_agp(
     agpdb.insert_agp(sample_agp)
     agp = agpdb.get_agp("CHD8")
     assert agp.gene_sets == [
-        'main_CHD8 target genes'
+        "main_CHD8 target genes"
     ]
 
     assert agp.genomic_scores["autism_scores"] == {
-        'SFARI_gene_score': {'value': 1.0, 'format': '%s'},
-        'RVIS_rank': {'value': 193.0, 'format': '%s'},
-        'RVIS': {'value': -2.34, 'format': '%s'}
+        "SFARI_gene_score": {"value": 1.0, "format": "%s"},
+        "RVIS_rank": {"value": 193.0, "format": "%s"},
+        "RVIS": {"value": -2.34, "format": "%s"}
     }
 
     assert agp.genomic_scores["protection_scores"] == {
-        'SFARI_gene_score': {'value': 1.0, 'format': '%s'},
-        'RVIS_rank': {'value': 193.0, 'format': '%s'},
-        'RVIS': {'value': -2.34, 'format': '%s'}
+        "SFARI_gene_score": {"value": 1.0, "format": "%s"},
+        "RVIS_rank": {"value": 193.0, "format": "%s"},
+        "RVIS": {"value": -2.34, "format": "%s"}
     }
 
     assert agp.variant_counts == {
-        'iossifov_we2014_test': {
-            'unknown': {
-                'denovo_noncoding': {"count": 53, "rate": 1},
-                'denovo_missense': {"count": 21, "rate": 2}
+        "iossifov_we2014_test": {
+            "unknown": {
+                "denovo_noncoding": {"count": 53, "rate": 1},
+                "denovo_missense": {"count": 21, "rate": 2}
             },
-            'unaffected': {
-                'denovo_noncoding': {"count": 43, "rate": 3},
-                'denovo_missense': {"count": 51, "rate": 4}
+            "unaffected": {
+                "denovo_noncoding": {"count": 43, "rate": 3},
+                "denovo_missense": {"count": 51, "rate": 4}
             },
         }
     }

@@ -44,13 +44,14 @@ def test_dir_repository(tmp_path):
 
     assert dir_manifest == src_manifest
 
-    dirname = pathlib.Path(dir_repo.get_genomic_resource_dir(dir_resource))
+    dirname = pathlib.Path(
+        dir_repo._get_genomic_resource_dir(dir_resource))  # pylint: disable=protected-access
 
-    for filename, size, mod_time in dir_resource.get_files():
+    for filename, _size, _mod_time in dir_resource.get_files():
         path = dirname / filename
         path.touch()
 
-    dir_manifest = dir_resource.build_manifest()
+    dir_manifest = dir_repo.build_manifest(dir_resource)
 
     assert dir_manifest != src_manifest
 
@@ -83,12 +84,13 @@ def test_dir_repository_resource_update(tmp_path):
 
     assert gr1.get_manifest() == gr2.get_manifest()
 
-    dirname = pathlib.Path(dir_repo1.get_genomic_resource_dir(gr1))
-    for filename, size, mod_time in gr1.get_files():
+    dirname = pathlib.Path(
+        dir_repo1._get_genomic_resource_dir(gr1))  # pylint: disable=protected-access
+    for filename, _size, _mod_time in gr1.get_files():
         path = dirname / filename
         path.touch()
 
-    gr1.save_manifest(gr1.build_manifest())
+    dir_repo1.save_manifest(gr1, dir_repo1.build_manifest(gr1))
 
     assert gr1.get_manifest() != gr2.get_manifest()
 

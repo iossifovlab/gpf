@@ -26,9 +26,7 @@ ATTRIBUTES_SCHEMA = {
 
 
 class Annotator(abc.ABC):
-    '''
-    Annotator provides a set of attrubutes for a given Annotatable.
-    '''
+    """Annotator provides a set of attrubutes for a given Annotatable."""
 
     class ConfigValidator(Validator):
 
@@ -47,8 +45,10 @@ class Annotator(abc.ABC):
     def __init__(self, config: dict):
         self.config = self.validate_config(config)
         self.input_annotatable = self.config.get("input_annotatable")
+        self._annotation_schema = None
 
-    @abc.abstractclassmethod
+    @classmethod
+    @abc.abstractmethod
     def validate_config(cls, config: Dict) -> Dict:
         """
         Normalizes and validates the annotation configuration.
@@ -110,7 +110,7 @@ class Annotator(abc.ABC):
 
     @abc.abstractmethod
     def annotator_type(self) -> str:
-        raise Exception("Should be overriden.!!")
+        """Returns annotator type."""
 
     @abc.abstractmethod
     def _do_annotate(
@@ -118,11 +118,10 @@ class Annotator(abc.ABC):
         """
         Internal abstract method used for annotation.
         """
-        pass
 
     @abc.abstractmethod
     def get_annotation_config(self) -> List[Dict]:
-        pass
+        """Returns annotation config."""
 
     def _empty_result(self) -> Dict[str, Any]:
         result: Dict[str, Any] = {}
@@ -141,22 +140,24 @@ class Annotator(abc.ABC):
                 raise ValueError(
                     f"can't find input annotatable {self.input_annotatable} "
                     f"in annotation context: {context}")
-            ao = context[self.input_annotatable]
+            override = context[self.input_annotatable]
             logger.debug(
-                f"input annotatable {self.input_annotatable} found {ao}.")
+                "input annotatable %s found %s.",
+                self.input_annotatable, override)
 
-            if ao is None:
+            if override is None:
                 logger.warning(
-                    f"can't find input annotatable {self.input_annotatable} "
-                    f"in annotation context: {context}")
+                    "can't find input annotatable %s "
+                    "in annotation context: %s",
+                    self.input_annotatable, context)
                 return self._empty_result()
 
-            if not isinstance(ao, Annotatable):
+            if not isinstance(override, Annotatable):
                 raise ValueError(
                     f"The object with a key {self.input_annotatable} in the "
                     f"annotation context {context} is not an Annotabable.")
 
-            annotatable = ao
+            annotatable = override
 
         attributes = self._do_annotate(annotatable, context)
         attributes_list = self.get_annotation_config()

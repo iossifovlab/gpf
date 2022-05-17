@@ -29,7 +29,7 @@ logger = logging.getLogger(__file__)
 class VerbosityConfiguration:
     @staticmethod
     def set_argumnets(parser: argparse.ArgumentParser) -> None:
-        parser.add_argument('--verbose', '-v', '-V', action='count', default=0)
+        parser.add_argument("--verbose", "-v", "-V", action="count", default=0)
 
     @staticmethod
     def set(args):
@@ -56,49 +56,49 @@ def cli_manage(cli_args=None):
 
     desc = "Genomic Resource Repository Management Tool"
     parser = argparse.ArgumentParser(description=desc)
-    subparsers = parser.add_subparsers(dest='command',
-                                       help='Command to execute')
+    subparsers = parser.add_subparsers(dest="command",
+                                       help="Command to execute")
 
-    parser_index = subparsers.add_parser('index', help='Index a GR Repo')
-    parser_index.add_argument('repo_dir', type=str,
-                              help='Path to the GR Repo to index')
-    parser_index.add_argument('--verbose', '-V', action='count', default=0)
+    parser_index = subparsers.add_parser("index", help="Index a GR Repo")
+    parser_index.add_argument("repo_dir", type=str,
+                              help="Path to the GR Repo to index")
+    parser_index.add_argument("--verbose", "-V", action="count", default=0)
 
-    parser_list = subparsers.add_parser('list', help='List a GR Repo')
-    parser_list.add_argument('repo_dir', type=str,
-                             help='Path to the GR Repo to list')
-    parser_list.add_argument('--verbose', '-V', action='count', default=0)
+    parser_list = subparsers.add_parser("list", help="List a GR Repo")
+    parser_list.add_argument("repo_dir", type=str,
+                             help="Path to the GR Repo to list")
+    parser_list.add_argument("--verbose", "-V", action="count", default=0)
 
-    parser_hist = subparsers.add_parser('histogram',
-                                        help='Build the histograms \
-                                        for a resource')
-    parser_hist.add_argument('repo_dir', type=str,
-                             help='Path to the GR Repo')
-    parser_hist.add_argument('resource', type=str,
-                             help='Resource to generate histograms for')
-    parser_hist.add_argument('--verbose', '-V', action='count', default=0)
-    parser_hist.add_argument('-j', '--jobs', type=int, default=None,
-                             help='Number of jobs to run in parallel. \
- Defaults to the number of processors on the machine')
+    parser_hist = subparsers.add_parser("histogram",
+                                        help="Build the histograms \
+                                        for a resource")
+    parser_hist.add_argument("repo_dir", type=str,
+                             help="Path to the GR Repo")
+    parser_hist.add_argument("resource", type=str,
+                             help="Resource to generate histograms for")
+    parser_hist.add_argument("--verbose", "-V", action="count", default=0)
+    parser_hist.add_argument("-j", "--jobs", type=int, default=None,
+                             help="Number of jobs to run in parallel. \
+ Defaults to the number of processors on the machine")
     parser_hist.add_argument("--region-size", type=int, default=3000000,
                              help="Number of records to process in parallel")
-    parser_hist.add_argument('--kubernetes', default=False,
-                             action='store_true',
-                             help='Run computation in a kubernetes cluster')
-    parser_hist.add_argument('--envvars', nargs='*', default=[],
-                             help='Environment variables to pass to '
-                             'kubernetes workers')
-    parser_hist.add_argument('--container-image',
-                             default='registry.seqpipe.org/seqpipe-gpf:'
-                             'dask-for-hist-compute_fc69179-14',
-                             help='Docker image to use when submitting '
-                             'jobs to kubernetes')
-    parser_hist.add_argument('--image-pull-secrets', nargs='*',
-                             help='Secrets to use when pulling '
-                             'the docker image')
-    parser_hist.add_argument('-f', '--force', default=False,
-                             action='store_true', help='Ignore histogram '
-                             'hashes and always precompute all histograms')
+    parser_hist.add_argument("--kubernetes", default=False,
+                             action="store_true",
+                             help="Run computation in a kubernetes cluster")
+    parser_hist.add_argument("--envvars", nargs="*", default=[],
+                             help="Environment variables to pass to "
+                             "kubernetes workers")
+    parser_hist.add_argument("--container-image",
+                             default="registry.seqpipe.org/seqpipe-gpf:"
+                             "dask-for-hist-compute_fc69179-14",
+                             help="Docker image to use when submitting "
+                             "jobs to kubernetes")
+    parser_hist.add_argument("--image-pull-secrets", nargs="*",
+                             help="Secrets to use when pulling "
+                             "the docker image")
+    parser_hist.add_argument("-f", "--force", default=False,
+                             action="store_true", help="Ignore histogram "
+                             "hashes and always precompute all histograms")
     parser_hist.add_argument("--sge", default=False,
                              action="store_true",
                              help="Run computation on a Sun Grid Engine \
@@ -124,8 +124,8 @@ the number of workers using -j")
     repo = _create_repo(repo_dir)
 
     if cmd == "index":
-        for gr in repo.get_all_resources():
-            gr.update_manifest()
+        for res in repo.get_all_resources():
+            repo.update_manifest(res)
 
         repo.save_content_file()
 
@@ -150,8 +150,8 @@ the number of workers using -j")
             env = _get_env_vars(args.envvars)
             extra_pod_config = {}
             if args.image_pull_secrets:
-                extra_pod_config['imagePullSecrets'] = [
-                    {'name': name} for name in args.image_pull_secrets
+                extra_pod_config["imagePullSecrets"] = [
+                    {"name": name} for name in args.image_pull_secrets
                 ]
             pod_spec = make_pod_spec(image=args.container_image,
                                      extra_pod_config=extra_pod_config)
@@ -159,7 +159,8 @@ the number of workers using -j")
             cluster.scale(n_jobs)
         elif args.sge:
             try:
-                from dask_jobqueue import SGECluster  # type: ignore pylint: disable=import-outside-toplevel
+                #  pylint: disable=import-outside-toplevel
+                from dask_jobqueue import SGECluster  # type: ignore
             except ModuleNotFoundError:
                 logger.error("No dask-jobqueue found. Please install it using:"
                              " mamba install dask-jobqueue -c conda-forge")
@@ -174,7 +175,7 @@ the number of workers using -j")
                                  walltime="1500000",
                                  cores=1,
                                  processes=1,
-                                 memory='2GB',
+                                 memory="2GB",
                                  log_directory=args.log_dir or tmp_dir.name,
                                  local_directory=tmp_dir.name,
                                  **dashboard_config)
@@ -292,7 +293,7 @@ def cli_cache_repo(argv=None):
 
 def _create_repo(dr):
     repo_url = urlparse(dr)
-    if not repo_url.scheme or repo_url.scheme == 'file':
+    if not repo_url.scheme or repo_url.scheme == "file":
         dr = pathlib.Path(dr)
         repo = GenomicResourceDirRepo("", dr)
     else:
@@ -307,5 +308,5 @@ def _get_env_vars(var_names):
     return res
 
 
-if __name__ == '__main__':
-    cli_browse(sys.argv[1:])
+if __name__ == "__main__":
+    cli_browse()

@@ -90,9 +90,9 @@ def test_position_score_annotator_all_attributes(position_score_repo):
     assert len(attributes) == 3
 
     assert annotator.get_all_annotation_attributes() == [
-        {'desc': 'test values', 'name': 'test100way', 'type': 'float'},
-        {'desc': 'test score 1', 'name': 't1', 'type': 'float'},
-        {'desc': 'test score 2', 'name': 't2', 'type': 'float'},
+        {"desc": "test values", "name": "test100way", "type": "float"},
+        {"desc": "test score 1", "name": "t1", "type": "float"},
+        {"desc": "test score 2", "name": "t2", "type": "float"},
     ]
 
 

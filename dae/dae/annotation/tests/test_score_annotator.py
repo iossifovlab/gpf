@@ -99,9 +99,9 @@ def test_position_score_annotator_indels(
         "annotator_type": "position_score",
         "resource_id": "hg38/TESTphastCons100way",
         "attributes": [{
-            'source': 'phastCons100way',
-            'destination': 'phastCons100way',
-            'position_aggregator': "mean"
+            "source": "phastCons100way",
+            "destination": "phastCons100way",
+            "position_aggregator": "mean"
         }]
     }
     score = open_position_score_from_resource(resource)
@@ -147,12 +147,12 @@ def test_np_score_annotator_indels(
         "resource_id": "hg38/TESTCADD",
         "attributes": [
             {
-                'source': 'cadd_raw',
-                'destination': 'cadd_raw',
+                "source": "cadd_raw",
+                "destination": "cadd_raw",
             },
             {
-                'source': 'cadd_phred',
-                'destination': 'cadd_phred',
+                "source": "cadd_phred",
+                "destination": "cadd_phred",
             }
         ]
     }
