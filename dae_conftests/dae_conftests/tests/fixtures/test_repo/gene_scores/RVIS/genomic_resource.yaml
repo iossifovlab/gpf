@@ -1,8 +1,18 @@
 type: gene_score
-id: RVIS
-filename: RVIS.csv
-desc: RVIS
-histogram:
-  bins: 150
-  xscale: linear
-  yscale: log
+gene_scores:
+  - id: RVIS_rank
+    filename: RVIS.csv
+    desc: RVIS rank
+  - id: RVIS
+    filename: RVIS.csv
+    desc: RVIS
+
+histograms:
+  - score: RVIS_rank
+    bins: 150
+    xscale: linear
+    yscale: linear
+  - score: RVIS
+    bins: 150
+    xscale: linear
+    yscale: log
