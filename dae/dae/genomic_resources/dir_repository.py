@@ -130,6 +130,16 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
                     src_resource.resource_id, filename)
                 return manifest_entry
 
+            logger.warning(
+                "resource %s file %s already cached "
+                "but (size, timestamp) does not match: %s,%s != %s,%s",
+                src_resource.resource_id, filename,
+                dest_size, dest_timestamp,
+                manifest_entry.size, manifest_entry.time)
+
+        logger.debug(
+            "copying resource (%s) file: %s",
+            src_resource.resource_id, filename)
         with src_resource.open_raw_file(
                 filename, "rb",
                 uncompress=False) as infile, \
