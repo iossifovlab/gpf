@@ -12,7 +12,7 @@ from django.conf import settings
 from utils.logger import LOGGER
 from datasets_api.permissions import get_directly_allowed_genotype_data
 
-from .email import send_reset_email, send_verif_email, send_already_existing_email
+from .utils import send_reset_email, send_verif_email, send_already_existing_email
 
 
 class WdaeUser(AbstractBaseUser, PermissionsMixin):
