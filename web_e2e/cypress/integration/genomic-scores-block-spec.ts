@@ -27,7 +27,7 @@ describe('Genomic scores panel tests', () => {
     page.panel.should('not.exist');
   });
 
-  it.only('should enter filter data and check how it affects the histogram', () => {
+  it('should enter filter data and check how it affects the histogram', () => {
     page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
 
     page.addFilterButton.click();
