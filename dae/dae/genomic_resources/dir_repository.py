@@ -88,6 +88,10 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
         full_file_path = self._get_file_path(resource, filename)
         return full_file_path.exists()
 
+    def file_local(self, genomic_resource, filename):
+        """Check if a given file in a given resource can be accessed locally"""
+        return True
+
     def open_raw_file(self, resource: GenomicResource, filename: str,
                       mode="rt", uncompress=False, _seekable=False):
 

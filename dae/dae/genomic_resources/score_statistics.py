@@ -25,44 +25,33 @@ class Histogram:
     """Class to represent a histogram"""
 
     def __init__(
-        self, bins_count,
+        self, bins, bars, bins_count,
         x_min, x_max, x_scale, y_scale,
         x_min_log=None
     ):
+        self.bins = bins
+        self.bars = bars
+        self.bins_count = bins_count
         self.x_min = x_min
         self.x_max = x_max
         self.x_scale = x_scale
         self.y_scale = y_scale
         self.x_min_log = x_min_log
 
-        if self.x_scale == "linear":
-            self.bins = np.linspace(
-                self.x_min,
-                self.x_max,
-                bins_count + 1,
-            )
-        elif self.x_scale == "log":
-            assert x_min_log is not None
-            self.bins = np.array([
-                self.x_min,
-                * np.logspace(
-                    np.log10(self.x_min_log),
-                    np.log10(self.x_max),
-                    bins_count
-                )])
-        else:
+        if self.x_scale not in ("linear", "log"):
             raise ValueError(f"unexpected histogram xscale: {self.x_scale}")
 
         if self.y_scale not in ("linear", "log"):
             raise ValueError(f"unexpected yscale {self.y_scale}")
 
-        self.y_scale = y_scale
         self.bars = np.zeros(bins_count, dtype=np.int64)
 
     @staticmethod
     def from_config(conf: Dict[str, Any]) -> Histogram:
         """Constructs a histogram from configuration dict"""
         return Histogram(
+            None,
+            None,
             conf["bins"],
             conf["min"],
             conf["max"],
@@ -87,6 +76,8 @@ class Histogram:
     def from_dict(data: Dict[str, Any]) -> Histogram:
         """Creates a histogram from dict"""
         hist = Histogram(
+            data["bins"],
+            data["bars"],
             data["bins_count"],
             data["x_min"], data["x_max"],
             data["x_scale"], data["y_scale"]
@@ -121,26 +112,6 @@ class Histogram:
         result.bars += hist2.bars
 
         return result
-
-    def add_value(self, value):
-        """Adds value to the histogram"""
-        if value < self.x_min or value > self.x_max:
-            logger.warning(
-                "value %s out of range: [%s, %s]",
-                value, self.x_min, self.x_max)
-            return False
-        index = self.bins.searchsorted(value, side="right")
-        if index == 0:
-            logger.warning(
-                "(1) empty index %s for value %s",
-                index, value)
-            return False
-        if value == self.bins[-1]:
-            self.bars[-1] += 1
-            return True
-
-        self.bars[index - 1] += 1
-        return True
 
 
 class HistogramBuilder:
@@ -247,17 +218,62 @@ class HistogramBuilder:
             yield chrom, i, None
 
     def _do_hist(self, chrom, hist_configs, start, end):
-        histograms = {}
+        histograms = dict()
+        bins = dict()
+        bars = dict()
         for scr_id, config in hist_configs.items():
-            histograms[scr_id] = Histogram.from_config(config)
+            hist = Histogram.from_config(config)
+            histograms[scr_id] = hist
+
+            if hist.x_scale == "linear":
+                bins[scr_id] = np.linspace(
+                    hist.x_min,
+                    hist.x_max,
+                    hist.bins_count + 1,
+                )
+            elif hist.x_scale == "log":
+                assert hist.x_min_log is not None
+                bins[scr_id] = np.array([
+                    hist.x_min,
+                    * np.logspace(
+                        np.log10(hist.x_min_log),
+                        np.log10(hist.x_max),
+                        hist.bins_count
+                    )])
+            bars[scr_id] = np.zeros(hist.bins_count, dtype=np.int64)
+
         score_names = list(histograms.keys())
 
         score = open_score_from_resource(self.resource)
         for rec in score.fetch_region(chrom, start, end, score_names):
             for scr_id, value in rec.items():
                 hist = histograms[scr_id]
-                if value is not None:  # None designates missing values
-                    hist.add_value(value)
+                _bins = bins[scr_id]
+                _bars = bars[scr_id]
+
+                if value is None:  # None designates missing values
+                    continue
+
+                if value < self.x_min or value > self.x_max:
+                    logger.warning(
+                        "value %s out of range: [%s, %s]",
+                        value, self.x_min, self.x_max)
+                    continue
+                index = _bins.searchsorted(value, side='right')
+                if index == 0:
+                    logger.warning(
+                        "(1) empty index %s for value %s",
+                        index, value)
+                    continue
+                if value == _bins[-1]:
+                    _bars[-1] += 1
+                    continue
+
+                _bars[index - 1] += 1
+
+        for scr_id in hist_configs.keys():
+            hist[scr_id].bins = bins[scr_id].tolist()
+            hist[scr_id].bars = bars[scr_id].tolist()
 
         return histograms
 
@@ -343,8 +359,7 @@ class HistogramBuilder:
             bars = list(histogram.bars)
             bars.append(np.nan)
 
-            data = pd.DataFrame({"bars": bars,
-                               "bins": histogram.bins})
+            data = pd.DataFrame({'bars': bars, 'bins': histogram.bins})
             hist_file = os.path.join(out_dir, f"{score}.csv")
             with self.resource.open_raw_file(hist_file, "wt") as outfile:
                 data.to_csv(outfile, index=None)

@@ -92,12 +92,12 @@ def find_genomic_resource_files_helper(
     """
 
     if prev is None:
-        prev= []
+        prev = []
 
     for name, content in content_dict.items():
         if name[0] == ".":
             continue
-        nxt = prev+ [name]
+        nxt = prev + [name]
         if isinstance(content, dict):
             yield from find_genomic_resource_files_helper(
                 content, leaf_to_size_and_date, nxt)
@@ -160,6 +160,7 @@ def find_genomic_resources_helper(content_dict, parent_id=None):
 
     yield from _scan_content_dict_for_genomic_resources(
         content_dict, parent_id)
+
 
 @dataclass
 class ManifestEntry:
@@ -287,6 +288,12 @@ class GenomicResource:
         """
         return self.repo.file_exists(self, filename)
 
+    def file_local(self, filename):
+        """
+        Returns whether filename can be accessed locally in this resource
+        """
+        return self.repo.file_local(self, filename)
+
     def get_manifest(self) -> Manifest:
         """Loads resource manifest if it exists. Otherwise builds it."""
         if self._manifest is None:
@@ -396,6 +403,10 @@ class GenomicResourceRealRepo(GenomicResourceRepo):
     @abc.abstractmethod
     def file_exists(self, resource, filename) -> bool:
         """Check if given file exist in give resource"""
+
+    def file_local(self, genomic_resource, filename):
+        """Check if a given file in a given resource can be accessed locally"""
+        return False
 
     @abc.abstractmethod
     def open_raw_file(

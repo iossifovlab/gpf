@@ -88,6 +88,16 @@ class CachingDirectoryRepo(GenomicResourceDirRepo):
 
         return full_file_path
 
+    def file_local(self, genomic_resource, filename):
+        """
+        Check if a given file in a given resource can be accessed locally
+        If inaccessible, it caches the file from the remote repository
+        """
+        full_file_path = self._get_file_path(genomic_resource, filename)
+        if not full_file_path.exists():
+            self._copy_or_update_remote_file(genomic_resource, filename)
+        return True
+
     def open_raw_file(
             self, resource: GenomicResource, filename: str,
             mode="rt", uncompress=False, seekable=False):

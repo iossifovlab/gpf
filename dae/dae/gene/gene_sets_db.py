@@ -1,11 +1,9 @@
-import os
 import logging
 from sqlalchemy import create_engine  # type: ignore
 from sqlalchemy import MetaData, Table, Column, String
 from sqlalchemy.sql import insert
-from dae.file_cache.cache import ResourceFileCache
 
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Any
 
 from dae.gene.gene_term import read_ewa_set_file, read_gmt_file, \
     read_mapping_file
@@ -43,7 +41,7 @@ class GeneSet:
 
 
 class GeneSetCollection:
-    
+
     def __init__(
             self, collection_id: str, gene_sets: List[GeneSet],
             web_label: str = None, web_format_str: str = None):
@@ -61,7 +59,7 @@ class GeneSetCollection:
         assert self.collection_id, self.gene_sets
 
     @staticmethod
-    def from_resource(resource: GenomicResource):
+    def from_resource(resource: GenomicResource, config: dict[str, Any]):
         assert resource is not None
         gene_sets = list()
         config = resource.get_config()
@@ -99,18 +97,12 @@ class GeneSetCollection:
 
             gene_terms = read_ewa_set_file(files)
         elif collection_format == "sqlite":
-            dae_db_dir = os.environ.get("dae_db_dir")
-            cache_dir = os.path.join(dae_db_dir, "file_cache", "gene_sets")
-            resource_file_cache = ResourceFileCache(cache_dir)
             dbfile = config["dbfile"]
-            dbfile_cache = resource_file_cache.get_file_path_from_resource(
-                resource,
-                dbfile,
-                is_binary=True
-            )
+            assert resource.file_local(dbfile)
+            dbfile_path = resource.repo.get_file_path(resource, dbfile)
             return SqliteGeneSetCollectionDB(
                 collection_id,
-                dbfile_cache,
+                dbfile_path,
                 web_label,
                 web_format_str
             )

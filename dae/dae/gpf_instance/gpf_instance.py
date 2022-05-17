@@ -209,7 +209,11 @@ class GPFInstance:
                 if resource is None:
                     logger.error("can't find resource %s", gsc_id)
                     continue
-                gscs.append(GeneSetCollection.from_resource(resource))
+                conf = resource.get_config()
+                for section in conf["gene_sets"]:
+                    gscs.append(
+                        GeneSetCollection.from_resource(resource, section)
+                    )
 
             return GeneSetsDb(gscs)
 
