@@ -88,3 +88,37 @@ def test_row_group_size():
 #         == 300_000
 #     assert config["partition_description"]["region_bin"]["region_length"] \
 #         == 100_000_000
+
+
+def test_shorthand_autosomes():
+    config = dict(
+        id="test_import",
+        input=dict(),
+        processing_config=dict(
+            vcf=dict(
+                region_length=300,
+                chromosomes=["autosomes"],
+            )
+        ),
+        partition_description=dict(
+            region_bin=dict(
+                region_length=100,
+                chromosomes=["autosomesXY"]
+            )
+        )
+    )
+    project = import_tools.ImportProject.build_from_config(config)
+    loader_chromosomes = project._get_loader_target_chromosomes("vcf")
+    assert len(loader_chromosomes) == 22 * 2
+    for i in range(1, 23):
+        assert str(i) in loader_chromosomes
+        assert f"chr{i}" in loader_chromosomes
+
+    pd_chromosomes = project.get_partition_description(work_dir="").chromosomes
+    assert len(pd_chromosomes) == 22 * 2 + 4
+    for i in range(1, 23):
+        assert str(i) in pd_chromosomes
+        assert f"chr{i}" in pd_chromosomes
+    for i in ["X", "Y"]:
+        assert str(i) in pd_chromosomes
+        assert f"chr{i}" in pd_chromosomes

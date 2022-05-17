@@ -112,17 +112,20 @@ class ImportProject():
         return loader
 
     def get_partition_description(self, work_dir=None):
-        work_dir = work_dir or self.work_dir
+        work_dir = work_dir if work_dir is not None else self.work_dir
         if "partition_description" in self.import_config:
             partition_desc = self.import_config["partition_description"]
             chromosomes = partition_desc.get("region_bin", {})\
                 .get("chromosomes", None)
-            if isinstance(chromosomes, list):
-                # ParquetPartitionDescriptor expects a string
-                # that gets parsed internally
-                partition_desc = deepcopy(partition_desc)
-                partition_desc["region_bin"]["chromosomes"] = \
-                    ",".join(chromosomes)
+            assert isinstance(chromosomes, list)
+            chromosomes = self._expand_chromosomes(chromosomes)
+
+            # ParquetPartitionDescriptor expects a string
+            # that gets parsed internally
+            partition_desc = deepcopy(partition_desc)
+            partition_desc["region_bin"]["chromosomes"] = \
+                ",".join(chromosomes)
+
             return ParquetPartitionDescriptor.from_dict(
                 partition_desc,
                 work_dir
@@ -249,11 +252,29 @@ class ImportProject():
         processing_config = self._get_loader_processing_config(loader_type)
         if isinstance(processing_config, str):
             return None
-        return processing_config.get("chromosomes", None)
+        return self._expand_chromosomes(
+            processing_config.get("chromosomes", None))
 
     def _get_loader_processing_config(self, loader_type):
         return self.import_config.get("processing_config", {})\
             .get(loader_type, {})
+
+    def _expand_chromosomes(self, chromosomes):
+        if chromosomes is None:
+            return None
+        res = []
+        for chr in chromosomes:
+            if chr in {"autosomes", "autosomesXY"}:
+                for i in range(1, 23):
+                    res.append(f"{i}")
+                    res.append(f"chr{i}")
+                if chr == "autosomesXY":
+                    for i in ["X", "Y"]:
+                        res.append(f"{i}")
+                        res.append(f"chr{i}")
+            else:
+                res.append(chr)
+        return res
 
 
 def main():
