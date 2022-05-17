@@ -1,6 +1,6 @@
 import itertools
 from collections import OrderedDict
-from typing import Optional
+from typing import Optional, Any
 
 import numpy as np
 import pandas as pd
@@ -65,16 +65,16 @@ class GeneScore:
 
     @staticmethod
     def load_gene_score_from_resource(
-            resource: Optional[GenomicResource]):
+            resource: Optional[GenomicResource],
+            config: dict[str, Any], histogram_config: dict[str, Any]):
         assert resource is not None
         assert resource.get_type() == "gene_score", "Invalid resource type"
 
-        config = resource.get_config()
+        resource_config = resource.get_config()
         gene_score_id = config["id"]
         file = resource.open_raw_file(config["filename"])
-        histogram_config = config["histogram"]
         desc = config["desc"]
-        meta = getattr(config, "meta", None)
+        meta = getattr(resource_config, "meta", None)
         return GeneScore(gene_score_id, file, desc, histogram_config, meta)
 
     def values(self):
