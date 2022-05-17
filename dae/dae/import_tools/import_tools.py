@@ -185,10 +185,10 @@ class ImportProject():
 
     def _get_default_bucket_index(self, loader_type):
         return {
-            "denovo": 1,
-            "vcf": 1000,
-            "dae": 1000,
-            "cnv": 2
+            "denovo": 0,
+            "vcf": 1_000_000,
+            "dae": 2_000_000,
+            "cnv": 3_000_000
         }[loader_type]
 
     @staticmethod

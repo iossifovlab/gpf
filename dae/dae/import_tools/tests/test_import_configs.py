@@ -64,3 +64,27 @@ def test_row_group_size():
     # 20_000 is the default value
     assert project.get_row_group_size(
         import_tools.Bucket("vcf", "", "", 0)) == 20_000
+
+
+# Uncomment when https://github.com/pyeve/cerberus/issues/585 is fixed
+# def test_shorthand_for_large_integers():
+#     config = dict(
+#         id="test_import",
+#         input=dict(),
+#         processing_config=dict(
+#             denovo=dict(
+#                 region_length="300k"
+#             )
+#         ),
+#         # partition_description=dict(
+#         #     region_bin=dict(
+#         #         region_length="100M"
+#         #     )
+#         # )
+#     )
+#     project = import_tools.ImportProject.build_from_config(config)
+#     config = project.import_config
+#     assert config["processing_config"]["denovo"]["region_length"] \
+#         == 300_000
+#     assert config["partition_description"]["region_bin"]["region_length"] \
+#         == 100_000_000

@@ -14,8 +14,20 @@ def _to_list(obj):
     return obj
 
 
+def _int_shorthand(obj):
+    try:
+        unit_suffixes = {
+            "K": 1_000,
+            "M": 1_000_000,
+            "G": 1_000_000_000,
+        }
+        return int(obj[:-1]) * unit_suffixes[obj[-1].upper()]
+    except Exception:
+        return obj
+
+
 _region_chromosomes_schema = {
-    "region_length": {"type": "integer"},
+    "region_length": {"type": "integer", "coerce": _int_shorthand},
     "chromosomes": {
         "type": "list",
         "schema": {"type": "string"},
@@ -24,7 +36,7 @@ _region_chromosomes_schema = {
 }
 
 _loader_processing_params = {
-    "row_group_size": {"type": "integer"},
+    "row_group_size": {"type": "integer", "coerce": _int_shorthand},
     **_region_chromosomes_schema,
 }
 
@@ -75,12 +87,7 @@ import_config_schema = {
         "type": "dict",
         "schema": {
             "work_dir": {"type": "string"},
-            "vcf": {
-                "type": "dict",
-                "schema": {
-                    "region_length": {"type": "integer"}
-                }
-            },
+            "vcf": _loader_processing_schema,
             "denovo": _loader_processing_schema,
             "cnv": _loader_processing_schema,
             "dae": _loader_processing_schema,

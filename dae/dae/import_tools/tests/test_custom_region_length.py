@@ -36,17 +36,17 @@ def test_import_task_bin_size(gpf_instance_2019, tmpdir):
     parquet_files = sorted(os.listdir(out_dir))
     assert len(parquet_files) == 3
     assert parquet_files[0] == "variants_region_bin_1_0_frequency_bin_0_" \
-        "family_bin_1_bucket_index_1.parquet"
+        "family_bin_1_bucket_index_0.parquet"
     assert parquet_files[1] == "variants_region_bin_1_0_frequency_bin_0_" \
-        "family_bin_1_bucket_index_2.parquet"
+        "family_bin_1_bucket_index_1.parquet"
     assert parquet_files[2] == "variants_region_bin_1_0_frequency_bin_0_" \
-        "family_bin_1_bucket_index_4.parquet"
+        "family_bin_1_bucket_index_3.parquet"
 
-    _assert_variants(join(out_dir, parquet_files[0]), bucket_index=1,
+    _assert_variants(join(out_dir, parquet_files[0]), bucket_index=0,
                      positions=[123, 150, 30000000])
-    _assert_variants(join(out_dir, parquet_files[1]), bucket_index=2,
+    _assert_variants(join(out_dir, parquet_files[1]), bucket_index=1,
                      positions=[30000001, 40000000])
-    _assert_variants(join(out_dir, parquet_files[2]), bucket_index=4,
+    _assert_variants(join(out_dir, parquet_files[2]), bucket_index=3,
                      positions=[99999999])
 
     out_dir = join(
@@ -55,13 +55,13 @@ def test_import_task_bin_size(gpf_instance_2019, tmpdir):
     parquet_files = sorted(os.listdir(out_dir))
     assert len(parquet_files) == 2
     assert parquet_files[0] == "variants_region_bin_1_1_frequency_bin_0_" \
-        "family_bin_0_bucket_index_4.parquet"
+        "family_bin_0_bucket_index_3.parquet"
     assert parquet_files[1] == "variants_region_bin_1_1_frequency_bin_0_" \
-        "family_bin_0_bucket_index_5.parquet"
+        "family_bin_0_bucket_index_4.parquet"
 
-    _assert_variants(join(out_dir, parquet_files[0]), bucket_index=4,
+    _assert_variants(join(out_dir, parquet_files[0]), bucket_index=3,
                      positions=[120000000])
-    _assert_variants(join(out_dir, parquet_files[1]), bucket_index=5,
+    _assert_variants(join(out_dir, parquet_files[1]), bucket_index=4,
                      positions=[120000001])
 
     out_dir = join(
@@ -70,8 +70,8 @@ def test_import_task_bin_size(gpf_instance_2019, tmpdir):
     parquet_files = sorted(os.listdir(out_dir))
     assert len(parquet_files) == 1
     assert parquet_files[0] == "variants_region_bin_1_1_frequency_bin_0_" \
-        "family_bin_1_bucket_index_4.parquet"
-    _assert_variants(join(out_dir, parquet_files[0]), bucket_index=4,
+        "family_bin_1_bucket_index_3.parquet"
+    _assert_variants(join(out_dir, parquet_files[0]), bucket_index=3,
                      positions=[100000000])
 
 
@@ -151,7 +151,7 @@ def test_bucket_generation_chrom_mismatch(gpf_instance_short):
     )
     project = import_tools.ImportProject.build_from_config(
         import_config, gpf_instance=gpf_instance_short)
-    buckets = list(project._loader_region_bins({}, "denovo"))
+    buckets = list(project.get_import_variants_buckets())
     assert len(buckets) == 3
     for i in range(3):
         assert buckets[i].region_bin == f"other_{i}"
