@@ -75,6 +75,15 @@ import_config_schema = {
             "dae": _loader_processing_schema,
         },
     },
+    "parquet_row_group_size": {
+        "type": "dict",
+        "schema": {
+            "vcf": {"anyof_type": ["integer", "string"]},
+            "denovo": {"anyof_type": ["integer", "string"]},
+            "dae": {"anyof_type": ["integer", "string"]},
+            "cnv": {"anyof_type": ["integer", "string"]},
+        },
+    },
     "destination": {
         "type": "dict",
         "schema": {

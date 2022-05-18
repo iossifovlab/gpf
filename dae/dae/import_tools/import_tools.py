@@ -180,10 +180,8 @@ class ImportProject():
         return "destination" in self.import_config
 
     def get_row_group_size(self, bucket):
-        processing_config = self._get_loader_processing_config(bucket.type)
-        if isinstance(processing_config, dict):
-            return processing_config.get("row_group_size", 20_000)
-        return 20_000
+        return self.import_config.get("parquet_row_group_size", {})\
+            .get(bucket.type, 20_000)
 
     def build_variants_loader_pipeline(self, variants_loader, gpf_instance):
         effect_annotator = construct_import_effect_annotator(gpf_instance)
@@ -284,6 +282,11 @@ class ImportConfigNormalizer:
         config = deepcopy(import_config)
         self._map_for_key(config, "region_length", self._int_shorthand)
         self._map_for_key(config, "chromosomes", self._normalize_chrom_list)
+        if "parquet_row_group_size" in config:
+            group_size_config = config["parquet_row_group_size"]
+            for loader in ["vcf", "denovo", "dae", "cnv"]:
+                self._map_for_key(group_size_config, loader,
+                                  self._int_shorthand)
         return config
 
     @classmethod

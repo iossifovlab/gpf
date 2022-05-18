@@ -55,13 +55,18 @@ def test_row_group_size():
         processing_config=dict(
             work_dir="",
             denovo=dict(
-                row_group_size=10_000
             ),
         ),
+        parquet_row_group_size=dict(
+            denovo=10000,
+            dae="10k",
+        )
     )
     project = import_tools.ImportProject.build_from_config(import_config)
     assert project.get_row_group_size(
         import_tools.Bucket("denovo", "", "", 0)) == 10_000
+    assert project.get_row_group_size(
+        import_tools.Bucket("dae", "", "", 0)) == 10_000
     # 20_000 is the default value
     assert project.get_row_group_size(
         import_tools.Bucket("vcf", "", "", 0)) == 20_000
