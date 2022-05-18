@@ -22,7 +22,7 @@ def test_url_vs_dir_results(tmp_path):
     })
     dir_repo = GenomicResourceDirRepo('dir', directory=tmp_path)
     dir_repo.store_all_resources(src_repo)
-    dir_repo.save_content_file()
+    dir_repo.update_repository_content_file()
     url_repo = GenomicResourceURLRepo("url", url=test_repo_URL)
 
     def resource_set(repo):

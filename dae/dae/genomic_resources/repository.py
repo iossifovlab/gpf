@@ -208,6 +208,12 @@ class Manifest:
             result.entries[entry.name] = entry
         return result
 
+    def get_files(self):
+        return [
+            (entry.name, entry.size, entry.time)
+            for entry in self.entries.values()
+        ]
+
     def __getitem__(self, name):
         return self.entries[name]
 

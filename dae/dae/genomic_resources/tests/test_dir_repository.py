@@ -12,7 +12,7 @@ def test_dir_repository(tmp_path):
     src_repo = GenomicResourceEmbededRepo("src", content={
         "one": {
             GR_CONF_FILE_NAME: "",
-            "data.txt": "alabala"
+            "data.txt": "alabala"  # NOSONAR
         },
         "sub": {
             "two[1.0]": {
@@ -32,7 +32,7 @@ def test_dir_repository(tmp_path):
         }
 
     assert resource_set(src_repo) == resource_set(dir_repo)
-    assert isinstance(dir_repo.get_resource("sub/two"), GenomicResource)
+    assert isinstance(dir_repo.get_resource("sub/two"), GenomicResource)  # NOSONAR
     assert dir_repo.get_resource("sub/two").get_file_content("genes.txt") == \
         demo_gtf_content
 

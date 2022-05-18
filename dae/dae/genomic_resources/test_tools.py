@@ -26,7 +26,7 @@ def build_test_repos(pth, content):
 
     dir_repo = GenomicResourceDirRepo("dir", directory=dir_repo_path)
     dir_repo.store_resource(emb_repo.get_resource("one"))
-    dir_repo.save_content_file()
+    dir_repo.update_repository_content_file()
 
     embeded_cached_repo = GenomicResourceCachedRepo(
         emb_repo, emb_cache_path)

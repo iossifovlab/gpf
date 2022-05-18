@@ -30,11 +30,11 @@ class CachingDirectoryRepo(GenomicResourceDirRepo):
         if remote_resource is None:
             return None
 
-        resource = super().get_resource(
+        local_resource = super().get_resource(
             resource_id, version_constraint, genomic_repository_id)
-        if resource is not None:
+        if local_resource is not None:
             self._refresh_cached_genomic_resource(
-                resource, remote_resource)
+                local_resource, remote_resource)
         else:
             self._save_cached_resource(remote_resource)
         self.refresh()
@@ -45,8 +45,10 @@ class CachingDirectoryRepo(GenomicResourceDirRepo):
     def _refresh_cached_genomic_resource(
             self, cached_resource: GenomicResource,
             remote_resource: GenomicResource):
+
         mnfst_cache = cached_resource.get_manifest()
         mnfst_remote = remote_resource.get_manifest()
+
         if mnfst_cache == mnfst_remote:
             return
 

@@ -8,6 +8,8 @@ from typing import cast
 from urllib.parse import urlparse
 from dae.dask.client_factory import DaskClient
 
+from dae.__version__ import VERSION, RELEASE
+
 from dae.genomic_resources.dir_repository import GenomicResourceDirRepo
 from dae.genomic_resources.url_repository import GenomicResourceURLRepo
 from dae.genomic_resources.repository_factory import \
@@ -142,16 +144,71 @@ def _run_list_command(repo, _args):
 
 def _configure_index_subparser(subparsers):
     parser_index = subparsers.add_parser("index", help="Index a GR Repo")
-    parser_index.add_argument("repo_dir", type=str,
-                              help="Path to the GR Repo to index")
+    parser_index.add_argument(
+        "repo_dir", type=str,
+        help="Path to the GR Repo to index")
     VerbosityConfiguration.set_argumnets(parser_index)
+    parser_index.add_argument(
+        "-r", "--resource", type=str, default=None,
+        help="specifies a single resource ID to be indexed")
+    parser_index.add_argument(
+        "-n", "--dry-run",  default=False, action="store_true",
+        help="only checks if the manifest update is needed and reports")
 
 
-def _run_index_command(repo, _args):
-    for res in repo.get_all_resources():
-        repo.update_manifest(res)
+def _run_index_command(repo, args):
+    if args.resource is not None:
+        res = repo.get_resource(args.resource)
+        if res is None:
+            logger.error(
+                "resource %s not found in repository %s",
+                args.resource, repo.repo_id)
+            sys.exit(1)
+        resources = [res]
+    else:
+        resources = repo.get_all_resources()
 
-    repo.save_content_file()
+    if args.dry_run:
+        for res in resources:
+            repo.check_manifest_timestamps(res)
+        repo.check_repository_content_file()
+    else:
+        for res in resources:
+            repo.update_manifest(res)
+        repo.update_repository_content_file()
+
+
+def _configure_checkout_subparser(subparsers):
+    parser_index = subparsers.add_parser(
+        "checkout", help="checkout Manifest timestamps.")
+    parser_index.add_argument(
+        "repo_dir", type=str,
+        help="path to the genomic resources repository directory")
+    VerbosityConfiguration.set_argumnets(parser_index)
+    parser_index.add_argument(
+        "-r", "--resource", type=str, default=None,
+        help="specifies a single resource ID to process")
+    parser_index.add_argument(
+        "-n", "--dry-run",  default=False, action="store_true",
+        help="only checks if the manifest update is needed and reports")
+
+
+def _run_checkout_command(repo, **kwargs):
+    res_id = kwargs.get("resource")
+    if res_id is not None:
+        res = repo.get_resource(res_id)
+        if res is None:
+            logger.error(
+                "resource %s not found in repository %s",
+                res_id, repo.repo_id)
+            sys.exit(1)
+        resources = [res]
+    else:
+        resources = repo.get_all_resources()
+
+    for res in resources:
+        repo.checkout_manifest_timestamps(res, kwargs.get("dry_run"))
+    repo.check_repository_content_file()
 
 
 def cli_manage(cli_args=None):
@@ -161,15 +218,22 @@ def cli_manage(cli_args=None):
 
     desc = "Genomic Resource Repository Management Tool"
     parser = argparse.ArgumentParser(description=desc)
+    parser.add_argument(
+        "--version", action="store_true", default=False,
+        help="Prints GPF version and exists.")
     subparsers = parser.add_subparsers(dest="command",
                                        help="Command to execute")
-
 
     _configure_index_subparser(subparsers)
     _configure_list_subparser(subparsers)
     _configure_hist_subparser(subparsers)
+    _configure_checkout_subparser(subparsers)
 
     args = parser.parse_args(cli_args)
+    if args.version:
+        print(f"GPF version: {VERSION} ({RELEASE})")
+        sys.exit(0)
+
     VerbosityConfiguration.set(args)
     command, repo_dir = args.command, args.repo_dir
 
@@ -181,6 +245,8 @@ def cli_manage(cli_args=None):
         _run_list_command(repo, args)
     elif command == "histogram":
         _run_hist_command(repo, args)
+    elif command == "checkout":
+        _run_checkout_command(repo, **vars(args))
     else:
         logger.error(
             "Unknown command %s. The known commands are index, "

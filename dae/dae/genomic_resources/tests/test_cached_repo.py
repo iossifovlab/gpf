@@ -176,7 +176,7 @@ def test_cached_http_repository_resource_update_delete(
 
     dir_repo = GenomicResourceDirRepo('dir', directory=tmp_path / "t1")
     dir_repo.store_all_resources(src_repo)
-    dir_repo.save_content_file()
+    dir_repo.update_repository_content_file()
 
     http_server = http_server(dir_repo.directory)
     http_port = http_server.http_port
@@ -201,7 +201,7 @@ def test_cached_http_repository_resource_update_delete(
     assert any([f.name != "alabala.txt" for f in manifest])
 
     dir_repo.save_manifest(gr1, manifest)
-    dir_repo.save_content_file()
+    dir_repo.update_repository_content_file()
     content = dir_repo.build_repo_content()
 
     print(100*"=")
