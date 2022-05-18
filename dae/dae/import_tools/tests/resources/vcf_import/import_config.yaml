@@ -7,7 +7,7 @@ input:
   vcf:
     files:
       - multivcf_[vc].vcf.gz
-    chromosomes: 1;2;3
+    chromosomes: 1,2,3
 
 
 partition_description:

@@ -89,6 +89,11 @@ class ImportProject():
             reference_genome = self.get_gpf_instance().reference_genome
 
         loader_config = self.import_config["input"][loader_type]
+        if loader_type == "vcf" and "chromosomes" in loader_config:
+            # vcf loader expects chromosomes to be in a list separated by ;
+            loader_config = deepcopy(loader_config)
+            loader_config["chromosomes"] = ";".join(
+                loader_config["chromosomes"])
         variants_params = self._add_loader_prefix(loader_config,
                                                   loader_type + "_")
 
@@ -269,19 +274,16 @@ class ImportConfigNormalizer:
     def normalize(self, import_config):
         config = deepcopy(import_config)
         self._map_for_key(config, "region_length", self._int_shorthand)
-
-        # vcf/chromosomes property has a different syntax
-        self._map_for_key(config, "chromosomes", self._normalize_chrom_list,
-                          skip_keys={"vcf"})
+        self._map_for_key(config, "chromosomes", self._normalize_chrom_list)
         return config
 
     @classmethod
-    def _map_for_key(cls, config, key, func, skip_keys={}):
+    def _map_for_key(cls, config, key, func):
         for k, v in config.items():
             if k == key:
                 config[k] = func(v)
-            elif isinstance(v, dict) and k not in skip_keys:
-                cls._map_for_key(v, key, func, skip_keys)
+            elif isinstance(v, dict):
+                cls._map_for_key(v, key, func)
 
     @staticmethod
     def _int_shorthand(obj):
