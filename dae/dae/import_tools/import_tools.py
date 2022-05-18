@@ -2,6 +2,7 @@ from abc import abstractmethod
 import argparse
 from copy import deepcopy
 from dataclasses import dataclass
+import os
 import sys
 from dae.backends.cnv.loader import CNVLoader
 from dae.backends.dae.loader import DaeTransmittedLoader, DenovoLoader
@@ -32,27 +33,30 @@ class Bucket:
 
 
 class ImportProject():
-    def __init__(self, import_config, gpf_instance=None):
+    def __init__(self, import_config, base_input_dir, gpf_instance):
         self.import_config = import_config
         if "denovo" in import_config["input"]:
             len_files = len(import_config["input"]["denovo"]["files"])
             assert len_files == 1, "Support for multiple denovo files is NYI"
 
+        self._base_input_dir = base_input_dir
         self._gpf_instance = gpf_instance
 
     @staticmethod
-    def build_from_config(import_config, gpf_instance=None):
+    def build_from_config(import_config, base_input_dir="", gpf_instance=None):
         import_config = GPFConfigParser.validate_config(import_config,
                                                         import_config_schema)
         normalizer = ImportConfigNormalizer()
         import_config = normalizer.normalize(import_config)
-        return ImportProject(import_config, gpf_instance)
+        return ImportProject(import_config, base_input_dir, gpf_instance)
 
     @staticmethod
     def build_from_file(import_filename, gpf_instance=None):
+        base_input_dir = os.path.dirname(os.path.realpath(import_filename))
         import_config = GPFConfigParser.parse_and_interpolate_file(
             import_filename)
-        return ImportProject.build_from_config(import_config, gpf_instance)
+        return ImportProject.build_from_config(import_config, base_input_dir,
+                                               gpf_instance)
 
     def get_pedigree(self) -> FamiliesData:
         families_filename = self.import_config["input"]["pedigree"]["file"]
@@ -158,7 +162,10 @@ class ImportProject():
 
     @property
     def input_dir(self):
-        return self.import_config["input"].get("input_dir", "")
+        return os.path.join(
+            self._base_input_dir,
+            self.import_config["input"].get("input_dir", "")
+        )
 
     @property
     def study_id(self):
@@ -344,22 +351,25 @@ def main():
     DaskClient.add_arguments(parser)
     args = parser.parse_args()
 
-    import_config = GPFConfigParser.parse_and_interpolate_file(args.config)
-
     if args.jobs == 1:
         executor = SequentialExecutor()
-        run(import_config, executor)
+        run(args.config, executor)
     else:
         dask_client = DaskClient.from_arguments(args)
         if dask_client is None:
             sys.exit(1)
         with dask_client as client:
             executor = DaskExecutor(client)
-            run(import_config, executor)
+            run(args.config, executor)
 
 
-def run(import_config, executor=SequentialExecutor(), gpf_instance=None):
-    project = ImportProject.build_from_config(import_config, gpf_instance)
+def run(import_config_fn, executor=SequentialExecutor(), gpf_instance=None):
+    project = ImportProject.build_from_file(import_config_fn,
+                                            gpf_instance=gpf_instance)
+    run_with_project(project, executor)
+
+
+def run_with_project(project, executor=SequentialExecutor()):
     storage = project.get_storage()
     task_graph = storage.generate_import_task_graph()
     executor.execute(task_graph)

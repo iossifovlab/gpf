@@ -14,10 +14,11 @@ def test_import_task_bin_size(gpf_instance_2019, tmpdir):
     config_fn = join(input_dir, "import_config.yaml")
 
     import_config = GPFConfigParser.parse_and_interpolate_file(config_fn)
-    import_config["input"]["input_dir"] = input_dir
     import_config["processing_config"]["work_dir"] = str(tmpdir)
 
-    import_tools.run(import_config, gpf_instance=gpf_instance_2019)
+    project = import_tools.ImportProject.build_from_config(
+        import_config, input_dir, gpf_instance=gpf_instance_2019)
+    import_tools.run_with_project(project)
 
     files = os.listdir(tmpdir)
     assert "test_import_variants" in files

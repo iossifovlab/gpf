@@ -14,12 +14,13 @@ def test_simple_import_config(tmpdir, gpf_instance_2019, config_dir):
     config_fn = os.path.join(input_dir, "import_config.yaml")
 
     import_config = GPFConfigParser.parse_and_interpolate_file(config_fn)
-    import_config["input"]["input_dir"] = input_dir
     import_config["processing_config"] = {
         "work_dir": str(tmpdir),
     }
 
-    import_tools.run(import_config, gpf_instance=gpf_instance_2019)
+    project = import_tools.ImportProject.build_from_config(
+        import_config, input_dir, gpf_instance=gpf_instance_2019)
+    import_tools.run_with_project(project)
 
     files = os.listdir(tmpdir)
     assert len(files) != 0
@@ -43,7 +44,7 @@ def test_add_chrom_prefix():
     import_config = GPFConfigParser.parse_and_interpolate_file(config_fn)
     import_config["input"]["input_dir"] = input_dir
 
-    project = import_tools.ImportProject(import_config)
+    project = import_tools.ImportProject.build_from_config(import_config)
     loader = project._get_variant_loader("vcf")
     assert loader._chrom_prefix == "chr"
 
@@ -160,3 +161,24 @@ def test_shorthand_chromosomes():
     chroms = config["partition_description"]["region_bin"]["chromosomes"]
     assert len(chroms) == 2*22 + 1
     assert chroms[-1] == "X"
+
+
+def test_project_input_dir_default_value():
+    config = dict(
+        id="test_import",
+        input=dict(),
+    )
+    project = import_tools.ImportProject.build_from_config(config, "")
+    assert project.input_dir == ""
+
+
+@pytest.mark.parametrize("input_dir", ["/input-dir", "input-dir"])
+def test_project_input_dir(input_dir):
+    config = dict(
+        id="test_import",
+        input=dict(
+            input_dir=input_dir
+        ),
+    )
+    project = import_tools.ImportProject.build_from_config(config, "/dir")
+    assert project.input_dir == os.path.join("/dir", input_dir)
