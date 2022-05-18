@@ -29,16 +29,7 @@ class WdaeUserManager(BaseUserManager):
 
         user = self.model(email=email, **kwargs)
         user.set_password(password)
-
         user.save(using=self._db)
-
-        groups = list(user.DEFAULT_GROUPS_FOR_USER)
-        groups.append(email)
-
-        for group_name in groups:
-            group, _ = Group.objects.get_or_create(name=group_name)
-            group.user_set.add(user)
-            group.save()
 
         return user
 
