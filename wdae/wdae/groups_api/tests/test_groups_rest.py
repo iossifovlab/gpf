@@ -72,8 +72,8 @@ def test_single_group_has_users_and_datasets(admin_client):
         assert "datasets" in response.data
 
 
-def test_admin_cant_delete_groups(admin_client, groups_model):
-    all_groups = groups_model.objects.filter(~Q(name__iregex=email_regex))
+def test_admin_cant_delete_groups(admin_client):
+    all_groups = Group.objects.filter(~Q(name__iregex=email_regex))
     assert len(all_groups) > 0
 
     for group in all_groups:
@@ -174,7 +174,7 @@ def test_empty_group_with_permissions_is_shown(admin_client, dataset):
     groups_count = Group.objects.filter(~Q(name__iregex=email_regex)).count()
     group = Group.objects.create(name="New Group")
 
-    shortcuts.assign_perm("view", group, dataset)
+    dataset.groups.add(group)
 
     url = "/api/v3/groups"
     response = admin_client.get(url)
@@ -200,7 +200,7 @@ def test_group_has_all_datasets(admin_client, group_with_user, dataset):
     assert response.status_code is status.HTTP_200_OK
     assert len(response.data["datasets"]) == 0
 
-    shortcuts.assign_perm("view", group, dataset)
+    dataset.groups.add(group)
 
     url = "/api/v3/groups/{}".format(group.id)
     response = admin_client.get(url)
@@ -293,7 +293,7 @@ def test_revoke_permission_for_group(admin_client, group_with_user, dataset):
     group, user = group_with_user
     data = {"datasetId": dataset.dataset_id, "groupId": group.id}
 
-    assign_perm("view", group, dataset)
+    dataset.groups.add(group)
 
     assert user.has_perm("view", dataset)
 
@@ -311,7 +311,7 @@ def test_not_admin_cant_revoke_permissions(
 ):
     group, user = group_with_user
     data = {"datasetId": dataset.dataset_id, "groupId": group.id}
-    assign_perm("view", group, dataset)
+    dataset.groups.add(group)
 
     assert user.has_perm("view", dataset)
 
@@ -343,7 +343,7 @@ def test_cant_revoke_default_permissions(user_client, dataset):
         )
 
         assert response.status_code == status.HTTP_403_FORBIDDEN
-        assert "view" in get_perms(group, dataset)
+        assert dataset.groups.filter(id=group.id).exists()
 
 
 def test_admin_can_assign_group_to_dataset(
@@ -365,7 +365,7 @@ def test_admin_can_revoke_dataset_access_from_group(
 ):
     group, user = group_with_user
 
-    assign_perm("view", group, dataset)
+    dataset.groups.add(group)
 
     assert user.has_perm("view", dataset)
 
@@ -450,7 +450,7 @@ def test_user_cant_revoke_dataset_access_from_group(
     user_client, dataset, group_with_user
 ):
     group, user = group_with_user
-    assign_perm("view", group, dataset)
+    dataset.groups.add(group)
     assert user.has_perm("view", dataset)
 
     url = f"/api/v3/groups/{group.id}/dataset/{dataset.dataset_id}"

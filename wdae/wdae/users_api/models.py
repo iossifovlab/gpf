@@ -3,7 +3,8 @@ import uuid
 from django.db import models
 from django.core.mail import send_mail
 
-from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, UserManager
+from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, \
+    BaseUserManager, Group
 
 from django.contrib.sessions.models import Session
 from django.utils import timezone
@@ -13,6 +14,57 @@ from utils.logger import LOGGER
 from datasets_api.permissions import get_directly_allowed_genotype_data
 
 from .utils import send_reset_email, send_verif_email, send_already_existing_email
+
+
+class WdaeUserManager(BaseUserManager):
+    def _create_user(self, email, password, **kwargs):
+        """
+        Creates and saves a User with the given email and password.
+        """
+        if not email:
+            raise ValueError("The given email must be set")
+
+        email = self.normalize_email(email)
+        email = email.lower()
+
+        user = self.model(email=email, **kwargs)
+        user.set_password(password)
+
+        user.save(using=self._db)
+
+        groups = list(user.DEFAULT_GROUPS_FOR_USER)
+        groups.append(email)
+
+        for group_name in groups:
+            group, _ = Group.objects.get_or_create(name=group_name)
+            group.user_set.add(user)
+            group.save()
+
+        return user
+
+    def get_or_create(self, **kwargs):
+        try:
+            return self.get(**kwargs), False
+        except WdaeUser.DoesNotExist:
+            return self.create_user(**kwargs), True
+
+    def create(self, **kwargs):
+        return self.create_user(**kwargs)
+
+    def create_user(self, email, password=None, **kwargs):
+        user = self._create_user(email, password, **kwargs)
+        return user
+
+    def create_superuser(self, email, password, **kwargs):
+        user = self._create_user(email, password, **kwargs)
+
+        user.is_superuser = True
+        user.is_active = True
+        user.is_staff = True
+
+        user.save()
+
+        return user
 
 
 class WdaeUser(AbstractBaseUser, PermissionsMixin):
@@ -28,7 +80,7 @@ class WdaeUser(AbstractBaseUser, PermissionsMixin):
     SUPERUSER_GROUP = "admin"
     UNLIMITED_DOWNLOAD_GROUP = "unlimited"
 
-    objects = UserManager()
+    objects = WdaeUserManager()
 
     @property
     def has_unlimited_download(self):

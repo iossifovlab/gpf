@@ -232,6 +232,18 @@ def get_dataset_groups(dataset):
     return {g.name for g in dataset.groups.all()}
 
 
+def add_group_perm_to_user(group_name, user):
+    group, _created = Group.objects.get_or_create(name=group_name)
+    user.groups.add(group)
+    user.save()
+
+
+def add_group_perm_to_dataset(group_name, dataset_id):
+    dataset, _created = Dataset.objects.get_or_create(dataset_id=dataset_id)
+    group, _created = Group.objects.get_or_create(name=group_name)
+    dataset.groups.add(group)
+
+
 def handle_partial_permissions(user, dataset_id: str, request_data: dict):
     """A user may have only partial access to a dataset based
     on which of its constituent studies he has rights to access.
