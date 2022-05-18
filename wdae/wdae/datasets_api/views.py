@@ -44,9 +44,6 @@ class DatasetView(QueryBaseView):
                 for genotype_data_id in selected_genotype_data
             ])
 
-            # assert all([d is not None for d in datasets]), \
-            #     selected_genotype_data
-
             res = [
                 StudyWrapperBase.build_genotype_data_all_datasets(
                     dataset.config

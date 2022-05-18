@@ -2,11 +2,52 @@ from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.db import transaction
+from .models import WdaeUser
 
-from .validators import SomeSuperuserLeftValidator
+
+class SomeSuperuserLeftValidator(object):
+    def __init__(self):
+        self.is_update = False
+        self.user_instance = None
+
+    def __call__(self, value):
+        if not self.is_update:
+            return
+
+        group_names = list(map(str, value))
+        has_superuser = WdaeUser.SUPERUSER_GROUP in group_names
+        try:
+            superuser_group = Group.objects.get(name=WdaeUser.SUPERUSER_GROUP)
+        except Group.DoesNotExist:
+            return
+
+        superusers = superuser_group.user_set.all()
+        if (
+            len(superusers) == 1
+            and superusers[0].pk == self.user_instance.pk
+            and not has_superuser
+        ):
+            raise serializers.ValidationError(
+                "The group {} cannot be removed. No superuser will be left if "
+                "that is done.".format(WdaeUser.SUPERUSER_GROUP)
+            )
+
+    def set_context(self, serializer_field):
+        current = serializer_field
+        while hasattr(current, "parent") and current.parent is not None:
+            current = current.parent
+
+        instance = current.instance
+
+        self.is_update = instance is not None
+        self.user_instance = instance
 
 
 class CreatableSlugRelatedField(serializers.SlugRelatedField):
+    """Tries to get related field and creates it if it does not exist.
+    Used for the 'groups' field in the user serializer - if a new group is
+    given to a user, it will be created and then attached to the user.
+    """
     def to_internal_value(self, data):
         try:
             return self.get_queryset().get_or_create(
@@ -19,9 +60,7 @@ class CreatableSlugRelatedField(serializers.SlugRelatedField):
 
 
 class UserSerializer(serializers.ModelSerializer):
-
     name = serializers.CharField(required=False, allow_blank=True)
-
     groups = serializers.ListSerializer(
         child=CreatableSlugRelatedField(
             slug_field="name", queryset=Group.objects.all()
@@ -29,9 +68,7 @@ class UserSerializer(serializers.ModelSerializer):
         validators=[SomeSuperuserLeftValidator()],
         default=[],
     )
-
     hasPassword = serializers.BooleanField(source="is_active", read_only=True)
-
     allowedDatasets = serializers.ListSerializer(
         required=False,
         read_only=True,
@@ -42,53 +79,21 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta(object):
         model = get_user_model()
         fields = (
-            "id", "email", "name",
-            "hasPassword", "groups", "allowedDatasets",)
-
-    def run_validation(self, data):
-        email = data.get("email")
-        if email:
-            email = get_user_model().objects.normalize_email(email)
-            email = email.lower()
-            data["email"] = email
-
-        groups = data.get("groups")
-        if groups:
-            new_groups = []
-            for group in groups:
-                if group.lower() == email:
-                    new_groups.append(email)
-                else:
-                    new_groups.append(group)
-            data["groups"] = new_groups
-
-        return super().run_validation(data=data)
-
-    def validate(self, data):
-        unknown_keys = set(self.initial_data.keys()) - set(self.fields.keys())
-        if unknown_keys:
-            raise serializers.ValidationError(
-                "Got unknown fields: {}".format(unknown_keys)
-            )
-
-        return super(UserSerializer, self).validate(data)
+            "id", "email", "name", "hasPassword", "groups", "allowedDatasets"
+        )
 
     @staticmethod
     def _check_groups_exist(groups):
         if groups:
             db_groups_count = Group.objects.filter(name__in=groups).count()
-            assert db_groups_count == len(groups), "Not all groups exists.."
+            assert db_groups_count == len(groups), "Not all groups exist!"
 
     @staticmethod
     def _update_groups(user, new_groups):
         with transaction.atomic():
-            protected_groups = set([
-                group.id for group in user.protected_groups])
-
             to_remove = set()
             for group in user.groups.all():
-                if group.id not in protected_groups:
-                    to_remove.add(group.id)
+                to_remove.add(group.id)
 
             to_add = set()
             for group in new_groups:
@@ -102,12 +107,10 @@ class UserSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         groups = validated_data.pop("groups", None)
-
         self._check_groups_exist(groups)
 
         with transaction.atomic():
             super(UserSerializer, self).update(instance, validated_data)
-
             if groups:
                 db_groups = Group.objects.filter(name__in=groups)
                 self._update_groups(instance, db_groups)
@@ -120,7 +123,6 @@ class UserSerializer(serializers.ModelSerializer):
 
         with transaction.atomic():
             instance = super(UserSerializer, self).create(validated_data)
-
             if groups:
                 db_groups = Group.objects.filter(name__in=groups)
                 self._update_groups(instance, db_groups)
@@ -132,23 +134,3 @@ class UserWithoutEmailSerializer(UserSerializer):
     class Meta(object):
         model = get_user_model()
         fields = tuple(x for x in UserSerializer.Meta.fields if x != "email")
-
-
-class BulkGroupOperationSerializer(serializers.Serializer):
-
-    userIds = serializers.ListSerializer(child=serializers.IntegerField())
-    groups = serializers.ListSerializer(child=serializers.CharField())
-
-    def create(self, validated_data):
-        raise NotImplementedError()
-
-    def to_representation(self, instance):
-        raise NotImplementedError()
-
-    def update(self, instance, validated_data):
-        raise NotImplementedError()
-
-    def to_internal_value(self, data):
-        return super(BulkGroupOperationSerializer, self).to_internal_value(
-            data
-        )

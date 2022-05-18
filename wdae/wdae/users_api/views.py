@@ -1,7 +1,3 @@
-import json
-from datetime import timedelta
-from functools import wraps
-
 from django.db import IntegrityError
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import BaseUserManager
@@ -25,30 +21,18 @@ from utils.logger import log_filter, LOGGER, request_logging
 from utils.logger import request_logging_function_view
 from utils.email_regex import is_email_valid
 from utils.password_requirements import is_password_valid
-from utils.streaming_response_util import convert
 
 from .authentication import SessionAuthenticationWithUnauthenticatedCSRF
 from .models import VerificationPath, AuthenticationLog
-from .serializers import UserSerializer
-from .serializers import UserWithoutEmailSerializer
+from .serializers import UserSerializer, UserWithoutEmailSerializer
 
+from .utils import csrf_clear, LOCKOUT_THRESHOLD
+
+
+from datetime import timedelta
 from django.utils import timezone
-
-
-LOCKOUT_THRESHOLD = 4
-
-
-def csrf_clear(view_func):
-    """
-    Skips the CSRF checks by setting the 'csrf_processing_done' to true.
-    """
-
-    def wrapped_view(*args, **kwargs):
-        request = args[0]
-        request.csrf_processing_done = True
-        return view_func(*args, **kwargs)
-
-    return wraps(view_func)(wrapped_view)
+import json
+from utils.streaming_response_util import convert
 
 
 def iterator_to_json(users):

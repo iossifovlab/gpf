@@ -1,4 +1,9 @@
+from functools import wraps
+
 from django.conf import settings
+
+
+LOCKOUT_THRESHOLD = 4
 
 
 def send_verif_email(user, verif_path):
@@ -88,3 +93,16 @@ def _build_email_template(settings):
     message = message.format(link="{0}{1}".format(settings["host"], path))
 
     return {"subject": subject, "message": message}
+
+
+def csrf_clear(view_func):
+    """
+    Skips the CSRF checks by setting the 'csrf_processing_done' to true.
+    """
+
+    def wrapped_view(*args, **kwargs):
+        request = args[0]
+        request.csrf_processing_done = True
+        return view_func(*args, **kwargs)
+
+    return wraps(view_func)(wrapped_view)
