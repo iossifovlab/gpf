@@ -44,6 +44,8 @@ class ImportProject():
     def build_from_config(import_config, gpf_instance=None):
         import_config = GPFConfigParser.validate_config(import_config,
                                                         import_config_schema)
+        normalizer = ImportConfigNormalizer()
+        import_config = normalizer.normalize(import_config)
         return ImportProject(import_config, gpf_instance)
 
     @staticmethod
@@ -119,7 +121,6 @@ class ImportProject():
             chromosomes = partition_desc.get("region_bin", {})\
                 .get("chromosomes", None)
             assert isinstance(chromosomes, list)
-            chromosomes = self._expand_chromosomes(chromosomes)
 
             # ParquetPartitionDescriptor expects a string
             # that gets parsed internally
@@ -257,14 +258,57 @@ class ImportProject():
         processing_config = self._get_loader_processing_config(loader_type)
         if isinstance(processing_config, str):
             return None
-        return self._expand_chromosomes(
-            processing_config.get("chromosomes", None))
+        return processing_config.get("chromosomes", None)
 
     def _get_loader_processing_config(self, loader_type):
         return self.import_config.get("processing_config", {})\
             .get(loader_type, {})
 
-    def _expand_chromosomes(self, chromosomes):
+
+class ImportConfigNormalizer:
+    def normalize(self, import_config):
+        config = deepcopy(import_config)
+        self._map_for_key(config, "region_length", self._int_shorthand)
+
+        # vcf/chromosomes property has a different syntax
+        self._map_for_key(config, "chromosomes", self._normalize_chrom_list,
+                          skip_keys={"vcf"})
+        return config
+
+    @classmethod
+    def _map_for_key(cls, config, key, func, skip_keys={}):
+        for k, v in config.items():
+            if k == key:
+                config[k] = func(v)
+            elif isinstance(v, dict) and k not in skip_keys:
+                cls._map_for_key(v, key, func, skip_keys)
+
+    @staticmethod
+    def _int_shorthand(obj):
+        if isinstance(obj, int):
+            return obj
+        assert isinstance(obj, str)
+
+        unit_suffixes = {
+            "K": 1_000,
+            "M": 1_000_000,
+            "G": 1_000_000_000,
+        }
+        return int(obj[:-1]) * unit_suffixes[obj[-1].upper()]
+
+    @classmethod
+    def _normalize_chrom_list(cls, obj):
+        if isinstance(obj, list):
+            return cls._expand_chromosomes(obj)
+        assert isinstance(obj, str)
+
+        chrom_list = list(
+            map(str.strip, obj.split(","))
+        )
+        return cls._expand_chromosomes(chrom_list)
+
+    @staticmethod
+    def _expand_chromosomes(chromosomes):
         if chromosomes is None:
             return None
         res = []

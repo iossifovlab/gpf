@@ -80,28 +80,27 @@ def test_row_group_size_short_config():
         import_tools.Bucket("denovo", "", "", 0)) == 20_000
 
 
-# Uncomment when https://github.com/pyeve/cerberus/issues/585 is fixed
-# def test_shorthand_for_large_integers():
-#     config = dict(
-#         id="test_import",
-#         input=dict(),
-#         processing_config=dict(
-#             denovo=dict(
-#                 region_length="300k"
-#             )
-#         ),
-#         # partition_description=dict(
-#         #     region_bin=dict(
-#         #         region_length="100M"
-#         #     )
-#         # )
-#     )
-#     project = import_tools.ImportProject.build_from_config(config)
-#     config = project.import_config
-#     assert config["processing_config"]["denovo"]["region_length"] \
-#         == 300_000
-#     assert config["partition_description"]["region_bin"]["region_length"] \
-#         == 100_000_000
+def test_shorthand_for_large_integers():
+    config = dict(
+        id="test_import",
+        input=dict(),
+        processing_config=dict(
+            denovo=dict(
+                region_length="300k"
+            )
+        ),
+        partition_description=dict(
+            region_bin=dict(
+                region_length="100M"
+            )
+        )
+    )
+    project = import_tools.ImportProject.build_from_config(config)
+    config = project.import_config
+    assert config["processing_config"]["denovo"]["region_length"] \
+        == 300_000
+    assert config["partition_description"]["region_bin"]["region_length"] \
+        == 100_000_000
 
 
 def test_shorthand_autosomes():
@@ -136,3 +135,28 @@ def test_shorthand_autosomes():
     for i in ["X", "Y"]:
         assert str(i) in pd_chromosomes
         assert f"chr{i}" in pd_chromosomes
+
+
+def test_shorthand_chromosomes():
+    config = dict(
+        id="test_import",
+        input=dict(),
+        processing_config=dict(
+            denovo=dict(
+                chromosomes="chr1, chr2"
+            )
+        ),
+        partition_description=dict(
+            region_bin=dict(
+                region_length=100,
+                chromosomes="autosomes,X"
+            )
+        )
+    )
+    project = import_tools.ImportProject.build_from_config(config)
+    config = project.import_config
+    assert config["processing_config"]["denovo"]["chromosomes"] \
+        == ["chr1", "chr2"]
+    chroms = config["partition_description"]["region_bin"]["chromosomes"]
+    assert len(chroms) == 2*22 + 1
+    assert chroms[-1] == "X"

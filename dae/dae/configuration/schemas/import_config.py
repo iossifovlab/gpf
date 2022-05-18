@@ -4,39 +4,21 @@ from dae.backends.cnv.loader import CNVLoader
 from dae.pedigrees.loader import FamiliesLoader
 
 
-def _to_list(obj):
-    if isinstance(obj, list):
-        return obj
-    if isinstance(obj, str):
-        return list(
-            map(str.strip, obj.split(","))
-        )
-    return obj
-
-
-def _int_shorthand(obj):
-    try:
-        unit_suffixes = {
-            "K": 1_000,
-            "M": 1_000_000,
-            "G": 1_000_000_000,
-        }
-        return int(obj[:-1]) * unit_suffixes[obj[-1].upper()]
-    except Exception:
-        return obj
-
-
 _region_chromosomes_schema = {
-    "region_length": {"type": "integer", "coerce": _int_shorthand},
+    "region_length": {"anyof_type": ["integer", "string"]},
     "chromosomes": {
-        "type": "list",
-        "schema": {"type": "string"},
-        "coerce": _to_list,
-    },
+        "anyof": [{
+            "type": "list",
+            "schema": {"type": "string"},
+        }, {
+            "type": "string"
+        }
+        ]
+    }
 }
 
 _loader_processing_params = {
-    "row_group_size": {"type": "integer", "coerce": _int_shorthand},
+    "row_group_size": {"anyof_type": ["integer", "string"]},
     **_region_chromosomes_schema,
 }
 
