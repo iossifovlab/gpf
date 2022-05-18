@@ -207,6 +207,16 @@ def test_single_bucket_generation(add_chrom_prefix):
                                   f"{prefix}4", f"{prefix}5"]
 
 
+def test_single_bucket_is_default_when_missing_processing_config():
+    import_config = deepcopy(_denovo_multi_chrom_config)
+    assert "denovo" not in import_config["processing_config"]
+
+    project = import_tools.ImportProject.build_from_config(import_config)
+    buckets = list(project._loader_region_bins({}, "denovo"))
+    assert len(buckets) == 1
+    assert buckets[0].regions == ["1", "2", "3", "4", "5"]
+
+
 @pytest.mark.parametrize("add_chrom_prefix", [None, "chr"])
 def test_chromosome_bucket_generation(add_chrom_prefix):
     import_config = deepcopy(_denovo_multi_chrom_config)

@@ -248,6 +248,8 @@ class ImportProject():
         mode = None
         if isinstance(processing_config, str):
             mode = processing_config
+        elif len(processing_config) == 0:
+            mode = "single_bucket"  # default mode when missing config
         variants_targets = partition_helper.generate_variants_targets(
             loader_chromosomes,
             mode=mode
