@@ -89,7 +89,7 @@ def test_bucket_generation():
                 file=join(_input_dir, "pedigree.ped"),
             ),
             denovo=dict(
-                files=[join(_input_dir, "variants.tsv")],
+                files=[join(_input_dir, "single_chromosome_variants.tsv")],
                 person_id="spid",
                 chrom="chrom",
                 pos="pos",
@@ -127,7 +127,7 @@ def test_bucket_generation_chrom_mismatch(gpf_instance_short):
                 file=join(_input_dir, "pedigree.ped"),
             ),
             denovo=dict(
-                files=[join(_input_dir, "variants.tsv")],
+                files=[join(_input_dir, "single_chromosome_variants.tsv")],
                 person_id="spid",
                 chrom="chrom",
                 pos="pos",

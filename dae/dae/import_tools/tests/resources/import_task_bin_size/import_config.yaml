@@ -6,7 +6,7 @@ input:
 
   denovo:
     files:
-      - variants.tsv
+      - single_chromosome_variants.tsv
     person_id: spid
     chrom: chrom
     pos: pos
