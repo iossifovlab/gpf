@@ -6,6 +6,7 @@ import os
 import gzip
 import logging
 import datetime
+from pytz import timezone
 
 import yaml
 import pysam  # type: ignore
@@ -36,6 +37,8 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
             result = {}
             for entry in directory.iterdir():
                 if entry.name in {".", ".."}:
+                    continue
+                if entry.name.startswith("."):
                     continue
                 result[entry.name] = self._dir_to_dict(entry)
             return result
@@ -71,7 +74,10 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
         def my_leaf_to_size_and_time(filepath):
             filestat = filepath.stat()
             filetimestamp = \
-                datetime.datetime.fromtimestamp(int(filestat.st_mtime)).isoformat()
+                datetime.datetime\
+                    .fromtimestamp(
+                        int(filestat.st_mtime), datetime.timezone.utc)\
+                    .isoformat()
             return filestat.st_size, filetimestamp
 
         yield from find_genomic_resource_files_helper(
@@ -119,11 +125,12 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
 
         if dest_filepath.exists():
             dest_stat = dest_filepath.stat()
-            dest_timestamp = datetime.datetime.fromtimestamp(
-                int(dest_stat.st_mtime)).isoformat()
+            dest_mtime = datetime.datetime.fromtimestamp(
+                int(dest_stat.st_mtime), datetime.timezone.utc)
+            dest_time = dest_mtime.isoformat()
             dest_size = dest_stat.st_size
             if dest_size == manifest_entry.size and \
-                    dest_timestamp == manifest_entry.time:
+                    dest_time == manifest_entry.time:
 
                 logger.info(
                     "resource %s file %s already cached",
@@ -134,7 +141,7 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
                 "resource %s file %s already cached "
                 "but (size, timestamp) does not match: %s,%s != %s,%s",
                 src_resource.resource_id, filename,
-                dest_size, dest_timestamp,
+                dest_size, dest_time,
                 manifest_entry.size, manifest_entry.time)
 
         logger.debug(
@@ -159,6 +166,7 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
                 "calculated md5 for the stored file is %s",
                 src_resource.resource_id, manifest_entry.md5, md5)
             raise IOError(f"storing of {src_resource.resource_id} failed")
+
         src_modtime = datetime.datetime.fromisoformat(
             manifest_entry.time).timestamp()
 

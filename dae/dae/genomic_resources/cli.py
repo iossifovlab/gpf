@@ -1,3 +1,4 @@
+"""Provides CLI for management of genomic resources repositories."""
 import os
 import sys
 import logging
@@ -7,6 +8,9 @@ import time
 from typing import cast
 from urllib.parse import urlparse
 import tempfile
+
+from dask.distributed import Client, LocalCluster  # type: ignore
+from dask_kubernetes import KubeCluster, make_pod_spec  # type: ignore
 
 from dae.genomic_resources.dir_repository import GenomicResourceDirRepo
 from dae.genomic_resources.url_repository import GenomicResourceURLRepo
@@ -19,20 +23,21 @@ from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.dae_conf import dae_conf_schema
 from dae.annotation.annotation_factory import AnnotationConfigParser
 
-from dask.distributed import Client, LocalCluster  # type: ignore
-from dask_kubernetes import KubeCluster, make_pod_spec  # type: ignore
-
 
 logger = logging.getLogger(__file__)
 
 
 class VerbosityConfiguration:
+    """Defines common configuration for verbosity of loggers."""
+
     @staticmethod
     def set_argumnets(parser: argparse.ArgumentParser) -> None:
+        """Add verbosity arguments to argument parser."""
         parser.add_argument("--verbose", "-v", "-V", action="count", default=0)
 
     @staticmethod
-    def set(args):
+    def set(args) -> None:
+        """Reads verbosity settings from parsed arguments and sets logger."""
         if args.verbose == 1:
             logging.basicConfig(level=logging.INFO)
         elif args.verbose >= 2:
@@ -41,16 +46,8 @@ class VerbosityConfiguration:
             logging.basicConfig(level=logging.WARNING)
 
 
-def cli_browse():
-    repo = build_genomic_resource_repository()
-    for gr in repo.get_all_resources():
-        print("%20s %20s %-7s %2d %12d %s" %
-              (gr.repo.repo_id, gr.get_type(), gr.get_version_str(),
-               len(list(gr.get_files())),
-                  sum([fs for _, fs, _ in gr.get_files()]), gr.get_id()))
-
-
 def cli_manage(cli_args=None):
+    """Provides CLI for repository management."""
     if not cli_args:
         cli_args = sys.argv[1:]
 
@@ -130,18 +127,19 @@ the number of workers using -j")
         repo.save_content_file()
 
     elif cmd == "list":
-        for gr in repo.get_all_resources():
+        for res in repo.get_all_resources():
+            res_size = sum([fs for _, fs, _ in res.get_files()])
+            print(
+                f"{res.get_type():20} {res.get_version_str():7s} "
+                f"{len(list(res.get_files())):2d} {res_size:12d} "
+                f"{res.get_id()}")
 
-            print("%20s %-7s %2d %12d %s" %
-                  (gr.get_resource_type(), gr.get_version_str(),
-                   len(list(gr.get_files())),
-                      sum([fs for _, fs, _ in gr.get_files()]), gr.get_id()))
     elif cmd == "histogram":
-        gr = repo.get_resource(args.resource)
-        if gr is None:
+        res = repo.get_resource(args.resource)
+        if res is None:
             logger.error("Cannot find resource %s", args.resource)
             sys.exit(1)
-        builder = HistogramBuilder(gr)
+        builder = HistogramBuilder(res)
         n_jobs = args.jobs or os.cpu_count()
 
         tmp_dir = tempfile.TemporaryDirectory()
@@ -208,18 +206,19 @@ def _extract_resource_ids_from_annotation_conf(config):
     resources = set()
     for annotator in config:
         print(annotator)
-        for k, v in annotator.items():
-            if k in [
+        for key, val in annotator.items():
+            if key in [
                 "resource_id",
                 "target_genome",
                 "chain",
                 "genome"
             ]:
-                resources.add(v)
+                resources.add(val)
     return resources
 
 
 def cli_cache_repo(argv=None):
+    """Provides CLI for caching repository."""
     if not argv:
         argv = sys.argv[1:]
 
@@ -307,7 +306,3 @@ def _get_env_vars(var_names):
     for var_name in var_names:
         res[var_name] = os.getenv(var_name)
     return res
-
-
-if __name__ == "__main__":
-    cli_browse()

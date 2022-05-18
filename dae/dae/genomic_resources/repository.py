@@ -168,7 +168,7 @@ class ManifestEntry:
     size: int
     time: str
     md5: Optional[str]
-
+            
 
 class Manifest:
     """Provides genomic resource manifest object."""
