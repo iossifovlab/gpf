@@ -158,7 +158,8 @@ class ImportProject():
 
     @property
     def work_dir(self):
-        return self.import_config["processing_config"]["work_dir"]
+        return self.import_config.get("processing_config", {})\
+            .get("work_dir", "")
 
     @property
     def input_dir(self):
