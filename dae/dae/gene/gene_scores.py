@@ -64,18 +64,28 @@ class GeneScore:
         return self.df
 
     @staticmethod
-    def load_gene_score_from_resource(
-            resource: Optional[GenomicResource],
-            config: dict[str, Any], histogram_config: dict[str, Any]):
+    def load_gene_scores_from_resource(
+            resource: Optional[GenomicResource]):
         assert resource is not None
         assert resource.get_type() == "gene_score", "Invalid resource type"
 
-        resource_config = resource.get_config()
-        gene_score_id = config["id"]
-        file = resource.open_raw_file(config["filename"])
-        desc = config["desc"]
-        meta = getattr(resource_config, "meta", None)
-        return GeneScore(gene_score_id, file, desc, histogram_config, meta)
+        config = resource.get_config()
+        meta = getattr(config, "meta", None)
+        scores = []
+        for gs_config in config["gene_scores"]:
+            gene_score_id = gs_config["id"]
+            file = resource.open_raw_file(gs_config["filename"])
+            desc = gs_config["desc"]
+            histogram_config = None
+            for hist_config in config["histograms"]:
+                if hist_config["score"] == gene_score_id:
+                    histogram_config = hist_config
+                    break
+            assert histogram_config is not None
+            gs = GeneScore(gene_score_id, file, desc, histogram_config, meta)
+            scores.append(gs)
+
+        return scores
 
     def values(self):
         return self.df[self.id].values

@@ -59,7 +59,7 @@ class GeneSetCollection:
         assert self.collection_id, self.gene_sets
 
     @staticmethod
-    def from_resource(resource: GenomicResource, config: dict[str, Any]):
+    def from_resource(resource: GenomicResource):
         assert resource is not None
         gene_sets = list()
         config = resource.get_config()

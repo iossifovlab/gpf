@@ -120,19 +120,10 @@ class GPFInstance:
             if resource is None:
                 logger.error("unable to find gene score: %s", gs)
                 continue
-            config = resource.get_config()
-            for score in config["gene_scores"]:
-                score_id = score["id"]
-                histogram_config = None
-                for hist in config["histograms"]:
-                    if hist["score"] == score_id:
-                        histogram_config = hist
-                        break
-                assert histogram_config is not None
-            gene_score = GeneScore.load_gene_score_from_resource(
-                resource, config, histogram_config
+            gene_scores = GeneScore.load_gene_scores_from_resource(
+                resource
             )
-            result.append(gene_score)
+            result += gene_scores
 
         return GeneScoresDb(result)
 
@@ -220,11 +211,9 @@ class GPFInstance:
                 if resource is None:
                     logger.error("can't find resource %s", gsc_id)
                     continue
-                conf = resource.get_config()
-                for section in conf["gene_sets"]:
-                    gscs.append(
-                        GeneSetCollection.from_resource(resource, section)
-                    )
+                gscs.append(
+                    GeneSetCollection.from_resource(resource)
+                )
 
             return GeneSetsDb(gscs)
 
