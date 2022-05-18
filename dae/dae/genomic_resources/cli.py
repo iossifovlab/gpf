@@ -42,6 +42,118 @@ class VerbosityConfiguration:
             logging.basicConfig(level=logging.WARNING)
 
 
+def _configure_hist_subparser(subparsers):
+    parser_hist = subparsers.add_parser("histogram",
+                                        help="Build the histograms \
+                                        for a resource")
+    parser_hist.add_argument("repo_dir", type=str,
+                             help="Path to the GR Repo")
+    parser_hist.add_argument("resource", type=str,
+                             help="Resource to generate histograms for")
+
+    VerbosityConfiguration.set_argumnets(parser_hist)
+    parser_hist.add_argument("--region-size", type=int, default=3000000,
+                             help="Number of records to process in parallel")
+    parser_hist.add_argument("-f", "--force", default=False,
+                             action="store_true", help="Ignore histogram "
+                             "hashes and always precompute all histograms")
+    DaskClient.add_arguments(parser_hist)
+
+
+def _run_hist_command(repo, args):
+    res = repo.get_resource(args.resource)
+    if res is None:
+        logger.error("Cannot find resource %s", args.resource)
+        sys.exit(1)
+    builder = HistogramBuilder(res)
+    n_jobs = args.jobs or os.cpu_count()
+
+    tmp_dir = tempfile.TemporaryDirectory()
+
+    if args.kubernetes:
+        env = _get_env_vars(args.envvars)
+        extra_pod_config = {}
+        if args.image_pull_secrets:
+            extra_pod_config["imagePullSecrets"] = [
+                {"name": name} for name in args.image_pull_secrets
+            ]
+        pod_spec = make_pod_spec(image=args.container_image,
+                                    extra_pod_config=extra_pod_config)
+        cluster = KubeCluster(pod_spec, env=env)
+        cluster.scale(n_jobs)
+    elif args.sge:
+        try:
+            #  pylint: disable=import-outside-toplevel
+            from dask_jobqueue import SGECluster  # type: ignore
+        except ModuleNotFoundError:
+            logger.error("No dask-jobqueue found. Please install it using:"
+                            " mamba install dask-jobqueue -c conda-forge")
+            sys.exit(1)
+
+        dashboard_config = {}
+        if args.dashboard_port:
+            dashboard_config["scheduler_options"] = \
+                {"dashboard_address": f":{args.dashboard_port}"}
+        cluster = SGECluster(n_workers=n_jobs,
+                                queue="all.q",
+                                walltime="1500000",
+                                cores=1,
+                                processes=1,
+                                memory="2GB",
+                                log_directory=args.log_dir or tmp_dir.name,
+                                local_directory=tmp_dir.name,
+                                **dashboard_config)
+    else:
+        dashboard_config = {}
+        if args.dashboard_port:
+            dashboard_config["dashboard_address"] = \
+                f":{args.dashboard_port}"
+        cluster = LocalCluster(n_workers=n_jobs, threads_per_worker=1,
+                                local_directory=tmp_dir.name,
+                                **dashboard_config)
+    try:
+        with Client(cluster) as client:
+            histograms = builder.build(client, force=args.force,
+                                        only_dirty=True,
+                                        region_size=args.region_size)
+    finally:
+        cluster.close()
+        tmp_dir.cleanup()
+
+    hist_out_dir = "histograms"
+    logger.info("Saving histograms in %s", hist_out_dir)
+    builder.save(histograms, hist_out_dir)
+
+
+def _configure_list_subparser(subparsers):
+    parser_list = subparsers.add_parser("list", help="List a GR Repo")
+    parser_list.add_argument("repo_dir", type=str,
+                             help="Path to the GR Repo to list")
+    VerbosityConfiguration.set_argumnets(parser_list)
+
+def _run_list_command(repo, _args):
+    for res in repo.get_all_resources():
+        res_size = sum([fs for _, fs, _ in res.get_files()])
+        print(
+            f"{res.get_type():20} {res.get_version_str():7s} "
+            f"{len(list(res.get_files())):2d} {res_size:12d} "
+            f"{res.get_id()}")
+
+
+def _configure_index_subparser(subparsers):
+    parser_index = subparsers.add_parser("index", help="Index a GR Repo")
+    parser_index.add_argument("repo_dir", type=str,
+                              help="Path to the GR Repo to index")
+    VerbosityConfiguration.set_argumnets(parser_index)
+
+
+def _run_index_command(repo, _args):
+    for res in repo.get_all_resources():
+        repo.update_manifest(res)
+
+    repo.save_content_file()
+
+
 def cli_manage(cli_args=None):
     """Provides CLI for repository management."""
     if not cli_args:
@@ -52,81 +164,28 @@ def cli_manage(cli_args=None):
     subparsers = parser.add_subparsers(dest="command",
                                        help="Command to execute")
 
-    parser_index = subparsers.add_parser("index", help="Index a GR Repo")
-    parser_index.add_argument("repo_dir", type=str,
-                              help="Path to the GR Repo to index")
-    parser_index.add_argument("--verbose", "-V", action="count", default=0)
 
-    parser_list = subparsers.add_parser("list", help="List a GR Repo")
-    parser_list.add_argument("repo_dir", type=str,
-                             help="Path to the GR Repo to list")
-    parser_list.add_argument("--verbose", "-V", action="count", default=0)
-
-    parser_hist = subparsers.add_parser("histogram",
-                                        help="Build the histograms \
-                                        for a resource")
-    parser_hist.add_argument("repo_dir", type=str,
-                             help="Path to the GR Repo")
-    parser_hist.add_argument("resource", type=str,
-                             help="Resource to generate histograms for")
-    parser_hist.add_argument("--verbose", "-V", action="count", default=0)
-    parser_hist.add_argument("--region-size", type=int, default=3_000_000,
-                             help="Number of records to process in parallel")
-    parser_hist.add_argument("-f", "--force", default=False,
-                             action="store_true", help="Ignore histogram "
-                             "hashes and always precompute all histograms")
-    DaskClient.add_arguments(parser_hist)
+    _configure_index_subparser(subparsers)
+    _configure_list_subparser(subparsers)
+    _configure_hist_subparser(subparsers)
 
     args = parser.parse_args(cli_args)
-    if args.verbose == 1:
-        logging.basicConfig(level=logging.WARNING)
-    elif args.verbose == 2:
-        logging.basicConfig(level=logging.INFO)
-    elif args.verbose >= 3:
-        logging.basicConfig(level=logging.DEBUG)
-    else:
-        logging.basicConfig(level=logging.WARNING)
-
-    cmd, repo_dir = args.command, args.repo_dir
+    VerbosityConfiguration.set(args)
+    command, repo_dir = args.command, args.repo_dir
 
     repo = _create_repo(repo_dir)
 
-    if cmd == "index":
-        for res in repo.get_all_resources():
-            repo.update_manifest(res)
-
-        repo.save_content_file()
-
-    elif cmd == "list":
-        for res in repo.get_all_resources():
-            res_size = sum([fs for _, fs, _ in res.get_files()])
-            print(
-                f"{res.get_type():20} {res.get_version_str():7s} "
-                f"{len(list(res.get_files())):2d} {res_size:12d} "
-                f"{res.get_id()}")
-
-    elif cmd == "histogram":
-        res = repo.get_resource(args.resource)
-        if res is None:
-            logger.error("Cannot find resource %s", args.resource)
-            sys.exit(1)
-        builder = HistogramBuilder(res)
-
-        dask_client = DaskClient.from_arguments(args)
-        if dask_client is None:
-            sys.exit(1)
-
-        with dask_client as client:
-            histograms = builder.build(client, force=args.force,
-                                       only_dirty=True,
-                                       region_size=args.region_size)
-
-        hist_out_dir = "histograms"
-        logger.info("Saving histograms in %s", hist_out_dir)
-        builder.save(histograms, hist_out_dir)
+    if command == "index":
+        _run_index_command(repo, args)
+    elif command == "list":
+        _run_list_command(repo, args)
+    elif command == "histogram":
+        _run_hist_command(repo, args)
     else:
-        logger.error("Unknown command {cmd}. The known commands are index, "
-                     "list and histogram")
+        logger.error(
+            "Unknown command %s. The known commands are index, "
+            "list and histogram", command)
+        sys.exit(1)
 
 
 def _extract_resource_ids_from_annotation_conf(config):
@@ -218,11 +277,11 @@ def cli_cache_repo(argv=None):
     logger.info("Cached all resources in %.2f secs", elapsed)
 
 
-def _create_repo(dr):
-    repo_url = urlparse(dr)
+def _create_repo(repo_dir):
+    repo_url = urlparse(repo_dir)
     if not repo_url.scheme or repo_url.scheme == "file":
-        dr = pathlib.Path(dr)
-        repo = GenomicResourceDirRepo("", dr)
+        repo_dir = pathlib.Path(repo_dir)
+        repo = GenomicResourceDirRepo("", repo_dir)
     else:
-        repo = GenomicResourceURLRepo("", dr)
+        repo = GenomicResourceURLRepo("", repo_dir)
     return repo
