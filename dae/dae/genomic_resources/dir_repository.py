@@ -129,9 +129,7 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
 
         if dest_filepath.exists():
             dest_stat = dest_filepath.stat()
-            dest_mtime = datetime.datetime.fromtimestamp(
-                int(dest_stat.st_mtime), datetime.timezone.utc)
-            dest_time = dest_mtime.isoformat()
+            dest_time = ManifestEntry.convert_timestamp(dest_stat.st_mtime)
             dest_size = dest_stat.st_size
             if dest_size == manifest_entry.size and \
                     dest_time == manifest_entry.time:
@@ -171,9 +169,7 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
                 src_resource.resource_id, manifest_entry.md5, md5)
             raise IOError(f"storing of {src_resource.resource_id} failed")
 
-        src_modtime = datetime.datetime.fromisoformat(
-            manifest_entry.time).timestamp()
-
+        src_modtime = manifest_entry.get_timestamp()
         assert dest_filepath.exists()
 
         os.utime(dest_filepath, (src_modtime, src_modtime))

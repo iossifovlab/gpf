@@ -2,12 +2,11 @@
 
 import io
 import time
-import datetime
 import hashlib
 import gzip
 import logging
 
-from .repository import GenomicResource, Manifest
+from .repository import GenomicResource, Manifest, ManifestEntry
 from .repository import GenomicResourceRealRepo
 from .repository import find_genomic_resources_helper
 from .repository import find_genomic_resource_files_helper
@@ -22,8 +21,7 @@ class GenomicResourceEmbededRepo(GenomicResourceRealRepo):
     def __init__(self, repo_id, content, **_kwargs):
         super().__init__(repo_id)
         self.content = content
-        self.stable_timestamp = datetime.datetime.fromtimestamp(
-            int(time.time())).isoformat()
+        self.stable_timestamp = ManifestEntry.convert_timestamp(time.time())
 
     def get_all_resources(self):
         for resource_id, version in find_genomic_resources_helper(

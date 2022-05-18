@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import re
 import logging
+import datetime
 from typing import List, Optional, cast, Tuple, Dict, Any
 from dataclasses import dataclass, asdict
 
@@ -170,6 +171,19 @@ class ManifestEntry:
     time: str
     md5: Optional[str]
 
+    def get_timestamp(self) -> int:
+        """Returns UNIX timestamp corresponding to entry time."""
+        return int(datetime.datetime.fromisoformat(
+            self.time).timestamp())
+
+    @staticmethod
+    def convert_timestamp(timestamp: float):
+        """Produces ISO formatted date-time from python time.time().
+
+        Uses integer precicsion, i.e. the timestamp is converted to int.
+        """
+        return datetime.datetime.fromtimestamp(
+                int(timestamp), datetime.timezone.utc).isoformat()
 
 class Manifest:
     """Provides genomic resource manifest object."""
