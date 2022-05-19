@@ -17,6 +17,7 @@ from tqdm import tqdm  # type: ignore
 from dask.distributed import as_completed  # type: ignore
 
 from dae.genomic_resources.genomic_scores import open_score_from_resource
+from dae.genomic_resources.repository_helpers import RepositoryWorkflowHelper
 
 logger = logging.getLogger(__name__)
 
@@ -401,7 +402,8 @@ class HistogramBuilder:
             plt.clf()
 
         # update manifest with newly written files
-        self.resource.repo.update_manifest(self.resource)
+        helper = RepositoryWorkflowHelper(self.resource.repo)
+        helper.update_manifest(self.resource)
 
 
 def load_histograms(repo, resource_id, version_constraint=None,

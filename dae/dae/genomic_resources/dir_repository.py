@@ -255,42 +255,6 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
                 }
                 for fn, fs, ft in sorted(self.get_files(resource))])
 
-    def update_manifest(self, resource):
-        """Updates resource manifest and stores it."""
-        try:
-            current_manifest = self.load_manifest(resource)
-            new_manifest = Manifest()
-            for fname, fsize, ftime in sorted(self.get_files(resource)):
-                md5 = None
-                if fname in current_manifest:
-                    entry = current_manifest[fname]
-                    if entry.size == fsize and entry.time == ftime:
-                        md5 = entry.md5
-                    else:
-                        logger.debug(
-                            "md5 sum for file %s for resource %s needs update",
-                            fname, resource.resource_id)
-                else:
-                    logger.debug(
-                        "found a new file %s for resource %s",
-                        fname, resource.resource_id)
-                if md5 is None:
-                    md5 = self.compute_md5_sum(resource, fname)
-                new_manifest.add(
-                    ManifestEntry(fname, fsize, ftime, md5))
-
-            if new_manifest == current_manifest:
-                logger.debug("manifest OK for %s", resource.resource_id)
-            else:
-                logger.debug("manifest updated for %s", resource.resource_id)
-                self.save_manifest(resource, new_manifest)
-        except IOError:
-            logger.info(
-                "building a new manifest for resource %s",
-                resource.resource_id, exc_info=True)
-            manifest = self.build_manifest(resource)
-            self.save_manifest(resource, manifest)
-
     def load_manifest(self, resource) -> Manifest:
         """Loads resource manifest"""
         filename = self.get_filepath(resource, GR_MANIFEST_FILE_NAME)
