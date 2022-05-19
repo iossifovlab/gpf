@@ -6,6 +6,7 @@ from gpf_instance.gpf_instance import get_gpf_instance
 from .models import Dataset
 from utils.datasets import find_dataset_id_in_request
 from dae.studies.study import GenotypeData
+from django.contrib.auth.models import Group
 from django.utils.encoding import force_str
 
 
