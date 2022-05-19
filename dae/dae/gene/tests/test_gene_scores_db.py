@@ -18,8 +18,8 @@ def scores_repo():
                 "histograms:\n"
                 "  - score: RVIS_rank\n"
                 "    bins: 150\n"
-                "    xscale: linear\n"
-                "    yscale: linear\n"
+                "    x_scale: linear\n"
+                "    y_scale: linear\n"
             ),
             "RVIS.csv": (
                 "\"gene\",\"RVIS\",\"RVIS_rank\"\n"
@@ -48,8 +48,8 @@ def scores_repo():
                 "histograms:\n"
                 "  - score: LGD_rank\n"
                 "    bins: 150\n"
-                "    xscale: linear\n"
-                "    yscale: linear\n"
+                "    x_scale: linear\n"
+                "    y_scale: linear\n"
             ),
             "LGD.csv": (
                 "\"gene\",\"LGD_score\",\"LGD_rank\"\n"
