@@ -331,50 +331,6 @@ def test_admin_can_delete_user(admin_client, user_model):
     assert not user_model.objects.filter(pk=user_id).exists()
 
 
-def test_admin_can_reset_user_password(admin_client, active_user):
-    assert active_user.is_active
-
-    url = "/api/v3/users/{}/password_reset".format(active_user.pk)
-    response = admin_client.post(url)
-    assert response.status_code is status.HTTP_204_NO_CONTENT
-
-    active_user.refresh_from_db()
-    assert active_user.has_usable_password()
-    assert active_user.is_active
-
-
-def test_resetting_user_password_does_not_deauthenticates_them(
-        admin_client, logged_in_user):
-
-    user, user_client = logged_in_user
-    url = "/api/v3/users/get_user_info"
-    response = user_client.get(url)
-    assert response.status_code == status.HTTP_200_OK
-    assert response.data["loggedIn"]
-
-    reset_password_url = "/api/v3/users/{}/password_reset".format(user.pk)
-
-    response = admin_client.post(reset_password_url)
-    assert response.status_code is status.HTTP_204_NO_CONTENT
-
-    response = user_client.get(url)
-    assert response.status_code == status.HTTP_200_OK
-    assert response.data["loggedIn"]
-
-
-def test_user_cant_reset_other_user_password(user_client, active_user):
-    assert active_user.has_usable_password()
-
-    url = "/api/v3/users/{}/password_reset".format(active_user.pk)
-    response = user_client.post(url)
-
-    assert response.status_code is status.HTTP_403_FORBIDDEN
-
-    active_user.refresh_from_db()
-    assert active_user.has_usable_password()
-    assert active_user.is_active
-
-
 def test_searching_by_email_finds_only_single_user(
     admin_client, active_user, user_model
 ):
@@ -436,24 +392,14 @@ def test_user_create_email_case_insensitive(admin_client, user_model):
     response = admin_client.post(
         url, json.dumps(data), content_type="application/json", format="json"
     )
-
-    print(response)
     assert response.status_code is status.HTTP_201_CREATED
     user = user_model.objects.get(email="example1@iossifovlab.com")
-
     assert user is not None
-    print(response.data)
-    data = response.data
-    groups = data["groups"]
-    print(groups)
-
-    assert "example1@iossifovlab.com" in groups
-    assert "ExAmPlE1@iossifovlab.com" not in groups
 
 
 def test_user_create_email_case_insensitive_with_groups(
-        admin_client, user_model):
-
+    admin_client, user_model
+):
     url = "/api/v3/users"
 
     data = {
@@ -466,19 +412,9 @@ def test_user_create_email_case_insensitive_with_groups(
     response = admin_client.post(
         url, json.dumps(data), content_type="application/json", format="json"
     )
-
-    print(response)
     assert response.status_code is status.HTTP_201_CREATED
     user = user_model.objects.get(email="example1@iossifovlab.com")
-
     assert user is not None
-    print(response.data)
-    data = response.data
-    groups = data["groups"]
-    print(groups)
-
-    assert "example1@iossifovlab.com" in groups
-    assert "ExAmPlE1@iossifovlab.com" not in groups
 
 
 def test_user_create_update_case_sensitive_groups(

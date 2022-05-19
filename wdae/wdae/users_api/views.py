@@ -135,6 +135,14 @@ class UserViewSet(viewsets.ModelViewSet):
             return Response(status=status.HTTP_400_BAD_REQUEST)
         return super().destroy(request, pk=pk)
 
+    def get_serializer_class(self):
+        serializer_class = self.serializer_class
+
+        if self.action == "update" or self.action == "partial_update":
+            serializer_class = UserWithoutEmailSerializer
+
+        return serializer_class
+
     @request_logging(LOGGER)
     @action(detail=False, methods=["get"])
     def streaming_search(self, request):
