@@ -186,7 +186,6 @@ def test_admin_can_add_user_group(admin_client, active_user, empty_group):
 
     url = "/api/v3/users/{}".format(user.pk)
     data = {"groups": [empty_group.name]}
-    data["groups"] += [g.name for g in user.protected_groups]
 
     assert not user.groups.filter(name=empty_group.name).exists()
     response = admin_client.put(
@@ -205,7 +204,6 @@ def test_admin_can_update_with_new_group(admin_client, active_user):
 
     url = "/api/v3/users/{}".format(user.pk)
     data = {"groups": [group_name]}
-    data["groups"] += [g.name for g in user.protected_groups]
 
     assert not Group.objects.filter(name=group_name).exists()
     response = admin_client.put(
@@ -319,21 +317,6 @@ def test_two_admins_can_remove_superuser_group_from_other(
     assert not other_superuser.groups.filter(
         name=WdaeUser.SUPERUSER_GROUP
     ).exists()
-
-
-def test_protected_groups_cant_be_removed(
-    admin_client, empty_group, active_user
-):
-    url = "/api/v3/users/{}".format(active_user.pk)
-    data = {"groups": [empty_group.name]}
-    response = admin_client.put(
-        url, json.dumps(data), content_type="application/json", format="json"
-    )
-
-    assert response.status_code is status.HTTP_400_BAD_REQUEST
-
-    assert active_user.protected_groups.count() == 2
-    assert not active_user.groups.filter(id=empty_group.id).exists()
 
 
 def test_admin_can_delete_user(admin_client, user_model):

@@ -230,6 +230,8 @@ def get_user_groups(user):
 
 
 def get_dataset_groups(dataset):
+    if not isinstance(dataset, Dataset):
+        dataset = Dataset.objects.get(dataset_id=force_str(dataset))
     return {g.name for g in dataset.groups.all()}
 
 

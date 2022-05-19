@@ -1,6 +1,6 @@
 import uuid
 
-from django.db import models
+from django.db import models, transaction
 from django.core.mail import send_mail
 
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, \
@@ -9,6 +9,7 @@ from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, \
 from django.contrib.sessions.models import Session
 from django.utils import timezone
 from django.conf import settings
+from django.db.models.signals import m2m_changed, post_delete, pre_delete
 
 from utils.logger import LOGGER
 from datasets_api.permissions import get_directly_allowed_genotype_data
@@ -204,3 +205,54 @@ class AuthenticationLog(models.Model):
         except IndexError:
             result = None
         return result
+
+
+def staff_update(sender, **kwargs):
+    for key in ["action", "instance", "reverse"]:
+        if key not in kwargs:
+            return
+    if kwargs["action"] not in ["post_add", "post_remove", "post_clear"]:
+        return
+
+    if kwargs["reverse"]:
+        users = WdaeUser.objects.filter(pk__in=kwargs["pk_set"])
+    else:
+        users = [kwargs["instance"]]
+
+    with transaction.atomic():
+        for user in users:
+            should_be_staff = user.groups.filter(
+                name=WdaeUser.SUPERUSER_GROUP
+            ).exists()
+            if user.is_staff != should_be_staff:
+                user.is_staff = should_be_staff
+                user.save()
+
+
+def group_post_delete(sender, **kwargs):
+    if "instance" not in kwargs:
+        return
+    group = kwargs["instance"]
+    if group.name != WdaeUser.SUPERUSER_GROUP:
+        return
+    if not hasattr(group, "_user_ids"):
+        return
+
+    with transaction.atomic():
+        for user in WdaeUser.objects.filter(pk__in=group._user_ids).all():
+            user.is_staff = False
+            user.save()
+
+
+# a hack to save the users the group had, used in the post_delete signal
+def group_pre_delete(sender, **kwargs):
+    if "instance" not in kwargs:
+        return
+    group = kwargs["instance"]
+    if group.name == WdaeUser.SUPERUSER_GROUP:
+        group._user_ids = [u.pk for u in group.user_set.all()]
+
+
+m2m_changed.connect(staff_update, WdaeUser.groups.through, weak=False)
+post_delete.connect(group_post_delete, Group, weak=False)
+pre_delete.connect(group_pre_delete, Group, weak=False)
