@@ -107,7 +107,7 @@ def test_caching_dir_repository_resource_update(tmp_path):
 
     res = dir_repo.get_resource("sub/two")
     dirname = pathlib.Path(
-        dir_repo._get_genomic_resource_dir(res))  # pylint: disable=protected-access
+        dir_repo._get_resource_dir(res))  # pylint: disable=protected-access
     for filename, _size, _mod_time in res.get_files():
         path = dirname / filename
         path.touch()

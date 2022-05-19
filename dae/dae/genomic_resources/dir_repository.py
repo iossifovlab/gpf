@@ -6,6 +6,8 @@ import os
 import gzip
 import logging
 
+from typing import List, Tuple, cast
+
 import yaml
 import pysam  # type: ignore
 
@@ -27,7 +29,7 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
         self, repo_id, directory, **kwargs
     ):
         super().__init__(repo_id)
-        self.directory = pathlib.Path(directory)
+        self.directory: pathlib.Path = pathlib.Path(directory)
         self.directory.mkdir(exist_ok=True, parents=True)
         self._all_resources = None
 
@@ -50,13 +52,11 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
         """Clears the content of the whole repository and trigers rescan."""
         self._all_resources = None
 
-    def _get_genomic_resource_dir(self, resource):
+    def _get_resource_dir(self, resource) -> pathlib.Path:
         """Returns directory for specified resources."""
-        return self.directory / resource.get_genomic_resource_id_version()
-
-    def _get_file_path(self, resource, filename):
-        """Returns full filename for a file in a resource."""
-        return self._get_genomic_resource_dir(resource) / filename
+        return cast(
+            pathlib.Path,
+            self.directory / resource.get_genomic_resource_id_version())
 
     def get_all_resources(self):
         """Returns generator for all resources in the repository."""
@@ -67,22 +67,26 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
                                    find_genomic_resources_helper(dir_content)]
         yield from self._all_resources
 
-    def get_files(self, resource):
-        """Returns a generator for all files in a resources."""
+    def get_files(self, resource) -> List[Tuple[str, int, str]]:
+        """Returns a list of tuples for all files in a resources."""
         content_dict = self._dir_to_dict(
-            self._get_genomic_resource_dir(resource))
+            self._get_resource_dir(resource))
 
         def my_leaf_to_size_and_time(filepath):
             filestat = filepath.stat()
             filetime = ManifestEntry.convert_timestamp(filestat.st_mtime)
             return filestat.st_size, filetime
 
-        yield from find_genomic_resource_files_helper(
-            content_dict, my_leaf_to_size_and_time)
+        return list(find_genomic_resource_files_helper(
+            content_dict, my_leaf_to_size_and_time))
+
+    def get_filepath(self, resource, filename: str) -> pathlib.Path:
+        """Returns full filename for a file in a resource."""
+        return self._get_resource_dir(resource) / filename
 
     def file_exists(self, resource, filename):
         """Checks if a file exists in a genomic resource."""
-        full_file_path = self._get_file_path(resource, filename)
+        full_file_path = self.get_filepath(resource, filename)
         return full_file_path.exists()
 
     def file_local(self, genomic_resource, filename):
@@ -92,25 +96,25 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
     def open_raw_file(self, resource: GenomicResource, filename: str,
                       mode="rt", uncompress=False, _seekable=False):
 
-        full_file_path = self._get_file_path(resource, filename)
+        filepath = self.get_filepath(resource, filename)
         if "w" in mode:
             # Create the containing directory if it doesn't exists.
             # This align DireRepo API with URL and fspec APIs
-            dirname = os.path.dirname(full_file_path)
+            dirname = os.path.dirname(filepath)
             if dirname:
                 os.makedirs(dirname, exist_ok=True)
         if filename.endswith(".gz") and uncompress:
             if "w" in mode:
                 raise IOError("writing gzip files not supported")
-            return gzip.open(full_file_path, mode)
+            return gzip.open(filepath, mode)
 
-        return open(full_file_path, mode)
+        return open(filepath, mode)  # pylint: disable=unspecified-encoding
 
     def _delete_manifest_entry(
             self, resource: GenomicResource, manifest_entry):
         filename = manifest_entry.name
 
-        filepath = self._get_file_path(resource, filename)
+        filepath = self.get_filepath(resource, filename)
         filepath.unlink(missing_ok=True)
 
     def _copy_manifest_entry(
@@ -119,10 +123,12 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
             manifest_entry: ManifestEntry):
 
         assert dest_resource.resource_id == src_resource.resource_id
+        assert dest_resource.repo == self
+
         filename = manifest_entry.name
 
-        dest_filepath = self._get_file_path(dest_resource, filename)
-        os.makedirs(dest_filepath.parent, exist_ok=True)
+        dest_filepath = self.get_filepath(dest_resource, filename)
+        dest_filepath.parent.mkdir(parents=True, exist_ok=True)
 
         if dest_filepath.exists():
             dest_stat = dest_filepath.stat()
@@ -149,7 +155,8 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
         with src_resource.open_raw_file(
                 filename, "rb",
                 uncompress=False) as infile, \
-                dest_resource.open_raw_file(
+                self.open_raw_file(
+                    dest_resource,
                     filename, "wb",
                     uncompress=False) as outfile:
 
@@ -256,10 +263,10 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
 
     def open_tabix_file(self, resource,  filename,
                         index_filename=None):
-        file_path = str(self._get_file_path(resource, filename))
+        file_path = str(self.get_filepath(resource, filename))
         index_path = None
         if index_filename:
-            index_path = str(self._get_file_path(
+            index_path = str(self.get_filepath(
                 resource, index_filename))
         return pysam.TabixFile(  # pylint: disable=no-member
             file_path, index=index_path
@@ -269,7 +276,7 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
         """Computes a md5 hash for a file in the resource"""
         logger.debug(
             "compute md5sum for %s in %s", filename, resource.resource_id)
-        filepath = self._get_file_path(resource, filename)
+        filepath = self.get_filepath(resource, filename)
         with open(filepath, "rb") as infile:
             md5_hash = hashlib.md5()
             while chunk := infile.read(8192):
@@ -375,10 +382,14 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
 
     def _precheck_checkout_manifest_timestamps(self, resource):
         current_manifest = self.load_manifest(resource)
-        manifest_files = set([
-            fname for fname, _, _ in current_manifest.get_files()])
-        resource_files = set([
-            fname for fname, _, _ in self.get_files(resource)])
+        manifest_files = {
+            fname
+            for fname, _, _ in current_manifest.get_files()
+        }
+        resource_files = {
+            fname
+            for fname, _, _ in self.get_files(resource)
+        }
 
         new_files = resource_files.difference(manifest_files)
         if new_files:
@@ -429,21 +440,21 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
                     "updating timestamp of file %s from resource %s to %s",
                     entry.name, resource.resource_id, entry.time)
                 if not dry_run:
-                    filepath = self._get_file_path(resource, entry.name)
+                    filepath = self.get_filepath(resource, entry.name)
                     timestamp = entry.get_timestamp()
                     os.utime(filepath, (timestamp, timestamp))
         return True
 
     def load_manifest(self, resource) -> Manifest:
         """Loads resource manifest"""
-        filename = self._get_file_path(resource, GR_MANIFEST_FILE_NAME)
+        filename = self.get_filepath(resource, GR_MANIFEST_FILE_NAME)
         with open(filename, "rt", encoding="utf8") as infile:
             content = infile.read()
             return Manifest.from_file_content(content)
 
     def save_manifest(self, resource, manifest: Manifest):
         """Saves manifest into genomic resources directory."""
-        filename = self._get_file_path(resource, GR_MANIFEST_FILE_NAME)
+        filename = self.get_filepath(resource, GR_MANIFEST_FILE_NAME)
         with open(filename, "wt", encoding="utf8") as outfile:
             yaml.dump(manifest.to_manifest_entries(), outfile)
         resource.refresh()

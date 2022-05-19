@@ -36,7 +36,7 @@ def test_cli_checkout_simple(dir_repo):
 
     res = dir_repo.get_resource("sub/two")  # NOSONAR
     for fname, _, _ in dir_repo.get_files(res):
-        filepath = dir_repo._get_file_path(res, fname)
+        filepath = dir_repo.get_filepath(res, fname)
         filepath.touch()
     assert not dir_repo.check_manifest_timestamps(res)
 
@@ -49,7 +49,7 @@ def test_cli_checkout_dry_run(dir_repo):
 
     res = dir_repo.get_resource("sub/two")
     for fname, _, _ in dir_repo.get_files(res):
-        filepath = dir_repo._get_file_path(res, fname)
+        filepath = dir_repo.get_filepath(res, fname)
         filepath.touch()
     assert not dir_repo.check_manifest_timestamps(res)
 
@@ -65,7 +65,7 @@ def test_cli_checkout_with_same_resource(dir_repo):
 
     res = dir_repo.get_resource("sub/two")
     for fname, _, _ in dir_repo.get_files(res):
-        filepath = dir_repo._get_file_path(res, fname)
+        filepath = dir_repo.get_filepath(res, fname)
         filepath.touch()
     assert not dir_repo.check_manifest_timestamps(res)
 
@@ -78,7 +78,7 @@ def test_cli_checkout_with_other_resource(dir_repo):
 
     res = dir_repo.get_resource("sub/two")
     for fname, _, _ in dir_repo.get_files(res):
-        filepath = dir_repo._get_file_path(res, fname)
+        filepath = dir_repo.get_filepath(res, fname)
         filepath.touch()
     assert not dir_repo.check_manifest_timestamps(res)
 

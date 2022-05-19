@@ -85,7 +85,7 @@ class CachingDirectoryRepo(GenomicResourceDirRepo):
         self._copy_manifest_entry(
             local_resource, remote_resource, file_remote_entry)
 
-        full_file_path = self._get_file_path(local_resource, filename)
+        full_file_path = self.get_filepath(local_resource, filename)
         assert full_file_path.exists()
 
         return full_file_path

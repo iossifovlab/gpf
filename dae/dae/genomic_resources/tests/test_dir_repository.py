@@ -45,7 +45,7 @@ def test_dir_repository(tmp_path):
     assert dir_manifest == src_manifest
 
     dirname = pathlib.Path(
-        dir_repo._get_genomic_resource_dir(dir_resource))  # pylint: disable=protected-access
+        dir_repo._get_resource_dir(dir_resource))  # pylint: disable=protected-access
 
     for filename, _size, _mod_time in dir_resource.get_files():
         path = dirname / filename
@@ -85,7 +85,7 @@ def test_dir_repository_resource_update(tmp_path):
     assert gr1.get_manifest() == gr2.get_manifest()
 
     dirname = pathlib.Path(
-        dir_repo1._get_genomic_resource_dir(gr1))  # pylint: disable=protected-access
+        dir_repo1._get_resource_dir(gr1))  # pylint: disable=protected-access
     for filename, _size, _mod_time in gr1.get_files():
         path = dirname / filename
         path.touch()

@@ -36,7 +36,7 @@ def test_check_manifest_timestamps(dir_repo):
     assert dir_repo.check_manifest_timestamps(res)
 
     for fname, _, _ in dir_repo.get_files(res):
-        filepath = dir_repo._get_file_path(res, fname)
+        filepath = dir_repo.get_filepath(res, fname)
         filepath.touch()
 
     assert not dir_repo.check_manifest_timestamps(res)
@@ -51,7 +51,7 @@ def test_check_manifest_md5sums(dir_repo):
     assert dir_repo.check_manifest_md5sums(res)
 
     for fname, _, _ in dir_repo.get_files(res):
-        filepath = dir_repo._get_file_path(res, fname)
+        filepath = dir_repo.get_filepath(res, fname)
         with open(filepath, "at", encoding="utf8") as outfile:
             outfile.write("\n")
 
@@ -64,7 +64,7 @@ def test_checkout_manifest_timestamps_simple(dir_repo):
     assert dir_repo.check_manifest_timestamps(res)
 
     for fname, _, _ in dir_repo.get_files(res):
-        filepath = dir_repo._get_file_path(res, fname)
+        filepath = dir_repo.get_filepath(res, fname)
         filepath.touch()
     assert not dir_repo.check_manifest_timestamps(res)
 
@@ -75,7 +75,7 @@ def test_checkout_manifest_timestamps_simple(dir_repo):
 def test_checkout_manifest_timestamps_fail_with_new_file(dir_repo):
     """Test that checkout fails when new file is found in the resource."""
     res = dir_repo.get_resource("one")
-    new_filepath = dir_repo._get_file_path(res, "new_file.txt")
+    new_filepath = dir_repo.get_filepath(res, "new_file.txt")
     with open(new_filepath, "wt", encoding="utf8") as outfile:
         outfile.write("new file\n")
 
@@ -84,7 +84,7 @@ def test_checkout_manifest_timestamps_fail_with_new_file(dir_repo):
 def test_checkout_manifest_timestamps_fail_with_deleted_file(dir_repo):
     """Test that checkout fails when a file is deleted from the resource."""
     res = dir_repo.get_resource("one")
-    new_filepath = dir_repo._get_file_path(res, "data.txt")
+    new_filepath = dir_repo.get_filepath(res, "data.txt")
     new_filepath.unlink()
 
     assert not dir_repo.checkout_manifest_timestamps(res)

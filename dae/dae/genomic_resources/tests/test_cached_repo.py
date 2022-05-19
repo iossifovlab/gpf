@@ -148,7 +148,7 @@ def test_cached_repository_resource_update_delete(tmp_path):
     assert any([f.name == "alabala.txt"for f in gr2.get_manifest()])
 
     dirname = pathlib.Path(
-        dir_repo._get_genomic_resource_dir(gr1))  # pylint: disable=protected-access
+        dir_repo._get_resource_dir(gr1))  # pylint: disable=protected-access
     path = dirname / "alabala.txt"
     path.unlink()
 
@@ -192,7 +192,7 @@ def test_cached_http_repository_resource_update_delete(
     assert any([f.name == "alabala.txt" for f in gr2.get_manifest()])
 
     dirname = pathlib.Path(
-        dir_repo._get_genomic_resource_dir(gr1))  # pylint: disable=protected-access
+        dir_repo._get_resource_dir(gr1))  # pylint: disable=protected-access
     path = dirname / "alabala.txt"
     path.unlink()
 

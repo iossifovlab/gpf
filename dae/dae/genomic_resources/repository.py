@@ -347,8 +347,8 @@ class GenomicResourceRepo(abc.ABC):
     def get_resource(self, resource_id, version_constraint=None,
                      genomic_repository_id=None) -> Optional[GenomicResource]:
         """
-            Returns one resource with id qual to resource_id. If not found,
-            None is returned.
+        Returns one resource with id qual to resource_id. If not found,
+        None is returned.
         """
 
     @abc.abstractmethod
