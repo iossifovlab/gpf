@@ -105,6 +105,25 @@ class UserSerializer(serializers.ModelSerializer):
             user.groups.add(*to_add)
             user.groups.remove(*to_remove)
 
+    def run_validation(self, data):
+        email = data.get("email")
+        if email:
+            data["email"] = get_user_model().objects.normalize_email(email).lower()
+
+        if not data.get("groups"):
+            data["groups"] = []
+
+        return super().run_validation(data=data)
+
+    def validate(self, data):
+        unknown_keys = set(self.initial_data.keys()) - set(self.fields.keys())
+        if unknown_keys:
+            raise serializers.ValidationError(
+                "Got unknown fields: {}".format(unknown_keys)
+            )
+
+        return super(UserSerializer, self).validate(data)
+
     def update(self, instance, validated_data):
         groups = validated_data.pop("groups", None)
         self._check_groups_exist(groups)

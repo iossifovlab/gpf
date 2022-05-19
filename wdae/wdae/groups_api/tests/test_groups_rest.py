@@ -321,11 +321,11 @@ def test_not_admin_cant_revoke_permissions(
         url, json.dumps(data), content_type="application/json", format="json"
     )
 
-    assert response.status_code == status.HTTP_403_FORBIDDEN
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED
     assert user_has_permission(user, dataset.dataset_id)
 
 
-def test_cant_revoke_default_permissions(user_client, dataset):
+def test_cant_revoke_default_permissions(admin_client, dataset):
     Dataset.recreate_dataset_perm(dataset.dataset_id)
 
     url = "/api/v3/groups/revoke-permission"
@@ -336,7 +336,7 @@ def test_cant_revoke_default_permissions(user_client, dataset):
         group = Group.objects.get(name=group_name)
         data = {"datasetId": dataset.dataset_id, "groupId": group.id}
 
-        response = user_client.post(
+        response = admin_client.post(
             url,
             json.dumps(data),
             content_type="application/json",
@@ -345,116 +345,3 @@ def test_cant_revoke_default_permissions(user_client, dataset):
 
         assert response.status_code == status.HTTP_403_FORBIDDEN
         assert dataset.groups.filter(id=group.id).exists()
-
-
-def test_admin_can_assign_group_to_dataset(
-    admin_client, dataset, group_with_user
-):
-    group, user = group_with_user
-
-    assert not user_has_permission(user, dataset.dataset_id)
-
-    url = f"/api/v3/groups/{group.id}/dataset/{dataset.dataset_id}"
-    response = admin_client.post(url)
-
-    assert response.status_code == status.HTTP_200_OK
-    assert user_has_permission(user, dataset.dataset_id)
-
-
-def test_admin_can_revoke_dataset_access_from_group(
-    admin_client, dataset, group_with_user
-):
-    group, user = group_with_user
-
-    dataset.groups.add(group)
-
-    assert user_has_permission(user, dataset.dataset_id)
-
-    url = f"/api/v3/groups/{group.id}/dataset/{dataset.dataset_id}"
-    response = admin_client.delete(url)
-
-    assert response.status_code == status.HTTP_200_OK
-    assert not user_has_permission(user, dataset.dataset_id)
-
-
-def test_admin_can_assign_group_to_user(admin_client, user, group):
-    assert not user.groups.filter(name=group.name).exists()
-
-    url = f"/api/v3/groups/{group.id}/user/{user.id}"
-    response = admin_client.post(url)
-
-    assert response.status_code == status.HTTP_200_OK
-    assert user.groups.filter(name=group.name).exists()
-
-
-def test_admin_can_remove_user_from_group(admin_client, group_with_user):
-    group, user = group_with_user
-    assert user.groups.filter(name=group.name).exists()
-
-    url = f"/api/v3/groups/{group.id}/user/{user.id}"
-    response = admin_client.delete(url)
-
-    assert response.status_code == status.HTTP_200_OK
-    assert not user.groups.filter(name=group.name).exists()
-
-
-def test_admin_cant_assign_user_to_nonexistant_group(admin_client, user):
-    random_id = 12413
-    assert not Group.objects.filter(id=random_id).exists()
-
-    url = f"/api/v3/groups/{random_id}/user/{user.id}"
-    response = admin_client.post(url)
-
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
-
-
-def test_admin_cant_assign_dataset_to_nonexistant_group(admin_client, dataset):
-    random_id = 12413
-    assert not Group.objects.filter(id=random_id).exists()
-
-    url = f"/api/v3/groups/{random_id}/dataset/{dataset.dataset_id}"
-    response = admin_client.post(url)
-
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
-
-
-def test_user_cant_add_user_to_group(user_client, user, group):
-    assert not user.groups.filter(name=group.name).exists()
-
-    url = f"/api/v3/groups/{group.id}/user/{user.id}"
-    response = user_client.post(url)
-
-    assert response.status_code == status.HTTP_403_FORBIDDEN
-
-
-def test_user_cant_add_dataset_to_group(user_client, dataset, group_with_user):
-    group, user = group_with_user
-    assert not user_has_permission(user, dataset.dataset_id)
-
-    url = f"/api/v3/groups/{group.id}/dataset/{dataset.dataset_id}"
-    response = user_client.post(url)
-
-    assert response.status_code == status.HTTP_403_FORBIDDEN
-
-
-def test_user_cant_remove_user_from_group(user_client, group_with_user):
-    group, user = group_with_user
-    assert user.groups.filter(name=group.name).exists()
-
-    url = f"/api/v3/groups/{group.id}/user/{user.id}"
-    response = user_client.delete(url)
-
-    assert response.status_code == status.HTTP_403_FORBIDDEN
-
-
-def test_user_cant_revoke_dataset_access_from_group(
-    user_client, dataset, group_with_user
-):
-    group, user = group_with_user
-    dataset.groups.add(group)
-    assert user_has_permission(user, dataset.dataset_id)
-
-    url = f"/api/v3/groups/{group.id}/dataset/{dataset.dataset_id}"
-    response = user_client.delete(url)
-
-    assert response.status_code == status.HTTP_403_FORBIDDEN

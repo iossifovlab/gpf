@@ -110,6 +110,9 @@ def _user_has_permission_strict(user, dataset):
     if user.is_superuser or user.is_staff:
         return True
 
+    if not user.is_active:
+        return False
+
     user_groups = get_user_groups(user)
     if "admin" in user_groups:
         return True
