@@ -5,9 +5,11 @@ import pytest
 from dae.genomic_resources.embeded_repository import GenomicResourceEmbededRepo
 from dae.genomic_resources.dir_repository import GenomicResourceDirRepo
 from dae.genomic_resources.repository import GR_CONF_FILE_NAME
+from dae.genomic_resources.repository_helpers import RepositoryWorkflowHelper
+
 
 @pytest.fixture
-def dir_repo(tmp_path):
+def repo_helper(tmp_path):
     """Fixture for directory repository."""
 
     demo_gtf_content = "TP53\tchr3\t300\t200"
@@ -26,65 +28,67 @@ def dir_repo(tmp_path):
     })
     repo = GenomicResourceDirRepo('dir', directory=tmp_path)
     repo.store_all_resources(src_repo)
-    return repo
+    helper = RepositoryWorkflowHelper(repo)
+    return helper
 
 
-def test_check_manifest_timestamps(dir_repo):
+def test_check_manifest_timestamps(repo_helper):
     """Test check for manifest timestamps."""
 
-    res = dir_repo.get_resource("sub/two")  # NOSONAR
-    assert dir_repo.check_manifest_timestamps(res)
+    res = repo_helper.repo.get_resource("sub/two")  # NOSONAR
+    assert repo_helper.check_manifest_timestamps(res)
 
-    for fname, _, _ in dir_repo.get_files(res):
-        filepath = dir_repo.get_filepath(res, fname)
+    for fname, _, _ in repo_helper.repo.get_files(res):
+        filepath = repo_helper.repo.get_filepath(res, fname)
         filepath.touch()
 
-    assert not dir_repo.check_manifest_timestamps(res)
+    assert not repo_helper.check_manifest_timestamps(res)
 
 
-def test_check_manifest_md5sums(dir_repo):
+def test_check_manifest_md5sums(repo_helper):
     """Test check for manifest md5sums."""
 
-    res = dir_repo.get_resource("sub/two")
-    assert dir_repo.check_manifest_timestamps(res)
+    res = repo_helper.repo.get_resource("sub/two")
+    assert repo_helper.check_manifest_timestamps(res)
 
-    assert dir_repo.check_manifest_md5sums(res)
+    assert repo_helper.check_manifest_md5sums(res)
 
-    for fname, _, _ in dir_repo.get_files(res):
-        filepath = dir_repo.get_filepath(res, fname)
+    for fname, _, _ in repo_helper.repo.get_files(res):
+        filepath = repo_helper.repo.get_filepath(res, fname)
         with open(filepath, "at", encoding="utf8") as outfile:
             outfile.write("\n")
 
-    assert not dir_repo.check_manifest_md5sums(res)
+    assert not repo_helper.check_manifest_md5sums(res)
 
 
-def test_checkout_manifest_timestamps_simple(dir_repo):
+def test_checkout_manifest_timestamps_simple(repo_helper):
     """Test that after timestamps checkout the manifest is ok."""
-    res = dir_repo.get_resource("sub/two")
-    assert dir_repo.check_manifest_timestamps(res)
+    res = repo_helper.repo.get_resource("sub/two")
+    assert repo_helper.check_manifest_timestamps(res)
 
-    for fname, _, _ in dir_repo.get_files(res):
-        filepath = dir_repo.get_filepath(res, fname)
+    for fname, _, _ in repo_helper.repo.get_files(res):
+        filepath = repo_helper.repo.get_filepath(res, fname)
         filepath.touch()
-    assert not dir_repo.check_manifest_timestamps(res)
+    assert not repo_helper.check_manifest_timestamps(res)
 
-    assert dir_repo.checkout_manifest_timestamps(res)
-    assert dir_repo.check_manifest_timestamps(res)
+    assert repo_helper.checkout_manifest_timestamps(res)
+    assert repo_helper.check_manifest_timestamps(res)
 
 
-def test_checkout_manifest_timestamps_fail_with_new_file(dir_repo):
+def test_checkout_manifest_timestamps_fail_with_new_file(repo_helper):
     """Test that checkout fails when new file is found in the resource."""
-    res = dir_repo.get_resource("one")
-    new_filepath = dir_repo.get_filepath(res, "new_file.txt")
+    res = repo_helper.repo.get_resource("one")
+    new_filepath = repo_helper.repo.get_filepath(res, "new_file.txt")
     with open(new_filepath, "wt", encoding="utf8") as outfile:
         outfile.write("new file\n")
 
-    assert not dir_repo.checkout_manifest_timestamps(res)
+    assert not repo_helper.checkout_manifest_timestamps(res)
 
-def test_checkout_manifest_timestamps_fail_with_deleted_file(dir_repo):
+
+def test_checkout_manifest_timestamps_fail_with_deleted_file(repo_helper):
     """Test that checkout fails when a file is deleted from the resource."""
-    res = dir_repo.get_resource("one")
-    new_filepath = dir_repo.get_filepath(res, "data.txt")
+    res = repo_helper.repo.get_resource("one")
+    new_filepath = repo_helper.repo.get_filepath(res, "data.txt")
     new_filepath.unlink()
 
-    assert not dir_repo.checkout_manifest_timestamps(res)
+    assert not repo_helper.checkout_manifest_timestamps(res)

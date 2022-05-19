@@ -17,6 +17,8 @@ from dae.genomic_resources.repository_factory import \
     get_configured_definition
 from dae.genomic_resources.cached_repository import GenomicResourceCachedRepo
 from dae.genomic_resources.histogram import HistogramBuilder
+from dae.genomic_resources.repository_helpers import RepositoryWorkflowHelper
+
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.dae_conf import dae_conf_schema
 from dae.annotation.annotation_factory import AnnotationConfigParser
@@ -155,27 +157,34 @@ def _configure_index_subparser(subparsers):
         "-n", "--dry-run",  default=False, action="store_true",
         help="only checks if the manifest update is needed and reports")
 
-
-def _run_index_command(repo, args):
-    if args.resource is not None:
-        res = repo.get_resource(args.resource)
+def _get_resources_list(repo, **kwargs):
+    res_id = kwargs.get("resource")
+    if res_id is not None:
+        res = repo.get_resource(res_id)
         if res is None:
             logger.error(
                 "resource %s not found in repository %s",
-                args.resource, repo.repo_id)
+                res_id, repo.repo_id)
             sys.exit(1)
         resources = [res]
     else:
         resources = repo.get_all_resources()
+    return resources
 
-    if args.dry_run:
+
+def _run_index_command(repo, **kwargs):
+    resources = _get_resources_list(repo, **kwargs)
+    dry_run = kwargs.get("dry_run", False)
+
+    repo_helper = RepositoryWorkflowHelper(repo)
+    if dry_run:
         for res in resources:
-            repo.check_manifest_timestamps(res)
-        repo.check_repository_content_file()
+            repo_helper.check_manifest_timestamps(res)
+        repo_helper.check_repository_content_file()
     else:
         for res in resources:
-            repo.update_manifest(res)
-        repo.update_repository_content_file()
+            repo_helper.update_manifest(res)
+        repo_helper.update_repository_content_file()
 
 
 def _configure_checkout_subparser(subparsers):
@@ -194,21 +203,13 @@ def _configure_checkout_subparser(subparsers):
 
 
 def _run_checkout_command(repo, **kwargs):
-    res_id = kwargs.get("resource")
-    if res_id is not None:
-        res = repo.get_resource(res_id)
-        if res is None:
-            logger.error(
-                "resource %s not found in repository %s",
-                res_id, repo.repo_id)
-            sys.exit(1)
-        resources = [res]
-    else:
-        resources = repo.get_all_resources()
+    resources = _get_resources_list(repo, **kwargs)
+    dry_run = kwargs.get("dry_run", False)
 
+    repo_helper = RepositoryWorkflowHelper(repo)
     for res in resources:
-        repo.checkout_manifest_timestamps(res, kwargs.get("dry_run"))
-    repo.check_repository_content_file()
+        repo_helper.checkout_manifest_timestamps(res, dry_run)
+    repo_helper.check_repository_content_file()
 
 
 def cli_manage(cli_args=None):
@@ -240,7 +241,7 @@ def cli_manage(cli_args=None):
     repo = _create_repo(repo_dir)
 
     if command == "index":
-        _run_index_command(repo, args)
+        _run_index_command(repo, **vars(args))
     elif command == "list":
         _run_list_command(repo, args)
     elif command == "histogram":

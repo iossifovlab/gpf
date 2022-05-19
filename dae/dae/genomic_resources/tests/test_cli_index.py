@@ -5,7 +5,7 @@ import pytest
 from dae.genomic_resources.embeded_repository import GenomicResourceEmbededRepo
 from dae.genomic_resources.dir_repository import GenomicResourceDirRepo
 from dae.genomic_resources.repository import GR_CONF_FILE_NAME
-from dae.genomic_resources.cli import _run_checkout_command
+from dae.genomic_resources.cli import _run_index_command
 from dae.genomic_resources.repository_helpers import RepositoryWorkflowHelper
 
 
@@ -34,8 +34,8 @@ def repo_helper(tmp_path):
     return helper
 
 
-def test_cli_checkout_simple(repo_helper):
-    """Test grr_manage checkout simple invocation."""
+def test_cli_index_simple(repo_helper):
+    """Test grr_manage index simple invocation."""
     dir_repo = repo_helper.repo
 
     res = dir_repo.get_resource("sub/two")  # NOSONAR
@@ -45,52 +45,23 @@ def test_cli_checkout_simple(repo_helper):
 
     assert not repo_helper.check_manifest_timestamps(res)
 
-    _run_checkout_command(dir_repo)
+    _run_index_command(dir_repo)
 
     assert repo_helper.check_manifest_timestamps(res)
 
 
-def test_cli_checkout_dry_run(repo_helper):
-    """Test grr_manage checkout simple invocation."""
+def test_cli_index_with_dry_run(repo_helper):
+    """Test grr_manage index with dry_run invocation."""
     dir_repo = repo_helper.repo
 
-    res = dir_repo.get_resource("sub/two")
+    res = dir_repo.get_resource("sub/two")  # NOSONAR
     for fname, _, _ in dir_repo.get_files(res):
         filepath = dir_repo.get_filepath(res, fname)
         filepath.touch()
     assert not repo_helper.check_manifest_timestamps(res)
 
-    _run_checkout_command(dir_repo, dry_run=True)
+    _run_index_command(dir_repo, dry_run=True)
     assert not repo_helper.check_manifest_timestamps(res)
 
-    _run_checkout_command(dir_repo, dry_run=False)
+    _run_index_command(dir_repo, dry_run=False)
     assert repo_helper.check_manifest_timestamps(res)
-
-
-def test_cli_checkout_with_same_resource(repo_helper):
-    """Test grr_manage checkout simple invocation."""
-    dir_repo = repo_helper.repo
-
-    res = dir_repo.get_resource("sub/two")
-    for fname, _, _ in dir_repo.get_files(res):
-        filepath = dir_repo.get_filepath(res, fname)
-        filepath.touch()
-    assert not repo_helper.check_manifest_timestamps(res)
-
-    _run_checkout_command(dir_repo, resource="sub/two")
-    assert repo_helper.check_manifest_timestamps(res)
-
-
-def test_cli_checkout_with_other_resource(repo_helper):
-    """Test grr_manage checkout simple invocation."""
-    dir_repo = repo_helper.repo
-
-    res = dir_repo.get_resource("sub/two")
-    for fname, _, _ in dir_repo.get_files(res):
-        filepath = dir_repo.get_filepath(res, fname)
-        filepath.touch()
-
-    assert not repo_helper.check_manifest_timestamps(res)
-
-    _run_checkout_command(dir_repo, resource="one")
-    assert not repo_helper.check_manifest_timestamps(res)

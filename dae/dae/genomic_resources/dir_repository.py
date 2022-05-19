@@ -81,8 +81,12 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
             content_dict, my_leaf_to_size_and_time))
 
     def get_filepath(self, resource, filename: str) -> pathlib.Path:
-        """Returns full filename for a file in a resource."""
+        """Returns pathlib filename for a file in a resource."""
         return self._get_resource_dir(resource) / filename
+
+    def get_content_filepath(self):
+        """Returns pathlib filename the repository content file."""
+        return self.directory / GRP_CONTENTS_FILE_NAME
 
     def file_exists(self, resource, filename):
         """Checks if a file exists in a genomic resource."""
@@ -216,51 +220,6 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
         self.save_manifest(local_resource, remote_manifest)
         self.refresh()
 
-    def build_repo_content(self):
-        """Builds the content of the .CONTENTS file."""
-        content = [
-            {
-                "id": gr.resource_id,
-                "version": gr.get_version_str(),
-                "config": gr.get_config(),
-                "manifest": gr.get_manifest().to_manifest_entries()
-            }
-            for gr in self.get_all_resources()]
-        content = sorted(content, key=lambda x: x["id"])
-        return content
-
-    def update_repository_content_file(self):
-        """Creates or updates the content file for the repository."""
-        content_filename = self.directory / GRP_CONTENTS_FILE_NAME
-        old_content = None
-        if content_filename.exists():
-            with open(content_filename, "rt", encoding="utf8") as infile:
-                old_content = yaml.safe_load(infile.read())
-
-        content = self.build_repo_content()
-        if content == old_content:
-            logger.info("repository content file is up-to-date")
-        else:
-            logger.info("saving contents file %s", content_filename)
-            with open(content_filename, "wt", encoding="utf8") as outfile:
-                yaml.dump(content, outfile)
-
-    def check_repository_content_file(self):
-        """Checks if the repository's content file is up-to-date."""
-        content_filename = self.directory / GRP_CONTENTS_FILE_NAME
-        old_content = None
-        if content_filename.exists():
-            with open(content_filename, "rt", encoding="utf8") as infile:
-                old_content = yaml.safe_load(infile.read())
-
-        content = self.build_repo_content()
-        if content == old_content:
-            logger.info("repository content file is up-to-date")
-            return True
-        else:
-            logger.info("repository content file needs updating.")
-            return False
-
     def open_tabix_file(self, resource,  filename,
                         index_filename=None):
         file_path = str(self.get_filepath(resource, filename))
@@ -331,119 +290,6 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
                 resource.resource_id, exc_info=True)
             manifest = self.build_manifest(resource)
             self.save_manifest(resource, manifest)
-
-    def check_manifest_timestamps(self, resource: GenomicResource) -> bool:
-        """
-        Checks if resource manifest needs update using timestamps.
-
-        The check is done using resoruce files timestamps. If all the
-        timestamps match, returns True. Otherwise returns False.
-        """
-        current_manifest = self.load_manifest(resource)
-        new_manifest = Manifest()
-        for fname, fsize, ftime in sorted(self.get_files(resource)):
-            md5 = None
-            if fname in current_manifest:
-                entry = current_manifest[fname]
-                if entry.size == fsize and entry.time == ftime:
-                    md5 = entry.md5
-            new_manifest.add(ManifestEntry(fname, fsize, ftime, md5))
-        if current_manifest != new_manifest:
-            logger.warning(
-                "resource %s needs manifest update", resource.resource_id)
-            return False
-        logger.info(
-            "manifest timestamps are OK for <%s>", resource.resource_id)
-        return True
-
-    def check_manifest_md5sums(self, resource):
-        """
-        Checks if md5 sums of resource's files match the manifest's md5 sums.
-        """
-        current_manifest = self.load_manifest(resource)
-
-        diff = []
-        for fname, _fsize, _ftime in sorted(self.get_files(resource)):
-            manifest_md5 = None
-            if fname in current_manifest:
-                entry = current_manifest[fname]
-                manifest_md5 = entry.md5
-            computed_md5 = self.compute_md5_sum(resource, fname)
-            if manifest_md5 != computed_md5:
-                diff.append((fname, manifest_md5, computed_md5))
-        if diff:
-            for fname, manifest_md5, computed_md5 in diff:
-                logger.warning(
-                    "resource (%s) file %s manifest md5 %s does not match "
-                    "computed md5 %s",
-                    resource.get_id(), fname, manifest_md5, computed_md5)
-            return False
-        return True
-
-    def _precheck_checkout_manifest_timestamps(self, resource):
-        current_manifest = self.load_manifest(resource)
-        manifest_files = {
-            fname
-            for fname, _, _ in current_manifest.get_files()
-        }
-        resource_files = {
-            fname
-            for fname, _, _ in self.get_files(resource)
-        }
-
-        new_files = resource_files.difference(manifest_files)
-        if new_files:
-            logger.error(
-                "new files %s found in resource <%s>",
-                new_files, resource.resource_id)
-        deleted_files = manifest_files.difference(resource_files)
-        if deleted_files:
-            logger.error(
-                "files %s deleted from resource <%s>",
-                deleted_files, resource.resource_id)
-        if new_files or deleted_files:
-            return False
-        assert manifest_files == resource_files
-
-        diff = []
-        for entry in current_manifest:
-            computed_md5 = self.compute_md5_sum(resource, entry.name)
-            if entry.md5 != computed_md5:
-                diff.append((entry.name, entry.md5, computed_md5))
-        if diff:
-            for fname, manifest_md5, computed_md5 in diff:
-                logger.warning(
-                    "resource (%s) file %s manifest md5 %s does not match "
-                    "computed md5 %s",
-                    resource.get_id(), fname, manifest_md5, computed_md5)
-            return False
-
-        return True
-
-    def checkout_manifest_timestamps(self, resource, dry_run=False):
-        """
-        Gets timestamps from manifest and sets them to resource's files.
-        """
-        if not self._precheck_checkout_manifest_timestamps(resource):
-            return False
-
-        current_manifest = resource.get_manifest()
-
-        for fname, _fsize, ftime in self.get_files(resource):
-            entry = current_manifest[fname]
-            if ftime == entry.time:
-                logger.info(
-                    "file %s from resource %s timestamp is OK",
-                    entry.name, resource.resource_id)
-            else:
-                logger.warning(
-                    "updating timestamp of file %s from resource %s to %s",
-                    entry.name, resource.resource_id, entry.time)
-                if not dry_run:
-                    filepath = self.get_filepath(resource, entry.name)
-                    timestamp = entry.get_timestamp()
-                    os.utime(filepath, (timestamp, timestamp))
-        return True
 
     def load_manifest(self, resource) -> Manifest:
         """Loads resource manifest"""

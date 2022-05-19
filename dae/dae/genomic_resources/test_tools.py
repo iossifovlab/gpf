@@ -1,6 +1,7 @@
 from dae.genomic_resources.embeded_repository import GenomicResourceEmbededRepo
 from dae.genomic_resources.dir_repository import GenomicResourceDirRepo
 from dae.genomic_resources.cached_repository import GenomicResourceCachedRepo
+from dae.genomic_resources.repository_helpers import RepositoryWorkflowHelper
 from dae.genomic_resources.url_repository import GenomicResourceURLRepo
 
 
@@ -26,7 +27,9 @@ def build_test_repos(pth, content):
 
     dir_repo = GenomicResourceDirRepo("dir", directory=dir_repo_path)
     dir_repo.store_resource(emb_repo.get_resource("one"))
-    dir_repo.update_repository_content_file()
+
+    repo_helper = RepositoryWorkflowHelper(dir_repo)
+    repo_helper.update_repository_content_file()
 
     embeded_cached_repo = GenomicResourceCachedRepo(
         emb_repo, emb_cache_path)

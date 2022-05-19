@@ -4,6 +4,7 @@ import pytest
 
 from dae.genomic_resources.url_repository import GenomicResourceURLRepo
 from dae.genomic_resources.dir_repository import GenomicResourceDirRepo
+from dae.genomic_resources.repository_helpers import RepositoryWorkflowHelper
 from dae.genomic_resources.cached_repository import GenomicResourceCachedRepo
 from dae.genomic_resources.embeded_repository import GenomicResourceEmbededRepo
 from dae.genomic_resources import build_genomic_resource_repository
@@ -176,7 +177,9 @@ def test_cached_http_repository_resource_update_delete(
 
     dir_repo = GenomicResourceDirRepo('dir', directory=tmp_path / "t1")
     dir_repo.store_all_resources(src_repo)
-    dir_repo.update_repository_content_file()
+
+    repo_helper = RepositoryWorkflowHelper(dir_repo)
+    repo_helper.update_repository_content_file()
 
     http_server = http_server(dir_repo.directory)
     http_port = http_server.http_port
@@ -201,8 +204,9 @@ def test_cached_http_repository_resource_update_delete(
     assert any([f.name != "alabala.txt" for f in manifest])
 
     dir_repo.save_manifest(gr1, manifest)
-    dir_repo.update_repository_content_file()
-    content = dir_repo.build_repo_content()
+    repo_helper = RepositoryWorkflowHelper(dir_repo)
+    repo_helper.update_repository_content_file()
+    content = repo_helper.build_repo_content()
 
     print(100*"=")
     print(content)
