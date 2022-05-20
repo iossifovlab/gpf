@@ -42,13 +42,14 @@ class TableConfigurationView(QueryBaseView):
         if configuration is None:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+        if len(configuration) == 0:
+            return Response(dict())
+
         response = {
             "defaultDataset": configuration.get("default_dataset"),
             "columns": [],
             "pageSize": self.gpf_instance._autism_gene_profile_db.PAGE_SIZE,
         }
-        if len(configuration) == 0:
-            return Response(response)
 
         response["columns"].append(
             column("geneSymbol", "Gene", clickable="createTab")
