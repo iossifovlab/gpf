@@ -20,13 +20,15 @@ class GeneScore:
 
     Gene Score resource configuration format:
     type: gene_score
-    id: (gene score id)
-    filename: (filename to gene score)
-    desc: (gene score description)
-    histogram:
-      bins: (number of bins)
-      xscale: linear/log
-      yscale: linear/log
+    gene_scores:
+      - id: (gene score id)
+        filename: (filename to gene score)
+        desc: (gene score description)
+    histogram_:
+      - score: (gene score id)
+        bins: (number of bins)
+        x_scale: linear/log
+        y_scale: linear/log
     meta: (gene score metadata)
     """
 
@@ -41,8 +43,8 @@ class GeneScore:
 
         self.desc = desc
         self.bins = self.histogram_config["bins"]
-        self.xscale = self.histogram_config["xscale"]
-        self.yscale = self.histogram_config["yscale"]
+        self.xscale = self.histogram_config["x_scale"]
+        self.yscale = self.histogram_config["y_scale"]
         self.file = file
         self.range = getattr(self.histogram_config, "range", None)
 
