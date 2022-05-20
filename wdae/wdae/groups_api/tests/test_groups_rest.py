@@ -172,7 +172,6 @@ def test_no_empty_groups_are_accessible(admin_client):
 
 
 def test_empty_group_with_permissions_is_shown(admin_client, dataset):
-    groups_count = Group.objects.filter(~Q(name__iregex=email_regex)).count()
     group = Group.objects.create(name="New Group")
 
     dataset.groups.add(group)
@@ -180,7 +179,7 @@ def test_empty_group_with_permissions_is_shown(admin_client, dataset):
     url = "/api/v3/groups"
     response = admin_client.get(url)
     assert response.status_code is status.HTTP_200_OK
-    assert len(response.data) == groups_count + 1
+    assert len(response.data) == Group.objects.count()
     new_group_reponse = next(
         (
             response_group

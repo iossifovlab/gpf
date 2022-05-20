@@ -344,20 +344,6 @@ def test_searching_by_email_finds_only_single_user(
     assert len(response.data) == 1
 
 
-def test_searching_by_any_user_finds_all_users(
-    admin_client, active_user, user_model
-):
-    users_count = user_model.objects.count()
-    assert users_count > 1
-
-    url = "/api/v3/users"
-    params = {"search": "any_user"}
-    response = admin_client.get(url, params, format="json")
-
-    assert response.status_code is status.HTTP_200_OK
-    assert len(response.data) == users_count
-
-
 def test_searching_by_username(admin_client, active_user):
     active_user.name = "Testy Mc Testington"
     active_user.save()

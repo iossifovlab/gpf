@@ -110,9 +110,6 @@ class UserSerializer(serializers.ModelSerializer):
         if email:
             data["email"] = get_user_model().objects.normalize_email(email).lower()
 
-        if not data.get("groups"):
-            data["groups"] = []
-
         return super().run_validation(data=data)
 
     def validate(self, data):
