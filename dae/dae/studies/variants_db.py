@@ -267,8 +267,8 @@ class VariantsDb(object):
             set(genotype_group_configs.keys())
         if overlap:
             logger.error(
-                f"overlapping configurations for studies and groups: "
-                f"{overlap}")
+                "overlapping configurations for studies and groups: %s",
+                overlap)
             raise ValueError(
                 f"overlapping configurations for studies and groups: "
                 f"{overlap}")
@@ -277,7 +277,7 @@ class VariantsDb(object):
         self._load_all_genotype_groups(genotype_group_configs)
 
     def _load_study_configs(self):
-        logger.info(f"loading study configs: {self.dae_config.studies}")
+        logger.info("loading study configs: %s", self.dae_config.studies)
         default_config_filename = None
         default_config = None
 
@@ -289,7 +289,7 @@ class VariantsDb(object):
         if default_config_filename is None or \
                 not os.path.exists(default_config_filename):
             logger.warning(
-                f"default config file is missing: {default_config_filename}")
+                "default config file is missing: %s", default_config_filename)
             default_config_filename = None
 
         if default_config_filename is None:

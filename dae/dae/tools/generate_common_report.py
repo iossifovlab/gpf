@@ -52,20 +52,20 @@ def main(argv, gpf_instance=None):
 
     if args.show_studies:
         for study_id in available_studies:
-            logger.warning(f"study: {study_id}")
+            logger.warning("study: %s", study_id)
     else:
         elapsed = time.time() - start
         logger.info(
-            f"started common reports generation after {elapsed:0.2f} sec")
+            "started common reports generation after %.2f sec", elapsed)
         if args.studies:
             studies = args.studies.split(",")
-            logger.info(f"generating common reports for: {studies}")
+            logger.info("generating common reports for: %s", studies)
         else:
             logger.info("generating common reports for all studies!!!")
             studies = available_studies
         for study in studies:
             if study not in available_studies:
-                logger.error(f"Study {study} not found! Skipping...")
+                logger.error("study %s not found! skipping...", study)
                 continue
 
             study = gpf_instance.get_genotype_data(study)
@@ -73,8 +73,8 @@ def main(argv, gpf_instance=None):
             if not study.config.common_report or \
                     not study.config.common_report.enabled:
                 logger.warning(
-                    f"skipping study {study.study_id} since "
-                    f"common report is disabled")
+                    "skipping study %s since common report is disabled",
+                    study.study_id)
                 continue
 
             common_report = CommonReport(study)
@@ -82,7 +82,7 @@ def main(argv, gpf_instance=None):
 
             if not os.path.exists(os.path.dirname(file_path)):
                 os.makedirs(os.path.dirname(file_path))
-            with open(file_path, "w+") as crf:
+            with open(file_path, "w+", encoding="utf8") as crf:
                 json.dump(common_report.to_dict(), crf)
 
 

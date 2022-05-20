@@ -376,6 +376,8 @@ class ImpalaVariants:
             pedigree_fields=None):
 
         if not self.variants_table:
+            logger.debug(
+                "missing varants table... skipping")
             return None
         do_join = False
         if pedigree_fields is not None:
@@ -416,7 +418,7 @@ class ImpalaVariants:
 
         query = query_builder.product
 
-        logger.debug(f"FAMILY VARIANTS QUERY: {query}")
+        logger.debug("FAMILY VARIANTS QUERY: %s", query)
         deserialize_row = query_builder.create_row_deserializer(
             self.serializer)
         assert deserialize_row is not None
@@ -572,11 +574,7 @@ class ImpalaVariants:
     def _fetch_pedigree(self):
         with closing(self.connection()) as conn:
             with conn.cursor() as cursor:
-                q = """
-                    SELECT * FROM {db}.{pedigree}
-                """.format(
-                    db=self.db, pedigree=self.pedigree_table
-                )
+                q = f"SELECT * FROM {self.db}.{self.pedigree_table}"""
 
                 cursor.execute(q)
                 ped_df = as_pandas(cursor)
@@ -657,11 +655,7 @@ class ImpalaVariants:
     def _fetch_pedigree_schema(self):
         with closing(self.connection()) as conn:
             with conn.cursor() as cursor:
-                q = """
-                    DESCRIBE {db}.{pedigree}
-                """.format(
-                    db=self.db, pedigree=self.pedigree_table
-                )
+                q = f"DESCRIBE {self.db}.{self.pedigree_table}"
 
                 cursor.execute(q)
                 df = as_pandas(cursor)

@@ -90,7 +90,7 @@ class GPFConfigParser:
         try:
             interpolated_text = content % interpol_vars
         except KeyError as ex:
-            raise ValueError(f"interpolation problems: {ex}")
+            raise ValueError("interpolation problems") from ex
 
         config = parser(interpolated_text)
         config.pop("vars", None)
@@ -108,7 +108,7 @@ class GPFConfigParser:
             return cls.parse_and_interpolate(file_contents, parser)
 
         except Exception as ex:
-            logger.error(f"problems parsing config file <{filename}>")
+            logger.error("problems parsing config file <%s>", filename)
             logger.error(ex)
             raise ex
 
@@ -171,8 +171,8 @@ class GPFConfigParser:
         if not os.path.exists(filename):
             raise ValueError(f"{filename} does not exist!")
         logger.debug(
-            f"loading config {filename} with default configuration file "
-            f"{default_config_filename};")
+            "loading config %s with default configuration file %s;",
+            filename, default_config_filename)
 
         config = cls.parse_and_interpolate_file(filename)
         if default_config_filename:
@@ -202,9 +202,8 @@ class GPFConfigParser:
 
             except ValueError:
                 logger.error(
-                    f"unable to parse configuration file {config_path}; "
-                    f"skipped",
-                    exc_info=True)
+                    "unable to parse configuration file %s; skipped",
+                    config_path, exc_info=True)
 
         return result
 
