@@ -1,8 +1,9 @@
+import { GenePlotPage } from './gene-plot-page';
 import { BasePage } from './utils';
 
 export class GeneBrowserPage extends BasePage {
   public get window(): element {
-    return cy.get('gpf-gene-browser');
+    return cy.get('gpf-gene-browser', {timeout: 35000});
   }
 
   public get geneSymbolsHeader(): element {
@@ -14,7 +15,7 @@ export class GeneBrowserPage extends BasePage {
   }
 
   public get goButton(): element {
-    return cy.get('input[value=\'Go\']');
+    return cy.get('input[value=\'Go\']', {timeout: 35000});
   }
 
   public get codingOnlyCheckbox(): element {
@@ -67,5 +68,16 @@ export class GeneBrowserPage extends BasePage {
 
   public get downloadButton(): element {
     return cy.get('#download-button');
+  }
+
+  public clickGoButton(): void {
+    const genePlotPage = new GenePlotPage();
+    this.goButton.click();
+    genePlotPage.window.should('be.visible');
+
+    // this.goButton.click({timeout: this.longerDefaultTimeout}).then(() => {
+    //   genePlotPage.window.should('be.visible')
+    // });
+    // cy.wrap(this.goButton.click(), {timeout: 35000}).then(()=> true);
   }
 }

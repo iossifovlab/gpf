@@ -1,6 +1,6 @@
 import { BasePage } from './utils';
 
-export class AutismGeneProfilesBlock extends BasePage {
+export class AutismGeneProfilesBlockPage extends BasePage {
   public get window(): element {
     return cy.get('gpf-autism-gene-profiles-block');
   }

@@ -1,8 +1,8 @@
-import { AutismGeneProfilesTable } from 'cypress/elements/autism-gene-profiles-table-page';
+import { AutismGeneProfilesTablePage } from 'cypress/elements/autism-gene-profiles-table-page';
 import { sidenavPageLinks } from 'cypress/elements/utils';
 
 describe('Autism gene profiles table tests', () => {
-  const page = new AutismGeneProfilesTable();
+  const page = new AutismGeneProfilesTablePage();
 
   before(() => {
     page.cleanup();
@@ -29,7 +29,7 @@ describe('Autism gene profiles table tests', () => {
 });
 
 describe('Autism gene profiles table row data tests', () => {
-  const page = new AutismGeneProfilesTable();
+  const page = new AutismGeneProfilesTablePage();
 
   before(() => {
     page.cleanup();
@@ -57,7 +57,7 @@ describe('Autism gene profiles table row data tests', () => {
 });
 
 describe('Autism gene profiles table column filtering modal tests', {scrollBehavior: false}, () => {
-  const page = new AutismGeneProfilesTable();
+  const page = new AutismGeneProfilesTablePage();
 
   beforeEach(() => {
     page.navigateToHome(false);
@@ -109,7 +109,7 @@ describe('Autism gene profiles table column filtering modal tests', {scrollBehav
 });
 
 describe('Autism gene profiles table row highlight tests', {scrollBehavior: false}, () => {
-  const page = new AutismGeneProfilesTable();
+  const page = new AutismGeneProfilesTablePage();
   const oddHighlightColor = 'rgb(247, 247, 203)';
   const evenHighlightColor = 'rgb(255, 255, 214)';
 
@@ -170,7 +170,7 @@ describe('Autism gene profiles table row highlight tests', {scrollBehavior: fals
 });
 
 describe('Autism gene profiles table functionality tests', () => {
-  const page = new AutismGeneProfilesTable();
+  const page = new AutismGeneProfilesTablePage();
 
   before(() => {
     page.cleanup();
@@ -366,16 +366,16 @@ describe('Autism gene profiles table functionality tests', () => {
 });
 
 // describe('Autism gene profiles compare modal tests', () => {
-//   const page = new AutismGeneProfilesTable();
-//   const autismGeneProfilesBlock = new AutismGeneProfilesBlock();
+//   const page = new AutismGeneProfilesTablePage();
+//   const AutismGeneProfilesBlockPage = new AutismGeneProfilesBlockPage();
 
 //   before(() => {
-//     autismGeneProfilesBlock.cleanup();
+//     AutismGeneProfilesBlockPage.cleanup();
 //   });
 
 //   beforeEach(() => {
-//     autismGeneProfilesBlock.navigateToHome();
-//     autismGeneProfilesBlock.navigateToSidenavPage(sidenavPageLinks.autismGeneProfiles);
+//     AutismGeneProfilesBlockPage.navigateToHome();
+//     AutismGeneProfilesBlockPage.navigateToSidenavPage(sidenavPageLinks.autismGeneProfiles);
 //   });
 
 //   it('should select multiple genes and check whether the modal appears correctly', () => {

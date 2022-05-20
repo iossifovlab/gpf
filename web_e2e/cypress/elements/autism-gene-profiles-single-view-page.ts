@@ -1,8 +1,8 @@
-import { AutismGeneProfilesTable } from './autism-gene-profiles-table-page';
+import { AutismGeneProfilesTablePage } from './autism-gene-profiles-table-page';
 import { GenotypeBlockPage } from './genotype-block-page';
 import { BasePage, sidenavPageLinks } from './utils';
 
-export class AutismGeneProfilesSingleView extends BasePage {
+export class AutismGeneProfilesSingleViewPage extends BasePage {
   public get window(): element {
     return cy.get('gpf-autism-gene-profile-single-view');
   }

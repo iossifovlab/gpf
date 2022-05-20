@@ -51,7 +51,7 @@ describe('Gene browser basic display tests before query', () => {
   });
 });
 
-describe('Gene browser basic display tests after query', () => {
+describe.only('Gene browser basic display tests after query', () => {
   const page = new GeneBrowserPage();
 
   before(() => {
@@ -60,7 +60,8 @@ describe('Gene browser basic display tests after query', () => {
     page.loginAdmin();
     page.navigateToDatasetPage(datasetIds.iossifov2014, toolPageLinks.geneBrowser);
     page.searchInputBox.type('chd8');
-    page.goButton.click();
+    cy.wait(3000)
+    page.clickGoButton();
   });
 
   it('should display the filters', () => {

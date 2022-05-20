@@ -51,6 +51,7 @@ export const sidenavPageLinks = {
 };
 
 export class BasePage {
+  public readonly longerDefaultTimeout = 35000;
   private readonly adminUsername = 'admin@iossifovlab.com';
   private readonly adminPassword = 'secret';
 

@@ -1,11 +1,11 @@
-import { AutismGeneProfilesBlock } from 'cypress/elements/autism-gene-profiles-block-page';
-import { AutismGeneProfilesSingleView } from 'cypress/elements/autism-gene-profiles-single-view-page';
-import { AutismGeneProfilesTable } from 'cypress/elements/autism-gene-profiles-table-page';
+import { AutismGeneProfilesBlockPage } from 'cypress/elements/autism-gene-profiles-block-page';
+import { AutismGeneProfilesSingleViewPage } from 'cypress/elements/autism-gene-profiles-single-view-page';
+import { AutismGeneProfilesTablePage } from 'cypress/elements/autism-gene-profiles-table-page';
 import { GenotypeBlockPage } from 'cypress/elements/genotype-block-page';
 import { sidenavPageLinks } from 'cypress/elements/utils';
 
 describe('Autism gene profiles single view tests', () => {
-  const page = new AutismGeneProfilesSingleView();
+  const page = new AutismGeneProfilesSingleViewPage();
 
   before(() => {
     page.cleanup();
@@ -55,8 +55,8 @@ describe('Autism gene profiles single view tests', () => {
 });
 
 describe('Autism gene profiles single view links tests', () => {
-  const page = new AutismGeneProfilesSingleView();
-  const autismGeneProfilesTablePage = new AutismGeneProfilesTable();
+  const page = new AutismGeneProfilesSingleViewPage();
+  const AutismGeneProfilesTablePagePage = new AutismGeneProfilesTablePage();
 
   before(() => {
     page.cleanup();
@@ -111,7 +111,7 @@ describe('Autism gene profiles single view links tests', () => {
 });
 
 describe('Autism gene profiles single view dataset table tests', () => {
-  const page = new AutismGeneProfilesSingleView();
+  const page = new AutismGeneProfilesSingleViewPage();
 
   // it('should test redirect logic', () => {
   //   page.cleanup();
@@ -154,7 +154,7 @@ describe('Autism gene profiles single view dataset table tests', () => {
 });
 
 describe.skip('Autism gene profiles single view visual tests', () => {
-  const page = new AutismGeneProfilesSingleView();
+  const page = new AutismGeneProfilesSingleViewPage();
 
   before(() => {
     page.cleanup();
@@ -327,7 +327,7 @@ export const geneData: any = [
 ]
 
 describe.skip('Autism gene profiles single view dynamic data tests', () => {
-  const page = new AutismGeneProfilesSingleView();
+  const page = new AutismGeneProfilesSingleViewPage();
 
   before(() => {
     page.cleanup();

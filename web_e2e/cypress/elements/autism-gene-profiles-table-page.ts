@@ -1,7 +1,7 @@
 import { GenotypeBlockPage } from './genotype-block-page';
 import { BasePage } from './utils';
 
-export class AutismGeneProfilesTable extends BasePage {
+export class AutismGeneProfilesTablePage extends BasePage {
   public get window(): element {
     return cy.get('gpf-autism-gene-profiles-table');
   }

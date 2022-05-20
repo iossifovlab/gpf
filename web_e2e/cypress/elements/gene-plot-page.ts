@@ -2,7 +2,7 @@ import { BasePage } from './utils';
 
 export class GenePlotPage extends BasePage {
   public get window(): element {
-    return cy.get('gpf-gene-plot');
+    return cy.get('gpf-gene-plot', {timeout: 35000});
   }
 
   public get undoButton(): element {

@@ -1,10 +1,10 @@
-import { AutismGeneProfilesBlock } from 'cypress/elements/autism-gene-profiles-block-page';
-import { AutismGeneProfilesTable } from 'cypress/elements/autism-gene-profiles-table-page';
+import { AutismGeneProfilesBlockPage } from 'cypress/elements/autism-gene-profiles-block-page';
+import { AutismGeneProfilesTablePage } from 'cypress/elements/autism-gene-profiles-table-page';
 import { sidenavPageLinks } from 'cypress/elements/utils';
 
 describe('Autism gene profiles block tests', () => {
-  const page = new AutismGeneProfilesBlock();
-  const autismGeneProfilesTablePage = new AutismGeneProfilesTable();
+  const page = new AutismGeneProfilesBlockPage();
+  const AutismGeneProfilesTablePagePage = new AutismGeneProfilesTablePage();
 
   before(() => {
     page.cleanup();
@@ -16,7 +16,7 @@ describe('Autism gene profiles block tests', () => {
   });
 
   it('should display autism gene profiles table', () => {
-    autismGeneProfilesTablePage.window.should('be.visible');
+    AutismGeneProfilesTablePagePage.window.should('be.visible');
   });
 
   it('should display the keybind icon', () => {
