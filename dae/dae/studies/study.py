@@ -1,12 +1,14 @@
+from __future__ import annotations
+
 import time
 import logging
 import functools
 
 from contextlib import closing
 
-from abc import ABC, abstractmethod, abstractproperty
+from abc import ABC, abstractmethod
 
-from typing import Dict
+from typing import Dict, List
 
 from dae.backends.query_runners import QueryResult
 from dae.pedigrees.family import FamiliesData
@@ -23,13 +25,14 @@ class GenotypeData(ABC):
         self.studies = studies
 
         self._description = None
-
+        
+        self._person_set_collection_configs = None
         self._person_set_collections: Dict[str, PersonSetCollection] = dict()
         self._parents = set()
         self._executor = None
 
     def close(self):
-        logger.error(f"base genotype data close() called for {self.study_id}")
+        logger.error("base genotype data close() called for %s", self.study_id)
 
     @property
     def study_id(self):
@@ -50,7 +53,9 @@ class GenotypeData(ABC):
     def description(self):
         if self._description is None:
             if self.config.description_file:
-                with open(self.config.description_file, "r") as infile:
+                with open(
+                        self.config.description_file,
+                        "rt", encoding="utf8") as infile:
                     self._description = infile.read()
             else:
                 self._description = self.config.description
@@ -103,9 +108,10 @@ class GenotypeData(ABC):
     def _add_parent(self, genotype_data_id):
         self._parents.add(genotype_data_id)
 
-    @abstractproperty
+    @property
+    @abstractmethod
     def is_group(self):
-        pass
+        return False
 
     @abstractmethod
     def get_studies_ids(self, leaves=True):
@@ -131,18 +137,18 @@ class GenotypeData(ABC):
                     seen.add(child.study_id)
         return result
 
-    def _get_query_children(self, study_filters):
+    def _get_query_children(self, study_filters) -> List[GenotypeDataStudy]:
         leafs = []
         if self.is_group:
             leafs = self.get_leaf_children()
         else:
             leafs = [self]
-        logger.debug(f"leaf children: {[st.study_id for st in leafs]}")
-        logger.debug(f"study_filters: {study_filters}")
+        logger.debug("leaf children: %s", [st.study_id for st in leafs])
+        logger.debug("study_filters: %s", study_filters)
 
         if study_filters is not None:
             leafs = [st for st in leafs if st.study_id in study_filters]
-        logger.debug(f"studies to query: {[st.study_id for st in leafs]}")
+        logger.debug("studies to query: %s", [st.study_id for st in leafs])
         return leafs
 
     def query_result_variants(
@@ -194,6 +200,7 @@ class GenotypeData(ABC):
                     collection = genotype_study\
                         .get_person_set_collection(collection_id)
 
+                    # pylint: disable=no-member,protected-access
                     person_sets_query = genotype_study\
                         ._backend\
                         .build_person_set_collection_query(
@@ -209,6 +216,7 @@ class GenotypeData(ABC):
             if person_ids is not None and len(person_ids) == 0:
                 continue
 
+            # pylint: disable=no-member,protected-access
             runner = genotype_study._backend\
                 .build_family_variants_query_runner(
                     regions=regions,
@@ -227,7 +235,13 @@ class GenotypeData(ABC):
                     return_unknown=return_unknown,
                     limit=limit,
                     pedigree_fields=person_sets_query)
-            runner.study_id = genotype_study.study_id
+            if runner is None:
+                logger.debug(
+                    "study %s has no varants... skipping",
+                    genotype_study.study_id)
+                continue
+
+            runner.study_id = genotype_study.study_id                
             logger.debug("runner created")
 
             study_name = genotype_study.name
@@ -237,7 +251,7 @@ class GenotypeData(ABC):
                 adapt_study_variants, study_name, study_phenotype))
             runners.append(runner)
 
-        logger.debug(f"runners: {len(runners)}")
+        logger.debug("runners: %s", len(runners))
         if len(runners) == 0:
             return
 
@@ -287,6 +301,8 @@ class GenotypeData(ABC):
             pedigree_fields=pedigree_fields,
             **kwargs
         )
+        if result is None:
+            return
 
         started = time.time()
         try:
@@ -340,9 +356,9 @@ class GenotypeData(ABC):
         study_filters=None,
         **kwargs,
     ):
-        logger.info(f"summary query - study_filters: {study_filters}")
+        logger.info("summary query - study_filters: %s", study_filters)
         logger.info(
-            f"study {self.study_id} children: {self.get_leaf_children()}")
+            "study %s children: %s", self.study_id, self.get_leaf_children())
 
         person_ids = self._transform_person_set_collection_query(
             person_set_collection, person_ids)
@@ -354,6 +370,7 @@ class GenotypeData(ABC):
 
         runners = []
         for genotype_study in self._get_query_children(study_filters):
+            # pylint: disable=no-member,protected-access
             runner = genotype_study._backend \
                 .build_summary_variants_query_runner(
                     regions=regions,
@@ -463,15 +480,16 @@ class GenotypeData(ABC):
 
             elapsed = time.time() - started
             logger.info(
-                f"processing study {self.study_id} "
-                f"elapsed: {elapsed:.3f}"
-            )
+                "processing study %s elapsed: %.3f",
+                self.study_id, elapsed)
+
             for v in variants.values():
                 yield v
         finally:
             logger.debug("[DONE] executor closed...")
 
-    @abstractproperty
+    @property
+    @abstractmethod
     def families(self):
         pass
 
@@ -561,7 +579,7 @@ class GenotypeDataGroup(GenotypeData):
 
 class GenotypeDataStudy(GenotypeData):
     def __init__(self, config, backend):
-        super(GenotypeDataStudy, self).__init__(config, [self])
+        super().__init__(config, [self])
 
         self._backend = backend
         self._build_person_set_collections()
