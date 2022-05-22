@@ -2,7 +2,6 @@ import os
 
 from rest_framework.response import Response  # type: ignore
 from rest_framework import status  # type: ignore
-from guardian.shortcuts import get_groups_with_perms  # type: ignore
 
 from query_base.query_base import QueryBaseView
 from studies.study_wrapper import StudyWrapperBase
@@ -25,8 +24,7 @@ class DatasetView(QueryBaseView):
 
     def augment_with_groups(self, dataset):
         dataset_object = Dataset.objects.get(dataset_id=dataset["id"])
-        groups = get_groups_with_perms(dataset_object)
-        serializer = GroupSerializer(groups, many=True)
+        serializer = GroupSerializer(dataset_object.groups.all(), many=True)
         dataset["groups"] = serializer.data
 
         return dataset

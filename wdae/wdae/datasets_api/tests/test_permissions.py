@@ -4,10 +4,6 @@ from box import Box
 
 from django.contrib.auth import get_user_model
 
-from django.contrib.auth.models import Group
-
-from guardian.shortcuts import get_groups_with_perms
-
 from dae.studies.study import GenotypeDataGroup
 from studies.study_wrapper import StudyWrapper
 from datasets_api.models import Dataset
@@ -237,20 +233,7 @@ def test_explore_datasets_users_and_groups(db, user, dataset_wrapper):
     add_group_perm_to_user("A", user)
     add_group_perm_to_dataset("A", "Dataset")
 
-    group = Group.objects.get(name="A")
-
     dataset = Dataset.objects.get(dataset_id="Dataset")
-
-    print("===========================================================")
-    print(group, dir(group))
-    print("===========================================================")
-
-    print("user.groups:", user.groups.all())
-    print("get_groups_with_perms:", get_groups_with_perms(dataset))
-
-    print(get_user_groups(user))
-    print(get_dataset_groups(dataset))
-    print(get_dataset_groups("Dataset"))
 
     assert get_user_groups(user) & get_dataset_groups(dataset)
 

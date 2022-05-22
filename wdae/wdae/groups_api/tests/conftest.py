@@ -1,6 +1,6 @@
 import pytest
 
-from guardian.models import Group
+from django.contrib.auth.models import Group
 
 from datasets_api.models import Dataset
 
