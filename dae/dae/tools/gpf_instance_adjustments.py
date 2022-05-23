@@ -1,11 +1,12 @@
-import yaml
 import os
 import sys
 import logging
 import argparse
 import glob
-import toml
 import abc
+
+import yaml
+import toml
 
 
 logger = logging.getLogger("gpf_instance_adjustments")
@@ -33,11 +34,12 @@ class AdjustmentsCommand(abc.ABC):
         self.filename = os.path.join(instance_dir, "gpf_instance.yaml")
         if not os.path.exists(self.filename):
             logger.error(
-                f"{instance_dir} is not a GPF instance; "
-                f"gpf_instance.yaml ({self.filename}) not found")
+                "%s is not a GPF instance; "
+                "gpf_instance.yaml (%s) not found",
+                instance_dir, self.filename)
             raise ValueError(instance_dir)
 
-        with open(self.filename) as infile:
+        with open(self.filename, "rt", encoding="utf8") as infile:
             self.config = yaml.safe_load(infile.read())
 
     @abc.abstractmethod
@@ -45,7 +47,7 @@ class AdjustmentsCommand(abc.ABC):
         pass
 
     def close(self):
-        with open(self.filename, "w") as outfile:
+        with open(self.filename, "w", encoding="utf8") as outfile:
             outfile.write(yaml.safe_dump(self.config))
 
     def __enter__(self):
@@ -65,7 +67,7 @@ class InstanceIdCommand(AdjustmentsCommand):
         variables = self.config["vars"]
         variables["instance_id"] = self.instance_id
         logger.info(
-            f"replacing instance id with {self.instance_id}")
+            "replacing instance id with %s", self.instance_id)
 
 
 class StudyConfigsAdjustmentCommand(AdjustmentsCommand):
@@ -79,14 +81,14 @@ class StudyConfigsAdjustmentCommand(AdjustmentsCommand):
         config_filenames = glob.glob(pattern, recursive=True)
 
         for config_filename in config_filenames:
-            logger.info(f"processing study {config_filename}")
-            with open(config_filename, "rt") as infile:
+            logger.info("processing study %s", config_filename)
+            with open(config_filename, "rt", encoding="utf8") as infile:
                 study_config = toml.loads(infile.read())
             study_id = study_config["id"]
 
             result_config = self.adjust_study(study_id, study_config)
 
-            with open(config_filename, "w") as outfile:
+            with open(config_filename, "w", encoding="utf8") as outfile:
                 outfile.write(toml.dumps(result_config))
 
     def _execute_datasets(self):
@@ -95,14 +97,14 @@ class StudyConfigsAdjustmentCommand(AdjustmentsCommand):
         config_filenames = glob.glob(pattern, recursive=True)
 
         for config_filename in config_filenames:
-            logger.info(f"processing study {config_filename}")
-            with open(config_filename, "rt") as infile:
+            logger.info("processing study %s", config_filename)
+            with open(config_filename, "rt", encoding="utf8") as infile:
                 dataset_config = toml.loads(infile.read())
             dataset_id = dataset_config["id"]
 
             result_config = self.adjust_dataset(dataset_id, dataset_config)
 
-            with open(config_filename, "w") as outfile:
+            with open(config_filename, "w", encoding="utf8") as outfile:
                 outfile.write(toml.dumps(result_config))
 
     def adjust_study(self, study_id, study_config):
@@ -125,20 +127,22 @@ class DefaultGenotypeStorage(StudyConfigsAdjustmentCommand):
         storages = self.config["storage"]
         if default not in storages:
             logger.error(
-                f"GPF instance misconfigured; "
-                f"current default genotype storage {default} not found "
-                f"in the list of storages: {list(storages.keys())}")
+                "GPF instance misconfigured; "
+                "current default genotype storage %s not found "
+                "in the list of storages: %s",
+                default, list(storages.keys()))
             raise ValueError(default)
         if self.storage_id not in storages:
             logger.error(
-                f"bad storage for GPF instance; "
-                f"passed genotype storage {default} not found "
-                f"in the list of configured storages: {list(storages.keys())}")
+                "bad storage for GPF instance; "
+                "passed genotype storage %s not found "
+                "in the list of configured storages: %s",
+                default, list(storages.keys()))
             raise ValueError(default)
 
         default_genotype_storage["default"] = self.storage_id
         logger.info(
-            f"replacing default storage id with {self.storage_id}")
+            "replacing default storage id with %s", self.storage_id)
 
         self._execute_studies()
 
@@ -158,7 +162,7 @@ class EnableDisableStudies(StudyConfigsAdjustmentCommand):
         self.enabled = enabled
 
     def execute(self):
-        logger.info(f"going to disable following studies: {self.study_ids}")
+        logger.info("going to disable following studies: %s", self.study_ids)
         self._execute_studies()
         self._execute_datasets()
 
@@ -175,19 +179,20 @@ class EnableDisableStudies(StudyConfigsAdjustmentCommand):
 
     def adjust_study(self, study_id, study_config):
         if study_id in self.study_ids:
-            logger.info(f"study {study_id} disabled")
+            logger.info("study %s disabled", study_id)
             study_config["enabled"] = self.enabled
         return study_config
 
     def adjust_dataset(self, dataset_id, dataset_config):
         if dataset_id in self.study_ids:
-            logger.info(f"dataset {dataset_id} disabled")
+            logger.info("dataset %s disabled", dataset_id)
             dataset_config["enabled"] = self.enabled
         studies = dataset_config["studies"]
         result = []
         for study_id in studies:
             if study_id in self.study_ids:
-                logger.info(f"removing {study_id} from dataset {dataset_id}")
+                logger.info(
+                    "removing %s from dataset %s", study_id, dataset_id)
                 continue
             result.append(study_id)
         dataset_config["studies"] = result
