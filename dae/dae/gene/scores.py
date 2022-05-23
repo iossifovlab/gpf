@@ -14,7 +14,7 @@ class GenomicScoresDb:
         self.grr = grr
 
         self.scores = {}
-        for resource_id, score_id in scores:
+        for resource_id, selected_score_id in scores:
             resource = self.grr.get_resource(resource_id)
             if resource is None:
                 logger.error(
@@ -27,20 +27,23 @@ class GenomicScoresDb:
                         histogram_config
                     )
                     score_id = histogram_config["score"]
+                    if score_id != selected_score_id:
+                        continue
                     resource_file = os.path.join(
                         "histograms", f"{score_id}.csv"
                     )
-                    is_local = self.grr.file_local(resource, resource_file)
-                    if is_local is False:
-                        logger.error(
-                            f"Failed to load histogram of {resource_id}; "
-                            "Repository cannot provide local filepath to "
-                            f"{resource_file};"
-                        )
-                        continue
+                    # is_local = self.grr.file_local(resource, resource_file)
+                    # if is_local is False:
+                    #     logger.error(
+                    #         f"Failed to load histogram of {resource_id}; "
+                    #         "Repository cannot provide local filepath to "
+                    #         f"{resource_file};"
+                    #     )
+                    #     continue
 
-                    filepath = self.grr.get_file_path(resource, resource_file)
-                    df = pd.read_csv(filepath)
+                    # filepath = self.grr.get_file_path(resource, resource_file)
+                    with resource.open_raw_file(resource_file) as infile:
+                        df = pd.read_csv(infile)
                     assert set(df.columns) == set(["bars", "bins"]), \
                         "Incorrect CSV file"
                     bins = df["bins"].values
@@ -63,7 +66,6 @@ class GenomicScoresDb:
         result = []
 
         for score in self.scores.values():
-            assert score.df is not None
             result.append(score)
 
         return result
@@ -73,8 +75,6 @@ class GenomicScoresDb:
             raise KeyError()
 
         res = self.scores[score_id]
-        if res.df is None:
-            res.load_scores()
         return res
 
     def __contains__(self, score_id):

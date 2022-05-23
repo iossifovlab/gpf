@@ -44,8 +44,6 @@ class Histogram:
         if self.y_scale not in ("linear", "log"):
             raise ValueError(f"unexpected yscale {self.y_scale}")
 
-        self.bars = np.zeros(bins_count, dtype=np.int64)
-
     @staticmethod
     def from_config(conf: Dict[str, Any]) -> Histogram:
         """Constructs a histogram from configuration dict"""
@@ -98,6 +96,8 @@ class Histogram:
         assert all(hist1.bins == hist2.bins)
 
         result = Histogram(
+            hist1.bins,
+            hist1.bars,
             len(hist1.bins) - 1,
             hist1.x_min,
             hist1.x_max,
@@ -106,9 +106,6 @@ class Histogram:
             hist1.x_min_log
         )
 
-        result.bins = hist1.bins
-
-        result.bars += hist1.bars
         result.bars += hist2.bars
 
         return result
@@ -254,10 +251,10 @@ class HistogramBuilder:
                 if value is None:  # None designates missing values
                     continue
 
-                if value < self.x_min or value > self.x_max:
+                if value < hist.x_min or value > hist.x_max:
                     logger.warning(
                         "value %s out of range: [%s, %s]",
-                        value, self.x_min, self.x_max)
+                        value, hist.x_min, hist.x_max)
                     continue
                 index = _bins.searchsorted(value, side='right')
                 if index == 0:
@@ -272,8 +269,8 @@ class HistogramBuilder:
                 _bars[index - 1] += 1
 
         for scr_id in hist_configs.keys():
-            hist[scr_id].bins = bins[scr_id].tolist()
-            hist[scr_id].bars = bars[scr_id].tolist()
+            histograms[scr_id].bins = bins[scr_id]
+            histograms[scr_id].bars = bars[scr_id]
 
         return histograms
 
@@ -436,6 +433,7 @@ def _load_histograms(repo, resource_id, version_constraint,
                 hist_config["max"] = metadata["calculated_max"]
             hist = Histogram.from_config(hist_config)
             hist.bars = data["bars"].to_numpy()[:-1]
+            hist.bins = data["bins"].to_numpy()
 
             hists[score] = hist
             metadatas[score] = metadata

@@ -8,5 +8,5 @@ gene_scores:
 histograms:
   - score: SFARI_gene_score
     bins: 8
-    xscale: linear
-    yscale: linear
+    x_scale: linear
+    y_scale: linear

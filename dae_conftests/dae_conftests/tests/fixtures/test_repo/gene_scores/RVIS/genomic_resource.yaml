@@ -10,9 +10,9 @@ gene_scores:
 histograms:
   - score: RVIS_rank
     bins: 150
-    xscale: linear
-    yscale: linear
+    x_scale: linear
+    y_scale: linear
   - score: RVIS
     bins: 150
-    xscale: linear
-    yscale: log
+    x_scale: linear
+    y_scale: log

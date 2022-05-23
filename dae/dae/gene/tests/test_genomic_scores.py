@@ -44,8 +44,10 @@ def scores_repo():
                 "histograms:\n"
                 " - score: phastCons100\n"
                 "   bins: 100\n"
-                "   xscale: linear\n"
-                "   yscale: linear\n"
+                "   min: 1574474507.0\n"
+                "   max: 23092042.0\n"
+                "   x_scale: linear\n"
+                "   y_scale: linear\n"
                 "default_annotation:\n"
                 "  attributes:\n"
                 "    - source: phastCons100\n"
@@ -85,10 +87,7 @@ def test_genomic_scores_db(scores_repo, temp_cache_dir):
     assert db["phastCons100"] is not None
 
     score = db["phastCons100"]
-    assert score.id == "phastCons100"
-    assert score.desc == "phastCons100 desc"
     assert len(score.bars) == 11
     assert len(score.bins) == 11
-    assert score.xscale == "linear"
-    assert score.yscale == "linear"
-    assert score.help == "test_help"
+    assert score.x_scale == "linear"
+    assert score.y_scale == "linear"
