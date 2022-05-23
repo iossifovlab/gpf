@@ -19,7 +19,7 @@ def test_admin_sees_all_default_users(admin_client):
     response = admin_client.get(url)
 
     assert response.status_code is status.HTTP_200_OK
-    assert len(response.data) == 2  # dev admin, dev staff
+    assert len(response.data) == 1  # dev admin
 
 
 def test_all_users_have_groups(admin_client):
@@ -128,10 +128,8 @@ def test_new_user_is_not_active(admin_client):
     assert not new_user["hasPassword"]
 
 
-def test_admin_can_partial_update_user(admin_client, user_model):
-    user = user_model.objects.first()
-
-    url = "/api/v3/users/{}".format(user.pk)
+def test_admin_can_partial_update_user(admin_client, active_user):
+    url = "/api/v3/users/{}".format(active_user.pk)
     data = {"name": "Ivan"}
 
     response = admin_client.patch(
@@ -140,26 +138,24 @@ def test_admin_can_partial_update_user(admin_client, user_model):
     print(response)
     assert response.status_code is status.HTTP_200_OK
 
-    user.refresh_from_db()
-    assert user.name == "Ivan"
+    active_user.refresh_from_db()
+    assert active_user.name == "Ivan"
 
 
-def test_admin_cant_partial_update_user_email(admin_client, user_model):
-    user = user_model.objects.first()
-
-    url = "/api/v3/users/{}".format(user.pk)
+def test_admin_cant_partial_update_user_email(admin_client, active_user):
+    url = "/api/v3/users/{}".format(active_user.pk)
     data = {"email": "test@test.com"}
 
-    assert user.email != data["email"]
-    old_email = user.email
+    assert active_user.email != data["email"]
+    old_email = active_user.email
 
     response = admin_client.patch(
         url, json.dumps(data), content_type="application/json", format="json"
     )
     assert response.status_code is status.HTTP_400_BAD_REQUEST
 
-    user.refresh_from_db()
-    assert user.email == old_email
+    active_user.refresh_from_db()
+    assert active_user.email == old_email
 
 
 def test_user_name_can_be_updated_to_blank(admin_client, active_user):

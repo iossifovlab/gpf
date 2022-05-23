@@ -16,7 +16,6 @@ from django.contrib.auth.models import \
 from django.contrib.sessions.models import Session
 from django.utils import timezone
 from django.conf import settings
-from guardian.conf import settings as guardian_settings  # type: ignore
 from django.contrib.auth.models import Group
 from django.db.models.signals import m2m_changed, post_delete, pre_delete
 
@@ -312,24 +311,6 @@ def _create_verif_path(user):
         user=user, defaults={"path": uuid.uuid4()}
     )
     return verif_path
-
-
-def get_anonymous_user_instance(current_user_model):
-    try:
-        print("current_user_model:", current_user_model)
-        user = current_user_model.objects.get(
-            email=guardian_settings.ANONYMOUS_USER_NAME
-        )
-        return user
-    except current_user_model.DoesNotExist:
-        user = current_user_model.objects.create_user(
-            email=guardian_settings.ANONYMOUS_USER_NAME
-        )
-        user.set_unusable_password()
-        user.is_active = True
-
-        user.save()
-        return user
 
 
 def staff_update(sender, **kwargs):

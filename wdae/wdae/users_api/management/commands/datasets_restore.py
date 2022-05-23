@@ -4,7 +4,6 @@ from datasets_api.permissions import add_group_perm_to_dataset
 from django.core.management.base import BaseCommand, CommandError
 from datasets_api.models import Dataset
 # from django.contrib.auth.models import Group
-# from guardian.shortcuts import get_perms
 
 
 class Command(BaseCommand):
