@@ -18,7 +18,7 @@ mpl.use("PS")  # noqa
 plt.ioff()  # noqa
 
 
-logger = logging.getLogger("__name__")
+logger = logging.getLogger("draw_pedigree")
 
 
 def build_families_report(families):

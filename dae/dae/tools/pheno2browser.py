@@ -58,9 +58,11 @@ def build_pheno_browser(
 ):
     phenodb = pheno_db.PhenotypeStudy(pheno_name, dbfile=dbfile)
 
+    images_dir = os.path.join(output_dir, "images")
+    os.makedirs(images_dir, exist_ok=True)
+
     prep = PreparePhenoBrowserBase(
-        pheno_name, phenodb, output_dir, pheno_regressions
-    )
+        pheno_name, phenodb, output_dir, pheno_regressions, images_dir)
     prep.run()
 
     # hash_sum = calc_dbfile_hashsum(dbfile)

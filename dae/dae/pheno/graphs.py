@@ -268,6 +268,9 @@ def draw_measure_violinplot(
         saturation=1,
     )
 
+    df_with_column_names.sex = df_with_column_names.sex.apply(
+        lambda s: s if s != Sex.unspecified else Sex.male)
+
     palette = gender_palette_light()
     stripplot(
         data=df_with_column_names,
