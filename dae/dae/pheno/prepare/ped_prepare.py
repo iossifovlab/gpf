@@ -3,9 +3,11 @@ import re
 import logging
 from collections import defaultdict, OrderedDict
 
+from multiprocessing import Pool
+
 import numpy as np
 import pandas as pd
-from multiprocessing import Pool
+
 from box import Box  # type: ignore
 
 from dae.pheno.db import DbManager
@@ -44,33 +46,34 @@ class PrepareBase(PrepareCommon):
 
 
 class PreparePersons(PrepareBase):
+
     def __init__(self, config):
-        super(PreparePersons, self).__init__(config)
+        super().__init__(config)
+        self.pedigree_df = None
 
     def _prepare_families(self, ped_df):
         if self.config.family.composite_key:
-            pass
+            raise ValueError("unsupported composite key")
         return ped_df
 
     def _map_role_column(self, ped_df):
         assert self.config.person.role.type == "column"
         role_column = self.config.person.role.column
-        assert (
-            role_column in ped_df.columns
-        ), "can't find column '{}' into pedigree file".format(role_column)
+        if role_column not in ped_df.columns:
+            raise ValueError(
+                "can't find column '{role_column}' into pedigree file")
+
         mapping_name = self.config.person.role.mapping
         mapping = getattr(RoleMapping(), mapping_name)
-        assert mapping is not None, "bad role mapping '{}'".format(
-            mapping_name
-        )
+        if mapping is None:
+            raise ValueError(f"bad role mapping '{mapping_name}'")
 
         roles = pd.Series(ped_df.index)
         for index, row in ped_df.iterrows():
-            if type(row["role"]) is not Role:
+            if not isinstance(row["role"], Role):
                 role = mapping.get(row["role"])
             else:
                 role = row["role"]
-            # roles[index] = role.value
             roles[index] = role
         ped_df["role"] = roles
         return ped_df
@@ -83,15 +86,13 @@ class PreparePersons(PrepareBase):
 
         if self.config.person.role.type == "column":
             ped_df = self._map_role_column(ped_df)
-        # elif self.config.person.role.type == 'guess':
-        #     ped_df = PedigreeRoleGuesser.guess_role_nuc(ped_df)
         return ped_df
 
     def prepare_pedigree(self, ped_df):
         assert set(self.PED_COLUMNS_REQUIRED) <= set(ped_df.columns)
         ped_df = self._prepare_families(ped_df)
         ped_df = self._prepare_persons(ped_df)
-        logger.info(f"pedigree columns: {ped_df.columns}")
+        logger.info("pedigree columns: %s", ped_df.columns)
         return ped_df
 
     def _save_families(self, ped_df):
@@ -102,9 +103,8 @@ class PreparePersons(PrepareBase):
 
     @staticmethod
     def _build_sample_id(sample_id):
-        if isinstance(sample_id, float) and np.isnan(sample_id):
-            return None
-        elif sample_id is None:
+        if (isinstance(sample_id, float) and np.isnan(sample_id)) \
+                or sample_id is None:
             return None
 
         return str(sample_id)
@@ -145,9 +145,6 @@ class Task(PrepareCommon):
     def done(self):
         raise NotImplementedError()
 
-    def __next__(self):
-        raise NotImplementedError()
-
     def __call__(self):
         return self.run()
 
@@ -162,6 +159,8 @@ class ClassifyMeasureTask(Task):
         self.measure = self.create_default_measure(
             instrument_name, measure_name, measure_desc
         )
+        self.rank = None
+        self.classifier_report = None
 
     @staticmethod
     def create_default_measure(instrument_name, measure_name, measure_desc):
@@ -169,7 +168,7 @@ class ClassifyMeasureTask(Task):
             "measure_type": MeasureType.other,
             "measure_name": measure_name,
             "instrument_name": instrument_name,
-            "measure_id": "{}.{}".format(instrument_name, measure_name),
+            "measure_id": f"{instrument_name}.{measure_name}",
             "description": measure_desc,
             "individuals": None,
             "default_filter": None,
@@ -191,7 +190,7 @@ class ClassifyMeasureTask(Task):
             min_value = None
             max_value = None
         if measure_type in set([MeasureType.continuous, MeasureType.ordinal]):
-            values_domain = "[{}, {}]".format(min_value, max_value)
+            values_domain = f"[{min_value}, {max_value}]"
         else:
             distribution = self.classifier_report.calc_distribution_report()
             unique_values = [v for (v, _) in distribution if v.strip() != ""]
@@ -204,7 +203,7 @@ class ClassifyMeasureTask(Task):
 
     def run(self):
         try:
-            logging.info("classifying measure {self.measure.measure_id}")
+            logging.info("classifying measure %s", self.measure.measure_id)
             values = self.mdf["value"]
             classifier = MeasureClassifier(self.config)
             self.classifier_report = classifier.meta_measures(values)
@@ -213,9 +212,10 @@ class ClassifyMeasureTask(Task):
                 self.classifier_report
             )
             self.build_meta_measure()
-        except Exception:
-            logger.exception(
-                f"problem processing measure: {self.measure.measure_id}")
+        except Exception:  # pylint: disable=broad-except
+            logger.error(
+                "problem processing measure: %s", self.measure.measure_id,
+                exc_info=True)
         return self
 
     def done(self):
@@ -226,6 +226,7 @@ class MeasureValuesTask(Task):
     def __init__(self, measure, mdf):
         self.measure = measure
         self.mdf = mdf
+        self.values = None
 
     def run(self):
         measure_id = self.measure.db_id
@@ -253,10 +254,9 @@ class MeasureValuesTask(Task):
 
             if k in values:
                 logger.info(
-                    f"updating measure {measure.measure_id} "
-                    f"for person {record['person_id']} value "
-                    f"{values[k]['value']} "
-                    f"with {value}")
+                    "updating measure %s for person %s value %s with %s",
+                    measure.measure_id,
+                    record["person_id"], values[k]["value"], value)
             values[k] = v
         self.values = values
         return self
@@ -281,7 +281,7 @@ class TaskQueue(object):
 
 class PrepareVariables(PreparePersons):
     def __init__(self, config):
-        super(PreparePersons, self).__init__(config)
+        super().__init__(config)
         self.sample_ids = None
         self.classifier = MeasureClassifier(config)
 
@@ -292,18 +292,12 @@ class PrepareVariables(PreparePersons):
             person_id = self.config.person.column
         else:
             person_id = df.columns[0]
-        logger.debug(f"Person ID: {person_id}")
+        logger.debug("Person ID: %s", person_id)
         return person_id
 
     def load_instrument(self, instrument_name, filenames):
         assert filenames
         assert all([os.path.exists(f) for f in filenames])
-
-        # instrument_names = [
-        #     os.path.splitext(os.path.basename(f))[0] for f in filenames
-        # ]
-        # assert len(set(instrument_names)) == 1
-        # assert instrument_name == instrument_names[0]
 
         dataframes = []
         sep = ","
@@ -312,15 +306,14 @@ class PrepareVariables(PreparePersons):
             sep = "\t"
 
         for filename in filenames:
-            logger.info(f"reading instrument: {filename}")
+            logger.info("reading instrument: %s", filename)
             df = pd.read_csv(
                 filename, sep=sep, low_memory=False, encoding="ISO-8859-1"
             )
             person_id = self._get_person_column_name(df)
             logging.info(
-                f"renaming column '{person_id}' to '{self.PERSON_ID}' "
-                f"in instrument: {instrument_name}"
-            )
+                "renaming column '%s' to '%s' in instrument: %s",
+                person_id, self.PERSON_ID, instrument_name)
 
             df = df.rename(columns={person_id: self.PERSON_ID})
             dataframes.append(df)
@@ -366,7 +359,7 @@ class PrepareVariables(PreparePersons):
             return filename
 
     def log_header(self):
-        with open(self.log_filename, "w") as log:
+        with open(self.log_filename, "w", encoding="utf8") as log:
             log.write(ClassifierReport.header_line())
             log.write("\n")
 
@@ -374,7 +367,7 @@ class PrepareVariables(PreparePersons):
         classifier_report.set_measure(measure)
         logging.info(classifier_report.log_line(short=True))
 
-        with open(self.log_filename, "a") as log:
+        with open(self.log_filename, "a", encoding="utf8") as log:
             log.write(classifier_report.log_line())
             log.write("\n")
 
@@ -391,11 +384,11 @@ class PrepareVariables(PreparePersons):
     def save_measure_values(self, measure, values):
         if len(values) == 0:
             logging.warning(
-                f"skiping measure {measure.measure_id} without values"
+                "skiping measure %s without values", measure.measure_id
             )
             return
         logging.info(
-            f"saving measure {measure.measure_id} values {len(values)}")
+            "saving measure %s values %s", measure.measure_id, len(values))
         value_table = self.db.get_value_table(measure.measure_type)
         ins = value_table.insert()
 
@@ -412,12 +405,12 @@ class PrepareVariables(PreparePersons):
                 res = regexp.match(basename)
                 if not res:
                     logger.debug(
-                        f"filename {basename} is not an instrument; "
-                        f"skipping...")
+                        "filename %s is not an instrument; skipping...",
+                        basename)
                     continue
                 logger.debug(
-                    f"instrument matched: {res.group('instrument')}; "
-                    f"file extension: {res.group('ext')}")
+                    "instrument matched: %s; file extension: %s",
+                    res.group("instrument"), res.group("ext"))
                 instruments[res.group("instrument")].append(
                     os.path.abspath(os.path.join(root, filename))
                 )
@@ -435,7 +428,7 @@ class PrepareVariables(PreparePersons):
             df = self.load_instrument(instrument_name, instrument_filenames)
             if len(df) == 0:
                 logger.info(
-                    f"instrument {instrument_name} is empty; skipping")
+                    "instrument %s is empty; skipping", instrument_name)
                 continue
             self.build_instrument(instrument_name, df, descriptions)
 
@@ -447,7 +440,7 @@ class PrepareVariables(PreparePersons):
             if p is None:
                 pid[index] = np.nan
                 logging.info(
-                    f"measure for missing person: {row[self.PERSON_ID]}")
+                    "measure for missing person: %s", row[self.PERSON_ID])
             else:
                 assert p is not None
                 assert p.person_id == row[self.PERSON_ID]
@@ -507,8 +500,8 @@ class PrepareVariables(PreparePersons):
             self.log_measure(measure, classifier_report)
             if measure.measure_type == MeasureType.skipped:
                 logging.info(
-                    f"skip saving measure: {measure.measure_id}; "
-                    f"measurings: {classifier_report.count_with_values}")
+                    "skip saving measure: %s; measurings: %s",
+                    measure.measure_id, classifier_report.count_with_values)
                 continue
             save_queue.put(task)
 
@@ -540,7 +533,7 @@ class PrepareVariables(PreparePersons):
             "measure_type": MeasureType.other,
             "measure_name": measure_name,
             "instrument_name": instrument_name,
-            "measure_id": "{}.{}".format(instrument_name, measure_name),
+            "measure_id": f"{instrument_name}.{measure_name}",
             "individuals": None,
             "default_filter": None,
         }
@@ -565,7 +558,7 @@ class PrepareVariables(PreparePersons):
             os.path.abspath(description_path)
         ), description_path
 
-        df = pd.read_csv(description_path, sep="\t")
+        data = pd.read_csv(description_path, sep="\t")
 
         class DescriptionDf:
             def __init__(self, desc_df):
@@ -584,7 +577,7 @@ class PrepareVariables(PreparePersons):
 
             def __call__(self, iname, mname):
                 if (
-                    "{}.{}".format(iname, mname)
+                    f"{iname}.{mname}"
                     not in self.desc_df["measureId"].values
                 ):
                     return None
@@ -596,57 +589,4 @@ class PrepareVariables(PreparePersons):
                 )
                 return row.iloc[0]["description"]
 
-        return DescriptionDf(df)
-
-
-# class PrepareMetaMeasures(PrepareBase):
-#
-#     def __init__(self, config):
-#         super(PrepareMetaMeasures, self).__init__(config)
-#         self.pheno = PhenoDB(dbfile=self.db.dbfile)
-#         self.pheno.load(skip_meta=True)
-#
-#     def build_meta(self):
-#         measures = self.db.get_measures()
-#         for m in measures.values():
-#             self.build_meta_measure(m)
-#
-#     def build_meta_measure(self, measure):
-#         print("processing meta measures for {}".format(measure.measure_id))
-#         df = self.pheno.get_measure_values_df(measure.measure_id)
-#         measure_type = measure.measure_type
-#         values = df[measure.measure_id]
-#         rank = len(values.unique())
-#
-#         if measure_type in \
-#                 set([MeasureType.continuous, MeasureType.ordinal]):
-#             min_value = values.values.min()
-#             max_value = values.values.max()
-#         else:
-#             min_value = None
-#             max_value = None
-#         if measure_type == MeasureType.continuous:
-#             values_domain = "[{}, {}]".format(min_value, max_value)
-#         else:
-#             unique_values = sorted(values.unique())
-#             unique_values = [str(v) for v in unique_values]
-#             values_domain = ",".join(unique_values)
-#
-#         meta = {
-#             'measure_id': measure.id,
-#             'min_value': min_value,
-#             'max_value': max_value,
-#             'values_domain': values_domain,
-#             'rank': rank,
-#         }
-#         try:
-#             insert = self.db.meta_measure.insert().values(**meta)
-#             with self.db.engine.begin() as connection:
-#                 connection.execute(insert)
-#         except Exception:
-#             del meta['measure_id']
-#             update = self.db.meta_measure.update().values(**meta).where(
-#                 self.db.meta_measure.c.measure_id == measure.id
-#             )
-#             with self.db.engine.begin() as connection:
-#                 connection.execute(update)
+        return DescriptionDf(data)

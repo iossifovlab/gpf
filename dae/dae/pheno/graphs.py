@@ -140,7 +140,7 @@ def draw_linregres(df, col1, col2, jitter=None, ax=None):
             dfemale[col1], res_female.predict(female_x), color=color_female
         )
     male_female_legend(color_male, color_female, ax)
-    # plt.tight_layout()
+    plt.tight_layout()
     return res_male, res_female
 
 
@@ -163,7 +163,7 @@ def draw_distribution(df, measure_id, ax=None):
 
     ax.set_xlabel(measure_id)
     ax.set_ylabel("count")
-    # plt.tight_layout()
+    plt.tight_layout()
 
 
 def column_counts(column):
@@ -289,7 +289,7 @@ def draw_measure_violinplot(
     plt.xticks(list(range(0, len(labels))), labels)
     ax.set_ylabel(measure_id)
     ax.set_xlabel("role")
-    # plt.tight_layout()
+    plt.tight_layout()
 
     return True
 

@@ -1002,9 +1002,8 @@ class PhenotypeGroup(PhenotypeData):
                 for name, measure in instrument.measures.items():
                     full_name = f"{instrument_name}.{name}"
                     if full_name in group_measures:
-                        logger.warn(
-                            f"{full_name} measure duplication! ignoring"
-                        )
+                        logger.warning(
+                            "%s measure duplication! ignoring", full_name)
                         del group_instrument.measures[full_name]
                         del group_measures[full_name]
                         continue
