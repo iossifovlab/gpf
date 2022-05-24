@@ -13,7 +13,7 @@ from dae.pheno.common import (
     dump_config,
     check_phenotype_data_config,
 )
-from dae.pheno.prepare.ped_prepare import PrepareVariables
+from dae.pheno.prepare.pheno_prepare import PrepareVariables
 from dae.tools.pheno2browser import build_pheno_browser
 
 from dae.gpf_instance.gpf_instance import GPFInstance

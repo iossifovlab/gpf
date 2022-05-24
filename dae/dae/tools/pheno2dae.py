@@ -17,7 +17,7 @@ from dae.pheno.common import (
     check_phenotype_data_config,
     default_config,
 )
-from dae.pheno.prepare.ped_prepare import PrepareVariables
+from dae.pheno.prepare.pheno_prepare import PrepareVariables
 
 
 logger = logging.getLogger(__name__)

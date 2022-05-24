@@ -4,7 +4,7 @@ Created on Jul 25, 2017
 @author: lubo
 """
 import os
-from dae.pheno.prepare.ped_prepare import PreparePersons, PrepareVariables
+from dae.pheno.prepare.pheno_prepare import PreparePersons, PrepareVariables
 from dae.pheno.pheno_db import PhenotypeStudy
 from dae.pedigrees.loader import FamiliesLoader
 import pytest

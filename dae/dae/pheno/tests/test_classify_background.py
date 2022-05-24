@@ -5,7 +5,7 @@ Created on Nov 21, 2017
 """
 from dae.pheno.prepare.measure_classifier import MeasureClassifier
 from dae.pheno.common import default_config, MeasureType
-from dae.pheno.prepare.ped_prepare import PrepareVariables
+from dae.pheno.prepare.pheno_prepare import PrepareVariables
 
 
 def test_fake_background_classify(fake_background_df):
