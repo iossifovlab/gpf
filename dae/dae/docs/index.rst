@@ -17,4 +17,5 @@ dae Interface
    gene
    annotation
    backends
+   import_tools
 
