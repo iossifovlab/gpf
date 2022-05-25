@@ -8,7 +8,7 @@ from dae.backends.cnv.loader import CNVLoader
 from dae.backends.dae.loader import DaeTransmittedLoader, DenovoLoader
 from dae.backends.vcf.loader import VcfLoader
 from dae.backends.impala.parquet_io import ParquetPartitionDescriptor,\
-    NoPartitionDescriptor
+    NoPartitionDescriptor, PartitionDescriptor
 from dae.backends.raw.loader import AnnotationPipelineDecorator,\
     EffectAnnotationDecorator, VariantsLoader
 from dae.configuration.gpf_config_parser import GPFConfigParser
@@ -34,6 +34,11 @@ class Bucket:
 
 class ImportProject():
     def __init__(self, import_config, base_input_dir, gpf_instance):
+        """
+        Creates a new project from the provided config. It is best not to call
+        this ctor directly but to use one of the provided build_* methods.
+        :param import_config: The parsed, validated and normalized config.
+        """
         self.import_config = import_config
         if "denovo" in import_config["input"]:
             len_files = len(import_config["input"]["denovo"]["files"])
@@ -44,6 +49,12 @@ class ImportProject():
 
     @staticmethod
     def build_from_config(import_config, base_input_dir="", gpf_instance=None):
+        """
+        Creates a new project from the provided config. The config is first
+        validated and normalized.
+        :param import_config: The config to use for the import.
+        :base_input_dir: Default input dir. Use cwd by default.
+        """
         import_config = GPFConfigParser.validate_config(import_config,
                                                         import_config_schema)
         normalizer = ImportConfigNormalizer()
@@ -52,6 +63,13 @@ class ImportProject():
 
     @staticmethod
     def build_from_file(import_filename, gpf_instance=None):
+        """Creates a new project from the provided config filename. The file
+        is first parsed, validated and normalized. The path to the file is used
+        as the default input path for the project.
+
+        :param import_filename: Path to the config file
+        :param gpf_instance: Gpf Instance to use.
+        """
         base_input_dir = os.path.dirname(os.path.realpath(import_filename))
         import_config = GPFConfigParser.parse_and_interpolate_file(
             import_filename)
@@ -59,6 +77,7 @@ class ImportProject():
                                                gpf_instance)
 
     def get_pedigree(self) -> FamiliesData:
+        """Loads, parses and returns the pedigree data"""
         families_filename = self.import_config["input"]["pedigree"]["file"]
         families_filename = fs_utils.join(self.input_dir, families_filename)
 
@@ -71,6 +90,8 @@ class ImportProject():
         return families_loader.load()
 
     def get_import_variants_buckets(self) -> list[Bucket]:
+        """Splits the input variant files into buckets allowing
+        for parallel processing"""
         types = ["denovo", "vcf", "cnv", "dae"]
         buckets = []
         for type in types:
@@ -81,6 +102,7 @@ class ImportProject():
         return buckets
 
     def get_variant_loader(self, bucket, reference_genome=None):
+        """Gets the appropriate variant loader for the specified bucket"""
         loader = self._get_variant_loader(bucket.type, reference_genome)
         loader.reset_regions(bucket.regions)
         return loader
@@ -123,7 +145,9 @@ class ImportProject():
         )
         return loader
 
-    def get_partition_description(self, work_dir=None):
+    def get_partition_description(self, work_dir=None) -> PartitionDescriptor:
+        """Retrurns a partition description object as described in the import
+        config"""
         work_dir = work_dir if work_dir is not None else self.work_dir
         if "partition_description" in self.import_config:
             partition_desc = self.import_config["partition_description"]
@@ -158,11 +182,14 @@ class ImportProject():
 
     @property
     def work_dir(self):
+        """Returns the path where generated import files (e.g. parquet files)
+        are stores"""
         return self.import_config.get("processing_config", {})\
             .get("work_dir", "")
 
     @property
     def input_dir(self):
+        """Returns the path relative to which input files are specified"""
         return os.path.join(
             self._base_input_dir,
             self.import_config["input"].get("input_dir", "")
@@ -185,6 +212,7 @@ class ImportProject():
             .get(bucket.type, 20_000)
 
     def build_variants_loader_pipeline(self, variants_loader, gpf_instance):
+        """Creates an annotation pipeline around variants_loader"""
         effect_annotator = construct_import_effect_annotator(gpf_instance)
 
         variants_loader = EffectAnnotationDecorator(

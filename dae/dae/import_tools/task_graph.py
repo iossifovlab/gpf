@@ -5,10 +5,19 @@ from typing import Any, Callable
 
 
 class TaskGraph:
+    """An object representing a graph of tasks"""
     def __init__(self):
         self.nodes = []
 
     def create_task(self, name, func, args, deps):
+        """Creates a new task and adds it to the graph
+
+        :param name: Name of the task (used for debugging purposes)
+        :param func: Function to execute
+        :param args: Arguments to that function
+        :param deps: List of TaskNodes on which the current task depends
+        :return TaskNode: The newly created task node in the graph
+        """
         node = TaskNode(name, func, args, deps)
         self.nodes.append(node)
         return node
@@ -16,6 +25,7 @@ class TaskGraph:
 
 class TaskGraphExecutor:
     def execute(self, task_graph):
+        """Executes the graph"""
         self._check_for_cyclic_deps(task_graph)
         for task_node in self._in_exec_order(task_graph):
             self.queue_task(task_node)
@@ -23,10 +33,12 @@ class TaskGraphExecutor:
 
     @abstractmethod
     def queue_task(self, task_node):
+        """Put the task on the execution queue"""
         pass
 
     @abstractmethod
     def await_tasks(self):
+        """Wait for all queued tasks to finish"""
         pass
 
     def _in_exec_order(self, task_graph):
@@ -73,6 +85,7 @@ class TaskNode:
 
 
 class SequentialExecutor(TaskGraphExecutor):
+    """A Task Graph Executor that executes task in a sequential order"""
     def queue_task(self, task_node):
         task_node.func(*task_node.args)
 
@@ -81,6 +94,8 @@ class SequentialExecutor(TaskGraphExecutor):
 
 
 class DaskExecutor(TaskGraphExecutor):
+    """A Task Graph Executor that executes task in parallel using
+    Dask to do the heavy lifting"""
     def __init__(self, client):
         self.client = client
         self.task2future = {}

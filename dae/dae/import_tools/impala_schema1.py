@@ -50,6 +50,8 @@ class Schema1ParquetWriter:
 
 
 class ImpalaSchema1ImportStorage(AbstractImportStorage):
+    """This class encodes the logic for import data in the
+    Impala Schema 1 format"""
     def __init__(self, project):
         super().__init__(project)
         self.project = project
