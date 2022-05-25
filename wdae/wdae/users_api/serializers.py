@@ -3,11 +3,14 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.db import transaction
 
-from .validators import ProtectedGroupsValidator
 from .validators import SomeSuperuserLeftValidator
 
 
 class CreatableSlugRelatedField(serializers.SlugRelatedField):
+    """Tries to get related field and creates it if it does not exist.
+    Used for the 'groups' field in the user serializer - if a new group is
+    given to a user, it will be created and then attached to the user.
+    """
     def to_internal_value(self, data):
         try:
             return self.get_queryset().get_or_create(
@@ -20,14 +23,13 @@ class CreatableSlugRelatedField(serializers.SlugRelatedField):
 
 
 class UserSerializer(serializers.ModelSerializer):
-
     name = serializers.CharField(required=False, allow_blank=True)
 
     groups = serializers.ListSerializer(
         child=CreatableSlugRelatedField(
             slug_field="name", queryset=Group.objects.all()
         ),
-        validators=[ProtectedGroupsValidator(), SomeSuperuserLeftValidator()],
+        validators=[SomeSuperuserLeftValidator()],
         default=[],
     )
 
@@ -49,19 +51,8 @@ class UserSerializer(serializers.ModelSerializer):
     def run_validation(self, data):
         email = data.get("email")
         if email:
-            email = get_user_model().objects.normalize_email(email)
-            email = email.lower()
+            email = get_user_model().objects.normalize_email(email).lower()
             data["email"] = email
-
-        groups = data.get("groups")
-        if groups:
-            new_groups = []
-            for group in groups:
-                if group.lower() == email:
-                    new_groups.append(email)
-                else:
-                    new_groups.append(group)
-            data["groups"] = new_groups
 
         return super().run_validation(data=data)
 
@@ -78,18 +69,14 @@ class UserSerializer(serializers.ModelSerializer):
     def _check_groups_exist(groups):
         if groups:
             db_groups_count = Group.objects.filter(name__in=groups).count()
-            assert db_groups_count == len(groups), "Not all groups exists.."
+            assert db_groups_count == len(groups), "Not all groups exist."
 
     @staticmethod
     def _update_groups(user, new_groups):
         with transaction.atomic():
-            protected_groups = set([
-                group.id for group in user.protected_groups])
-
             to_remove = set()
             for group in user.groups.all():
-                if group.id not in protected_groups:
-                    to_remove.add(group.id)
+                to_remove.add(group.id)
 
             to_add = set()
             for group in new_groups:
@@ -109,7 +96,7 @@ class UserSerializer(serializers.ModelSerializer):
         with transaction.atomic():
             super(UserSerializer, self).update(instance, validated_data)
 
-            if groups:
+            if groups is not None:
                 db_groups = Group.objects.filter(name__in=groups)
                 self._update_groups(instance, db_groups)
 
@@ -133,23 +120,3 @@ class UserWithoutEmailSerializer(UserSerializer):
     class Meta(object):
         model = get_user_model()
         fields = tuple(x for x in UserSerializer.Meta.fields if x != "email")
-
-
-class BulkGroupOperationSerializer(serializers.Serializer):
-
-    userIds = serializers.ListSerializer(child=serializers.IntegerField())
-    groups = serializers.ListSerializer(child=serializers.CharField())
-
-    def create(self, validated_data):
-        raise NotImplementedError()
-
-    def to_representation(self, instance):
-        raise NotImplementedError()
-
-    def update(self, instance, validated_data):
-        raise NotImplementedError()
-
-    def to_internal_value(self, data):
-        return super(BulkGroupOperationSerializer, self).to_internal_value(
-            data
-        )

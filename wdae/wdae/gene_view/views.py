@@ -97,7 +97,7 @@ class DownloadSummaryVariantsView(QueryBaseView):
         handle_partial_permissions(user, dataset_id, data)
 
         download_limit = None
-        if not (user.is_authenticated and user.has_unlimitted_download):
+        if not (user.is_authenticated and user.has_unlimited_download):
             download_limit = self.DOWNLOAD_LIMIT
         data.update({"limit": download_limit})
 
