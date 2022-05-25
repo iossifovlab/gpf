@@ -458,7 +458,7 @@ class VariantsParquetWriter:
             self,
             variants_loader,
             partition_descriptor,
-            bucket_index=1,
+            bucket_index=None,
             rows=100_000,
             include_reference=True):
 
