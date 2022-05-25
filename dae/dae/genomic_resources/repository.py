@@ -6,7 +6,7 @@ import logging
 import datetime
 import enum
 from typing import List, Optional, cast, Tuple, Dict, Any
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass, asdict, field
 
 import abc
 import yaml
@@ -163,14 +163,13 @@ def find_genomic_resources_helper(content_dict, parent_id=None):
     yield from _scan_content_dict_for_genomic_resources(
         content_dict, parent_id)
 
-
-@dataclass
+@dataclass(order=True)
 class ManifestEntry:
     """Provides an entry into manifest object"""
     name: str
     size: int
-    time: str
-    md5: Optional[str]
+    time: str = field(compare=False)
+    md5: Optional[str] = field(compare=False)
 
     def get_timestamp(self) -> int:
         """Returns UNIX timestamp corresponding to entry time."""
@@ -386,7 +385,7 @@ class RepositoryProtocol(abc.ABC):
     @abc.abstractmethod
     def open_raw_file(
             self, resource, filename,
-            mode="rt", uncompress=False, seekable=False):
+            mode="rt", **kwargs):
         """Opens file in a resource and returns a file-like object"""
 
     @abc.abstractmethod
