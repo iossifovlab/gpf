@@ -22,7 +22,8 @@ export class PhenoToolResultsChartComponent implements OnChanges {
     svg.selectAll('.axis').remove();
     svg.append('g')
       .attr('class', 'axis')
-      .call(d3.axisLeft(this.yScale));
+      .call(d3.axisLeft(this.yScale))
+      .attr('transform', 'translate(42,0)');
   }
 
   public addRange(phenoToolResult: PhenoToolResult, outputValues: Array<number>): void {
