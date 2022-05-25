@@ -355,17 +355,17 @@ class ImportConfigNormalizer:
         if chromosomes is None:
             return None
         res = []
-        for chr in chromosomes:
-            if chr in {"autosomes", "autosomesXY"}:
+        for chrom in chromosomes:
+            if chrom in {"autosomes", "autosomesXY"}:
                 for i in range(1, 23):
                     res.append(f"{i}")
                     res.append(f"chr{i}")
-                if chr == "autosomesXY":
+                if chrom == "autosomesXY":
                     for i in ["X", "Y"]:
                         res.append(f"{i}")
                         res.append(f"chr{i}")
             else:
-                res.append(chr)
+                res.append(chrom)
         return res
 
 
