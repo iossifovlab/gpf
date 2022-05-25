@@ -1,13 +1,10 @@
 import json
 
-from django.db.models import Q
 from django.contrib.auth.models import Group
 from rest_framework import status
 
 from datasets_api.models import Dataset
 from datasets_api.permissions import user_has_permission
-
-from utils.email_regex import email_regex
 
 
 def test_admin_can_get_groups(admin_client):
@@ -49,21 +46,8 @@ def test_groups_have_users_and_datasets(admin_client):
         assert "datasets" in group
 
 
-def test_groups_does_not_send_email_groups(admin_client):
-    url = "/api/v3/groups"
-    response = admin_client.get(url)
-
-    assert response.status_code is status.HTTP_200_OK
-    assert len(response.data) > 0
-    for group in response.data:
-        assert group["name"] not in [
-            "anonymous@seqpipe.org",
-            "admin@example.com"
-        ]
-
-
 def test_single_group_has_users_and_datasets(admin_client):
-    groups = Group.objects.filter(~Q(name__iregex=email_regex))
+    groups = Group.objects.all()
     for group in groups:
         url = "/api/v3/groups/{}".format(group.id)
         response = admin_client.get(url)
@@ -73,8 +57,8 @@ def test_single_group_has_users_and_datasets(admin_client):
         assert "datasets" in response.data
 
 
-def test_admin_cant_delete_groups(admin_client, groups_model):
-    all_groups = groups_model.objects.filter(~Q(name__iregex=email_regex))
+def test_admin_cant_delete_groups(admin_client):
+    all_groups = Group.objects.all()
     assert len(all_groups) > 0
 
     for group in all_groups:
@@ -158,7 +142,7 @@ def test_group_has_all_users(admin_client, group):
 
 
 def test_no_empty_groups_are_accessible(admin_client):
-    groups_count = Group.objects.filter(~Q(name__iregex=email_regex)).count()
+    groups_count = Group.objects.all().count()
     new_group = Group.objects.create(name="New Group")
 
     url = "/api/v3/groups"
@@ -172,7 +156,7 @@ def test_no_empty_groups_are_accessible(admin_client):
 
 
 def test_empty_group_with_permissions_is_shown(admin_client, dataset):
-    groups_count = Group.objects.filter(~Q(name__iregex=email_regex)).count()
+    groups_count = Group.objects.all().count()
     group = Group.objects.create(name="New Group")
 
     dataset.groups.add(group)
@@ -345,115 +329,3 @@ def test_cant_revoke_default_permissions(user_client, dataset):
 
         assert response.status_code == status.HTTP_403_FORBIDDEN
         assert dataset.groups.filter(pk=group.pk).exists()
-
-
-def test_admin_can_assign_group_to_dataset(
-    admin_client, dataset, group_with_user
-):
-    group, user = group_with_user
-
-    assert not user_has_permission(user, dataset)
-    url = f"/api/v3/groups/{group.id}/dataset/{dataset.dataset_id}"
-    response = admin_client.post(url)
-
-    assert response.status_code == status.HTTP_200_OK
-    assert user_has_permission(user, dataset)
-
-
-def test_admin_can_revoke_dataset_access_from_group(
-    admin_client, dataset, group_with_user
-):
-    group, user = group_with_user
-
-    dataset.groups.add(group)
-
-    assert user_has_permission(user, dataset)
-
-    url = f"/api/v3/groups/{group.id}/dataset/{dataset.dataset_id}"
-    response = admin_client.delete(url)
-
-    assert response.status_code == status.HTTP_200_OK
-    assert not user_has_permission(user, dataset)
-
-
-def test_admin_can_assign_group_to_user(admin_client, user, group):
-    assert not user.groups.filter(name=group.name).exists()
-
-    url = f"/api/v3/groups/{group.id}/user/{user.id}"
-    response = admin_client.post(url)
-
-    assert response.status_code == status.HTTP_200_OK
-    assert user.groups.filter(name=group.name).exists()
-
-
-def test_admin_can_remove_user_from_group(admin_client, group_with_user):
-    group, user = group_with_user
-    assert user.groups.filter(name=group.name).exists()
-
-    url = f"/api/v3/groups/{group.id}/user/{user.id}"
-    response = admin_client.delete(url)
-
-    assert response.status_code == status.HTTP_200_OK
-    assert not user.groups.filter(name=group.name).exists()
-
-
-def test_admin_cant_assign_user_to_nonexistant_group(admin_client, user):
-    random_id = 12413
-    assert not Group.objects.filter(id=random_id).exists()
-
-    url = f"/api/v3/groups/{random_id}/user/{user.id}"
-    response = admin_client.post(url)
-
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
-
-
-def test_admin_cant_assign_dataset_to_nonexistant_group(admin_client, dataset):
-    random_id = 12413
-    assert not Group.objects.filter(id=random_id).exists()
-
-    url = f"/api/v3/groups/{random_id}/dataset/{dataset.dataset_id}"
-    response = admin_client.post(url)
-
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
-
-
-def test_user_cant_add_user_to_group(user_client, user, group):
-    assert not user.groups.filter(name=group.name).exists()
-
-    url = f"/api/v3/groups/{group.id}/user/{user.id}"
-    response = user_client.post(url)
-
-    assert response.status_code == status.HTTP_403_FORBIDDEN
-
-
-def test_user_cant_add_dataset_to_group(user_client, dataset, group_with_user):
-    group, user = group_with_user
-    assert not user_has_permission(user, dataset)
-
-    url = f"/api/v3/groups/{group.id}/dataset/{dataset.dataset_id}"
-    response = user_client.post(url)
-
-    assert response.status_code == status.HTTP_403_FORBIDDEN
-
-
-def test_user_cant_remove_user_from_group(user_client, group_with_user):
-    group, user = group_with_user
-    assert user.groups.filter(name=group.name).exists()
-
-    url = f"/api/v3/groups/{group.id}/user/{user.id}"
-    response = user_client.delete(url)
-
-    assert response.status_code == status.HTTP_403_FORBIDDEN
-
-
-def test_user_cant_revoke_dataset_access_from_group(
-    user_client, dataset, group_with_user
-):
-    group, user = group_with_user
-    dataset.groups.add(group)
-    assert user_has_permission(user, dataset)
-
-    url = f"/api/v3/groups/{group.id}/dataset/{dataset.dataset_id}"
-    response = user_client.delete(url)
-
-    assert response.status_code == status.HTTP_403_FORBIDDEN

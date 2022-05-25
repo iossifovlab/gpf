@@ -40,7 +40,6 @@ class WdaeUserManager(BaseUserManager):
         user.save(using=self._db)
 
         groups = list(user.DEFAULT_GROUPS_FOR_USER)
-        groups.append(email)
 
         for group_name in groups:
             group, _ = Group.objects.get_or_create(name=group_name)
@@ -93,7 +92,7 @@ class WdaeUser(AbstractBaseUser, PermissionsMixin):
     objects = WdaeUserManager()
 
     def get_protected_group_names(self):
-        return self.DEFAULT_GROUPS_FOR_USER + (self.email,)
+        return self.DEFAULT_GROUPS_FOR_USER
 
     @property
     def protected_groups(self):
