@@ -168,8 +168,8 @@ class ManifestEntry:
     """Provides an entry into manifest object"""
     name: str
     size: int
-    time: str = field(compare=False)
-    md5: Optional[str] = field(compare=False)
+    time: str
+    md5: Optional[str]
 
     def get_timestamp(self) -> int:
         """Returns UNIX timestamp corresponding to entry time."""
@@ -208,7 +208,7 @@ class Manifest:
             result.entries[entry.name] = entry
         return result
 
-    def get_files(self):
+    def get_files(self) -> List[Tuple[str, int, str]]:
         return [
             (entry.name, entry.size, entry.time)
             for entry in self.entries.values()
@@ -237,6 +237,9 @@ class Manifest:
                 return False
 
         return True
+
+    def __len__(self):
+        return len(self.entries)
 
     def __repr__(self):
         return str(self.entries)

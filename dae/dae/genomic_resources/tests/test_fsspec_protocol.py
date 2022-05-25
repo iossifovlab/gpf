@@ -201,3 +201,45 @@ def test_open_raw_file_text_read_compression(fsspec_proto, filesystem):
             res, "new_data.txt.gz", mode="rt", compression=True) as infile:
         content = infile.read()
         assert content == "new alabala"
+
+
+@pytest.mark.parametrize("filesystem", [
+    "local",
+    "s3",
+])
+def test_compute_md5_sum(fsspec_proto, filesystem):
+    """Test md5 sum computation."""
+
+    proto = fsspec_proto(filesystem)
+
+    res = list(proto.collect_all_resources())[0]
+    assert res.resource_id == "one"
+
+    assert proto.compute_md5_sum(res, "data.txt") == \
+         "c1cfdaf7e22865b29b8d62a564dc8f23"
+    assert proto.compute_md5_sum(res, "genomic_resource.yaml") == \
+         "d41d8cd98f00b204e9800998ecf8427e"
+
+
+@pytest.mark.parametrize("filesystem", [
+    "local",
+    "s3",
+])
+def test_build_manifest(fsspec_proto, filesystem):
+    """Test md5 sum computation."""
+
+    proto = fsspec_proto(filesystem)
+
+    res = list(proto.collect_all_resources())[0]
+    assert res.resource_id == "one"
+
+    manifest = proto.build_manifest(res)
+
+    assert len(manifest) == 2
+    assert manifest["data.txt"].size == 7
+    assert manifest["data.txt"].md5 == \
+        "c1cfdaf7e22865b29b8d62a564dc8f23"
+
+    assert manifest["genomic_resource.yaml"].size == 0
+    assert manifest["genomic_resource.yaml"].md5 == \
+        "d41d8cd98f00b204e9800998ecf8427e"

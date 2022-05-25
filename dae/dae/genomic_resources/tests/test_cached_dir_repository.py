@@ -85,7 +85,7 @@ def test_caching_dir_repository_resource_update(tmp_path):
             "two[1.0]": {
                 GR_CONF_FILE_NAME: [
                     "",
-                    "2021-11-19T23:22:51"
+                    "2022-05-25T12:19:47+00:00"
                 ],
             }
         }
