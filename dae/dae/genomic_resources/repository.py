@@ -6,7 +6,7 @@ import logging
 import datetime
 import enum
 from typing import List, Optional, cast, Tuple, Dict, Any
-from dataclasses import dataclass, asdict, field
+from dataclasses import dataclass, asdict
 
 import abc
 import yaml
@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 GR_CONF_FILE_NAME = "genomic_resource.yaml"
 GR_MANIFEST_FILE_NAME = ".MANIFEST"
-GRP_CONTENTS_FILE_NAME = ".CONTENTS"
+GR_CONTENTS_FILE_NAME = ".CONTENTS"
 
 GR_ENCODING = "utf-8"
 

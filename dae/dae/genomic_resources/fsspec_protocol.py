@@ -5,6 +5,7 @@ import logging
 
 from urllib.parse import urlparse
 from typing import List, Generator, cast, Union, Optional
+from xml.dom import NotFoundErr
 
 import fsspec  # type: ignore
 import pysam
@@ -18,7 +19,9 @@ from dae.genomic_resources.repository import Manifest, \
     GenomicResource, \
     find_genomic_resources_helper, \
     find_genomic_resource_files_helper, \
-    GR_MANIFEST_FILE_NAME
+    is_version_constraint_satisfied, \
+    GR_MANIFEST_FILE_NAME, \
+    GR_CONTENTS_FILE_NAME
 
 
 logger = logging.getLogger(__name__)
@@ -45,6 +48,46 @@ class FsspecReadOnlyProtocol(ReadOnlyRepositoryProtocol):
 
         self.filesystem = filesystem
         self.filesystem.makedirs(self.root_path, exist_ok=True)
+        self._all_resources: Optional[List[GenomicResource]] = None
+
+    def get_all_resources(self):
+        """Returns generator for all resources in the repository."""
+        if self._all_resources is None:
+            self._all_resources = []
+            content_filename = os.path.join(
+                self.root_path, GR_CONTENTS_FILE_NAME)
+            contents = yaml.safe_load(self.filesystem.open(content_filename))
+
+            for entry in contents:
+                version = tuple(map(int, entry["version"].split(".")))
+                manifest = Manifest.from_manifest_entries(entry["manifest"])
+                resource = self.build_genomic_resource(
+                    entry["id"], version, config=entry["config"],
+                    manifest=manifest)
+                logger.debug(
+                    "url repo caching resource %s", resource.resource_id)
+                self._all_resources.append(resource)
+
+        yield from self._all_resources
+
+    def get_resource(
+            self, resource_id, version_constraint=None) -> GenomicResource:
+        """Returns requested resource."""
+
+        matching_resources: List[GenomicResource] = []
+        for res in self.get_all_resources():
+            if res.resource_id != resource_id:
+                continue
+            if is_version_constraint_satisfied(
+                    version_constraint, res.version):
+                matching_resources.append(res)
+        if not matching_resources:
+            raise NotFoundErr(
+                f"resource {resource_id} ({version_constraint}) not found")
+        return cast(
+            GenomicResource,
+            max(matching_resources, key=lambda gr: gr.version))  # type: ignore
+
 
     def get_resource_path(self, resource) -> str:
         """Returns directory pathlib.Path for specified resources."""
@@ -143,6 +186,16 @@ class FsspecReadWriteProtocol(
 
         return os.path.relpath(parent, relative)
 
+    def _get_resource_file_timestamp(self, res, filename):
+        filepath = self.get_resource_file_path(res, filename)
+        return self._get_filepath_timestamp(filepath)
+
+    def _get_filepath_timestamp(self, filepath):
+        modification = self.filesystem.modified(filepath)
+        timestamp = modification.timestamp()
+        filetime = ManifestEntry.convert_timestamp(timestamp)
+        return filetime
+
     def collect_all_resources(self) -> Generator[GenomicResource, None, None]:
         """Returns generator for all resources managed by this protocol."""
 
@@ -155,17 +208,11 @@ class FsspecReadWriteProtocol(
         resource_path = self.get_resource_path(resource)
         content_dict = self._path_to_dict(resource_path)
 
-        def my_leaf_to_size_and_time(filepath):
-            fileinfo = self.filesystem.info(
-                os.path.join(resource_path, filepath))
-            if self.scheme == "s3":
-                timestamp = fileinfo["LastModified"].timestamp()
-                filetime = ManifestEntry.convert_timestamp(timestamp)
-            elif self.scheme == "":
-                # local filesystem
-                filetime = ManifestEntry.convert_timestamp(fileinfo["mtime"])
-            else:
-                filetime = ManifestEntry.convert_timestamp(fileinfo["mtime"])
+        def my_leaf_to_size_and_time(filename):
+            filepath = self.get_resource_file_path(resource, filename)
+            fileinfo = self.filesystem.info(filepath)
+            filetime = self._get_filepath_timestamp(filepath)
+
             return fileinfo["size"], filetime
 
         result = []
@@ -199,3 +246,79 @@ class FsspecReadWriteProtocol(
             manifest = self.build_manifest(resource)
             self.save_manifest(resource, manifest)
             return manifest
+
+    def _delete_manifest_entry(
+            self, resource: GenomicResource, manifest_entry):
+        filename = manifest_entry.name
+
+        filepath = self.get_resource_file_path(resource, filename)
+        self.filesystem.delete(filepath, recursive=True)
+
+    def _copy_or_update_manifest_entry(
+            self,
+            remote_resource: GenomicResource,
+            dest_resource: GenomicResource,
+            manifest_entry: ManifestEntry):
+
+        assert dest_resource.resource_id == remote_resource.resource_id
+        assert dest_resource.repo == self
+
+        filename = manifest_entry.name
+
+        dest_filepath = self.get_resource_file_path(dest_resource, filename)
+        dest_parent = os.path.dirname(dest_filepath)
+        if not self.filesystem.exists(dest_parent):
+            self.filesystem.mkdir(
+                dest_parent, create_parents=True, exist_ok=True)
+
+        if self.filesystem.exists(dest_filepath):
+            fileinfo = self.filesystem.info(dest_filepath)
+            timestamp = self._get_filepath_timestamp(dest_filepath)
+
+            dest_time = ManifestEntry.convert_timestamp(timestamp)
+            dest_size = fileinfo["size"]
+
+            if dest_size == manifest_entry.size and \
+                    dest_time == manifest_entry.time:
+
+                logger.debug(
+                    "resource <%s> file <%s> already cached and up-to-date",
+                    remote_resource.resource_id, filename)
+                return manifest_entry
+
+            logger.warning(
+                "resource %s file %s already cached "
+                "but (size, timestamp) does not match: %s,%s != %s,%s",
+                remote_resource.resource_id, filename,
+                dest_size, dest_time,
+                manifest_entry.size, manifest_entry.time)
+
+        logger.debug(
+            "copying resource (%s) file: %s",
+            remote_resource.resource_id, filename)
+        with remote_resource.open_raw_file(
+                filename, "rb",
+                uncompress=False) as infile, \
+                self.open_raw_file(
+                    dest_resource,
+                    filename, "wb",
+                    uncompress=False) as outfile:
+
+            md5_hash = hashlib.md5()
+            while chunk := infile.read(32768):
+                outfile.write(chunk)
+                md5_hash.update(chunk)
+        md5 = md5_hash.hexdigest()
+
+        if manifest_entry.md5 != md5:
+            logger.error(
+                "storing %s failed; expected md5 is %s; "
+                "calculated md5 for the stored file is %s",
+                remote_resource.resource_id, manifest_entry.md5, md5)
+            raise IOError(f"storing of {remote_resource.resource_id} failed")
+
+        src_modtime = manifest_entry.get_timestamp()
+        assert self.filesystem.exists(dest_filepath)
+
+        os.utime(dest_filepath, (src_modtime, src_modtime))
+        return manifest_entry

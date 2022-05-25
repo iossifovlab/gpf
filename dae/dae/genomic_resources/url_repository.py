@@ -13,7 +13,7 @@ import fsspec  # type: ignore
 
 from .repository import GenomicResource, Manifest
 from .repository import GenomicResourceRealRepo
-from .repository import GRP_CONTENTS_FILE_NAME
+from .repository import GR_CONTENTS_FILE_NAME
 from .repository import GR_ENCODING
 
 
@@ -36,7 +36,7 @@ class GenomicResourceURLRepo(GenomicResourceRealRepo):
     def get_all_resources(self):
         if self._all_resources is None:
             self._all_resources = []
-            url = f"{self.url}/{GRP_CONTENTS_FILE_NAME}"
+            url = f"{self.url}/{GR_CONTENTS_FILE_NAME}"
             logger.debug("url repo to open: %s", url)
             contents = yaml.safe_load(self.filesystem.open(url))
 

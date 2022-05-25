@@ -13,8 +13,9 @@ from dae.genomic_resources.fsspec_protocol import FsspecReadWriteProtocol
 # pylint: disable=redefined-outer-name
 
 @pytest.fixture
-def fsspec_proto(tmp_path, s3):
-    """Builds fsspec local filesystem protocol fixture."""
+def dir_repo(tmp_path):
+    """Build directory repository fixture."""
+
     demo_gtf_content = "TP53\tchr3\t300\t200"
     src_repo = GenomicResourceEmbededRepo("src", content={
         "one": {
@@ -29,18 +30,28 @@ def fsspec_proto(tmp_path, s3):
             }
         }
     })
-    dir_repo = GenomicResourceDirRepo('dir', directory=tmp_path)
-    dir_repo.store_all_resources(src_repo)
+    repo = GenomicResourceDirRepo('dir', directory=tmp_path)
+    repo.store_all_resources(src_repo)
+    repo.build_repo_content()
+
+    return repo
+
+@pytest.fixture
+def fsspec_proto(dir_repo, s3):
+    """Builds fsspec local filesystem protocol fixture."""
+
+    assert os.path.exists(os.path.join(dir_repo.directory, ".CONTENTS"))
 
     def builder(filesystem="local"):
         if filesystem == "local":
             return FsspecReadWriteProtocol(
-                "test", tmp_path, LocalFileSystem())
+                "test", dir_repo.directory, LocalFileSystem())
 
         if filesystem == "s3":
-
             s3_path = "s3://test-bucket"
             for root, _, files in os.walk(dir_repo.directory):
+                print(files)
+
                 for fname in files:
                     root_rel = os.path.relpath(root, dir_repo.directory)
                     if root_rel == '.':
@@ -74,7 +85,7 @@ def test_fsspec_proto_resource_paths(fsspec_proto, filesystem):
     """Tests resource paths."""
     proto = fsspec_proto(filesystem)
 
-    res = list(proto.collect_all_resources())[0]
+    res = proto.get_resource("one")
 
     res_path = proto.get_resource_path(res)
     assert os.path.relpath(res_path, proto.root_path) == "one"
@@ -93,8 +104,7 @@ def test_collect_resource_entries(fsspec_proto, filesystem):
     """Test collection of resource entries."""
     proto = fsspec_proto(filesystem)
 
-    res = list(proto.collect_all_resources())[0]
-    assert res.resource_id == "one"
+    res = proto.get_resource("one")
 
     entries = proto.collect_resource_entries(res)
     assert len(entries) == 2
@@ -116,8 +126,7 @@ def test_file_exists(fsspec_proto, filesystem):
     """Tests file_exists method."""
     proto = fsspec_proto(filesystem)
 
-    res = list(proto.collect_all_resources())[0]
-    assert res.resource_id == "one"
+    res = proto.get_resource("one")
 
     assert proto.file_exists(res, "genomic_resource.yaml")
     assert not proto.file_exists(res, "alabala.txt")
@@ -131,8 +140,7 @@ def test_open_raw_file_text_read(fsspec_proto, filesystem):
     """Test simple open with mode='rt'."""
     proto = fsspec_proto(filesystem)
 
-    res = list(proto.collect_all_resources())[0]
-    assert res.resource_id == "one"
+    res = proto.get_resource("one")
 
     with proto.open_raw_file(res, "data.txt", mode="rt") as infile:
         content = infile.read()
@@ -146,8 +154,7 @@ def test_open_raw_file_text_write(fsspec_proto, filesystem):
     """Test simple open with mode='wt'."""
     proto = fsspec_proto(filesystem)
 
-    res = list(proto.collect_all_resources())[0]
-    assert res.resource_id == "one"
+    res = proto.get_resource("one")
 
     with proto.open_raw_file(res, "new_data.txt", mode="wt") as infile:
         infile.write("new alabala")
@@ -163,8 +170,7 @@ def test_open_raw_file_text_write_compression(fsspec_proto, filesystem):
     """Test open with mode='wt' and compression."""
     proto = fsspec_proto(filesystem)
 
-    res = list(proto.collect_all_resources())[0]
-    assert res.resource_id == "one"
+    res = proto.get_resource("one")
 
     with proto.open_raw_file(
             res, "new_data.txt.gz", mode="wt", compression=True) as outfile:
@@ -187,8 +193,7 @@ def test_open_raw_file_text_read_compression(fsspec_proto, filesystem):
     """Test open with mode='rt' and compression."""
     proto = fsspec_proto(filesystem)
 
-    res = list(proto.collect_all_resources())[0]
-    assert res.resource_id == "one"
+    res = proto.get_resource("one")
 
     filepath = proto.get_resource_file_path(res, "new_data.txt.gz")
     with proto.filesystem.open(
@@ -212,8 +217,7 @@ def test_compute_md5_sum(fsspec_proto, filesystem):
 
     proto = fsspec_proto(filesystem)
 
-    res = list(proto.collect_all_resources())[0]
-    assert res.resource_id == "one"
+    res = proto.get_resource("one")
 
     assert proto.compute_md5_sum(res, "data.txt") == \
          "c1cfdaf7e22865b29b8d62a564dc8f23"
@@ -230,8 +234,7 @@ def test_build_manifest(fsspec_proto, filesystem):
 
     proto = fsspec_proto(filesystem)
 
-    res = list(proto.collect_all_resources())[0]
-    assert res.resource_id == "one"
+    res = proto.get_resource("one")
 
     manifest = proto.build_manifest(res)
 
@@ -254,8 +257,7 @@ def test_load_manifest(fsspec_proto, filesystem):
 
     proto = fsspec_proto(filesystem)
 
-    res = list(proto.collect_all_resources())[0]
-    assert res.resource_id == "one"
+    res = proto.get_resource("one")
 
     manifest = proto.load_manifest(res)
 
@@ -280,8 +282,7 @@ def test_load_missing_manifest(fsspec_proto, filesystem):
 
     proto = fsspec_proto(filesystem)
 
-    res = list(proto.collect_all_resources())[0]
-    assert res.resource_id == "one"
+    res = proto.get_resource("one")
 
     manifest_filename = proto.get_resource_file_path(res, ".MANIFEST")
     assert proto.filesystem.exists(manifest_filename)
@@ -302,8 +303,7 @@ def test_get_manifest(fsspec_proto, filesystem):
 
     proto = fsspec_proto(filesystem)
 
-    res = list(proto.collect_all_resources())[0]
-    assert res.resource_id == "one"
+    res = proto.get_resource("one")
 
     manifest = proto.get_manifest(res)
 
@@ -328,8 +328,7 @@ def test_get_missing_manifest(fsspec_proto, filesystem):
 
     proto = fsspec_proto(filesystem)
 
-    res = list(proto.collect_all_resources())[0]
-    assert res.resource_id == "one"
+    res = proto.get_resource("one")
 
     manifest_filename = proto.get_resource_file_path(res, ".MANIFEST")
     assert proto.filesystem.exists(manifest_filename)
@@ -350,3 +349,51 @@ def test_get_missing_manifest(fsspec_proto, filesystem):
     assert manifest["genomic_resource.yaml"].size == 0
     assert manifest["genomic_resource.yaml"].md5 == \
         "d41d8cd98f00b204e9800998ecf8427e"
+
+
+@pytest.mark.parametrize("filesystem", [
+    "local",
+    "s3",
+])
+def test_delete_manifest_entry(fsspec_proto, filesystem):
+    """Test delete manifest entry."""
+
+    # Given
+    proto = fsspec_proto(filesystem)
+
+    res = proto.get_resource("one")
+
+    manifest = proto.load_manifest(res)
+
+    entry = manifest["data.txt"]
+    entry_filename = proto.get_resource_file_path(res, entry.name)
+    assert proto.filesystem.exists(entry_filename)
+
+    # When
+    proto._delete_manifest_entry(res, entry)  # pylint: disable=protected-access
+
+    # Then
+    assert not proto.filesystem.exists(entry_filename)
+
+
+@pytest.mark.parametrize("filesystem", [
+    "local",
+    "s3",
+])
+def test_copy_manifest_entry(dir_repo, fsspec_proto, filesystem):
+    """Test delete manifest entry."""
+
+    # Given
+    remote_res = dir_repo.get_resource("one")
+    assert remote_res is not None
+    assert remote_res.file_exists("data.txt")
+
+    proto = fsspec_proto(filesystem)
+
+    res = proto.get_resource("one")
+
+    manifest = proto.load_manifest(res)
+
+    entry = manifest["data.txt"]
+    entry_filename = proto.get_resource_file_path(res, entry.name)
+    assert proto.filesystem.exists(entry_filename)

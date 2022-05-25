@@ -2,7 +2,7 @@ import os
 from dae.genomic_resources.embeded_repository import GenomicResourceEmbededRepo
 from dae.genomic_resources.dir_repository import GenomicResourceDirRepo
 from dae.genomic_resources.repository import GR_CONF_FILE_NAME
-from dae.genomic_resources.repository import GRP_CONTENTS_FILE_NAME
+from dae.genomic_resources.repository import GR_CONTENTS_FILE_NAME
 from dae.genomic_resources.cli import cli_manage, cli_cache_repo
 
 
@@ -24,9 +24,9 @@ def test_cli_manage(tmp_path):
     dir_repo = GenomicResourceDirRepo('dir', directory=tmp_path)
     dir_repo.store_all_resources(src_repo)
 
-    assert not (tmp_path / GRP_CONTENTS_FILE_NAME).is_file()
+    assert not (tmp_path / GR_CONTENTS_FILE_NAME).is_file()
     cli_manage(["index", str(tmp_path)])
-    assert (tmp_path / GRP_CONTENTS_FILE_NAME).is_file()
+    assert (tmp_path / GR_CONTENTS_FILE_NAME).is_file()
 
 
 def test_cli_cache_instance(mocker, fixture_path, temp_cache_dir):

@@ -17,7 +17,7 @@ from .repository import GenomicResourceRepo
 from .repository import GenomicResourceRealRepo
 from .repository import find_genomic_resources_helper
 from .repository import find_genomic_resource_files_helper
-from .repository import GRP_CONTENTS_FILE_NAME
+from .repository import GR_CONTENTS_FILE_NAME
 
 logger = logging.getLogger(__name__)
 
@@ -86,7 +86,7 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
 
     def get_content_filepath(self):
         """Returns pathlib filename the repository content file."""
-        return self.directory / GRP_CONTENTS_FILE_NAME
+        return self.directory / GR_CONTENTS_FILE_NAME
 
     def file_exists(self, resource, filename):
         """Checks if a file exists in a genomic resource."""
@@ -182,6 +182,24 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
 
         os.utime(dest_filepath, (src_modtime, src_modtime))
         return manifest_entry
+
+    def build_repo_content(self):
+        """Builds the content of the .CONTENTS file."""
+        content = [
+            {
+                "id": gr.resource_id,
+                "version": gr.get_version_str(),
+                "config": gr.get_config(),
+                "manifest": gr.get_manifest().to_manifest_entries()
+            }
+            for gr in self.get_all_resources()]
+        content = sorted(content, key=lambda x: x["id"])
+
+        content_filepath = self.get_content_filepath()
+        with content_filepath.open("wt", encoding="utf8") as outfile:
+            yaml.dump(content, outfile)
+
+        return content
 
     def store_all_resources(self, source_repo: GenomicResourceRepo):
         """Copies all resources from another genomic resources repository."""
