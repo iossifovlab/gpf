@@ -8,14 +8,17 @@ from typing import List, Generator, cast, Union, Optional
 
 import fsspec  # type: ignore
 import pysam
+import yaml
 
-from dae.genomic_resources.repository import Manifest, ReadWriteRepositoryProtocol, \
+from dae.genomic_resources.repository import Manifest, \
+    ReadWriteRepositoryProtocol, \
     ReadOnlyRepositoryProtocol, \
     Mode, \
     ManifestEntry, \
     GenomicResource, \
     find_genomic_resources_helper, \
-    find_genomic_resource_files_helper
+    find_genomic_resource_files_helper, \
+    GR_MANIFEST_FILE_NAME
 
 
 logger = logging.getLogger(__name__)
@@ -101,6 +104,18 @@ class FsspecReadOnlyProtocol(ReadOnlyRepositoryProtocol):
                 resource, index_filename))
         return pysam.TabixFile(file_path, index=index_path)  # pylint: disable=no-member
 
+    def load_manifest(self, resource) -> Manifest:
+        """Loads resource manifest"""
+        filename = self.get_resource_file_path(resource, GR_MANIFEST_FILE_NAME)
+        with self.filesystem.open(filename, "rt", encoding="utf8") as infile:
+            content = infile.read()
+            return Manifest.from_file_content(content)
+
+    def get_manifest(self, resource):
+        """Loads and returnst a resource manifest."""
+        manifest = self.load_manifest(resource)
+        return manifest
+
 
 class FsspecReadWriteProtocol(
         FsspecReadOnlyProtocol, ReadWriteRepositoryProtocol):
@@ -167,3 +182,20 @@ class FsspecReadWriteProtocol(
             entry.md5 = self.compute_md5_sum(resource, entry.name)
             manifest.add(entry)
         return manifest
+
+    def save_manifest(self, resource, manifest: Manifest):
+        """Saves manifest into genomic resources directory."""
+        filename = self.get_resource_file_path(resource, GR_MANIFEST_FILE_NAME)
+        with self.filesystem.open(filename, "wt", encoding="utf8") as outfile:
+            yaml.dump(manifest.to_manifest_entries(), outfile)
+        resource.refresh()
+
+    def get_manifest(self, resource):
+        """Loads or builds a resource manifest."""
+        try:
+            manifest = self.load_manifest(resource)
+            return manifest
+        except FileNotFoundError:
+            manifest = self.build_manifest(resource)
+            self.save_manifest(resource, manifest)
+            return manifest

@@ -226,7 +226,7 @@ def test_compute_md5_sum(fsspec_proto, filesystem):
     "s3",
 ])
 def test_build_manifest(fsspec_proto, filesystem):
-    """Test md5 sum computation."""
+    """Test build manifest."""
 
     proto = fsspec_proto(filesystem)
 
@@ -234,6 +234,113 @@ def test_build_manifest(fsspec_proto, filesystem):
     assert res.resource_id == "one"
 
     manifest = proto.build_manifest(res)
+
+    assert len(manifest) == 2
+    assert manifest["data.txt"].size == 7
+    assert manifest["data.txt"].md5 == \
+        "c1cfdaf7e22865b29b8d62a564dc8f23"
+
+    assert manifest["genomic_resource.yaml"].size == 0
+    assert manifest["genomic_resource.yaml"].md5 == \
+        "d41d8cd98f00b204e9800998ecf8427e"
+
+
+@pytest.mark.parametrize("filesystem", [
+    "local",
+    "s3",
+])
+def test_load_manifest(fsspec_proto, filesystem):
+    """Test load manifest."""
+
+    proto = fsspec_proto(filesystem)
+
+    res = list(proto.collect_all_resources())[0]
+    assert res.resource_id == "one"
+
+    manifest = proto.load_manifest(res)
+
+    assert len(manifest) == 2
+
+    assert len(manifest) == 2
+    assert manifest["data.txt"].size == 7
+    assert manifest["data.txt"].md5 == \
+        "c1cfdaf7e22865b29b8d62a564dc8f23"
+
+    assert manifest["genomic_resource.yaml"].size == 0
+    assert manifest["genomic_resource.yaml"].md5 == \
+        "d41d8cd98f00b204e9800998ecf8427e"
+
+
+@pytest.mark.parametrize("filesystem", [
+    "local",
+    "s3",
+])
+def test_load_missing_manifest(fsspec_proto, filesystem):
+    """Test load missing manifest."""
+
+    proto = fsspec_proto(filesystem)
+
+    res = list(proto.collect_all_resources())[0]
+    assert res.resource_id == "one"
+
+    manifest_filename = proto.get_resource_file_path(res, ".MANIFEST")
+    assert proto.filesystem.exists(manifest_filename)
+
+    proto.filesystem.delete(manifest_filename)
+    assert not proto.filesystem.exists(manifest_filename)
+
+    with pytest.raises(FileNotFoundError):
+        proto.load_manifest(res)
+
+
+@pytest.mark.parametrize("filesystem", [
+    "local",
+    "s3",
+])
+def test_get_manifest(fsspec_proto, filesystem):
+    """Test get manifest."""
+
+    proto = fsspec_proto(filesystem)
+
+    res = list(proto.collect_all_resources())[0]
+    assert res.resource_id == "one"
+
+    manifest = proto.get_manifest(res)
+
+    assert len(manifest) == 2
+
+    assert len(manifest) == 2
+    assert manifest["data.txt"].size == 7
+    assert manifest["data.txt"].md5 == \
+        "c1cfdaf7e22865b29b8d62a564dc8f23"
+
+    assert manifest["genomic_resource.yaml"].size == 0
+    assert manifest["genomic_resource.yaml"].md5 == \
+        "d41d8cd98f00b204e9800998ecf8427e"
+
+
+@pytest.mark.parametrize("filesystem", [
+    "local",
+    "s3",
+])
+def test_get_missing_manifest(fsspec_proto, filesystem):
+    """Test get missing manifest. The manifest should be recreated."""
+
+    proto = fsspec_proto(filesystem)
+
+    res = list(proto.collect_all_resources())[0]
+    assert res.resource_id == "one"
+
+    manifest_filename = proto.get_resource_file_path(res, ".MANIFEST")
+    assert proto.filesystem.exists(manifest_filename)
+
+    proto.filesystem.delete(manifest_filename)
+    assert not proto.filesystem.exists(manifest_filename)
+
+    # now manifest file is missing... proto should recreate it...
+    manifest = proto.get_manifest(res)
+
+    assert len(manifest) == 2
 
     assert len(manifest) == 2
     assert manifest["data.txt"].size == 7
