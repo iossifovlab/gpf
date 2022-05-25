@@ -326,7 +326,7 @@ def test_not_admin_cant_revoke_permissions(
 
 
 def test_cant_revoke_default_permissions(user_client, dataset):
-    Dataset.recreate_dataset_perm(dataset.dataset_id, [])
+    Dataset.recreate_dataset_perm(dataset.dataset_id)
 
     url = "/api/v3/groups/revoke-permission"
 

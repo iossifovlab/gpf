@@ -47,9 +47,6 @@ class DatasetView(QueryBaseView):
                 for genotype_data_id in selected_genotype_data
             ])
 
-            # assert all([d is not None for d in datasets]), \
-            #     selected_genotype_data
-
             res = [
                 StudyWrapperBase.build_genotype_data_all_datasets(
                     dataset.config
@@ -58,8 +55,7 @@ class DatasetView(QueryBaseView):
             ]
             if not self.gpf_instance.get_selected_genotype_data():
                 res = sorted(
-                    res,
-                    key=lambda desc: desc["name"]
+                    res, key=lambda desc: desc["name"]
                 )
             res = [self.augment_accessibility(ds, user) for ds in res]
             res = [self.augment_with_groups(ds) for ds in res]
