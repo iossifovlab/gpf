@@ -98,7 +98,7 @@ class GeneSetCollection:
             filepaths = list()
             if directory == ".":
                 directory = ""  # Easier check with startswith
-            for filepath, _, _ in resource.get_files():
+            for filepath, _, _ in resource.get_manifest().get_files():
                 if filepath.startswith(directory) and \
                         filepath.endswith(".txt"):
                     filepaths.append(filepath)

@@ -51,9 +51,9 @@ class GenomicResourceURLRepo(GenomicResourceRealRepo):
                 self._all_resources.append(resource)
         yield from self._all_resources
 
-    def get_files(self, resource: GenomicResource):
-        for entry in resource.get_manifest():
-            yield entry.name, entry.size, entry.time
+    # def get_files(self, resource: GenomicResource):
+    #     for entry in resource.get_manifest():
+    #         yield entry.name, entry.size, entry.time
 
     def file_exists(self, resource, filename):
         file_url = self._get_file_url(resource, filename)

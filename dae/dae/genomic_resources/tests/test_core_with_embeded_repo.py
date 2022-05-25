@@ -95,7 +95,7 @@ def test_resources_files():
     gr = repo.get_resource("one")
     assert gr
 
-    assert {(fn, fs, ft) for fn, fs, ft in gr.get_files()} == {
+    assert {(fn, fs, ft) for fn, fs, ft in gr.get_manifest().get_files()} == {
         ("genomic_resource.yaml", 0, '2000-03-03'),
         ("data.txt", 9, '2000-03-08T10:03:03'),
         ("stats/hists.txt", 5, '1999-03-08T10:04:03'),

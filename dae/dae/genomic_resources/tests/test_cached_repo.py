@@ -260,10 +260,11 @@ def test_cached_repository_get_files(tmp_path):
     resource = cached_repo.get_resource("one")
     assert resource is not None
 
-    src_files = sorted(list(src_repo.get_resource("one").get_files()))
+    src_files = sorted(list(
+        src_repo.get_resource("one").get_manifest().get_files()))
     print(src_files)
 
-    cached_files = sorted(list(resource.get_files()))
+    cached_files = sorted(list(resource.get_manifest().get_files()))
     print(cached_files)
 
     assert src_files == cached_files

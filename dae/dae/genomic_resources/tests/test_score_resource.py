@@ -19,7 +19,5 @@ def test_pos_gr():
     })
     gr = repo.get_resource("")
 
-    assert {fn for fn, _, _ in gr.get_files()} == {
+    assert {fn for fn, _, _ in gr.get_manifest().get_files()} == {
         "genomic_resource.yaml", "data.txt"}
-    # gr.fetch('1', 4, ['c1']) == 4.14
-    # gr.fetch('1', 4, 8, ['c1']) == (4.14 + 5.14 + 6.14 + 7.14)/4

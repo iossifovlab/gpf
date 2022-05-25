@@ -47,7 +47,7 @@ def test_dir_repository(tmp_path):
     dirname = pathlib.Path(
         dir_repo._get_resource_dir(dir_resource))  # pylint: disable=protected-access
 
-    for filename, _size, _mod_time in dir_resource.get_files():
+    for filename, _size, _mod_time in dir_resource.get_manifest().get_files():
         path = dirname / filename
         path.touch()
 
@@ -86,7 +86,7 @@ def test_dir_repository_resource_update(tmp_path):
 
     dirname = pathlib.Path(
         dir_repo1._get_resource_dir(gr1))  # pylint: disable=protected-access
-    for filename, _size, _mod_time in gr1.get_files():
+    for filename, _size, _mod_time in gr1.get_manifest().get_files():
         path = dirname / filename
         path.touch()
 

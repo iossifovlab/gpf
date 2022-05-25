@@ -38,7 +38,7 @@ def test_check_manifest_timestamps(repo_helper):
     res = repo_helper.repo.get_resource("sub/two")  # NOSONAR
     assert repo_helper.check_manifest_timestamps(res)
 
-    for fname, _, _ in repo_helper.repo.get_files(res):
+    for fname, _, _ in repo_helper.repo.collect_resource_files(res):
         filepath = repo_helper.repo.get_filepath(res, fname)
         filepath.touch()
 
@@ -53,7 +53,7 @@ def test_check_manifest_md5sums(repo_helper):
 
     assert repo_helper.check_manifest_md5sums(res)
 
-    for fname, _, _ in repo_helper.repo.get_files(res):
+    for fname, _, _ in repo_helper.repo.collect_resource_files(res):
         filepath = repo_helper.repo.get_filepath(res, fname)
         with open(filepath, "at", encoding="utf8") as outfile:
             outfile.write("\n")
@@ -66,7 +66,7 @@ def test_checkout_manifest_timestamps_simple(repo_helper):
     res = repo_helper.repo.get_resource("sub/two")
     assert repo_helper.check_manifest_timestamps(res)
 
-    for fname, _, _ in repo_helper.repo.get_files(res):
+    for fname, _, _ in repo_helper.repo.collect_resource_files(res):
         filepath = repo_helper.repo.get_filepath(res, fname)
         filepath.touch()
     assert not repo_helper.check_manifest_timestamps(res)

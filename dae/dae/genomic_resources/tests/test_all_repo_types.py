@@ -19,7 +19,7 @@ def test_all_repo_types(tmp_path):
     run_test_on_all_repos(
         test_repos, "is_file_list_ok",
         lambda repo: {GR_CONF_FILE_NAME, "data.txt", "data.txt.gz"} ==
-        {fn for fn, _, _ in repo.get_resource("one").get_files()}
+        {entry.name for entry in repo.get_resource("one").get_manifest()}
     )
 
     run_test_on_all_repos(

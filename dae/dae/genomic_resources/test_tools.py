@@ -48,7 +48,8 @@ def run_test_on_all_repos(all_test_repos, test_name, test_function,
     for test_repo_name, test_repo in all_test_repos.items():
         print(100*"+")
         print(
-            test_repo.repo_id, list(test_repo.get_resource("one").get_files()))
+            test_repo.repo_id, list(
+                test_repo.get_resource("one").get_manifest()))
         print(100*"+")
         test_result = test_function(test_repo)
         if test_repo_name in repo_names_that_should_fail:

@@ -4,6 +4,7 @@ from __future__ import annotations
 import re
 import logging
 import datetime
+import enum
 from typing import List, Optional, cast, Tuple, Dict, Any
 from dataclasses import dataclass, asdict
 
@@ -294,13 +295,13 @@ class GenomicResource:
         """
         return f"{self.resource_id}{version_tuple_to_suffix(self.version)}"
 
-    def get_files(self) -> List[Tuple[str, int, str]]:
-        """
-        Returns a list of tuples (filename,filesize,filetime) for each of
-        the files in the genomic resource.
-        Files and directories staring with "." are ignored.
-        """
-        return self.repo.get_files(self)
+    # def get_files(self) -> List[Tuple[str, int, str]]:
+    #     """
+    #     Returns a list of tuples (filename,filesize,filetime) for each of
+    #     the files in the genomic resource.
+    #     Files and directories staring with "." are ignored.
+    #     """
+    #     return self.repo.get_files(self)
 
     def file_exists(self, filename):
         """
@@ -335,6 +336,92 @@ class GenomicResource:
     def open_tabix_file(self, filename, index_filename=None):
         """Opens a tabix file and returns a pysam.TabixFile."""
         return self.repo.open_tabix_file(self, filename, index_filename)
+
+
+class Mode(enum.Enum):
+    """Protocol mode."""
+
+    READONLY = 1
+    READWRITE = 2
+
+
+class RepositoryProtocol(abc.ABC):
+    """Read only genomic resources repository protocol."""
+
+    def __init__(self, proto_id: str):
+        self.proto_id = proto_id
+
+    @abc.abstractmethod
+    def mode(self):
+        """Returns protocol model."""
+
+    def get_id(self):
+        """Returns the repository ID."""
+        return self.proto_id
+
+    def load_yaml(self, genomic_resource, filename):
+        """Returns parsed YAML file."""
+
+        content = self.get_file_content(
+            genomic_resource, filename, uncompress=True)
+        return yaml.safe_load(content)
+
+    def get_file_content(
+            self, resource, filename, uncompress=True, mode="t"):
+        """Returns content of a file in given resource"""
+        with self.open_raw_file(
+                resource, filename, mode=f"r{mode}",
+                uncompress=uncompress) as infile:
+            return infile.read()
+
+    def get_manifest(self, resource):
+        """Loads resource manifest."""
+        content = self.get_file_content(resource, GR_MANIFEST_FILE_NAME)
+        return Manifest.from_file_content(content)
+
+    @abc.abstractmethod
+    def file_exists(self, resource, filename) -> bool:
+        """Check if given file exist in give resource"""
+
+    @abc.abstractmethod
+    def open_raw_file(
+            self, resource, filename,
+            mode="rt", uncompress=False, seekable=False):
+        """Opens file in a resource and returns a file-like object"""
+
+    @abc.abstractmethod
+    def open_tabix_file(
+            self, resource,  filename, index_filename=None):
+        """
+        Open a tabix file in a resource and return a pysam tabix file object.
+
+        Not all repositories support this method. Repositories that do
+        no support this method raise and exception.
+        """
+
+    def build_genomic_resource(
+            self, resource_id, version, config=None,
+            manifest: Optional[Manifest] = None):
+
+        """Builds a genomic resource based on this protocol."""
+        if not config:
+            res = GenomicResource(resource_id, version, self)
+            config = self.load_yaml(res, GR_CONF_FILE_NAME)
+
+        resource = GenomicResource(resource_id, version, self, config)
+        resource._manifest = manifest  # pylint: disable=protected-access
+        return resource
+
+
+class ReadOnlyRepositoryProtocol(RepositoryProtocol):
+
+    def mode(self):
+        return Mode.READWRITE
+
+class ReadWriteRepositoryProtocol(RepositoryProtocol):
+
+    def mode(self):
+        return Mode.READWRITE
 
 
 class GenomicResourceRepo(abc.ABC):
@@ -412,13 +499,13 @@ class GenomicResourceRealRepo(GenomicResourceRepo):
         content = self.get_file_content(resource, GR_MANIFEST_FILE_NAME)
         return Manifest.from_file_content(content)
 
-    @abc.abstractmethod
-    def get_files(self, resource) -> List[Tuple[str, int, str]]:
-        """Returns a list of files for given resource.
+    # @abc.abstractmethod
+    # def get_files(self, resource) -> List[Tuple[str, int, str]]:
+    #     """Returns a list of files for given resource.
 
-        For each file in the resource returns a tuple, containing the
-        file name, file size and file timestamp.
-        """
+    #     For each file in the resource returns a tuple, containing the
+    #     file name, file size and file timestamp.
+    #     """
 
     @abc.abstractmethod
     def file_exists(self, resource, filename) -> bool:

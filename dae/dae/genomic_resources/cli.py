@@ -137,10 +137,10 @@ def _configure_list_subparser(subparsers):
 
 def _run_list_command(repo, _args):
     for res in repo.get_all_resources():
-        res_size = sum([fs for _, fs, _ in res.get_files()])
+        res_size = sum([fs for _, fs, _ in res.get_manifest().get_files()])
         print(
             f"{res.get_type():20} {res.get_version_str():7s} "
-            f"{len(list(res.get_files())):2d} {res_size:12d} "
+            f"{len(list(res.get_manifest().get_files())):2d} {res_size:12d} "
             f"{res.get_id()}")
 
 

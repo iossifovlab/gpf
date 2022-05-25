@@ -124,9 +124,9 @@ class CachingDirectoryRepo(GenomicResourceDirRepo):
         return pysam.TabixFile(  # pylint: disable=no-member
             full_file_path, index=full_index_path)
 
-    def get_files(self, resource: GenomicResource):
-        for entry in resource.get_manifest():
-            yield entry.name, entry.size, entry.time
+    # def get_files(self, resource: GenomicResource):
+    #     for entry in resource.get_manifest():
+    #         yield entry.name, entry.size, entry.time
 
     def _get_local_file_content(
             self, genomic_resource, filename, uncompress=True, mode="t"):

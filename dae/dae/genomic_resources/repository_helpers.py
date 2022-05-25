@@ -24,7 +24,8 @@ class RepositoryWorkflowHelper:
         """
         current_manifest = self.repo.load_manifest(resource)
         new_manifest = Manifest()
-        for fname, fsize, ftime in sorted(self.repo.get_files(resource)):
+        for fname, fsize, ftime in sorted(
+                self.repo.collect_resource_files(resource)):
             md5 = None
             if fname in current_manifest:
                 entry = current_manifest[fname]
@@ -46,7 +47,8 @@ class RepositoryWorkflowHelper:
         current_manifest = self.repo.load_manifest(resource)
 
         diff = []
-        for fname, _fsize, _ftime in sorted(self.repo.get_files(resource)):
+        for fname, _fsize, _ftime in sorted(
+                self.repo.collect_resource_files(resource)):
             manifest_md5 = None
             if fname in current_manifest:
                 entry = current_manifest[fname]
@@ -71,7 +73,7 @@ class RepositoryWorkflowHelper:
         }
         resource_files = {
             fname
-            for fname, _, _ in self.repo.get_files(resource)
+            for fname, _, _ in self.repo.collect_resource_files(resource)
         }
 
         new_files = resource_files.difference(manifest_files)
@@ -112,7 +114,7 @@ class RepositoryWorkflowHelper:
 
         current_manifest = resource.get_manifest()
 
-        for fname, _fsize, ftime in self.repo.get_files(resource):
+        for fname, _fsize, ftime in self.repo.collect_resource_files(resource):
             entry = current_manifest[fname]
             if ftime == entry.time:
                 logger.info(
@@ -178,7 +180,8 @@ class RepositoryWorkflowHelper:
         try:
             current_manifest = self.repo.load_manifest(resource)
             new_manifest = Manifest()
-            for fname, fsize, ftime in sorted(self.repo.get_files(resource)):
+            for fname, fsize, ftime in sorted(
+                    self.repo.collect_resource_files(resource)):
                 md5 = None
                 if fname in current_manifest:
                     entry = current_manifest[fname]

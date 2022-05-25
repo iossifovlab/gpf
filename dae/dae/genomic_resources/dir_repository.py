@@ -67,7 +67,7 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
                                    find_genomic_resources_helper(dir_content)]
         yield from self._all_resources
 
-    def get_files(self, resource) -> List[Tuple[str, int, str]]:
+    def collect_resource_files(self, resource) -> List[Tuple[str, int, str]]:
         """Returns a list of tuples for all files in a resources."""
         content_dict = self._dir_to_dict(
             self._get_resource_dir(resource))
@@ -253,7 +253,8 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
                     "time": ft,
                     "md5": self.compute_md5_sum(resource, fn)
                 }
-                for fn, fs, ft in sorted(self.get_files(resource))])
+                for fn, fs, ft in sorted(
+                    self.collect_resource_files(resource))])
 
     def load_manifest(self, resource) -> Manifest:
         """Loads resource manifest"""

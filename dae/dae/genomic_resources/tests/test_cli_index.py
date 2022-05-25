@@ -39,7 +39,7 @@ def test_cli_index_simple(repo_helper):
     dir_repo = repo_helper.repo
 
     res = dir_repo.get_resource("sub/two")  # NOSONAR
-    for fname, _, _ in dir_repo.get_files(res):
+    for fname, _, _ in dir_repo.collect_resource_files(res):
         filepath = dir_repo.get_filepath(res, fname)
         filepath.touch()
 
@@ -55,7 +55,7 @@ def test_cli_index_with_dry_run(repo_helper):
     dir_repo = repo_helper.repo
 
     res = dir_repo.get_resource("sub/two")  # NOSONAR
-    for fname, _, _ in dir_repo.get_files(res):
+    for fname, _, _ in dir_repo.collect_resource_files(res):
         filepath = dir_repo.get_filepath(res, fname)
         filepath.touch()
     assert not repo_helper.check_manifest_timestamps(res)
