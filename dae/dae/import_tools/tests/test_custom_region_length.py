@@ -4,7 +4,7 @@ import os
 from os.path import join
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.import_tools import import_tools
-import pyarrow.parquet as pq
+import pyarrow.parquet as pq  # type: ignore
 
 
 def test_import_task_bin_size(gpf_instance_2019, tmpdir):

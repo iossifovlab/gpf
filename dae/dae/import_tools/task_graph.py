@@ -4,12 +4,21 @@ from dataclasses import dataclass
 from typing import Any, Callable
 
 
+@dataclass(eq=False, frozen=True)
+class TaskNode:
+    name: str
+    func: Callable
+    args: list[Any]
+    deps: list['TaskNode']
+
+
 class TaskGraph:
     """An object representing a graph of tasks"""
     def __init__(self):
         self.nodes = []
 
-    def create_task(self, name, func, args, deps):
+    def create_task(self, name: str, func: Callable[..., None], args: list,
+                    deps: list[TaskNode]) -> TaskNode:
         """Creates a new task and adds it to the graph
 
         :param name: Name of the task (used for debugging purposes)
@@ -24,7 +33,14 @@ class TaskGraph:
 
 
 class TaskGraphExecutor:
-    def execute(self, task_graph):
+    @abstractmethod
+    def execute(self, task_graph: TaskGraph):
+        """Executes the graph"""
+        pass
+
+
+class AbstractTaskGraphExecutor(TaskGraphExecutor):
+    def execute(self, task_graph: TaskGraph) -> None:
         """Executes the graph"""
         self._check_for_cyclic_deps(task_graph)
         for task_node in self._in_exec_order(task_graph):
@@ -32,12 +48,12 @@ class TaskGraphExecutor:
         return self.await_tasks()
 
     @abstractmethod
-    def queue_task(self, task_node):
+    def queue_task(self, task_node: TaskNode) -> None:
         """Put the task on the execution queue"""
         pass
 
     @abstractmethod
-    def await_tasks(self):
+    def await_tasks(self) -> None:
         """Wait for all queued tasks to finish"""
         pass
 
@@ -76,15 +92,7 @@ class TaskGraphExecutor:
         stack.pop()
 
 
-@dataclass(eq=False, frozen=True)
-class TaskNode:
-    name: str
-    func: Callable
-    args: list[Any]
-    deps: list['TaskNode']
-
-
-class SequentialExecutor(TaskGraphExecutor):
+class SequentialExecutor(AbstractTaskGraphExecutor):
     """A Task Graph Executor that executes task in a sequential order"""
     def queue_task(self, task_node):
         task_node.func(*task_node.args)
@@ -93,7 +101,7 @@ class SequentialExecutor(TaskGraphExecutor):
         pass
 
 
-class DaskExecutor(TaskGraphExecutor):
+class DaskExecutor(AbstractTaskGraphExecutor):
     """A Task Graph Executor that executes task in parallel using
     Dask to do the heavy lifting"""
     def __init__(self, client):
@@ -106,7 +114,7 @@ class DaskExecutor(TaskGraphExecutor):
         self.task2future[task_node] = future
 
     def await_tasks(self):
-        from dask.distributed import as_completed
+        from dask.distributed import as_completed  # type: ignore
 
         futures = list(self.task2future.values())
         self.task2future = {}

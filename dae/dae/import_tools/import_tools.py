@@ -204,10 +204,13 @@ class ImportProject():
         # TODO handle inline storage configurations
         return self.import_config["destination"].get("storage_id")
 
-    def has_destination(self):
+    def has_destination(self) -> bool:
+        """
+        Returns True if there is a *destination* section in the import config
+        """
         return "destination" in self.import_config
 
-    def get_row_group_size(self, bucket):
+    def get_row_group_size(self, bucket) -> int:
         return self.import_config.get("parquet_row_group_size", {})\
             .get(bucket.type, 20_000)
 
