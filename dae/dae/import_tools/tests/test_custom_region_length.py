@@ -8,6 +8,7 @@ import pyarrow.parquet as pq
 
 
 def test_import_task_bin_size(gpf_instance_2019, tmpdir):
+    # Create the import config and set tmpdir as work_dir
     input_dir = join(
         os.path.dirname(os.path.realpath(__file__)),
         "resources", "import_task_bin_size")
@@ -16,33 +17,34 @@ def test_import_task_bin_size(gpf_instance_2019, tmpdir):
     import_config = GPFConfigParser.parse_and_interpolate_file(config_fn)
     import_config["processing_config"]["work_dir"] = str(tmpdir)
 
+    # Running the import
     project = import_tools.ImportProject.build_from_config(
         import_config, input_dir, gpf_instance=gpf_instance_2019)
     import_tools.run_with_project(project)
 
+    # Assert the expected output files and dirs are created in the work_dir
+    # (i.e. tmpdir)
     files = os.listdir(tmpdir)
     assert "test_import_variants" in files
 
     variants_dir = join(tmpdir, "test_import_variants")
-    regions_dirs = sorted(os.listdir(variants_dir))
-    assert len(regions_dirs) == 4
-    assert regions_dirs[0] == "_PARTITION_DESCRIPTION"
-    assert regions_dirs[1] == "_VARIANTS_SCHEMA"
-    assert regions_dirs[2] == "region_bin=1_0"
-    assert regions_dirs[3] == "region_bin=1_1"
+    assert set(os.listdir(variants_dir)) == {
+        "_PARTITION_DESCRIPTION",
+        "_VARIANTS_SCHEMA",
+        "region_bin=1_0", "region_bin=1_1"
+    }
 
+    # This is the first output directory. Assert it has the right files
+    # with the right content
     out_dir = join(
         variants_dir,
         "region_bin=1_0/frequency_bin=0/family_bin=1")
-    parquet_files = sorted(os.listdir(out_dir))
-    assert len(parquet_files) == 3
-    assert parquet_files[0] == "variants_region_bin_1_0_frequency_bin_0_" \
-        "family_bin_1_bucket_index_0.parquet"
-    assert parquet_files[1] == "variants_region_bin_1_0_frequency_bin_0_" \
-        "family_bin_1_bucket_index_1.parquet"
-    assert parquet_files[2] == "variants_region_bin_1_0_frequency_bin_0_" \
-        "family_bin_1_bucket_index_3.parquet"
-
+    parquet_files = [f"{fn}.parquet" for fn in [
+        "variants_region_bin_1_0_frequency_bin_0_family_bin_1_bucket_index_0",
+        "variants_region_bin_1_0_frequency_bin_0_family_bin_1_bucket_index_1",
+        "variants_region_bin_1_0_frequency_bin_0_family_bin_1_bucket_index_3",
+    ]]
+    assert set(os.listdir(out_dir)) == set(parquet_files)
     _assert_variants(join(out_dir, parquet_files[0]), bucket_index=0,
                      positions=[123, 150, 30000000])
     _assert_variants(join(out_dir, parquet_files[1]), bucket_index=1,
@@ -50,28 +52,28 @@ def test_import_task_bin_size(gpf_instance_2019, tmpdir):
     _assert_variants(join(out_dir, parquet_files[2]), bucket_index=3,
                      positions=[99999999])
 
+    # Same for the second directory
     out_dir = join(
         variants_dir,
         "region_bin=1_1/frequency_bin=0/family_bin=0")
-    parquet_files = sorted(os.listdir(out_dir))
-    assert len(parquet_files) == 2
-    assert parquet_files[0] == "variants_region_bin_1_1_frequency_bin_0_" \
-        "family_bin_0_bucket_index_3.parquet"
-    assert parquet_files[1] == "variants_region_bin_1_1_frequency_bin_0_" \
-        "family_bin_0_bucket_index_4.parquet"
-
+    parquet_files = [f"{fn}.parquet" for fn in [
+        "variants_region_bin_1_1_frequency_bin_0_family_bin_0_bucket_index_3",
+        "variants_region_bin_1_1_frequency_bin_0_family_bin_0_bucket_index_4",
+    ]]
+    assert set(os.listdir(out_dir)) == set(parquet_files)
     _assert_variants(join(out_dir, parquet_files[0]), bucket_index=3,
                      positions=[120000000])
     _assert_variants(join(out_dir, parquet_files[1]), bucket_index=4,
                      positions=[120000001])
 
+    # And the third output directory
     out_dir = join(
         variants_dir,
         "region_bin=1_1/frequency_bin=0/family_bin=1")
-    parquet_files = sorted(os.listdir(out_dir))
-    assert len(parquet_files) == 1
-    assert parquet_files[0] == "variants_region_bin_1_1_frequency_bin_0_" \
-        "family_bin_1_bucket_index_3.parquet"
+    parquet_files = [f"{fn}.parquet" for fn in [
+        "variants_region_bin_1_1_frequency_bin_0_family_bin_1_bucket_index_3",
+    ]]
+    assert set(os.listdir(out_dir)) == set(parquet_files)
     _assert_variants(join(out_dir, parquet_files[0]), bucket_index=3,
                      positions=[100000000])
 
