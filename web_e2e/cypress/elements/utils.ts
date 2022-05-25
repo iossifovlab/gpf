@@ -35,6 +35,7 @@ export const datasetIds = {
 };
 
 export const toolPageLinks = {
+  datasetDescription: 'dataset-description',
   datasetStatistics: 'dataset-statistics',
   genotypeBrowser: 'genotype-browser',
   phenotypeBrowser: 'phenotype-browser',
@@ -117,6 +118,9 @@ export class BasePage {
   public waitForPageToLoad(page: string, hasAcessRights: boolean = true): void {
     if (hasAcessRights) {
       switch(page) {
+        case toolPageLinks.datasetDescription:
+          cy.get('gpf-dataset-description').should('be.visible');
+          break;
         case toolPageLinks.datasetStatistics:
           cy.get('gpf-variant-reports').should('be.visible');
           break;

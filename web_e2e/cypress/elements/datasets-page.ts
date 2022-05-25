@@ -9,6 +9,11 @@ export class DatasetsPage extends BasePage {
     return cy.get('#permission-denied-prompt');
   }
 
+  public get datasetDescriptionButton(): element {
+    cy.get('.navbar-custom').should('be.visible');
+    return cy.get('a.nav-link').contains('Dataset Description');
+  }
+
   public get datasetStatisticsButton(): element {
     cy.get('.navbar-custom').should('be.visible');
     return cy.get('a.nav-link').contains('Dataset Statistics');
