@@ -60,8 +60,8 @@ class GeneScore:
         self.histogram_bins = self.histogram.bins
         self.histogram_bars = self.histogram.bars
 
-    def _load_data(self, file):
-        assert file is not None
+    def _load_data(self):
+        assert self.file is not None
 
         df = pd.read_csv(self.file)
         assert self.id in df.columns, "{} not found in {}".format(

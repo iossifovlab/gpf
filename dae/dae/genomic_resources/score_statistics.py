@@ -111,7 +111,7 @@ class Histogram:
         return result
 
     def set_values(self, values):
-        step = 1.0 * (self.x_max - self.x_min / (self.bins - 1))
+        step = 1.0 * (self.x_max - self.x_min / (self.bins_count - 1))
         dec = -np.log10(step)
         dec = dec if dec >= 0 else 0
         dec = int(dec)
@@ -119,7 +119,7 @@ class Histogram:
         bleft = np.around(self.x_min, dec)
         bright = np.around(self.x_max + step, dec)
 
-        if self.xscale == "log":
+        if self.x_scale == "log":
             # Max numbers of items in first bin
             max_count = values.size / self.bins_count
 
