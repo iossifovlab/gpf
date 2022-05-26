@@ -478,9 +478,7 @@ class GenomicResourceRealRepo(GenomicResourceRepo):
                 matching_resources.append(res)
         if not matching_resources:
             return None
-        return cast(
-            GenomicResource,
-            max(matching_resources, key=lambda x: x.version))  # type: ignore
+        return max(matching_resources, key=lambda x: x.version)  # type: ignore
 
     def load_yaml(self, genomic_resource, filename):
         """Returns parsed YAML file."""
