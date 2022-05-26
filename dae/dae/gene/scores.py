@@ -43,7 +43,7 @@ class GenomicScoresDb:
 
                     # filepath = self.grr.get_file_path(resource, resource_file)
                     with resource.open_raw_file(resource_file) as infile:
-                        df = pd.read_csv(infile)
+                        df = pd.read_csv(infile, na_filter=False)
                     assert set(df.columns) == set(["bars", "bins"]), \
                         "Incorrect CSV file"
                     bins = df["bins"].values
@@ -65,8 +65,8 @@ class GenomicScoresDb:
         "Returns all genomic scores histograms"
         result = []
 
-        for score in self.scores.values():
-            result.append(score)
+        for score_id, score in self.scores.items():
+            result.append((score_id, score))
 
         return result
 

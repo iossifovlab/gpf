@@ -1,6 +1,6 @@
 import itertools
 from collections import OrderedDict
-from typing import Optional, Any
+from typing import Optional
 
 import numpy as np
 import pandas as pd
@@ -9,6 +9,7 @@ from dae.gene.gene_sets_db import cached
 from dae.utils.dae_utils import join_line
 
 from dae.genomic_resources import GenomicResource
+from dae.genomic_resources.score_statistics import Histogram
 
 
 class GeneScore:
@@ -42,11 +43,8 @@ class GeneScore:
         self.genomic_values_col = "gene"
 
         self.desc = desc
-        self.bins = self.histogram_config["bins"]
-        self.xscale = self.histogram_config["x_scale"]
-        self.yscale = self.histogram_config["y_scale"]
+        self.histogram = Histogram.from_config(histogram_config)
         self.file = file
-        self.range = getattr(self.histogram_config, "range", None)
 
         self.meta = meta
 

@@ -51,8 +51,8 @@ class Histogram:
             None,
             None,
             conf["bins"],
-            conf["min"],
-            conf["max"],
+            conf.get("min"),
+            conf.get("max"),
             conf.get("x_scale", "linear"),
             conf.get("y_scale", "linear"),
             conf.get("x_min_log")

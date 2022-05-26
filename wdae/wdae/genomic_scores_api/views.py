@@ -10,14 +10,14 @@ class GenomicScoresView(QueryBaseView):
     def get(self, request):
         return Response([
             {
-                "score": score.id,
-                "desc": score.desc,
+                "score": score_id,
+                # "desc": score.desc,
                 "bars": score.bars,
                 "bins": score.bins,
-                "xscale": score.xscale,
-                "yscale": score.yscale,
-                "range": score.range,
-                "help": score.help,
+                "xscale": score.x_scale,
+                "yscale": score.y_scale,
+                # "range": score.range,
+                # "help": score.help,
             }
-            for score in self.gpf_instance.get_genomic_scores()
+            for score_id, score in self.gpf_instance.get_genomic_scores()
         ])

@@ -12,16 +12,16 @@ scores:
 histograms:
   - score: score_raw_rankscore
     bins: 101
-    yscale: "log"
-    xscale: "linear"
+    y_scale: "log"
+    x_scale: "linear"
   - score: score_raw
     bins: 101
-    yscale: "log"
-    xscale: "linear"
+    y_scale: "log"
+    x_scale: "linear"
   - score: score_phred
     bins: 101
-    yscale: "log"
-    xscale: "linear"
+    y_scale: "log"
+    x_scale: "linear"
 default_annotation:
   attributes:
     - source: score_raw_rankscore
