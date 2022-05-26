@@ -88,10 +88,13 @@ def test_measures_forbidden(user_client, user):
 
 
 def test_download(admin_client):
-    url = "{}?dataset_id=quads_f1_ds&instrument=instrument1".format(
-        DOWNLOAD_URL
+    data = {
+        "dataset_id": "quads_f1",
+        "instrument": "instrument1"
+    }
+    response = admin_client.post(
+        DOWNLOAD_URL, json.dumps(data), "application/json"
     )
-    response = admin_client.get(url)
 
     assert response.status_code == 200
 
@@ -99,11 +102,33 @@ def test_download(admin_client):
     assert header[0] == "person_id"
 
 
-def test_download_forbidden(user_client):
-    url = "{}?dataset_id=quads_f1_ds&instrument=instrument1".format(
-        DOWNLOAD_URL
+def test_download_specific_measures(admin_client):
+    data = {
+        "dataset_id": "quads_f1",
+        "instrument": "instrument1",
+        "measures": ["instrument1.continuous", "instrument1.categorical"]
+    }
+    response = admin_client.post(
+        DOWNLOAD_URL, json.dumps(data), "application/json"
     )
-    response = user_client.get(url)
+
+    assert response.status_code == 200
+
+    header = response.content.decode("utf-8").split()[0].split(",")
+    assert len(header) == 3
+    assert header[0] == "person_id"
+    assert header[1] == "instrument1.continuous"
+    assert header[2] == "instrument1.categorical"
+
+
+def test_download_forbidden(user_client):
+    data = {
+        "dataset_id": "quads_f1",
+        "instrument": "instrument1"
+    }
+    response = user_client.post(
+        DOWNLOAD_URL, json.dumps(data), "application/json"
+    )
 
     assert response.status_code == 403
 
@@ -116,8 +141,12 @@ def test_download_forbidden(user_client):
 
 
 def test_download_all_instruments(admin_client):
-    url = "{}?dataset_id=quads_f1_ds&instrument=".format(DOWNLOAD_URL)
-    response = admin_client.get(url)
+    data = {
+        "dataset_id": "quads_f1"
+    }
+    response = admin_client.post(
+        DOWNLOAD_URL, json.dumps(data), "application/json"
+    )
 
     assert response.status_code == 200
 
@@ -132,6 +161,29 @@ def test_download_all_instruments(admin_client):
         "instrument1.categorical",
         "instrument1.ordinal",
         "instrument1.raw",
+    }
+
+
+def test_download_all_instruments_specific_measures(admin_client):
+    data = {
+        "dataset_id": "quads_f1",
+        "measures": ["instrument1.continuous", "instrument1.categorical"]
+    }
+    response = admin_client.post(
+        DOWNLOAD_URL, json.dumps(data), "application/json"
+    )
+
+    assert response.status_code == 200
+
+    content = list(response.streaming_content)[0].decode("utf-8")
+    header = content.split()[0].split(",")
+
+    print("header:\n", header)
+    assert len(header) == 3
+    assert set(header) == {
+        "person_id",
+        "instrument1.continuous",
+        "instrument1.categorical",
     }
 
 

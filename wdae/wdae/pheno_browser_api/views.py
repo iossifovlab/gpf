@@ -143,18 +143,22 @@ class PhenoMeasuresDownload(QueryBaseView):
     def __init__(self):
         super(PhenoMeasuresDownload, self).__init__()
 
-    def get(self, request):
-        if "dataset_id" not in request.query_params:
+    def post(self, request):
+        data = request.data
+        if "dataset_id" not in data:
             return Response(status=status.HTTP_400_BAD_REQUEST)
-        dataset_id = request.query_params["dataset_id"]
+        dataset_id = data["dataset_id"]
 
         dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
         if dataset is None or not dataset.has_pheno_data():
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        instrument = request.query_params.get("instrument", None)
+        measure_ids = data.get("measures", None)
+        instrument = data.get("instrument", None)
         if not instrument:
-            measure_ids = list(dataset.phenotype_data.measures.keys())
+            if measure_ids is None:
+                measure_ids = list(dataset.phenotype_data.measures.keys())
+
             values_iterator = dataset.phenotype_data.get_values_streaming_csv(
                 measure_ids)
             response = StreamingHttpResponse(

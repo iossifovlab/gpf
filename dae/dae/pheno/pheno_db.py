@@ -1,4 +1,3 @@
-from distutils.command.config import config
 import os
 import math
 import logging
@@ -471,12 +470,14 @@ class PhenotypeData(ABC):
             self, instrument_name,
             person_ids=None,
             family_ids=None,
-            role=None):
+            role=None,
+            measure_ids=None):
         """
         Returns a dataframe with values for all measures in given
         instrument (see **get_values_df**).
         """
-        measure_ids = self._get_instrument_measures(instrument_name)
+        if measure_ids is None:
+            measure_ids = self._get_instrument_measures(instrument_name)
         res = self.get_values_df(measure_ids, person_ids, family_ids, role)
         return res
 
@@ -513,7 +514,7 @@ class PhenotypeStudy(PhenotypeData):
 
     def __init__(
             self, pheno_id: str, dbfile: str, browser_dbfile: str = None,
-            config:Dict[str, str] = None):
+            config: Dict[str, str] = None):
 
         super(PhenotypeStudy, self).__init__(pheno_id)
 
