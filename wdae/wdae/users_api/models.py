@@ -177,6 +177,9 @@ class WdaeUser(AbstractBaseUser, PermissionsMixin):
 
 
 class VerificationPath(models.Model):
+    """Used for verification of account registration, password change and
+    password reset.
+    """
     path = models.CharField(max_length=255, unique=True)
     user = models.OneToOneField(WdaeUser, on_delete=models.CASCADE)
 

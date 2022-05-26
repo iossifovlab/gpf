@@ -27,6 +27,9 @@ from .utils import LOCKOUT_THRESHOLD, csrf_clear
 
 
 def iterator_to_json(users):
+    """Wraps an iterator over WdaeUser models to produce json objects
+    using the appropriate serializer.
+    """
     yield "["
     curr = next(users, None)
     post = next(users, None)

@@ -13,6 +13,10 @@ from datasets_api.permissions import get_wdae_parents, \
 
 
 class DatasetView(QueryBaseView):
+    """General dataset view which provides either a summary of ALL available
+    dataset configs or a specific dataset configuration in full, depending on
+    whether the request is made with a dataset_id param or not.
+    """
 
     def augment_accessibility(self, dataset, user):
         dataset_object = Dataset.objects.get(dataset_id=dataset["id"])
@@ -96,6 +100,10 @@ class DatasetView(QueryBaseView):
 
 
 class PermissionDeniedPromptView(QueryBaseView):
+    """Provides the markdown-formatted text to display when
+    access to a dataset is denied.
+    """
+
     def __init__(self):
         super(PermissionDeniedPromptView, self).__init__()
 
@@ -118,6 +126,9 @@ class PermissionDeniedPromptView(QueryBaseView):
 
 
 class DatasetDetailsView(QueryBaseView):
+    """Provides miscellaneous details for a given dataset for convenience.
+    """
+
     def get(self, request, dataset_id):
         if dataset_id is None:
             return Response(
@@ -144,6 +155,9 @@ class DatasetDetailsView(QueryBaseView):
 
 
 class DatasetPedigreeView(QueryBaseView):
+    """Provides pedigree data for a given dataset.
+    """
+
     def get(self, request, dataset_id, column):
         if dataset_id is None:
             return Response(
@@ -169,6 +183,8 @@ class DatasetPedigreeView(QueryBaseView):
 
 
 class DatasetConfigView(DatasetView):
+    """Provides a dataset's configuration; used for remote instances.
+    """
     def get(self, request, dataset_id):
         if dataset_id is None:
             return Response(
@@ -189,6 +205,9 @@ class DatasetConfigView(DatasetView):
 
 
 class DatasetDescriptionView(DatasetView):
+    """Allows the editing or creation of a dataset's description through
+    POST requests.
+    """
     def post(self, request, dataset_id):
         if not request.user.is_staff:
             return Response(
