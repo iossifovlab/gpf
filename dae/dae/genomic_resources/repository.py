@@ -408,10 +408,10 @@ class RepositoryProtocol(abc.ABC):
 
         """Builds a genomic resource based on this protocol."""
         if not config:
-            res = GenomicResource(resource_id, version, self)
+            res = GenomicResource(resource_id, version, self)  # type: ignore
             config = self.load_yaml(res, GR_CONF_FILE_NAME)
 
-        resource = GenomicResource(resource_id, version, self, config)
+        resource = GenomicResource(resource_id, version, self, config)  # type: ignore
         resource._manifest = manifest  # pylint: disable=protected-access
         return resource
 
@@ -533,4 +533,3 @@ class GenomicResourceRealRepo(GenomicResourceRepo):
         Not all repositories support this method. Repositories that do
         no support this method raise and exception.
         """
-

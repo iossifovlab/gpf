@@ -1024,63 +1024,63 @@ def temp_dbfile(request):
 @pytest.fixture
 def agp_config(data_import, iossifov2014_impala):
     return Box({
-        'gene_sets': [
+        "gene_sets": [
             {
-                'category': 'relevant_gene_sets',
-                'display_name': 'Relevant Gene Sets',
-                'sets': [
-                    {'set_id': 'CHD8 target genes', 'collection_id': 'main'},
+                "category": "relevant_gene_sets",
+                "display_name": "Relevant Gene Sets",
+                "sets": [
+                    {"set_id": "CHD8 target genes", "collection_id": "main"},
                     {
-                        'set_id': 'FMRP Darnell',
-                        'collection_id': 'main'
+                        "set_id": "FMRP Darnell",
+                        "collection_id": "main"
                     }
                 ]
             },
         ],
-        'genomic_scores': [
+        "genomic_scores": [
             {
-                'category': 'protection_scores',
-                'display_name': 'Protection scores',
-                'scores': [
-                    {'score_name': 'SFARI_gene_score', 'format': '%s'},
-                    {'score_name': 'RVIS_rank', 'format': '%s'},
-                    {'score_name': 'RVIS', 'format': '%s'}
+                "category": "protection_scores",
+                "display_name": "Protection scores",
+                "scores": [
+                    {"score_name": "SFARI_gene_score", "format": "%s"},
+                    {"score_name": "RVIS_rank", "format": "%s"},
+                    {"score_name": "RVIS", "format": "%s"}
                 ]
             },
             {
-                'category': 'autism_scores',
-                'display_name': 'Autism scores',
-                'scores': [
-                    {'score_name': 'SFARI_gene_score', 'format': '%s'},
-                    {'score_name': 'RVIS_rank', 'format': '%s'},
-                    {'score_name': 'RVIS', 'format': '%s'}
+                "category": "autism_scores",
+                "display_name": "Autism scores",
+                "scores": [
+                    {"score_name": "SFARI_gene_score", "format": "%s"},
+                    {"score_name": "RVIS_rank", "format": "%s"},
+                    {"score_name": "RVIS", "format": "%s"}
                 ]
             },
         ],
-        'datasets': Box({
-            'iossifov_we2014_test': Box({
-                'statistics': [
+        "datasets": Box({
+            "iossifov_we2014_test": Box({
+                "statistics": [
                     {
-                        'id': 'denovo_noncoding',
-                        'display_name': 'Noncoding',
-                        'effects': ['noncoding'],
-                        'category': 'denovo'
+                        "id": "denovo_noncoding",
+                        "display_name": "Noncoding",
+                        "effects": ["noncoding"],
+                        "category": "denovo"
                     },
                     {
-                        'id': 'denovo_missense',
-                        'display_name': 'Missense',
-                        'effects': ['missense'],
-                        'category': 'denovo'
+                        "id": "denovo_missense",
+                        "display_name": "Missense",
+                        "effects": ["missense"],
+                        "category": "denovo"
                     }
                 ],
-                'person_sets': [
+                "person_sets": [
                     {
-                        'set_name': 'unknown',
-                        'collection_name': 'phenotype'
+                        "set_name": "unknown",
+                        "collection_name": "phenotype"
                     },
                     {
-                        'set_name': 'unaffected',
-                        'collection_name': 'phenotype'
+                        "set_name": "unaffected",
+                        "collection_name": "phenotype"
                     },
                 ]
             })

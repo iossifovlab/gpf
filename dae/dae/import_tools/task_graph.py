@@ -9,7 +9,7 @@ class TaskNode:
     name: str
     func: Callable
     args: list[Any]
-    deps: list['TaskNode']
+    deps: list["TaskNode"]
 
 
 class TaskGraph:

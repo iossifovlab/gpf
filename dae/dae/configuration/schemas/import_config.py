@@ -161,7 +161,7 @@ def _copy_loader_args(loader_cls, schema, prefix):
             continue
         arg_config = {}
         arg_name = arg.argument_name.strip("-")\
-            .replace('-', '_').removeprefix(prefix)
+            .replace("-", "_").removeprefix(prefix)
         if arg.value_type is not None:
             arg_config["type"] = {
                 str: "string",

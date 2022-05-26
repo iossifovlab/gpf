@@ -70,59 +70,15 @@ def _run_hist_command(repo, args):
         logger.error("Cannot find resource %s", args.resource)
         sys.exit(1)
     builder = HistogramBuilder(res)
-    n_jobs = args.jobs or os.cpu_count()
 
-    tmp_dir = tempfile.TemporaryDirectory()
+    dask_client = DaskClient.from_arguments(args)
+    if dask_client is None:
+        sys.exit(1)
 
-    if args.kubernetes:
-        env = _get_env_vars(args.envvars)
-        extra_pod_config = {}
-        if args.image_pull_secrets:
-            extra_pod_config["imagePullSecrets"] = [
-                {"name": name} for name in args.image_pull_secrets
-            ]
-        pod_spec = make_pod_spec(image=args.container_image,
-                                    extra_pod_config=extra_pod_config)
-        cluster = KubeCluster(pod_spec, env=env)
-        cluster.scale(n_jobs)
-    elif args.sge:
-        try:
-            #  pylint: disable=import-outside-toplevel
-            from dask_jobqueue import SGECluster  # type: ignore
-        except ModuleNotFoundError:
-            logger.error("No dask-jobqueue found. Please install it using:"
-                            " mamba install dask-jobqueue -c conda-forge")
-            sys.exit(1)
-
-        dashboard_config = {}
-        if args.dashboard_port:
-            dashboard_config["scheduler_options"] = \
-                {"dashboard_address": f":{args.dashboard_port}"}
-        cluster = SGECluster(n_workers=n_jobs,
-                                queue="all.q",
-                                walltime="1500000",
-                                cores=1,
-                                processes=1,
-                                memory="2GB",
-                                log_directory=args.log_dir or tmp_dir.name,
-                                local_directory=tmp_dir.name,
-                                **dashboard_config)
-    else:
-        dashboard_config = {}
-        if args.dashboard_port:
-            dashboard_config["dashboard_address"] = \
-                f":{args.dashboard_port}"
-        cluster = LocalCluster(n_workers=n_jobs, threads_per_worker=1,
-                                local_directory=tmp_dir.name,
-                                **dashboard_config)
-    try:
-        with Client(cluster) as client:
-            histograms = builder.build(client, force=args.force,
-                                        only_dirty=True,
-                                        region_size=args.region_size)
-    finally:
-        cluster.close()
-        tmp_dir.cleanup()
+    with dask_client as client:
+        histograms = builder.build(client, force=args.force,
+                                    only_dirty=True,
+                                    region_size=args.region_size)
 
     hist_out_dir = "histograms"
     logger.info("Saving histograms in %s", hist_out_dir)

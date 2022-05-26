@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import argparse
 import os
 import sys
@@ -16,7 +18,7 @@ Defaults to the number of processors on the machine")
         parser.add_argument("--kubernetes", default=False,
                             action="store_true",
                             help="Run computation in a kubernetes cluster")
-        parser.add_argument("--envvars", nargs='*', default=[],
+        parser.add_argument("--envvars", nargs="*", default=[],
                             help="Environment variables to pass to "
                             "kubernetes workers")
         parser.add_argument("--container-image",
@@ -38,8 +40,7 @@ the number of workers using -j")
                             help="Directory where to store SGE worker logs")
 
     @classmethod
-    def from_arguments(cls, args: argparse.Namespace) \
-            -> Optional["DaskClient"]:
+    def from_arguments(cls, args: argparse.Namespace) -> DaskClient:
         n_jobs = args.jobs or os.cpu_count()
 
         tmp_dir = tempfile.TemporaryDirectory()
