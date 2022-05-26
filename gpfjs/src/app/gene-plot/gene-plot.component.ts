@@ -308,7 +308,7 @@ export class GenePlotComponent implements OnChanges {
       const alleleTitle =
         `Effect type: ${allele.effect}`
         + `\nVariant position: ${allele.location}`
-        + `\nFrequency: ${allele.frequency === null ? 'N/A' : allele.frequency}`;
+        + `\nFrequency: ${allele.frequency === null ? 'N/A' : allele.frequency.toFixed(3)}`;
 
       const alleleHeight = this.getAlleleHeight(allele);
       const color = draw.affectedStatusColors[allele.affectedStatus];
