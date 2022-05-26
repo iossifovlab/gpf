@@ -1,7 +1,3 @@
-.. pheno documentation master file, created by
-   sphinx-quickstart on Fri Nov 11 14:34:13 2016.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
 
 dae Interface
 =============
@@ -9,13 +5,14 @@ dae Interface
 .. toctree::
    :maxdepth: 4
 
-   configuration
+   genomic_resources
+   annotation
    variants
+   backends
+   import_tools
+   configuration
    pheno
    pheno_tool
    enrichment_tool
    gene
-   annotation
-   backends
-   import_tools
 
