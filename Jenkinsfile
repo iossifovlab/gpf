@@ -43,7 +43,9 @@ pipeline {
               myPy(pattern: 'test-results/mypy_dae_report', reportEncoding: 'UTF-8', id: 'mypy-dae', name: 'MyPy - dae'),
               myPy(pattern: 'test-results/mypy_wdae_report', reportEncoding: 'UTF-8', id: 'mypy-wdae', name: 'MyPy - wdae'),
               pyLint(pattern: 'test-results/pylint_gpf_report', reportEncoding: 'UTF-8')
-            ]
+            ],
+            qualityGates: [[threshold: 1, type: 'NEW']]
+
           )
 
           publishHTML (target : [allowMissing: true,
