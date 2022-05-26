@@ -165,7 +165,8 @@ class RemotePhenotypeData(PhenotypeData):
         return values
 
     def get_instrument_values_df(
-        self, instrument_id, person_ids=None, family_ids=None, roles=None
+        self, instrument_id, person_ids=None,
+        family_ids=None, roles=None, measures=None
     ):
         instrument_values = self.rest_client.post_instrument_values(
             self.remote_dataset_id,
@@ -173,12 +174,14 @@ class RemotePhenotypeData(PhenotypeData):
             person_ids,
             family_ids,
             roles,
+            measures,
         )
 
         return pd.DataFrame.from_records(instrument_values.values())
 
     def get_instrument_values(
-        self, instrument_id, person_ids=None, family_ids=None, roles=None
+        self, instrument_id, person_ids=None,
+        family_ids=None, roles=None, measures=None
     ):
         instrument_values = self.rest_client.post_instrument_values(
             self.remote_dataset_id,
@@ -186,6 +189,7 @@ class RemotePhenotypeData(PhenotypeData):
             person_ids,
             family_ids,
             roles,
+            measures,
         )
 
         return instrument_values

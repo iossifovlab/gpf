@@ -485,12 +485,14 @@ class PhenotypeData(ABC):
             self, instrument_name,
             person_ids=None,
             family_ids=None,
-            role=None):
+            role=None,
+            measure_ids=None):
         """
         Returns a dictionary with values for all measures in given
         instrument (see :func:`get_values`).
         """
-        measure_ids = self._get_instrument_measures(instrument_name)
+        if measure_ids is None:
+            measure_ids = self._get_instrument_measures(instrument_name)
         return self.get_values(measure_ids, person_ids, family_ids, role)
 
 

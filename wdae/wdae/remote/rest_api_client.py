@@ -347,13 +347,14 @@ class RESTClient:
 
     def post_instrument_values(
             self, dataset_id, instrument_name,
-            person_ids, family_ids, roles):
+            person_ids, family_ids, roles, measures):
         data = {
             "datasetId": dataset_id,
             "instrumentName": instrument_name,
             "personIds": person_ids,
             "familyIds": family_ids,
             "roles": roles,
+            "measures": measures,
         }
 
         response = self._post(

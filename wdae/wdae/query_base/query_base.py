@@ -1,4 +1,5 @@
 from rest_framework import views
+from rest_framework.permissions import IsAuthenticated
 
 from gpf_instance.gpf_instance import get_gpf_instance
 
@@ -9,7 +10,7 @@ from users_api.authentication import SessionAuthenticationWithoutCSRF
 class QueryBaseView(views.APIView):
 
     authentication_classes = (SessionAuthenticationWithoutCSRF,)
-    permission_classes = (IsDatasetAllowed,)
+    permission_classes = (IsDatasetAllowed, IsAuthenticated)
 
     def __init__(self):
         self.gpf_instance = get_gpf_instance()

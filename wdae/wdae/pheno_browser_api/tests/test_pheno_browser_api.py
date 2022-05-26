@@ -121,12 +121,12 @@ def test_download_specific_measures(admin_client):
     assert header[2] == "instrument1.categorical"
 
 
-def test_download_forbidden(user_client):
+def test_download_forbidden(anonymous_client):
     data = {
         "dataset_id": "quads_f1",
         "instrument": "instrument1"
     }
-    response = user_client.post(
+    response = anonymous_client.post(
         DOWNLOAD_URL, json.dumps(data), "application/json"
     )
 
@@ -136,7 +136,7 @@ def test_download_forbidden(user_client):
     assert len(header.keys()) == 1
     assert (
         header["detail"]
-        == "You do not have permission to perform this action."
+        == "Authentication credentials were not provided."
     )
 
 

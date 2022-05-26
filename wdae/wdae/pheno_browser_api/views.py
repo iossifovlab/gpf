@@ -166,7 +166,9 @@ class PhenoMeasuresDownload(QueryBaseView):
         else:
             if instrument not in dataset.phenotype_data.instruments:
                 return Response(status=status.HTTP_404_NOT_FOUND)
-            df = dataset.phenotype_data.get_instrument_values_df(instrument)
+            df = dataset.phenotype_data.get_instrument_values_df(
+                instrument, measure_ids=measure_ids
+            )
             df_csv = df.to_csv(index=False, encoding="utf-8")
 
             response = HttpResponse(df_csv, content_type="text/csv")
