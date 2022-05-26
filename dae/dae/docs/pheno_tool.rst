@@ -1,5 +1,5 @@
-pheno_tool package
-==================
+Phenotype tool
+==============
 
 Example usage of :class:`PhenoTool <dae.pheno_tool.tool.PhenoTool>` class
 -------------------------------------------------------------------------
@@ -251,27 +251,11 @@ Example for iterating on many measures::
                 cols.append("%.3f" % res.pvalue)
         result[measure_id] = cols
 
-..
-    dae.pheno_tool.family_filters module
-    --------------------------------
 
-    .. automodule:: dae.pheno_tool.family_filters
-        :members:
-        :undoc-members:
-        :show-inheritance:
+Classes and Functions
+---------------------
+.. toctree::
+   :maxdepth: 3
 
-dae.pheno_tool.tool module
---------------------------
+   modules/dae.pheno_tool
 
-.. automodule:: dae.pheno_tool.tool
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-dae.pheno_tool.pheno_common.PhenoResult class
----------------------------------------------
-
-.. autoclass:: dae.pheno_tool.pheno_common.PhenoResult
-    :members:
-    :undoc-members:
-    :show-inheritance:

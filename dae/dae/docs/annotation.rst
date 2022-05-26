@@ -1,9 +1,11 @@
 
-annotation package
-==================
+Annotation
+==========
 
 
-.. automodule:: dae.annotation
-    :members:
-    :undoc-members:
-    :show-inheritance:
+Classes and Functions
+---------------------
+.. toctree::
+   :maxdepth: 3
+
+   modules/dae.annotation

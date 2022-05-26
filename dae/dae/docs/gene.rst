@@ -1,5 +1,5 @@
-gene package
-============
+Gene Properties
+===============
 
 Example usage of :class:`Weights <dae.gene.weights.Weights>` class
 -------------------------------------------------------------------
@@ -57,19 +57,9 @@ Using `to_df` method we can get a data frame represenging all gene weights::
 
 
 
-dae.gene.weights module
------------------------
+Classes and Functions
+---------------------
+.. toctree::
+   :maxdepth: 3
 
-.. automodule:: dae.gene.weights
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-
-Module contents
----------------
-
-.. automodule:: dae.gene
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   modules/dae.gene

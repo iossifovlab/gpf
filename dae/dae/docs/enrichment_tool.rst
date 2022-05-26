@@ -1,5 +1,5 @@
-enrichment_tool package
-=======================
+Enrichment Tool
+===============
 
 Example usage of :class:`EnrichmentTool <dae.enrichment_tool.tool.EnrichmentTool>` class
 ----------------------------------------------------------------------------------------
@@ -70,43 +70,9 @@ Each value in the dictionary is an instance of the class
     Out[23]: 9.4660348870512223e-07
 
 
-dae.enrichment_tool.background module
--------------------------------------
+Classes and Functions
+---------------------
+.. toctree::
+   :maxdepth: 3
 
-.. automodule:: dae.enrichment_tool.background
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-dae.enrichment_tool.config module
----------------------------------
-
-.. automodule:: dae.enrichment_tool.config
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-dae.enrichment_tool.event_counters module
-------------------------------------------
-
-.. automodule:: dae.enrichment_tool.event_counters
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-dae.enrichment_tool.tool module
--------------------------------
-
-.. automodule:: dae.enrichment_tool.tool
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-
-Module contents
----------------
-
-.. automodule:: dae.enrichment_tool
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   modules/dae.pheno_tool

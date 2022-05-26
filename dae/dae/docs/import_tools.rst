@@ -127,3 +127,12 @@ All files specified in the *input* section are relative to the *input_dir*. The
 located. *input_dir* is options, if unspecified then every file would be
 relative to the config file's directory. If the input configuration is in an
 external file then input file paths will be relative to the external file.
+
+
+Classes and Functions
+---------------------
+
+.. toctree::
+   :maxdepth: 3
+
+   modules/dae.backends

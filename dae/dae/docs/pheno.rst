@@ -1,5 +1,5 @@
-pheno package
-=============
+Phenotype Data
+==============
 
 Pheno DB access
 ---------------
@@ -84,16 +84,10 @@ You can access individuals and measures values as a joined data frame by using
     10           1.0        -1.0
 
 
-.. automodule:: dae.pheno
-    :members:
-    :undoc-members:
-    :show-inheritance:
 
+Classes and Functions
+---------------------
+.. toctree::
+   :maxdepth: 3
 
-dae.pheno.pheno_db module
--------------------------
-
-.. automodule:: dae.pheno.pheno_db
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   modules/dae.pheno

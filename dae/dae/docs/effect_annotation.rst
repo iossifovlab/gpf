@@ -1,7 +1,5 @@
-Genomic Resources
+Effect Annotation
 =================
-
-
 
 Classes and Functions
 ---------------------
@@ -9,4 +7,4 @@ Classes and Functions
 .. toctree::
    :maxdepth: 3
 
-   modules/dae.genomic_resources
+   modules/dae.effect_annotation

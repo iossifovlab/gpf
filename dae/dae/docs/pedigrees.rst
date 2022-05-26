@@ -1,12 +1,10 @@
-Genomic Resources
-=================
-
+Pedigrees Tools
+===============
 
 
 Classes and Functions
 ---------------------
-
 .. toctree::
    :maxdepth: 3
 
-   modules/dae.genomic_resources
+   modules/dae.pedigrees
