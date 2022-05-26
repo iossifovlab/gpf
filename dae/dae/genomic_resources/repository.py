@@ -163,6 +163,7 @@ def find_genomic_resources_helper(content_dict, parent_id=None):
     yield from _scan_content_dict_for_genomic_resources(
         content_dict, parent_id)
 
+
 @dataclass(order=True)
 class ManifestEntry:
     """Provides an entry into manifest object"""
@@ -532,3 +533,4 @@ class GenomicResourceRealRepo(GenomicResourceRepo):
         Not all repositories support this method. Repositories that do
         no support this method raise and exception.
         """
+
