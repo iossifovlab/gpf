@@ -50,6 +50,10 @@ def main(argv):
     else:
         logging.basicConfig(level=logging.ERROR)
 
+    run(argv)
+
+
+def run(argv):
     filename, params = FamiliesLoader.parse_cli_arguments(argv)
     if argv.study_id is not None:
         study_id = argv.study_id

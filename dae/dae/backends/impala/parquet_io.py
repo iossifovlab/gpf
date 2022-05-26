@@ -161,6 +161,10 @@ class ParquetPartitionDescriptor(PartitionDescriptor):
         config = configparser.ConfigParser()
         with fs.open(config_path, "rt") as f:
             config.read_file(f, config_path)
+        return ParquetPartitionDescriptor.from_dict(config, root_dirname)
+
+    @staticmethod
+    def from_dict(config, root_dirname=""):
         assert config["region_bin"] is not None
 
         chromosomes = list(
@@ -240,6 +244,7 @@ class ParquetPartitionDescriptor(PartitionDescriptor):
     def variant_filename(self, family_allele):
         current_bin = self._evaluate_region_bin(family_allele)
         filepath = os.path.join(self.output, f"region_bin={current_bin}")
+        bucket_index = family_allele.get_attribute("bucket_index")
 
         filename = f"variants_region_bin_{current_bin}"
         if self._rare_boundary > 0:
@@ -254,6 +259,8 @@ class ParquetPartitionDescriptor(PartitionDescriptor):
             current_bin = self._evaluate_family_bin(family_allele)
             filepath = os.path.join(filepath, f"family_bin={current_bin}")
             filename += f"_family_bin_{current_bin}"
+        if bucket_index is not None:
+            filename += f"_bucket_index_{bucket_index}"
         filename += ".parquet"
 
         return os.path.join(filepath, filename)
@@ -451,7 +458,7 @@ class VariantsParquetWriter:
             self,
             variants_loader,
             partition_descriptor,
-            bucket_index=1,
+            bucket_index=None,
             rows=100_000,
             include_reference=True):
 

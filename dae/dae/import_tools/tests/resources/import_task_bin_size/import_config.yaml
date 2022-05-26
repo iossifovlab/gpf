@@ -1,0 +1,29 @@
+id: test_import
+
+input:
+  pedigree:
+    file: pedigree.ped
+
+  denovo:
+    files:
+      - single_chromosome_variants.tsv
+    person_id: spid
+    chrom: chrom
+    pos: pos
+    ref: ref
+    alt: alt
+    family_id: familyId
+    genotype: genotype
+
+processing_config:
+  denovo:
+    region_length: 30000000
+
+partition_description:
+  region_bin:
+    chromosomes: '1'
+    region_length: 100000000
+  family_bin:
+    family_bin_size: 2
+  frequency_bin:
+    rare_boundary: 5

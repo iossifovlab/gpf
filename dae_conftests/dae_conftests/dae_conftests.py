@@ -43,6 +43,8 @@ from dae.genomic_resources import build_genomic_resource_repository
 from dae.genomic_resources.group_repository import GenomicResourceGroupRepo
 from dae.genomic_resources.gene_models import \
     load_gene_models_from_resource
+from dae.genomic_resources.reference_genome import \
+    open_reference_genome_from_resource
 
 
 logger = logging.getLogger(__name__)
@@ -187,6 +189,49 @@ def gpf_instance_2019(default_dae_config, global_dae_fixtures_dir):
     return GPFInstance2019(
         dae_config=default_dae_config, work_dir=global_dae_fixtures_dir
     )
+
+
+@pytest.fixture(scope="session")
+def gpf_instance_short(
+        default_dae_config, global_dae_fixtures_dir, fixture_dirname):
+
+    class GPFInstanceShort(GPFInstance):
+        def __init__(self, *args, **kwargs):
+            super(GPFInstanceShort, self).__init__(*args, **kwargs)
+
+        @property  # type: ignore
+        @cached
+        def gene_models(self):
+            resource = self.grr.get_resource(
+                "hg19/GATK_ResourceBundle_5777_b37_phiX174_short/"
+                "gene_models/refGene_201309")
+            result = load_gene_models_from_resource(resource)
+            return result
+
+        @property  # type: ignore
+        @cached
+        def reference_genome(self):
+            resource = self.grr.get_resource(
+                "hg19/GATK_ResourceBundle_5777_b37_phiX174_short/genome")
+            result = open_reference_genome_from_resource(resource)
+            return result
+
+    instance = GPFInstanceShort(
+        dae_config=default_dae_config, work_dir=global_dae_fixtures_dir
+    )
+    repositories = [
+        instance.grr
+    ]
+    repositories.append(
+        build_genomic_resource_repository(
+            {
+                "id": "fixtures",
+                "type": "directory",
+                "directory": f"{fixture_dirname('genomic_resources')}"
+            }))
+    instance.grr = GenomicResourceGroupRepo(repositories)
+
+    return instance
 
 
 @pytest.fixture

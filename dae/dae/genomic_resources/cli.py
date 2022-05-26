@@ -1,5 +1,4 @@
 """Provides CLI for management of genomic resources repositories."""
-import os
 import sys
 import logging
 import pathlib
@@ -7,10 +6,7 @@ import argparse
 import time
 from typing import cast
 from urllib.parse import urlparse
-import tempfile
-
-from dask.distributed import Client, LocalCluster  # type: ignore
-from dask_kubernetes import KubeCluster, make_pod_spec  # type: ignore
+from dae.dask.client_factory import DaskClient
 
 from dae.genomic_resources.dir_repository import GenomicResourceDirRepo
 from dae.genomic_resources.url_repository import GenomicResourceURLRepo
@@ -74,37 +70,12 @@ def cli_manage(cli_args=None):
     parser_hist.add_argument("resource", type=str,
                              help="Resource to generate histograms for")
     parser_hist.add_argument("--verbose", "-V", action="count", default=0)
-    parser_hist.add_argument("-j", "--jobs", type=int, default=None,
-                             help="Number of jobs to run in parallel. \
- Defaults to the number of processors on the machine")
-    parser_hist.add_argument("--region-size", type=int, default=3000000,
+    parser_hist.add_argument("--region-size", type=int, default=3_000_000,
                              help="Number of records to process in parallel")
-    parser_hist.add_argument("--kubernetes", default=False,
-                             action="store_true",
-                             help="Run computation in a kubernetes cluster")
-    parser_hist.add_argument("--envvars", nargs="*", default=[],
-                             help="Environment variables to pass to "
-                             "kubernetes workers")
-    parser_hist.add_argument("--container-image",
-                             default="registry.seqpipe.org/seqpipe-gpf:"
-                             "dask-for-hist-compute_fc69179-14",
-                             help="Docker image to use when submitting "
-                             "jobs to kubernetes")
-    parser_hist.add_argument("--image-pull-secrets", nargs="*",
-                             help="Secrets to use when pulling "
-                             "the docker image")
     parser_hist.add_argument("-f", "--force", default=False,
                              action="store_true", help="Ignore histogram "
                              "hashes and always precompute all histograms")
-    parser_hist.add_argument("--sge", default=False,
-                             action="store_true",
-                             help="Run computation on a Sun Grid Engine \
-cluster. When using this command it is highly advisable to manually specify \
-the number of workers using -j")
-    parser_hist.add_argument("--dashboard-port", type=int,
-                             help="Port on which to run Dask Dashboard")
-    parser_hist.add_argument("--log-dir",
-                             help="Directory where to store SGE worker logs")
+    DaskClient.add_arguments(parser_hist)
 
     args = parser.parse_args(cli_args)
     if args.verbose == 1:
@@ -140,59 +111,15 @@ the number of workers using -j")
             logger.error("Cannot find resource %s", args.resource)
             sys.exit(1)
         builder = HistogramBuilder(res)
-        n_jobs = args.jobs or os.cpu_count()
 
-        tmp_dir = tempfile.TemporaryDirectory()
+        dask_client = DaskClient.from_arguments(args)
+        if dask_client is None:
+            sys.exit(1)
 
-        if args.kubernetes:
-            env = _get_env_vars(args.envvars)
-            extra_pod_config = {}
-            if args.image_pull_secrets:
-                extra_pod_config["imagePullSecrets"] = [
-                    {"name": name} for name in args.image_pull_secrets
-                ]
-            pod_spec = make_pod_spec(image=args.container_image,
-                                     extra_pod_config=extra_pod_config)
-            cluster = KubeCluster(pod_spec, env=env)
-            cluster.scale(n_jobs)
-        elif args.sge:
-            try:
-                #  pylint: disable=import-outside-toplevel
-                from dask_jobqueue import SGECluster  # type: ignore
-            except ModuleNotFoundError:
-                logger.error("No dask-jobqueue found. Please install it using:"
-                             " mamba install dask-jobqueue -c conda-forge")
-                sys.exit(1)
-
-            dashboard_config = {}
-            if args.dashboard_port:
-                dashboard_config["scheduler_options"] = \
-                    {"dashboard_address": f":{args.dashboard_port}"}
-            cluster = SGECluster(n_workers=n_jobs,
-                                 queue="all.q",
-                                 walltime="1500000",
-                                 cores=1,
-                                 processes=1,
-                                 memory="2GB",
-                                 log_directory=args.log_dir or tmp_dir.name,
-                                 local_directory=tmp_dir.name,
-                                 **dashboard_config)
-        else:
-            dashboard_config = {}
-            if args.dashboard_port:
-                dashboard_config["dashboard_address"] = \
-                    f":{args.dashboard_port}"
-            cluster = LocalCluster(n_workers=n_jobs, threads_per_worker=1,
-                                   local_directory=tmp_dir.name,
-                                   **dashboard_config)
-        try:
-            with Client(cluster) as client:
-                histograms = builder.build(client, force=args.force,
-                                           only_dirty=True,
-                                           region_size=args.region_size)
-        finally:
-            cluster.close()
-            tmp_dir.cleanup()
+        with dask_client as client:
+            histograms = builder.build(client, force=args.force,
+                                       only_dirty=True,
+                                       region_size=args.region_size)
 
         hist_out_dir = "histograms"
         logger.info("Saving histograms in %s", hist_out_dir)
@@ -299,10 +226,3 @@ def _create_repo(dr):
     else:
         repo = GenomicResourceURLRepo("", dr)
     return repo
-
-
-def _get_env_vars(var_names):
-    res = {}
-    for var_name in var_names:
-        res[var_name] = os.getenv(var_name)
-    return res

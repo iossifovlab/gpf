@@ -1,0 +1,13 @@
+familyId	personId	momId	dadId	sex	status	role	sampleId	generated	not_sequenced	family_bin	member_index
+f1	f1.dad	0	0	M	unaffected	dad	f1.dad	False	False	9	0
+f1	f1.mom	0	0	F	unaffected	mom	f1.mom	False	False	9	1
+f1	f1.s1	f1.mom	f1.dad	F	unaffected	sib	f1.s1	False	False	9	2
+f1	f1.p1	f1.mom	f1.dad	M	affected	prb	f1.p1	False	False	9	3
+f1	f1.s2	f1.mom	f1.dad	F	affected	sib	f1.s2	False	False	9	4
+f2	f2.mom	0	0	F	unaffected	mom	f2.mom	False	False	6	0
+f2	f2.dad	0	0	M	unaffected	dad	f2.dad	False	False	6	1
+f2	f2.p1	f2.mom	f2.dad	M	affected	prb	f2.p1	False	False	6	2
+f2	f2.s1	f2.mom	f2.dad	F	unaffected	sib	f2.s1	False	False	6	3
+f3	f3.p1	0	0	M	affected	prb	f3.p1	False	False	4	0
+f4	f4.p1	0	0	M	affected	prb	f4.p1	False	False	6	0
+f4	f4.s1	0	0	M	affected	sib	f4.s1	False	False	6	1

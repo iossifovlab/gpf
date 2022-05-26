@@ -240,30 +240,30 @@ class CNVLoader(VariantsGenotypesLoader):
             " column containing the CSHL-style"
             " location of the variant. [Default: location]",
         ))
-        arguments.append(CLIArgument(
-            "--cnv-chrom",
-            value_type=str,
-            default_value="chrom",
-            help_text="The label or index of the"
-            " column containing the chromosome"
-            " of the variant. [Default: chrom]",
-        ))
-        arguments.append(CLIArgument(
-            "--cnv-start",
-            value_type=str,
-            default_value="pos",
-            help_text="The label or index of the"
-            " column containing the start"
-            " of the CNV. [Default: pos]",
-        ))
-        arguments.append(CLIArgument(
-            "--cnv-end",
-            value_type=str,
-            default_value="pos_end",
-            help_text="The label or index of the"
-            " column containing the end"
-            " of the CNV variant. [Default: pos_end]",
-        ))
+        # arguments.append(CLIArgument(
+        #     "--cnv-chrom",
+        #     value_type=str,
+        #     default_value="chrom",
+        #     help_text="The label or index of the"
+        #     " column containing the chromosome"
+        #     " of the variant. [Default: chrom]",
+        # ))
+        # arguments.append(CLIArgument(
+        #     "--cnv-start",
+        #     value_type=str,
+        #     default_value="pos",
+        #     help_text="The label or index of the"
+        #     " column containing the start"
+        #     " of the CNV. [Default: pos]",
+        # ))
+        # arguments.append(CLIArgument(
+        #     "--cnv-end",
+        #     value_type=str,
+        #     default_value="pos_end",
+        #     help_text="The label or index of the"
+        #     " column containing the end"
+        #     " of the CNV variant. [Default: pos_end]",
+        # ))
         arguments.append(CLIArgument(
             "--cnv-family-id",
             value_type=str,
