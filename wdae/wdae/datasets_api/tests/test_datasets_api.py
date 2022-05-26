@@ -1,4 +1,5 @@
 import pytest
+import json
 from dae.configuration.gpf_config_parser import FrozenBox
 
 pytestmark = pytest.mark.usefixtures(
@@ -64,7 +65,7 @@ def test_user_client_get_nonexistant_dataset_details(
     response = user_client.get("/api/v3/datasets/details/asdfghjkl")
 
     assert response
-    assert response.status_code == 400
+    assert response.status_code == 404
 
 
 def test_user_client_get_dataset_details_remote(
@@ -118,3 +119,67 @@ def test_datasets_api_parents(admin_client, wdae_gpf_instance):
 
     assert "parents" in data
     assert data["parents"] == ["Dataset1"]
+
+
+def test_datasets_pedigree_no_such_dataset(admin_client, wdae_gpf_instance):
+    response = admin_client.get("/api/v3/datasets/pedigree/alabala/col")
+    assert response
+    assert response.status_code == 404
+    assert "error" in response.data
+    assert response.data["error"] == "Dataset alabala not found"
+
+
+def test_datasets_pedigree_no_such_column(admin_client, wdae_gpf_instance):
+    response = admin_client.get("/api/v3/datasets/pedigree/Study1/alabala")
+    assert response
+    assert response.status_code == 404
+    assert "error" in response.data
+    assert response.data["error"] == "No such column alabala"
+
+
+def test_datasets_pedigree_proper_request(admin_client, wdae_gpf_instance):
+    response = admin_client.get("/api/v3/datasets/pedigree/Study1/phenotype")
+    assert response
+    assert response.status_code == 200
+    assert "column_name" in response.data and \
+           "values_domain" in response.data
+    assert response.data["column_name"] == "phenotype"
+    assert set(response.data["values_domain"]) == {
+        "unaffected", "phenotype1", "phenotype2", "pheno"
+    }
+
+
+def test_datasets_config_no_such_dataset(admin_client, wdae_gpf_instance):
+    response = admin_client.get("/api/v3/datasets/config/alabala")
+    assert response
+    assert response.status_code == 404
+    assert "error" in response.data
+    assert response.data["error"] == "Dataset alabala not found"
+
+
+def test_datasets_config_proper_request(admin_client, wdae_gpf_instance):
+    response = admin_client.get("/api/v3/datasets/config/Study1")
+    assert response
+    assert response.status_code == 200
+    assert response.data
+
+
+def test_datasets_description_not_admin(user_client, wdae_gpf_instance):
+    response = user_client.post("/api/v3/datasets/description/Study1")
+    assert response
+    assert response.status_code == 403
+    assert "error" in response.data
+    assert response.data["error"] == \
+        "You have no permission to edit the description."
+
+
+def test_datasets_description_proper_request(admin_client, wdae_gpf_instance):
+    url = "/api/v3/datasets/description/Study1"
+    args = {
+        "description": "some new description"
+    }
+    response = admin_client.post(
+        url, json.dumps(args), content_type="application/json", format="json"
+    )
+    assert response
+    assert response.status_code == 200

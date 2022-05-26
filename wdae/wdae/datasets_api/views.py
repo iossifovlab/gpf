@@ -130,18 +130,12 @@ class DatasetDetailsView(QueryBaseView):
     """
 
     def get(self, request, dataset_id):
-        if dataset_id is None:
-            return Response(
-                {"error": "No dataset ID given"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
         genotype_data_config = \
             self.gpf_instance.get_genotype_data_config(dataset_id)
         if genotype_data_config is None:
             return Response(
-                {"error": f"No such dataset {dataset_id}"},
-                status=status.HTTP_400_BAD_REQUEST,
+                {"error": f"Dataset {dataset_id} not found"},
+                status=status.HTTP_404_NOT_FOUND,
             )
 
         has_denovo = genotype_data_config.get("has_denovo", False)
@@ -159,18 +153,18 @@ class DatasetPedigreeView(QueryBaseView):
     """
 
     def get(self, request, dataset_id, column):
-        if dataset_id is None:
-            return Response(
-                {"error": "No dataset ID given"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
         genotype_data = self.gpf_instance.get_genotype_data(dataset_id)
 
         if genotype_data is None:
             return Response(
-                {"error": f"No such dataset {dataset_id}"},
-                status=status.HTTP_400_BAD_REQUEST,
+                {"error": f"Dataset {dataset_id} not found"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        if column not in genotype_data.families.ped_df.columns:
+            return Response(
+                {"error": f"No such column {column}"},
+                status=status.HTTP_404_NOT_FOUND,
             )
 
         values_domain = list(
@@ -186,18 +180,12 @@ class DatasetConfigView(DatasetView):
     """Provides a dataset's configuration; used for remote instances.
     """
     def get(self, request, dataset_id):
-        if dataset_id is None:
-            return Response(
-                {"error": "No dataset ID given"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
         genotype_data = self.gpf_instance.get_genotype_data(dataset_id)
 
         if genotype_data is None:
             return Response(
-                {"error": f"No such dataset {dataset_id}"},
-                status=status.HTTP_400_BAD_REQUEST,
+                {"error": f"Dataset {dataset_id} not found"},
+                status=status.HTTP_404_NOT_FOUND,
             )
         return Response(
             self.augment_with_parents(genotype_data.config.to_dict())
@@ -216,12 +204,6 @@ class DatasetDescriptionView(DatasetView):
             )
 
         description = request.data.get('description')
-        if dataset_id is None:
-            return Response(
-                {"error": "No dataset ID given."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
         genotype_data = self.gpf_instance.get_genotype_data(dataset_id)
         genotype_data.description = description
 
