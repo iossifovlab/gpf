@@ -43,7 +43,6 @@ class GeneScore:
         self.genomic_values_col = "gene"
 
         self.desc = desc
-        self.histogram = Histogram.from_config(histogram_config)
         self.file = file
 
         self.meta = meta
@@ -51,10 +50,18 @@ class GeneScore:
         self._load_data()
         self.df.dropna(inplace=True)
 
-        self.histogram_bins, self.histogram_bars = self._bins_bars()
+        if "min" not in histogram_config:
+            histogram_config["min"] = self.min()
+        if "max" not in histogram_config:
+            histogram_config["max"] = self.max()
+        self.histogram = Histogram.from_config(histogram_config)
+        self.histogram.set_values(self.values())
 
-    def _load_data(self):
-        assert self.file is not None
+        self.histogram_bins = self.histogram.bins
+        self.histogram_bars = self.histogram.bars
+
+    def _load_data(self, file):
+        assert file is not None
 
         df = pd.read_csv(self.file)
         assert self.id in df.columns, "{} not found in {}".format(
