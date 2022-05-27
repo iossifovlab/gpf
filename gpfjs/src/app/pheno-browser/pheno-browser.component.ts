@@ -8,6 +8,8 @@ import { Dataset } from 'app/datasets/datasets';
 import { DatasetsService } from '../datasets/datasets.service';
 import { debounceTime, distinctUntilChanged, map, share, switchMap, take, tap } from 'rxjs/operators';
 import { environment } from 'environments/environment';
+import { ConfigService } from 'app/config/config.service';
+import { saveAs } from 'file-saver';
 
 @Component({
   selector: 'gpf-pheno-browser',
@@ -37,6 +39,7 @@ export class PhenoBrowserComponent implements OnInit {
     private phenoBrowserService: PhenoBrowserService,
     private location: Location,
     private datasetsService: DatasetsService,
+    public configService: ConfigService,
   ) { }
 
   public ngOnInit(): void {
@@ -123,6 +126,28 @@ export class PhenoBrowserComponent implements OnInit {
     );
   }
 
+  public downloadMeasures(): void {
+    let filename: string;
+
+    this.selectedInstrument$.pipe(take(1)).subscribe(instrument => {
+      filename = `measures_${this.selectedDatasetId}_${instrument}.csv`;
+      
+      if (instrument === '') {
+        instrument = null;
+        filename = `measures_${this.selectedDatasetId}.csv`;
+      }
+
+      this.phenoBrowserService.downloadMeasures(
+        this.selectedDatasetId,
+        instrument,
+        this.measuresToShow.measures
+      ).pipe(take(1)).subscribe(data => {
+          saveAs(data, filename);
+        }
+      );
+    })
+  }
+  
   public search(value: string): void {
     this.input$.next(value);
   }

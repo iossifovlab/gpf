@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable, Subject } from 'rxjs';
 import { CookieService } from 'ngx-cookie-service';
 import { PhenoInstruments, PhenoInstrument, PhenoMeasures, PhenoMeasure } from './pheno-browser';
@@ -93,5 +93,22 @@ export class PhenoBrowserService {
   public getDownloadLink(instrument: PhenoInstrument, datasetId: string): string {
     return `${this.config.baseUrl}${this.downloadUrl}`
            + `?dataset_id=${datasetId}&instrument=${instrument}`;
+  }
+
+  public downloadMeasures(
+    datasetId: string,
+    instrument: PhenoInstrument,
+    selectedMeasures: PhenoMeasure[]
+  ): Observable<Blob> {
+    const measureIds = selectedMeasures.map(m => m.measureId); 
+    return this.http.post(
+      this.config.baseUrl + this.downloadUrl,
+      { dataset_id: datasetId, instrument: instrument, measure_ids: measureIds },
+      { 
+        responseType: 'blob',
+        headers: new HttpHeaders().append('Content-Type', 'application/json'),
+        withCredentials: true
+      }
+    );
   }
 }

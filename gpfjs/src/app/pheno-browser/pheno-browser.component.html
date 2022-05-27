@@ -39,7 +39,7 @@
                 <span class="select-dropdown-icon" [style.content]="'url(' + imgPathPrefix + 'dropdown_icon.png)'">
                 </span>
               </div>
-              <a download [href]="downloadLink$ | async">Download instruments</a>
+              <a (click)="downloadMeasures()" href="javascript:;" id="download-measures" >Download measures</a>
             </div>
           </div>
         </div>
