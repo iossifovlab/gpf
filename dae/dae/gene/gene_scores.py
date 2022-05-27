@@ -60,6 +60,14 @@ class GeneScore:
         self.histogram_bins = self.histogram.bins
         self.histogram_bars = self.histogram.bars
 
+    @property
+    def x_scale(self):
+        return self.histogram.x_scale
+
+    @property
+    def y_scale(self):
+        return self.histogram.y_scale
+
     def _load_data(self):
         assert self.file is not None
 
