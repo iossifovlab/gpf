@@ -5,7 +5,7 @@ import re
 import logging
 import datetime
 import enum
-from typing import List, Optional, cast, Tuple, Dict, Any
+from typing import List, Optional, Tuple, Dict, Any
 from dataclasses import dataclass, asdict
 
 import abc
@@ -411,7 +411,8 @@ class RepositoryProtocol(abc.ABC):
             res = GenomicResource(resource_id, version, self)  # type: ignore
             config = self.load_yaml(res, GR_CONF_FILE_NAME)
 
-        resource = GenomicResource(resource_id, version, self, config)  # type: ignore
+        resource = GenomicResource(
+            resource_id, version, self, config)  # type: ignore
         resource._manifest = manifest  # pylint: disable=protected-access
         return resource
 
