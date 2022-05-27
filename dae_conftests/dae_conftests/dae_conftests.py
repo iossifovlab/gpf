@@ -1098,21 +1098,21 @@ def agp_gpf_instance(
         new_callable=mocker.PropertyMock
     )
     main_gene_sets = {
-        'CHD8 target genes',
-        'FMRP Darnell',
-        'FMRP Tuschl',
-        'PSD',
-        'autism candidates from Iossifov PNAS 2015',
-        'autism candidates from Sanders Neuron 2015',
-        'brain critical genes',
-        'brain embryonically expressed',
-        'chromatin modifiers',
-        'essential genes',
-        'non-essential genes',
-        'postsynaptic inhibition',
-        'synaptic clefts excitatory',
-        'synaptic clefts inhibitory',
-        'topotecan downreg genes'
+        "CHD8 target genes",
+        "FMRP Darnell",
+        "FMRP Tuschl",
+        "PSD",
+        "autism candidates from Iossifov PNAS 2015",
+        "autism candidates from Sanders Neuron 2015",
+        "brain critical genes",
+        "brain embryonically expressed",
+        "chromatin modifiers",
+        "essential genes",
+        "non-essential genes",
+        "postsynaptic inhibition",
+        "synaptic clefts excitatory",
+        "synaptic clefts inhibitory",
+        "topotecan downreg genes"
     }
     mocker.patch.object(
         fixtures_gpf_instance.gene_sets_db,
@@ -1132,24 +1132,24 @@ def agp_gpf_instance(
 
 @pytest.fixture(scope="session")
 def sample_agp():
-    gene_sets = ['main_CHD8 target genes']
+    gene_sets = ["main_CHD8 target genes"]
     genomic_scores = {
-        'protection_scores': {
-            'SFARI_gene_score': 1, 'RVIS_rank': 193.0, 'RVIS': -2.34
+        "protection_scores": {
+            "SFARI_gene_score": 1, "RVIS_rank": 193.0, "RVIS": -2.34
         },
-        'autism_scores': {
-            'SFARI_gene_score': 1, 'RVIS_rank': 193.0, 'RVIS': -2.34
+        "autism_scores": {
+            "SFARI_gene_score": 1, "RVIS_rank": 193.0, "RVIS": -2.34
         },
     }
     variant_counts = {
-        'iossifov_we2014_test': {
-            'unknown': {
-                'denovo_noncoding': {"count": 53, "rate": 1},
-                'denovo_missense': {"count": 21, "rate": 2}
+        "iossifov_we2014_test": {
+            "unknown": {
+                "denovo_noncoding": {"count": 53, "rate": 1},
+                "denovo_missense": {"count": 21, "rate": 2}
             },
-            'unaffected': {
-                'denovo_noncoding': {"count": 43, "rate": 3},
-                'denovo_missense': {"count": 51, "rate": 4}
+            "unaffected": {
+                "denovo_noncoding": {"count": 43, "rate": 3},
+                "denovo_missense": {"count": 51, "rate": 4}
             },
         }
     }
@@ -1227,7 +1227,7 @@ def s3(s3_base):
     from s3fs.core import S3FileSystem
 
     client = get_boto3_client()
-    client.create_bucket(Bucket='test-bucket', ACL="public-read")
+    client.create_bucket(Bucket="test-bucket", ACL="public-read")
 
     S3FileSystem.clear_instance_cache()
     s3 = S3FileSystem(anon=False, client_kwargs={"endpoint_url": endpoint_uri})

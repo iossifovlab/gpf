@@ -76,9 +76,10 @@ def _run_hist_command(repo, args):
         sys.exit(1)
 
     with dask_client as client:
-        histograms = builder.build(client, force=args.force,
-                                    only_dirty=True,
-                                    region_size=args.region_size)
+        histograms = builder.build(
+            client, force=args.force,
+            only_dirty=True,
+            region_size=args.region_size)
 
     hist_out_dir = "histograms"
     logger.info("Saving histograms in %s", hist_out_dir)
