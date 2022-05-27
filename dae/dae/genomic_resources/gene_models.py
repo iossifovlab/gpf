@@ -1336,7 +1336,7 @@ def join_gene_models(*gene_models):
     if len(gene_models) < 2:
         raise ValueError("The function needs at least 2 arguments!")
 
-    gm = GeneModels()
+    gm = GeneModels(gene_models[0].source)
     gm.utr_models = {}
     gm.gene_models = {}
 

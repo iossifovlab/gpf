@@ -44,7 +44,7 @@ toGMFile = args[1]
 
 
 gmDB = load_gene_models_from_file(
-    fromGMFile, gene_mapping_file=opts.gm_names, fileformat=opts.gm_format
+    fromGMFile, gene_mapping_filename=opts.gm_names, fileformat=opts.gm_format
 )
 if opts.chr_names is not None:
     gmDB.relabel_chromosomes(opts.chr_names)
