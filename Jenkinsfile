@@ -97,40 +97,14 @@ pipeline {
     }
     unstable {
       script {
-        LinkedHashSet < String > authors = []
-        currentBuild.changeSets.items.each {
-          itemSet ->
-            itemSet.each {
-              changeSet ->
-                if (changeSet instanceof hudson.plugins.git.GitChangeSet) {
-                  authors.add(changeSet.author.displayName)
-                }
-            }
-        }
-        zulipSend(
-          stream: "hristo-jenkins-test-stream",
-          topic: "${env.JOB_NAME}",
-          message: "@**${authors.last()}** \n" + "**Project: **[${env.JOB_BASE_NAME}](${env.JOB_URL}) : **Build: **[#${env.BUILD_NUMBER}](${env.BUILD_URL}): **${currentBuild.result}** :${currentBuild.result == 'UNSTABLE' ? 'warning' : 'cross_mark'}:"
-        )
+        include('build-scripts/libjenkinsfile/zulip-tagged-notification.groovy')
+        zulipTaggedNotification()
       }
     }
     failure {
       script {
-        LinkedHashSet < String > authors = []
-        currentBuild.changeSets.items.each {
-          itemSet ->
-            itemSet.each {
-              changeSet ->
-                if (changeSet instanceof hudson.plugins.git.GitChangeSet) {
-                  authors.add(changeSet.author.displayName)
-                }
-            }
-        }
-        zulipSend(
-          stream: "hristo-jenkins-test-stream",
-          topic: "${env.JOB_NAME}",
-          message: "@**${authors.last()}** \n" + "**Project: **[${env.JOB_BASE_NAME}](${env.JOB_URL}) : **Build: **[#${env.BUILD_NUMBER}](${env.BUILD_URL}): **${currentBuild.result}** :${currentBuild.result == 'UNSTABLE' ? 'warning' : 'cross_mark'}:"
-        )
+        include('build-scripts/libjenkinsfile/zulip-tagged-notification.groovy')
+        zulipTaggedNotification()
       }
     }
   }
