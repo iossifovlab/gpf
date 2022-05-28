@@ -97,14 +97,12 @@ pipeline {
     }
     unstable {
       script {
-        include('build-scripts/libjenkinsfile/zulip-tagged-notification.groovy')
-        zulipTaggedNotification()
+        load('build-scripts/libjenkinsfile/zulip-tagged-notification.groovy').zulipTaggedNotification()
       }
     }
     failure {
       script {
-        include('build-scripts/libjenkinsfile/zulip-tagged-notification.groovy')
-        zulipTaggedNotification()
+        load('build-scripts/libjenkinsfile/zulip-tagged-notification.groovy').zulipTaggedNotification()
       }
     }
   }
