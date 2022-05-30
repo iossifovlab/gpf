@@ -147,7 +147,8 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
             dest_gr.get_genomic_resource_dir() / filename).parent
 
         dest_path = dr / filename
-        dest_path.unlink()
+        if dest_path.exists():
+            dest_path.unlink()
 
     def _copy_manifest_entry(
             self, dest_gr: GenomicResource, src_gr: GenomicResource,
