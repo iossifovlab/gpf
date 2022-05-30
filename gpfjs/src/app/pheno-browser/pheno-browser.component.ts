@@ -22,7 +22,6 @@ export class PhenoBrowserComponent implements OnInit {
   public measuresToShow$: Observable<PhenoMeasures>;
 
   public instruments: Observable<PhenoInstruments>;
-  public downloadLink$: Observable<string>;
 
   private selectedDatasetId: string;
   public selectedDataset: Dataset;
@@ -50,7 +49,6 @@ export class PhenoBrowserComponent implements OnInit {
     this.selectedDataset = this.datasetsService.getSelectedDataset();
     this.initInstruments(this.selectedDataset.id);
     this.initMeasuresToShow(this.selectedDataset.id);
-    this.initDownloadLink(this.selectedDataset.id);
 
     this.focusSearchBox();
   }
@@ -116,14 +114,6 @@ export class PhenoBrowserComponent implements OnInit {
 
   public emitInstrument(instrument: PhenoInstrument): void {
     this.selectedInstrument$.next(instrument);
-  }
-
-  private initDownloadLink(datasetId: string): void {
-    this.downloadLink$ = this.selectedInstrument$.pipe(
-      map(instrument =>
-        this.phenoBrowserService.getDownloadLink(instrument, datasetId)
-      )
-    );
   }
 
   public downloadMeasures(): void {

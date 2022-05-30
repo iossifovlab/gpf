@@ -26,6 +26,7 @@ import { Location } from '@angular/common';
 import { Observable, of } from 'rxjs';
 import { ResizeService } from '../table/resize.service';
 import { By } from '@angular/platform-browser';
+import { ConfigService } from 'app/config/config.service';
 
 const fakeJsonMeasurei1 = JSON.parse(JSON.stringify(fakeJsonMeasureOneRegression));
 fakeJsonMeasurei1.instrument_name = 'i1';
@@ -123,6 +124,7 @@ describe('PhenoBrowserComponent', () => {
         { provide: Location, useValue: locationSpy },
         { provide: PValueIntensityPipe, useClass: PValueIntensityPipe },
         { provide: ResizeService, useValue: resizeSpy },
+        ConfigService
       ]
     }).compileComponents();
 
@@ -165,18 +167,6 @@ describe('PhenoBrowserComponent', () => {
     fixture.whenStable().then(() => {
       component.selectedInstrument$.subscribe(value => {
         expect(value).toEqual('i2');
-        done();
-      });
-    });
-  });
-
-  it('should set the download link to the selected instrument', (done) => {
-    const expectedDownloadLink = `${environment.apiPath}pheno_browser/download`
-                                 + `?dataset_id=testDatasetId&instrument=i3`;
-    setQuery(fixture, 3, '');
-    fixture.whenStable().then(() => {
-      component.downloadLink$.subscribe(value => {
-        expect(value).toEqual(expectedDownloadLink),
         done();
       });
     });
