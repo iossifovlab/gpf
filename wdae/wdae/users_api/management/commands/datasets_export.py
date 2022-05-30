@@ -12,7 +12,8 @@ class Command(BaseCommand, DatasetBaseMixin):
     help = "Export all existing datasets"
 
     def __init__(self, **kwargs):
-        DatasetBaseMixin.__init__(self)
+        gpf_instance = kwargs.pop("gpf_instance", None)
+        DatasetBaseMixin.__init__(self, gpf_instance=gpf_instance)
         BaseCommand.__init__(self, **kwargs)
 
     def add_arguments(self, parser):
@@ -32,7 +33,7 @@ class Command(BaseCommand, DatasetBaseMixin):
                 authorized = ";".join([
                     group.name for group in dataset.groups.all()
                 ])
-                print(f"{dataset.dataset_id},{authorized}", file=outfile)
+                print(f"{genotype_data_id},{authorized}", file=outfile)
             except Exception as ex:
                 logger.warning(f"dataset {genotype_data_id} not found")
                 logger.exception(ex)
