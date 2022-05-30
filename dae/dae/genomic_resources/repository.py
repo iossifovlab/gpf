@@ -139,6 +139,7 @@ class GenomicResource:
         self.version = version
         self.config = config
         self.repo = repo
+        self._manifest = None
 
     @staticmethod
     def get_resource_type():

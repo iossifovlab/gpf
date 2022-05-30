@@ -65,12 +65,15 @@ class GenomicResourceCachedRepo(GenomicResourceRepo):
         futures = []
         for gr_child in self.child.get_all_resources():
             cached_repo = self._get_or_create_cache_dir_repo(
-                    gr_child.repo.repo_id
-            )
+                    gr_child.repo.repo_id)
             futures.append(
-                executor.submit(cached_repo.store_resource, gr_child)
+                executor.submit(cached_repo.update_resource, gr_child)
             )
         for future in as_completed(futures):
+            exception = future.exception()
+            if exception is not None:
+                logger.error("exception raised: %s", exception, exc_info=True)
+                continue
             future.result()
 
     def refresh_cached_genomic_resource(self, cached: GenomicResource,

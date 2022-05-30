@@ -1,4 +1,5 @@
 import pathlib
+import copy
 import yaml
 import hashlib
 import os
@@ -26,7 +27,9 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
         self._all_resources = None
 
     def _dir_to_dict(self, dr):
-        if dr.is_dir():
+        if not dr.exists():
+            return {}
+        elif dr.is_dir():
             return {ch.name: self._dir_to_dict(ch) for ch in dr.iterdir()}
         else:
             return dr
@@ -80,49 +83,60 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
     def update_resource(
             self, src_gr: GenomicResource):
 
-        dest_gr: Optional[GenomicResource] = self.get_resource(
-            src_gr.resource_id, f"={src_gr.get_version_str()}")
-        assert dest_gr is not None
+        try:
+            dest_gr: Optional[GenomicResource] = self.get_resource(
+                src_gr.resource_id, f"={src_gr.get_version_str()}")
+            if dest_gr is None:
+                dest_gr = GenomicResource(
+                    src_gr.resource_id, src_gr.version, self)
 
-        assert dest_gr.repo == self
-        mnfst_dest = dest_gr.get_manifest()
-        mnfst_src = src_gr.get_manifest()
+            assert dest_gr is not None
 
-        if mnfst_dest == mnfst_src:
-            logger.debug(f"nothing to update {dest_gr.resource_id}")
-            return
+            assert dest_gr.repo == self
+            mnfst_dest = dest_gr.get_manifest()
+            mnfst_src = src_gr.get_manifest()
 
-        manifest_diff = {}
-        for dest_file in mnfst_dest:
-            manifest_diff[dest_file["name"]] = [dest_file, None]
-        for source_file in mnfst_src:
-            if source_file["name"] in manifest_diff:
-                manifest_diff[source_file["name"]][1] = source_file
-            else:
-                manifest_diff[source_file["name"]] = [None, source_file]
+            if mnfst_dest == mnfst_src:
+                logger.debug("nothing to update %s", dest_gr.resource_id)
+                return
 
-        result_manifest = []
-        for dest_file, src_file in manifest_diff.values():
+            manifest_diff = {}
+            for dest_file in mnfst_dest:
+                manifest_diff[dest_file["name"]] = [dest_file, None]
+            for source_file in mnfst_src:
+                if source_file["name"] in manifest_diff:
+                    manifest_diff[source_file["name"]][1] = source_file
+                else:
+                    manifest_diff[source_file["name"]] = [None, source_file]
+            logger.info(
+                "resource %s manifest diferences: %s",
+                src_gr.resource_id, manifest_diff)
+            result_manifest = []
+            for dest_file, src_file in manifest_diff.values():
 
-            if dest_file is None and src_file:
-                # copy src_file
-                dest_mnfst = self._copy_manifest_entry(
-                    dest_gr, src_gr, src_file)
-                result_manifest.append(dest_mnfst)
-            elif dest_file and src_file is None:
-                # delete dest_file
-                self._delete_manifest_entry(
-                    dest_gr, dest_file)
+                if dest_file is None and src_file:
+                    # copy src_file
+                    dest_mnfst = self._copy_manifest_entry(
+                        dest_gr, src_gr, src_file)
+                    result_manifest.append(dest_mnfst)
+                elif dest_file and src_file is None:
+                    # delete dest_file
+                    self._delete_manifest_entry(
+                        dest_gr, dest_file)
 
-            elif dest_file != src_file:
-                # update src_file
-                dest_mnfst = self._copy_manifest_entry(
-                    dest_gr, src_gr, src_file)
-                result_manifest.append(dest_mnfst)
-            else:
-                result_manifest.append(dest_file)
+                elif dest_file != src_file:
+                    # update src_file
+                    dest_mnfst = self._copy_manifest_entry(
+                        dest_gr, src_gr, src_file)
+                    result_manifest.append(dest_mnfst)
+                else:
+                    result_manifest.append(dest_file)
 
-        dest_gr.save_manifest(result_manifest)
+            dest_gr.save_manifest(result_manifest)
+            self._all_resources = None
+        except Exception as ex:
+            logger.error("update resource failed: %s", ex, exc_info=True)
+            raise ex
 
     def _delete_manifest_entry(
             self, dest_gr: GenomicResource, dest_mnfst_file):
@@ -182,7 +196,7 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
 
     def store_all_resources(self, source_repo: GenomicResourceRepo):
         for gr in source_repo.get_all_resources():
-            self.store_resource(gr)
+            self.update_resource(gr)
 
     def store_resource(self, resource: GenomicResource):
         manifest = resource.get_manifest()
