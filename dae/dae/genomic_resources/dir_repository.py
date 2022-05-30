@@ -155,11 +155,8 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
             self, dest_gr: GenomicResource, dest_mnfst_file):
         filename = dest_mnfst_file["name"]
 
-        dr = pathlib.Path(
-            self.directory /
-            dest_gr.get_genomic_resource_dir() / filename).parent
-
-        dest_path = dr / filename
+        dest_path = self.get_file_path(dest_gr, filename)
+        logger.debug("going to delete file %s", dest_path)
         if dest_path.exists():
             dest_path.unlink()
 
