@@ -108,24 +108,29 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
                     manifest_diff[source_file["name"]][1] = source_file
                 else:
                     manifest_diff[source_file["name"]] = [None, source_file]
-            logger.info(
-                "resource %s manifest diferences: %s",
-                src_gr.resource_id, manifest_diff)
             result_manifest = []
             for dest_file, src_file in manifest_diff.values():
 
                 if dest_file is None and src_file:
                     # copy src_file
+                    logger.info(
+                        "updating %s - copying manfiest enry %s",
+                        src_gr.resource_id, src_file)
                     dest_mnfst = self._copy_manifest_entry(
                         dest_gr, src_gr, src_file)
                     result_manifest.append(dest_mnfst)
                 elif dest_file and src_file is None:
                     # delete dest_file
+                    logger.info(
+                        "updating %s - deleting manfiest enry %s",
+                        src_gr.resource_id, dest_file)
                     self._delete_manifest_entry(
                         dest_gr, dest_file)
-
                 elif dest_file != src_file:
                     # update src_file
+                    logger.info(
+                        "updating %s - updating manfiest enry %s",
+                        src_gr.resource_id, src_file)
                     dest_mnfst = self._copy_manifest_entry(
                         dest_gr, src_gr, src_file)
                     result_manifest.append(dest_mnfst)
