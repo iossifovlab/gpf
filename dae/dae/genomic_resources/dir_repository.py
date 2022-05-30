@@ -54,7 +54,8 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
             sts = ff.stat()
 
             return sts.st_size, \
-                datetime.datetime.fromtimestamp(int(sts.st_mtime)).isoformat()
+                datetime.datetime.fromtimestamp(
+                    int(sts.st_mtime), datetime.timezone.utc).isoformat()
         yield from find_genomic_resource_files_helper(
             content_dict, my_leaf_to_size_and_time)
 

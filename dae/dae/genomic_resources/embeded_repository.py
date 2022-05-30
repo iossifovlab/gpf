@@ -15,7 +15,7 @@ class GenomicResourceEmbededRepo(GenomicResourceRealRepo):
         super().__init__(repo_id)
         self.content = content
         self.stable_timestamp = datetime.datetime.fromtimestamp(
-            int(time.time())).isoformat()
+            int(time.time()), datetime.timezone.utc).isoformat()
 
     def get_all_resources(self):
         for grId, grVr in find_genomic_resources_helper(self.content):

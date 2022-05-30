@@ -58,8 +58,8 @@ def test_cached_get_all_resources(tmpdir):
             "two[1.0]": {
                 GR_CONF_FILE_NAME:
                     ["type: gene_models\nfile: genes.gtf",
-                     '2021-11-20T00:00:56'],
-                "genes.txt": [demo_gtf_content, '2021-11-13T00:00:56']
+                     '2021-11-20T00:00:56+00:00'],
+                "genes.txt": [demo_gtf_content, '2021-11-13T00:00:56+00:00']
             }
         }
     })

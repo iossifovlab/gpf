@@ -1,16 +1,16 @@
 - md5: e793fd5e2153ae2b35ecaa8efb595ab0
   name: TESTphastCons100way.bedGraph.gz
   size: 261
-  time: '2021-12-06T17:38:48'
+  time: '2022-03-17T07:15:24+00:00'
 - md5: 0cae8c2951f4c60954b94c0a0cb2e431
   name: TESTphastCons100way.bedGraph.gz.tbi
   size: 169
-  time: '2021-12-06T17:38:48'
+  time: '2022-03-17T07:15:24+00:00'
 - md5: de4e51d2f1d46e6fad8864511860776a
   name: genomic_resource.yaml
   size: 872
-  time: '2021-12-06T18:16:23'
+  time: '2022-03-17T07:15:24+00:00'
 - md5: 56feb878ed78769d5200702392b8e4b7
   name: scores/phastCons100way.yaml
   size: 583
-  time: '2021-12-06T17:38:48'
+  time: '2022-03-17T07:15:24+00:00'
