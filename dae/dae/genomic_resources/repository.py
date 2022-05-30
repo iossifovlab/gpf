@@ -220,10 +220,12 @@ class GenomicResource:
                     {"name": fn, "size": fs, "time": ft, "md5": md5})
             if newManifest != currentManifest:
                 self.save_manifest(newManifest)
+            return newManifest
         except Exception:
             print(f"Building a new manifest for resource {self.resource_id}")
             manifest = self.build_manifest()
             self.save_manifest(manifest)
+            return manifest
 
     def load_manifest(self):
         return self.load_yaml(GR_MANIFEST_FILE_NAME)

@@ -93,7 +93,7 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
             assert dest_gr is not None
 
             assert dest_gr.repo == self
-            mnfst_dest = dest_gr.get_manifest()
+            mnfst_dest = dest_gr.update_manifest()
             mnfst_src = src_gr.get_manifest()
 
             if mnfst_dest == mnfst_src:
@@ -101,8 +101,16 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
                 return
 
             manifest_diff = {}
-            for dest_file in mnfst_dest:
-                manifest_diff[dest_file["name"]] = [dest_file, None]
+            if mnfst_dest is None:
+                logger.info(
+                    "resource %s not found in the cache; copying all...",
+                    src_gr.resource_id)
+            else:
+                for dest_file in mnfst_dest:
+                    dest_path = self.get_file_path(dest_gr, dest_file["name"])
+                    if not dest_path.exists():
+                        continue
+                    manifest_diff[dest_file["name"]] = [dest_file, None]
             for source_file in mnfst_src:
                 if source_file["name"] in manifest_diff:
                     manifest_diff[source_file["name"]][1] = source_file
@@ -114,7 +122,7 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
                 if dest_file is None and src_file:
                     # copy src_file
                     logger.info(
-                        "updating %s - copying manfiest enry %s",
+                        "updating %s - copying manfiest entry %s",
                         src_gr.resource_id, src_file)
                     dest_mnfst = self._copy_manifest_entry(
                         dest_gr, src_gr, src_file)
@@ -122,14 +130,14 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
                 elif dest_file and src_file is None:
                     # delete dest_file
                     logger.info(
-                        "updating %s - deleting manfiest enry %s",
+                        "updating %s - deleting manfiest entry %s",
                         src_gr.resource_id, dest_file)
                     self._delete_manifest_entry(
                         dest_gr, dest_file)
                 elif dest_file != src_file:
                     # update src_file
                     logger.info(
-                        "updating %s - updating manfiest enry %s",
+                        "updating %s - updating manfiest entry %s",
                         src_gr.resource_id, src_file)
                     dest_mnfst = self._copy_manifest_entry(
                         dest_gr, src_gr, src_file)
