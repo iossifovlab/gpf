@@ -70,11 +70,16 @@ class GenomicResourceCachedRepo(GenomicResourceRepo):
                 executor.submit(cached_repo.update_resource, gr_child)
             )
         for future in as_completed(futures):
-            exception = future.exception()
-            if exception is not None:
-                logger.error("exception raised: %s", exception, exc_info=True)
-                continue
-            future.result()
+            try:
+                future.result()
+            except Exception as ex:
+                logger.error("exception raised: %s", ex, exc_info=True)
+                exception = future.exception()
+                if exception is not None:
+                    logger.error(
+                        "exception from future raised: %s",
+                        exception, exc_info=True)
+
 
     def refresh_cached_genomic_resource(self, cached: GenomicResource,
                                         child: GenomicResource):
