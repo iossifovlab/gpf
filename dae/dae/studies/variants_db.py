@@ -544,3 +544,9 @@ class VariantsDb(object):
             self._genotype_group_cache[genotype_data.study_id] = genotype_data
         else:
             self._genotype_study_cache[genotype_data.study_id] = genotype_data
+
+    def unregister_genotype_data(self, genotype_data):
+        if genotype_data.is_group:
+            self._genotype_group_cache.pop(genotype_data.study_id)
+        else:
+            self._genotype_study_cache.pop(genotype_data.study_id)

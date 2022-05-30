@@ -18,7 +18,7 @@ from datasets_api.permissions import user_has_permission, \
 
 
 @pytest.fixture()
-def dataset_wrapper(db, wdae_gpf_instance):
+def dataset_wrapper(request, db, wdae_gpf_instance):
     dataset1_wrapper = wdae_gpf_instance.get_wdae_wrapper("Dataset1")
     assert dataset1_wrapper is not None
     assert dataset1_wrapper.is_group
@@ -60,6 +60,11 @@ def dataset_wrapper(db, wdae_gpf_instance):
 
     assert "Dataset" in wdae_gpf_instance.get_genotype_data_ids()
     assert wdae_gpf_instance.get_genotype_data("Dataset") is not None
+
+    def fin():
+        wdae_gpf_instance.unregister_genotype_data(dataset)
+
+    request.addfinalizer(fin)
 
     return dataset_wrapper
 
