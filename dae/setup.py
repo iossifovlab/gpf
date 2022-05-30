@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="gpf_dae",
-    version="3.6.9",
+    version="3.6.10",
     author="Lubomir Chorbadjiev",
     author_email="lubomir.chorbadjiev@gmail.com",
     description="GPF: Genotypes and Phenotypes in Families",
