@@ -58,7 +58,7 @@ TEST_REMOTE_iossifov_2014,any_dataset;TEST_REMOTE_iossifov_2014
     command = Command(gpf_instance=fixtures_wgpf_instance)
     call_command(command, file=temp.name)
     try:
-        assert temp.read() == expected_output
+        assert set(temp.read().split()) == set(expected_output.split())
     finally:
         os.unlink(temp.name)
         temp.close()
