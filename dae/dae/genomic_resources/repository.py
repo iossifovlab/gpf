@@ -445,10 +445,9 @@ class ReadOnlyRepositoryProtocol(abc.ABC):
                 uncompress=uncompress) as infile:
             return infile.read()
 
-    def load_manifest(self, resource):
+    @abc.abstractmethod
+    def load_manifest(self, resource: GenomicResource) -> Manifest:
         """Loads resource manifest."""
-        content = self.get_file_content(resource, GR_MANIFEST_FILE_NAME)
-        return Manifest.from_file_content(content)
 
     @abc.abstractmethod
     def file_exists(self, resource, filename) -> bool:
@@ -481,7 +480,7 @@ class ReadOnlyRepositoryProtocol(abc.ABC):
                 md5_hash.update(chunk)
         return md5_hash.hexdigest()
 
-    def get_manifest(self, resource):
+    def get_manifest(self, resource: GenomicResource) -> Manifest:
         """Loads and returns a resource manifest."""
         manifest = self.load_manifest(resource)
         return manifest

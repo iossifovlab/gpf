@@ -23,6 +23,7 @@ from dae.genomic_resources.repository import Manifest, \
     find_genomic_resource_files_helper, \
     version_string_to_suffix, \
     GR_CONTENTS_FILE_NAME, \
+    GR_MANIFEST_FILE_NAME, \
     isoformatted_from_datetime
 
 
@@ -93,6 +94,11 @@ class FsspecReadOnlyProtocol(ReadOnlyRepositoryProtocol):
     def file_exists(self, resource, filename) -> bool:
         filepath = self.get_resource_file_path(resource, filename)
         return cast(bool, self.filesystem.exists(filepath))
+
+    def load_manifest(self, resource):
+        """Loads resource manifest."""
+        content = self.get_file_content(resource, GR_MANIFEST_FILE_NAME)
+        return Manifest.from_file_content(content)
 
     def open_raw_file(self, resource: GenomicResource, filename: str,
                       mode="rt", **kwargs):
