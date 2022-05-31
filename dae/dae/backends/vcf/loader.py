@@ -264,7 +264,7 @@ class SingleVcfLoader(VariantsGenotypesLoader):
             ]
         else:
             return [
-                vcf.fetch(region=region)
+                vcf.fetch(region=self._unadjust_chrom_prefix(region))
                 for vcf in self.vcfs]
 
     def _init_chromosome_order(self):
@@ -290,13 +290,15 @@ class SingleVcfLoader(VariantsGenotypesLoader):
         filename = self.filenames[0]
         tabix_index_filename = f"{filename}.tbi"
         if not fs_utils.exists(tabix_index_filename):
-            return seqnames
+            res = seqnames
 
         try:
             with pysam.Tabixfile(filename) as tbx:
-                return list(tbx.contigs)
+                res = list(tbx.contigs)
         except Exception:
-            return seqnames
+            res = seqnames
+
+        return [self._adjust_chrom_prefix(chrom) for chrom in res]
 
     def _match_pedigree_to_samples(self):
         vcf_samples = list()

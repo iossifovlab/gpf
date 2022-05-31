@@ -116,7 +116,7 @@ class ImportProject():
 
         loader_config = self.import_config["input"][loader_type]
         if loader_type == "vcf" and "chromosomes" in loader_config:
-            # vcf loader expects chromosomes to be in a list separated by ;
+            # vcf loader expects chromosomes to be in a string separated by ;
             loader_config = deepcopy(loader_config)
             loader_config["chromosomes"] = ";".join(
                 loader_config["chromosomes"])

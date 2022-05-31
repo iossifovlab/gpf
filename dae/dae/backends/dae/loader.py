@@ -783,7 +783,8 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
         )
         try:
             with pysam.Tabixfile(self.summary_filename) as tbx:
-                self.chromosomes = list(tbx.contigs)
+                self.chromosomes = \
+                    [self._adjust_chrom_prefix(chrom) for chrom in tbx.contigs]
         except Exception:
             self.chromosomes = self.genome.chromosomes
 
@@ -951,11 +952,12 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
                         closing(pysam.Tabixfile(self.toomany_filename)) \
                         as too_tbf:
 
+                    region_unadjusted = self._unadjust_chrom_prefix(region)
                     summary_iterator = sum_tbf.fetch(
-                        region=region, parser=pysam.asTuple()
+                        region=region_unadjusted, parser=pysam.asTuple()
                     )
                     toomany_iterator = too_tbf.fetch(
-                        region=region, parser=pysam.asTuple()
+                        region=region_unadjusted, parser=pysam.asTuple()
                     )
 
                     for summary_line in summary_iterator:

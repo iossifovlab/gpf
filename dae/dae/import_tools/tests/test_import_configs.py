@@ -35,16 +35,32 @@ def test_simple_import_config(tmpdir, gpf_instance_2019, config_dir):
     assert len(variants_bins) != 0
 
 
-def test_add_chrom_prefix():
+def test_import_with_add_chrom_prefix(tmpdir, gpf_instance_grch38):
     input_dir = os.path.join(
         os.path.dirname(os.path.realpath(__file__)),
         "resources", "vcf_import")
     config_fn = os.path.join(input_dir, "import_config_add_chrom_prefix.yaml")
 
     import_config = GPFConfigParser.parse_and_interpolate_file(config_fn)
-    import_config["input"]["input_dir"] = input_dir
+    import_config["processing_config"] = {
+        "work_dir": str(tmpdir),
+    }
 
-    project = import_tools.ImportProject.build_from_config(import_config)
+    project = import_tools.ImportProject.build_from_config(
+        import_config, input_dir, gpf_instance=gpf_instance_grch38)
+    import_tools.run_with_project(project)
+
+    files = os.listdir(tmpdir)
+    assert len(files) != 0
+
+
+def test_add_chrom_prefix_is_propagated_to_the_loader():
+    input_dir = os.path.join(
+        os.path.dirname(os.path.realpath(__file__)),
+        "resources", "vcf_import")
+    config_fn = os.path.join(input_dir, "import_config_add_chrom_prefix.yaml")
+
+    project = import_tools.ImportProject.build_from_file(config_fn)
     loader = project._get_variant_loader("vcf")
     assert loader._chrom_prefix == "chr"
 
