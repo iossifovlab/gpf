@@ -769,14 +769,14 @@ class VariantsGenotypesLoader(VariantsLoader):
 
     def _add_chrom_prefix(self, chrom):
         assert self._chrom_prefix is not None
-        if chrom is not None and self._chrom_prefix not in chrom:
+        if chrom is not None and not chrom.startswith(self._chrom_prefix):
             return f"{self._chrom_prefix}{chrom}"
         else:
             return chrom
 
     def _del_chrom_prefix(self, chrom):
         assert self._chrom_prefix is not None
-        if chrom is not None and self._chrom_prefix in chrom:
+        if chrom is not None and chrom.startswith(self._chrom_prefix):
             return chrom[len(self._chrom_prefix):]
         else:
             return chrom
