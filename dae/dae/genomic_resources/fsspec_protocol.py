@@ -89,7 +89,6 @@ class FsspecReadOnlyProtocol(ReadOnlyRepositoryProtocol):
             GenomicResource,
             max(matching_resources, key=lambda gr: gr.version))  # type: ignore
 
-
     def get_resource_path(self, resource) -> str:
         """Returns directory pathlib.Path for specified resources."""
         return os.path.join(
@@ -135,9 +134,10 @@ class FsspecReadOnlyProtocol(ReadOnlyRepositoryProtocol):
 
         compression = None
         if kwargs.get("compression"):
-            compression="gzip"
+            compression = "gzip"
         return self.filesystem.open(
-            filepath, mode=mode, compression=compression)  # pylint: disable=unspecified-encoding
+            filepath, mode=mode,
+            compression=compression)  # pylint: disable=unspecified-encoding
 
     def open_tabix_file(self, resource,  filename,
                         index_filename=None):
@@ -146,7 +146,8 @@ class FsspecReadOnlyProtocol(ReadOnlyRepositoryProtocol):
         if index_filename:
             index_path = str(self.get_resource_file_path(
                 resource, index_filename))
-        return pysam.TabixFile(file_path, index=index_path)  # pylint: disable=no-member
+        return pysam.TabixFile(  # pylint: disable=no-member
+            file_path, index=index_path)
 
     def load_manifest(self, resource) -> Manifest:
         """Loads resource manifest"""
