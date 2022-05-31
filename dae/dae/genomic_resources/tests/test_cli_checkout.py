@@ -20,7 +20,7 @@ def repo_helper(tmp_path):
             "data.txt": ["alabala", "2021-11-20T00:00:56+00:00"],
         },
         "sub": {
-            "two[1.0]": {
+            "two(1.0)": {
                 GR_CONF_FILE_NAME: ["type: gene_models\nfile: genes.gtf",
                                     "2021-11-20T00:00:56+00:00"],
                 "genes.txt": demo_gtf_content

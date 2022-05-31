@@ -14,22 +14,30 @@ from dae.genomic_resources.fsspec_protocol import FsspecReadWriteProtocol
 
 
 @pytest.fixture
-def dir_repo(tmp_path):
+def src_repo():
     """Build directory repository fixture."""
     demo_gtf_content = "TP53\tchr3\t300\t200"
-    src_repo = GenomicResourceEmbededRepo("src", content={
+    repo = GenomicResourceEmbededRepo("src", content={
         "one": {
             GR_CONF_FILE_NAME: "",
             "data.txt": "alabala"
         },
         "sub": {
-            "two": {
+            "two(1.0)": {
                 GR_CONF_FILE_NAME: ["type: gene_models\nfile: genes.gtf",
                                     "2021-11-20T00:00:56"],
                 "genes.gtf": demo_gtf_content
             }
         }
     })
+
+    return repo
+
+
+@pytest.fixture
+def dir_repo(src_repo, tmp_path):
+    """Build directory repository fixture."""
+
     repo = GenomicResourceDirRepo("dir", directory=tmp_path)
     repo.store_all_resources(src_repo)
     repo.build_repo_content()
@@ -115,16 +123,54 @@ def test_fsspec_proto_resource_paths(fsspec_proto, filesystem):
 ])
 def test_build_resource_file_state(fsspec_proto, filesystem):
     proto = fsspec_proto(filesystem)
-
+    timestamp = "2022-05-31T00:00:00+00:00"
     res = proto.get_resource("one")
-    state = proto.build_resource_file_state(res, "data.txt")
+    state = proto.build_resource_file_state(
+        res, "data.txt", timestamp=timestamp)
+
     assert state.resource_id == "one"
     assert state.version == "0"
+    assert state.filename == "data.txt"
+    assert state.path.endswith("one/data.txt")
+    assert state.timestamp == timestamp
+    assert state.md5 == "c1cfdaf7e22865b29b8d62a564dc8f23"
 
     res = proto.get_resource("sub/two")
-    state = proto.build_resource_file_state(res, "genes.gtf")
+    state = proto.build_resource_file_state(
+        res, "genes.gtf", timestamp=timestamp)
+
     assert state.resource_id == "sub/two"
-    assert state.version == "0"
+    assert state.version == "1.0"
+    assert state.filename == "genes.gtf"
+    assert state.path.endswith("sub/two(1.0)/genes.gtf")
+    assert state.timestamp == timestamp
+    assert state.md5 == "d9636a8dca9e5626851471d1c0ea92b1"
+
+
+@pytest.mark.parametrize("filesystem", [
+    "local",
+    "s3",
+])
+def test_save_load_resource_file_state(fsspec_proto, filesystem):
+    proto = fsspec_proto(filesystem)
+    timestamp = "2022-05-31T00:00:00+00:00"
+
+    res = proto.get_resource("sub/two")
+    state = proto.build_resource_file_state(
+        res, "genes.gtf", timestamp=timestamp)
+
+    proto.save_resource_file_state(state)
+    state_path = proto._get_resource_file_state_path(res, "genes.gtf")
+    assert proto.filesystem.exists(state_path)
+
+    loaded = proto.load_resource_file_state(res, "genes.gtf")
+    assert loaded is not None
+    assert loaded.resource_id == "sub/two"
+    assert loaded.version == "1.0"
+    assert loaded.filename == "genes.gtf"
+    assert loaded.path.endswith("sub/two(1.0)/genes.gtf")
+    assert loaded.timestamp == timestamp
+    assert loaded.md5 == "d9636a8dca9e5626851471d1c0ea92b1"
 
 
 @pytest.mark.parametrize("filesystem", [
@@ -387,45 +433,75 @@ def test_get_missing_manifest(fsspec_proto, filesystem):
     "local",
     "s3",
 ])
-def test_delete_manifest_entry(fsspec_proto, filesystem):
-    """Test delete manifest entry."""
+def test_delete_resource_file(fsspec_proto, filesystem):
 
     # Given
     proto = fsspec_proto(filesystem)
 
-    res = proto.get_resource("one")
+    res = proto.get_resource("sub/two")
 
-    manifest = proto.load_manifest(res)
-
-    entry = manifest["data.txt"]
-    entry_filename = proto.get_resource_file_path(res, entry.name)
-    assert proto.filesystem.exists(entry_filename)
+    path = proto.get_resource_file_path(res, "genes.gtf")
+    assert proto.filesystem.exists(path)
 
     # When
-    proto._delete_manifest_entry(res, entry)
+    proto.delete_resource_file(res, "genes.gtf")
 
     # Then
-    assert not proto.filesystem.exists(entry_filename)
+    assert not proto.filesystem.exists(path)
 
 
 @pytest.mark.parametrize("filesystem", [
     "local",
     "s3",
 ])
-def test_copy_manifest_entry(dir_repo, fsspec_proto, filesystem):
-    """Test delete manifest entry."""
+def test_copy_resource_file(src_repo, fsspec_proto, filesystem):
 
     # Given
-    remote_res = dir_repo.get_resource("one")
-    assert remote_res is not None
-    assert remote_res.file_exists("data.txt")
-
     proto = fsspec_proto(filesystem)
 
-    res = proto.get_resource("one")
+    src_res = src_repo.get_resource("sub/two")
+    dst_res = proto.get_resource("sub/two")
 
-    manifest = proto.load_manifest(res)
+    # When
+    state = proto.copy_resource_file(src_res, dst_res, "genes.gtf")
 
-    entry = manifest["data.txt"]
-    entry_filename = proto.get_resource_file_path(res, entry.name)
-    assert proto.filesystem.exists(entry_filename)
+    # Then
+    timestamp = proto.get_resource_file_timestamp(dst_res, "genes.gtf")
+
+    assert state.resource_id == "sub/two"
+    assert state.version == "1.0"
+    assert state.filename == "genes.gtf"
+    assert state.path.endswith("sub/two(1.0)/genes.gtf")
+    assert state.timestamp == timestamp
+    assert state.md5 == "d9636a8dca9e5626851471d1c0ea92b1"
+
+    loaded = proto.load_resource_file_state(dst_res, "genes.gtf")
+    assert loaded == state
+
+
+@pytest.mark.parametrize("filesystem", [
+    "local",
+    "s3",
+])
+def test_copy_resource(src_repo, fsspec_proto, filesystem):
+
+    # Given
+    proto = fsspec_proto(filesystem)
+
+    src_res = src_repo.get_resource("sub/two")
+
+    # When
+    proto.copy_resource(src_res)
+
+    # Then
+    dst_res = proto.get_resource("sub/two")
+    timestamp = proto.get_resource_file_timestamp(dst_res, "genes.gtf")
+
+    state = proto.load_resource_file_state(dst_res, "genes.gtf")
+
+    assert state.resource_id == "sub/two"
+    assert state.version == "1.0"
+    assert state.filename == "genes.gtf"
+    assert state.path.endswith("sub/two(1.0)/genes.gtf")
+    assert state.timestamp == timestamp
+    assert state.md5 == "d9636a8dca9e5626851471d1c0ea92b1"

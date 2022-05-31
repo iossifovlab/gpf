@@ -33,7 +33,7 @@ def is_gr_id_token(token):
 
 
 _GR_ID_WITH_VERSION_TOKEN_RE = re.compile(
-    r"([a-zA-Z0-9._-]+)(?:\[([1-9]\d*(?:\.\d+)*)\])?")
+    r"([a-zA-Z0-9._-]+)(?:\(([1-9]\d*(?:\.\d+)*)\))?")
 
 
 def parse_gr_id_version_token(token):
@@ -56,11 +56,18 @@ def parse_gr_id_version_token(token):
     return token, version
 
 
+def version_string_to_suffix(version: str):
+    """Transforms version token into string."""
+    if version == "0":
+        return ""
+    return f"({version})"
+
+
 def version_tuple_to_suffix(version):
     """Transforms version token into string."""
     if version == (0,):
         return ""
-    return "[" + ".".join(map(str, version)) + "]"
+    return "(" + ".".join(map(str, version)) + ")"
 
 
 VERSION_CONSTRAINT_RE = re.compile(r"(>=|=)?(\d+(?:\.\d+)*)")
@@ -214,9 +221,11 @@ class ManifestEntry:
 
 @dataclass(order=True)
 class ResourceFileState:
+    """Defines resource file state saved into internal GRR state."""
     resource_id: str
     version: str
     filename: str
+    path: str
     size: int
     timestamp: str
     md5: str

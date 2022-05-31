@@ -24,7 +24,7 @@ def test_not_finding_resource_with_the_required_version():
 
 def test_finding_resource_with_version_and_repo_id():
     repo = GenomicResourceEmbededRepo("oneResource", content={
-        "one[1.0]": {"genomic_resource.yaml": ""}
+        "one(1.0)": {"genomic_resource.yaml": ""}
     })
     gr = repo.get_resource("one", version_constraint="1.0",
                            genomic_repository_id="oneResource")

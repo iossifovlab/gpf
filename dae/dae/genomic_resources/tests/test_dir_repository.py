@@ -17,7 +17,7 @@ def test_dir_repository(tmp_path):
             "data.txt": "alabala"  # NOSONAR
         },
         "sub": {
-            "two[1.0]": {
+            "two(1.0)": {
                 GR_CONF_FILE_NAME: ["type: gene_models\nfile: genes.gtf",
                                     "2021-11-20T00:00:56"],
                 "genes.txt": demo_gtf_content
@@ -68,7 +68,7 @@ def test_dir_repository_resource_update(tmp_path):
             "data.txt": "alabala"
         },
         "sub": {
-            "two[1.0]": {
+            "two(1.0)": {
                 GR_CONF_FILE_NAME: ["type: gene_models\nfile: genes.gtf",
                                     "2021-11-19T23:22:51"],
                 "genes.gtf": demo_gtf_content

@@ -54,11 +54,11 @@ def test_cached_get_all_resources(tmpdir):
                 1636242231.5675972
                 1636242231.567597
                 '''
-            "two-unstable[1.0]": {
+            "two-unstable(1.0)": {
                 GR_CONF_FILE_NAME: "type: gene_models\nfile: genes.gtf",
                 "genes.txt": demo_gtf_content
             },
-            "two[1.0]": {
+            "two(1.0)": {
                 GR_CONF_FILE_NAME:
                     ["type: gene_models\nfile: genes.gtf",
                      '2021-11-20T00:00:56'],
@@ -87,11 +87,11 @@ def test_cache_all(tmpdir):
             "data.txt": "alabala"
         },
         "sub": {
-            "two-unstable[1.0]": {
+            "two-unstable(1.0)": {
                 GR_CONF_FILE_NAME: "type: gene_models\nfile: genes.gtf",
                 "genes.txt": demo_gtf_content
             },
-            "two[1.0]": {
+            "two(1.0)": {
                 GR_CONF_FILE_NAME:
                     ["type: gene_models\nfile: genes.gtf",
                      '2021-11-20T00:00:56'],

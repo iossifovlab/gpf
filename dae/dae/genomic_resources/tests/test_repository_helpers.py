@@ -8,12 +8,12 @@ def test_parse_gr_id_version_token():
     assert not parse_gr_id_version_token("aaa[3.a]")
     assert not parse_gr_id_version_token("[3.2]")
     assert not parse_gr_id_version_token("aa*[3.0]")
-    assert not parse_gr_id_version_token("aa[0]")
-    assert not parse_gr_id_version_token("aa[0.2.3]")
+    assert not parse_gr_id_version_token("aa(0)")
+    assert not parse_gr_id_version_token("aa(0.2.3)")
 
     assert parse_gr_id_version_token("aa") == ('aa', (0,))
-    assert parse_gr_id_version_token("aa[2]") == ('aa', (2,))
-    assert parse_gr_id_version_token("aa[2.2.4.1]") == ('aa', (2, 2, 4, 1))
+    assert parse_gr_id_version_token("aa(2)") == ('aa', (2,))
+    assert parse_gr_id_version_token("aa(2.2.4.1)") == ('aa', (2, 2, 4, 1))
 
 
 def test_is_version_constraint_satisfied():
@@ -54,13 +54,13 @@ def test_find_genomic_resources_helper(caplog):
                 "one":        {GR_CONF_FILE_NAME: ""},
                 "bla": "",
                 "two":        {GR_CONF_FILE_NAME: ""},
-                "two[1.0.1]": {GR_CONF_FILE_NAME: ""},
+                "two(1.0.1)": {GR_CONF_FILE_NAME: ""},
                 "group": {
                     "three2.0":        {GR_CONF_FILE_NAME: ""},
-                    "three2.0[1.0]":   {GR_CONF_FILE_NAME: ""},
-                    "three2.0[1.0.1]": {GR_CONF_FILE_NAME: ""},
+                    "three2.0(1.0)":   {GR_CONF_FILE_NAME: ""},
+                    "three2.0(1.0.1)": {GR_CONF_FILE_NAME: ""},
                     "three3.1":        {GR_CONF_FILE_NAME: ""},
-                    "three3.1[1.0.1]": {GR_CONF_FILE_NAME: ""},
+                    "three3.1(1.0.1)": {GR_CONF_FILE_NAME: ""},
                     "four":            {GR_CONF_FILE_NAME: ""},
                     "tralala&":        {},
                     "bala": {"bala": {}}

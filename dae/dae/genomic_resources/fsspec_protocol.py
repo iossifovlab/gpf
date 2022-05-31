@@ -6,7 +6,7 @@ import logging
 
 from urllib.parse import urlparse
 from typing import List, Generator, cast, Union, Optional
-from xml.dom import NotFoundErr
+from dataclasses import asdict
 
 import fsspec  # type: ignore
 import pysam
@@ -22,6 +22,7 @@ from dae.genomic_resources.repository import Manifest, \
     find_genomic_resources_helper, \
     find_genomic_resource_files_helper, \
     is_version_constraint_satisfied, \
+    version_string_to_suffix, \
     GR_MANIFEST_FILE_NAME, \
     GR_CONTENTS_FILE_NAME, \
     isoformatted_from_datetime
@@ -57,6 +58,9 @@ class FsspecReadOnlyProtocol(ReadOnlyRepositoryProtocol):
 
         self._all_resources: Optional[List[GenomicResource]] = None
 
+    def invalidate(self):
+        self._all_resources = None
+
     def get_all_resources(self):
         """Returns generator for all resources in the repository."""
         if self._all_resources is None:
@@ -78,8 +82,12 @@ class FsspecReadOnlyProtocol(ReadOnlyRepositoryProtocol):
         yield from self._all_resources
 
     def get_resource(
-            self, resource_id, version_constraint=None) -> GenomicResource:
-        """Returns requested resource or raises NotFoundErr if not found."""
+            self, resource_id: str,
+            version_constraint: Optional[str] = None) -> GenomicResource:
+        """Returns requested resource or raises exception if not found.
+
+        In case resource is not found a FileNotFoundError exception
+        is raised."""
 
         matching_resources: List[GenomicResource] = []
         for res in self.get_all_resources():
@@ -89,7 +97,7 @@ class FsspecReadOnlyProtocol(ReadOnlyRepositoryProtocol):
                     version_constraint, res.version):
                 matching_resources.append(res)
         if not matching_resources:
-            raise NotFoundErr(
+            raise FileNotFoundError(
                 f"resource {resource_id} ({version_constraint}) not found")
         return cast(
             GenomicResource,
@@ -194,7 +202,7 @@ class FsspecReadWriteProtocol(
 
         return os.path.relpath(parent, relative)
 
-    def _get_filepath_timestamp(self, filepath):
+    def _get_filepath_timestamp(self, filepath: str) -> str:
         modification = self.filesystem.modified(filepath)
         return isoformatted_from_datetime(modification)
 
@@ -255,6 +263,11 @@ class FsspecReadWriteProtocol(
             resource.get_genomic_resource_id_version(),
             filename)
 
+    def get_resource_file_timestamp(
+            self, resource: GenomicResource, filename: str) -> str:
+        path = self.get_resource_file_path(resource, filename)
+        return self._get_filepath_timestamp(path)
+
     def build_resource_file_state(
             self, resource: GenomicResource,
             filename: str,
@@ -279,35 +292,66 @@ class FsspecReadWriteProtocol(
             resource.resource_id,
             resource.get_version_str(),
             filename,
+            filepath,
             size,
             timestamp,
             md5sum)
 
     def save_resource_file_state(
             self, state: ResourceFileState) -> None:
-        pass
+        """Saves resource file state into internal GRR state."""
+        path = os.path.join(
+            self.state_path,
+            f"{state.resource_id}{version_string_to_suffix(state.version)}",
+            state.filename)
+        if not self.filesystem.exists(os.path.dirname(path)):
+            self.filesystem.makedirs(
+                os.path.dirname(path), exist_ok=True)
 
-    def get_manifest_entry_state(
-            self, resource: GenomicResource, manifest_entry: ManifestEntry):
-        pass
+        content = asdict(state)
+        with self.filesystem.open(path, "wt", encoding="utf8") as outfile:
+            outfile.write(yaml.safe_dump(content))
 
-    def _delete_manifest_entry(
-            self, resource: GenomicResource, manifest_entry):
-        filename = manifest_entry.name
+    def load_resource_file_state(
+            self, resource: GenomicResource,
+            filename: str) -> Optional[ResourceFileState]:
+        """Loads resource file state from internal GRR state.
 
+        If the specified resource file has no internal state returns None."""
+        path = self._get_resource_file_state_path(resource, filename)
+        if not self.filesystem.exists(path):
+            return None
+        with self.filesystem.open(path, "rt", encodings="utf8") as infile:
+            content = yaml.safe_load(infile.read())
+            return ResourceFileState(
+                content["resource_id"],
+                content["version"],
+                content["filename"],
+                content["path"],
+                content["size"],
+                content["timestamp"],
+                content["md5"]
+            )
+
+    def delete_resource_file(
+            self, resource: GenomicResource, filename: str):
+        """Deletes a resource file and it's internal state."""
         filepath = self.get_resource_file_path(resource, filename)
-        self.filesystem.delete(filepath, recursive=True)
+        if self.filesystem.exists(filepath):
+            self.filesystem.delete(filepath)
 
-    def _copy_manifest_entry(
+        statepath = self._get_resource_file_state_path(resource, filename)
+        if self.filesystem.exists(statepath):
+            self.filesystem.delete(statepath)
+
+    def copy_resource_file(
             self,
             remote_resource: GenomicResource,
             dest_resource: GenomicResource,
-            manifest_entry: ManifestEntry):
-
+            filename: str):
+        """Copies a remote resource file into local repository."""
         assert dest_resource.resource_id == remote_resource.resource_id
         assert dest_resource.repo == self
-
-        filename = manifest_entry.name
 
         dest_filepath = self.get_resource_file_path(dest_resource, filename)
         dest_parent = os.path.dirname(dest_filepath)
@@ -333,14 +377,52 @@ class FsspecReadWriteProtocol(
 
         md5 = md5_hash.hexdigest()
 
-        if manifest_entry.md5 != md5:
-            logger.error(
-                "storing %s failed; expected md5 is %s; "
-                "calculated md5 for the stored file is %s",
-                remote_resource.resource_id, manifest_entry.md5, md5)
-            raise IOError(f"storing of {remote_resource.resource_id} failed")
-
         if not self.filesystem.exists(dest_filepath):
             raise IOError(f"destination file not created {dest_filepath}")
 
-        return manifest_entry
+        state = self.build_resource_file_state(
+            dest_resource,
+            filename,
+            md5sum=md5)
+
+        self.save_resource_file_state(state)
+        return state
+
+    def copy_resource(
+            self,
+            remote_resource: GenomicResource):
+        """Copies a remote resource into repository."""
+
+        try:
+            local_resource = self.get_resource(
+                resource_id=remote_resource.resource_id,
+                version_constraint=f"={remote_resource.get_version_str()}")
+        except FileNotFoundError:
+            logger.info(
+                "resource %s (%s) not found in %s; creating...",
+                remote_resource.resource_id,
+                remote_resource.get_version_str(),
+                self.get_id())
+            local_resource = GenomicResource(
+                remote_resource.resource_id,
+                remote_resource.version,
+                self)  # type: ignore
+
+        for manifest_entry in remote_resource.get_manifest():
+            state = self.copy_resource_file(
+                remote_resource, local_resource, manifest_entry.name)
+            if manifest_entry.md5 != state.md5:
+                logger.error(
+                    "bad copy or inconsistent remote %s (%s): "
+                    "%s <> %s; cleaning up...",
+                    remote_resource.resource_id,
+                    remote_resource.get_version_str(),
+                    manifest_entry,
+                    state)
+                self.delete_resource_file(local_resource, state.filename)
+                raise IOError(
+                    f"bad copy or incosistent remote: "
+                    f"{manifest_entry} <> {state}")
+
+        self.save_manifest(local_resource, remote_resource.get_manifest())
+        self.invalidate()
