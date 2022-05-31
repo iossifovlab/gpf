@@ -72,7 +72,7 @@ class FsspecReadOnlyProtocol(ReadOnlyRepositoryProtocol):
 
     def get_resource(
             self, resource_id, version_constraint=None) -> GenomicResource:
-        """Returns requested resource."""
+        """Returns requested resource or raises NotFoundErr if not found."""
 
         matching_resources: List[GenomicResource] = []
         for res in self.get_all_resources():
@@ -138,7 +138,7 @@ class FsspecReadOnlyProtocol(ReadOnlyRepositoryProtocol):
             filepath, mode=mode,
             compression=compression)  # pylint: disable=unspecified-encoding
 
-    def open_tabix_file(self, resource,  filename,
+    def open_tabix_file(self, resource, filename,
                         index_filename=None):
         file_path = self.get_resource_file_path(resource, filename)
         index_path = None
@@ -199,7 +199,6 @@ class FsspecReadWriteProtocol(
 
     def collect_all_resources(self) -> Generator[GenomicResource, None, None]:
         """Returns generator for all resources managed by this protocol."""
-
         dir_content = self._path_to_dict(self.root_path, self.root_path)
         for res_id, res_ver in find_genomic_resources_helper(dir_content):
             yield self.build_genomic_resource(res_id, res_ver)
@@ -224,7 +223,6 @@ class FsspecReadWriteProtocol(
 
     def build_manifest(self, resource):
         """Builds full manifest for the resource"""
-
         manifest = Manifest()
         for entry in self.collect_resource_entries(resource):
             entry.md5 = self.compute_md5_sum(resource, entry.name)
@@ -297,7 +295,7 @@ class FsspecReadWriteProtocol(
                 remote_resource.resource_id, manifest_entry.md5, md5)
             raise IOError(f"storing of {remote_resource.resource_id} failed")
 
-        src_modtime = manifest_entry.get_timestamp()
-        assert self.filesystem.exists(dest_filepath)
+        if not self.filesystem.exists(dest_filepath):
+            raise IOError(f"destination file not created {dest_filepath}")
 
         return manifest_entry

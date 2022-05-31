@@ -19,12 +19,12 @@ def test_dir_repository(tmp_path):
         "sub": {
             "two[1.0]": {
                 GR_CONF_FILE_NAME: ["type: gene_models\nfile: genes.gtf",
-                                    '2021-11-20T00:00:56'],
+                                    "2021-11-20T00:00:56"],
                 "genes.txt": demo_gtf_content
             }
         }
     })
-    dir_repo = GenomicResourceDirRepo('dir', directory=tmp_path)
+    dir_repo = GenomicResourceDirRepo("dir", directory=tmp_path)
     dir_repo.store_all_resources(src_repo)
 
     def resource_set(repo):
@@ -34,7 +34,7 @@ def test_dir_repository(tmp_path):
         }
 
     assert resource_set(src_repo) == resource_set(dir_repo)
-    assert isinstance(dir_repo.get_resource("sub/two"), GenomicResource)  # NOSONAR
+    assert isinstance(dir_repo.get_resource("sub/two"), GenomicResource)
     assert dir_repo.get_resource("sub/two").get_file_content("genes.txt") == \
         demo_gtf_content
 
@@ -47,7 +47,8 @@ def test_dir_repository(tmp_path):
     assert dir_manifest == src_manifest
 
     dirname = pathlib.Path(
-        dir_repo._get_resource_dir(dir_resource))  # pylint: disable=protected-access
+        dir_repo._get_resource_dir(  # pylint: disable=protected-access
+            dir_resource))
 
     for filename, _size, _mod_time in dir_resource.get_manifest().get_files():
         path = dirname / filename
@@ -60,7 +61,7 @@ def test_dir_repository(tmp_path):
 
 def test_dir_repository_resource_update(tmp_path):
 
-    demo_gtf_content = "TP53\tchr3\t300\t200".encode('utf-8')
+    demo_gtf_content = "TP53\tchr3\t300\t200".encode("utf-8")
     src_repo = GenomicResourceEmbededRepo("src", content={
         "one": {
             GR_CONF_FILE_NAME: "",
@@ -69,16 +70,16 @@ def test_dir_repository_resource_update(tmp_path):
         "sub": {
             "two[1.0]": {
                 GR_CONF_FILE_NAME: ["type: gene_models\nfile: genes.gtf",
-                                    '2021-11-19T23:22:51'],
+                                    "2021-11-19T23:22:51"],
                 "genes.gtf": demo_gtf_content
             }
         }
     })
 
-    dir_repo1 = GenomicResourceDirRepo('dir', directory=tmp_path / "t1")
+    dir_repo1 = GenomicResourceDirRepo("dir", directory=tmp_path / "t1")
     dir_repo1.store_all_resources(src_repo)
 
-    dir_repo2 = GenomicResourceDirRepo('dir', directory=tmp_path / "t2")
+    dir_repo2 = GenomicResourceDirRepo("dir", directory=tmp_path / "t2")
     dir_repo2.store_all_resources(src_repo)
 
     gr1 = dir_repo1.get_resource("sub/two")
@@ -106,7 +107,7 @@ def test_dir_repository_file_exists(tmp_path):
         },
     })
 
-    repo = GenomicResourceDirRepo('dir', directory=tmp_path / "t1")
+    repo = GenomicResourceDirRepo("dir", directory=tmp_path / "t1")
     repo.store_all_resources(src_repo)
     res = repo.get_resource("one")
 
