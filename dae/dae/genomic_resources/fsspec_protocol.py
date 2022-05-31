@@ -1,3 +1,4 @@
+"""Provides GRR protocols based on fsspec library."""
 import os
 import pathlib
 import hashlib
@@ -31,7 +32,7 @@ class FsspecReadOnlyProtocol(ReadOnlyRepositoryProtocol):
     """Provides fsspec genomic resources repository protocol."""
 
     def __init__(
-            self, proto_id: str, 
+            self, proto_id: str,
             root_url: Union[str, pathlib.Path],
             filesystem: fsspec.AbstractFileSystem,
             **kwargs):
@@ -254,7 +255,7 @@ class FsspecReadWriteProtocol(
         filepath = self.get_resource_file_path(resource, filename)
         self.filesystem.delete(filepath, recursive=True)
 
-    def _copy_or_update_manifest_entry(
+    def _copy_manifest_entry(
             self,
             remote_resource: GenomicResource,
             dest_resource: GenomicResource,
@@ -271,28 +272,6 @@ class FsspecReadWriteProtocol(
             self.filesystem.mkdir(
                 dest_parent, create_parents=True, exist_ok=True)
 
-        if self.filesystem.exists(dest_filepath):
-            fileinfo = self.filesystem.info(dest_filepath)
-            timestamp = self._get_filepath_timestamp(dest_filepath)
-
-            dest_time = ManifestEntry.convert_timestamp(timestamp)
-            dest_size = fileinfo["size"]
-
-            if dest_size == manifest_entry.size and \
-                    dest_time == manifest_entry.time:
-
-                logger.debug(
-                    "resource <%s> file <%s> already cached and up-to-date",
-                    remote_resource.resource_id, filename)
-                return manifest_entry
-
-            logger.warning(
-                "resource %s file %s already cached "
-                "but (size, timestamp) does not match: %s,%s != %s,%s",
-                remote_resource.resource_id, filename,
-                dest_size, dest_time,
-                manifest_entry.size, manifest_entry.time)
-
         logger.debug(
             "copying resource (%s) file: %s",
             remote_resource.resource_id, filename)
@@ -308,6 +287,7 @@ class FsspecReadWriteProtocol(
             while chunk := infile.read(32768):
                 outfile.write(chunk)
                 md5_hash.update(chunk)
+
         md5 = md5_hash.hexdigest()
 
         if manifest_entry.md5 != md5:
@@ -320,5 +300,4 @@ class FsspecReadWriteProtocol(
         src_modtime = manifest_entry.get_timestamp()
         assert self.filesystem.exists(dest_filepath)
 
-        os.utime(dest_filepath, (src_modtime, src_modtime))
         return manifest_entry
