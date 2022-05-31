@@ -19,7 +19,7 @@ def test_admin_sees_all_default_users(admin_client):
     response = admin_client.get(url)
 
     assert response.status_code is status.HTTP_200_OK
-    assert len(response.data) == 2  # dev admin, dev staff
+    assert len(response.data) == 1  # dev admin
 
 
 def test_all_users_have_groups(admin_client):
@@ -128,10 +128,8 @@ def test_new_user_is_not_active(admin_client):
     assert not new_user["hasPassword"]
 
 
-def test_admin_can_partial_update_user(admin_client, user_model):
-    user = user_model.objects.first()
-
-    url = "/api/v3/users/{}".format(user.pk)
+def test_admin_can_partial_update_user(admin_client, active_user):
+    url = "/api/v3/users/{}".format(active_user.pk)
     data = {"name": "Ivan"}
 
     response = admin_client.patch(
@@ -140,26 +138,24 @@ def test_admin_can_partial_update_user(admin_client, user_model):
     print(response)
     assert response.status_code is status.HTTP_200_OK
 
-    user.refresh_from_db()
-    assert user.name == "Ivan"
+    active_user.refresh_from_db()
+    assert active_user.name == "Ivan"
 
 
-def test_admin_cant_partial_update_user_email(admin_client, user_model):
-    user = user_model.objects.first()
-
-    url = "/api/v3/users/{}".format(user.pk)
+def test_admin_cant_partial_update_user_email(admin_client, active_user):
+    url = "/api/v3/users/{}".format(active_user.pk)
     data = {"email": "test@test.com"}
 
-    assert user.email != data["email"]
-    old_email = user.email
+    assert active_user.email != data["email"]
+    old_email = active_user.email
 
     response = admin_client.patch(
         url, json.dumps(data), content_type="application/json", format="json"
     )
     assert response.status_code is status.HTTP_400_BAD_REQUEST
 
-    user.refresh_from_db()
-    assert user.email == old_email
+    active_user.refresh_from_db()
+    assert active_user.email == old_email
 
 
 def test_user_name_can_be_updated_to_blank(admin_client, active_user):
@@ -186,7 +182,6 @@ def test_admin_can_add_user_group(admin_client, active_user, empty_group):
 
     url = "/api/v3/users/{}".format(user.pk)
     data = {"groups": [empty_group.name]}
-    data["groups"] += [g.name for g in user.protected_groups]
 
     assert not user.groups.filter(name=empty_group.name).exists()
     response = admin_client.put(
@@ -205,7 +200,6 @@ def test_admin_can_update_with_new_group(admin_client, active_user):
 
     url = "/api/v3/users/{}".format(user.pk)
     data = {"groups": [group_name]}
-    data["groups"] += [g.name for g in user.protected_groups]
 
     assert not Group.objects.filter(name=group_name).exists()
     response = admin_client.put(
@@ -321,21 +315,6 @@ def test_two_admins_can_remove_superuser_group_from_other(
     ).exists()
 
 
-def test_protected_groups_cant_be_removed(
-    admin_client, empty_group, active_user
-):
-    url = "/api/v3/users/{}".format(active_user.pk)
-    data = {"groups": [empty_group.name]}
-    response = admin_client.put(
-        url, json.dumps(data), content_type="application/json", format="json"
-    )
-
-    assert response.status_code is status.HTTP_400_BAD_REQUEST
-
-    assert active_user.protected_groups.count() == 2
-    assert not active_user.groups.filter(id=empty_group.id).exists()
-
-
 def test_admin_can_delete_user(admin_client, user_model):
     user = user_model.objects.create(email="test@test.com")
     user_id = user.pk
@@ -351,9 +330,12 @@ def test_admin_can_delete_user(admin_client, user_model):
 def test_admin_can_reset_user_password(admin_client, active_user):
     assert active_user.is_active
 
-    url = "/api/v3/users/{}/password_reset".format(active_user.pk)
-    response = admin_client.post(url)
-    assert response.status_code is status.HTTP_204_NO_CONTENT
+    url = "/api/v3/users/reset_password"
+    data = {"email": active_user.email}
+    response = admin_client.post(
+        url, json.dumps(data), content_type="application/json", format="json"
+    )
+    assert response.status_code is status.HTTP_200_OK
 
     active_user.refresh_from_db()
     assert active_user.has_usable_password()
@@ -369,27 +351,17 @@ def test_resetting_user_password_does_not_deauthenticates_them(
     assert response.status_code == status.HTTP_200_OK
     assert response.data["loggedIn"]
 
-    reset_password_url = "/api/v3/users/{}/password_reset".format(user.pk)
-
-    response = admin_client.post(reset_password_url)
-    assert response.status_code is status.HTTP_204_NO_CONTENT
+    reset_password_url = "/api/v3/users/reset_password"
+    data = {"email": user.email}
+    response = admin_client.post(
+        reset_password_url, json.dumps(data),
+        content_type="application/json", format="json"
+    )
+    assert response.status_code == status.HTTP_200_OK
 
     response = user_client.get(url)
     assert response.status_code == status.HTTP_200_OK
     assert response.data["loggedIn"]
-
-
-def test_user_cant_reset_other_user_password(user_client, active_user):
-    assert active_user.has_usable_password()
-
-    url = "/api/v3/users/{}/password_reset".format(active_user.pk)
-    response = user_client.post(url)
-
-    assert response.status_code is status.HTTP_403_FORBIDDEN
-
-    active_user.refresh_from_db()
-    assert active_user.has_usable_password()
-    assert active_user.is_active
 
 
 def test_searching_by_email_finds_only_single_user(
@@ -403,20 +375,6 @@ def test_searching_by_email_finds_only_single_user(
 
     assert response.status_code is status.HTTP_200_OK
     assert len(response.data) == 1
-
-
-def test_searching_by_any_user_finds_all_users(
-    admin_client, active_user, user_model
-):
-    users_count = user_model.objects.count()
-    assert users_count > 1
-
-    url = "/api/v3/users"
-    params = {"search": "any_user"}
-    response = admin_client.get(url, params, format="json")
-
-    assert response.status_code is status.HTTP_200_OK
-    assert len(response.data) == users_count
 
 
 def test_searching_by_username(admin_client, active_user):
@@ -442,7 +400,6 @@ def test_searching_by_email(admin_client, active_user):
 
 def test_user_create_email_case_insensitive(admin_client, user_model):
     url = "/api/v3/users"
-
     data = {
         "id": 0,
         "email": "ExAmPlE1@iossifovlab.com",
@@ -453,49 +410,28 @@ def test_user_create_email_case_insensitive(admin_client, user_model):
     response = admin_client.post(
         url, json.dumps(data), content_type="application/json", format="json"
     )
-
-    print(response)
     assert response.status_code is status.HTTP_201_CREATED
     user = user_model.objects.get(email="example1@iossifovlab.com")
-
     assert user is not None
-    print(response.data)
-    data = response.data
-    groups = data["groups"]
-    print(groups)
-
-    assert "example1@iossifovlab.com" in groups
-    assert "ExAmPlE1@iossifovlab.com" not in groups
 
 
 def test_user_create_email_case_insensitive_with_groups(
-        admin_client, user_model):
-
+    admin_client, user_model
+):
     url = "/api/v3/users"
-
     data = {
         "id": 0,
         "email": "ExAmPlE1@iossifovlab.com",
         "name": "Example User",
         "hasPassword": False,
-        "groups": ["test_group", "ExAmPlE1@iossifovlab.com", "SSC_TEST_GROUP"]
+        "groups": ["test_group", "SSC_TEST_GROUP"]
     }
     response = admin_client.post(
         url, json.dumps(data), content_type="application/json", format="json"
     )
-
-    print(response)
     assert response.status_code is status.HTTP_201_CREATED
     user = user_model.objects.get(email="example1@iossifovlab.com")
-
     assert user is not None
-    print(response.data)
-    data = response.data
-    groups = data["groups"]
-    print(groups)
-
-    assert "example1@iossifovlab.com" in groups
-    assert "ExAmPlE1@iossifovlab.com" not in groups
 
 
 def test_user_create_update_case_sensitive_groups(

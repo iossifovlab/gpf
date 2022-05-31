@@ -2,7 +2,6 @@ import os
 
 from rest_framework.response import Response  # type: ignore
 from rest_framework import status  # type: ignore
-from guardian.shortcuts import get_groups_with_perms  # type: ignore
 
 from query_base.query_base import QueryBaseView
 from studies.study_wrapper import StudyWrapperBase
@@ -14,6 +13,10 @@ from datasets_api.permissions import get_wdae_parents, \
 
 
 class DatasetView(QueryBaseView):
+    """General dataset view which provides either a summary of ALL available
+    dataset configs or a specific dataset configuration in full, depending on
+    whether the request is made with a dataset_id param or not.
+    """
 
     def augment_accessibility(self, dataset, user):
         dataset_object = Dataset.objects.get(dataset_id=dataset["id"])
@@ -25,8 +28,7 @@ class DatasetView(QueryBaseView):
 
     def augment_with_groups(self, dataset):
         dataset_object = Dataset.objects.get(dataset_id=dataset["id"])
-        groups = get_groups_with_perms(dataset_object)
-        serializer = GroupSerializer(groups, many=True)
+        serializer = GroupSerializer(dataset_object.groups.all(), many=True)
         dataset["groups"] = serializer.data
 
         return dataset
@@ -49,9 +51,6 @@ class DatasetView(QueryBaseView):
                 for genotype_data_id in selected_genotype_data
             ])
 
-            # assert all([d is not None for d in datasets]), \
-            #     selected_genotype_data
-
             res = [
                 StudyWrapperBase.build_genotype_data_all_datasets(
                     dataset.config
@@ -60,8 +59,7 @@ class DatasetView(QueryBaseView):
             ]
             if not self.gpf_instance.get_selected_genotype_data():
                 res = sorted(
-                    res,
-                    key=lambda desc: desc["name"]
+                    res, key=lambda desc: desc["name"]
                 )
             res = [self.augment_accessibility(ds, user) for ds in res]
             res = [self.augment_with_groups(ds) for ds in res]
@@ -102,6 +100,10 @@ class DatasetView(QueryBaseView):
 
 
 class PermissionDeniedPromptView(QueryBaseView):
+    """Provides the markdown-formatted text to display when
+    access to a dataset is denied.
+    """
+
     def __init__(self):
         super(PermissionDeniedPromptView, self).__init__()
 
@@ -124,19 +126,16 @@ class PermissionDeniedPromptView(QueryBaseView):
 
 
 class DatasetDetailsView(QueryBaseView):
-    def get(self, request, dataset_id):
-        if dataset_id is None:
-            return Response(
-                {"error": "No dataset ID given"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+    """Provides miscellaneous details for a given dataset for convenience.
+    """
 
+    def get(self, request, dataset_id):
         genotype_data_config = \
             self.gpf_instance.get_genotype_data_config(dataset_id)
         if genotype_data_config is None:
             return Response(
-                {"error": f"No such dataset {dataset_id}"},
-                status=status.HTTP_400_BAD_REQUEST,
+                {"error": f"Dataset {dataset_id} not found"},
+                status=status.HTTP_404_NOT_FOUND,
             )
 
         has_denovo = genotype_data_config.get("has_denovo", False)
@@ -150,19 +149,22 @@ class DatasetDetailsView(QueryBaseView):
 
 
 class DatasetPedigreeView(QueryBaseView):
-    def get(self, request, dataset_id, column):
-        if dataset_id is None:
-            return Response(
-                {"error": "No dataset ID given"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+    """Provides pedigree data for a given dataset.
+    """
 
+    def get(self, request, dataset_id, column):
         genotype_data = self.gpf_instance.get_genotype_data(dataset_id)
 
         if genotype_data is None:
             return Response(
-                {"error": f"No such dataset {dataset_id}"},
-                status=status.HTTP_400_BAD_REQUEST,
+                {"error": f"Dataset {dataset_id} not found"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        if column not in genotype_data.families.ped_df.columns:
+            return Response(
+                {"error": f"No such column {column}"},
+                status=status.HTTP_404_NOT_FOUND,
             )
 
         values_domain = list(
@@ -175,19 +177,15 @@ class DatasetPedigreeView(QueryBaseView):
 
 
 class DatasetConfigView(DatasetView):
+    """Provides a dataset's configuration; used for remote instances.
+    """
     def get(self, request, dataset_id):
-        if dataset_id is None:
-            return Response(
-                {"error": "No dataset ID given"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
         genotype_data = self.gpf_instance.get_genotype_data(dataset_id)
 
         if genotype_data is None:
             return Response(
-                {"error": f"No such dataset {dataset_id}"},
-                status=status.HTTP_400_BAD_REQUEST,
+                {"error": f"Dataset {dataset_id} not found"},
+                status=status.HTTP_404_NOT_FOUND,
             )
         return Response(
             self.augment_with_parents(genotype_data.config.to_dict())
@@ -195,6 +193,9 @@ class DatasetConfigView(DatasetView):
 
 
 class DatasetDescriptionView(DatasetView):
+    """Allows the editing or creation of a dataset's description through
+    POST requests.
+    """
     def post(self, request, dataset_id):
         if not request.user.is_staff:
             return Response(
@@ -203,12 +204,6 @@ class DatasetDescriptionView(DatasetView):
             )
 
         description = request.data.get('description')
-        if dataset_id is None:
-            return Response(
-                {"error": "No dataset ID given."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
         genotype_data = self.gpf_instance.get_genotype_data(dataset_id)
         genotype_data.description = description
 

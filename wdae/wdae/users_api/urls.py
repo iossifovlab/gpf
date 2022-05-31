@@ -1,7 +1,3 @@
-"""
-Created on Aug 10, 2016
-@author: lubo
-"""
 from django.urls import re_path
 
 from rest_framework.routers import SimpleRouter

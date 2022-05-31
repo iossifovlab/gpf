@@ -66,13 +66,13 @@ class GenotypeBrowserQueryView(QueryBaseView):
             if is_download:
                 max_variants = 10000
                 if not user.is_anonymous and \
-                        (user.is_staff or user.has_unlimitted_download):
+                        (user.is_staff or user.has_unlimited_download):
                     max_variants = None
             else:
                 max_variants = self.MAX_SHOWN_VARIANTS + 1
 
         if max_variants == -1:
-            # unlimitted variants preview
+            # unlimited variants preview
             max_variants = None
 
         dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)

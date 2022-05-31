@@ -1,9 +1,5 @@
-"""
-Created on Aug 10, 2016
-
-@author: lubo
-"""
 import uuid
+from datetime import timedelta
 
 from django.db import models, transaction
 from django.core.mail import send_mail
@@ -16,12 +12,14 @@ from django.contrib.auth.models import \
 from django.contrib.sessions.models import Session
 from django.utils import timezone
 from django.conf import settings
-from guardian.conf import settings as guardian_settings  # type: ignore
 from django.contrib.auth.models import Group
 from django.db.models.signals import m2m_changed, post_delete, pre_delete
 
 from utils.logger import LOGGER
 from datasets_api.permissions import get_directly_allowed_genotype_data
+
+from .utils import send_reset_email, send_already_existing_email, \
+    send_verif_email, LOCKOUT_THRESHOLD
 
 
 class WdaeUserManager(BaseUserManager):
@@ -39,14 +37,6 @@ class WdaeUserManager(BaseUserManager):
         user.set_password(password)
 
         user.save(using=self._db)
-
-        groups = list(user.DEFAULT_GROUPS_FOR_USER)
-        groups.append(email)
-
-        for group_name in groups:
-            group, _ = Group.objects.get_or_create(name=group_name)
-            group.user_set.add(user)
-            group.save()
 
         return user
 
@@ -76,7 +66,6 @@ class WdaeUserManager(BaseUserManager):
 
 
 class WdaeUser(AbstractBaseUser, PermissionsMixin):
-    app_label = "api"
     name: models.CharField = models.CharField(max_length=100)
     email: models.EmailField = models.EmailField(unique=True)
 
@@ -87,23 +76,15 @@ class WdaeUser(AbstractBaseUser, PermissionsMixin):
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["name"]
 
-    DEFAULT_GROUPS_FOR_USER = ("any_user",)
     SUPERUSER_GROUP = "admin"
-    UMLIMITTED_DOWNLOAD_GROUP = "unlimitted"
+    UMLIMITED_DOWNLOAD_GROUP = "unlimited"
 
     objects = WdaeUserManager()
 
-    def get_protected_group_names(self):
-        return self.DEFAULT_GROUPS_FOR_USER + (self.email,)
-
     @property
-    def protected_groups(self):
-        return self.groups.filter(name__in=self.get_protected_group_names())
-
-    @property
-    def has_unlimitted_download(self):
+    def has_unlimited_download(self):
         return self.groups.filter(
-            name=self.UMLIMITTED_DOWNLOAD_GROUP).count() > 0
+            name=self.UMLIMITED_DOWNLOAD_GROUP).count() > 0
 
     @property
     def allowed_datasets(self):
@@ -132,13 +113,6 @@ class WdaeUser(AbstractBaseUser, PermissionsMixin):
 
         return mail
 
-    def get_full_name(self):
-        return self.name
-
-    def get_short_name(self):
-        "Returns the short name for the user."
-        return self.name
-
     def set_password(self, raw_password):
         super(WdaeUser, self).set_password(raw_password)
 
@@ -153,8 +127,7 @@ class WdaeUser(AbstractBaseUser, PermissionsMixin):
             self.is_active = False
 
     def reset_password(self, by_admin=False):
-
-        verif_path = _create_verif_path(self)
+        verif_path = VerificationPath.create(self)
         send_reset_email(self, verif_path, by_admin)
 
     def deauthenticate(self):
@@ -172,7 +145,7 @@ class WdaeUser(AbstractBaseUser, PermissionsMixin):
             if name is not None and name != "":
                 self.name = name
 
-            verif_path = _create_verif_path(self)
+            verif_path = VerificationPath.create(self)
             send_verif_email(self, verif_path)
 
             self.save()
@@ -203,187 +176,10 @@ class WdaeUser(AbstractBaseUser, PermissionsMixin):
         db_table = "users"
 
 
-def send_verif_email(user, verif_path):
-    email = _create_verif_email(
-        settings.EMAIL_VERIFICATION_HOST,
-        settings.EMAIL_VERIFICATION_PATH,
-        str(verif_path.path),
-    )
-    user.email_user(email["subject"], email["message"])
-
-
-def send_already_existing_email(user):
-    subject = "GPF: Attempted registration with email in use"
-    message = (
-        "Hello. Someone has attempted to create an account in GPF "
-        "using an email that your account was registered with.  "
-        "If this was you, you can simply log in to your existing account, "
-        "or if you've forgotten your password, you can reset it "
-        "by using the 'Forgotten password' button on the login window. \n"
-        "Otherwise, please ignore this email."
-    )
-    user.email_user(subject, message)
-
-
-def send_reset_inactive_acc_email(user):
-    subject = "GPF: Password reset for inactive account"
-    message = (
-        "Hello. You've requested a password reset for an inactive account. "
-        "You must first finish your registration by following the "
-        "account validation link in the email you received when registering. "
-        "If you have lost that email or the link in it has expired, you can "
-        "register again to get a new validation email sent. \n"
-        "If you did not request this, please ignore this email."
-    )
-    user.email_user(subject, message)
-
-
-def send_reset_email(user, verif_path, by_admin=False):
-    """ Returns dict - subject and message of the email """
-    email = _create_reset_mail(
-        settings.EMAIL_VERIFICATION_HOST,
-        settings.EMAIL_VERIFICATION_PATH,
-        str(verif_path.path),
-        by_admin,
-    )
-
-    user.email_user(email["subject"], email["message"])
-
-
-def _create_verif_email(host, path, verification_path):
-    message = (
-        "Welcome to GPF: Genotype and Phenotype in Families! "
-        "Follow the link below to validate your new account "
-        "and set your password:\n {link}"
-    )
-
-    settings = {
-        "subject": "GPF: Registration validation",
-        "initial_message": message,
-        "host": host,
-        "path": path,
-        "verification_path": verification_path,
-    }
-
-    return _build_email_template(settings)
-
-
-def _create_reset_mail(host, path, verification_path, by_admin=False):
-    message = (
-        "Hello. You have requested to reset your password for "
-        "your GPF account. To do so, please follow the link below:\n {link}\n"
-        "If you did not request for your GPF account password to be reset, "
-        "please ignore this email."
-    )
-    if by_admin:
-        message = (
-            "Hello. Your password has been reset by an admin. Your old "
-            "password will not work. To set a new password in "
-            "GPF: Genotype and Phenotype in Families "
-            "please follow the link below:\n {link}"
-        )
-    settings = {
-        "subject": "GPF: Password reset request",
-        "initial_message": message,
-        "host": host,
-        "path": path,
-        "verification_path": verification_path,
-    }
-
-    return _build_email_template(settings)
-
-
-# ''' settings[dict] must contain :
-# subject, initial_message, host, path, verification_path'''
-
-
-def _build_email_template(settings):
-    subject = settings["subject"]
-    message = settings["initial_message"]
-    path = settings["path"].format(settings["verification_path"])
-
-    message = message.format(link="{0}{1}".format(settings["host"], path))
-
-    return {"subject": subject, "message": message}
-
-
-def _create_verif_path(user):
-    verif_path, _ = VerificationPath.objects.get_or_create(
-        user=user, defaults={"path": uuid.uuid4()}
-    )
-    return verif_path
-
-
-def get_anonymous_user_instance(current_user_model):
-    try:
-        print("current_user_model:", current_user_model)
-        user = current_user_model.objects.get(
-            email=guardian_settings.ANONYMOUS_USER_NAME
-        )
-        return user
-    except current_user_model.DoesNotExist:
-        user = current_user_model.objects.create_user(
-            email=guardian_settings.ANONYMOUS_USER_NAME
-        )
-        user.set_unusable_password()
-        user.is_active = True
-
-        user.save()
-        return user
-
-
-def staff_update(sender, **kwargs):
-    for key in ["action", "instance", "reverse"]:
-        if key not in kwargs:
-            return
-    if kwargs["action"] not in ["post_add", "post_remove", "post_clear"]:
-        return
-
-    if kwargs["reverse"]:
-        users = WdaeUser.objects.filter(pk__in=kwargs["pk_set"])
-    else:
-        users = [kwargs["instance"]]
-
-    with transaction.atomic():
-        for user in users:
-            should_be_staff = user.groups.filter(
-                name=WdaeUser.SUPERUSER_GROUP
-            ).exists()
-            if user.is_staff != should_be_staff:
-                user.is_staff = should_be_staff
-                user.save()
-
-
-def group_post_delete(sender, **kwargs):
-    if "instance" not in kwargs:
-        return
-    group = kwargs["instance"]
-    if group.name != WdaeUser.SUPERUSER_GROUP:
-        return
-    if not hasattr(group, "_user_ids"):
-        return
-
-    with transaction.atomic():
-        for user in WdaeUser.objects.filter(pk__in=group._user_ids).all():
-            user.is_staff = False
-            user.save()
-
-
-# a hack to save the users the group had, used in the post_delete signal
-def group_pre_delete(sender, **kwargs):
-    if "instance" not in kwargs:
-        return
-    group = kwargs["instance"]
-    if group.name == WdaeUser.SUPERUSER_GROUP:
-        group._user_ids = [u.pk for u in group.user_set.all()]
-
-
-m2m_changed.connect(staff_update, WdaeUser.groups.through, weak=False)
-post_delete.connect(group_post_delete, Group, weak=False)
-pre_delete.connect(group_pre_delete, Group, weak=False)
-
-
 class VerificationPath(models.Model):
+    """Used for verification of account registration, password change and
+    password reset.
+    """
     path = models.CharField(max_length=255, unique=True)
     user = models.OneToOneField(WdaeUser, on_delete=models.CASCADE)
 
@@ -392,6 +188,13 @@ class VerificationPath(models.Model):
 
     class Meta(object):
         db_table = "verification_paths"
+
+    @staticmethod
+    def create(user):
+        verif_path, _ = VerificationPath.objects.get_or_create(
+            user=user, defaults={"path": uuid.uuid4()}
+        )
+        return verif_path
 
 
 class AuthenticationLog(models.Model):
@@ -419,3 +222,97 @@ class AuthenticationLog(models.Model):
         except IndexError:
             result = None
         return result
+
+    @staticmethod
+    def is_user_locked_out(email: str):
+        last_login = AuthenticationLog.get_last_login_for(email)
+        return (last_login is not None
+                and last_login.failed_attempt > LOCKOUT_THRESHOLD)
+
+    @staticmethod
+    def get_remaining_lockout_time(email: str):
+        last_login = AuthenticationLog.get_last_login_for(email)
+        current_time = timezone.now().replace(microsecond=0)
+        lockout_time = pow(2, last_login.failed_attempt - LOCKOUT_THRESHOLD)
+        return (
+            - (current_time - last_login.time)
+            + timedelta(minutes=lockout_time)
+        ).total_seconds()
+
+    @staticmethod
+    def log_authentication_attempt(email: str, failed: bool):
+        last_login = AuthenticationLog.get_last_login_for(email)
+
+        if failed:
+            failed_attempt = last_login.failed_attempt if last_login else 0
+            failed_attempt += 1
+        else:
+            failed_attempt = 0
+
+        login_attempt = AuthenticationLog(
+            email=email,
+            time=timezone.now().replace(microsecond=0),
+            failed_attempt=failed_attempt
+        )
+        login_attempt.save()
+
+
+def staff_update(sender, **kwargs):
+    """Updates whether a user is part of the staff when the SUPERUSER_GROUP is
+    added or removed to them.
+    """
+    for key in ["action", "instance", "reverse"]:
+        if key not in kwargs:
+            return
+    if kwargs["action"] not in ["post_add", "post_remove", "post_clear"]:
+        return
+
+    if kwargs["reverse"]:
+        users = WdaeUser.objects.filter(pk__in=kwargs["pk_set"])
+    else:
+        users = [kwargs["instance"]]
+
+    with transaction.atomic():
+        for user in users:
+            should_be_staff = user.groups.filter(
+                name=WdaeUser.SUPERUSER_GROUP
+            ).exists()
+            if user.is_staff != should_be_staff:
+                user.is_staff = should_be_staff
+                user.save()
+
+
+def group_post_delete(sender, **kwargs):
+    """Automatically remove staff privileges of users who belonged to the
+    SUPERUSER_GROUP group if that group is deleted.
+    """
+    if "instance" not in kwargs:
+        return
+    group = kwargs["instance"]
+    if group.name != WdaeUser.SUPERUSER_GROUP:
+        return
+    if not hasattr(group, "_user_ids"):
+        return
+
+    with transaction.atomic():
+        for user in WdaeUser.objects.filter(pk__in=group._user_ids).all():
+            user.is_staff = False
+            user.save()
+
+
+# a hack to save the users the group had, used in the post_delete signal
+def group_pre_delete(sender, **kwargs):
+    """When deleting a group, attaches the ids of the users who belonged to it
+    in order to be used in the post_delete signal. Used only for the
+    SUPERUSER_GROUP group.
+    """
+    if "instance" not in kwargs:
+        return
+    group = kwargs["instance"]
+    if group.name == WdaeUser.SUPERUSER_GROUP:
+        group._user_ids = [u.pk for u in group.user_set.all()]
+
+
+m2m_changed.connect(staff_update, WdaeUser.groups.through, weak=False)
+post_delete.connect(group_post_delete, Group, weak=False)
+pre_delete.connect(group_pre_delete, Group, weak=False)

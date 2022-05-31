@@ -1,58 +1,35 @@
 import json
-from datetime import timedelta
-from functools import wraps
-
+import django.contrib.auth
 from django.db import IntegrityError
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import BaseUserManager
-from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.conf import settings
 from django.http.response import StreamingHttpResponse
 from django.db.models import Q
-import django.contrib.auth
 
-from rest_framework.decorators import action
-from rest_framework import status
-from rest_framework.decorators import api_view
+from rest_framework.decorators import action, api_view, authentication_classes
+from rest_framework import status, viewsets, permissions, filters
 from rest_framework.response import Response
-from rest_framework.decorators import authentication_classes
-from rest_framework import viewsets
 from rest_framework.authentication import SessionAuthentication
-from rest_framework import permissions
-from rest_framework import filters
 
-from utils.logger import log_filter, LOGGER, request_logging
-from utils.logger import request_logging_function_view
+from utils.logger import log_filter, LOGGER, request_logging, \
+    request_logging_function_view
 from utils.email_regex import is_email_valid
 from utils.password_requirements import is_password_valid
 from utils.streaming_response_util import convert
 
 from .authentication import SessionAuthenticationWithUnauthenticatedCSRF
 from .models import VerificationPath, AuthenticationLog
-from .serializers import UserSerializer
-from .serializers import UserWithoutEmailSerializer
+from .serializers import UserSerializer, UserWithoutEmailSerializer
 
-from django.utils import timezone
-
-
-LOCKOUT_THRESHOLD = 4
-
-
-def csrf_clear(view_func):
-    """
-    Skips the CSRF checks by setting the 'csrf_processing_done' to true.
-    """
-
-    def wrapped_view(*args, **kwargs):
-        request = args[0]
-        request.csrf_processing_done = True
-        return view_func(*args, **kwargs)
-
-    return wraps(view_func)(wrapped_view)
+from .utils import LOCKOUT_THRESHOLD, csrf_clear
 
 
 def iterator_to_json(users):
+    """Wraps an iterator over WdaeUser models to produce json objects
+    using the appropriate serializer.
+    """
     yield "["
     curr = next(users, None)
     post = next(users, None)
@@ -71,39 +48,6 @@ def iterator_to_json(users):
         post = next(users, None)
     yield "]"
     return 0
-
-
-def is_user_locked_out(email: str):
-    last_login = AuthenticationLog.get_last_login_for(email)
-    return (last_login is not None
-            and last_login.failed_attempt > LOCKOUT_THRESHOLD)
-
-
-def get_remaining_lockout_time(email: str):
-    last_login = AuthenticationLog.get_last_login_for(email)
-    current_time = timezone.now().replace(microsecond=0)
-    lockout_time = pow(2, last_login.failed_attempt - LOCKOUT_THRESHOLD)
-    return (
-        - (current_time - last_login.time)
-        + timedelta(minutes=lockout_time)
-    ).total_seconds()
-
-
-def log_authentication_attempt(email: str, failed: bool):
-    last_login = AuthenticationLog.get_last_login_for(email)
-
-    if failed:
-        failed_attempt = last_login.failed_attempt if last_login else 0
-        failed_attempt += 1
-    else:
-        failed_attempt = 0
-
-    login_attempt = AuthenticationLog(
-        email=email,
-        time=timezone.now().replace(microsecond=0),
-        failed_attempt=failed_attempt
-    )
-    login_attempt.save()
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -176,17 +120,6 @@ class UserViewSet(viewsets.ModelViewSet):
             status=status.HTTP_200_OK,
             content_type="text/event-stream",
         )
-
-    @request_logging(LOGGER)
-    @action(detail=True, methods=["post"])
-    def password_reset(self, request, pk=None):
-        self.check_permissions(request)
-        user = get_object_or_404(get_user_model(), pk=pk)
-
-        user.reset_password(by_admin=True)
-        user.deauthenticate()
-
-        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 @request_logging_function_view(LOGGER)
@@ -318,9 +251,11 @@ def login(request):
     if userfound:
         assert len(userfound) == 1
         user_email = userfound[0].email
-        if is_user_locked_out(user_email):
+        if AuthenticationLog.is_user_locked_out(user_email):
             # check if still locked out
-            remaining_time = get_remaining_lockout_time(user_email)
+            remaining_time = AuthenticationLog.get_remaining_lockout_time(
+                user_email
+            )
             if remaining_time > 0:
                 return Response(
                     {"lockout_time": remaining_time},
@@ -334,7 +269,9 @@ def login(request):
             username=user_email, password=password
         )
         if user is None or not user.is_active:
-            log_authentication_attempt(user_email, failed=True)
+            AuthenticationLog.log_authentication_attempt(
+                user_email, failed=True
+            )
             last_login = AuthenticationLog.get_last_login_for(user_email)
             failed_attempt = last_login.failed_attempt
 
@@ -348,7 +285,7 @@ def login(request):
 
         django.contrib.auth.login(request, user)
         LOGGER.info(log_filter(request, "login success: " + str(username)))
-        log_authentication_attempt(user_email, failed=False)
+        AuthenticationLog.log_authentication_attempt(user_email, failed=False)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     LOGGER.info(log_filter(request, "login failure: " + str(username)))

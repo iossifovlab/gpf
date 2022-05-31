@@ -10,9 +10,6 @@ from dae.studies.study import GenotypeData
 from django.contrib.auth.models import Group
 from django.utils.encoding import force_str
 
-from guardian.shortcuts import get_groups_with_perms
-from guardian.shortcuts import assign_perm
-
 
 logger = logging.getLogger(__name__)
 
@@ -114,8 +111,8 @@ def _user_has_permission_strict(user, dataset):
     if user.is_superuser or user.is_staff:
         return True
 
-    # if get_anonymous_user().has_perm("datasets_api.view", dataset):
-    #     return True
+    if not user.is_active:
+        return False
 
     user_groups = get_user_groups(user)
     if "admin" in user_groups:
@@ -125,10 +122,7 @@ def _user_has_permission_strict(user, dataset):
     if 'any_user' in dataset_groups:
         return True
 
-    if not bool(user_groups & dataset_groups):
-        return False
-
-    return user.has_perm("datasets_api.view", dataset)
+    return bool(user_groups & dataset_groups)
 
 
 def _user_has_permission_up(user, dataset):
@@ -245,7 +239,7 @@ def add_group_perm_to_user(group_name, user):
 def add_group_perm_to_dataset(group_name, dataset_id):
     dataset, _created = Dataset.objects.get_or_create(dataset_id=dataset_id)
     group, _created = Group.objects.get_or_create(name=group_name)
-    assign_perm("view", group, dataset)
+    dataset.groups.add(group)
 
 
 def get_user_groups(user):
@@ -255,7 +249,7 @@ def get_user_groups(user):
 def get_dataset_groups(dataset):
     if not isinstance(dataset, Dataset):
         dataset = Dataset.objects.get(dataset_id=force_str(dataset))
-    return {g.name for g in get_groups_with_perms(dataset)}
+    return {g.name for g in dataset.groups.all()}
 
 
 def handle_partial_permissions(user, dataset_id: str, request_data: dict):

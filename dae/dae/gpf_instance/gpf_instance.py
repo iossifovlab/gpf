@@ -255,6 +255,9 @@ class GPFInstance:
     def register_genotype_data(self, genotype_data):
         self._variants_db.register_genotype_data(genotype_data)
 
+    def unregister_genotype_data(self, genotype_data):
+        self._variants_db.unregister_genotype_data(genotype_data)
+
     # Phenotype data
     def get_phenotype_db_config(self):
         return self._pheno_db.config

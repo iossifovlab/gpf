@@ -1,5 +1,4 @@
 import logging
-import os
 from typing import Optional, List, Dict
 from threading import Lock
 
@@ -304,10 +303,7 @@ def load_gpf_instance():
 def reload_datasets(gpf_instance):
     from datasets_api.models import Dataset
     for genotype_data_id in gpf_instance.get_genotype_data_ids():
-        # study_wrapper = gpf_instance.get_wdae_wrapper(genotype_data_id)
-        Dataset.recreate_dataset_perm(
-            genotype_data_id,  # study_wrapper.config.studies
-        )
+        Dataset.recreate_dataset_perm(genotype_data_id)
 
         genotype_data = gpf_instance.get_genotype_data(genotype_data_id)
         if genotype_data is None:
@@ -318,9 +314,7 @@ def reload_datasets(gpf_instance):
         for study_id in genotype_data.get_studies_ids(leaves=False):
             if study_id is None:
                 continue
-            Dataset.recreate_dataset_perm(
-                study_id,  # study_wrapper.config.studies
-            )
+            Dataset.recreate_dataset_perm(study_id)
 
 
 def _recreated_dataset_perm():
