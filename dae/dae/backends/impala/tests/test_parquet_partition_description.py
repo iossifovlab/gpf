@@ -162,12 +162,16 @@ def test_parquet_coding_bin(
         )
 
 
-def test_variant_filename_basedir():
-    filename = \
-        "region_bin=1_0/frequency_bin=1/coding_bin=1/family_bin=0/" \
-        "variants_region_bin_1_0_frequency_bin_1_coding_bin_1_family_bin_0" \
-        ".parquet"
+@pytest.mark.parametrize("filename", [
+    "region_bin=1_0/frequency_bin=1/coding_bin=1/family_bin=0/"
+    "variants_region_bin_1_0_frequency_bin_1_coding_bin_1_family_bin_0"
+    ".parquet",
 
+    "region_bin=1_0/frequency_bin=1/coding_bin=1/family_bin=0/"
+    "variants_region_bin_1_0_frequency_bin_1_coding_bin_1_family_bin_0"
+    "_bucket_index_0.parquet",
+])
+def test_variant_filename_basedir(filename):
     pd = ParquetPartitionDescriptor(
         ["1"], 30_000_000,
         family_bin_size=10,
