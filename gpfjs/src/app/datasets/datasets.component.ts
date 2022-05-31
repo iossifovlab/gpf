@@ -97,7 +97,7 @@ export class DatasetsComponent implements OnInit, OnDestroy {
         this.router.navigate(['/', 'datasets', this.selectedDataset.id]);
       }
     } else {
-      const url = this.router.url.split('/');
+      const url = this.router.url.split('?')[0].split('/');
       const toolName = url[url.indexOf('datasets') + 2];
 
       if (!this.isToolEnabled(this.selectedDataset, toolName)) {
@@ -136,7 +136,7 @@ export class DatasetsComponent implements OnInit, OnDestroy {
   }
 
   private isToolSelected(): boolean {
-    return this.router.url.split('/').some(str => Object.values(toolPageLinks).includes(str));
+    return this.router.url.split('?')[0].split('/').some(str => Object.values(toolPageLinks).includes(str));
   }
 
   public findFirstTool(selectedDataset: Dataset): string {
