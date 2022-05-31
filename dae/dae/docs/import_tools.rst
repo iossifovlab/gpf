@@ -62,7 +62,7 @@ Import Tools configuration format
     processing_config:
         vcf: single_bucket
         (OR)
-        vcf: bucket_by_chromsome
+        vcf: chromsome
         (OR):
         vcf:
             chromosomes: ['chr1', 'chr2', 'chr3', ..., 'chr22', 'chrX', 'chrY']
