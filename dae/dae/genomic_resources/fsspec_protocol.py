@@ -34,8 +34,7 @@ class FsspecReadOnlyProtocol(ReadOnlyRepositoryProtocol):
     def __init__(
             self, proto_id: str,
             root_url: Union[str, pathlib.Path],
-            filesystem: fsspec.AbstractFileSystem,
-            **kwargs):
+            filesystem: fsspec.AbstractFileSystem):
 
         super().__init__(proto_id)
 

@@ -6,7 +6,7 @@ import logging
 import datetime
 import enum
 from typing import List, Optional, Tuple, Dict, Any
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass, asdict, field
 
 import abc
 import yaml
@@ -108,7 +108,7 @@ def find_genomic_resource_files_helper(
             yield "/".join(nxt), fsize, ftimestamp
 
 
-def _scan_content_dict_for_genomic_resources(content_dict, parent_id):  # NOSONAR
+def _scan_content_dict_for_genomic_resources(content_dict, parent_id):
     resources_counter = 0
     unused_dirs = set([])
 
@@ -135,9 +135,9 @@ def _scan_content_dict_for_genomic_resources(content_dict, parent_id):  # NOSONA
 
             # scan children
             dir_resource_counter = 0
-            for resource_id, version in _scan_content_dict_for_genomic_resources(
+            for res_id, res_ver in _scan_content_dict_for_genomic_resources(
                     content, curr_id):
-                yield resource_id, version
+                yield res_id, res_ver
                 resources_counter += 1
                 dir_resource_counter += 1
             if dir_resource_counter == 0:
@@ -169,7 +169,7 @@ class ManifestEntry:
     """Provides an entry into manifest object"""
     name: str
     size: int
-    time: str
+    time: Optional[str] = field(compare=False)
     md5: Optional[str]
 
     def get_timestamp(self) -> int:

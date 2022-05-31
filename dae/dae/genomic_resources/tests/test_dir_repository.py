@@ -1,3 +1,5 @@
+# pylint: disable=C0114,C0116
+
 import pathlib
 
 from dae.genomic_resources.embeded_repository import GenomicResourceEmbededRepo
@@ -49,7 +51,7 @@ def test_dir_repository(tmp_path):
 
     for filename, _size, _mod_time in dir_resource.get_manifest().get_files():
         path = dirname / filename
-        path.touch()
+        path.write_bytes(b"")
 
     dir_manifest = dir_repo.build_manifest(dir_resource)
 
@@ -88,7 +90,7 @@ def test_dir_repository_resource_update(tmp_path):
         dir_repo1._get_resource_dir(gr1))  # pylint: disable=protected-access
     for filename, _size, _mod_time in gr1.get_manifest().get_files():
         path = dirname / filename
-        path.touch()
+        path.write_bytes(b"")
 
     dir_repo1.save_manifest(gr1, dir_repo1.build_manifest(gr1))
 

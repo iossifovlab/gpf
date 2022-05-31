@@ -16,7 +16,7 @@ def repo_helper(tmp_path):
     demo_gtf_content = "TP53\tchr3\t300\t200"
     src_repo = GenomicResourceEmbededRepo("src", content={
         "one": {
-            GR_CONF_FILE_NAME: ["", "2021-11-20T00:00:56+00:00"],  # NOSONAR
+            GR_CONF_FILE_NAME: ["", "2021-11-20T00:00:56+00:00"],
             "data.txt": ["alabala", "2021-11-20T00:00:56+00:00"],
         },
         "sub": {
@@ -38,10 +38,10 @@ def test_cli_index_simple(repo_helper):
     """Test grr_manage index simple invocation."""
     dir_repo = repo_helper.repo
 
-    res = dir_repo.get_resource("sub/two")  # NOSONAR
+    res = dir_repo.get_resource("sub/two")
     for fname, _, _ in dir_repo.collect_resource_files(res):
         filepath = dir_repo.get_filepath(res, fname)
-        filepath.touch()
+        filepath.write_bytes(b"")
 
     assert not repo_helper.check_manifest_timestamps(res)
 
@@ -54,10 +54,10 @@ def test_cli_index_with_dry_run(repo_helper):
     """Test grr_manage index with dry_run invocation."""
     dir_repo = repo_helper.repo
 
-    res = dir_repo.get_resource("sub/two")  # NOSONAR
+    res = dir_repo.get_resource("sub/two")
     for fname, _, _ in dir_repo.collect_resource_files(res):
         filepath = dir_repo.get_filepath(res, fname)
-        filepath.touch()
+        filepath.write_bytes(b"")
     assert not repo_helper.check_manifest_timestamps(res)
 
     _run_index_command(dir_repo, dry_run=True)

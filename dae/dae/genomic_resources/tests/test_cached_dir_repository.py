@@ -84,7 +84,7 @@ def test_caching_dir_repository_resource_update(tmp_path):
         "sub": {
             "two[1.0]": {
                 GR_CONF_FILE_NAME: [
-                    "",
+                    "alabala",
                     "2022-05-25T12:19:47+00:00"
                 ],
             }
@@ -110,7 +110,7 @@ def test_caching_dir_repository_resource_update(tmp_path):
         dir_repo._get_resource_dir(res))  # pylint: disable=protected-access
     for entry in res.get_manifest():
         path = dirname / entry.name
-        path.touch()
+        path.write_bytes(b"")
 
     dir_repo.save_manifest(res, dir_repo.build_manifest(res))
 
