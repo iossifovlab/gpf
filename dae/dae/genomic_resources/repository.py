@@ -69,7 +69,7 @@ def version_tuple_to_suffix(version):
     """Transforms version token into string."""
     if version == (0,):
         return ""
-    return "(" + ".".join(map(str, version)) + ")"
+    return f"({'.'.join(map(str, version))})"
 
 
 VERSION_CONSTRAINT_RE = re.compile(r"(>=|=)?(\d+(?:\.\d+)*)")
@@ -392,7 +392,7 @@ class ReadOnlyRepositoryProtocol(abc.ABC):
     def __init__(self, proto_id: str):
         self.proto_id = proto_id
 
-    def mode(self):
+    def mode(self):  # pylint: disable=no-self-use
         """Returns protocol model."""
         return Mode.READONLY
 
