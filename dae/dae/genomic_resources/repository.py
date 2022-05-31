@@ -73,7 +73,7 @@ def is_version_constraint_satisfied(version_constraint, version):
     match = VERSION_CONSTRAINT_RE.fullmatch(version_constraint)
     if not match:
         raise ValueError(
-            f'Bad sintax of version constraint {version_constraint}')
+            f"Bad sintax of version constraint {version_constraint}")
     operator = match[1] if match[1] else ">="
     constraint_version = tuple(map(int, match[2].split(".")))
     if operator == "=":
@@ -164,6 +164,28 @@ def find_genomic_resources_helper(content_dict, parent_id=None):
         content_dict, parent_id)
 
 
+def timestamp_from_isoformatted(isoformatted: Optional[str]) -> Optional[int]:
+    """Returns UNIX timestamp corresponding to entry time."""
+    if isoformatted is None:
+        return None
+
+    return int(datetime.datetime.fromisoformat(
+        isoformatted).timestamp())
+
+
+def isoformatted_from_timestamp(timestamp: float) -> str:
+    """Produces ISO formatted date-time from python time.time().
+
+    Uses integer precicsion, i.e. the timestamp is converted to int.
+    """
+    return datetime.datetime.fromtimestamp(
+        int(timestamp), datetime.timezone.utc).isoformat()
+
+
+def isoformatted_from_datetime(timestamp: datetime.datetime) -> str:
+    return isoformatted_from_timestamp(timestamp.timestamp())
+
+
 @dataclass(order=True)
 class ManifestEntry:
     """Provides an entry into manifest object"""
@@ -172,8 +194,11 @@ class ManifestEntry:
     time: Optional[str] = field(compare=False)
     md5: Optional[str]
 
-    def get_timestamp(self) -> int:
+    def get_timestamp(self) -> Optional[int]:
         """Returns UNIX timestamp corresponding to entry time."""
+        if self.time is None:
+            return None
+
         return int(datetime.datetime.fromisoformat(
             self.time).timestamp())
 
@@ -184,7 +209,18 @@ class ManifestEntry:
         Uses integer precicsion, i.e. the timestamp is converted to int.
         """
         return datetime.datetime.fromtimestamp(
-                int(timestamp), datetime.timezone.utc).isoformat()
+            int(timestamp), datetime.timezone.utc).isoformat()
+
+
+@dataclass(order=True)
+class ResourceFileState:
+    resource_id: str
+    version: str
+    filename: str
+    size: int
+    timestamp: str
+    md5: str
+
 
 class Manifest:
     """Provides genomic resource manifest object."""
@@ -209,7 +245,7 @@ class Manifest:
             result.entries[entry.name] = entry
         return result
 
-    def get_files(self) -> List[Tuple[str, int, str]]:
+    def get_files(self) -> List[Tuple[str, int, Optional[str]]]:
         return [
             (entry.name, entry.size, entry.time)
             for entry in self.entries.values()
@@ -394,7 +430,7 @@ class RepositoryProtocol(abc.ABC):
 
     @abc.abstractmethod
     def open_tabix_file(
-            self, resource,  filename, index_filename=None):
+            self, resource, filename, index_filename=None):
         """
         Open a tabix file in a resource and return a pysam tabix file object.
 
@@ -421,6 +457,7 @@ class ReadOnlyRepositoryProtocol(RepositoryProtocol):
 
     def mode(self):
         return Mode.READWRITE
+
 
 class ReadWriteRepositoryProtocol(RepositoryProtocol):
 
@@ -525,7 +562,7 @@ class GenomicResourceRealRepo(GenomicResourceRepo):
 
     @abc.abstractmethod
     def open_tabix_file(
-            self, resource,  filename, index_filename=None):
+            self, resource, filename, index_filename=None):
         """
         Open a tabix file in a resource and return a pysam tabix file object.
 

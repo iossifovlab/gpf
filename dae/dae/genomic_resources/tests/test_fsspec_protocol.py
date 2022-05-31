@@ -1,3 +1,5 @@
+# pylint: disable=redefined-outer-name,C0114,C0116,protected-access
+
 import os
 import gzip
 import pytest
@@ -10,31 +12,30 @@ from dae.genomic_resources.embeded_repository import \
 from dae.genomic_resources.dir_repository import GenomicResourceDirRepo
 from dae.genomic_resources.fsspec_protocol import FsspecReadWriteProtocol
 
-# pylint: disable=redefined-outer-name
 
 @pytest.fixture
 def dir_repo(tmp_path):
     """Build directory repository fixture."""
-
     demo_gtf_content = "TP53\tchr3\t300\t200"
     src_repo = GenomicResourceEmbededRepo("src", content={
         "one": {
             GR_CONF_FILE_NAME: "",
-            "data.txt": "alabala"  # NOSONAR
+            "data.txt": "alabala"
         },
         "sub": {
             "two": {
                 GR_CONF_FILE_NAME: ["type: gene_models\nfile: genes.gtf",
-                                    '2021-11-20T00:00:56'],
-                "genes.txt": demo_gtf_content
+                                    "2021-11-20T00:00:56"],
+                "genes.gtf": demo_gtf_content
             }
         }
     })
-    repo = GenomicResourceDirRepo('dir', directory=tmp_path)
+    repo = GenomicResourceDirRepo("dir", directory=tmp_path)
     repo.store_all_resources(src_repo)
     repo.build_repo_content()
 
     return repo
+
 
 @pytest.fixture
 def fsspec_proto(dir_repo, s3):
@@ -54,8 +55,8 @@ def fsspec_proto(dir_repo, s3):
 
                 for fname in files:
                     root_rel = os.path.relpath(root, dir_repo.directory)
-                    if root_rel == '.':
-                        root_rel = ''
+                    if root_rel == ".":
+                        root_rel = ""
                     s3.put(
                         os.path.join(root, fname),
                         os.path.join(s3_path, root_rel, fname))
@@ -81,6 +82,18 @@ def test_fsspec_proto_simple(fsspec_proto, filesystem):
     "local",
     "s3",
 ])
+def test_fsspec_proto_state_directory_exists(fsspec_proto, filesystem):
+    proto = fsspec_proto(filesystem)
+
+    assert proto.state_path.endswith(".grr")
+    assert proto.filesystem.exists(proto.state_path)
+    assert proto.filesystem.isdir(proto.state_path)
+
+
+@pytest.mark.parametrize("filesystem", [
+    "local",
+    "s3",
+])
 def test_fsspec_proto_resource_paths(fsspec_proto, filesystem):
     """Tests resource paths."""
     proto = fsspec_proto(filesystem)
@@ -94,6 +107,24 @@ def test_fsspec_proto_resource_paths(fsspec_proto, filesystem):
         res, "genomic_resource.yaml")
     assert os.path.relpath(config_path, proto.root_path) == \
         "one/genomic_resource.yaml"
+
+
+@pytest.mark.parametrize("filesystem", [
+    "local",
+    "s3",
+])
+def test_build_resource_file_state(fsspec_proto, filesystem):
+    proto = fsspec_proto(filesystem)
+
+    res = proto.get_resource("one")
+    state = proto.build_resource_file_state(res, "data.txt")
+    assert state.resource_id == "one"
+    assert state.version == "0"
+
+    res = proto.get_resource("sub/two")
+    state = proto.build_resource_file_state(res, "genes.gtf")
+    assert state.resource_id == "sub/two"
+    assert state.version == "0"
 
 
 @pytest.mark.parametrize("filesystem", [
@@ -145,6 +176,7 @@ def test_open_raw_file_text_read(fsspec_proto, filesystem):
     with proto.open_raw_file(res, "data.txt", mode="rt") as infile:
         content = infile.read()
         assert content == "alabala"
+
 
 @pytest.mark.parametrize("filesystem", [
     "local",
@@ -220,9 +252,9 @@ def test_compute_md5_sum(fsspec_proto, filesystem):
     res = proto.get_resource("one")
 
     assert proto.compute_md5_sum(res, "data.txt") == \
-         "c1cfdaf7e22865b29b8d62a564dc8f23"
+        "c1cfdaf7e22865b29b8d62a564dc8f23"
     assert proto.compute_md5_sum(res, "genomic_resource.yaml") == \
-         "d41d8cd98f00b204e9800998ecf8427e"
+        "d41d8cd98f00b204e9800998ecf8427e"
 
 
 @pytest.mark.parametrize("filesystem", [
@@ -370,7 +402,7 @@ def test_delete_manifest_entry(fsspec_proto, filesystem):
     assert proto.filesystem.exists(entry_filename)
 
     # When
-    proto._delete_manifest_entry(res, entry)  # pylint: disable=protected-access
+    proto._delete_manifest_entry(res, entry)
 
     # Then
     assert not proto.filesystem.exists(entry_filename)

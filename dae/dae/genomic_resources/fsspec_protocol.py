@@ -17,12 +17,14 @@ from dae.genomic_resources.repository import Manifest, \
     ReadOnlyRepositoryProtocol, \
     Mode, \
     ManifestEntry, \
+    ResourceFileState, \
     GenomicResource, \
     find_genomic_resources_helper, \
     find_genomic_resource_files_helper, \
     is_version_constraint_satisfied, \
     GR_MANIFEST_FILE_NAME, \
-    GR_CONTENTS_FILE_NAME
+    GR_CONTENTS_FILE_NAME, \
+    isoformatted_from_datetime
 
 
 logger = logging.getLogger(__name__)
@@ -45,9 +47,14 @@ class FsspecReadOnlyProtocol(ReadOnlyRepositoryProtocol):
         self.scheme = url.scheme
         self.location = url.netloc
         self.root_path = os.path.join(self.location, url.path)
+        self.state_path = os.path.join(self.root_path, ".grr")
 
         self.filesystem = filesystem
         self.filesystem.makedirs(self.root_path, exist_ok=True)
+        self.filesystem.makedirs(self.state_path, exist_ok=True)
+        self.filesystem.touch(
+            os.path.join(self.state_path, ".keep"), exist_ok=True)
+
         self._all_resources: Optional[List[GenomicResource]] = None
 
     def get_all_resources(self):
@@ -187,15 +194,9 @@ class FsspecReadWriteProtocol(
 
         return os.path.relpath(parent, relative)
 
-    def _get_resource_file_timestamp(self, res, filename):
-        filepath = self.get_resource_file_path(res, filename)
-        return self._get_filepath_timestamp(filepath)
-
     def _get_filepath_timestamp(self, filepath):
         modification = self.filesystem.modified(filepath)
-        timestamp = modification.timestamp()
-        filetime = ManifestEntry.convert_timestamp(timestamp)
-        return filetime
+        return isoformatted_from_datetime(modification)
 
     def collect_all_resources(self) -> Generator[GenomicResource, None, None]:
         """Returns generator for all resources managed by this protocol."""
@@ -245,6 +246,50 @@ class FsspecReadWriteProtocol(
             manifest = self.build_manifest(resource)
             self.save_manifest(resource, manifest)
             return manifest
+
+    def _get_resource_file_state_path(
+            self, resource: GenomicResource, filename: str) -> str:
+        """Returns filename of the rersource file state path."""
+        return os.path.join(
+            self.state_path,
+            resource.get_genomic_resource_id_version(),
+            filename)
+
+    def build_resource_file_state(
+            self, resource: GenomicResource,
+            filename: str,
+            **kwargs) -> ResourceFileState:
+        """Builds resource file state."""
+        md5sum = kwargs.get("md5sum")
+        if md5sum is None:
+            md5sum = self.compute_md5_sum(resource, filename)
+
+        filepath = self.get_resource_file_path(resource, filename)
+
+        timestamp = kwargs.get("timestamp")
+        if timestamp is None:
+            timestamp = self._get_filepath_timestamp(filepath)
+
+        size = kwargs.get("size")
+        if size is None:
+            fileinfo = self.filesystem.info(filepath)
+            size = int(fileinfo["size"])
+
+        return ResourceFileState(
+            resource.resource_id,
+            resource.get_version_str(),
+            filename,
+            size,
+            timestamp,
+            md5sum)
+
+    def save_resource_file_state(
+            self, state: ResourceFileState) -> None:
+        pass
+
+    def get_manifest_entry_state(
+            self, resource: GenomicResource, manifest_entry: ManifestEntry):
+        pass
 
     def _delete_manifest_entry(
             self, resource: GenomicResource, manifest_entry):
