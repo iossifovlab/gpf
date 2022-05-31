@@ -131,7 +131,6 @@ def test_build_resource_file_state(fsspec_proto, filesystem):
     assert state.resource_id == "one"
     assert state.version == "0"
     assert state.filename == "data.txt"
-    assert state.path.endswith("one/data.txt")
     assert state.timestamp == timestamp
     assert state.md5 == "c1cfdaf7e22865b29b8d62a564dc8f23"
 
@@ -142,7 +141,6 @@ def test_build_resource_file_state(fsspec_proto, filesystem):
     assert state.resource_id == "sub/two"
     assert state.version == "1.0"
     assert state.filename == "genes.gtf"
-    assert state.path.endswith("sub/two(1.0)/genes.gtf")
     assert state.timestamp == timestamp
     assert state.md5 == "d9636a8dca9e5626851471d1c0ea92b1"
 
@@ -168,7 +166,6 @@ def test_save_load_resource_file_state(fsspec_proto, filesystem):
     assert loaded.resource_id == "sub/two"
     assert loaded.version == "1.0"
     assert loaded.filename == "genes.gtf"
-    assert loaded.path.endswith("sub/two(1.0)/genes.gtf")
     assert loaded.timestamp == timestamp
     assert loaded.md5 == "d9636a8dca9e5626851471d1c0ea92b1"
 
@@ -471,7 +468,6 @@ def test_copy_resource_file(src_repo, fsspec_proto, filesystem):
     assert state.resource_id == "sub/two"
     assert state.version == "1.0"
     assert state.filename == "genes.gtf"
-    assert state.path.endswith("sub/two(1.0)/genes.gtf")
     assert state.timestamp == timestamp
     assert state.md5 == "d9636a8dca9e5626851471d1c0ea92b1"
 
@@ -502,6 +498,5 @@ def test_copy_resource(src_repo, fsspec_proto, filesystem):
     assert state.resource_id == "sub/two"
     assert state.version == "1.0"
     assert state.filename == "genes.gtf"
-    assert state.path.endswith("sub/two(1.0)/genes.gtf")
     assert state.timestamp == timestamp
     assert state.md5 == "d9636a8dca9e5626851471d1c0ea92b1"

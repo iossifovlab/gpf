@@ -5,7 +5,9 @@ import re
 import logging
 import datetime
 import enum
-from typing import List, Optional, Tuple, Dict, Any
+import hashlib
+
+from typing import List, Optional, Tuple, Dict, Any, Generator
 from dataclasses import dataclass, asdict, field
 
 import abc
@@ -225,7 +227,6 @@ class ResourceFileState:
     resource_id: str
     version: str
     filename: str
-    path: str
     size: int
     timestamp: str
     md5: str
@@ -343,14 +344,6 @@ class GenomicResource:
         """
         return f"{self.resource_id}{version_tuple_to_suffix(self.version)}"
 
-    # def get_files(self) -> List[Tuple[str, int, str]]:
-    #     """
-    #     Returns a list of tuples (filename,filesize,filetime) for each of
-    #     the files in the genomic resource.
-    #     Files and directories staring with "." are ignored.
-    #     """
-    #     return self.repo.get_files(self)
-
     def file_exists(self, filename):
         """
         Returns whether filename exists in this resource
@@ -393,19 +386,49 @@ class Mode(enum.Enum):
     READWRITE = 2
 
 
-class RepositoryProtocol(abc.ABC):
-    """Read only genomic resources repository protocol."""
+class ReadOnlyRepositoryProtocol(abc.ABC):
+    """Defines read only genomic resources repository protocol."""
 
     def __init__(self, proto_id: str):
         self.proto_id = proto_id
 
-    @abc.abstractmethod
     def mode(self):
         """Returns protocol model."""
+        return Mode.READONLY
 
     def get_id(self):
         """Returns the repository ID."""
         return self.proto_id
+
+    @abc.abstractmethod
+    def get_all_resources(self) -> Generator[GenomicResource, None, None]:
+        """Returns generator for all resources in the repository."""
+
+    def get_resource(
+            self, resource_id: str,
+            version_constraint: Optional[str] = None) -> GenomicResource:
+        """Returns requested resource or raises exception if not found.
+
+        In case resource is not found a FileNotFoundError exception
+        is raised."""
+
+        matching_resources: List[GenomicResource] = []
+        for res in self.get_all_resources():
+            if res.resource_id != resource_id:
+                continue
+            if is_version_constraint_satisfied(
+                    version_constraint, res.version):
+                matching_resources.append(res)
+        if not matching_resources:
+            raise FileNotFoundError(
+                f"resource {resource_id} ({version_constraint}) not found")
+
+        def get_resource_version(res: GenomicResource):
+            return res.version
+
+        return max(
+            matching_resources,
+            key=get_resource_version)
 
     def load_yaml(self, genomic_resource, filename):
         """Returns parsed YAML file."""
@@ -422,7 +445,7 @@ class RepositoryProtocol(abc.ABC):
                 uncompress=uncompress) as infile:
             return infile.read()
 
-    def get_manifest(self, resource):
+    def load_manifest(self, resource):
         """Loads resource manifest."""
         content = self.get_file_content(resource, GR_MANIFEST_FILE_NAME)
         return Manifest.from_file_content(content)
@@ -447,6 +470,22 @@ class RepositoryProtocol(abc.ABC):
         no support this method raise and exception.
         """
 
+    def compute_md5_sum(self, resource, filename):
+        """Computes a md5 hash for a file in the resource"""
+        logger.debug(
+            "compute md5sum for %s in %s", filename, resource.resource_id)
+
+        with self.open_raw_file(resource, filename, "rb") as infile:
+            md5_hash = hashlib.md5()
+            while chunk := infile.read(8192):
+                md5_hash.update(chunk)
+        return md5_hash.hexdigest()
+
+    def get_manifest(self, resource):
+        """Loads and returns a resource manifest."""
+        manifest = self.load_manifest(resource)
+        return manifest
+
     def build_genomic_resource(
             self, resource_id, version, config=None,
             manifest: Optional[Manifest] = None):
@@ -462,16 +501,149 @@ class RepositoryProtocol(abc.ABC):
         return resource
 
 
-class ReadOnlyRepositoryProtocol(RepositoryProtocol):
+class ReadWriteRepositoryProtocol(ReadOnlyRepositoryProtocol):
+    """Defines read write genomic resources repository protocol."""
 
     def mode(self):
         return Mode.READWRITE
 
+    @abc.abstractmethod
+    def collect_all_resources(self) -> Generator[GenomicResource, None, None]:
+        """Returns generator for all resources managed by this protocol."""
 
-class ReadWriteRepositoryProtocol(RepositoryProtocol):
+    @abc.abstractmethod
+    def collect_resource_entries(self, resource) -> List[ManifestEntry]:
+        """Scans the resource and resturn list of manifest entries."""
 
-    def mode(self):
-        return Mode.READWRITE
+    @abc.abstractmethod
+    def invalidate(self):
+        """Invalidates internal cache of genomic resources collection."""
+
+    def build_manifest(self, resource):
+        """Builds full manifest for the resource"""
+        manifest = Manifest()
+        for entry in self.collect_resource_entries(resource):
+            entry.md5 = self.compute_md5_sum(resource, entry.name)
+            manifest.add(entry)
+        return manifest
+
+    def save_manifest(self, resource, manifest: Manifest):
+        """Saves manifest into genomic resources directory."""
+
+        with self.open_raw_file(
+                resource, GR_MANIFEST_FILE_NAME, "wt") as outfile:
+            yaml.dump(manifest.to_manifest_entries(), outfile)
+        resource.refresh()
+
+    def get_manifest(self, resource):
+        """Loads or builds a resource manifest."""
+        try:
+            manifest = self.load_manifest(resource)
+            return manifest
+        except FileNotFoundError:
+            manifest = self.build_manifest(resource)
+            self.save_manifest(resource, manifest)
+            return manifest
+
+    @abc.abstractmethod
+    def get_resource_file_timestamp(
+            self, resource: GenomicResource, filename: str) -> str:
+        """Returns the timestamp (ISO formatted) of a resource file."""
+
+    @abc.abstractmethod
+    def get_resource_file_size(
+            self, resource: GenomicResource, filename: str) -> int:
+        """Return the size of a resource file."""
+
+    def build_resource_file_state(
+            self, resource: GenomicResource,
+            filename: str,
+            **kwargs) -> ResourceFileState:
+        """Builds resource file state."""
+        md5sum = kwargs.get("md5sum")
+        if md5sum is None:
+            md5sum = self.compute_md5_sum(resource, filename)
+
+        timestamp = kwargs.get("timestamp")
+        if timestamp is None:
+            timestamp = self.get_resource_file_timestamp(resource, filename)
+
+        size = kwargs.get("size")
+        if size is None:
+            size = self.get_resource_file_size(resource, filename)
+
+        return ResourceFileState(
+            resource.resource_id,
+            resource.get_version_str(),
+            filename,
+            size,
+            timestamp,
+            md5sum)
+
+    @abc.abstractmethod
+    def save_resource_file_state(
+            self, state: ResourceFileState) -> None:
+        """Saves resource file state into internal GRR state."""
+
+    @abc.abstractmethod
+    def load_resource_file_state(
+            self, resource: GenomicResource,
+            filename: str) -> Optional[ResourceFileState]:
+        """Loads resource file state from internal GRR state.
+
+        If the specified resource file has no internal state returns None."""
+
+    @abc.abstractmethod
+    def delete_resource_file(
+            self, resource: GenomicResource, filename: str):
+        """Deletes a resource file and it's internal state."""
+
+    @abc.abstractmethod
+    def copy_resource_file(
+            self,
+            remote_resource: GenomicResource,
+            dest_resource: GenomicResource,
+            filename: str):
+        """Copies a remote resource file into local repository."""
+
+    def copy_resource(
+            self,
+            remote_resource: GenomicResource):
+        """Copies a remote resource into repository."""
+
+        try:
+            local_resource = self.get_resource(
+                resource_id=remote_resource.resource_id,
+                version_constraint=f"={remote_resource.get_version_str()}")
+        except FileNotFoundError:
+            logger.info(
+                "resource %s (%s) not found in %s; creating...",
+                remote_resource.resource_id,
+                remote_resource.get_version_str(),
+                self.get_id())
+            local_resource = GenomicResource(
+                remote_resource.resource_id,
+                remote_resource.version,
+                self)  # type: ignore
+
+        for manifest_entry in remote_resource.get_manifest():
+            state = self.copy_resource_file(
+                remote_resource, local_resource, manifest_entry.name)
+            if manifest_entry.md5 != state.md5:
+                logger.error(
+                    "bad copy or inconsistent remote %s (%s): "
+                    "%s <> %s; cleaning up...",
+                    remote_resource.resource_id,
+                    remote_resource.get_version_str(),
+                    manifest_entry,
+                    state)
+                self.delete_resource_file(local_resource, state.filename)
+                raise IOError(
+                    f"bad copy or incosistent remote: "
+                    f"{manifest_entry} <> {state}")
+
+        self.save_manifest(local_resource, remote_resource.get_manifest())
+        self.invalidate()
 
 
 class GenomicResourceRepo(abc.ABC):
