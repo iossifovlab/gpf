@@ -2,17 +2,16 @@ import os
 import gzip
 import warnings
 import logging
-import numpy as np
-
 from typing import List, Optional, Dict, Any
 from contextlib import closing
 
-import pysam  # type: ignore
 import numpy as np
+
+import pysam  # type: ignore
 import pandas as pd
 
-from dae.utils.regions import Region
 import fsspec  # type: ignore
+from dae.utils.regions import Region
 from dae.utils import fs_utils
 
 from dae.genomic_resources.reference_genome import ReferenceGenome
@@ -231,11 +230,11 @@ class DenovoLoader(VariantsGenotypesLoader):
 
     @staticmethod
     def produce_genotype(
-        chrom: str,
-        pos: int,
-        genome: ReferenceGenome,
-        family: Family,
-        members_with_variant: List[str]) -> np.array:
+            chrom: str,
+            pos: int,
+            genome: ReferenceGenome,
+            family: Family,
+            members_with_variant: List[str]) -> np.ndarray:
 
         # TODO Add support for multiallelic variants
         # This method currently assumes biallelic variants
@@ -530,6 +529,8 @@ class DenovoLoader(VariantsGenotypesLoader):
                 *map(cls.split_location, raw_df[denovo_location])
             )
         else:
+            assert denovo_chrom is not None
+            assert denovo_pos is not None
             chrom_col = raw_df.loc[:, denovo_chrom]
             pos_col = raw_df.loc[:, denovo_pos]
 
@@ -547,6 +548,8 @@ class DenovoLoader(VariantsGenotypesLoader):
             pos_col, ref_col, alt_col = zip(*ref_alt_tuples)
 
         else:
+            assert denovo_ref is not None
+            assert denovo_alt is not None
             ref_col = raw_df.loc[:, denovo_ref]
             alt_col = raw_df.loc[:, denovo_alt]
 
@@ -1001,7 +1004,7 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
 
                             yield summary_variant, family_variants
                             summary_index += 1
-                        except:
+                        except Exception:
                             logger.error(
                                 "unable to process summary line: %s "
                                 "from %s: %s",

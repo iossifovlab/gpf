@@ -156,7 +156,8 @@ def test_multivcf_loader_fill_missing(
         "vcf_multi_loader_fill_in_mode": fill_mode,
     }
     multi_vcf_loader = VcfLoader(
-        families, multivcf_files, gpf_instance_2013.reference_genome, params=params
+        families, multivcf_files, gpf_instance_2013.reference_genome,
+        params=params
     )
 
     assert multi_vcf_loader is not None
@@ -427,7 +428,8 @@ def test_reset_regions_with_adjusted_chrom(simple_vcf_loader,
 #         "vcf_multi_loader_fill_in_mode": fill_mode,
 #     }
 #     multi_vcf_loader = VcfLoader(
-#         families, multivcf_files, gpf_instance_2013.reference_genome, params=params
+#         families, multivcf_files, gpf_instance_2013.reference_genome,
+#         params=params
 #     )
 
 #     assert multi_vcf_loader is not None

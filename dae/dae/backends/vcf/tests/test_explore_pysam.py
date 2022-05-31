@@ -1,5 +1,5 @@
 import pytest
-import pysam
+import pysam  # type: ignore
 
 
 @pytest.mark.parametrize(
