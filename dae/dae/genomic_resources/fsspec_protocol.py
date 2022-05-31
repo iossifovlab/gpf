@@ -99,9 +99,13 @@ class FsspecReadOnlyProtocol(ReadOnlyRepositoryProtocol):
         if not matching_resources:
             raise FileNotFoundError(
                 f"resource {resource_id} ({version_constraint}) not found")
-        return cast(
-            GenomicResource,
-            max(matching_resources, key=lambda gr: gr.version))  # type: ignore
+
+        def get_resource_version(res: GenomicResource):
+            return res.version
+
+        return max(
+            matching_resources,
+            key=get_resource_version)
 
     def get_resource_path(self, resource) -> str:
         """Returns directory pathlib.Path for specified resources."""

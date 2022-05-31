@@ -307,7 +307,7 @@ class GenomicResource:
     def __init__(self, resource_id, version, repo: GenomicResourceRealRepo,
                  config=None):
         self.resource_id = resource_id
-        self.version = version
+        self.version: Tuple[int, ...] = version
         self.config = config
         self.repo = repo
         self._manifest: Optional[Manifest] = None
