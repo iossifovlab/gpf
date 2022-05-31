@@ -180,7 +180,7 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
         src_modtime = manifest_entry.get_timestamp()
         assert dest_filepath.exists()
 
-        os.utime(dest_filepath, (src_modtime, src_modtime))
+        os.utime(dest_filepath, (src_modtime, src_modtime))  # type: ignore
         return manifest_entry
 
     def build_repo_content(self):
