@@ -72,7 +72,7 @@ def build_embedded_protocol(
     filesystem = MemoryFileSystem(skip_instance_cache=True)
 
     proto = FsspecReadWriteProtocol(
-        proto_id, "memory", "", "/test-repo", filesystem)
+        proto_id, "memory:///test-repo", filesystem)
 
     for rid, rver, rcontent in _scan_for_resources(content, []):
         resource = GenomicResource(rid, rver, proto)  # type: ignore

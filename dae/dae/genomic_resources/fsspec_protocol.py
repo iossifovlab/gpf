@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import os
 import re
-import pathlib
 import hashlib
 import logging
 
@@ -38,13 +37,12 @@ def build_fsspec_protocol(proto_id: str, root_url: str, **kwargs) -> Union[
 
     if url.scheme in {"file", ""}:
         filesystem = fsspec.implementations.local.LocalFileSystem()
-        root_path = os.path.join(url.netloc, url.path)
         return FsspecReadWriteProtocol(
-            proto_id, "file", "", root_path, filesystem)
+            proto_id, root_url, filesystem)
     elif url.scheme in {"s3"}:
         filesystem = kwargs.get("filesystem")
         return FsspecReadWriteProtocol(
-            proto_id, url.scheme, url.netloc, url.path, filesystem)
+            proto_id, root_url, filesystem)
     raise NotImplementedError(f"unsupported schema {url.scheme}")
 
 
@@ -53,21 +51,21 @@ class FsspecReadOnlyProtocol(ReadOnlyRepositoryProtocol):
 
     def __init__(
             self, proto_id: str,
-            schema: str,
-            netloc: str,
-            root_path: Union[str, pathlib.Path],
+            url: str,
             filesystem: fsspec.AbstractFileSystem):
 
         super().__init__(proto_id)
 
-        self.schema = schema
-        self.netloc = netloc
-        root_path = str(root_path)
-        if not root_path.startswith("/"):
-            root_path = f"/{root_path}"
-        self.root_path = root_path
+        parsed = urlparse(url)
+        self.schema = parsed.scheme
+        if self.schema == "":
+            self.schema = "file"
+        self.netloc = parsed.netloc
+        self.root_path = parsed.path
+        if not self.root_path.startswith("/"):
+            self.root_path = f"/{self.root_path}"
 
-        self.url = f"{self.schema}://{self.netloc}{root_path}"
+        self.url = f"{self.schema}://{self.netloc}{self.root_path}"
         self.state_url = os.path.join(self.url, ".grr")
 
         self.filesystem = filesystem
@@ -101,21 +99,21 @@ class FsspecReadOnlyProtocol(ReadOnlyRepositoryProtocol):
 
         yield from self._all_resources
 
-    def get_resource_path(self, resource) -> str:
-        """Returns directory pathlib.Path for specified resources."""
-        resource_path = os.path.join(
+    def get_resource_url(self, resource) -> str:
+        """Returns url for the specified resources."""
+        resource_url = os.path.join(
             self.url,
             resource.get_genomic_resource_id_version())
-        return resource_path
+        return resource_url
 
-    def get_resource_file_path(self, resource, filename: str) -> str:
-        """Returns full path for a file in a resource."""
-        path = os.path.join(
-            self.get_resource_path(resource), filename)
-        return path
+    def get_resource_file_url(self, resource, filename: str) -> str:
+        """Returns url for a file in the resource."""
+        url = os.path.join(
+            self.get_resource_url(resource), filename)
+        return url
 
     def file_exists(self, resource, filename) -> bool:
-        filepath = self.get_resource_file_path(resource, filename)
+        filepath = self.get_resource_file_url(resource, filename)
         return cast(bool, self.filesystem.exists(filepath))
 
     def load_manifest(self, resource):
@@ -126,7 +124,7 @@ class FsspecReadOnlyProtocol(ReadOnlyRepositoryProtocol):
     def open_raw_file(self, resource: GenomicResource, filename: str,
                       mode="rt", **kwargs):
 
-        filepath = self.get_resource_file_path(resource, filename)
+        filepath = self.get_resource_file_url(resource, filename)
         if "w" in mode:
             if self.mode() == Mode.READONLY:
                 raise IOError(
@@ -148,13 +146,13 @@ class FsspecReadOnlyProtocol(ReadOnlyRepositoryProtocol):
 
     def open_tabix_file(self, resource, filename,
                         index_filename=None):
-        file_path = self.get_resource_file_path(resource, filename)
-        index_path = None
+        file_url = self.get_resource_file_url(resource, filename)
+        index_url = None
         if index_filename:
-            index_path = str(self.get_resource_file_path(
+            index_url = str(self.get_resource_file_url(
                 resource, index_filename))
         return pysam.TabixFile(  # pylint: disable=no-member
-            file_path, index=index_path)
+            file_url, index=index_url)
 
 
 _RESOURCE_ID_WITH_VERSION_TOKEN_RE = re.compile(
@@ -294,8 +292,8 @@ class FsspecReadWriteProtocol(
 
     def get_resource_file_timestamp(
             self, resource: GenomicResource, filename: str) -> str:
-        path = self.get_resource_file_path(resource, filename)
-        return self._get_filepath_timestamp(path)
+        url = self.get_resource_file_url(resource, filename)
+        return self._get_filepath_timestamp(url)
 
     def _get_filepath_size(
             self, filepath: str) -> int:
@@ -304,7 +302,7 @@ class FsspecReadWriteProtocol(
 
     def get_resource_file_size(
             self, resource: GenomicResource, filename: str) -> int:
-        path = self.get_resource_file_path(resource, filename)
+        path = self.get_resource_file_url(resource, filename)
         return self._get_filepath_size(path)
 
     def save_resource_file_state(
@@ -345,7 +343,7 @@ class FsspecReadWriteProtocol(
     def delete_resource_file(
             self, resource: GenomicResource, filename: str):
         """Deletes a resource file and it's internal state."""
-        filepath = self.get_resource_file_path(resource, filename)
+        filepath = self.get_resource_file_url(resource, filename)
         if self.filesystem.exists(filepath):
             self.filesystem.delete(filepath)
 
@@ -362,7 +360,7 @@ class FsspecReadWriteProtocol(
         assert dest_resource.resource_id == remote_resource.resource_id
         assert dest_resource.repo == self
 
-        dest_filepath = self.get_resource_file_path(dest_resource, filename)
+        dest_filepath = self.get_resource_file_url(dest_resource, filename)
         dest_parent = os.path.dirname(dest_filepath)
         if not self.filesystem.exists(dest_parent):
             self.filesystem.mkdir(

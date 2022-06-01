@@ -54,7 +54,7 @@ def fsspec_proto(dir_repo, s3):
     def builder(filesystem="local"):
         if filesystem == "local":
             return FsspecReadWriteProtocol(
-                "test", "file", "", dir_repo.directory, LocalFileSystem())
+                "test", f"file://{dir_repo.directory}", LocalFileSystem())
 
         if filesystem == "s3":
             s3_path = "s3://test-bucket"
@@ -70,7 +70,7 @@ def fsspec_proto(dir_repo, s3):
                         os.path.join(s3_path, root_rel, fname))
 
             return FsspecReadWriteProtocol(
-                "test", "s3", "test-bucket", "", s3)
+                "test", "s3://test-bucket", s3)
         return None
 
     return builder
@@ -108,10 +108,10 @@ def test_resource_paths(fsspec_proto, filesystem):
 
     res = proto.get_resource("one")
 
-    res_path = proto.get_resource_path(res)
+    res_path = proto.get_resource_url(res)
     assert res_path.endswith("one")
 
-    config_path = proto.get_resource_file_path(
+    config_path = proto.get_resource_file_url(
         res, "genomic_resource.yaml")
     assert config_path.endswith("one/genomic_resource.yaml")
 
@@ -247,7 +247,7 @@ def test_open_raw_file_text_write_compression(fsspec_proto, filesystem):
 
     assert proto.file_exists(res, "new_data.txt.gz")
 
-    filepath = proto.get_resource_file_path(res, "new_data.txt.gz")
+    filepath = proto.get_resource_file_url(res, "new_data.txt.gz")
     with gzip.open(
             proto.filesystem.open(filepath), mode="rt") as infile:
         content = infile.read()
@@ -263,7 +263,7 @@ def test_open_raw_file_text_read_compression(fsspec_proto, filesystem):
 
     res = proto.get_resource("one")
 
-    filepath = proto.get_resource_file_path(res, "new_data.txt.gz")
+    filepath = proto.get_resource_file_url(res, "new_data.txt.gz")
     with proto.filesystem.open(
             filepath, mode="wt", compression="gzip") as outfile:
         outfile.write("new alabala")
@@ -344,7 +344,7 @@ def test_load_missing_manifest(fsspec_proto, filesystem):
 
     res = proto.get_resource("one")
 
-    manifest_filename = proto.get_resource_file_path(res, ".MANIFEST")
+    manifest_filename = proto.get_resource_file_url(res, ".MANIFEST")
     assert proto.filesystem.exists(manifest_filename)
 
     proto.filesystem.delete(manifest_filename)
@@ -386,7 +386,7 @@ def test_get_missing_manifest(fsspec_proto, filesystem):
 
     res = proto.get_resource("one")
 
-    manifest_filename = proto.get_resource_file_path(res, ".MANIFEST")
+    manifest_filename = proto.get_resource_file_url(res, ".MANIFEST")
     assert proto.filesystem.exists(manifest_filename)
 
     proto.filesystem.delete(manifest_filename)
@@ -418,7 +418,7 @@ def test_delete_resource_file(fsspec_proto, filesystem):
 
     res = proto.get_resource("sub/two")
 
-    path = proto.get_resource_file_path(res, "genes.gtf")
+    path = proto.get_resource_file_url(res, "genes.gtf")
     assert proto.filesystem.exists(path)
 
     # When
