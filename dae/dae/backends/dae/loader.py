@@ -2,7 +2,7 @@ import os
 import gzip
 import warnings
 import logging
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict, Any, Tuple
 from contextlib import closing
 
 import numpy as np
@@ -432,7 +432,7 @@ class DenovoLoader(VariantsGenotypesLoader):
             denovo_genotype: Optional[str] = None,
             denovo_sep: str = "\t",
             adjust_chrom_prefix=None,
-            **kwargs) -> pd.DataFrame:
+            **kwargs) -> Tuple[pd.DataFrame, Any]:
         """
         Read a text file containing variants in the form
         of delimiter-separted values and produce a dataframe.
