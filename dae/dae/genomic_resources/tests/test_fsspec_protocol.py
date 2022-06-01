@@ -54,22 +54,23 @@ def fsspec_proto(dir_repo, s3):
     def builder(filesystem="local"):
         if filesystem == "local":
             return FsspecReadWriteProtocol(
-                "test", dir_repo.directory, LocalFileSystem())
+                "test", "file", "", dir_repo.directory, LocalFileSystem())
 
         if filesystem == "s3":
             s3_path = "s3://test-bucket"
             for root, _, files in os.walk(dir_repo.directory):
-                print(files)
 
                 for fname in files:
                     root_rel = os.path.relpath(root, dir_repo.directory)
                     if root_rel == ".":
                         root_rel = ""
+
                     s3.put(
                         os.path.join(root, fname),
                         os.path.join(s3_path, root_rel, fname))
 
-            return FsspecReadWriteProtocol("test", s3_path, s3)
+            return FsspecReadWriteProtocol(
+                "test", "s3", "test-bucket", "", s3)
         return None
 
     return builder
@@ -80,8 +81,8 @@ def fsspec_proto(dir_repo, s3):
     "s3",
 ])
 def test_fsspec_proto_simple(fsspec_proto, filesystem):
-    """Simple test for fsspec local filesystem proto"""
     proto = fsspec_proto(filesystem)
+
     resources = list(proto.collect_all_resources())
     assert len(resources) == 2
 
@@ -90,31 +91,29 @@ def test_fsspec_proto_simple(fsspec_proto, filesystem):
     "local",
     "s3",
 ])
-def test_fsspec_proto_state_directory_exists(fsspec_proto, filesystem):
+def test_state_directory_exists(fsspec_proto, filesystem):
     proto = fsspec_proto(filesystem)
 
-    assert proto.state_path.endswith(".grr")
-    assert proto.filesystem.exists(proto.state_path)
-    assert proto.filesystem.isdir(proto.state_path)
+    assert proto.state_url.endswith(".grr")
+    assert proto.filesystem.exists(proto.state_url)
+    assert proto.filesystem.isdir(proto.state_url)
 
 
 @pytest.mark.parametrize("filesystem", [
     "local",
     "s3",
 ])
-def test_fsspec_proto_resource_paths(fsspec_proto, filesystem):
-    """Tests resource paths."""
+def test_resource_paths(fsspec_proto, filesystem):
     proto = fsspec_proto(filesystem)
 
     res = proto.get_resource("one")
 
     res_path = proto.get_resource_path(res)
-    assert os.path.relpath(res_path, proto.root_path) == "one"
+    assert res_path.endswith("one")
 
     config_path = proto.get_resource_file_path(
         res, "genomic_resource.yaml")
-    assert os.path.relpath(config_path, proto.root_path) == \
-        "one/genomic_resource.yaml"
+    assert config_path.endswith("one/genomic_resource.yaml")
 
 
 @pytest.mark.parametrize("filesystem", [
@@ -175,7 +174,6 @@ def test_save_load_resource_file_state(fsspec_proto, filesystem):
     "s3",
 ])
 def test_collect_resource_entries(fsspec_proto, filesystem):
-    """Test collection of resource entries."""
     proto = fsspec_proto(filesystem)
 
     res = proto.get_resource("one")
@@ -183,11 +181,11 @@ def test_collect_resource_entries(fsspec_proto, filesystem):
     entries = proto.collect_resource_entries(res)
     assert len(entries) == 2
 
-    entry = entries[0]
+    entry = entries["data.txt"]
     assert entry.name == "data.txt"
     assert entry.size == 7
 
-    entry = entries[1]
+    entry = entries["genomic_resource.yaml"]
     assert entry.name == "genomic_resource.yaml"
     assert entry.size == 0
 
@@ -197,7 +195,6 @@ def test_collect_resource_entries(fsspec_proto, filesystem):
     "s3",
 ])
 def test_file_exists(fsspec_proto, filesystem):
-    """Tests file_exists method."""
     proto = fsspec_proto(filesystem)
 
     res = proto.get_resource("one")
@@ -211,7 +208,6 @@ def test_file_exists(fsspec_proto, filesystem):
     "s3",
 ])
 def test_open_raw_file_text_read(fsspec_proto, filesystem):
-    """Test simple open with mode='rt'."""
     proto = fsspec_proto(filesystem)
 
     res = proto.get_resource("one")
@@ -226,7 +222,6 @@ def test_open_raw_file_text_read(fsspec_proto, filesystem):
     "s3",
 ])
 def test_open_raw_file_text_write(fsspec_proto, filesystem):
-    """Test simple open with mode='wt'."""
     proto = fsspec_proto(filesystem)
 
     res = proto.get_resource("one")
@@ -242,7 +237,6 @@ def test_open_raw_file_text_write(fsspec_proto, filesystem):
     "s3",
 ])
 def test_open_raw_file_text_write_compression(fsspec_proto, filesystem):
-    """Test open with mode='wt' and compression."""
     proto = fsspec_proto(filesystem)
 
     res = proto.get_resource("one")
@@ -265,7 +259,6 @@ def test_open_raw_file_text_write_compression(fsspec_proto, filesystem):
     "s3",
 ])
 def test_open_raw_file_text_read_compression(fsspec_proto, filesystem):
-    """Test open with mode='rt' and compression."""
     proto = fsspec_proto(filesystem)
 
     res = proto.get_resource("one")
@@ -288,8 +281,6 @@ def test_open_raw_file_text_read_compression(fsspec_proto, filesystem):
     "s3",
 ])
 def test_compute_md5_sum(fsspec_proto, filesystem):
-    """Test md5 sum computation."""
-
     proto = fsspec_proto(filesystem)
 
     res = proto.get_resource("one")
@@ -305,8 +296,6 @@ def test_compute_md5_sum(fsspec_proto, filesystem):
     "s3",
 ])
 def test_build_manifest(fsspec_proto, filesystem):
-    """Test build manifest."""
-
     proto = fsspec_proto(filesystem)
 
     res = proto.get_resource("one")
@@ -328,8 +317,6 @@ def test_build_manifest(fsspec_proto, filesystem):
     "s3",
 ])
 def test_load_manifest(fsspec_proto, filesystem):
-    """Test load manifest."""
-
     proto = fsspec_proto(filesystem)
 
     res = proto.get_resource("one")
@@ -353,8 +340,6 @@ def test_load_manifest(fsspec_proto, filesystem):
     "s3",
 ])
 def test_load_missing_manifest(fsspec_proto, filesystem):
-    """Test load missing manifest."""
-
     proto = fsspec_proto(filesystem)
 
     res = proto.get_resource("one")
@@ -374,8 +359,6 @@ def test_load_missing_manifest(fsspec_proto, filesystem):
     "s3",
 ])
 def test_get_manifest(fsspec_proto, filesystem):
-    """Test get manifest."""
-
     proto = fsspec_proto(filesystem)
 
     res = proto.get_resource("one")
@@ -399,8 +382,6 @@ def test_get_manifest(fsspec_proto, filesystem):
     "s3",
 ])
 def test_get_missing_manifest(fsspec_proto, filesystem):
-    """Test get missing manifest. The manifest should be recreated."""
-
     proto = fsspec_proto(filesystem)
 
     res = proto.get_resource("one")

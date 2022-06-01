@@ -42,7 +42,7 @@ def parse_gr_id_version_token(token):
     """
     Genomic Resource Id Version Token is a Genomic Resource Id Token with
     an optional version appened. If present, the version suffix has the
-    form "[3.3.2]". The default version is [0].
+    form "(3.3.2)". The default version is (0).
     Returns None if s in not a Genomic Resource Id Version. Otherwise
     returns token,version tupple
     """
@@ -306,12 +306,13 @@ class Manifest:
 class GenomicResource:
     """Base class for genomic resources."""
     def __init__(self, resource_id, version, repo: GenomicResourceRealRepo,
-                 config=None):
+                 config=None,
+                 manfiest: Optional[Manifest] = None):
         self.resource_id = resource_id
         self.version: Tuple[int, ...] = version
         self.config = config
         self.repo = repo
-        self._manifest: Optional[Manifest] = None
+        self._manifest: Optional[Manifest] = manfiest
 
     def refresh(self):
         """Clean up cached attributes like manifest, etc."""
@@ -495,8 +496,7 @@ class ReadOnlyRepositoryProtocol(abc.ABC):
             config = self.load_yaml(res, GR_CONF_FILE_NAME)
 
         resource = GenomicResource(
-            resource_id, version, self, config)  # type: ignore
-        resource._manifest = manifest  # pylint: disable=protected-access
+            resource_id, version, self, config, manifest)  # type: ignore
         return resource
 
 
@@ -511,8 +511,8 @@ class ReadWriteRepositoryProtocol(ReadOnlyRepositoryProtocol):
         """Returns generator for all resources managed by this protocol."""
 
     @abc.abstractmethod
-    def collect_resource_entries(self, resource) -> List[ManifestEntry]:
-        """Scans the resource and resturn list of manifest entries."""
+    def collect_resource_entries(self, resource) -> Manifest:
+        """Scans the resource and returns manifest with all files."""
 
     @abc.abstractmethod
     def invalidate(self):

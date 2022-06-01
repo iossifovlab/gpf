@@ -1,5 +1,8 @@
 """Provides GRR protocols based on fsspec library."""
+from __future__ import annotations
+
 import os
+import re
 import pathlib
 import hashlib
 import logging
@@ -12,22 +15,37 @@ import fsspec  # type: ignore
 import pysam
 import yaml
 
-from dae.genomic_resources.repository import Manifest, \
+from dae.genomic_resources.repository import GR_CONF_FILE_NAME, Manifest, \
     ReadWriteRepositoryProtocol, \
     ReadOnlyRepositoryProtocol, \
     Mode, \
     ManifestEntry, \
     ResourceFileState, \
-    GenomicResource, \
-    find_genomic_resources_helper, \
-    find_genomic_resource_files_helper, \
+    GenomicResource, isoformatted_from_datetime, \
+    isoformatted_from_timestamp, \
     version_string_to_suffix, \
     GR_CONTENTS_FILE_NAME, \
-    GR_MANIFEST_FILE_NAME, \
-    isoformatted_from_datetime
+    GR_MANIFEST_FILE_NAME
 
 
 logger = logging.getLogger(__name__)
+
+
+def build_fsspec_protocol(proto_id: str, root_url: str, **kwargs) -> Union[
+        FsspecReadOnlyProtocol, FsspecReadWriteProtocol]:
+    """Factory function for creation of different fsspec protocols."""
+    url = urlparse(root_url)
+
+    if url.scheme in {"file", ""}:
+        filesystem = fsspec.implementations.local.LocalFileSystem()
+        root_path = os.path.join(url.netloc, url.path)
+        return FsspecReadWriteProtocol(
+            proto_id, "file", "", root_path, filesystem)
+    elif url.scheme in {"s3"}:
+        filesystem = kwargs.get("filesystem")
+        return FsspecReadWriteProtocol(
+            proto_id, url.scheme, url.netloc, url.path, filesystem)
+    raise NotImplementedError(f"unsupported schema {url.scheme}")
 
 
 class FsspecReadOnlyProtocol(ReadOnlyRepositoryProtocol):
@@ -35,25 +53,28 @@ class FsspecReadOnlyProtocol(ReadOnlyRepositoryProtocol):
 
     def __init__(
             self, proto_id: str,
-            root_url: Union[str, pathlib.Path],
+            schema: str,
+            netloc: str,
+            root_path: Union[str, pathlib.Path],
             filesystem: fsspec.AbstractFileSystem):
 
         super().__init__(proto_id)
 
-        if isinstance(root_url, pathlib.Path):
-            root_url = str(root_url)
+        self.schema = schema
+        self.netloc = netloc
+        root_path = str(root_path)
+        if not root_path.startswith("/"):
+            root_path = f"/{root_path}"
+        self.root_path = root_path
 
-        url = urlparse(root_url)
-        self.scheme = url.scheme
-        self.location = url.netloc
-        self.root_path = os.path.join(self.location, url.path)
-        self.state_path = os.path.join(self.root_path, ".grr")
+        self.url = f"{self.schema}://{self.netloc}{root_path}"
+        self.state_url = os.path.join(self.url, ".grr")
 
         self.filesystem = filesystem
-        self.filesystem.makedirs(self.root_path, exist_ok=True)
-        self.filesystem.makedirs(self.state_path, exist_ok=True)
+        self.filesystem.makedirs(self.url, exist_ok=True)
+        self.filesystem.makedirs(self.state_url, exist_ok=True)
         self.filesystem.touch(
-            os.path.join(self.state_path, ".keep"), exist_ok=True)
+            os.path.join(self.state_url, ".keep"), exist_ok=True)
 
         self._all_resources: Optional[List[GenomicResource]] = None
 
@@ -65,7 +86,7 @@ class FsspecReadOnlyProtocol(ReadOnlyRepositoryProtocol):
         if self._all_resources is None:
             self._all_resources = []
             content_filename = os.path.join(
-                self.root_path, GR_CONTENTS_FILE_NAME)
+                self.url, GR_CONTENTS_FILE_NAME)
             contents = yaml.safe_load(self.filesystem.open(content_filename))
 
             for entry in contents:
@@ -82,14 +103,16 @@ class FsspecReadOnlyProtocol(ReadOnlyRepositoryProtocol):
 
     def get_resource_path(self, resource) -> str:
         """Returns directory pathlib.Path for specified resources."""
-        return os.path.join(
-            self.root_path,
+        resource_path = os.path.join(
+            self.url,
             resource.get_genomic_resource_id_version())
+        return resource_path
 
     def get_resource_file_path(self, resource, filename: str) -> str:
-        """Returns pathlib.Path for a file in a resource."""
-        return os.path.join(
+        """Returns full path for a file in a resource."""
+        path = os.path.join(
             self.get_resource_path(resource), filename)
+        return path
 
     def file_exists(self, resource, filename) -> bool:
         filepath = self.get_resource_file_path(resource, filename)
@@ -134,65 +157,138 @@ class FsspecReadOnlyProtocol(ReadOnlyRepositoryProtocol):
             file_path, index=index_path)
 
 
+_RESOURCE_ID_WITH_VERSION_TOKEN_RE = re.compile(
+    r"([a-zA-Z0-9/._-]+)(?:\(([1-9]\d*(?:\.\d+)*)\))?")
+
+
+def parse_resource_id_version(resource_path):
+    """
+    Genomic Resource Id Version Token is a Genomic Resource Id Token with
+    an optional version appened. If present, the version suffix has the
+    form "(3.3.2)". The default version is (0).
+    Returns None if s in not a Genomic Resource Id Version. Otherwise
+    returns token,version tupple
+    """
+    match = _RESOURCE_ID_WITH_VERSION_TOKEN_RE.fullmatch(resource_path)
+    if not match:
+        return None, None
+    token = match[1]
+    version_string = match[2]
+    if version_string:
+        version = tuple(map(int, version_string.split(".")))
+    else:
+        version = (0,)
+    return token, version
+
+
 class FsspecReadWriteProtocol(
         FsspecReadOnlyProtocol, ReadWriteRepositoryProtocol):
     """Provides fsspec genomic resources repository protocol."""
 
-    def _path_to_dict(self, parent: str, relative: Optional[str] = None):
-        if relative is None:
-            relative = parent
+    def _scan_path_for_resources(self, path_array):
 
-        if not self.filesystem.exists(parent):
-            return {}
-        elif self.filesystem.isdir(parent):
-            result = {}
-            for entry in self.filesystem.ls(parent, detail=True):
-                path = entry["name"]
-                if path.startswith(parent):
-                    path = os.path.relpath(path, parent)
+        url = os.path.join(self.url, *path_array)
+        path = os.path.join(self.root_path, *path_array)
+        assert isinstance(url, str)
 
-                if path in {".", ".."}:
-                    continue
-                if path.startswith("."):
-                    continue
-                result[path] = self._path_to_dict(entry["name"], parent)
-            return result
+        if not self.filesystem.isdir(url):
+            return
 
-        return os.path.relpath(parent, relative)
+        content = []
+        for direntry in self.filesystem.ls(url):
+            if self.netloc and direntry.startswith(self.netloc):
+                direntry = direntry[len(self.netloc):]
+            name = os.path.relpath(direntry, path)
+            if name.startswith("."):
+                continue
+            content.append(name)
+
+        if GR_CONF_FILE_NAME in content:
+            res_path = "/".join(path_array)
+            resource_id, version = parse_resource_id_version(res_path)
+            if resource_id is None:
+                logger.error("bad resource id/version: %s", res_path)
+                return
+            yield resource_id, version, res_path
+        else:
+            for name in content:
+                yield from self._scan_path_for_resources([*path_array, name])
+
+    def _scan_resource_for_files(self, resource_path, path_array):
+
+        url = os.path.join(self.url, resource_path, *path_array)
+        if not self.filesystem.isdir(url):
+            yield os.path.join(*path_array), url
+            return
+
+        path = os.path.join(self.root_path, resource_path, *path_array)
+        content = []
+        for direntry in self.filesystem.ls(url):
+            if self.netloc and direntry.startswith(self.netloc):
+                direntry = direntry[len(self.netloc):]
+
+            name = os.path.relpath(direntry, path)
+            if name.startswith("."):
+                continue
+            content.append(name)
+
+        for name in content:
+            yield from self._scan_resource_for_files(
+                resource_path, [*path_array, name])
 
     def _get_filepath_timestamp(self, filepath: str) -> str:
-        modification = self.filesystem.modified(filepath)
-        return isoformatted_from_datetime(modification)
+        try:
+            modification = self.filesystem.modified(filepath)
+            return isoformatted_from_datetime(modification)
+        except NotImplementedError:
+            info = self.filesystem.info(filepath)
+            modification = info.get("created")
+            return isoformatted_from_timestamp(modification)
 
     def collect_all_resources(self) -> Generator[GenomicResource, None, None]:
         """Returns generator for all resources managed by this protocol."""
-        dir_content = self._path_to_dict(self.root_path, self.root_path)
-        for res_id, res_ver in find_genomic_resources_helper(dir_content):
-            yield self.build_genomic_resource(res_id, res_ver)
+        for res_id, res_ver, res_path in self._scan_path_for_resources([]):
+            res_fullpath = os.path.join(self.root_path, res_path)
+            assert res_fullpath.startswith("/")
+            res_fullpath = f"{self.schema}://{self.netloc}{res_fullpath}"
 
-    def collect_resource_entries(self, resource) -> List[ManifestEntry]:
+            with self.filesystem.open(
+                    os.path.join(
+                        res_fullpath, GR_CONF_FILE_NAME), "rt") as infile:
+                config = yaml.safe_load(infile)
+
+            manifest: Optional[Manifest] = None
+            manifest_filename = os.path.join(
+                res_fullpath, GR_MANIFEST_FILE_NAME)
+            if self.filesystem.exists(manifest_filename):
+                with self.filesystem.open(manifest_filename, "rt") as infile:
+                    manifest = Manifest.from_file_content(infile.read())
+            yield self.build_genomic_resource(
+                res_id, res_ver, config, manifest)
+
+    def collect_resource_entries(self, resource) -> Manifest:
         """Scans the resource and resturn list of manifest entries."""
-        resource_path = self.get_resource_path(resource)
-        content_dict = self._path_to_dict(resource_path)
+        resource_path = resource.get_genomic_resource_id_version()
 
-        def my_leaf_to_size_and_time(filename):
-            filepath = self.get_resource_file_path(resource, filename)
-            fileinfo = self.filesystem.info(filepath)
-            filetime = self._get_filepath_timestamp(filepath)
+        result = Manifest()
+        for name, path in self._scan_resource_for_files(resource_path, []):
+            timestamp = self._get_filepath_timestamp(path)
+            size = self._get_filepath_size(path)
+            result.add(ManifestEntry(
+                name, size, timestamp, None))
+        return result
 
-            return fileinfo["size"], filetime
-
-        result = []
-        for fname, fsize, ftime in find_genomic_resource_files_helper(
-                content_dict, my_leaf_to_size_and_time):
-            result.append(ManifestEntry(fname, fsize, ftime, None))
-        return sorted(result)
+    def get_all_resources(self) -> Generator[GenomicResource, None, None]:
+        """Returns generator for all resources in the repository."""
+        if self._all_resources is None:
+            self._all_resources = list(self.collect_all_resources())
+        yield from self._all_resources
 
     def _get_resource_file_state_path(
             self, resource: GenomicResource, filename: str) -> str:
         """Returns filename of the rersource file state path."""
         return os.path.join(
-            self.state_path,
+            self.state_url,
             resource.get_genomic_resource_id_version(),
             filename)
 
@@ -201,17 +297,21 @@ class FsspecReadWriteProtocol(
         path = self.get_resource_file_path(resource, filename)
         return self._get_filepath_timestamp(path)
 
+    def _get_filepath_size(
+            self, filepath: str) -> int:
+        fileinfo = self.filesystem.info(filepath)
+        return int(fileinfo["size"])
+
     def get_resource_file_size(
             self, resource: GenomicResource, filename: str) -> int:
         path = self.get_resource_file_path(resource, filename)
-        fileinfo = self.filesystem.info(path)
-        return int(fileinfo["size"])
+        return self._get_filepath_size(path)
 
     def save_resource_file_state(
             self, state: ResourceFileState) -> None:
         """Saves resource file state into internal GRR state."""
         path = os.path.join(
-            self.state_path,
+            self.state_url,
             f"{state.resource_id}{version_string_to_suffix(state.version)}",
             state.filename)
         if not self.filesystem.exists(os.path.dirname(path)):
