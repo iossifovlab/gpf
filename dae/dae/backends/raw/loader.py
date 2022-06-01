@@ -240,10 +240,8 @@ class VariantsLoader(CLILoader):
         return None
 
     @classmethod
-    def _arguments(cls):
-        arguments = []
-
-        return arguments
+    def _arguments(cls) -> list[CLIArgument]:
+        return []
 
     @abstractmethod
     def full_variants_iterator(self):
@@ -619,7 +617,7 @@ class VariantsGenotypesLoader(VariantsLoader):
         self.expect_best_state = expect_best_state
 
     @classmethod
-    def _arguments(cls):
+    def _arguments(cls) -> list[CLIArgument]:
         arguments = super()._arguments()
         arguments.append(CLIArgument(
             "--add-chrom-prefix",

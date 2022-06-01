@@ -2,7 +2,7 @@ import argparse
 import os
 import sys
 import tempfile
-from typing import Optional
+from typing import Any, Optional
 from dask.distributed import Client, LocalCluster  # type: ignore
 from dask_kubernetes import KubeCluster, make_pod_spec  # type: ignore
 
@@ -65,7 +65,7 @@ the number of workers using -j")
                       file=sys.stderr)
                 return None
 
-            dashboard_config = {}
+            dashboard_config: dict[str, Any] = {}
             if args.dashboard_port:
                 dashboard_config["scheduler_options"] = \
                     {"dashboard_address": f":{args.dashboard_port}"}
