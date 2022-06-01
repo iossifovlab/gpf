@@ -1,41 +1,9 @@
 # pylint: disable=redefined-outer-name,C0114,C0116,protected-access
 
-import pytest
-
 from dae.genomic_resources.repository import GR_CONF_FILE_NAME
 from dae.genomic_resources.embedded_protocol import \
-    build_embedded_protocol, \
     _scan_for_resources, \
     _scan_for_resource_files
-
-
-@pytest.fixture
-def embedded_content():
-    demo_gtf_content = "TP53\tchr3\t300\t200"
-    return {
-        "one": {
-            GR_CONF_FILE_NAME: "",
-            "data.txt": "alabala"
-        },
-        "sub": {
-            "two": {
-                GR_CONF_FILE_NAME: "",
-            },
-            "two(1.0)": {
-                GR_CONF_FILE_NAME: "type: gene_models\nfile: genes.gtf",
-                "genes.gtf": demo_gtf_content,
-            },
-        },
-        "three(2.0)": {
-            GR_CONF_FILE_NAME: "",
-            "sub1": {
-                "a.txt": "a"
-            },
-            "sub2": {
-                "b.txt": "b"
-            }
-        }
-    }
 
 
 def test_scan_content_for_resources(embedded_content):
@@ -120,15 +88,9 @@ def test_scan_for_resource_three_files(embedded_content):
     assert resource_files[2] == ("sub2/b.txt", "b")
 
 
-@pytest.fixture
-def embedded_proto(embedded_content, tmp_path):
-    proto = build_embedded_protocol(
-        "src", str(tmp_path), content=embedded_content)
-    return proto
-
-
 def test_scan_path_for_resources(embedded_proto, tmp_path):
-    result = list(embedded_proto._scan_path_for_resources([]))
+    proto = embedded_proto()
+    result = list(proto._scan_path_for_resources([]))
 
     assert len(result) == 4
     res_id, res_version, res_path = result[0]
@@ -137,7 +99,7 @@ def test_scan_path_for_resources(embedded_proto, tmp_path):
     assert res_path == "one"
 
     result_files = sorted(list(
-        embedded_proto._scan_resource_for_files(res_path, [])))
+        proto._scan_resource_for_files(res_path, [])))
 
     assert len(result_files) == 2
     assert result_files[0] == \
@@ -153,27 +115,30 @@ def test_scan_path_for_resources(embedded_proto, tmp_path):
     assert res_path == "three(2.0)"
 
     result_files = sorted(list(
-        embedded_proto._scan_resource_for_files(res_path, [])))
+        proto._scan_resource_for_files(res_path, [])))
 
     assert len(result_files) == 3
     print(result_files)
 
 
 def test_embedded_proto_simple(embedded_proto):
-    assert len(list(embedded_proto.get_all_resources())) == 4
+    proto = embedded_proto()
+    assert len(list(proto.get_all_resources())) == 4
 
 
 def test_get_resource(embedded_proto):
+    proto = embedded_proto()
 
-    res = embedded_proto.get_resource("sub/two")
+    res = proto.get_resource("sub/two")
     assert res.resource_id == "sub/two"
     assert res.version == (1, 0)
 
 
 def test_load_manifest(embedded_proto):
+    proto = embedded_proto()
 
-    res = embedded_proto.get_resource("sub/two")
-    manifest = embedded_proto.load_manifest(res)
+    res = proto.get_resource("sub/two")
+    manifest = proto.load_manifest(res)
 
     entry = manifest["genes.gtf"]
     assert entry.name == "genes.gtf"
@@ -183,9 +148,10 @@ def test_load_manifest(embedded_proto):
 
 
 def test_get_manifest(embedded_proto):
+    proto = embedded_proto()
 
-    res = embedded_proto.get_resource("sub/two")
-    manifest = embedded_proto.get_manifest(res)
+    res = proto.get_resource("sub/two")
+    manifest = proto.get_manifest(res)
 
     entry = manifest["genes.gtf"]
     assert entry.name == "genes.gtf"

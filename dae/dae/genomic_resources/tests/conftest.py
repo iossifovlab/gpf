@@ -1,3 +1,5 @@
+# pylint: disable=redefined-outer-name,C0114,C0116,protected-access
+
 import logging
 import os
 import tempfile
@@ -11,6 +13,12 @@ from http.server import ThreadingHTTPServer
 import pytest
 
 from RangeHTTPServer import RangeRequestHandler  # type: ignore
+
+from dae.genomic_resources.repository import \
+    GR_CONF_FILE_NAME
+from dae.genomic_resources.embedded_protocol import \
+    build_embedded_protocol
+
 
 logger = logging.getLogger(__name__)
 
@@ -147,3 +155,43 @@ def genomic_resource_fixture_s3_repo(genomic_resource_fixture_dir_repo, s3):
     repo = GenomicResourceURLRepo("genomic_resource_fixture_url_repo", s3_path)
     repo.filesystem = s3
     return repo
+
+
+@pytest.fixture
+def embedded_content():
+    demo_gtf_content = "TP53\tchr3\t300\t200"
+    return {
+        "one": {
+            GR_CONF_FILE_NAME: "",
+            "data.txt": "alabala"
+        },
+        "sub": {
+            "two": {
+                GR_CONF_FILE_NAME: "",
+            },
+            "two(1.0)": {
+                GR_CONF_FILE_NAME: "type: gene_models\nfile: genes.gtf",
+                "genes.gtf": demo_gtf_content,
+            },
+        },
+        "three(2.0)": {
+            GR_CONF_FILE_NAME: "",
+            "sub1": {
+                "a.txt": "a"
+            },
+            "sub2": {
+                "b.txt": "b"
+            }
+        }
+    }
+
+
+@pytest.fixture
+def embedded_proto(embedded_content, tmp_path):
+
+    def builder(path=tmp_path):
+        proto = build_embedded_protocol(
+            "src", str(path), content=embedded_content)
+        return proto
+    return builder
+

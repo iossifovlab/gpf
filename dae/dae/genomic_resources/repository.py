@@ -609,8 +609,8 @@ class ReadWriteRepositoryProtocol(ReadOnlyRepositoryProtocol):
 
     def copy_resource(
             self,
-            remote_resource: GenomicResource):
-        """Copies a remote resource into repository."""
+            remote_resource: GenomicResource) -> GenomicResource:
+        """Copy a remote resource into repository."""
 
         try:
             local_resource = self.get_resource(
@@ -645,6 +645,14 @@ class ReadWriteRepositoryProtocol(ReadOnlyRepositoryProtocol):
 
         self.save_manifest(local_resource, remote_resource.get_manifest())
         self.invalidate()
+
+        return self.get_resource(
+            resource_id=remote_resource.resource_id,
+            version_constraint=f"={remote_resource.get_version_str()}")
+
+    def update_resource(
+            self, remote_resource: GenomicResource) -> GenomicResource:
+        return self.copy_resource(remote_resource)        
 
 
 class GenomicResourceRepo(abc.ABC):
