@@ -652,7 +652,7 @@ class ReadWriteRepositoryProtocol(ReadOnlyRepositoryProtocol):
 
     def update_resource(
             self, remote_resource: GenomicResource) -> GenomicResource:
-        return self.copy_resource(remote_resource)        
+        return self.copy_resource(remote_resource)
 
 
 class GenomicResourceRepo(abc.ABC):

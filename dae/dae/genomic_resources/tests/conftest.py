@@ -1,4 +1,4 @@
-# pylint: disable=redefined-outer-name,C0114,C0116,protected-access
+# pylint: disable=redefined-outer-name,C0114,C0115,C0116,protected-access
 
 import logging
 import os
@@ -18,6 +18,8 @@ from dae.genomic_resources.repository import \
     GR_CONF_FILE_NAME
 from dae.genomic_resources.embedded_protocol import \
     build_embedded_protocol
+from dae.genomic_resources.dir_repository import GenomicResourceDirRepo
+from dae.genomic_resources.url_repository import GenomicResourceURLRepo
 
 
 logger = logging.getLogger(__name__)
@@ -28,7 +30,7 @@ def relative_to_this_test_folder(path):
 
 
 @pytest.fixture(scope="session")
-def fixture_path(request):
+def fixture_path():
     def builder(relpath):
         return relative_to_this_test_folder(os.path.join("fixtures", relpath))
 
@@ -66,12 +68,9 @@ class HTTPRepositoryServer(Thread):
         handler_class.protocol_version = "HTTP/1.0"
 
         with ThreadingHTTPServer(self.server_address, handler_class) as httpd:
-            sa = httpd.socket.getsockname()
-            serve_message = \
-                "Serving HTTP on {host} port {port} " \
-                "(http://{host}:{port}/) ..."
-
-            logger.info(serve_message.format(host=sa[0], port=sa[1]))
+            saddr = httpd.socket.getsockname()
+            logger.info(
+                "Serving HTTP on (http://%s:%s/) ...", saddr[0], saddr[1])
             self.httpd = httpd
             with self.ready:
                 self.ready.notify()
@@ -91,8 +90,8 @@ def http_server(request):
             http_server.ready.wait()
 
         logger.info(
-            f"HTTP repository test server started: "
-            f"{http_server.server_address}")
+            "HTTP repository test server started: %s",
+            http_server.server_address)
 
         def fin():
             http_server.httpd.shutdown()
@@ -116,7 +115,7 @@ def resources_http_server(fixture_dirname):
         http_server.ready.wait()
 
     logger.info(
-        f"HTTP repository test server started: {http_server.server_address}")
+        "HTTP repository test server started: %s", http_server.server_address)
 
     yield http_server
 
@@ -126,16 +125,14 @@ def resources_http_server(fixture_dirname):
 
 @pytest.fixture
 def genomic_resource_fixture_dir_repo(fixture_dirname):
-    from dae.genomic_resources.dir_repository import GenomicResourceDirRepo
-    dr = fixture_dirname("genomic_resources")
-    return GenomicResourceDirRepo("genomic_resource_fixture_dir_repo", dr)
+    repo_dir = fixture_dirname("genomic_resources")
+    return GenomicResourceDirRepo(
+        "genomic_resource_fixture_dir_repo", repo_dir)
 
 
 @pytest.fixture
 def genomic_resource_fixture_http_repo(resources_http_server):
     http_port = resources_http_server.http_port
-
-    from dae.genomic_resources.url_repository import GenomicResourceURLRepo
     url = f"http://localhost:{http_port}"
     return GenomicResourceURLRepo("genomic_resource_fixture_url_repo", url)
 
@@ -143,15 +140,16 @@ def genomic_resource_fixture_http_repo(resources_http_server):
 @pytest.fixture
 def genomic_resource_fixture_s3_repo(genomic_resource_fixture_dir_repo, s3):
     src_dir = genomic_resource_fixture_dir_repo.directory
-    s3_path = 's3://test-bucket'
+    s3_path = "s3://test-bucket"
     for root, _, files in os.walk(src_dir):
-        for fn in files:
+        for fname in files:
             root_rel = os.path.relpath(root, src_dir)
-            if root_rel == '.':
-                root_rel = ''
-            s3.put(os.path.join(root, fn), os.path.join(s3_path, root_rel, fn))
+            if root_rel == ".":
+                root_rel = ""
+            s3.put(
+                os.path.join(root, fname),
+                os.path.join(s3_path, root_rel, fname))
 
-    from dae.genomic_resources.url_repository import GenomicResourceURLRepo
     repo = GenomicResourceURLRepo("genomic_resource_fixture_url_repo", s3_path)
     repo.filesystem = s3
     return repo
@@ -194,4 +192,3 @@ def embedded_proto(embedded_content, tmp_path):
             "src", str(path), content=embedded_content)
         return proto
     return builder
-

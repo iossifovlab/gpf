@@ -165,7 +165,7 @@ def parse_resource_id_version(resource_path):
 
     An optional version (0,) appened if needed. If present, the version suffix
     has the form "(3.3.2)". The default version is (0,).
-    Returns tuple (None, None) if the path does not match the 
+    Returns tuple (None, None) if the path does not match the
     resource_id/version requirements. Otherwise returns tuple
     (resource_id, version).
     """
@@ -327,7 +327,8 @@ class FsspecReadWriteProtocol(
             filename: str) -> Optional[ResourceFileState]:
         """Load resource file state from internal GRR state.
 
-        If the specified resource file has no internal state returns None."""
+        If the specified resource file has no internal state returns None.
+        """
         path = self._get_resource_file_state_path(resource, filename)
         if not self.filesystem.exists(path):
             return None
