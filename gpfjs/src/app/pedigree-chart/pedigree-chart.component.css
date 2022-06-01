@@ -41,3 +41,27 @@ svg {
 .maximized svg {
   max-height: unset;
 }
+
+.btn {
+  border: none;
+  background-color: inherit;
+  padding: 14px 28px;
+  font-size: 16px;
+  cursor: pointer;
+  box-shadow: none;
+  display: inline-block;
+}
+
+.familyPanel {
+  border-bottom: 1px solid grey;
+  border-left: 1px solid grey;
+  border-right: 1px solid grey;
+  padding-top: 1.5em;
+  max-height: 500px;
+  overflow: auto;
+}
+
+.modalAccordion {
+  padding-left: 5px;
+  padding-right: 5px;
+}

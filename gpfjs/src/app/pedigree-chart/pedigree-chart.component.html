@@ -42,20 +42,30 @@
 
 <div class="modal fade" id="pedigreeModal">
   <div class="modal-dialog modal-dialog-centered" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="exampleModalCenterTitle">Pedigree family..</h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-      </div>
+    <div style="padding: 5px;" class="modal-content">
+      <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+        <span style="float: right; margin-right: 10px" aria-hidden="true">&times;</span>
+      </button>
       <div class="modal-body">
         <ng-container *ngTemplateOutlet="pedigree"></ng-container>
       </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">List families</button>
-        <button type="button" class="btn btn-primary">Download families</button>
-      </div>
+      <ngb-accordion class="modalAccordion" #a="ngbAccordion">
+        <ngb-panel>
+          <ng-template ngbPanelHeader>
+            <div style="display: flex; border: 1px solid grey;">
+              <button type="button" class="accordion-button btn" ngbPanelToggle style="width: 100%; text-align: left;">
+                Default-looking "custom" panel
+              </button>
+              <button type="button" class="btn">Download</button>
+            </div>
+          </ng-template>
+          <ng-template ngbPanelContent>
+            <div class="familyPanel">
+              <gpf-loading-spinner [loadingFinished]="false"></gpf-loading-spinner>
+            </div>
+          </ng-template>
+        </ngb-panel>
+      </ngb-accordion>
     </div>
   </div>
 </div>

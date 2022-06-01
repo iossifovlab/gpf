@@ -27,7 +27,6 @@ import { GeneSymbolsComponent } from './gene-symbols/gene-symbols.component';
 import { GeneSymbolsState } from './gene-symbols/gene-symbols.state';
 import { RegionsFilterComponent } from './regions-filter/regions-filter.component';
 import { RegionsBlockComponent } from './regions-block/regions-block.component';
-import { PedigreeChartModule } from './pedigree-chart/pedigree-chart.module';
 import { HistogramModule } from './histogram/histogram.module';
 import { GeneScoresComponent } from './gene-scores/gene-scores.component';
 import { GeneScoresService } from './gene-scores/gene-scores.service';
@@ -165,6 +164,8 @@ import { TruncatePipe } from './utils/truncate.pipe';
 import { UniqueFamilyVariantsFilterComponent } from './unique-family-variants-filter/unique-family-variants-filter.component';
 import { UniqueFamilyVariantsFilterState } from './unique-family-variants-filter/unique-family-variants-filter.state';
 import { AngularMarkdownEditorModule } from 'angular-markdown-editor';
+import { PedigreeChartComponent } from './pedigree-chart/pedigree-chart.component';
+import { PedigreeChartMemberComponent } from './pedigree-chart/pedigree-chart-member.component';
 
 const appRoutes: Routes = [
   {
@@ -364,14 +365,15 @@ const appRoutes: Routes = [
     SplitPipe,
     AgpTableComponent,
     TruncatePipe,
-    UniqueFamilyVariantsFilterComponent
+    UniqueFamilyVariantsFilterComponent,
+    PedigreeChartComponent,
+    PedigreeChartMemberComponent
   ],
   imports: [
     BrowserModule,
     FormsModule,
     NgbModule,
     GpfTableModule,
-    PedigreeChartModule,
     HistogramModule,
     RouterModule.forRoot(appRoutes),
     BrowserAnimationsModule,
