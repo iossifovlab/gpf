@@ -2,6 +2,7 @@ import argparse
 import os
 import sys
 import tempfile
+from typing import Optional
 from dask.distributed import Client, LocalCluster  # type: ignore
 from dask_kubernetes import KubeCluster, make_pod_spec  # type: ignore
 
@@ -37,7 +38,8 @@ the number of workers using -j")
                             help="Directory where to store SGE worker logs")
 
     @classmethod
-    def from_arguments(cls, args: argparse.Namespace) -> 'DaskClient':
+    def from_arguments(cls, args: argparse.Namespace) \
+            -> Optional["DaskClient"]:
         n_jobs = args.jobs or os.cpu_count()
 
         tmp_dir = tempfile.TemporaryDirectory()
