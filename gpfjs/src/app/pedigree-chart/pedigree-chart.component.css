@@ -30,6 +30,14 @@ svg {
   margin: auto;
 }
 
+.overlay {
+    position: fixed;
+    left: 50%;
+    transform: translate(-50%, 0);
+    width:100%;
+    z-index: 1000;
+}
+
 .maximized svg {
   max-height: unset;
 }

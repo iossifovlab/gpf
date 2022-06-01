@@ -71,7 +71,7 @@ export class VariantReportsComponent implements OnInit {
       this.variantReport = params;
       this.pedigreeTables = this.variantReport.familyReport.familiesCounters.map(
         familiesCounters => new PedigreeTable(
-          this.chunkPedigrees(familiesCounters.familyCounter),
+          this.chunkPedigrees(familiesCounters),
           familiesCounters.phenotypes, familiesCounters.groupName,
           familiesCounters.legend
         )
@@ -150,10 +150,8 @@ export class VariantReportsComponent implements OnInit {
     );
   }
 
-  private chunkPedigrees(familyCounters: FamilyCounter[], chunkSize = 4): PedigreeCounter[][] {
-    const allPedigrees = familyCounters.reduce(
-      (acc, familyCounter) => acc.concat(familyCounter.pedigreeCounters), [] as PedigreeCounter[]
-    );
+  private chunkPedigrees(familyCounters: FamilyCounter, chunkSize = 4): PedigreeCounter[][] {
+    const allPedigrees = familyCounters.pedigreeCounters;
 
     return allPedigrees.reduce(
       (acc: PedigreeCounter[][], pedigree, index) => {

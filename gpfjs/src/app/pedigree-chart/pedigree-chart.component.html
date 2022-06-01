@@ -4,7 +4,8 @@
     #wrapper
     class="svg-wrapper clickable"
     style="display: flex; width: 100%; height: 100%"
-    (click)="toggleMaximize()">
+    data-toggle="modal"
+    data-target="#pedigreeModal">
     <svg [attr.width]="width" [attr.viewBox]="getViewBox()" [ngClass]="{ 'fullscreen-pedigree': maximized }">
       <svg:line
         *ngFor="let straightLine of straightLines"
@@ -39,8 +40,28 @@
   </div>
 </ng-template>
 
-<ng-container *ngTemplateOutlet="pedigree"></ng-container>
+<div class="modal fade" id="pedigreeModal">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalCenterTitle">Pedigree family..</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <ng-container *ngTemplateOutlet="pedigree"></ng-container>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">List families</button>
+        <button type="button" class="btn btn-primary">Download families</button>
+      </div>
+    </div>
+  </div>
+</div>
 
-<div *ngIf="maximized" class="maximized">
+<div *ngIf="!maximized">
   <ng-container *ngTemplateOutlet="pedigree"></ng-container>
 </div>
+
+<!--REVIEW maximized may not be needed, modal-->

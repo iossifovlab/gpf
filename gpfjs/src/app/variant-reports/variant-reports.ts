@@ -58,7 +58,7 @@ export class PeopleCounter {
 export class PeopleReport {
   public static fromJson(json: any): PeopleReport {
     return new PeopleReport(
-      json['people_counters'].map((peopleCounter: any) => PeopleCounter.fromJson(peopleCounter))
+      json.map((peopleCounter: any) => PeopleCounter.fromJson(peopleCounter))
     );
   }
 
@@ -68,10 +68,11 @@ export class PeopleReport {
 }
 
 export class PedigreeCounter {
-  public static fromArray(data: any): PedigreeCounter {
+  public static fromJson(json: any): PedigreeCounter {
+
     return new PedigreeCounter(
-      data['pedigree'].map((pedigreeData: any) => PedigreeData.fromArray(pedigreeData)),
-      data['pedigrees_count']
+      json['pedigree'].map((pedigreeCounter) => PedigreeData.fromArray(pedigreeCounter)),
+      json['pedigrees_count']
     );
   }
 
@@ -81,19 +82,7 @@ export class PedigreeCounter {
 export class FamilyCounter {
   public static fromJson(json: any): FamilyCounter {
     return new FamilyCounter(
-      json['counters'].map((pedigree: any) => PedigreeCounter.fromArray(pedigree))
-    );
-  }
-
-  constructor(
-    public readonly pedigreeCounters: PedigreeCounter[]
-  ) {}
-}
-
-export class FamilyCounters {
-  public static fromJson(json: any): FamilyCounters {
-    return new FamilyCounters(
-      json['counters'].map((family_counter: any) => FamilyCounter.fromJson(family_counter)),
+      json['counters'].map((family_counter: any) => PedigreeCounter.fromJson(family_counter)),
       json['group_name'],
       json['phenotypes'],
       Legend.fromList(json['legend'])
@@ -101,7 +90,7 @@ export class FamilyCounters {
   }
 
   public constructor(
-    public readonly familyCounter: FamilyCounter[],
+    public readonly pedigreeCounters: PedigreeCounter[],
     public readonly groupName: string,
     public readonly phenotypes: string[],
     public readonly legend: Legend
@@ -109,15 +98,15 @@ export class FamilyCounters {
 }
 
 export class FamilyReport {
-  public static fromJson(json: any): FamilyReport {
+  public static fromJson(json: any, families = 0): FamilyReport {
     return new FamilyReport(
-      json['families_counters'].map((familyCounters: any) => FamilyCounters.fromJson(familyCounters)),
-      json['families_total']
+      json.map((familyCounters: any) => FamilyCounter.fromJson(familyCounters)),
+      families
     );
   }
 
   public constructor(
-    public readonly familiesCounters: FamilyCounters[],
+    public readonly familiesCounters: FamilyCounter[],
     public readonly familiesTotal: number
   ) {}
 }
@@ -195,7 +184,7 @@ export class VariantReport {
       json['study_name'],
       json['study_description'],
       PeopleReport.fromJson(json['people_report']),
-      FamilyReport.fromJson(json['families_report']),
+      FamilyReport.fromJson(json['families_report'], json['families'] as number),
       DenovoReport.fromJson(json['denovo_report'])
     );
   }

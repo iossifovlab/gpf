@@ -1,6 +1,6 @@
 export class PedigreeData {
   public static parsePosition(position: string): [number, number] {
-    if (position !== null) {
+    if (position !== null && position !== undefined) {
       const layout = position.split(':');
       const coordinates = layout[layout.length - 1];
       const result = coordinates.split(',').map(x => parseFloat(x));
