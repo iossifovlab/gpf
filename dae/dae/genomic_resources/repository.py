@@ -358,14 +358,14 @@ class GenomicResource:
         return self.repo.file_local(self, filename)
 
     def get_manifest(self) -> Manifest:
-        """Loads resource manifest if it exists. Otherwise builds it."""
+        """Load resource manifest if it exists. Otherwise builds it."""
         if self._manifest is None:
             self._manifest = self.repo.get_manifest(self)
         assert isinstance(self._manifest, Manifest), self._manifest
         return self._manifest
 
     def get_file_content(self, filename, uncompress=True, mode="t"):
-        """Returns the content of file in a resource."""
+        """Return the content of file in a resource."""
         return self.repo.get_file_content(
             self, filename, uncompress=uncompress, mode=mode)
 
@@ -373,7 +373,9 @@ class GenomicResource:
             self, filename, mode="rt", uncompress=False, seekable=False):
         """Opens a file in the resource and returns a File-like object."""
         return self.repo.open_raw_file(
-            self, filename, mode, uncompress, seekable)
+            self, filename, mode,
+            uncompress=uncompress,
+            seekable=seekable)
 
     def open_tabix_file(self, filename, index_filename=None):
         """Opens a tabix file and returns a pysam.TabixFile."""

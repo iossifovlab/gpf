@@ -1,77 +1,59 @@
 # pylint: disable=redefined-outer-name,C0114,C0116,protected-access
 
-import os
 import gzip
 import pytest
 
 from fsspec.implementations.local import LocalFileSystem  # type: ignore
 
 from dae.genomic_resources.repository import GR_CONF_FILE_NAME
-from dae.genomic_resources.embeded_repository import \
-    GenomicResourceEmbededRepo
-from dae.genomic_resources.dir_repository import GenomicResourceDirRepo
+from dae.genomic_resources.embedded_protocol import \
+    build_embedded_protocol
+
 from dae.genomic_resources.fsspec_protocol import FsspecReadWriteProtocol
 
 
 @pytest.fixture
-def src_repo():
-    """Build directory repository fixture."""
+def repo_content():
     demo_gtf_content = "TP53\tchr3\t300\t200"
-    repo = GenomicResourceEmbededRepo("src", content={
+    return {
         "one": {
             GR_CONF_FILE_NAME: "",
             "data.txt": "alabala"
         },
         "sub": {
             "two(1.0)": {
-                GR_CONF_FILE_NAME: ["type: gene_models\nfile: genes.gtf",
-                                    "2021-11-20T00:00:56"],
+                GR_CONF_FILE_NAME: "type: gene_models\nfile: genes.gtf",
                 "genes.gtf": demo_gtf_content
             }
         }
-    })
-
-    return repo
+    }
 
 
 @pytest.fixture
-def dir_repo(src_repo, tmp_path):
-    """Build directory repository fixture."""
-
-    repo = GenomicResourceDirRepo("dir", directory=tmp_path)
-    repo.store_all_resources(src_repo)
-    repo.build_repo_content()
-
-    return repo
+def emb_proto(repo_content, tmp_path):
+    src_proto = build_embedded_protocol(
+        "src", str(tmp_path), content=repo_content)
+    return src_proto
 
 
 @pytest.fixture
-def fsspec_proto(dir_repo, s3):
-    """Builds fsspec local filesystem protocol fixture."""
-
-    assert os.path.exists(os.path.join(dir_repo.directory, ".CONTENTS"))
+def fsspec_proto(emb_proto, tmp_path, s3):
 
     def builder(filesystem="local"):
         if filesystem == "local":
-            return FsspecReadWriteProtocol(
-                "test", f"file://{dir_repo.directory}", LocalFileSystem())
+            proto = FsspecReadWriteProtocol(
+                "test", f"file://{tmp_path}", LocalFileSystem())
 
-        if filesystem == "s3":
-            s3_path = "s3://test-bucket"
-            for root, _, files in os.walk(dir_repo.directory):
+        elif filesystem == "s3":
+            proto = FsspecReadWriteProtocol(
+                "test", f"s3:/{tmp_path}", s3)
+        else:
+            return None
 
-                for fname in files:
-                    root_rel = os.path.relpath(root, dir_repo.directory)
-                    if root_rel == ".":
-                        root_rel = ""
+        for res in emb_proto.get_all_resources():
+            proto.copy_resource(res)
 
-                    s3.put(
-                        os.path.join(root, fname),
-                        os.path.join(s3_path, root_rel, fname))
-
-            return FsspecReadWriteProtocol(
-                "test", "s3://test-bucket", s3)
-        return None
+        return proto
 
     return builder
 
@@ -84,7 +66,7 @@ def test_fsspec_proto_simple(fsspec_proto, filesystem):
     proto = fsspec_proto(filesystem)
 
     resources = list(proto.collect_all_resources())
-    assert len(resources) == 2
+    assert len(resources) == 2, resources
 
 
 @pytest.mark.parametrize("filesystem", [
@@ -432,12 +414,12 @@ def test_delete_resource_file(fsspec_proto, filesystem):
     "local",
     "s3",
 ])
-def test_copy_resource_file(src_repo, fsspec_proto, filesystem):
+def test_copy_resource_file(emb_proto, fsspec_proto, filesystem):
 
     # Given
     proto = fsspec_proto(filesystem)
 
-    src_res = src_repo.get_resource("sub/two")
+    src_res = emb_proto.get_resource("sub/two")
     dst_res = proto.get_resource("sub/two")
 
     # When
@@ -460,12 +442,12 @@ def test_copy_resource_file(src_repo, fsspec_proto, filesystem):
     "local",
     "s3",
 ])
-def test_copy_resource(src_repo, fsspec_proto, filesystem):
+def test_copy_resource(emb_proto, fsspec_proto, filesystem):
 
     # Given
     proto = fsspec_proto(filesystem)
 
-    src_res = src_repo.get_resource("sub/two")
+    src_res = emb_proto.get_resource("sub/two")
 
     # When
     proto.copy_resource(src_res)

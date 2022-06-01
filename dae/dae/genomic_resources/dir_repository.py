@@ -98,7 +98,7 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
         return True
 
     def open_raw_file(self, resource: GenomicResource, filename: str,
-                      mode="rt", uncompress=False, _seekable=False):
+                      mode="rt", uncompress=False, seekable=False):
 
         filepath = self.get_filepath(resource, filename)
         if "w" in mode:

@@ -94,7 +94,7 @@ class GenomicResourceEmbededRepo(GenomicResourceRealRepo):
         return io.StringIO(content.decode(GR_ENCODING))
 
     def get_files(self, resource):
-        """Returns list of resource files."""
+        """Return list of resource files."""
         path_array = resource.get_genomic_resource_id_version().split("/")
 
         content_dict = self.content

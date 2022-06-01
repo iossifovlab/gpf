@@ -32,17 +32,18 @@ logger = logging.getLogger(__name__)
 
 def build_fsspec_protocol(proto_id: str, root_url: str, **kwargs) -> Union[
         FsspecReadOnlyProtocol, FsspecReadWriteProtocol]:
-    """Factory function for creation of different fsspec protocols."""
+    """Create fsspec GRR protocol based on the root url."""
     url = urlparse(root_url)
 
     if url.scheme in {"file", ""}:
         filesystem = fsspec.implementations.local.LocalFileSystem()
         return FsspecReadWriteProtocol(
             proto_id, root_url, filesystem)
-    elif url.scheme in {"s3"}:
+    if url.scheme in {"s3"}:
         filesystem = kwargs.get("filesystem")
         return FsspecReadWriteProtocol(
             proto_id, root_url, filesystem)
+
     raise NotImplementedError(f"unsupported schema {url.scheme}")
 
 
@@ -80,7 +81,7 @@ class FsspecReadOnlyProtocol(ReadOnlyRepositoryProtocol):
         self._all_resources = None
 
     def get_all_resources(self):
-        """Returns generator for all resources in the repository."""
+        """Return generator over all resources in the repository."""
         if self._all_resources is None:
             self._all_resources = []
             content_filename = os.path.join(
@@ -100,14 +101,14 @@ class FsspecReadOnlyProtocol(ReadOnlyRepositoryProtocol):
         yield from self._all_resources
 
     def get_resource_url(self, resource) -> str:
-        """Returns url for the specified resources."""
+        """Return url of the specified resources."""
         resource_url = os.path.join(
             self.url,
             resource.get_genomic_resource_id_version())
         return resource_url
 
     def get_resource_file_url(self, resource, filename: str) -> str:
-        """Returns url for a file in the resource."""
+        """Return url of a file in the resource."""
         url = os.path.join(
             self.get_resource_url(resource), filename)
         return url
@@ -117,7 +118,7 @@ class FsspecReadOnlyProtocol(ReadOnlyRepositoryProtocol):
         return cast(bool, self.filesystem.exists(filepath))
 
     def load_manifest(self, resource):
-        """Loads resource manifest."""
+        """Load resource manifest."""
         content = self.get_file_content(resource, GR_MANIFEST_FILE_NAME)
         return Manifest.from_file_content(content)
 
@@ -160,12 +161,13 @@ _RESOURCE_ID_WITH_VERSION_TOKEN_RE = re.compile(
 
 
 def parse_resource_id_version(resource_path):
-    """
-    Genomic Resource Id Version Token is a Genomic Resource Id Token with
-    an optional version appened. If present, the version suffix has the
-    form "(3.3.2)". The default version is (0).
-    Returns None if s in not a Genomic Resource Id Version. Otherwise
-    returns token,version tupple
+    """Parse genomic resource id and version path into Id, Version tuple.
+
+    An optional version (0,) appened if needed. If present, the version suffix
+    has the form "(3.3.2)". The default version is (0,).
+    Returns tuple (None, None) if the path does not match the 
+    resource_id/version requirements. Otherwise returns tuple
+    (resource_id, version).
     """
     match = _RESOURCE_ID_WITH_VERSION_TOKEN_RE.fullmatch(resource_path)
     if not match:
@@ -244,7 +246,7 @@ class FsspecReadWriteProtocol(
             return isoformatted_from_timestamp(modification)
 
     def collect_all_resources(self) -> Generator[GenomicResource, None, None]:
-        """Returns generator for all resources managed by this protocol."""
+        """Return generator over all resources managed by this protocol."""
         for res_id, res_ver, res_path in self._scan_path_for_resources([]):
             res_fullpath = os.path.join(self.root_path, res_path)
             assert res_fullpath.startswith("/")
@@ -265,7 +267,7 @@ class FsspecReadWriteProtocol(
                 res_id, res_ver, config, manifest)
 
     def collect_resource_entries(self, resource) -> Manifest:
-        """Scans the resource and resturn list of manifest entries."""
+        """Scan the resource and resturn a manifest."""
         resource_path = resource.get_genomic_resource_id_version()
 
         result = Manifest()
@@ -277,14 +279,14 @@ class FsspecReadWriteProtocol(
         return result
 
     def get_all_resources(self) -> Generator[GenomicResource, None, None]:
-        """Returns generator for all resources in the repository."""
+        """Return generator over all resources in the repository."""
         if self._all_resources is None:
             self._all_resources = list(self.collect_all_resources())
         yield from self._all_resources
 
     def _get_resource_file_state_path(
             self, resource: GenomicResource, filename: str) -> str:
-        """Returns filename of the rersource file state path."""
+        """Return filename of the rersource file state path."""
         return os.path.join(
             self.state_url,
             resource.get_genomic_resource_id_version(),
@@ -307,7 +309,7 @@ class FsspecReadWriteProtocol(
 
     def save_resource_file_state(
             self, state: ResourceFileState) -> None:
-        """Saves resource file state into internal GRR state."""
+        """Save resource file state into internal GRR state."""
         path = os.path.join(
             self.state_url,
             f"{state.resource_id}{version_string_to_suffix(state.version)}",
@@ -323,7 +325,7 @@ class FsspecReadWriteProtocol(
     def load_resource_file_state(
             self, resource: GenomicResource,
             filename: str) -> Optional[ResourceFileState]:
-        """Loads resource file state from internal GRR state.
+        """Load resource file state from internal GRR state.
 
         If the specified resource file has no internal state returns None."""
         path = self._get_resource_file_state_path(resource, filename)
@@ -342,7 +344,7 @@ class FsspecReadWriteProtocol(
 
     def delete_resource_file(
             self, resource: GenomicResource, filename: str):
-        """Deletes a resource file and it's internal state."""
+        """Delete a resource file and it's internal state."""
         filepath = self.get_resource_file_url(resource, filename)
         if self.filesystem.exists(filepath):
             self.filesystem.delete(filepath)
@@ -356,7 +358,7 @@ class FsspecReadWriteProtocol(
             remote_resource: GenomicResource,
             dest_resource: GenomicResource,
             filename: str):
-        """Copies a remote resource file into local repository."""
+        """Copy a remote resource file into local repository."""
         assert dest_resource.resource_id == remote_resource.resource_id
         assert dest_resource.repo == self
 
