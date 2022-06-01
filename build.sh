@@ -331,8 +331,6 @@ EOT'
           --exclude dae/docs/ \
           --exclude dae/docs/conf.py \
           --pretty \
-          --warn-return-any \
-          --warn-redundant-casts \
           --show-error-context \
           --no-incremental \
           > /wd/results/mypy_dae_report || true'
@@ -344,8 +342,6 @@ EOT'
           --exclude wdae/docs/conf.py \
           --exclude wdae/conftest.py \
           --pretty \
-          --warn-return-any \
-          --warn-redundant-casts \
           --show-error-context \
           --no-incremental \
           > /wd/results/mypy_wdae_report || true'
