@@ -3,75 +3,6 @@
 import gzip
 import pytest
 
-from dae.genomic_resources.repository import GR_CONF_FILE_NAME
-from dae.genomic_resources.embedded_protocol import \
-    build_embedded_protocol
-
-from dae.genomic_resources.fsspec_protocol import \
-    build_fsspec_protocol
-
-
-@pytest.fixture
-def repo_content():
-    demo_gtf_content = "TP53\tchr3\t300\t200"
-    return {
-        "one": {
-            GR_CONF_FILE_NAME: "",
-            "data.txt": "alabala"
-        },
-        "sub": {
-            "two(1.0)": {
-                GR_CONF_FILE_NAME: "type: gene_models\nfile: genes.gtf",
-                "genes.gtf": demo_gtf_content
-            }
-        }
-    }
-
-
-@pytest.fixture
-def emb_proto(repo_content, tmp_path):
-    src_proto = build_embedded_protocol(
-        "src", str(tmp_path), content=repo_content)
-    return src_proto
-
-
-@pytest.fixture
-def fsspec_proto(
-        emb_proto, tmp_path_factory,
-        s3_base,  # pylint: disable=unused-argument
-        http_server):
-
-    def builder(scheme="file"):
-        tmp_dir = tmp_path_factory.mktemp(
-            basename="fsspec", numbered=True)
-
-        if scheme == "file":
-            proto = build_fsspec_protocol("test", f"file://{tmp_dir}")
-            for res in emb_proto.get_all_resources():
-                proto.copy_resource(res)
-
-        elif scheme == "s3":
-            proto = build_fsspec_protocol(
-                "test", f"s3:/{tmp_dir}",
-                endpoint_url="http://127.0.0.1:5555/")
-
-            for res in emb_proto.get_all_resources():
-                proto.copy_resource(res)
-        elif scheme == "http":
-            proto = build_fsspec_protocol("test", f"file://{tmp_dir}")
-            for res in emb_proto.get_all_resources():
-                proto.copy_resource(res)
-            proto.build_content_file()
-
-            http_server(str(tmp_dir))
-            proto = build_fsspec_protocol("test", "http://127.0.0.1:16510")
-        else:
-            raise ValueError(f"unsupported scheme: {scheme}")
-
-        return proto
-
-    return builder
-
 
 @pytest.mark.parametrize("filesystem", [
     "file",
@@ -82,7 +13,7 @@ def test_get_all_resources(fsspec_proto, filesystem):
     proto = fsspec_proto(filesystem)
 
     resources = list(proto.get_all_resources())
-    assert len(resources) == 2, resources
+    assert len(resources) == 4, resources
 
 
 @pytest.mark.parametrize("filesystem", [
@@ -93,7 +24,7 @@ def test_collect_all_resources(fsspec_proto, filesystem):
     proto = fsspec_proto(filesystem)
 
     resources = list(proto.collect_all_resources())
-    assert len(resources) == 2, resources
+    assert len(resources) == 4, resources
 
 
 @pytest.mark.parametrize("filesystem", [
@@ -188,7 +119,7 @@ def test_collect_resource_entries(fsspec_proto, filesystem):
     res = proto.get_resource("one")
 
     entries = proto.collect_resource_entries(res)
-    assert len(entries) == 2
+    assert len(entries) == 4
 
     entry = entries["data.txt"]
     assert entry.name == "data.txt"
@@ -311,7 +242,7 @@ def test_build_manifest(fsspec_proto, filesystem):
 
     manifest = proto.build_manifest(res)
 
-    assert len(manifest) == 2
+    assert len(manifest) == 4
     assert manifest["data.txt"].size == 7
     assert manifest["data.txt"].md5 == \
         "c1cfdaf7e22865b29b8d62a564dc8f23"
@@ -332,9 +263,7 @@ def test_load_manifest(fsspec_proto, filesystem):
 
     manifest = proto.load_manifest(res)
 
-    assert len(manifest) == 2
-
-    assert len(manifest) == 2
+    assert len(manifest) == 4
     assert manifest["data.txt"].size == 7
     assert manifest["data.txt"].md5 == \
         "c1cfdaf7e22865b29b8d62a564dc8f23"
@@ -374,9 +303,8 @@ def test_get_manifest(fsspec_proto, filesystem):
 
     manifest = proto.get_manifest(res)
 
-    assert len(manifest) == 2
+    assert len(manifest) == 4
 
-    assert len(manifest) == 2
     assert manifest["data.txt"].size == 7
     assert manifest["data.txt"].md5 == \
         "c1cfdaf7e22865b29b8d62a564dc8f23"
@@ -404,9 +332,7 @@ def test_get_missing_manifest(fsspec_proto, filesystem):
     # now manifest file is missing... proto should recreate it...
     manifest = proto.get_manifest(res)
 
-    assert len(manifest) == 2
-
-    assert len(manifest) == 2
+    assert len(manifest) == 4
     assert manifest["data.txt"].size == 7
     assert manifest["data.txt"].md5 == \
         "c1cfdaf7e22865b29b8d62a564dc8f23"
@@ -441,12 +367,12 @@ def test_delete_resource_file(fsspec_proto, filesystem):
     "file",
     "s3",
 ])
-def test_copy_resource_file(emb_proto, fsspec_proto, filesystem):
-
+def test_copy_resource_file(embedded_proto, fsspec_proto, filesystem):
     # Given
+    src_proto = embedded_proto()
     proto = fsspec_proto(filesystem)
 
-    src_res = emb_proto.get_resource("sub/two")
+    src_res = src_proto.get_resource("sub/two")
     dst_res = proto.get_resource("sub/two")
 
     # When
@@ -469,12 +395,13 @@ def test_copy_resource_file(emb_proto, fsspec_proto, filesystem):
     "file",
     "s3",
 ])
-def test_copy_resource(emb_proto, fsspec_proto, filesystem):
+def test_copy_resource(embedded_proto, fsspec_proto, filesystem):
 
     # Given
+    src_proto = embedded_proto()
     proto = fsspec_proto(filesystem)
 
-    src_res = emb_proto.get_resource("sub/two")
+    src_res = src_proto.get_resource("sub/two")
 
     # When
     proto.copy_resource(src_res)
@@ -497,12 +424,13 @@ def test_copy_resource(emb_proto, fsspec_proto, filesystem):
     "s3",
 ])
 def test_update_resource_file_when_missing(
-        emb_proto, fsspec_proto, filesystem):
+        embedded_proto, fsspec_proto, filesystem):
 
     # Given
+    src_proto = embedded_proto()
     proto = fsspec_proto(filesystem)
 
-    src_res = emb_proto.get_resource("sub/two")
+    src_res = src_proto.get_resource("sub/two")
     dst_res = proto.get_resource("sub/two")
 
     proto.delete_resource_file(dst_res, "genes.gtf")
@@ -528,12 +456,13 @@ def test_update_resource_file_when_missing(
     "s3",
 ])
 def test_update_resource_file_when_changed(
-        emb_proto, fsspec_proto, filesystem):
+        embedded_proto, fsspec_proto, filesystem):
 
     # Given
+    src_proto = embedded_proto()
     proto = fsspec_proto(filesystem)
 
-    src_res = emb_proto.get_resource("sub/two")
+    src_res = src_proto.get_resource("sub/two")
     dst_res = proto.get_resource("sub/two")
 
     with proto.open_raw_file(dst_res, "genes.gtf", mode="wt") as outfile:

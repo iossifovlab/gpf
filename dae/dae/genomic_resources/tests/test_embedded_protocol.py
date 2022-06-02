@@ -101,7 +101,7 @@ def test_scan_path_for_resources(embedded_proto, tmp_path):
     result_files = sorted(list(
         proto._scan_resource_for_files(res_path, [])))
 
-    assert len(result_files) == 2
+    assert len(result_files) == 4
     assert result_files[0] == \
         ("data.txt", f"memory://{tmp_path}/one/data.txt")
     assert result_files[1] == \

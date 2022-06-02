@@ -154,21 +154,8 @@ def test_open_raw_file_copies_the_file_three_b(caching_proto, caching_scheme):
     "s3",
 ])
 def test_open_tabix_file_simple(
-        caching_proto, tabix_file, tabix_to_resource, caching_scheme):
+        caching_proto, caching_scheme):
     proto = caching_proto(caching_scheme)
-
-    tabix_to_resource(
-        tabix_file(
-            content="""
-                chrom  pos_begin  pos_end    c1
-                1      180739426  180742735  0.065122
-                2      180742736  180742736  0.156342
-                3      180742737  180742813  0.327393
-                """,
-            seq_col=0, start_col=1, end_col=2, line_skip=1),
-        proto=proto.remote_protocol,
-        resource_id="one",
-        filename="test.txt.gz")
 
     res = proto.get_resource("one")
     with proto.open_tabix_file(res, "test.txt.gz") as tabix:

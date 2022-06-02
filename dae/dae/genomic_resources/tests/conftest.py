@@ -18,6 +18,8 @@ from RangeHTTPServer import RangeRequestHandler  # type: ignore
 
 from dae.genomic_resources.repository import \
     GR_CONF_FILE_NAME
+from dae.genomic_resources.fsspec_protocol import \
+    build_fsspec_protocol
 from dae.genomic_resources.embedded_protocol import \
     build_embedded_protocol
 from dae.genomic_resources.dir_repository import GenomicResourceDirRepo
@@ -159,6 +161,47 @@ def genomic_resource_fixture_s3_repo(genomic_resource_fixture_dir_repo, s3):
 
 
 @pytest.fixture
+def tabix_file(tmp_path_factory):
+
+    def builder(content, **kwargs):
+        content = textwrap.dedent(content)
+        content = convert_to_tab_separated(content)
+        tmpfilename = tmp_path_factory.mktemp(
+            basename="tabix", numbered=True) / "temp_tabix.txt"
+        with open(tmpfilename, "wt", encoding="utf8") as outfile:
+            outfile.write(content)
+        tabix_filename = f"{tmpfilename}.gz"
+        index_filename = f"{tabix_filename}.tbi"
+
+        # pylint: disable=no-member
+        pysam.tabix_compress(tmpfilename, tabix_filename)
+        pysam.tabix_index(tabix_filename, **kwargs)
+
+        return tabix_filename, index_filename
+
+    return builder
+
+
+def tabix_to_resource(tabix_source, proto, resource_id, filename):
+
+    res = proto.get_resource(resource_id)
+    tabix_filename, index_filename = tabix_source
+    with proto.open_raw_file(res, filename, "wb") as outfile, \
+            open(tabix_filename, "rb") as infile:
+        data = infile.read()
+        outfile.write(data)
+
+    with proto.open_raw_file(res, f"{filename}.tbi", "wb") as outfile, \
+            open(index_filename, "rb") as infile:
+        data = infile.read()
+        outfile.write(data)
+
+    proto.save_manifest(res, proto.build_manifest(res))
+    proto.invalidate()
+    proto.build_content_file()
+
+
+@pytest.fixture
 def embedded_content():
     demo_gtf_content = "TP53\tchr3\t300\t200"
     return {
@@ -188,54 +231,66 @@ def embedded_content():
 
 
 @pytest.fixture
-def embedded_proto(embedded_content, tmp_path):
+def embedded_proto(embedded_content, tmp_path, tabix_file):
 
     def builder(path=tmp_path):
         proto = build_embedded_protocol(
             "src", str(path), content=embedded_content)
+
+        tabix_to_resource(
+            tabix_file(
+                content="""
+                    chrom  pos_begin  pos_end    c1
+                    1      180739426  180742735  0.065122
+                    2      180742736  180742736  0.156342
+                    3      180742737  180742813  0.327393
+                    """,
+                seq_col=0, start_col=1, end_col=2, line_skip=1),
+            proto=proto,
+            resource_id="one",
+            filename="test.txt.gz")
+
         return proto
     return builder
 
 
 @pytest.fixture
-def tabix_file(tmp_path_factory):
+def fsspec_proto(
+        embedded_proto, tmp_path_factory,
+        s3_base,  # pylint: disable=unused-argument
+        http_server):
 
-    def builder(content, **kwargs):
-        content = textwrap.dedent(content)
-        content = convert_to_tab_separated(content)
-        tmpfilename = tmp_path_factory.mktemp(
-            basename="tabix", numbered=True) / "temp_tabix.txt"
-        with open(tmpfilename, "wt", encoding="utf8") as outfile:
-            outfile.write(content)
-        tabix_filename = f"{tmpfilename}.gz"
-        index_filename = f"{tabix_filename}.tbi"
+    def builder(scheme="file"):
+        tmp_dir = tmp_path_factory.mktemp(
+            basename="fsspec", numbered=True)
+        src_proto = embedded_proto(tmp_dir)
 
-        # pylint: disable=no-member
-        pysam.tabix_compress(tmpfilename, tabix_filename)
-        pysam.tabix_index(tabix_filename, **kwargs)
+        tmp_dir = tmp_path_factory.mktemp(
+            basename="fsspec", numbered=True)
 
-        return tabix_filename, index_filename
+        if scheme == "file":
+            proto = build_fsspec_protocol("test", f"file://{tmp_dir}")
+            for res in src_proto.get_all_resources():
+                proto.copy_resource(res)
 
-    return builder
+        elif scheme == "s3":
+            proto = build_fsspec_protocol(
+                "test", f"s3:/{tmp_dir}",
+                endpoint_url="http://127.0.0.1:5555/")
 
+            for res in src_proto.get_all_resources():
+                proto.copy_resource(res)
+        elif scheme == "http":
+            proto = build_fsspec_protocol("test", f"file://{tmp_dir}")
+            for res in src_proto.get_all_resources():
+                proto.copy_resource(res)
+            proto.build_content_file()
 
-@pytest.fixture
-def tabix_to_resource():
+            http_server(str(tmp_dir))
+            proto = build_fsspec_protocol("test", "http://127.0.0.1:16510")
+        else:
+            raise ValueError(f"unsupported scheme: {scheme}")
 
-    def builder(tabix_source, proto, resource_id, filename):
-        res = proto.get_resource(resource_id)
-        tabix_filename, index_filename = tabix_source
-        with proto.open_raw_file(res, filename, "wb") as outfile, \
-                open(tabix_filename, "rb") as infile:
-            data = infile.read()
-            outfile.write(data)
-
-        with proto.open_raw_file(res, f"{filename}.tbi", "wb") as outfile, \
-                open(index_filename, "rb") as infile:
-            data = infile.read()
-            outfile.write(data)
-
-        proto.save_manifest(res, proto.build_manifest(res))
-        proto.invalidate()
+        return proto
 
     return builder
