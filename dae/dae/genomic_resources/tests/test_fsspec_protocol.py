@@ -463,3 +463,66 @@ def test_copy_resource(emb_proto, fsspec_proto, filesystem):
     assert state.filename == "genes.gtf"
     assert state.timestamp == timestamp
     assert state.md5 == "d9636a8dca9e5626851471d1c0ea92b1"
+
+
+@pytest.mark.parametrize("filesystem", [
+    "local",
+    "s3",
+])
+def test_update_resource_file_when_missing(
+        emb_proto, fsspec_proto, filesystem):
+
+    # Given
+    proto = fsspec_proto(filesystem)
+
+    src_res = emb_proto.get_resource("sub/two")
+    dst_res = proto.get_resource("sub/two")
+
+    proto.delete_resource_file(dst_res, "genes.gtf")
+    assert not proto.file_exists(dst_res, "genes.gtf")
+
+    # When
+    state = proto.update_resource_file(src_res, dst_res, "genes.gtf")
+
+    # Then
+    assert proto.file_exists(dst_res, "genes.gtf")
+
+    timestamp = proto.get_resource_file_timestamp(dst_res, "genes.gtf")
+
+    assert state.resource_id == "sub/two"
+    assert state.version == "1.0"
+    assert state.filename == "genes.gtf"
+    assert state.timestamp == timestamp
+    assert state.md5 == "d9636a8dca9e5626851471d1c0ea92b1"
+
+
+@pytest.mark.parametrize("filesystem", [
+    "local",
+    "s3",
+])
+def test_update_resource_file_when_changed(
+        emb_proto, fsspec_proto, filesystem):
+
+    # Given
+    proto = fsspec_proto(filesystem)
+
+    src_res = emb_proto.get_resource("sub/two")
+    dst_res = proto.get_resource("sub/two")
+
+    with proto.open_raw_file(dst_res, "genes.gtf", mode="wt") as outfile:
+        outfile.write("aaaa")
+    proto.save_manifest(dst_res, proto.build_manifest(dst_res))
+
+    # When
+    state = proto.update_resource_file(src_res, dst_res, "genes.gtf")
+
+    # Then
+    assert proto.file_exists(dst_res, "genes.gtf")
+
+    timestamp = proto.get_resource_file_timestamp(dst_res, "genes.gtf")
+
+    assert state.resource_id == "sub/two"
+    assert state.version == "1.0"
+    assert state.filename == "genes.gtf"
+    assert state.timestamp == timestamp
+    assert state.md5 == "d9636a8dca9e5626851471d1c0ea92b1"

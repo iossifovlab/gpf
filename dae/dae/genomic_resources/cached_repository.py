@@ -3,7 +3,7 @@ import os
 import pathlib
 import logging
 
-from typing import Optional, Dict
+from typing import Iterable, Optional, Dict
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import pysam
@@ -110,7 +110,7 @@ class CachingDirectoryRepo(GenomicResourceDirRepo):
         return super().open_raw_file(
             resource, filename, mode, uncompress, seekable)
 
-    def open_tabix_file(self, resource,  filename,
+    def open_tabix_file(self, resource, filename,
                         index_filename=None):
 
         full_file_path = self._copy_or_update_local_file(
@@ -123,10 +123,6 @@ class CachingDirectoryRepo(GenomicResourceDirRepo):
 
         return pysam.TabixFile(  # pylint: disable=no-member
             full_file_path, index=full_index_path)
-
-    # def get_files(self, resource: GenomicResource):
-    #     for entry in resource.get_manifest():
-    #         yield entry.name, entry.size, entry.time
 
     def _get_local_file_content(
             self, genomic_resource, filename, uncompress=True, mode="t"):
@@ -228,7 +224,8 @@ class GenomicResourceCachedRepo(GenomicResourceRepo):
         futures = []
 
         if resource_ids is None:
-            resources = self.child.get_all_resources()
+            resources: Iterable[GenomicResource] = \
+                self.child.get_all_resources()
         else:
             resources = []
             for resource_id in resource_ids:

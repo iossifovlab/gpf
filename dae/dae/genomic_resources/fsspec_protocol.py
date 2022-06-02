@@ -218,7 +218,8 @@ class FsspecReadWriteProtocol(
 
         url = os.path.join(self.url, resource_path, *path_array)
         if not self.filesystem.isdir(url):
-            yield os.path.join(*path_array), url
+            if path_array:
+                yield os.path.join(*path_array), url
             return
 
         path = os.path.join(self.root_path, resource_path, *path_array)
@@ -358,10 +359,16 @@ class FsspecReadWriteProtocol(
             self,
             remote_resource: GenomicResource,
             dest_resource: GenomicResource,
-            filename: str):
-        """Copy a remote resource file into local repository."""
+            filename: str) -> ResourceFileState:
+        """Copy a resource file into repository."""
         assert dest_resource.resource_id == remote_resource.resource_id
         assert dest_resource.repo == self
+        remote_manifest = remote_resource.get_manifest()
+        if filename not in remote_manifest:
+            raise FileNotFoundError(
+                f"{filename} not found in remote resource "
+                f"{remote_resource.resource_id}")
+        manifest_entry = remote_manifest[filename]
 
         dest_filepath = self.get_resource_file_url(dest_resource, filename)
         dest_parent = os.path.dirname(dest_filepath)
@@ -390,6 +397,11 @@ class FsspecReadWriteProtocol(
         if not self.filesystem.exists(dest_filepath):
             raise IOError(f"destination file not created {dest_filepath}")
 
+        if md5 != manifest_entry.md5:
+            raise IOError(
+                f"file copy is broken; md5sum are different: "
+                f"{md5}!={manifest_entry.md5}")
+
         state = self.build_resource_file_state(
             dest_resource,
             filename,
@@ -397,3 +409,35 @@ class FsspecReadWriteProtocol(
 
         self.save_resource_file_state(state)
         return state
+
+    def update_resource_file(
+            self, remote_resource: GenomicResource,
+            dest_resource: GenomicResource,
+            filename: str) -> ResourceFileState:
+        """Update a resource file into repository if needed."""
+        assert dest_resource.resource_id == remote_resource.resource_id
+        assert dest_resource.repo == self
+
+        local_state = self.load_resource_file_state(dest_resource, filename)
+        if local_state is None:
+            return self.copy_resource_file(
+                remote_resource, dest_resource, filename)
+
+        timestamp = self.get_resource_file_timestamp(dest_resource, filename)
+        size = self.get_resource_file_size(dest_resource, filename)
+        if timestamp != local_state.timestamp or \
+                size != local_state.size:
+            return self.copy_resource_file(
+                remote_resource, dest_resource, filename)
+
+        remote_manifest = remote_resource.get_manifest()
+        if filename not in remote_manifest:
+            raise FileNotFoundError(
+                f"{filename} not found in remote resource "
+                f"{remote_resource.resource_id}")
+        manifest_entry = remote_manifest[filename]
+        if local_state.md5 != manifest_entry.md5:
+            return self.copy_resource_file(
+                remote_resource, dest_resource, filename)
+
+        return local_state
