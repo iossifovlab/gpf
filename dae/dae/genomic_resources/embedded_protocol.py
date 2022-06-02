@@ -22,7 +22,6 @@ logger = logging.getLogger(__name__)
 def _scan_for_resource_files(content_dict: dict[str, Any], parent_dirs):
 
     for path, content in content_dict.items():
-        print(path, content)
         if isinstance(content, dict):
             # handle subdirectory
             for fname, fcontent in _scan_for_resource_files(

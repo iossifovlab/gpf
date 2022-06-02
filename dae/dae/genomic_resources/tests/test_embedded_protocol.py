@@ -9,7 +9,7 @@ from dae.genomic_resources.embedded_protocol import \
 def test_scan_content_for_resources(embedded_content):
     result = list(_scan_for_resources(embedded_content, []))
 
-    assert len(result) == 4
+    assert len(result) == 5
 
 
 def test_scan_for_resource_one_files(embedded_content):
@@ -92,7 +92,7 @@ def test_scan_path_for_resources(embedded_proto, tmp_path):
     proto = embedded_proto()
     result = list(proto._scan_path_for_resources([]))
 
-    assert len(result) == 4
+    assert len(result) == 5
     res_id, res_version, res_path = result[0]
     assert res_id == "one"
     assert res_version == (0,)
@@ -123,7 +123,7 @@ def test_scan_path_for_resources(embedded_proto, tmp_path):
 
 def test_embedded_proto_simple(embedded_proto):
     proto = embedded_proto()
-    assert len(list(proto.get_all_resources())) == 4
+    assert len(list(proto.get_all_resources())) == 5
 
 
 def test_get_resource(embedded_proto):

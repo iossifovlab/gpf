@@ -13,7 +13,7 @@ def test_get_all_resources(fsspec_proto, filesystem):
     proto = fsspec_proto(filesystem)
 
     resources = list(proto.get_all_resources())
-    assert len(resources) == 4, resources
+    assert len(resources) == 5, resources
 
 
 @pytest.mark.parametrize("filesystem", [
@@ -24,7 +24,7 @@ def test_collect_all_resources(fsspec_proto, filesystem):
     proto = fsspec_proto(filesystem)
 
     resources = list(proto.collect_all_resources())
-    assert len(resources) == 4, resources
+    assert len(resources) == 5, resources
 
 
 @pytest.mark.parametrize("filesystem", [

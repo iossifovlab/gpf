@@ -1,3 +1,5 @@
+# pylint: disable=redefined-outer-name,C0114,C0116,protected-access
+
 import os
 
 import pytest
@@ -13,12 +15,12 @@ from dae.genomic_resources.reference_genome import \
 def test_basic_sequence_resoruce():
     res = build_a_test_resource({
         "genomic_resource.yaml": "{type: genome, filename: chr.fa}",
-        "chr.fa": convert_to_tab_separated('''
+        "chr.fa": convert_to_tab_separated("""
                 >pesho
                 NNACCCAAAC
                 GGGCCTTCCN
                 NNNA
-        '''),
+        """),
         "chr.fa.fai": "pesho\t24\t7\t10\t11\n"
     })
     ref = open_reference_genome_from_resource(res)

@@ -481,16 +481,15 @@ class FsspecReadWriteProtocol(
         return local_state
 
     def build_content_file(self):
-        """Build the content of the repository - .CONTENTS file."""
-
+        """Build the content of the repository (i.e '.CONTENTS' file)."""
         content = [
             {
-                "id": gr.resource_id,
-                "version": gr.get_version_str(),
-                "config": gr.get_config(),
-                "manifest": gr.get_manifest().to_manifest_entries()
+                "id": res.resource_id,
+                "version": res.get_version_str(),
+                "config": res.get_config(),
+                "manifest": res.get_manifest().to_manifest_entries()
             }
-            for gr in self.get_all_resources()]
+            for res in self.get_all_resources()]
         content = sorted(content, key=lambda x: x["id"])
 
         content_filepath = os.path.join(

@@ -4,7 +4,7 @@ import logging
 import os
 import tempfile
 import shutil
-import textwrap
+import glob
 
 from threading import Thread, Condition
 from functools import partial
@@ -83,7 +83,7 @@ class HTTPRepositoryServer(Thread):
             self.httpd.serve_forever()
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture
 def http_server(request):
 
     def builder(dirname):
@@ -99,6 +99,7 @@ def http_server(request):
             http_server.server_address)
 
         def fin():
+            http_server.httpd.socket.close()
             http_server.httpd.shutdown()
             http_server.join()
 
@@ -107,6 +108,28 @@ def http_server(request):
         return http_server
 
     return builder
+
+
+# @contextlib.contextmanager
+# def serve():
+#     port = 16510
+#     server_address = ("", port)
+#     httpd = HTTPServer(server_address, HTTPTestHandler)
+#     th = threading.Thread(target=httpd.serve_forever)
+#     th.daemon = True
+#     th.start()
+#     try:
+#         yield "http://localhost:%i" % port
+#     finally:
+#         httpd.socket.close()
+#         httpd.shutdown()
+#         th.join()
+
+
+# @pytest.fixture(scope="module")
+# def server():
+#     with serve() as s:
+#         yield s
 
 
 @pytest.fixture(scope="module")
@@ -164,7 +187,6 @@ def genomic_resource_fixture_s3_repo(genomic_resource_fixture_dir_repo, s3):
 def tabix_file(tmp_path_factory):
 
     def builder(content, **kwargs):
-        content = textwrap.dedent(content)
         content = convert_to_tab_separated(content)
         tmpfilename = tmp_path_factory.mktemp(
             basename="tabix", numbered=True) / "temp_tabix.txt"
@@ -226,6 +248,17 @@ def embedded_content():
             "sub2": {
                 "b.txt": "b"
             }
+        },
+        "xxxxx-genome": {
+            "genomic_resource.yaml": "type: genome\nfilename: chr.fa",
+            "chr.fa": convert_to_tab_separated(
+                """
+                    >xxxxx
+                    NNACCCAAAC
+                    GGGCCTTCCN
+                    NNNA
+                """),
+            "chr.fa.fai": "xxxxx\t24\t7\t10\t11\n"
         }
     }
 
@@ -239,13 +272,15 @@ def embedded_proto(embedded_content, tmp_path, tabix_file):
 
         tabix_to_resource(
             tabix_file(
-                content="""
-                    chrom  pos_begin  pos_end    c1
-                    1      180739426  180742735  0.065122
-                    2      180742736  180742736  0.156342
-                    3      180742737  180742813  0.327393
-                    """,
-                seq_col=0, start_col=1, end_col=2, line_skip=1),
+                """
+                    #chrom  pos_begin  pos_end    c1
+                    1      1          10         1.0
+                    2      1          10         2.0
+                    2      11         20         2.5
+                    3      1          10         3.0
+                    3      11         20         3.5
+                """,
+                seq_col=0, start_col=1, end_col=2),
             proto=proto,
             resource_id="one",
             filename="test.txt.gz")
@@ -256,6 +291,7 @@ def embedded_proto(embedded_content, tmp_path, tabix_file):
 
 @pytest.fixture
 def fsspec_proto(
+        request,
         embedded_proto, tmp_path_factory,
         s3_base,  # pylint: disable=unused-argument
         http_server):
@@ -265,22 +301,47 @@ def fsspec_proto(
             basename="fsspec", numbered=True)
         src_proto = embedded_proto(tmp_dir)
 
-        tmp_dir = tmp_path_factory.mktemp(
-            basename="fsspec", numbered=True)
+        def fin():
+            for fname in glob.glob("*.tbi"):
+                os.remove(fname)
+
+        request.addfinalizer(fin)
 
         if scheme == "file":
+
+            tmp_dir = tmp_path_factory.mktemp(
+                basename="file", numbered=True)
             proto = build_fsspec_protocol("test", f"file://{tmp_dir}")
             for res in src_proto.get_all_resources():
                 proto.copy_resource(res)
+            return proto
 
-        elif scheme == "s3":
+        if scheme == "s3":
+            # pylint: disable=import-outside-toplevel
+            from botocore.session import Session  # type: ignore
+            endpoint_url = "http://127.0.0.1:5555/"
+            # NB: we use the sync botocore client for setup
+            session = Session()
+            client = session.create_client("s3", endpoint_url=endpoint_url)
+            client.create_bucket(Bucket="test-bucket", ACL="public-read")
+
+            tmp_dir = tmp_path_factory.mktemp(
+                basename="s3", numbered=True)
+
             proto = build_fsspec_protocol(
-                "test", f"s3:/{tmp_dir}",
-                endpoint_url="http://127.0.0.1:5555/")
+                "test", f"s3://test-bucket{tmp_dir}",
+                endpoint_url=endpoint_url)
 
             for res in src_proto.get_all_resources():
                 proto.copy_resource(res)
-        elif scheme == "http":
+
+            proto.filesystem.invalidate_cache()
+            return proto
+
+        if scheme == "http":
+            tmp_dir = tmp_path_factory.mktemp(
+                basename="http", numbered=True)
+
             proto = build_fsspec_protocol("test", f"file://{tmp_dir}")
             for res in src_proto.get_all_resources():
                 proto.copy_resource(res)
@@ -288,9 +349,10 @@ def fsspec_proto(
 
             http_server(str(tmp_dir))
             proto = build_fsspec_protocol("test", "http://127.0.0.1:16510")
-        else:
-            raise ValueError(f"unsupported scheme: {scheme}")
 
-        return proto
+            proto.filesystem.invalidate_cache()
+            return proto
+
+        raise ValueError(f"unsupported scheme: {scheme}")
 
     return builder
