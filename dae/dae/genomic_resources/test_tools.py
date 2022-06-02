@@ -9,10 +9,10 @@ def build_a_test_resource(content: str):
     return GenomicResourceEmbededRepo("", content).get_resource("")
 
 
-def convert_to_tab_separated(s: str):
+def convert_to_tab_separated(content: str):
     result = "\n".join(
         "\t".join(line.strip("\n\r").split())
-        for line in s.split("\n")
+        for line in content.split("\n")
         if line.strip("\r\n") != "")
     return result.replace("||", " ")
 

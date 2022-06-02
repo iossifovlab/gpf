@@ -11,6 +11,7 @@ from typing import List, Generator, cast, Union, Optional
 from dataclasses import asdict
 
 import fsspec  # type: ignore
+from fsspec.implementations.local import LocalFileSystem  # type: ignore
 import pysam
 import yaml
 
@@ -36,11 +37,18 @@ def build_fsspec_protocol(proto_id: str, root_url: str, **kwargs) -> Union[
     url = urlparse(root_url)
 
     if url.scheme in {"file", ""}:
-        filesystem = fsspec.implementations.local.LocalFileSystem()
+        filesystem = LocalFileSystem()
         return FsspecReadWriteProtocol(
             proto_id, root_url, filesystem)
     if url.scheme in {"s3"}:
+        # pylint: disable=import-outside-toplevel
+        from s3fs.core import S3FileSystem  # type: ignore
+
         filesystem = kwargs.get("filesystem")
+        if filesystem is None:
+            endpoint_url = kwargs.get("endpoint_url")
+            filesystem = S3FileSystem(
+                anon=False, client_kwargs={"endpoint_url": endpoint_url})
         return FsspecReadWriteProtocol(
             proto_id, root_url, filesystem)
 
@@ -58,15 +66,15 @@ class FsspecReadOnlyProtocol(ReadOnlyRepositoryProtocol):
         super().__init__(proto_id)
 
         parsed = urlparse(url)
-        self.schema = parsed.scheme
-        if self.schema == "":
-            self.schema = "file"
+        self.scheme = parsed.scheme
+        if self.scheme == "":
+            self.scheme = "file"
         self.netloc = parsed.netloc
         self.root_path = parsed.path
         if not self.root_path.startswith("/"):
             self.root_path = f"/{self.root_path}"
 
-        self.url = f"{self.schema}://{self.netloc}{self.root_path}"
+        self.url = f"{self.scheme}://{self.netloc}{self.root_path}"
         self.state_url = os.path.join(self.url, ".grr")
 
         self.filesystem = filesystem
@@ -147,11 +155,26 @@ class FsspecReadOnlyProtocol(ReadOnlyRepositoryProtocol):
 
     def open_tabix_file(self, resource, filename,
                         index_filename=None):
-        file_url = self.get_resource_file_url(resource, filename)
-        index_url = None
-        if index_filename:
-            index_url = str(self.get_resource_file_url(
-                resource, index_filename))
+
+        if self.scheme not in {"file", "s3", "http", "https"}:
+            raise IOError(
+                f"tabix files are not supported on schema {self.scheme}")
+
+        def process_tabix_url(url):
+            if self.scheme == "file":
+                return urlparse(url).path
+            elif self.scheme == "s3":
+                return self.filesystem.sign(url)
+            return url
+
+        file_url = process_tabix_url(
+            self.get_resource_file_url(resource, filename))
+
+        if index_filename is None:
+            index_filename = f"{filename}.tbi"
+        index_url = process_tabix_url(
+            self.get_resource_file_url(resource, index_filename))
+
         return pysam.TabixFile(  # pylint: disable=no-member
             file_url, index=index_url)
 
@@ -251,7 +274,7 @@ class FsspecReadWriteProtocol(
         for res_id, res_ver, res_path in self._scan_path_for_resources([]):
             res_fullpath = os.path.join(self.root_path, res_path)
             assert res_fullpath.startswith("/")
-            res_fullpath = f"{self.schema}://{self.netloc}{res_fullpath}"
+            res_fullpath = f"{self.scheme}://{self.netloc}{res_fullpath}"
 
             with self.filesystem.open(
                     os.path.join(

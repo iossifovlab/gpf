@@ -68,6 +68,9 @@ class CachingProtocol(ReadOnlyRepositoryProtocol):
     def open_tabix_file(self, resource, filename, index_filename=None):
         assert resource.repo == self.local_protocol
         self._refresh_resource_file(resource, filename)
+        if index_filename is None:
+            index_filename = f"{filename}.tbi"
+        self._refresh_resource_file(resource, index_filename)
 
         return self.local_protocol.open_tabix_file(
             resource, filename, index_filename)

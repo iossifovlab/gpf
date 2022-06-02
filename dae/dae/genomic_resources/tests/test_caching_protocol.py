@@ -1,6 +1,9 @@
-# pylint: disable=redefined-outer-name,C0114,C0116,protected-access
+# pylint: disable=redefined-outer-name,C0114,C0116,protected-access,no-member
+
 import pytest
 
+from dae.genomic_resources.fsspec_protocol import \
+    build_fsspec_protocol
 from dae.genomic_resources.embedded_protocol import \
     build_embedded_protocol
 from dae.genomic_resources.caching_protocol import \
@@ -25,72 +28,148 @@ def test_caching_repo_simple(embedded_proto, tmp_path):
 
 
 @pytest.fixture
-def caching_proto(embedded_proto, tmp_path):
+def caching_proto(
+        embedded_proto, tmp_path, s3_base):  # pylint: disable=unused-argument
 
-    remote_proto = embedded_proto(tmp_path / "source")
-    local_proto = build_embedded_protocol(
-        "local", str(tmp_path / "cache"), {})
+    def builder(caching_scheme="file"):
+        remote_proto = embedded_proto(tmp_path / "source")
 
-    proto = CachingProtocol("test_cache", remote_proto, local_proto)
-    return proto
+        if caching_scheme == "file":
+            caching_proto = build_fsspec_protocol(
+                "local", str(tmp_path / "cache"))
+        elif caching_scheme == "s3":
+            # pylint: disable=import-outside-toplevel
+            from botocore.session import Session  # type: ignore
+            endpoint_url = "http://127.0.0.1:5555/"
+            # NB: we use the sync botocore client for setup
+            session = Session()
+            client = session.create_client("s3", endpoint_url=endpoint_url)
+            client.create_bucket(Bucket="test-bucket", ACL="public-read")
+
+            caching_proto = build_fsspec_protocol(
+                "local",
+                f"s3://test-bucket{tmp_path}",
+                endpoint_url=endpoint_url
+            )
+        else:
+            raise ValueError(f"Unsupported caching scheme: {caching_scheme}")
+
+        proto = CachingProtocol("test_cache", remote_proto, caching_proto)
+        return proto
+
+    return builder
 
 
-def test_get_resource_three(caching_proto):
-
-    res = caching_proto.get_resource("three")
+@pytest.mark.parametrize("caching_scheme", [
+    "file",
+    "s3",
+])
+def test_get_resource_three(caching_proto, caching_scheme):
+    proto = caching_proto(caching_scheme)
+    res = proto.get_resource("three")
 
     assert res.resource_id == "three"
     assert res.version == (2, 0)
 
 
-def test_get_resource_two(caching_proto):
-
-    res = caching_proto.get_resource("sub/two")
+@pytest.mark.parametrize("caching_scheme", [
+    "file",
+    "s3",
+])
+def test_get_resource_two(caching_proto, caching_scheme):
+    proto = caching_proto(caching_scheme)
+    res = proto.get_resource("sub/two")
 
     assert res.resource_id == "sub/two"
     assert res.version == (1, 0)
 
 
-def test_get_resource_copies_only_resource_config_three(caching_proto):
+@pytest.mark.parametrize("caching_scheme", [
+    "file",
+    "s3",
+])
+def test_get_resource_copies_only_resource_config_three(
+        caching_proto, caching_scheme):
+    proto = caching_proto(caching_scheme)
+    res = proto.get_resource("three")
 
-    res = caching_proto.get_resource("three")
-
-    local_proto = caching_proto.local_protocol
+    local_proto = proto.local_protocol
     assert local_proto.file_exists(res, "genomic_resource.yaml")
     assert not local_proto.file_exists(res, "sub1/a.txt")
     assert not local_proto.file_exists(res, "sub2/b.txt")
 
 
-def test_get_resource_copies_only_resource_config_two(caching_proto):
+@pytest.mark.parametrize("caching_scheme", [
+    "file",
+    "s3",
+])
+def test_get_resource_copies_only_resource_config_two(
+        caching_proto, caching_scheme):
+    proto = caching_proto(caching_scheme)
+    res = proto.get_resource("sub/two")
 
-    res = caching_proto.get_resource("sub/two")
-
-    local_proto = caching_proto.local_protocol
+    local_proto = proto.local_protocol
     assert local_proto.file_exists(res, "genomic_resource.yaml")
     assert not local_proto.file_exists(res, "genes.gtf")
 
 
-def test_open_raw_file_copies_the_file_three_a(caching_proto):
+@pytest.mark.parametrize("caching_scheme", [
+    "file",
+    "s3",
+])
+def test_open_raw_file_copies_the_file_three_a(
+        caching_proto, caching_scheme):
 
-    res = caching_proto.get_resource("three")
-    with caching_proto.open_raw_file(res, "sub1/a.txt") as infile:
+    proto = caching_proto(caching_scheme)
+    res = proto.get_resource("three")
+    with proto.open_raw_file(res, "sub1/a.txt") as infile:
         content = infile.read()
     assert content == "a"
 
-    local_proto = caching_proto.local_protocol
+    local_proto = proto.local_protocol
     assert local_proto.file_exists(res, "genomic_resource.yaml")
     assert local_proto.file_exists(res, "sub1/a.txt")
     assert not local_proto.file_exists(res, "sub2/b.txt")
 
 
-def test_open_raw_file_copies_the_file_three_b(caching_proto):
-
-    res = caching_proto.get_resource("three")
-    with caching_proto.open_raw_file(res, "sub2/b.txt") as infile:
+@pytest.mark.parametrize("caching_scheme", [
+    "file",
+    "s3",
+])
+def test_open_raw_file_copies_the_file_three_b(caching_proto, caching_scheme):
+    proto = caching_proto(caching_scheme)
+    res = proto.get_resource("three")
+    with proto.open_raw_file(res, "sub2/b.txt") as infile:
         content = infile.read()
     assert content == "b"
 
-    local_proto = caching_proto.local_protocol
+    local_proto = proto.local_protocol
     assert local_proto.file_exists(res, "genomic_resource.yaml")
     assert local_proto.file_exists(res, "sub2/b.txt")
     assert not local_proto.file_exists(res, "sub1/a.txt")
+
+
+@pytest.mark.parametrize("caching_scheme", [
+    "file",
+    "s3",
+])
+def test_open_tabix_file_simple(
+        caching_proto, tabix_file, tabix_to_resource, caching_scheme):
+    proto = caching_proto(caching_scheme)
+
+    tabix_to_resource(
+        tabix_file(
+            content="""
+                chrom  pos_begin  pos_end    c1
+                1      180739426  180742735  0.065122
+                2      180742736  180742736  0.156342
+                3      180742737  180742813  0.327393
+                """,
+            seq_col=0, start_col=1, end_col=2, line_skip=1),
+        proto=proto.remote_protocol,
+        resource_id="one",
+        filename="test.txt.gz")
+
+    res = proto.get_resource("one")
+    with proto.open_tabix_file(res, "test.txt.gz") as tabix:
+        assert tabix.contigs == ["1", "2", "3"]

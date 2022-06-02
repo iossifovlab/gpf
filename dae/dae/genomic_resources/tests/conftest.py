@@ -4,13 +4,15 @@ import logging
 import os
 import tempfile
 import shutil
+import textwrap
 
 from threading import Thread, Condition
 from functools import partial
 
 from http.server import ThreadingHTTPServer
 
-import pytest
+import pytest  # type: ignore
+import pysam
 
 from RangeHTTPServer import RangeRequestHandler  # type: ignore
 
@@ -20,6 +22,7 @@ from dae.genomic_resources.embedded_protocol import \
     build_embedded_protocol
 from dae.genomic_resources.dir_repository import GenomicResourceDirRepo
 from dae.genomic_resources.url_repository import GenomicResourceURLRepo
+from dae.genomic_resources.test_tools import convert_to_tab_separated
 
 
 logger = logging.getLogger(__name__)
@@ -191,4 +194,48 @@ def embedded_proto(embedded_content, tmp_path):
         proto = build_embedded_protocol(
             "src", str(path), content=embedded_content)
         return proto
+    return builder
+
+
+@pytest.fixture
+def tabix_file(tmp_path_factory):
+
+    def builder(content, **kwargs):
+        content = textwrap.dedent(content)
+        content = convert_to_tab_separated(content)
+        tmpfilename = tmp_path_factory.mktemp(
+            basename="tabix", numbered=True) / "temp_tabix.txt"
+        with open(tmpfilename, "wt", encoding="utf8") as outfile:
+            outfile.write(content)
+        tabix_filename = f"{tmpfilename}.gz"
+        index_filename = f"{tabix_filename}.tbi"
+
+        # pylint: disable=no-member
+        pysam.tabix_compress(tmpfilename, tabix_filename)
+        pysam.tabix_index(tabix_filename, **kwargs)
+
+        return tabix_filename, index_filename
+
+    return builder
+
+
+@pytest.fixture
+def tabix_to_resource():
+
+    def builder(tabix_source, proto, resource_id, filename):
+        res = proto.get_resource(resource_id)
+        tabix_filename, index_filename = tabix_source
+        with proto.open_raw_file(res, filename, "wb") as outfile, \
+                open(tabix_filename, "rb") as infile:
+            data = infile.read()
+            outfile.write(data)
+
+        with proto.open_raw_file(res, f"{filename}.tbi", "wb") as outfile, \
+                open(index_filename, "rb") as infile:
+            data = infile.read()
+            outfile.write(data)
+
+        proto.save_manifest(res, proto.build_manifest(res))
+        proto.invalidate()
+    
     return builder
