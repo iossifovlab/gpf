@@ -237,5 +237,5 @@ def tabix_to_resource():
 
         proto.save_manifest(res, proto.build_manifest(res))
         proto.invalidate()
-    
+
     return builder

@@ -11,8 +11,8 @@ from typing import List, Tuple, cast
 import yaml
 import pysam  # type: ignore
 
-from .repository import GR_MANIFEST_FILE_NAME, GenomicResource,\
-    ManifestEntry, Manifest
+from .repository import GR_MANIFEST_FILE_NAME, \
+    GenomicResource, ManifestEntry, Manifest
 from .repository import GenomicResourceRepo
 from .repository import GenomicResourceRealRepo
 from .repository import find_genomic_resources_helper
@@ -25,9 +25,9 @@ logger = logging.getLogger(__name__)
 class GenomicResourceDirRepo(GenomicResourceRealRepo):
     """Provides directory genomic resources repository."""
 
-    def __init__(  # pylint: disable=unused-argument
-        self, repo_id, directory, **kwargs
-    ):
+    def __init__(
+            self, repo_id, directory,
+            **kwargs):  # pylint: disable=unused-argument
         super().__init__(repo_id)
         self.directory: pathlib.Path = pathlib.Path(directory)
         self.directory.mkdir(exist_ok=True, parents=True)
@@ -184,7 +184,7 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
         return manifest_entry
 
     def build_repo_content(self):
-        """Builds the content of the .CONTENTS file."""
+        """Build the content of the .CONTENTS file."""
         content = [
             {
                 "id": gr.resource_id,
@@ -238,16 +238,16 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
         self.save_manifest(local_resource, remote_manifest)
         self.refresh()
 
-    def open_tabix_file(self, resource,  filename,
+    def open_tabix_file(self, resource, filename,
                         index_filename=None):
         file_path = str(self.get_filepath(resource, filename))
         index_path = None
         if index_filename:
             index_path = str(self.get_filepath(
                 resource, index_filename))
-        return pysam.TabixFile(  # pylint: disable=no-member
-            file_path, index=index_path
-        )
+        # pylint: disable=no-member
+        return pysam.TabixFile(
+            file_path, index=index_path)
 
     def compute_md5_sum(self, resource, filename):
         """Computes a md5 hash for a file in the resource"""

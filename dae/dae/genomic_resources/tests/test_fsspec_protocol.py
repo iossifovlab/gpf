@@ -3,13 +3,12 @@
 import gzip
 import pytest
 
-from fsspec.implementations.local import LocalFileSystem  # type: ignore
-
 from dae.genomic_resources.repository import GR_CONF_FILE_NAME
 from dae.genomic_resources.embedded_protocol import \
     build_embedded_protocol
 
-from dae.genomic_resources.fsspec_protocol import FsspecReadWriteProtocol
+from dae.genomic_resources.fsspec_protocol import \
+    build_fsspec_protocol
 
 
 @pytest.fixture
@@ -37,21 +36,37 @@ def emb_proto(repo_content, tmp_path):
 
 
 @pytest.fixture
-def fsspec_proto(emb_proto, tmp_path, s3):
+def fsspec_proto(
+        emb_proto, tmp_path_factory,
+        s3_base,  # pylint: disable=unused-argument
+        http_server):
 
-    def builder(filesystem="local"):
-        if filesystem == "local":
-            proto = FsspecReadWriteProtocol(
-                "test", f"file://{tmp_path}", LocalFileSystem())
+    def builder(scheme="file"):
+        tmp_dir = tmp_path_factory.mktemp(
+            basename="fsspec", numbered=True)
 
-        elif filesystem == "s3":
-            proto = FsspecReadWriteProtocol(
-                "test", f"s3:/{tmp_path}", s3)
+        if scheme == "file":
+            proto = build_fsspec_protocol("test", f"file://{tmp_dir}")
+            for res in emb_proto.get_all_resources():
+                proto.copy_resource(res)
+
+        elif scheme == "s3":
+            proto = build_fsspec_protocol(
+                "test", f"s3:/{tmp_dir}",
+                endpoint_url="http://127.0.0.1:5555/")
+
+            for res in emb_proto.get_all_resources():
+                proto.copy_resource(res)
+        elif scheme == "http":
+            proto = build_fsspec_protocol("test", f"file://{tmp_dir}")
+            for res in emb_proto.get_all_resources():
+                proto.copy_resource(res)
+            proto.build_content_file()
+
+            http_server(str(tmp_dir))
+            proto = build_fsspec_protocol("test", "http://127.0.0.1:16510")
         else:
-            return None
-
-        for res in emb_proto.get_all_resources():
-            proto.copy_resource(res)
+            raise ValueError(f"unsupported scheme: {scheme}")
 
         return proto
 
@@ -59,10 +74,22 @@ def fsspec_proto(emb_proto, tmp_path, s3):
 
 
 @pytest.mark.parametrize("filesystem", [
-    "local",
+    "file",
+    "s3",
+    "http"
+])
+def test_get_all_resources(fsspec_proto, filesystem):
+    proto = fsspec_proto(filesystem)
+
+    resources = list(proto.get_all_resources())
+    assert len(resources) == 2, resources
+
+
+@pytest.mark.parametrize("filesystem", [
+    "file",
     "s3",
 ])
-def test_fsspec_proto_simple(fsspec_proto, filesystem):
+def test_collect_all_resources(fsspec_proto, filesystem):
     proto = fsspec_proto(filesystem)
 
     resources = list(proto.collect_all_resources())
@@ -70,7 +97,7 @@ def test_fsspec_proto_simple(fsspec_proto, filesystem):
 
 
 @pytest.mark.parametrize("filesystem", [
-    "local",
+    "file",
     "s3",
 ])
 def test_state_directory_exists(fsspec_proto, filesystem):
@@ -82,7 +109,7 @@ def test_state_directory_exists(fsspec_proto, filesystem):
 
 
 @pytest.mark.parametrize("filesystem", [
-    "local",
+    "file",
     "s3",
 ])
 def test_resource_paths(fsspec_proto, filesystem):
@@ -99,7 +126,7 @@ def test_resource_paths(fsspec_proto, filesystem):
 
 
 @pytest.mark.parametrize("filesystem", [
-    "local",
+    "file",
     "s3",
 ])
 def test_build_resource_file_state(fsspec_proto, filesystem):
@@ -127,7 +154,7 @@ def test_build_resource_file_state(fsspec_proto, filesystem):
 
 
 @pytest.mark.parametrize("filesystem", [
-    "local",
+    "file",
     "s3",
 ])
 def test_save_load_resource_file_state(fsspec_proto, filesystem):
@@ -152,7 +179,7 @@ def test_save_load_resource_file_state(fsspec_proto, filesystem):
 
 
 @pytest.mark.parametrize("filesystem", [
-    "local",
+    "file",
     "s3",
 ])
 def test_collect_resource_entries(fsspec_proto, filesystem):
@@ -173,7 +200,7 @@ def test_collect_resource_entries(fsspec_proto, filesystem):
 
 
 @pytest.mark.parametrize("filesystem", [
-    "local",
+    "file",
     "s3",
 ])
 def test_file_exists(fsspec_proto, filesystem):
@@ -186,7 +213,7 @@ def test_file_exists(fsspec_proto, filesystem):
 
 
 @pytest.mark.parametrize("filesystem", [
-    "local",
+    "file",
     "s3",
 ])
 def test_open_raw_file_text_read(fsspec_proto, filesystem):
@@ -200,7 +227,7 @@ def test_open_raw_file_text_read(fsspec_proto, filesystem):
 
 
 @pytest.mark.parametrize("filesystem", [
-    "local",
+    "file",
     "s3",
 ])
 def test_open_raw_file_text_write(fsspec_proto, filesystem):
@@ -215,7 +242,7 @@ def test_open_raw_file_text_write(fsspec_proto, filesystem):
 
 
 @pytest.mark.parametrize("filesystem", [
-    "local",
+    "file",
     "s3",
 ])
 def test_open_raw_file_text_write_compression(fsspec_proto, filesystem):
@@ -237,7 +264,7 @@ def test_open_raw_file_text_write_compression(fsspec_proto, filesystem):
 
 
 @pytest.mark.parametrize("filesystem", [
-    "local",
+    "file",
     "s3",
 ])
 def test_open_raw_file_text_read_compression(fsspec_proto, filesystem):
@@ -259,7 +286,7 @@ def test_open_raw_file_text_read_compression(fsspec_proto, filesystem):
 
 
 @pytest.mark.parametrize("filesystem", [
-    "local",
+    "file",
     "s3",
 ])
 def test_compute_md5_sum(fsspec_proto, filesystem):
@@ -274,7 +301,7 @@ def test_compute_md5_sum(fsspec_proto, filesystem):
 
 
 @pytest.mark.parametrize("filesystem", [
-    "local",
+    "file",
     "s3",
 ])
 def test_build_manifest(fsspec_proto, filesystem):
@@ -295,7 +322,7 @@ def test_build_manifest(fsspec_proto, filesystem):
 
 
 @pytest.mark.parametrize("filesystem", [
-    "local",
+    "file",
     "s3",
 ])
 def test_load_manifest(fsspec_proto, filesystem):
@@ -318,7 +345,7 @@ def test_load_manifest(fsspec_proto, filesystem):
 
 
 @pytest.mark.parametrize("filesystem", [
-    "local",
+    "file",
     "s3",
 ])
 def test_load_missing_manifest(fsspec_proto, filesystem):
@@ -337,7 +364,7 @@ def test_load_missing_manifest(fsspec_proto, filesystem):
 
 
 @pytest.mark.parametrize("filesystem", [
-    "local",
+    "file",
     "s3",
 ])
 def test_get_manifest(fsspec_proto, filesystem):
@@ -360,7 +387,7 @@ def test_get_manifest(fsspec_proto, filesystem):
 
 
 @pytest.mark.parametrize("filesystem", [
-    "local",
+    "file",
     "s3",
 ])
 def test_get_missing_manifest(fsspec_proto, filesystem):
@@ -390,7 +417,7 @@ def test_get_missing_manifest(fsspec_proto, filesystem):
 
 
 @pytest.mark.parametrize("filesystem", [
-    "local",
+    "file",
     "s3",
 ])
 def test_delete_resource_file(fsspec_proto, filesystem):
@@ -411,7 +438,7 @@ def test_delete_resource_file(fsspec_proto, filesystem):
 
 
 @pytest.mark.parametrize("filesystem", [
-    "local",
+    "file",
     "s3",
 ])
 def test_copy_resource_file(emb_proto, fsspec_proto, filesystem):
@@ -439,7 +466,7 @@ def test_copy_resource_file(emb_proto, fsspec_proto, filesystem):
 
 
 @pytest.mark.parametrize("filesystem", [
-    "local",
+    "file",
     "s3",
 ])
 def test_copy_resource(emb_proto, fsspec_proto, filesystem):
@@ -466,7 +493,7 @@ def test_copy_resource(emb_proto, fsspec_proto, filesystem):
 
 
 @pytest.mark.parametrize("filesystem", [
-    "local",
+    "file",
     "s3",
 ])
 def test_update_resource_file_when_missing(
@@ -497,7 +524,7 @@ def test_update_resource_file_when_missing(
 
 
 @pytest.mark.parametrize("filesystem", [
-    "local",
+    "file",
     "s3",
 ])
 def test_update_resource_file_when_changed(

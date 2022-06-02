@@ -12,6 +12,9 @@ from dataclasses import asdict
 
 import fsspec  # type: ignore
 from fsspec.implementations.local import LocalFileSystem  # type: ignore
+from fsspec.implementations.http import HTTPFileSystem  # type: ignore
+from s3fs.core import S3FileSystem  # type: ignore
+
 import pysam
 import yaml
 
@@ -35,15 +38,19 @@ def build_fsspec_protocol(proto_id: str, root_url: str, **kwargs) -> Union[
         FsspecReadOnlyProtocol, FsspecReadWriteProtocol]:
     """Create fsspec GRR protocol based on the root url."""
     url = urlparse(root_url)
+    # pylint: disable=import-outside-toplevel
 
     if url.scheme in {"file", ""}:
         filesystem = LocalFileSystem()
         return FsspecReadWriteProtocol(
             proto_id, root_url, filesystem)
-    if url.scheme in {"s3"}:
-        # pylint: disable=import-outside-toplevel
-        from s3fs.core import S3FileSystem  # type: ignore
 
+    if url.scheme in {"http": "https"}:
+        base_url = kwargs.get("base_url")
+        filesystem = HTTPFileSystem(client_kwargs={"base_url": base_url})
+        return FsspecReadOnlyProtocol(proto_id, root_url, filesystem)
+
+    if url.scheme in {"s3"}:
         filesystem = kwargs.get("filesystem")
         if filesystem is None:
             endpoint_url = kwargs.get("endpoint_url")
@@ -75,13 +82,7 @@ class FsspecReadOnlyProtocol(ReadOnlyRepositoryProtocol):
             self.root_path = f"/{self.root_path}"
 
         self.url = f"{self.scheme}://{self.netloc}{self.root_path}"
-        self.state_url = os.path.join(self.url, ".grr")
-
         self.filesystem = filesystem
-        self.filesystem.makedirs(self.url, exist_ok=True)
-        self.filesystem.makedirs(self.state_url, exist_ok=True)
-        self.filesystem.touch(
-            os.path.join(self.state_url, ".keep"), exist_ok=True)
 
         self._all_resources: Optional[List[GenomicResource]] = None
 
@@ -163,7 +164,7 @@ class FsspecReadOnlyProtocol(ReadOnlyRepositoryProtocol):
         def process_tabix_url(url):
             if self.scheme == "file":
                 return urlparse(url).path
-            elif self.scheme == "s3":
+            if self.scheme == "s3":
                 return self.filesystem.sign(url)
             return url
 
@@ -207,6 +208,20 @@ def parse_resource_id_version(resource_path):
 class FsspecReadWriteProtocol(
         FsspecReadOnlyProtocol, ReadWriteRepositoryProtocol):
     """Provides fsspec genomic resources repository protocol."""
+
+    def __init__(
+            self, proto_id: str,
+            url: str,
+            filesystem: fsspec.AbstractFileSystem):
+
+        super().__init__(proto_id, url, filesystem)
+
+        self.filesystem.makedirs(self.url, exist_ok=True)
+
+        self.state_url = os.path.join(self.url, ".grr")
+        self.filesystem.makedirs(self.state_url, exist_ok=True)
+        self.filesystem.touch(
+            os.path.join(self.state_url, ".keep"), exist_ok=True)
 
     def _scan_path_for_resources(self, path_array):
 
@@ -464,3 +479,24 @@ class FsspecReadWriteProtocol(
                 remote_resource, dest_resource, filename)
 
         return local_state
+
+    def build_content_file(self):
+        """Build the content of the repository - .CONTENTS file."""
+
+        content = [
+            {
+                "id": gr.resource_id,
+                "version": gr.get_version_str(),
+                "config": gr.get_config(),
+                "manifest": gr.get_manifest().to_manifest_entries()
+            }
+            for gr in self.get_all_resources()]
+        content = sorted(content, key=lambda x: x["id"])
+
+        content_filepath = os.path.join(
+            self.url, GR_CONTENTS_FILE_NAME)
+        with self.filesystem.open(
+                content_filepath, "wt", encoding="utf8") as outfile:
+            yaml.dump(content, outfile)
+
+        return content
