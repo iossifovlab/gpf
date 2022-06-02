@@ -309,7 +309,7 @@ class Manifest:
             asdict(entry) for entry in self.entries.values()]
 
     def add(self, entry: ManifestEntry) -> None:
-        """Adds manifest enry to the manifest."""
+        """Add manifest enry to the manifest."""
         self.entries[entry.name] = entry
 
     def names(self) -> set[str]:
@@ -319,6 +319,7 @@ class Manifest:
 
 class GenomicResource:
     """Base class for genomic resources."""
+
     def __init__(self, resource_id, version, repo: GenomicResourceRealRepo,
                  config=None,
                  manfiest: Optional[Manifest] = None):
@@ -348,8 +349,8 @@ class GenomicResource:
         return config_type
 
     def get_version_str(self) -> str:
-        """Return string of the form 3.1"""
-        return ".".join(map(str, self.version))
+        """Return version string of the form '3.1'."""
+        return version_tuple_to_string(self.version)
 
     def get_genomic_resource_id_version(self) -> str:
         """Return a string combinint resource ID and version.
@@ -409,7 +410,7 @@ class ReadOnlyRepositoryProtocol(abc.ABC):
         self.proto_id = proto_id
 
     def mode(self):  # pylint: disable=no-self-use
-        """Returns protocol mode - READONLY or READWRITE."""
+        """Return repository protocol mode - READONLY or READWRITE."""
         return Mode.READONLY
 
     def get_id(self):
@@ -639,7 +640,8 @@ class ReadWriteRepositoryProtocol(ReadOnlyRepositoryProtocol):
             version: Tuple[int, ...]) -> GenomicResource:
         """Return a resource with specified ID and version.
 
-        If the resource is not found create an empty resource."""
+        If the resource is not found create an empty resource.
+        """
         resource = self.find_resource(
             resource_id=resource_id,
             version_constraint=f"={version_tuple_to_string(version)}")
