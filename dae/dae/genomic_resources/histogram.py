@@ -271,7 +271,7 @@ class HistogramBuilder:
             for scr_id, value in rec.items():
                 hist = histograms[scr_id]
 
-                if value is None:  # None designates missing values
+                if value is not None:  # None designates missing values
                     hist.add_value(value)
 
         return histograms
