@@ -4,6 +4,7 @@ from copy import deepcopy
 from dataclasses import dataclass
 import os
 import sys
+from typing import cast
 from dae.backends.cnv.loader import CNVLoader
 from dae.backends.dae.loader import DaeTransmittedLoader, DenovoLoader
 from dae.backends.vcf.loader import VcfLoader
@@ -87,7 +88,7 @@ class ImportProject():
         families_loader = FamiliesLoader(
             families_filename, **families_params
         )
-        return families_loader.load()
+        return cast(FamiliesData, families_loader.load())
 
     def get_import_variants_buckets(self) -> list[Bucket]:
         """Splits the input variant files into buckets allowing
@@ -137,7 +138,7 @@ class ImportProject():
             "cnv": CNVLoader,
             "dae": DaeTransmittedLoader,
         }[loader_type]
-        loader = loader_cls(
+        loader: VariantsLoader = loader_cls(
             self.get_pedigree(),
             variants_filenames,
             params=variants_params,
@@ -211,8 +212,9 @@ class ImportProject():
         return "destination" in self.import_config
 
     def get_row_group_size(self, bucket) -> int:
-        return self.import_config.get("parquet_row_group_size", {})\
+        res = self.import_config.get("parquet_row_group_size", {})\
             .get(bucket.type, 20_000)
+        return cast(int, res)
 
     def build_variants_loader_pipeline(self, variants_loader, gpf_instance):
         """Creates an annotation pipeline around variants_loader"""

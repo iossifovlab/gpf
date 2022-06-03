@@ -1,10 +1,11 @@
+from typing import Any
 from dae.backends.dae.loader import DenovoLoader, DaeTransmittedLoader
 from dae.backends.vcf.loader import VcfLoader
 from dae.backends.cnv.loader import CNVLoader
 from dae.pedigrees.loader import FamiliesLoader
 
 
-_region_chromosomes_schema = {
+_region_chromosomes_schema: dict[str, Any] = {
     "region_length": {"anyof_type": ["integer", "string"]},
     "chromosomes": {
         "anyof": [{

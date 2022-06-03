@@ -164,7 +164,7 @@ class ParquetPartitionDescriptor(PartitionDescriptor):
         return ParquetPartitionDescriptor.from_dict(config, root_dirname)
 
     @staticmethod
-    def from_dict(config, root_dirname=""):
+    def from_dict(config, root_dirname="") -> "ParquetPartitionDescriptor":
         assert config["region_bin"] is not None
 
         chromosomes = list(
@@ -179,9 +179,9 @@ class ParquetPartitionDescriptor(PartitionDescriptor):
         if "family_bin" in config:
             family_bin_size = int(config["family_bin"]["family_bin_size"])
         if "coding_bin" in config:
-            coding_effect_types = config["coding_bin"]["coding_effect_types"]
+            ce_types_str = config["coding_bin"]["coding_effect_types"]
             coding_effect_types = [
-                et.strip() for et in coding_effect_types.split(",")
+                et.strip() for et in ce_types_str.split(",")
             ]
             coding_effect_types = [et for et in coding_effect_types if et]
 

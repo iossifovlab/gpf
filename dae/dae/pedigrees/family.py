@@ -3,7 +3,7 @@ from __future__ import annotations
 import copy
 import logging
 
-from typing import Dict, Iterator, Optional, Set, List, cast
+from typing import Dict, Iterator, Optional, Set, List
 from enum import Enum, auto
 from collections import defaultdict
 from collections.abc import Mapping
@@ -620,10 +620,7 @@ class FamiliesData(Mapping):
                 set(["sample_index"])
             )
             columns.extend(sorted(extention_columns))
-            ped_df = cast(
-                pd.DataFrame,
-                pd.DataFrame.from_records(  # type: ignore
-                    records, columns=columns))
+            ped_df = pd.DataFrame.from_records(records, columns=columns)
             self._ped_df = ped_df
 
         return self._ped_df
