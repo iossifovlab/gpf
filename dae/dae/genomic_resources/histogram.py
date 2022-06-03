@@ -110,36 +110,48 @@ class Histogram:
 
         return result
 
-    def set_values(self, values):
-        step = 1.0 * (self.x_max - self.x_min / (self.bins_count - 1))
-        dec = -np.log10(step)
-        dec = dec if dec >= 0 else 0
-        dec = int(dec)
+    def add_value(self, value):
+        """Adds value to the histogram"""
+        if value < self.x_min or value > self.x_max:
+            logger.warning(
+                "value %s out of range: [%s, %s]",
+                value, self.x_min, self.x_max)
+            return False
+        index = self.bins.searchsorted(value, side="right")
+        if index == 0:
+            logger.warning(
+                "(1) empty index %s for value %s",
+                index, value)
+            return False
+        if value == self.bins[-1]:
+            self.bars[-1] += 1
+            return True
 
-        bleft = np.around(self.x_min, dec)
-        bright = np.around(self.x_max + step, dec)
+        self.bars[index - 1] += 1
+        return True
 
-        if self.x_scale == "log":
-            # Max numbers of items in first bin
-            max_count = values.size / self.bins_count
-
-            # Find a bin small enough to fit max_count items
-            for bleft in range(-1, -200, -1):
-                if ((values < 10 ** bleft).sum() < max_count):
-                    break
-
-            bins_in = [0] + list(
-                np.logspace(bleft, np.log10(bright), self.bins_count)
+    def set_empty(self):
+        if self.x_scale == "linear":
+            self.bins = np.linspace(
+                self.x_min,
+                self.x_max,
+                self.bins_count + 1,
             )
-        else:
-            bins_in = self.bins_count
+        elif self.x_scale == "log":
+            assert self.x_min_log is not None
+            self.bins = np.array([
+                self.x_min,
+                * np.logspace(
+                    np.log10(self.x_min_log),
+                    np.log10(self.x_max),
+                    self.bins_count
+                )])
+        self.bars = np.zeros(self.bins_count, dtype=np.int64)
 
-        bars, bins = np.histogram(
-            list(values), bins_in, range=[bleft, bright]
-        )
-
-        self.bars = bars
-        self.bins = bins
+    def set_values(self, values):
+        self.set_empty()
+        for value in values:
+            self.add_value(value)
 
 
 class HistogramBuilder:
@@ -247,28 +259,10 @@ class HistogramBuilder:
 
     def _do_hist(self, chrom, hist_configs, start, end):
         histograms = dict()
-        bins = dict()
-        bars = dict()
         for scr_id, config in hist_configs.items():
             hist = Histogram.from_config(config)
             histograms[scr_id] = hist
-
-            if hist.x_scale == "linear":
-                bins[scr_id] = np.linspace(
-                    hist.x_min,
-                    hist.x_max,
-                    hist.bins_count + 1,
-                )
-            elif hist.x_scale == "log":
-                assert hist.x_min_log is not None
-                bins[scr_id] = np.array([
-                    hist.x_min,
-                    * np.logspace(
-                        np.log10(hist.x_min_log),
-                        np.log10(hist.x_max),
-                        hist.bins_count
-                    )])
-            bars[scr_id] = np.zeros(hist.bins_count, dtype=np.int64)
+            hist.set_empty()
 
         score_names = list(histograms.keys())
 
@@ -276,32 +270,9 @@ class HistogramBuilder:
         for rec in score.fetch_region(chrom, start, end, score_names):
             for scr_id, value in rec.items():
                 hist = histograms[scr_id]
-                _bins = bins[scr_id]
-                _bars = bars[scr_id]
 
                 if value is None:  # None designates missing values
-                    continue
-
-                if value < hist.x_min or value > hist.x_max:
-                    logger.warning(
-                        "value %s out of range: [%s, %s]",
-                        value, hist.x_min, hist.x_max)
-                    continue
-                index = _bins.searchsorted(value, side='right')
-                if index == 0:
-                    logger.warning(
-                        "(1) empty index %s for value %s",
-                        index, value)
-                    continue
-                if value == _bins[-1]:
-                    _bars[-1] += 1
-                    continue
-
-                _bars[index - 1] += 1
-
-        for scr_id in hist_configs.keys():
-            histograms[scr_id].bins = bins[scr_id]
-            histograms[scr_id].bars = bars[scr_id]
+                    hist.add_value(value)
 
         return histograms
 

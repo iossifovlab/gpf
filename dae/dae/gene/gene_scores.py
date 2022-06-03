@@ -9,7 +9,7 @@ from dae.gene.gene_sets_db import cached
 from dae.utils.dae_utils import join_line
 
 from dae.genomic_resources import GenomicResource
-from dae.genomic_resources.score_statistics import Histogram
+from dae.genomic_resources.histogram import Histogram
 
 
 class GeneScore:
@@ -25,7 +25,7 @@ class GeneScore:
       - id: (gene score id)
         filename: (filename to gene score)
         desc: (gene score description)
-    histogram_:
+    histograms:
       - score: (gene score id)
         bins: (number of bins)
         x_scale: linear/log

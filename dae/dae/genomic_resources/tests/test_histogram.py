@@ -2,7 +2,7 @@ from dae.genomic_resources.embeded_repository import GenomicResourceEmbededRepo
 import pytest
 import os
 from dae.genomic_resources.repository import GR_CONF_FILE_NAME, GenomicResource
-from dae.genomic_resources.score_statistics import Histogram, \
+from dae.genomic_resources.histogram import Histogram, \
     HistogramBuilder, load_histograms
 from dae.genomic_resources.test_tools import build_a_test_resource
 from dae.genomic_resources.dir_repository import GenomicResourceDirRepo
@@ -10,9 +10,9 @@ from dae.genomic_resources.cached_repository import GenomicResourceCachedRepo
 import numpy as np
 
 
-@pytest.mark.xfail
 def test_histogram_simple_input():
-    hist = Histogram(10, 0, 10, "linear", "linear")
+    hist = Histogram(None, None, 10, 0, 10, "linear", "linear")
+    hist.set_empty()
     assert (hist.bins == np.arange(0, 11)).all()
 
     hist.add_value(0)
@@ -27,9 +27,9 @@ def test_histogram_simple_input():
     assert (hist.bars == np.array([1, 1, 1, 1, 1, 1, 1, 1, 1, 2])).all()
 
 
-@pytest.mark.xfail
 def test_histogram_log_scale():
-    hist = Histogram(4, 0, 1000, "log", "linear", x_min_log=1)
+    hist = Histogram(None, None, 4, 0, 1000, "log", "linear", x_min_log=1)
+    hist.set_empty()
     assert (hist.bins == np.array([0, 1, 10, 100, 1000])).all()
 
     hist.add_value(0)

@@ -2,7 +2,7 @@ import os
 import logging
 import pandas as pd
 
-from dae.genomic_resources.score_statistics import Histogram
+from dae.genomic_resources.histogram import Histogram
 
 
 logger = logging.getLogger(__name__)
