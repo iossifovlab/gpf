@@ -7,6 +7,7 @@ import pandas as pd
 
 from dae.gene.gene_sets_db import cached
 from dae.utils.dae_utils import join_line
+from dae.genomic_resources.aggregators import build_aggregator
 
 from dae.genomic_resources import GenomicResource
 from dae.genomic_resources.histogram import Histogram
@@ -32,6 +33,8 @@ class GeneScore:
         y_scale: linear/log
     meta: (gene score metadata)
     """
+
+    DEFAULT_AGGREGATOR_TYPE = "dict"
 
     def __init__(self, score_id, file, desc, histogram_config, meta=None):
         self.histogram_config = histogram_config
@@ -124,6 +127,16 @@ class GeneScore:
         """
         symbol_values = self._to_dict()
         return symbol_values[gene_symbol]
+
+    def aggregate_gene_values(self, gene_symbols, aggregator_type=None):
+        if aggregator_type is None:
+            aggregator_type = self.DEFAULT_AGGREGATOR_TYPE
+        aggregator = build_aggregator(aggregator_type)
+
+        for gs in gene_symbols:
+            aggregator.add_value(self.get_gene_value(gs), key=gs)
+
+        return aggregator.get_final()
 
     @cached
     def _to_dict(self):

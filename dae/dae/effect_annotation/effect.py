@@ -6,6 +6,8 @@ import itertools
 
 from typing import List, Optional, Dict
 
+from dae.utils.effect_utils import EffectTypesMixin
+
 
 class AnnotationEffect:  # pylint: disable=too-many-instance-attributes
     """Class to represent variant effect."""
@@ -205,6 +207,16 @@ class AnnotationEffect:  # pylint: disable=too-many-instance-attributes
             cls.worst_effect(effects),
             list(zip(*gene_effects)),
             list(zip(*transcript_effects)))
+
+    @classmethod
+    def lgd_gene_effects(cls, effects: List[AnnotationEffect]):
+        gene_effects = zip(*cls.gene_effects(effects))
+        result = []
+        for ge in gene_effects:
+            if ge[1] in EffectTypesMixin.EFFECT_GROUPS["lgds"]:
+                result.append(ge)
+
+        return result
 
     @classmethod
     def effects_description(cls, effects: List[AnnotationEffect]):

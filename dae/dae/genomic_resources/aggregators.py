@@ -3,6 +3,7 @@ import math
 
 from typing import cast
 
+
 class AbstractAggregator:
     def __init__(self):
         self.total_count = 0
@@ -11,11 +12,11 @@ class AbstractAggregator:
     def __call__(self):
         return self.get_final()
 
-    def add(self, v):
+    def add(self, v, **kwargs):
         self.total_count += 1
-        self._add_internal(v)
+        self._add_internal(v, **kwargs)
 
-    def _add_internal(self, v):
+    def _add_internal(self, v, **kwargs):
         raise NotImplementedError()
 
     def clear(self):
@@ -44,7 +45,7 @@ class MaxAggregator(AbstractAggregator):
         super().__init__()
         self.current_max = None
 
-    def _add_internal(self, v):
+    def _add_internal(self, v, **kwargs):
         if v is None:
             return
         if self.current_max is not None:
@@ -66,7 +67,7 @@ class MinAggregator(AbstractAggregator):
         super().__init__()
         self.current_min = None
 
-    def _add_internal(self, v):
+    def _add_internal(self, v, **kwargs):
         if v is None:
             return
         if self.current_min is not None:
@@ -88,7 +89,7 @@ class MeanAggregator(AbstractAggregator):
         super().__init__()
         self.sum = 0
 
-    def _add_internal(self, v):
+    def _add_internal(self, v, **kwargs):
         if v is None:
             return
 
@@ -109,7 +110,7 @@ class ConcatAggregator(AbstractAggregator):
         super().__init__()
         self.out = ""
 
-    def _add_internal(self, v):
+    def _add_internal(self, v, **kwargs):
         if v is not None:
             self.out += str(v)
             self.used_count += 1
@@ -129,7 +130,7 @@ class MedianAggregator(AbstractAggregator):
         super().__init__()
         self.values = list()
 
-    def _add_internal(self, v):
+    def _add_internal(self, v, **kwargs):
         if v is not None:
             self.values.append(v)
             self.used_count += 1
@@ -157,7 +158,7 @@ class ModeAggregator(AbstractAggregator):
         super().__init__()
         self.value_counts = dict()
 
-    def _add_internal(self, v):
+    def _add_internal(self, v, **kwargs):
         if v is not None:
             if v not in self.value_counts:
                 self.value_counts[v] = 0
@@ -191,7 +192,7 @@ class JoinAggregator(AbstractAggregator):
         self.values = list()
         self.separator = separator
 
-    def _add_internal(self, v):
+    def _add_internal(self, v, **kwargs):
         if v is not None:
             self.values.append(str(v))
             self.used_count += 1
@@ -203,6 +204,40 @@ class JoinAggregator(AbstractAggregator):
         return self.separator.join(self.values)
 
 
+class ListAggregator(AbstractAggregator):
+    def __init__(self):
+        super().__init__()
+        self.values = list()
+
+    def _add_internal(self, v, **kwargs):
+        if v is not None:
+            self.values.append(v)
+            self.used_count += 1
+
+    def _clear_internal(self):
+        self.values.clear()
+
+    def get_final(self):
+        return self.values
+
+
+class DictAggregator(AbstractAggregator):
+    def __init__(self):
+        super().__init__()
+        self.values = dict()
+
+    def _add_internal(self, v, **kwargs):
+        if v is not None:
+            self.values[kwargs["key"]] = v
+            self.used_count += 1
+
+    def _clear_internal(self):
+        self.values.clear()
+
+    def get_final(self):
+        return self.values
+
+
 AGGREGATOR_CLASS_DICT = {
     "max": MaxAggregator,
     "min": MinAggregator,
@@ -210,7 +245,9 @@ AGGREGATOR_CLASS_DICT = {
     "concatenate": ConcatAggregator,
     "median": MedianAggregator,
     "mode": ModeAggregator,
-    "join": JoinAggregator
+    "join": JoinAggregator,
+    "list": ListAggregator,
+    "dict": DictAggregator
 }
 
 AGGREGATOR_SCHEMA = {
@@ -223,6 +260,8 @@ AGGREGATOR_SCHEMA = {
         {"regex": "^median$"},
         {"regex": "^mode$"},
         {"regex": "^join\\(.+\\)$"},
+        {"regex": "^list$"},
+        {"regex": "^dict$"},
     ],
 }
 
