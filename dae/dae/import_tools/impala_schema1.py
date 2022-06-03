@@ -1,8 +1,10 @@
 import logging
 import os
-from dae.backends.impala.parquet_io import ParquetManager
+from dae.backends.impala.parquet_io import ParquetManager, \
+    ParquetPartitionDescriptor, PartitionDescriptor
 from dae.import_tools.import_tools import AbstractImportStorage
 from dae.import_tools.task_graph import TaskGraph
+from dae.pedigrees.family import FamiliesData
 from dae.utils import fs_utils
 import toml
 
@@ -38,8 +40,9 @@ class Schema1ParquetWriter:
         )
 
     @staticmethod
-    def write_pedigree(families, out_dir, partition_description):
-        if partition_description:
+    def write_pedigree(families: FamiliesData, out_dir: str,
+                       partition_description: PartitionDescriptor):
+        if isinstance(partition_description, ParquetPartitionDescriptor):
             if partition_description.family_bin_size > 0:
                 families = partition_description \
                     .add_family_bins_to_families(families)
