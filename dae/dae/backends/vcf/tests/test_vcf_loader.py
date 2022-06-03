@@ -156,7 +156,8 @@ def test_multivcf_loader_fill_missing(
         "vcf_multi_loader_fill_in_mode": fill_mode,
     }
     multi_vcf_loader = VcfLoader(
-        families, multivcf_files, gpf_instance_2013.reference_genome, params=params
+        families, multivcf_files, gpf_instance_2013.reference_genome,
+        params=params
     )
 
     assert multi_vcf_loader is not None
@@ -336,6 +337,77 @@ def test_vcf_loader_params(
     assert len(vs) == count
 
 
+@pytest.fixture
+def simple_vcf_loader(gpf_instance_2013, fixture_dirname):
+    def _split_all_ext(filename):
+        res, ext = os.path.splitext(filename)
+        while len(ext) > 0:
+            res, ext = os.path.splitext(res)
+        return res
+
+    def ctor(input_filename, additional_params):
+        ped_filename = _split_all_ext(input_filename) + ".ped"
+        families_loader = FamiliesLoader(fixture_dirname(ped_filename))
+        families = families_loader.load()
+
+        params = additional_params
+        vcf_filename = fixture_dirname(input_filename)
+        return VcfLoader(
+            families, [vcf_filename],
+            genome=gpf_instance_2013.reference_genome, params=params,
+        )
+    return ctor
+
+
+@pytest.mark.parametrize("input_filename, params", [
+    ("backends/multi_contig.vcf", {"add_chrom_prefix": "chr"}),
+    ("backends/multi_contig_chr.vcf", {"del_chrom_prefix": "chr"}),
+])
+def test_chromosomes_have_adjusted_chrom(simple_vcf_loader,
+                                         input_filename, params):
+    loader = simple_vcf_loader(input_filename, params)
+
+    prefix = params.get("add_chrom_prefix", "")
+    assert loader.chromosomes == [f"{prefix}1", f"{prefix}2", f"{prefix}3",
+                                  f"{prefix}4"]
+
+
+@pytest.mark.parametrize("input_filename, params", [
+    ("backends/multi_contig.vcf", {"add_chrom_prefix": "chr"}),
+    ("backends/multi_contig_chr.vcf", {"del_chrom_prefix": "chr"}),
+])
+def test_variants_have_adjusted_chrom(simple_vcf_loader,
+                                      input_filename, params):
+    loader = simple_vcf_loader(input_filename, params)
+    is_add = "add_chrom_prefix" in params
+
+    variants = list(loader.full_variants_iterator())
+    assert len(variants) > 0
+    for summary_variant, _ in variants:
+        if is_add:
+            assert summary_variant.chromosome.startswith("chr")
+        else:
+            assert not summary_variant.chromosome.startswith("chr")
+
+
+@pytest.mark.parametrize("input_filename, params", [
+    ("backends/multi_contig.vcf.gz", {"add_chrom_prefix": "chr"}),
+    ("backends/multi_contig_chr.vcf.gz", {"del_chrom_prefix": "chr"}),
+])
+def test_reset_regions_with_adjusted_chrom(simple_vcf_loader,
+                                           input_filename, params):
+    loader = simple_vcf_loader(input_filename, params)
+    prefix = params.get("add_chrom_prefix", "")
+    regions = [f"{prefix}1", f"{prefix}2"]
+
+    loader.reset_regions(regions)
+
+    variants = list(loader.full_variants_iterator())
+    assert len(variants) > 0
+    unique_chroms = np.unique([sv.chromosome for sv, _ in variants])
+    assert (unique_chroms == regions).all()
+
+
 # @pytest.mark.parametrize(
 #     "fill_mode, fill_value", [["reference", 0], ["unknown", -1]]
 # )
@@ -356,7 +428,8 @@ def test_vcf_loader_params(
 #         "vcf_multi_loader_fill_in_mode": fill_mode,
 #     }
 #     multi_vcf_loader = VcfLoader(
-#         families, multivcf_files, gpf_instance_2013.reference_genome, params=params
+#         families, multivcf_files, gpf_instance_2013.reference_genome,
+#         params=params
 #     )
 
 #     assert multi_vcf_loader is not None

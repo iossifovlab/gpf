@@ -240,10 +240,8 @@ class VariantsLoader(CLILoader):
         return None
 
     @classmethod
-    def _arguments(cls):
-        arguments = []
-
-        return arguments
+    def _arguments(cls) -> list[CLIArgument]:
+        return []
 
     @abstractmethod
     def full_variants_iterator(self):
@@ -605,18 +603,21 @@ class VariantsGenotypesLoader(VariantsLoader):
             self.regions = regions
 
         self._adjust_chrom_prefix = lambda chrom: chrom
+        self._unadjust_chrom_prefix = lambda chrom: chrom
         if params.get("add_chrom_prefix", None):
             self._chrom_prefix = params["add_chrom_prefix"]
             self._adjust_chrom_prefix = self._add_chrom_prefix
+            self._unadjust_chrom_prefix = self._del_chrom_prefix
         elif params.get("del_chrom_prefix", None):
             self._chrom_prefix = params["del_chrom_prefix"]
             self._adjust_chrom_prefix = self._del_chrom_prefix
+            self._unadjust_chrom_prefix = self._add_chrom_prefix
 
         self.expect_genotype = expect_genotype
         self.expect_best_state = expect_best_state
 
     @classmethod
-    def _arguments(cls):
+    def _arguments(cls) -> list[CLIArgument]:
         arguments = super()._arguments()
         arguments.append(CLIArgument(
             "--add-chrom-prefix",
@@ -766,14 +767,14 @@ class VariantsGenotypesLoader(VariantsLoader):
 
     def _add_chrom_prefix(self, chrom):
         assert self._chrom_prefix is not None
-        if self._chrom_prefix not in chrom:
+        if chrom is not None and not chrom.startswith(self._chrom_prefix):
             return f"{self._chrom_prefix}{chrom}"
         else:
             return chrom
 
     def _del_chrom_prefix(self, chrom):
         assert self._chrom_prefix is not None
-        if self._chrom_prefix in chrom:
+        if chrom is not None and chrom.startswith(self._chrom_prefix):
             return chrom[len(self._chrom_prefix):]
         else:
             return chrom

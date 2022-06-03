@@ -191,32 +191,32 @@ def gpf_instance_2019(default_dae_config, global_dae_fixtures_dir):
     )
 
 
-@pytest.fixture(scope="session")
-def gpf_instance_short(
+def _create_gpf_instance(
+        gene_model_dir, ref_genome_dir,
         default_dae_config, global_dae_fixtures_dir, fixture_dirname):
-
-    class GPFInstanceShort(GPFInstance):
+    class CustomGPFInstance(GPFInstance):
         def __init__(self, *args, **kwargs):
-            super(GPFInstanceShort, self).__init__(*args, **kwargs)
+            super(CustomGPFInstance, self).__init__(*args, **kwargs)
 
         @property  # type: ignore
         @cached
         def gene_models(self):
-            resource = self.grr.get_resource(
-                "hg19/GATK_ResourceBundle_5777_b37_phiX174_short/"
-                "gene_models/refGene_201309")
+            if gene_model_dir is None:
+                return super().gene_models()
+            resource = self.grr.get_resource(gene_model_dir)
             result = load_gene_models_from_resource(resource)
             return result
 
         @property  # type: ignore
         @cached
         def reference_genome(self):
-            resource = self.grr.get_resource(
-                "hg19/GATK_ResourceBundle_5777_b37_phiX174_short/genome")
+            if ref_genome_dir is None:
+                return super().reference_genome()
+            resource = self.grr.get_resource(ref_genome_dir)
             result = open_reference_genome_from_resource(resource)
             return result
 
-    instance = GPFInstanceShort(
+    instance = CustomGPFInstance(
         dae_config=default_dae_config, work_dir=global_dae_fixtures_dir
     )
     repositories = [
@@ -232,6 +232,27 @@ def gpf_instance_short(
     instance.grr = GenomicResourceGroupRepo(repositories)
 
     return instance
+
+
+@pytest.fixture(scope="session")
+def gpf_instance_short(
+        default_dae_config, global_dae_fixtures_dir, fixture_dirname):
+    return _create_gpf_instance(
+        "hg19/GATK_ResourceBundle_5777_b37_phiX174_short/\
+gene_models/refGene_201309",
+        "hg19/GATK_ResourceBundle_5777_b37_phiX174_short/genome",
+        default_dae_config, global_dae_fixtures_dir, fixture_dirname
+    )
+
+
+@pytest.fixture(scope="session")
+def gpf_instance_grch38(
+        default_dae_config, global_dae_fixtures_dir, fixture_dirname):
+    return _create_gpf_instance(
+        "hg38/GRCh38-hg38/gene_models/refSeq_20200330",
+        "hg38/GRCh38-hg38/genome",
+        default_dae_config, global_dae_fixtures_dir, fixture_dirname
+    )
 
 
 @pytest.fixture

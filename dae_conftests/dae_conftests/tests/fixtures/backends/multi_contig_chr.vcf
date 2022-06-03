@@ -1,0 +1,17 @@
+##fileformat=VCFv4.2
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+##contig=<ID=chr1>
+##contig=<ID=chr2>
+##contig=<ID=chr3>
+##contig=<ID=chr4>
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	mom	dad	ch1	ch2	ch3	gma	gpa
+chr1	11539	.	T	G,A	.	.	.	GT	0/0	0/0	0/0	0/0	0/0	0/0	0/0
+chr1	11540	.	T	G,A	.	.	.	GT	0/2	0/0	0/0	0/0	0/0	0/0	0/0
+chr1	11541	.	T	G,A	.	.	.	GT	./.	./.	./.	./.	./.	./.	./.
+chr2	11542	.	T	G,A	.	.	.	GT	0/1	0/0	0/0	0/0	0/2	0/0	0/0
+chr3	11543	.	T	G,A	.	.	.	GT	0/0	0/0	./.	0/0	0/0	0/0	0/0
+chr3	11544	.	T	G	.	.	.	GT	0/0	0/0	./.	0/0	0/0	0/0	0/0
+chr3	11545	.	T	G	.	.	.	GT	0/0	0/0	./.	0/0	0/1	0/0	0/0
+chr4	11546	.	T	G	.	.	.	GT	0/0	0/0	0/0	1/1	0/1	0/0	0/0
+chr4	11547	.	T	G	.	.	.	GT	0/0	0/0	0/0	0/1	0/0	0/0	1/1
+chr4	11548	.	T	GA,AA,CA,CC	.	.	.	GT	2/3	2/2	2/2	2/2	2/2	2/2	2/2

@@ -305,6 +305,7 @@ class ParquetPartitionDescriptor(PartitionDescriptor):
         dirname = "/".join(dirname_parts)
         dirname = os.path.join("^(?P<basedir>.+)", dirname)
         filename = "_".join(filename_parts)
+        filename = filename + r"(_bucket_index_\d+)?"
         filename = f"variants_{filename}\\.parquet$"
 
         filename = os.path.join(dirname, filename)

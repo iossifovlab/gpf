@@ -2,17 +2,16 @@ import os
 import gzip
 import warnings
 import logging
-import numpy as np
-
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict, Any, Tuple
 from contextlib import closing
 
-import pysam  # type: ignore
 import numpy as np
+
+import pysam  # type: ignore
 import pandas as pd
 
-from dae.utils.regions import Region
 import fsspec  # type: ignore
+from dae.utils.regions import Region
 from dae.utils import fs_utils
 
 from dae.genomic_resources.reference_genome import ReferenceGenome
@@ -231,11 +230,11 @@ class DenovoLoader(VariantsGenotypesLoader):
 
     @staticmethod
     def produce_genotype(
-        chrom: str,
-        pos: int,
-        genome: ReferenceGenome,
-        family: Family,
-        members_with_variant: List[str]) -> np.array:
+            chrom: str,
+            pos: int,
+            genome: ReferenceGenome,
+            family: Family,
+            members_with_variant: List[str]) -> np.ndarray:
 
         # TODO Add support for multiallelic variants
         # This method currently assumes biallelic variants
@@ -433,7 +432,7 @@ class DenovoLoader(VariantsGenotypesLoader):
             denovo_genotype: Optional[str] = None,
             denovo_sep: str = "\t",
             adjust_chrom_prefix=None,
-            **kwargs) -> pd.DataFrame:
+            **kwargs) -> Tuple[pd.DataFrame, Any]:
         """
         Read a text file containing variants in the form
         of delimiter-separted values and produce a dataframe.
@@ -530,6 +529,8 @@ class DenovoLoader(VariantsGenotypesLoader):
                 *map(cls.split_location, raw_df[denovo_location])
             )
         else:
+            assert denovo_chrom is not None
+            assert denovo_pos is not None
             chrom_col = raw_df.loc[:, denovo_chrom]
             pos_col = raw_df.loc[:, denovo_pos]
 
@@ -547,6 +548,8 @@ class DenovoLoader(VariantsGenotypesLoader):
             pos_col, ref_col, alt_col = zip(*ref_alt_tuples)
 
         else:
+            assert denovo_ref is not None
+            assert denovo_alt is not None
             ref_col = raw_df.loc[:, denovo_ref]
             alt_col = raw_df.loc[:, denovo_alt]
 
@@ -783,7 +786,8 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
         )
         try:
             with pysam.Tabixfile(self.summary_filename) as tbx:
-                self.chromosomes = list(tbx.contigs)
+                self.chromosomes = \
+                    [self._adjust_chrom_prefix(chrom) for chrom in tbx.contigs]
         except Exception:
             self.chromosomes = self.genome.chromosomes
 
@@ -951,11 +955,12 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
                         closing(pysam.Tabixfile(self.toomany_filename)) \
                         as too_tbf:
 
+                    region_unadjusted = self._unadjust_chrom_prefix(region)
                     summary_iterator = sum_tbf.fetch(
-                        region=region, parser=pysam.asTuple()
+                        region=region_unadjusted, parser=pysam.asTuple()
                     )
                     toomany_iterator = too_tbf.fetch(
-                        region=region, parser=pysam.asTuple()
+                        region=region_unadjusted, parser=pysam.asTuple()
                     )
 
                     for summary_line in summary_iterator:
@@ -999,7 +1004,7 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
 
                             yield summary_variant, family_variants
                             summary_index += 1
-                        except:
+                        except Exception:
                             logger.error(
                                 "unable to process summary line: %s "
                                 "from %s: %s",
@@ -1017,7 +1022,7 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
             self.lines_iterator = None
 
     @classmethod
-    def _arguments(cls) -> List[CLIArgument]:
+    def _arguments(cls) -> list[CLIArgument]:
         arguments = super()._arguments()
         arguments.append(CLIArgument(
             "dae_summary_file",

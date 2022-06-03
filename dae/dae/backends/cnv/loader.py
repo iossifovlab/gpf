@@ -76,7 +76,7 @@ import argparse
 from pathlib import Path
 
 from typing import List, Optional, Dict, Any, Tuple, Generator, \
-    Union, TextIO, cast
+    Union, TextIO
 
 from copy import copy
 from dae.backends.cnv.flexible_cnv_loader import flexible_cnv_loader
@@ -162,7 +162,7 @@ def _cnv_loader(
             "pos": "position",
             "pos_end": "end_position"
         })
-    return cast(pd.DataFrame, df)
+    return df
 
 
 class CNVLoader(VariantsGenotypesLoader):

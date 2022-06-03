@@ -4,21 +4,9 @@ import numpy as np
 
 from dae.variants.attributes import Inheritance
 
-from dae.pedigrees.loader import FamiliesLoader
-from dae.pedigrees.family import FamiliesData
-
 from dae.backends.dae.loader import DenovoLoader
 
 from dae.utils.variant_utils import GENOTYPE_TYPE
-
-
-@pytest.fixture(scope="session")
-def fake_families(fixture_dirname):
-    ped_df = FamiliesLoader.flexible_pedigree_read(
-        fixture_dirname("denovo_import/fake_pheno.ped")
-    )
-    fake_families = FamiliesData.from_pedigree_df(ped_df)
-    return fake_families
 
 
 def compare_variant_dfs(res_df, expected_df):

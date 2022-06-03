@@ -59,7 +59,6 @@ django-stubs==1.10.1
 types-pyyaml==6.0.7
 types-setuptools==57.4.14
 sqlalchemy-stubs==0.4
-data-science-types==0.2.23
 types-toml==0.10.3
 types-python-dateutil==2.8.9
 dask-jobqueue==0.7.3

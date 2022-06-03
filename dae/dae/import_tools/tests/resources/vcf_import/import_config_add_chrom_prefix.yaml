@@ -13,7 +13,7 @@ input:
 
 partition_description:
   region_bin:
-    chromosomes: 1, 2, 3, 4
+    chromosomes: chr1, chr2, chr3, chr4
     region_length: 100000000
   family_bin:
     family_bin_size: 10
