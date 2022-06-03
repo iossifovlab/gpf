@@ -1,5 +1,8 @@
 import { Pipe, PipeTransform } from '@angular/core';
 
+/**
+ * Truncate pipe with ellipsis
+ */
 @Pipe({
   name: 'truncate'
 })
