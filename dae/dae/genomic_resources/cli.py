@@ -1,4 +1,5 @@
 """Provides CLI for management of genomic resources repositories."""
+import os
 import sys
 import logging
 import argparse
@@ -98,7 +99,7 @@ def _configure_index_subparser(subparsers):
         "-r", "--resource", type=str, default=None,
         help="specifies a single resource ID to be indexed")
     parser_index.add_argument(
-        "-n", "--dry-run",  default=False, action="store_true",
+        "-n", "--dry-run", default=False, action="store_true",
         help="only checks if the manifest update is needed and reports")
 
 
@@ -137,7 +138,7 @@ def _configure_checkout_subparser(subparsers):
         "-r", "--resource", type=str, default=None,
         help="specifies a single resource ID to process")
     parser_index.add_argument(
-        "-n", "--dry-run",  default=False, action="store_true",
+        "-n", "--dry-run", default=False, action="store_true",
         help="only checks if the manifest update is needed and reports")
 
 
@@ -211,6 +212,9 @@ def _extract_resource_ids_from_annotation_conf(config):
 
 
 def _create_proto(repo_url):
+    if not os.path.isabs(repo_url):
+        repo_url = os.path.abspath(repo_url)
+
     proto = build_fsspec_protocol(proto_id="manage", root_url=repo_url)
     return proto
 
@@ -220,7 +224,8 @@ def _create_proto(repo_url):
 #     if not argv:
 #         argv = sys.argv[1:]
 
-#     description = "Repository cache tool - caches all resources in a given " \
+#     description = "Repository cache tool - caches all resources
+#           in a given " \
 #         "repository"
 #     parser = argparse.ArgumentParser(description=description)
 #     parser.add_argument(
