@@ -11,7 +11,7 @@ from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.import_tools import import_tools
 
 
-def test_import_task_bin_size(gpf_instance_2019, tmpdir):
+def test_import_task_bin_size(gpf_instance_2019, tmpdir, mocker):
     # Create the import config and set tmpdir as work_dir
     input_dir = join(
         os.path.dirname(os.path.realpath(__file__)),
@@ -22,8 +22,10 @@ def test_import_task_bin_size(gpf_instance_2019, tmpdir):
     import_config["processing_config"]["work_dir"] = str(tmpdir)
 
     # Running the import
+    mocker.patch.object(import_tools.ImportProject, "get_gpf_instance",
+                        return_value=gpf_instance_2019)
     project = import_tools.ImportProject.build_from_config(
-        import_config, input_dir, gpf_instance=gpf_instance_2019)
+        import_config, input_dir)
     import_tools.run_with_project(project)
 
     # Assert the expected output files and dirs are created in the work_dir
@@ -129,7 +131,7 @@ def test_bucket_generation(gpf_instance_2019):
     assert buckets[3].regions == ["1:210000001-249250621"]
 
 
-def test_bucket_generation_chrom_mismatch(gpf_instance_short):
+def test_bucket_generation_chrom_mismatch(gpf_instance_short, mocker):
     import_config = dict(
         input=dict(
             pedigree=dict(
@@ -158,8 +160,9 @@ def test_bucket_generation_chrom_mismatch(gpf_instance_short):
             )
         )
     )
-    project = import_tools.ImportProject.build_from_config(
-        import_config, gpf_instance=gpf_instance_short)
+    mocker.patch.object(import_tools.ImportProject, "get_gpf_instance",
+                        return_value=gpf_instance_short)
+    project = import_tools.ImportProject.build_from_config(import_config)
     buckets = list(project.get_import_variants_buckets())
     assert len(buckets) == 3
     for i in range(3):

@@ -11,7 +11,7 @@ from dae.configuration.gpf_config_parser import GPFConfigParser
 
 @pytest.mark.parametrize("config_dir", ["denovo_import", "vcf_import",
                                         "cnv_import", "dae_import"])
-def test_simple_import_config(tmpdir, gpf_instance_2019, config_dir):
+def test_simple_import_config(tmpdir, gpf_instance_2019, config_dir, mocker):
     input_dir = os.path.join(
         os.path.dirname(os.path.realpath(__file__)),
         "resources", config_dir)
@@ -22,8 +22,10 @@ def test_simple_import_config(tmpdir, gpf_instance_2019, config_dir):
         "work_dir": str(tmpdir),
     }
 
+    mocker.patch.object(import_tools.ImportProject, "get_gpf_instance",
+                        return_value=gpf_instance_2019)
     project = import_tools.ImportProject.build_from_config(
-        import_config, input_dir, gpf_instance=gpf_instance_2019)
+        import_config, input_dir)
     import_tools.run_with_project(project)
 
     files = os.listdir(tmpdir)
@@ -39,7 +41,7 @@ def test_simple_import_config(tmpdir, gpf_instance_2019, config_dir):
     assert len(variants_bins) != 0
 
 
-def test_import_with_add_chrom_prefix(tmpdir, gpf_instance_grch38):
+def test_import_with_add_chrom_prefix(tmpdir, gpf_instance_grch38, mocker):
     input_dir = os.path.join(
         os.path.dirname(os.path.realpath(__file__)),
         "resources", "vcf_import")
@@ -50,8 +52,10 @@ def test_import_with_add_chrom_prefix(tmpdir, gpf_instance_grch38):
         "work_dir": str(tmpdir),
     }
 
+    mocker.patch.object(import_tools.ImportProject, "get_gpf_instance",
+                        return_value=gpf_instance_grch38)
     project = import_tools.ImportProject.build_from_config(
-        import_config, input_dir, gpf_instance=gpf_instance_grch38)
+        import_config, input_dir)
     import_tools.run_with_project(project)
 
     files = os.listdir(tmpdir)

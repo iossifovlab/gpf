@@ -39,7 +39,7 @@ class ImportProject():
     objects needed to import a study (e.g. loaders, family data).
     """
 
-    def __init__(self, import_config, base_input_dir, gpf_instance):
+    def __init__(self, import_config, base_input_dir):
         """
         Creates a new project from the provided config. It is best not to call
         this ctor directly but to use one of the provided build_* methods.
@@ -51,10 +51,9 @@ class ImportProject():
             assert len_files == 1, "Support for multiple denovo files is NYI"
 
         self._base_input_dir = base_input_dir
-        self._gpf_instance = gpf_instance
 
     @staticmethod
-    def build_from_config(import_config, base_input_dir="", gpf_instance=None):
+    def build_from_config(import_config, base_input_dir=""):
         """
         Creates a new project from the provided config. The config is first
         validated and normalized.
@@ -65,10 +64,10 @@ class ImportProject():
                                                         import_config_schema)
         normalizer = ImportConfigNormalizer()
         import_config = normalizer.normalize(import_config)
-        return ImportProject(import_config, base_input_dir, gpf_instance)
+        return ImportProject(import_config, base_input_dir)
 
     @staticmethod
-    def build_from_file(import_filename, gpf_instance=None):
+    def build_from_file(import_filename):
         """Creates a new project from the provided config filename. The file
         is first parsed, validated and normalized. The path to the file is used
         as the default input path for the project.
@@ -79,8 +78,7 @@ class ImportProject():
         base_input_dir = os.path.dirname(os.path.realpath(import_filename))
         import_config = GPFConfigParser.parse_and_interpolate_file(
             import_filename)
-        return ImportProject.build_from_config(import_config, base_input_dir,
-                                               gpf_instance)
+        return ImportProject.build_from_config(import_config, base_input_dir)
 
     def get_pedigree(self) -> FamiliesData:
         """Loads, parses and returns the pedigree data"""
@@ -175,14 +173,8 @@ class ImportProject():
 
     def get_gpf_instance(self):
         """Creates and returns a gpf instance as desribed in the config"""
-        if self._gpf_instance is None:
-            # no injected gpf instance. We just create a new one.
-            # It cannot be cached because gpf instances are not serializable
-            # and if we were to cache it it would break multitasking
-            instance_config = self.import_config.get("gpf_instance", {})
-            return GPFInstance(work_dir=instance_config.get("path", None))
-        # Injected instances are used primarily for tests
-        return self._gpf_instance
+        instance_config = self.import_config.get("gpf_instance", {})
+        return GPFInstance(work_dir=instance_config.get("path", None))
 
     def get_storage(self):
         # pylint: disable=import-outside-toplevel
@@ -418,9 +410,8 @@ def main():
             run(args.config, executor)
 
 
-def run(import_config_fn, executor=SequentialExecutor(), gpf_instance=None):
-    project = ImportProject.build_from_file(import_config_fn,
-                                            gpf_instance=gpf_instance)
+def run(import_config_fn, executor=SequentialExecutor()):
+    project = ImportProject.build_from_file(import_config_fn)
     run_with_project(project, executor)
 
 
