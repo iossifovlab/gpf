@@ -130,7 +130,7 @@ class GPFInstance:
         if self.dae_config.genomic_scores_db is not None:
             for score_def in self.dae_config.genomic_scores_db:
                 scores.append((score_def["resource"], score_def["score"]))
-        return GenomicScoresDb(self.grr_no_cache, scores)
+        return GenomicScoresDb(self.grr, scores)
 
     @property  # type: ignore
     @cached

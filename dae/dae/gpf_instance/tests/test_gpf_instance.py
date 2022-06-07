@@ -1,3 +1,5 @@
+# pylint: disable=redefined-outer-name,C0114,C0116,protected-access
+
 def test_init(fixtures_gpf_instance):
     assert fixtures_gpf_instance
 

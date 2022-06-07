@@ -1,6 +1,8 @@
+# pylint: disable=redefined-outer-name,C0114,C0116,protected-access
+
 def test_enrichment_config_people_groups(f1_trio_enrichment_config):
     enrichment_config = f1_trio_enrichment_config
-    assert enrichment_config.selected_person_set_collections == ("phenotype",)
+    assert enrichment_config.selected_person_set_collections == ["phenotype"]
 
 
 def test_enrichment_config_default_values(f1_trio_enrichment_config):
@@ -16,17 +18,17 @@ def test_enrichment_config_default_values(f1_trio_enrichment_config):
 
 def test_enrichment_config_effect_types(f1_trio_enrichment_config):
     enrichment_config = f1_trio_enrichment_config
-    assert enrichment_config.effect_types == ("LGDs", "missense", "synonymous")
+    assert enrichment_config.effect_types == ["LGDs", "missense", "synonymous"]
 
 
 def test_enrichment_config_backgrounds(
     f1_trio_enrichment_config, fixture_dirname
 ):
     enrichment_config = f1_trio_enrichment_config
-    assert enrichment_config.selected_background_values == (
+    assert enrichment_config.selected_background_values == [
         "coding_len_background_model",
         "samocha_background_model",
-    )
+    ]
 
     assert len(enrichment_config.background) == 2
     for _, background in enrichment_config.background.items():
@@ -64,10 +66,10 @@ def test_enrichment_config_backgrounds(
 
 def test_enrichment_config_counting(f1_trio_enrichment_config):
     enrichment_config = f1_trio_enrichment_config
-    assert enrichment_config.selected_counting_values == (
+    assert enrichment_config.selected_counting_values == [
         "enrichment_events_counting",
         "enrichment_gene_counting",
-    )
+    ]
 
     assert len(enrichment_config.counting) == 2
     assert (
