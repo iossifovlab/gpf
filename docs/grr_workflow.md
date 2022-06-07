@@ -288,10 +288,6 @@ For any resource:
    This command should calculate the md5 sums for all resource files
    and store them into a resource manifest file named `.MANIFEST`.
  
-   Also for each resource files this command will be created a state file 
-   into repository state directory `.grr` that contains md5 sum, path, size
-   and timestamp of the file.
- 
    When you are sure that the large resource files are in sync
    within the DVC repository you can use:
  
@@ -323,9 +319,6 @@ For any resource:
 
    * `histograms/score9.png` is a figure of the histogram for quick inspection.
 
-   For each of these files a state file is created into GRR state directory
-   `.grr`.
-
    At the end this command will update the resource manifest file to include
    the histograms' files.
 
@@ -345,7 +338,8 @@ Let say we want to change the description of a `hg38/scores/score9` resource.
    grr_manage index --use-dvc . hg38/scores/score9
    ```
 
-   This will update the manifest of the resource store the state of the files
+   This will rebuild the manifest of the resource and store the state
+   of the resource files
    into the GRR state directory `.grr`. Note that the resource `.MANIFEST`
    file should be the same as the one into the Git repository.
 
@@ -376,7 +370,23 @@ Let say we want to change the description of a `hg38/scores/score9` resource.
 Let say we need to change any of the large resource files -- e.g. rebuild the
 score tabix index. After this change we need to:
 
-1. Add the updated score files under DVC version control:
+1. Clone the Git GRR repository.
+
+2. Checkout the DVC files for the resource you plan to update:
+
+   ```
+   dvc fetch -r nemo ht38/scores/score9/score9.tsv.gz.dvc ht38/scores/score9/score9.tsv.gz.tbi.dvc
+   dvc checkout ht38/scores/score9/score9.tsv.gz.dvc ht38/scores/score9/score9.tsv.gz.tbi.dvc
+   ```
+
+   Alternatively you can pull all dvc files by running:
+
+   ```
+   dvc pull -r nemo
+   ```
+
+
+3. Add the updated score files under DVC version control:
 
    ```   
    dvc add score9.tsv.gz score9.tsv.gz.tbi
@@ -384,17 +394,65 @@ score tabix index. After this change we need to:
    
    and add `*.dvc` files into the Git repo.
 
-2. Run the `index` command:
+4. Run the `index` command:
 
    ```
    grr_manage index --use-dvc . hg38/scores/score9
    ```
 
-3. Rebuild the histograms:
+5. Rebuild the histograms:
 
    ```
    grr_manage histogram . hg38/scores/score9
    ```
 
-4. Add resource manifest and histogram files under Git version control
+6. Add resource manifest and histogram files under Git version control
+
+### Notes on GRR histogram command
+
+GRR management `histogram` command expects that the manifest of the
+resource is in sync with the resource files. Before running `histogram` command
+you should always run the `index` command to ensure, that the `.MANIFEST`
+of the resource is up to date.
+
+
+### GRR resource files' states
+
+For each GRR resource file the `index` command stores:
+
+* resource ID;
+* version of the resource;
+* name of the resource file;
+* md5 sum of the resource file;
+* size of the resource file;
+* timestamp of the resource file.
+
+This state information is stored in a file inside the GRR state directory
+ `.grr`. This state directory
+should be git ignored and should not be put into the Git repository.
+
+For each resource file (e.g. `hg38/scores/score9/score9.tsv.gz`) the `index`
+command creates a state file `.grr/hg38/scores/score9/score9.tsv.gz.state`
+that contains the state info:
+
+```
+resource_id: hg38/scores/score9
+version: '0'
+filename: score9.tsv.gz
+md5: 978ad036fe7f3e0b822485c8ee8285de
+size: 3153512062
+timestamp: '2022-06-07T06:53:50+00:00'
+```
+
+### Optimizations based on GRR resource file state
+
+When GRR management `index` command is run it should
+recalculate the md5 sum for each resource file.
+
+Before calculating the md5 sums for give resource file,
+the `index` command checks the state of this resource file.
+
+If the state timestamp and size conincide with the size and timestamp
+of the resoruce file, then the md5 sum is not recomputed and the one
+from the state is used.
 
