@@ -10,6 +10,8 @@ export default defineConfig({
     },
   },
   downloadsFolder: 'cypress/downloads',
+  screenshotsFolder: 'cypress/screenshots',
+  videosFolder: 'cypress/videos',
   trashAssetsBeforeRuns: true,
   retries: {
     runMode: 2,
