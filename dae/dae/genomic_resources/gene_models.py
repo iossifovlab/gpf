@@ -1382,12 +1382,18 @@ def load_gene_models_from_resource(
     gm = GeneModels(
         ("resource", resource.protocol.proto_id,
          resource.resource_id, gene_mapping_filename))
+    compression = False
+    if filename.endswith(".gz"):
+        compression = True
     with resource.open_raw_file(
-            filename, mode="rt", compression=True) as infile:
+            filename, mode="rt", compression=compression) as infile:
         if gene_mapping_filename is not None:
+            compression = False
+            if gene_mapping_filename.endswith(".gz"):
+                compression = True
             with resource.open_raw_file(
                     gene_mapping_filename, "rt",
-                    compression=True) as gene_mapping:
+                    compression=compression) as gene_mapping:
                 logger.debug(
                     "loading gene mapping from %s", gene_mapping_filename)
                 gm.load(infile, fileformat, gene_mapping)
