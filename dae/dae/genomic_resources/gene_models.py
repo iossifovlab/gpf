@@ -1383,12 +1383,11 @@ def load_gene_models_from_resource(
         ("resource", resource.protocol.proto_id,
          resource.resource_id, gene_mapping_filename))
     with resource.open_raw_file(
-            filename, mode="rt",
-            uncompress=True, seekable=True) as infile:
+            filename, mode="rt", compression=True) as infile:
         if gene_mapping_filename is not None:
             with resource.open_raw_file(
-                    gene_mapping_filename,
-                    "rt", uncompress=True) as gene_mapping:
+                    gene_mapping_filename, "rt",
+                    compression=True) as gene_mapping:
                 logger.debug(
                     "loading gene mapping from %s", gene_mapping_filename)
                 gm.load(infile, fileformat, gene_mapping)
