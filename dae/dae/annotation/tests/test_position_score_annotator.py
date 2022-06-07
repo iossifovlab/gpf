@@ -1,7 +1,7 @@
-# pylint: disable=redefined-outer-name,C0114,C0116,protected-access
+# pylint: disable=redefined-outer-name,C0114,C0116,protected-access,fixme
 
-import pytest
 import textwrap
+import pytest
 
 from dae.annotation.annotatable import VCFAllele
 from dae.genomic_resources import build_genomic_resource_repository
@@ -109,20 +109,20 @@ def test_position_score_annotator_all_attributes(position_score_repo):
 
 # TODO: Add test for complex
 @pytest.mark.parametrize("allele,pos_aggregator, expected", [
-    (("1", 14970, "C", "A"),   "mean", 0.1),
+    (("1", 14970, "C", "A"), "mean", 0.1),
 
-    (("1", 14970, "CC", "C"),  "mean", (0.1 + 0.1 + 0.2)/3),
-    (("1", 14970, "CC", "C"),  "max", 0.2),
+    (("1", 14970, "CC", "C"), "mean", (0.1 + 0.1 + 0.2) / 3),
+    (("1", 14970, "CC", "C"), "max", 0.2),
 
     (("1", 14970, "CCT", "C"), "mean", (0.1 + 0.1 + 0.2 + 0.2) / 4),
     (("1", 14970, "CCT", "C"), "max", 0.2),
 
-    (("1", 14970, "C", "CA"),  "mean", 0.1),
+    (("1", 14970, "C", "CA"), "mean", 0.1),
     (("1", 14970, "C", "CAA"), "mean", 0.1),
     (("1", 14970, "C", "CAA"), "max", 0.1),
 
-    (("1", 14971, "C", "CA"),  "mean", (0.1 + 0.2) / 2),
-    (("1", 14971, "C", "CA"),  "max", 0.2),
+    (("1", 14971, "C", "CA"), "mean", (0.1 + 0.2) / 2),
+    (("1", 14971, "C", "CA"), "max", 0.2),
 
     (("1", 14971, "C", "CAA"), "mean", (0.1 + 0.2) / 2),
     (("1", 14971, "C", "CAA"), "max", 0.2),
@@ -251,8 +251,8 @@ def test_position_annotator_join_aggregation(position_score_repo):
     print(pipeline_config)
 
     pipeline = build_annotation_pipeline(
-      pipeline_config_str=pipeline_config,
-      grr_repository=position_score_repo)
+        pipeline_config_str=pipeline_config,
+        grr_repository=position_score_repo)
 
     allele = ("1", 14970, "CC", "C")
     annotatable = VCFAllele(*allele)

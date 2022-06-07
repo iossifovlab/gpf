@@ -1,7 +1,7 @@
 # pylint: disable=redefined-outer-name,C0114,C0116,protected-access
 
-import pytest
 import textwrap
+import pytest
 
 from dae.genomic_resources import build_genomic_resource_repository
 from dae.annotation.annotation_factory import build_annotation_pipeline
@@ -167,9 +167,7 @@ def test_annotation_pipeline_liftover_annotator_schema(grr_fixture):
     assert pipeline is not None
 
     assert len(pipeline.annotators) == 1
-    print(100*"=")
     print(pipeline.annotation_schema)
-    print(100*"=")
 
     schema = pipeline.annotation_schema
     assert len(schema) == 1
@@ -203,9 +201,7 @@ def test_annotation_pipeline_effect_annotator_schema(grr_fixture):
     assert pipeline is not None
 
     assert len(pipeline.annotators) == 1
-    print(100*"=")
     print(pipeline.annotation_schema)
-    print(100*"=")
 
     schema = pipeline.annotation_schema
     assert len(schema) == 2, schema

@@ -1,7 +1,7 @@
 # pylint: disable=redefined-outer-name,C0114,C0116,protected-access
 
-import pytest
 import textwrap
+import pytest
 
 from dae.genomic_resources.test_tools import convert_to_tab_separated
 from dae.genomic_resources.testing import build_test_resource
