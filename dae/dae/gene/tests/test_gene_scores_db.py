@@ -1,13 +1,15 @@
+# pylint: disable=redefined-outer-name,C0114,C0116,protected-access
+
 import pytest
 
 from dae.gene.gene_scores import GeneScoresDb, GeneScore
-from dae.genomic_resources.embeded_repository import GenomicResourceEmbededRepo
+from dae.genomic_resources.testing import build_testing_repository
 from dae.genomic_resources.repository import GR_CONF_FILE_NAME
 
 
 @pytest.fixture(scope="session")
 def scores_repo():
-    scores_repo = GenomicResourceEmbededRepo("scores", content={
+    scores_repo = build_testing_repository(repo_id="scores", content={
         "RVIS_rank": {
             GR_CONF_FILE_NAME: (
                 "type: gene_score\n"
