@@ -7,7 +7,7 @@ import datetime
 import enum
 import hashlib
 
-from typing import List, Optional, Tuple, Dict, Any, Generator
+from typing import List, Optional, Tuple, Dict, Any, Generator, Union
 from dataclasses import dataclass, asdict, field
 
 import abc
@@ -51,6 +51,31 @@ def parse_gr_id_version_token(token):
     match = _GR_ID_WITH_VERSION_TOKEN_RE.fullmatch(token)
     if not match:
         return None
+    token = match[1]
+    version_string = match[2]
+    if version_string:
+        version = tuple(map(int, version_string.split(".")))
+    else:
+        version = (0,)
+    return token, version
+
+
+_RESOURCE_ID_WITH_VERSION_PATH_RE = re.compile(
+    r"([a-zA-Z0-9/._-]+)(?:\(([1-9]\d*(?:\.\d+)*)\))?")
+
+
+def parse_resource_id_version(resource_path):
+    """Parse genomic resource id and version path into Id, Version tuple.
+
+    An optional version (0,) appened if needed. If present, the version suffix
+    has the form "(3.3.2)". The default version is (0,).
+    Returns tuple (None, None) if the path does not match the
+    resource_id/version requirements. Otherwise returns tuple
+    (resource_id, version).
+    """
+    match = _RESOURCE_ID_WITH_VERSION_PATH_RE.fullmatch(resource_path)
+    if not match:
+        return None, None
     token = match[1]
     version_string = match[2]
     if version_string:
@@ -251,6 +276,8 @@ class Manifest:
     def from_file_content(file_content: str) -> Manifest:
         """Produces a manifest from manifest file content."""
         manifest_entries = yaml.safe_load(file_content)
+        if manifest_entries is None:
+            manifest_entries = []
         return Manifest.from_manifest_entries(manifest_entries)
 
     @staticmethod
@@ -320,14 +347,18 @@ class Manifest:
 class GenomicResource:
     """Base class for genomic resources."""
 
-    def __init__(self, resource_id, version, repo: GenomicResourceRealRepo,
-                 config=None,
-                 manfiest: Optional[Manifest] = None):
+    def __init__(
+            self, resource_id: str, version: Tuple[int, ...],
+            protocol: Union[
+                ReadOnlyRepositoryProtocol, ReadWriteRepositoryProtocol],
+            config=None,
+            manifest: Optional[Manifest] = None):
+
         self.resource_id = resource_id
         self.version: Tuple[int, ...] = version
         self.config = config
-        self.repo = repo
-        self._manifest: Optional[Manifest] = manfiest
+        self.protocol = protocol
+        self._manifest: Optional[Manifest] = manifest
 
     def refresh(self):
         """Clean up cached attributes like manifest, etc."""
@@ -363,7 +394,7 @@ class GenomicResource:
 
     def file_exists(self, filename):
         """Check if filename exists in this resource."""
-        return self.repo.file_exists(self, filename)
+        return self.protocol.file_exists(self, filename)
 
     def file_local(self, filename):
         """
@@ -374,26 +405,23 @@ class GenomicResource:
     def get_manifest(self) -> Manifest:
         """Load resource manifest if it exists. Otherwise builds it."""
         if self._manifest is None:
-            self._manifest = self.repo.get_manifest(self)
-        assert isinstance(self._manifest, Manifest), self._manifest
+            self._manifest = self.protocol.get_manifest(self)
         return self._manifest
 
     def get_file_content(self, filename, uncompress=True, mode="t"):
         """Return the content of file in a resource."""
-        return self.repo.get_file_content(
+        return self.protocol.get_file_content(
             self, filename, uncompress=uncompress, mode=mode)
 
     def open_raw_file(
-            self, filename, mode="rt", uncompress=False, seekable=False):
+            self, filename, mode="rt", **kwargs):
         """Open a file in the resource and returns a File-like object."""
-        return self.repo.open_raw_file(
-            self, filename, mode,
-            uncompress=uncompress,
-            seekable=seekable)
+        return self.protocol.open_raw_file(
+            self, filename, mode, **kwargs)
 
     def open_tabix_file(self, filename, index_filename=None):
         """Open a tabix file and returns a pysam.TabixFile."""
-        return self.repo.open_tabix_file(self, filename, index_filename)
+        return self.protocol.open_tabix_file(self, filename, index_filename)
 
 
 class Mode(enum.Enum):
@@ -549,6 +577,36 @@ class ReadWriteRepositoryProtocol(ReadOnlyRepositoryProtocol):
             manifest.add(entry)
         return manifest
 
+    def update_manifest(self, resource):
+        """Update or create full manifest for the resource."""
+        manifest = Manifest()
+        for entry in self.collect_resource_entries(resource):
+            state = self.load_resource_file_state(resource, entry.name)
+            if state is None:
+                state = self.build_resource_file_state(resource, entry.name)
+                self.save_resource_file_state(state)
+                entry.md5 = state.md5
+                entry.size = state.size
+            else:
+                file_timestamp = self.get_resource_file_timestamp(
+                    resource, entry.name)
+                file_size = self.get_resource_file_size(
+                    resource, entry.name)
+                if state.timestamp != file_timestamp or \
+                        state.size != file_size:
+
+                    state = self.build_resource_file_state(
+                        resource, entry.name)
+                    self.save_resource_file_state(state)
+
+                entry.md5 = state.md5
+                entry.size = state.size
+
+            manifest.add(entry)
+
+        self.save_manifest(resource, manifest)
+        return manifest
+
     def save_manifest(self, resource, manifest: Manifest):
         """Save manifest into genomic resources directory."""
         with self.open_raw_file(
@@ -617,7 +675,7 @@ class ReadWriteRepositoryProtocol(ReadOnlyRepositoryProtocol):
 
     @abc.abstractmethod
     def delete_resource_file(
-            self, resource: GenomicResource, filename: str):
+            self, resource: GenomicResource, filename: str) -> None:
         """Delete a resource file and it's internal state."""
 
     @abc.abstractmethod
@@ -625,14 +683,14 @@ class ReadWriteRepositoryProtocol(ReadOnlyRepositoryProtocol):
             self,
             remote_resource: GenomicResource,
             dest_resource: GenomicResource,
-            filename: str) -> ResourceFileState:
+            filename: str) -> Optional[ResourceFileState]:
         """Copy a remote resource file into local repository."""
 
     @abc.abstractmethod
     def update_resource_file(
             self, remote_resource: GenomicResource,
             dest_resource: GenomicResource,
-            filename: str) -> ResourceFileState:
+            filename: str) -> Optional[ResourceFileState]:
         """Update a resource file into repository if needed."""
 
     def get_or_create_resource(
@@ -709,15 +767,29 @@ class ReadWriteRepositoryProtocol(ReadOnlyRepositoryProtocol):
             version_constraint=f"={remote_resource.get_version_str()}")
 
 
-class GenomicResourceRepo(abc.ABC):
+class GenomicResourceRepoBase(abc.ABC):
     """Base class for genomic resources repositories."""
 
-    def __init__(self, repo_id):
-        self.repo_id: str = repo_id
+    def __init__(self, repo_id: str):
+        self._repo_id: str = repo_id
+
+    @property
+    def repo_id(self):
+        return self._repo_id
 
     @abc.abstractmethod
-    def get_resource(self, resource_id, version_constraint=None,
-                     genomic_repository_id=None) -> Optional[GenomicResource]:
+    def get_resource(
+            self, resource_id, version_constraint: Optional[str] = None,
+            repository_id: Optional[str] = None) -> GenomicResource:
+        """Return one resource with id qual to resource_id.
+
+        If resource is not found, exception is raised.
+        """
+
+    @abc.abstractmethod
+    def find_resource(
+            self, resource_id, version_constraint: Optional[str] = None,
+            repository_id: Optional[str] = None) -> Optional[GenomicResource]:
         """Return one resource with id qual to resource_id.
 
         If resource is not found, None is returned.
@@ -728,77 +800,35 @@ class GenomicResourceRepo(abc.ABC):
         """Return a generator over all resource in the repository."""
 
 
-class GenomicResourceRealRepo(GenomicResourceRepo):
+class GenomicResourceRepo(GenomicResourceRepoBase):
     """Base class for real genomic resources repositories."""
 
-    def build_genomic_resource(
-            self, resource_id, version, config=None,
-            manifest: Optional[Manifest] = None):
-        """Build a genomic resource belonging to this repository."""
-        if not config:
-            res = GenomicResource(resource_id, version, self)
-            config = self.load_yaml(res, GR_CONF_FILE_NAME)
+    def __init__(
+            self,
+            protocol: Union[
+                ReadOnlyRepositoryProtocol, ReadWriteRepositoryProtocol]):
+        super().__init__(protocol.get_id())
+        self.protocol = protocol
 
-        resource = GenomicResource(resource_id, version, self, config)
-        resource._manifest = manifest  # pylint: disable=protected-access
-        return resource
+    def get_resource(
+            self, resource_id: str, version_constraint: Optional[str] = None,
+            repository_id: Optional[str] = None) -> GenomicResource:
 
-    def get_resource(self, resource_id, version_constraint=None,
-                     genomic_repository_id=None) -> Optional[GenomicResource]:
+        if repository_id and self.repo_id != repository_id:
+            raise ValueError(
+                f"can't find resource ({resource_id}, {version_constraint}: "
+                f"repository {repository_id} in repository {self.repo_id}")
 
-        if genomic_repository_id and self.repo_id != genomic_repository_id:
+        return self.protocol.get_resource(resource_id, version_constraint)
+
+    def find_resource(
+            self, resource_id: str, version_constraint: Optional[str] = None,
+            repository_id: Optional[str] = None) -> Optional[GenomicResource]:
+
+        if repository_id and self.repo_id != repository_id:
             return None
 
-        matching_resources = []
-        for res in self.get_all_resources():
-            if res.resource_id != resource_id:
-                continue
-            if is_version_constraint_satisfied(
-                    version_constraint, res.version):
-                matching_resources.append(res)
-        if not matching_resources:
-            return None
-        return max(matching_resources, key=lambda x: x.version)  # type: ignore
+        return self.protocol.find_resource(resource_id, version_constraint)
 
-    def load_yaml(self, genomic_resource, filename):
-        """Return parsed YAML file."""
-        content = self.get_file_content(
-            genomic_resource, filename, uncompress=True)
-        return yaml.safe_load(content)
-
-    def get_file_content(
-            self, resource, filename, uncompress=True, mode="t"):
-        """Return content of a file in given resource."""
-        with self.open_raw_file(
-                resource, filename, mode=f"r{mode}",
-                uncompress=uncompress) as infile:
-            return infile.read()
-
-    def get_manifest(self, resource):
-        """Load resource manifest."""
-        content = self.get_file_content(resource, GR_MANIFEST_FILE_NAME)
-        return Manifest.from_file_content(content)
-
-    @abc.abstractmethod
-    def file_exists(self, resource, filename) -> bool:
-        """Check if given file exist in give resource."""
-
-    def file_local(self, genomic_resource, filename):
-        """Check if a given file in a given resource can be accessed locally"""
-        return False
-
-    @abc.abstractmethod
-    def open_raw_file(
-            self, resource, filename,
-            mode="rt", uncompress=False, seekable=False):
-        """Open file in a resource and returns a file-like object."""
-
-    @abc.abstractmethod
-    def open_tabix_file(
-            self, resource, filename, index_filename=None):
-        """
-        Open a tabix file in a resource and return a pysam tabix file object.
-
-        Not all repositories support this method. Repositories that do
-        no support this method raise and exception.
-        """
+    def get_all_resources(self) -> Generator[GenomicResource, None, None]:
+        return self.protocol.get_all_resources()

@@ -1,27 +1,13 @@
 """Provides CLI for management of genomic resources repositories."""
 import sys
 import logging
-import pathlib
 import argparse
-import time
-from typing import cast
-from urllib.parse import urlparse
 from dae.dask.client_factory import DaskClient
 
 from dae.__version__ import VERSION, RELEASE
-
-from dae.genomic_resources.dir_repository import GenomicResourceDirRepo
-from dae.genomic_resources.url_repository import GenomicResourceURLRepo
-from dae.genomic_resources.repository_factory import \
-    build_genomic_resource_repository, load_definition_file, \
-    get_configured_definition
-from dae.genomic_resources.cached_repository import GenomicResourceCachedRepo
+from dae.genomic_resources.fsspec_protocol import build_fsspec_protocol
 from dae.genomic_resources.histogram import HistogramBuilder
-from dae.genomic_resources.repository_helpers import RepositoryWorkflowHelper
-
-from dae.configuration.gpf_config_parser import GPFConfigParser
-from dae.configuration.schemas.dae_conf import dae_conf_schema
-from dae.annotation.annotation_factory import AnnotationConfigParser
+# from dae.genomic_resources.repository_helpers import RepositoryWorkflowHelper
 
 
 logger = logging.getLogger(__file__)
@@ -92,8 +78,9 @@ def _configure_list_subparser(subparsers):
                              help="Path to the GR Repo to list")
     VerbosityConfiguration.set_argumnets(parser_list)
 
-def _run_list_command(repo, _args):
-    for res in repo.get_all_resources():
+
+def _run_list_command(proto, _args):
+    for res in proto.get_all_resources():
         res_size = sum([fs for _, fs, _ in res.get_manifest().get_files()])
         print(
             f"{res.get_type():20} {res.get_version_str():7s} "
@@ -114,34 +101,29 @@ def _configure_index_subparser(subparsers):
         "-n", "--dry-run",  default=False, action="store_true",
         help="only checks if the manifest update is needed and reports")
 
-def _get_resources_list(repo, **kwargs):
+
+def _get_resources_list(proto, **kwargs):
     res_id = kwargs.get("resource")
     if res_id is not None:
-        res = repo.get_resource(res_id)
+        res = proto.get_resource(res_id)
         if res is None:
             logger.error(
                 "resource %s not found in repository %s",
-                res_id, repo.repo_id)
+                res_id, proto.url)
             sys.exit(1)
         resources = [res]
     else:
-        resources = repo.get_all_resources()
+        resources = proto.get_all_resources()
     return resources
 
 
-def _run_index_command(repo, **kwargs):
-    resources = _get_resources_list(repo, **kwargs)
-    dry_run = kwargs.get("dry_run", False)
+def _run_index_command(proto, **kwargs):
+    resources = _get_resources_list(proto, **kwargs)
+    # dry_run = kwargs.get("dry_run", False)
 
-    repo_helper = RepositoryWorkflowHelper(repo)
-    if dry_run:
-        for res in resources:
-            repo_helper.check_manifest_timestamps(res)
-        repo_helper.check_repository_content_file()
-    else:
-        for res in resources:
-            repo_helper.update_manifest(res)
-        repo_helper.update_repository_content_file()
+    for res in resources:
+        proto.update_manifest(res)
+    proto.build_content_file()
 
 
 def _configure_checkout_subparser(subparsers):
@@ -160,13 +142,14 @@ def _configure_checkout_subparser(subparsers):
 
 
 def _run_checkout_command(repo, **kwargs):
-    resources = _get_resources_list(repo, **kwargs)
-    dry_run = kwargs.get("dry_run", False)
+    # resources = _get_resources_list(repo, **kwargs)
+    # dry_run = kwargs.get("dry_run", False)
 
-    repo_helper = RepositoryWorkflowHelper(repo)
-    for res in resources:
-        repo_helper.checkout_manifest_timestamps(res, dry_run)
-    repo_helper.check_repository_content_file()
+    # repo_helper = RepositoryWorkflowHelper(repo)
+    # for res in resources:
+    #     repo_helper.checkout_manifest_timestamps(res, dry_run)
+    # repo_helper.check_repository_content_file()
+    pass
 
 
 def cli_manage(cli_args=None):
@@ -195,16 +178,16 @@ def cli_manage(cli_args=None):
     VerbosityConfiguration.set(args)
     command, repo_dir = args.command, args.repo_dir
 
-    repo = _create_repo(repo_dir)
+    proto = _create_proto(repo_dir)
 
     if command == "index":
-        _run_index_command(repo, **vars(args))
+        _run_index_command(proto, **vars(args))
     elif command == "list":
-        _run_list_command(repo, args)
+        _run_list_command(proto, args)
     elif command == "histogram":
-        _run_hist_command(repo, args)
+        _run_hist_command(proto, args)
     elif command == "checkout":
-        _run_checkout_command(repo, **vars(args))
+        _run_checkout_command(proto, **vars(args))
     else:
         logger.error(
             "Unknown command %s. The known commands are index, "
@@ -227,85 +210,80 @@ def _extract_resource_ids_from_annotation_conf(config):
     return resources
 
 
-def cli_cache_repo(argv=None):
-    """Provides CLI for caching repository."""
-    if not argv:
-        argv = sys.argv[1:]
-
-    description = "Repository cache tool - caches all resources in a given " \
-        "repository"
-    parser = argparse.ArgumentParser(description=description)
-    parser.add_argument(
-        "--definition", default=None, help="Repository definition file"
-    )
-    parser.add_argument(
-        "--jobs", "-j", help="Number of jobs running in parallel",
-        default=4, type=int,
-    )
-    parser.add_argument(
-        "--instance", default=None,
-        help="gpf_instance.yaml to use for selective cache"
-    )
-    parser.add_argument(
-        "--annotation", default=None,
-        help="annotation.yaml to use for selective cache"
-    )
-    VerbosityConfiguration.set_argumnets(parser)
-
-    args = parser.parse_args(argv)
-    VerbosityConfiguration.set(args)
-
-    start = time.time()
-    if args.definition is not None:
-        definition = load_definition_file(args.definition)
-    else:
-        definition = get_configured_definition()
-
-    repository = build_genomic_resource_repository(definition=definition)
-    if not isinstance(repository, GenomicResourceCachedRepo):
-        raise ValueError(
-            "This tool works only if the top configured "
-            "repository is cached.")
-    repository = cast(GenomicResourceCachedRepo, repository)
-
-    resources = set()
-    annotation = None
-
-    if args.instance is not None and args.annotation is not None:
-        raise ValueError(
-            "This tool cannot handle both annotation and instance flags"
-        )
-
-    if args.instance is not None:
-        config = GPFConfigParser.load_config(args.instance, dae_conf_schema)
-        resources.add(config.reference_genome.resource_id)
-        resources.add(config.gene_models.resource_id)
-        if config.annotation is not None:
-            annotation = config.annotation.conf_file
-    elif args.annotation is not None:
-        annotation = args.annotation
-
-    if annotation is not None:
-        config = AnnotationConfigParser.parse_config_file(annotation)
-        resources.update(_extract_resource_ids_from_annotation_conf(config))
-
-    if len(resources) > 0:
-        resources = list(resources)
-    else:
-        resources = None
-
-    repository.cache_resources(workers=args.jobs, resource_ids=resources)
-
-    elapsed = time.time() - start
-
-    logger.info("Cached all resources in %.2f secs", elapsed)
+def _create_proto(repo_url):
+    proto = build_fsspec_protocol(proto_id="manage", root_url=repo_url)
+    return proto
 
 
-def _create_repo(repo_dir):
-    repo_url = urlparse(repo_dir)
-    if not repo_url.scheme or repo_url.scheme == "file":
-        repo_dir = pathlib.Path(repo_dir)
-        repo = GenomicResourceDirRepo("", repo_dir)
-    else:
-        repo = GenomicResourceURLRepo("", repo_dir)
-    return repo
+# def cli_cache_repo(argv=None):
+#     """Provides CLI for caching repository."""
+#     if not argv:
+#         argv = sys.argv[1:]
+
+#     description = "Repository cache tool - caches all resources in a given " \
+#         "repository"
+#     parser = argparse.ArgumentParser(description=description)
+#     parser.add_argument(
+#         "--definition", default=None, help="Repository definition file"
+#     )
+#     parser.add_argument(
+#         "--jobs", "-j", help="Number of jobs running in parallel",
+#         default=4, type=int,
+#     )
+#     parser.add_argument(
+#         "--instance", default=None,
+#         help="gpf_instance.yaml to use for selective cache"
+#     )
+#     parser.add_argument(
+#         "--annotation", default=None,
+#         help="annotation.yaml to use for selective cache"
+#     )
+#     VerbosityConfiguration.set_argumnets(parser)
+
+#     args = parser.parse_args(argv)
+#     VerbosityConfiguration.set(args)
+
+#     start = time.time()
+#     if args.definition is not None:
+#         definition = load_definition_file(args.definition)
+#     else:
+#         definition = get_configured_definition()
+
+#     repository = build_genomic_resource_repository(definition=definition)
+#     if not isinstance(repository, GenomicResourceCachedRepo):
+#         raise ValueError(
+#             "This tool works only if the top configured "
+#             "repository is cached.")
+#     repository = cast(GenomicResourceCachedRepo, repository)
+
+#     resources = set()
+#     annotation = None
+
+#     if args.instance is not None and args.annotation is not None:
+#         raise ValueError(
+#             "This tool cannot handle both annotation and instance flags"
+#         )
+
+#     if args.instance is not None:
+#         config = GPFConfigParser.load_config(args.instance, dae_conf_schema)
+#         resources.add(config.reference_genome.resource_id)
+#         resources.add(config.gene_models.resource_id)
+#         if config.annotation is not None:
+#             annotation = config.annotation.conf_file
+#     elif args.annotation is not None:
+#         annotation = args.annotation
+
+#     if annotation is not None:
+#         config = AnnotationConfigParser.parse_config_file(annotation)
+#         resources.update(_extract_resource_ids_from_annotation_conf(config))
+
+#     if len(resources) > 0:
+#         resources = list(resources)
+#     else:
+#         resources = None
+
+#     repository.cache_resources(workers=args.jobs, resource_ids=resources)
+
+#     elapsed = time.time() - start
+
+#     logger.info("Cached all resources in %.2f secs", elapsed)

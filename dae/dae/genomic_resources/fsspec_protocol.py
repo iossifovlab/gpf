@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import os
-import re
 import hashlib
 import logging
 
@@ -13,6 +12,7 @@ from dataclasses import asdict
 import fsspec  # type: ignore
 from fsspec.implementations.local import LocalFileSystem  # type: ignore
 from fsspec.implementations.http import HTTPFileSystem  # type: ignore
+from fsspec.implementations.memory import MemoryFileSystem  # type: ignore
 from s3fs.core import S3FileSystem  # type: ignore
 
 import pysam
@@ -27,6 +27,7 @@ from dae.genomic_resources.repository import GR_CONF_FILE_NAME, Manifest, \
     GenomicResource, isoformatted_from_datetime, \
     isoformatted_from_timestamp, \
     version_string_to_suffix, \
+    parse_resource_id_version, \
     GR_CONTENTS_FILE_NAME, \
     GR_MANIFEST_FILE_NAME
 
@@ -35,7 +36,7 @@ logger = logging.getLogger(__name__)
 
 
 def build_fsspec_protocol(proto_id: str, root_url: str, **kwargs) -> Union[
-        FsspecReadOnlyProtocol, FsspecReadWriteProtocol]:
+        ReadOnlyRepositoryProtocol, ReadWriteRepositoryProtocol]:
     """Create fsspec GRR protocol based on the root url."""
     url = urlparse(root_url)
     # pylint: disable=import-outside-toplevel
@@ -58,6 +59,9 @@ def build_fsspec_protocol(proto_id: str, root_url: str, **kwargs) -> Union[
                 anon=False, client_kwargs={"endpoint_url": endpoint_url})
         return FsspecReadWriteProtocol(
             proto_id, root_url, filesystem)
+    if url.scheme == "memory":
+        filesystem = MemoryFileSystem()
+        return FsspecReadWriteProtocol(proto_id, root_url, filesystem)
 
     raise NotImplementedError(f"unsupported schema {url.scheme}")
 
@@ -180,31 +184,6 @@ class FsspecReadOnlyProtocol(ReadOnlyRepositoryProtocol):
             file_url, index=index_url)
 
 
-_RESOURCE_ID_WITH_VERSION_TOKEN_RE = re.compile(
-    r"([a-zA-Z0-9/._-]+)(?:\(([1-9]\d*(?:\.\d+)*)\))?")
-
-
-def parse_resource_id_version(resource_path):
-    """Parse genomic resource id and version path into Id, Version tuple.
-
-    An optional version (0,) appened if needed. If present, the version suffix
-    has the form "(3.3.2)". The default version is (0,).
-    Returns tuple (None, None) if the path does not match the
-    resource_id/version requirements. Otherwise returns tuple
-    (resource_id, version).
-    """
-    match = _RESOURCE_ID_WITH_VERSION_TOKEN_RE.fullmatch(resource_path)
-    if not match:
-        return None, None
-    token = match[1]
-    version_string = match[2]
-    if version_string:
-        version = tuple(map(int, version_string.split(".")))
-    else:
-        version = (0,)
-    return token, version
-
-
 class FsspecReadWriteProtocol(
         FsspecReadOnlyProtocol, ReadWriteRepositoryProtocol):
     """Provides fsspec genomic resources repository protocol."""
@@ -299,6 +278,7 @@ class FsspecReadWriteProtocol(
             manifest: Optional[Manifest] = None
             manifest_filename = os.path.join(
                 res_fullpath, GR_MANIFEST_FILE_NAME)
+
             if self.filesystem.exists(manifest_filename):
                 with self.filesystem.open(manifest_filename, "rt") as infile:
                     manifest = Manifest.from_file_content(infile.read())
@@ -383,7 +363,7 @@ class FsspecReadWriteProtocol(
             )
 
     def delete_resource_file(
-            self, resource: GenomicResource, filename: str):
+            self, resource: GenomicResource, filename: str) -> None:
         """Delete a resource file and it's internal state."""
         filepath = self.get_resource_file_url(resource, filename)
         if self.filesystem.exists(filepath):
@@ -397,15 +377,15 @@ class FsspecReadWriteProtocol(
             self,
             remote_resource: GenomicResource,
             dest_resource: GenomicResource,
-            filename: str) -> ResourceFileState:
+            filename: str) -> Optional[ResourceFileState]:
         """Copy a resource file into repository."""
         assert dest_resource.resource_id == remote_resource.resource_id
-        assert dest_resource.repo == self
+
         remote_manifest = remote_resource.get_manifest()
         if filename not in remote_manifest:
-            raise FileNotFoundError(
-                f"{filename} not found in remote resource "
-                f"{remote_resource.resource_id}")
+            self.delete_resource_file(dest_resource, filename)
+            return None
+
         manifest_entry = remote_manifest[filename]
 
         dest_filepath = self.get_resource_file_url(dest_resource, filename)
@@ -437,7 +417,9 @@ class FsspecReadWriteProtocol(
 
         if md5 != manifest_entry.md5:
             raise IOError(
-                f"file copy is broken; md5sum are different: "
+                f"file copy is broken "
+                f"{dest_resource.resource_id} ({filename}); "
+                f"md5sum are different: "
                 f"{md5}!={manifest_entry.md5}")
 
         state = self.build_resource_file_state(
@@ -446,15 +428,16 @@ class FsspecReadWriteProtocol(
             md5sum=md5)
 
         self.save_resource_file_state(state)
+        self.save_manifest(dest_resource, remote_manifest)
+
         return state
 
     def update_resource_file(
             self, remote_resource: GenomicResource,
             dest_resource: GenomicResource,
-            filename: str) -> ResourceFileState:
+            filename: str) -> Optional[ResourceFileState]:
         """Update a resource file into repository if needed."""
         assert dest_resource.resource_id == remote_resource.resource_id
-        assert dest_resource.repo == self
 
         local_state = self.load_resource_file_state(dest_resource, filename)
         if local_state is None:
@@ -470,9 +453,9 @@ class FsspecReadWriteProtocol(
 
         remote_manifest = remote_resource.get_manifest()
         if filename not in remote_manifest:
-            raise FileNotFoundError(
-                f"{filename} not found in remote resource "
-                f"{remote_resource.resource_id}")
+            self.delete_resource_file(dest_resource, filename)
+            return None
+
         manifest_entry = remote_manifest[filename]
         if local_state.md5 != manifest_entry.md5:
             return self.copy_resource_file(

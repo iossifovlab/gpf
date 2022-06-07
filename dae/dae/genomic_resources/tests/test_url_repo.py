@@ -1,15 +1,10 @@
-from dae.genomic_resources.embeded_repository import GenomicResourceEmbededRepo
-from dae.genomic_resources.dir_repository import GenomicResourceDirRepo
-from dae.genomic_resources.repository_helpers import RepositoryWorkflowHelper
-from dae.genomic_resources.url_repository import GenomicResourceURLRepo
+# pylint: disable=redefined-outer-name,C0114,C0116,protected-access
 from dae.genomic_resources.repository import GR_CONF_FILE_NAME
 
 
-def test_url_vs_dir_results(tmp_path):
+def test_url_vs_dir_results(repo_testing):
 
-    test_repo_URL = "file://" + str(tmp_path)
-    demo_gtf_content = "TP53\tchr3\t300\t200"
-    src_repo = GenomicResourceEmbededRepo("src", content={
+    content = {
         "one": {
             GR_CONF_FILE_NAME: "",
             "data.txt": "alabala"
@@ -17,16 +12,12 @@ def test_url_vs_dir_results(tmp_path):
         "sub": {
             "two(1.0)": {
                 GR_CONF_FILE_NAME: "type: gene_models\nfile: genes.gtf",
-                "genes.txt": demo_gtf_content
+                "genes.txt": "TP53\tchr3\t300\t200"
             }
         }
-    })
-    dir_repo = GenomicResourceDirRepo('dir', directory=tmp_path)
-    dir_repo.store_all_resources(src_repo)
-
-    repo_helper = RepositoryWorkflowHelper(dir_repo)
-    repo_helper.update_repository_content_file()
-    url_repo = GenomicResourceURLRepo("url", url=test_repo_URL)
+    }    
+    dir_repo = repo_testing(repo_id="src", scheme="file", content=content)
+    url_repo = repo_testing(repo_id="url", scheme="http", content=content)
 
     def resource_set(repo):
         return {
@@ -34,6 +25,6 @@ def test_url_vs_dir_results(tmp_path):
         }
 
     assert dir_repo and url_repo
-    assert resource_set(src_repo) == resource_set(url_repo)
+    assert resource_set(dir_repo) == resource_set(url_repo)
     assert url_repo.get_resource("sub/two").get_file_content("genes.txt") == \
-        demo_gtf_content
+        "TP53\tchr3\t300\t200"

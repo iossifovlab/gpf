@@ -5,7 +5,10 @@ import os
 import pytest
 
 from dae.genomic_resources.test_tools import convert_to_tab_separated
-from dae.genomic_resources.test_tools import build_a_test_resource
+from dae.genomic_resources.testing import build_test_resource
+from dae.genomic_resources.fsspec_protocol import build_fsspec_protocol
+from dae.genomic_resources.repository import GenomicResourceRepo
+
 from dae.genomic_resources.reference_genome import \
     open_reference_genome_from_file
 from dae.genomic_resources.reference_genome import \
@@ -13,26 +16,31 @@ from dae.genomic_resources.reference_genome import \
 
 
 def test_basic_sequence_resoruce():
-    res = build_a_test_resource({
-        "genomic_resource.yaml": "{type: genome, filename: chr.fa}",
-        "chr.fa": convert_to_tab_separated("""
-                >pesho
-                NNACCCAAAC
-                GGGCCTTCCN
-                NNNA
-        """),
-        "chr.fa.fai": "pesho\t24\t7\t10\t11\n"
-    })
+    res = build_test_resource(
+        content={
+            "genomic_resource.yaml": "{type: genome, filename: chr.fa}",
+            "chr.fa": convert_to_tab_separated("""
+                    >pesho
+                    NNACCCAAAC
+                    GGGCCTTCCN
+                    NNNA
+            """),
+            "chr.fa.fai": "pesho\t24\t7\t10\t11\n"
+        })
     ref = open_reference_genome_from_resource(res)
     assert ref.get_chrom_length("pesho") == 24
     assert ref.get_sequence("pesho", 1, 12) == "NNACCCAAACGG"
 
 
-def test_genomic_sequence_resource(genomic_resource_fixture_dir_repo):
+def test_genomic_sequence_resource(fixture_dirname):
 
-    res = genomic_resource_fixture_dir_repo.get_resource(
+    dirname = fixture_dirname("genomic_resources")
+    proto = build_fsspec_protocol("d", dirname)
+    repo = GenomicResourceRepo(proto)
+
+    res = repo.get_resource(
         "hg19/GATK_ResourceBundle_5777_b37_phiX174_short/genome")
-    assert res is not None
+
     ref = open_reference_genome_from_resource(res)
 
     print(ref.get_all_chrom_lengths())
@@ -57,11 +65,20 @@ def test_genomic_sequence_resource(genomic_resource_fixture_dir_repo):
     ref.close()
 
 
-def test_genomic_sequence_resource_http(genomic_resource_fixture_http_repo):
+def test_genomic_sequence_resource_http(fixture_dirname, proto_builder):
 
-    res = genomic_resource_fixture_http_repo.get_resource(
+    dirname = fixture_dirname("genomic_resources")
+    src_proto = build_fsspec_protocol("d", dirname)
+
+    proto = proto_builder(
+        src_proto,
+        scheme="http",
+        proto_id="testing_http")
+    repo = GenomicResourceRepo(proto)
+
+    res = repo.get_resource(
         "hg19/GATK_ResourceBundle_5777_b37_phiX174_short/genome")
-    assert res is not None
+
     ref = open_reference_genome_from_resource(res)
 
     print(ref.get_all_chrom_lengths())

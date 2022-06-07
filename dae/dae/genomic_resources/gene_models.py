@@ -1380,7 +1380,7 @@ def load_gene_models_from_resource(
     logger.debug("loading gene models %s (%s)", filename, fileformat)
 
     gm = GeneModels(
-        ("resource", resource.repo.repo_id,
+        ("resource", resource.protocol.proto_id,
          resource.resource_id, gene_mapping_filename))
     with resource.open_raw_file(
             filename, mode="rt",

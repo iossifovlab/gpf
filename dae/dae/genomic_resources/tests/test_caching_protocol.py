@@ -4,24 +4,26 @@ import pytest
 
 from dae.genomic_resources.fsspec_protocol import \
     build_fsspec_protocol
-from dae.genomic_resources.embedded_protocol import \
-    build_embedded_protocol
 from dae.genomic_resources.caching_protocol import \
     CachingProtocol
+from dae.genomic_resources.testing import \
+    build_testing_protocol
 
 
 def test_caching_repo_simple(embedded_proto, tmp_path):
 
-    local_proto = build_embedded_protocol(
-        "local", str(tmp_path / "cache"), {})
+    local_proto = build_testing_protocol(
+        proto_id="local",
+        root_path=str(tmp_path / "cache"),
+        content={})
 
     assert local_proto is not None
     assert len(list(local_proto.get_all_resources())) == 0
 
-    remote_proto = embedded_proto(tmp_path / "source")
+    remote_proto = embedded_proto(path=tmp_path / "source")
     assert len(list(remote_proto.get_all_resources())) == 5
 
-    caching_proto = CachingProtocol("cache", remote_proto, local_proto)
+    caching_proto = CachingProtocol(remote_proto, local_proto)
     assert caching_proto is not None
 
     assert len(list(caching_proto.get_all_resources())) == 5
@@ -29,10 +31,10 @@ def test_caching_repo_simple(embedded_proto, tmp_path):
 
 @pytest.fixture
 def caching_proto(
-        embedded_proto, tmp_path, s3_base):  # pylint: disable=unused-argument
+        fsspec_proto, tmp_path, s3_base):  # pylint: disable=unused-argument
 
     def builder(caching_scheme="file"):
-        remote_proto = embedded_proto(tmp_path / "source")
+        remote_proto = fsspec_proto(scheme="memory")
 
         if caching_scheme == "file":
             caching_proto = build_fsspec_protocol(
@@ -54,7 +56,7 @@ def caching_proto(
         else:
             raise ValueError(f"Unsupported caching scheme: {caching_scheme}")
 
-        proto = CachingProtocol("test_cache", remote_proto, caching_proto)
+        proto = CachingProtocol(remote_proto, caching_proto)
         return proto
 
     return builder
@@ -93,7 +95,7 @@ def test_get_resource_copies_only_resource_config_three(
     proto = caching_proto(caching_scheme)
     res = proto.get_resource("three")
 
-    local_proto = proto.local_protocol
+    local_proto = proto.cache_protocol
     assert local_proto.file_exists(res, "genomic_resource.yaml")
     assert not local_proto.file_exists(res, "sub1/a.txt")
     assert not local_proto.file_exists(res, "sub2/b.txt")
@@ -108,7 +110,7 @@ def test_get_resource_copies_only_resource_config_two(
     proto = caching_proto(caching_scheme)
     res = proto.get_resource("sub/two")
 
-    local_proto = proto.local_protocol
+    local_proto = proto.cache_protocol
     assert local_proto.file_exists(res, "genomic_resource.yaml")
     assert not local_proto.file_exists(res, "genes.gtf")
 
@@ -126,7 +128,7 @@ def test_open_raw_file_copies_the_file_three_a(
         content = infile.read()
     assert content == "a"
 
-    local_proto = proto.local_protocol
+    local_proto = proto.cache_protocol
     assert local_proto.file_exists(res, "genomic_resource.yaml")
     assert local_proto.file_exists(res, "sub1/a.txt")
     assert not local_proto.file_exists(res, "sub2/b.txt")
@@ -143,7 +145,7 @@ def test_open_raw_file_copies_the_file_three_b(caching_proto, caching_scheme):
         content = infile.read()
     assert content == "b"
 
-    local_proto = proto.local_protocol
+    local_proto = proto.cache_protocol
     assert local_proto.file_exists(res, "genomic_resource.yaml")
     assert local_proto.file_exists(res, "sub2/b.txt")
     assert not local_proto.file_exists(res, "sub1/a.txt")

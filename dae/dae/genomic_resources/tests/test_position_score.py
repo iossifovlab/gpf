@@ -1,19 +1,25 @@
+# pylint: disable=redefined-outer-name,C0114,C0116,protected-access
+
 from typing import cast
+
+import yaml
+
 from dae.genomic_resources import GenomicResource
+from dae.genomic_resources.repository import GenomicResourceRepo
 from dae.genomic_resources.genomic_scores import \
     PositionScore,\
     open_position_score_from_resource,\
     open_score_from_resource
 from dae.genomic_resources.repository_factory import \
     build_genomic_resource_repository
-from dae.genomic_resources.test_tools import build_a_test_resource
+from dae.genomic_resources.testing import build_test_resource, \
+    build_fsspec_protocol
 from dae.genomic_resources.repository import GR_CONF_FILE_NAME
-import yaml
 
 
 def test_the_simplest_position_score():
-    res: GenomicResource = build_a_test_resource({
-        GR_CONF_FILE_NAME: '''
+    res: GenomicResource = build_test_resource({
+        GR_CONF_FILE_NAME: """
             type: position_score
             table:
                 filename: data.mem
@@ -22,14 +28,14 @@ def test_the_simplest_position_score():
                 type: float
                 desc: "The phastCons computed over the tree of 100 \
                        verterbarte species"
-                name: s1''',
-        "data.mem": '''
+                name: s1""",
+        "data.mem": """
             chrom  pos_begin  s1
             1      10         0.02
             1      11         0.03
             1      15         0.46
             2      8          0.01
-            '''
+            """
     })
     assert res.get_type() == "position_score"
     score = open_position_score_from_resource(res)
@@ -48,8 +54,8 @@ def test_the_simplest_position_score():
 
 
 def test_region_score():
-    res: GenomicResource = build_a_test_resource({
-        GR_CONF_FILE_NAME: '''
+    res: GenomicResource = build_test_resource({
+        GR_CONF_FILE_NAME: """
             type: position_score
             table:
                 filename: data.mem
@@ -65,14 +71,14 @@ def test_region_score():
                 na_values: "-1"
                 desc: "The phastCons computed over the tree of 5 \
                        verterbarte species"
-                name: s2''',
-        "data.mem": '''
+                name: s2""",
+        "data.mem": """
             chrom  pos_begin  pos_end  s1    s2
             1      10         15       0.02  -1
             1      17         19       0.03  0
             1      22         25       0.46  EMPTY
             2      5          80       0.01  3
-            '''
+            """
     })
     assert res
     assert res.get_type() == "position_score"
@@ -86,7 +92,7 @@ def test_region_score():
         "phastCons100way": 0.02, "phastCons5way": None}
 
     assert score.fetch_scores_agg("1", 13, 18, ["phastCons100way"]) == \
-        {"phastCons100way": (3*0.02 + 2*0.03) / 5.}
+        {"phastCons100way": (3 * 0.02 + 2 * 0.03) / 5.}
     assert score.fetch_scores_agg(
         "1", 13, 18, ["phastCons100way"],
         non_default_pos_aggregators={"phastCons100way": "max"}) == \
@@ -97,12 +103,12 @@ def test_region_score():
     assert score.fetch_scores_agg(
         "1", 13, 18, ["phastCons5way"],
         non_default_pos_aggregators={"phastCons5way": "mean"}) == \
-        {"phastCons5way": 0/2}
+        {"phastCons5way": 0 / 2}
 
 
 def test_phastcons100way():
-    res: GenomicResource = build_a_test_resource({
-        GR_CONF_FILE_NAME: '''
+    res: GenomicResource = build_test_resource({
+        GR_CONF_FILE_NAME: """
             type: position_score
             table:
                 filename: data.mem
@@ -112,8 +118,8 @@ def test_phastcons100way():
                 desc: "The phastCons computed over the tree of 100 \
                        verterbarte species"
                 name: phastCons100way
-        ''',
-        "data.mem": '''
+        """,
+        "data.mem": """
             chrom  pos_begin  pos_end  phastCons100way
             1      54768      54768    0.002
             1      54769      54771    0.001
@@ -122,7 +128,7 @@ def test_phastcons100way():
             1      54775      54776    0
             1      54777      54780    0.001
             1      54781      54789    0
-        '''
+        """
     })
     assert res
     assert res.get_type() == "position_score"
@@ -143,8 +149,17 @@ def test_phastcons100way():
         {"phastCons100way": 0.000625}
 
 
-def test_position_score_over_http(genomic_resource_fixture_http_repo):
-    resource = genomic_resource_fixture_http_repo.get_resource(
+def test_position_score_over_http(fixture_dirname, proto_builder):
+    dirname = fixture_dirname("genomic_resources")
+    src_proto = build_fsspec_protocol("d", dirname)
+
+    proto = proto_builder(
+        src_proto,
+        scheme="http",
+        proto_id="testing_http")
+    repo = GenomicResourceRepo(proto)
+
+    resource = repo.get_resource(
         "hg38/TESTphastCons100way")
     assert isinstance(resource, GenomicResource)
     resource = cast(GenomicResource, resource)
@@ -153,13 +168,13 @@ def test_position_score_over_http(genomic_resource_fixture_http_repo):
 
     result = score.fetch_scores("1", 10918)
     assert result
-    assert result['phastCons100way'] == 0.253
+    assert result["phastCons100way"] == 0.253
 
 
 def test_build_score_from_resource_with_pos_resource():
-    definition = yaml.safe_load('''
+    definition = yaml.safe_load("""
         id: mm
-        type: embeded
+        type: embedded
         content:
             pos_res:
                 genomic_resource.yaml: |
@@ -173,19 +188,19 @@ def test_build_score_from_resource_with_pos_resource():
                 data.mem: |
                         chrom  pos_begin  s1
                         chr1   23         0.01
-    ''')
+    """)
     repo = build_genomic_resource_repository(definition)
     assert repo is not None
-    gr = repo.get_resource('pos_res')
-    assert gr is not None
+    res = repo.get_resource("pos_res")
+    assert res.resource_id == "pos_res"
 
-    score = open_score_from_resource(gr)
+    score = open_score_from_resource(res)
     assert isinstance(score, PositionScore)
 
 
 def test_position_score_fetch_region():
-    res: GenomicResource = build_a_test_resource({
-        GR_CONF_FILE_NAME: '''
+    res: GenomicResource = build_test_resource({
+        GR_CONF_FILE_NAME: """
             type: position_score
             table:
                 filename: data.mem
@@ -201,14 +216,14 @@ def test_position_score_fetch_region():
                 na_values: "-1"
                 desc: "The phastCons computed over the tree of 5 \
                        verterbarte species"
-                name: s2''',
-        "data.mem": '''
+                name: s2""",
+        "data.mem": """
             chrom  pos_begin  pos_end  s1    s2
             1      10         15       0.02  -1
             1      17         19       0.03  0
             1      22         25       0.46  EMPTY
             2      5          80       0.01  3
-            '''
+            """
     })
     score = open_position_score_from_resource(res)
 

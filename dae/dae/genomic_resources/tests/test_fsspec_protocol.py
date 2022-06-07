@@ -4,47 +4,47 @@ import gzip
 import pytest
 
 
-@pytest.mark.parametrize("filesystem", [
+@pytest.mark.parametrize("scheme", [
     "file",
     "s3",
     "http"
 ])
-def test_get_all_resources(fsspec_proto, filesystem):
-    proto = fsspec_proto(filesystem)
+def test_get_all_resources(fsspec_proto, scheme):
+    proto = fsspec_proto(scheme)
 
     resources = list(proto.get_all_resources())
     assert len(resources) == 5, resources
 
 
-@pytest.mark.parametrize("filesystem", [
+@pytest.mark.parametrize("scheme", [
     "file",
     "s3",
 ])
-def test_collect_all_resources(fsspec_proto, filesystem):
-    proto = fsspec_proto(filesystem)
+def test_collect_all_resources(fsspec_proto, scheme):
+    proto = fsspec_proto(scheme)
 
     resources = list(proto.collect_all_resources())
     assert len(resources) == 5, resources
 
 
-@pytest.mark.parametrize("filesystem", [
+@pytest.mark.parametrize("scheme", [
     "file",
     "s3",
 ])
-def test_state_directory_exists(fsspec_proto, filesystem):
-    proto = fsspec_proto(filesystem)
+def test_state_directory_exists(fsspec_proto, scheme):
+    proto = fsspec_proto(scheme)
 
     assert proto.state_url.endswith(".grr")
     assert proto.filesystem.exists(proto.state_url)
     assert proto.filesystem.isdir(proto.state_url)
 
 
-@pytest.mark.parametrize("filesystem", [
+@pytest.mark.parametrize("scheme", [
     "file",
     "s3",
 ])
-def test_resource_paths(fsspec_proto, filesystem):
-    proto = fsspec_proto(filesystem)
+def test_resource_paths(fsspec_proto, scheme):
+    proto = fsspec_proto(scheme)
 
     res = proto.get_resource("one")
 
@@ -56,12 +56,12 @@ def test_resource_paths(fsspec_proto, filesystem):
     assert config_path.endswith("one/genomic_resource.yaml")
 
 
-@pytest.mark.parametrize("filesystem", [
+@pytest.mark.parametrize("scheme", [
     "file",
     "s3",
 ])
-def test_build_resource_file_state(fsspec_proto, filesystem):
-    proto = fsspec_proto(filesystem)
+def test_build_resource_file_state(fsspec_proto, scheme):
+    proto = fsspec_proto(scheme)
     timestamp = "2022-05-31T00:00:00+00:00"
     res = proto.get_resource("one")
     state = proto.build_resource_file_state(
@@ -84,12 +84,12 @@ def test_build_resource_file_state(fsspec_proto, filesystem):
     assert state.md5 == "d9636a8dca9e5626851471d1c0ea92b1"
 
 
-@pytest.mark.parametrize("filesystem", [
+@pytest.mark.parametrize("scheme", [
     "file",
     "s3",
 ])
-def test_save_load_resource_file_state(fsspec_proto, filesystem):
-    proto = fsspec_proto(filesystem)
+def test_save_load_resource_file_state(fsspec_proto, scheme):
+    proto = fsspec_proto(scheme)
     timestamp = "2022-05-31T00:00:00+00:00"
 
     res = proto.get_resource("sub/two")
@@ -109,12 +109,12 @@ def test_save_load_resource_file_state(fsspec_proto, filesystem):
     assert loaded.md5 == "d9636a8dca9e5626851471d1c0ea92b1"
 
 
-@pytest.mark.parametrize("filesystem", [
+@pytest.mark.parametrize("scheme", [
     "file",
     "s3",
 ])
-def test_collect_resource_entries(fsspec_proto, filesystem):
-    proto = fsspec_proto(filesystem)
+def test_collect_resource_entries(fsspec_proto, scheme):
+    proto = fsspec_proto(scheme)
 
     res = proto.get_resource("one")
 
@@ -130,12 +130,12 @@ def test_collect_resource_entries(fsspec_proto, filesystem):
     assert entry.size == 0
 
 
-@pytest.mark.parametrize("filesystem", [
+@pytest.mark.parametrize("scheme", [
     "file",
     "s3",
 ])
-def test_file_exists(fsspec_proto, filesystem):
-    proto = fsspec_proto(filesystem)
+def test_file_exists(fsspec_proto, scheme):
+    proto = fsspec_proto(scheme)
 
     res = proto.get_resource("one")
 
@@ -143,12 +143,12 @@ def test_file_exists(fsspec_proto, filesystem):
     assert not proto.file_exists(res, "alabala.txt")
 
 
-@pytest.mark.parametrize("filesystem", [
+@pytest.mark.parametrize("scheme", [
     "file",
     "s3",
 ])
-def test_open_raw_file_text_read(fsspec_proto, filesystem):
-    proto = fsspec_proto(filesystem)
+def test_open_raw_file_text_read(fsspec_proto, scheme):
+    proto = fsspec_proto(scheme)
 
     res = proto.get_resource("one")
 
@@ -157,12 +157,12 @@ def test_open_raw_file_text_read(fsspec_proto, filesystem):
         assert content == "alabala"
 
 
-@pytest.mark.parametrize("filesystem", [
+@pytest.mark.parametrize("scheme", [
     "file",
     "s3",
 ])
-def test_open_raw_file_text_write(fsspec_proto, filesystem):
-    proto = fsspec_proto(filesystem)
+def test_open_raw_file_text_write(fsspec_proto, scheme):
+    proto = fsspec_proto(scheme)
 
     res = proto.get_resource("one")
 
@@ -172,12 +172,12 @@ def test_open_raw_file_text_write(fsspec_proto, filesystem):
     assert proto.file_exists(res, "new_data.txt")
 
 
-@pytest.mark.parametrize("filesystem", [
+@pytest.mark.parametrize("scheme", [
     "file",
     "s3",
 ])
-def test_open_raw_file_text_write_compression(fsspec_proto, filesystem):
-    proto = fsspec_proto(filesystem)
+def test_open_raw_file_text_write_compression(fsspec_proto, scheme):
+    proto = fsspec_proto(scheme)
 
     res = proto.get_resource("one")
 
@@ -194,12 +194,12 @@ def test_open_raw_file_text_write_compression(fsspec_proto, filesystem):
         assert content == "new alabala"
 
 
-@pytest.mark.parametrize("filesystem", [
+@pytest.mark.parametrize("scheme", [
     "file",
     "s3",
 ])
-def test_open_raw_file_text_read_compression(fsspec_proto, filesystem):
-    proto = fsspec_proto(filesystem)
+def test_open_raw_file_text_read_compression(fsspec_proto, scheme):
+    proto = fsspec_proto(scheme)
 
     res = proto.get_resource("one")
 
@@ -216,12 +216,12 @@ def test_open_raw_file_text_read_compression(fsspec_proto, filesystem):
         assert content == "new alabala"
 
 
-@pytest.mark.parametrize("filesystem", [
+@pytest.mark.parametrize("scheme", [
     "file",
     "s3",
 ])
-def test_compute_md5_sum(fsspec_proto, filesystem):
-    proto = fsspec_proto(filesystem)
+def test_compute_md5_sum(fsspec_proto, scheme):
+    proto = fsspec_proto(scheme)
 
     res = proto.get_resource("one")
 
@@ -231,12 +231,12 @@ def test_compute_md5_sum(fsspec_proto, filesystem):
         "d41d8cd98f00b204e9800998ecf8427e"
 
 
-@pytest.mark.parametrize("filesystem", [
+@pytest.mark.parametrize("scheme", [
     "file",
     "s3",
 ])
-def test_build_manifest(fsspec_proto, filesystem):
-    proto = fsspec_proto(filesystem)
+def test_build_manifest(fsspec_proto, scheme):
+    proto = fsspec_proto(scheme)
 
     res = proto.get_resource("one")
 
@@ -252,12 +252,12 @@ def test_build_manifest(fsspec_proto, filesystem):
         "d41d8cd98f00b204e9800998ecf8427e"
 
 
-@pytest.mark.parametrize("filesystem", [
+@pytest.mark.parametrize("scheme", [
     "file",
     "s3",
 ])
-def test_load_manifest(fsspec_proto, filesystem):
-    proto = fsspec_proto(filesystem)
+def test_load_manifest(fsspec_proto, scheme):
+    proto = fsspec_proto(scheme)
 
     res = proto.get_resource("one")
 
@@ -273,12 +273,12 @@ def test_load_manifest(fsspec_proto, filesystem):
         "d41d8cd98f00b204e9800998ecf8427e"
 
 
-@pytest.mark.parametrize("filesystem", [
+@pytest.mark.parametrize("scheme", [
     "file",
     "s3",
 ])
-def test_load_missing_manifest(fsspec_proto, filesystem):
-    proto = fsspec_proto(filesystem)
+def test_load_missing_manifest(fsspec_proto, scheme):
+    proto = fsspec_proto(scheme)
 
     res = proto.get_resource("one")
 
@@ -292,12 +292,12 @@ def test_load_missing_manifest(fsspec_proto, filesystem):
         proto.load_manifest(res)
 
 
-@pytest.mark.parametrize("filesystem", [
+@pytest.mark.parametrize("scheme", [
     "file",
     "s3",
 ])
-def test_get_manifest(fsspec_proto, filesystem):
-    proto = fsspec_proto(filesystem)
+def test_get_manifest(fsspec_proto, scheme):
+    proto = fsspec_proto(scheme)
 
     res = proto.get_resource("one")
 
@@ -314,12 +314,12 @@ def test_get_manifest(fsspec_proto, filesystem):
         "d41d8cd98f00b204e9800998ecf8427e"
 
 
-@pytest.mark.parametrize("filesystem", [
+@pytest.mark.parametrize("scheme", [
     "file",
     "s3",
 ])
-def test_get_missing_manifest(fsspec_proto, filesystem):
-    proto = fsspec_proto(filesystem)
+def test_get_missing_manifest(fsspec_proto, scheme):
+    proto = fsspec_proto(scheme)
 
     res = proto.get_resource("one")
 
@@ -342,14 +342,14 @@ def test_get_missing_manifest(fsspec_proto, filesystem):
         "d41d8cd98f00b204e9800998ecf8427e"
 
 
-@pytest.mark.parametrize("filesystem", [
+@pytest.mark.parametrize("scheme", [
     "file",
     "s3",
 ])
-def test_delete_resource_file(fsspec_proto, filesystem):
+def test_delete_resource_file(fsspec_proto, scheme):
 
     # Given
-    proto = fsspec_proto(filesystem)
+    proto = fsspec_proto(scheme)
 
     res = proto.get_resource("sub/two")
 
@@ -363,14 +363,14 @@ def test_delete_resource_file(fsspec_proto, filesystem):
     assert not proto.filesystem.exists(path)
 
 
-@pytest.mark.parametrize("filesystem", [
+@pytest.mark.parametrize("scheme", [
     "file",
     "s3",
 ])
-def test_copy_resource_file(embedded_proto, fsspec_proto, filesystem):
+def test_copy_resource_file(embedded_proto, fsspec_proto, scheme):
     # Given
     src_proto = embedded_proto()
-    proto = fsspec_proto(filesystem)
+    proto = fsspec_proto(scheme)
 
     src_res = src_proto.get_resource("sub/two")
     dst_res = proto.get_resource("sub/two")
@@ -391,15 +391,15 @@ def test_copy_resource_file(embedded_proto, fsspec_proto, filesystem):
     assert loaded == state
 
 
-@pytest.mark.parametrize("filesystem", [
+@pytest.mark.parametrize("scheme", [
     "file",
     "s3",
 ])
-def test_copy_resource(embedded_proto, fsspec_proto, filesystem):
+def test_copy_resource(embedded_proto, fsspec_proto, scheme):
 
     # Given
     src_proto = embedded_proto()
-    proto = fsspec_proto(filesystem)
+    proto = fsspec_proto(scheme)
 
     src_res = src_proto.get_resource("sub/two")
 
@@ -419,16 +419,16 @@ def test_copy_resource(embedded_proto, fsspec_proto, filesystem):
     assert state.md5 == "d9636a8dca9e5626851471d1c0ea92b1"
 
 
-@pytest.mark.parametrize("filesystem", [
+@pytest.mark.parametrize("scheme", [
     "file",
     "s3",
 ])
 def test_update_resource_file_when_missing(
-        embedded_proto, fsspec_proto, filesystem):
+        embedded_proto, fsspec_proto, scheme):
 
     # Given
     src_proto = embedded_proto()
-    proto = fsspec_proto(filesystem)
+    proto = fsspec_proto(scheme)
 
     src_res = src_proto.get_resource("sub/two")
     dst_res = proto.get_resource("sub/two")
@@ -451,16 +451,16 @@ def test_update_resource_file_when_missing(
     assert state.md5 == "d9636a8dca9e5626851471d1c0ea92b1"
 
 
-@pytest.mark.parametrize("filesystem", [
+@pytest.mark.parametrize("scheme", [
     "file",
     "s3",
 ])
 def test_update_resource_file_when_changed(
-        embedded_proto, fsspec_proto, filesystem):
+        embedded_proto, fsspec_proto, scheme):
 
     # Given
     src_proto = embedded_proto()
-    proto = fsspec_proto(filesystem)
+    proto = fsspec_proto(scheme)
 
     src_res = src_proto.get_resource("sub/two")
     dst_res = proto.get_resource("sub/two")

@@ -17,13 +17,14 @@ import pysam
 from RangeHTTPServer import RangeRequestHandler  # type: ignore
 
 from dae.genomic_resources.repository import \
-    GR_CONF_FILE_NAME
+    GR_CONF_FILE_NAME, \
+    GenomicResourceRepo
 from dae.genomic_resources.fsspec_protocol import \
     build_fsspec_protocol
-from dae.genomic_resources.embedded_protocol import \
-    build_embedded_protocol
-from dae.genomic_resources.dir_repository import GenomicResourceDirRepo
-from dae.genomic_resources.url_repository import GenomicResourceURLRepo
+from dae.genomic_resources.testing import \
+    build_testing_protocol
+# from dae.genomic_resources.dir_repository import GenomicResourceDirRepo
+# from dae.genomic_resources.url_repository import GenomicResourceURLRepo
 from dae.genomic_resources.test_tools import convert_to_tab_separated
 
 
@@ -151,36 +152,37 @@ def resources_http_server(fixture_dirname):
     http_server.join()
 
 
-@pytest.fixture
-def genomic_resource_fixture_dir_repo(fixture_dirname):
-    repo_dir = fixture_dirname("genomic_resources")
-    return GenomicResourceDirRepo(
-        "genomic_resource_fixture_dir_repo", repo_dir)
+# @pytest.fixture
+# def genomic_resource_fixture_dir_repo(fixture_dirname):
+#     repo_dir = fixture_dirname("genomic_resources")
+#     return GenomicResourceDirRepo(
+#         "genomic_resource_fixture_dir_repo", repo_dir)
 
 
-@pytest.fixture
-def genomic_resource_fixture_http_repo(resources_http_server):
-    http_port = resources_http_server.http_port
-    url = f"http://localhost:{http_port}"
-    return GenomicResourceURLRepo("genomic_resource_fixture_url_repo", url)
+# @pytest.fixture
+# def genomic_resource_fixture_http_repo(resources_http_server):
+#     http_port = resources_http_server.http_port
+#     url = f"http://localhost:{http_port}"
+#     return GenomicResourceURLRepo("genomic_resource_fixture_url_repo", url)
 
 
-@pytest.fixture
-def genomic_resource_fixture_s3_repo(genomic_resource_fixture_dir_repo, s3):
-    src_dir = genomic_resource_fixture_dir_repo.directory
-    s3_path = "s3://test-bucket"
-    for root, _, files in os.walk(src_dir):
-        for fname in files:
-            root_rel = os.path.relpath(root, src_dir)
-            if root_rel == ".":
-                root_rel = ""
-            s3.put(
-                os.path.join(root, fname),
-                os.path.join(s3_path, root_rel, fname))
+# @pytest.fixture
+# def genomic_resource_fixture_s3_repo(genomic_resource_fixture_dir_repo, s3):
+#     src_dir = genomic_resource_fixture_dir_repo.directory
+#     s3_path = "s3://test-bucket"
+#     for root, _, files in os.walk(src_dir):
+#         for fname in files:
+#             root_rel = os.path.relpath(root, src_dir)
+#             if root_rel == ".":
+#                 root_rel = ""
+#             s3.put(
+#                 os.path.join(root, fname),
+#                 os.path.join(s3_path, root_rel, fname))
 
-    repo = GenomicResourceURLRepo("genomic_resource_fixture_url_repo", s3_path)
-    repo.filesystem = s3
-    return repo
+#     repo = GenomicResourceURLRepo(
+#           "genomic_resource_fixture_url_repo", s3_path)
+#     repo.filesystem = s3
+#     return repo
 
 
 @pytest.fixture
@@ -204,7 +206,7 @@ def tabix_file(tmp_path_factory):
     return builder
 
 
-def tabix_to_resource(tabix_source, proto, resource_id, filename):
+def _tabix_to_resource(tabix_source, proto, resource_id, filename):
 
     res = proto.get_resource(resource_id)
     tabix_filename, index_filename = tabix_source
@@ -264,42 +266,29 @@ def embedded_content():
 
 
 @pytest.fixture
-def embedded_proto(embedded_content, tmp_path, tabix_file):
+def embedded_proto(embedded_content, tmp_path):
 
-    def builder(path=tmp_path):
-        proto = build_embedded_protocol(
-            "src", str(path), content=embedded_content)
+    def builder(
+            proto_id="test_embedded", path=tmp_path,
+            content=embedded_content):
 
-        tabix_to_resource(
-            tabix_file(
-                """
-                    #chrom  pos_begin  pos_end    c1
-                    1      1          10         1.0
-                    2      1          10         2.0
-                    2      11         20         2.5
-                    3      1          10         3.0
-                    3      11         20         3.5
-                """,
-                seq_col=0, start_col=1, end_col=2),
-            proto=proto,
-            resource_id="one",
-            filename="test.txt.gz")
+        proto = build_testing_protocol(
+            scheme="memory",
+            proto_id=proto_id,
+            root_path=str(path),
+            content=content)
 
         return proto
     return builder
 
 
 @pytest.fixture
-def fsspec_proto(
-        request,
-        embedded_proto, tmp_path_factory,
+def proto_builder(
+        request, tmp_path_factory,
         s3_base,  # pylint: disable=unused-argument
         http_server):
 
-    def builder(scheme="file"):
-        tmp_dir = tmp_path_factory.mktemp(
-            basename="fsspec", numbered=True)
-        src_proto = embedded_proto(tmp_dir)
+    def builder(src_proto, scheme="file", proto_id="testing"):
 
         def fin():
             for fname in glob.glob("*.tbi"):
@@ -307,11 +296,19 @@ def fsspec_proto(
 
         request.addfinalizer(fin)
 
+        if scheme == "memory":
+            tmp_dir = tmp_path_factory.mktemp(
+                basename="file", numbered=True)
+            proto = build_fsspec_protocol(proto_id, f"memory://{tmp_dir}")
+            for res in src_proto.get_all_resources():
+                proto.copy_resource(res)
+            return proto
+
         if scheme == "file":
 
             tmp_dir = tmp_path_factory.mktemp(
                 basename="file", numbered=True)
-            proto = build_fsspec_protocol("test", f"file://{tmp_dir}")
+            proto = build_fsspec_protocol(proto_id, f"file://{tmp_dir}")
             for res in src_proto.get_all_resources():
                 proto.copy_resource(res)
             return proto
@@ -329,7 +326,7 @@ def fsspec_proto(
                 basename="s3", numbered=True)
 
             proto = build_fsspec_protocol(
-                "test", f"s3://test-bucket{tmp_dir}",
+                proto_id, f"s3://test-bucket{tmp_dir}",
                 endpoint_url=endpoint_url)
 
             for res in src_proto.get_all_resources():
@@ -342,17 +339,103 @@ def fsspec_proto(
             tmp_dir = tmp_path_factory.mktemp(
                 basename="http", numbered=True)
 
-            proto = build_fsspec_protocol("test", f"file://{tmp_dir}")
+            proto = build_fsspec_protocol(
+                f"{proto_id}_dir", f"file://{tmp_dir}")
             for res in src_proto.get_all_resources():
                 proto.copy_resource(res)
             proto.build_content_file()
 
             http_server(str(tmp_dir))
-            proto = build_fsspec_protocol("test", "http://127.0.0.1:16510")
+            proto = build_fsspec_protocol(proto_id, "http://127.0.0.1:16510")
 
             proto.filesystem.invalidate_cache()
             return proto
 
         raise ValueError(f"unsupported scheme: {scheme}")
+
+    return builder
+
+
+@pytest.fixture
+def resource_builder(proto_builder, embedded_proto):
+
+    def builder(content, scheme="file", repo_id="testing"):
+        repo_content = {
+            "t": content
+        }
+        src_proto = embedded_proto(
+            content=repo_content,
+            proto_id=repo_id)
+
+        proto = proto_builder(
+            src_proto, scheme=scheme, proto_id=repo_id,)
+
+        repo = GenomicResourceRepo(proto)
+
+        return repo.get_resource("t")
+
+    return builder
+
+
+@pytest.fixture
+def fsspec_proto(proto_builder, embedded_proto, tabix_file):
+
+    def builder(
+            scheme="file", proto_id="testing"):
+
+        src_proto = embedded_proto()
+        _tabix_to_resource(
+            tabix_file(
+                """
+                    #chrom  pos_begin  pos_end    c1
+                    1      1          10         1.0
+                    2      1          10         2.0
+                    2      11         20         2.5
+                    3      1          10         3.0
+                    3      11         20         3.5
+                """,
+                seq_col=0, start_col=1, end_col=2),
+            proto=src_proto,
+            resource_id="one",
+            filename="test.txt.gz")
+
+        proto = proto_builder(
+            src_proto, scheme=scheme, proto_id=proto_id)
+
+        return proto
+
+    return builder
+
+
+@pytest.fixture
+def repo_builder(proto_builder):
+
+    def builder(src_proto, scheme="file", repo_id="testing"):
+
+        proto = proto_builder(src_proto, scheme=scheme, proto_id=repo_id)
+        return GenomicResourceRepo(proto)
+
+    return builder
+
+
+@pytest.fixture
+def repo_testing(repo_builder, embedded_proto):
+
+    def builder(content, scheme="file", repo_id="testing"):
+        src_proto = embedded_proto(content=content)
+        repo = repo_builder(src_proto, scheme=scheme, repo_id=repo_id)
+        return repo
+
+    return builder
+
+
+@pytest.fixture
+def fsspec_repo(fsspec_proto):
+
+    def builder(scheme, repo_id="testing"):
+        proto = fsspec_proto(
+            scheme, proto_id=repo_id)
+        repo = GenomicResourceRepo(proto)
+        return repo
 
     return builder

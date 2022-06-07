@@ -1,23 +1,33 @@
+# pylint: disable=redefined-outer-name,C0114,C0116,protected-access
+
 import pytest
+
+from dae.genomic_resources.fsspec_protocol import build_fsspec_protocol
+from dae.genomic_resources.repository import GenomicResourceRepo
 
 from dae.genomic_resources.liftover_resource import \
     load_liftover_chain_from_resource
 
 
-@pytest.mark.fixture_repo
-def test_liftover_chain_resource(genomic_resource_fixture_dir_repo):
-    chain_resource = genomic_resource_fixture_dir_repo.get_resource(
+@pytest.mark.parametrize("pos,expected_chrom,expected_pos,expected_strand", [
+    (100_000, "1", 99_999, "+"),
+    (180_000, "16", 90_188_902, "-"),
+    (190_000, "2", 114_351_526, "-"),
+    (260_000, "1", 229_750, "+"),
+])
+def test_liftover_chain_resource(
+        fixture_dirname, pos, expected_chrom, expected_pos, expected_strand):
+
+    dirname = fixture_dirname("genomic_resources")
+    proto = build_fsspec_protocol("d", dirname)
+    repo = GenomicResourceRepo(proto)
+
+    chain_resource = repo.get_resource(
         "hg38/hg38tohg19")
     assert chain_resource
     chain = load_liftover_chain_from_resource(chain_resource)
 
-    def check_coordinate(pos, expected_chrom, expected_pos, expected_strand):
-        out = chain.convert_coordinate("chr1", pos)
-        assert out[0] == expected_chrom
-        assert out[1] == expected_pos
-        assert out[2] == expected_strand
-
-    check_coordinate(100_000, "1", 99_999, "+")
-    check_coordinate(180_000, "16", 90_188_902, "-")
-    check_coordinate(190_000, "2", 114_351_526, "-")
-    check_coordinate(260_000, "1", 229_750, "+")
+    out = chain.convert_coordinate("chr1", pos)
+    assert out[0] == expected_chrom
+    assert out[1] == expected_pos
+    assert out[2] == expected_strand

@@ -17,7 +17,6 @@ from tqdm import tqdm  # type: ignore
 from dask.distributed import as_completed  # type: ignore
 
 from dae.genomic_resources.genomic_scores import open_score_from_resource
-from dae.genomic_resources.repository_helpers import RepositoryWorkflowHelper
 
 logger = logging.getLogger(__name__)
 
@@ -188,9 +187,11 @@ class HistogramBuilder:
         if force:
             return {}, self._do_build(client, histogram_desc, region_size)
 
-        hists, metadata = _load_histograms(self.resource.repo,
-                                           self.resource.get_id(), None, None,
-                                           path)
+        hists, metadata = _load_histograms(
+            self.resource.protocol,
+            resource_id=self.resource.get_id(),
+            version_constraint=f"={self.resource.get_version_str()}",
+            path=path)
         hashes = self._build_hashes()
 
         configs_to_calculate = []
@@ -365,7 +366,10 @@ class HistogramBuilder:
             bars = list(histogram.bars)
             bars.append(np.nan)
 
-            data = pd.DataFrame({'bars': bars, 'bins': histogram.bins})
+            data = pd.DataFrame({
+                "bars": bars,
+                "bins": histogram.bins
+            })
             hist_file = os.path.join(out_dir, f"{score}.csv")
             with self.resource.open_raw_file(hist_file, "wt") as outfile:
                 data.to_csv(outfile, index=None)
@@ -402,35 +406,29 @@ class HistogramBuilder:
             plt.clf()
 
         # update manifest with newly written files
-        helper = RepositoryWorkflowHelper(self.resource.repo)
-        helper.update_manifest(self.resource)
+        self.resource.protocol.update_manifest(self.resource)
 
 
 def load_histograms(repo, resource_id, version_constraint=None,
-                    genomic_repository_id=None, path="histograms"):
+                    repository_id=None, path="histograms"):
     """Loads genomic scores histograms"""
-    hists, _ = _load_histograms(repo, resource_id, version_constraint,
-                                genomic_repository_id, path)
+    if repository_id is not None and repository_id != repo.get_id():
+        return {}
+
+    hists, _ = _load_histograms(repo, resource_id, version_constraint, path)
     return hists
 
 
-def _load_histograms(repo, resource_id, version_constraint,
-                     genomic_repository_id, path):
+def _load_histograms(repo, resource_id, version_constraint, path):
 
-    from dae.genomic_resources.cached_repository import \
-        GenomicResourceCachedRepo
-    if isinstance(repo, GenomicResourceCachedRepo):
-        # score resources are huge so circumvent the caching
-        repo = repo.child
-
-    res = repo.get_resource(resource_id, version_constraint,
-                            genomic_repository_id)
+    res = repo.get_resource(resource_id, version_constraint)
     hists = {}
     metadatas = {}
     for hist_config in res.get_config().get("histograms", []):
         score = hist_config["score"]
         hist_file = os.path.join(path, f"{score}.csv")
         metadata_file = os.path.join(path, f"{score}.metadata.yaml")
+
         if res.file_exists(hist_file) and res.file_exists(metadata_file):
             with res.open_raw_file(hist_file, "rt") as infile:
                 data = pd.read_csv(infile)

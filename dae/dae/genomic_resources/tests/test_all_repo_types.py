@@ -1,51 +1,46 @@
+# pylint: disable=redefined-outer-name,C0114,C0116,protected-access
+
 import gzip
+import pytest
 
 from dae.genomic_resources.repository import GR_CONF_FILE_NAME
-from dae.genomic_resources.test_tools import build_test_repos
-from dae.genomic_resources.test_tools import run_test_on_all_repos
 
 
-def test_all_repo_types(tmp_path):
+@pytest.mark.parametrize("scheme", [
+    "file",
+    "memory",
+    "s3",
+    "http",
+])
+def test_all_repo_types(repo_testing, scheme):
 
-    brehGz = gzip.compress(b'breh')
-    test_repos = build_test_repos(tmp_path, {
-        "one": {
-            GR_CONF_FILE_NAME: "opaa",
-            "data.txt": "breh",
-            "data.txt.gz": brehGz
-        }
-    })
+    breh_gz = gzip.compress(b'breh')
+    test_repo = repo_testing(
+        content={
+            "one": {
+                GR_CONF_FILE_NAME: "opaa",
+                "data.txt": "breh",
+                "data.txt.gz": breh_gz
+            }
+        },
+        scheme=scheme)
 
-    run_test_on_all_repos(
-        test_repos, "is_file_list_ok",
-        lambda repo: {GR_CONF_FILE_NAME, "data.txt", "data.txt.gz"} ==
-        {entry.name for entry in repo.get_resource("one").get_manifest()}
-    )
+    res = test_repo.get_resource("one")
+    files = sorted([fname for fname, _, _ in res.get_manifest().get_files()])
+    assert files == ["data.txt", "data.txt.gz", GR_CONF_FILE_NAME]
 
-    run_test_on_all_repos(
-        test_repos, "is_file_content_ok",
-        lambda repo: repo.get_resource(
-            "one").get_file_content("data.txt") == "breh"
-    )
+    with res.open_raw_file("data.txt", "rt") as infile:
+        content = infile.read(10)
+        assert content == "breh"
 
-    run_test_on_all_repos(
-        test_repos, "is_compressed_file_content_ok",
-        lambda repo: repo.get_resource("one").get_file_content(
-            "data.txt.gz", uncompress=False, mode="b") == brehGz
-    )
+    with res.open_raw_file("data.txt", "rb") as infile:
+        content = infile.read(10)
+        assert content == b"breh"
 
-    run_test_on_all_repos(
-        test_repos, "is_uncompressed_file_content_ok",
-        lambda repo: repo.get_resource("one").get_file_content(
-            "data.txt.gz", uncompress=True, mode="t") == "breh"
-    )
+    with res.open_raw_file("data.txt.gz", "rb") as infile:
+        content = infile.read()
+        assert content == breh_gz
 
-    def is_binary_ok(repo):
-        with repo.get_resource("one").open_raw_file("data.txt", "rb") as F:
-            return isinstance(F.read(10), bytes)
-    run_test_on_all_repos(test_repos, "is_binary_ok", is_binary_ok)
-
-    def is_text_ok(repo):
-        with repo.get_resource("one").open_raw_file("data.txt", "rt") as F:
-            return isinstance(F.read(10), str)
-    run_test_on_all_repos(test_repos, "is_text_ok", is_text_ok)
+    with res.open_raw_file("data.txt.gz", "rt", compression=True) as infile:
+        content = infile.read()
+        assert content == "breh"

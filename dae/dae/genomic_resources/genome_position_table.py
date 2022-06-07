@@ -61,7 +61,7 @@ class GenomicPositionTable(abc.ABC):
                 self.chrom_map = {}
                 self.chrom_order = []
                 with self.genomic_resource.open_raw_file(
-                        mapping["filename"], "rt", True) as F:
+                        mapping["filename"], "rt") as F:
                     hcs = F.readline().strip("\n\r").split("\t")
                     if hcs != ["chrom", "file_chrom"]:
                         raise ValueError(

@@ -1,10 +1,12 @@
 from __future__ import annotations
 from typing import TextIO
 
-from dae.genomic_resources import GenomicResource
 import logging
 
 from pyliftover import LiftOver  # type: ignore
+
+from dae.genomic_resources import GenomicResource
+
 
 logger = logging.getLogger(__name__)
 
@@ -42,6 +44,7 @@ class LiftoverChain:
         return chrom
 
     def convert_coordinate(self, chrom, pos):
+
         chrom = self.map_chromosome(chrom, self.chrom_variant_coordinates)
 
         lo_coordinates = self.liftover.convert_coordinate(chrom, pos - 1)
@@ -74,7 +77,7 @@ def load_liftover_chain_from_resource(
 
     filename: str = config["filename"]
     chain_file: TextIO = resource.open_raw_file(
-        filename, "rb", uncompress=True)
+        filename, "rb", compression=True)
 
     result = LiftoverChain(config, chain_file)
     return result
