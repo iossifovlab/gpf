@@ -2,27 +2,27 @@
 
 ## Abstract
 
-At the moment genomic resource's manifest contains last modification
+At the moment genomic resource's manifest contains the last modification
 timestamp for each resource file.
 
 These timestamps create several problems with managing genomic resources
-respositories:
+repositories:
 
 * to keep track of changes in genomic resources we use Git but Git does not
-  keep the modification timestamps of files; so when the GRR is cloned
+  keep the modification timestamps of files, so when the GRR has been cloned
   the modification timestamps of the files and timestamps stored in the
   manifest are different;
 
 * to version control the large resource files we are using DVC but DVC 
   does not keep the modification timestamps of files;
 
-* when GPF caches a resource file it manipulates it's modification timestamp
-  to match the manifest timestamp; this operation is supported for local
-  filesystem (directory repository), but is not supported on S3
+* when GPF caches a resource file it manipulates its modification timestamp
+  to match the manifest timestamp; this operation is supported for the local
+  filesystem (directory repository) but is not supported on S3
   (S3 repository);
 
-* using timestamps does not garuantee the the file is not changed or not
-  changed; timestamps could be used only for optimization of some long running
+* using timestamps does not guarantee that the file is not changed;
+  timestamps could be used only for optimization of some long-running
   operations.
 
 ### Proposal
@@ -188,41 +188,41 @@ stored in the cached GRR and after that the cached resource is used. See
 
 ## Management of genomic resources
 
-We assume that our genomic resources repositories are managed by combination
+We assume that our genomic resources repositories are managed by a combination
 of Git and DVC.
 
 For any resource:
 
-* all small file are managed by the Git
+* all small files are managed by the Git
 
 * all large resource files are managed using DVC and Git
 
-### How to add new resource to GRR
+### How to add a new resource to GRR
 
-1. Create a directory appropriate for the resource. Let assume this is
-   a position score for HG38 reference genome named `score9`. Then
-   the directory should be something like:
+1. Create a directory appropriate for the resource. Let's assume this is
+   a position score for the HG38 reference genome named `score9`. Then
+   the directory should be something like this:
 
    ```
    hg38/scores/score9
    ```
   
-2. Add all score resource files (score file and tabix index) inside
-   the created directory. Let say this files are:
+2. Add all score resource files (score file and Tabix index) inside
+   the created directory. Let's say these files are:
 
    ```
    score9.tsv.gz
    score9.tsv.gz.tbi
    ```
 
-3. Add this files under version control:
+3. Add these files under version control:
 
     ```
     cd hg38/scores/score9
     dvc add score9.tsv.gz score9.tsv.gz.tbi
     ```
   
-    This commands are going to create a `*.dvc` files for each of the
+    These commands are going to create the `*.dvc` files for each of the
     resource files, that contain the md5 sum for the file, the size of the
     file and the file name.
 
@@ -233,7 +233,7 @@ For any resource:
     git commit
     ```
   
-    The resource files itself should be pushed to the DVC remote:
+    The resource files themselves should be pushed to the DVC remote:
   
     ```
     dvc push -r nemo
@@ -274,8 +274,8 @@ For any resource:
      ## phyloP7way
        TODO
    ```
-     Add the configuration under version control:
-     ```
+   Add the configuration under version control:
+   ```
    git add genomic_resource.yaml
    git commit
    ```
@@ -295,8 +295,9 @@ For any resource:
    grr_manage index --use-dvc . hg38/scores/score9
    ```
  
-   This will skip calculation of the md5 sums for large files that
-   are managed by DVC.
+   This will skip the calculation of the md5 sums for large files that
+   are managed by DVC and is going to use the md5 sums from the corresponding
+   `*.dvc` files.
 
 6. Build score histogram. Run the command:
 
@@ -307,19 +308,19 @@ For any resource:
    This command will check the resource to find
    all score histograms that are configured and will run the computation for 
    these histograms. For each configured score histogram three files are
-   created. In the case of `hg38/scores/score9` only one score histogram is
+   created. In the case of `hg38/scores/score9`, only one score histogram is
    configured. The three files that are stored are:
 
    * `histograms/score9.csv` that contains the histogram itself;
 
    * `histograms/score9.metadata.yaml` that contains the histogram metadata, e.g. 
      score min and max if they are not configured into the resource configuration,
-     the histogram hash that is a md5 sum based on md5 sum of the score files and
+     the histogram hash that is an md5 sum based on md5 sum of the score files and
      histogram configuration;
 
-   * `histograms/score9.png` is a figure of the histogram for quick inspection.
+   * `histograms/score9.png` is a figure of the histogram for a quick inspection.
 
-   At the end this command will update the resource manifest file to include
+   In the end, this command will update the resource manifest file to include
    the histograms' files.
 
 
@@ -327,10 +328,10 @@ For any resource:
 
 ### How to make a small change in a resource in GRR
 
-Let say we want to change the description of a `hg38/scores/score9` resource.
+Let's say we want to change the description of a `hg38/scores/score9` resource.
 
 1. Clone the Git GRR repository. Since we do not change any of the large resource
-   we do not need the checkout the DVC repository.
+   files we do not need to check out the DVC repository.
 
 2. Run the `index` command for the resource with `--use-dvc`:
    
@@ -338,10 +339,7 @@ Let say we want to change the description of a `hg38/scores/score9` resource.
    grr_manage index --use-dvc . hg38/scores/score9
    ```
 
-   This will rebuild the manifest of the resource and store the state
-   of the resource files
-   into the GRR state directory `.grr`. Note that the resource `.MANIFEST`
-   file should be the same as the one into the Git repository.
+   This will rebuild the manifest of the resource.
 
 3. Edit the `genomic_resource.yaml` file and rerun the `index` command:
 
@@ -350,36 +348,36 @@ Let say we want to change the description of a `hg38/scores/score9` resource.
    ```
 
    This command should update the `genomic_resource.yaml` entry into
-   resource `.MANIFEST` file.
+   the resource `.MANIFEST` file.
 
-4. Check that histograms should not be rebuild:
+4. Check that histograms should not be rebuilt:
 
    ```
    grr_manage histogram --dry-run . hg38/scores/score9
    ```
 
-   If the previous command reports that any of the resource histograms needs
+   If the previous command reports that any of the resource histograms need
    rebuilding you should refer to the next section of the document.
 
 
-4. Add `.MANIFEST` resource file into the Git repository.
+4. Add `.MANIFEST` resource file to the Git repository.
 
 
 ### How to make a big change in a resource in GRR
 
-Let say we need to change any of the large resource files -- e.g. rebuild the
-score tabix index. After this change we need to:
+Let's say we need to change any of the large resource files -- e.g. rebuild the
+score Tabix index. To do this change we need to:
 
 1. Clone the Git GRR repository.
 
-2. Checkout the DVC files for the resource you plan to update:
+2. Check out the DVC files for the resource you plan to update.
 
-   ```
+   ```bash
    dvc fetch -r nemo ht38/scores/score9/score9.tsv.gz.dvc ht38/scores/score9/score9.tsv.gz.tbi.dvc
    dvc checkout ht38/scores/score9/score9.tsv.gz.dvc ht38/scores/score9/score9.tsv.gz.tbi.dvc
    ```
 
-   Alternatively you can pull all dvc files by running:
+   Alternatively, you can pull all DVC files by running:
 
    ```
    dvc pull -r nemo
@@ -410,18 +408,17 @@ score tabix index. After this change we need to:
 
 ### Notes on GRR histogram command
 
-GRR management `histogram` command expects that the manifest of the
-resource is in sync with the resource files. Before running `histogram` command
+Note that the GRR management `histogram`` command expects that the manifest of the
+resource is in sync with the resource files. Before running the `histogram` command
 you should always run the `index` command to ensure, that the `.MANIFEST`
 of the resource is up to date.
 
-
-### GRR resource files' states
+### GRR resource files state
 
 For each GRR resource file the `index` command stores:
 
 * resource ID;
-* version of the resource;
+* the version of the resource;
 * name of the resource file;
 * md5 sum of the resource file;
 * size of the resource file;
@@ -444,15 +441,15 @@ size: 3153512062
 timestamp: '2022-06-07T06:53:50+00:00'
 ```
 
-### Optimizations based on GRR resource file state
+### Optimizations based on the GRR resource file state
 
-When GRR management `index` command is run it should
+When the GRR management `index`` command is run it should
 recalculate the md5 sum for each resource file.
 
-Before calculating the md5 sums for give resource file,
+Before calculating the md5 sums for a given resource file,
 the `index` command checks the state of this resource file.
 
-If the state timestamp and size conincide with the size and timestamp
-of the resoruce file, then the md5 sum is not recomputed and the one
+If the state timestamp and size coincide with the size and timestamp
+of the resource file, then the md5 sum is not recomputed and the one
 from the state is used.
 
