@@ -145,12 +145,12 @@ class GPFConfigParser:
         schema: dict,
         default_config: Dict[str, Any] = None,
         conf_dir: str = None,
-    ) -> FrozenBox:
+    ) -> Box:
 
         config = GPFConfigParser.merge_config(config, default_config)
         config = GPFConfigParser.validate_config(config, schema, conf_dir)
 
-        return FrozenBox(config)
+        return Box(config)
 
     @classmethod
     def load_config_raw(cls, filename: str) -> Dict[str, Any]:
@@ -166,7 +166,7 @@ class GPFConfigParser:
         schema: dict,
         default_config_filename: Optional[str] = None,
         default_config: Optional[dict] = None,
-    ) -> FrozenBox:
+    ) -> Box:
 
         if not os.path.exists(filename):
             raise ValueError(f"{filename} does not exist!")

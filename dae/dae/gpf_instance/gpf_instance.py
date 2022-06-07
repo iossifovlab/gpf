@@ -63,15 +63,10 @@ class GPFInstance:
         self.load_eagerly = load_eagerly
 
         if self.dae_config.grr:
-            self.grr = build_genomic_resource_repository(self.dae_config.grr)
-            self.grr_no_cache = build_genomic_resource_repository(
-                self.dae_config.grr, use_cache=False
-            )
+            self.grr = build_genomic_resource_repository(
+                self.dae_config.grr.to_dict())
         else:
             self.grr = build_genomic_resource_repository()
-            self.grr_no_cache = build_genomic_resource_repository(
-                use_cache=False
-            )
         self._annotation_pipeline = None
 
         if load_eagerly:

@@ -1,3 +1,5 @@
+# pylint: disable=redefined-outer-name,C0114,C0116,protected-access
+
 import pytest
 import textwrap
 
@@ -15,13 +17,13 @@ from dae.annotation.annotation_factory import build_annotation_pipeline
 #  67  68  69  70   71   72   73   74   75   76
 #
 @pytest.mark.parametrize("variant,pos_aggregator,nuc_aggregator,expected", [
-    (("1", 14970, "C", "A"),   "mean", "max", 0.001),
+    (("1", 14970, "C", "A"), "mean", "max", 0.001),
 
-    (("1", 14970, "CA", "C"),  "mean", "max", (0.004 + 0.04 + 0.4)/3),
-    (("1", 14970, "CA", "C"),  "max",  "max", 0.4),
+    (("1", 14970, "CA", "C"), "mean", "max", (0.004 + 0.04 + 0.4)/3),
+    (("1", 14970, "CA", "C"), "max", "max", 0.4),
 
-    (("1", 14970, "C", "CA"),  "mean", "max", 0.022),
-    (("1", 14970, "C", "CA"),  "max",  "max", 0.04),
+    (("1", 14970, "C", "CA"), "mean", "max", 0.022),
+    (("1", 14970, "C", "CA"), "max", "max", 0.04),
 ])
 def test_np_score_annotator(
         variant, pos_aggregator, nuc_aggregator, expected):
@@ -31,7 +33,7 @@ def test_np_score_annotator(
     print(annotatable)
     repo = build_genomic_resource_repository({
         "id": "test_annotation",
-        "type": "embeded",
+        "type": "embedded",
         "content": {
             "np_score1": {
                 "genomic_resource.yaml":

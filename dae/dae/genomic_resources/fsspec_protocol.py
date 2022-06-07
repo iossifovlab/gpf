@@ -46,7 +46,7 @@ def build_fsspec_protocol(proto_id: str, root_url: str, **kwargs) -> Union[
         return FsspecReadWriteProtocol(
             proto_id, root_url, filesystem)
 
-    if url.scheme in {"http": "https"}:
+    if url.scheme in {"http", "https"}:
         base_url = kwargs.get("base_url")
         filesystem = HTTPFileSystem(client_kwargs={"base_url": base_url})
         return FsspecReadOnlyProtocol(proto_id, root_url, filesystem)

@@ -156,11 +156,11 @@ def gpf_instance_2013(
     ]
     repositories.append(
         build_genomic_resource_repository(
-            Box({
+            {
                 "id": "fixtures",
                 "type": "directory",
                 "directory": f"{fixture_dirname('genomic_resources')}"
-            })))
+            }))
     gpf_instance.grr = GenomicResourceGroupRepo(repositories)
 
     return gpf_instance

@@ -1,3 +1,5 @@
+# pylint: disable=redefined-outer-name,C0114,C0116,protected-access
+
 import pytest
 import textwrap
 
@@ -12,7 +14,7 @@ from dae.annotation.annotation_factory import build_annotation_pipeline
 def position_score_repo():
     repo = build_genomic_resource_repository({
         "id": "test_annotation",
-        "type": "embeded",
+        "type": "embedded",
         "content": {
             "position_score1": {
                 "genomic_resource.yaml":

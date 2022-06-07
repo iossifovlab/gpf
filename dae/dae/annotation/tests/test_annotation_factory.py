@@ -1,15 +1,17 @@
+# pylint: disable=redefined-outer-name,C0114,C0116,protected-access
+
 import pytest
 from dae.genomic_resources import build_genomic_resource_repository
-from dae.genomic_resources.repository import GenomicResourceRepo
+from dae.genomic_resources.repository import GenomicResourceRepoBase
 from dae.annotation.annotation_factory import build_annotation_pipeline, \
     build_np_score_annotator
 
 
 @pytest.fixture(scope="session")
-def grr_np_score1() -> GenomicResourceRepo:
+def grr_np_score1() -> GenomicResourceRepoBase:
     repo = build_genomic_resource_repository({
         "id": "test_annotation",
-        "type": "embeded",
+        "type": "embedded",
         "content": {
             "np_score1": {
                 "genomic_resource.yaml":
