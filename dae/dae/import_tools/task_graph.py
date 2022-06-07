@@ -6,6 +6,7 @@ from typing import Any, Callable
 
 @dataclass(eq=False, frozen=True)
 class TaskNode:
+    """Represent one node in a TaskGraph together with its dependancies"""
     name: str
     func: Callable
     args: list[Any]
@@ -36,10 +37,12 @@ class TaskGraphExecutor:
     @abstractmethod
     def execute(self, task_graph: TaskGraph):
         """Executes the graph"""
-        pass
 
 
 class AbstractTaskGraphExecutor(TaskGraphExecutor):
+    """An executor that traverses the task graph in an order that
+    satisfies dependancies"""
+
     def execute(self, task_graph: TaskGraph) -> None:
         """Executes the graph"""
         self._check_for_cyclic_deps(task_graph)
@@ -50,17 +53,15 @@ class AbstractTaskGraphExecutor(TaskGraphExecutor):
     @abstractmethod
     def queue_task(self, task_node: TaskNode) -> None:
         """Put the task on the execution queue"""
-        pass
 
     @abstractmethod
     def await_tasks(self) -> None:
         """Wait for all queued tasks to finish"""
-        pass
 
     def _in_exec_order(self, task_graph):
         visited = set()
-        for n in task_graph.nodes:
-            yield from self._node_in_exec_order(n, visited)
+        for node in task_graph.nodes:
+            yield from self._node_in_exec_order(node, visited)
 
     def _node_in_exec_order(self, node, visited):
         if node in visited:
@@ -83,13 +84,14 @@ class AbstractTaskGraphExecutor(TaskGraphExecutor):
         visited.add(node)
         stack.append(node)
 
-        for n in node.deps:
-            if n not in visited:
-                return self._find_cycle(n, visited, stack)
-            elif n in stack:
+        for dep in node.deps:
+            if dep not in visited:
+                return self._find_cycle(dep, visited, stack)
+            if dep in stack:
                 return copy(stack)
 
         stack.pop()
+        return None
 
 
 class SequentialExecutor(AbstractTaskGraphExecutor):
@@ -114,13 +116,14 @@ class DaskExecutor(AbstractTaskGraphExecutor):
         self.task2future[task_node] = future
 
     def await_tasks(self):
-        from dask.distributed import as_completed  # type: ignore
+        # pylint: disable=import-outside-toplevel
+        from dask.distributed import as_completed
 
         futures = list(self.task2future.values())
         self.task2future = {}
-        for f in as_completed(futures):
-            f.result()
+        for future in as_completed(futures):
+            future.result()
 
     @staticmethod
-    def _exec(task_node, *deps):
+    def _exec(task_node, *_deps):
         task_node.func(*task_node.args)
