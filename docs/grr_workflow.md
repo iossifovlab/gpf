@@ -186,3 +186,215 @@ stored in the cached GRR and after that the cached resource is used. See
 
 
 
+## Management of genomic resources
+
+We assume that our genomic resources repositories are managed by combination
+of Git and DVC.
+
+For any resource:
+
+* all small file are managed by the Git
+
+* all large resource files are managed using DVC and Git
+
+### How to add new resource to GRR
+
+1. Create a directory appropriate for the resource. Let assume this is
+   a position score for HG38 reference genome named `score9`. Then
+   the directory should be something like:
+
+   ```
+   hg38/scores/score9
+   ```
+  
+2. Add all score resource files (score file and tabix index) inside
+   the created directory. Let say this files are:
+
+   ```
+   score9.tsv.gz
+   score9.tsv.gz.tbi
+   ```
+
+3. Add this files under version control:
+
+    ```
+    cd hg38/scores/score9
+    dvc add score9.tsv.gz score9.tsv.gz.tbi
+    ```
+  
+    This commands are going to create a `*.dvc` files for each of the
+    resource files, that contain the md5 sum for the file, the size of the
+    file and the file name.
+
+    These `*.dvc` files should be added to the Git repository:
+  
+    ```
+    git add score9.tsv.gz.dvc score9.tsv.gz.tbi.dvc
+    git commit
+    ```
+  
+    The resource files itself should be pushed to the DVC remote:
+  
+    ```
+    dvc push -r nemo
+    ```
+  
+4. Configure the resource `hg38/scores/score9`. To this end create
+   a `genomic_resource.yaml` file, that contains the position score
+   configuration:
+
+   ```yaml
+   type: position_score
+     table:
+     filename: score9.tsv.gz
+     format: tabix
+       # defined by score_type
+     chrom:
+       name: chrom
+     pos_begin:
+       name: start
+     pos_end:
+       name: end
+     # score values
+   scores:
+       - id: score9
+         type: float
+         desc: "score9"
+         index: 3
+     histograms:
+     - score: score9
+       bins: 100
+       y_scale: "log"
+       x_scale: "linear"
+     default_annotation:
+     attributes:
+       - source: score9
+         destination: score9
+       meta: |
+     ## phyloP7way
+       TODO
+   ```
+     Add the configuration under version control:
+     ```
+   git add genomic_resource.yaml
+   git commit
+   ```
+
+5. Build the score manifest. Run the command:
+
+   ```bash
+   grr_manage index . hg38/scores/score9
+   ```
+   This command should calculate the md5 sums for all resource files
+   and store them into a resource manifest file named `.MANIFEST`.
+ 
+   Also for each resource files this command will be created a state file 
+   into repository state directory `.grr` that contains md5 sum, path, size
+   and timestamp of the file.
+ 
+   When you are sure that the large resource files are in sync
+   within the DVC repository you can use:
+ 
+   ```bash
+   grr_manage index --use-dvc . hg38/scores/score9
+   ```
+ 
+   This will skip calculation of the md5 sums for large files that
+   are managed by DVC.
+
+6. Build score histogram. Run the command:
+
+   ```
+   grr_manage histogram . hg38/scores/score9
+   ```
+
+   This command will check the resource to find
+   all score histograms that are configured and will run the computation for 
+   these histograms. For each configured score histogram three files are
+   created. In the case of `hg38/scores/score9` only one score histogram is
+   configured. The three files that are stored are:
+
+   * `histograms/score9.csv` that contains the histogram itself;
+
+   * `histograms/score9.metadata.yaml` that contains the histogram metadata, e.g. 
+     score min and max if they are not configured into the resource configuration,
+     the histogram hash that is a md5 sum based on md5 sum of the score files and
+     histogram configuration;
+
+   * `histograms/score9.png` is a figure of the histogram for quick inspection.
+
+   For each of these files a state file is created into GRR state directory
+   `.grr`.
+
+   At the end this command will update the resource manifest file to include
+   the histograms' files.
+
+
+7. Add resource manifest and histogram files under Git version control
+
+### How to make a small change in a resource in GRR
+
+Let say we want to change the description of a `hg38/scores/score9` resource.
+
+1. Clone the Git GRR repository. Since we do not change any of the large resource
+   we do not need the checkout the DVC repository.
+
+2. Run the `index` command for the resource with `--use-dvc`:
+   
+   ```
+   grr_manage index --use-dvc . hg38/scores/score9
+   ```
+
+   This will update the manifest of the resource store the state of the files
+   into the GRR state directory `.grr`. Note that the resource `.MANIFEST`
+   file should be the same as the one into the Git repository.
+
+3. Edit the `genomic_resource.yaml` file and rerun the `index` command:
+
+   ```
+   grr_manage index --use-dvc . hg38/scores/score9
+   ```
+
+   This command should update the `genomic_resource.yaml` entry into
+   resource `.MANIFEST` file.
+
+4. Check that histograms should not be rebuild:
+
+   ```
+   grr_manage histogram --dry-run . hg38/scores/score9
+   ```
+
+   If the previous command reports that any of the resource histograms needs
+   rebuilding you should refer to the next section of the document.
+
+
+4. Add `.MANIFEST` resource file into the Git repository.
+
+
+### How to make a big change in a resource in GRR
+
+Let say we need to change any of the large resource files -- e.g. rebuild the
+score tabix index. After this change we need to:
+
+1. Add the updated score files under DVC version control:
+
+   ```   
+   dvc add score9.tsv.gz score9.tsv.gz.tbi
+   ```
+   
+   and add `*.dvc` files into the Git repo.
+
+2. Run the `index` command:
+
+   ```
+   grr_manage index --use-dvc . hg38/scores/score9
+   ```
+
+3. Rebuild the histograms:
+
+   ```
+   grr_manage histogram . hg38/scores/score9
+   ```
+
+4. Add resource manifest and histogram files under Git version control
+
