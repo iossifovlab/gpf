@@ -6,47 +6,47 @@ import { GenotypeBrowserPage } from 'cypress/elements/genotype-browser-page';
 
 const geneScoresData = [
   {
-    desc: "SFARI gene score",
+    desc: 'SFARI gene score',
     inputField: false,
-    allVariants: '0'
+    allVariants: '35'
   },
   {
-    desc: "RVIS rank",
-    inputField: true,
-    allVariants: '0'
-  },
-  {
-    desc: "RVIS",
+    desc: 'RVIS rank',
     inputField: true,
     allVariants: '0'
   },
   {
-    desc: "LGD rank",
+    desc: 'RVIS',
+    inputField: true,
+    allVariants: '0'
+  },
+  {
+    desc: 'LGD rank',
     inputField: true,
     allVariants: '35'
   },
   {
-    desc: "LGD score",
+    desc: 'LGD score',
     inputField: true,
     allVariants: '35'
   },
   {
-    desc: "ExAC pLI rank",
+    desc: 'ExAC pLI rank',
     inputField: true,
     allVariants: '35'
   },
   {
-    desc: "ExAC pLI",
+    desc: 'ExAC pLI',
     inputField: true,
     allVariants: '35'
   },
   {
-    desc: "ExAC pRec rank",
+    desc: 'ExAC pRec rank',
     inputField: true,
     allVariants: '35'
   },
   {
-    desc: "ExAC pRec",
+    desc: 'ExAC pRec',
     inputField: true,
     allVariants: '35'
   }

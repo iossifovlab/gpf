@@ -1,4 +1,4 @@
-import { UsersPage } from "./users-page";
+import { UsersPage } from './users-page';
 
 export const longTimeout = 35000;
 

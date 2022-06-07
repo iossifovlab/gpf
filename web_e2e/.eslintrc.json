@@ -24,6 +24,7 @@
         "@typescript-eslint"
       ],
       "rules": {
+        "quotes": ["warn", "single"],
         "no-trailing-spaces": "warn",
         "require-atomic-updates": "warn",
         "no-await-in-loop": "warn",

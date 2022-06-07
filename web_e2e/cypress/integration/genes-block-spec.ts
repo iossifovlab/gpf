@@ -1,6 +1,6 @@
-import { GenesBlockPage } from "cypress/elements/genes-block-page";
-import { GenotypeBrowserController } from "cypress/elements/genotype-browser-controller";
-import { datasetIds, toolPageLinks } from "cypress/elements/utils";
+import { GenesBlockPage } from 'cypress/elements/genes-block-page';
+import { GenotypeBrowserController } from 'cypress/elements/genotype-browser-controller';
+import { datasetIds, toolPageLinks } from 'cypress/elements/utils';
 
 describe('Genes block tests', () => {
   const page = new GenesBlockPage();

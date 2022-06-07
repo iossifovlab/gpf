@@ -218,13 +218,13 @@ export const geneData: any = [
           'affected (2507)', 'unaffected (1910)'
         ], rows: [
           {
-            variant_statistics: "LGDs", variant_ids: "denovo_lgds", affected: "3 (1.197)", unaffected: "–"
+            variant_statistics: 'LGDs', variant_ids: 'denovo_lgds', affected: '3 (1.197)', unaffected: '–'
           },
           {
-            variant_statistics: "missense", variant_ids: "denovo_missense", affected: "1 (0.399)", unaffected: "–"
+            variant_statistics: 'missense', variant_ids: 'denovo_missense', affected: '1 (0.399)', unaffected: '–'
           },
           {
-            variant_statistics: "intron", variant_ids: "denovo_intron", affected: "–", unaffected: "–"
+            variant_statistics: 'intron', variant_ids: 'denovo_intron', affected: '–', unaffected: '–'
           }
         ]
       }
@@ -265,13 +265,13 @@ export const geneData: any = [
           'affected (2507)', 'unaffected (1910)'
         ], rows: [
           {
-            variant_statistics: "LGDs", variant_ids: "denovo_lgds", affected: "2 (0.798)", unaffected: "–"
+            variant_statistics: 'LGDs', variant_ids: 'denovo_lgds', affected: '2 (0.798)', unaffected: '–'
           },
           {
-            variant_statistics: "missense", variant_ids: "denovo_missense", affected: "2 (0.798)", unaffected: "1 (0.524)"
+            variant_statistics: 'missense', variant_ids: 'denovo_missense', affected: '2 (0.798)', unaffected: '1 (0.524)'
           },
           {
-            variant_statistics: "intron", variant_ids: "denovo_intron", affected: "–", unaffected: "–"
+            variant_statistics: 'intron', variant_ids: 'denovo_intron', affected: '–', unaffected: '–'
           }
         ]
       }
@@ -312,13 +312,13 @@ export const geneData: any = [
           'affected (2507)', 'unaffected (1910)'
         ], rows: [
           {
-            variant_statistics: "LGDs", variant_ids: "denovo_lgds", affected: "7 (2.792)", unaffected: "–"
+            variant_statistics: 'LGDs', variant_ids: 'denovo_lgds', affected: '7 (2.792)', unaffected: '–'
           },
           {
-            variant_statistics: "missense", variant_ids: "denovo_missense", affected: "–", unaffected: "–"
+            variant_statistics: 'missense', variant_ids: 'denovo_missense', affected: '–', unaffected: '–'
           },
           {
-            variant_statistics: "intron", variant_ids: "denovo_intron", affected: "–", unaffected: "–"
+            variant_statistics: 'intron', variant_ids: 'denovo_intron', affected: '–', unaffected: '–'
           }
         ]
       }

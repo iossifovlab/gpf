@@ -2,7 +2,7 @@ export class UsersPage {
   private get window(): element {
     return cy.get('gpf-users');
   }
-  
+
   public get loginDropdownToggleButton(): element {
     return this.window.find('#login-dropdown-toggle-button');
   }

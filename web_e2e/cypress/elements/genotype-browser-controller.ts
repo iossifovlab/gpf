@@ -1,10 +1,10 @@
-import { BaseController } from "./base-controller";
-import { FamilyFilterBlockPage } from "./family-filter-block-page";
-import { GenesBlockPage } from "./genes-block-page";
-import { GenotypeBlockPage } from "./genotype-block-page";
-import { GenotypeBrowserPage } from "./genotype-browser-page";
-import { RegionsBlockPage } from "./regions-block-page";
-import { longTimeout, toolPageLinks } from "./utils";
+import { BaseController } from './base-controller';
+import { FamilyFilterBlockPage } from './family-filter-block-page';
+import { GenesBlockPage } from './genes-block-page';
+import { GenotypeBlockPage } from './genotype-block-page';
+import { GenotypeBrowserPage } from './genotype-browser-page';
+import { RegionsBlockPage } from './regions-block-page';
+import { longTimeout, toolPageLinks } from './utils';
 
 export class GenotypeBrowserController extends BaseController {
   private genotypeBrowserPage = new GenotypeBrowserPage();
