@@ -49,7 +49,7 @@ describe('Enrichment tool common tests', () => {
     page.table.should('not.exist');
 
     genesBlockPage.geneSymbolsTextarea.type('CAMSAP1');
-    page.enrichmentTestButton.click();
+    page.pressEnrichmentTestButton();
     page.table.should('be.visible');
   });
 
@@ -73,7 +73,7 @@ describe('Enrichment tool common tests', () => {
     genesBlockPage.geneSetsSearchbox.click();
     genesBlockPage.geneSetsSearchbox.type('synaptic clefts inhibitory');
     genesBlockPage.findGeneSetsSearchboxDropdownOptionsByText('synaptic clefts inhibitory').click();
-    page.enrichmentTestButton.click();
+    page.pressEnrichmentTestButton();
     page.findErrorAlertInComponent('gpf-gene-sets').should('not.exist');
   });
 
@@ -85,7 +85,7 @@ describe('Enrichment tool common tests', () => {
     genesBlockPage.geneSetsSearchbox.click();
     genesBlockPage.geneSetsSearchbox.type('FMRP Darnell');
     genesBlockPage.findGeneSetsSearchboxDropdownOptionsByText('FMRP Darnell').click();
-    page.enrichmentTestButton.click();
+    page.pressEnrichmentTestButton();
     page.findTableCell('affected', 'LGDs', 2).should('have.text', '55');
     page.findTableCell('affected', 'Missense', 2).should('have.text', '169');
 
@@ -102,7 +102,7 @@ describe('Enrichment tool common tests', () => {
     genesBlockPage.geneSetsSearchbox.click();
     genesBlockPage.geneSetsSearchbox.type('BIOCARTA_PTEN_PATHWAY');
     genesBlockPage.findGeneSetsSearchboxDropdownOptionsByText('BIOCARTA_PTEN_PATHWAY').click();
-    page.enrichmentTestButton.click();
+    page.pressEnrichmentTestButton();
     page.findTableCell('affected', 'LGDs', 2).should('have.text', '0');
     page.findTableCell('affected', 'Missense', 2).should('have.text', '2');
 
@@ -136,7 +136,7 @@ if (Cypress.env().yamlPath !== undefined) {
           it(case_.name, () => {
             applyData(case_.params);
 
-            page.enrichmentTestButton.click();
+            page.pressEnrichmentTestButton();
 
             case_.expected.forEach(async expected_ => {
               const rowId = expected_.rowId.split('_');

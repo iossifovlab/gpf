@@ -4,7 +4,7 @@ import { GenesBlockPage } from "./genes-block-page";
 import { GenotypeBlockPage } from "./genotype-block-page";
 import { GenotypeBrowserPage } from "./genotype-browser-page";
 import { RegionsBlockPage } from "./regions-block-page";
-import { toolPageLinks } from "./utils";
+import { longTimeout, toolPageLinks } from "./utils";
 
 export class GenotypeBrowserController extends BaseController {
   private genotypeBrowserPage = new GenotypeBrowserPage();
@@ -192,7 +192,8 @@ export class GenotypeBrowserController extends BaseController {
     this.regionsBlockPage.regionsFilterTextarea.type(region);
   }
 
-  public showTablePreview(): void {
+  public pressTablePreviewButton(): void {
     this.genotypeBrowserPage.tablePreviewButton.click();
+    cy.get('span.loader', {timeout: longTimeout}).should('not.exist');
   }
 }

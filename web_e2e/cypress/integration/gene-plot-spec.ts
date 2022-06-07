@@ -12,7 +12,7 @@ describe('Gene plot tests', () => {
     page.loginAdmin();
     geneBrowserPage.navigateToDatasetPage(datasetIds.iossifov2014, toolPageLinks.geneBrowser);
     geneBrowserPage.searchInputBox.type('chd8');
-    geneBrowserPage.goButton.click();
+    geneBrowserPage.pressGoButton();
   });
 
   it('should have undo button', () => {
@@ -58,7 +58,7 @@ describe('Gene plot summary alleles count tests', () => {
     page.loginAdmin();
     geneBrowserPage.navigateToDatasetPage(datasetIds.iossifov2014, toolPageLinks.geneBrowser);
     geneBrowserPage.searchInputBox.type('chd8');
-    geneBrowserPage.goButton.click();
+    geneBrowserPage.pressGoButton();
   });
 
   [
@@ -143,7 +143,7 @@ describe.skip('Gene plot visual tests', () => {
 
   it('should condense introns', () => {
     geneBrowserPage.searchInputBox.type('chd8');
-    geneBrowserPage.goButton.click();
+    geneBrowserPage.pressGoButton();
     page.condenseIntronsCheckbox.click();
     cy.get('g#plot').matchImageSnapshot('not-condensed-introns');
 
@@ -153,7 +153,7 @@ describe.skip('Gene plot visual tests', () => {
 
   it('should compare visually TTN gene plot results', () => {
     geneBrowserPage.searchInputBox.type('ttn');
-    geneBrowserPage.goButton.click();
+    geneBrowserPage.pressGoButton();
     cy.get('g#plot').matchImageSnapshot('ttn-gene-plot-snapshot');
 
     page.variantsCount.should('exist');

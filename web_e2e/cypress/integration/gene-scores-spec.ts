@@ -159,7 +159,7 @@ describe('Gene weights panel tests', () => {
       page.allGeneScores.should('not.contain', '~');
 
       genotypeBrowserController.setEffectTypesGroup('All');
-      genotypeBrowserController.showTablePreview();
+      genotypeBrowserController.pressTablePreviewButton();
       genotypeBrowserPage.overviewParagraph.should(
         'have.text',
         geneScore.allVariants + ' variants selected (' + geneScore.allVariants + ' shown)'

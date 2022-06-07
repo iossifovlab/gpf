@@ -1,4 +1,4 @@
-import { BasePage } from './utils';
+import { BasePage, longTimeout } from './utils';
 
 export class PhenoToolPage extends BasePage {
   public get window(): element {
@@ -15,5 +15,10 @@ export class PhenoToolPage extends BasePage {
 
   public get reportButton(): element {
     return cy.get('gpf-pheno-tool button').contains('Report');
+  }
+
+  public pressReportButton(): void {
+    this.reportButton.click();
+    cy.get('gpf-pheno-tool-results-chart', {timeout: longTimeout}).should('be.visible');
   }
 }

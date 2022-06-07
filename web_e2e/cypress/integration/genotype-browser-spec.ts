@@ -118,11 +118,12 @@ describe('Genotype browser tests', () => {
   datasetList.forEach(dataset => {
     it('should display genotype preview table after table preview button click at /' + dataset + '/browser', () => {
       const genotypePreviewTablePage = new GenotypePreviewTablePage();
+      const genotypeBrowserController = new GenotypeBrowserController();
 
       page.navigateToDatasetPage(dataset, toolPageLinks.genotypeBrowser);
       genotypePreviewTablePage.table.should('not.exist');
 
-      page.tablePreviewButton.click();
+      genotypeBrowserController.pressTablePreviewButton();
       genotypePreviewTablePage.table.should('be.visible');
     });
   });
@@ -155,7 +156,7 @@ describe('Genotype browser table preview result tests', () => {
       genotypeBrowserController.setStudy(data.study);
       genotypeBrowserController.filterGenesByGeneSymbol('SAMD11');
       genotypeBrowserController.setEffectTypesGroup('All');
-      genotypeBrowserController.showTablePreview();
+      genotypeBrowserController.pressTablePreviewButton();
       page.overviewParagraph.should('have.text', data.expectedOverviewParagraph);
     });
   });
@@ -170,7 +171,7 @@ describe('Genotype browser table preview result tests', () => {
       genotypeBrowserController.setStudy(datasetIds.compVcf);
       genotypeBrowserController.setRegion(data.region);
       genotypeBrowserController.setEffectTypesGroup('All');
-      genotypeBrowserController.showTablePreview();
+      genotypeBrowserController.pressTablePreviewButton();
       page.overviewParagraph.should('have.text', '5 variants selected (5 shown)');
     });
   });
@@ -232,7 +233,7 @@ describe('Genotype browser table preview result tests', () => {
       genotypeBrowserController.setStudy(data.study);
       genotypeBrowserController.setAffectedStatus(data.affectedStatus);
       genotypeBrowserController.setEffectTypesGroup('All');
-      genotypeBrowserController.showTablePreview();
+      genotypeBrowserController.pressTablePreviewButton();
       page.overviewParagraph.should('have.text', data.expectedOverviewParagraph);
     });
   });
@@ -246,7 +247,7 @@ describe('Genotype browser table preview result tests', () => {
       genotypeBrowserController.setStudy(datasetIds.compVcf);
       genotypeBrowserController.setGender(data.childGender);
       genotypeBrowserController.setEffectTypesGroup('All');
-      genotypeBrowserController.showTablePreview();
+      genotypeBrowserController.pressTablePreviewButton();
       page.overviewParagraph.should('have.text', data.expectedOverviewParagraph);
     });
   });
@@ -261,7 +262,7 @@ describe('Genotype browser table preview result tests', () => {
       genotypeBrowserController.setStudy(datasetIds.compVcf);
       genotypeBrowserController.setVariantType(data.variantType);
       genotypeBrowserController.setEffectTypesGroup('All');
-      genotypeBrowserController.showTablePreview();
+      genotypeBrowserController.pressTablePreviewButton();
       page.overviewParagraph.should('have.text', data.expectedOverviewParagraph);
     });
   });
@@ -276,7 +277,7 @@ describe('Genotype browser table preview result tests', () => {
     it('should display the correct data in overview paragraph whene effect types are ' + data.effectType, () => {
       genotypeBrowserController.setStudy(datasetIds.compVcf);
       genotypeBrowserController.setEffectTypesGroup(data.effectType);
-      genotypeBrowserController.showTablePreview();
+      genotypeBrowserController.pressTablePreviewButton();
       page.overviewParagraph.should('have.text', data.expectedOverviewParagraph);
     });
   });
@@ -338,7 +339,7 @@ describe('Genotype browser table preview result tests', () => {
       genotypeBrowserController.setStudy(data.study);
       genotypeBrowserController.setEffectTypesGroup('All');
       genotypeBrowserController.setInheritanceType(data.inheritanceType);
-      genotypeBrowserController.showTablePreview();
+      genotypeBrowserController.pressTablePreviewButton();
       page.overviewParagraph.should('have.text', data.expectedOverviewParagraph);
     });
   });
@@ -355,7 +356,7 @@ describe('Genotype browser table preview result tests', () => {
       genotypeBrowserController.setStudy(data.study);
       genotypeBrowserController.setEffectTypesGroup('All');
       genotypeBrowserController.setInheritanceType('denovo');
-      genotypeBrowserController.showTablePreview();
+      genotypeBrowserController.pressTablePreviewButton();
       page.overviewParagraph.should('have.text', data.expectedOverviewParagraph);
     });
   });
@@ -371,7 +372,7 @@ describe('Genotype browser table preview result tests', () => {
       genotypeBrowserController.setStudy(datasetIds.compVcf);
       genotypeBrowserController.setEffectTypesGroup('All');
       genotypeBrowserController.setFamilyFilterToId(data.familyId);
-      genotypeBrowserController.showTablePreview();
+      genotypeBrowserController.pressTablePreviewButton();
 
       page.overviewParagraph.should('have.text', '6 variants selected (6 shown)');
     });
@@ -402,7 +403,7 @@ describe('Genotype browser table preview result tests', () => {
       genotypeBrowserController.setStudy(data.study);
       genotypeBrowserController.setEffectTypesGroup(data.effectType);
       genotypeBrowserController.filterGenesByGeneSymbol(data.geneSymbol);
-      genotypeBrowserController.showTablePreview();
+      genotypeBrowserController.pressTablePreviewButton();
       page.overviewParagraph.should('have.text', data.expectedOverviewParagraph);
     });
   });
@@ -412,7 +413,7 @@ describe('Genotype browser table preview result tests', () => {
     genotypeBrowserController.setStudy(datasetIds.iossifov2014);
     genotypeBrowserController.setEffectTypesGroup('All');
     genotypeBrowserController.setFamilyFilterToId('11002');
-    genotypeBrowserController.showTablePreview();
+    genotypeBrowserController.pressTablePreviewButton();
     page.overviewParagraph.should('have.text', '2 variants selected (2 shown)');
   });
 
@@ -421,7 +422,7 @@ describe('Genotype browser table preview result tests', () => {
     genotypeBrowserController.setStudy(datasetIds.iossifov2014);
     genotypeBrowserController.filterGenesByGeneSets('GO Terms', 'GO:0016917');
     genotypeBrowserController.setEffectTypesGroup('LGDs');
-    genotypeBrowserController.showTablePreview();
+    genotypeBrowserController.pressTablePreviewButton();
     page.overviewParagraph.should('have.text', '0 variants selected (0 shown)');
   });
 
@@ -447,7 +448,7 @@ describe('Genotype browser table preview result tests', () => {
       genotypeBrowserController.setStudy(datasetIds.iossifov2014);
       genotypeBrowserController.filterGenesByGeneSets('GO Terms', 'GO:0016917');
       genotypeBrowserController.setEffectTypes(data.effectTypes);
-      genotypeBrowserController.showTablePreview();
+      genotypeBrowserController.pressTablePreviewButton();
       page.overviewParagraph.should('have.text', data.expectedOverviewParagraph);
     });
   });
@@ -469,7 +470,7 @@ describe('Genotype browser table preview result tests', () => {
       genotypeBrowserController.setStudy(datasetIds.compAll);
       genotypeBrowserController.setEffectTypesGroup('All');
       genotypeBrowserController.setFamilyFilterToId(data.familyId);
-      genotypeBrowserController.showTablePreview();
+      genotypeBrowserController.pressTablePreviewButton();
 
       genotypePreviewTablePage.getSpansInTableRowByIndex(7).eq(0).invoke('text').then(text => {
         expect(truncate(text)).to.be.eq(data.values.age);
@@ -541,7 +542,7 @@ describe('Genotype browser UCSC url tests', () => {
   it('should compare redirect links', () => {
     genotypeBrowserController.setStudy(datasetIds.compAll);
     genotypeBrowserController.setEffectTypesGroup('All');
-    genotypeBrowserController.showTablePreview();
+    genotypeBrowserController.pressTablePreviewButton();
 
     const baseUrl = 'http://genome.ucsc.edu/cgi-bin/hgTracks?db=hg19&position=chr';
     for (let index = 0; index <= 10; index++) {
@@ -581,7 +582,7 @@ describe.skip('Genotype browser table preview visual tests', () => {
     [['POGZ', '2', 'pogz'], ['KDM5B', '4','kdm5b']].forEach(data => {
       genesBlockPage.geneSymbolsTextarea.clear().type(data[0]);
 
-      genotypeBrowserController.showTablePreview();
+      genotypeBrowserController.pressTablePreviewButton();
       page.overviewParagraph.should('have.text', data[1] +' variants selected (' + data[1] + ' shown)');
       genotypePreviewTablePage.table.matchImageSnapshot(data[2]);
     });

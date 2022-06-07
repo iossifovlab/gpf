@@ -74,7 +74,7 @@ describe('Pheno tool tests', () => {
 
     phenoToolMeasurePage.searchbox.click();
     page.findButtonInComponentContainingText('gpf-pheno-measure-selector', 'i1.age').click();
-    page.reportButton.click();
+    page.pressReportButton();
     page.resultsChart.should('be.visible');
   });
 });

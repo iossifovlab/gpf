@@ -1,5 +1,7 @@
 import { UsersPage } from "./users-page";
 
+export const longTimeout = 35000;
+
 export const userData = {
   unauthorized: {
     username: undefined,
@@ -52,7 +54,6 @@ export const sidenavPageLinks = {
 };
 
 export class BasePage {
-  public readonly longerDefaultTimeout = 35000;
   private readonly adminUsername = 'admin@iossifovlab.com';
   private readonly adminPassword = 'secret';
 

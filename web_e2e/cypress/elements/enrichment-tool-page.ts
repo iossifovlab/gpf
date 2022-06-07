@@ -1,4 +1,4 @@
-import { BasePage } from './utils';
+import { BasePage, longTimeout } from './utils';
 
 export class EnrichmentToolPage extends BasePage {
   public get enrichmentModelsBlock(): element {
@@ -38,5 +38,10 @@ export class EnrichmentToolPage extends BasePage {
 
   public findTableCell(affectedStatus: string, effectType: string, columnNumber: number): element {
     return this.findTableRow(affectedStatus, effectType).find(('td')).eq(columnNumber);
+  }
+
+  public pressEnrichmentTestButton(): void {
+    this.enrichmentTestButton.click();
+    cy.get('.enrichment-table', {timeout: longTimeout}).should('be.visible');
   }
 }
