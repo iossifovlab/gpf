@@ -6,31 +6,14 @@ import argparse
 from dae.dask.client_factory import DaskClient
 
 from dae.__version__ import VERSION, RELEASE
+from dae.utils.verbosity_configuration import VerbosityConfiguration
+
 from dae.genomic_resources.fsspec_protocol import build_fsspec_protocol
 from dae.genomic_resources.histogram import HistogramBuilder
 # from dae.genomic_resources.repository_helpers import RepositoryWorkflowHelper
 
 
 logger = logging.getLogger(__file__)
-
-
-class VerbosityConfiguration:
-    """Defines common configuration for verbosity of loggers."""
-
-    @staticmethod
-    def set_argumnets(parser: argparse.ArgumentParser) -> None:
-        """Add verbosity arguments to argument parser."""
-        parser.add_argument("--verbose", "-v", "-V", action="count", default=0)
-
-    @staticmethod
-    def set(args) -> None:
-        """Read verbosity settings from parsed arguments and sets logger."""
-        if args.verbose == 1:
-            logging.basicConfig(level=logging.INFO)
-        elif args.verbose >= 2:
-            logging.basicConfig(level=logging.DEBUG)
-        else:
-            logging.basicConfig(level=logging.WARNING)
 
 
 def _configure_hist_subparser(subparsers):
@@ -196,99 +179,9 @@ def cli_manage(cli_args=None):
         sys.exit(1)
 
 
-def _extract_resource_ids_from_annotation_conf(config):
-    resources = set()
-    for annotator in config:
-        print(annotator)
-        for key, val in annotator.items():
-            if key in [
-                "resource_id",
-                "target_genome",
-                "chain",
-                "genome"
-            ]:
-                resources.add(val)
-    return resources
-
-
 def _create_proto(repo_url):
     if not os.path.isabs(repo_url):
         repo_url = os.path.abspath(repo_url)
 
     proto = build_fsspec_protocol(proto_id="manage", root_url=repo_url)
     return proto
-
-
-# def cli_cache_repo(argv=None):
-#     """Provides CLI for caching repository."""
-#     if not argv:
-#         argv = sys.argv[1:]
-
-#     description = "Repository cache tool - caches all resources
-#           in a given " \
-#         "repository"
-#     parser = argparse.ArgumentParser(description=description)
-#     parser.add_argument(
-#         "--definition", default=None, help="Repository definition file"
-#     )
-#     parser.add_argument(
-#         "--jobs", "-j", help="Number of jobs running in parallel",
-#         default=4, type=int,
-#     )
-#     parser.add_argument(
-#         "--instance", default=None,
-#         help="gpf_instance.yaml to use for selective cache"
-#     )
-#     parser.add_argument(
-#         "--annotation", default=None,
-#         help="annotation.yaml to use for selective cache"
-#     )
-#     VerbosityConfiguration.set_argumnets(parser)
-
-#     args = parser.parse_args(argv)
-#     VerbosityConfiguration.set(args)
-
-#     start = time.time()
-#     if args.definition is not None:
-#         definition = load_definition_file(args.definition)
-#     else:
-#         definition = get_configured_definition()
-
-#     repository = build_genomic_resource_repository(definition=definition)
-#     if not isinstance(repository, GenomicResourceCachedRepo):
-#         raise ValueError(
-#             "This tool works only if the top configured "
-#             "repository is cached.")
-#     repository = cast(GenomicResourceCachedRepo, repository)
-
-#     resources = set()
-#     annotation = None
-
-#     if args.instance is not None and args.annotation is not None:
-#         raise ValueError(
-#             "This tool cannot handle both annotation and instance flags"
-#         )
-
-#     if args.instance is not None:
-#         config = GPFConfigParser.load_config(args.instance, dae_conf_schema)
-#         resources.add(config.reference_genome.resource_id)
-#         resources.add(config.gene_models.resource_id)
-#         if config.annotation is not None:
-#             annotation = config.annotation.conf_file
-#     elif args.annotation is not None:
-#         annotation = args.annotation
-
-#     if annotation is not None:
-#         config = AnnotationConfigParser.parse_config_file(annotation)
-#         resources.update(_extract_resource_ids_from_annotation_conf(config))
-
-#     if len(resources) > 0:
-#         resources = list(resources)
-#     else:
-#         resources = None
-
-#     repository.cache_resources(workers=args.jobs, resource_ids=resources)
-
-#     elapsed = time.time() - start
-
-#     logger.info("Cached all resources in %.2f secs", elapsed)

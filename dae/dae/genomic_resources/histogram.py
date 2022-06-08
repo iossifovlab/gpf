@@ -1,4 +1,4 @@
-"""Handling of genomic scores statistics
+"""Handling of genomic scores statistics.
 
 Currently we support only genomic scores histograms.
 """
@@ -12,7 +12,7 @@ from copy import copy
 import yaml
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt  # type: ignore
 from tqdm import tqdm  # type: ignore
 from dask.distributed import as_completed  # type: ignore
 
@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 
 class Histogram:
-    """Class to represent a histogram"""
+    """Class to represent a histogram."""
 
     def __init__(
         self, bins, bars, bins_count,
@@ -46,7 +46,7 @@ class Histogram:
 
     @staticmethod
     def from_config(conf: Dict[str, Any]) -> Histogram:
-        """Constructs a histogram from configuration dict"""
+        """Construct a histogram from configuration dict."""
         return Histogram(
             None,
             None,
@@ -59,7 +59,7 @@ class Histogram:
         )
 
     def to_dict(self):
-        """Builds dict representation of a histogram"""
+        """Build dict representation of a histogram."""
         return {
             "bins_count": len(self.bins),
             "bins": self.bins.tolist(),
@@ -72,7 +72,7 @@ class Histogram:
 
     @staticmethod
     def from_dict(data: Dict[str, Any]) -> Histogram:
-        """Creates a histogram from dict"""
+        """Create a histogram from dict."""
         hist = Histogram(
             data["bins"],
             data["bars"],
@@ -88,7 +88,7 @@ class Histogram:
 
     @staticmethod
     def merge(hist1: Histogram, hist2: Histogram) -> Histogram:
-        """Merges two histograms"""
+        """Merge two histograms."""
         assert hist1.x_scale == hist2.x_scale
         assert hist1.x_min == hist2.x_min
         assert hist1.x_min_log == hist2.x_min_log
@@ -111,7 +111,7 @@ class Histogram:
         return result
 
     def add_value(self, value):
-        """Adds value to the histogram"""
+        """Add value to the histogram."""
         if value < self.x_min or value > self.x_max:
             logger.warning(
                 "value %s out of range: [%s, %s]",
@@ -161,7 +161,7 @@ class Histogram:
 
 
 class HistogramBuilder:
-    """Class to build genomic scores histograms for given resource"""
+    """Class to build genomic scores histograms for given resource."""
 
     def __init__(self, resource) -> None:
         self.resource = resource
@@ -169,8 +169,7 @@ class HistogramBuilder:
     def build(self, client, path="histograms",
               force=False, only_dirty=False,
               region_size=1000000) -> dict[str, Histogram]:
-        """build a genomic score histograms and returns them"""
-
+        """Build a genomic score histograms and returns them."""
         loaded_hists, computed_hists = self._build(client, path, force,
                                                    region_size)
         if only_dirty:
@@ -357,7 +356,7 @@ class HistogramBuilder:
         return hashes
 
     def save(self, histograms, out_dir):
-        """Saves a histogram in the specified output directory"""
+        """Save a histogram in the specified output directory."""
         histogram_desc = self.resource.get_config().get("histograms", [])
         configs = {hist["score"]: hist for hist in histogram_desc}
         hist_hashes = self._build_hashes()
@@ -411,7 +410,7 @@ class HistogramBuilder:
 
 def load_histograms(repo, resource_id, version_constraint=None,
                     repository_id=None, path="histograms"):
-    """Loads genomic scores histograms"""
+    """Load genomic score histograms."""
     if repository_id is not None and repository_id != repo.get_id():
         return {}
 

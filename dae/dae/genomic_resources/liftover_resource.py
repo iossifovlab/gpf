@@ -34,7 +34,8 @@ class LiftoverChain:
     def close(self):
         pass
 
-    def map_chromosome(self, chrom, mapping):
+    @staticmethod
+    def map_chromosome(chrom, mapping):
         """Map a chromosome (contig) name according to configuration."""
         if not mapping:
             return chrom

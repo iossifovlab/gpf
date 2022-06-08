@@ -1,6 +1,8 @@
+"""Setup for GPF data access environment (DAE)."""
+
 import setuptools
 
-with open("README.md", "r") as fh:
+with open("README.md", "r", encoding="utf8") as fh:
     long_description = fh.read()
 
 setuptools.setup(
@@ -46,7 +48,7 @@ setuptools.setup(
     [console_scripts]
 
     grr_manage=dae.genomic_resources.cli:cli_manage
-    grr_cache_repo=dae.genomic_resources.cli:cli_cache_repo
+    grr_cache_repo=dae.tools.grr_cache_repo:cli
 
     annotate_variant_effects=dae.effect_annotation.cli:cli_columns
     annotate_variant_effects_vcf=dae.effect_annotation.cli:cli_vcf
