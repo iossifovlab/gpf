@@ -86,7 +86,7 @@ def parse_resource_id_version(resource_path):
 
 
 def version_string_to_suffix(version: str):
-    """Transforms version token into string."""
+    """Transform version string into resource ID version suffix."""
     if version == "0":
         return ""
     return f"({version})"
@@ -97,7 +97,7 @@ def version_tuple_to_string(version: Tuple[int, ...]) -> str:
 
 
 def version_tuple_to_suffix(version):
-    """Transforms version token into string."""
+    """Transform version tuple into resource ID version suffix."""
     if version == (0,):
         return ""
     return f"({'.'.join(map(str, version))})"
@@ -107,7 +107,7 @@ VERSION_CONSTRAINT_RE = re.compile(r"(>=|=)?(\d+(?:\.\d+)*)")
 
 
 def is_version_constraint_satisfied(version_constraint, version):
-    """Checks if a version matches a version constraint."""
+    """Check if a version matches a version constraint."""
     if not version_constraint:
         return True
     match = VERSION_CONSTRAINT_RE.fullmatch(version_constraint)
@@ -206,7 +206,7 @@ def find_genomic_resources_helper(content_dict, parent_id=None):
 
 
 def timestamp_from_isoformatted(isoformatted: Optional[str]) -> Optional[int]:
-    """Returns UNIX timestamp corresponding to entry time."""
+    """Return UNIX timestamp corresponding to entry time."""
     if isoformatted is None:
         return None
 
@@ -215,7 +215,7 @@ def timestamp_from_isoformatted(isoformatted: Optional[str]) -> Optional[int]:
 
 
 def isoformatted_from_timestamp(timestamp: float) -> str:
-    """Produces ISO formatted date-time from python time.time().
+    """Produce ISO formatted date-time from python time.time().
 
     Uses integer precicsion, i.e. the timestamp is converted to int.
     """
@@ -237,7 +237,7 @@ class ManifestEntry:
     md5: Optional[str]
 
     def get_timestamp(self) -> Optional[int]:
-        """Returns UNIX timestamp corresponding to entry time."""
+        """Return UNIX timestamp corresponding to entry time."""
         if self.time is None:
             return None
 
@@ -246,7 +246,7 @@ class ManifestEntry:
 
     @staticmethod
     def convert_timestamp(timestamp: float):
-        """Produces ISO formatted date-time from python time.time().
+        """Produce ISO formatted date-time from python time.time().
 
         Uses integer precicsion, i.e. the timestamp is converted to int.
         """
@@ -274,7 +274,7 @@ class Manifest:
 
     @staticmethod
     def from_file_content(file_content: str) -> Manifest:
-        """Produces a manifest from manifest file content."""
+        """Produce a manifest from manifest file content."""
         manifest_entries = yaml.safe_load(file_content)
         if manifest_entries is None:
             manifest_entries = []
@@ -283,8 +283,7 @@ class Manifest:
     @staticmethod
     def from_manifest_entries(
             manifest_entries: List[Dict[str, Any]]) -> Manifest:
-        """Produces a manifest from parsed manifest file content."""
-
+        """Produce a manifest from parsed manifest file content."""
         result = Manifest()
         for data in manifest_entries:
             entry = ManifestEntry(
@@ -329,9 +328,10 @@ class Manifest:
         return str(self.entries)
 
     def to_manifest_entries(self):
-        """Transforms manifest to list of dictionaries.
+        """Transform manifest to list of dictionaries.
 
-        Helpfull when storing the manifest."""
+        Helpfull when storing the manifest.
+        """
         return [
             asdict(entry) for entry in self.entries.values()]
 
@@ -365,7 +365,7 @@ class GenomicResource:
         self._manifest = None
 
     def get_id(self):
-        """Returns genomic resource ID."""
+        """Return genomic resource ID."""
         return self.resource_id
 
     def get_config(self):

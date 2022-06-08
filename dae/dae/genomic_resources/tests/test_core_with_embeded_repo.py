@@ -8,7 +8,7 @@ from dae.genomic_resources.repository import GenomicResource, Manifest
 
 def test_the_basic_resource_finding(tmp_path):
     repo = build_testing_repository(
-        repo_id="oneResource", 
+        repo_id="oneResource",
         root_path=str(tmp_path),
         content={
             "one": {"genomic_resource.yaml": ""}
@@ -22,7 +22,7 @@ def test_the_basic_resource_finding(tmp_path):
 
 def test_not_finding_resource_with_the_required_version(tmp_path):
     repo = build_testing_repository(
-        repo_id="oneResource", 
+        repo_id="oneResource",
         root_path=str(tmp_path),
         content={
             "one": {"genomic_resource.yaml": ""}
@@ -67,7 +67,7 @@ def test_md5_checksum(tmp_path):
 
 def test_manifest_file_creation(tmp_path):
     repo = build_testing_repository(
-        repo_id="a", 
+        repo_id="a",
         root_path=str(tmp_path),
         content={
             "one": {

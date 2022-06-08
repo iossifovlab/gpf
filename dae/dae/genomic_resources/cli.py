@@ -24,7 +24,7 @@ class VerbosityConfiguration:
 
     @staticmethod
     def set(args) -> None:
-        """Reads verbosity settings from parsed arguments and sets logger."""
+        """Read verbosity settings from parsed arguments and sets logger."""
         if args.verbose == 1:
             logging.basicConfig(level=logging.INFO)
         elif args.verbose >= 2:
@@ -154,7 +154,7 @@ def _run_checkout_command(repo, **kwargs):
 
 
 def cli_manage(cli_args=None):
-    """Provides CLI for repository management."""
+    """Provide CLI for repository management."""
     if not cli_args:
         cli_args = sys.argv[1:]
 

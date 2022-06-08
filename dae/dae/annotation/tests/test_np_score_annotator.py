@@ -19,7 +19,7 @@ from dae.annotation.annotation_factory import build_annotation_pipeline
 @pytest.mark.parametrize("variant,pos_aggregator,nuc_aggregator,expected", [
     (("1", 14970, "C", "A"), "mean", "max", 0.001),
 
-    (("1", 14970, "CA", "C"), "mean", "max", (0.004 + 0.04 + 0.4)/3),
+    (("1", 14970, "CA", "C"), "mean", "max", (0.004 + 0.04 + 0.4) / 3),
     (("1", 14970, "CA", "C"), "max", "max", 0.4),
 
     (("1", 14970, "C", "CA"), "mean", "max", 0.022),

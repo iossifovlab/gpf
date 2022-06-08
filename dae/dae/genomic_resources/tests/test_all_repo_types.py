@@ -14,7 +14,7 @@ from dae.genomic_resources.repository import GR_CONF_FILE_NAME
 ])
 def test_all_repo_types(repo_testing, scheme):
 
-    breh_gz = gzip.compress(b'breh')
+    breh_gz = gzip.compress(b"breh")
     test_repo = repo_testing(
         content={
             "one": {

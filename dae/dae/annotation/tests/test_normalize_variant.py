@@ -16,10 +16,10 @@ from dae.annotation.normalize_allele_annotator import normalize_allele, \
 
 
 @pytest.fixture
-def example_1_genome():
-    """
-    Example from https://genome.sph.umich.edu/wiki/File:Normalization_mnp.png
-    """
+def example_1_genome():    
+    # Example from 
+    # https://genome.sph.umich.edu/wiki/File:Normalization_mnp.png
+
     res = build_test_resource({
         "genomic_resource.yaml": "{type: genome, filename: chr.fa}",
         "chr.fa": convert_to_tab_separated("""
@@ -50,9 +50,9 @@ def test_example_1_genome_basic(example_1_genome, beg, end, seq):
 
 @pytest.fixture
 def example_2_genome():
-    """
-    Example from https://genome.sph.umich.edu/wiki/File:Normalization_str.png
-    """
+    # Example from 
+    # https://genome.sph.umich.edu/wiki/File:Normalization_str.png
+
     res = build_test_resource({
         "genomic_resource.yaml": "{type: genome, filename: chr.fa}",
         "chr.fa": convert_to_tab_separated("""

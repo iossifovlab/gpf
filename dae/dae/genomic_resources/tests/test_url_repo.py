@@ -15,7 +15,7 @@ def test_url_vs_dir_results(repo_testing):
                 "genes.txt": "TP53\tchr3\t300\t200"
             }
         }
-    }    
+    }
     dir_repo = repo_testing(repo_id="src", scheme="file", content=content)
     url_repo = repo_testing(repo_id="url", scheme="http", content=content)
 

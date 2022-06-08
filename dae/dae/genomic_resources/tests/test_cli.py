@@ -9,7 +9,7 @@ from dae.genomic_resources.testing import build_testing_repository
 
 def test_cli_manage(tmp_path):
 
-    demo_gtf_content = "TP53\tchr3\t300\t200".encode('utf-8')
+    demo_gtf_content = "TP53\tchr3\t300\t200".encode("utf-8")
     build_testing_repository(
         scheme="file",
         root_path=str(tmp_path),

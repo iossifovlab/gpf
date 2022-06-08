@@ -1,4 +1,5 @@
-# from dae.genomic_resources.embeded_repository import GenomicResourceEmbededRepo
+"""Provides tools useful for testing."""
+
 # from dae.genomic_resources.dir_repository import GenomicResourceDirRepo
 # from dae.genomic_resources.cached_repository import GenomicResourceCachedRepo
 # from dae.genomic_resources.repository_helpers import RepositoryWorkflowHelper
@@ -10,6 +11,10 @@
 
 
 def convert_to_tab_separated(content: str):
+    """Convert a string into tab separated file content.
+
+    Useful for testing purposes.
+    """
     result = "\n".join(
         "\t".join(line.strip("\n\r").split())
         for line in content.split("\n")

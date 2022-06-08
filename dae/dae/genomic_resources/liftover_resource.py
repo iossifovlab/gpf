@@ -1,3 +1,5 @@
+"""Provides LiftOver chain resource."""
+
 from __future__ import annotations
 from typing import TextIO
 
@@ -12,6 +14,7 @@ logger = logging.getLogger(__name__)
 
 
 class LiftoverChain:
+    """Defines Lift Over chain wrapper around pyliftover objects."""
 
     def __init__(self, config: dict, chain_file: TextIO):
 
@@ -32,6 +35,7 @@ class LiftoverChain:
         pass
 
     def map_chromosome(self, chrom, mapping):
+        """Map a chromosome (contig) name according to configuration."""
         if not mapping:
             return chrom
         if "del_prefix" in mapping:
@@ -44,7 +48,7 @@ class LiftoverChain:
         return chrom
 
     def convert_coordinate(self, chrom, pos):
-
+        """Lift over a genomic coordinate."""
         chrom = self.map_chromosome(chrom, self.chrom_variant_coordinates)
 
         lo_coordinates = self.liftover.convert_coordinate(chrom, pos - 1)
@@ -65,7 +69,7 @@ class LiftoverChain:
 
 def load_liftover_chain_from_resource(
         resource: GenomicResource) -> LiftoverChain:
-
+    """Load a Lift Over chaing from GRR resource."""
     config: dict = resource.get_config()
 
     if resource.get_type() != "liftover_chain":

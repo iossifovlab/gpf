@@ -54,7 +54,7 @@ GRR_DEFINITION_FILE_ENV = "GRR_DEFINITION_FILE"
 
 
 def get_configured_definition():
-    """Returns genomic repository definition."""
+    """Return default genomic resources repository definition."""
     logger.info("using default GRR definitions")
     env_repo_definition_path = os.environ.get(GRR_DEFINITION_FILE_ENV)
     if env_repo_definition_path is not None:
