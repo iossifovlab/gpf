@@ -26,7 +26,6 @@ from dae.genomic_resources.repository import GR_CONF_FILE_NAME, Manifest, \
     ResourceFileState, \
     GenomicResource, isoformatted_from_datetime, \
     isoformatted_from_timestamp, \
-    version_string_to_suffix, \
     parse_resource_id_version, \
     GR_CONTENTS_FILE_NAME, \
     GR_MANIFEST_FILE_NAME
@@ -306,10 +305,8 @@ class FsspecReadWriteProtocol(
     def _get_resource_file_state_path(
             self, resource: GenomicResource, filename: str) -> str:
         """Return filename of the rersource file state path."""
-        return os.path.join(
-            self.state_url,
-            resource.get_genomic_resource_id_version(),
-            filename)
+        resource_url = self.get_resource_url(resource)
+        return os.path.join(resource_url, ".grr", filename)
 
     def get_resource_file_timestamp(
             self, resource: GenomicResource, filename: str) -> str:
@@ -327,12 +324,9 @@ class FsspecReadWriteProtocol(
         return self._get_filepath_size(path)
 
     def save_resource_file_state(
-            self, state: ResourceFileState) -> None:
+            self, resource: GenomicResource, state: ResourceFileState) -> None:
         """Save resource file state into internal GRR state."""
-        path = os.path.join(
-            self.state_url,
-            f"{state.resource_id}{version_string_to_suffix(state.version)}",
-            state.filename)
+        path = self._get_resource_file_state_path(resource, state.filename)
         if not self.filesystem.exists(os.path.dirname(path)):
             self.filesystem.makedirs(
                 os.path.dirname(path), exist_ok=True)
@@ -354,8 +348,6 @@ class FsspecReadWriteProtocol(
         with self.filesystem.open(path, "rt", encodings="utf8") as infile:
             content = yaml.safe_load(infile.read())
             return ResourceFileState(
-                content["resource_id"],
-                content["version"],
                 content["filename"],
                 content["size"],
                 content["timestamp"],
@@ -427,7 +419,7 @@ class FsspecReadWriteProtocol(
             filename,
             md5sum=md5)
 
-        self.save_resource_file_state(state)
+        self.save_resource_file_state(dest_resource, state)
         self.save_manifest(dest_resource, remote_manifest)
 
         return state

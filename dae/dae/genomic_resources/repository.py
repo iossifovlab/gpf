@@ -258,8 +258,6 @@ class ManifestEntry:
 class ResourceFileState:
     """Defines resource file state saved into internal GRR state."""
 
-    resource_id: str
-    version: str
     filename: str
     size: int
     timestamp: str
@@ -584,7 +582,7 @@ class ReadWriteRepositoryProtocol(ReadOnlyRepositoryProtocol):
             state = self.load_resource_file_state(resource, entry.name)
             if state is None:
                 state = self.build_resource_file_state(resource, entry.name)
-                self.save_resource_file_state(state)
+                self.save_resource_file_state(resource, state)
                 entry.md5 = state.md5
                 entry.size = state.size
             else:
@@ -597,7 +595,7 @@ class ReadWriteRepositoryProtocol(ReadOnlyRepositoryProtocol):
 
                     state = self.build_resource_file_state(
                         resource, entry.name)
-                    self.save_resource_file_state(state)
+                    self.save_resource_file_state(resource, state)
 
                 entry.md5 = state.md5
                 entry.size = state.size
@@ -652,8 +650,6 @@ class ReadWriteRepositoryProtocol(ReadOnlyRepositoryProtocol):
             size = self.get_resource_file_size(resource, filename)
 
         return ResourceFileState(
-            resource.resource_id,
-            resource.get_version_str(),
             filename,
             size,
             timestamp,
@@ -661,7 +657,7 @@ class ReadWriteRepositoryProtocol(ReadOnlyRepositoryProtocol):
 
     @abc.abstractmethod
     def save_resource_file_state(
-            self, state: ResourceFileState) -> None:
+            self, resource: GenomicResource, state: ResourceFileState) -> None:
         """Save resource file state into internal GRR state."""
 
     @abc.abstractmethod

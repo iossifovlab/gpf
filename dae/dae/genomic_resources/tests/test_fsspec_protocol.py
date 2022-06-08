@@ -67,8 +67,6 @@ def test_build_resource_file_state(fsspec_proto, scheme):
     state = proto.build_resource_file_state(
         res, "data.txt", timestamp=timestamp)
 
-    assert state.resource_id == "one"
-    assert state.version == "0"
     assert state.filename == "data.txt"
     assert state.timestamp == timestamp
     assert state.md5 == "c1cfdaf7e22865b29b8d62a564dc8f23"
@@ -77,8 +75,6 @@ def test_build_resource_file_state(fsspec_proto, scheme):
     state = proto.build_resource_file_state(
         res, "genes.gtf", timestamp=timestamp)
 
-    assert state.resource_id == "sub/two"
-    assert state.version == "1.0"
     assert state.filename == "genes.gtf"
     assert state.timestamp == timestamp
     assert state.md5 == "d9636a8dca9e5626851471d1c0ea92b1"
@@ -96,14 +92,12 @@ def test_save_load_resource_file_state(fsspec_proto, scheme):
     state = proto.build_resource_file_state(
         res, "genes.gtf", timestamp=timestamp)
 
-    proto.save_resource_file_state(state)
+    proto.save_resource_file_state(res, state)
     state_path = proto._get_resource_file_state_path(res, "genes.gtf")
     assert proto.filesystem.exists(state_path)
 
     loaded = proto.load_resource_file_state(res, "genes.gtf")
     assert loaded is not None
-    assert loaded.resource_id == "sub/two"
-    assert loaded.version == "1.0"
     assert loaded.filename == "genes.gtf"
     assert loaded.timestamp == timestamp
     assert loaded.md5 == "d9636a8dca9e5626851471d1c0ea92b1"
@@ -381,8 +375,6 @@ def test_copy_resource_file(embedded_proto, fsspec_proto, scheme):
     # Then
     timestamp = proto.get_resource_file_timestamp(dst_res, "genes.gtf")
 
-    assert state.resource_id == "sub/two"
-    assert state.version == "1.0"
     assert state.filename == "genes.gtf"
     assert state.timestamp == timestamp
     assert state.md5 == "d9636a8dca9e5626851471d1c0ea92b1"
@@ -412,8 +404,6 @@ def test_copy_resource(embedded_proto, fsspec_proto, scheme):
 
     state = proto.load_resource_file_state(dst_res, "genes.gtf")
 
-    assert state.resource_id == "sub/two"
-    assert state.version == "1.0"
     assert state.filename == "genes.gtf"
     assert state.timestamp == timestamp
     assert state.md5 == "d9636a8dca9e5626851471d1c0ea92b1"
@@ -444,8 +434,6 @@ def test_update_resource_file_when_missing(
 
     timestamp = proto.get_resource_file_timestamp(dst_res, "genes.gtf")
 
-    assert state.resource_id == "sub/two"
-    assert state.version == "1.0"
     assert state.filename == "genes.gtf"
     assert state.timestamp == timestamp
     assert state.md5 == "d9636a8dca9e5626851471d1c0ea92b1"
@@ -477,8 +465,6 @@ def test_update_resource_file_when_changed(
 
     timestamp = proto.get_resource_file_timestamp(dst_res, "genes.gtf")
 
-    assert state.resource_id == "sub/two"
-    assert state.version == "1.0"
     assert state.filename == "genes.gtf"
     assert state.timestamp == timestamp
     assert state.md5 == "d9636a8dca9e5626851471d1c0ea92b1"

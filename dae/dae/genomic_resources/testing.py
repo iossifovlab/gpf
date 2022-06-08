@@ -29,7 +29,7 @@ def _scan_for_resource_files(content_dict: dict[str, Any], parent_dirs):
                 yield fname, fcontent
         else:
             fname = "/".join([*parent_dirs, path])
-            if isinstance(content, str) or isinstance(content, bytes):
+            if isinstance(content, (str, bytes)):
                 # handle file content
                 yield fname, content
             else:
@@ -95,7 +95,7 @@ def build_testing_protocol(
             with proto.open_raw_file(resource, fname, mode) as outfile:
                 outfile.write(fcontent)
             proto.save_resource_file_state(
-                proto.build_resource_file_state(resource, fname))
+                resource, proto.build_resource_file_state(resource, fname))
 
         proto.save_manifest(resource, proto.build_manifest(resource))
 
@@ -135,8 +135,7 @@ def build_test_resource(
 
 
 def tabix_to_resource(tabix_source, resource, filename):
-    """Stores a tabix file into a resource."""
-
+    """Store a tabix file into a resource."""
     tabix_filename, index_filename = tabix_source
     proto = resource.protocol
 
