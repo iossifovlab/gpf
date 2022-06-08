@@ -196,11 +196,6 @@ class FsspecReadWriteProtocol(
 
         self.filesystem.makedirs(self.url, exist_ok=True)
 
-        self.state_url = os.path.join(self.url, ".grr")
-        self.filesystem.makedirs(self.state_url, exist_ok=True)
-        self.filesystem.touch(
-            os.path.join(self.state_url, ".keep"), exist_ok=True)
-
     def _scan_path_for_resources(self, path_array):
 
         url = os.path.join(self.url, *path_array)
@@ -290,10 +285,8 @@ class FsspecReadWriteProtocol(
 
         result = Manifest()
         for name, path in self._scan_resource_for_files(resource_path, []):
-            timestamp = self._get_filepath_timestamp(path)
             size = self._get_filepath_size(path)
-            result.add(ManifestEntry(
-                name, size, timestamp, None))
+            result.add(ManifestEntry(name, size, None))
         return result
 
     def get_all_resources(self) -> Generator[GenomicResource, None, None]:

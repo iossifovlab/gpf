@@ -26,7 +26,7 @@ def test_all_repo_types(repo_testing, scheme):
         scheme=scheme)
 
     res = test_repo.get_resource("one")
-    files = sorted([fname for fname, _, _ in res.get_manifest().get_files()])
+    files = sorted([fname for fname, _ in res.get_manifest().get_files()])
     assert files == ["data.txt", "data.txt.gz", GR_CONF_FILE_NAME]
 
     with res.open_raw_file("data.txt", "rt") as infile:

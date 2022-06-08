@@ -7,7 +7,7 @@ from dae.genomic_resources.testing import build_testing_repository
 # , cli_cache_repo
 
 
-def test_cli_manage(tmp_path):
+def test_cli_manifest(tmp_path):
 
     demo_gtf_content = "TP53\tchr3\t300\t200".encode("utf-8")
     build_testing_repository(
@@ -27,8 +27,8 @@ def test_cli_manage(tmp_path):
         })
 
     assert not (tmp_path / GR_CONTENTS_FILE_NAME).is_file()
-    cli_manage(["index", str(tmp_path)])
-    assert (tmp_path / GR_CONTENTS_FILE_NAME).is_file()
+    cli_manage(["manifest", str(tmp_path), "one"])
+    assert (tmp_path / "one/.MANIFEST").is_file()
 
 
 # def test_cli_cache_instance(mocker, fixture_path, temp_cache_dir):

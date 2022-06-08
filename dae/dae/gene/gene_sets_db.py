@@ -98,7 +98,7 @@ class GeneSetCollection:
             filepaths = list()
             if directory == ".":
                 directory = ""  # Easier check with startswith
-            for filepath, _, _ in resource.get_manifest().get_files():
+            for filepath, _ in resource.get_manifest().get_files():
                 if filepath.startswith(directory) and \
                         filepath.endswith(".txt"):
                     filepaths.append(filepath)
@@ -109,7 +109,7 @@ class GeneSetCollection:
         elif collection_format == "sqlite":
             dbfile = config["dbfile"]
             assert resource.file_local(dbfile)
-            dbfile_path = resource.repo.get_file_path(resource, dbfile)
+            dbfile_path = resource.proto.get_file_path(resource, dbfile)
             return SqliteGeneSetCollectionDB(
                 collection_id,
                 dbfile_path,

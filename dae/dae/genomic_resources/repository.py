@@ -1,6 +1,7 @@
 """Provides basic classes for genomic resources and repositories."""
 from __future__ import annotations
 
+import os
 import re
 import logging
 import datetime
@@ -8,7 +9,7 @@ import enum
 import hashlib
 
 from typing import List, Optional, Tuple, Dict, Any, Generator, Union
-from dataclasses import dataclass, asdict, field
+from dataclasses import dataclass, asdict
 
 import abc
 import yaml
@@ -233,25 +234,7 @@ class ManifestEntry:
 
     name: str
     size: int
-    time: Optional[str] = field(compare=False)
     md5: Optional[str]
-
-    def get_timestamp(self) -> Optional[int]:
-        """Return UNIX timestamp corresponding to entry time."""
-        if self.time is None:
-            return None
-
-        return int(datetime.datetime.fromisoformat(
-            self.time).timestamp())
-
-    @staticmethod
-    def convert_timestamp(timestamp: float):
-        """Produce ISO formatted date-time from python time.time().
-
-        Uses integer precicsion, i.e. the timestamp is converted to int.
-        """
-        return datetime.datetime.fromtimestamp(
-            int(timestamp), datetime.timezone.utc).isoformat()
 
 
 @dataclass(order=True)
@@ -285,13 +268,13 @@ class Manifest:
         result = Manifest()
         for data in manifest_entries:
             entry = ManifestEntry(
-                data["name"], data["size"], data["time"], data["md5"])
+                data["name"], data["size"], data["md5"])
             result.entries[entry.name] = entry
         return result
 
-    def get_files(self) -> List[Tuple[str, int, Optional[str]]]:
+    def get_files(self) -> List[Tuple[str, int]]:
         return [
-            (entry.name, entry.size, entry.time)
+            (entry.name, entry.size)
             for entry in self.entries.values()
         ]
 
@@ -520,10 +503,31 @@ class ReadOnlyRepositoryProtocol(abc.ABC):
         no support this method raise and exception.
         """
 
-    def compute_md5_sum(self, resource, filename):
+    def _load_dvc_entry(
+            self, resource: GenomicResource,
+            filename) -> Optional[ManifestEntry]:
+        dvc_filename = f"{filename}.dvc"
+        if not self.file_exists(resource, dvc_filename):
+            return None
+
+        with self.open_raw_file(resource, dvc_filename, "rt") as infile:
+            content = infile.read()
+            dvc = yaml.safe_load(content)
+            basename = os.path.basename(filename)
+            for entry in dvc["outs"]:
+                if entry["path"] == basename:
+                    return ManifestEntry(
+                        filename, entry["size"], entry["md5"])
+        return None
+
+    def compute_md5_sum(self, resource, filename, use_dvc=False):
         """Compute a md5 hash for a file in the resource."""
         logger.debug(
             "compute md5sum for %s in %s", filename, resource.resource_id)
+        if use_dvc:
+            entry = self._load_dvc_entry(resource, filename)
+            if entry:
+                return entry.md5
 
         with self.open_raw_file(resource, filename, "rb") as infile:
             md5_hash = hashlib.md5()
@@ -567,43 +571,77 @@ class ReadWriteRepositoryProtocol(ReadOnlyRepositoryProtocol):
     def invalidate(self):
         """Invalidate internal cache of genomic resources collection."""
 
-    def build_manifest(self, resource):
+    def build_manifest(self, resource, use_dvc=True):
         """Build full manifest for the resource."""
         manifest = Manifest()
         for entry in self.collect_resource_entries(resource):
-            entry.md5 = self.compute_md5_sum(resource, entry.name)
+            state = self.build_resource_file_state(
+                resource, entry.name, use_dvc=use_dvc)
+            self.save_resource_file_state(resource, state)
+            entry.md5 = state.md5
+            entry.size = state.size
             manifest.add(entry)
         return manifest
 
-    def update_manifest(self, resource):
+    def update_manifest(
+            self, resource: GenomicResource,
+            dry_run=False, use_dvc=True) -> bool:
         """Update or create full manifest for the resource."""
+        try:
+            current_manifest = self.load_manifest(resource)
+        except FileNotFoundError:
+            current_manifest = Manifest()
+
         manifest = Manifest()
+        entries_to_update = set()
         for entry in self.collect_resource_entries(resource):
+            manifest.add(entry)
             state = self.load_resource_file_state(resource, entry.name)
             if state is None:
-                state = self.build_resource_file_state(resource, entry.name)
-                self.save_resource_file_state(resource, state)
-                entry.md5 = state.md5
-                entry.size = state.size
-            else:
-                file_timestamp = self.get_resource_file_timestamp(
-                    resource, entry.name)
-                file_size = self.get_resource_file_size(
-                    resource, entry.name)
-                if state.timestamp != file_timestamp or \
-                        state.size != file_size:
+                entries_to_update.add(entry.name)
+                continue
+            file_timestamp = self.get_resource_file_timestamp(
+                resource, entry.name)
+            file_size = self.get_resource_file_size(
+                resource, entry.name)
+            if state.timestamp != file_timestamp or \
+                    state.size != file_size:
+                entries_to_update.add(entry.name)
+                continue
+            entry.md5 = state.md5
+            entry.size = state.size
 
-                    state = self.build_resource_file_state(
-                        resource, entry.name)
-                    self.save_resource_file_state(resource, state)
+        entries_to_delete = current_manifest.names() - manifest.names()
+        if entries_to_delete or entries_to_update:
+            logger.warning(
+                "manifest of %s should be updated; entries to delete %s; "
+                "entries to update %s;",
+                resource.get_genomic_resource_id_version(),
+                entries_to_delete, entries_to_update)
+            if dry_run:
+                return True
+        else:
+            logger.info(
+                "manifest of %s is up to date",
+                resource.get_genomic_resource_id_version())
+            return False
 
-                entry.md5 = state.md5
-                entry.size = state.size
+        for filename in entries_to_update:
+            state = self.build_resource_file_state(
+                resource, filename, use_dvc=use_dvc)
+            self.save_resource_file_state(resource, state)
+            entry = manifest[filename]
+            entry.md5 = state.md5
+            entry.size = state.size
 
-            manifest.add(entry)
+        if entries_to_delete or entries_to_update:
+            self.save_manifest(resource, manifest)
+            logger.warning(
+                "manifest of %s udated",
+                resource.get_genomic_resource_id_version())
+            return True
 
-        self.save_manifest(resource, manifest)
-        return manifest
+        return False
 
     def save_manifest(self, resource, manifest: Manifest):
         """Save manifest into genomic resources directory."""
@@ -638,14 +676,22 @@ class ReadWriteRepositoryProtocol(ReadOnlyRepositoryProtocol):
             **kwargs) -> ResourceFileState:
         """Build resource file state."""
         md5sum = kwargs.get("md5sum")
-        if md5sum is None:
-            md5sum = self.compute_md5_sum(resource, filename)
-
         timestamp = kwargs.get("timestamp")
+        size = kwargs.get("size")
+
+        use_dvc = kwargs.get("use_dvc", False)
+        if use_dvc:
+            dvc_entry = self._load_dvc_entry(resource, filename)
+            if dvc_entry is not None:
+                size = dvc_entry.size
+                md5sum = dvc_entry.md5
+
+        if md5sum is None:
+            md5sum = self.compute_md5_sum(resource, filename, use_dvc=use_dvc)
+
         if timestamp is None:
             timestamp = self.get_resource_file_timestamp(resource, filename)
 
-        size = kwargs.get("size")
         if size is None:
             size = self.get_resource_file_size(resource, filename)
 

@@ -72,18 +72,30 @@ def _run_list_command(proto, _args):
             f"{res.get_id()}")
 
 
-def _configure_index_subparser(subparsers):
-    parser_index = subparsers.add_parser("index", help="Index a GR Repo")
-    parser_index.add_argument(
-        "repo_dir", type=str,
-        help="Path to the GR Repo to index")
+def _configure_manifest_subparser(subparsers):
+    parser_index = subparsers.add_parser(
+        "manifest", help="Create manifest for a resource")
     VerbosityConfiguration.set_argumnets(parser_index)
     parser_index.add_argument(
-        "-r", "--resource", type=str, default=None,
-        help="specifies a single resource ID to be indexed")
+        "repo_url", type=str,
+        help="Path to the genomic resources repository")
+    parser_index.add_argument(
+        "resource", type=str,
+        help="specifies a resource whose manifest we need to rebuild")
     parser_index.add_argument(
         "-n", "--dry-run", default=False, action="store_true",
-        help="only checks if the manifest update is needed and reports")
+        help="only checks if the manifest update is needed whithout "
+        "actually updating it")
+
+    parser_index.add_argument(
+        "-d", "--with-dvc", default=True,
+        action="store_true", dest="use_dvc",
+        help="use '.dvc' files if present to get md5 sum of a file")
+    parser_index.add_argument(
+        "-D", "--without-dvc", default=True,
+        action="store_false", dest="use_dvc",
+        help="do not use '.dvc' files if present to get md5 sum of a file; "
+        "calculate the md5 sum if necessary")
 
 
 def _get_resources_list(proto, **kwargs):
@@ -101,13 +113,15 @@ def _get_resources_list(proto, **kwargs):
     return resources
 
 
-def _run_index_command(proto, **kwargs):
+def _run_manifest_command(proto, **kwargs):
+    print("manifest:", kwargs)
+
     resources = _get_resources_list(proto, **kwargs)
-    # dry_run = kwargs.get("dry_run", False)
+    dry_run = kwargs.get("dry_run", False)
+    use_dvc = kwargs.get("use_dvc", True)
 
     for res in resources:
-        proto.update_manifest(res)
-    proto.build_content_file()
+        proto.update_manifest(res, dry_run=dry_run, use_dvc=use_dvc)
 
 
 def _configure_checkout_subparser(subparsers):
@@ -149,7 +163,7 @@ def cli_manage(cli_args=None):
     subparsers = parser.add_subparsers(dest="command",
                                        help="Command to execute")
 
-    _configure_index_subparser(subparsers)
+    _configure_manifest_subparser(subparsers)
     _configure_list_subparser(subparsers)
     _configure_hist_subparser(subparsers)
     _configure_checkout_subparser(subparsers)
@@ -160,12 +174,12 @@ def cli_manage(cli_args=None):
         sys.exit(0)
 
     VerbosityConfiguration.set(args)
-    command, repo_dir = args.command, args.repo_dir
+    command, repo_url = args.command, args.repo_url
 
-    proto = _create_proto(repo_dir)
+    proto = _create_proto(repo_url)
 
-    if command == "index":
-        _run_index_command(proto, **vars(args))
+    if command == "manifest":
+        _run_manifest_command(proto, **vars(args))
     elif command == "list":
         _run_list_command(proto, args)
     elif command == "histogram":

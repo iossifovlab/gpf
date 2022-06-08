@@ -31,18 +31,6 @@ def test_collect_all_resources(fsspec_proto, scheme):
     "file",
     "s3",
 ])
-def test_state_directory_exists(fsspec_proto, scheme):
-    proto = fsspec_proto(scheme)
-
-    assert proto.state_url.endswith(".grr")
-    assert proto.filesystem.exists(proto.state_url)
-    assert proto.filesystem.isdir(proto.state_url)
-
-
-@pytest.mark.parametrize("scheme", [
-    "file",
-    "s3",
-])
 def test_resource_paths(fsspec_proto, scheme):
     proto = fsspec_proto(scheme)
 

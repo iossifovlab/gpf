@@ -123,7 +123,7 @@ def test_resources_files(tmp_path):
     res = repo.get_resource("one")
     assert res
 
-    assert {(fn, fs) for fn, fs, ft in res.get_manifest().get_files()} == {
+    assert set(res.get_manifest().get_files()) == {
         ("genomic_resource.yaml", 0),
         ("data.txt", 9),
         ("stats/hists.txt", 5,),

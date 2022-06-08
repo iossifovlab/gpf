@@ -28,5 +28,5 @@ def test_pos_gr(tmp_path):
         })
     res = repo.get_resource("t")
 
-    assert {fn for fn, _, _ in res.get_manifest().get_files()} == {
+    assert {fn for fn, _ in res.get_manifest().get_files()} == {
         "genomic_resource.yaml", "data.txt"}
