@@ -25,7 +25,7 @@ describe('User management tests', () => {
   });
 
   it('should create and delete user', () => {
-    page.usersTableRows.should('have.length', 3);
+    page.usersTableRows.should('have.length', 2);
 
     page.createUserButton.click();
     page.emailInputField.should('be.focused');
@@ -34,20 +34,20 @@ describe('User management tests', () => {
     page.nameInputField.type('test_name');
     page.submitUserButton.click();
 
-    page.usersTableRows.should('have.length', 4);
+    page.usersTableRows.should('have.length', 3);
     page.usersTableRows.last().should('have.text', 'test_nametest_email@email.comany_usertest_email@email.com');
 
     page.userTableDeleteNewestUserButton.click();
     page.userTableDeleteUserConfirmButton.click();
 
-    page.usersTableRows.should('have.length', 3);
+    page.usersTableRows.should('have.length', 2);
   });
 
   it('should fail to create user with already used email', () => {
-    page.usersTableRows.should('have.length', 3);
+    page.usersTableRows.should('have.length', 2);
 
     createTestUser(page, 'test_email@email.com', 'test_name');
-    page.usersTableRows.should('have.length', 4);
+    page.usersTableRows.should('have.length', 3);
 
     page.createUserButton.click();
     page.emailInputField.should('be.focused');
@@ -60,20 +60,20 @@ describe('User management tests', () => {
     page.backUserButton.click();
     page.backUserConfirmationButton.click();
 
-    page.usersTableRows.should('have.length', 4);
+    page.usersTableRows.should('have.length', 3);
     page.usersTableRows.last().should('have.text', 'test_nametest_email@email.comany_usertest_email@email.com');
 
     deleteTestUser(page);
   });
 
   it('should search and filter users', () => {
-    page.usersTableRows.should('have.length', 3);
+    page.usersTableRows.should('have.length', 2);
     page.userSearchField.type('admin');
     page.usersTableRows.should('have.length', 1);
     page.userSearchField.clear();
     // triggers search event
     page.userSearchField.type(' ');
-    page.usersTableRows.should('have.length', 3);
+    page.usersTableRows.should('have.length', 2);
   });
 
   it('should search and filter a specific user', () => {
@@ -103,7 +103,7 @@ describe('User management tests', () => {
     page.datasetsTableRows.last().should('include.text', 'test_group');
 
     page.groupsButton.click();
-    page.groupsTableRows.should('have.length', 11);
+    page.groupsTableRows.should('have.length', 10);
     page.groupsTableRows.last().should('include.text', 'test_group');
 
     page.datasetsButton.click();
@@ -112,7 +112,7 @@ describe('User management tests', () => {
     page.datasetsTableRows.should('not.include.text', 'test_group');
 
     page.groupsButton.click();
-    page.groupsTableRows.should('have.length', 10);
+    page.groupsTableRows.should('have.length', 9);
     page.groupsTableRows.last().should('not.include.text', 'test_group');
   });
 
@@ -190,7 +190,7 @@ describe('User management tests', () => {
   });
 });
 
-function createTestUser(page: UserManagementPage, email: string, name: string) {
+function createTestUser(page: UserManagementPage, email: string, name: string): void {
   page.usersButton.click();
   page.createUserButton.click();
   page.emailInputField.should('be.focused');
@@ -200,19 +200,19 @@ function createTestUser(page: UserManagementPage, email: string, name: string) {
   page.submitUserButton.click();
 }
 
-function deleteTestUser(page: UserManagementPage) {
+function deleteTestUser(page: UserManagementPage): void {
   page.usersButton.click();
   page.userTableDeleteNewestUserButton.click();
   page.userTableDeleteUserConfirmButton.click();
 }
 
-function createTestGroup(page: UserManagementPage, groupName: string) {
+function createTestGroup(page: UserManagementPage, groupName: string): void {
   page.datasetsButton.click();
   page.datasetsTableAddGroupToLastDatasetInputField.type(groupName);
   page.datasetsTableAddGroupToLastDatasetButton.click();
 }
 
-function deleteTestGroup(page: UserManagementPage) {
+function deleteTestGroup(page: UserManagementPage): void {
   page.datasetsButton.click();
   page.datasetsTableRemoveNewestGroupInLastDatasetButton.click();
   page.datasetsTableRemoveGroupConfirmButton.click();

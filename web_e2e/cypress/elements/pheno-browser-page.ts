@@ -34,6 +34,6 @@ export class PhenoBrowserPage extends BasePage {
   }
 
   public get downloadInstrumentsButton(): element {
-    return cy.get('a').contains('Download instruments');
+    return cy.get('a').contains('Download measures');
   }
 }
