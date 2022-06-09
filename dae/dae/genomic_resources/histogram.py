@@ -332,24 +332,45 @@ class HistogramBuilder:
                     res[scr_id][1] = max(val, res[scr_id][1])
         return res
 
-    def _build_hashes(self):
+    def _get_table_hash(self):
         config = self.resource.get_config()
+
         table_filename = config["table"]["filename"]
+        index_filename = f"{table_filename}.tbi"
+
         manifest = self.resource.get_manifest()
         table_hash = None
+        index_hash = ""
         for rec in manifest:
             if rec.name == table_filename:
                 table_hash = rec.md5
-                break
+            elif rec.name == index_filename:
+                index_hash = rec.md5
         if table_hash is None:
-            return {}
+            raise ValueError(f"cant get table md5 hash for {table_filename}")
+
+        return (table_hash, index_hash)
+
+    def _build_hashes(self):
+        table_hash = self._get_table_hash()
+
+        config = self.resource.get_config()
 
         histogram_desc = config.get("histograms", [])
-        hist_configs = {hist["score"]: hist for hist in histogram_desc}
+        hist_configs = {hist["score"]: copy(hist) for hist in histogram_desc}
+        for hist_score, hist_conf in hist_configs.items():
+            for score_desc in config["scores"]:
+                if hist_score == score_desc["id"]:
+                    hist_conf["score_desc"] = score_desc
+
         hashes = {}
         for score_id, hist_config in hist_configs.items():
             md5_hash = hashlib.md5()
-            hist_hash_obj = {"table_hash": table_hash, "config": hist_config}
+            hist_hash_obj = {
+                "table_hash": table_hash[0],
+                "index_hash": table_hash[1],
+                "config": hist_config
+            }
             md5_hash.update(yaml.dump(hist_hash_obj).encode("utf-8"))
             hashes[score_id] = md5_hash.hexdigest()
 

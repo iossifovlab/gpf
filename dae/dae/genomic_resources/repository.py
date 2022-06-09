@@ -427,6 +427,10 @@ class ReadOnlyRepositoryProtocol(abc.ABC):
         return self.proto_id
 
     @abc.abstractmethod
+    def invalidate(self):
+        """Invalidate internal cache of repository protocol."""
+
+    @abc.abstractmethod
     def get_all_resources(self) -> Generator[GenomicResource, None, None]:
         """Return generator for all resources in the repository."""
 
@@ -566,10 +570,6 @@ class ReadWriteRepositoryProtocol(ReadOnlyRepositoryProtocol):
     @abc.abstractmethod
     def collect_resource_entries(self, resource) -> Manifest:
         """Scan the resource and returns manifest with all files."""
-
-    @abc.abstractmethod
-    def invalidate(self):
-        """Invalidate internal cache of genomic resources collection."""
 
     def build_manifest(self, resource, use_dvc=True):
         """Build full manifest for the resource."""
@@ -815,6 +815,10 @@ class GenomicResourceRepoBase(abc.ABC):
     def __init__(self, repo_id: str):
         self._repo_id: str = repo_id
 
+    @abc.abstractmethod
+    def invalidate(self):
+        """Invalidate internal state of the repository."""
+
     @property
     def repo_id(self):
         return self._repo_id
@@ -851,6 +855,9 @@ class GenomicResourceRepo(GenomicResourceRepoBase):
                 ReadOnlyRepositoryProtocol, ReadWriteRepositoryProtocol]):
         super().__init__(protocol.get_id())
         self.protocol = protocol
+
+    def invalidate(self):
+        self.protocol.invalidate()
 
     def get_resource(
             self, resource_id: str, version_constraint: Optional[str] = None,

@@ -91,8 +91,8 @@ def test_cached_get_all_resources(cache_repository):
     assert len(list(cache_repo.get_all_resources())) == 3
     cache_proto = cache_gr.protocol
 
-    filesystem = cache_proto.cache_protocol.filesystem
-    base_url = cache_proto.cache_protocol.url
+    filesystem = cache_proto.local_protocol.filesystem
+    base_url = cache_proto.local_protocol.url
 
     assert not filesystem.exists(
         os.path.join(base_url, "one", "data.txt"))
@@ -129,8 +129,8 @@ def test_cache_all(cache_repository):
     assert len(list(cache_repo.get_all_resources())) == 3
 
     cache_proto = cache_repo.get_resource("one").protocol
-    filesystem = cache_proto.cache_protocol.filesystem
-    base_url = cache_proto.cache_protocol.url
+    filesystem = cache_proto.local_protocol.filesystem
+    base_url = cache_proto.local_protocol.url
 
     assert filesystem.exists(
         os.path.join(base_url, "one", "data.txt"))
@@ -185,8 +185,8 @@ def test_cached_repository_file_level_cache(cache_repository):
     assert resource is not None
 
     cache_proto = cached_repo.get_resource("one").protocol
-    filesystem = cache_proto.cache_protocol.filesystem
-    base_url = cache_proto.cache_protocol.url
+    filesystem = cache_proto.local_protocol.filesystem
+    base_url = cache_proto.local_protocol.url
 
     assert filesystem.exists(
         os.path.join(base_url, "one", GR_CONF_FILE_NAME))

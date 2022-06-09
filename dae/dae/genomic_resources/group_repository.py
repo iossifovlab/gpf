@@ -14,6 +14,10 @@ class GenomicResourceGroupRepo(GenomicResourceRepoBase):
 
         self.children: List[GenomicResourceRepoBase] = children
 
+    def invalidate(self):
+        for child in self.children:
+            child.invalidate()
+
     def get_all_resources(self) -> Generator[GenomicResource, None, None]:
         for child_repo in self.children:
             yield from child_repo.get_all_resources()

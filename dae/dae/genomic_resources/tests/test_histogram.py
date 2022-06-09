@@ -5,6 +5,8 @@ import os
 import pytest
 import numpy as np
 
+from dask.distributed import Client  # type: ignore
+
 from dae.genomic_resources.repository import GR_CONF_FILE_NAME, \
     GenomicResource
 from dae.genomic_resources.histogram import Histogram, \
@@ -66,8 +68,6 @@ def test_histogram_merge():
 
 @pytest.fixture(scope="module")
 def client():
-    from dask.distributed import Client  # type: ignore
-
     client = Client(n_workers=4, threads_per_worker=1)
     yield client
     client.close()
@@ -120,21 +120,21 @@ def test_histogram_builder_position_resource(tmp_path, client, region_size):
     hists = hbuilder.build(client, region_size=region_size)
     assert len(hists) == 2
 
-    phastCons100way_hist = hists["phastCons100way"]
-    assert len(phastCons100way_hist.bars) == 100
-    assert phastCons100way_hist.bars[0] == 0
-    assert phastCons100way_hist.bars[1] == 76  # region [5-80]
-    assert phastCons100way_hist.bars[2] == 8  # region [10-15] and [10-11]
-    assert phastCons100way_hist.bars[3] == 3  # region [17-19]
-    assert phastCons100way_hist.bars[4] == 0
-    assert phastCons100way_hist.bars[46] == 4  # region [22-24]
-    assert phastCons100way_hist.bars.sum() == (76 + 8 + 3 + 4)
+    phast_cons_100way_hist = hists["phastCons100way"]
+    assert len(phast_cons_100way_hist.bars) == 100
+    assert phast_cons_100way_hist.bars[0] == 0
+    assert phast_cons_100way_hist.bars[1] == 76  # region [5-80]
+    assert phast_cons_100way_hist.bars[2] == 8  # region [10-15] and [10-11]
+    assert phast_cons_100way_hist.bars[3] == 3  # region [17-19]
+    assert phast_cons_100way_hist.bars[4] == 0
+    assert phast_cons_100way_hist.bars[46] == 4  # region [22-24]
+    assert phast_cons_100way_hist.bars.sum() == (76 + 8 + 3 + 4)
 
-    phastCons5way_hist = hists["phastCons5way"]
-    assert len(phastCons5way_hist.bars) == 4
-    assert phastCons5way_hist.bars[0] == 3  # region [17-19]
-    assert phastCons5way_hist.bars[3] == 76 + 2  # region [5-80] and [10-11]
-    assert phastCons5way_hist.bars.sum() == (76 + 2 + 3)
+    phast_cons_5way_hist = hists["phastCons5way"]
+    assert len(phast_cons_5way_hist.bars) == 4
+    assert phast_cons_5way_hist.bars[0] == 3  # region [17-19]
+    assert phast_cons_5way_hist.bars[3] == 76 + 2  # region [5-80] and [10-11]
+    assert phast_cons_5way_hist.bars.sum() == (76 + 2 + 3)
 
 
 def test_histogram_builder_allele_resource(client, tmp_path):

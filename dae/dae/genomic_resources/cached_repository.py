@@ -1,4 +1,4 @@
-"""Provides caching genomic resources"""
+"""Provides caching genomic resources."""
 import os
 import logging
 
@@ -28,6 +28,11 @@ class GenomicResourceCachedRepo(GenomicResourceRepoBase):
         self.cache_url = cache_url
         self.cache_protos: Dict[str, CachingProtocol] = {}
         self.additional_kwargs = kwargs
+
+    def invalidate(self):
+        self.child.invalidate()
+        for proto in self.cache_protos.values():
+            proto.invalidate()
 
     def get_all_resources(self):
         for cache_proto in self.cache_protos.values():
@@ -86,7 +91,7 @@ class GenomicResourceCachedRepo(GenomicResourceRepoBase):
         self, workers=4,
         resource_ids: Optional[list[str]] = None
     ):
-        """Caches all resources from a list of remote resource IDs"""
+        """Cache resources from a list of remote resource IDs."""
         executor = ThreadPoolExecutor(max_workers=workers)
         futures = []
 

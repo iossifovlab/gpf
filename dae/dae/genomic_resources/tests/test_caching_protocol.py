@@ -95,7 +95,7 @@ def test_get_resource_copies_only_resource_config_three(
     proto = caching_proto(caching_scheme)
     res = proto.get_resource("three")
 
-    local_proto = proto.cache_protocol
+    local_proto = proto.local_protocol
     assert local_proto.file_exists(res, "genomic_resource.yaml")
     assert not local_proto.file_exists(res, "sub1/a.txt")
     assert not local_proto.file_exists(res, "sub2/b.txt")
@@ -110,7 +110,7 @@ def test_get_resource_copies_only_resource_config_two(
     proto = caching_proto(caching_scheme)
     res = proto.get_resource("sub/two")
 
-    local_proto = proto.cache_protocol
+    local_proto = proto.local_protocol
     assert local_proto.file_exists(res, "genomic_resource.yaml")
     assert not local_proto.file_exists(res, "genes.gtf")
 
@@ -128,7 +128,7 @@ def test_open_raw_file_copies_the_file_three_a(
         content = infile.read()
     assert content == "a"
 
-    local_proto = proto.cache_protocol
+    local_proto = proto.local_protocol
     assert local_proto.file_exists(res, "genomic_resource.yaml")
     assert local_proto.file_exists(res, "sub1/a.txt")
     assert not local_proto.file_exists(res, "sub2/b.txt")
@@ -145,7 +145,7 @@ def test_open_raw_file_copies_the_file_three_b(caching_proto, caching_scheme):
         content = infile.read()
     assert content == "b"
 
-    local_proto = proto.cache_protocol
+    local_proto = proto.local_protocol
     assert local_proto.file_exists(res, "genomic_resource.yaml")
     assert local_proto.file_exists(res, "sub2/b.txt")
     assert not local_proto.file_exists(res, "sub1/a.txt")

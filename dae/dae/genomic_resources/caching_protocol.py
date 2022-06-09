@@ -32,7 +32,11 @@ class CachingProtocol(ReadOnlyRepositoryProtocol):
 
         super().__init__(cache_protocol.proto_id)
         self.remote_protocol = remote_protocol
-        self.cache_protocol = cache_protocol
+        self.local_protocol = cache_protocol
+
+    def invalidate(self):
+        self.remote_protocol.invalidate()
+        self.local_protocol.invalidate()
 
     def get_all_resources(self) -> Generator[GenomicResource, None, None]:
         for remote_resource in self.remote_protocol.get_all_resources():
@@ -44,15 +48,15 @@ class CachingProtocol(ReadOnlyRepositoryProtocol):
 
         remote_resource = self.remote_protocol.get_resource(
             resource_id, version_constraint)
-        local_resource = self.cache_protocol.get_or_create_resource(
+        local_resource = self.local_protocol.get_or_create_resource(
             remote_resource.resource_id, remote_resource.version)
 
-        self.cache_protocol.update_resource_file(
+        self.local_protocol.update_resource_file(
             remote_resource, local_resource, GR_CONF_FILE_NAME)
-        self.cache_protocol.invalidate()
+        self.local_protocol.invalidate()
 
         return CacheResource(
-            self.cache_protocol.get_resource(
+            self.local_protocol.get_resource(
                 remote_resource.resource_id,
                 f"={remote_resource.get_version_str()}"),
             self)
@@ -65,7 +69,7 @@ class CachingProtocol(ReadOnlyRepositoryProtocol):
             resource.resource_id,
             f"={resource.get_version_str()}")
 
-        self.cache_protocol.update_resource_file(
+        self.local_protocol.update_resource_file(
             remote_resource, resource, filename)
 
     def open_raw_file(self, resource, filename, mode="rt", **kwargs):
@@ -75,7 +79,7 @@ class CachingProtocol(ReadOnlyRepositoryProtocol):
                 f"{filename} for writing")
 
         self._refresh_resource_file(resource, filename)
-        return self.cache_protocol.open_raw_file(
+        return self.local_protocol.open_raw_file(
             resource, filename, mode, **kwargs)
 
     def open_tabix_file(self, resource, filename, index_filename=None):
@@ -84,18 +88,18 @@ class CachingProtocol(ReadOnlyRepositoryProtocol):
             index_filename = f"{filename}.tbi"
         self._refresh_resource_file(resource, index_filename)
 
-        return self.cache_protocol.open_tabix_file(
+        return self.local_protocol.open_tabix_file(
             resource, filename, index_filename)
 
     def file_exists(self, resource, filename) -> bool:
         self._refresh_resource_file(resource, filename)
 
-        return self.cache_protocol.file_exists(resource, filename)
+        return self.local_protocol.file_exists(resource, filename)
 
     def load_manifest(self, resource: GenomicResource) -> Manifest:
         self._refresh_resource_file(resource, GR_CONF_FILE_NAME)
 
-        return self.cache_protocol.load_manifest(resource)
+        return self.local_protocol.load_manifest(resource)
 
     def cache_resource(self, resource) -> None:
-        self.cache_protocol.update_resource(resource)
+        self.local_protocol.update_resource(resource)
