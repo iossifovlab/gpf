@@ -1,3 +1,4 @@
+import json
 from django.http.response import StreamingHttpResponse
 from rest_framework import status
 from rest_framework.response import Response
@@ -80,7 +81,9 @@ class FamilyCounterDownloadView(QueryBaseView):
         super().__init__()
 
     def post(self, request):
-        data = request.data
+        data = request.POST.get('queryData')
+
+        data = json.loads(data)
 
         common_report_id = data["study_id"]
         group_name = data["group_name"]
