@@ -179,12 +179,8 @@ class HistogramBuilder:
             loaded_hists[key] = value
         return loaded_hists
 
-    def _build(self, client, path, force, region_size) \
-            -> Tuple[Dict[str, Histogram], Dict[str, Histogram]]:
-
-        histogram_desc = self.resource.get_config().get("histograms", [])
-        if force:
-            return {}, self._do_build(client, histogram_desc, region_size)
+    def _collect_histograms_to_build(self, path):
+        hist_configs = self.resource.get_config().get("histograms", [])
 
         hists, metadata = _load_histograms(
             self.resource.protocol,
@@ -195,7 +191,7 @@ class HistogramBuilder:
 
         configs_to_calculate = []
         loaded_hists = {}
-        for hist_conf in histogram_desc:
+        for hist_conf in hist_configs:
             score_id = hist_conf["score"]
             actual_md5 = metadata.get(score_id, {}).get("md5", None)
             expected_md5 = hashes.get(score_id, None)
@@ -206,7 +202,19 @@ class HistogramBuilder:
                 loaded_hists[score_id] = hists[score_id]
             else:
                 configs_to_calculate.append(hist_conf)
+        return loaded_hists, configs_to_calculate
 
+    def _build(self, client, path, force, region_size) \
+            -> Tuple[Dict[str, Histogram], Dict[str, Histogram]]:
+
+        if force:
+            return {}, self._do_build(
+                client,
+                self.resource.get_config().get("histograms", []),
+                region_size)
+
+        loaded_hists, configs_to_calculate = \
+            self._collect_histograms_to_build(path)
         remaining = self._do_build(client, configs_to_calculate, region_size)
 
         return loaded_hists, remaining
