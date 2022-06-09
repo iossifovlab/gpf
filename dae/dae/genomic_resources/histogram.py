@@ -8,7 +8,7 @@ import hashlib
 import os
 import logging
 from typing import Dict, Tuple, Any
-from copy import copy
+from copy import copy, deepcopy
 import yaml
 import pandas as pd
 import numpy as np
@@ -219,33 +219,41 @@ class HistogramBuilder:
 
         return loaded_hists, remaining
 
+    def _do_fill_min_maxes(
+            self, client, score, hist_configs, region_size):
+        hist_configs = deepcopy(hist_configs)
+
+        scores_missing_limits = []
+        for hist_conf in hist_configs:
+            has_min_max = "min" in hist_conf and "max" in hist_conf
+            if not has_min_max:
+                scores_missing_limits.append(hist_conf["score"])
+
+        score_limits = {}
+        if len(scores_missing_limits) > 0:
+            # copy hist desc so that we don't overwrite the config
+            score_limits = self._score_min_max(client, score,
+                                               scores_missing_limits,
+                                               region_size)
+
+        result = {}
+        for hist_conf in hist_configs:
+            if "min" not in hist_conf:
+                hist_conf["min"] = score_limits[hist_conf["score"]][0]
+            if "max" not in hist_conf:
+                hist_conf["max"] = score_limits[hist_conf["score"]][1]
+            result[hist_conf["score"]] = hist_conf
+
+        return result
+
     def _do_build(self, client, histogram_desc,
                   region_size) -> dict[str, Histogram]:
         if len(histogram_desc) == 0:
             return {}
 
-        scores_missing_limits = []
-        for hist_conf in histogram_desc:
-            has_min_max = "min" in hist_conf and "max" in hist_conf
-            if not has_min_max:
-                scores_missing_limits.append(hist_conf["score"])
-
         score = open_score_from_resource(self.resource)
-        score_limits = {}
-        if len(scores_missing_limits) > 0:
-            # copy hist desc so that we don't overwrite the config
-            histogram_desc = [copy(d) for d in histogram_desc]
-            score_limits = self._score_min_max(client, score,
-                                               scores_missing_limits,
-                                               region_size)
-
-        hist_configs = {}
-        for hist_conf in histogram_desc:
-            if "min" not in hist_conf:
-                hist_conf["min"] = score_limits[hist_conf["score"]][0]
-            if "max" not in hist_conf:
-                hist_conf["max"] = score_limits[hist_conf["score"]][1]
-            hist_configs[hist_conf["score"]] = hist_conf
+        hist_configs = self._do_fill_min_maxes(
+            client, score, histogram_desc, region_size)
 
         chrom_histograms = []
         futures = []
@@ -302,18 +310,8 @@ class HistogramBuilder:
                     res[scr_id] = Histogram.merge(res[scr_id], histogram)
         return res
 
-    def _score_min_max(self, client, score, score_ids, region_size):
-        logger.info("Calculating min max for %s", score_ids)
-
-        min_maxes = []
-        futures = []
-        for chrom, start, end in self._split_into_regions(score, region_size):
-            futures.append(client.submit(self._min_max_for_chrom,
-                                         chrom, score_ids,
-                                         start, end))
-        for future in tqdm(as_completed(futures), total=len(futures)):
-            min_maxes.append(future.result())
-
+    @staticmethod
+    def _merge_min_maxes(min_maxes):
         res = {}
         for partial_res in min_maxes:
             for scr_id, (i_min, i_max) in partial_res.items():
@@ -322,13 +320,27 @@ class HistogramBuilder:
                     res[scr_id][1] = max(i_max, res[scr_id][1])
                 else:
                     res[scr_id] = [i_min, i_max]
+        return res
 
+    def _score_min_max(self, client, score, score_ids, region_size):
+        logger.info("Calculating min max for %s", score_ids)
+
+        min_maxes = []
+        futures = []
+        for chrom, start, end in self._split_into_regions(score, region_size):
+            futures.append(client.submit(self._min_max_for_region,
+                                         chrom, score_ids,
+                                         start, end))
+        for future in tqdm(as_completed(futures), total=len(futures)):
+            min_maxes.append(future.result())
+
+        res = self._merge_min_maxes(min_maxes)
         logger.info(
             "Done calculating min/max for %s. "
             "res=%s", score_ids, res)
         return res
 
-    def _min_max_for_chrom(self, chrom, score_ids, start, end):
+    def _min_max_for_region(self, chrom, score_ids, start, end):
         score = open_score_from_resource(self.resource)
         limits = np.iinfo(np.int64)
         res = {scr_id: [limits.max, limits.min] for scr_id in score_ids}
