@@ -68,21 +68,23 @@ export class PeopleReport {
 }
 
 export class PedigreeCounter {
-  public static fromJson(json: any): PedigreeCounter {
+  public static fromJson(json: any, groupName: string): PedigreeCounter {
 
     return new PedigreeCounter(
+      json['counter_id'],
+      groupName,
       json['pedigree'].map((pedigreeCounter) => PedigreeData.fromArray(pedigreeCounter)),
       json['pedigrees_count']
     );
   }
 
-  constructor(public readonly data: PedigreeData[], public readonly count: number) {}
+  constructor(public readonly counterId: number, public readonly groupName: string, public readonly data: PedigreeData[], public readonly count: number) {}
 }
 
 export class FamilyCounter {
   public static fromJson(json: any): FamilyCounter {
     return new FamilyCounter(
-      json['counters'].map((family_counter: any) => PedigreeCounter.fromJson(family_counter)),
+      json['counters'].map((family_counter: any) => PedigreeCounter.fromJson(family_counter, json['group_name'])),
       json['group_name'],
       json['phenotypes'],
       Legend.fromList(json['legend'])

@@ -10,6 +10,9 @@ import { PerfectlyDrawablePedigreeService } from '../perfectly-drawable-pedigree
 import { IndividualWithPosition, Line, IndividualSet, Individual, MatingUnit } from './pedigree-data';
 import { ResizeService } from '../table/resize.service';
 import { filter, map, switchMap, take } from 'rxjs/operators';
+import { VariantReportsService } from 'app/variant-reports/variant-reports.service';
+import { DatasetsService } from 'app/datasets/datasets.service';
+import { ConfigService } from 'app/config/config.service';
 
 type OrderedIndividuals = Array<Individual>;
 
@@ -32,6 +35,8 @@ export class PedigreeChartComponent implements OnInit, AfterViewInit, OnDestroy 
   public width = 0;
   public height = 0;
   public scale = 1.0;
+  public loadingFinishedFlag = false;
+  private familyLists;
 
   @ViewChild('wrapper')
   private element;
@@ -41,6 +46,10 @@ export class PedigreeChartComponent implements OnInit, AfterViewInit, OnDestroy 
     this.family$.next(data);
   }
 
+  @Input() public pedigreeCount: number;
+  @Input() public groupName: string;
+  @Input() public counterId: number;
+
   private family$ = new BehaviorSubject<PedigreeData[]>(null);
   public levels$: Observable<Array<OrderedIndividuals>>;
 
@@ -49,7 +58,10 @@ export class PedigreeChartComponent implements OnInit, AfterViewInit, OnDestroy 
   public constructor(
     private perfectlyDrawablePedigreeService: PerfectlyDrawablePedigreeService,
     private resizeService: ResizeService,
-    private changeDetectorRef: ChangeDetectorRef
+    private changeDetectorRef: ChangeDetectorRef,
+    private variantReportsService: VariantReportsService,
+    private datasetsService: DatasetsService,
+    public configService: ConfigService
   ) { }
 
   private maximizeSubscription: Subscription;
@@ -66,7 +78,6 @@ export class PedigreeChartComponent implements OnInit, AfterViewInit, OnDestroy 
     this.lines = [];
 
     const familyData = this.family$.pipe(filter(f => Boolean(f)));
-
     const sandwichResults$ = familyData.pipe(
       switchMap(family => {
         if (family.map(member => member.position).some(p => Boolean(p))) {
@@ -138,6 +149,27 @@ export class PedigreeChartComponent implements OnInit, AfterViewInit, OnDestroy 
 
   public get curveLines(): Line[] {
     return this.lines.filter(line => line.curved);
+  }
+
+  public getFamilyListData(): void {
+    this.loadingFinishedFlag = false;
+    this.variantReportsService.getFamilies(
+      this.datasetsService.getSelectedDataset().id,
+      this.groupName,
+      this.counterId
+    ).subscribe(lists => {
+      this.loadingFinishedFlag = true;
+      this.familyLists = lists;
+    });
+  }
+
+  public onSubmit(event): void {
+    event.target.queryData.value = JSON.stringify({
+      study_id: this.datasetsService.getSelectedDataset().id,
+      group_name: this.groupName,
+      counter_id: this.counterId
+    });
+    event.target.submit();
   }
 
   public scaleSvg(): void {

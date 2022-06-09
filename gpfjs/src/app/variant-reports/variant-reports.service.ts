@@ -11,6 +11,9 @@ import { map } from 'rxjs/operators';
 export class VariantReportsService {
   private readonly variantsUrl = 'common_reports/studies/';
   private readonly downloadUrl = 'common_reports/families_data/';
+  private readonly familiesUrl = 'common_reports/family_counters';
+  private readonly variantsUrlWithId = 'common_reports/family_counters/download/';
+
 
   public constructor(
     private http: HttpClient,
@@ -27,5 +30,13 @@ export class VariantReportsService {
   public getDownloadLink(): string {
     const selectedDatasetId = this.datasetsService.getSelectedDataset().id;
     return `${environment.apiPath}${this.downloadUrl}${selectedDatasetId}`;
+  }
+
+  public getFamilies(datasetId: string, groupName:  string, counterId:  number) {
+    const options = { withCredentials: true };
+    const data = { study_id: datasetId, group_name: groupName, counter_id: counterId };
+    const url = `${this.config.baseUrl}${this.familiesUrl}`;
+    const response = this.http.post(url, data, options).pipe(map(response => response as Array<string>));
+    return response;
   }
 }

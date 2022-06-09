@@ -1,6 +1,6 @@
 <div *ngIf="pedigree">
   <div style="height: 50px; display: inline-flex">
-    <gpf-pedigree-chart [family]="pedigree.data"></gpf-pedigree-chart>
+    <gpf-pedigree-chart [family]="pedigree.data" [pedigreeCount]="pedigree.count" [groupName]="pedigree.groupName" [counterId]="pedigree.counterId"></gpf-pedigree-chart>
   </div>
   <div class="pedigree-count">{{ pedigree.count }}</div>
 </div>
