@@ -24,7 +24,7 @@ export class User {
   ) {}
 
   public getDefaultGroups(): string[] {
-    return ['any_user', this.email];
+    return ['any_user', this.email.toLowerCase()];
   }
 
   public clone(): User {

@@ -56,7 +56,7 @@ export class UserCreateComponent implements OnInit {
   public submit(user: User): void {
     const groupsToAdd = this.userGroupsSelectorComponent.displayedGroups;
 
-    if (!(groupsToAdd.includes(undefined) || groupsToAdd.length === 0 || this.getDefaultGroups().includes(''))) {
+    if (!(groupsToAdd.includes(undefined))) {
       this.user$.value.groups = this.getDefaultGroups().concat(groupsToAdd);
     }
 
