@@ -29,7 +29,7 @@ def test_lookup_priority_in_a_group_repository(group_repo):
     assert res
     assert res.resource_id == "one"
     assert res.version == (0,)
-    assert res.protocol.get_id() == "a"
+    assert res.proto.get_id() == "a"
 
 
 def test_lookup_in_a_group_repository_with_version_requirement(group_repo):
@@ -37,4 +37,4 @@ def test_lookup_in_a_group_repository_with_version_requirement(group_repo):
     assert res
     assert res.resource_id == "one"
     assert res.version == (1, 0)
-    assert res.protocol.get_id() == "b"
+    assert res.proto.get_id() == "b"

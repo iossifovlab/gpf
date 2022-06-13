@@ -4,7 +4,7 @@ import pytest
 
 from dae.genomic_resources.fsspec_protocol import \
     build_fsspec_protocol
-from dae.genomic_resources.caching_protocol import \
+from dae.genomic_resources.cached_repository import \
     CachingProtocol
 from dae.genomic_resources.testing import \
     build_testing_protocol

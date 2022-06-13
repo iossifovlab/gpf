@@ -56,18 +56,18 @@ def test_build_a_complex_but_realistic_scenario(tmp_path):
 
     assert str(repo.children[0].cache_url) == \
         f"file://{str(tmp_path / 'tmp/remotes12Cache')}"
-    assert repo.children[0].child.children[0].protocol.url == \
+    assert repo.children[0].child.children[0].proto.url == \
         "http://r1.org/repo"
-    assert repo.children[0].child.children[1].protocol.url == \
+    assert repo.children[0].child.children[1].proto.url == \
         "http://r2.org/repo"
     assert str(repo.children[1].cache_url) == \
         f"file://{str(tmp_path / 'tmp/remote3Cache')}"
 
-    assert repo.children[1].child.protocol.url == "http://r3.org/repo"
-    assert repo.children[2].protocol.url == \
+    assert repo.children[1].child.proto.url == "http://r3.org/repo"
+    assert repo.children[2].proto.url == \
         f"file://{str(tmp_path / 'data/my/grRepo')}"
 
-    assert repo.children[3].protocol.scheme == "memory"
+    assert repo.children[3].proto.scheme == "memory"
 
 
 def test_build_a_complex_but_realistic_scenario_yaml(tmp_path):
@@ -105,15 +105,15 @@ def test_build_a_complex_but_realistic_scenario_yaml(tmp_path):
     #   * only embedded   repository has a 'content'               attribute.
     assert str(repo.children[0].cache_url) == \
         f"file://{tmp_path}/tmp/remotes12Cache"
-    assert repo.children[0].child.children[0].protocol.url == \
+    assert repo.children[0].child.children[0].proto.url == \
         "http://r1.org/repo"
-    assert repo.children[0].child.children[1].protocol.url == \
+    assert repo.children[0].child.children[1].proto.url == \
         "http://r2.org/repo"
     assert str(repo.children[1].cache_url) == \
         f"file://{tmp_path}/tmp/remote3Cache"
-    assert repo.children[1].child.protocol.url == "http://r3.org/repo"
-    assert repo.children[2].protocol.url == f"file://{tmp_path}/data/my/grRepo"
-    assert repo.children[3].protocol.scheme == "memory"
+    assert repo.children[1].child.proto.url == "http://r3.org/repo"
+    assert repo.children[2].proto.url == f"file://{tmp_path}/data/my/grRepo"
+    assert repo.children[3].proto.scheme == "memory"
 
 
 def test_build_a_configuration_with_embedded():

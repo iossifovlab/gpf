@@ -2,17 +2,17 @@
 
 from typing import Optional, List, Generator
 
-from .repository import GenomicResourceRepoBase
+from .repository import AbstractGenomicResourceRepo
 from .repository import GenomicResource
 
 
-class GenomicResourceGroupRepo(GenomicResourceRepoBase):
+class GenomicResourceGroupRepo(AbstractGenomicResourceRepo):
     """Defines group genomic resources repository."""
 
     def __init__(self, children, repo_id=None):
         super().__init__(repo_id)
 
-        self.children: List[GenomicResourceRepoBase] = children
+        self.children: List[AbstractGenomicResourceRepo] = children
 
     def invalidate(self):
         for child in self.children:

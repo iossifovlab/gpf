@@ -334,7 +334,7 @@ def test_histogram_builder_save(tmp_path, client):
     hists = hbuilder.build(client)
     hbuilder.save(hists, "")
 
-    proto = res.protocol
+    proto = res.proto
     filesystem = proto.filesystem
     res_url = proto.get_resource_url(res)
 
@@ -402,7 +402,7 @@ def test_building_already_calculated_histograms(tmp_path, client):
     hbuilder = HistogramBuilder(resource)
     hists = hbuilder.build(client)
     hbuilder.save(hists, "histograms")
-    repo.protocol.invalidate()
+    repo.invalidate()
 
     resource = repo.get_resource("one")
     hbuilder2 = HistogramBuilder(resource)

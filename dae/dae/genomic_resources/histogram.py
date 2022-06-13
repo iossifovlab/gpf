@@ -183,7 +183,7 @@ class HistogramBuilder:
         hist_configs = self.resource.get_config().get("histograms", [])
 
         hists, metadata = _load_histograms(
-            self.resource.protocol,
+            self.resource.proto,
             resource_id=self.resource.get_id(),
             version_constraint=f"={self.resource.get_version_str()}",
             path=path)
@@ -446,7 +446,7 @@ class HistogramBuilder:
             plt.clf()
 
         # update manifest with newly written files
-        self.resource.protocol.update_manifest(self.resource)
+        self.resource.proto.update_manifest(self.resource)
 
 
 def load_histograms(repo, resource_id, version_constraint=None,

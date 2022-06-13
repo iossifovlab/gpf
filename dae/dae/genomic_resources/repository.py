@@ -126,86 +126,6 @@ def is_version_constraint_satisfied(version_constraint, version):
         f"{version_constraint}")
 
 
-def find_genomic_resource_files_helper(
-        content_dict, leaf_to_size_and_date, prev=None):
-    """Return a generator over all files in a resource.
-
-    Helper function to iterate over directory yielding
-    (filename, size, timestamp) for each file in directory and its
-    subdirectories.
-    """
-    if prev is None:
-        prev = []
-
-    for name, content in content_dict.items():
-        if name[0] == ".":
-            continue
-        nxt = prev + [name]
-        if isinstance(content, dict):
-            yield from find_genomic_resource_files_helper(
-                content, leaf_to_size_and_date, nxt)
-        else:
-            fsize, ftimestamp = leaf_to_size_and_date(content)
-            yield "/".join(nxt), fsize, ftimestamp
-
-
-def _scan_content_dict_for_genomic_resources(content_dict, parent_id):
-    resources_counter = 0
-    unused_dirs = set([])
-
-    for name, content in content_dict.items():
-        id_ver = parse_gr_id_version_token(name)
-        if isinstance(content, dict) and id_ver and \
-                GR_CONF_FILE_NAME in content and \
-                not isinstance(content[GR_CONF_FILE_NAME], dict):
-            # resource found
-            resource_id, version = id_ver
-            yield "/".join(parent_id + [resource_id]), version
-            resources_counter += 1
-        else:
-            curr_id = parent_id + [name]
-            curr_id_path = "/".join(curr_id)
-            if not isinstance(content, dict):
-                logger.warning("file <%s> is not used.", curr_id_path)
-                continue
-            if not is_gr_id_token(name):
-                logger.warning(
-                    "directory <%s> has a name <%s> that is not a "
-                    "valid Genomic Resource Id Token.", curr_id_path, name)
-                continue
-
-            # scan children
-            dir_resource_counter = 0
-            for res_id, res_ver in _scan_content_dict_for_genomic_resources(
-                    content, curr_id):
-                yield res_id, res_ver
-                resources_counter += 1
-                dir_resource_counter += 1
-            if dir_resource_counter == 0:
-                unused_dirs.add(curr_id_path)
-    if resources_counter > 0:
-        for dir_id in unused_dirs:
-            logger.warning("directory <%s> contains no resources.", dir_id)
-
-
-def find_genomic_resources_helper(content_dict, parent_id=None):
-    """Return generator over all resoruces in a content dict.
-
-    Helper function to iterate over directory and its subdirectories
-    yielding (resource_id, version) for each resource found.
-    """
-    if GR_CONF_FILE_NAME in content_dict and \
-            not isinstance(content_dict[GR_CONF_FILE_NAME], dict):
-        yield "", (0,)
-        return
-
-    if parent_id is None:
-        parent_id = []
-
-    yield from _scan_content_dict_for_genomic_resources(
-        content_dict, parent_id)
-
-
 def timestamp_from_isoformatted(isoformatted: Optional[str]) -> Optional[int]:
     """Return UNIX timestamp corresponding to entry time."""
     if isoformatted is None:
@@ -338,10 +258,10 @@ class GenomicResource:
         self.resource_id = resource_id
         self.version: Tuple[int, ...] = version
         self.config = config
-        self.protocol = protocol
+        self.proto = protocol
         self._manifest: Optional[Manifest] = manifest
 
-    def refresh(self):
+    def invalidate(self):
         """Clean up cached attributes like manifest, etc."""
         self._manifest = None
 
@@ -375,7 +295,7 @@ class GenomicResource:
 
     def file_exists(self, filename):
         """Check if filename exists in this resource."""
-        return self.protocol.file_exists(self, filename)
+        return self.proto.file_exists(self, filename)
 
     def file_local(self, filename):
         """
@@ -386,23 +306,23 @@ class GenomicResource:
     def get_manifest(self) -> Manifest:
         """Load resource manifest if it exists. Otherwise builds it."""
         if self._manifest is None:
-            self._manifest = self.protocol.get_manifest(self)
+            self._manifest = self.proto.get_manifest(self)
         return self._manifest
 
     def get_file_content(self, filename, uncompress=True, mode="t"):
         """Return the content of file in a resource."""
-        return self.protocol.get_file_content(
+        return self.proto.get_file_content(
             self, filename, uncompress=uncompress, mode=mode)
 
     def open_raw_file(
             self, filename, mode="rt", **kwargs):
         """Open a file in the resource and returns a File-like object."""
-        return self.protocol.open_raw_file(
+        return self.proto.open_raw_file(
             self, filename, mode, **kwargs)
 
     def open_tabix_file(self, filename, index_filename=None):
         """Open a tabix file and returns a pysam.TabixFile."""
-        return self.protocol.open_tabix_file(self, filename, index_filename)
+        return self.proto.open_tabix_file(self, filename, index_filename)
 
 
 class Mode(enum.Enum):
@@ -549,11 +469,11 @@ class ReadOnlyRepositoryProtocol(abc.ABC):
             manifest: Optional[Manifest] = None):
         """Build a genomic resource based on this protocol."""
         if not config:
-            res = GenomicResource(resource_id, version, self)  # type: ignore
+            res = GenomicResource(resource_id, version, self)
             config = self.load_yaml(res, GR_CONF_FILE_NAME)
 
         resource = GenomicResource(
-            resource_id, version, self, config, manifest)  # type: ignore
+            resource_id, version, self, config, manifest)
         return resource
 
 
@@ -648,7 +568,7 @@ class ReadWriteRepositoryProtocol(ReadOnlyRepositoryProtocol):
         with self.open_raw_file(
                 resource, GR_MANIFEST_FILE_NAME, "wt") as outfile:
             yaml.dump(manifest.to_manifest_entries(), outfile)
-        resource.refresh()
+        resource.invalidate()
 
     def get_manifest(self, resource):
         """Load or build a resource manifest."""
@@ -755,7 +675,7 @@ class ReadWriteRepositoryProtocol(ReadOnlyRepositoryProtocol):
             resource = GenomicResource(
                 resource_id,
                 version,
-                self)  # type: ignore
+                self)
 
         return resource
 
@@ -809,7 +729,7 @@ class ReadWriteRepositoryProtocol(ReadOnlyRepositoryProtocol):
             version_constraint=f"={remote_resource.get_version_str()}")
 
 
-class GenomicResourceRepoBase(abc.ABC):
+class AbstractGenomicResourceRepo(abc.ABC):
     """Base class for genomic resources repositories."""
 
     def __init__(self, repo_id: str):
@@ -846,18 +766,18 @@ class GenomicResourceRepoBase(abc.ABC):
         """Return a generator over all resource in the repository."""
 
 
-class GenomicResourceRepo(GenomicResourceRepoBase):
+class GenomicResourceRepo(AbstractGenomicResourceRepo):
     """Base class for real genomic resources repositories."""
 
     def __init__(
             self,
-            protocol: Union[
+            proto: Union[
                 ReadOnlyRepositoryProtocol, ReadWriteRepositoryProtocol]):
-        super().__init__(protocol.get_id())
-        self.protocol = protocol
+        super().__init__(proto.get_id())
+        self.proto = proto
 
     def invalidate(self):
-        self.protocol.invalidate()
+        self.proto.invalidate()
 
     def get_resource(
             self, resource_id: str, version_constraint: Optional[str] = None,
@@ -868,7 +788,7 @@ class GenomicResourceRepo(GenomicResourceRepoBase):
                 f"can't find resource ({resource_id}, {version_constraint}: "
                 f"repository {repository_id} in repository {self.repo_id}")
 
-        return self.protocol.get_resource(resource_id, version_constraint)
+        return self.proto.get_resource(resource_id, version_constraint)
 
     def find_resource(
             self, resource_id: str, version_constraint: Optional[str] = None,
@@ -877,7 +797,7 @@ class GenomicResourceRepo(GenomicResourceRepoBase):
         if repository_id and self.repo_id != repository_id:
             return None
 
-        return self.protocol.find_resource(resource_id, version_constraint)
+        return self.proto.find_resource(resource_id, version_constraint)
 
     def get_all_resources(self) -> Generator[GenomicResource, None, None]:
-        return self.protocol.get_all_resources()
+        return self.proto.get_all_resources()

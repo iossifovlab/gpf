@@ -27,10 +27,10 @@ def test_writing_to_s3_repo(fsspec_repo):
     resource = s3_repo.get_resource("one")
     with resource.open_raw_file("test-file", "wt") as outfile:
         outfile.write("Test")
-    fileurl = s3_repo.protocol.get_resource_file_url(resource, "test-file")
+    fileurl = s3_repo.proto.get_resource_file_url(resource, "test-file")
     assert fileurl.endswith("one/test-file")
 
-    s3_filesystem = s3_repo.protocol.filesystem
+    s3_filesystem = s3_repo.proto.filesystem
     assert s3_filesystem.exists(fileurl)
 
 
@@ -38,6 +38,6 @@ def test_url_repository_file_exists(fsspec_repo):
     repo = fsspec_repo(scheme="s3")
     res = repo.get_resource("one")
 
-    assert repo.protocol.file_exists(res, "test.txt.gz.tbi")
-    assert not repo.protocol.file_exists(res, "missing_file")
+    assert repo.proto.file_exists(res, "test.txt.gz.tbi")
+    assert not repo.proto.file_exists(res, "missing_file")
     assert res.file_exists("test.txt.gz.tbi")

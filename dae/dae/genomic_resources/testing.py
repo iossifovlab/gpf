@@ -137,7 +137,7 @@ def build_test_resource(
 def tabix_to_resource(tabix_source, resource, filename):
     """Store a tabix file into a resource."""
     tabix_filename, index_filename = tabix_source
-    proto = resource.protocol
+    proto = resource.proto
 
     with proto.open_raw_file(resource, filename, "wb") as outfile, \
             open(tabix_filename, "rb") as infile:

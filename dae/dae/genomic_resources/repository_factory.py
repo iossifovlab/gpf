@@ -13,7 +13,7 @@ from urllib.parse import urlparse
 import yaml
 
 from .fsspec_protocol import build_fsspec_protocol
-from .repository import GenomicResourceRepo, GenomicResourceRepoBase
+from .repository import GenomicResourceRepo, AbstractGenomicResourceRepo
 from .cached_repository import GenomicResourceCachedRepo
 from .testing import build_testing_protocol
 
@@ -78,7 +78,7 @@ def get_configured_definition():
 def _build_real_repository(
         proto_type: str = "",
         repo_id: str = "",
-        **kwargs) -> GenomicResourceRepoBase:
+        **kwargs) -> AbstractGenomicResourceRepo:
 
     if proto_type == "group":
         repo = _build_group_repository(
@@ -151,14 +151,14 @@ def _build_real_repository(
 
 def _build_group_repository(
         repo_id: str,
-        children: List[dict], **kwargs) -> GenomicResourceRepoBase:
+        children: List[dict], **kwargs) -> AbstractGenomicResourceRepo:
 
-    result: List[GenomicResourceRepoBase] = []
+    result: List[AbstractGenomicResourceRepo] = []
     for child in children:
         child_id: str = child.pop("id", "")
         proto_type = child.pop("type")
         if proto_type == "group":
-            repo: GenomicResourceRepoBase = \
+            repo: AbstractGenomicResourceRepo = \
                 _build_group_repository(
                     child_id, child.pop("children"), **child)
             result.append(repo)
@@ -179,7 +179,7 @@ def _build_group_repository(
 
 def build_genomic_resource_repository(
         definition: Optional[dict] = None,
-        file_name: str = None) -> GenomicResourceRepoBase:
+        file_name: str = None) -> AbstractGenomicResourceRepo:
     """Build a GRR using a definition dict or yaml file."""
     if not definition:
         if file_name is not None:
@@ -216,7 +216,7 @@ def build_genomic_resource_repository(
         repo_id = definition.get("id")
 
         children = cast(List[dict], definition.pop("children"))
-        repo: GenomicResourceRepoBase = \
+        repo: AbstractGenomicResourceRepo = \
             _build_group_repository(repo_id, children, **definition)
     else:
         repo = _build_real_repository(repo_type, repo_id, **definition)

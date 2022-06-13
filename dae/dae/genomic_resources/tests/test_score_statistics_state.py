@@ -84,7 +84,7 @@ def test_double_build_histograms_without_change(repo_fixture, dask_client):
     hists = hbuilder.build(dask_client)
     hbuilder.save(hists, "histograms")
 
-    repo_fixture.protocol.invalidate()
+    repo_fixture.proto.invalidate()
     resource = repo_fixture.get_resource("one")
     hbuilder2 = HistogramBuilder(resource)
 

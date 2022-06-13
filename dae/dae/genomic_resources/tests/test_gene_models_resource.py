@@ -103,7 +103,7 @@ def test_gene_models_resource(fixture_dirname):
     assert res is not None
     assert isinstance(res, GenomicResource)
 
-    gm = load_gene_models_from_resource(res)
-    assert isinstance(gm, GeneModels)
+    gene_models = load_gene_models_from_resource(res)
+    assert isinstance(gene_models, GeneModels)
 
-    assert len(gm.gene_models) == 13
+    assert len(gene_models.gene_models) == 13

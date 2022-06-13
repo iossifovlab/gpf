@@ -89,7 +89,7 @@ def test_cached_get_all_resources(cache_repository):
 
     assert src_gr.get_manifest() == cache_gr.get_manifest()
     assert len(list(cache_repo.get_all_resources())) == 3
-    cache_proto = cache_gr.protocol
+    cache_proto = cache_gr.proto
 
     filesystem = cache_proto.local_protocol.filesystem
     base_url = cache_proto.local_protocol.url
@@ -128,7 +128,7 @@ def test_cache_all(cache_repository):
 
     assert len(list(cache_repo.get_all_resources())) == 3
 
-    cache_proto = cache_repo.get_resource("one").protocol
+    cache_proto = cache_repo.get_resource("one").proto
     filesystem = cache_proto.local_protocol.filesystem
     base_url = cache_proto.local_protocol.url
 
@@ -161,10 +161,10 @@ def test_cached_repository_resource_update_delete(cache_repository):
         content = infile.read()
         assert content == "alabala"
 
-    src_repo.protocol.delete_resource_file(gr1, "alabala.txt")
-    src_repo.protocol.save_manifest(
+    src_repo.proto.delete_resource_file(gr1, "alabala.txt")
+    src_repo.proto.save_manifest(
         gr1,
-        src_repo.protocol.build_manifest(gr1))
+        src_repo.proto.build_manifest(gr1))
 
     gr2 = cache_repo.get_resource("one")
 
@@ -184,7 +184,7 @@ def test_cached_repository_file_level_cache(cache_repository):
     resource = cached_repo.get_resource("one")
     assert resource is not None
 
-    cache_proto = cached_repo.get_resource("one").protocol
+    cache_proto = cached_repo.get_resource("one").proto
     filesystem = cache_proto.local_protocol.filesystem
     base_url = cache_proto.local_protocol.url
 

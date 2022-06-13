@@ -1380,7 +1380,7 @@ def load_gene_models_from_resource(
     logger.debug("loading gene models %s (%s)", filename, fileformat)
 
     gm = GeneModels(
-        ("resource", resource.protocol.proto_id,
+        ("resource", resource.proto.get_id(),
          resource.resource_id, gene_mapping_filename))
     compression = False
     if filename.endswith(".gz"):
