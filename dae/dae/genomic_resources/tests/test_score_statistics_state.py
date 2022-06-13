@@ -81,23 +81,19 @@ def test_double_build_histograms_without_change(repo_fixture, dask_client):
 
     resource = repo_fixture.get_resource("one")
     hbuilder = HistogramBuilder(resource)
-    hists = hbuilder.build(dask_client)
+    hists = hbuilder.update(dask_client)
     hbuilder.save(hists, "histograms")
 
     repo_fixture.proto.invalidate()
     resource = repo_fixture.get_resource("one")
     hbuilder2 = HistogramBuilder(resource)
 
-    # All histograms are already calculated and should simply be loaded
-    # from disk without any actual computations being carried out.
+    # All histograms are already calculated and update should return
+    # empty list.
     # That's why we pass a None for the client as it shouldn't be used.
-    hists2 = hbuilder2.build(None, "histograms")
+    hists2 = hbuilder2.update(None, "histograms")
 
-    assert len(hists) == len(hists2)
-    for score, hist in hists.items():
-        assert score in hists2
-        assert (hist.bars == hists2[score].bars).all()
-        assert (hist.bins == hists2[score].bins).all()
+    assert len(hists2) == 0
 
 
 def test_build_hashes_without_change(repo_fixture):

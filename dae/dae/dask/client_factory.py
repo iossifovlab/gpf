@@ -42,49 +42,61 @@ the number of workers using -j")
 
     @classmethod
     def from_arguments(cls, args: argparse.Namespace) -> Optional[DaskClient]:
-        n_jobs = args.jobs or os.cpu_count()
+        return DaskClient.from_dict(vars(args))
+
+    @classmethod
+    def from_dict(cls, kwargs) -> Optional[DaskClient]:
+        """Configure a DaskClient from a configuration dict."""
+        n_jobs = kwargs.get("jobs")
+        if not n_jobs:
+            n_jobs = os.cpu_count()
 
         tmp_dir = tempfile.TemporaryDirectory()
 
-        if args.kubernetes:
-            env = cls._get_env_vars(args.envvars)
+        dashboard_config: Dict[str, Any] = {}
+        if kwargs.get("dashboard_port"):
+            dashboard_config["scheduler_options"] = {
+                "dashboard_address":
+                f":{kwargs.get('dashboard_port', 8787)}"
+            }
+        log_dir = tmp_dir.name
+        if kwargs.get("log_dir"):
+            log_dir = kwargs.get("log_dir")
+
+        if kwargs.get("kubernetes"):
+            env = cls._get_env_vars(kwargs.get("envvars"))
             extra_pod_config = {}
-            if args.image_pull_secrets:
+            if kwargs.get("image_pull_secrets"):
                 extra_pod_config["imagePullSecrets"] = [
-                    {"name": name} for name in args.image_pull_secrets
+                    {"name": name}
+                    for name in kwargs.get(
+                        "image_pull_secrets", [])
                 ]
-            pod_spec = make_pod_spec(image=args.container_image,
-                                     extra_pod_config=extra_pod_config)
+            pod_spec = make_pod_spec(
+                image=kwargs.get("container_image"),
+                extra_pod_config=extra_pod_config)
             cluster = KubeCluster(pod_spec, env=env)
             cluster.scale(n_jobs)
-        elif args.sge:
+        elif kwargs.get("sge"):
             try:
                 #  pylint: disable=import-outside-toplevel
                 from dask_jobqueue import SGECluster  # type: ignore
-            except Exception:
+            except ModuleNotFoundError:
                 print("No dask-jobqueue found. Please install it using:"
                       " mamba install dask-jobqueue -c conda-forge",
                       file=sys.stderr)
                 return None
 
-            dashboard_config: Dict[str, Any] = {}
-            if args.dashboard_port:
-                dashboard_config["scheduler_options"] = \
-                    {"dashboard_address": f":{args.dashboard_port}"}
             cluster = SGECluster(n_workers=n_jobs,
                                  queue="all.q",
                                  walltime="1500000",
                                  cores=1,
                                  processes=1,
                                  memory="2GB",
-                                 log_directory=args.log_dir or tmp_dir.name,
+                                 log_directory=log_dir,
                                  local_directory=tmp_dir.name,
                                  **dashboard_config)
         else:
-            dashboard_config = {}
-            if args.dashboard_port:
-                dashboard_config["dashboard_address"] = \
-                    f":{args.dashboard_port}"
             cluster = LocalCluster(n_workers=n_jobs, threads_per_worker=1,
                                    local_directory=tmp_dir.name,
                                    **dashboard_config)

@@ -6,9 +6,11 @@ from __future__ import annotations
 
 import hashlib
 import os
+import sys
 import logging
-from typing import Dict, Tuple, Any
+from typing import Dict, Any
 from copy import copy, deepcopy
+
 import yaml
 import pandas as pd
 import numpy as np
@@ -166,18 +168,13 @@ class HistogramBuilder:
     def __init__(self, resource) -> None:
         self.resource = resource
 
-    def build(self, client, path="histograms",
-              force=False, only_dirty=False,
-              region_size=1000000) -> dict[str, Histogram]:
-        """Build a genomic score histograms and returns them."""
-        loaded_hists, computed_hists = self._build(client, path, force,
-                                                   region_size)
-        if only_dirty:
-            return computed_hists
-
-        for key, value in computed_hists.items():
-            loaded_hists[key] = value
-        return loaded_hists
+    def build(self, client,
+              region_size=1_000_000, **_kwargs) -> dict[str, Histogram]:
+        """Build a genomic score's histograms and returns them."""
+        return self._do_build(
+            client,
+            self.resource.get_config().get("histograms", []),
+            region_size)
 
     def _collect_histograms_to_build(self, path):
         hist_configs = self.resource.get_config().get("histograms", [])
@@ -204,20 +201,32 @@ class HistogramBuilder:
                 configs_to_calculate.append(hist_conf)
         return loaded_hists, configs_to_calculate
 
-    def _build(self, client, path, force, region_size) \
-            -> Tuple[Dict[str, Histogram], Dict[str, Histogram]]:
-
-        if force:
-            return {}, self._do_build(
-                client,
-                self.resource.get_config().get("histograms", []),
-                region_size)
-
-        loaded_hists, configs_to_calculate = \
+    def check_update(self, path="histograms"):
+        """Check if histograms of a given reource need update."""
+        _, configs_to_calculate = \
             self._collect_histograms_to_build(path)
-        remaining = self._do_build(client, configs_to_calculate, region_size)
+        if configs_to_calculate:
+            print(
+                f"resource <"
+                f"{self.resource.get_genomic_resource_id_version()}> "
+                f"histograms {configs_to_calculate} need update",
+                file=sys.stderr)
+            return True
 
-        return loaded_hists, remaining
+        print(
+            f"resource <"
+            f"{self.resource.get_genomic_resource_id_version()}> "
+            f"histograms are up to date",
+            file=sys.stderr)
+        return False
+
+    def update(
+            self, client, path="histograms",
+            region_size=1_000_000) -> Dict[str, Histogram]:
+        """Build a genomic score's histograms that need rebuilding."""
+        _, configs_to_calculate = \
+            self._collect_histograms_to_build(path)
+        return self._do_build(client, configs_to_calculate, region_size)
 
     def _do_fill_min_maxes(
             self, client, score, hist_configs, region_size):
@@ -396,6 +405,23 @@ class HistogramBuilder:
 
         return hashes
 
+    def _save_plt(self, histogram, score, out_dir):
+        width = histogram.bins[1:] - histogram.bins[:-1]
+        plt.bar(
+            x=histogram.bins[:-1], height=histogram.bars,
+            log=histogram.y_scale == "log",
+            width=width,
+            align="edge")
+
+        if histogram.x_scale == "log":
+            plt.xscale("log")
+        plt.grid(axis="y")
+        plt.grid(axis="x")
+        plot_file = os.path.join(out_dir, f"{score}.png")
+        with self.resource.open_raw_file(plot_file, "wb") as outfile:
+            plt.savefig(outfile)
+        plt.clf()
+
     def save(self, histograms, out_dir):
         """Save a histogram in the specified output directory."""
         histogram_desc = self.resource.get_config().get("histograms", [])
@@ -428,22 +454,7 @@ class HistogramBuilder:
             metadata_file = os.path.join(out_dir, f"{score}.metadata.yaml")
             with self.resource.open_raw_file(metadata_file, "wt") as outfile:
                 yaml.dump(metadata, outfile)
-
-            width = histogram.bins[1:] - histogram.bins[:-1]
-            plt.bar(
-                x=histogram.bins[:-1], height=histogram.bars,
-                log=histogram.y_scale == "log",
-                width=width,
-                align="edge")
-
-            if histogram.x_scale == "log":
-                plt.xscale("log")
-            plt.grid(axis="y")
-            plt.grid(axis="x")
-            plot_file = os.path.join(out_dir, f"{score}.png")
-            with self.resource.open_raw_file(plot_file, "wb") as outfile:
-                plt.savefig(outfile)
-            plt.clf()
+            self._save_plt(histogram, score, out_dir)
 
         # update manifest with newly written files
         self.resource.proto.update_manifest(self.resource)

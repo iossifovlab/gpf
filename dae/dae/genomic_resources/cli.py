@@ -21,8 +21,9 @@ def _configure_hist_subparser(subparsers):
     parser_hist = subparsers.add_parser("histogram",
                                         help="Build the histograms \
                                         for a resource")
-    parser_hist.add_argument("repo_dir", type=str,
-                             help="Path to the GR Repo")
+    parser_hist.add_argument(
+        "repo_url", type=str,
+        help="Path to the genomic resources repository")
     parser_hist.add_argument("resource", type=str,
                              help="Resource to generate histograms for")
 
@@ -32,29 +33,48 @@ def _configure_hist_subparser(subparsers):
     parser_hist.add_argument("-f", "--force", default=False,
                              action="store_true", help="Ignore histogram "
                              "hashes and always precompute all histograms")
+    parser_hist.add_argument(
+        "-n", "--dry-run", default=False, action="store_true",
+        help="only checks if the histograms update is needed whithout "
+        "actually updating it")
     DaskClient.add_arguments(parser_hist)
 
 
-def _run_hist_command(repo, args):
-    res = repo.get_resource(args.resource)
-    if res is None:
-        logger.error("Cannot find resource %s", args.resource)
-        sys.exit(1)
-    builder = HistogramBuilder(res)
-
-    dask_client = DaskClient.from_arguments(args)
-    if dask_client is None:
+def _run_hist_command(proto, region_size, **kwargs):
+    resources = _get_resources_list(proto, **kwargs)
+    if len(resources) != 1:
+        print("please supply resource id argument to run manifest command")
         sys.exit(1)
 
-    with dask_client as client:
-        histograms = builder.build(
-            client, force=args.force,
-            only_dirty=True,
-            region_size=args.region_size)
+    dry_run = kwargs.get("dry_run", False)
+    force = kwargs.get("force", False)
+    if dry_run and force:
+        logger.warning("please choose one of 'dry_run' and 'force' options")
+        return
 
-    hist_out_dir = "histograms"
-    logger.info("Saving histograms in %s", hist_out_dir)
-    builder.save(histograms, hist_out_dir)
+    for res in resources:
+        builder = HistogramBuilder(res)
+        if dry_run:
+            builder.check_update()
+            continue
+
+        dask_client = DaskClient.from_dict(kwargs)
+        if dask_client is None:
+            sys.exit(1)
+
+        with dask_client as client:
+            if force:
+                histograms = builder.build(
+                    client,
+                    region_size=region_size)
+            else:
+                histograms = builder.update(
+                    client,
+                    region_size=region_size)
+
+        hist_out_dir = "histograms"
+        logger.info("Saving histograms in %s", hist_out_dir)
+        builder.save(histograms, hist_out_dir)
 
 
 def _configure_list_subparser(subparsers):
@@ -106,7 +126,7 @@ def _configure_manifest_subparser(subparsers):
 def _get_resources_list(proto, **kwargs):
     res_id = kwargs.get("resource")
     if res_id is not None:
-        res = proto.get_resource(res_id)
+        res = proto.find_resource(res_id)
         if res is None:
             logger.error(
                 "resource %s not found in repository %s",
@@ -114,12 +134,16 @@ def _get_resources_list(proto, **kwargs):
             sys.exit(1)
         resources = [res]
     else:
-        resources = proto.get_all_resources()
+        resources = list(proto.get_all_resources())
     return resources
 
 
 def _run_manifest_command(proto, **kwargs):
     resources = _get_resources_list(proto, **kwargs)
+    if len(resources) != 1:
+        print("please supply resource id argument to run manifest command")
+        sys.exit(1)
+
     dry_run = kwargs.get("dry_run", False)
     force = kwargs.get("force", False)
     use_dvc = kwargs.get("use_dvc", True)
@@ -168,10 +192,10 @@ def cli_manage(cli_args=None):
 
     if command == "manifest":
         _run_manifest_command(proto, **vars(args))
+    elif command == "histogram":
+        _run_hist_command(proto, **vars(args))
     elif command == "list":
         _run_list_command(proto, args)
-    elif command == "histogram":
-        _run_hist_command(proto, args)
     else:
         logger.error(
             "Unknown command %s. The known commands are index, "

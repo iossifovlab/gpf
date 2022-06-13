@@ -407,16 +407,15 @@ def test_building_already_calculated_histograms(tmp_path, client):
     resource = repo.get_resource("one")
     hbuilder2 = HistogramBuilder(resource)
 
-    # All histograms are already calculated and should simply be loaded
-    # from disk without any actual computations being carried out.
+    # All histograms are already calculated and should return empty list.
     # That's why we pass a None for the client as it shouldn't be used.
-    hists2 = hbuilder2.build(None, "histograms")
+    hists2 = hbuilder2.update(None, "histograms")
 
-    assert len(hists) == len(hists2)
-    for score, hist in hists.items():
-        assert score in hists2
-        assert (hist.bars == hists2[score].bars).all()
-        assert np.isclose(hist.bins, hists2[score].bins).all()
+    assert len(hists2) == 0
+    # for score, hist in hists.items():
+    #     assert score in hists2
+    #     assert (hist.bars == hists2[score].bars).all()
+    #     assert (hist.bins == hists2[score].bins).all()
 
 
 def test_load_histograms(tmp_path, client):
