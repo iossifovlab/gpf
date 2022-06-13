@@ -81,9 +81,7 @@ class FamilyCounterDownloadView(QueryBaseView):
         super().__init__()
 
     def post(self, request):
-        data = request.POST.get('queryData')
-
-        data = json.loads(data)
+        data = json.loads(request.data["queryData"])
 
         common_report_id = data["study_id"]
         group_name = data["group_name"]
