@@ -1,4 +1,22 @@
-"""Provides basic classes for genomic resources and repositories."""
+"""
+Provides basic classes for genomic resources and repositories.
+
+       +-----------------------------+                    +-----------------+
+ +-----| AbstractGenomicResourceRepo |--------------------| GenomicResource |
+ |     +-----------------------------+                    +-----------------+
+ |        ^                    ^                                    |
+ |        |                    |                                    |
+ |        |       +---------------------+      +----------------------------+
+ |        |       | GenomicResourceRepo -------| ReadOnlyRepositoryProtocol |
+ |        |       +---------------------+      +----------------------------+
+ |        |                                                         ^
+ |        |                                                         |
+ |    +--------------------------+            +----------_------------------+
+ +----- GenomicResourceGroupRepo |            | ReadWriteRepositoryProtocol |
+      +--------------------------+            +-----------_-----------------+
+
+
+"""
 from __future__ import annotations
 
 import os

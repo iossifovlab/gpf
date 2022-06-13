@@ -39,7 +39,7 @@ def test_is_version_constraint_satisfied():
 
 
 # def test_find_genomic_resources_helper(caplog):
-#     from dae.genomic_resources.repository import 
+#     from dae.genomic_resources.repository import
 #       find_genomic_resources_helper
 #     from dae.genomic_resources.repository import GR_CONF_FILE_NAME
 
@@ -50,7 +50,7 @@ def test_is_version_constraint_satisfied():
 #                 "group/three2.0:(1, 0, 1)",
 #                 "group/three3.1:(0,)", "group/three3.1:(1, 0, 1)",
 #                 "group/four:(0,)"]) == \
-#         {f"{res_id}:{res_ver}" 
+#         {f"{res_id}:{res_ver}"
 #           for res_id, res_ver in find_genomic_resources_helper(
 #             {
 #                 "one":        {GR_CONF_FILE_NAME: ""},

@@ -2,13 +2,13 @@
 
 import pytest
 from dae.genomic_resources import build_genomic_resource_repository
-from dae.genomic_resources.repository import GenomicResourceRepoBase
+from dae.genomic_resources.repository import AbstractGenomicResourceRepo
 from dae.annotation.annotation_factory import build_annotation_pipeline, \
     build_np_score_annotator
 
 
 @pytest.fixture(scope="session")
-def grr_np_score1() -> GenomicResourceRepoBase:
+def grr_np_score1() -> AbstractGenomicResourceRepo:
     repo = build_genomic_resource_repository({
         "id": "test_annotation",
         "type": "embedded",
