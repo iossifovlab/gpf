@@ -20,7 +20,7 @@ from dae.annotation.annotation_factory import AnnotationConfigParser
 logger = logging.getLogger("grr_cache_tool")
 
 
-def cli(argv=None):
+def cli_cache_repo(argv=None):
     """CLI for caching genomic resources."""
     if not argv:
         argv = sys.argv[1:]

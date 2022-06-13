@@ -6,15 +6,15 @@ from dae.genomic_resources.group_repository import GenomicResourceGroupRepo
 
 
 @pytest.fixture
-def group_repo(repo_testing):
+def group_repo(repo_builder):
     repo = GenomicResourceGroupRepo(children=[
-        repo_testing(
+        repo_builder(
             repo_id="a",
             scheme="memory",
             content={
                 "one": {"genomic_resource.yaml": ""}
             }),
-        repo_testing(
+        repo_builder(
             repo_id="b",
             scheme="memory",
             content={

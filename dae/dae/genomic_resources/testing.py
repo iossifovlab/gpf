@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import logging
 
-from typing import Any, cast
+from typing import Any, cast, Optional
 
 from dae.genomic_resources.repository import \
     GenomicResource, \
@@ -66,12 +66,15 @@ def _scan_for_resources(content_dict, parent_id):
 
 
 def build_testing_protocol(
-        content: dict[str, Any],
+        content: Optional[dict[str, Any]],
         scheme: str = "memory",
         proto_id: str = "testing",
         root_path: str = "/testing",
         **kwargs) -> ReadWriteRepositoryProtocol:
     """Create an embedded or dir GRR protocol using passed content."""
+    if content is None:
+        content = {}
+
     if not root_path.startswith("/"):
         root_path = f"/{root_path}"
 

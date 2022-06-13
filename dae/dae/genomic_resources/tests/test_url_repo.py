@@ -2,7 +2,7 @@
 from dae.genomic_resources.repository import GR_CONF_FILE_NAME
 
 
-def test_url_vs_dir_results(repo_testing):
+def test_url_vs_dir_results(repo_builder):
 
     content = {
         "one": {
@@ -16,8 +16,8 @@ def test_url_vs_dir_results(repo_testing):
             }
         }
     }
-    dir_repo = repo_testing(repo_id="src", scheme="file", content=content)
-    url_repo = repo_testing(repo_id="url", scheme="http", content=content)
+    dir_repo = repo_builder(repo_id="src", scheme="file", content=content)
+    url_repo = repo_builder(repo_id="url", scheme="http", content=content)
 
     def resource_set(repo):
         return {

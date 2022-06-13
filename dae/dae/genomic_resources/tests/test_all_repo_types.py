@@ -12,10 +12,10 @@ from dae.genomic_resources.repository import GR_CONF_FILE_NAME
     "s3",
     "http",
 ])
-def test_all_repo_types(repo_testing, scheme):
+def test_all_repo_types(repo_builder, scheme):
 
     breh_gz = gzip.compress(b"breh")
-    test_repo = repo_testing(
+    test_repo = repo_builder(
         content={
             "one": {
                 GR_CONF_FILE_NAME: "opaa",

@@ -2,7 +2,8 @@
 import os
 import pytest
 
-from dae.genomic_resources.repository import GR_CONF_FILE_NAME
+from dae.genomic_resources.repository import GR_CONF_FILE_NAME, \
+    GenomicResourceRepo
 from dae.genomic_resources.cached_repository import GenomicResourceCachedRepo
 from dae.genomic_resources import build_genomic_resource_repository
 
@@ -24,14 +25,14 @@ def test_create_definition_with_cache(tmp_path):
 
 
 @pytest.fixture
-def cache_repository(tmp_path, embedded_proto, repo_builder):
+def cache_repository(tmp_path, embedded_proto, proto_builder):
 
     def builder(content, scheme="file", repo_id="testing"):
-        remote_repo = repo_builder(
-            embedded_proto(
-                content=content),
+        remote_proto = proto_builder(
+            embedded_proto(content=content),
             scheme="file",
-            repo_id=repo_id)
+            proto_id=repo_id)
+        remote_repo = GenomicResourceRepo(remote_proto)
 
         if scheme == "s3":
             cache_repo = GenomicResourceCachedRepo(

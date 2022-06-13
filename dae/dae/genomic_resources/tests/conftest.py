@@ -2,8 +2,6 @@
 
 import logging
 import os
-import tempfile
-import shutil
 import glob
 
 from threading import Thread, Condition
@@ -22,43 +20,17 @@ from dae.genomic_resources.repository import \
 from dae.genomic_resources.fsspec_protocol import \
     build_fsspec_protocol
 from dae.genomic_resources.testing import \
-    build_testing_protocol
-# from dae.genomic_resources.dir_repository import GenomicResourceDirRepo
-# from dae.genomic_resources.url_repository import GenomicResourceURLRepo
+    build_testing_protocol, tabix_to_resource
 from dae.genomic_resources.test_tools import convert_to_tab_separated
 
 
 logger = logging.getLogger(__name__)
 
 
-def relative_to_this_test_folder(path):
-    return os.path.join(os.path.dirname(os.path.realpath(__file__)), path)
-
-
-@pytest.fixture(scope="session")
-def fixture_path():
-    def builder(relpath):
-        return relative_to_this_test_folder(os.path.join("fixtures", relpath))
-
-    return builder
-
-
-@pytest.fixture(scope="function")
-def temp_cache_dir(request):
-    temp_directory = tempfile.mkdtemp(prefix="cache_repo_", suffix="_test")
-
-    def fin():
-        shutil.rmtree(temp_directory)
-
-    request.addfinalizer(fin)
-
-    return temp_directory
-
-
 class HTTPRepositoryServer(Thread):
 
     def __init__(self, http_port, directory):
-        super(HTTPRepositoryServer, self).__init__()
+        super().__init__()
 
         self.http_port = http_port
         self.directory = directory
@@ -152,39 +124,6 @@ def resources_http_server(fixture_dirname):
     http_server.join()
 
 
-# @pytest.fixture
-# def genomic_resource_fixture_dir_repo(fixture_dirname):
-#     repo_dir = fixture_dirname("genomic_resources")
-#     return GenomicResourceDirRepo(
-#         "genomic_resource_fixture_dir_repo", repo_dir)
-
-
-# @pytest.fixture
-# def genomic_resource_fixture_http_repo(resources_http_server):
-#     http_port = resources_http_server.http_port
-#     url = f"http://localhost:{http_port}"
-#     return GenomicResourceURLRepo("genomic_resource_fixture_url_repo", url)
-
-
-# @pytest.fixture
-# def genomic_resource_fixture_s3_repo(genomic_resource_fixture_dir_repo, s3):
-#     src_dir = genomic_resource_fixture_dir_repo.directory
-#     s3_path = "s3://test-bucket"
-#     for root, _, files in os.walk(src_dir):
-#         for fname in files:
-#             root_rel = os.path.relpath(root, src_dir)
-#             if root_rel == ".":
-#                 root_rel = ""
-#             s3.put(
-#                 os.path.join(root, fname),
-#                 os.path.join(s3_path, root_rel, fname))
-
-#     repo = GenomicResourceURLRepo(
-#           "genomic_resource_fixture_url_repo", s3_path)
-#     repo.filesystem = s3
-#     return repo
-
-
 @pytest.fixture
 def tabix_file(tmp_path_factory):
 
@@ -206,71 +145,12 @@ def tabix_file(tmp_path_factory):
     return builder
 
 
-def _tabix_to_resource(tabix_source, proto, resource_id, filename):
-
-    res = proto.get_resource(resource_id)
-    tabix_filename, index_filename = tabix_source
-    with proto.open_raw_file(res, filename, "wb") as outfile, \
-            open(tabix_filename, "rb") as infile:
-        data = infile.read()
-        outfile.write(data)
-
-    with proto.open_raw_file(res, f"{filename}.tbi", "wb") as outfile, \
-            open(index_filename, "rb") as infile:
-        data = infile.read()
-        outfile.write(data)
-
-    proto.save_manifest(res, proto.build_manifest(res))
-    proto.invalidate()
-    proto.build_content_file()
-
-
 @pytest.fixture
-def embedded_content():
-    demo_gtf_content = "TP53\tchr3\t300\t200"
-    return {
-        "one": {
-            GR_CONF_FILE_NAME: "",
-            "data.txt": "alabala"
-        },
-        "sub": {
-            "two": {
-                GR_CONF_FILE_NAME: "",
-            },
-            "two(1.0)": {
-                GR_CONF_FILE_NAME: "type: gene_models\nfile: genes.gtf",
-                "genes.gtf": demo_gtf_content,
-            },
-        },
-        "three(2.0)": {
-            GR_CONF_FILE_NAME: "",
-            "sub1": {
-                "a.txt": "a"
-            },
-            "sub2": {
-                "b.txt": "b"
-            }
-        },
-        "xxxxx-genome": {
-            "genomic_resource.yaml": "type: genome\nfilename: chr.fa",
-            "chr.fa": convert_to_tab_separated(
-                """
-                    >xxxxx
-                    NNACCCAAAC
-                    GGGCCTTCCN
-                    NNNA
-                """),
-            "chr.fa.fai": "xxxxx\t24\t7\t10\t11\n"
-        }
-    }
-
-
-@pytest.fixture
-def embedded_proto(embedded_content, tmp_path):
+def embedded_proto(tmp_path):
 
     def builder(
-            proto_id="test_embedded", path=tmp_path,
-            content=embedded_content):
+            content=None,
+            proto_id="test_embedded", path=tmp_path):
 
         proto = build_testing_protocol(
             scheme="memory",
@@ -378,13 +258,54 @@ def resource_builder(proto_builder, embedded_proto):
 
 
 @pytest.fixture
-def fsspec_proto(proto_builder, embedded_proto, tabix_file):
+def content_fixture():
+    demo_gtf_content = "TP53\tchr3\t300\t200"
+    return {
+        "one": {
+            GR_CONF_FILE_NAME: "",
+            "data.txt": "alabala"
+        },
+        "sub": {
+            "two": {
+                GR_CONF_FILE_NAME: "",
+            },
+            "two(1.0)": {
+                GR_CONF_FILE_NAME: "type: gene_models\nfile: genes.gtf",
+                "genes.gtf": demo_gtf_content,
+            },
+        },
+        "three(2.0)": {
+            GR_CONF_FILE_NAME: "",
+            "sub1": {
+                "a.txt": "a"
+            },
+            "sub2": {
+                "b.txt": "b"
+            }
+        },
+        "xxxxx-genome": {
+            "genomic_resource.yaml": "type: genome\nfilename: chr.fa",
+            "chr.fa": convert_to_tab_separated(
+                """
+                    >xxxxx
+                    NNACCCAAAC
+                    GGGCCTTCCN
+                    NNNA
+                """),
+            "chr.fa.fai": "xxxxx\t24\t7\t10\t11\n"
+        }
+    }
+
+
+@pytest.fixture
+def fsspec_proto(proto_builder, embedded_proto, content_fixture, tabix_file):
 
     def builder(
             scheme="file", proto_id="testing"):
 
-        src_proto = embedded_proto()
-        _tabix_to_resource(
+        src_proto = embedded_proto(content_fixture)
+        res = src_proto.get_resource("one")
+        tabix_to_resource(
             tabix_file(
                 """
                     #chrom  pos_begin  pos_end    c1
@@ -395,36 +316,13 @@ def fsspec_proto(proto_builder, embedded_proto, tabix_file):
                     3      11         20         3.5
                 """,
                 seq_col=0, start_col=1, end_col=2),
-            proto=src_proto,
-            resource_id="one",
+            res,
             filename="test.txt.gz")
 
         proto = proto_builder(
             src_proto, scheme=scheme, proto_id=proto_id)
 
         return proto
-
-    return builder
-
-
-@pytest.fixture
-def repo_builder(proto_builder):
-
-    def builder(src_proto, scheme="file", repo_id="testing"):
-
-        proto = proto_builder(src_proto, scheme=scheme, proto_id=repo_id)
-        return GenomicResourceRepo(proto)
-
-    return builder
-
-
-@pytest.fixture
-def repo_testing(repo_builder, embedded_proto):
-
-    def builder(content, scheme="file", repo_id="testing"):
-        src_proto = embedded_proto(content=content)
-        repo = repo_builder(src_proto, scheme=scheme, repo_id=repo_id)
-        return repo
 
     return builder
 
@@ -437,5 +335,16 @@ def fsspec_repo(fsspec_proto):
             scheme, proto_id=repo_id)
         repo = GenomicResourceRepo(proto)
         return repo
+
+    return builder
+
+
+@pytest.fixture
+def repo_builder(proto_builder, embedded_proto):
+
+    def builder(content, scheme="file", repo_id="testing"):
+        src_proto = embedded_proto(content=content)
+        proto = proto_builder(src_proto, scheme=scheme, proto_id=repo_id)
+        return GenomicResourceRepo(proto)
 
     return builder

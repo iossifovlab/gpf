@@ -10,7 +10,7 @@ from dae.genomic_resources.testing import \
     build_testing_protocol
 
 
-def test_caching_repo_simple(embedded_proto, tmp_path):
+def test_caching_repo_simple(embedded_proto, content_fixture, tmp_path):
 
     local_proto = build_testing_protocol(
         proto_id="local",
@@ -20,7 +20,7 @@ def test_caching_repo_simple(embedded_proto, tmp_path):
     assert local_proto is not None
     assert len(list(local_proto.get_all_resources())) == 0
 
-    remote_proto = embedded_proto(path=tmp_path / "source")
+    remote_proto = embedded_proto(content_fixture, path=tmp_path / "source")
     assert len(list(remote_proto.get_all_resources())) == 5
 
     caching_proto = CachingProtocol(remote_proto, local_proto)

@@ -6,15 +6,15 @@ from dae.genomic_resources.testing import \
     _scan_for_resource_files
 
 
-def test_scan_content_for_resources(embedded_content):
-    result = list(_scan_for_resources(embedded_content, []))
+def test_scan_content_for_resources(content_fixture):
+    result = list(_scan_for_resources(content_fixture, []))
 
     assert len(result) == 5
 
 
-def test_scan_for_resource_one_files(embedded_content):
+def test_scan_for_resource_one_files(content_fixture):
     # Given
-    result = list(_scan_for_resources(embedded_content, []))
+    result = list(_scan_for_resources(content_fixture, []))
 
     # When
     resource_id, version, content = result[0]
@@ -30,10 +30,10 @@ def test_scan_for_resource_one_files(embedded_content):
     assert resource_files[1] == (GR_CONF_FILE_NAME, "")
 
 
-def test_scan_for_resource_two_0_files(embedded_content):
+def test_scan_for_resource_two_0_files(content_fixture):
 
     # Given
-    result = list(_scan_for_resources(embedded_content, []))
+    result = list(_scan_for_resources(content_fixture, []))
 
     # When
     resource_id, version, content = result[1]
@@ -48,10 +48,10 @@ def test_scan_for_resource_two_0_files(embedded_content):
     assert resource_files[0] == (GR_CONF_FILE_NAME, "")
 
 
-def test_scan_for_resource_two_1_files(embedded_content):
+def test_scan_for_resource_two_1_files(content_fixture):
 
     # Given
-    result = list(_scan_for_resources(embedded_content, []))
+    result = list(_scan_for_resources(content_fixture, []))
 
     # When
     resource_id, version, content = result[2]
@@ -68,10 +68,10 @@ def test_scan_for_resource_two_1_files(embedded_content):
         (GR_CONF_FILE_NAME, "type: gene_models\nfile: genes.gtf")
 
 
-def test_scan_for_resource_three_files(embedded_content):
+def test_scan_for_resource_three_files(content_fixture):
 
     # Given
-    result = list(_scan_for_resources(embedded_content, []))
+    result = list(_scan_for_resources(content_fixture, []))
 
     # When
     resource_id, version, content = result[3]
@@ -88,8 +88,8 @@ def test_scan_for_resource_three_files(embedded_content):
     assert resource_files[2] == ("sub2/b.txt", "b")
 
 
-def test_scan_path_for_resources(embedded_proto, tmp_path):
-    proto = embedded_proto()
+def test_scan_path_for_resources(embedded_proto, content_fixture, tmp_path):
+    proto = embedded_proto(content_fixture)
     result = list(proto._scan_path_for_resources([]))
 
     assert len(result) == 5
@@ -121,21 +121,21 @@ def test_scan_path_for_resources(embedded_proto, tmp_path):
     print(result_files)
 
 
-def test_embedded_proto_simple(embedded_proto):
-    proto = embedded_proto()
+def test_embedded_proto_simple(embedded_proto, content_fixture):
+    proto = embedded_proto(content=content_fixture)
     assert len(list(proto.get_all_resources())) == 5
 
 
-def test_get_resource(embedded_proto):
-    proto = embedded_proto()
+def test_get_resource(embedded_proto, content_fixture):
+    proto = embedded_proto(content_fixture)
 
     res = proto.get_resource("sub/two")
     assert res.resource_id == "sub/two"
     assert res.version == (1, 0)
 
 
-def test_load_manifest(embedded_proto):
-    proto = embedded_proto()
+def test_load_manifest(embedded_proto, content_fixture):
+    proto = embedded_proto(content_fixture)
 
     res = proto.get_resource("sub/two")
     manifest = proto.load_manifest(res)
@@ -147,8 +147,8 @@ def test_load_manifest(embedded_proto):
     assert entry.md5 == "d9636a8dca9e5626851471d1c0ea92b1"
 
 
-def test_get_manifest(embedded_proto):
-    proto = embedded_proto()
+def test_get_manifest(embedded_proto, content_fixture):
+    proto = embedded_proto(content_fixture)
 
     res = proto.get_resource("sub/two")
     manifest = proto.get_manifest(res)
