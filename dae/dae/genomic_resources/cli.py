@@ -6,6 +6,7 @@ import argparse
 from dae.dask.client_factory import DaskClient
 
 from dae.__version__ import VERSION, RELEASE
+from dae.genomic_resources.repository import ReadWriteRepositoryProtocol
 from dae.utils.verbosity_configuration import VerbosityConfiguration
 
 from dae.genomic_resources.fsspec_protocol import build_fsspec_protocol
@@ -26,7 +27,7 @@ def _configure_hist_subparser(subparsers):
                              help="Resource to generate histograms for")
 
     VerbosityConfiguration.set_argumnets(parser_hist)
-    parser_hist.add_argument("--region-size", type=int, default=3000000,
+    parser_hist.add_argument("--region-size", type=int, default=3_000_000,
                              help="Number of records to process in parallel")
     parser_hist.add_argument("-f", "--force", default=False,
                              action="store_true", help="Ignore histogram "
@@ -73,25 +74,29 @@ def _run_list_command(proto, _args):
 
 
 def _configure_manifest_subparser(subparsers):
-    parser_index = subparsers.add_parser(
+    parser_manifest = subparsers.add_parser(
         "manifest", help="Create manifest for a resource")
-    VerbosityConfiguration.set_argumnets(parser_index)
-    parser_index.add_argument(
+    VerbosityConfiguration.set_argumnets(parser_manifest)
+    parser_manifest.add_argument(
         "repo_url", type=str,
         help="Path to the genomic resources repository")
-    parser_index.add_argument(
+    parser_manifest.add_argument(
         "resource", type=str,
         help="specifies a resource whose manifest we need to rebuild")
-    parser_index.add_argument(
+    parser_manifest.add_argument(
         "-n", "--dry-run", default=False, action="store_true",
         help="only checks if the manifest update is needed whithout "
         "actually updating it")
+    parser_manifest.add_argument(
+        "-f", "--force", default=False,
+        action="store_true",
+        help="ignore resource state and rebuild manifest")
 
-    parser_index.add_argument(
+    parser_manifest.add_argument(
         "-d", "--with-dvc", default=True,
         action="store_true", dest="use_dvc",
         help="use '.dvc' files if present to get md5 sum of a file")
-    parser_index.add_argument(
+    parser_manifest.add_argument(
         "-D", "--without-dvc", default=True,
         action="store_false", dest="use_dvc",
         help="do not use '.dvc' files if present to get md5 sum of a file; "
@@ -114,40 +119,24 @@ def _get_resources_list(proto, **kwargs):
 
 
 def _run_manifest_command(proto, **kwargs):
-    print("manifest:", kwargs)
-
     resources = _get_resources_list(proto, **kwargs)
     dry_run = kwargs.get("dry_run", False)
+    force = kwargs.get("force", False)
     use_dvc = kwargs.get("use_dvc", True)
 
+    if dry_run and force:
+        logger.warning("please choose one of 'dry_run' and 'force' options")
+        return
+
     for res in resources:
-        proto.update_manifest(res, dry_run=dry_run, use_dvc=use_dvc)
-
-
-def _configure_checkout_subparser(subparsers):
-    parser_index = subparsers.add_parser(
-        "checkout", help="checkout Manifest timestamps.")
-    parser_index.add_argument(
-        "repo_dir", type=str,
-        help="path to the genomic resources repository directory")
-    VerbosityConfiguration.set_argumnets(parser_index)
-    parser_index.add_argument(
-        "-r", "--resource", type=str, default=None,
-        help="specifies a single resource ID to process")
-    parser_index.add_argument(
-        "-n", "--dry-run", default=False, action="store_true",
-        help="only checks if the manifest update is needed and reports")
-
-
-def _run_checkout_command(repo, **kwargs):
-    # resources = _get_resources_list(repo, **kwargs)
-    # dry_run = kwargs.get("dry_run", False)
-
-    # repo_helper = RepositoryWorkflowHelper(repo)
-    # for res in resources:
-    #     repo_helper.checkout_manifest_timestamps(res, dry_run)
-    # repo_helper.check_repository_content_file()
-    pass
+        if dry_run:
+            proto.check_update_manifest(res)
+        elif force:
+            proto.build_manifest(
+                res, use_dvc=use_dvc)
+        else:
+            proto.update_manifest(
+                res, use_dvc=use_dvc)
 
 
 def cli_manage(cli_args=None):
@@ -166,7 +155,6 @@ def cli_manage(cli_args=None):
     _configure_manifest_subparser(subparsers)
     _configure_list_subparser(subparsers)
     _configure_hist_subparser(subparsers)
-    _configure_checkout_subparser(subparsers)
 
     args = parser.parse_args(cli_args)
     if args.version:
@@ -184,8 +172,6 @@ def cli_manage(cli_args=None):
         _run_list_command(proto, args)
     elif command == "histogram":
         _run_hist_command(proto, args)
-    elif command == "checkout":
-        _run_checkout_command(proto, **vars(args))
     else:
         logger.error(
             "Unknown command %s. The known commands are index, "
@@ -198,4 +184,8 @@ def _create_proto(repo_url):
         repo_url = os.path.abspath(repo_url)
 
     proto = build_fsspec_protocol(proto_id="manage", root_url=repo_url)
+    if not isinstance(proto, ReadWriteRepositoryProtocol):
+        raise ValueError(
+            f"we can manage resource in RW protocols; "
+            f"{proto.proto_id} ({proto.scheme}) is read only")
     return proto

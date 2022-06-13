@@ -20,13 +20,14 @@ Provides basic classes for genomic resources and repositories.
 from __future__ import annotations
 
 import os
+import sys
 import re
 import logging
 import datetime
 import enum
 import hashlib
 
-from typing import List, Optional, Tuple, Dict, Any, Generator, Union
+from typing import List, Optional, Tuple, Dict, Any, Generator, Union, Set
 from dataclasses import dataclass, asdict
 
 import abc
@@ -261,6 +262,18 @@ class Manifest:
     def names(self) -> set[str]:
         """Return set of all file names from the manifest."""
         return set(self.entries.keys())
+
+
+@dataclass
+class ManifestUpdate:
+    """Provides a manifest update object."""
+
+    manifest: Manifest
+    entries_to_delete: Set[str]
+    entries_to_update: Set[str]
+
+    def __bool__(self):
+        return bool(self.entries_to_delete or self.entries_to_update)
 
 
 class GenomicResource:
@@ -521,10 +534,9 @@ class ReadWriteRepositoryProtocol(ReadOnlyRepositoryProtocol):
             manifest.add(entry)
         return manifest
 
-    def update_manifest(
-            self, resource: GenomicResource,
-            dry_run=False, use_dvc=True) -> bool:
-        """Update or create full manifest for the resource."""
+    def check_update_manifest(
+            self, resource: GenomicResource) -> ManifestUpdate:
+        """Check if the resource manifest needs update."""
         try:
             current_manifest = self.load_manifest(resource)
         except FileNotFoundError:
@@ -551,20 +563,29 @@ class ReadWriteRepositoryProtocol(ReadOnlyRepositoryProtocol):
 
         entries_to_delete = current_manifest.names() - manifest.names()
         if entries_to_delete or entries_to_update:
-            logger.warning(
-                "manifest of %s should be updated; entries to delete %s; "
-                "entries to update %s;",
-                resource.get_genomic_resource_id_version(),
-                entries_to_delete, entries_to_update)
-            if dry_run:
-                return True
+            print(
+                f"manifest of <{resource.get_genomic_resource_id_version()}> "
+                f"should be updated; "
+                f"entries to delete from manifest {entries_to_delete}; "
+                f"entries to update in manifest {entries_to_update};",
+                file=sys.stderr)
         else:
-            logger.info(
-                "manifest of %s is up to date",
-                resource.get_genomic_resource_id_version())
-            return False
+            print(
+                f"manifest of <{resource.get_genomic_resource_id_version()}> "
+                f"is up to date", file=sys.stderr)
+        return ManifestUpdate(manifest, entries_to_delete, entries_to_update)
 
-        for filename in entries_to_update:
+    def update_manifest(
+            self, resource: GenomicResource,
+            use_dvc=True) -> Manifest:
+        """Update or create full manifest for the resource."""
+        manifest_update = self.check_update_manifest(resource)
+
+        if not bool(manifest_update):
+            return manifest_update.manifest
+
+        manifest = manifest_update.manifest
+        for filename in manifest_update.entries_to_update:
             state = self.build_resource_file_state(
                 resource, filename, use_dvc=use_dvc)
             self.save_resource_file_state(resource, state)
@@ -572,14 +593,12 @@ class ReadWriteRepositoryProtocol(ReadOnlyRepositoryProtocol):
             entry.md5 = state.md5
             entry.size = state.size
 
-        if entries_to_delete or entries_to_update:
-            self.save_manifest(resource, manifest)
-            logger.warning(
-                "manifest of %s udated",
-                resource.get_genomic_resource_id_version())
-            return True
+        self.save_manifest(resource, manifest)
+        logger.warning(
+            "manifest of %s udated",
+            resource.get_genomic_resource_id_version())
 
-        return False
+        return manifest
 
     def save_manifest(self, resource, manifest: Manifest):
         """Save manifest into genomic resources directory."""
