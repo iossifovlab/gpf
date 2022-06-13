@@ -84,8 +84,7 @@ def _build_real_repository(
         repo = _build_group_repository(
             repo_id=repo_id, **kwargs)
 
-    elif proto_type == "file" or proto_type == "dir" or \
-            proto_type == "directory":
+    elif proto_type in {"file", "dir", "directory"}:
         root_url = kwargs.pop("directory")
 
         if root_url is None:
@@ -105,7 +104,7 @@ def _build_real_repository(
         parsed = urlparse(root_url)
         if parsed.scheme not in {"http", "https", "s3"}:
             raise ValueError(f"unexpected GRR protocol scheme {root_url}")
-        protocol = build_fsspec_protocol(repo_id, root_url)
+        protocol = build_fsspec_protocol(repo_id, root_url, **kwargs)
         repo = GenomicResourceRepo(protocol)
 
     elif proto_type == "http":
