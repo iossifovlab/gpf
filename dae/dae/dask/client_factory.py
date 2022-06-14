@@ -1,3 +1,4 @@
+"""Factory for creatio of dask client objects from config or CLI arguments."""
 from __future__ import annotations
 
 import argparse
@@ -11,8 +12,11 @@ from dask_kubernetes import KubeCluster, make_pod_spec  # type: ignore
 
 
 class DaskClient:
+    """Factory for Dask client objects."""
+
     @staticmethod
     def add_arguments(parser):
+        """Configure argparser with Dask client parameters."""
         parser.add_argument("-j", "--jobs", type=int, default=None,
                             help="Number of jobs to run in parallel. \
 Defaults to the number of processors on the machine")
@@ -51,17 +55,18 @@ the number of workers using -j")
         if not n_jobs:
             n_jobs = os.cpu_count()
 
-        tmp_dir = tempfile.TemporaryDirectory()
-
         dashboard_config: Dict[str, Any] = {}
         if kwargs.get("dashboard_port"):
             dashboard_config["scheduler_options"] = {
                 "dashboard_address":
                 f":{kwargs.get('dashboard_port', 8787)}"
             }
-        log_dir = tmp_dir.name
         if kwargs.get("log_dir"):
             log_dir = kwargs.get("log_dir")
+        else:
+            # pylint: disable=consider-using-with
+            tmp_dir = tempfile.TemporaryDirectory()
+            log_dir = tmp_dir.name
 
         if kwargs.get("kubernetes"):
             env = cls._get_env_vars(kwargs.get("envvars"))
