@@ -161,6 +161,7 @@ def _run_manifest_command(proto, **kwargs):
         else:
             proto.update_manifest(
                 res, use_dvc=use_dvc)
+    proto.build_content_file()
 
 
 def _run_hist_command(proto, region_size, **kwargs):
@@ -202,6 +203,7 @@ def _run_hist_command(proto, region_size, **kwargs):
             logger.info("Saving histograms in %s", hist_out_dir)
             builder.save(histograms, hist_out_dir)
             proto.update_manifest(res)
+    proto.build_content_file()
 
 
 def _run_repair_command(proto, region_size, **kwargs):
@@ -260,6 +262,7 @@ def _run_repair_command(proto, region_size, **kwargs):
             logger.info("saving histograms in %s", hist_out_dir)
             builder.save(histograms, hist_out_dir)
             proto.update_manifest(res)
+    proto.build_content_file()
 
 
 def cli_manage(cli_args=None):

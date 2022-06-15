@@ -768,6 +768,10 @@ class ReadWriteRepositoryProtocol(ReadOnlyRepositoryProtocol):
             resource_id=remote_resource.resource_id,
             version_constraint=f"={remote_resource.get_version_str()}")
 
+    @abc.abstractmethod
+    def build_content_file(self):
+        """Build the content of the repository (i.e '.CONTENTS' file)."""
+
 
 class AbstractGenomicResourceRepo(abc.ABC):
     """Base class for genomic resources repositories."""
