@@ -223,7 +223,7 @@ class HistogramBuilder:
             self, client, path="histograms",
             region_size=1_000_000) -> Dict[str, Histogram]:
         """Build a genomic score's histograms that need rebuilding."""
-        configs_to_calculate = self.check_update()
+        configs_to_calculate = self.check_update(path=path)
         return self._do_build(client, configs_to_calculate, region_size)
 
     def _do_fill_min_maxes(
@@ -361,6 +361,8 @@ class HistogramBuilder:
 
     def _get_table_hash(self):
         config = self.resource.get_config()
+        if config.get("table") is None:
+            return None
 
         table_filename = config["table"]["filename"]
         index_filename = f"{table_filename}.tbi"
@@ -386,6 +388,8 @@ class HistogramBuilder:
 
         hist_configs = {hist["score"]: copy(hist) for hist in histogram_desc}
         table_hash = self._get_table_hash()
+        if table_hash is None:
+            return {}
 
         for hist_score, hist_conf in hist_configs.items():
             for score_desc in config["scores"]:

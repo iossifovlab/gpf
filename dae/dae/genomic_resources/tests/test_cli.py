@@ -27,5 +27,5 @@ def test_cli_manifest(tmp_path):
         })
 
     assert not (tmp_path / GR_CONTENTS_FILE_NAME).is_file()
-    cli_manage(["manifest", str(tmp_path), "one"])
+    cli_manage(["manifest", str(tmp_path), "-r", "one"])
     assert (tmp_path / "one/.MANIFEST").is_file()

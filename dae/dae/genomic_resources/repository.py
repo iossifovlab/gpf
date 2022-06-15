@@ -597,7 +597,7 @@ class ReadWriteRepositoryProtocol(ReadOnlyRepositoryProtocol):
             entry.size = state.size
 
         self.save_manifest(resource, manifest)
-        logger.warning(
+        logger.info(
             "manifest of %s udated",
             resource.get_genomic_resource_id_version())
 

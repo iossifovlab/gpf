@@ -19,7 +19,7 @@ def test_cli_manifest_simple(proto_fixture, tmp_path):
 
     assert not (tmp_path / GR_CONTENTS_FILE_NAME).is_file()
     assert (tmp_path / "one/.MANIFEST").is_file()
-    cli_manage(["manifest", str(tmp_path), "one"])
+    cli_manage(["manifest", str(tmp_path), "-r", "one"])
     assert (tmp_path / "one/.MANIFEST").is_file()
 
 
@@ -43,7 +43,7 @@ def test_cli_run_manifest_update(proto_fixture, tmp_path):
         outfile.write("alabala2")
 
     # When
-    cli_manage(["manifest", str(tmp_path), "one"])
+    cli_manage(["manifest", str(tmp_path), "-r", "one"])
 
     # Then
     assert not bool(proto_fixture.check_update_manifest(res))
@@ -56,7 +56,7 @@ def test_cli_dry_run_manifest_update(proto_fixture, tmp_path):
         outfile.write("alabala2")
 
     # When
-    cli_manage(["manifest", "--dry-run", str(tmp_path), "one"])
+    cli_manage(["manifest", "--dry-run", str(tmp_path), "-r", "one"])
 
     # Then
     assert bool(proto_fixture.check_update_manifest(res))
@@ -70,7 +70,7 @@ def test_cli_dry_run_manifest_needs_update_message(
         outfile.write("alabala2")
 
     # When
-    cli_manage(["manifest", "--dry-run", str(tmp_path), "one"])
+    cli_manage(["manifest", "--dry-run", str(tmp_path), "-r", "one"])
 
     # Then
     captured = capsys.readouterr()
@@ -85,7 +85,7 @@ def test_cli_dry_run_manifest_no_update_message(
     # Given
 
     # When
-    cli_manage(["manifest", "--dry-run", str(tmp_path), "one"])
+    cli_manage(["manifest", "--dry-run", str(tmp_path), "-r", "one"])
 
     # Then
     captured = capsys.readouterr()

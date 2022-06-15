@@ -49,21 +49,21 @@ def proto_fixture(tmp_path, tabix_file):
 def test_cli_histograms_simple(proto_fixture, tmp_path):
 
     assert not (tmp_path / "one/histograms").exists()
-    cli_manage(["histogram", str(tmp_path), "one"])
+    cli_manage(["histogram", str(tmp_path), "-r", "one"])
     assert (tmp_path / "one/histograms").exists()
 
 
 def test_cli_histograms_dry_run(proto_fixture, tmp_path):
 
     assert not (tmp_path / "one/histograms").exists()
-    cli_manage(["histogram", "--dry-run", str(tmp_path), "one"])
+    cli_manage(["histogram", "--dry-run", str(tmp_path), "-r", "one"])
     assert not (tmp_path / "one/histograms").exists()
 
 
 def test_cli_histograms_need_update_message(proto_fixture, tmp_path, capsys):
 
     assert not (tmp_path / "one/histograms").exists()
-    cli_manage(["histogram", "--dry-run", str(tmp_path), "one"])
+    cli_manage(["histogram", "--dry-run", str(tmp_path), "-r", "one"])
 
     captured = capsys.readouterr()
 
@@ -75,12 +75,12 @@ def test_cli_histograms_need_update_message(proto_fixture, tmp_path, capsys):
 def test_cli_histograms_no_update_message(proto_fixture, tmp_path, capsys):
     # Given
     assert not (tmp_path / "one/histograms").exists()
-    cli_manage(["histogram", str(tmp_path), "one"])
+    cli_manage(["histogram", str(tmp_path), "-r", "one"])
     assert (tmp_path / "one/histograms").exists()
     _, _ = capsys.readouterr()
 
     # When
-    cli_manage(["histogram", "--dry-run", str(tmp_path), "one"])
+    cli_manage(["histogram", "--dry-run", str(tmp_path), "-r", "one"])
 
     # Then
     _, err = capsys.readouterr()

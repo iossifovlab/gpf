@@ -24,8 +24,8 @@ def _configure_hist_subparser(subparsers):
     parser_hist.add_argument(
         "repo_url", type=str,
         help="Path to the genomic resources repository")
-    parser_hist.add_argument("resource", type=str,
-                             help="Resource to generate histograms for")
+    parser_hist.add_argument("-r", "--resource", type=str,
+                             help="resource to generate histograms for")
 
     VerbosityConfiguration.set_argumnets(parser_hist)
     parser_hist.add_argument("--region-size", type=int, default=3_000_000,
@@ -64,7 +64,7 @@ def _configure_manifest_subparser(subparsers):
         "repo_url", type=str,
         help="Path to the genomic resources repository")
     parser_manifest.add_argument(
-        "resource", type=str,
+        "-r", "--resource", type=str,
         help="specifies a resource whose manifest we want to rebuild")
     parser_manifest.add_argument(
         "-n", "--dry-run", default=False, action="store_true",
@@ -94,7 +94,7 @@ def _configure_repair_subparser(subparsers):
         "repo_url", type=str,
         help="Path to the genomic resources repository")
     parser.add_argument(
-        "resource", type=str,
+        "-r", "--resource", type=str,
         help="specifies a resource whose manifest/histograms we want "
         "to rebuild")
     parser.add_argument(
@@ -150,17 +150,17 @@ def _run_manifest_command(proto, **kwargs):
         logger.warning("please choose one of 'dry_run' and 'force' options")
         return
 
-    assert len(resources) == 1
-    res = resources[0]
+    for res in resources:
+        if dry_run:
+            proto.check_update_manifest(res)
+            continue
 
-    if dry_run:
-        proto.check_update_manifest(res)
-    elif force:
-        proto.build_manifest(
-            res, use_dvc=use_dvc)
-    else:
-        proto.update_manifest(
-            res, use_dvc=use_dvc)
+        if force:
+            proto.build_manifest(
+                res, use_dvc=use_dvc)
+        else:
+            proto.update_manifest(
+                res, use_dvc=use_dvc)
 
 
 def _run_hist_command(proto, region_size, **kwargs):
@@ -171,32 +171,37 @@ def _run_hist_command(proto, region_size, **kwargs):
     if dry_run and force:
         logger.warning("please choose one of 'dry_run' and 'force' options")
         return
-    assert len(resources) == 1
-    res = resources[0]
-
-    builder = HistogramBuilder(res)
-    if dry_run:
-        builder.check_update()
-        return
 
     dask_client = DaskClient.from_dict(kwargs)
     if dask_client is None:
         sys.exit(1)
 
     with dask_client as client:
-        if force:
-            histograms = builder.build(
-                client,
-                region_size=region_size)
-        else:
-            histograms = builder.update(
-                client,
-                region_size=region_size)
+        for res in resources:
+            if res.get_type() not in {
+                    "position_score", "np_score", "allele_score"}:
+                print(
+                    f"skip histograms update for {res.resource_id}; "
+                    f"not a score", file=sys.stderr)
+                continue
+            builder = HistogramBuilder(res)
+            if dry_run:
+                builder.check_update()
+                continue
 
-    hist_out_dir = "histograms"
-    logger.info("Saving histograms in %s", hist_out_dir)
-    builder.save(histograms, hist_out_dir)
-    proto.update_manifest(res)
+            if force:
+                histograms = builder.build(
+                    client,
+                    region_size=region_size)
+            else:
+                histograms = builder.update(
+                    client,
+                    region_size=region_size)
+
+            hist_out_dir = "histograms"
+            logger.info("Saving histograms in %s", hist_out_dir)
+            builder.save(histograms, hist_out_dir)
+            proto.update_manifest(res)
 
 
 def _run_repair_command(proto, region_size, **kwargs):
@@ -210,37 +215,51 @@ def _run_repair_command(proto, region_size, **kwargs):
         logger.warning("please choose one of 'dry_run' and 'force' options")
         return
 
-    assert len(resources) == 1
-    res = resources[0]
-    builder = HistogramBuilder(res)
-    if dry_run:
-        if not proto.check_update_manifest(res):
-            builder.check_update()
-        return
-
     dask_client = DaskClient.from_dict(kwargs)
     if dask_client is None:
         sys.exit(1)
-
     with dask_client as client:
-        if force:
-            proto.build_manifest(
-                res, use_dvc=use_dvc)
-            histograms = builder.build(
-                client,
-                region_size=region_size)
+        for res in resources:
+            is_a_score = res.get_type() in {
+                "position_score", "np_score", "allele_score"}
 
-        else:
-            proto.update_manifest(
-                res, use_dvc=use_dvc)
-            histograms = builder.update(
-                client,
-                region_size=region_size)
+            builder = HistogramBuilder(res)
+            if dry_run:
+                if not proto.check_update_manifest(res) and is_a_score:
+                    builder.check_update()
+                continue
 
-    hist_out_dir = "histograms"
-    logger.info("saving histograms in %s", hist_out_dir)
-    builder.save(histograms, hist_out_dir)
-    proto.update_manifest(res)
+            if force:
+                proto.build_manifest(
+                    res, use_dvc=use_dvc)
+            else:
+                proto.update_manifest(
+                    res, use_dvc=use_dvc)
+
+            if not is_a_score:
+                print(
+                    f"skip histograms update for {res.resource_id}; "
+                    f"not a score", file=sys.stderr)
+                continue
+
+            if force:
+                proto.build_manifest(
+                    res, use_dvc=use_dvc)
+                histograms = builder.build(
+                    client,
+                    region_size=region_size)
+
+            else:
+                proto.update_manifest(
+                    res, use_dvc=use_dvc)
+                histograms = builder.update(
+                    client,
+                    region_size=region_size)
+
+            hist_out_dir = "histograms"
+            logger.info("saving histograms in %s", hist_out_dir)
+            builder.save(histograms, hist_out_dir)
+            proto.update_manifest(res)
 
 
 def cli_manage(cli_args=None):
