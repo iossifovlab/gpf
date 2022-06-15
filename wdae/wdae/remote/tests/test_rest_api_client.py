@@ -142,7 +142,7 @@ def test_post_pheno_values(rest_client):
 
 def test_post_instrument_values(rest_client):
     instrument_values = rest_client.post_instrument_values(
-        "iossifov_2014", "i1", None, None, None)
+        "iossifov_2014", "i1", None, None, None, None)
 
     assert instrument_values is not None
     assert isinstance(instrument_values, dict)
