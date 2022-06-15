@@ -98,7 +98,8 @@ def test_download(admin_client):
 
     assert response.status_code == 200
 
-    header = response.content.decode("utf-8").split()[0].split(",")
+    header = list(response.streaming_content)[0].decode("utf-8")
+    header = header.split()[0].split(",")
     assert header[0] == "person_id"
 
 
@@ -114,7 +115,8 @@ def test_download_specific_measures(admin_client):
 
     assert response.status_code == 200
 
-    header = response.content.decode("utf-8").split()[0].split(",")
+    content = list(response.streaming_content)[0].decode("utf-8")
+    header = content.split()[0].split(",")
     assert len(header) == 3
     assert header[0] == "person_id"
     assert header[1] == "instrument1.continuous"
@@ -150,8 +152,8 @@ def test_download_all_instruments(admin_client):
 
     assert response.status_code == 200
 
-    content = list(response.streaming_content)[0].decode("utf-8")
-    header = content.split()[0].split(",")
+    header = list(response.streaming_content)[0].decode("utf-8")
+    header = header.split()[0].split(",")
 
     print("header:\n", header)
     assert len(header) == 5
@@ -175,8 +177,8 @@ def test_download_all_instruments_specific_measures(admin_client):
 
     assert response.status_code == 200
 
-    content = list(response.streaming_content)[0].decode("utf-8")
-    header = content.split()[0].split(",")
+    header = list(response.streaming_content)[0].decode("utf-8")
+    header = header.split()[0].split(",")
 
     print("header:\n", header)
     assert len(header) == 3

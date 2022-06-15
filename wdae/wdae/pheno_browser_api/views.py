@@ -4,8 +4,6 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.http.response import StreamingHttpResponse
 
-from django.http.response import HttpResponse
-
 from query_base.query_base import QueryBaseView
 
 from utils.streaming_response_util import iterator_to_json
@@ -155,24 +153,25 @@ class PhenoMeasuresDownload(QueryBaseView):
 
         measure_ids = data.get("measures", None)
         instrument = data.get("instrument", None)
-        if not instrument:
+        if instrument is None:
             if measure_ids is None:
                 measure_ids = list(dataset.phenotype_data.measures.keys())
-
-            values_iterator = dataset.phenotype_data.get_values_streaming_csv(
-                measure_ids)
-            response = StreamingHttpResponse(
-                values_iterator, content_type="text/csv")
         else:
             if instrument not in dataset.phenotype_data.instruments:
                 return Response(status=status.HTTP_404_NOT_FOUND)
-            df = dataset.phenotype_data.get_instrument_values_df(
-                instrument, measure_ids=measure_ids
-            )
-            df_csv = df.to_csv(index=False, encoding="utf-8")
 
-            response = HttpResponse(df_csv, content_type="text/csv")
+            instrument_measures = \
+                dataset.phenotype_data._get_instrument_measures(instrument)
+            if measure_ids is None:
+                measure_ids = instrument_measures
 
-        response["Content-Disposition"] = "attachment; filename=instrument.csv"
+            assert set(measure_ids).issubset(set(instrument_measures))
+
+        values_iterator = dataset.phenotype_data.get_values_streaming_csv(
+            measure_ids)
+        response = StreamingHttpResponse(
+            values_iterator, content_type="text/csv")
+
+        response["Content-Disposition"] = "attachment; filename=measures.csv"
         response["Expires"] = "0"
         return response

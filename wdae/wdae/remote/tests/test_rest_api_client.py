@@ -1,3 +1,4 @@
+
 from requests import Response
 
 
@@ -145,6 +146,17 @@ def test_post_instrument_values(rest_client):
 
     assert instrument_values is not None
     assert isinstance(instrument_values, dict)
+
+
+def test_post_measures_download(rest_client):
+    csv = rest_client.post_measures_download(
+        "iossifov_2014", measure_ids=["i1.m1"]
+    )
+    lines = list(csv)
+
+    assert lines is not None
+    assert len(lines) == 5021
+    print(b''.join(lines).decode())
 
 
 def test_post_pheno_tool(rest_client):

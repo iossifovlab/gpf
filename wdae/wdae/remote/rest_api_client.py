@@ -208,6 +208,20 @@ class RESTClient:
         )
         return response.json()["instruments"]
 
+    def post_measures_download(
+            self, dataset_id, measure_ids=None, instrument=None
+    ):
+        response = self._post(
+            "pheno_browser/download",
+            data={
+                "dataset_id": dataset_id,
+                "measures": measure_ids,
+                "instrument": instrument,
+            },
+            stream=True
+        )
+        return response.iter_content()
+
     def post_enrichment_test(self, query):
         response = self._post(
             "enrichment/test",
