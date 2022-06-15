@@ -211,21 +211,19 @@ class HistogramBuilder:
                 f"{self.resource.get_genomic_resource_id_version()}> "
                 f"histograms {configs_to_calculate} need update",
                 file=sys.stderr)
-            return True
-
-        print(
-            f"resource <"
-            f"{self.resource.get_genomic_resource_id_version()}> "
-            f"histograms are up to date",
-            file=sys.stderr)
-        return False
+        else:
+            print(
+                f"resource <"
+                f"{self.resource.get_genomic_resource_id_version()}> "
+                f"histograms are up to date",
+                file=sys.stderr)
+        return configs_to_calculate
 
     def update(
             self, client, path="histograms",
             region_size=1_000_000) -> Dict[str, Histogram]:
         """Build a genomic score's histograms that need rebuilding."""
-        _, configs_to_calculate = \
-            self._collect_histograms_to_build(path)
+        configs_to_calculate = self.check_update()
         return self._do_build(client, configs_to_calculate, region_size)
 
     def _do_fill_min_maxes(
@@ -381,12 +379,14 @@ class HistogramBuilder:
         return (table_hash, index_hash)
 
     def _build_hashes(self):
+        config = self.resource.get_config()
+        histogram_desc = config.get("histograms", [])
+        if not histogram_desc:
+            return {}
+
+        hist_configs = {hist["score"]: copy(hist) for hist in histogram_desc}
         table_hash = self._get_table_hash()
 
-        config = self.resource.get_config()
-
-        histogram_desc = config.get("histograms", [])
-        hist_configs = {hist["score"]: copy(hist) for hist in histogram_desc}
         for hist_score, hist_conf in hist_configs.items():
             for score_desc in config["scores"]:
                 if hist_score == score_desc["id"]:
@@ -455,9 +455,6 @@ class HistogramBuilder:
             with self.resource.open_raw_file(metadata_file, "wt") as outfile:
                 yaml.dump(metadata, outfile)
             self._save_plt(histogram, score, out_dir)
-
-        # update manifest with newly written files
-        self.resource.proto.update_manifest(self.resource)
 
 
 def load_histograms(repo, resource_id, version_constraint=None,

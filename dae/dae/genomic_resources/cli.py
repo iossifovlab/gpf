@@ -40,43 +40,6 @@ def _configure_hist_subparser(subparsers):
     DaskClient.add_arguments(parser_hist)
 
 
-def _run_hist_command(proto, region_size, **kwargs):
-    resources = _get_resources_list(proto, **kwargs)
-    if len(resources) != 1:
-        print("please supply resource id argument to run manifest command")
-        sys.exit(1)
-
-    dry_run = kwargs.get("dry_run", False)
-    force = kwargs.get("force", False)
-    if dry_run and force:
-        logger.warning("please choose one of 'dry_run' and 'force' options")
-        return
-
-    for res in resources:
-        builder = HistogramBuilder(res)
-        if dry_run:
-            builder.check_update()
-            continue
-
-        dask_client = DaskClient.from_dict(kwargs)
-        if dask_client is None:
-            sys.exit(1)
-
-        with dask_client as client:
-            if force:
-                histograms = builder.build(
-                    client,
-                    region_size=region_size)
-            else:
-                histograms = builder.update(
-                    client,
-                    region_size=region_size)
-
-        hist_out_dir = "histograms"
-        logger.info("Saving histograms in %s", hist_out_dir)
-        builder.save(histograms, hist_out_dir)
-
-
 def _configure_list_subparser(subparsers):
     parser_list = subparsers.add_parser("list", help="List a GR Repo")
     parser_list.add_argument("repo_dir", type=str,
@@ -102,7 +65,7 @@ def _configure_manifest_subparser(subparsers):
         help="Path to the genomic resources repository")
     parser_manifest.add_argument(
         "resource", type=str,
-        help="specifies a resource whose manifest we need to rebuild")
+        help="specifies a resource whose manifest we want to rebuild")
     parser_manifest.add_argument(
         "-n", "--dry-run", default=False, action="store_true",
         help="only checks if the manifest update is needed whithout "
@@ -115,12 +78,50 @@ def _configure_manifest_subparser(subparsers):
     parser_manifest.add_argument(
         "-d", "--with-dvc", default=True,
         action="store_true", dest="use_dvc",
-        help="use '.dvc' files if present to get md5 sum of a file")
+        help="use '.dvc' files if present to get md5 sum of resource files")
     parser_manifest.add_argument(
         "-D", "--without-dvc", default=True,
         action="store_false", dest="use_dvc",
-        help="do not use '.dvc' files if present to get md5 sum of a file; "
-        "calculate the md5 sum if necessary")
+        help="calculate the md5 sum if necessary of resource files; "
+        "do not use '.dvc' files to get md5 sum of resource files")
+
+
+def _configure_repair_subparser(subparsers):
+    parser = subparsers.add_parser(
+        "repair", help="Update/rebuild manifest and histograms for a resource")
+    VerbosityConfiguration.set_argumnets(parser)
+    parser.add_argument(
+        "repo_url", type=str,
+        help="Path to the genomic resources repository")
+    parser.add_argument(
+        "resource", type=str,
+        help="specifies a resource whose manifest/histograms we want "
+        "to rebuild")
+    parser.add_argument(
+        "-n", "--dry-run", default=False, action="store_true",
+        help="only checks if the manifest and/or histograms update is "
+        "needed whithout actually updating it")
+    parser.add_argument(
+        "-f", "--force", default=False,
+        action="store_true",
+        help="ignore resource state and rebuild manifest and histograms")
+
+    parser.add_argument(
+        "-d", "--with-dvc", default=True,
+        action="store_true", dest="use_dvc",
+        help="use '.dvc' files if present to get md5 sum of resource files")
+    parser.add_argument(
+        "-D", "--without-dvc", default=True,
+        action="store_false", dest="use_dvc",
+        help="calculate the md5 sum if necessary of resource files; "
+        "do not use '.dvc' files to get md5 sum of resource files")
+
+    parser.add_argument(
+        "--region-size", type=int, default=3_000_000,
+        help="split the resource into regions with region length for "
+        "parallel processing")
+
+    DaskClient.add_arguments(parser)
 
 
 def _get_resources_list(proto, **kwargs):
@@ -140,9 +141,6 @@ def _get_resources_list(proto, **kwargs):
 
 def _run_manifest_command(proto, **kwargs):
     resources = _get_resources_list(proto, **kwargs)
-    if len(resources) != 1:
-        print("please supply resource id argument to run manifest command")
-        sys.exit(1)
 
     dry_run = kwargs.get("dry_run", False)
     force = kwargs.get("force", False)
@@ -152,15 +150,97 @@ def _run_manifest_command(proto, **kwargs):
         logger.warning("please choose one of 'dry_run' and 'force' options")
         return
 
-    for res in resources:
-        if dry_run:
-            proto.check_update_manifest(res)
-        elif force:
+    assert len(resources) == 1
+    res = resources[0]
+
+    if dry_run:
+        proto.check_update_manifest(res)
+    elif force:
+        proto.build_manifest(
+            res, use_dvc=use_dvc)
+    else:
+        proto.update_manifest(
+            res, use_dvc=use_dvc)
+
+
+def _run_hist_command(proto, region_size, **kwargs):
+    resources = _get_resources_list(proto, **kwargs)
+
+    dry_run = kwargs.get("dry_run", False)
+    force = kwargs.get("force", False)
+    if dry_run and force:
+        logger.warning("please choose one of 'dry_run' and 'force' options")
+        return
+    assert len(resources) == 1
+    res = resources[0]
+
+    builder = HistogramBuilder(res)
+    if dry_run:
+        builder.check_update()
+        return
+
+    dask_client = DaskClient.from_dict(kwargs)
+    if dask_client is None:
+        sys.exit(1)
+
+    with dask_client as client:
+        if force:
+            histograms = builder.build(
+                client,
+                region_size=region_size)
+        else:
+            histograms = builder.update(
+                client,
+                region_size=region_size)
+
+    hist_out_dir = "histograms"
+    logger.info("Saving histograms in %s", hist_out_dir)
+    builder.save(histograms, hist_out_dir)
+    proto.update_manifest(res)
+
+
+def _run_repair_command(proto, region_size, **kwargs):
+    resources = _get_resources_list(proto, **kwargs)
+
+    dry_run = kwargs.get("dry_run", False)
+    force = kwargs.get("force", False)
+    use_dvc = kwargs.get("use_dvc", True)
+
+    if dry_run and force:
+        logger.warning("please choose one of 'dry_run' and 'force' options")
+        return
+
+    assert len(resources) == 1
+    res = resources[0]
+    builder = HistogramBuilder(res)
+    if dry_run:
+        if not proto.check_update_manifest(res):
+            builder.check_update()
+        return
+
+    dask_client = DaskClient.from_dict(kwargs)
+    if dask_client is None:
+        sys.exit(1)
+
+    with dask_client as client:
+        if force:
             proto.build_manifest(
                 res, use_dvc=use_dvc)
+            histograms = builder.build(
+                client,
+                region_size=region_size)
+
         else:
             proto.update_manifest(
                 res, use_dvc=use_dvc)
+            histograms = builder.update(
+                client,
+                region_size=region_size)
+
+    hist_out_dir = "histograms"
+    logger.info("saving histograms in %s", hist_out_dir)
+    builder.save(histograms, hist_out_dir)
+    proto.update_manifest(res)
 
 
 def cli_manage(cli_args=None):
@@ -176,9 +256,10 @@ def cli_manage(cli_args=None):
     subparsers = parser.add_subparsers(dest="command",
                                        help="Command to execute")
 
-    _configure_manifest_subparser(subparsers)
     _configure_list_subparser(subparsers)
+    _configure_manifest_subparser(subparsers)
     _configure_hist_subparser(subparsers)
+    _configure_repair_subparser(subparsers)
 
     args = parser.parse_args(cli_args)
     if args.version:
@@ -194,6 +275,8 @@ def cli_manage(cli_args=None):
         _run_manifest_command(proto, **vars(args))
     elif command == "histogram":
         _run_hist_command(proto, **vars(args))
+    elif command == "repair":
+        _run_repair_command(proto, **vars(args))
     elif command == "list":
         _run_list_command(proto, args)
     else:

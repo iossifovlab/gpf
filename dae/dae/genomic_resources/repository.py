@@ -563,12 +563,15 @@ class ReadWriteRepositoryProtocol(ReadOnlyRepositoryProtocol):
 
         entries_to_delete = current_manifest.names() - manifest.names()
         if entries_to_delete or entries_to_update:
-            print(
-                f"manifest of <{resource.get_genomic_resource_id_version()}> "
-                f"should be updated; "
-                f"entries to delete from manifest {entries_to_delete}; "
-                f"entries to update in manifest {entries_to_update};",
-                file=sys.stderr)
+            msg = \
+                f"manifest of " \
+                f"<{resource.get_genomic_resource_id_version()}> " \
+                f"should be updated; " \
+                f"entries to update in manifest {entries_to_update}"
+            if entries_to_delete:
+                msg = f"{msg}; " \
+                    f"entries to delete from manifest {entries_to_delete}"
+            print(msg, file=sys.stderr)
         else:
             print(
                 f"manifest of <{resource.get_genomic_resource_id_version()}> "

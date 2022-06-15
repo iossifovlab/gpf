@@ -77,8 +77,7 @@ def test_cli_dry_run_manifest_needs_update_message(
     print(captured.err)
     assert captured.err == \
         "manifest of <one> should be updated; " \
-        "entries to delete from manifest set(); " \
-        "entries to update in manifest {'data.txt'};\n"
+        "entries to update in manifest {'data.txt'}\n"
 
 
 def test_cli_dry_run_manifest_no_update_message(
