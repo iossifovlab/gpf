@@ -32,16 +32,6 @@ class GenomicScoresDb:
                     resource_file = os.path.join(
                         "histograms", f"{score_id}.csv"
                     )
-                    # is_local = self.grr.file_local(resource, resource_file)
-                    # if is_local is False:
-                    #     logger.error(
-                    #         f"Failed to load histogram of {resource_id}; "
-                    #         "Repository cannot provide local filepath to "
-                    #         f"{resource_file};"
-                    #     )
-                    #     continue
-
-                    # filepath = self.grr.get_file_path(resource, resource_file)
                     with resource.open_raw_file(resource_file) as infile:
                         df = pd.read_csv(infile, na_filter=False)
                     assert set(df.columns) == set(["bars", "bins"]), \

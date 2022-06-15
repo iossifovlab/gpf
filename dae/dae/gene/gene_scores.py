@@ -62,10 +62,16 @@ class GeneScore:
 
     @property
     def x_scale(self):
+        """
+        Returns the scale type of the X axis
+        """
         return self.histogram.x_scale
 
     @property
     def y_scale(self):
+        """
+        Returns the scale type of the Y axis
+        """
         return self.histogram.y_scale
 
     def _load_data(self):
@@ -81,6 +87,10 @@ class GeneScore:
     @staticmethod
     def load_gene_scores_from_resource(
             resource: Optional[GenomicResource]):
+        """
+        Creates and returns a list of all
+        the gene scores described in a resource
+        """
         assert resource is not None
         assert resource.get_type() == "gene_score", "Invalid resource type"
 
@@ -103,39 +113,15 @@ class GeneScore:
         return scores
 
     def values(self):
+        """
+        Returns a list of score values
+        """
         return self.df[self.id].values
 
-    def _bins_bars(self):
-        step = 1.0 * (self.max() - self.min()) / (self.bins - 1)
-        dec = -np.log10(step)
-        dec = dec if dec >= 0 else 0
-        dec = int(dec)
-
-        bleft = np.around(self.min(), dec)
-        bright = np.around(self.max() + step, dec)
-
-        if self.xscale == "log":
-            # Max numbers of items in first bin
-            max_count = self.values().size / self.bins
-
-            # Find a bin small enough to fit max_count items
-            for bleft in range(-1, -200, -1):
-                if ((self.values()) < 10 ** bleft).sum() < max_count:
-                    break
-
-            bins_in = [0] + list(
-                np.logspace(bleft, np.log10(bright), self.bins)
-            )
-        else:
-            bins_in = self.bins
-
-        bars, bins = np.histogram(
-            list(self.values()), bins_in, range=[bleft, bright]
-        )
-
-        return (bins, bars)
-
     def get_gene_value(self, gene_symbol):
+        """
+        Returns the value for a given gene symbol
+        """
         symbol_values = self._to_dict()
         return symbol_values[gene_symbol]
 
@@ -157,6 +143,9 @@ class GeneScore:
 
     @cached
     def to_tsv(self):
+        """
+        Returns a TSV version of the gene score data
+        """
         return map(join_line, self._to_list())
 
     @cached
@@ -204,20 +193,29 @@ class GeneScoresDb:
     """
 
     def __init__(self, gene_scores):
-        super(GeneScoresDb, self).__init__()
+        super().__init__()
         self.scores = OrderedDict()
         for score in gene_scores:
             self.scores[score.id] = score
 
     @cached
     def get_gene_score_ids(self):
+        """
+        Returns a list of the IDs of all the gene scores contained
+        """
         return list(self.scores.keys())
 
     @cached
     def get_gene_scores(self):
+        """
+        Returns a list of all the gene scores contained in the DB
+        """
         return [self.get_gene_score(score_id) for score_id in self.scores]
 
     def get_gene_score(self, score_id):
+        """
+        Returns a given gene score
+        """
         assert self[score_id].df is not None
         return self[score_id]
 

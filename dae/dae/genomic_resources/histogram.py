@@ -131,6 +131,9 @@ class Histogram:
         return True
 
     def set_empty(self):
+        """
+        Resets the bins and bars of the histogram
+        """
         if self.x_scale == "linear":
             self.bins = np.linspace(
                 self.x_min,
@@ -149,6 +152,9 @@ class Histogram:
         self.bars = np.zeros(self.bins_count, dtype=np.int64)
 
     def set_values(self, values):
+        """
+        Resets the histogram and adds every given values
+        """
         self.set_empty()
         for value in values:
             self.add_value(value)

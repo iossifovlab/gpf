@@ -95,7 +95,7 @@ class CachingDirectoryRepo(GenomicResourceDirRepo):
         """
         full_file_path = self._get_file_path(genomic_resource, filename)
         if not full_file_path.exists():
-            self._copy_or_update_remote_file(genomic_resource, filename)
+            self._copy_or_update_local_file(genomic_resource, filename)
         return True
 
     def open_raw_file(
@@ -119,7 +119,8 @@ class CachingDirectoryRepo(GenomicResourceDirRepo):
         full_index_path = self._copy_or_update_local_file(
             resource, index_filename)
 
-        return pysam.TabixFile(full_file_path, index=full_index_path)  # pylint: disable=no-member
+        return pysam.TabixFile(  # pylint: disable=no-member
+            full_file_path, index=full_index_path)
 
     def get_files(self, resource: GenomicResource):
         for entry in resource.get_manifest():

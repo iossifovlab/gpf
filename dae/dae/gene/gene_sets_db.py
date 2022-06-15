@@ -1,9 +1,9 @@
 import logging
+from typing import Dict, List, Optional
 from sqlalchemy import create_engine  # type: ignore
 from sqlalchemy import MetaData, Table, Column, String
 from sqlalchemy.sql import insert
 
-from typing import Dict, List, Optional, Any
 
 from dae.gene.gene_term import read_ewa_set_file, read_gmt_file, \
     read_mapping_file
@@ -14,6 +14,10 @@ logger = logging.getLogger(__name__)
 
 
 class GeneSet:
+    """
+    Class representing a set of genes
+    """
+
     name: str
     desc: str
     count: int
@@ -30,17 +34,20 @@ class GeneSet:
         # denovo gene set dictionaries can be accessed in a uniform way
         if name == "name":
             return self.name
-        elif name == "desc":
+        if name == "desc":
             return self.desc
-        elif name == "count":
+        if name == "count":
             return self.count
-        elif name == "syms":
+        if name == "syms":
             return self.syms
-        else:
-            raise KeyError()
+
+        raise KeyError()
 
 
 class GeneSetCollection:
+    """
+    Class representing a collection of gene sets stored in a dictionary
+    """
 
     def __init__(
             self, collection_id: str, gene_sets: List[GeneSet],
@@ -60,6 +67,9 @@ class GeneSetCollection:
 
     @staticmethod
     def from_resource(resource: GenomicResource):
+        """
+        Builds a gene set collection from a given GenomicResource
+        """
         assert resource is not None
         gene_sets = list()
         config = resource.get_config()
@@ -68,7 +78,7 @@ class GeneSetCollection:
         collection_format = config["format"]
         web_label = config.get("web_label", None)
         web_format_str = config.get("web_format_str", None)
-        logger.debug(f"loading {collection_id}: {config}")
+        logger.debug("loading %s: %s", collection_id, config)
 
         if collection_format == "map":
             filename = config["filename"]
@@ -119,13 +129,21 @@ class GeneSetCollection:
         )
 
     def get_gene_set(self, gene_set_id: str) -> Optional[GeneSet]:
+        """
+        Returns the gene set with the given ID, returns None if not found
+        """
         gene_set = self.gene_sets.get(gene_set_id)
         if gene_set is None:
-            print(f"{gene_set_id} not found in {self.gene_sets.keys()}")
+            logger.warning(
+                "%s not found in %s", gene_set_id, self.gene_sets.keys()
+            )
         return gene_set
 
 
 class SqliteGeneSetCollectionDB:
+    """
+    Class representing a collection of gene sets stored in a SQLite database
+    """
     def __init__(
         self, collection_id: str, dbfile: str,
         web_label: str = None, web_format_str: str = None
@@ -149,7 +167,10 @@ class SqliteGeneSetCollectionDB:
 
         self.metadata.create_all()
 
-    def add_gene_set(self, gene_set):
+    def add_gene_set(self, gene_set: GeneSet):
+        """
+        Add a gene set to the database
+        """
         with self.engine.connect() as connection:
             insert_values = {
                 "name": gene_set.name,
@@ -161,10 +182,13 @@ class SqliteGeneSetCollectionDB:
             )
 
     def get_gene_set(self, gene_set_id):
+        """
+        Fetches and constructs a GeneSet from the database
+        """
         table = self.gene_sets_table
-        s = table.select().where(table.c.name == gene_set_id)
+        select = table.select().where(table.c.name == gene_set_id)
         with self.engine.connect() as connection:
-            row = connection.execute(s).fetchone()
+            row = connection.execute(select).fetchone()
             gene_set = GeneSet(
                 row["name"],
                 row["desc"],
@@ -173,7 +197,10 @@ class SqliteGeneSetCollectionDB:
             return gene_set
 
 
-class GeneSetsDb(object):
+class GeneSetsDb:
+    """
+    Class that represents a dictionary of gene set collections mapped to IDs
+    """
     def __init__(self, gene_set_collections):
         self.gene_set_collections: Dict[str, GeneSetCollection] = {
             gsc.collection_id: gsc
@@ -183,6 +210,10 @@ class GeneSetsDb(object):
     @property  # type: ignore
     @cached
     def collections_descriptions(self):
+        """
+        Iterates and creates a list of descriptions
+        for each gene set collection
+        """
         gene_sets_collections_desc = []
         for gsc in self.gene_set_collections.values():
             label = gsc.web_label
@@ -201,9 +232,10 @@ class GeneSetsDb(object):
         return gene_sets_collections_desc
 
     def has_gene_set_collection(self, gsc_id):
-        return any(
-            [gsc["name"] == gsc_id for gsc in self.collections_descriptions]
-        )
+        """
+        Returns whether the database contains a given gene set collection
+        """
+        return gsc_id in self.gene_set_collections
 
     def get_gene_set_collection_ids(self):
         """
@@ -213,15 +245,25 @@ class GeneSetsDb(object):
         return set(self.gene_set_collections.keys())
 
     def get_gene_set_ids(self, collection_id):
+        """
+        Return the IDs of all the gene sets
+        in the gene set collection by the given ID
+        """
         gsc = self.gene_set_collections[collection_id]
         return set(gsc.gene_sets.keys())
 
     def get_all_gene_sets(self, collection_id):
+        """
+        Return all the gene sets in the gene set collection by the given ID
+        """
         gsc = self.gene_set_collections[collection_id]
         logger.debug(
-            f"gene sets from {collection_id}: {len(gsc.gene_sets.keys())}")
+            "gene sets from %s: %s", collection_id, len(gsc.gene_sets.keys()))
         return list(gsc.gene_sets.values())
 
     def get_gene_set(self, collection_id, gene_set_id):
+        """
+        Finds and returns a gene set by the given ID in a gene set collection
+        """
         gsc = self.gene_set_collections[collection_id]
         return gsc.get_gene_set(gene_set_id)
