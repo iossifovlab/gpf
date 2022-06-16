@@ -473,8 +473,10 @@ class PhenotypeData(ABC):
             role=None,
             measure_ids=None):
         """
-        Returns a dataframe with values for all measures in given
+        Returns a dataframe with values for measures in given
         instrument (see **get_values_df**).
+        If not supplied a list of measure IDs, it will use all
+        measures in the given instrument
         """
         if measure_ids is None:
             measure_ids = self._get_instrument_measures(instrument_name)
@@ -488,8 +490,10 @@ class PhenotypeData(ABC):
             role=None,
             measure_ids=None):
         """
-        Returns a dictionary with values for all measures in given
+        Returns a dictionary with values for measures in given
         instrument (see :func:`get_values`).
+        If not supplied a list of measure IDs, it will use all
+        measures in the given instrument
         """
         if measure_ids is None:
             measure_ids = self._get_instrument_measures(instrument_name)

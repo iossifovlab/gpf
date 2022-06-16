@@ -165,7 +165,8 @@ class PhenoMeasuresDownload(QueryBaseView):
             if measure_ids is None:
                 measure_ids = instrument_measures
 
-            assert set(measure_ids).issubset(set(instrument_measures))
+            if not set(measure_ids).issubset(set(instrument_measures)):
+                return Response(status=status.HTTP_400_BAD_REQUEST)
 
         values_iterator = dataset.phenotype_data.get_values_streaming_csv(
             measure_ids)
