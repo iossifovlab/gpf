@@ -151,15 +151,18 @@ def collect_dvc_entries(
         res: GenomicResource) -> Dict[str, ManifestEntry]:
     """Collect manifest entries defined by .dvc files."""
     result = {}
-    for entry in proto.collect_resource_entries(res):
+    manifest = proto.collect_resource_entries(res)
+    for entry in manifest:
         if not entry.name.endswith(".dvc"):
             continue
         filename = entry.name[:-4]
         basename = os.path.basename(filename)
 
-        logger.warning(
-            "filling manifest of <%s> with entry for <%s> based on dvc data",
-            res.resource_id, filename)
+        if filename not in manifest:
+            logger.warning(
+                "filling manifest of <%s> with entry for <%s> based on "
+                "dvc data only",
+                res.resource_id, filename)
 
         with proto.open_raw_file(res, entry.name, "rt") as infile:
             content = infile.read()

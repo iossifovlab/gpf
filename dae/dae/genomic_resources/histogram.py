@@ -133,9 +133,7 @@ class Histogram:
         return True
 
     def set_empty(self):
-        """
-        Resets the bins and bars of the histogram
-        """
+        """Reset the bins and bars of the histogram."""
         if self.x_scale == "linear":
             self.bins = np.linspace(
                 self.x_min,
@@ -154,9 +152,7 @@ class Histogram:
         self.bars = np.zeros(self.bins_count, dtype=np.int64)
 
     def set_values(self, values):
-        """
-        Resets the histogram and adds every given values
-        """
+        """Reset the histogram and adds every given values."""
         self.set_empty()
         for value in values:
             self.add_value(value)
@@ -213,9 +209,9 @@ class HistogramBuilder:
                 file=sys.stderr)
         else:
             print(
-                f"resource <"
+                f"histograms of <"
                 f"{self.resource.get_genomic_resource_id_version()}> "
-                f"histograms are up to date",
+                f"are up to date",
                 file=sys.stderr)
         return configs_to_calculate
 
@@ -288,7 +284,7 @@ class HistogramBuilder:
             yield chrom, i, None
 
     def _do_hist(self, chrom, hist_configs, start, end):
-        histograms = dict()
+        histograms = {}
         for scr_id, config in hist_configs.items():
             hist = Histogram.from_config(config)
             histograms[scr_id] = hist
