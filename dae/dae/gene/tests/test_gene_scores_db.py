@@ -11,13 +11,15 @@ def scores_repo():
         "RVIS_rank": {
             GR_CONF_FILE_NAME: (
                 "type: gene_score\n"
-                "id: RVIS_rank\n"
-                "filename: RVIS.csv\n"
-                "desc: RVIS rank\n"
-                "histogram:\n"
-                "  bins: 150\n"
-                "  xscale: linear\n"
-                "  yscale: linear\n"
+                "gene_scores:\n"
+                "  - id: RVIS_rank\n"
+                "    filename: RVIS.csv\n"
+                "    desc: RVIS rank\n"
+                "histograms:\n"
+                "  - score: RVIS_rank\n"
+                "    bins: 150\n"
+                "    x_scale: linear\n"
+                "    y_scale: linear\n"
             ),
             "RVIS.csv": (
                 "\"gene\",\"RVIS\",\"RVIS_rank\"\n"
@@ -39,13 +41,15 @@ def scores_repo():
         "LGD_rank": {
             GR_CONF_FILE_NAME: (
                 "type: gene_score\n"
-                "id: LGD_rank\n"
-                "filename: LGD.csv\n"
-                "desc: LGD rank\n"
-                "histogram:\n"
-                "  bins: 150\n"
-                "  xscale: linear\n"
-                "  yscale: linear\n"
+                "gene_scores:\n"
+                "  - id: LGD_rank\n"
+                "    filename: LGD.csv\n"
+                "    desc: LGD rank\n"
+                "histograms:\n"
+                "  - score: LGD_rank\n"
+                "    bins: 150\n"
+                "    x_scale: linear\n"
+                "    y_scale: linear\n"
             ),
             "LGD.csv": (
                 "\"gene\",\"LGD_score\",\"LGD_rank\"\n"
@@ -72,7 +76,9 @@ def gene_scores_db(scores_repo):
         scores_repo.get_resource("LGD_rank"),
         scores_repo.get_resource("RVIS_rank"),
     ]
-    scores = [GeneScore.load_gene_score_from_resource(r) for r in resources]
+    scores = []
+    for r in resources:
+        scores += GeneScore.load_gene_scores_from_resource(r)
     return GeneScoresDb(scores)
 
 
@@ -95,14 +101,14 @@ def test_loaded_scores(gene_scores_db):
 
 def test_create_score_from_repository(scores_repo):
     resource = scores_repo.get_resource("RVIS_rank")
-    score = GeneScore.load_gene_score_from_resource(resource)
-    assert score
-    print(score)
+    score = GeneScore.load_gene_scores_from_resource(resource)
+    assert score[0]
+    print(score[0])
 
 
 def test_scores_default(scores_repo):
     resource = scores_repo.get_resource("RVIS_rank")
-    w = GeneScore.load_gene_score_from_resource(resource)
+    w = GeneScore.load_gene_scores_from_resource(resource)[0]
 
     assert w.df is not None
 
@@ -111,7 +117,7 @@ def test_scores_default(scores_repo):
 
 def test_scores_min_max(scores_repo):
     resource = scores_repo.get_resource("LGD_rank")
-    w = GeneScore.load_gene_score_from_resource(resource)
+    w = GeneScore.load_gene_scores_from_resource(resource)[0]
 
     assert 1.0 == w.min()
     assert 59.0 == w.max()
@@ -119,7 +125,7 @@ def test_scores_min_max(scores_repo):
 
 def test_scores_get_genes(scores_repo):
     resource = scores_repo.get_resource("LGD_rank")
-    w = GeneScore.load_gene_score_from_resource(resource)
+    w = GeneScore.load_gene_scores_from_resource(resource)[0]
 
     genes = w.get_genes(1.5, 5.1)
     assert len(genes) == 2
@@ -136,7 +142,7 @@ def test_scores_get_genes(scores_repo):
 
 def test_scores_to_tsv(scores_repo):
     resource = scores_repo.get_resource("LGD_rank")
-    score = GeneScore.load_gene_score_from_resource(resource)
+    score = GeneScore.load_gene_scores_from_resource(resource)[0]
     tsv = list(score.to_tsv())
     assert len(tsv) == 12
     assert tsv[0] == "gene\tLGD_rank\n"

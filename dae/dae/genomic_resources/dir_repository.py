@@ -6,12 +6,12 @@ import os
 import gzip
 import logging
 import datetime
-from pytz import timezone
 
 import yaml
 import pysam  # type: ignore
 
-from .repository import GR_MANIFEST_FILE_NAME, GenomicResource, ManifestEntry, Manifest
+from .repository import GR_MANIFEST_FILE_NAME, GenomicResource,\
+    ManifestEntry, Manifest
 from .repository import GenomicResourceRepo
 from .repository import GenomicResourceRealRepo
 from .repository import find_genomic_resources_helper
@@ -24,7 +24,9 @@ logger = logging.getLogger(__name__)
 class GenomicResourceDirRepo(GenomicResourceRealRepo):
     """Provides directory genomic resources repository."""
 
-    def __init__(self, repo_id, directory, **kwargs):  # pylint: disable=unused-argument
+    def __init__(  # pylint: disable=unused-argument
+        self, repo_id, directory, **kwargs
+    ):
         super().__init__(repo_id)
         self.directory = pathlib.Path(directory)
         self.directory.mkdir(exist_ok=True, parents=True)
@@ -73,11 +75,9 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
 
         def my_leaf_to_size_and_time(filepath):
             filestat = filepath.stat()
-            filetimestamp = \
-                datetime.datetime\
-                    .fromtimestamp(
-                        int(filestat.st_mtime), datetime.timezone.utc)\
-                    .isoformat()
+            filetimestamp = datetime.datetime.fromtimestamp(
+                int(filestat.st_mtime), datetime.timezone.utc
+            ).isoformat()
             return filestat.st_size, filetimestamp
 
         yield from find_genomic_resource_files_helper(
@@ -87,6 +87,10 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
         """Checks if a file exists in a genomic resource."""
         full_file_path = self._get_file_path(resource, filename)
         return full_file_path.exists()
+
+    def file_local(self, genomic_resource, filename):
+        """Check if a given file in a given resource can be accessed locally"""
+        return True
 
     def open_raw_file(self, resource: GenomicResource, filename: str,
                       mode="rt", uncompress=False, _seekable=False):
@@ -103,7 +107,7 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
                 raise IOError("writing gzip files not supported")
             return gzip.open(full_file_path, mode)
 
-        return open(full_file_path, mode)  # pylint: disable=unspecified-encoding
+        return open(full_file_path, mode)
 
     def _delete_manifest_entry(
             self, resource: GenomicResource, manifest_entry):
@@ -240,7 +244,9 @@ class GenomicResourceDirRepo(GenomicResourceRealRepo):
         if index_filename:
             index_path = str(self._get_file_path(
                 resource, index_filename))
-        return pysam.TabixFile(file_path, index=index_path)  # pylint: disable=no-member
+        return pysam.TabixFile(  # pylint: disable=no-member
+            file_path, index=index_path
+        )
 
     def compute_md5_sum(self, resource, filename):
         """Computes a md5 hash for a file in the resource"""

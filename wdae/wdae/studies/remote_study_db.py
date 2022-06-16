@@ -20,6 +20,10 @@ class RemoteStudyDB:
 
     def _fetch_remote_studies(self, rest_client):
         studies = rest_client.get_datasets()
+        if studies is None:
+            raise RESTClientRequestError(
+                f"Failed to get studies from {rest_client.remote_id}"
+            )
         for study in studies["data"]:
             logger.info(f"creating remote genotype data: {study['id']}")
             rgd = RemoteGenotypeData(study["id"], rest_client)

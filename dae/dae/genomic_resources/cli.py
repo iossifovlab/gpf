@@ -14,7 +14,7 @@ from dae.genomic_resources.repository_factory import \
     build_genomic_resource_repository, load_definition_file, \
     get_configured_definition
 from dae.genomic_resources.cached_repository import GenomicResourceCachedRepo
-from dae.genomic_resources.score_statistics import HistogramBuilder
+from dae.genomic_resources.histogram import HistogramBuilder
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.dae_conf import dae_conf_schema
 from dae.annotation.annotation_factory import AnnotationConfigParser

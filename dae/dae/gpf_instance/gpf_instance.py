@@ -120,8 +120,10 @@ class GPFInstance:
             if resource is None:
                 logger.error("unable to find gene score: %s", gs)
                 continue
-            gene_score = GeneScore.load_gene_score_from_resource(resource)
-            result.append(gene_score)
+            gene_scores = GeneScore.load_gene_scores_from_resource(
+                resource
+            )
+            result += gene_scores
 
         return GeneScoresDb(result)
 
@@ -209,7 +211,9 @@ class GPFInstance:
                 if resource is None:
                     logger.error("can't find resource %s", gsc_id)
                     continue
-                gscs.append(GeneSetCollection.from_resource(resource))
+                gscs.append(
+                    GeneSetCollection.from_resource(resource)
+                )
 
             return GeneSetsDb(gscs)
 

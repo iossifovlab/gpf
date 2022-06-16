@@ -9,6 +9,7 @@ from dae.gene.gene_sets_db import cached
 from dae.utils.dae_utils import join_line
 
 from dae.genomic_resources import GenomicResource
+from dae.genomic_resources.histogram import Histogram
 
 
 class GeneScore:
@@ -20,13 +21,15 @@ class GeneScore:
 
     Gene Score resource configuration format:
     type: gene_score
-    id: (gene score id)
-    filename: (filename to gene score)
-    desc: (gene score description)
-    histogram:
-      bins: (number of bins)
-      xscale: linear/log
-      yscale: linear/log
+    gene_scores:
+      - id: (gene score id)
+        filename: (filename to gene score)
+        desc: (gene score description)
+    histograms:
+      - score: (gene score id)
+        bins: (number of bins)
+        x_scale: linear/log
+        y_scale: linear/log
     meta: (gene score metadata)
     """
 
@@ -40,18 +43,36 @@ class GeneScore:
         self.genomic_values_col = "gene"
 
         self.desc = desc
-        self.bins = self.histogram_config["bins"]
-        self.xscale = self.histogram_config["xscale"]
-        self.yscale = self.histogram_config["yscale"]
         self.file = file
-        self.range = getattr(self.histogram_config, "range", None)
 
         self.meta = meta
 
         self._load_data()
         self.df.dropna(inplace=True)
 
-        self.histogram_bins, self.histogram_bars = self._bins_bars()
+        if "min" not in histogram_config:
+            histogram_config["min"] = self.min()
+        if "max" not in histogram_config:
+            histogram_config["max"] = self.max()
+        self.histogram = Histogram.from_config(histogram_config)
+        self.histogram.set_values(self.values())
+
+        self.histogram_bins = self.histogram.bins
+        self.histogram_bars = self.histogram.bars
+
+    @property
+    def x_scale(self):
+        """
+        Returns the scale type of the X axis
+        """
+        return self.histogram.x_scale
+
+    @property
+    def y_scale(self):
+        """
+        Returns the scale type of the Y axis
+        """
+        return self.histogram.y_scale
 
     def _load_data(self):
         assert self.file is not None
@@ -64,53 +85,43 @@ class GeneScore:
         return self.df
 
     @staticmethod
-    def load_gene_score_from_resource(
+    def load_gene_scores_from_resource(
             resource: Optional[GenomicResource]):
+        """
+        Creates and returns a list of all
+        the gene scores described in a resource
+        """
         assert resource is not None
         assert resource.get_type() == "gene_score", "Invalid resource type"
 
         config = resource.get_config()
-        gene_score_id = config["id"]
-        file = resource.open_raw_file(config["filename"])
-        histogram_config = config["histogram"]
-        desc = config["desc"]
         meta = getattr(config, "meta", None)
-        return GeneScore(gene_score_id, file, desc, histogram_config, meta)
+        scores = []
+        for gs_config in config["gene_scores"]:
+            gene_score_id = gs_config["id"]
+            file = resource.open_raw_file(gs_config["filename"])
+            desc = gs_config["desc"]
+            histogram_config = None
+            for hist_config in config["histograms"]:
+                if hist_config["score"] == gene_score_id:
+                    histogram_config = hist_config
+                    break
+            assert histogram_config is not None
+            gs = GeneScore(gene_score_id, file, desc, histogram_config, meta)
+            scores.append(gs)
+
+        return scores
 
     def values(self):
+        """
+        Returns a list of score values
+        """
         return self.df[self.id].values
 
-    def _bins_bars(self):
-        step = 1.0 * (self.max() - self.min()) / (self.bins - 1)
-        dec = -np.log10(step)
-        dec = dec if dec >= 0 else 0
-        dec = int(dec)
-
-        bleft = np.around(self.min(), dec)
-        bright = np.around(self.max() + step, dec)
-
-        if self.xscale == "log":
-            # Max numbers of items in first bin
-            max_count = self.values().size / self.bins
-
-            # Find a bin small enough to fit max_count items
-            for bleft in range(-1, -200, -1):
-                if ((self.values()) < 10 ** bleft).sum() < max_count:
-                    break
-
-            bins_in = [0] + list(
-                np.logspace(bleft, np.log10(bright), self.bins)
-            )
-        else:
-            bins_in = self.bins
-
-        bars, bins = np.histogram(
-            list(self.values()), bins_in, range=[bleft, bright]
-        )
-
-        return (bins, bars)
-
     def get_gene_value(self, gene_symbol):
+        """
+        Returns the value for a given gene symbol
+        """
         symbol_values = self._to_dict()
         return symbol_values[gene_symbol]
 
@@ -132,6 +143,9 @@ class GeneScore:
 
     @cached
     def to_tsv(self):
+        """
+        Returns a TSV version of the gene score data
+        """
         return map(join_line, self._to_list())
 
     @cached
@@ -179,20 +193,29 @@ class GeneScoresDb:
     """
 
     def __init__(self, gene_scores):
-        super(GeneScoresDb, self).__init__()
+        super().__init__()
         self.scores = OrderedDict()
         for score in gene_scores:
             self.scores[score.id] = score
 
     @cached
     def get_gene_score_ids(self):
+        """
+        Returns a list of the IDs of all the gene scores contained
+        """
         return list(self.scores.keys())
 
     @cached
     def get_gene_scores(self):
+        """
+        Returns a list of all the gene scores contained in the DB
+        """
         return [self.get_gene_score(score_id) for score_id in self.scores]
 
     def get_gene_score(self, score_id):
+        """
+        Returns a given gene score
+        """
         assert self[score_id].df is not None
         return self[score_id]
 
