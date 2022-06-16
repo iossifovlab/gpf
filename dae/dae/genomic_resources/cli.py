@@ -156,11 +156,19 @@ def _run_manifest_command(proto, **kwargs):
             continue
 
         if force:
-            proto.build_manifest(
+            print(
+                f"building manifest for resource <{res.resource_id}>...",
+                file=sys.stderr)
+            manifest = proto.build_manifest(
                 res, use_dvc=use_dvc)
         else:
-            proto.update_manifest(
+            print(
+                f"updating manifest for resource <{res.resource_id}>...",
+                file=sys.stderr)
+            manifest = proto.update_manifest(
                 res, use_dvc=use_dvc)
+
+        proto.save_manifest(res, manifest)
     proto.build_content_file()
 
 
@@ -232,11 +240,19 @@ def _run_repair_command(proto, region_size, **kwargs):
                 continue
 
             if force:
-                proto.build_manifest(
+                print(
+                    f"building manifest for resource <{res.resource_id}>...",
+                    file=sys.stderr)
+                manifest = proto.build_manifest(
                     res, use_dvc=use_dvc)
             else:
-                proto.update_manifest(
+                print(
+                    f"updating manifest for resource <{res.resource_id}>...",
+                    file=sys.stderr)
+                manifest = proto.update_manifest(
                     res, use_dvc=use_dvc)
+
+            proto.save_manifest(res, manifest)
 
             if not is_a_score:
                 print(

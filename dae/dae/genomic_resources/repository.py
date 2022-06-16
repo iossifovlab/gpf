@@ -224,7 +224,7 @@ class Manifest:
         return name in self.entries
 
     def __iter__(self):
-        return iter(self.entries.values())
+        return iter(sorted(self.entries.values()))
 
     def __eq__(self, other):
         if not isinstance(other, Manifest):
@@ -253,7 +253,7 @@ class Manifest:
         Helpfull when storing the manifest.
         """
         return [
-            asdict(entry) for entry in self.entries.values()]
+            asdict(entry) for entry in sorted(self.entries.values())]
 
     def add(self, entry: ManifestEntry) -> None:
         """Add manifest enry to the manifest."""
@@ -595,11 +595,6 @@ class ReadWriteRepositoryProtocol(ReadOnlyRepositoryProtocol):
             entry = manifest[filename]
             entry.md5 = state.md5
             entry.size = state.size
-
-        self.save_manifest(resource, manifest)
-        logger.info(
-            "manifest of %s udated",
-            resource.get_genomic_resource_id_version())
 
         return manifest
 

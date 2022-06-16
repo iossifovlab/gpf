@@ -353,7 +353,7 @@ def test_histogram_builder_save(tmp_path, client):
         os.path.join(res_url, "phastCons5way.png"))
 
     # assert the manifest file is updated
-    proto.update_manifest(res)
+    proto.save_manifest(res, proto.update_manifest(res))
     manifest = res.get_manifest()
     for score_id in ["phastCons5way", "phastCons100way"]:
         assert f"{score_id}.csv" in manifest

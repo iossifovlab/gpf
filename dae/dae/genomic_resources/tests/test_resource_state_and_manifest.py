@@ -111,7 +111,9 @@ def test_build_update_manifest_use_dvc(
     with proto_fixture.open_raw_file(res, filename, "wt") as outfile:
         outfile.write("bigger")
 
-    assert proto_fixture.update_manifest(res, use_dvc=use_dvc)
+    manifest = proto_fixture.update_manifest(res, use_dvc=use_dvc)
+    proto_fixture.save_manifest(res, manifest)
+
     manifest = proto_fixture.load_manifest(res)
 
     md5, size = expected
