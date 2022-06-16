@@ -6,7 +6,8 @@ import argparse
 from dae.dask.client_factory import DaskClient
 
 from dae.__version__ import VERSION, RELEASE
-from dae.genomic_resources.repository import ReadWriteRepositoryProtocol
+from dae.genomic_resources.repository import \
+    ReadWriteRepositoryProtocol
 from dae.utils.verbosity_configuration import VerbosityConfiguration
 
 from dae.genomic_resources.fsspec_protocol import build_fsspec_protocol
@@ -139,6 +140,67 @@ def _get_resources_list(proto, **kwargs):
     return resources
 
 
+def _fill_manifest_with_dvc(proto, res, manifest):
+    dvc_entries = []
+    for entry in manifest:
+        if not entry.name.endswith(".dvc"):
+            continue
+
+        filename = entry.name[:-4]
+        if filename in manifest:
+            continue
+
+        # pylint: disable=protected-access
+        dvc_entry = proto._load_dvc_entry(res, filename)
+        assert dvc_entry.name == filename
+        logger.warning(
+            "filling manifest of <%s> with entry for <%s> based on dvc data",
+            res.resource_id, filename)
+        dvc_entries.append(dvc_entry)
+
+    for entry in dvc_entries:
+        manifest.add(entry)
+    return manifest
+
+
+def _run_resource_manifest_command(proto, res, dry_run, force, use_dvc):
+    manifest_update = proto.check_update_manifest(res)
+    if not bool(manifest_update):
+        print(
+            f"manifest of <{res.get_genomic_resource_id_version()}> "
+            f"is up to date",
+            file=sys.stderr)
+    else:
+        msg = \
+            f"manifest of " \
+            f"<{res.get_genomic_resource_id_version()}> " \
+            f"should be updated; " \
+            f"entries to update in manifest " \
+            f"{manifest_update.entries_to_update}"
+        if manifest_update.entries_to_delete:
+            msg = f"{msg}; " \
+                f"entries to delete from manifest " \
+                f"{manifest_update.entries_to_delete}"
+        print(msg, file=sys.stderr)
+
+    if dry_run:
+        return
+
+    if force:
+        print(
+            f"building manifest for resource <{res.resource_id}>...",
+            file=sys.stderr)
+        manifest = proto.build_manifest(
+            res, use_dvc=use_dvc)
+    else:
+        print(
+            f"updating manifest for resource <{res.resource_id}>...",
+            file=sys.stderr)
+        manifest = proto.update_manifest(
+            res, use_dvc=use_dvc)
+    proto.save_manifest(res, manifest)
+
+
 def _run_manifest_command(proto, **kwargs):
     resources = _get_resources_list(proto, **kwargs)
 
@@ -151,25 +213,37 @@ def _run_manifest_command(proto, **kwargs):
         return
 
     for res in resources:
-        if dry_run:
-            proto.check_update_manifest(res)
-            continue
+        _run_resource_manifest_command(proto, res, dry_run, force, use_dvc)
 
-        if force:
-            print(
-                f"building manifest for resource <{res.resource_id}>...",
-                file=sys.stderr)
-            manifest = proto.build_manifest(
-                res, use_dvc=use_dvc)
-        else:
-            print(
-                f"updating manifest for resource <{res.resource_id}>...",
-                file=sys.stderr)
-            manifest = proto.update_manifest(
-                res, use_dvc=use_dvc)
-
-        proto.save_manifest(res, manifest)
     proto.build_content_file()
+
+
+def _run_resource_hist_command(  # pylint: disable=too-many-arguments
+        client, proto, res, dry_run, force, region_size):
+    if res.get_type() not in {
+            "position_score", "np_score", "allele_score"}:
+        print(
+            f"skip histograms update for {res.resource_id}; "
+            f"not a score", file=sys.stderr)
+        return
+    builder = HistogramBuilder(res)
+    if dry_run:
+        builder.check_update()
+        return
+
+    if force:
+        histograms = builder.build(
+            client,
+            region_size=region_size)
+    else:
+        histograms = builder.update(
+            client,
+            region_size=region_size)
+
+    hist_out_dir = "histograms"
+    logger.info("Saving histograms in %s", hist_out_dir)
+    builder.save(histograms, hist_out_dir)
+    proto.update_manifest(res)
 
 
 def _run_hist_command(proto, region_size, **kwargs):
@@ -187,30 +261,8 @@ def _run_hist_command(proto, region_size, **kwargs):
 
     with dask_client as client:
         for res in resources:
-            if res.get_type() not in {
-                    "position_score", "np_score", "allele_score"}:
-                print(
-                    f"skip histograms update for {res.resource_id}; "
-                    f"not a score", file=sys.stderr)
-                continue
-            builder = HistogramBuilder(res)
-            if dry_run:
-                builder.check_update()
-                continue
-
-            if force:
-                histograms = builder.build(
-                    client,
-                    region_size=region_size)
-            else:
-                histograms = builder.update(
-                    client,
-                    region_size=region_size)
-
-            hist_out_dir = "histograms"
-            logger.info("Saving histograms in %s", hist_out_dir)
-            builder.save(histograms, hist_out_dir)
-            proto.update_manifest(res)
+            _run_resource_hist_command(
+                client, proto, res, dry_run, force, region_size)
     proto.build_content_file()
 
 
@@ -230,54 +282,10 @@ def _run_repair_command(proto, region_size, **kwargs):
         sys.exit(1)
     with dask_client as client:
         for res in resources:
-            is_a_score = res.get_type() in {
-                "position_score", "np_score", "allele_score"}
-
-            builder = HistogramBuilder(res)
-            if dry_run:
-                if not proto.check_update_manifest(res) and is_a_score:
-                    builder.check_update()
-                continue
-
-            if force:
-                print(
-                    f"building manifest for resource <{res.resource_id}>...",
-                    file=sys.stderr)
-                manifest = proto.build_manifest(
-                    res, use_dvc=use_dvc)
-            else:
-                print(
-                    f"updating manifest for resource <{res.resource_id}>...",
-                    file=sys.stderr)
-                manifest = proto.update_manifest(
-                    res, use_dvc=use_dvc)
-
-            proto.save_manifest(res, manifest)
-
-            if not is_a_score:
-                print(
-                    f"skip histograms update for {res.resource_id}; "
-                    f"not a score", file=sys.stderr)
-                continue
-
-            if force:
-                proto.build_manifest(
-                    res, use_dvc=use_dvc)
-                histograms = builder.build(
-                    client,
-                    region_size=region_size)
-
-            else:
-                proto.update_manifest(
-                    res, use_dvc=use_dvc)
-                histograms = builder.update(
-                    client,
-                    region_size=region_size)
-
-            hist_out_dir = "histograms"
-            logger.info("saving histograms in %s", hist_out_dir)
-            builder.save(histograms, hist_out_dir)
-            proto.update_manifest(res)
+            _run_resource_manifest_command(
+                proto, res, dry_run, force, use_dvc)
+            _run_resource_hist_command(
+                client, proto, res, dry_run, force, region_size)
     proto.build_content_file()
 
 

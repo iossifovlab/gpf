@@ -104,7 +104,9 @@ def test_cli_dry_run_repair_needs_manifest_update_message(
     print(captured.err)
     assert captured.err == \
         "manifest of <one> should be updated; " \
-        "entries to update in manifest {'data.txt'}\n"
+        "entries to update in manifest {'data.txt'}\n" \
+        "resource <one> histograms " \
+        "[{'score': 'phastCons100way', 'bins': 100}] need update\n"
 
 
 def test_cli_dry_run_repair_needs_manifest_and_histogram_update_message(

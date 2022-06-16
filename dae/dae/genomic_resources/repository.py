@@ -20,7 +20,6 @@ Provides basic classes for genomic resources and repositories.
 from __future__ import annotations
 
 import os
-import sys
 import re
 import logging
 import datetime
@@ -534,8 +533,30 @@ class ReadWriteRepositoryProtocol(ReadOnlyRepositoryProtocol):
             manifest.add(entry)
         return manifest
 
+    def _fill_manifest_with_dvc(self, res, manifest):
+        dvc_entries = []
+        for entry in manifest:
+            if not entry.name.endswith(".dvc"):
+                continue
+
+            filename = entry.name[:-4]
+            if filename in manifest:
+                continue
+
+            dvc_entry = self._load_dvc_entry(res, filename)
+            assert dvc_entry.name == filename
+            logger.warning(
+                "filling manifest of <%s> with entry for <%s> based on "
+                "dvc data only",
+                res.resource_id, filename)
+            dvc_entries.append(dvc_entry)
+
+        for entry in dvc_entries:
+            manifest.add(entry)
+        return manifest
+
     def check_update_manifest(
-            self, resource: GenomicResource) -> ManifestUpdate:
+            self, resource: GenomicResource, use_dvc=True) -> ManifestUpdate:
         """Check if the resource manifest needs update."""
         try:
             current_manifest = self.load_manifest(resource)
@@ -560,29 +581,32 @@ class ReadWriteRepositoryProtocol(ReadOnlyRepositoryProtocol):
                 continue
             entry.md5 = state.md5
             entry.size = state.size
+        if use_dvc:
+            self._fill_manifest_with_dvc(resource, manifest)
 
         entries_to_delete = current_manifest.names() - manifest.names()
-        if entries_to_delete or entries_to_update:
-            msg = \
-                f"manifest of " \
-                f"<{resource.get_genomic_resource_id_version()}> " \
-                f"should be updated; " \
-                f"entries to update in manifest {entries_to_update}"
-            if entries_to_delete:
-                msg = f"{msg}; " \
-                    f"entries to delete from manifest {entries_to_delete}"
-            print(msg, file=sys.stderr)
-        else:
-            print(
-                f"manifest of <{resource.get_genomic_resource_id_version()}> "
-                f"is up to date", file=sys.stderr)
+        # if entries_to_delete or entries_to_update:
+        #     msg = \
+        #         f"manifest of " \
+        #         f"<{resource.get_genomic_resource_id_version()}> " \
+        #         f"should be updated; " \
+        #         f"entries to update in manifest {entries_to_update}"
+        #     if entries_to_delete:
+        #         msg = f"{msg}; " \
+        #             f"entries to delete from manifest {entries_to_delete}"
+        #     print(msg, file=sys.stderr)
+        # else:
+        #     print(
+        #         f"manifest of "
+        #         f"<{resource.get_genomic_resource_id_version()}> "
+        #         f"is up to date", file=sys.stderr)
         return ManifestUpdate(manifest, entries_to_delete, entries_to_update)
 
     def update_manifest(
             self, resource: GenomicResource,
             use_dvc=True) -> Manifest:
         """Update or create full manifest for the resource."""
-        manifest_update = self.check_update_manifest(resource)
+        manifest_update = self.check_update_manifest(resource, use_dvc)
 
         if not bool(manifest_update):
             return manifest_update.manifest
