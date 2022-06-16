@@ -18,10 +18,11 @@ def scores_repo():
                   - id: RVIS_rank
                     filename: RVIS.csv
                     desc: RVIS rank
-                histogram:
-                  bins: 150
-                  xscale: linear
-                  yscale: linear
+                histograms:
+                  - score: RVIS_rank
+                    bins: 150
+                    x_scale: linear
+                    y_scale: linear
                 """,
             "RVIS.csv": textwrap.dedent("""
                 "gene","RVIS","RVIS_rank"
@@ -47,10 +48,11 @@ def scores_repo():
                   - id: LGD_rank
                     filename: LGD.csv
                     desc: LGD rank
-                histogram:
-                  bins: 150
-                  xscale: linear
-                  yscale: linear
+                histograms:
+                  - score: LGD_rank
+                    bins: 150
+                    x_scale: linear
+                    y_scale: linear
                 """,
             "LGD.csv": textwrap.dedent("""
                 "gene","LGD_score","LGD_rank"

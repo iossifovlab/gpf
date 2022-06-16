@@ -85,4 +85,4 @@ def test_cli_histograms_no_update_message(proto_fixture, tmp_path, capsys):
     # Then
     _, err = capsys.readouterr()
     assert err == \
-        "resource <one> histograms are up to date\n"
+        "histograms of <one> are up to date\n"

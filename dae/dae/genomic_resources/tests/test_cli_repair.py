@@ -86,7 +86,7 @@ def test_cli_repair_no_update_message(proto_fixture, tmp_path, capsys):
     _, err = capsys.readouterr()
     assert err == \
         "manifest of <one> is up to date\n" \
-        "resource <one> histograms are up to date\n"
+        "histograms of <one> are up to date\n"
 
 
 def test_cli_dry_run_repair_needs_manifest_update_message(
