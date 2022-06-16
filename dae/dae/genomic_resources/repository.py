@@ -19,7 +19,6 @@ Provides basic classes for genomic resources and repositories.
 """
 from __future__ import annotations
 
-import os
 import re
 import logging
 import datetime
@@ -258,6 +257,10 @@ class Manifest:
         """Add manifest enry to the manifest."""
         self.entries[entry.name] = entry
 
+    def update(self, entries: Dict[str, ManifestEntry]) -> None:
+        for entry in entries.values():
+            self.add(entry)
+
     def names(self) -> set[str]:
         """Return set of all file names from the manifest."""
         return set(self.entries.keys())
@@ -457,31 +460,10 @@ class ReadOnlyRepositoryProtocol(abc.ABC):
         no support this method raise and exception.
         """
 
-    def _load_dvc_entry(
-            self, resource: GenomicResource,
-            filename) -> Optional[ManifestEntry]:
-        dvc_filename = f"{filename}.dvc"
-        if not self.file_exists(resource, dvc_filename):
-            return None
-
-        with self.open_raw_file(resource, dvc_filename, "rt") as infile:
-            content = infile.read()
-            dvc = yaml.safe_load(content)
-            basename = os.path.basename(filename)
-            for entry in dvc["outs"]:
-                if entry["path"] == basename:
-                    return ManifestEntry(
-                        filename, entry["size"], entry["md5"])
-        return None
-
-    def compute_md5_sum(self, resource, filename, use_dvc=False):
+    def compute_md5_sum(self, resource, filename):
         """Compute a md5 hash for a file in the resource."""
         logger.debug(
             "compute md5sum for %s in %s", filename, resource.resource_id)
-        if use_dvc:
-            entry = self._load_dvc_entry(resource, filename)
-            if entry:
-                return entry.md5
 
         with self.open_raw_file(resource, filename, "rb") as infile:
             md5_hash = hashlib.md5()
@@ -521,42 +503,38 @@ class ReadWriteRepositoryProtocol(ReadOnlyRepositoryProtocol):
     def collect_resource_entries(self, resource) -> Manifest:
         """Scan the resource and returns manifest with all files."""
 
-    def build_manifest(self, resource, use_dvc=True):
+    def _update_manifest_entry_and_state(
+            self, resource, entry, prebuild_entries):
+        size = None
+        md5 = None
+        if entry.name in prebuild_entries:
+            ready_entry = prebuild_entries[entry.name]
+            size = ready_entry.size
+            md5 = ready_entry.md5
+        state = self.build_resource_file_state(
+            resource, entry.name, size=size, md5=md5)
+        self.save_resource_file_state(resource, state)
+        entry.md5 = state.md5
+        entry.size = state.size
+
+    def build_manifest(
+            self, resource,
+            prebuild_entries: Optional[Dict[str, ManifestEntry]] = None):
         """Build full manifest for the resource."""
+        if prebuild_entries is None:
+            prebuild_entries = {}
+
         manifest = Manifest()
         for entry in self.collect_resource_entries(resource):
-            state = self.build_resource_file_state(
-                resource, entry.name, use_dvc=use_dvc)
-            self.save_resource_file_state(resource, state)
-            entry.md5 = state.md5
-            entry.size = state.size
-            manifest.add(entry)
-        return manifest
-
-    def _fill_manifest_with_dvc(self, res, manifest):
-        dvc_entries = []
-        for entry in manifest:
-            if not entry.name.endswith(".dvc"):
-                continue
-
-            filename = entry.name[:-4]
-            if filename in manifest:
-                continue
-
-            dvc_entry = self._load_dvc_entry(res, filename)
-            assert dvc_entry.name == filename
-            logger.warning(
-                "filling manifest of <%s> with entry for <%s> based on "
-                "dvc data only",
-                res.resource_id, filename)
-            dvc_entries.append(dvc_entry)
-
-        for entry in dvc_entries:
+            self._update_manifest_entry_and_state(
+                resource, entry, prebuild_entries)
             manifest.add(entry)
         return manifest
 
     def check_update_manifest(
-            self, resource: GenomicResource, use_dvc=True) -> ManifestUpdate:
+        self, resource: GenomicResource,
+        prebuild_entries: Optional[Dict[str, ManifestEntry]] = None
+    ) -> ManifestUpdate:
         """Check if the resource manifest needs update."""
         try:
             current_manifest = self.load_manifest(resource)
@@ -581,44 +559,32 @@ class ReadWriteRepositoryProtocol(ReadOnlyRepositoryProtocol):
                 continue
             entry.md5 = state.md5
             entry.size = state.size
-        if use_dvc:
-            self._fill_manifest_with_dvc(resource, manifest)
+
+        if prebuild_entries is not None:
+            manifest.update(prebuild_entries)
 
         entries_to_delete = current_manifest.names() - manifest.names()
-        # if entries_to_delete or entries_to_update:
-        #     msg = \
-        #         f"manifest of " \
-        #         f"<{resource.get_genomic_resource_id_version()}> " \
-        #         f"should be updated; " \
-        #         f"entries to update in manifest {entries_to_update}"
-        #     if entries_to_delete:
-        #         msg = f"{msg}; " \
-        #             f"entries to delete from manifest {entries_to_delete}"
-        #     print(msg, file=sys.stderr)
-        # else:
-        #     print(
-        #         f"manifest of "
-        #         f"<{resource.get_genomic_resource_id_version()}> "
-        #         f"is up to date", file=sys.stderr)
         return ManifestUpdate(manifest, entries_to_delete, entries_to_update)
 
     def update_manifest(
-            self, resource: GenomicResource,
-            use_dvc=True) -> Manifest:
+        self, resource: GenomicResource,
+        prebuild_entries: Optional[Dict[str, ManifestEntry]] = None
+    ) -> Manifest:
         """Update or create full manifest for the resource."""
-        manifest_update = self.check_update_manifest(resource, use_dvc)
+        manifest_update = self.check_update_manifest(
+            resource, prebuild_entries)
 
         if not bool(manifest_update):
             return manifest_update.manifest
 
         manifest = manifest_update.manifest
+        if prebuild_entries is None:
+            prebuild_entries = {}
+
         for filename in manifest_update.entries_to_update:
-            state = self.build_resource_file_state(
-                resource, filename, use_dvc=use_dvc)
-            self.save_resource_file_state(resource, state)
             entry = manifest[filename]
-            entry.md5 = state.md5
-            entry.size = state.size
+            self._update_manifest_entry_and_state(
+                resource, entry, prebuild_entries)
 
         return manifest
 
@@ -654,19 +620,12 @@ class ReadWriteRepositoryProtocol(ReadOnlyRepositoryProtocol):
             filename: str,
             **kwargs) -> ResourceFileState:
         """Build resource file state."""
-        md5sum = kwargs.get("md5sum")
+        md5 = kwargs.get("md5")
         timestamp = kwargs.get("timestamp")
         size = kwargs.get("size")
 
-        use_dvc = kwargs.get("use_dvc", False)
-        if use_dvc:
-            dvc_entry = self._load_dvc_entry(resource, filename)
-            if dvc_entry is not None:
-                size = dvc_entry.size
-                md5sum = dvc_entry.md5
-
-        if md5sum is None:
-            md5sum = self.compute_md5_sum(resource, filename, use_dvc=use_dvc)
+        if md5 is None:
+            md5 = self.compute_md5_sum(resource, filename)
 
         if timestamp is None:
             timestamp = self.get_resource_file_timestamp(resource, filename)
@@ -678,7 +637,7 @@ class ReadWriteRepositoryProtocol(ReadOnlyRepositoryProtocol):
             filename,
             size,
             timestamp,
-            md5sum)
+            md5)
 
     @abc.abstractmethod
     def save_resource_file_state(

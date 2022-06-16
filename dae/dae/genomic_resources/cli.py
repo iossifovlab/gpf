@@ -3,11 +3,17 @@ import os
 import sys
 import logging
 import argparse
+from typing import Dict
+
+import yaml
+
 from dae.dask.client_factory import DaskClient
 
 from dae.__version__ import VERSION, RELEASE
 from dae.genomic_resources.repository import \
-    ReadWriteRepositoryProtocol
+    GenomicResource, \
+    ReadWriteRepositoryProtocol, \
+    ManifestEntry
 from dae.utils.verbosity_configuration import VerbosityConfiguration
 
 from dae.genomic_resources.fsspec_protocol import build_fsspec_protocol
@@ -140,31 +146,38 @@ def _get_resources_list(proto, **kwargs):
     return resources
 
 
-def _fill_manifest_with_dvc(proto, res, manifest):
-    dvc_entries = []
-    for entry in manifest:
+def collect_dvc_entries(
+        proto: ReadWriteRepositoryProtocol,
+        res: GenomicResource) -> Dict[str, ManifestEntry]:
+    """Collect manifest entries defined by .dvc files."""
+    result = {}
+    for entry in proto.collect_resource_entries(res):
         if not entry.name.endswith(".dvc"):
             continue
-
         filename = entry.name[:-4]
-        if filename in manifest:
-            continue
+        basename = os.path.basename(filename)
 
-        # pylint: disable=protected-access
-        dvc_entry = proto._load_dvc_entry(res, filename)
-        assert dvc_entry.name == filename
         logger.warning(
             "filling manifest of <%s> with entry for <%s> based on dvc data",
             res.resource_id, filename)
-        dvc_entries.append(dvc_entry)
 
-    for entry in dvc_entries:
-        manifest.add(entry)
-    return manifest
+        with proto.open_raw_file(res, entry.name, "rt") as infile:
+            content = infile.read()
+            dvc = yaml.safe_load(content)
+            for data in dvc["outs"]:
+                if data["path"] == basename:
+                    result[filename] = \
+                        ManifestEntry(filename, data["size"], data["md5"])
+
+    return result
 
 
 def _run_resource_manifest_command(proto, res, dry_run, force, use_dvc):
-    manifest_update = proto.check_update_manifest(res)
+    prebuild_entries = {}
+    if use_dvc:
+        prebuild_entries = collect_dvc_entries(proto, res)
+
+    manifest_update = proto.check_update_manifest(res, prebuild_entries)
     if not bool(manifest_update):
         print(
             f"manifest of <{res.get_genomic_resource_id_version()}> "
@@ -191,14 +204,16 @@ def _run_resource_manifest_command(proto, res, dry_run, force, use_dvc):
             f"building manifest for resource <{res.resource_id}>...",
             file=sys.stderr)
         manifest = proto.build_manifest(
-            res, use_dvc=use_dvc)
-    else:
+            res, prebuild_entries)
+        proto.save_manifest(res, manifest)
+
+    elif bool(manifest_update):
         print(
             f"updating manifest for resource <{res.resource_id}>...",
             file=sys.stderr)
         manifest = proto.update_manifest(
-            res, use_dvc=use_dvc)
-    proto.save_manifest(res, manifest)
+            res, prebuild_entries)
+        proto.save_manifest(res, manifest)
 
 
 def _run_manifest_command(proto, **kwargs):
@@ -339,6 +354,6 @@ def _create_proto(repo_url):
     proto = build_fsspec_protocol(proto_id="manage", root_url=repo_url)
     if not isinstance(proto, ReadWriteRepositoryProtocol):
         raise ValueError(
-            f"we can manage resource in RW protocols; "
+            f"resource management works with RW protocols; "
             f"{proto.proto_id} ({proto.scheme}) is read only")
     return proto
