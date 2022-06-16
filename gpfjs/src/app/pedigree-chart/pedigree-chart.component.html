@@ -5,7 +5,7 @@
     class="svg-wrapper clickable"
     style="display: flex; width: 100%; height: 100%"
     data-toggle="modal"
-    data-target="#pedigreeModal">
+    attr.data-target="#{{ pedigreeModalId }}">
     <svg [attr.width]="width" [attr.viewBox]="getViewBox()" [ngClass]="{ 'fullscreen-pedigree': maximized }">
       <svg:line
         *ngFor="let straightLine of straightLines"
@@ -40,7 +40,7 @@
   </div>
 </ng-template>
 
-<div class="modal fade" id="pedigreeModal">
+<div class="modal fade" id="{{ pedigreeModalId }}">
   <div class="modal-dialog modal-dialog-centered" role="document">
     <div style="padding: 5px" class="modal-content">
       <button type="button" class="close" data-dismiss="modal" aria-label="Close">
@@ -49,7 +49,7 @@
       <div class="modal-body">
         <ng-container *ngTemplateOutlet="pedigree"></ng-container>
       </div>
-      <ngb-accordion class="modalAccordion" #a="ngbAccordion">
+      <ngb-accordion *ngIf="counterId !== undefined" class="modalAccordion" #a="ngbAccordion">
         <ngb-panel>
           <ng-template ngbPanelHeader>
             <div style="display: flex; border: 1px solid grey">
@@ -66,16 +66,18 @@
                 action="{{ configService.baseUrl }}common_reports/family_counters/download"
                 method="post">
                 <input name="queryData" type="hidden" />
-                <button class="btn btn-md btn-primary btn-right" id="download-button" type="submit">Download</button>
+                <button class="btn btn-md btn-right" style="font-weight: bold" id="download-button" type="submit">
+                  Download
+                </button>
               </form>
             </div>
           </ng-template>
           <ng-template ngbPanelContent>
             <div class="familyPanel">
-              <gpf-loading-spinner *ngIf="!loadingFinishedFlag" [loadingFinished]="loadingFinishedFlag"> </gpf-loading-spinner>
-              <ng-container *ngIf="loadingFinishedFlag"
-                ><span *ngFor="let family; in: familyLists; let i = index">{{ i + 1 }}:{{ family }}</span></ng-container
-              >
+              <gpf-loading-spinner
+                *ngIf="!loadingFinishedFlag"
+                [loadingFinished]="loadingFinishedFlag"></gpf-loading-spinner>
+              <ng-container *ngIf="familyLists">{{ familyLists.join(',') }} </ng-container>
             </div>
           </ng-template>
         </ngb-panel>

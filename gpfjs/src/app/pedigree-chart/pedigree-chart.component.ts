@@ -36,7 +36,8 @@ export class PedigreeChartComponent implements OnInit, AfterViewInit, OnDestroy 
   public height = 0;
   public scale = 1.0;
   public loadingFinishedFlag = false;
-  private familyLists;
+  public familyLists;
+  public pedigreeModalId: string;
 
   @ViewChild('wrapper')
   private element;
@@ -118,6 +119,7 @@ export class PedigreeChartComponent implements OnInit, AfterViewInit, OnDestroy 
         .map(i => i.yUpperLeftCorner + i.size + 1)
         .reduce((acc, current) => Math.max(acc, current), 0);
     });
+    this.pedigreeModalId = `pedigreeModal${ this.counterId }`;
   }
 
   public ngOnDestroy(): void {
@@ -152,6 +154,9 @@ export class PedigreeChartComponent implements OnInit, AfterViewInit, OnDestroy 
   }
 
   public getFamilyListData(): void {
+    if (this.familyLists !== undefined) {
+      return;
+    }
     this.loadingFinishedFlag = false;
     this.variantReportsService.getFamilies(
       this.datasetsService.getSelectedDataset().id,
@@ -160,6 +165,7 @@ export class PedigreeChartComponent implements OnInit, AfterViewInit, OnDestroy 
     ).subscribe(lists => {
       this.loadingFinishedFlag = true;
       this.familyLists = lists;
+      this.changeDetectorRef.detectChanges();
     });
   }
 

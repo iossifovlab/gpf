@@ -57,8 +57,10 @@ svg {
   border-left: 1px solid grey;
   border-right: 1px solid grey;
   padding-top: 1.5em;
+  padding-bottom: 1.5em;
   max-height: 500px;
   overflow: auto;
+  overflow-wrap: break-word;
 }
 
 .modalAccordion {
