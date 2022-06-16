@@ -6,8 +6,7 @@ import yaml
 from dask.distributed import Client  # type: ignore
 
 from dae.genomic_resources.repository import GR_CONF_FILE_NAME
-from dae.genomic_resources.score_statistics import \
-    HistogramBuilder
+from dae.genomic_resources.histogram import HistogramBuilder
 from dae.genomic_resources.testing import \
     build_testing_repository, tabix_to_resource
 
