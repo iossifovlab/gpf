@@ -109,6 +109,9 @@ class FsspecReadOnlyProtocol(ReadOnlyRepositoryProtocol):
                 logger.debug(
                     "url repo caching resource %s", resource.resource_id)
                 self._all_resources.append(resource)
+            self._all_resources = sorted(
+                self._all_resources,
+                key=lambda r: r.get_genomic_resource_id_version())
 
         yield from self._all_resources
 
@@ -292,7 +295,10 @@ class FsspecReadWriteProtocol(
     def get_all_resources(self) -> Generator[GenomicResource, None, None]:
         """Return generator over all resources in the repository."""
         if self._all_resources is None:
-            self._all_resources = list(self.collect_all_resources())
+            self._all_resources = sorted(
+                list(self.collect_all_resources()),
+                key=lambda r: r.get_genomic_resource_id_version())
+
         yield from self._all_resources
 
     def _get_resource_file_state_path(
