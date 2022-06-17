@@ -103,7 +103,8 @@ def _configure_repair_subparser(subparsers):
     parser.add_argument(
         "-r", "--resource", type=str,
         help="specifies a resource whose manifest/histograms we want "
-        "to rebuild")
+        "to rebuild; if not specified the command will run on all "
+        "resources in the repository")
     parser.add_argument(
         "-n", "--dry-run", default=False, action="store_true",
         help="only checks if the manifest and/or histograms update is "
