@@ -1,4 +1,4 @@
-"""Handling of genomic scores statistics
+"""Handling of genomic scores statistics.
 
 Currently we support only genomic scores histograms.
 """
@@ -6,13 +6,15 @@ from __future__ import annotations
 
 import hashlib
 import os
+import sys
 import logging
-from typing import Dict, Tuple, Any
-from copy import copy
+from typing import Dict, Any
+from copy import copy, deepcopy
+
 import yaml
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt  # type: ignore
 from tqdm import tqdm  # type: ignore
 from dask.distributed import as_completed  # type: ignore
 
@@ -22,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 
 class Histogram:
-    """Class to represent a histogram"""
+    """Class to represent a histogram."""
 
     def __init__(
         self, bins, bars, bins_count,
@@ -46,7 +48,7 @@ class Histogram:
 
     @staticmethod
     def from_config(conf: Dict[str, Any]) -> Histogram:
-        """Constructs a histogram from configuration dict"""
+        """Construct a histogram from configuration dict."""
         return Histogram(
             None,
             None,
@@ -59,7 +61,7 @@ class Histogram:
         )
 
     def to_dict(self):
-        """Builds dict representation of a histogram"""
+        """Build dict representation of a histogram."""
         return {
             "bins_count": len(self.bins),
             "bins": self.bins.tolist(),
@@ -72,7 +74,7 @@ class Histogram:
 
     @staticmethod
     def from_dict(data: Dict[str, Any]) -> Histogram:
-        """Creates a histogram from dict"""
+        """Create a histogram from dict."""
         hist = Histogram(
             data["bins"],
             data["bars"],
@@ -88,7 +90,7 @@ class Histogram:
 
     @staticmethod
     def merge(hist1: Histogram, hist2: Histogram) -> Histogram:
-        """Merges two histograms"""
+        """Merge two histograms."""
         assert hist1.x_scale == hist2.x_scale
         assert hist1.x_min == hist2.x_min
         assert hist1.x_min_log == hist2.x_min_log
@@ -111,7 +113,7 @@ class Histogram:
         return result
 
     def add_value(self, value):
-        """Adds value to the histogram"""
+        """Add value to the histogram."""
         if value < self.x_min or value > self.x_max:
             logger.warning(
                 "value %s out of range: [%s, %s]",
@@ -131,9 +133,7 @@ class Histogram:
         return True
 
     def set_empty(self):
-        """
-        Resets the bins and bars of the histogram
-        """
+        """Reset the bins and bars of the histogram."""
         if self.x_scale == "linear":
             self.bins = np.linspace(
                 self.x_min,
@@ -152,49 +152,39 @@ class Histogram:
         self.bars = np.zeros(self.bins_count, dtype=np.int64)
 
     def set_values(self, values):
-        """
-        Resets the histogram and adds every given values
-        """
+        """Reset the histogram and adds every given values."""
         self.set_empty()
         for value in values:
             self.add_value(value)
 
 
 class HistogramBuilder:
-    """Class to build genomic scores histograms for given resource"""
+    """Class to build genomic scores histograms for given resource."""
 
     def __init__(self, resource) -> None:
         self.resource = resource
 
-    def build(self, client, path="histograms",
-              force=False, only_dirty=False,
-              region_size=1000000) -> dict[str, Histogram]:
-        """build a genomic score histograms and returns them"""
+    def build(self, client,
+              region_size=1_000_000, **_kwargs) -> dict[str, Histogram]:
+        """Build a genomic score's histograms and returns them."""
+        return self._do_build(
+            client,
+            self.resource.get_config().get("histograms", []),
+            region_size)
 
-        loaded_hists, computed_hists = self._build(client, path, force,
-                                                   region_size)
-        if only_dirty:
-            return computed_hists
+    def _collect_histograms_to_build(self, path):
+        hist_configs = self.resource.get_config().get("histograms", [])
 
-        for key, value in computed_hists.items():
-            loaded_hists[key] = value
-        return loaded_hists
-
-    def _build(self, client, path, force, region_size) \
-            -> Tuple[Dict[str, Histogram], Dict[str, Histogram]]:
-
-        histogram_desc = self.resource.get_config().get("histograms", [])
-        if force:
-            return {}, self._do_build(client, histogram_desc, region_size)
-
-        hists, metadata = _load_histograms(self.resource.repo,
-                                           self.resource.get_id(), None, None,
-                                           path)
+        hists, metadata = _load_histograms(
+            self.resource.proto,
+            resource_id=self.resource.get_id(),
+            version_constraint=f"={self.resource.get_version_str()}",
+            path=path)
         hashes = self._build_hashes()
 
         configs_to_calculate = []
         loaded_hists = {}
-        for hist_conf in histogram_desc:
+        for hist_conf in hist_configs:
             score_id = hist_conf["score"]
             actual_md5 = metadata.get(score_id, {}).get("md5", None)
             expected_md5 = hashes.get(score_id, None)
@@ -205,38 +195,68 @@ class HistogramBuilder:
                 loaded_hists[score_id] = hists[score_id]
             else:
                 configs_to_calculate.append(hist_conf)
+        return loaded_hists, configs_to_calculate
 
-        remaining = self._do_build(client, configs_to_calculate, region_size)
+    def check_update(self, path="histograms"):
+        """Check if histograms of a given reource need update."""
+        _, configs_to_calculate = \
+            self._collect_histograms_to_build(path)
+        if configs_to_calculate:
+            print(
+                f"resource <"
+                f"{self.resource.get_genomic_resource_id_version()}> "
+                f"histograms {configs_to_calculate} need update",
+                file=sys.stderr)
+        else:
+            print(
+                f"histograms of <"
+                f"{self.resource.get_genomic_resource_id_version()}> "
+                f"are up to date",
+                file=sys.stderr)
+        return configs_to_calculate
 
-        return loaded_hists, remaining
+    def update(
+            self, client, path="histograms",
+            region_size=1_000_000) -> Dict[str, Histogram]:
+        """Build a genomic score's histograms that need rebuilding."""
+        configs_to_calculate = self.check_update(path=path)
+        return self._do_build(client, configs_to_calculate, region_size)
+
+    def _do_fill_min_maxes(
+            self, client, score, hist_configs, region_size):
+        hist_configs = deepcopy(hist_configs)
+
+        scores_missing_limits = []
+        for hist_conf in hist_configs:
+            has_min_max = "min" in hist_conf and "max" in hist_conf
+            if not has_min_max:
+                scores_missing_limits.append(hist_conf["score"])
+
+        score_limits = {}
+        if len(scores_missing_limits) > 0:
+            # copy hist desc so that we don't overwrite the config
+            score_limits = self._score_min_max(client, score,
+                                               scores_missing_limits,
+                                               region_size)
+
+        result = {}
+        for hist_conf in hist_configs:
+            if "min" not in hist_conf:
+                hist_conf["min"] = score_limits[hist_conf["score"]][0]
+            if "max" not in hist_conf:
+                hist_conf["max"] = score_limits[hist_conf["score"]][1]
+            result[hist_conf["score"]] = hist_conf
+
+        return result
 
     def _do_build(self, client, histogram_desc,
                   region_size) -> dict[str, Histogram]:
         if len(histogram_desc) == 0:
             return {}
 
-        scores_missing_limits = []
-        for hist_conf in histogram_desc:
-            has_min_max = "min" in hist_conf and "max" in hist_conf
-            if not has_min_max:
-                scores_missing_limits.append(hist_conf["score"])
-
         score = open_score_from_resource(self.resource)
-        score_limits = {}
-        if len(scores_missing_limits) > 0:
-            # copy hist desc so that we don't overwrite the config
-            histogram_desc = [copy(d) for d in histogram_desc]
-            score_limits = self._score_min_max(client, score,
-                                               scores_missing_limits,
-                                               region_size)
-
-        hist_configs = {}
-        for hist_conf in histogram_desc:
-            if "min" not in hist_conf:
-                hist_conf["min"] = score_limits[hist_conf["score"]][0]
-            if "max" not in hist_conf:
-                hist_conf["max"] = score_limits[hist_conf["score"]][1]
-            hist_configs[hist_conf["score"]] = hist_conf
+        hist_configs = self._do_fill_min_maxes(
+            client, score, histogram_desc, region_size)
 
         chrom_histograms = []
         futures = []
@@ -264,7 +284,7 @@ class HistogramBuilder:
             yield chrom, i, None
 
     def _do_hist(self, chrom, hist_configs, start, end):
-        histograms = dict()
+        histograms = {}
         for scr_id, config in hist_configs.items():
             hist = Histogram.from_config(config)
             histograms[scr_id] = hist
@@ -293,18 +313,8 @@ class HistogramBuilder:
                     res[scr_id] = Histogram.merge(res[scr_id], histogram)
         return res
 
-    def _score_min_max(self, client, score, score_ids, region_size):
-        logger.info("Calculating min max for %s", score_ids)
-
-        min_maxes = []
-        futures = []
-        for chrom, start, end in self._split_into_regions(score, region_size):
-            futures.append(client.submit(self._min_max_for_chrom,
-                                         chrom, score_ids,
-                                         start, end))
-        for future in tqdm(as_completed(futures), total=len(futures)):
-            min_maxes.append(future.result())
-
+    @staticmethod
+    def _merge_min_maxes(min_maxes):
         res = {}
         for partial_res in min_maxes:
             for scr_id, (i_min, i_max) in partial_res.items():
@@ -313,13 +323,27 @@ class HistogramBuilder:
                     res[scr_id][1] = max(i_max, res[scr_id][1])
                 else:
                     res[scr_id] = [i_min, i_max]
+        return res
 
+    def _score_min_max(self, client, score, score_ids, region_size):
+        logger.info("Calculating min max for %s", score_ids)
+
+        min_maxes = []
+        futures = []
+        for chrom, start, end in self._split_into_regions(score, region_size):
+            futures.append(client.submit(self._min_max_for_region,
+                                         chrom, score_ids,
+                                         start, end))
+        for future in tqdm(as_completed(futures), total=len(futures)):
+            min_maxes.append(future.result())
+
+        res = self._merge_min_maxes(min_maxes)
         logger.info(
             "Done calculating min/max for %s. "
             "res=%s", score_ids, res)
         return res
 
-    def _min_max_for_chrom(self, chrom, score_ids, start, end):
+    def _min_max_for_region(self, chrom, score_ids, start, end):
         score = open_score_from_resource(self.resource)
         limits = np.iinfo(np.int64)
         res = {scr_id: [limits.max, limits.min] for scr_id in score_ids}
@@ -331,31 +355,75 @@ class HistogramBuilder:
                     res[scr_id][1] = max(val, res[scr_id][1])
         return res
 
-    def _build_hashes(self):
+    def _get_table_hash(self):
         config = self.resource.get_config()
+        if config.get("table") is None:
+            return None
+
         table_filename = config["table"]["filename"]
+        index_filename = f"{table_filename}.tbi"
+
         manifest = self.resource.get_manifest()
         table_hash = None
+        index_hash = ""
         for rec in manifest:
             if rec.name == table_filename:
                 table_hash = rec.md5
-                break
+            elif rec.name == index_filename:
+                index_hash = rec.md5
+        if table_hash is None:
+            raise ValueError(f"cant get table md5 hash for {table_filename}")
+
+        return (table_hash, index_hash)
+
+    def _build_hashes(self):
+        config = self.resource.get_config()
+        histogram_desc = config.get("histograms", [])
+        if not histogram_desc:
+            return {}
+
+        hist_configs = {hist["score"]: copy(hist) for hist in histogram_desc}
+        table_hash = self._get_table_hash()
         if table_hash is None:
             return {}
 
-        histogram_desc = config.get("histograms", [])
-        hist_configs = {hist["score"]: hist for hist in histogram_desc}
+        for hist_score, hist_conf in hist_configs.items():
+            for score_desc in config["scores"]:
+                if hist_score == score_desc["id"]:
+                    hist_conf["score_desc"] = score_desc
+
         hashes = {}
         for score_id, hist_config in hist_configs.items():
             md5_hash = hashlib.md5()
-            hist_hash_obj = {"table_hash": table_hash, "config": hist_config}
+            hist_hash_obj = {
+                "table_hash": table_hash[0],
+                "index_hash": table_hash[1],
+                "config": hist_config
+            }
             md5_hash.update(yaml.dump(hist_hash_obj).encode("utf-8"))
             hashes[score_id] = md5_hash.hexdigest()
 
         return hashes
 
+    def _save_plt(self, histogram, score, out_dir):
+        width = histogram.bins[1:] - histogram.bins[:-1]
+        plt.bar(
+            x=histogram.bins[:-1], height=histogram.bars,
+            log=histogram.y_scale == "log",
+            width=width,
+            align="edge")
+
+        if histogram.x_scale == "log":
+            plt.xscale("log")
+        plt.grid(axis="y")
+        plt.grid(axis="x")
+        plot_file = os.path.join(out_dir, f"{score}.png")
+        with self.resource.open_raw_file(plot_file, "wb") as outfile:
+            plt.savefig(outfile)
+        plt.clf()
+
     def save(self, histograms, out_dir):
-        """Saves a histogram in the specified output directory"""
+        """Save a histogram in the specified output directory."""
         histogram_desc = self.resource.get_config().get("histograms", [])
         configs = {hist["score"]: hist for hist in histogram_desc}
         hist_hashes = self._build_hashes()
@@ -364,7 +432,10 @@ class HistogramBuilder:
             bars = list(histogram.bars)
             bars.append(np.nan)
 
-            data = pd.DataFrame({'bars': bars, 'bins': histogram.bins})
+            data = pd.DataFrame({
+                "bars": bars,
+                "bins": histogram.bins
+            })
             hist_file = os.path.join(out_dir, f"{score}.csv")
             with self.resource.open_raw_file(hist_file, "wt") as outfile:
                 data.to_csv(outfile, index=None)
@@ -383,52 +454,29 @@ class HistogramBuilder:
             metadata_file = os.path.join(out_dir, f"{score}.metadata.yaml")
             with self.resource.open_raw_file(metadata_file, "wt") as outfile:
                 yaml.dump(metadata, outfile)
-
-            width = histogram.bins[1:] - histogram.bins[:-1]
-            plt.bar(
-                x=histogram.bins[:-1], height=histogram.bars,
-                log=histogram.y_scale == "log",
-                width=width,
-                align="edge")
-
-            if histogram.x_scale == "log":
-                plt.xscale("log")
-            plt.grid(axis="y")
-            plt.grid(axis="x")
-            plot_file = os.path.join(out_dir, f"{score}.png")
-            with self.resource.open_raw_file(plot_file, "wb") as outfile:
-                plt.savefig(outfile)
-            plt.clf()
-
-        # update manifest with newly written files
-        self.resource.repo.update_manifest(self.resource)
+            self._save_plt(histogram, score, out_dir)
 
 
 def load_histograms(repo, resource_id, version_constraint=None,
-                    genomic_repository_id=None, path="histograms"):
-    """Loads genomic scores histograms"""
-    hists, _ = _load_histograms(repo, resource_id, version_constraint,
-                                genomic_repository_id, path)
+                    repository_id=None, path="histograms"):
+    """Load genomic score histograms."""
+    if repository_id is not None and repository_id != repo.get_id():
+        return {}
+
+    hists, _ = _load_histograms(repo, resource_id, version_constraint, path)
     return hists
 
 
-def _load_histograms(repo, resource_id, version_constraint,
-                     genomic_repository_id, path):
+def _load_histograms(repo, resource_id, version_constraint, path):
 
-    from dae.genomic_resources.cached_repository import \
-        GenomicResourceCachedRepo
-    if isinstance(repo, GenomicResourceCachedRepo):
-        # score resources are huge so circumvent the caching
-        repo = repo.child
-
-    res = repo.get_resource(resource_id, version_constraint,
-                            genomic_repository_id)
+    res = repo.get_resource(resource_id, version_constraint)
     hists = {}
     metadatas = {}
     for hist_config in res.get_config().get("histograms", []):
         score = hist_config["score"]
         hist_file = os.path.join(path, f"{score}.csv")
         metadata_file = os.path.join(path, f"{score}.metadata.yaml")
+
         if res.file_exists(hist_file) and res.file_exists(metadata_file):
             with res.open_raw_file(hist_file, "rt") as infile:
                 data = pd.read_csv(infile)

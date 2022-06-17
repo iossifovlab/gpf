@@ -1,6 +1,11 @@
+from __future__ import annotations
+
 import os
 import glob
 import logging
+
+from typing import List, Any, Dict, Optional, cast
+
 import fsspec  # type: ignore
 
 import yaml
@@ -8,7 +13,6 @@ import toml
 
 from box import Box  # type: ignore
 
-from typing import List, Any, Dict, Optional, cast
 from cerberus import Validator  # type: ignore
 
 from dae.utils.dict_utils import recursive_dict_update
@@ -145,12 +149,12 @@ class GPFConfigParser:
         schema: dict,
         default_config: Dict[str, Any] = None,
         conf_dir: str = None,
-    ) -> FrozenBox:
+    ) -> DefaultBox:
 
         config = GPFConfigParser.merge_config(config, default_config)
         config = GPFConfigParser.validate_config(config, schema, conf_dir)
 
-        return FrozenBox(config)
+        return DefaultBox(config)
 
     @classmethod
     def load_config_raw(cls, filename: str) -> Dict[str, Any]:
@@ -166,7 +170,7 @@ class GPFConfigParser:
         schema: dict,
         default_config_filename: Optional[str] = None,
         default_config: Optional[dict] = None,
-    ) -> FrozenBox:
+    ) -> DefaultBox:
 
         if not os.path.exists(filename):
             raise ValueError(f"{filename} does not exist!")

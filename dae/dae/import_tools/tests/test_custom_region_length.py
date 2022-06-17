@@ -103,13 +103,13 @@ def test_bucket_generation():
         processing_config=dict(
             work_dir="",
             denovo=dict(
-                chromosomes=['1'],
+                chromosomes=["1"],
                 region_length=70_000_000
             )
         ),
         partition_description=dict(
             region_bin=dict(
-                chromosomes=['1'],
+                chromosomes=["1"],
                 region_length=100_000_000
             )
         )
@@ -141,13 +141,13 @@ def test_bucket_generation_chrom_mismatch(gpf_instance_short):
         processing_config=dict(
             work_dir="",
             denovo=dict(
-                chromosomes=['2'],
+                chromosomes=["2"],
                 region_length=140_000
             )
         ),
         partition_description=dict(
             region_bin=dict(
-                chromosomes=['1'],
+                chromosomes=["1"],
                 region_length=150_000
             )
         )
@@ -185,7 +185,7 @@ _denovo_multi_chrom_config = dict(
     ),
     partition_description=dict(
         region_bin=dict(
-            chromosomes=['chr1'],
+            chromosomes=["chr1"],
             region_length=100000000
         )
     )

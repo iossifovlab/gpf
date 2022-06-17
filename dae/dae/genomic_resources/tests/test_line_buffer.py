@@ -1,3 +1,5 @@
+# pylint: disable=redefined-outer-name,C0114,C0116,protected-access
+
 import pytest
 
 from dae.genomic_resources.genome_position_table import LineBuffer
@@ -7,7 +9,7 @@ def test_line_buffer_simple():
     buffer = LineBuffer()
     buffer.append("1", 1435348, 1435664, None)
     buffer.append("1", 1435665, 1435739, None)
-    
+
     assert buffer.region() == ("1", 1435348, 1435739)
 
     for row in buffer.fetch("1", 1435400, 1435400):
@@ -24,6 +26,7 @@ def test_line_buffer_simple_2():
 
     res = list(buffer.fetch("1", 4, 8))
     assert len(res) == 4
+
 
 @pytest.mark.parametrize("pos,expected", [
     (1, 5),
@@ -69,7 +72,7 @@ def test_line_buffer_find_index(pos, expected):
 
 def test_line_buffer_simple_3():
     buffer = LineBuffer()
-    buffer.append("1",  1, 10, None)
+    buffer.append("1", 1, 10, None)
     buffer.append("1", 11, 20, None)
     buffer.append("1", 21, 30, None)
     buffer.append("1", 31, 40, None)

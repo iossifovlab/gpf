@@ -352,7 +352,7 @@ const-naming-style=UPPER_CASE
 
 # Minimum line length for functions/classes that require docstrings, shorter
 # ones are exempt.
-docstring-min-length=-1
+docstring-min-length=7
 
 # Naming style matching correct function names.
 function-naming-style=snake_case
@@ -367,7 +367,9 @@ good-names=i,
            k,
            ex,
            Run,
-           _
+           _,
+           s3,
+           df
 
 # Good variable names regexes, separated by a comma. If names match any regex,
 # they will always be accepted

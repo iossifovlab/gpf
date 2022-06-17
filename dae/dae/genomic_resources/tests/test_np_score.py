@@ -1,31 +1,36 @@
+# pylint: disable=redefined-outer-name,C0114,C0116,protected-access
+
 from dae.genomic_resources import GenomicResource
 from dae.genomic_resources.genomic_scores import open_np_score_from_resource
-from dae.genomic_resources.test_tools import build_a_test_resource
+from dae.genomic_resources.testing import build_test_resource
+from dae.genomic_resources.test_tools import convert_to_tab_separated
 from dae.genomic_resources.repository import GR_CONF_FILE_NAME
 
 
-def test_the_simplest_np_score():
-    res: GenomicResource = build_a_test_resource({
-        "genomic_resource.yaml": '''
-            type: np_score
-            table:
-                filename: data.mem
-            scores:
-                - id: cadd_raw
-                  type: float
-                  desc: ""
-                  name: s1
-        ''',
-        "data.mem": '''
-            chrom  pos_begin  pos_end  reference  alternative  s1
-            1      10         15       A          G            0.02
-            1      10         15       A          C            0.03
-            1      10         15       A          T            0.04
-            1      16         19       C          G            0.03
-            1      16         19       C          T            0.04
-            1      16         19       C          A            0.05
-        '''
-    })
+def test_the_simplest_np_score(tmp_path):
+    res: GenomicResource = build_test_resource(
+        root_path=str(tmp_path),
+        content={
+            "genomic_resource.yaml": """
+                type: np_score
+                table:
+                    filename: data.mem
+                scores:
+                    - id: cadd_raw
+                      type: float
+                      desc: ""
+                      name: s1
+            """,
+            "data.mem": """
+                chrom  pos_begin  pos_end  reference  alternative  s1
+                1      10         15       A          G            0.02
+                1      10         15       A          C            0.03
+                1      10         15       A          T            0.04
+                1      16         19       C          G            0.03
+                1      16         19       C          T            0.04
+                1      16         19       C          A            0.05
+            """
+        })
     assert res.get_type() == "np_score"
     score = open_np_score_from_resource(res)
 
@@ -37,35 +42,36 @@ def test_the_simplest_np_score():
 
 
 def test_np_score_aggregation():
-    res: GenomicResource = build_a_test_resource({
-        GR_CONF_FILE_NAME: '''
-            type: np_score
-            table:
-                filename: data.mem
-            scores:
-                - id: cadd_raw
-                  type: float
-                  desc: ""
-                  name: s1
+    res: GenomicResource = build_test_resource(
+        content={
+            GR_CONF_FILE_NAME: """
+                type: np_score
+                table:
+                    filename: data.mem
+                scores:
+                    - id: cadd_raw
+                      type: float
+                      desc: ""
+                      name: s1
 
-                - id: cadd_test
-                  type: int
-                  position_aggregator: max
-                  nucleotide_aggregator: mean
-                  na_values: "-1"
-                  desc: ""
-                  name: s2
-        ''',
-        "data.mem": '''
-            chrom  pos_begin  pos_end  reference  alternative  s1    s2
-            1      10         15       A          G            0.02  2
-            1      10         15       A          C            0.03  -1
-            1      10         15       A          T            0.04  4
-            1      16         19       C          G            0.03  3
-            1      16         19       C          T            0.04  EMPTY
-            1      16         19       C          A            0.05  0
-        '''
-    })
+                    - id: cadd_test
+                      type: int
+                      position_aggregator: max
+                      nucleotide_aggregator: mean
+                      na_values: "-1"
+                      desc: ""
+                      name: s2
+            """,
+            "data.mem": convert_to_tab_separated("""
+                chrom  pos_begin  pos_end  reference  alternative  s1    s2
+                1      10         15       A          G            0.02  2
+                1      10         15       A          C            0.03  -1
+                1      10         15       A          T            0.04  4
+                1      16         19       C          G            0.03  3
+                1      16         19       C          T            0.04  EMPTY
+                1      16         19       C          A            0.05  0
+            """)
+        })
 
     assert res.get_type() == "np_score"
     score = open_np_score_from_resource(res)
@@ -75,7 +81,7 @@ def test_np_score_aggregation():
     assert score.table.pos_end_column_i == 2
 
     assert score.fetch_scores_agg("1", 14, 18, ["cadd_raw"]) == \
-        {"cadd_raw": (2*0.04 + 2*0.05) / 4.}
+        {"cadd_raw": (2 * 0.04 + 2 * 0.05) / 4.}
 
     assert score.fetch_scores_agg(
         "1", 14, 18, ["cadd_raw"],
@@ -98,8 +104,8 @@ def test_np_score_aggregation():
 
 
 def test_np_score_fetch_region():
-    res: GenomicResource = build_a_test_resource({
-        GR_CONF_FILE_NAME: '''
+    res: GenomicResource = build_test_resource(content={
+        GR_CONF_FILE_NAME: """
             type: np_score
             table:
                 filename: data.mem
@@ -116,8 +122,8 @@ def test_np_score_fetch_region():
                   na_values: "-1"
                   desc: ""
                   name: s2
-        ''',
-        "data.mem": '''
+        """,
+        "data.mem": convert_to_tab_separated("""
             chrom  pos_begin  pos_end  reference  alternative  s1    s2
             1      10         15       A          G            0.02  2
             1      10         15       A          C            0.03  -1
@@ -128,7 +134,7 @@ def test_np_score_fetch_region():
             2      16         19       C          A            0.03  3
             2      16         19       C          T            0.04  3
             2      16         19       C          G            0.05  4
-        '''
+        """)
     })
     score = open_np_score_from_resource(res)
 

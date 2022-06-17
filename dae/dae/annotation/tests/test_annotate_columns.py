@@ -1,3 +1,5 @@
+# pylint: disable=redefined-outer-name,C0114,C0116,protected-access
+
 import pytest
 
 from dae.annotation.annotate_columns import build_record_to_annotatable
@@ -84,7 +86,7 @@ def test_basic_setup(tmp_path):
             """,
         "grr.yaml": """
             id: mm
-            type: embeded
+            type: embedded
             content:
                 one:
                     genomic_resource.yaml: |

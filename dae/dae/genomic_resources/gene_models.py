@@ -1336,7 +1336,7 @@ def join_gene_models(*gene_models):
     if len(gene_models) < 2:
         raise ValueError("The function needs at least 2 arguments!")
 
-    gm = GeneModels()
+    gm = GeneModels(gene_models[0].source)
     gm.utr_models = {}
     gm.gene_models = {}
 
@@ -1380,15 +1380,20 @@ def load_gene_models_from_resource(
     logger.debug("loading gene models %s (%s)", filename, fileformat)
 
     gm = GeneModels(
-        ("resource", resource.repo.repo_id,
+        ("resource", resource.proto.get_id(),
          resource.resource_id, gene_mapping_filename))
+    compression = False
+    if filename.endswith(".gz"):
+        compression = True
     with resource.open_raw_file(
-            filename, mode="rt",
-            uncompress=True, seekable=True) as infile:
+            filename, mode="rt", compression=compression) as infile:
         if gene_mapping_filename is not None:
+            compression = False
+            if gene_mapping_filename.endswith(".gz"):
+                compression = True
             with resource.open_raw_file(
-                    gene_mapping_filename,
-                    "rt", uncompress=True) as gene_mapping:
+                    gene_mapping_filename, "rt",
+                    compression=compression) as gene_mapping:
                 logger.debug(
                     "loading gene mapping from %s", gene_mapping_filename)
                 gm.load(infile, fileformat, gene_mapping)

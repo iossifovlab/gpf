@@ -1,10 +1,12 @@
+# pylint: disable=redefined-outer-name,C0114,C0116,protected-access
+
 import tempfile
 import shutil
 
 import pytest
 
 from dae.gene.scores import GenomicScoresDb
-from dae.genomic_resources.embeded_repository import GenomicResourceEmbededRepo
+from dae.genomic_resources.testing import build_testing_repository
 from dae.genomic_resources.repository import GR_CONF_FILE_NAME
 
 
@@ -22,7 +24,7 @@ def temp_cache_dir(request):
 
 @pytest.fixture(scope="session")
 def scores_repo():
-    sets_repo = GenomicResourceEmbededRepo("gene_sets", content={
+    sets_repo = build_testing_repository(repo_id="gene_sets", content={
         "phastCons": {
             GR_CONF_FILE_NAME: (
                 "type: position_score\n"

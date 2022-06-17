@@ -165,7 +165,7 @@ def open_reference_genome_from_resource(
     index_content = resource.get_file_content(index_file_name)
 
     ref = ReferenceGenome(
-        ("resource", resource.repo.repo_id, resource.resource_id))
+        ("resource", resource.proto.get_id(), resource.resource_id))
 
     pars = _parse_pars(config)
     ref.set_pars(pars)

@@ -1,30 +1,40 @@
-from dae.genomic_resources.embeded_repository import GenomicResourceEmbededRepo
+# pylint: disable=redefined-outer-name,C0114,C0116,protected-access
+
+import pytest
+
 from dae.genomic_resources.group_repository import GenomicResourceGroupRepo
 
 
-def test_lookup_priority_in_a_group_repository():
+@pytest.fixture
+def group_repo(repo_builder):
     repo = GenomicResourceGroupRepo(children=[
-        GenomicResourceEmbededRepo("a", content={
-            "one": {"genomic_resource.yaml": ""}}),
-        GenomicResourceEmbededRepo("b", content={
-            "one[1.0]": {"genomic_resource.yaml": ""}})
+        repo_builder(
+            repo_id="a",
+            scheme="memory",
+            content={
+                "one": {"genomic_resource.yaml": ""}
+            }),
+        repo_builder(
+            repo_id="b",
+            scheme="memory",
+            content={
+                "one(1.0)": {"genomic_resource.yaml": ""}
+            })
     ])
-    gr = repo.get_resource("one")
-    assert gr
-    assert gr.resource_id == "one"
-    assert gr.version == (0,)
-    assert gr.repo.repo_id == "a"
+    return repo
 
 
-def test_lookup_in_a_group_repository_with_version_requirement():
-    repo = GenomicResourceGroupRepo([
-        GenomicResourceEmbededRepo(
-            "a", {"one": {"genomic_resource.yaml": ""}}),
-        GenomicResourceEmbededRepo(
-            "b", {"one[1.0]": {"genomic_resource.yaml": ""}})
-    ])
-    gr = repo.get_resource("one", version_constraint="1.0")
-    assert gr
-    assert gr.resource_id == "one"
-    assert gr.version == (1, 0)
-    assert gr.repo.repo_id == "b"
+def test_lookup_priority_in_a_group_repository(group_repo):
+    res = group_repo.get_resource("one")
+    assert res
+    assert res.resource_id == "one"
+    assert res.version == (0,)
+    assert res.proto.get_id() == "a"
+
+
+def test_lookup_in_a_group_repository_with_version_requirement(group_repo):
+    res = group_repo.get_resource("one", version_constraint="1.0")
+    assert res
+    assert res.resource_id == "one"
+    assert res.version == (1, 0)
+    assert res.proto.get_id() == "b"

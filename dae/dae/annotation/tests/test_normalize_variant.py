@@ -1,8 +1,10 @@
-import pytest
+# pylint: disable=redefined-outer-name,C0114,C0116,protected-access
+
 import textwrap
+import pytest
 
 from dae.genomic_resources.test_tools import convert_to_tab_separated
-from dae.genomic_resources.test_tools import build_a_test_resource
+from dae.genomic_resources.testing import build_test_resource
 from dae.genomic_resources.reference_genome import \
     open_reference_genome_from_resource
 from dae.annotation.annotatable import VCFAllele
@@ -14,11 +16,11 @@ from dae.annotation.normalize_allele_annotator import normalize_allele, \
 
 
 @pytest.fixture
-def example_1_genome():
-    """
-    Example from https://genome.sph.umich.edu/wiki/File:Normalization_mnp.png
-    """
-    res = build_a_test_resource({
+def example_1_genome():    
+    # Example from 
+    # https://genome.sph.umich.edu/wiki/File:Normalization_mnp.png
+
+    res = build_test_resource({
         "genomic_resource.yaml": "{type: genome, filename: chr.fa}",
         "chr.fa": convert_to_tab_separated("""
                 >1
@@ -48,10 +50,10 @@ def test_example_1_genome_basic(example_1_genome, beg, end, seq):
 
 @pytest.fixture
 def example_2_genome():
-    """
-    Example from https://genome.sph.umich.edu/wiki/File:Normalization_str.png
-    """
-    res = build_a_test_resource({
+    # Example from 
+    # https://genome.sph.umich.edu/wiki/File:Normalization_str.png
+
+    res = build_test_resource({
         "genomic_resource.yaml": "{type: genome, filename: chr.fa}",
         "chr.fa": convert_to_tab_separated("""
                 >1

@@ -403,7 +403,7 @@ class ContinuousParquetFileWriter:
                 os.makedirs(dirname)
             self.dirname = dirname
 
-        import pyarrow.parquet as pq
+        import pyarrow.parquet as pq  # type: ignore
         self._writer = pq.ParquetWriter(
             filepath, self.schema, compression="snappy", filesystem=filesystem
         )

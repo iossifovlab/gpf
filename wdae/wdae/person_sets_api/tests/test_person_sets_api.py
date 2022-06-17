@@ -1,3 +1,5 @@
+# pylint: disable=redefined-outer-name,C0114,C0116,protected-access
+
 import pytest
 from rest_framework import status  # type: ignore
 
@@ -10,51 +12,51 @@ def test_collection_configs_view(admin_client):
     response = admin_client.get(url)
     assert response.status_code == status.HTTP_200_OK
     assert response.data == {
-        'phenotype': {
-            'domain': [
+        "phenotype": {
+            "domain": [
                 {
-                    'color': '#e35252',
-                    'id': 'phenotype1',
-                    'name': 'phenotype 1',
-                    'values': ('phenotype1', )
+                    "color": "#e35252",
+                    "id": "phenotype1",
+                    "name": "phenotype 1",
+                    "values": ["phenotype1", ]
                 },
                 {
-                    'color': '#b8008a',
-                    'id': 'phenotype2',
-                    'name': 'phenotype 2',
-                    'values': ('phenotype2', )
+                    "color": "#b8008a",
+                    "id": "phenotype2",
+                    "name": "phenotype 2",
+                    "values": ["phenotype2", ]
                 },
                 {
-                    'color': '#ffffff',
-                    'id': 'unaffected',
-                    'name': 'unaffected',
-                    'values': ('unaffected', )
+                    "color": "#ffffff",
+                    "id": "unaffected",
+                    "name": "unaffected",
+                    "values": ["unaffected", ]
                 },
             ],
-            'id': 'phenotype',
-            'name': 'Phenotype',
-            'default': {
+            "id": "phenotype",
+            "name": "Phenotype",
+            "default": {
                 "id": "unknown",
                 "name": "unknown",
                 "color": "#aaaaaa",
             },
-            'sources': [
-                {'from': 'pedigree', "source": "phenotype"},
+            "sources": [
+                {"from": "pedigree", "source": "phenotype"},
             ],
         },
-        'status': {
-            'domain': [
+        "status": {
+            "domain": [
                 {
-                    'color': '#e35252',
-                    'id': 'affected',
-                    'name': 'affected',
-                    'values': ('affected', )
+                    "color": "#e35252",
+                    "id": "affected",
+                    "name": "affected",
+                    "values": ["affected", ]
                 },
                 {
-                    'color': '#ffffff',
-                    'id': 'unaffected',
-                    'name': 'unaffected',
-                    'values': ('unaffected', )
+                    "color": "#ffffff",
+                    "id": "unaffected",
+                    "name": "unaffected",
+                    "values": ["unaffected", ]
                 }
             ],
             "default": {
@@ -62,9 +64,9 @@ def test_collection_configs_view(admin_client):
                 "name": "unspecified",
                 "color": "#aaaaaa",
             },
-            'id': 'status',
-            'name': 'Affected Status',
-            'sources': [{'from': 'pedigree', "source": "status"}],
+            "id": "status",
+            "name": "Affected Status",
+            "sources": [{"from": "pedigree", "source": "status"}],
         }
     }
 

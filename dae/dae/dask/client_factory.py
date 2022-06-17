@@ -1,22 +1,29 @@
+"""Factory for creatio of dask client objects from config or CLI arguments."""
+from __future__ import annotations
+
 import argparse
 import os
 import sys
 import tempfile
-from typing import Any, Optional
+from typing import Optional, Dict, Any
+
 from dask.distributed import Client, LocalCluster  # type: ignore
 from dask_kubernetes import KubeCluster, make_pod_spec  # type: ignore
 
 
 class DaskClient:
+    """Factory for Dask client objects."""
+
     @staticmethod
     def add_arguments(parser):
+        """Configure argparser with Dask client parameters."""
         parser.add_argument("-j", "--jobs", type=int, default=None,
                             help="Number of jobs to run in parallel. \
 Defaults to the number of processors on the machine")
         parser.add_argument("--kubernetes", default=False,
                             action="store_true",
                             help="Run computation in a kubernetes cluster")
-        parser.add_argument("--envvars", nargs='*', default=[],
+        parser.add_argument("--envvars", nargs="*", default=[],
                             help="Environment variables to pass to "
                             "kubernetes workers")
         parser.add_argument("--container-image",
@@ -38,51 +45,63 @@ the number of workers using -j")
                             help="Directory where to store SGE worker logs")
 
     @classmethod
-    def from_arguments(cls, args: argparse.Namespace) \
-            -> Optional["DaskClient"]:
-        n_jobs = args.jobs or os.cpu_count()
+    def from_arguments(cls, args: argparse.Namespace) -> Optional[DaskClient]:
+        return DaskClient.from_dict(vars(args))
 
-        tmp_dir = tempfile.TemporaryDirectory()
+    @classmethod
+    def from_dict(cls, kwargs) -> Optional[DaskClient]:
+        """Configure a DaskClient from a configuration dict."""
+        n_jobs = kwargs.get("jobs")
+        if not n_jobs:
+            n_jobs = os.cpu_count()
 
-        if args.kubernetes:
-            env = cls._get_env_vars(args.envvars)
+        dashboard_config: Dict[str, Any] = {}
+        if kwargs.get("dashboard_port"):
+            dashboard_config["scheduler_options"] = {
+                "dashboard_address":
+                f":{kwargs.get('dashboard_port', 8787)}"
+            }
+        if kwargs.get("log_dir"):
+            log_dir = kwargs.get("log_dir")
+        else:
+            # pylint: disable=consider-using-with
+            tmp_dir = tempfile.TemporaryDirectory()
+            log_dir = tmp_dir.name
+
+        if kwargs.get("kubernetes"):
+            env = cls._get_env_vars(kwargs.get("envvars"))
             extra_pod_config = {}
-            if args.image_pull_secrets:
+            if kwargs.get("image_pull_secrets"):
                 extra_pod_config["imagePullSecrets"] = [
-                    {"name": name} for name in args.image_pull_secrets
+                    {"name": name}
+                    for name in kwargs.get(
+                        "image_pull_secrets", [])
                 ]
-            pod_spec = make_pod_spec(image=args.container_image,
-                                     extra_pod_config=extra_pod_config)
+            pod_spec = make_pod_spec(
+                image=kwargs.get("container_image"),
+                extra_pod_config=extra_pod_config)
             cluster = KubeCluster(pod_spec, env=env)
             cluster.scale(n_jobs)
-        elif args.sge:
+        elif kwargs.get("sge"):
             try:
                 #  pylint: disable=import-outside-toplevel
                 from dask_jobqueue import SGECluster  # type: ignore
-            except Exception:
+            except ModuleNotFoundError:
                 print("No dask-jobqueue found. Please install it using:"
                       " mamba install dask-jobqueue -c conda-forge",
                       file=sys.stderr)
                 return None
 
-            dashboard_config: dict[str, Any] = {}
-            if args.dashboard_port:
-                dashboard_config["scheduler_options"] = \
-                    {"dashboard_address": f":{args.dashboard_port}"}
             cluster = SGECluster(n_workers=n_jobs,
                                  queue="all.q",
                                  walltime="1500000",
                                  cores=1,
                                  processes=1,
                                  memory="2GB",
-                                 log_directory=args.log_dir or tmp_dir.name,
+                                 log_directory=log_dir,
                                  local_directory=tmp_dir.name,
                                  **dashboard_config)
         else:
-            dashboard_config = {}
-            if args.dashboard_port:
-                dashboard_config["dashboard_address"] = \
-                    f":{args.dashboard_port}"
             cluster = LocalCluster(n_workers=n_jobs, threads_per_worker=1,
                                    local_directory=tmp_dir.name,
                                    **dashboard_config)

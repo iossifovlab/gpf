@@ -1,10 +1,13 @@
-from dae.genomic_resources.dir_repository import GenomicResourceDirRepo
+# pylint: disable=redefined-outer-name,C0114,C0116,protected-access
+
+from dae.genomic_resources.fsspec_protocol import build_fsspec_protocol
+from dae.genomic_resources.repository import GenomicResourceRepo
 
 
 def test_genomic_resources_fixture(fixture_dirname):
     dirname = fixture_dirname("genomic_resources")
-
-    repo = GenomicResourceDirRepo('d', dirname)
+    proto = build_fsspec_protocol("d", dirname)
+    repo = GenomicResourceRepo(proto)
 
     all_resources = list(repo.get_all_resources())
     assert len(all_resources) > 0

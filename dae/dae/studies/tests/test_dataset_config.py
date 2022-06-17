@@ -1,4 +1,7 @@
+# pylint: disable=redefined-outer-name,C0114,C0116,protected-access
+
 import pytest
+
 from dae.studies.tests.conftest import genotype_data_groups_dir
 
 
@@ -11,7 +14,7 @@ def test_genotype_data_group_configs_simple(genotype_data_group_configs):
     [
         ("name", "QUADS_COMPOSITE"),
         ("id", "quads_composite_ds"),
-        ("studies", ("quads_in_child", "quads_in_parent")),
+        ("studies", ["quads_in_child", "quads_in_parent"]),
         ("phenotypeTool", None),
         ("phenotypeBrowser", None),
         ("year", None),
@@ -33,7 +36,7 @@ def test_genotype_data_group_quads_composite_dict(
     [
         ("name", "QUADS_COMPOSITE"),
         ("id", "quads_composite_ds"),
-        ("studies", ("quads_in_child", "quads_in_parent")),
+        ("studies", ["quads_in_child", "quads_in_parent"]),
         ("phenotype_tool", False),
         ("phenotype_browser", False),
         ("year", None),
@@ -106,7 +109,7 @@ def test_composite_genotype_data_group_config_genotype_browser_overwrite(
 
     download_columns = genotype_browser_config.download_columns
 
-    assert download_columns == (
+    assert download_columns == [
         "family",
         "phenotype",
         "variant",
@@ -117,7 +120,7 @@ def test_composite_genotype_data_group_config_genotype_browser_overwrite(
         "count",
         "geneeffect",
         "effectdetails",
-    )
+    ]
 
 
 def test_genotype_data_group_quads_work_dir(

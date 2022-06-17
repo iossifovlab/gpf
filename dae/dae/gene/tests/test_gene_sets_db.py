@@ -1,13 +1,15 @@
+# pylint: disable=redefined-outer-name,C0114,C0116,protected-access
+
 import pytest
 
 from dae.gene.gene_sets_db import GeneSetCollection, GeneSetsDb
-from dae.genomic_resources.embeded_repository import GenomicResourceEmbededRepo
+from dae.genomic_resources.testing import build_testing_repository
 from dae.genomic_resources.repository import GR_CONF_FILE_NAME
 
 
 @pytest.fixture(scope="session")
 def gene_sets_repo():
-    sets_repo = GenomicResourceEmbededRepo("gene_sets", content={
+    sets_repo = build_testing_repository(repo_id="gene_sets", content={
         "main": {
             GR_CONF_FILE_NAME: (
                 "type: gene_set\n"

@@ -1,10 +1,13 @@
 import logging
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, cast
+from urllib.parse import urlparse
+
 from sqlalchemy import create_engine  # type: ignore
 from sqlalchemy import MetaData, Table, Column, String
 from sqlalchemy.sql import insert
 
 
+from dae.genomic_resources.fsspec_protocol import FsspecReadOnlyProtocol
 from dae.gene.gene_term import read_ewa_set_file, read_gmt_file, \
     read_mapping_file
 from dae.genomic_resources.repository import GenomicResource
@@ -95,10 +98,10 @@ class GeneSetCollection:
             gene_terms = read_gmt_file(resource.open_raw_file(filename))
         elif collection_format == "directory":
             directory = config["directory"]
-            filepaths = list()
+            filepaths = []
             if directory == ".":
                 directory = ""  # Easier check with startswith
-            for filepath, _, _ in resource.get_files():
+            for filepath, _ in resource.get_manifest().get_files():
                 if filepath.startswith(directory) and \
                         filepath.endswith(".txt"):
                     filepaths.append(filepath)
@@ -108,8 +111,16 @@ class GeneSetCollection:
             gene_terms = read_ewa_set_file(files)
         elif collection_format == "sqlite":
             dbfile = config["dbfile"]
-            assert resource.file_local(dbfile)
-            dbfile_path = resource.repo.get_file_path(resource, dbfile)
+            if not isinstance(resource.proto, FsspecReadOnlyProtocol) and \
+                    cast(FsspecReadOnlyProtocol,
+                         resource.proto).scheme != "file":
+                raise ValueError(
+                    "sqlite gene sets are supported only on local filesystem")
+            proto: FsspecReadOnlyProtocol = \
+                cast(FsspecReadOnlyProtocol, resource.proto)
+            dbfile_url = proto.get_resource_file_url(resource, dbfile)
+            dbfile_path = urlparse(dbfile_url).path
+
             return SqliteGeneSetCollectionDB(
                 collection_id,
                 dbfile_path,
