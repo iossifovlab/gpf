@@ -5,6 +5,7 @@ import os
 import logging
 
 from typing import Optional, Tuple, Any, Deque
+from collections import Counter
 
 import pysam  # type: ignore
 from box import Box  # type: ignore
@@ -489,6 +490,7 @@ class TabixGenomicPositionTable(GenomicPositionTable):
 
         self._last_call: Tuple[str, int, Optional[int]] = "", -1, -1
         self.buffer = LineBuffer()
+        self.stats: Counter = Counter()
 
     def load(self):
         if self.header_mode == "file":
@@ -570,6 +572,7 @@ class TabixGenomicPositionTable(GenomicPositionTable):
                 if pos is not None and line_beg > pos:
                     return
                 result = self._transform_result(line)
+                self.stats["yield from tabix"] += 1
                 if result:
                     yield line_chrom, line_beg, line_end, result
         except StopIteration:
@@ -583,12 +586,15 @@ class TabixGenomicPositionTable(GenomicPositionTable):
         assert chrom == last_chrom
         assert pos >= last_begin
 
+        self.stats["sequential rewind"] += 1
+
         for row in self._gen_from_tabix(chrom, pos, buffering=True):
             last_chrom, last_begin, last_end, _ = row
         return bool(pos >= last_end)
 
     def _gen_from_buffer_and_tabix(self, chrom, beg, end):
         for row in self.buffer.fetch(chrom, beg, end):
+            self.stats["yield from buffer"] += 1
             line_chrom, line_beg, line_end, line = row
             result = self._transform_result(line)
             if result:
@@ -601,6 +607,7 @@ class TabixGenomicPositionTable(GenomicPositionTable):
 
     def get_records_in_region(
             self, chrom: str, pos_begin: int = None, pos_end: int = None):
+        self.stats["calls"] += 1
 
         if chrom not in self.get_chromosomes():
             logger.error(
@@ -616,12 +623,16 @@ class TabixGenomicPositionTable(GenomicPositionTable):
             pos_begin = 1
         if pos_end is None or pos_end - pos_begin > self.BUFFER_MAXSIZE:
             buffering = False
+            self.stats["no_buffering"] += 1
+        else:
+            self.stats["buffering"] += 1
 
         prev_call_chrom, _prev_call_beg, prev_call_end = self._last_call
 
         if not buffering or len(self.buffer) == 0 or prev_call_chrom != fchrom:
             # no buffering
-            self._last_call = "", -1, None
+            self.stats["last call reset"] += 1
+            self._last_call = "", -1, -1
         else:
             self._last_call = fchrom, pos_begin, pos_end
 
@@ -630,12 +641,14 @@ class TabixGenomicPositionTable(GenomicPositionTable):
                     and pos_begin > prev_call_end and pos_end < first_beg:
 
                 assert first_chrom == prev_call_chrom
+                self.stats["not found"] += 1
                 return
 
             if self.buffer.contains(fchrom, pos_begin):
                 for row in self._gen_from_buffer_and_tabix(
                         fchrom, pos_begin, pos_end):
                     _, _, _, line = row
+                    self.stats["ge from buffer and tabix"] += 1
                     yield line
 
                 self.buffer.prune(fchrom, pos_begin)
@@ -652,6 +665,7 @@ class TabixGenomicPositionTable(GenomicPositionTable):
                 self.buffer.prune(fchrom, pos_begin)
                 return
 
+        self._last_call = fchrom, pos_begin, pos_end
         # pylint: disable=no-member
         self.tabix_iterator = self.tabix_file.fetch(
             fchrom, pos_begin - 1, None, parser=pysam.asTuple())
@@ -665,6 +679,7 @@ class TabixGenomicPositionTable(GenomicPositionTable):
 
     def close(self):
         self.tabix_file.close()
+        print(self.stats)
 
 
 def open_genome_position_table(
