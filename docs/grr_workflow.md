@@ -143,7 +143,7 @@ Let's say we want to change the description of a `hg38/scores/score9` resource.
 1. Clone the Git GRR repository. Since we do not change any of the large resource
    files we do not need to check out the DVC repository.
 
-2. Edit the `genomic_resource.yaml` file and rerun the `manifest` command:
+2. Edit the `genomic_resource.yaml` file and rerun the `repair` command.
    From the root GRR directory run:
    ```
    grr_manage repair . -r hg38/scores/score9
@@ -208,7 +208,7 @@ that will walk through all GRR resources and rebuild their manifests and
 histograms if necessary.
 
 
-## GRR management command
+## GRR management commands
 
 For management of GRR, you can use the `grr_manage` command. It has several
 subcommands:
@@ -278,7 +278,7 @@ optional arguments:
 
 ### GRR manifest command
 
-To build the resource manifest you can use the `grr_manage`` manifest` command.
+To build the resource manifest you can use the `grr_manage manifest` command.
 
 For example
 
@@ -309,7 +309,7 @@ of `.dvc` files and calculate `md5` sums of files when needed.
 ### GRR histogram command
 
 To build configured histograms for a resource you can use the 
-`grr_manage`` histogram` command. For the resource `hg38/scores/score9`
+`grr_manage histogram` command. For the resource `hg38/scores/score9`
 the command should be as follows:
 
 ```
