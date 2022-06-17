@@ -425,7 +425,10 @@ class ReadOnlyRepositoryProtocol(abc.ABC):
         """Return parsed YAML file."""
         content = self.get_file_content(
             genomic_resource, filename, uncompress=True)
-        return yaml.safe_load(content)
+        result = yaml.safe_load(content)
+        if result is None:
+            return {}
+        return result
 
     def get_file_content(
             self, resource, filename, uncompress=True, mode="t"):

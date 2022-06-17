@@ -18,7 +18,6 @@ from dae.utils.verbosity_configuration import VerbosityConfiguration
 
 from dae.genomic_resources.fsspec_protocol import build_fsspec_protocol
 from dae.genomic_resources.histogram import HistogramBuilder
-# from dae.genomic_resources.repository_helpers import RepositoryWorkflowHelper
 
 
 logger = logging.getLogger(__file__)
@@ -49,14 +48,15 @@ def _configure_hist_subparser(subparsers):
 
 def _configure_list_subparser(subparsers):
     parser_list = subparsers.add_parser("list", help="List a GR Repo")
-    parser_list.add_argument("repo_dir", type=str,
-                             help="Path to the GR Repo to list")
+    parser_list.add_argument(
+        "repo_url", type=str,
+        help="Path to the genomic resources repository")
     VerbosityConfiguration.set_argumnets(parser_list)
 
 
 def _run_list_command(proto, _args):
     for res in proto.get_all_resources():
-        res_size = sum([fs for _, fs, _ in res.get_manifest().get_files()])
+        res_size = sum([fs for _, fs in res.get_manifest().get_files()])
         print(
             f"{res.get_type():20} {res.get_version_str():7s} "
             f"{len(list(res.get_manifest().get_files())):2d} {res_size:12d} "
