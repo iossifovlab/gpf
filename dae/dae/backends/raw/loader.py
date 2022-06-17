@@ -252,6 +252,9 @@ class VariantsLoader(CLILoader):
             for fv in fvs:
                 yield fv
 
+    @abstractmethod
+    def close(self):
+        """Close resources used by the loader."""
 
 class VariantsLoaderDecorator(VariantsLoader):
     def __init__(self, variants_loader: VariantsLoader):
@@ -294,6 +297,8 @@ class VariantsLoaderDecorator(VariantsLoader):
     def build_arguments_dict(self):
         return self.variants_loader.build_arguments_dict()
 
+    def close(self):
+        self.variants_loader.close()
 
 class AnnotationDecorator(VariantsLoaderDecorator):
 
@@ -322,7 +327,7 @@ class AnnotationDecorator(VariantsLoaderDecorator):
     )
 
     def __init__(self, variants_loader):
-        super(AnnotationDecorator, self).__init__(variants_loader)
+        super().__init__(variants_loader)
 
     @staticmethod
     def build_annotation_filename(filename):
@@ -331,12 +336,12 @@ class AnnotationDecorator(VariantsLoaderDecorator):
 
         if not suffixes:
             return f"{filename}-eff.txt"
-        else:
-            suffix = "".join(suffixes)
-            replace_with = suffix.replace(".", "-")
-            filename = filename.replace(suffix, replace_with)
 
-            return f"{filename}-eff.txt"
+        suffix = "".join(suffixes)
+        replace_with = suffix.replace(".", "-")
+        filename = filename.replace(suffix, replace_with)
+
+        return f"{filename}-eff.txt"
 
     @staticmethod
     def has_annotation_file(variants_filename):
@@ -404,7 +409,7 @@ class AnnotationDecorator(VariantsLoaderDecorator):
 
 class EffectAnnotationDecorator(AnnotationDecorator):
     def __init__(self, variants_loader, effect_annotator):
-        super(EffectAnnotationDecorator, self).__init__(variants_loader)
+        super().__init__(variants_loader)
 
         self.set_attribute(
             "extra_attributes",
@@ -427,16 +432,19 @@ class EffectAnnotationDecorator(AnnotationDecorator):
                 sa._effects = allele_effects
             yield summary_variant, family_variants
 
+    def close(self):
+        self.effect_annotator.close()
+        super().close()
 
 class AnnotationPipelineDecorator(AnnotationDecorator):
     def __init__(
             self, variants_loader, annotation_pipeline: AnnotationPipeline):
-        super(AnnotationPipelineDecorator, self).__init__(variants_loader)
+        super().__init__(variants_loader)
 
         self.annotation_pipeline = annotation_pipeline
         logger.debug(
-            f"creating annotation pipeline decorator with "
-            f"annotation pipeline: {annotation_pipeline.annotation_schema}")
+            "creating annotation pipeline decorator with "
+            "annotation pipeline: %s", annotation_pipeline.annotation_schema)
 
         self.set_attribute("annotation_schema", self.annotation_schema)
         self.set_attribute(
@@ -461,6 +469,9 @@ class AnnotationPipelineDecorator(AnnotationDecorator):
                     sa._effects = allele_effects
                 sa.update_attributes(attributes)
             yield summary_variant, family_variants
+
+    def close(self):
+        self.annotation_pipeline.close()
 
 
 class StoredAnnotationDecorator(AnnotationDecorator):

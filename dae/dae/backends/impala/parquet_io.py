@@ -110,7 +110,7 @@ class ParquetPartitionDescriptor(PartitionDescriptor):
             rare_boundary=0,
             root_dirname=""):
 
-        super(ParquetPartitionDescriptor, self).__init__()
+        super().__init__()
         self.output = root_dirname
         self._chromosomes = chromosomes
         self._region_length = region_length
@@ -124,11 +124,11 @@ class ParquetPartitionDescriptor(PartitionDescriptor):
     def build_impala_partitions(self):
         partitions = ["region_bin string"]
 
-        if not self.rare_boundary <= 0:
+        if self.rare_boundary > 0:
             partitions.append("frequency_bin tinyint")
-        if not self.coding_effect_types == []:
+        if self.coding_effect_types:
             partitions.append("coding_bin tinyint")
-        if not self.family_bin_size <= 0:
+        if self.family_bin_size > 0:
             partitions.append("family_bin tinyint")
 
         return ", ".join(partitions)
@@ -202,8 +202,8 @@ class ParquetPartitionDescriptor(PartitionDescriptor):
         pos = family_allele.position // self._region_length
         if chromosome in self._chromosomes:
             return f"{chromosome}_{pos}"
-        else:
-            return f"other_{pos}"
+
+        return f"other_{pos}"
 
     def _family_bin_from_id(self, family_id):
         sha256 = hashlib.sha256()
@@ -223,8 +223,7 @@ class ParquetPartitionDescriptor(PartitionDescriptor):
         result = variant_effects.intersection(coding_effect_types)
         if len(result) == 0:
             return 0
-        else:
-            return 1
+        return 1
 
     def _evaluate_frequency_bin(self, family_allele):
         count = family_allele.get_attribute("af_allele_count")
@@ -356,11 +355,11 @@ class ParquetPartitionDescriptor(PartitionDescriptor):
         Generates a glob for accessing every parquet file in the partition
         """
         glob = "*/"
-        if not self.family_bin_size == 0:
+        if self.family_bin_size > 0:
             glob += "*/"
-        if not self.coding_effect_types == []:
+        if self.coding_effect_types:
             glob += "*/"
-        if not self.rare_boundary == 0:
+        if self.rare_boundary > 0:
             glob += "*/"
         glob += "*.parquet"
         return glob
@@ -386,8 +385,9 @@ class ContinuousParquetFileWriter:
         self.filepath = filepath
         extra_attributes = variant_loader.get_attribute("extra_attributes")
         logger.info(
-            f"using variant loader {variant_loader} with annotation schema "
-            f"{variant_loader.annotation_schema}")
+            "using variant loader %s with annotation schema %s",
+            variant_loader,
+            variant_loader.annotation_schema)
 
         self.serializer = AlleleParquetSerializer(
             variant_loader.annotation_schema, extra_attributes
@@ -440,14 +440,13 @@ class ContinuousParquetFileWriter:
 
         if self.size() >= self.rows:
             logger.info(
-                f"parquet writer {self.filepath} data flushing "
-                f"at len {self.size()}")
+                "parquet writer %s data flushing at len %s",
+                self.filepath, self.size())
             self._write_table()
 
     def close(self):
         logger.info(
-            f"closing parquet writer {self.dirname} "
-            f"at len {self.size()}")
+            "closing parquet writer %s at len %s", self.dirname, self.size())
 
         if self.size() > 0:
             self._write_table()
@@ -679,6 +678,8 @@ class VariantsParquetWriter:
 
         self.partition_descriptor.write_partition_configuration()
         self.write_schema()
+
+        self.variants_loader.close()
 
         return filenames
 

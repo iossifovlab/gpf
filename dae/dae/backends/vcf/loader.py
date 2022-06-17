@@ -248,6 +248,10 @@ class SingleVcfLoader(VariantsGenotypesLoader):
     def _omission_mode_handler(family_vairant: FamilyVariant) -> bool:
         return False
 
+    def close(self):
+        for vcf in self.vcfs:
+            vcf.close()
+
     def _init_vcf_readers(self):
         self.vcfs = list()
         logger.debug(f"SingleVcfLoader input files: {self.filenames}")
@@ -262,10 +266,9 @@ class SingleVcfLoader(VariantsGenotypesLoader):
                 vcf.fetch()
                 for vcf in self.vcfs
             ]
-        else:
-            return [
-                vcf.fetch(region=self._unadjust_chrom_prefix(region))
-                for vcf in self.vcfs]
+        return [
+            vcf.fetch(region=self._unadjust_chrom_prefix(region))
+            for vcf in self.vcfs]
 
     def _init_chromosome_order(self):
         seqnames = list(self.vcfs[0].header.contigs)
@@ -646,6 +649,10 @@ class VcfLoader(VariantsGenotypesLoader):
             vcf_loader.families = families
 
         return families
+
+    def close(self):
+        for vcf_loader in self.vcf_loaders:
+            vcf_loader.close()
 
     @classmethod
     def _arguments(cls):

@@ -64,7 +64,7 @@ def best_state_serialized():
     return "\x02\x00\x00\x01\x01\x00\x00\x02\x00\x00\x01\x01"
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 def denovo_extra_attr_loader(
         fixture_dirname, gpf_instance_2013, annotation_pipeline_internal):
 
@@ -83,7 +83,7 @@ def denovo_extra_attr_loader(
     return variants_loader
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 def extra_attrs_impala(
         request,
         denovo_extra_attr_loader,

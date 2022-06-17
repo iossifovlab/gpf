@@ -1,4 +1,5 @@
-"""
+"""Defines CNV loader class and helpers.
+
 Copy Number Variants (CNV) loader :class:`CNVLoader`
 ====================================================
 
@@ -74,14 +75,14 @@ are:
 import logging
 import argparse
 from pathlib import Path
+from copy import copy
 
 from typing import List, Optional, Dict, Any, Tuple, Generator, \
     Union, TextIO
 
-from copy import copy
-from dae.backends.cnv.flexible_cnv_loader import flexible_cnv_loader
 import pandas as pd
 
+from dae.backends.cnv.flexible_cnv_loader import flexible_cnv_loader
 from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.backends.raw.loader import VariantsGenotypesLoader, TransmissionType
 
@@ -116,12 +117,12 @@ def _cnv_loader(
         add_chrom_prefix: Optional[str] = None,
         del_chrom_prefix: Optional[str] = None,
         **kwargs) -> pd.DataFrame:
-    """
+    """Flexible load of CNV variants.
+
     This function uses flexible variant loader infrastructure to
     load variants from a CNVs data input and transform them into a pandas
     `DataFrame`.
     """
-
     logger.info("unexpected parameters passed to _cnv_loader: %s", kwargs)
 
     variant_generator = flexible_cnv_loader(
@@ -148,11 +149,11 @@ def _cnv_loader(
         data.append(record)
 
     df: pd.DataFrame = pd.DataFrame.from_records(  # type: ignore
-            data, columns=[
-                "chrom", "pos", "pos_end",
-                "variant_type",
-                "family_id", "best_state"
-            ])
+        data, columns=[
+            "chrom", "pos", "pos_end",
+            "variant_type",
+            "family_id", "best_state"
+        ])
 
     df = df.sort_values(
         by=["chrom", "pos", "pos_end"])
@@ -166,6 +167,8 @@ def _cnv_loader(
 
 
 class CNVLoader(VariantsGenotypesLoader):
+    """Defines CNV loader class."""
+
     def __init__(
             self,
             families: FamiliesData,
@@ -181,7 +184,7 @@ class CNVLoader(VariantsGenotypesLoader):
         else:
             transmission_type = TransmissionType.transmitted
 
-        super(CNVLoader, self).__init__(
+        super().__init__(
             families=families,
             filenames=[cnv_filename],
             transmission_type=transmission_type,
@@ -192,7 +195,7 @@ class CNVLoader(VariantsGenotypesLoader):
             params=params,
         )
 
-        logger.info(f"CNV loader params: {params}")
+        logger.info("CNV loader params: %s", params)
         self.genome = genome
         self.set_attribute("source_type", "cnv")
         self.reset_regions(regions)
@@ -217,11 +220,10 @@ class CNVLoader(VariantsGenotypesLoader):
         self.chromosomes = list(self.cnv_df.chrom.unique())
 
         all_chromosomes = self.genome.chromosomes
-        if all([chrom in set(all_chromosomes) for chrom in self.chromosomes]):
+        if all(chrom in set(all_chromosomes) for chrom in self.chromosomes):
             self.chromosomes = sorted(
                 self.chromosomes,
-                key=lambda chrom: all_chromosomes.index(chrom),
-            )
+                key=all_chromosomes.index)
 
     @classmethod
     def _arguments(cls):
@@ -324,12 +326,12 @@ class CNVLoader(VariantsGenotypesLoader):
         return arguments
 
     def reset_regions(self, regions):
-        super(CNVLoader, self).reset_regions(regions)
+        super().reset_regions(regions)
 
         result = []
-        for r in self.regions:
-            assert r is not None
-            result.append(Region.from_str(r))
+        for reg in self.regions:
+            assert reg is not None
+            result.append(Region.from_str(reg))
         self.regions = result
 
     def _is_in_regions(self, summary_variant: SummaryVariant) -> bool:
@@ -343,14 +345,16 @@ class CNVLoader(VariantsGenotypesLoader):
         ]
         return any(isin)
 
+    def close(self):
+        pass
+
     def _full_variants_iterator_impl(
         self
     ) -> Generator[Tuple[SummaryVariant, List[FamilyVariant]], None, None]:
 
         group = self.cnv_df.groupby(
             ["chrom", "position", "end_position", "variant_type"],
-            sort=False).agg(
-                lambda x: list(x))
+            sort=False).agg(list)
 
         for num_idx, (idx, values) in enumerate(group.iterrows()):
 
@@ -373,11 +377,11 @@ class CNVLoader(VariantsGenotypesLoader):
 
             alt_rec["allele_index"] = 1
 
-            sv = SummaryVariantFactory.summary_variant_from_records(
+            svar = SummaryVariantFactory.summary_variant_from_records(
                 [summary_rec, alt_rec], self.transmission_type
             )
 
-            if not self._is_in_regions(sv):
+            if not self._is_in_regions(svar):
                 continue
 
             fvs = []
@@ -390,30 +394,31 @@ class CNVLoader(VariantsGenotypesLoader):
                 family = self.families.get(family_id)
                 if family is None:
                     continue
-                fv = FamilyVariant(sv, family, None, best_state)
+                fvar = FamilyVariant(svar, family, None, best_state)
                 extra_attributes = {}
                 for attr in extra_attributes_keys:
                     attr_val = values.get(attr)[f_idx]
                     extra_attributes[attr] = [attr_val]
-                fv.update_attributes(extra_attributes)
-                fvs.append(fv)
-            yield sv, fvs
+                fvar.update_attributes(extra_attributes)
+                fvs.append(fvar)
+            yield svar, fvs
 
     def full_variants_iterator(self):
-        full_iterator = super(CNVLoader, self).full_variants_iterator()
+        full_iterator = super().full_variants_iterator()
 
         for summary_variants, family_variants in full_iterator:
-            for fv in family_variants:
-                for fa in fv.alt_alleles:
+            for fvar in family_variants:
+                for fallele in fvar.alt_alleles:
                     if self.transmission_type == TransmissionType.denovo:
                         inheritance = [
                             Inheritance.denovo if mem is not None else inh
                             for inh, mem in zip(
-                                fa.inheritance_in_members,
-                                fa.variant_in_members
+                                fallele.inheritance_in_members,
+                                fallele.variant_in_members
                             )
                         ]
-                        fa._inheritance_in_members = inheritance
+                        # pylint: disable=protected-access
+                        fallele._inheritance_in_members = inheritance
 
             yield summary_variants, family_variants
 

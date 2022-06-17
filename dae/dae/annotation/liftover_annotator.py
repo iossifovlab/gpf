@@ -1,3 +1,5 @@
+"""Provides a lift over annotator and helpers."""
+
 import logging
 import copy
 
@@ -17,6 +19,7 @@ logger = logging.getLogger(__name__)
 
 
 def build_liftover_annotator(pipeline, config):
+    """Construct a liftover annotator."""
     config = LiftOverAnnotator.validate_config(config)
 
     assert config["annotator_type"] == "liftover_annotator"
@@ -42,6 +45,7 @@ def build_liftover_annotator(pipeline, config):
 
 
 class LiftOverAnnotator(Annotator):
+    """Defines a Lift Over annotator."""
 
     def __init__(
             self, config: dict,
@@ -54,6 +58,9 @@ class LiftOverAnnotator(Annotator):
 
     def annotator_type(self) -> str:
         return "liftover_annotator"
+
+    def close(self):
+        pass
 
     DEFAULT_ANNOTATION = {
         "attributes": [
@@ -106,11 +113,11 @@ class LiftOverAnnotator(Annotator):
         validator = cls.ConfigValidator(schema)
         validator.allow_unknown = True
 
-        logger.debug(f"validating liftover annotator config: {config}")
+        logger.debug("validating liftover annotator config: %s", config)
         if not validator.validate(config):
             logger.error(
-                f"wrong config format for liftover annotator: "
-                f"{validator.errors}")
+                "wrong config format for liftover annotator: %s",
+                validator.errors)
             raise ValueError(
                 f"wrong liftover annotator config {validator.errors}")
         return cast(Dict, validator.document)
@@ -123,8 +130,9 @@ class LiftOverAnnotator(Annotator):
         return attributes
 
     def liftover_allele(self, allele: VCFAllele):
+        """Liftover an allele."""
         if not isinstance(allele, VCFAllele):
-            return
+            return None
 
         try:
             lo_coordinates = self.chain.convert_coordinate(
@@ -135,26 +143,25 @@ class LiftOverAnnotator(Annotator):
                 return None
 
             lo_chrom, lo_pos, lo_strand, _ = lo_coordinates
-            pos = allele.position
-            ref = allele.reference
-            alt = allele.alternative
 
-            if lo_strand == "+" or len(ref) == len(alt):
+            if lo_strand == "+" or \
+                    len(allele.reference) == len(allele.alternative):
                 lo_pos += 1
             elif lo_strand == "-":
-                lo_pos -= len(ref)
+                lo_pos -= len(allele.reference)
                 lo_pos -= 1
 
-            _, tr_ref, tr_alt = trim_str_left(pos, ref, alt)
+            _, tr_ref, tr_alt = trim_str_left(
+                allele.position, allele.reference, allele.alternative)
 
             lo_ref = self.target_genome.get_sequence(
-                lo_chrom, lo_pos, lo_pos + len(ref) - 1)
+                lo_chrom, lo_pos, lo_pos + len(allele.reference) - 1)
             if lo_ref is None:
                 logger.warning(
-                    f"can't find genomic sequence for {lo_chrom}:{lo_pos}")
+                    "can't find genomic sequence for %s:%s", lo_chrom, lo_pos)
                 return None
 
-            lo_alt = alt
+            lo_alt = allele.alternative
             if lo_strand == "-":
                 if not tr_alt:
                     lo_alt = f"{lo_ref[0]}"
@@ -166,13 +173,15 @@ class LiftOverAnnotator(Annotator):
             result = VCFAllele(lo_chrom, lo_pos, lo_ref, lo_alt)
             if lo_ref == lo_alt:
                 logger.warning(
-                    f"allele %s mapped to no variant: %s", allele, result)
+                    "allele %s mapped to no variant: %s", allele, result)
                 return None
 
             return result
-        except Exception as ex:
+        except Exception as ex:  # pylint: disable=broad-except
             logger.warning(
-                f"problem in variant {allele} liftover: {ex}", exc_info=True)
+                "problem in variant %s liftover: %s",
+                allele, ex, exc_info=True)
+            return None
 
     def _do_annotate(self, annotatable: Annotatable, _context: Dict):
         assert annotatable is not None
@@ -181,14 +190,14 @@ class LiftOverAnnotator(Annotator):
                 Annotatable.Type.large_deletion,
                 Annotatable.Type.large_duplication}:
             logger.warning(
-                f"{self.annotator_type()} not ready to annotate CNV variants: "
-                f"{annotatable}")
+                "%s not ready to annotate CNV variants: %s",
+                self.annotator_type(), annotatable)
             return {"liftover_annotatable": None}
 
         lo_allele = self.liftover_allele(cast(VCFAllele, annotatable))
         if lo_allele is None:
             logger.info(
-                f"unable to liftover allele: {annotatable}")
+                "unable to liftover allele: %s", annotatable)
             return {"liftover_annotatable": None}
 
         return {"liftover_annotatable": lo_allele}

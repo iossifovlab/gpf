@@ -42,7 +42,7 @@ logger = logging.getLogger(__name__)
 
 class DenovoFamiliesGenotypes(FamiliesGenotypes):
     def __init__(self, family, gt, best_state=None):
-        super(DenovoFamiliesGenotypes, self).__init__()
+        super().__init__()
         self.family = family
         self.gt = gt
         self.best_state = best_state
@@ -50,10 +50,12 @@ class DenovoFamiliesGenotypes(FamiliesGenotypes):
     def full_families_genotypes(self):
         raise NotImplementedError()
 
-    def get_family_genotype(self):
+    def get_family_genotype(self, family):
+        assert family.family_id == self.family.family_id
         return self.gt
 
-    def get_family_best_state(self):
+    def get_family_best_state(self, family_id):
+        assert family.family_id == self.family.family_id
         return self.best_state
 
     def family_genotype_iterator(self):
@@ -69,7 +71,7 @@ class DenovoLoader(VariantsGenotypesLoader):
             regions: List[str] = None,
             params: Dict[str, Any] = {},
             sort: bool = True):
-        super(DenovoLoader, self).__init__(
+        super().__init__(
             families=families,
             filenames=[denovo_filename],
             transmission_type=TransmissionType.denovo,
@@ -82,7 +84,7 @@ class DenovoLoader(VariantsGenotypesLoader):
         self.genome = genome
         self.set_attribute("source_type", "denovo")
         logger.debug(
-            f"loading denovo variants: {denovo_filename}; {self.params}")
+            "loading denovo variants: %s; %s", denovo_filename, self.params)
 
         self.denovo_df, extra_attributes = self._flexible_denovo_load_internal(
             denovo_filename,
@@ -111,14 +113,13 @@ class DenovoLoader(VariantsGenotypesLoader):
         ]
 
         all_chromosomes = self.genome.chromosomes
-        if all([chrom in set(all_chromosomes) for chrom in self.chromosomes]):
+        if all(chrom in set(all_chromosomes) for chrom in self.chromosomes):
             self.chromosomes = sorted(
                 self.chromosomes,
-                key=lambda chrom: all_chromosomes.index(chrom),
-            )
+                key=all_chromosomes.index)
 
     def reset_regions(self, regions):
-        super(DenovoLoader, self).reset_regions(regions)
+        super().reset_regions(regions)
 
         result = []
         for r in self.regions:
@@ -127,7 +128,7 @@ class DenovoLoader(VariantsGenotypesLoader):
             else:
                 result.append(Region.from_str(r))
         self.regions = result
-        logger.debug(f"denovo reset regions: {self.regions}")
+        logger.debug("denovo reset regions: %s", self.regions)
 
     def _is_in_regions(self, summary_variant):
         isin = [
@@ -146,9 +147,7 @@ class DenovoLoader(VariantsGenotypesLoader):
 
         group = self.denovo_df.groupby(
             ["chrom", "position", "reference", "alternative"],
-            sort=False).agg(
-                lambda x: list(x)
-            )
+            sort=False).agg(lambda x: list(x))
         for num_idx, (idx, values) in enumerate(group.iterrows()):
             chrom, position, reference, alternative = idx
             position = int(position)
@@ -200,14 +199,15 @@ class DenovoLoader(VariantsGenotypesLoader):
             yield sv, fvs
 
     def full_variants_iterator(self):
-        full_iterator = super(DenovoLoader, self).full_variants_iterator()
+        full_iterator = super().full_variants_iterator()
         for summary_variants, family_variants in full_iterator:
             for fv in family_variants:
                 for fa in fv.alt_alleles:
                     inheritance = [
                         Inheritance.denovo
-                        if vinmem is not None and
-                        mem.role in set([Role.prb, Role.sib, Role.unknown])
+                        if vinmem is not None
+                        and mem.role in set([
+                            Role.prb, Role.sib, Role.unknown])
                         and inh in set([
                             Inheritance.unknown,
                             Inheritance.possible_denovo,
@@ -222,6 +222,9 @@ class DenovoLoader(VariantsGenotypesLoader):
                     fa._inheritance_in_members = inheritance
 
             yield summary_variants, family_variants
+
+    def close(self):
+        pass
 
     @staticmethod
     def split_location(location):
@@ -336,8 +339,8 @@ class DenovoLoader(VariantsGenotypesLoader):
         return arguments
 
     @classmethod
-    def parse_cli_arguments(cls, argv):
-        logger.debug(f"CLI arguments: {argv}")
+    def parse_cli_arguments(cls, argv, use_defaults=False):
+        logger.debug("CLI arguments: %s", argv)
 
         if argv.denovo_location and (argv.denovo_chrom or argv.denovo_pos):
             logger.error(
@@ -361,15 +364,15 @@ class DenovoLoader(VariantsGenotypesLoader):
             )
             raise ValueError()
 
-        if not (argv.denovo_location or
-                (argv.denovo_chrom and argv.denovo_pos)):
+        if not (argv.denovo_location
+                or (argv.denovo_chrom and argv.denovo_pos)):
             argv.denovo_location = "location"
 
         if not (argv.denovo_variant or (argv.denovo_ref and argv.denovo_alt)):
             argv.denovo_variant = "variant"
 
-        if not (argv.denovo_person_id or
-                (argv.denovo_family_id and (
+        if not (argv.denovo_person_id
+                or (argv.denovo_family_id and (
                     argv.denovo_best_state or argv.denovo_genotype))):
             argv.denovo_family_id = "familyId"
             argv.denovo_best_state = "bestState"
@@ -497,9 +500,9 @@ class DenovoLoader(VariantsGenotypesLoader):
         if not (denovo_variant or (denovo_ref and denovo_alt)):
             denovo_variant = "variant"
 
-        if not (denovo_person_id or
-                (denovo_family_id and
-                    (denovo_best_state or denovo_genotype))):
+        if not (denovo_person_id
+                or (denovo_family_id
+                    and (denovo_best_state or denovo_genotype))):
             denovo_family_id = "familyId"
             denovo_best_state = "bestState"
 
@@ -637,7 +640,7 @@ class DenovoLoader(VariantsGenotypesLoader):
                 assert denovo_genotype
                 genotype_col = list(
                     map(
-                        lambda gts: str2gt(gts),  # type: ignore
+                        str2gt,
                         raw_df[denovo_genotype],
                     )
                 )
@@ -703,7 +706,7 @@ class DenovoLoader(VariantsGenotypesLoader):
 class DaeTransmittedFamiliesGenotypes(FamiliesGenotypes):
     def __init__(
             self, families, family_data):
-        super(DaeTransmittedFamiliesGenotypes, self).__init__()
+        super().__init__()
         self.families = families
         self.family_data = family_data
 
@@ -762,7 +765,7 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
             summary_filename
         )
 
-        super(DaeTransmittedLoader, self).__init__(
+        super().__init__(
             families=families,
             filenames=[summary_filename, toomany_filename],
             transmission_type=TransmissionType.transmitted,
@@ -785,6 +788,7 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
             "dae_include_reference_genotypes", False
         )
         try:
+            # pylint: disable=no-member
             with pysam.Tabixfile(self.summary_filename) as tbx:
                 self.chromosomes = \
                     [self._adjust_chrom_prefix(chrom) for chrom in tbx.contigs]
@@ -940,6 +944,9 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
     #     }
     #     return read_counts
 
+    def close(self):
+        pass
+
     def _full_variants_iterator_impl(self):
 
         summary_columns = self._load_summary_columns(self.summary_filename)
@@ -950,6 +957,7 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
             try:
                 # using a context manager because of
                 # https://stackoverflow.com/a/25968716/2316754
+                # pylint: disable=no-member
                 with closing(pysam.Tabixfile(self.summary_filename)) \
                         as sum_tbf, \
                         closing(pysam.Tabixfile(self.toomany_filename)) \

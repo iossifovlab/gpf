@@ -100,9 +100,11 @@ class EffectAnnotatorAdapter(Annotator):
             promoter_len=promoter_len
         )
 
-    # FIXME
+    def close(self):
+        pass
+
     def _not_found(self, attributes):
-        for attr in self.attributes_list:
+        for attr in self.get_annotation_config():
             attributes[attr.destination] = ""
 
     def get_all_annotation_attributes(self) -> List[Dict]:

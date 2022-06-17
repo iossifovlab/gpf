@@ -1,3 +1,5 @@
+"""Provides annotation pipeline class."""
+
 from __future__ import annotations
 
 import logging
@@ -14,6 +16,8 @@ logger = logging.getLogger(__name__)
 
 
 class AnnotationPipeline():
+    """Provides annotation pipeline abstraction."""
+
     def __init__(
             self, config: List[Dict],
             repository: GenomicResourceRepo):
@@ -25,6 +29,7 @@ class AnnotationPipeline():
 
     @ property
     def annotation_schema(self) -> Schema:
+        """Return annotation schema."""
         if self._annotation_schema is None:
             schema = Schema()
             for annotator in self.annotators:
@@ -45,3 +50,7 @@ class AnnotationPipeline():
             context.update(attributes)
 
         return context
+
+    def close(self):
+        for annotator in self.annotators:
+            annotator.close()
