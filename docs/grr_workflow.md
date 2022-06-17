@@ -14,7 +14,10 @@ For any resource:
 
 ### How to add a new resource to GRR
 
+Let's assume that we have a GRR and we want to add a new resource to it.
 #### Add resource files and configuration
+
+From the root GRR directory:
 
 1. Create a directory appropriate for the resource. Let's assume this is
    a position score for the HG38 reference genome named `score9`. Then
@@ -100,105 +103,37 @@ For any resource:
    git commit
    ```
 
+#### Repair the resource
 
-5. Build the score manifest. Run the command:
+From the root directory of the GRR run the `repair` command:
 
-   ```bash
-   grr_manage manifest . -r hg38/scores/score9
-   ```
-   This command should calculate the md5 sums for all resource files
-   and store them into a resource manifest file named `.MANIFEST`.
- 
-   By default when the command finds `.dvc` files it will use them
-   to get the `md5` sum for the corresponding files instead of computing it.
-
-   If you want to suppress this behavior you can use the `--without-dvc`
-   option:
- 
-   ```bash
-   grr_manage manifest . -r hg38/scores/score9 --without-dvc
-   ```
-   or
-   ```bash
-   grr_manage manifest . -r hg38/scores/score9 -D
-   ```
-
-   The `--without-dvc` (`-D`) option will instruct the command to suppress usage
-   of `.dvc` files and calculate `md5` sums of files when needed.
-
-6. Build score histogram. Run the command:
-
-   ```
-   grr_manage histogram . -r hg38/scores/score9
-   ```
-
-   This command will check the resource to find
-   all score histograms that are configured and will run the computation for 
-   these histograms. For each configured score histogram three files are
-   created. In the case of `hg38/scores/score9`, only one score histogram is
-   configured. The three files that are stored are:
-
-   * `histograms/score9.csv` that contains the histogram itself;
-
-   * `histograms/score9.metadata.yaml` that contains the histogram metadata, e.g. 
-     score min and max if they are not configured into the resource configuration,
-     the histogram hash that is an md5 sum based on md5 sum of the score files and
-     histogram configuration;
-
-   * `histograms/score9.png` is a figure of the histogram for a quick inspection.
-
-   In the end, this command will update the resource manifest file to include
-   the histograms' files.
-
-7. Add resource manifest and histogram files under Git version control
-
-As an alternative to usage `manifest` and `histogram` commands, you can use a
-`repair` command that combines the building of manifest and histograms of a
-resource:
-
-```bash
+```
 grr_manage repair . -r hg38/scores/score9
 ```
 
-### Rebuild the manifests and histograms for all resources in a GRR
+This command should calculate the md5 sums for all resource files
+and store them into a resource manifest file named `.MANIFEST`.
 
-If you run the `repair` command without specifying a resource, it will
-run on all resources of the repository:
+By default when the command finds `.dvc` files it will use them
+to get the `md5` sum for the corresponding files instead of computing it.
+If you want to suppress this behavior you can use the `--without-dvc`
+option.
+
+After the manifest, this command is going to compute histograms
+configured for the resource.
+
+
+#### Add resource manifest and histograms under version control
+
+After the resource's manifest and histograms are built you should add
+them under version control. From the resource's directory run
+the following command:
 
 ```bash
-grr_manage repair .
-```
-
-```
-grr_manage repair --help
-usage: grr_manage repair [-h] [--verbose] [-r RESOURCE] [-n] [-f] [-d] [-D] [--region-size REGION_SIZE] [-j JOBS] [--kubernetes] [--envvars [ENVVARS ...]] [--container-image CONTAINER_IMAGE] [--image-pull-secrets [IMAGE_PULL_SECRETS ...]] [--sge] [--dashboard-port DASHBOARD_PORT] [--log-dir LOG_DIR] repo_url
-
-positional arguments:
-  repo_url              Path to the genomic resources repository
-
-optional arguments:
-  -h, --help            show this help message and exit
-  --verbose, -v, -V
-  -r RESOURCE, --resource RESOURCE
-                        specifies a resource whose manifest/histograms we want to rebuild; if not specified the command will run on all resources in the repository
-  -n, --dry-run         only checks if the manifest and/or histograms update is needed whithout actually updating it
-  -f, --force           ignore resource state and rebuild manifest and histograms
-  -d, --with-dvc        use '.dvc' files if present to get md5 sum of resource files
-  -D, --without-dvc     calculate the md5 sum if necessary of resource files; do not use '.dvc' files to get md5 sum of resource files
-  --region-size REGION_SIZE
-                        split the resource into regions with region length for parallel processing
-  -j JOBS, --jobs JOBS  Number of jobs to run in parallel. Defaults to the number of processors on the machine
-  --kubernetes          Run computation in a kubernetes cluster
-  --envvars [ENVVARS ...]
-                        Environment variables to pass to kubernetes workers
-  --container-image CONTAINER_IMAGE
-                        Docker image to use when submitting jobs to kubernetes
-  --image-pull-secrets [IMAGE_PULL_SECRETS ...]
-                        Secrets to use when pulling the docker image
-  --sge                 Run computation on a Sun Grid Engine cluster. When using this command it is highly advisable to manually specify the number of workers using -j
-  --dashboard-port DASHBOARD_PORT
-                        Port on which to run Dask Dashboard
-  --log-dir LOG_DIR     Directory where to store SGE worker logs
+git add .MANIFEST
+git add histograms/score9.csv histograms/score9.metadata.yaml histograms/score9.png
+git commit
+git push
 ```
 
 ### How to make a small change in a resource in GRR
@@ -209,24 +144,15 @@ Let's say we want to change the description of a `hg38/scores/score9` resource.
    files we do not need to check out the DVC repository.
 
 2. Edit the `genomic_resource.yaml` file and rerun the `manifest` command:
-
+   From the root GRR directory run:
    ```
-   grr_manage manifest . -r hg38/scores/score9
+   grr_manage repair . -r hg38/scores/score9
    ```
 
    This command should update the `genomic_resource.yaml` entry into
    the resource `.MANIFEST` file.
 
-4. Check that histograms should not be rebuilt:
-
-   ```
-   grr_manage histogram . -r hg38/scores/score9 --dry-run
-   ```
-
-   If the previous command reports that any of the resource histograms need
-   rebuilding you should refer to the next section of the document.
-
-5. Add the `.MANIFEST` resource file to the Git repository.
+3. Add the `.MANIFEST` resource file to the Git repository.
 
 
 ### How to make a big change in a resource in GRR
@@ -259,64 +185,163 @@ score Tabix index. To do this change we need to:
    
    and add `*.dvc` files into the Git repo.
 
-4. Run the `manifest` command:
+4. Run the `repair` command:
 
    ```
-   grr_manage manifest . -r hg38/scores/score9
+   grr_manage repair . -r hg38/scores/score9
    ```
 
-5. Rebuild the histograms:
+5. Add resource manifest and histogram files under Git version control
 
-   ```
-   grr_manage histogram . -r hg38/scores/score9
-   ```
 
-6. Add resource manifest and histogram files under Git version control
+### Repair all resources in a GRR
 
-### Notes on GRR histogram command
+If you run the `repair` command without specifying a resource, it will
+run on all resources of the repository. From the GRR root directory you can
+run:
+
+```bash
+grr_manage repair .
+```
+
+that will walk through all GRR resources and rebuild their manifests and
+histograms if necessary.
+
+
+## GRR management command
+
+For management of GRR, you can use the `grr_manage` command. It has several
+subcommands:
+
+* `list` - list all resources in the GRR
+
+* `manifest` - builds the manifest of a resource or for all resources in GRR
+
+* `histogram` - build the histograms of a resource or for all resources in GRR
+
+* `repair` - build the manifest and histograms of a resource or for
+  all resources in GRR
+
+
+```
+grr_manage --help
+usage: grr_manage [-h] [--version] {list,manifest,histogram,repair} ...
+
+Genomic Resource Repository Management Tool
+
+positional arguments:
+  {list,manifest,histogram,repair}
+                        Command to execute
+    list                List a GR Repo
+    manifest            Create manifest for a resource
+    histogram           Build the histograms for a resource
+    repair              Update/rebuild manifest and histograms for a resource
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --version             Prints GPF version and exists.
+```
+
+### GRR repair command
+
+```
+grr_manage repair --help
+usage: grr_manage repair [-h] [--verbose] [-r RESOURCE] [-n] [-f] [-d] [-D] [--region-size REGION_SIZE] [-j JOBS] [--kubernetes] [--envvars [ENVVARS ...]] [--container-image CONTAINER_IMAGE] [--image-pull-secrets [IMAGE_PULL_SECRETS ...]] [--sge] [--dashboard-port DASHBOARD_PORT] [--log-dir LOG_DIR] repo_url
+
+positional arguments:
+  repo_url              Path to the genomic resources repository
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --verbose, -v, -V
+  -r RESOURCE, --resource RESOURCE
+                        specifies a resource whose manifest/histograms we want to rebuild; if not specified the command will run on all resources in the repository
+  -n, --dry-run         only checks if the manifest and/or histograms update is needed whithout actually updating it
+  -f, --force           ignore resource state and rebuild manifest and histograms
+  -d, --with-dvc        use '.dvc' files if present to get md5 sum of resource files
+  -D, --without-dvc     calculate the md5 sum if necessary of resource files; do not use '.dvc' files to get md5 sum of resource files
+  --region-size REGION_SIZE
+                        split the resource into regions with region length for parallel processing
+  -j JOBS, --jobs JOBS  Number of jobs to run in parallel. Defaults to the number of processors on the machine
+  --kubernetes          Run computation in a kubernetes cluster
+  --envvars [ENVVARS ...]
+                        Environment variables to pass to kubernetes workers
+  --container-image CONTAINER_IMAGE
+                        Docker image to use when submitting jobs to kubernetes
+  --image-pull-secrets [IMAGE_PULL_SECRETS ...]
+                        Secrets to use when pulling the docker image
+  --sge                 Run computation on a Sun Grid Engine cluster. When using this command it is highly advisable to manually specify the number of workers using -j
+  --dashboard-port DASHBOARD_PORT
+                        Port on which to run Dask Dashboard
+  --log-dir LOG_DIR     Directory where to store SGE worker logs
+  ```
+
+### GRR manifest command
+
+To build the resource manifest you can use the `grr_manage`` manifest` command.
+
+For example
+
+```bash
+grr_manage manifest . -r hg38/scores/score9
+```
+
+should calculate the md5 sums for all resource files
+and store them into a resource manifest file named `.MANIFEST`.
+
+By default when the command finds `.dvc` files it will use them
+to get the `md5` sum for the corresponding files instead of computing it.
+
+If you want to suppress this behavior you can use the `--without-dvc`
+option:
+
+```bash
+grr_manage manifest . -r hg38/scores/score9 --without-dvc
+```
+or
+```bash
+grr_manage manifest . -r hg38/scores/score9 -D
+```
+
+The `--without-dvc` (`-D`) option will instruct the command to suppress usage
+of `.dvc` files and calculate `md5` sums of files when needed.
+
+### GRR histogram command
+
+To build configured histograms for a resource you can use the 
+`grr_manage`` histogram` command. For the resource `hg38/scores/score9`
+the command should be as follows:
+
+```
+grr_manage histogram . -r hg38/scores/score9
+```
+
+This command will check the resource to find
+all score histograms that are configured and will run the computation for 
+these histograms. For each configured score histogram three files are
+created. In the case of `hg38/scores/score9`, only one score histogram is
+configured. The three files that are stored are:
+
+* `histograms/score9.csv` that contains the histogram itself;
+
+* `histograms/score9.metadata.yaml` that contains the histogram metadata, e.g. 
+  score min and max if they are not configured into the resource configuration,
+  the histogram hash that is an md5 sum based on md5 sum of the score files and
+  histogram configuration;
+
+* `histograms/score9.png` is a figure of the histogram for a quick inspection.
+
+In the end, this command will update the resource manifest file to include
+the histograms' files.
+
 
 Note that the GRR management `histogram` command expects that the manifest of the
 resource is in sync with the resource files. Before running the `histogram` command
 you should always run the `manifest` command to ensure, that the `.MANIFEST`
 of the resource is up to date.
 
-### GRR resource files state
 
-For each GRR resource file the `manifest` command stores:
-
-* name of the resource file;
-* md5 sum of the resource file;
-* size of the resource file;
-* timestamp of the resource file.
-
-This state information is stored in a file inside the resource state directory
- `.grr`. This state directory
-should be git ignored and should not be put into the Git repository.
-
-For each resource file (e.g. `hg38/scores/score9/score9.tsv.gz`) the `manifest`
-command creates a state file `.grr/hg38/scores/score9/score9.tsv.gz.state`
-that contains the state info:
-
-```
-filename: score9.tsv.gz
-md5: 978ad036fe7f3e0b822485c8ee8285de
-size: 3153512062
-timestamp: '2022-06-07T06:53:50+00:00'
-```
-
-### Optimizations based on the GRR resource file state
-
-When the GRR management `manifest` command is run it should
-recalculate the md5 sum for each resource file.
-
-Before calculating the md5 sums for a given resource file,
-the `manifest` command checks the state of this resource file.
-
-If the state timestamp and size coincide with the size and timestamp
-of the resource file, then the md5 sum is not recomputed and the one
-from the state is used.
-
-
+`------------------------------------------------------------------------------`
 
 
 ## Management of genomic resources (old version)
