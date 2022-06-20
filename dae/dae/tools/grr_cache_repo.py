@@ -1,6 +1,7 @@
 """Provides CLI tools for caching genomic resources."""
 
 import sys
+import os
 import argparse
 import time
 import logging
@@ -71,7 +72,8 @@ def cli_cache_repo(argv=None):
         )
 
     if args.instance is not None:
-        config = GPFConfigParser.load_config(args.instance, dae_conf_schema)
+        instance_file = os.path.abspath(args.instance)
+        config = GPFConfigParser.load_config(instance_file, dae_conf_schema)
         resources.add(config.reference_genome.resource_id)
         resources.add(config.gene_models.resource_id)
         if config.annotation is not None:
