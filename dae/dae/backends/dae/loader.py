@@ -54,7 +54,7 @@ class DenovoFamiliesGenotypes(FamiliesGenotypes):
         assert family.family_id == self.family.family_id
         return self.gt
 
-    def get_family_best_state(self, family_id):
+    def get_family_best_state(self, family):
         assert family.family_id == self.family.family_id
         return self.best_state
 
@@ -69,7 +69,7 @@ class DenovoLoader(VariantsGenotypesLoader):
             denovo_filename: str,
             genome: ReferenceGenome,
             regions: List[str] = None,
-            params: Dict[str, Any] = {},
+            params: Optional[Dict[str, Any]] = None,
             sort: bool = True):
         super().__init__(
             families=families,
@@ -79,7 +79,7 @@ class DenovoLoader(VariantsGenotypesLoader):
             regions=regions,
             expect_genotype=False,
             expect_best_state=False,
-            params=params)
+            params=params if params else {})
 
         self.genome = genome
         self.set_attribute("source_type", "denovo")
@@ -147,7 +147,7 @@ class DenovoLoader(VariantsGenotypesLoader):
 
         group = self.denovo_df.groupby(
             ["chrom", "position", "reference", "alternative"],
-            sort=False).agg(lambda x: list(x))
+            sort=False).agg(list)
         for num_idx, (idx, values) in enumerate(group.iterrows()):
             chrom, position, reference, alternative = idx
             position = int(position)
@@ -239,7 +239,7 @@ class DenovoLoader(VariantsGenotypesLoader):
             family: Family,
             members_with_variant: List[str]) -> np.ndarray:
 
-        # TODO Add support for multiallelic variants
+        # TODO: Add support for multiallelic variants
         # This method currently assumes biallelic variants
 
         genotype = np.zeros(shape=(2, len(family)), dtype=GENOTYPE_TYPE)
@@ -436,7 +436,8 @@ class DenovoLoader(VariantsGenotypesLoader):
             denovo_sep: str = "\t",
             adjust_chrom_prefix=None,
             **kwargs) -> Tuple[pd.DataFrame, Any]:
-        """
+        """Load de Novo variants from a file.
+
         Read a text file containing variants in the form
         of delimiter-separted values and produce a dataframe.
 
@@ -947,6 +948,21 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
     def close(self):
         pass
 
+    def _produce_family_variants(self, summary_variant, families_genotypes):
+        family_variants = []
+        for (fam, bs, rc) in families_genotypes.family_genotype_iterator():
+
+            fv = FamilyVariant(
+                summary_variant, fam, None, bs)
+            fv.gt, fv._genetic_model = self._calc_genotype(
+                fv, self.genome)
+            for fa in fv.alleles:
+                fa.gt = fv.gt
+                fa._genetic_model = fv._genetic_model
+                fa.update_attributes({"read_counts": rc})
+            family_variants.append(fv)
+        return family_variants
+
     def _full_variants_iterator_impl(self):
 
         summary_columns = self._load_summary_columns(self.summary_filename)
@@ -995,20 +1011,8 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
                             families_genotypes = \
                                 DaeTransmittedFamiliesGenotypes(
                                     self.families, family_data)
-
-                            family_variants = []
-                            for (fam, bs, rc) in families_genotypes\
-                                    .family_genotype_iterator():
-
-                                fv = FamilyVariant(
-                                    summary_variant, fam, None, bs)
-                                fv.gt, fv._genetic_model = self._calc_genotype(
-                                    fv, self.genome)
-                                for fa in fv.alleles:
-                                    fa.gt = fv.gt
-                                    fa._genetic_model = fv._genetic_model
-                                    fa.update_attributes({"read_counts": rc})
-                                family_variants.append(fv)
+                            family_variants = self._produce_family_variants(
+                                summary_variant, families_genotypes)
 
                             yield summary_variant, family_variants
                             summary_index += 1
@@ -1020,14 +1024,11 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
                                 self.regions,
                                 exc_info=True)
 
-            except ValueError as ex:
+            except ValueError:
                 logger.warning(
-                    f"could not find region {region} in "
-                    f"{self.summary_filename} "
-                    f"or {self.toomany_filename}:")
-                logger.exception(ex)
-
-            self.lines_iterator = None
+                    "could not find region %s in %s or %s",
+                    region, self.summary_filename, self.toomany_filename,
+                    exc_info=True)
 
     @classmethod
     def _arguments(cls) -> list[CLIArgument]:
@@ -1047,7 +1048,7 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
         return arguments
 
     @classmethod
-    def parse_cli_arguments(cls, argv):
+    def parse_cli_arguments(cls, argv, use_defaults=False):
         filename = argv.dae_summary_file
 
         params = {

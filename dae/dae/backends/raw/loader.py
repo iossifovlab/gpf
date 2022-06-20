@@ -1,3 +1,4 @@
+
 import argparse
 import os
 import pathlib
@@ -108,7 +109,7 @@ class CLIArgument:
                             value = value.encode('unicode-escape')\
                                 .decode().replace('\\\\', '\\')
                         return f"{self.argument_name} \"{value}\""
-                    elif use_defaults and self.default_value is not None:
+                    if use_defaults and self.default_value is not None:
                         value = self.default_value
                         if self.raw:
                             value = value.encode('unicode-escape')\
@@ -149,9 +150,9 @@ class FamiliesGenotypes(ABC):
 
 
 class CLILoader(ABC):
-    def __init__(self, params={}):
+    def __init__(self, params=None):
         self.arguments = self._arguments()
-        self.params = params
+        self.params: Dict[str, Any] = params if params else {}
 
     def _add_argument(self, argument):
         self.arguments.append(argument)
@@ -164,7 +165,7 @@ class CLILoader(ABC):
     def cli_defaults(cls):
         argument_destinations = [arg.destination for arg in cls._arguments()]
         defaults = [arg.default_value for arg in cls._arguments()]
-        return {k: v for (k, v) in zip(argument_destinations, defaults)}
+        return dict(zip(argument_destinations, defaults))
 
     @classmethod
     def cli_arguments(cls, parser, options_only=False):
@@ -177,11 +178,11 @@ class CLILoader(ABC):
     def build_cli_arguments(cls, params):
         built_arguments = []
         for argument in cls._arguments():
-            logger.info(f"adding to CLI arguments: {argument}")
+            logger.info("adding to CLI arguments: %s", argument)
             built_arguments.append(argument.build_option(params))
         built_arguments = filter(lambda x: x is not None, built_arguments)
         result = " ".join(built_arguments)
-        logger.info(f"result CLI arguments: {result}")
+        logger.info("result CLI arguments: %s", result)
         return result
 
     def build_arguments_dict(self):
@@ -193,7 +194,7 @@ class CLILoader(ABC):
                 result[argument.destination] = \
                     self.params[argument.destination]
         logger.debug(
-            f"building arguments from {self.params} into dict: {result}")
+            "building arguments from %s into dict: %s", self.params, result)
         return result
 
     @classmethod
@@ -212,10 +213,10 @@ class VariantsLoader(CLILoader):
         families: FamiliesData,
         filenames: List[str],
         transmission_type: TransmissionType,
-        params: Dict[str, Any] = {},
+        params: Optional[Dict[str, Any]] = None,
         attributes: Optional[Dict[str, Any]] = None,
     ):
-
+        params = params if params else {}
         super().__init__(params=params)
         assert isinstance(families, FamiliesData)
         self.families = families
@@ -255,6 +256,7 @@ class VariantsLoader(CLILoader):
     @abstractmethod
     def close(self):
         """Close resources used by the loader."""
+
 
 class VariantsLoaderDecorator(VariantsLoader):
     def __init__(self, variants_loader: VariantsLoader):
@@ -300,6 +302,7 @@ class VariantsLoaderDecorator(VariantsLoader):
     def close(self):
         self.variants_loader.close()
 
+
 class AnnotationDecorator(VariantsLoaderDecorator):
 
     SEP1 = "!"
@@ -325,9 +328,6 @@ class AnnotationDecorator(VariantsLoaderDecorator):
             "effect_gene",
         ]
     )
-
-    def __init__(self, variants_loader):
-        super().__init__(variants_loader)
 
     @staticmethod
     def build_annotation_filename(filename):
@@ -382,7 +382,7 @@ class AnnotationDecorator(VariantsLoaderDecorator):
         header.extend(["effects"])
         header.extend(other_columns)
 
-        with open(filename, "w") as outfile:
+        with open(filename, "w", encoding="utf8") as outfile:
             outfile.write(sep.join(header))
             outfile.write("\n")
 
@@ -429,12 +429,14 @@ class EffectAnnotationDecorator(AnnotationDecorator):
                 allele_effects = attributes["allele_effects"]
                 assert isinstance(allele_effects, AlleleEffects), \
                     (type(allele_effects), allele_effects)
+                # pylint: disable=protected-access
                 sa._effects = allele_effects
             yield summary_variant, family_variants
 
     def close(self):
         self.effect_annotator.close()
         super().close()
+
 
 class AnnotationPipelineDecorator(AnnotationDecorator):
     def __init__(
@@ -466,6 +468,7 @@ class AnnotationPipelineDecorator(AnnotationDecorator):
                     allele_effects = attributes["allele_effects"]
                     assert isinstance(allele_effects, AlleleEffects), \
                         attributes
+                    # pylint: disable=protected-access
                     sa._effects = allele_effects
                 sa.update_attributes(attributes)
             yield summary_variant, family_variants
@@ -488,13 +491,12 @@ class StoredAnnotationDecorator(AnnotationDecorator):
                 source_filename
             )
         if not os.path.exists(annotation_filename):
-            logger.warning(f"stored annotation missing {annotation_filename}")
+            logger.warning("stored annotation missing %s", annotation_filename)
             return variants_loader
-        else:
-            variants_loader = StoredAnnotationDecorator(
-                variants_loader, annotation_filename
-            )
-            return variants_loader
+        variants_loader = StoredAnnotationDecorator(
+            variants_loader, annotation_filename
+        )
+        return variants_loader
 
     @classmethod
     def _convert_array_of_strings(cls, token):
@@ -513,7 +515,7 @@ class StoredAnnotationDecorator(AnnotationDecorator):
     @classmethod
     def _load_annotation_file(cls, filename, sep="\t"):
         assert os.path.exists(filename)
-        with open(filename, "r") as infile:
+        with open(filename, "r", encoding="utf8") as infile:
             annot_df = pd.read_csv(
                 infile,
                 sep=sep,
@@ -551,8 +553,8 @@ class StoredAnnotationDecorator(AnnotationDecorator):
         annot_df = self._load_annotation_file(self.annotation_filename)
         elapsed = time.time() - start
         logger.info(
-            f"Storred annotation file ({self.annotation_filename}) "
-            f"loaded in in {elapsed:.2f} sec")
+            "Storred annotation file (%s) loaded in in %.2f sec",
+            self.annotation_filename, elapsed)
 
         start = time.time()
         records = annot_df.to_dict(orient="records")
@@ -578,8 +580,8 @@ class StoredAnnotationDecorator(AnnotationDecorator):
 
         elapsed = time.time() - start
         logger.info(
-            f"Storred annotation file ({self.annotation_filename}) "
-            f"parsed in {elapsed:.2f} sec")
+            "Storred annotation file (%s) parsed in %.2f sec",
+            self.annotation_filename, elapsed)
 
 
 class VariantsGenotypesLoader(VariantsLoader):
@@ -597,9 +599,10 @@ class VariantsGenotypesLoader(VariantsLoader):
             regions: List[str] = None,
             expect_genotype: bool = True,
             expect_best_state: bool = False,
-            params: Dict[str, Any] = {}):
+            params: Optional[Dict[str, Any]] = None):
 
-        super(VariantsGenotypesLoader, self).__init__(
+        params = params if params else {}
+        super().__init__(
             families=families,
             filenames=filenames,
             transmission_type=transmission_type,
@@ -688,15 +691,13 @@ class VariantsGenotypesLoader(VariantsLoader):
             if male_ploidy == 2:
                 if not all(cls._get_diploid_males(family_variant)):
                     return GeneticModel.X_broken
-                else:
-                    return GeneticModel.pseudo_autosomal
-            elif any(cls._get_diploid_males(family_variant)):
+                return GeneticModel.pseudo_autosomal
+            if any(cls._get_diploid_males(family_variant)):
                 return GeneticModel.X_broken
-            else:
-                return GeneticModel.X
-        else:
-            # We currently assume all other chromosomes are autosomal
-            return GeneticModel.autosomal
+
+            return GeneticModel.X
+        # We currently assume all other chromosomes are autosomal
+        return GeneticModel.autosomal
 
     @classmethod
     def _calc_best_state(
@@ -735,7 +736,7 @@ class VariantsGenotypesLoader(VariantsLoader):
                 #         file=sys.stderr)
 
             return best_state
-        elif force:
+        if force:
             return calculate_simple_best_state(
                 family_variant.gt, family_variant.allele_count
             )
@@ -745,7 +746,7 @@ class VariantsGenotypesLoader(VariantsLoader):
     def _calc_genotype(
             cls, family_variant: FamilyVariant,
             genome: ReferenceGenome) -> Tuple[np.ndarray, GeneticModel]:
-
+        # pylint: disable=protected-access
         best_state = family_variant._best_state
         genotype = best2gt(best_state)
         male_ploidy = get_locus_ploidy(
@@ -780,15 +781,13 @@ class VariantsGenotypesLoader(VariantsLoader):
         assert self._chrom_prefix is not None
         if chrom is not None and not chrom.startswith(self._chrom_prefix):
             return f"{self._chrom_prefix}{chrom}"
-        else:
-            return chrom
+        return chrom
 
     def _del_chrom_prefix(self, chrom):
         assert self._chrom_prefix is not None
         if chrom is not None and chrom.startswith(self._chrom_prefix):
             return chrom[len(self._chrom_prefix):]
-        else:
-            return chrom
+        return chrom
 
     def full_variants_iterator(
         self,
@@ -796,6 +795,7 @@ class VariantsGenotypesLoader(VariantsLoader):
         full_iterator = self._full_variants_iterator_impl()
         for summary_variant, family_variants in full_iterator:
             chrom = self._adjust_chrom_prefix(summary_variant.chromosome)
+            # pylint: disable=protected-access
             summary_variant._chromosome = chrom
             for summary_allele in summary_variant.alleles:
                 summary_allele._chrom = chrom

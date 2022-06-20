@@ -1,3 +1,4 @@
+"""Provides Apache Parquet storage of genotype data."""
 import os
 import sys
 import time
@@ -5,6 +6,8 @@ import re
 import hashlib
 import itertools
 import logging
+import configparser
+
 from copy import copy
 from urllib.parse import urlparse
 from fsspec.core import url_to_fs
@@ -16,8 +19,8 @@ import numpy as np
 
 import pyarrow as pa
 from pyarrow import fs as pa_fs
+import pyarrow.parquet as pq
 
-import configparser
 import fsspec
 
 from dae.utils.variant_utils import GENOTYPE_TYPE
@@ -32,6 +35,8 @@ logger = logging.getLogger(__name__)
 
 
 class PartitionDescriptor:
+    """Abstract class for partition description."""
+
     def __init__(self):
         pass
 
@@ -57,12 +62,17 @@ class PartitionDescriptor:
 
 
 class NoPartitionDescriptor(PartitionDescriptor):
+    """Defines class for missing partition description."""
+
     def __init__(self, root_dirname=""):
-        super(NoPartitionDescriptor, self).__init__()
+        super().__init__()
         self.output = root_dirname
 
     def has_partitions(self):
         return False
+
+    def build_impala_partitions(self):
+        raise ValueError("unexpected use of build_impala_partitions")
 
     @property
     def chromosomes(self):
@@ -80,10 +90,9 @@ class NoPartitionDescriptor(PartitionDescriptor):
     def write_partition_configuration(self):
         return None
 
-    def generate_file_access_glob(self):
-        """
-        Generates a glob for accessing every parquet file in the partition
-        """
+    @staticmethod
+    def generate_file_access_glob():
+        """Generate a glob for accessing parquet files in the partition."""
         return "*variants.parquet"
 
     def variants_filename_basedir(self, filename):
@@ -101,12 +110,14 @@ class NoPartitionDescriptor(PartitionDescriptor):
 
 
 class ParquetPartitionDescriptor(PartitionDescriptor):
+    """Defines partition description used for parquet datasets."""
+
     def __init__(
             self,
             chromosomes,
             region_length,
             family_bin_size=0,
-            coding_effect_types=[],
+            coding_effect_types=None,
             rare_boundary=0,
             root_dirname=""):
 
@@ -115,7 +126,8 @@ class ParquetPartitionDescriptor(PartitionDescriptor):
         self._chromosomes = chromosomes
         self._region_length = region_length
         self._family_bin_size = family_bin_size
-        self._coding_effect_types = coding_effect_types
+        self._coding_effect_types = \
+            coding_effect_types if coding_effect_types else []
         self._rare_boundary = rare_boundary
 
     def has_partitions(self):
@@ -369,7 +381,7 @@ class ParquetPartitionDescriptor(PartitionDescriptor):
             family_bin = self._family_bin_from_id(family.family_id)
             for person in family.persons.values():
                 person.set_attr("family_bin", family_bin)
-        families._ped_df = None
+        families._ped_df = None  # pylint: disable=protected-access
         return families
 
 
@@ -403,7 +415,6 @@ class ContinuousParquetFileWriter:
                 os.makedirs(dirname)
             self.dirname = dirname
 
-        import pyarrow.parquet as pq  # type: ignore
         self._writer = pq.ParquetWriter(
             filepath, self.schema, compression="snappy", filesystem=filesystem
         )
@@ -787,7 +798,7 @@ def add_missing_parquet_fields(pps, ped_df):
     missing_fields = [rename[col] for col in missing_fields]
 
     for column in missing_fields:
-        ped_df[column] = ped_df[column].apply(lambda v: str(v))
+        ped_df[column] = ped_df[column].apply(str)
 
     return ped_df, pps
 
@@ -810,5 +821,4 @@ def save_ped_df_to_parquet(ped_df, filename, filesystem=None):
 
     table = pa.Table.from_pandas(ped_df, schema=pps)
 
-    import pyarrow.parquet as pq
     pq.write_table(table, filename, filesystem=filesystem)
