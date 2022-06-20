@@ -1,8 +1,7 @@
 type: gene_score
-
+filename: SFARI.csv
 gene_scores:
   - id: SFARI_gene_score
-    filename: SFARI.csv
     desc: SFARI gene score
 
 histograms:

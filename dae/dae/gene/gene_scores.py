@@ -36,7 +36,7 @@ class GeneScore:
     def __init__(self, score_id, file, desc, histogram_config, meta=None):
         self.histogram_config = histogram_config
 
-        self.id = score_id
+        self.score_id = score_id
         self.df = None
         self._dict = None
 
@@ -78,10 +78,10 @@ class GeneScore:
         assert self.file is not None
 
         df = pd.read_csv(self.file)
-        assert self.id in df.columns, "{} not found in {}".format(
-            self.id, df.columns
+        assert self.score_id in df.columns, "{} not found in {}".format(
+            self.score_id, df.columns
         )
-        self.df = df[[self.genomic_values_col, self.id]].copy()
+        self.df = df[[self.genomic_values_col, self.score_id]].copy()
         return self.df
 
     @staticmethod
@@ -99,7 +99,7 @@ class GeneScore:
         scores = []
         for gs_config in config["gene_scores"]:
             gene_score_id = gs_config["id"]
-            file = resource.open_raw_file(gs_config["filename"])
+            file = resource.open_raw_file(config["filename"])
             desc = gs_config["desc"]
             histogram_config = None
             for hist_config in config["histograms"]:
@@ -116,7 +116,7 @@ class GeneScore:
         """
         Returns a list of score values
         """
-        return self.df[self.id].values
+        return self.df[self.score_id].values
 
     def get_gene_value(self, gene_symbol):
         """
@@ -131,7 +131,7 @@ class GeneScore:
         Returns dictionary of all defined scores keyed by gene symbol.
         """
         if self._dict is None:
-            self._dict = self.df.set_index("gene")[self.id].to_dict()
+            self._dict = self.df.set_index("gene")[self.score_id].to_dict()
         return self._dict
 
     @cached
@@ -153,14 +153,14 @@ class GeneScore:
         """
         Returns minimal score value.
         """
-        return self.df[self.id].min()
+        return self.df[self.score_id].min()
 
     @cached
     def max(self):
         """
         Returns maximal score value.
         """
-        return self.df[self.id].max()
+        return self.df[self.score_id].max()
 
     def get_genes(self, wmin=None, wmax=None):
         """
@@ -172,7 +172,7 @@ class GeneScore:
         `wmax` -- the upper bound of scores. If not specified or `None`
         works without upper bound.
         """
-        df = self.df[self.id]
+        df = self.df[self.score_id]
         df.dropna(inplace=True)
 
         if wmin is None or wmin < df.min() or wmin > df.max():
@@ -196,7 +196,7 @@ class GeneScoresDb:
         super().__init__()
         self.scores = OrderedDict()
         for score in gene_scores:
-            self.scores[score.id] = score
+            self.scores[score.score_id] = score
 
     @cached
     def get_gene_score_ids(self):

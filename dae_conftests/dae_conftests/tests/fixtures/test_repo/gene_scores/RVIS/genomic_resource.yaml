@@ -1,10 +1,9 @@
 type: gene_score
+filename: RVIS.csv
 gene_scores:
   - id: RVIS_rank
-    filename: RVIS.csv
     desc: RVIS rank
   - id: RVIS
-    filename: RVIS.csv
     desc: RVIS
 
 histograms:
