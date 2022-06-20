@@ -137,7 +137,15 @@
           <thead>
             <th>Effect type</th>
             <th class="rotate" *ngFor="let column of currentDenovoReport.columns">
-              <div class="column-header">{{ column }}</div>
+              <div class="column-header"
+                [attr.title]="
+                  'children with the specific '
+                  + currentDenovoReport.groupName.toLowerCase()
+                  + ': '
+                  + column.substring(column.indexOf('(') + 1, column.lastIndexOf(')'))
+                "
+                >{{ column }}</div
+              >
             </th>
           </thead>
           <tbody>

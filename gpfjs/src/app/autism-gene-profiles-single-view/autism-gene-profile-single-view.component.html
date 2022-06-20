@@ -129,7 +129,11 @@
                 <tr class="card-block">
                   <th style="border-bottom: none">Variant Statistics</th>
                   <th *ngFor="let personSet of dataset.personSets" style="text-align: center; border-bottom: none">
-                    <span class="vertical-text">{{ personSet.displayName }} ({{ personSet.childrenCount }})</span>
+                    <span
+                      class="vertical-text"
+                      [attr.title]="'children with the specific phenotype: ' + personSet.childrenCount"
+                      >{{ personSet.displayName }} ({{ personSet.childrenCount }})</span
+                    >
                   </th>
                 </tr>
               </thead>

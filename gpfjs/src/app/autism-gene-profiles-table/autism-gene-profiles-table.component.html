@@ -54,7 +54,14 @@
           <div class="header-cell-content" [ngClass]="{ 'header-cell-vertical-content': column.displayVertical }">
             <span
               class="header-cell-content-span"
-              [attr.title]="column.meta || column.displayName"
+              [attr.title]="
+                column.meta
+                ? column.meta
+                : column.gridRow === '2 / 3'
+                ? column.displayName
+                  + '\nchildren with the specific phenotype: '
+                  + column.displayName.substring(column.displayName.indexOf('(') + 1, column.displayName.lastIndexOf(')'))
+                : column.displayName"
               [ngClass]="{
                 'vertical-text': column.displayVertical,
                 'header-gene-symbol-span': column.id === geneSymbolColumnId,
