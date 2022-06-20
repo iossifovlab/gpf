@@ -60,7 +60,7 @@
                 : column.gridRow === '2 / 3'
                 ? column.displayName
                   + '\nchildren with the specific phenotype: '
-                  + column.displayName.substring(column.displayName.indexOf('(') + 1, column.displayName.lastIndexOf(')'))
+                  + column.displayName.substring(column.displayName.lastIndexOf('(') + 1, column.displayName.lastIndexOf(')'))
                 : column.displayName"
               [ngClass]="{
                 'vertical-text': column.displayVertical,
