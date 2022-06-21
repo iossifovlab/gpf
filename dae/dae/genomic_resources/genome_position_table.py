@@ -623,18 +623,14 @@ class TabixGenomicPositionTable(GenomicPositionTable):
             pos_begin = 1
         if pos_end is None or pos_end - pos_begin > self.BUFFER_MAXSIZE:
             buffering = False
-            self.stats["no_buffering"] += 1
+            self.stats["without buffering"] += 1
         else:
-            self.stats["buffering"] += 1
+            self.stats["with buffering"] += 1
 
         prev_call_chrom, _prev_call_beg, prev_call_end = self._last_call
+        self._last_call = fchrom, pos_begin, pos_end
 
-        if not buffering or len(self.buffer) == 0 or prev_call_chrom != fchrom:
-            # no buffering
-            self.stats["last call reset"] += 1
-            self._last_call = "", -1, -1
-        else:
-            self._last_call = fchrom, pos_begin, pos_end
+        if buffering and len(self.buffer) > 0 and prev_call_chrom == fchrom:
 
             first_chrom, first_beg, _first_end, _ = self.buffer.peek_first()
             if first_chrom == fchrom and prev_call_end is not None \
@@ -648,7 +644,7 @@ class TabixGenomicPositionTable(GenomicPositionTable):
                 for row in self._gen_from_buffer_and_tabix(
                         fchrom, pos_begin, pos_end):
                     _, _, _, line = row
-                    self.stats["ge from buffer and tabix"] += 1
+                    self.stats["yield from buffer and tabix"] += 1
                     yield line
 
                 self.buffer.prune(fchrom, pos_begin)
@@ -665,8 +661,9 @@ class TabixGenomicPositionTable(GenomicPositionTable):
                 self.buffer.prune(fchrom, pos_begin)
                 return
 
-        self._last_call = fchrom, pos_begin, pos_end
+        # without using buffer
         # pylint: disable=no-member
+        self.stats["tabix fetch"] += 1
         self.tabix_iterator = self.tabix_file.fetch(
             fchrom, pos_begin - 1, None, parser=pysam.asTuple())
         self.buffer.clear()
