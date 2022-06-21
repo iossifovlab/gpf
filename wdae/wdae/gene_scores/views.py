@@ -23,7 +23,7 @@ class GeneScoresListView(QueryBaseView):
         return Response(
             [
                 {
-                    "score": score.id,
+                    "score": score.score_id,
                     "desc": score.desc,
                     "bars": score.histogram_bars,
                     "bins": score.histogram_bins,
