@@ -56,7 +56,7 @@
               class="header-cell-content-span"
               [attr.title]="
                 column.meta
-                ? column.meta
+                ? column.displayName + '\n' + column.meta
                 : column.gridRow === '2 / 3'
                 ? column.displayName
                   + '\nchildren with the specific phenotype: '
