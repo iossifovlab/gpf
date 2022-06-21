@@ -8,7 +8,7 @@ router.register(r"users", views.UserViewSet, basename="users")
 
 urlpatterns = [
     re_path(r"^users/register/?$", views.register),
-    re_path(r"^users/login/?$", views.login),
+    re_path(r"^users/login/?$", views.login, name='login_user'),
     re_path(r"^users/logout/?$", views.logout),
     re_path(r"^users/get_user_info/?$", views.get_user_info),
     re_path(r"^users/reset_password/?$", views.reset_password),
