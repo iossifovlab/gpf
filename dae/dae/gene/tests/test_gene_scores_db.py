@@ -14,9 +14,9 @@ def scores_repo():
         "RVIS_rank": {
             GR_CONF_FILE_NAME: """
                 type: gene_score
+                filename: RVIS.csv
                 gene_scores:
                   - id: RVIS_rank
-                    filename: RVIS.csv
                     desc: RVIS rank
                 histograms:
                   - score: RVIS_rank
@@ -44,9 +44,9 @@ def scores_repo():
         "LGD_rank": {
             GR_CONF_FILE_NAME: """
                 type: gene_score
+                filename: LGD.csv
                 gene_scores:
                   - id: LGD_rank
-                    filename: LGD.csv
                     desc: LGD rank
                 histograms:
                   - score: LGD_rank
@@ -80,8 +80,8 @@ def gene_scores_db(scores_repo):
         scores_repo.get_resource("RVIS_rank"),
     ]
     scores = []
-    for r in resources:
-        scores += GeneScore.load_gene_scores_from_resource(r)
+    for resource in resources:
+        scores += GeneScore.load_gene_scores_from_resource(resource)
     return GeneScoresDb(scores)
 
 
@@ -121,8 +121,8 @@ def test_scores_min_max(scores_repo):
     resource = scores_repo.get_resource("LGD_rank")
     score = GeneScore.load_gene_scores_from_resource(resource)[0]
 
-    assert 1.0 == score.min()
-    assert 59.0 == score.max()
+    assert score.min() == 1.0
+    assert score.max() == 59.0
 
 
 def test_scores_get_genes(scores_repo):

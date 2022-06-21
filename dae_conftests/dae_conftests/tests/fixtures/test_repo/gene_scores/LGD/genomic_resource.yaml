@@ -1,10 +1,9 @@
 type: gene_score
+filename: LGD.csv
 gene_scores:
   - id: LGD_rank
-    filename: LGD.csv
     desc: LGD rank
   - id: LGD_score
-    filename: LGD.csv
     desc: LGD score
 
 histograms:
