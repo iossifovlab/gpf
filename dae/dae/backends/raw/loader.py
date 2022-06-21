@@ -1,3 +1,4 @@
+"""Base classes and helpers for variant loaders."""
 
 import argparse
 import os
@@ -39,12 +40,14 @@ class ArgumentType(Enum):
 
 
 class CLIArgument:
-    """
+    """Defines class for handling CLI arguments in variant loaders.
+
     This class handles the logic for CLI argument operations such as parsing
     arguments, transforming to dict, transforming a parsed argument back to
     a CLI argument and adding itself to an existing ArgumentParser.
     Construction closely mirrors the ArgumentParser argument format.
     """
+
     def __init__(
             self, argument_name, has_value=True,
             default_value=None, destination=None,
@@ -77,6 +80,7 @@ class CLIArgument:
         return self.argument_name[2:].replace("-", "_")
 
     def add_to_parser(self, parser):
+        """Add this argument to argsparser."""
         kwargs = {
             "type": self.value_type,
             "help": self.help_text,
@@ -106,15 +110,15 @@ class CLIArgument:
                         if value == self.default_value:
                             continue
                         if self.raw:
-                            value = value.encode('unicode-escape')\
-                                .decode().replace('\\\\', '\\')
-                        return f"{self.argument_name} \"{value}\""
+                            value = value.encode("unicode-escape")\
+                                .decode().replace("\\\\", "\\")
+                        return f'{self.argument_name} "{value}"'
                     if use_defaults and self.default_value is not None:
                         value = self.default_value
                         if self.raw:
-                            value = value.encode('unicode-escape')\
-                                .decode().replace('\\\\', '\\')
-                        return f"{self.argument_name} \"{value}\""
+                            value = value.encode("unicode-escape")\
+                                .decode().replace("\\\\", "\\")
+                        return f'{self.argument_name} "{value}"'
                 else:
                     return f"{self.argument_name}"
         return None
@@ -186,7 +190,7 @@ class CLILoader(ABC):
         return result
 
     def build_arguments_dict(self):
-        result = dict()
+        result = {}
         for argument in self._arguments():
             if argument.arg_type == ArgumentType.ARGUMENT:
                 continue
@@ -250,8 +254,8 @@ class VariantsLoader(CLILoader):
 
     def family_variants_iterator(self):
         for _, fvs in self.full_variants_iterator():
-            for fv in fvs:
-                yield fv
+            for fvariant in fvs:
+                yield fvariant
 
     @abstractmethod
     def close(self):
@@ -261,7 +265,7 @@ class VariantsLoader(CLILoader):
 class VariantsLoaderDecorator(VariantsLoader):
     def __init__(self, variants_loader: VariantsLoader):
 
-        super(VariantsLoaderDecorator, self).__init__(
+        super().__init__(
             variants_loader.families,
             variants_loader.filenames,
             variants_loader.transmission_type,
@@ -421,16 +425,16 @@ class EffectAnnotationDecorator(AnnotationDecorator):
     def full_variants_iterator(self):
         for (summary_variant, family_variants) in \
                 self.variants_loader.full_variants_iterator():
-            for sa in summary_variant.alt_alleles:
+            for sallele in summary_variant.alt_alleles:
                 context = {}
                 attributes = self.effect_annotator.annotate(
-                    sa.get_annotatable(), context)
+                    sallele.get_annotatable(), context)
                 assert "allele_effects" in attributes, attributes
                 allele_effects = attributes["allele_effects"]
                 assert isinstance(allele_effects, AlleleEffects), \
                     (type(allele_effects), allele_effects)
                 # pylint: disable=protected-access
-                sa._effects = allele_effects
+                sallele._effects = allele_effects
             yield summary_variant, family_variants
 
     def close(self):
@@ -461,16 +465,16 @@ class AnnotationPipelineDecorator(AnnotationDecorator):
     def full_variants_iterator(self):
         for (summary_variant, family_variants) in \
                 self.variants_loader.full_variants_iterator():
-            for sa in summary_variant.alt_alleles:
+            for sallele in summary_variant.alt_alleles:
                 attributes = self.annotation_pipeline.annotate(
-                    sa.get_annotatable())
+                    sallele.get_annotatable())
                 if "allele_effects" in attributes:
                     allele_effects = attributes["allele_effects"]
                     assert isinstance(allele_effects, AlleleEffects), \
                         attributes
                     # pylint: disable=protected-access
-                    sa._effects = allele_effects
-                sa.update_attributes(attributes)
+                    sallele._effects = allele_effects
+                sallele.update_attributes(attributes)
             yield summary_variant, family_variants
 
     def close(self):
@@ -479,7 +483,7 @@ class AnnotationPipelineDecorator(AnnotationDecorator):
 
 class StoredAnnotationDecorator(AnnotationDecorator):
     def __init__(self, variants_loader, annotation_filename):
-        super(StoredAnnotationDecorator, self).__init__(variants_loader)
+        super().__init__(variants_loader)
 
         assert os.path.exists(annotation_filename)
         self.annotation_filename = annotation_filename
@@ -561,22 +565,27 @@ class StoredAnnotationDecorator(AnnotationDecorator):
         index = 0
 
         while index < len(records):
-            sv, family_variants = next(variant_iterator)
+            sumary_variant, family_variants = next(
+                variant_iterator, (None, None))
+            if sumary_variant is None:
+                return
             variant_records = []
 
             current_record = records[index]
-            while current_record["summary_variant_index"] == sv.summary_index:
+            while current_record["summary_variant_index"] == \
+                    sumary_variant.summary_index:
                 variant_records.append(current_record)
                 index += 1
                 if index >= len(records):
                     break
                 current_record = records[index]
 
-            assert len(variant_records) > 0, sv
+            assert len(variant_records) > 0, sumary_variant
 
-            for sa in sv.alleles:
-                sa.update_attributes(variant_records[sa.allele_index])
-            yield sv, family_variants
+            for sallele in sumary_variant.alleles:
+                sallele.update_attributes(
+                    variant_records[sallele.allele_index])
+            yield sumary_variant, family_variants
 
         elapsed = time.time() - start
         logger.info(
@@ -585,7 +594,8 @@ class StoredAnnotationDecorator(AnnotationDecorator):
 
 
 class VariantsGenotypesLoader(VariantsLoader):
-    """
+    """Base class for variants loaders.
+
     Calculate missing best states and adds a genetic model
     value to the family variant and its alleles.
     """
@@ -815,9 +825,9 @@ class VariantsGenotypesLoader(VariantsLoader):
                     family_variant._best_state = self._calc_best_state(
                         family_variant, self.genome, force=False
                     )
-                    for fa in family_variant.alleles:
-                        fa._best_state = family_variant.best_state
-                        fa._genetic_model = family_variant.genetic_model
+                    for fallele in family_variant.alleles:
+                        fallele._best_state = family_variant.best_state
+                        fallele._genetic_model = family_variant.genetic_model
                 elif self.expect_best_state and family_variant.gt is None:
                     assert family_variant._best_state is not None
                     assert family_variant._genetic_model is None
@@ -827,8 +837,8 @@ class VariantsGenotypesLoader(VariantsLoader):
                         family_variant.gt,
                         family_variant._genetic_model,
                     ) = self._calc_genotype(family_variant, self.genome)
-                    for fa in family_variant.alleles:
-                        fa.gt = family_variant.gt
-                        fa._genetic_model = family_variant.genetic_model
+                    for fallele in family_variant.alleles:
+                        fallele.gt = family_variant.gt
+                        fallele._genetic_model = family_variant.genetic_model
 
             yield summary_variant, family_variants
