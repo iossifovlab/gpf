@@ -7,6 +7,7 @@ from django.views.decorators.csrf import ensure_csrf_cookie
 from django.conf import settings
 from django.http.response import StreamingHttpResponse
 from django.db.models import Q
+from django.shortcuts import redirect
 
 from rest_framework.decorators import action, api_view, authentication_classes
 from rest_framework import status, viewsets, permissions, filters
@@ -24,6 +25,8 @@ from .models import VerificationPath, AuthenticationLog
 from .serializers import UserSerializer, UserWithoutEmailSerializer
 
 from .utils import LOCKOUT_THRESHOLD, csrf_clear
+
+from oauth2_provider.contrib.rest_framework import OAuth2Authentication
 
 
 def iterator_to_json(users):
@@ -286,7 +289,10 @@ def login(request):
         django.contrib.auth.login(request, user)
         LOGGER.info(log_filter(request, "login success: " + str(username)))
         AuthenticationLog.log_authentication_attempt(user_email, failed=False)
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        if request.data.get("next"):
+            return redirect(request.data.get("next"))
+        else:
+            return Response(status=status.HTTP_204_NO_CONTENT)
 
     LOGGER.info(log_filter(request, "login failure: " + str(username)))
     return Response(status=status.HTTP_404_NOT_FOUND)
@@ -304,6 +310,7 @@ def logout(request):
 @request_logging_function_view(LOGGER)
 @ensure_csrf_cookie
 @api_view(["GET"])
+@authentication_classes((OAuth2Authentication,))
 def get_user_info(request):
     user = request.user
     if user.is_authenticated:

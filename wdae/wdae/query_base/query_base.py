@@ -1,17 +1,16 @@
 """Provides base class for query views."""
 
 from rest_framework import views  # type: ignore
+from oauth2_provider.contrib.rest_framework import OAuth2Authentication
 
 from gpf_instance.gpf_instance import get_gpf_instance
-
 from datasets_api.permissions import IsDatasetAllowed
-from users_api.authentication import SessionAuthenticationWithoutCSRF
 
 
 class QueryBaseView(views.APIView):
     """Base class for query views."""
 
-    authentication_classes = (SessionAuthenticationWithoutCSRF,)
+    authentication_classes = (OAuth2Authentication,)
     permission_classes = (IsDatasetAllowed,)
 
     def __init__(self):
