@@ -153,21 +153,6 @@ def _configure_resource_repair_subparser(subparsers):
     DaskClient.add_arguments(parser)
 
 
-def _get_resources_list(proto, **kwargs):
-    res_id = kwargs.get("resource")
-    if res_id is not None:
-        res = proto.find_resource(res_id)
-        if res is None:
-            logger.error(
-                "resource %s not found in repository %s",
-                res_id, proto.url)
-            sys.exit(1)
-        resources = [res]
-    else:
-        resources = list(proto.get_all_resources())
-    return resources
-
-
 def collect_dvc_entries(
         proto: ReadWriteRepositoryProtocol,
         res: GenomicResource) -> Dict[str, ManifestEntry]:
