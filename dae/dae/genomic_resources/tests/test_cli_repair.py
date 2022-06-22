@@ -50,21 +50,24 @@ def proto_fixture(tmp_path, tabix_file):
 def test_cli_repair_simple(proto_fixture, tmp_path):
 
     assert not (tmp_path / "one/histograms").exists()
-    cli_manage(["repair", str(tmp_path), "-r", "one"])
+    cli_manage([
+        "resource-repair", "-R", str(tmp_path), "-r", "one"])
     assert (tmp_path / "one/histograms").exists()
 
 
 def test_cli_repair_dry_run(proto_fixture, tmp_path):
 
     assert not (tmp_path / "one/histograms").exists()
-    cli_manage(["repair", "--dry-run", str(tmp_path), "-r", "one"])
+    cli_manage([
+        "resource-repair", "--dry-run", "-R", str(tmp_path), "-r", "one"])
     assert not (tmp_path / "one/histograms").exists()
 
 
 def test_cli_repair_need_update_message(proto_fixture, tmp_path, capsys):
 
     assert not (tmp_path / "one/histograms").exists()
-    cli_manage(["repair", "--dry-run", str(tmp_path), "-r", "one"])
+    cli_manage([
+        "resource-repair", "--dry-run", "-R", str(tmp_path), "-r", "one"])
 
     captured = capsys.readouterr()
 
@@ -76,11 +79,13 @@ def test_cli_repair_need_update_message(proto_fixture, tmp_path, capsys):
 
 def test_cli_repair_no_update_message(proto_fixture, tmp_path, capsys):
     # Given
-    cli_manage(["repair", str(tmp_path), "-r", "one"])
+    cli_manage([
+        "resource-repair", "-R", str(tmp_path), "-r", "one"])
     _, _ = capsys.readouterr()
 
     # When
-    cli_manage(["repair", "--dry-run", str(tmp_path), "-r", "one"])
+    cli_manage([
+        "resource-repair", "--dry-run", "-R", str(tmp_path), "-r", "one"])
 
     # Then
     _, err = capsys.readouterr()
@@ -97,7 +102,8 @@ def test_cli_dry_run_repair_needs_manifest_update_message(
         outfile.write("alabala2")
 
     # When
-    cli_manage(["repair", "--dry-run", str(tmp_path), "-r", "one"])
+    cli_manage([
+        "resource-repair", "--dry-run", "-R", str(tmp_path), "-r", "one"])
 
     # Then
     captured = capsys.readouterr()
@@ -127,7 +133,8 @@ def test_cli_dry_run_repair_needs_manifest_and_histogram_update_message(
     )
 
     # When
-    cli_manage(["repair", "--dry-run", str(tmp_path), "-r", "one"])
+    cli_manage([
+        "resource-repair", "--dry-run", "-R", str(tmp_path), "-r", "one"])
 
     # Then
     captured = capsys.readouterr()
