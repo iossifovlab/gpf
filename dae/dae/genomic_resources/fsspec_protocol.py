@@ -24,8 +24,7 @@ from dae.genomic_resources.repository import GR_CONF_FILE_NAME, Manifest, \
     Mode, \
     ManifestEntry, \
     ResourceFileState, \
-    GenomicResource, isoformatted_from_datetime, \
-    isoformatted_from_timestamp, \
+    GenomicResource, \
     parse_resource_id_version, \
     GR_CONTENTS_FILE_NAME, \
     GR_MANIFEST_FILE_NAME
@@ -251,14 +250,14 @@ class FsspecReadWriteProtocol(
             yield from self._scan_resource_for_files(
                 resource_path, [*path_array, name])
 
-    def _get_filepath_timestamp(self, filepath: str) -> str:
+    def _get_filepath_timestamp(self, filepath: str) -> float:
         try:
             modification = self.filesystem.modified(filepath)
-            return isoformatted_from_datetime(modification)
+            return cast(float, round(modification.timestamp(), 2))
         except NotImplementedError:
             info = self.filesystem.info(filepath)
             modification = info.get("created")
-            return isoformatted_from_timestamp(modification)
+            return cast(float, round(modification, 2))
 
     def collect_all_resources(self) -> Generator[GenomicResource, None, None]:
         """Return generator over all resources managed by this protocol."""
@@ -305,10 +304,10 @@ class FsspecReadWriteProtocol(
             self, resource: GenomicResource, filename: str) -> str:
         """Return filename of the rersource file state path."""
         resource_url = self.get_resource_url(resource)
-        return os.path.join(resource_url, ".grr", filename)
+        return os.path.join(resource_url, ".grr", f"{filename}.state")
 
     def get_resource_file_timestamp(
-            self, resource: GenomicResource, filename: str) -> str:
+            self, resource: GenomicResource, filename: str) -> float:
         url = self.get_resource_file_url(resource, filename)
         return self._get_filepath_timestamp(url)
 

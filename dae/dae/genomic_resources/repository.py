@@ -21,7 +21,6 @@ from __future__ import annotations
 
 import re
 import logging
-import datetime
 import enum
 import hashlib
 
@@ -143,28 +142,6 @@ def is_version_constraint_satisfied(version_constraint, version):
         f"{version_constraint}")
 
 
-def timestamp_from_isoformatted(isoformatted: Optional[str]) -> Optional[int]:
-    """Return UNIX timestamp corresponding to entry time."""
-    if isoformatted is None:
-        return None
-
-    return int(datetime.datetime.fromisoformat(
-        isoformatted).timestamp())
-
-
-def isoformatted_from_timestamp(timestamp: float) -> str:
-    """Produce ISO formatted date-time from python time.time().
-
-    Uses integer precicsion, i.e. the timestamp is converted to int.
-    """
-    return datetime.datetime.fromtimestamp(
-        int(timestamp), datetime.timezone.utc).isoformat()
-
-
-def isoformatted_from_datetime(timestamp: datetime.datetime) -> str:
-    return isoformatted_from_timestamp(timestamp.timestamp())
-
-
 @dataclass(order=True)
 class ManifestEntry:
     """Provides an entry into manifest object."""
@@ -180,7 +157,7 @@ class ResourceFileState:
 
     filename: str
     size: int
-    timestamp: str
+    timestamp: float
     md5: str
 
 
@@ -608,7 +585,7 @@ class ReadWriteRepositoryProtocol(ReadOnlyRepositoryProtocol):
 
     @abc.abstractmethod
     def get_resource_file_timestamp(
-            self, resource: GenomicResource, filename: str) -> str:
+            self, resource: GenomicResource, filename: str) -> float:
         """Return the timestamp (ISO formatted) of a resource file."""
 
     @abc.abstractmethod
