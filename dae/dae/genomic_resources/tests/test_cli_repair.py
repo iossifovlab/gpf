@@ -47,7 +47,7 @@ def proto_fixture(tmp_path, tabix_file):
     return proto
 
 
-def test_cli_repair_simple(proto_fixture, tmp_path):
+def test_cli_repair_simple(proto_fixture, dask_mocker, tmp_path):
 
     assert not (tmp_path / "one/histograms").exists()
     cli_manage([
@@ -55,7 +55,7 @@ def test_cli_repair_simple(proto_fixture, tmp_path):
     assert (tmp_path / "one/histograms").exists()
 
 
-def test_cli_repair_dry_run(proto_fixture, tmp_path):
+def test_cli_repair_dry_run(proto_fixture, dask_mocker, tmp_path):
 
     assert not (tmp_path / "one/histograms").exists()
     cli_manage([
@@ -63,7 +63,8 @@ def test_cli_repair_dry_run(proto_fixture, tmp_path):
     assert not (tmp_path / "one/histograms").exists()
 
 
-def test_cli_repair_need_update_message(proto_fixture, tmp_path, capsys):
+def test_cli_repair_need_update_message(
+        proto_fixture, dask_mocker, tmp_path, capsys):
 
     assert not (tmp_path / "one/histograms").exists()
     cli_manage([
@@ -77,7 +78,8 @@ def test_cli_repair_need_update_message(proto_fixture, tmp_path, capsys):
         "[{'score': 'phastCons100way', 'bins': 100}] need update\n"
 
 
-def test_cli_repair_no_update_message(proto_fixture, tmp_path, capsys):
+def test_cli_repair_no_update_message(
+        proto_fixture, dask_mocker, tmp_path, capsys):
     # Given
     cli_manage([
         "resource-repair", "-R", str(tmp_path), "-r", "one"])
@@ -95,7 +97,7 @@ def test_cli_repair_no_update_message(proto_fixture, tmp_path, capsys):
 
 
 def test_cli_dry_run_repair_needs_manifest_update_message(
-        proto_fixture, tmp_path, capsys):
+        proto_fixture, dask_mocker, tmp_path, capsys):
     # Given
     res = proto_fixture.get_resource("one")
     with res.open_raw_file("data.txt", "wt") as outfile:
@@ -116,7 +118,7 @@ def test_cli_dry_run_repair_needs_manifest_update_message(
 
 
 def test_cli_dry_run_repair_needs_manifest_and_histogram_update_message(
-        proto_fixture, tabix_file, tmp_path, capsys):
+        proto_fixture, tabix_file, dask_mocker, tmp_path, capsys):
     # Given
     res = proto_fixture.get_resource("one")
     tabix_to_resource(
