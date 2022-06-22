@@ -367,6 +367,7 @@ class PhenoToolInstrumentValues(QueryBaseView):
             data["personIds"],
             data["familyIds"],
             data["roles"],
+            data.get("measures")
         )
 
         return Response(result)

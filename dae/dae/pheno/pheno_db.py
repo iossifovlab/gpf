@@ -1,4 +1,3 @@
-from distutils.command.config import config
 import os
 import math
 import logging
@@ -471,12 +470,16 @@ class PhenotypeData(ABC):
             self, instrument_name,
             person_ids=None,
             family_ids=None,
-            role=None):
+            role=None,
+            measure_ids=None):
         """
-        Returns a dataframe with values for all measures in given
+        Returns a dataframe with values for measures in given
         instrument (see **get_values_df**).
+        If not supplied a list of measure IDs, it will use all
+        measures in the given instrument
         """
-        measure_ids = self._get_instrument_measures(instrument_name)
+        if measure_ids is None:
+            measure_ids = self._get_instrument_measures(instrument_name)
         res = self.get_values_df(measure_ids, person_ids, family_ids, role)
         return res
 
@@ -484,12 +487,16 @@ class PhenotypeData(ABC):
             self, instrument_name,
             person_ids=None,
             family_ids=None,
-            role=None):
+            role=None,
+            measure_ids=None):
         """
-        Returns a dictionary with values for all measures in given
+        Returns a dictionary with values for measures in given
         instrument (see :func:`get_values`).
+        If not supplied a list of measure IDs, it will use all
+        measures in the given instrument
         """
-        measure_ids = self._get_instrument_measures(instrument_name)
+        if measure_ids is None:
+            measure_ids = self._get_instrument_measures(instrument_name)
         return self.get_values(measure_ids, person_ids, family_ids, role)
 
 
@@ -513,7 +520,7 @@ class PhenotypeStudy(PhenotypeData):
 
     def __init__(
             self, pheno_id: str, dbfile: str, browser_dbfile: str = None,
-            config:Dict[str, str] = None):
+            config: Dict[str, str] = None):
 
         super(PhenotypeStudy, self).__init__(pheno_id)
 
@@ -724,87 +731,6 @@ class PhenotypeStudy(PhenotypeData):
         df.rename(columns={"value": measure.measure_id}, inplace=True)
         return df
 
-    def get_measures_values_streaming_csv(
-        self,
-        measure_ids,
-        person_ids=None,
-        family_ids=None,
-        roles=None,
-        default_filter="apply",
-    ):
-        columns = [
-            self.db.measure.c.measure_id,
-            self.db.person.c.person_id,
-        ]
-        for measure_id in measure_ids:
-            assert measure_id in self.measures, measure_id
-            measure = self.measures[measure_id]
-            measure_type = measure.measure_type
-            if measure_type is None:
-                raise ValueError(
-                    "bad measure: {}; unknown value type".format(
-                        measure.measure_id
-                    )
-                )
-        value_tables = [
-            self.db.get_value_table(MeasureType.categorical),
-            self.db.get_value_table(MeasureType.continuous),
-            self.db.get_value_table(MeasureType.ordinal),
-            self.db.get_value_table(MeasureType.raw)
-        ]
-
-        fieldnames = ["person_id"] + measure_ids
-
-        buffer = StringIO()
-        writer = csv.DictWriter(buffer, fieldnames=fieldnames)
-        writer.writeheader()
-        yield buffer.getvalue()
-        buffer.seek(0)
-        buffer.truncate(0)
-
-        output = dict()
-
-        for vt in value_tables:
-            s = select(columns + [vt.c.value])
-
-            j = (
-                self.db.family.join(self.db.person)
-                .join(vt, isouter=True)
-                .join(self.db.measure)
-            )
-
-            s = s.select_from(j).where(
-                self.db.measure.c.measure_id.in_(measure_ids))
-
-            if roles is not None:
-                s = s.where(self.db.person.c.role.in_(roles))
-            if person_ids is not None:
-                s = s.where(self.db.person.c.person_id.in_(person_ids))
-            if family_ids is not None:
-                s = s.where(self.db.family.c.family_id.in_(family_ids))
-
-            s = s.order_by(desc(self.db.person.c.person_id))
-
-            with self.db.pheno_engine.connect() as connection:
-                results = connection.execute(s)
-                for row in results:
-                    person_id = row["person_id"]
-                    measure_id = row["measure_id"]
-                    measure_value = row["value"]
-
-                    if person_id not in output:
-                        output[person_id] = {"person_id": person_id}
-                        for measure in measure_ids:
-                            output[person_id][measure] = "-"
-
-                    output[person_id][measure_id] = measure_value
-
-        for v in output.values():
-            writer.writerow(v)
-            yield buffer.getvalue()
-            buffer.seek(0)
-            buffer.truncate(0)
-
     def get_measure_values_df(
         self,
         measure_id,
@@ -906,11 +832,8 @@ class PhenotypeStudy(PhenotypeData):
         default_filter="apply",
     ):
         """
-        Returns a data frame with values for given list of measures.
-
-        Values are loaded using consecutive calls to
-        `get_measure_values_df()` method for each measure in `measure_ids`.
-        All data frames are joined in the end and returned.
+        Collects and formats the values of the given measures in CSV format.
+        Yields lines.
 
         `measure_ids` -- list of measure ids which values should be returned.
 
@@ -928,9 +851,78 @@ class PhenotypeStudy(PhenotypeData):
         assert len(measure_ids) >= 1
         assert all([self.has_measure(m) for m in measure_ids])
 
-        return self.get_measures_values_streaming_csv(
-            measure_ids, person_ids, family_ids, roles, default_filter
-        )
+        columns = [
+            self.db.measure.c.measure_id,
+            self.db.person.c.person_id,
+        ]
+        for measure_id in measure_ids:
+            assert measure_id in self.measures, measure_id
+            measure = self.measures[measure_id]
+            measure_type = measure.measure_type
+            if measure_type is None:
+                raise ValueError(
+                    "bad measure: {}; unknown value type".format(
+                        measure.measure_id
+                    )
+                )
+        value_tables = [
+            self.db.get_value_table(MeasureType.categorical),
+            self.db.get_value_table(MeasureType.continuous),
+            self.db.get_value_table(MeasureType.ordinal),
+            self.db.get_value_table(MeasureType.raw)
+        ]
+
+        fieldnames = ["person_id"] + measure_ids
+
+        buffer = StringIO()
+        writer = csv.DictWriter(buffer, fieldnames=fieldnames)
+        writer.writeheader()
+        yield buffer.getvalue()
+        buffer.seek(0)
+        buffer.truncate(0)
+
+        output = dict()
+
+        for vt in value_tables:
+            s = select(columns + [vt.c.value])
+
+            j = (
+                self.db.family.join(self.db.person)
+                .join(vt, isouter=True)
+                .join(self.db.measure)
+            )
+
+            s = s.select_from(j).where(
+                self.db.measure.c.measure_id.in_(measure_ids))
+
+            if roles is not None:
+                s = s.where(self.db.person.c.role.in_(roles))
+            if person_ids is not None:
+                s = s.where(self.db.person.c.person_id.in_(person_ids))
+            if family_ids is not None:
+                s = s.where(self.db.family.c.family_id.in_(family_ids))
+
+            s = s.order_by(desc(self.db.person.c.person_id))
+
+            with self.db.pheno_engine.connect() as connection:
+                results = connection.execute(s)
+                for row in results:
+                    person_id = row["person_id"]
+                    measure_id = row["measure_id"]
+                    measure_value = row["value"]
+
+                    if person_id not in output:
+                        output[person_id] = {"person_id": person_id}
+                        for measure in measure_ids:
+                            output[person_id][measure] = "-"
+
+                    output[person_id][measure_id] = measure_value
+
+        for v in output.values():
+            writer.writerow(v)
+            yield buffer.getvalue()
+            buffer.seek(0)
+            buffer.truncate(0)
 
     def get_regressions(self):
         return self.db.regression_display_names_with_ids

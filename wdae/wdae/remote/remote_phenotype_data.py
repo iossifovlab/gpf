@@ -1,7 +1,11 @@
+import logging
 import pandas as pd
 from collections import OrderedDict
 from dae.pheno.pheno_db import PhenotypeData, Measure, Instrument
 from dae.pedigrees.family import Person
+
+
+logger = logging.getLogger(__name__)
 
 
 class RemotePhenotypeData(PhenotypeData):
@@ -165,7 +169,8 @@ class RemotePhenotypeData(PhenotypeData):
         return values
 
     def get_instrument_values_df(
-        self, instrument_id, person_ids=None, family_ids=None, roles=None
+        self, instrument_id, person_ids=None,
+        family_ids=None, roles=None, measures=None
     ):
         instrument_values = self.rest_client.post_instrument_values(
             self.remote_dataset_id,
@@ -173,12 +178,14 @@ class RemotePhenotypeData(PhenotypeData):
             person_ids,
             family_ids,
             roles,
+            measures,
         )
 
         return pd.DataFrame.from_records(instrument_values.values())
 
     def get_instrument_values(
-        self, instrument_id, person_ids=None, family_ids=None, roles=None
+        self, instrument_id, person_ids=None,
+        family_ids=None, roles=None, measures=None
     ):
         instrument_values = self.rest_client.post_instrument_values(
             self.remote_dataset_id,
@@ -186,9 +193,29 @@ class RemotePhenotypeData(PhenotypeData):
             person_ids,
             family_ids,
             roles,
+            measures,
         )
 
         return instrument_values
+
+    def get_values_streaming_csv(
+        self,
+        measure_ids,
+        person_ids=None,
+        family_ids=None,
+        roles=None,
+        default_filter="apply",
+    ):
+        if person_ids is not None:
+            logger.warning("Unsupported argument used: person_ids")
+        if family_ids is not None:
+            logger.warning("Unsupported argument used: family_ids")
+        if roles is not None:
+            logger.warning("Unsupported argument used: roles")
+        if default_filter is not None:
+            logger.warning("Unsupported argument used: default_filter")
+
+        return self.rest_client.post_measures_download(measure_ids=measure_ids)
 
     @property
     def instruments(self):
