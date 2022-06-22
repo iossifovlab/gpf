@@ -395,9 +395,7 @@ class LineBuffer:
 
     def find_index(self, chrom: str, pos: int) -> int:
         """Find index in line buffer that contains the passed position."""
-        if len(self.deque) == 0:
-            return -1
-        if not self.contains(chrom, pos):
+        if len(self.deque) == 0 or not self.contains(chrom, pos):
             return -1
 
         if len(self.deque) == 1:
@@ -405,9 +403,7 @@ class LineBuffer:
 
         first_index = 0
         last_index = len(self.deque) - 1
-        depth = 0
         while True:
-            depth += 1
             mid_index = (last_index - first_index) // 2 + first_index
             if last_index <= first_index:
                 break
@@ -415,17 +411,6 @@ class LineBuffer:
             _, mid_beg, mid_end, _ = self.deque[mid_index]
             if mid_end >= pos >= mid_beg:
                 break
-
-            if depth >= 100:
-                logger.error(
-                    "chrom=%s; pos=%s; region=%s; "
-                    "first_index=%s; last_index=%s; "
-                    "mid_index=%s; "
-                    "mid_beg=%s; mid_end=%s; ",
-                    chrom, pos, self.region(), first_index, last_index,
-                    mid_index, mid_beg, mid_end
-                )
-                logger.error("deque: %s", self.deque)
 
             if pos < mid_beg:
                 last_index = mid_index - 1
@@ -676,7 +661,9 @@ class TabixGenomicPositionTable(GenomicPositionTable):
 
     def close(self):
         self.tabix_file.close()
-        print(self.stats)
+        print(
+            f"genome position table: ({self.genomic_resource.resource_id})>",
+            self.stats)
 
 
 def open_genome_position_table(
