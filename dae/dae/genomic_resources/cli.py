@@ -16,7 +16,9 @@ from dae.genomic_resources.repository import \
     GR_CONTENTS_FILE_NAME, \
     GenomicResource, \
     ReadWriteRepositoryProtocol, \
-    ManifestEntry
+    ManifestEntry, \
+    parse_resource_id_version, \
+    version_tuple_to_string
 from dae.utils.verbosity_configuration import VerbosityConfiguration
 
 from dae.genomic_resources.fsspec_protocol import build_fsspec_protocol
@@ -243,15 +245,21 @@ def _run_repo_manifest_command(proto, **kwargs):
 
 def _find_resource(proto, repo_url, **kwargs):
     resource_id = kwargs.get("resource")
-    if resource_id is None:
+    if resource_id is not None:
+        res = proto.get_resource(resource_id)
+    else:
         cwd = os.getcwd()
         resource_dir = _find_directory_with_filename(GR_CONF_FILE_NAME, cwd)
         if resource_dir is None:
             logger.error("Can't find resource starting from %s", cwd)
             return None
 
-        resource_id = os.path.relpath(resource_dir, repo_url)
-    res = proto.get_resource(resource_id)
+        rid_ver = os.path.relpath(resource_dir, repo_url)
+        resource_id, version = parse_resource_id_version(rid_ver)
+
+        res = proto.get_resource(
+            resource_id,
+            version_constraint=f"={version_tuple_to_string(version)}")
     return res
 
 

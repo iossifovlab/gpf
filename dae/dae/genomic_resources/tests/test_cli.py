@@ -6,7 +6,9 @@ import pytest
 
 from dae.genomic_resources.repository import GR_CONF_FILE_NAME
 from dae.genomic_resources.repository import GR_CONTENTS_FILE_NAME
-from dae.genomic_resources.cli import cli_manage, _find_directory_with_filename
+from dae.genomic_resources.cli import cli_manage, \
+    _find_directory_with_filename, \
+    _find_resource
 from dae.genomic_resources.testing import build_testing_repository
 
 
@@ -75,3 +77,31 @@ def test_find_resource_dir_simple(repo_fixture, tmp_path):
 
     path = pathlib.Path(resource_dir)
     assert str(path.relative_to(repo_dir)) == "sub/two(1.0)"
+
+
+def test_find_resource_with_version(repo_fixture, tmp_path):
+
+    cli_manage(["repo-manifest", "-R", str(tmp_path)])
+    os.chdir(tmp_path / "sub" / "two(1.0)" / "gene_models")
+
+    res = _find_resource(repo_fixture.proto, str(tmp_path))
+    assert res.resource_id == "sub/two"
+    assert res.version == (1, 0)
+
+
+def test_find_resource_without_version(repo_fixture, tmp_path):
+
+    cli_manage(["repo-manifest", "-R", str(tmp_path)])
+    os.chdir(tmp_path / "one")
+
+    res = _find_resource(repo_fixture.proto, str(tmp_path))
+    assert res.resource_id == "one"
+    assert res.version == (0,)
+
+
+def test_find_resource_with_resource_id(repo_fixture, tmp_path):
+
+    res = _find_resource(
+        repo_fixture.proto, str(tmp_path), resource="sub/two")
+    assert res.resource_id == "sub/two"
+    assert res.version == (1, 0)
