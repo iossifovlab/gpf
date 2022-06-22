@@ -4,6 +4,7 @@ from __future__ import annotations
 import os
 import hashlib
 import logging
+import datetime
 
 from urllib.parse import urlparse
 from typing import List, Generator, cast, Union, Optional
@@ -253,8 +254,12 @@ class FsspecReadWriteProtocol(
     def _get_filepath_timestamp(self, filepath: str) -> float:
         try:
             modification = self.filesystem.modified(filepath)
+            modification = modification.replace(tzinfo=datetime.timezone.utc)
             return cast(float, round(modification.timestamp(), 2))
         except NotImplementedError:
+            logger.error(
+                "can't get timestamp for %s; filesystem: %s",
+                filepath, self.filesystem)
             info = self.filesystem.info(filepath)
             modification = info.get("created")
             return cast(float, round(modification, 2))

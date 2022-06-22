@@ -1,6 +1,7 @@
 # pylint: disable=redefined-outer-name,C0114,C0116,protected-access
 
 import gzip
+import time
 import pytest
 
 
@@ -50,21 +51,22 @@ def test_resource_paths(fsspec_proto, scheme):
 ])
 def test_build_resource_file_state(fsspec_proto, scheme):
     proto = fsspec_proto(scheme)
-    timestamp = "2022-05-31T00:00:00+00:00"
+    timestamp = time.time()
     res = proto.get_resource("one")
+
     state = proto.build_resource_file_state(
-        res, "data.txt", timestamp=timestamp)
+        res, "data.txt")
 
     assert state.filename == "data.txt"
-    assert state.timestamp == timestamp
+    assert state.timestamp == pytest.approx(timestamp, abs=5)
     assert state.md5 == "c1cfdaf7e22865b29b8d62a564dc8f23"
 
     res = proto.get_resource("sub/two")
     state = proto.build_resource_file_state(
-        res, "genes.gtf", timestamp=timestamp)
+        res, "genes.gtf")
 
     assert state.filename == "genes.gtf"
-    assert state.timestamp == timestamp
+    assert state.timestamp == pytest.approx(timestamp, abs=5)
     assert state.md5 == "d9636a8dca9e5626851471d1c0ea92b1"
 
 
@@ -74,11 +76,11 @@ def test_build_resource_file_state(fsspec_proto, scheme):
 ])
 def test_save_load_resource_file_state(fsspec_proto, scheme):
     proto = fsspec_proto(scheme)
-    timestamp = "2022-05-31T00:00:00+00:00"
+    timestamp = time.time()
 
     res = proto.get_resource("sub/two")
     state = proto.build_resource_file_state(
-        res, "genes.gtf", timestamp=timestamp)
+        res, "genes.gtf")
 
     proto.save_resource_file_state(res, state)
     state_path = proto._get_resource_file_state_path(res, "genes.gtf")
@@ -87,7 +89,7 @@ def test_save_load_resource_file_state(fsspec_proto, scheme):
     loaded = proto.load_resource_file_state(res, "genes.gtf")
     assert loaded is not None
     assert loaded.filename == "genes.gtf"
-    assert loaded.timestamp == timestamp
+    assert loaded.timestamp == pytest.approx(timestamp, abs=5)
     assert loaded.md5 == "d9636a8dca9e5626851471d1c0ea92b1"
 
 
@@ -394,6 +396,7 @@ def test_copy_resource(embedded_proto, fsspec_proto, scheme):
 
     assert state.filename == "genes.gtf"
     assert state.timestamp == timestamp
+    assert state.timestamp == pytest.approx(time.time(), abs=5)
     assert state.md5 == "d9636a8dca9e5626851471d1c0ea92b1"
 
 
@@ -424,6 +427,7 @@ def test_update_resource_file_when_missing(
 
     assert state.filename == "genes.gtf"
     assert state.timestamp == timestamp
+    assert state.timestamp == pytest.approx(time.time(), abs=5)
     assert state.md5 == "d9636a8dca9e5626851471d1c0ea92b1"
 
 
@@ -455,4 +459,6 @@ def test_update_resource_file_when_changed(
 
     assert state.filename == "genes.gtf"
     assert state.timestamp == timestamp
+    assert state.timestamp == pytest.approx(time.time(), abs=5)
+
     assert state.md5 == "d9636a8dca9e5626851471d1c0ea92b1"
