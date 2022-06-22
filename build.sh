@@ -474,10 +474,12 @@ EOT'
     build_run echo ${__gpf_build_no}
 
     build_run bash -c '
-      echo "build = \"'"${gpf_tag}"'-'"${__gpf_build_no}"'\"" > dae/dae/__build__.py
+      echo "# pylint: disable=W0621,C0114,C0116,W0212,W0613" > dae/dae/__build__.py    
+      echo "BUILD = \"'"${gpf_tag}"'-'"${__gpf_build_no}"'\"" >> dae/dae/__build__.py
     '
     build_run bash -c '
-      echo "build = \"'"${gpf_tag}"'-'"${__gpf_build_no}"'\"" > wdae/wdae/__build__.py
+      echo "# pylint: disable=W0621,C0114,C0116,W0212,W0613" > wdae/wdae/__build__.py    
+      echo "BUILD = \"'"${gpf_tag}"'-'"${__gpf_build_no}"'\"" >> wdae/wdae/__build__.py
     '
 
 
