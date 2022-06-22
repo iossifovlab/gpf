@@ -1,3 +1,5 @@
+"""Defines variant effect annotator."""
+
 import copy
 import logging
 
@@ -22,12 +24,13 @@ logger = logging.getLogger(__name__)
 
 
 def build_effect_annotator(pipeline, config):
+    """Build a variant effect annotator based on pipeline and configuration."""
     config = EffectAnnotatorAdapter.validate_config(config)
 
     if config.get("annotator_type") != "effect_annotator":
         logger.error(
-            f"wrong usage of build_effect_annotator with an "
-            f"annotator config: {config}")
+            "wrong usage of build_effect_annotator with an "
+            "annotator config: %s", config)
         raise ValueError(f"wrong annotator type: {config}")
 
     if config.get("genome") is None:
@@ -60,6 +63,7 @@ def build_effect_annotator(pipeline, config):
 
 
 class EffectAnnotatorAdapter(Annotator):
+    """Defines variant effect annotator."""
 
     DEFAULT_ANNOTATION = {
         "attributes": [
@@ -82,7 +86,7 @@ class EffectAnnotatorAdapter(Annotator):
 
     def __init__(
             self, config, genome: ReferenceGenome, gene_models: GeneModels):
-        super(EffectAnnotatorAdapter, self).__init__(config)
+        super().__init__(config)
 
         assert isinstance(genome, ReferenceGenome)
         assert isinstance(gene_models, GeneModels)
@@ -100,9 +104,11 @@ class EffectAnnotatorAdapter(Annotator):
             promoter_len=promoter_len
         )
 
-    # FIXME
+    def close(self):
+        pass
+
     def _not_found(self, attributes):
-        for attr in self.attributes_list:
+        for attr in self.get_annotation_config():
             attributes[attr.destination] = ""
 
     def get_all_annotation_attributes(self) -> List[Dict]:
@@ -163,11 +169,11 @@ class EffectAnnotatorAdapter(Annotator):
         validator = cls.ConfigValidator(schema)
         validator.allow_unknown = True
 
-        logger.debug(f"validating effect annotator config: {config}")
+        logger.debug("validating effect annotator config: %s", config)
         if not validator.validate(config):
             logger.error(
-                f"wrong config format for effect annotator: "
-                f"{validator.errors}")
+                "wrong config format for effect annotator: %s",
+                validator.errors)
             raise ValueError(
                 f"wrong effect annotator config {validator.errors}")
         return cast(Dict, validator.document)

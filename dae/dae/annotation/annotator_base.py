@@ -1,3 +1,4 @@
+"""Provides base class for annotators."""
 import logging
 import abc
 
@@ -29,14 +30,16 @@ class Annotator(abc.ABC):
     """Annotator provides a set of attrubutes for a given Annotatable."""
 
     class ConfigValidator(Validator):
+        """Cerberus validation for annotators configuration."""
 
+        # pylint: disable=no-self-use
         def _normalize_coerce_attributes(self, value):
             if isinstance(value, str):
                 return {
                     "source": value,
                     "destination": value,
                 }
-            elif isinstance(value, dict):
+            if isinstance(value, dict):
                 if "source" in value and "destination" not in value:
                     value["destination"] = value["source"]
                 return value
@@ -50,8 +53,7 @@ class Annotator(abc.ABC):
     @classmethod
     @abc.abstractmethod
     def validate_config(cls, config: Dict) -> Dict:
-        """
-        Normalizes and validates the annotation configuration.
+        """Normalize and validate the annotation configuration.
 
         When validation passes returns the normalized and validated
         annotator configuration dict.
@@ -62,9 +64,7 @@ class Annotator(abc.ABC):
 
     @abc.abstractmethod
     def get_all_annotation_attributes(self) -> List[Dict]:
-        """
-        Returns list of all available attributes that could be provided by
-        the annotator.
+        """Return list of all available attributes provided by the annotator.
 
         The result is a list of dicts. Each dict contains following
         attributes:
@@ -72,11 +72,11 @@ class Annotator(abc.ABC):
         * source: the name of the attribute
         * type: type of the attribute
         * desc: descripion of the attribute
-
         """
         return []
 
     def get_annotation_attribute(self, attribute_name) -> Dict[str, str]:
+        """Return configuration of an attribute."""
         for attribute in self.get_all_annotation_attributes():
             if attribute_name == attribute["name"]:
                 return attribute
@@ -87,6 +87,7 @@ class Annotator(abc.ABC):
 
     @property
     def annotation_schema(self):
+        """Return annotation schema."""
         if self._annotation_schema is None:
             schema = Schema()
             for attribute in self.get_annotation_config():
@@ -110,18 +111,23 @@ class Annotator(abc.ABC):
 
     @abc.abstractmethod
     def annotator_type(self) -> str:
-        """Returns annotator type."""
+        """Return annotator type."""
 
     @abc.abstractmethod
     def _do_annotate(
             self, annotatable: Annotatable, context: Dict) -> Dict:
-        """
+        """Annotate the annotatable.
+
         Internal abstract method used for annotation.
         """
 
     @abc.abstractmethod
     def get_annotation_config(self) -> List[Dict]:
-        """Returns annotation config."""
+        """Return annotation config."""
+
+    @abc.abstractmethod
+    def close(self):
+        """Close all resources used by the annotator."""
 
     def _empty_result(self) -> Dict[str, Any]:
         result: Dict[str, Any] = {}
@@ -131,10 +137,7 @@ class Annotator(abc.ABC):
 
     def annotate(self, annotatable: Annotatable,
                  context: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Carry out the annotation and then relabel resulting attributes
-        as configured.
-        """
+        """Annotate and relabel attributes as configured."""
         if self.input_annotatable is not None:
             if self.input_annotatable not in context:
                 raise ValueError(

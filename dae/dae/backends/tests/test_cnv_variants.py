@@ -12,7 +12,7 @@ from dae.configuration.gpf_config_parser import FrozenBox
 from dae.utils.regions import Region
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 def cnv_loader(
         fixture_dirname, gpf_instance_2013, annotation_pipeline_internal):
 
@@ -36,14 +36,14 @@ def cnv_loader(
     return families_loader, variants_loader
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 def cnv_raw(cnv_loader):
     _families_loader, variants_loader = cnv_loader
     fvars = RawMemoryVariants([variants_loader], variants_loader.families)
     return fvars
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 def cnv_impala(
         request,
         cnv_loader,

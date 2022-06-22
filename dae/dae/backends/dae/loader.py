@@ -42,22 +42,24 @@ logger = logging.getLogger(__name__)
 
 class DenovoFamiliesGenotypes(FamiliesGenotypes):
     def __init__(self, family, gt, best_state=None):
-        super(DenovoFamiliesGenotypes, self).__init__()
+        super().__init__()
         self.family = family
-        self.gt = gt
+        self.genotype = gt
         self.best_state = best_state
 
     def full_families_genotypes(self):
         raise NotImplementedError()
 
-    def get_family_genotype(self):
-        return self.gt
+    def get_family_genotype(self, family):
+        assert family.family_id == self.family.family_id
+        return self.genotype
 
-    def get_family_best_state(self):
+    def get_family_best_state(self, family):
+        assert family.family_id == self.family.family_id
         return self.best_state
 
     def family_genotype_iterator(self):
-        yield self.family, self.gt, self.best_state
+        yield self.family, self.genotype, self.best_state
 
 
 class DenovoLoader(VariantsGenotypesLoader):
@@ -67,9 +69,9 @@ class DenovoLoader(VariantsGenotypesLoader):
             denovo_filename: str,
             genome: ReferenceGenome,
             regions: List[str] = None,
-            params: Dict[str, Any] = {},
+            params: Optional[Dict[str, Any]] = None,
             sort: bool = True):
-        super(DenovoLoader, self).__init__(
+        super().__init__(
             families=families,
             filenames=[denovo_filename],
             transmission_type=TransmissionType.denovo,
@@ -77,12 +79,12 @@ class DenovoLoader(VariantsGenotypesLoader):
             regions=regions,
             expect_genotype=False,
             expect_best_state=False,
-            params=params)
+            params=params if params else {})
 
         self.genome = genome
         self.set_attribute("source_type", "denovo")
         logger.debug(
-            f"loading denovo variants: {denovo_filename}; {self.params}")
+            "loading denovo variants: %s; %s", denovo_filename, self.params)
 
         self.denovo_df, extra_attributes = self._flexible_denovo_load_internal(
             denovo_filename,
@@ -111,23 +113,22 @@ class DenovoLoader(VariantsGenotypesLoader):
         ]
 
         all_chromosomes = self.genome.chromosomes
-        if all([chrom in set(all_chromosomes) for chrom in self.chromosomes]):
+        if all(chrom in set(all_chromosomes) for chrom in self.chromosomes):
             self.chromosomes = sorted(
                 self.chromosomes,
-                key=lambda chrom: all_chromosomes.index(chrom),
-            )
+                key=all_chromosomes.index)
 
     def reset_regions(self, regions):
-        super(DenovoLoader, self).reset_regions(regions)
+        super().reset_regions(regions)
 
         result = []
-        for r in self.regions:
-            if r is None:
-                result.append(r)
+        for reg in self.regions:
+            if reg is None:
+                result.append(reg)
             else:
-                result.append(Region.from_str(r))
+                result.append(Region.from_str(reg))
         self.regions = result
-        logger.debug(f"denovo reset regions: {self.regions}")
+        logger.debug("denovo reset regions: %s", self.regions)
 
     def _is_in_regions(self, summary_variant):
         isin = [
@@ -138,6 +139,38 @@ class DenovoLoader(VariantsGenotypesLoader):
         ]
         return any(isin)
 
+    def _produce_family_variants(self, svariant, values):
+        fvs = []
+        extra_attributes_keys = list(filter(
+            lambda x: x not in ["best_state", "family_id", "genotype"],
+            values.keys()
+        ))
+        for f_idx, family_id in enumerate(values.get("family_id")):
+            best_state = values.get("best_state")[f_idx]
+            genotypes = values.get("genotype")[f_idx]
+            family = self.families.get(family_id)
+            if family is None:
+                continue
+            family_genotypes = DenovoFamiliesGenotypes(
+                family, genotypes, best_state)
+            for fam, genotype, best_state in \
+                    family_genotypes.family_genotype_iterator():
+                fvariant = FamilyVariant(svariant, fam, genotype, best_state)
+                extra_attributes = {}
+                for attr in extra_attributes_keys:
+                    attr_val = values.get(attr)[f_idx]
+                    extra_attributes[attr] = [attr_val]
+                if genotype is None:
+                    fvariant.gt, fvariant._genetic_model = self._calc_genotype(
+                        fvariant, self.genome)
+                    for fallele in fvariant.alleles:
+                        fallele.gt = fvariant.gt
+                        # pylint: disable=protected-access
+                        fallele._genetic_model = fvariant.genetic_model
+                fvariant.update_attributes(extra_attributes)
+                fvs.append(fvariant)
+        return fvs
+
     def _full_variants_iterator_impl(self):
         for region in self.regions:
             if region is None:
@@ -146,9 +179,7 @@ class DenovoLoader(VariantsGenotypesLoader):
 
         group = self.denovo_df.groupby(
             ["chrom", "position", "reference", "alternative"],
-            sort=False).agg(
-                lambda x: list(x)
-            )
+            sort=False).agg(list)
         for num_idx, (idx, values) in enumerate(group.iterrows()):
             chrom, position, reference, alternative = idx
             position = int(position)
@@ -163,65 +194,43 @@ class DenovoLoader(VariantsGenotypesLoader):
                     "allele_index": alt_index + 1,
                 })
 
-            sv = SummaryVariantFactory.summary_variant_from_records(
+            svariant = SummaryVariantFactory.summary_variant_from_records(
                 summary_records, self.transmission_type
             )
 
-            if not self._is_in_regions(sv):
+            if not self._is_in_regions(svariant):
                 continue
-
-            fvs = []
-            extra_attributes_keys = list(filter(
-                lambda x: x not in ["best_state", "family_id", "genotype"],
-                values.keys()
-            ))
-            for f_idx, family_id in enumerate(values.get("family_id")):
-                best_state = values.get("best_state")[f_idx]
-                gt = values.get("genotype")[f_idx]
-                family = self.families.get(family_id)
-                if family is None:
-                    continue
-                family_genotypes = DenovoFamiliesGenotypes(
-                    family, gt, best_state)
-                for fam, gt, bs in family_genotypes.family_genotype_iterator():
-                    fv = FamilyVariant(sv, fam, gt, bs)
-                    extra_attributes = {}
-                    for attr in extra_attributes_keys:
-                        attr_val = values.get(attr)[f_idx]
-                        extra_attributes[attr] = [attr_val]
-                    if gt is None:
-                        fv.gt, fv._genetic_model = self._calc_genotype(
-                            fv, self.genome)
-                        for fa in fv.alleles:
-                            fa.gt = fv.gt
-                            fa._genetic_model = fv.genetic_model
-                    fv.update_attributes(extra_attributes)
-                    fvs.append(fv)
-            yield sv, fvs
+            fvs = self._produce_family_variants(svariant, values)
+            yield svariant, fvs
 
     def full_variants_iterator(self):
-        full_iterator = super(DenovoLoader, self).full_variants_iterator()
+        full_iterator = super().full_variants_iterator()
         for summary_variants, family_variants in full_iterator:
-            for fv in family_variants:
-                for fa in fv.alt_alleles:
+            for fvariant in family_variants:
+                for fallele in fvariant.alt_alleles:
                     inheritance = [
                         Inheritance.denovo
-                        if vinmem is not None and
-                        mem.role in set([Role.prb, Role.sib, Role.unknown])
+                        if vinmem is not None
+                        and mem.role in set([
+                            Role.prb, Role.sib, Role.unknown])
                         and inh in set([
                             Inheritance.unknown,
                             Inheritance.possible_denovo,
                             Inheritance.possible_omission])
                         else inh
                         for inh, vinmem, mem in zip(
-                            fa.inheritance_in_members,
-                            fa.variant_in_members,
-                            fa.members_in_order
+                            fallele.inheritance_in_members,
+                            fallele.variant_in_members,
+                            fallele.members_in_order
                         )
                     ]
-                    fa._inheritance_in_members = inheritance
+                    # pylint: disable=protected-access
+                    fallele._inheritance_in_members = inheritance
 
             yield summary_variants, family_variants
+
+    def close(self):
+        pass
 
     @staticmethod
     def split_location(location):
@@ -236,7 +245,7 @@ class DenovoLoader(VariantsGenotypesLoader):
             family: Family,
             members_with_variant: List[str]) -> np.ndarray:
 
-        # TODO Add support for multiallelic variants
+        # TODO: Add support for multiallelic variants
         # This method currently assumes biallelic variants
 
         genotype = np.zeros(shape=(2, len(family)), dtype=GENOTYPE_TYPE)
@@ -336,8 +345,8 @@ class DenovoLoader(VariantsGenotypesLoader):
         return arguments
 
     @classmethod
-    def parse_cli_arguments(cls, argv):
-        logger.debug(f"CLI arguments: {argv}")
+    def parse_cli_arguments(cls, argv, use_defaults=False):
+        logger.debug("CLI arguments: %s", argv)
 
         if argv.denovo_location and (argv.denovo_chrom or argv.denovo_pos):
             logger.error(
@@ -361,15 +370,15 @@ class DenovoLoader(VariantsGenotypesLoader):
             )
             raise ValueError()
 
-        if not (argv.denovo_location or
-                (argv.denovo_chrom and argv.denovo_pos)):
+        if not (argv.denovo_location
+                or (argv.denovo_chrom and argv.denovo_pos)):
             argv.denovo_location = "location"
 
         if not (argv.denovo_variant or (argv.denovo_ref and argv.denovo_alt)):
             argv.denovo_variant = "variant"
 
-        if not (argv.denovo_person_id or
-                (argv.denovo_family_id and (
+        if not (argv.denovo_person_id
+                or (argv.denovo_family_id and (
                     argv.denovo_best_state or argv.denovo_genotype))):
             argv.denovo_family_id = "familyId"
             argv.denovo_best_state = "bestState"
@@ -432,8 +441,9 @@ class DenovoLoader(VariantsGenotypesLoader):
             denovo_genotype: Optional[str] = None,
             denovo_sep: str = "\t",
             adjust_chrom_prefix=None,
-            **kwargs) -> Tuple[pd.DataFrame, Any]:
-        """
+            **_kwargs) -> Tuple[pd.DataFrame, Any]:
+        """Load de Novo variants from a file.
+
         Read a text file containing variants in the form
         of delimiter-separted values and produce a dataframe.
 
@@ -484,7 +494,6 @@ class DenovoLoader(VariantsGenotypesLoader):
 
         :rtype: An instance of Pandas' DataFrame class.
         """
-
         assert families is not None
         assert isinstance(
             families, FamiliesData
@@ -497,9 +506,9 @@ class DenovoLoader(VariantsGenotypesLoader):
         if not (denovo_variant or (denovo_ref and denovo_alt)):
             denovo_variant = "variant"
 
-        if not (denovo_person_id or
-                (denovo_family_id and
-                    (denovo_best_state or denovo_genotype))):
+        if not (denovo_person_id
+                or (denovo_family_id
+                    and (denovo_best_state or denovo_genotype))):
             denovo_family_id = "familyId"
             denovo_best_state = "bestState"
 
@@ -637,7 +646,7 @@ class DenovoLoader(VariantsGenotypesLoader):
                 assert denovo_genotype
                 genotype_col = list(
                     map(
-                        lambda gts: str2gt(gts),  # type: ignore
+                        str2gt,
                         raw_df[denovo_genotype],
                     )
                 )
@@ -703,7 +712,7 @@ class DenovoLoader(VariantsGenotypesLoader):
 class DaeTransmittedFamiliesGenotypes(FamiliesGenotypes):
     def __init__(
             self, families, family_data):
-        super(DaeTransmittedFamiliesGenotypes, self).__init__()
+        super().__init__()
         self.families = families
         self.family_data = family_data
 
@@ -719,28 +728,28 @@ class DaeTransmittedFamiliesGenotypes(FamiliesGenotypes):
     #         return reference_genotype(len(family))
 
     def get_family_best_state(self, family):
-        fd = self.family_data.get(family.family_id, None)
-        if fd is None:
+        fdata = self.family_data.get(family.family_id, None)
+        if fdata is None:
             return None
-        return fd[0]
+        return fdata[0]
 
     def get_family_read_counts(self, family):
-        fd = self.family_data.get(family.family_id, None)
-        if fd is None:
+        fdata = self.family_data.get(family.family_id, None)
+        if fdata is None:
             return None
-        return fd[1]
+        return fdata[1]
 
     def get_family_genotype(self, family):
         raise NotImplementedError()
 
     def family_genotype_iterator(self):
-        for family_id, (bs, rc) in self.family_data.items():
+        for family_id, (best_state, read_counts) in self.family_data.items():
             fam = self.families.get(family_id)
             if fam is None:
                 continue
-            assert bs is not None, (family_id, bs, rc)
+            assert best_state is not None, (family_id, best_state, read_counts)
 
-            yield fam, bs, rc
+            yield fam, best_state, read_counts
 
     def full_families_genotypes(self):
         raise NotImplementedError()
@@ -754,15 +763,15 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
         summary_filename,
         genome,
         regions=None,
-        params={},
-        **kwargs,
+        params=None,
+        **_kwargs,
     ):
-
         toomany_filename = DaeTransmittedLoader._build_toomany_filename(
             summary_filename
         )
+        params = params if params else {}
 
-        super(DaeTransmittedLoader, self).__init__(
+        super().__init__(
             families=families,
             filenames=[summary_filename, toomany_filename],
             transmission_type=TransmissionType.transmitted,
@@ -785,10 +794,11 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
             "dae_include_reference_genotypes", False
         )
         try:
+            # pylint: disable=no-member
             with pysam.Tabixfile(self.summary_filename) as tbx:
                 self.chromosomes = \
                     [self._adjust_chrom_prefix(chrom) for chrom in tbx.contigs]
-        except Exception:
+        except Exception:  # pylint: disable=broad-except
             self.chromosomes = self.genome.chromosomes
 
     @property
@@ -834,8 +844,8 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
 
     @staticmethod
     def _load_column_names(filename):
-        with fsspec.open(filename) as f:
-            with gzip.open(f) as infile:
+        with fsspec.open(filename) as rawfile:
+            with gzip.open(rawfile) as infile:
                 column_names = (
                     infile.readline().decode("utf-8").strip().split("\t")
                 )
@@ -940,6 +950,26 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
     #     }
     #     return read_counts
 
+    def close(self):
+        pass
+
+    def _produce_family_variants(self, summary_variant, families_genotypes):
+        family_variants = []
+        for (fam, best_state, read_counts) in \
+                families_genotypes.family_genotype_iterator():
+
+            fvariant = FamilyVariant(
+                summary_variant, fam, None, best_state)
+            fvariant.gt, fvariant._genetic_model = self._calc_genotype(
+                fvariant, self.genome)
+            for fallele in fvariant.alleles:
+                fallele.gt = fvariant.gt
+                # pylint: disable=protected-access
+                fallele._genetic_model = fvariant._genetic_model
+                fallele.update_attributes({"read_counts": read_counts})
+            family_variants.append(fvariant)
+        return family_variants
+
     def _full_variants_iterator_impl(self):
 
         summary_columns = self._load_summary_columns(self.summary_filename)
@@ -950,6 +980,7 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
             try:
                 # using a context manager because of
                 # https://stackoverflow.com/a/25968716/2316754
+                # pylint: disable=no-member
                 with closing(pysam.Tabixfile(self.summary_filename)) \
                         as sum_tbf, \
                         closing(pysam.Tabixfile(self.toomany_filename)) \
@@ -972,7 +1003,9 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
 
                             family_data = rec["familyData"]
                             if family_data == "TOOMANY":
-                                toomany_line = next(toomany_iterator)
+                                toomany_line = next(toomany_iterator, None)
+                                if toomany_line is None:
+                                    return
                                 toomany_rec = dict(zip(
                                     toomany_columns, toomany_line))
                                 family_data = toomany_rec["familyData"]
@@ -987,24 +1020,12 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
                             families_genotypes = \
                                 DaeTransmittedFamiliesGenotypes(
                                     self.families, family_data)
-
-                            family_variants = []
-                            for (fam, bs, rc) in families_genotypes\
-                                    .family_genotype_iterator():
-
-                                fv = FamilyVariant(
-                                    summary_variant, fam, None, bs)
-                                fv.gt, fv._genetic_model = self._calc_genotype(
-                                    fv, self.genome)
-                                for fa in fv.alleles:
-                                    fa.gt = fv.gt
-                                    fa._genetic_model = fv._genetic_model
-                                    fa.update_attributes({"read_counts": rc})
-                                family_variants.append(fv)
+                            family_variants = self._produce_family_variants(
+                                summary_variant, families_genotypes)
 
                             yield summary_variant, family_variants
                             summary_index += 1
-                        except Exception:
+                        except Exception:  # pylint: disable=broad-except
                             logger.error(
                                 "unable to process summary line: %s "
                                 "from %s: %s",
@@ -1012,14 +1033,11 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
                                 self.regions,
                                 exc_info=True)
 
-            except ValueError as ex:
+            except ValueError:
                 logger.warning(
-                    f"could not find region {region} in "
-                    f"{self.summary_filename} "
-                    f"or {self.toomany_filename}:")
-                logger.exception(ex)
-
-            self.lines_iterator = None
+                    "could not find region %s in %s or %s",
+                    region, self.summary_filename, self.toomany_filename,
+                    exc_info=True)
 
     @classmethod
     def _arguments(cls) -> list[CLIArgument]:
@@ -1039,7 +1057,7 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
         return arguments
 
     @classmethod
-    def parse_cli_arguments(cls, argv):
+    def parse_cli_arguments(cls, argv, use_defaults=False):
         filename = argv.dae_summary_file
 
         params = {

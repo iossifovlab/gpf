@@ -116,6 +116,46 @@ def test_regions_in_tabix(tmp_path, tabix_file, jump_threshold):
     ]
 
 
+def test_last_call_is_updated(tmp_path, tabix_file):
+    res = build_test_resource(
+        scheme="file",
+        root_path=str(tmp_path),
+        content={
+            "genomic_resource.yaml": """
+                tabix_table:
+                    filename: data.bgz""",
+        })
+    assert res
+
+    tabix_to_resource(
+        tabix_file(
+            """
+            #chrom pos_begin pos_end  c2
+            1     10        12       3.14
+            1     15        20       4.14
+            1     21        30       5.14
+            """, seq_col=0, start_col=1, end_col=2),
+        res, "data.bgz"
+    )
+
+    tab = open_genome_position_table(res, res.config["tabix_table"])
+    assert tab._last_call == ("", -1, -1)
+
+    assert list(tab.get_records_in_region("1", 11, 11)) == [
+        ("1", "10", "12", "3.14")
+    ]
+    assert tab._last_call == ("1", 11, 11)
+
+    assert not list(tab.get_records_in_region("1", 13, 14))
+    assert tab._last_call == ("1", 13, 14)
+
+    assert list(tab.get_records_in_region("1", 18, 21)) == [
+        ("1", "15", "20", "4.14"),
+        ("1", "21", "30", "5.14")
+    ]
+    assert tab._last_call == ("1", 18, 21)
+
+
 def test_chr_add_pref():
     res = build_test_resource({
         "genomic_resource.yaml": """

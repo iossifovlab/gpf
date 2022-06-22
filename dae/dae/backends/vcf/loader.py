@@ -1,8 +1,11 @@
+"""Defines variant loader classed for VCF variants."""
+
 import itertools
 import logging
-from fsspec.core import url_to_fs  # type: ignore
-
 from collections import Counter
+from urllib.parse import urlparse
+
+from fsspec.core import url_to_fs  # type: ignore
 
 import numpy as np
 
@@ -29,8 +32,10 @@ logger = logging.getLogger(__name__)
 
 
 class VcfFamiliesGenotypes(FamiliesGenotypes):
+    """Class for family genotypes build vrom VCF variant."""
+
     def __init__(self, loader, vcf_variants):
-        super(VcfFamiliesGenotypes, self).__init__()
+        super().__init__()
 
         self.loader = loader
         self.vcf_variants = vcf_variants
@@ -46,7 +51,7 @@ class VcfFamiliesGenotypes(FamiliesGenotypes):
         raise NotImplementedError()
 
     def _collect_family_genotype(self, family, samples_index, fill_value):
-        gt = []
+        genotypes = []
         for person in family.members_in_order:
             vcf_index = samples_index.get(person.sample_id)
             assert vcf_index is not None, (person, self.vcf_variants)
@@ -67,63 +72,65 @@ class VcfFamiliesGenotypes(FamiliesGenotypes):
                 sample_genotype = tuple(map(
                     lambda g: g if g is not None else -1,
                     sample_genotype))
-            gt.append(sample_genotype)
-        return gt
+            genotypes.append(sample_genotype)
+        return genotypes
 
-    def _collect_known_independent_genotypes(self, family, gt):
+    def _collect_known_independent_genotypes(self, family, genotype):
         for index, person in enumerate(family.members_in_order):
             if person.person_id not in self.loader.independent_persons:
                 continue
             self.known_independent_genotypes.append(
-                gt[:, index]
+                genotype[:, index]
             )
 
     def family_genotype_iterator(self):
         self.known_independent_genotypes = []
-
+        # pylint: disable=protected-access
         fill_value = self.loader._fill_missing_value
         samples_index = self.loader.samples_vcf_index
 
         for family in self.loader.families.values():
-            gt = self._collect_family_genotype(
+            genotype = self._collect_family_genotype(
                 family, samples_index, fill_value)
 
-            if len(gt) == 0:
+            if len(genotype) == 0:
                 continue
 
-            gt = np.array(gt, np.int8)
-            gt = gt.T
-            assert len(gt.shape) == 2, (gt, family)
-            assert gt.shape[0] == 2
+            genotype = np.array(genotype, np.int8)
+            genotype = genotype.T
+            assert len(genotype.shape) == 2, (genotype, family)
+            assert genotype.shape[0] == 2
 
-            if is_unknown_genotype(gt):
+            if is_unknown_genotype(genotype):
                 if not self.loader.include_unknown_person_genotypes:
                     continue
             else:
-                self._collect_known_independent_genotypes(family, gt)
+                self._collect_known_independent_genotypes(family, genotype)
 
-            if is_all_unknown_genotype(gt) and \
+            if is_all_unknown_genotype(genotype) and \
                     not self.loader.include_unknown_family_genotypes:
                 continue
 
-            if is_all_reference_genotype(gt) and \
+            if is_all_reference_genotype(genotype) and \
                     not self.loader.include_reference_genotypes:
                 continue
 
-            yield family, gt, None
+            yield family, genotype, None
 
 
 class SingleVcfLoader(VariantsGenotypesLoader):
+    """Defines a variant loader from single VCF file."""
+
     def __init__(
             self,
             families,
             vcf_files,
             genome: ReferenceGenome,
             regions=None,
-            params={},
-            **kwargs):
-
-        super(SingleVcfLoader, self).__init__(
+            params=None,
+            **_kwargs):
+        params = params if params else {}
+        super().__init__(
             families=families,
             filenames=vcf_files,
             transmission_type=TransmissionType.transmitted,
@@ -154,8 +161,8 @@ class SingleVcfLoader(VariantsGenotypesLoader):
         self._match_pedigree_to_samples()
 
         self._build_samples_vcf_index()
-        self.independent_persons = set([
-            p.person_id for p in self.families.persons_without_parents()])
+        self.independent_persons = set(
+            p.person_id for p in self.families.persons_without_parents())
 
         self._init_chromosome_order()
         self._init_denovo_mode()
@@ -180,32 +187,33 @@ class SingleVcfLoader(VariantsGenotypesLoader):
             self._denovo_handler = self._ignore_denovo_mode_handler
         else:
             logger.warning(
-                f"unexpected denovo mode: {denovo_mode}; "
-                f"using possible_denovo")
+                "unexpected denovo mode: %s; "
+                "using possible_denovo", denovo_mode)
             self._denovo_handler = self._possible_denovo_mode_handler
 
     @staticmethod
     def _possible_denovo_mode_handler(family_variant: FamilyVariant) -> bool:
-        for fa in family_variant.alleles:
-            inheritance_in_members = fa.inheritance_in_members
+        for fallele in family_variant.alleles:
+            inheritance_in_members = fallele.inheritance_in_members
             inheritance_in_members = [
                 inh
                 if inh != Inheritance.denovo
                 else Inheritance.possible_denovo
                 for inh in inheritance_in_members
             ]
-            fa._inheritance_in_members = inheritance_in_members
+            # pylint: disable=protected-access
+            fallele._inheritance_in_members = inheritance_in_members
         return False
 
     @staticmethod
     def _ignore_denovo_mode_handler(family_variant: FamilyVariant) -> bool:
-        for fa in family_variant.alleles:
-            if Inheritance.denovo in fa.inheritance_in_members:
+        for fallele in family_variant.alleles:
+            if Inheritance.denovo in fallele.inheritance_in_members:
                 return True
         return False
 
     @staticmethod
-    def _denovo_mode_handler(family_vairant: FamilyVariant) -> bool:
+    def _denovo_mode_handler(_family_vairant: FamilyVariant) -> bool:
         return False
 
     def _init_omission_mode(self):
@@ -220,41 +228,46 @@ class SingleVcfLoader(VariantsGenotypesLoader):
             self._omission_handler = self._ignore_omission_mode_handler
         else:
             logger.warning(
-                f"unexpected omission mode: {omission_mode}; "
-                f"using possible_omission")
+                "unexpected omission mode: %s; "
+                "using possible_omission", omission_mode)
             self._omission_handler = self._possible_omission_mode_handler
 
     @staticmethod
     def _possible_omission_mode_handler(family_variant: FamilyVariant) -> bool:
-        for fa in family_variant.alleles:
-            inheritance_in_members = fa.inheritance_in_members
+        for fallele in family_variant.alleles:
+            inheritance_in_members = fallele.inheritance_in_members
             inheritance_in_members = [
                 inh
                 if inh != Inheritance.omission
                 else Inheritance.possible_omission
                 for inh in inheritance_in_members
             ]
-            fa._inheritance_in_members = inheritance_in_members
+            # pylint: disable=protected-access
+            fallele._inheritance_in_members = inheritance_in_members
         return False
 
     @staticmethod
     def _ignore_omission_mode_handler(family_variant: FamilyVariant) -> bool:
-        for fa in family_variant.alleles:
-            if Inheritance.omission in fa.inheritance_in_members:
+        for fallele in family_variant.alleles:
+            if Inheritance.omission in fallele.inheritance_in_members:
                 return True
         return False
 
     @staticmethod
-    def _omission_mode_handler(family_vairant: FamilyVariant) -> bool:
+    def _omission_mode_handler(_family_vairant: FamilyVariant) -> bool:
         return False
 
+    def close(self):
+        for vcf in self.vcfs:
+            vcf.close()
+
     def _init_vcf_readers(self):
-        self.vcfs = list()
-        logger.debug(f"SingleVcfLoader input files: {self.filenames}")
+        self.vcfs = []
+        logger.debug("SingleVcfLoader input files: %s", self.filenames)
 
         for file in self.filenames:
             self.vcfs.append(
-                pysam.VariantFile(file))
+                pysam.VariantFile(file))  # pylint: disable=no-member
 
     def _build_vcf_iterators(self, region):
         if region is None:
@@ -262,21 +275,20 @@ class SingleVcfLoader(VariantsGenotypesLoader):
                 vcf.fetch()
                 for vcf in self.vcfs
             ]
-        else:
-            return [
-                vcf.fetch(region=self._unadjust_chrom_prefix(region))
-                for vcf in self.vcfs]
+        return [
+            vcf.fetch(region=self._unadjust_chrom_prefix(region))
+            for vcf in self.vcfs]
 
     def _init_chromosome_order(self):
         seqnames = list(self.vcfs[0].header.contigs)
-        if not all([
+        if not all(
                 list(vcf.header.contigs) == seqnames
-                for vcf in self.vcfs]):
+                for vcf in self.vcfs):
             logger.warning(
-                f"VCF files {self.filenames} do not have the same list "
-                f"of contigs")
+                "VCF files %s do not have the same list "
+                "of contigs", self.filenames)
 
-        chrom_order = dict()
+        chrom_order = {}
         for idx, seq in enumerate(seqnames):
             chrom_order[seq] = idx
 
@@ -284,6 +296,7 @@ class SingleVcfLoader(VariantsGenotypesLoader):
 
     @property
     def chromosomes(self):
+        """Return list of all chromosomes from VCF file(s)."""
         assert len(self.vcfs) > 0
 
         seqnames = list(self.vcfs[0].header.contigs)
@@ -293,41 +306,41 @@ class SingleVcfLoader(VariantsGenotypesLoader):
             res = seqnames
 
         try:
-            with pysam.Tabixfile(filename) as tbx:
+            with pysam.Tabixfile(filename) as tbx:  # pylint: disable=no-member
                 res = list(tbx.contigs)
-        except Exception:
+        except Exception:  # pylint: disable=broad-except
             res = seqnames
 
         return [self._adjust_chrom_prefix(chrom) for chrom in res]
 
     def _match_pedigree_to_samples(self):
-        vcf_samples = list()
+        vcf_samples = []
         for vcf in self.vcfs:
             intersection = set(vcf_samples) & set(vcf.header.samples)
             if intersection:
                 logger.warning(
-                    f"vcf samples present in multiple batches: "
-                    f"{intersection}")
+                    "vcf samples present in multiple batches: %s",
+                    intersection)
 
             vcf_samples.extend(list(vcf.header.samples))
 
-        logger.info(f"vcf samples (all): {len(vcf_samples)}")
+        logger.info("vcf samples (all): %s", len(vcf_samples))
 
         vcf_samples_order = [list(vcf.header.samples) for vcf in self.vcfs]
         vcf_samples = set(vcf_samples)
-        logger.info(f"vcf samples (set): {len(vcf_samples)}")
+        logger.info("vcf samples (set): %s", len(vcf_samples))
         pedigree_samples = set(self.families.pedigree_samples())
-        logger.info(f"pedigree samples (all): {len(pedigree_samples)}")
+        logger.info("pedigree samples (all): %s", len(pedigree_samples))
 
         missing_samples = vcf_samples.difference(pedigree_samples)
         if missing_samples:
             logger.info(
-                f"vcf samples not found in pedigree: {len(missing_samples)}; "
-                f"{missing_samples}")
+                "vcf samples not found in pedigree: %s; %s",
+                len(missing_samples), missing_samples)
 
         vcf_samples = vcf_samples.difference(missing_samples)
         assert vcf_samples.issubset(pedigree_samples)
-        logger.info(f"vcf samples (matched): {len(vcf_samples)}")
+        logger.info("vcf samples (matched): %s", len(vcf_samples))
 
         seen = set()
         not_sequenced = set()
@@ -358,12 +371,12 @@ class SingleVcfLoader(VariantsGenotypesLoader):
                     person.set_attr("not_sequenced", True)
                     counters["not_sequenced"] += 1
                     logger.info(
-                        f"person {person.person_id} marked as "
-                        f"'not_sequenced'; ")
+                        "person %s marked as "
+                        "'not_sequenced';", person.person_id)
             else:
                 if not person.missing:
                     logger.info(
-                        f"person {person} marked as missing")
+                        "person %s marked as missing", person)
 
                     person.set_attr(
                         "sample_index",
@@ -376,12 +389,12 @@ class SingleVcfLoader(VariantsGenotypesLoader):
                     counters["missing"] += 1
                 counters["missing"] += 1
 
-        logger.warning(f"people stats: {counters}")
+        logger.warning("people stats: %s", counters)
 
         self.families.redefine()
         logger.warning(
-            f"persons changed to not_sequenced {len(not_sequenced)} "
-            f"in {self.filenames}")
+            "persons changed to not_sequenced %s in %s",
+            len(not_sequenced), self.filenames)
         self.families_samples_indexes = [
             (family, family.samples_index)
             for family in self.families.values()
@@ -401,9 +414,10 @@ class SingleVcfLoader(VariantsGenotypesLoader):
         self.samples_vcf_index = samples_index
 
     def _compare_vcf_variants_gt(self, lhs, rhs):
-        """
+        """Compare two VCF variant positions.
+
         Returns true if left vcf variant position in file is
-        larger than right vcf variant position in file
+        larger than right vcf variant position in file.
         """
         # TODO: Change this to use a dict
         if lhs is None:
@@ -414,13 +428,14 @@ class SingleVcfLoader(VariantsGenotypesLoader):
 
         if l_chrom_idx > r_chrom_idx:
             return True
-        elif lhs.pos > rhs.pos:
+        if lhs.pos > rhs.pos:
             return True
-        else:
-            return False
+        return False
 
-    def _compare_vcf_variants_eq(self, lhs, rhs):
-        """
+    @staticmethod
+    def _compare_vcf_variants_eq(lhs, rhs):
+        """Compare two VCF variant positions.
+
         Returns true if left vcf variant position in file is
         equal to right vcf variant position in file
         """
@@ -486,7 +501,7 @@ class SingleVcfLoader(VariantsGenotypesLoader):
             vcf_variants = [next(it, None) for it in vcf_iterators]
 
             while True:
-                if all([vcf_variant is None for vcf_variant in vcf_variants]):
+                if all(vcf_variant is None for vcf_variant in vcf_variants):
                     break
 
                 current_vcf_variant = self._find_current_vcf_variant(
@@ -497,8 +512,8 @@ class SingleVcfLoader(VariantsGenotypesLoader):
                         current_vcf_variant, summary_variant_index,
                         transmission_type=self.transmission_type)
 
-                vcf_iterator_idexes_to_advance = list()
-                vcf_gt_variants = list()
+                vcf_iterator_idexes_to_advance = []
+                vcf_gt_variants = []
                 for idx, vcf_variant in enumerate(vcf_variants):
                     if self._compare_vcf_variants_eq(
                         current_vcf_variant, vcf_variant
@@ -510,9 +525,9 @@ class SingleVcfLoader(VariantsGenotypesLoader):
 
                 if len(current_summary_variant.alt_alleles) > 127:
                     logger.warning(
-                        f"more than 127 alternative alleles; "
-                        f"some alleles will be skipped: "
-                        f"{current_summary_variant}")
+                        "more than 127 alternative alleles; "
+                        "some alleles will be skipped: %s",
+                        current_summary_variant)
 
                 else:
 
@@ -525,16 +540,16 @@ class SingleVcfLoader(VariantsGenotypesLoader):
                         self, vcf_gt_variants)
                     family_variants = []
 
-                    for fam, gt, bs in family_genotypes \
+                    for fam, genotype, best_state in family_genotypes \
                             .family_genotype_iterator():
 
-                        fv = FamilyVariant(
-                            current_summary_variant, fam, gt, bs)
-                        if self._denovo_handler(fv):
+                        fvariant = FamilyVariant(
+                            current_summary_variant, fam, genotype, best_state)
+                        if self._denovo_handler(fvariant):
                             continue
-                        if self._omission_handler(fv):
+                        if self._omission_handler(fvariant):
                             continue
-                        family_variants.append(fv)
+                        family_variants.append(fvariant)
 
                     known_independent_genotypes = \
                         family_genotypes.known_independent_genotypes
@@ -555,18 +570,20 @@ class SingleVcfLoader(VariantsGenotypesLoader):
 
 
 class VcfLoader(VariantsGenotypesLoader):
+    """Defines variant loader for VCF variants."""
+
     def __init__(
             self,
             families,
             vcf_files,
             genome: ReferenceGenome,
             regions=None,
-            params={},
-            **kwargs):
-
+            params=None,
+            **_kwargs):
+        params = params if params else {}
         all_filenames, filenames = self._collect_filenames(params, vcf_files)
 
-        super(VcfLoader, self).__init__(
+        super().__init__(
             families=families,
             filenames=all_filenames,
             transmission_type=TransmissionType.transmitted,
@@ -576,8 +593,8 @@ class VcfLoader(VariantsGenotypesLoader):
             params=params)
 
         self.set_attribute("source_type", "vcf")
-        logger.debug(f"loader passed VCF files {vcf_files}")
-        logger.debug(f"collected VCF files: {all_filenames}, {filenames}")
+        logger.debug("loader passed VCF files %s", vcf_files)
+        logger.debug("collected VCF files: %s, %s", all_filenames, filenames)
 
         self.vcf_files = vcf_files
         self.vcf_loaders = []
@@ -597,12 +614,12 @@ class VcfLoader(VariantsGenotypesLoader):
             self.families = self._families_union()
 
         logger.info(
-            f"real persons/sample: {len(self.families.real_persons)}")
+            "real persons/sample: %s", len(self.families.real_persons))
         for vcf_loader in self.vcf_loaders:
             vcf_families = vcf_loader.families
             logger.info(
-                f"real persons/sample: {len(vcf_families.real_persons)} "
-                f"in {vcf_loader.filenames}")
+                "real persons/sample: %s in %s",
+                len(vcf_families.real_persons), vcf_loader.filenames)
 
     def _families_intersection(self):
         logger.warning("families intersection run...")
@@ -614,8 +631,8 @@ class VcfLoader(VariantsGenotypesLoader):
                 if other_person.not_sequenced:
                     person = families.persons[other_person.person_id]
                     logger.warning(
-                        f"families intersection: person {person.person_id} "
-                        f"is marked as 'not_sequenced'")
+                        "families intersection: person %s "
+                        "is marked as 'not_sequenced'", person.person_id)
                     person.set_attr("not_sequenced", True)
         families.redefine()
 
@@ -635,8 +652,9 @@ class VcfLoader(VariantsGenotypesLoader):
 
                 if not other_person.not_sequenced:
                     logger.warning(
-                        f"families union: person {person.person_id} "
-                        f"'not_sequenced' flag changed to 'sequenced'")
+                        "families union: person %s "
+                        "'not_sequenced' flag changed to 'sequenced'",
+                        person.person_id)
                     person.set_attr("not_sequenced", False)
                     break
 
@@ -646,6 +664,10 @@ class VcfLoader(VariantsGenotypesLoader):
             vcf_loader.families = families
 
         return families
+
+    def close(self):
+        for vcf_loader in self.vcf_loaders:
+            vcf_loader.close()
 
     @classmethod
     def _arguments(cls):
@@ -728,10 +750,9 @@ class VcfLoader(VariantsGenotypesLoader):
 
     @staticmethod
     def _glob(globname):
-        from urllib.parse import urlparse
 
-        fs, _ = url_to_fs(globname)
-        filenames = fs.glob(globname)
+        filesystem, _ = url_to_fs(globname)
+        filenames = filesystem.glob(globname)
         # fs.glob strips the protocol at the beginning. We need to add it back
         # otherwise there is no way to know the correct fs down the pipeline
         scheme = urlparse(globname).scheme
@@ -746,26 +767,27 @@ class VcfLoader(VariantsGenotypesLoader):
             vcf_chromosomes = [
                 wc.strip() for wc in params.get("vcf_chromosomes").split(";")
             ]
-            if all(["[vc]" in vcf_file for vcf_file in vcf_files]):
+            if all("[vc]" in vcf_file for vcf_file in vcf_files):
                 glob_filenames = [
                     [vcf_file.replace("[vc]", vc) for vcf_file in vcf_files]
                     for vc in vcf_chromosomes
                 ]
-            elif all(["[vc]" not in vcf_file for vcf_file in vcf_files]):
+            elif all("[vc]" not in vcf_file for vcf_file in vcf_files):
                 logger.warning(
-                    f"VCF files {vcf_files} does not contain '[vc]' pattern, "
-                    f"but '--vcf-chromosomes' argument is passed; skipping...")
+                    "VCF files %s does not contain '[vc]' pattern, "
+                    "but '--vcf-chromosomes' argument is passed; skipping...",
+                    vcf_files)
                 glob_filenames = [vcf_files]
             else:
                 logger.error(
-                    f"some VCF files contain '[vc]' pattern, some not: "
-                    f"{vcf_files}; can't continue...")
+                    "some VCF files contain '[vc]' pattern, some not: "
+                    "%s; can't continue...", vcf_files)
                 raise ValueError(
                     f"some VCF files does not have '[vc]': {vcf_files}")
         else:
             glob_filenames = [vcf_files]
 
-        logger.debug(f"collecting VCF filenames glob: {glob_filenames}")
+        logger.debug("collecting VCF filenames glob: %s", glob_filenames)
 
         result = []
         for batches_globnames in glob_filenames:
@@ -787,6 +809,7 @@ class VcfLoader(VariantsGenotypesLoader):
 
     @property
     def chromosomes(self):
+        """Return list of all chromosomes from VCF files."""
         assert len(self.vcf_loaders) > 0
         all_chromosomes = []
         for loader in self.vcf_loaders:
@@ -802,6 +825,7 @@ class VcfLoader(VariantsGenotypesLoader):
     def _full_variants_iterator_impl(self):
         summary_index = 0
         for vcf_loader in self.vcf_loaders:
+            # pylint: disable=protected-access
             iterator = vcf_loader._full_variants_iterator_impl(summary_index)
             try:
                 for summary_variant, family_variants in iterator:
@@ -811,8 +835,8 @@ class VcfLoader(VariantsGenotypesLoader):
                 pass
 
     @classmethod
-    def parse_cli_arguments(cls, argv):
-        super().parse_cli_arguments(argv, use_defaults=False)
+    def parse_cli_arguments(cls, argv, use_defaults=False):
+        super().parse_cli_arguments(argv, use_defaults=use_defaults)
         filenames = argv.vcf_files
 
         assert argv.vcf_multi_loader_fill_in_mode in set(

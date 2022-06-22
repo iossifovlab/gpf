@@ -1,3 +1,4 @@
+"""Provides normalize allele annotator and helpers."""
 import logging
 
 from typing import List, Dict, Optional, cast
@@ -13,7 +14,8 @@ logger = logging.getLogger(__name__)
 
 
 def normalize_allele(allele: VCFAllele, genome: ReferenceGenome) -> VCFAllele:
-    """
+    """Normalize an allele.
+
     Using algorithm defined in
     following https://genome.sph.umich.edu/wiki/Variant_Normalization
     """
@@ -52,6 +54,7 @@ def normalize_allele(allele: VCFAllele, genome: ReferenceGenome) -> VCFAllele:
 
 
 def build_normalize_allele_annotator(pipeline, config):
+    """Construct a normalize allele annotator."""
     config = NormalizeAlleleAnnotator.validate_config(config)
 
     assert config["annotator_type"] == "normalize_allele_annotator"
@@ -68,6 +71,7 @@ def build_normalize_allele_annotator(pipeline, config):
 
 
 class NormalizeAlleleAnnotator(Annotator):
+    """Provides annotator for normalizing alleles."""
 
     def __init__(self, config, genome: ReferenceGenome):
         super().__init__(config)
@@ -77,6 +81,9 @@ class NormalizeAlleleAnnotator(Annotator):
 
     def annotator_type(self) -> str:
         return "normalize_allele_annotator"
+
+    def close(self):
+        pass
 
     @classmethod
     def validate_config(cls, config: Dict) -> Dict:
@@ -106,11 +113,12 @@ class NormalizeAlleleAnnotator(Annotator):
         validator = cls.ConfigValidator(schema)
         validator.allow_unknown = True
 
-        logger.debug(f"validating normalize allele annotator config: {config}")
+        logger.debug(
+            "validating normalize allele annotator config: %s", config)
         if not validator.validate(config):
             logger.error(
-                f"wrong config format for normalize allele annotator: "
-                f"{validator.errors}")
+                "wrong config format for normalize allele annotator: %s",
+                validator.errors)
             raise ValueError(
                 f"wrong liftover annotator config {validator.errors}")
         return cast(Dict, validator.document)
@@ -144,8 +152,8 @@ class NormalizeAlleleAnnotator(Annotator):
                 Annotatable.Type.large_deletion,
                 Annotatable.Type.large_duplication}:
             logger.warning(
-                f"{self.annotator_type()} not ready to annotate CNV variants: "
-                f"{annotatable}")
+                "%s not ready to annotate CNV variants: %s",
+                self.annotator_type(), annotatable)
             return {"normalized_allele": None}
 
         assert isinstance(annotatable, VCFAllele), annotatable

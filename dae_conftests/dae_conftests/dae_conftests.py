@@ -321,7 +321,7 @@ def annotation_scores_dirname():
     return filename
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 def annotation_pipeline_vcf(gpf_instance_2013):
     filename = relative_to_this_test_folder(IMPORT_ANNOTATION_CONFIG)
     pipeline = build_annotation_pipeline(
@@ -329,7 +329,7 @@ def annotation_pipeline_vcf(gpf_instance_2013):
     return pipeline
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 def annotation_pipeline_internal(gpf_instance_2013):
     filename = relative_to_this_test_folder(IMPORT_ANNOTATION_CONFIG)
     pipeline = build_annotation_pipeline(
@@ -444,7 +444,7 @@ def dae_transmitted(
     return variants_loader
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 def dae_iossifov2014_config():
     fullpath = relative_to_this_test_folder(
         "fixtures/dae_iossifov2014/iossifov2014"
@@ -453,7 +453,7 @@ def dae_iossifov2014_config():
     return config.denovo
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 def iossifov2014_loader(
         dae_iossifov2014_config,
         gpf_instance_2013, annotation_pipeline_internal):
@@ -475,7 +475,7 @@ def iossifov2014_loader(
     return variants_loader, families_loader
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 def iossifov2014_raw_denovo(iossifov2014_loader):
 
     variants_loader, families_loader = iossifov2014_loader
@@ -917,7 +917,7 @@ def variants_impala(
     return builder
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 def iossifov2014_impala(
         request,
         iossifov2014_loader,
