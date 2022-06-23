@@ -5,6 +5,7 @@ import logging
 import argparse
 import pathlib
 from typing import Dict
+from urllib.parse import urlparse
 
 import yaml
 
@@ -34,11 +35,20 @@ def _add_repository_resource_parameters_group(parser, use_resource=True):
     group.add_argument(
         "-R", "--repository", type=str,
         default=None,
-        help="URL to the genomic resources repository")
+        help="URL to the genomic resources repository. If not specified "
+        "the tool assumes a local file system repository and starts looking "
+        "for .CONTENTS file from the current working directory up to the root "
+        "directory. If found the directory is assumed for root repository "
+        "directory; otherwise error is reported.")
     if use_resource:
         group.add_argument(
             "-r", "--resource", type=str,
-            help="specifies a resource whose manifest we want to rebuild")
+            help="Specifies the resource whose manifest we want to rebuild. "
+            "If not specified the tool assumes local filesystem repository "
+            "and starts looking for 'genomic_resource.yaml' file from "
+            "current working directory up to the root directory. If found "
+            "the directory is assumed for a resource directory; otherwise "
+            "error is reported.")
 
 
 def _add_dry_run_and_force_parameters_group(parser):
@@ -250,6 +260,12 @@ def _find_resource(proto, repo_url, **kwargs):
     if resource_id is not None:
         res = proto.get_resource(resource_id)
     else:
+        if urlparse(repo_url).scheme not in {"file", ""}:
+            logger.error(
+                "resource not specified but the repository URL %s "
+                "is not local filesystem repository", repo_url)
+            return None
+
         cwd = os.getcwd()
         resource_dir = _find_directory_with_filename(GR_CONF_FILE_NAME, cwd)
         if resource_dir is None:
