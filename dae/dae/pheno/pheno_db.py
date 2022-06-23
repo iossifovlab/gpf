@@ -646,7 +646,7 @@ class PhenotypeStudy(PhenotypeData):
             self.db.person.c.sex,
         ]
         query = select(columns)
-        query = query.query_from(self.db.family.join(self.db.person))
+        query = query.select_from(self.db.family.join(self.db.person))
         if roles is not None:
             query = query.where(self.db.person.c.role.in_(roles))
         if person_ids is not None:
