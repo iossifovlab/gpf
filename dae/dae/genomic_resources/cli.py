@@ -29,37 +29,49 @@ logger = logging.getLogger(__file__)
 
 
 def _add_repository_resource_parameters_group(parser, use_resource=True):
-    parser.add_argument(
+
+    group = parser.add_argument_group(title="Repository/Resource")
+    group.add_argument(
         "-R", "--repository", type=str,
         default=None,
         help="URL to the genomic resources repository")
     if use_resource:
-        parser.add_argument(
+        group.add_argument(
             "-r", "--resource", type=str,
             help="specifies a resource whose manifest we want to rebuild")
 
 
 def _add_dry_run_and_force_parameters_group(parser):
-    parser.add_argument(
+    group = parser.add_argument_group(title="Force/Dry run")
+    group.add_argument(
         "-n", "--dry-run", default=False, action="store_true",
         help="only checks if the manifest update is needed whithout "
         "actually updating it")
-    parser.add_argument(
+    group.add_argument(
         "-f", "--force", default=False,
         action="store_true",
         help="ignore resource state and rebuild manifest")
 
 
 def _add_dvc_parameters_group(parser):
-    parser.add_argument(
+    group = parser.add_argument_group(title="DVC params")
+    group.add_argument(
         "-d", "--with-dvc", default=True,
         action="store_true", dest="use_dvc",
-        help="use '.dvc' files if present to get md5 sum of resource files")
-    parser.add_argument(
+        help="use '.dvc' files if present to get md5 sum of resource files "
+        "(default)")
+    group.add_argument(
         "-D", "--without-dvc", default=True,
         action="store_false", dest="use_dvc",
         help="calculate the md5 sum if necessary of resource files; "
         "do not use '.dvc' files to get md5 sum of resource files")
+
+
+def _add_hist_parameters_group(parser):
+    group = parser.add_argument_group(title="Histograms")
+    group.add_argument(
+        "--region-size", type=int, default=3_000_000,
+        help="Number of records to process in parallel")
 
 
 def _configure_list_subparser(subparsers):
@@ -104,9 +116,8 @@ def _configure_repo_hist_subparser(subparsers):
 
     _add_repository_resource_parameters_group(parser_hist, use_resource=False)
     _add_dry_run_and_force_parameters_group(parser_hist)
+    _add_hist_parameters_group(parser_hist)
 
-    parser_hist.add_argument("--region-size", type=int, default=3_000_000,
-                             help="Number of records to process in parallel")
     DaskClient.add_arguments(parser_hist)
 
 
@@ -117,9 +128,8 @@ def _configure_resource_hist_subparser(subparsers):
 
     _add_repository_resource_parameters_group(parser_hist)
     _add_dry_run_and_force_parameters_group(parser_hist)
+    _add_hist_parameters_group(parser_hist)
 
-    parser_hist.add_argument("--region-size", type=int, default=3_000_000,
-                             help="Number of records to process in parallel")
     DaskClient.add_arguments(parser_hist)
 
 
@@ -130,11 +140,7 @@ def _configure_repo_repair_subparser(subparsers):
     _add_repository_resource_parameters_group(parser, use_resource=False)
     _add_dry_run_and_force_parameters_group(parser)
     _add_dvc_parameters_group(parser)
-
-    parser.add_argument(
-        "--region-size", type=int, default=3_000_000,
-        help="split the resource into regions with region length for "
-        "parallel processing")
+    _add_hist_parameters_group(parser)
 
     DaskClient.add_arguments(parser)
 
@@ -146,11 +152,7 @@ def _configure_resource_repair_subparser(subparsers):
     _add_repository_resource_parameters_group(parser)
     _add_dry_run_and_force_parameters_group(parser)
     _add_dvc_parameters_group(parser)
-
-    parser.add_argument(
-        "--region-size", type=int, default=3_000_000,
-        help="split the resource into regions with region length for "
-        "parallel processing")
+    _add_hist_parameters_group(parser)
 
     DaskClient.add_arguments(parser)
 
