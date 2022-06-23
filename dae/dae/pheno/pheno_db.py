@@ -653,7 +653,7 @@ class PhenotypeStudy(PhenotypeData):
             query = query.where(self.db.person.c.person_id.in_(person_ids))
         if family_ids is not None:
             query = query.where(self.db.family.c.family_id.in_(family_ids))
-        df = pd.read_sql(select, self.db.pheno_engine)
+        df = pd.read_sql(query, self.db.pheno_engine)
         # df.rename(columns={'sex': 'sex'}, inplace=True)
         return df[["person_id", "family_id", "role", "sex", "status"]]
 
