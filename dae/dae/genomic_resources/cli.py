@@ -99,7 +99,7 @@ def _configure_resource_manifest_subparser(subparsers):
 
 def _configure_repo_hist_subparser(subparsers):
     parser_hist = subparsers.add_parser(
-        "repo-histogram",
+        "repo-histograms",
         help="Build the histograms for a resource")
 
     _add_repository_resource_parameters_group(parser_hist, use_resource=False)
@@ -112,7 +112,7 @@ def _configure_repo_hist_subparser(subparsers):
 
 def _configure_resource_hist_subparser(subparsers):
     parser_hist = subparsers.add_parser(
-        "resource-histogram",
+        "resource-histograms",
         help="Build the histograms for a resource")
 
     _add_repository_resource_parameters_group(parser_hist)
@@ -201,11 +201,11 @@ def _do_resource_manifest_command(proto, res, dry_run, force, use_dvc):
             f"<{res.get_genomic_resource_id_version()}> " \
             f"should be updated; " \
             f"entries to update in manifest " \
-            f"{manifest_update.entries_to_update}"
+            f"{sorted(manifest_update.entries_to_update)}"
         if manifest_update.entries_to_delete:
             msg = f"{msg}; " \
                 f"entries to delete from manifest " \
-                f"{manifest_update.entries_to_delete}"
+                f"{sorted(manifest_update.entries_to_delete)}"
         print(msg, file=sys.stderr)
 
     if dry_run:
@@ -321,7 +321,8 @@ def _run_repo_hist_command(proto, region_size, **kwargs):
         for res in proto.get_all_resources():
             _do_resource_hist_command(
                 client, proto, res, dry_run, force, region_size)
-    proto.build_content_file()
+    if not dry_run:
+        proto.build_content_file()
 
 
 def _run_resource_hist_command(proto, repo_url, region_size, **kwargs):
@@ -362,7 +363,8 @@ def _run_repo_repair_command(proto, region_size, **kwargs):
                 proto, res, dry_run, force, use_dvc)
             _do_resource_hist_command(
                 client, proto, res, dry_run, force, region_size)
-    proto.build_content_file()
+    if not dry_run:
+        proto.build_content_file()
 
 
 def _run_resource_repair_command(proto, repo_url, region_size, **kwargs):
@@ -434,9 +436,9 @@ def cli_manage(cli_args=None):
         _run_repo_manifest_command(proto, **vars(args))
     elif command == "resource-manifest":
         _run_resource_manifest_command(proto, repo_url, **vars(args))
-    elif command == "repo-histogram":
+    elif command == "repo-histograms":
         _run_repo_hist_command(proto, **vars(args))
-    elif command == "resource-histogram":
+    elif command == "resource-histograms":
         _run_resource_hist_command(proto, repo_url, **vars(args))
     elif command == "repo-repair":
         _run_repo_repair_command(proto, **vars(args))
