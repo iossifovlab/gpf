@@ -303,7 +303,7 @@ def _do_resource_hist_command(  # pylint: disable=too-many-arguments
     hist_out_dir = "histograms"
     logger.info("Saving histograms in %s", hist_out_dir)
     builder.save(histograms, hist_out_dir)
-    proto.update_manifest(res)
+    proto.save_manifest(res, proto.update_manifest(res))
 
 
 def _run_repo_hist_command(proto, region_size, **kwargs):
