@@ -1,6 +1,7 @@
 import logging
-import pandas as pd
 from collections import OrderedDict
+
+import pandas as pd
 from dae.pheno.pheno_db import PhenotypeData, Measure, Instrument
 from dae.pedigrees.family import Person
 
@@ -9,6 +10,8 @@ logger = logging.getLogger(__name__)
 
 
 class RemotePhenotypeData(PhenotypeData):
+    """Phenotype data adapter for accessing remote instance phenotype data."""
+
     def __init__(self, pheno_id, remote_dataset_id, rest_client):
         self._remote_pheno_id = pheno_id
         self.rest_client = rest_client
@@ -169,31 +172,31 @@ class RemotePhenotypeData(PhenotypeData):
         return values
 
     def get_instrument_values_df(
-        self, instrument_id, person_ids=None,
-        family_ids=None, roles=None, measures=None
+        self, instrument_name, person_ids=None,
+        family_ids=None, role=None, measure_ids=None
     ):
         instrument_values = self.rest_client.post_instrument_values(
             self.remote_dataset_id,
-            instrument_id,
+            instrument_name,
             person_ids,
             family_ids,
-            roles,
-            measures,
+            role,
+            measure_ids,
         )
 
         return pd.DataFrame.from_records(instrument_values.values())
 
     def get_instrument_values(
-        self, instrument_id, person_ids=None,
-        family_ids=None, roles=None, measures=None
+        self, instrument_name, person_ids=None,
+        family_ids=None, role=None, measure_ids=None
     ):
         instrument_values = self.rest_client.post_instrument_values(
             self.remote_dataset_id,
-            instrument_id,
+            instrument_name,
             person_ids,
             family_ids,
-            roles,
-            measures,
+            role,
+            measure_ids,
         )
 
         return instrument_values
@@ -204,7 +207,6 @@ class RemotePhenotypeData(PhenotypeData):
         person_ids=None,
         family_ids=None,
         roles=None,
-        default_filter="apply",
     ):
         if person_ids is not None:
             logger.warning("Unsupported argument used: person_ids")
@@ -212,8 +214,6 @@ class RemotePhenotypeData(PhenotypeData):
             logger.warning("Unsupported argument used: family_ids")
         if roles is not None:
             logger.warning("Unsupported argument used: roles")
-        if default_filter is not None:
-            logger.warning("Unsupported argument used: default_filter")
 
         return self.rest_client.post_measures_download(measure_ids=measure_ids)
 

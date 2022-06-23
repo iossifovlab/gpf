@@ -138,9 +138,6 @@ class PhenoMeasuresView(PhenoBrowserBaseView):
 
 
 class PhenoMeasuresDownload(QueryBaseView):
-    def __init__(self):
-        super(PhenoMeasuresDownload, self).__init__()
-
     def post(self, request):
         data = request.data
         if "dataset_id" not in data:

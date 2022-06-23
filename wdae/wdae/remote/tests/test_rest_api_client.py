@@ -156,7 +156,7 @@ def test_post_measures_download(rest_client):
 
     assert lines is not None
     assert len(lines) == 5021
-    print(b''.join(lines).decode())
+    print(b"".join(lines).decode())
 
 
 def test_post_pheno_tool(rest_client):
