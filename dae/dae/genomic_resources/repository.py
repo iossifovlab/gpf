@@ -598,6 +598,12 @@ class ReadWriteRepositoryProtocol(ReadOnlyRepositoryProtocol):
             filename: str,
             **kwargs) -> ResourceFileState:
         """Build resource file state."""
+
+        if not self.file_exists(resource, filename):
+            raise ValueError(
+                f"can't build resource state for not existing resource file "
+                f"{resource.resource_id} > {filename}")
+
         md5 = kwargs.get("md5")
         timestamp = kwargs.get("timestamp")
         size = kwargs.get("size")

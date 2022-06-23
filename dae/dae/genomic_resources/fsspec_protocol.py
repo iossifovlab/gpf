@@ -434,17 +434,22 @@ class FsspecReadWriteProtocol(
         """Update a resource file into repository if needed."""
         assert dest_resource.resource_id == remote_resource.resource_id
 
-        local_state = self.load_resource_file_state(dest_resource, filename)
-        if local_state is None:
+        if not self.file_exists(dest_resource, filename):
             return self.copy_resource_file(
                 remote_resource, dest_resource, filename)
 
-        timestamp = self.get_resource_file_timestamp(dest_resource, filename)
-        size = self.get_resource_file_size(dest_resource, filename)
-        if timestamp != local_state.timestamp or \
-                size != local_state.size:
-            return self.copy_resource_file(
-                remote_resource, dest_resource, filename)
+        local_state = self.load_resource_file_state(dest_resource, filename)
+        if local_state is None:
+            local_state = self.build_resource_file_state(
+                dest_resource, filename)
+        else:
+            timestamp = self.get_resource_file_timestamp(
+                dest_resource, filename)
+            size = self.get_resource_file_size(dest_resource, filename)
+            if timestamp != local_state.timestamp or \
+                    size != local_state.size:
+                local_state = self.build_resource_file_state(
+                    dest_resource, filename)
 
         remote_manifest = remote_resource.get_manifest()
         if filename not in remote_manifest:

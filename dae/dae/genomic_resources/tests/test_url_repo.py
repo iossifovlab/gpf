@@ -1,4 +1,5 @@
-# pylint: disable=redefined-outer-name,C0114,C0116,protected-access
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
+
 from dae.genomic_resources.repository import GR_CONF_FILE_NAME
 
 
