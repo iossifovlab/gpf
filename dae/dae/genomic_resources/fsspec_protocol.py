@@ -442,6 +442,7 @@ class FsspecReadWriteProtocol(
         if local_state is None:
             local_state = self.build_resource_file_state(
                 dest_resource, filename)
+            self.save_resource_file_state(dest_resource, local_state)
         else:
             timestamp = self.get_resource_file_timestamp(
                 dest_resource, filename)
@@ -450,6 +451,7 @@ class FsspecReadWriteProtocol(
                     size != local_state.size:
                 local_state = self.build_resource_file_state(
                     dest_resource, filename)
+                self.save_resource_file_state(dest_resource, local_state)
 
         remote_manifest = remote_resource.get_manifest()
         if filename not in remote_manifest:

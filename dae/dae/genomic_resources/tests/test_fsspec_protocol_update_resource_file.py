@@ -8,7 +8,7 @@ import pytest
     "file",
     "s3",
 ])
-def test_update_resource_file_when_missing(
+def test_update_resource_file_when_file_missing(
         embedded_proto, fsspec_proto, scheme):
 
     # Given
@@ -36,6 +36,39 @@ def test_update_resource_file_when_missing(
     assert state.timestamp == timestamp
     assert state.timestamp == pytest.approx(time.time(), abs=5)
     assert state.md5 == "d9636a8dca9e5626851471d1c0ea92b1"
+
+
+@pytest.mark.parametrize("scheme", [
+    "file",
+    "s3",
+])
+def test_update_resource_file_when_state_missing(
+        embedded_proto, fsspec_proto, scheme):
+
+    # Given
+    src_proto = embedded_proto()
+    proto = fsspec_proto(scheme)
+
+    src_res = src_proto.get_resource("sub/two")
+    dst_res = proto.get_resource("sub/two")
+
+    proto.filesystem.delete(
+        proto._get_resource_file_state_path(dst_res, "genes.gtf"))
+
+    assert proto.file_exists(dst_res, "genes.gtf")
+    assert not proto.load_resource_file_state(dst_res, "genes.gtf")
+    fileurl = proto.get_resource_file_url(dst_res, "genes.gtf")
+    timestamp = proto.filesystem.modified(fileurl)
+
+    # When
+    state = proto.update_resource_file(src_res, dst_res, "genes.gtf")
+
+    # Then
+    assert proto.file_exists(dst_res, "genes.gtf")
+
+    assert state.filename == "genes.gtf"
+    assert state.md5 == "d9636a8dca9e5626851471d1c0ea92b1"
+    assert proto.filesystem.modified(fileurl) == timestamp
 
 
 @pytest.mark.parametrize("scheme", [
