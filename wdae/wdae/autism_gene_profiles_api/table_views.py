@@ -10,7 +10,8 @@ LOGGER = logging.getLogger(__name__)
 
 def column(
     id, display_name, visible=True, clickable=None,
-    display_vertical=False, sortable=False, columns=None, meta=None):
+    display_vertical=False, sortable=False, columns=None, meta=None
+):
     if columns is None:
         columns = list()
     return {
@@ -115,8 +116,8 @@ class TableConfigurationView(QueryBaseView):
                         visible=person_set.get("default_visible", True),
                         meta=person_set.get("meta"),
                         columns=[column(
-                            f"{dataset_id}.{set_id}.{statistic.id}",
-                            statistic.display_name,
+                            f"{dataset_id}.{set_id}.{statistic['id']}",
+                            statistic["display_name"],
                             visible=statistic.get("default_visible", True),
                             meta=statistic.get("meta"),
                             clickable="goToQuery",
@@ -129,7 +130,9 @@ class TableConfigurationView(QueryBaseView):
 
         if configuration.get("order"):
             category_order = ["geneSymbol", *configuration["order"]]
-            response["columns"].sort(key=lambda col: category_order.index(col['id']))
+            response["columns"].sort(
+                key=lambda col: category_order.index(col["id"])
+            )
 
         return Response(response)
 
