@@ -178,15 +178,22 @@ class GPFConfigParser:
             "loading config %s with default configuration file %s;",
             filename, default_config_filename)
 
-        config = cls.parse_and_interpolate_file(filename)
-        if default_config_filename:
-            assert default_config is None
-            default_config = cls.parse_and_interpolate_file(
-                default_config_filename)
+        try:
+            config = cls.parse_and_interpolate_file(filename)
+            if default_config_filename:
+                assert default_config is None
+                default_config = cls.parse_and_interpolate_file(
+                    default_config_filename)
 
-        conf_dir = os.path.dirname(filename)
-        return cls.process_config(
-            config, schema, default_config, conf_dir)
+            conf_dir = os.path.dirname(filename)
+            return cls.process_config(
+                config, schema, default_config, conf_dir)
+        except ValueError as ex:
+            logger.error(
+                "unable to parse configuration: %s with default config %s "
+                "(%s) and schema %s", filename,
+                default_config_filename, default_config, schema)
+            raise ex
 
     @classmethod
     def load_directory_configs(

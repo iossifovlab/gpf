@@ -1,0 +1,4 @@
+id: "seqpipe"
+type: "url"
+url: "https://grr.seqpipe.org"
+cache_dir: "/wd/temp/grrCache"
