@@ -434,11 +434,11 @@ class PhenotypeData(ABC):
             roles=roles,
             default_filter=default_filter)
 
-        df = cast(pd.DataFrame, persons_df.join(
+        df = persons_df.join(
             value_df.set_index("person_id"),
             on="person_id",
             how="right",
-            rsuffix="_val"))  # type: ignore
+            rsuffix="_val")  # type: ignore
         df = df.set_index("person_id")
         df = df.reset_index()
 
@@ -1097,12 +1097,12 @@ class PhenotypeGroup(PhenotypeData):
 
         res_df = dfs[0]
         for i, df in enumerate(dfs[1:]):
-            res_df = cast(pd.DataFrame, res_df.join(
+            res_df = res_df.join(
                 df.set_index("person_id"),
                 on="person_id",
                 how="outer",
                 rsuffix="_val_{}".format(i),
-            ))  # type: ignore
+            )  # type: ignore
 
         return res_df
 
