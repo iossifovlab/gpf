@@ -1,6 +1,136 @@
 # Workflow for Management of Genomic Resources Repository
 
 
+
+## Available commands in `grr_manage`
+
+```
+grr_manage --help
+usage: grr_manage [-h] [--version] [--verbose] {list,repo-manifest,resource-manifest,repo-histograms,resource-histograms,repo-repair,resource-repair} ...
+
+Genomic Resource Repository Management Tool
+
+positional arguments:
+  {list,repo-manifest,resource-manifest,repo-histograms,resource-histograms,repo-repair,resource-repair}
+                        Command to execute
+    list                List a GR Repo
+    repo-manifest       Create/update manifests for whole GRR
+    resource-manifest   Create/update manifests for a resource
+    repo-histograms     Build the histograms for a resource
+    resource-histograms
+                        Build the histograms for a resource
+    repo-repair         Update/rebuild manifest and histograms whole GRR
+    resource-repair     Update/rebuild manifest and histograms for a resource
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --version             Prints GPF version and exists.
+  --verbose, -v, -V
+```
+
+### `resource-repair` command
+
+```
+grr_manage resource-repair --help
+usage: grr_manage resource-repair 
+      [-h] [-R REPOSITORY] [-r RESOURCE] [-n] [-f] [-d] [-D] [--region-size REGION_SIZE] 
+      [-j JOBS] [--kubernetes] [--envvars [ENVVARS ...]] [--container-image CONTAINER_IMAGE] 
+      [--image-pull-secrets [IMAGE_PULL_SECRETS ...]] [--sge] [--dashboard-port DASHBOARD_PORT] 
+      [--log-dir LOG_DIR]
+
+optional arguments:
+  -h, --help            show this help message and exit
+
+Repository/Resource:
+  -R REPOSITORY, --repository REPOSITORY
+                        URL to the genomic resources repository. If not specified the tool assumes a local 
+                        file system repository and starts looking for .CONTENTS file from the current working 
+                        directory up to the root directory. If found the directory is assumed for root 
+                        repository directory; otherwise error is reported.
+  -r RESOURCE, --resource RESOURCE
+                        Specifies the resource whose manifest we want to rebuild. If not specified the 
+                        tool assumes local filesystem repository and starts looking for 'genomic_resource.yaml' 
+                        file from current working directory up to the root directory. If found the 
+                        directory is assumed for a resource directory; otherwise error is reported.
+
+Force/Dry run:
+  -n, --dry-run         only checks if the manifest update is needed whithout actually updating it
+  -f, --force           ignore resource state and rebuild manifest
+
+DVC params:
+  -d, --with-dvc        use '.dvc' files if present to get md5 sum of resource files (default)
+  -D, --without-dvc     calculate the md5 sum if necessary of resource files; do not use '.dvc' 
+                        files to get md5 sum of resource files
+
+Histograms:
+  --region-size REGION_SIZE
+                        Number of records to process in parallel
+
+Dask cluster:
+  -j JOBS, --jobs JOBS  Number of jobs to run in parallel. Defaults to the number of processors 
+                        on the machine
+  --kubernetes          Run computation in a kubernetes cluster
+  --envvars [ENVVARS ...]
+                        Environment variables to pass to kubernetes workers
+  --container-image CONTAINER_IMAGE
+                        Docker image to use when submitting jobs to kubernetes
+  --image-pull-secrets [IMAGE_PULL_SECRETS ...]
+                        Secrets to use when pulling the docker image
+  --sge                 Run computation on a Sun Grid Engine cluster. When using this command it is
+                        highly advisable to manually specify the number of workers using -j
+  --dashboard-port DASHBOARD_PORT
+                        Port on which to run Dask Dashboard
+  --log-dir LOG_DIR     Directory where to store SGE worker logs
+```
+
+### `repo-repair` command
+
+```
+grr_manage repo-repair --help
+usage: grr_manage repo-repair [-h] [-R REPOSITORY] [-n] [-f] [-d] [-D] [--region-size REGION_SIZE] 
+                        [-j JOBS] [--kubernetes] [--envvars [ENVVARS ...]] [--container-image CONTAINER_IMAGE]
+                        [--image-pull-secrets [IMAGE_PULL_SECRETS ...]] [--sge] [--dashboard-port DASHBOARD_PORT] 
+                        [--log-dir LOG_DIR]
+
+optional arguments:
+  -h, --help            show this help message and exit
+
+Repository/Resource:
+  -R REPOSITORY, --repository REPOSITORY
+                        URL to the genomic resources repository. If not specified the tool assumes a local file 
+                        system repository and starts looking for .CONTENTS file from the current working directory 
+                        up to the root directory. If found the directory is assumed for root repository directory; 
+                        otherwise error is reported.
+
+Force/Dry run:
+  -n, --dry-run         only checks if the manifest update is needed whithout actually updating it
+  -f, --force           ignore resource state and rebuild manifest
+
+DVC params:
+  -d, --with-dvc        use '.dvc' files if present to get md5 sum of resource files (default)
+  -D, --without-dvc     calculate the md5 sum if necessary of resource files; do not use '.dvc' files to get md5 
+                        sum of resource files
+
+Histograms:
+  --region-size REGION_SIZE
+                        Number of records to process in parallel
+
+Dask cluster:
+  -j JOBS, --jobs JOBS  Number of jobs to run in parallel. Defaults to the number of processors on the machine
+  --kubernetes          Run computation in a kubernetes cluster
+  --envvars [ENVVARS ...]
+                        Environment variables to pass to kubernetes workers
+  --container-image CONTAINER_IMAGE
+                        Docker image to use when submitting jobs to kubernetes
+  --image-pull-secrets [IMAGE_PULL_SECRETS ...]
+                        Secrets to use when pulling the docker image
+  --sge                 Run computation on a Sun Grid Engine cluster. When using this command it is highly advisable
+                        to manually specify the number of workers using -j
+  --dashboard-port DASHBOARD_PORT
+                        Port on which to run Dask Dashboard
+  --log-dir LOG_DIR     Directory where to store SGE worker logs
+```
+
 ## Management of genomic resources
 
 We assume that our genomic resources repositories are managed by a combination
