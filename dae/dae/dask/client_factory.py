@@ -17,32 +17,41 @@ class DaskClient:
     @staticmethod
     def add_arguments(parser):
         """Configure argparser with Dask client parameters."""
-        parser.add_argument("-j", "--jobs", type=int, default=None,
-                            help="Number of jobs to run in parallel. \
-Defaults to the number of processors on the machine")
-        parser.add_argument("--kubernetes", default=False,
-                            action="store_true",
-                            help="Run computation in a kubernetes cluster")
-        parser.add_argument("--envvars", nargs="*", default=[],
-                            help="Environment variables to pass to "
-                            "kubernetes workers")
-        parser.add_argument("--container-image",
-                            default="registry.seqpipe.org/seqpipe-gpf:"
-                            "dask-for-hist-compute_fc69179-14",
-                            help="Docker image to use when submitting "
-                            "jobs to kubernetes")
-        parser.add_argument("--image-pull-secrets", nargs="*",
-                            help="Secrets to use when pulling "
-                            "the docker image")
-        parser.add_argument("--sge", default=False,
-                            action="store_true",
-                            help="Run computation on a Sun Grid Engine \
-cluster. When using this command it is highly advisable to manually specify \
-the number of workers using -j")
-        parser.add_argument("--dashboard-port", type=int,
-                            help="Port on which to run Dask Dashboard")
-        parser.add_argument("--log-dir",
-                            help="Directory where to store SGE worker logs")
+        group = parser.add_argument_group(title="Dask cluster")
+        group.add_argument(
+            "-j", "--jobs", type=int, default=None,
+            help="Number of jobs to run in parallel. Defaults to the number "
+            "of processors on the machine")
+        group.add_argument(
+            "--kubernetes", default=False,
+            action="store_true",
+            help="Run computation in a kubernetes cluster")
+        group.add_argument(
+            "--envvars", nargs="*", default=[],
+            help="Environment variables to pass to "
+            "kubernetes workers")
+        group.add_argument(
+            "--container-image",
+            default="registry.seqpipe.org/seqpipe-gpf:"
+            "dask-for-hist-compute_fc69179-14",
+            help="Docker image to use when submitting "
+            "jobs to kubernetes")
+        group.add_argument(
+            "--image-pull-secrets", nargs="*",
+            help="Secrets to use when pulling "
+            "the docker image")
+        group.add_argument(
+            "--sge", default=False,
+            action="store_true",
+            help="Run computation on a Sun Grid Engine cluster. When using "
+            "this command it is highly advisable to manually specify "
+            "the number of workers using -j")
+        group.add_argument(
+            "--dashboard-port", type=int,
+            help="Port on which to run Dask Dashboard")
+        group.add_argument(
+            "--log-dir",
+            help="Directory where to store SGE worker logs")
 
     @classmethod
     def from_arguments(cls, args: argparse.Namespace) -> Optional[DaskClient]:

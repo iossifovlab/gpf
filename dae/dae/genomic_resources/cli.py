@@ -3,7 +3,9 @@ import os
 import sys
 import logging
 import argparse
+import pathlib
 from typing import Dict
+from urllib.parse import urlparse
 
 import yaml
 
@@ -11,9 +13,13 @@ from dae.dask.client_factory import DaskClient
 
 from dae.__version__ import VERSION, RELEASE
 from dae.genomic_resources.repository import \
+    GR_CONF_FILE_NAME, \
+    GR_CONTENTS_FILE_NAME, \
     GenomicResource, \
     ReadWriteRepositoryProtocol, \
-    ManifestEntry
+    ManifestEntry, \
+    parse_resource_id_version, \
+    version_tuple_to_string
 from dae.utils.verbosity_configuration import VerbosityConfiguration
 
 from dae.genomic_resources.fsspec_protocol import build_fsspec_protocol
@@ -23,35 +29,67 @@ from dae.genomic_resources.histogram import HistogramBuilder
 logger = logging.getLogger(__file__)
 
 
-def _configure_hist_subparser(subparsers):
-    parser_hist = subparsers.add_parser("histogram",
-                                        help="Build the histograms \
-                                        for a resource")
-    parser_hist.add_argument(
-        "repo_url", type=str,
-        help="Path to the genomic resources repository")
-    parser_hist.add_argument("-r", "--resource", type=str,
-                             help="resource to generate histograms for")
+def _add_repository_resource_parameters_group(parser, use_resource=True):
 
-    VerbosityConfiguration.set_argumnets(parser_hist)
-    parser_hist.add_argument("--region-size", type=int, default=3_000_000,
-                             help="Number of records to process in parallel")
-    parser_hist.add_argument("-f", "--force", default=False,
-                             action="store_true", help="Ignore histogram "
-                             "hashes and always precompute all histograms")
-    parser_hist.add_argument(
+    group = parser.add_argument_group(title="Repository/Resource")
+    group.add_argument(
+        "-R", "--repository", type=str,
+        default=None,
+        help="URL to the genomic resources repository. If not specified "
+        "the tool assumes a local file system repository and starts looking "
+        "for .CONTENTS file from the current working directory up to the root "
+        "directory. If found the directory is assumed for root repository "
+        "directory; otherwise error is reported.")
+    if use_resource:
+        group.add_argument(
+            "-r", "--resource", type=str,
+            help="Specifies the resource whose manifest we want to rebuild. "
+            "If not specified the tool assumes local filesystem repository "
+            "and starts looking for 'genomic_resource.yaml' file from "
+            "current working directory up to the root directory. If found "
+            "the directory is assumed for a resource directory; otherwise "
+            "error is reported.")
+
+
+def _add_dry_run_and_force_parameters_group(parser):
+    group = parser.add_argument_group(title="Force/Dry run")
+    group.add_argument(
         "-n", "--dry-run", default=False, action="store_true",
-        help="only checks if the histograms update is needed whithout "
+        help="only checks if the manifest update is needed whithout "
         "actually updating it")
-    DaskClient.add_arguments(parser_hist)
+    group.add_argument(
+        "-f", "--force", default=False,
+        action="store_true",
+        help="ignore resource state and rebuild manifest")
+
+
+def _add_dvc_parameters_group(parser):
+    group = parser.add_argument_group(title="DVC params")
+    group.add_argument(
+        "-d", "--with-dvc", default=True,
+        action="store_true", dest="use_dvc",
+        help="use '.dvc' files if present to get md5 sum of resource files "
+        "(default)")
+    group.add_argument(
+        "-D", "--without-dvc", default=True,
+        action="store_false", dest="use_dvc",
+        help="calculate the md5 sum if necessary of resource files; "
+        "do not use '.dvc' files to get md5 sum of resource files")
+
+
+def _add_hist_parameters_group(parser):
+    group = parser.add_argument_group(title="Histograms")
+    group.add_argument(
+        "--region-size", type=int, default=3_000_000,
+        help="Number of records to process in parallel")
 
 
 def _configure_list_subparser(subparsers):
-    parser_list = subparsers.add_parser("list", help="List a GR Repo")
-    parser_list.add_argument(
-        "repo_url", type=str,
-        help="Path to the genomic resources repository")
-    VerbosityConfiguration.set_argumnets(parser_list)
+    parser = subparsers.add_parser("list", help="List a GR Repo")
+    parser.add_argument(
+        "-R", "--repository", type=str,
+        default=None,
+        help="URL to the genomic resources repository")
 
 
 def _run_list_command(proto, _args):
@@ -63,88 +101,70 @@ def _run_list_command(proto, _args):
             f"{res.get_id()}")
 
 
-def _configure_manifest_subparser(subparsers):
-    parser_manifest = subparsers.add_parser(
-        "manifest", help="Create manifest for a resource")
-    VerbosityConfiguration.set_argumnets(parser_manifest)
-    parser_manifest.add_argument(
-        "repo_url", type=str,
-        help="Path to the genomic resources repository")
-    parser_manifest.add_argument(
-        "-r", "--resource", type=str,
-        help="specifies a resource whose manifest we want to rebuild")
-    parser_manifest.add_argument(
-        "-n", "--dry-run", default=False, action="store_true",
-        help="only checks if the manifest update is needed whithout "
-        "actually updating it")
-    parser_manifest.add_argument(
-        "-f", "--force", default=False,
-        action="store_true",
-        help="ignore resource state and rebuild manifest")
-
-    parser_manifest.add_argument(
-        "-d", "--with-dvc", default=True,
-        action="store_true", dest="use_dvc",
-        help="use '.dvc' files if present to get md5 sum of resource files")
-    parser_manifest.add_argument(
-        "-D", "--without-dvc", default=True,
-        action="store_false", dest="use_dvc",
-        help="calculate the md5 sum if necessary of resource files; "
-        "do not use '.dvc' files to get md5 sum of resource files")
-
-
-def _configure_repair_subparser(subparsers):
+def _configure_repo_manifest_subparser(subparsers):
     parser = subparsers.add_parser(
-        "repair", help="Update/rebuild manifest and histograms for a resource")
-    VerbosityConfiguration.set_argumnets(parser)
-    parser.add_argument(
-        "repo_url", type=str,
-        help="Path to the genomic resources repository")
-    parser.add_argument(
-        "-r", "--resource", type=str,
-        help="specifies a resource whose manifest/histograms we want "
-        "to rebuild; if not specified the command will run on all "
-        "resources in the repository")
-    parser.add_argument(
-        "-n", "--dry-run", default=False, action="store_true",
-        help="only checks if the manifest and/or histograms update is "
-        "needed whithout actually updating it")
-    parser.add_argument(
-        "-f", "--force", default=False,
-        action="store_true",
-        help="ignore resource state and rebuild manifest and histograms")
+        "repo-manifest", help="Create/update manifests for whole GRR")
 
-    parser.add_argument(
-        "-d", "--with-dvc", default=True,
-        action="store_true", dest="use_dvc",
-        help="use '.dvc' files if present to get md5 sum of resource files")
-    parser.add_argument(
-        "-D", "--without-dvc", default=True,
-        action="store_false", dest="use_dvc",
-        help="calculate the md5 sum if necessary of resource files; "
-        "do not use '.dvc' files to get md5 sum of resource files")
+    _add_repository_resource_parameters_group(parser, use_resource=False)
+    _add_dry_run_and_force_parameters_group(parser)
+    _add_dvc_parameters_group(parser)
 
-    parser.add_argument(
-        "--region-size", type=int, default=3_000_000,
-        help="split the resource into regions with region length for "
-        "parallel processing")
+
+def _configure_resource_manifest_subparser(subparsers):
+    parser = subparsers.add_parser(
+        "resource-manifest", help="Create/update manifests for a resource")
+
+    _add_repository_resource_parameters_group(parser)
+    _add_dry_run_and_force_parameters_group(parser)
+    _add_dvc_parameters_group(parser)
+
+
+def _configure_repo_hist_subparser(subparsers):
+    parser_hist = subparsers.add_parser(
+        "repo-histograms",
+        help="Build the histograms for a resource")
+
+    _add_repository_resource_parameters_group(parser_hist, use_resource=False)
+    _add_dry_run_and_force_parameters_group(parser_hist)
+    _add_hist_parameters_group(parser_hist)
+
+    DaskClient.add_arguments(parser_hist)
+
+
+def _configure_resource_hist_subparser(subparsers):
+    parser_hist = subparsers.add_parser(
+        "resource-histograms",
+        help="Build the histograms for a resource")
+
+    _add_repository_resource_parameters_group(parser_hist)
+    _add_dry_run_and_force_parameters_group(parser_hist)
+    _add_hist_parameters_group(parser_hist)
+
+    DaskClient.add_arguments(parser_hist)
+
+
+def _configure_repo_repair_subparser(subparsers):
+    parser = subparsers.add_parser(
+        "repo-repair",
+        help="Update/rebuild manifest and histograms whole GRR")
+    _add_repository_resource_parameters_group(parser, use_resource=False)
+    _add_dry_run_and_force_parameters_group(parser)
+    _add_dvc_parameters_group(parser)
+    _add_hist_parameters_group(parser)
 
     DaskClient.add_arguments(parser)
 
 
-def _get_resources_list(proto, **kwargs):
-    res_id = kwargs.get("resource")
-    if res_id is not None:
-        res = proto.find_resource(res_id)
-        if res is None:
-            logger.error(
-                "resource %s not found in repository %s",
-                res_id, proto.url)
-            sys.exit(1)
-        resources = [res]
-    else:
-        resources = list(proto.get_all_resources())
-    return resources
+def _configure_resource_repair_subparser(subparsers):
+    parser = subparsers.add_parser(
+        "resource-repair",
+        help="Update/rebuild manifest and histograms for a resource")
+    _add_repository_resource_parameters_group(parser)
+    _add_dry_run_and_force_parameters_group(parser)
+    _add_dvc_parameters_group(parser)
+    _add_hist_parameters_group(parser)
+
+    DaskClient.add_arguments(parser)
 
 
 def collect_dvc_entries(
@@ -176,7 +196,7 @@ def collect_dvc_entries(
     return result
 
 
-def _run_resource_manifest_command(proto, res, dry_run, force, use_dvc):
+def _do_resource_manifest_command(proto, res, dry_run, force, use_dvc):
     prebuild_entries = {}
     if use_dvc:
         prebuild_entries = collect_dvc_entries(proto, res)
@@ -193,11 +213,11 @@ def _run_resource_manifest_command(proto, res, dry_run, force, use_dvc):
             f"<{res.get_genomic_resource_id_version()}> " \
             f"should be updated; " \
             f"entries to update in manifest " \
-            f"{manifest_update.entries_to_update}"
+            f"{sorted(manifest_update.entries_to_update)}"
         if manifest_update.entries_to_delete:
             msg = f"{msg}; " \
                 f"entries to delete from manifest " \
-                f"{manifest_update.entries_to_delete}"
+                f"{sorted(manifest_update.entries_to_delete)}"
         print(msg, file=sys.stderr)
 
     if dry_run:
@@ -220,9 +240,7 @@ def _run_resource_manifest_command(proto, res, dry_run, force, use_dvc):
         proto.save_manifest(res, manifest)
 
 
-def _run_manifest_command(proto, **kwargs):
-    resources = _get_resources_list(proto, **kwargs)
-
+def _run_repo_manifest_command(proto, **kwargs):
     dry_run = kwargs.get("dry_run", False)
     force = kwargs.get("force", False)
     use_dvc = kwargs.get("use_dvc", True)
@@ -231,13 +249,54 @@ def _run_manifest_command(proto, **kwargs):
         logger.warning("please choose one of 'dry_run' and 'force' options")
         return
 
-    for res in resources:
-        _run_resource_manifest_command(proto, res, dry_run, force, use_dvc)
+    for res in proto.get_all_resources():
+        _do_resource_manifest_command(proto, res, dry_run, force, use_dvc)
 
     proto.build_content_file()
 
 
-def _run_resource_hist_command(  # pylint: disable=too-many-arguments
+def _find_resource(proto, repo_url, **kwargs):
+    resource_id = kwargs.get("resource")
+    if resource_id is not None:
+        res = proto.get_resource(resource_id)
+    else:
+        if urlparse(repo_url).scheme not in {"file", ""}:
+            logger.error(
+                "resource not specified but the repository URL %s "
+                "is not local filesystem repository", repo_url)
+            return None
+
+        cwd = os.getcwd()
+        resource_dir = _find_directory_with_filename(GR_CONF_FILE_NAME, cwd)
+        if resource_dir is None:
+            logger.error("Can't find resource starting from %s", cwd)
+            return None
+
+        rid_ver = os.path.relpath(resource_dir, repo_url)
+        resource_id, version = parse_resource_id_version(rid_ver)
+
+        res = proto.get_resource(
+            resource_id,
+            version_constraint=f"={version_tuple_to_string(version)}")
+    return res
+
+
+def _run_resource_manifest_command(proto, repo_url, **kwargs):
+    dry_run = kwargs.get("dry_run", False)
+    force = kwargs.get("force", False)
+    use_dvc = kwargs.get("use_dvc", True)
+
+    if dry_run and force:
+        logger.warning("please choose one of 'dry_run' and 'force' options")
+        return
+    res = _find_resource(proto, repo_url, **kwargs)
+    if res is None:
+        logger.error("resource not found...")
+        return
+    _do_resource_manifest_command(proto, res, dry_run, force, use_dvc)
+
+
+def _do_resource_hist_command(  # pylint: disable=too-many-arguments
         client, proto, res, dry_run, force, region_size):
     if res.get_type() not in {
             "position_score", "np_score", "allele_score"}:
@@ -262,12 +321,10 @@ def _run_resource_hist_command(  # pylint: disable=too-many-arguments
     hist_out_dir = "histograms"
     logger.info("Saving histograms in %s", hist_out_dir)
     builder.save(histograms, hist_out_dir)
-    proto.update_manifest(res)
+    proto.save_manifest(res, proto.update_manifest(res))
 
 
-def _run_hist_command(proto, region_size, **kwargs):
-    resources = _get_resources_list(proto, **kwargs)
-
+def _run_repo_hist_command(proto, region_size, **kwargs):
     dry_run = kwargs.get("dry_run", False)
     force = kwargs.get("force", False)
     if dry_run and force:
@@ -279,15 +336,34 @@ def _run_hist_command(proto, region_size, **kwargs):
         sys.exit(1)
 
     with dask_client as client:
-        for res in resources:
-            _run_resource_hist_command(
+        for res in proto.get_all_resources():
+            _do_resource_hist_command(
                 client, proto, res, dry_run, force, region_size)
-    proto.build_content_file()
+    if not dry_run:
+        proto.build_content_file()
 
 
-def _run_repair_command(proto, region_size, **kwargs):
-    resources = _get_resources_list(proto, **kwargs)
+def _run_resource_hist_command(proto, repo_url, region_size, **kwargs):
+    dry_run = kwargs.get("dry_run", False)
+    force = kwargs.get("force", False)
+    if dry_run and force:
+        logger.warning("please choose one of 'dry_run' and 'force' options")
+        return
 
+    res = _find_resource(proto, repo_url, **kwargs)
+    if res is None:
+        logger.error("unable to find resource...")
+        return
+    dask_client = DaskClient.from_dict(kwargs)
+    if dask_client is None:
+        sys.exit(1)
+
+    with dask_client as client:
+        _do_resource_hist_command(
+            client, proto, res, dry_run, force, region_size)
+
+
+def _run_repo_repair_command(proto, region_size, **kwargs):
     dry_run = kwargs.get("dry_run", False)
     force = kwargs.get("force", False)
     use_dvc = kwargs.get("use_dvc", True)
@@ -300,12 +376,38 @@ def _run_repair_command(proto, region_size, **kwargs):
     if dask_client is None:
         sys.exit(1)
     with dask_client as client:
-        for res in resources:
-            _run_resource_manifest_command(
+        for res in proto.get_all_resources():
+            _do_resource_manifest_command(
                 proto, res, dry_run, force, use_dvc)
-            _run_resource_hist_command(
+            _do_resource_hist_command(
                 client, proto, res, dry_run, force, region_size)
-    proto.build_content_file()
+    if not dry_run:
+        proto.build_content_file()
+
+
+def _run_resource_repair_command(proto, repo_url, region_size, **kwargs):
+    dry_run = kwargs.get("dry_run", False)
+    force = kwargs.get("force", False)
+    use_dvc = kwargs.get("use_dvc", True)
+
+    if dry_run and force:
+        logger.warning("please choose one of 'dry_run' and 'force' options")
+        return
+
+    res = _find_resource(proto, repo_url, **kwargs)
+    if res is None:
+        logger.error("unable to find a resource")
+        sys.exit(1)
+
+    dask_client = DaskClient.from_dict(kwargs)
+    if dask_client is None:
+        sys.exit(1)
+
+    with dask_client as client:
+        _do_resource_manifest_command(
+            proto, res, dry_run, force, use_dvc)
+        _do_resource_hist_command(
+            client, proto, res, dry_run, force, region_size)
 
 
 def cli_manage(cli_args=None):
@@ -318,30 +420,48 @@ def cli_manage(cli_args=None):
     parser.add_argument(
         "--version", action="store_true", default=False,
         help="Prints GPF version and exists.")
-    subparsers = parser.add_subparsers(dest="command",
-                                       help="Command to execute")
+    VerbosityConfiguration.set_argumnets(parser)
 
-    _configure_list_subparser(subparsers)
-    _configure_manifest_subparser(subparsers)
-    _configure_hist_subparser(subparsers)
-    _configure_repair_subparser(subparsers)
+    commands_parser = parser.add_subparsers(
+        dest="command", help="Command to execute")
+
+    _configure_list_subparser(commands_parser)
+    _configure_repo_manifest_subparser(commands_parser)
+    _configure_resource_manifest_subparser(commands_parser)
+    _configure_repo_hist_subparser(commands_parser)
+    _configure_resource_hist_subparser(commands_parser)
+    _configure_repo_repair_subparser(commands_parser)
+    _configure_resource_repair_subparser(commands_parser)
 
     args = parser.parse_args(cli_args)
     if args.version:
         print(f"GPF version: {VERSION} ({RELEASE})")
         sys.exit(0)
 
-    VerbosityConfiguration.set(args)
-    command, repo_url = args.command, args.repo_url
+    command, repo_url = args.command, args.repository
+
+    if args.repository is None:
+        repo_url = _find_directory_with_filename(GR_CONTENTS_FILE_NAME)
+        if repo_url is None:
+            logger.error(
+                "Can't find repository starting from: %s", os.getcwd())
+            sys.exit(1)
+        print("working with repository:", repo_url)
 
     proto = _create_proto(repo_url)
 
-    if command == "manifest":
-        _run_manifest_command(proto, **vars(args))
-    elif command == "histogram":
-        _run_hist_command(proto, **vars(args))
-    elif command == "repair":
-        _run_repair_command(proto, **vars(args))
+    if command == "repo-manifest":
+        _run_repo_manifest_command(proto, **vars(args))
+    elif command == "resource-manifest":
+        _run_resource_manifest_command(proto, repo_url, **vars(args))
+    elif command == "repo-histograms":
+        _run_repo_hist_command(proto, **vars(args))
+    elif command == "resource-histograms":
+        _run_resource_hist_command(proto, repo_url, **vars(args))
+    elif command == "repo-repair":
+        _run_repo_repair_command(proto, **vars(args))
+    elif command == "resource-repair":
+        _run_resource_repair_command(proto, repo_url, **vars(args))
     elif command == "list":
         _run_list_command(proto, args)
     else:
@@ -361,3 +481,21 @@ def _create_proto(repo_url):
             f"resource management works with RW protocols; "
             f"{proto.proto_id} ({proto.scheme}) is read only")
     return proto
+
+
+def _find_directory_with_filename(filename, cwd=None):
+    if cwd is None:
+        cwd = pathlib.Path().absolute()
+    else:
+        cwd = pathlib.Path(cwd).absolute()
+
+    pathname = cwd / filename
+    if pathname.exists():
+        return str(cwd)
+
+    for work_dir in cwd.parents:
+        pathname = work_dir / filename
+        if pathname.exists():
+            return str(work_dir)
+
+    return None

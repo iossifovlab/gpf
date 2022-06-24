@@ -137,7 +137,7 @@ def build_test_resource(
     return repo.get_resource("t")
 
 
-def tabix_to_resource(tabix_source, resource, filename):
+def tabix_to_resource(tabix_source, resource, filename, update_repo=True):
     """Store a tabix file into a resource."""
     tabix_filename, index_filename = tabix_source
     proto = resource.proto
@@ -152,6 +152,7 @@ def tabix_to_resource(tabix_source, resource, filename):
         data = infile.read()
         outfile.write(data)
 
-    proto.save_manifest(resource, proto.build_manifest(resource))
-    proto.invalidate()
-    proto.build_content_file()
+    if update_repo:
+        proto.save_manifest(resource, proto.build_manifest(resource))
+        proto.invalidate()
+        proto.build_content_file()

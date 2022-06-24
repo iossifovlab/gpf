@@ -1,6 +1,7 @@
-import pytest
-
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
 import os
+
+import pytest
 
 from dae.genomic_resources.gene_models import load_gene_models_from_file
 from dae.genomic_resources.gene_models import _open_file
@@ -12,10 +13,10 @@ def test_gene_models_from_gtf(fixture_dirname):
 
     assert os.path.exists(gtf_filename)
 
-    gm = load_gene_models_from_file(gtf_filename, fileformat="gtf")
-    assert gm is not None
-    assert len(gm.transcript_models) == 12
-    assert len(gm.gene_models) == 12
+    gene_models = load_gene_models_from_file(gtf_filename, fileformat="gtf")
+    assert gene_models is not None
+    assert len(gene_models.transcript_models) == 12
+    assert len(gene_models.gene_models) == 12
 
 
 @pytest.mark.parametrize(
@@ -30,35 +31,35 @@ def test_gene_models_from_gtf_selenon(fixture_dirname, filename):
     gtf_filename = fixture_dirname(filename)
     print(gtf_filename)
 
-    gm = load_gene_models_from_file(gtf_filename, fileformat="gtf")
-    assert gm is not None
+    gene_models = load_gene_models_from_file(gtf_filename, fileformat="gtf")
+    assert gene_models is not None
 
 
 def test_gene_models_from_ref_gene_ref_seq(fixture_dirname):
     filename = fixture_dirname("gene_models/test_ref_gene.txt")
     assert os.path.exists(filename)
 
-    gm = load_gene_models_from_file(filename, fileformat="refseq")
-    assert len(gm.transcript_models) == 12
-    assert len(gm.gene_models) == 12
+    gene_models = load_gene_models_from_file(filename, fileformat="refseq")
+    assert len(gene_models.transcript_models) == 12
+    assert len(gene_models.gene_models) == 12
 
 
 def test_gene_models_from_ref_seq_orig(fixture_dirname):
     filename = fixture_dirname("gene_models/test_ref_seq_hg38.txt")
     assert os.path.exists(filename)
 
-    gm = load_gene_models_from_file(filename, fileformat="refseq")
-    assert gm is not None
-    assert len(gm.transcript_models) == 20
-    assert len(gm.gene_models) == 8
+    gene_models = load_gene_models_from_file(filename, fileformat="refseq")
+    assert gene_models is not None
+    assert len(gene_models.transcript_models) == 20
+    assert len(gene_models.gene_models) == 8
 
 
 def test_gene_models_from_gencode(fixture_dirname):
     filename = fixture_dirname("gene_models/test_gencode.gtf")
     assert os.path.exists(filename)
-    gm = load_gene_models_from_file(filename, "gtf")
-    assert len(gm.transcript_models) == 19
-    assert len(gm.gene_models) == 10
+    gene_models = load_gene_models_from_file(filename, "gtf")
+    assert len(gene_models.transcript_models) == 19
+    assert len(gene_models.gene_models) == 10
 
 
 @pytest.mark.parametrize(
@@ -71,9 +72,9 @@ def test_gene_models_from_gencode(fixture_dirname):
 def test_gene_models_from_ref_flat(fixture_dirname, filename):
     filename = fixture_dirname(filename)
     assert os.path.exists(filename)
-    gm = load_gene_models_from_file(filename, "refflat")
-    assert len(gm.transcript_models) == 19
-    assert len(gm.gene_models) == 19
+    gene_models = load_gene_models_from_file(filename, "refflat")
+    assert len(gene_models.transcript_models) == 19
+    assert len(gene_models.gene_models) == 19
 
 
 def test_gene_models_from_ccds(fixture_dirname):
@@ -82,14 +83,14 @@ def test_gene_models_from_ccds(fixture_dirname):
 
     assert os.path.exists(filename)
 
-    gm = load_gene_models_from_file(
+    gene_models = load_gene_models_from_file(
         filename, fileformat="ccds", gene_mapping_filename=gene_mapping_file)
-    assert len(gm.transcript_models) == 20
-    assert len(gm.gene_models) == 15
+    assert len(gene_models.transcript_models) == 20
+    assert len(gene_models.gene_models) == 15
 
-    assert gm is not None
-    assert len(gm.transcript_models) == 20
-    assert len(gm.gene_models) == 15
+    assert gene_models is not None
+    assert len(gene_models.transcript_models) == 20
+    assert len(gene_models.gene_models) == 15
 
 
 # def test_gene_models_probe_header(fixture_dirname):
@@ -107,36 +108,36 @@ def test_gene_models_from_known_gene(fixture_dirname):
 
     assert os.path.exists(filename)
 
-    gm = load_gene_models_from_file(
+    gene_models = load_gene_models_from_file(
         filename, gene_mapping_filename=gene_mapping_file,
         fileformat="knowngene"
     )
-    assert gm is not None
-    assert len(gm.transcript_models) == 20
-    assert len(gm.gene_models) == 14
+    assert gene_models is not None
+    assert len(gene_models.transcript_models) == 20
+    assert len(gene_models.gene_models) == 14
 
 
 def test_gene_models_from_default_ref_gene_2013(fixture_dirname):
     filename = fixture_dirname("gene_models/test_default_ref_gene_201309.txt")
     assert os.path.exists(filename)
 
-    gm = load_gene_models_from_file(filename, fileformat="default")
-    assert gm is not None
-    assert len(gm.transcript_models) == 19
-    assert len(gm.gene_models) == 19
+    gene_models = load_gene_models_from_file(filename, fileformat="default")
+    assert gene_models is not None
+    assert len(gene_models.transcript_models) == 19
+    assert len(gene_models.gene_models) == 19
 
 
 def test_gene_models_from_default_with_transcript_orig_id(fixture_dirname):
     filename = fixture_dirname(
         "gene_models/test_default_ref_gene_20190220.txt"
     )
-    gm1 = load_gene_models_from_file(filename, fileformat="default")
-    assert gm1 is not None
-    assert len(gm1.transcript_models) == 19
-    assert len(gm1.gene_models) == 19
+    gene_models1 = load_gene_models_from_file(filename, fileformat="default")
+    assert gene_models1 is not None
+    assert len(gene_models1.transcript_models) == 19
+    assert len(gene_models1.gene_models) == 19
 
-    for tm in gm1.transcript_models.values():
-        assert tm.tr_id != tm.tr_name
+    for transcript_model in gene_models1.transcript_models.values():
+        assert transcript_model.tr_id != transcript_model.tr_name
 
 
 @ pytest.mark.parametrize(
@@ -156,8 +157,8 @@ def test_gene_models_from_default_with_transcript_orig_id(fixture_dirname):
 def test_load_gene_models_from_file(fixture_dirname, filename, fileformat):
 
     filename = fixture_dirname(filename)
-    gm = load_gene_models_from_file(filename, fileformat=fileformat)
-    assert gm is not None
+    gene_models = load_gene_models_from_file(filename, fileformat=fileformat)
+    assert gene_models is not None
 
 
 @ pytest.mark.parametrize(
@@ -179,8 +180,9 @@ def test_infer_gene_models(fixture_dirname, filename, fileformat, expected):
 
     filename = fixture_dirname(filename)
     with _open_file(filename) as infile:
-        gm = load_gene_models_from_file(filename, fileformat=fileformat)
-        inferred_fileformat = gm._infer_gene_model_parser(
+        gene_models = load_gene_models_from_file(
+            filename, fileformat=fileformat)
+        inferred_fileformat = gene_models._infer_gene_model_parser(
             infile, fileformat=fileformat)
 
         assert inferred_fileformat is not None
@@ -198,8 +200,9 @@ def test_infer_gene_models_no_header(fixture_dirname, filename, fileformat):
 
     filename = fixture_dirname(filename)
     with _open_file(filename) as infile:
-        gm = load_gene_models_from_file(filename, fileformat=fileformat)
-        inferred_fileformat = gm._infer_gene_model_parser(infile)
+        gene_models = load_gene_models_from_file(
+            filename, fileformat=fileformat)
+        inferred_fileformat = gene_models._infer_gene_model_parser(infile)
         assert inferred_fileformat is not None
         assert inferred_fileformat == fileformat
 
@@ -207,9 +210,10 @@ def test_infer_gene_models_no_header(fixture_dirname, filename, fileformat):
 def test_load_ucscgenepred(fixture_dirname):
 
     filename = fixture_dirname("gene_models/genePred_100.txt.gz")
-    gm = load_gene_models_from_file(filename, fileformat="ucscgenepred")
-    assert gm is not None
-    assert "DDX11L1" in gm.gene_models
+    gene_models = load_gene_models_from_file(
+        filename, fileformat="ucscgenepred")
+    assert gene_models is not None
+    assert "DDX11L1" in gene_models.gene_models
 
 
 @pytest.mark.parametrize(
@@ -221,8 +225,8 @@ def test_load_ucscgenepred(fixture_dirname):
 def test_load_gene_models_no_header(fixture_dirname, filename, fileformat):
 
     filename = fixture_dirname(filename)
-    gm = load_gene_models_from_file(filename)
-    assert gm is not None
+    gene_models = load_gene_models_from_file(filename)
+    assert gene_models is not None
 
 
 @pytest.mark.parametrize(
@@ -245,37 +249,39 @@ def test_save_load_gene_models_from_file(
 ):
 
     filename = fixture_dirname(filename)
-    gm = load_gene_models_from_file(filename, fileformat=fileformat)
-    assert gm is not None
-    assert len(gm.transcript_models) > 0
+    gene_models = load_gene_models_from_file(filename, fileformat=fileformat)
+    assert gene_models is not None
+    assert len(gene_models.transcript_models) > 0
 
-    gm.save(temp_filename, gzipped=False)
+    gene_models.save(temp_filename, gzipped=False)
 
-    gm1 = load_gene_models_from_file(temp_filename, fileformat="default")
-    assert gm1 is not None
+    gene_models1 = load_gene_models_from_file(
+        temp_filename, fileformat="default")
+    assert gene_models1 is not None
 
-    for tr_id, tm in gm.transcript_models.items():
-        tm1 = gm1.transcript_models[tr_id]
+    for tr_id, transcript_model in gene_models.transcript_models.items():
+        transcript_model1 = gene_models1.transcript_models[tr_id]
 
-        assert tm.tr_id == tm1.tr_id
-        assert tm.tr_name == tm1.tr_name
-        assert tm.gene == tm1.gene
-        assert tm.chrom == tm1.chrom
-        assert tm.cds == tm1.cds
-        assert tm.strand == tm1.strand
-        assert tm.tx == tm1.tx
+        assert transcript_model.tr_id == transcript_model1.tr_id
+        assert transcript_model.tr_name == transcript_model1.tr_name
+        assert transcript_model.gene == transcript_model1.gene
+        assert transcript_model.chrom == transcript_model1.chrom
+        assert transcript_model.cds == transcript_model1.cds
+        assert transcript_model.strand == transcript_model1.strand
+        assert transcript_model.tx == transcript_model1.tx
 
         # TODO: THESE DON'T WORK (WITH GTF??)! WHY???
-        # assert len(tm.utrs) == len(tm1.utrs)
-        # assert tm.utrs == tm1.utrs
-        # assert tm.start_codon == tm1.start_codon
-        # assert tm.stop_codon == tm1.stop_codon
+        # assert len(transcript_model.utrs) == len(transcript_model1.utrs)
+        # assert transcript_model.utrs == transcript_model1.utrs
+        # assert transcript_model.start_codon == transcript_model1.start_codon
+        # assert transcript_model.stop_codon == transcript_model1.stop_codon
 
-        assert len(tm.exons) == len(tm1.exons)
-        for index, (exon, exon1) in enumerate(zip(tm.exons, tm1.exons)):
+        assert len(transcript_model.exons) == len(transcript_model1.exons)
+        for index, (exon, exon1) in enumerate(zip(
+                transcript_model.exons, transcript_model1.exons)):
             assert exon.start == exon1.start, (
-                tm.exons[: index + 2],
-                tm1.exons[: index + 2],
+                transcript_model.exons[: index + 2],
+                transcript_model1.exons[: index + 2],
             )
             assert exon.stop == exon1.stop
             assert exon.frame == exon1.frame

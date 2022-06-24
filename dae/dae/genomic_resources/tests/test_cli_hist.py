@@ -1,11 +1,12 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-
+import os
 import textwrap
 
 import pytest
 
 from dae.genomic_resources.cli import cli_manage
-from dae.genomic_resources.repository import GR_CONF_FILE_NAME
+from dae.genomic_resources.repository import GR_CONF_FILE_NAME, \
+    GR_CONTENTS_FILE_NAME
 from dae.genomic_resources.testing import build_testing_protocol, \
     tabix_to_resource
 
@@ -44,43 +45,133 @@ def proto_fixture(tmp_path, tabix_file):
             """, seq_col=0, start_col=1, end_col=2),
         resource, "data.bgz"
     )
+    return proto
 
 
-def test_cli_histograms_simple(proto_fixture, tmp_path):
-
+def test_resource_histograms_simple(proto_fixture, dask_mocker, tmp_path):
+    # Given
+    proto_fixture.filesystem.delete(
+        os.path.join(proto_fixture.url, ".CONTENTS"))
     assert not (tmp_path / "one/histograms").exists()
-    cli_manage(["histogram", str(tmp_path), "-r", "one"])
+    assert not (tmp_path / GR_CONTENTS_FILE_NAME).exists()
+
+    # When
+    cli_manage(["resource-histograms", "-R", str(tmp_path), "-r", "one"])
+
+    # Then
     assert (tmp_path / "one/histograms").exists()
+    assert not (tmp_path / GR_CONTENTS_FILE_NAME).exists()
 
 
-def test_cli_histograms_dry_run(proto_fixture, tmp_path):
+def test_repo_histograms_simple(proto_fixture, dask_mocker, tmp_path):
 
+    # Given
+    proto_fixture.filesystem.delete(
+        os.path.join(proto_fixture.url, ".CONTENTS"))
     assert not (tmp_path / "one/histograms").exists()
-    cli_manage(["histogram", "--dry-run", str(tmp_path), "-r", "one"])
+    assert not (tmp_path / GR_CONTENTS_FILE_NAME).exists()
+
+    # When
+    cli_manage(["repo-histograms", "-R", str(tmp_path)])
+
+    # Then
+    assert (tmp_path / "one/histograms").exists()
+    assert (tmp_path / GR_CONTENTS_FILE_NAME).exists()
+
+
+def test_resource_histograms_dry_run(proto_fixture, dask_mocker, tmp_path):
+    # Given
+    assert not (tmp_path / "one/histograms").exists()
+
+    # When
+    cli_manage([
+        "resource-histograms", "--dry-run", "-R", str(tmp_path), "-r", "one"])
+
+    # Then
     assert not (tmp_path / "one/histograms").exists()
 
 
-def test_cli_histograms_need_update_message(proto_fixture, tmp_path, capsys):
-
+def test_repo_histograms_dry_run(proto_fixture, dask_mocker, tmp_path):
+    # Given
+    proto_fixture.filesystem.delete(
+        os.path.join(proto_fixture.url, ".CONTENTS"))
     assert not (tmp_path / "one/histograms").exists()
-    cli_manage(["histogram", "--dry-run", str(tmp_path), "-r", "one"])
+    assert not (tmp_path / GR_CONTENTS_FILE_NAME).exists()
 
+    # When
+    cli_manage([
+        "repo-histograms", "--dry-run", "-R", str(tmp_path)])
+
+    # Then
+    assert not (tmp_path / "one/histograms").exists()
+    assert not (tmp_path / GR_CONTENTS_FILE_NAME).exists()
+
+
+def test_resource_histograms_need_update_message(
+        proto_fixture, dask_mocker, tmp_path, capsys):
+
+    # Given
+    assert not (tmp_path / "one/histograms").exists()
+
+    # When
+    cli_manage([
+        "resource-histograms", "--dry-run", "-R", str(tmp_path), "-r", "one"])
+
+    # Then
     captured = capsys.readouterr()
-
     assert captured.err == \
         "resource <one> histograms " \
         "[{'score': 'phastCons100way', 'bins': 100}] need update\n"
 
 
-def test_cli_histograms_no_update_message(proto_fixture, tmp_path, capsys):
+def test_repo_histograms_need_update_message(
+        proto_fixture, dask_mocker, tmp_path, capsys):
+
     # Given
     assert not (tmp_path / "one/histograms").exists()
-    cli_manage(["histogram", str(tmp_path), "-r", "one"])
+
+    # When
+    cli_manage([
+        "repo-histograms", "--dry-run", "-R", str(tmp_path)])
+
+    # Then
+    captured = capsys.readouterr()
+    assert captured.err == \
+        "resource <one> histograms " \
+        "[{'score': 'phastCons100way', 'bins': 100}] need update\n"
+
+
+def test_resource_histograms_no_update_message(
+        proto_fixture, dask_mocker, tmp_path, capsys):
+    # Given
+    assert not (tmp_path / "one/histograms").exists()
+    cli_manage([
+        "resource-histograms", "-R", str(tmp_path), "-r", "one"])
     assert (tmp_path / "one/histograms").exists()
     _, _ = capsys.readouterr()
 
     # When
-    cli_manage(["histogram", "--dry-run", str(tmp_path), "-r", "one"])
+    cli_manage([
+        "resource-histograms", "--dry-run", "-R", str(tmp_path), "-r", "one"])
+
+    # Then
+    _, err = capsys.readouterr()
+    assert err == \
+        "histograms of <one> are up to date\n"
+
+
+def test_repo_histograms_no_update_message(
+        proto_fixture, dask_mocker, tmp_path, capsys):
+    # Given
+    assert not (tmp_path / "one/histograms").exists()
+    cli_manage([
+        "repo-histograms", "-R", str(tmp_path)])
+    assert (tmp_path / "one/histograms").exists()
+    _, _ = capsys.readouterr()
+
+    # When
+    cli_manage([
+        "repo-histograms", "--dry-run", "-R", str(tmp_path)])
 
     # Then
     _, err = capsys.readouterr()

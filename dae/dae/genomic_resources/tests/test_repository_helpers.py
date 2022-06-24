@@ -1,4 +1,5 @@
-# pylint: disable=redefined-outer-name,C0114,C0116,protected-access
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
+
 from dae.genomic_resources.repository import parse_gr_id_version_token
 from dae.genomic_resources.repository import \
     is_version_constraint_satisfied

@@ -527,6 +527,9 @@ class ReadWriteRepositoryProtocol(ReadOnlyRepositoryProtocol):
             if state is None:
                 entries_to_update.add(entry.name)
                 continue
+            if state.filename not in current_manifest:
+                entries_to_update.add(entry.name)
+                continue
             file_timestamp = self.get_resource_file_timestamp(
                 resource, entry.name)
             file_size = self.get_resource_file_size(
@@ -598,6 +601,11 @@ class ReadWriteRepositoryProtocol(ReadOnlyRepositoryProtocol):
             filename: str,
             **kwargs) -> ResourceFileState:
         """Build resource file state."""
+        if not self.file_exists(resource, filename):
+            raise ValueError(
+                f"can't build resource state for not existing resource file "
+                f"{resource.resource_id} > {filename}")
+
         md5 = kwargs.get("md5")
         timestamp = kwargs.get("timestamp")
         size = kwargs.get("size")
