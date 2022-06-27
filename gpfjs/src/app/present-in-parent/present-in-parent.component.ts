@@ -52,11 +52,16 @@ export class PresentInParentComponent extends StatefulComponent implements OnIni
 
   public updatePresentInParent(newValues: Set<string>): void {
     this.selectedValues = newValues;
-    if (this.selectedValues.size === 1 && this.selectedValues.has('neither')) {
+    if (newValues.size === 0) {
+      // restore default rarity types
+      this.rarityIntervalEnd = 1;
+      this.rarityIntervalStart = 0;
+      this.selectedRarityType = 'ultraRare';
+    } else if (this.selectedValues.size === 1 && this.selectedValues.has('neither')) {
       // 'neither' does not allow for selecting a rarity type
       this.selectedRarityType = '';
     } else if (this.selectedRarityType === '') {
-      // otherwise, set 'all' as default rarity type
+      // otherwise, set 'ultraRare' as default rarity type
       this.selectedRarityType = 'ultraRare';
     }
     this.updateState();
@@ -74,12 +79,8 @@ export class PresentInParentComponent extends StatefulComponent implements OnIni
 
   public updateRarityType(newValue: string): void {
     this.selectedRarityType = newValue;
-    if (this.selectedRarityType !== 'rare' && this.selectedRarityType !== 'interval') {
-      this.rarityIntervalEnd = 1;
-      this.rarityIntervalStart = 0;
-    } else if (this.selectedRarityType === 'rare') {
-      this.rarityIntervalStart = 0;
-    }
+    this.rarityIntervalEnd = 1;
+    this.rarityIntervalStart = 0;
     this.updateState();
   }
 
