@@ -5,10 +5,9 @@ from __future__ import annotations
 import copy
 import logging
 
-from typing import Dict, Iterator, Optional, Set, List, Tuple
+from typing import Dict, Iterable, Iterator, Optional, Set, List, Tuple
 from enum import Enum, auto
 from collections import defaultdict
-from collections.abc import Mapping
 
 import pandas as pd
 
@@ -506,7 +505,7 @@ class Family:
         )
 
 
-class FamiliesData(Mapping):
+class FamiliesData:
     """Defines class for handling families in a study."""
 
     def __init__(self):
@@ -657,8 +656,8 @@ class FamiliesData(Mapping):
     def __len__(self) -> int:
         return len(self._families)
 
-    def __iter__(self) -> Iterator[str]:
-        return iter(self._families.keys())
+    def __iter__(self) -> Iterator[Tuple[str, Family]]:
+        return iter(self._families.items())
 
     def __contains__(self, family_id) -> bool:
         return family_id in self._families
@@ -666,10 +665,10 @@ class FamiliesData(Mapping):
     def __delitem__(self, family_id) -> None:
         del self._families[family_id]
 
-    def keys(self):
+    def keys(self) -> Iterable[str]:
         return self._families.keys()
 
-    def values(self):
+    def values(self) -> Iterable[Family]:
         return self._families.values()
 
     def items(self):

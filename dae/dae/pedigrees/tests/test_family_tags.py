@@ -1,27 +1,22 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-import io
 
 import pytest
 
-from dae.genomic_resources.test_tools import convert_to_tab_separated
-
-from dae.pedigrees.loader import FamiliesLoader
 from dae.pedigrees.family_tags import FamilyTagsBuilder
+from dae.pedigrees.testing import build_family
 
 
 @pytest.fixture
 def fam1_fixture():
-    ped_content = io.StringIO(convert_to_tab_separated(
+    fam = build_family(
         """
             familyId personId dadId	 momId	sex status role
             f1       m1       0      0      2   1      mom
             f1       d1       0      0      1   1      dad
             f1       p1       d1     m1     2   2      prb
             f1       s1       d1     m1     1   1      sib
-        """))
-    families = FamiliesLoader(ped_content).load()
-    fam1 = families["f1"]
-    return fam1
+        """)
+    return fam
 
 
 def test_tag_nuclear_family_simple(fam1_fixture):
