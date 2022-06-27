@@ -105,7 +105,7 @@ describe('Pheno browser tests', () => {
 
   it('should download all instruments and validate whether they are equal to the reference data', () => {
     const downloadFilePath = Cypress.config('downloadsFolder') + '/measures_comp_all.csv';
-    const expectedFilePath = 'cypress/fixtures/pheno-browser/instrument_all.csv';
+    const expectedFilePath = 'cypress/fixtures/pheno-browser/measures_comp_all.csv';
 
     page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.phenotypeBrowser);
     page.instrumentsBox.select('All instruments');
