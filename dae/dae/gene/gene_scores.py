@@ -134,7 +134,7 @@ class GeneScore:
         aggregator = build_aggregator(aggregator_type)
 
         for gs in gene_symbols:
-            aggregator.add_value(self.get_gene_value(gs), key=gs)
+            aggregator.add(self.get_gene_value(gs), key=gs)
 
         return aggregator.get_final()
 

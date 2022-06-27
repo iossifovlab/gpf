@@ -1,4 +1,5 @@
 import logging
+import copy
 
 from typing import List, Dict, cast
 from .annotatable import Annotatable
@@ -19,10 +20,8 @@ class GeneScoreAnnotator(Annotator):
         resource_scores = GeneScore.load_gene_scores_from_resource(
             resource
         )
-        resource_scores = {gs.id: gs for gs in resource_scores}
+        resource_scores = {gs.score_id: gs for gs in resource_scores}
         self.gene_scores = resource_scores
-
-        self._build_aggregators()
 
         self._annotation_schema = None
 
@@ -59,10 +58,18 @@ class GeneScoreAnnotator(Annotator):
             },
             "resource_id": {"type": "string"},
             "input_gene_list": {"type": "string"},
-            "attributes": ATTRIBUTES_SCHEMA
+            "attributes": {
+                "type": "list",
+                "schema": None
+            }
         }
-        attributes_schema = schema["attributes"]["schema"]
-        attributes_schema["gene_aggregator"] = AGGREGATOR_SCHEMA
+
+        attr_schema = copy.deepcopy(ATTRIBUTES_SCHEMA)
+        schema["attributes"]["schema"] = attr_schema
+
+        attributes_schema = schema["attributes"]["schema"]["schema"]
+        aggr_schema = copy.deepcopy(AGGREGATOR_SCHEMA)
+        attributes_schema["gene_aggregator"] = aggr_schema
 
         validator = cls.ConfigValidator(schema)
         validator.allow_unknown = True
@@ -77,12 +84,10 @@ class GeneScoreAnnotator(Annotator):
         return cast(Dict, validator.document)
 
     def _do_annotate(self, annotatable: Annotatable, _context: Dict):
-        assert annotatable is not None
-
         attributes: dict = {}
 
         input_gene_list = self.config["input_gene_list"]
-        genes = annotatable.get(input_gene_list)
+        genes = _context.get(input_gene_list)
         assert genes is not None
         for attr in self.config["attributes"]:
             src = attr["source"]
