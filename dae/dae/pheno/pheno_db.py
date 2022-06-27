@@ -2,28 +2,27 @@ import os
 import math
 import logging
 from typing import Dict, Iterable, Any, List, cast
+from typing import Optional, Sequence, Union
 from abc import ABC, abstractmethod
+
+from collections import defaultdict
+from itertools import chain
+
+import csv
+from io import StringIO
 
 import pandas as pd
 from sqlalchemy.sql import select, text
 from sqlalchemy import not_, desc
-
-from collections import defaultdict
-
-import csv
-from io import StringIO
 
 from dae.pedigrees.family import Person, FamiliesData
 from dae.pheno.db import DbManager
 from dae.pheno.common import MeasureType
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.phenotype_data import pheno_conf_schema
-from itertools import chain
 
 from dae.variants.attributes import Sex, Status, Role
 from dae.utils.helpers import isnan
-
-from typing import Optional, Sequence, Union
 
 
 logger = logging.getLogger(__name__)
@@ -52,7 +51,7 @@ def get_pheno_browser_images_dir(dae_config=None):
     return browser_images_path
 
 
-class Instrument(object):
+class Instrument:
     """
     Instrument object represents phenotype instruments.
 
@@ -68,12 +67,10 @@ class Instrument(object):
         self.measures: Dict[str, Measure] = {}
 
     def __repr__(self):
-        return "Instrument({}, {})".format(
-            self.instrument_name, len(self.measures)
-        )
+        return f"Instrument({self.instrument_name}, {len(self.measures)})"
 
 
-class Measure(object):
+class Measure:
     """
     Measure objects represent phenotype measures.
 
@@ -103,18 +100,20 @@ class Measure(object):
         self.measure_name: str = name
         self.measure_type: MeasureType = MeasureType.other
         self.values_domain: Optional[str] = None
+        self.instrument_name: Optional[str] = None
+        self.description: Optional[str] = None
+        self.default_filter = None
+        self.min_value = None
+        self.max_value = None
 
     def __repr__(self):
-        return "Measure({}, {}, {})".format(
-            self.measure_id, self.measure_type, self.values_domain
-        )
+        return f"Measure({self.measure_id}, " \
+            f"{self.measure_type}, {self.values_domain})"
 
     @property
     def domain(self) -> Sequence[Union[str, float]]:
-        # FIXME !
-        # This must be re-done in a better way, perhaps by
-        # changing how the values domain string is stored in the database...
-        domain_list: Sequence[Union[str, float]] = list()
+        """Return measure values domain."""
+        domain_list: Sequence[Union[str, float]] = []
         if self.values_domain is not None:
             domain = (
                 self.values_domain.replace("[", "")
@@ -126,7 +125,7 @@ class Measure(object):
                 MeasureType.continuous,
                 MeasureType.ordinal,
             ):
-                return list(map(lambda x: float(x), domain_list))
+                return list(map(float, domain_list))
         return domain_list
 
     @classmethod
@@ -134,39 +133,38 @@ class Measure(object):
         """Create `Measure` object from pandas data frame row."""
         assert row["measure_type"] is not None
 
-        m = Measure(row["measure_id"], row["measure_name"])
-        m.instrument_name = row["instrument_name"]
-        m.measure_name = row["measure_name"]
-        m.measure_type = row["measure_type"]
+        mes = Measure(row["measure_id"], row["measure_name"])
+        mes.instrument_name = row["instrument_name"]
+        mes.measure_name = row["measure_name"]
+        mes.measure_type = row["measure_type"]
 
-        m.description = row["description"]
-        m.default_filter = row["default_filter"]
-        m.values_domain = row.get("values_domain")
-        m.min_value = row.get("min_value")
-        m.max_value = row.get("max_value")
+        mes.description = row["description"]
+        mes.default_filter = row["default_filter"]
+        mes.values_domain = row.get("values_domain")
+        mes.min_value = row.get("min_value")
+        mes.max_value = row.get("max_value")
 
-        return m
+        return mes
 
     @classmethod
     def from_json(cls, json):
         """Create `Measure` object from a JSON representation."""
         assert json["measureType"] is not None
 
-        m = Measure(json["measureId"], json["measureName"])
-        m.instrument_name = json["instrumentName"]
-        m.measure_name = json["measureName"]
-        m.measure_type = MeasureType.from_str(json["measureType"])
+        mes = Measure(json["measureId"], json["measureName"])
+        mes.instrument_name = json["instrumentName"]
+        mes.measure_name = json["measureName"]
+        mes.measure_type = MeasureType.from_str(json["measureType"])
+        mes.description = json["description"]
+        mes.default_filter = json["defaultFilter"]
+        mes.values_domain = json.get("valuesDomain")
+        mes.min_value = json.get("minValue")
+        mes.max_value = json.get("maxValue")
 
-        m.description = json["description"]
-        m.default_filter = json["defaultFilter"]
-        m.values_domain = json.get("valuesDomain")
-        m.min_value = json.get("minValue")
-        m.max_value = json.get("maxValue")
-
-        return m
+        return mes
 
     def to_json(self):
-        result = dict()
+        result = {}
 
         result["measureName"] = self.measure_name
         result["measureId"] = self.measure_id
@@ -194,9 +192,9 @@ class PhenotypeData(ABC):
     def pheno_id(self) -> str:
         return self._pheno_id
 
-    @property
-    def id(self) -> str:
-        return self.pheno_id
+    # @property
+    # def id(self) -> str:
+    #     return self.pheno_id
 
     @property
     def measures(self) -> Dict[str, Measure]:
@@ -244,7 +242,7 @@ class PhenotypeData(ABC):
         for row in df.to_dict("records"):
             person_id = row["person_id"]
 
-            p = Person(**row)
+            p = Person(**row)  # type: ignore
             # p.person_id = person_id
             # p.family_id = family_id
             assert row["role"] in Role, f"{row['role']} not a valid role"
@@ -404,10 +402,10 @@ class PhenotypeData(ABC):
 
         """
         df = self.get_values_df(measure_ids, person_ids, family_ids, roles)
-        res = {}
+        res: Dict[str, Dict[str, Any]] = {}
         for row in df.to_dict("records"):
-            person_id = row["person_id"]
-            res[person_id] = row
+            person_id = str(row["person_id"])
+            res[person_id] = cast(Dict[str, Any], row)
 
         return res
 
@@ -592,7 +590,7 @@ class PhenotypeStudy(PhenotypeData):
             measures_df = df[df.instrument_name == instrument_name]
 
             for row in measures_df.to_dict("records"):
-                m = Measure._from_dict(row)
+                m = Measure._from_dict(row)  # pylint: disable=protected-access
                 measures[m.measure_name] = m
                 self._measures[m.measure_id] = m
             instrument.measures = measures
@@ -957,13 +955,44 @@ class PhenotypeGroup(PhenotypeData):
             config=None):
         super(PhenotypeGroup, self).__init__(pheno_id)
         self.phenotype_datas = phenotype_data
-        self.families = FamiliesData.combine_studies(self.phenotype_datas)
+        self.families = self._build_families()
         instruments, measures = self._merge_instruments(
             [ph.instruments for ph in self.phenotype_datas])
         self._instruments.update(instruments)
 
         self._measures.update(measures)
         self.config = config
+
+    def _build_families(self):
+        phenos = self.phenotype_datas
+        logger.info(
+            "building combined families from phenotype data: %s",
+            [st.pheno_id for st in phenos])
+
+        if len(phenos) == 1:
+            return FamiliesData.copy(phenos[0].families)
+
+        logger.info(
+            "combining families from phenotype data %s and %s",
+            phenos[0].pheno_id, phenos[1].pheno_id)
+        result = FamiliesData.combine(
+            phenos[0].families,
+            phenos[1].families)
+
+        if len(phenos) > 2:
+            for sind in range(2, len(phenos)):
+                logger.debug(
+                    "processing pheno (%s): %s", sind, phenos[sind].pheno_id)
+                logger.info(
+                    "combining families from pheno (%s) %s with families "
+                    "from pheno %s",
+                    sind, [st.pheno_id for st in phenos[:sind]],
+                    phenos[sind].pheno_id)
+                result = FamiliesData.combine(
+                    result,
+                    phenos[sind].families,
+                    forced=True)
+        return result
 
     @staticmethod
     def _merge_instruments(
@@ -1032,7 +1061,7 @@ class PhenotypeGroup(PhenotypeData):
             person_ids: Optional[List[str]] = None,
             family_ids: Optional[List[str]] = None) -> pd.DataFrame:
 
-        ped_df = self.families.ped_df[[
+        ped_df: pd.DataFrame = self.families.ped_df[[
             "person_id", "family_id", "role", "sex", "status"]]
 
         if roles is not None:
@@ -1063,7 +1092,8 @@ class PhenotypeGroup(PhenotypeData):
                 )
 
         # We should never get here
-        msg = f"measure {measure_id} not found in phenotype group {self.id}"
+        msg = f"measure {measure_id} not found in phenotype group " \
+            f"{self.pheno_id}"
         logger.error(msg)
         raise ValueError(msg)
 
@@ -1186,7 +1216,7 @@ class PhenoDb(object):
                 phenotype_data = PhenotypeGroup(
                     pheno_id, phenotype_studies, config)
             else:
-                logger.info(f"loading pheno db <{pheno_id}>")
+                logger.info("loading pheno db <%s>", pheno_id)
                 phenotype_data = PhenotypeStudy(
                     pheno_id,
                     dbfile=self.get_dbfile(pheno_id),

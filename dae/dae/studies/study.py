@@ -1,3 +1,4 @@
+"""Classes to represent genotype data."""
 from __future__ import annotations
 
 import time
@@ -9,7 +10,7 @@ from os.path import basename, exists
 
 from abc import ABC, abstractmethod
 
-from typing import Dict, List
+from typing import Dict, List, cast
 
 from dae.backends.query_runners import QueryResult
 from dae.pedigrees.family import FamiliesData
@@ -21,14 +22,16 @@ logger = logging.getLogger(__name__)
 
 
 class GenotypeData(ABC):
+    """Abstract base class for genotype data."""
+
     def __init__(self, config, studies):
         self.config = config
         self.studies = studies
 
         self._description = None
-        
+
         self._person_set_collection_configs = None
-        self._person_set_collections: Dict[str, PersonSetCollection] = dict()
+        self._person_set_collections: Dict[str, PersonSetCollection] = {}
         self._parents = set()
         self._executor = None
 
@@ -39,9 +42,9 @@ class GenotypeData(ABC):
     def study_id(self):
         return self.config["id"]
 
-    @property
-    def id(self):
-        return self.study_id
+    # @property
+    # def id(self):  # pylint: disable=invalid-name
+    #     return self.study_id
 
     @property
     def name(self):
@@ -52,6 +55,7 @@ class GenotypeData(ABC):
 
     @property
     def description(self):
+        """Load and return description of a genotype data."""
         if self._description is None:
             if basename(self.config.description_file) != "description.md" and \
                     not exists(self.config.description_file):
@@ -59,7 +63,7 @@ class GenotypeData(ABC):
                 raise ValueError(
                     f"missing description file {self.config.description_file}")
 
-            if exists(self.config.description_file): 
+            if exists(self.config.description_file):
                 # the default description file may not yet exist
                 with open(
                         self.config.description_file,
@@ -131,7 +135,8 @@ class GenotypeData(ABC):
     def get_studies_ids(self, leaves=True):
         pass
 
-    def get_leaf_children(self):
+    def get_leaf_children(self) -> List[GenotypeDataStudy]:
+        """Return list of genotype studies children of this group."""
         if not self.is_group:
             return []
         result = []
@@ -156,7 +161,7 @@ class GenotypeData(ABC):
         if self.is_group:
             leafs = self.get_leaf_children()
         else:
-            leafs = [self]
+            leafs = [cast(GenotypeDataStudy, self)]
         logger.debug("leaf children: %s", [st.study_id for st in leafs])
         logger.debug("study_filters: %s", study_filters)
 
@@ -185,8 +190,8 @@ class GenotypeData(ABC):
             limit=None,
             study_filters=None,
             pedigree_fields=None,
-            **kwargs):
-
+            **_kwargs):
+        """Build a query result."""
         if person_ids is not None and len(person_ids) == 0:
             return
 
@@ -255,7 +260,7 @@ class GenotypeData(ABC):
                     genotype_study.study_id)
                 continue
 
-            runner.study_id = genotype_study.study_id                
+            runner.study_id = genotype_study.study_id
             logger.debug("runner created")
 
             study_name = genotype_study.name
@@ -339,13 +344,12 @@ class GenotypeData(ABC):
 
         except GeneratorExit:
             logger.info("generator closed")
-        except Exception:
+        except Exception:  # pylint: disable=broad-except
             logger.exception("unexpected exception:", exc_info=True)
         finally:
             elapsed = time.time() - started
             logger.info(
-                f"processing study {self.study_id} "
-                f"elapsed: {elapsed:.3f}")
+                "processing study %s elapsed: %.3f", self.study_id, elapsed)
 
             logger.debug("[DONE] executor closed...")
 
@@ -434,24 +438,24 @@ class GenotypeData(ABC):
     ):
 
         result = self.query_result_summary_variants(
-                    regions=regions,
-                    genes=genes,
-                    effect_types=effect_types,
-                    family_ids=family_ids,
-                    person_ids=person_ids,
-                    person_set_collection=person_set_collection,
-                    inheritance=inheritance,
-                    roles=roles,
-                    sexes=sexes,
-                    variant_type=variant_type,
-                    real_attr_filter=real_attr_filter,
-                    ultra_rare=ultra_rare,
-                    frequency_filter=frequency_filter,
-                    return_reference=return_reference,
-                    return_unknown=return_unknown,
-                    limit=limit,
-                    study_filters=study_filters,
-                    **kwargs)
+            regions=regions,
+            genes=genes,
+            effect_types=effect_types,
+            family_ids=family_ids,
+            person_ids=person_ids,
+            person_set_collection=person_set_collection,
+            inheritance=inheritance,
+            roles=roles,
+            sexes=sexes,
+            variant_type=variant_type,
+            real_attr_filter=real_attr_filter,
+            ultra_rare=ultra_rare,
+            frequency_filter=frequency_filter,
+            return_reference=return_reference,
+            return_unknown=return_unknown,
+            limit=limit,
+            study_filters=study_filters,
+            **kwargs)
         try:
             started = time.time()
 
@@ -569,14 +573,42 @@ class GenotypeDataGroup(GenotypeData):
     def get_studies_ids(self, leaves=True):
         if not leaves:
             return [st.study_id for st in self.studies]
-        else:
-            result = []
-            for st in self.studies:
-                result.extend(st.get_studies_ids())
-            return result
+        result = []
+        for study in self.studies:
+            result.extend(study.get_studies_ids())
+        return result
 
     def _build_families(self):
-        return FamiliesData.combine_studies(self.studies)
+        logger.info(
+            "building combined families from studies: %s",
+            [st.study_id for st in self.studies])
+
+        if len(self.studies) == 1:
+            return FamiliesData.copy(self.studies[0].families)
+
+        logger.info(
+            "combining families from study %s and from study %s",
+            self.studies[0].study_id, self.studies[1].study_id)
+        result = FamiliesData.combine(
+            self.studies[0].families,
+            self.studies[1].families)
+
+        if len(self.studies) > 2:
+            for sind in range(2, len(self.studies)):
+                logger.debug(
+                    "processing study (%s): %s",
+                    sind, self.studies[sind].study_id)
+                logger.info(
+                    "combining families from studies (%s) %s with families "
+                    "from study %s",
+                    sind, [st.study_id for st in self.studies[:sind]],
+                    self.studies[sind].id)
+                result = FamiliesData.combine(
+                    result,
+                    self.studies[sind].families,
+                    forced=True)
+
+        return result
 
     def _build_person_set_collection(self, person_set_collection_id):
         assert person_set_collection_id in \

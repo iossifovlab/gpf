@@ -773,37 +773,37 @@ class FamiliesData(Mapping):
 
         return FamiliesData.from_families(combined_dict)
 
-    @staticmethod
-    def combine_studies(studies, forced=True) -> FamiliesData:
-        """Combine families from two studies."""
-        assert len(studies) > 0, studies
+    # @staticmethod
+    # def combine_studies(studies, forced=True) -> FamiliesData:
+    #     """Combine families from two studies."""
+    #     assert len(studies) > 0, studies
 
-        logger.info(
-            "building combined families from studies: %s",
-            [st.id for st in studies])
+    #     logger.info(
+    #         "building combined families from studies: %s",
+    #         [st.id for st in studies])
 
-        if len(studies) == 1:
-            return FamiliesData.copy(studies[0].families)
+    #     if len(studies) == 1:
+    #         return FamiliesData.copy(studies[0].families)
 
-        logger.info(
-            "combining families from study %s and from study %s",
-            studies[0].id, studies[1].id)
-        result = FamiliesData.combine(
-            studies[0].families,
-            studies[1].families)
+    #     logger.info(
+    #         "combining families from study %s and from study %s",
+    #         studies[0].id, studies[1].id)
+    #     result = FamiliesData.combine(
+    #         studies[0].families,
+    #         studies[1].families)
 
-        if len(studies) > 2:
-            for sind in range(2, len(studies)):
-                logger.debug(
-                    "processing study (%s): %s", sind, studies[sind].id)
-                logger.info(
-                    "combining families from studies (%s) %s with families "
-                    "from study %s",
-                    sind, [st.study_id for st in studies[:sind]],
-                    studies[sind].id)
-                result = FamiliesData.combine(
-                    result,
-                    studies[sind].families,
-                    forced=forced)
+    #     if len(studies) > 2:
+    #         for sind in range(2, len(studies)):
+    #             logger.debug(
+    #                 "processing study (%s): %s", sind, studies[sind].id)
+    #             logger.info(
+    #                 "combining families from studies (%s) %s with families "
+    #                 "from study %s",
+    #                 sind, [st.study_id for st in studies[:sind]],
+    #                 studies[sind].id)
+    #             result = FamiliesData.combine(
+    #                 result,
+    #                 studies[sind].families,
+    #                 forced=forced)
 
-        return result
+    #     return result
