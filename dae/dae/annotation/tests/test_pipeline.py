@@ -1,3 +1,5 @@
+import pytest
+
 from dae.genomic_resources.genomic_scores import \
     open_position_score_from_resource
 from dae.annotation.annotation_factory import build_annotation_pipeline
@@ -38,6 +40,7 @@ def test_build_pipeline_schema(
     assert field.type == "float"
 
 
+@pytest.mark.xfail()
 def test_internal_attribute_filtered(
         phastcons100way_indel_variants_expected,
         grr_fixture):

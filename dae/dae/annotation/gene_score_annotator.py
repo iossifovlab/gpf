@@ -99,3 +99,6 @@ class GeneScoreAnnotator(Annotator):
             )
 
         return attributes
+
+    def close(self):
+        pass

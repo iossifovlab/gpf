@@ -49,14 +49,14 @@ class AnnotationPipeline():
             attributes = annotator.annotate(annotatable, context)
             context.update(attributes)
 
-        clean_context: dict = {}
-        for annotator in self.annotators:
-            for attr in annotator.get_annotation_config():
-                if not attr.get("internal", False):
-                    key = attr["destination"]
-                    clean_context[key] = context[key]
+        # TODO: Decide where context should be cleaned up
+        # for annotator in self.annotators:
+        #     for attr in annotator.get_annotation_config():
+        #         if attr.get("internal", False):
+        #             key = attr["destination"]
+        #             del context[key]
 
-        return clean_context
+        return context
 
     def close(self):
         for annotator in self.annotators:
