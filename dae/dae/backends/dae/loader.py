@@ -592,12 +592,15 @@ class DenovoLoader(VariantsGenotypesLoader):
                     temp_df.iloc[variants_indices].loc[:, "person_id"]
                 ).split(",")
 
-                variant_families = families.families_query_by_person_ids(
-                    person_ids)
+                variant_families = {
+                    families.persons[pid].family_id
+                    for pid in filter(
+                        lambda p: p in families.persons, person_ids)}
 
                 # TODO Implement support for multiallelic variants
 
-                for family_id, family in variant_families.items():
+                for family_id in variant_families:
+                    family = families[family_id]
                     family_dict = {
                         "chrom": variant[0],
                         "position": variant[1],
