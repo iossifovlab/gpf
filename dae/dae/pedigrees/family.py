@@ -267,7 +267,7 @@ class Family:
         self.family_id = family_id
         self.persons = {}
         self._samples_index = None
-        self._members_in_order = None
+        self._members_in_order: Optional[List[Person]] = None
         self._trios: Optional[Dict[str, Tuple[str, str, str]]] = None
 
     def _connect_family(self):
@@ -339,7 +339,7 @@ class Family:
         return list(self.persons.values())
 
     @property
-    def members_in_order(self):
+    def members_in_order(self) -> List[Person]:
         """Return list of family members in the order of definition."""
         if self._members_in_order is None:
             self._members_in_order = list(
