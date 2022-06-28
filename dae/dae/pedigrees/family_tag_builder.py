@@ -6,7 +6,7 @@ from dae.variants.attributes import Role, Status
 from dae.pedigrees.family import Person, Family
 
 
-class FamilyTagsBuilder:
+class FamilyTagBuilder:
     """Tag families with a series of predefined tags."""
 
     def __init__(self, family: Family):

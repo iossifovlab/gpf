@@ -2,7 +2,7 @@
 
 import pytest
 
-from dae.pedigrees.family_tags import FamilyTagsBuilder
+from dae.pedigrees.family_tag_builder import FamilyTagBuilder
 from dae.pedigrees.testing import build_family
 
 
@@ -21,7 +21,7 @@ def fam1_fixture():
 
 def test_tag_nuclear_family_simple(fam1_fixture):
 
-    tagger = FamilyTagsBuilder(fam1_fixture)
+    tagger = FamilyTagBuilder(fam1_fixture)
     assert tagger.tag_nuclear_family()
 
     assert tagger.check_tag("tag_nuclear_family", True)
@@ -29,7 +29,7 @@ def test_tag_nuclear_family_simple(fam1_fixture):
 
 def test_tag_quad_family_simple(fam1_fixture):
 
-    tagger = FamilyTagsBuilder(fam1_fixture)
+    tagger = FamilyTagBuilder(fam1_fixture)
     assert tagger.tag_quad_family()
 
     assert tagger.check_tag("tag_quad_family", True)
@@ -37,7 +37,7 @@ def test_tag_quad_family_simple(fam1_fixture):
 
 def test_tag_trio_family_simple(fam1_fixture):
 
-    tagger = FamilyTagsBuilder(fam1_fixture)
+    tagger = FamilyTagBuilder(fam1_fixture)
     assert not tagger.tag_trio_family()
 
     assert tagger.check_tag("tag_trio_family", False)
@@ -45,7 +45,7 @@ def test_tag_trio_family_simple(fam1_fixture):
 
 def test_tag_simplex_family_simple(fam1_fixture):
 
-    tagger = FamilyTagsBuilder(fam1_fixture)
+    tagger = FamilyTagBuilder(fam1_fixture)
     assert tagger.tag_simplex_family()
 
     assert tagger.check_tag("tag_simplex_family", True)
@@ -53,7 +53,7 @@ def test_tag_simplex_family_simple(fam1_fixture):
 
 def test_tag_multiplex_family_simple(fam1_fixture):
 
-    tagger = FamilyTagsBuilder(fam1_fixture)
+    tagger = FamilyTagBuilder(fam1_fixture)
     assert not tagger.tag_multiplex_family()
 
     assert tagger.check_tag("tag_multiplex_family", False)
