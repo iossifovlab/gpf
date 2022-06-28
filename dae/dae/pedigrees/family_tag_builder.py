@@ -1,38 +1,38 @@
 """Helper class for tagging families."""
 
-from typing import Iterable, Optional
+from typing import Callable, Iterable, Optional, Tuple
 
 from dae.variants.attributes import Role, Status, Sex
 from dae.pedigrees.family import Person, Family
 
 
 
-def get_mom(family: Family) -> Optional[Person]:
+def _get_mom(family: Family) -> Optional[Person]:
     for person in family.members_in_order:
         if person.role == Role.mom:
             return person
     return None
 
-def get_dad(family: Family) -> Optional[Person]:
+def _get_dad(family: Family) -> Optional[Person]:
     for person in family.members_in_order:
         if person.role == Role.dad:
             return person
     return None
 
-def get_prb(family: Family) -> Optional[Person]:
+def _get_prb(family: Family) -> Optional[Person]:
     for person in family.members_in_order:
         if person.role == Role.prb:
             return person
     return None
 
-def get_sibs(family: Family) -> Iterable[Person]:
+def _get_sibs(family: Family) -> Iterable[Person]:
     result = []
     for person in family.members_in_order:
         if person.role == Role.sib:
             result.append(person)
     return result
 
-def tag(family: Family, label: str, value) -> None:
+def _tag(family: Family, label: str, value) -> None:
     for person in family.persons.values():
         person.set_attr(label, value)
 
@@ -47,8 +47,8 @@ def check_tag(family: Family, label: str, value) -> bool:
 
 def check_nuclear_family(family: Family) -> bool:
     """Check if the family is a nuclear family."""
-    mom = get_mom(family)
-    dad = get_dad(family)
+    mom = _get_mom(family)
+    dad = _get_dad(family)
 
     if mom is None or dad is None:
         return False
@@ -69,7 +69,7 @@ def check_nuclear_family(family: Family) -> bool:
 def tag_nuclear_family(family: Family) -> bool:
     """Set nuclear family tag to the family."""
     value = check_nuclear_family(family)
-    tag(family, "tag_nuclear_family", value)
+    _tag(family, "tag_nuclear_family", value)
     return value
 
 
@@ -85,7 +85,7 @@ def check_quad_family(family: Family) -> bool:
 def tag_quad_family(family: Family) -> bool:
     """Set quad family tag to the family."""
     value = check_quad_family(family)
-    tag(family, "tag_quad_family", value)
+    _tag(family, "tag_quad_family", value)
     return value
 
 
@@ -101,7 +101,7 @@ def check_trio_family(family: Family) -> bool:
 def tag_trio_family(family: Family) -> bool:
     """Set trio family tag to the family."""
     value = check_trio_family(family)
-    tag(family, "tag_trio_family", value)
+    _tag(family, "tag_trio_family", value)
     return value
 
 
@@ -114,7 +114,7 @@ def check_simplex_family(family: Family) -> bool:
 def tag_simplex_family(family: Family) -> bool:
     """Set simplex family tag to the family."""
     value = check_simplex_family(family)
-    tag(family, "tag_simplex_family", value)
+    _tag(family, "tag_simplex_family", value)
     return value
 
 
@@ -127,7 +127,7 @@ def check_multiplex_family(family: Family) -> bool:
 def tag_multiplex_family(family: Family) -> bool:
     """Set multiplex family tag to the family."""
     value = check_multiplex_family(family)
-    tag(family, "tag_multiplex_family", value)
+    _tag(family, "tag_multiplex_family", value)
     return value
 
 
@@ -140,12 +140,12 @@ def check_control_family(family: Family) -> bool:
 def tag_control_family(family: Family) -> bool:
     """Set control family tag to the family."""
     value = check_control_family(family)
-    tag(family, "tag_control_family", value)
+    _tag(family, "tag_control_family", value)
     return value
 
 
 def check_affected_dad_family(family: Family) -> bool:
-    dad = get_dad(family)
+    dad = _get_dad(family)
     if dad is None:
         return False
     return bool(dad.status == Status.affected)
@@ -154,12 +154,12 @@ def check_affected_dad_family(family: Family) -> bool:
 def tag_affected_dad_family(family: Family) -> bool:
     """Set affected dad family tag to the family."""
     value = check_affected_dad_family(family)
-    tag(family, "tag_affected_dad_family", value)
+    _tag(family, "tag_affected_dad_family", value)
     return value
 
 
 def check_affected_mom_family(family: Family) -> bool:
-    mom = get_mom(family)
+    mom = _get_mom(family)
     if mom is None:
         return False
     return bool(mom.status == Status.affected)
@@ -168,12 +168,12 @@ def check_affected_mom_family(family: Family) -> bool:
 def tag_affected_mom_family(family: Family) -> bool:
     """Set affected mom family tag to the family."""
     value = check_affected_mom_family(family)
-    tag(family, "tag_affected_mom_family", value)
+    _tag(family, "tag_affected_mom_family", value)
     return value
 
 
 def check_affected_prb_family(family: Family) -> bool:
-    prb = get_prb(family)
+    prb = _get_prb(family)
     if prb is None:
         return False
     return bool(prb.status == Status.affected)
@@ -182,12 +182,12 @@ def check_affected_prb_family(family: Family) -> bool:
 def tag_affected_prb_family(family: Family) -> bool:
     """Set affected proband family tag to the family."""
     value = check_affected_prb_family(family)
-    tag(family, "tag_affected_prb_family", value)
+    _tag(family, "tag_affected_prb_family", value)
     return value
 
 
 def check_affected_sib_family(family: Family) -> bool:
-    for sib in get_sibs(family):
+    for sib in _get_sibs(family):
         if sib.status == Status.affected:
             return True
     return False
@@ -196,12 +196,12 @@ def check_affected_sib_family(family: Family) -> bool:
 def tag_affected_sib_family(family: Family) -> bool:
     """Set affected sibling family tag to the family."""
     value = check_affected_sib_family(family)
-    tag(family, "tag_affected_sib_family", value)
+    _tag(family, "tag_affected_sib_family", value)
     return value
 
 
 def check_male_prb_family(family: Family) -> bool:
-    prb = get_prb(family)
+    prb = _get_prb(family)
     if prb is None:
         return False
     return bool(prb.sex == Sex.male)
@@ -210,12 +210,12 @@ def check_male_prb_family(family: Family) -> bool:
 def tag_male_prb_family(family: Family) -> bool:
     """Set male proband family tag to the family."""
     value = check_male_prb_family(family)
-    tag(family, "tag_male_prb_family", value)
+    _tag(family, "tag_male_prb_family", value)
     return value
 
 
 def check_female_prb_family(family: Family) -> bool:
-    prb = get_prb(family)
+    prb = _get_prb(family)
     if prb is None:
         return False
     return bool(prb.sex == Sex.female)
@@ -224,12 +224,12 @@ def check_female_prb_family(family: Family) -> bool:
 def tag_female_prb_family(family: Family) -> bool:
     """Set female proband family tag to the family."""
     value = check_female_prb_family(family)
-    tag(family, "tag_female_prb_family", value)
+    _tag(family, "tag_female_prb_family", value)
     return value
 
 
 def check_missing_mom_family(family: Family) -> bool:
-    if get_mom(family) is None:
+    if _get_mom(family) is None:
         return True
     return False
 
@@ -237,12 +237,12 @@ def check_missing_mom_family(family: Family) -> bool:
 def tag_missing_mom_family(family: Family) -> bool:
     """Set missing mom family tag to the family."""
     value = check_missing_mom_family(family)
-    tag(family, "tag_missing_mom_family", value)
+    _tag(family, "tag_missing_mom_family", value)
     return value
 
 
 def check_missing_dad_family(family: Family) -> bool:
-    if get_dad(family) is None:
+    if _get_dad(family) is None:
         return True
     return False
 
@@ -250,5 +250,31 @@ def check_missing_dad_family(family: Family) -> bool:
 def tag_missing_dad_family(family: Family) -> bool:
     """Set missing dad family tag to the family."""
     value = check_missing_dad_family(family)
-    tag(family, "tag_missing_dad_family", value)
+    _tag(family, "tag_missing_dad_family", value)
     return value
+
+
+class FamilyTagsBuilder:
+    """Class used ot apply all tags to a family."""
+
+    TAGS: Tuple[Callable[[Family], bool], ...] = (
+        tag_nuclear_family,
+        tag_quad_family,
+        tag_trio_family,
+        tag_simplex_family,
+        tag_multiplex_family,
+        tag_control_family,
+        tag_affected_dad_family,
+        tag_affected_mom_family,
+        tag_affected_prb_family,
+        tag_affected_sib_family,
+        tag_male_prb_family,
+        tag_female_prb_family,
+        tag_missing_mom_family,
+        tag_missing_dad_family,
+    )
+
+    @staticmethod
+    def tag(family: Family) -> None:
+        for tagger in FamilyTagsBuilder.TAGS:
+            tagger(family)

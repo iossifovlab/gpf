@@ -13,6 +13,7 @@ from dae.backends.raw.loader import CLILoader, CLIArgument
 
 from dae.pedigrees.family import FamiliesData, Person, PEDIGREE_COLUMN_NAMES
 from dae.pedigrees.family_role_builder import FamilyRoleBuilder
+from dae.pedigrees.family_tag_builder import FamilyTagsBuilder
 from dae.pedigrees.layout import Layout
 
 
@@ -61,8 +62,19 @@ class FamiliesLoader(CLILoader):
 
         FamiliesLoader._build_families_layouts(families, pedigree_format)
         FamiliesLoader._build_families_roles(families, pedigree_format)
+        FamiliesLoader._build_families_tags(families, pedigree_format)
 
         return families
+
+    @staticmethod
+    def _build_families_tags(families, pedigree_format):
+        ped_tags = pedigree_format.get("ped_tags", False)
+        if not ped_tags:
+            return
+
+        tagger = FamilyTagsBuilder()
+        for family in families.values():
+            tagger.tag(family)
 
     @staticmethod
     def _build_families_layouts(families, pedigree_format):
@@ -171,10 +183,8 @@ class FamiliesLoader(CLILoader):
             action="store_true",
             default_value=False,
             help_text="indicates that the provided pedigree file has no role "
-            "column. "
-            "If this argument is provided, the import tool will guess the "
-            "roles "
-            'of individuals and write them in a "role" column.',
+            "column. If this argument is provided, the import tool will guess "
+            "the roles of individuals and write them in a 'role' column.",
         ))
         arguments.append(CLIArgument(
             "--ped-proband",
@@ -183,6 +193,13 @@ class FamiliesLoader(CLILoader):
             " file that specifies persons with role `proband`;"
             " this columns is used only when"
             " option `--ped-no-role` is specified. [default: %(default)s]",
+        ))
+        arguments.append(CLIArgument(
+            "--ped-tags",
+            action="store_true",
+            default_value=False,
+            help_text="when specified each family will be tagged with "
+            "a number of predeined tags [default: %(default)s]",
         ))
         arguments.append(CLIArgument(
             "--ped-no-header",
@@ -236,6 +253,7 @@ class FamiliesLoader(CLILoader):
             "ped_sep",
             "ped_proband",
             "ped_layout_mode",
+            "ped_tags",
         ]
         columns = set(
             [
