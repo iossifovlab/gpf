@@ -15,19 +15,24 @@ describe('CommonReportsRowComponent', () => {
   beforeEach(() => {
     fixture = TestBed.createComponent(CommonReportsRowComponent);
     component = fixture.componentInstance;
-    component.pedigreeGroup = [{data: [{
-      pedigreeIdentifier: 'pi',
-      id: 'id',
-      father: 'dad',
-      mother: 'mom',
-      gender: 'M',
-      role: 'prb',
-      color: 'F0F0F0',
-      position: [5, 10],
-      generated: true,
-      label: 'label',
-      smallLabel: 'sl'
-    }], count: 1}];
+    component.pedigreeGroup = [{
+      counterId: 1,
+      groupName: 'groupName',
+      data: [{
+        pedigreeIdentifier: 'pi',
+        id: 'id',
+        father: 'dad',
+        mother: 'mom',
+        gender: 'M',
+        role: 'prb',
+        color: 'F0F0F0',
+        position: [5, 10],
+        generated: true,
+        label: 'label',
+        smallLabel: 'sl'
+      }],
+      count: 1
+    }];
     fixture.detectChanges();
   });
 
