@@ -88,7 +88,7 @@ class ImportProject():
         families_loader = FamiliesLoader(
             families_filename, **families_params
         )
-        return cast(FamiliesData, families_loader.load())
+        return families_loader.load()
 
     def get_import_variants_buckets(self) -> list[Bucket]:
         """Splits the input variant files into buckets allowing

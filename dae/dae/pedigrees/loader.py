@@ -310,6 +310,7 @@ class FamiliesLoader(CLILoader):
         pedigree_filepath,
         ped_sep="\t",
         ped_no_header=False,
+        ped_no_role=False,
         ped_family="familyId",
         ped_person="personId",
         ped_mom="momId",
@@ -322,7 +323,6 @@ class FamiliesLoader(CLILoader):
         ped_generated="generated",
         ped_not_sequenced="not_sequenced",
         ped_sample_id="sampleId",
-        ped_no_role=False,
         **kwargs,
     ):
 
