@@ -1,12 +1,12 @@
 """Helper class for tagging families."""
 
-from typing import Optional
+from typing import Iterable, Optional
 
-from dae.variants.attributes import Role, Status
+from dae.variants.attributes import Role, Status, Sex
 from dae.pedigrees.family import Person, Family
 
 
-class FamilyTagBuilder:
+class FamilyTagBuilder:  # pylint: disable=too-many-public-methods
     """Tag families with a series of predefined tags."""
 
     def __init__(self, family: Family):
@@ -23,6 +23,19 @@ class FamilyTagBuilder:
             if person.role == Role.dad:
                 return person
         return None
+
+    def get_prb(self) -> Optional[Person]:
+        for person in self.family.members_in_order:
+            if person.role == Role.prb:
+                return person
+        return None
+
+    def get_sibs(self) -> Iterable[Person]:
+        result = []
+        for person in self.family.members_in_order:
+            if person.role == Role.sib:
+                result.append(person)
+        return result
 
     def tag(self, label, value) -> None:
         for person in self.family.persons.values():
@@ -110,4 +123,109 @@ class FamilyTagBuilder:
         """Set multiplex family tag to the family."""
         value = self.check_multiplex_family()
         self.tag("tag_multiplex_family", value)
+        return value
+
+    def check_control_family(self) -> bool:
+        return len(list(filter(
+            lambda p: p.status == Status.affected,
+            self.family.persons.values()))) == 0
+
+    def tag_control_family(self) -> bool:
+        """Set control family tag to the family."""
+        value = self.check_control_family()
+        self.tag("tag_control_family", value)
+        return value
+
+    def check_affected_dad_family(self) -> bool:
+        dad = self.get_dad()
+        if dad is None:
+            return False
+        return bool(dad.status == Status.affected)
+
+    def tag_affected_dad_family(self) -> bool:
+        """Set affected dad family tag to the family."""
+        value = self.check_affected_dad_family()
+        self.tag("tag_affected_dad_family", value)
+        return value
+
+    def check_affected_mom_family(self) -> bool:
+        mom = self.get_mom()
+        if mom is None:
+            return False
+        return bool(mom.status == Status.affected)
+
+    def tag_affected_mom_family(self) -> bool:
+        """Set affected mom family tag to the family."""
+        value = self.check_affected_mom_family()
+        self.tag("tag_affected_mom_family", value)
+        return value
+
+    def check_affected_prb_family(self) -> bool:
+        prb = self.get_prb()
+        if prb is None:
+            return False
+        return bool(prb.status == Status.affected)
+
+    def tag_affected_prb_family(self) -> bool:
+        """Set affected proband family tag to the family."""
+        value = self.check_affected_prb_family()
+        self.tag("tag_affected_prb_family", value)
+        return value
+
+    def check_affected_sib_family(self) -> bool:
+        for sib in self.get_sibs():
+            if sib.status == Status.affected:
+                return True
+        return False
+
+    def tag_affected_sib_family(self) -> bool:
+        """Set affected sibling family tag to the family."""
+        value = self.check_affected_sib_family()
+        self.tag("tag_affected_sib_family", value)
+        return value
+
+    def check_male_prb_family(self) -> bool:
+        prb = self.get_prb()
+        if prb is None:
+            return False
+        return bool(prb.sex == Sex.male)
+
+    def tag_male_prb_family(self) -> bool:
+        """Set male proband family tag to the family."""
+        value = self.check_male_prb_family()
+        self.tag("tag_male_prb_family", value)
+        return value
+
+    def check_female_prb_family(self) -> bool:
+        prb = self.get_prb()
+        if prb is None:
+            return False
+        return bool(prb.sex == Sex.female)
+
+    def tag_female_prb_family(self) -> bool:
+        """Set female proband family tag to the family."""
+        value = self.check_female_prb_family()
+        self.tag("tag_female_prb_family", value)
+        return value
+
+    def check_missing_mom_family(self) -> bool:
+        if self.get_mom() is None:
+            return True
+        return False
+
+    def tag_missing_mom_family(self) -> bool:
+        """Set missing mom family tag to the family."""
+        value = self.check_missing_mom_family()
+        self.tag("tag_missing_mom_family", value)
+        return value
+
+    def check_missing_dad_family(self) -> bool:
+        if self.get_dad() is None:
+            return True
+        return False
+
+    def tag_missing_dad_family(self) -> bool:
+        """Set missing dad family tag to the family."""
+        value = self.check_missing_dad_family()
+        self.tag("tag_missing_dad_family", value)
         return value
