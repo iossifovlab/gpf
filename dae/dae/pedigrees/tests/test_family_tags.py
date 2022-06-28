@@ -182,7 +182,7 @@ def test_tag_affected_sib_family():
         """)
 
     assert tag_affected_sib_family(fam)
-    assert check_tag(fam,"tag_affected_sib_family", True)
+    assert check_tag(fam, "tag_affected_sib_family", True)
 
 
 def test_tag_male_prb_family_simple(fam1_fixture):
