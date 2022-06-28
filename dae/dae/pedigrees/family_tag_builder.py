@@ -3,7 +3,7 @@
 from typing import Callable, Iterable, Optional, Tuple
 
 from dae.variants.attributes import Role, Status, Sex
-from dae.pedigrees.family import Person, Family
+from dae.pedigrees.family import FamiliesData, Person, Family
 
 
 
@@ -273,8 +273,16 @@ class FamilyTagsBuilder:
         tag_missing_mom_family,
         tag_missing_dad_family,
     )
+    def __init__(self):
+        self._taggers = list(self.TAGS)
 
-    @staticmethod
-    def tag(family: Family) -> None:
-        for tagger in FamilyTagsBuilder.TAGS:
+    def add_tagger(self, tagger: Callable[[Family], bool]) -> None:
+        self._taggers.append(tagger)
+
+    def tag_family(self, family: Family) -> None:
+        for tagger in self._taggers:
             tagger(family)
+
+    def tag_families_data(self, families: FamiliesData):
+        for family in families.values():
+            self.tag_family(family)

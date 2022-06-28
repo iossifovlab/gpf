@@ -37,8 +37,6 @@ class FamiliesLoader(CLILoader):
 
         super().__init__(params=params)
         self.filename = families_filename
-        # FIXME: Params should be able to accept namedtuple instances
-        # self.params["ped_sep"] = ped_sep
         self.file_format = self.params.get("ped_file_format", "pedigree")
 
     @staticmethod
@@ -73,8 +71,7 @@ class FamiliesLoader(CLILoader):
             return
 
         tagger = FamilyTagsBuilder()
-        for family in families.values():
-            tagger.tag(family)
+        tagger.tag_families_data(families)
 
     @staticmethod
     def _build_families_layouts(families, pedigree_format):
@@ -113,7 +110,7 @@ class FamiliesLoader(CLILoader):
     #     ped_df = FamiliesLoader.load_simple_family_file(families_filename)
     #     return FamiliesData.from_pedigree_df(ped_df)
 
-    def load(self):
+    def load(self) -> FamiliesData:
         if self.file_format == "simple":
             return self.load_simple_families_file(self.filename)
         assert self.file_format == "pedigree"
@@ -285,33 +282,21 @@ class FamiliesLoader(CLILoader):
         return filename, res
 
     @staticmethod
-    def produce_header_from_indices(
-        ped_family=None,
-        ped_person=None,
-        ped_mom=None,
-        ped_dad=None,
-        ped_sex=None,
-        ped_status=None,
-        ped_role=None,
-        ped_proband=None,
-        ped_layout=None,
-        ped_generated=None,
-        ped_not_sequenced=None,
-        ped_sample_id=None,
-    ):
+    def _produce_header_from_indices(**kwargs):
         header = (
-            (ped_family, PEDIGREE_COLUMN_NAMES["family"]),
-            (ped_person, PEDIGREE_COLUMN_NAMES["person"]),
-            (ped_mom, PEDIGREE_COLUMN_NAMES["mother"]),
-            (ped_dad, PEDIGREE_COLUMN_NAMES["father"]),
-            (ped_sex, PEDIGREE_COLUMN_NAMES["sex"]),
-            (ped_status, PEDIGREE_COLUMN_NAMES["status"]),
-            (ped_role, PEDIGREE_COLUMN_NAMES["role"]),
-            (ped_proband, PEDIGREE_COLUMN_NAMES["proband"]),
-            (ped_layout, PEDIGREE_COLUMN_NAMES["layout"]),
-            (ped_generated, PEDIGREE_COLUMN_NAMES["generated"]),
-            (ped_not_sequenced, PEDIGREE_COLUMN_NAMES["not_sequenced"]),
-            (ped_sample_id, PEDIGREE_COLUMN_NAMES["sample id"]),
+            (kwargs.get("ped_family"), PEDIGREE_COLUMN_NAMES["family"]),
+            (kwargs.get("ped_person"), PEDIGREE_COLUMN_NAMES["person"]),
+            (kwargs.get("ped_mom"), PEDIGREE_COLUMN_NAMES["mother"]),
+            (kwargs.get("ped_dad"), PEDIGREE_COLUMN_NAMES["father"]),
+            (kwargs.get("ped_sex"), PEDIGREE_COLUMN_NAMES["sex"]),
+            (kwargs.get("ped_status"), PEDIGREE_COLUMN_NAMES["status"]),
+            (kwargs.get("ped_role"), PEDIGREE_COLUMN_NAMES["role"]),
+            (kwargs.get("ped_proband"), PEDIGREE_COLUMN_NAMES["proband"]),
+            (kwargs.get("ped_layout"), PEDIGREE_COLUMN_NAMES["layout"]),
+            (kwargs.get("ped_generated"), PEDIGREE_COLUMN_NAMES["generated"]),
+            (kwargs.get("ped_not_sequenced"),
+             PEDIGREE_COLUMN_NAMES["not_sequenced"]),
+            (kwargs.get("ped_sample_id"), PEDIGREE_COLUMN_NAMES["sample id"]),
         )
         header = tuple(filter(lambda col: isinstance(col[0], int), header))
         for col in header:
@@ -371,7 +356,7 @@ class FamiliesLoader(CLILoader):
             )
 
             if ped_no_header:
-                _, file_header = FamiliesLoader.produce_header_from_indices(
+                _, file_header = FamiliesLoader._produce_header_from_indices(
                     ped_family=ped_family,
                     ped_person=ped_person,
                     ped_mom=ped_mom,
@@ -466,7 +451,7 @@ class FamiliesLoader(CLILoader):
         return ped_df
 
     @staticmethod
-    def load_simple_families_file(infile, ped_sep="\t"):
+    def load_simple_families_file(infile, ped_sep="\t") -> FamiliesData:
         """Load a pedigree from a DAE simple family format file."""
         fam_df = pd.read_csv(
             infile,
@@ -526,7 +511,10 @@ class FamiliesLoader(CLILoader):
                 child["mom_id"] = mom_id
                 child["dad_id"] = dad_id
 
-            result[fam_id] = [Person(**member) for member in members]
+            result[fam_id] = [
+                Person(**member)  # type: ignore
+                for member in members
+            ]
 
         return FamiliesData.from_family_persons(result)
 
