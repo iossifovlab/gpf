@@ -1,3 +1,5 @@
+"""Loader for pedigree files."""
+
 import warnings
 import logging
 from functools import partial
@@ -28,6 +30,8 @@ PED_COLUMNS_REQUIRED = (
 
 
 class FamiliesLoader(CLILoader):
+    """Pedigree files loader."""
+
     def __init__(self, families_filename, **params):
 
         super().__init__(params=params)
@@ -37,7 +41,9 @@ class FamiliesLoader(CLILoader):
         self.file_format = self.params.get("ped_file_format", "pedigree")
 
     @staticmethod
-    def load_pedigree_file(pedigree_filename, pedigree_format=None):
+    def load_pedigree_file(
+            pedigree_filename, pedigree_format=None) -> FamiliesData:
+        """Load a pedigree files and return FamiliesData object."""
         if pedigree_format is None:
             pedigree_format = {}
 
@@ -64,8 +70,8 @@ class FamiliesLoader(CLILoader):
         if ped_layout_mode == "generate":
             for family in families.values():
                 logger.debug(
-                    f"building layout for family: {family.family_id}; "
-                    f"{family}")
+                    "building layout for family: %s; %s",
+                    family.family_id, family)
                 layouts = Layout.from_family(family)
                 for layout in layouts:
                     layout.apply_to_family(family)
@@ -80,18 +86,15 @@ class FamiliesLoader(CLILoader):
     @staticmethod
     def _build_families_roles(families, pedigree_format):
         has_unknown_roles = any(
-            [
-                p.role is None  # or p.role == Role.unknown
-                for p in families.persons.values()
-            ]
-        )
+            p.role is None  # or p.role == Role.unknown
+            for p in families.persons.values())
 
         if has_unknown_roles or pedigree_format.get("ped_no_role"):
             for family in families.values():
-                logger.debug(f"building family roles: {family.family_id}")
+                logger.debug("building family roles: %s", family.family_id)
                 role_build = FamilyRoleBuilder(family)
                 role_build.build_roles()
-            families._ped_df = None
+            families._ped_df = None  # pylint: disable=protected-access
 
     # @staticmethod
     # def load_simple_families_file(families_filename):
@@ -101,11 +104,10 @@ class FamiliesLoader(CLILoader):
     def load(self):
         if self.file_format == "simple":
             return self.load_simple_families_file(self.filename)
-        else:
-            assert self.file_format == "pedigree"
-            return self.load_pedigree_file(
-                self.filename, pedigree_format=self.params
-            )
+        assert self.file_format == "pedigree"
+        return self.load_pedigree_file(
+            self.filename, pedigree_format=self.params
+        )
 
     @classmethod
     def _arguments(cls):
@@ -218,9 +220,9 @@ class FamiliesLoader(CLILoader):
         return arguments
 
     @classmethod
-    def parse_cli_arguments(cls, argv):
+    def parse_cli_arguments(cls, argv, use_defaults=False):
         filename = argv.families
-        super().parse_cli_arguments(argv, use_defaults=False)
+        super().parse_cli_arguments(argv, use_defaults=use_defaults)
 
         ped_ped_args = [
             "ped_family",
@@ -293,9 +295,9 @@ class FamiliesLoader(CLILoader):
             (ped_not_sequenced, PEDIGREE_COLUMN_NAMES["not_sequenced"]),
             (ped_sample_id, PEDIGREE_COLUMN_NAMES["sample id"]),
         )
-        header = tuple(filter(lambda col: type(col[0]) is int, header))
+        header = tuple(filter(lambda col: isinstance(col[0], int), header))
         for col in header:
-            assert type(col[0]) is int, col[0]
+            assert isinstance(col[0], int), col[0]
         header = tuple(sorted(header, key=lambda col: col[0]))
 
         return zip(*header)
@@ -321,9 +323,9 @@ class FamiliesLoader(CLILoader):
         **kwargs,
     ):
 
-        if type(ped_no_role) == str:
+        if isinstance(ped_no_role, str):
             ped_no_role = str2bool(ped_no_role)
-        if type(ped_no_header) == str:
+        if isinstance(ped_no_header, str):
             ped_no_header = str2bool(ped_no_header)
 
         read_csv_func = partial(
@@ -335,15 +337,15 @@ class FamiliesLoader(CLILoader):
                 ped_role: Role.from_name,
                 ped_sex: Sex.from_name,
                 ped_status: Status.from_name,
-                ped_generated: lambda v: str2bool(v),
-                ped_not_sequenced: lambda v: str2bool(v),
-                ped_proband: lambda v: str2bool(v),
+                ped_generated: str2bool,
+                ped_not_sequenced: str2bool,
+                ped_proband: str2bool,
             },
             dtype=str,
             comment="#",
             encoding="utf-8",
         )
-        with warnings.catch_warnings(record=True) as ws:
+        with warnings.catch_warnings(record=True) as warn_messages:
             warnings.filterwarnings(
                 "ignore",
                 category=pd.errors.ParserWarning,
@@ -383,31 +385,29 @@ class FamiliesLoader(CLILoader):
             else:
                 ped_df = read_csv_func(pedigree_filepath)
 
-        for w in ws:
-            warnings.showwarning(w.message, w.category, w.filename, w.lineno)
+        for warn in warn_messages:
+            warnings.showwarning(
+                warn.message, warn.category, warn.filename, warn.lineno)
 
         if ped_sample_id in ped_df:
             if ped_generated in ped_df or ped_not_sequenced in ped_df:
 
-                def fill_sample_id(r):
-                    if not pd.isna(r.sampleId):
-                        return r.sampleId
-                    else:
-                        if r.generated or r.not_sequenced:
-                            return None
-                        else:
-                            return r.personId
+                def fill_sample_id(rec):
+                    if not pd.isna(rec.sampleId):
+                        return rec.sampleId
+                    if rec.generated or rec.not_sequenced:
+                        return None
+                    return rec.personId
 
             else:
 
-                def fill_sample_id(r):
-                    if not pd.isna(r.sampleId):
-                        return r.sampleId
-                    else:
-                        return r.personId
+                def fill_sample_id(rec):
+                    if not pd.isna(rec.sampleId):
+                        return rec.sampleId
+                    return rec.personId
 
             sample_ids = ped_df.apply(
-                lambda r: fill_sample_id(r), axis=1, result_type="reduce",
+                fill_sample_id, axis=1, result_type="reduce",
             )
             ped_df[ped_sample_id] = sample_ids
         else:
@@ -449,15 +449,16 @@ class FamiliesLoader(CLILoader):
 
     @staticmethod
     def load_simple_families_file(infile, ped_sep="\t"):
+        """Load a pedigree from a DAE simple family format file."""
         fam_df = pd.read_csv(
             infile,
             sep=ped_sep,
             index_col=False,
             skipinitialspace=True,
             converters={
-                "role": lambda r: Role.from_name(r),
-                "gender": lambda s: Sex.from_name(s),
-                "sex": lambda s: Sex.from_name(s),
+                "role": Role.from_name,
+                "gender": Sex.from_name,
+                "sex": Sex.from_name,
             },
             dtype={"familyId": str, "personId": str},
             comment="#",
@@ -476,7 +477,7 @@ class FamiliesLoader(CLILoader):
 
         fam_df["status"] = pd.Series(index=fam_df.index, data=1)
         fam_df.loc[fam_df.role == Role.prb, "status"] = 2
-        fam_df["status"] = fam_df.status.apply(lambda s: Status.from_value(s))
+        fam_df["status"] = fam_df.status.apply(Status.from_value)
 
         fam_df["mom_id"] = pd.Series(index=fam_df.index, data="0")
         fam_df["dad_id"] = pd.Series(index=fam_df.index, data="0")
@@ -512,7 +513,8 @@ class FamiliesLoader(CLILoader):
         return FamiliesData.from_family_persons(result)
 
     @staticmethod
-    def save_pedigree(families, filename):
+    def save_pedigree(families: FamiliesData, filename):
+        """Save FamiliesData object into a pedigree file."""
         df = families.ped_df.copy()
 
         df = df.rename(
@@ -531,6 +533,6 @@ class FamiliesLoader(CLILoader):
         df.to_csv(filename, index=False, sep="\t")
 
     @staticmethod
-    def save_families(families, filename):
+    def save_families(families: FamiliesData, filename):
         assert isinstance(families, FamiliesData)
         FamiliesLoader.save_pedigree(families, filename)
