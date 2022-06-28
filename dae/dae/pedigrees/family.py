@@ -5,9 +5,11 @@ from __future__ import annotations
 import copy
 import logging
 
-from typing import Dict, Iterable, Iterator, Optional, Set, List, Tuple
+from typing import Dict, Iterator, KeysView, ValuesView, \
+    Optional, Set, List, Tuple
 from enum import Enum, auto
 from collections import defaultdict
+from collections.abc import Mapping
 
 import pandas as pd
 
@@ -505,7 +507,7 @@ class Family:
         )
 
 
-class FamiliesData:
+class FamiliesData(Mapping[str, Family]):
     """Defines class for handling families in a study."""
 
     def __init__(self):
@@ -656,8 +658,8 @@ class FamiliesData:
     def __len__(self) -> int:
         return len(self._families)
 
-    def __iter__(self) -> Iterator[Tuple[str, Family]]:
-        return iter(self._families.items())
+    def __iter__(self) -> Iterator[str]:
+        return iter(self._families)
 
     def __contains__(self, family_id) -> bool:
         return family_id in self._families
@@ -665,16 +667,19 @@ class FamiliesData:
     def __delitem__(self, family_id) -> None:
         del self._families[family_id]
 
-    def keys(self) -> Iterable[str]:
+    def keys(self) -> KeysView[str]:
         return self._families.keys()
 
-    def values(self) -> Iterable[Family]:
+    def values(self) -> ValuesView[Family]:
         return self._families.values()
 
     def items(self):
         return self._families.items()
 
-    def get(self, key, default=None) -> Optional[Family]:
+    def get(  # type: ignore
+        self, key: str,
+        default: Optional[Family] = None
+    ) -> Optional[Family]:
         return self._families.get(key, default)
 
     # def families_query_by_person_ids(self, person_ids):
