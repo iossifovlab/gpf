@@ -6,7 +6,6 @@ import {
   EffectTypeRow,
   EffectTypeTable,
   FamilyCounter,
-  FamilyCounters,
   FamilyReport,
   GroupCounter,
   Legend,
@@ -172,7 +171,7 @@ describe('PeopleReport', () => {
 
 describe('PedigreeCounter', () => {
   it('should create pedigree counter from json', () => {
-    const pedigreeCounter = new PedigreeCounter([
+    const pedigreeCounter = new PedigreeCounter(1, 'groupName', [
       new PedigreeData(
         'identifier',
         'id',
@@ -186,13 +185,15 @@ describe('PedigreeCounter', () => {
         'label',
         'smallLabel')], 5);
 
-    const pedigreeCounter2 = PedigreeCounter.fromArray(
+    const pedigreeCounter2 = PedigreeCounter.fromJson(
       {
+        counter_id: 1,
+        group_name: 'groupName',
         pedigree: [
           ['identifier', 'id', 'mother', 'father', 'gender', 'role', 'color', ':5,7', true, 'label', 'smallLabel']
-        ]
-      },
-      5
+        ],
+        pedigrees_count: 5
+      }, 'groupName'
     );
 
     expect(pedigreeCounter).toEqual(pedigreeCounter2);
@@ -204,6 +205,8 @@ describe('FamilyCounter', () => {
     const mockFamilyCounter = FamilyCounter.fromJson({
       counters: [
         {
+          counter_id: 1,
+          group_name: 'groupName1',
           pedigree: [
             [
               'identifier1',
@@ -222,6 +225,8 @@ describe('FamilyCounter', () => {
           pedigrees_count: 5
         },
         {
+          counter_id: 2,
+          group_name: 'groupName1',
           pedigree: [
             [
               'identifier2',
@@ -239,11 +244,21 @@ describe('FamilyCounter', () => {
           ],
           pedigrees_count: 7
         }
+      ], group_name: 'groupName1', phenotypes: ['phenotype4', 'phenotype5'], legend: [
+        {
+          id: 'id6',
+          name: 'name7',
+          color: 'color8'
+        }, {
+          id: 'id9',
+          name: 'name10',
+          color: 'color11'
+        }
       ]
     });
 
     const mockFamilyCounter2 = new FamilyCounter([
-      new PedigreeCounter([
+      new PedigreeCounter(1, 'groupName1', [
         new PedigreeData(
           'identifier1',
           'id1',
@@ -256,7 +271,7 @@ describe('FamilyCounter', () => {
           true,
           'label1',
           'smallLabel1')], 5),
-      new PedigreeCounter([
+      new PedigreeCounter(2, 'groupName1', [
         new PedigreeData(
           'identifier2',
           'id2',
@@ -269,229 +284,285 @@ describe('FamilyCounter', () => {
           false,
           'label2',
           'smallLabel2')], 7)
-    ]);
-
+    ], 'groupName1', ['phenotype4', 'phenotype5'],
+    new Legend([new LegendItem('id6', 'name7', 'color8'), new LegendItem('id9', 'name10', 'color11')]));
     expect(mockFamilyCounter).toEqual(mockFamilyCounter2);
   });
 });
 
-describe('FamilyCounters', () => {
-  it('should create family counters from json', () => {
-    const mockFamilyCounters1 = new FamilyCounters([
-      new FamilyCounter([
-        new PedigreeCounter([
-          new PedigreeData(
-            'identifier1', 'id1', 'mother1', 'father1', 'gender1', 'role1', 'color1', [2, 1], true, 'label1', 'smallLabel1')], 5),
-        new PedigreeCounter([
-          new PedigreeData(
-            'identifier2', 'id2', 'mother2', 'father2', 'gender2', 'role2', 'color2', [5, 7], false, 'label2', 'smallLabel2')], 7)
-      ]),
-      new FamilyCounter([
-        new PedigreeCounter([
-          new PedigreeData(
-            'identifier3', 'id3', 'mother3', 'father3', 'gender3', 'role3', 'color3', [6, 8], false, 'label3', 'smallLabel3')], 1),
-        new PedigreeCounter([
-          new PedigreeData(
-            'identifier4', 'id4', 'mother4', 'father4', 'gender4', 'role4', 'color4', [1, 1], true, 'label4', 'smallLabel4')], 10)
-      ]),
-    ],
-    'groupName1', ['pheno1', 'pheno2'],
-    new Legend(
-      [
-        new LegendItem('id1', 'name1', 'color1'),
-        new LegendItem('id2', 'name2', 'color2')
-      ]
-    ));
-
-    const mockFamilyCounters2 = FamilyCounters.fromJson({
-      counters: [
-        {
-          counters: [
-            {
-              pedigree: [
-                ['identifier1', 'id1', 'mother1', 'father1', 'gender1', 'role1', 'color1', ':2,1', true, 'label1', 'smallLabel1']
-              ],
-              pedigrees_count: 5
-            },
-            {
-              pedigree: [
-                ['identifier2', 'id2', 'mother2', 'father2', 'gender2', 'role2', 'color2', ':5,7', false, 'label2', 'smallLabel2']
-              ],
-              pedigrees_count: 7
-            }
-          ]
-        }, {
-          counters: [
-            {
-              pedigree: [
-                ['identifier3', 'id3', 'mother3', 'father3', 'gender3', 'role3', 'color3', ':6,8', false, 'label3', 'smallLabel3']
-              ],
-              pedigrees_count: 1
-            },
-            {
-              pedigree: [
-                ['identifier4', 'id4', 'mother4', 'father4', 'gender4', 'role4', 'color4', ':1,1', true, 'label4', 'smallLabel4']
-              ],
-              pedigrees_count: 10
-            }
-          ]
-        }
-      ], group_name: 'groupName1', phenotypes: ['pheno1', 'pheno2'], legend: [
-        {id: 'id1', name: 'name1', color: 'color1'},
-        {id: 'id2', name: 'name2', color: 'color2'}
-      ]
-    });
-
-    expect(mockFamilyCounters1).toEqual(mockFamilyCounters2);
-  });
-});
 
 describe('FamilyReport', () => {
   it('should create family report from json', () => {
-    const mockFamilyReport1 = new FamilyReport(
-      [
-        new FamilyCounters([
-          new FamilyCounter([
-            new PedigreeCounter([
-              new PedigreeData(
-                'identifier1', 'id1', 'mother1', 'father1', 'gender1', 'role1', 'color1', [2, 1], true, 'label1', 'smallLabel1')], 5),
-            new PedigreeCounter([
-              new PedigreeData(
-                'identifier2', 'id2', 'mother2', 'father2', 'gender2', 'role2', 'color2', [5, 7], false, 'label2', 'smallLabel2')], 7)
-          ]),
-          new FamilyCounter([
-            new PedigreeCounter([
-              new PedigreeData(
-                'identifier3', 'id3', 'mother3', 'father3', 'gender3', 'role3', 'color3', [6, 8], false, 'label3', 'smallLabel3')], 1),
-            new PedigreeCounter([
-              new PedigreeData(
-                'identifier4', 'id4', 'mother4', 'father4', 'gender4', 'role4', 'color4', [1, 1], true, 'label4', 'smallLabel4')], 10)
-          ]),
-        ],
-        'groupName1', ['pheno1', 'pheno2'],
-        new Legend(
-          [
-            new LegendItem('id1', 'name1', 'color1'),
-            new LegendItem('id2', 'name2', 'color2')
-          ]
-        )),
-        new FamilyCounters([
-          new FamilyCounter([
-            new PedigreeCounter([
-              new PedigreeData(
-                'identifier5', 'id5', 'mother5', 'father5', 'gender5', 'role5', 'color5', [2, 2], true, 'label5', 'smallLabel5')], 9),
-            new PedigreeCounter([
-              new PedigreeData(
-                'identifier6', 'id6', 'mother6', 'father6', 'gender6', 'role6', 'color6', [51, 7], false, 'label6', 'smallLabel6')], 85)
-          ]),
-          new FamilyCounter([
-            new PedigreeCounter([
-              new PedigreeData(
-                'identifier7', 'id7', 'mother7', 'father7', 'gender7', 'role7', 'color7', [3, 3], false, 'label7', 'smallLabel7')], 14),
-            new PedigreeCounter([
-              new PedigreeData(
-                'identifier8', 'id8', 'mother8', 'father8', 'gender8', 'role8', 'color8', [16, 13], true, 'label8', 'smallLabel8')], 11)
-          ]),
-        ],
-        'groupName2', ['pheno3', 'pheno4'],
-        new Legend(
-          [
-            new LegendItem('id3', 'name3', 'color3'),
-            new LegendItem('id4', 'name4', 'color4')
-          ]
-        ))
-      ], 5
-    );
+    const mockFamilyReport1 = new FamilyReport([
+      new FamilyCounter([
+        new PedigreeCounter(1, 'groupName1', [
+          new PedigreeData(
+            'identifier1', 'id1', 'mother1', 'father1', 'gender1', 'role1',
+            'color1', [2, 1], true, 'label1', 'smallLabel1')], 5),
+        new PedigreeCounter(2, 'groupName1', [
+          new PedigreeData(
+            'identifier2', 'id2', 'mother2', 'father2', 'gender2', 'role2',
+            'color2', [5, 7], false, 'label2', 'smallLabel2')], 7)
+      ], 'groupName1', ['phenotype4', 'phenotype5'],
+      new Legend([new LegendItem('id6', 'name7', 'color8'), new LegendItem('id9', 'name10', 'color11')])
+      ),
+      new FamilyCounter([
+        new PedigreeCounter(3, 'groupName2', [
+          new PedigreeData(
+            'identifier3', 'id3', 'mother3', 'father3', 'gender3', 'role3',
+            'color3', [6, 8], false, 'label3', 'smallLabel3')], 1),
+        new PedigreeCounter(4, 'groupName2', [
+          new PedigreeData(
+            'identifier4', 'id4', 'mother4', 'father4', 'gender4', 'role4',
+            'color4', [1, 1], true, 'label4', 'smallLabel4')], 10)
+      ], 'groupName2', ['phenotype6', 'phenotype7'],
+      new Legend([new LegendItem('id12', 'name13', 'color14'), new LegendItem('id15', 'name16', 'color17')])
+      ),
+      new FamilyCounter([
+        new PedigreeCounter(5, 'groupName3', [
+          new PedigreeData(
+            'identifier5', 'id5', 'mother5', 'father5',
+            'gender5', 'role5', 'color5', [2, 2], true, 'label5', 'smallLabel5')], 9),
+        new PedigreeCounter(6, 'groupName3', [
+          new PedigreeData(
+            'identifier6', 'id6', 'mother6', 'father6',
+            'gender6', 'role6', 'color6', [51, 7], false, 'label6', 'smallLabel6')], 85)
+      ], 'groupName3', ['phenotype8', 'phenotype9'],
+      new Legend([new LegendItem('id18', 'name19', 'color20'), new LegendItem('id21', 'name22', 'color23')])
+      ),
+      new FamilyCounter([
+        new PedigreeCounter(7, 'groupName4', [
+          new PedigreeData(
+            'identifier7', 'id7', 'mother7', 'father7',
+            'gender7', 'role7', 'color7', [3, 3], false, 'label7', 'smallLabel7')], 14),
+        new PedigreeCounter(8, 'groupName4', [
+          new PedigreeData(
+            'identifier8', 'id8', 'mother8', 'father8',
+            'gender8', 'role8', 'color8', [16, 13], true, 'label8', 'smallLabel8')], 11)
+      ], 'groupName4', ['phenotype10', 'phenotype11'],
+      new Legend([new LegendItem('id24', 'name25', 'color26'), new LegendItem('id27', 'name28', 'color29')])
+      ),
+    ], 5);
 
-    const mockFamilyReport2 = FamilyReport.fromJson(
+
+    const mockFamilyReport2 = FamilyReport.fromJson([
       {
-        families_counters: [{
-          counters: [
-            {
-              counters: [
-                {
-                  pedigree: [
-                    ['identifier1', 'id1', 'mother1', 'father1', 'gender1', 'role1', 'color1', ':2,1', true, 'label1', 'smallLabel1']
-                  ],
-                  pedigrees_count: 5
-                },
-                {
-                  pedigree: [
-                    [
-                      'identifier2', 'id2', 'mother2', 'father2', 'gender2', 'role2', 'color2', ':5,7', false, 'label2', 'smallLabel2'
-                    ]
-                  ],
-                  pedigrees_count: 7
-                }
+        counters: [
+          {
+            counter_id: 1,
+            group_name: 'groupName1',
+            pedigree: [
+              [
+                'identifier1',
+                'id1',
+                'mother1',
+                'father1',
+                'gender1',
+                'role1',
+                'color1',
+                ':2,1',
+                true,
+                'label1',
+                'smallLabel1'
               ]
-            }, {
-              counters: [
-                {
-                  pedigree: [
-                    [
-                      'identifier3', 'id3', 'mother3', 'father3', 'gender3', 'role3', 'color3', ':6,8', false, 'label3', 'smallLabel3'
-                    ]
-                  ],
-                  pedigrees_count: 1
-                },
-                {
-                  pedigree: [
-                    ['identifier4', 'id4', 'mother4', 'father4', 'gender4', 'role4', 'color4', ':1,1', true, 'label4', 'smallLabel4']
-                  ],
-                  pedigrees_count: 10
-                }
+            ],
+            pedigrees_count: 5
+          },
+          {
+            counter_id: 2,
+            group_name: 'groupName1',
+            pedigree: [
+              [
+                'identifier2',
+                'id2',
+                'mother2',
+                'father2',
+                'gender2',
+                'role2',
+                'color2',
+                ':5,7',
+                false,
+                'label2',
+                'smallLabel2'
               ]
-            }
-          ], group_name: 'groupName1', phenotypes: ['pheno1', 'pheno2'], legend: [
-            {id: 'id1', name: 'name1', color: 'color1'},
-            {id: 'id2', name: 'name2', color: 'color2'}
-          ]
-        },
-        {
-          counters: [
-            {
-              counters: [
-                {
-                  pedigree: [
-                    ['identifier5', 'id5', 'mother5', 'father5', 'gender5', 'role5', 'color5', ':2,2', true, 'label5', 'smallLabel5']
-                  ],
-                  pedigrees_count: 9
-                },
-                {
-                  pedigree: [
-                    [
-                      'identifier6', 'id6', 'mother6', 'father6', 'gender6', 'role6', 'color6', ':51,7', false, 'label6', 'smallLabel6'
-                    ]
-                  ],
-                  pedigrees_count: 85
-                }
+            ],
+            pedigrees_count: 7
+          }
+        ], group_name: 'groupName1', phenotypes: ['phenotype4', 'phenotype5'], legend: [
+          {
+            id: 'id6',
+            name: 'name7',
+            color: 'color8'
+          }, {
+            id: 'id9',
+            name: 'name10',
+            color: 'color11'
+          }
+        ]
+      },
+      {
+        counters: [
+          {
+            counter_id: 3,
+            group_name: 'groupName2',
+            pedigree: [
+              [
+                'identifier3',
+                'id3',
+                'mother3',
+                'father3',
+                'gender3',
+                'role3',
+                'color3',
+                ':6,8',
+                false,
+                'label3',
+                'smallLabel3'
               ]
-            }, {
-              counters: [
-                {
-                  pedigree: [
-                    [
-                      'identifier7', 'id7', 'mother7', 'father7', 'gender7', 'role7', 'color7', ':3,3', false, 'label7', 'smallLabel7'
-                    ]
-                  ],
-                  pedigrees_count: 14
-                },
-                {
-                  pedigree: [
-                    ['identifier8', 'id8', 'mother8', 'father8', 'gender8', 'role8', 'color8', ':16,13', true, 'label8', 'smallLabel8']
-                  ],
-                  pedigrees_count: 11
-                }
+            ],
+            pedigrees_count: 1
+          },
+          {
+            counter_id: 4,
+            group_name: 'groupName2',
+            pedigree: [
+              [
+                'identifier4',
+                'id4',
+                'mother4',
+                'father4',
+                'gender4',
+                'role4',
+                'color4',
+                ':1,1',
+                true,
+                'label4',
+                'smallLabel4'
               ]
-            }
-          ], group_name: 'groupName2', phenotypes: ['pheno3', 'pheno4'], legend: [
-            {id: 'id3', name: 'name3', color: 'color3'},
-            {id: 'id4', name: 'name4', color: 'color4'}
-          ]
-        }],
-        families_total: 5
+            ],
+            pedigrees_count: 10
+          }
+        ], group_name: 'groupName2', phenotypes: ['phenotype6', 'phenotype7'], legend: [
+          {
+            id: 'id12',
+            name: 'name13',
+            color: 'color14'
+          }, {
+            id: 'id15',
+            name: 'name16',
+            color: 'color17'
+          }
+        ]
+      },
+      {
+        counters: [
+          {
+            counter_id: 5,
+            group_name: 'groupName5',
+            pedigree: [
+              [
+                'identifier5',
+                'id5',
+                'mother5',
+                'father5',
+                'gender5',
+                'role5',
+                'color5',
+                ':2,2',
+                true,
+                'label5',
+                'smallLabel5'
+              ]
+            ],
+            pedigrees_count: 9
+          },
+          {
+            counter_id: 6,
+            group_name: 'groupName6',
+            pedigree: [
+              [
+                'identifier6',
+                'id6',
+                'mother6',
+                'father6',
+                'gender6',
+                'role6',
+                'color6',
+                ':51,7',
+                false,
+                'label6',
+                'smallLabel6'
+              ]
+            ],
+            pedigrees_count: 85
+          }
+        ], group_name: 'groupName3', phenotypes: ['phenotype8', 'phenotype9'], legend: [
+          {
+            id: 'id18',
+            name: 'name19',
+            color: 'color20'
+          }, {
+            id: 'id21',
+            name: 'name22',
+            color: 'color23'
+          }
+        ]
+      },
+      {
+        counters: [
+          {
+            counter_id: 7,
+            group_name: 'groupName7',
+            pedigree: [
+              [
+                'identifier7',
+                'id7',
+                'mother7',
+                'father7',
+                'gender7',
+                'role7',
+                'color7',
+                ':3,3',
+                false,
+                'label7',
+                'smallLabel7'
+              ]
+            ],
+            pedigrees_count: 14
+          },
+          {
+            counter_id: 8,
+            group_name: 'groupName6',
+            pedigree: [
+              [
+                'identifier8',
+                'id8',
+                'mother8',
+                'father8',
+                'gender8',
+                'role8',
+                'color8',
+                ':16,13',
+                true,
+                'label8',
+                'smallLabel8'
+              ]
+            ],
+            pedigrees_count: 11
+          }
+        ], group_name: 'groupName4', phenotypes: ['phenotype10', 'phenotype11'], legend: [
+          {
+            id: 'id24',
+            name: 'name25',
+            color: 'color26'
+          }, {
+            id: 'id27',
+            name: 'name28',
+            color: 'color29'
+          }
+        ]
       }
-    );
+    ], 5);
 
     expect(mockFamilyReport1).toEqual(mockFamilyReport2);
   });
@@ -759,60 +830,56 @@ describe('VariantReport', () => {
           ['col1', 'col2', 'col3']
           )
         ]),
-      new FamilyReport(
-        [
-          new FamilyCounters([
-            new FamilyCounter([
-              new PedigreeCounter([
-                new PedigreeData(
-                  'identifier1', 'id1', 'mother1', 'father1', 'gender1', 'role1', 'color1', [2, 1], true, 'label1', 'smallLabel1')], 5),
-              new PedigreeCounter([
-                new PedigreeData(
-                  'identifier2', 'id2', 'mother2', 'father2', 'gender2', 'role2', 'color2', [5, 7], false, 'label2', 'smallLabel2')], 7)
-            ]),
-            new FamilyCounter([
-              new PedigreeCounter([
-                new PedigreeData(
-                  'identifier3', 'id3', 'mother3', 'father3', 'gender3', 'role3', 'color3', [6, 8], false, 'label3', 'smallLabel3')], 1),
-              new PedigreeCounter([
-                new PedigreeData(
-                  'identifier4', 'id4', 'mother4', 'father4', 'gender4', 'role4', 'color4', [1, 1], true, 'label4', 'smallLabel4')], 10)
-            ]),
-          ],
-          'groupName1', ['pheno1', 'pheno2'],
-          new Legend(
-            [
-              new LegendItem('id1', 'name1', 'color1'),
-              new LegendItem('id2', 'name2', 'color2')
-            ]
-          )),
-          new FamilyCounters([
-            new FamilyCounter([
-              new PedigreeCounter([
-                new PedigreeData(
-                  'identifier5', 'id5', 'mother5', 'father5', 'gender5', 'role5', 'color5', [2, 2], true, 'label5', 'smallLabel5')], 9),
-              new PedigreeCounter([
-                new PedigreeData(
-                  'identifier6', 'id6', 'mother6', 'father6', 'gender6', 'role6', 'color6', [51, 7], false, 'label6', 'smallLabel6')], 85)
-            ]),
-            new FamilyCounter([
-              new PedigreeCounter([
-                new PedigreeData(
-                  'identifier7', 'id7', 'mother7', 'father7', 'gender7', 'role7', 'color7', [3, 3], false, 'label7', 'smallLabel7')], 14),
-              new PedigreeCounter([
-                new PedigreeData(
-                  'identifier8', 'id8', 'mother8', 'father8', 'gender8', 'role8', 'color8', [16, 13], true, 'label8', 'smallLabel8')], 11)
-            ]),
-          ],
-          'groupName2', ['pheno3', 'pheno4'],
-          new Legend(
-            [
-              new LegendItem('id3', 'name3', 'color3'),
-              new LegendItem('id4', 'name4', 'color4')
-            ]
-          ))
-        ], 5
-      ),
+      new FamilyReport([
+        new FamilyCounter([
+          new PedigreeCounter(1, 'groupName1', [
+            new PedigreeData(
+              'identifier1', 'id1', 'mother1', 'father1', 'gender1', 'role1',
+              'color1', [2, 1], true, 'label1', 'smallLabel1')], 5),
+          new PedigreeCounter(2, 'groupName1', [
+            new PedigreeData(
+              'identifier2', 'id2', 'mother2', 'father2', 'gender2', 'role2',
+              'color2', [5, 7], false, 'label2', 'smallLabel2')], 7)
+        ], 'groupName1', ['phenotype4', 'phenotype5'],
+        new Legend([new LegendItem('id6', 'name7', 'color8'), new LegendItem('id9', 'name10', 'color11')])
+        ),
+        new FamilyCounter([
+          new PedigreeCounter(3, 'groupName2', [
+            new PedigreeData(
+              'identifier3', 'id3', 'mother3', 'father3', 'gender3', 'role3',
+              'color3', [6, 8], false, 'label3', 'smallLabel3')], 1),
+          new PedigreeCounter(4, 'groupName2', [
+            new PedigreeData(
+              'identifier4', 'id4', 'mother4', 'father4', 'gender4', 'role4',
+              'color4', [1, 1], true, 'label4', 'smallLabel4')], 10)
+        ], 'groupName2', ['phenotype6', 'phenotype7'],
+        new Legend([new LegendItem('id12', 'name13', 'color14'), new LegendItem('id15', 'name16', 'color17')])
+        ),
+        new FamilyCounter([
+          new PedigreeCounter(5, 'groupName3', [
+            new PedigreeData(
+              'identifier5', 'id5', 'mother5', 'father5',
+              'gender5', 'role5', 'color5', [2, 2], true, 'label5', 'smallLabel5')], 9),
+          new PedigreeCounter(6, 'groupName3', [
+            new PedigreeData(
+              'identifier6', 'id6', 'mother6', 'father6',
+              'gender6', 'role6', 'color6', [51, 7], false, 'label6', 'smallLabel6')], 85)
+        ], 'groupName3', ['phenotype8', 'phenotype9'],
+        new Legend([new LegendItem('id18', 'name19', 'color20'), new LegendItem('id21', 'name22', 'color23')])
+        ),
+        new FamilyCounter([
+          new PedigreeCounter(7, 'groupName4', [
+            new PedigreeData(
+              'identifier7', 'id7', 'mother7', 'father7',
+              'gender7', 'role7', 'color7', [3, 3], false, 'label7', 'smallLabel7')], 14),
+          new PedigreeCounter(8, 'groupName4', [
+            new PedigreeData(
+              'identifier8', 'id8', 'mother8', 'father8',
+              'gender8', 'role8', 'color8', [16, 13], true, 'label8', 'smallLabel8')], 11)
+        ], 'groupName4', ['phenotype10', 'phenotype11'],
+        new Legend([new LegendItem('id24', 'name25', 'color26'), new LegendItem('id27', 'name28', 'color29')])
+        ),
+      ], 5),
       new DenovoReport(
         [
           new EffectTypeTable(
@@ -835,114 +902,241 @@ describe('VariantReport', () => {
         study_name: 'studyName1',
         study_description: 'studyDescription1',
 
-        people_report: {
-          people_counters: [
-            {
-              counters: [
-                { column: 'col1', row1: 7, row2: 13, row3: 17 },
-                { column: 'col2', row1: 15, row2: 666, row3: 42 },
-              ],
-              group_name: 'mock_group',
-              rows: ['row1', 'row2', 'row3'],
-              columns: ['col1', 'col2', 'col3'],
-            }, {
-              counters: [
-                { column: 'col3', row1: 67, row2: 12, row3: 18 },
-                { column: 'col4', row1: 14, row2: 554, row3: 67 },
-              ],
-              group_name: 'mock_group',
-              rows: ['row1', 'row2', 'row3'],
-              columns: ['col1', 'col2', 'col3'],
-            }
-          ]
-        },
-        families_report: {
-          families_counters: [{
+        people_report: [{
+          counters: [
+            { column: 'col1', row1: 7, row2: 13, row3: 17 },
+            { column: 'col2', row1: 15, row2: 666, row3: 42 },
+          ],
+          group_name: 'mock_group',
+          rows: ['row1', 'row2', 'row3'],
+          columns: ['col1', 'col2', 'col3'],
+        }, {
+          counters: [
+            { column: 'col3', row1: 67, row2: 12, row3: 18 },
+            { column: 'col4', row1: 14, row2: 554, row3: 67 },
+          ],
+          group_name: 'mock_group',
+          rows: ['row1', 'row2', 'row3'],
+          columns: ['col1', 'col2', 'col3'],
+        }],
+        families_report: [
+          {
             counters: [
               {
-                counters: [
-                  {
-                    pedigree: [
-                      ['identifier1', 'id1', 'mother1', 'father1', 'gender1', 'role1', 'color1', ':2,1', true, 'label1', 'smallLabel1']
-                    ],
-                    pedigrees_count: 5
-                  },
-                  {
-                    pedigree: [
-                      [
-                        'identifier2', 'id2', 'mother2', 'father2', 'gender2', 'role2', 'color2', ':5,7', false, 'label2', 'smallLabel2'
-                      ]
-                    ],
-                    pedigrees_count: 7
-                  }
-                ]
-              }, {
-                counters: [
-                  {
-                    pedigree: [
-                      [
-                        'identifier3', 'id3', 'mother3', 'father3', 'gender3', 'role3', 'color3', ':6,8', false, 'label3', 'smallLabel3'
-                      ]
-                    ],
-                    pedigrees_count: 1
-                  },
-                  {
-                    pedigree: [
-                      ['identifier4', 'id4', 'mother4', 'father4', 'gender4', 'role4', 'color4', ':1,1', true, 'label4', 'smallLabel4']
-                    ],
-                    pedigrees_count: 10
-                  }
-                ]
+                counter_id: 1,
+                group_name: 'groupName1',
+                pedigree: [
+                  [
+                    'identifier1',
+                    'id1',
+                    'mother1',
+                    'father1',
+                    'gender1',
+                    'role1',
+                    'color1',
+                    ':2,1',
+                    true,
+                    'label1',
+                    'smallLabel1'
+                  ]
+                ],
+                pedigrees_count: 5
+              },
+              {
+                counter_id: 2,
+                group_name: 'groupName1',
+                pedigree: [
+                  [
+                    'identifier2',
+                    'id2',
+                    'mother2',
+                    'father2',
+                    'gender2',
+                    'role2',
+                    'color2',
+                    ':5,7',
+                    false,
+                    'label2',
+                    'smallLabel2'
+                  ]
+                ],
+                pedigrees_count: 7
               }
-            ], group_name: 'groupName1', phenotypes: ['pheno1', 'pheno2'], legend: [
-              {id: 'id1', name: 'name1', color: 'color1'},
-              {id: 'id2', name: 'name2', color: 'color2'}
+            ], group_name: 'groupName1', phenotypes: ['phenotype4', 'phenotype5'], legend: [
+              {
+                id: 'id6',
+                name: 'name7',
+                color: 'color8'
+              }, {
+                id: 'id9',
+                name: 'name10',
+                color: 'color11'
+              }
             ]
           },
           {
             counters: [
               {
-                counters: [
-                  {
-                    pedigree: [
-                      ['identifier5', 'id5', 'mother5', 'father5', 'gender5', 'role5', 'color5', ':2,2', true, 'label5', 'smallLabel5']
-                    ],
-                    pedigrees_count: 9
-                  },
-                  {
-                    pedigree: [
-                      [
-                        'identifier6', 'id6', 'mother6', 'father6', 'gender6', 'role6', 'color6', ':51,7', false, 'label6', 'smallLabel6'
-                      ]
-                    ],
-                    pedigrees_count: 85
-                  }
-                ]
-              }, {
-                counters: [
-                  {
-                    pedigree: [
-                      [
-                        'identifier7', 'id7', 'mother7', 'father7', 'gender7', 'role7', 'color7', ':3,3', false, 'label7', 'smallLabel7'
-                      ]
-                    ],
-                    pedigrees_count: 14
-                  },
-                  {
-                    pedigree: [
-                      ['identifier8', 'id8', 'mother8', 'father8', 'gender8', 'role8', 'color8', ':16,13', true, 'label8', 'smallLabel8']
-                    ],
-                    pedigrees_count: 11
-                  }
-                ]
+                counter_id: 3,
+                group_name: 'groupName2',
+                pedigree: [
+                  [
+                    'identifier3',
+                    'id3',
+                    'mother3',
+                    'father3',
+                    'gender3',
+                    'role3',
+                    'color3',
+                    ':6,8',
+                    false,
+                    'label3',
+                    'smallLabel3'
+                  ]
+                ],
+                pedigrees_count: 1
+              },
+              {
+                counter_id: 4,
+                group_name: 'groupName2',
+                pedigree: [
+                  [
+                    'identifier4',
+                    'id4',
+                    'mother4',
+                    'father4',
+                    'gender4',
+                    'role4',
+                    'color4',
+                    ':1,1',
+                    true,
+                    'label4',
+                    'smallLabel4'
+                  ]
+                ],
+                pedigrees_count: 10
               }
-            ], group_name: 'groupName2', phenotypes: ['pheno3', 'pheno4'], legend: [
-              {id: 'id3', name: 'name3', color: 'color3'},
-              {id: 'id4', name: 'name4', color: 'color4'}
+            ], group_name: 'groupName2', phenotypes: ['phenotype6', 'phenotype7'], legend: [
+              {
+                id: 'id12',
+                name: 'name13',
+                color: 'color14'
+              }, {
+                id: 'id15',
+                name: 'name16',
+                color: 'color17'
+              }
             ]
-          }],
-          families_total: 5
-        },
+          },
+          {
+            counters: [
+              {
+                counter_id: 5,
+                group_name: 'groupName5',
+                pedigree: [
+                  [
+                    'identifier5',
+                    'id5',
+                    'mother5',
+                    'father5',
+                    'gender5',
+                    'role5',
+                    'color5',
+                    ':2,2',
+                    true,
+                    'label5',
+                    'smallLabel5'
+                  ]
+                ],
+                pedigrees_count: 9
+              },
+              {
+                counter_id: 6,
+                group_name: 'groupName6',
+                pedigree: [
+                  [
+                    'identifier6',
+                    'id6',
+                    'mother6',
+                    'father6',
+                    'gender6',
+                    'role6',
+                    'color6',
+                    ':51,7',
+                    false,
+                    'label6',
+                    'smallLabel6'
+                  ]
+                ],
+                pedigrees_count: 85
+              }
+            ], group_name: 'groupName3', phenotypes: ['phenotype8', 'phenotype9'], legend: [
+              {
+                id: 'id18',
+                name: 'name19',
+                color: 'color20'
+              }, {
+                id: 'id21',
+                name: 'name22',
+                color: 'color23'
+              }
+            ]
+          },
+          {
+            counters: [
+              {
+                counter_id: 7,
+                group_name: 'groupName4',
+                pedigree: [
+                  [
+                    'identifier7',
+                    'id7',
+                    'mother7',
+                    'father7',
+                    'gender7',
+                    'role7',
+                    'color7',
+                    ':3,3',
+                    false,
+                    'label7',
+                    'smallLabel7'
+                  ]
+                ],
+                pedigrees_count: 14
+              },
+              {
+                counter_id: 8,
+                group_name: 'groupName4',
+                pedigree: [
+                  [
+                    'identifier8',
+                    'id8',
+                    'mother8',
+                    'father8',
+                    'gender8',
+                    'role8',
+                    'color8',
+                    ':16,13',
+                    true,
+                    'label8',
+                    'smallLabel8'
+                  ]
+                ],
+                pedigrees_count: 11
+              }
+            ], group_name: 'groupName4', phenotypes: ['phenotype10', 'phenotype11'], legend: [
+              {
+                id: 'id24',
+                name: 'name25',
+                color: 'color26'
+              }, {
+                id: 'id27',
+                name: 'name28',
+                color: 'color29'
+              }
+            ]
+          }
+        ], families: 5,
         denovo_report: {
           tables: [
             {
