@@ -1,3 +1,5 @@
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
+
 import pytest
 
 from dae.pedigrees.family import Family
@@ -13,7 +15,6 @@ from dae.pedigrees.family import Person
 
 from dae.pedigrees.interval_sandwich import SandwichSolver
 from dae.pedigrees.layout import IndividualWithCoordinates, Layout
-from dae.pedigrees.drawing import OffsetLayoutDrawer
 
 
 @pytest.fixture(scope="function")
@@ -208,13 +209,6 @@ def individuals_intervals_from_family2(intervals_from_family2):
 @pytest.fixture(scope="function")
 def layout_from_family2(individuals_intervals_from_family2):
     return [Layout(individuals_intervals_from_family2)]
-
-
-@pytest.fixture(scope="function")
-def drawing_from_family2(layout_from_family2):
-    return OffsetLayoutDrawer(
-        layout_from_family2, 0, 0, show_id=True, show_family=True
-    )
 
 
 @pytest.fixture(scope="session")

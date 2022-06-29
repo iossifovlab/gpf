@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+"""Tool to convert pedigree file into cannonical GPF pedigree file."""
 
 import os
 import sys
@@ -13,12 +14,43 @@ from dae.gpf_instance.gpf_instance import GPFInstance
 logger = logging.getLogger("ped2ped")
 
 
+def _handle_partition_description(families, argv):
+    if argv.partition_description:
+        partition_description = ParquetPartitionDescriptor.from_config(
+            argv.partition_description
+        )
+        families = partition_description.add_family_bins_to_families(families)
+    return families
+
+
+def _handle_vcf_files(families, argv, gpf_instance):
+    variants_filenames, variants_params = \
+        VcfLoader.parse_cli_arguments(argv)
+
+    if variants_filenames:
+        assert variants_filenames is not None
+
+        variants_loader = VcfLoader(
+            families,
+            variants_filenames,
+            params=variants_params,
+            genome=gpf_instance.reference_genome,
+        )
+
+        families = variants_loader.families
+    return families
+
+
 def main(argv, gpf_instance=None):
+    """Transform a pedigree file into cannonical GPF pedigree.
+
+    It should be called from the command line.
+    """
     if gpf_instance is None:
         gpf_instance = GPFInstance()
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--verbose', '-V', action='count', default=0)
+    parser.add_argument("--verbose", "-V", action="count", default=0)
 
     FamiliesLoader.cli_arguments(parser)
     VcfLoader.cli_arguments(parser, options_only=True)
@@ -54,43 +86,27 @@ def main(argv, gpf_instance=None):
         logging.basicConfig(level=logging.WARNING)
 
     filename, params = FamiliesLoader.parse_cli_arguments(argv)
-    logger.info(F"PED PARAMS: {params}")
+    logger.info("PED PARAMS: %s", params)
 
     loader = FamiliesLoader(filename, **params)
     families = loader.load()
 
-    if argv.partition_description:
-        partition_description = ParquetPartitionDescriptor.from_config(
-            argv.partition_description
-        )
-        families = partition_description.add_family_bins_to_families(families)
-
-    variants_filenames, variants_params = \
-        VcfLoader.parse_cli_arguments(argv)
-
-    if variants_filenames:
-        assert variants_filenames is not None
-
-        variants_loader = VcfLoader(
-            families,
-            variants_filenames,
-            params=variants_params,
-            genome=gpf_instance.reference_genome,
-        )
-
-        families = variants_loader.families
+    families = _handle_partition_description(families, argv)
+    families = _handle_vcf_files(families, argv, gpf_instance)
 
     if families.broken_families:
         for family_id, family in families.broken_families.items():
             if not family.has_members():
                 del families[family_id]
                 logger.warning(
-                    f"family {family_id} does not contain sequenced members "
-                    f"and is removed from the pedigree: {family}")
+                    "family %s does not contain sequenced members "
+                    "and is removed from the pedigree: %s", family_id, family)
 
     if not argv.output_filename:
         output_filename, _ = os.path.splitext(os.path.basename(filename))
         output_filename = f"{output_filename}.ped"
+    elif argv.output_filename == "-":
+        output_filename = sys.stdout
     else:
         output_filename = argv.output_filename
 

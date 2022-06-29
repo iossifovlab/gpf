@@ -1,3 +1,5 @@
+"""Family members' roles with respect to the proband."""
+
 import logging
 
 from collections import defaultdict
@@ -10,10 +12,12 @@ logger = logging.getLogger(__name__)
 
 
 class Mating:
+    """Class to represent a mating unit."""
+
     def __init__(self, mom_id, dad_id):
         self.mom_id = mom_id
         self.dad_id = dad_id
-        self.id = Mating.build_id(mom_id, dad_id)
+        self.mating_id = Mating.build_id(mom_id, dad_id)
         self.children = set()
 
     @staticmethod
@@ -22,22 +26,25 @@ class Mating:
 
     @staticmethod
     def parents_id(person):
-        assert person.mom_id is None or type(person.mom_id) == str, person
-        assert person.dad_id is None or type(person.dad_id) == str, person
+        assert person.mom_id is None or isinstance(person.mom_id, str), person
+        assert person.dad_id is None or isinstance(person.dad_id, str), person
 
         return Mating.build_id(person.mom_id, person.dad_id)
 
     def __repr__(self):
-        return f"({self.id}> Mom: {self.mom_id}, Dad: {self.dad_id})"
+        return f"({self.mating_id}> Mom: {self.mom_id}, Dad: {self.dad_id})"
 
 
-class FamilyRoleBuilder:
+class FamilyRoleBuilder:  # pylint: disable=too-few-public-methods
+    """Build roles of family members."""
+
     def __init__(self, family):
         self.family = family
         self.family_matings = self._build_family_matings()
         self.members_matings = self._build_members_matings()
 
     def build_roles(self):
+        """Build roles of all family members."""
         proband = self._get_family_proband()
         if proband is None:
             self._assign_unknown_roles()
@@ -62,8 +69,9 @@ class FamilyRoleBuilder:
         if person.role is None or person.role == Role.unknown:
             if role != person.role:
                 logger.warning(
-                    f"changing role for {person} from {person.role} to {role}"
-                )
+                    "changing role for %s from %s to %s",
+                    person, person.role, role)
+                # pylint: disable=protected-access
                 person._role = role
                 person._attributes["role"] = role
 

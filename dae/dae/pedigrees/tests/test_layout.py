@@ -1,3 +1,5 @@
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
+
 def test_layout(layout_from_family2):
     assert layout_from_family2 is not None
 
@@ -46,7 +48,6 @@ def test_layout_positions(layout_from_family2):
     assert layout.positions[0][0].x == 10.0
     assert layout.positions[0][0].y == 50.0
     assert layout.positions[0][0].size == 21.0
-    assert layout.positions[0][0].scale == 1.0
 
     assert (
         layout.positions[0][1].individual.member.person_id
@@ -55,7 +56,6 @@ def test_layout_positions(layout_from_family2):
     assert layout.positions[0][1].x == 53.5
     assert layout.positions[0][1].y == 50.0
     assert layout.positions[0][1].size == 21.0
-    assert layout.positions[0][1].scale == 1.0
 
     assert len(layout.positions[1]) == 1
     assert (
@@ -65,7 +65,6 @@ def test_layout_positions(layout_from_family2):
     assert layout.positions[1][0].x == 31.75
     assert layout.positions[1][0].y == 80.0
     assert layout.positions[1][0].size == 21.0
-    assert layout.positions[1][0].scale == 1.0
 
 
 def test_layout__individuals_by_rank(layout_from_family2):

@@ -1,5 +1,8 @@
-import pytest
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
+
 from io import StringIO
+
+import pytest
 import pandas as pd
 
 from dae.variants.attributes import Sex, Status, Role
@@ -138,7 +141,7 @@ def test_flexible_pedigree_read_from_filesystem(filepath, fixture_dirname):
     expected_df = expected_pedigree_df.copy()
     expected_df["sample_id"] = expected_df["person_id"]
 
-    absolute_filepath = fixture_dirname("pedigrees/{}".format(filepath))
+    absolute_filepath = fixture_dirname(f"pedigrees/{filepath}")
     pedigree_df = FamiliesLoader.flexible_pedigree_read(absolute_filepath)
     assert pedigree_df.equals(expected_df)
 
@@ -201,6 +204,4 @@ def test_flexible_pedigree_read_no_header(fixture_dirname):
         ped_status=5,
         ped_role=6,
     )
-    print(pedigree_df)
-    print(expected_df)
     assert pedigree_df.equals(expected_df)

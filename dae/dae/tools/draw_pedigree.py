@@ -1,7 +1,11 @@
 #!/usr/bin/env python
+"""Tool to draw pedigrees defined in a file."""
 import sys
 import argparse
 import logging
+
+import matplotlib as mpl
+import matplotlib.pyplot as plt
 
 from dae.pedigrees.loader import FamiliesLoader
 
@@ -11,17 +15,15 @@ from dae.common_reports.family_report import FamiliesReport
 from dae.configuration.gpf_config_parser import FrozenBox
 from dae.person_sets import PersonSetCollection
 
-import matplotlib as mpl
-import matplotlib.pyplot as plt
-
-mpl.use("PS")  # noqa
-plt.ioff()  # noqa
+mpl.use("PS")
+plt.ioff()
 
 
 logger = logging.getLogger("draw_pedigree")
 
 
 def build_families_report(families):
+    """Build a family report based on affected status."""
     status_collection_config = {
         "id": "status",
         "name": "Affected status",
@@ -55,12 +57,12 @@ def build_families_report(families):
     return FamiliesReport(families, [status_collection])
 
 
-def draw_pedigree(layout, title, show_id=True, show_family=True):
+def draw_pedigree(layout, title, show_family=True, tags=None):
 
     layout_drawer = OffsetLayoutDrawer(
-        layout, 0, 0, show_id=show_id, show_family=show_family
+        layout, show_family=show_family
     )
-    figure = layout_drawer.draw(title=title)
+    figure = layout_drawer.draw(title=title, tags=tags)
     return figure
 
 
@@ -71,37 +73,41 @@ def build_family_layout(family):
 
 
 def draw_families_report(families):
+    """Draw families from families report."""
     families_report = build_families_report(families)
     assert len(families_report.families_counters) == 1
     family_counters = families_report.families_counters[0]
-    logger.info(f"total number family types: {len(family_counters.counters)}")
+    logger.info("total number family types: %s", len(family_counters.counters))
 
     for family_counter in family_counters.counters.values():
         family = family_counter.family
         layout = build_family_layout(family)
-        logger.warning(
-            f"drawing {family}; list of families in this category: "
-            f"{','.join([f.family_id for f in family_counter.families])}")
+        logger.info(
+            "drawing %s; list of families in this category: %s",
+            family, ",".join([f.family_id for f in family_counter.families]))
 
         if len(family_counter.families) > 5:
             count = len(family_counter.families)
             title = f"Number of families: {count}"
         else:
             title = ", ".join([f.family_id for f in family_counter.families])
-
-        figure = draw_pedigree(layout, title=title)
+        figure = draw_pedigree(layout, title=title, tags=family.tags)
         yield figure
 
 
 def draw_families(families):
+    """Draw families."""
     for family_id, family in families.items():
         layout = build_family_layout(family)
 
-        figure = draw_pedigree(layout, title=family.family_id)
+        figure = draw_pedigree(layout, title=family_id, tags=family.tags)
         yield figure
 
 
-def main(argv=sys.argv[1:]):
+def main(argv=None):
+    """Run the CLI for draw_pedigree tool."""
+    if argv is None:
+        argv = sys.argv[1:]
 
     parser = argparse.ArgumentParser(
         description="Produce a pedigree drawing in PDF format "
@@ -110,7 +116,7 @@ def main(argv=sys.argv[1:]):
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
 
-    parser.add_argument('--verbose', '-V', action='count', default=0)
+    parser.add_argument("--verbose", "-V", action="count", default=0)
 
     FamiliesLoader.cli_arguments(parser)
 
@@ -149,7 +155,7 @@ def main(argv=sys.argv[1:]):
 
     mode = argv.mode
     assert mode in ("families", "report")
-    print("mode:", mode)
+    logger.warning("using mode: %s", mode)
     if mode == "report":
         generator = draw_families_report(families)
     else:
