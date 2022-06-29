@@ -1,4 +1,5 @@
 import json
+import base64
 import django.contrib.auth
 from django.db import IntegrityError
 from django.contrib.auth import get_user_model
@@ -27,6 +28,7 @@ from .serializers import UserSerializer, UserWithoutEmailSerializer
 from .utils import LOCKOUT_THRESHOLD, csrf_clear
 
 from oauth2_provider.contrib.rest_framework import OAuth2Authentication
+from oauth2_provider.models import get_application_model
 
 
 def iterator_to_json(users):
@@ -338,3 +340,28 @@ def check_verif_path(request):
             {"errors": "Verification path does not exist."},
             status=status.HTTP_400_BAD_REQUEST,
         )
+
+
+@api_view(["GET"])
+@authentication_classes((OAuth2Authentication,))
+def get_federation_credentials(request):
+    user = request.user
+    if not user.is_authenticated:
+        return Response(status=status.HTTP_401_UNAUTHORIZED)
+
+    Application = get_application_model()
+    new_application = Application(**{
+        "name": f"federation-{user}-app",
+        "user_id": user.id,
+        "client_type": "confidential",
+        "authorization_grant_type": "client-credentials"
+    })
+
+    new_application.full_clean()
+    cleartext_secret = new_application.client_secret
+    new_application.save()
+
+    credential = base64.b64encode(
+        f"{new_application.client_id}:{cleartext_secret}".encode("utf-8")
+    )
+    return Response({"credential": credential}, status=status.HTTP_200_OK)

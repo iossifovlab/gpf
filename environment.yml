@@ -51,3 +51,5 @@ dependencies:
   - tqdm=4.64.0
   - snakeobjects=3.1.1
   - google-cloud-bigquery=3.2.0
+  - pip:
+    - django-oauth-toolkit==2.1.0
