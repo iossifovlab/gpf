@@ -1,3 +1,5 @@
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
+
 import pytest
 
 from dae.pedigrees.family import Family
@@ -13,7 +15,6 @@ from dae.pedigrees.family import Person
 
 from dae.pedigrees.interval_sandwich import SandwichSolver
 from dae.pedigrees.layout import IndividualWithCoordinates, Layout
-from dae.pedigrees.drawing import OffsetLayoutDrawer
 
 
 @pytest.fixture(scope="function")
