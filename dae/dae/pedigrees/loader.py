@@ -194,9 +194,18 @@ class FamiliesLoader(CLILoader):
         arguments.append(CLIArgument(
             "--ped-tags",
             action="store_true",
-            default_value=False,
+            destination="ped_tags",
+            default_value=True,
             help_text="when specified each family will be tagged with "
             "a number of predeined tags [default: %(default)s]",
+        ))
+        arguments.append(CLIArgument(
+            "--ped-no-tags",
+            action="store_false",
+            destination="ped_tags",
+            default_value=True,
+            help_text="when specified tagging of families is disabled "
+            "[default: %(default)s]",
         ))
         arguments.append(CLIArgument(
             "--ped-no-header",
