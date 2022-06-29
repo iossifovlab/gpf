@@ -1,6 +1,6 @@
 """Helper class for tagging families."""
 
-from typing import Callable, Iterable, Optional, Tuple
+from typing import Callable, Iterable, Optional, Dict
 
 from dae.variants.attributes import Role, Status, Sex
 from dae.pedigrees.family import FamiliesData, Person, Family
@@ -257,31 +257,43 @@ def tag_missing_dad_family(family: Family) -> bool:
 class FamilyTagsBuilder:
     """Class used ot apply all tags to a family."""
 
-    TAGS: Tuple[Callable[[Family], bool], ...] = (
-        tag_nuclear_family,
-        tag_quad_family,
-        tag_trio_family,
-        tag_simplex_family,
-        tag_multiplex_family,
-        tag_control_family,
-        tag_affected_dad_family,
-        tag_affected_mom_family,
-        tag_affected_prb_family,
-        tag_affected_sib_family,
-        tag_male_prb_family,
-        tag_female_prb_family,
-        tag_missing_mom_family,
-        tag_missing_dad_family,
-    )
+    TAGS: Dict[str, Callable[[Family], bool]] = {
+        "tag_nuclear_family": tag_nuclear_family,
+        "tag_quad_family": tag_quad_family,
+        "tag_trio_family": tag_trio_family,
+        "tag_simplex_family": tag_simplex_family,
+        "tag_multiplex_family": tag_multiplex_family,
+        "tag_control_family": tag_control_family,
+        "tag_affected_dad_family": tag_affected_dad_family,
+        "tag_affected_mom_family": tag_affected_mom_family,
+        "tag_affected_prb_family": tag_affected_prb_family,
+        "tag_affected_sib_family": tag_affected_sib_family,
+        "tag_male_prb_family": tag_male_prb_family,
+        "tag_female_prb_family": tag_female_prb_family,
+        "tag_missing_mom_family": tag_missing_mom_family,
+        "tag_missing_dad_family": tag_missing_dad_family,
+    }
     def __init__(self):
-        self._taggers = list(self.TAGS)
+        self._taggers = {}
+        self._taggers.update(self.TAGS)
 
-    def add_tagger(self, tagger: Callable[[Family], bool]) -> None:
-        self._taggers.append(tagger)
+    def add_tagger(
+            self, label: str,
+            tagger: Callable[[Family], bool]) -> None:
+        self._taggers[label] = tagger
 
     def tag_family(self, family: Family) -> None:
-        for tagger in self._taggers:
-            tagger(family)
+        """Tag family with all available tags."""
+        family_tags = set()
+        for label, tagger in self._taggers.items():
+            value = tagger(family)
+            if isinstance(value, bool):
+                if value:
+                    family_tags.add(label)
+                continue
+
+            family_tags.add(f"{label}:{value}")
+        _tag(family, "tags", ";".join(sorted(family_tags)))
 
     def tag_families_data(self, families: FamiliesData):
         for family in families.values():

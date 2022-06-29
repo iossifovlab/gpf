@@ -19,6 +19,8 @@ from dae.pedigrees.family_tag_builder import FamilyTagsBuilder
     ("tag_female_prb_family", True),
     ("tag_missing_mom_family", False),
     ("tag_missing_dad_family", False),
+    ("tags", "tag_affected_prb_family;tag_affected_sib_family;"
+     "tag_female_prb_family;tag_multiplex_family;tag_nuclear_family")
 ])
 def test_family_tags_builder_simple(tag, value):
 
@@ -36,6 +38,4 @@ def test_family_tags_builder_simple(tag, value):
     tagger.tag_families_data(families)
 
     ped_df = families.ped_df
-
-    print(ped_df)
     assert all(ped_df[tag] == value)
