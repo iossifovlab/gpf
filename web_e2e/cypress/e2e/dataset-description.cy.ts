@@ -199,7 +199,8 @@ describe('Dataset description access rights tests', () => {
     page.logout();
   });
 
-  it('should login regular user, try to navgigate via the url to a dataset description page without', () => {
+  it('should login regular user, try to navgigate to a dataset description page without description via the url' +
+     'and get redirected back to the home page', () => {
     const homePageUrl = `${Cypress.config().baseUrl}datasets/ALL_genotypes/${toolPageLinks.geneBrowser}`;
     const datasetDescriptionUrl =
       `${Cypress.config().baseUrl}datasets/ALL_genotypes/${toolPageLinks.datasetDescription}`;
