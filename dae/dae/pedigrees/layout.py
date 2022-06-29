@@ -1,4 +1,5 @@
-import sys
+# pylint: disable=invalid-name
+
 import re
 import logging
 from collections import defaultdict, namedtuple
@@ -25,19 +26,18 @@ def layout_parser(layout):
         result["x"] = float(parsed["x"])
         result["y"] = float(parsed["y"])
         return result
-    else:
-        return None
+
+    return None
 
 
-class IndividualWithCoordinates(object):
+class IndividualWithCoordinates:
     SIZE = 21.0
 
-    def __init__(self, individual, x=0.0, y=0.0, size=SIZE, scale=1.0):
+    def __init__(self, individual, x=0.0, y=0.0, size=SIZE):
         self.individual = individual
         self.x = x
         self.y = y
         self.size = size
-        self.scale = scale
 
     @property
     def x_center(self):
@@ -48,19 +48,20 @@ class IndividualWithCoordinates(object):
         return self.y + self.size / 2.0
 
     def __repr__(self):
-        return "({}, {})".format(self.x, self.y)
+        return f"({self.x}, {self.y})"
 
 
-class Line(object):
-    def __init__(self, x1, y1, x2, y2, curved=False, curve_base_height=None):
+class Line:
+    def __init__(self, x1, y1, x2, y2, curve_base_height=None):
         self.x1 = x1
         self.y1 = y1
         self.x2 = x2
         self.y2 = y2
-        self.curved = curved
         self.curve_base_height = curve_base_height
 
-        assert self.curved == (self.curve_base_height is not None)
+    @property
+    def curved(self):
+        return self.curve_base_height is not None
 
     def curve_p0(self):
         return (self.x1, self.y1)
@@ -105,14 +106,10 @@ class Line(object):
         )
 
     def __repr__(self):
-        return "[({},{}) - ({},{})]".format(self.x1, self.y1, self.x2, self.y2)
+        return f"[({self.x1},{self.y1}) - ({self.x2},{self.y2})]"
 
 
-class CompositeLayout:
-    pass
-
-
-class Layout(object):
+class Layout:
     def __init__(self, intervals=None):
         self._intervals = intervals
         self.lines = []
@@ -151,8 +148,21 @@ class Layout(object):
             line.y1 += y_offset
             line.y2 += y_offset
 
+    def scale(self, scale=1.0):
+        for generation in self.positions:
+            for individual in generation:
+                individual.x *= scale
+                individual.y *= scale
+                individual.size *= scale
+        for line in self.lines:
+            line.x1 *= scale
+            line.x2 *= scale
+            line.y1 *= scale
+            line.y2 *= scale
+
     @staticmethod
-    def _handle_broken_family_connections(family, x_offset=15):
+    def _handle_broken_family_connections(family):
+        # pylint: disable=protected-access
         individuals = []
         for person in family.full_members:
             individuals.append(Individual(member=person))
@@ -170,7 +180,7 @@ class Layout(object):
 
         if family_connections is None:
             logger.warning(
-                f"missing family connections for family: {family.family_id}")
+                "missing family connections for family: %s", family.family_id)
             return Layout._handle_broken_family_connections(family)
 
         assert family_connections.is_connected()
@@ -178,7 +188,7 @@ class Layout(object):
         intervals = SandwichSolver.solve(sandwich_instance)
 
         if intervals is None:
-            logger.warning(f"no intervals for family: {family.family_id}")
+            logger.warning("no intervals for family: %s", family.family_id)
             return Layout._handle_broken_family_connections(family)
 
         individuals_intervals = [
@@ -201,7 +211,7 @@ class Layout(object):
 
         if family_connections.is_connected():
             logger.debug(
-                f"building layout for connected family: {family.family_id}")
+                "building layout for connected family: %s", family.family_id)
             return [Layout._build_family_layout(family, family_connections)]
 
         layouts = []
@@ -224,32 +234,27 @@ class Layout(object):
 
     @staticmethod
     def from_family_layout(family):
-        if any([p.layout is None for p in family.full_members]):
-            print(
-                f"family {family.family_id} has member without layout",
-                file=sys.stderr,
-            )
+        if any(p.layout is None for p in family.full_members):
+            logger.warning(
+                "family %s has member without layout", family.family_id)
             return None
 
         family_connections = FamilyConnections.from_family(
             family, add_missing_members=False
         )
         if family_connections is None:
-            print(
-                f"can't build family connections for family "
-                f"{family.family_id}",
-                file=sys.stderr,
-            )
+            logger.warning(
+                "can't build family connections for family %s",
+                family.family_id)
             return None
 
         layout_positions = defaultdict(list)
         for person in family_connections.members:
             position = layout_parser(person.layout)
             if position is None:
-                print(
-                    f"can't parse layout for person {person}: {person.layout}",
-                    file=sys.stderr,
-                )
+                logger.warning(
+                    "can't parse layout for person %s: %s",
+                    person, person.layout)
                 return None
             individual = family_connections.get_individual(person.person_id)
 
@@ -275,7 +280,7 @@ class Layout(object):
 
         layout = Layout()
         layout.positions = individual_positions
-        layout._create_lines()
+        layout._create_lines()  # pylint: disable=protected-access
 
         return layout
 
@@ -398,7 +403,6 @@ class Layout(object):
                             individual.y_center,
                             other_individual.x,
                             other_individual.y_center,
-                            True,
                             y_offset,
                         )
                         self.lines.append(line)
@@ -464,9 +468,7 @@ class Layout(object):
         }
         individual_position = self._id_to_position[individual]
 
-        ordered = list(others)
-        # print(ordered)
-        indices = [level.index(i) for i in ordered]
+        indices = [level.index(i) for i in list(others)]
         indices = sorted(indices)
 
         common_parent_index = level.index(individual)
@@ -646,8 +648,10 @@ class Layout(object):
             return self._move(ordered_parents[1:], offset)
         return self._move(ordered_parents[0:1], offset)
 
-    def _move(self, individuals, offset, already_moved=set(), min_gap=8.0):
+    def _move(self, individuals, offset, already_moved=None, min_gap=8.0):
         assert len(individuals) > 0
+        if already_moved is None:
+            already_moved = set()
 
         if abs(offset) < 1e-5:
             return 0

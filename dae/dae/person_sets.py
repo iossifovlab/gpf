@@ -129,7 +129,6 @@ class PersonSetCollection:
                 person_set.color,
                 dict(),
             )
-        print(result)
         return result
 
     @staticmethod

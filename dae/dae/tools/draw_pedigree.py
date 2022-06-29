@@ -57,10 +57,10 @@ def build_families_report(families):
     return FamiliesReport(families, [status_collection])
 
 
-def draw_pedigree(layout, title, show_id=True, show_family=True, tags=None):
+def draw_pedigree(layout, title, show_family=True, tags=None):
 
     layout_drawer = OffsetLayoutDrawer(
-        layout, 0, 0, show_id=show_id, show_family=show_family
+        layout, show_family=show_family
     )
     figure = layout_drawer.draw(title=title, tags=tags)
     return figure
