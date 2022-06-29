@@ -15,24 +15,28 @@ logger = logging.getLogger(__name__)
 
 
 class Dialect(ABC):
-    def __init__(self, ns:str = None):
-        # namespace, 
-        self.ns = ns 
+    """Caries info about a SQL dialect"""
+    def __init__(self, ns: str = None):
+        # namespace,
+        self.ns = ns
 
-    def add_unnest_in_join(self) -> bool:
-        return False 
+    @staticmethod
+    def add_unnest_in_join() -> bool:
+        return False
 
-    def float_type(self) -> str:
+    @staticmethod
+    def float_type() -> str:
         return "float"
 
-    def int_type(self) -> str:
-        return "int" 
+    @staticmethod
+    def int_type() -> str:
+        return "int"
 
-    def build_table_name(self, table:str, db:str) -> str:
+    def build_table_name(self, table: str, db: str) -> str:
         return f"`{self.ns}`.{db}.{table}" if self.ns else f"{db}.{table}"
 
-# family_variant_table & summary_allele_table are mandatory 
-# - no reliance on a variants table as in impala 
+# family_variant_table & summary_allele_table are mandatory
+# - no reliance on a variants table as in impala
 
 class BaseQueryBuilder(ABC):
     QUOTE = "'"
@@ -49,21 +53,21 @@ class BaseQueryBuilder(ABC):
             self, dialect:Dialect, db, family_variant_table, summary_allele_table, pedigree_table,
             family_variant_schema, summary_allele_schema, table_properties, pedigree_schema,
             pedigree_df, gene_models=None):
-        
+
         assert summary_allele_table is not None
         assert family_variant_table is not None 
-        
+
         self.dialect = dialect
         self.db = db
         self.family_variant_table = family_variant_table
         self.summary_allele_table = summary_allele_table
         self.pedigree_table = pedigree_table
         self.table_properties = table_properties
-        
+
         self.family_columns = family_variant_schema.keys() if family_variant_schema else []
         self.summary_columns = summary_allele_schema.keys() if summary_allele_schema else []
         self.combined_columns = {**family_variant_schema, **summary_allele_schema}
-    
+
         self.pedigree_columns = pedigree_schema
         self.ped_df = pedigree_df
         self.has_extra_attributes = "extra_attributes" in self.combined_columns
