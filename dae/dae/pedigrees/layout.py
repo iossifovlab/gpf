@@ -1,7 +1,11 @@
+"""Classes and helper functions to represent pedigree layout."""
 # pylint: disable=invalid-name
+from __future__ import annotations
 
 import re
 import logging
+from dataclasses import dataclass
+from typing import Dict, Union, List
 from collections import defaultdict, namedtuple
 from functools import reduce
 
@@ -16,12 +20,20 @@ logger = logging.getLogger(__name__)
 _LAYOUT_REGEX = re.compile(r"(?P<rank>\d):(?P<x>\d*\.?\d+),(?P<y>\d*\.?\d+)")
 
 
-def layout_parser(layout):
-    layout_groups = _LAYOUT_REGEX.search(str(layout))
+@dataclass
+class Point:
+    # pylint: disable=invalid-name
+    x: float
+    y: float
+
+
+def layout_parser(layout: str):
+    """Parse layout string."""
+    layout_groups = _LAYOUT_REGEX.search(layout)
 
     if layout_groups:
         parsed = layout_groups.groupdict()
-        result = {}
+        result: Dict[str, Union[int, float]] = {}
         result["rank"] = int(parsed["rank"])
         result["x"] = float(parsed["x"])
         result["y"] = float(parsed["y"])
@@ -31,6 +43,8 @@ def layout_parser(layout):
 
 
 class IndividualWithCoordinates:
+    """Class to represent individuals with specified coordinates."""
+
     SIZE = 21.0
 
     def __init__(self, individual, x=0.0, y=0.0, size=SIZE):
@@ -52,6 +66,9 @@ class IndividualWithCoordinates:
 
 
 class Line:
+    """Class to represent lines connecting individuals."""
+
+    # pylint: disable=too-many-arguments
     def __init__(self, x1, y1, x2, y2, curve_base_height=None):
         self.x1 = x1
         self.y1 = y1
@@ -110,6 +127,8 @@ class Line:
 
 
 class Layout:
+    """Represents a layout of a connected component of a family."""
+
     def __init__(self, intervals=None):
         self._intervals = intervals
         self.lines = []
@@ -126,6 +145,7 @@ class Layout:
     BBox = namedtuple("BBox", ["min_x", "min_y", "max_x", "max_y"])
 
     def get_bbox(self):
+        """Calculate the bounding box of a layout."""
         min_x = 0
         max_x = 0
         min_y = 0
@@ -138,6 +158,7 @@ class Layout:
         return Layout.BBox(min_x, min_y, max_x, max_y)
 
     def translate(self, x_offset=0.0, y_offset=0.0):
+        """Translate a layout."""
         for generation in self.positions:
             for individual in generation:
                 individual.x += x_offset
@@ -149,6 +170,7 @@ class Layout:
             line.y2 += y_offset
 
     def scale(self, scale=1.0):
+        """Scale the layout."""
         for generation in self.positions:
             for individual in generation:
                 individual.x *= scale
@@ -200,8 +222,8 @@ class Layout:
         return Layout(individuals_intervals)
 
     @staticmethod
-    def from_family(family: Family, add_missing_members=True):
-
+    def from_family(family: Family, add_missing_members=True) -> List[Layout]:
+        """Generate layout for each connected component of a family."""
         family_connections = FamilyConnections.from_family(
             family, add_missing_members=add_missing_members
         )
@@ -234,6 +256,7 @@ class Layout:
 
     @staticmethod
     def from_family_layout(family):
+        """Construct layout for each connected component using layout data."""
         if any(p.layout is None for p in family.full_members):
             logger.warning(
                 "family %s has member without layout", family.family_id)
@@ -302,6 +325,7 @@ class Layout:
         }
 
     def apply_to_family(self, family):
+        """Store family layout as individuals attributes."""
         for person_id, person in family.persons.items():
             if person_id not in self.id_to_position:
                 continue
@@ -480,10 +504,6 @@ class Layout:
         right_of_common_parent_reversed = list(
             reversed(right_of_common_parent)
         )
-
-        # print(indices)
-        # print(left_of_common_parent)
-        # print(right_of_common_parent)
 
         for index, parent_index in enumerate(left_of_common_parent[:-1]):
             parent = level[parent_index]

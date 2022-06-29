@@ -155,7 +155,7 @@ def main(argv=None):
 
     mode = argv.mode
     assert mode in ("families", "report")
-    print("mode:", mode)
+    logger.warning("using mode: %s", mode)
     if mode == "report":
         generator = draw_families_report(families)
     else:

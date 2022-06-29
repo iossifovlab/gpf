@@ -1,7 +1,7 @@
 """Classes and helpers for drawing pedigrees into a PDF file."""
 
-from copy import deepcopy
 import math
+from copy import deepcopy
 from typing import List
 
 import matplotlib as mpl
@@ -13,7 +13,7 @@ from matplotlib.path import Path
 from matplotlib.backends.backend_pdf import PdfPages
 
 from dae.variants.attributes import Sex, Role, Status
-from dae.pedigrees.layout import Layout
+from dae.pedigrees.layout import Layout, Point
 
 
 mpl.use("PS")  # noqa
@@ -46,7 +46,7 @@ class OffsetLayoutDrawer:
     """Class drawing a family pedigree using a prebuild family layout."""
 
     # pylint: disable=too-few-public-methods
-    GAP = 4.0
+    GAP = 2.0
 
     def __init__(
             self,
@@ -62,8 +62,8 @@ class OffsetLayoutDrawer:
         self._gap = self.GAP
         self._layouts = deepcopy(layouts)
         self._layouts_vertical_inverse()
-        for layout in self._layouts:
-            layout.scale(0.8)
+        # for layout in self._layouts:
+        #     layout.scale(0.5)
 
         self.show_family = show_family
         self.figsize = (7, 10)
@@ -182,103 +182,121 @@ class OffsetLayoutDrawer:
             return "red"
         return "purple"
 
+    def _draw_male_individual(self, axes, individual, color):
+        coords = [
+            individual.x + self._x_offset,
+            individual.y + self._y_offset,
+        ]
+        axes.add_patch(
+            mpatches.Rectangle(
+                coords,
+                individual.size,
+                individual.size,
+                facecolor=color,
+                edgecolor="black",
+            )
+        )
+
+        center_x = coords[0] + individual.size / 2.0
+        center_y = coords[1] + individual.size / 2.0
+
+        dlx = coords[0]
+        dly = coords[1]
+
+        return Point(center_x, center_y), Point(dlx, dly)
+
+    def _draw_female_individual(self, axes, individual, color):
+        coords = [
+            individual.x_center + self._x_offset,
+            individual.y_center + self._y_offset,
+        ]
+        axes.add_patch(
+            mpatches.Circle(
+                coords,
+                individual.size / 2,
+                facecolor=color,
+                edgecolor="black",
+            )
+        )
+
+        center_x = coords[0]
+        center_y = coords[1]
+
+        dlx = coords[0] + (individual.size / 2.0) * math.cos(
+            math.radians(225)
+        )
+        dly = coords[1] + (individual.size / 2.0) * math.sin(
+            math.radians(225)
+        )
+        return Point(center_x, center_y), Point(dlx, dly)
+
+    def _draw_unspecified_sex_individual(self, axes, individual, color):
+        size = math.sqrt((individual.size ** 2) / 2)
+        coords = [
+            individual.x + self._x_offset + (individual.size / 2),
+            individual.y + self._y_offset,
+        ]
+        axes.add_patch(
+            mpatches.Rectangle(
+                coords,
+                size,
+                size,
+                facecolor=color,
+                edgecolor="black",
+                angle=45.0,
+            )
+        )
+
+        center_x = coords[0]
+        center_y = coords[1] + individual.size / 2.0
+
+        dlx = coords[0] - individual.size / 4
+        dly = coords[1] + individual.size / 4
+
+        return Point(center_x, center_y), Point(dlx, dly)
+
+    def _draw_individual(self, axes, individual):
+        individual_color = self._infer_individual_color(individual)
+
+        if Sex.from_name(individual.individual.member.sex) == Sex.male:
+            center, bottom_left = self._draw_male_individual(
+                axes, individual, individual_color)
+        elif Sex.from_name(individual.individual.member.sex) == Sex.female:
+            center, bottom_left = self._draw_female_individual(
+                axes, individual, individual_color)
+
+        else:
+            center, bottom_left = self._draw_unspecified_sex_individual(
+                axes, individual, individual_color)
+
+        if individual.individual.member.role == Role.prb:
+            axes.add_patch(
+                mpatches.FancyArrow(
+                    bottom_left.x - self._gap,
+                    bottom_left.y - self._gap,
+                    self._gap,
+                    self._gap,
+                    length_includes_head=True,
+                    color="black",
+                    head_width=1.0,
+                    linewidth=0.1,
+                )
+            )
+
+        axes.annotate(
+            individual.individual.member.person_id,
+            (center.x, center.y),
+            color="black",
+            weight="bold",
+            fontsize=5,
+            ha="center",
+            va="center",
+        )
+
     def _draw_members(self, axes, layout):
         for level in layout.positions:
             for individual in level:
-                individual_color = self._infer_individual_color(individual)
-
-                if Sex.from_name(individual.individual.member.sex) == Sex.male:
-                    coords = [
-                        individual.x + self._x_offset,
-                        individual.y + self._y_offset,
-                    ]
-                    axes.add_patch(
-                        mpatches.Rectangle(
-                            coords,
-                            individual.size,
-                            individual.size,
-                            facecolor=individual_color,
-                            edgecolor="black",
-                        )
-                    )
-
-                    center_x = coords[0] + individual.size / 2.0
-                    center_y = coords[1] + individual.size / 2.0
-
-                    dlx = coords[0]
-                    dly = coords[1]
-                elif (
-                    Sex.from_name(individual.individual.member.sex)
-                    == Sex.female
-                ):
-                    coords = [
-                        individual.x_center + self._x_offset,
-                        individual.y_center + self._y_offset,
-                    ]
-                    axes.add_patch(
-                        mpatches.Circle(
-                            coords,
-                            individual.size / 2,
-                            facecolor=individual_color,
-                            edgecolor="black",
-                        )
-                    )
-
-                    center_x = coords[0]
-                    center_y = coords[1]
-
-                    dlx = coords[0] + (individual.size / 2.0) * math.cos(
-                        math.radians(225)
-                    )
-                    dly = coords[1] + (individual.size / 2.0) * math.sin(
-                        math.radians(225)
-                    )
-                else:
-                    size = math.sqrt((individual.size ** 2) / 2)
-                    coords = [
-                        individual.x + self._x_offset + (individual.size / 2),
-                        individual.y + self._y_offset,
-                    ]
-                    axes.add_patch(
-                        mpatches.Rectangle(
-                            coords,
-                            size,
-                            size,
-                            facecolor=individual_color,
-                            edgecolor="black",
-                            angle=45.0,
-                        )
-                    )
-
-                    center_x = coords[0]
-                    center_y = coords[1] + individual.size / 2.0
-
-                    dlx = coords[0] - individual.size / 4
-                    dly = coords[1] + individual.size / 4
-
-                if individual.individual.member.role == Role.prb:
-                    axes.add_patch(
-                        mpatches.FancyArrow(
-                            dlx - self._gap,
-                            dly - self._gap,
-                            self._gap,
-                            self._gap,
-                            length_includes_head=True,
-                            color="black",
-                            head_width=2.0,
-                            linewidth=0.1,
-                        )
-                    )
-
-                axes.annotate(
-                    individual.individual.member.person_id,
-                    (center_x, center_y),
-                    color="black",
-                    weight="bold",
-                    fontsize=5,
-                    ha="center",
-                    va="center",
-                )
+                self._draw_individual(axes, individual)
 
     @staticmethod
     def _draw_family_table(axes, family):
