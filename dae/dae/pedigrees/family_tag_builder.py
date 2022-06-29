@@ -1,6 +1,7 @@
 """Helper class for tagging families."""
 
 from typing import Callable, Iterable, Optional, Dict
+from collections import Counter
 
 from dae.variants.attributes import Role, Status, Sex
 from dae.pedigrees.family import FamiliesData, Person, Family
@@ -254,6 +255,18 @@ def tag_missing_dad_family(family: Family) -> bool:
     return value
 
 
+def _build_family_type_full(family: Family) -> str:
+    family_type = []
+    family_type.append(str(len(family.members_in_order)))
+    members_by_role_and_sex = sorted(
+        family.members_in_order, key=lambda p: f"{p.role}.{p.sex}")
+    for person in members_by_role_and_sex:
+        family_type.append(
+            f"{person.role}.{person.sex}.{person.status}"
+        )
+    return ":".join(family_type)
+
+
 class FamilyTagsBuilder:
     """Class used ot apply all tags to a family."""
 
@@ -276,6 +289,7 @@ class FamilyTagsBuilder:
     def __init__(self):
         self._taggers = {}
         self._taggers.update(self.TAGS)
+        self._family_types: Dict[str, str] = {}
 
     def add_tagger(
             self, label: str,
@@ -287,6 +301,8 @@ class FamilyTagsBuilder:
         family_tags = set()
         for label, tagger in self._taggers.items():
             value = tagger(family)
+            if value is None:
+                continue
             if isinstance(value, bool):
                 if value:
                     family_tags.add(label)
@@ -295,6 +311,35 @@ class FamilyTagsBuilder:
             family_tags.add(f"{label}:{value}")
         _tag(family, "tags", ";".join(sorted(family_tags)))
 
+    def _tag_family_type(self, family: Family) -> None:
+        """Tag a family with family type tags - short and full."""
+        full_type = _build_family_type_full(family)
+        if full_type not in self._family_types:
+            short_type = f"type#{len(self._family_types) + 1}"
+            self._family_types[full_type] = short_type
+        short_type = self._family_types[full_type]
+        _tag(family, "tag_family_type", short_type)
+        _tag(family, "tag_family_type_full", full_type)
+
     def tag_families_data(self, families: FamiliesData):
+        self._family_types = self._prebuild_family_types(families)
         for family in families.values():
             self.tag_family(family)
+            self._tag_family_type(family)
+
+    @staticmethod
+    def _prebuild_family_types(families: FamiliesData) -> Dict[str, str]:
+        counter: Counter[str] = Counter()
+        for family in families.values():
+            full_type = _build_family_type_full(family)
+            counter[full_type] += 1
+
+        def type_order(full_type: str) -> int:
+            return counter[full_type]
+
+        all_types = sorted(
+            counter.keys(), key=type_order, reverse=True)
+        result: Dict[str, str] = {}
+        for index, full_type in enumerate(all_types):
+            result[full_type] = f"type#{index + 1}"
+        return result
