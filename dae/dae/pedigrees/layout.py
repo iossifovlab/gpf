@@ -688,13 +688,10 @@ class Layout:
         level = self._get_level_of_individual(min_individual.individual)
 
         individuals = level[
-            level.index(min_individual.individual): level.index(
-                max_individual.individual
-            )
-            + 1
+            level.index(min_individual.individual):
+            level.index(max_individual.individual) + 1
         ]
         individuals = [self._id_to_position[x] for x in individuals]
-
         individuals = list(set(individuals) - already_moved)
 
         if len(individuals) == 0:
@@ -703,14 +700,12 @@ class Layout:
         to_move_offset = 0
 
         if offset > 0:
-            start = min_individual.x
-            end = max_individual.x
-            new_end = end + offset
+            new_end = max_individual.x + offset
             to_move = {
                 i
                 for x in level
                 for i in [self._id_to_position[x]]
-                if start <= i.x <= new_end
+                if min_individual.x <= i.x <= new_end
             }
             to_move -= already_moved
             to_move -= set(individuals)
@@ -720,14 +715,12 @@ class Layout:
                     [new_end - i.x + min_gap * 2.0 + i.size for i in to_move]
                 )
         else:
-            start = min_individual.x
-            end = max_individual.x
-            new_start = start + offset
+            new_start = min_individual.x + offset
             to_move = {
                 i
                 for x in level
                 for i in [self._id_to_position[x]]
-                if new_start <= i.x <= end
+                if new_start <= i.x <= max_individual.x
             }
             to_move -= already_moved
             to_move -= set(individuals)

@@ -210,13 +210,6 @@ def layout_from_family2(individuals_intervals_from_family2):
     return [Layout(individuals_intervals_from_family2)]
 
 
-@pytest.fixture(scope="function")
-def drawing_from_family2(layout_from_family2):
-    return OffsetLayoutDrawer(
-        layout_from_family2, 0, 0, show_id=True, show_family=True
-    )
-
-
 @pytest.fixture(scope="session")
 def pedigree_test(fixture_dirname):
     loader = FamiliesLoader(fixture_dirname("pedigrees/test.ped"))
