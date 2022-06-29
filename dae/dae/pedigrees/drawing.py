@@ -21,6 +21,7 @@ class PDFLayoutDrawer(object):
     def __init__(self, filename):
         self._filename = filename
         self._pages = []
+        self.pdf = None
 
     def __enter__(self):
         self.pdf = PdfPages(self._filename)
@@ -59,12 +60,13 @@ class OffsetLayoutDrawer(object):
         if self._layout is not None:
             self._horizontal_mirror_layout()
 
-    def draw(self, figure=None, ax=None, title=None):
+    def draw(self, figure=None, ax=None, title=None, tags=None):
         if figure is None:
             figure = plt.figure(figsize=self.figsize)
 
         if ax is not None:
             ax_pedigree = ax
+
         else:
             pedigree_axes_rect = (0.1, 0.3, 0.8, 0.6)
             if self.show_family:
@@ -81,6 +83,16 @@ class OffsetLayoutDrawer(object):
             self._draw_rounded_lines(ax_pedigree, layout)
 
             self._draw_members(ax_pedigree, layout)
+        if tags:
+            tags = "\n".join(sorted(tags))
+            props = dict(boxstyle="round", facecolor="wheat", alpha=0.5)
+            ax_pedigree.text(
+                0.99, 0.01, tags,
+                transform=ax_pedigree.transAxes,
+                fontsize=5,
+                verticalalignment="bottom",
+                horizontalalignment="right",
+                bbox=props)
 
         if ax:
             return ax_pedigree
@@ -377,7 +389,7 @@ class OffsetLayoutDrawer(object):
                         (cx, cy),
                         color="black",
                         weight="bold",
-                        fontsize=2,
+                        fontsize=5,
                         ha="center",
                         va="center",
                     )

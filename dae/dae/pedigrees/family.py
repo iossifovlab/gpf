@@ -270,6 +270,14 @@ class Family:
         self._samples_index = None
         self._members_in_order: Optional[List[Person]] = None
         self._trios: Optional[Dict[str, Tuple[str, str, str]]] = None
+        self._tags: Set[str] = set()
+
+    def add_tag(self, tag: str) -> None:
+        self._tags.add(tag)
+
+    @property
+    def tags(self) -> Set[str]:
+        return self._tags
 
     def _connect_family(self):
         index = 0

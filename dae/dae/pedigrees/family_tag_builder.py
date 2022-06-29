@@ -298,18 +298,17 @@ class FamilyTagsBuilder:
 
     def tag_family(self, family: Family) -> None:
         """Tag family with all available tags."""
-        family_tags = set()
         for label, tagger in self._taggers.items():
             value = tagger(family)
             if value is None:
                 continue
             if isinstance(value, bool):
                 if value:
-                    family_tags.add(label)
+                    family.add_tag(label)
                 continue
 
-            family_tags.add(f"{label}:{value}")
-        _tag(family, "tags", ";".join(sorted(family_tags)))
+            family.add_tag(f"{label}:{value}")
+        _tag(family, "tags", ";".join(sorted(family.tags)))
 
     def _tag_family_type(self, family: Family) -> None:
         """Tag a family with family type tags - short and full."""
@@ -319,6 +318,8 @@ class FamilyTagsBuilder:
             self._family_types[full_type] = short_type
         short_type = self._family_types[full_type]
         _tag(family, "tag_family_type", short_type)
+        family.add_tag(f"tag_family_type:{short_type}")
+
         _tag(family, "tag_family_type_full", full_type)
 
     def tag_families_data(self, families: FamiliesData):
