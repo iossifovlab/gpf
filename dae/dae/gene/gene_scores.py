@@ -65,16 +65,12 @@ class GeneScore:
 
     @property
     def x_scale(self):
-        """
-        Returns the scale type of the X axis
-        """
+        """Return the scale type of the X axis."""
         return self.histogram.x_scale
 
     @property
     def y_scale(self):
-        """
-        Returns the scale type of the Y axis
-        """
+        """Returns the scale type of the Y axis."""
         return self.histogram.y_scale
 
     def _load_data(self):
@@ -90,10 +86,7 @@ class GeneScore:
     @staticmethod
     def load_gene_scores_from_resource(
             resource: Optional[GenomicResource]):
-        """
-        Creates and returns a list of all
-        the gene scores described in a resource
-        """
+        """Create and return all of the gene scores described in a resource."""
         assert resource is not None
         assert resource.get_type() == "gene_score", "Invalid resource type"
 
@@ -116,15 +109,11 @@ class GeneScore:
         return scores
 
     def values(self):
-        """
-        Returns a list of score values
-        """
+        """Return a list of score values."""
         return self.df[self.score_id].values
 
     def get_gene_value(self, gene_symbol):
-        """
-        Returns the value for a given gene symbol
-        """
+        """Return the value for a given gene symbol."""
         symbol_values = self._to_dict()
         return symbol_values[gene_symbol]
 
@@ -140,9 +129,7 @@ class GeneScore:
 
     @cached
     def _to_dict(self):
-        """
-        Returns dictionary of all defined scores keyed by gene symbol.
-        """
+        """Return dictionary of all defined scores keyed by gene symbol."""
         if self._dict is None:
             self._dict = self.df.set_index("gene")[self.score_id].to_dict()
         return self._dict
@@ -156,28 +143,22 @@ class GeneScore:
 
     @cached
     def to_tsv(self):
-        """
-        Returns a TSV version of the gene score data
-        """
+        """Return a TSV version of the gene score data."""
         return map(join_line, self._to_list())
 
     @cached
     def min(self):
-        """
-        Returns minimal score value.
-        """
+        """Return minimal score value."""
         return self.df[self.score_id].min()
 
     @cached
     def max(self):
-        """
-        Returns maximal score value.
-        """
+        """Return maximal score value."""
         return self.df[self.score_id].max()
 
     def get_genes(self, wmin=None, wmax=None):
         """
-        Returns a set of genes which scores are between `wmin` and `wmax`.
+        Return a set of genes which scores are between `wmin` and `wmax`.
 
         `wmin` -- the lower bound of scores. If not specified or `None`
         works without lower bound.
@@ -213,28 +194,22 @@ class GeneScoresDb:
 
     @cached
     def get_gene_score_ids(self):
-        """
-        Returns a list of the IDs of all the gene scores contained
-        """
+        """Return a list of the IDs of all the gene scores contained."""
         return list(self.scores.keys())
 
     @cached
     def get_gene_scores(self):
-        """
-        Returns a list of all the gene scores contained in the DB
-        """
+        """Return a list of all the gene scores contained in the DB."""
         return [self.get_gene_score(score_id) for score_id in self.scores]
 
     def get_gene_score(self, score_id):
-        """
-        Returns a given gene score
-        """
+        """Return a given gene score."""
         assert self[score_id].df is not None
         return self[score_id]
 
     def __getitem__(self, score_id):
         if score_id not in self.scores:
-            raise ValueError("unsupported gene score {}".format(score_id))
+            raise ValueError(f"unsupported gene score {score_id}")
 
         res = self.scores[score_id]
         if res.df is None:
