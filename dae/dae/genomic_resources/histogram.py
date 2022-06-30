@@ -112,6 +112,12 @@ class Histogram:
 
         return result
 
+    @property
+    def range(self):
+        if self.x_min is not None and self.x_max is not None:
+            return [self.x_min, self.x_max]
+        return None
+
     def add_value(self, value):
         """Add value to the histogram."""
         if value < self.x_min or value > self.x_max:
@@ -156,6 +162,40 @@ class Histogram:
         self.set_empty()
         for value in values:
             self.add_value(value)
+
+    def set_bins_bars(self, values):
+        """Temporary func to support legacy calculation used in gene scores"""
+        _min = min(values)
+        _max = max(values)
+        step = 1.0 * (_max - _min) / (self.bins_count - 1)
+        dec = -np.log10(step)
+        dec = dec if dec >= 0 else 0
+        dec = int(dec)
+
+        bleft = np.around(_min, dec)
+        bright = np.around(_max, dec)
+
+        if self.x_scale == "log":
+            # Max numbers of items in first bin
+            max_count = values.size / self.bins_count
+
+            # Find a bin small enough to fit max_count items
+            for bleft in range(-1, -200, -1):
+                if ((values) < 10 ** bleft).sum() < max_count:
+                    break
+
+            bins_in = [0] + list(
+                np.logspace(bleft, np.log10(bright), self.bins_count)
+            )
+        else:
+            bins_in = self.bins_count
+
+        bars, bins = np.histogram(
+            list(values), bins_in, range=[bleft, bright]
+        )
+
+        self.bins = bins
+        self.bars = bars
 
 
 class HistogramBuilder:

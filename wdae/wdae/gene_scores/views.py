@@ -29,7 +29,7 @@ class GeneScoresListView(QueryBaseView):
                     "bins": score.histogram_bins,
                     "xscale": score.x_scale,
                     "yscale": score.y_scale,
-                    # "range": score.range,
+                    "range": score.histogram.range,
                 }
                 for score in gene_scores
             ]

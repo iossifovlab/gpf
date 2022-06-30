@@ -55,7 +55,7 @@ class GeneScore:
         if "max" not in histogram_config:
             histogram_config["max"] = self.max()
         self.histogram = Histogram.from_config(histogram_config)
-        self.histogram.set_values(self.values())
+        self.histogram.set_bins_bars(self.values())
 
         self.histogram_bins = self.histogram.bins
         self.histogram_bars = self.histogram.bars

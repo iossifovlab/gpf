@@ -16,7 +16,7 @@ class GenomicScoresView(QueryBaseView):
                 "bins": score.bins,
                 "xscale": score.x_scale,
                 "yscale": score.y_scale,
-                # "range": score.range,
+                "range": score.range,
                 # "help": score.help,
             }
             for score_id, score in self.gpf_instance.get_genomic_scores()
