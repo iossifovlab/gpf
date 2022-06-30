@@ -1,0 +1,76 @@
+vars:
+  instance_id: data_hg19_local
+
+genotype_storage:
+  default: genotype_impala
+
+storage:
+  genotype_impala:
+    dir: "work"
+    hdfs:
+      base_dir: /user/%(instance_id)s/studies
+      host: impala
+      port: 8020
+      replication: 1
+    impala:
+      db: "%(instance_id)s"
+      hosts:
+      - impala
+      pool_size: 3
+      port: 21050
+    storage_type: impala
+
+# annotation:
+#   conf_file: "annotation.yaml"
+
+
+phenotype_data:
+  dir: "pheno"
+
+studies:
+  dir: "studies"
+
+datasets:
+  dir: "datasets"
+
+default_study_config:
+  conf_file: "defaultConfiguration.conf"
+
+gene_sets_db:
+  gene_set_collections:
+    - gene_properties/gene_sets/main
+    - gene_properties/gene_sets/sfari
+    - gene_properties/gene_sets/spark
+    - gene_properties/gene_sets/MSigDB_curated
+    - gene_properties/gene_sets/miRNA
+    - gene_properties/gene_sets/GO
+    - gene_properties/gene_sets/domain
+    - gene_properties/gene_sets/disease
+    - gene_properties/gene_sets/miRNA_Darnell
+
+gene_scores_db:
+  gene_scores:
+    - gene_properties/gene_scores/SFARI_gene_score 
+    - gene_properties/gene_scores/RVIS
+    - gene_properties/gene_scores/LGD
+    - gene_properties/gene_scores/pLI
+    - gene_properties/gene_scores/pRec
+
+genomic_scores_db:
+- resource: hg19/scores/MPC
+  score: mpc
+- resource: hg19/scores/CADD
+  score: cadd_raw
+- resource: hg19/scores/CADD
+  score: cadd_phred
+- resource: hg19/variant_frequencies/gnomAD_v2.1.1/exomes
+  score: exome_gnomad_af_percent
+- resource: hg19/variant_frequencies/gnomAD_v2.1.1/genomes
+  score: genome_gnomad_af_percent
+
+reference_genome:
+  resource_id: "hg19/genomes/GATK_ResourceBundle_5777_b37_phiX174"
+
+gene_models:
+  resource_id: "hg19/gene_models/refGene_v20190211"
+
