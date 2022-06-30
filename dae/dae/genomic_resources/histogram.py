@@ -164,7 +164,7 @@ class Histogram:
             self.add_value(value)
 
     def set_bins_bars(self, values):
-        """Temporary func to support legacy calculation used in gene scores"""
+        """Temporary func to support legacy calculation used in gene scores."""
         _min = min(values)
         _max = max(values)
         step = 1.0 * (_max - _min) / (self.bins_count - 1)
