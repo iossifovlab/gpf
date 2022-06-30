@@ -36,3 +36,8 @@ cd /wd
 /opt/conda/bin/conda run --no-capture-output -n gpf \
     generate_denovo_gene_sets.py
 
+
+cd /wd/dae_conftests
+
+/opt/conda/bin/conda run --no-capture-output -n gpf \
+    py.test -v dae_conftests/tests/test_setup.py
