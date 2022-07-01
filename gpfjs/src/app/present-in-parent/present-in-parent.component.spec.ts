@@ -76,7 +76,7 @@ describe('PresentInParentComponent', () => {
     component.updateRarityType('rare');
     expect(component.selectedRarityType).toEqual('rare');
     expect(component.rarityIntervalStart).toEqual(0);
-    expect(component.rarityIntervalEnd).toEqual(2);
+    expect(component.rarityIntervalEnd).toEqual(1);
     expect(updateStateSpy).toHaveBeenCalledTimes(1);
 
     component.updateRarityIntervalStart(1.23);
