@@ -26,13 +26,8 @@ export class GenomicScoreState {
   public domainMax: number;
 
   public changeDomain(score: GenomicScores): void {
-    if (this.score.domain !== null) {
-      this.domainMin = score.domain[0];
-      this.domainMax = score.domain[1];
-    } else {
-      this.domainMin = score.bins[0];
-      this.domainMax = score.bins[score.bins.length - 1];
-    }
+    this.domainMin = score.bins[0];
+    this.domainMax = score.bins[score.bins.length - 1];
   }
 
   public constructor(score?: GenomicScores) {

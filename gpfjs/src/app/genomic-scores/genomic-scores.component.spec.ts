@@ -1,21 +1,16 @@
-import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { BrowserDynamicTestingModule } from '@angular/platform-browser-dynamic/testing';
 import { FormsModule } from '@angular/forms';
-
 import { NgbModule, NgbModal, NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
-
 import { MarkdownModule } from 'ngx-markdown';
-
 import { GenomicScoresComponent } from './genomic-scores.component';
-import { GenomicScoresState, GenomicScoreState } from './genomic-scores-store';
+import { GenomicScoreState } from './genomic-scores-store';
 import { GenomicScores } from 'app/genomic-scores-block/genomic-scores-block';
-import { HistogramComponent } from 'app/histogram/histogram.component';
-import { HistogramRangeSelectorLineComponent } from 'app/histogram/histogram-range-selector-line.component';
 import { PopupComponent } from 'app/popup/popup.component';
 import { ErrorsAlertComponent } from 'app/errors-alert/errors-alert.component';
-import { Component, ViewChild, NO_ERRORS_SCHEMA } from '@angular/core';
+import { NO_ERRORS_SCHEMA } from '@angular/core';
 
-describe('GenomicScoresComponent', () => {
+fdescribe('GenomicScoresComponent', () => {
   let component: GenomicScoresComponent;
   let fixture: ComponentFixture<GenomicScoresComponent>;
   let modalService: NgbModal;
@@ -23,8 +18,13 @@ describe('GenomicScoresComponent', () => {
 
   const initialGenomicScores: GenomicScores[] = [
     GenomicScores.fromJson({
-      bars: [1, 2, 3], score: 'GenomicScores', bins: [4, 5, 6], range: [1, 3],
-      desc: 'Genomic Scores description', help: 'gs help', xscale: 'log', yscale: 'linear'
+      bars: [1, 2, 3],
+      score: 'GenomicScores',
+      bins: [4, 5, 6],
+      desc: 'Genomic Scores description',
+      help: 'gs help',
+      xscale: 'log',
+      yscale: 'linear'
     })
   ];
 
@@ -81,8 +81,8 @@ describe('GenomicScoresComponent', () => {
   it('should get and set range and domain', () => {
     expect(component.rangeStart).toBe(null);
     expect(component.rangeEnd).toBe(null);
-    expect(component.domainMin).toBe(1);
-    expect(component.domainMax).toBe(3);
+    expect(component.domainMin).toBe(4);
+    expect(component.domainMax).toBe(6);
 
     component.rangeStart = 2;
     component.rangeEnd = 3;
