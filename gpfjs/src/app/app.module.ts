@@ -166,6 +166,7 @@ import { UniqueFamilyVariantsFilterState } from './unique-family-variants-filter
 import { AngularMarkdownEditorModule } from 'angular-markdown-editor';
 import { PedigreeChartComponent } from './pedigree-chart/pedigree-chart.component';
 import { PedigreeChartMemberComponent } from './pedigree-chart/pedigree-chart-member.component';
+import { JoinPipe } from './utils/join.pipe';
 
 const appRoutes: Routes = [
   {
@@ -365,6 +366,7 @@ const appRoutes: Routes = [
     SplitPipe,
     AgpTableComponent,
     TruncatePipe,
+    JoinPipe,
     UniqueFamilyVariantsFilterComponent,
     PedigreeChartComponent,
     PedigreeChartMemberComponent

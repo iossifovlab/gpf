@@ -1,6 +1,6 @@
 import {
   Input, Component, OnInit, ChangeDetectionStrategy,
-  AfterViewInit, ViewChild, ChangeDetectorRef, OnDestroy
+  AfterViewInit, ViewChild, ChangeDetectorRef, OnDestroy, Pipe, PipeTransform
 } from '@angular/core';
 import { Observable, BehaviorSubject, Subject, Subscription, of } from 'rxjs';
 import { difference } from '../utils/sets-helper';
