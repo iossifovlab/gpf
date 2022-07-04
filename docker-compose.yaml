@@ -19,6 +19,7 @@ services:
       - impala
     restart: "no"
     environment:
+      DAE_DB_DIR: /wd/data/data-hg19-local
       GRR_DEFINITION_FILE: /wd/integration/grr_definition.yaml
       DAE_IMPALA_HOST: impala
       DAE_HDFS_HOST: impala
@@ -40,13 +41,12 @@ services:
     ports:
       - "21010:21010"
     environment:
-      DAE_DB_DIR: /data/
+      DAE_DB_DIR: /wd/data/data-hg19-remote
       GRR_DEFINITION_FILE: /wd/integration/grr_definition.yaml
       DAE_IMPALA_HOST: impala
       DAE_HDFS_HOST: impala
       TEST_REMOTE_HOST: gpfremote
     volumes:
       - .:/wd
-      - ./data/data-hg19-remote:/data
 
     entrypoint: /wd/integration/remote/entrypoint.sh

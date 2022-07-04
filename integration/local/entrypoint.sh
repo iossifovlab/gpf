@@ -1,5 +1,14 @@
 #!/usr/bin/bash
 
+rm -rf /wd/data
+
+mkdir -p /wd/data/data-hg19-local
+mkdir -p /wd/data/data-hg19-remote
+
+cp -r /wd/integration/local/data/* /wd/data/data-hg19-local/
+cp -r /wd/integration/remote/data/* /wd/data/data-hg19-remote/
+
+
 /opt/conda/bin/conda run --no-capture-output -n gpf \
     /wd/scripts/wait-for-it.sh -h impala -p 8020 -t 300
 /opt/conda/bin/conda run --no-capture-output -n gpf \
@@ -11,14 +20,6 @@ for d in /wd/dae /wd/wdae /wd/dae_conftests; do
     /opt/conda/bin/conda run --no-capture-output -n gpf pip install -e .
 done
 
-mkdir -p /wd/data/data-hg19-local
-mkdir -p /wd/data/data-hg19-remote
-
-cp -r /wd/integration/local/data/* /wd/data/data-hg19-local/
-cp -r /wd/integration/remote/data/* /wd/data/data-hg19-remote/
-
-export DAE_DB_DIR=/wd/data/data-hg19-local
-
 cd /wd/integration/fixtures/pheno/comp-data
 
 /opt/conda/bin/conda run --no-capture-output -n gpf \
@@ -26,9 +27,9 @@ cd /wd/integration/fixtures/pheno/comp-data
     -i instruments/ -d comp_pheno_data_dictionary.tsv -o comp_pheno \
     --regression comp_pheno_regressions.conf
 
-mkdir -p /wd/integration/local/data/pheno/images
-cp -r /wd/integration/local/data/pheno/comp_pheno/browser/images/comp_pheno \
-    /wd/integration/local/data/pheno/
+mkdir -p $DAE_DB_DIR/pheno/images
+cp -r $DAE_DB_DIR/pheno/comp_pheno/browser/images/comp_pheno \
+    $DAE_DB_DIR/pheno/
 
 
 cd /wd/integration/fixtures/hg19/micro_iossifov2014
