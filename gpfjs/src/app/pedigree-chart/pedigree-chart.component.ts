@@ -153,7 +153,7 @@ export class PedigreeChartComponent implements OnInit, AfterViewInit, OnDestroy 
     return this.lines.filter(line => line.curved);
   }
 
-  public getFamilyListData(): void {
+  public loadFamilyListData(): void {
     if (this.familyLists !== undefined) {
       return;
     }
