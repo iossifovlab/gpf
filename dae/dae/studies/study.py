@@ -602,7 +602,7 @@ class GenotypeDataGroup(GenotypeData):
                     "combining families from studies (%s) %s with families "
                     "from study %s",
                     sind, [st.study_id for st in self.studies[:sind]],
-                    self.studies[sind].id)
+                    self.studies[sind].study_id)
                 result = FamiliesData.combine(
                     result,
                     self.studies[sind].families,
