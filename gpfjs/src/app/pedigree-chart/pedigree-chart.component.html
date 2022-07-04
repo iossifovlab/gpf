@@ -59,7 +59,7 @@
                 class="accordion-button btn"
                 ngbPanelToggle
                 style="width: 100%; text-align: left">
-                <span style="font-weight: bold">Family Id list:({{ pedigreeCount }})</span>
+                <span style="font-weight: bold">Family Id list ({{ pedigreeCount }})</span>
               </button>
               <form
                 (ngSubmit)="onSubmit($event)"
@@ -77,7 +77,7 @@
               <gpf-loading-spinner
                 *ngIf="!loadingFinishedFlag"
                 [loadingFinished]="loadingFinishedFlag"></gpf-loading-spinner>
-              <ng-container *ngIf="familyLists">{{ familyLists | join: ', ' }} </ng-container>
+              <ng-container *ngIf="familyLists">{{ familyLists | join: ', ' }}</ng-container>
             </div>
           </ng-template>
         </ngb-panel>
