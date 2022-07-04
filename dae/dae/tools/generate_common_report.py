@@ -77,13 +77,13 @@ def main(argv, gpf_instance=None):
                     study.study_id)
                 continue
 
-            common_report = CommonReport(study)
+            common_report = CommonReport.from_genotype_study(study)
             file_path = study.config.common_report.file_path
 
             if not os.path.exists(os.path.dirname(file_path)):
                 os.makedirs(os.path.dirname(file_path))
             with open(file_path, "w+", encoding="utf8") as crf:
-                json.dump(common_report.to_dict(), crf)
+                json.dump(common_report.to_dict(full=True), crf)
 
 
 if __name__ == "__main__":

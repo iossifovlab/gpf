@@ -163,8 +163,12 @@ class RESTClient:
         )
         return self._read_json_list_stream(response)
 
-    def get_common_report(self, common_report_id):
-        response = self._get(f"common_reports/studies/{common_report_id}")
+    def get_common_report(self, common_report_id, full=False):
+        if full:
+            url = f"common_reports/studies/{common_report_id}/full"
+        else:
+            url = f"common_reports/studies/{common_report_id}"
+        response = self._get(url)
         return response.json()
 
     def get_common_report_families_data(self, common_report_id):

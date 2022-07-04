@@ -40,57 +40,80 @@ def get_family_type(family, person_to_set):
 
 
 class FamilyCounter(object):
-    def __init__(self, families, pedigree, family_label):
-        self.families = families
-        self.pedigree = pedigree
-        self.pedigrees_label = family_label
+    def __init__(self, json):
+        self.families = json["families"]
+        self.pedigree = json["pedigree"]
+        self.pedigrees_count = json["pedigrees_count"]
+        self.counter_id = int(json["counter_id"])
 
     @property
     def family(self):
         return self.families[0]
 
-    def to_dict(self):
-        return {
-            "pedigree": self.pedigree,
-            "pedigrees_count": self.pedigrees_label,
-        }
+    @staticmethod
+    def from_family(family, pedigree, label=None):
+        return FamilyCounter({
+            "families": [family.family_id],
+            "pedigree": pedigree,
+            "pedigrees_count": (
+                label if label is not None else family.family_id
+            ),
+            "counter_id": 0
+        })
+
+    def to_dict(self, full=False):
+        if full:
+            return {
+                "pedigree": self.pedigree,
+                "pedigrees_count": self.pedigrees_count,
+                "families": self.families,
+                "counter_id": self.counter_id
+            }
+        else:
+            return {
+                "pedigree": self.pedigree,
+                "pedigrees_count": self.pedigrees_count,
+                "counter_id": self.counter_id
+            }
 
 
 class FamiliesGroupCounters(object):
-    def __init__(
-        self,
+    def __init__(self, json):
+        self.group_name = json["group_name"]
+        self.phenotypes = json["phenotypes"]
+        self.legend = json["legend"]
+        counters = [FamilyCounter(d) for d in json["counters"]]
+        self.counters = {c.counter_id: c for c in counters}
+
+    @staticmethod
+    def from_families(
         families,
         person_set_collection,
         draw_all_families,
         families_count_show_id,
     ):
-        self.families = families
-        self.person_set_collection = person_set_collection
-        self.draw_all_families = draw_all_families
-        self.families_count_show_id = families_count_show_id
+        counters = dict()
 
-        self.counters = self._build_counters()
-
-    def _build_counters(self):
-        result = dict()
-
-        if self.draw_all_families:
-            for family in self.families.values():
-                fc = FamilyCounter(
-                    [family],
-                    get_family_pedigree(family, self.person_set_collection),
-                    family.family_id,
-                )
-                result[family.family_id] = fc
+        if draw_all_families:
+            for idx, family in enumerate(families.values()):
+                fc = FamilyCounter({
+                    "families": [family.family_id],
+                    "pedigree": get_family_pedigree(
+                        family, person_set_collection
+                    ),
+                    "pedigrees_count": family.family_id,
+                    "counter_id": idx
+                })
+                counters[family.family_id] = fc
         else:
             families_to_types = defaultdict(list)
 
             person_to_set = dict()
-            for person_set in self.person_set_collection.person_sets.values():
+            for person_set in person_set_collection.person_sets.values():
                 for person_id in person_set.persons:
                     person_to_set[person_id] = person_set.id
 
-            for family in self.families.values():
+            for family in families.values():
                 families_to_types[
                     get_family_type(family, person_to_set)
                 ].append(family)
@@ -101,10 +124,11 @@ class FamiliesGroupCounters(object):
                         key=lambda item: len(item[1]), reverse=True)
             }
 
-            for family_type, families in families_to_types.items():
+            for idx, items in enumerate(families_to_types.items()):
+                family_type, families = items
                 if (
-                    self.families_count_show_id
-                    and len(families) <= self.families_count_show_id
+                    families_count_show_id
+                    and len(families) <= families_count_show_id
                 ):
                     pedigree_label = ", ".join(
                         [fam.family_id for fam in families]
@@ -113,28 +137,37 @@ class FamiliesGroupCounters(object):
                     pedigree_label = str(len(families))
 
                 family = families[0]
-                fc = FamilyCounter(
-                    families,
-                    get_family_pedigree(family, self.person_set_collection),
-                    pedigree_label,
-                )
-                result[family_type] = fc
+                fc = FamilyCounter({
+                    "families": [f.family_id for f in families],
+                    "pedigree": get_family_pedigree(
+                        family, person_set_collection
+                    ),
+                    "pedigrees_count": pedigree_label,
+                    "counter_id": idx
+                })
+                counters[family_type] = fc
 
-        return result
-
-    def to_dict(self):
-        return {
-            "group_name": self.person_set_collection.name,
-            "phenotypes": list(self.person_set_collection.person_sets.keys()),
+        json = {
+            "group_name": person_set_collection.name,
+            "phenotypes": list(person_set_collection.person_sets.keys()),
             "counters": [
-                {
-                    "counters": [
-                        counter.to_dict() for counter in self.counters.values()
-                    ],
-                }
+                counter.to_dict(full=True) for counter in counters.values()
             ],
             "legend": [
                 {"id": domain.id, "name": domain.name, "color": domain.color}
-                for domain in self.person_set_collection.person_sets.values()
+                for domain in person_set_collection.person_sets.values()
+            ]
+        }
+
+        return FamiliesGroupCounters(json)
+
+    def to_dict(self, full=False):
+        return {
+            "group_name": self.group_name,
+            "phenotypes": self.phenotypes,
+            "counters": [
+                counter.to_dict(full=full)
+                for counter in self.counters.values()
             ],
+            "legend": self.legend
         }

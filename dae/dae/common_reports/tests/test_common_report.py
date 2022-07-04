@@ -2,7 +2,7 @@ from dae.common_reports.common_report import CommonReport
 
 
 def test_common_report(study4):
-    common_report = CommonReport(study4)
+    common_report = CommonReport.from_genotype_study(study4)
 
     assert common_report.id == "Study4"
     assert common_report.families_report
@@ -20,3 +20,4 @@ def test_common_report(study4):
     assert common_report.study_description is None
 
     assert len(common_report.to_dict()) == 15
+    print(common_report.to_dict())

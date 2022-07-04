@@ -146,85 +146,36 @@ class EffectRow(object):
 
 
 class DenovoReportTable(object):
-    def __init__(
-            self,
+    def __init__(self, json):
+        self.rows = json["rows"]
+        self.group_name = json["group_name"]
+        self.columns = json["columns"]
+        self.effect_groups = json["effect_groups"]
+        self.effect_types = json["effect_types"]
+
+    @staticmethod
+    def from_variants(
             denovo_variants,
             effect_groups,
             effect_types,
             person_set_collection):
 
-        self.denovo_variants = denovo_variants
-
-        self.person_set_collection = person_set_collection
-        self.person_sets = []
+        person_sets = []
         for person_set in person_set_collection.person_sets.values():
             if len(person_set.persons) > 0:
-                self.person_sets.append(person_set)
+                person_sets.append(person_set)
 
-        self.effect_groups = list(effect_groups)
-        self.effect_types = list(effect_types)
-        self.effects = effect_groups + effect_types
-
-        self.rows = self._build_rows()
-        self._build_column_titles()
-
-    def _build_column_titles(self):
-        column_children = {}
-        for row in self.rows:
-            assert len(row.row) == len(self.person_sets)
-            for cell in row.row:
-                person_set_children = cell.person_set_children
-                person_set_id = cell.person_set.id
-                if person_set_id not in column_children:
-                    column_children[person_set_id] = len(person_set_children)
-                else:
-                    count = column_children[person_set_id]
-                    assert count == len(person_set_children)
-        self.columns = []
-        for person_set in self.person_sets:
-            self.columns.append(
-                f"{person_set.name} ({column_children[person_set.id]})")
-
-    def to_dict(self):
-        return {
-            "rows": [r.to_dict() for r in self.rows],
-            "group_name": self.person_set_collection.name,
-            "columns": self.columns,
-            "effect_groups": self.effect_groups,
-            "effect_types": self.effect_types,
-        }
-
-    def _remove_empty_columns(self, indexes):
-        for index in sorted(indexes, reverse=True):
-            self.person_sets.pop(index)
-
-    def _remove_empty_rows(self, effect_rows):
-        for effect_row in effect_rows:
-            if effect_row.is_row_empty():
-                try:
-                    self.effect_groups.remove(effect_row.effect_type)
-                except ValueError:
-                    pass
-                try:
-                    self.effect_types.remove(effect_row.effect_type)
-                except ValueError:
-                    pass
-
-        return list(
-            filter(
-                lambda effect_row: not effect_row.is_row_empty(), effect_rows
-            )
-        )
-
-    def _build_rows(self):
+        effect_groups = list(effect_groups)
+        effect_types = list(effect_types)
+        effects = effect_groups + effect_types
 
         effect_rows = [
             EffectRow(
-                self.denovo_variants,
+                denovo_variants,
                 effect,
-                self.person_sets,
+                person_sets,
             )
-            for effect in self.effects
+            for effect in effects
         ]
 
         effect_rows_empty_columns = list(
@@ -240,69 +191,123 @@ class DenovoReportTable(object):
             np.where(effect_rows_empty_columns)[0]
         )
 
-        self._remove_empty_columns(effect_rows_empty_columns_index)
+        for index in sorted(effect_rows_empty_columns_index, reverse=True):
+            person_sets.pop(index)
 
         for effect_row in effect_rows:
             effect_row.remove_elements(effect_rows_empty_columns_index)
+            if effect_row.is_row_empty():
+                try:
+                    effect_groups.remove(effect_row.effect_type)
+                except ValueError:
+                    pass
+                try:
+                    effect_types.remove(effect_row.effect_type)
+                except ValueError:
+                    pass
+        effect_rows = list(filter(
+            lambda effect_row: not effect_row.is_row_empty(), effect_rows
+        ))
 
-        effect_rows = self._remove_empty_rows(effect_rows)
+        rows = effect_rows
 
-        return effect_rows
+        column_children = {}
+        for row in rows:
+            assert len(row.row) == len(person_sets)
+            for cell in row.row:
+                person_set_children = cell.person_set_children
+                person_set_id = cell.person_set.id
+                if person_set_id not in column_children:
+                    column_children[person_set_id] = len(person_set_children)
+                else:
+                    count = column_children[person_set_id]
+                    assert count == len(person_set_children)
+        columns = []
+        for person_set in person_sets:
+            columns.append(
+                f"{person_set.name} ({column_children[person_set.id]})")
+
+        return DenovoReportTable({
+            "rows": [r.to_dict() for r in rows],
+            "group_name": person_set_collection.name,
+            "columns": columns,
+            "effect_groups": effect_groups,
+            "effect_types": effect_types
+        })
+
+    def to_dict(self):
+        return {
+            "rows": self.rows,
+            "group_name": self.group_name,
+            "columns": self.columns,
+            "effect_groups": self.effect_groups,
+            "effect_types": self.effect_types,
+        }
 
     def is_empty(self):
-        return all([row.is_row_empty() for row in self.rows])
+        def _is_row_empty(row):
+            for cell in row["row"]:
+                if cell["number_of_observed_events"] > 0 \
+                        or cell["number_of_children_with_event"] > 0 \
+                        or cell["observed_rate_per_child"] > 0 \
+                        or cell["percent_of_children_with_events"] > 0:
+                    return False
+            return True
+        return all([_is_row_empty(row) for row in self.rows])
 
 
 class DenovoReport(object):
-    def __init__(
-            self,
-            genotype_data,
-            effect_groups,
-            effect_types,
-            person_set_collections):
+    def __init__(self, json):
+        self.tables = []
+        if json is not None:
+            self.tables = [DenovoReportTable(d) for d in json["tables"]]
 
-        self.genotype_data = genotype_data
-        self.effect_groups = effect_groups
-        self.effect_types = effect_types
-        self.person_set_collections = person_set_collections
+    @staticmethod
+    def from_genotype_study(genotype_data, person_set_collections):
+
+        config = genotype_data.config.common_report
+        effect_groups = config.effect_groups
+        effect_types = config.effect_types
+
         print(
             f"DENOVO REPORTS: person set collections {person_set_collections}")
         start = time.time()
         denovo_variants = genotype_data.query_variants(
             limit=None, inheritance=["denovo"],
         )
-        self.denovo_variants = list(denovo_variants)
+
+        denovo_variants = list(denovo_variants)
+
         elapsed = time.time() - start
         logger.info(
             f"DENOVO REPORTS: denovo variants query in {elapsed:.2f} sec")
         logger.info(
             f"DENOVO REPORTS: denovo variants count is "
-            f"{len(self.denovo_variants)}")
+            f"{len(denovo_variants)}")
 
         start = time.time()
-        self.tables = self._build_tables()
+
+        denovo_report_tables = []
+        if len(denovo_variants) > 0:
+            for psc in person_set_collections:
+                denovo_report_table = DenovoReportTable.from_variants(
+                    denovo_variants,
+                    deepcopy(effect_groups),
+                    deepcopy(effect_types),
+                    psc
+                )
+                if not denovo_report_table.is_empty():
+                    denovo_report_tables.append(denovo_report_table)
+
         elapsed = time.time() - start
         logger.info(f"DENOVO REPORTS build " f"in {elapsed:.2f} sec")
 
+        return DenovoReport({
+            "tables": [t.to_dict() for t in denovo_report_tables]
+        })
+
     def to_dict(self):
         return {"tables": [t.to_dict() for t in self.tables]}
-
-    def _build_tables(self):
-        if len(self.denovo_variants) == 0:
-            return []
-
-        denovo_report_tables = []
-        for person_set_collection in self.person_set_collections:
-            denovo_report_table = DenovoReportTable(
-                self.denovo_variants,
-                deepcopy(self.effect_groups),
-                deepcopy(self.effect_types),
-                person_set_collection,
-            )
-            if not denovo_report_table.is_empty():
-                denovo_report_tables.append(denovo_report_table)
-
-        return denovo_report_tables
 
     def is_empty(self):
         return len(self.tables) == 0

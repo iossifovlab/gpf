@@ -14,6 +14,7 @@ from dae.gene.gene_scores import GeneScoresDb, GeneScore
 from dae.gene.scores import GenomicScoresDb
 from dae.gene.gene_sets_db import GeneSetsDb, GeneSetCollection
 from dae.gene.denovo_gene_sets_db import DenovoGeneSetsDb
+from dae.common_reports.common_report import CommonReport
 
 from dae.studies.variants_db import VariantsDb
 
@@ -301,12 +302,11 @@ class GPFInstance:
                 return None
 
             with open(common_report_path, "r") as crf:
-                common_report = json.load(crf)
+                cr_json = json.load(crf)
 
-            return common_report
+            return CommonReport(cr_json)
         except AssertionError:
             return None
-        return common_report.to_dict()
 
     def get_all_common_report_configs(self):
         configs = []
