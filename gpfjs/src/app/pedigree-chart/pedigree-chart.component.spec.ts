@@ -8,6 +8,14 @@ import { PedigreeChartMemberComponent } from './pedigree-chart-member.component'
 import { PedigreeData } from 'app/genotype-preview-model/genotype-preview';
 import { PerfectlyDrawablePedigreeService } from 'app/perfectly-drawable-pedigree/perfectly-drawable-pedigree.service';
 import { ResizeService } from 'app/table/resize.service';
+import { VariantReportsService } from 'app/variant-reports/variant-reports.service';
+import { HttpClient, HttpHandler } from '@angular/common/http';
+import { ConfigService } from 'app/config/config.service';
+import { DatasetsService } from 'app/datasets/datasets.service';
+import { UsersService } from 'app/users/users.service';
+import { Router } from '@angular/router';
+import { RouterTestingModule } from '@angular/router/testing';
+import { NgxsModule } from '@ngxs/store';
 
 const FAMILY_WITH_POSITIONS = [
   new PedigreeData('f1', 'prb1', 'mom1', 'dad1', 'M', 'prb',
@@ -39,11 +47,19 @@ describe('PedigreeChartComponent', () => {
       ],
       imports: [
         NgbModule,
+        RouterTestingModule,
+        NgxsModule.forRoot([], {developmentMode: true})
       ],
       providers: [
         PerfectlyDrawablePedigreeService,
         ResizeService,
-        ChangeDetectorRef
+        ChangeDetectorRef,
+        VariantReportsService,
+        HttpClient,
+        HttpHandler,
+        ConfigService,
+        DatasetsService,
+        UsersService
       ]
     })
       .compileComponents();
