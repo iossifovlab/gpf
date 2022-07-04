@@ -17,6 +17,7 @@ from gpf_instance.gpf_instance import WGPFInstance,\
     reload_datasets, load_gpf_instance
 
 from dae.autism_gene_profile.db import AutismGeneProfileDB
+
 from dae.genomic_resources import build_genomic_resource_repository
 from dae.genomic_resources.group_repository import GenomicResourceGroupRepo
 from dae.tools import generate_common_report
@@ -28,51 +29,51 @@ pytest_plugins = ["dae_conftests.dae_conftests"]
 @pytest.fixture()
 def user(db):
     user_model = get_user_model()
-    u = user_model.objects.create(
+    user = user_model.objects.create(
         email="user@example.com",
         name="User",
         is_staff=False,
         is_active=True,
         is_superuser=False,
     )
-    u.set_password("secret")
-    u.save()
+    user.set_password("secret")
+    user.save()
 
-    return u
+    return user
 
 
 @pytest.fixture()
 def user_without_password(db):
     user_model = get_user_model()
-    u = user_model.objects.create(
+    user = user_model.objects.create(
         email="user_without_password@example.com",
         name="User",
         is_staff=False,
         is_active=True,
         is_superuser=False,
     )
-    u.save()
+    user.save()
 
-    return u
+    return user
 
 
 @pytest.fixture()
 def admin(db):
     user_model = get_user_model()
-    u = user_model.objects.create(
+    user = user_model.objects.create(
         email="admin@example.com",
         name="User",
         is_staff=True,
         is_active=True,
         is_superuser=True,
     )
-    u.set_password("secret")
-    u.save()
+    user.set_password("secret")
+    user.save()
 
     admin_group, _ = Group.objects.get_or_create(name=WdaeUser.SUPERUSER_GROUP)
-    u.groups.add(admin_group)
+    user.groups.add(admin_group)
 
-    return u
+    return user
 
 
 @pytest.fixture()
@@ -158,7 +159,7 @@ def wdae_gpf_instance(
 
 
 @pytest.fixture(scope="function")
-def wdae_gpf_instance_agp(
+def wdae_gpf_instance_agp(  # pylint: disable=too-many-arguments
         db, mocker, admin_client, wgpf_instance, sample_agp,
         global_dae_fixtures_dir, agp_config, temp_filename,
         fixture_dirname):
@@ -244,7 +245,6 @@ def remote_settings(settings):
     }
     settings.REMOTES = [remote]
 
-    # FIXME: Find a better workaround
     reload_datasets(load_gpf_instance())
 
     return remote

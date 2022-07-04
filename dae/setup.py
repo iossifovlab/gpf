@@ -20,8 +20,6 @@ setuptools.setup(
     # include_package_data=True,
     package_data={
         "dae": ["py.typed"],
-        "dae.genomic_resources": ["py.typed"],
-        "dae.tools": ["py.typed"],
     },
     scripts=[
         "dae/tools/impala_parquet_loader.py",
@@ -77,9 +75,10 @@ setuptools.setup(
     """,
     classifiers=[
         "Development Status :: 4 - Beta",
-        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.9",
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
-    python_requires=">=3.6",
+    python_requires=">=3.9",
+    zip_safe=False,
 )
