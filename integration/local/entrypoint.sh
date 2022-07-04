@@ -11,6 +11,14 @@ for d in /wd/dae /wd/wdae /wd/dae_conftests; do
     /opt/conda/bin/conda run --no-capture-output -n gpf pip install -e .
 done
 
+mkdir -p /wd/data/data-hg19-local
+mkdir -p /wd/data/data-hg19-remote
+
+cp -r /wd/integration/local/data/* /wd/data/data-hg19-local/
+cp -r /wd/integration/remote/data/* /wd/data/data-hg19-remote/
+
+export DAE_DB_DIR=/wd/data/data-hg19-local
+
 cd /wd/integration/fixtures/pheno/comp-data
 
 /opt/conda/bin/conda run --no-capture-output -n gpf \

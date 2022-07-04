@@ -19,11 +19,12 @@ services:
       - impala
     restart: "no"
     environment:
-      DAE_DB_DIR: /data
       GRR_DEFINITION_FILE: /wd/integration/grr_definition.yaml
+      DAE_IMPALA_HOST: impala
+      DAE_HDFS_HOST: impala
+      TEST_REMOTE_HOST: gpfremote
     volumes:
       - .:/wd
-      - ./integration/local/data:/data
     entrypoint: /wd/integration/local/entrypoint.sh
 
 
@@ -35,13 +36,17 @@ services:
         REGISTRY: "registry.seqpipe.org/"
     depends_on:
       - impala
+      - setup
     ports:
       - "21010:21010"
     environment:
       DAE_DB_DIR: /data/
       GRR_DEFINITION_FILE: /wd/integration/grr_definition.yaml
+      DAE_IMPALA_HOST: impala
+      DAE_HDFS_HOST: impala
+      TEST_REMOTE_HOST: gpfremote
     volumes:
       - .:/wd
-      - ./integration/remote/data:/data
+      - ./data/data-hg19-remote:/data
 
     entrypoint: /wd/integration/remote/entrypoint.sh

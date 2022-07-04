@@ -1,17 +1,15 @@
-import pytest
-import toml
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
 from pathlib import Path
+
+import pytest
 from studies.study_wrapper import RemoteStudyWrapper, StudyWrapper
 from studies.remote_study import RemoteGenotypeData
-from dae.studies.study import GenotypeDataStudy
-from dae.configuration.gpf_config_parser import FrozenBox
-from dae.utils.dict_utils import recursive_dict_update
 from dae.gpf_instance.gpf_instance import GPFInstance
 
 
 @pytest.fixture(scope="session")
 def local_dir():
-    return Path(__file__).parents[4].joinpath("integration/local/data")
+    return Path(__file__).parents[4].joinpath("data/data-hg19-local")
 
 
 @pytest.fixture(scope="session")

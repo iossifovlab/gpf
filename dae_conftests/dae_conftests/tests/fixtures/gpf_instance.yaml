@@ -71,7 +71,7 @@ storage:
 
 remotes:
   - id: "TEST_REMOTE"
-    host: "gpfremote"
+    host: "localhost"
     base_url: "api/v3"
     port: 21010
     user: "admin@iossifovlab.com"

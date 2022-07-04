@@ -9,13 +9,13 @@ storage:
     dir: "work"
     hdfs:
       base_dir: /user/%(instance_id)s/studies
-      host: impala
+      host: localhost
       port: 8020
       replication: 1
     impala:
       db: "%(instance_id)s"
       hosts:
-      - impala
+      - localhost
       pool_size: 3
       port: 21050
     storage_type: impala
