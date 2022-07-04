@@ -1,5 +1,8 @@
-import pytest
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
+
 import os
+
+import pytest
 
 from box import Box  # type: ignore
 
@@ -12,12 +15,11 @@ from remote.rest_api_client import RESTClient
 
 from gpf_instance.gpf_instance import WGPFInstance,\
     reload_datasets, load_gpf_instance
-from dae.autism_gene_profile.db import AutismGeneProfileDB
 
+from dae.autism_gene_profile.db import AutismGeneProfileDB
 from dae.genomic_resources import build_genomic_resource_repository
 from dae.genomic_resources.group_repository import GenomicResourceGroupRepo
-
-import dae.tools.generate_common_report as generate_common_report
+from dae.tools import generate_common_report
 
 
 pytest_plugins = ["dae_conftests.dae_conftests"]
@@ -101,16 +103,22 @@ def wgpf_instance(default_dae_config, fixture_dirname):
         result = WGPFInstanceInternal(
             work_dir=work_dir, load_eagerly=load_eagerly
         )
+
+        remote_host = os.environ.get("TEST_REMOTE_HOST", "localhost")
+        if result.dae_config.remotes[0].id == "TEST_REMOTE":
+            result.dae_config.remotes[0].host = remote_host
+        result.load_remotes()
+
         repositories = [
             result.grr
         ]
         repositories.append(
-                build_genomic_resource_repository(
-                    Box({
-                        "id": "fixtures",
-                        "type": "directory",
-                        "directory": f"{fixture_dirname('genomic_resources')}"
-                    })))
+            build_genomic_resource_repository(
+                Box({
+                    "id": "fixtures",
+                    "type": "directory",
+                    "directory": f"{fixture_dirname('genomic_resources')}"
+                })))
         result.grr = GenomicResourceGroupRepo(repositories)
 
         return result
@@ -160,12 +168,12 @@ def wdae_gpf_instance_agp(
         wdae_gpf_instance.grr
     ]
     repositories.append(
-            build_genomic_resource_repository(
-                Box({
-                    "id": "fixtures",
-                    "type": "directory",
-                    "directory": f"{fixture_dirname('genomic_resources')}"
-                })))
+        build_genomic_resource_repository(
+            Box({
+                "id": "fixtures",
+                "type": "directory",
+                "directory": f"{fixture_dirname('genomic_resources')}"
+            })))
     wdae_gpf_instance.grr = GenomicResourceGroupRepo(repositories)
 
     reload_datasets(wdae_gpf_instance)
@@ -188,21 +196,21 @@ def wdae_gpf_instance_agp(
 
     wdae_gpf_instance.__autism_gene_profile_config = agp_config
     main_gene_sets = {
-        'CHD8 target genes',
-        'FMRP Darnell',
-        'FMRP Tuschl',
-        'PSD',
-        'autism candidates from Iossifov PNAS 2015',
-        'autism candidates from Sanders Neuron 2015',
-        'brain critical genes',
-        'brain embryonically expressed',
-        'chromatin modifiers',
-        'essential genes',
-        'non-essential genes',
-        'postsynaptic inhibition',
-        'synaptic clefts excitatory',
-        'synaptic clefts inhibitory',
-        'topotecan downreg genes'
+        "CHD8 target genes",
+        "FMRP Darnell",
+        "FMRP Tuschl",
+        "PSD",
+        "autism candidates from Iossifov PNAS 2015",
+        "autism candidates from Sanders Neuron 2015",
+        "brain critical genes",
+        "brain embryonically expressed",
+        "chromatin modifiers",
+        "essential genes",
+        "non-essential genes",
+        "postsynaptic inhibition",
+        "synaptic clefts excitatory",
+        "synaptic clefts inhibitory",
+        "topotecan downreg genes"
     }
     mocker.patch.object(
         wdae_gpf_instance.gene_sets_db,

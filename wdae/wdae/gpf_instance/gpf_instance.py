@@ -36,9 +36,8 @@ class WGPFInstance(GPFInstance):
         self._clients: List[RESTClient] = []
         self._study_wrappers: Dict[str, StudyWrapperBase] = dict()
         super().__init__(*args, **kwargs)
-        self._load_remotes()
 
-    def _load_remotes(self):
+    def load_remotes(self):
         if self._remote_study_db is not None:
             return
 
@@ -61,7 +60,7 @@ class WGPFInstance(GPFInstance):
                     self._clients.append(client)
                 except ConnectionError as err:
                     logger.error(err)
-                    logger.error("Failed to create remote %s", remote['id'])
+                    logger.error("Failed to create remote %s", remote["id"])
 
         self._remote_study_db = RemoteStudyDB(self._clients)
 
@@ -81,14 +80,14 @@ class WGPFInstance(GPFInstance):
     @cached
     def gene_sets_db(self):
         logger.debug("creating new instance of GeneSetsDb")
-        self._load_remotes()
+        self.load_remotes()
         gene_sets_db = super().gene_sets_db
         return RemoteGeneSetsDb(self._clients, gene_sets_db)
 
     @property  # type: ignore
     @cached
     def denovo_gene_sets_db(self):
-        self._load_remotes()
+        self.load_remotes()
         denovo_gene_sets_db = super().denovo_gene_sets_db
         return RemoteDenovoGeneSetsDb(self._clients, denovo_gene_sets_db)
 
@@ -111,7 +110,6 @@ class WGPFInstance(GPFInstance):
 
         if genotype_data.is_remote:
             return RemoteStudyWrapper(genotype_data)
-
         return StudyWrapper(
             genotype_data, self._pheno_db, self.gene_scores_db
         )
@@ -254,9 +252,7 @@ class WGPFInstance(GPFInstance):
                     "dataset: %s, "
                     "requested background: %s, "
                     "requested counting name: %s",
-                    dataset_id,
-                    background_name,
-                    counting_name
+                    dataset_id, background_name, counting_name
                 )
             builder = RemoteEnrichmentBuilder(
                 dataset, dataset.rest_client,
@@ -297,7 +293,9 @@ def load_gpf_instance():
         try:
             if _gpf_instance is None:
                 gpf_instance = WGPFInstance(
-                    load_eagerly=settings.STUDIES_EAGER_LOADING)  # FIXME
+                    load_eagerly=settings.STUDIES_EAGER_LOADING)
+                gpf_instance.load_remotes()
+
                 _gpf_instance = gpf_instance
         finally:
             _gpf_instance_lock.release()

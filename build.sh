@@ -112,15 +112,19 @@ function main() {
     build_run_ctx_init "local"
     defer_ret build_run_ctx_reset
 
-    # copy data
-    build_run_local cp -r ./integration/local/data ./data/data-hg19-local
+    local -A ctx_gpf_local
+    build_run_ctx_init ctx:ctx_gpf_local "container" "${gpf_dev_image_ref}" \
+      ports:21010 \
+      --hostname "local" \
+      --network "${ctx_network["network_id"]}" \
+      --env DAE_DB_DIR="/wd/data/data-hg19-remote/" \
+      --env GRR_DEFINITION_FILE="/wd/cache/grr_definition.yaml" \
+      --env DAE_HDFS_HOST="impala" \
+      --env DAE_IMPALA_HOST="impala"
+    defer_ret build_run_ctx_reset ctx:ctx_gpf_local
 
-    # # reset instance conf
-    # build_run_local bash -c 'sed -i \
-    #   -e s/"^      - localhost.*$/      - impala"/g \
-    #   -e s/"^      host: localhost.*$/      host: impala"/g \
-    #   ./data/data-hg19-local/gpf_instance.yaml
-    # '
+
+    build_run_container ctx:ctx_gpf_local /wd/integration/local/entrypoint.sh
 
     build_run_local bash -c "mkdir -p ./cache"
     build_run_local bash -c "touch ./cache/grr_definition.yaml"
@@ -131,29 +135,6 @@ url: "https://grr.seqpipe.org/"
 cache_dir: "/wd/cache/grrCache"
 EOT
 '
-  }
-
-  build_stage "Prepare GPF remote"
-  {
-    # prepare raw data
-    {
-      build_run_ctx_init "local"
-      defer_ret build_run_ctx_reset
-
-      # copy data
-    build_run_local cp -r ./integration/remote/data ./data/data-hg19-remote
-
-    # # reset instance conf
-    # build_run_local bash -c 'sed -i \
-    #   -e s/"^      - localhost.*$/      - impala"/g \
-    #   -e s/"^      host: localhost.*$/      host: impala"/g \
-    #   ./data/data-hg19-remote/gpf_instance.yaml
-    #   '
-
-    build_run_ctx_init "local"
-    defer_ret build_run_ctx_reset
-
-    }
   }
 
   build_stage "Run GPF remote instance"
@@ -176,7 +157,6 @@ EOT
     build_run_ctx_persist ctx:ctx_gpf_remote
   }
 
-  # lint
   build_stage "flake8"
   {
     build_run_ctx_init "container" "${gpf_dev_image_ref}"
@@ -236,7 +216,6 @@ EOT
     build_run_local cp ./results/bandit_dae_report.html ./results/bandit_wdae_report.html ./test-results/
   }
 
-  # mypy
   build_stage "MyPy"
   {
     build_run_ctx_init "container" "${gpf_dev_image_ref}"

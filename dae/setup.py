@@ -17,7 +17,12 @@ setuptools.setup(
     packages=setuptools.find_packages(
         where=".", exclude=["dae.docs", "dae.tests", "*.tests.*", "*.tests", ],
     ),
-    include_package_data=True,
+    # include_package_data=True,
+    package_data={
+        "dae": ["py.typed"],
+        "dae.genomic_resources": ["py.typed"],
+        "dae.tools": ["py.typed"],
+    },
     scripts=[
         "dae/tools/impala_parquet_loader.py",
         "dae/tools/impala_tables_loader.py",
