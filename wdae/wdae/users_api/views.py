@@ -314,7 +314,7 @@ def logout(request):
 @api_view(["GET"])
 @authentication_classes((OAuth2Authentication,))
 def get_user_info(request):
-    user = request.user
+    user = request.user or request.auth.application.user
     if user.is_authenticated:
         return Response(
             {
@@ -346,12 +346,16 @@ def check_verif_path(request):
 @authentication_classes((OAuth2Authentication,))
 def get_federation_credentials(request):
     user = request.user
+
     if not user.is_authenticated:
         return Response(status=status.HTTP_401_UNAUTHORIZED)
 
     Application = get_application_model()
+    if Application.objects.filter(name=request.GET['name']).exists():
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+
     new_application = Application(**{
-        "name": f"federation-{user}-app",
+        "name": request.GET['name'],
         "user_id": user.id,
         "client_type": "confidential",
         "authorization_grant_type": "client-credentials"
@@ -361,7 +365,21 @@ def get_federation_credentials(request):
     cleartext_secret = new_application.client_secret
     new_application.save()
 
-    credential = base64.b64encode(
+    credentials = base64.b64encode(
         f"{new_application.client_id}:{cleartext_secret}".encode("utf-8")
     )
-    return Response({"credential": credential}, status=status.HTTP_200_OK)
+    return Response({"credentials": credentials}, status=status.HTTP_200_OK)
+
+
+@api_view(["GET"])
+@authentication_classes((OAuth2Authentication,))
+def revoke_federation_credentials(request):
+    user = request.user
+    if not user.is_authenticated:
+        return Response(status=status.HTTP_401_UNAUTHORIZED)
+    app = get_application_model().objects.get(name=request.GET['name'])
+    if not user.id == app.user_id:
+        return Response(status=status.HTTP_401_UNAUTHORIZED)
+    else:
+        app.delete()
+        return Response(status=status.HTTP_200_OK)
