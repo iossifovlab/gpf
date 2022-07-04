@@ -366,16 +366,16 @@ class EffectTranscript:
 
         if len(parts) == 4:
             return EffectTranscript(
-                parts[0], gene=parts[1], effect=parts[2], details=data)
-        if len(parts) == 3:
-            return EffectTranscript(parts[0], gene=parts[1], details=data)
-        if len(parts) == 2:
-            return EffectTranscript(parts[0], gene=None, details=data)
+                parts[0], gene=parts[1], effect=parts[2], details=parts[3])
+        # if len(parts) == 3:
+        #     return EffectTranscript(parts[0], gene=parts[1], details=data)
+        # if len(parts) == 2:
+        #     return EffectTranscript(parts[0], gene=None, details=data)
         raise ValueError(
             f"unexpected effect details format: {data}")
 
     def __repr__(self):
-        return f"{self.details}"
+        return f"{self.transcript_id}:{self.gene}:{self.effect}:{self.details}"
 
     def __str__(self):
         return self.__repr__()
@@ -484,6 +484,7 @@ class AlleleEffects:
             t: EffectTranscript(t, g, e, d)
             for t, g, e, d in transcript_effects
         }
+
         result = AlleleEffects(worst_effect, gene_effects, transcript_effects)
         result.all_effects = effects
         return result
