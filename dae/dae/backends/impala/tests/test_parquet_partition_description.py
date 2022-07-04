@@ -1,5 +1,8 @@
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
+
 import pytest
 import numpy as np
+
 from dae.backends.impala.parquet_io import ParquetPartitionDescriptor, \
     NoPartitionDescriptor
 from dae.variants.family_variant import FamilyVariant
@@ -96,37 +99,43 @@ def test_parquet_frequency_bin(fam1, gt, attributes, rare_boundary, expected):
     "eff1, eff2, eff3, coding_effect_types, expected",
     [
         (
-            "synonymous!SAMD11:synonymous!NM_152486_1:40/68",
-            "synonymous!SAMD11:synonymous!NM_152486_1:40/68",
-            "synonymous!SAMD11:synonymous!NM_152486_1:40/68",
+            "synonymous!SAMD11:synonymous!NM_152486_1:SAMD11:synonymous:40/68",
+            "synonymous!SAMD11:synonymous!NM_152486_1:SAMD11:synonymous:40/68",
+            "synonymous!SAMD11:synonymous!NM_152486_1:SAMD11:synonymous:40/68",
             ["synonymous"],
             [0, 1, 1, 1],
         ),
         (
-            "synonymous!SAMD11:synonymous!NM_152486_1:40/68",
-            "synonymous!SAMD11:synonymous!NM_152486_1:40/68",
-            "synonymous!SAMD11:synonymous!NM_152486_1:40/68",
+            "synonymous!SAMD11:synonymous!NM_152486_1:SAMD11:synonymous:40/68",
+            "synonymous!SAMD11:synonymous!NM_152486_1:SAMD11:synonymous:40/68",
+            "synonymous!SAMD11:synonymous!NM_152486_1:SAMD11:synonymous:40/68",
             ["missense"],
             [0, 0, 0, 0],
         ),
         (
-            "synonymous!SAMD11:synonymous!NM_152486_1:40/68",
-            "synonymous!SAMD11:synonymous!NM_152486_1:40/68",
-            "synonymous!SAMD11:synonymous!NM_152486_1:40/68",
+            "synonymous!SAMD11:synonymous!NM_152486_1:SAMD11:synonymous:40/68",
+            "synonymous!SAMD11:synonymous!NM_152486_1:SAMD11:synonymous:40/68",
+            "synonymous!SAMD11:synonymous!NM_152486_1:SAMD11:synonymous:40/68",
             ["missense", "synonymous"],
             [0, 1, 1, 1],
         ),
         (
-            "synonymous!SAMD11:synonymous!NM_152486_1:40/68",
-            "missense!SAMD11:missense!NM_152486_1:54/681(Ser->Arg)",
-            "intergenic!intergenic:intergenic!intergenic:intergenic",
+            "synonymous!SAMD11:synonymous!"
+            "NM_152486_1:SAMD11:synonymous:40/68",
+            "missense!SAMD11:missense!"
+            "NM_152486_1:SAMD11:missense:54/681(Ser->Arg)",
+            "intergenic!intergenic:intergenic!"
+            "intergenic:intergenic:intergenic:intergenic",
             ["synonymous"],
             [0, 1, 0, 0],
         ),
         (
-            "synonymous!SAMD11:synonymous!NM_152486_1:40/68",
-            "missense!SAMD11:missense!NM_152486_1:54/681(Ser->Arg)",
-            "missense!SAMD11:missense!NM_152486_1:54/681(Ser->Arg)",
+            "synonymous!SAMD11:synonymous!"
+            "NM_152486_1:SAMD11:synonymous:40/68",
+            "missense!SAMD11:missense!"
+            "NM_152486_1:SAMD11:missense:54/681(Ser->Arg)",
+            "missense!SAMD11:missense!"
+            "NM_152486_1:SAMD11:missense:54/681(Ser->Arg)",
             ["nonsense", "intergenic"],
             [0, 0, 0, 0],
         ),
