@@ -18,4 +18,8 @@ urlpatterns = [
         r"^users/get_federation_credentials/?$",
         views.get_federation_credentials
     ),
+    re_path(
+        r"^users/revoke_federation_credentials/?$",
+        views.revoke_federation_credentials
+    ),
 ] + router.urls
