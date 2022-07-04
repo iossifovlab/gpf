@@ -310,34 +310,13 @@ EOT
       build_run_local cp ./results/mypy_dae_report ./results/mypy_wdae_report ./test-results/
   }
 
-  # # import test data to impala
-  # build_stage "Import test data to impala"
-  # {
-
-  #   build_run_ctx_init "container" "${gpf_dev_image_ref}" \
-  #     --network "${ctx_network["network_id"]}" \
-  #     --env DAE_DB_DIR="/wd/data/data-hg19-startup/" \
-  #     --env GRR_DEFINITION_FILE="/wd/cache/grr_definition.yaml" \
-  #     --env TEST_REMOTE_HOST="gpfremote" \
-  #     --env DAE_HDFS_HOST="impala" \
-  #     --env DAE_IMPALA_HOST="impala"
-
-  #   defer_ret build_run_ctx_reset
-
-  #   for d in /wd/dae /wd/wdae /wd/dae_conftests; do
-  #     build_run_container bash -c 'cd "'"${d}"'"; /opt/conda/bin/conda run --no-capture-output -n gpf \
-  #       pip install -e .'
-  #   done
-
-  # }
-
   # Tests - dae
   build_stage "Tests - dae"
   {
 
     build_run_ctx_init "container" "${gpf_dev_image_ref}" \
       --network "${ctx_network["network_id"]}" \
-      --env DAE_DB_DIR="/wd/data/data-hg19-startup/" \
+      --env DAE_DB_DIR="/wd/data/data-hg19-local/" \
       --env GRR_DEFINITION_FILE="/wd/cache/grr_definition.yaml" \
       --env TEST_REMOTE_HOST="gpfremote" \
       --env DAE_HDFS_HOST="impala" \
@@ -369,7 +348,7 @@ EOT
 
     build_run_ctx_init "container" "${gpf_dev_image_ref}" \
       --network "${ctx_network["network_id"]}" \
-      --env DAE_DB_DIR="/wd/data/data-hg19-startup/" \
+      --env DAE_DB_DIR="/wd/data/data-hg19-local/" \
       --env GRR_DEFINITION_FILE="/wd/cache/grr_definition.yaml" \
       --env TEST_REMOTE_HOST="gpfremote" \
       --env DAE_HDFS_HOST="impala" \
