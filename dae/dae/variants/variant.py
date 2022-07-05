@@ -5,7 +5,7 @@ import enum
 import itertools
 import logging
 
-from typing import List, Dict, Set, Any, Optional, cast
+from typing import List, Dict, Set, Any, Optional, cast, Tuple
 
 from dae.utils.variant_utils import trim_str_left_right, trim_str_right_left
 from dae.effect_annotation.effect import AlleleEffects, EffectGene
@@ -17,7 +17,9 @@ from dae.variants.attributes import TransmissionType
 logger = logging.getLogger(__name__)
 
 
-def allele_type_from_name(name):
+# pylint: disable=too-many-return-statements
+def allele_type_from_name(name: str) -> core.Allele.Type:
+    """Return allele type from an allele type name."""
     name = name.lower().strip()
     if name in {"sub", "substitution"}:
         return core.Allele.Type.substitution
@@ -37,7 +39,8 @@ def allele_type_from_name(name):
     raise ValueError(f"unexpected variant type: {name}")
 
 
-def allele_type_from_cshl_variant(variant):
+def allele_type_from_cshl_variant(variant: str):
+    """Return allele type from a CSHL variant type."""
     if variant is None:
         return None
 
@@ -60,7 +63,9 @@ def allele_type_from_cshl_variant(variant):
 
 
 class VariantDesc:
+    """Variant description."""
 
+    # pylint: disable=too-many-arguments,too-many-instance-attributes
     def __init__(
             self, variant_type, position,
             end_position=None,
@@ -82,8 +87,8 @@ class VariantDesc:
     def __repr__(self):
         return self.to_cshl_short()
 
-    def to_cshl_short(self):
-
+    def to_cshl_short(self) -> str:
+        """Convert variant description into CSHL short type description."""
         if self.variant_type & core.Allele.Type.substitution:
             return f"sub({self.ref}->{self.alt})"
         if self.variant_type & core.Allele.Type.small_insertion:
@@ -98,8 +103,11 @@ class VariantDesc:
             return "CNV-"
         raise ValueError(f"unexpected variant type: {self.variant_type}")
 
-    def to_cshl_full(self):
+    def to_cshl_full(self) -> str:
+        """Convert variant description into CSHL full type description.
 
+        Includes tandem repeats descriptions.
+        """
         if self.variant_type & core.Allele.Type.tandem_repeat:
             return f"TR({self.tr_ref}x{self.tr_unit}->{self.tr_alt})"
         if self.variant_type & core.Allele.Type.substitution:
@@ -117,7 +125,8 @@ class VariantDesc:
         raise ValueError(f"unexpected variant type: {self.variant_type}")
 
     @staticmethod
-    def combine(variant_descs):
+    def combine(variant_descs) -> List[str]:
+        """Combine multiple variant description into list of descriptions."""
         if all(variant_descs[0].variant_type == vd.variant_type
                for vd in variant_descs) or \
             all(vd.variant_type & core.Allele.Type.tandem_repeat
@@ -141,7 +150,8 @@ class VariantDesc:
         return [str(vd) for vd in variant_descs]
 
 
-def cshl_format(pos, ref, alt, trimmer=trim_str_left_right):
+def cshl_format(pos, ref, alt, trimmer=trim_str_left_right) -> VariantDesc:
+    """Build a description for an CSHL allele."""
     # pylint: disable=invalid-name
     p, r, a = trimmer(pos, ref, alt)
     if len(r) == len(a) and len(r) == 0:
@@ -167,7 +177,10 @@ def cshl_format(pos, ref, alt, trimmer=trim_str_left_right):
     )
 
 
-def tandem_repeat(ref, alt, min_mono_reference=8):
+def tandem_repeat(
+    ref, alt, min_mono_reference=8
+) -> Tuple[Optional[str], Optional[int], Optional[int]]:
+    """Check if an allele is a tandem repeat and builds it."""
     for period in range(1, len(ref) // 2 + 1):
         if len(ref) % period != 0:
             continue
@@ -190,7 +203,8 @@ def tandem_repeat(ref, alt, min_mono_reference=8):
     return None, None, None
 
 
-def vcf2cshl(pos, ref, alt, trimmer=trim_str_right_left):
+def vcf2cshl(pos, ref, alt, trimmer=trim_str_right_left) -> VariantDesc:
+    """Build a description for an VCF allele."""
     tr_vd = None
     tr_unit, tr_ref, tr_alt = tandem_repeat(ref, alt)
 
@@ -216,6 +230,7 @@ def vcf2cshl(pos, ref, alt, trimmer=trim_str_right_left):
 
 
 class VariantDetails:
+    """Represents CSHL variant details."""
 
     def __init__(
             self, chrom: str, variant_desc: VariantDesc):
@@ -235,12 +250,14 @@ class VariantDetails:
 
     @staticmethod
     def from_vcf(chrom, position, reference, alternative):
+        """Build variant details from a VCF variant."""
         return VariantDetails(
             chrom, vcf2cshl(position, reference, alternative)
         )
 
     @staticmethod
     def from_cnv(variant):
+        """Build variant details from a CNV variant."""
         # pylint: disable=protected-access
         assert core.Allele.Type.is_cnv(variant._allele_type)
 
@@ -255,6 +272,7 @@ class VariantDetails:
 class SummaryAllele(core.Allele):
     """Class to represents a single allele for given position."""
 
+    # pylint: disable=too-many-public-methods,too-many-arguments
     def __init__(
         self,
         chromosome: str,
@@ -302,20 +320,20 @@ class SummaryAllele(core.Allele):
         return self._allele_index
 
     @property
-    def to_record(self):
-
-        def enum_to_value(v):
-            if isinstance(v, enum.IntEnum):
-                return int(v)
-            if isinstance(v, enum.Enum):
-                return str(v)
-            return v
+    def to_record(self) -> Dict[str, Any]:
+        """Construct a record from an allele."""
+        def enum_to_value(val):
+            if isinstance(val, enum.IntEnum):
+                return int(val)
+            if isinstance(val, enum.Enum):
+                return str(val)
+            return val
 
         def encode_attributes(attributes):
             filtered_attr = {}
-            for k, v in attributes.items():
-                if k is not None:
-                    filtered_attr[k] = enum_to_value(v)
+            for key, val in attributes.items():
+                if key is not None:
+                    filtered_attr[key] = enum_to_value(val)
 
             return filtered_attr
 
@@ -349,6 +367,7 @@ class SummaryAllele(core.Allele):
 
     @property
     def details(self) -> VariantDetails:
+        """Build and return CSHL allele details."""
         if self._details is None:
             if self.Type.cnv & self.allele_type:
                 self._details = VariantDetails.from_cnv(self)
@@ -367,6 +386,7 @@ class SummaryAllele(core.Allele):
 
     @property
     def effects(self) -> Optional[AlleleEffects]:
+        """Build and return allele effect."""
         if self._effects is None:
             record = self.attributes
             if "effect_type" in record:
@@ -441,6 +461,7 @@ class SummaryAllele(core.Allele):
 
     @property
     def cshl_location(self) -> str:
+        """Return CSHL location (chrom:position) of an allele."""
         if self.Type.cnv & self.allele_type:
             return f"{self.chrom}:{self.position}-{self.end_position}"
         if self.alternative is None:
@@ -454,7 +475,8 @@ class SummaryAllele(core.Allele):
         return self.details.cshl_location  # type: ignore
 
     @property
-    def cshl_position(self) -> Optional[str]:
+    def cshl_position(self) -> Optional[int]:
+        """Return CSHL position of an allele."""
         if self.alternative is None:
             return None
         if self.details is None:
@@ -508,6 +530,7 @@ class SummaryAllele(core.Allele):
 
     @staticmethod
     def create_reference_allele(allele) -> SummaryAllele:
+        """Given an allele creates the corresponding reference allele."""
         allele_type = core.Allele.Type.position
 
         new_attributes = {
@@ -533,9 +556,10 @@ class SummaryAllele(core.Allele):
 
 
 class SummaryVariant:
+    """Represents summary variant."""
 
+    # pylint: disable=R0913,R0902,R0904
     def __init__(self, alleles):
-        super().__init__()
 
         assert len(alleles) >= 1
         assert len(set(sa.position for sa in alleles)) == 1
@@ -598,6 +622,7 @@ class SummaryVariant:
 
     @property
     def svuid(self):
+        """Build and return summary variant 'unique' ID."""
         if self._svuid is None:
             self._svuid = \
                 f"{self.location}.{self.reference}.{self.alternative}." \
@@ -618,31 +643,26 @@ class SummaryVariant:
 
     @property
     def location(self) -> str:
+        """Return summary variant location."""
         types = self.variant_types
         if core.Allele.Type.large_deletion in types \
                 or core.Allele.Type.large_duplication in types:
             return f"{self.chromosome}:{self.position}-{self.end_position}"
-        else:
-            return f"{self.chromosome}:{self.position}"
+        return f"{self.chromosome}:{self.position}"
 
     @property
     def ref_allele(self) -> SummaryAllele:
-        """
-        the reference allele
-        """
+        """Return the reference allele of the variant."""
         return cast(SummaryAllele, self.alleles[0])
 
     @property
     def alt_alleles(self) -> List[SummaryAllele]:
-        """list of all alternative alleles"""
+        """Return list of all alternative alleles of the variant."""
         return cast(List[SummaryAllele], self.alleles[1:])
 
     @property
     def details(self) -> List[VariantDetails]:
-        """
-        list of `VariantDetails`, that describe each
-        alternative allele.
-        """
+        """Return list of 'VariantDetails' for each allele."""
         if not self.alt_alleles:
             return []
         return [sa.details for sa in self.alt_alleles]
@@ -667,9 +687,7 @@ class SummaryVariant:
 
     @property
     def effects(self) -> List[AlleleEffects]:
-        """
-        1-based list of `Effect`, that describes variant effects.
-        """
+        """Return list of allele effects."""
         if not self.alt_alleles:
             return []
         return [sa.effects for sa in self.alt_alleles if sa.effects]
@@ -677,29 +695,25 @@ class SummaryVariant:
     @property
     def effect_types(self) -> List[str]:
         ets: set = set()
-        for a in self.alt_alleles:
-            ets = ets.union(a.effect_types)
+        for allele in self.alt_alleles:
+            ets = ets.union(allele.effect_types)
         return list(ets)
 
     @property
     def effect_gene_symbols(self):
         egs = set()
-        for a in self.alt_alleles:
-            egs = egs.union(a.effect_gene_symbols)
+        for allele in self.alt_alleles:
+            egs = egs.union(allele.effect_gene_symbols)
         return list(egs)
 
     @property
     def frequencies(self) -> List[Optional[float]]:
-        """
-        0-base list of frequencies for variant.
-        """
+        """Return list of allele frequencies."""
         return [sa.frequency for sa in self.alleles]
 
     @property
     def variant_types(self) -> Set[Any]:
-        """
-        returns set of variant types.
-        """
+        """Return set of allele types."""
         return set(aa.allele_type for aa in self.alt_alleles)
 
     def get_attribute(
@@ -718,8 +732,8 @@ class SummaryVariant:
     def update_attributes(self, atts: Dict[str, Any]) -> None:
         for key, values in list(atts.items()):
             assert len(values) == 1 or len(values) == len(self.alt_alleles)
-            for sa, val in zip(self.alt_alleles, itertools.cycle(values)):
-                sa.update_attributes({key: val})
+            for allele, val in zip(self.alt_alleles, itertools.cycle(values)):
+                allele.update_attributes({key: val})
 
     @property
     def _variant_repr(self) -> str:
@@ -791,12 +805,14 @@ class SummaryVariant:
         return [allele.to_record for allele in self.alt_alleles]
 
 
-class SummaryVariantFactory(object):
+class SummaryVariantFactory:
+    """Factory for summary variants."""
+
     @staticmethod
     def summary_allele_from_record(
-            record, transmission_type=None,
+            record: Dict[str, Any], transmission_type=None,
             attr_filter=None):
-
+        """Build a summary allele from a dictionary (record)."""
         if transmission_type is not None:
             record["transmission_type"] = transmission_type
         alternative = record["alternative"]
@@ -813,12 +829,12 @@ class SummaryVariantFactory(object):
         else:
             summary_index = record.get("summary_index")
 
-        allele_index = record.get("allele_index")
+        allele_index = record["allele_index"]
 
-        chrom = record.get("chrom")
-        position = record.get("position")
+        chrom = record["chrom"]
+        position = record["position"]
         end_position = record.get("end_position")
-        reference = record.get("reference")
+        reference = record["reference"]
         alternative = record.get("alternative")
         allele_type = record.get("variant_type", None)
         transmission_type = record.get(
@@ -847,18 +863,18 @@ class SummaryVariantFactory(object):
 
     @staticmethod
     def summary_variant_from_records(
-            records, transmission_type=None,
+            records: List[Dict[str, Any]], transmission_type=None,
             attr_filter=None):
-
+        """Build summary variant from a list of dictionaries (records)."""
         assert len(records) > 0
 
         alleles = []
         for record in records:
-            sa = SummaryVariantFactory.summary_allele_from_record(
+            allele = SummaryVariantFactory.summary_allele_from_record(
                 record, transmission_type=transmission_type,
                 attr_filter=attr_filter
             )
-            alleles.append(sa)
+            alleles.append(allele)
         if not alleles[0].is_reference_allele:
             ref_allele = SummaryAllele.create_reference_allele(alleles[0])
             alleles.insert(0, ref_allele)
@@ -871,6 +887,7 @@ class SummaryVariantFactory(object):
 
     @staticmethod
     def blank_summary_allele_from_record(record):
+        """Build an empty summary allele from record useful for testing."""
         attributes = record
 
         chrom = record.get("chrom", "1")
@@ -900,12 +917,14 @@ class SummaryVariantFactory(object):
 
     @staticmethod
     def blank_summary_variant_from_records(records):
+        """Build an empty summary variant from records useful for testing."""
         assert len(records) > 0
 
         alleles = []
         for record in records:
-            sa = SummaryVariantFactory.blank_summary_allele_from_record(record)
-            alleles.append(sa)
+            allele = SummaryVariantFactory \
+                .blank_summary_allele_from_record(record)
+            alleles.append(allele)
         if not alleles[0].is_reference_allele:
             ref_allele = SummaryAllele.create_reference_allele(alleles[0])
             alleles.insert(0, ref_allele)
@@ -919,6 +938,7 @@ class SummaryVariantFactory(object):
     @staticmethod
     def summary_variant_from_vcf(
             vcf_variant, summary_variant_index, transmission_type):
+        """Build sumamry variant from a pysam VCF record."""
         records = []
         alts = vcf_variant.alts \
             if vcf_variant.alts is not None else ["."]
