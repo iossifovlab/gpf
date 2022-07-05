@@ -43,6 +43,13 @@ cd /wd/integration/fixtures/hg19/micro_iossifov2014
 /opt/conda/bin/conda run --no-capture-output -n gpf \
     generate_denovo_gene_sets.py
 
+sed -i '5i\\nphenotype_data="comp_pheno"' \
+    /wd/data/data-hg19-remote/studies/iossifov_2014/iossifov_2014.conf
+
+cat >> /wd/data/data-hg19-remote/studies/iossifov_2014/iossifov_2014.conf << EOT
+[enrichment]
+enabled = true
+EOT
 
 /opt/conda/bin/conda run --no-capture-output -n gpf \
     /wd/wdae/wdae/wdaemanage.py migrate
