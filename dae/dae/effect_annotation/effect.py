@@ -399,10 +399,15 @@ class EffectTranscript:
             cls, effect_transcripts) -> Dict[str, EffectTranscript]:
         result = {}
         for transcript_id, details in effect_transcripts:
+            parts = [p.strip() for p in details.split(":")]
 
-            result[transcript_id] = EffectTranscript.from_tuple(
-                (transcript_id, None, None, details)
-            )
+            if len(parts) == 4:
+                result[transcript_id] = EffectTranscript(
+                    parts[0], gene=parts[1], effect=parts[2], details=parts[3])
+            else:
+                result[transcript_id] = EffectTranscript.from_tuple(
+                    (transcript_id, None, None, details)
+                )
         return result
 
 
