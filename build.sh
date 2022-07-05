@@ -148,7 +148,6 @@ EOT
       --env DAE_IMPALA_HOST="impala"
     defer_ret build_run_ctx_reset ctx:ctx_gpf_remote
 
-
     build_run_container_detached ctx:ctx_gpf_remote /wd/integration/remote/entrypoint.sh
 
     build_run_ctx_persist ctx:ctx_gpf_remote
@@ -266,8 +265,6 @@ EOT
         pip install -e .'
     done
 
-    build_run_attach
-
     build_run_container bash -c '
         cd /wd/dae;
         export PYTHONHASHSEED=0;
@@ -299,6 +296,11 @@ EOT
       build_run_container bash -c 'cd "'"${d}"'"; /opt/conda/bin/conda run --no-capture-output -n gpf \
         pip install -e .'
     done
+
+    build_run_container bash -c '
+      /opt/conda/bin/conda run --no-capture-output -n gpf \
+          /wd/scripts/wait-for-it.sh -h gpfremote -p 21010 -t 300    
+    '
 
     build_run_container bash -c '
         cd /wd/wdae;
