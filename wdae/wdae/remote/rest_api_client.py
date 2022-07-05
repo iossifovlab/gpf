@@ -1,6 +1,8 @@
+import logging
+from typing import List, Dict, Any, Optional, cast
+
 import requests  # type: ignore
 import ijson  # type: ignore
-import logging
 
 
 logger = logging.getLogger(__name__)
@@ -405,7 +407,7 @@ class RESTClient:
 
         return response.json()
 
-    def get_gene_sets(self, collection_id):
+    def get_gene_sets(self, collection_id) -> Optional[List[Dict[str, Any]]]:
         response = self._post(
             "gene_sets/gene_sets",
             data={"geneSetsCollection": collection_id}
@@ -414,7 +416,7 @@ class RESTClient:
         if response.status_code != 200:
             return None
 
-        return response.json()
+        return cast(List[Dict[str, Any]], response.json())
 
     def get_gene_set_download(self, gene_sets_collection, gene_set):
         response = self._get(
