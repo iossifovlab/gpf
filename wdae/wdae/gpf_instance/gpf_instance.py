@@ -20,8 +20,6 @@ from remote.rest_api_client import RESTClient
 from enrichment_api.enrichment_builder import \
     EnrichmentBuilder, RemoteEnrichmentBuilder
 
-from datasets_api.models import Dataset
-
 
 logger = logging.getLogger(__name__)
 __all__ = ["get_gpf_instance"]
@@ -308,6 +306,7 @@ def load_gpf_instance():
 
 
 def reload_datasets(gpf_instance):
+    from datasets_api.models import Dataset
     for genotype_data_id in gpf_instance.get_genotype_data_ids():
         Dataset.recreate_dataset_perm(genotype_data_id)
 
