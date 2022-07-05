@@ -36,7 +36,7 @@ function main() {
   libmain_init_build_env \
     clobber:"$clobber" preset:"$preset" build_no:"$build_no" \
     generate_jenkins_init:"$generate_jenkins_init" expose_ports:"$expose_ports" \
-    iossifovlab.data-hg19-startup iossifovlab.iossifovlab-containers
+    iossifovlab.iossifovlab-containers
 
   libmain_save_build_env_on_exit
   libbuild_init stage:"$stage" registry.seqpipe.org
@@ -111,7 +111,6 @@ function main() {
   {
 
     build_run_ctx_init "container" "${gpf_dev_image_ref}" \
-      ports:21010 \
       --hostname "local" \
       --network "${ctx_network["network_id"]}" \
       --env DAE_DB_DIR="/wd/data/data-hg19-local/" \
