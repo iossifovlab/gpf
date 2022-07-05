@@ -109,22 +109,19 @@ function main() {
   # prepare gpf data
   build_stage "Prepare GPF data"
   {
-    build_run_ctx_init "local"
-    defer_ret build_run_ctx_reset
 
-    local -A ctx_gpf_local
-    build_run_ctx_init ctx:ctx_gpf_local "container" "${gpf_dev_image_ref}" \
+    build_run_ctx_init "container" "${gpf_dev_image_ref}" \
       ports:21010 \
       --hostname "local" \
       --network "${ctx_network["network_id"]}" \
-      --env DAE_DB_DIR="/wd/data/data-hg19-remote/" \
+      --env DAE_DB_DIR="/wd/data/data-hg19-local/" \
       --env GRR_DEFINITION_FILE="/wd/cache/grr_definition.yaml" \
       --env DAE_HDFS_HOST="impala" \
       --env DAE_IMPALA_HOST="impala"
-    defer_ret build_run_ctx_reset ctx:ctx_gpf_local
+    defer_ret build_run_ctx_reset
 
 
-    build_run_container ctx:ctx_gpf_local /wd/integration/local/entrypoint.sh
+    build_run_container /wd/integration/local/entrypoint.sh
 
     build_run_local bash -c "mkdir -p ./cache"
     build_run_local bash -c "touch ./cache/grr_definition.yaml"
@@ -263,6 +260,8 @@ EOT
       build_run_container bash -c 'cd "'"${d}"'"; /opt/conda/bin/conda run --no-capture-output -n gpf \
         pip install -e .'
     done
+
+    build_run_attach
 
     build_run_container bash -c '
         cd /wd/dae;
