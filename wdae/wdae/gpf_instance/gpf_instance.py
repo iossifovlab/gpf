@@ -18,7 +18,8 @@ from remote.gene_sets_db import RemoteGeneSetsDb
 from remote.denovo_gene_sets_db import RemoteDenovoGeneSetsDb
 from remote.rest_api_client import RESTClient
 
-from dae.gpf_instance.gpf_instance import GPFInstance, cached
+from dae.utils.dae_utils import cached
+from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.enrichment_tool.tool import EnrichmentTool
 from dae.enrichment_tool.event_counters import CounterBase
 

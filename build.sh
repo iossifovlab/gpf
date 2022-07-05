@@ -218,6 +218,11 @@ EOT
     build_run_ctx_init "container" "${gpf_dev_image_ref}"
     defer_ret build_run_ctx_reset
 
+    for d in /wd/dae /wd/wdae /wd/dae_conftests; do
+      build_run_container bash -c 'cd "'"${d}"'"; /opt/conda/bin/conda run --no-capture-output -n gpf \
+        pip install -e .'
+    done
+
     build_run_container bash -c '
       cd /wd/dae;
       /opt/conda/bin/conda run --no-capture-output -n gpf mypy dae \
