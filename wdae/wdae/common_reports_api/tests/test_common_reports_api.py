@@ -1,5 +1,5 @@
-import pytest
 import json
+import pytest
 
 from rest_framework import status
 

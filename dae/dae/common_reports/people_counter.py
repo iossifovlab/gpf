@@ -1,7 +1,9 @@
 from dae.variants.attributes import Sex
 
 
-class PeopleCounter(object):
+class PeopleCounter:
+    """Class representing a people counter JSON."""
+
     def __init__(self, json):
         self.person_set_name = json["column"]
         self.people_male = json.get("people_male", 0)
@@ -11,6 +13,7 @@ class PeopleCounter(object):
 
     @staticmethod
     def from_families(families, person_set):
+        """Build people counter JSON from dict of families."""
         matched_people = list(person_set.persons.values())
 
         people_male = len(
@@ -45,6 +48,7 @@ class PeopleCounter(object):
         return self.people_total == 0
 
     def is_empty_field(self, field):
+        """Return whether a given field has not counted a single variant."""
         assert field in {
             "people_male",
             "people_female",
@@ -54,7 +58,9 @@ class PeopleCounter(object):
         return getattr(self, field) == 0
 
 
-class PeopleCounters(object):
+class PeopleCounters:
+    """Class representing people counters JSON."""
+
     def __init__(self, json):
         self.group_name = json["group_name"]
         self.columns = json["columns"]
@@ -63,7 +69,7 @@ class PeopleCounters(object):
 
     @staticmethod
     def from_families(families, person_set_collection):
-
+        """Create people counters JSON from dict of families."""
         people_counters = [
             PeopleCounter.from_families(families, person_set)
             for person_set in person_set_collection.person_sets.values()
@@ -86,10 +92,8 @@ class PeopleCounters(object):
 
         def is_row_empty(row):
             return all(
-                [
-                    people_counter.is_empty_field(row)
-                    for people_counter in people_counters
-                ]
+                people_counter.is_empty_field(row)
+                for people_counter in people_counters
             )
 
         rows = [row for row in rows if not is_row_empty(row)]
@@ -115,6 +119,8 @@ class PeopleCounters(object):
 
 
 class PeopleReport:
+    """Class representing people report JSON."""
+
     def __init__(self, json):
         self.people_counters = [PeopleCounters(d) for d in json]
 

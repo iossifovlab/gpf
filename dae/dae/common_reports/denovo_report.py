@@ -1,7 +1,7 @@
 import time
 import logging
-import numpy as np
 from copy import deepcopy
+import numpy as np
 
 from dae.utils.effect_utils import EffectTypesMixin
 
@@ -10,6 +10,8 @@ logger = logging.getLogger(__name__)
 
 
 class EffectCell:
+    """Class representing a cell in the denovo report table."""
+
     def __init__(self, denovo_variants, person_set, effect):
         self.denovo_variants = denovo_variants
         assert len(person_set.persons) > 0
@@ -34,8 +36,10 @@ class EffectCell:
                 self.count_variant(fv, fa)
 
         logger.info(
-            f"DENOVO REPORTS: persons set {self.person_set} children "
-            f"{len(self.person_set_children)}")
+            "DENOVO REPORTS: persons set %s children %s",
+            self.person_set,
+            len(self.person_set_children)
+        )
 
     @property
     def number_of_observed_events(self):
@@ -78,21 +82,26 @@ class EffectCell:
         }
 
     def count_variant(self, family_variant, family_allele):
+        """Count given variant in the cell data."""
         if not set(family_allele.variant_in_members) & \
                 self.person_set_children:
             variant_in_members = set(family_allele.variant_in_members) & \
                 self.person_set_persons
             if variant_in_members:
                 logger.warning(
-                    f"denovo variant not in child: {family_allele}; "
-                    f"{family_allele.variant_in_members}; "
-                    f"person set: {self.person_set.id}; "
-                    f"mismatched persons: {variant_in_members}")
+                    "denovo variant not in child: %s; %s; "
+                    "person set: %s; "
+                    "mismatched persons: %s",
+                    family_allele,
+                    family_allele.variant_in_members,
+                    self.person_set.id,
+                    variant_in_members
+                )
             return
         if not family_allele.effects:
             return
         # FIXME: Avoid conversion of effect types to set
-        if not (set(family_allele.effects.types) & self.effect_types):
+        if not set(family_allele.effects.types) & self.effect_types:
             return
         self.observed_variants_ids.add(family_variant.fvuid)
         self.observed_people_with_event.update(
@@ -107,7 +116,9 @@ class EffectCell:
         )
 
 
-class EffectRow(object):
+class EffectRow:
+    """Class representing a row in the denovo report table."""
+
     def __init__(self, denovo_variants, effect, person_sets):
         self.denovo_variants = denovo_variants
         self.person_sets = person_sets
@@ -132,7 +143,7 @@ class EffectRow(object):
         ]
 
     def is_row_empty(self):
-        return all([value.is_empty() for value in self.row])
+        return all(value.is_empty() for value in self.row)
 
     def get_empty(self):
         return [value.is_empty() for value in self.row]
@@ -145,7 +156,9 @@ class EffectRow(object):
             self.row.pop(index)
 
 
-class DenovoReportTable(object):
+class DenovoReportTable:
+    """Class representing a denovo report table JSON."""
+
     def __init__(self, json):
         self.rows = json["rows"]
         self.group_name = json["group_name"]
@@ -159,7 +172,7 @@ class DenovoReportTable(object):
             effect_groups,
             effect_types,
             person_set_collection):
-
+        """Construct a denovo report table from variants."""
         person_sets = []
         for person_set in person_set_collection.person_sets.values():
             if len(person_set.persons) > 0:
@@ -245,6 +258,7 @@ class DenovoReportTable(object):
         }
 
     def is_empty(self):
+        """Return whether the table does not have a single counted variant."""
         def _is_row_empty(row):
             for cell in row["row"]:
                 if cell["number_of_observed_events"] > 0 \
@@ -253,10 +267,12 @@ class DenovoReportTable(object):
                         or cell["percent_of_children_with_events"] > 0:
                     return False
             return True
-        return all([_is_row_empty(row) for row in self.rows])
+        return all(_is_row_empty(row) for row in self.rows)
 
 
-class DenovoReport(object):
+class DenovoReport:
+    """Class representing a denovo report JSON."""
+
     def __init__(self, json):
         self.tables = []
         if json is not None:
@@ -264,7 +280,7 @@ class DenovoReport(object):
 
     @staticmethod
     def from_genotype_study(genotype_data, person_set_collections):
-
+        """Create a denovo report JSON from a genotype data study."""
         config = genotype_data.config.common_report
         effect_groups = config.effect_groups
         effect_types = config.effect_types
@@ -280,10 +296,12 @@ class DenovoReport(object):
 
         elapsed = time.time() - start
         logger.info(
-            f"DENOVO REPORTS: denovo variants query in {elapsed:.2f} sec")
+            "DENOVO REPORTS: denovo variants query in %.2f sec", elapsed
+        )
         logger.info(
-            f"DENOVO REPORTS: denovo variants count is "
-            f"{len(denovo_variants)}")
+            "DENOVO REPORTS: denovo variants count is %s",
+            len(denovo_variants)
+        )
 
         start = time.time()
 
@@ -300,7 +318,9 @@ class DenovoReport(object):
                     denovo_report_tables.append(denovo_report_table)
 
         elapsed = time.time() - start
-        logger.info(f"DENOVO REPORTS build " f"in {elapsed:.2f} sec")
+        logger.info(
+            "DENOVO REPORTS build in %.2f sec", elapsed
+        )
 
         return DenovoReport({
             "tables": [t.to_dict() for t in denovo_report_tables]

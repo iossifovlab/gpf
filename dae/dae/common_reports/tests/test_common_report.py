@@ -4,7 +4,7 @@ from dae.common_reports.common_report import CommonReport
 def test_common_report(study4):
     common_report = CommonReport.from_genotype_study(study4)
 
-    assert common_report.id == "Study4"
+    assert common_report.study_id == "Study4"
     assert common_report.families_report
     assert common_report.denovo_report
     assert common_report.study_name == "Study4"

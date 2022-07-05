@@ -1,5 +1,5 @@
 import logging
-from typing import List
+from typing import List, Dict
 from remote.rest_api_client import RESTClient, RESTClientRequestError
 from studies.remote_study import RemoteGenotypeData
 
@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 class RemoteStudyDB:
     def __init__(self, clients: List[RESTClient]):
-        self._remote_study_clients = dict()
+        self._remote_study_clients: Dict[str, RESTClient] = dict()
         self._remote_study_ids = dict()
         self._remote_genotype_datas = dict()
 

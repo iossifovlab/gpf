@@ -12,8 +12,10 @@ logger = logging.getLogger(__name__)
 
 
 class CommonReport(object):
+    """Class representing a common report JSON."""
+
     def __init__(self, json):
-        self.id = json["id"]
+        self.study_id = json["id"]
         self.people_report = PeopleReport(json["people_report"])
         self.families_report = FamiliesReport(json["families_report"])
         self.denovo_report = DenovoReport(json.get("denovo_report"))
@@ -31,6 +33,7 @@ class CommonReport(object):
 
     @staticmethod
     def from_genotype_study(genotype_data_study):
+        """Generate common report JSON from genotpye data study."""
         config = genotype_data_study.config.common_report
 
         assert config.enabled, genotype_data_study.study_id
@@ -59,7 +62,8 @@ class CommonReport(object):
 
         elapsed = time.time() - start
         logger.info(
-            f"COMMON REPORTS family report " f"build in {elapsed:.2f} sec")
+            "COMMON REPORTS family report build in %.2f sec", elapsed
+        )
 
         start = time.time()
 
@@ -79,7 +83,8 @@ class CommonReport(object):
         )
         elapsed = time.time() - start
         logger.info(
-            f"COMMON REPORTS denovo report " f"build in {elapsed:.2f} sec")
+            "COMMON REPORTS denovo report build in %.2f sec", elapsed
+        )
 
         person_sets_config = \
             genotype_data_study.config.person_set_collections
@@ -90,7 +95,7 @@ class CommonReport(object):
         collection = genotype_data_study.get_person_set_collection(
             person_sets_config.selected_person_set_collections[0]
         )
-        phenotype = list()
+        phenotype = []
         for person_set in collection.person_sets.values():
             if len(person_set.persons) > 0:
                 phenotype += person_set.values
@@ -134,7 +139,7 @@ class CommonReport(object):
 
     def to_dict(self, full=False):
         return {
-            "id": self.id,
+            "id": self.study_id,
             "people_report": self.people_report.to_dict(),
             "families_report": self.families_report.to_dict(full=full),
             "denovo_report": (

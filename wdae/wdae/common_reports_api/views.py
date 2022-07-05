@@ -9,9 +9,6 @@ from query_base.query_base import QueryBaseView
 
 
 class VariantReportsView(QueryBaseView):
-    def __init__(self):
-        super(VariantReportsView, self).__init__()
-
     def get(self, request, common_report_id):
         assert common_report_id
 
@@ -22,15 +19,12 @@ class VariantReportsView(QueryBaseView):
         if common_report is not None:
             return Response(common_report.to_dict())
         return Response(
-            {"error": "Common report {} not found".format(common_report_id)},
+            {"error": f"Common report {common_report_id} not found"},
             status=status.HTTP_404_NOT_FOUND,
         )
 
 
 class VariantReportsFullView(QueryBaseView):
-    def __init__(self):
-        super(VariantReportsFullView, self).__init__()
-
     def get(self, request, common_report_id):
         assert common_report_id
 
@@ -47,9 +41,6 @@ class VariantReportsFullView(QueryBaseView):
 
 
 class FamilyCounterListView(QueryBaseView):
-    def __init__(self):
-        super().__init__()
-
     def post(self, request):
         data = request.data
 
@@ -77,9 +68,6 @@ class FamilyCounterListView(QueryBaseView):
 
 
 class FamilyCounterDownloadView(QueryBaseView):
-    def __init__(self):
-        super().__init__()
-
     def post(self, request):
         data = json.loads(request.data["queryData"])
 
@@ -114,9 +102,6 @@ class FamilyCounterDownloadView(QueryBaseView):
 
 
 class FamiliesDataDownloadView(QueryBaseView):
-    def __init__(self):
-        super(FamiliesDataDownloadView, self).__init__()
-
     def get(self, request, dataset_id):
         if not user_has_permission(
             request.user, dataset_id

@@ -23,7 +23,7 @@ def get_family_pedigree(family, person_set_collection):
 
 
 def get_family_type(family, person_to_set):
-    family_type = list()
+    family_type = []
     # get family size
     family_type.append(str(len(family.members_in_order)))
     members_by_role = sorted(
@@ -39,7 +39,9 @@ def get_family_type(family, person_to_set):
     return tuple(family_type)
 
 
-class FamilyCounter(object):
+class FamilyCounter:
+    """Class representing a family counter JSON."""
+
     def __init__(self, json):
         self.families = json["families"]
         self.pedigree = json["pedigree"]
@@ -62,6 +64,7 @@ class FamilyCounter(object):
         })
 
     def to_dict(self, full=False):
+        """Transform counter to dict."""
         if full:
             return {
                 "pedigree": self.pedigree,
@@ -69,15 +72,16 @@ class FamilyCounter(object):
                 "families": self.families,
                 "counter_id": self.counter_id
             }
-        else:
-            return {
-                "pedigree": self.pedigree,
-                "pedigrees_count": self.pedigrees_count,
-                "counter_id": self.counter_id
-            }
+        return {
+            "pedigree": self.pedigree,
+            "pedigrees_count": self.pedigrees_count,
+            "counter_id": self.counter_id
+        }
 
 
 class FamiliesGroupCounters(object):
+    """Class representing families group counters JSON."""
+
     def __init__(self, json):
         self.group_name = json["group_name"]
         self.phenotypes = json["phenotypes"]
@@ -92,6 +96,7 @@ class FamiliesGroupCounters(object):
         draw_all_families,
         families_count_show_id,
     ):
+        """Create families group counters from a dict of families."""
         counters = dict()
 
         if draw_all_families:
@@ -118,11 +123,12 @@ class FamiliesGroupCounters(object):
                     get_family_type(family, person_to_set)
                 ].append(family)
 
-            families_to_types = {
-                    k: v for k, v in sorted(
-                        families_to_types.items(),
-                        key=lambda item: len(item[1]), reverse=True)
-            }
+            families_to_types = dict(
+                sorted(
+                    families_to_types.items(),
+                    key=lambda item: len(item[1]), reverse=True
+                )
+            )
 
             for idx, items in enumerate(families_to_types.items()):
                 family_type, families = items
@@ -137,7 +143,7 @@ class FamiliesGroupCounters(object):
                     pedigree_label = str(len(families))
 
                 family = families[0]
-                fc = FamilyCounter({
+                counter = FamilyCounter({
                     "families": [f.family_id for f in families],
                     "pedigree": get_family_pedigree(
                         family, person_set_collection
@@ -145,7 +151,7 @@ class FamiliesGroupCounters(object):
                     "pedigrees_count": pedigree_label,
                     "counter_id": idx
                 })
-                counters[family_type] = fc
+                counters[family_type] = counter
 
         json = {
             "group_name": person_set_collection.name,

@@ -1,7 +1,9 @@
 from dae.common_reports.family_counter import FamiliesGroupCounters
 
 
-class FamiliesReport(object):
+class FamiliesReport:
+    """Class representing a family report JSON."""
+
     def __init__(self, json):
         families_counters = [
             FamiliesGroupCounters(fc) for fc in json
@@ -12,6 +14,7 @@ class FamiliesReport(object):
 
     @staticmethod
     def from_genotype_study(genotype_data_study, person_set_collections):
+        """Create a family report from a genotype study."""
         families = genotype_data_study.families
         config = genotype_data_study.config.common_report
         families_counters = [

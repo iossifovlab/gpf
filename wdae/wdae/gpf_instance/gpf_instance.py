@@ -5,19 +5,22 @@ from threading import Lock
 from django.conf import settings
 
 from dae.gpf_instance.gpf_instance import GPFInstance, cached
+from dae.common_reports.common_report import CommonReport
+from dae.enrichment_tool.tool import EnrichmentTool
+from dae.enrichment_tool.event_counters import CounterBase
+
 from studies.study_wrapper import StudyWrapper, RemoteStudyWrapper, \
     StudyWrapperBase
 from studies.remote_study_db import RemoteStudyDB
-from dae.common_reports.common_report import CommonReport
 
 from remote.gene_sets_db import RemoteGeneSetsDb
 from remote.denovo_gene_sets_db import RemoteDenovoGeneSetsDb
 from remote.rest_api_client import RESTClient
 
-from dae.enrichment_tool.tool import EnrichmentTool
-from dae.enrichment_tool.event_counters import CounterBase
 from enrichment_api.enrichment_builder import \
     EnrichmentBuilder, RemoteEnrichmentBuilder
+
+from datasets_api.models import Dataset
 
 
 logger = logging.getLogger(__name__)
@@ -31,8 +34,8 @@ _gpf_instance_lock = Lock()
 
 class WGPFInstance(GPFInstance):
     def __init__(self, *args, **kwargs):
-        self._remote_study_db = None
-        self._clients: List[RESTClient] = list()
+        self._remote_study_db: RemoteStudyDB = None
+        self._clients: List[RESTClient] = []
         self._study_wrappers: Dict[str, StudyWrapperBase] = dict()
         super().__init__(*args, **kwargs)
         self._load_remotes()
@@ -45,7 +48,7 @@ class WGPFInstance(GPFInstance):
 
         if remotes is not None:
             for remote in remotes:
-                logger.info(f"Creating remote {remote}")
+                logger.info("Creating remote %s", remote)
                 try:
                     client = RESTClient(
                         remote["id"],
@@ -60,7 +63,7 @@ class WGPFInstance(GPFInstance):
                     self._clients.append(client)
                 except ConnectionError as err:
                     logger.error(err)
-                    logger.error(f"Failed to create remote {remote['id']}")
+                    logger.error("Failed to create remote %s", remote['id'])
 
         self._remote_study_db = RemoteStudyDB(self._clients)
 
@@ -94,7 +97,7 @@ class WGPFInstance(GPFInstance):
     def register_genotype_data(self, genotype_data):
         super().register_genotype_data(genotype_data)
 
-        logger.debug(f"genotype data config; {genotype_data.study_id}")
+        logger.debug("genotype data config; %s", genotype_data.study_id)
 
         study_wrapper = StudyWrapper(
             genotype_data,
@@ -110,13 +113,13 @@ class WGPFInstance(GPFInstance):
 
         if genotype_data.is_remote:
             return RemoteStudyWrapper(genotype_data)
-        else:
-            return StudyWrapper(
-                genotype_data, self._pheno_db, self.gene_scores_db
-            )
+
+        return StudyWrapper(
+            genotype_data, self._pheno_db, self.gene_scores_db
+        )
 
     def get_wdae_wrapper(self, dataset_id):
-        if dataset_id not in self._study_wrappers.keys():
+        if dataset_id not in self._study_wrappers:
             wrapper = self.make_wdae_wrapper(dataset_id)
             if wrapper is not None:
                 self._study_wrappers[dataset_id] = wrapper
@@ -212,7 +215,7 @@ class WGPFInstance(GPFInstance):
         )
 
         if background is None:
-            logger.warning(f"Background {background_name} not found!")
+            logger.warning("Background %s not found!", background_name)
 
         counter = CounterBase.counters()[counting_name]()
         enrichment_tool = EnrichmentTool(
@@ -250,9 +253,12 @@ class WGPFInstance(GPFInstance):
                 logger.warning("WARNING: Using is_remote")
                 logger.warning(
                     "WARNING: Failed to create local enrichment builder!\n"
-                    f"dataset: {dataset_id}, "
-                    f"requested background: {background_name}, "
-                    f"requested counting name: {counting_name}"
+                    "dataset: %s, "
+                    "requested background: %s, "
+                    "requested counting name: %s",
+                    dataset_id,
+                    background_name,
+                    counting_name
                 )
             builder = RemoteEnrichmentBuilder(
                 dataset, dataset.rest_client,
@@ -302,7 +308,6 @@ def load_gpf_instance():
 
 
 def reload_datasets(gpf_instance):
-    from datasets_api.models import Dataset
     for genotype_data_id in gpf_instance.get_genotype_data_ids():
         Dataset.recreate_dataset_perm(genotype_data_id)
 

@@ -13,8 +13,7 @@ from dae.common_reports.common_report import CommonReport
 
 @pytest.fixture
 def no_variants_study(gpf_instance_2013, tmp_path):
-    """Builds a study without genotype data fixture."""
-
+    """Build a study without genotype data fixture."""
     content = textwrap.dedent(
         """
         id = "test_study"
@@ -70,6 +69,6 @@ def test_study_simple(no_variants_study):
 
 
 def test_common_reports(no_variants_study):
-    """Test building a common report from a study without variants"""
+    """Test building a common report from a study without variants."""
     common_report = CommonReport.from_genotype_study(no_variants_study)
     assert common_report
