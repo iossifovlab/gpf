@@ -1,75 +1,27 @@
-import pytest
-import toml
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
 from pathlib import Path
+
+import pytest
 from studies.study_wrapper import RemoteStudyWrapper, StudyWrapper
 from studies.remote_study import RemoteGenotypeData
-from dae.studies.study import GenotypeDataStudy
-from dae.configuration.gpf_config_parser import FrozenBox
-from dae.utils.dict_utils import recursive_dict_update
 from dae.gpf_instance.gpf_instance import GPFInstance
 
 
 @pytest.fixture(scope="session")
-def remote_dir():
-    return Path(__file__).parents[4].joinpath("data/data-hg19-remote")
+def local_dir():
+    return Path(__file__).parents[4].joinpath("data/data-hg19-local")
 
 
 @pytest.fixture(scope="session")
-def remote_studies_dir(remote_dir):
-    return remote_dir.joinpath("studies")
-
-
-@pytest.fixture(scope="session")
-def local_gpf_instance(remote_dir):
-    return GPFInstance(work_dir=remote_dir)
-
-
-@pytest.fixture(scope="session")
-def iossifov_2014_local_config(remote_studies_dir, remote_dir):
-    study_dir = remote_studies_dir.joinpath("iossifov_2014")
-    filename = study_dir.joinpath("iossifov_2014.conf")
-    file_content = ""
-
-    with open(filename, "r") as infile:
-        file_content = infile.read()
-
-    config = toml.loads(file_content)
-
-    files = config["genotype_storage"]["files"]
-    files["pedigree"]["path"] = str(
-        study_dir.joinpath("data", "iossifov2014_families.ped")
-    )
-    files["variants"][0]["path"] = str(
-        study_dir.joinpath("data", "iossifov2014.txt")
-    )
-
-    default_config_filename = remote_dir.joinpath("defaultConfiguration.conf")
-    with open(default_config_filename, "r") as infile:
-        file_content = infile.read()
-
-    default_config = toml.loads(file_content)
-
-    config = recursive_dict_update(default_config, config)
-
-    return FrozenBox(config)
+def local_gpf_instance(local_dir):
+    return GPFInstance(work_dir=local_dir)
 
 
 @pytest.fixture(scope="session")
 def iossifov_2014_local(
-        local_gpf_instance, remote_studies_dir, iossifov_2014_local_config):
-    assert remote_studies_dir.exists()
+        local_gpf_instance):
 
-    storage_db = local_gpf_instance.genotype_storage_db
-    genotype_storage = storage_db.get_genotype_storage(
-        iossifov_2014_local_config.genotype_storage.id
-    )
-
-    variants = genotype_storage.build_backend(
-        iossifov_2014_local_config, local_gpf_instance.reference_genome,
-        local_gpf_instance.gene_models)
-
-    data_study = GenotypeDataStudy(
-        iossifov_2014_local_config, variants)
+    data_study = local_gpf_instance.get_genotype_data("iossifov_2014")
 
     return StudyWrapper(
         data_study,

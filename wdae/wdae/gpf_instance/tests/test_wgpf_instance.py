@@ -1,8 +1,11 @@
-from dae.studies.study import GenotypeDataStudy
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
+from box import Box
+
 from studies.study_wrapper import StudyWrapper, RemoteStudyWrapper
 from studies.remote_study import RemoteGenotypeData
 from dae.common_reports.common_report import CommonReport
-from box import Box
+
+from dae.studies.study import GenotypeDataStudy
 
 
 def test_make_wdae_wrapper(wgpf_instance_fixture):

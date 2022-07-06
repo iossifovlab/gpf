@@ -1,11 +1,11 @@
 chrom	position	reference	alternative	bucket_index	summary_variant_index	allele_index	allele_count	effects
 1	865583	G	None		0	0	2	
-1	865583	G	A		0	1	2	synonymous!SAMD11:synonymous!NM_152486_1:41/681
+1	865583	G	A		0	1	2	synonymous!SAMD11:synonymous!NM_152486_1:SAMD11:synonymous:41/681
 1	865624	G	None		1	0	2	
-1	865624	G	A		1	1	2	missense!SAMD11:missense!NM_152486_1:54/681(Ser->Arg)
+1	865624	G	A		1	1	2	missense!SAMD11:missense!NM_152486_1:SAMD11:missense:54/681(Ser->Arg)
 1	865664	G	None		2	0	2	
-1	865664	G	A		2	1	2	synonymous!SAMD11:synonymous!NM_152486_1:68/681
+1	865664	G	A		2	1	2	synonymous!SAMD11:synonymous!NM_152486_1:SAMD11:synonymous:68/681
 1	901923	C	None		3	0	2	
-1	901923	C	A		3	1	2	missense!PLEKHN1:missense!NM_001160184_1:4/576(Ser->Arg)|NM_032129_1:4/611(Ser->Arg)
+1	901923	C	A		3	1	2	missense!PLEKHN1:missense!NM_001160184_1:PLEKHN1:missense:4/576(Ser->Arg)|NM_032129_1:PLEKHN1:missense:4/611(Ser->Arg)
 1	905957	C	None		4	0	2	
-1	905957	C	T		4	1	2	synonymous!PLEKHN1:synonymous!NM_001160184_1:129/576|NM_032129_1:129/611
+1	905957	C	T		4	1	2	synonymous!PLEKHN1:synonymous!NM_001160184_1:PLEKHN1:synonymous:129/576|NM_032129_1:PLEKHN1:synonymous:129/611

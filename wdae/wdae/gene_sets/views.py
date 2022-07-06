@@ -1,3 +1,5 @@
+"""Classes to handle gene set views."""
+
 import ast
 import json
 import itertools
@@ -5,8 +7,8 @@ import logging
 
 from copy import deepcopy
 
-from rest_framework import status
-from rest_framework.response import Response
+from rest_framework import status  # type: ignore
+from rest_framework.response import Response  # type: ignore
 
 from django.http.response import StreamingHttpResponse
 from django.utils.http import urlencode
@@ -18,10 +20,10 @@ logger = logging.getLogger(__name__)
 
 
 class GeneSetsCollectionsView(QueryBaseView):
-    def __init__(self):
-        super(GeneSetsCollectionsView, self).__init__()
+    """Class to handle gene sets collections view."""
 
     def get(self, request):
+        """Build response to a get request."""
         permitted_datasets = self.get_permitted_datasets(request.user)
         gene_sets_collections = deepcopy(
             self.gpf_instance.get_gene_sets_collections()
@@ -37,19 +39,17 @@ class GeneSetsCollectionsView(QueryBaseView):
 
 
 class GeneSetsView(QueryBaseView):
-    """
-        {
-        "geneSetsCollection": "main",
-        "geneSetsTypes": {
-            "SD_TEST": ["autism", "epilepsy"],
-        },
-        "filter": "ivan",
-        "limit": 100
-        }
-    """
+    """Class to handle gene set view.
 
-    def __init__(self):
-        super(GeneSetsView, self).__init__()
+    {
+    "geneSetsCollection": "main",
+    "geneSetsTypes": {
+        "SD_TEST": ["autism", "epilepsy"],
+    },
+    "filter": "ivan",
+    "limit": 100
+    }
+    """
 
     @staticmethod
     def _build_download_url(query):
@@ -58,14 +58,15 @@ class GeneSetsView(QueryBaseView):
         if "denovo" in query["geneSetsCollection"]:
             query["geneSetsTypes"] = json.dumps(query["geneSetsTypes"])
             query["geneSetsTypes"] = query["geneSetsTypes"].replace(" ", "")
-        return "{}?{}".format(url, urlencode(query))
+        return f"{url}?{urlencode(query)}"
 
     def post(self, request):
+        """Build response to a post request."""
         data = request.data
         if "geneSetsCollection" not in data:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         gene_sets_collection_id = data["geneSetsCollection"]
-        gene_sets_types = data.get("geneSetsTypes", dict())
+        gene_sets_types = data.get("geneSetsTypes", {})
 
         if "denovo" in gene_sets_collection_id:
             if not self.gpf_instance.has_denovo_gene_sets():
@@ -84,16 +85,16 @@ class GeneSetsView(QueryBaseView):
             gene_sets = self.gpf_instance.get_all_gene_sets(
                 gene_sets_collection_id
             )
-        logger.debug(f"gene set collection: {gene_sets_collection_id}")
-        logger.debug(f"gene sets: {len(gene_sets)}")
+        logger.debug("gene set collection: %s", gene_sets_collection_id)
+        logger.debug("gene sets: %s", len(gene_sets))
 
         response = gene_sets[:]
         if "filter" in data:
-            f = data["filter"].lower()
+            query = data["filter"].lower()
             response = [
                 r
                 for r in response
-                if f in r["name"].lower() or f in r["desc"].lower()
+                if query in r["name"].lower() or query in r["desc"].lower()
             ]
 
         if "limit" in data:
@@ -116,23 +117,21 @@ class GeneSetsView(QueryBaseView):
             for gs in response
         ]
         logger.debug(
-            f"gene sets response: {[r['name'] for r in response]}")
+            "gene sets response: %s", [r["name"] for r in response])
         return Response(response, status=status.HTTP_200_OK)
 
 
 class GeneSetDownloadView(QueryBaseView):
-    """
-        {
+    """Class to handle gene set download view.
+
+    {
         "geneSetsCollection": "denovo",
         "geneSet": "LGDs",
         "geneSetsTypes": {
             "SD_TEST": {"phenotype": ["autism", "epilepsy"]}
         }
-        }
+    }
     """
-
-    def __init__(self):
-        super(GeneSetDownloadView, self).__init__()
 
     def post(self, request):
         return self._build_response(request.data, request.user)
@@ -142,7 +141,7 @@ class GeneSetDownloadView(QueryBaseView):
             return Response(status=status.HTTP_400_BAD_REQUEST)
         gene_sets_collection_id = data["geneSetsCollection"]
         gene_set_id = data["geneSet"]
-        gene_sets_types = data.get("geneSetsTypes", dict())
+        gene_sets_types = data.get("geneSetsTypes", {})
 
         permitted_datasets = self.get_permitted_datasets(user)
 
@@ -170,8 +169,8 @@ class GeneSetDownloadView(QueryBaseView):
             print("GENE SET NOT FOUND", permitted_datasets)
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        gene_syms = ["{}\r\n".format(s) for s in gene_set["syms"]]
-        title = '"{}: {}"\r\n'.format(gene_set["name"], gene_set["desc"])
+        gene_syms = [f"{s}\r\n" for s in gene_set["syms"]]
+        title = f'"{gene_set["name"]}: {gene_set["desc"]}"\r\n'
         result = itertools.chain([title], gene_syms)
 
         response = StreamingHttpResponse(result, content_type="text/csv")
@@ -181,7 +180,8 @@ class GeneSetDownloadView(QueryBaseView):
 
         return response
 
-    def _parse_query_params(self, data):
+    @staticmethod
+    def _parse_query_params(data):
         res = {str(k): str(v) for k, v in list(data.items())}
         if "geneSetsTypes" in res:
             # FIXME replace usage of literal_eval
@@ -194,11 +194,8 @@ class GeneSetDownloadView(QueryBaseView):
 
 
 class GeneSetsHasDenovoView(QueryBaseView):
-    def __init__(self):
-        super(GeneSetsHasDenovoView, self).__init__()
 
-    def get(self, request):
+    def get(self, _request):
         if self.gpf_instance.has_denovo_gene_sets():
             return Response(status=status.HTTP_204_NO_CONTENT)
-        else:
-            return Response(status=status.HTTP_404_NOT_FOUND)
+        return Response(status=status.HTTP_404_NOT_FOUND)

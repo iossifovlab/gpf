@@ -1,13 +1,16 @@
+"""Classes and helpers for variant annotation effects."""
+
 from __future__ import annotations
 
 import itertools
 
-from typing import List
+from typing import List, Optional, Dict
 
 
-class AnnotationEffect:
+class AnnotationEffect:  # pylint: disable=too-many-instance-attributes
+    """Class to represent variant effect."""
 
-    Severity = {
+    SEVERITY: Dict[str, int] = {
         "CNV+": 35,
         "CNV-": 35,
         "tRNA:ANTICODON": 30,
@@ -38,10 +41,10 @@ class AnnotationEffect:
     }
 
     def __init__(self, effect_name):
-        self.effect = effect_name
-        self.gene = None
-        self.transcript_id = None
-        self.strand = None
+        self.effect: str = effect_name
+        self.gene: Optional[str] = None
+        self.transcript_id: Optional[str] = None
+        self.strand: Optional[str] = None
         self.prot_pos = None
         self.non_coding_pos = None
         self.prot_length = None
@@ -49,29 +52,22 @@ class AnnotationEffect:
         self.which_intron = None
         self.how_many_introns = None
         self.dist_from_coding = None
-        self.aa_change = None
+        self.aa_change: Optional[str] = None
         self.dist_from_acceptor = None
         self.dist_from_donor = None
         self.intron_length = None
-        self.mRNA_length = None
-        self.mRNA_position = None
+        self.mRNA_length = None  # pylint: disable=invalid-name
+        self.mRNA_position = None  # pylint: disable=invalid-name
         self.ref_aa = None
         self.alt_aa = None
         self.dist_from_5utr = None
 
     def __repr__(self):
-        return (
-            "Effect gene:{} trID:{} strand:{} effect:{} "
-            "protein pos:{}/{} aa: {}".format(
-                self.gene,
-                self.transcript_id,
-                self.strand,
-                self.effect,
-                self.prot_pos,
-                self.prot_length,
-                self.aa_change,
-            )
-        )
+        return \
+            f"Effect gene:{self.gene} trID:{self.transcript_id} " \
+            f"strand:{self.strand} effect:{self.effect} " \
+            f"protein pos:{self.prot_pos}/{self.prot_length} " \
+            f"aa: {self.aa_change}"
 
     def create_effect_details(self):
         eff_data = [
@@ -128,12 +124,14 @@ class AnnotationEffect:
         )
 
     @classmethod
-    def effect_severity(cls, effect: List[AnnotationEffect]):
-        return AnnotationEffect.Severity[effect.effect]
+    def effect_severity(cls, effect: AnnotationEffect) -> int:
+        return AnnotationEffect.SEVERITY[effect.effect]
 
     @classmethod
-    def sort_effects(cls, effects: List[AnnotationEffect]):
-        sorted_effects = sorted(effects, key=lambda v: -cls.effect_severity(v))
+    def sort_effects(
+            cls, effects: List[AnnotationEffect]) -> List[AnnotationEffect]:
+        sorted_effects = sorted(
+            effects, key=lambda v: - cls.effect_severity(v))
         return sorted_effects
 
     @classmethod
@@ -192,28 +190,6 @@ class AnnotationEffect:
         return (transcripts, genes, gene_effects, details)
 
     @classmethod
-    def wrap_effects(cls, effects: List[AnnotationEffect]):
-        if effects[0].effect == "unk_chr":
-            return (
-                "unk_chr",
-                ["unk_chr"],
-                ["unk_chr"],
-                ["unk_chr"],
-                ["unk_chr"],
-            )
-
-        gene_effect = cls.gene_effects(effects)
-        transcript_effects = cls.transcript_effects(effects)
-        return (
-            cls.worst_effect(effects),
-            gene_effect[0],
-            gene_effect[1],
-            transcript_effects[0],
-            transcript_effects[1],
-            transcript_effects[2],
-        )
-
-    @classmethod
     def simplify_effects(cls, effects: List[AnnotationEffect]):
         if effects[0].effect == "unk_chr":
             return (
@@ -227,15 +203,13 @@ class AnnotationEffect:
 
         return (
             cls.worst_effect(effects),
-            zip(*gene_effects),
-            zip(*transcript_effects))
+            list(zip(*gene_effects)),
+            list(zip(*transcript_effects)))
 
     @classmethod
     def effects_description(cls, effects: List[AnnotationEffect]):
         worst_effect, gene_effects, transcript_effects = \
             cls.simplify_effects(effects)
-        # assert isinstance(gene_effects, list), gene_effects
-        # assert isinstance(transcript_effects, list), transcript_effects
 
         gene_effects = "|".join([f"{g}:{e}" for g, e in gene_effects])
         transcript_effects = "|".join(
@@ -334,22 +308,22 @@ class EffectGene:
 
     @staticmethod
     def from_string(data):
+        """Deserialize effect gene."""
         if not data:
             return None
 
         parts = [p.strip() for p in data.split(":")]
         if len(parts) == 2:
             return EffectGene(parts[0], parts[1])
-        elif len(parts) == 1:
+        if len(parts) == 1:
             return EffectGene(symbol=None, effect=parts[0])
-        else:
-            raise ValueError("unexpected effect gene format: {}".format(data))
+
+        raise ValueError(f"unexpected effect gene format: {data}")
 
     def __repr__(self):
         if self.symbol is None:
             return self.effect
-        else:
-            return "{}:{}".format(self.symbol, self.effect)
+        return f"{self.symbol}:{self.effect}"
 
     def __str__(self):
         return self.__repr__()
@@ -384,6 +358,7 @@ class EffectTranscript:
 
     @staticmethod
     def from_string(data):
+        """Deserialize effect transcript/details."""
         if not data:
             return None
 
@@ -392,13 +367,12 @@ class EffectTranscript:
         if len(parts) == 4:
             return EffectTranscript(
                 parts[0], gene=parts[1], effect=parts[2], details=parts[3])
-        elif len(parts) == 3:
-            return EffectTranscript(parts[0], gene=parts[1], details=parts[2])
-        elif len(parts) == 2:
-            return EffectTranscript(parts[0], gene=None, details=parts[1])
-        else:
-            raise ValueError(
-                f"unexpected effect details format: {data}")
+        # if len(parts) == 3:
+        #     return EffectTranscript(parts[0], gene=parts[1], details=data)
+        # if len(parts) == 2:
+        #     return EffectTranscript(parts[0], gene=None, details=data)
+        raise ValueError(
+            f"unexpected effect details format: {data}")
 
     def __repr__(self):
         return f"{self.transcript_id}:{self.gene}:{self.effect}:{self.details}"
@@ -421,22 +395,32 @@ class EffectTranscript:
             transcript_id, gene=gene, effect=effect, details=details)
 
     @classmethod
-    def from_effect_transcripts(cls, effect_transcripts):
+    def from_effect_transcripts(
+            cls, effect_transcripts) -> Dict[str, EffectTranscript]:
         result = {}
         for transcript_id, details in effect_transcripts:
+            parts = [p.strip() for p in details.split(":")]
 
-            result[transcript_id] = EffectTranscript.from_tuple(
-                (transcript_id, None, None, details)
-            )
+            if len(parts) == 4:
+                result[transcript_id] = EffectTranscript(
+                    parts[0], gene=parts[1], effect=parts[2], details=parts[3])
+            else:
+                result[transcript_id] = EffectTranscript.from_tuple(
+                    (transcript_id, None, None, details)
+                )
         return result
 
 
 class AlleleEffects:
-    def __init__(self, worst_effect, gene_effects, effect_transcripts):
+    def __init__(
+            self, worst_effect: str,
+            gene_effects: List[EffectGene],
+            effect_transcripts):
         self.worst_effect = worst_effect
         self.genes = gene_effects
         self.transcripts = effect_transcripts
         self._effect_types = None
+        self.all_effects: Optional[List[AnnotationEffect]] = None
 
     @property
     def worst(self):
@@ -445,7 +429,7 @@ class AlleleEffects:
     def __repr__(self):
         effects = "|".join([str(g) for g in self.genes])
         transcripts = "|".join([str(t) for t in self.transcripts.values()])
-        return "{}!{}!{}".format(self.worst, effects, transcripts)
+        return f"{self.worst}!{effects}!{transcripts}"
 
     def __str__(self):
         return repr(self)
@@ -466,7 +450,9 @@ class AlleleEffects:
         return self._effect_types
 
     @classmethod
-    def from_simplified_effects(cls, effect_type, effect_genes, transcripts):
+    def from_simplified_effects(
+            cls, effect_type,
+            effect_genes, transcripts) -> Optional[AlleleEffects]:
         if effect_type is None:
             return None
 
@@ -475,7 +461,7 @@ class AlleleEffects:
         return AlleleEffects(effect_type, effect_genes, transcripts)
 
     @staticmethod
-    def from_string(data):
+    def from_string(data) -> Optional[AlleleEffects]:
         if data is None:
             return None
         parts = data.split("!")
@@ -484,13 +470,12 @@ class AlleleEffects:
         effect_genes = [
             EffectGene.from_string(eg.strip()) for eg in parts[1].split("|")
         ]
-        effect_genes = [eg for eg in filter(None, effect_genes)]
-        transcripts = [
+        effect_genes = list(filter(None, effect_genes))
+        transcripts_list: List[EffectTranscript] = list(filter(None, [
             EffectTranscript.from_string(et.strip())
             for et in parts[2].split("|")
-        ]
-        transcripts = filter(None, transcripts)
-        transcripts = {t.transcript_id: t for t in transcripts}
+        ]))
+        transcripts = {t.transcript_id: t for t in transcripts_list}
         if not effect_genes and not transcripts:
             return None
         return AlleleEffects(worst, effect_genes, transcripts)
@@ -504,6 +489,7 @@ class AlleleEffects:
             t: EffectTranscript(t, g, e, d)
             for t, g, e, d in transcript_effects
         }
+
         result = AlleleEffects(worst_effect, gene_effects, transcript_effects)
         result.all_effects = effects
         return result

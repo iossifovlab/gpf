@@ -17,7 +17,10 @@ setuptools.setup(
     packages=setuptools.find_packages(
         where=".", exclude=["dae.docs", "dae.tests", "*.tests.*", "*.tests", ],
     ),
-    include_package_data=True,
+    # include_package_data=True,
+    package_data={
+        "dae": ["py.typed"],
+    },
     scripts=[
         "dae/tools/impala_parquet_loader.py",
         "dae/tools/impala_tables_loader.py",
@@ -72,9 +75,10 @@ setuptools.setup(
     """,
     classifiers=[
         "Development Status :: 4 - Beta",
-        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.9",
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
-    python_requires=">=3.6",
+    python_requires=">=3.9",
+    zip_safe=False,
 )

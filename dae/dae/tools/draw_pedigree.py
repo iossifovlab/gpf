@@ -54,7 +54,7 @@ def build_families_report(families):
     status_collection = PersonSetCollection.from_families(
         status_collection_config, families
     )
-    return FamiliesReport(families, [status_collection])
+    return FamiliesReport.from_families_data(families, [status_collection])
 
 
 def draw_pedigree(layout, title, show_family=True, tags=None):
@@ -76,21 +76,23 @@ def draw_families_report(families):
     """Draw families from families report."""
     families_report = build_families_report(families)
     assert len(families_report.families_counters) == 1
-    family_counters = families_report.families_counters[0]
+
+    family_counters = list(families_report.families_counters.values())[0]
     logger.info("total number family types: %s", len(family_counters.counters))
 
     for family_counter in family_counters.counters.values():
-        family = family_counter.family
+        family_id = family_counter.family
+        family = families[family_id]
         layout = build_family_layout(family)
         logger.info(
             "drawing %s; list of families in this category: %s",
-            family, ",".join([f.family_id for f in family_counter.families]))
+            family, ",".join(family_counter.families))
 
         if len(family_counter.families) > 5:
             count = len(family_counter.families)
             title = f"Number of families: {count}"
         else:
-            title = ", ".join([f.family_id for f in family_counter.families])
+            title = ", ".join(family_counter.families)
         figure = draw_pedigree(layout, title=title, tags=family.tags)
         yield figure
 

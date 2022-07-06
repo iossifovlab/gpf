@@ -8,6 +8,7 @@ INSTALLED_APPS += [
 
 ALLOWED_HOSTS += [
     "gpfremote",
+    "localhost",
 ]
 
 

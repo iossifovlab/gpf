@@ -36,7 +36,7 @@ function main() {
   libmain_init_build_env \
     clobber:"$clobber" preset:"$preset" build_no:"$build_no" \
     generate_jenkins_init:"$generate_jenkins_init" expose_ports:"$expose_ports" \
-    iossifovlab.data-hg19-startup iossifovlab.iossifovlab-containers
+    iossifovlab.iossifovlab-containers
 
   libmain_save_build_env_on_exit
   libbuild_init stage:"$stage" registry.seqpipe.org
@@ -58,6 +58,16 @@ function main() {
 
     build_run rm -rvf ./test-results/
     build_run_local mkdir -p ./test-results/
+
+    build_run rm -rvf \
+      ./integration/remote/data/studies \
+      ./integration/remote/data/pheno \
+      ./integration/remote/data/wdae
+
+    build_run rm -rvf \
+      ./integration/local/data/studies \
+      ./integration/local/data/pheno \
+      ./integration/local/data/wdae
 
   }
 
@@ -99,23 +109,18 @@ function main() {
   # prepare gpf data
   build_stage "Prepare GPF data"
   {
-    build_run_ctx_init "local"
+
+    build_run_ctx_init "container" "${gpf_dev_image_ref}" \
+      --hostname "local" \
+      --network "${ctx_network["network_id"]}" \
+      --env DAE_DB_DIR="/wd/data/data-hg19-local/" \
+      --env GRR_DEFINITION_FILE="/wd/cache/grr_definition.yaml" \
+      --env DAE_HDFS_HOST="impala" \
+      --env DAE_IMPALA_HOST="impala"
     defer_ret build_run_ctx_reset
 
-    # find image
-    local data_hg19_startup_image_ref
-    data_hg19_startup_image_ref="$(e docker_data_img_data_hg19_startup)"
 
-    # copy data
-    build_run_local mkdir -p ./data/data-hg19-startup
-    build_docker_image_cp_from "$data_hg19_startup_image_ref" ./data/data-hg19-startup /
-
-    # reset instance conf
-    build_run_local bash -c 'sed -i \
-      -e s/"^      - localhost.*$/      - impala"/g \
-      -e s/"^      host: localhost.*$/      host: impala"/g \
-      ./data/data-hg19-startup/gpf_instance.yaml
-    '
+    build_run_container /wd/integration/local/entrypoint.sh
 
     build_run_local bash -c "mkdir -p ./cache"
     build_run_local bash -c "touch ./cache/grr_definition.yaml"
@@ -126,74 +131,9 @@ url: "https://grr.seqpipe.org/"
 cache_dir: "/wd/cache/grrCache"
 EOT
 '
-    build_run_ctx_init "container" "ubuntu:20.04"
-    defer_ret build_run_ctx_reset
-
-    # cleanup
-    build_run_container rm -rvf \
-      ./data/data-hg19-startup/studies/* \
-      ./data/data-hg19-startup/pheno/* \
-      ./data/data-hg19-startup/wdae/wdae.sql
-
-    build_run_ctx_init "local"
-    defer_ret build_run_ctx_reset
-
-    # setup directory structure
-    build_run_local mkdir -p \
-      ./data/data-hg19-startup/wdae
   }
 
-  build_stage "Prepare GPF remote"
-  {
-    # prepare raw data
-    {
-      build_run_ctx_init "local"
-      defer_ret build_run_ctx_reset
-
-      # find image
-      local data_hg19_startup_image_ref
-      data_hg19_startup_image_ref="$(e docker_data_img_data_hg19_startup)"
-
-      # copy data
-      build_run_local mkdir -p ./data/data-hg19-remote
-      build_docker_image_cp_from "$data_hg19_startup_image_ref" ./data/data-hg19-remote /
-
-      # reset instance conf
-    # reset instance conf
-    build_run_local bash -c 'sed -i \
-      -e s/"^      - localhost.*$/      - impala"/g \
-      -e s/"^      host: localhost.*$/      host: impala"/g \
-      ./data/data-hg19-remote/gpf_instance.yaml
-      '
-
-      build_run_ctx_init "container" "ubuntu:20.04"
-      defer_ret build_run_ctx_reset
-
-      # cleanup
-      build_run_container rm -rvf \
-        ./data/data-hg19-remote/studies/* \
-        ./data/data-hg19-remote/pheno/* \
-        ./data/data-hg19-remote/wdae/wdae.sql
-
-      build_run_ctx_init "local"
-      defer_ret build_run_ctx_reset
-
-      # setup directory structure
-      build_run_local mkdir -p \
-        ./data/data-hg19-remote/wdae
-
-      # prepare phenotype data
-      {
-        local docker_data_img_phenotype_comp_data
-        docker_data_img_phenotype_comp_data="$(e docker_data_img_phenotype_comp_data)"
-
-        # copy data
-        build_docker_image_cp_from "$docker_data_img_phenotype_comp_data" ./import /
-      }
-    }
-  }
-
-  build_stage "Import GPF remote data"
+  build_stage "Run GPF remote instance"
   {
 
     local -A ctx_gpf_remote
@@ -202,65 +142,16 @@ EOT
       --hostname gpfremote \
       --network "${ctx_network["network_id"]}" \
       --env DAE_DB_DIR="/wd/data/data-hg19-remote/" \
-      --env GRR_DEFINITION_FILE="/wd/cache/grr_definition.yaml" 
+      --env GRR_DEFINITION_FILE="/wd/cache/grr_definition.yaml" \
+      --env DAE_HDFS_HOST="impala" \
+      --env DAE_IMPALA_HOST="impala"
     defer_ret build_run_ctx_reset ctx:ctx_gpf_remote
 
-    local d
-    for d in /wd/dae /wd/wdae /wd/dae_conftests; do
-      build_run_container ctx:ctx_gpf_remote bash -c 'cd "'"${d}"'"; /opt/conda/bin/conda run --no-capture-output -n gpf pip install -e .'
-    done
-
-    # build_run_attach ctx:ctx_gpf_remote bash
-
-    # import genotype data
-    {
-
-      build_run_container ctx:ctx_gpf_remote bash -c '
-      cd /wd/dae_conftests/dae_conftests/tests/fixtures/dae_iossifov2014 && \
-      /opt/conda/bin/conda run --no-capture-output -n gpf \
-        simple_study_import.py --id iossifov_2014 \
-        -o /wd/import/data_iossifov_2014 \
-        --denovo-file iossifov2014.txt \
-        iossifov2014_families.ped'
-
-      build_run_container ctx:ctx_gpf_remote bash -c '
-      cat >> ./data/data-hg19-remote/studies/iossifov_2014/iossifov_2014.conf << EOT
-[enrichment]
-enabled = true
-EOT'
-    }
-
-    # import phenotype data
-    {
-      build_run_container ctx:ctx_gpf_remote bash -c 'cd ./import/comp-data && /opt/conda/bin/conda run --no-capture-output -n gpf \
-        simple_pheno_import.py -p comp_pheno.ped \
-        -i instruments/ -d comp_pheno_data_dictionary.tsv -o comp_pheno \
-        --regression comp_pheno_regressions.conf'
-
-      build_run_container ctx:ctx_gpf_remote sed -i '5i\\nphenotype_data="comp_pheno"' /wd/data/data-hg19-remote/studies/iossifov_2014/iossifov_2014.conf
-    }
-
-    # generate denovo gene sets
-    {
-      build_run_container ctx:ctx_gpf_remote bash -c '/opt/conda/bin/conda run --no-capture-output -n gpf \
-        generate_denovo_gene_sets.py'
-    }
-
-    build_run_container ctx:ctx_gpf_remote /opt/conda/bin/conda run --no-capture-output -n gpf \
-      /wd/wdae/wdae/wdaemanage.py migrate
-    build_run_container ctx:ctx_gpf_remote /opt/conda/bin/conda run --no-capture-output -n gpf \
-      /wd/wdae/wdae/wdae_create_dev_users.sh
-
-    build_run_container_detached ctx:ctx_gpf_remote /opt/conda/bin/conda run --no-capture-output -n gpf \
-      /wd/wdae/wdae/wdaemanage.py runserver 0.0.0.0:21010
-
-    build_run_container ctx:ctx_gpf_remote /opt/conda/bin/conda run --no-capture-output -n gpf \
-      /wd/scripts/wait-for-it.sh -h localhost -p 21010 -t 300
+    build_run_container_detached ctx:ctx_gpf_remote /wd/integration/remote/entrypoint.sh
 
     build_run_ctx_persist ctx:ctx_gpf_remote
   }
 
-  # lint
   build_stage "flake8"
   {
     build_run_ctx_init "container" "${gpf_dev_image_ref}"
@@ -320,11 +211,15 @@ EOT'
     build_run_local cp ./results/bandit_dae_report.html ./results/bandit_wdae_report.html ./test-results/
   }
 
-  # mypy
   build_stage "MyPy"
   {
     build_run_ctx_init "container" "${gpf_dev_image_ref}"
     defer_ret build_run_ctx_reset
+
+    for d in /wd/dae /wd/wdae /wd/dae_conftests; do
+      build_run_container bash -c 'cd "'"${d}"'"; /opt/conda/bin/conda run --no-capture-output -n gpf \
+        pip install -e .'
+    done
 
     build_run_container bash -c '
       cd /wd/dae;
@@ -350,34 +245,13 @@ EOT'
       build_run_local cp ./results/mypy_dae_report ./results/mypy_wdae_report ./test-results/
   }
 
-  # import test data to impala
-  build_stage "Import test data to impala"
-  {
-
-    build_run_ctx_init "container" "${gpf_dev_image_ref}" \
-      --network "${ctx_network["network_id"]}" \
-      --env DAE_DB_DIR="/wd/data/data-hg19-startup/" \
-      --env GRR_DEFINITION_FILE="/wd/cache/grr_definition.yaml" \
-      --env TEST_REMOTE_HOST="gpfremote" \
-      --env DAE_HDFS_HOST="impala" \
-      --env DAE_IMPALA_HOST="impala"
-
-    defer_ret build_run_ctx_reset
-
-    for d in /wd/dae /wd/wdae /wd/dae_conftests; do
-      build_run_container bash -c 'cd "'"${d}"'"; /opt/conda/bin/conda run --no-capture-output -n gpf \
-        pip install -e .'
-    done
-
-  }
-
   # Tests - dae
   build_stage "Tests - dae"
   {
 
     build_run_ctx_init "container" "${gpf_dev_image_ref}" \
       --network "${ctx_network["network_id"]}" \
-      --env DAE_DB_DIR="/wd/data/data-hg19-startup/" \
+      --env DAE_DB_DIR="/wd/data/data-hg19-local/" \
       --env GRR_DEFINITION_FILE="/wd/cache/grr_definition.yaml" \
       --env TEST_REMOTE_HOST="gpfremote" \
       --env DAE_HDFS_HOST="impala" \
@@ -409,7 +283,7 @@ EOT'
 
     build_run_ctx_init "container" "${gpf_dev_image_ref}" \
       --network "${ctx_network["network_id"]}" \
-      --env DAE_DB_DIR="/wd/data/data-hg19-startup/" \
+      --env DAE_DB_DIR="/wd/data/data-hg19-local/" \
       --env GRR_DEFINITION_FILE="/wd/cache/grr_definition.yaml" \
       --env TEST_REMOTE_HOST="gpfremote" \
       --env DAE_HDFS_HOST="impala" \
@@ -421,6 +295,11 @@ EOT'
       build_run_container bash -c 'cd "'"${d}"'"; /opt/conda/bin/conda run --no-capture-output -n gpf \
         pip install -e .'
     done
+
+    build_run_container bash -c '
+      /opt/conda/bin/conda run --no-capture-output -n gpf \
+          /wd/scripts/wait-for-it.sh -h gpfremote -p 21010 -t 300    
+    '
 
     build_run_container bash -c '
         cd /wd/wdae;
@@ -437,30 +316,6 @@ EOT'
     build_run_container coverage html --title GPF -d ./test-results/coverage-html
 
     build_run_container cp ./results/wdae-junit.xml coverage.xml ./test-results/
-  }
-
-  build_stage "Sonarqube"
-  {
-    local gpf_git_branch=$(e gpf_git_branch)
-
-    build_run_local echo "gpf_git_branch=$gpf_git_branch"
-    build_run_local echo "SONARQUBE_DEFAULT_TOKEN=$SONARQUBE_DEFAULT_TOKEN"
-
-    if [ "$SONARQUBE_DEFAULT_TOKEN" != "" ] && [ "$gpf_git_branch" = "master" ]; then
-      build_run_local echo "Sonarqube stage started"
-
-      build_run_local docker run --rm \
-          -e SONAR_HOST_URL="http://sonarqube.seqpipe.org:9000" \
-          -e SONAR_LOGIN="${SONARQUBE_DEFAULT_TOKEN}" \
-          -v "$(pwd):/usr/src" \
-          sonarsource/sonar-scanner-cli \
-          -Dsonar.projectKey=gpf \
-          -Dsonar.python.version=3.9 \
-          -Dsonar.python.coverage.reportPaths="coverage.xml"
-
-    else
-      build_run_local echo "Sonarqube stage skipped"
-    fi
   }
 
   build_stage "Package"

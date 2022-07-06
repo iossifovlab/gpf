@@ -1,0 +1,8 @@
+instrumentName	measureName	measureId	description
+i1	age	i1.age	The age of the individual (in months)
+i1	iq	i1.iq	The IQ of the individual
+i1	m1	i1.m1	Measure 1, a normally distributed continuous measure with a mean of 80
+i1	m2	i1.m2	Measure 2, a normally distributed continuous measure with a mean of 40
+i1	m3	i1.m3	Measure 3, a continuous measure with a normal distribution with mean of 80 for non-affected individuals, and 40 for affected individuals
+i1	m4	i1.m4	Measure 4, an ordinal measure with a Poisson distribution with an average number of events per interval of 4 for non-affected individuals, and 1 for affected individuals
+i1	m5	i1.m5	Measure 5, a categorical measure with random distribution of 5 distinct values

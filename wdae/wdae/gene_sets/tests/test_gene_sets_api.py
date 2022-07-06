@@ -1,9 +1,11 @@
-import pytest
-
-from urllib.parse import urlencode
-from rest_framework import status
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
 
 import json
+from urllib.parse import urlencode
+
+import pytest
+from rest_framework import status  # type: ignore
+
 
 pytestmark = pytest.mark.usefixtures(
     "wdae_gpf_instance", "dae_calc_gene_sets")
@@ -16,8 +18,7 @@ def name_in_gene_sets(gene_sets, name, count=None):
             if count is not None:
                 if gene_set["count"] == count:
                     return True
-                else:
-                    return False
+                return False
             return True
 
     return False
@@ -131,7 +132,7 @@ def test_get_gene_set_download_synonymous_autism(db, admin_client):
         "geneSet": "Synonymous",
         "geneSetsTypes": {"f1_group": {"phenotype": ["autism"]}},
     }
-    request = "{}?{}".format(url, urlencode(query))
+    request = f"{url}?{urlencode(query)}"
     response = admin_client.get(request)
     assert status.HTTP_200_OK == response.status_code, repr(response.content)
     result = list(response.streaming_content)
@@ -148,7 +149,7 @@ def test_get_gene_set_download_synonymous_recurrent(db, admin_client):
         "geneSet": "Synonymous.Recurrent",
         "geneSetsTypes": {"f2_group": {"phenotype": ["autism"]}},
     }
-    request = "{}?{}".format(url, urlencode(query))
+    request = f"{url}?{urlencode(query)}"
     response = admin_client.get(request)
     assert status.HTTP_200_OK == response.status_code, repr(response.content)
     result = list(response.streaming_content)
@@ -164,7 +165,7 @@ def test_get_gene_set_download_synonymous_triple(db, admin_client):
         "geneSet": "Synonymous.Triple",
         "geneSetsTypes": {"f3_group": {"phenotype": ["autism"]}},
     }
-    request = "{}?{}".format(url, urlencode(query))
+    request = f"{url}?{urlencode(query)}"
     response = admin_client.get(request)
     assert status.HTTP_200_OK == response.status_code, repr(response.content)
     result = list(response.streaming_content)
@@ -179,7 +180,7 @@ def test_get_denovo_gene_set_not_found(db, admin_client):
         "geneSet": "Synonymous.BadBad",
         "geneSetsTypes": {"f1_group": {"phenotype": ["autism"]}},
     }
-    request = "{}?{}".format(url, urlencode(query))
+    request = f"{url}?{urlencode(query)}"
     response = admin_client.get(request)
     assert status.HTTP_404_NOT_FOUND == response.status_code, repr(response)
 
@@ -190,7 +191,7 @@ def test_get_main_gene_set_not_found(db, admin_client):
         "geneSetsCollection": "main",
         "geneSet": "BadBadName",
     }
-    request = "{}?{}".format(url, urlencode(query))
+    request = f"{url}?{urlencode(query)}"
     response = admin_client.get(request)
     assert status.HTTP_404_NOT_FOUND == response.status_code, repr(response)
 
@@ -201,7 +202,7 @@ def test_get_bad_gene_set_collection_not_found(db, admin_client):
         "geneSetsCollection": "BadBadName",
         "geneSet": "BadBadName",
     }
-    request = "{}?{}".format(url, urlencode(query))
+    request = f"{url}?{urlencode(query)}"
     response = admin_client.get(request)
     assert status.HTTP_404_NOT_FOUND == response.status_code, repr(response)
 
@@ -209,7 +210,7 @@ def test_get_bad_gene_set_collection_not_found(db, admin_client):
 def test_get_gene_set_collection_empty_query(db, admin_client):
     url = "/api/v3/gene_sets/gene_set_download"
     query = {}
-    request = "{}?{}".format(url, urlencode(query))
+    request = f"{url}?{urlencode(query)}"
     response = admin_client.get(request)
     assert status.HTTP_400_BAD_REQUEST == response.status_code, repr(response)
 
@@ -251,7 +252,12 @@ def test_gene_sets_missing(db, admin_client):
     )
 
 
-def test_gene_sets_remote(db, admin_client):
+@pytest.mark.parametrize("name,count", [
+    ("chromatin modifiers", 428),
+    ("autism candidates from Iossifov PNAS 2015", 239),
+    ("CHD8 target genes", 2158),
+])
+def test_gene_sets_remote(db, admin_client, name, count):
     url = "/api/v3/gene_sets/gene_sets"
     query = {"geneSetsCollection": "TEST_REMOTE_main"}
     response = admin_client.post(
@@ -261,19 +267,15 @@ def test_gene_sets_remote(db, admin_client):
     assert response.status_code == status.HTTP_200_OK
     print(response.data)
     assert len(response.data) == 15
-    checked = 0
-    for gs in response.data:
-        if gs["name"] == "chromatin modifiers":
-            assert gs["count"] == 428
-            checked += 1
-        if gs["name"] == "CHD8 target genes":
-            assert gs["count"] == 2158
-            checked += 1
-        if gs["name"] == "autism candidates from Iossifov PNAS 2015":
-            assert gs["count"] == 239
-            checked += 1
 
-    assert checked == 3
+    checked = 0
+    for gs_desc in response.data:
+        if gs_desc["name"] == name:
+            assert gs_desc["count"] == count
+            checked += 1
+            break
+
+    assert checked == 1
 
 
 def test_gene_sets_remote_download(db, admin_client):

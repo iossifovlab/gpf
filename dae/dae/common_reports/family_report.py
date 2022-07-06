@@ -1,3 +1,5 @@
+"""Provides family report class."""
+
 from dae.common_reports.family_counter import FamiliesGroupCounters
 
 
@@ -15,14 +17,23 @@ class FamiliesReport:
     @staticmethod
     def from_genotype_study(genotype_data_study, person_set_collections):
         """Create a family report from a genotype study."""
-        families = genotype_data_study.families
         config = genotype_data_study.config.common_report
+        return FamiliesReport.from_families_data(
+            genotype_data_study.families, person_set_collections,
+            config.draw_all_families,
+            config.families_count_show_id)
+
+    @staticmethod
+    def from_families_data(
+            families, person_set_collections,
+            draw_all_families=True, families_count_show_id=5):
+        """Create a family report from families data."""
         families_counters = [
             FamiliesGroupCounters.from_families(
                 families,
                 person_set_collection,
-                config.draw_all_families,
-                config.families_count_show_id
+                draw_all_families,
+                families_count_show_id
             )
             for person_set_collection in person_set_collections
         ]
