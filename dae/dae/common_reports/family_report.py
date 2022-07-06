@@ -1,3 +1,5 @@
+"""Provides family report class."""
+
 from dae.common_reports.family_counter import FamiliesGroupCounters
 
 
@@ -25,8 +27,7 @@ class FamiliesReport:
     def from_families_data(
             families, person_set_collections,
             draw_all_families=True, families_count_show_id=5):
-        """Create a family report from a genotype study."""
-
+        """Create a family report from families data."""
         families_counters = [
             FamiliesGroupCounters.from_families(
                 families,
