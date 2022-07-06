@@ -132,14 +132,12 @@ class RESTClient:
 
     def get_datasets(self):
         response = self._get("datasets")
-        print(response.content)
         if response.status_code == 200:
             return response.json()
         return None
 
     def get_dataset_config(self, study_id):
         response = self._get(f"datasets/config/{study_id}")
-        print(response.content)
         if response.status_code == 200:
             return response.json()
         return None
@@ -184,7 +182,6 @@ class RESTClient:
             f"common_reports/families_data/{common_report_id}",
             stream=True
         )
-        print(response.content)
         return response
 
     def get_pheno_browser_config(self, db_name):
@@ -192,7 +189,6 @@ class RESTClient:
             "pheno_browser/config",
             query_values={"db_name": db_name},
         )
-        print(response.content)
         return response.json()
 
     def get_browser_measures_info(self, dataset_id):
@@ -200,8 +196,6 @@ class RESTClient:
             "pheno_browser/measures_info",
             query_values={"dataset_id": dataset_id}
         )
-        print(response.content)
-
         return response.json()
 
     def get_browser_measures(self, dataset_id, instrument, search_term):
@@ -221,7 +215,6 @@ class RESTClient:
             "pheno_browser/instruments",
             query_values={"dataset_id": dataset_id},
         )
-        print(response.content)
         return response.json()["instruments"]
 
     def post_measures_download(

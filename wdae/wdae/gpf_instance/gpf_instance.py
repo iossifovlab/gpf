@@ -22,6 +22,7 @@ from dae.utils.dae_utils import cached
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.enrichment_tool.tool import EnrichmentTool
 from dae.enrichment_tool.event_counters import CounterBase
+from dae.common_reports.common_report import CommonReport
 
 
 logger = logging.getLogger(__name__)
@@ -174,8 +175,8 @@ class WGPFInstance(GPFInstance):
 
         client = self.remote_study_clients[study_id]
         remote_study_id = self.remote_study_ids[study_id]
-        common_report = client.get_common_report(remote_study_id)
-        return common_report
+        common_report = client.get_common_report(remote_study_id, full=True)
+        return CommonReport(common_report)
 
     def get_common_report_families_data(self, common_report_id):
         families_data = \
