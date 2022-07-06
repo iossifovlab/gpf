@@ -247,8 +247,7 @@ def remote_config(fixtures_wgpf_instance):
         "host": host,
         "base_url": "api/v3",
         "port": "21010",
-        "user": "admin@iossifovlab.com",
-        "password": "secret",
+        "credentials": "ZmVkZXJhdGlvbjpzZWNyZXQ=",
     }
     reload_datasets(fixtures_wgpf_instance)
 
@@ -260,14 +259,13 @@ def rest_client(admin_client, remote_config):
     client = RESTClient(
         remote_config["id"],
         remote_config["host"],
-        remote_config["user"],
-        remote_config["password"],
+        remote_config["credentials"],
         base_url=remote_config["base_url"],
         port=remote_config["port"]
     )
 
-    assert client.session is not None, \
-        "Failed to create session for REST client"
+    assert client.token is not None, \
+        "Failed to get auth token for REST client"
 
     return client
 

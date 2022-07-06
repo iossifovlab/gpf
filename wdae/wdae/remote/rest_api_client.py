@@ -20,14 +20,13 @@ class RESTClient:
     """Class defining WDAE REST API client."""
 
     def __init__(
-            self, remote_id, host,
-            username, password,
+            self, remote_id, host, credentials,
             base_url=None, port=None,
             protocol=None, gpf_prefix=None):
         self.host = host
         self.remote_id = remote_id
-        self.username = username
-        self.password = password
+        self.credentials = credentials
+        self.token = None
         if base_url:
             if not base_url.endswith("/"):
                 base_url = f"{base_url}/"
@@ -37,37 +36,27 @@ class RESTClient:
         else:
             self.base_url = "/"
 
-        if port:
-            self.port = port
-        else:
-            self.port = None
+        self.port = port or None
+        self.protocol = protocol or "http"
+        self.gpf_prefix = gpf_prefix or None
 
-        if protocol:
-            self.protocol = protocol
-        else:
-            self.protocol = "http"
+        self._refresh_token()
 
-        if gpf_prefix:
-            self.gpf_prefix = gpf_prefix
-        else:
-            self.gpf_prefix = None
-
-        self.session = self._login()
-
-    def _login(self):
-        login_url = "users/login"
-        session = requests.session()
-        data = {
-            "username": self.username,
-            "password": self.password
-        }
-        login_url = self._build_url(login_url)
-        response = session.post(login_url, data=data)
-        if response.status_code != 204:
+    def _refresh_token(self):
+        prefix = f"/{self.gpf_prefix}" if self.gpf_prefix else ""
+        token_url = f"{self.build_host_url()}{prefix}/o/token/"
+        response = requests.post(
+            token_url,
+            headers={"Authorization": f"Basic {self.credentials}",
+                     "Cache-Control": "no-cache",
+                     "Content-Type": "application/json"},
+            json={"grant_type": "client_credentials"}
+        )
+        if response.status_code != 200:
             raise RESTClientRequestError(
-                f"Failed to login when creating session for {self.remote_id}"
+                f"Failed to obtain token from {self.remote_id}"
             )
-        return session
+        self.token = response.json()['access_token']
 
     def build_host_url(self):
         if self.port:
@@ -96,12 +85,27 @@ class RESTClient:
 
     def _get(self, url, query_values=None, stream=False):
         url = self._build_url(url, query_values)
-        response = self.session.get(url, stream=stream)
+        def make_request():
+            return requests.get(url, stream=stream, headers={
+                "Authorization": f"Bearer {self.token}"
+            })
+        response = make_request()
+        if response.status_code == 401:
+            # Try refreshing token
+            self._refresh_token()
+            response = make_request()
         return response
 
     def _post(self, url, data=None, stream=False):
         url = self._build_url(url)
-        response = self.session.post(url, json=data, stream=stream)
+        def make_request():
+            return requests.post(url, json=data, stream=stream, headers={
+                "Authorization": f"Bearer {self.token}"
+            })
+        response = make_request()
+        if response.status_code == 401:
+            self._refresh_token()
+            response = make_request()
         return response
 
     def _put(self, url, data=None):

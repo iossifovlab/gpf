@@ -4,14 +4,7 @@ from .default_settings import *
 ALLOWED_HOSTS += ["localhost"]
 
 INSTALLED_APPS += [
-    "corsheaders",
     "django_extensions",
-]
-
-
-MIDDLEWARE += [
-    "corsheaders.middleware.CorsMiddleware",
-    "django.middleware.common.CommonMiddleware",
 ]
 
 CORS_ORIGIN_WHITELIST = [
@@ -25,14 +18,3 @@ CORS_ORIGIN_WHITELIST = [
 CORS_ALLOW_CREDENTIALS = True
 
 STUDIES_EAGER_LOADING = False
-
-REMOTES = [
-    {
-        "id": "REMOTE1",
-        "host": "localhost",
-        "base_url": "api/v3",
-        "port": "21010",
-        "user": "admin@iossifovlab.com",
-        "password": "secret",
-    }
-]

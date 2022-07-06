@@ -140,6 +140,9 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     # Uncomment the next line for simple clickjacking protection:
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    'oauth2_provider.middleware.OAuth2TokenMiddleware',
 ]
 
 ROOT_URLCONF = "wdae.urls"
@@ -159,6 +162,8 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "rest_framework",
     "rest_framework.authtoken",
+    "corsheaders",
+    "oauth2_provider",
     "utils",
     "gene_scores",
     "gene_sets",
@@ -181,11 +186,17 @@ AUTH_USER_MODEL = "users_api.WdaeUser"
 REST_FRAMEWORK = {
     "PAGINATE_BY": 10,
     "DEFAULT_AUTHENTICATION_CLASSES": (
-        "users_api.authentication.SessionAuthenticationWithoutCSRF",
+        'oauth2_provider.contrib.rest_framework.OAuth2Authentication',
     ),
     # 'DEFAULT_RENDERER_CLASSES': (
     #     'rest_framework.renderers.JSONRenderer',
     # )
+}
+
+OAUTH2_PROVIDER = {
+    'OAUTH2_BACKEND_CLASS': 'oauth2_provider.oauth2_backends.JSONOAuthLibCore',
+    'REFRESH_TOKEN_EXPIRE_SECONDS': 360000,
+    'ACCESS_TOKEN_EXPIRE_SECONDS': 360000,
 }
 
 SESSION_SERIALIZER = "django.contrib.sessions.serializers.JSONSerializer"
