@@ -30,6 +30,8 @@ from .utils import LOCKOUT_THRESHOLD, csrf_clear
 from oauth2_provider.contrib.rest_framework import OAuth2Authentication
 from oauth2_provider.models import get_application_model
 
+from utils.authentication import GPFOAuth2Authentication
+
 
 def iterator_to_json(users):
     """Wraps an iterator over WdaeUser models to produce json objects
@@ -312,9 +314,9 @@ def logout(request):
 @request_logging_function_view(LOGGER)
 @ensure_csrf_cookie
 @api_view(["GET"])
-@authentication_classes((OAuth2Authentication,))
+@authentication_classes((GPFOAuth2Authentication,))
 def get_user_info(request):
-    user = request.user or request.auth.application.user
+    user = request.user
     if user.is_authenticated:
         return Response(
             {

@@ -85,8 +85,7 @@ remotes:
     host: "localhost"
     base_url: "api/v3"
     port: 21010
-    user: "admin@iossifovlab.com"
-    password: "secret"
+    credentials: "ZmVkZXJhdGlvbjpzZWNyZXQ="
 
 annotation:
   conf_file: "annotation_pipeline/import_annotation.conf"

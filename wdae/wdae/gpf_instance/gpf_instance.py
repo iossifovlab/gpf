@@ -57,8 +57,7 @@ class WGPFInstance(GPFInstance):
                     client = RESTClient(
                         remote["id"],
                         remote["host"],
-                        remote["user"],
-                        remote["password"],
+                        remote["credentials"],
                         base_url=remote["base_url"],
                         port=remote.get("port", None),
                         protocol=remote.get("protocol", None),
