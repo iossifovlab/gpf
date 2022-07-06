@@ -70,8 +70,6 @@ class GPFInstance:
             self.grr = build_genomic_resource_repository()
         self._annotation_pipeline = None
 
-        self.genomic_scores_db
-
         if load_eagerly:
             self.reference_genome
             self.gene_models
