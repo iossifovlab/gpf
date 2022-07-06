@@ -1,3 +1,5 @@
+"""WDAE REST API client class."""
+
 import logging
 from typing import List, Dict, Any, Optional, cast
 
@@ -15,6 +17,7 @@ class RESTClientRequestError(Exception):
 
 
 class RESTClient:
+    """Class defining WDAE REST API client."""
 
     def __init__(
             self, remote_id, host,
@@ -69,25 +72,23 @@ class RESTClient:
     def build_host_url(self):
         if self.port:
             return f"{self.protocol}://{self.host}:{self.port}"
-        else:
-            return f"{self.protocol}://{self.host}"
+        return f"{self.protocol}://{self.host}"
 
     def build_api_base_url(self):
         host_url = self.build_host_url()
         if self.gpf_prefix:
             return f"{host_url}/{self.gpf_prefix}{self.base_url}"
-        else:
-            return f"{host_url}{self.base_url}"
+        return f"{host_url}{self.base_url}"
 
     def _build_url(self, url, query_values=None):
         query_url = url
         if query_values:
             first = True
-            for k, v in query_values.items():
-                if v is None:
+            for key, val in query_values.items():
+                if val is None:
                     continue
                 query_url += "?" if first else "&"
-                query_url += f"{k}={v}"
+                query_url += f"{key}={val}"
                 first = False
         base = self.build_api_base_url()
         result = f"{base}{query_url}"
@@ -109,7 +110,8 @@ class RESTClient:
     def _delete(self, url, data=None):
         pass
 
-    def _read_json_list_stream(self, response, multiple_values=False):
+    @staticmethod
+    def _read_json_list_stream(response, _multiple_values=False):
         stream = response.iter_content()
         objects = ijson.sendable_list()
         coro = ijson.items_coro(
@@ -117,9 +119,9 @@ class RESTClient:
         )
         for chunk in stream:
             coro.send(chunk)
-            if len(objects):
-                for o in objects:
-                    yield o
+            if len(objects) > 0:
+                for obj in objects:
+                    yield obj
                 del objects[:]
 
     def prefix_remote_identifier(self, value):
@@ -133,12 +135,14 @@ class RESTClient:
         print(response.content)
         if response.status_code == 200:
             return response.json()
+        return None
 
     def get_dataset_config(self, study_id):
         response = self._get(f"datasets/config/{study_id}")
         print(response.content)
         if response.status_code == 200:
             return response.json()
+        return None
 
     def get_variants_preview(self, data):
         response = self._post(
@@ -407,8 +411,8 @@ class RESTClient:
 
         if response.status_code != 200:
             logger.warning(
-                f"error while looking for gene sets collections; "
-                f"{response.status_code}: ({response})")
+                "error while looking for gene sets collections; %s: (%s)",
+                response.status_code, response)
             return []
 
         return response.json()
@@ -446,7 +450,7 @@ class RESTClient:
 
     def get_denovo_gene_sets(self, gene_set_types):
         logger.debug(
-            f"getting denovo gene sets for: {gene_set_types}")
+            "getting denovo gene sets for: %s", gene_set_types)
 
         response = self._post(
             "gene_sets/gene_sets",
