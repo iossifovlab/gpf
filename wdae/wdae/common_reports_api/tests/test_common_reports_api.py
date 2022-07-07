@@ -66,8 +66,8 @@ def test_family_counters_download(admin_client):
     assert response.status_code == status.HTTP_200_OK
 
     res = list(response.streaming_content)
-    print(res)
-    assert len(res) == 1
+    print(b"".join(res).decode())
+    assert len(res) == 863
     # assert data == ["f2", "f4"]
 
 
