@@ -109,6 +109,15 @@ function main() {
   # prepare gpf data
   build_stage "Prepare GPF data"
   {
+    build_run_local bash -c "mkdir -p ./cache"
+    build_run_local bash -c "touch ./cache/grr_definition.yaml"
+    build_run_local bash -c 'cat > ./cache/grr_definition.yaml << EOT
+id: "default"
+type: "url"
+url: "https://grr.seqpipe.org/"
+cache_dir: "/wd/cache/grrCache"
+EOT
+'
 
     build_run_ctx_init "container" "${gpf_dev_image_ref}" \
       --hostname "local" \
@@ -121,16 +130,6 @@ function main() {
 
 
     build_run_container /wd/integration/local/entrypoint.sh
-
-    build_run_local bash -c "mkdir -p ./cache"
-    build_run_local bash -c "touch ./cache/grr_definition.yaml"
-    build_run_local bash -c 'cat > ./cache/grr_definition.yaml << EOT
-id: "default"
-type: "url"
-url: "https://grr.seqpipe.org/"
-cache_dir: "/wd/cache/grrCache"
-EOT
-'
   }
 
   build_stage "Run GPF remote instance"
