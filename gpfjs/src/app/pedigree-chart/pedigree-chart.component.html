@@ -46,34 +46,33 @@
       <button type="button" class="close" data-dismiss="modal" aria-label="Close">
         <span style="float: right; margin-right: 10px" aria-hidden="true">&times;</span>
       </button>
-      <div class="modal-body">
+      <div style="padding: 0 0 15px 0">
         <ng-container *ngTemplateOutlet="pedigree"></ng-container>
       </div>
-      <ngb-accordion *ngIf="counterId !== undefined" class="modalAccordion" #a="ngbAccordion">
+      <ngb-accordion *ngIf="counterId !== undefined" #a="ngbAccordion">
         <ngb-panel>
           <ng-template ngbPanelHeader>
-            <div style="display: flex; border: 1px solid grey">
+            <div style="text-align: left">
               <button
+                ngbPanelToggle
                 (click)="loadFamilyListData()"
                 type="button"
-                class="accordion-button btn"
-                ngbPanelToggle
-                style="width: 100%; text-align: left">
-                <span style="font-weight: bold">Family Id list ({{ pedigreeCount }})</span>
-              </button>
+                class="btn btn-md btn-secondary btn-left">Family Id list ({{ pedigreeCount }})</button>
               <form
                 (ngSubmit)="onSubmit($event)"
                 action="{{ configService.baseUrl }}common_reports/family_counters/download"
                 method="post">
                 <input name="queryData" type="hidden" />
-                <button class="btn btn-md btn-right" style="font-weight: bold" id="download-button" type="submit">
-                  <span>Download</span>
-                </button>
+                <button
+                  class="btn btn-md btn-primary btn-right"
+                  id="download-button"
+                  type="submit"
+                  style="position: absolute; right: 5px; top: 105px">Download</button>
               </form>
             </div>
           </ng-template>
           <ng-template ngbPanelContent>
-            <div class="familyPanel">
+            <div class="family-panel">
               <gpf-loading-spinner
                 *ngIf="!loadingFinishedFlag"
                 [loadingFinished]="loadingFinishedFlag"></gpf-loading-spinner>
