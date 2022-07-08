@@ -8,6 +8,7 @@ ALLOWED_HOSTS += ["localhost"]
 
 INSTALLED_APPS += [
     "corsheaders",
+    "gpf_instance.apps.WDAEConfig",
 ]
 
 

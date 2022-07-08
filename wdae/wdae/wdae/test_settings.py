@@ -7,6 +7,7 @@ from .default_settings import *
 
 INSTALLED_APPS += [
     "corsheaders",
+    "gpf_instance.apps.WDAETestingConfig",
 ]
 
 ALLOWED_HOSTS += [

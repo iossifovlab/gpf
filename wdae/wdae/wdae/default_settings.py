@@ -174,7 +174,6 @@ INSTALLED_APPS = [
     "gpfjs",
     "query_state_save",
     "user_queries",
-    "gpf_instance.apps.WDAEConfig",
 ]
 
 AUTH_USER_MODEL = "users_api.WdaeUser"
