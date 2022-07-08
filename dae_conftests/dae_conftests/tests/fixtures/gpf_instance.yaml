@@ -1,6 +1,5 @@
 vars:
   instance_id: test_data
-  wd: "."
 
 reference_genome:
   resource_id: "hg19/genomes/GATK_ResourceBundle_5777_b37_phiX174"
@@ -15,7 +14,7 @@ storage:
 
   genotype_impala:
     storage_type: impala
-    dir: "%(wd)s/work/"
+    dir: "work/"
     hdfs:
       base_dir: /tmp/test_data
       host: localhost
@@ -44,11 +43,11 @@ storage:
       port: 21050
 
   genotype_filesystem:
-    dir: "%(wd)s/studies"
+    dir: "studies"
     storage_type: filesystem
 
   genotype_filesystem2:
-    dir: "%(wd)s/data_dir"
+    dir: "data_dir"
     storage_type: filesystem
 
   test_filesystem:
@@ -78,7 +77,7 @@ remotes:
     password: "secret"
 
 annotation:
-  conf_file: "%(wd)s/annotation_pipeline/import_annotation.conf"
+  conf_file: "annotation_pipeline/import_annotation.conf"
 
 grr:
   id: "root"
@@ -86,7 +85,7 @@ grr:
   children:
     - id: "grr_test_repo"
       type: "directory"
-      directory: "%(wd)s/test_repo"
+      directory: "test_repo"
     - id: "seqpipe"
       type: "url"
       url: "https://grr.seqpipe.org"
@@ -114,23 +113,23 @@ genomic_scores_db:
     score: score_phred
 
 phenotype_data:
-  dir: "%(wd)s/pheno"
+  dir: "pheno"
 
 studies:
-  dir: "%(wd)s/studies"
+  dir: "studies"
 
 datasets:
-  dir: "%(wd)s/datasets"
+  dir: "datasets"
 
 default_study_config:
-  conf_file: "%(wd)s/defaultConfiguration.conf"
+  conf_file: "defaultConfiguration.conf"
 
 gene_info_db:
-  conf_file: "%(wd)s/gene_info.conf"
+  conf_file: "gene_info.conf"
 
 enrichment:
-  conf_file: "%(wd)s/enrichment.conf"
+  conf_file: "enrichment.conf"
 
 gpfjs:
-  permission_denied_prompt_file: "%(wd)s/permissionDeniedPrompt.md"
+  permission_denied_prompt_file: "permissionDeniedPrompt.md"
 

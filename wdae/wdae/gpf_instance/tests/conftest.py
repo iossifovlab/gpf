@@ -4,5 +4,5 @@ import pytest
 
 @pytest.fixture(scope="function")
 def wgpf_instance_fixture(
-        wgpf_instance, admin_client, remote_settings, global_dae_fixtures_dir):
+        wgpf_instance, admin_client, global_dae_fixtures_dir):
     return wgpf_instance(global_dae_fixtures_dir)

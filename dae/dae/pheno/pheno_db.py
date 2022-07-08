@@ -37,7 +37,8 @@ def get_pheno_db_dir(dae_config):
         else:
             pheno_data_dir = dae_config.phenotype_data.dir
     else:
-        pheno_data_dir = os.path.join(os.environ.get("DAE_DB_DIR"), "pheno")
+        pheno_data_dir = os.path.join(
+            os.environ.get("DAE_DB_DIR", ""), "pheno")
 
     return pheno_data_dir
 

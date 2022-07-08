@@ -6,7 +6,7 @@ genotype_storage:
 
 storage:
   genotype_impala:
-    dir: "%($DAE_DB_DIR)s/work/"
+    dir: "work/"
     hdfs:
       base_dir: /user/%(instance_id)s/studies
       host: impala
@@ -21,20 +21,20 @@ storage:
     storage_type: impala
 
 # annotation:
-#   conf_file: "%($DAE_DB_DIR)s/annotation.yaml"
+#   conf_file: "/annotation.yaml"
 
 
 phenotype_data:
-  dir: "%($DAE_DB_DIR)s/pheno"
+  dir: "pheno"
 
 studies:
-  dir: "%($DAE_DB_DIR)s/studies"
+  dir: "studies"
 
 datasets:
-  dir: "%($DAE_DB_DIR)s/datasets"
+  dir: "datasets"
 
 default_study_config:
-  conf_file: "%($DAE_DB_DIR)s/defaultConfiguration.conf"
+  conf_file: "defaultConfiguration.conf"
 
 gene_sets_db:
   gene_set_collections:

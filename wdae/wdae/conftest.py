@@ -1,6 +1,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 
 import os
+import logging
 
 import pytest
 
@@ -21,6 +22,9 @@ from dae.autism_gene_profile.db import AutismGeneProfileDB
 from dae.genomic_resources import build_genomic_resource_repository
 from dae.genomic_resources.group_repository import GenomicResourceGroupRepo
 from dae.tools import generate_common_report
+
+
+logger = logging.getLogger(__name__)
 
 
 pytest_plugins = ["dae_conftests.dae_conftests"]
@@ -125,6 +129,14 @@ def wgpf_instance(default_dae_config, fixture_dirname):
         return result
 
     return build
+
+
+# @pytest.fixture(autouse=True)
+# def switch_to_local_dae_db_dir(settings):
+#     if getattr(settings, "TESTING", None):
+#         print(100 * "+")
+#         logger.error("testing environment...")
+#         print(100 * "+")
 
 
 @pytest.fixture(scope="session")
@@ -233,7 +245,7 @@ def wdae_gpf_instance_agp(  # pylint: disable=too-many-arguments
 
 
 @pytest.fixture(scope="function")
-def remote_settings(settings):
+def remote_config():
     host = os.environ.get("TEST_REMOTE_HOST", "localhost")
     remote = {
         "id": "TEST_REMOTE",
@@ -243,22 +255,20 @@ def remote_settings(settings):
         "user": "admin@iossifovlab.com",
         "password": "secret",
     }
-    settings.REMOTES = [remote]
-
     reload_datasets(load_gpf_instance())
 
     return remote
 
 
 @pytest.fixture(scope="function")
-def rest_client(admin_client, remote_settings):
+def rest_client(admin_client, remote_config):
     client = RESTClient(
-        remote_settings["id"],
-        remote_settings["host"],
-        remote_settings["user"],
-        remote_settings["password"],
-        base_url=remote_settings["base_url"],
-        port=remote_settings["port"]
+        remote_config["id"],
+        remote_config["host"],
+        remote_config["user"],
+        remote_config["password"],
+        base_url=remote_config["base_url"],
+        port=remote_config["port"]
     )
 
     assert client.session is not None, \
