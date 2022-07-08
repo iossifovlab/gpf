@@ -267,7 +267,7 @@ EOT
         cd /wd/dae;
         export PYTHONHASHSEED=0;
         /opt/conda/bin/conda run --no-capture-output -n gpf py.test -v \
-           --durations 20 \
+          --durations 20 \
           --cov-config /wd/coveragerc \
           --junitxml=/wd/results/dae-junit.xml \
           --cov dae \
