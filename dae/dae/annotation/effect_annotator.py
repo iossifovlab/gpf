@@ -225,8 +225,12 @@ class EffectAnnotatorAdapter(Annotator):
             length=length
         )
 
-        gene_list = AnnotationEffect.gene_effects(effects)[1]
-        LGD_gene_list = AnnotationEffect.lgd_gene_effects(effects)
+        gene_list = list(set(
+            AnnotationEffect.gene_effects(effects)[0]
+        ))
+        LGD_gene_list = list(set(
+            AnnotationEffect.lgd_gene_effects(effects)[0]
+        ))
         # r = AnnotationEffect.wrap_effects(effects)
         full_desc = AnnotationEffect.effects_description(effects)
         result = {
@@ -235,7 +239,7 @@ class EffectAnnotatorAdapter(Annotator):
             "effect_details": full_desc[2],
             "allele_effects": AlleleEffects.from_effects(effects),
             "gene_list": gene_list,
-            "LGD_gene_list": LGD_gene_list
+            "lgd_gene_list": LGD_gene_list
         }
 
         return result

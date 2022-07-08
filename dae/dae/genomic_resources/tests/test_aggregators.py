@@ -5,7 +5,8 @@ from dae.genomic_resources.aggregators import (
     ConcatAggregator, MinAggregator,
     MaxAggregator, MeanAggregator,
     ModeAggregator, MedianAggregator,
-    JoinAggregator
+    JoinAggregator, ListAggregator,
+    DictAggregator
 )
 
 
@@ -143,3 +144,26 @@ def test_aggregator_used_counts():
 
     assert agg.get_used_count() == 2
     assert agg.get_total_count() == 2
+
+
+def test_list_aggregator():
+    values = [1, 2, 3, 4]
+    agg = ListAggregator()
+    for val in values:
+        agg.add(val)
+
+    assert agg.get_final() == values
+
+
+def test_dict_aggregator():
+    values = [("first", 1), ("second", 2), ("third", 3), ("fourth", 4)]
+    agg = DictAggregator()
+    for key, value in values:
+        agg.add(value, key=key)
+
+    assert agg.get_final() == {
+        "first": 1,
+        "second": 2,
+        "third": 3,
+        "fourth": 4,
+    }

@@ -212,11 +212,12 @@ class AnnotationEffect:  # pylint: disable=too-many-instance-attributes
     def lgd_gene_effects(cls, effects: List[AnnotationEffect]):
         gene_effects = zip(*cls.gene_effects(effects))
         result = []
-        for ge in gene_effects:
-            if ge[1] in EffectTypesMixin.EFFECT_GROUPS["lgds"]:
-                result.append(ge)
+        for gene_effect in gene_effects:
+            for lgd_effect in EffectTypesMixin.EFFECT_GROUPS["lgds"]:
+                if gene_effect[1] == lgd_effect.lower():
+                    result.append(gene_effect)
 
-        return result
+        return [[str(r[0]) for r in result], [str(r[1]) for r in result]]
 
     @classmethod
     def effects_description(cls, effects: List[AnnotationEffect]):
