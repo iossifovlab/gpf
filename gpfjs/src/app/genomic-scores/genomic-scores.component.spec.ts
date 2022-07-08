@@ -10,7 +10,7 @@ import { PopupComponent } from 'app/popup/popup.component';
 import { ErrorsAlertComponent } from 'app/errors-alert/errors-alert.component';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 
-fdescribe('GenomicScoresComponent', () => {
+describe('GenomicScoresComponent', () => {
   let component: GenomicScoresComponent;
   let fixture: ComponentFixture<GenomicScoresComponent>;
   let modalService: NgbModal;
