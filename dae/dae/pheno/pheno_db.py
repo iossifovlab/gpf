@@ -243,7 +243,7 @@ class PhenotypeData(ABC):
         for row in df.to_dict("records"):
             person_id = row["person_id"]
 
-            p = Person(**row)  # type: ignore
+            person = Person(**row)  # type: ignore
             # p.person_id = person_id
             # p.family_id = family_id
             assert row["role"] in Role, f"{row['role']} not a valid role"
@@ -251,7 +251,7 @@ class PhenotypeData(ABC):
             assert row["status"] in Status, \
                 f"{row['status']} not a valid status"
 
-            persons[person_id] = p
+            persons[person_id] = person
         return persons
 
     def has_measure(self, measure_id: str) -> bool:
@@ -554,14 +554,14 @@ class PhenotypeStudy(PhenotypeData):
             measure.c.min_value,
             measure.c.max_value,
         ]
-        s = select(columns)
-        s = s.where(not_(measure.c.measure_type.is_(None)))
+        query = select(columns)
+        query = query.where(not_(measure.c.measure_type.is_(None)))
         if instrument is not None:
-            s = s.where(measure.c.instrument_name == instrument)
+            query = query.where(measure.c.instrument_name == instrument)
         if measure_type is not None:
-            s = s.where(measure.c.measure_type == measure_type)
+            query = query.where(measure.c.measure_type == measure_type)
 
-        df = pd.read_sql(s, self.db.pheno_engine)
+        df = pd.read_sql(query, self.db.pheno_engine)
 
         df_columns = [
             "measure_id",
@@ -591,9 +591,10 @@ class PhenotypeStudy(PhenotypeData):
             measures_df = df[df.instrument_name == instrument_name]
 
             for row in measures_df.to_dict("records"):
-                m = Measure._from_dict(row)  # pylint: disable=protected-access
-                measures[m.measure_name] = m
-                self._measures[m.measure_id] = m
+                # pylint: disable=protected-access
+                measure = Measure._from_dict(row)
+                measures[measure.measure_name] = measure
+                self._measures[measure.measure_id] = measure
             instrument.measures = measures
             instruments[instrument.instrument_name] = instrument
 
@@ -602,8 +603,8 @@ class PhenotypeStudy(PhenotypeData):
     def _load_families(self):
         families = defaultdict(list)
         persons = self.get_persons()
-        for p in list(persons.values()):
-            families[p.family_id].append(p)
+        for person in list(persons.values()):
+            families[person.family_id].append(person)
         self.families = FamiliesData.from_family_persons(families)
 
     def _load(self):
@@ -656,17 +657,17 @@ class PhenotypeStudy(PhenotypeData):
         # df.rename(columns={'sex': 'sex'}, inplace=True)
         return df[["person_id", "family_id", "role", "sex", "status"]]
 
-    def _build_default_filter_clause(self, m, default_filter):
-        if default_filter == "skip" or m.default_filter is None:
+    def _build_default_filter_clause(self, measure, default_filter):
+        if default_filter == "skip" or measure.default_filter is None:
             return None
-        elif default_filter == "apply":
-            return "value {}".format(m.default_filter)
-        elif default_filter == "invert":
-            return "NOT (value {})".format(m.default_filter)
-        else:
-            raise ValueError(
-                "bad default_filter value: {}".format(default_filter)
-            )
+        if default_filter == "apply":
+            return f"value {measure.default_filter}"
+        if default_filter == "invert":
+            return f"NOT (value {measure.default_filter})"
+
+        raise ValueError(
+            f"bad default_filter value: {default_filter}"
+        )
 
     def _raw_get_measure_values_df(
         self,
@@ -680,9 +681,7 @@ class PhenotypeStudy(PhenotypeData):
         measure_type = measure.measure_type
         if measure_type is None:
             raise ValueError(
-                "bad measure: {}; unknown value type".format(
-                    measure.measure_id
-                )
+                f"bad measure: {measure.measure_id}; unknown value type"
             )
         value_table = self.db.get_value_table(measure_type)
         columns = [
@@ -849,9 +848,7 @@ class PhenotypeStudy(PhenotypeData):
             measure_type = measure.measure_type
             if measure_type is None:
                 raise ValueError(
-                    "bad measure: {}; unknown value type".format(
-                        measure.measure_id
-                    )
+                    f"bad measure: {measure.measure_id}; unknown value type"
                 )
         value_tables = [
             self.db.get_value_table(MeasureType.categorical),
@@ -869,31 +866,31 @@ class PhenotypeStudy(PhenotypeData):
         buffer.seek(0)
         buffer.truncate(0)
 
-        output = dict()
+        output = {}
 
-        for vt in value_tables:
-            s = select(columns + [vt.c.value])
+        for table in value_tables:
+            query = select(columns + [table.c.value])
 
-            j = (
+            join = (
                 self.db.family.join(self.db.person)
-                .join(vt, isouter=True)
+                .join(table, isouter=True)
                 .join(self.db.measure)
             )
 
-            s = s.select_from(j).where(
+            query = query.select_from(join).where(
                 self.db.measure.c.measure_id.in_(measure_ids))
 
             if roles is not None:
-                s = s.where(self.db.person.c.role.in_(roles))
+                query = query.where(self.db.person.c.role.in_(roles))
             if person_ids is not None:
-                s = s.where(self.db.person.c.person_id.in_(person_ids))
+                query = query.where(self.db.person.c.person_id.in_(person_ids))
             if family_ids is not None:
-                s = s.where(self.db.family.c.family_id.in_(family_ids))
+                query = query.where(self.db.family.c.family_id.in_(family_ids))
 
-            s = s.order_by(desc(self.db.person.c.person_id))
+            query = query.order_by(desc(self.db.person.c.person_id))
 
             with self.db.pheno_engine.connect() as connection:
-                results = connection.execute(s)
+                results = connection.execute(query)
                 for row in results:
                     person_id = row["person_id"]
                     measure_id = row["measure_id"]
@@ -906,8 +903,8 @@ class PhenotypeStudy(PhenotypeData):
 
                     output[person_id][measure_id] = measure_value
 
-        for v in output.values():
-            writer.writerow(v)
+        for value in output.values():
+            writer.writerow(value)
             yield buffer.getvalue()
             buffer.seek(0)
             buffer.truncate(0)
@@ -954,7 +951,7 @@ class PhenotypeGroup(PhenotypeData):
     def __init__(
             self, pheno_id: str, phenotype_data: Iterable[PhenotypeData],
             config=None):
-        super(PhenotypeGroup, self).__init__(pheno_id)
+        super().__init__(pheno_id)
         self.phenotype_datas = phenotype_data
         self.families = self._build_families()
         instruments, measures = self._merge_instruments(

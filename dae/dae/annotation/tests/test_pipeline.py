@@ -1,10 +1,4 @@
-import pytest
-
-from dae.genomic_resources.genomic_scores import \
-    open_position_score_from_resource
 from dae.annotation.annotation_factory import build_annotation_pipeline
-from dae.annotation.score_annotator import PositionScoreAnnotator
-from dae.annotation.annotation_pipeline import AnnotationPipeline
 
 
 def test_build_pipeline(

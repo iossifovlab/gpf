@@ -324,7 +324,7 @@ class GPFInstance:
             ):
                 return None
 
-            with open(common_report_path, "r") as crf:
+            with open(common_report_path, "r", encoding="utf-8") as crf:
                 cr_json = json.load(crf)
 
             return CommonReport(cr_json)
