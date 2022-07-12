@@ -6,6 +6,7 @@ import glob
 import shutil
 import tempfile
 import logging
+from pathlib import Path
 
 import pandas as pd
 from io import StringIO
@@ -71,6 +72,14 @@ def get_global_dae_fixtures_dir():
 @pytest.fixture(scope="session")
 def global_dae_fixtures_dir():
     return get_global_dae_fixtures_dir()
+
+
+@pytest.fixture()
+def resources_dir(request) -> Path:
+    resources_path = os.path.join(
+        os.path.dirname(os.path.realpath(request.module.__file__)),
+        "resources")
+    return Path(resources_path)
 
 
 @pytest.fixture(scope="session")

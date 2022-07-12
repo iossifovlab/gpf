@@ -11,11 +11,10 @@ from dae.configuration.gpf_config_parser import GPFConfigParser
 
 @pytest.mark.parametrize("config_dir", ["denovo_import", "vcf_import",
                                         "cnv_import", "dae_import"])
-def test_simple_import_config(tmpdir, gpf_instance_2019, config_dir, mocker):
-    input_dir = os.path.join(
-        os.path.dirname(os.path.realpath(__file__)),
-        "resources", config_dir)
-    config_fn = os.path.join(input_dir, "import_config.yaml")
+def test_simple_import_config(tmpdir, gpf_instance_2019, config_dir, mocker,
+                              resources_dir):
+    input_dir = resources_dir / config_dir
+    config_fn = input_dir / "import_config.yaml"
 
     import_config = GPFConfigParser.parse_and_interpolate_file(config_fn)
     import_config["processing_config"] = {
@@ -41,11 +40,10 @@ def test_simple_import_config(tmpdir, gpf_instance_2019, config_dir, mocker):
     assert len(variants_bins) != 0
 
 
-def test_import_with_add_chrom_prefix(tmpdir, gpf_instance_grch38, mocker):
-    input_dir = os.path.join(
-        os.path.dirname(os.path.realpath(__file__)),
-        "resources", "vcf_import")
-    config_fn = os.path.join(input_dir, "import_config_add_chrom_prefix.yaml")
+def test_import_with_add_chrom_prefix(tmpdir, gpf_instance_grch38, mocker,
+                                      resources_dir):
+    input_dir = resources_dir / "vcf_import"
+    config_fn = input_dir / "import_config_add_chrom_prefix.yaml"
 
     import_config = GPFConfigParser.parse_and_interpolate_file(config_fn)
     import_config["processing_config"] = {
@@ -62,11 +60,10 @@ def test_import_with_add_chrom_prefix(tmpdir, gpf_instance_grch38, mocker):
     assert len(files) != 0
 
 
-def test_add_chrom_prefix_is_propagated_to_the_loader(gpf_instance_2019):
-    input_dir = os.path.join(
-        os.path.dirname(os.path.realpath(__file__)),
-        "resources", "vcf_import")
-    config_fn = os.path.join(input_dir, "import_config_add_chrom_prefix.yaml")
+def test_add_chrom_prefix_is_propagated_to_the_loader(resources_dir,
+                                                      gpf_instance_2019):
+    config_fn = resources_dir / "vcf_import" \
+        / "import_config_add_chrom_prefix.yaml"
 
     project = import_tools.ImportProject.build_from_file(
         config_fn, gpf_instance=gpf_instance_2019)

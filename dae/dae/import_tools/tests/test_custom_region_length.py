@@ -11,12 +11,11 @@ from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.import_tools import import_tools
 
 
-def test_import_task_bin_size(gpf_instance_2019, tmpdir, mocker):
+def test_import_task_bin_size(gpf_instance_2019, tmpdir, mocker,
+                              resources_dir):
     # Create the import config and set tmpdir as work_dir
-    input_dir = join(
-        os.path.dirname(os.path.realpath(__file__)),
-        "resources", "import_task_bin_size")
-    config_fn = join(input_dir, "import_config.yaml")
+    input_dir = resources_dir / "import_task_bin_size"
+    config_fn = input_dir / "import_config.yaml"
 
     import_config = GPFConfigParser.parse_and_interpolate_file(config_fn)
     import_config["processing_config"]["work_dir"] = str(tmpdir)
