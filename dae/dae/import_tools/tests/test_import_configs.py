@@ -60,13 +60,14 @@ def test_import_with_add_chrom_prefix(tmpdir, gpf_instance_grch38, mocker,
     assert len(files) != 0
 
 
-def test_add_chrom_prefix_is_propagated_to_the_loader(resources_dir,
+def test_add_chrom_prefix_is_propagated_to_the_loader(resources_dir, mocker,
                                                       gpf_instance_2019):
     config_fn = resources_dir / "vcf_import" \
         / "import_config_add_chrom_prefix.yaml"
 
-    project = import_tools.ImportProject.build_from_file(
-        config_fn, gpf_instance=gpf_instance_2019)
+    mocker.patch.object(import_tools.ImportProject, "get_gpf_instance",
+                        return_value=gpf_instance_2019)
+    project = import_tools.ImportProject.build_from_file(config_fn)
     loader = project._get_variant_loader("vcf")
     assert loader._chrom_prefix == "chr"
 
