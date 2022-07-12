@@ -1,7 +1,9 @@
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
+
 import json
 import pytest
 
-from rest_framework import status
+from rest_framework import status  # type: ignore
 
 
 QUERY_URL = "/api/v3/genotype_browser/query"
@@ -10,7 +12,7 @@ pytestmark = pytest.mark.usefixtures(
     "wdae_gpf_instance", "dae_calc_gene_sets")
 
 
-def test_simple_query_variants_preview(db, admin_client, remote_settings):
+def test_simple_query_variants_preview(db, admin_client):
     data = {
         "datasetId": "TEST_REMOTE_iossifov_2014",
         "sources": [{"source": "location"}]

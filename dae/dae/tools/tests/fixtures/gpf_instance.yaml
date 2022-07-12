@@ -2,7 +2,7 @@ vars:
   wd: "."
 
 annotation:
-  conf_file: "%(wd)s/annotation.yaml"
+  conf_file: "annotation.yaml"
 
 reference_genome:
   resource_id: "genomes/mock"

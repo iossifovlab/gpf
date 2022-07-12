@@ -1,8 +1,12 @@
-from dae.configuration.gpf_config_parser import GPFConfigParser
-import pytest
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
+
 import os
 from glob import glob
+
+import pytest
+
 from dae.import_tools import import_tools
+from dae.configuration.gpf_config_parser import GPFConfigParser
 
 
 @pytest.mark.parametrize("config_dir", ["denovo_import", "vcf_import",
@@ -54,13 +58,14 @@ def test_import_with_add_chrom_prefix(tmpdir, gpf_instance_grch38):
     assert len(files) != 0
 
 
-def test_add_chrom_prefix_is_propagated_to_the_loader():
+def test_add_chrom_prefix_is_propagated_to_the_loader(gpf_instance_2019):
     input_dir = os.path.join(
         os.path.dirname(os.path.realpath(__file__)),
         "resources", "vcf_import")
     config_fn = os.path.join(input_dir, "import_config_add_chrom_prefix.yaml")
 
-    project = import_tools.ImportProject.build_from_file(config_fn)
+    project = import_tools.ImportProject.build_from_file(
+        config_fn, gpf_instance=gpf_instance_2019)
     loader = project._get_variant_loader("vcf")
     assert loader._chrom_prefix == "chr"
 
@@ -180,7 +185,7 @@ def test_shorthand_chromosomes():
     assert config["processing_config"]["denovo"]["chromosomes"] \
         == ["chr1", "chr2"]
     chroms = config["partition_description"]["region_bin"]["chromosomes"]
-    assert len(chroms) == 2*22 + 1
+    assert len(chroms) == 2 * 22 + 1
     assert chroms[-1] == "X"
 
 

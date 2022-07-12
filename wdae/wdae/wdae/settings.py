@@ -1,10 +1,14 @@
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
 # flake8: noqa
+
+# pylint: disable=wildcard-import,unused-wildcard-import
 from .default_settings import *
 
 ALLOWED_HOSTS += ["localhost"]
 
 INSTALLED_APPS += [
     "corsheaders",
+    "gpf_instance.apps.WDAEConfig",
 ]
 
 
@@ -21,17 +25,6 @@ CORS_ORIGIN_WHITELIST = [
 ]
 
 CORS_ALLOW_CREDENTIALS = True
-
-REMOTES = [
-    # {
-    #     "id": "REMOTE1",
-    #     "host": "localhost",
-    #     "base_url": "api/v3",
-    #     "port": "8000",
-    #     "user": "admin@iossifovlab.com",
-    #     "password": "secret",
-    # }
-]
 
 STUDIES_EAGER_LOADING = False
 

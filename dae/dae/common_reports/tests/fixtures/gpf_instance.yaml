@@ -13,21 +13,21 @@ genotype_storage:
 storage:
 
   genotype_filesystem:
-    dir: "%(wd)s/studies"
+    dir: "studies"
     storage_type: filesystem
 
 phenotype_data:
-  dir: "%(wd)s/dummy_pheno_dir"
+  dir: "dummy_pheno_dir"
 
 
 studies:
-  dir: "%(wd)s/studies"
+  dir: "studies"
 
 datasets:
-  dir: "%(wd)s/datasets"
+  dir: "datasets"
 
 default_study_config:
-  conf_file: "%(wd)s/defaultConfiguration.conf"
+  conf_file: "defaultConfiguration.conf"
 
 gene_info_db:
-  conf_file: "%(wd)s/gene_info.conf"
+  conf_file: "gene_info.conf"

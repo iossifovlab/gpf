@@ -1,3 +1,5 @@
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
+
 import os
 import glob
 import pyarrow.parquet as pq
@@ -6,7 +8,8 @@ from dae.tools.denovo2parquet import main
 from dae.backends.impala.parquet_io import ParquetPartitionDescriptor
 
 
-def test_denovo2parquet_denovo(dae_denovo_config, temp_filename):
+def test_denovo2parquet_denovo(
+        dae_denovo_config, temp_filename, gpf_instance_2019):
 
     argv = [
         "--ped-file-format",
@@ -17,7 +20,7 @@ def test_denovo2parquet_denovo(dae_denovo_config, temp_filename):
         dae_denovo_config.denovo_filename,
     ]
 
-    main(argv)
+    main(argv, gpf_instance=gpf_instance_2019)
 
     assert os.path.exists(temp_filename)
 
@@ -34,7 +37,7 @@ def test_denovo2parquet_denovo(dae_denovo_config, temp_filename):
 
 
 def test_denovo2parquet_denovo_partition(
-        fixture_dirname, dae_denovo_config, temp_dirname):
+        fixture_dirname, dae_denovo_config, temp_dirname, gpf_instance_2019):
 
     partition_description = fixture_dirname(
         "backends/example_partition_configuration.conf"
@@ -51,10 +54,11 @@ def test_denovo2parquet_denovo_partition(
         dae_denovo_config.denovo_filename,
     ]
 
-    main(argv)
+    main(argv, gpf_instance=gpf_instance_2019)
 
-    pd = ParquetPartitionDescriptor.from_config(partition_description)
-    file_glob = os.path.join(temp_dirname, pd.generate_file_access_glob())
+    part_desc = ParquetPartitionDescriptor.from_config(partition_description)
+    file_glob = os.path.join(
+        temp_dirname, part_desc.generate_file_access_glob())
     partition_files = glob.glob(file_glob)
 
     assert len(partition_files) == 5

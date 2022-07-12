@@ -1,4 +1,5 @@
-# Django settings for wdae project.
+"""Default Django settings for wdae project."""
+
 import os
 from dae.pheno.pheno_db import get_pheno_browser_images_dir
 
@@ -173,7 +174,6 @@ INSTALLED_APPS = [
     "gpfjs",
     "query_state_save",
     "user_queries",
-    "gpf_instance.apps.EagerLoadingConfig",
 ]
 
 AUTH_USER_MODEL = "users_api.WdaeUser"

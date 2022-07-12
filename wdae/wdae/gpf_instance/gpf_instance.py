@@ -294,15 +294,15 @@ class WGPFInstance(GPFInstance):
             gene_set_id, types, datasets, collection_id)
 
 
-def get_gpf_instance() -> WGPFInstance:
-    load_gpf_instance()
+def get_gpf_instance(work_dir=None) -> WGPFInstance:
+    load_gpf_instance(work_dir=work_dir)
     _recreated_dataset_perm()
     if _GPF_INSTANCE is None:
         raise ValueError("can't create an WGPFInstance")
     return _GPF_INSTANCE
 
 
-def load_gpf_instance() -> WGPFInstance:
+def load_gpf_instance(work_dir=None) -> WGPFInstance:
     """Load and return a WGPFInstance."""
     # pylint: disable=global-statement
     global _GPF_INSTANCE
@@ -311,6 +311,7 @@ def load_gpf_instance() -> WGPFInstance:
         with _GPF_INSTANCE_LOCK:
             if _GPF_INSTANCE is None:
                 gpf_instance = WGPFInstance(
+                    work_dir=work_dir,
                     load_eagerly=settings.STUDIES_EAGER_LOADING)
                 gpf_instance.load_remotes()
 
