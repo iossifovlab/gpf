@@ -20,7 +20,7 @@ def test_import_and_query(resources_dir, tmpdir, gpf_instance_2013):
     # run vcf2schema2 on the input vcf files
     _run_vcf2schema2(str(resources_dir / "simple_variants.ped"),
                      str(resources_dir / "simple_variants.vcf"),
-                     variants_dir)
+                     variants_dir, gpf_instance_2013)
 
     # create the storage
     config = {
@@ -65,14 +65,14 @@ def test_import_and_query(resources_dir, tmpdir, gpf_instance_2013):
     assert len(family_variants) == 2
 
 
-def _run_vcf2schema2(ped_file, vcf_file, tmpdir):
+def _run_vcf2schema2(ped_file, vcf_file, tmpdir, gpf_instance):
     # TODO don't call main as it changes the log level
     Variants2Schema2.main([
         ped_file,
         vcf_file,
         "--study-id", "testStudy",
         "--out", tmpdir,
-    ])
+    ], gpf_instance=gpf_instance)
 
 
 def _run_ped2parquet(ped_file, output_filename):
