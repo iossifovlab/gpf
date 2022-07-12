@@ -11,11 +11,11 @@
   margin-top: 5px;
 }
 
-::ng-deep.md-header {
+:host::ng-deep.md-header {
   margin-bottom: 8px;
 }
 
-::ng-deep.md-header .btn-sm {
+:host::ng-deep.md-header .btn-sm {
   background-color: unset;
   width: 30px;
   height: 30px;
@@ -23,31 +23,32 @@
   border-radius: 0%;
 }
 
-::ng-deep.btn-sm:hover {
+:host::ng-deep.btn-sm:hover {
   background-color: #eee;
   border: 1px solid rgb(197, 197, 197) !important;
   border-radius: 0%;
 }
 
-::ng-deep.btn-sm:disabled {
+:host::ng-deep.btn-sm:disabled {
   background-color: unset;
   border: none;
   outline: none;
   cursor: not-allowed;
+
 }
 
-::ng-deep.md-header .btn-sm[title="Preview"] {
+:host::ng-deep.md-header .btn-sm[title="Preview"] {
   height: 30px;
   width: 90px;
   background-color: #2a6395;
   border: none;
 }
 
-::ng-deep.btn-sm[title="Preview"]:hover,
-::ng-deep.btn-sm[title="Preview"]:focus {
+:host::ng-deep.btn-sm[title="Preview"]:hover,
+:host::ng-deep.btn-sm[title="Preview"]:focus {
   background-color: #2a6395;
 }
 
-::ng-deep.btn-sm.active[title="Preview"] {
+:host::ng-deep.btn-sm.active[title="Preview"] {
   background-color: #0b355a !important;
 }
