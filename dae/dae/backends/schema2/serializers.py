@@ -123,16 +123,16 @@ class AlleleParquetSerializer:
     ]
 
     def __init__(self, annotation_schema, extra_attributes=None):
-        self.annotation_schema = annotation_schema       
-        self._schema_summary = None 
-        self._schema_family = None 
+        self.annotation_schema = annotation_schema
+        self._schema_summary = None
+        self._schema_family = None
 
         additional_searchable_props = {}
         scores_searchable = {}
         scores_binary = {}
-        
+
         self.scores_serializers = scores_binary
-    
+
         self.searchable_properties_summary_types = {
             **self.SUMMARY_SEARCHABLE_PROPERTIES_TYPES,
             **additional_searchable_props,
@@ -153,9 +153,9 @@ class AlleleParquetSerializer:
         if extra_attributes:
             for attribute_name in extra_attributes:
                 self.extra_attributes.append(attribute_name)
-    
-    @property 
-    def schema_summary(self): 
+
+    @property
+    def schema_summary(self):
         if self._schema_summary is None:
             fields = [pa.field(spr, pat) for spr, pat in self.SUMMARY_SEARCHABLE_PROPERTIES_TYPES.items()]
             fields.append(pa.field("summary_data", pa.string()))
@@ -164,15 +164,16 @@ class AlleleParquetSerializer:
                 "float": pa.float32(),
                 "int": pa.int32()
             }
-            
-            for annotation in self.annotation_schema.public_fields:
-                annotation_field_type=self.annotation_schema[annotation].type
 
-                if annotation_field_type in annotation_type_to_pa_type:
-                    fields.append(pa.field(
-                        annotation, 
-                        annotation_type_to_pa_type[annotation_field_type]
-                    ))
+            if self.annotation_schema is not None:
+                for annotation in self.annotation_schema.public_fields:
+                    annotation_field_type = self.annotation_schema[annotation].type
+
+                    if annotation_field_type in annotation_type_to_pa_type:
+                        fields.append(pa.field(
+                            annotation,
+                            annotation_type_to_pa_type[annotation_field_type]
+                        ))
             
             self._schema_summary = pa.schema(fields)
         return self._schema_summary 
@@ -254,7 +255,8 @@ class AlleleParquetSerializer:
             
             allele_data[spr] = [prop_value]
  
-        for a in self.annotation_schema.public_fields:
-            allele_data[a] = [allele.get_attribute(a)]
+        if self.annotation_schema is not None:
+            for a in self.annotation_schema.public_fields:
+                allele_data[a] = [allele.get_attribute(a)]
 
         return allele_data

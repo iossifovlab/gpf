@@ -28,17 +28,17 @@ class ImpalaVariants:
             self,
             impala_helpers,
             db,
-            family_variant_table, 
-            summary_allele_table, 
+            family_variant_table,
+            summary_allele_table,
             pedigree_table,
-            meta_table, 
+            meta_table,
             gene_models=None):
 
         super(ImpalaVariants, self).__init__()
         assert db, db
         assert pedigree_table, pedigree_table
 
-        self.dialect = ImpalaDialect() 
+        self.dialect = ImpalaDialect()
         self.db = db
         self._impala_helpers = impala_helpers
         self.family_variant_table = family_variant_table
@@ -65,16 +65,19 @@ class ImpalaVariants:
         
         # pass config to PartitionDesciption 
 
-        self.table_properties = {
-            "region_length": int(_tbl_props['region_bin']['region_length']),
-            "chromosomes": list(map(lambda c: c.strip(), _tbl_props['region_bin']['chromosomes'].split(","))),
-            "family_bin_size": int(_tbl_props['family_bin']['family_bin_size']),
-            "rare_boundary": int(_tbl_props['frequency_bin']['rare_boundary']),
-            "coding_effect_types": set([
-                lambda s: s.strip() \
-                for s in _tbl_props['coding_bin']['coding_effect_types'].split(",")
-            ])
-        }
+        if _tbl_props is not None:
+            self.table_properties = {
+                "region_length": int(_tbl_props['region_bin']['region_length']),
+                "chromosomes": list(map(lambda c: c.strip(), _tbl_props['region_bin']['chromosomes'].split(","))),
+                "family_bin_size": int(_tbl_props['family_bin']['family_bin_size']),
+                "rare_boundary": int(_tbl_props['frequency_bin']['rare_boundary']),
+                "coding_effect_types": set([
+                    lambda s: s.strip() \
+                    for s in _tbl_props['coding_bin']['coding_effect_types'].split(",")
+                ])
+            }
+        else:
+            self.table_properties = None
 
     def connection(self):
         conn = self._impala_helpers.connection()
@@ -113,7 +116,8 @@ class ImpalaVariants:
                 
                 for r in cursor:
                     config.read_string(r[0])
-                    return config           
+                    return config
+        return None
                    
     def _summary_variants_iterator(
             self,
@@ -138,7 +142,7 @@ class ImpalaVariants:
                 self.dialect, self.db, 
                 self.family_variant_table,self.summary_allele_table, self.pedigree_table, 
                 self.family_variant_schema, self.summary_allele_schema, self.table_properties, 
-                self.pedigree_schema,self.pedigree_df, self.families, 
+                self.pedigree_schema, self.ped_df, self.families, 
                 gene_models=self.gene_models, 
                 do_join_affected=False)
 
@@ -165,19 +169,22 @@ class ImpalaVariants:
 
         # query = sqlparse.format(query_builder.product, reindent=True, keyword_case='upper')
         query = query_builder.product
-        result = self.client.query(query)
 
-        for row in result:
-            try:
-                sv_record = json.loads(row[-1]) 
-                sv = SummaryVariantFactory.summary_variant_from_records(sv_record)            
-                if sv is None:
-                    continue
-                yield sv
-            except Exception as ex:
-                logger.error("unable to deserialize summary variant (BQ)")
-                logger.exception(ex)
-                continue
+        with closing(self.connection()) as conn:
+            with conn.cursor() as cursor:
+                cursor.execute(query)
+
+                for row in cursor:
+                    # try:
+                        sv_record = json.loads(row[-1]) 
+                        sv = SummaryVariantFactory.summary_variant_from_records(sv_record)            
+                        if sv is None:
+                            continue
+                        yield sv
+                    # except Exception as ex:
+                    #     logger.error("unable to deserialize summary variant (BQ)")
+                    #     logger.exception(ex)
+                    #     continue
 
     def _family_variants_iterator(
             self,

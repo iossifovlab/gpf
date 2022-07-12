@@ -28,6 +28,9 @@ logger = logging.getLogger(__name__)
 
 
 class PartitionDescriptor:
+    family_alleles_dirname: str = "family"
+    summary_alleles_dirname: str = "summary"
+
     def __init__(self):
         pass
 
@@ -75,16 +78,30 @@ class NoPartitionDescriptor(PartitionDescriptor):
 
     def summary_filename(self, summary_allele):
         bucket_index = summary_allele.get_attribute("bucket_index")
-        filename = f"nopart_{bucket_index:0>6}_summary_alleles.parquet" 
-        return os.path.join(self.output, filename) 
+        filename = f"nopart_{bucket_index:0>6}_summary_alleles.parquet"
+        return os.path.join(self.output, self.summary_alleles_dirname, filename)
 
     def family_filename(self, family_allele):
         bucket_index = family_allele.get_attribute("bucket_index")
         filename = f"nopart_{bucket_index:0>6}_family_alleles.parquet"
-        return os.path.join(self.output, filename) 
+        return os.path.join(self.output, self.family_alleles_dirname, filename)
 
     def write_partition_configuration(self):
-        return None
+        partition_desc_table = pa.Table.from_pydict(
+            {
+                "key": [],
+                "value": []
+            },
+            schema=pa.schema({
+                "key": pa.string(),
+                "value": pa.string()
+            })
+        )
+
+        pq.write_table(
+            partition_desc_table,
+            os.path.join(self.output, "meta.parquet")
+        )
 
     def generate_file_access_glob(self):
         """
@@ -247,7 +264,7 @@ class ParquetPartitionDescriptor(PartitionDescriptor):
         return frequency_bin
 
     def summary_filename(self, summary_allele): 
-        filepath = os.path.join(self.output, "summary") 
+        filepath = os.path.join(self.output, self.summary_alleles_dirname)
         filename = "summary"
 
         current_bin = self._evaluate_region_bin(summary_allele)
@@ -271,7 +288,7 @@ class ParquetPartitionDescriptor(PartitionDescriptor):
         return os.path.join(filepath, filename)
 
     def family_filename(self, family_allele):
-        filepath = os.path.join(self.output, "family") 
+        filepath = os.path.join(self.output, self.family_alleles_dirname)
         filename = "family"
          
         summary_allele = family_allele
@@ -648,7 +665,7 @@ class VariantsParquetWriter:
             # assert summary_variant.to_record == json.loads(sv_json) 
             # assert sv_json == sv2_json  
  
-            for summary_allele in summary_variant.alleles: 
+            for summary_allele in summary_variant.alleles:
                 extra_atts = {
                     "bucket_index": self.bucket_index,
                 }
