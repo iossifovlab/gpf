@@ -27,7 +27,7 @@ class AnnotationPipeline():
 
         self._annotation_schema: Optional[Schema] = None
 
-    @ property
+    @property
     def annotation_schema(self) -> Schema:
         """Return annotation schema."""
         if self._annotation_schema is None:
@@ -48,6 +48,13 @@ class AnnotationPipeline():
         for annotator in self.annotators:
             attributes = annotator.annotate(annotatable, context)
             context.update(attributes)
+
+        # TODO: Decide where context should be cleaned up
+        # for annotator in self.annotators:
+        #     for attr in annotator.get_annotation_config():
+        #         if attr.get("internal", False):
+        #             key = attr["destination"]
+        #             del context[key]
 
         return context
 

@@ -9,7 +9,8 @@ logger = logging.getLogger(__name__)
 
 
 class GenomicScoresDb:
-    """Genomic scores DB allowing access to genomic scores histograms"""
+    """Genomic scores DB allowing access to genomic scores histograms."""
+
     def __init__(self, grr, scores, cache_dir=None):
         self.grr = grr
 
@@ -52,7 +53,7 @@ class GenomicScoresDb:
                         "histogram resource: %s", resource_id, err)
 
     def get_scores(self):
-        "Returns all genomic scores histograms"
+        """Return all genomic scores histograms."""
         result = []
 
         for score_id, score in self.scores.items():

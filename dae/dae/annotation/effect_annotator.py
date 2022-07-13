@@ -137,6 +137,16 @@ class EffectAnnotatorAdapter(Annotator):
                 "desc": "The a list of a python objects with details of the "
                         "effects for each affected transcript. "
             },
+            {
+                "name": "gene_list",
+                "type": "object",
+                "desc": "List of all genes"
+            },
+            {
+                "name": "LGD_gene_list",
+                "type": "object",
+                "desc": "List of all LGD genes"
+            },
         ]
         return result
 
@@ -215,6 +225,12 @@ class EffectAnnotatorAdapter(Annotator):
             length=length
         )
 
+        gene_list = list(set(
+            AnnotationEffect.gene_effects(effects)[0]
+        ))
+        lgd_gene_list = list(set(
+            AnnotationEffect.lgd_gene_effects(effects)[0]
+        ))
         # r = AnnotationEffect.wrap_effects(effects)
         full_desc = AnnotationEffect.effects_description(effects)
         result = {
@@ -222,6 +238,8 @@ class EffectAnnotatorAdapter(Annotator):
             "gene_effects": full_desc[1],
             "effect_details": full_desc[2],
             "allele_effects": AlleleEffects.from_effects(effects),
+            "gene_list": gene_list,
+            "lgd_gene_list": lgd_gene_list
         }
 
         return result
