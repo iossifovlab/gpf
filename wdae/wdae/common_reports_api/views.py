@@ -1,4 +1,5 @@
 import json
+import itertools
 from django.http.response import StreamingHttpResponse
 from rest_framework import status
 from rest_framework.response import Response
@@ -6,6 +7,9 @@ from rest_framework.response import Response
 from datasets_api.permissions import user_has_permission
 
 from query_base.query_base import QueryBaseView
+
+from dae.pedigrees.family import FamiliesData
+from dae.utils.dae_utils import join_line
 
 
 class VariantReportsView(QueryBaseView):
@@ -71,31 +75,40 @@ class FamilyCounterDownloadView(QueryBaseView):
     def post(self, request):
         data = json.loads(request.data["queryData"])
 
-        common_report_id = data["study_id"]
+        study_id = data["study_id"]
         group_name = data["group_name"]
         counter_id = int(data["counter_id"])
 
-        assert common_report_id
+        assert study_id is not None
 
         common_report = self.gpf_instance.get_common_report(
-            common_report_id
+            study_id
         )
 
         if common_report is None:
             return Response(
-                {"error": f"Common report {common_report_id} not found"},
+                {"error": f"Common report for {study_id} not found"},
                 status=status.HTTP_404_NOT_FOUND,
             )
 
         group = common_report.families_report.families_counters[group_name]
 
-        counter = group.counters[counter_id]
+        counter_families = group.counters[counter_id].families
+
+        study_families = self.gpf_instance.get_genotype_data(study_id).families
+
+        counter_families_data = FamiliesData.from_families({
+            family_id: study_families[family_id]
+            for family_id in counter_families
+        })
+
+        ped_df = counter_families_data.ped_df
 
         response = StreamingHttpResponse(
-            ["\n".join(counter.families)],
-            content_type="text/plain"
+            ped_df.to_csv(index=False, sep="\t"),
+            content_type="text/tab-separated-values"
         )
-        response["Content-Disposition"] = "attachment; filename=families.txt"
+        response["Content-Disposition"] = "attachment; filename=families.ped"
         response["Expires"] = "0"
 
         return response
