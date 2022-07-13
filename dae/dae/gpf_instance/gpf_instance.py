@@ -128,9 +128,32 @@ class GPFInstance:
     def genomic_scores_db(self):
         "Loads and returns genomic scores db"
         scores = []
+        pipeline = self.get_annotation_pipeline()
+        if pipeline is not None:
+            for annotator in pipeline.annotators:
+                schema = annotator.annotation_schema
+                resource_id = annotator.config.get("resource_id")
+                if resource_id is None:
+                    continue
+
+                resource = self.grr.get_resource(resource_id)
+                assert resource is not None, resource_id
+
+                config = resource.get_config()
+
+                if "histograms" not in config:
+                    continue
+
+                for field_name in schema.public_fields:
+                    field = schema[field_name]
+                    score_name = field.source.attribute_config["source"]
+                    scores.append((resource_id, score_name))
+
+
         if self.dae_config.genomic_scores_db is not None:
             for score_def in self.dae_config.genomic_scores_db:
                 scores.append((score_def["resource"], score_def["score"]))
+
         return GenomicScoresDb(self.grr, scores)
 
     @property  # type: ignore
