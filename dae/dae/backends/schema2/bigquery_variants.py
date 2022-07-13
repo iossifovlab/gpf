@@ -21,13 +21,16 @@ class BigQueryDialect(Dialect):
     def __init__(self, ns: str = None):
         super().__init__(ns=ns)
 
-    def add_unnest_in_join(self) -> bool:
+    @staticmethod
+    def add_unnest_in_join() -> bool:
         return True
 
-    def int_type(self) -> str:
+    @staticmethod
+    def int_type() -> str:
         return "INT64"
 
-    def float_type(self) -> str:
+    @staticmethod
+    def float_type() -> str:
         return "FLOAT64"
 
 
@@ -74,8 +77,10 @@ class BigQueryVariants:
 
         # serializer
         # VariantSchema = namedtuple('VariantSchema', 'col_names')
-        # self.variants_schema = VariantSchema(col_names=list(self.combined_columns))
-        # self.serializer = AlleleParquetSerializer(variants_schema=self.variants_schema)
+        # self.variants_schema = VariantSchema(
+        #     col_names=list(self.combined_columns))
+        # self.serializer = AlleleParquetSerializer(
+        #     variants_schema=self.variants_schema)
 
         self.gene_models = gene_models
         assert gene_models is not None
@@ -224,7 +229,8 @@ class BigQueryVariants:
             affected_status=affected_status,
         )
 
-        # query = sqlparse.format(query_builder.product, reindent=True, keyword_case='upper')
+        # query = sqlparse.format(query_builder.product, reindent=True,
+        #                         keyword_case='upper')
         query = query_builder.product
         result = self.client.query(query)
 

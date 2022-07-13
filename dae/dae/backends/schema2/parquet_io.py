@@ -1,5 +1,4 @@
 import os
-import io
 import sys
 import time
 import re
@@ -7,7 +6,6 @@ import hashlib
 import itertools
 import logging
 import json
-from copy import copy
 
 import toml
 from box import Box
@@ -102,9 +100,7 @@ class NoPartitionDescriptor(PartitionDescriptor):
         )
 
     def generate_file_access_glob(self):
-        """
-        Generates a glob for accessing every parquet file in the partition
-        """
+        """Return a glob for accessing every parquet file in the partition."""
         return "*variants.parquet"
 
     def variants_filename_basedir(self, filename):
@@ -406,9 +402,7 @@ class ParquetPartitionDescriptor(PartitionDescriptor):
         )
 
     def generate_file_access_glob(self):
-        """
-        Generates a glob for accessing every parquet file in the partition
-        """
+        """Return a glob for accessing every parquet file in the partition."""
         glob = "*/"
         if not self.family_bin_size == 0:
             glob += "*/"
@@ -429,7 +423,8 @@ class ParquetPartitionDescriptor(PartitionDescriptor):
 
 
 class ContinuousParquetFileWriter:
-    """
+    """A continous parquet writer.
+
     Class that automatically writes to a given parquet file when supplied
     enough data. Automatically dumps leftover data when closing into the file
     """
@@ -514,8 +509,7 @@ class ContinuousParquetFileWriter:
     def append_allele(
         self, allele, variant_data, extra_attributes_data, summary_vectors
     ):
-        """
-        Appends the data for an entire variant to the buffer
+        """Append the data for an entire variant to the buffer.
 
         :param list attributes: List of key-value tuples containing the data
         """
@@ -663,14 +657,17 @@ class VariantsParquetWriter:
             family_variants,
         ) in enumerate(self.full_variants_iterator):
 
-            # build summary json blob (concat all other alleles) INSIDE summary_variant
+            # build summary json blob (concat all other alleles)
+            # INSIDE summary_variant
             summary_blobs_json = json.dumps(
                 summary_variant.to_record, sort_keys=True
             )
 
             # print("-" * 40, "SUMMARY VARIANT", "-" * 40)
             # sv_json = json.dumps(summary_variant.to_record, sort_keys=True)
-            # sv_from_json = SummaryVariantFactory.summary_variant_from_records(json.loads(sv_json))
+            # sv_from_json = \
+            #     SummaryVariantFactory.summary_variant_from_records(
+            #         json.loads(sv_json))
             # sv2_json = json.dumps(sv_from_json.to_record,  sort_keys=True)
             # assert summary_variant.to_record == json.loads(sv_json)
             # assert sv_json == sv2_json
@@ -689,13 +686,16 @@ class VariantsParquetWriter:
                 family_variant_index += 1
 
                 # print("-" * 40, "FAMILY VARIANT", "-" * 40)
-                # fv_json = json.dumps(family_variant.to_record, sort_keys=True)
+                # fv_json = json.dumps(family_variant.to_record,
+                #                      sort_keys=True)
                 # fv_from_json_obj = json.loads(fv_json)
                 # assert family_variant.to_record == fv_from_json_obj
-                # fv_from_json = FamilyVariantFactory.family_variant_from_record(
-                #   sv_from_json,
-                #   self.variants_loader.families[fv_from_json_obj["family_id"]],
-                #   fv_from_json_obj)
+                # fv_from_json = \
+                #     FamilyVariantFactory.family_variant_from_record(
+                #         sv_from_json,
+                #         self.variants_loader.families[
+                #             fv_from_json_obj["family_id"]],
+                #         fv_from_json_obj)
 
                 if fv.is_unknown() or fv.is_reference():
                     continue

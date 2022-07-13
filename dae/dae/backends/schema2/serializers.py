@@ -169,7 +169,9 @@ class AlleleParquetSerializer:
         if self._schema_summary is None:
             fields = [
                 pa.field(spr, pat)
-                for spr, pat in self.SUMMARY_SEARCHABLE_PROPERTIES_TYPES.items()
+                for spr, pat in (
+                    self.SUMMARY_SEARCHABLE_PROPERTIES_TYPES.items()
+                )
             ]
             fields.append(pa.field("summary_data", pa.string()))
 

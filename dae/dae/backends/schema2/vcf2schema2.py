@@ -1,5 +1,4 @@
-"""
-import script similar to vcf2parquet.py
+"""import script similar to vcf2parquet.py.
 
 # when complete add to setup.py
 # do not inherit, create a new tool.
