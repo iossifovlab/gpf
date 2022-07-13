@@ -1,26 +1,26 @@
 class QueryDirector:
-
     def __init__(self, query_builder):
         self.query_builder = query_builder
 
     def build_query(
-            self,
-            regions=None,
-            genes=None,
-            effect_types=None,
-            family_ids=None,
-            person_ids=None,
-            inheritance=None,
-            roles=None,
-            sexes=None,
-            variant_type=None,
-            real_attr_filter=None,
-            ultra_rare=None,
-            frequency_filter=None,
-            return_reference=None,
-            return_unknown=None,
-            limit=None,
-            affected_status=None):
+        self,
+        regions=None,
+        genes=None,
+        effect_types=None,
+        family_ids=None,
+        person_ids=None,
+        inheritance=None,
+        roles=None,
+        sexes=None,
+        variant_type=None,
+        real_attr_filter=None,
+        ultra_rare=None,
+        frequency_filter=None,
+        return_reference=None,
+        return_unknown=None,
+        limit=None,
+        affected_status=None,
+    ):
 
         self.query_builder.reset_product()
 
@@ -28,9 +28,7 @@ class QueryDirector:
 
         self.query_builder.build_from()
 
-        self.query_builder.build_join(
-            genes=genes,
-            effect_types=effect_types)
+        self.query_builder.build_join(genes=genes, effect_types=effect_types)
 
         self.query_builder.build_where(
             regions=regions,

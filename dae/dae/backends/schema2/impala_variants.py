@@ -1,9 +1,9 @@
-import time 
-import json 
+import time
+import json
 import logging
 import configparser
-import numpy as np
 from contextlib import closing
+import numpy as np
 from impala.util import as_pandas
 from dae.pedigrees.family import FamiliesData
 from dae.variants.attributes import Role, Status, Sex
@@ -13,7 +13,7 @@ from dae.backends.schema2.family_builder import FamilyQueryBuilder
 from dae.backends.schema2.summary_builder import SummaryQueryBuilder
 from dae.variants.variant import SummaryVariantFactory
 from dae.variants.family_variant import FamilyVariant
-import pprint
+
 logger = logging.getLogger(__name__)
 
 
@@ -23,18 +23,18 @@ class ImpalaDialect(Dialect):
 
 
 class ImpalaVariants:
-
     def __init__(
-            self,
-            impala_helpers,
-            db,
-            family_variant_table,
-            summary_allele_table,
-            pedigree_table,
-            meta_table,
-            gene_models=None):
+        self,
+        impala_helpers,
+        db,
+        family_variant_table,
+        summary_allele_table,
+        pedigree_table,
+        meta_table,
+        gene_models=None,
+    ):
 
-        super(ImpalaVariants, self).__init__()
+        super().__init__()
         assert db, db
         assert pedigree_table, pedigree_table
 
@@ -45,14 +45,21 @@ class ImpalaVariants:
         self.summary_allele_table = summary_allele_table
         self.pedigree_table = pedigree_table
         self.meta_table = meta_table
-        self.summary_allele_schema = self._fetch_schema(self.summary_allele_table)
-        self.family_variant_schema = self._fetch_schema(self.family_variant_table)
-        self.combined_columns = {**self.family_variant_schema, **self.summary_allele_schema}
+        self.summary_allele_schema = self._fetch_schema(
+            self.summary_allele_table
+        )
+        self.family_variant_schema = self._fetch_schema(
+            self.family_variant_table
+        )
+        self.combined_columns = {
+            **self.family_variant_schema,
+            **self.summary_allele_schema,
+        }
         self.pedigree_schema = self._fetch_pedigree_schema()
         self.ped_df = self._fetch_pedigree()
         self.families = FamiliesData.from_pedigree_df(self.ped_df)
 
-        # Serializer 
+        # Serializer
         # VariantSchema = namedtuple('VariantSchema', 'col_names')
         # self.serializer = AlleleParquetSerializer(
         #     variants_schema=VariantSchema(col_names=list(self.combined_columns))
@@ -62,19 +69,34 @@ class ImpalaVariants:
         self.gene_models = gene_models
 
         _tbl_props = self._fetch_tblproperties(self.meta_table)
-        
-        # pass config to PartitionDesciption 
+
+        # pass config to PartitionDesciption
 
         if _tbl_props is not None:
             self.table_properties = {
-                "region_length": int(_tbl_props['region_bin']['region_length']),
-                "chromosomes": list(map(lambda c: c.strip(), _tbl_props['region_bin']['chromosomes'].split(","))),
-                "family_bin_size": int(_tbl_props['family_bin']['family_bin_size']),
-                "rare_boundary": int(_tbl_props['frequency_bin']['rare_boundary']),
-                "coding_effect_types": set([
-                    lambda s: s.strip() \
-                    for s in _tbl_props['coding_bin']['coding_effect_types'].split(",")
-                ])
+                "region_length": int(
+                    _tbl_props["region_bin"]["region_length"]
+                ),
+                "chromosomes": list(
+                    map(
+                        lambda c: c.strip(),
+                        _tbl_props["region_bin"]["chromosomes"].split(","),
+                    )
+                ),
+                "family_bin_size": int(
+                    _tbl_props["family_bin"]["family_bin_size"]
+                ),
+                "rare_boundary": int(
+                    _tbl_props["frequency_bin"]["rare_boundary"]
+                ),
+                "coding_effect_types": set(
+                    [
+                        lambda s: s.strip()
+                        for s in _tbl_props["coding_bin"][
+                            "coding_effect_types"
+                        ].split(",")
+                    ]
+                ),
             }
         else:
             self.table_properties = None
@@ -83,7 +105,8 @@ class ImpalaVariants:
         conn = self._impala_helpers.connection()
         logger.debug(
             f"getting connection to host {conn.host} from impala helpers "
-            f"{id(self._impala_helpers)}")
+            f"{id(self._impala_helpers)}"
+        )
         return conn
 
     def _fetch_schema(self, table):
@@ -102,49 +125,60 @@ class ImpalaVariants:
                 col_name: col_type for (_, col_name, col_type) in records
             }
             return schema
-    
+
     def _fetch_tblproperties(self, meta_table):
         with closing(self.connection()) as conn:
-            with conn.cursor() as cursor:    
-                q = """SELECT value FROM {db}.{meta_table} 
+            with conn.cursor() as cursor:
+                q = """SELECT value FROM {db}.{meta_table}
                        WHERE key = 'partition_description'
                        LIMIT 1
-                    """.format(db=self.db, meta_table=meta_table)
-                
+                    """.format(
+                    db=self.db, meta_table=meta_table
+                )
+
                 cursor.execute(q)
                 config = configparser.ConfigParser()
-                
+
                 for r in cursor:
                     config.read_string(r[0])
                     return config
         return None
-                   
+
     def _summary_variants_iterator(
-            self,
-            regions=None,
-            genes=None,
-            effect_types=None,
-            family_ids=None,
-            person_ids=None,
-            inheritance=None,
-            roles=None,
-            sexes=None,
-            variant_type=None,
-            real_attr_filter=None,
-            ultra_rare=None,
-            frequency_filter=None,
-            return_reference=None,
-            return_unknown=None,
-            limit=None,
-            affected_status=None):
-        
+        self,
+        regions=None,
+        genes=None,
+        effect_types=None,
+        family_ids=None,
+        person_ids=None,
+        inheritance=None,
+        roles=None,
+        sexes=None,
+        variant_type=None,
+        real_attr_filter=None,
+        ultra_rare=None,
+        frequency_filter=None,
+        return_reference=None,
+        return_unknown=None,
+        limit=None,
+        affected_status=None,
+    ):
+
         query_builder = SummaryQueryBuilder(
-                self.dialect, self.db, 
-                self.family_variant_table,self.summary_allele_table, self.pedigree_table, 
-                self.family_variant_schema, self.summary_allele_schema, self.table_properties, 
-                self.pedigree_schema, self.ped_df, self.families, 
-                gene_models=self.gene_models, 
-                do_join_affected=False)
+            self.dialect,
+            self.db,
+            self.family_variant_table,
+            self.summary_allele_table,
+            self.pedigree_table,
+            self.family_variant_schema,
+            self.summary_allele_schema,
+            self.table_properties,
+            self.pedigree_schema,
+            self.ped_df,
+            self.families,
+            gene_models=self.gene_models,
+            do_join_affected=False,
+        )
 
         director = QueryDirector(query_builder)
 
@@ -164,10 +198,11 @@ class ImpalaVariants:
             return_reference=return_reference,
             return_unknown=return_unknown,
             limit=limit,
-            affected_status=affected_status
+            affected_status=affected_status,
         )
 
-        # query = sqlparse.format(query_builder.product, reindent=True, keyword_case='upper')
+        # query = sqlparse.format(query_builder.product, reindent=True,
+        #                         keyword_case='upper')
         query = query_builder.product
 
         with closing(self.connection()) as conn:
@@ -175,46 +210,61 @@ class ImpalaVariants:
                 cursor.execute(query)
 
                 for row in cursor:
-                    # try:
-                        sv_record = json.loads(row[-1]) 
-                        sv = SummaryVariantFactory.summary_variant_from_records(sv_record)            
+                    try:
+                        sv_record = json.loads(row[-1])
+                        sv = (
+                            SummaryVariantFactory.summary_variant_from_records(
+                                sv_record
+                            )
+                        )
                         if sv is None:
                             continue
                         yield sv
-                    # except Exception as ex:
-                    #     logger.error("unable to deserialize summary variant (BQ)")
-                    #     logger.exception(ex)
-                    #     continue
+                    except Exception as ex:
+                        logger.error(
+                            "unable to deserialize summary variant (BQ)"
+                        )
+                        logger.exception(ex)
+                        continue
 
     def _family_variants_iterator(
-            self,
-            regions=None,
-            genes=None,
-            effect_types=None,
-            family_ids=None,
-            person_ids=None,
-            inheritance=None,
-            roles=None,
-            sexes=None,
-            variant_type=None,
-            real_attr_filter=None,
-            ultra_rare=None,
-            frequency_filter=None,
-            return_reference=None,
-            return_unknown=None,
-            limit=None,
-            affected_status=None):
+        self,
+        regions=None,
+        genes=None,
+        effect_types=None,
+        family_ids=None,
+        person_ids=None,
+        inheritance=None,
+        roles=None,
+        sexes=None,
+        variant_type=None,
+        real_attr_filter=None,
+        ultra_rare=None,
+        frequency_filter=None,
+        return_reference=None,
+        return_unknown=None,
+        limit=None,
+        affected_status=None,
+    ):
 
         with closing(self.connection()) as conn:
 
             with conn.cursor() as cursor:
                 do_join_affected = affected_status is not None
                 query_builder = FamilyQueryBuilder(
-                    self.dialect, self.db, self.family_variant_table, self.summary_allele_table, self.pedigree_table,
-                    self.family_variant_schema, self.summary_allele_schema, self.table_properties,
-                    self.pedigree_schema, self.ped_df,
-                    self.families, gene_models=self.gene_models,
-                    do_join_affected=do_join_affected
+                    self.dialect,
+                    self.db,
+                    self.family_variant_table,
+                    self.summary_allele_table,
+                    self.pedigree_table,
+                    self.family_variant_schema,
+                    self.summary_allele_schema,
+                    self.table_properties,
+                    self.pedigree_schema,
+                    self.ped_df,
+                    self.families,
+                    gene_models=self.gene_models,
+                    do_join_affected=do_join_affected,
                 )
                 director = QueryDirector(query_builder)
                 director.build_query(
@@ -233,7 +283,7 @@ class ImpalaVariants:
                     return_reference=return_reference,
                     return_unknown=return_unknown,
                     limit=None,
-                    affected_status=affected_status
+                    affected_status=affected_status,
                 )
 
                 query = query_builder.product
@@ -244,45 +294,50 @@ class ImpalaVariants:
                 end = time.perf_counter()
                 logger.info(f"TIME (IMPALA DB): {end - start}")
 
-
                 for row in cursor:
                     try:
-                        # columns: ..summary_data, family_data 
+                        # columns: ..summary_data, family_data
                         sv_record = json.loads(row[-2])
                         fv_record = json.loads(row[-1])
 
                         fv = FamilyVariant(
-                            SummaryVariantFactory.summary_variant_from_records(sv_record),
+                            SummaryVariantFactory.summary_variant_from_records(
+                                sv_record
+                            ),
                             self.families[fv_record["family_id"]],
                             np.array(fv_record["genotype"]),
-                            np.array(fv_record["best_state"]))
-                        
+                            np.array(fv_record["best_state"]),
+                        )
+
                         if fv is None:
                             continue
                         yield fv
 
                     except Exception as ex:
-                        logger.info("unable to deserialize family variant (IMPALA)")
+                        logger.info(
+                            "unable to deserialize family variant (IMPALA)"
+                        )
                         logger.exception(ex)
                         continue
 
     def query_summary_variants(
-            self,   
-            regions=None,
-            genes=None,
-            effect_types=None,
-            family_ids=None,
-            person_ids=None,
-            inheritance=None,
-            roles=None,
-            sexes=None,
-            variant_type=None,
-            real_attr_filter=None,
-            ultra_rare=None,
-            frequency_filter=None,
-            return_reference=None,
-            return_unknown=None,
-            limit=None):
+        self,
+        regions=None,
+        genes=None,
+        effect_types=None,
+        family_ids=None,
+        person_ids=None,
+        inheritance=None,
+        roles=None,
+        sexes=None,
+        variant_type=None,
+        real_attr_filter=None,
+        ultra_rare=None,
+        frequency_filter=None,
+        return_reference=None,
+        return_unknown=None,
+        limit=None,
+    ):
 
         if limit is None:
             count = -1
@@ -290,7 +345,8 @@ class ImpalaVariants:
             count = limit
             limit = 10 * limit
 
-        with closing(self._summary_variants_iterator(
+        with closing(
+            self._summary_variants_iterator(
                 regions=regions,
                 genes=genes,
                 effect_types=effect_types,
@@ -305,8 +361,10 @@ class ImpalaVariants:
                 frequency_filter=frequency_filter,
                 return_reference=return_reference,
                 return_unknown=return_unknown,
-                limit=limit)) as sv_iterator:
-            
+                limit=limit,
+            )
+        ) as sv_iterator:
+
             for sv in sv_iterator:
                 if sv is None:
                     continue
@@ -316,23 +374,24 @@ class ImpalaVariants:
                     break
 
     def query_variants(
-            self,
-            regions=None,
-            genes=None,
-            effect_types=None,
-            family_ids=None,
-            person_ids=None,
-            inheritance=None,
-            roles=None,
-            sexes=None,
-            variant_type=None,
-            real_attr_filter=None,
-            ultra_rare=None,
-            frequency_filter=None,
-            return_reference=None,
-            return_unknown=None,
-            limit=None,
-            affected_status=None):
+        self,
+        regions=None,
+        genes=None,
+        effect_types=None,
+        family_ids=None,
+        person_ids=None,
+        inheritance=None,
+        roles=None,
+        sexes=None,
+        variant_type=None,
+        real_attr_filter=None,
+        ultra_rare=None,
+        frequency_filter=None,
+        return_reference=None,
+        return_unknown=None,
+        limit=None,
+        affected_status=None,
+    ):
 
         if limit is None:
             count = -1
@@ -340,23 +399,26 @@ class ImpalaVariants:
             count = limit
             limit = 10 * limit
 
-        with closing(self._family_variants_iterator(
-                        regions=regions,
-                        genes=genes,
-                        effect_types=effect_types,
-                        family_ids=family_ids,
-                        person_ids=person_ids,
-                        inheritance=inheritance,
-                        roles=roles,
-                        sexes=sexes,
-                        variant_type=variant_type,
-                        real_attr_filter=real_attr_filter,
-                        ultra_rare=ultra_rare,
-                        frequency_filter=frequency_filter,
-                        return_reference=return_reference,
-                        return_unknown=return_unknown,
-                        limit=limit,
-                        affected_status=affected_status)) as fv_iterator:
+        with closing(
+            self._family_variants_iterator(
+                regions=regions,
+                genes=genes,
+                effect_types=effect_types,
+                family_ids=family_ids,
+                person_ids=person_ids,
+                inheritance=inheritance,
+                roles=roles,
+                sexes=sexes,
+                variant_type=variant_type,
+                real_attr_filter=real_attr_filter,
+                ultra_rare=ultra_rare,
+                frequency_filter=frequency_filter,
+                return_reference=return_reference,
+                return_unknown=return_unknown,
+                limit=limit,
+                affected_status=affected_status,
+            )
+        ) as fv_iterator:
 
             for v in fv_iterator:
                 if v is None:
@@ -379,22 +441,20 @@ class ImpalaVariants:
                 ped_df = as_pandas(cursor)
 
         columns = {
-                "personId": "person_id",
-                "familyId": "family_id",
-                "momId": "mom_id",
-                "dadId": "dad_id",
-                "sampleId": "sample_id",
-                "sex": "sex",
-                "status": "status",
-                "role": "role",
-                "generated": "generated",
-                "layout": "layout",
-                "phenotype": "phenotype",
+            "personId": "person_id",
+            "familyId": "family_id",
+            "momId": "mom_id",
+            "dadId": "dad_id",
+            "sampleId": "sample_id",
+            "sex": "sex",
+            "status": "status",
+            "role": "role",
+            "generated": "generated",
+            "layout": "layout",
+            "phenotype": "phenotype",
         }
         if "not_sequenced" in self.pedigree_schema:
-            columns = {
-                "not_sequenced": "not_sequenced"
-            }
+            columns = {"not_sequenced": "not_sequenced"}
 
         ped_df = ped_df.rename(columns=columns)
 

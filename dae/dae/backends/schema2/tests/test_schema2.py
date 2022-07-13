@@ -1,3 +1,5 @@
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
+
 from box import Box
 from dae.backends.schema2.parquet_io import NoPartitionDescriptor
 from dae.tools import ped2parquet

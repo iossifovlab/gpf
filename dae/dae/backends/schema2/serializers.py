@@ -1,14 +1,19 @@
 import functools
 import operator
-import itertools
 import logging
 
 import pyarrow as pa
 from dae.variants.core import Allele
-from dae.variants.attributes import Inheritance, \
-    TransmissionType, Sex, Role, Status
+from dae.variants.attributes import (
+    Inheritance,
+    TransmissionType,
+    Sex,
+    Role,
+    Status,
+)
 
 logger = logging.getLogger(__name__)
+
 
 class AlleleParquetSerializer:
 
@@ -19,17 +24,24 @@ class AlleleParquetSerializer:
         "chromosome": pa.string(),
         "position": pa.int32(),
         "end_position": pa.int32(),
-        'effect_gene': pa.list_(pa.field("element", pa.struct([
-             pa.field('effect_gene_symbols', pa.string()),
-             pa.field('effect_types', pa.string())
-        ]))),
+        "effect_gene": pa.list_(
+            pa.field(
+                "element",
+                pa.struct(
+                    [
+                        pa.field("effect_gene_symbols", pa.string()),
+                        pa.field("effect_types", pa.string()),
+                    ]
+                ),
+            )
+        ),
         "variant_type": pa.int8(),
         "transmission_type": pa.int8(),
         "reference": pa.string(),
-        "af_allele_count": pa.int32(), 
+        "af_allele_count": pa.int32(),
         "af_allele_freq": pa.float32(),
         "af_parents_called": pa.int32(),
-        "af_parents_freq": pa.float32()
+        "af_parents_freq": pa.float32(),
     }
 
     FAMILY_SEARCHABLE_PROPERTIES_TYPES = {
@@ -43,22 +55,24 @@ class AlleleParquetSerializer:
         "allele_in_statuses": pa.int8(),
         "allele_in_roles": pa.int32(),
         "inheritance_in_members": pa.int16(),
-        "allele_in_members": pa.list_(pa.string())
+        "allele_in_members": pa.list_(pa.string()),
     }
 
-    PRODUCT_PROPERTIES_LIST = [
-        "effect_gene", "allele_in_members"
-    ]
+    PRODUCT_PROPERTIES_LIST = ["effect_gene", "allele_in_members"]
 
     BASE_SEARCHABLE_PROPERTIES_TYPES = {
         "bucket_index": pa.int32(),
         "chromosome": pa.string(),
         "position": pa.int32(),
         "end_position": pa.int32(),
-        'effect_gene': pa.list_(pa.struct([
-             pa.field('effect_gene_symbols', pa.string()),
-             pa.field('effect_types', pa.string())
-        ])),
+        "effect_gene": pa.list_(
+            pa.struct(
+                [
+                    pa.field("effect_gene_symbols", pa.string()),
+                    pa.field("effect_types", pa.string()),
+                ]
+            )
+        ),
         "summary_index": pa.int32(),
         "allele_index": pa.int32(),
         "variant_type": pa.int8(),
@@ -68,16 +82,13 @@ class AlleleParquetSerializer:
         "family_id": pa.string(),
         "is_denovo": pa.int8(),
         "allele_in_sexes": pa.int8(),
-        "allele_in_statuses": pa.int8(), 
+        "allele_in_statuses": pa.int8(),
         "allele_in_roles": pa.int32(),
         "inheritance_in_members": pa.int16(),
         "allele_in_members": pa.string(),
     }
 
-    LIST_TO_ROW_PROPERTIES_LISTS = [
-        ["effect_gene"],
-        ["allele_in_members"]
-    ]
+    LIST_TO_ROW_PROPERTIES_LISTS = [["effect_gene"], ["allele_in_members"]]
 
     ENUM_PROPERTIES = {
         "variant_type": Allele.Type,
@@ -87,7 +98,6 @@ class AlleleParquetSerializer:
         "allele_in_statuses": Status,
         "inheritance_in_members": Inheritance,
     }
- 
 
     GENOMIC_SCORES_SCHEMA_CLEAN_UP = [
         "worst_effect",
@@ -119,7 +129,7 @@ class AlleleParquetSerializer:
         "frequency_data",
         "alternative",
         "variant_data",
-        "family_variant_index"
+        "family_variant_index",
     ]
 
     def __init__(self, annotation_schema, extra_attributes=None):
@@ -136,11 +146,11 @@ class AlleleParquetSerializer:
         self.searchable_properties_summary_types = {
             **self.SUMMARY_SEARCHABLE_PROPERTIES_TYPES,
             **additional_searchable_props,
-            **scores_searchable
+            **scores_searchable,
         }
 
         self.searchable_properties_family_types = {
-            **self.FAMILY_SEARCHABLE_PROPERTIES_TYPES 
+            **self.FAMILY_SEARCHABLE_PROPERTIES_TYPES
         }
 
         self.searchable_properties_types = {
@@ -157,38 +167,49 @@ class AlleleParquetSerializer:
     @property
     def schema_summary(self):
         if self._schema_summary is None:
-            fields = [pa.field(spr, pat) for spr, pat in self.SUMMARY_SEARCHABLE_PROPERTIES_TYPES.items()]
+            fields = [
+                pa.field(spr, pat)
+                for spr, pat in self.SUMMARY_SEARCHABLE_PROPERTIES_TYPES.items()
+            ]
             fields.append(pa.field("summary_data", pa.string()))
 
             annotation_type_to_pa_type = {
                 "float": pa.float32(),
-                "int": pa.int32()
+                "int": pa.int32(),
             }
 
             if self.annotation_schema is not None:
                 for annotation in self.annotation_schema.public_fields:
-                    annotation_field_type = self.annotation_schema[annotation].type
+                    annotation_field_type = self.annotation_schema[
+                        annotation
+                    ].type
 
                     if annotation_field_type in annotation_type_to_pa_type:
-                        fields.append(pa.field(
-                            annotation,
-                            annotation_type_to_pa_type[annotation_field_type]
-                        ))
-            
-            self._schema_summary = pa.schema(fields)
-        return self._schema_summary 
+                        fields.append(
+                            pa.field(
+                                annotation,
+                                annotation_type_to_pa_type[
+                                    annotation_field_type
+                                ],
+                            )
+                        )
 
-    @property 
+            self._schema_summary = pa.schema(fields)
+        return self._schema_summary
+
+    @property
     def schema_family(self):
         if self._schema_family is None:
             fields = []
             for spr in self.FAMILY_SEARCHABLE_PROPERTIES_TYPES:
-                field = pa.field(spr, self.FAMILY_SEARCHABLE_PROPERTIES_TYPES[spr])
+                field = pa.field(
+                    spr, self.FAMILY_SEARCHABLE_PROPERTIES_TYPES[spr]
+                )
                 fields.append(field)
 
             fields.append(pa.field("family_data", pa.string()))
-            self._schema_family = pa.schema(fields) 
-        return self._schema_family 
+            self._schema_family = pa.schema(fields)
+        return self._schema_family
 
     @property
     def searchable_properties_summary(self):
@@ -210,51 +231,53 @@ class AlleleParquetSerializer:
             if isinstance(prop_value, list):
                 prop_value = functools.reduce(
                     operator.or_,
-                    [
-                        enum.value
-                        for enum in prop_value
-                        if enum is not None
-                    ],
+                    [enum.value for enum in prop_value if enum is not None],
                     0,
                 )
             else:
                 prop_value = prop_value.value
         return prop_value
 
-    def build_family_allele_batch_dict(self, allele, family_data): 
-        family_header = [] 
-        family_properties = [] 
-        
+    def build_family_allele_batch_dict(self, allele, family_data):
+        family_header = []
+        family_properties = []
+
         for spr in self.FAMILY_SEARCHABLE_PROPERTIES_TYPES:
             prop_value = self._get_searchable_prop_value(allele, spr)
-            
+
             family_header.append(spr)
-            family_properties.append(prop_value) 
+            family_properties.append(prop_value)
 
         allele_data = {name: [] for name in self.schema_family.names}
-        for name, value in zip(family_header, family_properties): 
+        for name, value in zip(family_header, family_properties):
             allele_data[name].append(value)
-        
-        allele_data['family_data'] = [family_data]  
+
+        allele_data["family_data"] = [family_data]
         return allele_data
 
     def build_summary_allele_batch_dict(self, allele, summary_data):
-        allele_data = {'summary_data': [summary_data]}
+        allele_data = {"summary_data": [summary_data]}
 
         for spr in self.SUMMARY_SEARCHABLE_PROPERTIES_TYPES:
-             
-            if spr == 'effect_gene':
+
+            if spr == "effect_gene":
                 if allele.effect_types is None:
-                    assert allele.effect_gene_symbols is None 
-                    prop_value = [{"effect_types": None,"effect_gene_symbols": None}]
+                    assert allele.effect_gene_symbols is None
+                    prop_value = [
+                        {"effect_types": None, "effect_gene_symbols": None}
+                    ]
                 else:
-                    prop_value = [{"effect_types": e[0],"effect_gene_symbols": e[1]} \
-                            for e in zip(allele.effect_types, allele.effect_gene_symbols)]
+                    prop_value = [
+                        {"effect_types": e[0], "effect_gene_symbols": e[1]}
+                        for e in zip(
+                            allele.effect_types, allele.effect_gene_symbols
+                        )
+                    ]
             else:
                 prop_value = self._get_searchable_prop_value(allele, spr)
-            
+
             allele_data[spr] = [prop_value]
- 
+
         if self.annotation_schema is not None:
             for a in self.annotation_schema.public_fields:
                 allele_data[a] = [allele.get_attribute(a)]
