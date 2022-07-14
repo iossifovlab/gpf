@@ -8,7 +8,7 @@ import { User } from './users';
 import { LocationStrategy } from '@angular/common';
 import { Store } from '@ngxs/store';
 import { StateResetAll } from 'ngxs-reset-plugin';
-import { catchError, map, tap } from 'rxjs/operators';
+import { catchError, map, tap, take } from 'rxjs/operators';
 import { AuthService } from '../auth.service';
 const oboe = require('oboe');
 
@@ -38,6 +38,10 @@ export class UsersService {
     private authService: AuthService,
   ) {
     this.emailLog = new BehaviorSubject('');
+    this.authService.tokenExchangeSubject.subscribe(() => {
+      // Refresh user data when a token arrives
+      this.getUserInfo().pipe(take(1)).subscribe(() => {});
+    });
   }
 
   public logout(): Observable<boolean> {
