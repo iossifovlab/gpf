@@ -10,7 +10,8 @@ import { Router } from '@angular/router';
 export class AuthService {
   private readonly headers = new HttpHeaders({ 'Content-Type': 'application/json' });
   private readonly options = { headers: this.headers };
-  private accessToken = '';
+  private _accessToken = '';
+  private _refreshToken = '';
 
   public tokenExchangeSubject = new Subject<boolean>();
 
@@ -19,13 +20,12 @@ export class AuthService {
     private config: ConfigService,
     private router: Router,
   ) {
-    if (localStorage.getItem('gpf-token')) {
-      this.accessToken = localStorage.getItem('gpf-token');
-    }
+    this._accessToken = localStorage.getItem('access_token') || '';
+    this._refreshToken = localStorage.getItem('refresh_token') || '';
   }
 
   public getAccessToken(): string {
-    return this.accessToken;
+    return this._accessToken;
   }
 
   public requestAccessToken(code: string): Observable<object> {
@@ -35,8 +35,7 @@ export class AuthService {
       grant_type: 'authorization_code',
       code_verifier: 'MTIz', //TODO: Fix this, use proper code verifier (must be fixed in users.component.ts as well)
     }, this.options).pipe(take(1), tap(res => {
-      this.accessToken = res['access_token'];
-      localStorage.setItem('gpf-token', this.accessToken);
+      this.setTokens(res);
       // Remove auth code from query params and refresh navigation
       this.router.navigate([], {
         queryParams: {'code': null},
@@ -49,10 +48,30 @@ export class AuthService {
   public revokeAccessToken(): Observable<object> {
     return this.http.post(this.config.rootUrl + '/o/revoke_token/', {
       client_id: 'TgvqlBwtPEor9AoizuuLQQ06ZwXNzC74n9Og7Cfw',
-      token: this.accessToken,
+      token: this._accessToken,
     }, this.options).pipe(take(1), tap(_ => { 
-      this.accessToken = '';
-      localStorage.removeItem('gpf-token');
+      this._accessToken = '';
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
     }));
+  }
+
+  public refreshToken(): Observable<object> {
+    if (this._refreshToken !== '') {
+      return this.http.post(this.config.rootUrl + '/o/token/', {
+        grant_type: 'refresh_token',
+        client_id: 'TgvqlBwtPEor9AoizuuLQQ06ZwXNzC74n9Og7Cfw',
+        refresh_token: this._refreshToken,
+      }, this.options).pipe(take(1), tap(res => {
+        this.setTokens(res);
+      }));
+    }
+  }
+
+  private setTokens(res: object): void {
+    this._accessToken = res['access_token'];
+    this._refreshToken = res['refresh_token'];
+    localStorage.setItem('access_token', this._accessToken);
+    localStorage.setItem('refresh_token', this._refreshToken);
   }
 }

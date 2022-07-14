@@ -44,12 +44,12 @@ export class UsersService {
     });
   }
 
-  public logout(): Observable<boolean> {
+  public logout(): Observable<object> {
     return this.authService.revokeAccessToken().pipe(
-      map(() => {
+      take(1),
+      tap(() => {
         this.store.dispatch(new StateResetAll());
         window.location.href = this.locationStrategy.getBaseHref();
-        return true;
       })
     );
   }
