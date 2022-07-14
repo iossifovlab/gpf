@@ -8,7 +8,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from .repository import GenomicResource, \
     ReadOnlyRepositoryProtocol, ReadWriteRepositoryProtocol
-from .repository import AbstractGenomicResourceRepo, GenomicResourceRepo, \
+from .repository import GenomicResourceRepo, GenomicResourceProtocolRepo, \
     GR_CONF_FILE_NAME, Manifest
 from .fsspec_protocol import build_fsspec_protocol
 
@@ -109,7 +109,7 @@ class CachingProtocol(ReadOnlyRepositoryProtocol):
         self.local_protocol.update_resource(resource)
 
 
-class GenomicResourceCachedRepo(AbstractGenomicResourceRepo):
+class GenomicResourceCachedRepo(GenomicResourceRepo):
     """Defines caching genomic resources repository."""
 
     def __init__(self, child, cache_url, **kwargs):
@@ -119,7 +119,7 @@ class GenomicResourceCachedRepo(AbstractGenomicResourceRepo):
         logger.debug(
             "creating cached GRR with cache url: %s", cache_url)
 
-        self.child: GenomicResourceRepo = child
+        self.child: GenomicResourceProtocolRepo = child
         self.cache_url = cache_url
         self.cache_protos: Dict[str, CachingProtocol] = {}
         self.additional_kwargs = kwargs

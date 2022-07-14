@@ -13,7 +13,7 @@ from urllib.parse import urlparse
 import yaml
 
 from .fsspec_protocol import build_fsspec_protocol
-from .repository import GenomicResourceRepo, AbstractGenomicResourceRepo
+from .repository import GenomicResourceRepo, GenomicResourceProtocolRepo
 from .cached_repository import GenomicResourceCachedRepo
 from .testing import build_testing_protocol
 
@@ -78,7 +78,7 @@ def get_configured_definition():
 def _build_real_repository(
         proto_type: str = "",
         repo_id: str = "",
-        **kwargs) -> AbstractGenomicResourceRepo:
+        **kwargs) -> GenomicResourceRepo:
 
     if proto_type == "group":
         repo = _build_group_repository(
@@ -97,7 +97,7 @@ def _build_real_repository(
             raise ValueError(f"not an absolute directory name: {root_url}")
         root_url = f"file://{root_url}"
         protocol = build_fsspec_protocol(repo_id, root_url, **kwargs)
-        repo = GenomicResourceRepo(protocol)
+        repo = GenomicResourceProtocolRepo(protocol)
 
     elif proto_type == "url":
         root_url = kwargs.pop("url")
@@ -105,7 +105,7 @@ def _build_real_repository(
         if parsed.scheme not in {"http", "https", "s3"}:
             raise ValueError(f"unexpected GRR protocol scheme {root_url}")
         protocol = build_fsspec_protocol(repo_id, root_url, **kwargs)
-        repo = GenomicResourceRepo(protocol)
+        repo = GenomicResourceProtocolRepo(protocol)
 
     elif proto_type == "http":
         root_url = kwargs.pop("url")
@@ -113,7 +113,7 @@ def _build_real_repository(
         if urlparse(root_url).scheme not in {"http", "https"}:
             raise ValueError(f"not an http(s) root url: {root_url}")
         protocol = build_fsspec_protocol(repo_id, root_url)
-        repo = GenomicResourceRepo(protocol)
+        repo = GenomicResourceProtocolRepo(protocol)
 
     elif proto_type == "s3":
         root_url = kwargs.pop("url")
@@ -121,7 +121,7 @@ def _build_real_repository(
         if urlparse(root_url).scheme != "s3":
             raise ValueError(f"not an s3 root url: {root_url}")
         protocol = build_fsspec_protocol(repo_id, root_url, **kwargs)
-        repo = GenomicResourceRepo(protocol)
+        repo = GenomicResourceProtocolRepo(protocol)
 
     elif proto_type in {"embedded", "memory"}:
         root_url = tempfile.mkdtemp(prefix="memory", suffix=repo_id)
@@ -137,7 +137,7 @@ def _build_real_repository(
             scheme="memory",
             proto_id=repo_id,
             root_path=root_url)
-        repo = GenomicResourceRepo(protocol)
+        repo = GenomicResourceProtocolRepo(protocol)
 
     else:
         raise ValueError(f"unexpected GRR protocol type {proto_type}")
@@ -151,14 +151,14 @@ def _build_real_repository(
 
 def _build_group_repository(
         repo_id: str,
-        children: List[dict], **kwargs) -> AbstractGenomicResourceRepo:
+        children: List[dict], **kwargs) -> GenomicResourceRepo:
 
-    result: List[AbstractGenomicResourceRepo] = []
+    result: List[GenomicResourceRepo] = []
     for child in children:
         child_id: str = child.pop("id", "")
         proto_type = child.pop("type")
         if proto_type == "group":
-            repo: AbstractGenomicResourceRepo = \
+            repo: GenomicResourceRepo = \
                 _build_group_repository(
                     child_id, child.pop("children"), **child)
             result.append(repo)
@@ -179,7 +179,7 @@ def _build_group_repository(
 
 def build_genomic_resource_repository(
         definition: Optional[dict] = None,
-        file_name: str = None) -> AbstractGenomicResourceRepo:
+        file_name: str = None) -> GenomicResourceRepo:
     """Build a GRR using a definition dict or yaml file."""
     if not definition:
         if file_name is not None:
@@ -216,7 +216,7 @@ def build_genomic_resource_repository(
         repo_id = definition.get("id")
 
         children = cast(List[dict], definition.pop("children"))
-        repo: AbstractGenomicResourceRepo = \
+        repo: GenomicResourceRepo = \
             _build_group_repository(repo_id, children, **definition)
     else:
         repo = _build_real_repository(repo_type, repo_id, **definition)

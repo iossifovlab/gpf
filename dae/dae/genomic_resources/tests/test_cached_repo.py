@@ -3,7 +3,7 @@ import os
 import pytest
 
 from dae.genomic_resources.repository import GR_CONF_FILE_NAME, \
-    GenomicResourceRepo
+    GenomicResourceProtocolRepo
 from dae.genomic_resources.cached_repository import GenomicResourceCachedRepo
 from dae.genomic_resources import build_genomic_resource_repository
 
@@ -32,7 +32,7 @@ def cache_repository(tmp_path, embedded_proto, proto_builder):
             embedded_proto(content=content),
             scheme="file",
             proto_id=repo_id)
-        remote_repo = GenomicResourceRepo(remote_proto)
+        remote_repo = GenomicResourceProtocolRepo(remote_proto)
 
         if scheme == "s3":
             cache_repo = GenomicResourceCachedRepo(

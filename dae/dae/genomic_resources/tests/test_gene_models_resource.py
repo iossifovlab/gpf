@@ -7,7 +7,7 @@ from dae.genomic_resources.gene_models import \
 from dae.genomic_resources.testing import build_test_resource
 from dae.genomic_resources.test_tools import convert_to_tab_separated
 from dae.genomic_resources.fsspec_protocol import build_fsspec_protocol
-from dae.genomic_resources.repository import GenomicResourceRepo, \
+from dae.genomic_resources.repository import GenomicResourceProtocolRepo, \
     GenomicResource
 
 
@@ -94,7 +94,7 @@ def test_gene_models_resource(fixture_dirname):
 
     dirname = fixture_dirname("genomic_resources")
     proto = build_fsspec_protocol("d", dirname)
-    repo = GenomicResourceRepo(proto)
+    repo = GenomicResourceProtocolRepo(proto)
 
     res = repo.get_resource(
         "hg19/GATK_ResourceBundle_5777_b37_phiX174_short/"

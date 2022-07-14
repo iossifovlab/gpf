@@ -1,5 +1,5 @@
 import logging
-from multiprocessing.sharedctypes import Value
+
 import yaml
 
 from typing import List, Dict
@@ -105,13 +105,14 @@ def build_annotation_pipeline(
     for annotator_config in pipeline_config:
         try:
             annotator_type = annotator_config["annotator_type"]
-        except KeyError:
+        except KeyError as ex:
             raise ValueError(
-                "The pipeline config element has not annotator_type!")
+                "The pipeline config element has not annotator_type!") from ex
         try:
             builder = ANNOTATOR_BUILDER_REGISTRY[annotator_type]
-        except KeyError:
-            raise ValueError(f"Unknonwn annotator type {annotator_type}.")
+        except KeyError as ex:
+            raise ValueError(f"Unknonwn annotator type {annotator_type}.") \
+                from ex
         annotator = builder(pipeline, annotator_config)
         pipeline.add_annotator(annotator)
 

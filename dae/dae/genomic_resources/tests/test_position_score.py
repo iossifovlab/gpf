@@ -5,7 +5,7 @@ from typing import cast
 import yaml
 
 from dae.genomic_resources import GenomicResource
-from dae.genomic_resources.repository import GenomicResourceRepo
+from dae.genomic_resources.repository import GenomicResourceProtocolRepo
 from dae.genomic_resources.genomic_scores import \
     PositionScore,\
     open_position_score_from_resource,\
@@ -157,7 +157,7 @@ def test_position_score_over_http(fixture_dirname, proto_builder):
         src_proto,
         scheme="http",
         proto_id="testing_http")
-    repo = GenomicResourceRepo(proto)
+    repo = GenomicResourceProtocolRepo(proto)
 
     resource = repo.get_resource(
         "hg38/TESTphastCons100way")

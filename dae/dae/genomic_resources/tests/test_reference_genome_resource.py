@@ -7,7 +7,7 @@ import pytest
 from dae.genomic_resources.test_tools import convert_to_tab_separated
 from dae.genomic_resources.testing import build_test_resource
 from dae.genomic_resources.fsspec_protocol import build_fsspec_protocol
-from dae.genomic_resources.repository import GenomicResourceRepo
+from dae.genomic_resources.repository import GenomicResourceProtocolRepo
 
 from dae.genomic_resources.reference_genome import \
     open_reference_genome_from_file
@@ -36,7 +36,7 @@ def test_genomic_sequence_resource(fixture_dirname):
 
     dirname = fixture_dirname("genomic_resources")
     proto = build_fsspec_protocol("d", dirname)
-    repo = GenomicResourceRepo(proto)
+    repo = GenomicResourceProtocolRepo(proto)
 
     res = repo.get_resource(
         "hg19/GATK_ResourceBundle_5777_b37_phiX174_short/genome")
@@ -74,7 +74,7 @@ def test_genomic_sequence_resource_http(fixture_dirname, proto_builder):
         src_proto,
         scheme="http",
         proto_id="testing_http")
-    repo = GenomicResourceRepo(proto)
+    repo = GenomicResourceProtocolRepo(proto)
 
     res = repo.get_resource(
         "hg19/GATK_ResourceBundle_5777_b37_phiX174_short/genome")

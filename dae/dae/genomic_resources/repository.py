@@ -1,19 +1,19 @@
 """
 Provides basic classes for genomic resources and repositories.
 
-       +-----------------------------+                    +-----------------+
- +-----| AbstractGenomicResourceRepo |--------------------| GenomicResource |
- |     +-----------------------------+                    +-----------------+
- |        ^                    ^                                    |
- |        |                    |                                    |
- |        |       +---------------------+      +----------------------------+
- |        |       | GenomicResourceRepo -------| ReadOnlyRepositoryProtocol |
- |        |       +---------------------+      +----------------------------+
- |        |                                                         ^
- |        |                                                         |
- |    +--------------------------+            +----------_------------------+
- +----- GenomicResourceGroupRepo |            | ReadWriteRepositoryProtocol |
-      +--------------------------+            +-----------_-----------------+
+       +---------------------+                    +-----------------+
+ +-----| GenomicResourceRepo |--------------------| GenomicResource |
+ |     +---------------------+                    +-----------------+
+ |        ^               ^                                    |
+ |        |               |                                    |
+ |        |  +-----------------------------+     +----------------------------+
+ |        |  | GenomicResourceProtocolRepo | ----| ReadOnlyRepositoryProtocol |
+ |        |  +-----------------------------+     +----------------------------+
+ |        |                                                    ^
+ |        |                                                    |
+ |    +--------------------------+            +-----------------------------+
+ +----| GenomicResourceGroupRepo |            | ReadWriteRepositoryProtocol |
+      +--------------------------+            +-----------------------------+
 
 
 """
@@ -737,7 +737,7 @@ class ReadWriteRepositoryProtocol(ReadOnlyRepositoryProtocol):
         """Build the content of the repository (i.e '.CONTENTS' file)."""
 
 
-class AbstractGenomicResourceRepo(abc.ABC):
+class GenomicResourceRepo(abc.ABC):
     """Base class for genomic resources repositories."""
 
     def __init__(self, repo_id: str):
@@ -774,7 +774,7 @@ class AbstractGenomicResourceRepo(abc.ABC):
         """Return a generator over all resource in the repository."""
 
 
-class GenomicResourceRepo(AbstractGenomicResourceRepo):
+class GenomicResourceProtocolRepo(GenomicResourceRepo):
     """Base class for real genomic resources repositories."""
 
     def __init__(

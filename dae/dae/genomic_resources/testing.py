@@ -7,7 +7,7 @@ from typing import Any, cast, Optional
 
 from dae.genomic_resources.repository import \
     GenomicResource, \
-    GenomicResourceRepo, \
+    GenomicResourceProtocolRepo, \
     ReadWriteRepositoryProtocol, \
     parse_gr_id_version_token, \
     is_gr_id_token, \
@@ -110,13 +110,13 @@ def build_testing_repository(
         scheme: str = "memory",
         repo_id: str = "testing",
         root_path: str = "/testing",
-        **kwargs) -> GenomicResourceRepo:
+        **kwargs) -> GenomicResourceProtocolRepo:
     """Create an embedded or dir GRR repository using passed content."""
     proto = build_testing_protocol(
         content, scheme=scheme, proto_id=repo_id,
         root_path=root_path, **kwargs)
 
-    return GenomicResourceRepo(proto)
+    return GenomicResourceProtocolRepo(proto)
 
 
 def build_test_resource(
