@@ -2,7 +2,7 @@
 import { BrowserModule } from '@angular/platform-browser';
 import { NgModule, ErrorHandler } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { HttpClientModule } from '@angular/common/http';
+import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { AppComponent } from './app.component';
 import { DatasetsService } from './datasets/datasets.service';
@@ -167,11 +167,14 @@ import { PedigreeChartMemberComponent } from './pedigree-chart/pedigree-chart-me
 import { JoinPipe } from './utils/join.pipe';
 import { LegendComponent } from './legend/legend.component';
 import { PedigreeComponent } from './pedigree/pedigree.component';
+import { AuthInterceptorService } from './auth-interceptor.service';
+import { AuthResolverService } from './auth-resolver.service';
 
 const appRoutes: Routes = [
   {
     path: 'datasets',
-    component: DatasetsComponent
+    component: DatasetsComponent,
+    resolve: { _: AuthResolverService},
   },
   {
     path: 'datasets/:dataset',
@@ -423,7 +426,8 @@ const appRoutes: Routes = [
       provide: ErrorHandler,
       useClass: GlobalErrorHandler
     },
-    BnNgIdleService
+    BnNgIdleService,
+    { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptorService, multi: true }
   ],
 
   bootstrap: [AppComponent]
