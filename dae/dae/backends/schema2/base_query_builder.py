@@ -111,7 +111,7 @@ class BaseQueryBuilder(ABC):
 
     def _where_accessors(self):
         cols = list(self.family_columns) + list(self.summary_columns)
-        accessors = {k: v for k, v in zip(cols, cols)}
+        accessors = dict(zip(cols, cols))
 
         family_keys = set(self.family_columns)
         summary_keys = set(self.summary_columns)
@@ -634,14 +634,12 @@ class BaseQueryBuilder(ABC):
             start = region.start // region_length
             stop = region.stop // region_length
             for position_bin in range(start, stop + 1):
-                region_bins.append("{}_{}".format(chrom_bin, position_bin))
+                region_bins.append(f"{chrom_bin}_{position_bin}")
         if not region_bins:
             return ""
         region_bin_col = self.where_accessors["region_bin"]
-        return "{region_bin} IN ({bins})".format(
-            region_bin=region_bin_col,
-            bins=",".join(["'{}'".format(rb) for rb in region_bins]),
-        )
+        bins_str = ",".join([f"'{rb}'" for rb in region_bins])
+        return f"{region_bin_col} IN ({bins_str})"
 
     def _build_family_bin_heuristic(self, family_ids, person_ids):
         if "family_bin" not in self.combined_columns:
@@ -673,9 +671,7 @@ class BaseQueryBuilder(ABC):
 
         if 0 < len(family_bins) < self.table_properties["family_bin_size"]:
             w = ", ".join([str(fb) for fb in family_bins])
-            return "{family_bin} IN ({w})".format(
-                family_bin=family_bin_col, w=w
-            )
+            return f"{family_bin_col} IN ({w})"
 
         return ""
 

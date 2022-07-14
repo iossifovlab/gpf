@@ -24,6 +24,8 @@ class HdfsStudyLayout:
 
 
 class Schema2GenotypeStorage(GenotypeStorage):
+    """A genotype storing implementing the new schema2."""
+
     def __init__(self, storage_config, section_id):
         super().__init__(storage_config, section_id)
         self._hdfs_helpers = None
@@ -42,11 +44,11 @@ class Schema2GenotypeStorage(GenotypeStorage):
     def is_filestorage(self):
         return False
 
-    def build_backend(self, study_config, genome, gene_models):
-        assert study_config is not None
+    def build_backend(self, study_id, genome, gene_models):
+        assert study_id is not None
 
         family_table, summary_table, pedigree_table, meta_table \
-            = self._study_tables(study_config)
+            = self._study_tables(study_id)
         variants = ImpalaVariants(
             self.impala_helpers,
             self.storage_config.impala.db,
@@ -72,6 +74,7 @@ class Schema2GenotypeStorage(GenotypeStorage):
     def hdfs_upload_dataset(self, study_id, variants_dir, pedigree_file,
                             meta_file, partition_description) \
             -> HdfsStudyLayout:
+        """Upload local data to hdfs."""
         # Copy pedigree
         study_path = os.path.join(self.storage_config.hdfs.base_dir, study_id)
         pedigree_hdfs_path = os.path.join(
@@ -91,9 +94,10 @@ class Schema2GenotypeStorage(GenotypeStorage):
         ]
         for optional_file in optional_files:
             optional_filename = os.path.join(variants_dir, optional_file)
-            logger.debug(f"checking for: {optional_filename}")
+            logger.debug("checking for: %s", optional_filename)
             if os.path.exists(optional_filename):
-                logger.info(f"copying {optional_filename} into {study_path}")
+                logger.info("copying %s into %s",
+                            optional_filename, study_path)
                 self.hdfs_helpers.put_in_directory(optional_filename,
                                                    study_path)
 
@@ -161,7 +165,8 @@ class Schema2GenotypeStorage(GenotypeStorage):
         # return the first parquet files in the list as sample files
         return summary_files_to_copy[0][1], family_files_to_copy[0][1]
 
-    def _enum_parquet_files_to_copy(self, src_variants_dir, dest_dir) \
+    @staticmethod
+    def _enum_parquet_files_to_copy(src_variants_dir, dest_dir) \
             -> Iterator[tuple[str, str]]:
         parquet_files_glob = glob.iglob(
             os.path.join(src_variants_dir, "**/*.parquet"),
@@ -174,6 +179,7 @@ class Schema2GenotypeStorage(GenotypeStorage):
 
     @property
     def hdfs_helpers(self):
+        """Return the hdfs helper used to interact with hdfs."""
         if self._hdfs_helpers is None:
             self._hdfs_helpers = HdfsHelpers(
                 self.storage_config.hdfs.host,
@@ -187,7 +193,7 @@ class Schema2GenotypeStorage(GenotypeStorage):
             self, study_id,
             hdfs_study_layout: HdfsStudyLayout,
             partition_description):
-
+        """Load a dataset from HDFS into impala."""
         pedigree_table = self._construct_pedigree_table(study_id)
         summary_variant_table, family_variant_table = \
             self._construct_variant_tables(study_id)

@@ -920,6 +920,7 @@ def add_missing_parquet_fields(pps, ped_df):
 
 
 def save_ped_df_to_parquet(ped_df, filename, filesystem=None):
+    """Save ped_df as a parquet file named filename."""
     ped_df = ped_df.copy()
 
     ped_df.role = ped_df.role.apply(lambda r: r.value)
