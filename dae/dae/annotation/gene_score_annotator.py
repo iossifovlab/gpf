@@ -1,16 +1,21 @@
+"""Module containing the gene score annotator."""
+
 import logging
 import copy
 
-from typing import List, Dict, cast
-from .annotatable import Annotatable
+from typing import List, Dict, cast, Any
 from dae.gene.gene_scores import GeneScore
-from .annotator_base import Annotator, ATTRIBUTES_SCHEMA
 from dae.genomic_resources.aggregators import AGGREGATOR_SCHEMA
+
+from .annotator_base import Annotator, ATTRIBUTES_SCHEMA
+from .annotatable import Annotatable
 
 logger = logging.getLogger(__name__)
 
 
 class GeneScoreAnnotator(Annotator):
+    """Annotator that annotates variants by using gene score resources."""
+
     def __init__(
             self, config: dict,
             resource):
@@ -30,11 +35,11 @@ class GeneScoreAnnotator(Annotator):
 
     def get_all_annotation_attributes(self) -> List[Dict]:
         result = []
-        for gs in self.gene_scores.values():
+        for gene_score in self.gene_scores.values():
             result.append({
-                "name": gs.id,
+                "name": gene_score.id,
                 "type": "object",
-                "desc": gs.desc
+                "desc": gene_score.desc
             })
         return result
 
@@ -45,6 +50,10 @@ class GeneScoreAnnotator(Annotator):
 
     @classmethod
     def validate_config(cls, config: Dict) -> Dict:
+        attr_schema = cast(Dict[str, Any], copy.deepcopy(ATTRIBUTES_SCHEMA))
+        aggr_schema = copy.deepcopy(AGGREGATOR_SCHEMA)
+        attr_schema["schema"]["gene_aggregator"] = aggr_schema
+
         schema = {
             "annotator_type": {
                 "type": "string",
@@ -60,25 +69,19 @@ class GeneScoreAnnotator(Annotator):
             "input_gene_list": {"type": "string"},
             "attributes": {
                 "type": "list",
-                "schema": None
+                "schema": attr_schema
             }
         }
-
-        attr_schema = copy.deepcopy(ATTRIBUTES_SCHEMA)
-        schema["attributes"]["schema"] = attr_schema
-
-        attributes_schema = schema["attributes"]["schema"]["schema"]
-        aggr_schema = copy.deepcopy(AGGREGATOR_SCHEMA)
-        attributes_schema["gene_aggregator"] = aggr_schema
 
         validator = cls.ConfigValidator(schema)
         validator.allow_unknown = True
 
-        logger.debug(f"validating gene score annotator config: {config}")
+        logger.debug("validating gene score annotator config: %s", config)
         if not validator.validate(config):
             logger.error(
-                f"wrong config format for gene score annotator: "
-                f"{validator.errors}")
+                "wrong config format for gene score annotator: %s",
+                validator.errors
+            )
             raise ValueError(
                 f"wrong gene score annotator config {validator.errors}")
         return cast(Dict, validator.document)

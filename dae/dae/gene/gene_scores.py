@@ -70,7 +70,7 @@ class GeneScore:
 
     @property
     def y_scale(self):
-        """Returns the scale type of the Y axis."""
+        """Return the scale type of the Y axis."""
         return self.histogram.y_scale
 
     def _load_data(self):
@@ -118,12 +118,13 @@ class GeneScore:
         return symbol_values[gene_symbol]
 
     def aggregate_gene_values(self, gene_symbols, aggregator_type=None):
+        """Aggregate values for given symbols with given aggregator type."""
         if aggregator_type is None:
             aggregator_type = self.DEFAULT_AGGREGATOR_TYPE
         aggregator = build_aggregator(aggregator_type)
 
-        for gs in gene_symbols:
-            aggregator.add(self.get_gene_value(gs), key=gs)
+        for symbol in gene_symbols:
+            aggregator.add(self.get_gene_value(symbol), key=symbol)
 
         return aggregator.get_final()
 

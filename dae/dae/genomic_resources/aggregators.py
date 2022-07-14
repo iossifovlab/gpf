@@ -12,11 +12,11 @@ class AbstractAggregator:
     def __call__(self):
         return self.get_final()
 
-    def add(self, v, **kwargs):
+    def add(self, value, **kwargs):
         self.total_count += 1
-        self._add_internal(v, **kwargs)
+        self._add_internal(value, **kwargs)
 
-    def _add_internal(self, v, **kwargs):
+    def _add_internal(self, value, **kwargs):
         raise NotImplementedError()
 
     def clear(self):
@@ -36,8 +36,8 @@ class AbstractAggregator:
     def get_used_count(self):
         return self.used_count
 
-    def __eq__(self, o: object) -> bool:
-        return cast(bool, self.get_final() == o)
+    def __eq__(self, obj: object) -> bool:
+        return cast(bool, self.get_final() == obj)
 
 
 class MaxAggregator(AbstractAggregator):
@@ -45,13 +45,13 @@ class MaxAggregator(AbstractAggregator):
         super().__init__()
         self.current_max = None
 
-    def _add_internal(self, v, **kwargs):
-        if v is None:
+    def _add_internal(self, value, **kwargs):
+        if value is None:
             return
         if self.current_max is not None:
-            self.current_max = max(self.current_max, v)
+            self.current_max = max(self.current_max, value)
         else:
-            self.current_max = v
+            self.current_max = value
 
         self.used_count += 1
 
@@ -67,13 +67,13 @@ class MinAggregator(AbstractAggregator):
         super().__init__()
         self.current_min = None
 
-    def _add_internal(self, v, **kwargs):
-        if v is None:
+    def _add_internal(self, value, **kwargs):
+        if value is None:
             return
         if self.current_min is not None:
-            self.current_min = min(self.current_min, v)
+            self.current_min = min(self.current_min, value)
         else:
-            self.current_min = v
+            self.current_min = value
 
         self.used_count += 1
 
@@ -89,11 +89,11 @@ class MeanAggregator(AbstractAggregator):
         super().__init__()
         self.sum = 0
 
-    def _add_internal(self, v, **kwargs):
-        if v is None:
+    def _add_internal(self, value, **kwargs):
+        if value is None:
             return
 
-        self.sum += v
+        self.sum += value
         self.used_count += 1
 
     def _clear_internal(self):
@@ -110,9 +110,9 @@ class ConcatAggregator(AbstractAggregator):
         super().__init__()
         self.out = ""
 
-    def _add_internal(self, v, **kwargs):
-        if v is not None:
-            self.out += str(v)
+    def _add_internal(self, value, **kwargs):
+        if value is not None:
+            self.out += str(value)
             self.used_count += 1
 
     def _clear_internal(self):
@@ -128,11 +128,11 @@ class ConcatAggregator(AbstractAggregator):
 class MedianAggregator(AbstractAggregator):
     def __init__(self):
         super().__init__()
-        self.values = list()
+        self.values = []
 
-    def _add_internal(self, v, **kwargs):
-        if v is not None:
-            self.values.append(v)
+    def _add_internal(self, value, **kwargs):
+        if value is not None:
+            self.values.append(value)
             self.used_count += 1
 
     def _clear_internal(self):
@@ -142,38 +142,38 @@ class MedianAggregator(AbstractAggregator):
         self.values.sort()
         print(self.values)
         if len(self.values) % 2 == 1:
-            return self.values[math.floor(len(self.values)/2)]
-        else:
-            first = self.values[int(len(self.values)/2)-1]
-            second = self.values[int(len(self.values)/2)]
-            if isinstance(first, str):
-                assert isinstance(second, str)
-                return first + second
-            else:
-                return (first + second) / 2
+            return self.values[math.floor(len(self.values) / 2)]
+
+        first = self.values[int(len(self.values) / 2) - 1]
+        second = self.values[int(len(self.values) / 2)]
+        if isinstance(first, str):
+            assert isinstance(second, str)
+            return first + second
+
+        return (first + second) / 2
 
 
 class ModeAggregator(AbstractAggregator):
     def __init__(self):
         super().__init__()
-        self.value_counts = dict()
+        self.value_counts = {}
 
-    def _add_internal(self, v, **kwargs):
-        if v is not None:
-            if v not in self.value_counts:
-                self.value_counts[v] = 0
-            self.value_counts[v] += 1
+    def _add_internal(self, value, **kwargs):
+        if value is not None:
+            if value not in self.value_counts:
+                self.value_counts[value] = 0
+            self.value_counts[value] += 1
             self.used_count += 1
 
     def _clear_internal(self):
         self.value_counts.clear()
 
     def get_final(self):
-        count_values = dict()
+        count_values = {}
         current_max = None
         for value, count in self.value_counts.items():
             if count not in count_values:
-                count_values[count] = list()
+                count_values[count] = []
 
             count_values[count].append(value)
 
@@ -189,12 +189,12 @@ class ModeAggregator(AbstractAggregator):
 class JoinAggregator(AbstractAggregator):
     def __init__(self, separator):
         super().__init__()
-        self.values = list()
+        self.values = []
         self.separator = separator
 
-    def _add_internal(self, v, **kwargs):
-        if v is not None:
-            self.values.append(str(v))
+    def _add_internal(self, value, **kwargs):
+        if value is not None:
+            self.values.append(str(value))
             self.used_count += 1
 
     def _clear_internal(self):
@@ -207,11 +207,11 @@ class JoinAggregator(AbstractAggregator):
 class ListAggregator(AbstractAggregator):
     def __init__(self):
         super().__init__()
-        self.values = list()
+        self.values = []
 
-    def _add_internal(self, v, **kwargs):
-        if v is not None:
-            self.values.append(v)
+    def _add_internal(self, value, **kwargs):
+        if value is not None:
+            self.values.append(value)
             self.used_count += 1
 
     def _clear_internal(self):
@@ -224,11 +224,11 @@ class ListAggregator(AbstractAggregator):
 class DictAggregator(AbstractAggregator):
     def __init__(self):
         super().__init__()
-        self.values = dict()
+        self.values = {}
 
-    def _add_internal(self, v, **kwargs):
-        if v is not None:
-            self.values[kwargs["key"]] = v
+    def _add_internal(self, value, **kwargs):
+        if value is not None:
+            self.values[kwargs["key"]] = value
             self.used_count += 1
 
     def _clear_internal(self):
@@ -289,8 +289,8 @@ def create_aggregator(aggregator_def):
     aggregator_class = get_aggregator_class(aggregator_name)
     if "args" in aggregator_def:
         return aggregator_class(*aggregator_def["args"])
-    else:
-        return aggregator_class()
+
+    return aggregator_class()
 
 
 def build_aggregator(aggregator_type):

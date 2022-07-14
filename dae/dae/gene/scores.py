@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 class GenomicScoresDb:
     """Genomic scores DB allowing access to genomic scores histograms."""
 
-    def __init__(self, grr, scores, cache_dir=None):
+    def __init__(self, grr, scores):
         self.grr = grr
 
         self.scores = {}

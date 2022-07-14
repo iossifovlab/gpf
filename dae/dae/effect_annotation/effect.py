@@ -210,6 +210,7 @@ class AnnotationEffect:  # pylint: disable=too-many-instance-attributes
 
     @classmethod
     def lgd_gene_effects(cls, effects: List[AnnotationEffect]):
+        """Filter and return a mapping of gene to effects by the LGD group."""
         gene_effects = zip(*cls.gene_effects(effects))
         result = []
         for gene_effect in gene_effects:
@@ -238,80 +239,82 @@ class EffectFactory(object):
 
     @classmethod
     def create_effect_with_tm(cls, effect_name, transcript_model):
-        ef = cls.create_effect(effect_name)
-        ef.gene = transcript_model.gene
-        ef.strand = transcript_model.strand
+        effect = cls.create_effect(effect_name)
+        effect.gene = transcript_model.gene
+        effect.strand = transcript_model.strand
         try:
-            ef.transcript_id = transcript_model.tr_name
+            effect.transcript_id = transcript_model.tr_name
         except AttributeError:
-            ef.transcript_id = transcript_model.tr_id
+            effect.transcript_id = transcript_model.tr_id
 
-        return ef
+        return effect
 
     @classmethod
     def create_effect_with_request(cls, effect_name, request):
-        ef = cls.create_effect_with_tm(effect_name, request.transcript_model)
-        ef.mRNA_length = request.get_exonic_length()
-        ef.mRNA_position = request.get_exonic_position()
-        return ef
+        effect = cls.create_effect_with_tm(
+            effect_name, request.transcript_model
+        )
+        effect.mRNA_length = request.get_exonic_length()
+        effect.mRNA_position = request.get_exonic_position()
+        return effect
 
     @classmethod
     def create_effect_with_prot_length(cls, effect_name, request):
-        ef = cls.create_effect_with_request(effect_name, request)
-        ef.prot_length = request.get_protein_length()
-        return ef
+        effect = cls.create_effect_with_request(effect_name, request)
+        effect.prot_length = request.get_protein_length()
+        return effect
 
     @classmethod
     def create_effect_with_prot_pos(cls, effect_name, request):
-        ef = cls.create_effect_with_prot_length(effect_name, request)
+        effect = cls.create_effect_with_prot_length(effect_name, request)
         start_prot, _ = request.get_protein_position()
-        ef.prot_pos = start_prot
-        return ef
+        effect.prot_pos = start_prot
+        return effect
 
     @classmethod
     def create_effect_with_aa_change(cls, effect_name, request):
-        ef = cls.create_effect_with_prot_pos(effect_name, request)
+        effect = cls.create_effect_with_prot_pos(effect_name, request)
         # ef.prot_pos, _ = request.get_protein_position()
 
         ref_aa, alt_aa = request.get_amino_acids()
-        ef.aa_change = "{}->{}".format("".join(ref_aa), "".join(alt_aa))
+        effect.aa_change = "{}->{}".format("".join(ref_aa), "".join(alt_aa))
 
-        ef.ref_aa = ref_aa
-        ef.alt_aa = alt_aa
+        effect.ref_aa = ref_aa
+        effect.alt_aa = alt_aa
 
-        return ef
+        return effect
 
     @classmethod
     def create_intronic_non_coding_effect(
         cls, effect_type, request, start, end, index
     ):
-        ef = cls.create_effect_with_prot_length(effect_type, request)
+        effect = cls.create_effect_with_prot_length(effect_type, request)
         dist_left = request.variant.position - start - 1
         dist_right = end - request.variant.ref_position_last
-        ef.dist_from_coding = min(dist_left, dist_right)
+        effect.dist_from_coding = min(dist_left, dist_right)
 
-        ef.how_many_introns = len(request.transcript_model.exons) - 1
-        ef.intron_length = end - start - 1
+        effect.how_many_introns = len(request.transcript_model.exons) - 1
+        effect.intron_length = end - start - 1
         if request.transcript_model.strand == "+":
-            ef.dist_from_acceptor = dist_right
-            ef.dist_from_donor = dist_left
-            ef.which_intron = index
+            effect.dist_from_acceptor = dist_right
+            effect.dist_from_donor = dist_left
+            effect.which_intron = index
         else:
-            ef.dist_from_acceptor = dist_left
-            ef.dist_from_donor = dist_right
-            ef.which_intron = ef.how_many_introns - index + 1
-        return ef
+            effect.dist_from_acceptor = dist_left
+            effect.dist_from_donor = dist_right
+            effect.which_intron = effect.how_many_introns - index + 1
+        return effect
 
     @classmethod
     def create_intronic_effect(cls, effect_type, request, start, end, index):
-        ef = cls.create_intronic_non_coding_effect(
+        effect = cls.create_intronic_non_coding_effect(
             effect_type, request, start, end, index
         )
         if request.transcript_model.strand == "+":
-            ef.prot_pos = request.get_protein_position_for_pos(end)
+            effect.prot_pos = request.get_protein_position_for_pos(end)
         else:
-            ef.prot_pos = request.get_protein_position_for_pos(start)
-        return ef
+            effect.prot_pos = request.get_protein_position_for_pos(start)
+        return effect
 
 
 class EffectGene:

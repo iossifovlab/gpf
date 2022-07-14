@@ -1,25 +1,10 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 
-import tempfile
-import shutil
-
 import pytest
 
 from dae.gene.scores import GenomicScoresDb
 from dae.genomic_resources.testing import build_testing_repository
 from dae.genomic_resources.repository import GR_CONF_FILE_NAME
-
-
-@pytest.fixture
-def temp_cache_dir(request):
-    dirname = tempfile.mkdtemp(suffix="_scores", prefix="cache_")
-
-    def fin():
-        shutil.rmtree(dirname)
-
-    request.addfinalizer(fin)
-
-    return dirname
 
 
 @pytest.fixture(scope="session")
@@ -42,7 +27,7 @@ def scores_repo():
                 "  - id: phastCons100\n"
                 "    index: 3\n"
                 "    type: float\n"
-                "    desc: \"phastCons100 desc\"\n"
+                "    desc: \'phastCons100 desc\'\n"
                 "histograms:\n"
                 " - score: phastCons100\n"
                 "   bins: 100\n"
@@ -78,11 +63,10 @@ def scores_repo():
     return sets_repo
 
 
-def test_genomic_scores_db(scores_repo, temp_cache_dir):
+def test_genomic_scores_db(scores_repo):
     db = GenomicScoresDb(
         scores_repo,
-        [("phastCons", "phastCons100")],
-        temp_cache_dir
+        [("phastCons", "phastCons100")]
     )
     assert len(db.get_scores()) == 1
     assert "phastCons100" in db

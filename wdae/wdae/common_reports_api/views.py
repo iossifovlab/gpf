@@ -1,5 +1,4 @@
 import json
-import itertools
 from django.http.response import StreamingHttpResponse
 from rest_framework import status
 from rest_framework.response import Response
@@ -9,7 +8,6 @@ from datasets_api.permissions import user_has_permission
 from query_base.query_base import QueryBaseView
 
 from dae.pedigrees.family import FamiliesData
-from dae.utils.dae_utils import join_line
 
 
 class VariantReportsView(QueryBaseView):
