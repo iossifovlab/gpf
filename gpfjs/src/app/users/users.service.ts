@@ -14,7 +14,6 @@ const oboe = require('oboe');
 
 @Injectable()
 export class UsersService {
-  private readonly logoutUrl = 'users/logout';
   private readonly userInfoUrl = 'users/get_user_info';
   private readonly registerUrl = 'users/register';
   private readonly resetPasswordUrl = 'users/reset_password';
