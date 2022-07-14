@@ -451,12 +451,16 @@ class GPFInstance:
             if self.dae_config.annotation is None:
                 self._annotation_pipeline = build_annotation_pipeline(
                     [], grr_repository=self.grr)
+                return self._annotation_pipeline
                 # TODO: write a test to check that this (or the correct
                 # version) works.
+
             config_filename = self.dae_config.annotation.conf_file
             if not os.path.exists(config_filename):
                 logger.warning(
-                    f"missing annotation configuration: {config_filename}")
+                    "missing annotation configuration: %s",
+                    config_filename
+                )
                 return None
             self._annotation_pipeline = \
                 build_annotation_pipeline(
