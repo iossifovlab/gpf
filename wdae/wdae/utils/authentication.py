@@ -16,9 +16,11 @@ class GPFOAuth2Authentication(OAuth2Authentication):
             raise exceptions.AuthenticationFailed(
                 "Invalid or expired OAuth token."
             )
-        else:
+        elif retval is not None:
             user, auth = retval
             if user is None:
                 # handle federation users, set the user to the app owner
                 user = auth.application.user
             return user, auth
+        else:
+            return retval  # no user authenticated, just pass on
