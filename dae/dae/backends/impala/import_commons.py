@@ -81,8 +81,10 @@ def construct_import_annotation_pipeline(
 
     grr = gpf_instance.grr
     assert os.path.exists(config_filename), config_filename
-    return build_annotation_pipeline(
+    pipeline = build_annotation_pipeline(
         pipeline_config_file=config_filename, grr_repository=grr)
+    # pipeline.open()  # FIXME:
+    return pipeline
 
 
 def construct_import_effect_annotator(gpf_instance):
@@ -1416,6 +1418,7 @@ class Variants2ParquetTool:
         annotation_pipeline = construct_import_annotation_pipeline(
             gpf_instance, annotation_configfile=argv.annotation_config,
         )
+
         if annotation_pipeline is not None:
             variants_loader = AnnotationPipelineDecorator(
                 variants_loader, annotation_pipeline
