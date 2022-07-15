@@ -22,6 +22,7 @@ from dae.genomic_resources.fsspec_protocol import \
 from dae.genomic_resources.testing import \
     build_testing_protocol, tabix_to_resource
 from dae.genomic_resources.test_tools import convert_to_tab_separated
+from dae.genomic_resources import build_genomic_resource_repository
 
 
 logger = logging.getLogger(__name__)
@@ -105,23 +106,22 @@ def http_server(request):
 #         yield s
 
 
-@pytest.fixture(scope="module")
-def resources_http_server(fixture_dirname):
-    http_port = 16500
+@pytest.fixture
+def resources_http_server(http_server, fixture_dirname):
     directory = fixture_dirname("genomic_resources")
 
-    http_server = HTTPRepositoryServer(http_port, directory)
-    http_server.start()
-    with http_server.ready:
-        http_server.ready.wait()
+    return http_server(directory)
 
-    logger.info(
-        "HTTP repository test server started: %s", http_server.server_address)
 
-    yield http_server
+@pytest.fixture
+def grr_http(resources_http_server):  # pylint: disable=unused-argument
+    repositories = {
+        "id": "test_grr",
+        "type": "url",
+        "url": f"http://localhost:{resources_http_server.http_port}"
+    }
 
-    http_server.httpd.shutdown()
-    http_server.join()
+    return build_genomic_resource_repository(repositories)
 
 
 @pytest.fixture

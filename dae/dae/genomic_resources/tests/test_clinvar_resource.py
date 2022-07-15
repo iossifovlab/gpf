@@ -9,6 +9,11 @@ def clinvar_vcf(grr_fixture):
     return ClinVarVcf(grr_fixture.get_resource("clinvar"))
 
 
+@pytest.fixture(scope="function")
+def clinvar_http(grr_http):
+    return ClinVarVcf(grr_http.get_resource("clinvar"))
+
+
 def test_clinvarvcf_init(clinvar_vcf):
     assert isinstance(clinvar_vcf.vcf, VariantFile)
 
@@ -50,3 +55,8 @@ def test_clinvar_vcf_get_header_info(clinvar_vcf):
 def test_close(clinvar_vcf):
     clinvar_vcf.close()
     assert clinvar_vcf.vcf.closed is True
+
+
+@pytest.mark.skip(reason="Fixture hangs on pysam.VariantFile from urls")
+def test_clinvar_resource_http(clinvar_http):
+    print("ready")
