@@ -1,0 +1,9 @@
+---
+
+type: clinvar_resource
+
+filename: clinvar.vcf.gz
+index_filename: clinvar.vcf.gz.tbi
+
+meta: |
+  TODO
