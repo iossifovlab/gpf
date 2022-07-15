@@ -95,6 +95,15 @@ class CachingProtocol(ReadOnlyRepositoryProtocol):
         return self.local_protocol.open_tabix_file(
             resource, filename, index_filename)
 
+    def open_vcf_file(self, resource, filename, index_filename=None):
+        self._refresh_resource_file(resource, filename)
+        if index_filename is None:
+            index_filename = f"{filename}.tbi"
+        self._refresh_resource_file(resource, index_filename)
+
+        return self.local_protocol.open_vcf_file(
+            resource, filename, index_filename)
+
     def file_exists(self, resource, filename) -> bool:
         self._refresh_resource_file(resource, filename)
 
