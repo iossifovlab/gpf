@@ -1,8 +1,9 @@
+"""Factory for creation of annotation pipeline."""
+
 import logging
+from typing import List, Dict
 
 import yaml
-
-from typing import List, Dict
 
 from dae.genomic_resources import build_genomic_resource_repository
 from dae.genomic_resources.repository import GenomicResourceRepo
@@ -30,9 +31,11 @@ ANNOTATOR_BUILDER_REGISTRY = {
 
 
 class AnnotationConfigParser:
+    """Parser for annotation configuration."""
 
     @classmethod
     def normalize(cls, pipeline_config: List[Dict]) -> List[Dict]:
+        """Return a normalized annotation pipeline configuration."""
         result = []
 
         for config in pipeline_config:
@@ -79,7 +82,7 @@ def build_annotation_pipeline(
         grr_repository: GenomicResourceRepo = None,
         grr_repository_file: str = None,
         grr_repository_definition: dict = None) -> AnnotationPipeline:
-
+    """Build an annotation pipeline."""
     if pipeline_config_file is not None:
         assert pipeline_config is None
         assert pipeline_config_str is None
@@ -107,7 +110,7 @@ def build_annotation_pipeline(
             annotator_type = annotator_config["annotator_type"]
         except KeyError as ex:
             raise ValueError(
-                "The pipeline config element has not annotator_type!") from ex
+                "The pipeline config element has no annotator_type!") from ex
         try:
             builder = ANNOTATOR_BUILDER_REGISTRY[annotator_type]
         except KeyError as ex:

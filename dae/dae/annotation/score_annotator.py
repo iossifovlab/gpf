@@ -59,7 +59,7 @@ class VariantScoreAnnotatorBase(Annotator):
         result = []
         for score in self.score.score_columns.values():
             result.append({
-                "name": score.id,
+                "name": score.score_id,
                 "type": score.type,
                 "desc": score.desc
             })
