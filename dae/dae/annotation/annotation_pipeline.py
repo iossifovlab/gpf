@@ -15,7 +15,7 @@ from dae.annotation.schema import Schema
 logger = logging.getLogger(__name__)
 
 
-class AnnotationPipeline():
+class AnnotationPipeline:
     """Provides annotation pipeline abstraction."""
 
     def __init__(
@@ -44,6 +44,7 @@ class AnnotationPipeline():
         self._annotation_schema = None
 
     def annotate(self, annotatable: Annotatable) -> dict:
+        """Apply all annotators to an annotatable."""
         context: dict = {}
         for annotator in self.annotators:
             attributes = annotator.annotate(annotatable, context)
@@ -58,6 +59,26 @@ class AnnotationPipeline():
 
         return context
 
+    def open(self) -> AnnotationPipeline:
+        for annotator in self.annotators:
+            annotator.open()
+        return self
+
     def close(self):
         for annotator in self.annotators:
-            annotator.close()
+            try:
+                annotator.close()
+            except Exception:  # pylint: disable=broad-except
+                logger.error(
+                    "exception while closing annotator %s",
+                    annotator.config, exc_info=True)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, exc_tb):
+        if exc_type is not None:
+            logger.error(
+                "exception during annotation: %s, %s, %s",
+                exc_type, exc_value, exc_tb, exc_info=True)
+        self.close()

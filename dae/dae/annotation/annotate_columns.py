@@ -66,6 +66,8 @@ def cli(raw_args: list[str] = None) -> None:
     print(*(hcs + annotation_attributes),
           sep=args.output_separator, file=out_file)
 
+    pipeline.open()
+
     for line in in_file:
         cs = line.strip("\n\r").split(args.input_separator)
         record = dict(zip(hcs, cs))

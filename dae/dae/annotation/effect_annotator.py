@@ -107,6 +107,12 @@ class EffectAnnotatorAdapter(Annotator):
     def close(self):
         pass
 
+    def open(self):  # FIXME:
+        return self
+
+    def is_open(self):  # FIXME:
+        return True
+
     def _not_found(self, attributes):
         for attr in self.get_annotation_config():
             attributes[attr.destination] = ""

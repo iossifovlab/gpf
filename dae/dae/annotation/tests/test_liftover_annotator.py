@@ -87,10 +87,10 @@ def test_pipeline_liftover(
 
     pipeline = build_annotation_pipeline(
         pipeline_config_file=annotation_config, grr_repository=grr_fixture)
-
-    allele = Allele.build_vcf_allele("chr1", 69094, "G", "A")
-    attributes = pipeline.annotate(allele.get_annotatable())
-    assert attributes.get("mpc") is not None
+    with pipeline.open() as work_pipeline:
+        allele = Allele.build_vcf_allele("chr1", 69094, "G", "A")
+        attributes = work_pipeline.annotate(allele.get_annotatable())
+        assert attributes.get("mpc") is not None
 
 
 @pytest.mark.parametrize("chrom,pos,ref,alt", [

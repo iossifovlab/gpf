@@ -1,4 +1,6 @@
 """Provides base class for annotators."""
+from __future__ import annotations
+
 import logging
 import abc
 
@@ -128,6 +130,14 @@ class Annotator(abc.ABC):
     @abc.abstractmethod
     def close(self):
         """Close all resources used by the annotator."""
+
+    @abc.abstractmethod
+    def open(self) -> Annotator:
+        """Prepare all resources needed by the annotator."""
+
+    @abc.abstractmethod
+    def is_open(self) -> bool:
+        """Check if an annotator is open and ready."""
 
     def _empty_result(self) -> Dict[str, Any]:
         result: Dict[str, Any] = {}

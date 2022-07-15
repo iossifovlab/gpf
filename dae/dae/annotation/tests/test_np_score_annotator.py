@@ -1,7 +1,8 @@
 # pylint: disable=redefined-outer-name,C0114,C0116,protected-access
 
-import pytest
 import textwrap
+
+import pytest
 
 from dae.genomic_resources import build_genomic_resource_repository
 
@@ -84,7 +85,8 @@ def test_np_score_annotator(
 
     # pipeline.get_schema -> ["attribute", "type", "resource", "scores"]
     # pipeline.annotate_allele(sa) -> {("a1": v1), "a2": v2}}
-    result = pipeline.annotate(annotatable)
+    with pipeline.open() as work_pipeline:
+        result = work_pipeline.annotate(annotatable)
 
     print(annotatable, result)
     assert result.get("test") == pytest.approx(expected, rel=1e-2), annotatable

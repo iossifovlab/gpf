@@ -7,7 +7,7 @@ import logging
 from dataclasses import dataclass
 from numbers import Number
 
-from typing import Generator, List, Tuple, cast, Type, Dict, Any
+from typing import Generator, List, Tuple, cast, Type, Dict, Any, Optional
 
 
 from . import GenomicResource
@@ -58,11 +58,15 @@ class ScoreLine:
 class GenomicScore(abc.ABC):
     """Genomic scores base class."""
 
-    def __init__(self, config, table, score_columns, special_columns):
-        self.config = config
-        self.table = table
-        self.score_columns = score_columns
-        self.special_columns = special_columns
+    def __init__(self, resource):
+        self.resource = resource
+        self.config = resource.get_config()
+        self.config["id"] = resource.resource_id
+        self.score_columns = _configure_score_columns(self.config)
+        self.special_columns = _configure_special_columns(
+            extra_special_columns=self.get_extra_special_columns())
+
+        self.table = None
 
     LONG_JUMP_THRESHOLD = 5000
     ACCESS_SWITCH_THRESHOLD = 1500
@@ -80,14 +84,63 @@ class GenomicScore(abc.ABC):
         return {
             "attributes": [
                 {"source": score, "destination": score}
-                for score in self.score_columns.keys()]
+                for score in self.score_columns]
         }
+
+    @staticmethod
+    def get_extra_special_columns():
+        return None
 
     def get_score_config(self, score_id):
         return self.score_columns.get(score_id)
 
     def close(self):
         self.table.close()
+        self.table = None
+
+    def is_open(self):
+        return self.table is not None
+
+    def open(self) -> GenomicScore:
+        """Open genomic score resource and returns it."""
+        if self.is_open():
+            return self
+
+        self.table = open_genome_position_table(
+            self.resource,
+            self.config["table"])
+        self._configure_score_columns_indices()
+        self._configure_special_columns_indices()
+        return self
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, exc_tb):
+        if exc_type is not None:
+            logger.error(
+                "exception while working with genomic score: %s, %s, %s",
+                exc_type, exc_value, exc_tb, exc_info=True)
+        self.close()
+
+    def _configure_score_columns_indices(self):
+        for score_conf in self.config["scores"]:
+            if "index" in score_conf:
+                col_index = int(score_conf["index"])
+            elif "name" in score_conf:
+                col_index = self.table.get_column_names().index(
+                    score_conf["name"])
+            else:
+                raise ValueError(
+                    "The score configuration must have a column specified")
+
+            score_def = self.score_columns[score_conf["id"]]
+            score_def.col_index = col_index
+
+    def _configure_special_columns_indices(self):
+        for key, spec_def in self.special_columns.items():
+            col_index = self.table.get_special_column_index(key)
+            spec_def.col_index = col_index
 
     @staticmethod
     def _line_to_begin_end(line):
@@ -116,6 +169,9 @@ class GenomicScore(abc.ABC):
             yield ScoreLine(record, self.score_columns, self.special_columns)
 
     def get_all_chromosomes(self):
+        if not self.is_open():
+            raise ValueError(f"genomic score <{self.score_id()}> is not open")
+
         return self.table.get_chromosomes()
 
     def get_all_scores(self):
@@ -125,6 +181,9 @@ class GenomicScore(abc.ABC):
                      scores: List[str]) \
             -> Generator[dict[str, Number], None, None]:
         """Return score values in a region."""
+        if not self.is_open():
+            raise ValueError(f"genomic score <{self.score_id()}> is not open")
+
         if chrom not in self.get_all_chromosomes():
             raise ValueError(
                 f"{chrom} is not among the available chromosomes.")
@@ -152,6 +211,9 @@ class GenomicScore(abc.ABC):
 
 class PositionScore(GenomicScore):
     """Defines position genomic score."""
+
+    def open(self) -> PositionScore:
+        return cast(PositionScore, super().open())
 
     def fetch_scores(
             self, chrom: str, position: int, scores: List[str] = None):
@@ -225,6 +287,9 @@ class PositionScore(GenomicScore):
 
 class NPScore(GenomicScore):
     """Defines nucleotide-position genomic score."""
+
+    def open(self) -> NPScore:
+        return cast(NPScore, super().open())
 
     @staticmethod
     def get_extra_special_columns():
@@ -336,6 +401,9 @@ class NPScore(GenomicScore):
 class AlleleScore(GenomicScore):
     """Defines allele genomic scores."""
 
+    def open(self) -> AlleleScore:
+        return cast(AlleleScore, super().open())
+
     @classmethod
     def required_columns(cls):
         return ("chrom", "pos_begin", "pos_end", "variant")
@@ -374,7 +442,9 @@ class AlleleScore(GenomicScore):
             for sc in requested_scores}
 
 
-def _configure_score_columns(table, config, ):
+def _configure_score_columns(
+        # table,
+        config):
     """Parse score configuration."""
     scores = {}
     for score_conf in config["scores"]:
@@ -385,7 +455,7 @@ def _configure_score_columns(table, config, ):
 
             score_id: str
             desc: str
-            col_index: int
+            col_index: Optional[int]
             type: str
             value_parser: Any
             na_values: Any
@@ -393,14 +463,14 @@ def _configure_score_columns(table, config, ):
             nuc_aggregator: Any
             description: str
 
-        if "index" in score_conf:
-            col_index = int(score_conf["index"])
-        elif "name" in score_conf:
-            col_index = table.get_column_names().index(
-                score_conf["name"])
-        else:
-            raise ValueError(
-                "The score configuration must have a column specified")
+        # if "index" in score_conf:
+        #     col_index = int(score_conf["index"])
+        # elif "name" in score_conf:
+        #     col_index = table.get_column_names().index(
+        #         score_conf["name"])
+        # else:
+        #     raise ValueError(
+        #         "The score configuration must have a column specified")
 
         scr_type = score_conf.get(
             "type", config.get("default.score.type", "float"))
@@ -429,7 +499,7 @@ def _configure_score_columns(table, config, ):
         scr_def = ScoreDef(
             score_conf["id"],
             score_conf.get("desc", ""),
-            col_index,
+            None,  # col_index,
             scr_type,
             type_parsers[scr_type],
             score_conf.get(
@@ -454,7 +524,9 @@ def _configure_score_columns(table, config, ):
     return scores
 
 
-def _configure_special_columns(table, extra_special_columns=None):
+def _configure_special_columns(
+        # table,
+        extra_special_columns=None):
     special_clmns = {"chrom": str, "pos_begin": int, "pos_end": int}
     if extra_special_columns is not None:
         special_clmns.update(extra_special_columns)
@@ -470,67 +542,57 @@ def _configure_special_columns(table, extra_special_columns=None):
             col_index: int
             value_parser: Any
 
-        spec_def = SpecialDef(key, table.get_special_column_index(key), parser)
+        spec_def = SpecialDef(
+            key,
+            None,  # table.get_special_column_index(key),
+            parser)
         special_columns[key] = spec_def
 
     return special_columns
 
 
-def _open_genomic_score_from_resource(
+def _build_genomic_score_from_resource(
         clazz: Type[GenomicScore],
-        resource: GenomicResource,
-        extra_special_columns=None) -> GenomicScore:
+        resource: GenomicResource) -> GenomicScore:
 
-    config = resource.get_config()
-    config["id"] = resource.resource_id
-
-    table = open_genome_position_table(
-        resource, resource.get_config()["table"])
-    score_columns = _configure_score_columns(table, config)
-    special_columns = _configure_special_columns(table, extra_special_columns)
-
-    return clazz(config, table, score_columns, special_columns)
+    return clazz(resource)
 
 
-def open_position_score_from_resource(
+def build_position_score_from_resource(
         resource: GenomicResource) -> PositionScore:
-    """Open a position score genomic resource and returns a position score."""
-    result = _open_genomic_score_from_resource(
+    """Build a position score genomic resource and returns a position score."""
+    result = _build_genomic_score_from_resource(
         PositionScore,
-        resource,
-        extra_special_columns=None)
+        resource)
 
     return cast(PositionScore, result)
 
 
-def open_np_score_from_resource(
+def build_np_score_from_resource(
         resource: GenomicResource) -> NPScore:
-    """Open a NP-score genomic resource and returns a NP-score."""
-    result = _open_genomic_score_from_resource(
+    """Build a NP-score genomic resource and returns a NP-score."""
+    result = _build_genomic_score_from_resource(
         NPScore,
-        resource,
-        extra_special_columns={"reference": str, "alternative": str})
+        resource)
 
     return cast(NPScore, result)
 
 
-def open_allele_score_from_resource(
+def build_allele_score_from_resource(
         resource: GenomicResource) -> AlleleScore:
-    """Open a allele score genomic resource and returns an allele score."""
-    result = _open_genomic_score_from_resource(
+    """Build a allele score genomic resource and returns an allele score."""
+    result = _build_genomic_score_from_resource(
         AlleleScore,
-        resource,
-        extra_special_columns={"reference": str, "alternative": str})
-
+        resource)
     return cast(AlleleScore, result)
 
 
-def open_score_from_resource(resource: GenomicResource) -> GenomicScore:
-    """Open a genomic score resource and return the coresponding score."""
+def build_score_from_resource(resource: GenomicResource) -> GenomicScore:
+    """Build a genomic score resource and return the coresponding score."""
     type_to_ctor = {
-        "position_score": open_position_score_from_resource,
-        "np_score": open_np_score_from_resource,
-        "allele_score": open_allele_score_from_resource,
+        "position_score": build_position_score_from_resource,
+        "np_score": build_np_score_from_resource,
+        "allele_score": build_allele_score_from_resource,
     }
     ctor = type_to_ctor.get(resource.get_type())
     if ctor is None:

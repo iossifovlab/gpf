@@ -18,7 +18,7 @@ import matplotlib.pyplot as plt  # type: ignore
 from tqdm import tqdm  # type: ignore
 from dask.distributed import as_completed  # type: ignore
 
-from dae.genomic_resources.genomic_scores import open_score_from_resource
+from dae.genomic_resources.genomic_scores import build_score_from_resource
 
 logger = logging.getLogger(__name__)
 
@@ -294,16 +294,18 @@ class HistogramBuilder:
         if len(histogram_desc) == 0:
             return {}
 
-        score = open_score_from_resource(self.resource)
+        score = build_score_from_resource(self.resource).open()
+
         hist_configs = self._do_fill_min_maxes(
             client, score, histogram_desc, region_size)
 
         chrom_histograms = []
         futures = []
         for chrom, start, end in self._split_into_regions(score, region_size):
-            futures.append(client.submit(self._do_hist,
-                                         chrom, hist_configs,
-                                         start, end))
+            futures.append(client.submit(
+                self._do_hist,
+                chrom, hist_configs,
+                start, end))
         for future in tqdm(as_completed(futures), total=len(futures)):
             chrom_histograms.append(future.result())
 
@@ -332,7 +334,8 @@ class HistogramBuilder:
 
         score_names = list(histograms.keys())
 
-        score = open_score_from_resource(self.resource)
+        score = build_score_from_resource(self.resource).open()
+
         for rec in score.fetch_region(chrom, start, end, score_names):
             for scr_id, value in rec.items():
                 hist = histograms[scr_id]
@@ -384,7 +387,8 @@ class HistogramBuilder:
         return res
 
     def _min_max_for_region(self, chrom, score_ids, start, end):
-        score = open_score_from_resource(self.resource)
+        score = build_score_from_resource(self.resource).open()
+
         limits = np.iinfo(np.int64)
         res = {scr_id: [limits.max, limits.min] for scr_id in score_ids}
         for rec in score.fetch_region(chrom, start, end, score_ids):

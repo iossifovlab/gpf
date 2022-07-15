@@ -6,7 +6,7 @@ import pytest
 from dae.annotation.annotatable import VCFAllele
 from dae.genomic_resources import build_genomic_resource_repository
 from dae.genomic_resources.genomic_scores import \
-    open_position_score_from_resource
+    build_position_score_from_resource
 from dae.annotation.annotation_factory import build_annotation_pipeline
 
 
@@ -64,7 +64,7 @@ def test_position_resource_default_annotation(position_score_repo):
 
     res = position_score_repo.get_resource("position_score1")
     assert res is not None
-    score = open_position_score_from_resource(res)
+    score = build_position_score_from_resource(res)
 
     default_annotation = score.get_default_annotation()
     print(default_annotation)
@@ -150,11 +150,11 @@ def test_position_score_annotator(
     # annotator = AsynioAnnotatorRunner()
 
     # result = annotation_runner.run(pipeline, annotatable)
+    with pipeline.open() as work_pipeline:
+        result = work_pipeline.annotate(annotatable)
 
-    result = pipeline.annotate(annotatable)
-
-    print(annotatable, result)
-    assert result.get("test100") == expected
+        print(annotatable, result)
+        assert result.get("test100") == expected
 
 
 def test_position_annotator_schema(position_score_repo):
@@ -254,9 +254,10 @@ def test_position_annotator_join_aggregation(position_score_repo):
         pipeline_config_str=pipeline_config,
         grr_repository=position_score_repo)
 
-    allele = ("1", 14970, "CC", "C")
-    annotatable = VCFAllele(*allele)
-    result = pipeline.annotate(annotatable)
+    with pipeline.open() as work_pipeline:
+        allele = ("1", 14970, "CC", "C")
+        annotatable = VCFAllele(*allele)
+        result = work_pipeline.annotate(annotatable)
 
     assert result.get("test100") == "0.1, 0.1, 0.2"
 

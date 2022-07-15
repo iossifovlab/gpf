@@ -85,6 +85,12 @@ class NormalizeAlleleAnnotator(Annotator):
     def close(self):
         pass
 
+    def open(self):  # FIXME:
+        return self
+
+    def is_open(self):  # FIXME:
+        return True
+
     @classmethod
     def validate_config(cls, config: Dict) -> Dict:
         schema = {

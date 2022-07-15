@@ -8,8 +8,8 @@ from dae.genomic_resources import GenomicResource
 from dae.genomic_resources.repository import GenomicResourceProtocolRepo
 from dae.genomic_resources.genomic_scores import \
     PositionScore,\
-    open_position_score_from_resource,\
-    open_score_from_resource
+    build_position_score_from_resource,\
+    build_score_from_resource
 from dae.genomic_resources.repository_factory import \
     build_genomic_resource_repository
 from dae.genomic_resources.testing import build_test_resource, \
@@ -38,7 +38,8 @@ def test_the_simplest_position_score():
             """
     })
     assert res.get_type() == "position_score"
-    score = open_position_score_from_resource(res)
+    score: PositionScore = build_position_score_from_resource(res)
+    score.open()
 
     assert score.get_all_scores() == ["phastCons100way"]
     assert score.fetch_scores("1", 11) == {"phastCons100way": 0.03}
@@ -82,7 +83,8 @@ def test_region_score():
     })
     assert res
     assert res.get_type() == "position_score"
-    score = open_position_score_from_resource(res)
+    score = build_position_score_from_resource(res)
+    score.open()
 
     assert score.table.chrom_column_i == 0
     assert score.table.pos_begin_column_i == 1
@@ -132,7 +134,8 @@ def test_phastcons100way():
     })
     assert res
     assert res.get_type() == "position_score"
-    score = open_position_score_from_resource(res)
+    score = build_position_score_from_resource(res)
+    score.open()
 
     assert score.get_all_scores() == ["phastCons100way"]
 
@@ -164,7 +167,8 @@ def test_position_score_over_http(fixture_dirname, proto_builder):
     assert isinstance(resource, GenomicResource)
     resource = cast(GenomicResource, resource)
 
-    score = open_position_score_from_resource(resource)
+    score = build_position_score_from_resource(resource)
+    score.open()
 
     result = score.fetch_scores("1", 10918)
     assert result
@@ -194,7 +198,7 @@ def test_build_score_from_resource_with_pos_resource():
     res = repo.get_resource("pos_res")
     assert res.resource_id == "pos_res"
 
-    score = open_score_from_resource(res)
+    score = build_score_from_resource(res)
     assert isinstance(score, PositionScore)
 
 
@@ -225,7 +229,7 @@ def test_position_score_fetch_region():
             2      5          80       0.01  3
             """
     })
-    score = open_position_score_from_resource(res)
+    score = build_position_score_from_resource(res).open()
 
     assert list(score.fetch_region("1", 13, 18, ["phastCons100way"])) == \
         [{"phastCons100way": 0.02},
