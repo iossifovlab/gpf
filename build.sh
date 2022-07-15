@@ -160,10 +160,7 @@ EOT
       cd /wd; 
       /opt/conda/bin/conda run --no-capture-output -n gpf flake8 \
         --exit-zero \
-        --format=pylint --max-complexity 15 \
-        --docstring-convention pep257 \
-        --inline-quotes=double --docstring-quotes=double --multiline-quotes=double \
-        --exclude "*old*,*tmp*,*temp*,data-hg19*,gpf*,*build*" \
+        --format=pylint \
         --output-file=/wd/results/flake8_report . || true'
 
     build_run_local cp ./results/flake8_report ./test-results/

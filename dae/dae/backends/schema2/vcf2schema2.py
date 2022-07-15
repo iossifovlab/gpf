@@ -1,14 +1,13 @@
-'''
-import script similar to vcf2parquet.py 
+"""import script similar to vcf2parquet.py.
 
-# when complete add to setup.py 
-# do not inherit, create a new tool. 
+# when complete add to setup.py
+# do not inherit, create a new tool.
 # retrace steps of Variants2ParquetTool class
-'''
+"""
 
-import os 
+import os
 import sys
-import time 
+import time
 import logging
 import argparse
 from math import ceil
@@ -24,21 +23,26 @@ from dae.annotation.effect_annotator import EffectAnnotatorAdapter
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.pedigrees.loader import FamiliesLoader
 
-from dae.backends.raw.loader import AnnotationPipelineDecorator, \
-    EffectAnnotationDecorator
+from dae.backends.raw.loader import (
+    AnnotationPipelineDecorator,
+    EffectAnnotationDecorator,
+)
 
-from dae.backends.schema2.parquet_io import ParquetManager, \
-    ParquetPartitionDescriptor, NoPartitionDescriptor
+from dae.backends.schema2.parquet_io import (
+    ParquetManager,
+    ParquetPartitionDescriptor,
+    NoPartitionDescriptor,
+)
 
 logger = logging.getLogger(__name__)
+
 
 def save_study_config(dae_config, study_id, study_config, force=False):
     dirname = os.path.join(dae_config.studies.dir, study_id)
     filename = os.path.join(dirname, "{}.conf".format(study_id))
 
     if os.path.exists(filename):
-        logger.info(
-            f"configuration file already exists: {filename}")
+        logger.info(f"configuration file already exists: {filename}")
         if not force:
             logger.info("skipping overwring the old config file...")
             return
@@ -54,7 +58,8 @@ def save_study_config(dae_config, study_id, study_config, force=False):
 
 
 def construct_import_annotation_pipeline(
-        gpf_instance, annotation_configfile=None):
+    gpf_instance, annotation_configfile=None
+):
 
     if annotation_configfile is not None:
         config_filename = annotation_configfile
@@ -70,44 +75,47 @@ def construct_import_annotation_pipeline(
     grr = gpf_instance.grr
     assert os.path.exists(config_filename), config_filename
     return build_annotation_pipeline(
-        pipeline_config_file=config_filename, grr_repository=grr)
+        pipeline_config_file=config_filename, grr_repository=grr
+    )
 
 
 def construct_import_effect_annotator(gpf_instance):
     genome = gpf_instance.reference_genome
     gene_models = gpf_instance.gene_models
 
-    config = Box({
-        "annotator_type": "effect_annotator",
-        "genome": gpf_instance.dae_config.reference_genome.resource_id,
-        "gene_models": gpf_instance.dae_config.gene_models.resource_id,
-        "attributes": [
-            {
-                "source": "allele_effects",
-                "destination": "allele_effects",
-                "internal": True
-            }
-        ]
-    })
+    config = Box(
+        {
+            "annotator_type": "effect_annotator",
+            "genome": gpf_instance.dae_config.reference_genome.resource_id,
+            "gene_models": gpf_instance.dae_config.gene_models.resource_id,
+            "attributes": [
+                {
+                    "source": "allele_effects",
+                    "destination": "allele_effects",
+                    "internal": True,
+                }
+            ],
+        }
+    )
 
     effect_annotator = EffectAnnotatorAdapter(
-        config, genome=genome, gene_models=gene_models)
+        config, genome=genome, gene_models=gene_models
+    )
     return effect_annotator
 
 
 class MakefilePartitionHelper:
     def __init__(
-            self,
-            partition_descriptor,
-            genome,
-            add_chrom_prefix=None,
-            del_chrom_prefix=None):
+        self,
+        partition_descriptor,
+        genome,
+        add_chrom_prefix=None,
+        del_chrom_prefix=None,
+    ):
 
         self.genome = genome
         self.partition_descriptor = partition_descriptor
-        self.chromosome_lengths = dict(
-            self.genome.get_all_chrom_lengths()
-        )
+        self.chromosome_lengths = dict(self.genome.get_all_chrom_lengths())
 
         self._build_adjust_chrom(add_chrom_prefix, del_chrom_prefix)
 
@@ -229,7 +237,7 @@ class Variants2Schema2:
             conflict_handler="resolve",
             formatter_class=argparse.RawDescriptionHelpFormatter,
         )
-        parser.add_argument('--verbose', '-V', action='count', default=0)
+        parser.add_argument("--verbose", "-V", action="count", default=0)
 
         FamiliesLoader.cli_arguments(parser)
         cls.VARIANTS_LOADER_CLASS.cli_arguments(parser)
@@ -266,7 +274,6 @@ class Variants2Schema2:
             dest="partition_description",
             help="Path to a config file containing the partition description "
             "[default: %(default)s]",
-
         )
 
         parser.add_argument(
@@ -341,12 +348,12 @@ class Variants2Schema2:
         else:
             logging.basicConfig(level=logging.ERROR)
 
-        families_filename, families_params = \
-            FamiliesLoader.parse_cli_arguments(argv)
+        (
+            families_filename,
+            families_params,
+        ) = FamiliesLoader.parse_cli_arguments(argv)
 
-        families_loader = FamiliesLoader(
-            families_filename, **families_params
-        )
+        families_loader = FamiliesLoader(families_filename, **families_params)
         families = families_loader.load()
 
         variants_loader = cls._load_variants(argv, families, gpf_instance)
@@ -385,7 +392,8 @@ class Variants2Schema2:
                     + generator.bucket_index(argv.region_bin)
                 )
                 logger.info(
-                    f"resetting regions (rb: {argv.region_bin}): {regions}")
+                    f"resetting regions (rb: {argv.region_bin}): {regions}"
+                )
                 variants_loader.reset_regions(regions)
 
         elif argv.regions is not None:
@@ -408,15 +416,18 @@ class Variants2Schema2:
 
     @classmethod
     def _build_variants_loader_pipeline(
-            cls, gpf_instance: GPFInstance, argv, variants_loader):
+        cls, gpf_instance: GPFInstance, argv, variants_loader
+    ):
 
         effect_annotator = construct_import_effect_annotator(gpf_instance)
 
         variants_loader = EffectAnnotationDecorator(
-            variants_loader, effect_annotator)
+            variants_loader, effect_annotator
+        )
 
         annotation_pipeline = construct_import_annotation_pipeline(
-            gpf_instance, annotation_configfile=argv.annotation_config,
+            gpf_instance,
+            annotation_configfile=argv.annotation_config,
         )
         if annotation_pipeline is not None:
             variants_loader = AnnotationPipelineDecorator(
@@ -427,8 +438,10 @@ class Variants2Schema2:
 
     @classmethod
     def _load_variants(cls, argv, families, gpf_instance):
-        variants_filenames, variants_params = \
-            cls.VARIANTS_LOADER_CLASS.parse_cli_arguments(argv)
+        (
+            variants_filenames,
+            variants_params,
+        ) = cls.VARIANTS_LOADER_CLASS.parse_cli_arguments(argv)
 
         variants_loader = cls.VARIANTS_LOADER_CLASS(
             families,
@@ -476,10 +489,7 @@ class Variants2Schema2:
 
 def main(argv=sys.argv[1:], gpf_instance=None):
 
-    Variants2Schema2.main(
-        argv,
-        gpf_instance=gpf_instance
-    )
+    Variants2Schema2.main(argv, gpf_instance=gpf_instance)
 
 
 if __name__ == "__main__":

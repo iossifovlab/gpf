@@ -34,7 +34,12 @@ class Bucket:
 
 
 class ImportProject():
-    def __init__(self, import_config, base_input_dir, gpf_instance):
+    """
+    Encapsulates the import configuration. This class creates the necessary
+    objects needed to import a study (e.g. loaders, family data).
+    """
+
+    def __init__(self, import_config, base_input_dir):
         """
         Creates a new project from the provided config. It is best not to call
         this ctor directly but to use one of the provided build_* methods.
@@ -46,10 +51,9 @@ class ImportProject():
             assert len_files == 1, "Support for multiple denovo files is NYI"
 
         self._base_input_dir = base_input_dir
-        self._gpf_instance = gpf_instance
 
     @staticmethod
-    def build_from_config(import_config, base_input_dir="", gpf_instance=None):
+    def build_from_config(import_config, base_input_dir=""):
         """
         Creates a new project from the provided config. The config is first
         validated and normalized.
@@ -60,10 +64,10 @@ class ImportProject():
                                                         import_config_schema)
         normalizer = ImportConfigNormalizer()
         import_config = normalizer.normalize(import_config)
-        return ImportProject(import_config, base_input_dir, gpf_instance)
+        return ImportProject(import_config, base_input_dir)
 
     @staticmethod
-    def build_from_file(import_filename, gpf_instance=None):
+    def build_from_file(import_filename):
         """Creates a new project from the provided config filename. The file
         is first parsed, validated and normalized. The path to the file is used
         as the default input path for the project.
@@ -74,8 +78,7 @@ class ImportProject():
         base_input_dir = os.path.dirname(os.path.realpath(import_filename))
         import_config = GPFConfigParser.parse_and_interpolate_file(
             import_filename)
-        return ImportProject.build_from_config(import_config, base_input_dir,
-                                               gpf_instance)
+        return ImportProject.build_from_config(import_config, base_input_dir)
 
     def get_pedigree(self) -> FamiliesData:
         """Loads, parses and returns the pedigree data"""
@@ -93,12 +96,11 @@ class ImportProject():
     def get_import_variants_buckets(self) -> list[Bucket]:
         """Splits the input variant files into buckets allowing
         for parallel processing"""
-        types = ["denovo", "vcf", "cnv", "dae"]
         buckets = []
-        for type in types:
-            config = self.import_config["input"].get(type, None)
+        for loader_type in ["denovo", "vcf", "cnv", "dae"]:
+            config = self.import_config["input"].get(loader_type, None)
             if config is not None:
-                for bucket in self._loader_region_bins(config, type):
+                for bucket in self._loader_region_bins(config, loader_type):
                     buckets.append(bucket)
         return buckets
 
@@ -149,34 +151,33 @@ class ImportProject():
     def get_partition_description(self, work_dir=None) -> PartitionDescriptor:
         """Retrurns a partition description object as described in the import
         config"""
-        work_dir = work_dir if work_dir is not None else self.work_dir
-        if "partition_description" in self.import_config:
-            partition_desc = self.import_config["partition_description"]
-            chromosomes = partition_desc.get("region_bin", {})\
-                .get("chromosomes", None)
-            assert isinstance(chromosomes, list)
-
-            # ParquetPartitionDescriptor expects a string
-            # that gets parsed internally
-            partition_desc = deepcopy(partition_desc)
-            partition_desc["region_bin"]["chromosomes"] = \
-                ",".join(chromosomes)
-
-            return ParquetPartitionDescriptor.from_dict(
-                partition_desc,
-                work_dir
-            )
-        else:
+        if "partition_description" not in self.import_config:
             return NoPartitionDescriptor(work_dir)
 
+        work_dir = work_dir if work_dir is not None else self.work_dir
+        partition_desc = self.import_config["partition_description"]
+        chromosomes = partition_desc.get("region_bin", {})\
+            .get("chromosomes", None)
+        assert isinstance(chromosomes, list)
+
+        # ParquetPartitionDescriptor expects a string
+        # that gets parsed internally
+        partition_desc = deepcopy(partition_desc)
+        partition_desc["region_bin"]["chromosomes"] = \
+            ",".join(chromosomes)
+
+        return ParquetPartitionDescriptor.from_dict(
+            partition_desc,
+            work_dir
+        )
+
     def get_gpf_instance(self):
-        if self._gpf_instance is None:
-            instance_config = self.import_config.get("gpf_instance", {})
-            return GPFInstance(work_dir=instance_config.get("path", None))
-        else:
-            return self._gpf_instance
+        """Creates and returns a gpf instance as desribed in the config"""
+        instance_config = self.import_config.get("gpf_instance", {})
+        return GPFInstance(work_dir=instance_config.get("path", None))
 
     def get_storage(self):
+        # pylint: disable=import-outside-toplevel
         from dae.import_tools.impala_schema1 import ImpalaSchema1ImportStorage
 
         return ImpalaSchema1ImportStorage(self)
@@ -236,7 +237,8 @@ class ImportProject():
 
         return variants_loader
 
-    def _get_default_bucket_index(self, loader_type):
+    @staticmethod
+    def _get_default_bucket_index(loader_type):
         return {
             "denovo": 0,
             "vcf": 1_000_000,
@@ -248,14 +250,15 @@ class ImportProject():
     def _add_loader_prefix(params, prefix):
         res = {}
         exclude = {"add_chrom_prefix", "del_chrom_prefix", "files"}
-        for k, v in params.items():
+        for k, val in params.items():
             if k not in exclude:
-                res[prefix + k] = v
+                res[prefix + k] = val
             else:
-                res[k] = v
+                res[k] = val
         return res
 
     def _loader_region_bins(self, loader_args, loader_type):
+        # pylint: disable=too-many-locals
         reference_genome = self.get_gpf_instance().reference_genome
 
         loader = self._get_variant_loader(loader_type, reference_genome)
@@ -289,9 +292,9 @@ class ImportProject():
 
         default_bucket_index = self._get_default_bucket_index(loader_type)
         index = 0
-        for rb, regions in variants_targets.items():
+        for region_bin, regions in variants_targets.items():
             bucket_index = default_bucket_index + index
-            yield Bucket(loader_type, rb, regions, bucket_index)
+            yield Bucket(loader_type, region_bin, regions, bucket_index)
             index += 1
 
     def _get_processing_region_length(self, loader_type):
@@ -312,7 +315,11 @@ class ImportProject():
 
 
 class ImportConfigNormalizer:
-    def normalize(self, import_config):
+    """Class to normalize import configs. Most of the normalization is done
+    by Cerberus but it fails short in a few cases. This class picks up the
+    slack"""
+    def normalize(self, import_config: dict):
+        """Normalizes the import config"""
         config = deepcopy(import_config)
         self._map_for_key(config, "region_length", self._int_shorthand)
         self._map_for_key(config, "chromosomes", self._normalize_chrom_list)
@@ -325,11 +332,11 @@ class ImportConfigNormalizer:
 
     @classmethod
     def _map_for_key(cls, config, key, func):
-        for k, v in config.items():
+        for k, val in config.items():
             if k == key:
-                config[k] = func(v)
-            elif isinstance(v, dict):
-                cls._map_for_key(v, key, func)
+                config[k] = func(val)
+            elif isinstance(val, dict):
+                cls._map_for_key(val, key, func)
 
     @staticmethod
     def _int_shorthand(obj):
@@ -384,6 +391,7 @@ class AbstractImportStorage:
 
 
 def main():
+    """Entry point for import tools when invoked as a cli tool"""
     parser = argparse.ArgumentParser(description="Import datasets into GPF")
     parser.add_argument("-f", "--config", type=str,
                         help="Path to the import configuration")
@@ -402,9 +410,8 @@ def main():
             run(args.config, executor)
 
 
-def run(import_config_fn, executor=SequentialExecutor(), gpf_instance=None):
-    project = ImportProject.build_from_file(import_config_fn,
-                                            gpf_instance=gpf_instance)
+def run(import_config_fn, executor=SequentialExecutor()):
+    project = ImportProject.build_from_file(import_config_fn)
     run_with_project(project, executor)
 
 

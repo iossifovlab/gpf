@@ -1,26 +1,31 @@
 import logging
 import os
-from dae.backends.impala.parquet_io import ParquetManager
+import toml
+from dae.backends.impala.parquet_io import ParquetManager, \
+    ParquetPartitionDescriptor, PartitionDescriptor
 from dae.import_tools.import_tools import AbstractImportStorage
 from dae.import_tools.task_graph import TaskGraph
+from dae.pedigrees.family import FamiliesData
 from dae.utils import fs_utils
-import toml
 
 
 logger = logging.getLogger(__file__)
 
 
 class Schema1ParquetWriter:
+    """Implements writing variants and pedigrees in schema1 parquet files"""
+
     @staticmethod
     def write_variant(variants_loader, bucket, gpf_instance, project,
                       out_dir):
+        "Write a variant to the corresponding parquet files"
         partition_description = project.get_partition_description(
             work_dir=out_dir)
 
         if bucket.region_bin is not None and bucket.region_bin != "none":
             logger.info(
-                f"resetting regions (rb: {bucket.region_bin}): "
-                f"{bucket.regions}")
+                "resetting regions (rb: %s): %s",
+                bucket.region_bin, bucket.regions)
             variants_loader.reset_regions(bucket.regions)
 
         variants_loader = project.build_variants_loader_pipeline(
@@ -28,7 +33,7 @@ class Schema1ParquetWriter:
         )
 
         rows = project.get_row_group_size(bucket)
-        logger.debug(f"argv.rows: {rows}")
+        logger.debug("argv.rows: %s", rows)
 
         ParquetManager.variants_to_parquet(
             variants_loader,
@@ -38,8 +43,10 @@ class Schema1ParquetWriter:
         )
 
     @staticmethod
-    def write_pedigree(families, out_dir, partition_description):
-        if partition_description:
+    def write_pedigree(families: FamiliesData, out_dir: str,
+                       partition_description: PartitionDescriptor):
+        """Write FamiliesData to a pedigree parquet file"""
+        if isinstance(partition_description, ParquetPartitionDescriptor):
             if partition_description.family_bin_size > 0:
                 families = partition_description \
                     .add_family_bins_to_families(families)
@@ -123,8 +130,8 @@ class ImpalaSchema1ImportStorage(AbstractImportStorage):
         hdfs_pedigree_file = \
             genotype_storage.default_pedigree_hdfs_filename(project.study_id)
 
-        logger.info(f"HDFS variants dir: {hdfs_variants_dir}")
-        logger.info(f"HDFS pedigree file: {hdfs_pedigree_file}")
+        logger.info("HDFS variants dir: %s", hdfs_variants_dir)
+        logger.info("HDFS pedigree file: %s", hdfs_pedigree_file)
 
         partition_description = project.get_partition_description()
 
@@ -148,9 +155,9 @@ class ImpalaSchema1ImportStorage(AbstractImportStorage):
                                           [self.project], [])
 
         bucket_tasks = []
-        for b in self.project.get_import_variants_buckets():
-            task = graph.create_task(f"Task {b}", self._do_write_variant,
-                                     [self.project, b], [])
+        for bucket in self.project.get_import_variants_buckets():
+            task = graph.create_task(f"Task {bucket}", self._do_write_variant,
+                                     [self.project, bucket], [])
             bucket_tasks.append(task)
 
         if self.project.has_destination():

@@ -1,49 +1,52 @@
 import time
-import json 
+import json
 import logging
-import numpy as np 
 from contextlib import closing
 import configparser
+import numpy as np
+from google.cloud import bigquery
 from dae.pedigrees.family import FamiliesData
 from dae.variants.attributes import Role, Status, Sex
-from dae.utils.variant_utils import mat2str
 from dae.backends.schema2.base_query_builder import Dialect
 from dae.backends.schema2.family_builder import FamilyQueryBuilder
 from dae.backends.schema2.summary_builder import SummaryQueryBuilder
 from dae.backends.schema2.base_query_director import QueryDirector
 from dae.variants.variant import SummaryVariantFactory
 from dae.variants.family_variant import FamilyVariant
-from google.cloud import bigquery
 
 logger = logging.getLogger(__name__)
+
 
 class BigQueryDialect(Dialect):
     def __init__(self, ns: str = None):
         super().__init__(ns=ns)
 
-    def add_unnest_in_join(self) -> bool:
-        return True 
-    
-    def int_type(self) -> str:
+    @staticmethod
+    def add_unnest_in_join() -> bool:
+        return True
+
+    @staticmethod
+    def int_type() -> str:
         return "INT64"
 
-    def float_type(self) -> str:
+    @staticmethod
+    def float_type() -> str:
         return "FLOAT64"
 
 
 class BigQueryVariants:
-
     def __init__(
-            self,
-            gcp_project_id,
-            db,
-            summary_allele_table,
-            family_variant_table,
-            pedigree_table,
-            meta_table, 
-            gene_models=None):
+        self,
+        gcp_project_id,
+        db,
+        summary_allele_table,
+        family_variant_table,
+        pedigree_table,
+        meta_table,
+        gene_models=None,
+    ):
 
-        super(BigQueryVariants, self).__init__()
+        super().__init__()
         assert db, db
         assert pedigree_table, pedigree_table
 
@@ -53,16 +56,19 @@ class BigQueryVariants:
         self.db = db
         self.start_time = time.time()
 
-        # meta table: partition settings 
-        self.meta_table = meta_table 
+        # meta table: partition settings
+        self.meta_table = meta_table
 
         # family and summary tables
         self.summary_allele_table = summary_allele_table
         self.family_variant_table = family_variant_table
-        self.summary_allele_schema= self._fetch_schema(summary_allele_table)
+        self.summary_allele_schema = self._fetch_schema(summary_allele_table)
         self.family_variant_schema = self._fetch_schema(family_variant_table)
-        self.combined_columns = {**self.family_variant_schema, **self.summary_allele_schema}
-        
+        self.combined_columns = {
+            **self.family_variant_schema,
+            **self.summary_allele_schema,
+        }
+
         # pedigree tables
         self.pedigree_table = pedigree_table
         self.pedigree_schema = self._fetch_schema(self.pedigree_table)
@@ -71,8 +77,10 @@ class BigQueryVariants:
 
         # serializer
         # VariantSchema = namedtuple('VariantSchema', 'col_names')
-        # self.variants_schema = VariantSchema(col_names=list(self.combined_columns))
-        # self.serializer = AlleleParquetSerializer(variants_schema=self.variants_schema)
+        # self.variants_schema = VariantSchema(
+        #     col_names=list(self.combined_columns))
+        # self.serializer = AlleleParquetSerializer(
+        #     variants_schema=self.variants_schema)
 
         self.gene_models = gene_models
         assert gene_models is not None
@@ -80,25 +88,37 @@ class BigQueryVariants:
         # self._fetch_tblproperties()
         # hardcoding relevant for specific dataset
         # pass in table_properties OR table in datastore
-        _tbl_props = self._fetch_tblproperties(self.meta_table) 
+        _tbl_props = self._fetch_tblproperties(self.meta_table)
 
         self.table_properties = {
-            "region_length": int(_tbl_props['region_bin']['region_length']),
-            "chromosomes": list(map(lambda c: c.strip(), _tbl_props['region_bin']['chromosomes'].split(","))),
-            "family_bin_size": int(_tbl_props['family_bin']['family_bin_size']),
-            "rare_boundary": int(_tbl_props['frequency_bin']['rare_boundary']),
-            "coding_effect_types": set([
-                lambda s: s.strip() \
-                for s in _tbl_props['coding_bin']['coding_effect_types'].split(",")
-            ])
+            "region_length": int(_tbl_props["region_bin"]["region_length"]),
+            "chromosomes": list(
+                map(
+                    lambda c: c.strip(),
+                    _tbl_props["region_bin"]["chromosomes"].split(","),
+                )
+            ),
+            "family_bin_size": int(
+                _tbl_props["family_bin"]["family_bin_size"]
+            ),
+            "rare_boundary": int(_tbl_props["frequency_bin"]["rare_boundary"]),
+            "coding_effect_types": set(
+                [
+                    lambda s: s.strip()
+                    for s in _tbl_props["coding_bin"][
+                        "coding_effect_types"
+                    ].split(",")
+                ]
+            ),
         }
-
 
     def _fetch_tblproperties(self, meta_table):
         q = """SELECT value FROM {db}.{meta_table}
                WHERE key = 'partition_description'
                LIMIT 1
-            """.format(db=self.db, meta_table=meta_table)
+            """.format(
+            db=self.db, meta_table=meta_table
+        )
 
         result = self.client.query(q).result()
         config = configparser.ConfigParser()
@@ -114,11 +134,9 @@ class BigQueryVariants:
             db=self.db, table=table
         )
         df = self.client.query(q).result().to_dataframe()
-        
+
         records = df[["column_name", "data_type"]].to_records()
-        schema = {
-            col_name: col_type for (_, col_name, col_type) in records
-        }
+        schema = {col_name: col_type for (_, col_name, col_type) in records}
         return schema
 
     def _fetch_pedigree(self):
@@ -145,9 +163,7 @@ class BigQueryVariants:
             "phenotype": "phenotype",
         }
         if "not_sequenced" in self.pedigree_schema:
-            columns = {
-                "not_sequenced": "not_sequenced"
-            }
+            columns = {"not_sequenced": "not_sequenced"}
 
         ped_df = ped_df.rename(columns=columns)
         ped_df.role = ped_df.role.apply(lambda v: Role(v))
@@ -157,31 +173,40 @@ class BigQueryVariants:
         return ped_df
 
     def _summary_variants_iterator(
-            self,
-            regions=None,
-            genes=None,
-            effect_types=None,
-            family_ids=None,
-            person_ids=None,
-            inheritance=None,
-            roles=None,
-            sexes=None,
-            variant_type=None,
-            real_attr_filter=None,
-            ultra_rare=None,
-            frequency_filter=None,
-            return_reference=None,
-            return_unknown=None,
-            limit=None,
-            affected_status=None):
-        
+        self,
+        regions=None,
+        genes=None,
+        effect_types=None,
+        family_ids=None,
+        person_ids=None,
+        inheritance=None,
+        roles=None,
+        sexes=None,
+        variant_type=None,
+        real_attr_filter=None,
+        ultra_rare=None,
+        frequency_filter=None,
+        return_reference=None,
+        return_unknown=None,
+        limit=None,
+        affected_status=None,
+    ):
+
         query_builder = SummaryQueryBuilder(
-                self.dialect, self.db, 
-                self.family_variant_table,self.summary_allele_table, self.pedigree_table, 
-                self.family_variant_schema, self.summary_allele_schema, self.table_properties, 
-                self.pedigree_schema,self.pedigree_df, self.families, 
-                gene_models=self.gene_models, 
-                do_join_affected=False)
+            self.dialect,
+            self.db,
+            self.family_variant_table,
+            self.summary_allele_table,
+            self.pedigree_table,
+            self.family_variant_schema,
+            self.summary_allele_schema,
+            self.table_properties,
+            self.pedigree_schema,
+            self.pedigree_df,
+            self.families,
+            gene_models=self.gene_models,
+            do_join_affected=False,
+        )
 
         director = QueryDirector(query_builder)
 
@@ -201,17 +226,20 @@ class BigQueryVariants:
             return_reference=return_reference,
             return_unknown=return_unknown,
             limit=limit,
-            affected_status=affected_status
+            affected_status=affected_status,
         )
 
-        # query = sqlparse.format(query_builder.product, reindent=True, keyword_case='upper')
-        query = query_builder.product 
+        # query = sqlparse.format(query_builder.product, reindent=True,
+        #                         keyword_case='upper')
+        query = query_builder.product
         result = self.client.query(query)
 
         for row in result:
             try:
-                sv_record = json.loads(row.summary_data) 
-                sv = SummaryVariantFactory.summary_variant_from_records(sv_record)            
+                sv_record = json.loads(row.summary_data)
+                sv = SummaryVariantFactory.summary_variant_from_records(
+                    sv_record
+                )
                 if sv is None:
                     continue
                 yield sv
@@ -221,32 +249,41 @@ class BigQueryVariants:
                 continue
 
     def _family_variants_iterator(
-            self,
-            regions=None,
-            genes=None,
-            effect_types=None,
-            family_ids=None,
-            person_ids=None,
-            inheritance=None,
-            roles=None,
-            sexes=None,
-            variant_type=None,
-            real_attr_filter=None,
-            ultra_rare=None,
-            frequency_filter=None,
-            return_reference=None,
-            return_unknown=None,
-            limit=None,
-            affected_status=None):
+        self,
+        regions=None,
+        genes=None,
+        effect_types=None,
+        family_ids=None,
+        person_ids=None,
+        inheritance=None,
+        roles=None,
+        sexes=None,
+        variant_type=None,
+        real_attr_filter=None,
+        ultra_rare=None,
+        frequency_filter=None,
+        return_reference=None,
+        return_unknown=None,
+        limit=None,
+        affected_status=None,
+    ):
 
         do_join_affected = affected_status is not None
         query_builder = FamilyQueryBuilder(
-                self.dialect, self.db, 
-                self.family_variant_table,self.summary_allele_table, self.pedigree_table, 
-                self.family_variant_schema, self.summary_allele_schema, self.table_properties, 
-                self.pedigree_schema,self.pedigree_df, self.families, 
-                gene_models=self.gene_models, 
-                do_join_affected=do_join_affected)
+            self.dialect,
+            self.db,
+            self.family_variant_table,
+            self.summary_allele_table,
+            self.pedigree_table,
+            self.family_variant_schema,
+            self.summary_allele_schema,
+            self.table_properties,
+            self.pedigree_schema,
+            self.pedigree_df,
+            self.families,
+            gene_models=self.gene_models,
+            do_join_affected=do_join_affected,
+        )
 
         director = QueryDirector(query_builder)
 
@@ -266,7 +303,7 @@ class BigQueryVariants:
             return_reference=return_reference,
             return_unknown=return_unknown,
             limit=limit,
-            affected_status=affected_status
+            affected_status=affected_status,
         )
 
         query = query_builder.product
@@ -283,14 +320,17 @@ class BigQueryVariants:
 
         for row in result:
             try:
-                sv_record = json.loads(row.summary_data) 
+                sv_record = json.loads(row.summary_data)
                 fv_record = json.loads(row.family_data)
-                
+
                 fv = FamilyVariant(
-                    SummaryVariantFactory.summary_variant_from_records(sv_record),
+                    SummaryVariantFactory.summary_variant_from_records(
+                        sv_record
+                    ),
                     self.families[fv_record["family_id"]],
                     np.array(fv_record["genotype"]),
-                    np.array(fv_record["best_state"]))
+                    np.array(fv_record["best_state"]),
+                )
 
                 if fv is None:
                     continue
@@ -299,74 +339,24 @@ class BigQueryVariants:
                 logger.error("unable to deserialize family variant (BQ)")
                 logger.exception(ex)
                 continue
-    
+
     def query_summary_variants(
-            self,
-            regions=None,
-            genes=None,
-            effect_types=None,
-            family_ids=None,
-            person_ids=None,
-            inheritance=None,
-            roles=None,
-            sexes=None,
-            variant_type=None,
-            real_attr_filter=None,
-            ultra_rare=None,
-            frequency_filter=None,
-            return_reference=None,
-            return_unknown=None,
-            limit=None):
-
-        if limit is None:
-            count = -1
-        else:
-            count = limit
-            limit = 10 * limit
-
-        with closing(self._summary_variants_iterator(
-                regions=regions,
-                genes=genes,
-                effect_types=effect_types,
-                family_ids=family_ids,
-                person_ids=person_ids,
-                inheritance=inheritance,
-                roles=roles,
-                sexes=sexes,
-                variant_type=variant_type,
-                real_attr_filter=real_attr_filter,
-                ultra_rare=ultra_rare,
-                frequency_filter=frequency_filter,
-                return_reference=return_reference,
-                return_unknown=return_unknown,
-                limit=limit)) as sv_iterator:
-            
-            for sv in sv_iterator:
-                if sv is None:
-                    continue
-                yield sv
-                count -= 1
-                if count == 0:
-                    break
-
-    def query_variants(
-            self,
-            regions=None,
-            genes=None,
-            effect_types=None,
-            family_ids=None,
-            person_ids=None,
-            inheritance=None,
-            roles=None,
-            sexes=None,
-            variant_type=None,
-            real_attr_filter=None,
-            ultra_rare=None,
-            frequency_filter=None,
-            return_reference=None,
-            return_unknown=None,
-            limit=None,
-            affected_status=None
+        self,
+        regions=None,
+        genes=None,
+        effect_types=None,
+        family_ids=None,
+        person_ids=None,
+        inheritance=None,
+        roles=None,
+        sexes=None,
+        variant_type=None,
+        real_attr_filter=None,
+        ultra_rare=None,
+        frequency_filter=None,
+        return_reference=None,
+        return_unknown=None,
+        limit=None,
     ):
 
         if limit is None:
@@ -375,7 +365,8 @@ class BigQueryVariants:
             count = limit
             limit = 10 * limit
 
-        with closing(self._family_variants_iterator(
+        with closing(
+            self._summary_variants_iterator(
                 regions=regions,
                 genes=genes,
                 effect_types=effect_types,
@@ -391,7 +382,63 @@ class BigQueryVariants:
                 return_reference=return_reference,
                 return_unknown=return_unknown,
                 limit=limit,
-                affected_status=affected_status)) as fv_iterator:
+            )
+        ) as sv_iterator:
+
+            for sv in sv_iterator:
+                if sv is None:
+                    continue
+                yield sv
+                count -= 1
+                if count == 0:
+                    break
+
+    def query_variants(
+        self,
+        regions=None,
+        genes=None,
+        effect_types=None,
+        family_ids=None,
+        person_ids=None,
+        inheritance=None,
+        roles=None,
+        sexes=None,
+        variant_type=None,
+        real_attr_filter=None,
+        ultra_rare=None,
+        frequency_filter=None,
+        return_reference=None,
+        return_unknown=None,
+        limit=None,
+        affected_status=None,
+    ):
+
+        if limit is None:
+            count = -1
+        else:
+            count = limit
+            limit = 10 * limit
+
+        with closing(
+            self._family_variants_iterator(
+                regions=regions,
+                genes=genes,
+                effect_types=effect_types,
+                family_ids=family_ids,
+                person_ids=person_ids,
+                inheritance=inheritance,
+                roles=roles,
+                sexes=sexes,
+                variant_type=variant_type,
+                real_attr_filter=real_attr_filter,
+                ultra_rare=ultra_rare,
+                frequency_filter=frequency_filter,
+                return_reference=return_reference,
+                return_unknown=return_unknown,
+                limit=limit,
+                affected_status=affected_status,
+            )
+        ) as fv_iterator:
 
             for v in fv_iterator:
                 if v is None:
@@ -401,5 +448,4 @@ class BigQueryVariants:
                 if count == 0:
                     break
 
-        logger.debug(f"[DONE] FAMILY VARIANTS QUERY")
-
+        logger.debug("[DONE] FAMILY VARIANTS QUERY")

@@ -1,5 +1,4 @@
 import os
-import io
 import sys
 import time
 import re
@@ -7,7 +6,6 @@ import hashlib
 import itertools
 import logging
 import json
-from copy import copy
 
 import toml
 from box import Box
@@ -19,8 +17,11 @@ import configparser
 
 from dae.utils.variant_utils import GENOTYPE_TYPE
 from dae.variants.attributes import TransmissionType
-from dae.variants.family_variant import FamilyAllele, FamilyVariant, \
-    calculate_simple_best_state
+from dae.variants.family_variant import (
+    FamilyAllele,
+    FamilyVariant,
+    calculate_simple_best_state,
+)
 from dae.variants.variant import SummaryVariant, SummaryAllele
 from dae.backends.schema2.serializers import AlleleParquetSerializer
 
@@ -28,6 +29,9 @@ logger = logging.getLogger(__name__)
 
 
 class PartitionDescriptor:
+    family_alleles_dirname: str = "family"
+    summary_alleles_dirname: str = "summary"
+
     def __init__(self):
         pass
 
@@ -75,26 +79,32 @@ class NoPartitionDescriptor(PartitionDescriptor):
 
     def summary_filename(self, summary_allele):
         bucket_index = summary_allele.get_attribute("bucket_index")
-        filename = f"nopart_{bucket_index:0>6}_summary_alleles.parquet" 
-        return os.path.join(self.output, filename) 
+        filename = f"nopart_{bucket_index:0>6}_summary_alleles.parquet"
+        return os.path.join(
+            self.output, self.summary_alleles_dirname, filename
+        )
 
     def family_filename(self, family_allele):
         bucket_index = family_allele.get_attribute("bucket_index")
         filename = f"nopart_{bucket_index:0>6}_family_alleles.parquet"
-        return os.path.join(self.output, filename) 
+        return os.path.join(self.output, self.family_alleles_dirname, filename)
 
     def write_partition_configuration(self):
-        return None
+        partition_desc_table = pa.Table.from_pydict(
+            {"key": [], "value": []},
+            schema=pa.schema({"key": pa.string(), "value": pa.string()}),
+        )
+
+        pq.write_table(
+            partition_desc_table, os.path.join(self.output, "meta.parquet")
+        )
 
     def generate_file_access_glob(self):
-        """
-        Generates a glob for accessing every parquet file in the partition
-        """
+        """Return a glob for accessing every parquet file in the partition."""
         return "*variants.parquet"
 
     def variants_filename_basedir(self, filename):
-        regexp = re.compile(
-            "^(?P<basedir>.+)/(?P<prefix>.+)variants.parquet$")
+        regexp = re.compile("^(?P<basedir>.+)/(?P<prefix>.+)variants.parquet$")
         match = regexp.match(filename)
         if not match:
             return None
@@ -108,13 +118,14 @@ class NoPartitionDescriptor(PartitionDescriptor):
 
 class ParquetPartitionDescriptor(PartitionDescriptor):
     def __init__(
-            self,
-            chromosomes,
-            region_length,
-            family_bin_size=0,
-            coding_effect_types=[],
-            rare_boundary=0,
-            root_dirname=""):
+        self,
+        chromosomes,
+        region_length,
+        family_bin_size=0,
+        coding_effect_types=[],
+        rare_boundary=0,
+        root_dirname="",
+    ):
 
         super(ParquetPartitionDescriptor, self).__init__()
         self.output = root_dirname
@@ -159,9 +170,8 @@ class ParquetPartitionDescriptor(PartitionDescriptor):
     def rare_boundary(self):
         return self._rare_boundary
 
-
-    # reoganize to path 
-    # def from_string 
+    # reoganize to path
+    # def from_string
 
     @staticmethod
     def from_config(config_path, root_dirname=""):
@@ -246,19 +256,19 @@ class ParquetPartitionDescriptor(PartitionDescriptor):
 
         return frequency_bin
 
-    def summary_filename(self, summary_allele): 
-        filepath = os.path.join(self.output, "summary") 
+    def summary_filename(self, summary_allele):
+        filepath = os.path.join(self.output, self.summary_alleles_dirname)
         filename = "summary"
 
         current_bin = self._evaluate_region_bin(summary_allele)
         filepath = os.path.join(filepath, f"region_bin={current_bin}")
         filename += f"_region_bin_{current_bin}"
-        
+
         if self._rare_boundary > 0:
             current_bin = self._evaluate_frequency_bin(summary_allele)
             filepath = os.path.join(filepath, f"frequency_bin={current_bin}")
             filename += f"_frequency_bin_{current_bin}"
-         
+
         if len(self._coding_effect_types) > 0:
             current_bin = self._evaluate_coding_bin(summary_allele)
             filepath = os.path.join(filepath, f"coding_bin={current_bin}")
@@ -271,9 +281,9 @@ class ParquetPartitionDescriptor(PartitionDescriptor):
         return os.path.join(filepath, filename)
 
     def family_filename(self, family_allele):
-        filepath = os.path.join(self.output, "family") 
+        filepath = os.path.join(self.output, self.family_alleles_dirname)
         filename = "family"
-         
+
         summary_allele = family_allele
 
         current_bin = self._evaluate_region_bin(summary_allele)
@@ -294,7 +304,7 @@ class ParquetPartitionDescriptor(PartitionDescriptor):
             current_bin = self._evaluate_family_bin(family_allele)
             filepath = os.path.join(filepath, f"family_bin={current_bin}")
             filename += f"_family_bin_{current_bin}"
-        
+
         bucket_index = family_allele.get_attribute("bucket_index")
         filename += f"_bucket_index_{bucket_index:0>6}"
         filename += ".parquet"
@@ -312,19 +322,15 @@ class ParquetPartitionDescriptor(PartitionDescriptor):
             frequency_bins = [
                 ("frequency_bin", "1"),
                 ("frequency_bin", "2"),
-                ("frequency_bin", "3")
+                ("frequency_bin", "3"),
             ]
             partition_bins.append(frequency_bins)
         if len(self._coding_effect_types) > 0:
-            coding_bins = [
-                ("coding_bin", "0"),
-                ("coding_bin", "1")
-            ]
+            coding_bins = [("coding_bin", "0"), ("coding_bin", "1")]
             partition_bins.append(coding_bins)
         if self._family_bin_size > 0:
             family_bins = [
-                ("family_bin", f"{fb}")
-                for fb in range(self._family_bin_size)
+                ("family_bin", f"{fb}") for fb in range(self._family_bin_size)
             ]
             partition_bins.append(family_bins)
         return partition_bins
@@ -332,12 +338,8 @@ class ParquetPartitionDescriptor(PartitionDescriptor):
     def _variants_filenames_regexp(self):
         partition_bins = self._variants_partition_bins()
         product = next(itertools.product(*partition_bins))
-        dirname_parts = [
-            f"{p[0]}=(?P<{p[0]}>.+)" for p in product
-        ]
-        filename_parts = [
-            f"{p[0]}_(?P={p[0]})" for p in product
-        ]
+        dirname_parts = [f"{p[0]}=(?P<{p[0]}>.+)" for p in product]
+        filename_parts = [f"{p[0]}_(?P={p[0]})" for p in product]
         dirname = "/".join(dirname_parts)
         dirname = os.path.join("^(?P<basedir>.+)", dirname)
         filename = "_".join(filename_parts)
@@ -384,30 +386,23 @@ class ParquetPartitionDescriptor(PartitionDescriptor):
         filename = os.path.join(self.output, "_PARTITION_DESCRIPTION")
         os.makedirs(os.path.dirname(filename), exist_ok=True)
 
-        
         with open(filename, "w") as configfile:
             config.write(configfile)
-        
+
         partition_desc_table = pa.Table.from_pydict(
             {
                 "key": ["partition_description"],
-                "value": [open(filename, "r").read()]
+                "value": [open(filename, "r").read()],
             },
-            schema = pa.schema({
-                "key": pa.string(),
-                "value":pa.string()
-            })
+            schema=pa.schema({"key": pa.string(), "value": pa.string()}),
         )
 
         pq.write_table(
-            partition_desc_table, 
-            os.path.join(self.output, "meta.parquet")
-        ) 
+            partition_desc_table, os.path.join(self.output, "meta.parquet")
+        )
 
     def generate_file_access_glob(self):
-        """
-        Generates a glob for accessing every parquet file in the partition
-        """
+        """Return a glob for accessing every parquet file in the partition."""
         glob = "*/"
         if not self.family_bin_size == 0:
             glob += "*/"
@@ -428,20 +423,28 @@ class ParquetPartitionDescriptor(PartitionDescriptor):
 
 
 class ContinuousParquetFileWriter:
-    """
+    """A continous parquet writer.
+
     Class that automatically writes to a given parquet file when supplied
     enough data. Automatically dumps leftover data when closing into the file
     """
 
     def __init__(
-            self, filepath, variant_loader, filesystem=None, rows=100_000, schema="schema"):
+        self,
+        filepath,
+        variant_loader,
+        filesystem=None,
+        rows=100_000,
+        schema="schema",
+    ):
 
         self.filepath = filepath
         annotation_schema = variant_loader.get_attribute("annotation_schema")
         extra_attributes = variant_loader.get_attribute("extra_attributes")
         self.serializer = AlleleParquetSerializer(
-            annotation_schema, extra_attributes)
-        
+            annotation_schema, extra_attributes
+        )
+
         self.schema = getattr(self.serializer, schema)
 
         dirname = os.path.dirname(filepath)
@@ -460,12 +463,12 @@ class ContinuousParquetFileWriter:
         self._data = {name: [] for name in self.schema.names}
 
     def size(self):
-        # chromosome is not guaranteed across all schemas - Kevin 
+        # chromosome is not guaranteed across all schemas - Kevin
         # return len(self._data["chromosome"])
 
         return max([len(self._data[k]) for k in self._data.keys()])
-    
-    def build_table(self):    
+
+    def build_table(self):
         table = pa.Table.from_pydict(self._data, self.schema)
         return table
 
@@ -474,7 +477,9 @@ class ContinuousParquetFileWriter:
         self.data_reset()
 
     def append_summary_allele(self, allele, json_data):
-        data = self.serializer.build_summary_allele_batch_dict(allele, json_data)
+        data = self.serializer.build_summary_allele_batch_dict(
+            allele, json_data
+        )
 
         for k, v in self._data.items():
             v.extend(data[k])
@@ -482,44 +487,49 @@ class ContinuousParquetFileWriter:
         if self.size() >= self.rows:
             logger.info(
                 f"parquet writer {self.filepath} data flushing "
-                f"at len {self.size()}")
+                f"at len {self.size()}"
+            )
             self._write_table()
 
-    def append_family_allele(self, allele, json_data): 
-        data = self.serializer.build_family_allele_batch_dict(allele, json_data)
+    def append_family_allele(self, allele, json_data):
+        data = self.serializer.build_family_allele_batch_dict(
+            allele, json_data
+        )
 
         for k, v in self._data.items():
             v.extend(data[k])
-         
+
         if self.size() >= self.rows:
             logger.info(
                 f"parquet writer {self.filepath} data flushing "
-                f"at len {self.size()}")
+                f"at len {self.size()}"
+            )
             self._write_table()
- 
+
     def append_allele(
-            self, allele, variant_data,
-            extra_attributes_data, summary_vectors):
-        """
-        Appends the data for an entire variant to the buffer
+        self, allele, variant_data, extra_attributes_data, summary_vectors
+    ):
+        """Append the data for an entire variant to the buffer.
 
         :param list attributes: List of key-value tuples containing the data
         """
         data = self.serializer.build_allele_batch_dict(
-            allele, variant_data, extra_attributes_data, summary_vectors)
+            allele, variant_data, extra_attributes_data, summary_vectors
+        )
         for k, v in self._data.items():
             v.extend(data[k])
 
         if self.size() >= self.rows:
             logger.info(
                 f"parquet writer {self.filepath} data flushing "
-                f"at len {self.size()}")
+                f"at len {self.size()}"
+            )
             self._write_table()
 
     def close(self):
         logger.info(
-            f"closing parquet writer {self.dirname} "
-            f"at len {self.size()}")
+            f"closing parquet writer {self.dirname} " f"at len {self.size()}"
+        )
 
         if self.size() > 0:
             self._write_table()
@@ -528,14 +538,15 @@ class ContinuousParquetFileWriter:
 
 class VariantsParquetWriter:
     def __init__(
-            self,
-            variants_loader,
-            partition_descriptor,
-            bucket_index=1,
-            rows=100_000,
-            include_reference=True,
-            filesystem=None):
-            
+        self,
+        variants_loader,
+        partition_descriptor,
+        bucket_index=1,
+        rows=100_000,
+        include_reference=True,
+        filesystem=None,
+    ):
+
         self.variants_loader = variants_loader
         self.families = variants_loader.families
         self.full_variants_iterator = variants_loader.full_variants_iterator()
@@ -551,10 +562,16 @@ class VariantsParquetWriter:
         assert isinstance(partition_descriptor, PartitionDescriptor)
         self.partition_descriptor = partition_descriptor
 
-        annotation_schema = self.variants_loader.get_attribute("annotation_schema")
-        extra_attributes = self.variants_loader.get_attribute("extra_attributes")
-        self.serializer = AlleleParquetSerializer(annotation_schema, extra_attributes)
-    
+        annotation_schema = self.variants_loader.get_attribute(
+            "annotation_schema"
+        )
+        extra_attributes = self.variants_loader.get_attribute(
+            "extra_attributes"
+        )
+        self.serializer = AlleleParquetSerializer(
+            annotation_schema, extra_attributes
+        )
+
     def _setup_reference_allele(self, summary_variant, family):
         genotype = -1 * np.ones(shape=(2, len(family)), dtype=GENOTYPE_TYPE)
         best_state = calculate_simple_best_state(
@@ -604,72 +621,84 @@ class VariantsParquetWriter:
         )
 
     def _get_bin_writer_family(self, allele):
-        filename = self.partition_descriptor.family_filename(allele) 
-         
+        filename = self.partition_descriptor.family_filename(allele)
+
         if filename not in self.data_writers:
             self.data_writers[filename] = ContinuousParquetFileWriter(
-                filename, 
+                filename,
                 self.variants_loader,
                 filesystem=self.filesystem,
                 rows=self.rows,
-                schema="schema_family"
+                schema="schema_family",
             )
 
         return self.data_writers[filename]
 
-    def _get_bin_writer_summary(self, allele): 
-        filename = self.partition_descriptor.summary_filename(allele)  
+    def _get_bin_writer_summary(self, allele):
+        filename = self.partition_descriptor.summary_filename(allele)
 
         if filename not in self.data_writers:
             self.data_writers[filename] = ContinuousParquetFileWriter(
-                filename, 
+                filename,
                 self.variants_loader,
                 filesystem=self.filesystem,
                 rows=self.rows,
-                schema="schema_summary"
+                schema="schema_summary",
             )
-        
-        return self.data_writers[filename] 
+
+        return self.data_writers[filename]
 
     def _write_internal(self):
         family_variant_index = 0
         report = False
 
-        for summary_variant_index, (summary_variant, family_variants) in \
-                enumerate(self.full_variants_iterator):
+        for summary_variant_index, (
+            summary_variant,
+            family_variants,
+        ) in enumerate(self.full_variants_iterator):
 
-            # build summary json blob (concat all other alleles) INSIDE summary_variant 
-            summary_blobs_json = json.dumps(summary_variant.to_record, sort_keys=True) 
+            # build summary json blob (concat all other alleles)
+            # INSIDE summary_variant
+            summary_blobs_json = json.dumps(
+                summary_variant.to_record, sort_keys=True
+            )
 
-            # print("-" * 40, "SUMMARY VARIANT", "-" * 40) 
-            # sv_json = json.dumps(summary_variant.to_record, sort_keys=True) 
-            # sv_from_json = SummaryVariantFactory.summary_variant_from_records(json.loads(sv_json))
-            # sv2_json = json.dumps(sv_from_json.to_record,  sort_keys=True) 
-            # assert summary_variant.to_record == json.loads(sv_json) 
-            # assert sv_json == sv2_json  
- 
-            for summary_allele in summary_variant.alleles: 
+            # print("-" * 40, "SUMMARY VARIANT", "-" * 40)
+            # sv_json = json.dumps(summary_variant.to_record, sort_keys=True)
+            # sv_from_json = \
+            #     SummaryVariantFactory.summary_variant_from_records(
+            #         json.loads(sv_json))
+            # sv2_json = json.dumps(sv_from_json.to_record,  sort_keys=True)
+            # assert summary_variant.to_record == json.loads(sv_json)
+            # assert sv_json == sv2_json
+
+            for summary_allele in summary_variant.alleles:
                 extra_atts = {
                     "bucket_index": self.bucket_index,
                 }
-                summary_allele.update_attributes(extra_atts) 
-                summary_writer = self._get_bin_writer_summary(summary_allele)  
-                summary_writer.append_summary_allele(summary_allele, summary_blobs_json)
-            
+                summary_allele.update_attributes(extra_atts)
+                summary_writer = self._get_bin_writer_summary(summary_allele)
+                summary_writer.append_summary_allele(
+                    summary_allele, summary_blobs_json
+                )
+
             for fv in family_variants:
                 family_variant_index += 1
 
                 # print("-" * 40, "FAMILY VARIANT", "-" * 40)
-                # fv_json = json.dumps(family_variant.to_record, sort_keys=True)
-                # fv_from_json_obj = json.loads(fv_json) 
-                # assert family_variant.to_record == fv_from_json_obj 
-                # fv_from_json = FamilyVariantFactory.family_variant_from_record(
-                #   sv_from_json, 
-                #   self.variants_loader.families[fv_from_json_obj["family_id"]], 
-                #   fv_from_json_obj) 
-            
-                if fv.is_unknown() or fv.is_reference(): 
-                    continue 
+                # fv_json = json.dumps(family_variant.to_record,
+                #                      sort_keys=True)
+                # fv_from_json_obj = json.loads(fv_json)
+                # assert family_variant.to_record == fv_from_json_obj
+                # fv_from_json = \
+                #     FamilyVariantFactory.family_variant_from_record(
+                #         sv_from_json,
+                #         self.variants_loader.families[
+                #             fv_from_json_obj["family_id"]],
+                #         fv_from_json_obj)
+
+                if fv.is_unknown() or fv.is_reference():
+                    continue
 
                 fv.summary_index = summary_variant_index
                 fv.family_index = family_variant_index
@@ -677,19 +706,23 @@ class VariantsParquetWriter:
                 for family_allele in fv.alleles:
                     extra_atts = {
                         "bucket_index": self.bucket_index,
-                        "family_index": family_variant_index
+                        "family_index": family_variant_index,
                     }
                     family_allele.update_attributes(extra_atts)
-                                        
+
                 family_data_json = json.dumps(fv.to_record, sort_keys=True)
 
                 for family_allele in fv.alt_alleles:
-                    family_bin_writer = self._get_bin_writer_family(family_allele)
-                    family_bin_writer.append_family_allele(family_allele, family_data_json) 
+                    family_bin_writer = self._get_bin_writer_family(
+                        family_allele
+                    )
+                    family_bin_writer.append_family_allele(
+                        family_allele, family_data_json
+                    )
 
             # DEBUG
             # if family_variant_index % 20 == 0: break
-           
+
             if summary_variant_index % 1000 == 0:
                 report = True
 
@@ -730,7 +763,7 @@ class VariantsParquetWriter:
         schema_summary = self.serializer.schema_summary
         schema_family = self.serializer.schema_family
         config["summary_schema"] = {}
-        config["family_schema"] = {} 
+        config["family_schema"] = {}
 
         for k in schema_summary.names:
             v = schema_summary.field(k)
@@ -739,7 +772,7 @@ class VariantsParquetWriter:
         for k in schema_family.names:
             v = schema_family.field(k)
             config["family_schema"][k] = str(v.type)
-        
+
         if os.path.isdir(self.partition_descriptor.output):
             path = self.partition_descriptor.output
         else:
@@ -767,7 +800,9 @@ class VariantsParquetWriter:
 
 class ParquetManager:
     @staticmethod
-    def build_parquet_filenames(prefix, study_id=None, bucket_index=0, suffix=None):
+    def build_parquet_filenames(
+        prefix, study_id=None, bucket_index=0, suffix=None
+    ):
 
         assert bucket_index >= 0
 
@@ -788,18 +823,21 @@ class ParquetManager:
         variants_dirname = os.path.join(prefix, "variants")
 
         summary_filename = os.path.join(
-            variants_dirname, f"{study_id}{filesuffix}_summary_alleles.parquet") 
+            variants_dirname, f"{study_id}{filesuffix}_summary_alleles.parquet"
+        )
 
         family_filename = os.path.join(
-            variants_dirname, f"{study_id}{filesuffix}_family_alleles.parquet")
+            variants_dirname, f"{study_id}{filesuffix}_family_alleles.parquet"
+        )
 
         pedigree_filename = os.path.join(
-            prefix, "pedigree", f"{study_id}{filesuffix}_pedigree.parquet")
+            prefix, "pedigree", f"{study_id}{filesuffix}_pedigree.parquet"
+        )
 
         conf = {
             "variants_dirname": variants_dirname,
             "family_alleles": family_filename,
-            "summary_alleles": summary_filename, 
+            "summary_alleles": summary_filename,
             "pedigree": pedigree_filename,
         }
 
@@ -816,8 +854,12 @@ class ParquetManager:
 
     @staticmethod
     def variants_to_parquet(
-            variants_loader, partition_descriptor,
-            bucket_index=1, rows=100_000, include_reference=False):
+        variants_loader,
+        partition_descriptor,
+        bucket_index=1,
+        rows=100_000,
+        include_reference=False,
+    ):
 
         # assert variants_loader.get_attribute("annotation_schema") is not None
 
@@ -828,7 +870,8 @@ class ParquetManager:
             partition_descriptor,
             bucket_index=bucket_index,
             rows=rows,
-            include_reference=include_reference)
+            include_reference=include_reference,
+        )
 
         variants_writer.write_dataset()
         elapsed = time.time() - start
@@ -877,6 +920,7 @@ def add_missing_parquet_fields(pps, ped_df):
 
 
 def save_ped_df_to_parquet(ped_df, filename, filesystem=None):
+    """Save ped_df as a parquet file named filename."""
     ped_df = ped_df.copy()
 
     ped_df.role = ped_df.role.apply(lambda r: r.value)

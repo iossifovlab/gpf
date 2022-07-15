@@ -11,19 +11,20 @@ from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.import_tools import import_tools
 
 
-def test_import_task_bin_size(gpf_instance_2019, tmpdir):
+def test_import_task_bin_size(gpf_instance_2019, tmpdir, mocker,
+                              resources_dir):
     # Create the import config and set tmpdir as work_dir
-    input_dir = join(
-        os.path.dirname(os.path.realpath(__file__)),
-        "resources", "import_task_bin_size")
-    config_fn = join(input_dir, "import_config.yaml")
+    input_dir = resources_dir / "import_task_bin_size"
+    config_fn = input_dir / "import_config.yaml"
 
     import_config = GPFConfigParser.parse_and_interpolate_file(config_fn)
     import_config["processing_config"]["work_dir"] = str(tmpdir)
 
     # Running the import
+    mocker.patch.object(import_tools.ImportProject, "get_gpf_instance",
+                        return_value=gpf_instance_2019)
     project = import_tools.ImportProject.build_from_config(
-        import_config, input_dir, gpf_instance=gpf_instance_2019)
+        import_config, input_dir)
     import_tools.run_with_project(project)
 
     # Assert the expected output files and dirs are created in the work_dir
@@ -89,7 +90,7 @@ def _assert_variants(parquet_fn, bucket_index, positions):
     assert (variants.position == positions).all()
 
 
-def test_bucket_generation(gpf_instance_2019):
+def test_bucket_generation(gpf_instance_2019, mocker):
     import_config = dict(
         input=dict(
             pedigree=dict(
@@ -118,9 +119,9 @@ def test_bucket_generation(gpf_instance_2019):
             )
         )
     )
-    project = import_tools.ImportProject.build_from_config(
-        import_config,
-        gpf_instance=gpf_instance_2019)
+    mocker.patch.object(import_tools.ImportProject, "get_gpf_instance",
+                        return_value=gpf_instance_2019)
+    project = import_tools.ImportProject.build_from_config(import_config)
     buckets = list(project._loader_region_bins({}, "denovo"))
     assert len(buckets) == 4
     assert buckets[0].regions == ["1:1-70000000"]
@@ -129,7 +130,7 @@ def test_bucket_generation(gpf_instance_2019):
     assert buckets[3].regions == ["1:210000001-249250621"]
 
 
-def test_bucket_generation_chrom_mismatch(gpf_instance_short):
+def test_bucket_generation_chrom_mismatch(gpf_instance_short, mocker):
     import_config = dict(
         input=dict(
             pedigree=dict(
@@ -158,8 +159,9 @@ def test_bucket_generation_chrom_mismatch(gpf_instance_short):
             )
         )
     )
-    project = import_tools.ImportProject.build_from_config(
-        import_config, gpf_instance=gpf_instance_short)
+    mocker.patch.object(import_tools.ImportProject, "get_gpf_instance",
+                        return_value=gpf_instance_short)
+    project = import_tools.ImportProject.build_from_config(import_config)
     buckets = list(project.get_import_variants_buckets())
     assert len(buckets) == 3
     for i in range(3):
@@ -199,7 +201,7 @@ _denovo_multi_chrom_config = dict(
 
 
 @pytest.mark.parametrize("add_chrom_prefix", [None, "chr"])
-def test_single_bucket_generation(add_chrom_prefix, gpf_instance_2019):
+def test_single_bucket_generation(add_chrom_prefix, gpf_instance_2019, mocker):
     import_config = deepcopy(_denovo_multi_chrom_config)
     import_config["processing_config"]["denovo"] = "single_bucket"
     if add_chrom_prefix:
@@ -208,8 +210,9 @@ def test_single_bucket_generation(add_chrom_prefix, gpf_instance_2019):
     else:
         prefix = ""
 
-    project = import_tools.ImportProject.build_from_config(
-        import_config, gpf_instance=gpf_instance_2019)
+    mocker.patch.object(import_tools.ImportProject, "get_gpf_instance",
+                        return_value=gpf_instance_2019)
+    project = import_tools.ImportProject.build_from_config(import_config)
     buckets = list(project._loader_region_bins({}, "denovo"))
     assert len(buckets) == 1
     assert buckets[0].regions == [f"{prefix}1", f"{prefix}2", f"{prefix}3",
@@ -217,19 +220,21 @@ def test_single_bucket_generation(add_chrom_prefix, gpf_instance_2019):
 
 
 def test_single_bucket_is_default_when_missing_processing_config(
-        gpf_instance_2019):
+        gpf_instance_2019, mocker):
     import_config = deepcopy(_denovo_multi_chrom_config)
     assert "denovo" not in import_config["processing_config"]
 
-    project = import_tools.ImportProject.build_from_config(
-        import_config, gpf_instance=gpf_instance_2019)
+    mocker.patch.object(import_tools.ImportProject, "get_gpf_instance",
+                        return_value=gpf_instance_2019)
+    project = import_tools.ImportProject.build_from_config(import_config)
     buckets = list(project._loader_region_bins({}, "denovo"))
     assert len(buckets) == 1
     assert buckets[0].regions == ["1", "2", "3", "4", "5"]
 
 
 @pytest.mark.parametrize("add_chrom_prefix", [None, "chr"])
-def test_chromosome_bucket_generation(add_chrom_prefix, gpf_instance_2019):
+def test_chromosome_bucket_generation(add_chrom_prefix, gpf_instance_2019,
+                                      mocker):
     import_config = deepcopy(_denovo_multi_chrom_config)
     import_config["processing_config"]["denovo"] = "chromosome"
     if add_chrom_prefix:
@@ -238,8 +243,9 @@ def test_chromosome_bucket_generation(add_chrom_prefix, gpf_instance_2019):
     else:
         prefix = ""
 
-    project = import_tools.ImportProject.build_from_config(
-        import_config, gpf_instance=gpf_instance_2019)
+    mocker.patch.object(import_tools.ImportProject, "get_gpf_instance",
+                        return_value=gpf_instance_2019)
+    project = import_tools.ImportProject.build_from_config(import_config)
     buckets = list(project._loader_region_bins({}, "denovo"))
     assert len(buckets) == 5
     assert buckets[0].regions == [f"{prefix}1"]
@@ -249,14 +255,15 @@ def test_chromosome_bucket_generation(add_chrom_prefix, gpf_instance_2019):
     assert buckets[4].regions == [f"{prefix}5"]
 
 
-def test_chromosome_list_bucket_generation(gpf_instance_2019):
+def test_chromosome_list_bucket_generation(gpf_instance_2019, mocker):
     import_config = deepcopy(_denovo_multi_chrom_config)
     import_config["processing_config"]["denovo"] = {
         "chromosomes": ["1", "2", "3"]
     }
 
-    project = import_tools.ImportProject.build_from_config(
-        import_config, gpf_instance=gpf_instance_2019)
+    mocker.patch.object(import_tools.ImportProject, "get_gpf_instance",
+                        return_value=gpf_instance_2019)
+    project = import_tools.ImportProject.build_from_config(import_config)
     buckets = list(project._loader_region_bins({}, "denovo"))
     assert len(buckets) == 4
     assert buckets[0].regions == ["1"]
