@@ -9,8 +9,8 @@ from dae.genomic_resources.repository import GR_CONF_FILE_NAME
 from dae.annotation.gene_score_annotator import GeneScoreAnnotator
 
 
-@pytest.fixture(scope="session")
-def scores_repo():
+@pytest.fixture
+def scores_repo(tmp_path):
     scores_repo = build_testing_repository(repo_id="scores", content={
         "LGD_rank": {
             GR_CONF_FILE_NAME: """
@@ -40,7 +40,7 @@ def scores_repo():
                 "UBR4",0.007496,59
             """)
         }
-    })
+    }, root_path=str(tmp_path))
     return scores_repo
 
 

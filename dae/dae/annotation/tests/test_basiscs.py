@@ -1,11 +1,11 @@
-# pylint: disable=redefined-outer-name,C0114,C0116,protected-access
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
 
 from dae.genomic_resources.testing import build_testing_repository
 from dae.genomic_resources.repository import GR_CONF_FILE_NAME
 from dae.annotation.annotation_factory import build_annotation_pipeline
 
 
-def test_basic():
+def test_basic(tmp_path):
     grr_repo = build_testing_repository(
         repo_id="r",
         content={
@@ -26,7 +26,8 @@ def test_basic():
                     2      8          0.01
                     """
             }
-        })
+        },
+        root_path=str(tmp_path))
     annotation_cofiguration = """
     - position_score:
         resource_id: one

@@ -128,3 +128,22 @@ def test_filesystem_genomic_sequence(fixture_dirname):
 
     seq = genome.get_sequence("X", 150001, 150050)
     assert seq == "ACCCTGACAGCCTCGTTCTAATACTATGAGGCCAAATACACTCACGTTCT"
+
+
+def test_local_genomic_sequence(fixture_dirname):
+
+    dirname = fixture_dirname(
+        "genomic_resources/hg19/"
+        "GATK_ResourceBundle_5777_b37_phiX174_short/genome")
+    proto = build_fsspec_protocol("d", dirname)
+    repo = GenomicResourceProtocolRepo(proto)
+
+    res = repo.get_resource("")
+    assert res is not None
+
+    # ref = open_reference_genome_from_resource(res)
+
+    # print(ref.get_all_chrom_lengths())
+    # assert len(ref.get_all_chrom_lengths()) == 3
+
+    # assert ref.get_chrom_length("X") == 300_000

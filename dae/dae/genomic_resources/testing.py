@@ -39,6 +39,15 @@ def _scan_for_resource_files(content_dict: dict[str, Any], parent_dirs):
 
 
 def _scan_for_resources(content_dict, parent_id):
+    name = "/".join(parent_id)
+    id_ver = parse_gr_id_version_token(name)
+    if isinstance(content_dict, dict) and id_ver and \
+            GR_CONF_FILE_NAME in content_dict and \
+            not isinstance(content_dict[GR_CONF_FILE_NAME], dict):
+        # resource found
+        resource_id, version = id_ver
+        yield "/".join([*parent_id, resource_id]), version, content_dict
+        return
 
     for name, content in content_dict.items():
         id_ver = parse_gr_id_version_token(name)
@@ -127,14 +136,15 @@ def build_test_resource(
         **kwargs) -> GenomicResource:
     """Create a resource based on content passed."""
     repo = build_testing_repository(
-        content={
-            "t": content
-        },
+        content,
+        # content={
+        #     "t": content
+        # },
         scheme=scheme,
         repo_id=repo_id,
         root_path=root_path,
         **kwargs)
-    return repo.get_resource("t")
+    return repo.get_resource("")
 
 
 def tabix_to_resource(tabix_source, resource, filename, update_repo=True):
