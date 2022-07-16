@@ -24,7 +24,7 @@ class ReferenceGenome:
 
     @property
     def chromosomes(self) -> List[str]:
-        """Returns a list of all chromosomes of the reference genome"""
+        """Return a list of all chromosomes of the reference genome."""
         return self._chromosomes
 
     def _load_genome_index(self, index_content):
@@ -43,38 +43,33 @@ class ReferenceGenome:
         self._chromosomes = list(self._index.keys())
 
     def set_open(self, index_content, sequence_file):
-        """
-        Helper method to setup working reference genome instance.
-        """
+        """Set up working reference genome instance."""
         self._sequence = sequence_file
         self._load_genome_index(index_content)
 
     def set_pars(self, pars):
-        """Helper method to setup PARS definition in the reference genome."""
+        """Set up PARS definition in the reference genome."""
         self.pars = pars
 
     def close(self):
-        """Closes reference genome sequence file-like objects"""
+        """Close reference genome sequence file-like objects."""
         self._sequence.close()
 
     def get_chrom_length(self, chrom: str) -> int:
-        """Returns the length of a specified chromosome."""
-
+        """Return the length of a specified chromosome."""
         chrom_data = self._index.get(chrom)
         if chrom_data is None:
             raise ValueError(f"can't fined chromosome {chrom}")
         return cast(int, chrom_data["length"])
 
     def get_all_chrom_lengths(self):
-        """Returns list of all chromosomes lengths."""
+        """Return list of all chromosomes lengths."""
         return [
             (key, value["length"])
             for key, value in self._index.items()]
 
     def get_sequence(self, chrom, start, stop):
-        """
-        Returns sequence of nucleotides from specified chromosome region.
-        """
+        """Return sequence of nucleotides from specified chromosome region."""
         if chrom not in self.chromosomes:
             logger.warning(
                 "chromosome %s not found in %s", chrom, self.source)
@@ -95,8 +90,7 @@ class ReferenceGenome:
         return sequence.upper()
 
     def is_pseudoautosomal(self, chrom: str, pos: int) -> bool:
-        """Returns true if specified position is pseudoautosomal."""
-
+        """Return true if specified position is pseudoautosomal."""
         def in_any_region(
                 chrom: str, pos: int, regions: List[Region]) -> bool:
             return any(map(lambda reg: reg.isin(chrom, pos), regions))
@@ -110,8 +104,7 @@ class ReferenceGenome:
 
 
 def open_reference_genome_from_file(filename) -> ReferenceGenome:
-    """Opens a reference genome from a file."""
-
+    """Open a reference genome from a file."""
     ref = ReferenceGenome(("file", filename))
     index_filename = f"{filename}.fai"
     assert os.path.exists(index_filename)
@@ -146,8 +139,7 @@ def _parse_pars(config) -> Optional[dict]:
 
 def open_reference_genome_from_resource(
         resource: Optional[GenomicResource]) -> ReferenceGenome:
-    """Opens a reference genome from resource."""
-
+    """Open a reference genome from resource."""
     if resource is None:
         raise ValueError("None resource passed")
 
