@@ -6,7 +6,8 @@ import pytest
 
 from dae.genomic_resources.test_tools import convert_to_tab_separated
 from dae.genomic_resources.testing import build_test_resource
-from dae.genomic_resources.fsspec_protocol import build_fsspec_protocol
+from dae.genomic_resources.fsspec_protocol import build_fsspec_protocol, \
+    build_local_resource
 from dae.genomic_resources.repository import GenomicResourceProtocolRepo
 
 from dae.genomic_resources.reference_genome import \
@@ -135,15 +136,16 @@ def test_local_genomic_sequence(fixture_dirname):
     dirname = fixture_dirname(
         "genomic_resources/hg19/"
         "GATK_ResourceBundle_5777_b37_phiX174_short/genome")
-    proto = build_fsspec_protocol("d", dirname)
-    repo = GenomicResourceProtocolRepo(proto)
 
-    res = repo.get_resource("")
+    res = build_local_resource(dirname, {
+        "type": "genome",
+        "filename": "chrAll.fa"
+    })
     assert res is not None
 
-    # ref = open_reference_genome_from_resource(res)
+    ref = open_reference_genome_from_resource(res)
 
-    # print(ref.get_all_chrom_lengths())
-    # assert len(ref.get_all_chrom_lengths()) == 3
+    print(ref.get_all_chrom_lengths())
+    assert len(ref.get_all_chrom_lengths()) == 3
 
-    # assert ref.get_chrom_length("X") == 300_000
+    assert ref.get_chrom_length("X") == 300_000

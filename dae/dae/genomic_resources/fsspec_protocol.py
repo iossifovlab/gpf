@@ -7,7 +7,7 @@ import logging
 import datetime
 
 from urllib.parse import urlparse
-from typing import List, Generator, cast, Union, Optional
+from typing import List, Generator, cast, Union, Optional, Dict, Any
 from dataclasses import asdict
 
 import fsspec  # type: ignore
@@ -484,3 +484,13 @@ class FsspecReadWriteProtocol(
             yaml.dump(content, outfile)
 
         return content
+
+
+def build_local_resource(
+        dirname: str, config: Dict[str, Any]) -> GenomicResource:
+    """Build a resource from a local filesystem directory."""
+    proto = build_fsspec_protocol("d", dirname)
+    resource = GenomicResource(
+        dirname, (0, ), proto,
+        config)
+    return resource
