@@ -1,4 +1,4 @@
-# pylint: disable=redefined-outer-name,C0114,C0116,protected-access
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
 
 import textwrap
 import pytest
@@ -8,8 +8,8 @@ from dae.genomic_resources.testing import build_testing_repository
 from dae.genomic_resources.repository import GR_CONF_FILE_NAME
 
 
-@pytest.fixture(scope="session")
-def scores_repo():
+@pytest.fixture
+def scores_repo(tmp_path):
     scores_repo = build_testing_repository(repo_id="scores", content={
         "RVIS_rank": {
             GR_CONF_FILE_NAME: """
@@ -69,11 +69,11 @@ def scores_repo():
                 "UBR4",0.007496,59
             """)
         }
-    })
+    }, root_path=str(tmp_path))
     return scores_repo
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 def gene_scores_db(scores_repo):
     resources = [
         scores_repo.get_resource("LGD_rank"),
