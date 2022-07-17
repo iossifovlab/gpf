@@ -1,6 +1,6 @@
 import argparse
 import logging
-from typing import Optional, cast
+from typing import Optional
 from dae.annotation.annotation_factory import build_annotation_pipeline
 from dae.annotation.annotation_pipeline import AnnotationPipeline
 from dae.genomic_resources.gene_models import GeneModels
@@ -8,7 +8,7 @@ from dae.genomic_resources.gene_models import \
     load_gene_models_from_resource
 from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.genomic_resources.reference_genome import \
-    open_reference_genome_from_resource
+    build_reference_genome_from_resource
 from dae.genomic_resources.genomic_context import get_genomic_context
 
 from dae.genomic_resources import build_genomic_resource_repository
@@ -48,14 +48,15 @@ class Context:
     def get_grr(self) -> GenomicResourceRepo:
         if self._grr is None:
             if self.args.grr_file_name:
-                logger.info("Using the GRR consigured in the file "
-                            f"{self.args.grr_file_name} as requested on the "
-                            "command line.")
+                logger.info(
+                    "Using the GRR consigured in the file "
+                    "%s as requested on the "
+                    "command line.", self.args.grr_file_name)
                 self._grr = build_genomic_resource_repository(
                     file_name=self.args.grr_file_name)
             else:
-                gc = get_genomic_context()
-                self._grr = gc.get_genomic_resource_repository()
+                context = get_genomic_context()
+                self._grr = context.get_genomic_resource_repository()
                 if self._grr is None:
                     logger.info("Using the defualt configured GRR.")
                     self._grr = build_genomic_resource_repository()
@@ -69,18 +70,21 @@ class Context:
             if self.args.pipeline == "context":
                 logger.info("Using the annotation pipeline from "
                             "the GPF instance.")
-                gc = get_genomic_context()
-                o = gc.get_context_object("annotation_pipeline")
-                if o is None:
-                    raise Exception("No annotation pipeline could be found "
-                                    "in the genomic context.")
-                if not isinstance(o, AnnotationPipeline):
-                    raise Exception("The annotation pipeline from the genomic "
-                                    " context is not an AnnotationPipeline")
-                self._pipeline = cast(AnnotationPipeline, o)
+                context = get_genomic_context()
+                pipeline = context.get_context_object("annotation_pipeline")
+                if pipeline is None:
+                    raise ValueError(
+                        "No annotation pipeline could be found "
+                        "in the genomic context.")
+                if not isinstance(pipeline, AnnotationPipeline):
+                    raise ValueError(
+                        "The annotation pipeline from the genomic "
+                        " context is not an AnnotationPipeline")
+                self._pipeline = pipeline
             else:
-                logger.info("Using the annotation pipeline from "
-                            f"the file {self.args.pipeline}.")
+                logger.info(
+                    "Using the annotation pipeline from "
+                    "the file %s.", self.args.pipeline)
                 # TODO: Add self as a context plugin.
                 self._pipeline = build_annotation_pipeline(
                     pipeline_config_file=self.args.pipeline,
@@ -90,13 +94,14 @@ class Context:
     def get_reference_genome(self) -> ReferenceGenome:
         if self._ref_genome is None:
             if self.args.reference_genome_resource_id is not None:
-                logger.info("Using the reference genome from resoruce"
-                            f" {self.args.reference_genome_resource_id} "
-                            "provided on the command line.")
+                logger.info(
+                    "Using the reference genome from resoruce "
+                    "%s provided on the command line.",
+                    self.args.reference_genome_resource_id)
                 resource = self.get_grr().get_resource(
                     self.args.reference_genome_resource_id)
 
-                self._ref_genome = open_reference_genome_from_resource(
+                self._ref_genome = build_reference_genome_from_resource(
                     resource)
             else:
                 logger.info("Using the reference genome from the context.")
@@ -109,9 +114,10 @@ class Context:
     def get_gene_models(self) -> GeneModels:
         if self._gene_models is None:
             if self.args.gene_models_resource_id is not None:
-                logger.info("Using the gene models from resoruce "
-                            f"{self.args.gene_models_resource_id} "
-                            "provided on the command line.")
+                logger.info(
+                    "Using the gene models from resoruce "
+                    "%s provided on the command line.",
+                    self.args.gene_models_resource_id)
                 resource = self.get_grr().get_resource(
                     self.args.gene_models_resource_id)
 

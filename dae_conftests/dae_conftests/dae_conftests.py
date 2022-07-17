@@ -47,7 +47,7 @@ from dae.genomic_resources.group_repository import GenomicResourceGroupRepo
 from dae.genomic_resources.gene_models import \
     load_gene_models_from_resource
 from dae.genomic_resources.reference_genome import \
-    open_reference_genome_from_resource
+    build_reference_genome_from_resource
 
 
 logger = logging.getLogger(__name__)
@@ -224,7 +224,8 @@ def _create_gpf_instance(
             if ref_genome_dir is None:
                 return super().reference_genome
             resource = self.grr.get_resource(ref_genome_dir)
-            result = open_reference_genome_from_resource(resource)
+            result = build_reference_genome_from_resource(resource)
+            result.open()
             return result
 
     instance = CustomGPFInstance(

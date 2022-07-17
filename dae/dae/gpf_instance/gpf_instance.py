@@ -5,7 +5,7 @@ import logging
 import json
 
 from dae.genomic_resources.reference_genome import ReferenceGenome, \
-    open_reference_genome_from_resource
+    build_reference_genome_from_resource
 from dae.genomic_resources.gene_models import \
     load_gene_models_from_resource
 from dae.enrichment_tool.background_facade import BackgroundFacade
@@ -87,7 +87,8 @@ class GPFInstance:
         """Returns reference genome defined in the GPFInstance config"""
         resource = self.grr.get_resource(
             self.dae_config.reference_genome.resource_id)
-        result = open_reference_genome_from_resource(resource)
+        result = build_reference_genome_from_resource(resource)
+        result.open()
         return result
 
     @property  # type: ignore

@@ -11,9 +11,9 @@ from dae.genomic_resources.fsspec_protocol import build_fsspec_protocol, \
 from dae.genomic_resources.repository import GenomicResourceProtocolRepo
 
 from dae.genomic_resources.reference_genome import \
-    open_reference_genome_from_file
+    build_reference_genome_from_file
 from dae.genomic_resources.reference_genome import \
-    open_reference_genome_from_resource
+    build_reference_genome_from_resource
 
 
 def test_basic_sequence_resoruce():
@@ -28,7 +28,8 @@ def test_basic_sequence_resoruce():
             """),
             "chr.fa.fai": "pesho\t24\t7\t10\t11\n"
         })
-    ref = open_reference_genome_from_resource(res)
+    ref = build_reference_genome_from_resource(res)
+    ref.open()
     assert ref.get_chrom_length("pesho") == 24
     assert ref.get_sequence("pesho", 1, 12) == "NNACCCAAACGG"
 
@@ -42,7 +43,8 @@ def test_genomic_sequence_resource(fixture_dirname):
     res = repo.get_resource(
         "hg19/GATK_ResourceBundle_5777_b37_phiX174_short/genome")
 
-    ref = open_reference_genome_from_resource(res)
+    ref = build_reference_genome_from_resource(res)
+    ref.open()
 
     print(ref.get_all_chrom_lengths())
     assert len(ref.get_all_chrom_lengths()) == 3
@@ -80,7 +82,8 @@ def test_genomic_sequence_resource_http(fixture_dirname, proto_builder):
     res = repo.get_resource(
         "hg19/GATK_ResourceBundle_5777_b37_phiX174_short/genome")
 
-    ref = open_reference_genome_from_resource(res)
+    ref = build_reference_genome_from_resource(res)
+    ref.open()
 
     print(ref.get_all_chrom_lengths())
     assert len(ref.get_all_chrom_lengths()) == 3
@@ -103,13 +106,14 @@ def test_genomic_sequence_resource_http(fixture_dirname, proto_builder):
 
 
 def test_filesystem_genomic_sequence(fixture_dirname):
-    genome = open_reference_genome_from_file(
+    genome = build_reference_genome_from_file(
         os.path.join(
             fixture_dirname("genomic_resources"),
             "hg19/GATK_ResourceBundle_5777_b37_phiX174_short/"
             "genome/chrAll.fa"))
 
     assert genome is not None
+    genome.open()
 
     print(genome.get_all_chrom_lengths())
     assert len(genome.get_all_chrom_lengths()) == 3
@@ -143,7 +147,8 @@ def test_local_genomic_sequence(fixture_dirname):
     })
     assert res is not None
 
-    ref = open_reference_genome_from_resource(res)
+    ref = build_reference_genome_from_resource(res)
+    ref.open()
 
     print(ref.get_all_chrom_lengths())
     assert len(ref.get_all_chrom_lengths()) == 3

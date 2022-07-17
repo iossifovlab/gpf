@@ -5,7 +5,7 @@ import copy
 
 from typing import Dict, List, Optional, cast
 from dae.genomic_resources.reference_genome import \
-    ReferenceGenome, open_reference_genome_from_resource
+    ReferenceGenome, build_reference_genome_from_resource
 from dae.genomic_resources.liftover_resource import \
     LiftoverChain, load_liftover_chain_from_resource
 
@@ -38,7 +38,7 @@ def build_liftover_annotator(pipeline, config):
             f"can't find liftover target genome: "
             f"{config.target_genome}")
     target_genome: ReferenceGenome = \
-        open_reference_genome_from_resource(resource)
+        build_reference_genome_from_resource(resource)
     liftover_chain: LiftoverChain = \
         load_liftover_chain_from_resource(chain_resource)
     return LiftOverAnnotator(config, liftover_chain, target_genome)
@@ -60,13 +60,14 @@ class LiftOverAnnotator(Annotator):
         return "liftover_annotator"
 
     def close(self):
-        pass
+        self.target_genome.close()
 
     def open(self):  # FIXME:
+        self.target_genome.open()
         return self
 
     def is_open(self):  # FIXME:
-        return True
+        return self.target_genome.is_open()
 
     DEFAULT_ANNOTATION = {
         "attributes": [

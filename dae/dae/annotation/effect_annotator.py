@@ -9,7 +9,7 @@ from dae.effect_annotation.annotator import EffectAnnotator
 from dae.effect_annotation.effect import AlleleEffects, AnnotationEffect
 from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.genomic_resources.reference_genome import \
-    open_reference_genome_from_resource
+    build_reference_genome_from_resource
 from dae.genomic_resources.gene_models import GeneModels
 
 from dae.genomic_resources.genomic_context import get_genomic_context
@@ -46,7 +46,7 @@ def build_effect_annotator(pipeline, config):
     else:
         genome_id = config.get("genome")
         resource = pipeline.repository.get_resource(genome_id)
-        genome = open_reference_genome_from_resource(resource)
+        genome = build_reference_genome_from_resource(resource)
 
     if config.get("gene_models") is None:
         gene_models = get_genomic_context().get_gene_models()
@@ -105,13 +105,14 @@ class EffectAnnotatorAdapter(Annotator):
         )
 
     def close(self):
-        pass
+        self.genome.close()
 
     def open(self):  # FIXME:
+        self.genome.open()
         return self
 
     def is_open(self):  # FIXME:
-        return True
+        return self.genome.is_open()
 
     def _not_found(self, attributes):
         for attr in self.get_annotation_config():

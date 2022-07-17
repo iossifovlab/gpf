@@ -1,9 +1,11 @@
 """Defines reference genome class."""
+from __future__ import annotations
 
 import os
 import logging
 
-from typing import List, Tuple, Optional, Dict, Any, cast
+from typing import List, Optional, Dict, Any, cast
+from dae.genomic_resources.fsspec_protocol import build_local_resource
 
 from dae.utils.regions import Region
 from dae.genomic_resources import GenomicResource
@@ -15,12 +17,39 @@ logger = logging.getLogger(__name__)
 class ReferenceGenome:
     """Provides an interface for quering a reference genome."""
 
-    def __init__(self, source: Tuple[str, ...]):
+    def __init__(self, resource: GenomicResource):
+        if resource.get_type() != "genome":
+            raise ValueError(
+                f"wront type of resource passed: {resource.get_type()}")
         self._index: Dict[str, Any] = {}
         self._chromosomes: List[str] = []
         self._sequence = None
-        self.pars: dict = {}
-        self.source = source
+
+        self.resource = resource
+        self.pars: dict = self._parse_pars(resource.get_config())
+
+    @staticmethod
+    def _parse_pars(config) -> dict:
+        if "PARS" not in config:
+            return {}
+
+        assert config["PARS"]["X"] is not None
+        regions_x = [
+            Region.from_str(region) for region in config["PARS"]["X"]
+        ]
+        chrom_x = regions_x[0].chrom
+
+        result = {
+            chrom_x: regions_x
+        }
+
+        if config["PARS"]["Y"] is not None:
+            regions_y = [
+                Region.from_str(region) for region in config["PARS"]["Y"]
+            ]
+            chrom_y = regions_y[0].chrom
+            result[chrom_y] = regions_y
+        return result
 
     @property
     def chromosomes(self) -> List[str]:
@@ -42,18 +71,44 @@ class ReferenceGenome:
             }
         self._chromosomes = list(self._index.keys())
 
-    def set_open(self, index_content, sequence_file):
-        """Set up working reference genome instance."""
-        self._sequence = sequence_file
-        self._load_genome_index(index_content)
-
-    def set_pars(self, pars):
-        """Set up PARS definition in the reference genome."""
-        self.pars = pars
-
     def close(self):
         """Close reference genome sequence file-like objects."""
         self._sequence.close()
+        self._sequence = None
+
+        self._index = {}
+        self._chromosomes = []
+
+    def open(self) -> ReferenceGenome:
+        """Open reference genome resources."""
+        config = self.resource.get_config()
+        file_name = config["filename"]
+        index_file_name = config.get(
+            "index_file", f"{file_name}.fai")
+
+        index_content = self.resource.get_file_content(index_file_name)
+        self._load_genome_index(index_content)
+        self._sequence = self.resource.open_raw_file(
+            file_name, "rb", uncompress=False, seekable=True)
+
+        return self
+
+    def is_open(self):
+        return self._sequence is not None
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, exc_tb):
+        if exc_type is not None:
+            logger.error(
+                "exception while using reference genome: %s, %s, %s",
+                exc_type, exc_value, exc_tb, exc_info=True)
+        try:
+            self.close()
+        except Exception:  # pylint: disable=broad-except
+            logger.error(
+                "exception during closing reference genome", exc_info=True)
 
     def get_chrom_length(self, chrom: str) -> int:
         """Return the length of a specified chromosome."""
@@ -72,7 +127,8 @@ class ReferenceGenome:
         """Return sequence of nucleotides from specified chromosome region."""
         if chrom not in self.chromosomes:
             logger.warning(
-                "chromosome %s not found in %s", chrom, self.source)
+                "chromosome %s not found in %s",
+                chrom, self.resource.resource_id)
             return None
 
         self._sequence.seek(
@@ -103,41 +159,18 @@ class ReferenceGenome:
         return False
 
 
-def open_reference_genome_from_file(filename) -> ReferenceGenome:
+def build_reference_genome_from_file(filename) -> ReferenceGenome:
     """Open a reference genome from a file."""
-    ref = ReferenceGenome(("file", filename))
-    index_filename = f"{filename}.fai"
-    assert os.path.exists(index_filename)
-    with open(index_filename, encoding="utf8") as index_file:
-        content = index_file.read()
-    ref.set_open(content, open(filename, "rb"))
-    return ref
+    dirname = os.path.dirname(filename)
+    basename = os.path.basename(filename)
+    res = build_local_resource(dirname, {
+        "type": "genome",
+        "filename": basename,
+    })
+    return build_reference_genome_from_resource(res)
 
 
-def _parse_pars(config) -> Optional[dict]:
-    if "PARS" not in config:
-        return None
-
-    assert config["PARS"]["X"] is not None
-    regions_x = [
-        Region.from_str(region) for region in config["PARS"]["X"]
-    ]
-    chrom_x = regions_x[0].chrom
-
-    result = {
-        chrom_x: regions_x
-    }
-
-    if config["PARS"]["Y"] is not None:
-        regions_y = [
-            Region.from_str(region) for region in config["PARS"]["Y"]
-        ]
-        chrom_y = regions_y[0].chrom
-        result[chrom_y] = regions_y
-    return result
-
-
-def open_reference_genome_from_resource(
+def build_reference_genome_from_resource(
         resource: Optional[GenomicResource]) -> ReferenceGenome:
     """Open a reference genome from resource."""
     if resource is None:
@@ -150,20 +183,5 @@ def open_reference_genome_from_resource(
             resource.resource_id, resource.get_type())
         raise ValueError(f"wrong resource type: {resource.resource_id}")
 
-    config = resource.get_config()
-    file_name = config["filename"]
-    index_file_name = config.get("index_file", f"{file_name}.fai")
-
-    index_content = resource.get_file_content(index_file_name)
-
-    ref = ReferenceGenome(
-        ("resource", resource.proto.get_id(), resource.resource_id))
-
-    pars = _parse_pars(config)
-    ref.set_pars(pars)
-
-    ref.set_open(
-        index_content,
-        resource.open_raw_file(
-            file_name, "rb", uncompress=False, seekable=True))
+    ref = ReferenceGenome(resource)
     return ref
