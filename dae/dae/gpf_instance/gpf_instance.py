@@ -7,7 +7,7 @@ import json
 from dae.genomic_resources.reference_genome import ReferenceGenome, \
     build_reference_genome_from_resource
 from dae.genomic_resources.gene_models import \
-    load_gene_models_from_resource
+    build_gene_models_from_resource
 from dae.enrichment_tool.background_facade import BackgroundFacade
 
 from dae.gene.gene_scores import GeneScoresDb, GeneScore
@@ -98,7 +98,8 @@ class GPFInstance:
             self.dae_config.gene_models.resource_id)
         assert resource is not None, \
             self.dae_config.gene_models.resource_id
-        result = load_gene_models_from_resource(resource)
+        result = build_gene_models_from_resource(resource)
+        result.load()
         return result
 
     @property  # type: ignore

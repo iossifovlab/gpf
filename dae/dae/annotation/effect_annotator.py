@@ -14,7 +14,7 @@ from dae.genomic_resources.gene_models import GeneModels
 
 from dae.genomic_resources.genomic_context import get_genomic_context
 from dae.genomic_resources.gene_models import \
-    load_gene_models_from_resource
+    build_gene_models_from_resource
 
 from .annotatable import Annotatable, CNVAllele, VCFAllele
 
@@ -57,7 +57,7 @@ def build_effect_annotator(pipeline, config):
     else:
         gene_models_id = config.get("gene_models")
         resource = pipeline.repository.get_resource(gene_models_id)
-        gene_models = load_gene_models_from_resource(resource)
+        gene_models = build_gene_models_from_resource(resource)
 
     return EffectAnnotatorAdapter(config, genome, gene_models)
 
@@ -109,6 +109,8 @@ class EffectAnnotatorAdapter(Annotator):
 
     def open(self):  # FIXME:
         self.genome.open()
+        self.gene_models.load()
+
         return self
 
     def is_open(self):  # FIXME:

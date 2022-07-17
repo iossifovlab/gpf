@@ -5,7 +5,7 @@ from dae.annotation.annotation_factory import build_annotation_pipeline
 from dae.annotation.annotation_pipeline import AnnotationPipeline
 from dae.genomic_resources.gene_models import GeneModels
 from dae.genomic_resources.gene_models import \
-    load_gene_models_from_resource
+    build_gene_models_from_resource
 from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.genomic_resources.reference_genome import \
     build_reference_genome_from_resource
@@ -121,7 +121,7 @@ class Context:
                 resource = self.get_grr().get_resource(
                     self.args.gene_models_resource_id)
 
-                self._gene_models = load_gene_models_from_resource(resource)
+                self._gene_models = build_gene_models_from_resource(resource)
             else:
                 logger.info("Using the gene models from the GPF instance.")
                 self._gene_models = get_genomic_context().get_gene_models()
