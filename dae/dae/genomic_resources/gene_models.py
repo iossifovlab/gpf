@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import gzip
 import logging
 import copy
@@ -9,11 +10,11 @@ from contextlib import contextmanager
 
 import pandas as pd
 
-from typing import Optional, Dict, TextIO, Tuple, cast
+from typing import Any, Optional, Dict, TextIO, Tuple, cast
 
 from dae.utils.regions import Region
 from dae.genomic_resources import GenomicResource
-
+from dae.genomic_resources.fsspec_protocol import build_local_resource
 
 logger = logging.getLogger(__name__)
 
@@ -64,7 +65,7 @@ class TranscriptModel:
         start_codon=None,
         stop_codon=None,
         is_coding=False,
-        attributes={},
+        attributes=None,
     ):
         self.gene = gene
         self.tr_id = tr_id
@@ -83,7 +84,7 @@ class TranscriptModel:
         self._is_coding = (
             is_coding  # it can be derivable from cds' start and end
         )
-        self.attributes = attributes
+        self.attributes = attributes if attributes is not None else {}
 
     def is_coding(self):
         if self.cds[0] >= self.cds[1]:
@@ -411,6 +412,10 @@ def _open_file(filename):
 class GeneModels:
     def __init__(self, source: Tuple[str, str, Optional[str], Optional[str]]):
         self.source = source
+        self.gene_models = None
+        self.utr_models = None
+        self.transcript_models: Dict[str, Any] = {}
+        self.alternative_names: Dict[str, Any] = {}
         self._reset()
 
     def _reset(self):
@@ -439,7 +444,7 @@ class GeneModels:
 
     def gene_names(self):
         if self.gene_models is None:
-            logger.warning(f"gene models {self.source} are empty")
+            logger.warning("gene models %s are empty", self.source)
             return None
 
         return list(self.gene_models.keys())
@@ -1307,12 +1312,12 @@ class GeneModels:
     def load(self, infile, fileformat: str = None, gene_mapping_file=None):
         if fileformat is None:
             fileformat = self._infer_gene_model_parser(infile)
-            logger.debug("infering gene models file format: %s", fileformat)
+            logger.info("infering gene models file format: %s", fileformat)
             if fileformat is None:
                 logger.error(
                     "can't infer gene models file format for "
                     "%s...", self.source)
-                raise ValueError()
+                raise ValueError("can't infer gene models file format")
 
         parser = self._get_parser(fileformat)
         if parser is None:
@@ -1355,11 +1360,20 @@ def load_gene_models_from_file(
     fileformat: Optional[str] = None,
     gene_mapping_filename: Optional[str] = None
 ) -> GeneModels:
-    gm = GeneModels(("file", filename, fileformat, gene_mapping_filename))
-    with _open_file(filename) as infile:
-        gm.load(infile, fileformat=fileformat,
-                gene_mapping_file=gene_mapping_filename)
-    return gm
+    dirname = os.path.dirname(filename)
+    basename = os.path.basename(filename)
+    config = {
+        "type": "gene_models",
+        "filename": basename,
+    }
+    if fileformat:
+        config["format"] = fileformat
+    if gene_mapping_filename:
+        gene_mapping = os.path.relpath(gene_mapping_filename, dirname)
+        config["gene_mapping"] = gene_mapping
+
+    res = build_local_resource(dirname, config)
+    return load_gene_models_from_resource(res)
 
 
 def load_gene_models_from_resource(
@@ -1380,7 +1394,7 @@ def load_gene_models_from_resource(
     logger.debug("loading gene models %s (%s)", filename, fileformat)
 
     gm = GeneModels(
-        ("resource", resource.proto.get_id(),
+        ("resource", resource.resource_id,
          resource.resource_id, gene_mapping_filename))
     compression = False
     if filename.endswith(".gz"):
