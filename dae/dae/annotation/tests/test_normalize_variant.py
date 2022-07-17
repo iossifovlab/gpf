@@ -161,7 +161,8 @@ def test_normalize_allele_annotator_pipeline(grr_fixture, pos, ref, alt):
         assert annotator.annotator_type() == "normalize_allele_annotator"
         assert isinstance(annotator, NormalizeAlleleAnnotator)
 
-        assert annotator.genome.get_sequence("1", 20_001, 20_010) == "CCTGGTGCTC"
+        assert annotator.genome.get_sequence("1", 20_001, 20_010) ==  \
+            "CCTGGTGCTC"
 
         allele = VCFAllele("1", pos, ref, alt)
         result = pipeline.annotate(allele)
