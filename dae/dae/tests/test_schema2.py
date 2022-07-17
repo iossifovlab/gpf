@@ -3,7 +3,7 @@ import logging
 import json 
 
 from dae.utils.variant_utils import mat2str, str2mat
-from dae.genomic_resources.gene_models import load_gene_models_from_file
+from dae.genomic_resources.gene_models import build_gene_models_from_file
 from dae.backends.schema2.bigquery_variants import BigQueryVariants 
 from dae.backends.schema2.impala_variants import ImpalaVariants
 from dae.backends.impala.impala_variants import ImpalaVariants as ImpalaVariants1 
@@ -68,7 +68,8 @@ if __name__ == "__main__":
 
     logger.info("BigQuery vs Impala Benchmark")
     logger.info("Loading Gene Model (from file)")
-    gm = load_gene_models_from_file('./reference/refGene-20190211.gz')
+    gm = build_gene_models_from_file('./reference/refGene-20190211.gz')
+    gm.load()
     # get gm from gpf_instance 
 
     i1 = ImpalaVariants1(
