@@ -7,10 +7,9 @@ import copy
 
 from collections import defaultdict
 from contextlib import contextmanager
+from typing import Any, Optional, Dict, TextIO, cast
 
 import pandas as pd
-
-from typing import Any, Optional, Dict, TextIO, cast
 
 from dae.utils.regions import Region
 from dae.genomic_resources import GenomicResource
@@ -20,12 +19,10 @@ logger = logging.getLogger(__name__)
 
 # TODO IVAN: not all parsers handle the gene_mapping properly!
 
-#
-# Exon
-#
-
 
 class Exon:
+    """Provides exon model."""
+
     def __init__(
         self,
         start=None,
@@ -52,6 +49,8 @@ class Exon:
 
 
 class TranscriptModel:
+    """Provides transcript model."""
+
     def __init__(
         self,
         gene=None,
@@ -92,7 +91,7 @@ class TranscriptModel:
         return True
 
     def CDS_regions(self, ss=0):
-
+        """Compute CDS regions."""
         if self.cds[0] >= self.cds[1]:
             return []
 
@@ -234,63 +233,65 @@ class TranscriptModel:
                 )
                 k += 1
 
-            for e in self.exons[k:]:
+            for exon in self.exons[k:]:
                 utr3_regions.append(
-                    Region(chrom=self.chrom, start=e.start, stop=e.stop)
+                    Region(chrom=self.chrom, start=exon.start, stop=exon.stop)
                 )
 
         return utr3_regions
 
     def all_regions(self, ss=0, prom=0):
-
         all_regions = []
 
         if ss == 0:
-            for e in self.exons:
+            for exon in self.exons:
                 all_regions.append(
-                    Region(chrom=self.chrom, start=e.start, stop=e.stop)
+                    Region(chrom=self.chrom, start=exon.start, stop=exon.stop)
                 )
 
         else:
-            for e in self.exons:
-                if e.stop <= self.cds[0]:
+            for exon in self.exons:
+                if exon.stop <= self.cds[0]:
                     all_regions.append(
-                        Region(chrom=self.chrom, start=e.start, stop=e.stop)
+                        Region(
+                            chrom=self.chrom,
+                            start=exon.start, stop=exon.stop)
                     )
-                elif e.start <= self.cds[0]:
-                    if e.stop >= self.cds[1]:
+                elif exon.start <= self.cds[0]:
+                    if exon.stop >= self.cds[1]:
                         all_regions.append(
                             Region(
-                                chrom=self.chrom, start=e.start, stop=e.stop
-                            )
+                                chrom=self.chrom,
+                                start=exon.start, stop=exon.stop)
                         )
                     else:
                         all_regions.append(
                             Region(
                                 chrom=self.chrom,
-                                start=e.start,
-                                stop=e.stop + ss,
+                                start=exon.start,
+                                stop=exon.stop + ss,
                             )
                         )
-                elif e.start > self.cds[1]:
+                elif exon.start > self.cds[1]:
                     all_regions.append(
-                        Region(chrom=self.chrom, start=e.start, stop=e.stop)
+                        Region(
+                            chrom=self.chrom, start=exon.start, stop=exon.stop)
                     )
                 else:
-                    if e.stop >= self.cds[1]:
+                    if exon.stop >= self.cds[1]:
                         all_regions.append(
                             Region(
                                 chrom=self.chrom,
-                                start=e.start - ss,
-                                stop=e.stop,
+                                start=exon.start - ss,
+                                stop=exon.stop,
                             )
                         )
                     else:
                         all_regions.append(
                             Region(
                                 chrom=self.chrom,
-                                start=e.start - ss,
-                                stop=e.stop + ss,
+                                start=exon.start - ss,
+                                stop=exon.stop + ss,
                             )
                         )
 
@@ -340,6 +341,7 @@ class TranscriptModel:
         return length
 
     def calc_frames(self):
+        """Calculate codon frames."""
         length = len(self.exons)
         fms = []
 
@@ -382,6 +384,7 @@ class TranscriptModel:
         return fms
 
     def update_frames(self):
+        """Update codon frames."""
         fms = self.calc_frames()
         for e, f in zip(self.exons, fms):
             e.frame = f
@@ -1031,7 +1034,6 @@ class GeneModels:
             lstring exonFrames; 	"Exon frame offsets {0,1,2}"
             )
         """
-
         expected_columns = [
             "name",
             "chrom",
