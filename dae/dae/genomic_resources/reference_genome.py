@@ -73,11 +73,12 @@ class ReferenceGenome:
 
     def close(self):
         """Close reference genome sequence file-like objects."""
-        self._sequence.close()
-        self._sequence = None
+        # FIXME: consider using weakref to work around this problem
+        # self._sequence.close()
+        # self._sequence = None
 
-        self._index = {}
-        self._chromosomes = []
+        # self._index = {}
+        # self._chromosomes = []
 
     def open(self) -> ReferenceGenome:
         """Open reference genome resources."""
