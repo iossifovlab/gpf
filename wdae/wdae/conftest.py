@@ -83,11 +83,10 @@ def admin(db):
 
     return user
 
-@pytest.fixture()
-def tokens(admin, user):
-    Application = get_application_model()
-    AccessToken = get_access_token_model()
 
+@pytest.fixture()
+def oauth_app(admin):
+    Application = get_application_model()
     new_application = Application(**{
         "name": f"testing client app",
         "user_id": admin.id,
@@ -97,20 +96,25 @@ def tokens(admin, user):
         "client_secret": "secret"
     })
     new_application.save()
+    return new_application
 
+
+@pytest.fixture()
+def tokens(admin, user, oauth_app):
+    AccessToken = get_access_token_model()
     user_access_token = AccessToken(
         user=user,
         scope='read write',
         expires=timezone.now() + timedelta(seconds=300),
         token='user-token',
-        application=new_application
+        application=oauth_app
     )
     admin_access_token = AccessToken(
         user=admin,
         scope='read write',
         expires=timezone.now() + timedelta(seconds=300),
         token='admin-token',
-        application=new_application
+        application=oauth_app
     )
     user_access_token.save()
     admin_access_token.save()
@@ -120,7 +124,6 @@ def tokens(admin, user):
 @pytest.fixture()
 def user_client(user, tokens):
     client = Client(HTTP_AUTHORIZATION="Bearer user-token")
-    # client.login(email=user.email, password="secret")
     return client
 
 
