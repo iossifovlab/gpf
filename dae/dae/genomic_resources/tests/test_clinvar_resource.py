@@ -1,17 +1,21 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pytest
-from pysam import VariantFile
+from pysam import VariantFile  # pylint: disable=no-name-in-module
 from dae.genomic_resources.clinvar import ClinVarVcf
 
 
 @pytest.fixture(scope="function")
 def clinvar_vcf(grr_fixture):
-    return ClinVarVcf(grr_fixture.get_resource("clinvar"))
+    res = ClinVarVcf(grr_fixture.get_resource("clinvar"))
+    res.open()
+    return res
 
 
 @pytest.fixture(scope="function")
 def clinvar_http(grr_http):
-    return ClinVarVcf(grr_http.get_resource("clinvar"))
+    res = ClinVarVcf(grr_http.get_resource("clinvar"))
+    res.open()
+    return res
 
 
 def test_clinvarvcf_init(clinvar_vcf):
@@ -54,7 +58,7 @@ def test_clinvar_vcf_get_header_info(clinvar_vcf):
 
 def test_close(clinvar_vcf):
     clinvar_vcf.close()
-    assert clinvar_vcf.vcf.closed is True
+    assert not clinvar_vcf.is_open()
 
 
 @pytest.mark.skip(reason="Fixture hangs on pysam.VariantFile from urls")

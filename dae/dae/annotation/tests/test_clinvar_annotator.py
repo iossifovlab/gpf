@@ -26,7 +26,9 @@ def clinvar_annotator_config():
 @pytest.fixture(scope="function")
 def clinvar_annotator(grr_fixture, clinvar_annotator_config):
     resource = grr_fixture.get_resource("clinvar")
-    return ClinVarAnnotator(clinvar_annotator_config, resource)
+    annotator = ClinVarAnnotator(clinvar_annotator_config, resource)
+    annotator.open()
+    return annotator
 
 
 @pytest.fixture(scope="session")

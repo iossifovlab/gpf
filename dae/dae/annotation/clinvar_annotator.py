@@ -1,4 +1,5 @@
 """Provides ClinVar annotator."""
+from __future__ import annotations
 
 import logging
 
@@ -46,15 +47,14 @@ class ClinVarAnnotator(Annotator):
         super().__init__(config)
 
         self.resource = resource
-
-        self.vcf = ClinVarVcf(resource)
+        self.clinvar_vcf = ClinVarVcf(resource)
 
     def annotator_type(self) -> str:
         return "clinvar_annotator"
 
     def get_all_annotation_attributes(self) -> List[Dict]:
         result = []
-        for attr in self.vcf.get_header_info().values():
+        for attr in self.clinvar_vcf.get_header_info().values():
             attr_type = "object"
             if attr["number"] == 1:
                 attr_type = self.ATTRIBUTE_TYPE_MAP[cast(str, attr["type"])]
@@ -104,7 +104,17 @@ class ClinVarAnnotator(Annotator):
         return cast(Dict, validator.document)
 
     def close(self):
-        self.vcf.close()
+        self.clinvar_vcf.close()
+
+    def is_open(self):
+        return self.clinvar_vcf.is_open()
+
+    def open(self) -> ClinVarAnnotator:
+        if self.is_open():
+            return self
+        self.clinvar_vcf.open()
+        return self
 
     def _do_annotate(self, annotatable: Annotatable, _context: Dict):
-        return self.vcf.get_variant_info(annotatable.chrom, annotatable.pos)
+        return self.clinvar_vcf.get_variant_info(
+            annotatable.chrom, annotatable.pos)

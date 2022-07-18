@@ -1,4 +1,6 @@
 """Module containing class for reading ClinVar VCF files from resource."""
+from __future__ import annotations
+
 import logging
 from functools import cache
 from typing import Dict, Any, Union
@@ -18,8 +20,7 @@ class ClinVarVcf:
     def __init__(self, resource: GenomicResource):
         assert resource.get_type() == "clinvar_resource"
         self.resource = resource
-        config = resource.get_config()
-        self.vcf = self._load_vcf(config["filename"], config["index_filename"])
+        self.vcf = None
 
     def _format_info(self, info):
         """Format variant info output according to types present in header."""
@@ -40,7 +41,10 @@ class ClinVarVcf:
     @cache
     def get_header_info(self) -> Dict[str, Dict[str, Union[str, int]]]:
         """Return dictionary of ClinVar info description."""
-        assert not self.vcf.closed
+        if not self.is_open():
+            raise ValueError("trying to work with not open ClinVarVcf")
+        assert self.vcf is not None
+
         output = {}
         for attribute_name, metadata in self.vcf.header.info.items():
             output[attribute_name] = {
@@ -53,7 +57,10 @@ class ClinVarVcf:
 
     def get_variant_info(self, chrom: str, pos: int) -> Dict[str, Any]:
         """Return dictionary of ClinVar info for given variant."""
-        assert not self.vcf.closed
+        if not self.is_open():
+            raise ValueError("trying to work with not open ClinVarVcf")
+        assert self.vcf is not None
+
         start = pos - 1
         end = pos
         try:
@@ -66,5 +73,16 @@ class ClinVarVcf:
                 output[attribute_name] = value
         return output
 
+    def open(self) -> ClinVarVcf:
+        if self.is_open():
+            return self
+        config = self.resource.get_config()
+        self.vcf = self._load_vcf(config["filename"], config["index_filename"])
+        return self
+
+    def is_open(self):
+        return self.vcf is not None
+
     def close(self):
         self.vcf.close()
+        self.vcf = None
