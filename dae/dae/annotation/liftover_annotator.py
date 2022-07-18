@@ -60,14 +60,18 @@ class LiftOverAnnotator(Annotator):
         return "liftover_annotator"
 
     def close(self):
-        self.target_genome.close()
+        # FIXME: consider using weekrefs
+        # self.target_genome.close()
+        # self.chain.close()
+        pass
 
-    def open(self):  # FIXME:
+    def open(self):
         self.target_genome.open()
+        self.chain.open()
         return self
 
-    def is_open(self):  # FIXME:
-        return self.target_genome.is_open()
+    def is_open(self):
+        return self.target_genome.is_open() and self.chain.is_open()
 
     DEFAULT_ANNOTATION = {
         "attributes": [
