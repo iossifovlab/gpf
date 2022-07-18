@@ -10,26 +10,23 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.test import Client
 from django.utils import timezone
-
-from oauth2_provider.models import get_application_model, \
-    get_access_token_model
-
-from users_api.models import WdaeUser
-
+from oauth2_provider.models import (get_access_token_model,
+                                    get_application_model)
+from gpf_instance.gpf_instance import (WGPFInstance, load_gpf_instance,
+                                       reload_datasets)
 from remote.rest_api_client import RESTClient
 
 from gpf_instance.gpf_instance import WGPFInstance, get_gpf_instance,\
     reload_datasets, load_gpf_instance
 
+from users_api.models import WdaeUser
+import dae.tools.generate_common_report
 from dae.autism_gene_profile.db import AutismGeneProfileDB
-
 from dae.genomic_resources import build_genomic_resource_repository
 from dae.genomic_resources.group_repository import GenomicResourceGroupRepo
 from dae.tools import generate_common_report
 
-
 logger = logging.getLogger(__name__)
-
 
 pytest_plugins = ["dae_conftests.dae_conftests"]
 
@@ -37,58 +34,58 @@ pytest_plugins = ["dae_conftests.dae_conftests"]
 @pytest.fixture()
 def user(db):
     user_model = get_user_model()
-    user = user_model.objects.create(
+    new_user = user_model.objects.create(
         email="user@example.com",
         name="User",
         is_staff=False,
         is_active=True,
         is_superuser=False,
     )
-    user.set_password("secret")
-    user.save()
+    new_user.set_password("secret")
+    new_user.save()
 
-    return user
+    return new_user
 
 
 @pytest.fixture()
 def user_without_password(db):
     user_model = get_user_model()
-    user = user_model.objects.create(
+    new_user = user_model.objects.create(
         email="user_without_password@example.com",
         name="User",
         is_staff=False,
         is_active=True,
         is_superuser=False,
     )
-    user.save()
+    new_user.save()
 
-    return user
+    return new_user
 
 
 @pytest.fixture()
 def admin(db):
     user_model = get_user_model()
-    user = user_model.objects.create(
+    new_user = user_model.objects.create(
         email="admin@example.com",
         name="User",
         is_staff=True,
         is_active=True,
         is_superuser=True,
     )
-    user.set_password("secret")
-    user.save()
+    new_user.set_password("secret")
+    new_user.save()
 
     admin_group, _ = Group.objects.get_or_create(name=WdaeUser.SUPERUSER_GROUP)
-    user.groups.add(admin_group)
+    new_user.groups.add(admin_group)
 
-    return user
+    return new_user
 
 
 @pytest.fixture()
 def oauth_app(admin):
-    Application = get_application_model()
-    new_application = Application(**{
-        "name": f"testing client app",
+    application = get_application_model()
+    new_application = application(**{
+        "name": "testing client app",
         "user_id": admin.id,
         "client_type": "confidential",
         "authorization_grant_type": "authorization-code",
@@ -101,19 +98,19 @@ def oauth_app(admin):
 
 @pytest.fixture()
 def tokens(admin, user, oauth_app):
-    AccessToken = get_access_token_model()
-    user_access_token = AccessToken(
+    access_token = get_access_token_model()
+    user_access_token = access_token(
         user=user,
-        scope='read write',
+        scope="read write",
         expires=timezone.now() + timedelta(seconds=300),
-        token='user-token',
+        token="user-token",
         application=oauth_app
     )
-    admin_access_token = AccessToken(
+    admin_access_token = access_token(
         user=admin,
-        scope='read write',
+        scope="read write",
         expires=timezone.now() + timedelta(seconds=300),
-        token='admin-token',
+        token="admin-token",
         application=oauth_app
     )
     user_access_token.save()
@@ -198,8 +195,8 @@ def fixtures_wgpf_instance(wgpf_instance, global_dae_fixtures_dir):
 
 @pytest.fixture(scope="function")
 def wdae_gpf_instance(
-        db, mocker, admin_client, fixtures_wgpf_instance, fixture_dirname):
-
+    db, mocker, admin_client, fixtures_wgpf_instance, fixture_dirname
+):
     reload_datasets(fixtures_wgpf_instance)
     mocker.patch(
         "query_base.query_base.get_gpf_instance",
@@ -327,7 +324,7 @@ def use_common_reports(wdae_gpf_instance):
 
     args = ["--studies", "Study1,study4"]
 
-    generate_common_report.main(args, wdae_gpf_instance)
+    dae.tools.generate_common_report.main(args, wdae_gpf_instance)
 
     yield
 
