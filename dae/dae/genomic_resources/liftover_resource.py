@@ -1,7 +1,7 @@
 """Provides LiftOver chain resource."""
 
 from __future__ import annotations
-from typing import TextIO
+from typing import Optional
 
 import logging
 
@@ -16,7 +16,17 @@ logger = logging.getLogger(__name__)
 class LiftoverChain:
     """Defines Lift Over chain wrapper around pyliftover objects."""
 
-    def __init__(self, config: dict, chain_file: TextIO):
+    def __init__(self, resource: GenomicResource):
+
+        config = resource.get_config()
+        if resource.get_type() != "liftover_chain":
+            logger.error(
+                "trying to use genomic resource %s "
+                "as a liftover chaing but its type is %s; %s",
+                resource.resource_id, resource.get_type(), config)
+            raise ValueError(f"wrong resource type: {config}")
+
+        self.resource = resource
 
         chrom_prefix = config.get("chrom_prefix")
         if chrom_prefix is None:
@@ -28,11 +38,21 @@ class LiftoverChain:
             self.chrom_target_coordinates = chrom_prefix.get(
                 "target_coordinates", None)
 
-        self.chain_file = chain_file
-        self.liftover = LiftOver(self.chain_file)
+        self.liftover: Optional[LiftOver] = None
 
     def close(self):
-        pass
+        del self.liftover
+        self.liftover = None
+
+    def open(self) -> LiftoverChain:
+        filename: str = self.resource.get_config()["filename"]
+        with self.resource.open_raw_file(
+                filename, "rb", compression=True) as chain_file:
+            self.liftover = LiftOver(chain_file)
+        return self
+
+    def is_open(self):
+        return self.liftover is not None
 
     @staticmethod
     def map_chromosome(chrom, mapping):
@@ -80,9 +100,6 @@ def load_liftover_chain_from_resource(
             resource.resource_id, resource.get_type(), config)
         raise ValueError(f"wrong resource type: {config}")
 
-    filename: str = config["filename"]
-    chain_file: TextIO = resource.open_raw_file(
-        filename, "rb", compression=True)
-
-    result = LiftoverChain(config, chain_file)
+    result = LiftoverChain(resource)
+    result.open()
     return result
