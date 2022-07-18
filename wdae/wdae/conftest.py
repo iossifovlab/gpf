@@ -2,11 +2,17 @@
 
 import os
 import logging
+from datetime import timedelta
 
 import pytest
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
+from django.test import Client
+from django.utils import timezone
+
+from oauth2_provider.models import get_application_model, \
+    get_access_token_model
 
 from users_api.models import WdaeUser
 
@@ -77,10 +83,44 @@ def admin(db):
 
     return user
 
+@pytest.fixture()
+def tokens(admin, user):
+    Application = get_application_model()
+    AccessToken = get_access_token_model()
+
+    new_application = Application(**{
+        "name": f"testing client app",
+        "user_id": admin.id,
+        "client_type": "confidential",
+        "authorization_grant_type": "authorization-code",
+        "client_id": "admin",
+        "client_secret": "secret"
+    })
+    new_application.save()
+
+    user_access_token = AccessToken(
+        user=user,
+        scope='read write',
+        expires=timezone.now() + timedelta(seconds=300),
+        token='user-token',
+        application=new_application
+    )
+    admin_access_token = AccessToken(
+        user=admin,
+        scope='read write',
+        expires=timezone.now() + timedelta(seconds=300),
+        token='admin-token',
+        application=new_application
+    )
+    user_access_token.save()
+    admin_access_token.save()
+    return user_access_token, admin_access_token
+
 
 @pytest.fixture()
-def user_client(user, client):
-    client.login(email=user.email, password="secret")
+def user_client(user, tokens):
+    client = Client(HTTP_AUTHORIZATION="Bearer user-token")
+    # client.login(email=user.email, password="secret")
     return client
 
 
@@ -91,8 +131,8 @@ def anonymous_client(client, db):
 
 
 @pytest.fixture()
-def admin_client(admin, client, db):
-    client.login(email=admin.email, password="secret")
+def admin_client(admin, tokens):
+    client = Client(HTTP_AUTHORIZATION="Bearer admin-token")
     return client
 
 
