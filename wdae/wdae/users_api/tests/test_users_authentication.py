@@ -86,23 +86,8 @@ def test_no_username_auth(db, user, client):
     assert response.status_code == status.HTTP_400_BAD_REQUEST
 
 
-def test_get_user_info_after_auth(user, client):
-    user.is_staff = True
-    user.save()
-
-    url = "/api/v3/users/login"
-    data = {
-        "username": "user@example.com",
-        "password": "secret",
-    }
-
-    response = client.post(
-        url, json.dumps(data), content_type="application/json", format="json"
-    )
-
-    assert response.status_code == status.HTTP_204_NO_CONTENT
-
-    response = client.get("/api/v3/users/get_user_info")
+def test_get_user_info_after_auth(user_client):
+    response = user_client.get("/api/v3/users/get_user_info")
     assert response.data["loggedIn"] is True
     assert response.data["email"] == "user@example.com"
 

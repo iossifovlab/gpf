@@ -1,9 +1,13 @@
 import pytest
+from datetime import timedelta
 
 from django.contrib.auth.models import Group
 from django.contrib.auth import get_user_model
+from django.utils import timezone
 
 from rest_framework.test import APIClient  # type: ignore
+from oauth2_provider.models import get_application_model, \
+    get_access_token_model
 
 from users_api.models import WdaeUser
 
@@ -42,8 +46,17 @@ def inactive_user(db, user_model):
 
 
 @pytest.fixture()
-def logged_in_user(active_user):
-    client = APIClient()
+def logged_in_user(active_user, oauth_app):
+    AccessToken = get_access_token_model()
+    user_access_token = AccessToken(
+        user=active_user,
+        scope='read write',
+        expires=timezone.now() + timedelta(seconds=300),
+        token='active-user-token',
+        application=oauth_app
+    )
+    user_access_token.save()
+    client = APIClient(HTTP_AUTHORIZATION="Bearer active-user-token")
     client.login(email=active_user.email, password="secret")
     return active_user, client
 

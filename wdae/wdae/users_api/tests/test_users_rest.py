@@ -19,7 +19,7 @@ def test_admin_sees_all_default_users(admin_client):
     response = admin_client.get(url)
 
     assert response.status_code is status.HTTP_200_OK
-    assert len(response.data) == 1  # dev admin
+    assert len(response.data) == 2  # admin and user
 
 
 def test_all_users_have_groups(admin_client):
@@ -45,7 +45,7 @@ def test_unauthenticated_cant_get_all_users(client):
     url = "/api/v3/users"
     response = client.get(url)
 
-    assert response.status_code is status.HTTP_403_FORBIDDEN
+    assert response.status_code is status.HTTP_401_UNAUTHORIZED
 
 
 def test_admin_can_create_new_users(admin_client, user_model):
