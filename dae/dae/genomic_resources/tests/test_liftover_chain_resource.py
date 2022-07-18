@@ -6,7 +6,7 @@ from dae.genomic_resources.fsspec_protocol import build_fsspec_protocol
 from dae.genomic_resources.repository import GenomicResourceProtocolRepo
 
 from dae.genomic_resources.liftover_resource import \
-    load_liftover_chain_from_resource
+    build_liftover_chain_from_resource
 
 
 @pytest.mark.parametrize("pos,expected_chrom,expected_pos,expected_strand", [
@@ -25,7 +25,8 @@ def test_liftover_chain_resource(
     chain_resource = repo.get_resource(
         "hg38/hg38tohg19")
     assert chain_resource
-    chain = load_liftover_chain_from_resource(chain_resource)
+    chain = build_liftover_chain_from_resource(chain_resource)
+    chain.open()
 
     out = chain.convert_coordinate("chr1", pos)
     assert out[0] == expected_chrom

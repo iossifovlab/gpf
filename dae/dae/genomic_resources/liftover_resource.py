@@ -88,7 +88,7 @@ class LiftoverChain:
         return tuple(coordinates)
 
 
-def load_liftover_chain_from_resource(
+def build_liftover_chain_from_resource(
         resource: GenomicResource) -> LiftoverChain:
     """Load a Lift Over chaing from GRR resource."""
     config: dict = resource.get_config()
@@ -101,5 +101,4 @@ def load_liftover_chain_from_resource(
         raise ValueError(f"wrong resource type: {config}")
 
     result = LiftoverChain(resource)
-    result.open()
     return result
