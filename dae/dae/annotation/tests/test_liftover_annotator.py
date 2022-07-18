@@ -8,7 +8,7 @@ from dae.annotation.annotatable import VCFAllele
 from dae.genomic_resources.reference_genome import \
     build_reference_genome_from_resource
 from dae.genomic_resources.liftover_resource import \
-    load_liftover_chain_from_resource
+    build_liftover_chain_from_resource
 
 from dae.annotation.annotation_factory import build_annotation_pipeline
 from dae.variants.core import Allele
@@ -65,18 +65,12 @@ def test_liftover(
         config, chain, target_genome)
     assert annotator is not None
 
-    # aline = {
-    #     "chrom": chrom,
-    #     "pos": pos,
-    # }
-
     allele = Allele.build_vcf_allele(chrom, pos, "A", "T")
-    context = {}
-    result = annotator._do_annotate(allele.get_annotatable(), context)
+
+    result = annotator._do_annotate(allele.get_annotatable(), {})
     assert isinstance(result, dict)
 
     lo_allele = result.get("liftover_annotatable")
-    print(f"liftover allele: {lo_allele}", context)
     lo_chrom = lo_allele.chrom if lo_allele else None
     lo_pos = lo_allele.position if lo_allele else None
 
@@ -120,12 +114,12 @@ def test_liftover_annotator_denovo_db_examples(
 
     lifover_chain_resource = grr.get_resource("liftover/hg19ToHg38")
     assert lifover_chain_resource is not None
-    lifover_chain = load_liftover_chain_from_resource(lifover_chain_resource)
+    lifover_chain = build_liftover_chain_from_resource(lifover_chain_resource)
     assert lifover_chain is not None
 
     liftover_annotator = LiftOverAnnotator(
         config, lifover_chain, target_genome)
-    assert liftover_annotator is not None
+    liftover_annotator.open()
 
     allele = VCFAllele(chrom, pos, ref, alt)
 

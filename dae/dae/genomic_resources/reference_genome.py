@@ -82,6 +82,12 @@ class ReferenceGenome:
 
     def open(self) -> ReferenceGenome:
         """Open reference genome resources."""
+        if self.is_open():
+            logger.info(
+                "opening already opened reference genome %s",
+                self.resource.resource_id)
+            return self
+
         config = self.resource.get_config()
         file_name = config["filename"]
         index_file_name = config.get(
