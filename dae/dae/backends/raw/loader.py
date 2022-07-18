@@ -423,6 +423,8 @@ class EffectAnnotationDecorator(AnnotationDecorator):
         self.effect_annotator = effect_annotator
 
     def full_variants_iterator(self):
+        self.effect_annotator.open()
+
         for (summary_variant, family_variants) in \
                 self.variants_loader.full_variants_iterator():
             for sallele in summary_variant.alt_alleles:
@@ -463,19 +465,20 @@ class AnnotationPipelineDecorator(AnnotationDecorator):
         return self.annotation_pipeline.annotation_schema
 
     def full_variants_iterator(self):
-        for (summary_variant, family_variants) in \
-                self.variants_loader.full_variants_iterator():
-            for sallele in summary_variant.alt_alleles:
-                attributes = self.annotation_pipeline.annotate(
-                    sallele.get_annotatable())
-                if "allele_effects" in attributes:
-                    allele_effects = attributes["allele_effects"]
-                    assert isinstance(allele_effects, AlleleEffects), \
-                        attributes
-                    # pylint: disable=protected-access
-                    sallele._effects = allele_effects
-                sallele.update_attributes(attributes)
-            yield summary_variant, family_variants
+        with self.annotation_pipeline.open() as annotation_pipeline:
+            for (summary_variant, family_variants) in \
+                    self.variants_loader.full_variants_iterator():
+                for sallele in summary_variant.alt_alleles:
+                    attributes = annotation_pipeline.annotate(
+                        sallele.get_annotatable())
+                    if "allele_effects" in attributes:
+                        allele_effects = attributes["allele_effects"]
+                        assert isinstance(allele_effects, AlleleEffects), \
+                            attributes
+                        # pylint: disable=protected-access
+                        sallele._effects = allele_effects
+                    sallele.update_attributes(attributes)
+                yield summary_variant, family_variants
 
     def close(self):
         self.annotation_pipeline.close()

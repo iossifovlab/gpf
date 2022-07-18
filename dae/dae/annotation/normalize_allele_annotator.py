@@ -5,7 +5,7 @@ from typing import List, Dict, Optional, cast
 
 from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.genomic_resources.reference_genome import \
-    open_reference_genome_from_resource
+    build_reference_genome_from_resource
 
 from .annotatable import Annotatable, VCFAllele
 from .annotator_base import Annotator, ATTRIBUTES_SCHEMA
@@ -66,7 +66,7 @@ def build_normalize_allele_annotator(pipeline, config):
             f"can't find reference genome: "
             f"{config['genome']}"
         )
-    genome = open_reference_genome_from_resource(genome_resource)
+    genome = build_reference_genome_from_resource(genome_resource)
     return NormalizeAlleleAnnotator(config, genome)
 
 
@@ -83,7 +83,14 @@ class NormalizeAlleleAnnotator(Annotator):
         return "normalize_allele_annotator"
 
     def close(self):
-        pass
+        self.genome.close()
+
+    def open(self):  # FIXME:
+        self.genome.open()
+        return self
+
+    def is_open(self):  # FIXME:
+        return True
 
     @classmethod
     def validate_config(cls, config: Dict) -> Dict:

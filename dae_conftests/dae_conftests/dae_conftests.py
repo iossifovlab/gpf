@@ -1,4 +1,4 @@
-import pytest
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
 
 import os
 import sys
@@ -8,8 +8,10 @@ import tempfile
 import logging
 from pathlib import Path
 
-import pandas as pd
 from io import StringIO
+
+import pandas as pd
+import pytest
 
 from box import Box
 
@@ -43,9 +45,9 @@ from dae.autism_gene_profile.db import AutismGeneProfileDB
 from dae.genomic_resources import build_genomic_resource_repository
 from dae.genomic_resources.group_repository import GenomicResourceGroupRepo
 from dae.genomic_resources.gene_models import \
-    load_gene_models_from_resource
+    build_gene_models_from_resource
 from dae.genomic_resources.reference_genome import \
-    open_reference_genome_from_resource
+    build_reference_genome_from_resource
 
 
 logger = logging.getLogger(__name__)
@@ -143,7 +145,7 @@ def gpf_instance(default_dae_config, fixture_dirname):
 
 @pytest.fixture(scope="session")
 def gpf_instance_2013(
-        default_dae_config,  fixture_dirname, global_dae_fixtures_dir):
+        default_dae_config, fixture_dirname, global_dae_fixtures_dir):
 
     class GPFInstance2013(GPFInstance):
         def __init__(self, *args, **kwargs):
@@ -155,7 +157,8 @@ def gpf_instance_2013(
             print(self.dae_config.gene_models)
             resource = self.grr.get_resource(
                 "hg19/gene_models/refGene_v201309")
-            result = load_gene_models_from_resource(resource)
+            result = build_gene_models_from_resource(resource)
+            result.load()
             return result
 
     gpf_instance = GPFInstance2013(dae_config=default_dae_config)
@@ -192,7 +195,8 @@ def gpf_instance_2019(default_dae_config, global_dae_fixtures_dir):
         def gene_models(self):
             resource = self.grr.get_resource(
                 "hg19/gene_models/refGene_v20190211")
-            result = load_gene_models_from_resource(resource)
+            result = build_gene_models_from_resource(resource)
+            result.load()
             return result
 
     return GPFInstance2019(
@@ -211,18 +215,20 @@ def _create_gpf_instance(
         @cached
         def gene_models(self):
             if gene_model_dir is None:
-                return super().gene_models()
+                return super().gene_models
             resource = self.grr.get_resource(gene_model_dir)
-            result = load_gene_models_from_resource(resource)
+            result = build_gene_models_from_resource(resource)
+            result.load()
             return result
 
         @property  # type: ignore
         @cached
         def reference_genome(self):
             if ref_genome_dir is None:
-                return super().reference_genome()
+                return super().reference_genome
             resource = self.grr.get_resource(ref_genome_dir)
-            result = open_reference_genome_from_resource(resource)
+            result = build_reference_genome_from_resource(resource)
+            result.open()
             return result
 
     instance = CustomGPFInstance(
@@ -343,6 +349,7 @@ def annotation_pipeline_internal(gpf_instance_2013):
     filename = relative_to_this_test_folder(IMPORT_ANNOTATION_CONFIG)
     pipeline = build_annotation_pipeline(
         pipeline_config_file=filename, grr_repository=gpf_instance_2013.grr)
+    pipeline.open()
     return pipeline
 
 
@@ -403,7 +410,7 @@ def dae_denovo(
     variants_loader = AnnotationPipelineDecorator(
         variants_loader, annotation_pipeline_internal
     )
-    fvars = RawMemoryVariants([variants_loader])
+    fvars = RawMemoryVariants([variants_loader], families=families)
     return fvars
 
 
@@ -1224,7 +1231,7 @@ def s3_base():
 
 
 def get_boto3_client():
-    from botocore.session import Session
+    from botocore.session import Session  # type: ignore
 
     # NB: we use the sync botocore client for setup
     session = Session()
@@ -1233,7 +1240,7 @@ def get_boto3_client():
 
 @pytest.fixture()
 def s3(s3_base):
-    from s3fs.core import S3FileSystem
+    from s3fs.core import S3FileSystem  # type: ignore
 
     client = get_boto3_client()
     client.create_bucket(Bucket="test-bucket", ACL="public-read")

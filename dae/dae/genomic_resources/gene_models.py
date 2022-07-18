@@ -1,30 +1,28 @@
 from __future__ import annotations
 
+import os
 import gzip
 import logging
 import copy
 
 from collections import defaultdict
 from contextlib import contextmanager
+from typing import Any, Optional, Dict, TextIO, cast
 
 import pandas as pd
 
-from typing import Optional, Dict, TextIO, Tuple, cast
-
 from dae.utils.regions import Region
 from dae.genomic_resources import GenomicResource
-
+from dae.genomic_resources.fsspec_protocol import build_local_resource
 
 logger = logging.getLogger(__name__)
 
 # TODO IVAN: not all parsers handle the gene_mapping properly!
 
-#
-# Exon
-#
-
 
 class Exon:
+    """Provides exon model."""
+
     def __init__(
         self,
         start=None,
@@ -51,6 +49,8 @@ class Exon:
 
 
 class TranscriptModel:
+    """Provides transcript model."""
+
     def __init__(
         self,
         gene=None,
@@ -64,7 +64,7 @@ class TranscriptModel:
         start_codon=None,
         stop_codon=None,
         is_coding=False,
-        attributes={},
+        attributes=None,
     ):
         self.gene = gene
         self.tr_id = tr_id
@@ -80,10 +80,10 @@ class TranscriptModel:
         self.start_codon = start_codon
         self.stop_codon = stop_codon
 
-        self._is_coding = (
-            is_coding  # it can be derivable from cds' start and end
-        )
-        self.attributes = attributes
+        # it can be derivable from cds' start and end
+        self._is_coding = is_coding
+
+        self.attributes = attributes if attributes is not None else {}
 
     def is_coding(self):
         if self.cds[0] >= self.cds[1]:
@@ -91,7 +91,7 @@ class TranscriptModel:
         return True
 
     def CDS_regions(self, ss=0):
-
+        """Compute CDS regions."""
         if self.cds[0] >= self.cds[1]:
             return []
 
@@ -233,63 +233,65 @@ class TranscriptModel:
                 )
                 k += 1
 
-            for e in self.exons[k:]:
+            for exon in self.exons[k:]:
                 utr3_regions.append(
-                    Region(chrom=self.chrom, start=e.start, stop=e.stop)
+                    Region(chrom=self.chrom, start=exon.start, stop=exon.stop)
                 )
 
         return utr3_regions
 
     def all_regions(self, ss=0, prom=0):
-
         all_regions = []
 
         if ss == 0:
-            for e in self.exons:
+            for exon in self.exons:
                 all_regions.append(
-                    Region(chrom=self.chrom, start=e.start, stop=e.stop)
+                    Region(chrom=self.chrom, start=exon.start, stop=exon.stop)
                 )
 
         else:
-            for e in self.exons:
-                if e.stop <= self.cds[0]:
+            for exon in self.exons:
+                if exon.stop <= self.cds[0]:
                     all_regions.append(
-                        Region(chrom=self.chrom, start=e.start, stop=e.stop)
+                        Region(
+                            chrom=self.chrom,
+                            start=exon.start, stop=exon.stop)
                     )
-                elif e.start <= self.cds[0]:
-                    if e.stop >= self.cds[1]:
+                elif exon.start <= self.cds[0]:
+                    if exon.stop >= self.cds[1]:
                         all_regions.append(
                             Region(
-                                chrom=self.chrom, start=e.start, stop=e.stop
-                            )
+                                chrom=self.chrom,
+                                start=exon.start, stop=exon.stop)
                         )
                     else:
                         all_regions.append(
                             Region(
                                 chrom=self.chrom,
-                                start=e.start,
-                                stop=e.stop + ss,
+                                start=exon.start,
+                                stop=exon.stop + ss,
                             )
                         )
-                elif e.start > self.cds[1]:
+                elif exon.start > self.cds[1]:
                     all_regions.append(
-                        Region(chrom=self.chrom, start=e.start, stop=e.stop)
+                        Region(
+                            chrom=self.chrom, start=exon.start, stop=exon.stop)
                     )
                 else:
-                    if e.stop >= self.cds[1]:
+                    if exon.stop >= self.cds[1]:
                         all_regions.append(
                             Region(
                                 chrom=self.chrom,
-                                start=e.start - ss,
-                                stop=e.stop,
+                                start=exon.start - ss,
+                                stop=exon.stop,
                             )
                         )
                     else:
                         all_regions.append(
                             Region(
                                 chrom=self.chrom,
-                                start=e.start - ss,
-                                stop=e.stop + ss,
+                                start=exon.start - ss,
+                                stop=exon.stop + ss,
                             )
                         )
 
@@ -339,6 +341,7 @@ class TranscriptModel:
         return length
 
     def calc_frames(self):
+        """Calculate codon frames."""
         length = len(self.exons)
         fms = []
 
@@ -381,6 +384,7 @@ class TranscriptModel:
         return fms
 
     def update_frames(self):
+        """Update codon frames."""
         fms = self.calc_frames()
         for e, f in zip(self.exons, fms):
             e.frame = f
@@ -409,8 +413,13 @@ def _open_file(filename):
 # GeneModel's
 #
 class GeneModels:
-    def __init__(self, source: Tuple[str, str, Optional[str], Optional[str]]):
-        self.source = source
+    def __init__(self, resource: GenomicResource):
+        self.resource = resource
+        self.gene_models = None
+        self.utr_models = None
+        self.transcript_models: Dict[str, Any] = {}
+        self.alternative_names: Dict[str, Any] = {}
+
         self._reset()
 
     def _reset(self):
@@ -430,16 +439,17 @@ class GeneModels:
 
         self.utr_models[tm.chrom][tm.tx].append(tm)
 
-    def _update_indexes(self):
+    def update_indexes(self):
         self.gene_models = defaultdict(list)
         self.utr_models = defaultdict(lambda: defaultdict(list))
-        for tm in self.transcript_models.values():
-            self.gene_models[tm.gene].append(tm)
-            self.utr_models[tm.chrom][tm.tx].append(tm)
+        for transcript in self.transcript_models.values():
+            self.gene_models[transcript.gene].append(transcript)
+            self.utr_models[transcript.chrom][transcript.tx].append(transcript)
 
     def gene_names(self):
         if self.gene_models is None:
-            logger.warning(f"gene models {self.source} are empty")
+            logger.warning(
+                "gene models %s are empty", self.resource.resource_id)
             return None
 
         return list(self.gene_models.keys())
@@ -626,7 +636,7 @@ class GeneModels:
             )
             self.transcript_models[tm.tr_id] = tm
 
-        self._update_indexes()
+        self.update_indexes()
         if nrows is not None:
             return True
 
@@ -983,7 +993,8 @@ class GeneModels:
         gene_mapping: Optional[Dict[str, str]] = None,
         nrows: Optional[int] = None
     ) -> bool:
-        """
+        """Parse UCSC gene prediction models file fomrat.
+
         table genePred
         "A gene prediction."
             (
@@ -1023,7 +1034,6 @@ class GeneModels:
             lstring exonFrames; 	"Exon frame offsets {0,1,2}"
             )
         """
-
         expected_columns = [
             "name",
             "chrom",
@@ -1223,11 +1233,10 @@ class GeneModels:
 
     @classmethod
     def _gene_mapping(cls, filename: str) -> Dict[str, str]:
-        """
-        alternative names for genes
-        assume that its first line has two column names
-    """
+        """Load alternative names for genes.
 
+        Assume that its first line has two column names
+        """
         df = pd.read_csv(filename, sep="\t")
         assert len(df.columns) == 2
 
@@ -1304,31 +1313,53 @@ class GeneModels:
             "inferred file formats are %s", inferred_formats)
         return None
 
-    def load(self, infile, fileformat: str = None, gene_mapping_file=None):
-        if fileformat is None:
-            fileformat = self._infer_gene_model_parser(infile)
-            logger.debug("infering gene models file format: %s", fileformat)
+    def load(self) -> GeneModels:
+        """Load gene models."""
+        filename = self.resource.get_config()["filename"]
+        fileformat = self.resource.get_config().get("format", None)
+        gene_mapping_filename = self.resource.get_config().get(
+            "gene_mapping", None)
+        logger.debug("loading gene models %s (%s)", filename, fileformat)
+        compression = False
+        if filename.endswith(".gz"):
+            compression = True
+        with self.resource.open_raw_file(
+                filename, mode="rt", compression=compression) as infile:
+
             if fileformat is None:
+                fileformat = self._infer_gene_model_parser(infile)
+                logger.info("infering gene models file format: %s", fileformat)
+                if fileformat is None:
+                    logger.error(
+                        "can't infer gene models file format for "
+                        "%s...", self.resource.resource_id)
+                    raise ValueError("can't infer gene models file format")
+
+            parser = self._get_parser(fileformat)
+            if parser is None:
                 logger.error(
-                    "can't infer gene models file format for "
-                    "%s...", self.source)
+                    "Unsupported file format %s for "
+                    "gene model file %s.", fileformat,
+                    self.resource.resource_id)
                 raise ValueError()
 
-        parser = self._get_parser(fileformat)
-        if parser is None:
-            logger.error(
-                "Unsupported file format %s for "
-                "gene model file %s.", fileformat, self.source)
-            raise ValueError()
+            gene_mapping = None
+            if gene_mapping_filename is not None:
+                compression = False
+                if gene_mapping_filename.endswith(".gz"):
+                    compression = True
+                with self.resource.open_raw_file(
+                        gene_mapping_filename, "rt",
+                        compression=compression) as gene_mapping_file:
+                    logger.debug(
+                        "loading gene mapping from %s", gene_mapping_filename)
+                    gene_mapping = self._gene_mapping(gene_mapping_file)
 
-        gene_mapping = None
-        if gene_mapping_file is not None:
-            gene_mapping = self._gene_mapping(gene_mapping_file)
+            infile.seek(0)
+            self._reset()
 
-        infile.seek(0)
-        self._reset()
-
-        parser(infile, gene_mapping=gene_mapping)
+            parser(infile, gene_mapping=gene_mapping)
+        return self
 
 
 def join_gene_models(*gene_models):
@@ -1336,7 +1367,7 @@ def join_gene_models(*gene_models):
     if len(gene_models) < 2:
         raise ValueError("The function needs at least 2 arguments!")
 
-    gm = GeneModels(gene_models[0].source)
+    gm = GeneModels(gene_models[0].resource)
     gm.utr_models = {}
     gm.gene_models = {}
 
@@ -1345,26 +1376,36 @@ def join_gene_models(*gene_models):
     for i in gene_models[1:]:
         gm.transcript_models.update(i.transcript_models)
 
-    gm._update_indexes()
+    gm.update_indexes()
 
     return gm
 
 
-def load_gene_models_from_file(
+def build_gene_models_from_file(
     filename: str,
     fileformat: Optional[str] = None,
     gene_mapping_filename: Optional[str] = None
 ) -> GeneModels:
-    gm = GeneModels(("file", filename, fileformat, gene_mapping_filename))
-    with _open_file(filename) as infile:
-        gm.load(infile, fileformat=fileformat,
-                gene_mapping_file=gene_mapping_filename)
-    return gm
+    """Load gene models from local filesystem."""
+    dirname = os.path.dirname(filename)
+    basename = os.path.basename(filename)
+    config = {
+        "type": "gene_models",
+        "filename": basename,
+    }
+    if fileformat:
+        config["format"] = fileformat
+    if gene_mapping_filename:
+        gene_mapping = os.path.relpath(gene_mapping_filename, dirname)
+        config["gene_mapping"] = gene_mapping
+
+    res = build_local_resource(dirname, config)
+    return build_gene_models_from_resource(res)
 
 
-def load_gene_models_from_resource(
+def build_gene_models_from_resource(
         resource: Optional[GenomicResource]) -> GeneModels:
-
+    """Load gene models from a genomic resource."""
     if resource is None:
         raise ValueError(f"missing resource {resource}")
 
@@ -1374,29 +1415,7 @@ def load_gene_models_from_resource(
             "%s as gene models", resource.resource_id, resource.get_type())
         raise ValueError(f"wrong resource type: {resource.resource_id}")
 
-    filename = resource.get_config()["filename"]
-    fileformat = resource.get_config().get("format", None)
-    gene_mapping_filename = resource.get_config().get("gene_mapping", None)
-    logger.debug("loading gene models %s (%s)", filename, fileformat)
+    gene_models = GeneModels(resource)
+    gene_models.load()
 
-    gm = GeneModels(
-        ("resource", resource.proto.get_id(),
-         resource.resource_id, gene_mapping_filename))
-    compression = False
-    if filename.endswith(".gz"):
-        compression = True
-    with resource.open_raw_file(
-            filename, mode="rt", compression=compression) as infile:
-        if gene_mapping_filename is not None:
-            compression = False
-            if gene_mapping_filename.endswith(".gz"):
-                compression = True
-            with resource.open_raw_file(
-                    gene_mapping_filename, "rt",
-                    compression=compression) as gene_mapping:
-                logger.debug(
-                    "loading gene mapping from %s", gene_mapping_filename)
-                gm.load(infile, fileformat, gene_mapping)
-        else:
-            gm.load(infile, fileformat)
-    return gm
+    return gene_models

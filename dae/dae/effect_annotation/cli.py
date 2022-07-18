@@ -9,13 +9,13 @@ from dae.genomic_resources.genomic_context import GenomicContext
 from dae.genomic_resources.genomic_context import get_genomic_context
 from dae.genomic_resources.repository import GenomicResourceRepo
 from dae.genomic_resources.gene_models import GeneModels, \
-    load_gene_models_from_file, \
-    load_gene_models_from_resource
+    build_gene_models_from_file, \
+    build_gene_models_from_resource
 from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.genomic_resources.reference_genome import \
-    open_reference_genome_from_file
+    build_reference_genome_from_file
 from dae.genomic_resources.reference_genome import \
-    open_reference_genome_from_resource
+    build_reference_genome_from_resource
 
 from dae.effect_annotation.annotator import EffectAnnotator
 from dae.effect_annotation.effect import AnnotationEffect
@@ -104,10 +104,10 @@ class EffectAnnotatorBuilder:
         if self.args.gene_models_resource_id:
             resource = self.get_grr().get_resource(
                 self.args.gene_models_resource_id)
-            return load_gene_models_from_resource(resource)
+            return build_gene_models_from_resource(resource)
 
         if self.args.gene_models_filename:
-            return load_gene_models_from_file(
+            return build_gene_models_from_file(
                 self.args.gene_models_filename,
                 self.args.gene_models_fileformat,
                 self.args.gene_mapping_filename)
@@ -121,10 +121,10 @@ class EffectAnnotatorBuilder:
         if self.args.reference_genome_resource_id:
             resource = self.get_grr().get_resource(
                 self.args.reference_genome_resource_id)
-            return open_reference_genome_from_resource(resource)
+            return build_reference_genome_from_resource(resource)
 
         if self.args.reference_genome_filename:
-            return open_reference_genome_from_file(
+            return build_reference_genome_from_file(
                 self.args.reference_genome_filename)
 
         ref = self.get_genomic_context().get_reference_genome()
@@ -135,10 +135,13 @@ class EffectAnnotatorBuilder:
     def build_effect_annotator(self):
         ref = self.get_refernce_genome()
         gm = self.get_gene_models()
-        logger.info(f"Building effect annotator with:\n"
-                    f"\treferende genome from {ref.source},\n"
-                    f"\tgene models from {gm.source}, and\n"
-                    f"\tpromoter lengths of {self.args.promoter_len}")
+        logger.info(
+            "Building effect annotator with:\n"
+            "\treferende genome from %s,\n"
+            "\tgene models from %s, and\n"
+            "\tpromoter lengths of %s",
+            ref.resource.resource_id, gm.resource.resource_id,
+            self.args.promoter_len)
         return EffectAnnotator(ref, gm, promoter_len=self.args.promoter_len)
 
 
@@ -187,7 +190,7 @@ class VariantColumnInputFile:
                 self.file = open(filename, "rt")
 
         # read header
-        self.header = self.file.readline(). \
+        self.header: List[str] = self.file.readline(). \
             strip("\n\r").split(self.args.input_sep)
 
         # prepare the variant_attribute_index
@@ -266,8 +269,8 @@ class AnnotationAttributes:
 
     def __init__(self, args):
         self.args = args
-        self.out_attributes = []
-        self.source_attributes = []
+        self.out_attributes: List[str] = []
+        self.source_attributes: List[str] = []
 
         for attribute_def in self.args.annotation_attributes.split(","):
             parts = attribute_def.split(":")
@@ -319,13 +322,13 @@ def cli_columns():
     output_file.write_columns(
         input_file.get_header() + annotation_attributes.get_out_attributes())
     for cs, vdef in input_file.get_lines():
-        logger.debug(f"vdef: {vdef} AAA")
+        logger.debug("vdef: %s AAA", vdef)
         E = annotator.do_annotate_variant(**vdef)
         output_file.write_columns(cs + annotation_attributes.get_values(E))
 
 
 def cli_vcf():
-    from pysam import VariantFile  # type: ignore
+    import pysam  # type: ignore
 
     parser = ArgumentParser(
         description="Annotate Variant Effects in a VCF file.")
@@ -345,7 +348,8 @@ def cli_vcf():
     annotator = EffectAnnotatorBuilder(args).build_effect_annotator()
     annotation_attributes = AnnotationAttributes(args)
 
-    infile = VariantFile(args.input_filename)
+    # pylint: disable=no-member
+    infile = pysam.VariantFile(args.input_filename)
     if args.output_filename is None:
         outfile = sys.stdout
     else:

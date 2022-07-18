@@ -19,3 +19,6 @@ work
 temp
 integration/remote/data/wdae
 integration/local/data/wdae
+dae/mypy.ini
+wdae/mypy.ini
+.vagrant

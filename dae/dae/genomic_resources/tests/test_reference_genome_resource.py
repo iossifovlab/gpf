@@ -6,13 +6,14 @@ import pytest
 
 from dae.genomic_resources.test_tools import convert_to_tab_separated
 from dae.genomic_resources.testing import build_test_resource
-from dae.genomic_resources.fsspec_protocol import build_fsspec_protocol
-from dae.genomic_resources.repository import GenomicResourceRepo
+from dae.genomic_resources.fsspec_protocol import build_fsspec_protocol, \
+    build_local_resource
+from dae.genomic_resources.repository import GenomicResourceProtocolRepo
 
 from dae.genomic_resources.reference_genome import \
-    open_reference_genome_from_file
+    build_reference_genome_from_file
 from dae.genomic_resources.reference_genome import \
-    open_reference_genome_from_resource
+    build_reference_genome_from_resource
 
 
 def test_basic_sequence_resoruce():
@@ -27,7 +28,8 @@ def test_basic_sequence_resoruce():
             """),
             "chr.fa.fai": "pesho\t24\t7\t10\t11\n"
         })
-    ref = open_reference_genome_from_resource(res)
+    ref = build_reference_genome_from_resource(res)
+    ref.open()
     assert ref.get_chrom_length("pesho") == 24
     assert ref.get_sequence("pesho", 1, 12) == "NNACCCAAACGG"
 
@@ -36,12 +38,13 @@ def test_genomic_sequence_resource(fixture_dirname):
 
     dirname = fixture_dirname("genomic_resources")
     proto = build_fsspec_protocol("d", dirname)
-    repo = GenomicResourceRepo(proto)
+    repo = GenomicResourceProtocolRepo(proto)
 
     res = repo.get_resource(
         "hg19/GATK_ResourceBundle_5777_b37_phiX174_short/genome")
 
-    ref = open_reference_genome_from_resource(res)
+    ref = build_reference_genome_from_resource(res)
+    ref.open()
 
     print(ref.get_all_chrom_lengths())
     assert len(ref.get_all_chrom_lengths()) == 3
@@ -74,12 +77,13 @@ def test_genomic_sequence_resource_http(fixture_dirname, proto_builder):
         src_proto,
         scheme="http",
         proto_id="testing_http")
-    repo = GenomicResourceRepo(proto)
+    repo = GenomicResourceProtocolRepo(proto)
 
     res = repo.get_resource(
         "hg19/GATK_ResourceBundle_5777_b37_phiX174_short/genome")
 
-    ref = open_reference_genome_from_resource(res)
+    ref = build_reference_genome_from_resource(res)
+    ref.open()
 
     print(ref.get_all_chrom_lengths())
     assert len(ref.get_all_chrom_lengths()) == 3
@@ -102,13 +106,14 @@ def test_genomic_sequence_resource_http(fixture_dirname, proto_builder):
 
 
 def test_filesystem_genomic_sequence(fixture_dirname):
-    genome = open_reference_genome_from_file(
+    genome = build_reference_genome_from_file(
         os.path.join(
             fixture_dirname("genomic_resources"),
             "hg19/GATK_ResourceBundle_5777_b37_phiX174_short/"
             "genome/chrAll.fa"))
 
     assert genome is not None
+    genome.open()
 
     print(genome.get_all_chrom_lengths())
     assert len(genome.get_all_chrom_lengths()) == 3
@@ -128,3 +133,24 @@ def test_filesystem_genomic_sequence(fixture_dirname):
 
     seq = genome.get_sequence("X", 150001, 150050)
     assert seq == "ACCCTGACAGCCTCGTTCTAATACTATGAGGCCAAATACACTCACGTTCT"
+
+
+def test_local_genomic_sequence(fixture_dirname):
+
+    dirname = fixture_dirname(
+        "genomic_resources/hg19/"
+        "GATK_ResourceBundle_5777_b37_phiX174_short/genome")
+
+    res = build_local_resource(dirname, {
+        "type": "genome",
+        "filename": "chrAll.fa"
+    })
+    assert res is not None
+
+    ref = build_reference_genome_from_resource(res)
+    ref.open()
+
+    print(ref.get_all_chrom_lengths())
+    assert len(ref.get_all_chrom_lengths()) == 3
+
+    assert ref.get_chrom_length("X") == 300_000

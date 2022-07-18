@@ -1,19 +1,19 @@
 """
 Provides basic classes for genomic resources and repositories.
 
-       +-----------------------------+                    +-----------------+
- +-----| AbstractGenomicResourceRepo |--------------------| GenomicResource |
- |     +-----------------------------+                    +-----------------+
- |        ^                    ^                                    |
- |        |                    |                                    |
- |        |       +---------------------+      +----------------------------+
- |        |       | GenomicResourceRepo -------| ReadOnlyRepositoryProtocol |
- |        |       +---------------------+      +----------------------------+
- |        |                                                         ^
- |        |                                                         |
- |    +--------------------------+            +----------_------------------+
- +----- GenomicResourceGroupRepo |            | ReadWriteRepositoryProtocol |
-      +--------------------------+            +-----------_-----------------+
+       +---------------------+                    +-----------------+
+ +-----| GenomicResourceRepo |--------------------| GenomicResource |
+ |     +---------------------+                    +-----------------+
+ |        ^               ^                                    |
+ |        |               |                                    |
+ |        |  +-----------------------------+     +----------------------------+
+ |        |  | GenomicResourceProtocolRepo | ----| ReadOnlyRepositoryProtocol |
+ |        |  +-----------------------------+     +----------------------------+
+ |        |                                                    ^
+ |        |                                                    |
+ |    +--------------------------+            +-----------------------------+
+ +----| GenomicResourceGroupRepo |            | ReadWriteRepositoryProtocol |
+      +--------------------------+            +-----------------------------+
 
 
 """
@@ -65,6 +65,9 @@ def parse_gr_id_version_token(token):
     Returns None if s in not a Genomic Resource Id Version. Otherwise
     returns token,version tupple
     """
+    if token == "":
+        return "", (0, )
+
     match = _GR_ID_WITH_VERSION_TOKEN_RE.fullmatch(token)
     if not match:
         return None
@@ -90,6 +93,9 @@ def parse_resource_id_version(resource_path):
     resource_id/version requirements. Otherwise returns tuple
     (resource_id, version).
     """
+    if resource_path == "":
+        return "", (0,)
+
     match = _RESOURCE_ID_WITH_VERSION_PATH_RE.fullmatch(resource_path)
     if not match:
         return None, None
@@ -395,7 +401,7 @@ class ReadOnlyRepositoryProtocol(abc.ABC):
         resource = self.find_resource(resource_id, version_constraint)
         if resource is None:
             raise FileNotFoundError(
-                f"resource {resource_id} ({version_constraint}) not found")
+                f"resource <{resource_id}> ({version_constraint}) not found")
         return resource
 
     def load_yaml(self, genomic_resource, filename):
@@ -737,7 +743,7 @@ class ReadWriteRepositoryProtocol(ReadOnlyRepositoryProtocol):
         """Build the content of the repository (i.e '.CONTENTS' file)."""
 
 
-class AbstractGenomicResourceRepo(abc.ABC):
+class GenomicResourceRepo(abc.ABC):
     """Base class for genomic resources repositories."""
 
     def __init__(self, repo_id: str):
@@ -774,7 +780,7 @@ class AbstractGenomicResourceRepo(abc.ABC):
         """Return a generator over all resource in the repository."""
 
 
-class GenomicResourceRepo(AbstractGenomicResourceRepo):
+class GenomicResourceProtocolRepo(GenomicResourceRepo):
     """Base class for real genomic resources repositories."""
 
     def __init__(

@@ -6,7 +6,7 @@ import pytest
 from dae.genomic_resources.test_tools import convert_to_tab_separated
 from dae.genomic_resources.testing import build_test_resource
 from dae.genomic_resources.reference_genome import \
-    open_reference_genome_from_resource
+    build_reference_genome_from_resource
 from dae.annotation.annotatable import VCFAllele
 from dae.annotation.annotation_factory import AnnotationConfigParser, \
     build_annotation_pipeline
@@ -16,8 +16,8 @@ from dae.annotation.normalize_allele_annotator import normalize_allele, \
 
 
 @pytest.fixture
-def example_1_genome():    
-    # Example from 
+def example_1_genome():
+    # Example from
     # https://genome.sph.umich.edu/wiki/File:Normalization_mnp.png
 
     res = build_test_resource({
@@ -29,7 +29,7 @@ def example_1_genome():
         """),
         "chr.fa.fai": "1\t11\t3\t11\t12\n"
     })
-    genome = open_reference_genome_from_resource(res)
+    genome = build_reference_genome_from_resource(res)
     return genome
 
 
@@ -41,16 +41,15 @@ def example_1_genome():
     (5, 7, "CAT"),
 ])
 def test_example_1_genome_basic(example_1_genome, beg, end, seq):
+    with example_1_genome.open() as genome:
+        assert genome.get_chrom_length("1") == 11
 
-    genome = example_1_genome
-    assert genome.get_chrom_length("1") == 11
-
-    assert genome.get_sequence("1", beg, end) == seq
+        assert genome.get_sequence("1", beg, end) == seq
 
 
 @pytest.fixture
 def example_2_genome():
-    # Example from 
+    # Example from
     # https://genome.sph.umich.edu/wiki/File:Normalization_str.png
 
     res = build_test_resource({
@@ -62,7 +61,7 @@ def example_2_genome():
         """),
         "chr.fa.fai": "1\t14\t3\t14\t15\n"
     })
-    genome = open_reference_genome_from_resource(res)
+    genome = build_reference_genome_from_resource(res)
     return genome
 
 
@@ -76,11 +75,10 @@ def example_2_genome():
     (3, 3, "G"),
 ])
 def test_example_2_genome_basic(example_2_genome, beg, end, seq):
+    with example_2_genome.open() as genome:
+        assert genome.get_chrom_length("1") == 14
 
-    genome = example_2_genome
-    assert genome.get_chrom_length("1") == 14
-
-    assert genome.get_sequence("1", beg, end) == seq
+        assert genome.get_sequence("1", beg, end) == seq
 
 
 @pytest.mark.parametrize("pos,ref,alt", [
@@ -90,18 +88,17 @@ def test_example_2_genome_basic(example_2_genome, beg, end, seq):
     (5, "CAT", "TGC"),
 ])
 def test_example_1_normalize(example_1_genome, pos, ref, alt):
+    with example_1_genome.open() as genome:
+        allele = VCFAllele("1", pos, ref, alt)
 
-    genome = example_1_genome
-    allele = VCFAllele("1", pos, ref, alt)
+        check_ref = genome.get_sequence("1", pos, pos + len(ref) - 1)
+        assert ref == check_ref
 
-    check_ref = genome.get_sequence("1", pos, pos + len(ref) - 1)
-    assert ref == check_ref
+        normalized = normalize_allele(allele, genome)
 
-    normalized = normalize_allele(allele, genome)
-
-    assert normalized.pos == 5, (allele, normalized)
-    assert normalized.ref == "CAT", (allele, normalized)
-    assert normalized.alt == "TGC", (allele, normalized)
+        assert normalized.pos == 5, (allele, normalized)
+        assert normalized.ref == "CAT", (allele, normalized)
+        assert normalized.alt == "TGC", (allele, normalized)
 
 
 @pytest.mark.parametrize("pos,ref,alt", [
@@ -113,17 +110,17 @@ def test_example_1_normalize(example_1_genome, pos, ref, alt):
 ])
 def test_example_2_normalize(example_2_genome, pos, ref, alt):
 
-    genome = example_2_genome
-    allele = VCFAllele("1", pos, ref, alt)
+    with example_2_genome.open() as genome:
+        allele = VCFAllele("1", pos, ref, alt)
 
-    check_ref = genome.get_sequence("1", pos, pos + len(ref) - 1)
-    assert ref == check_ref
+        check_ref = genome.get_sequence("1", pos, pos + len(ref) - 1)
+        assert ref == check_ref
 
-    normalized = normalize_allele(allele, genome)
+        normalized = normalize_allele(allele, genome)
 
-    assert normalized.pos == 3, (allele, normalized)
-    assert normalized.ref == "GCA", (allele, normalized)
-    assert normalized.alt == "G", (allele, normalized)
+        assert normalized.pos == 3, (allele, normalized)
+        assert normalized.ref == "GCA", (allele, normalized)
+        assert normalized.alt == "G", (allele, normalized)
 
 
 def test_normalize_allele_annotator_config():
@@ -154,25 +151,27 @@ def test_normalize_allele_annotator_pipeline(grr_fixture, pos, ref, alt):
             genome: hg19/GATK_ResourceBundle_5777_b37_phiX174_short/genome
         """)
 
-    pipeline = build_annotation_pipeline(
+    annotation_pipeline = build_annotation_pipeline(
         pipeline_config_str=config, grr_repository=grr_fixture)
 
-    assert len(pipeline.annotators) == 1
-    annotator = pipeline.annotators[0]
+    with annotation_pipeline.open() as pipeline:
+        assert len(pipeline.annotators) == 1
+        annotator = pipeline.annotators[0]
 
-    assert annotator.annotator_type() == "normalize_allele_annotator"
-    assert isinstance(annotator, NormalizeAlleleAnnotator)
+        assert annotator.annotator_type() == "normalize_allele_annotator"
+        assert isinstance(annotator, NormalizeAlleleAnnotator)
 
-    assert annotator.genome.get_sequence("1", 20_001, 20_010) == "CCTGGTGCTC"
+        assert annotator.genome.get_sequence("1", 20_001, 20_010) ==  \
+            "CCTGGTGCTC"
 
-    allele = VCFAllele("1", pos, ref, alt)
-    result = pipeline.annotate(allele)
+        allele = VCFAllele("1", pos, ref, alt)
+        result = pipeline.annotate(allele)
 
-    norm = result["normalized_allele"]
+        norm = result["normalized_allele"]
 
-    assert norm.pos == 20_006
-    assert norm.ref == "TGC"
-    assert norm.alt == "T"
+        assert norm.pos == 20_006
+        assert norm.ref == "TGC"
+        assert norm.alt == "T"
 
 
 @pytest.mark.parametrize("pos,ref,alt, npos, nref, nalt", [
@@ -187,28 +186,29 @@ def test_normalize_tandem_repeats(pos, ref, alt, npos, nref, nalt):
             genome: hg38/genomes/GRCh38-hg38
         """)
 
-    pipeline = build_annotation_pipeline(
+    annotation_pipeline = build_annotation_pipeline(
         pipeline_config_str=config)
 
-    assert pipeline is not None
+    with annotation_pipeline.open() as pipeline:
+        assert pipeline is not None
 
-    assert len(pipeline.annotators) == 1
-    annotator = pipeline.annotators[0]
+        assert len(pipeline.annotators) == 1
+        annotator = pipeline.annotators[0]
 
-    assert annotator.annotator_type() == "normalize_allele_annotator"
-    assert isinstance(annotator, NormalizeAlleleAnnotator)
+        assert annotator.annotator_type() == "normalize_allele_annotator"
+        assert isinstance(annotator, NormalizeAlleleAnnotator)
 
-    assert annotator.genome.get_sequence(
-        "chrX", 1_948_771, 1_948_782) == "TTTTTTTTTTTT"
+        assert annotator.genome.get_sequence(
+            "chrX", 1_948_771, 1_948_782) == "TTTTTTTTTTTT"
 
-    allele = VCFAllele("chrX", pos, ref, alt)
-    result = pipeline.annotate(allele)
+        allele = VCFAllele("chrX", pos, ref, alt)
+        result = pipeline.annotate(allele)
 
-    norm = result["normalized_allele"]
+        norm = result["normalized_allele"]
 
-    assert norm.pos == npos
-    assert norm.ref == nref
-    assert norm.alt == nalt
+        assert norm.pos == npos
+        assert norm.ref == nref
+        assert norm.alt == nalt
 
 
 def test_normalize_allele_annotator_pipeline_schema(grr_fixture):
@@ -237,14 +237,14 @@ def test_normalize_allele_annotator_pipeline_schema(grr_fixture):
 ])
 def test_normalize_novariant_allele(
         example_2_genome, pos, ref, alt, npos, nref, nalt):
-    genome = example_2_genome
-    allele = VCFAllele("1", pos, ref, alt)
+    with example_2_genome.open() as genome:
+        allele = VCFAllele("1", pos, ref, alt)
 
-    check_ref = genome.get_sequence("1", pos, pos + len(ref) - 1)
-    assert ref == check_ref
+        check_ref = genome.get_sequence("1", pos, pos + len(ref) - 1)
+        assert ref == check_ref
 
-    normalized = normalize_allele(allele, genome)
+        normalized = normalize_allele(allele, genome)
 
-    assert normalized.pos == npos
-    assert normalized.ref == nref
-    assert normalized.alt == nalt
+        assert normalized.pos == npos
+        assert normalized.ref == nref
+        assert normalized.alt == nalt

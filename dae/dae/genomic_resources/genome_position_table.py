@@ -176,6 +176,14 @@ class GenomicPositionTable(abc.ABC):
     def close(self):
         """Close the resource."""
 
+    # @abc.abstractmethod
+    # def open(self):
+    #     """Open the resource."""
+
+    # @abc.abstractmethod
+    # def is_open(self):
+    #     """Check if the resource is open."""
+
     def get_chromosomes(self):
         return self.chrom_order
 

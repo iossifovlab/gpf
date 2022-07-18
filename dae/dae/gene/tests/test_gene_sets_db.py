@@ -1,4 +1,4 @@
-# pylint: disable=redefined-outer-name,C0114,C0116,protected-access
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
 
 import pytest
 
@@ -7,8 +7,8 @@ from dae.genomic_resources.testing import build_testing_repository
 from dae.genomic_resources.repository import GR_CONF_FILE_NAME
 
 
-@pytest.fixture(scope="session")
-def gene_sets_repo():
+@pytest.fixture
+def gene_sets_repo(tmp_path):
     sets_repo = build_testing_repository(repo_id="gene_sets", content={
         "main": {
             GR_CONF_FILE_NAME: (
@@ -70,11 +70,11 @@ def gene_sets_repo():
                 "TEST_GENE_SET3\tsomedescription\tPOGZ\n"
             )
         }
-    })
+    }, root_path=str(tmp_path))
     return sets_repo
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 def gene_sets_db(gene_sets_repo):
     resources = [
         gene_sets_repo.get_resource("main"),

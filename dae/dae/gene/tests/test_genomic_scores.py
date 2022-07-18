@@ -7,8 +7,8 @@ from dae.genomic_resources.testing import build_testing_repository
 from dae.genomic_resources.repository import GR_CONF_FILE_NAME
 
 
-@pytest.fixture(scope="session")
-def scores_repo():
+@pytest.fixture
+def scores_repo(tmp_path):
     sets_repo = build_testing_repository(repo_id="gene_sets", content={
         "phastCons": {
             GR_CONF_FILE_NAME: (
@@ -59,7 +59,7 @@ def scores_repo():
                 )
             }
         }
-    })
+    }, root_path=str(tmp_path))
     return sets_repo
 
 

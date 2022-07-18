@@ -51,20 +51,21 @@ def test_build_record_to_annotable_failures():
         build_record_to_annotatable({"gosho": "pesho"}, set([]))
 
 
-def setup_dir(dir, files):
-    """
+def setup_dir(directory, files):
+    """Set up a directory with list of (file name, file content).
+
     TODO: There must be a pytest tool like that.
           If not, we should moved it to a more general location.
           Also, it should be extended to recursivelly build directories.
     """
     for file_name, file_content in files.items():
-        with open(dir / file_name, "wt") as F:
-            F.write(file_content)
+        with open(directory / file_name, "wt", encoding="utf8") as infile:
+            infile.write(file_content)
 
 
 def get_file_content_as_string(file):
-    with open(file, "rt") as F:
-        return "".join(F.readlines())
+    with open(file, "rt", encoding="utf8") as infile:
+        return "".join(infile.readlines())
 
 
 def test_basic_setup(tmp_path):

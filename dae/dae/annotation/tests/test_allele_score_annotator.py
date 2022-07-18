@@ -1,5 +1,7 @@
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
+
 from dae.genomic_resources.genomic_scores import \
-    open_allele_score_from_resource
+    build_allele_score_from_resource
 from dae.annotation.score_annotator import AlleleScoreAnnotator
 from dae.annotation.annotation_pipeline import AnnotationPipeline
 
@@ -9,7 +11,7 @@ def test_allele_score_annotator(
 
     pipeline = AnnotationPipeline([], grr_fixture)
     resource = grr_fixture.get_resource("hg38/TESTFreq")
-    score = open_allele_score_from_resource(resource)
+    score = build_allele_score_from_resource(resource)
 
     annotator = AlleleScoreAnnotator({
         "annotator_type": "allele_score",
@@ -19,14 +21,14 @@ def test_allele_score_annotator(
 
     pipeline.add_annotator(annotator)
 
-    print(annotator.get_all_annotation_attributes())
+    with pipeline.open() as work_pipeline:
 
-    for sv, e in frequency_variants_expected:
-        for sa in sv.alt_alleles:
-            a = sa.get_annotatable()
-            result = pipeline.annotate(a)
-            for score, value in e.items():
-                assert result.get(score) == value
+        for svar, expected in frequency_variants_expected:
+            for sallele in svar.alt_alleles:
+                annotatable = sallele.get_annotatable()
+                result = work_pipeline.annotate(annotatable)
+                for score, value in expected.items():
+                    assert result.get(score) == value
 
 
 def test_allele_score_annotator_attributes(
@@ -34,18 +36,19 @@ def test_allele_score_annotator_attributes(
 
     pipeline = AnnotationPipeline([], grr_fixture)
     resource = grr_fixture.get_resource("hg38/TESTFreq")
-    score = open_allele_score_from_resource(resource)
+    score = build_allele_score_from_resource(resource)
 
     annotator = AlleleScoreAnnotator({
         "annotator_type": "allele_score",
         "resource_id": "hg38/TESTFreq",
         "attributes": None,
     }, score)
-    pipeline.add_annotator(annotator)
 
-    print(annotator.get_all_annotation_attributes())
+    pipeline.add_annotator(annotator)
 
     assert annotator.get_all_annotation_attributes() == [
         {"name": "altFreq", "type": "float", "desc": ""},
         {"name": "altFreq2", "type": "float", "desc": ""},
     ]
+
+    assert not annotator.is_open()

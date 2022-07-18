@@ -3,7 +3,7 @@
 import pytest
 
 from dae.genomic_resources.fsspec_protocol import build_fsspec_protocol
-from dae.genomic_resources.repository import GenomicResourceRepo
+from dae.genomic_resources.repository import GenomicResourceProtocolRepo
 
 from dae.genomic_resources.liftover_resource import \
     load_liftover_chain_from_resource
@@ -20,7 +20,7 @@ def test_liftover_chain_resource(
 
     dirname = fixture_dirname("genomic_resources")
     proto = build_fsspec_protocol("d", dirname)
-    repo = GenomicResourceRepo(proto)
+    repo = GenomicResourceProtocolRepo(proto)
 
     chain_resource = repo.get_resource(
         "hg38/hg38tohg19")

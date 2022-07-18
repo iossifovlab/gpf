@@ -34,7 +34,7 @@ def test_import_and_query(resources_dir, tmpdir, gpf_instance_2013):
         },
         "hdfs": {
             "base_dir": "/tests/test_schema2/studies",
-            "host": "locahost",
+            "host": "localhost",
             "port": 8020,
             "replication": 1,
         },

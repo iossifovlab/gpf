@@ -3,11 +3,11 @@
 import pytest
 
 from dae.genomic_resources.gene_models import \
-    load_gene_models_from_resource, GeneModels
+    build_gene_models_from_resource, GeneModels
 from dae.genomic_resources.testing import build_test_resource
 from dae.genomic_resources.test_tools import convert_to_tab_separated
 from dae.genomic_resources.fsspec_protocol import build_fsspec_protocol
-from dae.genomic_resources.repository import GenomicResourceRepo, \
+from dae.genomic_resources.repository import GenomicResourceProtocolRepo, \
     GenomicResource
 
 
@@ -28,7 +28,9 @@ def test_gene_models_resource_with_format():
             "genes.txt": convert_to_tab_separated(GMM_CONTENT)
         })
 
-    gene_models = load_gene_models_from_resource(res)
+    gene_models = build_gene_models_from_resource(res)
+    gene_models.load()
+
     assert isinstance(gene_models, GeneModels)
 
     assert set(gene_models.gene_names()) == {"TP53", "POGZ"}
@@ -43,7 +45,9 @@ def test_gene_models_resource_with_inferred_format():
             "genes.txt": convert_to_tab_separated(GMM_CONTENT)
         })
 
-    gene_models = load_gene_models_from_resource(res)
+    gene_models = build_gene_models_from_resource(res)
+    gene_models.load()
+
     assert isinstance(gene_models, GeneModels)
 
     assert set(gene_models.gene_names()) == {"TP53", "POGZ"}
@@ -64,7 +68,9 @@ def test_gene_models_resource_with_inferred_format_and_gene_mapping():
             """)
         })
 
-    gene_models = load_gene_models_from_resource(res)
+    gene_models = build_gene_models_from_resource(res)
+    gene_models.load()
+
     assert isinstance(gene_models, GeneModels)
 
     assert set(gene_models.gene_names()) == {"gosho", "pesho"}
@@ -85,7 +91,9 @@ def test_against_against_different_repo_types(resource_builder, scheme):
             "genes.txt": convert_to_tab_separated(GMM_CONTENT)
         })
 
-    gene_models = load_gene_models_from_resource(res)
+    gene_models = build_gene_models_from_resource(res)
+    gene_models.load()
+
     assert set(gene_models.gene_names()) == {"TP53", "POGZ"}
     assert len(gene_models.transcript_models) == 3
 
@@ -94,7 +102,7 @@ def test_gene_models_resource(fixture_dirname):
 
     dirname = fixture_dirname("genomic_resources")
     proto = build_fsspec_protocol("d", dirname)
-    repo = GenomicResourceRepo(proto)
+    repo = GenomicResourceProtocolRepo(proto)
 
     res = repo.get_resource(
         "hg19/GATK_ResourceBundle_5777_b37_phiX174_short/"
@@ -103,7 +111,9 @@ def test_gene_models_resource(fixture_dirname):
     assert res is not None
     assert isinstance(res, GenomicResource)
 
-    gene_models = load_gene_models_from_resource(res)
+    gene_models = build_gene_models_from_resource(res)
+    gene_models.load()
+
     assert isinstance(gene_models, GeneModels)
 
     assert len(gene_models.gene_models) == 13

@@ -16,7 +16,7 @@ from RangeHTTPServer import RangeRequestHandler  # type: ignore
 
 from dae.genomic_resources.repository import \
     GR_CONF_FILE_NAME, \
-    GenomicResourceRepo
+    GenomicResourceProtocolRepo
 from dae.genomic_resources.fsspec_protocol import \
     build_fsspec_protocol
 from dae.genomic_resources.testing import \
@@ -250,7 +250,7 @@ def resource_builder(proto_builder, embedded_proto):
         proto = proto_builder(
             src_proto, scheme=scheme, proto_id=repo_id,)
 
-        repo = GenomicResourceRepo(proto)
+        repo = GenomicResourceProtocolRepo(proto)
 
         return repo.get_resource("t")
 
@@ -333,7 +333,7 @@ def fsspec_repo(fsspec_proto):
     def builder(scheme, repo_id="testing"):
         proto = fsspec_proto(
             scheme, proto_id=repo_id)
-        repo = GenomicResourceRepo(proto)
+        repo = GenomicResourceProtocolRepo(proto)
         return repo
 
     return builder
@@ -345,6 +345,6 @@ def repo_builder(proto_builder, embedded_proto):
     def builder(content, scheme="file", repo_id="testing"):
         src_proto = embedded_proto(content=content)
         proto = proto_builder(src_proto, scheme=scheme, proto_id=repo_id)
-        return GenomicResourceRepo(proto)
+        return GenomicResourceProtocolRepo(proto)
 
     return builder

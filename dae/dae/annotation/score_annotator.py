@@ -6,8 +6,8 @@ import copy
 from typing import Dict, List, cast, Any
 
 from dae.genomic_resources.genomic_scores import \
-    open_allele_score_from_resource, open_position_score_from_resource, \
-    open_np_score_from_resource
+    build_allele_score_from_resource, build_position_score_from_resource, \
+    build_np_score_from_resource
 from dae.genomic_resources.aggregators import AGGREGATOR_SCHEMA
 
 from .annotatable import Annotatable, VCFAllele
@@ -55,11 +55,17 @@ class VariantScoreAnnotatorBase(Annotator):
         self.non_default_nucleotide_aggregators: dict = {}
         self._collect_non_default_aggregators()
 
+    def open(self):
+        self.score.open()
+
+    def is_open(self):
+        return self.score.is_open()
+
     def get_all_annotation_attributes(self) -> List[Dict]:
         result = []
         for score in self.score.score_columns.values():
             result.append({
-                "name": score.id,
+                "name": score.score_id,
                 "type": score.type,
                 "desc": score.desc
             })
@@ -124,7 +130,7 @@ def build_position_score_annotator(pipeline: AnnotationPipeline, config: Dict):
     resource_id = config["resource_id"]
     resource = pipeline.repository.get_resource(resource_id)
 
-    score = open_position_score_from_resource(resource)
+    score = build_position_score_from_resource(resource)
     return PositionScoreAnnotator(config, score)
 
 
@@ -232,7 +238,7 @@ def build_np_score_annotator(pipeline: AnnotationPipeline, config: Dict):
     resource_id = config["resource_id"]
     resource = pipeline.repository.get_resource(resource_id)
 
-    score = open_np_score_from_resource(resource)
+    score = build_np_score_from_resource(resource)
     return NPScoreAnnotator(config, score)
 
 
@@ -302,7 +308,7 @@ def build_allele_score_annotator(pipeline: AnnotationPipeline, config: Dict):
     resource_id = config["resource_id"]
     resource = pipeline.repository.get_resource(resource_id)
 
-    score = open_allele_score_from_resource(resource)
+    score = build_allele_score_from_resource(resource)
     return AlleleScoreAnnotator(config, score)
 
 

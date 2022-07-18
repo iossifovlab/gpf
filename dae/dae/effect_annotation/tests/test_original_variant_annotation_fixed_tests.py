@@ -1,10 +1,12 @@
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
+
 import pytest
 from dae.effect_annotation.annotator import EffectAnnotator
 from dae.genomic_resources import build_genomic_resource_repository
 from dae.genomic_resources.reference_genome import \
-    open_reference_genome_from_resource
+    build_reference_genome_from_resource
 from dae.genomic_resources.gene_models import \
-    load_gene_models_from_resource
+    build_gene_models_from_resource
 
 
 @pytest.fixture(scope="module")
@@ -16,14 +18,14 @@ def grr_repository():
 def genomic_sequence_2013(grr_repository):
     resource = grr_repository.get_resource(
         "hg19/genomes/GATK_ResourceBundle_5777_b37_phiX174")
-    return open_reference_genome_from_resource(resource)
+    return build_reference_genome_from_resource(resource).open()
 
 
 @pytest.fixture(scope="module")
 def gene_models_2013(grr_repository):
     resource = grr_repository.get_resource(
         "hg19/gene_models/refGene_v201309")
-    return load_gene_models_from_resource(resource)
+    return build_gene_models_from_resource(resource).load()
 
 
 def test_chr12_130827138_del_var(genomic_sequence_2013, gene_models_2013):

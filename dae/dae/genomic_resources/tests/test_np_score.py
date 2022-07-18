@@ -1,7 +1,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 
 from dae.genomic_resources import GenomicResource
-from dae.genomic_resources.genomic_scores import open_np_score_from_resource
+from dae.genomic_resources.genomic_scores import build_np_score_from_resource
 from dae.genomic_resources.testing import build_test_resource
 from dae.genomic_resources.test_tools import convert_to_tab_separated
 from dae.genomic_resources.repository import GR_CONF_FILE_NAME
@@ -32,7 +32,8 @@ def test_the_simplest_np_score(tmp_path):
             """
         })
     assert res.get_type() == "np_score"
-    score = open_np_score_from_resource(res)
+    score = build_np_score_from_resource(res)
+    score.open()
 
     assert score.get_all_scores() == ["cadd_raw"]
     assert score.fetch_scores("1", 11, "A", "C") == {"cadd_raw": 0.03}
@@ -74,7 +75,8 @@ def test_np_score_aggregation():
         })
 
     assert res.get_type() == "np_score"
-    score = open_np_score_from_resource(res)
+    score = build_np_score_from_resource(res)
+    score.open()
 
     assert score.table.chrom_column_i == 0
     assert score.table.pos_begin_column_i == 1
@@ -136,7 +138,7 @@ def test_np_score_fetch_region():
             2      16         19       C          G            0.05  4
         """)
     })
-    score = open_np_score_from_resource(res)
+    score = build_np_score_from_resource(res).open()
 
     # The in-mem table will sort the records. In this example it will sort
     # the alternatives column (previous columns are the same). That is why
