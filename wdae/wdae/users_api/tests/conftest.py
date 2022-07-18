@@ -1,13 +1,14 @@
-import pytest
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
+
 from datetime import timedelta
+import pytest
 
 from django.contrib.auth.models import Group
 from django.contrib.auth import get_user_model
 from django.utils import timezone
 
 from rest_framework.test import APIClient  # type: ignore
-from oauth2_provider.models import get_application_model, \
-    get_access_token_model
+from oauth2_provider.models import get_access_token_model
 
 from users_api.models import WdaeUser
 
@@ -47,12 +48,12 @@ def inactive_user(db, user_model):
 
 @pytest.fixture()
 def logged_in_user(active_user, oauth_app):
-    AccessToken = get_access_token_model()
-    user_access_token = AccessToken(
+    access_token = get_access_token_model()
+    user_access_token = access_token(
         user=active_user,
-        scope='read write',
+        scope="read write",
         expires=timezone.now() + timedelta(seconds=300),
-        token='active-user-token',
+        token="active-user-token",
         application=oauth_app
     )
     user_access_token.save()
@@ -66,7 +67,7 @@ def three_new_users(db, user_model):
     users = []
     for email_id in range(3):
         user = user_model.objects.create(
-            email="user{}@example.com".format(email_id + 1)
+            email=f"user{email_id + 1}@example.com"
         )
         users.append(user)
 

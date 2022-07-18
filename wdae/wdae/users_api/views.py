@@ -14,23 +14,21 @@ from rest_framework.decorators import action, api_view, authentication_classes
 from rest_framework import status, viewsets, permissions, filters
 from rest_framework.response import Response
 from rest_framework.authentication import SessionAuthentication
+from oauth2_provider.contrib.rest_framework import OAuth2Authentication
+from oauth2_provider.models import get_application_model
 
 from utils.logger import log_filter, LOGGER, request_logging, \
     request_logging_function_view
 from utils.email_regex import is_email_valid
 from utils.password_requirements import is_password_valid
 from utils.streaming_response_util import convert
+from utils.authentication import GPFOAuth2Authentication
 
 from .authentication import SessionAuthenticationWithUnauthenticatedCSRF
 from .models import VerificationPath, AuthenticationLog
 from .serializers import UserSerializer, UserWithoutEmailSerializer
 
 from .utils import LOCKOUT_THRESHOLD, csrf_clear
-
-from oauth2_provider.contrib.rest_framework import OAuth2Authentication
-from oauth2_provider.models import get_application_model
-
-from utils.authentication import GPFOAuth2Authentication
 
 
 def iterator_to_json(users):
@@ -187,9 +185,7 @@ def register(request):
             log_filter(
                 request,
                 "registration succeded; "
-                "email: '"
-                + str(email)
-                + "'",
+                "email: '" + str(email) + "'",
             )
         )
         return Response({}, status=status.HTTP_201_CREATED)
@@ -198,9 +194,7 @@ def register(request):
             log_filter(
                 request,
                 "Registration failed: IntegrityError; "
-                "email: '"
-                + str(email)
-                + "'",
+                "email: '" + str(email) + "'",
             )
         )
         return Response({}, status=status.HTTP_201_CREATED)
@@ -209,9 +203,7 @@ def register(request):
             log_filter(
                 request,
                 "Registration failed: Email or Researcher Id not found; "
-                "email: '"
-                + str(email)
-                + "'",
+                "email: '" + str(email) + "'",
             )
         )
         return Response(
@@ -316,6 +308,7 @@ def logout(request):
 @api_view(["GET"])
 @authentication_classes((GPFOAuth2Authentication,))
 def get_user_info(request):
+    """Gets user info for currently logged-in user."""
     user = request.user
     if user.is_authenticated:
         return Response(
@@ -326,8 +319,7 @@ def get_user_info(request):
             },
             status.HTTP_200_OK,
         )
-    else:
-        return Response({"loggedIn": False}, status.HTTP_200_OK)
+    return Response({"loggedIn": False}, status.HTTP_200_OK)
 
 
 @request_logging_function_view(LOGGER)
@@ -347,17 +339,18 @@ def check_verif_path(request):
 @api_view(["GET"])
 @authentication_classes((OAuth2Authentication,))
 def get_federation_credentials(request):
+    """Creates a new federation application and returns its credentials."""
     user = request.user
 
     if not user.is_authenticated:
         return Response(status=status.HTTP_401_UNAUTHORIZED)
 
-    Application = get_application_model()
-    if Application.objects.filter(name=request.GET['name']).exists():
+    application = get_application_model()
+    if application.objects.filter(name=request.GET["name"]).exists():
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
-    new_application = Application(**{
-        "name": request.GET['name'],
+    new_application = application(**{
+        "name": request.GET["name"],
         "user_id": user.id,
         "client_type": "confidential",
         "authorization_grant_type": "client-credentials"
@@ -376,12 +369,12 @@ def get_federation_credentials(request):
 @api_view(["GET"])
 @authentication_classes((OAuth2Authentication,))
 def revoke_federation_credentials(request):
+    """Deletes a given federation app."""
     user = request.user
     if not user.is_authenticated:
         return Response(status=status.HTTP_401_UNAUTHORIZED)
-    app = get_application_model().objects.get(name=request.GET['name'])
+    app = get_application_model().objects.get(name=request.GET["name"])
     if not user.id == app.user_id:
         return Response(status=status.HTTP_401_UNAUTHORIZED)
-    else:
-        app.delete()
-        return Response(status=status.HTTP_200_OK)
+    app.delete()
+    return Response(status=status.HTTP_200_OK)

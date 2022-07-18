@@ -1,5 +1,4 @@
-"""Provides base class for query views."""
-
+"""Module containing the base view for data-related views."""
 from rest_framework import views  # type: ignore
 
 from gpf_instance.gpf_instance import get_gpf_instance
@@ -9,8 +8,12 @@ from utils.authentication import GPFOAuth2Authentication
 
 
 class QueryBaseView(views.APIView):
-    """Base class for query views."""
+    """
+    Base classfor data-related views.
 
+    Provides custom OAuth2 authentication and an automatic dataset
+    permissions check.
+    """
     authentication_classes = (GPFOAuth2Authentication,)
     permission_classes = (IsDatasetAllowed,)
 
