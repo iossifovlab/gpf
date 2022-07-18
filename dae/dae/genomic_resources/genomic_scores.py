@@ -95,8 +95,10 @@ class GenomicScore(abc.ABC):
         return self.score_columns.get(score_id)
 
     def close(self):
-        self.table.close()
-        self.table = None
+        # FIXME: consider using weekrefs
+        # self.table.close()
+        # self.table = None
+        pass
 
     def is_open(self):
         return self.table is not None
@@ -104,6 +106,9 @@ class GenomicScore(abc.ABC):
     def open(self) -> GenomicScore:
         """Open genomic score resource and returns it."""
         if self.is_open():
+            logger.info(
+                "opening already opened genomic score: %s",
+                self.resource.resource_id)
             return self
 
         self.table = open_genome_position_table(

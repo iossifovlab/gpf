@@ -1313,8 +1313,17 @@ class GeneModels:
             "inferred file formats are %s", inferred_formats)
         return None
 
+    def is_loaded(self):
+        return len(self.transcript_models) > 0
+
     def load(self) -> GeneModels:
         """Load gene models."""
+        if self.is_loaded():
+            logger.info(
+                "loading already loaded gene models: %s",
+                self.resource.resource_id)
+            return self
+
         filename = self.resource.get_config()["filename"]
         fileformat = self.resource.get_config().get("format", None)
         gene_mapping_filename = self.resource.get_config().get(
