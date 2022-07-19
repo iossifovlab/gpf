@@ -87,7 +87,7 @@ class SummaryQueryBuilder(BaseQueryBuilder):
         #pylint: disable=too-many-arguments,too-many-locals
         if self.summary_allele_table:
             inheritance = None
-        where_clause = self._base_build_where(
+        where_clause = self._build_where_string(
             regions=regions,
             genes=genes,
             effect_types=effect_types,

@@ -23,6 +23,10 @@ class ImpalaDialect(Dialect):
 
 
 class ImpalaVariants:
+    """A backend implementing an impala backend."""
+
+    # pylint: disable=too-many-instance-attributes
+
     def __init__(
         self,
         impala_helpers,
@@ -35,8 +39,8 @@ class ImpalaVariants:
     ):
 
         super().__init__()
-        assert db, db
-        assert pedigree_table, pedigree_table
+        assert db
+        assert pedigree_table
 
         self.dialect = ImpalaDialect()
         self.db = db
@@ -58,12 +62,6 @@ class ImpalaVariants:
         self.pedigree_schema = self._fetch_pedigree_schema()
         self.ped_df = self._fetch_pedigree()
         self.families = FamiliesData.from_pedigree_df(self.ped_df)
-
-        # Serializer
-        # VariantSchema = namedtuple('VariantSchema', 'col_names')
-        # self.serializer = AlleleParquetSerializer(
-        #     variants_schema=VariantSchema(col_names=list(self.combined_columns))
-        # )
 
         assert gene_models is not None
         self.gene_models = gene_models
@@ -90,12 +88,10 @@ class ImpalaVariants:
                     _tbl_props["frequency_bin"]["rare_boundary"]
                 ),
                 "coding_effect_types": set(
-                    [
-                        lambda s: s.strip()
-                        for s in _tbl_props["coding_bin"][
-                            "coding_effect_types"
-                        ].split(",")
-                    ]
+                    lambda s: s.strip()
+                    for s in _tbl_props["coding_bin"][
+                        "coding_effect_types"
+                    ].split(",")
                 ),
             }
         else:
@@ -104,20 +100,16 @@ class ImpalaVariants:
     def connection(self):
         conn = self._impala_helpers.connection()
         logger.debug(
-            f"getting connection to host {conn.host} from impala helpers "
-            f"{id(self._impala_helpers)}"
+            "getting connection to host %s from impala helpers %s",
+            conn.host, id(self._impala_helpers)
         )
         return conn
 
     def _fetch_schema(self, table):
         with closing(self.connection()) as conn:
             with conn.cursor() as cursor:
-                q = """
-                    DESCRIBE {db}.{table}
-                """.format(
-                    db=self.db, table=table
-                )
-                cursor.execute(q)
+                query = f"""DESCRIBE {self.db}.{table}"""
+                cursor.execute(query)
                 df = as_pandas(cursor)
 
             records = df[["name", "type"]].to_records()
@@ -129,18 +121,16 @@ class ImpalaVariants:
     def _fetch_tblproperties(self, meta_table):
         with closing(self.connection()) as conn:
             with conn.cursor() as cursor:
-                q = """SELECT value FROM {db}.{meta_table}
-                       WHERE key = 'partition_description'
-                       LIMIT 1
-                    """.format(
-                    db=self.db, meta_table=meta_table
-                )
+                query = f"""SELECT value FROM {self.db}.{meta_table}
+                            WHERE key = 'partition_description'
+                            LIMIT 1
+                """
 
-                cursor.execute(q)
+                cursor.execute(query)
                 config = configparser.ConfigParser()
 
-                for r in cursor:
-                    config.read_string(r[0])
+                for row in cursor:
+                    config.read_string(row[0])
                     return config
         return None
 
@@ -163,7 +153,7 @@ class ImpalaVariants:
         limit=None,
         affected_status=None,
     ) -> Iterator[SummaryVariant]:
-
+        # pylint: disable=too-many-arguments,too-many-locals
         query_builder = SummaryQueryBuilder(
             self.dialect,
             self.db,
@@ -206,15 +196,15 @@ class ImpalaVariants:
                 for row in cursor:
                     try:
                         sv_record = json.loads(row[-1])
-                        sv = (
+                        summary_variant = (
                             SummaryVariantFactory.summary_variant_from_records(
                                 sv_record
                             )
                         )
-                        if sv is None:
+                        if summary_variant is None:  # TODO WHY?
                             continue
-                        yield sv
-                    except Exception as ex:
+                        yield summary_variant
+                    except Exception as ex:  # pylint: disable=broad-except
                         logger.error(
                             "Unable to deserialize summary variant (BQ)"
                         )
@@ -240,9 +230,8 @@ class ImpalaVariants:
         limit=None,
         affected_status=None,
     ):
-
+        # pylint: disable=too-many-arguments,too-many-locals
         with closing(self.connection()) as conn:
-
             with conn.cursor() as cursor:
                 do_join_affected = affected_status is not None
                 query_builder = FamilyQueryBuilder(
@@ -275,15 +264,16 @@ class ImpalaVariants:
                     frequency_filter=frequency_filter,
                     return_reference=return_reference,
                     return_unknown=return_unknown,
-                    limit=None,
+                    limit=limit,
                     affected_status=affected_status,
                 )
 
-                logger.info(f"FAMILY VARIANTS QUERY ({conn.host}):\n {query}")
+                logger.info("FAMILY VARIANTS QUERY (%s):\n %s", conn.host,
+                            query)
                 start = time.perf_counter()
                 cursor.execute(query)
                 end = time.perf_counter()
-                logger.info(f"TIME (IMPALA DB): {end - start}")
+                logger.info("TIME (IMPALA DB): %s", end - start)
 
                 for row in cursor:
                     try:
@@ -291,7 +281,7 @@ class ImpalaVariants:
                         sv_record = json.loads(row[-2])
                         fv_record = json.loads(row[-1])
 
-                        fv = FamilyVariant(
+                        family_variant = FamilyVariant(
                             SummaryVariantFactory.summary_variant_from_records(
                                 sv_record
                             ),
@@ -300,11 +290,8 @@ class ImpalaVariants:
                             np.array(fv_record["best_state"]),
                         )
 
-                        if fv is None:
-                            continue
-                        yield fv
-
-                    except Exception as ex:
+                        yield family_variant
+                    except Exception as ex:  # pylint: disable=broad-except
                         logger.info(
                             "unable to deserialize family variant (IMPALA)"
                         )
@@ -329,12 +316,13 @@ class ImpalaVariants:
         return_unknown=None,
         limit=None,
     ):
-
+        """Query summary variants."""
+        # pylint: disable=too-many-arguments,too-many-locals
         if limit is None:
             count = -1
         else:
             count = limit
-            limit = 10 * limit
+            limit = 10 * limit  # TODO WHY?
 
         with closing(
             self._summary_variants_iterator(
@@ -355,11 +343,8 @@ class ImpalaVariants:
                 limit=limit,
             )
         ) as sv_iterator:
-
-            for sv in sv_iterator:
-                if sv is None:
-                    continue
-                yield sv
+            for summary_variant in sv_iterator:
+                yield summary_variant
                 count -= 1
                 if count == 0:
                     break
@@ -383,7 +368,8 @@ class ImpalaVariants:
         limit=None,
         affected_status=None,
     ):
-
+        """Query family variants."""
+        # pylint: disable=too-many-arguments,too-many-locals
         if limit is None:
             count = -1
         else:
@@ -411,10 +397,8 @@ class ImpalaVariants:
             )
         ) as fv_iterator:
 
-            for v in fv_iterator:
-                if v is None:
-                    continue
-                yield v
+            for family_variant in fv_iterator:
+                yield family_variant
                 count -= 1
                 if count == 0:
                     break
@@ -422,13 +406,8 @@ class ImpalaVariants:
     def _fetch_pedigree(self):
         with closing(self.connection()) as conn:
             with conn.cursor() as cursor:
-                q = """
-                    SELECT * FROM {db}.{pedigree}
-                """.format(
-                    db=self.db, pedigree=self.pedigree_table
-                )
-
-                cursor.execute(q)
+                query = f"""SELECT * FROM {self.db}.{self.pedigree_table}"""
+                cursor.execute(query)
                 ped_df = as_pandas(cursor)
 
         columns = {
@@ -449,23 +428,19 @@ class ImpalaVariants:
 
         ped_df = ped_df.rename(columns=columns)
 
-        ped_df.role = ped_df.role.apply(lambda v: Role(v))
-        ped_df.sex = ped_df.sex.apply(lambda v: Sex(v))
-        ped_df.status = ped_df.status.apply(lambda v: Status(v))
+        ped_df.role = ped_df.role.apply(Role)
+        ped_df.sex = ped_df.sex.apply(Sex)
+        ped_df.status = ped_df.status.apply(Status)
 
         return ped_df
 
     def _fetch_pedigree_schema(self):
         with closing(self.connection()) as conn:
             with conn.cursor() as cursor:
-                q = """
-                    DESCRIBE {db}.{pedigree}
-                """.format(
-                    db=self.db, pedigree=self.pedigree_table
-                )
-
-                cursor.execute(q)
+                query = f"""DESCRIBE {self.db}.{self.pedigree_table}"""
+                cursor.execute(query)
                 df = as_pandas(cursor)
+
                 records = df[["name", "type"]].to_records()
                 schema = {
                     col_name: col_type for (_, col_name, col_type) in records

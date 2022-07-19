@@ -17,8 +17,10 @@ logger = logging.getLogger(__name__)
 
 
 class BigQueryDialect(Dialect):
+    """Abstracts away details related to bigquery."""
+
     def __init__(self, ns: str = None):
-        super().__init__(ns=ns)
+        super().__init__(namespace=ns)
 
     @staticmethod
     def add_unnest_in_join() -> bool:
