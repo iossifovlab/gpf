@@ -59,12 +59,13 @@ def test_import_and_query(resources_dir, tmpdir, gpf_instance_2013):
     # query impala
     backend = storage.build_backend(Box(study_config), None,
                                     gpf_instance_2013.gene_models)
-    # summary_variants = list(backend.query_summary_variants())
     family_variants = list(backend.query_variants())
+    summary_variants = list(backend.query_summary_variants())
 
     # assert the number of summary and family allies is as expected
-    # assert len(summary_variants) == 28
     assert len(family_variants) == 2
+    assert len(summary_variants) == 10
+    assert sum(len(sv.alleles) for sv in summary_variants) == 28
 
 
 def _run_vcf2schema2(ped_file, vcf_file, tmpdir, gpf_instance):

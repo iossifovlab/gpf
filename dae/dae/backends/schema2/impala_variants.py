@@ -3,15 +3,15 @@ import json
 import logging
 import configparser
 from contextlib import closing
+from typing import Iterator
 import numpy as np
 from impala.util import as_pandas
 from dae.pedigrees.family import FamiliesData
 from dae.variants.attributes import Role, Status, Sex
 from dae.backends.schema2.base_query_builder import Dialect
-from dae.backends.schema2.base_query_director import QueryDirector
 from dae.backends.schema2.family_builder import FamilyQueryBuilder
 from dae.backends.schema2.summary_builder import SummaryQueryBuilder
-from dae.variants.variant import SummaryVariantFactory
+from dae.variants.variant import SummaryVariant, SummaryVariantFactory
 from dae.variants.family_variant import FamilyVariant
 
 logger = logging.getLogger(__name__)
@@ -162,7 +162,7 @@ class ImpalaVariants:
         return_unknown=None,
         limit=None,
         affected_status=None,
-    ):
+    ) -> Iterator[SummaryVariant]:
 
         query_builder = SummaryQueryBuilder(
             self.dialect,
@@ -180,9 +180,7 @@ class ImpalaVariants:
             do_join_affected=False,
         )
 
-        director = QueryDirector(query_builder)
-
-        director.build_query(
+        query = query_builder.build_query(
             regions=regions,
             genes=genes,
             effect_types=effect_types,
@@ -201,10 +199,6 @@ class ImpalaVariants:
             affected_status=affected_status,
         )
 
-        # query = sqlparse.format(query_builder.product, reindent=True,
-        #                         keyword_case='upper')
-        query = query_builder.product
-
         with closing(self.connection()) as conn:
             with conn.cursor() as cursor:
                 cursor.execute(query)
@@ -222,7 +216,7 @@ class ImpalaVariants:
                         yield sv
                     except Exception as ex:
                         logger.error(
-                            "unable to deserialize summary variant (BQ)"
+                            "Unable to deserialize summary variant (BQ)"
                         )
                         logger.exception(ex)
                         continue
@@ -266,8 +260,7 @@ class ImpalaVariants:
                     gene_models=self.gene_models,
                     do_join_affected=do_join_affected,
                 )
-                director = QueryDirector(query_builder)
-                director.build_query(
+                query = query_builder.build_query(
                     regions=regions,
                     genes=genes,
                     effect_types=effect_types,
@@ -285,8 +278,6 @@ class ImpalaVariants:
                     limit=None,
                     affected_status=affected_status,
                 )
-
-                query = query_builder.product
 
                 logger.info(f"FAMILY VARIANTS QUERY ({conn.host}):\n {query}")
                 start = time.perf_counter()

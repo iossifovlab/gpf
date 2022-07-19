@@ -10,7 +10,6 @@ from dae.variants.attributes import Role, Status, Sex
 from dae.backends.schema2.base_query_builder import Dialect
 from dae.backends.schema2.family_builder import FamilyQueryBuilder
 from dae.backends.schema2.summary_builder import SummaryQueryBuilder
-from dae.backends.schema2.base_query_director import QueryDirector
 from dae.variants.variant import SummaryVariantFactory
 from dae.variants.family_variant import FamilyVariant
 
@@ -208,9 +207,7 @@ class BigQueryVariants:
             do_join_affected=False,
         )
 
-        director = QueryDirector(query_builder)
-
-        director.build_query(
+        query = query_builder.build_query(
             regions=regions,
             genes=genes,
             effect_types=effect_types,
@@ -229,9 +226,6 @@ class BigQueryVariants:
             affected_status=affected_status,
         )
 
-        # query = sqlparse.format(query_builder.product, reindent=True,
-        #                         keyword_case='upper')
-        query = query_builder.product
         result = self.client.query(query)
 
         for row in result:
@@ -285,9 +279,7 @@ class BigQueryVariants:
             do_join_affected=do_join_affected,
         )
 
-        director = QueryDirector(query_builder)
-
-        director.build_query(
+        query = query_builder.build_query(
             regions=regions,
             genes=genes,
             effect_types=effect_types,
@@ -305,8 +297,6 @@ class BigQueryVariants:
             limit=limit,
             affected_status=affected_status,
         )
-
-        query = query_builder.product
 
         # ------------------ DEBUG ---------------------
         result = []

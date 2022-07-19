@@ -5,6 +5,8 @@ logger = logging.getLogger(__name__)
 
 
 class SummaryQueryBuilder(BaseQueryBuilder):
+    """Build queries related to summary variants"""
+
     def __init__(
         self,
         dialect: Dialect,
@@ -21,7 +23,7 @@ class SummaryQueryBuilder(BaseQueryBuilder):
         gene_models=None,
         do_join_affected=False,
     ):
-
+        #pylint: disable=too-many-arguments
         self.family_variant_table = family_variant_table
         self.summary_allele_table = summary_allele_table
 
@@ -42,56 +44,29 @@ class SummaryQueryBuilder(BaseQueryBuilder):
         self.do_join_affected = do_join_affected
         self.families = families
 
-    def _where_accessors(self):
-        return super()._where_accessors()
-
     def _query_columns(self):
-        self.select_accessors = {
-            "bucket_index": f"sa.bucket_index",
-            "summary_index": f"sa.summary_index",
-            "family_index": f"fa.family_index",
-            "family_id": f"fa.family_id",
-            "summary_data": "sa.summary_data",
-            "family_data": f"fa.family_data",
-        }
+        return [
+            "sa.bucket_index",
+            "sa.summary_index",
+            "sa.summary_data",
+        ]
 
-        columns = list(self.select_accessors.values())
-        return columns
+    def _build_from(self):
+        from_clause = f"""\n FROM
+        {self.dialect.build_table_name(self.summary_allele_table, self.db)} AS sa
+        """
+        self._add_to_product(from_clause)
 
-    def build_from(self):
-        return super().build_from()
-
-    def build_join(self, genes=None, effect_types=None):
-
-        join_clause = ""
-
-        if self.do_join_affected:
-            join_clause = f"JOIN {self.dialect.build_table_name(self.pedigree_table, self.db)} as pedigree\n"
-
-        if genes is not None or effect_types is not None:
-            effect_gene_abs = self.where_accessors["effect_gene"]
-            inner_clause = (
-                f"UNNEST({effect_gene_abs})"
-                if self.dialect.add_unnest_in_join()
-                else effect_gene_abs
-            )
-            join_clause = join_clause + f"JOIN {inner_clause} \n"
-
-        self._add_to_product(join_clause)
-
-    def build_group_by(self):
-        if self.summary_allele_table is not None:
-            return
-
-        self._add_to_product(
-            "GROUP BY bucket_index, summary_index, "
-            "allele_index, variant_type, transmission_type"
-        )
-
-    def build_having(self, **kwargs):
+    def _build_join(self, genes=None, effect_types=None):
         pass
 
-    def build_where(
+    def _build_group_by(self):
+        pass
+
+    def _build_having(self, **kwargs):
+        pass
+
+    def _build_where(
         self,
         regions=None,
         genes=None,
@@ -109,6 +84,7 @@ class SummaryQueryBuilder(BaseQueryBuilder):
         return_unknown=None,
         **kwargs,
     ):
+        #pylint: disable=too-many-arguments,too-many-locals
         if self.summary_allele_table:
             inheritance = None
         where_clause = self._base_build_where(
@@ -128,12 +104,3 @@ class SummaryQueryBuilder(BaseQueryBuilder):
             return_unknown=return_unknown,
         )
         self._add_to_product(where_clause)
-
-        if self.summary_allele_table is not None:
-            return
-
-        if where_clause:
-            in_members = "AND fa.allele_in_members = pedigree.person_id"
-        else:
-            in_members = "WHERE fa.allele_in_members = pedigree.person_id"
-        self._add_to_product(in_members)

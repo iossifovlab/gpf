@@ -102,13 +102,6 @@ class BaseQueryBuilder(ABC):
         self.query_columns = self._query_columns()
         self.where_accessors = self._where_accessors()
 
-    def reset_product(self):
-        self._product = ""
-
-    @property
-    def product(self):
-        return self._product
-
     def _where_accessors(self):
         cols = list(self.family_columns) + list(self.summary_columns)
         accessors = dict(zip(cols, cols))
@@ -117,35 +110,75 @@ class BaseQueryBuilder(ABC):
         summary_keys = set(self.summary_columns)
 
         for key, value in accessors.items():
-            if value in family_keys:
-                accessors[key] = f"fa.{value}"
-            elif value in summary_keys:
+            if value in summary_keys:
                 accessors[key] = f"sa.{value}"
+            elif value in family_keys:
+                accessors[key] = f"fa.{value}"
 
         return accessors
 
-    def build_select(self):
+    def build_query(
+        self,
+        regions=None,
+        genes=None,
+        effect_types=None,
+        family_ids=None,
+        person_ids=None,
+        inheritance=None,
+        roles=None,
+        sexes=None,
+        variant_type=None,
+        real_attr_filter=None,
+        ultra_rare=None,
+        frequency_filter=None,
+        return_reference=None,
+        return_unknown=None,
+        limit=None,
+        affected_status=None,
+    ):
+        # pylint: disable=too-many-arguments,too-many-locals
+        """Build an SQL query in the correct order."""
+        self._product = ""
+        self._build_select()
+        self._build_from()
+        self._build_join(genes=genes, effect_types=effect_types)
+
+        self._build_where(
+            regions=regions,
+            genes=genes,
+            effect_types=effect_types,
+            family_ids=family_ids,
+            person_ids=person_ids,
+            inheritance=inheritance,
+            roles=roles,
+            sexes=sexes,
+            variant_type=variant_type,
+            real_attr_filter=real_attr_filter,
+            ultra_rare=ultra_rare,
+            frequency_filter=frequency_filter,
+            return_reference=return_reference,
+            return_unknown=return_unknown,
+            affected_status=affected_status,
+        )
+
+        self._build_group_by()
+        self._build_having(affected_status=affected_status)
+        self._build_limit(limit)
+
+        return self._product
+
+    def _build_select(self):
         columns = ", ".join(self.query_columns)
         select_clause = f"SELECT DISTINCT {columns}"
         self._add_to_product(select_clause)
 
-    def build_from(self):
-
-        # implicit join on family_allele and summary variants table
-        from_clause = f"""\n FROM 
-        {self.dialect.build_table_name(self.summary_allele_table, self.db)} AS sa
-        JOIN 
-        {self.dialect.build_table_name(self.family_variant_table, self.db)} AS fa
-        ON (fa.summary_index = sa.summary_index AND
-        fa.bucket_index = sa.bucket_index AND
-        fa.allele_index = sa.allele_index)""".rstrip()
-
-        self._add_to_product(from_clause)
-
-    def build_join(self):
+    def _build_from(self):
         pass
 
-    def build_where(
+    def _build_join(self, genes, effect_types):
+        pass
+
+    def _build_where(
         self,
         regions=None,
         genes=None,
@@ -307,15 +340,15 @@ class BaseQueryBuilder(ABC):
         return where_clause
 
     @abstractmethod
-    def build_group_by(self):
+    def _build_group_by(self):
         pass
 
-    def build_limit(self, limit):
+    def _build_limit(self, limit):
         if limit is not None:
             self._add_to_product(f"LIMIT {limit}")
 
     @abstractmethod
-    def build_having(self, **kwargs):
+    def _build_having(self, **kwargs):
         pass
 
     def _add_to_product(self, string):
@@ -676,11 +709,11 @@ class BaseQueryBuilder(ABC):
         return ""
 
     def _build_return_reference_and_return_unknown(
-        self, return_reference=None, return_unknown=None
+        self, return_reference=None, _return_unknown=None
     ):
         allele_index_col = self.where_accessors["allele_index"]
         if not return_reference:
             return f"{allele_index_col} > 0"
-        if not return_unknown:
-            return f"{allele_index_col} >= 0"
+        # return_unknown basically means return all so no specific where
+        # expression is required
         return ""
