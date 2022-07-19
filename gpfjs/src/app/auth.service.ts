@@ -30,7 +30,7 @@ export class AuthService {
 
   public requestAccessToken(code: string): Observable<object> {
     return this.http.post(this.config.rootUrl + '/o/token/', {
-      client_id: 'TgvqlBwtPEor9AoizuuLQQ06ZwXNzC74n9Og7Cfw',
+      client_id: this.config.oauthClientId,
       code: code,
       grant_type: 'authorization_code',
       code_verifier: 'MTIz', //TODO: Fix this, use proper code verifier (must be fixed in users.component.ts as well)
@@ -47,7 +47,7 @@ export class AuthService {
 
   public revokeAccessToken(): Observable<object> {
     return this.http.post(this.config.rootUrl + '/o/revoke_token/', {
-      client_id: 'TgvqlBwtPEor9AoizuuLQQ06ZwXNzC74n9Og7Cfw',
+      client_id: this.config.oauthClientId,
       token: this._accessToken,
     }, this.options).pipe(take(1), tap(_ => { 
       this._accessToken = '';
@@ -60,7 +60,7 @@ export class AuthService {
     if (this._refreshToken !== '') {
       return this.http.post(this.config.rootUrl + '/o/token/', {
         grant_type: 'refresh_token',
-        client_id: 'TgvqlBwtPEor9AoizuuLQQ06ZwXNzC74n9Og7Cfw',
+        client_id: this.config.oauthClientId,
         refresh_token: this._refreshToken,
       }, this.options).pipe(take(1), tap(res => {
         this.setTokens(res);

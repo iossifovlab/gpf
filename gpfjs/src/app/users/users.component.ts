@@ -57,7 +57,7 @@ export class UsersComponent implements OnInit {
   }
 
   public login(): void {
-    location.href = this.config.rootUrl + "/o/authorize/?response_type=code&code_challenge=MTIz&client_id=TgvqlBwtPEor9AoizuuLQQ06ZwXNzC74n9Og7Cfw&code_challenge_method=plain";
+    location.href = `${this.config.rootUrl}/o/authorize/?response_type=code&code_challenge=MTIz&client_id=${this.config.oauthClientId}&code_challenge_method=plain`;
   }
 
   public logout(): void {
