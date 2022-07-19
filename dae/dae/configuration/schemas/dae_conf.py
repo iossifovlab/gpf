@@ -70,6 +70,7 @@ repository_schema = {
         "coerce": "abspath",
     },
 }
+
 grr_schema = {
     "id": {"type": "string", },
     "type": {"type": "string", },
@@ -88,7 +89,6 @@ grr_schema = {
         "type": "dict",
         "schema": repository_schema
     }}
-
 }
 
 storage_schema = {
