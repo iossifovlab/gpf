@@ -1,6 +1,6 @@
-<div *ngIf="(userInfo$ | async)?.email as email" class="row justify-content-end dropdown">
-  <div class="align-self-center">
-    <span class="username-field">{{ email }}</span>
+<div *ngIf="(userInfo$ | async)?.email as email" style="display: flex; justify-content: flex-end">
+  <div>
+    <span class="username-field" style="align-self: center">{{ email }}</span>
     <button class="btn btn-sm" id="logout-button" (click)="logout()">Logout</button>
   </div>
 </div>

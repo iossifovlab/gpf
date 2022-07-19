@@ -28,12 +28,12 @@ tr:hover {
 
 .variants-report-content {
   width: 100%;
-  padding: 30px;
+  padding: 20px 30px 30px;
 }
 
 .variants-report-selector {
-  width: 20%;
-  padding: 20px;
+  width: 230px;
+  padding: 15px 0;
 }
 
 th.rotate > div {
@@ -90,6 +90,10 @@ table {
     );
 }
 
+.legend-report {
+  padding-bottom: 10px;
+}
+
 .legend-report span {
   color: #6c757d !important;
   font-size: 80%;
@@ -126,4 +130,17 @@ table {
   padding-right: 10px;
   margin-left: -10px;
   margin-right: -10px;
+}
+
+#total-number-of-families {
+  text-align: center;
+}
+
+#families-by-number,
+#families-by-pedigree {
+  padding-bottom: 55px;
+}
+
+h5 {
+  margin-bottom: 0;
 }
