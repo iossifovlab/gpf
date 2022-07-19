@@ -186,14 +186,14 @@ AUTH_USER_MODEL = "users_api.WdaeUser"
 REST_FRAMEWORK = {
     "PAGINATE_BY": 10,
     "DEFAULT_AUTHENTICATION_CLASSES": (
-        "oauth2_provider.contrib.rest_framework.OAuth2Authentication",
+        "utils.authentication.GPFOAuth2Authentication",
     ),
 }
 
 OAUTH2_PROVIDER = {
     "OAUTH2_BACKEND_CLASS": "oauth2_provider.oauth2_backends.JSONOAuthLibCore",
-    "REFRESH_TOKEN_EXPIRE_SECONDS": 360000,
-    "ACCESS_TOKEN_EXPIRE_SECONDS": 360000,
+    "REFRESH_TOKEN_EXPIRE_SECONDS": 18000,
+    "ACCESS_TOKEN_EXPIRE_SECONDS": 36000,
 }
 
 SESSION_SERIALIZER = "django.contrib.sessions.serializers.JSONSerializer"
