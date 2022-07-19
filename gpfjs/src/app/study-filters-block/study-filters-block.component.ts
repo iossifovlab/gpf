@@ -12,32 +12,32 @@ import { ValidateNested } from 'class-validator';
   styleUrls: ['./study-filters-block.component.css'],
 })
 export class StudyFiltersBlockComponent extends StatefulComponent implements OnInit, OnChanges {
-  @Input() dataset: Dataset;
+  @Input() public dataset: Dataset;
 
   @ValidateNested({each: true})
-  studies: Study[] = [];
+  public studies: Study[] = [];
 
   @ValidateNested({each: true})
-  selectedStudies: Study[] = [];
+  public selectedStudies: Study[] = [];
 
-  constructor(protected store: Store) {
+  public constructor(protected store: Store) {
     super(store, StudyFiltersBlockState, 'studyFiltersBlock');
   }
 
-  ngOnChanges(changes: SimpleChanges) {
+  public ngOnChanges(changes: SimpleChanges): void {
     let ids: string[] = changes.dataset.currentValue.studies;
     let names: string[] = changes.dataset.currentValue.studyNames;
     this.studies = [];
     for (let i = 0; i < ids.length; i++) {
-        let study: Study = {
-            "studyId": ids[i],
-            "studyName": names[i]
-        }
-        this.studies.push(study)
+      const study: Study = {
+        studyId: ids[i],
+        studyName: names[i]
+      };
+      this.studies.push(study);
     }
   }
 
-  ngOnInit() {
+  public ngOnInit(): void {
     super.ngOnInit();
     this.store.selectOnce(state => state.studyFiltersBlockState).subscribe(state => {
       // restore state
@@ -51,13 +51,13 @@ export class StudyFiltersBlockComponent extends StatefulComponent implements OnI
     });
   }
 
-  updateState() {
+  private updateState(): void {
     this.store.dispatch(new SetStudyFilters(
       this.selectedStudies.map(st => st.studyId)
     ));
   }
 
-  addFilter(studyFilter: Study = null) {
+  public addFilter(studyFilter: Study = null): void {
     if (studyFilter === null) {
       this.selectedStudies.push(new Study(
         this.studies[0].studyId,
@@ -69,14 +69,14 @@ export class StudyFiltersBlockComponent extends StatefulComponent implements OnI
     this.updateState();
   }
 
-  removeFilter(studyFilter: Study) {
+  public removeFilter(studyFilter: Study): void {
     this.selectedStudies = this.selectedStudies.filter(
       sf => sf.studyId !== studyFilter.studyId
     );
     this.updateState();
   }
 
-  changeSelectedStudy(event: object) {
+  public changeSelectedStudy(event: object): void {
     const selectedStudy = event['selectedStudy'];
     const selectedStudyId = event['selectedStudyId'];
     for (const study of this.studies) {
@@ -89,7 +89,7 @@ export class StudyFiltersBlockComponent extends StatefulComponent implements OnI
     this.updateState();
   }
 
-  trackById(index: number, data: any) {
+  public trackById(data: any) {
     return data.id;
   }
 }
