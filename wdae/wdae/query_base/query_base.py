@@ -14,6 +14,7 @@ class QueryBaseView(views.APIView):
     Provides custom OAuth2 authentication and an automatic dataset
     permissions check.
     """
+
     authentication_classes = (GPFOAuth2Authentication,)
     permission_classes = (IsDatasetAllowed,)
 

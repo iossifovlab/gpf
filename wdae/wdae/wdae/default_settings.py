@@ -142,7 +142,7 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
-    'oauth2_provider.middleware.OAuth2TokenMiddleware',
+    "oauth2_provider.middleware.OAuth2TokenMiddleware",
 ]
 
 ROOT_URLCONF = "wdae.urls"
@@ -186,14 +186,14 @@ AUTH_USER_MODEL = "users_api.WdaeUser"
 REST_FRAMEWORK = {
     "PAGINATE_BY": 10,
     "DEFAULT_AUTHENTICATION_CLASSES": (
-        'oauth2_provider.contrib.rest_framework.OAuth2Authentication',
+        "oauth2_provider.contrib.rest_framework.OAuth2Authentication",
     ),
 }
 
 OAUTH2_PROVIDER = {
-    'OAUTH2_BACKEND_CLASS': 'oauth2_provider.oauth2_backends.JSONOAuthLibCore',
-    'REFRESH_TOKEN_EXPIRE_SECONDS': 360000,
-    'ACCESS_TOKEN_EXPIRE_SECONDS': 360000,
+    "OAUTH2_BACKEND_CLASS": "oauth2_provider.oauth2_backends.JSONOAuthLibCore",
+    "REFRESH_TOKEN_EXPIRE_SECONDS": 360000,
+    "ACCESS_TOKEN_EXPIRE_SECONDS": 360000,
 }
 
 SESSION_SERIALIZER = "django.contrib.sessions.serializers.JSONSerializer"

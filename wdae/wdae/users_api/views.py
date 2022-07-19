@@ -308,7 +308,7 @@ def logout(request):
 @api_view(["GET"])
 @authentication_classes((GPFOAuth2Authentication,))
 def get_user_info(request):
-    """Gets user info for currently logged-in user."""
+    """Get user info for currently logged-in user."""
     user = request.user
     if user.is_authenticated:
         return Response(
@@ -339,7 +339,7 @@ def check_verif_path(request):
 @api_view(["GET"])
 @authentication_classes((OAuth2Authentication,))
 def get_federation_credentials(request):
-    """Creates a new federation application and returns its credentials."""
+    """Create a new federation application and returns its credentials."""
     user = request.user
 
     if not user.is_authenticated:
@@ -369,7 +369,7 @@ def get_federation_credentials(request):
 @api_view(["GET"])
 @authentication_classes((OAuth2Authentication,))
 def revoke_federation_credentials(request):
-    """Deletes a given federation app."""
+    """Delete a given federation app."""
     user = request.user
     if not user.is_authenticated:
         return Response(status=status.HTTP_401_UNAUTHORIZED)

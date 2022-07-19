@@ -56,7 +56,7 @@ class RESTClient:
             raise RESTClientRequestError(
                 f"Failed to obtain token from {self.remote_id}"
             )
-        self.token = response.json()['access_token']
+        self.token = response.json()["access_token"]
 
     def build_host_url(self):
         if self.port:
@@ -85,10 +85,12 @@ class RESTClient:
 
     def _get(self, url, query_values=None, stream=False):
         url = self._build_url(url, query_values)
+
         def make_request():
             return requests.get(url, stream=stream, headers={
                 "Authorization": f"Bearer {self.token}"
             })
+
         response = make_request()
         if response.status_code == 401:
             # Try refreshing token
@@ -98,10 +100,12 @@ class RESTClient:
 
     def _post(self, url, data=None, stream=False):
         url = self._build_url(url)
+
         def make_request():
             return requests.post(url, json=data, stream=stream, headers={
                 "Authorization": f"Bearer {self.token}"
             })
+
         response = make_request()
         if response.status_code == 401:
             self._refresh_token()
