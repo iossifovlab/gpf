@@ -7,8 +7,10 @@ td {
 }
 
 .link-td {
+  font-weight: bold;
+  font-style: italic;
   cursor: pointer;
-}
+  }
 
 .link-td:hover {
   text-decoration: underline;
