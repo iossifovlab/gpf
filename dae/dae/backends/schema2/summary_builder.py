@@ -48,7 +48,7 @@ class SummaryQueryBuilder(BaseQueryBuilder):
         return [
             "sa.bucket_index",
             "sa.summary_index",
-            "sa.summary_data",
+            "sa.summary_variant_data",
         ]
 
     def _build_from(self):

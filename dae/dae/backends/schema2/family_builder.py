@@ -50,8 +50,8 @@ class FamilyQueryBuilder(BaseQueryBuilder):
             "summary_index": "sa.summary_index",
             "family_index": "fa.family_index",
             "family_id": "fa.family_id",
-            "summary_data": "sa.summary_data",
-            "family_data": "fa.family_data",
+            "summary_variant_data": "sa.summary_variant_data",
+            "family_variant_data": "fa.family_variant_data",
         }
 
         columns = list(self.select_accessors.values())

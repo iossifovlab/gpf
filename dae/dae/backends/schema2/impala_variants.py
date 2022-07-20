@@ -277,7 +277,7 @@ class ImpalaVariants:
 
                 for row in cursor:
                     try:
-                        # columns: ..summary_data, family_data
+                        # columns: ..summary_variant_data, family_variant_data
                         sv_record = json.loads(row[-2])
                         fv_record = json.loads(row[-1])
 

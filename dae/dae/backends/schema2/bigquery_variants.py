@@ -232,7 +232,7 @@ class BigQueryVariants:
 
         for row in result:
             try:
-                sv_record = json.loads(row.summary_data)
+                sv_record = json.loads(row.summary_variant_data)
                 sv = SummaryVariantFactory.summary_variant_from_records(
                     sv_record
                 )
@@ -312,8 +312,8 @@ class BigQueryVariants:
 
         for row in result:
             try:
-                sv_record = json.loads(row.summary_data)
-                fv_record = json.loads(row.family_data)
+                sv_record = json.loads(row.summary_variant_data)
+                fv_record = json.loads(row.family_variant_data)
 
                 fv = FamilyVariant(
                     SummaryVariantFactory.summary_variant_from_records(
