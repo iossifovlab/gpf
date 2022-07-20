@@ -656,7 +656,6 @@ class VariantsParquetWriter:
             summary_variant,
             family_variants,
         ) in enumerate(self.full_variants_iterator):
-
             # build summary json blob (concat all other alleles)
             # INSIDE summary_variant
             summary_blobs_json = json.dumps(
