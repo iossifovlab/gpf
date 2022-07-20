@@ -1,178 +1,175 @@
 <div *ngIf="variantReport" class="variants-report-content">
-  <div class="row justify-content-center">
-    <div class="col-12" id="total-number-of-families">
+  <div class="row justify-content-center mb-3">
+    <div class="col-12">
+      <h4 class="text-center" style="margin-bottom: 0">{{ variantReport.studyName }}</h4>
+    </div>
+
+    <div class="col-12 mb-1">
       <h5>
         <span>Total number of families: {{ variantReport.familyReport.familiesTotal }}</span>
-        <span style="padding-left: 5px">(<a class="download-link" [href]="getDownloadLink()" download>Download</a>)</span>
+        <span>(<a [href]="getDownloadLink()" download>Download</a>)</span>
       </h5>
     </div>
   </div>
 
-  <div id="families-by-number">
-    <div class="col-12">
-      <h5>Families by number of:</h5>
-    </div>
+  <div class="col-12 mb-1">
+    <h5>Families by number of:</h5>
+  </div>
 
-    <div class="col-sm-3" class="variants-report-selector">
-      <div class="select-wrapper">
-        <select id="families-by-number-dropdown-button" class="form-control" [(ngModel)]="currentPeopleCounter">
-          <option value="" selected="selected">–</option>
-          <option *ngFor="let peopleCounter of variantReport.peopleReport.peopleCounters" [ngValue]="peopleCounter">
-            <span>{{ peopleCounter.groupName }}</span>
-          </option>
-        </select>
-        <span class="select-dropdown-icon" [style.content]="'url(' + imgPathPrefix + 'dropdown_icon.png)'"></span>
-      </div>
-    </div>
-
-    <div *ngIf="currentPeopleCounter" id="families-by-number-div" class="row">
-      <div class="col-12">
-        <table class="gpf-basic-table">
-          <thead>
-            <th class="first-header-cell">
-              <div style="padding: 0">
-                <div class="groups-title">{{ currentPeopleCounter.groupName }}</div>
-                <div class="sex-title">Sex</div>
-              </div>
-            </th>
-
-            <th style="vertical-align: top; border-bottom: 1px" *ngFor="let row of currentPeopleCounter.rows">
-              <span>{{ row | getPeopleCounterRow }}</span>
-            </th>
-          </thead>
-          <tbody>
-            <tr *ngFor="let row of currentPeopleCounter.columns">
-              <th style="text-align: left; padding-left: 15px">{{ row }}</th>
-              <td *ngFor="let column of currentPeopleCounter.rows">
-                <span>{{ currentPeopleCounter.getChildrenCounter(row, column).children }}</span>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+  <div class="col-sm-3" class="variants-report-selector">
+    <div class="select-wrapper">
+      <select id="families-by-number-dropdown-button" class="form-control" [(ngModel)]="currentPeopleCounter">
+        <option value="" selected="selected">–</option>
+        <option *ngFor="let peopleCounter of variantReport.peopleReport.peopleCounters" [ngValue]="peopleCounter">
+          <span>{{ peopleCounter.groupName }}</span>
+        </option>
+      </select>
+      <span class="select-dropdown-icon" [style.content]="'url(' + imgPathPrefix + 'dropdown_icon.png)'"></span>
     </div>
   </div>
 
-  <div id="families-by-pedigree">
+  <div *ngIf="currentPeopleCounter" id="families-by-number-div" class="row mb-3">
     <div class="col-12">
-      <h5>Families by pedigree of:</h5>
-    </div>
+      <table class="gpf-basic-table">
+        <thead>
+          <th class="first-header-cell">
+            <div style="padding: 0">
+              <div class="groups-title">{{ currentPeopleCounter.groupName }}</div>
+              <div class="sex-title">Sex</div>
+            </div>
+          </th>
 
-    <div class="col-sm-3 variants-report-selector">
-      <div class="select-wrapper">
-        <select class="form-control" [(ngModel)]="currentPedigreeTable">
-          <option value="" selected="selected">–</option>
-          <option *ngFor="let pedigreeTable of pedigreeTables" [ngValue]="pedigreeTable">
-            <span>{{ pedigreeTable.groupName }}</span>
-          </option>
-        </select>
-        <span class="select-dropdown-icon" [style.content]="'url(' + imgPathPrefix + 'dropdown_icon.png)'"></span>
-      </div>
-    </div>
-
-    <div *ngIf="currentPedigreeTable" id="families-by-pedigree-div" class="row" #families_pedigree>
-      <div class="col-12">
-        <table class="gpf-basic-table">
-          <colgroup>
-            <col />
-            <col />
-            <col />
-            <col />
-          </colgroup>
-          <tbody>
-            <ng-template ngFor let-pedigreeGroup [ngForOf]="currentPedigreeTable.pedigrees">
-              <tr gpf-common-reports-row [pedigreeGroup]="pedigreeGroup"></tr>
-            </ng-template>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <div
-      *ngIf="currentPedigreeTable"
-      class="legend"
-      style="z-index: 99; opacity: 90%"
-      #legend
-      [style.visibility]="
-        familiesPedigreeTop - legendTop < 0 && familiesPedigreeBottom - legendTop > 0 ? 'visible' : 'hidden'
-      ">
-      <div *ngFor="let legendItem of currentPedigreeTable.legend.legendItems">
-        <span class="pedigree-icon" [style.background-color]="legendItem.color"></span>
-        <span>{{ legendItem.name }}</span>
-      </div>
+          <th style="vertical-align: top; border-bottom: 1px" *ngFor="let row of currentPeopleCounter.rows">
+            <span>{{ row | getPeopleCounterRow }}</span>
+          </th>
+        </thead>
+        <tbody>
+          <tr *ngFor="let row of currentPeopleCounter.columns">
+            <th style="text-align: left; padding-left: 15px">{{ row }}</th>
+            <td *ngFor="let column of currentPeopleCounter.rows">
+              <span>{{ currentPeopleCounter.getChildrenCounter(row, column).children }}</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   </div>
 
-  <div id="de-novo-variants">
-    <div *ngIf="variantReport.denovoReport">
-      <div class="col-12">
-        <h5>De Novo Variants of:</h5>
-      </div>
+  <div class="col-12 mb-1">
+    <h5>Families by pedigree of:</h5>
+  </div>
 
-      <div class="col-sm-3" class="variants-report-selector">
-        <div class="select-wrapper">
-          <select
-            id="denovo-variants-dropdown-button"
-            class="form-control"
-            [(ngModel)]="currentDenovoReport"
-            (change)="calculateDenovoVariantsTableWidth()">
-            <option value="" selected="selected">–</option>
-            <option *ngFor="let denovoReport of variantReport.denovoReport.tables" [ngValue]="denovoReport">
-              <span>{{ denovoReport.groupName }}</span>
-            </option>
-          </select>
-          <span class="select-dropdown-icon" [style.content]="'url(' + imgPathPrefix + 'dropdown_icon.png)'"></span>
-        </div>
-      </div>
+  <div class="col-sm-3 variants-report-selector">
+    <div class="select-wrapper">
+      <select class="form-control" [(ngModel)]="currentPedigreeTable">
+        <option value="" selected="selected">–</option>
+        <option *ngFor="let pedigreeTable of pedigreeTables" [ngValue]="pedigreeTable">
+          <span>{{ pedigreeTable.groupName }}</span>
+        </option>
+      </select>
+      <span class="select-dropdown-icon" [style.content]="'url(' + imgPathPrefix + 'dropdown_icon.png)'"></span>
+    </div>
+  </div>
 
-      <h5 *ngIf="currentDenovoReport" class="legend-report">
+  <div *ngIf="currentPedigreeTable" id="families-by-pedigree-div" class="row mb-3" #families_pedigree>
+    <div class="col-12">
+      <table class="gpf-basic-table">
+        <colgroup>
+          <col />
+          <col />
+          <col />
+          <col />
+        </colgroup>
+        <tbody>
+          <ng-template ngFor let-pedigreeGroup [ngForOf]="currentPedigreeTable.pedigrees">
+            <tr gpf-common-reports-row [pedigreeGroup]="pedigreeGroup"></tr>
+          </ng-template>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div
+    *ngIf="currentPedigreeTable"
+    class="legend"
+    style="z-index: 99; opacity: 90%"
+    #legend
+    [style.visibility]="
+      familiesPedigreeTop - legendTop < 0 && familiesPedigreeBottom - legendTop > 0 ? 'visible' : 'hidden'
+    ">
+    <div *ngFor="let legendItem of currentPedigreeTable.legend.legendItems">
+      <span class="pedigree-icon" [style.background-color]="legendItem.color"></span>
+      <span>{{ legendItem.name }}</span>
+    </div>
+  </div>
+
+  <div *ngIf="variantReport.denovoReport">
+    <div class="col-12 mb-1">
+      <h5>De Novo Variants of:</h5>
+      <h5 class="legend-report">
         <span>Legend:<br /></span>
         <span style="padding-left: 6px">"number of observed events", "observed rate per individual"</span><br />
         <span style="padding-left: 6px"
           >("number of individuals with events", "percent of individuals with events")</span
         >
       </h5>
+    </div>
 
-      <div *ngIf="currentDenovoReport" id="denovo-variants-div" class="row">
-        <div class="col-12">
-          <table class="gpf-basic-table" [style.width.px]="denovoVariantsTableWidth">
-            <thead>
-              <th>Effect type</th>
-              <th class="rotate" *ngFor="let column of currentDenovoReport.columns">
-                <div class="column-header"
-                  [attr.title]="
-                    'children with the specific '
-                    + currentDenovoReport.groupName.toLowerCase()
-                    + ': '
-                    + column.substring(column.lastIndexOf('(') + 1, column.lastIndexOf(')'))
-                  "
-                  >{{ column }}</div
+    <div class="col-sm-3" class="variants-report-selector">
+      <div class="select-wrapper">
+        <select
+          id="denovo-variants-dropdown-button"
+          class="form-control"
+          [(ngModel)]="currentDenovoReport"
+          (change)="calculateDenovoVariantsTableWidth()">
+          <option value="" selected="selected">–</option>
+          <option *ngFor="let denovoReport of variantReport.denovoReport.tables" [ngValue]="denovoReport">
+            <span>{{ denovoReport.groupName }}</span>
+          </option>
+        </select>
+        <span class="select-dropdown-icon" [style.content]="'url(' + imgPathPrefix + 'dropdown_icon.png)'"></span>
+      </div>
+    </div>
+
+    <div *ngIf="currentDenovoReport" id="denovo-variants-div" class="row mb-3">
+      <div class="col-12">
+        <table class="gpf-basic-table" [style.width.px]="denovoVariantsTableWidth">
+          <thead>
+            <th>Effect type</th>
+            <th class="rotate" *ngFor="let column of currentDenovoReport.columns">
+              <div class="column-header"
+                [attr.title]="
+                  'children with the specific '
+                  + currentDenovoReport.groupName.toLowerCase()
+                  + ': '
+                  + column.substring(column.lastIndexOf('(') + 1, column.lastIndexOf(')'))
+                "
+                >{{ column }}</div
+              >
+            </th>
+          </thead>
+          <tbody>
+            <tr
+              *ngFor="let effectType of getRows(currentDenovoReport.effectGroups, currentDenovoReport.effectTypes)"
+              [ngClass]="{ 'effect-type-group-row': currentDenovoReport.effectGroups.indexOf(effectType) !== -1 }">
+              <th>{{ effectType }}</th>
+              <td
+                *ngFor="
+                  let effectTypeData of getEffectTypeOrderByColumOrder(
+                    effectType,
+                    currentDenovoReport,
+                    currentDenovoReport.columns
+                  )
+                ">
+                <div
+                  class="effect-type-data-values"
+                  title="{{ effectType }}&#10;{{ effectTypeData.column }}&#10;number of observed events: {{ effectTypeData.numberOfObservedEvents }}&#10;observed rate per individual: {{ effectTypeData.observedRatePerChild | number }}&#10;number of individuals with events: {{ effectTypeData.numberOfChildrenWithEvent }}&#10;percent of individuals with events: {{ effectTypeData.percentOfChildrenWithEvents | percent }}"
+                  >{{ effectTypeData.numberOfObservedEvents }}, {{ effectTypeData.observedRatePerChild | number }}<br />({{ effectTypeData.numberOfChildrenWithEvent }}, {{ effectTypeData.percentOfChildrenWithEvents | percent }})</div
                 >
-              </th>
-            </thead>
-            <tbody>
-              <tr
-                *ngFor="let effectType of getRows(currentDenovoReport.effectGroups, currentDenovoReport.effectTypes)"
-                [ngClass]="{ 'effect-type-group-row': currentDenovoReport.effectGroups.indexOf(effectType) !== -1 }">
-                <th>{{ effectType }}</th>
-                <td
-                  *ngFor="
-                    let effectTypeData of getEffectTypeOrderByColumOrder(
-                      effectType,
-                      currentDenovoReport,
-                      currentDenovoReport.columns
-                    )
-                  ">
-                  <div
-                    class="effect-type-data-values"
-                    title="{{ effectType }}&#10;{{ effectTypeData.column }}&#10;number of observed events: {{ effectTypeData.numberOfObservedEvents }}&#10;observed rate per individual: {{ effectTypeData.observedRatePerChild | number }}&#10;number of individuals with events: {{ effectTypeData.numberOfChildrenWithEvent }}&#10;percent of individuals with events: {{ effectTypeData.percentOfChildrenWithEvents | percent }}"
-                    >{{ effectTypeData.numberOfObservedEvents }}, {{ effectTypeData.observedRatePerChild | number }}<br />({{ effectTypeData.numberOfChildrenWithEvent }}, {{ effectTypeData.percentOfChildrenWithEvents | percent }})</div
-                  >
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
   </div>

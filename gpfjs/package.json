@@ -37,7 +37,7 @@
     "@types/sprintf-js": "1.1.2",
     "angular-confirmation-popover": "6.0.0",
     "bn-ng-idle": "2.0.1",
-    "bootstrap": "5.1.3",
+    "bootstrap": "4.6.1",
     "class-transformer": "0.5.1",
     "angular-markdown-editor": "^2.0.2",
     "class-validator": "0.13.2",

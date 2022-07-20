@@ -2,7 +2,7 @@
 <div>
   <div class="container-fluid" id="logo">
     <div class="row">
-      <div class="col-10">
+      <div class="col-10 align-self-center">
         <span class="navbar-button navbar-light">
           <button class="btn navbar-toggler" (click)="toggleSidenav()">
             <span class="navbar-toggler-icon"></span>
@@ -11,7 +11,7 @@
         <img src="{{ imgPathPrefix }}logo-64x64.png" />
         <h3 id="title">{{ title }}</h3>
       </div>
-      <div class="col-2" style="padding-right: 0">
+      <div class="col-2 align-self-center">
         <gpf-users (loginDropdownClickEvent)="hideSidenav()"></gpf-users>
       </div>
     </div>

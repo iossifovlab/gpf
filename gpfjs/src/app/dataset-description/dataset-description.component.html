@@ -1,11 +1,12 @@
 <div *ngIf="dataset$ | async as dataset" class="container" style="margin-top: 20px">
   <div *ngIf="!editMode">
-    <div style="position: relative">
+    <div class="row" style="position: relative">
       <i
         *ngIf="('' | userInfo)?.isAdministrator"
         (click)="edit()"
         id="edit-icon"
         class="fa fa-pencil fa-lg"
+        style="margin-right: 10px"
         title="Edit">
       </i>
       <markdown [data]="dataset.description || ''"></markdown>
