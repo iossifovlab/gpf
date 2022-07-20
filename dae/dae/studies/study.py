@@ -217,6 +217,7 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
         runners = []
         for genotype_study in self._get_query_children(study_filters):
             person_sets_query = None
+            query_person_ids = None
             if person_set_collection is not None:
                 collection_id, selected_person_sets = person_set_collection
                 if selected_person_sets is not None:
@@ -232,11 +233,16 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
                         continue
 
                     if person_sets_query is None:
-                        person_ids = genotype_study\
+                        query_person_ids = genotype_study\
                             ._transform_person_set_collection_query(
                                 person_set_collection, person_ids)
 
-            if person_ids is not None and len(person_ids) == 0:
+            if query_person_ids is not None and len(query_person_ids) == 0:
+                logger.debug(
+                    "Study %s can't match any person to filter %s... "
+                    "skipping",
+                    genotype_study.study_id,
+                    person_set_collection)
                 continue
 
             # pylint: disable=no-member,protected-access
@@ -246,7 +252,7 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
                     genes=genes,
                     effect_types=effect_types,
                     family_ids=family_ids,
-                    person_ids=person_ids,
+                    person_ids=query_person_ids,
                     inheritance=inheritance,
                     roles=roles,
                     sexes=sexes,
