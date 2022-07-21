@@ -8,7 +8,7 @@
   >
   <div id="save-query-dropdown" ngbDropdownMenu aria-labelledby="dropdownQuerySave">
     <form (ngSubmit)="saveUserQuery(nameInput.value, descInput.value)" #queryStorageForm="ngForm" style="margin: 10px">
-      <div class="form-group" style="margin-bottom: 16px">
+      <div class="form-group">
         <label for="name">Query name</label>
         <input
           #nameInput
@@ -28,7 +28,7 @@
         >
       </div>
 
-      <div class="form-group" style="margin-bottom: 16px">
+      <div class="form-group">
         <label for="description">Query description</label>
         <textarea
           #descInput
