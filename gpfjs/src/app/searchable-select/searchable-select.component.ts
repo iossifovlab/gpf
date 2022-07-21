@@ -1,5 +1,6 @@
 import {
-  Component, Input, Output, EventEmitter, ViewChild, ContentChild, AfterViewInit, OnChanges, ElementRef, NgZone
+  Component, Input, Output, EventEmitter, ViewChild, ContentChild,
+  AfterViewInit, OnChanges, ElementRef, NgZone, HostListener
 } from '@angular/core';
 import { SearchableSelectTemplateDirective } from './searchable-select-template.directive';
 import { NgbDropdown } from '@ng-bootstrap/ng-bootstrap';
@@ -21,6 +22,13 @@ export class SearchableSelectComponent implements AfterViewInit, OnChanges {
   @ViewChild('searchBox') private searchBox: ElementRef;
   @ContentChild(SearchableSelectTemplateDirective) public template: SearchableSelectTemplateDirective;
 
+  @HostListener('document:click', ['$event'])
+  public clickout(event): void {
+    if (!this.eRef.nativeElement.contains(event.target)) {
+      this.dropdown.close();
+    }
+  }
+
   public onEnterPress(): void {
     if (this.isInGeneBrowser) {
       this.onSelect(this.searchBox.nativeElement.value);
@@ -31,6 +39,7 @@ export class SearchableSelectComponent implements AfterViewInit, OnChanges {
   public constructor(
     private ngZone: NgZone,
     private route: ActivatedRoute,
+    private eRef: ElementRef
   ) {}
 
   public ngOnChanges(): void {

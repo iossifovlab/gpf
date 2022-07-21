@@ -1,4 +1,4 @@
-<div ngbDropdown role="group" style="display: inline-flex; flex-wrap: nowrap; width: 100%" placement="bottom-right" class="">
+<div ngbDropdown role="group" style="display: inline-flex; flex-wrap: nowrap; width: 100%" placement="bottom-right">
   <input
     [hidden]="caption"
     #searchBox
@@ -18,7 +18,11 @@
     (click)="searchBox.value = ''; onFocus($event)">
     <span>{{ caption }}</span>
   </span>
-  <button ngbDropdownToggle style="border-top-left-radius: 0; border-bottom-left-radius: 0" type="button" class="dropdown-toggle btn btn-secondary dropdown-toggle-split" >
+  <button
+    ngbDropdownToggle
+    style="border-top-left-radius: 0; border-bottom-left-radius: 0"
+    type="button"
+    class="dropdown-toggle btn btn-secondary dropdown-toggle-split">
     <span class="caret"></span>
   </button>
   <div ngbDropdownMenu style="width: 100%; overflow-x: hidden; max-height: 300px; overflow-y: scroll; z-index: 150">
