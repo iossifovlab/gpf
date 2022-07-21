@@ -86,6 +86,10 @@ label {
   font-size: 0.9em;
 }
 
+.navbar {
+  padding: 0.5rem 1rem;
+}
+
 .form-block .navbar {
   padding: 10px 20px;
 }
@@ -160,6 +164,7 @@ label {
   border-bottom-left-radius: 5px;
   padding-left: 10px;
   line-height: 34px;
+  outline: none;
 }
 
 .username-field {
@@ -181,6 +186,12 @@ label {
 
 .nav-link {
   margin-right: 8px;
+  color: #2a6395;
+  -webkit-transition: height 0.01s;
+  -moz-transition: height 0.01s;
+  -ms-transition: height 0.01s;
+  -o-transition: height 0.01s;
+  transition: height 0.01s;
 }
 
 .nav-pills .nav-link.active {
@@ -366,4 +377,19 @@ label {
 
 ngb-modal-window {
   z-index: 1000;
+}
+
+.download-link {
+  color: #0645ad !important;
+  text-decoration: none;
+}
+
+.download-link:hover {
+  text-decoration: underline;
+}
+
+.container {
+  width: 1140px;
+  margin: auto;
+  padding: 0 15px 30px 15px;
 }

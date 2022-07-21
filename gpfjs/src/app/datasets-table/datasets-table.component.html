@@ -37,11 +37,17 @@
                 <input
                   #input
                   class="form-control"
+                  style="border-top-left-radius: 5px; border-bottom-left-radius: 5px"
                   [ngbTypeahead]="searchGroups(data.groups)"
                   container="body"
                   spellcheck="false" />
                 <div class="input-group-btn">
-                  <button class="btn btn-primary" (click)="updatePermissions(data.dataset, input.value)">Add</button>
+                  <button
+                    class="btn btn-primary"
+                    style="border-top-left-radius: 0; border-bottom-left-radius: 0"
+                    (click)="updatePermissions(data.dataset, input.value)"
+                    >Add</button
+                  >
                 </div>
               </div>
             </span>
