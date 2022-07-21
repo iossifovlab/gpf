@@ -255,7 +255,7 @@ export class UsersService {
 
   public searchUsersByGroup(searchTerm: string): Observable<User> {
     const csrfToken = this.cookieService.get('csrftoken');
-    const headers = { 'X-CSRFToken': csrfToken };
+    const headers = { 'X-CSRFToken': csrfToken, 'Authorization': `Bearer ${this.authService.getAccessToken()}` };
     const usersSubject: Subject<User> = new Subject();
 
     let url: string;
