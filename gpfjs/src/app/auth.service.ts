@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { ConfigService } from './config/config.service';
-import { Observable, Subject, take, tap } from 'rxjs';
+import { Observable, Subject, take, tap, catchError, of } from 'rxjs';
 import { Router } from '@angular/router';
 
 @Injectable({
@@ -49,11 +49,15 @@ export class AuthService {
     return this.http.post(this.config.rootUrl + '/o/revoke_token/', {
       client_id: this.config.oauthClientId,
       token: this._accessToken,
-    }, this.options).pipe(take(1), tap(_ => { 
-      this._accessToken = '';
-      localStorage.removeItem('access_token');
-      localStorage.removeItem('refresh_token');
-    }));
+    }, this.options).pipe(take(1), tap(this.clearTokens));
+
+  }
+
+  public clearTokens(): void {
+    this._accessToken = '';
+    this._refreshToken = '';
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('refresh_token');
   }
 
   public refreshToken(): Observable<object> {
@@ -62,9 +66,21 @@ export class AuthService {
         grant_type: 'refresh_token',
         client_id: this.config.oauthClientId,
         refresh_token: this._refreshToken,
-      }, this.options).pipe(take(1), tap(res => {
-        this.setTokens(res);
-      }));
+      }, this.options).pipe(
+        take(1),
+        tap(res => {
+          this.setTokens(res);
+        }),
+        catchError((err, caught) => {
+          if (err.status === 400 && err.error.error === 'invalid_grant') {
+            this.clearTokens();
+            throw 'Invalid refresh token, discarding.';
+          }
+          return caught;
+        })
+      );
+    } else {
+      return of(null);
     }
   }
 

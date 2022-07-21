@@ -37,17 +37,12 @@ export class AuthInterceptorService implements HttpInterceptor {
   public handleResponseError(
     err: HttpErrorResponse, req?: HttpRequest<any>, next?: HttpHandler
   ): Observable<HttpEvent<any>> {
-    if (err.status === 401) {
-      return this.refreshToken().pipe(
-        switchMap(() => {
-          return next.handle(this.addAuthHeader(req));
-        }),
-        catchError((err, caught) => {
-          return err.status !== 401 ? this.handleResponseError(err) : caught;
-        })
-      );
+    if (err.status !== 401) {
+      return throwError(() => err);
     }
-    return throwError(() => err);
+    return this.refreshToken().pipe(
+      switchMap(() => { return next.handle(this.addAuthHeader(req)); }),
+    );
   }
 
   public refreshToken() {
@@ -67,8 +62,8 @@ export class AuthInterceptorService implements HttpInterceptor {
         }),
         catchError((err, caught) => {
           this.refreshTokenInProgress = false;
-          return caught;
-        }),
+          throw err;
+        })
       );
     }
   }
