@@ -3,9 +3,10 @@
   <div class="container-fluid" id="logo">
     <div class="row">
       <div class="col-10">
-        <span class="navbar-button navbar-light">
-          <button class="btn navbar-toggler" (click)="toggleSidenav()">
-            <span class="navbar-toggler-icon"></span>
+        <span class="navbar-button">
+          <button class="navbar-toggler" (click)="toggleSidenav()">
+            <span class="navbar-toggler-icon" [style.background-image]="'url(' + imgPathPrefix + 'navbar-icon.svg)'">
+            </span>
           </button>
         </span>
         <img src="{{ imgPathPrefix }}logo-64x64.png" />
