@@ -28,7 +28,12 @@ export class PersonIdsComponent extends StatefulComponent implements OnInit {
     this.focusTextInputArea();
     this.store.selectOnce(state => state.personIdsState).subscribe(state => {
       // restore state
-      this.setPersonIds(state.personIds.join('\n'));
+      let separator = '\n';
+      if(state.personIds.length >= 3) {
+        separator = ', ';
+      }
+
+      this.setPersonIds(state.personIds.join(separator));
     });
   }
 

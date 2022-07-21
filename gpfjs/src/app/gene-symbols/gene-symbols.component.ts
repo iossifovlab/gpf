@@ -29,7 +29,11 @@ export class GeneSymbolsComponent extends StatefulComponent implements OnInit {
     this.focusGeneTextArea();
     this.store.selectOnce(GeneSymbolsState).subscribe(state => {
       // restore state
-      this.setGeneSymbols(state.geneSymbols.join('\n'));
+      let separator = '\n';
+      if(state.geneSymbols.length >= 3) {
+        separator = ', ';
+      }
+      this.setGeneSymbols(state.geneSymbols.join(separator));
     });
   }
 
