@@ -79,6 +79,8 @@ export class HistogramComponent implements OnInit, OnChanges {
       this.rangeStart = this.bins[0];
       this.rangeEnd = this.bins[this.bins.length - 1];
     }
+
+    this.estimateRangeTexts();
   }
 
   public ngOnChanges(changes: SimpleChanges): void {
