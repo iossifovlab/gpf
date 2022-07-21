@@ -20,6 +20,8 @@ export class ShareQueryButtonComponent {
   private savedUrlUUID: string;
   public buttonValue = 'Copy';
 
+  private timeoutHandle: NodeJS.Timeout;
+
   public constructor(
     private store: Store,
     private queryService: QueryService,
@@ -71,8 +73,8 @@ export class ShareQueryButtonComponent {
     inputElement.select();
     document.execCommand('Copy');
     this.buttonValue = 'Copied';
-
-    setTimeout(() => {
+    window.clearTimeout(this.timeoutHandle);
+    this.timeoutHandle = setTimeout(() => {
       this.buttonValue = 'Copy';
     }, 2000);
   }
