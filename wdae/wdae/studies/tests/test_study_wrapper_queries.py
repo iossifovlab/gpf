@@ -367,13 +367,7 @@ def test_query_person_filters(iossifov_2014_wrappers, wrapper_type):
     assert len(variants) == 2
 
 
-@pytest.mark.parametrize(
-    "wrapper_type",
-    [
-        "local",
-        "remote"
-    ]
-)
+@pytest.mark.parametrize("wrapper_type", ["local", "remote"])
 def test_query_family_filters(iossifov_2014_wrappers, wrapper_type):
     study_wrapper = iossifov_2014_wrappers[wrapper_type]
     query = {

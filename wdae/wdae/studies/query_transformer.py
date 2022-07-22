@@ -219,11 +219,7 @@ class QueryTransformer:
             if filter_conf["from"] == "phenodb":
                 ids = make_pheno_filter(
                     filter_conf, self.study_wrapper.phenotype_data
-                ).apply(
-                    self.study_wrapper.families,
-                    self.study_wrapper.phenotype_data,
-                    roles
-                )
+                ).apply(self.study_wrapper.families, roles)
             else:
                 ids = make_pedigree_filter(filter_conf).apply(
                     self.study_wrapper.families, roles
