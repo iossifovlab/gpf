@@ -15,31 +15,34 @@ logger = logging.getLogger(__name__)
 
 
 class GenomicContext(ABC):
+    """Abstract base class for genomic context."""
+
     def get_reference_genome(self) -> Optional[ReferenceGenome]:
-        o = self.get_context_object(GC_REFERENCE_GENOME_KEY)
-        if o is None:
+        obj = self.get_context_object(GC_REFERENCE_GENOME_KEY)
+        if obj is None:
             return None
-        if isinstance(o, ReferenceGenome):
-            return o
-        raise Exception(
+        if isinstance(obj, ReferenceGenome):
+            return obj
+        raise ValueError(
             "The conext returned a worng type for a reference genome.")
 
     def get_gene_models(self) -> Optional[GeneModels]:
-        o = self.get_context_object(GC_GENE_MODELS_KEY)
-        if o is None:
+        obj = self.get_context_object(GC_GENE_MODELS_KEY)
+        if obj is None:
             return None
-        if isinstance(o, GeneModels):
-            return o
-        raise Exception("The conext returned a wrong type for gene models.")
+        if isinstance(obj, GeneModels):
+            return obj
+        raise ValueError("The conext returned a wrong type for gene models.")
 
     def get_genomic_resource_repository(self) -> Optional[GenomicResourceRepo]:
-        o = self.get_context_object(GC_GRR_KEY)
-        if o is None:
+        obj = self.get_context_object(GC_GRR_KEY)
+        if obj is None:
             return None
-        if isinstance(o, GenomicResourceRepo):
-            return o
-        raise Exception("The conext returned a wrong type for "
-                        "a genomic resource repository.")
+        if isinstance(obj, GenomicResourceRepo):
+            return obj
+        raise ValueError(
+            "The conext returned a wrong type for "
+            "a genomic resource repository.")
 
     @abstractmethod
     def get_context_object(self, key) -> Optional[Any]:
@@ -51,8 +54,10 @@ class GenomicContext(ABC):
 
 
 class GenomicContextGenerator(ABC):
+    """Abstract base class for generator of genomic contexts."""
 
     def get_context_generator_priority(self) -> int:
+        # pylint: disable=no-self-use
         return 0
 
     @abstractmethod
@@ -62,39 +67,41 @@ class GenomicContextGenerator(ABC):
     @abstractmethod
     def get_contexts(self) -> List[GenomicContext]:
         pass
-    pass
 
 
 def register_context_source(context_generator: GenomicContextGenerator):
-    logger.debug(f"Registerfing the "
-                 f"{context_generator.get_context_generator_type()} "
-                 f"genomic context generator with priority "
-                 f"{context_generator.get_context_generator_type()}")
+    logger.debug(
+        "Registerfing the %s "
+        "genomic context generator with priority %s",
+        context_generator.get_context_generator_type(),
+        context_generator.get_context_generator_type())
     _REGISTERED_CONEXT_GENERATORS.append(context_generator)
 
 
 class PriorityGenomicContext(GenomicContext):
+    """Defines a priority genomic context."""
+
     def __init__(self, contexts):
         self.contexts = contexts
         if self.contexts:
             logger.info("Using the folloing genomic context:")
             for context in self.contexts:
-                logger.info(f"\t{context.get_source()}")
+                logger.info("\t%s", context.get_source())
         else:
             logger.info("No genomic context are available.")
 
     def get_context_object(self, key) -> Optional[Any]:
         for context in self.contexts:
-            o = context.get_context_object(key)
-            if o:
+            obj = context.get_context_object(key)
+            if obj:
                 logger.info(
-                    f"object with key {key} found in the context "
-                    f"{context.get_source()}")
-                return o
+                    "object with key %s found in the context %s",
+                    key, context.get_source())
+                return obj
         return None
 
     def get_source(self) -> Tuple[str, ...]:
-        return "PriorityGenomicContext",
+        return ("PriorityGenomicContext", )
 
 
 def get_genomic_context() -> GenomicContext:

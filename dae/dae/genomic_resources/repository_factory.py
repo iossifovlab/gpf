@@ -79,7 +79,7 @@ def _build_real_repository(
         proto_type: str = "",
         repo_id: str = "",
         **kwargs) -> GenomicResourceRepo:
-
+    # pylint: disable=too-many-branches
     if proto_type == "group":
         repo = _build_group_repository(
             repo_id=repo_id, **kwargs)

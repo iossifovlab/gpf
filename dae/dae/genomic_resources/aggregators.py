@@ -5,6 +5,8 @@ from typing import cast
 
 
 class AbstractAggregator:
+    """Base class for score aggregators."""
+
     def __init__(self):
         self.total_count = 0
         self.used_count = 0
@@ -41,6 +43,8 @@ class AbstractAggregator:
 
 
 class MaxAggregator(AbstractAggregator):
+    """Maximum value aggregator for genomic scores."""
+
     def __init__(self):
         super().__init__()
         self.current_max = None
@@ -63,6 +67,8 @@ class MaxAggregator(AbstractAggregator):
 
 
 class MinAggregator(AbstractAggregator):
+    """Minimum value aggregator for genomic scores."""
+
     def __init__(self):
         super().__init__()
         self.current_min = None
@@ -85,6 +91,8 @@ class MinAggregator(AbstractAggregator):
 
 
 class MeanAggregator(AbstractAggregator):
+    """Aggregator for genomic scores that calculates mean value."""
+
     def __init__(self):
         super().__init__()
         self.sum = 0
@@ -106,6 +114,8 @@ class MeanAggregator(AbstractAggregator):
 
 
 class ConcatAggregator(AbstractAggregator):
+    """Aggregator that concatenates all passed values."""
+
     def __init__(self):
         super().__init__()
         self.out = ""
@@ -126,6 +136,8 @@ class ConcatAggregator(AbstractAggregator):
 
 
 class MedianAggregator(AbstractAggregator):
+    """Aggregator for genomic scores that calculates median value."""
+
     def __init__(self):
         super().__init__()
         self.values = []
@@ -154,6 +166,8 @@ class MedianAggregator(AbstractAggregator):
 
 
 class ModeAggregator(AbstractAggregator):
+    """Aggregator for genomic scores that calculates mode value."""
+
     def __init__(self):
         super().__init__()
         self.value_counts = {}
@@ -187,6 +201,8 @@ class ModeAggregator(AbstractAggregator):
 
 
 class JoinAggregator(AbstractAggregator):
+    """Aggregator that joins all passed values using a separator."""
+
     def __init__(self, separator):
         super().__init__()
         self.values = []
@@ -205,6 +221,8 @@ class JoinAggregator(AbstractAggregator):
 
 
 class ListAggregator(AbstractAggregator):
+    """Aggregator that builds a list of all passed values."""
+
     def __init__(self):
         super().__init__()
         self.values = []
@@ -222,6 +240,8 @@ class ListAggregator(AbstractAggregator):
 
 
 class DictAggregator(AbstractAggregator):
+    """Aggregator that builds a dictionary of all passed values."""
+
     def __init__(self):
         super().__init__()
         self.values = {}
@@ -271,6 +291,7 @@ def get_aggregator_class(aggregator):
 
 
 def create_aggregator_definition(aggregator_type):
+    """Parse an aggregator definition string."""
     join_regex = r"^(join)\((.+)\)"
     join_match = re.match(join_regex, aggregator_type)
     if join_match is not None:
@@ -285,6 +306,7 @@ def create_aggregator_definition(aggregator_type):
 
 
 def create_aggregator(aggregator_def):
+    """Create an aggregator by aggregator definition."""
     aggregator_name = aggregator_def["name"]
     aggregator_class = get_aggregator_class(aggregator_name)
     if "args" in aggregator_def:
