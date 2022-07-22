@@ -2,6 +2,11 @@ import logging
 
 from typing import List
 
+from dae.utils.regions import Region
+from dae.annotation.annotatable import Annotatable
+from dae.genomic_resources.gene_models import GeneModels
+from dae.genomic_resources.reference_genome import ReferenceGenome
+
 from .gene_codes import NuclearCode
 from .effect_checkers.coding import CodingEffectChecker
 from .effect_checkers.promoter import PromoterEffectChecker
@@ -16,17 +21,12 @@ from .effect import EffectFactory, AnnotationEffect
 from .variant import Variant
 from .annotation_request import AnnotationRequestFactory
 
-from dae.annotation.annotatable import Annotatable
-from dae.genomic_resources.gene_models import GeneModels
-from dae.genomic_resources.reference_genome import ReferenceGenome
-
-
-from dae.utils.regions import Region
 
 logger = logging.getLogger(__name__)
 
 
-class EffectAnnotator(object):
+class EffectAnnotator:
+    """Predicts variant effect."""
 
     def __init__(
             self, reference_genome: ReferenceGenome, gene_models: GeneModels,
@@ -50,6 +50,7 @@ class EffectAnnotator(object):
         ]
 
     def get_effect_for_transcript(self, variant, transcript_model):
+        """Calculate effect for a given transcript."""
         request = AnnotationRequestFactory.create_annotation_request(
             self, variant, transcript_model
         )
@@ -60,29 +61,32 @@ class EffectAnnotator(object):
                 return effect
         return None
 
-    def _do_annotate_cnv(self, variant):
-        if variant.variant_type == Annotatable.Type.large_duplication:
+    def _do_annotate_cnv(self, variant) -> List[AnnotationEffect]:
+        if variant.variant_type == Annotatable.Type.LARGE_DUPLICATION:
             effect_type = "CNV+"
-        elif variant.variant_type == Annotatable.Type.large_deletion:
+        elif variant.variant_type == Annotatable.Type.LARGE_DELETION:
             effect_type = "CNV-"
         else:
             raise ValueError(
                 f"unexpected variant type: {variant.variant_type}")
         assert effect_type is not None
 
-        effects = []
+        effects: List[AnnotationEffect] = []
         cnv_region = Region(
             variant.chromosome,
             variant.position,
             variant.position + variant.length)
+        if self.gene_models.utr_models is None:
+            raise ValueError("bad gene models")
 
         for (start, stop), tms in \
                 self.gene_models.utr_models[variant.chromosome].items():
             if cnv_region.intersection(
                     Region(variant.chromosome, start, stop)):
-                for tm in tms:
+                for transcript_model in tms:
                     effects.append(
-                        EffectFactory.create_effect_with_tm(effect_type, tm))
+                        EffectFactory.create_effect_with_tm(
+                            effect_type, transcript_model))
 
         if len(effects) == 0:
             effects.append(EffectFactory.create_effect(effect_type))
@@ -90,9 +94,13 @@ class EffectAnnotator(object):
         return effects
 
     def annotate(self, variant) -> List[AnnotationEffect]:
-        if variant.variant_type == Annotatable.Type.large_duplication or \
-                variant.variant_type == Annotatable.Type.large_deletion:
+        """Annotate effects for a variant."""
+        if variant.variant_type in {
+                Annotatable.Type.LARGE_DUPLICATION,
+                Annotatable.Type.LARGE_DELETION}:
             return self._do_annotate_cnv(variant)
+        if self.gene_models.utr_models is None:
+            raise ValueError("bad gene models")
 
         effects = []
         if variant.chromosome not in self.gene_models.utr_models:
@@ -104,17 +112,11 @@ class EffectAnnotator(object):
                 variant.position <= key[1] + self.promoter_len
                 and variant.ref_position_last >= key[0] - self.promoter_len
             ):
-                for tm in self.gene_models.utr_models[variant.chromosome][key]:
-                    logger.debug(
-                        "========: %s-%s :====================",
-                        tm.gene,
-                        tm.tr_id,
-                    )
-                    effect = self.get_effect_for_transcript(variant, tm)
+                for transcript_model in self.gene_models\
+                        .utr_models[variant.chromosome][key]:
+                    effect = self.get_effect_for_transcript(
+                        variant, transcript_model)
 
-                    logger.debug("")
-                    logger.debug("Result: %s", effect)
-                    logger.debug("")
                     if effect is not None:
                         effects.append(effect)
 
@@ -133,17 +135,16 @@ class EffectAnnotator(object):
             length=None,
             seq=None,
             variant_type=None):
-
+        """Annotate effects for a variant."""
         variant = Variant(
             chrom, pos, location, variant, ref, alt, length, seq, variant_type
         )
         return self.annotate(variant)
 
-    @classmethod
+    @staticmethod
     def annotate_variant(
-            cls,
             gm,
-            refG,
+            reference_genome,
             chrom=None,
             position=None,
             loc=None,
@@ -154,8 +155,10 @@ class EffectAnnotator(object):
             seq=None,
             variant_type=None,
             promoter_len=0):
-
-        annotator = EffectAnnotator(refG, gm, promoter_len=promoter_len)
+        """Build effect annotator and annotate a variant."""
+        # pylint: disable=too-many-arguments
+        annotator = EffectAnnotator(
+            reference_genome, gm, promoter_len=promoter_len)
         effects = annotator.do_annotate_variant(
             chrom, position, loc, var, ref, alt, length, seq, variant_type
         )

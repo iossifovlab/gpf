@@ -18,7 +18,8 @@ nonsyn = [
 
 
 def get_effect_types(types=True, groups=False):
-    T = [
+    """Produce collection of effect types."""
+    effect_types = [
         "tRNA:ANTICODON",
         "splice-site",
         "frame-shift",
@@ -46,25 +47,25 @@ def get_effect_types(types=True, groups=False):
         "CNV+",
     ]
 
-    G = ["LGDs", "LoF", "nonsynonymous", "coding", "introns", "UTRs", "CNVs"]
+    effect_groups = [
+        "LGDs", "LoF", "nonsynonymous", "coding", "introns", "UTRs", "CNVs"]
 
     if types:
         if not groups:
-            return T
-        A = list(G)
-        A.extend(T)
-        return A
+            return effect_types
+        result = list(effect_groups)
+        result.extend(effect_types)
+        return result
     if groups:
-        return G
+        return effect_groups
     return []
 
 
-def get_effect_types_set(s):
-    s = s.split(",")
-    global LOF
-    global nonsyn
+def get_effect_types_set(effect_types):
+    """Split comma separated list of effect types."""
+    effect_types = effect_types.split(",")
 
-    Groups = {
+    groups = {
         "LGDs": LOF,
         "LoF": LOF,
         "introns": [
@@ -99,12 +100,12 @@ def get_effect_types_set(s):
         ],
         "CNVs": ["CNV+", "CNV-"],
     }
-    R = []
+    result = []
 
-    for i in s:
-        try:
-            R.extend(Groups[i])
-        except KeyError:
-            R.append(i)
+    for effect_type in effect_types:
+        if effect_type in groups:
+            result.extend(groups[effect_type])
+        else:
+            result.append(effect_type)
 
-    return set(R)
+    return set(result)

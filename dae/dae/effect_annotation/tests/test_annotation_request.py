@@ -1,9 +1,10 @@
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pytest
-
-from .mocks import TranscriptModelMock
 
 from dae.effect_annotation.annotator import Variant
 from dae.effect_annotation.annotation_request import AnnotationRequestFactory
+
+from .mocks import TranscriptModelMock
 
 
 @pytest.fixture(scope="session")

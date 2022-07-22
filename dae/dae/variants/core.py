@@ -134,22 +134,22 @@ class Allele:
         if Allele.Type.large_duplication & self.allele_type:
             return CNVAllele(
                 self.chrom, self.position, self.end_position,
-                Annotatable.Type.large_duplication)
-        elif Allele.Type.large_deletion & self.allele_type:
+                Annotatable.Type.LARGE_DUPLICATION)
+        if Allele.Type.large_deletion & self.allele_type:
             return CNVAllele(
                 self.chrom, self.position, self.end_position,
-                Annotatable.Type.large_deletion)
-        elif Allele.Type.substitution == self.allele_type:
+                Annotatable.Type.LARGE_DELETION)
+        if Allele.Type.substitution == self.allele_type:
             pos, ref, alt = trim_parsimonious(
                 self.position, self.reference, self.alternative)
             return VCFAllele(self.chrom, pos, ref, alt)
-        elif Allele.Type.indel & self.allele_type:
+        if Allele.Type.indel & self.allele_type:
             pos, ref, alt = trim_parsimonious(
                 self.position, self.reference, self.alternative)
             return VCFAllele(self.chrom, pos, ref, alt)
-        else:
-            logger.error(f"unexpected allele: {self}")
-            raise ValueError(f"unexpeced allele: {self}")
+
+        logger.error("unexpected allele: %s", self)
+        raise ValueError(f"unexpeced allele: {self}")
 
     @property
     def chromosome(self) -> str:

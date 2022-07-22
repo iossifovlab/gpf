@@ -1,3 +1,4 @@
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pytest
 
 import numpy as np
@@ -53,7 +54,7 @@ def cnv_impala(
         impala_genotype_storage,
         reimport,
         data_import):
-
+    # pylint: disable=too-many-locals,import-outside-toplevel
     from dae.backends.impala.impala_helpers import ImpalaHelpers
 
     impala_helpers = ImpalaHelpers(
@@ -104,10 +105,9 @@ def test_cnv_impala(cnv_impala):
 
     print(vs)
 
-    for v in vs:
-        assert v.alt_alleles
-        for aa in v.alt_alleles:
-            print(aa)
+    for fv in vs:
+        assert fv.alt_alleles
+        for aa in fv.alt_alleles:
             assert Allele.Type.cnv & aa.allele_type
     assert len(vs) == 12
 
@@ -142,7 +142,7 @@ def test_cnv_impala_region_query(cnv_impala):
     assert len(list(vs)) == 2
 
 
-def test_cnv_best_state_X(cnv_raw):
+def test_cnv_best_state_x(cnv_raw):
     vs = cnv_raw.query_variants(
         effect_types=["CNV+", "CNV-"],
         variant_type="cnv+ or cnv-",

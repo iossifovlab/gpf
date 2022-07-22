@@ -3,7 +3,10 @@ import re
 from dae.annotation.annotatable import Annotatable
 
 
-class Variant(object):
+class Variant:
+    """Provides variant defintion used in effect annotator."""
+
+    # pylint: disable=too-many-instance-attributes
     def __init__(
             self,
             chrom=None,
@@ -18,11 +21,13 @@ class Variant(object):
 
         self.variant_type = None
         self.length = None
-
+        self.reference = None
+        self.alternate = None
         self.set_position(chrom, position, loc)
 
-        if Annotatable.Type.large_duplication == variant_type or \
-                Annotatable.Type.large_deletion == variant_type:
+        if variant_type in {
+                Annotatable.Type.LARGE_DUPLICATION,
+                Annotatable.Type.LARGE_DELETION}:
             assert self.chromosome is not None
             assert self.position is not None
 
@@ -41,6 +46,7 @@ class Variant(object):
             )
 
     def set_position(self, chromosome, position, loc):
+        """Set variant position."""
         if position is not None:
             assert chromosome is not None
             assert loc is None
@@ -63,7 +69,8 @@ class Variant(object):
         assert self.chromosome is not None
         assert self.position is not None
 
-    def set_ref_alt(self, var, ref, alt, length, seq, typ):
+    def set_ref_alt(self, var, ref, alt, _length, seq, _typ):
+        """Set variant reference and alternative."""
         if ref is not None:
             assert alt is not None
             assert var is None
@@ -86,6 +93,7 @@ class Variant(object):
         assert self.alternate is not None
 
     def trim_equal_ref_alt_parts(self):
+        """Trim reference and alternative."""
         start_index = -1
         for i in range(min(len(self.reference), len(self.alternate))):
             if self.reference[i] == self.alternate[i]:
@@ -98,29 +106,30 @@ class Variant(object):
         self.position += start_index + 1
 
     def set_ref_alt_from_variant(self, var):
+        """Set reference and alternative from CSHL variant."""
         if var.startswith("complex"):
-            a = re.match(".*\\((.*)->(.*)\\)", var)
-            self.reference = a.group(1).upper()
-            self.alternate = a.group(2).upper()
+            res = re.match(".*\\((.*)->(.*)\\)", var)
+            self.reference = res.group(1).upper()
+            self.alternate = res.group(2).upper()
             return
 
-        t = var[0].upper()
-        if t == "S":
-            a = re.match(".*\\((.*)->(.*)\\)", var)
-            self.reference = a.group(1).upper()
-            self.alternate = a.group(2).upper()
+        var_type = var[0].upper()
+        if var_type == "S":
+            res = re.match(".*\\((.*)->(.*)\\)", var)
+            self.reference = res.group(1).upper()
+            self.alternate = res.group(2).upper()
             return
 
-        if t == "D":
-            a = re.match(".*\\((.*)\\)", var)
-            self.reference = "0" * int(a.group(1))
+        if var_type == "D":
+            res = re.match(".*\\((.*)\\)", var)
+            self.reference = "0" * int(res.group(1))
             self.alternate = ""
             return
 
-        if t == "I":
-            a = re.match(".*\\((.*)\\)", var)
+        if var_type == "I":
+            res = re.match(".*\\((.*)\\)", var)
             self.reference = ""
-            self.alternate = re.sub("[0-9]+", "", a.group(1).upper())
+            self.alternate = re.sub("[0-9]+", "", res.group(1).upper())
             return
 
-        raise Exception("Unknown variant!: " + var)
+        raise ValueError(f"Unknown variant!: {var}")
