@@ -1,10 +1,10 @@
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
 from dae.common_reports.people_counter import PeopleCounter, PeopleReport
 
 
 def test_people_counter(study1, phenotype_role_collection):
-    people_counter = PeopleCounter.from_families(
-        study1.families,
-        phenotype_role_collection.person_sets["phenotype1"],
+    people_counter = PeopleCounter.from_person_set(
+        phenotype_role_collection.person_sets["phenotype1"]
     )
 
     assert people_counter.people_male == 7
@@ -24,8 +24,7 @@ def test_people_counter(study1, phenotype_role_collection):
 
 
 def test_people_counter_empty(study1, phenotype_role_collection):
-    people_counter = PeopleCounter.from_families(
-        study1.families,
+    people_counter = PeopleCounter.from_person_set(
         phenotype_role_collection.person_sets["unknown"],
     )
 
@@ -41,8 +40,8 @@ def test_people_counter_empty(study1, phenotype_role_collection):
 
 
 def test_people_report(study1, phenotype_role_collection):
-    people_report = PeopleReport.from_families(
-        study1.families, [phenotype_role_collection]
+    people_report = PeopleReport.from_person_set_collections(
+        [phenotype_role_collection]
     )
 
     assert len(people_report.people_counters) == 1

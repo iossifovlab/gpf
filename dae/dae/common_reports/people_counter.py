@@ -12,8 +12,8 @@ class PeopleCounter:
         self.people_total = json.get("people_total", 0)
 
     @staticmethod
-    def from_families(families, person_set):
-        """Build people counter JSON from dict of families."""
+    def from_person_set(person_set):
+        """Build people counter JSON from person set."""
         matched_people = list(person_set.persons.values())
 
         people_male = len(
@@ -68,10 +68,10 @@ class PeopleCounters:
         self.counters = [PeopleCounter(d) for d in json["counters"]]
 
     @staticmethod
-    def from_families(families, person_set_collection):
+    def from_person_set_collection(person_set_collection):
         """Create people counters JSON from dict of families."""
         people_counters = [
-            PeopleCounter.from_families(families, person_set)
+            PeopleCounter.from_person_set(person_set)
             for person_set in person_set_collection.person_sets.values()
         ]
 
@@ -125,9 +125,9 @@ class PeopleReport:
         self.people_counters = [PeopleCounters(d) for d in json]
 
     @staticmethod
-    def from_families(families, person_set_collections):
+    def from_person_set_collections(person_set_collections):
         people_counters_collection = [
-            PeopleCounters.from_families(families, person_set_collection)
+            PeopleCounters.from_person_set_collection(person_set_collection)
             for person_set_collection in person_set_collections
         ]
         return PeopleReport(

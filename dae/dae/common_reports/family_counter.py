@@ -23,6 +23,7 @@ def get_family_pedigree(family, person_set_collection):
 
 
 def get_family_type(family, person_to_set):
+    """Transform a family into a tuple of strings describing members."""
     family_type = []
     # get family size
     family_type.append(str(len(family.members_in_order)))
@@ -79,7 +80,7 @@ class FamilyCounter:
         }
 
 
-class FamiliesGroupCounters(object):
+class FamiliesGroupCounters:
     """Class representing families group counters JSON."""
 
     def __init__(self, json):
@@ -89,19 +90,20 @@ class FamiliesGroupCounters(object):
         counters = [FamilyCounter(d) for d in json["counters"]]
         self.counters = {c.counter_id: c for c in counters}
 
+    # FIXME: Too many locals
     @staticmethod
-    def from_families(
+    def from_families(  # pylint: disable=too-many-locals
         families,
         person_set_collection,
         draw_all_families,
         families_count_show_id,
     ):
         """Create families group counters from a dict of families."""
-        counters = dict()
+        counters = {}
 
         if draw_all_families:
             for idx, family in enumerate(families.values()):
-                fc = FamilyCounter({
+                family_counter = FamilyCounter({
                     "families": [family.family_id],
                     "pedigree": get_family_pedigree(
                         family, person_set_collection
@@ -109,11 +111,11 @@ class FamiliesGroupCounters(object):
                     "pedigrees_count": family.family_id,
                     "counter_id": idx
                 })
-                counters[family.family_id] = fc
+                counters[family.family_id] = family_counter
         else:
             families_to_types = defaultdict(list)
 
-            person_to_set = dict()
+            person_to_set = {}
             for person_set in person_set_collection.person_sets.values():
                 for person_id in person_set.persons:
                     person_to_set[person_id] = person_set.id

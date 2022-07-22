@@ -1,5 +1,7 @@
-import pytest
+# pylint: disable=all
+# Old, unused test, disable all checks
 from pprint import pprint
+import pytest
 
 from dae.common_reports.common_report import CommonReport
 

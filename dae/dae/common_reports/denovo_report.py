@@ -9,7 +9,8 @@ from dae.utils.effect_utils import EffectTypesMixin
 logger = logging.getLogger(__name__)
 
 
-class EffectCell:
+# FIXME: Too many instance attributes
+class EffectCell:  # pylint: disable=too-many-instance-attributes
     """Class representing a cell in the denovo report table."""
 
     def __init__(self, denovo_variants, person_set, effect):
@@ -166,8 +167,9 @@ class DenovoReportTable:
         self.effect_groups = json["effect_groups"]
         self.effect_types = json["effect_types"]
 
+    # FIXME: Too many locals
     @staticmethod
-    def from_variants(
+    def from_variants(  # pylint: disable=too-many-locals
             denovo_variants,
             effect_groups,
             effect_types,

@@ -11,7 +11,8 @@ from dae.common_reports.denovo_report import DenovoReport
 logger = logging.getLogger(__name__)
 
 
-class CommonReport(object):
+# FIXME: Too many instance attributes, refactor?
+class CommonReport:  # pylint: disable=too-many-instance-attributes
     """Class representing a common report JSON."""
 
     def __init__(self, json):
@@ -31,8 +32,10 @@ class CommonReport(object):
         self.transmitted = json["transmitted"]
         self.study_description = json["study_description"]
 
+    # FIXME: Too many locals
     @staticmethod
     def from_genotype_study(genotype_data_study):
+        # pylint: disable=too-many-locals
         """Generate common report JSON from genotpye data study."""
         config = genotype_data_study.config.common_report
 
@@ -55,8 +58,7 @@ class CommonReport(object):
             families_report_collections,
         )
 
-        people_report = PeopleReport.from_families(
-            genotype_data_study.families,
+        people_report = PeopleReport.from_person_set_collections(
             families_report_collections
         )
 
