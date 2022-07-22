@@ -10,7 +10,6 @@ from dae.variants.attributes import Role, Status, Sex
 from dae.backends.schema2.base_query_builder import Dialect
 from dae.backends.schema2.family_builder import FamilyQueryBuilder
 from dae.backends.schema2.summary_builder import SummaryQueryBuilder
-from dae.backends.schema2.base_query_director import QueryDirector
 from dae.variants.variant import SummaryVariantFactory
 from dae.variants.family_variant import FamilyVariant
 
@@ -18,8 +17,10 @@ logger = logging.getLogger(__name__)
 
 
 class BigQueryDialect(Dialect):
+    """Abstracts away details related to bigquery."""
+
     def __init__(self, ns: str = None):
-        super().__init__(ns=ns)
+        super().__init__(namespace=ns)
 
     @staticmethod
     def add_unnest_in_join() -> bool:
@@ -208,9 +209,7 @@ class BigQueryVariants:
             do_join_affected=False,
         )
 
-        director = QueryDirector(query_builder)
-
-        director.build_query(
+        query = query_builder.build_query(
             regions=regions,
             genes=genes,
             effect_types=effect_types,
@@ -229,14 +228,11 @@ class BigQueryVariants:
             affected_status=affected_status,
         )
 
-        # query = sqlparse.format(query_builder.product, reindent=True,
-        #                         keyword_case='upper')
-        query = query_builder.product
         result = self.client.query(query)
 
         for row in result:
             try:
-                sv_record = json.loads(row.summary_data)
+                sv_record = json.loads(row.summary_variant_data)
                 sv = SummaryVariantFactory.summary_variant_from_records(
                     sv_record
                 )
@@ -285,9 +281,7 @@ class BigQueryVariants:
             do_join_affected=do_join_affected,
         )
 
-        director = QueryDirector(query_builder)
-
-        director.build_query(
+        query = query_builder.build_query(
             regions=regions,
             genes=genes,
             effect_types=effect_types,
@@ -306,8 +300,6 @@ class BigQueryVariants:
             affected_status=affected_status,
         )
 
-        query = query_builder.product
-
         # ------------------ DEBUG ---------------------
         result = []
         logger.info(f"BQ QUERY BUILDER:\n{query}")
@@ -320,8 +312,8 @@ class BigQueryVariants:
 
         for row in result:
             try:
-                sv_record = json.loads(row.summary_data)
-                fv_record = json.loads(row.family_data)
+                sv_record = json.loads(row.summary_variant_data)
+                fv_record = json.loads(row.family_variant_data)
 
                 fv = FamilyVariant(
                     SummaryVariantFactory.summary_variant_from_records(

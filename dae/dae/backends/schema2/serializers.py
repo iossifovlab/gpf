@@ -173,7 +173,7 @@ class AlleleParquetSerializer:
                     self.SUMMARY_SEARCHABLE_PROPERTIES_TYPES.items()
                 )
             ]
-            fields.append(pa.field("summary_data", pa.string()))
+            fields.append(pa.field("summary_variant_data", pa.string()))
 
             annotation_type_to_pa_type = {
                 "float": pa.float32(),
@@ -209,7 +209,7 @@ class AlleleParquetSerializer:
                 )
                 fields.append(field)
 
-            fields.append(pa.field("family_data", pa.string()))
+            fields.append(pa.field("family_variant_data", pa.string()))
             self._schema_family = pa.schema(fields)
         return self._schema_family
 
@@ -240,7 +240,7 @@ class AlleleParquetSerializer:
                 prop_value = prop_value.value
         return prop_value
 
-    def build_family_allele_batch_dict(self, allele, family_data):
+    def build_family_allele_batch_dict(self, allele, family_variant_data):
         family_header = []
         family_properties = []
 
@@ -254,11 +254,11 @@ class AlleleParquetSerializer:
         for name, value in zip(family_header, family_properties):
             allele_data[name].append(value)
 
-        allele_data["family_data"] = [family_data]
+        allele_data["family_variant_data"] = [family_variant_data]
         return allele_data
 
-    def build_summary_allele_batch_dict(self, allele, summary_data):
-        allele_data = {"summary_data": [summary_data]}
+    def build_summary_allele_batch_dict(self, allele, summary_variant_data):
+        allele_data = {"summary_variant_data": [summary_variant_data]}
 
         for spr in self.SUMMARY_SEARCHABLE_PROPERTIES_TYPES:
 

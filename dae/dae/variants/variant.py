@@ -864,7 +864,7 @@ class SummaryVariantFactory:
     @staticmethod
     def summary_variant_from_records(
             records: List[Dict[str, Any]], transmission_type=None,
-            attr_filter=None):
+            attr_filter=None) -> SummaryVariant:
         """Build summary variant from a list of dictionaries (records)."""
         assert len(records) > 0
 

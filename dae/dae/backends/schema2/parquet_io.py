@@ -656,7 +656,6 @@ class VariantsParquetWriter:
             summary_variant,
             family_variants,
         ) in enumerate(self.full_variants_iterator):
-
             # build summary json blob (concat all other alleles)
             # INSIDE summary_variant
             summary_blobs_json = json.dumps(
@@ -710,14 +709,15 @@ class VariantsParquetWriter:
                     }
                     family_allele.update_attributes(extra_atts)
 
-                family_data_json = json.dumps(fv.to_record, sort_keys=True)
+                family_variant_data_json = json.dumps(fv.to_record,
+                                                      sort_keys=True)
 
                 for family_allele in fv.alt_alleles:
                     family_bin_writer = self._get_bin_writer_family(
                         family_allele
                     )
                     family_bin_writer.append_family_allele(
-                        family_allele, family_data_json
+                        family_allele, family_variant_data_json
                     )
 
             # DEBUG

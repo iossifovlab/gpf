@@ -1,5 +1,6 @@
-import pytest
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
 import os
+import pytest
 import numpy as np
 
 from dae.pedigrees.loader import FamiliesLoader
@@ -468,3 +469,36 @@ def test_collect_filenames_s3(fixture_dirname, s3, mocker):
     assert len(all_filenames) == 2
     assert all_filenames[0] == "s3://test-bucket/dir/multivcf_split1.vcf"
     assert all_filenames[1] == "s3://test-bucket/dir/multivcf_split2.vcf"
+
+
+def test_family_variants(resources_dir, gpf_instance_2013):
+    ped_filename = str(resources_dir / "simple_family.ped")
+    families = FamiliesLoader(ped_filename).load()
+
+    vcf_loader = VcfLoader(
+        families,
+        [str(resources_dir / "simple_variants.vcf")],
+        gpf_instance_2013.reference_genome,
+    )
+    variants = list(vcf_loader.full_variants_iterator())
+    assert len(variants) == 10
+
+    family_variants = [v[1] for v in variants]
+    exp_num_fam_variants_and_alleles = [
+        # (num variants, num alleles)
+        (0, 0),  # 1st variant is not found in any individual
+        (1, 2),  # only the 2nd alt allele of the second variant is found
+        (0, 0),  # the 3rd variant is unknown across the board
+        (1, 3),  # the 4th variant is found in 1 individual (similar to 2nd)
+        (0, 0),  # the 5th, 6th and 7th have missing values
+        (0, 0),
+        (0, 0),
+        (1, 2),  # the 8th is a normal-looking variant
+        (1, 2),  # the 9th is a normal-looking variant
+        (1, 4),  # the 10th is found in all individuals
+    ]
+
+    for i, fam_variants in enumerate(family_variants):
+        exp_num_variants, exp_num_alleles = exp_num_fam_variants_and_alleles[i]
+        assert len(fam_variants) == exp_num_variants
+        assert sum(len(fv.alleles) for fv in fam_variants) == exp_num_alleles
