@@ -92,7 +92,9 @@ export class GpfTableComponent {
     if (this.noScrollOptimization || !this.dataSource) {
       return 0;
     }
-    return (this.dataSource.length - this.getScrollIndices()[1]) * this.lastRowHeight;
+
+    const result = (this.dataSource.length - this.getScrollIndices()[1]) * this.lastRowHeight;
+    return result > 0 ? result : 0;
   }
 
   public get visibleData(): Array<any> {
