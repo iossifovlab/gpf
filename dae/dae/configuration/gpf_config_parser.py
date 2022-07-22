@@ -55,6 +55,20 @@ class GPFConfigValidator(Validator):
         to an absolute path
     """
 
+    def _validate_depends_global(self, constraint, field, value):
+        del value
+        field_path = constraint.split(".")
+        current_parent = self.document
+        failed_to_find = False
+        for field_name in field_path:
+            next_field = current_parent.get(field_name, None)
+            if next_field is None:
+                failed_to_find = True
+                break
+            current_parent = next_field
+
+        if not failed_to_find:
+            self._error(field, f"Depends on {constraint}")
     def _normalize_coerce_abspath(self, value: str) -> str:
         directory = self._config["conf_dir"]
         if directory is None:

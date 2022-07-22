@@ -96,7 +96,10 @@ genotype_browser_schema = {
             }
         },
         "has_person_filters": {"type": "boolean"},
-        "has_study_filters": {"type": "boolean"},
+        "has_study_filters": {
+            "type": "boolean",
+            "depends_global": "genotype_browser.has_study_filters"
+        },
         "has_present_in_child": {"type": "boolean"},
         "has_present_in_parent": {"type": "boolean"},
         "has_pedigree_selector": {"type": "boolean"},
@@ -320,7 +323,7 @@ study_config_schema = {
     "studies": {
         "type": "list",
         "schema": {"type": "string"},
-        "excludes": "genotype_storage",
+        "excludes": "genotype_storage"
     },
     "genotype_browser": genotype_browser_schema,
     "common_report": {
