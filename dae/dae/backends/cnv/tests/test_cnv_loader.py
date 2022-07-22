@@ -1,7 +1,8 @@
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
+import numpy as np
 import pytest
 from dae.backends.cnv.loader import CNVLoader
 from dae.pedigrees.loader import FamiliesLoader
-import numpy as np
 
 
 def test_cnv_loader(fixture_dirname, gpf_instance_2013):

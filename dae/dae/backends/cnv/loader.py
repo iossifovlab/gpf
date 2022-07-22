@@ -123,6 +123,7 @@ def _cnv_loader(
     load variants from a CNVs data input and transform them into a pandas
     `DataFrame`.
     """
+    # pylint: disable=too-many-arguments,too-many-locals
     logger.info("unexpected parameters passed to _cnv_loader: %s", kwargs)
 
     variant_generator = flexible_cnv_loader(
@@ -351,7 +352,7 @@ class CNVLoader(VariantsGenotypesLoader):
     def _full_variants_iterator_impl(
         self
     ) -> Generator[Tuple[SummaryVariant, List[FamilyVariant]], None, None]:
-
+        # pylint: disable=too-many-locals
         group = self.cnv_df.groupby(
             ["chrom", "position", "end_position", "variant_type"],
             sort=False).agg(list)

@@ -18,7 +18,8 @@ from dae.pedigrees.family import FamiliesData
 
 def _cnv_location_to_vcf_trasformer() \
         -> Callable[[Dict[str, Any]], Dict[str, Any]]:
-    """
+    """Expand shorthand loc notation to separate crom, pos, pos_end attrs.
+
     In case the input uses CNV location this transformer will produce
     internal (chrom, pos, pos_end) description of the CNV position.
     """
@@ -37,7 +38,8 @@ def _cnv_location_to_vcf_trasformer() \
 
 def _cnv_vcf_to_vcf_trasformer() \
         -> Callable[[Dict[str, Any]], Dict[str, Any]]:
-    """
+    """Convert pos and pos_end to int.
+
     In case the input uses VCF-like description of the CNVs this
     transformer will check it and handle the proper type conversion for
     `pos` and `pos_end` values.
@@ -63,7 +65,8 @@ def _configure_cnv_location(
         cnv_start: Optional[str] = None,
         cnv_end: Optional[str] = None,
         cnv_location: Optional[str] = None) -> None:
-    """
+    """Configure the header and position-handling transformers.
+
     This helper function will **configure** the header and transformers needed
     to handle position of CNVs in the input record.
     """
@@ -100,7 +103,8 @@ def _configure_cnv_location(
 def _cnv_dae_best_state_to_best_state(
         families: FamiliesData, genome: ReferenceGenome) \
         -> Callable[[Dict[str, Any]], Dict[str, Any]]:
-    """
+    """Transform old dae family id/best state to canonical form.
+
     In case the genotype of the CNVs is specified in old
     dae family id/best state notation, this transformer will handle it
     and transform it to canonical family id/best state form
@@ -139,8 +143,8 @@ def _cnv_dae_best_state_to_best_state(
 def _cnv_person_id_to_best_state(
         families: FamiliesData, genome: ReferenceGenome) \
         -> Callable[[Dict[str, Any]], Dict[str, Any]]:
+    """Transform variant into canonical family id/best state form.
 
-    """
     In case the genotype is specified by person id having the variant
     this transformer will transform it into canonical family id/best state
     form
@@ -180,11 +184,7 @@ def _configure_cnv_best_state(
         cnv_person_id: Optional[str] = None,
         cnv_family_id: Optional[str] = None,
         cnv_best_state: Optional[str] = None) -> None:
-    """
-    This helper function will **configure** the header and transformers
-    needed to handle family genotypes of CNVs.
-    """
-
+    """Configure header and transformers that handle CNV family genotypes."""
     if cnv_person_id is not None:
         # if cnv_family_id is not None and cnv_best_state is not None:
         #     raise ValueError(
@@ -215,11 +215,10 @@ def _configure_cnv_best_state(
             _cnv_dae_best_state_to_best_state(families, genome))
 
 
-def _cnv_variant_to_variant_type(
-        cnv_plus_values=None,
-        cnv_minus_values=None) \
-            -> Callable[[Dict[str, Any]], Dict[str, Any]]:
-    """
+def _cnv_variant_to_variant_type(cnv_plus_values=None, cnv_minus_values=None) \
+        -> Callable[[Dict[str, Any]], Dict[str, Any]]:
+    """Transform variant type to canonical internal representation.
+
     This transformer is used to transform variant type to canonical
     inernal representation using :class:`Allele.Type.large_duplication` and
     :class:`Allele.Type.large_deletion`.
@@ -250,11 +249,7 @@ def _configure_cnv_variant_type(
         cnv_variant_type: Optional[str] = None,
         cnv_plus_values: Optional[Union[str, List[str]]] = None,
         cnv_minus_values: Optional[Union[str, List[str]]] = None):
-    """
-    This helper function **configures** the header and transformer needed
-    to handle CNV variant type in the input data.
-    """
-
+    """Configure header and transformer needed to handle CNV variant type."""
     if cnv_plus_values is None:
         cnv_plus_values = ["CNV+"]
     elif isinstance(cnv_plus_values, str):
@@ -293,11 +288,8 @@ def _configure_loader(
         -> Tuple[
             List[str],
             List[Callable[[Dict[str, Any]], Dict[str, Any]]]]:
-    """
-    This funciton configures all headers and transformers needed to
-    handle CNVs input data.
-    """
-
+    """Configure all headers and transformers needed to handle CNVs input."""
+    # pylint: disable=too-many-arguments
     transformers: List[
         Callable[[Dict[str, Any]], Dict[str, Any]]] = []
     header = deepcopy(header)
@@ -339,24 +331,25 @@ def flexible_cnv_loader(
         cnv_sep: str = "\t",
         add_chrom_prefix: Optional[str] = None,
         del_chrom_prefix: Optional[str] = None,
-        **kwargs) -> Generator[Dict[str, Any], None, None]:
-    """
+        **_kwargs) -> Generator[Dict[str, Any], None, None]:
+    """Load variants from CNVs input and transform them into DataFrames.
+
     This function uses flexible variant loader infrastructure to
     load variants from a CNVs data input and transform them into a pandas
     `DataFrame`.
     """
+    # pylint: disable=too-many-locals,too-many-arguments
+    def line_splitter(line: str) -> List[str]:
+        return line.strip("\n\r").split(cnv_sep)
 
-    if isinstance(filepath_or_buffer, str) or \
-            isinstance(filepath_or_buffer, Path):
+    if isinstance(filepath_or_buffer, (str, Path)):
         infile = open(filepath_or_buffer, "rt")
     else:
         infile = filepath_or_buffer
 
-    def line_splitter(line: str) -> List[str]:
-        return line.strip("\n\r").split(cnv_sep)
-
     with infile as infile:
-        line = next(infile)
+        # FIXME don't throw StopIteration and fix the next line
+        line = next(infile)  # pylint: disable=stop-iteration-return
         header = line_splitter(line)
 
         header, transformers = _configure_loader(
@@ -382,11 +375,11 @@ def flexible_cnv_loader(
                 return True
             chrom = rec["chrom"]
             pos = rec["pos"]
-            return any([r.isin(chrom, pos) for r in regions])
+            return any(r.isin(chrom, pos) for r in regions)
 
         variant_generator = flexible_variant_loader(
-                infile, header, line_splitter, transformers,
-                filters=[regions_filter])
+            infile, header, line_splitter, transformers,
+            filters=[regions_filter])
 
         for record in variant_generator:
             yield record
