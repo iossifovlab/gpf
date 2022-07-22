@@ -1,6 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pytest
-from pysam import VariantFile  # pylint: disable=no-name-in-module
+import pysam
 from dae.genomic_resources.clinvar import ClinVarVcf
 
 
@@ -19,7 +19,8 @@ def clinvar_http(grr_http):
 
 
 def test_clinvarvcf_init(clinvar_vcf):
-    assert isinstance(clinvar_vcf.vcf, VariantFile)
+    # pylint: disable=no-member
+    assert isinstance(clinvar_vcf.vcf, pysam.VariantFile)
 
 
 def test_clinvar_vcf_get_variant_info(clinvar_vcf):
