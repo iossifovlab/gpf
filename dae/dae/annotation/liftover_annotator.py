@@ -198,8 +198,8 @@ class LiftOverAnnotator(Annotator):
         assert annotatable is not None
 
         if annotatable.type in {
-                Annotatable.Type.large_deletion,
-                Annotatable.Type.large_duplication}:
+                Annotatable.Type.LARGE_DELETION,
+                Annotatable.Type.LARGE_DUPLICATION}:
             logger.warning(
                 "%s not ready to annotate CNV variants: %s",
                 self.annotator_type(), annotatable)

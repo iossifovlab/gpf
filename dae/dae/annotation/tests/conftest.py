@@ -1,5 +1,7 @@
-import pytest
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
+
 import os
+import pytest
 
 from dae.variants.core import Allele
 
@@ -174,10 +176,10 @@ def cadd_indel_variants_expected():
             "cadd_raw": 0.412572, "cadd_phred": 6.745333333333334
         },
         {
-            "cadd_raw": 0.4407,  "cadd_phred": 7.01775
+            "cadd_raw": 0.4407, "cadd_phred": 7.01775
         },
         {
-            "cadd_raw": 0.4799115,  "cadd_phred": 7.40450
+            "cadd_raw": 0.4799115, "cadd_phred": 7.40450
         },
     ]
 

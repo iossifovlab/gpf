@@ -8,8 +8,11 @@ logger = logging.getLogger(__name__)
 
 
 class Schema:
+    """Represents an annotation pipeline attributes schema."""
 
     class Source:
+        """Defines attribute source."""
+
         def __init__(
                 self, annotator_type: str,
                 annotator_config: dict, attribute_config: dict):
@@ -22,7 +25,9 @@ class Schema:
                 f"{self.annotator_config}:{self.attribute_config}"
 
     class Field:
+        """Describes a field from the schema."""
 
+        # pylint: disable=too-few-public-methods
         def __init__(
                 self, name: str,
                 py_type: str,
@@ -45,15 +50,17 @@ class Schema:
             internal: bool = False,
             description: str = "",
             source: Optional[Source] = None):
+        """Create schema field."""
         if name in self.fields:
             logger.warning(
-                f"creating a field with name {name} more than once")
+                "creating a field with name %s more than once", name)
 
         self.fields[name] = Schema.Field(
             name, py_type, internal, description, source)
 
     @staticmethod
     def merge_schemas(left: Schema, right: Schema) -> Schema:
+        """Merge two schemas."""
         merged_schema = Schema()
         missing_fields = {}
         for field_name, field in right.fields.items():
@@ -67,6 +74,7 @@ class Schema:
 
     @staticmethod
     def concat_schemas(first: Schema, second: Schema) -> Schema:
+        """Build concatenation of two schemas."""
         result = Schema()
         result.fields.update(first.fields)
 

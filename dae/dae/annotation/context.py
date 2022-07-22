@@ -18,9 +18,11 @@ logger = logging.getLogger(__name__)
 
 
 class Context:
+    """Defines annotation pipeline genomics context."""
 
     @staticmethod
     def add_context_arguments(parser: argparse.ArgumentParser):
+        """Add command line arguments to the argument parser."""
         parser.add_argument(
             "-grr", "--grr-file-name", default=None,
             help="The GRR configuration file. If the argument is absent, "
@@ -46,6 +48,7 @@ class Context:
         self._pipeline: Optional[AnnotationPipeline] = None
 
     def get_grr(self) -> GenomicResourceRepo:
+        """Build a genomic resources repository."""
         if self._grr is None:
             if self.args.grr_file_name:
                 logger.info(
@@ -66,6 +69,7 @@ class Context:
         return self._grr
 
     def get_pipeline(self) -> AnnotationPipeline:
+        """Construct an annotation pipeline."""
         if self._pipeline is None:
             if self.args.pipeline == "context":
                 logger.info("Using the annotation pipeline from "
@@ -92,6 +96,7 @@ class Context:
         return self._pipeline
 
     def get_reference_genome(self) -> ReferenceGenome:
+        """Construct reference genome according to the context."""
         if self._ref_genome is None:
             if self.args.reference_genome_resource_id is not None:
                 logger.info(
@@ -112,6 +117,7 @@ class Context:
         return self._ref_genome
 
     def get_gene_models(self) -> GeneModels:
+        """Construct gene models according to the context."""
         if self._gene_models is None:
             if self.args.gene_models_resource_id is not None:
                 logger.info(

@@ -156,8 +156,8 @@ class NormalizeAlleleAnnotator(Annotator):
             self, annotatable: Annotatable, _context: Dict) -> Dict:
 
         if annotatable.type in {
-                Annotatable.Type.large_deletion,
-                Annotatable.Type.large_duplication}:
+                Annotatable.Type.LARGE_DELETION,
+                Annotatable.Type.LARGE_DUPLICATION}:
             logger.warning(
                 "%s not ready to annotate CNV variants: %s",
                 self.annotator_type(), annotatable)

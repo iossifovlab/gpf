@@ -1,3 +1,5 @@
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
+
 from dae.annotation.annotation_factory import build_annotation_pipeline
 
 
