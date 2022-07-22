@@ -327,10 +327,8 @@ class BaseQueryBuilder(ABC):
 
         where = []
         for i in range(0, len(values), self.MAX_CHILD_NUMBER):
-            chunk_values = values[i: i + self.MAX_CHILD_NUMBER]
-
-            values = ",".join(chunk_values)
-            where_str = f" {column_name} in ( {values} ) "
+            chunk_values = ",".join(values[i: i + self.MAX_CHILD_NUMBER])
+            where_str = f" {column_name} in ( {chunk_values} ) "
 
             where.append(where_str)
 
