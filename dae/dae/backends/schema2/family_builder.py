@@ -5,7 +5,7 @@ logger = logging.getLogger(__name__)
 
 
 class FamilyQueryBuilder(BaseQueryBuilder):
-    """Build queries related to family variants"""
+    """Build queries related to family variants."""
 
     def __init__(
         self,

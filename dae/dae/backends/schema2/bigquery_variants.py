@@ -35,7 +35,11 @@ class BigQueryDialect(Dialect):
         return "FLOAT64"
 
 
+# FIXME too-many-instance-attributes
+# pylint: disable=too-many-instance-attributes
 class BigQueryVariants:
+    """Backend for BigQuery."""
+
     def __init__(
         self,
         gcp_project_id,
@@ -103,52 +107,42 @@ class BigQueryVariants:
                 _tbl_props["family_bin"]["family_bin_size"]
             ),
             "rare_boundary": int(_tbl_props["frequency_bin"]["rare_boundary"]),
-            "coding_effect_types": set(
-                [
-                    lambda s: s.strip()
-                    for s in _tbl_props["coding_bin"][
-                        "coding_effect_types"
-                    ].split(",")
-                ]
-            ),
+            "coding_effect_types": {
+                s.strip()
+                for s in _tbl_props["coding_bin"][
+                    "coding_effect_types"
+                ].split(",")
+            },
         }
 
     def _fetch_tblproperties(self, meta_table):
-        q = """SELECT value FROM {db}.{meta_table}
+        query = f"""SELECT value FROM {self.db}.{meta_table}
                WHERE key = 'partition_description'
                LIMIT 1
-            """.format(
-            db=self.db, meta_table=meta_table
-        )
+            """
 
-        result = self.client.query(q).result()
+        result = self.client.query(query).result()
         config = configparser.ConfigParser()
-        for r in result:
-            config.read_string(r[0])
+        for row in result:
+            config.read_string(row[0])
             return config
 
     def _fetch_schema(self, table):
-        q = """
-            SELECT * FROM {db}.INFORMATION_SCHEMA.COLUMNS
+        query = f"""
+            SELECT * FROM {self.db}.INFORMATION_SCHEMA.COLUMNS
             WHERE table_name = '{table}'
-        """.format(
-            db=self.db, table=table
-        )
-        df = self.client.query(q).result().to_dataframe()
+        """
+        df = self.client.query(query).result().to_dataframe()
 
         records = df[["column_name", "data_type"]].to_records()
         schema = {col_name: col_type for (_, col_name, col_type) in records}
         return schema
 
     def _fetch_pedigree(self):
-        q = """
-            SELECT * FROM {db}.{pedigree}
-        """.format(
-            db=self.db, pedigree=self.pedigree_table
-        )
+        query = f"SELECT * FROM {self.db}.{self.pedigree_table}"
 
         # ped_df = pandas_gbq.read_gbq(q, project_id=self.gcp_project_id)
-        ped_df = self.client.query(q).result().to_dataframe()
+        ped_df = self.client.query(query).result().to_dataframe()
 
         columns = {
             "personId": "person_id",
@@ -167,9 +161,9 @@ class BigQueryVariants:
             columns = {"not_sequenced": "not_sequenced"}
 
         ped_df = ped_df.rename(columns=columns)
-        ped_df.role = ped_df.role.apply(lambda v: Role(v))
-        ped_df.sex = ped_df.sex.apply(lambda v: Sex(v))
-        ped_df.status = ped_df.status.apply(lambda v: Status(v))
+        ped_df.role = ped_df.role.apply(Role)
+        ped_df.sex = ped_df.sex.apply(Sex)
+        ped_df.status = ped_df.status.apply(Status)
 
         return ped_df
 
@@ -192,7 +186,7 @@ class BigQueryVariants:
         limit=None,
         affected_status=None,
     ):
-
+        # pylint: disable=too-many-arguments,too-many-locals
         query_builder = SummaryQueryBuilder(
             self.dialect,
             self.db,
@@ -239,7 +233,7 @@ class BigQueryVariants:
                 if sv is None:
                     continue
                 yield sv
-            except Exception as ex:
+            except Exception as ex:  # pylint: disable=broad-except
                 logger.error("unable to deserialize summary variant (BQ)")
                 logger.exception(ex)
                 continue
@@ -263,7 +257,7 @@ class BigQueryVariants:
         limit=None,
         affected_status=None,
     ):
-
+        # pylint: disable=too-many-arguments,too-many-locals
         do_join_affected = affected_status is not None
         query_builder = FamilyQueryBuilder(
             self.dialect,
@@ -302,11 +296,11 @@ class BigQueryVariants:
 
         # ------------------ DEBUG ---------------------
         result = []
-        logger.info(f"BQ QUERY BUILDER:\n{query}")
+        logger.info("BQ QUERY BUILDER:\n%s}", query)
         start = time.perf_counter()
         bq_job = self.client.query(query)
         end = time.perf_counter()
-        logger.info(f"TIME (BQ DB): {end - start}")
+        logger.info("TIME (BQ DB): %f", end - start)
         result = bq_job
         # ------------------ DEBUG ---------------------
 
@@ -327,7 +321,7 @@ class BigQueryVariants:
                 if fv is None:
                     continue
                 yield fv
-            except Exception as ex:
+            except Exception as ex:  # pylint: disable=broad-except
                 logger.error("unable to deserialize family variant (BQ)")
                 logger.exception(ex)
                 continue
@@ -350,7 +344,9 @@ class BigQueryVariants:
         return_unknown=None,
         limit=None,
     ):
-
+        """Query summary variants."""
+        # FIXME too-many-arguments
+        # pylint: disable=too-many-arguments
         if limit is None:
             count = -1
         else:
@@ -404,7 +400,9 @@ class BigQueryVariants:
         limit=None,
         affected_status=None,
     ):
-
+        """Query summary variants."""
+        # FIXME too-many-arguments
+        # pylint: disable=too-many-arguments
         if limit is None:
             count = -1
         else:

@@ -9,6 +9,7 @@ logger = logging.getLogger(__name__)
 
 
 class RsyncHelpers:
+    """A class containing helper funcs for working with rsync."""
 
     def __init__(self, remote):
         if not remote.endswith("/"):
@@ -32,7 +33,7 @@ class RsyncHelpers:
         if parsed_remote.port and parsed_remote.port != 22:
             self.rsync_remote_shell = f"ssh -p {parsed_remote.port}"
 
-        logger.debug(f"parsed_remote: {parsed_remote}")
+        logger.debug("parsed_remote: %s", parsed_remote)
 
     def hosturl(self):
         logger.debug(self.parsed_remote)
@@ -47,8 +48,9 @@ class RsyncHelpers:
                 "",  # fragment identifier
             ))
 
-    def _exclude_options(self, exclude=[]):
-        if not exclude:
+    @staticmethod
+    def _exclude_options(exclude=None):
+        if exclude is None:
             return []
         result = []
         for ex in exclude:
@@ -60,12 +62,13 @@ class RsyncHelpers:
 
     def _copy_to_remote_cmd(
             self, local_path, remote_subdir=None,
-            exclude=[],
+            exclude=None,
             ignore_existing=False,
             clear_remote=True):
-
-        logger.debug(f"rsync remote: {self.rsync_remote}")
-        logger.debug(f"rsync hosturl: {self.hosturl()}")
+        # pylint: disable=too-many-branches
+        exclude = exclude if exclude is not None else []
+        logger.debug("rsync remote: %s", self.rsync_remote)
+        logger.debug("rsync hosturl: %s", self.hosturl())
 
         cmds = []
 
@@ -78,7 +81,7 @@ class RsyncHelpers:
         if not local_dir.endswith("/"):
             local_dir += "/"
 
-        logger.debug(f"rsync remote: <{self.rsync_remote}>")
+        logger.debug("rsync remote: <%s>", self.rsync_remote)
 
         rsync_path = ""
         rsync_remote = self.rsync_remote
@@ -117,12 +120,13 @@ class RsyncHelpers:
         if self.rsync_remote_shell:
             rsync_cmd.extend(["-e", self.rsync_remote_shell])
         rsync_cmd.extend([local_path, rsync_remote])
-        logger.debug(f"rsync command: {rsync_cmd}")
+        logger.debug("rsync command: %s", rsync_cmd)
         cmds.append(rsync_cmd)
 
         return cmds
 
-    def _copy_to_local_cmd(self, local_path, remote_subdir=None, exclude=[]):
+    def _copy_to_local_cmd(self, local_path, remote_subdir=None, exclude=None):
+        exclude = exclude if exclude is not None else []
         os.makedirs(local_path, exist_ok=True)
         cmds = []
 
@@ -145,12 +149,13 @@ class RsyncHelpers:
 
         return cmds
 
-    def _cmd_execute(self, commands):
+    @staticmethod
+    def _cmd_execute(commands):
         for cmd in commands:
-            logger.info(f"executing command: {cmd}")
+            logger.info("executing command: %s", cmd)
             # argv = [c.strip() for c in cmd.split(" ")]
             # argv = list(filter(lambda c: len(c) > 0, argv))
-            logger.debug(f"executing command: {cmd}")
+            logger.debug("executing command: %s", cmd)
 
             with subprocess.Popen(
                     cmd,
@@ -165,12 +170,14 @@ class RsyncHelpers:
                     line = line.strip()
                     logger.debug(line)
 
-            logger.debug(f"command {cmd} finished")
+            logger.debug("command %s finished", cmd)
             if proc.returncode:
-                logger.error(f"command {cmd} finished with {proc.returncode}")
+                logger.error("command %s finished with %s",
+                             cmd, proc.returncode)
                 raise ValueError(f"error in {cmd}")
 
     def clear_remote(self, remote_subdir):
+        """Clear the remote directory."""
         cmds = []
         rsync_path = ""
         assert remote_subdir is not None
@@ -196,10 +203,10 @@ class RsyncHelpers:
         self._cmd_execute(cmds)
 
     def copy_to_remote(
-            self, local_path, remote_subdir=None, exclude=[],
+            self, local_path, remote_subdir=None, exclude=None,
             clear_remote=True):
-        logger.debug(
-            f"copying {local_path} to {remote_subdir}")
+        """Copy from a local dir to a remote one."""
+        logger.debug("copying %s to %s", local_path, remote_subdir)
 
         cmd = self._copy_to_remote_cmd(
             local_path, remote_subdir=remote_subdir, exclude=exclude,
@@ -207,7 +214,7 @@ class RsyncHelpers:
 
         self._cmd_execute(cmd)
 
-    def copy_to_local(self, local_path, remote_subdir=None, exclude=[]):
+    def copy_to_local(self, local_path, remote_subdir=None, exclude=None):
         cmd = self._copy_to_local_cmd(
             local_path, remote_subdir=remote_subdir, exclude=exclude)
         self._cmd_execute(cmd)

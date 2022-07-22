@@ -74,7 +74,7 @@ class Expression:
 
 class InheritanceTransformer(Transformer):
     def __init__(self, attr_name, *args, **kwargs):
-        super(InheritanceTransformer, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.attr_name = attr_name
         self.inheritance_mask = 16383
 

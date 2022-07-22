@@ -6,6 +6,8 @@ logger = logging.getLogger(__name__)
 
 
 class FamilyVariantsQueryBuilder(BaseQueryBuilder):
+    """Build queries related to family variants."""
+
     def __init__(
             self, db, variants_table, pedigree_table,
             variants_schema, table_properties, pedigree_schema,
@@ -17,7 +19,8 @@ class FamilyVariantsQueryBuilder(BaseQueryBuilder):
             pedigree_df, gene_models=gene_models)
         self.families = families
 
-    def _get_pedigree_column_value(self, source, str_value):
+    @staticmethod
+    def _get_pedigree_column_value(source, str_value):
         if source == "status":
             value = Status.from_name(str_value).value
         elif source == "role":
@@ -98,7 +101,8 @@ class FamilyVariantsQueryBuilder(BaseQueryBuilder):
             pedigree_where = " OR ".join([
                 f"( {wc} )" for wc in clause])
             return pedigree_where
-        elif len(negative) > 0:
+
+        if len(negative) > 0:
             assert len(positive) == 0
             clause = []
             for person_set_clause in pedigree_where_clause(negative, "!="):
@@ -106,11 +110,11 @@ class FamilyVariantsQueryBuilder(BaseQueryBuilder):
             pedigree_where = " AND ".join([
                 f"( {wc} )" for wc in clause])
             return pedigree_where
-        else:
-            logger.error(
-                "unexpected pedigree_fields argument: %s",
-                pedigree_fields)
-            raise ValueError("unexpected pedigree_fields argument")
+
+        logger.error(
+            "unexpected pedigree_fields argument: %s",
+            pedigree_fields)
+        raise ValueError("unexpected pedigree_fields argument")
 
     def build_where(
         self,

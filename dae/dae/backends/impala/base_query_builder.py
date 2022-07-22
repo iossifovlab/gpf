@@ -18,6 +18,8 @@ logger = logging.getLogger(__name__)
 
 
 class BaseQueryBuilder(ABC):
+    """A base class for all query builders."""
+
     QUOTE = "'"
     WHERE = """
         WHERE
@@ -57,7 +59,7 @@ class BaseQueryBuilder(ABC):
 
     def _where_accessors(self):
         cols = list(self.variants_columns)
-        accessors = {k: v for k, v in zip(cols, cols)}
+        accessors = dict(zip(cols, cols))
         if "effect_types" not in accessors:
             accessors["effect_types"] = "effect_types"
 
@@ -92,8 +94,9 @@ class BaseQueryBuilder(ABC):
             frequency_filter=None,
             return_reference=None,
             return_unknown=None,
-            **kwargs):
-
+            **_kwargs):
+        """Build the where clause of a query."""
+        # pylint: disable=too-many-arguments
         where_clause = self._base_build_where(
             regions=regions,
             genes=genes,
@@ -129,7 +132,7 @@ class BaseQueryBuilder(ABC):
             return_reference=None,
             return_unknown=None,
             **kwargs):
-
+        # pylint: disable=too-many-arguments,too-many-branches
         where = []
         if genes is not None:
             regions = self._build_gene_regions_heuristic(genes, regions)
@@ -213,7 +216,7 @@ class BaseQueryBuilder(ABC):
 
         if where:
             where_clause = self.WHERE.format(
-                where=" AND ".join(["( {} )".format(w) for w in where])
+                where=" AND ".join([f"( {w} )" for w in where])
             )
 
         return where_clause
@@ -250,8 +253,7 @@ class BaseQueryBuilder(ABC):
                 continue
             assert attr_name in self.variants_columns
             assert (
-                self.variants_columns[attr_name].type == float
-                or self.variants_columns[attr_name].type == int
+                self.variants_columns[attr_name].type in (float, int)
             ), self.variants_columns[attr_name]
             left, right = attr_range
             attr_name = self.where_accessors[attr_name]
@@ -267,7 +269,7 @@ class BaseQueryBuilder(ABC):
 
             elif right is None:
                 assert left is not None
-                query.append("({} >= {})".format(attr_name, left))
+                query.append(f"({attr_name} >= {left})")
             else:
                 query.append(
                     "({attr} >= {left} AND {attr} <= {right})".format(
@@ -310,33 +312,30 @@ class BaseQueryBuilder(ABC):
     def _build_iterable_string_attr_where(self, column_name, query_values):
         assert query_values is not None
 
-        assert isinstance(query_values, list) or isinstance(
-            query_values, set
-        ), type(query_values)
+        assert isinstance(query_values, (list, set)), type(query_values)
 
         if not query_values:
-            where = " {column_name} IS NULL".format(column_name=column_name)
+            where = f" {column_name} IS NULL"
             return where
-        else:
-            values = [
-                " {q}{val}{q} ".format(
-                    q=self.QUOTE, val=val.replace("'", "\\'")
-                )
-                for val in query_values
-            ]
 
-            where = []
-            for i in range(0, len(values), self.MAX_CHILD_NUMBER):
-                chunk_values = values[i: i + self.MAX_CHILD_NUMBER]
+        values = [
+            " {q}{val}{q} ".format(
+                q=self.QUOTE, val=val.replace("'", "\\'")
+            )
+            for val in query_values
+        ]
 
-                w = " {column_name} in ( {values} ) ".format(
-                    column_name=column_name, values=",".join(chunk_values)
-                )
+        where = []
+        for i in range(0, len(values), self.MAX_CHILD_NUMBER):
+            chunk_values = values[i: i + self.MAX_CHILD_NUMBER]
 
-                where.append(w)
+            values = ",".join(chunk_values)
+            where_str = f" {column_name} in ( {values} ) "
 
-            where_clause = " OR ".join(["( {} )".format(w) for w in where])
-            return where_clause
+            where.append(where_str)
+
+        where_clause = " OR ".join(["( {} )".format(w) for w in where])
+        return where_clause
 
     def _build_bitwise_attr_where(
         self, column_name, query_value, query_transformer
