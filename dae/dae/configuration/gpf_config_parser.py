@@ -37,16 +37,23 @@ class DefaultBox(Box):
         kwargs["default_box"] = True
         kwargs["default_box_attr"] = None
         kwargs["default_box_none_transform"] = False
-        super(DefaultBox, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
 
 class FrozenBox(DefaultBox):
     def __init__(self, *args, **kwargs):
         kwargs["frozen_box"] = True
-        super(FrozenBox, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
 
 class GPFConfigValidator(Validator):
+    """
+    Validator class with various extra cerberus features for GPF.
+
+    Supports:
+        "coerce": "abspath" - transform a relative path in configuration
+        to an absolute path
+    """
 
     def _normalize_coerce_abspath(self, value: str) -> str:
         directory = self._config["conf_dir"]
@@ -58,6 +65,15 @@ class GPFConfigValidator(Validator):
 
 
 class GPFConfigParser:
+    """
+    Class that handles reading, validation and parsing of all GPF config files.
+
+    Supports loading from YAML and TOML files.
+    Parsing used depends on type specified in filename:
+        .yaml, .yml - YAML parse
+        .toml, .conf - TOML parse
+
+    """
 
     filetype_parsers: dict = {
         ".yaml": yaml.safe_load,
@@ -69,8 +85,8 @@ class GPFConfigParser:
 
     @classmethod
     def _collect_directory_configs(cls, dirname: str) -> List[str]:
-        config_files: List[str] = list()
-        for filetype in cls.filetype_parsers.keys():
+        config_files: List[str] = []
+        for filetype in cls.filetype_parsers:
             config_files += glob.glob(
                 os.path.join(dirname, f"**/*{filetype}"), recursive=True
             )
@@ -83,6 +99,7 @@ class GPFConfigParser:
 
     @staticmethod
     def parse_and_interpolate(content: str, parser=yaml.safe_load) -> dict:
+        """Parse text content and perform variable interpolation on result."""
         interpol_vars = parser(content).get("vars", {})
 
         env_vars = {f"${key}": val for key, val in os.environ.items()}
@@ -102,6 +119,7 @@ class GPFConfigParser:
 
     @classmethod
     def parse_and_interpolate_file(cls, filename: str) -> dict:
+        """Open a file and interpolate it's contents."""
         try:
             ext = os.path.splitext(filename)[1]
             if ext not in cls.filetype_parsers:
@@ -126,10 +144,11 @@ class GPFConfigParser:
 
     @staticmethod
     def validate_config(
-            config: Dict[str, Any],
-            schema: dict,
-            conf_dir: str = None) -> dict:
-
+        config: Dict[str, Any],
+        schema: dict,
+        conf_dir: str = None
+    ) -> dict:
+        """Perform validation on a parsed config."""
         if conf_dir is not None and "conf_dir" in schema:
             config["conf_dir"] = conf_dir
 
@@ -139,8 +158,8 @@ class GPFConfigParser:
         if not validator.validate(config):
             if conf_dir:
                 raise ValueError(f"{conf_dir}: {validator.errors}")
-            else:
-                raise ValueError(f"{validator.errors}")
+
+            raise ValueError(f"{validator.errors}")
         return cast(dict, validator.document)
 
     @staticmethod
@@ -150,7 +169,12 @@ class GPFConfigParser:
         default_config: Dict[str, Any] = None,
         conf_dir: str = None,
     ) -> DefaultBox:
+        """
+        Pass an interpolated config to validation and prepare it for use.
 
+        default_config: interpolated configuration to use for defaults where
+        values in the main configuration are missing.
+        """
         config = GPFConfigParser.merge_config(config, default_config)
         config = GPFConfigParser.validate_config(config, schema, conf_dir)
 
@@ -171,7 +195,7 @@ class GPFConfigParser:
         default_config_filename: Optional[str] = None,
         default_config: Optional[dict] = None,
     ) -> DefaultBox:
-
+        """Load a file and return a processed configuration."""
         if not os.path.exists(filename):
             raise ValueError(f"{filename} does not exist!")
         logger.debug(
@@ -200,7 +224,7 @@ class GPFConfigParser:
             cls, dirname: str, schema: dict,
             default_config_filename: Optional[str] = None,
             default_config: Optional[dict] = None) -> List[Box]:
-
+        """Find and load all configs in a given root directory."""
         result = []
         for config_path in cls._collect_directory_configs(dirname):
             try:
@@ -220,6 +244,6 @@ class GPFConfigParser:
 
     @classmethod
     def modify_tuple(
-            cls, t: Box, new_values: Dict[str, Any]) -> Box:
+            cls, tup: Box, new_values: Dict[str, Any]) -> Box:
 
-        return FrozenBox(recursive_dict_update(t.to_dict(), new_values))
+        return FrozenBox(recursive_dict_update(tup.to_dict(), new_values))

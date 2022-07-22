@@ -120,7 +120,7 @@ genotype_browser_schema = {
                     "type": "dict",
                     "valuesrules": genotype_column_schema,
                 },
-                "phenotype":  {
+                "phenotype": {
                     "type": "dict",
                     "valuesrules": phenotype_column_schema,
                 },

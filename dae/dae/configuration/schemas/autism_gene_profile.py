@@ -111,19 +111,18 @@ autism_gene_tool_config = {
             "type": "dict", "schema": {
                 "meta": {"type": "string"},
                 "person_sets": {"type": "list", "schema": {
-                        "type": "dict",
-                        "schema": {
-                            "set_name": {
-                                "type": "string",
-                                "regex": "^[^.\r\n]+$"
-                            },
-                            "collection_name": {"type": "string"},
-                            "description": {"type": "string"},
-                            "default_visible": {
-                                "type": "boolean", "default": True},
-                        }
+                    "type": "dict",
+                    "schema": {
+                        "set_name": {
+                            "type": "string",
+                            "regex": "^[^.\r\n]+$"
+                        },
+                        "collection_name": {"type": "string"},
+                        "description": {"type": "string"},
+                        "default_visible": {
+                            "type": "boolean", "default": True},
                     }
-                },
+                }},
                 "statistics": {
                     "type": "list", "schema": variant_statistic_schema
                 },

@@ -1,5 +1,5 @@
-import pytest
 import os
+import pytest
 
 from dae.configuration.gpf_config_parser import validate_path
 
@@ -49,7 +49,7 @@ sample_conf_schema_3 = {
 sample_conf_schema_5 = {
     "id": {"type": "string"},
     "name": {"type": "string"},
-    "some_abs_path": {"type": "string", "check_with": validate_path,},
+    "some_abs_path": {"type": "string", "check_with": validate_path},
     "some_rel_path": {
         "type": "string",
         "check_with": validate_path,

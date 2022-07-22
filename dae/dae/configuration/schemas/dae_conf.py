@@ -43,7 +43,7 @@ hdfs_schema = {
 
 rsync_schema = {
     "location": {"type": "string"},
-    "remote_shell": {"type": "string", "default": None, 'nullable': True},
+    "remote_shell": {"type": "string", "default": None, "nullable": True},
 }
 
 remote_schema = {
@@ -132,7 +132,7 @@ dae_conf_schema = {
 
     "mirror_of": {
         "type": "string",
-        "default": None, 'nullable': True,
+        "default": None, "nullable": True,
     },
 
     "annotation_defaults": {

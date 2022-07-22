@@ -154,7 +154,8 @@ def _set_loader_args(loader_cls, schema, prefix):
 
 
 def _copy_loader_args(loader_cls, schema, prefix):
-    for arg in loader_cls._arguments():
+    # FIXME: Fix use of private _arguments of loaders
+    for arg in loader_cls._arguments():  # pylint: disable=protected-access
         if not arg.argument_name.startswith("--"):
             # ignore positional arguments as they are explicitly
             # specified in the schema

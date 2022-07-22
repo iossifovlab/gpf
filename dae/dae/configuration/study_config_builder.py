@@ -1,9 +1,12 @@
-from typing import Dict, Any
-from jinja2 import Template
 from collections import UserDict, UserList
+from typing import Dict, Any
+
+from jinja2 import Template
 
 
 class StudyConfigBuilder:
+    """Class used for building study configurations from dictionaries."""
+
     def __init__(self, config_dict: Dict[str, Any]):
         assert config_dict
         assert config_dict["genotype_storage"]
@@ -14,8 +17,16 @@ class StudyConfigBuilder:
 
 
 class TOMLDict(UserDict):
+    """Class that transforms Python dictionaries to TOML dictionaries."""
+
     @staticmethod
     def from_dict(input_dict):
+        """
+        Construct TOMLDict from a Python dictionary.
+
+        Any dictionaries or lists in the dictionary's
+        values are also converted.
+        """
         output = TOMLDict(input_dict)
         for k, v in output.items():
             if isinstance(v, dict):
@@ -26,7 +37,8 @@ class TOMLDict(UserDict):
                 output[k] = "true" if v else "false"
         return output
 
-    def _get_val_str(self, val):
+    @staticmethod
+    def _get_val_str(val):
         if isinstance(val, str):
             output = f'"{val}"'
         elif isinstance(val, bool):
@@ -52,19 +64,28 @@ class TOMLDict(UserDict):
 
 
 class TOMLList(UserList):
+    """Class that transforms Python dictionaries to TOML dictionaries."""
+
     @staticmethod
     def from_list(input_list):
+        """
+        Construct TOMLList from a Python list.
+
+        Any dictionaries or lists in the list's
+        element are also converted.
+        """
         output = TOMLList(input_list)
-        for idx, el in enumerate(output):
-            if isinstance(el, dict):
-                output[idx] = TOMLDict.from_dict(el)
-            elif isinstance(el, list):
-                output[idx] = TOMLList.from_list(el)
-            elif isinstance(el, bool):
-                output[idx] = "true" if el else "false"
+        for idx, element in enumerate(output):
+            if isinstance(element, dict):
+                output[idx] = TOMLDict.from_dict(element)
+            elif isinstance(element, list):
+                output[idx] = TOMLList.from_list(element)
+            elif isinstance(element, bool):
+                output[idx] = "true" if element else "false"
         return output
 
-    def _get_val_str(self, val):
+    @staticmethod
+    def _get_val_str(val):
         if isinstance(val, str):
             output = f'"{val}"'
         elif isinstance(val, bool):
@@ -78,11 +99,11 @@ class TOMLList(UserList):
             return "[]"
         output = "["
         first = True
-        for el in self:
+        for element in self:
             if not first:
                 output += ", "
 
-            output += f"{self._get_val_str(el)}"
+            output += f"{self._get_val_str(element)}"
             first = False
 
         output += "]"
