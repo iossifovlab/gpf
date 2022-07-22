@@ -1,7 +1,9 @@
-import pytest
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
 import os
+import pytest
 
-from dae_conftests.dae_conftests import get_global_dae_fixtures_dir  # type: ignore
+from dae_conftests.dae_conftests import \
+    get_global_dae_fixtures_dir  # type: ignore
 
 
 def fixtures_dir():

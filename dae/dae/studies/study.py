@@ -21,7 +21,8 @@ from dae.utils.effect_utils import expand_effect_types
 logger = logging.getLogger(__name__)
 
 
-class GenotypeData(ABC):
+# FIXME: Too many public methods, refactor?
+class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
     """Abstract base class for genotype data."""
 
     def __init__(self, config, studies):
@@ -170,6 +171,7 @@ class GenotypeData(ABC):
         logger.debug("studies to query: %s", [st.study_id for st in leafs])
         return leafs
 
+    # FIXME: Too many locals, too many arguments, complex. To refactor
     def query_result_variants(
             self,
             regions=None,
@@ -192,8 +194,10 @@ class GenotypeData(ABC):
             pedigree_fields=None,
             **_kwargs):
         """Build a query result."""
+        # pylint: disable=too-many-locals,too-many-arguments
+        del pedigree_fields  # Unused argument
         if person_ids is not None and len(person_ids) == 0:
-            return
+            return None
 
         if effect_types:
             effect_types = expand_effect_types(effect_types)
@@ -272,11 +276,11 @@ class GenotypeData(ABC):
 
         logger.debug("runners: %s", len(runners))
         if len(runners) == 0:
-            return
+            return None
 
         return QueryResult(runners)
 
-    def query_variants(
+    def query_variants(  # pylint: disable=too-many-locals,too-many-arguments
             self,
             regions=None,
             genes=None,
@@ -298,7 +302,7 @@ class GenotypeData(ABC):
             pedigree_fields=None,
             unique_family_variants=True,
             **kwargs):
-
+        """Query and return generator containing variants."""
         result = self.query_result_variants(
             regions=regions,
             genes=genes,
@@ -353,6 +357,7 @@ class GenotypeData(ABC):
 
             logger.debug("[DONE] executor closed...")
 
+    # FIXME: Too many locals, too many arguments, To refactor
     def query_result_summary_variants(
         self,
         regions=None,
@@ -374,6 +379,8 @@ class GenotypeData(ABC):
         study_filters=None,
         **kwargs,
     ):
+        # pylint: disable=too-many-locals,too-many-arguments,unused-argument
+        """Build a query result for summary variants only."""
         logger.info("summary query - study_filters: %s", study_filters)
         logger.info(
             "study %s children: %s", self.study_id, self.get_leaf_children())
@@ -381,7 +388,7 @@ class GenotypeData(ABC):
         person_ids = self._transform_person_set_collection_query(
             person_set_collection, person_ids)
         if person_ids is not None and len(person_ids) == 0:
-            return
+            return None
 
         if effect_types:
             effect_types = expand_effect_types(effect_types)
@@ -410,7 +417,7 @@ class GenotypeData(ABC):
             runners.append(runner)
 
         if len(runners) == 0:
-            return
+            return None
 
         result = QueryResult(runners)
         return result
@@ -436,7 +443,8 @@ class GenotypeData(ABC):
         study_filters=None,
         **kwargs,
     ):
-
+        """Query and return generator containing summary variants."""
+        # pylint: disable=too-many-locals,too-many-arguments
         result = self.query_result_summary_variants(
             regions=regions,
             genes=genes,
@@ -459,7 +467,7 @@ class GenotypeData(ABC):
         try:
             started = time.time()
 
-            variants = dict()
+            variants = {}
             with closing(result) as result:
                 result.start()
 
@@ -550,9 +558,14 @@ class GenotypeData(ABC):
 
 
 class GenotypeDataGroup(GenotypeData):
+    """
+    Represents a group of genotype data classes.
+
+    Queries to this object will be sent to all child data.
+    """
 
     def __init__(self, genotype_data_group_config, studies):
-        super(GenotypeDataGroup, self).__init__(
+        super().__init__(
             genotype_data_group_config, studies
         )
         self._families = self._build_families()
@@ -614,7 +627,7 @@ class GenotypeDataGroup(GenotypeData):
         assert person_set_collection_id in \
             self.config.person_set_collections.selected_person_set_collections
 
-        collections = list()
+        collections = []
         for study in self.studies:
             collections.append(study.get_person_set_collection(
                 person_set_collection_id
@@ -624,6 +637,8 @@ class GenotypeDataGroup(GenotypeData):
 
 
 class GenotypeDataStudy(GenotypeData):
+    """Represents a singular genotype data study."""
+
     def __init__(self, config, backend):
         super().__init__(config, [self])
 

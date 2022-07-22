@@ -1,3 +1,4 @@
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
 import os
 
 from dae.studies.tests.conftest import fixtures_dir
@@ -75,19 +76,19 @@ def test_get_non_existing_study_config(variants_db_fixture):
 def test_get_existing_study(variants_db_fixture):
     study = variants_db_fixture.get_genotype_study("inheritance_trio")
     assert study is not None
-    vs = study.query_variants()
-    vs = list(vs)
-    assert len(vs) == 14
+    variants = study.query_variants()
+    variants = list(variants)
+    assert len(variants) == 14
 
 
 def test_query_summary_variants(variants_db_fixture):
     study = variants_db_fixture.get_genotype_study("quads_f1")
     assert study is not None
-    vs = study.query_summary_variants()
-    vs = list(vs)
-    print(vs)
+    variants = study.query_summary_variants()
+    variants = list(variants)
+    print(variants)
 
-    assert len(vs) == 3
+    assert len(variants) == 3
 
 
 def test_get_non_existing_study(variants_db_fixture):
@@ -155,9 +156,9 @@ def test_get_existing_genotype_data_group(variants_db_fixture):
         "inheritance_trio_ds"
     )
     assert genotype_data_group is not None
-    vs = genotype_data_group.query_variants()
-    vs = list(vs)
-    assert len(vs) == 14
+    variants = genotype_data_group.query_variants()
+    variants = list(variants)
+    assert len(variants) == 14
 
 
 def test_get_non_existing_genotype_data_group(variants_db_fixture):
@@ -192,15 +193,15 @@ def test_get_non_existing_config(variants_db_fixture):
 def test_get_existing(variants_db_fixture):
     study = variants_db_fixture.get("inheritance_trio")
     assert study is not None
-    vs = study.query_variants()
-    vs = list(vs)
-    assert len(vs) == 14
+    variants = study.query_variants()
+    variants = list(variants)
+    assert len(variants) == 14
 
     genotype_data_group = variants_db_fixture.get("inheritance_trio_ds")
     assert genotype_data_group is not None
-    vs = genotype_data_group.query_variants()
-    vs = list(vs)
-    assert len(vs) == 14
+    variants = genotype_data_group.query_variants()
+    variants = list(variants)
+    assert len(variants) == 14
 
 
 def test_get_non_existing(variants_db_fixture):

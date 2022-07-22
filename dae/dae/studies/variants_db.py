@@ -236,7 +236,9 @@ DEFAULT_STUDY_CONFIG = GPFConfigParser.parse_and_interpolate(
     DEFAULT_STUDY_CONFIG_TOML, parser=toml.loads)  # noqa
 
 
-class VariantsDb(object):
+class VariantsDb:
+    """Database responsible for keeping genotype data studies and groups."""
+
     def __init__(
             self,
             dae_config,
@@ -260,6 +262,7 @@ class VariantsDb(object):
         self.reload()
 
     def reload(self):
+        """Load all studies and groups again."""
         genotype_study_configs = self._load_study_configs()
         genotype_group_configs = self._load_group_configs()
 
@@ -330,7 +333,7 @@ class VariantsDb(object):
         if default_config_filename is None or \
                 not os.path.exists(default_config_filename):
             logger.warning(
-                f"default config file is missing: {default_config_filename}")
+                "default config file is missing: %s", default_config_filename)
             default_config_filename = None
         if default_config_filename is None:
             default_config = copy.deepcopy(DEFAULT_STUDY_CONFIG)
@@ -449,10 +452,10 @@ class VariantsDb(object):
 
     def _load_genotype_study(self, study_config):
         if not study_config:
-            return
+            return None
 
         logger.info(
-            f"creating genotype study: {study_config.id}")
+            "creating genotype study: %s", study_config.id)
 
         genotype_study = self._make_genotype_study(study_config)
         self._genotype_study_cache[study_config.id] = genotype_study
@@ -471,9 +474,9 @@ class VariantsDb(object):
                 self.genotype_storage_factory.get_genotype_storage_ids()
             )
             logger.error(
-                f"unknown genotype storage id: "
-                f"{study_config.genotype_storage.id}; "
-                f"Known ones: {storage_ids}"
+                "unknown genotype storage id: %s; Known ones: %s",
+                study_config.genotype_storage.id,
+                storage_ids
             )
             return None
 
@@ -483,8 +486,8 @@ class VariantsDb(object):
             )
 
             return GenotypeDataStudy(study_config, variants)
-        except Exception as ex:
-            logger.error(f"unable to create study {study_config.id}")
+        except Exception as ex:  # pylint: disable=broad-except
+            logger.error("unable to create study %s", study_config.id)
             logger.exception(ex)
             return None
 
@@ -498,14 +501,14 @@ class VariantsDb(object):
 
     def _load_genotype_group(self, group_config):
         if group_config is None:
-            return
+            return None
 
         logger.info(
-            f"creating genotype group: {group_config.id}")
+            "creating genotype group: %s", group_config.id)
         try:
             group_studies = []
             for child_id in group_config.studies:
-                logger.info(f"looking for a child: {child_id}")
+                logger.info("looking for a child: %s", child_id)
                 if child_id in self._genotype_study_cache:
                     child_data = self.get_genotype_study(child_id)
                     assert child_data is not None, child_id
@@ -514,8 +517,10 @@ class VariantsDb(object):
                     if child_data is None:
                         # group not loaded... load it...
                         logger.info(
-                            f"child genotype data {child_id} not found; "
-                            f"trying to create it...")
+                            "child genotype data %s not found; "
+                            "trying to create it...",
+                            child_id
+                        )
                         genotype_group_configs = self._load_group_configs()
                         child_config = genotype_group_configs[child_id]
                         child_data = self._load_genotype_group(child_config)
@@ -527,18 +532,20 @@ class VariantsDb(object):
             self._genotype_group_cache[group_config.id] = genotype_group
             return genotype_group
 
-        except Exception as ex:
+        except Exception as ex:  # pylint: disable=broad-except
             logger.error(
-                f"unable to create genotype data group {group_config.id}")
+                "unable to create genotype data group %s", group_config.id)
             logger.exception(ex)
+            return None
 
     def register_genotype_data(self, genotype_data):
+        """Add GenotypeData to DB."""
         if genotype_data.study_id in self.get_all_genotype_study_ids():
             logger.warning(
-                f"replacing genotype study instance {genotype_data.study_id}")
+                "replacing genotype study instance %s", genotype_data.study_id)
         if genotype_data.study_id in self.get_all_genotype_group_ids():
             logger.warning(
-                f"replacing genotype group instance {genotype_data.study_id}")
+                "replacing genotype group instance %s", genotype_data.study_id)
 
         if genotype_data.is_group:
             self._genotype_group_cache[genotype_data.study_id] = genotype_data
@@ -546,6 +553,7 @@ class VariantsDb(object):
             self._genotype_study_cache[genotype_data.study_id] = genotype_data
 
     def unregister_genotype_data(self, genotype_data):
+        """Remove GenotypeData from DB."""
         if genotype_data.is_group:
             self._genotype_group_cache.pop(genotype_data.study_id)
         else:

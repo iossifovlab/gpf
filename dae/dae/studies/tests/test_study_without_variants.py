@@ -1,5 +1,5 @@
 """Tests genotype study without genotype data."""
-# pylint: disable=redefined-outer-name
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
 import textwrap
 import pytest
 import toml
