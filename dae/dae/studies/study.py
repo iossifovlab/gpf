@@ -217,7 +217,8 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
         runners = []
         for genotype_study in self._get_query_children(study_filters):
             person_sets_query = None
-            query_person_ids = None
+            query_person_ids = person_ids.copy() \
+                    if person_ids is not None else None
             if person_set_collection is not None:
                 collection_id, selected_person_sets = person_set_collection
                 if selected_person_sets is not None:
