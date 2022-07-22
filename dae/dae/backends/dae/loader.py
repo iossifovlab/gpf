@@ -1,3 +1,5 @@
+# pylint: disable=too-many-lines
+# FIXME refactor and shorten this module
 import os
 import gzip
 import warnings
@@ -41,6 +43,7 @@ logger = logging.getLogger(__name__)
 
 
 class DenovoFamiliesGenotypes(FamiliesGenotypes):
+    """Tuple of family, genotype, and best_state"""
     def __init__(self, family, gt, best_state=None):
         super().__init__()
         self.family = family
@@ -63,6 +66,8 @@ class DenovoFamiliesGenotypes(FamiliesGenotypes):
 
 
 class DenovoLoader(VariantsGenotypesLoader):
+    """Load denovo variants."""
+
     def __init__(
             self,
             families: FamiliesData,
@@ -244,6 +249,7 @@ class DenovoLoader(VariantsGenotypesLoader):
             genome: ReferenceGenome,
             family: Family,
             members_with_variant: List[str]) -> np.ndarray:
+        """Produce genotype."""
 
         # TODO: Add support for multiallelic variants
         # This method currently assumes biallelic variants
@@ -344,8 +350,10 @@ class DenovoLoader(VariantsGenotypesLoader):
         ))
         return arguments
 
+    # flake8: noqa: C901
     @classmethod
     def parse_cli_arguments(cls, argv, use_defaults=False):
+        # pylint: disable=too-many-branches
         logger.debug("CLI arguments: %s", argv)
 
         if argv.denovo_location and (argv.denovo_chrom or argv.denovo_pos):
@@ -442,58 +450,9 @@ class DenovoLoader(VariantsGenotypesLoader):
             denovo_sep: str = "\t",
             adjust_chrom_prefix=None,
             **_kwargs) -> Tuple[pd.DataFrame, Any]:
-        """Load de Novo variants from a file.
-
-        Read a text file containing variants in the form
-        of delimiter-separted values and produce a dataframe.
-
-        The text file may use different names for the columns
-        containing the relevant data - these are specified
-        with the provided parameters.
-
-        :param str filepath: The path to the DSV file to read.
-
-        :param genome: A reference genome object.
-
-        :param str denovo_location: The label or index of the column containing
-        the CSHL-style location of the variant.
-
-        :param str denovo_variant: The label or index of the column containing
-        the CSHL-style representation of the variant.
-
-        :param str denovo_chrom: The label or index of the column containing
-        the chromosome upon which the variant is located.
-
-        :param str denovo_pos: The label or index of the column containing the
-        position upon which the variant is located.
-
-        :param str denovo_ref: The label or index of the column containing the
-        variant's reference allele.
-
-        :param str denovo_alt: The label or index of the column containing the
-        variant's alternative allele.
-
-        :param str denovo_person_id: The label or index of the column
-        containing either a singular person ID or a comma-separated
-        list of person IDs.
-
-        :param str denovo_family_id: The label or index of the column
-        containing a singular family ID.
-
-        :param str denovo_best_state: The label or index of the column
-        containing the best state for the variant.
-
-        :param str families: An instance of the FamiliesData class for the
-        pedigree of the relevant study.
-
-        :type genome: An instance of Genome.
-
-        :return: Dataframe containing the variants, with the following
-        header - 'chrom', 'position', 'reference', 'alternative', 'family_id',
-        'genotype'.
-
-        :rtype: An instance of Pandas' DataFrame class.
-        """
+        # FIXME
+        # pylint: disable=too-many-arguments,too-many-branches
+        # pylint: disable=too-many-statements,too-many-locals
         assert families is not None
         assert isinstance(
             families, FamiliesData
@@ -691,6 +650,60 @@ class DenovoLoader(VariantsGenotypesLoader):
             denovo_sep: str = "\t",
             adjust_chrom_prefix=None,
             **kwargs) -> pd.DataFrame:
+        """Load de Novo variants from a file.
+
+        Read a text file containing variants in the form
+        of delimiter-separted values and produce a dataframe.
+
+        The text file may use different names for the columns
+        containing the relevant data - these are specified
+        with the provided parameters.
+
+        :param str filepath: The path to the DSV file to read.
+
+        :param genome: A reference genome object.
+
+        :param str denovo_location: The label or index of the column containing
+        the CSHL-style location of the variant.
+
+        :param str denovo_variant: The label or index of the column containing
+        the CSHL-style representation of the variant.
+
+        :param str denovo_chrom: The label or index of the column containing
+        the chromosome upon which the variant is located.
+
+        :param str denovo_pos: The label or index of the column containing the
+        position upon which the variant is located.
+
+        :param str denovo_ref: The label or index of the column containing the
+        variant's reference allele.
+
+        :param str denovo_alt: The label or index of the column containing the
+        variant's alternative allele.
+
+        :param str denovo_person_id: The label or index of the column
+        containing either a singular person ID or a comma-separated
+        list of person IDs.
+
+        :param str denovo_family_id: The label or index of the column
+        containing a singular family ID.
+
+        :param str denovo_best_state: The label or index of the column
+        containing the best state for the variant.
+
+        :param str families: An instance of the FamiliesData class for the
+        pedigree of the relevant study.
+
+        :type genome: An instance of Genome.
+
+        :return: Dataframe containing the variants, with the following
+        header - 'chrom', 'position', 'reference', 'alternative', 'family_id',
+        'genotype'.
+
+        :rtype: An instance of Pandas' DataFrame class.
+        """
+        # FIXME too many arguments
+        # pylint: disable=too-many-arguments
         denovo_df, _ = cls._flexible_denovo_load_internal(
             filepath,
             genome,
@@ -713,8 +726,8 @@ class DenovoLoader(VariantsGenotypesLoader):
 
 
 class DaeTransmittedFamiliesGenotypes(FamiliesGenotypes):
-    def __init__(
-            self, families, family_data):
+    """Tuple of families and family data"""
+    def __init__(self, families, family_data):
         super().__init__()
         self.families = families
         self.family_data = family_data
@@ -760,6 +773,8 @@ class DaeTransmittedFamiliesGenotypes(FamiliesGenotypes):
 
 
 class DaeTransmittedLoader(VariantsGenotypesLoader):
+    """Loader for dae variants."""
+
     def __init__(
         self,
         families,
