@@ -58,7 +58,7 @@ export class PhenoBrowserService {
         .set('instrument', instrument)
         .set('search', search);
     const measuresSubject: Subject<PhenoMeasure> = new Subject();
-
+ 
     this.oboeInstance = oboe({
       url: `${this.config.baseUrl}${this.measuresUrl}?${searchParams.toString()}`,
       method: 'GET',
@@ -70,14 +70,23 @@ export class PhenoBrowserService {
     }).node('!.*', data => {
       measuresSubject.next(data);
     }).done(data => {
+      if(data.length === 0) {
+        measuresSubject.next(null);
+      }
       this.measuresStreamingFinishedSubject.next(true);
     }).fail(error => {
       this.connectionEstablished = false;
       this.measuresStreamingFinishedSubject.next(true);
       console.warn('oboejs encountered a fail event while streaming');
     });
+    
+    return measuresSubject.pipe(map(data => { 
+      if (data === null) {
+        return null;
+      }
+      return PhenoMeasure.fromJson(data['measure'] as object)
+    }));
 
-    return measuresSubject.pipe(map(data => PhenoMeasure.fromJson(data['measure'] as object)));
   }
 
   public getMeasuresInfo(datasetId: string): Observable<PhenoMeasures> {

@@ -93,7 +93,9 @@ export class PhenoBrowserComponent implements OnInit {
         if (this.measuresToShow === null) {
           return null;
         }
-        this.measuresToShow._addMeasure(measure);
+        if (measure !== null) {
+          this.measuresToShow._addMeasure(measure);
+        }
         return this.measuresToShow;
       }),
       share()
