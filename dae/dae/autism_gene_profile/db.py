@@ -1,25 +1,35 @@
 import logging
+from typing import Optional, Dict
 from copy import copy
 
-from dae.autism_gene_profile.statistic import AGPStatistic
 from sqlalchemy import create_engine, inspect, nullslast  # type: ignore
 from sqlalchemy import MetaData, Table, Column, Integer, String, Float
 from sqlalchemy.sql import insert, desc, asc
+from dae.autism_gene_profile.statistic import AGPStatistic
 
 logger = logging.getLogger(__name__)
 
 
 class AutismGeneProfileDB:
+    """
+    Class for managing the autism gene profile database.
+
+    Uses SQLite for DB management and supports loading
+    and storing to filesystem.
+    Has to be supplied a configuration and a path to which to read/write
+    the SQLite DB.
+    """
 
     PAGE_SIZE = 20
 
     def __init__(self, configuration, dbfile, clear=False):
         self.dbfile = dbfile
-        self.engine = create_engine("sqlite:///{}".format(dbfile))
+        self.engine = create_engine(f"sqlite:///{dbfile}")
         self.metadata = MetaData(self.engine)
-        self.configuration = self._build_configuration(configuration)
+        self.configuration = \
+            AutismGeneProfileDB.build_configuration(configuration)
         self._create_agp_table()
-        self.gene_sets_categories = dict()
+        self.gene_sets_categories = {}
         if clear:
             self._clear_agp_table()
         if len(self.configuration.keys()):
@@ -31,9 +41,16 @@ class AutismGeneProfileDB:
                     full_gene_set_id = f"{collection_id}_{set_id}"
                     self.gene_sets_categories[full_gene_set_id] = category_name
 
-    def _build_configuration(self, configuration):
+    @classmethod
+    def build_configuration(cls, configuration):
+        """
+        Perform a transformation on a given configuration.
+
+        The configuration is transformed to an internal version with more
+        specific information on order and ranks.
+        """
         if configuration is None:
-            return dict()
+            return {}
 
         order = configuration.get("order")
         if order is None:
@@ -55,19 +72,27 @@ class AutismGeneProfileDB:
 
         return copy(configuration)
 
-    def get_agp(self, gene_symbol):
+    def get_agp(self, gene_symbol) -> Optional[AGPStatistic]:
+        """
+        Query an AGP by gene_symbol and return the row as statistic.
+
+        Returns None if gene_symbol is not found within the DB.
+        """
         table = self.agp_table
-        s = table.select()
-        s = s.where(table.c.symbol_name == gene_symbol)
+        query = table.select()
+        query = query.where(table.c.symbol_name == gene_symbol)
         with self.engine.connect() as connection:
-            row = connection.execute(s).fetchone()
+            row = connection.execute(query).fetchone()
             if not row:
                 return None
             return self.agp_from_table_row_single_view(row)
 
+    # FIXME: Too many locals, refactor?
     def agp_from_table_row(self, row) -> dict:
+        # pylint: disable=too-many-locals
+        """Build an AGPStatistic from internal DB row."""
         config = self.configuration
-        result = dict()
+        result = {}
 
         result["geneSymbol"] = row["symbol_name"]
 
@@ -86,30 +111,33 @@ class AutismGeneProfileDB:
                 full_gs_id = f"{collection_id}_{set_id}"
                 result[".".join([f"{category_name}_rank", set_id])] = \
                     "\u2713" if row[full_gs_id] else None
-        
+
         for dataset_id, filters in config["datasets"].items():
-            for ps in filters["person_sets"]:
-                person_set = ps["set_name"]
+            for person_set in filters["person_sets"]:
+                set_name = person_set["set_name"]
                 for statistic in filters["statistics"]:
                     statistic_id = statistic["id"]
                     count = row[
-                        f"{dataset_id}_{person_set}_{statistic_id}"
+                        f"{dataset_id}_{set_name}_{statistic_id}"
                     ]
                     rate = row[
-                        f"{dataset_id}_{person_set}_{statistic_id}_rate"
+                        f"{dataset_id}_{set_name}_{statistic_id}_rate"
                     ]
-                    result[".".join([dataset_id, person_set, statistic_id])] = \
+                    result[".".join([dataset_id, set_name, statistic_id])] = \
                         f"{count} ({round(rate, 2)})" if count else None
 
         return result
 
-    def agp_from_table_row_single_view(self, row):
+    # FIXME: Too many locals, refactor?
+    def agp_from_table_row_single_view(self, row) -> AGPStatistic:
+        """Create an AGPStatistic from single view row."""
+        # pylint: disable=too-many-locals
         config = self.configuration
         gene_symbol = row["symbol_name"]
-        genomic_scores = dict()
+        genomic_scores: Dict[str, Dict] = {}
         for gs_category in config["genomic_scores"]:
             category_name = gs_category["category"]
-            genomic_scores[category_name] = dict()
+            genomic_scores[category_name] = {}
             for score in gs_category["scores"]:
                 score_name = score["score_name"]
                 full_score_id = f"{category_name}_{score_name}"
@@ -131,21 +159,21 @@ class AutismGeneProfileDB:
 
         variant_counts = {}
         for dataset_id, filters in config["datasets"].items():
-            current_counts = dict()
-            for ps in filters["person_sets"]:
-                person_set = ps["set_name"]
+            current_counts: Dict[str, Dict] = {}
+            for person_set in filters["person_sets"]:
+                set_name = person_set["set_name"]
                 for statistic in filters["statistics"]:
                     statistic_id = statistic["id"]
-                    counts = current_counts.get(person_set)
+                    counts = current_counts.get(set_name)
                     if not counts:
-                        current_counts[person_set] = dict()
-                        counts = current_counts[person_set]
+                        current_counts[set_name] = {}
+                        counts = current_counts[set_name]
 
                     count = row[
-                        f"{dataset_id}_{person_set}_{statistic_id}"
+                        f"{dataset_id}_{set_name}_{statistic_id}"
                     ]
                     rate = row[
-                        f"{dataset_id}_{person_set}_{statistic_id}_rate"
+                        f"{dataset_id}_{set_name}_{statistic_id}_rate"
                     ]
                     counts[statistic_id] = {
                         "count": count,
@@ -167,31 +195,44 @@ class AutismGeneProfileDB:
             category = sort_by_tokens[0].replace("_rank", "")
             if len(sort_by_tokens) == 2:
                 for gs_category in self.configuration["gene_sets"]:
-                    if gs_category["category"] == category:
-                        for gene_set in gs_category["sets"]:
-                            if gene_set["set_id"] == sort_by_tokens[1]:
-                                collection_id = gene_set["collection_id"]
+                    if gs_category["category"] != category:
+                        continue
+                    for gene_set in gs_category["sets"]:
+                        if gene_set["set_id"] == sort_by_tokens[1]:
+                            collection_id = gene_set["collection_id"]
                 sort_by = ".".join((collection_id, sort_by_tokens[1]))
         return sort_by.replace(".", "_")
 
     def query_agps(self, page, symbol_like=None, sort_by=None, order=None):
+        """
+        Perform paginated query and return list of AGPs.
+
+        Parameters:
+            page - Which page to fetch.
+            symbol_like - Which gene symbol to search for, supports
+            incomplete search
+            sort_by - Column to sort by
+            order - "asc" or "desc"
+        """
         table = self.agp_table
 
-        s = table.select()
+        query = table.select()
         if symbol_like:
-            s = s.where(table.c.symbol_name.like(f"%{symbol_like}%"))
+            query = query.where(table.c.symbol_name.like(f"%{symbol_like}%"))
 
         if sort_by is not None:
             if order is None:
                 order = "desc"
             sort_by = self._transform_sort_by(sort_by)
             query_order_func = desc if order == "desc" else asc
-            s = s.order_by(nullslast(query_order_func(sort_by)))
+            query = query.order_by(nullslast(query_order_func(sort_by)))
 
         if page is not None:
-            s = s.limit(self.PAGE_SIZE).offset(self.PAGE_SIZE*(page-1))
+            query = query.limit(self.PAGE_SIZE).offset(
+                self.PAGE_SIZE * (page - 1)
+            )
         with self.engine.connect() as connection:
-            return connection.execute(s).fetchall()
+            return connection.execute(query).fetchall()
 
     def drop_agp_table(self):
         with self.engine.connect() as connection:
@@ -205,7 +246,8 @@ class AutismGeneProfileDB:
             )
             return has_agp_table
 
-    def _agp_table_columns(self):
+    # FIXME: Too many locals, refactor?
+    def _agp_table_columns(self):  # pylint: disable=too-many-locals
         columns = {}
         columns["symbol_name"] = \
             Column("symbol_name", String(64), primary_key=True)
@@ -217,9 +259,9 @@ class AutismGeneProfileDB:
             rank_col = f"{category_name}_rank"
 
             columns[rank_col] = Column(rank_col, Integer())
-            for gs in category["sets"]:
-                set_id = gs["set_id"]
-                collection_id = gs["collection_id"]
+            for gene_set in category["sets"]:
+                set_id = gene_set["set_id"]
+                collection_id = gene_set["collection_id"]
                 full_set_id = f"{collection_id}_{set_id}"
                 columns[full_set_id] = Column(full_set_id, Integer())
 
@@ -230,7 +272,7 @@ class AutismGeneProfileDB:
                 col = f"{category_name}_{score_name}"
                 columns[col] = Column(col, Float())
 
-        for dataset_id, dataset in self.configuration["datasets"].items():
+        for dataset_id in self.configuration["datasets"].keys():
             config_section = self.configuration["datasets"][dataset_id]
             for person_set in config_section["person_sets"]:
                 set_name = person_set["set_name"]
@@ -254,27 +296,32 @@ class AutismGeneProfileDB:
         self.metadata.create_all()
 
     def _clear_agp_table(self, connection=None):
-        d = self.agp_table.delete()
+        query = self.agp_table.delete()
         if connection is not None:
-            connection.execute(d)
+            connection.execute(query)
             return
 
-        with self.engine.connect() as connection:
-            connection.execute(d)
+        connection = self.engine.connect()
+        with connection:
+            connection.execute(query)
 
     def insert_agp(self, agp, connection=None):
+        """Insert an AGP into the DB."""
         insert_map = self._create_insert_map(agp)
-        if connection is None:
-            with self.engine.connect() as connection:
-                connection.execute(
-                    insert(self.agp_table).values(**insert_map)
-                )
-        else:
+        if connection is not None:
+            connection.execute(
+                insert(self.agp_table).values(**insert_map)
+            )
+            return
+
+        connection = self.engine.connect()
+        with connection:
             connection.execute(
                 insert(self.agp_table).values(**insert_map)
             )
 
-    def _create_insert_map(self, agp):
+    # FIXME: Too many locals, refactor?
+    def _create_insert_map(self, agp):  # pylint: disable=too-many-locals
         insert_map = {
             "symbol_name": agp.gene_symbol,
         }
@@ -284,9 +331,9 @@ class AutismGeneProfileDB:
         }
         for gsc in self.configuration["gene_sets"]:
             category = gsc["category"]
-            for gs in gsc["sets"]:
-                collection_id = gs["collection_id"]
-                gs_id = gs["set_id"]
+            for gene_set in gsc["sets"]:
+                collection_id = gene_set["collection_id"]
+                gs_id = gene_set["set_id"]
                 set_col = f"{collection_id}_{gs_id}"
                 if set_col in agp.gene_sets:
                     insert_map[set_col] = 1
@@ -310,6 +357,7 @@ class AutismGeneProfileDB:
         return insert_map
 
     def insert_agps(self, agps):
+        """Insert multiple AGPStatistics into the DB."""
         with self.engine.connect() as connection:
             with connection.begin():
                 self._clear_agp_table(connection)
@@ -318,5 +366,6 @@ class AutismGeneProfileDB:
                     self.insert_agp(agp, connection)
 
                     if idx % 1000 == 0:
-                        logger.info(f"Inserted {idx}/{agp_count} AGPs into DB")
+                        logger.info(
+                            "Inserted %s/%s AGPs into DB", idx, agp_count)
                 logger.info("Done!")

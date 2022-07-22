@@ -1,5 +1,6 @@
-from dae.autism_gene_profile.db import AutismGeneProfileDB
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
 from sqlalchemy import inspect
+from dae.autism_gene_profile.db import AutismGeneProfileDB
 
 
 def test_agpdb_table_building(temp_dbfile, agp_config):
