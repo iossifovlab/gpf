@@ -272,9 +272,6 @@ class FsspecReadWriteProtocol(
             modification = modification.replace(tzinfo=datetime.timezone.utc)
             return cast(float, round(modification.timestamp(), 2))
         except NotImplementedError:
-            logger.error(
-                "can't get timestamp for %s; filesystem: %s",
-                filepath, self.filesystem)
             info = self.filesystem.info(filepath)
             modification = info.get("created")
             return cast(float, round(modification, 2))

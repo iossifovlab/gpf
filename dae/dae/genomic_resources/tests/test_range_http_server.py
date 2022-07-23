@@ -3,26 +3,20 @@
 import logging
 import requests
 
-from .conftest import HTTPRepositoryServer
 
 logger = logging.getLogger(__name__)
 
 
-def test_simple_experiment(fixture_dirname):
-    directory = fixture_dirname("genomic_resources")
+def test_simple_experiment(fixtures_http_server):
+    url = fixtures_http_server
+    print(100 * "=")
+    print(url)
+    print(100 * "=")
 
-    server = HTTPRepositoryServer(16510, directory)
-    server.start()
-
-    with server.ready:
-        server.ready.wait()
-    logger.info("server started...")
-
-    response = requests.get("http://localhost:16510/.CONTENTS")
+    response = requests.get(f"{url}/.CONTENTS")
     assert response.status_code == 200
     logger.info("response: %s", response)
     logger.info("shutting down range http server...")
-    server.shutdown()
-    logger.info("[DONE] shutting down range http server...")
 
+    logger.info("[DONE] shutting down range http server...")
 

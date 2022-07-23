@@ -1,9 +1,17 @@
 """Provides tools usefult for testing."""
 from __future__ import annotations
+import contextlib
+import time
 
 import logging
+import threading
+
+from http.server import HTTPServer  # ThreadingHTTPServer
 
 from typing import Any, cast, Optional
+from functools import partial
+
+from RangeHTTPServer import RangeRequestHandler  # type: ignore
 
 from dae.genomic_resources.repository import \
     GenomicResource, \
@@ -166,3 +174,52 @@ def tabix_to_resource(tabix_source, resource, filename, update_repo=True):
         proto.save_manifest(resource, proto.build_manifest(resource))
         proto.invalidate()
         proto.build_content_file()
+
+
+def range_http_server_generator(directory):
+    handler_class = partial(
+        RangeRequestHandler, directory=directory)
+    handler_class.protocol_version = "HTTP/1.0"
+    try:
+        httpd = HTTPServer(("", 0), handler_class)
+        server_address = httpd.server_address
+        logger.info(
+            "HTTP range server at %s serving %s",
+            server_address, directory)
+        server_thread = threading.Thread(target=httpd.serve_forever)
+        server_thread.daemon = True
+        server_thread.start()
+        yield f"http://{server_address[0]}:{server_address[1]}"
+
+    finally:
+        time.sleep(0.1)
+        logger.info("shutting down HTT range server %s", server_address)
+        httpd.socket.close()
+        httpd.shutdown()
+        server_thread.join()
+
+
+@contextlib.contextmanager
+def range_http_serve(directory):
+    yield from range_http_server_generator(directory=directory)
+
+
+# def run_simple_range_http_server(port, directory):
+#     """Run simple HTTP server supporting range requests."""
+#     handler_class = partial(
+#         RangeRequestHandler, directory=directory)
+#     handler_class.protocol_version = "HTTP/1.0"
+
+#     with ThreadingHTTPServer(("localhost", port), handler_class) as httpd:
+#         saddr = httpd.socket.getsockname()
+#         print(
+#             f"Serving directory {directory} with HTTP "
+#             f"on (http://{saddr[0]}:{saddr[1]}/) ...")
+#         httpd.serve_forever()
+
+
+# def run_genomic_resources_http_repo():
+#     from dae_conftests.dae_conftests import relative_to_this_test_folder
+#     directory = relative_to_this_test_folder("fixtures/genomic_resources")
+#     print("serving directory:", directory)
+#     run_simple_range_http_server(16511, directory)
