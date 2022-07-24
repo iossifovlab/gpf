@@ -31,7 +31,7 @@ def test_caching_repo_simple(embedded_proto, content_fixture, tmp_path):
 
 @pytest.fixture
 def caching_proto(
-        fsspec_proto, tmp_path, s3_base):  # pylint: disable=unused-argument
+        fsspec_proto, tmp_path, s3_moto_fixture):
 
     def builder(caching_scheme="file"):
         remote_proto = fsspec_proto(scheme="memory")
@@ -40,18 +40,11 @@ def caching_proto(
             caching_proto = build_fsspec_protocol(
                 "local", str(tmp_path / "cache"))
         elif caching_scheme == "s3":
-            # pylint: disable=import-outside-toplevel
-            from botocore.session import Session  # type: ignore
-            endpoint_url = "http://127.0.0.1:5555/"
-            # NB: we use the sync botocore client for setup
-            session = Session()
-            client = session.create_client("s3", endpoint_url=endpoint_url)
-            client.create_bucket(Bucket="test-bucket", ACL="public-read")
 
             caching_proto = build_fsspec_protocol(
                 "local",
                 f"s3://test-bucket{tmp_path}",
-                endpoint_url=endpoint_url
+                endpoint_url=s3_moto_fixture
             )
         else:
             raise ValueError(f"Unsupported caching scheme: {caching_scheme}")

@@ -5,6 +5,7 @@ import time
 
 import logging
 import threading
+import multiprocessing
 
 from http.server import HTTPServer  # ThreadingHTTPServer
 
@@ -176,12 +177,13 @@ def tabix_to_resource(tabix_source, resource, filename, update_repo=True):
         proto.build_content_file()
 
 
-def range_http_server_generator(directory):
+def range_http_thread_server_generator(directory):
+    """Return threading HTTP range server generator for testing."""
     handler_class = partial(
         RangeRequestHandler, directory=directory)
     handler_class.protocol_version = "HTTP/1.0"
+    httpd = HTTPServer(("", 0), handler_class)
     try:
-        httpd = HTTPServer(("", 0), handler_class)
         server_address = httpd.server_address
         logger.info(
             "HTTP range server at %s serving %s",
@@ -199,27 +201,62 @@ def range_http_server_generator(directory):
         server_thread.join()
 
 
+def range_http_process_server_generator(directory):
+    """Return process HTTP range server generator for testing."""
+    def runner(queue):
+        handler_class = partial(
+            RangeRequestHandler, directory=directory)
+        handler_class.protocol_version = "HTTP/1.0"
+        httpd = HTTPServer(("", 0), handler_class)
+        try:
+            server_address = httpd.server_address
+            queue.put(f"http://{server_address[0]}:{server_address[1]}")
+            logger.info(
+                "HTTP range server at %s serving %s",
+                server_address, directory)
+            server_thread = threading.Thread(target=httpd.serve_forever)
+            server_thread.daemon = True
+            server_thread.start()
+
+            while 1:
+                command = queue.get()
+                if command == "stop":
+                    break
+        finally:
+            time.sleep(0.1)
+            logger.info("shutting down HTT range server %s", server_address)
+            httpd.socket.close()
+            httpd.shutdown()
+            server_thread.join()
+
+    queue = multiprocessing.Queue()
+    proc = multiprocessing.Process(target=runner, args=(queue, ))
+    proc.start()
+    # wait for server address
+    server_address = queue.get()
+    yield server_address
+
+    # stop the server process
+    queue.put("stop")
+
+
 @contextlib.contextmanager
 def range_http_serve(directory):
-    yield from range_http_server_generator(directory=directory)
+    yield from range_http_process_server_generator(directory=directory)
 
 
-# def run_simple_range_http_server(port, directory):
-#     """Run simple HTTP server supporting range requests."""
-#     handler_class = partial(
-#         RangeRequestHandler, directory=directory)
-#     handler_class.protocol_version = "HTTP/1.0"
-
-#     with ThreadingHTTPServer(("localhost", port), handler_class) as httpd:
-#         saddr = httpd.socket.getsockname()
-#         print(
-#             f"Serving directory {directory} with HTTP "
-#             f"on (http://{saddr[0]}:{saddr[1]}/) ...")
-#         httpd.serve_forever()
+def s3_moto_server_generator():
+    """Build an S3 mock server generator."""
+    # pylint: disable=protected-access,import-outside-toplevel
+    from moto.server import ThreadedMotoServer  # type: ignore
+    server = ThreadedMotoServer(ip_address="", port=0)
+    server.start()
+    server_address = server._server.server_address
+    # run tests
+    yield f"http://{server_address[0]}:{server_address[1]}"
+    server.stop()
 
 
-# def run_genomic_resources_http_repo():
-#     from dae_conftests.dae_conftests import relative_to_this_test_folder
-#     directory = relative_to_this_test_folder("fixtures/genomic_resources")
-#     print("serving directory:", directory)
-#     run_simple_range_http_server(16511, directory)
+@contextlib.contextmanager
+def s3_moto_server():
+    yield from s3_moto_server_generator()

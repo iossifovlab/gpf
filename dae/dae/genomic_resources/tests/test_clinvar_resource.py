@@ -62,6 +62,5 @@ def test_close(clinvar_vcf):
     assert not clinvar_vcf.is_open()
 
 
-@pytest.mark.skip(reason="Fixture hangs on pysam.VariantFile from urls")
 def test_clinvar_resource_http(clinvar_http):
     print("ready")

@@ -13,7 +13,10 @@ from dae.genomic_resources.repository import \
 from dae.genomic_resources.fsspec_protocol import \
     build_fsspec_protocol
 from dae.genomic_resources.testing import \
-    build_testing_protocol, range_http_server_generator, tabix_to_resource
+    build_testing_protocol, \
+    range_http_process_server_generator, \
+    s3_moto_server, \
+    tabix_to_resource
 from dae.genomic_resources.test_tools import convert_to_tab_separated
 from dae.genomic_resources import build_genomic_resource_repository
 
@@ -71,10 +74,22 @@ def embedded_proto(tmp_path):
     return builder
 
 
+@pytest.fixture(scope="session")
+def s3_moto_fixture():
+    with s3_moto_server() as s3_url:
+
+        from botocore.session import Session  # type: ignore
+        session = Session()
+        client = session.create_client("s3", endpoint_url=s3_url)
+        client.create_bucket(Bucket="test-bucket", ACL="public-read")
+
+        yield s3_url
+
+
 @pytest.fixture
 def proto_builder(
-        request, tmp_path_factory, s3_base):
-
+        request, tmp_path_factory, s3_moto_fixture):
+    # flake8: noqa
     def builder(src_proto, scheme="file", proto_id="testing"):
 
         http_server_gen = None
@@ -96,13 +111,7 @@ def proto_builder(
                 proto.copy_resource(res)
 
         if scheme == "s3":
-            # pylint: disable=import-outside-toplevel
-            from botocore.session import Session  # type: ignore
-            endpoint_url = "http://127.0.0.1:5555/"
-            # NB: we use the sync botocore client for setup
-            session = Session()
-            client = session.create_client("s3", endpoint_url=endpoint_url)
-            client.create_bucket(Bucket="test-bucket", ACL="public-read")
+            endpoint_url = s3_moto_fixture
 
             tmp_dir = tmp_path_factory.mktemp(
                 basename="s3", numbered=True)
@@ -120,7 +129,7 @@ def proto_builder(
             tmp_dir = tmp_path_factory.mktemp(
                 basename="http", numbered=True)
 
-            http_server_gen = range_http_server_generator(str(tmp_dir))
+            http_server_gen = range_http_process_server_generator(str(tmp_dir))
             url = next(http_server_gen)
 
             proto = build_fsspec_protocol(
