@@ -89,7 +89,7 @@ describe('GpfTableComponent', () => {
     expect(component.getScrollIndices()).toEqual([0, 10 + Math.ceil(window.innerHeight / 80.0)]);
 
     expect(component.beforeDataCellHeight).toBe(0);
-    expect(component.afterDataCellHeight).toBe((-5 - Math.ceil(window.innerHeight / 80.0)) * 80);
+    expect(component.afterDataCellHeight).toBe(0);
 
     expect(component.visibleData).toEqual([
       {field: 3, arrayPosition: 0},
