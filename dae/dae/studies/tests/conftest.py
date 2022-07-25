@@ -8,11 +8,13 @@ def fixtures_dir(global_dae_fixtures_dir):
     return global_dae_fixtures_dir
 
 
-def studies_dir():
+@pytest.fixture(scope="session")
+def studies_dir(fixtures_dir):
     return os.path.abspath(os.path.join(fixtures_dir, "studies"))
 
 
-def genotype_data_groups_dir():
+@pytest.fixture(scope="session")
+def genotype_data_groups_dir(fixtures_dir):
     return os.path.abspath(os.path.join(fixtures_dir, "datasets"))
 
 

@@ -1,8 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import os
 import pytest
-from dae.studies.tests.conftest import studies_dir
-
 
 def test_study_config_simple(genotype_data_study_configs):
     assert genotype_data_study_configs is not None
@@ -104,8 +102,8 @@ def test_quads_f1_files_and_tables(quads_f1_config):
     # assert quads_f1_config.tables.pedigree == 'quads_f1_pedigree'
 
 
-def test_quads_f1_config_work_dir(quads_f1_config):
-    assert quads_f1_config.work_dir == os.path.join(studies_dir(), "quads_f1")
+def test_quads_f1_config_work_dir(quads_f1_config, studies_dir):
+    assert quads_f1_config.work_dir == os.path.join(studies_dir, "quads_f1")
 
 
 def test_quads_f1_config_files(quads_f1_config):

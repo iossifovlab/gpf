@@ -2,8 +2,6 @@
 
 import pytest
 
-from dae.studies.tests.conftest import genotype_data_groups_dir
-
 
 def test_genotype_data_group_configs_simple(genotype_data_group_configs):
     assert genotype_data_group_configs is not None
@@ -124,10 +122,10 @@ def test_composite_genotype_data_group_config_genotype_browser_overwrite(
 
 
 def test_genotype_data_group_quads_work_dir(
-    quads_composite_genotype_data_group_config,
+    quads_composite_genotype_data_group_config, genotype_data_groups_dir
 ):
 
     assert quads_composite_genotype_data_group_config is not None
     config = quads_composite_genotype_data_group_config
 
-    assert config.work_dir == genotype_data_groups_dir()
+    assert config.work_dir == genotype_data_groups_dir
