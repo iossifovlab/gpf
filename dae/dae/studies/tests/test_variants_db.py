@@ -26,12 +26,13 @@ def test_variants_db_studies_simple(
     dae_config_fixture,
     gpf_instance_2013,
     genotype_storage_factory,
+    fixtures_dir
 ):
     assert dae_config_fixture is not None
     assert dae_config_fixture.studies.dir is not None
 
     assert dae_config_fixture.studies.dir == os.path.join(
-        fixtures_dir(), "studies"
+        fixtures_dir, "studies"
     )
 
     vdb = VariantsDb(
@@ -47,12 +48,13 @@ def test_variants_db_genotype_data_groups_simple(
     dae_config_fixture,
     gpf_instance_2013,
     genotype_storage_factory,
+    fixtures_dir
 ):
     assert dae_config_fixture is not None
     assert dae_config_fixture.datasets.dir is not None
 
     assert dae_config_fixture.datasets.dir == os.path.join(
-        fixtures_dir(), "datasets"
+        fixtures_dir, "datasets"
     )
 
     vdb = VariantsDb(

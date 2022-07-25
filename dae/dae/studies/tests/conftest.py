@@ -2,9 +2,6 @@
 import os
 import pytest
 
-from dae_conftests.dae_conftests import \
-    get_global_dae_fixtures_dir  # type: ignore
-
 
 @pytest.fixture(scope="session")
 def fixtures_dir(global_dae_fixtures_dir):
@@ -12,11 +9,11 @@ def fixtures_dir(global_dae_fixtures_dir):
 
 
 def studies_dir():
-    return os.path.abspath(os.path.join(fixtures_dir(), "studies"))
+    return os.path.abspath(os.path.join(fixtures_dir, "studies"))
 
 
 def genotype_data_groups_dir():
-    return os.path.abspath(os.path.join(fixtures_dir(), "datasets"))
+    return os.path.abspath(os.path.join(fixtures_dir, "datasets"))
 
 
 @pytest.fixture(scope="session")
