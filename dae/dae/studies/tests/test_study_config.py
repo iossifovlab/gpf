@@ -2,6 +2,7 @@
 import os
 import pytest
 
+
 def test_study_config_simple(genotype_data_study_configs):
     assert genotype_data_study_configs is not None
     assert list(genotype_data_study_configs.keys())
