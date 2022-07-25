@@ -11,6 +11,8 @@ logger = logging.getLogger(__name__)
 
 
 class HdfsHelpers:
+    """Helper methods for working with HDFS."""
+
     def __init__(self, hdfs_host, hdfs_port, replication=None):
         assert hdfs_host
         assert hdfs_port
@@ -26,6 +28,7 @@ class HdfsHelpers:
 
     @property
     def hdfs(self):
+        """Return a file system for working with HDFS."""
         if self._hdfs is None:
             extra_conf = None
             if self.replication and self.replication > 0:
@@ -33,9 +36,8 @@ class HdfsHelpers:
                 extra_conf = {
                     "dfs.replication": str(self.replication)
                 }
-            logger.info(
-                f"hdfs connecting to: {self.host}:{self.port}; "
-                f"extra: {extra_conf}")
+            logger.info("hdfs connecting to: %s:%s; extra: %s",
+                        self.host, self.port, extra_conf)
             hdfs = fs.HadoopFileSystem(
                 host=self.host, port=self.port, extra_conf=extra_conf)
             self._hdfs = ArrowFSWrapper(hdfs)
@@ -48,6 +50,7 @@ class HdfsHelpers:
         self.hdfs.mkdir(path)
 
     def makedirs(self, path):
+        """Make all dire alone the path."""
         if path[0] == os.sep:
             paths = path[1:].split(os.sep)
             paths[0] = "/" + paths[0]
@@ -90,6 +93,7 @@ class HdfsHelpers:
         self.put(local_file, hdfs_filename)
 
     def put_content(self, local_path, hdfs_dirname):
+        """Copy local_path to hdfs_dirname."""
         assert os.path.exists(local_path), local_path
 
         if os.path.isdir(local_path):
@@ -122,6 +126,7 @@ class HdfsHelpers:
         return info["type"] == "file"
 
     def list_parquet_files(self, hdfs_dirname, regexp=r".*\.parquet"):
+        """List all parquet files in hdfs_dirname."""
         regexp = re.compile(regexp)
 
         def list_parquet_files_recursive(dirname, collection):

@@ -1,11 +1,16 @@
 import logging
 
+logger = logging.getLogger(__name__)
 
-class BaseAnnotationRequest(object):
+
+class BaseAnnotationRequest:
+    """Effect annotation request description."""
+
     def __init__(self, annotator, variant, transcript_model):
         self.annotator = annotator
         self.variant = variant
         self.transcript_model = transcript_model
+        self.__cds_regions = None
         self.logger = logging.getLogger(__name__)
 
     def _clamp_in_cds(self, position):
@@ -26,6 +31,7 @@ class BaseAnnotationRequest(object):
         return self.get_exonic_distance(start, end) + 1
 
     def get_exonic_distance(self, start, end):
+        """Calculate exonic distance."""
         length = 0
         for region in self.transcript_model.exons:
             if region.start <= start <= region.stop:
@@ -78,21 +84,23 @@ class BaseAnnotationRequest(object):
             self.transcript_model.chrom, start_position, end_position
         )
 
-    def CDS_regions(self):
-        if not hasattr(self, "__CDS_regions"):
-            self.__CDS_regions = self.transcript_model.CDS_regions()
-        return self.__CDS_regions
+    def CDS_regions(self):  # pylint: disable=invalid-name
+        if self.__cds_regions is None:
+            self.__cds_regions = self.transcript_model.CDS_regions()
+        return self.__cds_regions
 
     def get_coding_region_for_pos(self, pos):
+        """Find conding region for a position."""
         close_match = None
         for i, reg in enumerate(self.transcript_model.exons):
             if reg.start <= pos <= reg.stop:
                 return i
-            elif reg.start - 1 <= pos <= reg.stop + 1:
+            if reg.start - 1 <= pos <= reg.stop + 1:
                 close_match = i
         return close_match
 
     def get_coding_right(self, pos, length, index):
+        """Construct conding sequence to the right of a position."""
         self.logger.debug(
             "get_coding_right pos:%d len:%d index:%d", pos, length, index
         )
@@ -113,6 +121,7 @@ class BaseAnnotationRequest(object):
         return seq + self.get_coding_right(-1, length, index + 1)
 
     def get_codons_right(self, pos, length):
+        """Return coding sequence to the right of a position."""
         if length <= 0:
             return ""
 
@@ -122,6 +131,7 @@ class BaseAnnotationRequest(object):
         return seq
 
     def get_coding_left(self, pos, length, index):
+        """Return coding sequence to the left of a position."""
         self.logger.debug(
             "get_coding_left pos:%d len:%d index:%d", pos, length, index
         )
@@ -144,8 +154,7 @@ class BaseAnnotationRequest(object):
 
         if index == 0:
             return self.get_codons_left(reg.start - 1, length) + seq
-        else:
-            return self.get_coding_left(-1, length, index - 1) + seq
+        return self.get_coding_left(-1, length, index - 1) + seq
 
     def get_codons_left(self, pos, length):
         if length <= 0:
@@ -154,10 +163,12 @@ class BaseAnnotationRequest(object):
         seq = self._get_sequence(start_index, pos)
         return seq
 
-    def get_nucleotides_count_to_full_codon(self, length):
+    @staticmethod
+    def get_nucleotides_count_to_full_codon(length):
         return (3 - (length % 3)) % 3
 
     def cod2aa(self, codon):
+        """Translate codon to amino acid."""
         codon = codon.upper()
         if len(codon) != 3:
             return "?"
@@ -191,13 +202,13 @@ class BaseAnnotationRequest(object):
             <= self.variant.corrected_ref_position_last
         )
 
-    def has_3_UTR_region(self):
+    def has_3_UTR_region(self):  # pylint: disable=invalid-name
         return (
             self.transcript_model.exons[-1].stop
             != self.transcript_model.cds[1]
         )
 
-    def has_5_UTR_region(self):
+    def has_5_UTR_region(self):  # pylint: disable=invalid-name
         return (
             self.transcript_model.exons[0].start
             != self.transcript_model.cds[0]
@@ -205,10 +216,13 @@ class BaseAnnotationRequest(object):
 
 
 class PositiveStrandAnnotationRequest(BaseAnnotationRequest):
+    """Effect annotation request on the positive strand."""
+
     def __init__(self, annotator, variant, transcript_model):
         BaseAnnotationRequest.__init__(
             self, annotator, variant, transcript_model
         )
+        self.__amino_acids = None
 
     def _get_coding_nucleotide_position(self, position):
         length = 0
@@ -224,6 +238,7 @@ class PositiveStrandAnnotationRequest(BaseAnnotationRequest):
         return length
 
     def get_protein_position(self):
+        """Calculate protein position."""
         start_pos = self._clamp_in_cds(self.variant.position)
         end_pos = self._clamp_in_cds(self.variant.ref_position_last - 1)
         end_pos = max(start_pos, end_pos)
@@ -240,16 +255,17 @@ class PositiveStrandAnnotationRequest(BaseAnnotationRequest):
         )
 
     def in_start_codons(self, codon):
+        """Check if request belongs to the start codon."""
         seq = self._get_sequence(
             self.transcript_model.cds[0], self.transcript_model.cds[0] + 2
         )
 
         if codon == seq or codon in self.annotator.code.startCodons:
             return True
-        else:
-            return False
+        return False
 
     def get_frame(self, pos, index):
+        """Return the frame of the annotation request."""
         reg = self.transcript_model.exons[index]
         if reg.stop < self.transcript_model.cds[0]:
             self.logger.error(
@@ -263,6 +279,7 @@ class PositiveStrandAnnotationRequest(BaseAnnotationRequest):
         return frame
 
     def get_codons(self):
+        """Get list of codons."""
         pos = max(self.transcript_model.cds[0], self.variant.position)
 
         index = self.get_coding_region_for_pos(pos)
@@ -294,7 +311,8 @@ class PositiveStrandAnnotationRequest(BaseAnnotationRequest):
         return ref_codons, alt_codons
 
     def get_amino_acids(self):
-        if not hasattr(self, "__amino_acids"):
+        """Construct the list of amino acids."""
+        if self.__amino_acids is None:
             ref_codons, alt_codons = self.get_codons()
 
             ref_amino_acids = [
@@ -312,10 +330,12 @@ class PositiveStrandAnnotationRequest(BaseAnnotationRequest):
 
 
 class NegativeStrandAnnotationRequest(BaseAnnotationRequest):
+    """Effect annotation request on the negative strand."""
+
     def __init__(self, annotator, variant, transcript_model):
-        BaseAnnotationRequest.__init__(
-            self, annotator, variant, transcript_model
-        )
+        super().__init__(
+            annotator, variant, transcript_model)
+        self.__amino_acids = None
 
     def _get_coding_nucleotide_position(self, position):
         length = 0
@@ -331,6 +351,7 @@ class NegativeStrandAnnotationRequest(BaseAnnotationRequest):
         return length
 
     def get_protein_position(self):
+        """Calculate the protein position."""
         start_pos = self._clamp_in_cds(self.variant.position)
         end_pos = self._clamp_in_cds(self.variant.ref_position_last - 1)
         end_pos = max(start_pos, end_pos)
@@ -347,6 +368,7 @@ class NegativeStrandAnnotationRequest(BaseAnnotationRequest):
         )
 
     def in_start_codons(self, codon):
+        """Check if request belongs to the start codon."""
         seq = self._get_sequence(
             self.transcript_model.cds[1] - 2, self.transcript_model.cds[1]
         )
@@ -354,10 +376,10 @@ class NegativeStrandAnnotationRequest(BaseAnnotationRequest):
         complement_codon = self.complement(codon[::-1])
         if codon == seq or complement_codon in self.annotator.code.startCodons:
             return True
-        else:
-            return False
+        return False
 
     def get_frame(self, pos, index):
+        """Return the frame of the annotation request."""
         reg = self.transcript_model.exons[index]
         if reg.start > self.transcript_model.cds[1]:
             self.logger.error(
@@ -371,6 +393,7 @@ class NegativeStrandAnnotationRequest(BaseAnnotationRequest):
         return frame
 
     def get_codons(self):
+        """Get list of codons."""
         pos = max(self.variant.position, self.transcript_model.cds[0])
         last_position = self.variant.position + len(self.variant.reference) - 1
 
@@ -435,23 +458,25 @@ class NegativeStrandAnnotationRequest(BaseAnnotationRequest):
         return ref_codons, alt_codons
 
     @staticmethod
-    def complement(nts):
-        nts = nts.upper()
-        reverse = ""
-        for nt in nts:
-            if nt == "A":
-                reverse += "T"
-            elif nt == "T":
-                reverse += "A"
-            elif nt == "G":
-                reverse += "C"
-            elif nt == "C":
-                reverse += "G"
-            elif nt == "N":
-                reverse += "N"
+    def complement(sequence):
+        """Build the complementary sequence for a sequence of nucleotides."""
+        reverse = []
+        for nucleotide in sequence.upper():
+            if nucleotide == "A":
+                reverse.append("T")
+            elif nucleotide == "T":
+                reverse.append("A")
+            elif nucleotide == "G":
+                reverse.append("C")
+            elif nucleotide == "C":
+                reverse.append("G")
+            elif nucleotide == "N":
+                reverse.append("N")
             else:
-                print("Invalid nucleotide: " + str(nt) + " in " + str(nts))
-        return reverse
+                logger.error(
+                    "invalid nucleotide: %s in %s",
+                    nucleotide, sequence)
+        return "".join(reverse)
 
     def cod2aa(self, codon):
         complement_codon = self.complement(codon[::-1])
@@ -461,7 +486,8 @@ class NegativeStrandAnnotationRequest(BaseAnnotationRequest):
         return BaseAnnotationRequest.cod2aa(self, complement_codon)
 
     def get_amino_acids(self):
-        if not hasattr(self, "__amino_acids"):
+        """Construct the list of amino acids."""
+        if self.__amino_acids is None:
             ref_codons, alt_codons = self.get_codons()
 
             ref_amino_acids = [
@@ -490,14 +516,15 @@ class NegativeStrandAnnotationRequest(BaseAnnotationRequest):
         return BaseAnnotationRequest.has_3_UTR_region(self)
 
 
-class AnnotationRequestFactory(object):
+class AnnotationRequestFactory:
+    """Factory for annotation requests."""
+
     @staticmethod
     def create_annotation_request(annotator, variant, transcript_model):
         if transcript_model.strand == "+":
             return PositiveStrandAnnotationRequest(
                 annotator, variant, transcript_model
             )
-        else:
-            return NegativeStrandAnnotationRequest(
-                annotator, variant, transcript_model
-            )
+        return NegativeStrandAnnotationRequest(
+            annotator, variant, transcript_model
+        )

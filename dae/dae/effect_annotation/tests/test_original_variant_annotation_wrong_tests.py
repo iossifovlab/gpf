@@ -1,3 +1,5 @@
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
+
 import pytest
 
 from dae.effect_annotation.annotator import EffectAnnotator
@@ -14,10 +16,12 @@ def gene_models_2013(gpf_instance_2013):
 
 
 def test_chr1_120387132_del_var(genomic_sequence_2013, gene_models_2013):
-    [effect] = EffectAnnotator.annotate_variant(
+    effects = EffectAnnotator.annotate_variant(
         gene_models_2013, genomic_sequence_2013,
         loc="1:120387132", var="del(71)"
     )
+    assert len(effects) == 1
+    effect = effects[0]
 
     assert effect.gene == "NBPF7"
     assert effect.transcript_id == "NM_001047980_1"
@@ -29,10 +33,11 @@ def test_chr1_120387132_del_var(genomic_sequence_2013, gene_models_2013):
 
 
 def test_chr2_237172988_ins_var(genomic_sequence_2013, gene_models_2013):
-    [effect] = EffectAnnotator.annotate_variant(
+    effects = EffectAnnotator.annotate_variant(
         gene_models_2013, genomic_sequence_2013,
         loc="2:237172988", var="ins(TTGTTACG)"
     )
+    effect = effects[0]
 
     assert effect.gene == "ASB18"
     assert effect.transcript_id == "NM_212556_1"
@@ -44,7 +49,7 @@ def test_chr2_237172988_ins_var(genomic_sequence_2013, gene_models_2013):
 
 
 @pytest.mark.skip()
-def test_chr1_802610_867930_CNV_var(genomic_sequence_2013, gene_models_2013):
+def test_chr1_802610_867930_cnv_var(genomic_sequence_2013, gene_models_2013):
     effects = EffectAnnotator.annotate_variant(
         gene_models_2013, genomic_sequence_2013,
         loc="1:802610-867930", var="CNV+"

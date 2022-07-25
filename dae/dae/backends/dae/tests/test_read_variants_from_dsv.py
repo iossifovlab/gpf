@@ -1,11 +1,10 @@
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pytest
 import pandas as pd
 import numpy as np
 
 from dae.variants.attributes import Inheritance
-
 from dae.backends.dae.loader import DenovoLoader
-
 from dae.utils.variant_utils import GENOTYPE_TYPE
 
 
@@ -24,6 +23,7 @@ def compare_variant_dfs(res_df, expected_df):
         assert len(res_genotype) == len(expected_genotype)
 
         equal = equal and len(res_genotype) == len(expected_genotype)
+        # pylint: disable=consider-using-enumerate
         for i in range(0, len(res_genotype)):
             assert np.array_equal(res_genotype[i], expected_genotype[i]), (
                 expected_df.loc[i, :],
@@ -75,7 +75,7 @@ def test_families_instance_type_assertion():
     assert str(excinfo.value) == error_message
 
 
-def test_read_variants_DAE_style(
+def test_read_variants_dae_style(
         gpf_instance_2013, fixture_dirname, fake_families):
     filename = fixture_dirname("denovo_import/variants_DAE_style.tsv")
     res_df = DenovoLoader.flexible_denovo_load(
@@ -109,7 +109,7 @@ def test_read_variants_DAE_style(
     assert compare_variant_dfs(res_df, expected_df)
 
 
-def test_read_variants_a_la_VCF_style(
+def test_read_variants_a_la_vcf_style(
     gpf_instance_2013, fixture_dirname, fake_families
 ):
     filename = fixture_dirname("denovo_import/variants_VCF_style.tsv")
@@ -146,7 +146,7 @@ def test_read_variants_a_la_VCF_style(
     assert compare_variant_dfs(res_df, expected_df)
 
 
-def test_read_variants_mixed_A(
+def test_read_variants_mixed_a(
         gpf_instance_2013, fixture_dirname, fake_families):
     filename = fixture_dirname("denovo_import/variants_mixed_style_A.tsv")
     res_df = DenovoLoader.flexible_denovo_load(
@@ -181,7 +181,7 @@ def test_read_variants_mixed_A(
     assert compare_variant_dfs(res_df, expected_df)
 
 
-def test_read_variants_mixed_B(
+def test_read_variants_mixed_b(
         gpf_instance_2013, fixture_dirname, fake_families):
     filename = fixture_dirname("denovo_import/variants_mixed_style_B.tsv")
     res_df = DenovoLoader.flexible_denovo_load(
@@ -459,11 +459,11 @@ def test_denovo_loader(
         sort=False
     )
 
-    vs = list(variants_loader.full_variants_iterator())
-    print(vs)
+    variants = list(variants_loader.full_variants_iterator())
+    print(variants)
 
     def falt_allele(index):
-        return vs[index][1][0].alt_alleles[0]
+        return variants[index][1][0].alt_alleles[0]
 
     fa = falt_allele(0)
     print(fa, fa.variant_in_members, fa.inheritance_in_members)
@@ -533,11 +533,11 @@ def test_denovo_loader_avoids_duplicates(
         genome=gpf_instance_2013.reference_genome, params=params
     )
 
-    vs = variants_loader.full_variants_iterator()
+    variants_iter = variants_loader.full_variants_iterator()
 
     svs = []
     fvs = []
-    for sv, fvs_ in vs:
+    for sv, fvs_ in variants_iter:
         print(sv, fvs)
         svs.append(sv)
         for fv in fvs_:

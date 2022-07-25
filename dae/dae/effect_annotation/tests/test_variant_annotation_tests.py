@@ -1,3 +1,4 @@
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pytest
 
 from dae.effect_annotation.annotator import EffectAnnotator
@@ -14,12 +15,15 @@ def gene_models_2013(gpf_instance_2013):
 
 
 def test_synonymous_complex_var(genomic_sequence_2013, gene_models_2013):
-    [effect] = EffectAnnotator.annotate_variant(
+    effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
         loc="1:897349",
         var="complex(GG->AA)",
     )
+
+    assert len(effects) == 1
+    effect = effects[0]
 
     assert effect.gene == "KLHL17"
     assert effect.transcript_id == "NM_198317_1"
@@ -84,12 +88,14 @@ def test_chr2_32853362_ins_var(genomic_sequence_2013, gene_models_2013):
 
 
 def test_chr5_75902128_sub_var(genomic_sequence_2013, gene_models_2013):
-    [effect] = EffectAnnotator.annotate_variant(
+    effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
         loc="5:75902128",
         var="sub(C->T)",
     )
+    assert len(effects) == 1
+    effect = effects[0]
 
     assert effect.gene == "IQGAP2"
     assert effect.transcript_id == "NM_006633_1"

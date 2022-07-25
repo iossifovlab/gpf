@@ -1,4 +1,5 @@
 class ImpalaQueryDirector:
+    """Build a query in the right order."""
 
     def __init__(self, query_builder):
         self.query_builder = query_builder
@@ -21,7 +22,8 @@ class ImpalaQueryDirector:
             return_unknown=None,
             limit=None,
             pedigree_fields=None):
-
+        # pylint: disable=too-many-arguments
+        """Build a query in the right order."""
         self.query_builder.reset_product()
 
         self.query_builder.build_select()

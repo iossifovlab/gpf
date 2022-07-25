@@ -1,6 +1,7 @@
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
+import io
 import textwrap
 import pytest
-import io
 
 from dae.genomic_resources.test_tools import convert_to_tab_separated
 from dae.pedigrees.loader import FamiliesLoader
@@ -74,14 +75,14 @@ def test_configure_cnv_loader_location_mismatch():
 
 def test_configure_cnv_loader_dae_best_state_default(
         families, gpf_instance_2013):
-
+    # TODO this test doesn't seem to test anything
     header = ["family_id", "location", "variant", "best_state", "extra"]
-    transformers = []
+    # transformers = []
 
-    (
-        header, transformers,
-        families, gpf_instance_2013.reference_genome,
-    )
+    # (
+    #     header, transformers,
+    #     families, gpf_instance_2013.reference_genome,
+    # )
 
     assert header == [
         "family_id", "location", "variant", "best_state", "extra"]

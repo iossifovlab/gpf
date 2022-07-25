@@ -357,6 +357,8 @@ class NPScore(GenomicScore):
             non_default_pos_aggregators=None,
             non_default_nuc_aggregators=None):
         """Fetch score values in a region and aggregates them."""
+        # pylint: disable=too-many-locals
+        # FIXME:
         if chrom not in self.get_all_chromosomes():
             raise ValueError(
                 f"{chrom} is not among the available chromosomes for "
@@ -458,6 +460,7 @@ def _configure_score_columns(
         class ScoreDef:
             """Score configuration definition."""
 
+            # pylint: disable=too-many-instance-attributes
             score_id: str
             desc: str
             col_index: Optional[int]

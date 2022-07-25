@@ -1,8 +1,9 @@
-import textwrap
-from dae.backends.cnv.loader import CNVLoader
-import pytest
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
 import io
+import textwrap
+import pytest
 
+from dae.backends.cnv.loader import CNVLoader
 from dae.variants.attributes import Inheritance
 from dae.variants.core import Allele
 
@@ -48,18 +49,18 @@ def test_cnv_loader_expected_inheritance(
     loader = CNVLoader(
         abn_families, canvas_cnv, gpf_instance_2013.reference_genome,
         params={
-           "cnv_person_id": "person_id",
-           "cnv_location": "location",
-           "cnv_variant_type": "variant",
-           "cnv_plus_values": ["GAIN"],
-           "cnv_minus_values": ["LOSS"],
-           "cnv_transmission_type": transmission_type,
+            "cnv_person_id": "person_id",
+            "cnv_location": "location",
+            "cnv_variant_type": "variant",
+            "cnv_plus_values": ["GAIN"],
+            "cnv_minus_values": ["LOSS"],
+            "cnv_transmission_type": transmission_type,
         }
     )
 
     variants = list(loader.full_variants_iterator())
     assert len(variants) == 2
-    for sv, fvs in variants:
+    for _sv, fvs in variants:
         for fv in fvs:
             for fa in fv.alt_alleles:
                 assert expected_inheritance in fa.inheritance_in_members
@@ -78,12 +79,12 @@ def test_cnv_loader_expected_variant_type(
     loader = CNVLoader(
         abn_families, canvas_cnv, gpf_instance_2013.reference_genome,
         params={
-           "cnv_person_id": "person_id",
-           "cnv_location": "location",
-           "cnv_variant_type": "variant",
-           "cnv_plus_values": ["GAIN"],
-           "cnv_minus_values": ["LOSS"],
-           "cnv_transmission_type": "transmitted",
+            "cnv_person_id": "person_id",
+            "cnv_location": "location",
+            "cnv_variant_type": "variant",
+            "cnv_plus_values": ["GAIN"],
+            "cnv_minus_values": ["LOSS"],
+            "cnv_transmission_type": "transmitted",
         }
     )
 
@@ -113,13 +114,13 @@ def test_cnv_loader_regions(
     loader = CNVLoader(
         abn_families, canvas_cnv, gpf_instance_2013.reference_genome,
         params={
-           "cnv_person_id": "person_id",
-           "cnv_location": "location",
-           "cnv_variant_type": "variant",
-           "cnv_plus_values": ["GAIN"],
-           "cnv_minus_values": ["LOSS"],
-           "cnv_transmission_type": "transmitted",
-           "add_chrom_prefix": add_chrom_prefix,
+            "cnv_person_id": "person_id",
+            "cnv_location": "location",
+            "cnv_variant_type": "variant",
+            "cnv_plus_values": ["GAIN"],
+            "cnv_minus_values": ["LOSS"],
+            "cnv_transmission_type": "transmitted",
+            "add_chrom_prefix": add_chrom_prefix,
         }
     )
 
@@ -150,13 +151,13 @@ def test_cnv_loader_constructor_regions(
         abn_families, canvas_cnv, gpf_instance_2013.reference_genome,
         regions=[region],
         params={
-           "cnv_person_id": "person_id",
-           "cnv_location": "location",
-           "cnv_variant_type": "variant",
-           "cnv_plus_values": ["GAIN"],
-           "cnv_minus_values": ["LOSS"],
-           "cnv_transmission_type": "transmitted",
-           "add_chrom_prefix": add_chrom_prefix,
+            "cnv_person_id": "person_id",
+            "cnv_location": "location",
+            "cnv_variant_type": "variant",
+            "cnv_plus_values": ["GAIN"],
+            "cnv_minus_values": ["LOSS"],
+            "cnv_transmission_type": "transmitted",
+            "add_chrom_prefix": add_chrom_prefix,
         }
     )
 
@@ -187,13 +188,13 @@ def test_cnv_loader_del_chrom_prefix_regions(
     loader = CNVLoader(
         abn_families, content, gpf_instance_2013.reference_genome,
         params={
-           "cnv_person_id": "person_id",
-           "cnv_location": "location",
-           "cnv_variant_type": "variant",
-           "cnv_plus_values": ["GAIN"],
-           "cnv_minus_values": ["LOSS"],
-           "cnv_transmission_type": "transmitted",
-           "del_chrom_prefix": "chr",
+            "cnv_person_id": "person_id",
+            "cnv_location": "location",
+            "cnv_variant_type": "variant",
+            "cnv_plus_values": ["GAIN"],
+            "cnv_minus_values": ["LOSS"],
+            "cnv_transmission_type": "transmitted",
+            "del_chrom_prefix": "chr",
         }
     )
 

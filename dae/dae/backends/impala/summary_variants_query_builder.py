@@ -5,6 +5,8 @@ logger = logging.getLogger(__name__)
 
 
 class SummaryVariantsQueryBuilder(BaseQueryBuilder):
+    """Build queries related to summary variants."""
+
     def __init__(
             self, db, variants_table, pedigree_table,
             variants_schema, table_properties, pedigree_schema,
@@ -55,8 +57,8 @@ class SummaryVariantsQueryBuilder(BaseQueryBuilder):
 
     def build_from(self):
         table = self.summary_variants_table \
-                if self.summary_variants_table is not None \
-                else self.variants_table
+            if self.summary_variants_table is not None \
+            else self.variants_table
         from_clause = f"FROM {self.db}.{table} as variants"
         self._add_to_product(from_clause)
 
@@ -91,6 +93,8 @@ class SummaryVariantsQueryBuilder(BaseQueryBuilder):
             return_reference=None,
             return_unknown=None,
             **kwargs):
+        # FIXME too many arguments
+        # pylint: disable=too-many-arguments
         if self.summary_variants_table:
             inheritance = None
         where_clause = self._base_build_where(
@@ -123,7 +127,7 @@ class SummaryVariantsQueryBuilder(BaseQueryBuilder):
 
     def create_row_deserializer(self, serializer):
         def deserialize_row(row):
-            cols = dict()
+            cols = {}
             for idx, col_name in enumerate(self.query_columns):
                 cols[col_name] = row[idx]
 
@@ -137,13 +141,14 @@ class SummaryVariantsQueryBuilder(BaseQueryBuilder):
             extra_attributes = cols.get(
                 self.select_accessors.get("extra_attributes", None), None)
 
-            if type(variant_data) == str:
+            if isinstance(variant_data, str):
                 logger.debug(
-                    f"variant_data is string!!!! "
-                    f"{bucket_index}, {summary_index}"
+                    "variant_data is string!!!! %d, %s",
+                    bucket_index, summary_index
                 )
                 variant_data = bytes(variant_data, "utf8")
-            if type(extra_attributes) == str:
+            if isinstance(extra_attributes, str):
+                # TODO do we really need that if. Looks like a python2 leftover
                 # logger.debug(
                 #     f"extra_attributes is string!!!! "
                 #     f"{bucket_index}, {summary_index}"

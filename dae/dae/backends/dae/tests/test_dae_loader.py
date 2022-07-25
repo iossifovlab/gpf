@@ -1,7 +1,8 @@
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pytest
+import numpy as np
 from dae.backends.dae.loader import DaeTransmittedLoader
 from dae.pedigrees.loader import FamiliesLoader
-import numpy as np
 from dae.utils.variant_utils import mat2str, str2mat
 
 

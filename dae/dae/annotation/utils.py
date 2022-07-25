@@ -3,26 +3,28 @@ import os
 
 
 def handle_chrom_prefix(expect_prefix, data):
+    """Add or delete the chromosome prefix."""
     if data is None:
         return data
     if expect_prefix and not data.startswith("chr"):
-        return "chr{}".format(data)
+        return f"chr{data}"
     if not expect_prefix and data.startswith("chr"):
         return data[3:]
     return data
 
 
 def is_gzip(filename):
+    """Check if a file is gzipped."""
     try:
         if filename == "-" or not os.path.exists(filename):
             return False
         with gzip.open(filename, "rt") as infile:
             infile.readline()
         return True
-    except Exception:
+    except Exception:  # pylint: disable=broad-except
         return False
 
 
-def regions_intersect(b1: int, e1: int, b2: int, e2: int) -> bool:
-    assert b1 <= e1 and b2 <= e2
-    return b2 <= e1 and b1 <= e2
+def regions_intersect(beg1: int, end1: int, beg2: int, end2: int) -> bool:
+    assert beg1 <= end1 and beg2 <= end2
+    return beg2 <= end1 and beg1 <= end2

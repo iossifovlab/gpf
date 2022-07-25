@@ -27,10 +27,10 @@ def test_position_score_annotator(
     pipeline = AnnotationPipeline([], grr_fixture)
     pipeline.add_annotator(annotator)
 
-    for sv, e in phastcons100way_variants_expected:
+    for sv, expect in phastcons100way_variants_expected:
         for sa in sv.alt_alleles:
             result = pipeline.annotate(sa.get_annotatable())
-            assert result.get("phastCons100way") == e
+            assert result.get("phastCons100way") == expect
 
 
 def test_position_score_annotator_schema(grr_fixture):
@@ -63,10 +63,10 @@ def test_np_score_annotator(cadd_variants_expected, grr_fixture):
     pipeline = AnnotationPipeline([], grr_fixture)
     pipeline.add_annotator(annotator)
 
-    for sv, e in cadd_variants_expected:
+    for sv, expect in cadd_variants_expected:
         for sa in sv.alt_alleles:
             result = pipeline.annotate(sa.get_annotatable())
-            for score, value in e.items():
+            for score, value in expect.items():
                 assert result.get(score) == pytest.approx(value, abs=1e-2)
 
 
@@ -117,12 +117,12 @@ def test_position_score_annotator_indels(
     pipeline = AnnotationPipeline([], grr_fixture)
     pipeline.add_annotator(annotator)
 
-    for sv, e in phastcons100way_indel_variants_expected:
+    for sv, expect in phastcons100way_indel_variants_expected:
         for sa in sv.alt_alleles:
             result = pipeline.annotate(sa.get_annotatable())
 
             assert result.get("phastCons100way") == \
-                pytest.approx(e, abs=1e-2)
+                pytest.approx(expect, abs=1e-2)
 
 
 def test_position_score_annotator_mean_aggregate(
@@ -140,11 +140,11 @@ def test_position_score_annotator_mean_aggregate(
     pipeline = AnnotationPipeline([], grr_fixture)
     pipeline.add_annotator(annotator)
 
-    for sv, e in position_agg_mean_variants_expected:
+    for sv, expect in position_agg_mean_variants_expected:
         for sa in sv.alt_alleles:
             result = pipeline.annotate(sa.get_annotatable())
 
-            assert result.get("test_score") == pytest.approx(e, 1e-2)
+            assert result.get("test_score") == pytest.approx(expect, 1e-2)
 
 
 def test_np_score_annotator_indels(
@@ -172,9 +172,9 @@ def test_np_score_annotator_indels(
     pipeline = AnnotationPipeline([], grr_fixture)
     pipeline.add_annotator(annotator)
 
-    for sv, e in cadd_indel_variants_expected:
+    for sv, expect in cadd_indel_variants_expected:
         for sa in sv.alt_alleles:
             result = pipeline.annotate(sa.get_annotatable())
             print(sa, sa.get_annotatable())
-            for score, value in e.items():
+            for score, value in expect.items():
                 assert result.get(score) == pytest.approx(value, rel=1e-3)

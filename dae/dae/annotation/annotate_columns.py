@@ -11,6 +11,7 @@ from dae.genomic_resources.cli import VerbosityConfiguration
 
 
 def configure_argument_parser() -> argparse.ArgumentParser:
+    """Configure argument parser."""
     parser = argparse.ArgumentParser(
         description="Annotate columns",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
@@ -35,6 +36,7 @@ def configure_argument_parser() -> argparse.ArgumentParser:
 
 
 def cli(raw_args: list[str] = None) -> None:
+    """Run command line interface for annotate columns."""
     if not raw_args:
         raw_args = sys.argv[1:]
 
@@ -50,15 +52,19 @@ def cli(raw_args: list[str] = None) -> None:
     if args.input == "-":
         in_file = sys.stdin
     elif args.input.endswith(".gz"):
+        # pylint: disable=consider-using-with
         in_file = gzip.open(args.input, "rt")
     else:
+        # pylint: disable=consider-using-with
         in_file = open(args.input, "rt")
 
     if args.output == "-":
         out_file = sys.stdout
     elif args.output.endswith(".gz"):
+        # pylint: disable=consider-using-with
         out_file = gzip.open(args.output, "wt")
     else:
+        # pylint: disable=consider-using-with
         out_file = open(args.output, "wt")
 
     hcs = in_file.readline().strip("\r\n").split(args.input_separator)
@@ -69,13 +75,14 @@ def cli(raw_args: list[str] = None) -> None:
     pipeline.open()
 
     for line in in_file:
-        cs = line.strip("\n\r").split(args.input_separator)
-        record = dict(zip(hcs, cs))
+        columns = line.strip("\n\r").split(args.input_separator)
+        record = dict(zip(hcs, columns))
         annotabale = record_to_annotable.build(record)
         annotation = pipeline.annotate(annotabale)
-        print(*(cs + [str(annotation[attrib])
-                      for attrib in annotation_attributes]),
-              sep=args.output_separator, file=out_file)
+        print(*(columns + [
+            str(annotation[attrib])
+            for attrib in annotation_attributes]),
+            sep=args.output_separator, file=out_file)
 
     if args.input != "-":
         in_file.close()

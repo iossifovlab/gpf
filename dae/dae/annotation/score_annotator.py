@@ -206,7 +206,7 @@ class PositionScoreAnnotator(VariantScoreAnnotatorBase):
             return attributes
 
         length = len(annotatable)
-        if annotatable.type == Annotatable.Type.substitution:
+        if annotatable.type == Annotatable.Type.SUBSTITUTION:
             scores = self._fetch_substitution_scores(annotatable)
         else:
             if length > 500_000:

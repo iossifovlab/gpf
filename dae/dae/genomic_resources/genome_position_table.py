@@ -18,6 +18,8 @@ logger = logging.getLogger(__name__)
 class GenomicPositionTable(abc.ABC):
     """Abstraction over genomic scores table."""
 
+    # FIXME:
+    # pylint: disable=too-many-instance-attributes
     CHROM = "chrom"
     POS_BEGIN = "pos_begin"
     POS_END = "pos_end"

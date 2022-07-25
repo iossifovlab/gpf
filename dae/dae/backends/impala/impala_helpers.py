@@ -15,12 +15,13 @@ logger = logging.getLogger(__name__)
 
 
 class ImpalaHelpers:
+    """Helper methods for working with impala."""
 
     def __init__(self, impala_hosts, impala_port=21050, pool_size=1):
 
         if os.environ.get("DAE_IMPALA_HOST", None) is not None:
             impala_host = os.environ.get("DAE_IMPALA_HOST", None)
-            logger.info(f"impala host overwritten: {impala_host}")
+            logger.info("impala host overwritten: %s", impala_host)
             if impala_host is not None:
                 impala_hosts = [impala_host]
         if impala_hosts is None:
@@ -30,7 +31,7 @@ class ImpalaHelpers:
 
         def create_connection():
             impala_host = next(host_generator)
-            logger.debug(f"creating connection to impala host {impala_host}")
+            logger.debug("creating connection to impala host %s", impala_host)
             connection = dbapi.connect(host=impala_host, port=impala_port)
             connection.host = impala_host
             return connection

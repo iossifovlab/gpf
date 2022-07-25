@@ -1,10 +1,12 @@
-import pytest
+# pylint: disable=W0621,C0114,C0116,W0212,W0613,too-many-lines
 
-from .mocks import TranscriptModelMock
+import pytest
 
 from dae.effect_annotation.annotator import Variant
 from dae.effect_annotation.annotation_request import AnnotationRequestFactory
 from dae.effect_annotation.effect_checkers.intron import IntronicEffectChecker
+
+from .mocks import TranscriptModelMock
 
 
 @pytest.fixture(scope="session")

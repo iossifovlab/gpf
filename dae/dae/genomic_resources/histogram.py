@@ -26,6 +26,8 @@ logger = logging.getLogger(__name__)
 class Histogram:
     """Class to represent a histogram."""
 
+    # pylint: disable=too-many-instance-attributes
+    # FIXME:
     def __init__(
         self, bins, bars, bins_count,
         x_min, x_max, x_scale, y_scale,

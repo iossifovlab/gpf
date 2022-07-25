@@ -95,7 +95,9 @@ class NoPartitionDescriptor(PartitionDescriptor):
         """Generate a glob for accessing parquet files in the partition."""
         return "*variants.parquet"
 
-    def variants_filename_basedir(self, filename):
+    @staticmethod
+    def variants_filename_basedir(filename):
+        """Extract the variants basedir from filename."""
         regexp = re.compile(
             "^(?P<basedir>.+)/(?P<prefix>.+)variants.parquet$")
         match = regexp.match(filename)
@@ -167,16 +169,18 @@ class ParquetPartitionDescriptor(PartitionDescriptor):
 
     @staticmethod
     def from_config(config_path, root_dirname=""):
+        """Create a partition description from the provided config file."""
         fs, _ = url_to_fs(config_path)
         assert fs.exists(config_path), config_path
 
         config = configparser.ConfigParser()
-        with fs.open(config_path, "rt") as f:
-            config.read_file(f, config_path)
+        with fs.open(config_path, "rt") as input_config_file:
+            config.read_file(input_config_file, config_path)
         return ParquetPartitionDescriptor.from_dict(config, root_dirname)
 
     @staticmethod
     def from_dict(config, root_dirname="") -> "ParquetPartitionDescriptor":
+        """Create a paritition description from the provided config."""
         assert config["region_bin"] is not None
 
         chromosomes = list(
@@ -323,6 +327,7 @@ class ParquetPartitionDescriptor(PartitionDescriptor):
         return re.compile(filename, re.VERBOSE)
 
     def variants_filename_basedir(self, filename):
+        """Return the basedir of the variant file."""
         regexp = self._variants_filenames_regexp()
         match = regexp.match(filename)
         if not match:
@@ -363,9 +368,7 @@ class ParquetPartitionDescriptor(PartitionDescriptor):
             config.write(configfile)
 
     def generate_file_access_glob(self):
-        """
-        Generates a glob for accessing every parquet file in the partition
-        """
+        """Return a glob for accessing every parquet file in the partition."""
         glob = "*/"
         if self.family_bin_size > 0:
             glob += "*/"
@@ -386,8 +389,9 @@ class ParquetPartitionDescriptor(PartitionDescriptor):
 
 
 class ContinuousParquetFileWriter:
-    """
-    Class that automatically writes to a given parquet file when supplied
+    """Class that writes to a output parquet file.
+
+    This class automatically writes to a given parquet file when supplied
     enough data. Automatically dumps leftover data when closing into the file
     """
 
@@ -439,8 +443,7 @@ class ContinuousParquetFileWriter:
     def append_allele(
             self, allele, variant_data,
             extra_attributes_data, summary_vectors):
-        """
-        Appends the data for an entire variant to the buffer
+        """Append the data for an entire variant to the buffer.
 
         :param list attributes: List of key-value tuples containing the data
         """
@@ -465,6 +468,8 @@ class ContinuousParquetFileWriter:
 
 
 class VariantsParquetWriter:
+    """Provide functions for storing variants into parquet dataset."""
+
     def __init__(
             self,
             variants_loader,
@@ -492,32 +497,35 @@ class VariantsParquetWriter:
         self.serializer = AlleleParquetSerializer(
             self.variants_loader.annotation_schema, extra_attributes)
 
-    def _setup_reference_allele(self, summary_variant, family):
+    @staticmethod
+    def _setup_reference_allele(summary_variant, family):
         genotype = -1 * np.ones(shape=(2, len(family)), dtype=GENOTYPE_TYPE)
         best_state = calculate_simple_best_state(
             genotype, summary_variant.allele_count
         )
 
-        ra = summary_variant.ref_allele
-        reference_allele = FamilyAllele(ra, family, genotype, best_state)
+        ref_summary_allele = summary_variant.ref_allele
+        reference_allele = FamilyAllele(ref_summary_allele, family, genotype,
+                                        best_state)
         return reference_allele
 
-    def _setup_all_unknown_allele(self, summary_variant, family):
+    @staticmethod
+    def _setup_all_unknown_allele(summary_variant, family):
         genotype = -1 * np.ones(shape=(2, len(family)), dtype=GENOTYPE_TYPE)
         best_state = calculate_simple_best_state(
             genotype, summary_variant.allele_count
         )
 
-        ra = summary_variant.ref_allele
+        ref_allele = summary_variant.ref_allele
         unknown_allele = FamilyAllele(
             SummaryAllele(
-                ra.chromosome,
-                ra.position,
-                ra.reference,
-                ra.reference,
-                summary_index=ra.summary_index,
+                ref_allele.chromosome,
+                ref_allele.position,
+                ref_allele.reference,
+                ref_allele.reference,
+                summary_index=ref_allele.summary_index,
                 allele_index=-1,
-                transmission_type=ra.transmission_type,
+                transmission_type=ref_allele.transmission_type,
                 attributes={},
             ),
             family,
@@ -558,6 +566,7 @@ class VariantsParquetWriter:
         return self.data_writers[filename]
 
     def _write_internal(self):
+        # pylint: disable=too-many-locals
         family_variant_index = 0
         report = False
         for summary_variant_index, (summary_variant, family_variants) in \
@@ -659,7 +668,8 @@ class VariantsParquetWriter:
         return filenames
 
     def write_schema(self):
-        config = dict()
+        """Write the schema to a separate file."""
+        config = {}
 
         schema = self.serializer.schema
         config["variants_schema"] = {}
@@ -685,6 +695,7 @@ class VariantsParquetWriter:
             configfile.write(content)
 
     def write_dataset(self):
+        """Write the variants, parittion description and schema."""
         filenames = self._write_internal()
 
         self.partition_descriptor.write_partition_configuration()
@@ -696,10 +707,12 @@ class VariantsParquetWriter:
 
 
 class ParquetManager:
+    """Provide function for producing variants and pedigree parquet files."""
+
     @staticmethod
     def build_parquet_filenames(
             prefix, study_id=None, bucket_index=0, suffix=None):
-
+        """Build parquet filenames."""
         assert bucket_index >= 0
 
         basename = os.path.basename(os.path.abspath(prefix))
@@ -733,7 +746,6 @@ class ParquetManager:
 
     @staticmethod
     def families_to_parquet(families, pedigree_filename):
-
         dirname = os.path.dirname(pedigree_filename)
         if dirname:
             os.makedirs(dirname, exist_ok=True)
@@ -744,7 +756,7 @@ class ParquetManager:
     def variants_to_parquet(
             variants_loader, partition_descriptor,
             bucket_index=1, rows=100_000, include_reference=False):
-
+        """Read variants from variant_loader and store them in parquet."""
         # assert variants_loader.get_attribute("annotation_schema") is not None
         print(f"variants to parquet ({rows} rows)", file=sys.stderr)
 
@@ -764,6 +776,7 @@ class ParquetManager:
 
 
 def pedigree_parquet_schema():
+    """Return the schema for pedigree parquet file."""
     fields = [
         pa.field("family_id", pa.string()),
         pa.field("person_id", pa.string()),
@@ -782,6 +795,7 @@ def pedigree_parquet_schema():
 
 
 def add_missing_parquet_fields(pps, ped_df):
+    """Add missing parquet fields."""
     missing_fields = set(ped_df.columns.values) - set(pps.names)
 
     if "family_bin" in missing_fields:
@@ -804,6 +818,7 @@ def add_missing_parquet_fields(pps, ped_df):
 
 
 def save_ped_df_to_parquet(ped_df, filename, filesystem=None):
+    """Convert pdf_df from a dataframe to parquet and store it in filename."""
     ped_df = ped_df.copy()
 
     ped_df.role = ped_df.role.apply(lambda r: r.value)

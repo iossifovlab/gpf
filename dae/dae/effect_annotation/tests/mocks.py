@@ -1,11 +1,15 @@
-class ExonMock(object):
+# pylint: disable=W0621,C0114,C0115,C0116,W0212,W0613
+
+class ExonMock:
+    # pylint: disable=too-few-public-methods
     def __init__(self, start, stop, frame):
         self.start = start
         self.stop = stop
         self.frame = frame
 
 
-class TranscriptModelMock(object):
+class TranscriptModelMock:
+    # pylint: disable=too-many-instance-attributes
     def __init__(
         self, strand, cds_start, cds_end, exons, coding=None, is_coding=True
     ):
@@ -23,7 +27,7 @@ class TranscriptModelMock(object):
             self.coding = coding
         self._is_coding = is_coding
 
-    def CDS_regions(self):
+    def CDS_regions(self):  # pylint: disable=invalid-name
         return self.coding
 
     def is_coding(self):
@@ -33,18 +37,22 @@ class TranscriptModelMock(object):
         return self.exons
 
 
-class ReferenceGenomeMock(object):
+class ReferenceGenomeMock:
+    # pylint: disable=no-self-use
     def get_sequence(self, chromosome, pos, pos_last):
         print(("get", chromosome, pos, pos_last))
         return "".join([chr(i) for i in range(pos, pos_last + 1)])
 
 
-class CodeMock(object):
+class CodeMock:
+    # pylint: disable=too-few-public-methods
     startCodons = ["ABC", "DEF"]
     CodonsAaKeys: dict = {}
 
 
-class AnnotatorMock(object):
+class AnnotatorMock:
+    # pylint: disable=too-few-public-methods
+
     def __init__(self, reference_genome):
         self.reference_genome = reference_genome
         self.code = CodeMock()

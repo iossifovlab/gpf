@@ -2,18 +2,21 @@ import enum
 
 
 class Annotatable:
+    """Base class for annotatables used in annotation pipeline."""
 
     class Type(enum.Enum):
-        position = 0
-        region = 1
+        """Defines annotatable types."""
 
-        substitution = 2
-        small_insertion = 3
-        small_deletion = 4
-        complex = 5
+        POSITION = 0
+        REGION = 1
 
-        large_duplication = 6
-        large_deletion = 7
+        SUBSTITUTION = 2
+        SMALL_INSERTION = 3
+        SMALL_DELETION = 4
+        COMPLEX = 5
+
+        LARGE_DUPLICATION = 6
+        LARGE_DELETION = 7
 
     def __init__(self, chrom, pos, pos_end, annotatable_type):
         self._chrom = chrom
@@ -57,18 +60,19 @@ class Annotatable:
 class Position(Annotatable):
 
     def __init__(self, chrom, pos):
-        super(Position, self).__init__(
-            chrom, pos, pos, Annotatable.Type.position)
+        super().__init__(
+            chrom, pos, pos, Annotatable.Type.POSITION)
 
 
-class Region(Position):
+class Region(Annotatable):
 
     def __init__(self, chrom, pos_begin, pos_end):
-        super(Position, self).__init__(
-            chrom, pos_begin, pos_end, Annotatable.Type.region)
+        super().__init__(
+            chrom, pos_begin, pos_end, Annotatable.Type.REGION)
 
 
 class VCFAllele(Annotatable):
+    """Defines small variants annotatable."""
 
     def __init__(self, chrom, pos, ref, alt):
         assert ref is not None
@@ -79,22 +83,22 @@ class VCFAllele(Annotatable):
 
         allele_type = None
         if len(ref) == 1 and len(alt) == 1:
-            allele_type = Annotatable.Type.substitution
+            allele_type = Annotatable.Type.SUBSTITUTION
             pos_end = pos
 
         elif len(ref) == 1 and len(alt) > 1 and ref[0] == alt[0]:
-            allele_type = Annotatable.Type.small_insertion
+            allele_type = Annotatable.Type.SMALL_INSERTION
             pos_end = pos + 1
 
         elif len(ref) > 1 and len(alt) == 1 and ref[0] == alt[0]:
 
-            allele_type = Annotatable.Type.small_deletion
+            allele_type = Annotatable.Type.SMALL_DELETION
             pos_end = pos + len(ref)
         else:
-            allele_type = Annotatable.Type.complex
+            allele_type = Annotatable.Type.COMPLEX
             pos_end = pos + len(ref)
 
-        super(VCFAllele, self).__init__(
+        super().__init__(
             chrom, pos, pos_end, allele_type)
 
     @property
@@ -121,13 +125,14 @@ class VCFAllele(Annotatable):
 
 
 class CNVAllele(Annotatable):
+    """Defines copy number variants annotatable."""
 
     def __init__(self, chrom, pos_begin, pos_end, cnv_type):
         assert cnv_type in {
-            Annotatable.Type.large_deletion,
-            Annotatable.Type.large_duplication}, cnv_type
+            Annotatable.Type.LARGE_DELETION,
+            Annotatable.Type.LARGE_DUPLICATION}, cnv_type
 
-        super(CNVAllele, self).__init__(chrom, pos_begin, pos_end, cnv_type)
+        super().__init__(chrom, pos_begin, pos_end, cnv_type)
 
     @property
     def ref(self):

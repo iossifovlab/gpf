@@ -2,16 +2,21 @@ from __future__ import annotations
 
 import sys
 import argparse
-
+import logging
 from typing import List
+
+from pysam import VariantFile  # pylint: disable=no-name-in-module
 
 from dae.annotation.context import Context
 from dae.annotation.annotatable import VCFAllele
 from dae.genomic_resources.cli import VerbosityConfiguration
-from pysam import VariantFile  # type: ignore
+
+
+logger = logging.getLogger("annotate_vcf")
 
 
 def configure_argument_parser() -> argparse.ArgumentParser:
+    """Construct and configure argument parser."""
     parser = argparse.ArgumentParser(
         description="Annotate columns",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
@@ -31,6 +36,9 @@ def configure_argument_parser() -> argparse.ArgumentParser:
 
 
 def cli(raw_args: list[str] = None) -> None:
+    """Run command line interface for annotate_vcf tool."""
+    # FIXME:
+    # pylint: disable=too-many-locals
     if not raw_args:
         raw_args = sys.argv[1:]
 
@@ -47,6 +55,7 @@ def cli(raw_args: list[str] = None) -> None:
     if args.output == "-":
         out_file = sys.stdout
     else:
+        # pylint: disable=consider-using-with
         out_file = open(args.output, "wt")
 
     # handling the header
@@ -55,27 +64,31 @@ def cli(raw_args: list[str] = None) -> None:
         "pipeline_annotation_tool", "GPF variant annotation."
     )
     header.add_meta(
-        "pipeline_annotation_tool", '"{}"'.format(" ".join(sys.argv))
-    )
-    for aa in annotation_attributes:
-        header.info.add(aa, "A", "String",
-                        pipeline.annotation_schema[aa].description)
+        "pipeline_annotation_tool", f"{' '.join(sys.argv)}")
+    for attribute in annotation_attributes:
+        header.info.add(attribute, "A", "String",
+                        pipeline.annotation_schema[attribute].description)
 
     print(str(header), file=out_file, end="")
 
     # handling the variants
-    for var in in_file:
+    for vcf_var in in_file:
         buffers: List[List] = [list([]) for _ in annotation_attributes]
 
-        for alt in var.alts:
-            annotabale = VCFAllele(var.chrom, var.pos, var.ref, alt)
-            annotation = pipeline.annotate(annotabale)
-            for buff, aa in zip(buffers, annotation_attributes):
-                buff.append(str(annotation[aa]))
+        if vcf_var.alts is None:
+            logger.info("vcf variant without alternatives: %s", vcf_var)
+            continue
 
-        for aa, buff in zip(annotation_attributes, buffers):
-            var.info[aa] = ",".join(buff)
-        print(str(var), file=out_file, end="")
+        for alt in vcf_var.alts:
+            annotabale = VCFAllele(
+                vcf_var.chrom, vcf_var.pos, vcf_var.ref, alt)
+            annotation = pipeline.annotate(annotabale)
+            for buff, attribute in zip(buffers, annotation_attributes):
+                buff.append(str(annotation[attribute]))
+
+        for attribute, buff in zip(annotation_attributes, buffers):
+            vcf_var.info[attribute] = ",".join(buff)
+        print(str(vcf_var), file=out_file, end="")
 
     in_file.close()
 

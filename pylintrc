@@ -381,7 +381,9 @@ good-names=i,
            sv,
            fa,
            sa,
-           id
+           fs
+           vs,
+           aa
 
 # Good variable names regexes, separated by a comma. If names match any regex,
 # they will always be accepted
@@ -535,7 +537,7 @@ spelling-store-unknown-words=no
 max-args=11
 
 # Maximum number of attributes for a class (see R0902).
-max-attributes=7
+max-attributes=12
 
 # Maximum number of boolean expressions in an if statement (see R0916).
 max-bool-expr=5
@@ -544,7 +546,7 @@ max-bool-expr=5
 max-branches=12
 
 # Maximum number of locals for function / method body.
-max-locals=15
+max-locals=20
 
 # Maximum number of parents for a class (see R0901).
 max-parents=7

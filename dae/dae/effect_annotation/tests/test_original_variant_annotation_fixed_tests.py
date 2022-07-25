@@ -1,4 +1,4 @@
-# pylint: disable=W0621,C0114,C0116,W0212,W0613
+# pylint: disable=W0621,C0114,C0116,W0212,W0613,too-many-lines
 
 import pytest
 from dae.effect_annotation.annotator import EffectAnnotator
@@ -57,12 +57,14 @@ def test_chr12_130827138_del_var(genomic_sequence_2013, gene_models_2013):
 
 
 def test_chr12_64841908_del_var(genomic_sequence_2013, gene_models_2013):
-    [effect] = EffectAnnotator.annotate_variant(
+    effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
         loc="12:64841908",
         var="del(2)",
     )
+    assert len(effects) == 1
+    effect = effects[0]
 
     assert effect.gene == "XPOT"
     assert effect.transcript_id == "NM_007235_1"
@@ -74,6 +76,7 @@ def test_chr12_64841908_del_var(genomic_sequence_2013, gene_models_2013):
 
 
 def test_chr1_95712170_del_var(genomic_sequence_2013, gene_models_2013):
+    # pylint: disable=too-many-statements
     effects = EffectAnnotator.annotate_variant(
         gene_models_2013, genomic_sequence_2013, loc="1:95712170", var="del(3)"
     )
@@ -139,12 +142,14 @@ def test_chr1_95712170_del_var(genomic_sequence_2013, gene_models_2013):
 
 
 def test_chr19_35249941_ins_var(genomic_sequence_2013, gene_models_2013):
-    [effect] = EffectAnnotator.annotate_variant(
+    effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
         loc="19:35249941",
         var="ins(AA)",
     )
+    assert len(effects) == 1
+    effect = effects[0]
 
     assert effect.gene == "ZNF599"
     assert effect.transcript_id == "NM_001007248_1"
@@ -156,12 +161,14 @@ def test_chr19_35249941_ins_var(genomic_sequence_2013, gene_models_2013):
 
 
 def test_chr3_195966608_del_var(genomic_sequence_2013, gene_models_2013):
-    [effect] = EffectAnnotator.annotate_variant(
+    effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
         loc="3:195966608",
         var="del(4)",
     )
+    assert len(effects) == 1
+    effect = effects[0]
 
     assert effect.gene == "PCYT1A"
     assert effect.transcript_id == "NM_005017_1"
@@ -179,6 +186,7 @@ def test_chr3_195966608_del_var(genomic_sequence_2013, gene_models_2013):
 
 
 def test_chr1_156786466_ins_var(genomic_sequence_2013, gene_models_2013):
+    # pylint: disable=too-many-statements
     effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
@@ -301,12 +309,14 @@ def test_chr1_21050866_del_var(genomic_sequence_2013, gene_models_2013):
 
 
 def test_chr2_111753543_del_var(genomic_sequence_2013, gene_models_2013):
-    [effect] = EffectAnnotator.annotate_variant(
+    effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
         loc="2:111753543",
         var="del(54)",
     )
+    assert len(effects) == 1
+    effect = effects[0]
 
     assert effect.gene == "ACOXL"
     assert effect.transcript_id == "NM_001142807_1"
@@ -324,9 +334,11 @@ def test_chr2_111753543_del_var(genomic_sequence_2013, gene_models_2013):
 
 
 def test_chr3_97611838_del_var(genomic_sequence_2013, gene_models_2013):
-    [effect] = EffectAnnotator.annotate_variant(
+    effects = EffectAnnotator.annotate_variant(
         gene_models_2013, genomic_sequence_2013, loc="3:97611838", var="del(4)"
     )
+    assert len(effects) == 1
+    effect = effects[0]
 
     assert effect.gene == "CRYBG3"
     assert effect.transcript_id == "NM_153605_1"
@@ -486,6 +498,7 @@ def test_chr17_4086688_del_var(genomic_sequence_2013, gene_models_2013):
 
 
 def test_chr21_11049623_sub_var(genomic_sequence_2013, gene_models_2013):
+    # pylint: disable=too-many-statements
     effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
@@ -599,6 +612,7 @@ def test_chr1_71530819_del_var(genomic_sequence_2013, gene_models_2013):
 
 
 def test_chr1_43917074_del_var(genomic_sequence_2013, gene_models_2013):
+    # pylint: disable=too-many-statements
     effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
@@ -662,6 +676,7 @@ def test_chr1_43917074_del_var(genomic_sequence_2013, gene_models_2013):
 
 
 def test_chr1_1653031_del_var(genomic_sequence_2013, gene_models_2013):
+    # pylint: disable=too-many-statements
     effects = EffectAnnotator.annotate_variant(
         gene_models_2013, genomic_sequence_2013, loc="1:1653031", var="del(7)"
     )
@@ -892,12 +907,14 @@ def test_chr1_29447418_ins_var(genomic_sequence_2013, gene_models_2013):
 
 
 def test_chr6_99817476_del_var(genomic_sequence_2013, gene_models_2013):
-    [effect] = EffectAnnotator.annotate_variant(
+    effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
         loc="6:99817476",
         var="del(22)",
     )
+    assert len(effects) == 1
+    effect = effects[0]
 
     assert effect.gene == "COQ3"
     assert effect.transcript_id == "NM_017421_1"
@@ -911,9 +928,11 @@ def test_chr6_99817476_del_var(genomic_sequence_2013, gene_models_2013):
 def test_last_codon_ins_frameshift_var(
     genomic_sequence_2013, gene_models_2013
 ):
-    [effect] = EffectAnnotator.annotate_variant(
+    effects = EffectAnnotator.annotate_variant(
         gene_models_2013, genomic_sequence_2013, loc="7:24727231", var="ins(A)"
     )
+    assert len(effects) == 1
+    effect = effects[0]
 
     assert effect.gene == "MPP6"
     assert effect.transcript_id == "NM_016447_1"
@@ -959,9 +978,11 @@ def test_chr10_104629323_del_var(genomic_sequence_2013, gene_models_2013):
 
 
 def test_chr1_6694147_del_var(genomic_sequence_2013, gene_models_2013):
-    [effect] = EffectAnnotator.annotate_variant(
+    effects = EffectAnnotator.annotate_variant(
         gene_models_2013, genomic_sequence_2013, loc="1:6694147", var="del(3)"
     )
+    assert len(effects) == 1
+    effect = effects[0]
 
     assert effect.gene == "THAP3"
     assert effect.transcript_id == "NM_138350_1"
@@ -973,9 +994,11 @@ def test_chr1_6694147_del_var(genomic_sequence_2013, gene_models_2013):
 
 
 def test_chr1_23836374_del_var(genomic_sequence_2013, gene_models_2013):
-    [effect] = EffectAnnotator.annotate_variant(
+    effects = EffectAnnotator.annotate_variant(
         gene_models_2013, genomic_sequence_2013, loc="1:23836374", var="del(4)"
     )
+    assert len(effects) == 1
+    effect = effects[0]
 
     assert effect.gene == "E2F2"
     assert effect.transcript_id == "NM_004091_1"
@@ -987,9 +1010,11 @@ def test_chr1_23836374_del_var(genomic_sequence_2013, gene_models_2013):
 
 
 def test_first_codon_ins_var(genomic_sequence_2013, gene_models_2013):
-    [effect] = EffectAnnotator.annotate_variant(
+    effects = EffectAnnotator.annotate_variant(
         gene_models_2013, genomic_sequence_2013, loc="1:3527831", var="ins(A)"
     )
+    assert len(effects) == 1
+    effect = effects[0]
 
     assert effect.gene == "MEGF6"
     assert effect.transcript_id == "NM_001409_1"
@@ -1001,12 +1026,14 @@ def test_first_codon_ins_var(genomic_sequence_2013, gene_models_2013):
 
 
 def test_chr4_100544005_ins_var(genomic_sequence_2013, gene_models_2013):
-    [effect] = EffectAnnotator.annotate_variant(
+    effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
         loc="4:100544005",
         var="ins(GAAA)",
     )
+    assert len(effects) == 1
+    effect = effects[0]
 
     assert effect.gene == "MTTP"
     assert effect.transcript_id == "NM_000253_1"
@@ -1052,12 +1079,14 @@ def test_chr6_109954111_del_var(genomic_sequence_2013, gene_models_2013):
 
 
 def test_chr16_3070391_del_var(genomic_sequence_2013, gene_models_2013):
-    [effect] = EffectAnnotator.annotate_variant(
+    effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
         loc="16:3070391",
         var="del(13)",
     )
+    assert len(effects) == 1
+    effect = effects[0]
 
     assert effect.gene == "TNFRSF12A"
     assert effect.transcript_id == "NM_016639_1"
@@ -1197,9 +1226,11 @@ def test_chr20_44518889_ins_var(genomic_sequence_2013, gene_models_2013):
 
 def test_chr9_139839774_ins_var(genomic_sequence_2013, gene_models_2013):
     var = "ins(TGCTGCCGCCACCA)"
-    [effect] = EffectAnnotator.annotate_variant(
+    effects = EffectAnnotator.annotate_variant(
         gene_models_2013, genomic_sequence_2013, loc="9:139839774", var=var
     )
+    assert len(effects) == 1
+    effect = effects[0]
 
     assert effect.gene == "C8G"
     assert effect.transcript_id == "NM_000606_1"
@@ -1245,9 +1276,11 @@ def test_chr1_17313765_ins_var(genomic_sequence_2013, gene_models_2013):
 
 def test_chr13_45911524_ins_var(genomic_sequence_2013, gene_models_2013):
     var = "ins(ACATTTTTCCATTTCTAAACCAT)"
-    [effect] = EffectAnnotator.annotate_variant(
+    effects = EffectAnnotator.annotate_variant(
         gene_models_2013, genomic_sequence_2013, loc="13:45911524", var=var
     )
+    assert len(effects) == 1
+    effect = effects[0]
 
     assert effect.gene == "TPT1"
     assert effect.transcript_id == "NM_003295_1"
@@ -1319,12 +1352,14 @@ def test_chr1_45446840_ins_var(genomic_sequence_2013, gene_models_2013):
 
 
 def test_chr1_31845860_ins_var(genomic_sequence_2013, gene_models_2013):
-    [effect] = EffectAnnotator.annotate_variant(
+    effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
         loc="1:31845860",
         var="ins(ATAG)",
     )
+    assert len(effects) == 1
+    effect = effects[0]
 
     assert effect.gene == "FABP3"
     assert effect.transcript_id == "NM_004102_1"
@@ -1361,12 +1396,14 @@ def test_chr1_47775990_del_var(genomic_sequence_2013, gene_models_2013):
 
 
 def test_chr1_120387156_sub_var(genomic_sequence_2013, gene_models_2013):
-    [effect] = EffectAnnotator.annotate_variant(
+    effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
         loc="1:120387156",
         var="sub(C->T)",
     )
+    assert len(effects) == 1
+    effect = effects[0]
 
     assert effect.gene == "NBPF7"
     assert effect.transcript_id == "NM_001047980_1"
@@ -1411,12 +1448,14 @@ def test_chr11_128868319_ins_var(genomic_sequence_2013, gene_models_2013):
 
 
 def test_chr1_38061419_del_var(genomic_sequence_2013, gene_models_2013):
-    [effect] = EffectAnnotator.annotate_variant(
+    effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
         loc="1:38061419",
         var="del(17)",
     )
+    assert len(effects) == 1
+    effect = effects[0]
 
     assert effect.gene == "GNL2"
     assert effect.transcript_id == "NM_013285_1"
@@ -1430,9 +1469,11 @@ def test_chr1_38061419_del_var(genomic_sequence_2013, gene_models_2013):
 def test_first_codon_ins_integenic_var(
     genomic_sequence_2013, gene_models_2013
 ):
-    [effect] = EffectAnnotator.annotate_variant(
+    effects = EffectAnnotator.annotate_variant(
         gene_models_2013, genomic_sequence_2013, loc="1:3407092", var="ins(A)"
     )
+    assert len(effects) == 1
+    effect = effects[0]
 
     assert effect.gene == "MEGF6"
     assert effect.transcript_id == "NM_001409_1"
@@ -1444,9 +1485,11 @@ def test_first_codon_ins_integenic_var(
 
 
 def test_chr1_92546129_ins_var(genomic_sequence_2013, gene_models_2013):
-    [effect] = EffectAnnotator.annotate_variant(
+    effects = EffectAnnotator.annotate_variant(
         gene_models_2013, genomic_sequence_2013, loc="1:92546129", var="ins(A)"
     )
+    assert len(effects) == 1
+    effect = effects[0]
 
     assert effect.gene == "BTBD8"
     assert effect.transcript_id == "NM_183242_1"
@@ -1486,12 +1529,14 @@ def test_chr1_11740658_ins_var(genomic_sequence_2013, gene_models_2013):
 
 
 def test_chr6_161557574_ins_var(genomic_sequence_2013, gene_models_2013):
-    [effect] = EffectAnnotator.annotate_variant(
+    effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
         loc="6:161557574",
         var="ins(AGTC)",
     )
+    assert len(effects) == 1
+    effect = effects[0]
 
     assert effect.gene == "AGPAT4"
     assert effect.transcript_id == "NM_020133_1"
@@ -1503,12 +1548,14 @@ def test_chr6_161557574_ins_var(genomic_sequence_2013, gene_models_2013):
 
 
 def test_chr11_123847404_ins_var(genomic_sequence_2013, gene_models_2013):
-    [effect] = EffectAnnotator.annotate_variant(
+    effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
         loc="11:123847404",
         var="ins(T)",
     )
+    assert len(effects) == 1
+    effect = effects[0]
 
     assert effect.gene is None
     assert effect.transcript_id is None
@@ -1566,9 +1613,11 @@ def test_chr1_26158517_ins_var(genomic_sequence_2013, gene_models_2013):
 def test_last_codon_ins_intergenic_var(
     genomic_sequence_2013, gene_models_2013
 ):
-    [effect] = EffectAnnotator.annotate_variant(
+    effects = EffectAnnotator.annotate_variant(
         gene_models_2013, genomic_sequence_2013, loc="7:24727232", var="ins(A)"
     )
+    assert len(effects) == 1
+    effect = effects[0]
 
     assert effect.gene == "MPP6"
     assert effect.transcript_id == "NM_016447_1"
@@ -1581,12 +1630,14 @@ def test_last_codon_ins_intergenic_var(
 
 
 def test_chr7_149461804_del_var(genomic_sequence_2013, gene_models_2013):
-    [effect] = EffectAnnotator.annotate_variant(
+    effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
         loc="7:149461804",
         var="del(1)",
     )
+    assert len(effects) == 1
+    effect = effects[0]
 
     assert effect.gene == "ZNF467"
     assert effect.transcript_id == "NM_207336_1"
@@ -1665,12 +1716,14 @@ def test_chr1_26142208_ins_var(genomic_sequence_2013, gene_models_2013):
 
 
 def test_chr12_125396262_ins_var(genomic_sequence_2013, gene_models_2013):
-    [effect] = EffectAnnotator.annotate_variant(
+    effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
         loc="12:125396262",
         var="ins(T)",
     )
+    assert len(effects) == 1
+    effect = effects[0]
 
     assert effect.gene == "UBC"
     assert effect.transcript_id == "NM_021009_1"
@@ -1683,9 +1736,11 @@ def test_chr12_125396262_ins_var(genomic_sequence_2013, gene_models_2013):
 
 
 def test_chr1_16890438_del_var(genomic_sequence_2013, gene_models_2013):
-    [effect] = EffectAnnotator.annotate_variant(
+    effects = EffectAnnotator.annotate_variant(
         gene_models_2013, genomic_sequence_2013, loc="1:16890438", var="del(1)"
     )
+    assert len(effects) == 1
+    effect = effects[0]
 
     assert effect.gene == "NBPF1"
     assert effect.transcript_id == "NM_017940_1"
@@ -1725,12 +1780,14 @@ def test_chr1_20440608_ins_var(genomic_sequence_2013, gene_models_2013):
 
 
 def test_chr11_62931298_ins_var(genomic_sequence_2013, gene_models_2013):
-    [effect] = EffectAnnotator.annotate_variant(
+    effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
         loc="11:62931298",
         var="ins(C)",
     )
+    assert len(effects) == 1
+    effect = effects[0]
 
     assert effect.gene is None
     assert effect.transcript_id is None
@@ -1742,12 +1799,14 @@ def test_chr11_62931298_ins_var(genomic_sequence_2013, gene_models_2013):
 
 
 def test_chr1_20490475_del_var(genomic_sequence_2013, gene_models_2013):
-    [effect] = EffectAnnotator.annotate_variant(
+    effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
         genomic_sequence_2013,
         loc="1:20490475",
         var="del(18)",
     )
+    assert len(effects) == 1
+    effect = effects[0]
 
     assert effect.gene == "PLA2G2C"
     assert effect.transcript_id == "NM_001105572_1"

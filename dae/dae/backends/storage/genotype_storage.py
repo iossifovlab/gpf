@@ -1,4 +1,6 @@
 class GenotypeStorage:
+    """Base class for genotype storages."""
+
     def __init__(self, storage_config, section_id):
         self.storage_config = storage_config
         self.id = section_id
