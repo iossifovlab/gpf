@@ -6,6 +6,7 @@ from dae_conftests.dae_conftests import \
     get_global_dae_fixtures_dir  # type: ignore
 
 
+@pytest.fixture(scope="session")
 def fixtures_dir(global_dae_fixtures_dir):
     return global_dae_fixtures_dir
 
@@ -19,8 +20,8 @@ def genotype_data_groups_dir():
 
 
 @pytest.fixture(scope="session")
-def local_gpf_instance(gpf_instance):
-    return gpf_instance(work_dir=fixtures_dir())
+def local_gpf_instance(gpf_instance, fixtures_dir):
+    return gpf_instance(work_dir=fixtures_dir)
 
 
 @pytest.fixture(scope="session")
