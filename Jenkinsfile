@@ -42,7 +42,9 @@ pipeline {
     always {
       script {
         try {
+          resultBeforeTests = currentBuild.currentResult
           junit 'test-results/wdae-junit.xml, test-results/dae-junit.xml'
+          sh "test ${resultBeforeTests} == ${currentBuild.currentResult}"
 
           cobertura coberturaReportFile: 'test-results/dae-coverage.xml', enableNewApi: true
           cobertura coberturaReportFile: 'test-results/wdae-coverage.xml', enableNewApi: true
