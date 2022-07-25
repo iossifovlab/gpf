@@ -6,8 +6,8 @@ from dae_conftests.dae_conftests import \
     get_global_dae_fixtures_dir  # type: ignore
 
 
-def fixtures_dir():
-    return get_global_dae_fixtures_dir()
+def fixtures_dir(global_dae_fixtures_dir):
+    return global_dae_fixtures_dir
 
 
 def studies_dir():
