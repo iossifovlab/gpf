@@ -5,25 +5,27 @@ from dae.genomic_resources.clinvar import ClinVarVcf
 
 
 @pytest.fixture(scope="function")
-def clinvar_vcf(grr_fixture):
-    res = ClinVarVcf(grr_fixture.get_resource("clinvar"))
-    res.open()
-    return res
+def clinvar_fixtures(grr_fixture, grr_http):
+    local = ClinVarVcf(grr_fixture.get_resource("clinvar"))
+    local.open()
+    http = ClinVarVcf(grr_http.get_resource("clinvar"))
+    http.open()
+    return {
+        "local": local,
+        "http": http
+    }
 
 
-@pytest.fixture(scope="function")
-def clinvar_http(grr_http):
-    res = ClinVarVcf(grr_http.get_resource("clinvar"))
-    res.open()
-    return res
-
-
-def test_clinvarvcf_init(clinvar_vcf):
+@pytest.mark.parametrize("resource_type", ["local", "http"])
+def test_clinvarvcf_init(clinvar_fixtures, resource_type):
     # pylint: disable=no-member
+    clinvar_vcf = clinvar_fixtures[resource_type]
     assert isinstance(clinvar_vcf.vcf, pysam.VariantFile)
 
 
-def test_clinvar_vcf_get_variant_info(clinvar_vcf):
+@pytest.mark.parametrize("resource_type", ["local", "http"])
+def test_clinvar_vcf_get_variant_info(clinvar_fixtures, resource_type):
+    clinvar_vcf = clinvar_fixtures[resource_type]
     info = clinvar_vcf.get_variant_info("1", 925952)
     assert len(info) == 2
     assert info == {
@@ -32,7 +34,9 @@ def test_clinvar_vcf_get_variant_info(clinvar_vcf):
     }
 
 
-def test_clinvar_vcf_get_header_info(clinvar_vcf):
+@pytest.mark.parametrize("resource_type", ["local", "http"])
+def test_clinvar_vcf_get_header_info(clinvar_fixtures, resource_type):
+    clinvar_vcf = clinvar_fixtures[resource_type]
     header = clinvar_vcf.get_header_info()
     assert len(header) == 2
     print(header)
@@ -57,10 +61,7 @@ def test_clinvar_vcf_get_header_info(clinvar_vcf):
     }
 
 
-def test_close(clinvar_vcf):
+@pytest.mark.parametrize("resource_type", ["local", "http"])
+def test_close(clinvar_fixtures, resource_type):
+    clinvar_vcf = clinvar_fixtures[resource_type]
     clinvar_vcf.close()
-    assert not clinvar_vcf.is_open()
-
-
-def test_clinvar_resource_http(clinvar_http):
-    print("ready")
