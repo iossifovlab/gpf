@@ -1,18 +1,11 @@
-# pylint: disable=redefined-outer-name,C0114,C0115,C0116,protected-access
+# pylint: disable=W0621,C0114,C0116,C0415,W0212,W0613
 
 import logging
 import os
 import glob
 
-from threading import Thread, Condition
-from functools import partial
-
-from http.server import ThreadingHTTPServer
-
 import pytest  # type: ignore
 import pysam
-
-from RangeHTTPServer import RangeRequestHandler  # type: ignore
 
 from dae.genomic_resources.repository import \
     GR_CONF_FILE_NAME, \
@@ -20,108 +13,27 @@ from dae.genomic_resources.repository import \
 from dae.genomic_resources.fsspec_protocol import \
     build_fsspec_protocol
 from dae.genomic_resources.testing import \
-    build_testing_protocol, tabix_to_resource
+    build_testing_protocol, \
+    range_http_process_server_generator, \
+    s3_moto_server, \
+    tabix_to_resource
 from dae.genomic_resources.test_tools import convert_to_tab_separated
-
+from dae.genomic_resources import build_genomic_resource_repository
 
 logger = logging.getLogger(__name__)
 
 
-class HTTPRepositoryServer(Thread):
-
-    def __init__(self, http_port, directory):
-        super().__init__()
-
-        self.http_port = http_port
-        self.directory = directory
-        self.httpd = None
-        self.server_address = None
-        self.ready = Condition()
-
-    def run(self):
-        handler_class = partial(
-            RangeRequestHandler, directory=self.directory)
-
-        self.server_address = ("localhost", self.http_port)
-        handler_class.protocol_version = "HTTP/1.0"
-
-        with ThreadingHTTPServer(self.server_address, handler_class) as httpd:
-            saddr = httpd.socket.getsockname()
-            logger.info(
-                "Serving HTTP on (http://%s:%s/) ...", saddr[0], saddr[1])
-            self.httpd = httpd
-            with self.ready:
-                self.ready.notify()
-
-            self.httpd.serve_forever()
-
-
 @pytest.fixture
-def http_server(request):
+def grr_http(fixtures_http_server):  # pylint: disable=unused-argument
+    # resources_http_server):
+    url = fixtures_http_server
+    repositories = {
+        "id": "test_grr",
+        "type": "url",
+        "url": url,
+    }
 
-    def builder(dirname):
-        http_port = 16510
-
-        http_server = HTTPRepositoryServer(http_port, dirname)
-        http_server.start()
-        with http_server.ready:
-            http_server.ready.wait()
-
-        logger.info(
-            "HTTP repository test server started: %s",
-            http_server.server_address)
-
-        def fin():
-            http_server.httpd.socket.close()
-            http_server.httpd.shutdown()
-            http_server.join()
-
-        request.addfinalizer(fin)
-
-        return http_server
-
-    return builder
-
-
-# @contextlib.contextmanager
-# def serve():
-#     port = 16510
-#     server_address = ("", port)
-#     httpd = HTTPServer(server_address, HTTPTestHandler)
-#     th = threading.Thread(target=httpd.serve_forever)
-#     th.daemon = True
-#     th.start()
-#     try:
-#         yield "http://localhost:%i" % port
-#     finally:
-#         httpd.socket.close()
-#         httpd.shutdown()
-#         th.join()
-
-
-# @pytest.fixture(scope="module")
-# def server():
-#     with serve() as s:
-#         yield s
-
-
-@pytest.fixture(scope="module")
-def resources_http_server(fixture_dirname):
-    http_port = 16500
-    directory = fixture_dirname("genomic_resources")
-
-    http_server = HTTPRepositoryServer(http_port, directory)
-    http_server.start()
-    with http_server.ready:
-        http_server.ready.wait()
-
-    logger.info(
-        "HTTP repository test server started: %s", http_server.server_address)
-
-    yield http_server
-
-    http_server.httpd.shutdown()
-    http_server.join()
+    return build_genomic_resource_repository(repositories)
 
 
 @pytest.fixture
@@ -162,19 +74,26 @@ def embedded_proto(tmp_path):
     return builder
 
 
+@pytest.fixture(scope="session")
+def s3_moto_fixture():
+    with s3_moto_server() as s3_url:
+
+        from botocore.session import Session  # type: ignore
+        session = Session()
+        client = session.create_client("s3", endpoint_url=s3_url)
+        client.create_bucket(Bucket="test-bucket", ACL="public-read")
+
+        yield s3_url
+
+
 @pytest.fixture
 def proto_builder(
-        request, tmp_path_factory,
-        s3_base,  # pylint: disable=unused-argument
-        http_server):
-
+        request, tmp_path_factory, s3_moto_fixture):
+    # flake8: noqa
     def builder(src_proto, scheme="file", proto_id="testing"):
 
-        def fin():
-            for fname in glob.glob("*.tbi"):
-                os.remove(fname)
-
-        request.addfinalizer(fin)
+        http_server_gen = None
+        proto = None
 
         if scheme == "memory":
             tmp_dir = tmp_path_factory.mktemp(
@@ -182,7 +101,6 @@ def proto_builder(
             proto = build_fsspec_protocol(proto_id, f"memory://{tmp_dir}")
             for res in src_proto.get_all_resources():
                 proto.copy_resource(res)
-            return proto
 
         if scheme == "file":
 
@@ -191,16 +109,9 @@ def proto_builder(
             proto = build_fsspec_protocol(proto_id, f"file://{tmp_dir}")
             for res in src_proto.get_all_resources():
                 proto.copy_resource(res)
-            return proto
 
         if scheme == "s3":
-            # pylint: disable=import-outside-toplevel
-            from botocore.session import Session  # type: ignore
-            endpoint_url = "http://127.0.0.1:5555/"
-            # NB: we use the sync botocore client for setup
-            session = Session()
-            client = session.create_client("s3", endpoint_url=endpoint_url)
-            client.create_bucket(Bucket="test-bucket", ACL="public-read")
+            endpoint_url = s3_moto_fixture
 
             tmp_dir = tmp_path_factory.mktemp(
                 basename="s3", numbered=True)
@@ -213,11 +124,13 @@ def proto_builder(
                 proto.copy_resource(res)
 
             proto.filesystem.invalidate_cache()
-            return proto
 
         if scheme == "http":
             tmp_dir = tmp_path_factory.mktemp(
                 basename="http", numbered=True)
+
+            http_server_gen = range_http_process_server_generator(str(tmp_dir))
+            url = next(http_server_gen)
 
             proto = build_fsspec_protocol(
                 f"{proto_id}_dir", f"file://{tmp_dir}")
@@ -225,13 +138,24 @@ def proto_builder(
                 proto.copy_resource(res)
             proto.build_content_file()
 
-            http_server(str(tmp_dir))
-            proto = build_fsspec_protocol(proto_id, "http://127.0.0.1:16510")
+            proto = build_fsspec_protocol(proto_id, url)
 
             proto.filesystem.invalidate_cache()
-            return proto
 
-        raise ValueError(f"unsupported scheme: {scheme}")
+        if proto is None:
+            raise ValueError(f"unsupported scheme: {scheme}")
+
+        def fin():
+            for fname in glob.glob("*.tbi"):
+                os.remove(fname)
+            if http_server_gen is not None:
+                try:
+                    next(http_server_gen)
+                except StopIteration:
+                    pass
+
+        request.addfinalizer(fin)
+        return proto
 
     return builder
 

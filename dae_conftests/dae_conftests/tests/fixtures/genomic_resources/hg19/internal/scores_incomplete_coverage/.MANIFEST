@@ -1,20 +1,15 @@
 - md5: 0861ec8c51f6d1909f42ef459e18fe4e
   name: MANIFEST
   size: 393
-  time: '2021-12-06T17:38:48'
 - md5: c8c3134770dc4131022e55674b60442e
   name: genomic_resource.yaml
   size: 438
-  time: '2021-12-06T18:19:39'
 - md5: 28ee47e15cc15c1b8881cd453cdefc7d
   name: scores_incomplete_coverage.tsv.gz
   size: 176
-  time: '2021-12-06T17:38:48'
 - md5: 0430149f831b429fbf64235468576191
   name: scores_incomplete_coverage.tsv.gz.conf
   size: 292
-  time: '2021-12-06T17:38:48'
 - md5: f77946424457cdc1e16ae23ba2062b1d
   name: scores_incomplete_coverage.tsv.gz.tbi
   size: 987
-  time: '2021-12-06T17:38:48'

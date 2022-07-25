@@ -160,30 +160,45 @@ class FsspecReadOnlyProtocol(ReadOnlyRepositoryProtocol):
             filepath, mode=mode,
             compression=compression)  # pylint: disable=unspecified-encoding
 
-    def open_tabix_file(self, resource, filename,
-                        index_filename=None):
-
-        if self.scheme not in {"file", "s3", "http", "https"}:
-            raise IOError(
-                f"tabix files are not supported on schema {self.scheme}")
-
-        def process_tabix_url(url):
+    def _get_file_url(self, resource, filename):
+        def process_file_url(url):
             if self.scheme == "file":
                 return urlparse(url).path
             if self.scheme == "s3":
                 return self.filesystem.sign(url)
             return url
 
-        file_url = process_tabix_url(
-            self.get_resource_file_url(resource, filename))
+        return process_file_url(self.get_resource_file_url(resource, filename))
+
+    def open_tabix_file(self, resource, filename, index_filename=None):
+
+        if self.scheme not in {"file", "s3", "http", "https"}:
+            raise IOError(
+                f"tabix files are not supported on schema {self.scheme}")
+
+        file_url = self._get_file_url(resource, filename)
 
         if index_filename is None:
             index_filename = f"{filename}.tbi"
-        index_url = process_tabix_url(
-            self.get_resource_file_url(resource, index_filename))
+        index_url = self._get_file_url(resource, index_filename)
 
         return pysam.TabixFile(  # pylint: disable=no-member
             file_url, index=index_url)
+
+    def open_vcf_file(self, resource, filename, index_filename=None):
+
+        if self.scheme not in {"file", "s3", "http", "https"}:
+            raise IOError(
+                f"vcf files are not supported on schema {self.scheme}")
+
+        file_url = self._get_file_url(resource, filename)
+
+        if index_filename is None:
+            index_filename = f"{filename}.tbi"
+        index_url = self._get_file_url(resource, index_filename)
+
+        return pysam.VariantFile(  # pylint: disable=no-member
+            file_url, index_filename=index_url)
 
 
 class FsspecReadWriteProtocol(
@@ -257,9 +272,6 @@ class FsspecReadWriteProtocol(
             modification = modification.replace(tzinfo=datetime.timezone.utc)
             return cast(float, round(modification.timestamp(), 2))
         except NotImplementedError:
-            logger.error(
-                "can't get timestamp for %s; filesystem: %s",
-                filepath, self.filesystem)
             info = self.filesystem.info(filepath)
             modification = info.get("created")
             return cast(float, round(modification, 2))

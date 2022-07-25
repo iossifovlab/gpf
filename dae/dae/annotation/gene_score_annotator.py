@@ -13,6 +13,23 @@ from .annotatable import Annotatable
 logger = logging.getLogger(__name__)
 
 
+def build_gene_score_annotator(pipeline, config):
+    """Construct a gene score annotator."""
+    config = GeneScoreAnnotator.validate_config(config)
+
+    assert config["annotator_type"] == "gene_score_annotator"
+
+    gene_score_resource = pipeline.repository.get_resource(
+        config["resource_id"]
+    )
+    if gene_score_resource is None:
+        raise ValueError(
+            f"can't create gene score annotator; "
+            f"can't find score {config['resource_id']}")
+
+    return GeneScoreAnnotator(config, gene_score_resource)
+
+
 class GeneScoreAnnotator(Annotator):
     """Annotator that annotates variants by using gene score resources."""
 

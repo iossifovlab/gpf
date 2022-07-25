@@ -338,6 +338,10 @@ class GenomicResource:
         """Open a tabix file and returns a pysam.TabixFile."""
         return self.proto.open_tabix_file(self, filename, index_filename)
 
+    def open_vcf_file(self, filename, index_filename=None):
+        """Open a vcf file and returns a pysam.VariantFile."""
+        return self.proto.open_vcf_file(self, filename, index_filename)
+
 
 class Mode(enum.Enum):
     """Protocol mode."""
@@ -439,6 +443,15 @@ class ReadOnlyRepositoryProtocol(abc.ABC):
     def open_tabix_file(
             self, resource, filename, index_filename=None):
         """Open a tabix file in a resource and return a pysam tabix file.
+
+        Not all repositories support this method. Repositories that do
+        no support this method raise and exception.
+        """
+
+    @abc.abstractmethod
+    def open_vcf_file(
+            self, resource, filename, index_filename=None):
+        """Open a vcf file in a resource and return a pysam VariantFile.
 
         Not all repositories support this method. Repositories that do
         no support this method raise and exception.

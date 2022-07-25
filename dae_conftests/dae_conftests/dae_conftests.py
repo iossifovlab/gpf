@@ -1,4 +1,4 @@
-# pylint: disable=W0621,C0114,C0116,W0212,W0613
+# pylint: disable=W0621,C0114,C0116,C0415,W0212,W0613
 
 import os
 import sys
@@ -209,7 +209,7 @@ def _create_gpf_instance(
         default_dae_config, global_dae_fixtures_dir, fixture_dirname):
     class CustomGPFInstance(GPFInstance):
         def __init__(self, *args, **kwargs):
-            super(CustomGPFInstance, self).__init__(*args, **kwargs)
+            super().__init__(*args, **kwargs)
 
         @property  # type: ignore
         @cached
@@ -622,27 +622,6 @@ def config_dae():
         fullpath = relative_to_this_test_folder(os.path.join("fixtures", path))
         config = from_prefix_dae(fullpath)
         return config
-
-    return builder
-
-
-@pytest.fixture(scope="session")
-def raw_dae(config_dae, gpf_instance_2013):
-    def builder(path, region=None):
-        config = config_dae(path)
-
-        ped_df = FamiliesLoader.load_simple_family_file(
-            dae_transmitted_config.family_filename
-        )
-
-        dae = DaeTransmittedLoader(
-            config.dae.summary_filename,
-            config.dae.toomany_filename,
-            ped_df,
-            region=region,
-            genome=gpf_instance_2013.reference_genome,
-        )
-        return dae
 
     return builder
 
@@ -1249,3 +1228,11 @@ def s3(s3_base):
     s3 = S3FileSystem(anon=False, client_kwargs={"endpoint_url": endpoint_uri})
     s3.invalidate_cache()
     yield s3
+
+
+@pytest.fixture(scope="session")
+def fixtures_http_server():
+    from dae.genomic_resources.testing import range_http_serve
+    directory = relative_to_this_test_folder("fixtures/genomic_resources")
+    with range_http_serve(directory) as httpd:
+        yield httpd
