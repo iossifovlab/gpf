@@ -32,7 +32,9 @@ pipeline {
       script {
         try {
           resultBeforeTests = currentBuild.currentResult
+          resultBeforeTests = currentBuild.currentResult
           junit 'test-results/wdae-junit.xml, test-results/dae-junit.xml'
+          sh "test ${resultBeforeTests} == ${currentBuild.currentResult}"
           sh "test ${resultBeforeTests} == ${currentBuild.currentResult}"
 
           cobertura coberturaReportFile: 'test-results/coverage.xml',
