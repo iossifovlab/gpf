@@ -1,6 +1,5 @@
-import pytest
-
 import json
+import pytest
 
 from rest_framework import status
 
@@ -28,19 +27,19 @@ FILTER_QUERY_CONTINUOUS = {
 }
 
 SOURCE_CONTINUOUS = {
-    'source': 'instrument1.continuous', 'role': 'prb', 'format': '%s'
+    "source": "instrument1.continuous", "role": "prb", "format": "%s"
 }
 
 SOURCE_CATEGORICAL = {
-    'source': 'instrument1.categorical', 'role': 'prb', 'format': '%s'
+    "source": "instrument1.categorical", "role": "prb", "format": "%s"
 }
 
 SOURCE_ORDINAL = {
-    'source': 'instrument1.ordinal', 'role': 'prb', 'format': '%s'
+    "source": "instrument1.ordinal", "role": "prb", "format": "%s"
 }
 
 SOURCE_RAW = {
-    'source': 'instrument1.raw', 'role': 'prb', 'format': '%s'
+    "source": "instrument1.raw", "role": "prb", "format": "%s"
 }
 
 

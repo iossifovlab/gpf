@@ -104,7 +104,7 @@ class PersonSetCollection:
         return len(self.person_sets)
 
     def is_pedigree_only(self):
-        return all([s.sfrom == "pedigree" for s in self.sources])
+        return all(s.sfrom == "pedigree" for s in self.sources)
 
     @staticmethod
     def _sources_from_config(person_set_collection) -> List[Source]:
@@ -120,14 +120,14 @@ class PersonSetCollection:
         mapped to empty PersonSet instances from a given configuration.
         """
         person_set_configs = [*config.domain]
-        result = dict()
+        result = {}
         for person_set in person_set_configs:
             result[person_set.id] = PersonSet(
                 person_set.id,
                 person_set.name,
                 person_set["values"],
                 person_set.color,
-                dict(),
+                {},
             )
         return result
 
@@ -140,13 +140,14 @@ class PersonSetCollection:
             config.default.name,
             [],
             config.default.color,
-            dict(),
+            {},
         )
 
     @staticmethod
     def get_person_color(
-            person: Person, person_set_collection: PersonSetCollection) -> str:
-
+        person: Person, person_set_collection: PersonSetCollection
+    ) -> str:
+        """Get the hex color value for a Person in a PersonSetCollection."""
         if person.generated:
             return "#E0E0E0"
 
@@ -168,7 +169,9 @@ class PersonSetCollection:
 
     @staticmethod
     def remove_empty_person_sets(
-            person_set_collection: PersonSetCollection) -> PersonSetCollection:
+        person_set_collection: PersonSetCollection
+    ) -> PersonSetCollection:
+        """Remove all empty person sets in a PersonSetCollection in place."""
         empty_person_sets = set()
         for set_id, person_set in person_set_collection.person_sets.items():
             if len(person_set.persons) == 0:
@@ -181,11 +184,11 @@ class PersonSetCollection:
             del person_set_collection.person_sets[set_id]
         return person_set_collection
 
-    def _collect_person_collection_attributes(
-            self, person: Person,
-            pheno_db: Optional[PhenotypeData]) -> FrozenSet[str]:
-
-        values = list()
+    def collect_person_collection_attributes(
+        self, person: Person, pheno_db: Optional[PhenotypeData]
+    ) -> FrozenSet[str]:
+        """Collect all configured attributes for a Person."""
+        values = []
         for source in self.sources:
             if source.sfrom == "pedigree":
                 value = person.get_attr(source.ssource)
@@ -214,10 +217,10 @@ class PersonSetCollection:
 
     @staticmethod
     def from_families(
-            collection_config: FrozenBox,
-            families_data: FamiliesData,
-            pheno_db: Optional[PhenotypeData] = None) -> PersonSetCollection:
-
+        collection_config: FrozenBox,
+        families_data: FamiliesData,
+        pheno_db: Optional[PhenotypeData] = None
+    ) -> PersonSetCollection:
         """Produce a PersonSetCollection from its given configuration
         with a pedigree as its source.
         """
@@ -236,7 +239,7 @@ class PersonSetCollection:
         }
 
         for person_id, person in families_data.persons.items():
-            value = collection._collect_person_collection_attributes(
+            value = collection.collect_person_collection_attributes(
                 person, pheno_db)
             if value not in value_to_id:
                 collection.default.persons[person_id] = person
@@ -248,7 +251,13 @@ class PersonSetCollection:
 
     @staticmethod
     def merge_configs(
-            person_set_collections: List[PersonSetCollection]) -> FrozenBox:
+        person_set_collections: List[PersonSetCollection]
+    ) -> FrozenBox:
+        """Merge the configurations of a list of PersonSetCollection objects.
+
+        Only supports merging PersonSetCollection objects with matching ids.
+        The method will not merge the PersonSet objects' values.
+        """
         assert len(person_set_collections) > 0
         collections_iterator = iter(person_set_collections)
         first = next(collections_iterator)
@@ -340,13 +349,13 @@ class PersonSetCollection:
             families)
 
         for person_id, person in families.persons.items():
-            ps = first.get_person_set(person_id)
-            if ps is not None:
-                result.person_sets[ps.id].persons[person_id] = person
+            person_set = first.get_person_set(person_id)
+            if person_set is not None:
+                result.person_sets[person_set.id].persons[person_id] = person
                 continue
-            ps = second.get_person_set(person_id)
-            if ps is not None:
-                result.person_sets[ps.id].persons[person_id] = person
+            person_set = second.get_person_set(person_id)
+            if person_set is not None:
+                result.person_sets[person_set.id].persons[person_id] = person
                 continue
 
             logger.warning(
@@ -357,8 +366,8 @@ class PersonSetCollection:
         return PersonSetCollection.remove_empty_person_sets(result)
 
     @staticmethod
-    def combine(collections: List[PersonSetCollection]) \
-            -> PersonSetCollection:
+    def combine(collections: List[PersonSetCollection]) -> PersonSetCollection:
+        """Combine a list of PersonSetCollection objects into a single one."""
         if len(collections) == 0:
             raise ValueError("can't combine empty list of collections")
         if len(collections) == 1:
@@ -377,7 +386,8 @@ class PersonSetCollection:
             f"person {person_id} not in person set collection {self.id}")
 
     def config_json(self):
-        domain = list()
+        """Produce a JSON configuration for this PersonSetCollection object."""
+        domain = []
         for person_set in self.person_sets.values():
             if self.default.id == person_set.id:
                 continue
@@ -410,8 +420,12 @@ class PersonSetCollection:
         config = FrozenBox(config_json)
         return PersonSetCollection.from_families(config, families)
 
-    def get_stats(self):
-        result = dict()
+    def get_stats(self) -> Dict[str, Dict[str, int]]:
+        """Return a dictionary with statistics for each PersonSet.
+
+        The statistics are a dictionary containing the amount of parents
+        and children in the set."""
+        result = {}
         for set_id, person_set in self.person_sets.items():
             parents = len(list(
                 person_set.get_persons_with_roles(Role.dad, Role.mom)
