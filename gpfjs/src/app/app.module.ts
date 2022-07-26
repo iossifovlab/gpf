@@ -117,7 +117,6 @@ import { NonPdpPedigreesComponent } from './non-pdp-pedigrees/non-pdp-pedigrees.
 import { PerfectlyDrawablePedigreeService } from './perfectly-drawable-pedigree/perfectly-drawable-pedigree.service';
 import { StudyFiltersBlockComponent } from './study-filters-block/study-filters-block.component';
 import { StudyFiltersBlockState } from './study-filters-block/study-filters-block.state';
-import { StudyFilterComponent } from './study-filter/study-filter.component';
 import { AddButtonComponent } from './add-button/add-button.component';
 import { RemoveButtonComponent } from './remove-button/remove-button.component';
 import { PopupComponent } from './popup/popup.component';
@@ -336,7 +335,6 @@ const appRoutes: Routes = [
     NonPdpPedigreesComponent,
     SmallRemoveButtonComponent,
     StudyFiltersBlockComponent,
-    StudyFilterComponent,
     AddButtonComponent,
     RemoveButtonComponent,
     PopupComponent,
