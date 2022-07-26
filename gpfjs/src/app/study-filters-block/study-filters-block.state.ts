@@ -2,8 +2,8 @@ import { Injectable } from '@angular/core';
 import { State, Action, StateContext } from '@ngxs/store';
 
 export class SetStudyFilters {
-  static readonly type = '[Genotype] Set studyFilters';
-  constructor(public studyFilters: string[]) {}
+  public static readonly type = '[Genotype] Set studyFilters';
+  public constructor(public studyFilters: string[]) {}
 }
 
 export interface StudyFiltersBlockModel {
@@ -19,7 +19,7 @@ export interface StudyFiltersBlockModel {
 @Injectable()
 export class StudyFiltersBlockState {
   @Action(SetStudyFilters)
-  setStudyFilters(ctx: StateContext<StudyFiltersBlockModel>, action: SetStudyFilters) {
+  setStudyFilters(ctx: StateContext<StudyFiltersBlockModel>, action: SetStudyFilters): void {
     ctx.patchState({
       studyFilters: [...action.studyFilters]
     });
