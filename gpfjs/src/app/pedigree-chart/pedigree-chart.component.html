@@ -40,7 +40,7 @@
   </div>
 </ng-template>
 
-<div class="modal fade" id="{{ pedigreeModalId }}">
+<div *ngIf="!maximized" class="modal fade" id="{{ pedigreeModalId }}">
   <div class="modal-dialog modal-dialog-centered" role="document">
     <div style="padding: 5px" class="modal-content">
       <button type="button" style="margin-left: 455px;" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
