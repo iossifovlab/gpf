@@ -1,4 +1,7 @@
-"""This module provides functionality for grouping
+"""
+Provide classes for grouping of individuals by some criteria.
+
+This module provides functionality for grouping
 individuals from a study or study group into various
 sets based on what value they have in a given mapping.
 """
@@ -18,9 +21,7 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class PersonSet:
-    """A set of individuals which are all mapped to a
-    common value in the source.
-    """
+    """Set of individuals mapped to a common value in the source."""
 
     def __init__(
             self, psid: str, name: str,
@@ -116,8 +117,11 @@ class PersonSetCollection:
 
     @staticmethod
     def _produce_sets(config: FrozenBox) -> Dict[str, PersonSet]:
-        """Initializes a dictionary of person set IDs
-        mapped to empty PersonSet instances from a given configuration.
+        """
+        Produce initial PersonSet instances.
+
+        Initializes a dictionary of person set IDs mapped to
+        empty PersonSet instances from a given configuration.
         """
         person_set_configs = [*config.domain]
         result = {}
@@ -221,9 +225,7 @@ class PersonSetCollection:
         families_data: FamiliesData,
         pheno_db: Optional[PhenotypeData] = None
     ) -> PersonSetCollection:
-        """Produce a PersonSetCollection from its given configuration
-        with a pedigree as its source.
-        """
+        """Produce a PersonSetCollection from a config and pedigree."""
         collection = PersonSetCollection(
             collection_config.id,
             collection_config.name,
@@ -253,7 +255,8 @@ class PersonSetCollection:
     def merge_configs(
         person_set_collections: List[PersonSetCollection]
     ) -> FrozenBox:
-        """Merge the configurations of a list of PersonSetCollection objects.
+        """
+        Merge the configurations of a list of PersonSetCollection objects.
 
         Only supports merging PersonSetCollection objects with matching ids.
         The method will not merge the PersonSet objects' values.
@@ -421,10 +424,12 @@ class PersonSetCollection:
         return PersonSetCollection.from_families(config, families)
 
     def get_stats(self) -> Dict[str, Dict[str, int]]:
-        """Return a dictionary with statistics for each PersonSet.
+        """
+        Return a dictionary with statistics for each PersonSet.
 
         The statistics are a dictionary containing the amount of parents
-        and children in the set."""
+        and children in the set.
+        """
         result = {}
         for set_id, person_set in self.person_sets.items():
             parents = len(list(

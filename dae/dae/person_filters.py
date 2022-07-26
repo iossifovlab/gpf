@@ -22,6 +22,7 @@ class PersonFilter():
 
 class CriteriaFilter(PersonFilter):  # pylint: disable=abstract-method
     """Filter individuals based on given criteria and their values."""
+
     def __init__(self, criteria: str, values: Collection):
         self.criteria: str = criteria
         self.values: Collection = values
@@ -40,6 +41,7 @@ class CriteriaFilter(PersonFilter):  # pylint: disable=abstract-method
 
 class PersonFilterSet(CriteriaFilter):
     """Filter based on a specific set of values."""
+
     def apply_to_df(self, df: pd.DataFrame) -> pd.DataFrame:
         if not isinstance(self.values, (list, set, tuple)):
             raise TypeError(f"{self.values} ({type(self.values)})")
@@ -48,6 +50,7 @@ class PersonFilterSet(CriteriaFilter):
 
 class PersonFilterRange(CriteriaFilter):
     """Filter based on a range of values."""
+
     def __init__(self, criteria: str, values: Collection):
         super().__init__(criteria, values)
         if isinstance(self.values, (list, tuple)):
@@ -74,6 +77,7 @@ class PersonFilterRange(CriteriaFilter):
 
 class PhenoFilter(CriteriaFilter):  # pylint: disable=abstract-method
     """Filter using a phenotype measure as criteria."""
+
     def __init__(
         self, criteria: str, values: Collection, phenotype_data: PhenotypeData
     ):
@@ -98,6 +102,7 @@ class PhenoFilter(CriteriaFilter):  # pylint: disable=abstract-method
 
 class PhenoFilterSet(PhenoFilter, PersonFilterSet):
     """Filter based on a specific set of phenotype measure values."""
+
     def __init__(
         self,
         measure: Measure,
@@ -113,6 +118,7 @@ class PhenoFilterSet(PhenoFilter, PersonFilterSet):
 
 class PhenoFilterRange(PhenoFilter, PersonFilterRange):
     """Filter based on a range of phenotype measure values."""
+
     def __init__(
         self,
         measure: Measure,
@@ -128,6 +134,7 @@ class PhenoFilterRange(PhenoFilter, PersonFilterRange):
 
 class FamilyFilter(PersonFilter):
     """Apply a given PersonFilter, but collect a set of family ids instead."""
+
     def __init__(self, person_filter: PersonFilter):
         self.person_filter = person_filter
 
