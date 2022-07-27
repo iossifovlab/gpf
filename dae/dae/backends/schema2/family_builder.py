@@ -23,7 +23,7 @@ class FamilyQueryBuilder(BaseQueryBuilder):
         gene_models=None,
         do_join_affected=False,
     ):
-        #pylint: disable=too-many-arguments
+        # pylint: disable=too-many-arguments
         self.family_variant_table = family_variant_table
         self.summary_allele_table = summary_allele_table
 
@@ -78,13 +78,15 @@ class FamilyQueryBuilder(BaseQueryBuilder):
 
     def _build_from(self):
         # implicit join on family_allele and summary variants table
-        from_clause = f"""\n FROM
-        {self.dialect.build_table_name(self.summary_allele_table, self.db)} AS sa
-        JOIN 
-        {self.dialect.build_table_name(self.family_variant_table, self.db)} AS fa
+        from_clause = f"""FROM
+        {self.dialect.build_table_name(self.summary_allele_table, self.db)}
+            AS sa
+        JOIN
+        {self.dialect.build_table_name(self.family_variant_table, self.db)}
+            AS fa
         ON (fa.summary_index = sa.summary_index AND
         fa.bucket_index = sa.bucket_index AND
-        fa.allele_index = sa.allele_index)""".rstrip()
+        fa.allele_index = sa.allele_index)"""
 
         self._add_to_product(from_clause)
 
@@ -110,9 +112,9 @@ class FamilyQueryBuilder(BaseQueryBuilder):
         frequency_filter=None,
         return_reference=None,
         return_unknown=None,
-        **kwargs,
+        **_kwargs,
     ):
-        #pylint: disable=too-many-arguments,too-many-locals
+        # pylint: disable=too-many-arguments,too-many-locals
         if self.summary_allele_table:
             inheritance = None
         where_clause = self._build_where_string(

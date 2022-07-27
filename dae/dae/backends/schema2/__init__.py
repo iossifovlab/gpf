@@ -1,4 +1,5 @@
-"""
+"""Implementation for the next version (v2) of the DB schema.
+
 Variants schema separated into two separate tables: summary allele and
 family variant.
 
