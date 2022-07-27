@@ -12,8 +12,6 @@ from http.server import HTTPServer  # ThreadingHTTPServer
 from typing import Any, cast, Optional
 from functools import partial
 
-from RangeHTTPServer import RangeRequestHandler  # type: ignore
-
 from dae.genomic_resources.repository import \
     GenomicResource, \
     GenomicResourceProtocolRepo, \
@@ -179,6 +177,9 @@ def tabix_to_resource(tabix_source, resource, filename, update_repo=True):
 
 def range_http_thread_server_generator(directory):
     """Return threading HTTP range server generator for testing."""
+    # pylint: disable=import-outside-toplevel
+    from RangeHTTPServer import RangeRequestHandler  # type: ignore
+
     handler_class = partial(
         RangeRequestHandler, directory=directory)
     handler_class.protocol_version = "HTTP/1.0"
@@ -203,6 +204,9 @@ def range_http_thread_server_generator(directory):
 
 def range_http_process_server_generator(directory):
     """Return process HTTP range server generator for testing."""
+    # pylint: disable=import-outside-toplevel
+    from RangeHTTPServer import RangeRequestHandler  # type: ignore
+
     def runner(queue):
         handler_class = partial(
             RangeRequestHandler, directory=directory)
