@@ -1,4 +1,5 @@
 import itertools
+import logging
 from collections import OrderedDict
 from typing import Optional
 
@@ -11,6 +12,8 @@ from dae.genomic_resources.aggregators import build_aggregator
 
 from dae.genomic_resources import GenomicResource
 from dae.genomic_resources.histogram import Histogram
+
+logger = logging.getLogger(__name__)
 
 
 class GeneScore:
@@ -77,9 +80,8 @@ class GeneScore:
         assert self.file is not None
 
         df = pd.read_csv(self.file)
-        assert self.score_id in df.columns, "{} not found in {}".format(
-            self.score_id, df.columns
-        )
+        assert self.score_id in df.columns, \
+            f"{self.score_id} not found in {df.columns}"
         self.df = df[[self.genomic_values_col, self.score_id]].copy()
         return self.df
 
@@ -88,7 +90,12 @@ class GeneScore:
             resource: Optional[GenomicResource]):
         """Create and return all of the gene scores described in a resource."""
         assert resource is not None
-        assert resource.get_type() == "gene_score", "Invalid resource type"
+        if resource.get_type() != "gene_score":
+            logger.error(
+                "invalid resource type for gene score %s",
+                resource.resource_id)
+            raise ValueError("Invalid resource type")
+        logger.info("processing gene score %s", resource.resource_id)
 
         config = resource.get_config()
         meta = getattr(config, "meta", None)
@@ -103,8 +110,9 @@ class GeneScore:
                     histogram_config = hist_config
                     break
             assert histogram_config is not None
-            gs = GeneScore(gene_score_id, file, desc, histogram_config, meta)
-            scores.append(gs)
+            gene_score = GeneScore(
+                gene_score_id, file, desc, histogram_config, meta)
+            scores.append(gene_score)
 
         return scores
 

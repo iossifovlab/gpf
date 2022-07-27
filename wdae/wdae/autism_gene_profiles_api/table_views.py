@@ -92,6 +92,9 @@ class TableConfigurationView(QueryBaseView):
         if "datasets" in configuration:
             for dataset_id, dataset in configuration["datasets"].items():
                 study_wrapper = self.gpf_instance.get_wdae_wrapper(dataset_id)
+                if study_wrapper is None:
+                    LOGGER.error("missing dataset %s", dataset_id)
+                    continue
                 display_name = dataset.get("display_name") \
                     or study_wrapper.config.get("name") \
                     or dataset_id
