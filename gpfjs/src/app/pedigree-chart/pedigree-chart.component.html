@@ -1,12 +1,10 @@
 <ng-template #pedigree>
-  <div class="toggle-maximize" (click)="toggleMaximize()"></div>
   <div
     #wrapper
     class="svg-wrapper clickable"
     style="display: flex; width: 100%; height: 100%"
-    data-bs-toggle="modal"
-    attr.data-bs-target="#{{ pedigreeModalId }}">
-    <svg [attr.width]="width" [attr.viewBox]="getViewBox()" [ngClass]="{ 'fullscreen-pedigree': maximized }">
+  >
+    <svg [attr.width]="width" [attr.viewBox]="getViewBox()">
       <svg:line
         *ngFor="let straightLine of straightLines"
         [attr.x1]="straightLine.startX"
@@ -40,50 +38,48 @@
   </div>
 </ng-template>
 
-<div *ngIf="!maximized" class="modal fade" id="{{ pedigreeModalId }}">
-  <div class="modal-dialog modal-dialog-centered" role="document">
-    <div style="padding: 5px" class="modal-content">
-      <button type="button" style="margin-left: 455px;" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
-      </button>
-      <div style="padding: 0 0 15px 0">
-          <ng-container *ngTemplateOutlet="pedigree"></ng-container>
-      </div>
-      <ngb-accordion *ngIf="counterId !== undefined" #a="ngbAccordion">
-        <ngb-panel>
-          <ng-template ngbPanelHeader>
-            <div style="text-align: left">
-              <button
-                ngbPanelToggle
-                (click)="loadFamilyListData()"
-                type="button"
-                class="btn btn-secondary btn-left">Family Id list ({{ pedigreeCount }})</button>
-              <form
-                (ngSubmit)="onSubmit($event)"
-                action="{{ configService.baseUrl }}common_reports/family_counters/download"
-                method="post">
-                <input name="queryData" type="hidden" />
-                <button
-                  class="btn btn-md btn-primary btn-right"
-                  id="download-button"
-                  type="button submit"
-                  style="margin-left: 390px; margin-top: -38.5px;">Download</button>
-              </form>
-            </div>
-          </ng-template>
-          <ng-template ngbPanelContent>
-            <div class="family-panel">
-              <gpf-loading-spinner
-                *ngIf="!loadingFinishedFlag"
-                [loadingFinished]="loadingFinishedFlag"></gpf-loading-spinner>
-              <ng-container *ngIf="familyLists">{{ familyLists | join: ', ' }}</ng-container>
-            </div>
-          </ng-template>
-        </ngb-panel>
-      </ngb-accordion>
-    </div>
+<ng-template #pedigreeModal let-modal>
+  <button type="button" style="margin-left: 455px;" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+  </button>
+  <div style="padding: 0 0 15px 0">
+      <ng-container *ngTemplateOutlet="pedigree"></ng-container>
   </div>
-</div>
+  <ngb-accordion *ngIf="counterId !== undefined" #a="ngbAccordion">
+    <ngb-panel>
+      <ng-template ngbPanelHeader>
+        <div style="text-align: left">
+          <button
+            ngbPanelToggle
+            (click)="loadFamilyListData()"
+            type="button"
+            class="btn btn-secondary btn-left">Family Id list ({{ pedigreeCount }})</button>
+          <form
+            (ngSubmit)="onSubmit($event)"
+            action="{{ configService.baseUrl }}common_reports/family_counters/download"
+            method="post">
+            <input name="queryData" type="hidden" />
+            <button
+              class="btn btn-md btn-primary btn-right"
+              id="download-button"
+              type="button submit"
+              style="margin-left: 390px; margin-top: -38.5px;">Download</button>
+          </form>
+        </div>
+      </ng-template>
+      <ng-template ngbPanelContent>
+        <div class="family-panel">
+          <gpf-loading-spinner
+            *ngIf="!loadingFinishedFlag"
+            [loadingFinished]="loadingFinishedFlag"></gpf-loading-spinner>
+          <ng-container *ngIf="familyLists">{{ familyLists | join: ', ' }}</ng-container>
+        </div>
+      </ng-template>
+    </ngb-panel>
+  </ngb-accordion>
+</ng-template>
 
-<div *ngIf="!maximized">
-  <ng-container *ngTemplateOutlet="pedigree"></ng-container>
+<div>
+  <div (click)="openModal(pedigreeModal)">
+    <ng-container *ngTemplateOutlet="pedigree"></ng-container>
+  </div>
 </div>
