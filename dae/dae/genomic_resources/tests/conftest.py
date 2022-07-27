@@ -77,10 +77,17 @@ def embedded_proto(tmp_path):
 @pytest.fixture(scope="session")
 def s3_moto_fixture():
     with s3_moto_server() as s3_url:
+        # if "AWS_SECRET_ACCESS_KEY" not in os.environ:
+        #     os.environ["AWS_SECRET_ACCESS_KEY"] = "foo"
+        # if "AWS_ACCESS_KEY_ID" not in os.environ:
+        #     os.environ["AWS_ACCESS_KEY_ID"] = "foo"
 
         from botocore.session import Session  # type: ignore
         session = Session()
-        client = session.create_client("s3", endpoint_url=s3_url)
+        client = session.create_client(
+            "s3", endpoint_url=s3_url,
+            aws_access_key_id="foo",
+            aws_secret_access_key="foo")
         client.create_bucket(Bucket="test-bucket", ACL="public-read")
 
         yield s3_url
