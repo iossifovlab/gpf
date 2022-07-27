@@ -8,6 +8,7 @@ import { Observable } from 'rxjs';
 import { RegistrationComponent } from '../registration/registration.component';
 import { ForgotPasswordComponent } from '../forgot-password/forgot-password.component';
 import { share, take } from 'rxjs/operators';
+import { AuthService } from 'app/auth.service';
 
 @Component({
   selector: 'gpf-users',
@@ -35,7 +36,8 @@ export class UsersComponent implements OnInit {
     private modalService: NgbModal,
     private usersService: UsersService,
     private changeDetectorRef: ChangeDetectorRef,
-    private config: ConfigService
+    private config: ConfigService,
+    private authService: AuthService
   ) { }
 
   public ngOnInit(): void {
@@ -57,7 +59,8 @@ export class UsersComponent implements OnInit {
   }
 
   public login(): void {
-    location.href = `${this.config.rootUrl}/o/authorize/?response_type=code&code_challenge=MTIz&client_id=${this.config.oauthClientId}&code_challenge_method=plain`;
+    const codeChallenge = this.authService.generatePKCE();
+    location.href = `${this.config.rootUrl}/o/authorize/?response_type=code&code_challenge_method=S256&code_challenge=${codeChallenge}&client_id=${this.config.oauthClientId}`;
   }
 
   public logout(): void {

@@ -3,6 +3,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { ConfigService } from './config/config.service';
 import { Observable, Subject, take, tap, catchError, of } from 'rxjs';
 import { Router } from '@angular/router';
+import pkceChallenge from 'pkce-challenge';
 
 @Injectable({
   providedIn: 'root'
@@ -28,12 +29,18 @@ export class AuthService {
     return this._accessToken;
   }
 
+  public generatePKCE(): string {
+    const pkce = pkceChallenge();
+    localStorage.setItem('code_verifier', pkce['code_verifier']);
+    return pkce['code_challenge'];
+  }
+
   public requestAccessToken(code: string): Observable<object> {
     return this.http.post(this.config.rootUrl + '/o/token/', {
       client_id: this.config.oauthClientId,
       code: code,
       grant_type: 'authorization_code',
-      code_verifier: 'MTIz', //TODO: Fix this, use proper code verifier (must be fixed in users.component.ts as well)
+      code_verifier: localStorage.getItem('code_verifier'),
     }, this.options).pipe(take(1), tap(res => {
       this.setTokens(res);
       // Remove auth code from query params and refresh navigation
