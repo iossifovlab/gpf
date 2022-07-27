@@ -43,6 +43,7 @@ export class AuthService {
       code_verifier: localStorage.getItem('code_verifier'),
     }, this.options).pipe(take(1), tap(res => {
       this.setTokens(res);
+      localStorage.removeItem('code_verifier');
       // Remove auth code from query params and refresh navigation
       this.router.navigate([], {
         queryParams: {'code': null},
@@ -81,7 +82,7 @@ export class AuthService {
         catchError((err, caught) => {
           if (err.status === 400 && err.error.error === 'invalid_grant') {
             this.clearTokens();
-            throw 'Invalid refresh token, discarding.';
+            window.location.reload()
           }
           return caught;
         })
