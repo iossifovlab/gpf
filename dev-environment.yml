@@ -24,6 +24,7 @@ dependencies:
   - pytest-django=4.5.2
   - pytest-doctestplus=0.12.0
   - pylint=2.13.8
+  - werkzeug=2.1.2
   - moto=3.1.11
   - pandas-stubs=1.2.0.58
   - django-stubs=1.10.1
