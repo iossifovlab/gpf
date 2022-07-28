@@ -25,6 +25,7 @@ dependencies:
   - pylint=2.9.1
   - pre-commit=2.13.0
   - moto=2.3.0
+  - werkzeug=2.1.2
   - pandas-stubs=1.2.0.43
   - django-stubs=1.9.0
   - types-pyyaml=6.0.3
