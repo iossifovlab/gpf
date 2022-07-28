@@ -1,5 +1,6 @@
 """Provides tools usefult for testing."""
 from __future__ import annotations
+import os
 import contextlib
 import time
 
@@ -252,6 +253,10 @@ def range_http_serve(directory):
 def s3_moto_server_generator():
     """Build an S3 mock server generator."""
     # pylint: disable=protected-access,import-outside-toplevel
+    if "AWS_SECRET_ACCESS_KEY" not in os.environ:
+        os.environ["AWS_SECRET_ACCESS_KEY"] = "foo"
+    if "AWS_ACCESS_KEY_ID" not in os.environ:
+        os.environ["AWS_ACCESS_KEY_ID"] = "foo"
     from moto.server import ThreadedMotoServer  # type: ignore
     server = ThreadedMotoServer(ip_address="", port=0)
     server.start()
