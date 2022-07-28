@@ -3,7 +3,10 @@
   "ignorePatterns": [
     "projects/**/*"
   ],
-  "plugins": ["only-warn"],
+  "plugins": [
+    "only-warn",
+    "jest"
+  ],
   "overrides": [
     {
       "files": [
@@ -161,6 +164,51 @@
       "extends": ["plugin:prettier/recommended"],
       "rules": {
         "prettier/prettier": "warn"
+      }
+    },
+    {
+      "files": ["*.spec.ts"],
+      "plugins": ["jest"],
+      "extends": ["plugin:jest/recommended"],
+      "rules": {
+        "jest/unbound-method": 1,
+        "jest/consistent-test-it": 1,
+        "jest/expect-expect": 1,
+        "jest/max-expects": 1,
+        "jest/max-nested-describe": 2,
+        "jest/no-conditional-expect": 1,
+        "jest/no-conditional-in-test": 1,
+        "jest/no-deprecated-functions": 1,
+        "jest/no-done-callback": 1,
+        "jest/no-duplicate-hooks": 1,
+        "jest/no-export": 1,
+        "jest/no-focused-tests": 1,
+        "jest/no-identical-title": 1,
+        "jest/no-interpolation-in-snapshots": 1,
+        "jest/no-jasmine-globals": 1,
+        "jest/no-jest-import": 1,
+        "jest/no-large-snapshots": 1,
+        "jest/no-mocks-import": 1,
+        "jest/no-standalone-expect": 1,
+        "jest/no-test-return-statement": 1,
+        "jest/prefer-called-with": 1,
+        "jest/prefer-comparison-matcher": 1,
+        "jest/prefer-equality-matcher": 1,
+        "jest/prefer-expect-resolves": 1,
+        "jest/prefer-hooks-in-order": 1,
+        "jest/prefer-hooks-on-top": 1,
+        "jest/prefer-spy-on": 1,
+        "jest/prefer-strict-equal": 1,
+        "jest/prefer-to-be": 1,
+        "jest/prefer-to-contain": 1,
+        "jest/prefer-to-have-length": 1,
+        "jest/prefer-todo": 1,
+        "jest/require-to-throw-message": 1,
+        "jest/require-top-level-describe": 1,
+        "jest/valid-describe-callback": 1,
+        "jest/valid-expect": 1,
+        "jest/valid-expect-in-promise": 1,
+        "jest/valid-title": 1
       }
     }
   ]
