@@ -1,4 +1,4 @@
-# pylint: disable=W0621,C0114,C0116,C0415,W0212,W0613
+# pylint: disable=W0621,C0114,C0116,C0415,W0212,W0613,C0302,C0115,W0102,W0603
 
 import os
 import sys
@@ -118,7 +118,7 @@ def gpf_instance(default_dae_config, fixture_dirname):
 
     class GPFInstanceInternal(GPFInstance):
         def __init__(self, *args, **kwargs):
-            super(GPFInstanceInternal, self).__init__(*args, **kwargs)
+            super().__init__(*args, **kwargs)
 
     def build(work_dir=None, load_eagerly=False):
         instance = GPFInstanceInternal(
@@ -149,7 +149,7 @@ def gpf_instance_2013(
 
     class GPFInstance2013(GPFInstance):
         def __init__(self, *args, **kwargs):
-            super(GPFInstance2013, self).__init__(*args, **kwargs)
+            super().__init__(*args, **kwargs)
 
         @property  # type: ignore
         @cached
@@ -188,7 +188,7 @@ def gpf_instance_2019(default_dae_config, global_dae_fixtures_dir):
 
     class GPFInstance2019(GPFInstance):
         def __init__(self, *args, **kwargs):
-            super(GPFInstance2019, self).__init__(*args, **kwargs)
+            super().__init__(*args, **kwargs)
 
         @property  # type: ignore
         @cached
@@ -354,8 +354,8 @@ def annotation_pipeline_internal(gpf_instance_2013):
 
 
 def from_prefix_denovo(prefix):
-    denovo_filename = "{}.txt".format(prefix)
-    family_filename = "{}_families.ped".format(prefix)
+    denovo_filename = f"{prefix}.txt"
+    family_filename = f"{prefix}_families.ped"
 
     conf = {
         "denovo": {
@@ -374,9 +374,9 @@ def from_prefix_vcf(prefix):
         "pedigree": pedigree_filename,
     }
 
-    vcf_filename = "{}.vcf".format(prefix)
+    vcf_filename = f"{prefix}.vcf"
     if not os.path.exists(vcf_filename):
-        vcf_filename = "{}.vcf.gz".format(prefix)
+        vcf_filename = f"{prefix}.vcf.gz"
     if os.path.exists(vcf_filename):
         conf["vcf"] = vcf_filename
 
@@ -415,9 +415,9 @@ def dae_denovo(
 
 
 def from_prefix_dae(prefix):
-    summary_filename = "{}.txt.gz".format(prefix)
-    toomany_filename = "{}-TOOMANY.txt.gz".format(prefix)
-    family_filename = "{}.families.txt".format(prefix)
+    summary_filename = f"{prefix}.txt.gz"
+    toomany_filename = f"{prefix}-TOOMANY.txt.gz"
+    family_filename = f"{prefix}.families.txt"
 
     conf = {
         "dae": {
@@ -822,7 +822,7 @@ def data_import(
         vcf_configs = collect_vcf(vcfdirname)
 
         for config in vcf_configs:
-            logger.debug(f"importing: {config}")
+            logger.debug("importing: %s", config)
 
             filename = os.path.basename(config.pedigree)
             study_id = os.path.splitext(filename)[0]
