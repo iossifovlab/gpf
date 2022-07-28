@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import itertools
 import logging
 from collections import OrderedDict
-from typing import Optional
+from typing import Optional, List
 
 import numpy as np
 import pandas as pd
@@ -61,7 +63,8 @@ class GeneScore:
         if "max" not in histogram_config:
             histogram_config["max"] = self.max()
         self.histogram = Histogram.from_config(histogram_config)
-        self.histogram.set_bins_bars(self.values())
+        self.histogram.set_empty()
+        self.histogram.set_values(self.values())
 
         self.histogram_bins = self.histogram.bins
         self.histogram_bars = self.histogram.bars
@@ -87,7 +90,7 @@ class GeneScore:
 
     @staticmethod
     def load_gene_scores_from_resource(
-            resource: Optional[GenomicResource]):
+            resource: Optional[GenomicResource]) -> List[GeneScore]:
         """Create and return all of the gene scores described in a resource."""
         assert resource is not None
         if resource.get_type() != "gene_score":
