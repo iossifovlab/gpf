@@ -42,8 +42,7 @@ class GeneScoreAnnotator(Annotator):
         resource_scores = GeneScore.load_gene_scores_from_resource(
             resource
         )
-        resource_scores = {gs.score_id: gs for gs in resource_scores}
-        self.gene_scores = resource_scores
+        self.gene_scores = {gs.score_id: gs for gs in resource_scores}
 
         self._annotation_schema = None
 
@@ -54,7 +53,7 @@ class GeneScoreAnnotator(Annotator):
         result = []
         for gene_score in self.gene_scores.values():
             result.append({
-                "name": gene_score.id,
+                "name": gene_score.score_id,
                 "type": "object",
                 "desc": gene_score.desc
             })
