@@ -1169,6 +1169,10 @@ def grr_fixture(fixture_dirname):
 def s3_moto_server_url():
     """Start a moto (i.e. mocked) s3 server and return its URL."""
     # pylint: disable=protected-access,import-outside-toplevel
+    if "AWS_SECRET_ACCESS_KEY" not in os.environ:
+        os.environ["AWS_SECRET_ACCESS_KEY"] = "foo"
+    if "AWS_ACCESS_KEY_ID" not in os.environ:
+        os.environ["AWS_ACCESS_KEY_ID"] = "foo"
     from moto.server import ThreadedMotoServer  # type: ignore
     server = ThreadedMotoServer(ip_address="", port=0)
     server.start()
