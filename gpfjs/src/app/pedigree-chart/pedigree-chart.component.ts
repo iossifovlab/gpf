@@ -28,7 +28,6 @@ export class PedigreeChartComponent implements OnInit {
 
   public width = 0;
   public height = 0;
-  public scale = 1.0;
   public loadingFinishedFlag = false;
   public familyLists;
   public pedigreeModalId: string;
@@ -138,14 +137,15 @@ export class PedigreeChartComponent implements OnInit {
   }
 
   public getViewBox(): string {
+    // The addition of 8 to the width and height of the viewbox is to fit the proband arrow
     const sortedCurveLines = this.curveLines.sort(curveLine => curveLine.inverseCurveP1[1]);
     if (sortedCurveLines.length !== 0) {
       const minY = sortedCurveLines[0].inverseCurveP1[1];
       if (minY < 0) {
-        return `-8 ${minY.toString()} ${(this.width + 8.0).toString()} ${(this.height + -minY + 8.0).toString()}`;
+        return `0 ${minY.toString()} ${(this.width + 8).toString()} ${(this.height + -minY + 8).toString()}`;
       }
     }
-    return `-8 0 ${this.width + 8.0} ${this.height + 8.0}`;
+    return `0 0 ${this.width + 8} ${this.height + 8}`;
   }
 
   private loadPositions(family: PedigreeData[]): IndividualWithPosition[][] {

@@ -85,38 +85,16 @@ describe('PedigreeChartComponent', () => {
     expect(component.curveLines.length).toBe(0);
   });
 
-  // Fix me
-  // it('should scale svg', () => {
-  //   component.family = FAMILY_WITH_POSITIONS;
-  //   fixture.detectChanges();
-
-  //   component.scaleSvg();
-  //   expect(component.scale).toBe(1);
-  // });
-
-  it('should toggle maximized', () => {
-    component.family = FAMILY_WITH_POSITIONS;
-    fixture.detectChanges();
-
-    expect(component.maximized).toBe(false);
-    component.toggleMaximize();
-    expect(component.maximized).toBe(true);
-    component.toggleMaximize();
-    expect(component.maximized).toBe(false);
-  });
-
   it('should return view box', () => {
     component.family = FAMILY_WITH_POSITIONS;
     fixture.detectChanges();
 
-    expect(component.getViewBox()).toBe('-8 0 81 81');
+    expect(component.getViewBox()).toBe('0 0 81 81');
   });
 
   it('should load pedigree with positions', () => {
     component.family = FAMILY_WITH_POSITIONS;
     fixture.detectChanges();
-
-    component.maximized = true;
 
     component.ngOnInit();
 
