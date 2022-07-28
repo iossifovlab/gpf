@@ -1194,25 +1194,6 @@ def s3_client(s3_moto_server_url):
 
 
 @pytest.fixture()
-def s3_tmp_bucket_url(s3_client):
-    """Create a bucket called 'test-bucket' and return its URL."""
-    s3_client.create_bucket(Bucket="test-bucket", ACL="public-read")
-
-    yield "s3://test-bucket"
-
-    all_objects = s3_client.list_objects(Bucket="test-bucket")\
-        .get("Contents", None)
-    if all_objects is not None:
-        to_delete = {
-            "Objects": [
-                {"Key": obj["Key"]} for obj in all_objects
-            ]
-        }
-        s3_client.delete_objects(Bucket="test-bucket", Delete=to_delete)
-        s3_client.delete_bucket(Bucket="test-bucket")
-
-
-@pytest.fixture()
 def s3_filesystem(s3_moto_server_url):
     from s3fs.core import S3FileSystem  # type: ignore
 
@@ -1221,6 +1202,17 @@ def s3_filesystem(s3_moto_server_url):
                       client_kwargs={"endpoint_url": s3_moto_server_url})
     s3.invalidate_cache()
     yield s3
+
+
+@pytest.fixture()
+def s3_tmp_bucket_url(s3_client, s3_filesystem):
+    """Create a bucket called 'test-bucket' and return its URL."""
+    bucket_url = "s3://test-bucket"
+    s3_filesystem.mkdir(bucket_url, acl="public-read")
+
+    yield bucket_url
+
+    s3_filesystem.rm("s3://test-bucket", recursive=True)
 
 
 @pytest.fixture(scope="session")

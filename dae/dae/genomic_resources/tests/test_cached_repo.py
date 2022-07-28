@@ -25,7 +25,8 @@ def test_create_definition_with_cache(tmp_path):
 
 
 @pytest.fixture
-def cache_repository(tmp_path, embedded_proto, proto_builder, s3_moto_fixture):
+def cache_repository(tmp_path, embedded_proto, proto_builder,
+                     s3_moto_server_url, s3_tmp_bucket_url):
 
     def builder(content, scheme="file", repo_id="testing"):
         remote_proto = proto_builder(
@@ -37,8 +38,8 @@ def cache_repository(tmp_path, embedded_proto, proto_builder, s3_moto_fixture):
         if scheme == "s3":
             cache_repo = GenomicResourceCachedRepo(
                 remote_repo,
-                f"s3://test-bucket{tmp_path}/{repo_id}.caching",
-                endpoint_url=s3_moto_fixture)
+                f"{s3_tmp_bucket_url}/{repo_id}.caching",
+                endpoint_url=s3_moto_server_url)
         else:
             cache_repo = GenomicResourceCachedRepo(
                 remote_repo,

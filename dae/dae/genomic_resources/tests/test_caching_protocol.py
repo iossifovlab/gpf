@@ -31,7 +31,7 @@ def test_caching_repo_simple(embedded_proto, content_fixture, tmp_path):
 
 @pytest.fixture
 def caching_proto(
-        fsspec_proto, tmp_path, s3_moto_fixture):
+        fsspec_proto, tmp_path, s3_moto_server_url, s3_tmp_bucket_url):
 
     def builder(caching_scheme="file"):
         remote_proto = fsspec_proto(scheme="memory")
@@ -43,8 +43,8 @@ def caching_proto(
 
             caching_proto = build_fsspec_protocol(
                 "local",
-                f"s3://test-bucket{tmp_path}",
-                endpoint_url=s3_moto_fixture
+                s3_tmp_bucket_url,
+                endpoint_url=s3_moto_server_url
             )
         else:
             raise ValueError(f"Unsupported caching scheme: {caching_scheme}")
