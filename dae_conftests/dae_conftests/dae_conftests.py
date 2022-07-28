@@ -1165,67 +1165,56 @@ def grr_fixture(fixture_dirname):
     return build_genomic_resource_repository(repositories)
 
 
-# Code copy/pasted from
-# https://github.com/fsspec/s3fs/blob/main/s3fs/tests/test_s3fs.py#L67
-port = 5555
-endpoint_uri = "http://127.0.0.1:%s/" % port
+@pytest.fixture(scope="session")
+def s3_moto_server_url():
+    """Start a moto (i.e. mocked) s3 server and return its URL."""
+    # pylint: disable=protected-access,import-outside-toplevel
+    from moto.server import ThreadedMotoServer  # type: ignore
+    server = ThreadedMotoServer(ip_address="", port=0)
+    server.start()
+    server_address = server._server.server_address
+
+    yield f"http://{server_address[0]}:{server_address[1]}"
+
+    server.stop()
 
 
-@pytest.fixture()
-def s3_base():
-    import time
-    import requests
-
-    # writable local S3 system
-    import shlex
-    import subprocess
-
-    try:
-        # should fail since we didn't start server yet
-        r = requests.get(endpoint_uri)
-    except Exception:  # noqa
-        pass
-    else:
-        if r.ok:
-            raise RuntimeError("moto server already up")
-    if "AWS_SECRET_ACCESS_KEY" not in os.environ:
-        os.environ["AWS_SECRET_ACCESS_KEY"] = "foo"
-    if "AWS_ACCESS_KEY_ID" not in os.environ:
-        os.environ["AWS_ACCESS_KEY_ID"] = "foo"
-    proc = subprocess.Popen(shlex.split("moto_server s3 -p %s" % port))
-
-    timeout = 5
-    while timeout > 0:
-        try:
-            r = requests.get(endpoint_uri)
-            if r.ok:
-                break
-        except Exception:  # noqa
-            pass
-        timeout -= 0.1
-        time.sleep(0.1)
-    yield
-    proc.terminate()
-    proc.wait()
-
-
-def get_boto3_client():
+@pytest.fixture(scope="session")
+def s3_client(s3_moto_server_url):
+    """Return a boto client connected to the moto server."""
     from botocore.session import Session  # type: ignore
 
-    # NB: we use the sync botocore client for setup
     session = Session()
-    return session.create_client("s3", endpoint_url=endpoint_uri)
+    client = session.create_client("s3", endpoint_url=s3_moto_server_url)
+    return client
 
 
 @pytest.fixture()
-def s3(s3_base):
+def s3_tmp_bucket_url(s3_client):
+    """Create a bucket called 'test-bucket' and return its URL."""
+    s3_client.create_bucket(Bucket="test-bucket", ACL="public-read")
+
+    yield "s3://test-bucket"
+
+    all_objects = s3_client.list_objects(Bucket="test-bucket")\
+        .get("Contents", None)
+    if all_objects is not None:
+        to_delete = {
+            "Objects": [
+                {"Key": obj["Key"]} for obj in all_objects
+            ]
+        }
+        s3_client.delete_objects(Bucket="test-bucket", Delete=to_delete)
+        s3_client.delete_bucket(Bucket="test-bucket")
+
+
+@pytest.fixture()
+def s3_filesystem(s3_moto_server_url):
     from s3fs.core import S3FileSystem  # type: ignore
 
-    client = get_boto3_client()
-    client.create_bucket(Bucket="test-bucket", ACL="public-read")
-
     S3FileSystem.clear_instance_cache()
-    s3 = S3FileSystem(anon=False, client_kwargs={"endpoint_url": endpoint_uri})
+    s3 = S3FileSystem(anon=False,
+                      client_kwargs={"endpoint_url": s3_moto_server_url})
     s3.invalidate_cache()
     yield s3
 

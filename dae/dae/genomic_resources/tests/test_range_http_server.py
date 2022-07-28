@@ -4,7 +4,7 @@ import logging
 import requests
 
 from dae.genomic_resources.testing import \
-    range_http_process_server_generator, s3_moto_server
+    range_http_process_server_generator
 from dae.genomic_resources.repository_factory import \
     build_genomic_resource_repository
 from dae.genomic_resources.clinvar import ClinVarVcf
@@ -63,25 +63,5 @@ def test_process_server_simple(fixture_dirname):
         pass
 
 
-def test_s3_threading_server():
-    # pylint: disable=import-outside-toplevel
-    with s3_moto_server() as s3_url:
-
-        print(100 * "=")
-        print("s3:", s3_url)
-        print(100 * "=")
-
-        from botocore.session import Session  # type: ignore
-
-        # NB: we use the sync botocore client for setup
-        session = Session()
-        client = session.create_client("s3", endpoint_url=s3_url)
-        client.create_bucket(Bucket="test-bucket", ACL="public-read")
-
-        from s3fs.core import S3FileSystem  # type: ignore
-
-        S3FileSystem.clear_instance_cache()
-        s3 = S3FileSystem(anon=False, client_kwargs={"endpoint_url": s3_url})
-        s3.invalidate_cache()
-
-        assert s3.ls("test-bucket") is not None
+def test_s3_threading_server(s3_tmp_bucket_url, s3_filesystem):
+    assert s3_filesystem.ls("test-bucket") is not None

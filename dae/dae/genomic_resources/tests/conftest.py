@@ -15,7 +15,6 @@ from dae.genomic_resources.fsspec_protocol import \
 from dae.genomic_resources.testing import \
     build_testing_protocol, \
     range_http_process_server_generator, \
-    s3_moto_server, \
     tabix_to_resource
 from dae.genomic_resources.test_tools import convert_to_tab_separated
 from dae.genomic_resources import build_genomic_resource_repository
@@ -74,28 +73,9 @@ def embedded_proto(tmp_path):
     return builder
 
 
-@pytest.fixture(scope="session")
-def s3_moto_fixture():
-    with s3_moto_server() as s3_url:
-        # if "AWS_SECRET_ACCESS_KEY" not in os.environ:
-        #     os.environ["AWS_SECRET_ACCESS_KEY"] = "foo"
-        # if "AWS_ACCESS_KEY_ID" not in os.environ:
-        #     os.environ["AWS_ACCESS_KEY_ID"] = "foo"
-
-        from botocore.session import Session  # type: ignore
-        session = Session()
-        client = session.create_client(
-            "s3", endpoint_url=s3_url,
-            aws_access_key_id="foo",
-            aws_secret_access_key="foo")
-        client.create_bucket(Bucket="test-bucket", ACL="public-read")
-
-        yield s3_url
-
-
 @pytest.fixture
 def proto_builder(
-        request, tmp_path_factory, s3_moto_fixture):
+        request, tmp_path_factory, s3_moto_server_url, s3_tmp_bucket_url):
     # flake8: noqa
     def builder(src_proto, scheme="file", proto_id="testing"):
 
@@ -118,14 +98,10 @@ def proto_builder(
                 proto.copy_resource(res)
 
         if scheme == "s3":
-            endpoint_url = s3_moto_fixture
-
-            tmp_dir = tmp_path_factory.mktemp(
-                basename="s3", numbered=True)
+            endpoint_url = s3_moto_server_url
 
             proto = build_fsspec_protocol(
-                proto_id, f"s3://test-bucket{tmp_dir}",
-                endpoint_url=endpoint_url)
+                proto_id, s3_tmp_bucket_url, endpoint_url=endpoint_url)
 
             for res in src_proto.get_all_resources():
                 proto.copy_resource(res)

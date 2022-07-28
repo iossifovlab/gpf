@@ -451,14 +451,15 @@ def test_collect_filenames_local(fixture_dirname):
     assert all_filenames[1] == fixture_dirname("backends/multivcf_split2.vcf")
 
 
-@pytest.mark.skip(reason="Moto currently hangs")
-def test_collect_filenames_s3(fixture_dirname, s3, mocker):
-    s3.put(fixture_dirname("backends/multivcf_split1.vcf"),
-           "s3://test-bucket/dir/multivcf_split1.vcf")
-    s3.put(fixture_dirname("backends/multivcf_split2.vcf"),
-           "s3://test-bucket/dir/multivcf_split2.vcf")
+def test_collect_filenames_s3(fixture_dirname, s3_filesystem,
+                              s3_tmp_bucket_url, mocker):
+    s3_filesystem.put(fixture_dirname("backends/multivcf_split1.vcf"),
+                      f"{s3_tmp_bucket_url}/dir/multivcf_split1.vcf")
+    s3_filesystem.put(fixture_dirname("backends/multivcf_split2.vcf"),
+                      f"{s3_tmp_bucket_url}/dir/multivcf_split2.vcf")
 
-    mocker.patch("dae.backends.vcf.loader.url_to_fs", return_value=(s3, None))
+    mocker.patch("dae.backends.vcf.loader.url_to_fs",
+                 return_value=(s3_filesystem, None))
 
     vcf_filenames = ["s3://test-bucket/dir/multivcf_split[vc].vcf"]
 
