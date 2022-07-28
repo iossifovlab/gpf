@@ -165,39 +165,39 @@ class Histogram:
         for value in values:
             self.add_value(value)
 
-    def set_bins_bars(self, values):
-        """Temporary func to support legacy calculation used in gene scores."""
-        _min = min(values)
-        _max = max(values)
-        step = 1.0 * (_max - _min) / (self.bins_count - 1)
-        dec = -np.log10(step)
-        dec = dec if dec >= 0 else 0
-        dec = int(dec)
+    # def set_bins_bars(self, values):
+    #     """Temp func to support legacy calculation used in gene scores."""
+    #     _min = min(values)
+    #     _max = max(values)
+    #     step = 1.0 * (_max - _min) / (self.bins_count - 1)
+    #     dec = -np.log10(step)
+    #     dec = dec if dec >= 0 else 0
+    #     dec = int(dec)
 
-        bleft = np.around(_min, dec)
-        bright = np.around(_max, dec)
+    #     bleft = np.around(_min, dec)
+    #     bright = np.around(_max, dec)
 
-        if self.x_scale == "log":
-            # Max numbers of items in first bin
-            max_count = values.size / self.bins_count
+    #     if self.x_scale == "log":
+    #         # Max numbers of items in first bin
+    #         max_count = values.size / self.bins_count
 
-            # Find a bin small enough to fit max_count items
-            for bleft in range(-1, -200, -1):
-                if ((values) < 10 ** bleft).sum() < max_count:
-                    break
+    #         # Find a bin small enough to fit max_count items
+    #         for bleft in range(-1, -200, -1):
+    #             if ((values) < 10 ** bleft).sum() < max_count:
+    #                 break
 
-            bins_in = [0] + list(
-                np.logspace(bleft, np.log10(bright), self.bins_count)
-            )
-        else:
-            bins_in = self.bins_count
+    #         bins_in = [0] + list(
+    #             np.logspace(bleft, np.log10(bright), self.bins_count)
+    #         )
+    #     else:
+    #         bins_in = self.bins_count
 
-        bars, bins = np.histogram(
-            list(values), bins_in, range=[bleft, bright]
-        )
+    #     bars, bins = np.histogram(
+    #         list(values), bins_in - 1, range=[bleft, bright]
+    #     )
 
-        self.bins = bins
-        self.bars = bars
+    #     self.bins = bins
+    #     self.bars = bars
 
 
 class HistogramBuilder:
