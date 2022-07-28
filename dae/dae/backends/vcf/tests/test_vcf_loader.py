@@ -55,7 +55,7 @@ def test_simple_vcf_loader_multi(fixture_dirname, gpf_instance_2013):
         fixture_dirname("backends/multivcf_split1.vcf"),
         fixture_dirname("backends/multivcf_split2.vcf"),
     ]
-    assert all([os.path.exists(fn) for fn in vcf_filenames])
+    assert all(os.path.exists(fn) for fn in vcf_filenames)
     ped_filename = fixture_dirname("backends/multivcf.ped")
     assert os.path.exists(ped_filename)
 
@@ -68,8 +68,8 @@ def test_simple_vcf_loader_multi(fixture_dirname, gpf_instance_2013):
         fill_missing_ref=False,
     )
     assert vcf_loader is not None
-    vs = list(vcf_loader.full_variants_iterator())
-    assert len(vs) == 6
+    variants = list(vcf_loader.full_variants_iterator())
+    assert len(variants) == 6
 
 
 @pytest.mark.parametrize(
@@ -80,6 +80,7 @@ def test_simple_vcf_loader_multi(fixture_dirname, gpf_instance_2013):
     ],
 )
 def test_vcf_loader_multi(fixture_dirname, multivcf_files, gpf_instance_2013):
+    # pylint: disable=too-many-locals,invalid-name
     ped_file = fixture_dirname("backends/multivcf.ped")
 
     multivcf_files = list(
@@ -143,6 +144,7 @@ def test_vcf_loader_multi(fixture_dirname, multivcf_files, gpf_instance_2013):
 def test_multivcf_loader_fill_missing(
     fixture_dirname, fill_mode, fill_value, gpf_instance_2013
 ):
+    # pylint: disable=too-many-locals
     ped_file = fixture_dirname("backends/multivcf.ped")
 
     multivcf_files = [
@@ -163,7 +165,7 @@ def test_multivcf_loader_fill_missing(
 
     assert multi_vcf_loader is not None
     multi_it = multi_vcf_loader.full_variants_iterator()
-    svs_fvs = [sum_fvs for sum_fvs in multi_it]
+    svs_fvs = list(multi_it)
     print(svs_fvs)
     first_present = svs_fvs[0]
     second_missing = svs_fvs[1]
@@ -250,9 +252,9 @@ def test_vcf_denovo_mode(
     )
 
     assert vcf_loader is not None
-    vs = list(vcf_loader.family_variants_iterator())
-    assert len(vs) == total
-    for fv in vs:
+    variants = list(vcf_loader.family_variants_iterator())
+    assert len(variants) == total
+    for fv in variants:
         for fa in fv.alleles:
             print(fa, fa.inheritance_in_members)
             assert set(
@@ -292,9 +294,9 @@ def test_vcf_omission_mode(
     )
 
     assert vcf_loader is not None
-    vs = list(vcf_loader.family_variants_iterator())
-    assert len(vs) == total
-    for fv in vs:
+    variants = list(vcf_loader.family_variants_iterator())
+    assert len(variants) == total
+    for fv in variants:
         for fa in fv.alleles:
             print(20 * "-")
             print(fa, fa.inheritance_in_members)
@@ -334,8 +336,8 @@ def test_vcf_loader_params(
 
     variants_loader = vcf_variants_loaders(
         "backends/f1_test", params=params)[0]
-    vs = list(variants_loader.family_variants_iterator())
-    assert len(vs) == count
+    variants = list(variants_loader.family_variants_iterator())
+    assert len(variants) == count
 
 
 @pytest.fixture
@@ -451,14 +453,15 @@ def test_collect_filenames_local(fixture_dirname):
     assert all_filenames[1] == fixture_dirname("backends/multivcf_split2.vcf")
 
 
-@pytest.mark.skip(reason="Moto currently hangs")
-def test_collect_filenames_s3(fixture_dirname, s3, mocker):
-    s3.put(fixture_dirname("backends/multivcf_split1.vcf"),
-           "s3://test-bucket/dir/multivcf_split1.vcf")
-    s3.put(fixture_dirname("backends/multivcf_split2.vcf"),
-           "s3://test-bucket/dir/multivcf_split2.vcf")
+def test_collect_filenames_s3(fixture_dirname, s3_filesystem,
+                              s3_tmp_bucket_url, mocker):
+    s3_filesystem.put(fixture_dirname("backends/multivcf_split1.vcf"),
+                      f"{s3_tmp_bucket_url}/dir/multivcf_split1.vcf")
+    s3_filesystem.put(fixture_dirname("backends/multivcf_split2.vcf"),
+                      f"{s3_tmp_bucket_url}/dir/multivcf_split2.vcf")
 
-    mocker.patch("dae.backends.vcf.loader.url_to_fs", return_value=(s3, None))
+    mocker.patch("dae.backends.vcf.loader.url_to_fs",
+                 return_value=(s3_filesystem, None))
 
     vcf_filenames = ["s3://test-bucket/dir/multivcf_split[vc].vcf"]
 

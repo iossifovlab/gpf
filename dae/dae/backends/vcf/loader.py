@@ -121,6 +121,7 @@ class VcfFamiliesGenotypes(FamiliesGenotypes):
 class SingleVcfLoader(VariantsGenotypesLoader):
     """Defines a variant loader from single VCF file."""
 
+    # pylint: disable=too-many-instance-attributes
     def __init__(
             self,
             families,
@@ -314,6 +315,7 @@ class SingleVcfLoader(VariantsGenotypesLoader):
         return [self._adjust_chrom_prefix(chrom) for chrom in res]
 
     def _match_pedigree_to_samples(self):
+        # pylint: disable=too-many-branches
         vcf_samples = []
         for vcf in self.vcfs:
             intersection = set(vcf_samples) & set(vcf.header.samples)

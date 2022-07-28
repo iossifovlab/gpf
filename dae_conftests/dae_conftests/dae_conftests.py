@@ -1,4 +1,4 @@
-# pylint: disable=W0621,C0114,C0116,C0415,W0212,W0613
+# pylint: disable=W0621,C0114,C0116,C0415,W0212,W0613,C0302,C0115,W0102,W0603
 
 import os
 import sys
@@ -118,7 +118,7 @@ def gpf_instance(default_dae_config, fixture_dirname):
 
     class GPFInstanceInternal(GPFInstance):
         def __init__(self, *args, **kwargs):
-            super(GPFInstanceInternal, self).__init__(*args, **kwargs)
+            super().__init__(*args, **kwargs)
 
     def build(work_dir=None, load_eagerly=False):
         instance = GPFInstanceInternal(
@@ -149,7 +149,7 @@ def gpf_instance_2013(
 
     class GPFInstance2013(GPFInstance):
         def __init__(self, *args, **kwargs):
-            super(GPFInstance2013, self).__init__(*args, **kwargs)
+            super().__init__(*args, **kwargs)
 
         @property  # type: ignore
         @cached
@@ -188,7 +188,7 @@ def gpf_instance_2019(default_dae_config, global_dae_fixtures_dir):
 
     class GPFInstance2019(GPFInstance):
         def __init__(self, *args, **kwargs):
-            super(GPFInstance2019, self).__init__(*args, **kwargs)
+            super().__init__(*args, **kwargs)
 
         @property  # type: ignore
         @cached
@@ -354,8 +354,8 @@ def annotation_pipeline_internal(gpf_instance_2013):
 
 
 def from_prefix_denovo(prefix):
-    denovo_filename = "{}.txt".format(prefix)
-    family_filename = "{}_families.ped".format(prefix)
+    denovo_filename = f"{prefix}.txt"
+    family_filename = f"{prefix}_families.ped"
 
     conf = {
         "denovo": {
@@ -374,9 +374,9 @@ def from_prefix_vcf(prefix):
         "pedigree": pedigree_filename,
     }
 
-    vcf_filename = "{}.vcf".format(prefix)
+    vcf_filename = f"{prefix}.vcf"
     if not os.path.exists(vcf_filename):
-        vcf_filename = "{}.vcf.gz".format(prefix)
+        vcf_filename = f"{prefix}.vcf.gz"
     if os.path.exists(vcf_filename):
         conf["vcf"] = vcf_filename
 
@@ -415,9 +415,9 @@ def dae_denovo(
 
 
 def from_prefix_dae(prefix):
-    summary_filename = "{}.txt.gz".format(prefix)
-    toomany_filename = "{}-TOOMANY.txt.gz".format(prefix)
-    family_filename = "{}.families.txt".format(prefix)
+    summary_filename = f"{prefix}.txt.gz"
+    toomany_filename = f"{prefix}-TOOMANY.txt.gz"
+    family_filename = f"{prefix}.families.txt"
 
     conf = {
         "dae": {
@@ -822,7 +822,7 @@ def data_import(
         vcf_configs = collect_vcf(vcfdirname)
 
         for config in vcf_configs:
-            logger.debug(f"importing: {config}")
+            logger.debug("importing: %s", config)
 
             filename = os.path.basename(config.pedigree)
             study_id = os.path.splitext(filename)[0]
@@ -1165,69 +1165,54 @@ def grr_fixture(fixture_dirname):
     return build_genomic_resource_repository(repositories)
 
 
-# Code copy/pasted from
-# https://github.com/fsspec/s3fs/blob/main/s3fs/tests/test_s3fs.py#L67
-port = 5555
-endpoint_uri = "http://127.0.0.1:%s/" % port
-
-
-@pytest.fixture()
-def s3_base():
-    import time
-    import requests
-
-    # writable local S3 system
-    import shlex
-    import subprocess
-
-    try:
-        # should fail since we didn't start server yet
-        r = requests.get(endpoint_uri)
-    except Exception:  # noqa
-        pass
-    else:
-        if r.ok:
-            raise RuntimeError("moto server already up")
+@pytest.fixture(scope="session")
+def s3_moto_server_url():
+    """Start a moto (i.e. mocked) s3 server and return its URL."""
+    # pylint: disable=protected-access,import-outside-toplevel
     if "AWS_SECRET_ACCESS_KEY" not in os.environ:
         os.environ["AWS_SECRET_ACCESS_KEY"] = "foo"
     if "AWS_ACCESS_KEY_ID" not in os.environ:
         os.environ["AWS_ACCESS_KEY_ID"] = "foo"
-    proc = subprocess.Popen(shlex.split("moto_server s3 -p %s" % port))
+    from moto.server import ThreadedMotoServer  # type: ignore
+    server = ThreadedMotoServer(ip_address="", port=0)
+    server.start()
+    server_address = server._server.server_address
 
-    timeout = 5
-    while timeout > 0:
-        try:
-            r = requests.get(endpoint_uri)
-            if r.ok:
-                break
-        except Exception:  # noqa
-            pass
-        timeout -= 0.1
-        time.sleep(0.1)
-    yield
-    proc.terminate()
-    proc.wait()
+    yield f"http://{server_address[0]}:{server_address[1]}"
+
+    server.stop()
 
 
-def get_boto3_client():
+@pytest.fixture(scope="session")
+def s3_client(s3_moto_server_url):
+    """Return a boto client connected to the moto server."""
     from botocore.session import Session  # type: ignore
 
-    # NB: we use the sync botocore client for setup
     session = Session()
-    return session.create_client("s3", endpoint_url=endpoint_uri)
+    client = session.create_client("s3", endpoint_url=s3_moto_server_url)
+    return client
 
 
 @pytest.fixture()
-def s3(s3_base):
+def s3_filesystem(s3_moto_server_url):
     from s3fs.core import S3FileSystem  # type: ignore
 
-    client = get_boto3_client()
-    client.create_bucket(Bucket="test-bucket", ACL="public-read")
-
     S3FileSystem.clear_instance_cache()
-    s3 = S3FileSystem(anon=False, client_kwargs={"endpoint_url": endpoint_uri})
+    s3 = S3FileSystem(anon=False,
+                      client_kwargs={"endpoint_url": s3_moto_server_url})
     s3.invalidate_cache()
     yield s3
+
+
+@pytest.fixture()
+def s3_tmp_bucket_url(s3_client, s3_filesystem):
+    """Create a bucket called 'test-bucket' and return its URL."""
+    bucket_url = "s3://test-bucket"
+    s3_filesystem.mkdir(bucket_url, acl="public-read")
+
+    yield bucket_url
+
+    s3_filesystem.rm("s3://test-bucket", recursive=True)
 
 
 @pytest.fixture(scope="session")
