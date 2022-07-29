@@ -1,6 +1,7 @@
 import functools
 import operator
 import logging
+from typing import Any
 
 import pyarrow as pa
 from dae.variants.core import Allele
@@ -16,6 +17,7 @@ logger = logging.getLogger(__name__)
 
 
 class AlleleParquetSerializer:
+    """Serialize a bunch of alleles."""
 
     SUMMARY_SEARCHABLE_PROPERTIES_TYPES = {
         "bucket_index": pa.int32(),
@@ -166,6 +168,7 @@ class AlleleParquetSerializer:
 
     @property
     def schema_summary(self):
+        """Lazy construct and return the schema for the summary alleles."""
         if self._schema_summary is None:
             fields = [
                 pa.field(spr, pat)
@@ -201,12 +204,11 @@ class AlleleParquetSerializer:
 
     @property
     def schema_family(self):
+        """Lazy construct and return the schema for the family alleles."""
         if self._schema_family is None:
             fields = []
-            for spr in self.FAMILY_SEARCHABLE_PROPERTIES_TYPES:
-                field = pa.field(
-                    spr, self.FAMILY_SEARCHABLE_PROPERTIES_TYPES[spr]
-                )
+            for spr, ftype in self.FAMILY_SEARCHABLE_PROPERTIES_TYPES.items():
+                field = pa.field(spr, ftype)
                 fields.append(field)
 
             fields.append(pa.field("family_variant_data", pa.string()))
@@ -240,7 +242,9 @@ class AlleleParquetSerializer:
                 prop_value = prop_value.value
         return prop_value
 
-    def build_family_allele_batch_dict(self, allele, family_variant_data):
+    def build_family_allele_batch_dict(self, allele, family_variant_data) \
+            -> dict[str, list[Any]]:
+        """Build a batch of family allele data in the form of a dict."""
         family_header = []
         family_properties = []
 
@@ -250,14 +254,18 @@ class AlleleParquetSerializer:
             family_header.append(spr)
             family_properties.append(prop_value)
 
-        allele_data = {name: [] for name in self.schema_family.names}
+        allele_data: dict[str, list] = {
+            name: [] for name in self.schema_family.names
+        }
         for name, value in zip(family_header, family_properties):
             allele_data[name].append(value)
 
         allele_data["family_variant_data"] = [family_variant_data]
         return allele_data
 
-    def build_summary_allele_batch_dict(self, allele, summary_variant_data):
+    def build_summary_allele_batch_dict(self, allele, summary_variant_data) \
+            -> dict[str, list[Any]]:
+        """Build a batch of summary allele data in the form of a dict."""
         allele_data = {"summary_variant_data": [summary_variant_data]}
 
         for spr in self.SUMMARY_SEARCHABLE_PROPERTIES_TYPES:
@@ -281,7 +289,7 @@ class AlleleParquetSerializer:
             allele_data[spr] = [prop_value]
 
         if self.annotation_schema is not None:
-            for a in self.annotation_schema.public_fields:
-                allele_data[a] = [allele.get_attribute(a)]
+            for field in self.annotation_schema.public_fields:
+                allele_data[field] = [allele.get_attribute(field)]
 
         return allele_data

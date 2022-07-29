@@ -270,7 +270,6 @@ class BigQueryVariants:
             self.table_properties,
             self.pedigree_schema,
             self.pedigree_df,
-            self.families,
             gene_models=self.gene_models,
             do_join_affected=do_join_affected,
         )

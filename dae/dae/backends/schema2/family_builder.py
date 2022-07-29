@@ -1,6 +1,5 @@
 import logging
 from typing import Optional
-from dae.pedigrees.family import FamiliesData
 import pandas as pd
 from dae.backends.schema2.base_query_builder import BaseQueryBuilder, Dialect,\
     TableSchema
