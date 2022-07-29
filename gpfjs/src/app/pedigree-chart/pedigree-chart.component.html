@@ -33,14 +33,14 @@
 </ng-template>
 
 <ng-template #pedigreeModal let-modal>
-  <button type="button" style="margin-left: 455px;" class="btn-close" data-bs-dismiss="pedigreeModal" aria-label="Close"></button>
-  <div class="svg-container" style="padding: 0 0 15px 0; max-width: 200px">
+  <button type="button" style="margin-left: 95%;" class="btn-close" data-bs-dismiss="pedigreeModal" aria-label="Close"></button>
+  <div class="svg-container" style="max-width: 200px">
     <ng-container *ngTemplateOutlet="pedigree"></ng-container>
   </div>
-  <ngb-accordion *ngIf="counterId !== undefined" #a="ngbAccordion">
+  <ngb-accordion style="margin-top: 10px;" *ngIf="counterId !== undefined" #a="ngbAccordion">
     <ngb-panel>
       <ng-template ngbPanelHeader>
-        <div style="text-align: left">
+        <div style="text-align: left; display: flex; justify-content: space-between;">
           <button
             ngbPanelToggle
             (click)="loadFamilyListData()"
@@ -54,8 +54,7 @@
             <button
               class="btn btn-md btn-primary btn-right"
               id="download-button"
-              type="button submit"
-              style="margin-left: 390px; margin-top: -38.5px;">Download</button>
+              type="button submit">Download</button>
           </form>
         </div>
       </ng-template>
@@ -71,6 +70,6 @@
   </ngb-accordion>
 </ng-template>
 
-<div (click)="openModal(pedigreeModal)" class="svg-container" style="width: 73px">
+<div (click)="openModal(pedigreeModal)" class="svg-container" style="width: 50%; max-width: 100px;">
   <ng-container *ngTemplateOutlet="pedigree"></ng-container>
 </div>
