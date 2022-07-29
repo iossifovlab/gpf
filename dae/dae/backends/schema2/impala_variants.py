@@ -105,7 +105,7 @@ class ImpalaVariants:
         )
         return conn
 
-    def _fetch_schema(self, table):
+    def _fetch_schema(self, table) -> dict[str, str]:
         with closing(self.connection()) as conn:
             with conn.cursor() as cursor:
                 query = f"""DESCRIBE {self.db}.{table}"""
@@ -245,7 +245,6 @@ class ImpalaVariants:
                     self.table_properties,
                     self.pedigree_schema,
                     self.ped_df,
-                    self.families,
                     gene_models=self.gene_models,
                     do_join_affected=do_join_affected,
                 )
@@ -409,24 +408,6 @@ class ImpalaVariants:
                 query = f"""SELECT * FROM {self.db}.{self.pedigree_table}"""
                 cursor.execute(query)
                 ped_df = as_pandas(cursor)
-
-        columns = {
-            "personId": "person_id",
-            "familyId": "family_id",
-            "momId": "mom_id",
-            "dadId": "dad_id",
-            "sampleId": "sample_id",
-            "sex": "sex",
-            "status": "status",
-            "role": "role",
-            "generated": "generated",
-            "layout": "layout",
-            "phenotype": "phenotype",
-        }
-        if "not_sequenced" in self.pedigree_schema:
-            columns = {"not_sequenced": "not_sequenced"}
-
-        ped_df = ped_df.rename(columns=columns)
 
         ped_df.role = ped_df.role.apply(Role)
         ped_df.sex = ped_df.sex.apply(Sex)

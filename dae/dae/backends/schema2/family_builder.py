@@ -1,5 +1,9 @@
 import logging
-from dae.backends.schema2.base_query_builder import BaseQueryBuilder, Dialect
+from typing import Optional
+from dae.pedigrees.family import FamiliesData
+import pandas as pd
+from dae.backends.schema2.base_query_builder import BaseQueryBuilder, Dialect,\
+    TableSchema
 
 logger = logging.getLogger(__name__)
 
@@ -10,16 +14,15 @@ class FamilyQueryBuilder(BaseQueryBuilder):
     def __init__(
         self,
         dialect: Dialect,
-        db,
-        family_variant_table,
-        summary_allele_table,
-        pedigree_table,
-        family_variant_schema,
-        summary_allele_schema,
-        table_properties,
-        pedigree_schema,
-        pedigree_df,
-        families,
+        db: str,
+        family_variant_table: str,
+        summary_allele_table: str,
+        pedigree_table: str,
+        family_variant_schema: TableSchema,
+        summary_allele_schema: TableSchema,
+        table_properties: Optional[dict],
+        pedigree_schema: TableSchema,
+        pedigree_df: pd.DataFrame,
         gene_models=None,
         do_join_affected=False,
     ):
@@ -42,7 +45,6 @@ class FamilyQueryBuilder(BaseQueryBuilder):
         )
 
         self.do_join_affected = do_join_affected
-        self.families = families
 
     def _query_columns(self):
         self.select_accessors = {

@@ -1,5 +1,8 @@
 import logging
 from abc import ABC, abstractmethod
+from typing import Optional
+import pandas as pd
+from dae.genomic_resources.gene_models import GeneModels
 from dae.variants.attributes import Inheritance
 from dae.backends.attributes_query import inheritance_query
 from dae.utils.regions import Region
@@ -44,6 +47,9 @@ class Dialect(ABC):
                f"{db}.{table}"
 
 
+# A type describing a schema as expected by the query builders
+TableSchema = dict[str, str]
+
 # family_variant_table & summary_allele_table are mandatory
 # - no reliance on a variants table as in impala
 
@@ -66,16 +72,16 @@ class BaseQueryBuilder(ABC):
     def __init__(
         self,
         dialect: Dialect,
-        db,
-        family_variant_table,
-        summary_allele_table,
-        pedigree_table,
-        family_variant_schema,
-        summary_allele_schema,
-        table_properties,
-        pedigree_schema,
-        pedigree_df,
-        gene_models=None,
+        db: str,
+        family_variant_table: str,
+        summary_allele_table: str,
+        pedigree_table: str,
+        family_variant_schema: TableSchema,
+        summary_allele_schema: TableSchema,
+        table_properties: Optional[dict],
+        pedigree_schema: TableSchema,
+        pedigree_df: pd.DataFrame,
+        gene_models: Optional[GeneModels] = None,
     ):
         # pylint: disable=too-many-arguments
 
@@ -89,12 +95,8 @@ class BaseQueryBuilder(ABC):
         self.pedigree_table = pedigree_table
         self.table_properties = table_properties
 
-        self.family_columns = (
-            family_variant_schema.keys() if family_variant_schema else []
-        )
-        self.summary_columns = (
-            summary_allele_schema.keys() if summary_allele_schema else []
-        )
+        self.family_columns = family_variant_schema.keys()
+        self.summary_columns = summary_allele_schema.keys()
         self.combined_columns = {
             **family_variant_schema,
             **summary_allele_schema,
