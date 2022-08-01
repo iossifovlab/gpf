@@ -1,25 +1,24 @@
 <div class="form-block">
   <div class="card">
-    <ul ngbNav #nav="ngbNav" class="navbar bg-light nav-pills" style="justify-content: flex-start">
-      <div class="nav-title-custom">Studies</div>
-      <li ngbNavItem>
-        <a ngbNavLink>
-          <gpf-add-button (addFilter)="addFilter($event)"></gpf-add-button>
-        </a>
+    <ul ngbNav #nav="ngbNav" (navChange)="onNavChange()" class="navbar bg-light nav-pills" style="justify-content: flex-start">
+      <div class="nav-title-custom">Study filters</div>
+      <li [ngbNavItem]="'allStudies'" id="all-studies">
+        <a ngbNavLink>All</a>
+      </li>
+      <li [ngbNavItem]="'studyNames'" id="study-names">
+        <a ngbNavLink>Studies</a>
+        <ng-template ngbNavContent>
+          <div class="panel">
+            <gpf-checkbox-list
+              [items]="allStudies"
+              [selectedItems]="selectedStudies"
+              (itemsUpdateEvent)="updateSelectedStudies($event)">
+            </gpf-checkbox-list>
+            <gpf-errors-alert [errors]="errors"></gpf-errors-alert>
+          </div>
+        </ng-template>
       </li>
     </ul>
-    <div class="card-block">
-      <div style="padding: 5px" *ngFor="let study of selectedStudies; trackBy: trackById; let i = index">
-        <span style="padding: 5px; display: block; overflow: hidden">
-          <gpf-remove-button [field]="study" (removeFilter)="removeFilter($event)"></gpf-remove-button>
-          <gpf-study-filter
-            [selectedStudy]="study"
-            (changeSelectedStudyEvent)="changeSelectedStudy($event)"
-            [errors]="errors"
-            [studies]="studies">
-          </gpf-study-filter>
-        </span>
-      </div>
-    </div>
+    <div [ngbNavOutlet]="nav" class="card-block"></div>
   </div>
 </div>

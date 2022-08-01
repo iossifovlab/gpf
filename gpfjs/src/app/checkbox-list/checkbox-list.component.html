@@ -1,5 +1,5 @@
 <div class="card">
-  <span class="card-header card-title">{{ title }}</span>
+  <span *ngIf="title" class="card-header card-title">{{ title }}</span>
   <div class="card-block">
     <div class="btn-group btn-group-sm">
       <button (click)="selectAll()" class="btn btn-default">All</button>

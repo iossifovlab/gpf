@@ -1,95 +1,55 @@
-import { Component, OnInit, OnChanges, Input, SimpleChanges } from '@angular/core';
+import { Component, OnInit, Input, ViewChild } from '@angular/core';
 import { Store } from '@ngxs/store';
 import { Dataset } from '../datasets/datasets';
-import { Study } from '../study-filter/study-filter.component';
-import { SetStudyFilters, StudyFiltersBlockState } from './study-filters-block.state';
+import { SetStudyFilters, StudyFiltersBlockModel, StudyFiltersBlockState } from './study-filters-block.state';
 import { StatefulComponent } from 'app/common/stateful-component';
-import { ValidateNested } from 'class-validator';
+import { NgbNav } from '@ng-bootstrap/ng-bootstrap';
+import { StateReset } from 'ngxs-reset-plugin';
+import { SetNotEmpty } from 'app/utils/set.validators';
+import { Validate } from 'class-validator';
 
 @Component({
   selector: 'gpf-study-filters-block',
   templateUrl: './study-filters-block.component.html',
   styleUrls: ['./study-filters-block.component.css'],
 })
-export class StudyFiltersBlockComponent extends StatefulComponent implements OnInit, OnChanges {
+export class StudyFiltersBlockComponent extends StatefulComponent implements OnInit {
   @Input() public dataset: Dataset;
+  public allStudies: Set<string>;
 
-  @ValidateNested({each: true})
-  public studies: Study[] = [];
+  @Validate(SetNotEmpty, {message: 'Select at least one.'})
+  public selectedStudies: Set<string> = new Set();
 
-  @ValidateNested({each: true})
-  public selectedStudies: Study[] = [];
+  @ViewChild('nav') public ngbNav: NgbNav;
 
   public constructor(protected store: Store) {
-    super(store, StudyFiltersBlockState, 'studyFiltersBlock');
-  }
-
-  public ngOnChanges(changes: SimpleChanges): void {
-    let ids: string[] = changes.dataset.currentValue.studies;
-    let names: string[] = changes.dataset.currentValue.studyNames;
-    this.studies = [];
-    for (let i = 0; i < ids.length; i++) {
-      const study: Study = {
-        studyId: ids[i],
-        studyName: names[i]
-      };
-      this.studies.push(study);
-    }
+    super(store, StudyFiltersBlockState, 'studyFilters');
   }
 
   public ngOnInit(): void {
     super.ngOnInit();
-    this.store.selectOnce(state => state.studyFiltersBlockState).subscribe(state => {
+
+    this.allStudies = new Set<string>(this.dataset.studyNames);
+
+    this.store.selectOnce(state => state.studyFiltersBlockState as StudyFiltersBlockModel).subscribe(state => {
       // restore state
-      for (const study of state.studyFilters) {
-        for (const studyDesc of this.studies) {
-          if (studyDesc.studyId === study.studyId) {
-            this.addFilter(new Study(studyDesc.studyId, studyDesc.studyName));
-          }
-        }
+      if (state.studyFilters.length !== 0) {
+        this.updateSelectedStudies(new Set(state.studyFilters))
+        setTimeout(() => this.ngbNav.select('studyNames'));
+      } else {
+        this.updateSelectedStudies(new Set(this.allStudies));
       }
     });
   }
 
-  private updateState(): void {
-    this.store.dispatch(new SetStudyFilters(
-      this.selectedStudies.map(st => st.studyId)
-    ));
+  public onNavChange(): void {
+    this.store.dispatch(new SetStudyFilters([]));
+    this.store.dispatch(new StateReset(StudyFiltersBlockState));
+    this.selectedStudies = new Set(this.allStudies);
   }
 
-  public addFilter(studyFilter: Study = null): void {
-    if (studyFilter === null) {
-      this.selectedStudies.push(new Study(
-        this.studies[0].studyId,
-        this.studies[0].studyName,
-      ));
-    } else {
-      this.selectedStudies.push(studyFilter);
-    }
-    this.updateState();
-  }
-
-  public removeFilter(studyFilter: Study): void {
-    this.selectedStudies = this.selectedStudies.filter(
-      sf => sf.studyId !== studyFilter.studyId
-    );
-    this.updateState();
-  }
-
-  public changeSelectedStudy(event: object): void {
-    const selectedStudy = event['selectedStudy'];
-    const selectedStudyId = event['selectedStudyId'];
-    for (const study of this.studies) {
-      if (study.studyId === selectedStudyId) {
-        selectedStudy.studyId = study.studyId;
-        selectedStudy.studyName = study.studyName;
-        break;
-      }
-    }
-    this.updateState();
-  }
-
-  public trackById(data: any) {
-    return data.id;
+  public updateSelectedStudies(newValues: Set<string>): void {
+    this.selectedStudies = newValues;
+    this.store.dispatch(new SetStudyFilters(Array.from(newValues)));
   }
 }

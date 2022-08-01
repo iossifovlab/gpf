@@ -1,7 +1,5 @@
 import { Component, Input, OnInit } from '@angular/core';
-
 import { Observable } from 'rxjs';
-
 import { QueryService } from '../query/query.service';
 import { FullscreenLoadingService } from '../fullscreen-loading/fullscreen-loading.service';
 import { ConfigService } from '../config/config.service';
@@ -19,6 +17,7 @@ import { UniqueFamilyVariantsFilterState } from 'app/unique-family-variants-filt
 import { ErrorsState, ErrorsModel } from '../common/errors.state';
 import { clone } from 'lodash';
 import { take } from 'rxjs/operators';
+import { StudyFiltersBlockState } from 'app/study-filters-block/study-filters-block.state';
 
 @Component({
   selector: 'gpf-genotype-browser',
@@ -49,6 +48,7 @@ export class GenotypeBrowserComponent implements OnInit {
     FamilyFiltersBlockComponent.familyFiltersBlockState,
     PersonFiltersBlockComponent.personFiltersBlockState,
     UniqueFamilyVariantsFilterState,
+    StudyFiltersBlockState
   ])
   public static genotypeBrowserStateSelector(
     genotypeBlockState,
@@ -58,6 +58,7 @@ export class GenotypeBrowserComponent implements OnInit {
     familyFiltersBlockState,
     personFiltersBlockState,
     uniqueFamilyVariantsFilterState,
+    StudyFiltersBlockState
   ): object {
     const res = {
       ...genotypeBlockState,
@@ -66,6 +67,7 @@ export class GenotypeBrowserComponent implements OnInit {
       ...familyFiltersBlockState,
       ...personFiltersBlockState,
       ...uniqueFamilyVariantsFilterState,
+      ...StudyFiltersBlockState
     };
     if (regionsFilterState.regionsFilters.length) {
       res.regions = regionsFilterState.regionsFilters;

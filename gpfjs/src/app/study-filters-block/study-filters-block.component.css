@@ -1,5 +1,3 @@
-.study-filters {
-  position: absolute;
-  right: 20px;
-  top: 5px;
+:host ::ng-deep gpf-checkbox-list .card {
+  border: none;
 }
