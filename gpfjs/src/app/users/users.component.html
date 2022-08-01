@@ -71,11 +71,9 @@
           </div>
         </div>
 
-        <div class="row mt-1 justify-content-center">
-          <div>
-            <button class="btn btn-sm btn-link" (click)="showRegister()">Register</button>
-            <button class="btn btn-sm btn-link" (click)="showForgotPassword()">Forgotten password</button>
-          </div>
+        <div style="display: flex; justify-content: center">
+          <button class="btn btn-sm btn-link" (click)="showRegister()">Register</button>
+          <button class="btn btn-sm btn-link" (click)="showForgotPassword()">Forgotten password</button>
         </div>
         <div *ngIf="errorMessage" class="row mt-1">
           <div class="col-12">
