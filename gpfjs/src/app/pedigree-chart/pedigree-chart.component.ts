@@ -1,29 +1,24 @@
-import {
-  Input, Component, OnInit, ChangeDetectionStrategy,
-  AfterViewInit, ViewChild, ChangeDetectorRef, OnDestroy, Pipe, PipeTransform
-} from '@angular/core';
-import { Observable, BehaviorSubject, Subject, Subscription, of } from 'rxjs';
+import { Input, Component, OnInit } from '@angular/core';
+import { Observable, BehaviorSubject, of } from 'rxjs';
 import { difference } from '../utils/sets-helper';
 import { IntervalForVertex } from '../utils/interval-sandwich';
 import { PedigreeData } from '../genotype-preview-model/genotype-preview';
 import { PerfectlyDrawablePedigreeService } from '../perfectly-drawable-pedigree/perfectly-drawable-pedigree.service';
 import { IndividualWithPosition, Line, IndividualSet, Individual, MatingUnit } from './pedigree-data';
-import { ResizeService } from '../table/resize.service';
 import { filter, map, switchMap, take } from 'rxjs/operators';
 import { VariantReportsService } from 'app/variant-reports/variant-reports.service';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { ConfigService } from 'app/config/config.service';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 
 type OrderedIndividuals = Array<Individual>;
 
 @Component({
   selector: 'gpf-pedigree-chart',
   templateUrl: './pedigree-chart.component.html',
-  styleUrls: ['./pedigree-chart.component.css'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  styleUrls: ['./pedigree-chart.component.css']
 })
-export class PedigreeChartComponent implements OnInit, AfterViewInit, OnDestroy {
-  public static miximizedChart = new Subject<PedigreeChartComponent>();
+export class PedigreeChartComponent implements OnInit {
 
   public pedigreeDataWithLayout: IndividualWithPosition[];
   public lines: Line[];
@@ -31,16 +26,11 @@ export class PedigreeChartComponent implements OnInit, AfterViewInit, OnDestroy 
   public positionedIndividuals = new Array<IndividualWithPosition[]>();
   private idToPosition: Map<string, IndividualWithPosition> = new Map();
 
-  public maximized = false;
   public width = 0;
   public height = 0;
-  public scale = 1.0;
   public loadingFinishedFlag = false;
   public familyLists;
   public pedigreeModalId: string;
-
-  @ViewChild('wrapper')
-  private element;
 
   @Input()
   public set family(data: PedigreeData[]) {
@@ -54,27 +44,15 @@ export class PedigreeChartComponent implements OnInit, AfterViewInit, OnDestroy 
   private family$ = new BehaviorSubject<PedigreeData[]>(null);
   public levels$: Observable<Array<OrderedIndividuals>>;
 
-  private resizeElement: any = null;
-
   public constructor(
     private perfectlyDrawablePedigreeService: PerfectlyDrawablePedigreeService,
-    private resizeService: ResizeService,
-    private changeDetectorRef: ChangeDetectorRef,
     private variantReportsService: VariantReportsService,
     private datasetsService: DatasetsService,
-    public configService: ConfigService
+    public configService: ConfigService,
+    public modalService: NgbModal
   ) { }
 
-  private maximizeSubscription: Subscription;
-
   public ngOnInit(): void {
-    this.maximizeSubscription = PedigreeChartComponent.miximizedChart
-      .subscribe(chart => {
-        if (chart !== this && this.maximized) {
-          this.maximized = false;
-          this.changeDetectorRef.markForCheck();
-        }
-      });
     this.pedigreeDataWithLayout = [];
     this.lines = [];
 
@@ -122,29 +100,6 @@ export class PedigreeChartComponent implements OnInit, AfterViewInit, OnDestroy 
     this.pedigreeModalId = `pedigreeModal${ this.counterId }`;
   }
 
-  public ngOnDestroy(): void {
-    if (this.maximizeSubscription) {
-      this.maximizeSubscription.unsubscribe();
-      this.maximizeSubscription = null;
-    }
-
-    if (this.resizeElement) {
-      this.resizeService.removeResizeEventListener(this.resizeElement);
-      this.resizeElement = null;
-    }
-  }
-
-  public ngAfterViewInit(): void {
-    this.resizeElement = this.element.nativeElement;
-    // console.log(this.element);
-    this.resizeService.addResizeEventListener(this.resizeElement, () => {
-      this.scaleSvg();
-    });
-    setTimeout(() => {
-      this.scaleSvg();
-    });
-  }
-
   public get straightLines(): Line[] {
     return this.lines.filter(line => !line.curved);
   }
@@ -165,7 +120,6 @@ export class PedigreeChartComponent implements OnInit, AfterViewInit, OnDestroy 
     ).subscribe(lists => {
       this.loadingFinishedFlag = true;
       this.familyLists = lists;
-      this.changeDetectorRef.detectChanges();
     });
   }
 
@@ -178,46 +132,20 @@ export class PedigreeChartComponent implements OnInit, AfterViewInit, OnDestroy 
     event.target.submit();
   }
 
-  public scaleSvg(): void {
-    if (!this.element) {
-      return;
-    }
-    const box = this.element.nativeElement.getBoundingClientRect();
-    if (!box) {
-      return;
-    }
-    const height = box.height as number;
-    const width = box.width as number;
-
-    if (this.maximized) {
-      this.scale = 1.0;
-    } else if (this.width && this.height) {
-      this.scale = Math.min(1.0, width / this.width, height / this.height);
-    } else {
-      return;
-    }
-
-    this.changeDetectorRef.markForCheck();
-  }
-
-  public toggleMaximize(): void {
-    if (!this.maximized) {
-      this.maximized = true;
-      PedigreeChartComponent.miximizedChart.next(this);
-    } else {
-      this.maximized = false;
-    }
+  public openModal(content): void {
+    this.modalService.open(content);
   }
 
   public getViewBox(): string {
+    // The addition of 8 to the width and height of the viewbox is to fit the proband arrow
     const sortedCurveLines = this.curveLines.sort(curveLine => curveLine.inverseCurveP1[1]);
     if (sortedCurveLines.length !== 0) {
       const minY = sortedCurveLines[0].inverseCurveP1[1];
       if (minY < 0) {
-        return `-8 ${minY.toString()} ${(this.width + 8.0).toString()} ${(this.height + -minY + 8.0).toString()}`;
+        return `0 ${minY.toString()} ${(this.width + 8).toString()} ${(this.height + -minY + 8).toString()}`;
       }
     }
-    return `-8 0 ${this.width + 8.0} ${this.height + 8.0}`;
+    return `0 0 ${this.width + 8} ${this.height + 8}`;
   }
 
   private loadPositions(family: PedigreeData[]): IndividualWithPosition[][] {

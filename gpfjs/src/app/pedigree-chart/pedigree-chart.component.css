@@ -1,45 +1,10 @@
-.maximized .toggle-maximize {
-  opacity: 0%;
-  position: fixed;
-  width: 100%;
-  height: 100%;
-  top: 0;
-  left: 0;
-  z-index: 1000;
-}
-
-.maximized .svg-wrapper {
-  position: absolute !important;
-  left: 50%;
-  margin: 0 auto;
-  height: initial !important;
-  width: initial !important;
-  max-width: 96%;
-  max-height: 96%;
-  min-width: 40%;
-  overflow: auto;
-  background: white;
-  border: 1px solid #ddd;
-  padding: 10px;
-  z-index: 1;
-  transform: translate(-50%, -80%);
-}
-
 svg {
-  max-height: 73px;
-  margin: auto;
-}
-
-.overlay {
-  position: fixed;
-  left: 50%;
-  transform: translate(-50%, 0);
   width: 100%;
-  z-index: 1000;
+  height: auto;
 }
 
-.maximized svg {
-  max-height: unset;
+.svg-container {
+  margin: 0 auto;
 }
 
 .family-panel {
