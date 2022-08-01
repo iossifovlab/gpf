@@ -58,7 +58,7 @@ export class PhenoBrowserService {
         .set('instrument', instrument)
         .set('search', search);
     const measuresSubject: Subject<PhenoMeasure> = new Subject();
- 
+
     this.oboeInstance = oboe({
       url: `${this.config.baseUrl}${this.measuresUrl}?${searchParams.toString()}`,
       method: 'GET',
@@ -70,7 +70,7 @@ export class PhenoBrowserService {
     }).node('!.*', data => {
       measuresSubject.next(data);
     }).done(data => {
-      if(data.length === 0) {
+      if (data.length === 0) {
         measuresSubject.next(null);
       }
       this.measuresStreamingFinishedSubject.next(true);
