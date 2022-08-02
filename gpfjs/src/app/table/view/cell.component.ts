@@ -13,6 +13,7 @@ export class GpfTableCellComponent {
   @Input() public noScrollOptimization: boolean;
 
   public get cellContent(): GpfTableContentComponent {
-    return this.columnInfo.contentChildren.first;
+    if(this.columnInfo !== undefined)
+      return this.columnInfo.contentChildren.first;
   }
 }
