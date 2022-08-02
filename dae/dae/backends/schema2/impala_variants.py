@@ -3,7 +3,7 @@ import json
 import logging
 import configparser
 from contextlib import closing
-from typing import Iterator
+from typing import Iterator, Optional
 import numpy as np
 from impala.util import as_pandas
 from dae.pedigrees.family import FamiliesData
@@ -95,7 +95,13 @@ class ImpalaVariants:
                 ),
             }
         else:
-            self.table_properties = None
+            self.table_properties = {
+                "region_length": 0,
+                "chromosomes": [],
+                "family_bin_size": 0,
+                "coding_effect_types": [],
+                "rare_boundary": 0
+            }
 
     def connection(self):
         conn = self._impala_helpers.connection()
@@ -118,7 +124,8 @@ class ImpalaVariants:
             }
             return schema
 
-    def _fetch_tblproperties(self, meta_table):
+    def _fetch_tblproperties(self, meta_table) \
+            -> Optional[configparser.ConfigParser]:
         with closing(self.connection()) as conn:
             with conn.cursor() as cursor:
                 query = f"""SELECT value FROM {self.db}.{meta_table}
@@ -165,7 +172,6 @@ class ImpalaVariants:
             self.table_properties,
             self.pedigree_schema,
             self.ped_df,
-            self.families,
             gene_models=self.gene_models,
             do_join_affected=False,
         )

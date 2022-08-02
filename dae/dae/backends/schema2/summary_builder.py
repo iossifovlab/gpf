@@ -19,7 +19,6 @@ class SummaryQueryBuilder(BaseQueryBuilder):
         table_properties,
         pedigree_schema,
         pedigree_df,
-        families,
         gene_models=None,
         do_join_affected=False,
     ):
@@ -42,7 +41,6 @@ class SummaryQueryBuilder(BaseQueryBuilder):
         )
 
         self.do_join_affected = do_join_affected
-        self.families = families
 
     def _query_columns(self):
         return [

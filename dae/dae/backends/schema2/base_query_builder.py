@@ -127,7 +127,7 @@ class BaseQueryBuilder(ABC):
 
     def build_query(
         self,
-        regions=None,
+        regions: Optional[list[Region]] = None,
         genes=None,
         effect_types=None,
         family_ids=None,
