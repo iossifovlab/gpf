@@ -13,12 +13,12 @@ logger = logging.getLogger(__file__)
 
 
 class Schema1ParquetWriter:
-    """Implements writing variants and pedigrees in schema1 parquet files"""
+    """Implements writing variants and pedigrees in schema1 parquet files."""
 
     @staticmethod
     def write_variant(variants_loader, bucket, gpf_instance, project,
                       out_dir):
-        "Write a variant to the corresponding parquet files"
+        """Write a variant to the corresponding parquet files."""
         partition_description = project.get_partition_description(
             work_dir=out_dir)
 
@@ -45,7 +45,7 @@ class Schema1ParquetWriter:
     @staticmethod
     def write_pedigree(families: FamiliesData, out_dir: str,
                        partition_description: PartitionDescriptor):
-        """Write FamiliesData to a pedigree parquet file"""
+        """Write FamiliesData to a pedigree parquet file."""
         if isinstance(partition_description, ParquetPartitionDescriptor):
             if partition_description.family_bin_size > 0:
                 families = partition_description \
@@ -57,8 +57,8 @@ class Schema1ParquetWriter:
 
 
 class ImpalaSchema1ImportStorage(AbstractImportStorage):
-    """This class encodes the logic for import data in the
-    Impala Schema 1 format"""
+    """Import logic for data in the Impala Schema 1 format."""
+
     def __init__(self, project):
         super().__init__(project)
         self.project = project

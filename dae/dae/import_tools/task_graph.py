@@ -6,7 +6,8 @@ from typing import Any, Callable
 
 @dataclass(eq=False, frozen=True)
 class TaskNode:
-    """Represent one node in a TaskGraph together with its dependancies"""
+    """Represent one node in a TaskGraph together with its dependancies."""
+
     name: str
     func: Callable
     args: list[Any]
@@ -14,13 +15,14 @@ class TaskNode:
 
 
 class TaskGraph:
-    """An object representing a graph of tasks"""
+    """An object representing a graph of tasks."""
+
     def __init__(self):
         self.nodes = []
 
     def create_task(self, name: str, func: Callable[..., None], args: list,
                     deps: list[TaskNode]) -> TaskNode:
-        """Creates a new task and adds it to the graph
+        """Create a new task and adds it to the graph.
 
         :param name: Name of the task (used for debugging purposes)
         :param func: Function to execute
@@ -36,15 +38,14 @@ class TaskGraph:
 class TaskGraphExecutor:
     @abstractmethod
     def execute(self, task_graph: TaskGraph):
-        """Executes the graph"""
+        """Execute the graph."""
 
 
 class AbstractTaskGraphExecutor(TaskGraphExecutor):
-    """An executor that traverses the task graph in an order that
-    satisfies dependancies"""
+    """Executor that walks the graph in order that satisfies dependancies."""
 
     def execute(self, task_graph: TaskGraph) -> None:
-        """Executes the graph"""
+        """Execute the graph."""
         self._check_for_cyclic_deps(task_graph)
         for task_node in self._in_exec_order(task_graph):
             self.queue_task(task_node)
@@ -52,11 +53,11 @@ class AbstractTaskGraphExecutor(TaskGraphExecutor):
 
     @abstractmethod
     def queue_task(self, task_node: TaskNode) -> None:
-        """Put the task on the execution queue"""
+        """Put the task on the execution queue."""
 
     @abstractmethod
     def await_tasks(self) -> None:
-        """Wait for all queued tasks to finish"""
+        """Wait for all queued tasks to finish."""
 
     def _in_exec_order(self, task_graph):
         visited = set()
@@ -95,7 +96,8 @@ class AbstractTaskGraphExecutor(TaskGraphExecutor):
 
 
 class SequentialExecutor(AbstractTaskGraphExecutor):
-    """A Task Graph Executor that executes task in a sequential order"""
+    """A Task Graph Executor that executes task in sequential order."""
+
     def queue_task(self, task_node):
         task_node.func(*task_node.args)
 
@@ -104,8 +106,8 @@ class SequentialExecutor(AbstractTaskGraphExecutor):
 
 
 class DaskExecutor(AbstractTaskGraphExecutor):
-    """A Task Graph Executor that executes task in parallel using
-    Dask to do the heavy lifting"""
+    """Execute tasks in parallel using Dask to do the heavy lifting."""
+
     def __init__(self, client):
         self.client = client
         self.task2future = {}

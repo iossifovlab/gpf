@@ -74,11 +74,10 @@ def test_add_chrom_prefix_is_propagated_to_the_loader(resources_dir, mocker,
 
 def test_row_group_size():
     import_config = dict(
-        input=dict(),
+        input={},
         processing_config=dict(
             work_dir="",
-            denovo=dict(
-            ),
+            denovo={},
         ),
         parquet_row_group_size=dict(
             denovo=10000,
@@ -97,7 +96,7 @@ def test_row_group_size():
 
 def test_row_group_size_short_config():
     import_config = dict(
-        input=dict(),
+        input={},
         processing_config=dict(
             work_dir="",
             denovo="single_bucket",
@@ -112,7 +111,7 @@ def test_row_group_size_short_config():
 def test_shorthand_for_large_integers():
     config = dict(
         id="test_import",
-        input=dict(),
+        input={},
         processing_config=dict(
             denovo=dict(
                 region_length="300k"
@@ -135,7 +134,7 @@ def test_shorthand_for_large_integers():
 def test_shorthand_autosomes():
     config = dict(
         id="test_import",
-        input=dict(),
+        input={},
         processing_config=dict(
             vcf=dict(
                 region_length=300,
@@ -169,7 +168,7 @@ def test_shorthand_autosomes():
 def test_shorthand_chromosomes():
     config = dict(
         id="test_import",
-        input=dict(),
+        input={},
         processing_config=dict(
             denovo=dict(
                 chromosomes="chr1, chr2"
@@ -194,7 +193,7 @@ def test_shorthand_chromosomes():
 def test_project_input_dir_default_value():
     config = dict(
         id="test_import",
-        input=dict(),
+        input={},
     )
     project = import_tools.ImportProject.build_from_config(config, "")
     assert project.input_dir == ""

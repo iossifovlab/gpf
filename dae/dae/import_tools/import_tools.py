@@ -34,15 +34,17 @@ class Bucket:
 
 
 class ImportProject():
-    """
-    Encapsulates the import configuration. This class creates the necessary
-    objects needed to import a study (e.g. loaders, family data).
+    """Encapsulate the import configuration.
+
+    This class creates the necessary objects needed to import a study
+    (e.g. loaders, family data and so one).
     """
 
     def __init__(self, import_config, base_input_dir):
-        """
-        Creates a new project from the provided config. It is best not to call
-        this ctor directly but to use one of the provided build_* methods.
+        """Create a new project from the provided config.
+
+        It is best not to call this ctor directly but to use one of the
+        provided build_* methods.
         :param import_config: The parsed, validated and normalized config.
         """
         self.import_config = import_config
@@ -54,9 +56,9 @@ class ImportProject():
 
     @staticmethod
     def build_from_config(import_config, base_input_dir=""):
-        """
-        Creates a new project from the provided config. The config is first
-        validated and normalized.
+        """Create a new project from the provided config.
+
+        The config is first validated and normalized.
         :param import_config: The config to use for the import.
         :base_input_dir: Default input dir. Use cwd by default.
         """
@@ -68,9 +70,10 @@ class ImportProject():
 
     @staticmethod
     def build_from_file(import_filename):
-        """Creates a new project from the provided config filename. The file
-        is first parsed, validated and normalized. The path to the file is used
-        as the default input path for the project.
+        """Create a new project from the provided config filename.
+
+        The file is first parsed, validated and normalized. The path to the
+        file is used as the default input path for the project.
 
         :param import_filename: Path to the config file
         :param gpf_instance: Gpf Instance to use.
@@ -81,7 +84,7 @@ class ImportProject():
         return ImportProject.build_from_config(import_config, base_input_dir)
 
     def get_pedigree(self) -> FamiliesData:
-        """Loads, parses and returns the pedigree data"""
+        """Load, parse and return the pedigree data."""
         families_filename = self.import_config["input"]["pedigree"]["file"]
         families_filename = fs_utils.join(self.input_dir, families_filename)
 
@@ -94,8 +97,7 @@ class ImportProject():
         return families_loader.load()
 
     def get_import_variants_buckets(self) -> list[Bucket]:
-        """Splits the input variant files into buckets allowing
-        for parallel processing"""
+        """Split variant files into buckets enabling parallel processing."""
         buckets = []
         for loader_type in ["denovo", "vcf", "cnv", "dae"]:
             config = self.import_config["input"].get(loader_type, None)
@@ -105,7 +107,7 @@ class ImportProject():
         return buckets
 
     def get_variant_loader(self, bucket, reference_genome=None):
-        """Gets the appropriate variant loader for the specified bucket"""
+        """Get the appropriate variant loader for the specified bucket."""
         loader = self._get_variant_loader(bucket.type, reference_genome)
         loader.reset_regions(bucket.regions)
         return loader
@@ -149,8 +151,7 @@ class ImportProject():
         return loader
 
     def get_partition_description(self, work_dir=None) -> PartitionDescriptor:
-        """Retrurns a partition description object as described in the import
-        config"""
+        """Retrurn partition description as described in the import config."""
         if "partition_description" not in self.import_config:
             return NoPartitionDescriptor(work_dir)
 
@@ -172,7 +173,7 @@ class ImportProject():
         )
 
     def get_gpf_instance(self):
-        """Creates and returns a gpf instance as desribed in the config"""
+        """Create and return a gpf instance as desribed in the config."""
         instance_config = self.import_config.get("gpf_instance", {})
         return GPFInstance(work_dir=instance_config.get("path", None))
 
@@ -184,14 +185,13 @@ class ImportProject():
 
     @property
     def work_dir(self):
-        """Returns the path where generated import files (e.g. parquet files)
-        are stores"""
+        """Where to store generated import files (e.g. parquet files)."""
         return self.import_config.get("processing_config", {})\
             .get("work_dir", "")
 
     @property
     def input_dir(self):
-        """Returns the path relative to which input files are specified"""
+        """Return the path relative to which input files are specified."""
         return os.path.join(
             self._base_input_dir,
             self.import_config["input"].get("input_dir", "")
@@ -207,9 +207,7 @@ class ImportProject():
         return self.import_config["destination"].get("storage_id")
 
     def has_destination(self) -> bool:
-        """
-        Returns True if there is a *destination* section in the import config
-        """
+        """Return if there is a *destination* section in the import config."""
         return "destination" in self.import_config
 
     def get_row_group_size(self, bucket) -> int:
@@ -218,7 +216,7 @@ class ImportProject():
         return cast(int, res)
 
     def build_variants_loader_pipeline(self, variants_loader, gpf_instance):
-        """Creates an annotation pipeline around variants_loader"""
+        """Create an annotation pipeline around variants_loader."""
         effect_annotator = construct_import_effect_annotator(gpf_instance)
 
         variants_loader = EffectAnnotationDecorator(
@@ -315,11 +313,14 @@ class ImportProject():
 
 
 class ImportConfigNormalizer:
-    """Class to normalize import configs. Most of the normalization is done
-    by Cerberus but it fails short in a few cases. This class picks up the
-    slack"""
+    """Class to normalize import configs.
+
+    Most of the normalization is done by Cerberus but it fails short in a few
+    cases. This class picks up the slack.
+    """
+
     def normalize(self, import_config: dict):
-        """Normalizes the import config"""
+        """Normalize the import config."""
         config = deepcopy(import_config)
         self._map_for_key(config, "region_length", self._int_shorthand)
         self._map_for_key(config, "chromosomes", self._normalize_chrom_list)
@@ -391,7 +392,7 @@ class AbstractImportStorage:
 
 
 def main():
-    """Entry point for import tools when invoked as a cli tool"""
+    """Entry point for import tools when invoked as a cli tool."""
     parser = argparse.ArgumentParser(description="Import datasets into GPF")
     parser.add_argument("-f", "--config", type=str,
                         help="Path to the import configuration")
