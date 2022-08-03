@@ -1,9 +1,10 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 
 from box import Box
-from dae.backends.schema2.parquet_io import NoPartitionDescriptor
-from dae.tools import ped2parquet
-from dae.backends.schema2.vcf2schema2 import Variants2Schema2
+from dae.backends.schema2.parquet_io import (
+    NoPartitionDescriptor, ParquetManager)
+from dae.backends.vcf.loader import VcfLoader
+from dae.pedigrees.loader import FamiliesLoader
 from dae.backends.storage.schema2_genotype_storage import \
     Schema2GenotypeStorage
 
@@ -22,7 +23,7 @@ def test_import_and_query(resources_dir, tmpdir, gpf_instance_2013):
     # run vcf2schema2 on the input vcf files
     _run_vcf2schema2(str(resources_dir / "simple_variants.ped"),
                      str(resources_dir / "simple_variants.vcf"),
-                     variants_dir, gpf_instance_2013)
+                     gpf_instance_2013, partition_description)
 
     # create the storage
     config = {
@@ -71,18 +72,28 @@ def test_import_and_query(resources_dir, tmpdir, gpf_instance_2013):
     assert sum(len(sv.alleles) for sv in summary_variants) == 28
 
 
-def _run_vcf2schema2(ped_file, vcf_file, tmpdir, gpf_instance):
-    # TODO don't call main as it changes the log level
-    Variants2Schema2.main([
-        ped_file,
-        vcf_file,
-        "--study-id", "testStudy",
-        "--out", tmpdir,
-        "--vcf-denovo-mode", "possible_denovo",
-        "--vcf-omission-mode", "possible_omission",
-    ], gpf_instance=gpf_instance)
+def _run_vcf2schema2(ped_file, vcf_file, gpf_instance,
+                     partition_description):
+    pedigree = FamiliesLoader(ped_file).load()
+
+    variants_loader = VcfLoader(
+        pedigree,
+        [vcf_file],
+        params={
+            "vcf_denovo_mode": "possible_denovo",
+            "vcf_omission_mode": "possible_omission",
+        },
+        genome=gpf_instance.reference_genome,
+    )
+
+    ParquetManager.variants_to_parquet(
+        variants_loader,
+        partition_description,
+        bucket_index=0,
+        rows=20_000,
+    )
 
 
 def _run_ped2parquet(ped_file, output_filename):
-    # TODO don't call main as it changes the log level
-    ped2parquet.main([ped_file, "--output", output_filename])
+    pedigree = FamiliesLoader(ped_file).load()
+    ParquetManager.families_to_parquet(pedigree, output_filename)
