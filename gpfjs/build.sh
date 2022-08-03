@@ -48,9 +48,6 @@ function main() {
   {
     build_run rm -rf dist
     build_run rm -rf node_modules package-lock.json
-    build_run apt-get remove -y nodejs
-    build_run bash -c 'curl -sL https://deb.nodesource.com/setup_14.x  | bash -'
-    build_run apt-get install -y nodejs
     build_run npm install
   }
 
