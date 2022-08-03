@@ -42,12 +42,14 @@ def test_import_and_query(resources_dir, tmpdir, gpf_instance_2013):
     config = Box(config)
     storage = Schema2GenotypeStorage(config, "genotype_schema2")
 
-    # copy resulting parquets in hdfs
+    # clean hdfs from prev test runs and copy resulting parquets in hdfs
+    study_dir = "/tests/test_schema2/studies/testStudy"
+    if storage.hdfs_helpers.exists(study_dir):
+        storage.hdfs_helpers.delete(study_dir, True)
     hdfs_study_layout = storage.hdfs_upload_dataset(
         study_id, variants_dir, pedigree_parquet, str(tmpdir / "meta.parquet"),
         partition_description)
-    # TODO assert hdfs dirs exist
-    # TODO assert meta.parquet exists
+    assert storage.hdfs_helpers.exists(study_dir)
 
     # load parquets in impala
     study_config = storage.import_dataset(
