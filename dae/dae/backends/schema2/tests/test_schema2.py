@@ -1,19 +1,24 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 
+import pytest
 from box import Box
 from dae.backends.schema2.parquet_io import (
-    NoPartitionDescriptor, ParquetManager)
+    NoPartitionDescriptor, ParquetManager, ParquetPartitionDescriptor)
 from dae.backends.vcf.loader import VcfLoader
 from dae.pedigrees.loader import FamiliesLoader
 from dae.backends.storage.schema2_genotype_storage import \
     Schema2GenotypeStorage
 
 
-# TODO ass a param test with partition description
-def test_import_and_query(resources_dir, tmpdir, gpf_instance_2013):
+@pytest.mark.parametrize("partition_description", [
+    NoPartitionDescriptor(),
+    ParquetPartitionDescriptor(["1"], region_length=5),
+])
+def test_import_and_query(resources_dir, tmpdir, gpf_instance_2013,
+                          partition_description):
     study_id = "testStudy"
     variants_dir = str(tmpdir)
-    partition_description = NoPartitionDescriptor(variants_dir)
+    partition_description.output = variants_dir
 
     # run ped2parquet
     pedigree_parquet = str(tmpdir / "pedigree.parquet")
@@ -65,7 +70,7 @@ def test_import_and_query(resources_dir, tmpdir, gpf_instance_2013):
     family_variants = list(backend.query_variants())
     summary_variants = list(backend.query_summary_variants())
 
-    # assert the number of summary and family allies is as expected
+    # assert the number of summary and family allelies is as expected
     assert len(family_variants) == 5
     assert len(summary_variants) == 10
     # 10 reference and 18 alternative alleles

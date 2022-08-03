@@ -382,21 +382,18 @@ class ParquetPartitionDescriptor(PartitionDescriptor):
         config["region_bin"]["chromosomes"] = ", ".join(self._chromosomes)
         config["region_bin"]["region_length"] = str(self._region_length)
 
-        if self._family_bin_size > 0:
-            config.add_section("family_bin")
-            config["family_bin"]["family_bin_size"] = str(
-                self._family_bin_size
-            )
+        config.add_section("family_bin")
+        config["family_bin"]["family_bin_size"] = str(
+            self._family_bin_size
+        )
 
-        if len(self._coding_effect_types) > 0:
-            config.add_section("coding_bin")
-            config["coding_bin"]["coding_effect_types"] = ", ".join(
-                self._coding_effect_types
-            )
+        config.add_section("coding_bin")
+        config["coding_bin"]["coding_effect_types"] = ", ".join(
+            self._coding_effect_types
+        )
 
-        if self._rare_boundary > 0:
-            config.add_section("frequency_bin")
-            config["frequency_bin"]["rare_boundary"] = str(self._rare_boundary)
+        config.add_section("frequency_bin")
+        config["frequency_bin"]["rare_boundary"] = str(self._rare_boundary)
 
         filename = os.path.join(self.output, "_PARTITION_DESCRIPTION")
         os.makedirs(os.path.dirname(filename), exist_ok=True)
