@@ -8,6 +8,7 @@ from studies.study_wrapper import StudyWrapperBase
 
 from groups_api.serializers import GroupSerializer
 from datasets_api.permissions import get_wdae_parents, user_has_permission
+from dae.studies.study import GenotypeData
 from .models import Dataset
 
 
@@ -205,3 +206,29 @@ class DatasetDescriptionView(DatasetView):
         genotype_data.description = description
 
         return Response(status=status.HTTP_200_OK)
+
+
+class DatasetHierarchyView(DatasetView):
+    """Provide the hierarchy of all datasets configured in the instance."""
+
+    @staticmethod
+    def produce_tree(dataset: GenotypeData):
+        if dataset.is_group:
+            children = [
+                DatasetHierarchyView.produce_tree(child)
+                for child in dataset.studies
+            ]
+        else:
+            children = None
+        return {"dataset": dataset.study_id, "children": children}
+
+    def get(self, request, dataset_id=None):
+        genotype_data = \
+            self.gpf_instance.get_selected_genotype_data() \
+            or self.gpf_instance.get_genotype_data_ids()
+        if dataset_id:
+            genotype_data = filter(lambda gd: gd == dataset_id, genotype_data)
+        genotype_data = map(self.gpf_instance.get_genotype_data, genotype_data)
+        return Response({"data": [
+            DatasetHierarchyView.produce_tree(gd) for gd in genotype_data
+        ]}, status=status.HTTP_200_OK)
