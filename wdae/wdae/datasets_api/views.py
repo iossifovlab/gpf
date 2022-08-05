@@ -6,103 +6,106 @@ from rest_framework import status  # type: ignore
 from query_base.query_base import QueryBaseView
 from studies.study_wrapper import StudyWrapperBase
 
-from .models import Dataset
 from groups_api.serializers import GroupSerializer
-from datasets_api.permissions import get_wdae_parents, \
-    user_has_permission
+from datasets_api.permissions import get_wdae_parents, user_has_permission
+from dae.studies.study import GenotypeData
+from .models import Dataset
+
+
+def augment_accessibility(dataset, user):
+    dataset_object = Dataset.objects.get(dataset_id=dataset["id"])
+    dataset["access_rights"] = user_has_permission(user, dataset_object)
+    return dataset
+
+
+def augment_with_groups(dataset):
+    dataset_object = Dataset.objects.get(dataset_id=dataset["id"])
+    serializer = GroupSerializer(dataset_object.groups.all(), many=True)
+    dataset["groups"] = serializer.data
+    return dataset
+
+
+def augment_with_parents(dataset):
+    dataset["parents"] = [
+        ds.dataset_id for ds in get_wdae_parents(dataset["id"])
+    ]
+    return dataset
 
 
 class DatasetView(QueryBaseView):
-    """General dataset view which provides either a summary of ALL available
-    dataset configs or a specific dataset configuration in full, depending on
+    """
+    General dataset view.
+
+    Provides either a summary of ALL available dataset configs
+    or a specific dataset configuration in full, depending on
     whether the request is made with a dataset_id param or not.
     """
 
-    def augment_accessibility(self, dataset, user):
-        dataset_object = Dataset.objects.get(dataset_id=dataset["id"])
+    def _collect_datasets_summary(self, user):
+        selected_genotype_data = \
+            self.gpf_instance.get_selected_genotype_data() \
+            or self.gpf_instance.get_genotype_data_ids()
 
-        dataset["access_rights"] = user_has_permission(
-            user, dataset_object)
+        datasets = filter(None, [
+            self.gpf_instance.get_wdae_wrapper(genotype_data_id)
+            for genotype_data_id in selected_genotype_data
+        ])
 
-        return dataset
+        res = [
+            StudyWrapperBase.build_genotype_data_all_datasets(
+                dataset.config
+            )
+            for dataset in datasets
+        ]
 
-    def augment_with_groups(self, dataset):
-        dataset_object = Dataset.objects.get(dataset_id=dataset["id"])
-        serializer = GroupSerializer(dataset_object.groups.all(), many=True)
-        dataset["groups"] = serializer.data
+        if not self.gpf_instance.get_selected_genotype_data():
+            res = sorted(res, key=lambda desc: desc["name"])
 
-        return dataset
-
-    def augment_with_parents(self, dataset):
-        parents = get_wdae_parents(dataset["id"])
-        parents = [ds.dataset_id for ds in parents]
-        dataset["parents"] = parents
-        return dataset
+        res = [augment_accessibility(ds, user) for ds in res]
+        res = [augment_with_groups(ds) for ds in res]
+        res = [augment_with_parents(ds) for ds in res]
+        return res
 
     def get(self, request, dataset_id=None):
         user = request.user
+
         if dataset_id is None:
-            selected_genotype_data = \
-                self.gpf_instance.get_selected_genotype_data() \
-                or self.gpf_instance.get_genotype_data_ids()
+            return Response({"data": self._collect_datasets_summary(user)})
 
-            datasets = filter(None, [
-                self.gpf_instance.get_wdae_wrapper(genotype_data_id)
-                for genotype_data_id in selected_genotype_data
-            ])
+        dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
 
-            res = [
-                StudyWrapperBase.build_genotype_data_all_datasets(
+        if not dataset:
+            return Response({"error": f"Dataset {dataset_id} not found"},
+                            status=status.HTTP_404_NOT_FOUND)
+
+        if dataset:
+            dataset_object = Dataset.objects.get(dataset_id=dataset_id)
+
+            if user_has_permission(user, dataset_object):
+                person_set_collection_configs = {
+                    psc.id: psc.config_json()
+                    for psc in dataset.person_set_collections.values()
+                }
+                res = StudyWrapperBase.build_genotype_data_group_description(
+                    self.gpf_instance,
+                    dataset.config,
+                    dataset.description,
+                    person_set_collection_configs
+                )
+            else:
+                res = StudyWrapperBase.build_genotype_data_all_datasets(
                     dataset.config
                 )
-                for dataset in datasets
-            ]
-            if not self.gpf_instance.get_selected_genotype_data():
-                res = sorted(
-                    res, key=lambda desc: desc["name"]
-                )
-            res = [self.augment_accessibility(ds, user) for ds in res]
-            res = [self.augment_with_groups(ds) for ds in res]
-            res = [self.augment_with_parents(ds) for ds in res]
+
+            res = augment_accessibility(res, user)
+            res = augment_with_groups(res)
+            res = augment_with_parents(res)
 
             return Response({"data": res})
-        else:
-            dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
-            if dataset:
-                dataset_object = Dataset.objects.get(dataset_id=dataset_id)
-
-                if user_has_permission(user, dataset_object):
-                    person_set_collection_configs = {
-                        psc.id: psc.config_json()
-                        for psc in dataset.person_set_collections.values()
-                    }
-                    res = StudyWrapperBase\
-                        .build_genotype_data_group_description(
-                            self.gpf_instance,
-                            dataset.config,
-                            dataset.description,
-                            person_set_collection_configs
-                        )
-                else:
-                    res = StudyWrapperBase.build_genotype_data_all_datasets(
-                        dataset.config
-                    )
-
-                res = self.augment_accessibility(res, user)
-                res = self.augment_with_groups(res)
-                res = self.augment_with_parents(res)
-
-                return Response({"data": res})
-            return Response(
-                {"error": "Dataset {} not found".format(dataset_id)},
-                status=status.HTTP_404_NOT_FOUND,
-            )
 
 
 class PermissionDeniedPromptView(QueryBaseView):
-    """Provides the markdown-formatted text to display when
-    access to a dataset is denied.
-    """
+    """Provide the markdown-formatted permission denied prompt text."""
 
     def __init__(self):
         super(PermissionDeniedPromptView, self).__init__()
@@ -126,8 +129,7 @@ class PermissionDeniedPromptView(QueryBaseView):
 
 
 class DatasetDetailsView(QueryBaseView):
-    """Provides miscellaneous details for a given dataset for convenience.
-    """
+    """Provide miscellaneous details for a given dataset."""
 
     def get(self, request, dataset_id):
         genotype_data_config = \
@@ -149,8 +151,7 @@ class DatasetDetailsView(QueryBaseView):
 
 
 class DatasetPedigreeView(QueryBaseView):
-    """Provides pedigree data for a given dataset.
-    """
+    """Provide pedigree data for a given dataset."""
 
     def get(self, request, dataset_id, column):
         genotype_data = self.gpf_instance.get_genotype_data(dataset_id)
@@ -177,8 +178,8 @@ class DatasetPedigreeView(QueryBaseView):
 
 
 class DatasetConfigView(DatasetView):
-    """Provides a dataset's configuration; used for remote instances.
-    """
+    """Provide a dataset's configuration. Used for remote instances."""
+
     def get(self, request, dataset_id):
         genotype_data = self.gpf_instance.get_genotype_data(dataset_id)
 
@@ -187,15 +188,12 @@ class DatasetConfigView(DatasetView):
                 {"error": f"Dataset {dataset_id} not found"},
                 status=status.HTTP_404_NOT_FOUND,
             )
-        return Response(
-            self.augment_with_parents(genotype_data.config.to_dict())
-        )
+        return Response(augment_with_parents(genotype_data.config.to_dict()))
 
 
 class DatasetDescriptionView(DatasetView):
-    """Allows the editing or creation of a dataset's description through
-    POST requests.
-    """
+    """Provide editing or creation of a dataset's description."""
+
     def post(self, request, dataset_id):
         if not request.user.is_staff:
             return Response(
@@ -203,8 +201,34 @@ class DatasetDescriptionView(DatasetView):
                 status=status.HTTP_403_FORBIDDEN
             )
 
-        description = request.data.get('description')
+        description = request.data.get("description")
         genotype_data = self.gpf_instance.get_genotype_data(dataset_id)
         genotype_data.description = description
 
         return Response(status=status.HTTP_200_OK)
+
+
+class DatasetHierarchyView(DatasetView):
+    """Provide the hierarchy of all datasets configured in the instance."""
+
+    @staticmethod
+    def produce_tree(dataset: GenotypeData):
+        if dataset.is_group:
+            children = [
+                DatasetHierarchyView.produce_tree(child)
+                for child in dataset.studies
+            ]
+        else:
+            children = None
+        return {"dataset": dataset.study_id, "children": children}
+
+    def get(self, request, dataset_id=None):
+        genotype_data = \
+            self.gpf_instance.get_selected_genotype_data() \
+            or self.gpf_instance.get_genotype_data_ids()
+        if dataset_id:
+            genotype_data = filter(lambda gd: gd == dataset_id, genotype_data)
+        genotype_data = map(self.gpf_instance.get_genotype_data, genotype_data)
+        return Response({"data": [
+            DatasetHierarchyView.produce_tree(gd) for gd in genotype_data
+        ]}, status=status.HTTP_200_OK)

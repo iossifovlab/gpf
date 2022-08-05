@@ -12,7 +12,7 @@ class Dataset(models.Model):
     groups = models.ManyToManyField(Group)
 
     def __repr__(self):
-        return self.dataset_id
+        return str(self.dataset_id)
 
     @property
     def default_groups(self):
@@ -21,7 +21,7 @@ class Dataset(models.Model):
     @classmethod
     def recreate_dataset_perm(cls, dataset_id):
         """Add the default groups to a dataset object."""
-        logger.debug(f"looking for dataset <{dataset_id}>")
+        logger.debug("looking for dataset <%s>", dataset_id)
         dataset_object, _ = cls.objects.get_or_create(dataset_id=dataset_id)
         for group_name in dataset_object.default_groups:
             group, _created = Group.objects.get_or_create(name=group_name)
