@@ -11,8 +11,9 @@ from dae.configuration.gpf_config_parser import GPFConfigParser
 
 @pytest.mark.parametrize("config_dir", ["denovo_import", "vcf_import",
                                         "cnv_import", "dae_import"])
-def test_simple_import_config(tmpdir, gpf_instance_2019, config_dir, mocker,
-                              resources_dir):
+@pytest.mark.parametrize("schema", ["schema1", "schema2"])
+def test_parquet_files_are_generated(tmpdir, gpf_instance_2019, config_dir,
+                                     mocker, resources_dir, schema):
     input_dir = resources_dir / config_dir
     config_fn = input_dir / "import_config.yaml"
 
@@ -23,6 +24,8 @@ def test_simple_import_config(tmpdir, gpf_instance_2019, config_dir, mocker,
 
     mocker.patch.object(import_tools.ImportProject, "get_gpf_instance",
                         return_value=gpf_instance_2019)
+    mocker.patch.object(import_tools.ImportProject, "_is_schema2",
+                        return_value=schema == "schema2")
     project = import_tools.ImportProject.build_from_config(
         import_config, input_dir)
     import_tools.run_with_project(project)
@@ -155,7 +158,8 @@ def test_shorthand_autosomes():
         assert str(i) in loader_chromosomes
         assert f"chr{i}" in loader_chromosomes
 
-    pd_chromosomes = project.get_partition_description(work_dir="").chromosomes
+    pd_dict = project.get_partition_description_dict()
+    pd_chromosomes = pd_dict["region_bin"]["chromosomes"].split(",")
     assert len(pd_chromosomes) == 22 * 2 + 4
     for i in range(1, 23):
         assert str(i) in pd_chromosomes

@@ -1,6 +1,9 @@
 from box import Box  # type: ignore
 
 from dae.backends.storage.impala_genotype_storage import ImpalaGenotypeStorage
+from dae.backends.storage.schema2_genotype_storage import (
+    Schema2GenotypeStorage
+)
 from dae.backends.storage.filesystem_genotype_storage import (
     FilesystemGenotypeStorage,
 )
@@ -62,6 +65,9 @@ class GenotypeStorageFactory:
                 conf, genotype_storage_id)
         elif conf.storage_type == "filesystem":
             genotype_storage = FilesystemGenotypeStorage(
+                conf, genotype_storage_id)
+        elif conf.storage_type == "schema2":
+            genotype_storage = Schema2GenotypeStorage(
                 conf, genotype_storage_id)
 
         assert genotype_storage

@@ -4,12 +4,11 @@ from copy import deepcopy
 from dataclasses import dataclass
 import os
 import sys
-from typing import cast
+from typing import Optional, cast
 from dae.backends.cnv.loader import CNVLoader
 from dae.backends.dae.loader import DaeTransmittedLoader, DenovoLoader
 from dae.backends.vcf.loader import VcfLoader
-from dae.backends.impala.parquet_io import ParquetPartitionDescriptor,\
-    NoPartitionDescriptor, PartitionDescriptor
+from dae.backends.impala.parquet_io import ParquetPartitionDescriptor
 from dae.backends.raw.loader import AnnotationPipelineDecorator,\
     EffectAnnotationDecorator, VariantsLoader
 from dae.configuration.gpf_config_parser import GPFConfigParser
@@ -150,13 +149,17 @@ class ImportProject():
         )
         return loader
 
-    def get_partition_description(self, work_dir=None) -> PartitionDescriptor:
-        """Retrurn partition description as described in the import config."""
-        if "partition_description" not in self.import_config:
-            return NoPartitionDescriptor(work_dir)
+    def get_partition_description_dict(self) -> Optional[dict]:
+        """Retrurn a dict describing the paritition description.
 
-        work_dir = work_dir if work_dir is not None else self.work_dir
-        partition_desc = self.import_config["partition_description"]
+        The dict is sutable for passing to the from_dict function of a
+        PartitionDescriptor. Return None if no partition description is
+        specified in the input config.
+        """
+        if "partition_description" not in self.import_config:
+            return None
+
+        partition_desc: dict = self.import_config["partition_description"]
         chromosomes = partition_desc.get("region_bin", {})\
             .get("chromosomes", None)
         assert isinstance(chromosomes, list)
@@ -167,10 +170,7 @@ class ImportProject():
         partition_desc["region_bin"]["chromosomes"] = \
             ",".join(chromosomes)
 
-        return ParquetPartitionDescriptor.from_dict(
-            partition_desc,
-            work_dir
-        )
+        return partition_desc
 
     def get_gpf_instance(self):
         """Create and return a gpf instance as desribed in the config."""
@@ -178,9 +178,15 @@ class ImportProject():
         return GPFInstance(work_dir=instance_config.get("path", None))
 
     def get_storage(self):
+        """Create an import storage as described in the import config."""
         # pylint: disable=import-outside-toplevel
         from dae.import_tools.impala_schema1 import ImpalaSchema1ImportStorage
+        from dae.import_tools.schema2_import_storage import (
+            Schema2ImportStorage
+        )
 
+        if self._is_schema2():
+            return Schema2ImportStorage(self)
         return ImpalaSchema1ImportStorage(self)
 
     @property
@@ -203,6 +209,7 @@ class ImportProject():
 
     @property
     def genotype_storage_id(self):
+        # TODO remove this and add a method that creates the storage itself
         # TODO handle inline storage configurations
         return self.import_config["destination"].get("storage_id")
 
@@ -235,6 +242,21 @@ class ImportProject():
 
         return variants_loader
 
+    def _is_schema2(self) -> bool:
+        if not self.has_destination():
+            return False  # Default import schema is schema1 for backward comp.
+
+        destination = self.import_config["destination"]
+        if "gpf_storage_id" in destination:
+            storage_id = destination["gpf_storage_id"]
+            gpf_instance = self.get_gpf_instance()
+            storage_type: str = gpf_instance.dae_config\
+                .storage[storage_id]["storage_type"]
+        else:
+            storage_type = destination["storage_type"]
+
+        return storage_type == "schema2"
+
     @staticmethod
     def _get_default_bucket_index(loader_type):
         return {
@@ -265,6 +287,9 @@ class ImportProject():
         if target_chromosomes is None:
             target_chromosomes = loader_chromosomes
 
+        # cannot use self.get_partition_description() here as the processing
+        # region length might be different than the region length specified in
+        # the parition description section of the import config
         partition_description = ParquetPartitionDescriptor(
             target_chromosomes,
             self._get_processing_region_length(loader_type),

@@ -1,17 +1,18 @@
 import logging
-import toml
 from dae.utils import fs_utils
 from dae.import_tools.parquet_writer import ParquetWriter
 from dae.import_tools.import_tools import AbstractImportStorage
 from dae.import_tools.task_graph import TaskGraph
-from dae.backends.impala.parquet_io import NoPartitionDescriptor, \
+from dae.backends.storage.schema2_genotype_storage import \
+    Schema2GenotypeStorage
+from dae.backends.schema2.parquet_io import NoPartitionDescriptor, \
     ParquetManager, ParquetPartitionDescriptor
 
 
 logger = logging.getLogger(__file__)
 
 
-class ImpalaSchema1ImportStorage(AbstractImportStorage):
+class Schema2ImportStorage(AbstractImportStorage):
     """Import logic for data in the Impala Schema 1 format."""
 
     def __init__(self, project):
@@ -62,57 +63,34 @@ class ImpalaSchema1ImportStorage(AbstractImportStorage):
         genotype_storage = genotype_storage_db.get_genotype_storage(
             project.genotype_storage_id
         )
-        if genotype_storage is None or not genotype_storage.is_impala():
-            logger.error("missing or non-impala genotype storage")
-            return
+        assert isinstance(genotype_storage, Schema2GenotypeStorage)
 
         partition_description = cls._get_partition_description(project)
 
         pedigree_file = fs_utils.join(cls._pedigree_dir(project),
                                       "pedigree.parquet")
-        genotype_storage.hdfs_upload_dataset(
+        return genotype_storage.hdfs_upload_dataset(
             project.study_id,
             cls._variants_dir(project),
             pedigree_file,
             partition_description)
 
     @classmethod
-    def _do_load_in_impala(cls, project):
+    def _do_load_in_impala(cls, project, hdfs_study_layout):
         gpf_instance = project.get_gpf_instance()
         genotype_storage_db = gpf_instance.genotype_storage_db
         genotype_storage = genotype_storage_db.get_genotype_storage(
             project.genotype_storage_id)
+        assert isinstance(genotype_storage, Schema2GenotypeStorage)
 
-        if genotype_storage is None or not genotype_storage.is_impala():
-            logger.error("missing or non-impala genotype storage")
-            return
-
-        study_id = project.study_id
-
-        hdfs_variants_dir = \
-            genotype_storage.default_variants_hdfs_dirname(study_id)
-
-        hdfs_pedigree_file = \
-            genotype_storage.default_pedigree_hdfs_filename(project.study_id)
-
-        logger.info("HDFS variants dir: %s", hdfs_variants_dir)
-        logger.info("HDFS pedigree file: %s", hdfs_pedigree_file)
+        logger.info("HDFS study layout: %s", hdfs_study_layout)
 
         partition_description = cls._get_partition_description(project)
-
-        variants_schema_fn = fs_utils.join(
-            cls._variants_dir(project), "_VARIANTS_SCHEMA")
-        with open(variants_schema_fn) as infile:
-            content = infile.read()
-            schema = toml.loads(content)
-            variants_schema = schema["variants_schema"]
-
         genotype_storage.impala_import_dataset(
             project.study_id,
-            hdfs_pedigree_file,
-            hdfs_variants_dir,
+            hdfs_study_layout,
             partition_description=partition_description,
-            variants_schema=variants_schema)
+        )
 
     def generate_import_task_graph(self) -> TaskGraph:
         graph = TaskGraph()
@@ -131,6 +109,6 @@ class ImpalaSchema1ImportStorage(AbstractImportStorage):
                 [self.project], [pedigree_task] + bucket_tasks)
 
             graph.create_task("impala import", self._do_load_in_impala,
-                              [self.project], [hdfs_task])
+                              [self.project, hdfs_task], [hdfs_task])
 
         return graph

@@ -194,6 +194,11 @@ class ParquetPartitionDescriptor(PartitionDescriptor):
         config.read(config_path)
         assert config["region_bin"] is not None
 
+        return ParquetPartitionDescriptor.from_dict(config, root_dirname)
+
+    @staticmethod
+    def from_dict(config, root_dirname=""):
+        """Create a partition description from the provided dictionary."""
         chromosomes = list(
             map(str.strip, config["region_bin"]["chromosomes"].split(","))
         )

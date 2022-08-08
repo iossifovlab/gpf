@@ -20,7 +20,7 @@ class TaskGraph:
     def __init__(self):
         self.nodes = []
 
-    def create_task(self, name: str, func: Callable[..., None], args: list,
+    def create_task(self, name: str, func: Callable[..., Any], args: list,
                     deps: list[TaskNode]) -> TaskNode:
         """Create a new task and adds it to the graph.
 
@@ -30,6 +30,11 @@ class TaskGraph:
         :param deps: List of TaskNodes on which the current task depends
         :return TaskNode: The newly created task node in the graph
         """
+        # tasks that use the output of other tasks as input should
+        # have those other tasks as dependancies
+        for arg in args:
+            if isinstance(arg, TaskNode):
+                deps.append(arg)
         node = TaskNode(name, func, args, deps)
         self.nodes.append(node)
         return node
@@ -98,11 +103,19 @@ class AbstractTaskGraphExecutor(TaskGraphExecutor):
 class SequentialExecutor(AbstractTaskGraphExecutor):
     """A Task Graph Executor that executes task in sequential order."""
 
+    def __init__(self):
+        self.task2result = {}
+
     def queue_task(self, task_node):
-        task_node.func(*task_node.args)
+        # handle tasks that use the output of other tasks
+        args = [self.task2result[arg] if isinstance(arg, TaskNode) else arg
+                for arg in task_node.args]
+        result = task_node.func(*args)
+        self.task2result[task_node] = result
 
     def await_tasks(self):
-        pass
+        # all tasks have already been executed. Let's clean the state.
+        self.task2result = {}
 
 
 class DaskExecutor(AbstractTaskGraphExecutor):
@@ -114,7 +127,10 @@ class DaskExecutor(AbstractTaskGraphExecutor):
 
     def queue_task(self, task_node):
         deps = [self.task2future[d] for d in task_node.deps]
-        future = self.client.submit(self._exec, task_node, *deps)
+        # handle tasks that use the output of other tasks
+        args = [self.task2future[arg] if isinstance(arg, TaskNode) else arg
+                for arg in task_node.args]
+        future = self.client.submit(self._exec, task_node.func, args, deps)
         self.task2future[task_node] = future
 
     def await_tasks(self):
@@ -127,5 +143,5 @@ class DaskExecutor(AbstractTaskGraphExecutor):
             future.result()
 
     @staticmethod
-    def _exec(task_node, *_deps):
-        task_node.func(*task_node.args)
+    def _exec(task_func, args, _deps):
+        return task_func(*args)

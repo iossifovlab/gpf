@@ -3,6 +3,7 @@ from dae.backends.dae.loader import DenovoLoader, DaeTransmittedLoader
 from dae.backends.vcf.loader import VcfLoader
 from dae.backends.cnv.loader import CNVLoader
 from dae.pedigrees.loader import FamiliesLoader
+from dae.configuration.schemas.dae_conf import storage_schema
 
 
 _region_chromosomes_schema: dict[str, Any] = {
@@ -87,9 +88,9 @@ import_config_schema = {
     },
     "destination": {
         "type": "dict",
-        "schema": {
+        "anyof_schema": [{
             "storage_id": {"type": "string"},
-        },
+        }, storage_schema],
     },
     "partition_description": {
         "type": "dict",
