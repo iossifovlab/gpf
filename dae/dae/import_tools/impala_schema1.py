@@ -57,11 +57,7 @@ class ImpalaSchema1ImportStorage(AbstractImportStorage):
 
     @classmethod
     def _do_load_in_hdfs(cls, project):
-        gpf_instance = project.get_gpf_instance()
-        genotype_storage_db = gpf_instance.genotype_storage_db
-        genotype_storage = genotype_storage_db.get_genotype_storage(
-            project.genotype_storage_id
-        )
+        genotype_storage = project.get_genotype_storage()
         if genotype_storage is None or not genotype_storage.is_impala():
             logger.error("missing or non-impala genotype storage")
             return
@@ -78,11 +74,7 @@ class ImpalaSchema1ImportStorage(AbstractImportStorage):
 
     @classmethod
     def _do_load_in_impala(cls, project):
-        gpf_instance = project.get_gpf_instance()
-        genotype_storage_db = gpf_instance.genotype_storage_db
-        genotype_storage = genotype_storage_db.get_genotype_storage(
-            project.genotype_storage_id)
-
+        genotype_storage = project.get_genotype_storage()
         if genotype_storage is None or not genotype_storage.is_impala():
             logger.error("missing or non-impala genotype storage")
             return

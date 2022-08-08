@@ -10,6 +10,8 @@ from dae.backends.storage.filesystem_genotype_storage import (
 
 
 class GenotypeStorageFactory:
+    """Create the correct Genotype Storage."""
+
     def __init__(self, dae_config):
         self.storage_config = dae_config.storage
         self.default_storage_id = dae_config.genotype_storage.default
@@ -29,6 +31,7 @@ class GenotypeStorageFactory:
         return self.get_genotype_storage(self.default_storage_id)
 
     def get_genotype_storage(self, genotype_storage_id):
+        """Create and return a genotype storage with id genotype_storage_id."""
         if genotype_storage_id is None:
             return self.get_default_genotype_storage()
 

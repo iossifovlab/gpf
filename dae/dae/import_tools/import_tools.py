@@ -5,8 +5,12 @@ from dataclasses import dataclass
 import os
 import sys
 from typing import Optional, cast
+from box import Box
 from dae.backends.cnv.loader import CNVLoader
 from dae.backends.dae.loader import DaeTransmittedLoader, DenovoLoader
+from dae.backends.storage.genotype_storage_factory import (
+    GenotypeStorageFactory
+)
 from dae.backends.vcf.loader import VcfLoader
 from dae.backends.impala.parquet_io import ParquetPartitionDescriptor
 from dae.backends.raw.loader import AnnotationPipelineDecorator,\
@@ -207,11 +211,28 @@ class ImportProject():
     def study_id(self):
         return self.import_config["id"]
 
-    @property
-    def genotype_storage_id(self):
-        # TODO remove this and add a method that creates the storage itself
-        # TODO handle inline storage configurations
-        return self.import_config["destination"].get("storage_id")
+    def get_genotype_storage(self):
+        """Find, create and return the correct genotype storage."""
+        explicit_config = (
+            self.has_destination()
+            and "gpf_storage_id" not in self.import_config["destination"]
+        )
+        if not explicit_config:
+            gpf_instance = self.get_gpf_instance()
+            genotype_storage_db = gpf_instance.genotype_storage_db
+            storage_id = self.import_config.get("destination", {})\
+                .get("gpf_storage_id", None)
+            return genotype_storage_db.get_genotype_storage(storage_id)
+        # explicit storage config
+        genotype_storage_db = GenotypeStorageFactory(Box({
+            "storage": {
+                "dummy_id": self.import_config["destination"]
+            },
+            "genotype_storage": {
+                "default": "dummy_id"
+            }
+        }))
+        return genotype_storage_db.get_genotype_storage(None)
 
     def has_destination(self) -> bool:
         """Return if there is a *destination* section in the import config."""

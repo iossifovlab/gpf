@@ -58,11 +58,7 @@ class Schema2ImportStorage(AbstractImportStorage):
 
     @classmethod
     def _do_load_in_hdfs(cls, project):
-        gpf_instance = project.get_gpf_instance()
-        genotype_storage_db = gpf_instance.genotype_storage_db
-        genotype_storage = genotype_storage_db.get_genotype_storage(
-            project.genotype_storage_id
-        )
+        genotype_storage = project.get_genotype_storage()
         assert isinstance(genotype_storage, Schema2GenotypeStorage)
 
         partition_description = cls._get_partition_description(project)
@@ -77,10 +73,7 @@ class Schema2ImportStorage(AbstractImportStorage):
 
     @classmethod
     def _do_load_in_impala(cls, project, hdfs_study_layout):
-        gpf_instance = project.get_gpf_instance()
-        genotype_storage_db = gpf_instance.genotype_storage_db
-        genotype_storage = genotype_storage_db.get_genotype_storage(
-            project.genotype_storage_id)
+        genotype_storage = project.get_genotype_storage()
         assert isinstance(genotype_storage, Schema2GenotypeStorage)
 
         logger.info("HDFS study layout: %s", hdfs_study_layout)
