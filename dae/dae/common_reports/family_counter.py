@@ -47,7 +47,11 @@ class FamilyCounter:
         self.families = json["families"]
         self.pedigree = json["pedigree"]
         self.pedigrees_count = json["pedigrees_count"]
-        self.tags = json["tags"]
+        tags = json.get("tags")
+        if tags is not None:
+            self.tags = list(json.get("tags"))
+        else:
+            self.tags = None
         self.counter_id = int(json["counter_id"])
 
     @property

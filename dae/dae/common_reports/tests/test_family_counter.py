@@ -77,7 +77,9 @@ def test_family_counter_tags(study1):
     pedigree = get_family_pedigree(family, person_set_collection)
     family_counter = FamilyCounter.from_family(family, pedigree, 1)
 
-    assert family_counter.tags == set([
+    assert isinstance(family_counter.tags, list)
+
+    assert set(family_counter.tags) == set([
         "tag_simplex_family",
         "tag_trio_family",
         "tag_nuclear_family",
