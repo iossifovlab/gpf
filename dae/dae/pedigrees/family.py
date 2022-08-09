@@ -326,7 +326,8 @@ class Family:
             "family_id": self.family_id,
             "person_ids": self.members_ids,
             "samples_index": self._samples_index,
-            "family_type": self.family_type.name
+            "family_type": self.family_type.name,
+            "tags": self.tags
         }
 
     def add_members(self, persons: List[Person]) -> None:
