@@ -199,6 +199,7 @@ family_schema = {
             "ped_file_format": {"type": "string"},
             "ped_layout_mode": {"type": "string"},
             "ped_sep": {"type": "string"},
+            "ped_tags": {"type": "boolean"},
         },
         "default": {},
     },
