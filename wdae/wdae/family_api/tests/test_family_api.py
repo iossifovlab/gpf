@@ -21,6 +21,28 @@ def test_list_families_view_nonexistent(admin_client):
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
+def test_list_tags_view(admin_client):
+    url = "/api/v3/families/tags"
+    response = admin_client.get(url)
+    assert response.status_code == status.HTTP_200_OK
+    assert set(response.data) == set([
+        "tag_nuclear_family",
+        "tag_quad_family",
+        "tag_trio_family",
+        "tag_simplex_family",
+        "tag_multiplex_family",
+        "tag_control_family",
+        "tag_affected_dad_family",
+        "tag_affected_mom_family",
+        "tag_affected_prb_family",
+        "tag_affected_sib_family",
+        "tag_male_prb_family",
+        "tag_female_prb_family",
+        "tag_missing_mom_family",
+        "tag_missing_dad_family"
+    ])
+
+
 def test_family_details_view(admin_client):
     url = "/api/v3/families/Study1/f6"
     response = admin_client.get(url)
@@ -29,7 +51,15 @@ def test_family_details_view(admin_client):
         "family_id": "f6",
         "family_type": "TRIO",
         "person_ids": ["mom6", "dad6", "ch6"],
-        "samples_index": None
+        "samples_index": None,
+        "tags": set([
+            "tag_affected_prb_family",
+            "tag_family_type:type#3",
+            "tag_male_prb_family",
+            "tag_nuclear_family",
+            "tag_simplex_family",
+            "tag_trio_family"
+        ])
     }
 
 
