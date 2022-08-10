@@ -107,11 +107,11 @@ class GeneScoresPartitionsView(QueryBaseView):
 
         total = 1.0 * len(df)
         ldf = df[df[score_name] < score_min]
-        rdf = df[df[score_name] >= score_max]
+        rdf = df[df[score_name] > score_max]
         mdf = df[
             np.logical_and(
                 df[score_name] >= score_min,
-                df[score_name] < score_max)
+                df[score_name] <= score_max)
         ]
 
         res = {

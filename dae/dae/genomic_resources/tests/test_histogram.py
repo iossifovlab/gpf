@@ -30,7 +30,7 @@ def test_histogram_simple_input():
 
     hist.add_value(12)
     hist.add_value(-1)
-    assert (hist.bars == np.array([1, 1, 1, 1, 1, 1, 1, 1, 1, 2])).all()
+    assert (hist.bars == np.array([2, 1, 1, 1, 1, 1, 1, 1, 1, 3])).all()
 
 
 def test_histogram_log_scale():
@@ -47,7 +47,7 @@ def test_histogram_log_scale():
 
     hist.add_value(2000)
     hist.add_value(-1)
-    assert (hist.bars == np.array([2, 1, 1, 1])).all()
+    assert (hist.bars == np.array([3, 1, 1, 2])).all()
 
 
 def test_histogram_merge():

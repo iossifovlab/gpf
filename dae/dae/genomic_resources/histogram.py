@@ -122,11 +122,19 @@ class Histogram:
 
     def add_value(self, value):
         """Add value to the histogram."""
-        if value < self.x_min or value > self.x_max:
+        if value < self.x_min:
             logger.warning(
-                "value %s out of range: [%s, %s]",
+                "value %s out of range: [%s, %s]; adding to the first bin",
                 value, self.x_min, self.x_max)
+            self.bars[0] += 1
             return False
+        if value > self.x_max:
+            logger.warning(
+                "value %s out of range: [%s, %s]; adding to the last bin",
+                value, self.x_min, self.x_max)
+            self.bars[-1] += 1
+            return False
+
         index = self.bins.searchsorted(value, side="right")
         if index == 0:
             logger.warning(
@@ -142,6 +150,8 @@ class Histogram:
 
     def set_empty(self):
         """Reset the bins and bars of the histogram."""
+        assert self.x_min is not None
+        assert self.x_max is not None
         if self.x_scale == "linear":
             self.bins = np.linspace(
                 self.x_min,
@@ -161,6 +171,18 @@ class Histogram:
 
     def set_values(self, values):
         """Reset the histogram and adds every given values."""
+        if self.x_min is None or self.x_max is None:
+            min_value = min(values)
+            max_value = max(values)
+            step = 1.0 * (max_value - min_value) / (self.bins_count - 1)
+            dec = -np.log10(step)
+            dec = dec if dec >= 0 else 0
+            dec = int(dec)
+            if self.x_min is None:
+                self.x_min = np.around(min_value - step / 2.0, dec)
+            if self.x_max is None:
+                self.x_max = np.around(max_value + step / 2.0, dec)
+
         self.set_empty()
         for value in values:
             self.add_value(value)

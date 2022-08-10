@@ -58,12 +58,7 @@ class GeneScore:
         self._load_data()
         self.df.dropna(inplace=True)
 
-        if "min" not in histogram_config:
-            histogram_config["min"] = self.min()
-        if "max" not in histogram_config:
-            histogram_config["max"] = self.max()
         self.histogram = Histogram.from_config(histogram_config)
-        self.histogram.set_empty()
         self.histogram.set_values(self.values())
 
         self.histogram_bins = self.histogram.bins
