@@ -31,10 +31,10 @@
 </div>
 
 <div *ngIf="visibleData.length === 0">
-  <gpf-table-view-cell [style.width]="noResultsWidth"
+  <gpf-nothing-found-row [style.width]="noResultsWidth"
   [style.min-width]="noResultsWidth"
   style="height: 100%">
-  </gpf-table-view-cell>
+  </gpf-nothing-found-row>
 </div>
 
 <div *ngIf="showFloatingHeader && visibleData.length > 0" class="legend-div">

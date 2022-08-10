@@ -2,10 +2,3 @@
   max-height: 94px;
   overflow: auto;
 }
-
-.nothing-found {
-  background-color: #fafafa;
-  line-height: 300%;
-  font-style: italic;
-  opacity: 75%;
-}
