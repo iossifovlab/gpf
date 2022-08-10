@@ -168,25 +168,25 @@ class GeneScore:
         """Return maximal score value."""
         return self.df[self.score_id].max()
 
-    def get_genes(self, wmin=None, wmax=None):
+    def get_genes(self, score_min=None, score_max=None):
         """
-        Return a set of genes which scores are between `wmin` and `wmax`.
+        Return genes which scores are between `score_min` and `score_max`.
 
-        `wmin` -- the lower bound of scores. If not specified or `None`
+        `score_min` -- the lower bound of scores. If not specified or `None`
         works without lower bound.
 
-        `wmax` -- the upper bound of scores. If not specified or `None`
+        `score_max` -- the upper bound of scores. If not specified or `None`
         works without upper bound.
         """
         df = self.df[self.score_id]
         df.dropna(inplace=True)
 
-        if wmin is None or wmin < df.min() or wmin > df.max():
-            wmin = float("-inf")
-        if wmax is None or wmax < df.min() or wmax > df.max():
-            wmax = float("inf")
+        if score_min is None or score_min < df.min() or score_min > df.max():
+            score_min = float("-inf")
+        if score_max is None or score_max < df.min() or score_max > df.max():
+            score_max = float("inf")
 
-        index = np.logical_and(df.values >= wmin, df.values < wmax)
+        index = np.logical_and(df.values >= score_min, df.values < score_max)
         genes = self.df[index].gene
         return set(genes.values)
 

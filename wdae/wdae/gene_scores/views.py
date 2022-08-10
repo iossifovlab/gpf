@@ -8,10 +8,10 @@ from query_base.query_base import QueryBaseView
 
 
 class GeneScoresListView(QueryBaseView):
-    def __init__(self):
-        super(GeneScoresListView, self).__init__()
+    """Provides list of all gene scores."""
 
     def get(self, request):
+        """Build list of gene scores and return it."""
         ids = request.query_params.get("ids")
         if ids:
             gene_scores = [
@@ -37,10 +37,10 @@ class GeneScoresListView(QueryBaseView):
 
 
 class GeneScoresDownloadView(QueryBaseView):
-    def __init__(self):
-        super(GeneScoresDownloadView, self).__init__()
+    """Serves gene scores download requests."""
 
-    def get(self, request, score):
+    def get(self, _request, score):
+        """Serve a gene score download request."""
         tsv = self.gpf_instance.get_gene_score(score).to_tsv()
 
         response = StreamingHttpResponse(tsv, content_type="text/csv")
@@ -51,38 +51,38 @@ class GeneScoresDownloadView(QueryBaseView):
 
 
 class GeneScoresGetGenesView(QueryBaseView):
-    def __init__(self):
-        super(GeneScoresGetGenesView, self).__init__()
+    """Serves request for list of gene in a gene score range."""
 
     def prepare_data(self, data):
+        """Prepare list of genes that have a gene score in a range."""
         if "score" not in data:
             raise ValueError("score key not found")
-        wname = data["score"]
-        if not self.gpf_instance.has_gene_score(wname):
-            raise ValueError("unknown gene score")
+        score_name = data["score"]
+        if not self.gpf_instance.has_gene_score(score_name):
+            raise ValueError(f"unknown gene score {score_name}")
         if "min" not in data:
-            wmin = None
+            score_min = None
         else:
-            wmin = float(data["min"])
+            score_min = float(data["min"])
         if "max" not in data:
-            wmax = None
+            score_max = None
         else:
-            wmax = float(data["max"])
-        return self.gpf_instance.get_gene_score(wname).get_genes(
-            wmin=wmin, wmax=wmax
+            score_max = float(data["max"])
+        return self.gpf_instance.get_gene_score(score_name).get_genes(
+            score_min=score_min, score_max=score_max
         )
 
     def post(self, request):
-        data = self.request.data
+        data = request.data
         genes = self.prepare_data(data)
         return Response(genes)
 
 
 class GeneScoresPartitionsView(QueryBaseView):
-    def __init__(self):
-        super(GeneScoresPartitionsView, self).__init__()
+    """Serves gene scores partitions request."""
 
     def post(self, request):
+        """Calculate and return gene score partitions."""
         data = request.data
 
         assert "score" in data
@@ -92,24 +92,26 @@ class GeneScoresPartitionsView(QueryBaseView):
         if not self.gpf_instance.has_gene_score(score_name):
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        w = self.gpf_instance.get_gene_score(score_name)
-        df = w.df
+        score = self.gpf_instance.get_gene_score(score_name)
+        df = score.df
 
         try:
-            wmin = float(data["min"])
+            score_min = float(data["min"])
         except TypeError:
-            wmin = float("-inf")
+            score_min = float("-inf")
 
         try:
-            wmax = float(data["max"])
+            score_max = float(data["max"])
         except TypeError:
-            wmax = float("inf")
+            score_max = float("inf")
 
         total = 1.0 * len(df)
-        ldf = df[df[score_name] < wmin]
-        rdf = df[df[score_name] >= wmax]
+        ldf = df[df[score_name] < score_min]
+        rdf = df[df[score_name] >= score_max]
         mdf = df[
-            np.logical_and(df[score_name] >= wmin, df[score_name] < wmax)
+            np.logical_and(
+                df[score_name] >= score_min,
+                df[score_name] < score_max)
         ]
 
         res = {
