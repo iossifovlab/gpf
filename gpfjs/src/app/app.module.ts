@@ -166,6 +166,7 @@ import { AngularMarkdownEditorModule } from 'angular-markdown-editor';
 import { PedigreeChartComponent } from './pedigree-chart/pedigree-chart.component';
 import { PedigreeChartMemberComponent } from './pedigree-chart/pedigree-chart-member.component';
 import { JoinPipe } from './utils/join.pipe';
+import { LegendComponent } from './legend/legend.component';
 
 const appRoutes: Routes = [
   {
@@ -367,7 +368,8 @@ const appRoutes: Routes = [
     JoinPipe,
     UniqueFamilyVariantsFilterComponent,
     PedigreeChartComponent,
-    PedigreeChartMemberComponent
+    PedigreeChartMemberComponent,
+    LegendComponent
   ],
   imports: [
     BrowserModule,

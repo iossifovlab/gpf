@@ -23,10 +23,8 @@ export class PeopleCounterRowPipe implements PipeTransform {
 })
 export class VariantReportsComponent implements OnInit {
   @ViewChild('families_pedigree') private familiesPedigree: ElementRef;
-  @ViewChild('legend') private legend: ElementRef;
-  public familiesPedigreeTop: number;
-  public familiesPedigreeBottom: number;
-  public legendTop: number;
+  
+  public visible: boolean = false;
 
   public currentPeopleCounter: PeopleCounter;
   public currentPedigreeTable: PedigreeTable;
@@ -50,14 +48,19 @@ export class VariantReportsComponent implements OnInit {
   @HostListener('window:scroll', ['$event'])
   @HostListener('click', ['$event'])
   public onWindowScroll(): void {
-    if (this.familiesPedigree && this.familiesPedigree.nativeElement) {
-      this.familiesPedigreeTop = (this.familiesPedigree.nativeElement as Element).getBoundingClientRect().top;
-      this.familiesPedigreeBottom = (this.familiesPedigree.nativeElement as Element).getBoundingClientRect().bottom;
+    if (this.isInView(this.familiesPedigree)) {
+      this.visible = true;
+    } else {
+      this.visible = false;
     }
+  }
 
-    if (this.legend && this.legend.nativeElement) {
-      this.legendTop = (this.legend.nativeElement as Element).getBoundingClientRect().top;
-    }
+  private isInView(element: ElementRef): boolean {
+    const wTop = window.scrollY;
+    const wBot = wTop + window.innerHeight;
+    const eTop = element.nativeElement.offsetTop;
+    const eBot = eTop + element.nativeElement.offsetHeight;
+    return ((eBot <= wBot) && (eTop >= wTop));
   }
 
   @HostListener('window:resize')

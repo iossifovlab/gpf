@@ -7,8 +7,9 @@ import { GpfTableHeaderComponent } from 'app/table/view/header/header.component'
 import { GpfTableCellComponent } from 'app/table/view/cell.component';
 import { GpfTableEmptyCellComponent } from 'app/table/view/empty-cell.component';
 import { GpfTableSubheaderComponent } from 'app/table/component/subheader.component';
-import { GenotypeBrowser } from 'app/datasets/datasets';
+import { GenotypeBrowser, PersonSet } from 'app/datasets/datasets';
 import { GenotypePreview, GenotypePreviewVariantsArray } from 'app/genotype-preview-model/genotype-preview';
+import { LegendItem } from 'app/variant-reports/variant-reports';
 
 describe('GenotypePreviewTableComponent', () => {
   let component: GenotypePreviewTableComponent;
@@ -32,6 +33,10 @@ describe('GenotypePreviewTableComponent', () => {
     fixture = TestBed.createComponent(GenotypePreviewTableComponent);
     component = fixture.componentInstance;
 
+    component.legend = [
+      new PersonSet('id1', 'name1', ['value1', 'value2'], 'color1'),
+      new PersonSet('id2', 'name2', ['value3', 'value4'], 'color2')
+    ];
     component.columns = GenotypeBrowser.tableColumnsFromJson([
       {
         id: 'column1',
@@ -107,6 +112,20 @@ describe('GenotypePreviewTableComponent', () => {
       GenotypePreview.fromJson(['Y:125'], ['variant.location']),
       GenotypePreview.fromJson(['M:113'], ['variant.location'])
     )).toBe(-1);
+  });
+
+  it('should have set legend on init', () => {
+    expect(component.legend).toEqual([
+      new PersonSet('id1', 'name1', ['value1', 'value2'], 'color1'),
+      new PersonSet('id2', 'name2', ['value3', 'value4'], 'color2')
+    ]);
+  });
+
+  it('should have set legend item on init', () => {
+    expect(component.legendItems).toEqual([
+      new LegendItem('id1', 'name1', 'color1'),
+      new LegendItem('id2', 'name2', 'color2'),
+    ]);
   });
 
   xit('should calculate single column width in onResize()', () => {
