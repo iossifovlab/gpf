@@ -12,7 +12,7 @@ from dae.backends.storage.schema2_genotype_storage import \
 
 @pytest.mark.parametrize("partition_description", [
     NoPartitionDescriptor(),
-    ParquetPartitionDescriptor(["1"], region_length=5),
+    ParquetPartitionDescriptor(["1"], region_length=5, family_bin_size=2),
 ])
 def test_import_and_query(resources_dir, tmpdir, gpf_instance_2013,
                           partition_description):

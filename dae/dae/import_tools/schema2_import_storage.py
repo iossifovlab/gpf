@@ -27,6 +27,10 @@ class Schema2ImportStorage(AbstractImportStorage):
     def _variants_dir(project):
         return fs_utils.join(project.work_dir, f"{project.study_id}_variants")
 
+    @classmethod
+    def _meta_dir(cls, project):
+        return cls._variants_dir(project)
+
     @staticmethod
     def _get_partition_description(project, out_dir=None):
         out_dir = out_dir if out_dir else project.work_dir
@@ -65,10 +69,12 @@ class Schema2ImportStorage(AbstractImportStorage):
 
         pedigree_file = fs_utils.join(cls._pedigree_dir(project),
                                       "pedigree.parquet")
+        meta_file = fs_utils.join(cls._meta_dir(project), "meta.parquet")
         return genotype_storage.hdfs_upload_dataset(
             project.study_id,
             cls._variants_dir(project),
             pedigree_file,
+            meta_file,
             partition_description)
 
     @classmethod
@@ -79,7 +85,7 @@ class Schema2ImportStorage(AbstractImportStorage):
         logger.info("HDFS study layout: %s", hdfs_study_layout)
 
         partition_description = cls._get_partition_description(project)
-        genotype_storage.impala_import_dataset(
+        genotype_storage.import_dataset(
             project.study_id,
             hdfs_study_layout,
             partition_description=partition_description,

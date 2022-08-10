@@ -215,13 +215,13 @@ class ImportProject():
         """Find, create and return the correct genotype storage."""
         explicit_config = (
             self.has_destination()
-            and "gpf_storage_id" not in self.import_config["destination"]
+            and "storage_id" not in self.import_config["destination"]
         )
         if not explicit_config:
             gpf_instance = self.get_gpf_instance()
             genotype_storage_db = gpf_instance.genotype_storage_db
             storage_id = self.import_config.get("destination", {})\
-                .get("gpf_storage_id", None)
+                .get("storage_id", None)
             return genotype_storage_db.get_genotype_storage(storage_id)
         # explicit storage config
         genotype_storage_db = GenotypeStorageFactory(Box({
@@ -268,8 +268,8 @@ class ImportProject():
             return False  # Default import schema is schema1 for backward comp.
 
         destination = self.import_config["destination"]
-        if "gpf_storage_id" in destination:
-            storage_id = destination["gpf_storage_id"]
+        if "storage_id" in destination:
+            storage_id = destination["storage_id"]
             gpf_instance = self.get_gpf_instance()
             storage_type: str = gpf_instance.dae_config\
                 .storage[storage_id]["storage_type"]

@@ -275,6 +275,7 @@ class ParquetPartitionDescriptor(PartitionDescriptor):
 
     def summary_filename(self, summary_allele):
         """Return filename that summary_allele should be appended to."""
+        # TODO eliminated copy/pasted code with family_filename
         filepath = os.path.join(self.output, self.summary_alleles_dirname)
         filename = "summary"
 

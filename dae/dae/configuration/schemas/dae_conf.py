@@ -90,18 +90,18 @@ storage_schema = {
     },
     "impala": {
         "type": "dict",
-        "dependencies": {"storage_type": "impala"},
+        "dependencies": {"storage_type": ["impala", "schema2"]},
         "schema": impala_schema,
     },
     "hdfs": {
         "type": "dict",
-        "dependencies": {"storage_type": "impala"},
+        "dependencies": {"storage_type": ["impala", "schema2"]},
         "schema": hdfs_schema,
     },
     "rsync": {
         "type": "dict",
         "schema": rsync_schema,
-        "dependencies": {"storage_type": "impala"},
+        "dependencies": {"storage_type": ["impala", "schema2"]},
     }
 }
 
