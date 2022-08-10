@@ -58,12 +58,7 @@ class GeneScore:
         self._load_data()
         self.df.dropna(inplace=True)
 
-        if "min" not in histogram_config:
-            histogram_config["min"] = self.min()
-        if "max" not in histogram_config:
-            histogram_config["max"] = self.max()
         self.histogram = Histogram.from_config(histogram_config)
-        self.histogram.set_empty()
         self.histogram.set_values(self.values())
 
         self.histogram_bins = self.histogram.bins
@@ -97,10 +92,17 @@ class GeneScore:
             logger.error(
                 "invalid resource type for gene score %s",
                 resource.resource_id)
-            raise ValueError("Invalid resource type")
+            raise ValueError(f"invalid resource type {resource.resource_id}")
         logger.info("processing gene score %s", resource.resource_id)
 
         config = resource.get_config()
+        if config.get("gene_scores") is None:
+            raise ValueError(
+                f"missing gene_scores config {resource.resource_id}")
+        if config.get("histograms") is None:
+            raise ValueError(
+                f"missing histograms config {resource.resource_id}")
+
         meta = getattr(config, "meta", None)
         scores = []
         for gs_config in config["gene_scores"]:
@@ -112,7 +114,11 @@ class GeneScore:
                 if hist_config["score"] == gene_score_id:
                     histogram_config = hist_config
                     break
-            assert histogram_config is not None
+            if histogram_config is None:
+                raise ValueError(
+                    f"missing histogram config for score {gene_score_id} in "
+                    f"resource {resource.resource_id}"
+                )
             gene_score = GeneScore(
                 gene_score_id, file, desc, histogram_config, meta)
             scores.append(gene_score)
@@ -168,25 +174,25 @@ class GeneScore:
         """Return maximal score value."""
         return self.df[self.score_id].max()
 
-    def get_genes(self, wmin=None, wmax=None):
+    def get_genes(self, score_min=None, score_max=None):
         """
-        Return a set of genes which scores are between `wmin` and `wmax`.
+        Return genes which scores are between `score_min` and `score_max`.
 
-        `wmin` -- the lower bound of scores. If not specified or `None`
+        `score_min` -- the lower bound of scores. If not specified or `None`
         works without lower bound.
 
-        `wmax` -- the upper bound of scores. If not specified or `None`
+        `score_max` -- the upper bound of scores. If not specified or `None`
         works without upper bound.
         """
         df = self.df[self.score_id]
         df.dropna(inplace=True)
 
-        if wmin is None or wmin < df.min() or wmin > df.max():
-            wmin = float("-inf")
-        if wmax is None or wmax < df.min() or wmax > df.max():
-            wmax = float("inf")
+        if score_min is None or score_min < df.min() or score_min > df.max():
+            score_min = float("-inf")
+        if score_max is None or score_max < df.min() or score_max > df.max():
+            score_max = float("inf")
 
-        index = np.logical_and(df.values >= wmin, df.values < wmax)
+        index = np.logical_and(df.values >= score_min, df.values < score_max)
         genes = self.df[index].gene
         return set(genes.values)
 
@@ -207,7 +213,7 @@ class GeneScoresDb:
     @cached
     def get_gene_score_ids(self):
         """Return a list of the IDs of all the gene scores contained."""
-        return list(self.scores.keys())
+        return sorted(list(self.scores.keys()))
 
     @cached
     def get_gene_scores(self):
@@ -221,7 +227,7 @@ class GeneScoresDb:
 
     def __getitem__(self, score_id):
         if score_id not in self.scores:
-            raise ValueError(f"unsupported gene score {score_id}")
+            raise ValueError(f"gene score {score_id} not found")
 
         res = self.scores[score_id]
         if res.df is None:
