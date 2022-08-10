@@ -1,4 +1,4 @@
-# pylint: disable=W0621,C0114,C0116,W0212,W0613
+# pylint: disable=W0621,C0114,C0116,W0212,W0613,W0104
 
 import textwrap
 import pytest
@@ -98,8 +98,23 @@ def test_scores_has_rvis_rank(gene_scores_db):
     assert "RVIS_rank" in gene_scores_db
 
 
+def test_missing_gene_score(gene_scores_db):
+    with pytest.raises(ValueError, match="gene score bad_score not found"):
+        gene_scores_db["bad_score"]
+
+
 def test_loaded_scores(gene_scores_db):
     assert len(gene_scores_db) == 2
+
+
+def test_gene_scores_ids(gene_scores_db):
+    assert gene_scores_db.get_gene_score_ids() == ["LGD_rank", "RVIS_rank"]
+
+
+def test_gene_scores(gene_scores_db):
+    gene_scores = gene_scores_db.get_gene_scores()
+    assert sorted(gs.score_id for gs in gene_scores) == \
+        ["LGD_rank", "RVIS_rank"]
 
 
 def test_create_score_from_repository(scores_repo):

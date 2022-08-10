@@ -92,10 +92,17 @@ class GeneScore:
             logger.error(
                 "invalid resource type for gene score %s",
                 resource.resource_id)
-            raise ValueError("Invalid resource type")
+            raise ValueError(f"invalid resource type {resource.resource_id}")
         logger.info("processing gene score %s", resource.resource_id)
 
         config = resource.get_config()
+        if config.get("gene_scores") is None:
+            raise ValueError(
+                f"missing gene_scores config {resource.resource_id}")
+        if config.get("histograms") is None:
+            raise ValueError(
+                f"missing histograms config {resource.resource_id}")
+
         meta = getattr(config, "meta", None)
         scores = []
         for gs_config in config["gene_scores"]:
@@ -107,7 +114,11 @@ class GeneScore:
                 if hist_config["score"] == gene_score_id:
                     histogram_config = hist_config
                     break
-            assert histogram_config is not None
+            if histogram_config is None:
+                raise ValueError(
+                    f"missing histogram config for score {gene_score_id} in "
+                    f"resource {resource.resource_id}"
+                )
             gene_score = GeneScore(
                 gene_score_id, file, desc, histogram_config, meta)
             scores.append(gene_score)
@@ -202,7 +213,7 @@ class GeneScoresDb:
     @cached
     def get_gene_score_ids(self):
         """Return a list of the IDs of all the gene scores contained."""
-        return list(self.scores.keys())
+        return sorted(list(self.scores.keys()))
 
     @cached
     def get_gene_scores(self):
@@ -216,7 +227,7 @@ class GeneScoresDb:
 
     def __getitem__(self, score_id):
         if score_id not in self.scores:
-            raise ValueError(f"unsupported gene score {score_id}")
+            raise ValueError(f"gene score {score_id} not found")
 
         res = self.scores[score_id]
         if res.df is None:
