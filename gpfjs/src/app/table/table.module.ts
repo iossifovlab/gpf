@@ -16,6 +16,7 @@ import { GpfTableHeaderCellComponent } from './view/header/header-cell.component
 import { GpfTableHeaderComponent } from './view/header/header.component';
 import { GpfTableCellComponent } from './view/cell.component';
 import { GpfTableEmptyCellComponent } from './view/empty-cell.component';
+import { GpfTableNothingFoundRowComponent } from './view/nothing-found-row.component';
 
 @NgModule({
   declarations: [
@@ -30,7 +31,8 @@ import { GpfTableEmptyCellComponent } from './view/empty-cell.component';
     GpfTableLegendDirective,
     GpfTableContentComponent,
     GpfTableSubcontentComponent,
-    GpfTableEmptyCellComponent
+    GpfTableEmptyCellComponent,
+    GpfTableNothingFoundRowComponent
   ],
   providers: [
     ResizeService

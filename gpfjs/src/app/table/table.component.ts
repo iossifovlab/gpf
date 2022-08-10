@@ -31,6 +31,8 @@ export class GpfTableComponent {
   private drawOutsideVisibleCount = 5;
   private tableTopPosition = 0;
 
+  public noResultsWidth: string;
+
   public showFloatingHeader: boolean;
 
   @HostListener('window:scroll', ['$event'])
@@ -98,6 +100,15 @@ export class GpfTableComponent {
   }
 
   public get visibleData(): Array<any> {
+    if (this.dataSource === undefined || this.dataSource === null || this.dataSource.length === 0) {
+      if (this.columnsChildren !== undefined || this.columnsChildren !== null) {
+        let width = 0;
+        this.columnsChildren.forEach(column => {
+          width += Number(column.columnWidth.split('px')[0]);
+        });
+        this.noResultsWidth = String(width) + 'px';
+      }
+    }
     if (!this.dataSource) {
       return [];
     }

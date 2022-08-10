@@ -30,6 +30,13 @@
   </div>
 </div>
 
-<div *ngIf="showFloatingHeader" class="legend-div">
+<div *ngIf="visibleData.length === 0">
+  <gpf-nothing-found-row [style.width]="noResultsWidth"
+  [style.min-width]="noResultsWidth"
+  style="height: 100%">
+  </gpf-nothing-found-row>
+</div>
+
+<div *ngIf="showFloatingHeader && visibleData.length > 0" class="legend-div">
   <ng-template *ngIf="legend?.templateRef" [ngTemplateOutlet]="legend.templateRef"></ng-template>
 </div>
