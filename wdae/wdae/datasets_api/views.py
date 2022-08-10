@@ -212,17 +212,24 @@ class DatasetHierarchyView(DatasetView):
     """Provide the hierarchy of all datasets configured in the instance."""
 
     @staticmethod
-    def produce_tree(dataset: GenotypeData):
+    def produce_tree(dataset: GenotypeData, user):
+        """Recursively collect a dataset's id, children and access rights."""
         if dataset.is_group:
             children = [
-                DatasetHierarchyView.produce_tree(child)
+                DatasetHierarchyView.produce_tree(child, user)
                 for child in dataset.studies
             ]
         else:
             children = None
-        return {"dataset": dataset.study_id, "children": children}
+        dataset_object = Dataset.objects.get(dataset_id=dataset.study_id)
+        return {
+            "dataset": dataset.study_id,
+            "children": children,
+            "access_rights": user_has_permission(user, dataset_object)
+        }
 
     def get(self, request, dataset_id=None):
+        user = request.user
         genotype_data = \
             self.gpf_instance.get_selected_genotype_data() \
             or self.gpf_instance.get_genotype_data_ids()
@@ -230,5 +237,5 @@ class DatasetHierarchyView(DatasetView):
             genotype_data = filter(lambda gd: gd == dataset_id, genotype_data)
         genotype_data = map(self.gpf_instance.get_genotype_data, genotype_data)
         return Response({"data": [
-            DatasetHierarchyView.produce_tree(gd) for gd in genotype_data
+            DatasetHierarchyView.produce_tree(gd, user) for gd in genotype_data
         ]}, status=status.HTTP_200_OK)

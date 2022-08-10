@@ -192,10 +192,9 @@ def test_datasets_hierarchy(admin_client, wdae_gpf_instance):
     assert response.data
     assert len(response.data["data"]) == 43
     response = admin_client.get("/api/v3/datasets/hierarchy/Dataset1")
-    print(response.data["data"])
     assert response.data["data"] == [
         {"dataset": "Dataset1", "children": [
-            {"dataset": "Study1", "children": None},
-            {"dataset": "Study3", "children": None}
-        ]}
+            {"dataset": "Study1", "children": None, "access_rights": True},
+            {"dataset": "Study3", "children": None, "access_rights": True}
+        ], "access_rights": True}
     ]
