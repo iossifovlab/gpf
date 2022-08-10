@@ -7,6 +7,7 @@ import { Dataset } from 'app/datasets/datasets';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { take } from 'rxjs/operators';
 import { environment } from 'environments/environment';
+import { isInViewport } from 'app/utils/is-in-viewport';
 
 @Pipe({ name: 'getPeopleCounterRow' })
 export class PeopleCounterRowPipe implements PipeTransform {
@@ -48,19 +49,7 @@ export class VariantReportsComponent implements OnInit {
   @HostListener('window:scroll', ['$event'])
   @HostListener('click', ['$event'])
   public onWindowScroll(): void {
-    if (this.isInView(this.familiesPedigree)) {
-      this.visible = true;
-    } else {
-      this.visible = false;
-    }
-  }
-
-  private isInView(element: ElementRef): boolean {
-    const wTop = window.scrollY;
-    const wBot = wTop + window.innerHeight;
-    const eTop = element.nativeElement.offsetTop;
-    const eBot = eTop + element.nativeElement.offsetHeight;
-    return ((eBot <= wBot) && (eTop >= wTop));
+    this.visible = isInViewport(this.familiesPedigree, 10);
   }
 
   @HostListener('window:resize')

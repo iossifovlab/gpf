@@ -1,6 +1,6 @@
 <div *ngIf="visible" class="legend">
   <div *ngIf="expanded">
-    <div class="legend-item" *ngFor="let legendItem of legend">
+    <div *ngFor="let legendItem of legend">
       <span class="pedigree-icon" [style.background-color]="legendItem.color"></span>
       <span>{{ legendItem.name }}</span>
     </div>
