@@ -1,7 +1,8 @@
-import { Input, Component, HostListener, OnInit, ElementRef, ViewChild } from '@angular/core';
+import { Input, Component, HostListener, OnInit } from '@angular/core';
 import { GenotypePreview, GenotypePreviewVariantsArray } from '../genotype-preview-model/genotype-preview';
 import { PersonSet } from '../datasets/datasets';
 import { LegendItem } from 'app/variant-reports/variant-reports';
+import { isInViewport } from '../utils/is-in-viewport';
 
 @Component({
   selector: 'gpf-genotype-preview-table',
@@ -15,7 +16,6 @@ export class GenotypePreviewTableComponent implements OnInit {
   public singleColumnWidth: string;
   public legendItems: Array<LegendItem> = [];
   public visible: boolean = false;
-  @ViewChild('gpf-table') private tableHeader: ElementRef;
 
   @HostListener('window:resize', ['$event'])
   public onResize(): void {
@@ -27,22 +27,16 @@ export class GenotypePreviewTableComponent implements OnInit {
     this.singleColumnWidth = `${(screenWidth - padding - scrollSize) / columnsCount}px`;
   }
 
-  @HostListener('window:scroll', ['$event'])
-  onScroll(event) {
-    let table = document.getElementsByTagName('gpf-table');
-    if (table[0].getBoundingClientRect().top <= 0) {
-      this.visible = true;
-    } else {
-      this.visible = false;
-    }
+  @HostListener('window:scroll')
+  onScroll() {
+    this.visible = isInViewport(document.getElementById('gpf-table'), 0);
   }
+
   constructor() { }
 
   public ngOnInit(): void {
-    if(this.legend !== null || this.legend !== undefined) {
-      this.legend.forEach(item => {
-        this.legendItems.push(new LegendItem(item.id, item.name, item.color));
-      });
+    if (this.legend) {
+      this.legendItems = this.legend.map(item => new LegendItem(item.id, item.name, item.color));
       this.onResize();
     }
   }

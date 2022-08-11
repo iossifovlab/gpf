@@ -49,7 +49,7 @@ export class VariantReportsComponent implements OnInit {
   @HostListener('window:scroll', ['$event'])
   @HostListener('click', ['$event'])
   public onWindowScroll(): void {
-    this.visible = isInViewport(this.familiesPedigree, 10);
+    this.visible = isInViewport(this.familiesPedigree.nativeElement, 10);
   }
 
   @HostListener('window:resize')

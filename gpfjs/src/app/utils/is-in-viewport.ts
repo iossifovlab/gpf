@@ -1,5 +1,5 @@
 export function isInViewport(el, percentVisible) {
-    let rect = el.nativeElement.getBoundingClientRect(),
+    let rect = el.getBoundingClientRect(),
         windowHeight = (window.innerHeight || document.documentElement.clientHeight);
 
     return !(
