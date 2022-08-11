@@ -258,10 +258,15 @@ genotype_storage_schema = {
     },
     "tables": {
         "type": "dict",
-        "schema": {
+        "anyof_schema": [{
             "pedigree": {"type": "string"},
             "variants": {"type": "string"},
-        },
+        }, {
+            "pedigree": {"type": "string"},
+            "summary": {"type": "string"},
+            "family": {"type": "string"},
+            "meta": {"type": "string"},
+        }],
         "excludes": "files",
     },
 }
