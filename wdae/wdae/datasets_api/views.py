@@ -225,6 +225,7 @@ class DatasetHierarchyView(DatasetView):
         return {
             "dataset": dataset.study_id,
             "children": children,
+            "description": dataset.description,
             "access_rights": user_has_permission(user, dataset_object)
         }
 
