@@ -8,12 +8,13 @@ import { User } from './users';
 import { LocationStrategy } from '@angular/common';
 import { Store } from '@ngxs/store';
 import { StateResetAll } from 'ngxs-reset-plugin';
-import { catchError, map, tap, take } from 'rxjs/operators';
+import { catchError, map, tap, take, switchMap } from 'rxjs/operators';
 import { AuthService } from '../auth.service';
 const oboe = require('oboe');
 
 @Injectable()
 export class UsersService {
+  private readonly logoutUrl = 'users/logout';
   private readonly userInfoUrl = 'users/get_user_info';
   private readonly registerUrl = 'users/register';
   private readonly resetPasswordUrl = 'users/reset_password';
@@ -44,8 +45,13 @@ export class UsersService {
   }
 
   public logout(): Observable<object> {
+    const csrfToken = this.cookieService.get('csrftoken');
+    const headers = { 'X-CSRFToken': csrfToken };
+    const options = { headers: headers, withCredentials: true };
+
     return this.authService.revokeAccessToken().pipe(
       take(1),
+      switchMap(() => { return this.http.post(this.config.baseUrl + this.logoutUrl, {}, options) }),
       tap(() => {
         this.store.dispatch(new StateResetAll());
         window.location.href = this.locationStrategy.getBaseHref();
