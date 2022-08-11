@@ -81,8 +81,8 @@ grr_schema = {
 }
 
 storage_schema = {
-    "storage_type": {"type": "string", "allowed": ["impala", "filesystem",
-                                                   "schema2"]},
+    "storage_type": {"type": "string", "allowed": ["impala", "filesystem"]},
+    "schema_version": {"type": "integer", "allowed": [1, 2], "default": 1},
     "dir": {
         "type": "string",
         "check_with": validate_path,
@@ -90,18 +90,18 @@ storage_schema = {
     },
     "impala": {
         "type": "dict",
-        "dependencies": {"storage_type": ["impala", "schema2"]},
+        "dependencies": {"storage_type": "impala"},
         "schema": impala_schema,
     },
     "hdfs": {
         "type": "dict",
-        "dependencies": {"storage_type": ["impala", "schema2"]},
+        "dependencies": {"storage_type": "impala"},
         "schema": hdfs_schema,
     },
     "rsync": {
         "type": "dict",
         "schema": rsync_schema,
-        "dependencies": {"storage_type": ["impala", "schema2"]},
+        "dependencies": {"storage_type": "impala"},
     }
 }
 

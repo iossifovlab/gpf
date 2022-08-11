@@ -265,18 +265,18 @@ class ImportProject():
 
     def _is_schema2(self) -> bool:
         if not self.has_destination():
-            return False  # Default import schema is schema1 for backward comp.
+            return True  # Default import schema is schema2
 
         destination = self.import_config["destination"]
         if "storage_id" in destination:
             storage_id = destination["storage_id"]
             gpf_instance = self.get_gpf_instance()
-            storage_type: str = gpf_instance.dae_config\
-                .storage[storage_id]["storage_type"]
+            schema_version: int = gpf_instance.dae_config\
+                .storage[storage_id]["schema_version"]
         else:
-            storage_type = destination["storage_type"]
+            schema_version = destination["schema_version"]
 
-        return storage_type == "schema2"
+        return schema_version == 2
 
     @staticmethod
     def _get_default_bucket_index(loader_type):

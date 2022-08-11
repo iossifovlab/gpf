@@ -64,13 +64,15 @@ class GenotypeStorageFactory:
 
         genotype_storage = None
         if conf.storage_type == "impala":
-            genotype_storage = ImpalaGenotypeStorage(
-                conf, genotype_storage_id)
+            if conf.schema_version == 1:
+                genotype_storage = ImpalaGenotypeStorage(
+                    conf, genotype_storage_id)
+            else:
+                assert conf.schema_version == 2
+                genotype_storage = Schema2GenotypeStorage(
+                    conf, genotype_storage_id)
         elif conf.storage_type == "filesystem":
             genotype_storage = FilesystemGenotypeStorage(
-                conf, genotype_storage_id)
-        elif conf.storage_type == "schema2":
-            genotype_storage = Schema2GenotypeStorage(
                 conf, genotype_storage_id)
 
         assert genotype_storage
