@@ -5,6 +5,7 @@ from django.contrib.auth import get_user_model
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "project.settings")
 
 gpfjs_url = os.environ.get("GPFJS_URL", "http://localhost:4200")
+gpfjs_frontpage_url = os.environ.get("GPFJS_FRONTPAGE_URL", "http://localhost:4201")
 
 User = get_user_model()
 Application = get_application_model()
@@ -19,6 +20,17 @@ new_application = Application(**{
     "redirect_uris": f"{gpfjs_url}/datasets",
     "client_id": "gpfjs",
 })
-
 new_application.full_clean()
 new_application.save()
+
+new_application = Application(**{
+    "name": "gpfjs frontpage dev app",
+    "user_id": user.id,
+    "client_type": "public",
+    "authorization_grant_type": "authorization-code",
+    "redirect_uris": f"{gpfjs_frontpage_url}",
+    "client_id": "gpfjs-frontpage",
+})
+new_application.full_clean()
+new_application.save()
+
