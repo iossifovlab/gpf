@@ -175,7 +175,7 @@ EOT
       cd /wd/; 
       wdae_files=$(find wdae/wdae -name "*.py");
       /opt/conda/bin/conda run --no-capture-output -n gpf 
-      pylint dae/dae $wdae_files -f parseable --reports=no \
+      pylint dae/dae $wdae_files -f parseable --reports=no -j 4 \
           --exit-zero > /wd/results/pylint_gpf_report || true'
 
     build_run_local cp ./results/pylint_gpf_report ./test-results/
