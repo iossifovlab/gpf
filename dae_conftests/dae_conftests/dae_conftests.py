@@ -121,22 +121,27 @@ def gpf_instance(default_dae_config, fixture_dirname):
             super().__init__(*args, **kwargs)
 
     def build(work_dir=None, load_eagerly=False):
-        instance = GPFInstanceInternal(
-            work_dir=work_dir, load_eagerly=load_eagerly
-        )
         repositories = [
-            instance.grr
-        ]
-
-        repositories.append(
             build_genomic_resource_repository(
-                Box({
+                {
+                    "id": "grr_test_repo",
+                    "type": "directory",
+                    "directory": fixture_dirname("test_repo"),
+                }
+            ),
+            build_genomic_resource_repository(
+                {
                     "id": "fixtures",
                     "type": "directory",
-                    "directory":
-                        f"{fixture_dirname('genomic_resources')}"
-                })))
-        instance.grr = GenomicResourceGroupRepo(repositories)
+                    "directory": fixture_dirname("genomic_resources")
+                }),
+            build_genomic_resource_repository(),
+        ]
+        grr = GenomicResourceGroupRepo(repositories)
+
+        instance = GPFInstanceInternal(
+            work_dir=work_dir, load_eagerly=load_eagerly, grr=grr
+        )
 
         return instance
 
@@ -161,19 +166,21 @@ def gpf_instance_2013(
             result.load()
             return result
 
-    gpf_instance = GPFInstance2013(dae_config=default_dae_config)
-
     repositories = [
-        gpf_instance.grr
+        build_genomic_resource_repository({
+            "id": "grr_test_repo",
+            "type": "directory",
+            "directory": fixture_dirname("test_repo"),
+        }),
+        build_genomic_resource_repository({
+            "id": "fixtures",
+            "type": "directory",
+            "directory": fixture_dirname("genomic_resources")
+        }),
+        build_genomic_resource_repository(),
     ]
-    repositories.append(
-        build_genomic_resource_repository(
-            {
-                "id": "fixtures",
-                "type": "directory",
-                "directory": f"{fixture_dirname('genomic_resources')}"
-            }))
-    gpf_instance.grr = GenomicResourceGroupRepo(repositories)
+    grr = GenomicResourceGroupRepo(repositories)
+    gpf_instance = GPFInstance2013(dae_config=default_dae_config, grr=grr)
 
     return gpf_instance
 
@@ -184,7 +191,8 @@ def fixtures_gpf_instance(gpf_instance, global_dae_fixtures_dir):
 
 
 @pytest.fixture(scope="session")
-def gpf_instance_2019(default_dae_config, global_dae_fixtures_dir):
+def gpf_instance_2019(
+        default_dae_config, fixture_dirname, global_dae_fixtures_dir):
 
     class GPFInstance2019(GPFInstance):
         def __init__(self, *args, **kwargs):
@@ -199,9 +207,25 @@ def gpf_instance_2019(default_dae_config, global_dae_fixtures_dir):
             result.load()
             return result
 
-    return GPFInstance2019(
-        dae_config=default_dae_config, work_dir=global_dae_fixtures_dir
-    )
+    repositories = [
+        build_genomic_resource_repository({
+            "id": "grr_test_repo",
+            "type": "directory",
+            "directory": fixture_dirname("test_repo"),
+        }),
+        build_genomic_resource_repository({
+            "id": "fixtures",
+            "type": "directory",
+            "directory": fixture_dirname("genomic_resources")
+        }),
+        build_genomic_resource_repository(),
+    ]
+    grr = GenomicResourceGroupRepo(repositories)
+    gpf_instance = GPFInstance2019(
+        dae_config=default_dae_config, work_dir=global_dae_fixtures_dir,
+        grr=grr)
+
+    return gpf_instance
 
 
 def _create_gpf_instance(
@@ -230,21 +254,25 @@ def _create_gpf_instance(
             result = build_reference_genome_from_resource(resource)
             result.open()
             return result
+    repositories = [
+        build_genomic_resource_repository({
+            "id": "grr_test_repo",
+            "type": "directory",
+            "directory": fixture_dirname("test_repo"),
+        }),
+        build_genomic_resource_repository({
+            "id": "fixtures",
+            "type": "directory",
+            "directory": fixture_dirname("genomic_resources")
+        }),
+        build_genomic_resource_repository(),
+    ]
+    grr = GenomicResourceGroupRepo(repositories)
 
     instance = CustomGPFInstance(
-        dae_config=default_dae_config, work_dir=global_dae_fixtures_dir
+        dae_config=default_dae_config, work_dir=global_dae_fixtures_dir,
+        grr=grr
     )
-    repositories = [
-        instance.grr
-    ]
-    repositories.append(
-        build_genomic_resource_repository(
-            {
-                "id": "fixtures",
-                "type": "directory",
-                "directory": f"{fixture_dirname('genomic_resources')}"
-            }))
-    instance.grr = GenomicResourceGroupRepo(repositories)
 
     return instance
 

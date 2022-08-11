@@ -21,17 +21,19 @@ __all__ = [
 _PLUGINS_LOADED = False
 
 
-# def _load_plugins():
-#     global _PLUGINS_LOADED
-#     if _PLUGINS_LOADED:
-#         return
+def _load_plugins():
+    # pylint: disable=global-statement
+    global _PLUGINS_LOADED
 
-#     from importlib_metadata import entry_points
-#     discovered_plugins = entry_points(group="dae.genomic_resources.plugins")
-#     for dp in discovered_plugins:
-#         dp.load()()
-#     _PLUGINS_LOADED = True
-#     return None
+    if _PLUGINS_LOADED:
+        return
+
+    # pylint: disable=import-outside-toplevel
+    from importlib_metadata import entry_points
+    discovered_plugins = entry_points(group="dae.genomic_resources.plugins")
+    for plugin in discovered_plugins:
+        plugin.load()()
+    _PLUGINS_LOADED = True
 
 
-# _load_plugins()
+_load_plugins()

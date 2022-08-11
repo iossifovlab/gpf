@@ -1,11 +1,12 @@
+from functools import cache
 import logging
 from abc import ABC, abstractmethod
-from typing import List, Optional, Any, Tuple
+from typing import List, Optional, Any, Tuple, Set
 from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.genomic_resources.gene_models import GeneModels
 from dae.genomic_resources.repository import GenomicResourceRepo
 
-_REGISTERED_CONEXT_GENERATORS: list = []
+_REGISTERED_CONEXT_PROVIDERS: list = []
 
 GC_GRR_KEY = "genomic_resource_repository"
 GC_REFERENCE_GENOME_KEY = "reference_genome"
@@ -49,12 +50,16 @@ class GenomicContext(ABC):
         pass
 
     @abstractmethod
+    def get_context_keys(self) -> Set[str]:
+        pass
+
+    @abstractmethod
     def get_source(self) -> Tuple[str, ...]:
         pass
 
 
-class GenomicContextGenerator(ABC):
-    """Abstract base class for generator of genomic contexts."""
+class GenomicContextProvider(ABC):
+    """Abstract base class for genomic contexts provider."""
 
     def get_context_generator_priority(self) -> int:
         # pylint: disable=no-self-use
@@ -69,13 +74,13 @@ class GenomicContextGenerator(ABC):
         pass
 
 
-def register_context_source(context_generator: GenomicContextGenerator):
+def register_context_provider(context_generator: GenomicContextProvider):
     logger.debug(
         "Registerfing the %s "
         "genomic context generator with priority %s",
         context_generator.get_context_generator_type(),
         context_generator.get_context_generator_type())
-    _REGISTERED_CONEXT_GENERATORS.append(context_generator)
+    _REGISTERED_CONEXT_PROVIDERS.append(context_generator)
 
 
 class PriorityGenomicContext(GenomicContext):
@@ -100,14 +105,24 @@ class PriorityGenomicContext(GenomicContext):
                 return obj
         return None
 
+    def get_context_keys(self) -> Set[str]:
+        result: Set[str] = set()
+        for context in self.contexts:
+            result = result.union(context.get_context_keys())
+        return result
+
+    @cache
     def get_source(self) -> Tuple[str, ...]:
-        return ("PriorityGenomicContext", )
+        result = ["PriorityGenomicContext"]
+        for context in self.contexts:
+            result.append(context.get_source())
+        return tuple(result)
 
 
 def get_genomic_context() -> GenomicContext:
     contexts = []
-    for generator in sorted(_REGISTERED_CONEXT_GENERATORS,
-                            key=lambda g: (g.get_context_generator_priority(),
-                                           g.get_context_generator_type())):
-        contexts += generator.get_contexts()
+    for provider in sorted(_REGISTERED_CONEXT_PROVIDERS,
+                           key=lambda g: (g.get_context_generator_priority(),
+                                          g.get_context_generator_type())):
+        contexts += provider.get_contexts()
     return PriorityGenomicContext(contexts)

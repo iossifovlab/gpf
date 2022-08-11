@@ -46,6 +46,7 @@ class GPFInstance:
             config_file="gpf_instance.yaml",
             work_dir=None,
             defaults=None,
+            grr=None,
             load_eagerly=False):
         if dae_config is None:
             # FIXME Merge defaults with newly-loaded config
@@ -63,7 +64,9 @@ class GPFInstance:
 
         self.load_eagerly = load_eagerly
 
-        if self.dae_config.grr:
+        if grr is not None:
+            self.grr = grr
+        elif self.dae_config.grr:
             self.grr = build_genomic_resource_repository(
                 self.dae_config.grr.to_dict())
         else:
