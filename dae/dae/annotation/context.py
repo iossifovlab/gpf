@@ -59,7 +59,7 @@ class Context:
                     file_name=self.args.grr_file_name)
             else:
                 context = get_genomic_context()
-                self._grr = context.get_genomic_resource_repository()
+                self._grr = context.get_genomic_resources_repository()
                 if self._grr is None:
                     logger.info("Using the defualt configured GRR.")
                     self._grr = build_genomic_resource_repository()

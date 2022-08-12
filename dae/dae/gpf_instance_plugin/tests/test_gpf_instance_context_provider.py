@@ -23,8 +23,7 @@ def test_gpf_instance_genomic_context_plugin(context_fixture, fixture_dirname):
     source = context_fixture.get_source()
 
     assert source[0] == "PriorityGenomicContext"
-    assert source[1][0] == "gpf_instance"
-    assert source[1][1] == fixture_dirname("")
+    assert source[1] == f"('gpf_instance', '{fixture_dirname('')}')"
 
 
 def test_gpf_instance_context_reference_genome(context_fixture):
@@ -50,5 +49,5 @@ def test_gpf_instance_context_keys(context_fixture):
     assert len(keys) == 5
     assert keys == {
         "gene_models", "reference_genome",
-        "genomic_resource_repository", "annotation_pipeline", "gpf_instance"
+        "genomic_resources_repository", "annotation_pipeline", "gpf_instance"
     }

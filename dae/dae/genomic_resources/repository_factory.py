@@ -213,7 +213,7 @@ def build_genomic_resource_repository(
             raise ValueError(
                 "The children attribute in the definition of a group "
                 "repository must be a list")
-        repo_id = definition.get("id")
+        # repo_id = definition.get("id")
 
         children = cast(List[dict], definition.pop("children"))
         repo: GenomicResourceRepo = \

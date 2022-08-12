@@ -16,7 +16,7 @@ from dae.genomic_resources.repository import GenomicResourceRepo
 
 _REGISTERED_CONEXT_PROVIDERS: list = []
 
-GC_GRR_KEY = "genomic_resource_repository"
+GC_GRR_KEY = "genomic_resources_repository"
 GC_REFERENCE_GENOME_KEY = "reference_genome"
 GC_GENE_MODELS_KEY = "gene_models"
 
@@ -27,43 +27,53 @@ class GenomicContext(ABC):
     """Abstract base class for genomic context."""
 
     def get_reference_genome(self) -> Optional[ReferenceGenome]:
+        """Return reference genome from context."""
         obj = self.get_context_object(GC_REFERENCE_GENOME_KEY)
         if obj is None:
             return None
         if isinstance(obj, ReferenceGenome):
             return obj
         raise ValueError(
-            "The conext returned a worng type for a reference genome.")
+            f"The context returned a wrong type for a reference genome: "
+            f"{type(obj)}")
 
     def get_gene_models(self) -> Optional[GeneModels]:
+        """Return gene models from context."""
         obj = self.get_context_object(GC_GENE_MODELS_KEY)
         if obj is None:
             return None
         if isinstance(obj, GeneModels):
             return obj
-        raise ValueError("The conext returned a wrong type for gene models.")
+        raise ValueError(
+            f"The context returned a wrong type for gene models: "
+            f"{type(obj)}")
 
-    def get_genomic_resource_repository(self) -> Optional[GenomicResourceRepo]:
+    def get_genomic_resources_repository(
+            self) -> Optional[GenomicResourceRepo]:
+        """Return genomic resources repository from context."""
         obj = self.get_context_object(GC_GRR_KEY)
         if obj is None:
             return None
         if isinstance(obj, GenomicResourceRepo):
             return obj
         raise ValueError(
-            "The conext returned a wrong type for "
-            "a genomic resource repository.")
+            f"The context returned a wrong type for GRR: "
+            f"{type(obj)}")
 
     @abstractmethod
     def get_context_object(self, key) -> Optional[Any]:
-        pass
+        """Return a genomic context object corresponding to the passed key.
+
+        If there is no such object returns None.
+        """
 
     @abstractmethod
     def get_context_keys(self) -> Set[str]:
-        pass
+        """Return set of all keys that could be found in the context."""
 
     @abstractmethod
     def get_source(self) -> Tuple[str, ...]:
-        pass
+        """Return a tuple of strings that identifies the genomic context."""
 
 
 class GenomicContextProvider(ABC):
@@ -176,7 +186,7 @@ class PriorityGenomicContext(GenomicContext):
     def get_source(self) -> Tuple[str, ...]:
         result = ["PriorityGenomicContext"]
         for context in self.contexts:
-            result.append(context.get_source())
+            result.append(str(context.get_source()))
         return tuple(result)
 
 
@@ -189,53 +199,21 @@ def get_genomic_context() -> GenomicContext:
     return PriorityGenomicContext(contexts)
 
 
-class CLIGenomicContext(GenomicContext):
+class CLIGenomicContext(SimpleGenomicContext):
     """Defines CLI genomics context."""
-
-    def __init__(self, grr, genome, gene_models):
-        self._grr: GenomicResourceRepo = grr
-        self._ref_genome: Optional[ReferenceGenome] = genome
-        self._gene_models: Optional[GeneModels] = gene_models
-
-    def get_context_object(self, key) -> Optional[Any]:
-        if key == GC_GRR_KEY and self._grr is not None:
-            return self._grr
-        if key == GC_REFERENCE_GENOME_KEY and self._ref_genome is not None:
-            return self._ref_genome
-        if key == GC_GENE_MODELS_KEY and self._gene_models is not None:
-            return self._gene_models
-        logger.info(
-            "genomic context object with key %s not found in %s",
-            key, self.get_source())
-        return None
-
-    @cache
-    def get_context_keys(self) -> Set[str]:
-        result = set()
-        if self._grr is not None:
-            result.add(GC_GRR_KEY)
-        if self._ref_genome is not None:
-            result.add(GC_REFERENCE_GENOME_KEY)
-        if self._gene_models is not None:
-            result.add(GC_GENE_MODELS_KEY)
-        return result
-
-    def get_source(self) -> Tuple[str, ...]:
-        return ("CLIGenomicContext",)
-
-
-class CLIGenomicContextProvider(SimpleGenomicContextProvider):
-    """Defines CLI genomic context provider."""
 
     @staticmethod
     def add_context_arguments(parser: argparse.ArgumentParser):
         """Add command line arguments to the argument parser."""
         parser.add_argument(
-            "-grr", "--grr-file-name", default=None,
+            "-grr", "--grr-filename", default=None,
             help="The GRR configuration file. If the argument is absent, "
             "the a GRR repository from the current genomic context "
             "(i.e. gpf_instance) will be used or, if that fails, the "
             "default GRR configuration will be used.")
+        parser.add_argument(
+            "--grr-directory", default=None,
+            help="Local GRR directory to use as repository.")
         parser.add_argument(
             "-ref", "--reference-genome-resource-id", default=None,
             help="The resource id for the reference genome. If the argument "
@@ -250,21 +228,32 @@ class CLIGenomicContextProvider(SimpleGenomicContextProvider):
     @staticmethod
     def context_builder(args) -> CLIGenomicContext:
         """Build a CLI genomic context."""
+        context_objects: Dict[str, Any] = {}
         grr = None
-        if args.grr_filename is None:
+        if args.grr_filename is None and args.grr_directory is None:
             grr = get_genomic_context().get_context_object(GC_GRR_KEY)
-        else:
+        elif args.grr_filename is not None:
             logger.info(
-                "Using the GRR consigured in the file "
+                "Using the GRR configured in the file "
                 "%s as requested on the "
-                "command line.", args.grr_file_name)
+                "command line.", args.grr_filename)
             grr = build_genomic_resource_repository(
-                file_name=args.grr_file_name)
+                file_name=args.grr_filename)
+        elif args.grr_directory is not None:
+            logger.info(
+                "Using local GRR directory "
+                "%s as requested on the "
+                "command line.", args.grr_directory)
+            grr = build_genomic_resource_repository({
+                "id": "local",
+                "type": "directory",
+                "directory": args.grr_directory
+            })
 
         if grr is None:
             raise ValueError("Can't resolve genomic context GRR")
 
-        genome: Optional[ReferenceGenome] = None
+        context_objects[GC_GRR_KEY] = grr
         if args.reference_genome_resource_id is not None:
             logger.info(
                 "Using the reference genome from resoruce "
@@ -273,8 +262,8 @@ class CLIGenomicContextProvider(SimpleGenomicContextProvider):
             resource = grr.get_resource(args.reference_genome_resource_id)
 
             genome = build_reference_genome_from_resource(resource)
+            context_objects[GC_REFERENCE_GENOME_KEY] = genome
 
-        gene_models: Optional[GeneModels] = None
         if args.gene_models_resource_id is not None:
             logger.info(
                 "Using the gene models from resoruce "
@@ -283,8 +272,10 @@ class CLIGenomicContextProvider(SimpleGenomicContextProvider):
             resource = grr.get_resource(args.gene_models_resource_id)
 
             gene_models = build_gene_models_from_resource(resource)
+            context_objects[GC_GENE_MODELS_KEY] = gene_models
 
-        return CLIGenomicContext(grr, genome, gene_models)
+        return CLIGenomicContext(
+            context_objects, source=("CLIGenomicContext", ))
 
 
 class DefaultRepositoryContextProvider(SimpleGenomicContextProvider):
