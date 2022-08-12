@@ -167,6 +167,8 @@ EOT
 
     build_run_container cd /wd/gpf/wdae/wdae/docs 
     build_run_container bash -c "
+        /opt/conda/bin/conda run --no-capture-output -n gpf /wd/gpf/wdae/wdae/docs/api_docs_generator.py"
+    build_run_container bash -c "
         /opt/conda/bin/conda run --no-capture-output -n gpf \
         sphinx-build -b html -d _build/doctrees   . _build/html"
     build_run_container tar zcvf /wd/results/gpf-wdae-html.tar.gz -C _build/ html/
@@ -179,23 +181,23 @@ EOT
 
   }
 
-  build_stage "Publish documentation"
-  {
-
-    local iossifovlab_anaconda_infra_ref;
-    iossifovlab_anaconda_infra_ref=$(e docker_img_iossifovlab_anaconda_infra)
-
-    build_run_ctx_init "container" "${iossifovlab_anaconda_infra_ref}"
-    defer_ret build_run_ctx_reset
-
-    # copy host's .ssh dir as the root .ssh in the container
-    build_run_container_cp_to /root/ $HOME/.ssh
-    build_run_container chown -R root:root /root/.ssh
-    build_run_container bash -c "
-        /opt/conda/bin/conda run --no-capture-output -n infra \
-        ansible-playbook -i doc_inventory doc_publish.yml"
-
-  }
+#   build_stage "Publish documentation"
+#   {
+# 
+#     local iossifovlab_anaconda_infra_ref;
+#     iossifovlab_anaconda_infra_ref=$(e docker_img_iossifovlab_anaconda_infra)
+# 
+#     build_run_ctx_init "container" "${iossifovlab_anaconda_infra_ref}"
+#     defer_ret build_run_ctx_reset
+# 
+#     # copy host's .ssh dir as the root .ssh in the container
+#     build_run_container_cp_to /root/ $HOME/.ssh
+#     build_run_container chown -R root:root /root/.ssh
+#     build_run_container bash -c "
+#         /opt/conda/bin/conda run --no-capture-output -n infra \
+#         ansible-playbook -i doc_inventory doc_publish.yml"
+# 
+#   }
 
 }
 
