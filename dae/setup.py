@@ -47,7 +47,9 @@ setuptools.setup(
     ],
     entry_points="""
     [dae.genomic_resources.plugins]
+    default_grr=dae.genomic_resources.genomic_context:DefaultRepositoryContextProvider.register
     gpf_instance=dae.gpf_instance_plugin.gpf_instance_context_plugin:init_gpf_instance_genomic_context_plugin
+
     [console_scripts]
 
     grr_manage=dae.genomic_resources.cli:cli_manage

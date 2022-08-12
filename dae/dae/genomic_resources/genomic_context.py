@@ -285,3 +285,26 @@ class CLIGenomicContextProvider(SimpleGenomicContextProvider):
             gene_models = build_gene_models_from_resource(resource)
 
         return CLIGenomicContext(grr, genome, gene_models)
+
+
+class DefaultRepositoryContextProvider(SimpleGenomicContextProvider):
+    """Genomic context provider for default GRR."""
+
+    @staticmethod
+    def context_builder():
+        grr = build_genomic_resource_repository()
+        return SimpleGenomicContext(
+            {
+                GC_GRR_KEY: grr
+            },
+            ("default_genomic_resources_repository", grr.repo_id)
+        )
+
+    def __init__(self):
+        super().__init__(
+            DefaultRepositoryContextProvider.context_builder,
+            1000)
+
+    @staticmethod
+    def register():
+        register_context_provider(DefaultRepositoryContextProvider())
