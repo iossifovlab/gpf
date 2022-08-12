@@ -105,26 +105,32 @@ def wgpf_instance(default_dae_config, fixture_dirname):
         pass
 
     def build(work_dir=None, load_eagerly=False):
+        repositories = [
+            build_genomic_resource_repository(
+                {
+                    "id": "grr_test_repo",
+                    "type": "directory",
+                    "directory": fixture_dirname("test_repo"),
+                }
+            ),
+            build_genomic_resource_repository(
+                {
+                    "id": "fixtures",
+                    "type": "directory",
+                    "directory": fixture_dirname("genomic_resources")
+                }),
+            build_genomic_resource_repository(),
+        ]
+        grr = GenomicResourceGroupRepo(repositories)
+
         result = WGPFInstanceInternal(
-            work_dir=work_dir, load_eagerly=load_eagerly
+            work_dir=work_dir, load_eagerly=load_eagerly, grr=grr
         )
 
         remote_host = os.environ.get("TEST_REMOTE_HOST", "localhost")
         if result.dae_config.remotes[0].id == "TEST_REMOTE":
             result.dae_config.remotes[0].host = remote_host
         result.load_remotes()
-
-        repositories = [
-            result.grr
-        ]
-        repositories.append(
-            build_genomic_resource_repository(
-                Box({
-                    "id": "fixtures",
-                    "type": "directory",
-                    "directory": f"{fixture_dirname('genomic_resources')}"
-                })))
-        result.grr = GenomicResourceGroupRepo(repositories)
 
         return result
 
