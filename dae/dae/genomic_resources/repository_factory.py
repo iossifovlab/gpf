@@ -196,9 +196,12 @@ def build_genomic_resource_repository(
         raise ValueError("can't find GRR definition")
 
     if "type" not in definition:
+        logger.error(
+            "missing type in genomic resources repository definition: %s",
+            definition)
         raise ValueError(
             f"The repository definition element {definition} "
-            "has not type attiribute.")
+            "has no type attiribute.")
 
     repo_type = definition.pop("type")
     repo_id = definition.pop("id", None)
