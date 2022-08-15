@@ -110,6 +110,9 @@ class SimpleGenomicContext(GenomicContext):
     def get_source(self) -> Tuple[str, ...]:
         return self._source
 
+    def get_all_context_objects(self) -> Dict[str, Any]:
+        return self._context
+
 
 class SimpleGenomicContextProvider(GenomicContextProvider):
     """Simple implementation of genomic contexts provider."""

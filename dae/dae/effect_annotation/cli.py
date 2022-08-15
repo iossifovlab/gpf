@@ -4,6 +4,7 @@ import gzip
 from argparse import ArgumentParser
 from typing import Dict, Iterator, List, Optional, Tuple
 
+from dae.utils.verbosity_configuration import VerbosityConfiguration
 from dae.genomic_resources import build_genomic_resource_repository
 from dae.genomic_resources.genomic_context import GenomicContext
 from dae.genomic_resources.genomic_context import get_genomic_context
@@ -95,7 +96,7 @@ class EffectAnnotatorBuilder:
             grr = build_genomic_resource_repository(
                 self.args.genomic_repository_config_filename)
         else:
-            grr = self.get_genomic_context().get_genomic_resource_repository()
+            grr = self.get_genomic_context().get_genomic_resources_repository()
         if grr:
             return grr
         return build_genomic_resource_repository()
@@ -143,19 +144,6 @@ class EffectAnnotatorBuilder:
             ref.resource.resource_id, gm.resource.resource_id,
             self.args.promoter_len)
         return EffectAnnotator(ref, gm, promoter_len=self.args.promoter_len)
-
-
-def set_verbosity_argumnets(parser: ArgumentParser) -> None:
-    parser.add_argument('--verbose', '-V', action='count', default=0)
-
-
-def set_verbosity(args):
-    if args.verbose == 1:
-        logging.basicConfig(level=logging.INFO)
-    elif args.verbose >= 2:
-        logging.basicConfig(level=logging.DEBUG)
-    else:
-        logging.basicConfig(level=logging.WARNING)
 
 
 class VariantColumnInputFile:
@@ -306,14 +294,14 @@ def cli_columns():
     parser = ArgumentParser(
         description="Annotate Variant Effects in a Column File.")
 
-    set_verbosity_argumnets(parser)
+    VerbosityConfiguration.set_argumnets(parser)
     EffectAnnotatorBuilder.set_arguments(parser)
     VariantColumnInputFile.set_argument(parser)
     VariantColumnOutputFile.set_argument(parser)
     AnnotationAttributes.set_argument(parser)
 
     args = parser.parse_args(sys.argv[1:])
-    set_verbosity(args)
+    VerbosityConfiguration.set(args)
     annotator = EffectAnnotatorBuilder(args).build_effect_annotator()
     input_file = VariantColumnInputFile(args)
     output_file = VariantColumnOutputFile(args)
@@ -333,7 +321,7 @@ def cli_vcf():
     parser = ArgumentParser(
         description="Annotate Variant Effects in a VCF file.")
 
-    set_verbosity_argumnets(parser)
+    VerbosityConfiguration.set_argumnets(parser)
     EffectAnnotatorBuilder.set_arguments(parser)
     AnnotationAttributes.set_argument(
         parser,
@@ -344,7 +332,7 @@ def cli_vcf():
         "output_filename", nargs="?", help="output file name (default: stdout)"
     )
     args = parser.parse_args(sys.argv[1:])
-    set_verbosity(args)
+    VerbosityConfiguration.set(args)
     annotator = EffectAnnotatorBuilder(args).build_effect_annotator()
     annotation_attributes = AnnotationAttributes(args)
 
