@@ -109,7 +109,6 @@ import { GenotypeBrowserSingleViewComponent } from './genotype-browser-single-vi
 import { GenotypePreviewFieldComponent } from './genotype-preview-field/genotype-preview-field.component';
 import { ErrorsAlertComponent } from './errors-alert/errors-alert.component';
 import { SmallRemoveButtonComponent } from './small-remove-button/small-remove-button.component';
-import { ShareQueryButtonComponent } from './share-query-button/share-query-button.component';
 import { LoadQueryComponent } from './load-query/load-query.component';
 import { PerfectlyDrawablePedigreeComponent } from './perfectly-drawable-pedigree/perfectly-drawable-pedigree.component';
 import { PedigreeMockService } from './perfectly-drawable-pedigree/pedigree-mock.service';
@@ -330,7 +329,6 @@ const appRoutes: Routes = [
     GenotypeBrowserSingleViewComponent,
     GenotypePreviewFieldComponent,
     ErrorsAlertComponent,
-    ShareQueryButtonComponent,
     LoadQueryComponent,
     PerfectlyDrawablePedigreeComponent,
     NonPdpPedigreesComponent,
