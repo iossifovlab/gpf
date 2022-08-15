@@ -55,6 +55,7 @@ class GPFInstanceGenomicContextProvider(SimpleGenomicContextProvider):
     def __init__(self):
         super().__init__(
             GPFInstanceGenomicContextProvider.context_builder,
+            "GPFInstanceProvider",
             100)
 
 

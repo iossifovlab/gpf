@@ -117,7 +117,9 @@ class SimpleGenomicContextProvider(GenomicContextProvider):
     def __init__(
             self,
             context_builder: Callable[[], GenomicContext],
+            provider_type: str,
             priority: int):
+        self._type: str = provider_type
         self._priority: int = priority
         self._context_builder = context_builder
         self._contexts: Optional[List[GenomicContext]] = None
@@ -126,11 +128,7 @@ class SimpleGenomicContextProvider(GenomicContextProvider):
         return self._priority
 
     def get_context_provider_type(self) -> str:
-        if self._contexts is None:
-            sources: List[Tuple[str, ...]] = [("not initialized", )]
-        else:
-            sources = [c.get_source() for c in self._contexts]
-        return f"SingleGenomicContextProvider{sources}"
+        return f"SingleGenomicContextProvider[{self._type}]"
 
     def get_contexts(self) -> List[GenomicContext]:
         if self._contexts is None:
@@ -150,7 +148,7 @@ def register_context_provider(context_provider: GenomicContextProvider):
         "Registerfing the %s "
         "genomic context generator with priority %s",
         context_provider.get_context_provider_type(),
-        context_provider.get_context_provider_type())
+        context_provider.get_context_provider_priority())
     _REGISTERED_CONEXT_PROVIDERS.append(context_provider)
 
 
@@ -294,6 +292,7 @@ class DefaultRepositoryContextProvider(SimpleGenomicContextProvider):
     def __init__(self):
         super().__init__(
             DefaultRepositoryContextProvider.context_builder,
+            "DefaultGRRProvider",
             1000)
 
     @staticmethod

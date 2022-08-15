@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import copy
 import pathlib
 import logging
 import tempfile
@@ -72,7 +73,7 @@ def get_configured_definition():
             "using repo definition at %s", default_repo_definition_path)
         return load_definition_file(default_repo_definition_path)
 
-    return DEFAULT_DEFINITION
+    return copy.deepcopy(DEFAULT_DEFINITION)
 
 
 def _build_real_repository(
