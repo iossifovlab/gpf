@@ -44,10 +44,12 @@ def test_renamed_columsn(parameters, record, expected):
 
 
 def test_build_record_to_annotable_failures():
-    with pytest.raises(Exception):
+    with pytest.raises(
+            ValueError, match="no record to annotatable could be found"):
         build_record_to_annotatable({}, set([]))
 
-    with pytest.raises(Exception):
+    with pytest.raises(
+            ValueError, match="no record to annotatable could be found"):
         build_record_to_annotatable({"gosho": "pesho"}, set([]))
 
 

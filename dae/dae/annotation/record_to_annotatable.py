@@ -121,4 +121,4 @@ def build_record_to_annotatable(
             [cn for cn in renamed_columns if cn not in available_columns]) == 0
         if all_available:
             return record_to_annotabale_class(tuple(renamed_columns), context)
-    raise ValueError("not record to annotatable could be found.")
+    raise ValueError("no record to annotatable could be found.")
