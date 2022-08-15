@@ -1,11 +1,13 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 
 import pytest
+import pysam
 
 from dae.annotation.annotate_columns import build_record_to_annotatable
 from dae.annotation.annotatable import Position, VCFAllele, Region
 from dae.genomic_resources.test_tools import convert_to_tab_separated
-from dae.annotation.annotate_columns import cli
+from dae.annotation.annotate_columns import cli as cli_columns
+from dae.annotation.annotate_vcf import cli as cli_vcf
 
 
 @pytest.mark.parametrize(
@@ -70,20 +72,9 @@ def get_file_content_as_string(file):
         return "".join(infile.readlines())
 
 
-def test_basic_setup(tmp_path):
-    in_content = convert_to_tab_separated("""
-            chrom   pos
-            chr1    23
-            chr1    24
-        """)
-    out_expected_content = convert_to_tab_separated("""
-            chrom   pos score
-            chr1    23  0.01
-            chr1    24  0.2
-        """)
-
+@pytest.fixture
+def annotate_directory_fixture(tmp_path):
     setup_dir(tmp_path, {
-        "in.txt": in_content,
         "annotation.yaml": """
             - position_score: one
             """,
@@ -110,12 +101,29 @@ def test_basic_setup(tmp_path):
 
             """
     })
+
+
+def test_basic_setup(tmp_path, annotate_directory_fixture):
+    in_content = convert_to_tab_separated("""
+            chrom   pos
+            chr1    23
+            chr1    24
+        """)
+    out_expected_content = convert_to_tab_separated("""
+            chrom   pos score
+            chr1    23  0.01
+            chr1    24  0.2
+        """)
+
+    setup_dir(tmp_path, {
+        "in.txt": in_content,
+    })
     in_file = tmp_path / "in.txt"
     out_file = tmp_path / "out.txt"
     annotation_file = tmp_path / "annotation.yaml"
     grr_file = tmp_path / "grr.yaml"
 
-    cli([
+    cli_columns([
         str(a) for a in [
             in_file, annotation_file, out_file, "-grr", grr_file
         ]
@@ -123,3 +131,35 @@ def test_basic_setup(tmp_path):
     out_file_content = get_file_content_as_string(out_file)
     print(out_file_content)
     assert out_file_content == out_expected_content
+
+
+def test_basic_setup_vcf(tmp_path, annotate_directory_fixture):
+    in_content = convert_to_tab_separated("""
+        ##fileformat=VCFv4.2
+        ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+        ##contig=<ID=chr1>
+        #CHROM POS ID REF ALT QUAL FILTER INFO FORMAT m1  d1  c1
+        chr1   23  .  C   T   .    .      .    GT     0/1 0/0 0/0
+        chr1   24  .  C   A   .    .      .    GT     0/0 0/1 0/0
+        """)
+
+    setup_dir(tmp_path, {
+        "in.vcf": in_content
+    })
+
+    in_file = tmp_path / "in.vcf"
+    out_file = tmp_path / "out.vcf"
+    annotation_file = tmp_path / "annotation.yaml"
+    grr_file = tmp_path / "grr.yaml"
+
+    cli_vcf([
+        str(a) for a in [
+            in_file, annotation_file, out_file, "-grr", grr_file
+        ]
+    ])
+
+    result = []
+    with pysam.VariantFile(out_file) as vcf_file:  # pylint: disable=no-member
+        for vcf in vcf_file.fetch():
+            result.append(vcf.info["score"][0])
+    assert result == ["0.01", "0.2"]

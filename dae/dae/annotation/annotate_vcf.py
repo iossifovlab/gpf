@@ -67,8 +67,11 @@ def cli(raw_args: list[str] = None) -> None:
     header.add_meta(
         "pipeline_annotation_tool", f"{' '.join(sys.argv)}")
     for attribute in annotation_attributes:
-        header.info.add(attribute, "A", "String",
-                        pipeline.annotation_schema[attribute].description)
+        description = pipeline.annotation_schema[attribute].description
+        description = description.replace("\n", " ")
+        header.info.add(
+            attribute, "A", "String",
+            description)
 
     print(str(header), file=out_file, end="")
 
