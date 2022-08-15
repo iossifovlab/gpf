@@ -9,7 +9,7 @@ from utils.authentication import GPFOAuth2Authentication
 
 class QueryBaseView(views.APIView):
     """
-    Base classfor data-related views.
+    Base class for data-related views.
 
     Provides custom OAuth2 authentication and an automatic dataset
     permissions check.

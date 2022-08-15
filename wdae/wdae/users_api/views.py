@@ -339,18 +339,18 @@ def check_verif_path(request):
 @api_view(["GET"])
 @authentication_classes((OAuth2Authentication,))
 def get_federation_credentials(request):
-    """Create a new federation application and returns its credentials."""
+    """Create a new federation application and return its credentials."""
     user = request.user
 
     if not user.is_authenticated:
         return Response(status=status.HTTP_401_UNAUTHORIZED)
 
     application = get_application_model()
-    if application.objects.filter(name=request.GET["name"]).exists():
+    if application.objects.filter(name=request.GET.get("name")).exists():
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
     new_application = application(**{
-        "name": request.GET["name"],
+        "name": request.GET.get("name"),
         "user_id": user.id,
         "client_type": "confidential",
         "authorization_grant_type": "client-credentials"
@@ -373,7 +373,7 @@ def revoke_federation_credentials(request):
     user = request.user
     if not user.is_authenticated:
         return Response(status=status.HTTP_401_UNAUTHORIZED)
-    app = get_application_model().objects.get(name=request.GET["name"])
+    app = get_application_model().objects.get(name=request.GET.get("name"))
     if not user.id == app.user_id:
         return Response(status=status.HTTP_401_UNAUTHORIZED)
     app.delete()

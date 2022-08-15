@@ -10,17 +10,14 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.test import Client
 from django.utils import timezone
-from oauth2_provider.models import (get_access_token_model,
-                                    get_application_model)
-from gpf_instance.gpf_instance import (WGPFInstance, load_gpf_instance,
-                                       reload_datasets)
+from oauth2_provider.models import \
+    get_access_token_model, get_application_model
 from remote.rest_api_client import RESTClient
 
 from gpf_instance.gpf_instance import WGPFInstance, get_gpf_instance,\
     reload_datasets
 
 from users_api.models import WdaeUser
-import dae.tools.generate_common_report
 from dae.autism_gene_profile.db import AutismGeneProfileDB
 from dae.genomic_resources import build_genomic_resource_repository
 from dae.genomic_resources.group_repository import GenomicResourceGroupRepo
@@ -321,7 +318,7 @@ def use_common_reports(wdae_gpf_instance):
 
     args = ["--studies", "Study1,study4"]
 
-    dae.tools.generate_common_report.main(args, wdae_gpf_instance)
+    generate_common_report.main(args, wdae_gpf_instance)
 
     yield
 
