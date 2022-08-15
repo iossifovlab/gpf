@@ -1,5 +1,7 @@
-class NuclearCode(object):
+class NuclearCode:
+    """Defines codon to amino acid translation codes."""
 
+    # pylint: disable=too-few-public-methods
     stopCodons = ["TAG", "TAA", "TGA"]
     startCodons = ["ATG"]
 
