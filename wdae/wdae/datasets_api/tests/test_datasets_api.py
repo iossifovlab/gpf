@@ -173,7 +173,14 @@ def test_datasets_description_not_admin(user_client, wdae_gpf_instance):
         "You have no permission to edit the description."
 
 
-def test_datasets_description_proper_request(admin_client, wdae_gpf_instance):
+def test_datasets_description_get(admin_client, wdae_gpf_instance):
+    response = admin_client.get("/api/v3/datasets/description/Study1")
+    assert response
+    assert response.status_code == 200
+    assert response.data["description"] == "some new description"
+
+
+def test_datasets_description_post(admin_client, wdae_gpf_instance):
     url = "/api/v3/datasets/description/Study1"
     args = {
         "description": "some new description"
@@ -195,19 +202,8 @@ def test_datasets_hierarchy(admin_client, wdae_gpf_instance):
     assert response.data["data"] == [{
         "dataset": "Dataset1",
         "children": [
-            {
-                "dataset": "Study1",
-                "children": None,
-                "access_rights": True,
-                "description": "some new description"
-            },
-            {
-                "dataset": "Study3",
-                "children": None,
-                "access_rights": True,
-                "description": None
-            },
+            {"dataset": "Study1", "children": None, "access_rights": True},
+            {"dataset": "Study3", "children": None, "access_rights": True},
         ],
         "access_rights": True,
-        "description": None,
     }]

@@ -191,10 +191,29 @@ class DatasetConfigView(DatasetView):
         return Response(augment_with_parents(genotype_data.config.to_dict()))
 
 
-class DatasetDescriptionView(DatasetView):
-    """Provide editing or creation of a dataset's description."""
+class DatasetDescriptionView(QueryBaseView):
+    """Provide fetching and editing a dataset's description."""
+
+    def get(self, request, dataset_id):  # pylint: disable=unused-argument
+        """Collect a dataset's description."""
+        if dataset_id is None:
+            return Response(
+                {"error": "No dataset id provided."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        genotype_data = self.gpf_instance.get_genotype_data(dataset_id)
+        if genotype_data is None:
+            return Response(
+                {"error": f"Dataset {dataset_id} not found"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        return Response(
+            {"description": genotype_data.description},
+            status=status.HTTP_200_OK
+        )
 
     def post(self, request, dataset_id):
+        """Overwrite a dataset's description."""
         if not request.user.is_staff:
             return Response(
                 {"error": "You have no permission to edit the description."},
@@ -225,7 +244,6 @@ class DatasetHierarchyView(DatasetView):
         return {
             "dataset": dataset.study_id,
             "children": children,
-            "description": dataset.description,
             "access_rights": user_has_permission(user, dataset_object)
         }
 
