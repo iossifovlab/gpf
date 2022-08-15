@@ -11,13 +11,12 @@ channels:
   - defaults
   - iossifovlab
 dependencies:
-  - python=3.9
+  - python=3.10
   - importlib_metadata=4.11.3
-  - pysam=0.19.0
+  - pysam=0.19.1
   - samtools=1.15.1
   - htslib=1.15.1
-  - bcftools=1.15.1
-  - impyla=0.16.3
+  - impyla=0.17.0
   - thriftpy2=0.4.14
   - thrift=0.13.0
   - lark-parser=0.6.7
@@ -47,8 +46,8 @@ dependencies:
   - jinja2=3.0.1
   - snakemake-minimal=6.12.1
   - ijson=3.1.4
-  - dask=2022.1.0
-  - dask-kubernetes=2022.1.0
+  - dask=2022.7.1
+  - dask-kubernetes=2022.7.0
   - tqdm=4.62.3
   - snakeobjects=3.0.7
   - google-cloud-bigquery=2.34.2
