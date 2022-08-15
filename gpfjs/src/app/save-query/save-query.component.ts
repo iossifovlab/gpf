@@ -26,8 +26,10 @@ export class SaveQueryComponent implements OnInit {
   private urlUUID: string;
   public url: string;
   private savedUrlUUID: string;
-  private timeoutHandle: NodeJS.Timeout;
+  private copiedTimeoutHandle: NodeJS.Timeout;
+  private savedTimeoutHandle: NodeJS.Timeout;
   public imgPathPrefix = environment.imgPathPrefix;
+  public saveButtonText = 'Save';
 
   public constructor(
     private store: Store,
@@ -53,12 +55,16 @@ export class SaveQueryComponent implements OnInit {
             if (response.hasOwnProperty('uuid')) {
               this.nameInputRef.nativeElement.value = '';
               this.descInputRef.nativeElement.value = '';
+              this.saveButtonText = 'Saved';
+
+              window.clearTimeout(this.savedTimeoutHandle);
+              this.savedTimeoutHandle = setTimeout(() => {
+                this.saveButtonText = 'Save';
+              }, 2000);
             }
           });
       });
     });
-
-   this.ngbDropdownMenu.dropdown.close();
   }
 
   public focusNameInput(): void {
@@ -107,8 +113,8 @@ export class SaveQueryComponent implements OnInit {
 
   public openCopiedTooltip(): void {
     this.copiedTooltip.open();
-    window.clearTimeout(this.timeoutHandle);
-    this.timeoutHandle = setTimeout(() => {
+    window.clearTimeout(this.copiedTimeoutHandle);
+    this.copiedTimeoutHandle = setTimeout(() => {
       this.copiedTooltip.close();
     }, 2000);
   }

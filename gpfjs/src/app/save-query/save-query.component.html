@@ -1,10 +1,10 @@
-<div ngbDropdown *ngIf="(userInfo$ | async)?.email" autoClose="outside" placement="top">
+<div ngbDropdown *ngIf="(userInfo$ | async)?.email" autoClose="outside">
   <button
-    (click)="focusNameInput(); openDropdown(true); copiedTooltip.close()"
+    (click)="focusNameInput(); openDropdown(true)"
     [disabled]="disabled"
     id="save-query-dropdown-button"
     class="btn btn-default"
-    ngbDropdownToggle>Query</button>
+    ngbDropdownToggle>Share/save query</button>
 
   <div id="save-query-dropdown" ngbDropdownMenu aria-labelledby="dropdownQuerySave">
     <p>Share</p>
@@ -22,7 +22,7 @@
       </div>
     </div>
 
-    <form id="save-form" (ngSubmit)="saveUserQuery(nameInput.value, descInput.value)" #queryStorageForm="ngForm">
+    <div id="save-form">
       <p style="border-top: 1px solid rgb(211, 211, 211); padding-top: 11px">Save</p>
 
       <div style="padding-left: 8px">
@@ -46,11 +46,16 @@
             class="form-control"
             id="description"
             maxlength="1024"
-            style="resize: none; height: 100px"></textarea>
+            style="resize: none; height: 150px"></textarea>
         </div>
 
-        <button id="save-link-button" type="submit" class="btn btn-success" [disabled]="!nameInput.value">Save</button>
+        <button
+          (click)="saveUserQuery(nameInput.value, descInput.value)"
+          id="save-link-button"
+          type="button"
+          class="btn btn-success"
+          [disabled]="!nameInput.value">{{ saveButtonText }}</button>
       </div>
-    </form>
+    </div>
   </div>
 </div>
