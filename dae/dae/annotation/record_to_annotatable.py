@@ -12,11 +12,11 @@ from dae.annotation.annotatable import VCFAllele
 
 
 from dae.tools.cshl2vcf import cshl2vcf
-from .context import Context
+from dae.genomic_resources.genomic_context import GenomicContext
 
 
 class RecordToAnnotable(abc.ABC):
-    def __init__(self, columns: tuple, context: Optional[Context]):
+    def __init__(self, columns: tuple, context: Optional[GenomicContext]):
         pass
 
     @abc.abstractmethod
@@ -25,7 +25,7 @@ class RecordToAnnotable(abc.ABC):
 
 
 class RecordToPosition(RecordToAnnotable):
-    def __init__(self, columns: tuple, context: Optional[Context]):
+    def __init__(self, columns: tuple, context: Optional[GenomicContext]):
         super().__init__(columns, context)
         self.chrom_column, self.pos_column = columns
 
@@ -35,7 +35,7 @@ class RecordToPosition(RecordToAnnotable):
 
 
 class RecordToRegion(RecordToAnnotable):
-    def __init__(self, columns: tuple, context: Optional[Context]):
+    def __init__(self, columns: tuple, context: Optional[GenomicContext]):
         super().__init__(columns, context)
         self.chrom_col, self.pos_beg_col, self.pos_end_col = columns
 
@@ -46,7 +46,7 @@ class RecordToRegion(RecordToAnnotable):
 
 
 class RecordToVcfAllele(RecordToAnnotable):
-    def __init__(self, columns: tuple, context: Optional[Context]):
+    def __init__(self, columns: tuple, context: Optional[GenomicContext]):
         super().__init__(columns, context)
         self.chrom_col, self.pos_col, self.ref_col, self.alt_col = columns
 
@@ -60,7 +60,7 @@ class RecordToVcfAllele(RecordToAnnotable):
 class VcfLikeRecordToVcfAllele(RecordToAnnotable):
     """Transform a variant record into VCF allele annotatable."""
 
-    def __init__(self, columns: tuple, context: Optional[Context]):
+    def __init__(self, columns: tuple, context: Optional[GenomicContext]):
         super().__init__(columns, context)
         self.vcf_like_col, = columns
 
@@ -72,7 +72,7 @@ class VcfLikeRecordToVcfAllele(RecordToAnnotable):
 class CSHLAlleleRecordToVcfAllele(RecordToAnnotable):
     """Transform a CSHL variant record into a VCF allele annotatable."""
 
-    def __init__(self, columns: tuple, context: Optional[Context]):
+    def __init__(self, columns: tuple, context: Optional[GenomicContext]):
         super().__init__(columns, context)
         if context is None:
             raise ValueError(
@@ -81,12 +81,13 @@ class CSHLAlleleRecordToVcfAllele(RecordToAnnotable):
 
         self.location_col, self.variant_col = columns
         self.context = context
+        self.reference_genome = context.get_reference_genome()
 
     def build(self, record: dict[str, str]) -> Annotatable:
         return VCFAllele(*cshl2vcf(
             record[self.location_col],
             record[self.variant_col],
-            self.context.get_reference_genome()))
+            self.reference_genome))
 
 
 RECORD_TO_ANNOTABALE_CONFIGUATION: Dict[tuple, Type[RecordToAnnotable]] = {
@@ -107,9 +108,10 @@ def add_record_to_annotable_arguments(parser: argparse.ArgumentParser):
                             help=f"The column name that stores {col}")
 
 
-def build_record_to_annotatable(parameters: dict[str, str],
-                                available_columns: set[str],
-                                context: Context = None) -> RecordToAnnotable:
+def build_record_to_annotatable(
+        parameters: dict[str, str],
+        available_columns: set[str],
+        context: GenomicContext = None) -> RecordToAnnotable:
     """Transform a variant record into an annotable."""
     for columns, record_to_annotabale_class in \
             RECORD_TO_ANNOTABALE_CONFIGUATION.items():
@@ -119,4 +121,4 @@ def build_record_to_annotatable(parameters: dict[str, str],
             [cn for cn in renamed_columns if cn not in available_columns]) == 0
         if all_available:
             return record_to_annotabale_class(tuple(renamed_columns), context)
-    raise Exception("not record to annotatable could be found.")
+    raise ValueError("no record to annotatable could be found.")

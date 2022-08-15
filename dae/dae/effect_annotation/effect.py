@@ -72,6 +72,7 @@ class AnnotationEffect:  # pylint: disable=too-many-instance-attributes
             f"aa: {self.aa_change}"
 
     def create_effect_details(self):
+        """Build effect details."""
         eff_data = [
             (["noStart", "noEnd", "CDS", "all"], str(self.prot_length)),
             (
@@ -143,6 +144,10 @@ class AnnotationEffect:  # pylint: disable=too-many-instance-attributes
 
     @classmethod
     def gene_effects(cls, effects: List[AnnotationEffect]):
+        """Build parallel lists of genes and effects in that genes.
+
+        Consider deprecating this.
+        """
         sorted_effects = cls.sort_effects(effects)
         worst_effect = sorted_effects[0].effect
         if worst_effect == "intergenic":
@@ -163,6 +168,10 @@ class AnnotationEffect:  # pylint: disable=too-many-instance-attributes
 
     @classmethod
     def transcript_effects(cls, effects: List[AnnotationEffect]):
+        """Build parallel lists of transcripts, genes, effects and details.
+
+        Consider deprecating this.
+        """
         # effects = cls.sort_effects(effects)
         worst_effect = cls.worst_effect(effects)
         if worst_effect == "intergenic":
@@ -193,6 +202,10 @@ class AnnotationEffect:  # pylint: disable=too-many-instance-attributes
 
     @classmethod
     def simplify_effects(cls, effects: List[AnnotationEffect]):
+        """Simplify effects.
+
+        Consider deprecating this.
+        """
         if effects[0].effect == "unk_chr":
             return (
                 "unk_chr",
@@ -222,6 +235,10 @@ class AnnotationEffect:  # pylint: disable=too-many-instance-attributes
 
     @classmethod
     def effects_description(cls, effects: List[AnnotationEffect]):
+        """Build effects description.
+
+        Condider deprecating this.
+        """
         worst_effect, gene_effects, transcript_effects = \
             cls.simplify_effects(effects)
 
@@ -232,13 +249,16 @@ class AnnotationEffect:  # pylint: disable=too-many-instance-attributes
         return (worst_effect, gene_effects, transcript_effects)
 
 
-class EffectFactory(object):
+class EffectFactory:
+    """Factory class for build annotation effects."""
+
     @classmethod
     def create_effect(cls, effect_name):
         return AnnotationEffect(effect_name)
 
     @classmethod
     def create_effect_with_tm(cls, effect_name, transcript_model):
+        """Create effect with transcript model."""
         effect = cls.create_effect(effect_name)
         effect.gene = transcript_model.gene
         effect.strand = transcript_model.strand
@@ -251,6 +271,7 @@ class EffectFactory(object):
 
     @classmethod
     def create_effect_with_request(cls, effect_name, request):
+        """Create effect with annotation request."""
         effect = cls.create_effect_with_tm(
             effect_name, request.transcript_model
         )
@@ -273,11 +294,12 @@ class EffectFactory(object):
 
     @classmethod
     def create_effect_with_aa_change(cls, effect_name, request):
+        """Create effect with amino acid change."""
         effect = cls.create_effect_with_prot_pos(effect_name, request)
         # ef.prot_pos, _ = request.get_protein_position()
 
         ref_aa, alt_aa = request.get_amino_acids()
-        effect.aa_change = "{}->{}".format("".join(ref_aa), "".join(alt_aa))
+        effect.aa_change = f"{''.join(ref_aa)}->{''.join(alt_aa)}"
 
         effect.ref_aa = ref_aa
         effect.alt_aa = alt_aa
@@ -288,6 +310,7 @@ class EffectFactory(object):
     def create_intronic_non_coding_effect(
         cls, effect_type, request, start, end, index
     ):
+        """Create intronic non coding effect."""
         effect = cls.create_effect_with_prot_length(effect_type, request)
         dist_left = request.variant.position - start - 1
         dist_right = end - request.variant.ref_position_last
@@ -307,6 +330,7 @@ class EffectFactory(object):
 
     @classmethod
     def create_intronic_effect(cls, effect_type, request, start, end, index):
+        """Create intronic effect."""
         effect = cls.create_intronic_non_coding_effect(
             effect_type, request, start, end, index
         )
@@ -318,6 +342,8 @@ class EffectFactory(object):
 
 
 class EffectGene:
+    """Combine gene and effect and that gene."""
+
     def __init__(self, symbol=None, effect=None):
         self.symbol = symbol
         self.effect = effect
@@ -360,12 +386,14 @@ class EffectGene:
         return result
 
     @classmethod
-    def from_tuple(cls, t):
-        (symbol, effect) = tuple(t)
+    def from_tuple(cls, gene_effect):
+        (symbol, effect) = tuple(gene_effect)
         return EffectGene(symbol, effect)
 
 
 class EffectTranscript:
+    """Defines effect transcript."""
+
     def __init__(self, transcript_id, gene=None, effect=None, details=None):
         self.transcript_id = transcript_id
         self.gene = gene
@@ -405,14 +433,15 @@ class EffectTranscript:
         )
 
     @classmethod
-    def from_tuple(cls, t):
-        (transcript_id, gene, effect, details) = tuple(t)
+    def from_tuple(cls, transcript_tuple):
+        (transcript_id, gene, effect, details) = tuple(transcript_tuple)
         return EffectTranscript(
             transcript_id, gene=gene, effect=effect, details=details)
 
     @classmethod
     def from_effect_transcripts(
             cls, effect_transcripts) -> Dict[str, EffectTranscript]:
+        """Build effect transcripts."""
         result = {}
         for transcript_id, details in effect_transcripts:
             parts = [p.strip() for p in details.split(":")]
@@ -428,6 +457,8 @@ class EffectTranscript:
 
 
 class AlleleEffects:
+    """Class for allele effect used in alleles."""
+
     def __init__(
             self, worst_effect: str,
             gene_effects: List[EffectGene],
@@ -469,6 +500,7 @@ class AlleleEffects:
     def from_simplified_effects(
             cls, effect_type,
             effect_genes, transcripts) -> Optional[AlleleEffects]:
+        """Build allele effects from simplified effects."""
         if effect_type is None:
             return None
 
@@ -478,6 +510,7 @@ class AlleleEffects:
 
     @staticmethod
     def from_string(data) -> Optional[AlleleEffects]:
+        """Build allele effect from string."""
         if data is None:
             return None
         parts = data.split("!")
@@ -498,6 +531,7 @@ class AlleleEffects:
 
     @classmethod
     def from_effects(cls, effects: List[AnnotationEffect]) -> AlleleEffects:
+        """Build allele effects from list of annotation effect."""
         worst_effect, gene_effects, transcript_effects = \
             AnnotationEffect.simplify_effects(effects)
         gene_effects = [EffectGene(g, e) for g, e in gene_effects]

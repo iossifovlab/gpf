@@ -1,136 +1,60 @@
-import argparse
+from __future__ import annotations
+
 import logging
-from typing import Optional
+import functools
 from dae.annotation.annotation_factory import build_annotation_pipeline
 from dae.annotation.annotation_pipeline import AnnotationPipeline
-from dae.genomic_resources.gene_models import GeneModels
-from dae.genomic_resources.gene_models import \
-    build_gene_models_from_resource
-from dae.genomic_resources.reference_genome import ReferenceGenome
-from dae.genomic_resources.reference_genome import \
-    build_reference_genome_from_resource
-from dae.genomic_resources.genomic_context import get_genomic_context
+from dae.genomic_resources.genomic_context import \
+    SimpleGenomicContextProvider, \
+    register_context_provider
 
-from dae.genomic_resources import build_genomic_resource_repository
-from dae.genomic_resources.repository import GenomicResourceRepo
+from dae.genomic_resources.genomic_context import CLIGenomicContext
 
 logger = logging.getLogger(__name__)
 
 
-class Context:
+class CLIAnnotationContext(CLIGenomicContext):
     """Defines annotation pipeline genomics context."""
 
     @staticmethod
-    def add_context_arguments(parser: argparse.ArgumentParser):
-        """Add command line arguments to the argument parser."""
-        parser.add_argument(
-            "-grr", "--grr-file-name", default=None,
-            help="The GRR configuration file. If the argument is absent, "
-            "the a GRR repository from the current genomic context "
-            "(i.e. gpf_instance) will be used or, if that fails, the "
-            "default GRR configuration will be used.")
-        parser.add_argument(
-            "-ref", "--reference-genome-resource-id", default=None,
-            help="The resource id for the reference genome. If the argument "
-                 "is absent the reference genome from the current genomic "
-                 "context will be used.")
-        parser.add_argument(
-            "-genes", "--gene-models-resource-id", default=None,
-            help="The resource is of the gene models resoruce. If the argument"
-                 " is absent the gene models from the current genomic "
-                 "context will be used.")
+    def context_builder(args) -> CLIAnnotationContext:
+        """Build a CLI genomic context."""
+        context = CLIGenomicContext.context_builder(args)
+        context_objects = context.get_all_context_objects()
 
-    def __init__(self, args):
-        self.args = args
-        self._grr: Optional[GenomicResourceRepo] = None
-        self._ref_genome: Optional[ReferenceGenome] = None
-        self._gene_models: Optional[GeneModels] = None
-        self._pipeline: Optional[AnnotationPipeline] = None
+        if args.pipeline is not None and args.pipeline != "context":
+            logger.info(
+                "Using the annotation pipeline from the file %s.",
+                args.pipeline)
+            grr = context.get_genomic_resources_repository()
+            pipeline = build_annotation_pipeline(
+                pipeline_config_file=args.pipeline,
+                grr_repository=grr)
+            context_objects["annotation_pipeline"] = pipeline
 
-    def get_grr(self) -> GenomicResourceRepo:
-        """Build a genomic resources repository."""
-        if self._grr is None:
-            if self.args.grr_file_name:
-                logger.info(
-                    "Using the GRR consigured in the file "
-                    "%s as requested on the "
-                    "command line.", self.args.grr_file_name)
-                self._grr = build_genomic_resource_repository(
-                    file_name=self.args.grr_file_name)
-            else:
-                context = get_genomic_context()
-                self._grr = context.get_genomic_resource_repository()
-                if self._grr is None:
-                    logger.info("Using the defualt configured GRR.")
-                    self._grr = build_genomic_resource_repository()
-                else:
-                    logger.info("Using the GRR from the genomic context.")
+        return CLIAnnotationContext(
+            context_objects, source=("CLIAnnotationContext", ))
 
-        return self._grr
+    @staticmethod
+    def register(args):
+        builder = functools.partial(CLIAnnotationContext.context_builder, args)
+        register_context_provider(
+            SimpleGenomicContextProvider(
+                builder,
+                "CLIAnnotationContext",
+                0
+            )
+        )
 
-    def get_pipeline(self) -> AnnotationPipeline:
+    @staticmethod
+    def get_pipeline(context) -> AnnotationPipeline:
         """Construct an annotation pipeline."""
-        if self._pipeline is None:
-            if self.args.pipeline == "context":
-                logger.info("Using the annotation pipeline from "
-                            "the GPF instance.")
-                context = get_genomic_context()
-                pipeline = context.get_context_object("annotation_pipeline")
-                if pipeline is None:
-                    raise ValueError(
-                        "No annotation pipeline could be found "
-                        "in the genomic context.")
-                if not isinstance(pipeline, AnnotationPipeline):
-                    raise ValueError(
-                        "The annotation pipeline from the genomic "
-                        " context is not an AnnotationPipeline")
-                self._pipeline = pipeline
-            else:
-                logger.info(
-                    "Using the annotation pipeline from "
-                    "the file %s.", self.args.pipeline)
-                # TODO: Add self as a context plugin.
-                self._pipeline = build_annotation_pipeline(
-                    pipeline_config_file=self.args.pipeline,
-                    grr_repository=self.get_grr())
-        return self._pipeline
-
-    def get_reference_genome(self) -> ReferenceGenome:
-        """Construct reference genome according to the context."""
-        if self._ref_genome is None:
-            if self.args.reference_genome_resource_id is not None:
-                logger.info(
-                    "Using the reference genome from resoruce "
-                    "%s provided on the command line.",
-                    self.args.reference_genome_resource_id)
-                resource = self.get_grr().get_resource(
-                    self.args.reference_genome_resource_id)
-
-                self._ref_genome = build_reference_genome_from_resource(
-                    resource)
-            else:
-                logger.info("Using the reference genome from the context.")
-                self._ref_genome = get_genomic_context().get_reference_genome()
-
-        if self._ref_genome is None:
-            raise Exception("No reference genome could be found!")
-        return self._ref_genome
-
-    def get_gene_models(self) -> GeneModels:
-        """Construct gene models according to the context."""
-        if self._gene_models is None:
-            if self.args.gene_models_resource_id is not None:
-                logger.info(
-                    "Using the gene models from resoruce "
-                    "%s provided on the command line.",
-                    self.args.gene_models_resource_id)
-                resource = self.get_grr().get_resource(
-                    self.args.gene_models_resource_id)
-
-                self._gene_models = build_gene_models_from_resource(resource)
-            else:
-                logger.info("Using the gene models from the GPF instance.")
-                self._gene_models = get_genomic_context().get_gene_models()
-        if self._gene_models is None:
-            raise Exception("No gene models could be found!")
-        return self._gene_models
+        pipeline = context.get_context_object("annotation_pipeline")
+        if pipeline is None:
+            raise ValueError(
+                "Unable to find annotation pipeline in genomic context")
+        if not isinstance(pipeline, AnnotationPipeline):
+            raise ValueError(
+                "The annotation pipeline from the genomic "
+                " context is not an AnnotationPipeline")
+        return pipeline

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import copy
 import pathlib
 import logging
 import tempfile
@@ -72,7 +73,7 @@ def get_configured_definition():
             "using repo definition at %s", default_repo_definition_path)
         return load_definition_file(default_repo_definition_path)
 
-    return DEFAULT_DEFINITION
+    return copy.deepcopy(DEFAULT_DEFINITION)
 
 
 def _build_real_repository(
@@ -196,9 +197,12 @@ def build_genomic_resource_repository(
         raise ValueError("can't find GRR definition")
 
     if "type" not in definition:
+        logger.error(
+            "missing type in genomic resources repository definition: %s",
+            definition)
         raise ValueError(
             f"The repository definition element {definition} "
-            "has not type attiribute.")
+            "has no type attiribute.")
 
     repo_type = definition.pop("type")
     repo_id = definition.pop("id", None)
@@ -213,7 +217,7 @@ def build_genomic_resource_repository(
             raise ValueError(
                 "The children attribute in the definition of a group "
                 "repository must be a list")
-        repo_id = definition.get("id")
+        # repo_id = definition.get("id")
 
         children = cast(List[dict], definition.pop("children"))
         repo: GenomicResourceRepo = \

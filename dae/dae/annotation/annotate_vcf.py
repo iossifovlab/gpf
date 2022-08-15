@@ -7,10 +7,10 @@ from typing import List
 
 from pysam import VariantFile  # pylint: disable=no-name-in-module
 
-from dae.annotation.context import Context
+from dae.annotation.context import CLIAnnotationContext
 from dae.annotation.annotatable import VCFAllele
-from dae.genomic_resources.cli import VerbosityConfiguration
-
+from dae.utils.verbosity_configuration import VerbosityConfiguration
+from dae.genomic_resources.genomic_context import get_genomic_context
 
 logger = logging.getLogger("annotate_vcf")
 
@@ -30,7 +30,7 @@ def configure_argument_parser() -> argparse.ArgumentParser:
     parser.add_argument("output", default="-", nargs="?",
                         help="the output column file")
 
-    Context.add_context_arguments(parser)
+    CLIAnnotationContext.add_context_arguments(parser)
     VerbosityConfiguration.set_argumnets(parser)
     return parser
 
@@ -45,9 +45,10 @@ def cli(raw_args: list[str] = None) -> None:
     parser = configure_argument_parser()
     args = parser.parse_args(raw_args)
     VerbosityConfiguration.set(args)
-    context = Context(args)
+    CLIAnnotationContext.register(args)
 
-    pipeline = context.get_pipeline()
+    context = get_genomic_context()
+    pipeline = CLIAnnotationContext.get_pipeline(context)
     annotation_attributes = pipeline.annotation_schema.names
 
     in_file = VariantFile(args.input)
@@ -66,8 +67,11 @@ def cli(raw_args: list[str] = None) -> None:
     header.add_meta(
         "pipeline_annotation_tool", f"{' '.join(sys.argv)}")
     for attribute in annotation_attributes:
-        header.info.add(attribute, "A", "String",
-                        pipeline.annotation_schema[attribute].description)
+        description = pipeline.annotation_schema[attribute].description
+        description = description.replace("\n", " ")
+        header.info.add(
+            attribute, "A", "String",
+            description)
 
     print(str(header), file=out_file, end="")
 

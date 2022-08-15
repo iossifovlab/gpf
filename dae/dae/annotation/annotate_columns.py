@@ -3,11 +3,12 @@ from __future__ import annotations
 import sys
 import gzip
 import argparse
-from dae.annotation.context import Context
+from dae.annotation.context import CLIAnnotationContext
 from dae.annotation.record_to_annotatable import build_record_to_annotatable
 from dae.annotation.record_to_annotatable import \
     add_record_to_annotable_arguments
 from dae.genomic_resources.cli import VerbosityConfiguration
+from dae.genomic_resources.genomic_context import get_genomic_context
 
 
 def configure_argument_parser() -> argparse.ArgumentParser:
@@ -29,7 +30,7 @@ def configure_argument_parser() -> argparse.ArgumentParser:
                         help="The column separator in the input")
     parser.add_argument("-out_sep", "--output-separator", default="\t",
                         help="The column separator in the output")
-    Context.add_context_arguments(parser)
+    CLIAnnotationContext.add_context_arguments(parser)
     add_record_to_annotable_arguments(parser)
     VerbosityConfiguration.set_argumnets(parser)
     return parser
@@ -43,10 +44,10 @@ def cli(raw_args: list[str] = None) -> None:
     parser = configure_argument_parser()
     args = parser.parse_args(raw_args)
     VerbosityConfiguration.set(args)
+    CLIAnnotationContext.register(args)
 
-    context = Context(args)
-
-    pipeline = context.get_pipeline()
+    context = get_genomic_context()
+    pipeline = CLIAnnotationContext.get_pipeline(context)
     annotation_attributes = pipeline.annotation_schema.public_fields
 
     if args.input == "-":
