@@ -14,7 +14,7 @@ from dae.genomic_resources.gene_models import GeneModels, \
     build_gene_models_from_resource
 from dae.genomic_resources.repository import GenomicResourceRepo
 
-_REGISTERED_CONEXT_PROVIDERS: list = []
+_REGISTERED_CONTEXT_PROVIDERS: list = []
 
 GC_GRR_KEY = "genomic_resources_repository"
 GC_REFERENCE_GENOME_KEY = "reference_genome"
@@ -152,7 +152,7 @@ def register_context_provider(context_provider: GenomicContextProvider):
         "genomic context generator with priority %s",
         context_provider.get_context_provider_type(),
         context_provider.get_context_provider_priority())
-    _REGISTERED_CONEXT_PROVIDERS.append(context_provider)
+    _REGISTERED_CONTEXT_PROVIDERS.append(context_provider)
 
 
 class PriorityGenomicContext(GenomicContext):
@@ -193,7 +193,7 @@ class PriorityGenomicContext(GenomicContext):
 
 def get_genomic_context() -> GenomicContext:
     contexts = []
-    for provider in sorted(_REGISTERED_CONEXT_PROVIDERS,
+    for provider in sorted(_REGISTERED_CONTEXT_PROVIDERS,
                            key=lambda g: (g.get_context_provider_priority(),
                                           g.get_context_provider_type())):
         contexts.extend(provider.get_contexts())

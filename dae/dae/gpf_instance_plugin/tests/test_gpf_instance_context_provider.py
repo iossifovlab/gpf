@@ -2,6 +2,8 @@
 import os
 import pytest
 from dae.genomic_resources.genomic_context import get_genomic_context
+from dae.gpf_instance_plugin.gpf_instance_context_plugin import \
+    init_gpf_instance_genomic_context_plugin
 
 
 @pytest.fixture
@@ -12,6 +14,10 @@ def context_fixture(fixture_dirname, mocker):
         "DAE_DB_DIR": conf_dir,
         "HOME": home_dir
     })
+    mocker.patch(
+        "dae.genomic_resources.genomic_context._REGISTERED_CONTEXT_PROVIDERS",
+        [])
+    init_gpf_instance_genomic_context_plugin()
     context = get_genomic_context()
     assert context is not None
 

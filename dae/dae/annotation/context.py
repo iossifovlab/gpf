@@ -6,7 +6,6 @@ from dae.annotation.annotation_factory import build_annotation_pipeline
 from dae.annotation.annotation_pipeline import AnnotationPipeline
 from dae.genomic_resources.genomic_context import \
     SimpleGenomicContextProvider, \
-    get_genomic_context, \
     register_context_provider
 
 from dae.genomic_resources.genomic_context import CLIGenomicContext
@@ -20,15 +19,14 @@ class CLIAnnotationContext(CLIGenomicContext):
     @staticmethod
     def context_builder(args) -> CLIAnnotationContext:
         """Build a CLI genomic context."""
-        context = super().context_builder(args)
+        context = CLIGenomicContext.context_builder(args)
         context_objects = context.get_all_context_objects()
 
         if args.pipeline is not None and args.pipeline != "context":
             logger.info(
                 "Using the annotation pipeline from the file %s.",
                 args.pipeline)
-            grr = get_genomic_context().get_genomic_resources_repository()
-            # TODO: Add self as a context plugin.
+            grr = context.get_genomic_resources_repository()
             pipeline = build_annotation_pipeline(
                 pipeline_config_file=args.pipeline,
                 grr_repository=grr)
@@ -36,18 +34,6 @@ class CLIAnnotationContext(CLIGenomicContext):
 
         return CLIAnnotationContext(
             context_objects, source=("CLIAnnotationContext", ))
-
-    def get_pipeline(self) -> AnnotationPipeline:
-        """Construct an annotation pipeline."""
-        pipeline = self.get_context_object("annotation_pipeline")
-        if pipeline is None:
-            raise ValueError(
-                "Unable to find annotation pipeline in genomic context")
-        if not isinstance(pipeline, AnnotationPipeline):
-            raise ValueError(
-                "The annotation pipeline from the genomic "
-                " context is not an AnnotationPipeline")
-        return pipeline
 
     @staticmethod
     def register(args):
@@ -59,3 +45,16 @@ class CLIAnnotationContext(CLIGenomicContext):
                 0
             )
         )
+
+    @staticmethod
+    def get_pipeline(context) -> AnnotationPipeline:
+        """Construct an annotation pipeline."""
+        pipeline = context.get_context_object("annotation_pipeline")
+        if pipeline is None:
+            raise ValueError(
+                "Unable to find annotation pipeline in genomic context")
+        if not isinstance(pipeline, AnnotationPipeline):
+            raise ValueError(
+                "The annotation pipeline from the genomic "
+                " context is not an AnnotationPipeline")
+        return pipeline
