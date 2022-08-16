@@ -70,6 +70,14 @@
   </ngb-accordion>
 </ng-template>
 
-<div (click)="openModal(pedigreeModal)" class="svg-container" style="width: 50%; max-width: 100px;">
+<div
+  [ngbPopover]="pedigreeModal"
+  [autoClose]="'outside'"
+  [animation]="false"
+  container="body"
+  placement="right left"
+  class="svg-container"
+  style="width: 50%; max-width: 100px;"
+>
   <ng-container *ngTemplateOutlet="pedigree"></ng-container>
 </div>
