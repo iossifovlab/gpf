@@ -1,5 +1,5 @@
 <ng-template #pedigree>
-  <svg [attr.viewBox]="getViewBox()">
+  <svg [ngStyle]="{'cursor': modalService.hasOpenModals() ? 'default' : 'pointer'}" [attr.viewBox]="getViewBox()">
     <svg:line
       *ngFor="let straightLine of straightLines"
       [attr.x1]="straightLine.startX"
@@ -33,7 +33,7 @@
 </ng-template>
 
 <ng-template #pedigreeModal let-modal>
-  <button type="button" style="margin-left: 95%;" class="btn-close" data-bs-dismiss="pedigreeModal" aria-label="Close"></button>
+  <button (click)="closeModal()" type="button" style="margin-left: 95%;" class="btn-close"></button>
   <div class="svg-container" style="max-width: 200px">
     <ng-container *ngTemplateOutlet="pedigree"></ng-container>
   </div>

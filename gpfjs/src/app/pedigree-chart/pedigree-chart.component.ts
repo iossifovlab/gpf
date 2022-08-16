@@ -9,7 +9,7 @@ import { filter, map, switchMap, take } from 'rxjs/operators';
 import { VariantReportsService } from 'app/variant-reports/variant-reports.service';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { ConfigService } from 'app/config/config.service';
-import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { NgbModal, NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
 
 type OrderedIndividuals = Array<Individual>;
 
@@ -132,8 +132,13 @@ export class PedigreeChartComponent implements OnInit {
     event.target.submit();
   }
 
+  public modal: NgbModalRef;
   public openModal(content): void {
-    this.modalService.open(content);
+    this.modal = this.modalService.open(content, {centered: true});
+  }
+
+  public closeModal(): void {
+    this.modal.close();
   }
 
   public getViewBox(): string {

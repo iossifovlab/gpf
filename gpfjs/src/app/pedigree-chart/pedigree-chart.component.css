@@ -13,3 +13,8 @@ svg {
   overflow: auto;
   overflow-wrap: break-word;
 }
+
+.btn-close {
+  box-shadow: none;
+  opacity: 0.5;
+}
