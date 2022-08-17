@@ -41,3 +41,6 @@ dependencies:
   - pip:
     - sphinx-autorun==1.1.1
     - rangehttpserver==1.2.0
+    - -e ./dae
+    - -e ./wdae
+    - -e ./dae_conftests
