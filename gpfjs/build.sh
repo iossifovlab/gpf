@@ -68,7 +68,7 @@ function main() {
     build_run rm -rf dist/
   
     build_run npm run-script ng build -- --aot --configuration 'production' --base-href '/gpf_prefix/' --deploy-url '/gpf_prefix/'
-    build_run /usr/bin/python ppindex.py
+    build_run /usr/bin/python3 ppindex.py
   }
 
   build_stage "Package and clean production"
@@ -99,7 +99,7 @@ function main() {
     build_run rm -rf dist/
   
     build_run npm run-script ng build -- --aot --configuration 'conda' --base-href '' --deploy-url '/static/gpfjs/'
-    build_run /usr/bin/python ppindex.py
+    build_run /usr/bin/python3 ppindex.py
   }
 
   build_stage "Package and clean conda"
