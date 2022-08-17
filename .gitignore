@@ -88,3 +88,4 @@ dae/TESTphastCons100way.bedGraph.gz.tbi
 dask-worker-space/
 temp
 .grr
+*.egg-info
