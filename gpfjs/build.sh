@@ -63,31 +63,6 @@ function main() {
     build_run bash -c 'npm run-script test:ci || false'
   }
 
-  build_stage "Sonarqube Analysis"
-  {
-    local gpfjs_git_branch=$(e gpfjs_git_branch)
-
-    build_run_local echo "gpfjs_git_branch=$gpfjs_git_branch"
-    build_run_local echo "SONARQUBE_DEFAULT_TOKEN=$SONARQUBE_DEFAULT_TOKEN"
-
-    if [ "$SONARQUBE_DEFAULT_TOKEN" != "" ] && [ "$gpfjs_git_branch" = "master" ]; then
-
-      build_run_local echo "Sonarqube stage started"
-
-      build_run_local docker run --rm \
-          -e SONAR_HOST_URL="http://sonarqube.seqpipe.org:9000" \
-          -e SONAR_LOGIN="${SONARQUBE_DEFAULT_TOKEN}" \
-          -v "$(pwd):/usr/src" \
-          sonarsource/sonar-scanner-cli \
-          -Dsonar.projectKey=gpfjs \
-          -Dsonar.python.version=3.9 \
-          -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
-
-    else
-      build_run_local echo "Sonarqube stage skipped"
-    fi
-  }
-
   build_stage "Compile production"
   {
     build_run rm -rf dist/
@@ -124,7 +99,7 @@ function main() {
     build_run rm -rf dist/
   
     build_run npm run-script ng build -- --aot --configuration 'conda' --base-href '' --deploy-url '/static/gpfjs/'
-    build_run python ppindex.py
+    build_run /usr/bin/python ppindex.py
   }
 
   build_stage "Package and clean conda"
