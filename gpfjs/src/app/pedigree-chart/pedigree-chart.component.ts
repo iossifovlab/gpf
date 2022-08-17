@@ -63,7 +63,6 @@ export class PedigreeChartComponent implements OnInit {
           this.positionedIndividuals = this.loadPositions(family);
           return of<void>(null);
         }
-
         return of(this.perfectlyDrawablePedigreeService.isPDP(family)).pipe(
           map(([, intervals]) => intervals),
           filter(i => Boolean(i)),
@@ -97,7 +96,7 @@ export class PedigreeChartComponent implements OnInit {
         .map(i => i.yUpperLeftCorner + i.size + 1)
         .reduce((acc, current) => Math.max(acc, current), 0);
     });
-    this.pedigreeModalId = `pedigreeModal${ this.counterId }`;
+    this.moveProbandArrow();
   }
 
   public get straightLines(): Line[] {
@@ -132,13 +131,21 @@ export class PedigreeChartComponent implements OnInit {
     event.target.submit();
   }
 
-  public modal: NgbModalRef;
-  public openModal(content): void {
-    this.modal = this.modalService.open(content, {centered: true});
-  }
-
-  public closeModal(): void {
-    this.modal.close();
+  private xPlusPrb: number = 0;
+  public moveProbandArrow() {
+    this.getSibsipsOnLevel(this.pedigreeDataWithLayout).forEach(children => {
+      children.forEach(child => {
+        if(child.individual.pedigreeData.role === 'prb') {
+          this.xPlusPrb = 8;
+        }
+      });
+    });
+    if (this.pedigreeDataWithLayout[this.pedigreeDataWithLayout.length - 1].individual.pedigreeData.role === 'prb') {
+      this.xPlusPrb = 8;
+    }
+    if(this.pedigreeDataWithLayout.length === 1) {
+      this.xPlusPrb = 4;
+    }
   }
 
   public getViewBox(): string {
@@ -147,10 +154,10 @@ export class PedigreeChartComponent implements OnInit {
     if (sortedCurveLines.length !== 0) {
       const minY = sortedCurveLines[0].inverseCurveP1[1];
       if (minY < 0) {
-        return `0 ${minY.toString()} ${(this.width + 8).toString()} ${(this.height + -minY + 8).toString()}`;
+        return `${-this.xPlusPrb} ${minY.toString()} ${this.width + 8} ${(this.height + -minY + 8).toString()}`;
       }
     }
-    return `0 0 ${this.width + 8} ${this.height + 8}`;
+    return `${-this.xPlusPrb} 0 ${this.width + 8} ${this.height + this.xPlusPrb}`;
   }
 
   private loadPositions(family: PedigreeData[]): IndividualWithPosition[][] {
@@ -505,7 +512,7 @@ export class PedigreeChartComponent implements OnInit {
       this.idToPosition.set(individual.pedigreeData.id, position);
       xOffset += memberSize + maxGap;
     }
-
+    
     return result;
   }
 

@@ -33,7 +33,7 @@
 </ng-template>
 
 <ng-template #pedigreeModal let-modal>
-  <button (click)="closeModal()" type="button" style="margin-left: 95%;" class="btn-close"></button>
+  <button type="button" style="margin-left: 95%;" class="btn-close"></button>
   <div class="svg-container" style="max-width: 200px">
     <ng-container *ngTemplateOutlet="pedigree"></ng-container>
   </div>
@@ -77,7 +77,7 @@
   container="body"
   placement="right left"
   class="svg-container"
-  style="width: 50%; max-width: 100px;"
+  style="width: 50%; max-width: 100px"
 >
   <ng-container *ngTemplateOutlet="pedigree"></ng-container>
 </div>
