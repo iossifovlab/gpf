@@ -197,7 +197,7 @@ def test_datasets_hierarchy(admin_client, wdae_gpf_instance):
     assert response
     assert response.status_code == 200
     assert response.data
-    assert len(response.data["data"]) == 43
+    assert len(response.data["data"]) == 24
     response = admin_client.get("/api/v3/datasets/hierarchy/Dataset1")
     assert response.data["data"] == [{
         "dataset": "Dataset1",

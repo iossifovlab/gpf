@@ -249,12 +249,16 @@ class DatasetHierarchyView(DatasetView):
 
     def get(self, request, dataset_id=None):
         user = request.user
-        genotype_data = \
-            self.gpf_instance.get_selected_genotype_data() \
-            or self.gpf_instance.get_genotype_data_ids()
-        if dataset_id:
-            genotype_data = filter(lambda gd: gd == dataset_id, genotype_data)
-        genotype_data = map(self.gpf_instance.get_genotype_data, genotype_data)
+        if dataset_id is None:
+            selected_genotype_data = \
+                self.gpf_instance.get_selected_genotype_data() \
+                or self.gpf_instance.get_genotype_data_ids()
+            genotype_data = filter(lambda gd: gd and not gd.parents, [
+                self.gpf_instance.get_wdae_wrapper(genotype_data_id)
+                for genotype_data_id in selected_genotype_data
+            ])
+        else:
+            genotype_data = [self.gpf_instance.get_wdae_wrapper(dataset_id)]
         return Response({"data": [
             DatasetHierarchyView.produce_tree(gd, user) for gd in genotype_data
         ]}, status=status.HTTP_200_OK)

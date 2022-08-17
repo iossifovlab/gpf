@@ -471,6 +471,10 @@ class RemoteStudyWrapper(StudyWrapperBase):
     def families(self):
         return self.remote_genotype_data._families
 
+    @property
+    def parents(self):
+        return self.remote_genotype_data.parents
+
     def has_pheno_data(self):
         return self.phenotype_data is not None
 
