@@ -68,7 +68,7 @@ function main() {
     build_run rm -rf dist/
   
     build_run npm run-script ng build -- --aot --configuration 'production' --base-href '/gpf_prefix/' --deploy-url '/gpf_prefix/'
-    build_run python ppindex.py
+    build_run /usr/bin/python ppindex.py
   }
 
   build_stage "Package and clean production"
