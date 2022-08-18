@@ -6,6 +6,7 @@ GPF Administration
    :maxdepth: 2
 
    getting_started
+   genomic_resources
    working_with_pedigree_files
    working_with_vcf_files
    pheno
