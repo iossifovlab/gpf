@@ -105,3 +105,24 @@ def test_find_resource_with_resource_id(repo_fixture, tmp_path):
         repo_fixture.proto, str(tmp_path), resource="sub/two")
     assert res.resource_id == "sub/two"
     assert res.version == (1, 0)
+
+
+def test_repo_init(tmp_path):
+    # When
+    cli_manage(["repo-init", "-R", str(tmp_path)])
+
+    # Then
+    assert (tmp_path / ".CONTENTS").exists()
+
+
+def test_repo_init_inside_repo(tmp_path):
+    # Given
+    (tmp_path / "inside").mkdir()
+    cli_manage(["repo-init", "-R", str(tmp_path)])
+
+    # When
+    with pytest.raises(SystemExit, match="1"):
+        cli_manage(["repo-init", "-R", str(tmp_path / "inside")])
+
+    # Then
+    assert not (tmp_path / "inside" / ".CONTENTS").exists()

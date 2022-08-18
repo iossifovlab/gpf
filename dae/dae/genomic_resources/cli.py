@@ -101,6 +101,36 @@ def _run_list_command(proto, _args):
             f"{res.get_id()}")
 
 
+def _configure_repo_init_subparser(subparsers):
+    parser = subparsers.add_parser(
+        "repo-init", help="Initialize a directory to turn it into a GRR")
+
+    _add_repository_resource_parameters_group(parser, use_resource=False)
+    _add_dry_run_and_force_parameters_group(parser)
+
+
+def _run_repo_init_command(**kwargs):
+    repository = kwargs.get("repository")
+    if repository is None:
+        repo_url = _find_directory_with_filename(GR_CONTENTS_FILE_NAME)
+    else:
+        repo_url = _find_directory_with_filename(
+            GR_CONTENTS_FILE_NAME, repository)
+
+    if repo_url is not None:
+        logger.error(
+            "current working directory is part of a GRR at %s", repo_url)
+        sys.exit(1)
+
+    if repository is None:
+        cwd = pathlib.Path().absolute()
+    else:
+        cwd = pathlib.Path(repository).absolute()
+
+    proto = _create_proto(str(cwd))
+    proto.build_content_file()
+
+
 def _configure_repo_manifest_subparser(subparsers):
     parser = subparsers.add_parser(
         "repo-manifest", help="Create/update manifests for whole GRR")
@@ -426,6 +456,7 @@ def cli_manage(cli_args=None):
         dest="command", help="Command to execute")
 
     _configure_list_subparser(commands_parser)
+    _configure_repo_init_subparser(commands_parser)
     _configure_repo_manifest_subparser(commands_parser)
     _configure_resource_manifest_subparser(commands_parser)
     _configure_repo_hist_subparser(commands_parser)
@@ -439,6 +470,9 @@ def cli_manage(cli_args=None):
         sys.exit(0)
 
     command, repo_url = args.command, args.repository
+    if command == "repo-init":
+        _run_repo_init_command(**vars(args))
+        return
 
     if args.repository is None:
         repo_url = _find_directory_with_filename(GR_CONTENTS_FILE_NAME)
