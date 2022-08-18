@@ -7,11 +7,54 @@ Prerequisites
 
 This guide assumes that you are working on a Linux distribution.
 
-You need wget to follow this guide - you can use your system's package manager to install it. For example, on Ubuntu:
+Installation of `wget`
+++++++++++++++++++++++
+
+You need wget to follow this guide - you can use your system's package manager
+to install it. For example, on Ubuntu:
 
 .. code-block:: bash
 
     sudo apt-get install wget
+
+
+Working version of `anaconda` or `miniconda`
+++++++++++++++++++++++++++++++++++++++++++++
+
+The GPF system is distributed as an Anaconda package using the `conda`
+package manager.
+
+If you do not have a working version of Anaconda or Miniconda you need to
+install one. We recommended using a Miniconda version.
+
+Go to the Miniconda 
+`distribution page <https://docs.conda.io/en/latest/miniconda.html>`_,
+download the Linux installer
+
+.. code-block:: bash
+
+    wget -c https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+
+and install it in your local environment:
+
+.. code-block:: bash
+
+    sh Miniconda3-latest-Linux-x86_64.sh
+
+.. note::
+
+    At the end of the installation process, you will be asked if you wish
+    to allow the installer to initialize Anaconda3 by running conda init.
+    If you choose to, every terminal you open after that will have the ``base``
+    Anaconda environment activated, and you'll have access to the ``conda``
+    commands used below.
+
+Once Anaconda/Miniconda is installed we would recomend installing ``mamba`` 
+instead of ``conda`` when installing packages.
+
+.. code-block::
+
+    conda -c conda-forge install mamba
 
 
 GPF Installation
@@ -19,29 +62,6 @@ GPF Installation
 
 The GPF system is developed in Python and supports Python 3.7 and up. The
 recommended way to setup the GPF development environment is to use Anaconda.
-
-Download and install Anaconda
-+++++++++++++++++++++++++++++
-
-Download Anaconda from Anaconda's `distribution page <https://www.anaconda.com/distribution>`_ using the following command:
-
-.. code-block:: bash
-
-    wget -c https://repo.anaconda.com/archive/Anaconda3-2019.07-Linux-x86_64.sh
-
-and install it in your local environment, following the installer instructions:
-
-.. code-block:: bash
-
-    sh Anaconda3-2019.07-Linux-x86_64.sh
-
-.. note::
-
-    At the end of the installation process, you will be asked if you wish
-    to allow the installer to initialize Anaconda3 by running conda init.
-    If you choose to, every terminal you open after that will have the ``base``
-    Anaconda environment activated, and you'll have access to the ``conda`` commands
-    used below.
 
 Install GPF
 +++++++++++
@@ -63,91 +83,128 @@ environment:
 
 .. code-block:: bash
 
-    conda install -c defaults -c conda-forge -c iossifovlab -c bioconda gpf_wdae
+    mamba install \
+        -c defaults \
+        -c conda-forge \
+        -c bioconda \
+        -c iossifovlab \
+        gpf_wdae
 
 This command is going to install GPF and all of its dependencies.
 
+.. note:: 
 
-Bootstrap GPF
-+++++++++++++
+    If you want to install development version of GPF you can use
+    the following command:
 
-To start working with GPF, you will need a startup data instance. There are
-two GPF startup instances that are aligned with different versions of the
-reference human genome - for HG19 and HG38.
-
-Besides the startup data instance, some initial bootstrapping of GPF is also
-necessary.
-
-The bootstrap script ``wdae_bootstrap.sh`` creates a working directory where the data will be
-stored. You can provide the name of the working directory as a parameter
-to the boostrap script. For example, if you want the working directory to
-be named `gpf_test`, use the following command:
-
-
-* For HG19:
     .. code-block:: bash
 
-        wdae_bootstrap.sh hg19 gpf_test
+        mamba install \
+            -c defaults \
+            -c conda-forge \
+            -c bioconda \
+            -c iossifovlab/label/dev \
+            -c iossifovlab gpf_wdae
 
-* For HG38
-    .. code-block:: bash
 
-        wdae_bootstrap.sh hg38 gpf_test
+Create an empty GPF instance
+++++++++++++++++++++++++++++
 
-As a result, a directory named `gpf_test` will be created with the following
-structure:
+Create an empty directory named ``data-hg38-empty``:
 
 .. code-block:: bash
 
-    gpf_test
-    ├── annotation.conf
-    ├── DAE.conf
-    ├── datasets
-    ├── datasetsDB.conf
-    ├── defaultConfiguration.conf
-    ├── enrichment
-    ├── geneInfo
-    ├── geneInfo.conf
-    ├── genomes
-    ├── genomesDB.conf
-    ├── genomicScores
-    ├── genomicScores.conf
-    ├── genomic-scores-hg19
-    ├── genomic-scores-hg38
-    ├── permissionDeniedPrompt.md
-    ├── pheno
-    ├── setenv.sh
-    ├── studies
-    ├── studiesDB.conf
-    └── wdae
+    mkdir data-hg38-empty
+
+and inside it create a file named ``gpf_instance.yaml`` with the following
+content:
+
+.. code-block:: yaml
+
+    grr:
+        id: "seqpipe"
+        type: "url"
+        url: "https://grr.seqpipe.org/"
+        cache_dir: "%($HOME)s/grrCache"
+
+    reference_genome:
+        resource_id: "hg38/genomes/GRCh38-hg38"
+
+    gene_models:
+        resource_id: "hg38/gene_models/refSeq_v20200330"
+
+This creates an GPF instance, that:
+
+* uses a genomic resources repository as specified in ``grr`` section;
+  the repository is located at 
+  `https://grr.seqpipe.org/ <https://grr.seqpipe.org>`_
+  and the resources are cached locally in the home directory of the user as
+  specified in ``cache_dir`` property;
+
+* the reference genome used by this GPF instance is ``hg38/genomes/GRCh38-hg38``
+  from GRR specified in ``grr`` section;
+
+* the gene models used by this GPF instance are 
+  ``hg38/gene_models/refSeq_v20200330`` from GRR specified in ``grr`` section.
 
 
-Run GPF web server
-##################
 
-Enter into the newly created ``gpf_test`` directory and source the ``setenv.sh`` file:
+Prepare the GPF web server
+##########################
+
+First let us instruct the GPF system, that the we are going to use
+``data-hg38-empty`` as an instance directory. By default the GPF system
+look for an environment variable named ``DAE_DB_DIR`` to locate the GPF
+instance directory.
 
 .. code-block:: bash
 
-    cd gpf_test
-    source ./setenv.sh
+    cd data-hg38-empty
+    export DAE_DB_DIR="$(pwd)"
 
-To run the GPF development web server, use the ``wdaemanage.py``
-command provided by the conda environment. To do so, run:
+To setup initial empty database we need to run:
+
+.. code-block:: bash
+
+    wdaemanage.py migrate
+
+After that we will need to create an admin user to be able to have access and
+manage the instance web server:
+
+.. code-block:: bash
+
+    wdaemanage.py user_create admin@iossifovlab.com -p secret -g any_dataset:admin
+
+This will create an ``admin`` user with user name ``admin@iossifovlab.com``
+and password ``secret``.
+
+Now we can run the GPF development web server and browse our empty GPF instance:
 
 .. code-block:: bash
 
     wdaemanage.py runserver 0.0.0.0:8000
 
-You can browse the development server using the IP address and port
-provided to the wdaemanage.py command. In this case:
+and browse the GPF development server using the IP address and port specified in
+the runserver command:
 
 .. code-block:: bash
 
     http://localhost:8000
 
-Once loaded, you will be greeted by a blank page. To demonstrate how to import new study data into
-the GPF instance, we will reproduce the necessary steps for importing a sample study.
+
+To stop the development GPF web server you should press ``Ctrl-C`` - the usual
+keybinding for stopping long running Linux commands in a terminal.
+
+
+.. warning:: 
+
+    The web server used in this guide is meant for development purposes only
+    and is not sutable for serving GPF system in production.
+
+
+Import genotype variants
+########################
+
 
 Data Storage
 ++++++++++++
