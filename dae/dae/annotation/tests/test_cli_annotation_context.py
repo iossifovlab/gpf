@@ -18,6 +18,9 @@ def context_fixture(fixture_dirname, mocker):
     mocker.patch(
         "dae.genomic_resources.genomic_context._REGISTERED_CONTEXT_PROVIDERS",
         [])
+    mocker.patch(
+        "dae.genomic_resources.genomic_context._REGISTERED_CONTEXTS",
+        [])
     context = get_genomic_context()
     assert context is not None
 

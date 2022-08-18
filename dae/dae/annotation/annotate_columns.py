@@ -73,17 +73,17 @@ def cli(raw_args: list[str] = None) -> None:
     print(*(hcs + annotation_attributes),
           sep=args.output_separator, file=out_file)
 
-    pipeline.open()
+    with pipeline.open() as pipeline:
 
-    for line in in_file:
-        columns = line.strip("\n\r").split(args.input_separator)
-        record = dict(zip(hcs, columns))
-        annotabale = record_to_annotable.build(record)
-        annotation = pipeline.annotate(annotabale)
-        print(*(columns + [
-            str(annotation[attrib])
-            for attrib in annotation_attributes]),
-            sep=args.output_separator, file=out_file)
+        for line in in_file:
+            columns = line.strip("\n\r").split(args.input_separator)
+            record = dict(zip(hcs, columns))
+            annotabale = record_to_annotable.build(record)
+            annotation = pipeline.annotate(annotabale)
+            print(*(columns + [
+                str(annotation[attrib])
+                for attrib in annotation_attributes]),
+                sep=args.output_separator, file=out_file)
 
     if args.input != "-":
         in_file.close()

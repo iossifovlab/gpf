@@ -76,23 +76,24 @@ def cli(raw_args: list[str] = None) -> None:
     print(str(header), file=out_file, end="")
 
     # handling the variants
-    for vcf_var in in_file:
-        buffers: List[List] = [list([]) for _ in annotation_attributes]
+    with pipeline.open() as pipeline:
+        for vcf_var in in_file:
+            buffers: List[List] = [list([]) for _ in annotation_attributes]
 
-        if vcf_var.alts is None:
-            logger.info("vcf variant without alternatives: %s", vcf_var)
-            continue
+            if vcf_var.alts is None:
+                logger.info("vcf variant without alternatives: %s", vcf_var)
+                continue
 
-        for alt in vcf_var.alts:
-            annotabale = VCFAllele(
-                vcf_var.chrom, vcf_var.pos, vcf_var.ref, alt)
-            annotation = pipeline.annotate(annotabale)
-            for buff, attribute in zip(buffers, annotation_attributes):
-                buff.append(str(annotation[attribute]))
+            for alt in vcf_var.alts:
+                annotabale = VCFAllele(
+                    vcf_var.chrom, vcf_var.pos, vcf_var.ref, alt)
+                annotation = pipeline.annotate(annotabale)
+                for buff, attribute in zip(buffers, annotation_attributes):
+                    buff.append(str(annotation[attribute]))
 
-        for attribute, buff in zip(annotation_attributes, buffers):
-            vcf_var.info[attribute] = ",".join(buff)
-        print(str(vcf_var), file=out_file, end="")
+            for attribute, buff in zip(annotation_attributes, buffers):
+                vcf_var.info[attribute] = ",".join(buff)
+            print(str(vcf_var), file=out_file, end="")
 
     in_file.close()
 

@@ -1,12 +1,9 @@
 from __future__ import annotations
 
 import logging
-import functools
 from dae.annotation.annotation_factory import build_annotation_pipeline
 from dae.annotation.annotation_pipeline import AnnotationPipeline
-from dae.genomic_resources.genomic_context import \
-    SimpleGenomicContextProvider, \
-    register_context_provider
+from dae.genomic_resources.genomic_context import register_context
 
 from dae.genomic_resources.genomic_context import CLIGenomicContext
 
@@ -38,14 +35,8 @@ class CLIAnnotationContext(CLIGenomicContext):
 
     @staticmethod
     def register(args):
-        builder = functools.partial(CLIAnnotationContext.context_builder, args)
-        register_context_provider(
-            SimpleGenomicContextProvider(
-                builder,
-                "CLIAnnotationContext",
-                0
-            )
-        )
+        context = CLIAnnotationContext.context_builder(args)
+        register_context(context)
 
     @staticmethod
     def get_pipeline(context) -> AnnotationPipeline:
