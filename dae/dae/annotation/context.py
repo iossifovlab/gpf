@@ -22,8 +22,8 @@ class CLIAnnotationContext(CLIGenomicContext):
         context = CLIGenomicContext.context_builder(args)
         context_objects = context.get_all_context_objects()
 
-        if hasattr(args, "pipeline") and args.pipeline is not None \
-                and args.pipeline != "context":
+        if hasattr(args, "pipeline") and \
+                args.pipeline is not None and args.pipeline != "context":
             logger.info(
                 "Using the annotation pipeline from the file %s.",
                 args.pipeline)
