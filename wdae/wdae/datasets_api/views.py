@@ -227,38 +227,38 @@ class DatasetDescriptionView(QueryBaseView):
         return Response(status=status.HTTP_200_OK)
 
 
-class DatasetHierarchyView(DatasetView):
+class DatasetHierarchyView(QueryBaseView):
     """Provide the hierarchy of all datasets configured in the instance."""
 
     @staticmethod
-    def produce_tree(dataset: GenotypeData, user):
+    def produce_tree(dataset: GenotypeData, user, selected):
         """Recursively collect a dataset's id, children and access rights."""
+        children = None
         if dataset.is_group:
             children = [
-                DatasetHierarchyView.produce_tree(child, user)
+                DatasetHierarchyView.produce_tree(child, user, selected)
                 for child in dataset.studies
+                if child.study_id in selected
             ]
-        else:
-            children = None
         dataset_object = Dataset.objects.get(dataset_id=dataset.study_id)
         return {
             "dataset": dataset.study_id,
+            "name": dataset.name,
             "children": children,
             "access_rights": user_has_permission(user, dataset_object)
         }
 
-    def get(self, request, dataset_id=None):
+    def get(self, request):
+        """Return the hierarchy of configured datasets in the instance."""
         user = request.user
-        if dataset_id is None:
-            selected_genotype_data = \
-                self.gpf_instance.get_selected_genotype_data() \
-                or self.gpf_instance.get_genotype_data_ids()
-            genotype_data = filter(lambda gd: gd and not gd.parents, [
-                self.gpf_instance.get_wdae_wrapper(genotype_data_id)
-                for genotype_data_id in selected_genotype_data
-            ])
-        else:
-            genotype_data = [self.gpf_instance.get_wdae_wrapper(dataset_id)]
+        selected_genotype_data = \
+            self.gpf_instance.get_selected_genotype_data() \
+            or self.gpf_instance.get_genotype_data_ids()
+        genotype_data = filter(lambda gd: gd and not gd.parents, [
+            self.gpf_instance.get_wdae_wrapper(genotype_data_id)
+            for genotype_data_id in selected_genotype_data
+        ])
         return Response({"data": [
-            DatasetHierarchyView.produce_tree(gd, user) for gd in genotype_data
+            DatasetHierarchyView.produce_tree(gd, user, selected_genotype_data)
+            for gd in genotype_data
         ]}, status=status.HTTP_200_OK)
