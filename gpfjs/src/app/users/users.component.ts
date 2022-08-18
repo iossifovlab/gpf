@@ -60,7 +60,8 @@ export class UsersComponent implements OnInit {
 
   public login(): void {
     const codeChallenge = this.authService.generatePKCE();
-    location.href = `${this.config.rootUrl}/o/authorize/?response_type=code&code_challenge_method=S256&code_challenge=${codeChallenge}&client_id=${this.config.oauthClientId}`;
+    window.open(`${this.config.rootUrl}/o/authorize/?response_type=code&code_challenge_method=S256&code_challenge=${codeChallenge}&client_id=${this.config.oauthClientId}`,
+                '_blank', 'popup=true,width=600,height=300');
   }
 
   public logout(): void {
