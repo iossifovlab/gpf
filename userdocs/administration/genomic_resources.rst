@@ -172,7 +172,7 @@ providing the path to the root directory:
 
     grr_manage list -R <path to the local repo>
 
-You can store a genomic resource repository in an S3 storage an you can browse
+You can store a genomic resource repository in an S3 storage and you can browse
 its content with:
 
 .. code-block::
@@ -180,5 +180,6 @@ its content with:
     grr_manage list -R s3://grr-bucket-test/grr \
         --extra-args "endpoint_url=http://piglet.seqpipe.org:7480"
 
-
+where ``grr-bucket-test`` is the bucket where you store the repository and
+``--extra-args`` are used to specify the S3 endpoint.
 
