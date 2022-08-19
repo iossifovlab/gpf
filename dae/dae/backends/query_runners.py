@@ -11,14 +11,16 @@ logger = logging.getLogger(__name__)
 
 
 class QueryRunner(abc.ABC):
+    """Run a query in the backround using the provided executor."""
 
     def __init__(self, deserializer=None):
-        super(QueryRunner, self).__init__()
+        super().__init__()
 
         self._status_lock = threading.RLock()
         self._closed = False
         self._started = False
         self._done = False
+        self.timestamp = None
 
         self._result_queue = None
         self._future = None
@@ -52,7 +54,7 @@ class QueryRunner(abc.ABC):
 
     def close(self):
         elapsed = time.time() - self.timestamp
-        logger.debug(f"closing runner after {elapsed:0.3f}")
+        logger.debug("closing runner after %0.3f", elapsed)
         with self._status_lock:
             if self._started:
                 self._future.cancel()
@@ -74,8 +76,13 @@ class QueryRunner(abc.ABC):
 
 
 class QueryResult:
-    def __init__(self, runners, limit=-1):
-        self.result_queue = queue.Queue(maxsize=1_000)
+    """Run a list of queries in the background.
+
+    The result of the queries is enqueued on result_queue
+    """
+
+    def __init__(self, runners: list[QueryRunner], limit=-1):
+        self.result_queue: queue.Queue = queue.Queue(maxsize=1_000)
 
         if limit is None:
             limit = -1
@@ -91,10 +98,11 @@ class QueryResult:
 
     def done(self):
         if self.limit >= 0 and self._counter >= self.limit:
-            logger.debug(f"limit done {self._counter} >= {self.limit}")
+            logger.debug("limit done %d >= %d", self._counter, self.limit)
             return True
-        if all([r.done() for r in self.runners]):
+        if all(r.done() for r in self.runners):
             return True
+        return False
 
     def __iter__(self):
         return self
@@ -105,20 +113,24 @@ class QueryResult:
                 item = self.result_queue.get(timeout=0.1)
                 self._counter += 1
                 return item
-            except queue.Empty:
+            except queue.Empty as exp:
                 if not self.done():
                     return None
-                else:
-                    logger.debug("result done")
-                    raise StopIteration()
+                logger.debug("result done")
+                raise StopIteration() from exp
 
     def get(self, timeout=0):
+        """Pop the next entry from the queue.
+
+        Return None if the queue is still empty after timeout seconds.
+        """
         try:
             row = self.result_queue.get(timeout=timeout)
             return row
-        except queue.Empty:
+        except queue.Empty as exp:
             if self.done():
-                raise StopIteration()
+                raise StopIteration() from exp
+            return None
 
     def start(self):
         self.timestamp = time.time()
@@ -127,16 +139,17 @@ class QueryResult:
         time.sleep(0.1)
 
     def close(self):
+        """Gracefully close and dispose of resources."""
         for runner in self.runners:
             try:
                 runner.close()
-            except Exception as ex:
+            except Exception as ex:  # pylint: disable=broad-except
                 logger.info(
-                    f"exception in result close: {type(ex)}", exc_info=True)
+                    "exception in result close: %s", type(ex), exc_info=True)
         while not self.result_queue.empty():
             self.result_queue.get()
 
         logger.debug("closing thread pool executor")
         self.executor.shutdown(wait=True)
         elapsed = time.time() - self.timestamp
-        logger.debug(f"result closed after {elapsed:0.3f}")
+        logger.debug("result closed after %0.3f", elapsed)
