@@ -1,8 +1,4 @@
-"""
-Created on Jul 3, 2018
-
-@author: lubo
-"""
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pytest
 
 from dae.utils.variant_utils import mat2str
@@ -21,12 +17,12 @@ from dae.utils.variant_utils import mat2str
 )
 def test_inheritance_trio_full(variants_impl, variants, inheritance, count):
     fvars = variants_impl(variants)("backends/inheritance_trio")
-    vs = list(
+    actual_variants = list(
         fvars.query_variants(inheritance=inheritance, return_reference=False)
     )
-    for v in vs:
+    for v in actual_variants:
         assert len(mat2str(v.best_state)) == 7
-    assert len(vs) == count
+    assert len(actual_variants) == count
 
 
 @pytest.mark.parametrize("variants", ["variants_impala", "variants_vcf"])
@@ -40,11 +36,11 @@ def test_inheritance_trio_full(variants_impl, variants, inheritance, count):
 )
 def test_inheritance_quad_full(variants_impl, variants, count, inheritance):
     fvars = variants_impl(variants)("backends/inheritance_quad")
-    vs = list(
+    actual_variants = list(
         fvars.query_variants(inheritance=inheritance, return_reference=False)
     )
-    assert len(vs) == count
-    for v in vs:
+    assert len(actual_variants) == count
+    for v in actual_variants:
         assert len(mat2str(v.best_state)) == 9
 
 
@@ -55,10 +51,10 @@ def test_inheritance_quad_full(variants_impl, variants, count, inheritance):
 )
 def test_inheritance_multi_full(variants_impl, variants, count, inheritance):
     fvars = variants_impl(variants)("backends/inheritance_multi")
-    vs = list(
+    actual_variants = list(
         fvars.query_variants(inheritance=inheritance, return_reference=False)
     )
-    for v in vs:
+    for v in actual_variants:
         for aa in v.alleles:
             print(">>", aa, aa.inheritance_in_members)
-    assert len(vs) == count
+    assert len(actual_variants) == count

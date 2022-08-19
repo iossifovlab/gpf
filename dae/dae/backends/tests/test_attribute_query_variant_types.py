@@ -1,3 +1,4 @@
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pytest
 from dae.variants.core import Allele
 from dae.backends.attributes_query import \
@@ -7,7 +8,7 @@ from dae.backends.attributes_query import \
 
 
 @pytest.mark.parametrize(
-    "query,vt,expected",
+    "query,variant,expected",
     [
         ("sub", Allele.Type.substitution, True),
         ("ins", Allele.Type.small_insertion, True),
@@ -20,7 +21,7 @@ from dae.backends.attributes_query import \
         ("ins and TR", Allele.Type.tandem_repeat_ins, True),
     ],
 )
-def test_simple_variant_types_parser(query, vt, expected):
+def test_simple_variant_types_parser(query, variant, expected):
     parsed = variant_type_query.transform_query_string_to_tree(query)
     print(parsed)
 
@@ -32,7 +33,7 @@ def test_simple_variant_types_parser(query, vt, expected):
     matcher = transformer.transform(parsed)
     print(matcher)
 
-    result = matcher([vt])
+    result = matcher([variant])
     print(result)
 
     assert result == expected

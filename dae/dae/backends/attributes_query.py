@@ -1,9 +1,10 @@
+# pylint: disable=too-few-public-methods
 import enum
+from functools import reduce
 
 from lark import Lark, InlineTransformer
 from lark.visitors import Interpreter
 from lark.reconstruct import Reconstructor
-from functools import reduce
 
 from dae.variants.core import Allele
 from dae.variants.attributes import Role, Inheritance, Sex
@@ -67,7 +68,9 @@ parser_with_ambiguity = Lark(QUERY_GRAMMAR, ambiguity="explicit")
 PARSER = Lark(QUERY_GRAMMAR)
 
 
-class Matcher(object):
+class Matcher:
+    """No idea what this class is supposed to do. If you know please edit."""
+
     def __init__(self, tree, parser, matcher):
         assert matcher is not None
         assert tree is not None
@@ -90,7 +93,9 @@ class Matcher(object):
         self._reconstructor.reconstruct(self.tree)
 
 
-class BaseQueryTransformerMatcher(object):
+class BaseQueryTransformerMatcher:
+    """Base class for query transformer matchers."""
+
     def __init__(self, parser=PARSER, token_converter=None):
         self.parser = parser
         self.transformer = StringQueryToTreeTransformer(
@@ -116,8 +121,12 @@ class BaseQueryTransformerMatcher(object):
 
 
 class StringQueryToTreeTransformer(InlineTransformer):
+    # pylint: disable=no-self-use
+    """Convert tokens using a token converter."""
+
     def __init__(self, parser=PARSER, token_converter=None):
-        super(StringQueryToTreeTransformer, self).__init__()
+        # pylint: disable=unused-argument
+        super().__init__()
 
         if token_converter is None:
             self.token_converter = lambda x: x
@@ -156,6 +165,7 @@ class StringQueryToTreeTransformer(InlineTransformer):
         return args[0]
 
     def eq(self, *args):
+        # pylint: disable=invalid-name
         return EqualsNode(args)
 
     def any(self, *args):
@@ -165,82 +175,76 @@ class StringQueryToTreeTransformer(InlineTransformer):
         return AndNode(args)
 
 
-class Leaf(object):
+class Leaf:
+    # pylint: disable=invalid-name
     def __init__(self, op, value):
         self.value = value
         self.op = op
 
 
-class LeafNode(object):
+class LeafNode:
     def __init__(self, arg):
         self.arg = arg
 
 
-class TreeNode(object):
+class TreeNode:
     def __init__(self, children):
         self.children = children
 
 
 class AndNode(TreeNode):
-    def __init__(self, children):
-        super(AndNode, self).__init__(children)
+    pass
 
 
 class OrNode(TreeNode):
-    def __init__(self, children):
-        super(OrNode, self).__init__(children)
+    pass
 
 
 class NotNode(TreeNode):
     def __init__(self, children):
-        super(NotNode, self).__init__([children])
+        super().__init__([children])
 
 
 class EqualsNode(LeafNode):
-    def __init__(self, arg):
-        super(EqualsNode, self).__init__(arg)
+    pass
 
 
 class ContainsNode(LeafNode):
-    def __init__(self, arg):
-        super(ContainsNode, self).__init__(arg)
+    pass
 
 
 class ElementOfNode(LeafNode):
-    def __init__(self, arg):
-        super(ElementOfNode, self).__init__(arg)
+    pass
 
 
 class LessThanNode(LeafNode):
-    def __init__(self, arg):
-        super(LessThanNode, self).__init__(arg)
+    pass
 
 
 class GreaterThanNode(LeafNode):
-    def __init__(self, arg):
-        super(GreaterThanNode, self).__init__(arg)
+    pass
 
 
 class LessThanEqNode(LeafNode):
-    def __init__(self, arg):
-        super(LessThanEqNode, self).__init__(arg)
+    pass
 
 
 class GreaterThanEqNode(LeafNode):
-    def __init__(self, arg):
-        super(GreaterThanEqNode, self).__init__(arg)
+    pass
 
 
-class BaseTreeTransformer(object):
+class BaseTreeTransformer:
     def transform(self, node):
         if isinstance(node, TreeNode):
             children = [self.transform(c) for c in node.children]
             return getattr(self, type(node).__name__)(children)
-        else:
-            return getattr(self, type(node).__name__)(node.arg)
+        return getattr(self, type(node).__name__)(node.arg)
 
 
 class QueryTreeToLambdaTransformer(BaseTreeTransformer):
+    # pylint: disable=no-self-use,invalid-name
+    """Transforma all nodes to python lambda functions."""
+
     def LessThanNode(self, arg):
         return lambda x: x > arg
 
@@ -275,8 +279,11 @@ class QueryTreeToLambdaTransformer(BaseTreeTransformer):
 
 
 class QueryTreeToBitwiseLambdaTransformer(BaseTreeTransformer):
+    # pylint: disable=no-self-use,invalid-name
+    """No idea what this is supposed to do. Please edit."""
+
     def ContainsNode(self, arg):
-        return lambda vals: any([arg & v for v in vals if v is not None])
+        return lambda vals: any(arg & v for v in vals if v is not None)
 
     def LessThanNode(self, arg):
         raise NotImplementedError("unexpected bitwise query")
@@ -291,10 +298,10 @@ class QueryTreeToBitwiseLambdaTransformer(BaseTreeTransformer):
         raise NotImplementedError("unexpected bitwise query")
 
     def ElementOfNode(self, arg):
-        return lambda x: any([x & a for a in arg])
+        return lambda x: any(x & a for a in arg)
 
     def EqualsNode(self, arg):
-        return lambda val: all([val & a for a in arg])
+        return lambda val: all(val & a for a in arg)
 
     def NotNode(self, children):
         assert len(children) == 1
@@ -308,41 +315,44 @@ class QueryTreeToBitwiseLambdaTransformer(BaseTreeTransformer):
         return lambda x: any(child(x) for child in children)
 
 
-def roles_converter(a):
-    if not isinstance(a, Role):
-        return Role.from_name(a)
-    return a
+def roles_converter(arg):
+    if not isinstance(arg, Role):
+        return Role.from_name(arg)
+    return arg
 
 
-def sex_converter(a):
-    if not isinstance(a, Sex):
-        return Sex.from_name(a)
-    return a
+def sex_converter(arg):
+    if not isinstance(arg, Sex):
+        return Sex.from_name(arg)
+    return arg
 
 
-def inheritance_converter(a):
-    if not isinstance(a, Inheritance):
-        return Inheritance.from_name(a)
-    return a
+def inheritance_converter(arg):
+    if not isinstance(arg, Inheritance):
+        return Inheritance.from_name(arg)
+    return arg
 
 
-def variant_type_converter(a):
-    if not isinstance(a, Allele.Type):
-        return allele_type_from_name(a)
-    return a
+def variant_type_converter(arg):
+    if not isinstance(arg, Allele.Type):
+        return allele_type_from_name(arg)
+    return arg
 
 
 class QueryTreeToSQLTransformer(BaseTreeTransformer):
-    def __init__(self, column_name, add_unnest = False):
+    # pylint: disable=invalid-name
+    """I don't know what this class does. Please edit if you do."""
+
+    def __init__(self, column_name, add_unnest=False):
         self.column_name = column_name
         self.add_unnest = add_unnest
-        super(QueryTreeToSQLTransformer, self).__init__()
+        super().__init__()
 
-    def token_converter(self, arg):
+    @staticmethod
+    def token_converter(arg):
         if isinstance(arg, enum.Enum):
             return str(arg.value)
-        else:
-            return str(arg)
+        return str(arg)
 
     def LessThanNode(self, arg):
         return self.column_name + " > " + self.token_converter(arg)
@@ -365,18 +375,23 @@ class QueryTreeToSQLTransformer(BaseTreeTransformer):
     def EqualsNode(self, arg):
         return self.column_name + " = " + self.token_converter(arg)
 
-    def NotNode(self, children):
+    @staticmethod
+    def NotNode(children):
         assert len(children) == 1
         return "NOT (" + children[0] + ")"
 
-    def AndNode(self, children):
+    @staticmethod
+    def AndNode(children):
         return "(" + reduce((lambda x, y: x + " AND " + y), children) + ")"
 
-    def OrNode(self, children):
+    @staticmethod
+    def OrNode(children):
         return "(" + reduce((lambda x, y: x + " OR " + y), children) + ")"
 
 
 class QueryTreeToSQLListTransformer(QueryTreeToSQLTransformer):
+    """I don't know what this class does. Please edit if you do."""
+
     def ContainsNode(self, arg):
         return (
             "array_contains("
@@ -409,15 +424,14 @@ class QueryTreeToSQLListTransformer(QueryTreeToSQLTransformer):
 
 
 class QueryTreeToSQLBitwiseTransformer(QueryTreeToSQLTransformer):
+    """I don't know what this class does. Please edit if you do."""
+
     def ContainsNode(self, arg):
+        converted_token = self.token_converter(arg)
         if self.add_unnest:
-            return "((SELECT BIT_AND(x) FROM UNNEST([{}, {}]) as x) != 0)".format(
-                self.column_name, self.token_converter(arg)
-            )
-        else:
-            return "(BITAND({}, {}) != 0)".format(
-                self.column_name, self.token_converter(arg)
-            )
+            return f"((SELECT BIT_AND(x) FROM UNNEST([{self.column_name}, "\
+                   f"{converted_token}]) as x) != 0)"
+        return f"(BITAND({self.column_name}, {converted_token}) != 0)"
 
     def LessThanNode(self, arg):
         raise NotImplementedError("unexpected bitwise query")
@@ -432,28 +446,28 @@ class QueryTreeToSQLBitwiseTransformer(QueryTreeToSQLTransformer):
         raise NotImplementedError("unexpected bitwise query")
 
     def ElementOfNode(self, arg):
+        converted_token = self.token_converter(arg)
         if self.add_unnest:
-            return "((SELECT BIT_AND(x) FROM UNNEST([{}, {}]) as x) != 0)".format(
-                self.column_name, self.token_converter(arg)
-            )
-        else:
-            return "(BITAND({}, {}) != 0)".format(
-                self.column_name, self.token_converter(arg)
-            )
+            return f"((SELECT BIT_AND(x) FROM UNNEST([{self.column_name}, "\
+                   f"{converted_token}]) as x) != 0)"
+        return f"(BITAND({self.column_name}, {converted_token}) != 0)"
 
     def EqualsNode(self, arg):
         return self.column_name + " = " + self.token_converter(arg)
 
-    def NotNode(self, children):
+    @staticmethod
+    def NotNode(children):
         assert len(children) == 1
-        return "(NOT ({}))".format(children[0])
+        return f"(NOT ({children[0]}))"
 
-    def AndNode(self, children):
-        res = reduce(lambda x, y: "({}) AND ({})".format(x, y), children)
+    @staticmethod
+    def AndNode(children):
+        res = reduce(lambda x, y: f"({x}) AND ({y})", children)
         return res
 
-    def OrNode(self, children):
-        res = reduce(lambda x, y: "({}) OR ({})".format(x, y), children)
+    @staticmethod
+    def OrNode(children):
+        res = reduce(lambda x, y: f"({x}) OR ({y})", children)
         return res
 
 
@@ -477,7 +491,9 @@ class QueryTreeToSQLBitwiseTransformer(QueryTreeToSQLTransformer):
 #         }
 
 
-class StringQueryToTreeTransformerWrapper(object):
+class StringQueryToTreeTransformerWrapper:
+    """No idea what this is supposed to do. Please edit."""
+
     def __init__(self, parser=PARSER, token_converter=None):
         self.parser = parser
         self.transformer = StringQueryToTreeTransformer(
@@ -494,18 +510,21 @@ class StringQueryToTreeTransformerWrapper(object):
         return self.transform(self.parse(expression))
 
 
-class StringListQueryToTreeTransformer(object):
-    def __init__(self):
-        pass
+class StringListQueryToTreeTransformer:
+    """No idea what this is supposed to do. Please edit."""
 
-    def parse_and_transform(self, expression):
+    @staticmethod
+    def parse_and_transform(expression):
         assert isinstance(expression, list)
         return ElementOfNode(expression)
 
 
 class BitwiseTreeTransformer(Interpreter):
+    # pylint: disable=invalid-name,no-self-use
+    """Transform bitwise expressions."""
+
     def __init__(self, token_converter):
-        super(BitwiseTreeTransformer, self).__init__()
+        super().__init__()
         self.parser = PARSER
         self.token_converter = token_converter
 
@@ -551,11 +570,13 @@ class BitwiseTreeTransformer(Interpreter):
 
 
 class QueryTransformerMatcher(BaseQueryTransformerMatcher):
+    """No idea what this is supposed to do. Please edit."""
+
     def __init__(
             self, parser=PARSER, token_converter=None,
             transformer2=QueryTreeToLambdaTransformer()):
 
-        super(QueryTransformerMatcher, self).__init__(parser, token_converter)
+        super().__init__(parser, token_converter)
         self.transformer2 = transformer2
 
     def transform_tree_to_matcher(self, tree):

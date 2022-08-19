@@ -1,8 +1,4 @@
-"""
-Created on Jun 15, 2018
-
-@author: lubo
-"""
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pytest
 
 from dae.utils.regions import Region
@@ -24,10 +20,11 @@ def test_variants_all_count(variants_impl, variants, fixture_name, count):
     vvars = variants_impl(variants)(fixture_name)
     assert vvars is not None
 
-    vs = vvars.query_variants(return_reference=True, return_unknown=True)
-    vs = list(vs)
-    print(vs)
-    assert len(vs) == count
+    actual_variants = vvars.query_variants(return_reference=True,
+                                           return_unknown=True)
+    actual_variants = list(actual_variants)
+    print(actual_variants)
+    assert len(actual_variants) == count
 
 
 @pytest.mark.parametrize("fixture_name", ["backends/trios2"])
@@ -41,15 +38,15 @@ def test_df_query_multiallelic3_families(
 
     regions = [Region("1", 11606, 11606)]
     family_ids = ["f1"]
-    vs = dfvars.query_variants(
+    actual_variants = dfvars.query_variants(
         regions=regions,
         family_ids=family_ids,
         return_reference=True,
         return_unknown=True,
     )
-    vs = list(vs)
-    assert len(vs) == 1
-    v = vs[0]
+    actual_variants = list(actual_variants)
+    assert len(actual_variants) == 1
+    v = actual_variants[0]
 
     print(v, mat2str(v.best_state))
     fa1 = v.alt_alleles[0]
@@ -69,12 +66,13 @@ def test_reference_variant(variants_impl, variants, fixture_name):
     fvars = variants_impl(variants)(fixture_name)
     assert fvars is not None
 
-    vs = fvars.query_variants(return_reference=True, return_unknown=True)
-    vs = list(vs)
-    assert len(vs) == 2
-    print(vs)
+    actual_variants = fvars.query_variants(return_reference=True,
+                                           return_unknown=True)
+    actual_variants = list(actual_variants)
+    assert len(actual_variants) == 2
+    print(actual_variants)
 
-    for v in vs:
+    for v in actual_variants:
         print(v.family_id, mat2str(v.best_state))
 
     # assert vs[0].summary_variant == vs[1].summary_variant
@@ -87,12 +85,13 @@ def test_reference_multiallelic_variant(variants_impl, variants, fixture_name):
     fvars = variants_impl(variants)(fixture_name)
     assert fvars is not None
 
-    vs = fvars.query_variants(return_reference=True, return_unknown=True)
-    vs = list(vs)
-    print(vs)
-    assert len(vs) == 2
+    actual_variants = fvars.query_variants(return_reference=True,
+                                           return_unknown=True)
+    actual_variants = list(actual_variants)
+    print(actual_variants)
+    assert len(actual_variants) == 2
 
-    for v in vs:
+    for v in actual_variants:
         print(mat2str(v.best_state))
 
     # assert vs[0].summary_variant == vs[1].summary_variant
@@ -107,10 +106,10 @@ def test_query_strange_multiallelic_families(
     fvars = variants_impl(variants)(fixture_name)
     assert fvars is not None
 
-    vs = fvars.query_variants()
-    vs = list(vs)
-    assert len(vs) == 2
-    for v in vs:
+    actual_variants = fvars.query_variants()
+    actual_variants = list(actual_variants)
+    assert len(actual_variants) == 2
+    for v in actual_variants:
         # v = vs[0]
 
         print(v, mat2str(v.best_state))

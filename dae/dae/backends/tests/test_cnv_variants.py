@@ -96,24 +96,24 @@ def cnv_impala(
 
 
 def test_cnv_impala(cnv_impala):
-    vs = cnv_impala.query_variants(
+    variants = cnv_impala.query_variants(
         effect_types=["CNV+", "CNV-"],
         variant_type="cnv+ or cnv-",
         inheritance="denovo"
     )
-    vs = list(vs)
+    variants = list(variants)
 
-    print(vs)
+    print(variants)
 
-    for fv in vs:
+    for fv in variants:
         assert fv.alt_alleles
         for aa in fv.alt_alleles:
             assert Allele.Type.cnv & aa.allele_type
-    assert len(vs) == 12
+    assert len(variants) == 12
 
 
 def test_cnv_impala_region_query(cnv_impala):
-    vs = cnv_impala.query_variants(
+    variants = cnv_impala.query_variants(
         regions=[
             Region("1", 1600000, 1620000)
         ],
@@ -121,8 +121,8 @@ def test_cnv_impala_region_query(cnv_impala):
         variant_type="cnv+ or cnv-",
         inheritance="denovo"
     )
-    assert len(list(vs)) == 1
-    vs = cnv_impala.query_variants(
+    assert len(list(variants)) == 1
+    variants = cnv_impala.query_variants(
         regions=[
             Region("1", 1600000, 1630000)
         ],
@@ -130,8 +130,8 @@ def test_cnv_impala_region_query(cnv_impala):
         variant_type="cnv+ or cnv-",
         inheritance="denovo"
     )
-    assert len(list(vs)) == 2
-    vs = cnv_impala.query_variants(
+    assert len(list(variants)) == 2
+    variants = cnv_impala.query_variants(
         regions=[
             Region("1", 1000000, 2000000)
         ],
@@ -139,24 +139,24 @@ def test_cnv_impala_region_query(cnv_impala):
         variant_type="cnv+ or cnv-",
         inheritance="denovo"
     )
-    assert len(list(vs)) == 2
+    assert len(list(variants)) == 2
 
 
 def test_cnv_best_state_x(cnv_raw):
-    vs = cnv_raw.query_variants(
+    variants = cnv_raw.query_variants(
         effect_types=["CNV+", "CNV-"],
         variant_type="cnv+ or cnv-",
     )
-    vs = [v for v in vs if v.chrom == "X"]
+    variants = [v for v in variants if v.chrom == "X"]
 
-    assert len(vs) == 2
-    for v in vs:
+    assert len(variants) == 2
+    for v in variants:
         assert v.alt_alleles
         for aa in v.alt_alleles:
             assert Allele.Type.cnv & aa.allele_type
 
     assert np.array_equal(
-        vs[0].best_state,
+        variants[0].best_state,
         np.asarray([
             [2, 1, 0, 2],
             [0, 0, 1, 0]
@@ -164,7 +164,7 @@ def test_cnv_best_state_x(cnv_raw):
     )
 
     assert np.array_equal(
-        vs[1].best_state,
+        variants[1].best_state,
         np.asarray([
             [2, 1, 0, 2],
             [0, 0, 1, 0]

@@ -1,12 +1,8 @@
-"""
-Created on Mar 7, 2018
-
-@author: lubo
-"""
-import pytest
-
-import numpy as np
+# pylint: disable=W0621,C0114,C0116,W0212,W0613,invalid-name
 import os
+import numpy as np
+
+import pytest
 
 
 def relative_to_this_test_folder(path):
@@ -22,8 +18,8 @@ def assert_annotation_equals(vars_df, vars1_df):
             res = v1[k] == v2[k]
             print(
                 k,
-                "|{}|".format(v1[k]),
-                "|{}|".format(v2[k]),
+                f"|{v1[k]}|".format(),
+                f"|{v2[k]}|".format(),
                 type(v1[k]),
                 type(v2[k]),
             )
@@ -39,25 +35,20 @@ def assert_annotation_equals(vars_df, vars1_df):
                     assert np.all(res)
                 elif v1[k].dtype.type == np.object_:
                     print(
-                        "objects: {}: {} == {} ({}, {})".format(
-                            k, v1[k], v2[k], type(v1[k]), type(v2[k])
-                        )
+                        f"objects: {k}: {v1[k]} == {v2[k]} "
+                        f"({type(v1[k])}, {type(v2[k])})"
                     )
                     assert all(v1[k] == v2[k])
                 else:
                     print(
-                        "{}: {} == {} ({}, {})".format(
-                            k, v1[k], v2[k], type(v1[k]), type(v2[k])
-                        )
+                        f"{k}: {v1[k]} == {v2[k]} "
+                        f"({type(v1[k])}, {type(v2[k])})"
                     )
                     assert np.allclose(v1[k], v2[k], rtol=1e-3)
             elif isinstance(v1[k], float):
                 assert v1[k] == pytest.approx(
                     v2[k], rel=1e-5
-                ), "{}: {} == {} ({}, {})".format(
-                    k, v1[k], v2[k], type(v1[k]), type(v2[k])
-                )
+                ), f"{k}: {v1[k]} == {v2[k]} ({type(v1[k])}, {type(v2[k])})"
             else:
-                assert v1[k] == v2[k], "{}: {} == {} ({}, {})".format(
-                    k, v1[k], v2[k], type(v1[k]), type(v2[k])
-                )
+                assert v1[k] == v2[k], \
+                    f"{k}: {v1[k]} == {v2[k]} ({type(v1[k])}, {type(v2[k])})"
