@@ -16,6 +16,7 @@ from dae.genomic_resources.repository import \
     GR_CONF_FILE_NAME, \
     GR_CONTENTS_FILE_NAME, \
     GenomicResource, \
+    ReadOnlyRepositoryProtocol, \
     ReadWriteRepositoryProtocol, \
     ManifestEntry, \
     parse_resource_id_version, \
@@ -92,7 +93,7 @@ def _configure_list_subparser(subparsers):
         help="URL to the genomic resources repository")
 
 
-def _run_list_command(proto, _args):
+def _run_list_command(proto: ReadOnlyRepositoryProtocol, _args):
     for res in proto.get_all_resources():
         res_size = sum([fs for _, fs in res.get_manifest().get_files()])
         print(
@@ -466,6 +467,8 @@ def cli_manage(cli_args=None):
     _configure_resource_repair_subparser(commands_parser)
 
     args = parser.parse_args(cli_args)
+    VerbosityConfiguration.set(args)
+
     if args.version:
         print(f"GPF version: {VERSION} ({RELEASE})")
         sys.exit(0)
@@ -484,6 +487,14 @@ def cli_manage(cli_args=None):
         print("working with repository:", repo_url)
 
     proto = _create_proto(repo_url)
+    if command == "list":
+        _run_list_command(proto, args)
+        return
+
+    if not isinstance(proto, ReadWriteRepositoryProtocol):
+        raise ValueError(
+            f"resource management works with RW protocols; "
+            f"{proto.proto_id} ({proto.scheme}) is read only")
 
     if command == "repo-manifest":
         _run_repo_manifest_command(proto, **vars(args))
@@ -497,8 +508,6 @@ def cli_manage(cli_args=None):
         _run_repo_repair_command(proto, **vars(args))
     elif command == "resource-repair":
         _run_resource_repair_command(proto, repo_url, **vars(args))
-    elif command == "list":
-        _run_list_command(proto, args)
     else:
         logger.error(
             "Unknown command %s. The known commands are index, "
@@ -507,14 +516,12 @@ def cli_manage(cli_args=None):
 
 
 def _create_proto(repo_url):
-    if not os.path.isabs(repo_url):
+    url = urlparse(repo_url)
+
+    if url.scheme in {"file", ""} and not os.path.isabs(repo_url):
         repo_url = os.path.abspath(repo_url)
 
     proto = build_fsspec_protocol(proto_id="manage", root_url=repo_url)
-    if not isinstance(proto, ReadWriteRepositoryProtocol):
-        raise ValueError(
-            f"resource management works with RW protocols; "
-            f"{proto.proto_id} ({proto.scheme}) is read only")
     return proto
 
 

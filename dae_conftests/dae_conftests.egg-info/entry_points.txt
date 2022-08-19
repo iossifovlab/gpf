@@ -1,3 +1,0 @@
-[pytest11]
-dae_conftests = dae_conftests
-
