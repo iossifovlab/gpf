@@ -142,7 +142,7 @@ class BaseQueryBuilder(ABC):
         return_reference=None,
         return_unknown=None,
         limit=None,
-        affected_status=None,
+        pedigree_fields=None,
     ):
         # pylint: disable=too-many-arguments,too-many-locals
         """Build an SQL query in the correct order."""
@@ -166,11 +166,10 @@ class BaseQueryBuilder(ABC):
             frequency_filter=frequency_filter,
             return_reference=return_reference,
             return_unknown=return_unknown,
-            affected_status=affected_status,
         )
 
         self._build_group_by()
-        self._build_having(affected_status=affected_status)
+        self._build_having()
         self._build_limit(limit)
 
         return self._product

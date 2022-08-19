@@ -107,7 +107,7 @@ def family_query_builder(pedigree_df):
         pedigree_schema=PEDIGREE_SCHEMA,
         pedigree_df=pedigree_df,
         gene_models=None,
-        do_join_affected=False,
+        do_join_pedigree=False,
     )
 
 

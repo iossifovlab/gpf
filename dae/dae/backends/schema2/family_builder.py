@@ -23,7 +23,7 @@ class FamilyQueryBuilder(BaseQueryBuilder):
         pedigree_schema: TableSchema,
         pedigree_df: pd.DataFrame,
         gene_models=None,
-        do_join_affected=False,
+        do_join_pedigree=False,
     ):
         # pylint: disable=too-many-arguments
         self.family_variant_table = family_variant_table
@@ -43,7 +43,7 @@ class FamilyQueryBuilder(BaseQueryBuilder):
             gene_models=gene_models,
         )
 
-        self.do_join_affected = do_join_affected
+        self.do_join_pedigree = do_join_pedigree
 
     def _query_columns(self):
         self.select_accessors = {
@@ -61,7 +61,7 @@ class FamilyQueryBuilder(BaseQueryBuilder):
     def _build_join(self, genes=None, effect_types=None):
         join_clause = ""
 
-        if self.do_join_affected:
+        if self.do_join_pedigree:
             pedigree_table = self.dialect.build_table_name(self.pedigree_table,
                                                            self.db)
             join_clause = f"JOIN {pedigree_table} as pedigree\n"
