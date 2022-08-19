@@ -41,6 +41,14 @@ def _add_repository_resource_parameters_group(parser, use_resource=True):
         "for .CONTENTS file from the current working directory up to the root "
         "directory. If found the directory is assumed for root repository "
         "directory; otherwise error is reported.")
+
+    group.add_argument(
+        "--extra-args", type=str, default=None,
+        help="comma separated list of `key=value` pairs arguments needed for "
+        "connection to the specific repository protocol. "
+        "Ex: if you want to connect to an S3 repository it is often "
+        "neccessary to pass additional `endpoint-url` argument."
+    )
     if use_resource:
         group.add_argument(
             "-r", "--resource", type=str,
@@ -87,10 +95,7 @@ def _add_hist_parameters_group(parser):
 
 def _configure_list_subparser(subparsers):
     parser = subparsers.add_parser("list", help="List a GR Repo")
-    parser.add_argument(
-        "-R", "--repository", type=str,
-        default=None,
-        help="URL to the genomic resources repository")
+    _add_repository_resource_parameters_group(parser, use_resource=False)
 
 
 def _run_list_command(proto: ReadOnlyRepositoryProtocol, _args):
@@ -486,7 +491,7 @@ def cli_manage(cli_args=None):
             sys.exit(1)
         print("working with repository:", repo_url)
 
-    proto = _create_proto(repo_url)
+    proto = _create_proto(repo_url, args.extra_args)
     if command == "list":
         _run_list_command(proto, args)
         return
@@ -515,13 +520,19 @@ def cli_manage(cli_args=None):
         sys.exit(1)
 
 
-def _create_proto(repo_url):
+def _create_proto(repo_url, extra_args: str = ""):
     url = urlparse(repo_url)
 
     if url.scheme in {"file", ""} and not os.path.isabs(repo_url):
         repo_url = os.path.abspath(repo_url)
 
-    proto = build_fsspec_protocol(proto_id="manage", root_url=repo_url)
+    kwargs: Dict[str, str] = {}
+    if extra_args:
+        parsed = [tuple(a.split("=")) for a in extra_args.split(",")]
+        kwargs = {p[0]: p[1] for p in parsed}
+
+    proto = build_fsspec_protocol(
+        proto_id="manage", root_url=repo_url, **kwargs)
     return proto
 
 
