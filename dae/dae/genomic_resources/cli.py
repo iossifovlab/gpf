@@ -442,6 +442,7 @@ def _run_resource_repair_command(proto, repo_url, region_size, **kwargs):
 
 def cli_manage(cli_args=None):
     """Provide CLI for repository management."""
+    # pylint: disable=too-many-branches
     if not cli_args:
         cli_args = sys.argv[1:]
 
