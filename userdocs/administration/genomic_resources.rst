@@ -84,7 +84,101 @@ This command will create a ``.MANIFEST`` file for our new resource
 the resource.
 
 
+Add genomic score resources
+---------------------------
+
+Add all score resource files (score file and Tabix index) inside
+the created directory ``hg38/scores/score9``. Let's say these files are:
+
+.. code-block:: 
+
+   score9.tsv.gz
+   score9.tsv.gz.tbi
+
+Configure the resource ``hg38/scores/score9``. To this end create
+a ``genomic_resource.yaml`` file, that contains the position score
+configuration:
+
+.. code-block:: yaml
+
+    type: position_score
+    table:
+      filename: score9.tsv.gz
+      format: tabix
+
+      # defined by score_type
+      chrom:
+        name: chrom
+      pos_begin:
+        name: start
+      pos_end:
+        name: end
+
+    # score values
+    scores:
+    - id: score9
+        type: float
+        desc: "score9"
+        index: 3
+    histograms:
+    - score: score9
+      bins: 100
+      y_scale: "log"
+      x_scale: "linear"
+    default_annotation:
+      attributes:
+      - source: score9
+        destination: score9
+    meta: |
+    ## score9
+      TODO
+
+When ready you should run ``grr_manage resource-repair`` from inside resource
+directory:
+
+.. code-block:: bash
+    cd hg38/scores/score9
+    grr_manage resource-repair
+
+This command is going to calculate histograms for the score (if histograms
+are configured) and create or update the resource manifest.
+
+Once the resource is ready we need to regenerated the repository contents:
+
+.. code-block:: bash
+
+    grr_manage repo-repair
+
+
 Usage of genomic resources repositories (GRRs)
 ----------------------------------------------
+
+The GPF system can use genomic resources from different repositories. The
+default genomic resources repository used by GPF system is located at
+`https://www.iossifovlab.com/distribution/public/genomic-resources-repository/ 
+<https://www.iossifovlab.com/distribution/public/genomic-resources-repository/>`_.
+You can browse the content of the repository using the ``grr_manage list``
+command:
+
+.. code-block::
+
+    grr_manage list -R https://www.iossifovlab.com/distribution/public/genomic-resources-repository
+
+
+If you have a repository on your local filesytem you can browse it by
+providing the path to the root directory:
+
+.. code-block::
+
+    grr_manage list -R <path to the local repo>
+
+You can store a genomic resource repository in an S3 storage an you can browse
+its content with:
+
+.. code-block::
+
+    grr_manage list -R s3://grr-bucket-test/grr \
+        --extra-args "endpoint_url=http://piglet.seqpipe.org:7480"
+
 
 
