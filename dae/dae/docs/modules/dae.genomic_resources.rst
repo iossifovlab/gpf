@@ -28,18 +28,18 @@ dae.genomic\_resources.cli module
    :undoc-members:
    :show-inheritance:
 
-dae.genomic\_resources.dir\_repository module
----------------------------------------------
+dae.genomic\_resources.clinvar module
+-------------------------------------
 
-.. automodule:: dae.genomic_resources.dir_repository
+.. automodule:: dae.genomic_resources.clinvar
    :members:
    :undoc-members:
    :show-inheritance:
 
-dae.genomic\_resources.embeded\_repository module
--------------------------------------------------
+dae.genomic\_resources.fsspec\_protocol module
+----------------------------------------------
 
-.. automodule:: dae.genomic_resources.embeded_repository
+.. automodule:: dae.genomic_resources.fsspec_protocol
    :members:
    :undoc-members:
    :show-inheritance:
@@ -84,6 +84,14 @@ dae.genomic\_resources.group\_repository module
    :undoc-members:
    :show-inheritance:
 
+dae.genomic\_resources.histogram module
+---------------------------------------
+
+.. automodule:: dae.genomic_resources.histogram
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 dae.genomic\_resources.liftover\_resource module
 ------------------------------------------------
 
@@ -116,14 +124,6 @@ dae.genomic\_resources.repository\_factory module
    :undoc-members:
    :show-inheritance:
 
-dae.genomic\_resources.score\_statistics module
------------------------------------------------
-
-.. automodule:: dae.genomic_resources.score_statistics
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 dae.genomic\_resources.test\_tools module
 -----------------------------------------
 
@@ -132,10 +132,10 @@ dae.genomic\_resources.test\_tools module
    :undoc-members:
    :show-inheritance:
 
-dae.genomic\_resources.url\_repository module
----------------------------------------------
+dae.genomic\_resources.testing module
+-------------------------------------
 
-.. automodule:: dae.genomic_resources.url_repository
+.. automodule:: dae.genomic_resources.testing
    :members:
    :undoc-members:
    :show-inheritance:

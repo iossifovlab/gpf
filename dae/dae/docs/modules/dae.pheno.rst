@@ -29,29 +29,29 @@ dae.pheno.db module
    :undoc-members:
    :show-inheritance:
 
-.. dae.pheno.graphs module
-.. -----------------------
+dae.pheno.graphs module
+-----------------------
 
-.. .. automodule:: dae.pheno.graphs
-..    :members:
-..    :undoc-members:
-..    :show-inheritance:
+.. automodule:: dae.pheno.graphs
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
-.. dae.pheno.husl module
-.. ---------------------
+dae.pheno.husl module
+---------------------
 
-.. .. automodule:: dae.pheno.husl
-..    :members:
-..    :undoc-members:
-..    :show-inheritance:
+.. automodule:: dae.pheno.husl
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
-.. dae.pheno.palletes module
-.. -------------------------
+dae.pheno.palletes module
+-------------------------
 
-.. .. automodule:: dae.pheno.palletes
-..    :members:
-..    :undoc-members:
-..    :show-inheritance:
+.. automodule:: dae.pheno.palletes
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
 dae.pheno.pheno\_db module
 --------------------------
@@ -61,13 +61,13 @@ dae.pheno.pheno\_db module
    :undoc-members:
    :show-inheritance:
 
-.. dae.pheno.plots module
-.. ----------------------
+dae.pheno.plots module
+----------------------
 
-.. .. automodule:: dae.pheno.plots
-..    :members:
-..    :undoc-members:
-..    :show-inheritance:
+.. automodule:: dae.pheno.plots
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
 dae.pheno.prepare\_data module
 ------------------------------

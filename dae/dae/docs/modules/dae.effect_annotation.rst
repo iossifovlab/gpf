@@ -60,14 +60,6 @@ dae.effect\_annotation.gene\_codes module
    :undoc-members:
    :show-inheritance:
 
-dae.effect\_annotation.missense\_scores\_tabix module
------------------------------------------------------
-
-.. automodule:: dae.effect_annotation.missense_scores_tabix
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 dae.effect\_annotation.variant module
 -------------------------------------
 

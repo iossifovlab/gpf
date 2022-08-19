@@ -16,7 +16,6 @@ Subpackages
    dae.docs
    dae.effect_annotation
    dae.enrichment_tool
-   dae.file_cache
    dae.gene
    dae.genomic_resources
    dae.gpf_instance

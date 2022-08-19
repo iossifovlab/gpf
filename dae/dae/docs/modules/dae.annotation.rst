@@ -52,6 +52,14 @@ dae.annotation.annotator\_base module
    :undoc-members:
    :show-inheritance:
 
+dae.annotation.clinvar\_annotator module
+----------------------------------------
+
+.. automodule:: dae.annotation.clinvar_annotator
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 dae.annotation.context module
 -----------------------------
 
@@ -64,6 +72,14 @@ dae.annotation.effect\_annotator module
 ---------------------------------------
 
 .. automodule:: dae.annotation.effect_annotator
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+dae.annotation.gene\_score\_annotator module
+--------------------------------------------
+
+.. automodule:: dae.annotation.gene_score_annotator
    :members:
    :undoc-members:
    :show-inheritance:

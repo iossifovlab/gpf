@@ -12,14 +12,6 @@ dae.backends.schema2.base\_query\_builder module
    :undoc-members:
    :show-inheritance:
 
-dae.backends.schema2.base\_query\_director module
--------------------------------------------------
-
-.. automodule:: dae.backends.schema2.base_query_director
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 dae.backends.schema2.bigquery\_variants module
 ----------------------------------------------
 
