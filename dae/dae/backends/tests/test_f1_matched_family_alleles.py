@@ -1,12 +1,7 @@
-"""
-Created on Jul 18, 2018
-
-@author: lubo
-"""
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pytest
 
 from dae.utils.regions import Region
-
 from dae.effect_annotation.effect import EffectGene
 
 

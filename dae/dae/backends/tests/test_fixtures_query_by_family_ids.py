@@ -1,8 +1,4 @@
-"""
-Created on Jul 2, 2018
-
-@author: lubo
-"""
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pytest
 
 from dae.utils.regions import Region
@@ -55,12 +51,11 @@ def test_fixture_query_by_family_ids(
     vvars = variants_impl(variants)(fixture_name)
     assert vvars is not None
 
-    vs = vvars.query_variants(
+    actual_variants = vvars.query_variants(
         regions=regions,
         family_ids=family_ids,
         return_reference=False,
         return_unknown=False,
     )
-    vs = list(vs)
-    print(vs)
-    assert len(vs) == count
+    actual_variants = list(actual_variants)
+    assert len(actual_variants) == count

@@ -100,7 +100,8 @@ class CLIArgument:
 
         parser.add_argument(self.argument_name, **kwargs)
 
-    def build_option(self, params, use_defaults=False):
+    def build_option(self, params, use_defaults=False) -> Optional[str]:
+        """Build an option."""
         if self.arg_type == ArgumentType.ARGUMENT:
             return None
         for key, value in params.items():
@@ -133,6 +134,8 @@ class CLIArgument:
 
 
 class FamiliesGenotypes(ABC):
+    """A base class for family genotypes."""
+
     def __init__(self):
         pass
 
@@ -154,6 +157,8 @@ class FamiliesGenotypes(ABC):
 
 
 class CLILoader(ABC):
+    """Base class for loader classes that require cli arguments."""
+
     def __init__(self, params=None):
         self.arguments = self._arguments()
         self.params: Dict[str, Any] = params if params else {}
@@ -179,17 +184,19 @@ class CLILoader(ABC):
             argument.add_to_parser(parser)
 
     @classmethod
-    def build_cli_arguments(cls, params):
+    def build_cli_arguments(cls, params) -> str:
+        """Return a string with cli arguments."""
         built_arguments = []
         for argument in cls._arguments():
             logger.info("adding to CLI arguments: %s", argument)
             built_arguments.append(argument.build_option(params))
-        built_arguments = filter(lambda x: x is not None, built_arguments)
-        result = " ".join(built_arguments)
+        nonnull_arguments = (x for x in built_arguments if x is not None)
+        result = " ".join(nonnull_arguments)
         logger.info("result CLI arguments: %s", result)
         return result
 
     def build_arguments_dict(self):
+        """Build a dictionary with the argument destinations as keys."""
         result = {}
         for argument in self._arguments():
             if argument.arg_type == ArgumentType.ARGUMENT:
@@ -205,13 +212,15 @@ class CLILoader(ABC):
     def parse_cli_arguments(
             cls, argv: argparse.Namespace,
             use_defaults=False) -> Tuple[str, Dict[str, Any]]:
-
+        """Parse clie arguments."""
         for arg in cls._arguments():
             arg.parse_cli_argument(argv, use_defaults=use_defaults)
         return "", {}
 
 
 class VariantsLoader(CLILoader):
+    """Base class for all variant loaders."""
+
     def __init__(
         self,
         families: FamiliesData,
@@ -263,6 +272,8 @@ class VariantsLoader(CLILoader):
 
 
 class VariantsLoaderDecorator(VariantsLoader):
+    """Base class for wrapping and decoring a variant loader."""
+
     def __init__(self, variants_loader: VariantsLoader):
 
         super().__init__(
@@ -308,6 +319,7 @@ class VariantsLoaderDecorator(VariantsLoader):
 
 
 class AnnotationDecorator(VariantsLoaderDecorator):
+    """Base class for annotators."""
 
     SEP1 = "!"
     SEP2 = "|"
@@ -335,6 +347,7 @@ class AnnotationDecorator(VariantsLoaderDecorator):
 
     @staticmethod
     def build_annotation_filename(filename):
+        """Return the corresponding annotation file for filename."""
         path = pathlib.Path(filename)
         suffixes = path.suffixes
 
@@ -355,6 +368,7 @@ class AnnotationDecorator(VariantsLoaderDecorator):
 
     @staticmethod
     def save_annotation_file(variants_loader, filename, sep="\t"):
+        """Save annotation file."""
         # def convert_array_of_strings_to_string(a):
         #     if not a:
         #         return None
@@ -412,6 +426,8 @@ class AnnotationDecorator(VariantsLoaderDecorator):
 
 
 class EffectAnnotationDecorator(AnnotationDecorator):
+    """Annotate variants with an effect."""
+
     def __init__(self, variants_loader, effect_annotator):
         super().__init__(variants_loader)
 
@@ -445,6 +461,8 @@ class EffectAnnotationDecorator(AnnotationDecorator):
 
 
 class AnnotationPipelineDecorator(AnnotationDecorator):
+    """Annotate variants by processing them through an annotation pipeline."""
+
     def __init__(
             self, variants_loader, annotation_pipeline: AnnotationPipeline):
         super().__init__(variants_loader)
@@ -485,6 +503,8 @@ class AnnotationPipelineDecorator(AnnotationDecorator):
 
 
 class StoredAnnotationDecorator(AnnotationDecorator):
+    """Annotate variant using a stored annotator."""
+
     def __init__(self, variants_loader, annotation_filename):
         super().__init__(variants_loader)
 
@@ -493,6 +513,7 @@ class StoredAnnotationDecorator(AnnotationDecorator):
 
     @staticmethod
     def decorate(variants_loader, source_filename):
+        """Wrap variants_loader into a StoredAnnotationDecorator."""
         annotation_filename = StoredAnnotationDecorator \
             .build_annotation_filename(
                 source_filename

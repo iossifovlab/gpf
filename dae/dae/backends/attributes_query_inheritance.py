@@ -1,3 +1,4 @@
+# pylint: disable=too-few-public-methods
 import operator
 import functools
 
@@ -73,6 +74,9 @@ class Expression:
 
 
 class InheritanceTransformer(Transformer):
+    """No idea what this class is supposed to do. If you know please edit."""
+
+    # pylint: disable=no-self-use,unused-argument
     def __init__(self, attr_name, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.attr_name = attr_name
@@ -117,8 +121,7 @@ class InheritanceTransformer(Transformer):
 
     def atom(self, items):
         assert len(items) == 1
-        assert isinstance(items[0], Primitive) or \
-            isinstance(items[0], NegPrimitive)
+        assert isinstance(items[0], (Primitive, NegPrimitive))
         return items[0]
 
     def atomlist(self, items):
@@ -164,6 +167,7 @@ class InheritanceTransformer(Transformer):
         return Expression(" AND ".join(expressions))
 
     def expression(self, items):
+        """Construct an Expression from items."""
         if len(items) == 1 and isinstance(items[0], Primitive):
             mask = items[0].value
             return Expression(f"BITAND({mask}, {self.attr_name}) != 0")

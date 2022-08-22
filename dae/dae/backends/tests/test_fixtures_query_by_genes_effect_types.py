@@ -1,8 +1,4 @@
-"""
-Created on Jul 3, 2018
-
-@author: lubo
-"""
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pytest
 
 from dae.utils.regions import Region
@@ -23,17 +19,18 @@ def test_single_alt_allele_effects(
     variants_impl, variants, regions, effect, count
 ):
     fvars = variants_impl(variants)("backends/effects_trio")
-    vs = list(fvars.query_variants(regions=regions, effect_types=[effect]))
-    for v in vs:
+    actual_variants = list(fvars.query_variants(regions=regions,
+                                                effect_types=[effect]))
+    for v in actual_variants:
         print(v.effects)
-    assert len(vs) == count
+    assert len(actual_variants) == count
 
 
 @pytest.mark.parametrize("variants", ["variants_impala", "variants_vcf"])
 def test_no_missense_effects(variants_impl, variants):
     fvars = variants_impl(variants)("backends/effects_trio_nomissense")
-    vs = list(fvars.query_variants(effect_types=["missense"]))
-    assert len(vs) == 0
+    actual_variants = list(fvars.query_variants(effect_types=["missense"]))
+    assert len(actual_variants) == 0
 
 
 @pytest.mark.parametrize("variants", ["variants_impala", "variants_vcf"])
@@ -42,10 +39,10 @@ def test_no_missense_effects(variants_impl, variants):
 )
 def test_multi_alt_allele_effects(variants_impl, variants, effect, count):
     fvars = variants_impl(variants)("backends/effects_trio_multi")
-    vs = list(fvars.query_variants(effect_types=[effect]))
-    for v in vs:
+    actual_variants = list(fvars.query_variants(effect_types=[effect]))
+    for v in actual_variants:
         print(v.effects)
-    assert len(vs) == count
+    assert len(actual_variants) == count
 
 
 @pytest.mark.parametrize("variants", ["variants_impala", "variants_vcf"])
@@ -74,14 +71,14 @@ def test_single_alt_allele_genes(
     variants_impl, variants, regions, effects, genes, count
 ):
     fvars = variants_impl(variants)("backends/effects_trio")
-    vs = list(
+    actual_variants = list(
         fvars.query_variants(
             regions=regions, effect_types=effects, genes=genes,
         )
     )
-    for v in vs:
+    for v in actual_variants:
         print(v.effects)
-    assert len(vs) == count
+    assert len(actual_variants) == count
 
 
 @pytest.mark.parametrize("variants", ["variants_impala", "variants_vcf"])
@@ -91,11 +88,11 @@ def test_single_alt_allele_genes(
 )
 def test_empty_lists(variants_impl, variants, regions, effects, genes, count):
     fvars = variants_impl(variants)("backends/effects_trio")
-    vs = list(
+    actual_variants = list(
         fvars.query_variants(
             regions=regions, effect_types=effects, genes=genes,
         )
     )
-    for v in vs:
+    for v in actual_variants:
         print(v.effects)
-    assert len(vs) == count
+    assert len(actual_variants) == count

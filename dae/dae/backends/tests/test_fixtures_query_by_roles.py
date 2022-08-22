@@ -1,9 +1,8 @@
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pytest
 
 from dae.utils.regions import Region
-
 from dae.variants.attributes import Role
-
 from dae.backends.attributes_query import role_query
 
 

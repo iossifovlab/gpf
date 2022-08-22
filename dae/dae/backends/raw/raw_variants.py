@@ -21,12 +21,12 @@ logger = logging.getLogger(__name__)
 
 
 class RawVariantsQueryRunner(QueryRunner):
+    """Run a variant iterator as a query."""
 
     def __init__(
             self, variants_iterator=None,
             deserializer=None):
-        super(RawVariantsQueryRunner, self).__init__(
-            deserializer=deserializer)
+        super().__init__(deserializer=deserializer)
         self.variants_iterator = variants_iterator
         assert self.variants_iterator is not None
 
@@ -57,9 +57,9 @@ class RawVariantsQueryRunner(QueryRunner):
         except StopIteration:
             logger.debug("variants iterator done")
 
-        except BaseException as ex:
+        except BaseException as ex:  # pylint: disable=broad-except
             logger.warning(
-                f"exception in runner run: {type(ex)}", exc_info=True)
+                "exception in runner run: %s", type(ex), exc_info=True)
         finally:
             self.close()
 
@@ -69,6 +69,7 @@ class RawVariantsQueryRunner(QueryRunner):
 
 
 class RawFamilyVariants(abc.ABC):
+    """Base class that stores a reference to the families data."""
 
     def __init__(self, families):
         self.families = families
@@ -78,8 +79,8 @@ class RawFamilyVariants(abc.ABC):
         pass
 
     def family_variants_iterator(self):
-        for _, vs in self.full_variants_iterator():
-            for v in vs:
+        for _, variants in self.full_variants_iterator():
+            for v in variants:
                 yield v
 
     def summary_variants_iterator(self):
@@ -88,6 +89,7 @@ class RawFamilyVariants(abc.ABC):
 
     @staticmethod
     def filter_regions(v, regions):
+        """Return True if v is in regions."""
         if v.end_position is None:
             end_position = -1
         else:
@@ -97,22 +99,27 @@ class RawFamilyVariants(abc.ABC):
             if (
                 reg.chrom == v.chromosome
                 and (
-                    reg.start <= v.position <= reg.stop or
-                    reg.start <= end_position <= reg.stop or
-                    (reg.start >= v.position and reg.stop <= end_position)
+                    reg.start <= v.position <= reg.stop
+                    or reg.start <= end_position <= reg.stop
+                    or (reg.start >= v.position and reg.stop <= end_position)
                 )
             ):
                 return True
         return False
 
     @staticmethod
-    def filter_real_attr(va, real_attr_filter, is_frequency=False):
+    def filter_real_attr(variant, real_attr_filter, is_frequency=False):
+        # pylint: disable=unused-argument
+        """Return True if variant's attrs are within bounds.
+
+        The bounds are specified in real_attr_filter.
+        """
         result = []
         for key, ranges in real_attr_filter:
-            if not va.has_attribute(key):
+            if not variant.has_attribute(key):
                 return False
 
-            val = va.get_attribute(key)
+            val = variant.get_attribute(key)
             rmin, rmax = ranges
             if rmin is None and rmax is None:
                 result.append(True)
@@ -122,7 +129,7 @@ class RawFamilyVariants(abc.ABC):
                 result.append(val is not None and val >= rmin)
             else:
                 result.append(
-                    val is not None and (val >= rmin) and (val <= rmax))
+                    val is not None and (rmin <= val <= rmax))
         if all(result):
             return True
 
@@ -130,6 +137,7 @@ class RawFamilyVariants(abc.ABC):
 
     @staticmethod
     def filter_gene_effects(v, effect_types, genes):
+        """Return True if variant's effects are in effect types and genes."""
         assert effect_types is not None or genes is not None
         if v.effects is None:
             return False
@@ -158,7 +166,7 @@ class RawFamilyVariants(abc.ABC):
         return False
 
     @classmethod
-    def filter_allele(
+    def filter_allele(  # NOQA
             cls,
             allele,
             inheritance=None,
@@ -171,8 +179,10 @@ class RawFamilyVariants(abc.ABC):
             person_ids=None,
             roles=None,
             sexes=None,
-            **kwargs):
-
+            **_kwargs):
+        # pylint: disable=too-many-arguments,too-many-return-statements
+        # pylint: disable=too-many-branches
+        """Return True if a family allele meets the required conditions."""
         assert isinstance(allele, FamilyAllele)
         if inheritance is not None:
             # if v.is_reference_allele:
@@ -227,8 +237,9 @@ class RawFamilyVariants(abc.ABC):
             effect_types=None,
             variant_type=None,
             person_ids=None,
-            **kwargs):
-
+            **_kwargs):
+        # pylint: disable=too-many-return-statements,too-many-branches
+        """Return True if a summary allele meets the required conditions."""
         assert isinstance(allele, SummaryAllele)
         if real_attr_filter is not None:
             if not cls.filter_real_attr(allele, real_attr_filter):
@@ -256,6 +267,7 @@ class RawFamilyVariants(abc.ABC):
 
     @classmethod
     def filter_family_variant(cls, v, **kwargs):
+        """Return true if variant meets conditions in kwargs."""
         if kwargs.get("regions") is not None:
             if not cls.filter_regions(v, kwargs["regions"]):
                 return False
@@ -271,6 +283,7 @@ class RawFamilyVariants(abc.ABC):
 
     @classmethod
     def filter_summary_variant(cls, v, **kwargs):
+        """Return true if variant meets conditions in kwargs."""
         if kwargs.get("regions") is not None:
             if not cls.filter_regions(v, kwargs["regions"]):
                 return False
@@ -282,6 +295,7 @@ class RawFamilyVariants(abc.ABC):
 
     @classmethod
     def summary_variant_filter_function(cls, **kwargs):
+        """Return a filter function that checks the conditions in kwargs."""
         if kwargs.get("variant_type") is not None:
             parsed = kwargs["variant_type"]
             if isinstance(kwargs["variant_type"], str):
@@ -309,13 +323,13 @@ class RawFamilyVariants(abc.ABC):
                     alleles_matched.append(allele.allele_index)
             if not alleles_matched:
                 return None
-            else:
-                sv.set_matched_alleles(alleles_matched)
-                return sv
+            sv.set_matched_alleles(alleles_matched)
+            return sv
 
         return filter_func
 
     def build_summary_variants_query_runner(self, **kwargs):
+        """Return a query runner for the summary variants."""
         filter_func = RawFamilyVariants\
             .summary_variant_filter_function(**kwargs)
         runner = RawVariantsQueryRunner(
@@ -325,11 +339,13 @@ class RawFamilyVariants(abc.ABC):
         return runner
 
     def query_summary_variants(self, **kwargs):
+        """Run a sammary variant query and yields the results."""
         runner = self.build_summary_variants_query_runner(**kwargs)
 
         result = QueryResult(
-                runners=[runner],
-                limit=kwargs.get("limit", -1))
+            runners=[runner],
+            limit=kwargs.get("limit", -1)
+        )
 
         try:
             logger.debug("starting result")
@@ -347,11 +363,12 @@ class RawFamilyVariants(abc.ABC):
             pass
 
     @classmethod
-    def family_variant_filter_function(cls, **kwargs):
+    def family_variant_filter_function(cls, **kwargs):  # noqa
+        """Return a function that filters variants."""
         if kwargs.get("roles") is not None:
             parsed = kwargs["roles"]
             if isinstance(parsed, list):
-                parsed = "any({})".format(",".join(parsed))
+                parsed = f"any({','.join(parsed)})"
             if isinstance(parsed, str):
                 parsed = role_query.transform_query_string_to_tree(parsed)
 
@@ -415,14 +432,17 @@ class RawFamilyVariants(abc.ABC):
                 if alleles_matched:
                     v.set_matched_alleles(alleles_matched)
                     return v
-            except Exception as ex:
-                logger.warning(f"unexpected error: {ex}", exc_info=True)
+                return None
+            except Exception as ex:  # pylint: disable=broad-except
+                logger.warning("unexpected error: %s", ex, exc_info=True)
                 return None
 
         return filter_func
 
+    @staticmethod
     def build_person_set_collection_query(
-            self, person_set_collection, person_set_collection_query):
+            person_set_collection, person_set_collection_query):
+        # pylint: disable=unused-argument
         return None
 
     def build_family_variants_query_runner(
@@ -443,7 +463,8 @@ class RawFamilyVariants(abc.ABC):
             return_unknown=None,
             limit=None,
             pedigree_fields=None):
-
+        # pylint: disable=too-many-arguments,unused-argument
+        """Return a query runner for the family variants."""
         filter_func = RawFamilyVariants.family_variant_filter_function(
             regions=regions,
             genes=genes,
@@ -468,11 +489,13 @@ class RawFamilyVariants(abc.ABC):
         return runner
 
     def query_variants(self, **kwargs):
+        """Query family variants and yield the results."""
         runner = self.build_family_variants_query_runner(**kwargs)
 
         result = QueryResult(
-                runners=[runner],
-                limit=kwargs.get("limit", -1))
+            runners=[runner],
+            limit=kwargs.get("limit", -1)
+        )
 
         try:
             logger.debug("starting result")
@@ -491,8 +514,10 @@ class RawFamilyVariants(abc.ABC):
 
 
 class RawMemoryVariants(RawFamilyVariants):
+    """Store variants in memory."""
+
     def __init__(self, loaders, families):
-        super(RawMemoryVariants, self).__init__(families)
+        super().__init__(families)
         self.variants_loaders = loaders
         if len(loaders) > 0:
             self._full_variants = None
@@ -502,6 +527,7 @@ class RawMemoryVariants(RawFamilyVariants):
 
     @property
     def full_variants(self):
+        """Return the full list of variants."""
         if self._full_variants is None:
             start = time.time()
             self._full_variants = []
@@ -510,7 +536,7 @@ class RawMemoryVariants(RawFamilyVariants):
                     self._full_variants.append((sv, fvs))
 
             elapsed = time.time() - start
-            logger.debug(f"variants loaded in in {elapsed:.2f} sec")
+            logger.debug("variants loaded in in %.2f sec", elapsed)
         return self._full_variants
 
     def full_variants_iterator(self):
