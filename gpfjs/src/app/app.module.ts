@@ -169,6 +169,7 @@ import { LegendComponent } from './legend/legend.component';
 import { PedigreeComponent } from './pedigree/pedigree.component';
 import { AuthInterceptorService } from './auth-interceptor.service';
 import { AuthResolverService } from './auth-resolver.service';
+import { APP_BASE_HREF, PlatformLocation } from '@angular/common';
 
 const appRoutes: Routes = [
   {
@@ -427,7 +428,12 @@ const appRoutes: Routes = [
       useClass: GlobalErrorHandler
     },
     BnNgIdleService,
-    { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptorService, multi: true }
+    { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptorService, multi: true },
+    {
+      provide: APP_BASE_HREF,
+      useFactory: (s: PlatformLocation) => s.getBaseHrefFromDOM(),
+      deps: [PlatformLocation]
+    },
   ],
 
   bootstrap: [AppComponent]

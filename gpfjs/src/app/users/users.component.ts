@@ -1,5 +1,5 @@
 import {
-  Component, OnInit, HostListener, ViewChild, ElementRef, ChangeDetectorRef, EventEmitter, Output
+  Component, OnInit, HostListener, ViewChild, ElementRef, ChangeDetectorRef, EventEmitter, Output, Inject
 } from '@angular/core';
 import { UsersService } from './users.service';
 import { ConfigService } from '../config/config.service';
@@ -9,6 +9,7 @@ import { RegistrationComponent } from '../registration/registration.component';
 import { ForgotPasswordComponent } from '../forgot-password/forgot-password.component';
 import { share, take } from 'rxjs/operators';
 import { AuthService } from 'app/auth.service';
+import {APP_BASE_HREF} from '@angular/common';
 
 @Component({
   selector: 'gpf-users',
@@ -37,7 +38,8 @@ export class UsersComponent implements OnInit {
     private usersService: UsersService,
     private changeDetectorRef: ChangeDetectorRef,
     private config: ConfigService,
-    private authService: AuthService
+    private authService: AuthService,
+    @Inject(APP_BASE_HREF) private baseHref: string
   ) { }
 
   public ngOnInit(): void {
@@ -60,8 +62,8 @@ export class UsersComponent implements OnInit {
 
   public login(): void {
     const codeChallenge = this.authService.generatePKCE();
-    window.open(`${this.config.rootUrl}/o/authorize/?response_type=code&code_challenge_method=S256&code_challenge=${codeChallenge}&client_id=${this.config.oauthClientId}`,
-                '_blank', 'popup=true,width=600,height=300');
+    window.open(`${this.config.rootUrl}${this.baseHref}o/authorize/?response_type=code&code_challenge_method=S256&code_challenge=${codeChallenge}&client_id=${this.config.oauthClientId}`,
+    '_blank', 'popup=true,width=600,height=300');
   }
 
   public logout(): void {
