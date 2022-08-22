@@ -267,8 +267,7 @@ class GeneticModel(enum.Enum):
     X_broken = 5
 
 
-class TransmissionType(enum.Enum):
-
+class TransmissionType(enum.IntEnum):
     unknown = 0
     transmitted = 1
     denovo = 2

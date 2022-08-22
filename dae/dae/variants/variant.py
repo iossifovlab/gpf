@@ -837,8 +837,9 @@ class SummaryVariantFactory:
         reference = record["reference"]
         alternative = record.get("alternative")
         allele_type = record.get("variant_type", None)
-        transmission_type = record.get(
-            "transmission_type", TransmissionType.transmitted)
+        transmission_type = TransmissionType(
+            record.get("transmission_type", TransmissionType.transmitted)
+        )
 
         if position is not None and end_position is not None and \
                 reference is None and alternative is None and \
