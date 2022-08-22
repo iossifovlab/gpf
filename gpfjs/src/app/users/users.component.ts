@@ -9,7 +9,7 @@ import { RegistrationComponent } from '../registration/registration.component';
 import { ForgotPasswordComponent } from '../forgot-password/forgot-password.component';
 import { share, take } from 'rxjs/operators';
 import { AuthService } from 'app/auth.service';
-import {APP_BASE_HREF} from '@angular/common';
+import { APP_BASE_HREF } from '@angular/common';
 
 @Component({
   selector: 'gpf-users',
@@ -62,8 +62,13 @@ export class UsersComponent implements OnInit {
 
   public login(): void {
     const codeChallenge = this.authService.generatePKCE();
-    window.open(`${this.config.rootUrl}${this.baseHref}o/authorize/?response_type=code&code_challenge_method=S256&code_challenge=${codeChallenge}&client_id=${this.config.oauthClientId}`,
-    '_blank', 'popup=true,width=600,height=300');
+    window.open(
+      `${this.config.rootUrl}${this.baseHref}`
+        + `o/authorize/?response_type=code&code_challenge_method=S256&code_challenge=${codeChallenge}`
+        + `&client_id=${this.config.oauthClientId}`,
+      '_blank',
+      'popup=true,width=600,height=300'
+    );
   }
 
   public logout(): void {
