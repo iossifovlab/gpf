@@ -70,41 +70,39 @@ class ImpalaVariants:
         self.gene_models = gene_models
 
         _tbl_props = self._fetch_tblproperties(self.meta_table)
+        self.table_properties = self._normalize_tblproperties(_tbl_props)
 
-        # pass config to PartitionDesciption
-
-        if _tbl_props is not None:
-            self.table_properties = {
+    @staticmethod
+    def _normalize_tblproperties(tbl_props) -> dict:
+        if tbl_props is not None:
+            return {
                 "region_length": int(
-                    _tbl_props["region_bin"]["region_length"]
+                    tbl_props["region_bin"]["region_length"]
                 ),
-                "chromosomes": list(
-                    map(
-                        lambda c: c.strip(),
-                        _tbl_props["region_bin"]["chromosomes"].split(","),
-                    )
-                ),
+                "chromosomes": [
+                    c.strip()
+                    for c in tbl_props["region_bin"]["chromosomes"].split(",")
+                ],
                 "family_bin_size": int(
-                    _tbl_props["family_bin"]["family_bin_size"]
+                    tbl_props["family_bin"]["family_bin_size"]
                 ),
                 "rare_boundary": int(
-                    _tbl_props["frequency_bin"]["rare_boundary"]
+                    tbl_props["frequency_bin"]["rare_boundary"]
                 ),
                 "coding_effect_types": set(
-                    lambda s: s.strip()
-                    for s in _tbl_props["coding_bin"][
+                    s.strip()
+                    for s in tbl_props["coding_bin"][
                         "coding_effect_types"
                     ].split(",")
                 ),
             }
-        else:
-            self.table_properties = {
-                "region_length": 0,
-                "chromosomes": [],
-                "family_bin_size": 0,
-                "coding_effect_types": [],
-                "rare_boundary": 0
-            }
+        return {
+            "region_length": 0,
+            "chromosomes": [],
+            "family_bin_size": 0,
+            "coding_effect_types": set(),
+            "rare_boundary": 0
+        }
 
     def connection(self):
         conn = self._impala_helpers.connection()
