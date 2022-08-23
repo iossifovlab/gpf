@@ -77,7 +77,8 @@
   container="body"
   placement="right left"
   class="svg-container"
-  style="width: 50%; max-width: 100px"
+  [style.width.%]="pedigreeWidth"
+  [style.max-width.px]="maxWidth"
 >
   <ng-container *ngTemplateOutlet="pedigree"></ng-container>
 </div>

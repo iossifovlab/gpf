@@ -1,4 +1,4 @@
-import { Input, Component, OnInit } from '@angular/core';
+import { Input, Component, OnInit, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { Observable, BehaviorSubject, of } from 'rxjs';
 import { difference } from '../utils/sets-helper';
 import { IntervalForVertex } from '../utils/interval-sandwich';
@@ -30,7 +30,6 @@ export class PedigreeChartComponent implements OnInit {
   public height = 0;
   public loadingFinishedFlag = false;
   public familyLists;
-  public pedigreeModalId: string;
 
   @Input()
   public set family(data: PedigreeData[]) {
@@ -49,8 +48,17 @@ export class PedigreeChartComponent implements OnInit {
     private variantReportsService: VariantReportsService,
     private datasetsService: DatasetsService,
     public configService: ConfigService,
-    public modalService: NgbModal
+    public modalService: NgbModal,
+    public cdr: ChangeDetectorRef
   ) { }
+
+  public ngAfterViewInit(): void {
+     this.calculatePedigreeSize();
+     this.maxWidth += (20*(this.pedigreeWidthAndDepth[this.counterId][0] - 2));
+     const width = 25*((this.pedigreeWidthAndDepth[this.counterId][0] - 2) <= 2 ? (this.pedigreeWidthAndDepth[this.counterId][0] - 2) : 2);
+     this.pedigreeWidth += (width >= 0 ? width : 0);
+     this.cdr.detectChanges();
+  }
 
   public ngOnInit(): void {
     this.pedigreeDataWithLayout = [];
@@ -131,6 +139,31 @@ export class PedigreeChartComponent implements OnInit {
     event.target.submit();
   }
 
+  public modal: NgbModalRef;
+
+  public maxWidth: number = 100;
+  public pedigreeWidth: number = 25;
+  pedigreeWidthAndDepth: number[][] = [[0, 0]];
+
+  public calculatePedigreeSize() {
+    let minRank = 0;
+    this.pedigreeWidthAndDepth[this.counterId] = [0, 0];
+    let ranks = [];
+
+    this.pedigreeDataWithLayout.forEach(data => {
+      if(this.pedigreeWidthAndDepth[this.counterId][0] < this.getIndividualsOnLevel(data).length) {
+        this.pedigreeWidthAndDepth[this.counterId][0] = this.getIndividualsOnLevel(data).length;
+      }
+      if (ranks.indexOf(data.individual.rank) > -1) {
+      } else {
+        minRank++;
+        ranks.push(data.individual.rank);
+      }
+      this.pedigreeWidthAndDepth[this.counterId][1] = minRank;
+    });
+
+  }
+
   private xPlusPrb: number = 0;
   public moveProbandArrow() {
     this.getSibsipsOnLevel(this.pedigreeDataWithLayout).forEach(children => {
@@ -149,7 +182,6 @@ export class PedigreeChartComponent implements OnInit {
   }
 
   public getViewBox(): string {
-    // The addition of 8 to the width and height of the viewbox is to fit the proband arrow
     const sortedCurveLines = this.curveLines.sort(curveLine => curveLine.inverseCurveP1[1]);
     if (sortedCurveLines.length !== 0) {
       const minY = sortedCurveLines[0].inverseCurveP1[1];
