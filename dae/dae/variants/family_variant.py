@@ -682,8 +682,8 @@ class FamilyVariant(SummaryVariant, FamilyDelegate):
     def to_record(self):
         return {
             "family_id": self.family_id,
-            "summary_index":self.summary_index,
-            "family_index":self.family_index,
-            "genotype":self.gt.tolist(),
+            "summary_index": self.summary_index,
+            "family_index": self.family_index,
+            "genotype": self.gt.tolist(),
             "best_state": self.best_state.tolist()
         }

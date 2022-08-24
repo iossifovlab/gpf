@@ -2,7 +2,7 @@ import json
 import logging
 import configparser
 from contextlib import closing
-from typing import Iterator, Optional, Set, Tuple
+from typing import Optional, Set, Tuple
 import numpy as np
 from impala.util import as_pandas
 from dae.person_sets import PersonSetCollection
@@ -14,7 +14,7 @@ from dae.variants.attributes import Role, Status, Sex
 from dae.backends.schema2.base_query_builder import Dialect
 from dae.backends.schema2.family_builder import FamilyQueryBuilder
 from dae.backends.schema2.summary_builder import SummaryQueryBuilder
-from dae.variants.variant import SummaryVariant, SummaryVariantFactory
+from dae.variants.variant import SummaryVariantFactory
 from dae.variants.family_variant import FamilyVariant
 
 logger = logging.getLogger(__name__)
