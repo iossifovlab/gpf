@@ -1,3 +1,4 @@
+from copy import copy
 import glob
 from itertools import chain
 import os
@@ -144,7 +145,6 @@ class Schema2GenotypeStorage(GenotypeStorage):
         hdfs_summary_dir = os.path.join(study_path, "summary")
         hdfs_family_dir = os.path.join(study_path, "family")
 
-        assert variants_dir == partition_description.output
         # TODO why pass variants_dir as a independant input parameter ?
 
         src_summary_dir = os.path.join(
@@ -213,9 +213,12 @@ class Schema2GenotypeStorage(GenotypeStorage):
             db, meta_table, hdfs_study_layout.meta_file)
 
         assert hdfs_study_layout.summary_sample is not None
+        summary_pd = copy(partition_description)
+        # XXX summary_alleles have to family_bin
+        summary_pd._family_bin_size = 0  # pylint: disable=protected-access
         self.impala_helpers.import_variants_into_db(
             db, summary_variant_table, hdfs_study_layout.summary_variant_dir,
-            partition_description,
+            summary_pd,
             variants_sample=hdfs_study_layout.summary_sample)
 
         assert hdfs_study_layout.family_sample is not None

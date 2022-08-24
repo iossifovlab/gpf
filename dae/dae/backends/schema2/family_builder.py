@@ -1,5 +1,8 @@
 import logging
-from dae.backends.schema2.base_query_builder import BaseQueryBuilder, Dialect
+from typing import Optional
+import pandas as pd
+from dae.backends.schema2.base_query_builder import BaseQueryBuilder, Dialect,\
+    TableSchema
 
 logger = logging.getLogger(__name__)
 
@@ -10,20 +13,19 @@ class FamilyQueryBuilder(BaseQueryBuilder):
     def __init__(
         self,
         dialect: Dialect,
-        db,
-        family_variant_table,
-        summary_allele_table,
-        pedigree_table,
-        family_variant_schema,
-        summary_allele_schema,
-        table_properties,
-        pedigree_schema,
-        pedigree_df,
-        families,
+        db: str,
+        family_variant_table: str,
+        summary_allele_table: str,
+        pedigree_table: str,
+        family_variant_schema: TableSchema,
+        summary_allele_schema: TableSchema,
+        table_properties: Optional[dict],
+        pedigree_schema: TableSchema,
+        pedigree_df: pd.DataFrame,
         gene_models=None,
-        do_join_affected=False,
+        do_join_pedigree=False,
     ):
-        #pylint: disable=too-many-arguments
+        # pylint: disable=too-many-arguments
         self.family_variant_table = family_variant_table
         self.summary_allele_table = summary_allele_table
 
@@ -41,8 +43,7 @@ class FamilyQueryBuilder(BaseQueryBuilder):
             gene_models=gene_models,
         )
 
-        self.do_join_affected = do_join_affected
-        self.families = families
+        self.do_join_pedigree = do_join_pedigree
 
     def _query_columns(self):
         self.select_accessors = {
@@ -60,7 +61,7 @@ class FamilyQueryBuilder(BaseQueryBuilder):
     def _build_join(self, genes=None, effect_types=None):
         join_clause = ""
 
-        if self.do_join_affected:
+        if self.do_join_pedigree:
             pedigree_table = self.dialect.build_table_name(self.pedigree_table,
                                                            self.db)
             join_clause = f"JOIN {pedigree_table} as pedigree\n"
@@ -78,13 +79,15 @@ class FamilyQueryBuilder(BaseQueryBuilder):
 
     def _build_from(self):
         # implicit join on family_allele and summary variants table
-        from_clause = f"""\n FROM
-        {self.dialect.build_table_name(self.summary_allele_table, self.db)} AS sa
-        JOIN 
-        {self.dialect.build_table_name(self.family_variant_table, self.db)} AS fa
+        from_clause = f"""FROM
+        {self.dialect.build_table_name(self.summary_allele_table, self.db)}
+            AS sa
+        JOIN
+        {self.dialect.build_table_name(self.family_variant_table, self.db)}
+            AS fa
         ON (fa.summary_index = sa.summary_index AND
         fa.bucket_index = sa.bucket_index AND
-        fa.allele_index = sa.allele_index)""".rstrip()
+        fa.allele_index = sa.allele_index)"""
 
         self._add_to_product(from_clause)
 
@@ -110,9 +113,9 @@ class FamilyQueryBuilder(BaseQueryBuilder):
         frequency_filter=None,
         return_reference=None,
         return_unknown=None,
-        **kwargs,
+        **_kwargs,
     ):
-        #pylint: disable=too-many-arguments,too-many-locals
+        # pylint: disable=too-many-arguments,too-many-locals
         if self.summary_allele_table:
             inheritance = None
         where_clause = self._build_where_string(

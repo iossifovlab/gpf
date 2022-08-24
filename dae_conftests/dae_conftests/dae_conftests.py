@@ -76,7 +76,7 @@ def global_dae_fixtures_dir():
     return get_global_dae_fixtures_dir()
 
 
-@pytest.fixture()
+@pytest.fixture(scope="module")
 def resources_dir(request) -> Path:
     resources_path = os.path.join(
         os.path.dirname(os.path.realpath(request.module.__file__)),

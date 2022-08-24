@@ -1,12 +1,17 @@
 from box import Box  # type: ignore
 
 from dae.backends.storage.impala_genotype_storage import ImpalaGenotypeStorage
+from dae.backends.storage.schema2_genotype_storage import (
+    Schema2GenotypeStorage
+)
 from dae.backends.storage.filesystem_genotype_storage import (
     FilesystemGenotypeStorage,
 )
 
 
 class GenotypeStorageFactory:
+    """Create the correct Genotype Storage."""
+
     def __init__(self, dae_config):
         self.storage_config = dae_config.storage
         self.default_storage_id = dae_config.genotype_storage.default
@@ -26,6 +31,7 @@ class GenotypeStorageFactory:
         return self.get_genotype_storage(self.default_storage_id)
 
     def get_genotype_storage(self, genotype_storage_id):
+        """Create and return a genotype storage with id genotype_storage_id."""
         if genotype_storage_id is None:
             return self.get_default_genotype_storage()
 
@@ -58,8 +64,13 @@ class GenotypeStorageFactory:
 
         genotype_storage = None
         if conf.storage_type == "impala":
-            genotype_storage = ImpalaGenotypeStorage(
-                conf, genotype_storage_id)
+            if conf.schema_version == 1:
+                genotype_storage = ImpalaGenotypeStorage(
+                    conf, genotype_storage_id)
+            else:
+                assert conf.schema_version == 2
+                genotype_storage = Schema2GenotypeStorage(
+                    conf, genotype_storage_id)
         elif conf.storage_type == "filesystem":
             genotype_storage = FilesystemGenotypeStorage(
                 conf, genotype_storage_id)

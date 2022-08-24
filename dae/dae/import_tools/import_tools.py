@@ -4,12 +4,15 @@ from copy import deepcopy
 from dataclasses import dataclass
 import os
 import sys
-from typing import cast
+from typing import Optional, cast
+from box import Box
 from dae.backends.cnv.loader import CNVLoader
 from dae.backends.dae.loader import DaeTransmittedLoader, DenovoLoader
+from dae.backends.storage.genotype_storage_factory import (
+    GenotypeStorageFactory
+)
 from dae.backends.vcf.loader import VcfLoader
-from dae.backends.impala.parquet_io import ParquetPartitionDescriptor,\
-    NoPartitionDescriptor, PartitionDescriptor
+from dae.backends.impala.parquet_io import ParquetPartitionDescriptor
 from dae.backends.raw.loader import AnnotationPipelineDecorator,\
     EffectAnnotationDecorator, VariantsLoader
 from dae.configuration.gpf_config_parser import GPFConfigParser
@@ -34,15 +37,17 @@ class Bucket:
 
 
 class ImportProject():
-    """
-    Encapsulates the import configuration. This class creates the necessary
-    objects needed to import a study (e.g. loaders, family data).
+    """Encapsulate the import configuration.
+
+    This class creates the necessary objects needed to import a study
+    (e.g. loaders, family data and so one).
     """
 
     def __init__(self, import_config, base_input_dir):
-        """
-        Creates a new project from the provided config. It is best not to call
-        this ctor directly but to use one of the provided build_* methods.
+        """Create a new project from the provided config.
+
+        It is best not to call this ctor directly but to use one of the
+        provided build_* methods.
         :param import_config: The parsed, validated and normalized config.
         """
         self.import_config = import_config
@@ -54,9 +59,9 @@ class ImportProject():
 
     @staticmethod
     def build_from_config(import_config, base_input_dir=""):
-        """
-        Creates a new project from the provided config. The config is first
-        validated and normalized.
+        """Create a new project from the provided config.
+
+        The config is first validated and normalized.
         :param import_config: The config to use for the import.
         :base_input_dir: Default input dir. Use cwd by default.
         """
@@ -68,9 +73,10 @@ class ImportProject():
 
     @staticmethod
     def build_from_file(import_filename):
-        """Creates a new project from the provided config filename. The file
-        is first parsed, validated and normalized. The path to the file is used
-        as the default input path for the project.
+        """Create a new project from the provided config filename.
+
+        The file is first parsed, validated and normalized. The path to the
+        file is used as the default input path for the project.
 
         :param import_filename: Path to the config file
         :param gpf_instance: Gpf Instance to use.
@@ -81,7 +87,7 @@ class ImportProject():
         return ImportProject.build_from_config(import_config, base_input_dir)
 
     def get_pedigree(self) -> FamiliesData:
-        """Loads, parses and returns the pedigree data"""
+        """Load, parse and return the pedigree data."""
         families_filename = self.import_config["input"]["pedigree"]["file"]
         families_filename = fs_utils.join(self.input_dir, families_filename)
 
@@ -94,8 +100,7 @@ class ImportProject():
         return families_loader.load()
 
     def get_import_variants_buckets(self) -> list[Bucket]:
-        """Splits the input variant files into buckets allowing
-        for parallel processing"""
+        """Split variant files into buckets enabling parallel processing."""
         buckets = []
         for loader_type in ["denovo", "vcf", "cnv", "dae"]:
             config = self.import_config["input"].get(loader_type, None)
@@ -105,7 +110,7 @@ class ImportProject():
         return buckets
 
     def get_variant_loader(self, bucket, reference_genome=None):
-        """Gets the appropriate variant loader for the specified bucket"""
+        """Get the appropriate variant loader for the specified bucket."""
         loader = self._get_variant_loader(bucket.type, reference_genome)
         loader.reset_regions(bucket.regions)
         return loader
@@ -148,14 +153,17 @@ class ImportProject():
         )
         return loader
 
-    def get_partition_description(self, work_dir=None) -> PartitionDescriptor:
-        """Retrurns a partition description object as described in the import
-        config"""
-        if "partition_description" not in self.import_config:
-            return NoPartitionDescriptor(work_dir)
+    def get_partition_description_dict(self) -> Optional[dict]:
+        """Retrurn a dict describing the paritition description.
 
-        work_dir = work_dir if work_dir is not None else self.work_dir
-        partition_desc = self.import_config["partition_description"]
+        The dict is sutable for passing to the from_dict function of a
+        PartitionDescriptor. Return None if no partition description is
+        specified in the input config.
+        """
+        if "partition_description" not in self.import_config:
+            return None
+
+        partition_desc: dict = self.import_config["partition_description"]
         chromosomes = partition_desc.get("region_bin", {})\
             .get("chromosomes", None)
         assert isinstance(chromosomes, list)
@@ -166,32 +174,34 @@ class ImportProject():
         partition_desc["region_bin"]["chromosomes"] = \
             ",".join(chromosomes)
 
-        return ParquetPartitionDescriptor.from_dict(
-            partition_desc,
-            work_dir
-        )
+        return partition_desc
 
     def get_gpf_instance(self):
-        """Creates and returns a gpf instance as desribed in the config"""
+        """Create and return a gpf instance as desribed in the config."""
         instance_config = self.import_config.get("gpf_instance", {})
         return GPFInstance(work_dir=instance_config.get("path", None))
 
     def get_storage(self):
+        """Create an import storage as described in the import config."""
         # pylint: disable=import-outside-toplevel
         from dae.import_tools.impala_schema1 import ImpalaSchema1ImportStorage
+        from dae.import_tools.schema2_import_storage import (
+            Schema2ImportStorage
+        )
 
+        if self._is_schema2():
+            return Schema2ImportStorage(self)
         return ImpalaSchema1ImportStorage(self)
 
     @property
     def work_dir(self):
-        """Returns the path where generated import files (e.g. parquet files)
-        are stores"""
+        """Where to store generated import files (e.g. parquet files)."""
         return self.import_config.get("processing_config", {})\
             .get("work_dir", "")
 
     @property
     def input_dir(self):
-        """Returns the path relative to which input files are specified"""
+        """Return the path relative to which input files are specified."""
         return os.path.join(
             self._base_input_dir,
             self.import_config["input"].get("input_dir", "")
@@ -201,15 +211,31 @@ class ImportProject():
     def study_id(self):
         return self.import_config["id"]
 
-    @property
-    def genotype_storage_id(self):
-        # TODO handle inline storage configurations
-        return self.import_config["destination"].get("storage_id")
+    def get_genotype_storage(self):
+        """Find, create and return the correct genotype storage."""
+        explicit_config = (
+            self.has_destination()
+            and "storage_id" not in self.import_config["destination"]
+        )
+        if not explicit_config:
+            gpf_instance = self.get_gpf_instance()
+            genotype_storage_db = gpf_instance.genotype_storage_db
+            storage_id = self.import_config.get("destination", {})\
+                .get("storage_id", None)
+            return genotype_storage_db.get_genotype_storage(storage_id)
+        # explicit storage config
+        genotype_storage_db = GenotypeStorageFactory(Box({
+            "storage": {
+                "dummy_id": self.import_config["destination"]
+            },
+            "genotype_storage": {
+                "default": "dummy_id"
+            }
+        }))
+        return genotype_storage_db.get_genotype_storage(None)
 
     def has_destination(self) -> bool:
-        """
-        Returns True if there is a *destination* section in the import config
-        """
+        """Return if there is a *destination* section in the import config."""
         return "destination" in self.import_config
 
     def get_row_group_size(self, bucket) -> int:
@@ -218,7 +244,7 @@ class ImportProject():
         return cast(int, res)
 
     def build_variants_loader_pipeline(self, variants_loader, gpf_instance):
-        """Creates an annotation pipeline around variants_loader"""
+        """Create an annotation pipeline around variants_loader."""
         effect_annotator = construct_import_effect_annotator(gpf_instance)
 
         variants_loader = EffectAnnotationDecorator(
@@ -236,6 +262,21 @@ class ImportProject():
             )
 
         return variants_loader
+
+    def _is_schema2(self) -> bool:
+        if not self.has_destination():
+            return True  # Default import schema is schema2
+
+        destination = self.import_config["destination"]
+        if "storage_id" in destination:
+            storage_id = destination["storage_id"]
+            gpf_instance = self.get_gpf_instance()
+            schema_version: int = gpf_instance.dae_config\
+                .storage[storage_id]["schema_version"]
+        else:
+            schema_version = destination["schema_version"]
+
+        return schema_version == 2
 
     @staticmethod
     def _get_default_bucket_index(loader_type):
@@ -267,6 +308,9 @@ class ImportProject():
         if target_chromosomes is None:
             target_chromosomes = loader_chromosomes
 
+        # cannot use self.get_partition_description() here as the processing
+        # region length might be different than the region length specified in
+        # the parition description section of the import config
         partition_description = ParquetPartitionDescriptor(
             target_chromosomes,
             self._get_processing_region_length(loader_type),
@@ -315,11 +359,14 @@ class ImportProject():
 
 
 class ImportConfigNormalizer:
-    """Class to normalize import configs. Most of the normalization is done
-    by Cerberus but it fails short in a few cases. This class picks up the
-    slack"""
+    """Class to normalize import configs.
+
+    Most of the normalization is done by Cerberus but it fails short in a few
+    cases. This class picks up the slack.
+    """
+
     def normalize(self, import_config: dict):
-        """Normalizes the import config"""
+        """Normalize the import config."""
         config = deepcopy(import_config)
         self._map_for_key(config, "region_length", self._int_shorthand)
         self._map_for_key(config, "chromosomes", self._normalize_chrom_list)
@@ -391,7 +438,7 @@ class AbstractImportStorage:
 
 
 def main():
-    """Entry point for import tools when invoked as a cli tool"""
+    """Entry point for import tools when invoked as a cli tool."""
     parser = argparse.ArgumentParser(description="Import datasets into GPF")
     parser.add_argument("-f", "--config", type=str,
                         help="Path to the import configuration")

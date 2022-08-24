@@ -11,8 +11,9 @@ from dae.configuration.gpf_config_parser import GPFConfigParser
 
 @pytest.mark.parametrize("config_dir", ["denovo_import", "vcf_import",
                                         "cnv_import", "dae_import"])
-def test_simple_import_config(tmpdir, gpf_instance_2019, config_dir, mocker,
-                              resources_dir):
+@pytest.mark.parametrize("schema", ["schema1", "schema2"])
+def test_parquet_files_are_generated(tmpdir, gpf_instance_2019, config_dir,
+                                     mocker, resources_dir, schema):
     input_dir = resources_dir / config_dir
     config_fn = input_dir / "import_config.yaml"
 
@@ -23,6 +24,8 @@ def test_simple_import_config(tmpdir, gpf_instance_2019, config_dir, mocker,
 
     mocker.patch.object(import_tools.ImportProject, "get_gpf_instance",
                         return_value=gpf_instance_2019)
+    mocker.patch.object(import_tools.ImportProject, "_is_schema2",
+                        return_value=schema == "schema2")
     project = import_tools.ImportProject.build_from_config(
         import_config, input_dir)
     import_tools.run_with_project(project)
@@ -74,11 +77,10 @@ def test_add_chrom_prefix_is_propagated_to_the_loader(resources_dir, mocker,
 
 def test_row_group_size():
     import_config = dict(
-        input=dict(),
+        input={},
         processing_config=dict(
             work_dir="",
-            denovo=dict(
-            ),
+            denovo={},
         ),
         parquet_row_group_size=dict(
             denovo=10000,
@@ -97,7 +99,7 @@ def test_row_group_size():
 
 def test_row_group_size_short_config():
     import_config = dict(
-        input=dict(),
+        input={},
         processing_config=dict(
             work_dir="",
             denovo="single_bucket",
@@ -112,7 +114,7 @@ def test_row_group_size_short_config():
 def test_shorthand_for_large_integers():
     config = dict(
         id="test_import",
-        input=dict(),
+        input={},
         processing_config=dict(
             denovo=dict(
                 region_length="300k"
@@ -135,7 +137,7 @@ def test_shorthand_for_large_integers():
 def test_shorthand_autosomes():
     config = dict(
         id="test_import",
-        input=dict(),
+        input={},
         processing_config=dict(
             vcf=dict(
                 region_length=300,
@@ -156,7 +158,8 @@ def test_shorthand_autosomes():
         assert str(i) in loader_chromosomes
         assert f"chr{i}" in loader_chromosomes
 
-    pd_chromosomes = project.get_partition_description(work_dir="").chromosomes
+    pd_dict = project.get_partition_description_dict()
+    pd_chromosomes = pd_dict["region_bin"]["chromosomes"].split(",")
     assert len(pd_chromosomes) == 22 * 2 + 4
     for i in range(1, 23):
         assert str(i) in pd_chromosomes
@@ -169,7 +172,7 @@ def test_shorthand_autosomes():
 def test_shorthand_chromosomes():
     config = dict(
         id="test_import",
-        input=dict(),
+        input={},
         processing_config=dict(
             denovo=dict(
                 chromosomes="chr1, chr2"
@@ -194,7 +197,7 @@ def test_shorthand_chromosomes():
 def test_project_input_dir_default_value():
     config = dict(
         id="test_import",
-        input=dict(),
+        input={},
     )
     project = import_tools.ImportProject.build_from_config(config, "")
     assert project.input_dir == ""

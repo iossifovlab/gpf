@@ -82,6 +82,7 @@ grr_schema = {
 
 storage_schema = {
     "storage_type": {"type": "string", "allowed": ["impala", "filesystem"]},
+    "schema_version": {"type": "integer", "allowed": [1, 2], "default": 1},
     "dir": {
         "type": "string",
         "check_with": validate_path,

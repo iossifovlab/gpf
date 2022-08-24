@@ -1,30 +1,19 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 
+import pytest
 from box import Box
-from dae.backends.schema2.parquet_io import NoPartitionDescriptor
-from dae.tools import ped2parquet
-from dae.backends.schema2.vcf2schema2 import Variants2Schema2
+from dae.utils.regions import Region
+from dae.backends.dae.loader import DenovoLoader
+from dae.backends.schema2.parquet_io import (
+    NoPartitionDescriptor, ParquetManager, ParquetPartitionDescriptor)
+from dae.backends.vcf.loader import VcfLoader
 from dae.backends.storage.schema2_genotype_storage import \
     Schema2GenotypeStorage
+from dae.pedigrees.loader import FamiliesLoader
 
 
-# TODO ass a param test with partition description
-def test_import_and_query(resources_dir, tmpdir, gpf_instance_2013):
-    study_id = "testStudy"
-    variants_dir = str(tmpdir)
-    partition_description = NoPartitionDescriptor(variants_dir)
-
-    # run ped2parquet
-    pedigree_parquet = str(tmpdir / "pedigree.parquet")
-    _run_ped2parquet(str(resources_dir / "simple_variants.ped"),
-                     pedigree_parquet)
-
-    # run vcf2schema2 on the input vcf files
-    _run_vcf2schema2(str(resources_dir / "simple_variants.ped"),
-                     str(resources_dir / "simple_variants.vcf"),
-                     variants_dir, gpf_instance_2013)
-
-    # create the storage
+@pytest.fixture
+def storage():
     config = {
         "impala": {
             "db": "impala_test_db",
@@ -40,14 +29,35 @@ def test_import_and_query(resources_dir, tmpdir, gpf_instance_2013):
         },
     }
     config = Box(config)
-    storage = Schema2GenotypeStorage(config, "genotype_schema2")
+    return Schema2GenotypeStorage(config, "genotype_schema2")
 
-    # copy resulting parquets in hdfs
+
+@pytest.mark.parametrize("partition_description", [
+    NoPartitionDescriptor(),
+    ParquetPartitionDescriptor(["1"], region_length=5, family_bin_size=2),
+])
+def test_import_and_query(resources_dir, tmpdir, gpf_instance_2013,
+                          partition_description, storage):
+    study_id = "testStudy"
+    variants_dir = str(tmpdir)
+    partition_description.output = variants_dir
+
+    # generate parquets
+    pedigree_parquet = str(tmpdir / "pedigree.parquet")
+    _run_ped2parquet(str(resources_dir / "simple_variants.ped"),
+                     pedigree_parquet)
+    _run_vcf2schema2(str(resources_dir / "simple_variants.ped"),
+                     str(resources_dir / "simple_variants.vcf"),
+                     gpf_instance_2013, partition_description)
+
+    # clean hdfs from prev test runs and copy resulting parquets in hdfs
+    study_dir = "/tests/test_schema2/studies/testStudy"
+    if storage.hdfs_helpers.exists(study_dir):
+        storage.hdfs_helpers.delete(study_dir, True)
     hdfs_study_layout = storage.hdfs_upload_dataset(
         study_id, variants_dir, pedigree_parquet, str(tmpdir / "meta.parquet"),
         partition_description)
-    # TODO assert hdfs dirs exist
-    # TODO assert meta.parquet exists
+    assert storage.hdfs_helpers.exists(study_dir)
 
     # load parquets in impala
     study_config = storage.import_dataset(
@@ -56,31 +66,110 @@ def test_import_and_query(resources_dir, tmpdir, gpf_instance_2013):
         partition_description=partition_description,
     )
 
-    # query impala
-    backend = storage.build_backend(Box(study_config), None,
-                                    gpf_instance_2013.gene_models)
-    family_variants = list(backend.query_variants())
-    summary_variants = list(backend.query_summary_variants())
+    family_variants, summary_variants = _query_all_variants(
+        storage, study_config, gpf_instance_2013.gene_models
+    )
 
-    # assert the number of summary and family allies is as expected
+    # assert the number of summary and family allelies is as expected
     assert len(family_variants) == 5
     assert len(summary_variants) == 10
     # 10 reference and 18 alternative alleles
     assert sum(len(sv.alleles) for sv in summary_variants) == 28
 
 
-def _run_vcf2schema2(ped_file, vcf_file, tmpdir, gpf_instance):
-    # TODO don't call main as it changes the log level
-    Variants2Schema2.main([
-        ped_file,
-        vcf_file,
-        "--study-id", "testStudy",
-        "--out", tmpdir,
-        "--vcf-denovo-mode", "possible_denovo",
-        "--vcf-omission-mode", "possible_omission",
-    ], gpf_instance=gpf_instance)
+@pytest.mark.parametrize("partition_description", [
+    NoPartitionDescriptor(),
+])
+def test_import_denovo_with_custome_range(
+    resources_dir, tmpdir, gpf_instance_2013, partition_description, storage
+):
+    study_id = "testStudyDenovo"
+    variants_dir = str(tmpdir)
+    partition_description.output = variants_dir
+
+    # generate parquets
+    pedigree_parquet = str(tmpdir / "pedigree.parquet")
+    _run_ped2parquet(str(resources_dir / "simple_variants.ped"),
+                     pedigree_parquet)
+    _run_denovo2schema2(str(resources_dir / "simple_variants.ped"),
+                        str(resources_dir / "denovo_variants.txt"),
+                        gpf_instance_2013, partition_description,
+                        regions=[Region("2", 30, 100)])
+
+    # copy parquets to hdfs
+    study_dir = f"/tests/test_schema2/studies/{study_id}"
+    if storage.hdfs_helpers.exists(study_dir):
+        storage.hdfs_helpers.delete(study_dir, True)
+    hdfs_study_layout = storage.hdfs_upload_dataset(
+        study_id, variants_dir, pedigree_parquet, str(tmpdir / "meta.parquet"),
+        partition_description)
+    assert storage.hdfs_helpers.exists(study_dir)
+
+    # load parquets in impala
+    study_config = storage.import_dataset(
+        study_id,
+        hdfs_study_layout,
+        partition_description=partition_description,
+    )
+
+    # query and assert
+    family_variants, summary_variants = _query_all_variants(
+        storage, study_config, gpf_instance_2013.gene_models
+    )
+    assert len(family_variants) == 3
+    assert len(summary_variants) == 3
+    # 2 alleles per summary variant
+    assert sum(len(sv.alleles) for sv in summary_variants) == 6
+
+
+def _run_vcf2schema2(ped_file, vcf_file, gpf_instance,
+                     partition_description):
+    pedigree = FamiliesLoader(ped_file).load()
+
+    variants_loader = VcfLoader(
+        pedigree,
+        [vcf_file],
+        params={
+            "vcf_denovo_mode": "possible_denovo",
+            "vcf_omission_mode": "possible_omission",
+        },
+        genome=gpf_instance.reference_genome,
+    )
+
+    ParquetManager.variants_to_parquet(
+        variants_loader,
+        partition_description,
+        bucket_index=0,
+        rows=20_000,
+    )
+
+
+def _run_denovo2schema2(ped_file, denovo_file, gpf_instance,
+                        partition_description, regions=None):
+    pedigree = FamiliesLoader(ped_file).load()
+
+    variants_loader = DenovoLoader(
+        pedigree,
+        denovo_file,
+        genome=gpf_instance.reference_genome,
+        regions=regions
+    )
+
+    ParquetManager.variants_to_parquet(
+        variants_loader,
+        partition_description,
+        bucket_index=100,
+        rows=20_000,
+    )
 
 
 def _run_ped2parquet(ped_file, output_filename):
-    # TODO don't call main as it changes the log level
-    ped2parquet.main([ped_file, "--output", output_filename])
+    pedigree = FamiliesLoader(ped_file).load()
+    ParquetManager.families_to_parquet(pedigree, output_filename)
+
+
+def _query_all_variants(storage, study_config, gene_models):
+    backend = storage.build_backend(Box(study_config), None, gene_models)
+    family_variants = list(backend.query_variants())
+    summary_variants = list(backend.query_summary_variants())
+    return family_variants, summary_variants
