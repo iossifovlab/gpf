@@ -337,7 +337,7 @@ TEMPLATES = [
         "BACKEND": "django.template.backends.django.DjangoTemplates",
         "DIRS": [
             os.path.normpath(
-                os.path.join(PROJECT_ROOT, "gpfjs", "static", "gpfjs")
+                os.path.join(PROJECT_ROOT, "gpfjs", "static")
             ),
             os.path.normpath(
                 os.path.join(PROJECT_ROOT, "gpfjs", "static", "empty")
