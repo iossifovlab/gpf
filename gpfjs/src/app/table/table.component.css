@@ -27,9 +27,8 @@ gpf-table-view-cell {
   z-index: 1002;
 }
 
-.legend-div {
+#legend-wrapper {
   position: fixed;
-  bottom: 1%;
-  right: 1.6%;
-  background-color: white;
+  bottom: 10px;
+  right: 10px;
 }

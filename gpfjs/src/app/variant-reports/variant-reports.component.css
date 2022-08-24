@@ -90,24 +90,23 @@ table {
     );
 }
 
-.legend-report {
+#de-novo-variants-legend-report {
   padding-bottom: 10px;
 }
 
-.legend-report span {
+#de-novo-variants-legend-report span {
   color: #6c757d !important;
   font-size: 80%;
   font-weight: 400;
 }
 
-.legend {
-  position: fixed;
-  bottom: 100px;
-  right: 100px;
-  background-color: white;
-  text-align: left;
-  border: 1px solid #ddd;
-  padding: 5px;
+#legend-wrapper {
+  position: sticky;
+  width: 238px;
+  float: right;
+  margin-top: 8px;
+  margin-right: 10px;
+  bottom: 10px;
 }
 
 .docked {

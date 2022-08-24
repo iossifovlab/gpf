@@ -1,13 +1,15 @@
-<div *ngIf="visible" class="legend">
-  <div *ngIf="expanded">
-    <div *ngFor="let legendItem of legend">
-      <span class="pedigree-icon" [style.background-color]="legendItem.color"></span>
-      <span>{{ legendItem.name }}</span>
+<div id="legend" *ngIf="isExpanded">
+  <div id="legend-items-wrapper">
+    <div *ngFor="let item of legendItems" class="legend-item">
+      <span class="pedigree-icon" [style.background-color]="item.color"></span>
+      <span>{{ item.name }}</span>
     </div>
   </div>
-  <button
-    id="legend-button"
-    class="btn btn-default"
-    (click)="expand()"
-    title="Expand legend">Expand legend</button>
+</div>
+
+<div id="expand-legend-button-wrapper">
+  <button id="expand-legend-button" class="btn btn-default" (click)="isExpanded = !isExpanded">
+    <span>Legend</span>
+    <span class="select-dropdown-icon" [style.content]="'url(' + imgPathPrefix + 'dropdown_icon.png)'"></span>
+  </button>
 </div>

@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, ElementRef, HostListener, Pipe, PipeTransform } from '@angular/core';
+import { Component, OnInit, HostListener, Pipe, PipeTransform } from '@angular/core';
 import { VariantReportsService } from './variant-reports.service';
 import {
   VariantReport, FamilyCounter, PedigreeCounter, EffectTypeTable, DeNovoData, PedigreeTable, PeopleCounter
@@ -7,7 +7,6 @@ import { Dataset } from 'app/datasets/datasets';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { take } from 'rxjs/operators';
 import { environment } from 'environments/environment';
-import { isInViewport } from 'app/utils/is-in-viewport';
 
 @Pipe({ name: 'getPeopleCounterRow' })
 export class PeopleCounterRowPipe implements PipeTransform {
@@ -23,10 +22,6 @@ export class PeopleCounterRowPipe implements PipeTransform {
   styleUrls: ['./variant-reports.component.css']
 })
 export class VariantReportsComponent implements OnInit {
-  @ViewChild('families_pedigree') private familiesPedigree: ElementRef;
-  
-  public visible: boolean = false;
-
   public currentPeopleCounter: PeopleCounter;
   public currentPedigreeTable: PedigreeTable;
   public currentDenovoReport: EffectTypeTable;
@@ -45,12 +40,6 @@ export class VariantReportsComponent implements OnInit {
     private variantReportsService: VariantReportsService,
     private datasetsService: DatasetsService
   ) { }
-
-  @HostListener('window:scroll', ['$event'])
-  @HostListener('click', ['$event'])
-  public onWindowScroll(): void {
-    this.visible = isInViewport(this.familiesPedigree.nativeElement, 10);
-  }
 
   @HostListener('window:resize')
   public onResize(): void {

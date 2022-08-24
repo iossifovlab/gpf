@@ -4,7 +4,11 @@
 </div>
 
 <div #table style="width: 100%; display: table; border-collapse: collapse">
-  <gpf-table-view-header style="display: table-header-group" [columns]="columnsChildren" [(sortingInfo)]="sortingInfo">
+  <gpf-table-view-header
+    id="gpf-table-view-header"
+    style="display: table-header-group"
+    [columns]="columnsChildren"
+    [(sortingInfo)]="sortingInfo">
   </gpf-table-view-header>
   <div [style.display]="beforeDataCellHeight ? 'table-row' : 'none'" [style.height]="beforeDataCellHeight + 'px'">
     <td *ngFor="let column of columnsChildren"></td>
@@ -31,12 +35,10 @@
 </div>
 
 <div *ngIf="visibleData.length === 0">
-  <gpf-nothing-found-row [style.width]="noResultsWidth"
-  [style.min-width]="noResultsWidth"
-  style="height: 100%">
+  <gpf-nothing-found-row [style.width]="noResultsWidth" [style.min-width]="noResultsWidth" style="height: 100%">
   </gpf-nothing-found-row>
 </div>
 
-<div *ngIf="showFloatingHeader && visibleData.length > 0" class="legend-div">
+<div *ngIf="showLegend && visibleData.length > 0" id="legend-wrapper">
   <ng-template *ngIf="legend?.templateRef" [ngTemplateOutlet]="legend.templateRef"></ng-template>
 </div>

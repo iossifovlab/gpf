@@ -2,7 +2,6 @@ import { Input, Component, HostListener, OnInit } from '@angular/core';
 import { GenotypePreview, GenotypePreviewVariantsArray } from '../genotype-preview-model/genotype-preview';
 import { PersonSet } from '../datasets/datasets';
 import { LegendItem } from 'app/variant-reports/variant-reports';
-import { isInViewport } from '../utils/is-in-viewport';
 
 @Component({
   selector: 'gpf-genotype-preview-table',
@@ -15,7 +14,6 @@ export class GenotypePreviewTableComponent implements OnInit {
   @Input() public legend: Array<PersonSet> = [];
   public singleColumnWidth: string;
   public legendItems: Array<LegendItem> = [];
-  public visible: boolean = false;
 
   @HostListener('window:resize', ['$event'])
   public onResize(): void {
@@ -26,13 +24,6 @@ export class GenotypePreviewTableComponent implements OnInit {
 
     this.singleColumnWidth = `${(screenWidth - padding - scrollSize) / columnsCount}px`;
   }
-
-  @HostListener('window:scroll')
-  onScroll() {
-    this.visible = isInViewport(document.getElementById('gpf-table'), 0);
-  }
-
-  constructor() { }
 
   public ngOnInit(): void {
     if (this.legend) {

@@ -1,6 +1,9 @@
 <div class="genome-preview">
   <div *ngIf="genotypePreviewVariantsArray">
-    <gpf-table id="gpf-table" [dataSource]="genotypePreviewVariantsArray.genotypePreviews" style="display: inline-block">
+    <gpf-table
+      id="gpf-table"
+      [dataSource]="genotypePreviewVariantsArray.genotypePreviews"
+      style="display: inline-block">
       <gpf-table-column *ngFor="let column of columns" [columnWidth]="singleColumnWidth">
         <gpf-table-header caption="{{ column.name }}"></gpf-table-header>
         <gpf-table-header>
@@ -38,7 +41,7 @@
         </gpf-table-content>
       </gpf-table-column>
 
-     <gpf-legend *gpfTableLegend [visible]="visible" [legend]="legendItems"></gpf-legend>
+      <gpf-legend *gpfTableLegend [legendItems]="legendItems"></gpf-legend>
     </gpf-table>
   </div>
 </div>

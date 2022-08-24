@@ -34,10 +34,15 @@ export class GpfTableComponent {
   public noResultsWidth: string;
 
   public showFloatingHeader: boolean;
+  public showLegend: boolean;
 
   @HostListener('window:scroll', ['$event'])
   public onWindowScroll(): void {
     this.tableTopPosition = this.tableViewChild.nativeElement.getBoundingClientRect().top;
+
+    if (this.rowViewChildren && this.rowViewChildren.first) {
+      this.showLegend = this.rowViewChildren.first.nativeElement.getBoundingClientRect().bottom < window.innerHeight;
+    }
 
     if (
       this.rowViewChildren

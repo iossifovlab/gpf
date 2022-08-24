@@ -1,5 +1,6 @@
 import { Component, Input } from '@angular/core';
 import { LegendItem } from 'app/variant-reports/variant-reports';
+import { environment } from 'environments/environment';
 
 @Component({
   selector: 'gpf-legend',
@@ -7,14 +8,7 @@ import { LegendItem } from 'app/variant-reports/variant-reports';
   styleUrls: ['./legend.component.css']
 })
 export class LegendComponent {
-
-  @Input('visible') public visible: boolean = false;
-
-  @Input('legend') public legend: Array<LegendItem> = [];
-
-  public expanded: boolean = false;
-
-  public expand() {
-    this.expanded = !this.expanded;
-  }
+  @Input() public legendItems: Array<LegendItem> = [];
+  public isExpanded = false;
+  public imgPathPrefix = environment.imgPathPrefix;
 }

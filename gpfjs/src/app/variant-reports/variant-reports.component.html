@@ -70,7 +70,7 @@
       </div>
     </div>
 
-    <div *ngIf="currentPedigreeTable" id="families-by-pedigree-div" class="row" #families_pedigree>
+    <div *ngIf="currentPedigreeTable" id="families-by-pedigree-div" class="row">
       <div class="col-12">
         <table class="gpf-basic-table">
           <colgroup>
@@ -87,9 +87,9 @@
         </table>
       </div>
     </div>
-
-  <div #legend *ngIf="currentPedigreeTable">
-    <gpf-legend [visible]="visible" [legend] = "currentPedigreeTable.legend.legendItems"></gpf-legend>
+    <div *ngIf="currentPedigreeTable" id="legend-wrapper">
+      <gpf-legend [legendItems]="currentPedigreeTable.legend.legendItems"></gpf-legend>
+    </div>
   </div>
 
   <div id="de-novo-variants">
@@ -114,7 +114,7 @@
         </div>
       </div>
 
-      <h5 *ngIf="currentDenovoReport" class="legend-report">
+      <h5 *ngIf="currentDenovoReport" id="de-novo-variants-legend-report">
         <span>Legend:<br /></span>
         <span style="padding-left: 6px">"number of observed events", "observed rate per individual"</span><br />
         <span style="padding-left: 6px"
