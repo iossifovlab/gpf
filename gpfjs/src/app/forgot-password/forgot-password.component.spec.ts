@@ -6,6 +6,7 @@ import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { NgxsModule } from '@ngxs/store';
 import { ConfigService } from 'app/config/config.service';
 import { UsersService } from 'app/users/users.service';
+import { APP_BASE_HREF } from '@angular/common';
 
 import { ForgotPasswordComponent } from './forgot-password.component';
 
@@ -20,6 +21,7 @@ describe('ForgotPasswordComponent', () => {
         NgbActiveModal,
         UsersService,
         ConfigService,
+        { provide: APP_BASE_HREF, useValue: '' }
       ],
       imports: [
         HttpClientTestingModule, RouterTestingModule, FormsModule,

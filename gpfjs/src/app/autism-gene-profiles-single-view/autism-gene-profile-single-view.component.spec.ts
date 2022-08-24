@@ -9,6 +9,7 @@ import { UsersService } from 'app/users/users.service';
 import { of } from 'rxjs';
 import { AutismGeneProfileSingleViewComponent } from './autism-gene-profile-single-view.component';
 import { QueryService } from 'app/query/query.service';
+import { APP_BASE_HREF } from '@angular/common';
 
 describe('AutismGeneProfileSingleViewComponent', () => {
   let component: AutismGeneProfileSingleViewComponent;
@@ -17,7 +18,10 @@ describe('AutismGeneProfileSingleViewComponent', () => {
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [AutismGeneProfileSingleViewComponent],
-      providers: [ConfigService, GeneScoresService, DatasetsService, UsersService, QueryService],
+      providers: [
+        ConfigService, GeneScoresService, DatasetsService,
+        UsersService, QueryService, { provide: APP_BASE_HREF, useValue: '' }
+      ],
       imports: [HttpClientTestingModule, RouterTestingModule, NgxsModule.forRoot([], {developmentMode: true})]
     }).compileComponents();
   }));

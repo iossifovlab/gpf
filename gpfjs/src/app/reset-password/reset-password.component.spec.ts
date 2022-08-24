@@ -5,6 +5,7 @@ import { NgxsModule } from '@ngxs/store';
 import { ConfigService } from 'app/config/config.service';
 import { UsersService } from 'app/users/users.service';
 import { ResetPasswordComponent } from './reset-password.component';
+import { APP_BASE_HREF } from '@angular/common';
 
 describe('ResetPasswordComponent', () => {
   let component: ResetPasswordComponent;
@@ -13,7 +14,7 @@ describe('ResetPasswordComponent', () => {
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [ResetPasswordComponent],
-      providers: [UsersService, ConfigService],
+      providers: [UsersService, ConfigService, { provide: APP_BASE_HREF, useValue: '' }],
       imports: [HttpClientTestingModule, RouterTestingModule, NgxsModule.forRoot([], {developmentMode: true})]
     }).compileComponents();
   }));

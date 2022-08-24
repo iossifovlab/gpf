@@ -9,6 +9,7 @@ import { RouterTestingModule } from '@angular/router/testing';
 import { NgxsModule } from '@ngxs/store';
 import { Dataset } from './datasets';
 import { of, take } from 'rxjs';
+import { APP_BASE_HREF } from '@angular/common';
 
 describe('DatasetService', () => {
   let service: DatasetsService;
@@ -20,6 +21,7 @@ describe('DatasetService', () => {
         DatasetsService,
         UsersService,
         {provide: ConfigService, useValue: configMock},
+        { provide: APP_BASE_HREF, useValue: '' }
       ],
       declarations: [],
     }).compileComponents();

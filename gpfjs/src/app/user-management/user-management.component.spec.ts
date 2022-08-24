@@ -17,6 +17,7 @@ import { GpfTableHeaderCellComponent } from 'app/table/view/header/header-cell.c
 import { GpfTableHeaderComponent } from 'app/table/view/header/header.component';
 import { UsersTableComponent } from 'app/users-table/users-table.component';
 import { UsersService } from 'app/users/users.service';
+import { APP_BASE_HREF } from '@angular/common';
 
 import { UserManagementComponent } from './user-management.component';
 
@@ -39,7 +40,7 @@ describe('UserManagementComponent', () => {
         GpfTableColumnComponent,
         GpfTableEmptyCellComponent
       ],
-      providers: [UsersService, ConfigService, ResizeService],
+      providers: [UsersService, ConfigService, ResizeService, { provide: APP_BASE_HREF, useValue: '' }],
       imports: [
         HttpClientTestingModule,
         RouterTestingModule,

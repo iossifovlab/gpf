@@ -9,6 +9,7 @@ import { UsersGroupsService } from 'app/users-groups/users-groups.service';
 import { UsersService } from 'app/users/users.service';
 import { NgMultiSelectDropDownModule } from 'ng-multiselect-dropdown';
 import { UserCreateComponent } from './user-create.component';
+import { APP_BASE_HREF } from '@angular/common';
 
 describe('UserCreateComponent', () => {
   let component: UserCreateComponent;
@@ -16,7 +17,7 @@ describe('UserCreateComponent', () => {
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      providers: [UsersService, ConfigService, UsersGroupsService],
+      providers: [UsersService, ConfigService, UsersGroupsService, { provide: APP_BASE_HREF, useValue: '' }],
       declarations: [UserCreateComponent],
       imports: [
         HttpClientTestingModule,

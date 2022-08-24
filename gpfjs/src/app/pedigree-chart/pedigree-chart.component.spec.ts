@@ -12,6 +12,7 @@ import { HttpClient, HttpHandler } from '@angular/common/http';
 import { ConfigService } from 'app/config/config.service';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { UsersService } from 'app/users/users.service';
+import { APP_BASE_HREF } from '@angular/common';
 import { RouterTestingModule } from '@angular/router/testing';
 import { NgxsModule } from '@ngxs/store';
 import { Observable } from 'rxjs/internal/Observable';
@@ -235,7 +236,8 @@ describe('PedigreeChartComponent', () => {
         HttpHandler,
         ConfigService,
         {provide: DatasetsService, useValue: mockDatasetsService},
-        UsersService
+        UsersService,
+        { provide: APP_BASE_HREF, useValue: '' }
       ]
     })
       .compileComponents();

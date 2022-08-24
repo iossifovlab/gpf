@@ -16,6 +16,7 @@ import { GpfTableEmptyCellComponent } from 'app/table/view/empty-cell.component'
 import { GpfTableHeaderCellComponent } from 'app/table/view/header/header-cell.component';
 import { GpfTableHeaderComponent } from 'app/table/view/header/header.component';
 import { UsersService } from 'app/users/users.service';
+import { APP_BASE_HREF } from '@angular/common';
 
 import { SavedQueriesComponent } from './saved-queries.component';
 
@@ -38,7 +39,8 @@ describe('SavedQueriesComponent', () => {
         GpfTableHeaderComponent
       ],
       providers: [
-        QueryService, ConfigService, UsersService, ResizeService, DatasetsService
+        QueryService, ConfigService, UsersService, ResizeService, DatasetsService,
+        { provide: APP_BASE_HREF, useValue: '' }
       ],
       imports: [
         RouterTestingModule, HttpClientTestingModule, NgbNavModule, NgxsModule.forRoot([], {developmentMode: true})
