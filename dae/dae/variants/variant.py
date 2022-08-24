@@ -350,7 +350,7 @@ class SummaryAllele(core.Allele):
             "transmission_type": enum_to_value(self.transmission_type),
             "variant_type":
             self.variant_type.value if self.variant_type is not None else None,
-            "effect": str(self.effects) if self.effects is not None else None,
+            "effects": str(self.effects) if self.effects is not None else None,
         }}
 
     @property
