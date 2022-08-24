@@ -104,7 +104,6 @@ export class PedigreeChartComponent implements OnInit {
         .map(i => i.yUpperLeftCorner + i.size + 1)
         .reduce((acc, current) => Math.max(acc, current), 0);
     });
-    this.moveProbandArrow();
   }
 
   public get straightLines(): Line[] {
@@ -164,32 +163,17 @@ export class PedigreeChartComponent implements OnInit {
 
   }
 
-  private xPlusPrb: number = 0;
-  public moveProbandArrow() {
-    this.getSibsipsOnLevel(this.pedigreeDataWithLayout).forEach(children => {
-      children.forEach(child => {
-        if(child.individual.pedigreeData.role === 'prb') {
-          this.xPlusPrb = 8;
-        }
-      });
-    });
-    if (this.pedigreeDataWithLayout[this.pedigreeDataWithLayout.length - 1].individual.pedigreeData.role === 'prb') {
-      this.xPlusPrb = 8;
-    }
-    if(this.pedigreeDataWithLayout.length === 1) {
-      this.xPlusPrb = 4;
-    }
-  }
-
   public getViewBox(): string {
+    const xPlusPrb = 8;
+
     const sortedCurveLines = this.curveLines.sort(curveLine => curveLine.inverseCurveP1[1]);
     if (sortedCurveLines.length !== 0) {
       const minY = sortedCurveLines[0].inverseCurveP1[1];
       if (minY < 0) {
-        return `${-this.xPlusPrb} ${minY.toString()} ${this.width + 8} ${(this.height + -minY + 8).toString()}`;
+        return `${-xPlusPrb} ${minY.toString()} ${this.width + 8} ${(this.height + -minY + 8).toString()}`;
       }
     }
-    return `${-this.xPlusPrb} 0 ${this.width + 8} ${this.height + this.xPlusPrb}`;
+    return `${-xPlusPrb} 0 ${this.width + 8} ${this.height + xPlusPrb}`;
   }
 
   private loadPositions(family: PedigreeData[]): IndividualWithPosition[][] {
