@@ -36,6 +36,12 @@ def parse_parameter(line):
 
 
 def parse_typed_parameter(line):
+    """
+    Return a dictionary representing a typed parameter parsed from a line.
+
+    Example of a typed parameter line:
+        parameter_name (type): description
+    """
     if line == "":
         return None
     regex = r"(\w+).*\((\w+)\):\s*(.+)"
@@ -67,6 +73,7 @@ DOC_SECTIONS = list(DOC_SECTIONS_PARSERS.keys())
 
 
 def get_section_lines(lines, section_name):
+    """Return list of lines contained in a given doc section."""
     start = -1
     end = 0
     for idx, line in enumerate(lines):
@@ -157,7 +164,9 @@ def find_view_function(views_tree, function_name):
 
     return None
 
+
 def find_api_view_decorator(function_node):
+    """Return api_view decorator of a given view function."""
     for decorator in function_node.decorator_list:
         if not isinstance(decorator, ast.Call):
             continue
@@ -168,6 +177,7 @@ def find_api_view_decorator(function_node):
 
 
 def get_view_source(pattern):
+    """Return name of node that this view uses in views.py."""
     view_node = pattern.args[1]
     if isinstance(view_node, ast.Call):
         source_node = view_node.func.value
@@ -176,10 +186,12 @@ def get_view_source(pattern):
 
     if isinstance(source_node, ast.Attribute):
         return source_node.attr
-    elif isinstance(source_node, ast.Name):
+
+    if isinstance(source_node, ast.Name):
         return source_node.id
-    else:
-        return None
+
+    return None
+
 
 def iter_routes(url_tree):
     """Iterate through urlpatterns in a given parsed urls.py file."""
@@ -223,6 +235,7 @@ def find_method(class_tree, method_name):
 
 
 def parse_http_docstring(docstring):
+    """Return a dictionary containing the sections of a given docstring."""
     lines = docstring.split("\n")
     summary = lines[0]
     lines = lines[1:len(lines)]
@@ -233,7 +246,7 @@ def parse_http_docstring(docstring):
             out_lines = get_section_lines(lines, section)
             section_lines[section] = out_lines
         except ValueError as err:
-            logger.error("Failed to parse section %s! %s", section)
+            logger.error("Failed to parse section %s!", section)
             logger.exception(err)
         except Exception as err:
             logger.error("Failed to parse section %s!", section)
@@ -249,6 +262,7 @@ def parse_http_docstring(docstring):
 
 
 def collect_http_method_docstrings(method_node, method_name=None):
+    """Return a complete doc dictionary for a node."""
     docstring = ast.get_docstring(method_node)
     if docstring is None:
         return None
@@ -275,6 +289,7 @@ def transform_api_name(name):
 
 
 def get_route_documentation(regex, views_tree, view_source):
+    """Collect all docstrings from source in a node tree."""
     output = []
     view_class = find_view_class(views_tree, view_source)
     if view_class is not None:
@@ -288,29 +303,29 @@ def get_route_documentation(regex, views_tree, view_source):
                 route_documentation["regex"] = regex
                 output.append(route_documentation)
         return output
-    else:
-        logger.info(
-            "Failed to find view class %s, searching for function", view_source
+
+    logger.info(
+        "Failed to find view class %s, searching for function", view_source
+    )
+    view_function = find_view_function(views_tree, view_source)
+    if view_function is None:
+        raise ValueError(f"Could not find {view_source}")
+    logger.info(
+        "Found function %s", view_source
+    )
+
+    api_decorator = find_api_view_decorator(view_function)
+
+    if api_decorator is None:
+        raise ValueError(f"Invalid view function found for {view_source}")
+
+    for method in api_decorator.args[0].elts:
+        method_name = method.n
+        route_documentation = collect_http_method_docstrings(
+            view_function, method_name
         )
-        view_function = find_view_function(views_tree, view_source)
-        if view_function is None:
-            raise ValueError(f"Could not find {view_source}")
-        logger.info(
-            "Found function %s", view_source
-        )
-
-        api_decorator = find_api_view_decorator(view_function)
-
-        if api_decorator is None:
-            raise ValueError(f"Invalid view function found for {view_source}")
-
-        for method in api_decorator.args[0].elts:
-            method_name = method.n
-            route_documentation = collect_http_method_docstrings(
-                view_function, method_name
-            )
-            output.append(route_documentation)
-        return output
+        output.append(route_documentation)
+    return output
 
 
 def collect_docstrings(route):
@@ -342,6 +357,7 @@ def collect_docstrings(route):
 
 
 def main(argv=None):
+    """Entrypoint for API documentation generation tool."""
     description = "Tool for generating WDAE API documentation"
     parser = argparse.ArgumentParser(description=description)
     parser.add_argument("--verbose", "-V", "-v", action="count", default=0)
