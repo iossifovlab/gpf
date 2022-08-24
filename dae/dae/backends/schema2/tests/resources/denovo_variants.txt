@@ -1,0 +1,6 @@
+familyId	location	variant	inChild	fromParent	bestState	effectType	effectGene	effectDetails	SSC-freq	EVS-freq	E65-freq
+f	2:10	sub(G->A)	ch1		2 2 2 2 2 1 2/0 0 0 0 0 1 0	synonymous	KLHL17:synonymous	211/642		0.01	
+f	2:20	sub(C->A)	ch2		2 2 2 2 2 2 1/0 0 0 0 0 0 1	nonsense	SCNN1D:nonsense|SCNN1D:non-coding	383/802(Tyr->End)|2960			
+f	2:30	sub(G->A)	ch1		2 2 2 2 1 2 2/0 0 0 0 1 0 0	missense	SCNN1D:missense|SCNN1D:non-coding	581/802(Gly->Arg)|2960			
+f	2:50	sub(A->G)	ch1		2 2 2 2 1 2 2/0 0 0 0 1 0 0	missense	SCNN1D:missense|SCNN1D:non-coding	581/802(Gly->Arg)|2960			
+f	2:60	sub(A->C)	ch1		2 2 2 2 1 2 2/0 0 0 0 1 0 0	missense	SCNN1D:missense|SCNN1D:non-coding	581/802(Gly->Arg)|2960			
