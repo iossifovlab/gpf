@@ -4,8 +4,8 @@ from django.contrib.auth import views as auth_views
 from gpfjs.views import index
 
 urlpatterns = [
-    re_path(r'^$', index),
-    re_path(r'^gpfjs/.*$', index),
+    re_path(r"^$", index),
+    re_path(r"^gpfjs/.*$", index),
     re_path(r"^api/v3/datasets", include("datasets_api.urls")),
     re_path(r"^api/v3/gene_scores", include("gene_scores.urls")),
     re_path(r"^api/v3/gene_sets", include("gene_sets.urls")),
@@ -28,6 +28,6 @@ urlpatterns = [
     ),
     re_path(r"^api/v3/families", include("family_api.urls")),
     re_path(r"^api/v3/person_sets", include("person_sets_api.urls")),
-    path("o/", include('oauth2_provider.urls', namespace='oauth2_provider')),
+    path("o/", include("oauth2_provider.urls", namespace="oauth2_provider")),
     path("accounts/login/", auth_views.LoginView.as_view())
 ]
