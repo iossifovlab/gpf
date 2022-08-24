@@ -95,5 +95,8 @@
     "defaults",
     "not IE 11",
     "maintained node versions"
-  ]
+  ],
+  "overrides": {
+    "tough-cookie": "4.0.0"
+  }
 }
