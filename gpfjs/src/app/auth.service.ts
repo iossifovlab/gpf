@@ -1,8 +1,9 @@
-import { Injectable } from '@angular/core';
+import { Injectable, Inject } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { ConfigService } from './config/config.service';
 import { Observable, Subject, take, tap, catchError, of } from 'rxjs';
 import { Router } from '@angular/router';
+import { APP_BASE_HREF } from '@angular/common';
 import pkceChallenge from 'pkce-challenge';
 
 @Injectable({
@@ -20,6 +21,7 @@ export class AuthService {
     private http: HttpClient,
     private config: ConfigService,
     private router: Router,
+    @Inject(APP_BASE_HREF) private baseHref: string
   ) {
     this._accessToken = localStorage.getItem('access_token') || '';
     this._refreshToken = localStorage.getItem('refresh_token') || '';
@@ -36,7 +38,7 @@ export class AuthService {
   }
 
   public requestAccessToken(code: string): Observable<object> {
-    return this.http.post(this.config.rootUrl + '/o/token/', {
+    return this.http.post(`${this.config.rootUrl}${this.baseHref}o/token/`, {
       client_id: this.config.oauthClientId,
       code: code,
       grant_type: 'authorization_code',
@@ -54,7 +56,7 @@ export class AuthService {
   }
 
   public revokeAccessToken(): Observable<object> {
-    return this.http.post(this.config.rootUrl + '/o/revoke_token/', {
+    return this.http.post(`${this.config.rootUrl}${this.baseHref}o/revoke_token/`, {
       client_id: this.config.oauthClientId,
       token: this._accessToken,
     }, this.options).pipe(take(1), tap(this.clearTokens));
@@ -70,7 +72,7 @@ export class AuthService {
 
   public refreshToken(): Observable<object> {
     if (this._refreshToken !== '') {
-      return this.http.post(this.config.rootUrl + '/o/token/', {
+      return this.http.post(`${this.config.rootUrl}${this.baseHref}o/token/`, {
         grant_type: 'refresh_token',
         client_id: this.config.oauthClientId,
         refresh_token: this._refreshToken,
