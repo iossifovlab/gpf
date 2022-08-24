@@ -679,6 +679,7 @@ class VariantsParquetWriter:
                 extra_atts = {
                     "bucket_index": self.bucket_index,
                 }
+                summary_allele.summary_index = summary_variant_index
                 summary_allele.update_attributes(extra_atts)
                 summary_writer = self._get_bin_writer_summary(summary_allele)
                 summary_writer.append_summary_allele(
