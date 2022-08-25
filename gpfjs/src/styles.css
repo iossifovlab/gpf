@@ -401,3 +401,7 @@ ngb-modal-window {
 .btn-default:focus {
   outline: grey solid 2px;
 }
+
+#legend-wrapper {
+  direction: rtl;
+}
