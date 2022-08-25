@@ -14,6 +14,7 @@ import { GpfTableCellComponent } from 'app/table/view/cell.component';
 import { GpfTableEmptyCellComponent } from 'app/table/view/empty-cell.component';
 import { GpfTableHeaderCellComponent } from 'app/table/view/header/header-cell.component';
 import { GpfTableHeaderComponent } from 'app/table/view/header/header.component';
+import { GpfTableNothingFoundRowComponent } from 'app/table/view/nothing-found-row.component';
 import { UsersService } from 'app/users/users.service';
 
 import { UsersTableComponent } from './users-table.component';
@@ -35,7 +36,8 @@ describe('UsersTableComponent', () => {
         GpfTableEmptyCellComponent,
         GpfTableHeaderCellComponent,
         GpfTableSubheaderComponent,
-        GpfTableSubcontentComponent
+        GpfTableSubcontentComponent,
+        GpfTableNothingFoundRowComponent
       ],
       providers: [UsersService, ConfigService, ResizeService],
       imports: [HttpClientTestingModule, RouterTestingModule, NgxsModule.forRoot([], {developmentMode: true})]
