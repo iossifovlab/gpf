@@ -1,3 +1,56 @@
 button:disabled {
   cursor: not-allowed;
 }
+
+#save-query-dropdown {
+  width: 400px;
+  padding: 12px;
+}
+
+#save-link-button {
+  float: right;
+  width: 125px;
+}
+
+#share-url-div {
+  display: flex;
+  align-items: center;
+  border: 1px solid #ced4da;
+  border-radius: 5px;
+  background-color: #f6f8fa;
+  margin-bottom: 12px;
+  padding-left: 8px;
+}
+
+#share-url-div input {
+  width: 100%;
+  border: none;
+  outline: none;
+  background: #f6f8fa;
+  border-right: 1px solid #ced4da;
+  padding: 6px;
+}
+
+#share-url-div div {
+  display: flex;
+  padding: 8px;
+}
+
+.clone-icon {
+  background-repeat: no-repeat;
+  background-position-y: center;
+  background-position-x: center;
+  width: 20px;
+  height: 20px;
+}
+
+p {
+  font-size: 20px;
+  font-weight: bold;
+  padding-bottom: 8px;
+  margin-bottom: 0;
+}
+
+.dropdown-toggle::after {
+  display: none;
+}

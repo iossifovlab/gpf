@@ -1,44 +1,62 @@
-<div ngbDropdown *ngIf="(userInfo$ | async)?.email" autoClose="outside" placement="top">
+<div ngbDropdown *ngIf="(userInfo$ | async)?.email" autoClose="outside">
   <button
-    (click)="focusNameInput()"
+    (click)="focusNameInput(); openDropdown(true)"
     [disabled]="disabled"
     id="save-query-dropdown-button"
     class="btn btn-default"
-    ngbDropdownToggle>Save query</button
-  >
+    ngbDropdownToggle>Share/save query</button>
+
   <div id="save-query-dropdown" ngbDropdownMenu aria-labelledby="dropdownQuerySave">
-    <form (ngSubmit)="saveUserQuery(nameInput.value, descInput.value)" #queryStorageForm="ngForm" style="margin: 10px">
-      <div class="form-group">
-        <label for="name">Query name</label>
-        <input
-          #nameInput
-          type="text"
-          class="form-control"
-          id="name"
-          required
-          autocomplete="off"
-          maxlength="256"
-          style="width: 300px"
-          spellcheck="false" />
-        <div
-          [hidden]="nameInput.value"
-          class="alert alert-danger"
-          style="padding-top: 5px; padding-bottom: 5px"
-          >Query name is required</div
-        >
-      </div>
+    <p>Share</p>
 
-      <div class="form-group">
-        <label for="description">Query description</label>
-        <textarea
-          #descInput
-          class="form-control"
-          id="description"
-          maxlength="1024"
-          placeholder="A brief description of the query. (max. 1024 characters)"></textarea>
+    <div id="share-url-div">
+      <input #link readonly type="disabled" (click)="link.select()" value="{{ url }}" spellcheck="false" />
+      <div [cdkCopyToClipboard]="url" (click)="openCopiedTooltip(); link.select()">
+        <span
+          ngbTooltip="Copied!"
+          [autoClose]="false"
+          triggers="manual"
+          #copiedTooltip="ngbTooltip"
+          class="clone-icon"
+          [style.background-image]="'url(' + imgPathPrefix + 'clone-regular.svg)'"></span>
       </div>
+    </div>
 
-      <button type="submit" class="btn btn-success" [disabled]="!nameInput.value">Save</button>
-    </form>
+    <div id="save-form">
+      <p style="border-top: 1px solid rgb(211, 211, 211); padding-top: 11px">Save</p>
+
+      <div>
+        <div style="margin-bottom: 8px">
+          <label for="name">Name</label>
+          <input
+            #nameInput
+            type="text"
+            class="form-control"
+            id="name"
+            required
+            autocomplete="off"
+            maxlength="256"
+            spellcheck="false"
+            (input)="saveButtonText = 'Save'" />
+        </div>
+
+        <div style="margin-bottom: 16px">
+          <label for="description">Description</label>
+          <textarea
+            #descInput
+            class="form-control"
+            id="description"
+            maxlength="1024"
+            style="resize: none; height: 150px"></textarea>
+        </div>
+
+        <button
+          (click)="saveUserQuery(nameInput.value, descInput.value)"
+          id="save-link-button"
+          type="button"
+          class="btn btn-success"
+          [disabled]="!nameInput.value">{{ saveButtonText }}</button>
+      </div>
+    </div>
   </div>
 </div>

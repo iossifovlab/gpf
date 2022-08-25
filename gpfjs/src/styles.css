@@ -243,15 +243,9 @@ label {
   border: 0.1px solid #aaa;
 }
 
-#table-preview-button {
-  margin-right: 19px;
-}
-
-#enrichment-test-button {
-  margin-right: 19px;
-}
-
-#share-query-dropdown-button,
+#report-button,
+#table-preview-button,
+#enrichment-test-button,
 #save-query-dropdown-button {
   margin-right: 8px;
 }

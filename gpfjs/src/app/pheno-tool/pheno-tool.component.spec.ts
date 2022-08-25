@@ -43,7 +43,6 @@ describe('PhenoToolComponent', () => {
         GenesBlockComponent,
         GeneSymbolsComponent,
         PhenoToolMeasureComponent,
-        // ShareQueryButtonComponent,
         // PhenoMeasureSelectorComponent,
         // ErrorsAlertComponent,
         // SaveQueryComponent,
