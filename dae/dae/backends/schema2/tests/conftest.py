@@ -86,7 +86,7 @@ def import_test_study(resources_dir, gpf_instance_2013, storage):
     scope="session",
     params=[
         NoPartitionDescriptor(),
-        ParquetPartitionDescriptor(["1"], region_length=5, family_bin_size=2),
+        ParquetPartitionDescriptor(["1"], region_length=50, family_bin_size=2),
     ]
 )
 def partition_description(request):

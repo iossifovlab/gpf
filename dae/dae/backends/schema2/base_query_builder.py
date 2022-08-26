@@ -246,7 +246,8 @@ class BaseQueryBuilder(ABC):
         if genes is not None and effect_types is not None:
             regions = self._build_gene_regions_heuristic(genes, regions)
             clause = self._build_iterable_struct_string_attr_where(
-                ["effect_gene_symbols", "effect_types"], [genes, effect_types]
+                ["eg.effect_gene_symbols", "eg.effect_types"],
+                [genes, effect_types]
             )
             where.append(f"({clause})")
 
@@ -255,14 +256,14 @@ class BaseQueryBuilder(ABC):
             # effect gene is a struct under affect gene in V2 schema
             where.append(
                 self._build_iterable_struct_string_attr_where(
-                    ["effect_gene_symbols"], [genes]
+                    ["eg.effect_gene_symbols"], [genes]
                 )
             )
         if effect_types is not None and genes is None:
             # effect gene is a struct under affect gene in V2 schema
             where.append(
                 self._build_iterable_struct_string_attr_where(
-                    ["effect_types"], [effect_types]
+                    ["eg.effect_types"], [effect_types]
                 )
             )
         if regions is not None:

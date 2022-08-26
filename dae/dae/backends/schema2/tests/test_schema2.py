@@ -16,7 +16,7 @@ def test_import_and_query(testing_study_backend):
 
 
 def test_import_denovo_with_custome_range(
-    import_test_study, partition_description, tmpdir
+    import_test_study, tmpdir
 ):
     study_id = "testStudy"
     partition_description = NoPartitionDescriptor()
@@ -34,3 +34,30 @@ def test_import_denovo_with_custome_range(
     assert len(summary_variants) == 3
     # 2 alleles per summary variant
     assert sum(len(sv.alleles) for sv in summary_variants) == 6
+
+
+def test_query_summary_variants_with_gene_symbols(testing_study_backend):
+    effect_types = [
+        "frame-shift", "nonsense", "splice-site", "no-frame-shift-newStop",
+        "nonsense", "frame-shift", "splice-site", "no-frame-shift-newStop",
+        "missense", "no-frame-shift", "noStart", "noEnd", "synonymous",
+        "CNV+", "CNV-", "CDS"
+    ]
+    inheritance = [
+        "not possible_denovo and not possible_omission",
+        "any(denovo,omission,mendelian,missing)"
+    ]
+
+    summary_variants = list(testing_study_backend.query_summary_variants(
+        genes=["SAMD11"],
+        effect_types=effect_types,
+        inheritance=inheritance,
+    ))
+    assert len(summary_variants) == 7
+
+    family_variants = list(testing_study_backend.query_variants(
+        genes=["SAMD11"],
+        effect_types=effect_types,
+        inheritance=inheritance,
+    ))
+    assert len(family_variants) == 10
