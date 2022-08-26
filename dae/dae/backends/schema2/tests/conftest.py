@@ -10,6 +10,10 @@ from dae.backends.storage.schema2_genotype_storage import \
     Schema2GenotypeStorage
 from dae.backends.schema2.parquet_io import (
     NoPartitionDescriptor, ParquetManager, ParquetPartitionDescriptor)
+from dae.backends.impala.import_commons import \
+    construct_import_annotation_pipeline, construct_import_effect_annotator
+from dae.backends.raw.loader import AnnotationPipelineDecorator,\
+    EffectAnnotationDecorator
 
 
 @pytest.fixture(scope="module")
@@ -116,6 +120,9 @@ def run_vcf2schema2(ped_file, vcf_file, gpf_instance,
         genome=gpf_instance.reference_genome,
         **loader_args,
     )
+    variants_loader = build_variants_loader_pipeline(
+        variants_loader, gpf_instance
+    )
 
     ParquetManager.variants_to_parquet(
         variants_loader,
@@ -136,6 +143,9 @@ def run_denovo2schema2(ped_file, denovo_file, gpf_instance,
         genome=gpf_instance.reference_genome,
         **loader_args,
     )
+    variants_loader = build_variants_loader_pipeline(
+        variants_loader, gpf_instance
+    )
 
     ParquetManager.variants_to_parquet(
         variants_loader,
@@ -148,3 +158,18 @@ def run_denovo2schema2(ped_file, denovo_file, gpf_instance,
 def run_ped2parquet(ped_file, output_filename):
     pedigree = FamiliesLoader(ped_file).load()
     ParquetManager.families_to_parquet(pedigree, output_filename)
+
+
+def build_variants_loader_pipeline(variants_loader, gpf_instance):
+    effect_annotator = construct_import_effect_annotator(gpf_instance)
+
+    variants_loader = EffectAnnotationDecorator(
+        variants_loader, effect_annotator)
+
+    annotation_pipeline = construct_import_annotation_pipeline(gpf_instance)
+    if annotation_pipeline is not None:
+        variants_loader = AnnotationPipelineDecorator(
+            variants_loader, annotation_pipeline
+        )
+
+    return variants_loader
