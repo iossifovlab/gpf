@@ -150,7 +150,8 @@
         ],
         "valid-typeof": "warn",
         "yoda": "warn",
-        "object-shorthand": ["warn", "never"]
+        "object-shorthand": ["warn", "never"],
+        "@typescript-eslint/unbound-method": "off"
       }
     },
     {
@@ -171,7 +172,6 @@
       "plugins": ["jest"],
       "extends": ["plugin:jest/recommended"],
       "rules": {
-        "jest/unbound-method": 1,
         "jest/consistent-test-it": 1,
         "jest/expect-expect": 1,
         "jest/max-expects": 1,

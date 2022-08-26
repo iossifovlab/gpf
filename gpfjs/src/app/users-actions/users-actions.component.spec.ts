@@ -8,9 +8,6 @@ import { Observable, of } from 'rxjs';
 
 import { UsersActionsComponent } from './users-actions.component';
 
-/* rule not applicable for jest mocks */
-/* eslint-disable @typescript-eslint/unbound-method */
-
 class UsersServiceMock {
   public getUserInfo(): Observable<object> {
     return of({ email: 'mockMail@mail.com'});
