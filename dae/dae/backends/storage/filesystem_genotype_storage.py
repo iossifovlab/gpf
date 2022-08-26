@@ -23,10 +23,10 @@ logger = logging.getLogger(__name__)
 
 
 class FilesystemGenotypeStorage(GenotypeStorage):
+    """A storage that uses the filesystem as its backend."""
+
     def __init__(self, storage_config, section_id):
-        super(FilesystemGenotypeStorage, self).__init__(
-            storage_config, section_id
-        )
+        super().__init__(storage_config, section_id)
         self.data_dir = self.storage_config.dir
 
     def get_data_dir(self, *path):
@@ -39,10 +39,10 @@ class FilesystemGenotypeStorage(GenotypeStorage):
         if not study_config.genotype_storage.files:
             data_dir = self.get_data_dir(study_config.id, "data")
             vcf_filename = os.path.join(
-                data_dir, "{}.vcf".format(study_config.id)
+                data_dir, f"{study_config.id}.vcf"
             )
             ped_filename = os.path.join(
-                data_dir, "{}.ped".format(study_config.id)
+                data_dir, f"{study_config.id}.ped"
             )
 
             families_loader = FamiliesLoader(ped_filename)
@@ -56,67 +56,67 @@ class FilesystemGenotypeStorage(GenotypeStorage):
 
             return RawMemoryVariants([variants_loader], families)
 
-        else:
+        start = time.time()
+        ped_params = \
+            study_config.genotype_storage.files.pedigree.params.to_dict()
+        ped_filename = study_config.genotype_storage.files.pedigree.path
+        logger.debug("pedigree params: %s; %s", ped_filename, ped_params)
+
+        families_loader = FamiliesLoader(ped_filename, **ped_params)
+        families = families_loader.load()
+        elapsed = time.time() - start
+        logger.info("families loaded in in %.2f sec", elapsed)
+        logger.debug("%s", families.ped_df.head())
+
+        loaders = []
+        for file_conf in study_config.genotype_storage.files.variants:
             start = time.time()
-            ped_params = \
-                study_config.genotype_storage.files.pedigree.params.to_dict()
-            ped_filename = study_config.genotype_storage.files.pedigree.path
-            logger.debug(f"pedigree params: {ped_filename}; {ped_params}")
+            variants_filename = file_conf.path
+            variants_params = file_conf.params.to_dict()
+            logger.debug(
+                "variant params: %s; %s", variants_filename, variants_params
+            )
 
-            families_loader = FamiliesLoader(ped_filename, **ped_params)
-            families = families_loader.load()
-            elapsed = time.time() - start
-            logger.info(f"families loaded in in {elapsed:.2f} sec")
-            logger.debug(f"{families.ped_df.head()}")
-
-            loaders = []
-            for file_conf in study_config.genotype_storage.files.variants:
-                start = time.time()
-                variants_filename = file_conf.path
-                variants_params = file_conf.params.to_dict()
-                logger.debug(
-                    f"variant params: {variants_filename}; {variants_params}")
-
-                annotation_filename = variants_filename
-                if file_conf.format == "vcf":
-                    variants_filenames = [
-                        fn.strip() for fn in variants_filename.split(" ")
-                    ]
-                    variants_loader = VcfLoader(
-                        families,
-                        variants_filenames,
-                        genome,
-                        params=variants_params,
-                    )
-                    annotation_filename = variants_filenames[0]
-                if file_conf.format == "denovo":
-                    variants_loader = DenovoLoader(
-                        families,
-                        variants_filename,
-                        genome,
-                        params=variants_params,
-                    )
-                if file_conf.format == "dae":
-                    variants_loader = DaeTransmittedLoader(
-                        families,
-                        variants_filename,
-                        genome,
-                        params=variants_params,
-                    )
-                if file_conf.format == "cnv":
-                    variants_loader = CNVLoader(
-                        families,
-                        variants_filename,
-                        genome,
-                        params=variants_params,
-                    )
-
-                variants_loader = StoredAnnotationDecorator.decorate(
-                    variants_loader, annotation_filename
+            annotation_filename = variants_filename
+            if file_conf.format == "vcf":
+                variants_filenames = [
+                    fn.strip() for fn in variants_filename.split(" ")
+                ]
+                variants_loader = VcfLoader(
+                    families,
+                    variants_filenames,
+                    genome,
+                    params=variants_params,
                 )
-                loaders.append(variants_loader)
+                annotation_filename = variants_filenames[0]
+            if file_conf.format == "denovo":
+                variants_loader = DenovoLoader(
+                    families,
+                    variants_filename,
+                    genome,
+                    params=variants_params,
+                )
+            if file_conf.format == "dae":
+                variants_loader = DaeTransmittedLoader(
+                    families,
+                    variants_filename,
+                    genome,
+                    params=variants_params,
+                )
+            if file_conf.format == "cnv":
+                variants_loader = CNVLoader(
+                    families,
+                    variants_filename,
+                    genome,
+                    params=variants_params,
+                )
 
-            return RawMemoryVariants(loaders, families)
+            variants_loader = StoredAnnotationDecorator.decorate(
+                variants_loader, annotation_filename
+            )
+            loaders.append(variants_loader)
+
+        return RawMemoryVariants(loaders, families)
 
     def simple_study_import(
         self,
@@ -151,17 +151,13 @@ class FilesystemGenotypeStorage(GenotypeStorage):
         else:
             variant_loaders[0].get_attribute("source_type")
             if any(
-                [
-                    loader.get_attribute("source_type") == "denovo"
-                    for loader in variant_loaders
-                ]
+                loader.get_attribute("source_type") == "denovo"
+                for loader in variant_loaders
             ):
                 config_dict["has_denovo"] = True
             if any(
-                [
-                    loader.get_attribute("source_type") == "cnv"
-                    for loader in variant_loaders
-                ]
+                loader.get_attribute("source_type") == "cnv"
+                for loader in variant_loaders
             ):
                 config_dict["has_denovo"] = True
                 config_dict["has_cnv"] = True
@@ -195,12 +191,7 @@ class FilesystemGenotypeStorage(GenotypeStorage):
 
     def _import_variants_files(self, study_id, loaders):
         result_config = []
-        for index, variants_loader in enumerate(loaders):
-            # assert (
-            #     variants_loader.get_attribute("annotation_schema")
-            #     is not None
-            # )
-
+        for variants_loader in loaders:
             destination_dirname = os.path.join(self.data_dir, study_id, "data")
 
             def construct_destination_filename(fn):
@@ -223,7 +214,7 @@ class FilesystemGenotypeStorage(GenotypeStorage):
                 "params": params,
                 "format": source_type,
             }
-            logger.debug(f"config prepared: {config}")
+            logger.debug("config prepared: %s", config)
             result_config.append(config)
 
             os.makedirs(destination_dirname, exist_ok=True)
@@ -237,11 +228,10 @@ class FilesystemGenotypeStorage(GenotypeStorage):
 
             for filename in variants_loader.filenames:
                 source_filenames = glob.glob(f"{filename}*")
-                logger.debug(f"source filenames: {source_filenames}")
-                for fn in source_filenames:
-                    logger.debug(
-                        f"copying: {fn} -> "
-                        f"{construct_destination_filename(fn)}")
-                    shutil.copyfile(fn, construct_destination_filename(fn))
+                logger.debug("source filenames: %s", source_filenames)
+                for src_file in source_filenames:
+                    dst_file = construct_destination_filename(src_file)
+                    logger.debug("copying: %s -> %s", src_file, dst_file)
+                    shutil.copyfile(src_file, dst_file)
 
         return result_config

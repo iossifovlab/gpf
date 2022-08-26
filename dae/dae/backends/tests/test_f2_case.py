@@ -21,9 +21,6 @@ def count_variants(
         return_unknown=unknown,
     )
     vs = list(vs)
-    for v in vs:
-        for a in v.alleles:
-            print(a, a.inheritance_in_members, a.variant_in_members)
     return len(vs)
 
 
@@ -54,10 +51,10 @@ def test_f2_all_unknown(
     variants_impl, variants, regions, inheritance, reference, unknown, count
 ):
 
-    c = count_variants(
+    actual_count = count_variants(
         variants_impl(variants), regions, inheritance, reference, unknown
     )
-    assert c == count
+    assert actual_count == count
 
 
 @pytest.mark.parametrize("variants", ["variants_impala", "variants_vcf"])
@@ -93,10 +90,10 @@ def test_f2_reference_and_unknown(
     variants_impl, variants, regions, inheritance, reference, unknown, count
 ):
 
-    c = count_variants(
+    actual_count = count_variants(
         variants_impl(variants), regions, inheritance, reference, unknown
     )
-    assert c == count
+    assert actual_count == count
 
 
 @pytest.mark.parametrize("variants", ["variants_impala", "variants_vcf"])
@@ -132,10 +129,10 @@ def test_f2_canonical_denovo(
     variants_impl, variants, regions, inheritance, reference, unknown, count
 ):
 
-    c = count_variants(
+    actual_count = count_variants(
         variants_impl(variants), regions, inheritance, reference, unknown
     )
-    assert c == count
+    assert actual_count == count
 
 
 @pytest.mark.parametrize("variants", ["variants_impala", "variants_vcf"])
@@ -171,10 +168,10 @@ def test_f2_canonical_omission(
     variants_impl, variants, regions, inheritance, reference, unknown, count
 ):
 
-    c = count_variants(
+    actual_count = count_variants(
         variants_impl(variants), regions, inheritance, reference, unknown
     )
-    assert c == count
+    assert actual_count == count
 
 
 @pytest.mark.parametrize("variants", ["variants_impala", "variants_vcf"])
@@ -210,10 +207,10 @@ def test_f2_non_canonical_omission(
     variants_impl, variants, regions, inheritance, reference, unknown, count
 ):
 
-    c = count_variants(
+    actual_count = count_variants(
         variants_impl(variants), regions, inheritance, reference, unknown
     )
-    assert c == count
+    assert actual_count == count
 
 
 @pytest.mark.parametrize("variants", ["variants_impala", "variants_vcf"])
@@ -249,7 +246,7 @@ def test_f2_partially_unknown_denovo(
     variants_impl, variants, regions, inheritance, reference, unknown, count
 ):
 
-    c = count_variants(
+    actual_count = count_variants(
         variants_impl(variants), regions, inheritance, reference, unknown
     )
-    assert c == count
+    assert actual_count == count

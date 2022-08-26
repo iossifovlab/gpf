@@ -4,7 +4,7 @@ from dae.utils.variant_utils import mat2str
 
 
 @pytest.mark.parametrize("variants", ["variants_impala", "variants_vcf"])
-@pytest.mark.parametrize("fixture_name", ["backends/trios2_11541",])
+@pytest.mark.parametrize("fixture_name", ["backends/trios2_11541"])
 def test_reference_variant_single_allele(
     variants_impl, variants, fixture_name
 ):
@@ -49,7 +49,7 @@ def test_reference_variant_single_allele(
         "variants_vcf"
     ],
 )
-@pytest.mark.parametrize("fixture_name", ["backends/trios2_11541",])
+@pytest.mark.parametrize("fixture_name", ["backends/trios2_11541"])
 def test_full_variants_iterator(variants_impl, variants, fixture_name):
 
     fvars = variants_impl(variants)(fixture_name)

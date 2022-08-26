@@ -8,7 +8,7 @@ from contextlib import closing
 
 from impala import dbapi  # type: ignore
 from sqlalchemy.pool import QueuePool
-from sqlalchemy.exc import TimeoutError
+from sqlalchemy.exc import TimeoutError as SqlTimeoutError
 
 
 logger = logging.getLogger(__name__)
@@ -52,23 +52,23 @@ class ImpalaHelpers:
             self._connection_pool.status())
 
     def connection(self, timeout: float = None):
-        logger.debug(
-            f"going to get impala connection from the pool; "
-            f"{self._connection_pool.status()}")
+        """Create a new connection to the impala host."""
+        logger.debug("going to get impala connection from the pool; %s",
+                     self._connection_pool.status())
         started = time.time()
         while True:
             try:
                 connection = self._connection_pool.connect()
                 return connection
-            except TimeoutError:
+            except SqlTimeoutError:
                 elapsed = time.time() - started
                 logger.debug(
                     "unable to connect; elapsed %0.2fsec", elapsed)
                 if timeout is not None and elapsed > timeout:
                     return None
 
-    def _import_single_file(self, cursor, db, table, import_file):
-
+    @staticmethod
+    def _import_single_file(cursor, db, table, import_file):
         cursor.execute(
             f"""
             DROP TABLE IF EXISTS {db}.{table}
@@ -79,13 +79,12 @@ class ImpalaHelpers:
             CREATE EXTERNAL TABLE {db}.{table} LIKE PARQUET '{import_file}'
             STORED AS PARQUET LOCATION '{dirname}'
         """
-        logger.debug(f"{statement}")
+        logger.debug("%s", statement)
         cursor.execute(statement)
         cursor.execute(f"REFRESH {db}.{table}")
 
-    def _add_partition_properties(
-            self, cursor, db, table, partition_description):
-
+    @staticmethod
+    def _add_partition_properties(cursor, db, table, partition_description):
         chromosomes = ", ".join(partition_description.chromosomes)
         cursor.execute(
             f"ALTER TABLE {db}.{table} "
@@ -127,22 +126,21 @@ class ImpalaHelpers:
             ")"
         )
 
+    @staticmethod
     def _create_dataset_table(
-            self, cursor, db, table,
-            sample_file,
-            pd):
-
+        cursor, db, table, sample_file, partition_description
+    ):
         cursor.execute(
             f"DROP TABLE IF EXISTS {db}.{table}")
 
-        hdfs_dir = pd.variants_filename_basedir(sample_file)
-        if not pd.has_partitions():
+        hdfs_dir = partition_description.variants_filename_basedir(sample_file)
+        if not partition_description.has_partitions():
             statement = f"""
                 CREATE EXTERNAL TABLE {db}.{table} LIKE PARQUET '{sample_file}'
                 STORED AS PARQUET LOCATION '{hdfs_dir}'
             """
         else:
-            partitions = pd.build_impala_partitions()
+            partitions = partition_description.build_impala_partitions()
             statement = f"""
                 CREATE EXTERNAL TABLE {db}.{table} LIKE PARQUET '{sample_file}'
                 PARTITIONED BY ({partitions})
@@ -150,7 +148,7 @@ class ImpalaHelpers:
             """
         cursor.execute(statement)
 
-        if pd.has_partitions():
+        if partition_description.has_partitions():
             cursor.execute(
                 f"ALTER TABLE {db}.{table} RECOVER PARTITIONS")
         cursor.execute(
@@ -165,19 +163,19 @@ class ImpalaHelpers:
                 self._import_single_file(
                     cursor, db, pedigree_table, pedigree_hdfs_file)
 
-    def _build_variants_schema(self, variants_schema):
-        TYPE_CONVERTION = {
+    @staticmethod
+    def _build_variants_schema(variants_schema):
+        type_convertion = {
             "int32": "INT",
             "int16": "SMALLINT",
             "int8": "TINYINT",
             "float": "FLOAT",
             "string": "STRING",
             "binary": "STRING",
-
         }
         result = []
         for field_name, field_type in variants_schema.items():
-            impala_type = TYPE_CONVERTION.get(field_type)
+            impala_type = type_convertion.get(field_type)
             assert impala_type is not None, (field_name, field_type)
             result.append(f"`{field_name}` {impala_type}")
         statement = ", ".join(result)
@@ -219,7 +217,7 @@ class ImpalaHelpers:
             partition_description,
             variants_sample=None,
             variants_schema=None):
-
+        """Import variant parquet files in variants_hdfs_dir in impala."""
         assert variants_schema is not None or variants_sample is not None
 
         with closing(self.connection()) as conn:
@@ -235,7 +233,7 @@ class ImpalaHelpers:
                     partition_description,
                     variants_sample=variants_sample,
                     variants_schema=variants_schema)
-                logger.info(f"going to execute: {statement}")
+                logger.info("going to execute: %s", statement)
                 cursor.execute(statement)
 
                 if partition_description.has_partitions():
@@ -250,6 +248,7 @@ class ImpalaHelpers:
                         cursor, db, variants_table, partition_description)
 
     def get_table_create_statement(self, db, table):
+        """Get the create statement for table."""
         with closing(self.connection()) as conn:
             with conn.cursor() as cursor:
                 statement = f"SHOW CREATE TABLE {db}.{table}"
@@ -261,9 +260,8 @@ class ImpalaHelpers:
                     break
                 return create_statement
 
-    def recreate_table(
-            self, db, table, new_table, new_hdfs_dir):
-
+    def recreate_table(self, db, table, new_table, new_hdfs_dir):
+        """Recreate a table."""
         create_statement = self.get_table_create_statement(db, table)
         assert create_statement is not None
 
@@ -307,7 +305,7 @@ class ImpalaHelpers:
                     f"DROP TABLE IF EXISTS {db}.{new_table}"
                 )
 
-                logger.info(f"going to execute {create_statement}")
+                logger.info("going to execute %s", create_statement)
                 cursor.execute(create_statement)
 
                 if "PARTITIONED" in create_statement:
@@ -317,33 +315,35 @@ class ImpalaHelpers:
                 cursor.execute(
                     f"REFRESH {db}.{new_table}")
 
-    def rename_table(
-            self, db, table, new_table):
+    def rename_table(self, db, table, new_table):
+        """Rename db.table to new_table."""
         statement = [
             f"ALTER TABLE {db}.{table} RENAME TO {db}.{new_table}"
         ]
         statement = " ".join(statement)
-        logger.info(f"going to execute {statement}")
+        logger.info("going to execute %s", statement)
 
         with closing(self.connection()) as conn:
             with conn.cursor() as cursor:
                 cursor.execute(statement)
 
     def check_database(self, dbname):
+        """Check if dbname exists."""
         with closing(self.connection()) as conn:
             with conn.cursor() as cursor:
-                q = "SHOW DATABASES"
-                cursor.execute(q)
+                query = "SHOW DATABASES"
+                cursor.execute(query)
                 for row in cursor:
                     if row[0] == dbname:
                         return True
         return False
 
     def check_table(self, dbname, tablename):
+        """Check if dbname.tablename exists."""
         with closing(self.connection()) as conn:
             with conn.cursor() as cursor:
-                q = f"SHOW TABLES IN {dbname}"
-                cursor.execute(q)
+                query = f"SHOW TABLES IN {dbname}"
+                cursor.execute(query)
                 for row in cursor:
                     if row[0] == tablename.lower():
                         return True
@@ -352,14 +352,14 @@ class ImpalaHelpers:
     def drop_table(self, dbname, tablename):
         with closing(self.connection()) as conn:
             with conn.cursor() as cursor:
-                q = f"DROP TABLE IF EXISTS {dbname}.{tablename}"
-                cursor.execute(q)
+                query = f"DROP TABLE IF EXISTS {dbname}.{tablename}"
+                cursor.execute(query)
 
     def create_database(self, dbname):
         with closing(self.connection()) as conn:
             with conn.cursor() as cursor:
-                q = f"CREATE DATABASE IF NOT EXISTS {dbname}"
-                cursor.execute(q)
+                query = f"CREATE DATABASE IF NOT EXISTS {dbname}"
+                cursor.execute(query)
 
     def drop_database(self, dbname):
         with closing(self.connection()) as conn:

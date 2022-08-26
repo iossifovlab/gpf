@@ -1,8 +1,8 @@
 import os
 import glob
-import toml
-
 import logging
+
+import toml
 
 from dae.backends.raw.loader import VariantsLoader, TransmissionType
 from dae.backends.storage.genotype_storage import GenotypeStorage
@@ -24,9 +24,10 @@ logger = logging.getLogger(__name__)
 
 
 class ImpalaGenotypeStorage(GenotypeStorage):
+    """Storage that uses impala as its backend."""
 
     def __init__(self, storage_config, section_id):
-        super(ImpalaGenotypeStorage, self).__init__(storage_config, section_id)
+        super().__init__(storage_config, section_id)
         # self.data_dir = self.storage_config.dir
 
         impala_hosts = self.storage_config.impala.hosts
@@ -56,6 +57,7 @@ class ImpalaGenotypeStorage(GenotypeStorage):
 
     @property
     def hdfs_helpers(self):
+        """Return a helper used to interact with hdfs."""
         if self._hdfs_helpers is None:
             self._hdfs_helpers = HdfsHelpers(
                 self.storage_config.hdfs.host,
@@ -72,6 +74,7 @@ class ImpalaGenotypeStorage(GenotypeStorage):
 
     @classmethod
     def study_tables(cls, study_config):
+        """Return the variant and pedigree table."""
         storage_config = study_config.genotype_storage
         if storage_config and storage_config.tables \
                 and storage_config.tables.pedigree \
@@ -139,6 +142,7 @@ class ImpalaGenotypeStorage(GenotypeStorage):
 
         return study_config
 
+    # pylint: disable=arguments-differ
     def simple_study_import(
             self,
             study_id,
@@ -280,22 +284,20 @@ class ImpalaGenotypeStorage(GenotypeStorage):
         partition_filename = os.path.join(
             variants_dir, "_PARTITION_DESCRIPTION")
         logger.debug(
-            f"checking for partition description: {partition_filename}")
+            "checking for partition description: %s", partition_filename
+        )
         if os.path.exists(partition_filename):
-            logger.info(
-                f"copying partition description {partition_filename} "
-                f"into {study_path}")
+            logger.info("copying partition description %s into %s",
+                        partition_filename, study_path)
             self.hdfs_helpers.put_in_directory(
                 partition_filename, study_path)
 
         schema_filename = os.path.join(
             variants_dir, "_VARIANTS_SCHEMA")
-        logger.debug(
-            f"checking for variants schema: {schema_filename}")
+        logger.debug("checking for variants schema: %s", schema_filename)
         if os.path.exists(schema_filename):
-            logger.info(
-                f"copying variants schema {schema_filename} "
-                f"into {study_path}")
+            logger.info("copying variants schema %s into %s",
+                        schema_filename, study_path)
             self.hdfs_helpers.put_in_directory(
                 schema_filename, study_path)
 
@@ -364,15 +366,14 @@ class ImpalaGenotypeStorage(GenotypeStorage):
     def hdfs_upload_dataset(
             self, study_id, variants_dir,
             pedigree_file, partition_description):
-
+        """Upload a variants dir and pedigree file to hdfs."""
         if self.rsync_helpers is not None:
             return self._rsync_hdfs_upload_dataset(
                 study_id, variants_dir,
                 pedigree_file, partition_description)
-        else:
-            return self._native_hdfs_upload_dataset(
-                study_id, variants_dir,
-                pedigree_file, partition_description)
+        return self._native_hdfs_upload_dataset(
+            study_id, variants_dir,
+            pedigree_file, partition_description)
 
     def impala_import_dataset(
             self, study_id,
@@ -381,7 +382,7 @@ class ImpalaGenotypeStorage(GenotypeStorage):
             partition_description,
             variants_sample=None,
             variants_schema=None):
-
+        """Import variantsand pedigree parquet files from hdfs into impala."""
         pedigree_table = self._construct_pedigree_table(study_id)
         variants_table = self._construct_variants_table(study_id)
 
@@ -408,6 +409,7 @@ class ImpalaGenotypeStorage(GenotypeStorage):
             study_id, pedigree_table, variants_table)
 
     def impala_load_dataset(self, study_id, variants_dir, pedigree_file):
+        """Import local variants into hdfs and then into impala."""
         if variants_dir is None:
             partition_description = None
             variants_schema = None
