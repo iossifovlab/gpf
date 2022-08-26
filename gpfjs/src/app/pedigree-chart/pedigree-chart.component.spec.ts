@@ -89,7 +89,7 @@ describe('PedigreeChartComponent', () => {
     component.family = FAMILY_WITH_POSITIONS;
     fixture.detectChanges();
 
-    expect(component.getViewBox()).toBe('0 0 81 81');
+    expect(component.getViewBox()).toBe('-8 0 81 81');
   });
 
   it('should load pedigree with positions', () => {

@@ -1,5 +1,5 @@
 <ng-template #pedigree>
-  <svg [ngStyle]="{'cursor': modalService.hasOpenModals() ? 'default' : 'pointer'}" [attr.viewBox]="getViewBox()">
+  <svg [attr.viewBox]="getViewBox()">
     <svg:line
       *ngFor="let straightLine of straightLines"
       [attr.x1]="straightLine.startX"
@@ -76,8 +76,7 @@
   container="body"
   placement="right left"
   class="svg-container"
-  [style.width.%]="pedigreeWidth"
-  [style.max-width.px]="maxWidth"
+  [style.width.px]="width*scale"
 >
   <ng-container *ngTemplateOutlet="pedigree"></ng-container>
 </div>

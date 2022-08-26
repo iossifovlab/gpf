@@ -42,6 +42,8 @@ export class PedigreeChartComponent implements OnInit {
 
   private family$ = new BehaviorSubject<PedigreeData[]>(null);
   public levels$: Observable<Array<OrderedIndividuals>>;
+  public modal: NgbModalRef;
+  public scale = 1.25;
 
   public constructor(
     private perfectlyDrawablePedigreeService: PerfectlyDrawablePedigreeService,
@@ -51,14 +53,6 @@ export class PedigreeChartComponent implements OnInit {
     public modalService: NgbModal,
     public cdr: ChangeDetectorRef
   ) { }
-
-  public ngAfterViewInit(): void {
-     this.calculatePedigreeSize();
-     this.maxWidth += (20*(this.pedigreeWidthAndDepth[this.counterId][0] - 2));
-     const width = 25*((this.pedigreeWidthAndDepth[this.counterId][0] - 2) <= 2 ? (this.pedigreeWidthAndDepth[this.counterId][0] - 2) : 2);
-     this.pedigreeWidth += (width >= 0 ? width : 0);
-     this.cdr.detectChanges();
-  }
 
   public ngOnInit(): void {
     this.pedigreeDataWithLayout = [];
@@ -138,42 +132,18 @@ export class PedigreeChartComponent implements OnInit {
     event.target.submit();
   }
 
-  public modal: NgbModalRef;
-
-  public maxWidth: number = 100;
-  public pedigreeWidth: number = 25;
-  pedigreeWidthAndDepth: number[][] = [[0, 0]];
-
-  public calculatePedigreeSize() {
-    let minRank = 0;
-    this.pedigreeWidthAndDepth[this.counterId] = [0, 0];
-    let ranks = [];
-
-    this.pedigreeDataWithLayout.forEach(data => {
-      if(this.pedigreeWidthAndDepth[this.counterId][0] < this.getIndividualsOnLevel(data).length) {
-        this.pedigreeWidthAndDepth[this.counterId][0] = this.getIndividualsOnLevel(data).length;
-      }
-      if (ranks.indexOf(data.individual.rank) > -1) {
-      } else {
-        minRank++;
-        ranks.push(data.individual.rank);
-      }
-      this.pedigreeWidthAndDepth[this.counterId][1] = minRank;
-    });
-
-  }
-
   public getViewBox(): string {
+    // The addition of 8 to the width and height of the viewbox is to fit the proband arrow
     const xPlusPrb = 8;
 
     const sortedCurveLines = this.curveLines.sort(curveLine => curveLine.inverseCurveP1[1]);
     if (sortedCurveLines.length !== 0) {
       const minY = sortedCurveLines[0].inverseCurveP1[1];
       if (minY < 0) {
-        return `${-xPlusPrb} ${minY.toString()} ${this.width + 8} ${(this.height + -minY + 8).toString()}`;
+        return `${-xPlusPrb} ${minY} ${this.width + xPlusPrb} ${this.height - minY + xPlusPrb}`;
       }
     }
-    return `${-xPlusPrb} 0 ${this.width + 8} ${this.height + xPlusPrb}`;
+    return `${-xPlusPrb} 0 ${this.width + xPlusPrb} ${this.height + xPlusPrb}`;
   }
 
   private loadPositions(family: PedigreeData[]): IndividualWithPosition[][] {
@@ -528,7 +498,7 @@ export class PedigreeChartComponent implements OnInit {
       this.idToPosition.set(individual.pedigreeData.id, position);
       xOffset += memberSize + maxGap;
     }
-    
+
     return result;
   }
 
