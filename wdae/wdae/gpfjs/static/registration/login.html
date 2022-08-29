@@ -1,50 +1,47 @@
 <!DOCTYPE html>
 <html lang="en">
 
-<head>
-    <meta charset="utf-8" />
-    <title>
-        GPF Login
-    </title>
-    <meta content="width=device-width, initial-scale=1, shrink-to-fit=no" name="viewport" />
-    <link href="https://fonts.googleapis.com/css?family=Roboto:400,500,700&amp;subset=latin-ext" rel="stylesheet" />
-    <link href="https://fonts.googleapis.com/css?family=Roboto:400,500,700&amp;subset=latin-ext" rel="stylesheet">
-    <link href="/static/empty/favicon.ico" rel="icon" type="image/x-icon">
-    <link href="/static/empty/styles.css" rel="stylesheet">
-    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet">
-    <meta content="width=device-width, initial-scale=1, shrink-to-fit=no" name="viewport">
-</head>
+    <head>
+        <meta charset="utf-8" />
+        <title>
+            GPF Login
+        </title>
+        <meta content="width=device-width, initial-scale=1, shrink-to-fit=no" name="viewport" />
+        <link href="https://fonts.googleapis.com/css?family=Roboto:400,500,700&amp;subset=latin-ext" rel="stylesheet">
+        <link href="/static/registration/favicon.ico" rel="icon" type="image/x-icon">
+        <link href="/static/registration/styles.css" rel="stylesheet">
+        <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet">
+    </head>
 
-<body>
-{% if form.errors %}
-<p>Your username and password didn't match. Please try again.</p>
-{% endif %}
-
-{% if next %}
-    {% if user.is_authenticated %}
-    <p>Your account doesn't have access to this page. To proceed,
-    please login with an account that has access.</p>
-    {% else %}
-    <p>Please login to see this page.</p>
-    {% endif %}
-{% endif %}
-
-<form method="post" action="{% url 'login_user' %}">
-{% csrf_token %}
-<table>
-<tr>
-    <td>{{ form.username.label_tag }}</td>
-    <td>{{ form.username }}</td>
-</tr>
-<tr>
-    <td>{{ form.password.label_tag }}</td>
-    <td>{{ form.password }}</td>
-</tr>
-</table>
-
-<input type="submit" value="login">
-<input type="hidden" name="next" value="{{ next }}">
-</form>
-</body>
+    <body>
+        <form method="post" action="{% url 'login_user' %}" style="text-align:center">
+            {% csrf_token %}
+            <table>
+                <th>
+                    <img src="/static/registration/logo-64x64.png">
+                    <label>GPF: Genotypes and Phenotypes in Families</label>
+                </th>
+                <tr>
+                    <td class="input-cell">
+                        <div>{{ form.username.label_tag }}</div>
+                        <div>{{ form.username }}</div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="input-cell">
+                        <div>{{ form.password.label_tag }}</div>
+                        <div>{{ form.password }}</div>
+                    </td>
+                </tr>
+            </table>
+        
+            <input class="login-button" type="submit" value="Login">
+            <input type="hidden" name="next" value="{{ next }}">
+        </form>
+        
+        {% if form.errors %}
+        <div>Your username and password didn't match. Please try again.</div>
+        {% endif %}
+    </body>
 
 </html>
