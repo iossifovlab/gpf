@@ -1,4 +1,4 @@
-"""Sample module documentation."""
+"""Genotype browser routes for browsing and listing variants in studies."""
 from django.http.response import StreamingHttpResponse, FileResponse
 
 from rest_framework import status  # type: ignore
