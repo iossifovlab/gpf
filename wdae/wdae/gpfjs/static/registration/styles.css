@@ -6,7 +6,6 @@ table {
 }
 
 .login-button {
-  width: 327px;
   cursor: pointer;
   color: #fff;
   background-color: #2a6395;
@@ -37,6 +36,10 @@ td, th, input, a, .login-button {
   font-family: Roboto;
 }
 
+a, .login-button {
+  width: 348px;
+}
+
 div, a {
   clear: left;
   float: left;
@@ -50,6 +53,7 @@ input {
   border: 1px solid #ced4da;
   border-radius: 0.25rem;
   transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+  padding: 0 12px 0 12px;
 }
 
 input:focus {
@@ -58,8 +62,4 @@ input:focus {
   border-color: #80bdff;
   outline: 0;
   box-shadow: 0 0 0 .2rem rgba(0,123,255,.25);
-}
-
-a {
-  width: 327px;
 }
