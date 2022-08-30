@@ -56,9 +56,15 @@ class GPFConfigValidator(Validator):
     """
 
     def _validate_depends_global(self, constraint, field, value):
-        del value
+        # pylint: disable=unused-argument
+        """
+        Check if a given other value exists anywhere in the dictionary.
+
+        The rule's arguments are validated against this schema:
+        {"type": "string"}
+        """
         field_path = constraint.split(".")
-        current_parent = self.document
+        current_parent = self.root_document
         failed_to_find = False
         for field_name in field_path:
             next_field = current_parent.get(field_name, None)
@@ -67,8 +73,9 @@ class GPFConfigValidator(Validator):
                 break
             current_parent = next_field
 
-        if not failed_to_find:
+        if failed_to_find:
             self._error(field, f"Depends on {constraint}")
+
     def _normalize_coerce_abspath(self, value: str) -> str:
         directory = self._config["conf_dir"]
         if directory is None:

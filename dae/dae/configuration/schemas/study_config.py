@@ -98,7 +98,7 @@ genotype_browser_schema = {
         "has_person_filters": {"type": "boolean"},
         "has_study_filters": {
             "type": "boolean",
-            "depends_global": "genotype_browser.has_study_filters"
+            "depends_global": "studies"
         },
         "has_present_in_child": {"type": "boolean"},
         "has_present_in_parent": {"type": "boolean"},
