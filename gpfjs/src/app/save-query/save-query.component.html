@@ -10,8 +10,15 @@
     <p>Share</p>
 
     <div id="share-url-div">
-      <input #link readonly type="disabled" (click)="link.select()" value="{{ url }}" spellcheck="false" />
-      <div [cdkCopyToClipboard]="url" (click)="openCopiedTooltip(); link.select()">
+      <input
+        id="link-input"
+        #link
+        readonly
+        type="disabled"
+        (click)="link.select()"
+        value="{{ url }}"
+        spellcheck="false" />
+      <div id="copy-link-button" [cdkCopyToClipboard]="url" (click)="openCopiedTooltip(); link.select()">
         <span
           ngbTooltip="Copied!"
           [autoClose]="false"
@@ -52,7 +59,7 @@
 
         <button
           (click)="saveUserQuery(nameInput.value, descInput.value)"
-          id="save-link-button"
+          id="save-button"
           type="button"
           class="btn btn-success"
           [disabled]="!nameInput.value">{{ saveButtonText }}</button>
