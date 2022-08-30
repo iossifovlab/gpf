@@ -116,9 +116,9 @@ export class BasePage {
     this.waitForPageToLoad(page, hasAccessRights);
   }
 
-  public waitForPageToLoad(page: string, hasAcessRights: boolean = true): void {
+  public waitForPageToLoad(page: string, hasAcessRights = true): void {
     if (hasAcessRights) {
-      switch(page) {
+      switch (page) {
         case toolPageLinks.datasetDescription:
           cy.get('gpf-dataset-description').should('be.visible');
           break;
@@ -172,11 +172,11 @@ export class BasePage {
   }
 
   private get sidenavTogglerButton(): element {
-    return cy.get('.navbar-toggler-icon');
+    return cy.get('#sidenav-toggle-button');
   }
 
   public toggleSidenav(): void {
-    this.sidenavTogglerButton.click({scrollBehavior: false});
+    this.sidenavTogglerButton.click();
     cy.wait(1000);
   }
 

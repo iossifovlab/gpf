@@ -52,7 +52,7 @@ export class DatasetsPage extends BasePage {
   }
 
   public get familiesByPedigreeDivs(): element {
-    return cy.get('gpf-common-reports-pedigree-cell div.pedigree-count');
+    return cy.get('gpf-common-reports-pedigree-cell .pedigree-count');
   }
 
   public findDenovoVariantsCountsByRowName(rowName: string): element {

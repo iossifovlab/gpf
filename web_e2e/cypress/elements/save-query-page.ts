@@ -9,19 +9,27 @@ export class SaveQueryPage extends BasePage {
     return cy.get('#save-query-dropdown');
   }
 
-  public get dropdownNameInput(): element {
-    return cy.get('gpf-save-query input#name');
+  public get copyLinkButton(): element {
+    return cy.get('#copy-link-button');
+  }
+
+  public get copiedTooltip(): element {
+    return cy.get('ngb-tooltip-window');
+  }
+
+  public get linkInput(): element {
+    return cy.get('#link-input');
+  }
+
+  public get nameInput(): element {
+    return cy.get('gpf-save-query #name');
+  }
+
+  public get descriptionInput(): element {
+    return cy.get('gpf-save-query #description')
   }
 
   public get saveButton(): element {
-    return cy.get('gpf-save-query form > button');
-  }
-
-  public get tableFirstLoadButton(): element {
-    return cy.get('gpf-table-view-cell a').contains('Load').first();
-  }
-
-  public get tableFirstDeleteButton(): element {
-    return cy.get('gpf-table-view-cell button').contains('Delete').first();
+    return cy.get('gpf-save-query #save-button');
   }
 }

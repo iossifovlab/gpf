@@ -349,16 +349,19 @@ describe('Autism gene profiles table functionality tests', () => {
     page.allTableRows.should('have.length', 15);
 
     cy.scrollTo('bottom');
+    cy.wait(1000);
     cy.window().its('scrollY').then(yScroll => {
       cy.wrap(yScroll).as('pageEndY');
     });
 
     cy.get('body').type('{home}');
+    cy.wait(1000);
     cy.window().its('scrollY').then(yScroll => {
       expect(yScroll).to.equal(0);
     });
 
     cy.get('body').type('{end}');
+    cy.wait(1000);
     cy.window().its('scrollY').then(yScroll => {
       cy.get('@pageEndY').should('equal', yScroll);
     });

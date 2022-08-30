@@ -3,7 +3,6 @@ import { GenesBlockPage } from 'cypress/elements/genes-block-page';
 import { PhenoToolMeasurePage } from 'cypress/elements/pheno-tool-measure-page';
 import { PhenoToolPage } from 'cypress/elements/pheno-tool-page';
 import { SaveQueryPage } from 'cypress/elements/save-query-page';
-import { ShareQueryPage } from 'cypress/elements/share-query-page';
 import { datasetIds, toolPageLinks } from 'cypress/elements/utils';
 
 describe('Pheno tool tests', () => {
@@ -49,9 +48,9 @@ describe('Pheno tool tests', () => {
   });
 
   it('should display "Share query" button', () => {
-    const shareQueryPage = new ShareQueryPage();
+    const saveQueryPage = new SaveQueryPage();
     page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.phenotypeTool);
-    shareQueryPage.button.should('be.visible');
+    saveQueryPage.button.should('be.visible');
   });
 
   it('should display "Save query" button', () => {

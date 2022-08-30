@@ -8,7 +8,6 @@ import { GenotypePreviewTablePage } from 'cypress/elements/genotype-preview-tabl
 import { PersonFiltersBlockPage } from 'cypress/elements/person-filters-block-page';
 import { RegionsBlockPage } from 'cypress/elements/regions-block-page';
 import { SaveQueryPage } from 'cypress/elements/save-query-page';
-import { ShareQueryPage } from 'cypress/elements/share-query-page';
 import { UniqueFamilyVariantsFilterPage } from 'cypress/elements/unique-family-variants-filter-page';
 import { datasetIds, toolPageLinks } from 'cypress/elements/utils';
 
@@ -94,9 +93,9 @@ describe('Genotype browser tests', () => {
 
   datasetList.forEach(dataset => {
     it('should display "Share query" button in genotype browser at /' + dataset + '/browser', () => {
-      const shareQueryPage = new ShareQueryPage();
+      const saveQueryPage = new SaveQueryPage();
       page.navigateToDatasetPage(dataset, toolPageLinks.genotypeBrowser);
-      shareQueryPage.button.should('be.visible');
+      saveQueryPage.button.should('be.visible');
     });
   });
 

@@ -1,7 +1,6 @@
 import { EnrichmentToolPage } from 'cypress/elements/enrichment-tool-page';
 import { GenesBlockPage } from 'cypress/elements/genes-block-page';
 import { SaveQueryPage } from 'cypress/elements/save-query-page';
-import { ShareQueryPage } from 'cypress/elements/share-query-page';
 import { datasetIds, toolPageLinks } from 'cypress/elements/utils';
 import { applyData, EnrichmentToolData, parseYamlData } from 'cypress/elements/dynamic-data-structure';
 
@@ -33,9 +32,9 @@ describe('Enrichment tool common tests', () => {
     page.enrichmentTestButton.should('be.visible');
   });
 
-  it('should display "Share query" button', () => {
-    const shareQueryPage = new ShareQueryPage();
-    shareQueryPage.button.should('be.visible');
+  it('should display "Share/save query" button', () => {
+    const saveQueryPage = new SaveQueryPage();
+    saveQueryPage.button.should('be.visible');
   });
 
   it('should display "Save query" button', () => {

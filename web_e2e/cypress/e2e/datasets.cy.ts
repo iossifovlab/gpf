@@ -76,13 +76,13 @@ describe('Datasets tests', () => {
 
   it('should change url correctly after clicking on a dataset from the dataset dropdown menu', () => {
     const datasets = [
-      {id: datasetIds.allGenotypes, url: "ALL_genotypes"},
-      {id: datasetIds.compGenotypes, url: "COMP_genotypes"},
-      {id: datasetIds.compDenovo, url: "comp_denovo"},
-      {id: datasetIds.compVcf, url: "comp_vcf"},
-      {id: datasetIds.compAll, url: "comp_all"},
-      {id: datasetIds.iossifov2014, url: "iossifov_2014"},
-      {id: datasetIds.multi, url: "multi"}
+      {id: datasetIds.allGenotypes, url: 'ALL_genotypes'},
+      {id: datasetIds.compGenotypes, url: 'COMP_genotypes'},
+      {id: datasetIds.compDenovo, url: 'comp_denovo'},
+      {id: datasetIds.compVcf, url: 'comp_vcf'},
+      {id: datasetIds.compAll, url: 'comp_all'},
+      {id: datasetIds.iossifov2014, url: 'iossifov_2014'},
+      {id: datasetIds.multi, url: 'multi'}
     ]
 
     page.loginAdmin();
