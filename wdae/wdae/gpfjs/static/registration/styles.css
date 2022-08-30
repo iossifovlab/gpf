@@ -1,20 +1,17 @@
+
 table {
-  margin-left: auto;
-  margin-right: auto;
   border-collapse:separate;
-  border-spacing:10px;
+  margin: 0%;
+  margin-left: 15px;
 }
 
 .login-button {
-  width: 200px;
+  width: 327px;
   cursor: pointer;
   color: #fff;
-  background-color: #007bff;
-  border-color: #007bff;
-}
-
-table {
-  width: 600px;
+  background-color: #2a6395;
+  float: left;
+  margin-left: -1px;
 }
 
 img {
@@ -25,15 +22,44 @@ img {
 }
 
 th {
-  text-align: center;
   padding-bottom: 10px;
+  float:left;
 }
 
 th label {
   font-size: x-large 
 }
 
-td, th, input, .login-button {
+td, th, input, a, .login-button {
   font-size: large;
   height: 40px;
+  margin-bottom: 10px;
+  font-family: Roboto;
+}
+
+div, a {
+  clear: left;
+  float: left;
+}
+
+input {
+  width: 320px;
+  color: #495057;
+  background-color: #fff;
+  background-clip: padding-box;
+  border: 1px solid #ced4da;
+  border-radius: 0.25rem;
+  transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+}
+
+input:focus {
+  color: #495057;
+  background-color: #fff;
+  border-color: #80bdff;
+  outline: 0;
+  box-shadow: 0 0 0 .2rem rgba(0,123,255,.25);
+}
+
+a {
+  width: 327px;
 }
