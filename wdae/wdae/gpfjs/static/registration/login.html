@@ -22,21 +22,32 @@
                     <label>GPF: Genotypes and Phenotypes in Families</label>
                 </th>
                 <tr>
-                    <td class="input-cell">
+                    <td>
                         <div>{{ form.username.label_tag }}</div>
                         <div>{{ form.username }}</div>
                     </td>
                 </tr>
                 <tr>
-                    <td class="input-cell">
+                    <td>
                         <div>{{ form.password.label_tag }}</div>
                         <div>{{ form.password }}</div>
                     </td>
                 </tr>
+                <tr>
+                    <td>
+                        <input class="login-button" type="submit" value="Login">
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <a href="">Forgotten password</a>
+                    </td>
+                </tr>
             </table>
         
-            <input class="login-button" type="submit" value="Login">
-            <input type="hidden" name="next" value="{{ next }}">
+            <!-- <input class="login-button" type="submit" value="Login">
+            <a href="https://www.google.com/">Forgotten password</a> -->
+            <!-- <input type="hidden" name="next" value="{{ next }}"> -->
         </form>
         
         {% if form.errors %}
