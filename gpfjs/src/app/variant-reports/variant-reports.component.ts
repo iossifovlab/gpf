@@ -1,4 +1,5 @@
-import { Component, OnInit, HostListener, Pipe, PipeTransform } from '@angular/core';
+/* eslint-disable @typescript-eslint/explicit-member-accessibility */
+import { Component, OnInit, ViewChild, ElementRef, HostListener, Pipe, PipeTransform } from '@angular/core';
 import { VariantReportsService } from './variant-reports.service';
 import {
   VariantReport, FamilyCounter, PedigreeCounter, EffectTypeTable, DeNovoData, PedigreeTable, PeopleCounter
@@ -7,6 +8,9 @@ import { Dataset } from 'app/datasets/datasets';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { take } from 'rxjs/operators';
 import { environment } from 'environments/environment';
+import { isInViewport } from 'app/utils/is-in-viewport';
+import { Dictionary } from 'lodash';
+import * as _ from 'lodash';
 
 @Pipe({ name: 'getPeopleCounterRow' })
 export class PeopleCounterRowPipe implements PipeTransform {
@@ -22,11 +26,19 @@ export class PeopleCounterRowPipe implements PipeTransform {
   styleUrls: ['./variant-reports.component.css']
 })
 export class VariantReportsComponent implements OnInit {
+  @ViewChild('families_pedigree') private familiesPedigree: ElementRef;
+
+  public visible = false;
+
+  public tags: Array<CheckBox> = new Array<CheckBox>();
+
   public currentPeopleCounter: PeopleCounter;
   public currentPedigreeTable: PedigreeTable;
   public currentDenovoReport: EffectTypeTable;
 
   public variantReport: VariantReport;
+  public familiesCounters: FamilyCounter[];
+  public currentPedigreeCounters: Dictionary<PedigreeCounter[]>;
   public pedigreeTables: PedigreeTable[];
 
   public selectedDataset: Dataset;
@@ -41,6 +53,15 @@ export class VariantReportsComponent implements OnInit {
     private datasetsService: DatasetsService
   ) { }
 
+  @HostListener('window:scroll', ['$event'])
+  @HostListener('click', ['$event'])
+  public onWindowScroll(): void {
+    if (this.familiesPedigree === undefined) {
+      return;
+    }
+    this.visible = isInViewport(this.familiesPedigree.nativeElement, 10);
+  }
+
   @HostListener('window:resize')
   public onResize(): void {
     this.calculateDenovoVariantsTableWidth();
@@ -50,9 +71,16 @@ export class VariantReportsComponent implements OnInit {
     this.selectedDataset = this.datasetsService.getSelectedDataset();
     this.variantReportsService.getVariantReport(this.selectedDataset.id).pipe(take(1)).subscribe(params => {
       this.variantReport = params;
-      this.pedigreeTables = this.variantReport.familyReport.familiesCounters.map(
+      this.familiesCounters = this.variantReport.familyReport.familiesCounters;
+      this.currentPedigreeCounters = this.familiesCounters.reduce(
+        (obj, x) => {
+          obj[x.groupName] = Array.from(x.pedigreeCounters);
+          return obj;
+        }, {}
+      );
+      this.pedigreeTables = this.familiesCounters.map(
         familiesCounters => new PedigreeTable(
-          this.chunkPedigrees(familiesCounters),
+          this.chunkPedigrees(familiesCounters.pedigreeCounters),
           familiesCounters.phenotypes, familiesCounters.groupName,
           familiesCounters.legend
         )
@@ -65,6 +93,40 @@ export class VariantReportsComponent implements OnInit {
         this.calculateDenovoVariantsTableWidth();
       }
     });
+
+    this.variantReportsService.getTags().subscribe(data => {
+      data.forEach(tag => {
+        this.tags.push(new CheckBox(tag, false));
+      });
+    });
+  }
+
+  private copyOriginalPedigreeCounters(): Dictionary<PedigreeCounter[]> {
+    return this.familiesCounters.reduce(
+      (obj, x) => {
+        obj[x.groupName] = Array.from(x.pedigreeCounters); return obj;
+      }, {}
+    );
+  }
+
+  private getSelectedTags(): string[] {
+    return this.tags.filter(x => x.value === true).map(x => x.name);
+  }
+
+  public updatePedigrees(newCounters: Dictionary<PedigreeCounter[]>): void {
+    for (const table of this.pedigreeTables) {
+      table.pedigrees = this.chunkPedigrees(newCounters[table.groupName]);
+    }
+  }
+
+  public updateTagFilters(): void {
+    const tags = this.getSelectedTags();
+    const copiedCounters = this.copyOriginalPedigreeCounters();
+    const filteredCounters = {};
+    for (const [groupName, counters] of Object.entries(copiedCounters)) {
+      filteredCounters[groupName] = counters.filter(x => _.difference(tags, x.tags).length === 0);
+    }
+    this.updatePedigrees(filteredCounters);
   }
 
   public calculateDenovoVariantsTableWidth(): void {
@@ -131,8 +193,8 @@ export class VariantReportsComponent implements OnInit {
     );
   }
 
-  private chunkPedigrees(familyCounters: FamilyCounter, chunkSize = 4): PedigreeCounter[][] {
-    const allPedigrees = familyCounters.pedigreeCounters;
+  private chunkPedigrees(pedigreeCounters: PedigreeCounter[], chunkSize = 4): PedigreeCounter[][] {
+    const allPedigrees = pedigreeCounters;
 
     return allPedigrees.reduce(
       (acc: PedigreeCounter[][], pedigree, index) => {
@@ -154,4 +216,14 @@ export class VariantReportsComponent implements OnInit {
       }, []
     );
   }
+}
+
+export class CheckBox {
+  constructor(name: string, value: boolean) {
+    this.name = name;
+    this.value = value;
+  }
+
+  name = '';
+  value = false;
 }

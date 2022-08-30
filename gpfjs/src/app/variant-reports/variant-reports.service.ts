@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { ConfigService } from '../config/config.service';
-import { Observable } from 'rxjs';
+import { BehaviorSubject, Observable, ReplaySubject } from 'rxjs';
 import { VariantReport } from './variant-reports';
 import { environment } from '../../environments/environment';
 import { DatasetsService } from 'app/datasets/datasets.service';
@@ -9,9 +9,11 @@ import { map } from 'rxjs/operators';
 
 @Injectable()
 export class VariantReportsService {
+  public tags$: ReplaySubject<string[]> = new ReplaySubject<string[]>();
   private readonly variantsUrl = 'common_reports/studies/';
   private readonly downloadUrl = 'common_reports/families_data/';
   private readonly familiesUrl = 'common_reports/family_counters';
+  private readonly tagsUrl = 'families/tags';
   private readonly variantsUrlWithId = 'common_reports/family_counters/download/';
 
 
@@ -19,7 +21,12 @@ export class VariantReportsService {
     private http: HttpClient,
     private config: ConfigService,
     private datasetsService: DatasetsService
-  ) {}
+  ) {
+    const options = { withCredentials: true };
+    const response = this.http.get(`${this.config.baseUrl}${this.tagsUrl}`, options)
+      .pipe(map((data) => data));
+    response.subscribe((tag: string[]) => this.tags$.next(tag));
+  }
 
   public getVariantReport(datasetId: string): Observable<VariantReport> {
     const options = { withCredentials: true };
@@ -38,5 +45,9 @@ export class VariantReportsService {
     const url = `${this.config.baseUrl}${this.familiesUrl}`;
     const response = this.http.post(url, data, options).pipe(map(response => response as Array<string>));
     return response;
+  }
+
+  public getTags(): Observable<string[]> {
+    return this.tags$.asObservable();
   }
 }

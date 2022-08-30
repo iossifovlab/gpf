@@ -3,7 +3,9 @@
     <div class="col-12" id="total-number-of-families">
       <h5>
         <span>Total number of families: {{ variantReport.familyReport.familiesTotal }}</span>
-        <span style="padding-left: 5px">(<a class="download-link" [href]="getDownloadLink()" download>Download</a>)</span>
+        <span style="padding-left: 5px"
+          >(<a class="download-link" [href]="getDownloadLink()" download>Download</a>)</span
+        >
       </h5>
     </div>
   </div>
@@ -70,7 +72,17 @@
       </div>
     </div>
 
-    <div *ngIf="currentPedigreeTable" id="families-by-pedigree-div" class="row">
+    <div *ngIf="currentPedigreeTable" class="row">
+      <div class="col-4" *ngFor="let tag of tags">
+        <input
+          style="margin-right: 5px"
+          type="checkbox"
+          [checked]="tag.value"
+          (change)="tag.value = !tag.value; updateTagFilters()" /><span>{{ tag.name }}</span>
+      </div>
+    </div>
+
+    <div *ngIf="currentPedigreeTable" id="families-by-pedigree-div" class="row" #families_pedigree>
       <div class="col-12">
         <table class="gpf-basic-table">
           <colgroup>
@@ -122,45 +134,57 @@
         >
       </h5>
 
-      <div *ngIf="currentDenovoReport" id="denovo-variants-div" class="row">
-        <div class="col-12">
-          <table class="gpf-basic-table" [style.width.px]="denovoVariantsTableWidth">
-            <thead>
-              <th>Effect type</th>
-              <th class="rotate" *ngFor="let column of currentDenovoReport.columns">
-                <div class="column-header"
-                  [attr.title]="
-                    'children with the specific '
-                    + currentDenovoReport.groupName.toLowerCase()
-                    + ': '
-                    + column.substring(column.lastIndexOf('(') + 1, column.lastIndexOf(')'))
-                  "
-                  >{{ column }}</div
-                >
-              </th>
-            </thead>
-            <tbody>
-              <tr
-                *ngFor="let effectType of getRows(currentDenovoReport.effectGroups, currentDenovoReport.effectTypes)"
-                [ngClass]="{ 'effect-type-group-row': currentDenovoReport.effectGroups.indexOf(effectType) !== -1 }">
-                <th>{{ effectType }}</th>
-                <td
-                  *ngFor="
-                    let effectTypeData of getEffectTypeOrderByColumOrder(
-                      effectType,
-                      currentDenovoReport,
-                      currentDenovoReport.columns
-                    )
-                  ">
+        <div *ngIf="currentDenovoReport" id="denovo-variants-div" class="row">
+          <div class="col-12">
+            <table class="gpf-basic-table" [style.width.px]="denovoVariantsTableWidth">
+              <thead>
+                <th>Effect type</th>
+                <th class="rotate" *ngFor="let column of currentDenovoReport.columns">
                   <div
-                    class="effect-type-data-values"
-                    title="{{ effectType }}&#10;{{ effectTypeData.column }}&#10;number of observed events: {{ effectTypeData.numberOfObservedEvents }}&#10;observed rate per individual: {{ effectTypeData.observedRatePerChild | number }}&#10;number of individuals with events: {{ effectTypeData.numberOfChildrenWithEvent }}&#10;percent of individuals with events: {{ effectTypeData.percentOfChildrenWithEvents | percent }}"
-                    >{{ effectTypeData.numberOfObservedEvents }}, {{ effectTypeData.observedRatePerChild | number }}<br />({{ effectTypeData.numberOfChildrenWithEvent }}, {{ effectTypeData.percentOfChildrenWithEvents | percent }})</div
-                  >
-                </td>
-              </tr>
-            </tbody>
-          </table>
+                    class="column-header"
+                    [attr.title]="
+                      'children with the specific ' +
+                      currentDenovoReport.groupName.toLowerCase() +
+                      ': ' +
+                      column.substring(column.lastIndexOf('(') + 1, column.lastIndexOf(')'))
+                    ">
+                    {{ column }}
+                  </div>
+                </th>
+              </thead>
+              <tbody>
+                <tr
+                  *ngFor="let effectType of getRows(currentDenovoReport.effectGroups, currentDenovoReport.effectTypes)"
+                  [ngClass]="{ 'effect-type-group-row': currentDenovoReport.effectGroups.indexOf(effectType) !== -1 }">
+                  <th>{{ effectType }}</th>
+                  <td
+                    *ngFor="
+                      let effectTypeData of getEffectTypeOrderByColumOrder(
+                        effectType,
+                        currentDenovoReport,
+                        currentDenovoReport.columns
+                      )
+                    ">
+                    <div
+                      class="effect-type-data-values"
+                      title="{{ effectType }}&#10;{{ effectTypeData.column }}&#10;number of observed events: {{
+                        effectTypeData.numberOfObservedEvents
+                      }}&#10;observed rate per individual: {{
+                        effectTypeData.observedRatePerChild | number
+                      }}&#10;number of individuals with events: {{
+                        effectTypeData.numberOfChildrenWithEvent
+                      }}&#10;percent of individuals with events: {{
+                        effectTypeData.percentOfChildrenWithEvents | percent
+                      }}">
+                      {{ effectTypeData.numberOfObservedEvents }}, {{ effectTypeData.observedRatePerChild | number
+                      }}<br />({{ effectTypeData.numberOfChildrenWithEvent }},
+                      {{ effectTypeData.percentOfChildrenWithEvents | percent }})
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>

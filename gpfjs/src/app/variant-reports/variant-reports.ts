@@ -74,11 +74,12 @@ export class PedigreeCounter {
       json['counter_id'],
       groupName,
       json['pedigree'].map((pedigreeCounter) => PedigreeData.fromArray(pedigreeCounter)),
-      json['pedigrees_count']
+      json['pedigrees_count'],
+      json['tags']
     );
   }
 
-  constructor(public readonly counterId: number, public readonly groupName: string, public readonly data: PedigreeData[], public readonly count: number) {}
+  constructor(public readonly counterId: number, public readonly groupName: string, public readonly data: PedigreeData[], public readonly count: number, public readonly tags: string[]) {}
 }
 
 export class FamilyCounter {
@@ -203,7 +204,7 @@ export class VariantReport {
 
 export class PedigreeTable {
   public constructor(
-    public readonly pedigrees: PedigreeCounter[][],
+    public pedigrees: PedigreeCounter[][],
     public readonly phenotypes: string[],
     public readonly groupName: string,
     public readonly legend: Legend
