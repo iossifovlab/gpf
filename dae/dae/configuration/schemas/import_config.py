@@ -92,6 +92,12 @@ import_config_schema = {
             "storage_id": {"type": "string"},
         }, storage_schema],
     },
+    "gpf_instance": {
+        "type": "dict",
+        "schema": {
+            "path": {"type": "string"}
+        }
+    },
     "partition_description": {
         "type": "dict",
         "schema": {

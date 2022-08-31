@@ -10,18 +10,18 @@
 #     return build_embedded_repo("", content).get_resource("")
 
 
-def convert_to_tab_separated(content: str):
-    """Convert a string into tab separated file content.
+# def convert_to_tab_separated(content: str):
+#     """Convert a string into tab separated file content.
 
-    Useful for testing purposes.
-    """
-    result = "\n".join(
-        "\t".join(line.strip("\n\r").split())
-        for line in content.split("\n")
-        if line.strip("\r\n") != "")
-    result = result.replace("||", " ")
-    # result = result.replace("EMPTY", "")
-    return result
+#     Useful for testing purposes.
+#     """
+#     result = "\n".join(
+#         "\t".join(line.strip("\n\r").split())
+#         for line in content.split("\n")
+#         if line.strip("\r\n") != "")
+#     result = result.replace("||", " ")
+#     # result = result.replace("EMPTY", "")
+#     return result
 
 
 # def build_test_repos(pth, content):

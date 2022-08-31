@@ -307,11 +307,47 @@ EOT
           --cov wdae \
           wdae || true'
 
-    build_run_container coverage combine dae/.coverage wdae/.coverage
+    build_run_container cp ./results/wdae-junit.xml ./test-results/
+  }
+
+  build_stage "Tests - tests"
+  {
+
+    build_run_ctx_init "container" "${gpf_dev_image_ref}" \
+      --network "${ctx_network["network_id"]}" \
+      --env DAE_DB_DIR="/wd/data/data-hg19-local/" \
+      --env GRR_DEFINITION_FILE="/wd/cache/grr_definition.yaml" \
+      --env TEST_REMOTE_HOST="gpfremote" \
+      --env DAE_HDFS_HOST="impala" \
+      --env DAE_IMPALA_HOST="impala"
+
+    defer_ret build_run_ctx_reset
+
+    for d in /wd/dae /wd/wdae /wd/dae_conftests; do
+      build_run_container bash -c 'cd "'"${d}"'"; /opt/conda/bin/conda run --no-capture-output -n gpf \
+        pip install -e .'
+    done
+
+    build_run_container bash -c '
+      /opt/conda/bin/conda run --no-capture-output -n gpf \
+          /wd/scripts/wait-for-it.sh -h gpfremote -p 21010 -t 300    
+    '
+
+    build_run_container bash -c '
+        cd /wd/tests;
+        export PYTHONHASHSEED=0;
+        /opt/conda/bin/conda run --no-capture-output -n gpf py.test -v \
+          --durations 20 \
+          --cov-config /wd/coveragerc \
+          --junitxml=/wd/results/tests-junit.xml \
+          --cov dae \
+          . || true'
+
+    build_run_container coverage combine dae/.coverage wdae/.coverage tests/.coverage
     build_run_container coverage xml
     build_run_container coverage html --title GPF -d ./test-results/coverage-html
 
-    build_run_container cp ./results/wdae-junit.xml coverage.xml ./test-results/
+    build_run_container cp ./results/tests-junit.xml coverage.xml ./test-results/
   }
 
   build_stage "Package"

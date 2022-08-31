@@ -7,7 +7,7 @@ from dae.utils.regions import Region
 from dae.utils.variant_utils import mat2str
 from dae.variants.core import Allele
 
-from dae.genomic_resources.test_tools import convert_to_tab_separated
+from dae.genomic_resources.testing import convert_to_tab_separated
 from dae.backends.raw.flexible_variant_loader import flexible_variant_loader
 
 from dae.backends.cnv.flexible_cnv_loader import \
