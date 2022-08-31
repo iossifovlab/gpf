@@ -1,4 +1,4 @@
-import { Input, Component, OnInit, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Input, Component, OnInit } from '@angular/core';
 import { Observable, BehaviorSubject, of } from 'rxjs';
 import { difference } from '../utils/sets-helper';
 import { IntervalForVertex } from '../utils/interval-sandwich';
@@ -50,8 +50,7 @@ export class PedigreeChartComponent implements OnInit {
     private variantReportsService: VariantReportsService,
     private datasetsService: DatasetsService,
     public configService: ConfigService,
-    public modalService: NgbModal,
-    public cdr: ChangeDetectorRef
+    public modalService: NgbModal
   ) { }
 
   public ngOnInit(): void {
