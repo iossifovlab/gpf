@@ -8,6 +8,7 @@ import { DatasetsService } from 'app/datasets/datasets.service';
 import { PerfectlyDrawablePedigreeService } from 'app/perfectly-drawable-pedigree/perfectly-drawable-pedigree.service';
 import { ResizeService } from 'app/table/resize.service';
 import { DenovoReport, PedigreeCounter } from './variant-reports';
+import { PedigreeData } from 'app/genotype-preview-model/genotype-preview';
 
 class MockDatasetsService {
   public getSelectedDataset() {
@@ -73,7 +74,10 @@ class VariantReportsServiceMock {
   }
 
   public getVariantReport(datasetId: string): Observable<any> {
-    const pedigreeCounter: PedigreeCounter | null = null;
+    const pedigreeCounter: PedigreeCounter = new PedigreeCounter(1, 'groupName',
+      [new PedigreeData(
+        'identifier', 'id', 'mother', 'father', 'gender', 'role', 'color', [1, 2], true, 'label', 'smallLabel'
+      )], 1, ['tag1', 'tag2']);
     const denovoReport: DenovoReport | null = null;
 
     const variantReport = {
@@ -268,6 +272,10 @@ class VariantReportsServiceMock {
 
   public getDownloadLink(): string {
     return '';
+  }
+
+  public getTags(): Observable<string> {
+    return undefined;
   }
 }
 

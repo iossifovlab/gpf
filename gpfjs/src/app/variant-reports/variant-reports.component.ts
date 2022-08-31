@@ -74,7 +74,9 @@ export class VariantReportsComponent implements OnInit {
       this.familiesCounters = this.variantReport.familyReport.familiesCounters;
       this.currentPedigreeCounters = this.familiesCounters.reduce(
         (obj, x) => {
-          obj[x.groupName] = Array.from(x.pedigreeCounters);
+          if (obj[x.groupName] && x.pedigreeCounters) {
+            obj[x.groupName] = Array.from(x.pedigreeCounters);
+          }
           return obj;
         }, {}
       );
@@ -93,12 +95,13 @@ export class VariantReportsComponent implements OnInit {
         this.calculateDenovoVariantsTableWidth();
       }
     });
-
-    this.variantReportsService.getTags().subscribe(data => {
-      data.forEach(tag => {
-        this.tags.push(new CheckBox(tag, false));
+    if (this.variantReportsService.getTags() !== undefined) {
+      this.variantReportsService.getTags().subscribe(data => {
+        data.forEach(tag => {
+          this.tags.push(new CheckBox(tag, false));
+        });
       });
-    });
+    }
   }
 
   private copyOriginalPedigreeCounters(): Dictionary<PedigreeCounter[]> {

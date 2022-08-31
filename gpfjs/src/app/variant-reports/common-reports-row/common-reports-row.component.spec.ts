@@ -31,7 +31,7 @@ describe('CommonReportsRowComponent', () => {
         label: 'label',
         smallLabel: 'sl'
       }],
-      count: 1
+      count: 1, tags: ['tag1','tag2']
     }];
     fixture.detectChanges();
   });
