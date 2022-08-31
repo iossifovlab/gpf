@@ -25,11 +25,11 @@ def test_fixture_query_by_sex(
     vs = vvars.query_variants(sexes=sexes)
     vs = list(vs)
     for v in vs:
-        for a in v.alleles:
+        for allele in v.alleles:
             print(
-                a,
-                a.inheritance_in_members,
-                a.variant_in_members,
-                a.variant_in_sexes,
+                allele,
+                allele.inheritance_in_members,
+                allele.variant_in_members,
+                allele.variant_in_sexes,
             )
     assert len(vs) == count

@@ -116,6 +116,7 @@ class FamilyVariantsQueryBuilder(BaseQueryBuilder):
             pedigree_fields)
         raise ValueError("unexpected pedigree_fields argument")
 
+    # pylint: disable=arguments-differ,too-many-arguments
     def build_where(
         self,
         regions=None,
@@ -180,7 +181,7 @@ class FamilyVariantsQueryBuilder(BaseQueryBuilder):
         seen = set()
 
         def deserialize_row(row):
-            cols = dict()
+            cols = {}
             for idx, col_name in enumerate(self.query_columns):
                 cols[col_name] = row[idx]
 
@@ -200,13 +201,13 @@ class FamilyVariantsQueryBuilder(BaseQueryBuilder):
                 return None
             seen.add(fvuid)
 
-            if type(variant_data) == str:
+            if isinstance(variant_data, str):
                 logger.debug(
-                    f"variant_data is string!!!! "
-                    f"{family_id}, {chrom}, "
-                    f"{position}, {end_position}, {reference}")
+                    "variant_data is string!!!! %s, %s, %s, %s, %s",
+                    family_id, chrom, position, end_position, reference
+                )
                 variant_data = bytes(variant_data, "utf8")
-            if type(extra_attributes) == str:
+            if isinstance(extra_attributes, str):
                 extra_attributes = bytes(extra_attributes, "utf8")
 
             family = self.families.get(family_id)

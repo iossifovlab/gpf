@@ -25,9 +25,8 @@ def test_inheritance_trio_full(variants_vcf, region, count, inheritance):
     for v in vs:
         # assert Inheritance.from_name(inheritance) in v.inheritance_in_members
         assert len(mat2str(v.best_state)) == 7
-        for a in v.alleles:
-            print(">>>", a, a.inheritance_in_members)
-            assert len(a.inheritance_in_members) == 3
+        for allele in v.alleles:
+            assert len(allele.inheritance_in_members) == 3
 
     assert len(vs) == count
 
@@ -49,9 +48,8 @@ def test_inheritance_quad_full(variants_vcf, region, count, inheritance):
     )
     assert len(vs) == count
     for v in vs:
-        for a in v.alt_alleles:
-            print(a, mat2str(a.gt), a.members_ids, a.inheritance_in_members)
-            assert len(a.inheritance_in_members) == 4
+        for allele in v.alt_alleles:
+            assert len(allele.inheritance_in_members) == 4
         # assert Inheritance.from_name(inheritance) in v.inheritance_in_members
         assert len(mat2str(v.best_state)) == 9
 
@@ -73,8 +71,7 @@ def test_inheritance_multi_full(variants_vcf, region, count, inheritance):
     )
     assert len(vs) == count
     for v in vs:
-        for a in v.alt_alleles:
-            print(a, mat2str(a.gt), a.members_ids, a.inheritance_in_members)
-            assert len(a.inheritance_in_members) == 7
+        for allele in v.alt_alleles:
+            assert len(allele.inheritance_in_members) == 7
         # assert Inheritance.from_name(inheritance) in v.inheritance_in_members
         assert len(mat2str(v.best_state)) == 15

@@ -62,9 +62,7 @@ def test_multi_alt_allele_effects_match_family(
     assert len(vs) == 1
 
     for v in vs:
-        checked = False
-        for va in v.alt_alleles:
-            checked = True
-            assert va.effects.worst == worst_effect[0]
-            assert va.effects.transcripts is not None
-        assert checked
+        for alt_allele in v.alt_alleles:
+            assert alt_allele.effects.worst == worst_effect[0]
+            assert alt_allele.effects.transcripts is not None
+        assert len(v.alt_alleles)
