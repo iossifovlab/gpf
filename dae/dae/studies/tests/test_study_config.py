@@ -47,7 +47,7 @@ def test_quads_f1_config_attr_access(
         ("has_present_in_parent", False),
         ("has_family_filters", False),
         ("has_pedigree_selector", True),
-        ("has_study_filters", True),
+        ("has_study_filters", False),
     ],
 )
 def test_quads_f1_config_genotype_browser(
