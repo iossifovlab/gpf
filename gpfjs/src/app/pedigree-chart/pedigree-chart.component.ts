@@ -44,6 +44,7 @@ export class PedigreeChartComponent implements OnInit {
   public levels$: Observable<Array<OrderedIndividuals>>;
   public modal: NgbModalRef;
   public scale = 1.25;
+  public popoverScale = 2;
 
   public constructor(
     private perfectlyDrawablePedigreeService: PerfectlyDrawablePedigreeService,

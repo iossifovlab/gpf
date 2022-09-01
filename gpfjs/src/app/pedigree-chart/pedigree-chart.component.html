@@ -33,7 +33,7 @@
 </ng-template>
 
 <ng-template #pedigreeModal let-modal>
-  <div class="svg-container" style="max-width: 200px">
+  <div class="svg-container" [style.width.px]="width*popoverScale">
     <ng-container *ngTemplateOutlet="pedigree"></ng-container>
   </div>
   <ngb-accordion style="margin-top: 10px;" *ngIf="counterId !== undefined" #a="ngbAccordion">
