@@ -1,8 +1,6 @@
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { ChangeDetectorRef } from '@angular/core';
-
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
-
 import { PedigreeChartComponent } from './pedigree-chart.component';
 import { PedigreeChartMemberComponent } from './pedigree-chart-member.component';
 import { PedigreeData } from 'app/genotype-preview-model/genotype-preview';
@@ -13,9 +11,10 @@ import { HttpClient, HttpHandler } from '@angular/common/http';
 import { ConfigService } from 'app/config/config.service';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { UsersService } from 'app/users/users.service';
-import { Router } from '@angular/router';
 import { RouterTestingModule } from '@angular/router/testing';
 import { NgxsModule } from '@ngxs/store';
+import { Observable } from 'rxjs/internal/Observable';
+import { of } from 'rxjs';
 
 const FAMILY_WITH_POSITIONS = [
   new PedigreeData('f1', 'prb1', 'mom1', 'dad1', 'M', 'prb',
@@ -35,9 +34,22 @@ const FAMILY_WITHOUT_POSITIONS = [
     null, false, 'label', 'sl')
 ];
 
+class MockDatasetsService {
+  public getSelectedDataset(): object {
+    return { id: 'testDataset' };
+  }
+}
+
+class MockVariantReportsService {
+  public getFamilies(datasetId, groupName, counterId): Observable<string[]> {
+    return of(['family1', 'family2', 'family3']);
+  }
+}
+
 describe('PedigreeChartComponent', () => {
   let component: PedigreeChartComponent;
   let fixture: ComponentFixture<PedigreeChartComponent>;
+  const mockDatasetsService = new MockDatasetsService();
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
@@ -54,11 +66,11 @@ describe('PedigreeChartComponent', () => {
         PerfectlyDrawablePedigreeService,
         ResizeService,
         ChangeDetectorRef,
-        VariantReportsService,
+        {provide: VariantReportsService, useValue: new MockVariantReportsService()},
         HttpClient,
         HttpHandler,
         ConfigService,
-        DatasetsService,
+        {provide: DatasetsService, useValue: mockDatasetsService},
         UsersService
       ]
     })
@@ -89,7 +101,7 @@ describe('PedigreeChartComponent', () => {
     component.family = FAMILY_WITH_POSITIONS;
     fixture.detectChanges();
 
-    expect(component.getViewBox()).toBe('0 0 81 81');
+    expect(component.getViewBox()).toBe('-8 0 81 81');
   });
 
   it('should load pedigree with positions', () => {
@@ -187,7 +199,6 @@ describe('PedigreeChartComponent', () => {
     expect(component.positionedIndividuals.length).toBe(2);
 
     expect(component.positionedIndividuals[0].length).toBe(2);
-
     expect(component.positionedIndividuals[0][0].individual.matingUnits.length).toBe(1);
     expect(component.positionedIndividuals[0][0].individual.matingUnits[0].children.individuals.length).toBe(1);
     expect(component.positionedIndividuals[0][0].individual.matingUnits[0].children.individuals[0].pedigreeData.id).toBe('prb2');
@@ -263,5 +274,22 @@ describe('PedigreeChartComponent', () => {
 
     expect(component.width).toBe(60.5);
     expect(component.height).toBe(61.5);
+  });
+
+  it('should load family lists', () => {
+    component.loadFamilyListData();
+    expect(component.familyLists).toEqual(['family1', 'family2', 'family3']);
+  });
+
+  it('should not duplicate pedigree individuals on repeat ngOnInit calls', () => {
+    component.family = FAMILY_WITHOUT_POSITIONS;
+    component.ngOnInit();
+    expect(component.positionedIndividuals.length).toBe(2);
+    expect(component.lines.length).toBe(3);
+    expect(component.pedigreeDataWithLayout.length).toBe(3);
+    fixture.detectChanges();
+    expect(component.positionedIndividuals.length).toBe(2);
+    expect(component.lines.length).toBe(3);
+    expect(component.pedigreeDataWithLayout.length).toBe(3);
   });
 });

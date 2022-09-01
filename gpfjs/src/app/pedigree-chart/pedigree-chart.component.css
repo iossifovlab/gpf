@@ -1,6 +1,7 @@
 svg {
   width: 100%;
   height: auto;
+  cursor: pointer;
 }
 
 .svg-container {
@@ -12,4 +13,9 @@ svg {
   max-height: 500px;
   overflow: auto;
   overflow-wrap: break-word;
+}
+
+.btn-close {
+  box-shadow: none;
+  opacity: 0.5;
 }

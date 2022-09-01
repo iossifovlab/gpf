@@ -9,7 +9,7 @@ import { filter, map, switchMap, take } from 'rxjs/operators';
 import { VariantReportsService } from 'app/variant-reports/variant-reports.service';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { ConfigService } from 'app/config/config.service';
-import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { NgbModal, NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
 
 type OrderedIndividuals = Array<Individual>;
 
@@ -30,7 +30,6 @@ export class PedigreeChartComponent implements OnInit {
   public height = 0;
   public loadingFinishedFlag = false;
   public familyLists;
-  public pedigreeModalId: string;
 
   @Input()
   public set family(data: PedigreeData[]) {
@@ -43,6 +42,9 @@ export class PedigreeChartComponent implements OnInit {
 
   private family$ = new BehaviorSubject<PedigreeData[]>(null);
   public levels$: Observable<Array<OrderedIndividuals>>;
+  public modal: NgbModalRef;
+  public scale = 1.25;
+  public popoverScale = 2;
 
   public constructor(
     private perfectlyDrawablePedigreeService: PerfectlyDrawablePedigreeService,
@@ -54,6 +56,7 @@ export class PedigreeChartComponent implements OnInit {
 
   public ngOnInit(): void {
     this.pedigreeDataWithLayout = [];
+    this.positionedIndividuals = [];
     this.lines = [];
 
     const familyData = this.family$.pipe(filter(f => Boolean(f)));
@@ -63,7 +66,6 @@ export class PedigreeChartComponent implements OnInit {
           this.positionedIndividuals = this.loadPositions(family);
           return of<void>(null);
         }
-
         return of(this.perfectlyDrawablePedigreeService.isPDP(family)).pipe(
           map(([, intervals]) => intervals),
           filter(i => Boolean(i)),
@@ -97,7 +99,6 @@ export class PedigreeChartComponent implements OnInit {
         .map(i => i.yUpperLeftCorner + i.size + 1)
         .reduce((acc, current) => Math.max(acc, current), 0);
     });
-    this.pedigreeModalId = `pedigreeModal${ this.counterId }`;
   }
 
   public get straightLines(): Line[] {
@@ -132,20 +133,18 @@ export class PedigreeChartComponent implements OnInit {
     event.target.submit();
   }
 
-  public openModal(content): void {
-    this.modalService.open(content);
-  }
-
   public getViewBox(): string {
     // The addition of 8 to the width and height of the viewbox is to fit the proband arrow
+    const xPlusPrb = 8;
+
     const sortedCurveLines = this.curveLines.sort(curveLine => curveLine.inverseCurveP1[1]);
     if (sortedCurveLines.length !== 0) {
       const minY = sortedCurveLines[0].inverseCurveP1[1];
       if (minY < 0) {
-        return `0 ${minY.toString()} ${(this.width + 8).toString()} ${(this.height + -minY + 8).toString()}`;
+        return `${-xPlusPrb} ${minY} ${this.width + xPlusPrb} ${this.height - minY + xPlusPrb}`;
       }
     }
-    return `0 0 ${this.width + 8} ${this.height + 8}`;
+    return `${-xPlusPrb} 0 ${this.width + xPlusPrb} ${this.height + xPlusPrb}`;
   }
 
   private loadPositions(family: PedigreeData[]): IndividualWithPosition[][] {

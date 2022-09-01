@@ -33,8 +33,7 @@
 </ng-template>
 
 <ng-template #pedigreeModal let-modal>
-  <button type="button" style="margin-left: 95%;" class="btn-close" data-bs-dismiss="pedigreeModal" aria-label="Close"></button>
-  <div class="svg-container" style="max-width: 200px">
+  <div class="svg-container" [style.width.px]="width*popoverScale">
     <ng-container *ngTemplateOutlet="pedigree"></ng-container>
   </div>
   <ngb-accordion style="margin-top: 10px;" *ngIf="counterId !== undefined" #a="ngbAccordion">
@@ -45,7 +44,7 @@
             ngbPanelToggle
             (click)="loadFamilyListData()"
             type="button"
-            class="btn btn-secondary btn-left">Family Id list ({{ pedigreeCount }})</button>
+            class="btn btn-secondary btn-left">Family list</button>
           <form
             (ngSubmit)="onSubmit($event)"
             action="{{ configService.baseUrl }}common_reports/family_counters/download"
@@ -70,6 +69,14 @@
   </ngb-accordion>
 </ng-template>
 
-<div (click)="openModal(pedigreeModal)" class="svg-container" style="width: 50%; max-width: 100px;">
+<div
+  [ngbPopover]="pedigreeModal"
+  [autoClose]="'outside'"
+  [animation]="false"
+  container="body"
+  placement="right left"
+  class="svg-container"
+  [style.width.px]="width*scale"
+>
   <ng-container *ngTemplateOutlet="pedigree"></ng-container>
 </div>
