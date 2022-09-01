@@ -64,7 +64,6 @@ class GPFConfigValidator(Validator):
         The rule's arguments are validated against this schema:
         {"type": "string"}
         """
-
         if isinstance(value, bool) and value is False:
             return
 
@@ -80,8 +79,6 @@ class GPFConfigValidator(Validator):
 
         if failed_to_find:
             self._error(field, f"Depends on {constraint}, which is missing!")
-
-
 
     def _normalize_coerce_abspath(self, value: str) -> str:
         directory = self._config["conf_dir"]
