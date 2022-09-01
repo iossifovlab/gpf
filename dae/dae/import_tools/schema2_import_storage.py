@@ -15,10 +15,6 @@ logger = logging.getLogger(__file__)
 class Schema2ImportStorage(AbstractImportStorage):
     """Import logic for data in the Impala Schema 1 format."""
 
-    def __init__(self, project):
-        super().__init__(project)
-        self.project = project
-
     @staticmethod
     def _pedigree_dir(project):
         return fs_utils.join(project.work_dir, f"{project.study_id}_pedigree")
@@ -91,23 +87,23 @@ class Schema2ImportStorage(AbstractImportStorage):
             partition_description=partition_description,
         )
 
-    def generate_import_task_graph(self) -> TaskGraph:
+    def generate_import_task_graph(self, project) -> TaskGraph:
         graph = TaskGraph()
         pedigree_task = graph.create_task("ped task", self._do_write_pedigree,
-                                          [self.project], [])
+                                          [project], [])
 
         bucket_tasks = []
-        for bucket in self.project.get_import_variants_buckets():
+        for bucket in project.get_import_variants_buckets():
             task = graph.create_task(f"Task {bucket}", self._do_write_variant,
-                                     [self.project, bucket], [])
+                                     [project, bucket], [])
             bucket_tasks.append(task)
 
-        if self.project.has_destination():
+        if project.has_destination():
             hdfs_task = graph.create_task(
                 "hdfs copy", self._do_load_in_hdfs,
-                [self.project], [pedigree_task] + bucket_tasks)
+                [project], [pedigree_task] + bucket_tasks)
 
             graph.create_task("impala import", self._do_load_in_impala,
-                              [self.project, hdfs_task], [hdfs_task])
+                              [project, hdfs_task], [hdfs_task])
 
         return graph

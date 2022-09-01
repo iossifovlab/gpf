@@ -232,7 +232,6 @@ def minimal_project(tmp_path, minimal_gpf_instance, minimal_vcf):
         processing_config:
           work_dir: {tmp_path / "work"}
         input:
-          input_dir: "."
           pedigree:
             file: in.ped
           vcf:
@@ -253,7 +252,7 @@ def minimal_project(tmp_path, minimal_gpf_instance, minimal_vcf):
     return project
 
 
-def test_import_project_config(tmp_path, minimal_project):
+def test_minimal_project(tmp_path, minimal_project):
     project: ImportProject = minimal_project
     assert project is not None
     assert project.get_genotype_storage().storage_id == "genotype_impala"
@@ -263,3 +262,11 @@ def test_import_project_config(tmp_path, minimal_project):
 
     assert "minimal_vcf_pedigree" in files
     assert "minimal_vcf_variants" in files
+
+    assert (tmp_path / "gpf_instance/studies/minimal_vcf/minimal_vcf.conf")\
+        .exists()
+
+    gpf_instance: GPFInstance = minimal_project.get_gpf_instance()
+    gpf_instance.reload()
+
+    assert gpf_instance.get_genotype_data_ids() == ["minimal_vcf"]
