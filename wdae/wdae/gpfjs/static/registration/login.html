@@ -36,6 +36,7 @@
                 <tr>
                     <td>
                         <input class="login-button" type="submit" value="Login">
+                        <input type="hidden" name="next" value="{{ next }}">
                     </td>
                 </tr>
                 <tr>
@@ -45,9 +46,7 @@
                 </tr>
             </table>
         
-            <!-- <input class="login-button" type="submit" value="Login">
-            <a href="https://www.google.com/">Forgotten password</a> -->
-            <!-- <input type="hidden" name="next" value="{{ next }}"> -->
+
         </form>
         
         {% if form.errors %}
