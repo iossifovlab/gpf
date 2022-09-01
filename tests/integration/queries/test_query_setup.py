@@ -1,6 +1,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import os
 import textwrap
+import time
 
 import pytest
 import pysam
@@ -257,7 +258,10 @@ def test_minimal_project(tmp_path, minimal_project):
     assert project is not None
     assert project.get_genotype_storage().storage_id == "genotype_impala"
 
+    start = time.time()
     run_with_project(project)
+    elapsed = time.time() - start
+    print(f"import: {elapsed:.2f} sec")
     files = os.listdir(tmp_path / "work")
 
     assert "minimal_vcf_pedigree" in files
@@ -270,3 +274,13 @@ def test_minimal_project(tmp_path, minimal_project):
     gpf_instance.reload()
 
     assert gpf_instance.get_genotype_data_ids() == ["minimal_vcf"]
+
+    start = time.time()
+    study = gpf_instance.get_genotype_data("minimal_vcf")
+    vs = list(study.query_variants())
+    elapsed = time.time() - start
+    print(f"query: {elapsed:.2f} sec")
+
+    print(project.all_stats())
+
+    assert len(vs) == 2

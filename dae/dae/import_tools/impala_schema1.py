@@ -1,4 +1,5 @@
 import logging
+import time
 
 import toml
 
@@ -36,15 +37,20 @@ class ImpalaSchema1ImportStorage(AbstractImportStorage):
 
     @classmethod
     def _do_write_pedigree(cls, project):
+        start = time.time()
         out_dir = cls._pedigree_dir(project)
         ParquetWriter.write_pedigree(
             project.get_pedigree(), out_dir,
             cls._get_partition_description(project),
             ParquetManager(),
         )
+        elapsed = time.time() - start
+        logger.info("prepare pedigree elapsed %.2f sec", elapsed)
+        project.put_stats(("elapsed", "pedigree"), elapsed)
 
     @classmethod
     def _do_write_variant(cls, project, bucket):
+        start = time.time()
         out_dir = cls._variants_dir(project)
         gpf_instance = project.get_gpf_instance()
         ParquetWriter.write_variant(
@@ -54,9 +60,15 @@ class ImpalaSchema1ImportStorage(AbstractImportStorage):
             gpf_instance,
             project, cls._get_partition_description(project, out_dir),
             ParquetManager())
+        elapsed = time.time() - start
+        logger.info(
+            "prepare variants for bucket %s elapsed %.2f sec",
+            bucket, elapsed)
+        project.put_stats(("elapsed", f"variants {bucket}"), elapsed)
 
     @classmethod
     def _do_load_in_hdfs(cls, project):
+        start = time.time()
         genotype_storage = project.get_genotype_storage()
         if genotype_storage is None or not genotype_storage.is_impala():
             logger.error("missing or non-impala genotype storage")
@@ -71,9 +83,13 @@ class ImpalaSchema1ImportStorage(AbstractImportStorage):
             cls._variants_dir(project),
             pedigree_file,
             partition_description)
+        elapsed = time.time() - start
+        logger.info("load in hdfs elapsed %.2f sec", elapsed)
+        project.put_stats(("elapsed", "hdfs"), elapsed)
 
     @classmethod
     def _do_load_in_impala(cls, project):
+        start = time.time()
         genotype_storage = project.get_genotype_storage()
         if genotype_storage is None or not genotype_storage.is_impala():
             logger.error("missing or non-impala genotype storage")
@@ -105,6 +121,9 @@ class ImpalaSchema1ImportStorage(AbstractImportStorage):
             hdfs_variants_dir,
             partition_description=partition_description,
             variants_schema=variants_schema)
+        elapsed = time.time() - start
+        logger.info("load in impala elapsed %.2f sec", elapsed)
+        project.put_stats(("elapsed", "impala"), elapsed)
 
     @staticmethod
     def _construct_variants_table(study_id):
@@ -116,6 +135,7 @@ class ImpalaSchema1ImportStorage(AbstractImportStorage):
 
     @classmethod
     def _do_study_config(cls, project):
+        start = time.time()
         pedigree_table = cls._construct_pedigree_table(project.study_id)
         study_config = {
             "id": project.study_id,
@@ -141,6 +161,9 @@ class ImpalaSchema1ImportStorage(AbstractImportStorage):
             project.get_gpf_instance().dae_config,
             project.study_id,
             config, force=True)
+        elapsed = time.time() - start
+        logger.info("study config elapsed %.2f sec", elapsed)
+        project.put_stats(("elapsed", "study config"), elapsed)
 
     def generate_import_task_graph(self, project) -> TaskGraph:
         graph = TaskGraph()
