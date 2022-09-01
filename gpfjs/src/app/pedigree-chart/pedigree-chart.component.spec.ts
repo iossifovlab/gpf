@@ -280,4 +280,16 @@ describe('PedigreeChartComponent', () => {
     component.loadFamilyListData();
     expect(component.familyLists).toEqual(['family1', 'family2', 'family3']);
   });
+
+  it('should not duplicate pedigree individuals on repeat ngOnInit calls', () => {
+    component.family = FAMILY_WITHOUT_POSITIONS;
+    component.ngOnInit();
+    expect(component.positionedIndividuals.length).toBe(2);
+    expect(component.lines.length).toBe(3);
+    expect(component.pedigreeDataWithLayout.length).toBe(3);
+    fixture.detectChanges();
+    expect(component.positionedIndividuals.length).toBe(2);
+    expect(component.lines.length).toBe(3);
+    expect(component.pedigreeDataWithLayout.length).toBe(3);
+  });
 });

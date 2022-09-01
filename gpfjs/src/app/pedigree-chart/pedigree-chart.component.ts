@@ -56,6 +56,7 @@ export class PedigreeChartComponent implements OnInit {
 
   public ngOnInit(): void {
     this.pedigreeDataWithLayout = [];
+    this.positionedIndividuals = [];
     this.lines = [];
 
     const familyData = this.family$.pipe(filter(f => Boolean(f)));
