@@ -1,7 +1,5 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-import os
 import textwrap
-import time
 
 import pytest
 import pysam
@@ -162,11 +160,27 @@ def minimal_gpf_instance(
                       port: 8020
                       replication: 1
                     impala:
-                      db: "impala_storage_test_db"
+                      db: "test_schema1"
                       hosts:
                       - localhost
                       pool_size: 3
                       port: 21050
+
+                  genotype_impala_2:
+                    storage_type: impala
+                    dir: "work/"
+                    hdfs:
+                      base_dir: /tmp/test_data
+                      host: localhost
+                      port: 8020
+                      replication: 1
+                    impala:
+                      db: "test_schema1"
+                      hosts:
+                      - localhost
+                      pool_size: 3
+                      port: 21050
+                    schema_version: 2
             """)
         }
     })
@@ -228,59 +242,57 @@ def test_minimal_vcf(tmp_path, minimal_reference_genome, minimal_vcf):
 
 @pytest.fixture
 def minimal_project(tmp_path, minimal_gpf_instance, minimal_vcf):
-    config = textwrap.dedent(f"""
-        id: minimal_vcf
-        processing_config:
-          work_dir: {tmp_path / "work"}
-        input:
-          pedigree:
-            file: in.ped
-          vcf:
-            files:
-              - in.vcf.gz
-            denovo_mode: ignore
-            omission_mode: ignore
-        gpf_instance:
-          path: {tmp_path / "gpf_instance"}
-        """)
-    setup_directories(tmp_path, {
-        "input": {
-            "import_project.yaml": config
-        },
-    })
-    project = ImportProject.build_from_file(
-        tmp_path / "input" / "import_project.yaml")
-    return project
+    def build(storage_id):
+        config = textwrap.dedent(f"""
+            id: minimal_vcf
+            processing_config:
+              work_dir: {tmp_path / "work"}
+            input:
+              pedigree:
+                file: in.ped
+              vcf:
+                files:
+                 - in.vcf.gz
+                denovo_mode: ignore
+                omission_mode: ignore
+            gpf_instance:
+              path: {tmp_path / "gpf_instance"}
+            destination:
+              storage_id: {storage_id}
+            """)
+        setup_directories(tmp_path, {
+            "input": {
+                "import_project.yaml": config
+            },
+        })
+        project = ImportProject.build_from_file(
+            tmp_path / "input" / "import_project.yaml")
+        return project
+    return build
 
 
-def test_minimal_project(tmp_path, minimal_project):
-    project: ImportProject = minimal_project
+@pytest.mark.parametrize("storage_id", [
+    "genotype_impala",
+    "genotype_impala_2",
+])
+def test_minimal_project(tmp_path, minimal_project, storage_id):
+
+    project: ImportProject = minimal_project(storage_id)
     assert project is not None
-    assert project.get_genotype_storage().storage_id == "genotype_impala"
+    assert project.get_genotype_storage().storage_id == storage_id
 
-    start = time.time()
     run_with_project(project)
-    elapsed = time.time() - start
-    print(f"import: {elapsed:.2f} sec")
-    files = os.listdir(tmp_path / "work")
-
-    assert "minimal_vcf_pedigree" in files
-    assert "minimal_vcf_variants" in files
+    print(project.all_stats())
 
     assert (tmp_path / "gpf_instance/studies/minimal_vcf/minimal_vcf.conf")\
         .exists()
 
-    gpf_instance: GPFInstance = minimal_project.get_gpf_instance()
+    gpf_instance: GPFInstance = project.get_gpf_instance()
     gpf_instance.reload()
 
     assert gpf_instance.get_genotype_data_ids() == ["minimal_vcf"]
 
-    start = time.time()
     study = gpf_instance.get_genotype_data("minimal_vcf")
     vs = list(study.query_variants())
-    elapsed = time.time() - start
-    print(f"query: {elapsed:.2f} sec")
-
-    print(project.all_stats())
 
     assert len(vs) == 2

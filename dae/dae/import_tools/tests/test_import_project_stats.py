@@ -48,4 +48,3 @@ def test_stats_get_bad():
 
     with pytest.raises(ValueError):
         project.get_stats(("a", "1"))
-

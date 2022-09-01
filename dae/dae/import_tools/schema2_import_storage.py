@@ -1,5 +1,9 @@
 import logging
+from typing import cast
+
 from dae.utils import fs_utils
+from dae.configuration.study_config_builder import StudyConfigBuilder
+from dae.backends.impala.import_commons import save_study_config
 from dae.import_tools.parquet_writer import ParquetWriter
 from dae.import_tools.import_tools import AbstractImportStorage
 from dae.import_tools.task_graph import TaskGraph
@@ -87,6 +91,45 @@ class Schema2ImportStorage(AbstractImportStorage):
             partition_description=partition_description,
         )
 
+    @classmethod
+    def _do_study_config(cls, project):
+        genotype_storage: Schema2GenotypeStorage = \
+            cast(Schema2GenotypeStorage, project.get_genotype_storage())
+        # pylint: disable=protected-access
+        pedigree_table = genotype_storage\
+            ._construct_pedigree_table(project.study_id)
+        summary_table, family_table = genotype_storage\
+            ._construct_variant_tables(project.study_id)
+        meta_table = genotype_storage\
+            ._construct_metadata_table(project.study_id)
+
+        study_config = {
+            "id": project.study_id,
+            "conf_dir": ".",
+            "has_denovo": False,
+            "genotype_storage": {
+                "id": genotype_storage.storage_id,
+                "tables": {"pedigree": pedigree_table},
+            },
+            "genotype_browser": {"enabled": False},
+        }
+
+        if summary_table:
+            assert family_table is not None
+            storage_config = study_config["genotype_storage"]
+            storage_config["tables"]["summary"] = summary_table
+            storage_config["tables"]["family"] = family_table
+            storage_config["tables"]["meta"] = meta_table
+            study_config["genotype_browser"]["enabled"] = True
+
+        config_builder = StudyConfigBuilder(study_config)
+        config = config_builder.build_config()
+
+        save_study_config(
+            project.get_gpf_instance().dae_config,
+            project.study_id,
+            config, force=True)
+
     def generate_import_task_graph(self, project) -> TaskGraph:
         graph = TaskGraph()
         pedigree_task = graph.create_task("ped task", self._do_write_pedigree,
@@ -103,7 +146,11 @@ class Schema2ImportStorage(AbstractImportStorage):
                 "hdfs copy", self._do_load_in_hdfs,
                 [project], [pedigree_task] + bucket_tasks)
 
-            graph.create_task("impala import", self._do_load_in_impala,
-                              [project, hdfs_task], [hdfs_task])
+            impala_task = graph.create_task(
+                "impala import", self._do_load_in_impala,
+                [project, hdfs_task], [hdfs_task])
+            graph.create_task(
+                "study config", self._do_study_config,
+                [project], [impala_task])
 
         return graph
