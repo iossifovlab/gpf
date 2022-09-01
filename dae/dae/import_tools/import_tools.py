@@ -1,11 +1,13 @@
-from abc import abstractmethod
 import argparse
-from copy import deepcopy
-from dataclasses import dataclass
 import os
 import sys
+from abc import abstractmethod, ABC
+from copy import deepcopy
+from dataclasses import dataclass
 from typing import Optional, cast
+
 from box import Box
+
 from dae.backends.cnv.loader import CNVLoader
 from dae.backends.dae.loader import DaeTransmittedLoader, DenovoLoader
 from dae.backends.storage.genotype_storage_factory import (
@@ -447,13 +449,15 @@ class ImportConfigNormalizer:
         return res
 
 
-class AbstractImportStorage:
+class AbstractImportStorage(ABC):
+    """Defines abstract base class for import storages."""
+
     def __init__(self):
         pass
 
     @abstractmethod
-    def generate_import_task_graph(self, project) -> TaskGraph:
-        pass
+    def generate_import_task_graph(self, project: ImportProject) -> TaskGraph:
+        """Generate task grap for import of the project into this storage."""
 
 
 def main():

@@ -458,6 +458,10 @@ class VariantsDb:
             "creating genotype study: %s", study_config.id)
 
         genotype_study = self._make_genotype_study(study_config)
+        if genotype_study is None:
+            logger.warning("unable to load a study <%s>", study_config.id)
+            return None
+
         self._genotype_study_cache[study_config.id] = genotype_study
         return genotype_study
 
