@@ -1,3 +1,4 @@
+"""Genotype browser routes for browsing and listing variants in studies."""
 from django.http.response import StreamingHttpResponse, FileResponse
 
 from rest_framework import status  # type: ignore
@@ -38,7 +39,73 @@ class GenotypeBrowserQueryView(QueryBaseView):
     @expand_gene_set
     @request_logging(LOGGER)
     def post(self, request):
-        LOGGER.info("query v3 variants request: " + str(request.data))
+        """
+        Query for variants from a dataset.
+
+        Request:
+            POST /genotype_browser/preview/variants HTTP/1.1
+            Host: example.com
+            Content-Type: application/json
+            Accept: text/event-stream
+
+            {
+              "datasetId": "iossifov_2014",
+              "maxVariantsCount": 1000
+            }
+
+        Response:
+            HTTP/1.1 200 OK
+            Vary: Accept
+            Content-Type: text/event-stream
+            [
+
+            [col1,col2,col3,col4.....]
+
+            ,
+
+            [col1,col2,col3,col4.....]
+
+            ,
+            ......
+
+            ,
+
+            [col1,col2,col3,col4.....]
+
+            ]
+
+        Status codes:
+            200: Successfully fetched variants
+            403: User has no permissions for dataset
+            400: Invalid request body
+            404: Dataset does not exist
+
+        Request JSON parameters:
+            datasetId (string): ID of the dataset to query.
+            download (boolean): Change response type for easier download.
+            genomicScores (json): Genomic score range filter.
+            maxVariantsCount (integer): Maximum amount of variants to query.
+            sources (list): List of name-source objects: columns to fetch.
+            summaryVariantIds (list): List of summary variant IDs for filter.
+            querySummary (boolean): True if should query only summary variants.
+            uniqueFamilyVariants (boolean): Query for unique variants only.
+            regions (list): List of regions as strings to filter with.
+            presentInChild (json): Roles object to filter with.
+            presentInParent (json): Roles object to filter with.
+            inheritanceTypeFilter (list): Inheritance filtering.
+            geneScores (list): Gene score range filter.
+            gender (list): Gender filter.
+            variantTypes (list): Filter by variant type.
+            effectTypes (list): Filter by effect type.
+            studyFilters (list): Filter by study ID (dataset only).
+            personFilters (list): Filter with person filters.
+            familyFilters (list): Filter with family filters.
+            personIds (list): Filter by person IDs.
+            familyTypes (list): Filter by family type.
+            familyIds (list): Filter by family IDs.
+            affectedStatus (list): Filter by affected status.
+        """
+        LOGGER.info("query v3 variants request: %s", str(request.data))
 
         data = request.data
         user = request.user
@@ -76,6 +143,9 @@ class GenotypeBrowserQueryView(QueryBaseView):
             max_variants = None
 
         dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
+
+        if dataset is None:
+            return Response(status=status.HTTP_404_NOT_FOUND)
 
         if "sources" in data:
             sources = data.pop("sources")
