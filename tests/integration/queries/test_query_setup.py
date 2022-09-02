@@ -282,7 +282,7 @@ def test_minimal_project(tmp_path, minimal_project, storage_id):
     assert project.get_genotype_storage().storage_id == storage_id
 
     run_with_project(project)
-    print(project.all_stats())
+    print(project.stats)
 
     assert (tmp_path / "gpf_instance/studies/minimal_vcf/minimal_vcf.conf")\
         .exists()

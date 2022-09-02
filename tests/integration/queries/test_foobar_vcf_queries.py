@@ -47,42 +47,57 @@ def minimal_vcf(tmp_path_factory):
             root_path / "vcf_data" / "in.vcf.gz")
 
 
-@pytest.fixture(scope="module")
-def data_import(tmp_path_factory, minimal_vcf):
+@pytest.fixture(
+    scope="module", params=["genotype_impala", "genotype_impala_2"])
+def import_project(request, tmp_path_factory, minimal_vcf):
     # pylint: disable=import-outside-toplevel
-    from ...foobar import foobar_vcf_import
+    from ...foobar_import import foobar_vcf_import
 
-    result = {}
-    for storage_id in ["genotype_impala", "genotype_impala_2"]:
-        root_path = tmp_path_factory.mktemp(storage_id)
-        ped_path, vcf_path = minimal_vcf
+    storage_id = request.param
+    root_path = tmp_path_factory.mktemp(storage_id)
+    ped_path, vcf_path = minimal_vcf
 
-        project = foobar_vcf_import(root_path, ped_path, vcf_path, storage_id)
-        result[storage_id] = project
-    return result
+    project = foobar_vcf_import(
+        root_path, "minimal_vcf", ped_path, vcf_path, storage_id)
+    return project
 
 
-@pytest.mark.parametrize("storage_id", [
-    "genotype_impala",
-    "genotype_impala_2",
+@pytest.mark.parametrize("index, query,ecount", [
+    (1, {}, 2),
+    (2, {"genes": ["g1"]}, 2),
+    (3, {"genes": ["g2"]}, 0),
+    (4, {"effect_types": ["missense"]}, 1),
+    (5, {"effect_types": ["splice-site"]}, 1),
+    (6, {"regions": [Region("foo", 10, 10)]}, 1),
 ])
-@pytest.mark.parametrize("query,ecount", [
-    ({}, 2),
-    ({"genes": ["g1"]}, 2),
-    ({"genes": ["g2"]}, 0),
-    ({"effect_types": ["missense"]}, 1),
-    ({"effect_types": ["splice-site"]}, 1),
-    ({"regions": [Region("foo", 10, 10)]}, 1),
-])
-def test_family_queries(data_import, storage_id, query, ecount):
-
-    project = data_import[storage_id]
-    gpf_instance: GPFInstance = project.get_gpf_instance()
+def test_family_queries(import_project, index, query, ecount):
+    gpf_instance: GPFInstance = import_project.get_gpf_instance()
     gpf_instance.reload()
 
     assert gpf_instance.get_genotype_data_ids() == ["minimal_vcf"]
 
     study = gpf_instance.get_genotype_data("minimal_vcf")
     vs = list(study.query_variants(**query))
+
+    assert len(vs) == ecount
+
+
+@pytest.mark.parametrize("index,query,ecount", [
+    (1, {}, 2),
+    # FIXME fix in schema 2 and uncomment
+    # (2, {"genes": ["g1"]}, 2),
+    (3, {"genes": ["g2"]}, 0),
+    # (4, {"effect_types": ["missense"]}, 1),
+    # (5, {"effect_types": ["splice-site"]}, 1),
+    (6, {"regions": [Region("foo", 10, 10)]}, 1),
+])
+def test_summary_queries(import_project, index, query, ecount):
+    gpf_instance: GPFInstance = import_project.get_gpf_instance()
+    gpf_instance.reload()
+
+    assert gpf_instance.get_genotype_data_ids() == ["minimal_vcf"]
+
+    study = gpf_instance.get_genotype_data("minimal_vcf")
+    vs = list(study.query_summary_variants(**query))
 
     assert len(vs) == ecount

@@ -14,11 +14,11 @@ class GenotypeStorage(abc.ABC):
     def id(self):
         return self.storage_id
 
-    @deprecated(details="switch to using storage_type")
+    @deprecated(details="pending remove from the API")
     def is_impala(self):  # pylint: disable=no-self-use
         return False
 
-    @deprecated(details="switch to using storage_type")
+    @deprecated(details="pending remove from the API")
     def is_filestorage(self):  # pylint: disable=no-self-use
         return False
 

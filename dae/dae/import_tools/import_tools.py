@@ -4,7 +4,7 @@ import sys
 from abc import abstractmethod, ABC
 from copy import deepcopy
 from dataclasses import dataclass
-from typing import Optional, cast, Tuple, Any, Dict
+from typing import Optional, cast
 
 from box import Box
 
@@ -28,6 +28,7 @@ from dae.utils import fs_utils
 from dae.backends.impala.import_commons import MakefilePartitionHelper,\
     construct_import_annotation_pipeline, construct_import_effect_annotator
 from dae.dask.client_factory import DaskClient
+from dae.utils.statistics import StatsCollection
 
 
 @dataclass(frozen=True)
@@ -59,36 +60,7 @@ class ImportProject():
 
         self._base_input_dir = base_input_dir
 
-        self._stats: Dict[str, Any] = {}
-
-    def put_stats(self, key: Tuple[str, ...], value: Any) -> None:
-        """Save stats value for specified key."""
-        stats = self._stats
-        for part in key[: -1]:
-            if part not in stats:
-                stats[part] = {}
-            stats = stats[part]
-        if not isinstance(stats, dict):
-            raise ValueError(
-                f"put stats mismatched key {key} in {self._stats}")
-
-        stats[key[-1]] = value
-
-    def all_stats(self) -> Dict[str, Any]:
-        return self._stats
-
-    def get_stats(self, key: Tuple[str, ...]) -> Any:
-        """Return stats value corresponding to key or None if not found."""
-        stats = self._stats
-        for part in key[: -1]:
-            if part not in stats:
-                stats[part] = {}
-            stats = stats[part]
-
-        if not isinstance(stats, dict):
-            raise ValueError(
-                f"get stats mismatched key {key} in {self._stats}")
-        return stats.get(key[-1], None)
+        self.stats: StatsCollection = StatsCollection()
 
     @staticmethod
     def build_from_config(import_config, base_input_dir=""):

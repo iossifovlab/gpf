@@ -108,11 +108,12 @@ def foobar_gpf(root_path):
     return gpf_instance
 
 
-def foobar_vcf_import(root_path, ped_path, vcf_path, storage_id):
+def foobar_vcf_import(root_path, study_id, ped_path, vcf_path, storage_id):
+
     foobar_gpf(root_path)
 
     config = textwrap.dedent(f"""
-        id: minimal_vcf
+        id: {study_id}
         processing_config:
           work_dir: {root_path / "work"}
         input:
