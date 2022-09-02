@@ -23,16 +23,16 @@ class ListFamiliesView(QueryBaseView):
                 status.HTTP_200_OK
             )
 
-        result = []
+        result = set()
         tags = tags.split(",")
         for family_id, family in families.items():
             for tag in tags:
                 try:
                     tagged = check_tag(family, tag, True)
                     if tagged:
-                        result.append(family_id)
-                except ValueError as e:
-                    print(e)
+                        result.add(family_id)
+                except ValueError as err:
+                    print(err)
                     return Response(status=status.HTTP_400_BAD_REQUEST)
 
         return Response(
@@ -181,7 +181,7 @@ class ListAllDetailsView(QueryBaseView):
 
         out = []
 
-        for family_id, family in families.items():
+        for _, family in families.items():
             json = family.to_json()
             members = family.members_in_order
             json["members"] = [m.to_json() for m in members]
