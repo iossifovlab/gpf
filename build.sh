@@ -167,6 +167,8 @@ EOT
 
     build_run_container cd /wd/gpf/wdae/wdae/docs 
     build_run_container bash -c "
+        /opt/conda/bin/conda run --no-capture-output -n gpf /wd/gpf/wdae/wdae/docs/api_docs_generator.py --root_dir /wd/gpf/wdae/wdae --output_dir /wd/gpf/wdae/wdae/docs/routes"
+    build_run_container bash -c "
         /opt/conda/bin/conda run --no-capture-output -n gpf \
         sphinx-build -b html -d _build/doctrees   . _build/html"
     build_run_container tar zcvf /wd/results/gpf-wdae-html.tar.gz -C _build/ html/
