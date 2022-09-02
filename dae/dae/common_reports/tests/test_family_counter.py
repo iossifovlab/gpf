@@ -68,7 +68,25 @@ def test_family_counter(study1):
     )
     assert family_counter.pedigrees_count == 1
 
-    assert len(family_counter.to_dict().keys()) == 3
+    assert len(family_counter.to_dict().keys()) == 4
+
+
+def test_family_counter_tags(study1):
+    person_set_collection = study1.get_person_set_collection("phenotype")
+    family = study1.families["f6"]
+    pedigree = get_family_pedigree(family, person_set_collection)
+    family_counter = FamilyCounter.from_family(family, pedigree, 1)
+
+    assert isinstance(family_counter.tags, list)
+
+    assert set(family_counter.tags) == set([
+        "tag_simplex_family",
+        "tag_trio_family",
+        "tag_nuclear_family",
+        "tag_affected_prb_family",
+        "tag_family_type:type#3",
+        "tag_male_prb_family"
+    ])
 
 
 @pytest.mark.xfail

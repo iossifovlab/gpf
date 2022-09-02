@@ -212,7 +212,7 @@ class CLILoader(ABC):
     def parse_cli_arguments(
             cls, argv: argparse.Namespace,
             use_defaults=False) -> Tuple[str, Dict[str, Any]]:
-        """Parse clie arguments."""
+        """Parse cli arguments."""
         for arg in cls._arguments():
             arg.parse_cli_argument(argv, use_defaults=use_defaults)
         return "", {}

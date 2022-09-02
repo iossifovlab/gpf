@@ -47,6 +47,11 @@ class FamilyCounter:
         self.families = json["families"]
         self.pedigree = json["pedigree"]
         self.pedigrees_count = json["pedigrees_count"]
+        tags = json.get("tags")
+        if tags is not None:
+            self.tags = list(json.get("tags"))
+        else:
+            self.tags = None
         self.counter_id = int(json["counter_id"])
 
     @property
@@ -61,23 +66,23 @@ class FamilyCounter:
             "pedigrees_count": (
                 label if label is not None else family.family_id
             ),
+            "tags": family.tags,
             "counter_id": 0
         })
 
     def to_dict(self, full=False):
         """Transform counter to dict."""
-        if full:
-            return {
-                "pedigree": self.pedigree,
-                "pedigrees_count": self.pedigrees_count,
-                "families": self.families,
-                "counter_id": self.counter_id
-            }
-        return {
+        output = {
             "pedigree": self.pedigree,
             "pedigrees_count": self.pedigrees_count,
+            "tags": self.tags,
             "counter_id": self.counter_id
         }
+
+        if full:
+            output["families"] = self.families
+
+        return output
 
 
 class FamiliesGroupCounters:
@@ -109,6 +114,7 @@ class FamiliesGroupCounters:
                         family, person_set_collection
                     ),
                     "pedigrees_count": family.family_id,
+                    "tags": family.tags,
                     "counter_id": idx
                 })
                 counters[family.family_id] = family_counter
@@ -150,6 +156,7 @@ class FamiliesGroupCounters:
                     "pedigree": get_family_pedigree(
                         family, person_set_collection
                     ),
+                    "tags": family.tags,
                     "pedigrees_count": pedigree_label,
                     "counter_id": idx
                 })

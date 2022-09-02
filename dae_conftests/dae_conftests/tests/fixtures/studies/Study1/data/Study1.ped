@@ -1,34 +1,34 @@
-familyId	personId	dadId	momId	sex	status	role	phenotype	sampleId	generated
-f1	mom1	0	0	2	1	mom	unaffected	mom1
-f1	dad1	0	0	1	1	dad	unaffected	dad1
-f1	ch1	dad1	mom1	2	2	prb	phenotype1	ch1
-f3	mom3	0	0	2	1	mom	unaffected	mom3
-f3	dad3	0	0	1	1	dad	unaffected	dad3
-f3	ch3	dad3	mom3	2	2	prb	phenotype1	ch3
-f4	mom4	0	0	2	1	mom	phenotype1	mom4
-f4	ch4	dad4	mom4	2	2	prb	phenotype1	ch4
-f4	ch4.1	dad4	mom4	2	2	sib	phenotype2	ch4.1
-f4	dad4	0	0	1	1	dad	pheno	dad4	1.0
-f5	mom5	0	0	2	1	mom	phenotype1	mom5
-f5	dad5	0	0	1	1	dad	pheno	dad5
-f5	ch5	dad5	mom5	2	2	prb	phenotype1	ch5
-f5	ch5.1	dad5	mom5	2	2	sib	phenotype2	ch5.1	1.0
-f6	mom6	0	0	2	1	mom	unaffected	mom6
-f6	dad6	0	0	1	1	dad	unaffected	dad6
-f6	ch6	dad6	mom6	1	2	prb	phenotype1	ch6
-f7	mom7	0	0	2	1	mom	phenotype1	mom7
-f7	dad7	0	0	1	1	dad	pheno	dad7
-f7	ch7	dad7	mom7	2	2	prb	phenotype2	ch7
-f8	mom8	0	0	2	1	mom	phenotype1	mom8
-f8	dad8	0	0	1	1	dad	pheno	dad8
-f8	ch8	dad8	mom8	2	2	prb	phenotype1	ch8
-f8	ch8.1	dad8	mom8	2	2	sib	phenotype2	ch8.1	1.0
-f9	ch9	0	0	1	1	sib	phenotype1	ch9
-f9	ch9.1	0	0	1	1	prb	phenotype1	ch9.1
-f9	ch9.2	0	0	1	1	prb	phenotype1	ch9.2
-f10	ch10	0	0	1	1	sib	phenotype1	ch10
-f10	ch10.1	0	0	1	1	sib	phenotype1	ch10.1
-f10	ch10.2	0	0	1	1	prb	phenotype1	ch10.2
-f11	mom11	0	0	2	1	mom	unaffected	mom11
-f11	dad11	0	0	1	1	dad	unaffected	dad11
-f11	ch11	dad11	mom11	2	2	prb	unaffected	ch11
+familyId	personId	momId	dadId	sex	status	role	sampleId	generated	not_sequenced	member_index	phenotype	tag_affected_dad_family	tag_affected_mom_family	tag_affected_prb_family	tag_affected_sib_family	tag_control_family	tag_family_type	tag_family_type_full	tag_female_prb_family	tag_male_prb_family	tag_missing_dad_family	tag_missing_mom_family	tag_multiplex_family	tag_nuclear_family	tag_quad_family	tag_simplex_family	tag_trio_family	tags
+f1	mom1	0	0	F	unaffected	mom	mom1	False	False	0	unaffected	False	False	True	False	False	type#1	3:dad.M.unaffected:mom.F.unaffected:prb.F.affected	True	False	False	False	False	True	False	True	True	tag_affected_prb_family;tag_female_prb_family;tag_nuclear_family;tag_simplex_family;tag_trio_family
+f1	dad1	0	0	M	unaffected	dad	dad1	False	False	1	unaffected	False	False	True	False	False	type#1	3:dad.M.unaffected:mom.F.unaffected:prb.F.affected	True	False	False	False	False	True	False	True	True	tag_affected_prb_family;tag_female_prb_family;tag_nuclear_family;tag_simplex_family;tag_trio_family
+f1	ch1	mom1	dad1	F	affected	prb	ch1	False	False	2	phenotype1	False	False	True	False	False	type#1	3:dad.M.unaffected:mom.F.unaffected:prb.F.affected	True	False	False	False	False	True	False	True	True	tag_affected_prb_family;tag_female_prb_family;tag_nuclear_family;tag_simplex_family;tag_trio_family
+f3	mom3	0	0	F	unaffected	mom	mom3	False	False	0	unaffected	False	False	True	False	False	type#1	3:dad.M.unaffected:mom.F.unaffected:prb.F.affected	True	False	False	False	False	True	False	True	True	tag_affected_prb_family;tag_female_prb_family;tag_nuclear_family;tag_simplex_family;tag_trio_family
+f3	dad3	0	0	M	unaffected	dad	dad3	False	False	1	unaffected	False	False	True	False	False	type#1	3:dad.M.unaffected:mom.F.unaffected:prb.F.affected	True	False	False	False	False	True	False	True	True	tag_affected_prb_family;tag_female_prb_family;tag_nuclear_family;tag_simplex_family;tag_trio_family
+f3	ch3	mom3	dad3	F	affected	prb	ch3	False	False	2	phenotype1	False	False	True	False	False	type#1	3:dad.M.unaffected:mom.F.unaffected:prb.F.affected	True	False	False	False	False	True	False	True	True	tag_affected_prb_family;tag_female_prb_family;tag_nuclear_family;tag_simplex_family;tag_trio_family
+f4	mom4	0	0	F	unaffected	mom	mom4	False	False	0	phenotype1	False	False	True	True	False	type#2	3:mom.F.unaffected:prb.F.affected:sib.F.affected	True	False	True	False	True	False	False	False	False	tag_affected_prb_family;tag_affected_sib_family;tag_female_prb_family;tag_missing_dad_family;tag_multiplex_family
+f4	ch4	mom4	dad4	F	affected	prb	ch4	False	False	1	phenotype1	False	False	True	True	False	type#2	3:mom.F.unaffected:prb.F.affected:sib.F.affected	True	False	True	False	True	False	False	False	False	tag_affected_prb_family;tag_affected_sib_family;tag_female_prb_family;tag_missing_dad_family;tag_multiplex_family
+f4	ch4.1	mom4	dad4	F	affected	sib	ch4.1	False	False	2	phenotype2	False	False	True	True	False	type#2	3:mom.F.unaffected:prb.F.affected:sib.F.affected	True	False	True	False	True	False	False	False	False	tag_affected_prb_family;tag_affected_sib_family;tag_female_prb_family;tag_missing_dad_family;tag_multiplex_family
+f4	dad4	0	0	M	unaffected	dad	dad4	True	True	3	pheno	False	False	True	True	False	type#2	3:mom.F.unaffected:prb.F.affected:sib.F.affected	True	False	True	False	True	False	False	False	False	tag_affected_prb_family;tag_affected_sib_family;tag_female_prb_family;tag_missing_dad_family;tag_multiplex_family
+f5	mom5	0	0	F	unaffected	mom	mom5	False	False	0	phenotype1	False	False	True	False	False	type#1	3:dad.M.unaffected:mom.F.unaffected:prb.F.affected	True	False	False	False	True	True	False	False	True	tag_affected_prb_family;tag_female_prb_family;tag_multiplex_family;tag_nuclear_family;tag_trio_family
+f5	dad5	0	0	M	unaffected	dad	dad5	False	False	1	pheno	False	False	True	False	False	type#1	3:dad.M.unaffected:mom.F.unaffected:prb.F.affected	True	False	False	False	True	True	False	False	True	tag_affected_prb_family;tag_female_prb_family;tag_multiplex_family;tag_nuclear_family;tag_trio_family
+f5	ch5	mom5	dad5	F	affected	prb	ch5	False	False	2	phenotype1	False	False	True	False	False	type#1	3:dad.M.unaffected:mom.F.unaffected:prb.F.affected	True	False	False	False	True	True	False	False	True	tag_affected_prb_family;tag_female_prb_family;tag_multiplex_family;tag_nuclear_family;tag_trio_family
+f5	ch5.1	mom5	dad5	F	affected	sib	ch5.1	True	True	3	phenotype2	False	False	True	False	False	type#1	3:dad.M.unaffected:mom.F.unaffected:prb.F.affected	True	False	False	False	True	True	False	False	True	tag_affected_prb_family;tag_female_prb_family;tag_multiplex_family;tag_nuclear_family;tag_trio_family
+f6	mom6	0	0	F	unaffected	mom	mom6	False	False	0	unaffected	False	False	True	False	False	type#3	3:dad.M.unaffected:mom.F.unaffected:prb.M.affected	False	True	False	False	False	True	False	True	True	tag_affected_prb_family;tag_male_prb_family;tag_nuclear_family;tag_simplex_family;tag_trio_family
+f6	dad6	0	0	M	unaffected	dad	dad6	False	False	1	unaffected	False	False	True	False	False	type#3	3:dad.M.unaffected:mom.F.unaffected:prb.M.affected	False	True	False	False	False	True	False	True	True	tag_affected_prb_family;tag_male_prb_family;tag_nuclear_family;tag_simplex_family;tag_trio_family
+f6	ch6	mom6	dad6	M	affected	prb	ch6	False	False	2	phenotype1	False	False	True	False	False	type#3	3:dad.M.unaffected:mom.F.unaffected:prb.M.affected	False	True	False	False	False	True	False	True	True	tag_affected_prb_family;tag_male_prb_family;tag_nuclear_family;tag_simplex_family;tag_trio_family
+f7	mom7	0	0	F	unaffected	mom	mom7	False	False	0	phenotype1	False	False	True	False	False	type#1	3:dad.M.unaffected:mom.F.unaffected:prb.F.affected	True	False	False	False	False	True	False	True	True	tag_affected_prb_family;tag_female_prb_family;tag_nuclear_family;tag_simplex_family;tag_trio_family
+f7	dad7	0	0	M	unaffected	dad	dad7	False	False	1	pheno	False	False	True	False	False	type#1	3:dad.M.unaffected:mom.F.unaffected:prb.F.affected	True	False	False	False	False	True	False	True	True	tag_affected_prb_family;tag_female_prb_family;tag_nuclear_family;tag_simplex_family;tag_trio_family
+f7	ch7	mom7	dad7	F	affected	prb	ch7	False	False	2	phenotype2	False	False	True	False	False	type#1	3:dad.M.unaffected:mom.F.unaffected:prb.F.affected	True	False	False	False	False	True	False	True	True	tag_affected_prb_family;tag_female_prb_family;tag_nuclear_family;tag_simplex_family;tag_trio_family
+f8	mom8	0	0	F	unaffected	mom	mom8	False	False	0	phenotype1	False	False	True	False	False	type#1	3:dad.M.unaffected:mom.F.unaffected:prb.F.affected	True	False	False	False	True	True	False	False	True	tag_affected_prb_family;tag_female_prb_family;tag_multiplex_family;tag_nuclear_family;tag_trio_family
+f8	dad8	0	0	M	unaffected	dad	dad8	False	False	1	pheno	False	False	True	False	False	type#1	3:dad.M.unaffected:mom.F.unaffected:prb.F.affected	True	False	False	False	True	True	False	False	True	tag_affected_prb_family;tag_female_prb_family;tag_multiplex_family;tag_nuclear_family;tag_trio_family
+f8	ch8	mom8	dad8	F	affected	prb	ch8	False	False	2	phenotype1	False	False	True	False	False	type#1	3:dad.M.unaffected:mom.F.unaffected:prb.F.affected	True	False	False	False	True	True	False	False	True	tag_affected_prb_family;tag_female_prb_family;tag_multiplex_family;tag_nuclear_family;tag_trio_family
+f8	ch8.1	mom8	dad8	F	affected	sib	ch8.1	True	True	3	phenotype2	False	False	True	False	False	type#1	3:dad.M.unaffected:mom.F.unaffected:prb.F.affected	True	False	False	False	True	True	False	False	True	tag_affected_prb_family;tag_female_prb_family;tag_multiplex_family;tag_nuclear_family;tag_trio_family
+f9	ch9	0	0	M	unaffected	sib	ch9	False	False	0	phenotype1	False	False	False	False	True	type#4	3:prb.M.unaffected:prb.M.unaffected:sib.M.unaffected	False	True	True	True	False	False	False	False	False	tag_control_family;tag_male_prb_family;tag_missing_dad_family;tag_missing_mom_family
+f9	ch9.1	0	0	M	unaffected	prb	ch9.1	False	False	1	phenotype1	False	False	False	False	True	type#4	3:prb.M.unaffected:prb.M.unaffected:sib.M.unaffected	False	True	True	True	False	False	False	False	False	tag_control_family;tag_male_prb_family;tag_missing_dad_family;tag_missing_mom_family
+f9	ch9.2	0	0	M	unaffected	prb	ch9.2	False	False	2	phenotype1	False	False	False	False	True	type#4	3:prb.M.unaffected:prb.M.unaffected:sib.M.unaffected	False	True	True	True	False	False	False	False	False	tag_control_family;tag_male_prb_family;tag_missing_dad_family;tag_missing_mom_family
+f10	ch10	0	0	M	unaffected	sib	ch10	False	False	0	phenotype1	False	False	False	False	True	type#5	3:prb.M.unaffected:sib.M.unaffected:sib.M.unaffected	False	True	True	True	False	False	False	False	False	tag_control_family;tag_male_prb_family;tag_missing_dad_family;tag_missing_mom_family
+f10	ch10.1	0	0	M	unaffected	sib	ch10.1	False	False	1	phenotype1	False	False	False	False	True	type#5	3:prb.M.unaffected:sib.M.unaffected:sib.M.unaffected	False	True	True	True	False	False	False	False	False	tag_control_family;tag_male_prb_family;tag_missing_dad_family;tag_missing_mom_family
+f10	ch10.2	0	0	M	unaffected	prb	ch10.2	False	False	2	phenotype1	False	False	False	False	True	type#5	3:prb.M.unaffected:sib.M.unaffected:sib.M.unaffected	False	True	True	True	False	False	False	False	False	tag_control_family;tag_male_prb_family;tag_missing_dad_family;tag_missing_mom_family
+f11	mom11	0	0	F	unaffected	mom	mom11	False	False	0	unaffected	False	False	True	False	False	type#1	3:dad.M.unaffected:mom.F.unaffected:prb.F.affected	True	False	False	False	False	True	False	True	True	tag_affected_prb_family;tag_female_prb_family;tag_nuclear_family;tag_simplex_family;tag_trio_family
+f11	dad11	0	0	M	unaffected	dad	dad11	False	False	1	unaffected	False	False	True	False	False	type#1	3:dad.M.unaffected:mom.F.unaffected:prb.F.affected	True	False	False	False	False	True	False	True	True	tag_affected_prb_family;tag_female_prb_family;tag_nuclear_family;tag_simplex_family;tag_trio_family
+f11	ch11	mom11	dad11	F	affected	prb	ch11	False	False	2	unaffected	False	False	True	False	False	type#1	3:dad.M.unaffected:mom.F.unaffected:prb.F.affected	True	False	False	False	False	True	False	True	True	tag_affected_prb_family;tag_female_prb_family;tag_nuclear_family;tag_simplex_family;tag_trio_family

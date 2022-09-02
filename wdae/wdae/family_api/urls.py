@@ -3,6 +3,11 @@ from . import views
 
 urlpatterns = [
     re_path(
+        r"^/tags/?$",
+        views.TagsView.as_view(),
+        name="list_tags",
+    ),
+    re_path(
         r"^/(?P<dataset_id>[^/]+)/all/?$",
         views.ListAllDetailsView.as_view(),
         name="list_all_details",

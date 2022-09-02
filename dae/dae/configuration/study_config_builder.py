@@ -257,6 +257,11 @@ pedigree.params.ped_sep = \
 "{{ genotype_storage.files.pedigree.params.ped_sep }}"
 {%- endif %}
 
+{%- if genotype_storage.files.pedigree.params.ped_tags %}
+pedigree.params.ped_tags = \
+{{ genotype_storage.files.pedigree.params.ped_tags }}
+{%- endif %}
+
 {%- else %}
 pedigree.params = {}
 {%- endif %}
