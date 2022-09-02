@@ -10,9 +10,9 @@ def test_import_and_query(testing_study_backend):
 
     # assert the number of summary and family allelies is as expected
     assert len(family_variants) == 5
-    assert len(summary_variants) == 10
-    # 10 reference and 18 alternative alleles
-    assert sum(len(sv.alleles) for sv in summary_variants) == 28
+    assert len(summary_variants) == 5
+    # 5 reference and 10 alternative alleles
+    assert sum(len(sv.alleles) for sv in summary_variants) == 15
 
 
 def test_import_denovo_with_custome_range(
@@ -36,7 +36,7 @@ def test_import_denovo_with_custome_range(
     assert sum(len(sv.alleles) for sv in summary_variants) == 6
 
 
-def test_query_summary_variants_with_gene_symbols(testing_study_backend):
+def test_query_variants_with_gene_symbols(testing_study_backend):
     effect_types = [
         "frame-shift", "nonsense", "splice-site", "no-frame-shift-newStop",
         "nonsense", "frame-shift", "splice-site", "no-frame-shift-newStop",
@@ -53,11 +53,11 @@ def test_query_summary_variants_with_gene_symbols(testing_study_backend):
         effect_types=effect_types,
         inheritance=inheritance,
     ))
-    assert len(summary_variants) == 7
+    assert len(summary_variants) == 2
 
     family_variants = list(testing_study_backend.query_variants(
         genes=["SAMD11"],
         effect_types=effect_types,
         inheritance=inheritance,
     ))
-    assert len(family_variants) == 10
+    assert len(family_variants) == 2

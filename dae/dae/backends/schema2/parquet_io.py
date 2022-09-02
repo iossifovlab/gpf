@@ -660,46 +660,9 @@ class VariantsParquetWriter:
             summary_variant,
             family_variants,
         ) in enumerate(self.full_variants_iterator):
-            # build summary json blob (concat all other alleles)
-            # INSIDE summary_variant
-            summary_blobs_json = json.dumps(
-                summary_variant.to_record, sort_keys=True
-            )
-
-            # print("-" * 40, "SUMMARY VARIANT", "-" * 40)
-            # sv_json = json.dumps(summary_variant.to_record, sort_keys=True)
-            # sv_from_json = \
-            #     SummaryVariantFactory.summary_variant_from_records(
-            #         json.loads(sv_json))
-            # sv2_json = json.dumps(sv_from_json.to_record,  sort_keys=True)
-            # assert summary_variant.to_record == json.loads(sv_json)
-            # assert sv_json == sv2_json
-
-            for summary_allele in summary_variant.alleles:
-                extra_atts = {
-                    "bucket_index": self.bucket_index,
-                }
-                summary_allele.summary_index = summary_variant_index
-                summary_allele.update_attributes(extra_atts)
-                summary_writer = self._get_bin_writer_summary(summary_allele)
-                summary_writer.append_summary_allele(
-                    summary_allele, summary_blobs_json
-                )
-
+            num_fam_alleles_wirtten = 0
             for fv in family_variants:
                 family_variant_index += 1
-
-                # print("-" * 40, "FAMILY VARIANT", "-" * 40)
-                # fv_json = json.dumps(family_variant.to_record,
-                #                      sort_keys=True)
-                # fv_from_json_obj = json.loads(fv_json)
-                # assert family_variant.to_record == fv_from_json_obj
-                # fv_from_json = \
-                #     FamilyVariantFactory.family_variant_from_record(
-                #         sv_from_json,
-                #         self.variants_loader.families[
-                #             fv_from_json_obj["family_id"]],
-                #         fv_from_json_obj)
 
                 if fv.is_unknown() or fv.is_reference():
                     continue
@@ -724,9 +687,27 @@ class VariantsParquetWriter:
                     family_bin_writer.append_family_allele(
                         family_allele, family_variant_data_json
                     )
+                    num_fam_alleles_wirtten += 1
 
-            # DEBUG
-            # if family_variant_index % 20 == 0: break
+            # don't store summary alleles withouth family ones
+            if num_fam_alleles_wirtten > 0:
+                # build summary json blob (concat all other alleles)
+                # INSIDE summary_variant
+                summary_blobs_json = json.dumps(
+                    summary_variant.to_record, sort_keys=True
+                )
+                for summary_allele in summary_variant.alleles:
+                    extra_atts = {
+                        "bucket_index": self.bucket_index,
+                    }
+                    summary_allele.summary_index = summary_variant_index
+                    summary_allele.update_attributes(extra_atts)
+                    summary_writer = self._get_bin_writer_summary(
+                        summary_allele
+                    )
+                    summary_writer.append_summary_allele(
+                        summary_allele, summary_blobs_json
+                    )
 
             if summary_variant_index % 1000 == 0:
                 report = True
