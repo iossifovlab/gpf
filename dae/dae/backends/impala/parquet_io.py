@@ -170,11 +170,11 @@ class ParquetPartitionDescriptor(PartitionDescriptor):
     @staticmethod
     def from_config(config_path, root_dirname=""):
         """Create a partition description from the provided config file."""
-        fs, _ = url_to_fs(config_path)
-        assert fs.exists(config_path), config_path
+        filesystem, _ = url_to_fs(config_path)
+        assert filesystem.exists(config_path), config_path
 
         config = configparser.ConfigParser()
-        with fs.open(config_path, "rt") as input_config_file:
+        with filesystem.open(config_path, "rt") as input_config_file:
             config.read_file(input_config_file, config_path)
         return ParquetPartitionDescriptor.from_dict(config, root_dirname)
 
