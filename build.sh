@@ -310,9 +310,11 @@ EOT
     build_run_container cp ./results/wdae-junit.xml ./test-results/
   }
 
-  build_stage "Tests - tests"
+  build_stage "Tests - integration"
   {
-
+    # Run integration tests located at gpf/tests
+  
+    # Setup execution context
     build_run_ctx_init "container" "${gpf_dev_image_ref}" \
       --network "${ctx_network["network_id"]}" \
       --env DAE_DB_DIR="/wd/data/data-hg19-local/" \
@@ -328,11 +330,7 @@ EOT
         pip install -e .'
     done
 
-    build_run_container bash -c '
-      /opt/conda/bin/conda run --no-capture-output -n gpf \
-          /wd/scripts/wait-for-it.sh -h gpfremote -p 21010 -t 300    
-    '
-
+    # Run integration tests in gpf/tests
     build_run_container bash -c '
         cd /wd/tests;
         export PYTHONHASHSEED=0;
@@ -343,10 +341,14 @@ EOT
           --cov dae \
           . || true'
 
+    # Combane coverage information from tests in dae/, wdae/ and tests/
     build_run_container coverage combine dae/.coverage wdae/.coverage tests/.coverage
+
+    # Convert coverage information to XML coberture format
     build_run_container coverage xml
     build_run_container coverage html --title GPF -d ./test-results/coverage-html
 
+    # Copy test and results and coverage information in test results directory
     build_run_container cp ./results/tests-junit.xml coverage.xml ./test-results/
   }
 
