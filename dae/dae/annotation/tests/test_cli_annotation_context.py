@@ -24,7 +24,7 @@ def test_cli_genomic_context_reference_genome(fixture_dirname):
 
     # Then
     context = get_genomic_context()
-    assert context.get_context_keys() == {
+    assert context.get_context_keys() <= {
         "reference_genome", "genomic_resources_repository",
         "gene_models",
         "annotation_pipeline",

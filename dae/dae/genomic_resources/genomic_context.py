@@ -136,7 +136,11 @@ class SimpleGenomicContextProvider(GenomicContextProvider):
     def get_contexts(self) -> List[GenomicContext]:
         if self._contexts is None:
             try:
-                self._contexts = [self._context_builder()]
+                context = self._context_builder()
+                if context is None:
+                    self._contexts = []
+                else:
+                    self._contexts = [context]
             except Exception:  # pylint: disable=broad-except
                 logger.error(
                     "problem while building genomic context",
