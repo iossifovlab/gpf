@@ -20,6 +20,7 @@ partition_description:
     rare_boundary: 5
 
 destination:
+  id: dummy_id
   hdfs:
     base_dir: /user/schema2_tests/studies
     host: localhost
@@ -31,5 +32,5 @@ destination:
     - localhost
     pool_size: 3
     port: 21050
-  storage_type: impala
+  storage_type: impala2
   schema_version: 2

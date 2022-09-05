@@ -6,12 +6,11 @@ from copy import deepcopy
 from dataclasses import dataclass
 from typing import Optional, cast
 
-from box import Box
-
 from dae.backends.cnv.loader import CNVLoader
 from dae.backends.dae.loader import DaeTransmittedLoader, DenovoLoader
-from dae.backends.storage.genotype_storage_factory import (
-    GenotypeStorageFactory
+from dae.genotype_storage.genotype_storage import GenotypeStorage
+from dae.genotype_storage.genotype_storage_registry import (
+    GenotypeStorageRegistry
 )
 from dae.backends.vcf.loader import VcfLoader
 from dae.backends.impala.parquet_io import ParquetPartitionDescriptor
@@ -189,13 +188,19 @@ class ImportProject():
     def get_import_storage(self):
         """Create an import storage as described in the import config."""
         # pylint: disable=import-outside-toplevel
-        from dae.import_tools.impala_schema1 import ImpalaSchema1ImportStorage
-        from dae.import_tools.schema2_import_storage import (
-            Schema2ImportStorage
-        )
-        if self._is_schema2():
+        storage_type = self._storage_type()
+        if storage_type == "impala":
+
+            from dae.import_tools.impala_schema1 import \
+                ImpalaSchema1ImportStorage
+            return ImpalaSchema1ImportStorage()
+
+        if storage_type == "impala2":
+            from dae.import_tools.schema2_import_storage import \
+                Schema2ImportStorage
             return Schema2ImportStorage()
-        return ImpalaSchema1ImportStorage()
+
+        raise ValueError(f"unsupported storage type: {storage_type}")
 
     @property
     def work_dir(self):
@@ -238,15 +243,10 @@ class ImportProject():
                 .get("storage_id", None)
             return genotype_storage_db.get_genotype_storage(storage_id)
         # explicit storage config
-        genotype_storage_db = GenotypeStorageFactory(Box({
-            "storage": {
-                "dummy_id": self.import_config["destination"]
-            },
-            "genotype_storage": {
-                "default": "dummy_id"
-            }
-        }))
-        return genotype_storage_db.get_genotype_storage(None)
+        registry = GenotypeStorageRegistry()
+        # FIXME: switch to using new storage configuration
+        return registry.register_genotype_storage(
+            self.import_config["destination"])
 
     def has_destination(self) -> bool:
         """Return if there is a *destination* section in the import config."""
@@ -277,30 +277,24 @@ class ImportProject():
 
         return variants_loader
 
-    def _is_schema2(self) -> bool:
-        schema_version: int = 2
-
+    def _storage_type(self) -> str:
         if not self.has_destination():
             # get default storage schema from GPF instance
             gpf_instance = self.get_gpf_instance()
-            storage_id = gpf_instance\
-                .genotype_storage_db.default_storage_id
-            gpf_instance = self.get_gpf_instance()
-            schema_version = gpf_instance.dae_config\
-                .storage[storage_id].get("schema_version", 0)
-
-            return schema_version == 2
+            storage: GenotypeStorage = gpf_instance\
+                .genotype_storage_db.get_default_genotype_storage()
+            return storage.get_storage_type()
 
         destination = self.import_config["destination"]
         if "storage_id" in destination:
             storage_id = destination["storage_id"]
             gpf_instance = self.get_gpf_instance()
-            schema_version = gpf_instance.dae_config\
-                .storage[storage_id].get("schema_version", 0)
-        else:
-            schema_version = destination["schema_version"]
+            storage = gpf_instance\
+                .genotype_storage_db\
+                .get_genotype_storage(storage_id)
+            return storage.get_storage_type()
 
-        return schema_version == 2
+        return cast(str, destination["storage_type"])
 
     @staticmethod
     def _get_default_bucket_index(loader_type):

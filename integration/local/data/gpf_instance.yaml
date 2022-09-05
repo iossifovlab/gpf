@@ -4,8 +4,8 @@ vars:
 genotype_storage:
   default: genotype_impala
 
-storage:
-  genotype_impala:
+  storages:
+  - id: genotype_impala
     dir: "work"
     hdfs:
       base_dir: /user/%(instance_id)s/studies

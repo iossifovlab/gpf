@@ -63,8 +63,8 @@ def foobar_gpf(root_path):
                     resource_id: "foobar_genes"
                 genotype_storage:
                   default: genotype_impala
-                storage:
-                  genotype_impala:
+                  storages:
+                  - id: genotype_impala
                     storage_type: impala
                     dir: "work/"
                     hdfs:
@@ -78,8 +78,8 @@ def foobar_gpf(root_path):
                       - localhost
                       pool_size: 3
                       port: 21050
-                  genotype_impala_2:
-                    storage_type: impala
+                  - id: genotype_impala_2
+                    storage_type: impala2
                     dir: "work/"
                     hdfs:
                       base_dir: /tmp/test_data2

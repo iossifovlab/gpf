@@ -1,6 +1,5 @@
-from dae.backends.storage.filesystem_genotype_storage import (
-    FilesystemGenotypeStorage,
-)
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
+
 from dae.tools.simple_study_import import main
 
 
@@ -17,14 +16,6 @@ def test_import_iossifov2014_filesystem(
 
     genotype_storage_id = "test_filesystem"
     study_id = "test_denovo_iossifov2014_fs"
-
-    storage_config = getattr(default_dae_config.storage, genotype_storage_id)
-    assert storage_config.storage_type == "filesystem"
-    genotype_storage = FilesystemGenotypeStorage(
-        storage_config,
-        genotype_storage_id
-    )
-    assert genotype_storage
 
     argv = [
         pedigree_filename,
@@ -49,9 +40,6 @@ def test_import_iossifov2014_filesystem(
 
     main(argv, gpf_instance_2019)
 
-    storage_config = getattr(default_dae_config.storage, genotype_storage_id)
-    assert storage_config.storage_type == "filesystem"
-
     gpf_instance_2019.reload()
     study = gpf_instance_2019.get_genotype_data(study_id)
     assert study is not None
@@ -66,41 +54,32 @@ def test_import_iossifov2014_filesystem(
     assert len(vs) == 2
 
 
-def assert_proper_flexible_short_variants(vs):
-    assert len(vs) == 3
-    v = vs[0]
-    for a in v.alt_alleles:
-        print(a, a.effects)
-        print("\t>", a.effects.transcripts)
-        assert a.chrom == "15"
-        assert a.position == 80137553
-        assert a.reference == "T"
-        assert a.alternative == "TA"
-        assert a.family_id == "f1"
-        assert len(a.effects.transcripts) == 4
+def assert_proper_flexible_short_variants(fvs):
+    assert len(fvs) == 3
+    v = fvs[0]
+    for fa in v.alt_alleles:
+        assert fa.chrom == "15"
+        assert fa.position == 80137553
+        assert fa.reference == "T"
+        assert fa.alternative == "TA"
+        assert fa.family_id == "f1"
+        assert len(fa.effects.transcripts) == 4
 
-    v = vs[1]
-    for a in v.alt_alleles:
-        print(a, a.effects)
-        print("\t>", a.effects.transcripts)
+    v = fvs[1]
+    for fa in v.alt_alleles:
+        assert fa.chrom == "3"
+        assert fa.position == 56627767
+        assert fa.reference == "AAAGT"
+        assert fa.alternative == "A"
+        assert fa.family_id == "f2"
 
-        assert a.chrom == "3"
-        assert a.position == 56627767
-        assert a.reference == "AAAGT"
-        assert a.alternative == "A"
-        assert a.family_id == "f2"
-        # assert len(a.effect.transcripts) == 28
-
-    v = vs[2]
-    for a in v.alt_alleles:
-        print(a, a.effects)
-        print("\t>", a.effects.transcripts)
-        assert a.chrom == "4"
-        assert a.position == 83276456
-        assert a.reference == "C"
-        assert a.alternative == "T"
-        assert a.family_id == "f1"
-        # assert len(a.effect.transcripts) == 4
+    v = fvs[2]
+    for fa in v.alt_alleles:
+        assert fa.chrom == "4"
+        assert fa.position == 83276456
+        assert fa.reference == "C"
+        assert fa.alternative == "T"
+        assert fa.family_id == "f1"
 
 
 def test_flexible_denovo_default(
@@ -114,16 +93,6 @@ def test_flexible_denovo_default(
 
     genotype_storage_id = "test_filesystem"
     study_id = "test_flexible_denovo_default"
-
-    storage_config = getattr(
-        gpf_instance_2019.dae_config.storage, genotype_storage_id
-    )
-    assert storage_config.storage_type == "filesystem"
-    genotype_storage = FilesystemGenotypeStorage(
-        storage_config,
-        genotype_storage_id
-    )
-    assert genotype_storage
 
     argv = [
         pedigree_filename,
@@ -139,11 +108,6 @@ def test_flexible_denovo_default(
     ]
 
     main(argv, gpf_instance_2019)
-
-    storage_config = getattr(
-        gpf_instance_2019.dae_config.storage, genotype_storage_id
-    )
-    assert storage_config.storage_type == "filesystem"
 
     gpf_instance_2019.reload()
     study = gpf_instance_2019.get_genotype_data(study_id)
@@ -164,16 +128,6 @@ def test_flexible_denovo_vcf(
 
     genotype_storage_id = "test_filesystem"
     study_id = "test_flexible_denovo_vcf"
-
-    storage_config = getattr(
-        gpf_instance_2019.dae_config.storage, genotype_storage_id
-    )
-    assert storage_config.storage_type == "filesystem"
-    genotype_storage = FilesystemGenotypeStorage(
-        storage_config,
-        genotype_storage_id
-    )
-    assert genotype_storage
 
     argv = [
         pedigree_filename,
@@ -199,11 +153,6 @@ def test_flexible_denovo_vcf(
     ]
 
     main(argv, gpf_instance_2019)
-
-    storage_config = getattr(
-        gpf_instance_2019.dae_config.storage, genotype_storage_id
-    )
-    assert storage_config.storage_type == "filesystem"
 
     gpf_instance_2019.reload()
     study = gpf_instance_2019.get_genotype_data(study_id)
@@ -227,16 +176,6 @@ def test_flexible_denovo_vcf_location(
     genotype_storage_id = "test_filesystem"
     study_id = "test_flexible_denovo_vcf_location"
 
-    storage_config = getattr(
-        gpf_instance_2019.dae_config.storage, genotype_storage_id
-    )
-    assert storage_config.storage_type == "filesystem"
-    genotype_storage = FilesystemGenotypeStorage(
-        storage_config,
-        genotype_storage_id
-    )
-    assert genotype_storage
-
     argv = [
         pedigree_filename,
         "--id",
@@ -260,11 +199,6 @@ def test_flexible_denovo_vcf_location(
 
     main(argv, gpf_instance_2019)
 
-    storage_config = getattr(
-        gpf_instance_2019.dae_config.storage, genotype_storage_id
-    )
-    assert storage_config.storage_type == "filesystem"
-
     gpf_instance_2019.reload()
     study = gpf_instance_2019.get_genotype_data(study_id)
     assert study is not None
@@ -286,16 +220,6 @@ def test_flexible_denovo_vcf_best_state(
 
     genotype_storage_id = "test_filesystem"
     study_id = "test_flexible_denovo_vcf_best_state"
-
-    storage_config = getattr(
-        gpf_instance_2019.dae_config.storage, genotype_storage_id
-    )
-    assert storage_config.storage_type == "filesystem"
-    genotype_storage = FilesystemGenotypeStorage(
-        storage_config,
-        genotype_storage_id
-    )
-    assert genotype_storage
 
     argv = [
         pedigree_filename,
@@ -322,11 +246,6 @@ def test_flexible_denovo_vcf_best_state(
 
     main(argv, gpf_instance_2019)
 
-    storage_config = getattr(
-        gpf_instance_2019.dae_config.storage, genotype_storage_id
-    )
-    assert storage_config.storage_type == "filesystem"
-
     gpf_instance_2019.reload()
     study = gpf_instance_2019.get_genotype_data(study_id)
     assert study is not None
@@ -348,16 +267,6 @@ def test_flexible_denovo_dae_chrom_pos(
 
     genotype_storage_id = "test_filesystem"
     study_id = "test_flexible_denovo_dae_chrom_pos"
-
-    storage_config = getattr(
-        gpf_instance_2019.dae_config.storage, genotype_storage_id
-    )
-    assert storage_config.storage_type == "filesystem"
-    genotype_storage = FilesystemGenotypeStorage(
-        storage_config,
-        genotype_storage_id
-    )
-    assert genotype_storage
 
     argv = [
         pedigree_filename,
@@ -384,11 +293,6 @@ def test_flexible_denovo_dae_chrom_pos(
 
     main(argv, gpf_instance_2019)
 
-    storage_config = getattr(
-        gpf_instance_2019.dae_config.storage, genotype_storage_id
-    )
-    assert storage_config.storage_type == "filesystem"
-
     gpf_instance_2019.reload()
     study = gpf_instance_2019.get_genotype_data(study_id)
     assert study is not None
@@ -411,16 +315,6 @@ def test_flexible_denovo_dae_person(
     genotype_storage_id = "test_filesystem"
     study_id = "test_flexible_denovo_dae_person"
 
-    storage_config = getattr(
-        gpf_instance_2019.dae_config.storage, genotype_storage_id
-    )
-    assert storage_config.storage_type == "filesystem"
-    genotype_storage = FilesystemGenotypeStorage(
-        storage_config,
-        genotype_storage_id
-    )
-    assert genotype_storage
-
     argv = [
         pedigree_filename,
         "--id",
@@ -439,12 +333,6 @@ def test_flexible_denovo_dae_person(
     ]
 
     main(argv, gpf_instance_2019)
-
-    storage_config = getattr(
-        gpf_instance_2019.dae_config.storage, genotype_storage_id
-    )
-    assert storage_config.storage_type == "filesystem"
-
     gpf_instance_2019.reload()
     study = gpf_instance_2019.get_genotype_data(study_id)
     assert study is not None

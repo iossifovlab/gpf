@@ -3,12 +3,13 @@ import shutil
 import time
 import glob
 import logging
+from typing import Dict, Any
 
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.study_config_builder import StudyConfigBuilder
 from dae.pedigrees.loader import FamiliesLoader
 
-from dae.backends.storage.genotype_storage import GenotypeStorage
+from dae.genotype_storage.genotype_storage import GenotypeStorage
 
 from dae.backends.raw.loader import StoredAnnotationDecorator
 from dae.backends.raw.raw_variants import RawMemoryVariants
@@ -25,12 +26,18 @@ logger = logging.getLogger(__name__)
 class FilesystemGenotypeStorage(GenotypeStorage):
     """A storage that uses the filesystem as its backend."""
 
-    def __init__(self, storage_config, section_id):
-        super().__init__(storage_config, section_id)
-        self.data_dir = self.storage_config.dir
+    def __init__(self, storage_config: Dict[str, Any]):
+        super().__init__(storage_config)
+        self.data_dir = self.storage_config["dir"]
+
+    def open(self):
+        # FIXME:
+        self.is_open = True
+
+        return self
 
     def get_data_dir(self, *path):
-        return os.path.abspath(os.path.join(self.storage_config.dir, *path))
+        return os.path.join(self.data_dir, *path)
 
     def is_filestorage(self):
         return True

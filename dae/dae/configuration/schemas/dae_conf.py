@@ -81,8 +81,12 @@ grr_schema = {
 }
 
 storage_schema = {
-    "storage_type": {"type": "string", "allowed": ["impala", "filesystem"]},
+    "storage_type": {"type": "string", "allowed": [
+        "impala", "impala2", "filesystem"]},
     "schema_version": {"type": "integer", "allowed": [1, 2], "default": 1},
+    "id": {
+        "type": "string",
+    },
     "dir": {
         "type": "string",
         "check_with": validate_path,
@@ -90,18 +94,18 @@ storage_schema = {
     },
     "impala": {
         "type": "dict",
-        "dependencies": {"storage_type": "impala"},
+        # "dependencies": {"storage_type": "impala"},
         "schema": impala_schema,
     },
     "hdfs": {
         "type": "dict",
-        "dependencies": {"storage_type": "impala"},
+        # "dependencies": {"storage_type": "impala"},
         "schema": hdfs_schema,
     },
     "rsync": {
         "type": "dict",
         "schema": rsync_schema,
-        "dependencies": {"storage_type": "impala"},
+        # "dependencies": {"storage_type": "impala"},
     }
 }
 
@@ -140,16 +144,16 @@ dae_conf_schema = {
         "type": "dict",
         "schema": {"wd": {"type": "string"}, "data_dir": {"type": "string"}},
     },
-    # FIXME This is only used for the default genotype storage param
-    # It should be a key in the root section
+
     "genotype_storage": {
         "type": "dict",
-        "schema": {"default": {"type": "string"}},
-        "default": {"default": "genotype_filesystem"},
-    },
-    "storage": {
-        "type": "dict",
-        "valuesrules": {"type": "dict", "schema": storage_schema},
+        "schema": {
+            "default": {"type": "string"},
+            "storages": {
+                "type": "list",
+                "valuesrules": {"type": "dict", "schema": storage_schema},
+            }
+        },
     },
     "studies": {
         "type": "dict",

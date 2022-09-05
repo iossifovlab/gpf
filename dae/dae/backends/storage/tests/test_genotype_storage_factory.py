@@ -1,3 +1,5 @@
+import pytest
+
 from dae.backends.storage.impala_genotype_storage import ImpalaGenotypeStorage
 from dae.backends.storage.filesystem_genotype_storage import (
     FilesystemGenotypeStorage,
@@ -50,8 +52,5 @@ def test_get_default_genotype_storage(genotype_storage_factory):
 
 
 def test_get_genotype_storage_missing(genotype_storage_factory):
-    genotype_missing = genotype_storage_factory.get_genotype_storage(
-        "genotype_missing"
-    )
-
-    assert genotype_missing is None
+    with pytest.raises(ValueError):
+        genotype_storage_factory.get_genotype_storage("genotype_missing")

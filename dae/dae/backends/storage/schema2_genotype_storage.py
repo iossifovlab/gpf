@@ -5,10 +5,11 @@ import os
 import logging
 from dataclasses import dataclass
 from collections.abc import Iterator
+from typing import Dict, Any
 from dae.backends.impala.hdfs_helpers import HdfsHelpers
 from dae.backends.impala.impala_helpers import ImpalaHelpers
 from dae.backends.schema2.impala_variants import ImpalaVariants
-from dae.backends.storage.genotype_storage import GenotypeStorage
+from dae.genotype_storage.genotype_storage import GenotypeStorage
 
 
 logger = logging.getLogger(__name__)
@@ -27,17 +28,22 @@ class HdfsStudyLayout:
 class Schema2GenotypeStorage(GenotypeStorage):
     """A genotype storing implementing the new schema2."""
 
-    def __init__(self, storage_config, section_id):
-        super().__init__(storage_config, section_id)
+    def __init__(self, storage_config: Dict[str, Any]):
+        super().__init__(storage_config)
         self._hdfs_helpers = None
 
-        impala_hosts = self.storage_config.impala.hosts
-        impala_port = self.storage_config.impala.port
-        pool_size = self.storage_config.impala.pool_size
+        impala_hosts = self.storage_config["impala"]["hosts"]
+        impala_port = self.storage_config["impala"]["port"]
+        pool_size = self.storage_config["impala"]["pool_size"]
 
         self._impala_helpers = ImpalaHelpers(
             impala_hosts=impala_hosts, impala_port=impala_port,
             pool_size=pool_size)
+
+    def open(self):
+        # FIXME:
+        self.is_open = True
+        return self
 
     def is_impala(self):
         return False
@@ -77,7 +83,8 @@ class Schema2GenotypeStorage(GenotypeStorage):
             -> HdfsStudyLayout:
         """Upload local data to hdfs."""
         # Copy pedigree
-        study_path = os.path.join(self.storage_config.hdfs.base_dir, study_id)
+        base_dir = self.storage_config["hdfs"]["base_dir"]
+        study_path = os.path.join(base_dir, study_id)
         pedigree_hdfs_path = os.path.join(
             study_path, "pedigree", "pedigree.parquet"
         )
@@ -182,9 +189,9 @@ class Schema2GenotypeStorage(GenotypeStorage):
         """Return the hdfs helper used to interact with hdfs."""
         if self._hdfs_helpers is None:
             self._hdfs_helpers = HdfsHelpers(
-                self.storage_config.hdfs.host,
-                self.storage_config.hdfs.port,
-                replication=self.storage_config.hdfs.replication
+                self.storage_config["hdfs"]["host"],
+                self.storage_config["hdfs"]["port"],
+                replication=self.storage_config["hdfs"]["replication"]
             )
 
         return self._hdfs_helpers
@@ -199,7 +206,7 @@ class Schema2GenotypeStorage(GenotypeStorage):
             self._construct_variant_tables(study_id)
         meta_table = self._construct_metadata_table(study_id)
 
-        db = self.storage_config.impala.db
+        db = self.storage_config["impala"]["db"]
 
         self.impala_helpers.drop_table(db, summary_variant_table)
         self.impala_helpers.drop_table(db, family_variant_table)

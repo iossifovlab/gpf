@@ -10,9 +10,9 @@ gene_models:
 genotype_storage:
   default: genotype_filesystem
 
-storage:
+  storages:
 
-  genotype_filesystem:
+  - id: genotype_filesystem
     dir: "studies"
     storage_type: filesystem
 

@@ -69,9 +69,6 @@ def test_import_denovo_dae_style_denovo_sep(
     gpf_instance_2013,
     temp_dirname,
 ):
-
-    storage_config = default_dae_config.storage.test_impala
-    assert storage_config.storage_type == "impala"
     pedigree_filename = fixture_dirname("denovo_import/fake_pheno.ped")
     denovo_filename = fixture_dirname(
         "denovo_import/variants_different_separator.dsv"
@@ -344,9 +341,6 @@ def test_add_chrom_prefix_simple(
     study_id = f"test_comp_all_prefix_{genotype_storage_id}"
     genotype_storage_id = "test_filesystem"
 
-    storage_config = default_dae_config.storage.test_filesystem
-    assert storage_config.storage_type == "filesystem"
-
     argv = [
         pedigree_filename,
         "--id",
@@ -412,8 +406,6 @@ def test_import_comp_all_del_chrom_prefix(
     vcf_filename = fixture_dirname("study_import/comp_chromprefix.vcf")
     denovo_filename = fixture_dirname("study_import/comp_chromprefix.tsv")
 
-    storage_config = default_dae_config.storage.test_filesystem
-    assert storage_config.storage_type == "filesystem"
     study_id = f"test_comp_all_del_chrom_prefix_{genotype_storage_id}"
 
     argv = [

@@ -41,7 +41,7 @@ def test_hdfs_upload_dataset(import_layout):
     base_dir = "/user/test_user/studies"
     hdfs_host = os.environ.get("DAE_HDFS_HOST", "localhost")
     config = {
-        "section_id": "genotype_impala",
+        "id": "genotype_impala",
         "impala": {
             "hosts": ["localhost"],
             "port": 21050,
@@ -60,7 +60,7 @@ def test_hdfs_upload_dataset(import_layout):
     if hdfs.exists(base_dir):
         hdfs.rm(base_dir, recursive=True)  # cleanup from previous tests
 
-    storage = Schema2GenotypeStorage(config, "genotype_impala")
+    storage = Schema2GenotypeStorage(config)
     hdfs_layout = storage.hdfs_upload_dataset(
         "study_id", import_layout.variant_dir, import_layout.pedigree_file,
         import_layout.meta_file, partition_description)

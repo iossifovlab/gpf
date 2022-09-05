@@ -782,7 +782,7 @@ def impala_genotype_storage(hdfs_host, impala_host):
         }
     )
 
-    return ImpalaGenotypeStorage(storage_config, "impala_test_storage")
+    return ImpalaGenotypeStorage(storage_config)
 
 
 @pytest.fixture(scope="session")

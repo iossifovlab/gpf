@@ -1,11 +1,12 @@
 import os
 import glob
 import logging
+from typing import Dict, Any
 
 import toml
 
 from dae.backends.raw.loader import VariantsLoader, TransmissionType
-from dae.backends.storage.genotype_storage import GenotypeStorage
+from dae.genotype_storage.genotype_storage import GenotypeStorage
 
 from dae.backends.impala.hdfs_helpers import HdfsHelpers
 from dae.backends.impala.impala_helpers import ImpalaHelpers
@@ -26,12 +27,12 @@ logger = logging.getLogger(__name__)
 class ImpalaGenotypeStorage(GenotypeStorage):
     """Defines Apache Impala genotype storage."""
 
-    def __init__(self, storage_config, section_id):
-        super().__init__(storage_config, section_id)
+    def __init__(self, storage_config: Dict[str, Any]):
+        super().__init__(storage_config)
 
-        impala_hosts = self.storage_config.impala.hosts
-        impala_port = self.storage_config.impala.port
-        pool_size = self.storage_config.impala.pool_size
+        impala_hosts = self.storage_config["impala"]["hosts"]
+        impala_port = self.storage_config["impala"]["port"]
+        pool_size = self.storage_config["impala"]["pool_size"]
 
         self._impala_helpers = ImpalaHelpers(
             impala_hosts=impala_hosts, impala_port=impala_port,
@@ -39,9 +40,12 @@ class ImpalaGenotypeStorage(GenotypeStorage):
 
         self._hdfs_helpers = None
         self._rsync_helpers = None
-        if self.storage_config.rsync:
+        if self.storage_config.get("rsync"):
             self._rsync_helpers = RsyncHelpers(
-                self.storage_config.rsync.location)
+                self.storage_config["rsync"]["location"])
+
+    def open(self):
+        self.is_open = True
 
     def get_db(self):
         return self.storage_config.impala.db
@@ -59,9 +63,9 @@ class ImpalaGenotypeStorage(GenotypeStorage):
         """Create and return an HDFS helpers object."""
         if self._hdfs_helpers is None:
             self._hdfs_helpers = HdfsHelpers(
-                self.storage_config.hdfs.host,
-                self.storage_config.hdfs.port,
-                replication=self.storage_config.hdfs.replication
+                self.storage_config["hdfs"]["host"],
+                self.storage_config["hdfs"]["port"],
+                replication=self.storage_config["hdfs"]["replication"]
             )
 
         assert self._hdfs_helpers is not None

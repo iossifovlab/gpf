@@ -49,5 +49,4 @@ def test_get_data_dir(
     fixture_dirname, filesystem_genotype_storage, expected_path, build_path
 ):
     assert filesystem_genotype_storage.get_data_dir(
-        *build_path
-    ) == fixture_dirname(expected_path)
+        *build_path).endswith(expected_path)

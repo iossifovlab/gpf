@@ -138,7 +138,7 @@ def test_impala_partition_import(
 
 def test_impala_genotype_storate_has_rsync_helpers(mocker):
     config = {
-        "section_id": "genotype_impala",
+        "id": "genotype_impala",
         "impala": {
             "hosts": ["localhost"],
             "port": 21050,
@@ -152,16 +152,15 @@ def test_impala_genotype_storate_has_rsync_helpers(mocker):
             "location": "ssh://dory:/mnt/hdfs2mnt",
         },
     }
-    config = Box(config)
 
-    storage = ImpalaGenotypeStorage(config, "genotype_impala")
+    storage = ImpalaGenotypeStorage(config)
     assert storage is not None
     assert storage.rsync_helpers is not None
 
 
 def test_impala_genotype_storate_no_rsync_helpers(mocker):
     config = {
-        "section_id": "genotype_impala",
+        "id": "genotype_impala",
         "impala": {
             "hosts": ["localhost"],
             "port": 21050,
@@ -175,6 +174,6 @@ def test_impala_genotype_storate_no_rsync_helpers(mocker):
     }
     config = Box(config)
 
-    storage = ImpalaGenotypeStorage(config, "genotype_impala")
+    storage = ImpalaGenotypeStorage(config)
     assert storage is not None
     assert storage.rsync_helpers is None
