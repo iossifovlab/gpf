@@ -6,7 +6,7 @@ from abc import abstractmethod, ABC
 from copy import deepcopy
 from dataclasses import dataclass
 from typing import Optional, cast
-from typing import Callable, Dict, List
+from typing import Callable, Dict, List, Tuple, Any
 
 from dae.backends.cnv.loader import CNVLoader
 from dae.backends.dae.loader import DaeTransmittedLoader, DenovoLoader
@@ -50,6 +50,7 @@ class ImportProject():
     (e.g. loaders, family data and so one).
     """
 
+    # pylint: disable=too-many-public-methods
     def __init__(self, import_config, base_input_dir):
         """Create a new project from the provided config.
 
@@ -95,18 +96,35 @@ class ImportProject():
             import_filename)
         return ImportProject.build_from_config(import_config, base_input_dir)
 
-    def get_pedigree(self) -> FamiliesData:
-        """Load, parse and return the pedigree data."""
+    def get_pedigree_params(self) -> Tuple[str, Dict[str, Any]]:
+        """Get params for loading the pedigree."""
         families_filename = self.import_config["input"]["pedigree"]["file"]
         families_filename = fs_utils.join(self.input_dir, families_filename)
 
         families_params = self.import_config["input"]["pedigree"]
         families_params = self._add_loader_prefix(families_params, "ped_")
 
+        return families_filename, families_params
+
+    def get_pedigree_loader(self) -> FamiliesLoader:
+        families_filename, families_params = self.get_pedigree_params()
         families_loader = FamiliesLoader(
             families_filename, **families_params
         )
+        return families_loader
+
+    def get_pedigree(self) -> FamiliesData:
+        """Load, parse and return the pedigree data."""
+        families_loader = self.get_pedigree_loader()
         return families_loader.load()
+
+    def get_import_variants_types(self) -> set[str]:
+        result = set()
+        for loader_type in ["denovo", "vcf", "cnv", "dae"]:
+            config = self.import_config["input"].get(loader_type)
+            if config is not None:
+                result.add(loader_type)
+        return result
 
     def get_import_variants_buckets(self) -> list[Bucket]:
         """Split variant files into buckets enabling parallel processing."""
@@ -118,18 +136,24 @@ class ImportProject():
                     buckets.append(bucket)
         return buckets
 
-    def get_variant_loader(self, bucket, reference_genome=None):
+    def get_variant_loader(
+            self,
+            bucket: Optional[Bucket] = None, loader_type: Optional[str] = None,
+            reference_genome=None):
         """Get the appropriate variant loader for the specified bucket."""
-        loader = self._get_variant_loader(bucket.type, reference_genome)
-        loader.reset_regions(bucket.regions)
+        if bucket is None and loader_type is None:
+            raise ValueError("loader_type or bucket is required")
+        if bucket is not None:
+            loader_type = bucket.type
+        loader = self._get_variant_loader(loader_type, reference_genome)
+        if bucket is not None:
+            loader.reset_regions(bucket.regions)
         return loader
 
-    def _get_variant_loader(self, loader_type, reference_genome=None) \
-            -> VariantsLoader:
+    def get_variant_params(self, loader_type):
+        """Return variant loader filenames and params."""
         assert loader_type in self.import_config["input"],\
             f"No input config for loader {loader_type}"
-        if reference_genome is None:
-            reference_genome = self.get_gpf_instance().reference_genome
 
         loader_config = self.import_config["input"][loader_type]
         if loader_type == "vcf" and "chromosomes" in loader_config:
@@ -147,7 +171,16 @@ class ImportProject():
             assert len(variants_filenames) == 1,\
                 f"Support for multiple {loader_type} files is NYI"
             variants_filenames = variants_filenames[0]
+        return variants_filenames, variants_params
 
+    def _get_variant_loader(self, loader_type, reference_genome=None) \
+            -> VariantsLoader:
+        assert loader_type in self.import_config["input"],\
+            f"No input config for loader {loader_type}"
+        if reference_genome is None:
+            reference_genome = self.get_gpf_instance().reference_genome
+        variants_filenames, variants_params = \
+            self.get_variant_params(loader_type)
         loader_cls = {
             "denovo": DenovoLoader,
             "vcf": VcfLoader,
@@ -252,7 +285,9 @@ class ImportProject():
             .get(bucket.type, 20_000)
         return cast(int, res)
 
-    def build_variants_loader_pipeline(self, variants_loader, gpf_instance):
+    def build_variants_loader_pipeline(
+            self, variants_loader: VariantsLoader,
+            gpf_instance) -> VariantsLoader:
         """Create an annotation pipeline around variants_loader."""
         effect_annotator = construct_import_effect_annotator(gpf_instance)
 
@@ -269,7 +304,6 @@ class ImportProject():
             variants_loader = AnnotationPipelineDecorator(
                 variants_loader, annotation_pipeline
             )
-
         return variants_loader
 
     def _storage_type(self) -> str:

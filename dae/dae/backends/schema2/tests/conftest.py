@@ -19,6 +19,7 @@ from dae.backends.raw.loader import AnnotationPipelineDecorator,\
 @pytest.fixture(scope="module")
 def storage():
     config = {
+        "id": "genotype_schema2",
         "impala": {
             "db": "impala_test_db",
             "hosts": ["localhost"],
@@ -33,7 +34,7 @@ def storage():
         },
     }
     config = Box(config)
-    return Schema2GenotypeStorage(config, "genotype_schema2")
+    return Schema2GenotypeStorage(config)
 
 
 @pytest.fixture(scope="module")

@@ -249,6 +249,9 @@ class VariantsLoader(CLILoader):
     def set_attribute(self, key: str, value: Any) -> None:
         self._attributes[key] = value
 
+    def reset_regions(self, regions) -> None:
+        pass
+
     @property
     def annotation_schema(self):
         return None

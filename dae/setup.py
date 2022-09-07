@@ -53,11 +53,12 @@ setuptools.setup(
     [dae.genotype_storage.factories]
     impala=dae.backends.storage.impala_genotype_storage:ImpalaGenotypeStorage
     impala2=dae.backends.storage.schema2_genotype_storage:Schema2GenotypeStorage
-    filesystem=dae.backends.storage.filesystem_genotype_storage:FilesystemGenotypeStorage
+    filesystem=dae.filesystem_storage.filesystem_genotype_storage:FilesystemGenotypeStorage
 
     [dae.import_tools.storages]
     impala=dae.import_tools.impala_schema1:ImpalaSchema1ImportStorage
     impala2=dae.import_tools.schema2_import_storage:Schema2ImportStorage
+    filesystem=dae.filesystem_storage.filesystem_import_storage:FilesystemImportStorage
 
     [console_scripts]
 

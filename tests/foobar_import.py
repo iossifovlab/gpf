@@ -93,6 +93,9 @@ def foobar_gpf(root_path):
                       pool_size: 3
                       port: 21050
                     schema_version: 2
+                  - id: genotype_filesystem
+                    storage_type: filesystem
+                    dir: "{root_path}/genotype_filesystem"
             """)
         }
     }

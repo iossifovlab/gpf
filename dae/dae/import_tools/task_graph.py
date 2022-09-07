@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from abc import abstractmethod
 from copy import copy
 from dataclasses import dataclass
@@ -11,7 +13,7 @@ class TaskNode:
     name: str
     func: Callable
     args: list[Any]
-    deps: list["TaskNode"]
+    deps: list[TaskNode]
 
 
 class TaskGraph:

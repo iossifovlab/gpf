@@ -1,7 +1,7 @@
 import pytest
 
 from dae.backends.storage.impala_genotype_storage import ImpalaGenotypeStorage
-from dae.backends.storage.filesystem_genotype_storage import (
+from dae.filesystem_storage.filesystem_genotype_storage import (
     FilesystemGenotypeStorage,
 )
 

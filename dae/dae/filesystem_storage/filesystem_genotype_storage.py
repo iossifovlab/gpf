@@ -43,24 +43,6 @@ class FilesystemGenotypeStorage(GenotypeStorage):
         return True
 
     def build_backend(self, study_config, genome, gene_models):
-        if not study_config.genotype_storage.files:
-            data_dir = self.get_data_dir(study_config.id, "data")
-            vcf_filename = os.path.join(
-                data_dir, f"{study_config.id}.vcf")
-            ped_filename = os.path.join(
-                data_dir, f"{study_config.id}.ped")
-
-            families_loader = FamiliesLoader(ped_filename)
-            families = families_loader.load()
-            variants_loader = VcfLoader(
-                families, [vcf_filename], genome
-            )
-            variants_loader = StoredAnnotationDecorator.decorate(
-                variants_loader, vcf_filename
-            )
-
-            return RawMemoryVariants([variants_loader], families)
-
         start = time.time()
         ped_params = \
             study_config.genotype_storage.files.pedigree.params.to_dict()

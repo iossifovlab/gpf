@@ -48,7 +48,8 @@ def minimal_vcf(tmp_path_factory):
 
 
 @pytest.fixture(
-    scope="module", params=["genotype_impala", "genotype_impala_2"])
+    scope="module", params=[
+        "genotype_impala", "genotype_impala_2", "genotype_filesystem"])
 def import_project(request, tmp_path_factory, minimal_vcf):
     # pylint: disable=import-outside-toplevel
     from ...foobar_import import foobar_vcf_import
