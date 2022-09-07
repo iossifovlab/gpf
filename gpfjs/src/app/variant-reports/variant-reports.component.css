@@ -33,7 +33,7 @@ tr:hover {
 
 .variants-report-selector {
   width: 230px;
-  padding: 15px 0;
+  padding: 16px 0;
 }
 
 th.rotate > div {
@@ -141,4 +141,8 @@ table {
 
 h5 {
   margin-bottom: 0;
+}
+
+#tags-wrapper {
+  padding-bottom: 16px;
 }

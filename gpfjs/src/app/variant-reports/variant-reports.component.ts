@@ -1,5 +1,4 @@
-/* eslint-disable @typescript-eslint/explicit-member-accessibility */
-import { Component, OnInit, ViewChild, ElementRef, HostListener, Pipe, PipeTransform } from '@angular/core';
+import { Component, OnInit, HostListener, Pipe, PipeTransform } from '@angular/core';
 import { VariantReportsService } from './variant-reports.service';
 import {
   VariantReport, FamilyCounter, PedigreeCounter, EffectTypeTable, DeNovoData, PedigreeTable, PeopleCounter
@@ -8,7 +7,6 @@ import { Dataset } from 'app/datasets/datasets';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { take } from 'rxjs/operators';
 import { environment } from 'environments/environment';
-import { isInViewport } from 'app/utils/is-in-viewport';
 import { Dictionary } from 'lodash';
 import * as _ from 'lodash';
 
@@ -26,10 +24,6 @@ export class PeopleCounterRowPipe implements PipeTransform {
   styleUrls: ['./variant-reports.component.css']
 })
 export class VariantReportsComponent implements OnInit {
-  @ViewChild('families_pedigree') private familiesPedigree: ElementRef;
-
-  public visible = false;
-
   public tags: Array<CheckBox> = new Array<CheckBox>();
 
   public currentPeopleCounter: PeopleCounter;
@@ -38,7 +32,6 @@ export class VariantReportsComponent implements OnInit {
 
   public variantReport: VariantReport;
   public familiesCounters: FamilyCounter[];
-  public currentPedigreeCounters: Dictionary<PedigreeCounter[]>;
   public pedigreeTables: PedigreeTable[];
 
   public selectedDataset: Dataset;
@@ -53,15 +46,6 @@ export class VariantReportsComponent implements OnInit {
     private datasetsService: DatasetsService
   ) { }
 
-  @HostListener('window:scroll', ['$event'])
-  @HostListener('click', ['$event'])
-  public onWindowScroll(): void {
-    if (this.familiesPedigree === undefined) {
-      return;
-    }
-    this.visible = isInViewport(this.familiesPedigree.nativeElement, 10);
-  }
-
   @HostListener('window:resize')
   public onResize(): void {
     this.calculateDenovoVariantsTableWidth();
@@ -72,14 +56,6 @@ export class VariantReportsComponent implements OnInit {
     this.variantReportsService.getVariantReport(this.selectedDataset.id).pipe(take(1)).subscribe(params => {
       this.variantReport = params;
       this.familiesCounters = this.variantReport.familyReport.familiesCounters;
-      this.currentPedigreeCounters = this.familiesCounters.reduce(
-        (obj, x) => {
-          if (obj[x.groupName] && x.pedigreeCounters) {
-            obj[x.groupName] = Array.from(x.pedigreeCounters);
-          }
-          return obj;
-        }, {}
-      );
       this.pedigreeTables = this.familiesCounters.map(
         familiesCounters => new PedigreeTable(
           this.chunkPedigrees(familiesCounters.pedigreeCounters),
@@ -87,7 +63,6 @@ export class VariantReportsComponent implements OnInit {
           familiesCounters.legend
         )
       );
-
       this.currentPeopleCounter = this.variantReport.peopleReport.peopleCounters[0];
       this.currentPedigreeTable = this.pedigreeTables[0];
       if (this.variantReport.denovoReport !== null) {
@@ -97,7 +72,7 @@ export class VariantReportsComponent implements OnInit {
     });
     if (this.variantReportsService.getTags() !== undefined) {
       this.variantReportsService.getTags().subscribe(data => {
-        data.forEach(tag => {
+        Object.values(data).forEach(tag => {
           this.tags.push(new CheckBox(tag, false));
         });
       });
@@ -222,11 +197,5 @@ export class VariantReportsComponent implements OnInit {
 }
 
 export class CheckBox {
-  constructor(name: string, value: boolean) {
-    this.name = name;
-    this.value = value;
-  }
-
-  name = '';
-  value = false;
+  public constructor(public name = '', public value = false) { }
 }
