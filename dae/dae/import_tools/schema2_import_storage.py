@@ -5,7 +5,7 @@ from dae.utils import fs_utils
 from dae.configuration.study_config_builder import StudyConfigBuilder
 from dae.backends.impala.import_commons import save_study_config
 from dae.import_tools.parquet_writer import ParquetWriter
-from dae.import_tools.import_tools import AbstractImportStorage
+from dae.import_tools.import_tools import ImportStorage
 from dae.import_tools.task_graph import TaskGraph
 from dae.backends.storage.schema2_genotype_storage import \
     Schema2GenotypeStorage
@@ -16,7 +16,7 @@ from dae.backends.schema2.parquet_io import NoPartitionDescriptor, \
 logger = logging.getLogger(__file__)
 
 
-class Schema2ImportStorage(AbstractImportStorage):
+class Schema2ImportStorage(ImportStorage):
     """Import logic for data in the Impala Schema 1 format."""
 
     @staticmethod

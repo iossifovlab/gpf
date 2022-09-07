@@ -1,10 +1,10 @@
 import logging
-from typing import Callable, Dict, Any
+from typing import Callable, Dict, Any, List
 
 from .genotype_storage import GenotypeStorage
 
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(__file__)
 
 _REGISTERED_GENOTYPE_STORAGE_FACTORIES: \
     Dict[str, Callable[[Dict[str, Any]], GenotypeStorage]] = {}
@@ -17,6 +17,10 @@ def get_genotype_storage_factory(
     if storage_type not in _REGISTERED_GENOTYPE_STORAGE_FACTORIES:
         raise ValueError(f"unsupported storage type: {storage_type}")
     return _REGISTERED_GENOTYPE_STORAGE_FACTORIES[storage_type]
+
+
+def get_genotype_storage_types() -> List[str]:
+    return list(_REGISTERED_GENOTYPE_STORAGE_FACTORIES.keys())
 
 
 def register_genotype_storage_factory(

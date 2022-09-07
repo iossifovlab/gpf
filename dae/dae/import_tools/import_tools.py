@@ -1,10 +1,12 @@
 import argparse
 import os
 import sys
+import logging
 from abc import abstractmethod, ABC
 from copy import deepcopy
 from dataclasses import dataclass
 from typing import Optional, cast
+from typing import Callable, Dict, List
 
 from dae.backends.cnv.loader import CNVLoader
 from dae.backends.dae.loader import DaeTransmittedLoader, DenovoLoader
@@ -28,6 +30,9 @@ from dae.backends.impala.import_commons import MakefilePartitionHelper,\
     construct_import_annotation_pipeline, construct_import_effect_annotator
 from dae.dask.client_factory import DaskClient
 from dae.utils.statistics import StatsCollection
+
+
+logger = logging.getLogger(__file__)
 
 
 @dataclass(frozen=True)
@@ -189,18 +194,8 @@ class ImportProject():
         """Create an import storage as described in the import config."""
         # pylint: disable=import-outside-toplevel
         storage_type = self._storage_type()
-        if storage_type == "impala":
-
-            from dae.import_tools.impala_schema1 import \
-                ImpalaSchema1ImportStorage
-            return ImpalaSchema1ImportStorage()
-
-        if storage_type == "impala2":
-            from dae.import_tools.schema2_import_storage import \
-                Schema2ImportStorage
-            return Schema2ImportStorage()
-
-        raise ValueError(f"unsupported storage type: {storage_type}")
+        factory = get_import_storage_factory(storage_type)
+        return factory()
 
     @property
     def work_dir(self):
@@ -446,7 +441,7 @@ class ImportConfigNormalizer:
         return res
 
 
-class AbstractImportStorage(ABC):
+class ImportStorage(ABC):
     """Defines abstract base class for import storages."""
 
     def __init__(self):
@@ -487,3 +482,27 @@ def run_with_project(project, executor=SequentialExecutor()):
 
     task_graph = storage.generate_import_task_graph(project)
     executor.execute(task_graph)
+
+
+_REGISTERED_IMPORT_STORAGE_FACTORIES: \
+    Dict[str, Callable[[], ImportStorage]] = {}
+
+
+def get_import_storage_factory(
+        storage_type: str) -> Callable[[], ImportStorage]:
+    """Find and return a factory function for creation of a storage type."""
+    if storage_type not in _REGISTERED_IMPORT_STORAGE_FACTORIES:
+        raise ValueError(f"unsupported import storage type: {storage_type}")
+    return _REGISTERED_IMPORT_STORAGE_FACTORIES[storage_type]
+
+
+def get_import_storage_types() -> List[str]:
+    return list(_REGISTERED_IMPORT_STORAGE_FACTORIES.keys())
+
+
+def register_import_storage_factory(
+        storage_type: str,
+        factory: Callable[[], ImportStorage]) -> None:
+    if storage_type in _REGISTERED_IMPORT_STORAGE_FACTORIES:
+        logger.warning("overwriting import storage type: %s", storage_type)
+    _REGISTERED_IMPORT_STORAGE_FACTORIES[storage_type] = factory
