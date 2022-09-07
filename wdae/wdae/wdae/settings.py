@@ -11,10 +11,15 @@ INSTALLED_APPS += [
 ALLOWED_HOSTS += ["localhost"]
 
 CORS_ORIGIN_WHITELIST = [
-    "http://localhost:8000",
+    # For docker-compose
+    "http://localhost:9000",
     "http://127.0.0.1:9000",
+    # For local development with `ng serve`
     "http://localhost:4200",
     "http://127.0.0.1:4200",
+    # For local development
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
 ]
 
 CORS_ALLOW_CREDENTIALS = True
