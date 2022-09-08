@@ -660,7 +660,7 @@ class VariantsParquetWriter:
             summary_variant,
             family_variants,
         ) in enumerate(self.full_variants_iterator):
-            num_fam_alleles_wirtten = 0
+            num_fam_alleles_written = 0
             for fv in family_variants:
                 family_variant_index += 1
 
@@ -687,10 +687,10 @@ class VariantsParquetWriter:
                     family_bin_writer.append_family_allele(
                         family_allele, family_variant_data_json
                     )
-                    num_fam_alleles_wirtten += 1
+                    num_fam_alleles_written += 1
 
             # don't store summary alleles withouth family ones
-            if num_fam_alleles_wirtten > 0:
+            if num_fam_alleles_written > 0:
                 # build summary json blob (concat all other alleles)
                 # INSIDE summary_variant
                 summary_blobs_json = json.dumps(
