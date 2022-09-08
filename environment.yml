@@ -35,7 +35,7 @@ dependencies:
   - setuptools=65.0.1
   - sqlalchemy=1.4.40
   - sqlite=3.39.2
-  - django=4.1
+  - django==4.1
   - django-cors-headers=3.13.0
   - djangorestframework=3.13.1
   - openjdk=8.0.312
