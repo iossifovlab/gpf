@@ -19,3 +19,6 @@ partition_description:
     family_bin_size: 10
   frequency_bin:
     rare_boundary: 5
+
+destination:
+  storage_id: genotype_impala_2

@@ -27,6 +27,21 @@ storage:
       pool_size: 3
       port: 21050
 
+  genotype_impala_2:
+    hdfs:
+      base_dir: /user/schema2_tests/studies
+      host: localhost
+      port: 8020
+      replication: 1
+    impala:
+      db: schema2
+      hosts:
+      - localhost
+      pool_size: 3
+      port: 21050
+    storage_type: impala
+    schema_version: 2
+
   genotype_impala_backends:
     storage_type: impala
     dir: /tmp/test_impala/studies

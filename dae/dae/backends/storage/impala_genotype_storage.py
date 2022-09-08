@@ -24,11 +24,10 @@ logger = logging.getLogger(__name__)
 
 
 class ImpalaGenotypeStorage(GenotypeStorage):
-    """Storage that uses impala as its backend."""
+    """Defines Apache Impala genotype storage."""
 
     def __init__(self, storage_config, section_id):
         super().__init__(storage_config, section_id)
-        # self.data_dir = self.storage_config.dir
 
         impala_hosts = self.storage_config.impala.hosts
         impala_port = self.storage_config.impala.port
@@ -57,7 +56,7 @@ class ImpalaGenotypeStorage(GenotypeStorage):
 
     @property
     def hdfs_helpers(self):
-        """Return a helper used to interact with hdfs."""
+        """Create and return an HDFS helpers object."""
         if self._hdfs_helpers is None:
             self._hdfs_helpers = HdfsHelpers(
                 self.storage_config.hdfs.host,
@@ -74,7 +73,7 @@ class ImpalaGenotypeStorage(GenotypeStorage):
 
     @classmethod
     def study_tables(cls, study_config):
-        """Return the variant and pedigree table."""
+        """Return variants and pedigree tables names for a study."""
         storage_config = study_config.genotype_storage
         if storage_config and storage_config.tables \
                 and storage_config.tables.pedigree \
@@ -129,7 +128,7 @@ class ImpalaGenotypeStorage(GenotypeStorage):
             "conf_dir": ".",
             "has_denovo": False,
             "genotype_storage": {
-                "id": self.id,
+                "id": self.storage_id,
                 "tables": {"pedigree": pedigree_table},
             },
             "genotype_browser": {"enabled": False},
@@ -150,7 +149,8 @@ class ImpalaGenotypeStorage(GenotypeStorage):
             variant_loaders=None,
             study_config=None,
             output=".",
-            include_reference=False):
+            include_reference=False,
+            **kwargs):
 
         variants_dir = None
         has_denovo = False
@@ -284,20 +284,22 @@ class ImpalaGenotypeStorage(GenotypeStorage):
         partition_filename = os.path.join(
             variants_dir, "_PARTITION_DESCRIPTION")
         logger.debug(
-            "checking for partition description: %s", partition_filename
-        )
+            "checking for partition description: %s", partition_filename)
         if os.path.exists(partition_filename):
-            logger.info("copying partition description %s into %s",
-                        partition_filename, study_path)
+            logger.info(
+                "copying partition description %s "
+                "into %s", partition_filename, study_path)
             self.hdfs_helpers.put_in_directory(
                 partition_filename, study_path)
 
         schema_filename = os.path.join(
             variants_dir, "_VARIANTS_SCHEMA")
-        logger.debug("checking for variants schema: %s", schema_filename)
+        logger.debug(
+            "checking for variants schema: %s", schema_filename)
         if os.path.exists(schema_filename):
-            logger.info("copying variants schema %s into %s",
-                        schema_filename, study_path)
+            logger.info(
+                "copying variants schema %s "
+                "into %s", schema_filename, study_path)
             self.hdfs_helpers.put_in_directory(
                 schema_filename, study_path)
 
@@ -382,7 +384,7 @@ class ImpalaGenotypeStorage(GenotypeStorage):
             partition_description,
             variants_sample=None,
             variants_schema=None):
-        """Import variantsand pedigree parquet files from hdfs into impala."""
+        """Create pedigree and variant tables for a study."""
         pedigree_table = self._construct_pedigree_table(study_id)
         variants_table = self._construct_variants_table(study_id)
 
@@ -409,7 +411,7 @@ class ImpalaGenotypeStorage(GenotypeStorage):
             study_id, pedigree_table, variants_table)
 
     def impala_load_dataset(self, study_id, variants_dir, pedigree_file):
-        """Import local variants into hdfs and then into impala."""
+        """Load a study data into impala genotype storage."""
         if variants_dir is None:
             partition_description = None
             variants_schema = None

@@ -28,10 +28,10 @@ dae.pedigrees.family\_role\_builder module
    :undoc-members:
    :show-inheritance:
 
-dae.pedigrees.family\_structure\_builder module
------------------------------------------------
+dae.pedigrees.family\_tag\_builder module
+-----------------------------------------
 
-.. automodule:: dae.pedigrees.family_structure_builder
+.. automodule:: dae.pedigrees.family_tag_builder
    :members:
    :undoc-members:
    :show-inheritance:
@@ -64,6 +64,14 @@ dae.pedigrees.pedigrees module
 ------------------------------
 
 .. automodule:: dae.pedigrees.pedigrees
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+dae.pedigrees.testing module
+----------------------------
+
+.. automodule:: dae.pedigrees.testing
    :members:
    :undoc-members:
    :show-inheritance:

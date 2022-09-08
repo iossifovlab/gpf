@@ -7,7 +7,8 @@ import pytest
 from dae.genomic_resources.genomic_context import \
     CLIGenomicContext, \
     SimpleGenomicContext, \
-    get_genomic_context
+    SimpleGenomicContextProvider, \
+    get_genomic_context, register_context, register_context_provider
 from dae.genomic_resources.reference_genome import ReferenceGenome, \
     build_reference_genome_from_resource
 from dae.genomic_resources.gene_models import GeneModels, \
@@ -26,16 +27,13 @@ def context_fixture(fixture_dirname, mocker):
     mocker.patch(
         "dae.genomic_resources.genomic_context._REGISTERED_CONTEXT_PROVIDERS",
         [])
+    mocker.patch(
+        "dae.genomic_resources.genomic_context._REGISTERED_CONTEXTS",
+        [])
     context = get_genomic_context()
     assert context is not None
 
     return context
-
-
-# def test_contexts(context_fixture, fixture_dirname):
-
-#     assert isinstance(context_fixture, PriorityGenomicContext)
-#     assert len(context_fixture.contexts) == 2
 
 
 def test_get_reference_genome_ok(grr_fixture):
@@ -222,5 +220,69 @@ def test_cli_genomic_context_gene_models(fixture_dirname):
     gene_models = context.get_gene_models()
     assert gene_models is not None
     assert isinstance(gene_models, GeneModels)
+    assert gene_models.resource.resource_id == \
+        "hg38/GRCh38-hg38/gene_models/refSeq_20200330"
+
+
+@pytest.fixture
+def contexts(grr_fixture):
+    gene_models1 = build_gene_models_from_resource(
+        grr_fixture.get_resource(
+            "hg38/GRCh38-hg38/gene_models/refSeq_20200330"))
+
+    context1 = SimpleGenomicContext(
+        context_objects={
+            "gene_models": gene_models1
+        },
+        source=("gene_models1", ))
+    gene_models2 = build_gene_models_from_resource(
+        grr_fixture.get_resource(
+            "hg19/GATK_ResourceBundle_5777_b37_phiX174_short/"
+            "gene_models/refGene_201309"))
+
+    context2 = SimpleGenomicContext(
+        context_objects={
+            "gene_models": gene_models2
+        },
+        source=("gene_models2", ))
+    return context1, context2
+
+
+def test_register_context(context_fixture, contexts):
+    # Given:
+    context1, context2 = contexts
+    register_context(context1)
+    register_context(context2)
+
+    # When
+    gene_models = get_genomic_context().get_gene_models()
+
+    # Then
+    assert gene_models.resource.resource_id == \
+        "hg19/GATK_ResourceBundle_5777_b37_phiX174_short/" \
+        "gene_models/refGene_201309"
+
+
+def test_register_context_provider(context_fixture, contexts):
+    # Given:
+    context1, context2 = contexts
+
+    register_context_provider(
+        SimpleGenomicContextProvider(
+            lambda: context2,
+            "gene_models2",
+            2)
+    )
+    register_context_provider(
+        SimpleGenomicContextProvider(
+            lambda: context1,
+            "gene_models1",
+            1)
+    )
+
+    # When
+    gene_models = get_genomic_context().get_gene_models()
+
+    # Then
     assert gene_models.resource.resource_id == \
         "hg38/GRCh38-hg38/gene_models/refSeq_20200330"

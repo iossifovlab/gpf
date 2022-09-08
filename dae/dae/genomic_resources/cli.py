@@ -16,6 +16,7 @@ from dae.genomic_resources.repository import \
     GR_CONF_FILE_NAME, \
     GR_CONTENTS_FILE_NAME, \
     GenomicResource, \
+    ReadOnlyRepositoryProtocol, \
     ReadWriteRepositoryProtocol, \
     ManifestEntry, \
     parse_resource_id_version, \
@@ -40,6 +41,14 @@ def _add_repository_resource_parameters_group(parser, use_resource=True):
         "for .CONTENTS file from the current working directory up to the root "
         "directory. If found the directory is assumed for root repository "
         "directory; otherwise error is reported.")
+
+    group.add_argument(
+        "--extra-args", type=str, default=None,
+        help="comma separated list of `key=value` pairs arguments needed for "
+        "connection to the specific repository protocol. "
+        "Ex: if you want to connect to an S3 repository it is often "
+        "neccessary to pass additional `endpoint-url` argument."
+    )
     if use_resource:
         group.add_argument(
             "-r", "--resource", type=str,
@@ -86,19 +95,46 @@ def _add_hist_parameters_group(parser):
 
 def _configure_list_subparser(subparsers):
     parser = subparsers.add_parser("list", help="List a GR Repo")
-    parser.add_argument(
-        "-R", "--repository", type=str,
-        default=None,
-        help="URL to the genomic resources repository")
+    _add_repository_resource_parameters_group(parser, use_resource=False)
 
 
-def _run_list_command(proto, _args):
+def _run_list_command(proto: ReadOnlyRepositoryProtocol, _args):
     for res in proto.get_all_resources():
         res_size = sum([fs for _, fs in res.get_manifest().get_files()])
         print(
             f"{res.get_type():20} {res.get_version_str():7s} "
             f"{len(list(res.get_manifest().get_files())):2d} {res_size:12d} "
             f"{res.get_id()}")
+
+
+def _configure_repo_init_subparser(subparsers):
+    parser = subparsers.add_parser(
+        "repo-init", help="Initialize a directory to turn it into a GRR")
+
+    _add_repository_resource_parameters_group(parser, use_resource=False)
+    _add_dry_run_and_force_parameters_group(parser)
+
+
+def _run_repo_init_command(**kwargs):
+    repository = kwargs.get("repository")
+    if repository is None:
+        repo_url = _find_directory_with_filename(GR_CONTENTS_FILE_NAME)
+    else:
+        repo_url = _find_directory_with_filename(
+            GR_CONTENTS_FILE_NAME, repository)
+
+    if repo_url is not None:
+        logger.error(
+            "current working directory is part of a GRR at %s", repo_url)
+        sys.exit(1)
+
+    if repository is None:
+        cwd = pathlib.Path().absolute()
+    else:
+        cwd = pathlib.Path(repository).absolute()
+
+    proto = _create_proto(str(cwd))
+    proto.build_content_file()
 
 
 def _configure_repo_manifest_subparser(subparsers):
@@ -412,6 +448,7 @@ def _run_resource_repair_command(proto, repo_url, region_size, **kwargs):
 
 def cli_manage(cli_args=None):
     """Provide CLI for repository management."""
+    # pylint: disable=too-many-branches
     if not cli_args:
         cli_args = sys.argv[1:]
 
@@ -426,6 +463,7 @@ def cli_manage(cli_args=None):
         dest="command", help="Command to execute")
 
     _configure_list_subparser(commands_parser)
+    _configure_repo_init_subparser(commands_parser)
     _configure_repo_manifest_subparser(commands_parser)
     _configure_resource_manifest_subparser(commands_parser)
     _configure_repo_hist_subparser(commands_parser)
@@ -434,11 +472,16 @@ def cli_manage(cli_args=None):
     _configure_resource_repair_subparser(commands_parser)
 
     args = parser.parse_args(cli_args)
+    VerbosityConfiguration.set(args)
+
     if args.version:
         print(f"GPF version: {VERSION} ({RELEASE})")
         sys.exit(0)
 
     command, repo_url = args.command, args.repository
+    if command == "repo-init":
+        _run_repo_init_command(**vars(args))
+        return
 
     if args.repository is None:
         repo_url = _find_directory_with_filename(GR_CONTENTS_FILE_NAME)
@@ -448,7 +491,15 @@ def cli_manage(cli_args=None):
             sys.exit(1)
         print("working with repository:", repo_url)
 
-    proto = _create_proto(repo_url)
+    proto = _create_proto(repo_url, args.extra_args)
+    if command == "list":
+        _run_list_command(proto, args)
+        return
+
+    if not isinstance(proto, ReadWriteRepositoryProtocol):
+        raise ValueError(
+            f"resource management works with RW protocols; "
+            f"{proto.proto_id} ({proto.scheme}) is read only")
 
     if command == "repo-manifest":
         _run_repo_manifest_command(proto, **vars(args))
@@ -462,8 +513,6 @@ def cli_manage(cli_args=None):
         _run_repo_repair_command(proto, **vars(args))
     elif command == "resource-repair":
         _run_resource_repair_command(proto, repo_url, **vars(args))
-    elif command == "list":
-        _run_list_command(proto, args)
     else:
         logger.error(
             "Unknown command %s. The known commands are index, "
@@ -471,15 +520,19 @@ def cli_manage(cli_args=None):
         sys.exit(1)
 
 
-def _create_proto(repo_url):
-    if not os.path.isabs(repo_url):
+def _create_proto(repo_url, extra_args: str = ""):
+    url = urlparse(repo_url)
+
+    if url.scheme in {"file", ""} and not os.path.isabs(repo_url):
         repo_url = os.path.abspath(repo_url)
 
-    proto = build_fsspec_protocol(proto_id="manage", root_url=repo_url)
-    if not isinstance(proto, ReadWriteRepositoryProtocol):
-        raise ValueError(
-            f"resource management works with RW protocols; "
-            f"{proto.proto_id} ({proto.scheme}) is read only")
+    kwargs: Dict[str, str] = {}
+    if extra_args:
+        parsed = [tuple(a.split("=")) for a in extra_args.split(",")]
+        kwargs = {p[0]: p[1] for p in parsed}
+
+    proto = build_fsspec_protocol(
+        proto_id="manage", root_url=repo_url, **kwargs)
     return proto
 
 

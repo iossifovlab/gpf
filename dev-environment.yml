@@ -40,7 +40,6 @@ dependencies:
   - pip=21.3.1
   - pip:
     - sphinx-autorun==1.1.1
+    - sphinx-copybutton==0.5.0
+    - sphinx-rtd-theme==1.0.0
     - rangehttpserver==1.2.0
-    # - -e ./dae
-    # - -e ./wdae
-    # - -e ./dae_conftests

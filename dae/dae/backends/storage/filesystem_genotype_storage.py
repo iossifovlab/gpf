@@ -39,11 +39,9 @@ class FilesystemGenotypeStorage(GenotypeStorage):
         if not study_config.genotype_storage.files:
             data_dir = self.get_data_dir(study_config.id, "data")
             vcf_filename = os.path.join(
-                data_dir, f"{study_config.id}.vcf"
-            )
+                data_dir, f"{study_config.id}.vcf")
             ped_filename = os.path.join(
-                data_dir, f"{study_config.id}.ped"
-            )
+                data_dir, f"{study_config.id}.ped")
 
             families_loader = FamiliesLoader(ped_filename)
             families = families_loader.load()
@@ -66,7 +64,6 @@ class FilesystemGenotypeStorage(GenotypeStorage):
         families = families_loader.load()
         elapsed = time.time() - start
         logger.info("families loaded in in %.2f sec", elapsed)
-        logger.debug("%s", families.ped_df.head())
 
         loaders = []
         for file_conf in study_config.genotype_storage.files.variants:
@@ -74,8 +71,7 @@ class FilesystemGenotypeStorage(GenotypeStorage):
             variants_filename = file_conf.path
             variants_params = file_conf.params.to_dict()
             logger.debug(
-                "variant params: %s; %s", variants_filename, variants_params
-            )
+                "variant params: %s; %s", variants_filename, variants_params)
 
             annotation_filename = variants_filename
             if file_conf.format == "vcf":
@@ -138,7 +134,7 @@ class FilesystemGenotypeStorage(GenotypeStorage):
             "has_denovo": False,
             "has_cnv": False,
             "genotype_storage": {
-                "id": self.id,
+                "id": self.storage_id,
                 "files": {
                     "variants": variants_config,
                     "pedigree": families_config,
@@ -151,15 +147,13 @@ class FilesystemGenotypeStorage(GenotypeStorage):
         else:
             variant_loaders[0].get_attribute("source_type")
             if any(
-                loader.get_attribute("source_type") == "denovo"
-                for loader in variant_loaders
-            ):
+                    loader.get_attribute("source_type") == "denovo"
+                    for loader in variant_loaders):
                 config_dict["has_denovo"] = True
             if any(
-                loader.get_attribute("source_type") == "cnv"
-                for loader in variant_loaders
-            ):
-                config_dict["has_denovo"] = True
+                    loader.get_attribute("source_type") == "cnv"
+                    for loader in variant_loaders):
+                config_dict["has_denovo"] = True  # FIXME
                 config_dict["has_cnv"] = True
 
         if study_config is not None:
@@ -179,7 +173,7 @@ class FilesystemGenotypeStorage(GenotypeStorage):
         for key, value in params.items():
             if isinstance(value, bool):
                 params[key] = "true" if value else "false"
-            if isinstance(value, str) and '\t' in value:
+            if isinstance(value, str) and "\t" in value:
                 value = value.replace("\t", "\\t")
                 params[key] = value
 
@@ -191,11 +185,12 @@ class FilesystemGenotypeStorage(GenotypeStorage):
 
     def _import_variants_files(self, study_id, loaders):
         result_config = []
+        destination_dirname = os.path.join(self.data_dir, study_id, "data")
         for variants_loader in loaders:
-            destination_dirname = os.path.join(self.data_dir, study_id, "data")
 
-            def construct_destination_filename(fn):
-                return os.path.join(destination_dirname, os.path.basename(fn))
+            def construct_destination_filename(fname):
+                return os.path.join(
+                    destination_dirname, os.path.basename(fname))
 
             source_filenames = variants_loader.variants_filenames
             destination_filenames = list(
@@ -206,7 +201,7 @@ class FilesystemGenotypeStorage(GenotypeStorage):
             for key, value in params.items():
                 if isinstance(value, bool):
                     params[key] = "true" if value else "false"
-                if isinstance(value, str) and '\t' in value:
+                if isinstance(value, str) and "\t" in value:
                     value = value.replace("\t", "\\t")
                     params[key] = value
             config = {
@@ -229,9 +224,11 @@ class FilesystemGenotypeStorage(GenotypeStorage):
             for filename in variants_loader.filenames:
                 source_filenames = glob.glob(f"{filename}*")
                 logger.debug("source filenames: %s", source_filenames)
-                for src_file in source_filenames:
-                    dst_file = construct_destination_filename(src_file)
-                    logger.debug("copying: %s -> %s", src_file, dst_file)
-                    shutil.copyfile(src_file, dst_file)
+                for fname in source_filenames:
+                    logger.debug(
+                        "copying: %s -> %s",
+                        fname, construct_destination_filename(fname))
+                    shutil.copyfile(
+                        fname, construct_destination_filename(fname))
 
         return result_config

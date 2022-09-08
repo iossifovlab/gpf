@@ -13,7 +13,7 @@ from dae.genomic_resources.histogram import Histogram, \
     HistogramBuilder, load_histograms
 from dae.genomic_resources.testing import build_test_resource, \
     build_testing_repository
-from dae.genomic_resources.test_tools import convert_to_tab_separated
+from dae.genomic_resources.testing import convert_to_tab_separated
 
 
 def test_histogram_simple_input():

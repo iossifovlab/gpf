@@ -1,14 +1,10 @@
-#!/bin/env python
-
-# version 2.1
-# January/16th/2014
-# written by Ewa
-
+from __future__ import annotations
 from collections import defaultdict
 import copy
 
 
 def bedfile2regions(bed_filename):
+    """Transform BED file into list of regions."""
     with open(bed_filename) as infile:
         regions = []
         for line in infile:
@@ -22,13 +18,15 @@ def bedfile2regions(bed_filename):
 
 
 def regions2bedfile(regions, bed_filename):
+    """Save list of regions into a BED file."""
     with open(bed_filename, "w") as outfile:
         for reg in regions:
             outfile.write(
                 f"{reg.chrom}\t{reg.start-1}\t{reg.stop}\n")
 
 
-class Region(object):
+class Region:
+    """Class representing a genomic region."""
 
     # REGION_REGEXP2 = re.compile(
     #     r"^(chr)?(.+)(:([\d]{1,3}(,?[\d]{3})*)(-([\d]{1,3}(,?[\d]{3})*))?)?$"
@@ -51,10 +49,9 @@ class Region(object):
     def __repr__(self):
         if self.start is None:
             return self.chrom
-        elif self.end is None:
-            return "{}:{}".format(self.chrom, self.start)
-        else:
-            return f"{self.chrom}:{self.start}-{self.stop}"
+        if self.end is None:
+            return f"{self.chrom}:{self.start}"
+        return f"{self.chrom}:{self.start}-{self.stop}"
 
     def __hash__(self):
         return str(self).__hash__()
@@ -70,6 +67,7 @@ class Region(object):
         return not self.__eq__(other)
 
     def isin(self, chrom, pos):
+        """Check if a genomic position is insde of the region."""
         if chrom != self.chrom:
             return False
 
@@ -79,7 +77,8 @@ class Region(object):
             return False
         return True
 
-    def intersection(self, other):
+    def intersection(self, other: Region):
+        """Return intersection of the region with other region."""
         if self.chrom != other.chrom:
             return None
         if self.start > other.stop:
@@ -101,16 +100,17 @@ class Region(object):
 
     @classmethod
     def from_str(cls, region):
+        """Parse string representation of a region."""
         parts = [p.strip() for p in region.split(":")]
         if len(parts) == 1:
             return Region(parts[0], None, None)
-        elif len(parts) == 2:
+        if len(parts) == 2:
             chrom = parts[0]
             parts = [p.strip() for p in parts[1].split("-")]
             start = int(parts[0].replace(",", ""))
             if len(parts) == 1:
                 return Region(chrom, start, start)
-            elif len(parts) == 2:
+            if len(parts) == 2:
                 stop = int(parts[1].replace(",", ""))
                 return Region(chrom, start, stop)
         return None
@@ -154,41 +154,43 @@ class Region(object):
     #     return Region(chromosome, start, end)
 
 
-def all_regions_from_chr(R, chrom):
+def all_regions_from_chrom(regions, chrom):
     """Subset of regions in R that are from chr."""
-    A = [r for r in R if r.chrom == chrom]
-    return A
+    return [r for r in regions if r.chrom == chrom]
 
 
-def unique_regions(R):
-    """removed duplicated regions"""
-    return list(set(R))
+def unique_regions(regions):
+    """Remove duplicated regions."""
+    return list(set(regions))
 
 
-def connected_component(R):
-    """This might be the same as collapse"""
-    import networkx as nx  # type: ignore
+def connected_component(regions):
+    """Return connected component of regions.
 
-    G = nx.Graph()
+    This might be the same as collapse.
+    """
+    import networkx as nx  # pylint: disable=import-outside-toplevel
 
-    G.add_nodes_from(R)
-    D = defaultdict(list)
-    for r in R:
-        D[r.chrom].append(r)
+    graph = nx.Graph()
 
-    for _chrom, nds in list(D.items()):
+    graph.add_nodes_from(regions)
+    regions_by_chrom = defaultdict(list)
+    for reg in regions:
+        regions_by_chrom[reg.chrom].append(reg)
+
+    for _chrom, nds in regions_by_chrom.items():
         nds.sort(key=lambda x: x.stop)
         for k in range(1, len(nds)):
             for j in range(k - 1, -1, -1):
                 if nds[k].start <= nds[j].stop:
-                    G.add_edge(nds[k], nds[j])
+                    graph.add_edge(nds[k], nds[j])
                 else:
                     break
-    CC = nx.connected_components(G)
-    return CC
+    return nx.connected_components(graph)
 
 
 def collapse(source, is_sorted=False):
+    """Collapse list of regions."""
     if not source:
         return source
 
@@ -206,8 +208,7 @@ def collapse(source, is_sorted=False):
         if not chrom_collapsed:
             collapsed[reg.chrom].append(reg)
             continue
-        else:
-            prev_reg = chrom_collapsed[-1]
+        prev_reg = chrom_collapsed[-1]
 
         if reg.start <= prev_reg.stop:
             if reg.stop > prev_reg.stop:
@@ -223,9 +224,11 @@ def collapse(source, is_sorted=False):
 
 
 def collapse_no_chrom(source, is_sorted=False):
-    """collapse by ignoring the chromosome. Useful when the caller knows
-    that all the regions are from the same chromosome."""
+    """Collapse by ignoring the chromosome.
 
+    Useful when the caller knows
+    that all the regions are from the same chromosome.
+    """
     if not source:
         return source
     regions = copy.copy(source)
@@ -248,15 +251,18 @@ def collapse_no_chrom(source, is_sorted=False):
     return collapsed
 
 
-def totalLen(s):
-    return sum(x.len() for x in s)
+def total_length(regions):
+    return sum(regions.len() for x in regions)
 
 
-def intersection(s1, s2):
-    """ First collapses each for lists of regions s1 and s2 and then find
-    the intersection. """
-    s1_c = collapse(s1)
-    s2_c = collapse(s2)
+def intersection(regions1, regions2):
+    """Compute intersection of two list of regions.
+
+    First collapses each for lists of regions s1 and s2 and then find
+    the intersection.
+    """
+    s1_c = collapse(regions1)
+    s2_c = collapse(regions2)
     s1_c.sort(key=lambda x: (x.chrom, x.start))
     s2_c.sort(key=lambda x: (x.chrom, x.start))
 
@@ -299,51 +305,51 @@ def intersection(s1, s2):
 
 
 def union(*r):
-    """Collapses many lists"""
+    """Collapse many lists of regions."""
     r_sum = [el for list in r for el in list]
     return collapse(r_sum)
 
 
-def _diff(A, B):
-    D = []
+def _diff(regions_a, regions_b):
+    result = []
     k = 0
 
-    for a in A:
-        if k >= len(B):
-            D.append(a)
+    for reg_a in regions_a:
+        if k >= len(regions_b):
+            result.append(reg_a)
             continue
-        if a.chrom < B[k].chrom:
-            D.append(a)
+        if reg_a.chrom < regions_b[k].chrom:
+            result.append(reg_a)
             continue
-        if a.stop < B[k].start:
-            D.append(a)
+        if reg_a.stop < regions_b[k].start:
+            result.append(reg_a)
             continue
-        prev = a.start
-        while k < len(B) and B[k].stop <= a.stop and B[k].chrom == a.chrom:
-            if prev < B[k].start:
-                new_a = Region(a.chrom, prev, B[k].start - 1)
-                D.append(new_a)
-            prev = B[k].stop + 1
+        prev = reg_a.start
+        while k < len(regions_b) \
+                and regions_b[k].stop <= reg_a.stop \
+                and regions_b[k].chrom == reg_a.chrom:
+            if prev < regions_b[k].start:
+                new_a = Region(reg_a.chrom, prev, regions_b[k].start - 1)
+                result.append(new_a)
+            prev = regions_b[k].stop + 1
             k += 1
-        if k < len(B) and B[k].chrom != a.chrom:
+        if k < len(regions_b) and regions_b[k].chrom != reg_a.chrom:
             continue
-        if prev <= a.stop:
-            D.append(Region(a.chrom, prev, a.stop))
+        if prev <= reg_a.stop:
+            result.append(Region(reg_a.chrom, prev, reg_a.stop))
 
-    return D
+    return result
 
 
-def difference(s1, s2, symmetric=False):
-
+def difference(regions1, regions2, symmetric=False):
+    """Compute difference between two list of regions."""
     if not symmetric:
-        A = collapse(s1)
-        A.sort(key=lambda x: (x.chrom, x.start))
+        left = collapse(regions1)
+        left.sort(key=lambda x: (x.chrom, x.start))
     else:
-        A = union(s1, s2)
-        A.sort(key=lambda x: (x.chrom, x.start))
+        left = union(regions1, regions2)
+        left.sort(key=lambda x: (x.chrom, x.start))
 
-    B = intersection(s1, s2)
+    right = intersection(regions1, regions2)
 
-    D = _diff(A, B)
-
-    return D
+    return _diff(left, right)

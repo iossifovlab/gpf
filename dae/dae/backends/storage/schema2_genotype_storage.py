@@ -45,11 +45,11 @@ class Schema2GenotypeStorage(GenotypeStorage):
     def is_filestorage(self):
         return False
 
-    def build_backend(self, study_id, genome, gene_models):
-        assert study_id is not None
+    def build_backend(self, study_config, genome, gene_models):
+        assert study_config is not None
 
         family_table, summary_table, pedigree_table, meta_table \
-            = self._study_tables(study_id)
+            = self._study_tables(study_config)
         variants = ImpalaVariants(
             self.impala_helpers,
             self.storage_config.impala.db,
@@ -258,7 +258,7 @@ class Schema2GenotypeStorage(GenotypeStorage):
             "conf_dir": ".",
             "has_denovo": False,
             "genotype_storage": {
-                "id": self.id,
+                "id": self.storage_id,
                 "tables": {"pedigree": pedigree_table},
             },
             "genotype_browser": {"enabled": False},

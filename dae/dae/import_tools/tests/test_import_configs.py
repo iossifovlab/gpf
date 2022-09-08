@@ -28,6 +28,7 @@ def test_parquet_files_are_generated(tmpdir, gpf_instance_2019, config_dir,
                         return_value=schema == "schema2")
     project = import_tools.ImportProject.build_from_config(
         import_config, input_dir)
+
     import_tools.run_with_project(project)
 
     files = os.listdir(tmpdir)

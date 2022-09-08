@@ -1,11 +1,13 @@
-from abc import abstractmethod
 import argparse
-from copy import deepcopy
-from dataclasses import dataclass
 import os
 import sys
+from abc import abstractmethod, ABC
+from copy import deepcopy
+from dataclasses import dataclass
 from typing import Optional, cast
+
 from box import Box
+
 from dae.backends.cnv.loader import CNVLoader
 from dae.backends.dae.loader import DaeTransmittedLoader, DenovoLoader
 from dae.backends.storage.genotype_storage_factory import (
@@ -26,6 +28,7 @@ from dae.utils import fs_utils
 from dae.backends.impala.import_commons import MakefilePartitionHelper,\
     construct_import_annotation_pipeline, construct_import_effect_annotator
 from dae.dask.client_factory import DaskClient
+from dae.utils.statistics import StatsCollection
 
 
 @dataclass(frozen=True)
@@ -56,6 +59,8 @@ class ImportProject():
             assert len_files == 1, "Support for multiple denovo files is NYI"
 
         self._base_input_dir = base_input_dir
+
+        self.stats: StatsCollection = StatsCollection()
 
     @staticmethod
     def build_from_config(import_config, base_input_dir=""):
@@ -181,17 +186,16 @@ class ImportProject():
         instance_config = self.import_config.get("gpf_instance", {})
         return GPFInstance(work_dir=instance_config.get("path", None))
 
-    def get_storage(self):
+    def get_import_storage(self):
         """Create an import storage as described in the import config."""
         # pylint: disable=import-outside-toplevel
         from dae.import_tools.impala_schema1 import ImpalaSchema1ImportStorage
         from dae.import_tools.schema2_import_storage import (
             Schema2ImportStorage
         )
-
         if self._is_schema2():
-            return Schema2ImportStorage(self)
-        return ImpalaSchema1ImportStorage(self)
+            return Schema2ImportStorage()
+        return ImpalaSchema1ImportStorage()
 
     @property
     def work_dir(self):
@@ -206,6 +210,16 @@ class ImportProject():
             self._base_input_dir,
             self.import_config["input"].get("input_dir", "")
         )
+
+    def has_variants(self):  # pylint: disable=no-self-use
+        # FIXME: this method should check if the input has variants
+        return True
+
+    def has_gpf_instance(self):  # pylint: disable=no-self-use
+        # FIXME: this method should check if project has access to a
+        # GPF instance - configured in the project or through the
+        # environment variable DAE_DB_DIR
+        return True
 
     @property
     def study_id(self):
@@ -264,15 +278,25 @@ class ImportProject():
         return variants_loader
 
     def _is_schema2(self) -> bool:
+        schema_version: int = 2
+
         if not self.has_destination():
-            return True  # Default import schema is schema2
+            # get default storage schema from GPF instance
+            gpf_instance = self.get_gpf_instance()
+            storage_id = gpf_instance\
+                .genotype_storage_db.default_storage_id
+            gpf_instance = self.get_gpf_instance()
+            schema_version = gpf_instance.dae_config\
+                .storage[storage_id].get("schema_version", 0)
+
+            return schema_version == 2
 
         destination = self.import_config["destination"]
         if "storage_id" in destination:
             storage_id = destination["storage_id"]
             gpf_instance = self.get_gpf_instance()
-            schema_version: int = gpf_instance.dae_config\
-                .storage[storage_id]["schema_version"]
+            schema_version = gpf_instance.dae_config\
+                .storage[storage_id].get("schema_version", 0)
         else:
             schema_version = destination["schema_version"]
 
@@ -428,13 +452,15 @@ class ImportConfigNormalizer:
         return res
 
 
-class AbstractImportStorage:
-    def __init__(self, project):
+class AbstractImportStorage(ABC):
+    """Defines abstract base class for import storages."""
+
+    def __init__(self):
         pass
 
     @abstractmethod
-    def generate_import_task_graph(self) -> TaskGraph:
-        pass
+    def generate_import_task_graph(self, project: ImportProject) -> TaskGraph:
+        """Generate task grap for import of the project into this storage."""
 
 
 def main():
@@ -463,6 +489,7 @@ def run(import_config_fn, executor=SequentialExecutor()):
 
 
 def run_with_project(project, executor=SequentialExecutor()):
-    storage = project.get_storage()
-    task_graph = storage.generate_import_task_graph()
+    storage = project.get_import_storage()
+
+    task_graph = storage.generate_import_task_graph(project)
     executor.execute(task_graph)

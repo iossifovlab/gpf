@@ -1,3 +1,4 @@
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pytest
 
 from dae.tools.simple_study_import import main
@@ -20,6 +21,7 @@ def test_import_denovo_dae_style_into_genotype_storage(
     denovo_filename = fixture_dirname("denovo_import/variants_DAE_style.tsv")
 
     study_id = f"test_denovo_dae_style_{genotype_storage_id}"
+    gpf_instance_2013.reload()
 
     argv = [
         pedigree_filename,
@@ -385,9 +387,9 @@ def test_add_chrom_prefix_simple(
     for v in vs:
         print(v)
         assert v.chromosome.startswith("ala_bala")
-        for va in v.alleles:
-            print("\t", va)
-            assert va.chromosome.startswith("ala_bala")
+        for fa in v.alleles:
+            print("\t", fa)
+            assert fa.chromosome.startswith("ala_bala")
 
 
 @pytest.mark.parametrize(
@@ -418,7 +420,7 @@ def test_import_comp_all_del_chrom_prefix(
         pedigree_filename,
         "--id",
         study_id,
-        '--skip-reports',
+        "--skip-reports",
         "--vcf-denovo-mode", "possible_denovo",
         "--vcf-omission-mode", "possible_omission",
         "--vcf-files",
@@ -592,8 +594,7 @@ def test_import_study_config_arg(
 def test_denovo_db_import(
         fixture_dirname, temp_dirname,
         genotype_storage_id, storage_type,
-        gpf_instance_2013,
-        ):
+        gpf_instance_2013,):
 
     families_filename = fixture_dirname("backends/denovo-db-person-id.ped")
     denovo_filename = fixture_dirname("backends/denovo-db-person-id.tsv")

@@ -1,6 +1,0 @@
-setup.py
-dae_conftests.egg-info/PKG-INFO
-dae_conftests.egg-info/SOURCES.txt
-dae_conftests.egg-info/dependency_links.txt
-dae_conftests.egg-info/entry_points.txt
-dae_conftests.egg-info/top_level.txt

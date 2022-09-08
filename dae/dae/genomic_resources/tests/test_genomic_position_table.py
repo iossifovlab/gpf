@@ -9,7 +9,7 @@ from dae.genomic_resources.genome_position_table import \
 from dae.genomic_resources.testing import \
     build_test_resource, \
     tabix_to_resource
-from dae.genomic_resources.test_tools import convert_to_tab_separated
+from dae.genomic_resources.testing import convert_to_tab_separated
 
 
 def test_default_setup():

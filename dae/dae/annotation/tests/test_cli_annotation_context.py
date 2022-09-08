@@ -1,11 +1,34 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
+import os
 import argparse
+import pytest
 
 from dae.annotation.context import CLIAnnotationContext
 from dae.genomic_resources.genomic_context import get_genomic_context
 
 
-def test_cli_genomic_context_reference_genome(fixture_dirname):
+@pytest.fixture
+def context_fixture(fixture_dirname, mocker):
+    conf_dir = fixture_dirname("")
+    home_dir = os.environ["HOME"]
+    mocker.patch("os.environ", {
+        "DAE_DB_DIR": conf_dir,
+        "HOME": home_dir
+    })
+    mocker.patch(
+        "dae.genomic_resources.genomic_context._REGISTERED_CONTEXT_PROVIDERS",
+        [])
+    mocker.patch(
+        "dae.genomic_resources.genomic_context._REGISTERED_CONTEXTS",
+        [])
+    context = get_genomic_context()
+    assert context is not None
+
+    return context
+
+
+def test_cli_genomic_context_reference_genome(
+        fixture_dirname, context_fixture):
     # Given
     parser = argparse.ArgumentParser(
         description="Test CLI genomic context",

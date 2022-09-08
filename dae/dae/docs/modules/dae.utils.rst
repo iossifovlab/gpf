@@ -100,6 +100,14 @@ dae.utils.variant\_utils module
    :undoc-members:
    :show-inheritance:
 
+dae.utils.verbosity\_configuration module
+-----------------------------------------
+
+.. automodule:: dae.utils.verbosity_configuration
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Module contents
 ---------------
 

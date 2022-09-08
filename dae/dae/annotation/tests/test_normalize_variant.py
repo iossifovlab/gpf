@@ -3,7 +3,7 @@
 import textwrap
 import pytest
 
-from dae.genomic_resources.test_tools import convert_to_tab_separated
+from dae.genomic_resources.testing import convert_to_tab_separated
 from dae.genomic_resources.testing import build_test_resource
 from dae.genomic_resources.reference_genome import \
     build_reference_genome_from_resource

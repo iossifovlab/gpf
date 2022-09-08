@@ -36,6 +36,14 @@ dae.backends.storage.impala\_genotype\_storage module
    :undoc-members:
    :show-inheritance:
 
+dae.backends.storage.schema2\_genotype\_storage module
+------------------------------------------------------
+
+.. automodule:: dae.backends.storage.schema2_genotype_storage
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Module contents
 ---------------
 
