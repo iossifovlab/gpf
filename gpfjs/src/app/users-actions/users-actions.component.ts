@@ -19,7 +19,7 @@ export class UsersActionsComponent implements OnInit {
   ) { }
 
   public ngOnInit(): void {
-    this.usersService.getUserInfo().pipe(take(1)).subscribe((currentUser) => {
+    this.usersService.getUserInfoObservable().pipe(take(1)).subscribe((currentUser) => {
       if (currentUser.email === this.user.email) {
         this.showDeleteButton = false;
       }
