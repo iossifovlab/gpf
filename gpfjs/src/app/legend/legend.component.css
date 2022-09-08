@@ -3,7 +3,7 @@
   border: 1px solid #ddd;
   padding: 8px;
   position: absolute;
-  bottom: 40px;
+  bottom: 39px;
 }
 
 #legend-items-wrapper {
@@ -23,8 +23,8 @@
   border-radius: 0;
   background-color: #ffffd6 !important;
   color: #fff;
-  height: 41px;
-  width: 47px;
+  height: 40px;
+  width: 46px;
   opacity: 75%;
 }
 
@@ -37,10 +37,9 @@
   background-repeat: no-repeat;
   background-position-y: center;
   background-position-x: center;
-  width: 38px;
-  height: 35px;
-  scale: 70%;
+  width: 30px;
+  height: 30px;
   position: absolute;
-  top: 2px;
-  left: 3px;
+  top: 4px;
+  left: 7px;
 }
