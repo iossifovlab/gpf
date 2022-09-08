@@ -73,7 +73,7 @@ class FamilyQueryBuilder(BaseQueryBuilder):
                 if self.dialect.add_unnest_in_join()
                 else effect_gene_abs
             )
-            join_clause = join_clause + f"JOIN {inner_clause} \n"
+            join_clause = join_clause + f"JOIN {inner_clause}  as eg\n"
 
         self._add_to_product(join_clause)
 

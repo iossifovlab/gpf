@@ -56,7 +56,8 @@ class SummaryQueryBuilder(BaseQueryBuilder):
         self._add_to_product(from_clause)
 
     def _build_join(self, genes=None, effect_types=None):
-        pass
+        if genes is not None or effect_types is not None:
+            self._add_to_product("\n JOIN sa.effect_gene as eg ")
 
     def _build_group_by(self):
         pass
