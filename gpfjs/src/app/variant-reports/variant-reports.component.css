@@ -102,10 +102,9 @@ table {
 
 #legend-wrapper {
   position: sticky;
-  width: 238px;
   float: right;
   margin-top: 8px;
-  margin-right: 10px;
+  margin-right: 16px;
   bottom: 10px;
 }
 

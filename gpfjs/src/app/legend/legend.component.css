@@ -3,7 +3,7 @@
   border: 1px solid #ddd;
   padding: 8px;
   position: absolute;
-  bottom: 44px;
+  bottom: 40px;
 }
 
 #legend-items-wrapper {
@@ -18,25 +18,29 @@
 }
 
 #expand-legend-button {
-  margin: 0;
-  width: 100%;
-  min-width: 220px;
-  height: 44px;
-  border-radius: 0;
   position: relative;
   outline: none;
-  background-color: #138496 !important;
-  border-color: #117a8b !important;
+  border-radius: 0;
+  background-color: #ffffd6 !important;
   color: #fff;
-}
-
-.select-dropdown-icon {
-  transform: rotate(180deg);
-  position: absolute;
-  top: 18px;
-  right: 12px;
+  height: 41px;
+  width: 47px;
+  opacity: 75%;
 }
 
 #expand-legend-button-wrapper {
   background-color: #fff;
+}
+
+#legend-icon {
+  display: inline-block;
+  background-repeat: no-repeat;
+  background-position-y: center;
+  background-position-x: center;
+  width: 38px;
+  height: 35px;
+  scale: 70%;
+  position: absolute;
+  top: 2px;
+  left: 3px;
 }

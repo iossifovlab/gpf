@@ -8,8 +8,7 @@
 </div>
 
 <div id="expand-legend-button-wrapper">
-  <button id="expand-legend-button" class="btn btn-default" (click)="isExpanded = !isExpanded">
-    <span>Legend</span>
-    <span class="select-dropdown-icon" [style.content]="'url(' + imgPathPrefix + 'dropdown_icon.png)'"></span>
+  <button id="expand-legend-button" title="Legend" class="btn btn-default" (click)="isExpanded = !isExpanded">
+    <span id="legend-icon" [style.background-image]="'url(' + imgPathPrefix + 'legend-icon.png)'"></span>
   </button>
 </div>
