@@ -10,6 +10,7 @@ from dae.backends.query_runners import QueryResult, QueryRunner
 from dae.backends.raw.raw_variants import RawFamilyVariants
 from dae.backends.schema2.sql_query_runner import SqlQueryRunner
 from dae.pedigrees.family import FamiliesData
+from dae.pedigrees.loader import FamiliesLoader
 from dae.variants.attributes import Role, Status, Sex
 from dae.backends.schema2.base_query_builder import Dialect
 from dae.backends.schema2.family_builder import FamilyQueryBuilder
@@ -65,6 +66,10 @@ class ImpalaVariants:
         self.pedigree_schema = self._fetch_pedigree_schema()
         self.ped_df = self._fetch_pedigree()
         self.families = FamiliesData.from_pedigree_df(self.ped_df)
+        # Temporary workaround for studies that are imported without tags
+        FamiliesLoader._build_families_tags(
+            self.families, {"ped_tags": True}
+        )
 
         assert gene_models is not None
         self.gene_models = gene_models

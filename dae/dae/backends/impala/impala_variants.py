@@ -15,6 +15,7 @@ from dae.backends.raw.raw_variants import RawFamilyVariants
 
 from dae.annotation.schema import Schema
 from dae.pedigrees.family import FamiliesData
+from dae.pedigrees.loader import FamiliesLoader
 from dae.backends.impala.serializers import AlleleParquetSerializer
 
 from dae.variants.attributes import Role, Status, Sex
@@ -194,6 +195,10 @@ class ImpalaVariants:
 
         self.ped_df = self._fetch_pedigree()
         self.families = FamiliesData.from_pedigree_df(self.ped_df)
+        # Temporary workaround for studies that are imported without tags
+        FamiliesLoader._build_families_tags(
+            self.families, {"ped_tags": True}
+        )
 
         self.schema = self._fetch_variant_schema()
         if self.variants_table:
