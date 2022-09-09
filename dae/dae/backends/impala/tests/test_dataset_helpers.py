@@ -1,13 +1,13 @@
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
 import os
-
 from dae.backends.impala.import_commons import DatasetHelpers
 
 
 def test_find_genotype_data_config_file(fixtures_gpf_instance):
     print(fixtures_gpf_instance.get_genotype_data_ids())
     helpers = DatasetHelpers(fixtures_gpf_instance)
-    fn = helpers.find_genotype_data_config_file("Study1")
-    assert fn is not None
+    filename = helpers.find_genotype_data_config_file("Study1")
+    assert filename is not None
 
 
 def test_find_genotype_data_config(fixtures_gpf_instance):
@@ -49,9 +49,9 @@ def test_check_dataset_hdfs_directory(
 
 def test_dataset_rename_hdfs_directory(
         fixtures_gpf_instance, mocker, data_import):
-    def mock_rename(self, n1, n2):
-        assert n1.endswith("SVMergingStudy1")
-        assert n2.endswith("new")
+    def mock_rename(self, src, dst):
+        assert src.endswith("SVMergingStudy1")
+        assert dst.endswith("new")
 
     mocker.patch(
         "dae.backends.impala.hdfs_helpers.HdfsHelpers.rename",
@@ -122,16 +122,16 @@ def test_check_dataset_impala_tables(
 
 
 def test_rename_study_config(fixtures_gpf_instance, mocker):
-    def mock_rename(n1, n2):
-        print(n1)
-        print(n2)
+    def mock_rename(src, dst):
+        print(src)
+        print(dst)
 
     mocker.patch("os.rename", mock_rename)
 
     mock_open = mocker.mock_open()
-    mocker.patch('dae.backends.impala.import_commons.open', mock_open)
+    mocker.patch("dae.backends.impala.import_commons.open", mock_open)
 
-    spy = mocker.spy(os, 'rename')
+    spy = mocker.spy(os, "rename")
 
     helpers = DatasetHelpers(fixtures_gpf_instance)
 
@@ -145,9 +145,8 @@ def test_rename_study_config(fixtures_gpf_instance, mocker):
 
 
 def test_remove_study_config(fixtures_gpf_instance, mocker):
-    def mock_remove(fn):
-        print(fn)
-        assert fn.endswith("SVMergingStudy1")
+    def mock_remove(filename):
+        assert filename.endswith("SVMergingStudy1")
 
     mocker.patch("shutil.rmtree", mock_remove)
 

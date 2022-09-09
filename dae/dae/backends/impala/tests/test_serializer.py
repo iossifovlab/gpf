@@ -1,3 +1,4 @@
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
 from dae.annotation.schema import Schema
 from dae.backends.impala.serializers import AlleleParquetSerializer
 from dae.backends.dae.loader import DenovoLoader
@@ -58,8 +59,8 @@ def test_extra_attributes_serialization_deserialization(
     extra_attributes = loader.get_attribute("extra_attributes")
 
     serializer = AlleleParquetSerializer(main_schema, extra_attributes)
-    it = loader.full_variants_iterator()
-    variant = next(it)[1][0]
+    full_variants_iterator = loader.full_variants_iterator()
+    variant = next(full_variants_iterator)[1][0]
     print(variant.gt)
     summary_blobs = serializer.serialize_summary_data(variant.alleles)
     scores_blob = serializer.serialize_scores_data(variant.alleles)
@@ -95,8 +96,8 @@ def test_extra_attributes_loading_with_person_id(
         params=params
     )
 
-    it = loader.full_variants_iterator()
-    variants = list(it)
+    full_variants_iterator = loader.full_variants_iterator()
+    variants = list(full_variants_iterator)
     assert len(variants) == 17
     family_variants = [v[1][0] for v in variants]
     assert family_variants[0].get_attribute("StudyName")[0] == "Turner_2017"

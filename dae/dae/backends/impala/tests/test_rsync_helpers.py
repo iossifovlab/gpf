@@ -1,3 +1,4 @@
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pytest
 
 from dae.backends.impala.rsync_helpers import RsyncHelpers
@@ -58,9 +59,9 @@ def test_rsync_helpers_ssh_port2022(temp_dirname, mocker):
 
 def test_exclude_options(temp_dirname):
     helpers = RsyncHelpers("ssh://root@seqclust0.seqpipe.org:/mnt/hdfs2nfs")
-    assert helpers._exclude_options([]) == []
-    assert helpers._exclude_options(None) == []
-    assert helpers._exclude_options("") == []
+    assert not helpers._exclude_options([])
+    assert not helpers._exclude_options(None)
+    assert not helpers._exclude_options("")
 
     cmds = helpers._copy_to_remote_cmd(temp_dirname, exclude=[".git", ".dvc"])
     print(cmds)
