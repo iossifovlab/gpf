@@ -131,7 +131,7 @@ class BaseQueryBuilder(ABC):
             frequency_filter=None,
             return_reference=None,
             return_unknown=None,
-            **kwargs):
+            **_kwargs):
         # pylint: disable=too-many-arguments,too-many-branches
         where = []
         if genes is not None:
@@ -149,6 +149,7 @@ class BaseQueryBuilder(ABC):
                     self.where_accessors["family_id"], family_ids)
             )
         if person_ids is not None:
+            # pylint: disable=no-member
             person_ids = set(person_ids) & set(self.families.persons.keys())
             where.append(
                 self._build_iterable_string_attr_where(
@@ -292,20 +293,20 @@ class BaseQueryBuilder(ABC):
             assert isinstance(region, Region)
             end_position = "COALESCE(end_position, -1)"
             where.append(
-                    "(`chromosome` = {q}{chrom}{q} AND "
-                    "("
-                    "(`position` >= {start} AND `position` <= {stop}) "
-                    "OR "
-                    "({end_position} >= {start} AND {end_position} <= {stop}) "
-                    "OR "
-                    "({start} >= `position` AND {stop} <= {end_position})"
-                    "))".format(
-                        q=self.QUOTE,
-                        chrom=region.chrom,
-                        start=region.start,
-                        stop=region.stop,
-                        end_position=end_position
-                    )
+                "(`chromosome` = {q}{chrom}{q} AND "
+                "("
+                "(`position` >= {start} AND `position` <= {stop}) "
+                "OR "
+                "({end_position} >= {start} AND {end_position} <= {stop}) "
+                "OR "
+                "({start} >= `position` AND {stop} <= {end_position})"
+                "))".format(
+                    q=self.QUOTE,
+                    chrom=region.chrom,
+                    start=region.start,
+                    stop=region.stop,
+                    end_position=end_position
+                )
             )
         return " OR ".join(where)
 
@@ -335,9 +336,8 @@ class BaseQueryBuilder(ABC):
         where_clause = " OR ".join([f"( {w} )" for w in where])
         return where_clause
 
-    def _build_bitwise_attr_where(
-        self, column_name, query_value, query_transformer
-    ):
+    @staticmethod
+    def _build_bitwise_attr_where(column_name, query_value, query_transformer):
         assert query_value is not None
         parsed = query_value
         if isinstance(query_value, str):
@@ -347,15 +347,16 @@ class BaseQueryBuilder(ABC):
         transformer = QueryTreeToSQLBitwiseTransformer(column_name)
         return transformer.transform(parsed)
 
-    def _build_inheritance_where(self, column_name, query_value):
+    @staticmethod
+    def _build_inheritance_where(column_name, query_value):
         trees = []
         if isinstance(query_value, str):
             tree = inheritance_parser.parse(query_value)
             trees.append(tree)
 
         elif isinstance(query_value, list):
-            for qv in query_value:
-                tree = inheritance_parser.parse(qv)
+            for qval in query_value:
+                tree = inheritance_parser.parse(qval)
                 trees.append(tree)
 
         else:
@@ -373,10 +374,10 @@ class BaseQueryBuilder(ABC):
         assert genes is not None
         if len(genes) > 0 and len(genes) <= self.GENE_REGIONS_HEURISTIC_CUTOFF:
             gene_regions = []
-            for gs in genes:
-                gene_model = self.gene_models.gene_models_by_gene_name(gs)
+            for gene in genes:
+                gene_model = self.gene_models.gene_models_by_gene_name(gene)
                 if gene_model is None:
-                    logger.warning(f"gene model for {gs} not found")
+                    logger.warning("gene model for %s not found", gene)
                     continue
                 for gm in gene_model:
                     gene_regions.append(
@@ -387,26 +388,27 @@ class BaseQueryBuilder(ABC):
                         )
                     )
             gene_regions = dae.utils.regions.collapse(gene_regions)
-            logger.info(f"gene regions for {genes}: {gene_regions}")
-            logger.info(f"input regions: {regions}")
+            logger.info("gene regions for %s: %s", genes, gene_regions)
+            logger.info("input regions: %s", regions)
             if not regions:
                 regions = gene_regions
             else:
                 result = []
-                for gr in gene_regions:
-                    for r in regions:
-                        intersection = gr.intersection(r)
+                for gene_region in gene_regions:
+                    for region in regions:
+                        intersection = gene_region.intersection(region)
                         if intersection:
                             result.append(intersection)
                 result = dae.utils.regions.collapse(result)
-                logger.info(f"original regions: {regions}; result: {result}")
+                logger.info("original regions: %s; result: %s",
+                            regions, result)
                 regions = result
 
         return regions
 
     def _build_frequency_bin_heuristic(
             self, inheritance, ultra_rare, real_attr_filter):
-
+        # pylint: disable=too-many-branches
         if "frequency_bin" not in self.variants_columns:
             return ""
 
@@ -417,8 +419,9 @@ class BaseQueryBuilder(ABC):
         matchers = []
         if inheritance is not None:
             logger.debug(
-                f"frequence_bin_heuristic inheritance: {inheritance} "
-                f"({type(inheritance)})")
+                "frequence_bin_heuristic inheritance: %s (%s)",
+                inheritance, type(inheritance)
+            )
             if isinstance(inheritance, str):
                 inheritance = [inheritance]
 
@@ -427,10 +430,10 @@ class BaseQueryBuilder(ABC):
                     inheritance_query.transform_query_string_to_tree(inh))
                 for inh in inheritance]
 
-            if any([m.match([Inheritance.denovo]) for m in matchers]):
+            if any(m.match([Inheritance.denovo]) for m in matchers):
                 frequency_bin.add(f"{frequency_bin_col} = 0")
 
-        has_transmitted_query = all([
+        has_transmitted_query = all(
             any(
                 m.match([inh]) for inh in [
                     Inheritance.mendelian,
@@ -438,7 +441,9 @@ class BaseQueryBuilder(ABC):
                     Inheritance.possible_omission,
                     Inheritance.unknown,
                     Inheritance.missing
-                ]) for m in matchers])
+                ]
+            ) for m in matchers
+        )
 
         if inheritance is None or has_transmitted_query:
             if ultra_rare:
@@ -487,11 +492,12 @@ class BaseQueryBuilder(ABC):
             set(self.table_properties["coding_effect_types"])
 
         logger.debug(
-            f"coding bin heuristic for {self.variants_table}: "
-            f"query effect types: {effect_types}; "
-            f"coding_effect_types: "
-            f"{self.table_properties['coding_effect_types']}; "
-            f"=> {intersection == effect_types}")
+            "coding bin heuristic for %s: query effect types: %s; "
+            "coding_effect_types: %s; => %s",
+            self.variants_table, effect_types,
+            self.table_properties["coding_effect_types"],
+            intersection == effect_types
+        )
 
         coding_bin_col = self.where_accessors["coding_bin"]
 
@@ -517,14 +523,12 @@ class BaseQueryBuilder(ABC):
             start = region.start // region_length
             stop = region.stop // region_length
             for position_bin in range(start, stop + 1):
-                region_bins.append("{}_{}".format(chrom_bin, position_bin))
+                region_bins.append(f"{chrom_bin}_{position_bin}")
         if not region_bins:
             return ""
         region_bin_col = self.where_accessors["region_bin"]
-        return "{region_bin} IN ({bins})".format(
-            region_bin=region_bin_col,
-            bins=",".join(["'{}'".format(rb) for rb in region_bins])
-        )
+        bins_str = ",".join([f"'{rb}'" for rb in region_bins])
+        return f"{region_bin_col} IN ({bins_str})"
 
     def _build_family_bin_heuristic(self, family_ids, person_ids):
         if "family_bin" not in self.variants_columns:
@@ -555,9 +559,8 @@ class BaseQueryBuilder(ABC):
         family_bin_col = self.where_accessors["family_bin"]
 
         if 0 < len(family_bins) < self.table_properties["family_bin_size"]:
-            w = ", ".join([str(fb) for fb in family_bins])
-            return "{family_bin} IN ({w})".format(
-                family_bin=family_bin_col, w=w)
+            family_bin_list = ", ".join([str(fb) for fb in family_bins])
+            return f"{family_bin_col} IN ({family_bin_list})"
 
         return ""
 
@@ -567,6 +570,6 @@ class BaseQueryBuilder(ABC):
         allele_index_col = self.where_accessors["allele_index"]
         if not return_reference:
             return f"{allele_index_col} > 0"
-        elif not return_unknown:
+        if not return_unknown:
             return f"{allele_index_col} >= 0"
         return ""
