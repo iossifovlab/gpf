@@ -163,6 +163,9 @@ ng-multiselect-dropdown > span.selected-item {
 
 #tags-selector {
   padding-bottom: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 :host::ng-deep.dropdown-multiselect__caret {
@@ -202,10 +205,36 @@ ng-multiselect-dropdown > span.selected-item {
   flex-wrap: wrap !important;
   align-content: center !important;
   border: 1px solid #dee2e6 !important;
+  width: 434px !important;
 }
 
 :host::ng-deep.multiselect-item-checkbox div:before {
   border: 1px solid black !important;
   animation: none !important;
   transition: none !important;
+}
+
+:host::ng-deep.item1 {
+  border-top: 1px solid #ccc !important;
+}
+
+:host::ng-deep.dropdown-list {
+  display: flex;
+  flex-direction: column-reverse !important;
+  top: -211px !important;
+  box-shadow: none !important;
+  border-bottom: 0 !important;
+  width: 434px !important;
+}
+
+:host::ng-deep.item1 .multiselect-item-checkbox {
+  display: none;
+}
+
+:host::ng-deep input[aria-label="multiselect-search"] {
+  padding: 0 !important;
+}
+
+:host::ng-deep.filter-textbox {
+  padding: 7px 10px !important;
 }

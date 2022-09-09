@@ -89,7 +89,8 @@ export class VariantReportsComponent implements OnInit {
       textField: 'item_text',
       selectAllText: 'Select All',
       unSelectAllText: 'UnSelect All',
-      allowSearchFilter: true
+      allowSearchFilter: true,
+      maxHeight: 150
     };
   }
 

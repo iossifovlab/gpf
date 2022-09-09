@@ -82,6 +82,10 @@
         (onSelectAll)="updateTagFilters()"
         (onDeSelectAll)="updateTagFilters()">
       </ng-multiselect-dropdown>
+      <button
+        id="download-button"
+        (click)="getDownloadLinkTags()"
+        class="btn btn-md btn-primary">Download</button>
     </div>
 
     <div *ngIf="currentPedigreeTable" id="families-by-pedigree-div" class="row" #families_pedigree>
@@ -101,11 +105,6 @@
         </table>
       </div>
     </div>
-    <button
-      id="download-button"
-      (click)="getDownloadLinkTags()"
-      class="btn btn-md btn-primary"
-      style="margin-top: 9px; float: left">Download</button>
     <div *ngIf="currentPedigreeTable" id="legend-wrapper">
       <gpf-legend [legendItems]="currentPedigreeTable.legend.legendItems"></gpf-legend>
     </div>
