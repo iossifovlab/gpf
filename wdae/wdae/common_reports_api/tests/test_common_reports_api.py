@@ -89,6 +89,31 @@ def test_families_tags_download(admin_client):
     assert len(res) == 7279
 
 
+def test_families_tags_download_succeeds_on_empty_tags(admin_client):
+    url = (
+        "/api/v3/common_reports/families_data/download?"
+        "study_id=Study1&tags="
+    )
+    response = admin_client.get(
+        url, content_type="application/json"
+    )
+
+    assert response
+    assert response.status_code == status.HTTP_200_OK
+
+    url = (
+        "/api/v3/common_reports/families_data/download?"
+        "study_id=Study1"
+    )
+    response = admin_client.get(
+        url, content_type="application/json"
+    )
+
+    assert response
+    assert response.status_code == status.HTTP_200_OK
+
+
+
 def test_variant_reports_no_permissions(user_client):
     url = "/api/v3/common_reports/studies/study4"
     response = user_client.get(url)
