@@ -9,16 +9,16 @@ import { Observable, of } from 'rxjs';
 import { UsersActionsComponent } from './users-actions.component';
 
 class UsersServiceMock {
-  public getUserInfo(): Observable<object> {
+  public deleteUser(): Observable<object> {
+    return of({});
+  }
+
+  public resetUserPassword(): Observable<object> {
+    return of({});
+  }
+
+  public getUserInfoObservable(): Observable<object> {
     return of({ email: 'mockMail@mail.com'});
-  }
-
-  public deleteUser(): object {
-    return of({});
-  }
-
-  public resetUserPassword(): object {
-    return of({});
   }
 }
 
