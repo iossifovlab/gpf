@@ -146,3 +146,14 @@ h5 {
 #tags-wrapper {
   padding-bottom: 16px;
 }
+
+ng-multiselect-dropdown > span.selected-item {
+  display: block;
+  padding: 3px 26px 3px 5px;
+  width: auto;
+  border: 0;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  max-width: 100%;
+}

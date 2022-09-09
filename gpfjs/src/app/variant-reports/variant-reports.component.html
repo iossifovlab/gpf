@@ -72,20 +72,17 @@
       </div>
     </div>
 
-    <div *ngIf="currentPedigreeTable" id="tags-wrapper">
-      <div class="col-4" *ngFor="let tag of tags">
-        <label>
-          <input
-            style="margin-right: 5px"
-            type="checkbox"
-            [checked]="tag.value"
-            (change)="tag.value = !tag.value; updateTagFilters()" />
-          <span>{{ tag.name }}</span>
-        </label>
-      </div>
-    </div>
+    <ng-multiselect-dropdown
+      [placeholder]="'Select tags'"
+      [settings]="dropdownSettings"
+      [data]="dropdownList"
+      [(ngModel)]="selectedItems"
+      (onSelect)="updateTagFilters()"
+      (onSelectAll)="updateTagFilters()"
+      (onDeselectAll)="updateTagFilters()">
+    </ng-multiselect-dropdown>
 
-    <div *ngIf="currentPedigreeTable" id="families-by-pedigree-div" class="row">
+    <div *ngIf="currentPedigreeTable" id="families-by-pedigree-div" class="row" #families_pedigree>
       <div class="col-12">
         <table class="gpf-basic-table">
           <colgroup>

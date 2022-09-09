@@ -9,6 +9,7 @@ import { take } from 'rxjs/operators';
 import { environment } from 'environments/environment';
 import { Dictionary } from 'lodash';
 import * as _ from 'lodash';
+import { IDropdownSettings } from 'ng-multiselect-dropdown';
 
 @Pipe({ name: 'getPeopleCounterRow' })
 export class PeopleCounterRowPipe implements PipeTransform {
@@ -37,6 +38,9 @@ export class VariantReportsComponent implements OnInit {
   public selectedDataset: Dataset;
 
   public imgPathPrefix = environment.imgPathPrefix;
+  public dropdownList = [];
+  public selectedItems = [];
+  public dropdownSettings: IDropdownSettings = {};
 
   public denovoVariantsTableWidth: number;
   private denovoVariantsTableColumnWidth = 140;
@@ -74,9 +78,19 @@ export class VariantReportsComponent implements OnInit {
       this.variantReportsService.getTags().subscribe(data => {
         Object.values(data).forEach(tag => {
           this.tags.push(new CheckBox(tag, false));
+          this.dropdownList.push(tag);
         });
       });
     }
+
+    this.dropdownSettings = {
+      singleSelection: false,
+      idField: 'item_id',
+      textField: 'item_text',
+      selectAllText: 'Select All',
+      unSelectAllText: 'UnSelect All',
+      allowSearchFilter: true
+    };
   }
 
   private copyOriginalPedigreeCounters(): Dictionary<PedigreeCounter[]> {
@@ -88,7 +102,7 @@ export class VariantReportsComponent implements OnInit {
   }
 
   private getSelectedTags(): string[] {
-    return this.tags.filter(x => x.value === true).map(x => x.name);
+    return this.tags.filter(x => this.selectedItems.includes(x.name)).map(x => x.name);
   }
 
   public updatePedigrees(newCounters: Dictionary<PedigreeCounter[]>): void {
