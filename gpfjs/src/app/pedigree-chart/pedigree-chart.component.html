@@ -33,50 +33,33 @@
 </ng-template>
 
 <ng-template #pedigreeModal let-modal>
+  <div style="padding: 5px">
+    <form
+      (ngSubmit)="onSubmit($event)"
+      action="{{ configService.baseUrl }}common_reports/family_counters/download"
+      method="post">
+      <input name="queryData" type="hidden" />
+      <button
+        class="btn btn-md btn-primary btn-right"
+        id="download-button"
+        type="button submit">
+          <i class="fa fa-download fa-lg"></i>
+      </button>
+    </form>
+  </div>
   <div class="svg-container" [style.width.px]="width*popoverScale">
     <ng-container *ngTemplateOutlet="pedigree"></ng-container>
   </div>
-  <ngb-accordion style="margin-top: 10px;" *ngIf="counterId !== undefined" #a="ngbAccordion">
-    <ngb-panel>
-      <ng-template ngbPanelHeader>
-        <div style="text-align: left; display: flex; justify-content: space-between;">
-          <button
-            ngbPanelToggle
-            (click)="loadFamilyListData()"
-            type="button"
-            class="btn btn-secondary btn-left">Family list</button>
-          <form
-            (ngSubmit)="onSubmit($event)"
-            action="{{ configService.baseUrl }}common_reports/family_counters/download"
-            method="post">
-            <input name="queryData" type="hidden" />
-            <button
-              class="btn btn-md btn-primary btn-right"
-              id="download-button"
-              type="button submit">Download</button>
-          </form>
-        </div>
-      </ng-template>
-      <ng-template ngbPanelContent>
-        <div class="family-panel">
-          <gpf-loading-spinner
-            *ngIf="!loadingFinishedFlag"
-            [loadingFinished]="loadingFinishedFlag"></gpf-loading-spinner>
-          <ng-container *ngIf="familyLists">{{ familyLists | join: ', ' }}</ng-container>
-        </div>
-      </ng-template>
-    </ngb-panel>
-  </ngb-accordion>
+  <hr>
+  <div class="family-panel">
+    <gpf-loading-spinner
+      *ngIf="!loadingFinishedFlag"
+      [loadingFinished]="loadingFinishedFlag"
+    ></gpf-loading-spinner>
+    <div *ngIf="familyLists" style="padding: 5px; text-align: center">{{ familyLists | join: ', ' }}</div>
+  </div>
 </ng-template>
 
-<div
-  [ngbPopover]="pedigreeModal"
-  [autoClose]="'outside'"
-  [animation]="false"
-  container="body"
-  placement="right left"
-  class="svg-container"
-  [style.width.px]="width*scale"
->
+<div (click)="openModal(pedigreeModal)" class="svg-container" [style.width.px]="width*scale">
   <ng-container *ngTemplateOutlet="pedigree"></ng-container>
 </div>

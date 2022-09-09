@@ -559,4 +559,13 @@ export class PedigreeChartComponent implements OnInit {
 
     return lines;
   }
+
+  public openModal(content): void {
+    this.modal = this.modalService.open(content, {animation: false, centered: true, size: "lg"});
+    this.loadFamilyListData();
+  }
+
+  public closeModal(): void {
+    this.modal.close();
+  }
 }

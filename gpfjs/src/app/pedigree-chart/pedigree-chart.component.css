@@ -9,8 +9,7 @@ svg {
 }
 
 .family-panel {
-  margin-top: 10px;
-  max-height: 500px;
+  max-height: 100px;
   overflow: auto;
   overflow-wrap: break-word;
 }
