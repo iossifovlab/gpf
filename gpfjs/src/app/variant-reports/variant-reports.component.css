@@ -157,3 +157,45 @@ ng-multiselect-dropdown > span.selected-item {
   overflow: hidden;
   max-width: 100%;
 }
+
+#tags-selector {
+  padding-bottom: 16px;
+}
+
+:host::ng-deep.dropdown-multiselect__caret {
+  display: none !important;
+}
+
+:host::ng-deep.selected-item {
+  color: black !important;
+  background-color: #eee !important;
+  border: 1px solid #ddd !important;
+  box-shadow: none !important;
+  max-width: unset !important;
+  margin: 2px !important;
+  text-align: center;
+  width: 200px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+  height: 28px;
+  display: flex;
+}
+
+:host::ng-deep.selected-item span {
+  width: 90% !important;
+}
+
+:host::ng-deep.selected-item a {
+  color: black !important;
+  opacity: 50% !important;
+  float: right;
+}
+
+:host::ng-deep.dropdown-btn {
+  min-height: 44px !important;
+  padding: 5px !important;
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-content: center !important;
+}

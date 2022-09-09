@@ -71,17 +71,18 @@
         <span class="select-dropdown-icon" [style.content]="'url(' + imgPathPrefix + 'dropdown_icon.png)'"></span>
       </div>
     </div>
-
-    <ng-multiselect-dropdown
-      [placeholder]="'Select tags'"
-      [settings]="dropdownSettings"
-      [data]="dropdownList"
-      [(ngModel)]="selectedItems"
-      (onSelect)="updateTagFilters()"
-      (onDeSelect)="updateTagFilters()"
-      (onSelectAll)="updateTagFilters()"
-      (onDeSelectAll)="updateTagFilters()">
-    </ng-multiselect-dropdown>
+    <div *ngIf="dropdownList.length !== 0" id="tags-selector">
+      <ng-multiselect-dropdown
+        [placeholder]="'Select tags'"
+        [settings]="dropdownSettings"
+        [data]="dropdownList"
+        [(ngModel)]="selectedItems"
+        (onSelect)="updateTagFilters()"
+        (onDeSelect)="updateTagFilters()"
+        (onSelectAll)="updateTagFilters()"
+        (onDeSelectAll)="updateTagFilters()">
+      </ng-multiselect-dropdown>
+    </div>
 
     <div *ngIf="currentPedigreeTable" id="families-by-pedigree-div" class="row" #families_pedigree>
       <div class="col-12">
