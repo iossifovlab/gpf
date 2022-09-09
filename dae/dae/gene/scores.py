@@ -55,6 +55,10 @@ class GenomicScoresDb:
             for attr in default_annotation.get("attributes", [])
         }
         logger.debug("default annotation: %s", default_annotation)
+        if selected_score_id not in attributes_mapping:
+            logger.warning(
+                "unable to find %s in default annotation", selected_score_id)
+            return None
         source_score_id = attributes_mapping[selected_score_id]
         conf = resource.get_config()
         description = selected_score_id
