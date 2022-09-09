@@ -78,8 +78,9 @@
       [data]="dropdownList"
       [(ngModel)]="selectedItems"
       (onSelect)="updateTagFilters()"
+      (onDeSelect)="updateTagFilters()"
       (onSelectAll)="updateTagFilters()"
-      (onDeselectAll)="updateTagFilters()">
+      (onDeSelectAll)="updateTagFilters()">
     </ng-multiselect-dropdown>
 
     <div *ngIf="currentPedigreeTable" id="families-by-pedigree-div" class="row" #families_pedigree>
