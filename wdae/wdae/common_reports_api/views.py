@@ -148,7 +148,7 @@ class FamiliesDataTagDownload(QueryBaseView):
                 if has_tags:
                     result[family_id] = family
 
-        result = FamiliesData.from_families(result)
+            result = FamiliesData.from_families(result)
 
         response = StreamingHttpResponse(
             result.ped_df.to_csv(index=False, sep="\t"),
