@@ -134,9 +134,12 @@ table {
   text-align: center;
 }
 
-#families-by-number,
-#families-by-pedigree {
+#families-by-number {
   padding-bottom: 55px;
+}
+
+#families-by-pedigree {
+  padding-bottom: 102px;
 }
 
 h5 {
@@ -194,8 +197,15 @@ ng-multiselect-dropdown > span.selected-item {
 
 :host::ng-deep.dropdown-btn {
   min-height: 44px !important;
-  padding: 5px !important;
+  padding: 5px 12px !important;
   display: flex !important;
   flex-wrap: wrap !important;
   align-content: center !important;
+  border: 1px solid #dee2e6 !important;
+}
+
+:host::ng-deep.multiselect-item-checkbox div:before {
+  border: 1px solid black !important;
+  animation: none !important;
+  transition: none !important;
 }
