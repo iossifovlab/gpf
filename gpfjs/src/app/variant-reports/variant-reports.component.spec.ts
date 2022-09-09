@@ -270,6 +270,10 @@ class VariantReportsServiceMock {
     return of(variantReport);
   }
 
+  public getDownloadLink(): string {
+    return '';
+  }
+
   public getDownloadLinkTags(): string {
     return '';
   }
