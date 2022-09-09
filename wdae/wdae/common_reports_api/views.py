@@ -127,22 +127,26 @@ class FamiliesDataTagDownload(QueryBaseView):
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         study_families = study.families
-        result = {}
-        tags = set(tags.split(","))
-        for family_id, family in study_families.items():
-            has_tags = True
-            for tag in tags:
-                try:
-                    tagged = check_tag(family, tag, True)
-                    if not tagged:
-                        has_tags = False
-                        break
-                except ValueError as err:
-                    print(err)
-                    return Response(status=status.HTTP_400_BAD_REQUEST)
 
-            if has_tags:
-                result[family_id] = family
+        if tags is None or len(tags) == 0:
+            result = study_families
+        else:
+            result = {}
+            tags = set(tags.split(","))
+            for family_id, family in study_families.items():
+                has_tags = True
+                for tag in tags:
+                    try:
+                        tagged = check_tag(family, tag, True)
+                        if not tagged:
+                            has_tags = False
+                            break
+                    except ValueError as err:
+                        print(err)
+                        return Response(status=status.HTTP_400_BAD_REQUEST)
+
+                if has_tags:
+                    result[family_id] = family
 
         result = FamiliesData.from_families(result)
 
