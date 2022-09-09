@@ -145,8 +145,9 @@ export class VariantReportsComponent implements OnInit {
     return this.orderByColumnOrder(effectType.data, phenotypes);
   }
 
-  public getDownloadLink(): string {
-    return this.variantReportsService.getDownloadLink();
+  public getDownloadLinkTags() {
+    const tags = this.getSelectedTags().join(',');
+    this.variantReportsService.getDownloadLinkPedigreeTags(this.datasetsService.getSelectedDataset().id, tags);
   }
 
   private orderByColumnOrder(childrenCounters: DeNovoData[], columns: string[], strict = false): DeNovoData[] {
