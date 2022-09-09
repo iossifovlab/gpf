@@ -1,0 +1,34 @@
+<button class="add-button" (click)="showMenu=!showMenu">Add</button>
+
+<div class="menu" *ngIf="showMenu">
+  <div class="search">
+    <div class="search-input-wrapper">
+      <input
+        #searchInput
+        class="search-input form-control"
+        type="text"
+        name="search"
+        placeholder="Search"
+        (ngModel)="searchText"
+        (ngModelChange)="filterItems($event)"
+        autocomplete="off"
+        spellcheck="false"/>
+      <span
+        class="search-clear-icon"
+        *ngIf="searchInput.value !== ''"
+        (click)="resetSearch(); searchText = '';">
+      </span>
+    </div>
+  </div>
+
+  <table>
+    <tr *ngFor="let item of filteredItems">
+      <td>
+        <label class="item">
+          <span class="item-text">{{item}}</span>
+          <button class="add-item-button" (click)="addItem(id, item)">+</button>
+        </label>
+      </td>
+    </tr>
+  </table>
+</div>
