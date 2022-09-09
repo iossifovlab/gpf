@@ -47,7 +47,12 @@ export class VariantReportsService {
   }
 
   public async getDownloadLinkPedigreeTags(study_id: string, tags: string) {
-    const searchParams = new HttpParams().set('study_id', study_id).set('tags', tags);
+    let searchParams = new HttpParams().set('study_id', study_id);
+
+    if (tags) {
+      searchParams = searchParams.set('tags', tags);
+    }
+
     const options = { headers: this.getHeaders(), withCredentials: true, params: searchParams };
     const result = await this.http.get(`${this.config.baseUrl}${this.downloadUrl}download`, { ...options, responseType: 'blob' })
       .subscribe(async res => {

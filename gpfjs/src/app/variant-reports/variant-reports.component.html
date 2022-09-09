@@ -4,7 +4,7 @@
       <h5>
         <span>Total number of families: {{ variantReport.familyReport.familiesTotal }}</span>
         <span style="padding-left: 5px"
-          >(<a class="download-link" (click)="getDownloadLinkTags()" download>Download</a>)</span
+          >(<a class="download-link" [href]="getDownloadLink()" download>Download</a>)</span
         >
       </h5>
     </div>
@@ -102,6 +102,11 @@
         </table>
       </div>
     </div>
+    <button
+      id="download-button"
+      (click)="getDownloadLinkTags()"
+      class="btn btn-md btn-primary"
+      style="margin-top: 9px; float: left">Download</button>
     <div *ngIf="currentPedigreeTable" id="legend-wrapper">
       <gpf-legend [legendItems]="currentPedigreeTable.legend.legendItems"></gpf-legend>
     </div>
