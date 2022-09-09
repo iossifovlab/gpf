@@ -49,24 +49,23 @@ export class VariantReportsService {
   public async getDownloadLinkPedigreeTags(study_id: string, tags: string) {
     const searchParams = new HttpParams().set('study_id', study_id).set('tags', tags);
     const options = { headers: this.getHeaders(), withCredentials: true, params: searchParams };
-    const result = await this.http.get(`${this.config.baseUrl}${this.downloadUrl}download`, { ...options, responseType: 'blob' })
+    if (tags) {
+      const result = await this.http.get(`${this.config.baseUrl}${this.downloadUrl}download`, { ...options, responseType: 'blob' })
       .subscribe(async res => {
-        if (tags) {
-          const a = document.createElement('a');
-          a.href = URL.createObjectURL(res);
-          a.download = 'families.ped';
-          const text = await res.text();
-          if (text && text !== ' ' && text !== '\n') {
-            a.click();
-          }
-        } else {
-          const a = document.createElement('a');
-          a.href = this.getDownloadLink();
-          a.download = 'families.ped';
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(res);
+        a.download = 'families.ped';
+        const text = await res.text();
+        if (text && text !== ' ' && text !== '\n') {
           a.click();
         }
       });
-    return result;
+    } else {
+      const a = document.createElement('a');
+      a.href = this.getDownloadLink();
+      a.download = 'families.ped';
+      a.click();
+    }
   }
 
   private getHeaders() {
