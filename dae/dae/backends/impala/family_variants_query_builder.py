@@ -47,6 +47,7 @@ class FamilyVariantsQueryBuilder(BaseQueryBuilder):
             self.select_accessors["extra_attributes"] = \
                 "variants.extra_attributes"
         if not self.do_join:
+            # pylint: disable=unused-variable
             for k, v in self.select_accessors.items():
                 self.select_accessors[k] = k
         columns = list(self.select_accessors.values())

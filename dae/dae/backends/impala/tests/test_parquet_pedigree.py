@@ -1,7 +1,8 @@
+# pylint: disable=W0621,C0114,C0116,W0212,W0613,no-member
 import os
-import dae
 import pytest
 
+import dae
 from dae.pedigrees.loader import FamiliesLoader
 from dae.backends.impala.parquet_io import ParquetManager
 

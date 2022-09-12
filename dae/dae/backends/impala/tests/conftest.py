@@ -1,14 +1,16 @@
-import pytest
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
 import os
-import numpy as np
-from dae.pedigrees.loader import FamiliesLoader
 from io import StringIO
+import numpy as np
+import pytest
+from dae.pedigrees.loader import FamiliesLoader
 from dae.utils.variant_utils import GENOTYPE_TYPE, BEST_STATE_TYPE
 from dae.backends.dae.loader import DenovoLoader
 from dae.backends.raw.loader import AnnotationPipelineDecorator
 from dae.backends.impala.parquet_io import ParquetManager, \
     NoPartitionDescriptor
 from dae.configuration.gpf_config_parser import FrozenBox
+from dae.backends.impala.hdfs_helpers import HdfsHelpers
 
 PED1 = """
 # SIMPLE TRIO
@@ -48,7 +50,7 @@ def fam2():
 
 
 @pytest.fixture(scope="module")
-def gt():
+def genotype():
     return np.array([[0, 0, 0], [0, 0, 0]], dtype=GENOTYPE_TYPE)
 
 
@@ -90,9 +92,6 @@ def extra_attrs_impala(
         gpf_instance_2013,
         hdfs_host,
         impala_genotype_storage):
-
-    from dae.backends.impala.hdfs_helpers import HdfsHelpers
-
     hdfs = HdfsHelpers(hdfs_host, 8020)
 
     temp_dirname = hdfs.tempdir(prefix="variants_", suffix="_data")

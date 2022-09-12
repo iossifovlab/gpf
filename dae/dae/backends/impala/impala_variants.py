@@ -7,7 +7,7 @@ from typing import Dict, Any, Tuple, Set
 
 import pyarrow as pa  # type: ignore
 from impala.util import as_pandas  # type: ignore
-from sqlalchemy.exc import TimeoutError
+from sqlalchemy.exc import TimeoutError as SqlTimeoutError
 
 from dae.person_sets import PersonSetCollection
 
@@ -31,22 +31,22 @@ logger = logging.getLogger(__name__)
 
 
 class ImpalaQueryRunner(QueryRunner):
+    """Run a query in a separate thread."""
 
-    def __init__(
-            self, connection_pool, query, deserializer=None):
-        super(ImpalaQueryRunner, self).__init__(
-            deserializer=deserializer)
+    def __init__(self, connection_pool, query, deserializer=None):
+        super().__init__(deserializer=deserializer)
 
         self.connection_pool = connection_pool
         self.query = query
 
     def connect(self):
+        """Connect to the connection pool and return the connection."""
         started = time.time()
         while True:
             try:
                 connection = self.connection_pool.connect()
                 return connection
-            except TimeoutError:
+            except SqlTimeoutError:
                 elapsed = time.time() - started
                 logger.debug(
                     "runner (%s) timeout in connect; elapsed %0.2fsec",
@@ -112,7 +112,7 @@ class ImpalaQueryRunner(QueryRunner):
                                 self.study_id)
                             break
 
-                except Exception as ex:
+                except Exception as ex:  # pylint: disable=broad-except
                     logger.debug(
                         "exception in runner (%s) run: %s",
                         self.study_id, type(ex), exc_info=True)
@@ -171,6 +171,8 @@ class ImpalaQueryRunner(QueryRunner):
 
 
 class ImpalaVariants:
+    # pylint: disable=too-many-instance-attributes
+    """A backend implementing an impala backend."""
 
     def __init__(
             self,
@@ -179,8 +181,7 @@ class ImpalaVariants:
             variants_table,
             pedigree_table,
             gene_models=None):
-
-        super(ImpalaVariants, self).__init__()
+        super().__init__()
         assert db, db
         assert pedigree_table, pedigree_table
 
@@ -217,12 +218,13 @@ class ImpalaVariants:
     def connection(self):
         conn = self._impala_helpers.connection()
         logger.debug(
-            f"ImpalaVariants: getting connection to host {conn.host} "
-            f"from impala helpers {id(self._impala_helpers)}")
+            "ImpalaVariants: getting connection to host %s "
+            "from impala helpers %s", conn.host, id(self._impala_helpers))
         return conn
 
     @property
     def connection_pool(self):
+        # pylint: disable=protected-access
         return self._impala_helpers._connection_pool
 
     @property
@@ -247,6 +249,8 @@ class ImpalaVariants:
             return_reference=None,
             return_unknown=None,
             limit=None):
+        """Build a query selecting the appropriate summary variants."""
+        # pylint: disable=too-many-arguments,too-many-locals
         if not self.variants_table:
             return None
 
@@ -290,7 +294,7 @@ class ImpalaVariants:
         )
 
         query = query_builder.product
-        logger.debug(f"SUMMARY VARIANTS QUERY: {query}")
+        logger.debug("SUMMARY VARIANTS QUERY: %s", query)
 
         runner = ImpalaQueryRunner(
             self.connection_pool, query, deserializer=deserialize_row)
@@ -320,10 +324,11 @@ class ImpalaVariants:
     def build_person_set_collection_query(
             person_set_collection: PersonSetCollection,
             person_set_collection_query: Tuple[str, Set[str]]):
+        """No idea what it does. If you know please edit."""
         collection_id, selected_person_sets = person_set_collection_query
         assert collection_id == person_set_collection.id
         selected_person_sets = set(selected_person_sets)
-        assert type(selected_person_sets) == set
+        assert isinstance(selected_person_sets, set)
 
         if not person_set_collection.is_pedigree_only():
             return None
@@ -350,11 +355,10 @@ class ImpalaVariants:
 
         if person_set_collection.default.id not in selected_person_sets:
             return (pedigree_columns(selected_person_sets), [])
-        else:
-            return (
-                [],
-                pedigree_columns(available_person_sets - selected_person_sets)
-            )
+        return (
+            [],
+            pedigree_columns(available_person_sets - selected_person_sets)
+        )
 
     def build_family_variants_query_runner(
             self,
@@ -374,7 +378,8 @@ class ImpalaVariants:
             return_unknown=None,
             limit=None,
             pedigree_fields=None):
-
+        """Build a query selecting the appropriate family variants."""
+        # pylint: disable=too-many-arguments,too-many-locals
         if not self.variants_table:
             logger.debug(
                 "missing varants table... skipping")
@@ -464,6 +469,8 @@ class ImpalaVariants:
             return_reference=None,
             return_unknown=None,
             limit=None):
+        """Query summary variants."""
+        # pylint: disable=too-many-arguments,too-many-locals
         if not self.variants_table:
             return None
 
@@ -474,24 +481,24 @@ class ImpalaVariants:
             request_limit = 10 * limit
 
         runner = self.build_summary_variants_query_runner(
-                regions=regions,
-                genes=genes,
-                effect_types=effect_types,
-                family_ids=family_ids,
-                person_ids=person_ids,
-                inheritance=inheritance,
-                roles=roles,
-                sexes=sexes,
-                variant_type=variant_type,
-                real_attr_filter=real_attr_filter,
-                ultra_rare=ultra_rare,
-                frequency_filter=frequency_filter,
-                return_reference=return_reference,
-                return_unknown=return_unknown,
-                limit=request_limit)
+            regions=regions,
+            genes=genes,
+            effect_types=effect_types,
+            family_ids=family_ids,
+            person_ids=person_ids,
+            inheritance=inheritance,
+            roles=roles,
+            sexes=sexes,
+            variant_type=variant_type,
+            real_attr_filter=real_attr_filter,
+            ultra_rare=ultra_rare,
+            frequency_filter=frequency_filter,
+            return_reference=return_reference,
+            return_unknown=return_unknown,
+            limit=request_limit
+        )
 
-        result = QueryResult(
-                runners=[runner], limit=limit)
+        result = QueryResult(runners=[runner], limit=limit)
         logger.debug("starting result")
         result.start()
 
@@ -527,7 +534,8 @@ class ImpalaVariants:
             return_unknown=None,
             limit=None,
             pedigree_fields=None):
-
+        """Query family variants."""
+        # pylint: disable=too-many-arguments,too-many-locals
         if not self.variants_table:
             return None
 
@@ -555,8 +563,7 @@ class ImpalaVariants:
             limit=request_limit,
             pedigree_fields=pedigree_fields)
 
-        result = QueryResult(
-                runners=[runner], limit=limit)
+        result = QueryResult(runners=[runner], limit=limit)
         logger.debug("starting result")
 
         result.start()

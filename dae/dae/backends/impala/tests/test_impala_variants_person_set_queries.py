@@ -1,11 +1,12 @@
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
 import io
-from dae.backends.impala.impala_variants import ImpalaVariants
-import toml
 import textwrap
-import pytest
-
 from typing import cast, Any, Dict
 
+import toml
+import pytest
+
+from dae.backends.impala.impala_variants import ImpalaVariants
 from dae.genomic_resources.testing import convert_to_tab_separated
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.person_sets import person_set_collections_schema
