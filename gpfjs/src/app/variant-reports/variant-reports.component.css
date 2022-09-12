@@ -168,6 +168,17 @@ ng-multiselect-dropdown > span.selected-item {
   align-items: center;
 }
 
+#nothing-found {
+  height: 43px;
+}
+
+#nothing-found span {
+  line-height: 43px;
+  font-style: italic;
+  padding-left: 12px;
+  opacity: 75%;
+}
+
 :host::ng-deep.dropdown-multiselect__caret {
   display: none !important;
 }

@@ -102,6 +102,12 @@
               <tr gpf-common-reports-row [pedigreeGroup]="pedigreeGroup"></tr>
             </ng-template>
           </tbody>
+          <div
+            *ngIf="currentPedigreeTable.pedigrees.length === 0"
+            id="nothing-found"
+            class="table-row table-body-row">
+            <span>Nothing found</span>
+          </div>
         </table>
       </div>
     </div>
