@@ -71,7 +71,7 @@
         <span class="select-dropdown-icon" [style.content]="'url(' + imgPathPrefix + 'dropdown_icon.png)'"></span>
       </div>
     </div>
-    <div *ngIf="dropdownList.length !== 0" id="tags-selector">
+    <div *ngIf="dropdownList.length !== 0 && currentPedigreeTable" id="tags-selector">
       <ng-multiselect-dropdown
         [placeholder]="'Select tags'"
         [settings]="dropdownSettings"
