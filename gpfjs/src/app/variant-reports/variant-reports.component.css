@@ -225,6 +225,7 @@ ng-multiselect-dropdown > span.selected-item {
   box-shadow: none !important;
   border-bottom: 0 !important;
   width: 434px !important;
+  height: 198px;
 }
 
 :host::ng-deep.item1 .multiselect-item-checkbox {
