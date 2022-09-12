@@ -239,3 +239,19 @@ ng-multiselect-dropdown > span.selected-item {
 :host::ng-deep.filter-textbox {
   padding: 7px 10px !important;
 }
+
+:host::ng-deep.no-filtered-data h5 {
+  visibility: hidden;
+  margin-bottom: 0;
+}
+
+:host::ng-deep.no-filtered-data h5::after {
+  content: "Nothing found";
+  visibility: visible;
+  font-size: 16px;
+  font-weight: normal;
+  font-style: italic;
+  opacity: 75%;
+  float: left;
+  margin-bottom: 0;
+}
