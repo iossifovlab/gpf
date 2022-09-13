@@ -1,5 +1,6 @@
-import pytest
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
 import json
+import pytest
 from dae.configuration.gpf_config_parser import FrozenBox
 
 pytestmark = pytest.mark.usefixtures(
