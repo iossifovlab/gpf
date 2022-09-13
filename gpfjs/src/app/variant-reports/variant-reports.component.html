@@ -83,6 +83,7 @@
         (onDeSelectAll)="updateTagFilters()">
       </ng-multiselect-dropdown>
       <button
+        [disabled]="currentPedigreeTable.pedigrees.length === 0"
         id="download-button"
         (click)="getDownloadLinkTags()"
         class="btn btn-md btn-primary">Download</button>
