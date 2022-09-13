@@ -45,7 +45,7 @@ logger = logging.getLogger(__name__)
 def save_study_config(dae_config, study_id, study_config, force=False):
     """Save the study config to a file."""
     dirname = os.path.join(dae_config.studies.dir, study_id)
-    filename = os.path.join(dirname, f"{study_id}.conf")
+    filename = os.path.join(dirname, f"{study_id}.yaml")
 
     if os.path.exists(filename):
         logger.info(
