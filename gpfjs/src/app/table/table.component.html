@@ -13,7 +13,7 @@
   <div [style.display]="beforeDataCellHeight ? 'table-row' : 'none'" [style.height]="beforeDataCellHeight + 'px'">
     <td *ngFor="let column of columnsChildren"></td>
   </div>
-  <div #rows style="display: table-row" *ngFor="let data of visibleData">
+  <div #rows style="display: table-row" *ngFor="let data of visibleData" class="table-row">
     <gpf-table-view-cell
       #cells
       *ngFor="let column of columnsChildren"
