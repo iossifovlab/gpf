@@ -219,7 +219,7 @@ ng-multiselect-dropdown > span.selected-item {
   width: 434px !important;
 }
 
-:host::ng-deep.multiselect-item-checkbox div:before {
+:host::ng-deep.multiselect-item-checkbox div::before {
   border: 1px solid black !important;
   animation: none !important;
   transition: none !important;
