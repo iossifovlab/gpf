@@ -78,9 +78,7 @@
         [data]="dropdownList"
         [(ngModel)]="selectedItems"
         (onSelect)="updateTagFilters()"
-        (onDeSelect)="updateTagFilters()"
-        (onSelectAll)="updateTagFilters()"
-        (onDeSelectAll)="updateTagFilters()">
+        (onDeSelect)="updateTagFilters()">
       </ng-multiselect-dropdown>
       <button
         [disabled]="currentPedigreeTable.pedigrees.length === 0"
