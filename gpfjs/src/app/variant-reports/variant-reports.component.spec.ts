@@ -311,7 +311,6 @@ describe('VariantReportsComponent', () => {
     component['chunkPedigrees'] = function(a, b) { return null; };
 
     component.ngOnInit();
-    fixture.detectChanges();
   });
 
   it('should create', () => {
@@ -352,7 +351,6 @@ describe('VariantReportsComponent Denovo', () => {
     component['chunkPedigrees'] = function(a, b): null { return null; };
 
     component.ngOnInit();
-    fixture.detectChanges();
   });
 
   it('should create', () => {
