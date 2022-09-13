@@ -101,22 +101,22 @@ describe('Gene weights panel tests', () => {
     page.dropdownButton.select('RVIS rank');
 
     page.fromInputField.should('have.value', '1');
-    page.toInputField.should('have.value', '16754');
+    page.toInputField.should('have.value', '16640');
 
     page.fromFieldStepUp.click();
     page.toFieldStepDown.click();
-    page.fromInputField.should('have.value', '112.687');
-    page.toInputField.should('have.value', '16642.313');
+    page.fromInputField.should('have.value', '111.927');
+    page.toInputField.should('have.value', '16529.073');
 
     page.toFieldStepUp.click();
     page.fromFieldStepDown.click();
     page.fromInputField.should('have.value', '1');
-    page.toInputField.should('have.value', '16754');
+    page.toInputField.should('have.value', '16640');
 
     page.toFieldStepUp.click();
     page.fromFieldStepDown.click();
     page.fromInputField.should('have.value', '1');
-    page.toInputField.should('have.value', '16754');
+    page.toInputField.should('have.value', '16640');
   });
 
   it('should have working from/to step up/down buttons in ExAC pLI', () => {
@@ -125,27 +125,27 @@ describe('Gene weights panel tests', () => {
     page.dropdownButton.select('ExAC pLI');
 
     page.fromInputField.should('have.value', '0');
-    page.toInputField.should('have.value', '1.01');
+    page.toInputField.should('have.value', '1');
 
     page.fromFieldStepUp.click();
     page.toFieldStepDown.click();
-    page.fromInputField.should('have.value', '1e-26');
-    page.toInputField.should('have.value', '0.676');
+    page.fromInputField.should('have.value', '0.00001');
+    page.toInputField.should('have.value', '0.912');
 
     page.fromFieldStepUp.click();
     page.toFieldStepDown.click();
-    page.fromInputField.should('have.value', '1.49e-26');
-    page.toInputField.should('have.value', '0.452');
+    page.fromInputField.should('have.value', '0.000011');
+    page.toInputField.should('have.value', '0.832');
 
     page.toFieldStepUp.click();
     page.fromFieldStepDown.click();
-    page.fromInputField.should('have.value', '1e-26');
-    page.toInputField.should('have.value', '0.676');
+    page.fromInputField.should('have.value', '0.00001');
+    page.toInputField.should('have.value', '0.912');
 
     page.toFieldStepUp.click();
     page.fromFieldStepDown.click();
     page.fromInputField.should('have.value', '0');
-    page.toInputField.should('have.value', '1.01');
+    page.toInputField.should('have.value', '1');
   });
 
   geneScoresData.forEach(geneScore => {
