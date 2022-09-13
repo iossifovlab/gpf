@@ -353,7 +353,6 @@ study_config_schema = {
                 "schema": {"type": "string"},
                 "default": [],
             },
-            "families_count_show_id": {"type": "integer"},
             "draw_all_families": {"type": "boolean", "default": False},
             "file_path": {
                 "type": "string",
