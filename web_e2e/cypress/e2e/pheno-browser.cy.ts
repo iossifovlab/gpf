@@ -57,7 +57,7 @@ describe('Pheno browser tests', () => {
     page.allTableRows.should('have.length', 8);
   });
 
-  it('should have working table header sorting buttons', () => {
+  it('should have working table header sorting buttons', { scrollBehavior: false }, () => {
     page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.phenotypeBrowser);
 
     page.tableCells.eq(0).should('have.text', 'i1');
