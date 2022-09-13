@@ -95,7 +95,6 @@ def test_families_group_counter(study1):
         study1.families,
         study1.get_person_set_collection("phenotype"),
         False,
-        False,
     )
 
     assert len(families_group_counter.counters) == 8
@@ -111,7 +110,6 @@ def test_families_group_counter_draw_all(study1):
         study1.families,
         study1.get_person_set_collection("phenotype"),
         True,
-        False,
     )
     assert len(counter.to_dict().keys()) == 4
     assert len(counter.counters) == len(study1.families)
@@ -122,7 +120,6 @@ def test_families_group_counter_same(study1):
         study1.families,
         study1.get_person_set_collection("phenotype"),
         False,
-        False,
     )
     assert len(families_group_counter.counters) == 8
     assert len(families_group_counter.to_dict().keys()) == 4
@@ -132,7 +129,6 @@ def test_families_group_counters(study1):
     families_group_counters = FamiliesGroupCounters.from_families(
         study1.families,
         study1.get_person_set_collection("phenotype"),
-        False,
         False,
     )
 
@@ -152,7 +148,6 @@ def test_families_group_counter_study2(study2):
     families_group_counters = FamiliesGroupCounters.from_families(
         study2.families,
         study2.get_person_set_collection("phenotype"),
-        False,
         False,
     )
     assert len(families_group_counters.counters) == 4
