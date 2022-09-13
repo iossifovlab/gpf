@@ -42,7 +42,7 @@ export class UserManagementPage extends BasePage {
   }
 
   public get usersTableRows(): element {
-    return cy.get('gpf-users-table gpf-table > div > div[class=\'ng-star-inserted\']');
+    return cy.get('gpf-users-table .table-row');
   }
 
   public get userTableDeleteNewestUserButton(): element {
@@ -102,7 +102,7 @@ export class UserManagementPage extends BasePage {
   }
 
   public get groupsTableRows(): element {
-    return cy.get('gpf-groups-table gpf-table > div > div[class=\'ng-star-inserted\']');
+    return cy.get('gpf-groups-table .table-row');
   }
 
   public get datasetsButton(): element {
@@ -114,7 +114,7 @@ export class UserManagementPage extends BasePage {
   }
 
   public get datasetsTableRows(): element {
-    return cy.get('gpf-datasets-table gpf-table > div > div[class=\'ng-star-inserted\']');
+    return cy.get('gpf-datasets-table .table-row');
   }
 
   public get datasetsTableAddGroupToLastDatasetInputField(): element {
