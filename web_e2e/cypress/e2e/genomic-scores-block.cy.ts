@@ -39,7 +39,7 @@ describe('Genomic scores panel tests', () => {
     page.histogramRangeSelectors.eq(2).should('have.text', '~35798106 (53.49%)');
 
     page.addFilterButton.click();
-    page.filterSelect.eq(1).select('CADD raw');
+    page.filterSelect.eq(1).select('cadd_raw');
     page.fromInputField.eq(1).clear().type('9.7944').type('{enter}');
     page.histogramRangeSelectors.eq(3).should('have.text', '~8591392889 (99.97%)');
 
