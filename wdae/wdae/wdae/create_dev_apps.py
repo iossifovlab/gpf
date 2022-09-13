@@ -8,7 +8,9 @@ from django.contrib.auth import get_user_model
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "project.settings")
 
 gpfjs_url = os.environ.get("GPFJS_URL", "http://localhost:9000/gpf_prefix")
-gpfjs_frontpage_url = os.environ.get("GPFJS_FRONTPAGE_URL", "http://localhost:9000/frontpage_prefix")
+gpfjs_frontpage_url = os.environ.get(
+    "GPFJS_FRONTPAGE_URL", "http://localhost:9000/frontpage_prefix"
+)
 
 User = get_user_model()
 Application = get_application_model()
@@ -36,4 +38,3 @@ new_application = Application(**{
 })
 new_application.full_clean()
 new_application.save()
-
