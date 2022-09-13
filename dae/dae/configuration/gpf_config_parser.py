@@ -253,6 +253,11 @@ class GPFConfigParser:
         """Find and load all configs in a given root directory."""
         result = []
         for config_path in cls._collect_directory_configs(dirname):
+            if config_path.endswith(".conf") or config_path.endswith(".toml"):
+                logger.warning(
+                    "TOML configurations have been deprecated - %s",
+                    config_path
+                )
             try:
                 config = cls.load_config(
                     config_path, schema,

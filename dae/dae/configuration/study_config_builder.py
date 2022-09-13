@@ -1,7 +1,15 @@
 from collections import UserDict, UserList
+import typing
 from typing import Dict, Any
+import yaml
 
 from jinja2 import Template
+
+
+class ConfigDumper(yaml.Dumper):
+
+    def increase_indent(self, flow=False, indentless=False):
+        return super().increase_indent(flow, False)
 
 
 class StudyConfigBuilder:
@@ -10,10 +18,15 @@ class StudyConfigBuilder:
     def __init__(self, config_dict: Dict[str, Any]):
         assert config_dict
         assert config_dict["genotype_storage"]
-        self._config_dict = TOMLDict.from_dict(config_dict)
+        self._config_dict = config_dict
 
     def build_config(self) -> str:
-        return STUDY_CONFIG_TEMPLATE.render(self._config_dict)
+        return typing.cast(str, yaml.dump(
+            self._config_dict,
+            default_flow_style=False,
+            sort_keys=False,
+            Dumper=ConfigDumper
+        ))
 
 
 class TOMLDict(UserDict):
