@@ -7,22 +7,20 @@ import { ItemAddEvent } from './item-add-menu';
   styleUrls: ['./item-add-menu.component.css']
 })
 export class ItemAddMenuComponent implements OnChanges {
-  @Input() public id: string = '';
+  @Input() public id = '';
   @Input() public items: string[] = [];
   @Output() public addItemEvent = new EventEmitter<ItemAddEvent>();
   public filteredItems: string[] = [];
-  public searchText: string = '';
-  public showMenu: boolean = false;
+  public searchText = '';
+  public showMenu = false;
   private isInside = false;
 
-  constructor() { }
-
-  ngOnChanges() {
+  public ngOnChanges(): void {
     this.filteredItems = this.items;
   }
 
   public filterItems(substring: Event): void {
-    if(substring instanceof String) {
+    if (substring instanceof String) {
       this.filteredItems = this.items.filter(item => item.toLowerCase().includes(substring.toLowerCase()));
     }
   }
@@ -38,12 +36,12 @@ export class ItemAddMenuComponent implements OnChanges {
   }
 
   @HostListener('click')
-  public clickInside() {
+  public clickInside(): void {
     this.isInside = true;
   }
-  
+
   @HostListener('document:click')
-  public allClicks() {
+  public allClicks(): void {
     if (!this.isInside) {
       this.showMenu = false;
     }

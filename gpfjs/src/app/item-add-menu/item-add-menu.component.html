@@ -9,15 +9,11 @@
         type="text"
         name="search"
         placeholder="Search"
-        (ngModel)="searchText"
+        (ngModel)="(searchText)"
         (ngModelChange)="filterItems($event)"
         autocomplete="off"
-        spellcheck="false"/>
-      <span
-        class="search-clear-icon"
-        *ngIf="searchInput.value !== ''"
-        (click)="resetSearch(); searchText = '';">
-      </span>
+        spellcheck="false" />
+      <span class="search-clear-icon" *ngIf="searchInput.value !== ''" (click)="resetSearch(); searchText = ''"> </span>
     </div>
   </div>
 
@@ -25,7 +21,7 @@
     <tr *ngFor="let item of filteredItems">
       <td>
         <label class="item">
-          <span class="item-text">{{item}}</span>
+          <span class="item-text">{{ item }}</span>
           <button class="add-item-button" (click)="addItem(id, item)">+</button>
         </label>
       </td>
