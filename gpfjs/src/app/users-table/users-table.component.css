@@ -16,3 +16,28 @@ gpf-table {
 .select-unselect-all {
   text-align: center;
 }
+
+.grid-container {
+  display: grid;
+  grid-template-columns: auto auto auto auto auto;
+}
+
+.grid-header {
+  border: 1px solid #ddd;
+  background-color: #eee;
+  text-align: center;
+}
+
+.grid-cell {
+  border: 1px solid #ddd;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.delete-button {
+  border: none;
+  background: none;
+  color: blue;
+}

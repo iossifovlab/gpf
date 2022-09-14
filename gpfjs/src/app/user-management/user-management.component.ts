@@ -1,5 +1,7 @@
 import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
+import { UserGroup } from 'app/users-groups/users-groups';
+import { UsersGroupsService } from 'app/users-groups/users-groups.service';
 import { environment } from 'environments/environment';
 import { Observable, ReplaySubject } from 'rxjs';
 import { debounceTime, distinctUntilChanged, map, share, switchMap, take, tap } from 'rxjs/operators';
@@ -15,12 +17,14 @@ export class UserManagementComponent implements OnInit {
   public input$ = new ReplaySubject<string>(1);
   public users: User[] = [];
   public usersToShow$: Observable<User[]>;
+  public groups$: Observable<UserGroup[]>;
   @ViewChild('searchBox') private searchBox: ElementRef;
 
   public imgPathPrefix = environment.imgPathPrefix;
 
   public constructor(
     private usersService: UsersService,
+    private usersGroupsService: UsersGroupsService,
     private router: Router,
     private route: ActivatedRoute
   ) { }
@@ -57,6 +61,8 @@ export class UserManagementComponent implements OnInit {
     ).subscribe(searchTerm => {
       this.search(searchTerm);
     });
+
+    this.groups$ = this.usersGroupsService.getAllGroups();
   }
 
   public search(value: string): void {
