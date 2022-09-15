@@ -27,7 +27,7 @@ export class PedigreeChartComponent implements OnInit {
 
   public width = 0;
   public height = 0;
-  public familyLists;
+  public familyIdsList: string[];
 
   @Input()
   public set family(data: PedigreeData[]) {
@@ -108,15 +108,16 @@ export class PedigreeChartComponent implements OnInit {
   }
 
   public loadFamilyListData(): void {
-    if (this.familyLists !== undefined) {
+    if (this.familyIdsList !== undefined) {
       return;
     }
+
     this.variantReportsService.getFamilies(
       this.datasetsService.getSelectedDataset().id,
       this.groupName,
       this.counterId
-    ).subscribe(lists => {
-      this.familyLists = lists;
+    ).subscribe(list => {
+      this.familyIdsList = list;
     });
   }
 
