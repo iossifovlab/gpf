@@ -5,3 +5,8 @@ gpf-table {
 .action-button {
   margin: 0 2px;
 }
+
+
+div.table-header-sticky-div {
+  width: 100%;
+}
