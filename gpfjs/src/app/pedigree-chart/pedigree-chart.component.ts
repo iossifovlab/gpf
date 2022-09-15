@@ -19,7 +19,6 @@ type OrderedIndividuals = Array<Individual>;
   styleUrls: ['./pedigree-chart.component.css']
 })
 export class PedigreeChartComponent implements OnInit {
-
   public pedigreeDataWithLayout: IndividualWithPosition[];
   public lines: Line[];
 
@@ -28,7 +27,6 @@ export class PedigreeChartComponent implements OnInit {
 
   public width = 0;
   public height = 0;
-  public loadingFinishedFlag = false;
   public familyLists;
 
   @Input()
@@ -113,13 +111,11 @@ export class PedigreeChartComponent implements OnInit {
     if (this.familyLists !== undefined) {
       return;
     }
-    this.loadingFinishedFlag = false;
     this.variantReportsService.getFamilies(
       this.datasetsService.getSelectedDataset().id,
       this.groupName,
       this.counterId
     ).subscribe(lists => {
-      this.loadingFinishedFlag = true;
       this.familyLists = lists;
     });
   }
