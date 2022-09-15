@@ -33,23 +33,24 @@
 </ng-template>
 
 <ng-template #pedigreeModal let-modal>
-  <div style="padding: 5px">
+  <div class="svg-container" [style.width.px]="width * popoverScale" style="margin-top: 8px">
+    <ng-container *ngTemplateOutlet="pedigree"></ng-container>
+  </div>
+
+  <div style="padding-right: 8px">
     <form
       (ngSubmit)="onSubmit($event)"
       action="{{ configService.baseUrl }}common_reports/family_counters/download"
-      method="post">
-      <input name="queryData" type="hidden" />
-      <button class="btn btn-md btn-primary btn-right" id="download-button" type="button submit">
+      method="post"
+      style="float: right">
+      <input ngbAutofocus name="queryData" type="hidden" />
+      <button class="btn btn-md btn-primary" id="download-button">
         <i class="fa fa-download fa-lg"></i>
       </button>
     </form>
   </div>
 
-  <div class="svg-container" [style.width.px]="width * popoverScale">
-    <ng-container *ngTemplateOutlet="pedigree"></ng-container>
-  </div>
-
-  <hr />
+  <hr style="margin-top: 8px" />
 
   <div id="family-ids-list-wrapper" style="height: 100px">
     <div *ngIf="familyIdsList" id="family-ids-list">

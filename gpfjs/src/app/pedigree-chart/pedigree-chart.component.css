@@ -24,7 +24,10 @@ svg {
   text-align: center;
 }
 
-.btn-close {
-  box-shadow: none;
-  opacity: 50%;
+#download-button {
+  padding: 6px 11px 6px 12px;
+}
+
+#download-button i {
+  color: #fff;
 }
