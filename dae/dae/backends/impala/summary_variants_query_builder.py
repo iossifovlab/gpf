@@ -92,7 +92,7 @@ class SummaryVariantsQueryBuilder(BaseQueryBuilder):
             frequency_filter=None,
             return_reference=None,
             return_unknown=None,
-            **kwargs):
+            **_kwargs):
         # FIXME too many arguments
         # pylint: disable=too-many-arguments
         if self.summary_variants_table:
