@@ -276,11 +276,6 @@ describe('PedigreeChartComponent', () => {
     expect(component.height).toBe(61.5);
   });
 
-  it('should load family lists', () => {
-    component.loadFamilyListData();
-    expect(component.familyLists).toEqual(['family1', 'family2', 'family3']);
-  });
-
   it('should not duplicate pedigree individuals on repeat ngOnInit calls', () => {
     component.family = FAMILY_WITHOUT_POSITIONS;
     component.ngOnInit();
