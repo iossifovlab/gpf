@@ -1,8 +1,42 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-
 import pytest
 
 pytest_plugins = ["dae_conftests.dae_conftests"]
+
+
+# def pytest_sessionfinish(session, exitstatus):
+#     # pylint: disable=import-outside-toplevel
+#     # try:
+#     #     from dae.genotype_storage.genotype_storage import \
+#     #         shutdown_genotype_storages
+#     #     shutdown_genotype_storages()
+#     # except Exception:  # pylint: disable=broad-except
+#     #     pass
+
+#     # try:
+#     #     import jpype  # type: ignore
+#     #     jpype.shutdownJVM()
+#     #     jpype.config.onexit = False
+#     # except Exception:  # pylint: disable=broad-except
+#     #     pass
+
+#     # try:
+#     #     from dask.distributed import Client, LocalCluster
+#     #     LocalCluster
+#     # except Exception:  # pylint: disable=broad-except
+#     #     pass
+
+
+# def pytest_sessionstart(session):
+#     # pylint: disable=import-outside-toplevel
+#     try:
+#         from dask_sql import Context  # type: ignore
+#         context = Context()
+#         import jpype.config  # type: ignore
+#         jpype.config.onexit = False
+#         return context
+#     except Exception:  # pylint: disable=broad-except
+#         return None
 
 
 class DummyFuture:

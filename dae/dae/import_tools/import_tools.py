@@ -19,7 +19,6 @@ from dae.backends.impala.parquet_io import ParquetPartitionDescriptor
 from dae.backends.raw.loader import AnnotationPipelineDecorator,\
     EffectAnnotationDecorator, VariantsLoader
 from dae.configuration.gpf_config_parser import GPFConfigParser
-from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.import_tools.task_graph import DaskExecutor, SequentialExecutor,\
     TaskGraph
 from dae.pedigrees.family import FamiliesData
@@ -221,6 +220,8 @@ class ImportProject():
     def get_gpf_instance(self):
         """Create and return a gpf instance as desribed in the config."""
         instance_config = self.import_config.get("gpf_instance", {})
+        # pylint: disable=import-outside-toplevel
+        from dae.gpf_instance.gpf_instance import GPFInstance
         return GPFInstance(work_dir=instance_config.get("path", None))
 
     def get_import_storage(self):
@@ -520,23 +521,44 @@ def run_with_project(project, executor=SequentialExecutor()):
 
 _REGISTERED_IMPORT_STORAGE_FACTORIES: \
     Dict[str, Callable[[], ImportStorage]] = {}
+_EXTENTIONS_LOADED = False
+
+
+def _load_import_storage_factory_plugins():
+    # pylint: disable=global-statement
+    global _EXTENTIONS_LOADED
+    if _EXTENTIONS_LOADED:
+        return
+    # pylint: disable=import-outside-toplevel
+    from importlib_metadata import entry_points
+    discovered_entries = entry_points(group="dae.import_tools.storages")
+    for entry in discovered_entries:
+        storage_type = entry.name
+        factory = entry.load()
+        if storage_type in _REGISTERED_IMPORT_STORAGE_FACTORIES:
+            logger.warning("overwriting import storage type: %s", storage_type)
+        _REGISTERED_IMPORT_STORAGE_FACTORIES[storage_type] = factory
+    _EXTENTIONS_LOADED = True
 
 
 def get_import_storage_factory(
         storage_type: str) -> Callable[[], ImportStorage]:
     """Find and return a factory function for creation of a storage type."""
+    _load_import_storage_factory_plugins()
     if storage_type not in _REGISTERED_IMPORT_STORAGE_FACTORIES:
         raise ValueError(f"unsupported import storage type: {storage_type}")
     return _REGISTERED_IMPORT_STORAGE_FACTORIES[storage_type]
 
 
 def get_import_storage_types() -> List[str]:
+    _load_import_storage_factory_plugins()
     return list(_REGISTERED_IMPORT_STORAGE_FACTORIES.keys())
 
 
 def register_import_storage_factory(
         storage_type: str,
         factory: Callable[[], ImportStorage]) -> None:
+    _load_import_storage_factory_plugins()
     if storage_type in _REGISTERED_IMPORT_STORAGE_FACTORIES:
         logger.warning("overwriting import storage type: %s", storage_type)
     _REGISTERED_IMPORT_STORAGE_FACTORIES[storage_type] = factory

@@ -15,8 +15,6 @@ import pytest
 
 from box import Box
 
-from dae.gpf_instance.gpf_instance import GPFInstance, cached
-
 from dae.configuration.gpf_config_parser import GPFConfigParser, FrozenBox
 from dae.configuration.schemas.dae_conf import dae_conf_schema
 
@@ -35,8 +33,6 @@ from dae.backends.impala.import_commons import \
 
 from dae.pedigrees.loader import FamiliesLoader
 from dae.utils.helpers import study_id_from_path
-
-from dae.backends.storage.impala_genotype_storage import ImpalaGenotypeStorage
 
 from dae.gene.denovo_gene_set_collection_factory import \
     DenovoGeneSetCollectionFactory
@@ -115,6 +111,7 @@ def default_dae_config(request, fixture_dirname):
 
 @pytest.fixture(scope="session")
 def gpf_instance(default_dae_config, fixture_dirname):
+    from dae.gpf_instance.gpf_instance import GPFInstance
 
     class GPFInstanceInternal(GPFInstance):
         def __init__(self, *args, **kwargs):
@@ -151,6 +148,7 @@ def gpf_instance(default_dae_config, fixture_dirname):
 @pytest.fixture(scope="session")
 def gpf_instance_2013(
         default_dae_config, fixture_dirname, global_dae_fixtures_dir):
+    from dae.gpf_instance.gpf_instance import GPFInstance, cached
 
     class GPFInstance2013(GPFInstance):
         def __init__(self, *args, **kwargs):
@@ -193,6 +191,7 @@ def fixtures_gpf_instance(gpf_instance, global_dae_fixtures_dir):
 @pytest.fixture(scope="session")
 def gpf_instance_2019(
         default_dae_config, fixture_dirname, global_dae_fixtures_dir):
+    from dae.gpf_instance.gpf_instance import GPFInstance, cached
 
     class GPFInstance2019(GPFInstance):
         def __init__(self, *args, **kwargs):
@@ -231,6 +230,8 @@ def gpf_instance_2019(
 def _create_gpf_instance(
         gene_model_dir, ref_genome_dir,
         default_dae_config, global_dae_fixtures_dir, fixture_dirname):
+    from dae.gpf_instance.gpf_instance import GPFInstance, cached
+
     class CustomGPFInstance(GPFInstance):
         def __init__(self, *args, **kwargs):
             super().__init__(*args, **kwargs)
@@ -763,11 +764,12 @@ def impala_test_dbname():
 
 
 @pytest.fixture(scope="session")
-def impala_genotype_storage(hdfs_host, impala_host):
+def impala_genotype_storage(request, hdfs_host, impala_host):
+
     storage_config = FrozenBox(
         {
             "id": "impala_test_storage",
-            "type": "impala",
+            "storage_type": "impala",
             "dir": "/tmp",
             "impala": {
                 "hosts": [impala_host],
@@ -781,13 +783,16 @@ def impala_genotype_storage(hdfs_host, impala_host):
                 "base_dir": "/tmp/test_data"},
         }
     )
+    from dae.genotype_storage.genotype_storage_registry import \
+        GenotypeStorageRegistry
+    registry = GenotypeStorageRegistry()
+    registry.register_genotype_storage(storage_config)
 
-    return ImpalaGenotypeStorage(storage_config)
+    def fin():
+        registry.shutdown()
+    request.addfinalizer(fin)
 
-
-@pytest.fixture(scope="session")
-def impala_helpers(impala_genotype_storage):
-    return impala_genotype_storage.impala_helpers
+    return registry.get_genotype_storage("impala_test_storage")
 
 
 def collect_vcf(dirname):
@@ -1114,6 +1119,8 @@ def agp_config(data_import, iossifov2014_impala):
 @pytest.fixture
 def agp_gpf_instance(
         fixtures_gpf_instance, mocker, sample_agp, temp_dbfile, agp_config):
+    from dae.gpf_instance.gpf_instance import GPFInstance
+
     mocker.patch.object(
         GPFInstance,
         "_autism_gene_profile_config",

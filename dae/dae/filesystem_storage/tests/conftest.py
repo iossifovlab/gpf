@@ -1,10 +1,11 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import textwrap
 
-from dae.genomic_resources.testing import convert_to_tab_separated, \
-    setup_directories
-from dae.import_tools.import_tools import ImportProject, run_with_project
+import pytest
 
+from dae.genomic_resources.testing import setup_directories, \
+    convert_to_tab_separated
+from dae.import_tools.import_tools import ImportProject
 
 # this content follows the 'refflat' gene model format
 GMM_CONTENT = """
@@ -15,8 +16,10 @@ g2        tx3  bar   -      10      20    12       18     1         12         1
 """  # noqa
 
 
-def foobar_gpf(root_path):
-    content = {
+@pytest.fixture(scope="module")
+def simple_project(tmp_path_factory):
+    root_path = tmp_path_factory.mktemp("root_path") / "simple_project"
+    setup_directories(root_path, {
         "grr": {
             "foobar_genome": {
                 "chrAll.fa": convert_to_tab_separated("""
@@ -58,73 +61,53 @@ def foobar_gpf(root_path):
                 gene_models:
                     resource_id: "foobar_genes"
                 genotype_storage:
-                  default: genotype_impala
+                  default: genotype_filesystem
                   storages:
-                  - id: genotype_impala
-                    storage_type: impala
-                    dir: "work/"
-                    hdfs:
-                      base_dir: /tmp/test_data1
-                      host: localhost
-                      port: 8020
-                      replication: 1
-                    impala:
-                      db: "test_schema1"
-                      hosts:
-                      - localhost
-                      pool_size: 3
-                      port: 21050
-                  - id: genotype_impala_2
-                    storage_type: impala2
-                    dir: "work/"
-                    hdfs:
-                      base_dir: /tmp/test_data2
-                      host: localhost
-                      port: 8020
-                      replication: 1
-                    impala:
-                      db: "test_schema2"
-                      hosts:
-                      - localhost
-                      pool_size: 3
-                      port: 21050
-                    schema_version: 2
                   - id: genotype_filesystem
                     storage_type: filesystem
-                    dir: "{root_path}/genotype_filesystem"
+                    dir: "{root_path}/storage"
             """)
-        }
-    }
-    setup_directories(root_path, content)
-
-
-def foobar_vcf_import(root_path, study_id, ped_path, vcf_path, storage_id):
-
-    foobar_gpf(root_path)
-
-    config = textwrap.dedent(f"""
-        id: {study_id}
-        processing_config:
-          work_dir: {root_path / "work"}
-        input:
-          pedigree:
-            file: {ped_path}
-          vcf:
-            files:
-             - {vcf_path}
-            denovo_mode: denovo
-            omission_mode: omission
-        gpf_instance:
-          path: {root_path / "gpf_instance"}
-        destination:
-          storage_id: {storage_id}
-        """)
-    setup_directories(root_path, {
-        "vcf_project": {
-            "vcf_project.yaml": config
         },
+        "project": {
+            "project.yaml": textwrap.dedent(f"""
+                id: test_import
+                input:
+                  pedigree:
+                    file: pedigree.ped
+                    family: fId
+                    person: pId
+                    mom: mId
+                    dad: dId
+                  denovo:
+                    files:
+                      - denovo.tsv
+                    person_id: spid
+                    family_id: fId
+                    chrom: chrom
+                    pos: pos
+                    ref: ref
+                    alt: alt
+                    genotype: genotype
+                gpf_instance:
+                    path: {root_path / "gpf_instance"}
+                destination:
+                    storage_id: genotype_filesystem
+            """),
+            "pedigree.ped": convert_to_tab_separated("""
+                fId pId      mId    dId    sex status      role
+                f1  f1.dad   0      0      M   unaffected  dad
+                f1  f1.mom   0      0      F   unaffected  mom
+                f1  f1.s1    f1.mom f1.dad F   unaffected  sib
+                f1  f1.p1    f1.mom f1.dad M   affected    prb
+                f1  f1.s2    f1.mom f1.dad F   affected    sib
+            """),
+            "denovo.tsv": convert_to_tab_separated("""
+                fId chrom pos ref alt genotype             spid
+                f1  foo   11  G   C   0/0,0/0,0/1,0/0,0/1  f1.s1
+                f1  bar   11  C   G   0/0,0/0,0/1,0/0,0/1  f1.s1
+            """),
+        }
     })
     project = ImportProject.build_from_file(
-        root_path / "vcf_project" / "vcf_project.yaml")
-    run_with_project(project)
+        root_path / "project" / "project.yaml")
     return project

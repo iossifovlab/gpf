@@ -40,10 +40,14 @@ class Schema2GenotypeStorage(GenotypeStorage):
             impala_hosts=impala_hosts, impala_port=impala_port,
             pool_size=pool_size)
 
-    def open(self):
-        # FIXME:
-        self.is_open = True
+    def start(self):
         return self
+
+    def shutdown(self):
+        if self._impala_helpers is not None:
+            self._impala_helpers.close()
+        if self._hdfs_helpers is not None:
+            self._hdfs_helpers.close()
 
     def is_impala(self):
         return False

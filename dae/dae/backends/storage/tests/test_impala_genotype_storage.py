@@ -3,17 +3,39 @@
 import os
 from contextlib import closing
 
+import pytest
 from box import Box  # type: ignore
 
 from dae.backends.storage.impala_genotype_storage import ImpalaGenotypeStorage
 
 
-def test_is_impala(impala_genotype_storage):
-    assert impala_genotype_storage.is_impala() is True
+@pytest.fixture(scope="session")
+def impala_genotype_storage(tmpdir_factory):
+    work_dir = tmpdir_factory.mktemp("impala").join("work_dir")
+    storage_config = Box({
+        "id": "genotype_impala",
+        "storage_type": "impala",
+        "dir": work_dir,
+        "hdfs": {
+            "base_dir": "/tmp/test_data",
+            "host": "localhost",
+            "port": 8020,
+            "replication": 1,
+        },
+        "impala": {
+            "db": "impala_storage_test_db",
+            "hosts": [
+                "localhost",
+            ],
+            "pool_size": 3,
+            "port": 21050,
+        },
+    })
+    return ImpalaGenotypeStorage(storage_config)
 
 
-def test_is_filestorage(impala_genotype_storage):
-    assert impala_genotype_storage.is_filestorage() is False
+def test_storage_type(impala_genotype_storage):
+    assert impala_genotype_storage.get_storage_type() == "impala"
 
 
 def test_impala_helpers(impala_genotype_storage):

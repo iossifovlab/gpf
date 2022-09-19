@@ -3,7 +3,9 @@ import shutil
 import time
 import glob
 import logging
-from typing import Dict, Any
+from typing import Dict, Any, cast
+
+from cerberus import Validator
 
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.study_config_builder import StudyConfigBuilder
@@ -26,21 +28,41 @@ logger = logging.getLogger(__name__)
 class FilesystemGenotypeStorage(GenotypeStorage):
     """A storage that uses the filesystem as its backend."""
 
+    VALIDATION_SCHEMA = {
+        "storage_type": {"type": "string", "allowed": ["filesystem"]},
+        "id": {
+            "type": "string",
+        },
+        "dir": {
+            "type": "string",
+        },
+    }
+
     def __init__(self, storage_config: Dict[str, Any]):
         super().__init__(storage_config)
         self.data_dir = self.storage_config["dir"]
 
-    def open(self):
-        # FIXME:
-        self.is_open = True
+    @classmethod
+    def validate_config(cls, config: Dict) -> Dict:
+        config = super().validate_config(config)
+        validator = Validator(cls.VALIDATION_SCHEMA)
+        if not validator.validate(config):
+            logger.error(
+                "wrong config format for fileystem genotype storage: %s",
+                validator.errors)
+            raise ValueError(
+                f"wrong config format for filesytem storage: "
+                f"{validator.errors}")
+        return cast(Dict, validator.document)
 
+    def start(self):
         return self
+
+    def shutdown(self):
+        """No resources to close."""
 
     def get_data_dir(self, *path):
         return os.path.join(self.data_dir, *path)
-
-    def is_filestorage(self):
-        return True
 
     def build_backend(self, study_config, genome, gene_models):
         start = time.time()

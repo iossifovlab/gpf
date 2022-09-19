@@ -4,9 +4,15 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 from queue import Queue
 
+import pytest
 from dae.backends.query_runners import QueryResult
 
 from dae.backends.impala.impala_variants import ImpalaQueryRunner
+
+
+@pytest.fixture(scope="session")
+def impala_helpers(impala_genotype_storage):
+    return impala_genotype_storage.impala_helpers
 
 
 def create_runner(impala_helpers, query, deserializer=None):

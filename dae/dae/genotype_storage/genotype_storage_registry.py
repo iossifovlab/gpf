@@ -46,3 +46,8 @@ class GenotypeStorageRegistry:
         if default_storage_id is not None:
             storage = self.get_genotype_storage(default_storage_id)
             self.register_default_storage(storage)
+
+    def shutdown(self):
+        for storage_id, storage in self._genotype_storages.items():
+            logger.info("closing genotype storage %s", storage_id)
+            storage.close()

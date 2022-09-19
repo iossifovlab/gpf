@@ -2,7 +2,6 @@
 import textwrap
 
 import pytest
-import pysam
 
 from dae.import_tools.import_tools import ImportProject, run_with_project
 from dae.genomic_resources import build_genomic_resource_repository
@@ -116,17 +115,19 @@ def test_minimal_effect_annotator(
 
 
 @pytest.fixture
-def minimal_grr(tmp_path, minimal_reference_genome, minimal_gene_models):
+def minimal_grr(
+    tmp_path, minimal_reference_genome, minimal_gene_models
+):
     grr = build_genomic_resource_repository({
         "id": "minimal",
         "type": "file",
         "directory": str(tmp_path / "grr")
     })
+
     return grr
 
 
 def test_minimal_grr(minimal_grr):
-
     assert minimal_grr.get_resource("gene_models").get_type() == "gene_models"
     assert minimal_grr.get_resource("ref_genome").get_type() == "genome"
 
@@ -225,6 +226,7 @@ def minimal_vcf(tmp_path):
     })
 
     # pylint: disable=no-member
+    import pysam  # pylint: disable=import-outside-toplevel
     pysam.tabix_compress(
         str(tmp_path / "input" / "in.vcf"),
         str(tmp_path / "input" / "in.vcf.gz"))

@@ -71,7 +71,9 @@ def import_project(request, tmp_path_factory, minimal_vcf):
     (5, {"effect_types": ["splice-site"]}, 1),
     (6, {"regions": [Region("foo", 10, 10)]}, 1),
 ])
-def test_family_queries(import_project, index, query, ecount):
+def test_family_queries(
+        tmp_path_factory, import_project, index, query, ecount):
+
     gpf_instance: GPFInstance = import_project.get_gpf_instance()
     gpf_instance.reload()
 

@@ -44,8 +44,14 @@ class ImpalaGenotypeStorage(GenotypeStorage):
             self._rsync_helpers = RsyncHelpers(
                 self.storage_config["rsync"]["location"])
 
-    def open(self):
-        self.is_open = True
+    def start(self):
+        return self
+
+    def shutdown(self):
+        if self._hdfs_helpers is not None:
+            self._hdfs_helpers.close()
+        if self._impala_helpers is not None:
+            self._impala_helpers.close()
 
     def get_db(self):
         return self.storage_config.impala.db

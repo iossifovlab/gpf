@@ -51,6 +51,9 @@ class ImpalaHelpers:
             "created impala pool with %s connections",
             self._connection_pool.status())
 
+    def close(self):
+        self._connection_pool.dispose()
+
     def connection(self, timeout: float = None):
         """Create a new connection to the impala host."""
         logger.debug("going to get impala connection from the pool; %s",

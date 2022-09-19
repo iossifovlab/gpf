@@ -11,12 +11,7 @@ from typing import List, Generator, cast, Union, Optional, Dict, Any
 from dataclasses import asdict
 
 import fsspec  # type: ignore
-from fsspec.implementations.local import LocalFileSystem  # type: ignore
-from fsspec.implementations.http import HTTPFileSystem  # type: ignore
-from fsspec.implementations.memory import MemoryFileSystem  # type: ignore
-from s3fs.core import S3FileSystem  # type: ignore
 
-import pysam
 import yaml
 
 from dae.genomic_resources.repository import GR_CONF_FILE_NAME, Manifest, \
@@ -41,10 +36,12 @@ def build_fsspec_protocol(proto_id: str, root_url: str, **kwargs) -> Union[
     # pylint: disable=import-outside-toplevel
 
     if url.scheme in {"file", ""}:
+        from fsspec.implementations.local import LocalFileSystem
         filesystem = LocalFileSystem()
         return FsspecReadWriteProtocol(
             proto_id, root_url, filesystem)
     if url.scheme in {"http", "https"}:
+        from fsspec.implementations.http import HTTPFileSystem
         base_url = kwargs.get("base_url")
         filesystem = HTTPFileSystem(client_kwargs={"base_url": base_url})
         return FsspecReadOnlyProtocol(proto_id, root_url, filesystem)
@@ -52,12 +49,15 @@ def build_fsspec_protocol(proto_id: str, root_url: str, **kwargs) -> Union[
     if url.scheme in {"s3"}:
         filesystem = kwargs.get("filesystem")
         if filesystem is None:
+            from s3fs.core import S3FileSystem  # type: ignore
+
             endpoint_url = kwargs.get("endpoint_url")
             filesystem = S3FileSystem(
                 anon=False, client_kwargs={"endpoint_url": endpoint_url})
         return FsspecReadWriteProtocol(
             proto_id, root_url, filesystem)
     if url.scheme == "memory":
+        from fsspec.implementations.memory import MemoryFileSystem
         filesystem = MemoryFileSystem()
         return FsspecReadWriteProtocol(proto_id, root_url, filesystem)
 
@@ -181,6 +181,7 @@ class FsspecReadOnlyProtocol(ReadOnlyRepositoryProtocol):
             index_filename = f"{filename}.tbi"
         index_url = self._get_file_url(resource, index_filename)
 
+        import pysam  # pylint: disable=import-outside-toplevel
         return pysam.TabixFile(  # pylint: disable=no-member
             file_url, index=index_url)
 
@@ -196,6 +197,7 @@ class FsspecReadOnlyProtocol(ReadOnlyRepositoryProtocol):
             index_filename = f"{filename}.tbi"
         index_url = self._get_file_url(resource, index_filename)
 
+        import pysam  # pylint: disable=import-outside-toplevel
         return pysam.VariantFile(  # pylint: disable=no-member
             file_url, index_filename=index_url)
 

@@ -4,10 +4,6 @@ import os
 import logging
 import json
 
-from dae.genomic_resources.reference_genome import ReferenceGenome, \
-    build_reference_genome_from_resource
-from dae.genomic_resources.gene_models import \
-    build_gene_models_from_resource
 from dae.enrichment_tool.background_facade import BackgroundFacade
 
 from dae.gene.gene_scores import GeneScoresDb, GeneScore
@@ -20,8 +16,6 @@ from dae.studies.variants_db import VariantsDb
 
 from dae.pheno.pheno_db import PhenoDb
 
-from dae.genotype_storage.genotype_storage_registry import \
-    GenotypeStorageRegistry
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.dae_conf import dae_conf_schema
 from dae.configuration.schemas.autism_gene_profile import \
@@ -87,8 +81,12 @@ class GPFInstance:
 
     @property  # type: ignore
     @cached
-    def reference_genome(self) -> ReferenceGenome:
+    def reference_genome(self):
         """Return reference genome defined in the GPFInstance config."""
+        # pylint: disable=import-outside-toplevel
+        from dae.genomic_resources.reference_genome import \
+            build_reference_genome_from_resource
+
         resource = self.grr.get_resource(
             self.dae_config.reference_genome.resource_id)
         result = build_reference_genome_from_resource(resource)
@@ -99,6 +97,10 @@ class GPFInstance:
     @cached
     def gene_models(self):
         """Return gene models used in the GPF instance."""
+        # pylint: disable=import-outside-toplevel
+        from dae.genomic_resources.gene_models import \
+            build_gene_models_from_resource
+
         resource = self.grr.get_resource(
             self.dae_config.gene_models.resource_id)
         assert resource is not None, \
@@ -166,6 +168,10 @@ class GPFInstance:
     @cached
     def genotype_storage_db(self):
         """Construct and return genotype storage registry."""
+        # pylint: disable=import-outside-toplevel
+        from dae.genotype_storage.genotype_storage_registry import \
+            GenotypeStorageRegistry
+
         registry = GenotypeStorageRegistry()
         registry.register_config(self.dae_config.genotype_storage)
         return registry

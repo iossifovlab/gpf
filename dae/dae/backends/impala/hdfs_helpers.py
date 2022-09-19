@@ -43,6 +43,11 @@ class HdfsHelpers:
             self._hdfs = ArrowFSWrapper(hdfs)
         return self._hdfs
 
+    def close(self):
+        if self._hdfs is not None:
+            del self._hdfs
+        self._hdfs = None
+
     def exists(self, path):
         return self.hdfs.exists(path)
 

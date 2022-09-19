@@ -1,4 +1,5 @@
 # pylint: disable=too-many-lines
+import abc
 import os
 import sys
 import glob
@@ -7,25 +8,22 @@ import time
 import logging
 import shutil
 from urllib.parse import urlparse
-from typing import Optional, Any
+from typing import Optional, Callable
 from math import ceil
 from collections import defaultdict
 
-import fsspec  # type: ignore
+import fsspec
 import toml
-from box import Box  # type: ignore
-
+from box import Box
 
 from jinja2 import Template
 
 from dae.annotation.annotation_factory import build_annotation_pipeline
 from dae.annotation.effect_annotator import EffectAnnotatorAdapter
 
-from dae.gpf_instance.gpf_instance import GPFInstance
-
 from dae.pedigrees.loader import FamiliesLoader
 from dae.backends.raw.loader import AnnotationPipelineDecorator, \
-    EffectAnnotationDecorator
+    EffectAnnotationDecorator, VariantsLoader
 from dae.backends.dae.loader import DenovoLoader, DaeTransmittedLoader
 from dae.backends.vcf.loader import VcfLoader
 from dae.backends.cnv.loader import CNVLoader
@@ -50,15 +48,16 @@ def save_study_config(dae_config, study_id, study_config, force=False):
     filename = os.path.join(dirname, f"{study_id}.conf")
 
     if os.path.exists(filename):
-        logger.info("configuration file already exists: %s", filename)
+        logger.info(
+            "configuration file already exists: %s", filename)
         if not force:
             logger.info("skipping overwring the old config file...")
             return
 
         new_name = os.path.basename(filename) + "." + str(time.time_ns())
         new_path = os.path.join(os.path.dirname(filename), new_name)
-        logger.info("Backing up configuration for %s in %s",
-                    study_id, new_path)
+        logger.info(
+            "Backing up configuration for %s in %s", study_id, new_path)
         os.rename(filename, new_path)
 
     os.makedirs(dirname, exist_ok=True)
@@ -68,7 +67,7 @@ def save_study_config(dae_config, study_id, study_config, force=False):
 
 def construct_import_annotation_pipeline(
         gpf_instance, annotation_configfile=None):
-    """Construct the import annotation pipeline."""
+    """Construct annotation pipeline for importing data."""
     if annotation_configfile is not None:
         config_filename = annotation_configfile
     else:
@@ -89,7 +88,7 @@ def construct_import_annotation_pipeline(
 
 
 def construct_import_effect_annotator(gpf_instance):
-    """Construct the import effect annotator."""
+    """Construct import effect annotator."""
     genome = gpf_instance.reference_genome
     gene_models = gpf_instance.gene_models
 
@@ -112,6 +111,8 @@ def construct_import_effect_annotator(gpf_instance):
 
 
 class MakefilePartitionHelper:
+    """Helper class for organizing partition targets."""
+
     def __init__(
             self,
             partition_descriptor,
@@ -170,7 +171,7 @@ class MakefilePartitionHelper:
         return [self._adjust_chrom(tg) for tg in target_chromosomes]
 
     def generate_chrom_targets(self, target_chrom):
-        """Split the target chrom into regions according to part desc."""
+        """Generate variant targets based on partition descriptor."""
         target = target_chrom
         if target_chrom not in self.partition_descriptor.chromosomes:
             target = "other"
@@ -192,14 +193,12 @@ class MakefilePartitionHelper:
         return result
 
     def bucket_index(self, region_bin):
-        """Return bucket index for a region bin."""
-        # fmt: off
+        """Return bucket index based on variants target."""
         genome_chromosomes = [
             chrom
             for chrom, _ in
             self.genome.get_all_chrom_lengths()
         ]
-        # fmt: on
         variants_targets = self.generate_variants_targets(genome_chromosomes)
         assert region_bin in variants_targets
 
@@ -207,7 +206,7 @@ class MakefilePartitionHelper:
         return variants_targets.index(region_bin)
 
     def generate_variants_targets(self, target_chromosomes, mode=None):
-        """Generate variants targets."""
+        """Produce variants targets."""
         if len(self.partition_descriptor.chromosomes) == 0:
             return {"none": [self.partition_descriptor.output]}
 
@@ -242,11 +241,17 @@ class MakefilePartitionHelper:
         return targets
 
 
-class MakefileGenerator:
+class BatchGenerator:
     """Generate a Makefile which when executed imports a study."""
 
-    @staticmethod
-    def generate(context):
+    @abc.abstractmethod
+    def generate(self, context):
+        """Generate a Makefile/Snakemakefile."""
+
+
+class MakefileGenerator(BatchGenerator):
+
+    def generate(self, context):
         return MakefileGenerator.TEMPLATE.render(context)
 
     TEMPLATE = Template(
@@ -376,9 +381,8 @@ setup_remote.flag: reports.flag
 class SnakefileGenerator:
     """Generate a Snakefile which when executed imports a study."""
 
-    @staticmethod
-    def generate(context):
-        return SnakefileGenerator.TEMPLATE.render(context)
+    def generate(self, context):
+        return self.TEMPLATE.render(context)
 
     TEMPLATE = Template(
         """\
@@ -592,11 +596,9 @@ rule setup_remote:
         """)
 
 
-class SnakefileKubernetesGenerator:
-    """Generate a Snakefile which when executed imports a study using k8s."""
+class SnakefileKubernetesGenerator(BatchGenerator):
 
-    @staticmethod
-    def generate(context):
+    def generate(self, context):
         return SnakefileKubernetesGenerator.TEMPLATE.render(context)
 
     TEMPLATE = Template(
@@ -692,6 +694,8 @@ rule parquet:
 
 
 class BatchImporter:
+    """Class that should run tasks for importing of a study."""
+
     def __init__(self, gpf_instance):
         self.gpf_instance = gpf_instance
         assert self.gpf_instance is not None
@@ -718,7 +722,7 @@ class BatchImporter:
         return self._families
 
     def build_familes_loader(self, argv):
-        """Build a family loader for the provided arguments."""
+        """Construct a family loader based on CLI arguments."""
         families_filename, families_params = \
             FamiliesLoader.parse_cli_arguments(argv)
 
@@ -729,7 +733,7 @@ class BatchImporter:
         return self
 
     def build_vcf_loader(self, argv):
-        """Build a vcf loader for the provided arguments."""
+        """Construct a VCF loader based on the CLI arguments."""
         variants_filenames, variants_params = \
             VcfLoader.parse_cli_arguments(argv)
 
@@ -747,7 +751,7 @@ class BatchImporter:
         return self
 
     def build_denovo_loader(self, argv):
-        """Build a denovo loader for the provided arguments."""
+        """Construct a de Novo variants loader based on the CLI arguments."""
         variants_filename, variants_params = \
             DenovoLoader.parse_cli_arguments(argv)
 
@@ -764,7 +768,7 @@ class BatchImporter:
         return self
 
     def build_cnv_loader(self, argv):
-        """Build a cnv loader for the provided arguments."""
+        """Construct a CNV loader based on the CLI arguments."""
         variants_filename, variants_params = \
             CNVLoader.parse_cli_arguments(argv)
 
@@ -782,7 +786,7 @@ class BatchImporter:
         return self
 
     def build_dae_loader(self, argv):
-        """Build a dae loader for the provided arguments."""
+        """Construct a DAE loader based on the CLI arguments."""
         variants_filename, variants_params = \
             DaeTransmittedLoader.parse_cli_arguments(argv)
 
@@ -799,7 +803,7 @@ class BatchImporter:
         return self
 
     def build_study_id(self, argv):
-        """Set an appropriate study id for the provided arguments."""
+        """Construct a study_id from CLI arguments."""
         assert self.families_loader is not None
         if argv.study_id is not None:
             study_id = argv.study_id
@@ -810,7 +814,7 @@ class BatchImporter:
         return self
 
     def build_partition_helper(self, argv):
-        """Create a partition description and partition helper."""
+        """Load and adjust the parition description."""
         if argv.partition_description is not None:
             partition_description = ParquetPartitionDescriptor.from_config(
                 argv.partition_description, root_dirname=argv.output
@@ -831,6 +835,7 @@ class BatchImporter:
         return self
 
     def build_genotype_storage(self, argv):
+        """Construct a genotype storage."""
         if argv.genotype_storage is None:
             genotype_storage_id = self.gpf_instance.dae_config.get(
                 "genotype_storage", {}
@@ -855,6 +860,7 @@ class BatchImporter:
         return self
 
     def build(self, argv):
+        """Construct a study importer based on CLI aruments."""
         self.build_familes_loader(argv) \
             .build_denovo_loader(argv) \
             .build_cnv_loader(argv) \
@@ -866,6 +872,7 @@ class BatchImporter:
         return self
 
     def generate_instructions(self, argv):
+        """Generate instruction for importing a study using CLI arguments."""
         dirname = argv.generator_output or argv.output
         context = self.build_context(argv)
         if argv.tool == "make":
@@ -919,8 +926,7 @@ class BatchImporter:
         for prefix, variants_loader in self.variants_loaders.items():
             variants_context = context["variants"][prefix]
             variants_context["variants"] = " ".join(
-                variants_loader.variants_filenames
-            )
+                list(variants_loader.variants_filenames))
 
         if self.variants_loaders:
             context["variants_output"] = \
@@ -1002,6 +1008,7 @@ class BatchImporter:
         return context
 
     def generate_study_config(self, argv):
+        """Generate a study config for imported study."""
         dirname = argv.output
 
         config_dict = {
@@ -1012,8 +1019,8 @@ class BatchImporter:
             "genotype_storage": {
                 "id": self.genotype_storage_id,
                 "tables": {
-                    "variants": f'{self.study_id}_variants',
-                    "pedigree": f'{self.study_id}_pedigree',
+                    "variants": f"{self.study_id}_variants",
+                    "pedigree": f"{self.study_id}_pedigree",
                 },
             },
             "genotype_browser": {"enabled": True},
@@ -1039,13 +1046,14 @@ class BatchImporter:
 
     @classmethod
     def cli_arguments_parser(cls, gpf_instance):
+        """Parse CLI arguments."""
         parser = argparse.ArgumentParser(
             description="Convert variants file to parquet",
             conflict_handler="resolve",
             formatter_class=argparse.RawDescriptionHelpFormatter,
         )
 
-        parser.add_argument('--verbose', '-V', action='count', default=0)
+        parser.add_argument("--verbose", "-V", action="count", default=0)
 
         FamiliesLoader.cli_arguments(parser)
         DenovoLoader.cli_arguments(parser, options_only=True)
@@ -1180,16 +1188,21 @@ class BatchImporter:
         return parser
 
     @staticmethod
-    def main(argv=sys.argv[1:], gpf_instance=None):
+    def main(argv=None, gpf_instance=None):
+        """Construct and run the importer based on CLI arguments.
+
+        Main function called from CLI tools.
+        """
         if gpf_instance is None:
             try:
+                # pylint: disable=import-outside-toplevel
+                from dae.gpf_instance.gpf_instance import GPFInstance
                 gpf_instance = GPFInstance()
-            except Exception as ex:  # pylint: disable=broad-except
-                logger.warning("GPF not configured properly...")
-                logger.exception(ex)
+            except Exception:  # pylint: disable=broad-except
+                logger.warning("GPF not configured properly...", exc_info=True)
 
         parser = BatchImporter.cli_arguments_parser(gpf_instance)
-        argv = parser.parse_args(argv)
+        argv = parser.parse_args(argv or sys.argv[1:])
 
         if argv.verbose == 1:
             logging.basicConfig(level=logging.WARNING)
@@ -1207,22 +1220,23 @@ class BatchImporter:
 
 
 class Variants2ParquetTool:
-    """Tool that stores variants in a parquet file(s)."""
+    """Tool for importing variants into parquet dataset."""
 
-    VARIANTS_LOADER_CLASS: Any = None
+    VARIANTS_LOADER_CLASS: Optional[Callable[..., VariantsLoader]] = None
     VARIANTS_TOOL: Optional[str] = None
     VARIANTS_FREQUENCIES: bool = False
 
     BUCKET_INDEX_DEFAULT = 1000
 
     @classmethod
-    def cli_arguments_parser(cls, gpf_instance):
+    def cli_arguments_parser(cls, _gpf_instance):
+        """Parse CLI arguments."""
         parser = argparse.ArgumentParser(
             description="Convert variants file to parquet",
             conflict_handler="resolve",
             formatter_class=argparse.RawDescriptionHelpFormatter,
         )
-        parser.add_argument('--verbose', '-V', action='count', default=0)
+        parser.add_argument("--verbose", "-V", action="count", default=0)
 
         FamiliesLoader.cli_arguments(parser)
         cls.VARIANTS_LOADER_CLASS.cli_arguments(parser)
@@ -1318,13 +1332,19 @@ class Variants2ParquetTool:
         return parser
 
     @classmethod
-    def main(cls, argv=sys.argv[1:], gpf_instance=None):
+    def main(cls, argv=None, gpf_instance=None):
+        """Construct and run importer to transform variants into parquet.
+
+        Called from CLI tools.
+        """
         if gpf_instance is None:
+            # pylint: disable=import-outside-toplevel
+            from dae.gpf_instance.gpf_instance import GPFInstance
             gpf_instance = GPFInstance()
 
         parser = cls.cli_arguments_parser(gpf_instance)
 
-        argv = parser.parse_args(argv)
+        argv = parser.parse_args(argv or sys.argv[1:])
         if argv.verbose == 1:
             logging.basicConfig(level=logging.WARNING)
         elif argv.verbose == 2:
@@ -1338,7 +1358,10 @@ class Variants2ParquetTool:
 
     @classmethod
     def run(cls, argv, gpf_instance=None):
+        """Run actual variants import into parquet dataset."""
         if gpf_instance is None:
+            # pylint: disable=import-outside-toplevel
+            from dae.gpf_instance.gpf_instance import GPFInstance
             gpf_instance = GPFInstance()
 
         families_filename, families_params = \
@@ -1384,8 +1407,8 @@ class Variants2ParquetTool:
                     cls.BUCKET_INDEX_DEFAULT
                     + generator.bucket_index(argv.region_bin)
                 )
-                logger.info("resetting regions (rb: %s): %s",
-                            argv.region_bin, regions)
+                logger.info(
+                    "resetting regions (rb: %s): %s", argv.region_bin, regions)
                 variants_loader.reset_regions(regions)
 
         elif argv.regions is not None:
@@ -1408,7 +1431,7 @@ class Variants2ParquetTool:
 
     @classmethod
     def _build_variants_loader_pipeline(
-            cls, gpf_instance: GPFInstance, argv, variants_loader):
+            cls, gpf_instance, argv, variants_loader):
 
         effect_annotator = construct_import_effect_annotator(gpf_instance)
 
@@ -1428,6 +1451,9 @@ class Variants2ParquetTool:
 
     @classmethod
     def _load_variants(cls, argv, families, gpf_instance):
+        if cls.VARIANTS_LOADER_CLASS is None:
+            raise ValueError("VARIANTS_LOADER_CLASS not set")
+
         variants_filenames, variants_params = \
             cls.VARIANTS_LOADER_CLASS.parse_cli_arguments(argv)
 
@@ -1477,15 +1503,18 @@ class Variants2ParquetTool:
 
 
 class DatasetHelpers:
-    """A collection of helper methods for working with datasets."""
+    """Helper class for work with studies in impala genotype storage."""
 
     def __init__(self, gpf_instance=None):
         if gpf_instance is None:
+            # pylint: disable=import-outside-toplevel
+            from dae.gpf_instance.gpf_instance import GPFInstance
             self.gpf_instance = GPFInstance()
         else:
             self.gpf_instance = gpf_instance
 
     def find_genotype_data_config_file(self, dataset_id):
+        """Find and return config filename for a dataset."""
         config = self.gpf_instance.get_genotype_data_config(dataset_id)
         if config is None:
             # pylint: disable=protected-access
@@ -1506,6 +1535,7 @@ class DatasetHelpers:
         return config_file
 
     def find_genotype_data_config(self, dataset_id):
+        """Find and return configuration of a dataset."""
         config_file = self.find_genotype_data_config_file(dataset_id)
         if config_file is None:
             return None
@@ -1515,6 +1545,7 @@ class DatasetHelpers:
         return short_config
 
     def get_genotype_storage(self, dataset_id):
+        """Find the genotype storage that stores a dataset."""
         config = self.find_genotype_data_config(dataset_id)
         if config is None:
             return None
@@ -1526,27 +1557,30 @@ class DatasetHelpers:
         return genotype_storage
 
     def is_impala_genotype_storage(self, dataset_id):
+        """Check if genotype storage is an impala genotype storage."""
         genotype_storage = self.get_genotype_storage(dataset_id)
         return genotype_storage.is_impala()
 
     def check_dataset_hdfs_directories(self, genotype_storage, dataset_id):
-        # genotype_storage = self.get_genotype_storage(dataset_id)
+        """Check if a dataset HDFS directories are OK.
+
+        Works only for impala genotype storage.
+        """
+        # pylint: disable=too-many-return-statements
         logger.info(
             "genotype storage of study %s should be impala: %s",
-            dataset_id, genotype_storage.is_impala()
-        )
+            dataset_id, genotype_storage.is_impala())
         if not genotype_storage.is_impala():
             return None
 
         hdfs_helpers = genotype_storage.hdfs_helpers
-
         study_dir = genotype_storage.default_hdfs_study_path(dataset_id)
 
         logger.info(
             "study hdfs dir %s should exists: %s",
             study_dir, hdfs_helpers.exists(study_dir))
         logger.info(
-            "study hdfs dir %s should be a directory: {%s}",
+            "study hdfs dir %s should be a directory: %s",
             study_dir, hdfs_helpers.isdir(study_dir))
 
         if not hdfs_helpers.exists(study_dir) or \
@@ -1583,8 +1617,8 @@ class DatasetHelpers:
         variants_table = config.genotype_storage.tables.variants
         if variants_table is None:
             logger.info(
-                "dataset %s does not have variants; "
-                "skipping checks for variants directory...", dataset_id)
+                "dataset %s does not have variants; skipping checks for "
+                "variants directory...", dataset_id)
         else:
             variants_dir = os.path.join(study_dir, "variants")
             logger.info(
@@ -1600,6 +1634,10 @@ class DatasetHelpers:
         return True
 
     def check_dataset_rename_hdfs_directory(self, old_id, new_id):
+        """Check if it is OK to rename an HDFS directory for a dataset.
+
+        Works for impala genotype storage.
+        """
         genotype_storage = self.get_genotype_storage(old_id)
         if not self.check_dataset_hdfs_directories(genotype_storage, old_id):
             return (None, None)
@@ -1625,10 +1663,11 @@ class DatasetHelpers:
                 hdfs_helpers.isdir(source_dir) and  \
                 not hdfs_helpers.exists(dest_dir):
             return (source_dir, dest_dir)
+
         return (None, None)
 
     def dataset_rename_hdfs_directory(self, old_id, new_id, dry_run=None):
-        """Rename two directories in HDFS."""
+        """Rename dataset HDFS directory."""
         source_dir, dest_dir = \
             self.check_dataset_rename_hdfs_directory(old_id, new_id)
         if not dry_run:
@@ -1643,7 +1682,7 @@ class DatasetHelpers:
             hdfs_helpers.rename(source_dir, dest_dir)
 
     def dataset_remove_hdfs_directory(self, dataset_id, dry_run=None):
-        """Delete the HDFS directory for a dataset with id dataset_id."""
+        """Remove dataset HDFS directory."""
         genotype_storage = self.get_genotype_storage(dataset_id)
         assert self.check_dataset_hdfs_directories(
             genotype_storage, dataset_id)
@@ -1657,6 +1696,7 @@ class DatasetHelpers:
             hdfs_helpers.delete(study_dir, recursive=True)
 
     def dataset_recreate_impala_tables(self, old_id, new_id, dry_run=None):
+        """Recreate impala tables for a dataset."""
         genotype_storage = self.get_genotype_storage(old_id)
 
         assert genotype_storage.is_impala()
@@ -1670,7 +1710,6 @@ class DatasetHelpers:
         new_hdfs_pedigree = genotype_storage \
             .default_pedigree_hdfs_filename(new_id)
         new_hdfs_pedigree = os.path.dirname(new_hdfs_pedigree)
-
         # pylint: disable=protected-access
         new_pedigree_table = genotype_storage._construct_pedigree_table(new_id)
 
@@ -1697,8 +1736,9 @@ class DatasetHelpers:
             new_variants_table = genotype_storage \
                 ._construct_variants_table(new_id)
 
-            logger.info("going to recreate variants table %s from %s",
-                        new_variants_table, new_hdfs_variants)
+            logger.info(
+                "going to recreate variants table %s from %s",
+                new_variants_table, new_hdfs_variants)
 
             if not dry_run:
                 impala_helpers.recreate_table(
@@ -1708,6 +1748,7 @@ class DatasetHelpers:
         return new_pedigree_table, new_variants_table
 
     def dataset_drop_impala_tables(self, dataset_id, dry_run=None):
+        """Drop impala tables for a dataset."""
         assert self.check_dataset_impala_tables(dataset_id)
 
         genotype_storage = self.get_genotype_storage(dataset_id)
@@ -1735,6 +1776,7 @@ class DatasetHelpers:
                     impala_db, variants_table)
 
     def check_dataset_impala_tables(self, dataset_id):
+        """Check if impala tables for a dataset are OK."""
         genotype_storage = self.get_genotype_storage(dataset_id)
 
         impala_db = genotype_storage.storage_config.impala.db
@@ -1756,18 +1798,17 @@ class DatasetHelpers:
             impala_db, pedigree_table)
 
         logger.info(
-            "pedigree table %s.%s should be external table: %s",
-            impala_db, pedigree_table,
-            "CREATE EXTERNAL TABLE" in create_statement
-        )
+            "pedigree table %s.%s should be external table: "
+            "'CREATE EXTERNAL TABLE' in %s",
+            impala_db, pedigree_table, create_statement)
         if "CREATE EXTERNAL TABLE" not in create_statement:
             return None
 
         variants_table = config.genotype_storage.tables.variants
         if variants_table is None:
             logger.info(
-                "dataset %s has no variants; "
-                "skipping checks for variants table", dataset_id)
+                "dataset %s has no variants; skipping checks for variants "
+                "table", dataset_id)
         else:
             logger.info(
                 "impala variants table %s.%s should exists: %s",
@@ -1781,9 +1822,9 @@ class DatasetHelpers:
                 impala_db, variants_table)
 
             logger.info(
-                "variants table %s.%s should be external table: %s",
-                impala_db, variants_table,
-                "CREATE EXTERNAL TABLE" in create_statement
+                "variants table %s.%s should be external table: "
+                "'CREATE EXTERNAL TABLE' in %s",
+                impala_db, variants_table, create_statement
             )
             if "CREATE EXTERNAL TABLE" not in create_statement:
                 return None
@@ -1792,7 +1833,7 @@ class DatasetHelpers:
 
     def rename_study_config(
             self, dataset_id, new_id, config_content, dry_run=None):
-
+        """Rename study config for a dataset."""
         config_file = self.find_genotype_data_config_file(dataset_id)
         logger.info("going to disable config file %s", config_file)
         if not dry_run:
@@ -1800,8 +1841,9 @@ class DatasetHelpers:
 
         config_dirname = os.path.dirname(config_file)
         new_dirname = os.path.join(os.path.dirname(config_dirname), new_id)
-        logger.info("going to rename config directory %s to %s",
-                    config_dirname, new_dirname)
+        logger.info(
+            "going to rename config directory %s to %s",
+            config_dirname, new_dirname)
         if not dry_run:
             os.rename(config_dirname, new_dirname)
 
@@ -1820,6 +1862,7 @@ class DatasetHelpers:
         shutil.rmtree(config_dir)
 
     def disable_study_config(self, dataset_id, dry_run=None):
+        """Disable dataset."""
         config_file = self.find_genotype_data_config_file(dataset_id)
         config_dir = os.path.dirname(config_file)
 
