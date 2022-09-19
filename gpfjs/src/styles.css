@@ -399,3 +399,7 @@ ngb-modal-window {
 #legend-wrapper {
   direction: rtl;
 }
+
+.pedigree-modal .modal-lg {
+  width: 520px;
+}

@@ -1,9 +1,9 @@
 <div *ngIf="pedigree">
-  <gpf-pedigree-chart
+  <gpf-pedigree-modal
+    [isInDatasetStatistics]="true"
     [family]="pedigree.data"
-    [pedigreeCount]="pedigree.count"
     [groupName]="pedigree.groupName"
     [counterId]="pedigree.counterId">
-  </gpf-pedigree-chart>
+  </gpf-pedigree-modal>
   <span class="pedigree-count">{{ pedigree.count }}</span>
 </div>

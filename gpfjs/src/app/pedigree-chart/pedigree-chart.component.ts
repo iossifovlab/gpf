@@ -6,10 +6,6 @@ import { PedigreeData } from '../genotype-preview-model/genotype-preview';
 import { PerfectlyDrawablePedigreeService } from '../perfectly-drawable-pedigree/perfectly-drawable-pedigree.service';
 import { IndividualWithPosition, Line, IndividualSet, Individual, MatingUnit } from './pedigree-data';
 import { filter, map, switchMap, take } from 'rxjs/operators';
-import { VariantReportsService } from 'app/variant-reports/variant-reports.service';
-import { DatasetsService } from 'app/datasets/datasets.service';
-import { ConfigService } from 'app/config/config.service';
-import { NgbModal, NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
 
 type OrderedIndividuals = Array<Individual>;
 
@@ -27,29 +23,21 @@ export class PedigreeChartComponent implements OnInit {
 
   public width = 0;
   public height = 0;
-  public familyIdsList: string[];
+  @Input() public scale = 1.25;
 
   @Input()
   public set family(data: PedigreeData[]) {
     this.family$.next(data);
   }
 
-  @Input() public pedigreeCount: number;
   @Input() public groupName: string;
   @Input() public counterId: number;
 
   private family$ = new BehaviorSubject<PedigreeData[]>(null);
   public levels$: Observable<Array<OrderedIndividuals>>;
-  public modal: NgbModalRef;
-  public scale = 1.25;
-  public popoverScale = 2;
 
   public constructor(
-    private perfectlyDrawablePedigreeService: PerfectlyDrawablePedigreeService,
-    private variantReportsService: VariantReportsService,
-    private datasetsService: DatasetsService,
-    public configService: ConfigService,
-    public modalService: NgbModal
+    private perfectlyDrawablePedigreeService: PerfectlyDrawablePedigreeService
   ) { }
 
   public ngOnInit(): void {
@@ -107,28 +95,6 @@ export class PedigreeChartComponent implements OnInit {
     return this.lines.filter(line => line.curved);
   }
 
-  public loadFamilyListData(): void {
-    if (this.familyIdsList !== undefined) {
-      return;
-    }
-
-    this.variantReportsService.getFamilies(
-      this.datasetsService.getSelectedDataset().id,
-      this.groupName,
-      this.counterId
-    ).subscribe(list => {
-      this.familyIdsList = list;
-    });
-  }
-
-  public onSubmit(event): void {
-    event.target.queryData.value = JSON.stringify({
-      study_id: this.datasetsService.getSelectedDataset().id,
-      group_name: this.groupName,
-      counter_id: this.counterId
-    });
-    event.target.submit();
-  }
 
   public getViewBox(): string {
     // The addition of 8 to the width and height of the viewbox is to fit the proband arrow
@@ -555,14 +521,5 @@ export class PedigreeChartComponent implements OnInit {
     }
 
     return lines;
-  }
-
-  public openModal(content): void {
-    this.modal = this.modalService.open(content, {animation: false, centered: true, size: "lg"});
-    this.loadFamilyListData();
-  }
-
-  public closeModal(): void {
-    this.modal.close();
   }
 }

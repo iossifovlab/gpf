@@ -1,33 +1,8 @@
 svg {
-  width: 100%;
   height: auto;
   cursor: pointer;
 }
 
 .svg-container {
-  margin: 0 auto;
-}
-
-#family-ids-list-wrapper {
-  height: 100px;
-}
-
-#family-ids-list {
-  max-height: 100px;
-  height: 100px;
-  overflow: auto;
-  overflow-wrap: break-word;
-  padding: 0 8px 24px 8px;
-}
-
-#family-ids-list div {
-  text-align: center;
-}
-
-#download-button {
-  padding: 6px 11px 6px 12px;
-}
-
-#download-button i {
-  color: #fff;
+  margin: auto;
 }

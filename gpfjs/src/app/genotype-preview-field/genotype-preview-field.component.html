@@ -1,6 +1,5 @@
-<div *ngIf="field === 'pedigree'" style="max-height: 93px; height: 93px; overflow: hidden;">
-  <gpf-pedigree-chart *ngIf="value" style="width: 100%; height: 100%; display: block" [family]="value">
-  </gpf-pedigree-chart>
+<div *ngIf="field === 'pedigree'">
+  <gpf-pedigree-modal [isInDatasetStatistics]="false" [family]="value"></gpf-pedigree-modal>
 </div>
 
 <span *ngIf="field === 'location'">

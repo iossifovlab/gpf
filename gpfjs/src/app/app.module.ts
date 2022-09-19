@@ -166,6 +166,7 @@ import { PedigreeChartComponent } from './pedigree-chart/pedigree-chart.componen
 import { PedigreeChartMemberComponent } from './pedigree-chart/pedigree-chart-member.component';
 import { JoinPipe } from './utils/join.pipe';
 import { LegendComponent } from './legend/legend.component';
+import { PedigreeModalComponent } from './pedigree-modal/pedigree-modal.component';
 
 const appRoutes: Routes = [
   {
@@ -367,7 +368,8 @@ const appRoutes: Routes = [
     UniqueFamilyVariantsFilterComponent,
     PedigreeChartComponent,
     PedigreeChartMemberComponent,
-    LegendComponent
+    LegendComponent,
+    PedigreeModalComponent
   ],
   imports: [
     BrowserModule,
