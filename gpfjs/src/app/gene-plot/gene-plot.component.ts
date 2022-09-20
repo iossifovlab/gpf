@@ -487,20 +487,17 @@ export class GenePlotComponent implements OnChanges {
     const [domainMin, domainMax] = this.xDomain;
 
     for (const [chromosome, range] of this.gene.chromosomes) {
-      if (range[1] < domainMin || range[0] > domainMax) {
-        continue;
+      if (range[1] >= domainMin && range[0] <= domainMax) {
+        const [fromX, toX] = [Math.max(range[0], domainMin), Math.min(range[1], domainMax)];
+        draw.hoverText(
+          element,
+          (this.scale.x(fromX) + this.scale.x(toX)) / 2 + chromosome.length * 3.3,
+          yPos + this.constants.chromosomeLabelPadding - this.constants.transcriptHeight,
+          chromosome,
+          `Chromosome: ${chromosome}`,
+          this.constants.fontSize
+        );
       }
-
-      const [fromX, toX] = [Math.max(range[0], domainMin), Math.min(range[1], domainMax)];
-
-      draw.hoverText(
-        element,
-        (this.scale.x(fromX) + this.scale.x(toX)) / 2 + chromosome.length * 3.3,
-        yPos + this.constants.chromosomeLabelPadding - this.constants.transcriptHeight,
-        chromosome,
-        `Chromosome: ${chromosome}`,
-        this.constants.fontSize
-      );
     }
   }
 

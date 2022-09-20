@@ -181,9 +181,7 @@ export class Gene {
   public getRegionString(start: number, stop: number): string[] {
     const result: string[] = [];
     for (const [chromosome, range] of this.chromosomes) {
-      if (range[0] >= stop || range[1] <= start) {
-        continue;
-      } else {
+      if (range[0] < stop && range[1] > start) {
         result.push(`${chromosome}:${Math.max(start, range[0])}-${Math.min(stop, range[1])}`);
       }
     }

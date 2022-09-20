@@ -316,23 +316,16 @@ export function solveSandwich<T>(sandwichInstance: SandwichInstance<T>): Interva
     for (let vertex of leftVertices) {
       let currentRealizationCopy = currentRealization.clone();
       let successfulExtension = currentRealizationCopy.extend(vertex);
-      // console.log("Success?", successfulExtension);
-
       if (!successfulExtension) {
         continue;
       }
-
       if (sandwichInstance.vertices.length === currentRealizationCopy.domain.length) {
-        // console.log("Took", Date.now() - start, "ms");
-        // console.log(currentRealizationCopy.intervals.map(i => i.toString()))
         return currentRealizationCopy.intervals;
-      } else {
-        // console.log("Checking realization", currentRealizationCopy);
-        let realizationString = currentRealizationCopy.toString();
-        if (!visitedRealizationMap[realizationString]) {
-          realizationsQueue.push(currentRealizationCopy);
-          visitedRealizationMap[realizationString] = true;
-        }
+      }
+      let realizationString = currentRealizationCopy.toString();
+      if (!visitedRealizationMap[realizationString]) {
+        realizationsQueue.push(currentRealizationCopy);
+        visitedRealizationMap[realizationString] = true;
       }
     }
   }
