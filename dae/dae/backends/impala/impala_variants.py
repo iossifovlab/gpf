@@ -472,7 +472,7 @@ class ImpalaVariants:
         """Query summary variants."""
         # pylint: disable=too-many-arguments,too-many-locals
         if not self.variants_table:
-            return None
+            return
 
         if limit is None:
             limit = -1
@@ -537,7 +537,7 @@ class ImpalaVariants:
         """Query family variants."""
         # pylint: disable=too-many-arguments,too-many-locals
         if not self.variants_table:
-            return None
+            return
 
         if limit is None:
             limit = -1
@@ -581,23 +581,23 @@ class ImpalaVariants:
     def _fetch_pedigree(self):
         with closing(self.connection()) as conn:
             with conn.cursor() as cursor:
-                q = f"SELECT * FROM {self.db}.{self.pedigree_table}"""
+                query = f"SELECT * FROM {self.db}.{self.pedigree_table}"""
 
-                cursor.execute(q)
+                cursor.execute(query)
                 ped_df = as_pandas(cursor)
 
         columns = {
-                "personId": "person_id",
-                "familyId": "family_id",
-                "momId": "mom_id",
-                "dadId": "dad_id",
-                "sampleId": "sample_id",
-                "sex": "sex",
-                "status": "status",
-                "role": "role",
-                "generated": "generated",
-                "layout": "layout",
-                "phenotype": "phenotype",
+            "personId": "person_id",
+            "familyId": "family_id",
+            "momId": "mom_id",
+            "dadId": "dad_id",
+            "sampleId": "sample_id",
+            "sex": "sex",
+            "status": "status",
+            "role": "role",
+            "generated": "generated",
+            "layout": "layout",
+            "phenotype": "phenotype",
         }
         if "not_sequenced" in self.pedigree_schema:
             columns = {
@@ -606,9 +606,9 @@ class ImpalaVariants:
 
         ped_df = ped_df.rename(columns=columns)
 
-        ped_df.role = ped_df.role.apply(lambda v: Role(v))
-        ped_df.sex = ped_df.sex.apply(lambda v: Sex(v))
-        ped_df.status = ped_df.status.apply(lambda v: Status(v))
+        ped_df.role = ped_df.role.apply(Role)
+        ped_df.sex = ped_df.sex.apply(Sex)
+        ped_df.status = ped_df.status.apply(Status)
 
         return ped_df
 
@@ -639,13 +639,8 @@ class ImpalaVariants:
             return None
         with closing(self.connection()) as conn:
             with conn.cursor() as cursor:
-                q = """
-                    DESCRIBE {db}.{variant}
-                """.format(
-                    db=self.db, variant=self.variants_table
-                )
-
-                cursor.execute(q)
+                query = f"DESCRIBE {self.db}.{self.variants_table}"
+                cursor.execute(query)
                 df = as_pandas(cursor)
 
             records = df[["name", "type"]].to_records()
@@ -662,9 +657,8 @@ class ImpalaVariants:
     def _fetch_pedigree_schema(self):
         with closing(self.connection()) as conn:
             with conn.cursor() as cursor:
-                q = f"DESCRIBE {self.db}.{self.pedigree_table}"
-
-                cursor.execute(q)
+                query = f"DESCRIBE {self.db}.{self.pedigree_table}"
+                cursor.execute(query)
                 df = as_pandas(cursor)
                 records = df[["name", "type"]].to_records()
                 schema = {
@@ -674,7 +668,7 @@ class ImpalaVariants:
 
     def _fetch_tblproperties(self):
         if not self.variants_table:
-            return None
+            return
         with closing(self.connection()) as conn:
             with conn.cursor() as cursor:
                 cursor.execute(
@@ -729,9 +723,9 @@ class ImpalaVariants:
     def _check_summary_variants_table(self):
         with closing(self.connection()) as conn:
             with conn.cursor() as cursor:
-                q = f"SHOW TABLES IN {self.db} " \
-                    f"LIKE '{self.summary_variants_table}'"
-                cursor.execute(q)
+                query = f"SHOW TABLES IN {self.db} " \
+                        f"LIKE '{self.summary_variants_table}'"
+                cursor.execute(query)
                 return len(cursor.fetchall()) == 1
 
     def build_count_query(
@@ -751,7 +745,8 @@ class ImpalaVariants:
         return_unknown=None,
         limit=None,
     ):
-
+        # pylint: disable=too-many-arguments
+        """Build a query that counts variants."""
         where_clause = self._build_where(
             regions=regions,
             genes=genes,
@@ -768,7 +763,7 @@ class ImpalaVariants:
             return_unknown=return_unknown,
         )
 
-        return """
+        return f"""
             SELECT
                 COUNT(
                     DISTINCT
@@ -776,8 +771,6 @@ class ImpalaVariants:
                         summary_variant_index,
                         family_variant_index
                 )
-            FROM {db}.{variant}
+            FROM {self.db}.{self.variants_table}
             {where_clause}
-            """.format(
-            db=self.db, variant=self.variants_table, where_clause=where_clause
-        )
+        """
