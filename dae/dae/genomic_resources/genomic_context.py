@@ -153,7 +153,7 @@ class SimpleGenomicContextProvider(GenomicContextProvider):
 
 def register_context_provider(context_provider: GenomicContextProvider):
     logger.debug(
-        "Registerfing the %s "
+        "Registering the %s "
         "genomic context generator with priority %s",
         context_provider.get_context_provider_type(),
         context_provider.get_context_provider_priority())
@@ -162,7 +162,7 @@ def register_context_provider(context_provider: GenomicContextProvider):
 
 def register_context(context: GenomicContext):
     logger.debug(
-        "Registerfing the %s "
+        "Registering the %s "
         "genomic context",
         context.get_source())
     _REGISTERED_CONTEXTS.insert(0, context)
@@ -174,11 +174,11 @@ class PriorityGenomicContext(GenomicContext):
     def __init__(self, contexts):
         self.contexts = contexts
         if self.contexts:
-            logger.info("Using the folloing genomic context:")
+            logger.info("Using the following genomic context:")
             for context in self.contexts:
                 logger.info("\t%s", context.get_source())
         else:
-            logger.info("No genomic context are available.")
+            logger.info("No genomic contexts are available.")
 
     def get_context_object(self, key) -> Optional[Any]:
         for context in self.contexts:
@@ -235,7 +235,7 @@ class CLIGenomicContext(SimpleGenomicContext):
                  "context will be used.")
         parser.add_argument(
             "-genes", "--gene-models-resource-id", default=None,
-            help="The resource is of the gene models resoruce. If the argument"
+            help="The resource is of the gene models resource. If the argument"
                  " is absent the gene models from the current genomic "
                  "context will be used.")
 
@@ -270,7 +270,7 @@ class CLIGenomicContext(SimpleGenomicContext):
         context_objects[GC_GRR_KEY] = grr
         if args.reference_genome_resource_id is not None:
             logger.info(
-                "Using the reference genome from resoruce "
+                "Using the reference genome from resource "
                 "%s provided on the command line.",
                 args.reference_genome_resource_id)
             resource = grr.get_resource(args.reference_genome_resource_id)
@@ -280,7 +280,7 @@ class CLIGenomicContext(SimpleGenomicContext):
 
         if args.gene_models_resource_id is not None:
             logger.info(
-                "Using the gene models from resoruce "
+                "Using the gene models from resource "
                 "%s provided on the command line.",
                 args.gene_models_resource_id)
             resource = grr.get_resource(args.gene_models_resource_id)
