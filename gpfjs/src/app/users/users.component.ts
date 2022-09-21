@@ -65,6 +65,7 @@ export class UsersComponent implements OnInit {
     window.open(
       `${this.config.rootUrl}${this.baseHref}`
         + `o/authorize/?response_type=code&code_challenge_method=S256&code_challenge=${codeChallenge}`
+        + '&scope=read'
         + `&client_id=${this.config.oauthClientId}`,
       '_blank',
       'popup=true,width=600,height=300'
