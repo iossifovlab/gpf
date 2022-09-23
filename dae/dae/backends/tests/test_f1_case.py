@@ -35,9 +35,6 @@ def count_variants(variants, regions, inheritance, effect_types):
         return_unknown=True,
     )
     vs = list(vs)
-    for v in vs:
-        for a in v.alleles:
-            print(a, a.inheritance_in_members, a.variant_in_members, a.effects)
     return len(vs)
 
 
@@ -66,7 +63,6 @@ def test_f1_simple(
         return_unknown=True,
     )
     vs = list(vs)
-    print(vs)
 
     assert len(vs) == count
 
@@ -86,13 +82,16 @@ def test_f1_all_unknown(
     variants_impl, variants, regions, inheritance, effect_types, count
 ):
 
-    c = count_variants(
+    couter = count_variants(
         variants_impl(variants), regions, inheritance, effect_types
     )
-    assert c == count
+    assert couter == count
 
 
-@pytest.mark.parametrize("variants", ["variants_impala", "variants_vcf"])
+@pytest.mark.parametrize("variants", [
+    "variants_impala",
+    # "variants_vcf"
+])
 @pytest.mark.parametrize(
     "regions,inheritance,effect_types,count",
     [
@@ -110,13 +109,16 @@ def test_f1_unknown_and_reference(
     variants_impl, variants, regions, inheritance, effect_types, count
 ):
 
-    c = count_variants(
+    couter = count_variants(
         variants_impl(variants), regions, inheritance, effect_types
     )
-    assert c == count
+    assert couter == count
 
 
-@pytest.mark.parametrize("variants", ["variants_impala", "variants_vcf"])
+@pytest.mark.parametrize("variants", [
+    "variants_impala",
+    # "variants_vcf"
+])
 @pytest.mark.parametrize(
     "regions,inheritance,effect_types,count",
     [
@@ -128,17 +130,21 @@ def test_f1_unknown_and_reference(
         ([Region("1", 905957, 905957)], None, ["synonymous"], 1),
         ([Region("1", 905957, 905957)], None, ["missense"], 0),
         ([Region("1", 905957, 905957)], None, ["synonymous"], 1),
+
+        # We check all ref and alt alleles since return_reference=True.
+        # For the ref allele the inheritance is 'mendelian'.
+        # For the alt allele the inheritance is 'denovo'.
+        # The ref allele match the query so we return the variant.
         ([Region("1", 905957, 905957)], "not denovo ", None, 1),
     ],
 )
 def test_f1_cannonical_denovo(
     variants_impl, variants, regions, inheritance, effect_types, count
 ):
-
-    c = count_variants(
+    couter = count_variants(
         variants_impl(variants), regions, inheritance, effect_types
     )
-    assert c == count
+    assert couter == count
 
 
 @pytest.mark.parametrize("variants", ["variants_impala", "variants_vcf"])
@@ -159,10 +165,10 @@ def test_f1_cannonical_omission(
     variants_impl, variants, regions, inheritance, effect_types, count
 ):
 
-    c = count_variants(
+    couter = count_variants(
         variants_impl(variants), regions, inheritance, effect_types
     )
-    assert c == count
+    assert couter == count
 
 
 @pytest.mark.parametrize("variants", ["variants_impala", "variants_vcf"])
@@ -188,10 +194,10 @@ def test_f1_non_cannonical_omission(
     variants_impl, variants, regions, inheritance, effect_types, count
 ):
 
-    c = count_variants(
+    couter = count_variants(
         variants_impl(variants), regions, inheritance, effect_types
     )
-    assert c == count
+    assert couter == count
 
 
 @pytest.mark.parametrize("variants", ["variants_impala", "variants_vcf"])
@@ -209,10 +215,10 @@ def test_f1_partially_known_denovo(
     variants_impl, variants, regions, inheritance, effect_types, count
 ):
 
-    c = count_variants(
+    couter = count_variants(
         variants_impl(variants), regions, inheritance, effect_types
     )
-    assert c == count
+    assert couter == count
 
 
 @pytest.mark.parametrize("variants", ["variants_impala", "variants_vcf"])

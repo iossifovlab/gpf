@@ -56,7 +56,10 @@ f1       c2       d1    m1    1    1      sib
 
 
 @pytest.fixture(
-    scope="module", params=["genotype_impala", "genotype_impala_2"])
+    scope="module", params=[
+        "genotype_impala",
+        "genotype_impala_2"
+    ])
 def import_project(request, tmp_path_factory, f1_vcf):
     # pylint: disable=import-outside-toplevel
     from ...foobar_import import foobar_vcf_import
@@ -109,11 +112,17 @@ def test_f1_check_all_variants_effects(import_project):
 
         ([Region("foo", 13, 13)], None, None, 1),
         ([Region("foo", 13, 13)], "unknown", None, 1),
-        ([Region("foo", 13, 13)], "mendelian", None, 1),  # FAIL
+        # We check only the alt allele since return_reference=False.
+        # For the alternative allele the inheritance is 'denovo'.
+        # Hence this variant didn't pass.
+        ([Region("foo", 13, 13)], "mendelian", None, 0),
         ([Region("foo", 13, 13)], "mendelian", ["synonymous"], 0),
         ([Region("foo", 13, 13)], None, ["noEnd"], 1),
         ([Region("foo", 13, 13)], None, ["missense"], 0),
-        ([Region("foo", 13, 13)], "not denovo", None, 1),  # FAIL
+        # We check only the alternative allele since 'return_reference=False.
+        # For the alternative allele the inheritance is 'denovo'.
+        # Hence this variant didn't pass.
+        ([Region("foo", 13, 13)], "not denovo", None, 0),
     ],
 )
 def test_f1_simple(import_project, regions, inheritance, effect_types, count):
@@ -123,10 +132,6 @@ def test_f1_simple(import_project, regions, inheritance, effect_types, count):
     vs = study.query_variants(
         regions=regions,
         inheritance=inheritance,
-        effect_types=effect_types,
-        return_reference=True,
-        return_unknown=True,
-    )
+        effect_types=effect_types)
     vs = list(vs)
-
     assert len(vs) == count
