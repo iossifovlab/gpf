@@ -19,10 +19,8 @@ export class ItemAddMenuComponent implements OnChanges {
     this.filteredItems = this.items;
   }
 
-  public filterItems(substring: Event): void {
-    if (substring instanceof String) {
-      this.filteredItems = this.items.filter(item => item.toLowerCase().includes(substring.toLowerCase()));
-    }
+  public filterItems(substring: string): void {
+    this.filteredItems = this.items.filter(item => item.toLowerCase().includes(substring.toLowerCase()));
   }
 
   public resetSearch(): void {
