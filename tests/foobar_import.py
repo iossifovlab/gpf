@@ -68,7 +68,7 @@ def foobar_gpf(root_path):
                     storage_type: impala
                     dir: "work/"
                     hdfs:
-                      base_dir: /tmp/test_data
+                      base_dir: /tmp/test_data1
                       host: localhost
                       port: 8020
                       replication: 1
@@ -82,12 +82,12 @@ def foobar_gpf(root_path):
                     storage_type: impala
                     dir: "work/"
                     hdfs:
-                      base_dir: /tmp/test_data
+                      base_dir: /tmp/test_data2
                       host: localhost
                       port: 8020
                       replication: 1
                     impala:
-                      db: "test_schema1"
+                      db: "test_schema2"
                       hosts:
                       - localhost
                       pool_size: 3
@@ -122,8 +122,8 @@ def foobar_vcf_import(root_path, study_id, ped_path, vcf_path, storage_id):
           vcf:
             files:
              - {vcf_path}
-            denovo_mode: ignore
-            omission_mode: ignore
+            denovo_mode: denovo
+            omission_mode: omission
         gpf_instance:
           path: {root_path / "gpf_instance"}
         destination:

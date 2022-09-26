@@ -541,6 +541,11 @@ class SummaryAllele(core.Allele):
             "summary_variant_index": allele.attributes.get(
                 "summary_variant_index"),
             "allele_count": allele.attributes.get("allele_count"),
+            # FIXME uncomment when ref allele count/freq computation is fixed
+            # for schema1. At the moment all ref allles will have a freq of
+            # None. To emulate that behavior following lines are commented out.
+            # "af_allele_count": allele.attributes.get("af_ref_allele_count"),
+            # "af_allele_freq": allele.attributes.get("af_ref_allele_freq"),
         }
 
         return SummaryAllele(
