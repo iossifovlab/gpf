@@ -23,12 +23,15 @@ gpf-table {
 }
 
 .grid-header {
+  min-height: 2rem;
+  line-height: 2rem;
   border: 1px solid #ddd;
   background-color: #eee;
   text-align: center;
 }
 
 .grid-cell {
+  min-height: 6rem;
   border: 1px solid #ddd;
   text-align: center;
   display: flex;
