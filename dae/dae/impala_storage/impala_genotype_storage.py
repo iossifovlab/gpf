@@ -1,24 +1,26 @@
 import os
 import glob
 import logging
-from typing import Dict, Any
+from typing import Dict, Any, cast
 
 import toml
+from cerberus import Validator
 
+from dae.configuration.utils import validate_path
 from dae.backends.raw.loader import VariantsLoader, TransmissionType
 from dae.genotype_storage.genotype_storage import GenotypeStorage
 
-from dae.backends.impala.hdfs_helpers import HdfsHelpers
-from dae.backends.impala.impala_helpers import ImpalaHelpers
-from dae.backends.impala.impala_variants import ImpalaVariants
-from dae.backends.impala.parquet_io import NoPartitionDescriptor, \
+from dae.impala_storage.hdfs_helpers import HdfsHelpers
+from dae.impala_storage.impala_helpers import ImpalaHelpers
+from dae.impala_storage.impala_variants import ImpalaVariants
+from dae.impala_storage.parquet_io import NoPartitionDescriptor, \
     ParquetManager, \
     ParquetPartitionDescriptor
 
 from dae.configuration.study_config_builder import StudyConfigBuilder
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.utils.dict_utils import recursive_dict_update
-from dae.backends.impala.rsync_helpers import RsyncHelpers
+from dae.impala_storage.rsync_helpers import RsyncHelpers
 
 
 logger = logging.getLogger(__name__)
@@ -26,6 +28,53 @@ logger = logging.getLogger(__name__)
 
 class ImpalaGenotypeStorage(GenotypeStorage):
     """Defines Apache Impala genotype storage."""
+
+    VALIDATION_SCHEMA = {
+        "storage_type": {"type": "string", "allowed": ["impala"]},
+        "id": {
+            "type": "string",
+        },
+        "impala": {
+            "type": "dict",
+            "schema": {
+                "hosts": {
+                    "type": "list",
+                    "schema": {"type": "string"},
+                    "required": True,
+                },
+                "port": {"type": "integer", "default": 21050},
+                "db": {"type": "string", "required": True},
+                "pool_size": {"type": "integer", "default": 1}
+            },
+            "required": True,
+        },
+        "hdfs": {
+            "type": "dict",
+            "schema": {
+                "host": {"type": "string", "required": True},
+                "port": {"type": "integer", "default": 8020},
+                "replication": {"type": "integer", "default": 1},
+                "base_dir": {
+                    "type": "string",
+                    "check_with": validate_path,
+                    "required": True,
+                },
+            },
+            "required": True,
+        },
+        "rsync": {
+            "type": "dict",
+            "schema": {
+                "location": {"type": "string"},
+                "remote_shell": {
+                    "type": "string",
+                    "default": None,
+                    "nullable": True
+                },
+            },
+            "nullable": True,
+        }
+    }
 
     def __init__(self, storage_config: Dict[str, Any]):
         super().__init__(storage_config)
@@ -43,6 +92,19 @@ class ImpalaGenotypeStorage(GenotypeStorage):
         if self.storage_config.get("rsync"):
             self._rsync_helpers = RsyncHelpers(
                 self.storage_config["rsync"]["location"])
+
+    @classmethod
+    def validate_config(cls, config: Dict) -> Dict:
+        config = super().validate_config(config)
+        validator = Validator(cls.VALIDATION_SCHEMA)
+        if not validator.validate(config):
+            logger.error(
+                "wrong config format for impala genotype storage: %s",
+                validator.errors)
+            raise ValueError(
+                f"wrong config format for impala storage: "
+                f"{validator.errors}")
+        return cast(Dict, validator.document)
 
     def start(self):
         return self
@@ -120,7 +182,7 @@ class ImpalaGenotypeStorage(GenotypeStorage):
         variants_table, pedigree_table = self.study_tables(study_config)
         family_variants = ImpalaVariants(
             self.impala_helpers,
-            self.storage_config.impala.db,
+            self.storage_config["impala"]["db"],
             variants_table,
             pedigree_table,
             gene_models,
@@ -246,14 +308,16 @@ class ImpalaGenotypeStorage(GenotypeStorage):
 
     def _build_hdfs_pedigree(
             self, study_id, pedigree_file):
-        study_path = os.path.join(self.storage_config.hdfs.base_dir, study_id)
+        study_path = os.path.join(
+            self.storage_config["hdfs"]["base_dir"], study_id)
         hdfs_dir = os.path.join(study_path, "pedigree")
         basename = os.path.basename(pedigree_file)
         return os.path.join(hdfs_dir, basename)
 
     def _build_hdfs_variants(
             self, study_id, variants_dir, partition_description):
-        study_path = os.path.join(self.storage_config.hdfs.base_dir, study_id)
+        study_path = os.path.join(
+            self.storage_config["hdfs"]["base_dir"], study_id)
         hdfs_variants_dir = os.path.join(study_path, "variants")
 
         files_glob = partition_description.generate_file_access_glob()
@@ -278,7 +342,8 @@ class ImpalaGenotypeStorage(GenotypeStorage):
             self, study_id, variants_dir,
             pedigree_file, partition_description):
 
-        study_path = os.path.join(self.storage_config.hdfs.base_dir, study_id)
+        study_path = os.path.join(
+            self.storage_config["hdfs"]["base_dir"], study_id)
         pedigree_hdfs_path = os.path.join(
             study_path, "pedigree", "pedigree.parquet"
         )
@@ -398,7 +463,7 @@ class ImpalaGenotypeStorage(GenotypeStorage):
         pedigree_table = self._construct_pedigree_table(study_id)
         variants_table = self._construct_variants_table(study_id)
 
-        db = self.storage_config.impala.db
+        db = self.storage_config["impala"]["db"]
 
         self.impala_helpers.drop_table(db, variants_table)
         self.impala_helpers.drop_table(db, pedigree_table)

@@ -88,9 +88,11 @@ import_config_schema = {
     },
     "destination": {
         "type": "dict",
-        "anyof_schema": [{
-            "storage_id": {"type": "string"},
-        }, storage_schema],
+        "anyof_schema": [
+            {"storage_id": {"type": "string"}},
+            storage_schema
+        ],
+        "allow_unknown": True,
     },
     "gpf_instance": {
         "type": "dict",

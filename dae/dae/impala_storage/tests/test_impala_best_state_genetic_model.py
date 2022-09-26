@@ -2,7 +2,7 @@
 import numpy as np
 
 from dae.variants.attributes import GeneticModel
-from dae.backends.impala.serializers import AlleleParquetSerializer
+from dae.impala_storage.serializers import AlleleParquetSerializer
 
 
 def test_best_state_genetic_model(variants_impala, impala_genotype_storage):
@@ -10,7 +10,7 @@ def test_best_state_genetic_model(variants_impala, impala_genotype_storage):
     families = impala_variants.families
 
     impala = impala_genotype_storage.impala_helpers
-    db = impala_genotype_storage.storage_config.impala.db
+    db = impala_genotype_storage.storage_config["impala"]["db"]
 
     best_state_expecteds = [
         np.array([[1, 2, 1, 2], [1, 0, 1, 0]], dtype=np.int8),

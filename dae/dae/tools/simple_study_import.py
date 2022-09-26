@@ -8,11 +8,10 @@ import logging
 
 from dae.gpf_instance.gpf_instance import GPFInstance
 
-from dae.backends.impala.import_commons import (
-    construct_import_annotation_pipeline,
-    construct_import_effect_annotator,
-    save_study_config,
-)
+from dae.impala_storage.import_commons import \
+    construct_import_annotation_pipeline, \
+    construct_import_effect_annotator, \
+    save_study_config
 
 from dae.backends.dae.loader import DenovoLoader, DaeTransmittedLoader
 from dae.backends.vcf.loader import VcfLoader
@@ -24,11 +23,15 @@ from dae.backends.raw.loader import AnnotationPipelineDecorator, \
 from dae.pedigrees.loader import FamiliesLoader
 
 from dae.tools import generate_common_report
+from dae.tools import generate_denovo_gene_sets
+
+from dae.utils.verbosity_configuration import VerbosityConfiguration
 
 logger = logging.getLogger("simple_study_import")
 
 
-def cli_arguments(dae_config, argv=sys.argv[1:]):
+def cli_arguments(dae_config, argv=None):
+    """Create and return CLI arguments parser."""
     if dae_config:
         default_genotype_storage_id = dae_config.genotype_storage.default
     else:
@@ -40,8 +43,7 @@ def cli_arguments(dae_config, argv=sys.argv[1:]):
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
 
-    parser.add_argument('--verbose', '-V', action='count', default=0)
-
+    VerbosityConfiguration.set_argumnets(parser)
     FamiliesLoader.cli_arguments(parser)
 
     parser.add_argument(
@@ -145,15 +147,8 @@ def cli_arguments(dae_config, argv=sys.argv[1:]):
     DaeTransmittedLoader.cli_arguments(parser, options_only=True)
     CNVLoader.cli_arguments(parser, options_only=True)
 
-    parser_args = parser.parse_args(argv)
+    parser_args = parser.parse_args(argv or sys.argv[1:])
     return parser_args
-
-
-def generate_denovo_gene_sets(gpf_instance, study_id):
-    from dae.tools.generate_denovo_gene_sets import main
-
-    argv = ["--studies", study_id]
-    main(gpf_instance=gpf_instance, argv=argv)
 
 
 def _decorate_loader(variants_loader, effect_annotator, annotation_pipeline):
@@ -168,6 +163,8 @@ def _decorate_loader(variants_loader, effect_annotator, annotation_pipeline):
 
 
 def main(argv, gpf_instance=None):
+    """Run the simple study import procedure."""
+    # pylint: disable=too-many-locals,too-many-branches,too-many-statements
     dae_config = None
     if gpf_instance is not None:
         dae_config = gpf_instance.dae_config
@@ -175,9 +172,8 @@ def main(argv, gpf_instance=None):
         try:
             gpf_instance = GPFInstance()
             dae_config = gpf_instance.dae_config
-        except Exception as e:
-            logger.warning("GPF not configured correctly")
-            logger.exception(e)
+        except Exception:  # pylint: disable=broad-except
+            logger.warning("GPF not configured correctly", exc_info=True)
 
     argv = cli_arguments(dae_config, argv)
 
@@ -198,7 +194,7 @@ def main(argv, gpf_instance=None):
         argv.genotype_storage
     )
     logger.debug(
-        f"genotype storage: {argv.genotype_storage}, {genotype_storage}")
+        "genotype storage: %s, %s", argv.genotype_storage, genotype_storage)
     assert genotype_storage is not None, argv.genotype_storage
 
     annotation_pipeline = construct_import_annotation_pipeline(gpf_instance)
@@ -210,26 +206,22 @@ def main(argv, gpf_instance=None):
         study_id, _ = os.path.splitext(os.path.basename(argv.families))
 
     if argv.output is None:
-        from pprint import pprint
-        pprint(dae_config)
         output = dae_config.studies.dir
     else:
         output = argv.output
 
-    logger.info(f"storing results into: {output}")
+    logger.info("storing results into: %s", output)
     os.makedirs(output, exist_ok=True)
 
     assert output is not None
 
     start = time.time()
-    families_filename, families_params = FamiliesLoader.parse_cli_arguments(
-        argv
-    )
+    families_filename, families_params = \
+        FamiliesLoader.parse_cli_arguments(argv)
     families_loader = FamiliesLoader(families_filename, **families_params)
     families = families_loader.load()
     elapsed = time.time() - start
-    logger.info(f"Families loaded in {elapsed:.2f} sec")
-    logger.debug(f"{families.ped_df.head()}")
+    logger.info("Families loaded in %.2f sec", elapsed)
 
     variant_loaders = []
     if argv.denovo_file is not None:
@@ -282,23 +274,22 @@ def main(argv, gpf_instance=None):
     if not argv.skip_reports:
         # needs to reload the configuration, hence gpf_instance=None
         gpf_instance.reload()
-
-        print("generating common reports...")
-        start = time.time()
         argv = ["--studies", study_id]
-        generate_common_report.main(argv, gpf_instance)
 
-        print("generating de Novo gene sets...", file=sys.stderr)
+        logger.info("generating common reports...")
         start = time.time()
-        generate_denovo_gene_sets(gpf_instance, study_id)
-        print(
-            "DONE: generating de Novo gene sets in {:.2f} sec".format(
-                time.time() - start
-            ),
-            file=sys.stderr,
-        )
+        generate_common_report.main(argv, gpf_instance)
+        logger.info(
+            "DONE: generating common reports in %.2f sec",
+            time.time() - start)
+
+        logger.info("generating de Novo gene sets...")
+        start = time.time()
+        generate_denovo_gene_sets.main(gpf_instance=gpf_instance, argv=argv)
+        logger.info(
+            "DONE: generating de Novo gene sets in %.2f sec",
+            time.time() - start)
 
 
 if __name__ == "__main__":
-
     main(sys.argv[1:])

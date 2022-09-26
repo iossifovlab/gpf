@@ -42,7 +42,9 @@ def test_hdfs_upload_dataset(import_layout):
     hdfs_host = os.environ.get("DAE_HDFS_HOST", "localhost")
     config = {
         "id": "genotype_impala",
+        "storage_type": "impala2",
         "impala": {
+            "db": "genotype_impala_db",
             "hosts": ["localhost"],
             "port": 21050,
             "pool_size": 3,

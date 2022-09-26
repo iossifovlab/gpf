@@ -17,8 +17,8 @@ class GenotypeStorage(abc.ABC):
     _instances: ClassVar[weakref.WeakSet[GenotypeStorage]] = weakref.WeakSet()
 
     def __init__(self, storage_config: Dict[str, Any]):
-        self.storage_id = storage_config["id"]
-        self.storage_config = storage_config
+        self.storage_config = self.validate_config(storage_config)
+        self.storage_id = self.storage_config["id"]
         self._instances.add(self)
 
     @classmethod

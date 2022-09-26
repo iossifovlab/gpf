@@ -27,7 +27,7 @@ from dae.backends.raw.raw_variants import RawMemoryVariants
 from dae.backends.dae.loader import DaeTransmittedLoader, DenovoLoader
 from dae.backends.vcf.loader import VcfLoader
 
-from dae.backends.impala.import_commons import \
+from dae.impala_storage.import_commons import \
     construct_import_effect_annotator
 
 
@@ -766,23 +766,20 @@ def impala_test_dbname():
 @pytest.fixture(scope="session")
 def impala_genotype_storage(request, hdfs_host, impala_host):
 
-    storage_config = FrozenBox(
-        {
-            "id": "impala_test_storage",
-            "storage_type": "impala",
-            "dir": "/tmp",
-            "impala": {
-                "hosts": [impala_host],
-                "port": 21050,
-                "db": impala_test_dbname(),
-                "pool_size": 5,
-            },
-            "hdfs": {
-                "host": hdfs_host,
-                "port": 8020,
-                "base_dir": "/tmp/test_data"},
-        }
-    )
+    storage_config = {
+        "id": "impala_test_storage",
+        "storage_type": "impala",
+        "impala": {
+            "hosts": [impala_host],
+            "port": 21050,
+            "db": impala_test_dbname(),
+            "pool_size": 5,
+        },
+        "hdfs": {
+            "host": hdfs_host,
+            "port": 8020,
+            "base_dir": "/tmp/test_data"},
+    }
     from dae.genotype_storage.genotype_storage_registry import \
         GenotypeStorageRegistry
     registry = GenotypeStorageRegistry()
@@ -823,7 +820,7 @@ def data_import(
 
     assert DATA_IMPORT_COUNT == 1
 
-    from dae.backends.impala.hdfs_helpers import HdfsHelpers
+    from dae.impala_storage.hdfs_helpers import HdfsHelpers
 
     hdfs = HdfsHelpers(hdfs_host, 8020)
 
@@ -839,7 +836,7 @@ def data_import(
         gpf_instance_2013
     )
 
-    from dae.backends.impala.impala_helpers import ImpalaHelpers
+    from dae.impala_storage.impala_helpers import ImpalaHelpers
 
     impala_helpers = ImpalaHelpers(
         impala_hosts=[impala_host], impala_port=21050)
@@ -957,7 +954,7 @@ def iossifov2014_impala(
 
     study_id = "iossifov_we2014_test"
 
-    from dae.backends.impala.impala_helpers import ImpalaHelpers
+    from dae.impala_storage.impala_helpers import ImpalaHelpers
 
     impala_helpers = ImpalaHelpers(
         impala_hosts=[impala_host], impala_port=21050)
@@ -972,7 +969,7 @@ def iossifov2014_impala(
             not impala_helpers.check_table(
                 "impala_test_db", pedigree_table):
 
-        from dae.backends.impala.hdfs_helpers import HdfsHelpers
+        from dae.impala_storage.hdfs_helpers import HdfsHelpers
 
         hdfs = HdfsHelpers(hdfs_host, 8020)
 

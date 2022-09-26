@@ -21,6 +21,7 @@ partition_description:
 
 destination:
   id: dummy_id
+  storage_type: impala2
   hdfs:
     base_dir: /user/schema2_tests/studies
     host: localhost
@@ -33,4 +34,3 @@ destination:
     pool_size: 3
     port: 21050
   storage_type: impala2
-  schema_version: 2

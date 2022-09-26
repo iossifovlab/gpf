@@ -28,11 +28,11 @@ from dae.backends.dae.loader import DenovoLoader, DaeTransmittedLoader
 from dae.backends.vcf.loader import VcfLoader
 from dae.backends.cnv.loader import CNVLoader
 
-from dae.backends.impala.parquet_io import ParquetManager, \
+from dae.impala_storage.parquet_io import ParquetManager, \
     ParquetPartitionDescriptor, \
     NoPartitionDescriptor
 
-from dae.backends.impala.rsync_helpers import RsyncHelpers
+from dae.impala_storage.rsync_helpers import RsyncHelpers
 
 from dae.configuration.study_config_builder import StudyConfigBuilder
 from dae.configuration.gpf_config_parser import GPFConfigParser

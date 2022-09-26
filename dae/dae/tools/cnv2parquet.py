@@ -2,7 +2,7 @@
 import sys
 
 from dae.backends.cnv.loader import CNVLoader
-from dae.backends.impala.import_commons import Variants2ParquetTool
+from dae.impala_storage.import_commons import Variants2ParquetTool
 
 
 class Cnv2ParquetTool(Variants2ParquetTool):

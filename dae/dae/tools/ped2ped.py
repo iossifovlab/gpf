@@ -5,7 +5,7 @@ import os
 import sys
 import argparse
 import logging
-from dae.backends.impala.parquet_io import ParquetPartitionDescriptor
+from dae.impala_storage.parquet_io import ParquetPartitionDescriptor
 from dae.pedigrees.loader import FamiliesLoader
 from dae.backends.vcf.loader import VcfLoader
 from dae.gpf_instance.gpf_instance import GPFInstance

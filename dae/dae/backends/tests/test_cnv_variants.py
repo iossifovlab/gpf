@@ -55,7 +55,7 @@ def cnv_impala(
         reimport,
         data_import):
     # pylint: disable=too-many-locals,import-outside-toplevel
-    from dae.backends.impala.impala_helpers import ImpalaHelpers
+    from dae.impala_storage.impala_helpers import ImpalaHelpers
 
     impala_helpers = ImpalaHelpers(
         impala_hosts=[impala_host], impala_port=21050)
@@ -72,7 +72,7 @@ def cnv_impala(
             not impala_helpers.check_table(
                 "impala_test_db", pedigree_table):
 
-        from dae.backends.impala.hdfs_helpers import HdfsHelpers
+        from dae.impala_storage.hdfs_helpers import HdfsHelpers
 
         hdfs = HdfsHelpers(hdfs_host, 8020)
 

@@ -1,6 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 from dae.annotation.schema import Schema
-from dae.backends.impala.serializers import AlleleParquetSerializer
+from dae.impala_storage.serializers import AlleleParquetSerializer
 from dae.backends.dae.loader import DenovoLoader
 from dae.pedigrees.loader import FamiliesLoader
 

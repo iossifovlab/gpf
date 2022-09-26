@@ -7,7 +7,7 @@ from queue import Queue
 import pytest
 from dae.backends.query_runners import QueryResult
 
-from dae.backends.impala.impala_variants import ImpalaQueryRunner
+from dae.impala_storage.impala_variants import ImpalaQueryRunner
 
 
 @pytest.fixture(scope="session")

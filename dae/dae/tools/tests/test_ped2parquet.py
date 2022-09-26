@@ -5,7 +5,7 @@ import pyarrow.parquet as pq
 
 from dae.pedigrees.loader import FamiliesLoader
 from dae.pedigrees.family import FamiliesData
-from dae.backends.impala.parquet_io import (
+from dae.impala_storage.parquet_io import (
     ParquetPartitionDescriptor,
     ParquetManager,
 )
@@ -106,7 +106,7 @@ def test_ped2parquet_outfilename(mocker, pedigree_filename, parquet_filename):
 
     mocker.patch("dae.pedigrees.loader.FamiliesLoader.load")
     mocker.patch(
-        "dae.backends.impala.parquet_io.ParquetManager.families_to_parquet"
+        "dae.impala_storage.parquet_io.ParquetManager.families_to_parquet"
     )
 
     argv = ["pedigree_A.ped"]

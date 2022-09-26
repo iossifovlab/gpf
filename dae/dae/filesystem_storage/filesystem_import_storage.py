@@ -2,7 +2,7 @@ import os
 import shutil
 import logging
 from typing import Any
-from dae.backends.impala.import_commons import save_study_config
+from dae.impala_storage.import_commons import save_study_config  # FIXME
 
 from dae.backends.raw.loader import StoredAnnotationDecorator, VariantsLoader
 from dae.configuration.study_config_builder import StudyConfigBuilder

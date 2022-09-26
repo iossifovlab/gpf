@@ -10,7 +10,7 @@ from dae.backends.storage.schema2_genotype_storage import \
     Schema2GenotypeStorage
 from dae.backends.schema2.parquet_io import (
     NoPartitionDescriptor, ParquetManager, ParquetPartitionDescriptor)
-from dae.backends.impala.import_commons import \
+from dae.impala_storage.import_commons import \
     construct_import_annotation_pipeline, construct_import_effect_annotator
 from dae.backends.raw.loader import AnnotationPipelineDecorator,\
     EffectAnnotationDecorator
@@ -20,6 +20,7 @@ from dae.backends.raw.loader import AnnotationPipelineDecorator,\
 def storage():
     config = {
         "id": "genotype_schema2",
+        "storage_type": "impala2",
         "impala": {
             "db": "impala_test_db",
             "hosts": ["localhost"],

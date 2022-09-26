@@ -1,9 +1,11 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
+import re
+
 import pytest
 
-# from dae.filesystem_storage.filesystem_genotype_storage import \
-#     FilesystemGenotypeStorage
 from dae.import_tools.import_tools import run_with_project
+from dae.filesystem_storage.filesystem_genotype_storage import \
+    FilesystemGenotypeStorage
 
 
 @pytest.fixture(scope="module")
@@ -62,3 +64,79 @@ def test_get_data_dir(
 ):
     assert filesystem_genotype_storage.get_data_dir(
         *build_path).endswith(expected_path)
+
+
+def test_create_filesystem_storage(tmp_path):
+    config = {
+        "storage_type": "filesystem",
+        "id": "aaaa",
+        "dir": str(tmp_path)
+    }
+    storage = FilesystemGenotypeStorage(config)
+    assert storage is not None
+
+
+def test_create_filesystem_storage_missing_id(tmp_path):
+    config = {
+        "storage_type": "filesystem",
+        # "id": "aaaa",
+        "dir": str(tmp_path)
+    }
+    with pytest.raises(
+            ValueError,
+            match="genotype storage without ID; 'id' is required"):
+        FilesystemGenotypeStorage(config)
+
+
+def test_create_missing_storage_type():
+    config = {
+        "id": "aaaa",
+        "dir": "/tmp/aaaa_filesystem"
+    }
+    with pytest.raises(
+            ValueError,
+            match="genotype storage without type; 'storage_type' is required"):
+        FilesystemGenotypeStorage(config)
+
+
+def test_create_wrong_storage_type():
+    config = {
+        "id": "aaaa",
+        "storage_type": "filesystem2",
+        "dir": "/tmp/aaaa_filesystem"
+    }
+    with pytest.raises(
+            ValueError,
+            match=re.escape(
+                "wrong config format for filesytem storage: "
+                "{'storage_type': ['unallowed value filesystem2']}")):
+        FilesystemGenotypeStorage(config)
+
+
+def test_create_missing_dir():
+    config = {
+        "id": "aaaa",
+        "storage_type": "filesystem",
+        # "dir": "/tmp/aaaa_filesystem"
+    }
+    with pytest.raises(
+            ValueError,
+            match=re.escape(
+                "wrong config format for filesytem storage: "
+                "{'dir': ['required field']}")):
+        FilesystemGenotypeStorage(config)
+
+
+def test_create_bad_dir():
+    config = {
+        "id": "aaaa",
+        "storage_type": "filesystem",
+        "dir": "tmp/aaaa_filesystem"
+    }
+    with pytest.raises(
+            ValueError,
+            match=re.escape(
+                "wrong config format for filesytem storage: "
+                "{'dir': ['path <tmp/aaaa_filesystem> "
+                "is not an absolute path']}")):
+        FilesystemGenotypeStorage(config)

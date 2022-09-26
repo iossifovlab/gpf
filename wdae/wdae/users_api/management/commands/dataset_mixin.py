@@ -4,7 +4,7 @@ from django.db.models import Q
 from django.contrib.auth.models import Group
 from datasets_api.models import Dataset
 
-from dae.backends.impala.import_commons import DatasetHelpers
+from dae.impala_storage.import_commons import DatasetHelpers
 
 
 logger = logging.getLogger(__name__)

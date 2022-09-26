@@ -4,8 +4,8 @@ import pytest
 from dae.genomic_resources.reference_genome import \
     ReferenceGenome
 
-from dae.backends.impala.parquet_io import ParquetPartitionDescriptor
-from dae.backends.impala.import_commons import MakefilePartitionHelper
+from dae.impala_storage.parquet_io import ParquetPartitionDescriptor
+from dae.impala_storage.import_commons import MakefilePartitionHelper
 
 
 @pytest.mark.parametrize(

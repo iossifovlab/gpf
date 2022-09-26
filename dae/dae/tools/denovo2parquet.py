@@ -3,7 +3,7 @@ import sys
 import logging
 
 from dae.backends.dae.loader import DenovoLoader
-from dae.backends.impala.import_commons import Variants2ParquetTool
+from dae.impala_storage.import_commons import Variants2ParquetTool
 
 
 logger = logging.getLogger(__name__)

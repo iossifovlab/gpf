@@ -7,6 +7,7 @@ from typing import Dict, Any, cast
 
 from cerberus import Validator
 
+from dae.configuration.utils import validate_path
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.study_config_builder import StudyConfigBuilder
 from dae.pedigrees.loader import FamiliesLoader
@@ -35,6 +36,8 @@ class FilesystemGenotypeStorage(GenotypeStorage):
         },
         "dir": {
             "type": "string",
+            "check_with": validate_path,
+            "required": True,
         },
     }
 

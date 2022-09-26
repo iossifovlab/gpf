@@ -1,6 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import os
-from dae.backends.impala.import_commons import DatasetHelpers
+from dae.impala_storage.import_commons import DatasetHelpers
 
 
 def test_find_genotype_data_config_file(fixtures_gpf_instance):
@@ -53,7 +53,7 @@ def test_dataset_rename_hdfs_directory(
         assert name2.endswith("new")
 
     mocker.patch(
-        "dae.backends.impala.hdfs_helpers.HdfsHelpers.rename",
+        "dae.impala_storage.hdfs_helpers.HdfsHelpers.rename",
         mock_rename)
 
     helpers = DatasetHelpers(fixtures_gpf_instance)
@@ -67,7 +67,7 @@ def test_dataset_delete_hdfs_directory(
         assert recursive
 
     mocker.patch(
-        "dae.backends.impala.hdfs_helpers.HdfsHelpers.delete",
+        "dae.impala_storage.hdfs_helpers.HdfsHelpers.delete",
         mock_delete)
 
     helpers = DatasetHelpers(fixtures_gpf_instance)
@@ -85,7 +85,7 @@ def test_dataset_recreate_impala_tables(
         assert "/new/" in hdfs_dir
 
     mocker.patch(
-        "dae.backends.impala.impala_helpers.ImpalaHelpers.recreate_table",
+        "dae.impala_storage.impala_helpers.ImpalaHelpers.recreate_table",
         mock_recreate)
 
     helpers = DatasetHelpers(fixtures_gpf_instance)
@@ -102,7 +102,7 @@ def test_dataset_drop_impala_tables(
         assert table.startswith("svmergingstudy1")
 
     mocker.patch(
-        "dae.backends.impala.impala_helpers.ImpalaHelpers.drop_table",
+        "dae.impala_storage.impala_helpers.ImpalaHelpers.drop_table",
         mock_drop)
 
     helpers = DatasetHelpers(fixtures_gpf_instance)
@@ -128,7 +128,7 @@ def test_rename_study_config(fixtures_gpf_instance, mocker):
     mocker.patch("os.rename", mock_rename)
 
     mock_open = mocker.mock_open()
-    mocker.patch("dae.backends.impala.import_commons.open", mock_open)
+    mocker.patch("dae.impala_storage.import_commons.open", mock_open)
 
     spy = mocker.spy(os, "rename")
 

@@ -6,8 +6,8 @@ import logging
 from dataclasses import dataclass
 from collections.abc import Iterator
 from typing import Dict, Any
-from dae.backends.impala.hdfs_helpers import HdfsHelpers
-from dae.backends.impala.impala_helpers import ImpalaHelpers
+from dae.impala_storage.hdfs_helpers import HdfsHelpers
+from dae.impala_storage.impala_helpers import ImpalaHelpers
 from dae.backends.schema2.impala_variants import ImpalaVariants
 from dae.genotype_storage.genotype_storage import GenotypeStorage
 

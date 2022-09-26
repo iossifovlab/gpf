@@ -1,4 +1,4 @@
-from dae.configuration.gpf_config_parser import validate_existing_path
+from dae.configuration.utils import validate_existing_path
 
 from dae.variants.attributes import _VARIANT_TYPE_DISPLAY_NAME, \
     _ROLE_DISPLAY_NAME

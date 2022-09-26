@@ -28,7 +28,7 @@ from dae.variants.attributes import TransmissionType
 from dae.variants.family_variant import FamilyAllele, FamilyVariant, \
     calculate_simple_best_state
 from dae.variants.variant import SummaryVariant, SummaryAllele
-from dae.backends.impala.serializers import AlleleParquetSerializer
+from dae.impala_storage.serializers import AlleleParquetSerializer
 
 
 logger = logging.getLogger(__name__)

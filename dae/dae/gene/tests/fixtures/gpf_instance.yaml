@@ -9,7 +9,7 @@ genotype_storage:
   default: genotype_filesystem
   storages:
   - id: genotype_filesystem
-    dir: "studies"
+    dir: "%(wd)s/studies"
     storage_type: filesystem
 
 phenotype_data:

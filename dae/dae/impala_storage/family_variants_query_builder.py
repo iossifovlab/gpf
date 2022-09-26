@@ -1,5 +1,5 @@
 import logging
-from dae.backends.impala.base_query_builder import BaseQueryBuilder
+from dae.impala_storage.base_query_builder import BaseQueryBuilder
 from dae.variants.attributes import Status, Role, Sex
 
 logger = logging.getLogger(__name__)

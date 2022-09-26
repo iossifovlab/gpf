@@ -13,7 +13,6 @@ genotype_storage:
   storages:
     - id: genotype_impala
       storage_type: impala
-      dir: "work/"
       hdfs:
         base_dir: /tmp/test_data
         host: localhost
@@ -43,7 +42,6 @@ genotype_storage:
 
     - id: genotype_impala_backends
       storage_type: impala
-      dir: /tmp/test_impala/studies
       hdfs:
         base_dir: /tmp/test_data
         host: localhost
@@ -57,11 +55,11 @@ genotype_storage:
         port: 21050
 
     - id: genotype_filesystem
-      dir: studies
+      dir: /tmp/studies
       storage_type: filesystem
 
     - id: genotype_filesystem2
-      dir: data_dir
+      dir: /tmp/data_dir
       storage_type: filesystem
 
     - id: test_filesystem
@@ -69,7 +67,6 @@ genotype_storage:
       storage_type: filesystem
 
     - id: test_impala
-      dir: /tmp/test_impala/studies
       hdfs:
         base_dir: /user/test_impala/studies
         host: localhost

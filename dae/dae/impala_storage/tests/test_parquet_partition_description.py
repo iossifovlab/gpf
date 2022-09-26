@@ -3,7 +3,7 @@
 import pytest
 import numpy as np
 
-from dae.backends.impala.parquet_io import ParquetPartitionDescriptor, \
+from dae.impala_storage.parquet_io import ParquetPartitionDescriptor, \
     NoPartitionDescriptor
 from dae.variants.family_variant import FamilyVariant
 from dae.variants.variant import SummaryAllele, SummaryVariant

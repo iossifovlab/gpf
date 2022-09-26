@@ -8,9 +8,9 @@ from dae.backends.attributes_query import inheritance_query
 from dae.utils.regions import Region
 import dae.utils.regions
 
-from ..attributes_query import QueryTreeToSQLBitwiseTransformer, \
+from dae.backends.attributes_query import QueryTreeToSQLBitwiseTransformer, \
     role_query, sex_query, variant_type_query
-from ..attributes_query_inheritance import InheritanceTransformer, \
+from dae.backends.attributes_query_inheritance import InheritanceTransformer, \
     inheritance_parser
 
 

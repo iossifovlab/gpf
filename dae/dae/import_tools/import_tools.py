@@ -15,7 +15,7 @@ from dae.genotype_storage.genotype_storage_registry import (
     GenotypeStorageRegistry
 )
 from dae.backends.vcf.loader import VcfLoader
-from dae.backends.impala.parquet_io import ParquetPartitionDescriptor
+from dae.impala_storage.parquet_io import ParquetPartitionDescriptor
 from dae.backends.raw.loader import AnnotationPipelineDecorator,\
     EffectAnnotationDecorator, VariantsLoader
 from dae.configuration.gpf_config_parser import GPFConfigParser
@@ -25,7 +25,7 @@ from dae.pedigrees.family import FamiliesData
 from dae.configuration.schemas.import_config import import_config_schema
 from dae.pedigrees.loader import FamiliesLoader
 from dae.utils import fs_utils
-from dae.backends.impala.import_commons import MakefilePartitionHelper,\
+from dae.impala_storage.import_commons import MakefilePartitionHelper,\
     construct_import_annotation_pipeline, construct_import_effect_annotator
 from dae.dask.client_factory import DaskClient
 from dae.utils.statistics import StatsCollection

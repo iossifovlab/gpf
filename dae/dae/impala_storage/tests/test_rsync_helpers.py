@@ -1,7 +1,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pytest
 
-from dae.backends.impala.rsync_helpers import RsyncHelpers
+from dae.impala_storage.rsync_helpers import RsyncHelpers
 
 
 def test_rsync_helpers_ssh():

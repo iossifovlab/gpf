@@ -16,15 +16,15 @@ from dae.backends.raw.raw_variants import RawFamilyVariants
 from dae.annotation.schema import Schema
 from dae.pedigrees.family import FamiliesData
 from dae.pedigrees.loader import FamiliesLoader
-from dae.backends.impala.serializers import AlleleParquetSerializer
+from dae.impala_storage.serializers import AlleleParquetSerializer
 
 from dae.variants.attributes import Role, Status, Sex
 
 from dae.backends.query_runners import QueryResult, QueryRunner
-from dae.backends.impala.impala_query_director import ImpalaQueryDirector
-from dae.backends.impala.family_variants_query_builder import \
+from dae.impala_storage.impala_query_director import ImpalaQueryDirector
+from dae.impala_storage.family_variants_query_builder import \
     FamilyVariantsQueryBuilder
-from dae.backends.impala.summary_variants_query_builder import \
+from dae.impala_storage.summary_variants_query_builder import \
     SummaryVariantsQueryBuilder
 
 

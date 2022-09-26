@@ -2,7 +2,7 @@ import os
 import logging
 from typing import Union
 from dae.pedigrees.family import FamiliesData
-from dae.backends.impala.parquet_io import PartitionDescriptor as Schema1PD
+from dae.impala_storage.parquet_io import PartitionDescriptor as Schema1PD
 from dae.backends.schema2.parquet_io import PartitionDescriptor as Schema2PD
 
 

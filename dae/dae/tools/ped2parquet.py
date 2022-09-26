@@ -5,7 +5,7 @@ import sys
 import argparse
 import logging
 
-from dae.backends.impala.parquet_io import (
+from dae.impala_storage.parquet_io import (
     ParquetPartitionDescriptor,
     ParquetManager,
 )

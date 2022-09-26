@@ -62,7 +62,6 @@ def foobar_gpf(root_path):
                   storages:
                   - id: genotype_impala
                     storage_type: impala
-                    dir: "work/"
                     hdfs:
                       base_dir: /tmp/test_data1
                       host: localhost
@@ -76,7 +75,6 @@ def foobar_gpf(root_path):
                       port: 21050
                   - id: genotype_impala_2
                     storage_type: impala2
-                    dir: "work/"
                     hdfs:
                       base_dir: /tmp/test_data2
                       host: localhost

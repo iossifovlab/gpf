@@ -11,10 +11,10 @@ from dae.pedigrees.loader import FamiliesLoader
 from dae.utils.variant_utils import GENOTYPE_TYPE, BEST_STATE_TYPE
 from dae.backends.dae.loader import DenovoLoader
 from dae.backends.raw.loader import AnnotationPipelineDecorator
-from dae.backends.impala.parquet_io import ParquetManager, \
+from dae.impala_storage.parquet_io import ParquetManager, \
     NoPartitionDescriptor
 from dae.configuration.gpf_config_parser import FrozenBox
-from dae.backends.impala.hdfs_helpers import HdfsHelpers
+from dae.impala_storage.hdfs_helpers import HdfsHelpers
 
 PED1 = """
 # SIMPLE TRIO

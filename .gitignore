@@ -62,7 +62,6 @@ comp-data/
 comp
 dae_conftests/dae_conftests/tests/fixtures/agpdb
 builds
-data
 downloads
 results
 dae/dae/gene/tests/fixtures/datasets/f1_group/denovo-cache-phenotype.json
@@ -89,3 +88,4 @@ dask-worker-space/
 temp
 .grr
 *.egg-info
+/data/

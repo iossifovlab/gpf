@@ -2,7 +2,7 @@
 import os
 import pytest
 
-from dae.backends.impala.parquet_io import ParquetManager
+from dae.impala_storage.parquet_io import ParquetManager
 
 
 @pytest.mark.parametrize(

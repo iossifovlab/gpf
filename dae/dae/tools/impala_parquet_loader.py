@@ -4,7 +4,7 @@ import sys
 import argparse
 
 from dae.gpf_instance.gpf_instance import GPFInstance
-from dae.backends.impala.import_commons import save_study_config
+from dae.impala_storage.import_commons import save_study_config
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.study_config_builder import StudyConfigBuilder
 from dae.utils.dict_utils import recursive_dict_update

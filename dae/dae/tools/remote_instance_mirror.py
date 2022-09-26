@@ -10,7 +10,7 @@ import copy
 
 import yaml
 
-from dae.backends.impala.rsync_helpers import RsyncHelpers
+from dae.impala_storage.rsync_helpers import RsyncHelpers
 
 
 logger = logging.getLogger("remote_instance_mirror")

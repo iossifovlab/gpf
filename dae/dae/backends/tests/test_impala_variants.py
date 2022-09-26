@@ -1,6 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pytest
-from dae.backends.impala.hdfs_helpers import HdfsHelpers
+from dae.impala_storage.hdfs_helpers import HdfsHelpers
 from dae.variants.variant import SummaryVariant
 
 

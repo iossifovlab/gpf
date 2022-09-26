@@ -4,7 +4,7 @@ import pytest
 
 import dae
 from dae.pedigrees.loader import FamiliesLoader
-from dae.backends.impala.parquet_io import ParquetManager
+from dae.impala_storage.parquet_io import ParquetManager
 
 
 @pytest.mark.parametrize(
@@ -53,13 +53,13 @@ def test_ped2parquet_mock(
     assert families is not None
 
     mocker.patch("os.makedirs")
-    mocker.patch("dae.backends.impala.parquet_io.save_ped_df_to_parquet")
+    mocker.patch("dae.impala_storage.parquet_io.save_ped_df_to_parquet")
 
     ParquetManager.families_to_parquet(families, outfile)
 
     os.makedirs.assert_called_once_with(dirname, exist_ok=True)
-    dae.backends.impala.parquet_io.save_ped_df_to_parquet.assert_called_once()
+    dae.impala_storage.parquet_io.save_ped_df_to_parquet.assert_called_once()
 
-    call_args = dae.backends.impala.parquet_io.save_ped_df_to_parquet.call_args
+    call_args = dae.impala_storage.parquet_io.save_ped_df_to_parquet.call_args
     _, filename = call_args[0]
     assert filename == outfile

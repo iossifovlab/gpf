@@ -2,7 +2,7 @@
 import os
 import pytest
 
-from dae.backends.impala.import_commons import BatchImporter, \
+from dae.impala_storage.import_commons import BatchImporter, \
     SnakefileGenerator, \
     MakefileGenerator
 

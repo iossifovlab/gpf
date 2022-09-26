@@ -20,19 +20,8 @@ from dae.utils.dict_utils import recursive_dict_update
 logger = logging.getLogger(__name__)
 
 
-def validate_existing_path(field: str, value: str, error):
-    if not os.path.isabs(value):
-        error(field, f"path <{value}> is not an absolute path!")
-    if not os.path.exists(value):
-        error(field, f"path <{value}> does not exist!")
-
-
-def validate_path(field: str, value: str, error):
-    if not os.path.isabs(value):
-        error(field, f"path <{value}> is not an absolute path!")
-
-
 class DefaultBox(Box):
+    # pylint: disable=too-few-public-methods
     def __init__(self, *args, **kwargs):
         kwargs["default_box"] = True
         kwargs["default_box_attr"] = None
@@ -41,6 +30,7 @@ class DefaultBox(Box):
 
 
 class FrozenBox(DefaultBox):
+    # pylint: disable=too-few-public-methods
     def __init__(self, *args, **kwargs):
         kwargs["frozen_box"] = True
         super().__init__(*args, **kwargs)
@@ -123,7 +113,9 @@ class GPFConfigParser:
             return cast(str, infile.read())
 
     @staticmethod
-    def parse_and_interpolate(content: str, parser=yaml.safe_load) -> dict:
+    def parse_and_interpolate(
+            content: str, parser=yaml.safe_load,
+            conf_dir=None) -> dict:
         """Parse text content and perform variable interpolation on result."""
         interpol_vars = parser(content).get("vars", {})
 
@@ -132,6 +124,12 @@ class GPFConfigParser:
             key: value % env_vars for key, value in interpol_vars.items()
         }
         interpol_vars.update(env_vars)
+        if conf_dir:
+            interpol_vars.update({
+                "conf_dir": conf_dir,
+                "wd": conf_dir,
+                "work_dir": conf_dir,
+            })
 
         try:
             interpolated_text = content % interpol_vars
@@ -152,7 +150,9 @@ class GPFConfigParser:
             parser = cls.filetype_parsers[ext]
 
             file_contents = cls._get_file_contents(filename)
-            return cls.parse_and_interpolate(file_contents, parser)
+            conf_dir = os.path.abspath(os.path.dirname(filename))
+            return cls.parse_and_interpolate(
+                file_contents, parser, conf_dir=conf_dir)
 
         except Exception as ex:
             logger.error("problems parsing config file <%s>", filename)
@@ -193,7 +193,7 @@ class GPFConfigParser:
         schema: dict,
         default_config: Dict[str, Any] = None,
         conf_dir: str = None,
-    ) -> DefaultBox:
+    ) -> Box:
         """
         Pass an interpolated config to validation and prepare it for use.
 
@@ -203,7 +203,7 @@ class GPFConfigParser:
         config = GPFConfigParser.merge_config(config, default_config)
         config = GPFConfigParser.validate_config(config, schema, conf_dir)
 
-        return DefaultBox(config)
+        return cast(Box, DefaultBox(config))
 
     @classmethod
     def load_config_raw(cls, filename: str) -> Dict[str, Any]:
@@ -219,7 +219,7 @@ class GPFConfigParser:
         schema: dict,
         default_config_filename: Optional[str] = None,
         default_config: Optional[dict] = None,
-    ) -> DefaultBox:
+    ) -> Box:
         """Load a file and return a processed configuration."""
         if not os.path.exists(filename):
             raise ValueError(f"{filename} does not exist!")

@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 
-from dae.backends.impala.import_commons import DatasetHelpers
 import sys
 import argparse
 import logging
 
+from dae.impala_storage.import_commons import DatasetHelpers
 from dae.gpf_instance.gpf_instance import GPFInstance
 
 

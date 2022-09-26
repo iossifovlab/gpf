@@ -3,7 +3,7 @@ from typing import cast
 
 from dae.utils import fs_utils
 from dae.configuration.study_config_builder import StudyConfigBuilder
-from dae.backends.impala.import_commons import save_study_config
+from dae.impala_storage.import_commons import save_study_config
 from dae.import_tools.parquet_writer import ParquetWriter
 from dae.import_tools.import_tools import ImportStorage
 from dae.import_tools.task_graph import TaskGraph

@@ -13,7 +13,7 @@ genotype_storage:
   storages:
 
   - id: genotype_filesystem
-    dir: "studies"
+    dir: "/tmp/studies"
     storage_type: filesystem
 
 phenotype_data:
