@@ -55,7 +55,7 @@ import { EnrichmentTableRowComponent } from './enrichment-table/enrichment-table
 import { FullscreenLoadingComponent } from './fullscreen-loading/fullscreen-loading.component';
 import { FullscreenLoadingService } from './fullscreen-loading/fullscreen-loading.service';
 import { EncodeUriComponentPipe } from './utils/encode-uri-component.pipe';
-import { RouterModule, Routes } from '@angular/router';
+import { RouterModule, Routes, UrlSerializer } from '@angular/router';
 import { PersonFiltersComponent } from './person-filters/person-filters.component';
 import { PersonFiltersState } from './person-filters/person-filters.state';
 import { FamilyFiltersBlockComponent } from './family-filters-block/family-filters-block.component';
@@ -170,6 +170,7 @@ import { PedigreeComponent } from './pedigree/pedigree.component';
 import { AuthInterceptorService } from './auth-interceptor.service';
 import { AuthResolverService } from './auth-resolver.service';
 import { APP_BASE_HREF, PlatformLocation } from '@angular/common';
+import { CustomUrlSerializer } from './custom-url-serializer';
 
 const appRoutes: Routes = [
   {
@@ -434,6 +435,10 @@ const appRoutes: Routes = [
       useFactory: (s: PlatformLocation) => s.getBaseHrefFromDOM(),
       deps: [PlatformLocation]
     },
+    {
+      provide: UrlSerializer,
+      useClass: CustomUrlSerializer
+    }
   ],
 
   bootstrap: [AppComponent]
