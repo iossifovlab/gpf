@@ -38,18 +38,24 @@ export class UsersTableComponent implements OnInit {
   }
 
   public removeGroup(user: User, group: string): void {
-    this.usersService.removeUserGroup(user, group);
+    this.usersService.removeUserGroup(user, group).pipe(take(1)).subscribe(() => {
+      this.zone.runOutsideAngular(() => {
+        window.location.reload();
+      });
+    });
 
     this.manualPipeTrigger++;
   }
 
   public addGroup(user: User, event$: ItemAddEvent): void {
-    user.groups.push(event$.item);
-
     const userClone = user.clone();
-    // Taken from user-edit component. Why delete the email? Precaution?
-    delete userClone.email;
-    this.usersService.updateUser(userClone);
+    userClone.groups.push(event$.item);
+
+    this.usersService.updateUser(userClone).pipe(take(1)).subscribe(() => {
+      this.zone.runOutsideAngular(() => {
+        window.location.reload();
+      });
+    });
   }
 
   public getUserAllowedDatasetIds(user: User): string[] {
