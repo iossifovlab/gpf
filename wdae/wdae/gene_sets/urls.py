@@ -1,8 +1,3 @@
-"""
-Created on Feb 16, 2017
-
-@author: lubo
-"""
 from django.urls import re_path
 from gene_sets import views
 
