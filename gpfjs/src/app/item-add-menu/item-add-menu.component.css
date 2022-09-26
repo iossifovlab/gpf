@@ -8,8 +8,9 @@
   padding: 10px;
   display: grid;
   position: absolute;
-  border: 1px solid black;
+  border: 2px solid #ddd;
   background: #fff;
+  margin: 10px;
 }
 
 tr {
@@ -20,22 +21,16 @@ tr > td {
   padding-top: 8px;
 }
 
-.item {
-  width: 100%;
+.add-item-button {
+  border: none;
+  background: none;
+  padding-left: 10px;
+  width: 300px;
   padding-top: 4px;
   padding-bottom: 4px;
   padding-left: 6px;
   border: 1px solid #dedede;
   background-color: #fff;
-}
-
-.item-text {
-  padding-left: 10px;
-}
-
-.add-item-button {
-  border: none;
-  background: none;
 }
 
 .form-control {
@@ -44,4 +39,10 @@ tr > td {
 
 .form-control:focus {
   box-shadow: inset 0 -1px 0 #ddd;
+}
+
+.table-container {
+  overflow-y: scroll;
+  height: 215px;
+  margin-top: 4px;
 }
