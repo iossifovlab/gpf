@@ -28,6 +28,7 @@ gpf-table {
   border: 1px solid #ddd;
   background-color: #eee;
   text-align: center;
+  font-weight: bold;
 }
 
 .grid-cell {
