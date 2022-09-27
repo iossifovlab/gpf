@@ -46,7 +46,7 @@ pipeline {
               myPy(pattern: 'test-results/mypy_wdae_report', reportEncoding: 'UTF-8', id: 'mypy-wdae', name: 'MyPy - wdae'),
               pyLint(pattern: 'test-results/pylint_gpf_report', reportEncoding: 'UTF-8')
             ],
-            qualityGates: [[threshold: 1, type: 'NEW', unstable: true]]
+            qualityGates: [[threshold: 1, type: 'DELTA', unstable: true]]
 
           )
 
