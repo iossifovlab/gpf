@@ -1,5 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import textwrap
+import pysam
 
 from dae.genomic_resources.testing import convert_to_tab_separated, \
     setup_directories
@@ -126,3 +127,52 @@ def foobar_vcf_import(root_path, study_id, ped_path, vcf_path, storage_id):
         root_path / "vcf_project" / "vcf_project.yaml")
     run_with_project(project)
     return project
+
+
+def setup_vcf(root_path, content, name="in.vcf"):
+    in_vcf = convert_to_tab_separated(content)
+
+    setup_directories(root_path, {
+        "vcf_data": {
+            name: in_vcf,
+        }
+    })
+
+    # pylint: disable=no-member
+    pysam.tabix_compress(
+        str(root_path / "vcf_data" / name),
+        str(root_path / "vcf_data" / f"{name}.gz"))
+    pysam.tabix_index(
+        str(root_path / "vcf_data" / f"{name}.gz"), preset="vcf")
+
+    return str(root_path / "vcf_data" / f"{name}.gz")
+
+
+def setup_dae_transmitted(root_path, summary_content, toomany_content):
+    summary = convert_to_tab_separated(summary_content)
+    toomany = convert_to_tab_separated(toomany_content)
+
+    setup_directories(root_path, {
+        "dae_transmitted_data": {
+            "tr.txt": summary,
+            "tr-TOOMANY.txt": toomany
+        }
+    })
+
+    # pylint: disable=no-member
+    pysam.tabix_compress(
+        str(root_path / "dae_transmitted_data" / "tr.txt"),
+        str(root_path / "dae_transmitted_data" / "tr.txt.gz"))
+    pysam.tabix_compress(
+        str(root_path / "dae_transmitted_data" / "tr-TOOMANY.txt"),
+        str(root_path / "dae_transmitted_data" / "tr-TOOMANY.txt.gz"))
+
+    pysam.tabix_index(
+        str(root_path / "dae_transmitted_data" / "tr.txt.gz"),
+        seq_col=0, start_col=1, end_col=1, line_skip=1)
+    pysam.tabix_index(
+        str(root_path / "dae_transmitted_data" / "tr-TOOMANY.txt.gz"),
+        seq_col=0, start_col=1, end_col=1, line_skip=1)
+
+    return (str(root_path / "dae_transmitted_data" / "tr.txt.gz"),
+            str(root_path / "dae_transmitted_data" / "tr-TOOMANY.txt.gz"))

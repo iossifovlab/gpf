@@ -5,6 +5,7 @@ import logging
 from abc import abstractmethod, ABC
 from copy import deepcopy
 from dataclasses import dataclass
+from functools import cache
 from typing import Optional, cast
 from typing import Callable, Dict, List, Tuple, Any
 
@@ -50,7 +51,7 @@ class ImportProject():
     """
 
     # pylint: disable=too-many-public-methods
-    def __init__(self, import_config, base_input_dir):
+    def __init__(self, import_config, base_input_dir, gpf_instance=None):
         """Create a new project from the provided config.
 
         It is best not to call this ctor directly but to use one of the
@@ -63,11 +64,11 @@ class ImportProject():
             assert len_files == 1, "Support for multiple denovo files is NYI"
 
         self._base_input_dir = base_input_dir
-
+        self._gpf_instance = gpf_instance
         self.stats: StatsCollection = StatsCollection()
 
     @staticmethod
-    def build_from_config(import_config, base_input_dir=""):
+    def build_from_config(import_config, base_input_dir="", gpf_instance=None):
         """Create a new project from the provided config.
 
         The config is first validated and normalized.
@@ -78,10 +79,11 @@ class ImportProject():
                                                         import_config_schema)
         normalizer = ImportConfigNormalizer()
         import_config = normalizer.normalize(import_config)
-        return ImportProject(import_config, base_input_dir)
+        return ImportProject(
+            import_config, base_input_dir, gpf_instance=gpf_instance)
 
     @staticmethod
-    def build_from_file(import_filename):
+    def build_from_file(import_filename, gpf_instance=None):
         """Create a new project from the provided config filename.
 
         The file is first parsed, validated and normalized. The path to the
@@ -93,7 +95,8 @@ class ImportProject():
         base_input_dir = os.path.dirname(os.path.realpath(import_filename))
         import_config = GPFConfigParser.parse_and_interpolate_file(
             import_filename)
-        return ImportProject.build_from_config(import_config, base_input_dir)
+        return ImportProject.build_from_config(
+            import_config, base_input_dir, gpf_instance=gpf_instance)
 
     def get_pedigree_params(self) -> Tuple[str, Dict[str, Any]]:
         """Get params for loading the pedigree."""
@@ -117,7 +120,9 @@ class ImportProject():
         families_loader = self.get_pedigree_loader()
         return families_loader.load()
 
+    @cache
     def get_import_variants_types(self) -> set[str]:
+        """Collect all variant import types used in the project."""
         result = set()
         for loader_type in ["denovo", "vcf", "cnv", "dae"]:
             config = self.import_config["input"].get(loader_type)
@@ -219,10 +224,13 @@ class ImportProject():
 
     def get_gpf_instance(self):
         """Create and return a gpf instance as desribed in the config."""
-        instance_config = self.import_config.get("gpf_instance", {})
-        # pylint: disable=import-outside-toplevel
-        from dae.gpf_instance.gpf_instance import GPFInstance
-        return GPFInstance(work_dir=instance_config.get("path", None))
+        if self._gpf_instance is None:
+            instance_config = self.import_config.get("gpf_instance", {})
+            # pylint: disable=import-outside-toplevel
+            from dae.gpf_instance.gpf_instance import GPFInstance
+            self._gpf_instance = \
+                GPFInstance(work_dir=instance_config.get("path", None))
+        return self._gpf_instance
 
     def get_import_storage(self):
         """Create an import storage as described in the import config."""
@@ -344,6 +352,19 @@ class ImportProject():
                 res[prefix + k] = val
             else:
                 res[k] = val
+        return res
+
+    @staticmethod
+    def del_loader_prefix(params, prefix):
+        """Remove prefix from parameter keys."""
+        res = {}
+        for k, val in params.items():
+            if val is None:
+                continue
+            key = k
+            if k.startswith(prefix):
+                key = k[len(prefix):]
+            res[key] = val
         return res
 
     def _loader_region_bins(self, loader_args, loader_type):

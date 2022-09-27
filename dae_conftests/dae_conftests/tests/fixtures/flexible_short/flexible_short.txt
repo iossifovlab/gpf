@@ -1,4 +1,0 @@
-familyId	location	variant	bestState
-f1	15:80137554	ins(A)	2 2 1 2/0 0 1 0
-f2	3:56627768	del(4)	2 2 1/0 0 1
-f1	4:83276456	sub(C->T)	2 2 1 2/0 0 1 0

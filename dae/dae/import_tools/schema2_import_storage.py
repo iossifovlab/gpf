@@ -103,10 +103,13 @@ class Schema2ImportStorage(ImportStorage):
         meta_table = genotype_storage\
             ._construct_metadata_table(project.study_id)
 
+        variants_types = project.get_import_variants_types()
         study_config = {
             "id": project.study_id,
             "conf_dir": ".",
-            "has_denovo": False,
+            "has_denovo": "denovo" in variants_types,
+            "has_cnv": "cnv" in variants_types,
+            "has_transmitted": bool({"dae", "vcf"} & variants_types),
             "genotype_storage": {
                 "id": genotype_storage.storage_id,
                 "tables": {"pedigree": pedigree_table},

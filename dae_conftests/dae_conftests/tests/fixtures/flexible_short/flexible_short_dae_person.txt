@@ -1,4 +1,0 @@
-person_id	location	variant
-f1.p1	15:80137554	ins(A)
-f2.p1	3:56627768	del(4)
-f1.p1	4:83276456	sub(C->T)

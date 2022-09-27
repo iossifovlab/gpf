@@ -1,9 +1,0 @@
-familyId	location	variant	inChild	fromParent	bestState	effectType	effectGene	effectDetails	SSC-freq	EVS-freq	E65-freq
-14505	1:897349	sub(G->A)	prbM		2 2 1 2/0 0 1 0	synonymous	KLHL17:synonymous	211/642		0.01	
-11563	1:1222518	sub(C->A)	prbM		2 2 1 2/0 0 1 0	nonsense	SCNN1D:nonsense|SCNN1D:non-coding	383/802(Tyr->End)|2960			
-12111	1:1225729	sub(G->A)	sibF		2 2 2 1/0 0 0 1	missense	SCNN1D:missense|SCNN1D:non-coding	581/802(Gly->Arg)|2960			
-11138	1:1230203	sub(G->A)	sibM		2 2 2 1/0 0 0 1	intron	ACAP3:intron	19/23[7]			
-14253	1:1246368	sub(G->C)	sibF		2 2 2 1/0 0 0 1	missense	PUSL1:missense	260/303(Ser->Thr)			0.00
-11057	1:1558774	sub(G->A)	sibM		2 2 2 1/0 0 0 1	missense	MIB2:missense|MIB2:intron|MIB2:non-coding|MIB2:5'UTR-intron	96/1005(Arg->Gln);96/1070(Arg->Gln);96/1066(Arg->Gln)|2/19[37]|3121|2/2[37]			0.00
-12221	1:1886352	sub(C->T)	prbM		2 2 1 2/0 0 1 0	3'UTR	KIAA1751:3'UTR	665	0.04	6.40	
-13743	1:1886352	sub(C->T)	prbM		2 2 1/0 0 1	3'UTR	KIAA1751:3'UTR	665	0.04	6.40	

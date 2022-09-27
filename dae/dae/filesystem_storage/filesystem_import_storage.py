@@ -67,27 +67,37 @@ class FilesystemImportStorage(ImportStorage):
         else:
             loader_types = set([loader_type])
 
+        destination_dir = cls._get_destination_study_dir(project)
+
+        def construct_destination_filename(fname):
+            return os.path.join(
+                destination_dir, os.path.basename(fname))
+
         variants_config = []
         for variants_type in loader_types:
             variants_loader = project.get_variant_loader(
                 loader_type=variants_type)
-            variants_filenames = variants_loader.filenames
 
-            if isinstance(variants_filenames, str):
-                variants_filenames = [variants_filenames]
             dest_filenames = []
-            for source_filename in variants_filenames:
+            for source_filename in variants_loader.filenames:
                 dest = cls._copy_to_filesystem_storage(
                     project, source_filename)
                 dest_filenames.append(dest)
+                if os.path.exists(f"{source_filename}.tbi"):
+                    cls._copy_to_filesystem_storage(
+                        project, f"{source_filename}.tbi")
+
             annotation_filename = StoredAnnotationDecorator\
                 .build_annotation_filename(dest_filenames[0])
             StoredAnnotationDecorator.save_annotation_file(
                 cls._decorate_variants_loader(project, variants_loader),
                 annotation_filename)
 
+            config_filenames = list(map(
+                construct_destination_filename,
+                variants_loader.variants_filenames))
             variants_config.append({
-                "path": " ".join(dest_filenames),  # FIXME: switch to list
+                "path": " ".join(config_filenames),  # FIXME: switch to list
                 "params": variants_loader.build_arguments_dict(),
                 "format": variants_type
             })
@@ -102,6 +112,7 @@ class FilesystemImportStorage(ImportStorage):
             "id": project.study_id,
             "has_denovo": "denovo" in variants_types,
             "has_cnv": "cnv" in variants_types,
+            "has_transmitted": bool({"dae", "vcf"} & variants_types),
             "genotype_storage": {
                 "id": project.get_genotype_storage().storage_id,
                 "files": {

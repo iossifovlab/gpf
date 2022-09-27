@@ -19,6 +19,13 @@ def fixture_path():
     return builder
 
 
+@pytest.fixture
+def local_fixture():
+    def builder(relpath):
+        return relative_to_this_test_folder(os.path.join("fixtures", relpath))
+    return builder
+
+
 @pytest.fixture(scope="function")
 def temp_cache_dir(request):
     temp_directory = tempfile.mkdtemp(prefix="cache_repo_", suffix="_test")

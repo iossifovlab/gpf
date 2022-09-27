@@ -107,9 +107,12 @@ class FilesystemGenotypeStorage(GenotypeStorage):
                     params=variants_params,
                 )
             if file_conf.format == "dae":
+                variants_filenames = [
+                    fn.strip() for fn in variants_filename.split(" ")
+                ]
                 variants_loader = DaeTransmittedLoader(
                     families,
-                    variants_filename,
+                    variants_filenames[0],
                     genome,
                     params=variants_params,
                 )

@@ -1,0 +1,4 @@
+location	reference	alternative	familyId	bestState
+foo:11	T	TA	f1	2 2 1 2/0 0 1 0
+foo:12	AAAGT	A	f2	2 2 1/0 0 1
+bar:11	C	T	f1	2 2 1 2/0 0 1 0

@@ -1,21 +1,32 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
+import pytest
 
+from tests.foobar_import import foobar_gpf
 from dae.tools.simple_study_import import main
+from dae.gpf_instance import GPFInstance
 
 
+@pytest.mark.skip(reason="wrong reference genome")
+@pytest.mark.parametrize(
+    "storage_id",
+    [
+        "genotype_impala",
+        "genotype_impala_2",
+        "genotype_filesystem",
+    ]
+)
 def test_import_iossifov2014_filesystem(
-    fixture_dirname,
-    dae_iossifov2014_config,
-    default_dae_config,
-    gpf_instance_2019,
-    temp_dirname,
-):
+        tmp_path_factory, storage_id, fixture_dirname):
+    root_path = tmp_path_factory.mktemp(storage_id)
+    foobar_gpf(root_path)
+    gpf_instance = GPFInstance(work_dir=str(root_path / "gpf_instance"))
 
-    pedigree_filename = dae_iossifov2014_config.family_filename
-    denovo_filename = dae_iossifov2014_config.denovo_filename
+    pedigree_filename = \
+        fixture_dirname("dae_iossifov2014/iossifov2014_families.ped")
+    denovo_filename = \
+        fixture_dirname("dae_iossifov2014/iossifov2014.txt")
 
-    genotype_storage_id = "test_filesystem"
-    study_id = "test_denovo_iossifov2014_fs"
+    study_id = f"test_denovo_iossifov2014_{storage_id}"
 
     argv = [
         pedigree_filename,
@@ -33,66 +44,41 @@ def test_import_iossifov2014_filesystem(
         "--denovo-best-state",
         "bestState",
         "--genotype-storage",
-        genotype_storage_id,
+        storage_id,
         "-o",
-        temp_dirname,
+        str(root_path / "output"),
     ]
 
-    main(argv, gpf_instance_2019)
+    main(argv, gpf_instance)
 
-    gpf_instance_2019.reload()
-    study = gpf_instance_2019.get_genotype_data(study_id)
+    gpf_instance.reload()
+    study = gpf_instance.get_genotype_data(study_id)
     assert study is not None
 
     vs = list(study.query_variants())
     assert len(vs) == 16
 
-    vs = list(study.query_variants(effect_types=["splice-site"]))
-    assert len(vs) == 9
 
-    vs = list(study.query_variants(effect_types=["no-frame-shift"]))
-    assert len(vs) == 2
-
-
-def assert_proper_flexible_short_variants(fvs):
-    assert len(fvs) == 3
-    v = fvs[0]
-    for fa in v.alt_alleles:
-        assert fa.chrom == "15"
-        assert fa.position == 80137553
-        assert fa.reference == "T"
-        assert fa.alternative == "TA"
-        assert fa.family_id == "f1"
-        assert len(fa.effects.transcripts) == 4
-
-    v = fvs[1]
-    for fa in v.alt_alleles:
-        assert fa.chrom == "3"
-        assert fa.position == 56627767
-        assert fa.reference == "AAAGT"
-        assert fa.alternative == "A"
-        assert fa.family_id == "f2"
-
-    v = fvs[2]
-    for fa in v.alt_alleles:
-        assert fa.chrom == "4"
-        assert fa.position == 83276456
-        assert fa.reference == "C"
-        assert fa.alternative == "T"
-        assert fa.family_id == "f1"
-
-
+@pytest.mark.parametrize(
+    "storage_id",
+    [
+        "genotype_impala",
+        "genotype_impala_2",
+        "genotype_filesystem",
+    ]
+)
 def test_flexible_denovo_default(
-    fixture_dirname, gpf_instance_2019, temp_dirname
-):
+        tmp_path_factory, storage_id, local_fixture):
+    root_path = tmp_path_factory.mktemp(storage_id)
+    foobar_gpf(root_path)
+    gpf_instance = GPFInstance(work_dir=str(root_path / "gpf_instance"))
 
-    pedigree_filename = fixture_dirname(
+    pedigree_filename = local_fixture(
         "flexible_short/flexible_short_families.ped"
     )
-    denovo_filename = fixture_dirname("flexible_short/flexible_short.txt")
+    denovo_filename = local_fixture("flexible_short/flexible_short.txt")
 
-    genotype_storage_id = "test_filesystem"
-    study_id = "test_flexible_denovo_default"
+    study_id = f"test_flexible_denovo_default_{storage_id}"
 
     argv = [
         pedigree_filename,
@@ -102,32 +88,41 @@ def test_flexible_denovo_default(
         "--denovo-file",
         denovo_filename,
         "--genotype-storage",
-        genotype_storage_id,
+        storage_id,
         "-o",
-        temp_dirname,
+        str(root_path / "output"),
     ]
 
-    main(argv, gpf_instance_2019)
+    main(argv, gpf_instance)
 
-    gpf_instance_2019.reload()
-    study = gpf_instance_2019.get_genotype_data(study_id)
+    gpf_instance.reload()
+    study = gpf_instance.get_genotype_data(study_id)
     assert study is not None
 
     vs = list(study.query_variants())
-    assert_proper_flexible_short_variants(vs)
+    assert len(vs) == 3
 
 
+@pytest.mark.parametrize(
+    "storage_id",
+    [
+        "genotype_impala",
+        "genotype_impala_2",
+        "genotype_filesystem",
+    ]
+)
 def test_flexible_denovo_vcf(
-    fixture_dirname, gpf_instance_2019, temp_dirname
-):
+        tmp_path_factory, storage_id, local_fixture):
+    root_path = tmp_path_factory.mktemp(storage_id)
+    foobar_gpf(root_path)
+    gpf_instance = GPFInstance(work_dir=str(root_path / "gpf_instance"))
 
-    pedigree_filename = fixture_dirname(
+    pedigree_filename = local_fixture(
         "flexible_short/flexible_short_families.ped"
     )
-    denovo_filename = fixture_dirname("flexible_short/flexible_short_vcf.txt")
+    denovo_filename = local_fixture("flexible_short/flexible_short_vcf.txt")
 
-    genotype_storage_id = "test_filesystem"
-    study_id = "test_flexible_denovo_vcf"
+    study_id = f"test_flexible_denovo_vcf{storage_id}"
 
     argv = [
         pedigree_filename,
@@ -146,35 +141,42 @@ def test_flexible_denovo_vcf(
         "reference",
         "--denovo-alt",
         "alternative",
-        "--genotype-storage",
-        genotype_storage_id,
-        "-o",
-        temp_dirname,
+        "--genotype-storage", storage_id,
+        "-o", str(root_path / "output")
     ]
 
-    main(argv, gpf_instance_2019)
+    main(argv, gpf_instance)
 
-    gpf_instance_2019.reload()
-    study = gpf_instance_2019.get_genotype_data(study_id)
+    gpf_instance.reload()
+    study = gpf_instance.get_genotype_data(study_id)
     assert study is not None
 
     vs = list(study.query_variants())
-    assert_proper_flexible_short_variants(vs)
+    assert len(vs) == 3
 
 
+@pytest.mark.parametrize(
+    "storage_id",
+    [
+        "genotype_impala",
+        "genotype_impala_2",
+        "genotype_filesystem",
+    ]
+)
 def test_flexible_denovo_vcf_location(
-    fixture_dirname, gpf_instance_2019, temp_dirname
-):
+        tmp_path_factory, storage_id, local_fixture):
+    root_path = tmp_path_factory.mktemp(storage_id)
+    foobar_gpf(root_path)
+    gpf_instance = GPFInstance(work_dir=str(root_path / "gpf_instance"))
 
-    pedigree_filename = fixture_dirname(
+    pedigree_filename = local_fixture(
         "flexible_short/flexible_short_families.ped"
     )
-    denovo_filename = fixture_dirname(
+    denovo_filename = local_fixture(
         "flexible_short/flexible_short_vcf_location.txt"
     )
 
-    genotype_storage_id = "test_filesystem"
-    study_id = "test_flexible_denovo_vcf_location"
+    study_id = f"test_flexible_denovo_vcf_location_{storage_id}"
 
     argv = [
         pedigree_filename,
@@ -192,34 +194,41 @@ def test_flexible_denovo_vcf_location(
         "--denovo-alt",
         "alternative",
         "--genotype-storage",
-        genotype_storage_id,
+        storage_id,
         "-o",
-        temp_dirname,
+        str(root_path / "output"),
     ]
 
-    main(argv, gpf_instance_2019)
+    main(argv, gpf_instance)
 
-    gpf_instance_2019.reload()
-    study = gpf_instance_2019.get_genotype_data(study_id)
+    gpf_instance.reload()
+    study = gpf_instance.get_genotype_data(study_id)
     assert study is not None
 
     vs = list(study.query_variants())
-    assert_proper_flexible_short_variants(vs)
+    assert len(vs) == 3
 
 
+@pytest.mark.parametrize(
+    "storage_id",
+    [
+        "genotype_impala",
+        "genotype_impala_2",
+        "genotype_filesystem",
+    ]
+)
 def test_flexible_denovo_vcf_best_state(
-    fixture_dirname, gpf_instance_2019, temp_dirname
-):
+        tmp_path_factory, storage_id, local_fixture):
+    root_path = tmp_path_factory.mktemp(storage_id)
+    foobar_gpf(root_path)
+    gpf_instance = GPFInstance(work_dir=str(root_path / "gpf_instance"))
 
-    pedigree_filename = fixture_dirname(
-        "flexible_short/flexible_short_families.ped"
-    )
-    denovo_filename = fixture_dirname(
-        "flexible_short/flexible_short_vcf_best_state.txt"
-    )
+    pedigree_filename = local_fixture(
+        "flexible_short/flexible_short_families.ped")
+    denovo_filename = local_fixture(
+        "flexible_short/flexible_short_vcf_best_state.txt")
 
-    genotype_storage_id = "test_filesystem"
-    study_id = "test_flexible_denovo_vcf_best_state"
+    study_id = f"test_flexible_denovo_vcf_best_state_{storage_id}"
 
     argv = [
         pedigree_filename,
@@ -239,34 +248,43 @@ def test_flexible_denovo_vcf_best_state(
         "--denovo-alt",
         "alternative",
         "--genotype-storage",
-        genotype_storage_id,
+        storage_id,
         "-o",
-        temp_dirname,
+        str(root_path / "output"),
     ]
 
-    main(argv, gpf_instance_2019)
+    main(argv, gpf_instance)
 
-    gpf_instance_2019.reload()
-    study = gpf_instance_2019.get_genotype_data(study_id)
+    gpf_instance.reload()
+    study = gpf_instance.get_genotype_data(study_id)
     assert study is not None
 
     vs = list(study.query_variants())
-    assert_proper_flexible_short_variants(vs)
+    assert len(vs) == 3
 
 
+@pytest.mark.parametrize(
+    "storage_id",
+    [
+        "genotype_impala",
+        "genotype_impala_2",
+        "genotype_filesystem",
+    ]
+)
 def test_flexible_denovo_dae_chrom_pos(
-    fixture_dirname, gpf_instance_2019, temp_dirname
-):
+        tmp_path_factory, storage_id, local_fixture):
+    root_path = tmp_path_factory.mktemp(storage_id)
+    foobar_gpf(root_path)
+    gpf_instance = GPFInstance(work_dir=str(root_path / "gpf_instance"))
 
-    pedigree_filename = fixture_dirname(
+    pedigree_filename = local_fixture(
         "flexible_short/flexible_short_families.ped"
     )
-    denovo_filename = fixture_dirname(
+    denovo_filename = local_fixture(
         "flexible_short/flexible_short_dae_chrom_pos.txt"
     )
 
-    genotype_storage_id = "test_filesystem"
-    study_id = "test_flexible_denovo_dae_chrom_pos"
+    study_id = f"test_flexible_denovo_dae_chrom_pos_{storage_id}"
 
     argv = [
         pedigree_filename,
@@ -286,34 +304,43 @@ def test_flexible_denovo_dae_chrom_pos(
         "--denovo-best-state",
         "bestState",
         "--genotype-storage",
-        genotype_storage_id,
+        storage_id,
         "-o",
-        temp_dirname,
+        str(root_path / "output"),
     ]
 
-    main(argv, gpf_instance_2019)
+    main(argv, gpf_instance)
 
-    gpf_instance_2019.reload()
-    study = gpf_instance_2019.get_genotype_data(study_id)
+    gpf_instance.reload()
+    study = gpf_instance.get_genotype_data(study_id)
     assert study is not None
 
     vs = list(study.query_variants())
-    assert_proper_flexible_short_variants(vs)
+    assert len(vs) == 3
 
 
+@pytest.mark.parametrize(
+    "storage_id",
+    [
+        "genotype_impala",
+        "genotype_impala_2",
+        "genotype_filesystem",
+    ]
+)
 def test_flexible_denovo_dae_person(
-    fixture_dirname, gpf_instance_2019, temp_dirname
-):
+        tmp_path_factory, storage_id, local_fixture):
+    root_path = tmp_path_factory.mktemp(storage_id)
+    foobar_gpf(root_path)
+    gpf_instance = GPFInstance(work_dir=str(root_path / "gpf_instance"))
 
-    pedigree_filename = fixture_dirname(
+    pedigree_filename = local_fixture(
         "flexible_short/flexible_short_families.ped"
     )
-    denovo_filename = fixture_dirname(
+    denovo_filename = local_fixture(
         "flexible_short/flexible_short_dae_person.txt"
     )
 
-    genotype_storage_id = "test_filesystem"
-    study_id = "test_flexible_denovo_dae_person"
+    study_id = f"test_flexible_denovo_dae_person_{storage_id}"
 
     argv = [
         pedigree_filename,
@@ -327,15 +354,15 @@ def test_flexible_denovo_dae_person(
         "--denovo-person-id",
         "person_id",
         "--genotype-storage",
-        genotype_storage_id,
+        storage_id,
         "-o",
-        temp_dirname,
+        str(root_path / "output"),
     ]
 
-    main(argv, gpf_instance_2019)
-    gpf_instance_2019.reload()
-    study = gpf_instance_2019.get_genotype_data(study_id)
+    main(argv, gpf_instance)
+    gpf_instance.reload()
+    study = gpf_instance.get_genotype_data(study_id)
     assert study is not None
 
     vs = list(study.query_variants())
-    assert_proper_flexible_short_variants(vs)
+    assert len(vs) == 3

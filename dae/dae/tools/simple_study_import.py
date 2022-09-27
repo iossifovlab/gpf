@@ -8,10 +8,7 @@ import logging
 
 from dae.gpf_instance.gpf_instance import GPFInstance
 
-from dae.impala_storage.import_commons import \
-    construct_import_annotation_pipeline, \
-    construct_import_effect_annotator, \
-    save_study_config
+from dae.import_tools.import_tools import ImportProject, run_with_project
 
 from dae.backends.dae.loader import DenovoLoader, DaeTransmittedLoader
 from dae.backends.vcf.loader import VcfLoader
@@ -125,22 +122,22 @@ def cli_arguments(dae_config, argv=None):
         "variants file",
     )
 
-    parser.add_argument(
-        "--study-config",
-        type=str,
-        default=None,
-        dest="study_config",
-        help="Config used to overwrite values in generated configuration",
-    )
+    # parser.add_argument(
+    #     "--study-config",
+    #     type=str,
+    #     default=None,
+    #     dest="study_config",
+    #     help="Config used to overwrite values in generated configuration",
+    # )
 
-    parser.add_argument(
-        "--force", "-F",
-        dest="force",
-        action="store_true",
-        help="allows overwriting configuration file in case "
-        "target directory already contains such file",
-        default=False
-    )
+    # parser.add_argument(
+    #     "--force", "-F",
+    #     dest="force",
+    #     action="store_true",
+    #     help="allows overwriting configuration file in case "
+    #     "target directory already contains such file",
+    #     default=False
+    # )
 
     DenovoLoader.cli_arguments(parser, options_only=True)
     VcfLoader.cli_arguments(parser, options_only=True)
@@ -162,6 +159,62 @@ def _decorate_loader(variants_loader, effect_annotator, annotation_pipeline):
     return variants_loader
 
 
+def build_import_project(argv, gpf_instance):
+    """Build an import project based on the CLI arguments."""
+    project = {
+        "gpf_instance": {
+            "path": gpf_instance.dae_config.conf_dir,
+        },
+        "destination": {
+            "storage_id": argv.genotype_storage
+        }
+    }
+
+    if argv.id is not None:
+        study_id = argv.id
+    else:
+        study_id, _ = os.path.splitext(os.path.basename(argv.families))
+    project["id"] = study_id
+
+    if argv.output is not None:
+        project["processing_config"] = {}
+        project["processing_config"]["work_dir"] = argv.output
+
+    project["input"] = {}
+
+    families_filename, families_params = \
+        FamiliesLoader.parse_cli_arguments(argv)
+    project["input"]["pedigree"] = \
+        ImportProject.del_loader_prefix(families_params, "ped_")
+    project["input"]["pedigree"]["file"] = families_filename
+
+    if argv.denovo_file is not None:
+        denovo_filename, denovo_params = DenovoLoader.parse_cli_arguments(argv)
+        project["input"]["denovo"] = \
+            ImportProject.del_loader_prefix(denovo_params, "denovo_")
+        project["input"]["denovo"]["files"] = [denovo_filename]
+
+    if argv.cnv_file is not None:
+        cnv_filename, cnv_params = CNVLoader.parse_cli_arguments(argv)
+        project["input"]["cnv"] = \
+            ImportProject.del_loader_prefix(cnv_params, "cnv_")
+        project["input"]["cnv"]["files"] = [cnv_filename]
+
+    if argv.vcf_files is not None:
+        vcf_files, vcf_params = VcfLoader.parse_cli_arguments(argv)
+        project["input"]["vcf"] = \
+            ImportProject.del_loader_prefix(vcf_params, "vcf_")
+        project["input"]["vcf"]["files"] = vcf_files
+
+    if argv.dae_summary_file is not None:
+        dae_file, dae_params = DaeTransmittedLoader.parse_cli_arguments(argv)
+        project["input"]["dae"] = \
+            ImportProject.del_loader_prefix(dae_params, "dae_")
+        project["input"]["dae"]["files"] = [dae_file]
+
+    return ImportProject.build_from_config(project)
+
+
 def main(argv, gpf_instance=None):
     """Run the simple study import procedure."""
     # pylint: disable=too-many-locals,too-many-branches,too-many-statements
@@ -176,105 +229,16 @@ def main(argv, gpf_instance=None):
             logger.warning("GPF not configured correctly", exc_info=True)
 
     argv = cli_arguments(dae_config, argv)
-
-    if argv.verbose == 1:
-        logging.basicConfig(level=logging.WARNING)
-    elif argv.verbose == 2:
-        logging.basicConfig(level=logging.INFO)
-    elif argv.verbose >= 3:
-        logging.basicConfig(level=logging.DEBUG)
-    else:
-        logging.basicConfig(level=logging.WARNING)
+    VerbosityConfiguration.set(argv)
     logging.getLogger("impala").setLevel(logging.WARNING)
 
-    genotype_storage_factory = gpf_instance.genotype_storage_db
-    genome = gpf_instance.reference_genome
-
-    genotype_storage = genotype_storage_factory.get_genotype_storage(
-        argv.genotype_storage
-    )
-    logger.debug(
-        "genotype storage: %s, %s", argv.genotype_storage, genotype_storage)
-    assert genotype_storage is not None, argv.genotype_storage
-
-    annotation_pipeline = construct_import_annotation_pipeline(gpf_instance)
-    effect_annotator = construct_import_effect_annotator(gpf_instance)
-
-    if argv.id is not None:
-        study_id = argv.id
-    else:
-        study_id, _ = os.path.splitext(os.path.basename(argv.families))
-
-    if argv.output is None:
-        output = dae_config.studies.dir
-    else:
-        output = argv.output
-
-    logger.info("storing results into: %s", output)
-    os.makedirs(output, exist_ok=True)
-
-    assert output is not None
-
-    start = time.time()
-    families_filename, families_params = \
-        FamiliesLoader.parse_cli_arguments(argv)
-    families_loader = FamiliesLoader(families_filename, **families_params)
-    families = families_loader.load()
-    elapsed = time.time() - start
-    logger.info("Families loaded in %.2f sec", elapsed)
-
-    variant_loaders = []
-    if argv.denovo_file is not None:
-        denovo_filename, denovo_params = DenovoLoader.parse_cli_arguments(argv)
-        denovo_loader = DenovoLoader(
-            families, denovo_filename, genome=genome, params=denovo_params
-        )
-
-        denovo_loader = _decorate_loader(
-            denovo_loader, effect_annotator, annotation_pipeline
-        )
-        variant_loaders.append(denovo_loader)
-
-    if argv.cnv_file is not None:
-        cnv_filename, cnv_params = CNVLoader.parse_cli_arguments(argv)
-        cnv_loader = CNVLoader(
-            families, cnv_filename, genome=genome, params=cnv_params
-        )
-        cnv_loader = _decorate_loader(
-            cnv_loader, effect_annotator, annotation_pipeline)
-        variant_loaders.append(cnv_loader)
-
-    if argv.vcf_files is not None:
-        vcf_files, vcf_params = VcfLoader.parse_cli_arguments(argv)
-        vcf_loader = VcfLoader(families, vcf_files, genome, params=vcf_params)
-        vcf_loader = _decorate_loader(
-            vcf_loader, effect_annotator, annotation_pipeline)
-
-        variant_loaders.append(vcf_loader)
-
-    if argv.dae_summary_file is not None:
-        dae_files, dae_params = DaeTransmittedLoader.parse_cli_arguments(argv)
-        dae_loader = DaeTransmittedLoader(
-            families, dae_files, genome, params=dae_params
-        )
-        dae_loader = _decorate_loader(
-            dae_loader, effect_annotator, annotation_pipeline)
-        variant_loaders.append(dae_loader)
-
-    study_config = genotype_storage.simple_study_import(
-        study_id,
-        families_loader=families_loader,
-        variant_loaders=variant_loaders,
-        output=output,
-        study_config=argv.study_config,
-    )
-    save_study_config(
-        dae_config, study_id, study_config, force=argv.force)
+    import_project = build_import_project(argv, gpf_instance)
+    run_with_project(import_project)
 
     if not argv.skip_reports:
         # needs to reload the configuration, hence gpf_instance=None
         gpf_instance.reload()
-        argv = ["--studies", study_id]
+        argv = ["--studies", import_project.study_id]
 
         logger.info("generating common reports...")
         start = time.time()

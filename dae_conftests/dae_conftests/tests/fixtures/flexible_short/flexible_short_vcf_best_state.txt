@@ -1,4 +1,0 @@
-location	reference	alternative	familyId	bestState
-15:80137553	T	TA	f1	2 2 1 2/0 0 1 0
-3:56627767	AAAGT	A	f2	2 2 1/0 0 1
-4:83276456	C	T	f1	2 2 1 2/0 0 1 0
