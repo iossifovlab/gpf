@@ -332,7 +332,7 @@ EOT
 
     # Run integration tests in gpf/tests
     build_run_container bash -c '
-        cd /wd/tests;
+        cd /wd/dae/tests;
         export PYTHONHASHSEED=0;
         /opt/conda/bin/conda run --no-capture-output -n gpf py.test -v \
           --durations 20 \
@@ -342,7 +342,7 @@ EOT
           . || true'
 
     # Combane coverage information from tests in dae/, wdae/ and tests/
-    build_run_container coverage combine dae/.coverage wdae/.coverage tests/.coverage
+    build_run_container coverage combine dae/.coverage wdae/.coverage dae/tests/.coverage
 
     # Convert coverage information to XML coberture format
     build_run_container coverage xml
