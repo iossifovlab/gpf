@@ -7,19 +7,14 @@ import toml
 from cerberus import Validator
 
 from dae.configuration.utils import validate_path
-from dae.backends.raw.loader import VariantsLoader, TransmissionType
 from dae.genotype_storage.genotype_storage import GenotypeStorage
+from dae.impala_storage.parquet_io import NoPartitionDescriptor, \
+    ParquetPartitionDescriptor
 
 from dae.impala_storage.hdfs_helpers import HdfsHelpers
 from dae.impala_storage.impala_helpers import ImpalaHelpers
 from dae.impala_storage.impala_variants import ImpalaVariants
-from dae.impala_storage.parquet_io import NoPartitionDescriptor, \
-    ParquetManager, \
-    ParquetPartitionDescriptor
 
-from dae.configuration.study_config_builder import StudyConfigBuilder
-from dae.configuration.gpf_config_parser import GPFConfigParser
-from dae.utils.dict_utils import recursive_dict_update
 from dae.impala_storage.rsync_helpers import RsyncHelpers
 
 
@@ -116,7 +111,7 @@ class ImpalaGenotypeStorage(GenotypeStorage):
             self._impala_helpers.close()
 
     def get_db(self):
-        return self.storage_config.impala.db
+        return self.storage_config["impala"]["db"]
 
     def is_impala(self):
         return True
@@ -213,83 +208,9 @@ class ImpalaGenotypeStorage(GenotypeStorage):
 
         return study_config
 
-    # pylint: disable=arguments-differ
-    def simple_study_import(
-            self,
-            study_id,
-            families_loader=None,
-            variant_loaders=None,
-            study_config=None,
-            output=".",
-            include_reference=False,
-            **kwargs):
-
-        variants_dir = None
-        has_denovo = False
-        has_cnv = False
-        bucket_index = 0
-
-        if variant_loaders:
-            for index, variant_loader in enumerate(variant_loaders):
-                assert isinstance(variant_loader, VariantsLoader), \
-                    type(variant_loader)
-
-                if variant_loader.get_attribute("source_type") == "denovo":
-                    has_denovo = True
-
-                if variant_loader.get_attribute("source_type") == "cnv":
-                    has_denovo = True
-                    has_cnv = True
-
-                if variant_loader.transmission_type == \
-                        TransmissionType.denovo:
-                    assert index < 100
-
-                    bucket_index = index  # denovo buckets < 100
-                elif variant_loader.transmission_type == \
-                        TransmissionType.transmitted:
-                    bucket_index = index + 100  # transmitted buckets >=100
-
-                variants_dir = os.path.join(output, "variants")
-                partition_description = NoPartitionDescriptor(variants_dir)
-
-                ParquetManager.variants_to_parquet(
-                    variant_loader,
-                    partition_description,
-                    # parquet_filenames.variants,
-                    bucket_index=bucket_index,
-                    include_reference=include_reference
-                )
-
-        pedigree_filename = os.path.join(
-            output, "pedigree", "pedigree.parquet")
-        families = families_loader.load()
-        ParquetManager.families_to_parquet(
-            families, pedigree_filename
-        )
-
-        config_dict = self.impala_load_dataset(
-            study_id,
-            variants_dir=variants_dir,
-            pedigree_file=pedigree_filename
-        )
-
-        config_dict["has_denovo"] = has_denovo
-        config_dict["has_cnv"] = has_cnv
-
-        if study_config is not None:
-            study_config_dict = GPFConfigParser.load_config_raw(study_config)
-            config_dict = recursive_dict_update(config_dict, study_config_dict)
-
-        config_builder = StudyConfigBuilder(config_dict)
-
-        return config_builder.build_config()
-
     def default_hdfs_study_path(self, study_id):
-        study_path = os.path.join(self.storage_config.hdfs.base_dir, study_id)
-        # study_path = \
-        #     f"hdfs://{self.storage_config.hdfs.host}:" \
-        #     f"{self.storage_config.hdfs.port}{study_path}"
+        study_path = os.path.join(
+            self.storage_config["hdfs"]["base_dir"], study_id)
         return study_path
 
     def default_pedigree_hdfs_filename(self, study_id):
@@ -522,16 +443,3 @@ class ImpalaGenotypeStorage(GenotypeStorage):
             partition_description=partition_description,
             variants_schema=variants_schema,
             variants_sample=variants_hdfs_path)
-
-
-STUDY_CONFIG_TEMPLATE = """
-id = "{id}"
-conf_dir = "."
-
-[genotype_storage]
-id = "{genotype_storage}"
-
-[genotype_storage.tables]
-pedigree = "{pedigree_table}"
-variants = "{variants_table}"
-"""

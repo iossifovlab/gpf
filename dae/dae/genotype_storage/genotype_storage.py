@@ -62,7 +62,6 @@ class GenotypeStorage(abc.ABC):
         """Construct a query backend for this genotype storage."""
 
     @deprecated(details="pending remove from the API")
-    @abc.abstractmethod
     def simple_study_import(
             self,
             study_id,

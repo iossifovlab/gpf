@@ -331,7 +331,8 @@ class CNVLoader(VariantsGenotypesLoader):
 
         result = []
         for reg in self.regions:
-            assert reg is not None
+            if reg is None:
+                continue
             result.append(Region.from_str(reg))
         self.regions = result
 

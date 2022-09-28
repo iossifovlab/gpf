@@ -1,3 +1,5 @@
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
+
 from dae.tools.generate_autism_gene_profile import main
 from dae.autism_gene_profile.db import AutismGeneProfileDB
 

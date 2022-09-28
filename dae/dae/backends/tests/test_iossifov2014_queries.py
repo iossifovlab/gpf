@@ -3,6 +3,7 @@ import pytest
 from dae.utils.regions import Region
 
 
+@pytest.mark.skip(reason="WIP: migration to new test infrastructure")
 @pytest.mark.parametrize(
     "variants", ["iossifov2014_raw_denovo", "iossifov2014_impala", ]
 )

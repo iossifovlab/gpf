@@ -14,15 +14,20 @@ class GenotypeStorageRegistry:
         self._genotype_storages = {}
         self._default_genotype_storage: GenotypeStorage = None
 
-    def register_genotype_storage(self, storage_config) -> GenotypeStorage:
+    def register_storage_config(
+            self, storage_config) -> GenotypeStorage:
         """Create a genotype storage by storage config and registers it."""
-        storage_id = storage_config["id"]
         storage_type = storage_config["storage_type"]
         storage_factory = get_genotype_storage_factory(storage_type)
 
         genotype_storage = storage_factory(storage_config)
-        self._genotype_storages[storage_id] = genotype_storage
-        return genotype_storage
+        return self.register_genotype_storage(genotype_storage)
+
+    def register_genotype_storage(
+            self, storage: GenotypeStorage) -> GenotypeStorage:
+        storage_id = storage.storage_id
+        self._genotype_storages[storage_id] = storage
+        return storage
 
     def register_default_storage(self, genotype_storage):
         self._default_genotype_storage = genotype_storage
@@ -39,9 +44,9 @@ class GenotypeStorageRegistry:
     def get_genotype_storage_ids(self):
         return list(self._genotype_storages.keys())
 
-    def register_storages_config(self, genotype_storages_config):
+    def register_storages_configs(self, genotype_storages_config):
         for storage_config in genotype_storages_config["storages"]:
-            self.register_genotype_storage(storage_config)
+            self.register_storage_config(storage_config)
         default_storage_id = genotype_storages_config.default
         if default_storage_id is not None:
             storage = self.get_genotype_storage(default_storage_id)

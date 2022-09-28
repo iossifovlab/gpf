@@ -34,6 +34,7 @@ class ParquetWriter:
             partition_description,
             bucket_index=bucket.index,
             rows=rows,
+            include_reference=project.include_reference,
         )
 
     @staticmethod

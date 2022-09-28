@@ -15,7 +15,9 @@ import pytest
 
 from box import Box
 
-from dae.configuration.gpf_config_parser import GPFConfigParser, FrozenBox
+from dae.configuration.gpf_config_parser import GPFConfigParser, FrozenBox, \
+    DefaultBox
+
 from dae.configuration.schemas.dae_conf import dae_conf_schema
 
 from dae.annotation.annotation_factory import build_annotation_pipeline
@@ -26,6 +28,7 @@ from dae.backends.raw.raw_variants import RawMemoryVariants
 
 from dae.backends.dae.loader import DaeTransmittedLoader, DenovoLoader
 from dae.backends.vcf.loader import VcfLoader
+from dae.import_tools.import_tools import ImportProject, run_with_project
 
 from dae.impala_storage.import_commons import \
     construct_import_effect_annotator
@@ -387,12 +390,11 @@ def from_prefix_denovo(prefix):
     family_filename = f"{prefix}_families.ped"
 
     conf = {
-        "denovo": {
-            "denovo_filename": denovo_filename,
-            "family_filename": family_filename,
-        }
+        "prefix": prefix,
+        "pedigree": family_filename,
+        "denovo": denovo_filename,
     }
-    return FrozenBox(conf)
+    return DefaultBox(conf)
 
 
 def from_prefix_vcf(prefix):
@@ -412,35 +414,35 @@ def from_prefix_vcf(prefix):
     denovo_filename = f"{prefix}.tsv"
     if os.path.exists(denovo_filename):
         conf["denovo"] = denovo_filename
-    return FrozenBox(conf)
+    return DefaultBox(conf)
 
 
 @pytest.fixture
 def dae_denovo_config():
     fullpath = relative_to_this_test_folder("fixtures/dae_denovo/denovo")
     config = from_prefix_denovo(fullpath)
-    return config.denovo
+    return config
 
 
-@pytest.fixture
-def dae_denovo(
-        dae_denovo_config, gpf_instance_2013, annotation_pipeline_internal):
+# @pytest.fixture
+# def dae_denovo(
+#         dae_denovo_config, gpf_instance_2013, annotation_pipeline_internal):
 
-    families_loader = FamiliesLoader(
-        dae_denovo_config.family_filename, **{"ped_file_format": "simple"}
-    )
-    families = families_loader.load()
+#     families_loader = FamiliesLoader(
+#         dae_denovo_config.family_filename, **{"ped_file_format": "simple"}
+#     )
+#     families = families_loader.load()
 
-    variants_loader = DenovoLoader(
-        families, dae_denovo_config.denovo_filename,
-        gpf_instance_2013.reference_genome
-    )
+#     variants_loader = DenovoLoader(
+#         families, dae_denovo_config.denovo_filename,
+#         gpf_instance_2013.reference_genome
+#     )
 
-    variants_loader = AnnotationPipelineDecorator(
-        variants_loader, annotation_pipeline_internal
-    )
-    fvars = RawMemoryVariants([variants_loader], families=families)
-    return fvars
+#     variants_loader = AnnotationPipelineDecorator(
+#         variants_loader, annotation_pipeline_internal
+#     )
+#     fvars = RawMemoryVariants([variants_loader], families=families)
+#     return fvars
 
 
 def from_prefix_dae(prefix):
@@ -490,26 +492,20 @@ def dae_transmitted(
 
 
 @pytest.fixture
-def dae_iossifov2014_config():
-    fullpath = relative_to_this_test_folder(
-        "fixtures/dae_iossifov2014/iossifov2014"
-    )
-    config = from_prefix_denovo(fullpath)
-    return config.denovo
-
-
-@pytest.fixture
 def iossifov2014_loader(
-        dae_iossifov2014_config,
+        fixture_dirname,
         gpf_instance_2013, annotation_pipeline_internal):
 
-    config = dae_iossifov2014_config
+    family_filename = fixture_dirname(
+        "dae_iossifov2014/iossifov2014_families.ped")
+    denovo_filename = fixture_dirname(
+        "dae_iossifov2014/iossifov2014.txt")
 
-    families_loader = FamiliesLoader(config.family_filename)
+    families_loader = FamiliesLoader(family_filename)
     families = families_loader.load()
 
     variants_loader = DenovoLoader(
-        families, config.denovo_filename,
+        families, denovo_filename,
         gpf_instance_2013.reference_genome
     )
 
@@ -518,17 +514,6 @@ def iossifov2014_loader(
     )
 
     return variants_loader, families_loader
-
-
-@pytest.fixture
-def iossifov2014_raw_denovo(iossifov2014_loader):
-
-    variants_loader, families_loader = iossifov2014_loader
-    fvars = RawMemoryVariants(
-        [variants_loader], families_loader.load()
-    )
-
-    return fvars
 
 
 @pytest.fixture(scope="session")
@@ -783,7 +768,7 @@ def impala_genotype_storage(request, hdfs_host, impala_host):
     from dae.genotype_storage.genotype_storage_registry import \
         GenotypeStorageRegistry
     registry = GenotypeStorageRegistry()
-    registry.register_genotype_storage(storage_config)
+    registry.register_storage_config(storage_config)
 
     def fin():
         registry.shutdown()
@@ -800,6 +785,60 @@ def collect_vcf(dirname):
         vcf_config = from_prefix_vcf(prefix)
         result.append(vcf_config)
     return result
+
+
+def _import_project_from_prefix_config(
+        config, root_path, gpf_instance, study_id=None):
+    logger.debug("importing: %s", config)
+
+    study_id = study_id or study_id_from_path(config.pedigree)
+    study_temp_dirname = os.path.join(root_path, study_id)
+
+    project = {
+        "id": study_id,
+        "processing_config": {
+            "work_dir": study_temp_dirname,
+            "include_reference": True,
+        },
+        "input": {
+            "pedigree": {
+                "file": config.pedigree,
+            }
+        },
+        "destination": {
+            "storage_id": "impala_test_storage",
+        },
+    }
+
+    if config.denovo:
+        project["input"]["denovo"] = {
+            "files": [
+                config.denovo,
+            ],
+        }
+        if config.denovo.endswith("tsv"):
+            project["input"]["denovo"].update({
+                "genotype": "genotype",
+                "family_id": "family",
+                "chrom": "chrom",
+                "pos": "pos",
+                "ref": "ref",
+                "alt": "alt",
+            })
+    if config.vcf:
+        project["input"]["vcf"] = {
+            "files": [
+                config.vcf,
+            ],
+            "include_reference_genotypes": True,
+            "include_unknown_family_genotypes": True,
+            "include_unknown_person_genotypes": True,
+            "multi_loader_fill_in_mode": "reference",
+            "denovo_mode": "denovo",
+            "omission_mode": "omission",
+        }
+
+    return ImportProject.build_from_config(project, gpf_instance=gpf_instance)
 
 
 DATA_IMPORT_COUNT = 0
@@ -832,14 +871,12 @@ def data_import(
 
     request.addfinalizer(fin)
 
-    effect_annotator = construct_import_effect_annotator(
-        gpf_instance_2013
-    )
-
     from dae.impala_storage.impala_helpers import ImpalaHelpers
 
     impala_helpers = ImpalaHelpers(
         impala_hosts=[impala_host], impala_port=21050)
+    gpf_instance_2013.genotype_storage_db.register_genotype_storage(
+        impala_genotype_storage)
 
     def build(dirname):
 
@@ -854,73 +891,22 @@ def data_import(
         for config in vcf_configs:
             logger.debug("importing: %s", config)
 
-            filename = os.path.basename(config.pedigree)
-            study_id = os.path.splitext(filename)[0]
-
+            study_id = study_id_from_path(config.pedigree)
             (variant_table, pedigree_table) = \
                 impala_genotype_storage.study_tables(
                     FrozenBox({"id": study_id}))
 
-            if (
-                not reimport
-                and impala_helpers.check_table(
-                    impala_test_dbname(), variant_table
-                )
-                and impala_helpers.check_table(
-                    impala_test_dbname(), pedigree_table
-                )
-            ):
+            if not reimport and \
+                    impala_helpers.check_table(
+                        impala_test_dbname(), variant_table) and \
+                    impala_helpers.check_table(
+                        impala_test_dbname(), pedigree_table):
                 continue
 
-            study_id = study_id_from_path(config.pedigree)
-            study_temp_dirname = os.path.join(temp_dirname, study_id)
+            import_project = _import_project_from_prefix_config(
+                config, temp_dirname, gpf_instance_2013)
 
-            families_loader = FamiliesLoader(config.pedigree)
-            families = families_loader.load()
-            genome = gpf_instance_2013.reference_genome
-
-            loaders = []
-            if config.denovo:
-                denovo_loader = DenovoLoader(
-                    families,
-                    config.denovo,
-                    genome,
-                    params={
-                        "denovo_genotype": "genotype",
-                        "denovo_family_id": "family",
-                        "denovo_chrom": "chrom",
-                        "denovo_pos": "pos",
-                        "denovo_ref": "ref",
-                        "denovo_alt": "alt",
-                    }
-                )
-                loaders.append(EffectAnnotationDecorator(
-                    denovo_loader, effect_annotator))
-
-            vcf_loader = VcfLoader(
-                families,
-                [config.vcf],
-                genome,
-                regions=None,
-                params={
-                    "vcf_include_reference_genotypes": True,
-                    "vcf_include_unknown_family_genotypes": True,
-                    "vcf_include_unknown_person_genotypes": True,
-                    "vcf_multi_loader_fill_in_mode": "reference",
-                    "vcf_denovo_mode": "denovo",
-                    "vcf_omission_mode": "omission",
-                },
-            )
-
-            loaders.append(EffectAnnotationDecorator(
-                vcf_loader, effect_annotator))
-
-            impala_genotype_storage.simple_study_import(
-                study_id,
-                families_loader=families_loader,
-                variant_loaders=loaders,
-                output=study_temp_dirname,
-                include_reference=True)
+            run_with_project(import_project)
 
     build("backends/")
     return True
@@ -942,18 +928,16 @@ def variants_impala(
     return builder
 
 
-@pytest.fixture
-def iossifov2014_impala(
-        request,
-        iossifov2014_loader,
+@pytest.fixture(scope="session")
+def iossifov2014_import(
         gpf_instance_2013,
-        hdfs_host,
+        fixture_dirname,
+        tmp_path_factory,
         impala_host,
         impala_genotype_storage,
         reimport):
 
     study_id = "iossifov_we2014_test"
-
     from dae.impala_storage.impala_helpers import ImpalaHelpers
 
     impala_helpers = ImpalaHelpers(
@@ -963,33 +947,23 @@ def iossifov2014_impala(
         impala_genotype_storage.study_tables(
             FrozenBox({"id": study_id}))
 
-    if reimport or \
-            not impala_helpers.check_table(
-                "impala_test_db", variant_table) or \
-            not impala_helpers.check_table(
-                "impala_test_db", pedigree_table):
+    if not reimport and \
+            impala_helpers.check_table(
+                impala_test_dbname(), variant_table) and \
+            impala_helpers.check_table(
+                impala_test_dbname(), pedigree_table):
+        return
 
-        from dae.impala_storage.hdfs_helpers import HdfsHelpers
+    gpf_instance_2013.genotype_storage_db.register_genotype_storage(
+        impala_genotype_storage)
+    config = from_prefix_denovo(
+        fixture_dirname("dae_iossifov2014/iossifov2014"))
 
-        hdfs = HdfsHelpers(hdfs_host, 8020)
-
-        temp_dirname = hdfs.tempdir(prefix="variants_", suffix="_data")
-        hdfs.mkdir(temp_dirname)
-
-        study_temp_dirname = os.path.join(temp_dirname, study_id)
-        variants_loader, families_loader = iossifov2014_loader
-
-        impala_genotype_storage.simple_study_import(
-            study_id,
-            families_loader=families_loader,
-            variant_loaders=[variants_loader],
-            output=study_temp_dirname)
-
-    fvars = impala_genotype_storage.build_backend(
-        FrozenBox({"id": study_id}), gpf_instance_2013.reference_genome,
-        gpf_instance_2013.gene_models
-    )
-    return fvars
+    root_path = tmp_path_factory.mktemp(
+        f"{study_id}_{impala_genotype_storage.get_db()}")
+    import_project = _import_project_from_prefix_config(
+        config, root_path, gpf_instance_2013, study_id=study_id)
+    run_with_project(import_project)
 
 
 @pytest.fixture(scope="session")
@@ -1047,7 +1021,7 @@ def temp_dbfile(request):
 
 
 @pytest.fixture
-def agp_config(data_import, iossifov2014_impala):
+def agp_config(iossifov2014_import):
     return Box({
         "gene_sets": [
             {

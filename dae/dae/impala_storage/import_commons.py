@@ -215,7 +215,7 @@ class MakefilePartitionHelper:
         ]
 
         if mode == "single_bucket":
-            targets = {"all": generated_target_chromosomes}
+            targets = {"all": [None]}
             return targets
         if mode == "chromosome":
             targets = {chrom: [chrom]

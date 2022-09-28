@@ -1,4 +1,5 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
+import copy
 import pytest
 
 import numpy as np
@@ -8,6 +9,7 @@ from dae.backends.cnv.loader import CNVLoader
 from dae.pedigrees.loader import FamiliesLoader
 from dae.backends.raw.loader import AnnotationPipelineDecorator
 from dae.backends.raw.raw_variants import RawMemoryVariants
+from dae.import_tools.import_tools import ImportProject, run_with_project
 
 from dae.configuration.gpf_config_parser import FrozenBox
 from dae.utils.regions import Region
@@ -44,24 +46,51 @@ def cnv_raw(cnv_loader):
     return fvars
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
+def cnv_project_config(fixture_dirname, impala_genotype_storage):
+    families_filename = fixture_dirname("backends/cnv_ped.txt")
+    variants_filename = fixture_dirname("backends/cnv_variants.txt")
+
+    project = {
+        "id": "cnv_test",
+        "input": {
+            "pedigree": {
+                "file": families_filename,
+                "file_format": "simple"
+            },
+            "cnv": {
+                "files": [
+                    variants_filename,
+                ],
+                "family_id": "familyId",
+                "best_state": "bestState",
+                "transmission_type": "denovo",
+            }
+        },
+        "destination": {
+            "storage_id": impala_genotype_storage.storage_id,
+        }
+    }
+    return project
+
+
+@pytest.fixture(scope="session")
 def cnv_impala(
-        request,
-        cnv_loader,
+        cnv_project_config,
         gpf_instance_2013,
         hdfs_host,
         impala_host,
         impala_genotype_storage,
-        reimport,
-        data_import):
+        reimport):
     # pylint: disable=too-many-locals,import-outside-toplevel
     from dae.impala_storage.impala_helpers import ImpalaHelpers
 
     impala_helpers = ImpalaHelpers(
         impala_hosts=[impala_host], impala_port=21050)
 
-    study_id = "cnv_test"
-
+    study_id = f"cnv_test_{impala_genotype_storage.storage_id}"
+    gpf_instance_2013.genotype_storage_db.register_genotype_storage(
+        impala_genotype_storage)
     (variant_table, pedigree_table) = \
         impala_genotype_storage.study_tables(
             FrozenBox({"id": study_id}))
@@ -76,16 +105,15 @@ def cnv_impala(
 
         hdfs = HdfsHelpers(hdfs_host, 8020)
 
-        temp_dirname = hdfs.tempdir(prefix="variants_", suffix="_data")
-        hdfs.mkdir(temp_dirname)
-
-        families_loader, variants_loader = cnv_loader
-        impala_genotype_storage.simple_study_import(
-            study_id,
-            families_loader=families_loader,
-            variant_loaders=[variants_loader],
-            output=temp_dirname,
-            include_reference=True)
+        tmp_dirname = hdfs.tempdir(prefix="variants_", suffix="_data")
+        project = copy.deepcopy(cnv_project_config)
+        project["processing_config"] = {
+            "work_dir": tmp_dirname
+        }
+        project["id"] = study_id
+        import_project = ImportProject.build_from_config(
+            project, gpf_instance=gpf_instance_2013)
+        run_with_project(import_project)
 
     fvars = impala_genotype_storage.build_backend(
         FrozenBox({"id": study_id}), gpf_instance_2013.reference_genome,

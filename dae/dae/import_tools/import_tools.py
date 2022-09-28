@@ -150,7 +150,7 @@ class ImportProject():
         if bucket is not None:
             loader_type = bucket.type
         loader = self._get_variant_loader(loader_type, reference_genome)
-        if bucket is not None:
+        if bucket is not None and bucket.region_bin != "all":
             loader.reset_regions(bucket.regions)
         return loader
 
@@ -246,6 +246,12 @@ class ImportProject():
             .get("work_dir", "")
 
     @property
+    def include_reference(self):
+        """Check if the import should include ref allele in the output data."""
+        return self.import_config.get("processing_config", {})\
+            .get("include_reference", False)
+
+    @property
     def input_dir(self):
         """Return the path relative to which input files are specified."""
         return os.path.join(
@@ -282,7 +288,7 @@ class ImportProject():
         # explicit storage config
         registry = GenotypeStorageRegistry()
         # FIXME: switch to using new storage configuration
-        return registry.register_genotype_storage(
+        return registry.register_storage_config(
             self.import_config["destination"])
 
     def has_destination(self) -> bool:

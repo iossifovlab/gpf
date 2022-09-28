@@ -1,8 +1,58 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
+import pytest
+
 from dae.annotation.schema import Schema
 from dae.impala_storage.serializers import AlleleParquetSerializer
 from dae.backends.dae.loader import DenovoLoader
 from dae.pedigrees.loader import FamiliesLoader
+
+from dae.import_tools.import_tools import ImportProject, run_with_project
+from dae.configuration.gpf_config_parser import FrozenBox
+
+
+@pytest.fixture(scope="session")
+def extra_attrs_impala(
+        fixture_dirname,
+        tmp_path_factory,
+        gpf_instance_2013,
+        impala_genotype_storage):
+    study_id = f"denovo_extra_attrs_{impala_genotype_storage.storage_id}"
+    families_filename = fixture_dirname("backends/iossifov_extra_attrs.ped")
+    variants_filename = fixture_dirname("backends/iossifov_extra_attrs.tsv")
+    root_path = tmp_path_factory.mktemp(study_id)
+    gpf_instance_2013\
+        .genotype_storage_db\
+        .register_genotype_storage(impala_genotype_storage)
+
+    project = {
+        "id": study_id,
+        "input": {
+            "pedigree": {
+                "file": families_filename,
+            },
+            "denovo": {
+                "files": [
+                    variants_filename
+                ]
+            },
+        },
+        "processing_config": {
+            "work_dir": str(root_path),
+        },
+        "destination": {
+            "storage_id": impala_genotype_storage.storage_id,
+        }
+    }
+    import_project = ImportProject.build_from_config(
+        project, gpf_instance=gpf_instance_2013)
+    run_with_project(import_project)
+
+    fvars = impala_genotype_storage.build_backend(
+        FrozenBox({"id": study_id}), gpf_instance_2013.reference_genome,
+        gpf_instance_2013.gene_models
+    )
+
+    return fvars
 
 
 def test_all_properties_in_blob(vcf_variants_loaders, impala_genotype_storage):
