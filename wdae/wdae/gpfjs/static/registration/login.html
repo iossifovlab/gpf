@@ -14,13 +14,14 @@
     </head>
 
     <body>
+        <header>
+            <img src="/static/registration/logo-64x64.png">
+            <label class="login-header">GPF: Genotypes and Phenotypes in Families</label>
+        </header>
+
         <form method="post" action="{% url 'login_user' %}" style="text-align:center">
             {% csrf_token %}
             <table>
-                <th>
-                    <img src="/static/registration/logo-64x64.png">
-                    <label>GPF: Genotypes and Phenotypes in Families</label>
-                </th>
                 <tr>
                     <td>
                         <div>{{ form.username.label_tag }}</div>
@@ -33,6 +34,17 @@
                         <div>{{ form.password }}</div>
                     </td>
                 </tr>
+                {% if form.errors and show_errors %}
+                <tr>
+                    <td>
+                        {% for errors in form.errors.values %}
+                        {% for error in errors %}
+                        <div class="message error">{{ error }}</div>
+                        {% endfor %}
+                        {% endfor %}
+                    </td>
+                </tr>
+                {% endif %}
                 <tr>
                     <td>
                         <input class="login-button" type="submit" value="Login">
@@ -41,17 +53,14 @@
                 </tr>
                 <tr>
                     <td>
-                        <a href="">Forgotten password</a>
+                        <a href="{% url 'forgotten_password' %}">Forgotten password</a>
                     </td>
                 </tr>
             </table>
-        
+
 
         </form>
-        
-        {% if form.errors %}
-        <div>Your username and password didn't match. Please try again.</div>
-        {% endif %}
+
     </body>
 
 </html>
