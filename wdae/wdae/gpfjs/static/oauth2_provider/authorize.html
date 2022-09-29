@@ -1,0 +1,61 @@
+{% extends "oauth2_provider/base.html" %}
+
+{% load i18n %}
+{% block content %}
+    <div class="block-center">
+        {% if not error %}
+            <form id="authorizationForm" method="post">
+                <h3 class="block-center-heading">{% trans "Authorize" %} {{ application.name }}?</h3>
+                {% csrf_token %}
+
+                {% for field in form %}
+                    {% if field.is_hidden %}
+                        {{ field }}
+                    {% endif %}
+                {% endfor %}
+
+                <p>{% trans "Application requires the following permissions" %}</p>
+                <ul>
+                    {% for scope in scopes_descriptions %}
+                        <li>{{ scope }}</li>
+                    {% endfor %}
+                </ul>
+
+                {{ form.errors }}
+                {{ form.non_field_errors }}
+
+
+                <div class="control-group">
+                    <div class="controls">
+                        <input type="submit" class="btn btn-large" value="Cancel"/>
+                        <input type="submit" class="btn btn-large btn-primary" name="allow" value="Authorize"/>
+                    </div>
+                </div>
+            </form>
+            <script>
+                function getQueryVariable(variable) {
+                    var query = window.location.search.substring(1);
+                    var vars = query.split('&');
+                    for (var i = 0; i < vars.length; i++) {
+                        var pair = vars[i].split('=');
+                        if (decodeURIComponent(pair[0]) == variable) {
+                            return decodeURIComponent(pair[1]);
+                        }
+                    }
+                    console.log('Query variable %s not found', variable);
+                }
+
+                function goToLogin() {
+                    var next = encodeURIComponent(window.location.href);
+                    var origin = window.location.origin;
+                    window.location.href = origin + "/accounts/login/?next=" + next
+                }
+            </script>
+            <button class="btn btn-large btn-secondary" onclick="goToLogin()">Change user</button>
+
+        {% else %}
+            <h2>Error: {{ error.error }}</h2>
+            <p>{{ error.description }}</p>
+        {% endif %}
+    </div>
+{% endblock %}
