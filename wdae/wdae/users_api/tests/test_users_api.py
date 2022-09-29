@@ -7,10 +7,14 @@ from utils.email_regex import email_regex, is_email_valid
 from utils.password_requirements import is_password_valid
 
 
-def test_invalid_verif_path(client, researcher):
-    url = "/api/v3/users/check_verif_path"
+def test_invalid_reset_code(client, researcher):
+    url = "/api/v3/users/reset_password"
+    session = client.session
+    session.update({"reset_code": "asdasfasfgadg"})
+    session.save()
     data = {
-        "verifPath": "dasdasdasdasdsa",
+        "new_password1": "samplenewpassword",
+        "new_password2": "samplenewpassword",
     }
     response = client.post(
         url, json.dumps(data), content_type="application/json", format="json"
@@ -19,7 +23,7 @@ def test_invalid_verif_path(client, researcher):
 
 
 def test_reset_pass(client, researcher):
-    url = "/api/v3/users/reset_password"
+    url = "/api/v3/users/forgotten_password"
     data = {"email": researcher.email}
     pprint(data)
 
