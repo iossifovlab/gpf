@@ -134,9 +134,8 @@ def test_email_auth_unsuccessful(db, user, client, tokens):
 
 
 def test_failed_auth_attempts(db, user, client, tokens):
-    """Check if the user is allowed four failed
-    login attempts before being locked out.
-    """
+    # Check if the user is allowed four failed
+    # login attempts before being locked out.
     url = "/api/v3/users/login"
     data = {
         "username": "user@example.com",
@@ -164,7 +163,7 @@ def test_failed_auth_attempts(db, user, client, tokens):
 
 
 def test_failed_auth_lockouts(db, user, client, tokens):
-    """Check if progressive lockouts are working."""
+    # Check if progressive lockouts are working.
     url = "/api/v3/users/login"
     data = {
         "username": "user@example.com",
@@ -193,7 +192,7 @@ def test_failed_auth_lockouts(db, user, client, tokens):
 
 
 def test_lockout_prevents_login(db, user, client, tokens):
-    """Check if lockouts prevent even valid logins."""
+    # Check if lockouts prevent even valid logins.
     url = "/api/v3/users/login"
     data = {
         "username": "user@example.com",
@@ -210,9 +209,8 @@ def test_lockout_prevents_login(db, user, client, tokens):
 
 
 def test_successful_auth_resets_lockouts(db, user, client, tokens):
-    """Check if a successful login will reset the email's
-    lockouts and allow another five failed attempts.
-    """
+    # Check if a successful login will reset the email's
+    # lockouts and allow another five failed attempts.
     url = "/api/v3/users/login"
     data = {
         "username": "user@example.com",
@@ -239,9 +237,8 @@ def test_successful_auth_resets_lockouts(db, user, client, tokens):
 
 
 def test_password_reset_resets_lockouts(user, client, tokens):
-    """Check if a password reset will reset the email's
-    lockouts and allow another five failed attempts.
-    """
+    # Check if a password reset will reset the email's
+    # lockouts and allow another five failed attempts.
     url = "/api/v3/users/login"
     data = {
         "username": "user@example.com",
@@ -298,9 +295,8 @@ def test_password_reset_resets_lockouts(user, client, tokens):
 
 
 def test_authentication_logging(user, client, tokens):
-    """Check if both successful and unsuccessful authentication attempts
-    are logged.
-    """
+    # Check if both successful and unsuccessful
+    # authentication attempts are logged.
     url = "/api/v3/users/login"
     data = {
         "username": "user@example.com",

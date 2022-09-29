@@ -132,6 +132,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
 
 class ForgotPassword(views.APIView):
+    @request_logging(LOGGER)
     def get(self, request):
         form = WdaePasswordForgottenForm()
         return render(
@@ -140,6 +141,7 @@ class ForgotPassword(views.APIView):
             {"form": form, "show_form": True}
         )
 
+    @request_logging(LOGGER)
     def post(self, request):
         form = WdaePasswordForgottenForm(request.data)
         is_valid = form.is_valid()
@@ -199,6 +201,7 @@ class BasePasswordView(views.APIView):
     verification_code_model: Optional[models.Model] = None
     template: Optional[str] = None
     form: Optional[forms.Form] = None
+    code_type: Optional[str] = None
 
     def _check_request_verification_path(self, request):
         """
@@ -209,22 +212,23 @@ class BasePasswordView(views.APIView):
         """
         verification_path = request.GET.get("code")
         if verification_path is None:
-            verification_path = request.session.get("reset_code")
+            verification_path = request.session.get(f"{self.code_type}_code")
         if verification_path is None:
-            return None, "No reset code provided"
+            return None, f"No {self.code_type} code provided"
         try:
             verif_code = self.verification_code_model.objects.get(
                 path=verification_path)
         except ObjectDoesNotExist:
-            return None, "Invalid reset code"
+            return None, f"Invalid {self.code_type} code"
 
         is_valid = verif_code.validate()
 
         if not is_valid:
-            return verif_code, "Expired reset code"
+            return verif_code, f"Expired {self.code_type} code"
 
         return verif_code, None
 
+    @request_logging(LOGGER)
     def get(self, request):
         verif_code, msg = \
             self._check_request_verification_path(request)
@@ -242,7 +246,7 @@ class BasePasswordView(views.APIView):
         user = verif_code.user
 
         form = self.form(user)  # pylint: disable=not-callable
-        request.session["reset_code"] = verif_code.path
+        request.session[f"{self.code_type}_code"] = verif_code.path
         request.path = request.path[:request.path.find("?")]
         return render(
             request,
@@ -250,6 +254,7 @@ class BasePasswordView(views.APIView):
             {"form": form}
         )
 
+    @request_logging(LOGGER)
     def post(self, request):
         verif_code, msg = \
             self._check_request_verification_path(request)
@@ -280,7 +285,7 @@ class BasePasswordView(views.APIView):
 
         new_password = form.cleaned_data["new_password1"]
         user.change_password(verif_code, new_password)
-        del request.session["reset_code"]
+        del request.session[f"{self.code_type}_code"]
         application = get_default_application()
         redirect_uri = application.redirect_uris.split(" ")[0]
         return HttpResponseRedirect(redirect_uri)
@@ -290,16 +295,19 @@ class ResetPassword(BasePasswordView):
     verification_code_model = cast(models.Model, ResetPasswordCode)
     template = "reset-password.html"
     form = cast(forms.Form, WdaeResetPasswordForm)
+    code_type = "reset"
 
 
 class SetPassword(BasePasswordView):
     verification_code_model = cast(models.Model, SetPasswordCode)
     template = "set-password.html"
     form = cast(forms.Form, WdaeRegisterPasswordForm)
+    code_type = "set"
 
 
 class WdaeLoginView(views.APIView):
 
+    @request_logging(LOGGER)
     def get(self, request):
         next_uri = request.GET.get("next")
         if next_uri is None:
@@ -315,6 +323,7 @@ class WdaeLoginView(views.APIView):
             }
         )
 
+    @request_logging(LOGGER)
     def post(self, request):
         data = request.data
         next_uri = data.get("next")

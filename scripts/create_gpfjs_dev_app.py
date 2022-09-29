@@ -5,7 +5,9 @@ from django.contrib.auth import get_user_model
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "project.settings")
 
 gpfjs_url = os.environ.get("GPFJS_URL", "http://localhost:4200")
-gpfjs_frontpage_url = os.environ.get("GPFJS_FRONTPAGE_URL", "http://localhost:4201")
+gpfjs_frontpage_url = os.environ.get(
+    "GPFJS_FRONTPAGE_URL", "http://localhost:4201"
+)
 
 User = get_user_model()
 Application = get_application_model()
