@@ -401,5 +401,15 @@ ngb-modal-window {
 }
 
 .pedigree-modal .modal-lg {
-  width: 520px;
+  --bs-modal-width: fit-content;
+  min-width: 620px;
+  padding: 0 50px;
+}
+
+gpf-genotype-preview-field gpf-pedigree-modal gpf-pedigree-chart .svg-container {
+  width: unset !important;
+}
+
+.pedigree-modal .modal-lg .svg-container {
+  max-width: 100% !important;
 }
