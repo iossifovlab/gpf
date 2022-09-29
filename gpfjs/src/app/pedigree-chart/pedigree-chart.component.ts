@@ -1,4 +1,4 @@
-import { Input, Component, OnInit } from '@angular/core';
+import { Input, Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { Observable, BehaviorSubject, of } from 'rxjs';
 import { difference } from '../utils/sets-helper';
 import { IntervalForVertex } from '../utils/interval-sandwich';
@@ -12,7 +12,8 @@ type OrderedIndividuals = Array<Individual>;
 @Component({
   selector: 'gpf-pedigree-chart',
   templateUrl: './pedigree-chart.component.html',
-  styleUrls: ['./pedigree-chart.component.css']
+  styleUrls: ['./pedigree-chart.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class PedigreeChartComponent implements OnInit {
   public pedigreeDataWithLayout: IndividualWithPosition[];
@@ -23,7 +24,9 @@ export class PedigreeChartComponent implements OnInit {
 
   public width = 0;
   public height = 0;
-  @Input() public scale = 1.25;
+  @Input() public scale = 1.3;
+  @Input() public maxWidth: number;
+  @Input() public maxHeight: number;
 
   @Input()
   public set family(data: PedigreeData[]) {
@@ -59,8 +62,7 @@ export class PedigreeChartComponent implements OnInit {
           map(i => this.getIndividualsByRank(i)),
           map(individuals => {
             for (let i = 0; i < individuals.length; i++) {
-              this.positionedIndividuals.push(
-                this.generateLayout(individuals[i], i));
+              this.positionedIndividuals.push(this.generateLayout(individuals[i], i));
             }
             this.optimizeDrawing(this.positionedIndividuals);
           })
@@ -95,19 +97,27 @@ export class PedigreeChartComponent implements OnInit {
     return this.lines.filter(line => line.curved);
   }
 
-
   public getViewBox(): string {
-    // The addition of 8 to the width and height of the viewbox is to fit the proband arrow
-    const xPlusPrb = 8;
+    const scaleDownIndex = 1.3;
 
-    const sortedCurveLines = this.curveLines.sort(curveLine => curveLine.inverseCurveP1[1]);
-    if (sortedCurveLines.length !== 0) {
-      const minY = sortedCurveLines[0].inverseCurveP1[1];
-      if (minY < 0) {
-        return `${-xPlusPrb} ${minY} ${this.width + xPlusPrb} ${this.height - minY + xPlusPrb}`;
+    const viewBoxWidth = this.width * scaleDownIndex;
+    let viewBoxHeight = this.height * scaleDownIndex;
+    const viewBoxWidthOffset = (viewBoxWidth - this.width) / 2;
+    let viewBoxHeightOffset = (viewBoxHeight - this.height) / 2;
+
+    if (this.curveLines.length !== 0) {
+      const curveLinesOnTop = this.curveLines
+        .map(curveLine => curveLine.startY)
+        .filter(curveLineStartY => curveLineStartY <= 12).length !== 0;
+
+      if (curveLinesOnTop) {
+        const curveLinesHeightOffset = 12;
+        viewBoxHeight += curveLinesHeightOffset;
+        viewBoxHeightOffset += curveLinesHeightOffset;
       }
     }
-    return `${-xPlusPrb} 0 ${this.width + xPlusPrb} ${this.height + xPlusPrb}`;
+
+    return `${-viewBoxWidthOffset} ${-viewBoxHeightOffset} ${viewBoxWidth} ${viewBoxHeight}`;
   }
 
   private loadPositions(family: PedigreeData[]): IndividualWithPosition[][] {
@@ -168,10 +178,7 @@ export class PedigreeChartComponent implements OnInit {
 
     const result: OrderedIndividuals[] = [];
     for (const key of keys.sort()) {
-      const sorted = individualsByRank.get(key)
-        .sort((a, b) => a.left - b.left);
-
-      // console.log(sorted.map(i => i.toString()));
+      const sorted = individualsByRank.get(key).sort((a, b) => a.left - b.left);
       result.push(sorted.map(interval => interval.vertex));
     }
 
@@ -210,7 +217,7 @@ export class PedigreeChartComponent implements OnInit {
     return result;
   }
 
-  private optimizeDrawing(individuals: IndividualWithPosition[][], xOffset = 20): void {
+  private optimizeDrawing(individuals: IndividualWithPosition[][]): void {
     let movedIndividuals = 0;
     let counter = 0;
     do {
@@ -226,7 +233,7 @@ export class PedigreeChartComponent implements OnInit {
       movedIndividuals += this.moveOverlaps(individuals);
     } while (movedIndividuals !== 0 && counter < 100);
 
-    this.alignLeft(individuals, xOffset);
+    this.alignToTopLeft(individuals);
   }
 
   private moveOverlaps(levels: IndividualWithPosition[][]): number {
@@ -276,15 +283,19 @@ export class PedigreeChartComponent implements OnInit {
     return result;
   }
 
-  private alignLeft(groups: IndividualWithPosition[][], xOffset): void {
+  private alignToTopLeft(groups: IndividualWithPosition[][]): void {
+    const offset = 11;
+
     const minStartXReducer = (g1, g2) => g1.xCenter < g2.xCenter ? g1 : g2;
+    const minStartYReducer = (g1, g2) => g1.yCenter < g2.yCenter ? g1 : g2;
 
-    const leftmostGroupX = groups
-      .map(group => group.reduce(minStartXReducer).xCenter)
-      .reduce((a, b) => Math.min(a, b));
+    const leftmostGroupX = groups.map(group => group.reduce(minStartXReducer).xCenter).reduce((a, b) => Math.min(a, b));
+    const leftmostGroupY = groups.map(group => group.reduce(minStartYReducer).yCenter).reduce((a, b) => Math.min(a, b));
 
-    const toMove = leftmostGroupX - xOffset;
-    groups.forEach(g => g.forEach(group => group.xCenter -= toMove));
+    const toMoveX = leftmostGroupX - offset;
+    const toMoveY = leftmostGroupY - offset;
+
+    groups.forEach(g => g.forEach(group => {group.xCenter -= toMoveX; group.yCenter -= toMoveY}));
   }
 
   private centerChildrenOfParents(mates: MatingUnit): number {

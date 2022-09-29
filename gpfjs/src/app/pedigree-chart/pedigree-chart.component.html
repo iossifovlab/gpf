@@ -1,4 +1,8 @@
-<div class="svg-container" [style.width.px]="width * scale">
+<div
+  class="svg-container"
+  [style.width.px]="width * scale"
+  [style.max-width.px]="maxWidth ? maxWidth : width * scale"
+  [style.max-height.px]="maxHeight">
   <svg [attr.viewBox]="getViewBox()">
     <svg:line
       *ngFor="let straightLine of straightLines"
