@@ -27,7 +27,6 @@ urlpatterns = [
         name="set_password"
     ),
     re_path(r"^users/change_password/?$", views.change_password),
-    re_path(r"^users/check_verif_path/?$", views.check_verif_code),
     re_path(
         r"^users/get_federation_credentials/?$",
         views.get_federation_credentials
