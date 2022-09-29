@@ -1,5 +1,8 @@
 <div *ngIf="field === 'pedigree'">
-  <gpf-pedigree-modal [isInDatasetStatistics]="false" [family]="value"></gpf-pedigree-modal>
+  <gpf-pedigree-modal
+    [family]="value"
+    [pedigreeMaxHeight]="pedigreeMaxHeight">
+  </gpf-pedigree-modal>
 </div>
 
 <span *ngIf="field === 'location'">
