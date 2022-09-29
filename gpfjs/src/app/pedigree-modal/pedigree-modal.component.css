@@ -1,9 +1,18 @@
-.pedigree-container {
+#modal-pedigree-container {
   margin: 16px;
 }
 
+.pedigree-container {
+  width: fit-content;
+  margin: auto;
+  cursor: pointer;
+}
+
 #family-ids-list-wrapper {
+  display: flex;
   height: 100px;
+  justify-content: center;
+  margin: auto;
 }
 
 #family-ids-list {
@@ -12,6 +21,7 @@
   overflow: auto;
   overflow-wrap: break-word;
   padding: 0 8px 24px;
+  max-width: 520px;
 }
 
 #family-ids-list div {
@@ -19,9 +29,23 @@
 }
 
 #download-button {
-  padding: 6px 11px 6px 12px;
+  box-shadow: none;
+  height: 33px;
+}
+
+#download-button:focus {
+  background: #2a6395;
+}
+
+#download-button:hover {
+  background: #173f62;
 }
 
 #download-button i {
   color: #fff;
+}
+
+form {
+  display: flex;
+  justify-content: flex-end;
 }

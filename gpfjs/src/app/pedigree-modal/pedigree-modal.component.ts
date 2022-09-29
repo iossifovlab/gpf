@@ -13,8 +13,10 @@ export class PedigreeModalComponent {
   @Input() public family;
   @Input() public groupName: string;
   @Input() public counterId: number;
-  @Input() public isInDatasetStatistics: boolean;
+  @Input() public pedigreeMaxWidth: number;
+  @Input() public pedigreeMaxHeight: number;
 
+  @Input() public modalSimpleView = true;
   public modal: NgbModalRef;
   public familyIdsList: string[];
   public pedigreeScale = 2.5;
@@ -42,7 +44,6 @@ export class PedigreeModalComponent {
 
   public openModal(pedigreeModal): void {
     this.loadFamilyListData();
-
     this.modal = this.modalService.open(
       pedigreeModal,
       {animation: false, centered: true, size: 'lg', windowClass: 'pedigree-modal'}
