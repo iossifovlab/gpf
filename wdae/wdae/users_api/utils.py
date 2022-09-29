@@ -7,9 +7,7 @@ LOCKOUT_THRESHOLD = 4
 
 
 def csrf_clear(view_func):
-    """
-    Skips the CSRF checks by setting the 'csrf_processing_done' to true.
-    """
+    """Skips the CSRF checks by setting the 'csrf_processing_done' to true."""
 
     def wrapped_view(*args, **kwargs):
         request = args[0]
@@ -61,7 +59,7 @@ def send_reset_inactive_acc_email(user):
 
 
 def send_reset_email(user, verif_path, by_admin=False):
-    """ Returns dict - subject and message of the email """
+    """Return dict with subject and message of the email."""
     email = _create_reset_mail(
         settings.EMAIL_HOST,
         settings.EMAIL_RESET_PATH,
