@@ -1,5 +1,6 @@
 from django.urls import path, re_path, include
 from django.contrib.auth import views as auth_views
+from users_api.views import WdaeLoginView
 
 from gpfjs.views import index
 
@@ -29,5 +30,5 @@ urlpatterns = [
     re_path(r"^api/v3/families", include("family_api.urls")),
     re_path(r"^api/v3/person_sets", include("person_sets_api.urls")),
     path("o/", include("oauth2_provider.urls", namespace="oauth2_provider")),
-    path("accounts/login/", auth_views.LoginView.as_view())
+    re_path(r"^accounts/login/?$", WdaeLoginView.as_view(), name="login_user"),
 ]
