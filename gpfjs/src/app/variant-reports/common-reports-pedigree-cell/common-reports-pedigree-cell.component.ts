@@ -8,4 +8,5 @@ import { PedigreeCounter } from '../variant-reports';
 })
 export class CommonReportsPedigreeCellComponent {
   @Input() public pedigree: PedigreeCounter;
+  public pedigreeMaxWidth = 300;
 }
