@@ -1,12 +1,13 @@
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
 import json
-import pytest
-
 from datetime import timedelta
+import re
+
 from rest_framework import status
 from django.utils import timezone
 
-from users_api.views import LOCKOUT_THRESHOLD
-from users_api.models import AuthenticationLog
+from users_api.utils import LOCKOUT_THRESHOLD
+from users_api.models import AuthenticationLog, ResetPasswordCode
 
 
 def lockout_email(client, email):
@@ -14,7 +15,7 @@ def lockout_email(client, email):
         "username": email,
         "password": "invalidpasswordinvalidpassword",
     }
-    for i in range(0, LOCKOUT_THRESHOLD + 1):
+    for _ in range(0, LOCKOUT_THRESHOLD + 1):
         client.post(
             "/api/v3/users/login",
             json.dumps(data),
@@ -23,9 +24,7 @@ def lockout_email(client, email):
 
 
 def expire_email_lockout(email):
-    """
-    Wind back times of all logins so that the lockout expires.
-    """
+    """Wind back times of all logins so that the lockout expires."""
     query = AuthenticationLog.objects.filter(
         email__iexact=email
     ).order_by("-time", "-failed_attempt")
@@ -38,7 +37,7 @@ def expire_email_lockout(email):
         login.save()
 
 
-def test_successful_auth(db, user, client):
+def test_successful_auth(db, user, client, tokens):
     url = "/api/v3/users/login"
     data = {
         "username": "user@example.com",
@@ -49,10 +48,27 @@ def test_successful_auth(db, user, client):
         url, json.dumps(data), content_type="application/json", format="json"
     )
 
-    assert response.status_code == status.HTTP_204_NO_CONTENT
+    assert response.status_code == status.HTTP_302_FOUND
+    assert response.url == "http://localhost:4200/datasets"
 
 
-def test_successful_auth_case_insensitive(db, user, client):
+def test_successful_auth_with_next(db, user, client, tokens):
+    url = "/api/v3/users/login"
+    data = {
+        "username": "user@example.com",
+        "password": "secret",
+        "next": "somewhere.com"
+    }
+
+    response = client.post(
+        url, json.dumps(data), content_type="application/json", format="json"
+    )
+
+    assert response.status_code == status.HTTP_302_FOUND
+    assert response.url == "somewhere.com"
+
+
+def test_successful_auth_case_insensitive(db, user, client, tokens):
     url = "/api/v3/users/login"
     data = {
         "username": "UsER@ExAmPlE.cOm",
@@ -63,10 +79,11 @@ def test_successful_auth_case_insensitive(db, user, client):
         url, json.dumps(data), content_type="application/json", format="json"
     )
 
-    assert response.status_code == status.HTTP_204_NO_CONTENT
+    assert response.status_code == status.HTTP_302_FOUND
+    assert response.url == "http://localhost:4200/datasets"
 
 
-def test_failed_auth(db, user, client):
+def test_failed_auth(db, user, client, tokens):
     url = "/api/v3/users/login"
     data = {"username": "bad@example.com", "password": "secret"}
 
@@ -76,7 +93,7 @@ def test_failed_auth(db, user, client):
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
-def test_no_username_auth(db, user, client):
+def test_no_username_auth(db, user, client, tokens):
     url = "/api/v3/users/login"
     data = {"username": "", "password": "secret"}
 
@@ -92,8 +109,7 @@ def test_get_user_info_after_auth(user_client):
     assert response.data["email"] == "user@example.com"
 
 
-def test_email_auth_successful(db, user, client):
-    """Try to login with an valid, existing email."""
+def test_no_password_auth(db, user, client, tokens):
     url = "/api/v3/users/login"
     data = {
         "username": "user@example.com",
@@ -101,10 +117,11 @@ def test_email_auth_successful(db, user, client):
     response = client.post(
         url, json.dumps(data), content_type="application/json", format="json"
     )
-    assert response.status_code == status.HTTP_204_NO_CONTENT
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.content.find(b"Password not provided") != -1
 
 
-def test_email_auth_unsuccessful(db, user, client):
+def test_email_auth_unsuccessful(db, user, client, tokens):
     """Try to login with a non-existing email."""
     url = "/api/v3/users/login"
     data = {
@@ -116,7 +133,7 @@ def test_email_auth_unsuccessful(db, user, client):
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
-def test_failed_auth_attempts(db, user, client):
+def test_failed_auth_attempts(db, user, client, tokens):
     """Check if the user is allowed four failed
     login attempts before being locked out.
     """
@@ -133,8 +150,8 @@ def test_failed_auth_attempts(db, user, client):
         )
         last_login = AuthenticationLog.get_last_login_for(data["username"])
         assert last_login.failed_attempt == i + 1
-        assert response.data is None
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
+        assert response.content.find(b"Invalid login credentials") != -1
 
     response = client.post(
         url, json.dumps(data),
@@ -143,9 +160,10 @@ def test_failed_auth_attempts(db, user, client):
     last_login = AuthenticationLog.get_last_login_for(data["username"])
     assert last_login.failed_attempt == LOCKOUT_THRESHOLD + 1
     assert response.status_code == status.HTTP_403_FORBIDDEN
+    assert response.content.find(b"This account is locked out") != -1
 
 
-def test_failed_auth_lockouts(db, user, client):
+def test_failed_auth_lockouts(db, user, client, tokens):
     """Check if progressive lockouts are working."""
     url = "/api/v3/users/login"
     data = {
@@ -160,15 +178,21 @@ def test_failed_auth_lockouts(db, user, client):
             url, json.dumps(data),
             content_type="application/json", format="json"
         )
-        assert "lockout_time" in response.data
-        assert response.data["lockout_time"] == pytest.approx(
-            pow(2, i) * 60, abs=5  # 5 second tolerance
-        )
+        assert response.content.find(b"This account is locked out for") != -1
+        regex = r"locked out for (\d+) hours and (\d+) minutes"
+        match = re.search(regex, response.content.decode())
+        response_hours, response_minutes = map(int, match.groups())
+        total_minutes = pow(2, i)
+        hours = int(total_minutes / 60)
+        minutes = total_minutes % 60
+
+        assert response_hours == hours
+        assert response_minutes == minutes
         assert response.status_code == status.HTTP_403_FORBIDDEN
         expire_email_lockout(data["username"])
 
 
-def test_lockout_prevents_login(db, user, client):
+def test_lockout_prevents_login(db, user, client, tokens):
     """Check if lockouts prevent even valid logins."""
     url = "/api/v3/users/login"
     data = {
@@ -185,7 +209,7 @@ def test_lockout_prevents_login(db, user, client):
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
-def test_successful_auth_resets_lockouts(db, user, client):
+def test_successful_auth_resets_lockouts(db, user, client, tokens):
     """Check if a successful login will reset the email's
     lockouts and allow another five failed attempts.
     """
@@ -203,7 +227,7 @@ def test_successful_auth_resets_lockouts(db, user, client):
         url, json.dumps(data),
         content_type="application/json", format="json"
     )
-    assert response.status_code == status.HTTP_204_NO_CONTENT
+    assert response.status_code == status.HTTP_302_FOUND
 
     data["password"] = "wrongpasswordagain"
     response = client.post(
@@ -211,10 +235,10 @@ def test_successful_auth_resets_lockouts(db, user, client):
         content_type="application/json", format="json"
     )
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
-    assert response.data is None
+    assert response.content.find(b"Invalid login credentials") != -1
 
 
-def test_password_reset_resets_lockouts(user, client):
+def test_password_reset_resets_lockouts(user, client, tokens):
     """Check if a password reset will reset the email's
     lockouts and allow another five failed attempts.
     """
@@ -230,25 +254,30 @@ def test_password_reset_resets_lockouts(user, client):
         url, json.dumps(data),
         content_type="application/json", format="json"
     )
-    assert "lockout_time" in response.data
+    assert response.content.find(b"This account is locked out for") != -1
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
     # Reset and change password
     assert client.post(
-        "/api/v3/users/reset_password",
+        "/api/v3/users/forgotten_password",
         json.dumps({"email": user.email}),
         content_type="application/json",
         format="json"
     ).status_code == status.HTTP_200_OK
-    assert client.post(
-        "/api/v3/users/change_password",
+    code = ResetPasswordCode.get_code(user)
+    session = client.session
+    session.update({"reset_code": code.path})
+    session.save()
+    response = client.post(
+        "/api/v3/users/reset_password",
         json.dumps({
-            "verifPath": user.verificationpath.path,
-            "password": "samplenewpassword"
+            "new_password1": "samplenewpassword",
+            "new_password2": "samplenewpassword",
         }),
         content_type="application/json",
         format="json"
-    ).status_code == status.HTTP_201_CREATED
+    )
+    assert response.status_code == status.HTTP_302_FOUND
 
     # See that the lockouts have been reset
     data["password"] = "wrongpasswordagain"
@@ -257,7 +286,7 @@ def test_password_reset_resets_lockouts(user, client):
         content_type="application/json", format="json"
     )
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
-    assert response.data is None
+    assert response.content.find(b"Invalid login credentials") != -1
 
     # Try properly logging in
     data["password"] = "samplenewpassword"
@@ -265,10 +294,10 @@ def test_password_reset_resets_lockouts(user, client):
         url, json.dumps(data),
         content_type="application/json", format="json"
     )
-    assert response.status_code == status.HTTP_204_NO_CONTENT
+    assert response.status_code == status.HTTP_302_FOUND
 
 
-def test_authentication_logging(user, client):
+def test_authentication_logging(user, client, tokens):
     """Check if both successful and unsuccessful authentication attempts
     are logged.
     """
@@ -283,7 +312,7 @@ def test_authentication_logging(user, client):
         content_type="application/json", format="json"
     )
     last_login = AuthenticationLog.get_last_login_for(data["username"])
-    assert response.status_code == status.HTTP_204_NO_CONTENT
+    assert response.status_code == status.HTTP_302_FOUND
     assert last_login.email == "user@example.com"
     assert last_login.time == timezone.now().replace(microsecond=0)
     assert last_login.failed_attempt == 0

@@ -86,6 +86,7 @@ def oauth_app(admin):
         "user_id": admin.id,
         "client_type": "confidential",
         "authorization_grant_type": "authorization-code",
+        "redirect_uris": "http://localhost:4200/datasets",
         "client_id": "admin",
         "client_secret": "secret"
     })
