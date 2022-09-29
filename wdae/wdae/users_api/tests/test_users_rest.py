@@ -330,7 +330,7 @@ def test_admin_can_delete_user(admin_client, user_model):
 def test_admin_can_reset_user_password(admin_client, active_user):
     assert active_user.is_active
 
-    url = "/api/v3/users/reset_password"
+    url = "/api/v3/users/forgotten_password"
     data = {"email": active_user.email}
     response = admin_client.post(
         url, json.dumps(data), content_type="application/json", format="json"
@@ -351,7 +351,7 @@ def test_resetting_user_password_does_not_deauthenticates_them(
     assert response.status_code == status.HTTP_200_OK
     assert response.data["loggedIn"]
 
-    reset_password_url = "/api/v3/users/reset_password"
+    reset_password_url = "/api/v3/users/forgotten_password"
     data = {"email": user.email}
     response = admin_client.post(
         reset_password_url, json.dumps(data),

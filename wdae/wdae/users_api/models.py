@@ -275,7 +275,6 @@ class AuthenticationLog(models.Model):
     @staticmethod
     def get_locked_out_error(email: str):
         seconds_left = AuthenticationLog.get_remaining_lockout_time(email)
-        print(seconds_left)
         hours = int(seconds_left / 3600)
         minutes = int(seconds_left / 60) % 60
         time_to_unlock = f"{hours} hours and {minutes} minutes"
@@ -290,13 +289,6 @@ class AuthenticationLog(models.Model):
         last_login = AuthenticationLog.get_last_login_for(email)
         current_time = timezone.now().replace(microsecond=0)
         lockout_time = pow(2, last_login.failed_attempt - LOCKOUT_THRESHOLD)
-        print("========START========")
-        print(lockout_time)
-        print(current_time)
-        print(last_login.time)
-        print(current_time - last_login.time)
-        print(timedelta(minutes=lockout_time))
-        print("========END========")
         return (
             - (current_time - last_login.time)
             + timedelta(minutes=lockout_time)

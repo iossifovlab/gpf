@@ -327,7 +327,6 @@ class WdaeLoginView(views.APIView):
         if form.is_valid():
             return redirect(next_uri)
         response_status = form.status_code
-        print(form.errors)
 
         return render(
             request,
