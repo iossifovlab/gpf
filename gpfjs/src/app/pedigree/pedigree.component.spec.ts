@@ -3,7 +3,7 @@ import { ConfigService } from 'app/config/config.service';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { VariantReportsService } from 'app/variant-reports/variant-reports.service';
 import { Observable, of } from 'rxjs';
-import { PedigreeModalComponent } from './pedigree-modal.component';
+import { PedigreeComponent } from './pedigree.component';
 
 class MockVariantReportsService {
   public getFamilies(datasetId, groupName, counterId): Observable<string[]> {
@@ -17,13 +17,13 @@ class MockDatasetsService {
   }
 }
 
-describe('PedigreeModalComponent', () => {
-  let component: PedigreeModalComponent;
-  let fixture: ComponentFixture<PedigreeModalComponent>;
+describe('PedigreeComponent', () => {
+  let component: PedigreeComponent;
+  let fixture: ComponentFixture<PedigreeComponent>;
 
   beforeEach(async() => {
     await TestBed.configureTestingModule({
-      declarations: [PedigreeModalComponent],
+      declarations: [PedigreeComponent],
       providers: [
         {provide: VariantReportsService, useValue: new MockVariantReportsService()},
         ConfigService,
@@ -33,7 +33,7 @@ describe('PedigreeModalComponent', () => {
   });
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(PedigreeModalComponent);
+    fixture = TestBed.createComponent(PedigreeComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

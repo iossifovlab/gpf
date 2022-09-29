@@ -406,7 +406,7 @@ ngb-modal-window {
   padding: 0 50px;
 }
 
-gpf-genotype-preview-field gpf-pedigree-modal gpf-pedigree-chart .svg-container {
+gpf-genotype-preview-field gpf-pedigree gpf-pedigree-chart .svg-container {
   width: unset !important;
 }
 

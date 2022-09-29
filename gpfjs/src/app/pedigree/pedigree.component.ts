@@ -5,11 +5,11 @@ import { DatasetsService } from 'app/datasets/datasets.service';
 import { VariantReportsService } from 'app/variant-reports/variant-reports.service';
 
 @Component({
-  selector: 'gpf-pedigree-modal',
-  templateUrl: './pedigree-modal.component.html',
-  styleUrls: ['./pedigree-modal.component.css']
+  selector: 'gpf-pedigree',
+  templateUrl: './pedigree.component.html',
+  styleUrls: ['./pedigree.component.css']
 })
-export class PedigreeModalComponent {
+export class PedigreeComponent {
   @Input() public family;
   @Input() public groupName: string;
   @Input() public counterId: number;
