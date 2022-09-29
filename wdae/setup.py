@@ -22,7 +22,8 @@ setuptools.setup(
     package_data={"gpfjs": [
         "static/gpfjs/*", "static/gpfjs/assets/*",
         "static/empty/*",
-        "static/registration/*"], },
+        "static/registration/*",
+        "static/oauth2_provider/*"], },
 
     scripts=[
         "wdae/wdaemanage.py",
