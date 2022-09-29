@@ -2,8 +2,8 @@
 import sys
 import logging
 
-from dae.backends.vcf.loader import VcfLoader
-from dae.impala_storage.import_commons import Variants2ParquetTool
+from dae.variants_loaders.vcf.loader import VcfLoader
+from dae.impala_storage.schema1.import_commons import Variants2ParquetTool
 
 
 logger = logging.getLogger("vcf2parquet")
@@ -16,10 +16,10 @@ class Vcf2ParquetTool(Variants2ParquetTool):
     VARIANTS_FREQUENCIES = True
 
 
-def main(argv=sys.argv[1:], gpf_instance=None):
+def main(argv=None, gpf_instance=None):
 
     Vcf2ParquetTool.main(
-        argv,
+        argv or sys.argv[1:],
         gpf_instance=gpf_instance
     )
 

@@ -51,16 +51,16 @@ setuptools.setup(
     gpf_instance=dae.gpf_instance_plugin.gpf_instance_context_plugin:init_gpf_instance_genomic_context_plugin
 
     [dae.genotype_storage.factories]
-    impala=dae.impala_storage.impala_genotype_storage:ImpalaGenotypeStorage
-    impala2=dae.backends.storage.schema2_genotype_storage:Schema2GenotypeStorage
-    filesystem=dae.filesystem_storage.filesystem_genotype_storage:FilesystemGenotypeStorage
-    filesystem2=dae.filesystem2_storage.filesystem2_genotype_storage:Filesystem2GenotypeStorage
+    impala=dae.impala_storage.schema1.impala_genotype_storage:ImpalaGenotypeStorage
+    impala2=dae.impala_storage.schema2.schema2_genotype_storage:Schema2GenotypeStorage
+    filesystem=dae.filesystem_storage.in_memory.filesystem_genotype_storage:FilesystemGenotypeStorage
+    filesystem2=dae.filesystem_storage.schema2.filesystem2_genotype_storage:Filesystem2GenotypeStorage
 
     [dae.import_tools.storages]
-    impala=dae.impala_storage.impala_schema1:ImpalaSchema1ImportStorage
-    impala2=dae.import_tools.schema2_import_storage:Schema2ImportStorage
-    filesystem=dae.filesystem_storage.filesystem_import_storage:FilesystemImportStorage
-    filesystem2=dae.filesystem2_storage.filesystem2_import_storage:Filesystem2ImportStorage
+    impala=dae.impala_storage.schema1.impala_schema1:ImpalaSchema1ImportStorage
+    impala2=dae.impala_storage.schema2.schema2_import_storage:Schema2ImportStorage
+    filesystem=dae.filesystem_storage.in_memory.filesystem_import_storage:FilesystemImportStorage
+    filesystem2=dae.filesystem_storage.schema2.filesystem2_import_storage:Filesystem2ImportStorage
 
     [console_scripts]
 

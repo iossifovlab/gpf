@@ -8,7 +8,7 @@ from dae.utils.effect_utils import EffectTypesMixin
 from dae.variants.attributes import Role, Inheritance
 from dae.utils.regions import Region
 from dae.pedigrees.family import ALL_FAMILY_TYPES, FamilyType
-from dae.backends.attributes_query import (
+from dae.query_variants.attributes_query import (
     role_query,
     variant_type_converter,
     sex_converter,

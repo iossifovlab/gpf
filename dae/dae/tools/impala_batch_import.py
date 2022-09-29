@@ -3,7 +3,7 @@
 import sys
 import logging
 
-from dae.impala_storage.import_commons import BatchImporter
+from dae.impala_storage.schema1.import_commons import BatchImporter
 
 logger = logging.getLogger(__name__)
 

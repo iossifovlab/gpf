@@ -22,15 +22,15 @@ from dae.configuration.schemas.dae_conf import dae_conf_schema
 
 from dae.annotation.annotation_factory import build_annotation_pipeline
 
-from dae.backends.raw.loader import EffectAnnotationDecorator, \
+from dae.variants_loaders.raw.loader import EffectAnnotationDecorator, \
     AnnotationPipelineDecorator
-from dae.backends.raw.raw_variants import RawMemoryVariants
+from dae.filesystem_storage.in_memory.raw_variants import RawMemoryVariants
 
-from dae.backends.dae.loader import DaeTransmittedLoader, DenovoLoader
-from dae.backends.vcf.loader import VcfLoader
+from dae.variants_loaders.dae.loader import DaeTransmittedLoader, DenovoLoader
+from dae.variants_loaders.vcf.loader import VcfLoader
 from dae.import_tools.import_tools import ImportProject, run_with_project
 
-from dae.impala_storage.import_commons import \
+from dae.impala_storage.schema1.import_commons import \
     construct_import_effect_annotator
 
 
@@ -859,7 +859,7 @@ def data_import(
 
     assert DATA_IMPORT_COUNT == 1
 
-    from dae.impala_storage.hdfs_helpers import HdfsHelpers
+    from dae.impala_storage.helpers.hdfs_helpers import HdfsHelpers
 
     hdfs = HdfsHelpers(hdfs_host, 8020)
 
@@ -871,7 +871,7 @@ def data_import(
 
     request.addfinalizer(fin)
 
-    from dae.impala_storage.impala_helpers import ImpalaHelpers
+    from dae.impala_storage.helpers.impala_helpers import ImpalaHelpers
 
     impala_helpers = ImpalaHelpers(
         impala_hosts=[impala_host], impala_port=21050)
@@ -938,7 +938,7 @@ def iossifov2014_import(
         reimport):
 
     study_id = "iossifov_we2014_test"
-    from dae.impala_storage.impala_helpers import ImpalaHelpers
+    from dae.impala_storage.helpers.impala_helpers import ImpalaHelpers
 
     impala_helpers = ImpalaHelpers(
         impala_hosts=[impala_host], impala_port=21050)

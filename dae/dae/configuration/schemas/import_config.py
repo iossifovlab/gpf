@@ -1,7 +1,7 @@
 from typing import Any
-from dae.backends.dae.loader import DenovoLoader, DaeTransmittedLoader
-from dae.backends.vcf.loader import VcfLoader
-from dae.backends.cnv.loader import CNVLoader
+from dae.variants_loaders.dae.loader import DenovoLoader, DaeTransmittedLoader
+from dae.variants_loaders.vcf.loader import VcfLoader
+from dae.variants_loaders.cnv.loader import CNVLoader
 from dae.pedigrees.loader import FamiliesLoader
 from dae.configuration.schemas.dae_conf import storage_schema
 

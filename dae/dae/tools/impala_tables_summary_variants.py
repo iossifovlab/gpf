@@ -9,7 +9,7 @@ import math
 from contextlib import closing
 
 from dae.gpf_instance.gpf_instance import GPFInstance
-from dae.impala_storage.impala_variants import ImpalaVariants
+from dae.impala_storage.schema1.impala_variants import ImpalaVariants
 from dae.utils.regions import Region
 
 

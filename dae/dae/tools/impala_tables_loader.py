@@ -7,7 +7,7 @@ import logging
 import toml
 
 from dae.gpf_instance.gpf_instance import GPFInstance
-from dae.impala_storage.parquet_io import NoPartitionDescriptor, \
+from dae.parquet.schema1.parquet_io import NoPartitionDescriptor, \
     ParquetPartitionDescriptor
 
 

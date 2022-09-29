@@ -10,11 +10,11 @@ from dae.gpf_instance.gpf_instance import GPFInstance
 
 from dae.import_tools.import_tools import ImportProject, run_with_project
 
-from dae.backends.dae.loader import DenovoLoader, DaeTransmittedLoader
-from dae.backends.vcf.loader import VcfLoader
+from dae.variants_loaders.dae.loader import DenovoLoader, DaeTransmittedLoader
+from dae.variants_loaders.vcf.loader import VcfLoader
 
-from dae.backends.cnv.loader import CNVLoader
-from dae.backends.raw.loader import AnnotationPipelineDecorator, \
+from dae.variants_loaders.cnv.loader import CNVLoader
+from dae.variants_loaders.raw.loader import AnnotationPipelineDecorator, \
     EffectAnnotationDecorator
 
 from dae.pedigrees.loader import FamiliesLoader

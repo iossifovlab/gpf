@@ -1,10 +1,10 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pytest
 
-from dae.impala_storage.impala_genotype_storage import ImpalaGenotypeStorage
-from dae.filesystem_storage.filesystem_genotype_storage import (
-    FilesystemGenotypeStorage,
-)
+from dae.impala_storage.schema1.impala_genotype_storage import \
+    ImpalaGenotypeStorage
+from dae.filesystem_storage.in_memory.filesystem_genotype_storage import \
+    FilesystemGenotypeStorage
 
 
 @pytest.fixture(scope="session")

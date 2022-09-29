@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 import sys
 
-from dae.backends.cnv.loader import CNVLoader
-from dae.impala_storage.import_commons import Variants2ParquetTool
+from dae.variants_loaders.cnv.loader import CNVLoader
+from dae.impala_storage.schema1.import_commons import Variants2ParquetTool
 
 
 class Cnv2ParquetTool(Variants2ParquetTool):

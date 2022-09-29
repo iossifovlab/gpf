@@ -5,7 +5,7 @@ import glob
 import pyarrow.parquet as pq
 
 from dae.tools.denovo2parquet import main
-from dae.impala_storage.parquet_io import ParquetPartitionDescriptor
+from dae.parquet.schema1.parquet_io import ParquetPartitionDescriptor
 
 
 def test_denovo2parquet_denovo(

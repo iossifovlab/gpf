@@ -4,7 +4,7 @@ import sys
 import argparse
 import logging
 
-from dae.impala_storage.import_commons import DatasetHelpers
+from dae.impala_storage.schema1.import_commons import DatasetHelpers
 from dae.gpf_instance.gpf_instance import GPFInstance
 
 

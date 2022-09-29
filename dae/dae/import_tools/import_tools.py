@@ -9,16 +9,17 @@ from functools import cache
 from typing import Optional, cast
 from typing import Callable, Dict, List, Tuple, Any
 
-from dae.backends.cnv.loader import CNVLoader
-from dae.backends.dae.loader import DaeTransmittedLoader, DenovoLoader
+from dae.variants_loaders.cnv.loader import CNVLoader
+from dae.variants_loaders.dae.loader import DaeTransmittedLoader, DenovoLoader
+from dae.variants_loaders.vcf.loader import VcfLoader
+from dae.variants_loaders.raw.loader import AnnotationPipelineDecorator,\
+    EffectAnnotationDecorator, VariantsLoader
+
 from dae.genotype_storage.genotype_storage import GenotypeStorage
 from dae.genotype_storage.genotype_storage_registry import (
     GenotypeStorageRegistry
 )
-from dae.backends.vcf.loader import VcfLoader
-from dae.impala_storage.parquet_io import ParquetPartitionDescriptor
-from dae.backends.raw.loader import AnnotationPipelineDecorator,\
-    EffectAnnotationDecorator, VariantsLoader
+from dae.parquet.schema1.parquet_io import ParquetPartitionDescriptor
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.import_tools.task_graph import DaskExecutor, SequentialExecutor,\
     TaskGraph
@@ -26,7 +27,7 @@ from dae.pedigrees.family import FamiliesData
 from dae.configuration.schemas.import_config import import_config_schema
 from dae.pedigrees.loader import FamiliesLoader
 from dae.utils import fs_utils
-from dae.impala_storage.import_commons import MakefilePartitionHelper,\
+from dae.impala_storage.schema1.import_commons import MakefilePartitionHelper,\
     construct_import_annotation_pipeline, construct_import_effect_annotator
 from dae.dask.client_factory import DaskClient
 from dae.utils.statistics import StatsCollection
