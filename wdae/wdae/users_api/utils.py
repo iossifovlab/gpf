@@ -1,5 +1,6 @@
 from functools import wraps
 from django.conf import settings
+from oauth2_provider.models import get_application_model
 
 
 LOCKOUT_THRESHOLD = 4
@@ -18,10 +19,16 @@ def csrf_clear(view_func):
     return wraps(view_func)(wrapped_view)
 
 
+def get_default_application():
+    client_id = settings.DEFAULT_OAUTH_APPLICATION_CLIENT
+    model = get_application_model()
+    return model.objects.get(client_id=client_id)
+
+
 def send_verif_email(user, verif_path):
     email = _create_verif_email(
-        settings.EMAIL_VERIFICATION_HOST,
-        settings.EMAIL_VERIFICATION_PATH,
+        settings.EMAIL_HOST,
+        settings.EMAIL_SET_PATH,
         str(verif_path.path),
     )
     user.email_user(email["subject"], email["message"])
@@ -56,8 +63,8 @@ def send_reset_inactive_acc_email(user):
 def send_reset_email(user, verif_path, by_admin=False):
     """ Returns dict - subject and message of the email """
     email = _create_reset_mail(
-        settings.EMAIL_VERIFICATION_HOST,
-        settings.EMAIL_VERIFICATION_PATH,
+        settings.EMAIL_HOST,
+        settings.EMAIL_RESET_PATH,
         str(verif_path.path),
         by_admin,
     )
