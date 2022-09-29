@@ -434,68 +434,6 @@ def register(request):
 @request_logging_function_view(LOGGER)
 @csrf_clear
 @api_view(["POST"])
-@authentication_classes((SessionAuthenticationWithUnauthenticatedCSRF,))
-def login(request):
-    """Supports a two-step login procedure where only an email
-    is given at first.
-    """
-    username = request.data.get("username")
-    if not username:
-        return Response(status=status.HTTP_400_BAD_REQUEST)
-    password = request.data.get("password")
-    user_model = get_user_model()
-    userfound = user_model.objects.filter(email__iexact=username)
-
-    if userfound:
-        assert len(userfound) == 1
-        user_email = userfound[0].email
-        if AuthenticationLog.is_user_locked_out(user_email):
-            # check if still locked out
-            remaining_time = AuthenticationLog.get_remaining_lockout_time(
-                user_email
-            )
-            if remaining_time > 0:
-                return Response(
-                    {"lockout_time": remaining_time},
-                    status=status.HTTP_403_FORBIDDEN
-                )
-
-        if password is None:
-            return Response(status=status.HTTP_204_NO_CONTENT)
-
-        user = django.contrib.auth.authenticate(
-            username=user_email, password=password
-        )
-        if user is None or not user.is_active:
-            AuthenticationLog.log_authentication_attempt(
-                user_email, failed=True
-            )
-            last_login = AuthenticationLog.get_last_login_for(user_email)
-            failed_attempt = last_login.failed_attempt
-
-            if failed_attempt > LOCKOUT_THRESHOLD:
-                lockout_time = pow(2, failed_attempt - LOCKOUT_THRESHOLD) * 60
-                return Response(
-                    {"lockout_time": lockout_time},  # in seconds
-                    status=status.HTTP_403_FORBIDDEN
-                )
-            return Response(status=status.HTTP_401_UNAUTHORIZED)
-
-        django.contrib.auth.login(request, user)
-        LOGGER.info(log_filter(request, "login success: " + str(username)))
-        AuthenticationLog.log_authentication_attempt(user_email, failed=False)
-        if request.data.get("next"):
-            return redirect(request.data.get("next"))
-        else:
-            return Response(status=status.HTTP_204_NO_CONTENT)
-
-    LOGGER.info(log_filter(request, "login failure: " + str(username)))
-    return Response(status=status.HTTP_404_NOT_FOUND)
-
-
-@request_logging_function_view(LOGGER)
-@csrf_clear
-@api_view(["POST"])
 @authentication_classes((SessionAuthentication,))
 def logout(request):
     django.contrib.auth.logout(request)
