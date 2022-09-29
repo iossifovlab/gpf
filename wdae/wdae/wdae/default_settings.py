@@ -24,8 +24,13 @@ AUTHENTICATION_BACKENDS = (
 
 MANAGERS = ADMINS
 
-EMAIL_VERIFICATION_HOST = "http://localhost:8000"
-EMAIL_VERIFICATION_PATH = "/gpfjs/validate/{}"
+EMAIL_HOST = "http://localhost:8000"
+EMAIL_SET_PATH = "/api/v3/users/set_password?code={}"
+EMAIL_RESET_PATH = "/api/v3/users/reset_password?code={}"
+
+RESET_PASSWORD_TIMEOUT_HOURS = 24
+
+DEFAULT_OAUTH_APPLICATION_CLIENT = "gpfjs"
 
 
 """ Set these for production"""
@@ -341,6 +346,9 @@ TEMPLATES = [
             ),
             os.path.normpath(
                 os.path.join(PROJECT_ROOT, "gpfjs", "static", "empty")
+            ),
+            os.path.normpath(
+                os.path.join(PROJECT_ROOT, "gpfjs", "static", "registration")
             ),
         ],
         "APP_DIRS": True,
