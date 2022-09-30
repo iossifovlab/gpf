@@ -101,7 +101,7 @@ describe('PedigreeChartComponent', () => {
     component.family = FAMILY_WITH_POSITIONS;
     fixture.detectChanges();
 
-    expect(component.getViewBox()).toBe('-8 0 81 81');
+    expect(component.getViewBox()).toBe('-10.95 -10.95 94.9 94.9');
   });
 
   it('should load pedigree with positions', () => {
@@ -208,12 +208,12 @@ describe('PedigreeChartComponent', () => {
     expect(component.positionedIndividuals[0][0].individual.pedigreeData.id).toBe('mom2');
     expect(component.positionedIndividuals[0][0].individual.parents).toBe(undefined);
     expect(-component.positionedIndividuals[0][0].individual.rank).toBe(0);
-    expect(component.positionedIndividuals[0][0].xCenter).toBe(20);
-    expect(component.positionedIndividuals[0][0].yCenter).toBe(20);
+    expect(component.positionedIndividuals[0][0].xCenter).toBe(11);
+    expect(component.positionedIndividuals[0][0].yCenter).toBe(11);
     expect(component.positionedIndividuals[0][0].size).toBe(21.0);
     expect(component.positionedIndividuals[0][0].scaleFactor).toBe(1.0);
-    expect(component.positionedIndividuals[0][0].xUpperLeftCorner).toBe(9.5);
-    expect(component.positionedIndividuals[0][0].yUpperLeftCorner).toBe(9.5);
+    expect(component.positionedIndividuals[0][0].xUpperLeftCorner).toBe(0.5);
+    expect(component.positionedIndividuals[0][0].yUpperLeftCorner).toBe(0.5);
 
     expect(component.positionedIndividuals[0][1].individual.matingUnits.length).toBe(1);
     expect(component.positionedIndividuals[0][1].individual.matingUnits[0].children.individuals.length).toBe(1);
@@ -224,12 +224,12 @@ describe('PedigreeChartComponent', () => {
     expect(component.positionedIndividuals[0][1].individual.pedigreeData.id).toBe('dad2');
     expect(component.positionedIndividuals[0][1].individual.parents).toBe(undefined);
     expect(component.positionedIndividuals[0][1].individual.rank === 0).toBe(true);
-    expect(component.positionedIndividuals[0][1].xCenter).toBe(49);
-    expect(component.positionedIndividuals[0][1].yCenter).toBe(20);
+    expect(component.positionedIndividuals[0][1].xCenter).toBe(40);
+    expect(component.positionedIndividuals[0][1].yCenter).toBe(11);
     expect(component.positionedIndividuals[0][1].size).toBe(21.0);
     expect(component.positionedIndividuals[0][1].scaleFactor).toBe(1.0);
-    expect(component.positionedIndividuals[0][1].xUpperLeftCorner).toBe(38.5);
-    expect(component.positionedIndividuals[0][1].yUpperLeftCorner).toBe(9.5);
+    expect(component.positionedIndividuals[0][1].xUpperLeftCorner).toBe(29.5);
+    expect(component.positionedIndividuals[0][1].yUpperLeftCorner).toBe(0.5);
 
     expect(component.positionedIndividuals[1].length).toBe(1);
     expect(component.positionedIndividuals[1][0].individual.matingUnits.length).toBe(0);
@@ -237,33 +237,33 @@ describe('PedigreeChartComponent', () => {
     expect(component.positionedIndividuals[1][0].individual.parents.father.pedigreeData.id).toBe('dad2');
     expect(component.positionedIndividuals[1][0].individual.parents.mother.pedigreeData.id).toBe('mom2');
     expect(component.positionedIndividuals[1][0].individual.rank).toBe(1);
-    expect(component.positionedIndividuals[1][0].xCenter).toBe(34.5);
-    expect(component.positionedIndividuals[1][0].yCenter).toBe(50);
+    expect(component.positionedIndividuals[1][0].xCenter).toBe(25.5);
+    expect(component.positionedIndividuals[1][0].yCenter).toBe(41);
     expect(component.positionedIndividuals[1][0].size).toBe(21.0);
     expect(component.positionedIndividuals[1][0].scaleFactor).toBe(1.0);
-    expect(component.positionedIndividuals[1][0].xUpperLeftCorner).toBe(24);
-    expect(component.positionedIndividuals[1][0].yUpperLeftCorner).toBe(39.5);
+    expect(component.positionedIndividuals[1][0].xUpperLeftCorner).toBe(15);
+    expect(component.positionedIndividuals[1][0].yUpperLeftCorner).toBe(30.5);
 
     expect(component.lines.length).toBe(3);
 
-    expect(component.lines[0].startX).toBe(20);
-    expect(component.lines[0].startY).toBe(20);
-    expect(component.lines[0].endX).toBe(49);
-    expect(component.lines[0].endY).toBe(20);
+    expect(component.lines[0].startX).toBe(11);
+    expect(component.lines[0].startY).toBe(11);
+    expect(component.lines[0].endX).toBe(40);
+    expect(component.lines[0].endY).toBe(11);
     expect(component.lines[0].curved).toBe(false);
     expect(component.lines[0].curvedBaseHeight).toBeNaN();
 
-    expect(component.lines[1].startX).toBe(34.5);
-    expect(component.lines[1].startY).toBe(20);
-    expect(component.lines[1].endX).toBe(34.5);
-    expect(component.lines[1].endY).toBe(35);
+    expect(component.lines[1].startX).toBe(25.5);
+    expect(component.lines[1].startY).toBe(11);
+    expect(component.lines[1].endX).toBe(25.5);
+    expect(component.lines[1].endY).toBe(26);
     expect(component.lines[1].curved).toBe(false);
     expect(component.lines[1].curvedBaseHeight).toBeNaN();
 
-    expect(component.lines[2].startX).toBe(34.5);
-    expect(component.lines[2].startY).toBe(50);
-    expect(component.lines[2].endX).toBe(34.5);
-    expect(component.lines[2].endY).toBe(35);
+    expect(component.lines[2].startX).toBe(25.5);
+    expect(component.lines[2].startY).toBe(41);
+    expect(component.lines[2].endX).toBe(25.5);
+    expect(component.lines[2].endY).toBe(26);
     expect(component.lines[2].curved).toBe(false);
     expect(component.lines[2].curvedBaseHeight).toBeNaN();
 
@@ -272,8 +272,8 @@ describe('PedigreeChartComponent', () => {
     expect(component.pedigreeDataWithLayout[1].individual.pedigreeData.id).toBe('dad2');
     expect(component.pedigreeDataWithLayout[2].individual.pedigreeData.id).toBe('prb2');
 
-    expect(component.width).toBe(60.5);
-    expect(component.height).toBe(61.5);
+    expect(component.width).toBe(51.5);
+    expect(component.height).toBe(52.5);
   });
 
   it('should not duplicate pedigree individuals on repeat ngOnInit calls', () => {

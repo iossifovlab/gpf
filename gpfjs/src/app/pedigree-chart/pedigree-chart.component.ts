@@ -102,8 +102,8 @@ export class PedigreeChartComponent implements OnInit {
 
     const viewBoxWidth = this.width * scaleDownIndex;
     let viewBoxHeight = this.height * scaleDownIndex;
-    const viewBoxWidthOffset = (viewBoxWidth - this.width) / 2;
-    let viewBoxHeightOffset = (viewBoxHeight - this.height) / 2;
+    const viewBoxWidthOffset = Math.round(100 * ((viewBoxWidth - this.width) / 2) + Number.EPSILON) / 100;
+    let viewBoxHeightOffset = Math.round(100 * ((viewBoxHeight - this.height) / 2) + Number.EPSILON) / 100;
 
     if (this.curveLines.length !== 0) {
       const curveLinesOnTop = this.curveLines
