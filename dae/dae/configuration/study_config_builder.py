@@ -23,12 +23,8 @@ class StudyConfigBuilder:
     @classmethod
     def _cleanup_dict(cls, config_dict):
         for k, v in list(config_dict.items()):
-            print(k, v)
             if v is None:
-                print("deleting")
-                print(config_dict)
                 del config_dict[k]
-                print(config_dict)
 
             elif isinstance(v, dict):
                 config_dict[k] = cls._cleanup_dict(v)
@@ -39,7 +35,6 @@ class StudyConfigBuilder:
         return config_dict
 
     def build_config(self) -> str:
-        print(self._config_dict)
         return typing.cast(str, yaml.dump(
             self._config_dict,
             default_flow_style=False,
