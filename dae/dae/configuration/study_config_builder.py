@@ -18,9 +18,28 @@ class StudyConfigBuilder:
     def __init__(self, config_dict: Dict[str, Any]):
         assert config_dict
         assert config_dict["genotype_storage"]
-        self._config_dict = config_dict
+        self._config_dict = self._cleanup_dict(config_dict)
+
+    @classmethod
+    def _cleanup_dict(cls, config_dict):
+        for k, v in list(config_dict.items()):
+            print(k, v)
+            if v is None:
+                print("deleting")
+                print(config_dict)
+                del config_dict[k]
+                print(config_dict)
+
+            elif isinstance(v, dict):
+                config_dict[k] = cls._cleanup_dict(v)
+            elif isinstance(v, list):
+                for idx, elem in enumerate(v):
+                    if isinstance(elem, dict):
+                        v[idx] = cls._cleanup_dict(elem)
+        return config_dict
 
     def build_config(self) -> str:
+        print(self._config_dict)
         return typing.cast(str, yaml.dump(
             self._config_dict,
             default_flow_style=False,
