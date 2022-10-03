@@ -3,7 +3,7 @@ from __future__ import annotations
 from abc import abstractmethod
 from copy import copy
 from dataclasses import dataclass
-from typing import Any, Callable
+from typing import Any, Callable, Iterator
 
 
 @dataclass(eq=False, frozen=True)
@@ -34,6 +34,7 @@ class TaskGraph:
         """
         # tasks that use the output of other tasks as input should
         # have those other tasks as dependancies
+        deps = copy(deps)
         for arg in args:
             if isinstance(arg, TaskNode):
                 deps.append(arg)
@@ -43,15 +44,24 @@ class TaskGraph:
 
 
 class TaskGraphExecutor:
+    """Class that executes a task graph."""
+
     @abstractmethod
-    def execute(self, task_graph: TaskGraph):
-        """Execute the graph."""
+    def execute(self, task_graph: TaskGraph) -> Iterator[TaskNode]:
+        """Start execute the graph.
+
+        Return an iterator that yields the task in the graph as they finish.
+        """
+
+    @abstractmethod
+    def get_active_tasks(self) -> list[TaskNode]:
+        """Return the list of tasks currently being processed."""
 
 
 class AbstractTaskGraphExecutor(TaskGraphExecutor):
     """Executor that walks the graph in order that satisfies dependancies."""
 
-    def execute(self, task_graph: TaskGraph) -> None:
+    def execute(self, task_graph: TaskGraph) -> Iterator[TaskNode]:
         """Execute the graph."""
         self._check_for_cyclic_deps(task_graph)
         for task_node in self._in_exec_order(task_graph):
@@ -63,8 +73,8 @@ class AbstractTaskGraphExecutor(TaskGraphExecutor):
         """Put the task on the execution queue."""
 
     @abstractmethod
-    def await_tasks(self) -> None:
-        """Wait for all queued tasks to finish."""
+    def await_tasks(self) -> Iterator[TaskNode]:
+        """Yield enqueued tasks as soon as they finish."""
 
     def _in_exec_order(self, task_graph):
         visited = set()
@@ -106,43 +116,81 @@ class SequentialExecutor(AbstractTaskGraphExecutor):
     """A Task Graph Executor that executes task in sequential order."""
 
     def __init__(self):
-        self.task2result = {}
+        self._task_queue = []
+        self._task2result = {}
 
     def queue_task(self, task_node):
-        # handle tasks that use the output of other tasks
-        args = [self.task2result[arg] if isinstance(arg, TaskNode) else arg
-                for arg in task_node.args]
-        result = task_node.func(*args)
-        self.task2result[task_node] = result
+        self._task_queue.append(task_node)
 
     def await_tasks(self):
-        # all tasks have already been executed. Let's clean the state.
-        self.task2result = {}
+        assert len(self._task2result) == 0, "Cannot call execute multipe times"
+        for task_node in self._task_queue:
+            # handle tasks that use the output of other tasks
+            args = [
+                self._task2result[arg] if isinstance(arg, TaskNode) else arg
+                for arg in task_node.args
+            ]
+            result = task_node.func(*args)
+            self._task2result[task_node] = result
+            yield task_node
+
+        # all tasks have already executed. Let's clean the state.
+        self._task_queue = []
+        self._task2result = {}
+
+    def get_active_tasks(self):
+        for task_node in self._task_queue:
+            if task_node not in self._task2result:
+                return [task_node]
+        return []
 
 
 class DaskExecutor(AbstractTaskGraphExecutor):
     """Execute tasks in parallel using Dask to do the heavy lifting."""
 
     def __init__(self, client):
-        self.client = client
-        self.task2future = {}
+        self._client = client
+        self._task2future = {}
+        self._future2task = {}
+        self._finished_futures = set()
 
     def queue_task(self, task_node):
-        deps = [self.task2future[d] for d in task_node.deps]
+        deps = [self._task2future[d] for d in task_node.deps]
         # handle tasks that use the output of other tasks
-        args = [self.task2future[arg] if isinstance(arg, TaskNode) else arg
+        args = [self._task2future[arg] if isinstance(arg, TaskNode) else arg
                 for arg in task_node.args]
-        future = self.client.submit(self._exec, task_node.func, args, deps)
-        self.task2future[task_node] = future
+        future = self._client.submit(self._exec, task_node.func, args, deps,
+                                     pure=False)
+        self._task2future[task_node] = future
+        self._future2task[future.key] = task_node
 
     def await_tasks(self):
         # pylint: disable=import-outside-toplevel
         from dask.distributed import as_completed
 
-        futures = list(self.task2future.values())
-        self.task2future = {}
+        assert len(self._finished_futures) == 0, "Cannot call execute twice"
+
+        futures = list(self._task2future.values())
         for future in as_completed(futures):
-            future.result()
+            _ = future.result()
+            self._finished_futures.add(future.key)
+            yield self._future2task[future.key]
+
+        # clean up
+        self._task2future = {}
+        self._future2task = {}
+        self._finished_futures = set()
+
+    def get_active_tasks(self):
+        res = []
+        for task, future in self._task2future.items():
+            all_deps_satisfied = all(
+                self._task2future[dep].key in self._finished_futures
+                for dep in task.deps
+            )
+            if future.key not in self._finished_futures and all_deps_satisfied:
+                res.append(task)
+        return res
 
     @staticmethod
     def _exec(task_func, args, _deps):

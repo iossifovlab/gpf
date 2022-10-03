@@ -541,10 +541,18 @@ def run(import_config_fn, executor=SequentialExecutor()):
 
 
 def run_with_project(project, executor=SequentialExecutor()):
+    """Import the project using the provided executor."""
     storage = project.get_import_storage()
 
     task_graph = storage.generate_import_task_graph(project)
-    executor.execute(task_graph)
+    tasks_iter = executor.execute(task_graph)
+    last_stagenames = _get_current_stagenames(executor)
+    _print_stagenames(last_stagenames)
+    for _ in tasks_iter:
+        current_stagenames = _get_current_stagenames(executor)
+        if current_stagenames != last_stagenames:
+            last_stagenames = current_stagenames
+            _print_stagenames(last_stagenames)
 
 
 _REGISTERED_IMPORT_STORAGE_FACTORIES: \
@@ -590,3 +598,18 @@ def register_import_storage_factory(
     if storage_type in _REGISTERED_IMPORT_STORAGE_FACTORIES:
         logger.warning("overwriting import storage type: %s", storage_type)
     _REGISTERED_IMPORT_STORAGE_FACTORIES[storage_type] = factory
+
+
+def _get_current_stagenames(executor):
+    # we use the task name is also the stagename
+    return {
+        t.name
+        for t in executor.get_active_tasks()
+        if t.name is not None
+    }
+
+
+def _print_stagenames(stagenames):
+    if stagenames:
+        stagenames_str = ", ".join(stagenames)
+        print(f"Executing stage: {stagenames_str}")
