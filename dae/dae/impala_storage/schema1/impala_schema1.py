@@ -70,7 +70,8 @@ class ImpalaSchema1ImportStorage(ImportStorage):
     def _do_load_in_hdfs(cls, project):
         start = time.time()
         genotype_storage = project.get_genotype_storage()
-        if genotype_storage is None or not genotype_storage.is_impala():
+        if genotype_storage is None \
+                or genotype_storage.get_storage_type() != "impala":
             logger.error("missing or non-impala genotype storage")
             return
 
@@ -91,7 +92,8 @@ class ImpalaSchema1ImportStorage(ImportStorage):
     def _do_load_in_impala(cls, project):
         start = time.time()
         genotype_storage = project.get_genotype_storage()
-        if genotype_storage is None or not genotype_storage.is_impala():
+        if genotype_storage is None \
+                or genotype_storage.get_storage_type() != "impala":
             logger.error("missing or non-impala genotype storage")
             return
 

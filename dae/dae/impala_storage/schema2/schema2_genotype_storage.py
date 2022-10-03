@@ -49,12 +49,6 @@ class Schema2GenotypeStorage(GenotypeStorage):
         if self._hdfs_helpers is not None:
             self._hdfs_helpers.close()
 
-    def is_impala(self):
-        return False
-
-    def is_filestorage(self):
-        return False
-
     def build_backend(self, study_config, genome, gene_models):
         assert study_config is not None
 
@@ -71,16 +65,6 @@ class Schema2GenotypeStorage(GenotypeStorage):
         )
         # TODO create a bigquery variants if so specified in the config
         return variants
-
-    def simple_study_import(
-        self,
-        study_id,
-        families_loader=None,
-        variant_loaders=None,
-        study_config=None,
-        **kwargs,
-    ):
-        raise NotImplementedError()
 
     def hdfs_upload_dataset(self, study_id, variants_dir, pedigree_file,
                             meta_file, partition_description) \

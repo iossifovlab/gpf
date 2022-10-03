@@ -25,7 +25,7 @@ def test_impala_config_validation():
             "port": 21050,
         },
     }
-    res = ImpalaGenotypeStorage.validate_config(config)
+    res = ImpalaGenotypeStorage.validate_and_normalize_config(config)
     assert res is not None
 
 
@@ -50,7 +50,7 @@ def test_impala_config_validation_missing_id():
     with pytest.raises(
             ValueError,
             match="genotype storage without ID; 'id' is required"):
-        ImpalaGenotypeStorage.validate_config(config)
+        ImpalaGenotypeStorage.validate_and_normalize_config(config)
 
 
 def test_impala_config_validation_missing_type():
@@ -74,7 +74,7 @@ def test_impala_config_validation_missing_type():
     with pytest.raises(
             ValueError,
             match="genotype storage without type; 'storage_type' is required"):
-        ImpalaGenotypeStorage.validate_config(config)
+        ImpalaGenotypeStorage.validate_and_normalize_config(config)
 
 
 def test_impala_config_validation_wrong_type():
@@ -101,7 +101,7 @@ def test_impala_config_validation_wrong_type():
             match=re.escape(
                 "wrong config format for impala storage: "
                 "{'storage_type': ['unallowed value impala2']}")):
-        ImpalaGenotypeStorage.validate_config(config)
+        ImpalaGenotypeStorage.validate_and_normalize_config(config)
 
 
 def test_impala_config_validation_missing_hdfs():
@@ -128,7 +128,7 @@ def test_impala_config_validation_missing_hdfs():
             match=re.escape(
                 "wrong config format for impala storage: "
                 "{'hdfs': ['required field']}")):
-        ImpalaGenotypeStorage.validate_config(config)
+        ImpalaGenotypeStorage.validate_and_normalize_config(config)
 
 
 def test_impala_config_validation_missing_hdfs_base_dir():
@@ -155,7 +155,7 @@ def test_impala_config_validation_missing_hdfs_base_dir():
             match=re.escape(
                 "wrong config format for impala storage: "
                 "{'hdfs': [{'base_dir': ['required field']}]}")):
-        ImpalaGenotypeStorage.validate_config(config)
+        ImpalaGenotypeStorage.validate_and_normalize_config(config)
 
 
 def test_impala_config_validation_bad_hdfs_path():
@@ -183,7 +183,7 @@ def test_impala_config_validation_bad_hdfs_path():
                 "wrong config format for impala storage: "
                 "{'hdfs': [{'base_dir': "
                 "['path <tmp/test_data> is not an absolute path']}]}")):
-        ImpalaGenotypeStorage.validate_config(config)
+        ImpalaGenotypeStorage.validate_and_normalize_config(config)
 
 
 def test_impala_config_validation_missing_hdfs_host():
@@ -210,7 +210,7 @@ def test_impala_config_validation_missing_hdfs_host():
             match=re.escape(
                 "wrong config format for impala storage: "
                 "{'hdfs': [{'host': ['required field']}]}")):
-        ImpalaGenotypeStorage.validate_config(config)
+        ImpalaGenotypeStorage.validate_and_normalize_config(config)
 
 
 def test_impala_config_validation_missing_hdfs_port():
@@ -232,7 +232,7 @@ def test_impala_config_validation_missing_hdfs_port():
             "port": 21050,
         },
     }
-    res = ImpalaGenotypeStorage.validate_config(config)
+    res = ImpalaGenotypeStorage.validate_and_normalize_config(config)
     assert res["hdfs"]["port"] == 8020
 
 
@@ -255,7 +255,7 @@ def test_impala_config_validation_missing_hdfs_replication():
             "port": 21050,
         },
     }
-    res = ImpalaGenotypeStorage.validate_config(config)
+    res = ImpalaGenotypeStorage.validate_and_normalize_config(config)
     assert res["hdfs"]["replication"] == 1
 
 
@@ -283,7 +283,7 @@ def test_impala_config_validation_missing_impala():
             match=re.escape(
                 "wrong config format for impala storage: "
                 "{'impala': ['required field']}")):
-        ImpalaGenotypeStorage.validate_config(config)
+        ImpalaGenotypeStorage.validate_and_normalize_config(config)
 
 
 def test_impala_config_validation_missing_impala_db():
@@ -310,7 +310,7 @@ def test_impala_config_validation_missing_impala_db():
             match=re.escape(
                 "wrong config format for impala storage: "
                 "{'impala': [{'db': ['required field']}]}")):
-        ImpalaGenotypeStorage.validate_config(config)
+        ImpalaGenotypeStorage.validate_and_normalize_config(config)
 
 
 def test_impala_config_validation_missing_impala_hosts():
@@ -337,7 +337,7 @@ def test_impala_config_validation_missing_impala_hosts():
             match=re.escape(
                 "wrong config format for impala storage: "
                 "{'impala': [{'hosts': ['required field']}]}")):
-        ImpalaGenotypeStorage.validate_config(config)
+        ImpalaGenotypeStorage.validate_and_normalize_config(config)
 
 
 def test_impala_config_validation_missing_impala_port():
@@ -359,7 +359,7 @@ def test_impala_config_validation_missing_impala_port():
             # "port": 21050,
         },
     }
-    res = ImpalaGenotypeStorage.validate_config(config)
+    res = ImpalaGenotypeStorage.validate_and_normalize_config(config)
     assert res["impala"]["port"] == 21050
 
 
@@ -382,5 +382,5 @@ def test_impala_config_validation_missing_impala_pool_size():
             # "pool_size": 3,
         },
     }
-    res = ImpalaGenotypeStorage.validate_config(config)
+    res = ImpalaGenotypeStorage.validate_and_normalize_config(config)
     assert res["impala"]["pool_size"] == 1

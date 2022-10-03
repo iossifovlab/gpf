@@ -12,7 +12,7 @@ def test_validate_config():
         "id": "aaaa",
         "dir": "/tmp/aaaa_filesystem"
     }
-    res = FilesystemGenotypeStorage.validate_config(config)
+    res = FilesystemGenotypeStorage.validate_and_normalize_config(config)
     assert res is not None
 
 
@@ -24,7 +24,7 @@ def test_validate_config_missing_id():
     with pytest.raises(
             ValueError,
             match="genotype storage without ID; 'id' is required"):
-        FilesystemGenotypeStorage.validate_config(config)
+        FilesystemGenotypeStorage.validate_and_normalize_config(config)
 
 
 def test_validate_config_missing_storage_type():
@@ -35,7 +35,7 @@ def test_validate_config_missing_storage_type():
     with pytest.raises(
             ValueError,
             match="genotype storage without type; 'storage_type' is required"):
-        FilesystemGenotypeStorage.validate_config(config)
+        FilesystemGenotypeStorage.validate_and_normalize_config(config)
 
 
 def test_validate_config_wrong_storage_type():
@@ -49,7 +49,7 @@ def test_validate_config_wrong_storage_type():
             match=re.escape(
                 "wrong config format for filesytem storage: "
                 "{'storage_type': ['unallowed value filesystem2']}")):
-        FilesystemGenotypeStorage.validate_config(config)
+        FilesystemGenotypeStorage.validate_and_normalize_config(config)
 
 
 def test_validate_config_missing_dir():
@@ -63,7 +63,7 @@ def test_validate_config_missing_dir():
             match=re.escape(
                 "wrong config format for filesytem storage: "
                 "{'dir': ['required field']}")):
-        FilesystemGenotypeStorage.validate_config(config)
+        FilesystemGenotypeStorage.validate_and_normalize_config(config)
 
 
 def test_validate_config_bad_dir():
@@ -78,4 +78,4 @@ def test_validate_config_bad_dir():
                 "wrong config format for filesytem storage: "
                 "{'dir': ['path <tmp/aaaa_filesystem> "
                 "is not an absolute path']}")):
-        FilesystemGenotypeStorage.validate_config(config)
+        FilesystemGenotypeStorage.validate_and_normalize_config(config)

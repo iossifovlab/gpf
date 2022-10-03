@@ -89,8 +89,8 @@ class ImpalaGenotypeStorage(GenotypeStorage):
                 self.storage_config["rsync"]["location"])
 
     @classmethod
-    def validate_config(cls, config: Dict) -> Dict:
-        config = super().validate_config(config)
+    def validate_and_normalize_config(cls, config: Dict) -> Dict:
+        config = super().validate_and_normalize_config(config)
         validator = Validator(cls.VALIDATION_SCHEMA)
         if not validator.validate(config):
             logger.error(
@@ -112,9 +112,6 @@ class ImpalaGenotypeStorage(GenotypeStorage):
 
     def get_db(self):
         return self.storage_config["impala"]["db"]
-
-    def is_impala(self):
-        return True
 
     @property
     def impala_helpers(self):

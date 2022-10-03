@@ -40,8 +40,8 @@ class FilesystemGenotypeStorage(GenotypeStorage):
         self.data_dir = self.storage_config["dir"]
 
     @classmethod
-    def validate_config(cls, config: Dict) -> Dict:
-        config = super().validate_config(config)
+    def validate_and_normalize_config(cls, config: Dict) -> Dict:
+        config = super().validate_and_normalize_config(config)
         validator = Validator(cls.VALIDATION_SCHEMA)
         if not validator.validate(config):
             logger.error(

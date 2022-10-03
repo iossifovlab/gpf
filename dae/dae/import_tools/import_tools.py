@@ -236,7 +236,6 @@ class ImportProject():
     @cache
     def get_import_storage(self):
         """Create an import storage as described in the import config."""
-        # pylint: disable=import-outside-toplevel
         storage_type = self._storage_type()
         factory = get_import_storage_factory(storage_type)
         return factory()

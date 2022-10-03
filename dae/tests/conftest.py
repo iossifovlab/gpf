@@ -115,43 +115,43 @@ def pytest_addoption(parser):
         help="genotype storage configuration file to use integration tests")
 
 
+def pytest_sessionstart(session):
+    global GENOTYPE_STORAGES  # pylint: disable=global-statement
+    if not GENOTYPE_STORAGES:
+        # pylint: disable=protected-access
+        root_path = session\
+            .config\
+            ._tmp_path_factory.mktemp("genotype_storage")
+        _populate_default_genotype_storages(root_path)
+
+        storage_types = session.config.getoption("storage_types")
+        storage_ids = session.config.getoption("storage_ids")
+        storage_config_filename = \
+            session.config.getoption("storage_config")
+
+        if storage_types:
+            assert not storage_ids
+            assert not storage_config_filename
+            GENOTYPE_STORAGES = _select_storages_by_type(storage_types)
+        elif storage_ids:
+            assert not storage_config_filename
+            GENOTYPE_STORAGES = _select_storages_by_ids(storage_ids)
+
+        elif storage_config_filename:
+            import yaml  # pylint: disable=import-outside-toplevel
+            with open(storage_config_filename, encoding="utf8") as infile:
+                storage_config = yaml.safe_load(infile.read())
+            storage = GENOTYPE_STORAGE_REGISTRY\
+                .register_storage_config(storage_config)
+            GENOTYPE_STORAGES = {
+                storage.storage_id: storage
+            }
+        else:
+            GENOTYPE_STORAGES = _populate_storages_from_registry()
+
+
 def pytest_generate_tests(metafunc):
-    # import pdb; pdb.set_trace()
-
-    print(dir(metafunc))
     if "genotype_storage" in metafunc.fixturenames:
-        global GENOTYPE_STORAGES  # pylint: disable=global-statement
-        if not GENOTYPE_STORAGES:
-            # pylint: disable=protected-access
-            root_path = metafunc\
-                .config\
-                ._tmp_path_factory.mktemp("genotype_storage")
-            _populate_default_genotype_storages(root_path)
-
-            storage_types = metafunc.config.getoption("storage_types")
-            storage_ids = metafunc.config.getoption("storage_ids")
-            storage_config_filename = \
-                metafunc.config.getoption("storage_config")
-
-            if storage_types:
-                assert not storage_ids
-                assert not storage_config_filename
-                GENOTYPE_STORAGES = _select_storages_by_type(storage_types)
-            elif storage_ids:
-                assert not storage_config_filename
-                GENOTYPE_STORAGES = _select_storages_by_ids(storage_ids)
-
-            elif storage_config_filename:
-                import yaml  # pylint: disable=import-outside-toplevel
-                with open(storage_config_filename, encoding="utf8") as infile:
-                    storage_config = yaml.safe_load(infile.read())
-                storage = GENOTYPE_STORAGE_REGISTRY\
-                    .register_storage_config(storage_config)
-                GENOTYPE_STORAGES = {
-                    storage.storage_id: storage
-                }
-            else:
-                GENOTYPE_STORAGES = _populate_storages_from_registry()
 
         storages = GENOTYPE_STORAGES
 
@@ -159,4 +159,4 @@ def pytest_generate_tests(metafunc):
             "genotype_storage",
             storages.values(),
             ids=storages.keys(),
-            scope="session")
+            scope="module")
