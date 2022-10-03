@@ -10,7 +10,7 @@ import multiprocessing
 
 from http.server import HTTPServer  # ThreadingHTTPServer
 
-from typing import Any, cast, Optional, Dict
+from typing import Any, cast, Optional, Dict, Union
 from functools import partial
 
 from dae.genomic_resources.repository import \
@@ -252,19 +252,19 @@ def range_http_serve(directory):
 
 
 def setup_directories(
-        root_dir: pathlib.Path, content: Dict[str, Any]) -> None:
+        root_dir: pathlib.Path,
+        content: Union[str, Dict[str, Any]]) -> None:
     """Set up directory and subdirectory structures using the content."""
     root_dir = pathlib.Path(root_dir)
-
-    root_dir.mkdir(parents=True, exist_ok=True)
-    for path_name, path_content in content.items():
-        if isinstance(path_content, str):
-            (root_dir / path_name).write_text(path_content, encoding="utf8")
-        elif isinstance(path_content, dict):
+    root_dir.parent.mkdir(parents=True, exist_ok=True)
+    if isinstance(content, str):
+        root_dir.write_text(content, encoding="utf8")
+    elif isinstance(content, dict):
+        for path_name, path_content in content.items():
             setup_directories(root_dir / path_name, path_content)
-        else:
-            raise ValueError(
-                f"unexpected content type: {path_content} for {path_name}")
+    else:
+        raise ValueError(
+            f"unexpected content type: {path_content} for {path_name}")
 
 
 def convert_to_tab_separated(content: str):

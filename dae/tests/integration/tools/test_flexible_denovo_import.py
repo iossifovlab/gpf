@@ -59,36 +59,26 @@ def test_import_iossifov2014_filesystem(
     assert len(vs) == 16
 
 
-@pytest.mark.parametrize(
-    "storage_id",
-    [
-        "genotype_impala",
-        "genotype_impala_2",
-        "genotype_filesystem",
-    ]
-)
 def test_flexible_denovo_default(
-        tmp_path_factory, storage_id, local_fixture):
-    root_path = tmp_path_factory.mktemp(storage_id)
-    foobar_gpf(root_path)
-    gpf_instance = GPFInstance(work_dir=str(root_path / "gpf_instance"))
+        tmp_path_factory, genotype_storage, resources_dir):
+    root_path = tmp_path_factory.mktemp(genotype_storage.storage_id)
+    gpf_instance = foobar_gpf(root_path, genotype_storage)
 
-    pedigree_filename = local_fixture(
+    pedigree_filename = resources_dir / \
         "flexible_short/flexible_short_families.ped"
-    )
-    denovo_filename = local_fixture("flexible_short/flexible_short.txt")
+    denovo_filename = resources_dir / "flexible_short/flexible_short.txt"
 
-    study_id = f"test_flexible_denovo_default_{storage_id}"
+    study_id = f"test_flexible_denovo_default_{genotype_storage.storage_id}"
 
     argv = [
-        pedigree_filename,
+        str(pedigree_filename),
         "--id",
         study_id,
         "--skip-reports",
         "--denovo-file",
-        denovo_filename,
+        str(denovo_filename),
         "--genotype-storage",
-        storage_id,
+        genotype_storage.storage_id,
         "-o",
         str(root_path / "output"),
     ]
@@ -103,34 +93,24 @@ def test_flexible_denovo_default(
     assert len(vs) == 3
 
 
-@pytest.mark.parametrize(
-    "storage_id",
-    [
-        "genotype_impala",
-        "genotype_impala_2",
-        "genotype_filesystem",
-    ]
-)
 def test_flexible_denovo_vcf(
-        tmp_path_factory, storage_id, local_fixture):
-    root_path = tmp_path_factory.mktemp(storage_id)
-    foobar_gpf(root_path)
-    gpf_instance = GPFInstance(work_dir=str(root_path / "gpf_instance"))
+        tmp_path_factory, genotype_storage, resources_dir):
+    root_path = tmp_path_factory.mktemp(genotype_storage.storage_id)
+    gpf_instance = foobar_gpf(root_path, genotype_storage)
 
-    pedigree_filename = local_fixture(
+    pedigree_filename = resources_dir / \
         "flexible_short/flexible_short_families.ped"
-    )
-    denovo_filename = local_fixture("flexible_short/flexible_short_vcf.txt")
+    denovo_filename = resources_dir / "flexible_short/flexible_short_vcf.txt"
 
-    study_id = f"test_flexible_denovo_vcf{storage_id}"
+    study_id = f"test_flexible_denovo_vcf{genotype_storage.storage_id}"
 
     argv = [
-        pedigree_filename,
+        str(pedigree_filename),
         "--id",
         study_id,
         "--skip-reports",
         "--denovo-file",
-        denovo_filename,
+        str(denovo_filename),
         "--denovo-person-id",
         "person_id",
         "--denovo-chrom",
@@ -141,7 +121,7 @@ def test_flexible_denovo_vcf(
         "reference",
         "--denovo-alt",
         "alternative",
-        "--genotype-storage", storage_id,
+        "--genotype-storage", genotype_storage.storage_id,
         "-o", str(root_path / "output")
     ]
 
@@ -155,36 +135,26 @@ def test_flexible_denovo_vcf(
     assert len(vs) == 3
 
 
-@pytest.mark.parametrize(
-    "storage_id",
-    [
-        "genotype_impala",
-        "genotype_impala_2",
-        "genotype_filesystem",
-    ]
-)
 def test_flexible_denovo_vcf_location(
-        tmp_path_factory, storage_id, local_fixture):
-    root_path = tmp_path_factory.mktemp(storage_id)
-    foobar_gpf(root_path)
-    gpf_instance = GPFInstance(work_dir=str(root_path / "gpf_instance"))
+        tmp_path_factory, genotype_storage, resources_dir):
+    root_path = tmp_path_factory.mktemp(genotype_storage.storage_id)
+    gpf_instance = foobar_gpf(root_path, genotype_storage)
 
-    pedigree_filename = local_fixture(
+    pedigree_filename = resources_dir / \
         "flexible_short/flexible_short_families.ped"
-    )
-    denovo_filename = local_fixture(
+    denovo_filename = resources_dir / \
         "flexible_short/flexible_short_vcf_location.txt"
-    )
 
-    study_id = f"test_flexible_denovo_vcf_location_{storage_id}"
+    study_id = f"test_flexible_denovo_vcf_location_" \
+        f"{genotype_storage.storage_id}"
 
     argv = [
-        pedigree_filename,
+        str(pedigree_filename),
         "--id",
         study_id,
         "--skip-reports",
         "--denovo-file",
-        denovo_filename,
+        str(denovo_filename),
         "--denovo-person-id",
         "person_id",
         "--denovo-location",
@@ -194,7 +164,7 @@ def test_flexible_denovo_vcf_location(
         "--denovo-alt",
         "alternative",
         "--genotype-storage",
-        storage_id,
+        genotype_storage.storage_id,
         "-o",
         str(root_path / "output"),
     ]
@@ -209,34 +179,26 @@ def test_flexible_denovo_vcf_location(
     assert len(vs) == 3
 
 
-@pytest.mark.parametrize(
-    "storage_id",
-    [
-        "genotype_impala",
-        "genotype_impala_2",
-        "genotype_filesystem",
-    ]
-)
 def test_flexible_denovo_vcf_best_state(
-        tmp_path_factory, storage_id, local_fixture):
-    root_path = tmp_path_factory.mktemp(storage_id)
-    foobar_gpf(root_path)
-    gpf_instance = GPFInstance(work_dir=str(root_path / "gpf_instance"))
+        tmp_path_factory, genotype_storage, resources_dir):
+    root_path = tmp_path_factory.mktemp(genotype_storage.storage_id)
+    gpf_instance = foobar_gpf(root_path, genotype_storage)
 
-    pedigree_filename = local_fixture(
-        "flexible_short/flexible_short_families.ped")
-    denovo_filename = local_fixture(
-        "flexible_short/flexible_short_vcf_best_state.txt")
+    pedigree_filename = resources_dir / \
+        "flexible_short/flexible_short_families.ped"
+    denovo_filename = resources_dir / \
+        "flexible_short/flexible_short_vcf_best_state.txt"
 
-    study_id = f"test_flexible_denovo_vcf_best_state_{storage_id}"
+    study_id = f"test_flexible_denovo_vcf_best_state_" \
+        f"{genotype_storage.storage_id}"
 
     argv = [
-        pedigree_filename,
+        str(pedigree_filename),
         "--id",
         study_id,
         "--skip-reports",
         "--denovo-file",
-        denovo_filename,
+        str(denovo_filename),
         "--denovo-family-id",
         "familyId",
         "--denovo-best-state",
@@ -248,7 +210,7 @@ def test_flexible_denovo_vcf_best_state(
         "--denovo-alt",
         "alternative",
         "--genotype-storage",
-        storage_id,
+        genotype_storage.storage_id,
         "-o",
         str(root_path / "output"),
     ]
@@ -263,36 +225,26 @@ def test_flexible_denovo_vcf_best_state(
     assert len(vs) == 3
 
 
-@pytest.mark.parametrize(
-    "storage_id",
-    [
-        "genotype_impala",
-        "genotype_impala_2",
-        "genotype_filesystem",
-    ]
-)
 def test_flexible_denovo_dae_chrom_pos(
-        tmp_path_factory, storage_id, local_fixture):
-    root_path = tmp_path_factory.mktemp(storage_id)
-    foobar_gpf(root_path)
-    gpf_instance = GPFInstance(work_dir=str(root_path / "gpf_instance"))
+        tmp_path_factory, genotype_storage, resources_dir):
+    root_path = tmp_path_factory.mktemp(genotype_storage.storage_id)
+    gpf_instance = foobar_gpf(root_path, genotype_storage)
 
-    pedigree_filename = local_fixture(
+    pedigree_filename = resources_dir / \
         "flexible_short/flexible_short_families.ped"
-    )
-    denovo_filename = local_fixture(
+    denovo_filename = resources_dir / \
         "flexible_short/flexible_short_dae_chrom_pos.txt"
-    )
 
-    study_id = f"test_flexible_denovo_dae_chrom_pos_{storage_id}"
+    study_id = f"test_flexible_denovo_dae_chrom_pos_" \
+        f"{genotype_storage.storage_id}"
 
     argv = [
-        pedigree_filename,
+        str(pedigree_filename),
         "--id",
         study_id,
         "--skip-reports",
         "--denovo-file",
-        denovo_filename,
+        str(denovo_filename),
         "--denovo-chrom",
         "chrom",
         "--denovo-pos",
@@ -304,7 +256,7 @@ def test_flexible_denovo_dae_chrom_pos(
         "--denovo-best-state",
         "bestState",
         "--genotype-storage",
-        storage_id,
+        genotype_storage.storage_id,
         "-o",
         str(root_path / "output"),
     ]
@@ -319,42 +271,32 @@ def test_flexible_denovo_dae_chrom_pos(
     assert len(vs) == 3
 
 
-@pytest.mark.parametrize(
-    "storage_id",
-    [
-        "genotype_impala",
-        "genotype_impala_2",
-        "genotype_filesystem",
-    ]
-)
 def test_flexible_denovo_dae_person(
-        tmp_path_factory, storage_id, local_fixture):
-    root_path = tmp_path_factory.mktemp(storage_id)
-    foobar_gpf(root_path)
-    gpf_instance = GPFInstance(work_dir=str(root_path / "gpf_instance"))
+        tmp_path_factory, genotype_storage, resources_dir):
+    root_path = tmp_path_factory.mktemp(genotype_storage.storage_id)
+    gpf_instance = foobar_gpf(root_path, genotype_storage)
 
-    pedigree_filename = local_fixture(
+    pedigree_filename = resources_dir / \
         "flexible_short/flexible_short_families.ped"
-    )
-    denovo_filename = local_fixture(
+    denovo_filename = resources_dir / \
         "flexible_short/flexible_short_dae_person.txt"
-    )
 
-    study_id = f"test_flexible_denovo_dae_person_{storage_id}"
+    study_id = f"test_flexible_denovo_dae_person_" \
+        f"{genotype_storage.storage_id}"
 
     argv = [
-        pedigree_filename,
+        str(pedigree_filename),
         "--id",
         study_id,
         "--skip-reports",
         "--denovo-file",
-        denovo_filename,
+        str(denovo_filename),
         "--denovo-variant",
         "variant",
         "--denovo-person-id",
         "person_id",
         "--genotype-storage",
-        storage_id,
+        genotype_storage.storage_id,
         "-o",
         str(root_path / "output"),
     ]

@@ -2,13 +2,12 @@
 import textwrap
 import pytest
 
-from tests.foobar_import import foobar_gpf, setup_vcf, setup_dae_transmitted
+from tests.foobar_import import foobar_gpf, setup_pedigree, setup_vcf, \
+    setup_dae_transmitted, setup_denovo
+from dae.genomic_resources.testing import setup_directories
 
-from dae.genomic_resources.testing import convert_to_tab_separated, \
-    setup_directories
 from dae.import_tools.import_tools import ImportProject
 from dae.tools.simple_study_import import main
-from dae.gpf_instance import GPFInstance
 
 
 def test_del_loader_prefix():
@@ -21,7 +20,8 @@ def test_del_loader_prefix():
 @pytest.fixture
 def pedigree_data(tmp_path_factory):
     root_path = tmp_path_factory.mktemp("pedigree")
-    in_ped = convert_to_tab_separated(
+    return setup_pedigree(
+        root_path / "pedigree_data" / "in.ped",
         """
             familyId personId dadId	 momId	sex status role
             f1       m1       0      0      2   1      mom
@@ -31,53 +31,33 @@ def pedigree_data(tmp_path_factory):
             f2       m2       0      0      2   1      mom
             f2       d2       0      0      1   1      dad
             f2       p2       d2     m2     2   2      prb
-        """)
-
-    setup_directories(root_path, {
-        "pedigree_data": {
-            "in.ped": in_ped
-        }
-    })
-
-    return str(root_path / "pedigree_data" / "in.ped")
+        """
+    )
 
 
 @pytest.fixture
 def denovo_dae_data(tmp_path_factory):
     root_path = tmp_path_factory.mktemp("denovo_dae_path")
-    in_var = convert_to_tab_separated("""
+    return setup_denovo(
+        root_path / "denovo_dae_data" / "in.tsv",
+        """
           familyId  location  variant    bestState
           f1        foo:10    sub(A->G)  2||2||1||1/0||0||1||0
           f1        foo:11    sub(T->A)  2||2||1||2/0||0||1||0
           f1        bar:10    sub(G->A)  2||2||2||1/0||0||0||1
           f2        bar:11    sub(G->A)  2||2||1/0||0||1
           f2        bar:12    sub(G->A)  2||2||1/0||0||1
-        """)
-
-    setup_directories(root_path, {
-        "denovo_dae_data": {
-            "in.tsv": in_var,
-        }
-    })
-
-    return str(root_path / "denovo_dae_data" / "in.tsv")
+        """
+    )
 
 
-@pytest.mark.parametrize(
-    "storage_id",
-    [
-        "genotype_impala",
-        "genotype_impala_2",
-        "genotype_filesystem",
-    ]
-)
 def test_import_denovo_dae_style_into_genotype_storage(
-        tmp_path_factory, storage_id, pedigree_data, denovo_dae_data):
-    root_path = tmp_path_factory.mktemp(storage_id)
-    foobar_gpf(root_path)
-
-    study_id = f"test_denovo_dae_style_{storage_id}"
-    gpf_instance = GPFInstance(work_dir=str(root_path / "gpf_instance"))
+        tmp_path_factory, pedigree_data, denovo_dae_data,
+        genotype_storage):
+    root_path = tmp_path_factory.mktemp(
+        genotype_storage.storage_id)
+    gpf_instance = foobar_gpf(root_path, genotype_storage)
+    study_id = f"test_denovo_dae_style_{genotype_storage.storage_id}"
 
     argv = [
         pedigree_data,
@@ -95,7 +75,7 @@ def test_import_denovo_dae_style_into_genotype_storage(
         "--denovo-best-state",
         "bestState",
         "--genotype-storage",
-        storage_id,
+        genotype_storage.storage_id,
         "-o",
         str(root_path / "output"),
     ]
@@ -113,19 +93,10 @@ def test_import_denovo_dae_style_into_genotype_storage(
     assert len(vs) == 5
 
 
-@pytest.mark.parametrize(
-    "storage_id",
-    [
-        "genotype_impala",
-        "genotype_impala_2",
-        "genotype_filesystem",
-    ]
-)
-def test_import_denovo_dae_style_denovo_sep(
-        tmp_path_factory, storage_id, pedigree_data):
-    root_path = tmp_path_factory.mktemp(storage_id)
-    foobar_gpf(root_path)
-    gpf_instance = GPFInstance(work_dir=str(root_path / "gpf_instance"))
+def test_import_denovo_dae_style_sep(
+        tmp_path_factory, pedigree_data, genotype_storage):
+    root_path = tmp_path_factory.mktemp(genotype_storage.storage_id)
+    gpf_instance = foobar_gpf(root_path, genotype_storage)
 
     in_var = textwrap.dedent("""
           familyId$chrom$pos$ref$alt$bestState
@@ -143,8 +114,7 @@ def test_import_denovo_dae_style_denovo_sep(
     })
 
     denovo_filename = str(root_path / "denovo_separator_data" / "in.dsv")
-
-    study_id = f"test_denovo_dae_style_denovo_sep_{storage_id}"
+    study_id = f"test_denovo_dae_style_sep_{genotype_storage.storage_id}"
 
     argv = [
         pedigree_data,
@@ -168,7 +138,7 @@ def test_import_denovo_dae_style_denovo_sep(
         "--denovo-sep",
         "$",
         "--genotype-storage",
-        storage_id,
+        genotype_storage.storage_id,
         "-o",
         str(root_path / "output"),
     ]
@@ -190,7 +160,7 @@ def test_import_denovo_dae_style_denovo_sep(
 def vcf_data(tmp_path_factory):
     root_path = tmp_path_factory.mktemp("vcf_data")
 
-    return setup_vcf(root_path, textwrap.dedent("""
+    return setup_vcf(root_path / "vcf_data" / "in.vcf.gz", textwrap.dedent("""
         ##fileformat=VCFv4.2
         ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
         ##contig=<ID=foo>
@@ -200,22 +170,12 @@ def vcf_data(tmp_path_factory):
         """))
 
 
-@pytest.mark.parametrize(
-    "storage_id",
-    [
-        "genotype_impala",
-        "genotype_impala_2",
-        "genotype_filesystem",
-    ]
-)
 def test_import_comp_vcf_into_genotype_storage(
-        tmp_path_factory, storage_id, pedigree_data, vcf_data):
+        tmp_path_factory, pedigree_data, vcf_data, genotype_storage):
 
-    root_path = tmp_path_factory.mktemp(storage_id)
-    foobar_gpf(root_path)
-    gpf_instance = GPFInstance(work_dir=str(root_path / "gpf_instance"))
-
-    study_id = f"test_comp_vcf_{storage_id}"
+    root_path = tmp_path_factory.mktemp(genotype_storage.storage_id)
+    gpf_instance = foobar_gpf(root_path, genotype_storage)
+    study_id = f"test_comp_vcf_{genotype_storage.storage_id}"
 
     argv = [
         pedigree_data,
@@ -227,7 +187,7 @@ def test_import_comp_vcf_into_genotype_storage(
         "--vcf-denovo-mode", "possible_denovo",
         "--vcf-omission-mode", "possible_omission",
         "--genotype-storage",
-        storage_id,
+        genotype_storage.storage_id,
         "-o",
         str(root_path / "output"),
     ]
@@ -244,22 +204,14 @@ def test_import_comp_vcf_into_genotype_storage(
     assert len(vs) == 2
 
 
-@pytest.mark.parametrize(
-    "storage_id",
-    [
-        "genotype_impala",
-        "genotype_impala_2",
-        "genotype_filesystem",
-    ]
-)
 def test_import_vcf_and_denovo_into_genotype_storage(
-        tmp_path_factory, storage_id,
-        pedigree_data, denovo_dae_data, vcf_data):
-    root_path = tmp_path_factory.mktemp(storage_id)
-    foobar_gpf(root_path)
-    gpf_instance = GPFInstance(work_dir=str(root_path / "gpf_instance"))
+        tmp_path_factory,
+        pedigree_data, denovo_dae_data, vcf_data,
+        genotype_storage):
+    root_path = tmp_path_factory.mktemp(genotype_storage.storage_id)
+    gpf_instance = foobar_gpf(root_path, genotype_storage)
 
-    study_id = f"test_comp_all_{storage_id}"
+    study_id = f"test_comp_all_{genotype_storage.storage_id}"
 
     argv = [
         pedigree_data,
@@ -273,7 +225,7 @@ def test_import_vcf_and_denovo_into_genotype_storage(
         "--denovo-variant", "variant",
         "--denovo-family-id", "familyId",
         "--denovo-best-state", "bestState",
-        "--genotype-storage", storage_id,
+        "--genotype-storage", genotype_storage.storage_id,
         "-o", str(root_path / "output"),
     ]
 
@@ -290,22 +242,13 @@ def test_import_vcf_and_denovo_into_genotype_storage(
     assert len(vs) == 7
 
 
-@pytest.mark.parametrize(
-    "storage_id",
-    [
-        "genotype_impala",
-        "genotype_impala_2",
-        "genotype_filesystem",
-    ]
-)
 def test_add_chrom_prefix_simple(
-        tmp_path_factory, storage_id,
-        pedigree_data, denovo_dae_data, vcf_data):
-    root_path = tmp_path_factory.mktemp(storage_id)
-    foobar_gpf(root_path)
-    gpf_instance = GPFInstance(work_dir=str(root_path / "gpf_instance"))
-
-    study_id = f"test_comp_all_prefix_{storage_id}"
+        tmp_path_factory,
+        pedigree_data, denovo_dae_data, vcf_data,
+        genotype_storage):
+    root_path = tmp_path_factory.mktemp(genotype_storage.storage_id)
+    gpf_instance = foobar_gpf(root_path, genotype_storage)
+    study_id = f"test_comp_all_prefix_{genotype_storage.storage_id}"
 
     argv = [
         pedigree_data,
@@ -327,7 +270,7 @@ def test_add_chrom_prefix_simple(
         "--denovo-best-state",
         "bestState",
         "--genotype-storage",
-        storage_id,
+        genotype_storage.storage_id,
         "-o",
         str(root_path / "output"),
         "--add-chrom-prefix",
@@ -355,22 +298,14 @@ def test_add_chrom_prefix_simple(
             assert fa.chromosome.startswith("ala_bala")
 
 
-@pytest.mark.parametrize(
-    "storage_id",
-    [
-        "genotype_impala",
-        "genotype_impala_2",
-        "genotype_filesystem",
-    ]
-)
 def test_import_del_chrom_prefix(
-        tmp_path_factory, storage_id,
-        pedigree_data, vcf_data):
-    root_path = tmp_path_factory.mktemp(storage_id)
-    foobar_gpf(root_path)
-    gpf_instance = GPFInstance(work_dir=str(root_path / "gpf_instance"))
+        tmp_path_factory,
+        pedigree_data, vcf_data,
+        genotype_storage):
+    root_path = tmp_path_factory.mktemp(genotype_storage.storage_id)
+    gpf_instance = foobar_gpf(root_path, genotype_storage)
 
-    study_id = f"test_comp_all_del_chrom_prefix_{storage_id}"
+    study_id = f"test_comp_all_del_chrom_prefix_{genotype_storage.storage_id}"
 
     argv = [
         pedigree_data,
@@ -382,7 +317,7 @@ def test_import_del_chrom_prefix(
         "--vcf-files",
         vcf_data,
         "--genotype-storage",
-        storage_id,
+        genotype_storage.storage_id,
         "--del-chrom-prefix",
         "fo",
         "-o",
@@ -404,22 +339,14 @@ def test_import_del_chrom_prefix(
         assert v.chromosome == "o", v
 
 
-@pytest.mark.parametrize(
-    "storage_id",
-    [
-        "genotype_impala",
-        "genotype_impala_2",
-        "genotype_filesystem",
-    ]
-)
 def test_import_transmitted_dae_into_genotype_storage(
-        tmp_path_factory, storage_id,
-        pedigree_data, denovo_dae_data, vcf_data):
+        tmp_path_factory,
+        pedigree_data,
+        genotype_storage):
 
-    root_path = tmp_path_factory.mktemp(storage_id)
-    foobar_gpf(root_path)
-    gpf_instance = GPFInstance(work_dir=str(root_path / "gpf_instance"))
-    study_id = f"test_dae_transmitted_{storage_id}"
+    root_path = tmp_path_factory.mktemp(genotype_storage.storage_id)
+    gpf_instance = foobar_gpf(root_path, genotype_storage)
+    study_id = f"test_dae_transmitted_{genotype_storage.storage_id}"
 
     summary_data, _toomany_data = setup_dae_transmitted(
         root_path,
@@ -445,7 +372,7 @@ bar 11       sub(A->G) f1:1121/1101:38||4||83||25/16||23||0||16/0||0||0||0;f2:21
         "--dae-summary-file",
         summary_data,
         "--genotype-storage",
-        storage_id,
+        genotype_storage.storage_id,
         "-o",
         str(root_path / "output"),
     ]
@@ -463,23 +390,14 @@ bar 11       sub(A->G) f1:1121/1101:38||4||83||25/16||23||0||16/0||0||0||0;f2:21
     assert len(vs) == 4
 
 
-@pytest.mark.parametrize(
-    "storage_id",
-    [
-        "genotype_impala",
-        "genotype_impala_2",
-        "genotype_filesystem",
-    ]
-)
 def test_import_wild_multivcf_into_genotype_storage(
-        tmp_path_factory, storage_id,
+        tmp_path_factory, genotype_storage,
         pedigree_data):
-    root_path = tmp_path_factory.mktemp(storage_id)
-    foobar_gpf(root_path)
-    gpf_instance = GPFInstance(work_dir=str(root_path / "gpf_instance"))
+    root_path = tmp_path_factory.mktemp(genotype_storage.storage_id)
+    gpf_instance = foobar_gpf(root_path, genotype_storage)
 
     setup_vcf(
-        root_path,
+        root_path / "vcf_data" / "multivcf_f1_foo.vcf.gz",
         content=textwrap.dedent("""
         ##fileformat=VCFv4.2
         ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
@@ -488,10 +406,9 @@ def test_import_wild_multivcf_into_genotype_storage(
         #CHROM POS ID REF ALT QUAL FILTER INFO FORMAT m1  d1  p1  s1
         foo    7   .  A   C   .    .      .    GT     0/1 0/0 0/1 0/0
         foo    10  .  C   G   .    .      .    GT     0/0 0/1 0/1 0/0
-        """),
-        name="multivcf_f1_foo.vcf")
+        """))
     setup_vcf(
-        root_path,
+        root_path / "vcf_data" / "multivcf_f1_bar.vcf.gz",
         content=textwrap.dedent("""
         ##fileformat=VCFv4.2
         ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
@@ -500,11 +417,9 @@ def test_import_wild_multivcf_into_genotype_storage(
         #CHROM POS ID REF ALT QUAL FILTER INFO FORMAT m1  d1  p1  s1
         bar    10  .  C   A   .    .      .    GT     0/1 0/0 0/1 0/0
         bar    11  .  C   G   .    .      .    GT     0/0 0/1 0/1 0/0
-        """),
-        name="multivcf_f1_bar.vcf")
-
+        """))
     setup_vcf(
-        root_path,
+        root_path / "vcf_data" / "multivcf_f2_foo.vcf.gz",
         content=textwrap.dedent("""
         ##fileformat=VCFv4.2
         ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
@@ -513,10 +428,9 @@ def test_import_wild_multivcf_into_genotype_storage(
         #CHROM POS ID REF ALT QUAL FILTER INFO FORMAT m2  d2  p2
         foo    7   .  A   C   .    .      .    GT     0/1 0/0 0/1
         foo    11  .  G   T   .    .      .    GT     0/0 0/1 0/1
-        """),
-        name="multivcf_f2_foo.vcf")
+        """))
     setup_vcf(
-        root_path,
+        root_path / "vcf_data" / "multivcf_f2_bar.vcf.gz",
         content=textwrap.dedent("""
         ##fileformat=VCFv4.2
         ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
@@ -525,10 +439,9 @@ def test_import_wild_multivcf_into_genotype_storage(
         #CHROM POS ID REF ALT QUAL FILTER INFO FORMAT m2  d2  p2
         bar    11  .  C   A   .    .      .    GT     0/1 0/0 0/1
         bar    12  .  A   T   .    .      .    GT     0/0 0/1 0/1
-        """),
-        name="multivcf_f2_bar.vcf")
+        """))
 
-    study_id = f"test_wile_multivcf_{storage_id}"
+    study_id = f"test_wile_multivcf_{genotype_storage.storage_id}"
     argv = [
         pedigree_data,
         "--id", study_id,
@@ -539,7 +452,7 @@ def test_import_wild_multivcf_into_genotype_storage(
         str(root_path / "vcf_data" / "multivcf_f1_[vc].vcf.gz"),
         str(root_path / "vcf_data" / "multivcf_f2_[vc].vcf.gz"),
         "--vcf-chromosomes", "foo;bar",
-        "--genotype-storage", storage_id,
+        "--genotype-storage", genotype_storage.storage_id,
         "-o", str(root_path / "output"),
     ]
 
@@ -556,27 +469,18 @@ def test_import_wild_multivcf_into_genotype_storage(
     assert len(vs) == 8
 
 
-@pytest.mark.parametrize(
-    "storage_id",
-    [
-        "genotype_impala",
-        "genotype_impala_2",
-        "genotype_filesystem",
-    ]
-)
 def test_import_study_config_arg(
-        tmp_path_factory, storage_id,
+        tmp_path_factory, genotype_storage,
         pedigree_data, vcf_data):
-    root_path = tmp_path_factory.mktemp(storage_id)
-    foobar_gpf(root_path)
-    gpf_instance = GPFInstance(work_dir=str(root_path / "gpf_instance"))
+    root_path = tmp_path_factory.mktemp(genotype_storage.storage_id)
+    gpf_instance = foobar_gpf(root_path, genotype_storage)
 
     study_config = root_path / "study_import" / "study_config.conf"
     study_config.parent.mkdir()
     with open(study_config, "wt", encoding="utf8") as outfile:
         outfile.write("""name="asdf"\n""")
 
-    study_id = f"test_comp_vcf_{storage_id}"
+    study_id = f"test_comp_vcf_{genotype_storage.storage_id}"
 
     argv = [
         pedigree_data,
@@ -585,7 +489,7 @@ def test_import_study_config_arg(
         "--vcf-denovo-mode", "possible_denovo",
         "--vcf-omission-mode", "possible_omission",
         "--vcf-files", vcf_data,
-        "--genotype-storage", storage_id,
+        "--genotype-storage", genotype_storage.storage_id,
         "--study-config", str(study_config),
         "-F",
         "-o", str(root_path / "output"),
@@ -595,23 +499,14 @@ def test_import_study_config_arg(
 
 
 @pytest.mark.xfail(reason="denovo-db import does not work on impala2")
-@pytest.mark.parametrize(
-    "storage_id",
-    [
-        "genotype_impala",
-        "genotype_impala_2",
-        "genotype_filesystem",
-    ]
-)
 def test_denovo_db_import(
-        tmp_path_factory, storage_id, fixture_dirname):
-    root_path = tmp_path_factory.mktemp(storage_id)
-    foobar_gpf(root_path)
-    gpf_instance = GPFInstance(work_dir=str(root_path / "gpf_instance"))
+        tmp_path_factory, genotype_storage, fixture_dirname):
+    root_path = tmp_path_factory.mktemp(genotype_storage.storage_id)
+    gpf_instance = foobar_gpf(root_path, genotype_storage)
 
     families_filename = fixture_dirname("backends/denovo-db-person-id.ped")
     denovo_filename = fixture_dirname("backends/denovo-db-person-id.tsv")
-    study_id = f"test_denovo_db_import_{storage_id}"
+    study_id = f"test_denovo_db_import_{genotype_storage.storage_id}"
 
     argv = [
         "--study-id", study_id,
@@ -624,7 +519,7 @@ def test_denovo_db_import(
         "--denovo-alt", "Alt",
         "--denovo-person-id", "SampleID",
         "--denovo-file", denovo_filename,
-        "--genotype-storage", storage_id,
+        "--genotype-storage", genotype_storage.storage_id,
     ]
 
     main(argv, gpf_instance)

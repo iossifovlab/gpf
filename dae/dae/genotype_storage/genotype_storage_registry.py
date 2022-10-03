@@ -41,8 +41,11 @@ class GenotypeStorageRegistry:
             raise ValueError(f"unknown storage id {storage_id}")
         return cast(GenotypeStorage, self._genotype_storages[storage_id])
 
-    def get_genotype_storage_ids(self):
+    def get_all_genotype_storage_ids(self):
         return list(self._genotype_storages.keys())
+
+    def get_all_genotype_storages(self):
+        return list(self._genotype_storages.values())
 
     def register_storages_configs(self, genotype_storages_config):
         for storage_config in genotype_storages_config["storages"]:

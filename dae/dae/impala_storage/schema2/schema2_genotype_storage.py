@@ -62,7 +62,7 @@ class Schema2GenotypeStorage(GenotypeStorage):
             = self._study_tables(study_config)
         variants = ImpalaVariants(
             self.impala_helpers,
-            self.storage_config.impala.db,
+            self.storage_config["impala"]["db"],
             family_table,
             summary_table,
             pedigree_table,
@@ -131,24 +131,24 @@ class Schema2GenotypeStorage(GenotypeStorage):
     def _study_tables(study_config) -> tuple[str, str, str, str]:
         study_id = study_config.id
         storage_config = study_config.genotype_storage
-        has_tables = storage_config and storage_config.tables
-        tables = storage_config.tables if has_tables else None
+        has_tables = storage_config and storage_config.get("tables")
+        tables = storage_config["tables"] if has_tables else None
 
         family_table = f"{study_id}_family_alleles"
-        if has_tables and tables.family:
-            family_table = tables.family
+        if has_tables and tables.get("family"):
+            family_table = tables["family"]
 
         summary_table = f"{study_id}_summary_alleles"
-        if has_tables and tables.summary:
-            summary_table = tables.summary
+        if has_tables and tables.get("summary"):
+            summary_table = tables["summary"]
 
         pedigree_table = f"{study_id}_pedigree"
         if has_tables and tables.pedigree:
             pedigree_table = tables.pedigree
 
         meta_table = f"{study_id}_meta"
-        if has_tables and tables.meta:
-            meta_table = tables.meta
+        if has_tables and tables.get("meta"):
+            meta_table = tables["meta"]
 
         return family_table, summary_table, pedigree_table, meta_table
 

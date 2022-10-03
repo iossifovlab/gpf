@@ -18,7 +18,8 @@ def quads_f1_vcf_config(fixtures_gpf_instance):
 
 
 def test_get_genotype_storage_ids(genotype_storage_registry):
-    genotype_storage_ids = genotype_storage_registry.get_genotype_storage_ids()
+    genotype_storage_ids = \
+        genotype_storage_registry.get_all_genotype_storage_ids()
 
     assert len(genotype_storage_ids) == 7
     assert genotype_storage_ids == [

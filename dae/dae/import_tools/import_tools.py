@@ -233,6 +233,7 @@ class ImportProject():
                 GPFInstance(work_dir=instance_config.get("path", None))
         return self._gpf_instance
 
+    @cache
     def get_import_storage(self):
         """Create an import storage as described in the import config."""
         # pylint: disable=import-outside-toplevel

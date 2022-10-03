@@ -173,7 +173,9 @@ class GPFInstance:
             GenotypeStorageRegistry
 
         registry = GenotypeStorageRegistry()
-        registry.register_storages_configs(self.dae_config.genotype_storage)
+        if self.dae_config.genotype_storage:
+            registry.register_storages_configs(
+                self.dae_config.genotype_storage)
         return registry
 
     @property  # type: ignore

@@ -29,10 +29,10 @@ logger = logging.getLogger("simple_study_import")
 
 def cli_arguments(dae_config, argv=None):
     """Create and return CLI arguments parser."""
-    if dae_config:
-        default_genotype_storage_id = dae_config.genotype_storage.default
-    else:
-        default_genotype_storage_id = None
+    default_genotype_storage_id = None
+    if dae_config and dae_config.genotype_storage:
+        default_genotype_storage_id = \
+            dae_config.genotype_storage.default
 
     parser = argparse.ArgumentParser(
         description="simple import of new study data",
@@ -212,7 +212,7 @@ def build_import_project(argv, gpf_instance):
             ImportProject.del_loader_prefix(dae_params, "dae_")
         project["input"]["dae"]["files"] = [dae_file]
 
-    return ImportProject.build_from_config(project)
+    return ImportProject.build_from_config(project, gpf_instance=gpf_instance)
 
 
 def main(argv, gpf_instance=None):
@@ -232,7 +232,7 @@ def main(argv, gpf_instance=None):
     VerbosityConfiguration.set(argv)
     logging.getLogger("impala").setLevel(logging.WARNING)
 
-    import_project = build_import_project(argv, gpf_instance)
+    import_project = build_import_project(argv, gpf_instance=gpf_instance)
     run_with_project(import_project)
 
     if not argv.skip_reports:
