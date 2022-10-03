@@ -43,7 +43,7 @@
       <li ngbNavItem id="groups">
         <a ngbNavLink>Groups</a>
         <ng-template ngbNavContent>
-          <gpf-groups-table></gpf-groups-table>
+          <gpf-groups-table [groups]="groups$ | async"></gpf-groups-table>
         </ng-template>
       </li>
       <li ngbNavItem id="datasets">

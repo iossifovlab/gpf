@@ -1,23 +1,27 @@
-import { Component, OnInit } from '@angular/core';
-
-import { Observable } from 'rxjs';
+import { Component, Input, OnInit } from '@angular/core';
+import { ItemAddEvent } from 'app/item-add-menu/item-add-menu';
+import { User } from 'app/users/users';
 
 import { UserGroup } from '../users-groups/users-groups';
-import { UsersGroupsService } from '../users-groups/users-groups.service';
 
 @Component({
   selector: 'gpf-groups-table',
   templateUrl: './groups-table.component.html',
-  styleUrls: ['./groups-table.component.css']
+  // Order of css styles is important (second file overwrites first when needed)
+  styleUrls: ['../users-table/users-table.component.css', './groups-table.component.css']
 })
-export class GroupsTableComponent implements OnInit {
-  public constructor(
-    private usersGroupsService: UsersGroupsService
-  ) { }
+export class GroupsTableComponent {
+  @Input() public groups: UserGroup[];
 
-  public groups$: Observable<UserGroup[]>;
+  public removeUser(user: string, group: string): void {
+    // has to remove group from user
+  }
 
-  public ngOnInit(): void {
-    this.groups$ = this.usersGroupsService.getAllGroups();
+  public addUser(user: string, $event: ItemAddEvent): void {
+    // has to add group to user
+  }
+
+  public isDefaultGroup(user: User, group: string): boolean {
+    return user.getDefaultGroups().indexOf(group) !== -1;
   }
 }
