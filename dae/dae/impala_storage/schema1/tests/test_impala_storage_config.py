@@ -99,8 +99,8 @@ def test_impala_config_validation_wrong_type():
     with pytest.raises(
             ValueError,
             match=re.escape(
-                "wrong config format for impala storage: "
-                "{'storage_type': ['unallowed value impala2']}")):
+                "storage configuration for <impala2> passed to "
+                "genotype storage class type <impala>")):
         ImpalaGenotypeStorage.validate_and_normalize_config(config)
 
 

@@ -47,8 +47,8 @@ def test_validate_config_wrong_storage_type():
     with pytest.raises(
             ValueError,
             match=re.escape(
-                "wrong config format for filesytem storage: "
-                "{'storage_type': ['unallowed value filesystem2']}")):
+                "storage configuration for <filesystem2> passed to "
+                "genotype storage class type <filesystem>")):
         FilesystemGenotypeStorage.validate_and_normalize_config(config)
 
 

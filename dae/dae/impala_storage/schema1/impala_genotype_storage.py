@@ -101,6 +101,10 @@ class ImpalaGenotypeStorage(GenotypeStorage):
                 f"{validator.errors}")
         return cast(Dict, validator.document)
 
+    @classmethod
+    def get_storage_type(cls) -> str:
+        return "impala"
+
     def start(self):
         return self
 

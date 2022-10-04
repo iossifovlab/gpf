@@ -40,6 +40,10 @@ class FilesystemGenotypeStorage(GenotypeStorage):
         self.data_dir = self.storage_config["dir"]
 
     @classmethod
+    def get_storage_type(cls) -> str:
+        return "filesystem"
+
+    @classmethod
     def validate_and_normalize_config(cls, config: Dict) -> Dict:
         config = super().validate_and_normalize_config(config)
         validator = Validator(cls.VALIDATION_SCHEMA)

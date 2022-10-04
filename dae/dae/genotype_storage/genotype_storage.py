@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import abc
 import logging
-from typing import Dict, cast, Any
+from typing import Dict, Any
 
 
 logger = logging.getLogger(__file__)
@@ -24,6 +24,13 @@ class GenotypeStorage(abc.ABC):
         annotator configuration dict.
 
         When validation fails, raises ValueError.
+
+        All genotype storage configurations are required to have:
+
+        * "storage_type" - which storage type this configuration is used for;
+
+        * "id" - the ID of the genotype storage instance that will be created.
+
         """
         if config.get("id") is None:
             raise ValueError(
@@ -31,10 +38,16 @@ class GenotypeStorage(abc.ABC):
         if config.get("storage_type") is None:
             raise ValueError(
                 "genotype storage without type; 'storage_type' is required")
+        if config["storage_type"] != cls.get_storage_type():
+            raise ValueError(
+                f"storage configuration for <{config['storage_type']}> passed "
+                f"to genotype storage class type <{cls.get_storage_type()}>")
         return config
 
-    def get_storage_type(self) -> str:
-        return cast(str, self.storage_config["storage_type"])
+    @classmethod
+    @abc.abstractmethod
+    def get_storage_type(cls) -> str:
+        """Return the genotype storage type."""
 
     @abc.abstractmethod
     def start(self) -> GenotypeStorage:

@@ -40,6 +40,10 @@ class Schema2GenotypeStorage(GenotypeStorage):
             impala_hosts=impala_hosts, impala_port=impala_port,
             pool_size=pool_size)
 
+    @classmethod
+    def get_storage_type(cls) -> str:
+        return "impala2"
+
     def start(self):
         return self
 
