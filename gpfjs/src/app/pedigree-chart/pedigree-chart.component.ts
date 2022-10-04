@@ -100,10 +100,10 @@ export class PedigreeChartComponent implements OnInit {
   public getViewBox(): string {
     const scaleDownIndex = 1.3;
 
-    const viewBoxWidth = this.width * scaleDownIndex;
-    let viewBoxHeight = this.height * scaleDownIndex;
-    const viewBoxWidthOffset = Math.round(100 * ((viewBoxWidth - this.width) / 2) + Number.EPSILON) / 100;
-    let viewBoxHeightOffset = Math.round(100 * ((viewBoxHeight - this.height) / 2) + Number.EPSILON) / 100;
+    const viewBoxWidth = this.round(this.width * scaleDownIndex);
+    let viewBoxHeight = this.round(this.height * scaleDownIndex);
+    const viewBoxWidthOffset = this.round((viewBoxWidth - this.width) / 2);
+    let viewBoxHeightOffset = this.round((viewBoxHeight - this.height) / 2);
 
     if (this.curveLines.length !== 0) {
       const curveLinesOnTop = this.curveLines
@@ -118,6 +118,10 @@ export class PedigreeChartComponent implements OnInit {
     }
 
     return `${-viewBoxWidthOffset} ${-viewBoxHeightOffset} ${viewBoxWidth} ${viewBoxHeight}`;
+  }
+
+  private round(num: number): number {
+    return (Math.round(100 * num) + Number.EPSILON) / 100;
   }
 
   private loadPositions(family: PedigreeData[]): IndividualWithPosition[][] {
