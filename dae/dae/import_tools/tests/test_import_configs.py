@@ -214,3 +214,17 @@ def test_project_input_dir(input_dir):
     )
     project = import_tools.ImportProject.build_from_config(config, "/dir")
     assert project.input_dir == os.path.join("/dir", input_dir)
+
+
+def test_get_genotype_storage_no_explicit_config():
+    config = dict(
+        id="test_import",
+        input={},
+    )
+    project = import_tools.ImportProject.build_from_config(config)
+    genotype_storage = project.get_genotype_storage()
+    assert genotype_storage is not None
+    assert (
+        genotype_storage.storage_id
+        == project.get_gpf_instance().genotype_storage_db.default_storage_id
+    )
