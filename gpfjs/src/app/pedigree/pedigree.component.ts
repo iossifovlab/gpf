@@ -2,6 +2,7 @@ import { Component, Input } from '@angular/core';
 import { NgbModal, NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
 import { ConfigService } from 'app/config/config.service';
 import { DatasetsService } from 'app/datasets/datasets.service';
+import { PedigreeData } from 'app/genotype-preview-model/genotype-preview';
 import { VariantReportsService } from 'app/variant-reports/variant-reports.service';
 
 @Component({
@@ -10,7 +11,7 @@ import { VariantReportsService } from 'app/variant-reports/variant-reports.servi
   styleUrls: ['./pedigree.component.css']
 })
 export class PedigreeComponent {
-  @Input() public family;
+  @Input() public family: PedigreeData[];
   @Input() public groupName: string;
   @Input() public counterId: number;
   @Input() public pedigreeMaxWidth: number;

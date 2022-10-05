@@ -75,9 +75,10 @@ class VariantReportsServiceMock {
 
   public getVariantReport(datasetId: string): Observable<any> {
     const pedigreeCounter: PedigreeCounter = new PedigreeCounter(1, 'groupName',
-      [new PedigreeData(
-        'identifier', 'id', 'mother', 'father', 'gender', 'role', 'color', [1, 2], true, 'label', 'smallLabel'
-      )], 1, ['tag1', 'tag2']);
+      [
+        new PedigreeData('identifier', 'id', 'mother', 'father',
+          'gender', 'role', 'color', [1, 2], true, 'label', 'smallLabel')
+      ], 1, ['tag1', 'tag2']);
     const denovoReport: DenovoReport | null = null;
 
     const variantReport = {

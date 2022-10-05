@@ -25,7 +25,7 @@ export class PeopleCounterRowPipe implements PipeTransform {
   styleUrls: ['./variant-reports.component.css']
 })
 export class VariantReportsComponent implements OnInit {
-  public tags: Array<CheckBox> = new Array<CheckBox>();
+  public tags: Array<String> = new Array<String>();
 
   public currentPeopleCounter: PeopleCounter;
   public currentPedigreeTable: PedigreeTable;
@@ -77,8 +77,9 @@ export class VariantReportsComponent implements OnInit {
     if (this.variantReportsService.getTags() !== undefined) {
       this.variantReportsService.getTags().subscribe(data => {
         Object.values(data).forEach(tag => {
-          this.tags.push(new CheckBox(tag, false));
+          this.tags.push(tag);
           this.dropdownList.push(tag);
+          console.log(this.tags, this.dropdownList);
         });
       });
     }
@@ -94,7 +95,7 @@ export class VariantReportsComponent implements OnInit {
     };
   }
 
-  private copyOriginalPedigreeCounters(): Dictionary<PedigreeCounter[]> {
+  private copyOriginalPedigreeCounters(): Record<string, PedigreeCounter[]>{
     return this.familiesCounters.reduce(
       (obj, x) => {
         obj[x.groupName] = Array.from(x.pedigreeCounters); return obj;
@@ -102,8 +103,8 @@ export class VariantReportsComponent implements OnInit {
     );
   }
 
-  private getSelectedTags(): string[] {
-    return this.tags.filter(x => this.selectedItems.includes(x.name)).map(x => x.name);
+  private getSelectedTags(): String[] {
+    return this.tags.filter(x => this.selectedItems.includes(x)).map(x => x);
   }
 
   public updatePedigrees(newCounters: Dictionary<PedigreeCounter[]>): void {
@@ -114,6 +115,7 @@ export class VariantReportsComponent implements OnInit {
 
   public updateTagFilters(): void {
     const tags = this.getSelectedTags();
+    console.log(tags);
     const copiedCounters = this.copyOriginalPedigreeCounters();
     const filteredCounters = {};
     for (const [groupName, counters] of Object.entries(copiedCounters)) {
@@ -214,8 +216,4 @@ export class VariantReportsComponent implements OnInit {
       }, []
     );
   }
-}
-
-export class CheckBox {
-  public constructor(public name = '', public value = false) { }
 }
