@@ -44,6 +44,9 @@ class AlleleParquetSerializer:
         "af_allele_freq": pa.float32(),
         "af_parents_called": pa.int32(),
         "af_parents_freq": pa.float32(),
+        "seen_as_denovo": pa.bool_(),
+        "seen_in_status": pa.int8(),
+        "family_variants_count": pa.int32(),
     }
 
     FAMILY_ALLELE_BASE_SCHEMA = {
