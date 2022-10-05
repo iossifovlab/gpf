@@ -46,8 +46,8 @@ export class VariantReportsService {
     return this.http.get(`${this.config.baseUrl}${this.tagsUrl}`, options);
   }
 
-  public async getDownloadLinkPedigreeTags(study_id: string, tags: string): Promise<Subscription> {
-    let searchParams = new HttpParams().set('study_id', study_id);
+  public async getDownloadLinkPedigreeTags(studyId: string, tags: string): Promise<Subscription> {
+    let searchParams = new HttpParams().set('study_id', studyId);
 
     if (tags) {
       searchParams = searchParams.set('tags', tags);
