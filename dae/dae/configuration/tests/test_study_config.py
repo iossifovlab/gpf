@@ -2,18 +2,12 @@
 import os
 import pytest
 import yaml
-from copy import deepcopy
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.study_config import study_config_schema
 from dae.configuration.study_config_builder import StudyConfigBuilder
 
 
-@pytest.fixture()
-def study_schema():
-    return deepcopy(study_config_schema)
-
-
-def test_study_with_study_filters_fails(study_schema):
+def test_study_with_study_filters_fails():
     study_config = {
         "id": "test",
         "genotype_browser": {
@@ -23,12 +17,12 @@ def test_study_with_study_filters_fails(study_schema):
     }
     with pytest.raises(ValueError) as err:
         GPFConfigParser.validate_config(
-            study_config, study_schema, conf_dir=os.path.abspath(".")
+            study_config, study_config_schema, conf_dir=os.path.abspath(".")
         )
     print(err)
 
 
-def test_dataset_with_study_filters_passes(study_schema):
+def test_dataset_with_study_filters_passes():
     study_config = {
         "id": "test",
         "studies": ["asdf"],
@@ -38,11 +32,11 @@ def test_dataset_with_study_filters_passes(study_schema):
         },
     }
     GPFConfigParser.validate_config(
-        study_config, study_schema, conf_dir=os.path.abspath(".")
+        study_config, study_config_schema, conf_dir=os.path.abspath(".")
     )
 
 
-def test_study_with_study_filters_false_passes(study_schema):
+def test_study_with_study_filters_false_passes():
     study_config = {
         "id": "test",
         "genotype_browser": {
@@ -51,7 +45,7 @@ def test_study_with_study_filters_false_passes(study_schema):
         },
     }
     GPFConfigParser.validate_config(
-        study_config, study_schema, conf_dir=os.path.abspath(".")
+        study_config, study_config_schema, conf_dir=os.path.abspath(".")
     )
 
 
@@ -91,9 +85,9 @@ def full_study_config():
                         "ped_sex": "test",
                         "ped_status": "test",
                         "ped_role": "test",
-                        "ped_no_role": "test",
+                        "ped_no_role": True,
                         "ped_proband": "test",
-                        "ped_no_header": "test",
+                        "ped_no_header": True,
                         "ped_file_format": "test",
                         "ped_layout_mode": "test",
                         "ped_sep": "test",
@@ -126,6 +120,7 @@ def full_study_config():
                             "vcf_denovo_mode": "test",
                             "vcf_omission_mode": "test",
                             "vcf_chromosomes": "test",
+                            "vcf_pedigree_mode": "test"
                         },
                     }
                 ],
@@ -345,8 +340,8 @@ def build_structural_schema(schema):
 
 
 @pytest.fixture()
-def study_config_structural(study_schema):
-    return build_structural_schema(study_schema)
+def study_config_structural():
+    return build_structural_schema(study_config_schema)
 
 
 def test_structural_config_generation():
