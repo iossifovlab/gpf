@@ -30,10 +30,8 @@ def imported_study(tmp_path_factory, genotype_storage):
         ##contig=<ID=foo>
         #CHROM POS ID REF ALT QUAL FILTER INFO FORMAT m1  d1  p1  s1
         foo    7   .  A   C   .    .      .    GT     0/1 0/0 0/1 0/0
-        foo    10  .  C   G   .    .      .    GT     0/0 0/1 0/1 0/0
-        bar    11  .  C   G   .    .      .    GT     1/0 0/0 0/0 0/1
-        bar    12  .  A   T   .    .      .    GT     0/0 1/0 1/0 0/0
-        bar    13  .  C   T   .    .      .    GT     0/0 1/0 1/0 1/0
+        foo    10  .  C   G   .    .      .    GT     0/0 0/0 0/1 0/0
+        foo    11  .  C   G   .    .      .    GT     1/0 0/0 0/0 0/1
         """)
 
     study = foobar_vcf_study(
@@ -43,11 +41,12 @@ def imported_study(tmp_path_factory, genotype_storage):
     return study
 
 
-# @pytest.mark.impala2
 @pytest.mark.impala
+@pytest.mark.impala2
 @pytest.mark.parametrize("region,count,seen_in_status", [
     (Region("foo", 7, 7), 1, Status.affected.value | Status.unaffected.value),
-    (Region("bar", 11, 11), 1, Status.unaffected.value),
+    (Region("foo", 10, 10), 1, Status.affected.value),
+    (Region("foo", 11, 11), 1, Status.unaffected.value),
 ])
 def test_query_summary_variants_seen_in_status(
         region, count, seen_in_status, imported_study):

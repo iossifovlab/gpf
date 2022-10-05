@@ -378,13 +378,14 @@ good-names=i,
            df,
            db,
            gm,
-           fv,
-           sv,
-           fa,
-           sa,
+           fv,  # family variant
+           sv,  # summary variant
+           fa,  # family allele
+           sa,  # summary allele
            fs,
            vs,
-           aa
+           aa,  # alternative allele
+           gt,  # genotype
 
 # Good variable names regexes, separated by a comma. If names match any regex,
 # they will always be accepted

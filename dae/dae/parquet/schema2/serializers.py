@@ -63,34 +63,6 @@ class AlleleParquetSerializer:
         "allele_in_members": pa.list_(pa.string()),
     }
 
-    BASE_SEARCHABLE_PROPERTIES_TYPES = {
-        "bucket_index": pa.int32(),
-        "chromosome": pa.string(),
-        "position": pa.int32(),
-        "end_position": pa.int32(),
-        "effect_gene": pa.list_(
-            pa.struct(
-                [
-                    pa.field("effect_gene_symbols", pa.string()),
-                    pa.field("effect_types", pa.string()),
-                ]
-            )
-        ),
-        "summary_index": pa.int32(),
-        "allele_index": pa.int32(),
-        "variant_type": pa.int8(),
-        "transmission_type": pa.int8(),
-        "reference": pa.string(),
-        "family_index": pa.int32(),
-        "family_id": pa.string(),
-        "is_denovo": pa.int8(),
-        "allele_in_sexes": pa.int8(),
-        "allele_in_statuses": pa.int8(),
-        "allele_in_roles": pa.int32(),
-        "inheritance_in_members": pa.int16(),
-        "allele_in_members": pa.string(),
-    }
-
     ENUM_PROPERTIES = {
         "variant_type": Allele.Type,
         "transmission_type": TransmissionType,
@@ -105,27 +77,9 @@ class AlleleParquetSerializer:
         self._schema_summary = None
         self._schema_family = None
 
-        additional_searchable_props = {}
-        scores_searchable = {}
         scores_binary = {}
 
         self.scores_serializers = scores_binary
-
-        self.searchable_properties_summary_types = {
-            **self.SUMMARY_ALLELE_BASE_SCHEMA,
-            **additional_searchable_props,
-            **scores_searchable,
-        }
-
-        self.searchable_properties_family_types = {
-            **self.FAMILY_ALLELE_BASE_SCHEMA
-        }
-
-        self.searchable_properties_types = {
-            **self.BASE_SEARCHABLE_PROPERTIES_TYPES,
-            **additional_searchable_props,
-            **scores_searchable,
-        }
 
         self.extra_attributes = []
         if extra_attributes:
@@ -180,18 +134,6 @@ class AlleleParquetSerializer:
             fields.append(pa.field("family_variant_data", pa.string()))
             self._schema_family = pa.schema(fields)
         return self._schema_family
-
-    @property
-    def searchable_properties_summary(self):
-        return self.searchable_properties_summary_types.keys()
-
-    @property
-    def searchable_properties_family(self):
-        return self.searchable_properties_family_types.keys()
-
-    @property
-    def searchable_properties(self):
-        return self.searchable_properties_types.keys()
 
     def _get_searchable_prop_value(self, allele, spr):
         prop_value = getattr(allele, spr, None)
