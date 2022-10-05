@@ -6,7 +6,7 @@ import { Observable, of } from 'rxjs';
 import { PedigreeComponent } from './pedigree.component';
 
 class MockVariantReportsService {
-  public getFamilies(datasetId, groupName, counterId): Observable<string[]> {
+  public getFamilies(): Observable<string[]> {
     return of(['family1', 'family2', 'family3']);
   }
 }

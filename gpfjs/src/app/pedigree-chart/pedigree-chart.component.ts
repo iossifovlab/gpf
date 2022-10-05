@@ -70,10 +70,9 @@ export class PedigreeChartComponent implements OnInit {
       })
     );
 
-    sandwichResults$.pipe(take(1)).subscribe(_ => {
+    sandwichResults$.pipe(take(1)).subscribe(() => {
       for (const individual of this.positionedIndividuals) {
-        this.lines = this.lines.concat(
-          this.generateLines(individual));
+        this.lines = this.lines.concat(this.generateLines(individual));
       }
 
       this.pedigreeDataWithLayout = this.positionedIndividuals
@@ -427,7 +426,8 @@ export class PedigreeChartComponent implements OnInit {
           new Set(alreadyMoved))
       );
       if (toCheckCollision.length) {
-        collisionMove = toCheckCollision.map(i => newStart - i.xCenter - 8 * 2 - i.size)
+        collisionMove = toCheckCollision
+          .map(i => newStart - i.xCenter - 8 * 2 - i.size)
           .reduce((a, b) => Math.min(a, b));
       }
     }
