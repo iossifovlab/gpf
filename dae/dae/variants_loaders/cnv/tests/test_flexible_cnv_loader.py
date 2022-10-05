@@ -225,6 +225,6 @@ def test_flexible_cnv_variants_bad_configs(header, params, families, genome):
                 content,
                 families,
                 genome,
-                [],
+                regions=[],
                 **params)
         )

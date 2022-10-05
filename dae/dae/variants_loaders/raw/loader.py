@@ -815,16 +815,17 @@ class VariantsGenotypesLoader(VariantsLoader):
         return genotype, genetic_model
 
     def _add_chrom_prefix(self, chrom):
+        # there is an important invariant between this and _del_chrom_prefix
+        # we don't know if this or _del_chrom_prefix will be executed first so
+        # _add_chrom_prefix should undo _del_chrom_prefix
+        # _del_chrom_prefix should undo _add_chrom_prefix
         assert self._chrom_prefix is not None
-        if chrom is not None and not chrom.startswith(self._chrom_prefix):
-            return f"{self._chrom_prefix}{chrom}"
-        return chrom
+        return f"{self._chrom_prefix}{chrom}"
 
     def _del_chrom_prefix(self, chrom):
         assert self._chrom_prefix is not None
-        if chrom is not None and chrom.startswith(self._chrom_prefix):
-            return chrom[len(self._chrom_prefix):]
-        return chrom
+        assert chrom.startswith(self._chrom_prefix)
+        return chrom[len(self._chrom_prefix):]
 
     def full_variants_iterator(
         self,

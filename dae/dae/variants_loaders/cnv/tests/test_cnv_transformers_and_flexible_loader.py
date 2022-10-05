@@ -3,7 +3,6 @@ import io
 import textwrap
 import pytest
 
-from dae.utils.regions import Region
 from dae.utils.variant_utils import mat2str
 from dae.variants.core import Allele
 
@@ -270,24 +269,3 @@ def test_cnv_loader_simple(families, cnv_dae, gpf_instance_2013):
         regions=[])
     result = list(generator)
     assert len(result) == 4
-
-
-@pytest.mark.parametrize(
-    "regions,expected", [
-        ([], 4),
-        (["1"], 2),
-        (["X"], 2),
-        (["1", "X"], 4),
-        (["3"], 0),
-    ]
-)
-def test_cnv_loader_with_regions(
-        families, cnv_dae, gpf_instance_2013, regions, expected):
-
-    regions_list = [Region.from_str(r) for r in regions]
-
-    generator = flexible_cnv_loader(
-        cnv_dae, families, gpf_instance_2013.reference_genome,
-        regions=regions_list)
-    result = list(generator)
-    assert len(result) == expected

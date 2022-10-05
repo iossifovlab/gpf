@@ -198,6 +198,7 @@ class ImportProject():
             params=variants_params,
             genome=reference_genome,
         )
+        self._check_chrom_prefix(loader, variants_params)
         return loader
 
     def get_partition_description_dict(self) -> Optional[dict]:
@@ -432,6 +433,36 @@ class ImportProject():
     def _get_loader_processing_config(self, loader_type):
         return self.import_config.get("processing_config", {})\
             .get(loader_type, {})
+
+    @staticmethod
+    def _check_chrom_prefix(loader, variants_params):
+        prefix = variants_params.get("add_chrom_prefix")
+        if prefix:
+            all_already_have_prefix = True
+            for chrom in loader.chromosomes:
+                # the loader should have already added the prefix
+                assert chrom.startswith(prefix)
+                if not chrom[len(prefix):].startswith(prefix):
+                    all_already_have_prefix = False
+                    break
+            if all_already_have_prefix and len(loader.chromosomes):
+                raise ValueError(
+                    f"All chromosomes already have the prefix {prefix}. "
+                    "Consider removing add_chrom_prefix."
+                )
+
+        prefix = variants_params.get("del_chrom_prefix")
+        if prefix:
+            try:
+                # the chromosomes getter will assert for us if the prefix
+                # can be removed or not. If there is no prefix to begin with
+                # we will get an assertion error
+                loader.chromosomes
+            except AssertionError as exp:
+                raise ValueError(
+                    f"Chromosomes already missing the prefix {prefix}. "
+                    "Consider removing del_chrom_prefix."
+                ) from exp
 
 
 class ImportConfigNormalizer:
