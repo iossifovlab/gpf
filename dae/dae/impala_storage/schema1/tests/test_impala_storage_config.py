@@ -269,14 +269,6 @@ def test_impala_config_validation_missing_impala():
             "port": 8020,
             "replication": 1,
         },
-        # "impala": {
-        #     "db": "impala_storage_test_db",
-        #     "hosts": [
-        #         "localhost",
-        #     ],
-        #     "pool_size": 3,
-        #     "port": 21050,
-        # },
     }
     with pytest.raises(
             ValueError,

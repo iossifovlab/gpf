@@ -424,27 +424,6 @@ def dae_denovo_config():
     return config
 
 
-# @pytest.fixture
-# def dae_denovo(
-#         dae_denovo_config, gpf_instance_2013, annotation_pipeline_internal):
-
-#     families_loader = FamiliesLoader(
-#         dae_denovo_config.family_filename, **{"ped_file_format": "simple"}
-#     )
-#     families = families_loader.load()
-
-#     variants_loader = DenovoLoader(
-#         families, dae_denovo_config.denovo_filename,
-#         gpf_instance_2013.reference_genome
-#     )
-
-#     variants_loader = AnnotationPipelineDecorator(
-#         variants_loader, annotation_pipeline_internal
-#     )
-#     fvars = RawMemoryVariants([variants_loader], families=families)
-#     return fvars
-
-
 def from_prefix_dae(prefix):
     summary_filename = f"{prefix}.txt.gz"
     toomany_filename = f"{prefix}-TOOMANY.txt.gz"
