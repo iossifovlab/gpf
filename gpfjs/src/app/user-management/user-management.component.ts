@@ -1,10 +1,10 @@
-import { Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { Component, ElementRef, HostListener, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { UserGroup } from 'app/users-groups/users-groups';
 import { UsersGroupsService } from 'app/users-groups/users-groups.service';
 import { environment } from 'environments/environment';
-import { fromEvent, Observable, ReplaySubject, Subscription, zip } from 'rxjs';
-import { debounceTime, distinctUntilChanged, map, share, switchMap, take, tap, throttleTime } from 'rxjs/operators';
+import { Observable, ReplaySubject } from 'rxjs';
+import { debounceTime, distinctUntilChanged, map, share, switchMap, take, tap } from 'rxjs/operators';
 import { User } from '../users/users';
 import { UsersService } from '../users/users.service';
 
@@ -15,18 +15,18 @@ type TableName = 'USERS' | 'GROUPS' | 'DATASETS';
   templateUrl: './user-management.component.html',
   styleUrls: ['./user-management.component.css']
 })
-export class UserManagementComponent implements OnInit, OnDestroy {
+export class UserManagementComponent implements OnInit {
   public input$ = new ReplaySubject<string>(1);
   public users: User[] = [];
   public usersToShow$: Observable<User[]>;
-  public groups$: Observable<UserGroup[]>;
+  public groups: UserGroup[] | undefined;
   @ViewChild('searchBox') private searchBox: ElementRef;
 
   public imgPathPrefix = environment.imgPathPrefix;
 
   private pageCount = 1;
   private tableName: TableName = 'USERS';
-  private scrollEventSub: Subscription;
+  private loadingPage = true;
 
   public constructor(
     private usersService: UsersService,
@@ -36,11 +36,6 @@ export class UserManagementComponent implements OnInit, OnDestroy {
   ) { }
 
   public ngOnInit(): void {
-    this.scrollEventSub = fromEvent(window, 'scroll').pipe(
-      throttleTime(100), // ignore calls for certain time
-      tap(() => this.onWindowScroll())
-    ).subscribe();
-
     this.focusSearchBox();
     this.usersToShow$ = this.input$.pipe(
       map(searchTerm => searchTerm.trim()),
@@ -73,7 +68,10 @@ export class UserManagementComponent implements OnInit, OnDestroy {
       this.search(searchTerm);
     });
 
-    this.groups$ = this.usersGroupsService.getAllGroups();
+    this.usersGroupsService.getAllGroups().subscribe(res => {
+      this.groups = res;
+      this.loadingPage = false;
+    });
   }
 
   public search(value: string): void {
@@ -127,13 +125,18 @@ export class UserManagementComponent implements OnInit, OnDestroy {
     }
   }
 
+  @HostListener('window:scroll', ['$event'])
   private updateTable(): void {
-    this.pageCount++;
+    if (!this.loadingPage && window.scrollY + window.innerHeight + 200 > document.body.scrollHeight) {
+      if (this.tableName === 'GROUPS') {
+        this.pageCount++;
+        this.loadingPage = true;
 
-    if (this.tableName === 'GROUPS') {
-      this.groups$ = zip(this.groups$, this.usersGroupsService.getAllGroups()).pipe(
-        map(groups => groups[0].concat(groups[1]))
-      );
+        this.usersGroupsService.getAllGroups().subscribe(res => {
+          this.groups = this.groups.concat(res);
+          this.loadingPage = false;
+        });
+      }
     }
   }
 
@@ -141,9 +144,5 @@ export class UserManagementComponent implements OnInit, OnDestroy {
     this.tableName = newName;
     // Reset pagecount
     this.pageCount = 1;
-  }
-
-  public ngOnDestroy(): void {
-    this.scrollEventSub.unsubscribe();
   }
 }

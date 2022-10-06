@@ -34,7 +34,7 @@
               </div>
             </div>
           </div>
-          <ng-container *ngIf="groups$ | async as groups">
+          <ng-container *ngIf="groups">
             <gpf-users-table *ngIf="groups" [users]="usersToShow$ | async" [allGroups]="groups"></gpf-users-table>
           </ng-container>
         </ng-template>
@@ -43,7 +43,7 @@
       <li ngbNavItem id="groups">
         <a ngbNavLink (click)="switchTableName('GROUPS')">Groups</a>
         <ng-template ngbNavContent>
-          <gpf-groups-table [groups]="groups$ | async"></gpf-groups-table>
+          <gpf-groups-table [groups]="groups"></gpf-groups-table>
         </ng-template>
       </li>
       <li ngbNavItem id="datasets">
