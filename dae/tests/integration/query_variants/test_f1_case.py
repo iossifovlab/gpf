@@ -2,8 +2,7 @@
 
 import pytest
 
-from tests.foobar_import import setup_vcf, setup_pedigree
-
+from dae.testing import setup_vcf, setup_pedigree
 from dae.utils.regions import Region
 
 

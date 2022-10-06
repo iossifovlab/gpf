@@ -5,7 +5,7 @@ import pysam
 
 from dae.annotation.annotate_columns import build_record_to_annotatable
 from dae.annotation.annotatable import Position, VCFAllele, Region
-from dae.genomic_resources.testing import convert_to_tab_separated
+from dae.testing import convert_to_tab_separated
 from dae.annotation.annotate_columns import cli as cli_columns
 from dae.annotation.annotate_vcf import cli as cli_vcf
 

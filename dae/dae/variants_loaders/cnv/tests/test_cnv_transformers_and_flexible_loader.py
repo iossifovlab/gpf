@@ -6,7 +6,7 @@ import pytest
 from dae.utils.variant_utils import mat2str
 from dae.variants.core import Allele
 
-from dae.genomic_resources.testing import convert_to_tab_separated
+from dae.testing import convert_to_tab_separated
 from dae.variants_loaders.raw.flexible_variant_loader import \
     flexible_variant_loader
 

@@ -1,8 +1,11 @@
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
+
 import textwrap
-import pytest
 import io
 
-from dae.genomic_resources.testing import convert_to_tab_separated
+import pytest
+
+from dae.testing import convert_to_tab_separated
 from dae.pedigrees.loader import FamiliesLoader
 from dae.variants.attributes import Sex, Role
 from dae.variants.core import Allele

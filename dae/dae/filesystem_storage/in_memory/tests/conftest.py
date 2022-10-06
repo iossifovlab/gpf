@@ -3,7 +3,7 @@ import textwrap
 
 import pytest
 
-from dae.genomic_resources.testing import setup_directories, \
+from dae.testing import setup_directories, \
     convert_to_tab_separated
 from dae.import_tools.import_tools import ImportProject
 
