@@ -1,19 +1,21 @@
-import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
+import { Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { UserGroup } from 'app/users-groups/users-groups';
 import { UsersGroupsService } from 'app/users-groups/users-groups.service';
 import { environment } from 'environments/environment';
-import { Observable, ReplaySubject } from 'rxjs';
-import { debounceTime, distinctUntilChanged, map, share, switchMap, take, tap } from 'rxjs/operators';
+import { fromEvent, Observable, ReplaySubject, Subscription, zip } from 'rxjs';
+import { debounceTime, distinctUntilChanged, map, share, switchMap, take, tap, throttleTime } from 'rxjs/operators';
 import { User } from '../users/users';
 import { UsersService } from '../users/users.service';
+
+type TableName = 'USERS' | 'GROUPS' | 'DATASETS';
 
 @Component({
   selector: 'gpf-user-management',
   templateUrl: './user-management.component.html',
   styleUrls: ['./user-management.component.css']
 })
-export class UserManagementComponent implements OnInit {
+export class UserManagementComponent implements OnInit, OnDestroy {
   public input$ = new ReplaySubject<string>(1);
   public users: User[] = [];
   public usersToShow$: Observable<User[]>;
@@ -21,6 +23,10 @@ export class UserManagementComponent implements OnInit {
   @ViewChild('searchBox') private searchBox: ElementRef;
 
   public imgPathPrefix = environment.imgPathPrefix;
+
+  private pageCount = 1;
+  private tableName: TableName = 'USERS';
+  private scrollEventSub: Subscription;
 
   public constructor(
     private usersService: UsersService,
@@ -30,6 +36,11 @@ export class UserManagementComponent implements OnInit {
   ) { }
 
   public ngOnInit(): void {
+    this.scrollEventSub = fromEvent(window, 'scroll').pipe(
+      throttleTime(100), // ignore calls for certain time
+      tap(() => this.onWindowScroll())
+    ).subscribe();
+
     this.focusSearchBox();
     this.usersToShow$ = this.input$.pipe(
       map(searchTerm => searchTerm.trim()),
@@ -106,5 +117,33 @@ export class UserManagementComponent implements OnInit {
     this.waitForSearchBoxToLoad().then(() => {
       this.searchBox.nativeElement.focus();
     });
+  }
+
+  public onWindowScroll(): void {
+    const pos = (document.documentElement.scrollTop || document.body.scrollTop) + document.documentElement.offsetHeight;
+    const max = document.documentElement.scrollHeight;
+    if (pos > max - 100) {
+      this.updateTable();
+    }
+  }
+
+  private updateTable(): void {
+    this.pageCount++;
+
+    if (this.tableName === 'GROUPS') {
+      this.groups$ = zip(this.groups$, this.usersGroupsService.getAllGroups()).pipe(
+        map(groups => groups[0].concat(groups[1]))
+      );
+    }
+  }
+
+  public switchTableName(newName: TableName): void {
+    this.tableName = newName;
+    // Reset pagecount
+    this.pageCount = 1;
+  }
+
+  public ngOnDestroy(): void {
+    this.scrollEventSub.unsubscribe();
   }
 }

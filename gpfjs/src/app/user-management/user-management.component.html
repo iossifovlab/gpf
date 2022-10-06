@@ -41,7 +41,7 @@
       </li>
 
       <li ngbNavItem id="groups">
-        <a ngbNavLink>Groups</a>
+        <a ngbNavLink (click)="switchTableName('GROUPS')">Groups</a>
         <ng-template ngbNavContent>
           <gpf-groups-table [groups]="groups$ | async"></gpf-groups-table>
         </ng-template>
