@@ -72,7 +72,7 @@ export class VariantReportsService {
     return result;
   }
 
-  private getHeaders():   { 'X-CSRFToken': string, 'Content-Type':  string } {
+  private getHeaders(): { 'X-CSRFToken': string, 'Content-Type':  string } {
     const csrfToken = this.cookieService.get('csrftoken');
     const headers = { 'X-CSRFToken': csrfToken, 'Content-Type': 'application/json' };
 

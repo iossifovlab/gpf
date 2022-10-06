@@ -25,7 +25,7 @@ export class PeopleCounterRowPipe implements PipeTransform {
   styleUrls: ['./variant-reports.component.css']
 })
 export class VariantReportsComponent implements OnInit {
-  public tags: Array<String> = new Array<String>();
+  public tags: Array<string> = new Array<string>();
 
   public currentPeopleCounter: PeopleCounter;
   public currentPedigreeTable: PedigreeTable;
@@ -79,7 +79,6 @@ export class VariantReportsComponent implements OnInit {
         Object.values(data).forEach(tag => {
           this.tags.push(tag);
           this.dropdownList.push(tag);
-          console.log(this.tags, this.dropdownList);
         });
       });
     }
@@ -103,8 +102,8 @@ export class VariantReportsComponent implements OnInit {
     );
   }
 
-  private getSelectedTags(): String[] {
-    return this.tags.filter(x => this.selectedItems.includes(x)).map(x => x);
+  private getSelectedTags(): string[] {
+    return this.tags.filter(x => this.selectedItems.includes(x));
   }
 
   public updatePedigrees(newCounters: Dictionary<PedigreeCounter[]>): void {
@@ -115,7 +114,6 @@ export class VariantReportsComponent implements OnInit {
 
   public updateTagFilters(): void {
     const tags = this.getSelectedTags();
-    console.log(tags);
     const copiedCounters = this.copyOriginalPedigreeCounters();
     const filteredCounters = {};
     for (const [groupName, counters] of Object.entries(copiedCounters)) {
