@@ -1,0 +1,89 @@
+import pathlib
+import textwrap
+from dataclasses import dataclass, asdict
+
+import jinja2
+
+from dae.testing import setup_directories
+
+
+@dataclass
+class StudyLayout:
+    study_id: str
+    pedigree: pathlib.Path
+    vcf: list[pathlib.Path]
+    denovo: list[pathlib.Path]
+    dae: list[pathlib.Path]
+    cnv: list[pathlib.Path]
+
+
+def data_import(root_path: pathlib.Path, study: StudyLayout, gpf_instance):
+    """Set up an import project for a study and imports it."""
+    params = asdict(study)
+    params["work_dir"] = str(root_path / "work_dir")
+    params["storage_id"] = gpf_instance\
+        .genotype_storage_db\
+        .get_default_genotype_storage()\
+        .storage_id
+
+    project_config = jinja2.Template(textwrap.dedent("""
+        id: {{ study_id}}
+        processing_config:
+          work_dir: {{ work_dir }}
+        input:
+          pedigree:
+            file: {{ pedigree }}
+        {% if vcf %}
+          vcf:
+            files:
+            {% for vcf_path in vcf %}
+             - {{ vcf_path }}
+            {% endfor %}
+            denovo_mode: denovo
+            omission_mode: omission
+        {% endif %}
+        {% if denovo %}
+          denovo:
+            files:
+            {% for denovo_path in denovo %}
+            - {{ denovo_path }}
+            {% endfor %}
+        {% endif %}
+        destination:
+          storage_id: {{ storage_id}}
+        """)).render(params)
+
+    setup_directories(
+        root_path / "import_project" / "import_config.yaml",
+        project_config)
+
+    # pylint: disable=import-outside-toplevel
+    from dae.import_tools.import_tools import ImportProject, run_with_project
+    project = ImportProject.build_from_file(
+        root_path / "import_project" / "import_config.yaml",
+        gpf_instance=gpf_instance)
+    run_with_project(project)
+    return project
+
+
+def vcf_import(
+        root_path: pathlib.Path,
+        study_id: str,
+        ped_path: pathlib.Path, vcf_paths: list[pathlib.Path],
+        gpf_instance):
+    """Import a VCF study and return the import project."""
+    study = StudyLayout(study_id, ped_path, vcf_paths, [], [], [])
+    project = data_import(root_path, study, gpf_instance)
+    return project
+
+
+def vcf_study(
+        root_path: pathlib.Path,
+        study_id: str,
+        ped_path: pathlib.Path, vcf_paths: list[pathlib.Path],
+        gpf_instance):
+    """Import a VCF study and return the imported study."""
+    vcf_import(
+        root_path, study_id, ped_path, vcf_paths, gpf_instance)
+    gpf_instance.reload()
+    return gpf_instance.get_genotype_data(study_id)
