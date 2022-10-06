@@ -22,7 +22,6 @@ from dae.configuration.schemas.autism_gene_profile import \
     autism_gene_tool_config
 
 from dae.autism_gene_profile.db import AutismGeneProfileDB
-from dae.genomic_resources import build_genomic_resource_repository
 from dae.annotation.annotation_factory import build_annotation_pipeline
 
 from dae.utils.dae_utils import cached, join_line
@@ -40,8 +39,8 @@ class GPFInstance:
             config_file="gpf_instance.yaml",
             work_dir=None,
             defaults=None,
-            grr=None,
-            load_eagerly=False):
+            load_eagerly=False,
+            **kwargs):
         if dae_config is None:
             # FIXME Merge defaults with newly-loaded config
             assert not defaults, defaults
@@ -57,15 +56,10 @@ class GPFInstance:
         # self.__autism_gene_profile_config = None
 
         self.load_eagerly = load_eagerly
-
-        if grr is not None:
-            self.grr = grr
-        elif self.dae_config.grr:
-            self.grr = build_genomic_resource_repository(
-                self.dae_config.grr.to_dict())
-        else:
-            self.grr = build_genomic_resource_repository()
         self._annotation_pipeline = None
+        self._grr = kwargs.get("grr")
+        self._reference_genome = kwargs.get("reference_genome")
+        self._gene_models = kwargs.get("gene_models")
 
         if load_eagerly:
             # pylint: disable=pointless-statement
@@ -81,8 +75,27 @@ class GPFInstance:
 
     @property  # type: ignore
     @cached
+    def grr(self):
+        """Return genomic resource repository configured for GPF instance."""
+        if self._grr is not None:
+            return self._grr
+
+        # pylint: disable=import-outside-toplevel
+        from dae.genomic_resources import build_genomic_resource_repository
+        if self.dae_config.grr:
+            self._grr = build_genomic_resource_repository(
+                self.dae_config.grr.to_dict())
+            return self._grr
+        self._grr = build_genomic_resource_repository()
+        return self._grr
+
+    @property  # type: ignore
+    @cached
     def reference_genome(self):
         """Return reference genome defined in the GPFInstance config."""
+        if self._reference_genome is not None:
+            return self._reference_genome
+
         # pylint: disable=import-outside-toplevel
         from dae.genomic_resources.reference_genome import \
             build_reference_genome_from_resource
@@ -97,6 +110,9 @@ class GPFInstance:
     @cached
     def gene_models(self):
         """Return gene models used in the GPF instance."""
+        if self._gene_models is not None:
+            return self._gene_models
+
         # pylint: disable=import-outside-toplevel
         from dae.genomic_resources.gene_models import \
             build_gene_models_from_resource

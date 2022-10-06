@@ -28,6 +28,10 @@ class ReferenceGenome:
         self.resource = resource
         self.pars: dict = self._parse_pars(resource.get_config())
 
+    @property
+    def resource_id(self):
+        return self.resource.resource_id
+
     @staticmethod
     def _parse_pars(config) -> dict:
         if "PARS" not in config:

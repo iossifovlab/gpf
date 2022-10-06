@@ -5,8 +5,6 @@ import logging
 
 import pytest
 
-from box import Box  # type: ignore
-
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 
@@ -183,17 +181,6 @@ def wdae_gpf_instance_agp(  # pylint: disable=too-many-arguments
         fixture_dirname):
 
     wdae_gpf_instance = wgpf_instance(global_dae_fixtures_dir)
-    repositories = [
-        wdae_gpf_instance.grr
-    ]
-    repositories.append(
-        build_genomic_resource_repository(
-            Box({
-                "id": "fixtures",
-                "type": "directory",
-                "directory": f"{fixture_dirname('genomic_resources')}"
-            })))
-    wdae_gpf_instance.grr = GenomicResourceGroupRepo(repositories)
 
     reload_datasets(wdae_gpf_instance)
     mocker.patch(
