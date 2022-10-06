@@ -10,15 +10,15 @@ logger = logging.getLogger(__name__)
 class GenotypeStorageRegistry:
     """Registry for genotype storages.
 
-    This class could accept genotypes storages config from an GPF instance
-    configuration and instanciate and register all genotype storages defined
-    in this configuration. To do this one could use
+    This class could accept genotype storages config from a GPF instance
+    configuration and instantiate and register all genotype storages defined
+    in this configuration. To do this, one could use
     :meth:`GenotypeStorageRegistry.register_storages_configs`.
 
-    To create and register a single genotype storage using its configuration
+    To create and register single genotype storage using its configuration
     you can use :meth:`GenotypeStorageRegistry.register_storage_config`.
 
-    When you have already created instance of genotype storage you can use
+    When you have already created an instance of genotype storage, you can use
     :meth:`GenotypeStorageRegistry.register_genotype_storage` to register
     it.
     """
@@ -41,8 +41,8 @@ class GenotypeStorageRegistry:
         """Register a genotype storage instance."""
         if not isinstance(storage, GenotypeStorage):
             raise ValueError(
-                f"tryint to register object of type <{type(storage)}>"
-                f"as a genotype storage.")
+                f"trying to register object of type <{type(storage)}>"
+                f" as genotype storage.")
         storage_id = storage.storage_id
         self._genotype_storages[storage_id] = storage
         return storage
@@ -55,14 +55,15 @@ class GenotypeStorageRegistry:
     def get_default_genotype_storage(self) -> Optional[GenotypeStorage]:
         """Return the default genotype storage if one is defined.
 
-        Otherwise return None.
+        Otherwise, return None.
         """
         return self._default_genotype_storage
 
     def get_genotype_storage(self, storage_id) -> GenotypeStorage:
-        """Return a genotype storage with specified storage_id.
+        """Return genotype storage with specified storage_id.
 
-        If storage with the specified ID is not found, raises ValueError.
+        If the method can not find storage with the specified ID, it will raise
+        ValueError exception.
         """
         if storage_id not in self._genotype_storages:
             raise ValueError(f"unknown storage id {storage_id}")
@@ -77,12 +78,12 @@ class GenotypeStorageRegistry:
         return list(self._genotype_storages.values())
 
     def register_storages_configs(self, genotype_storages_config):
-        """Create and register all genotype storages defined in a config.
+        """Create and register all genotype storages defined in config.
 
-        When defining a GPF instance we specify a `genotype_storage` section
-        in the configuration. This whole section could be passed to this
-        method and it will create and register all genotype storages defined
-        in that configuration section.
+        When defining a GPF instance, we specify a `genotype_storage` section
+        in the configuration. If you pass this whole configuration section
+        to this method, it will create and register all genotype storages
+        defined in that configuration section.
         """
         for storage_config in genotype_storages_config["storages"]:
             self.register_storage_config(storage_config)

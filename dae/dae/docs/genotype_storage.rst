@@ -1,30 +1,31 @@
 Genotype Storage
 ================
 
-To store and query genomic variants we use a genotype storage.
+To store and query genomic variants, we use genotype storage.
 
-There are two interfaces that define a genotype storage:
+There are two interfaces that define genotype storage:
 
 * :class:`dae.genotype_storage.genotype_storage.GenotypeStorage`  that defines
-  how to use the storage for quering genomic variants;
+  how to use the storage for querying genomic variants;
 
 * :class:`dae.import_tools.import_tools.ImportStorage` that defines how to
   import genomic variants into the storage.
 
 
-When you want to create a new genotype storage you have to create two classes - 
+When you want to create new genotype storage, you have to create two classes - 
 a genotype storage class that inherits the 
 :class:`dae.genotype_storage.genotype_storage.GenotypeStorage`
 and an import storage class that inherits 
-:class:`dae.import_tools.import_tools.ImportStorage`. These classes should be
-registered in two extenstion points, defined in the `setup.py`:
+:class:`dae.import_tools.import_tools.ImportStorage`.
+Once created, you should register these classes in the two extension points
+defined in the `setup.py`:
 
 * for genotype storage class use `[dae.genotype_storage.factories]` extenstion
   point;
 
 * for import storage class use `[dae.import_tools.storages]` extenstion point.
 
-As an example of genotype storage definitions you can check the following pairs
+As an example of genotype storage definitions, you can check the following pairs
 of classes:
 
 * Filesystem storage (`filesystem` storage type):
