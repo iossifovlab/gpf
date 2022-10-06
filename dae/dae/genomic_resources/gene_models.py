@@ -430,6 +430,10 @@ class GeneModels:
 
         self._reset()
 
+    @property
+    def resource_id(self):
+        return self.resource.resource_id
+
     def _reset(self):
         self._shift = None
         self.alternative_names = None
