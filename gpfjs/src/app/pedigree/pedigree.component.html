@@ -1,0 +1,40 @@
+<div class="pedigree-container" (click)="openModal(pedigreeModal)">
+  <gpf-pedigree-chart
+    [family]="family"
+    [groupName]="groupName"
+    [counterId]="counterId"
+    [maxWidth]="pedigreeMaxWidth"
+    [maxHeight]="pedigreeMaxHeight">
+  </gpf-pedigree-chart>
+</div>
+
+<ng-template #pedigreeModal let-modal>
+  <div id="modal-pedigree-container">
+    <gpf-pedigree-chart [scale]="pedigreeScale" [family]="family" [groupName]="groupName" [counterId]="counterId">
+    </gpf-pedigree-chart>
+  </div>
+
+  <ng-container *ngIf="!modalSimpleView">
+    <div class="modal-family">
+      <div style="padding-right: 8px">
+        <form
+          (ngSubmit)="onSubmit($event)"
+          action="{{ configService.baseUrl }}common_reports/family_counters/download"
+          method="post">
+          <input name="queryData" type="hidden" />
+          <button class="btn btn-md btn-primary" id="download-button">
+            <i class="fa fa-solid fa-download" style="scale: 1.2"></i>
+          </button>
+        </form>
+      </div>
+
+      <hr />
+
+      <div id="family-ids-list-wrapper" style="height: 100px">
+        <div *ngIf="familyIdsList" id="family-ids-list">
+          <div>{{ familyIdsList | join: ', ' }}</div>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+</ng-template>

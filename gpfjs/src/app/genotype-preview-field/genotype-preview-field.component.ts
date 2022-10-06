@@ -14,8 +14,7 @@ export class GenotypePreviewFieldComponent implements OnInit, OnChanges {
 
   public formattedValue: string;
   public UCSCLink: string;
-
-  constructor() { }
+  public pedigreeMaxHeight = 75;
 
   public ngOnInit(): void {
     this.UCSCLink = this.getUCSCLink();

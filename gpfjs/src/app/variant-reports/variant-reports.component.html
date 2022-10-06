@@ -3,7 +3,9 @@
     <div class="col-12" id="total-number-of-families">
       <h5>
         <span>Total number of families: {{ variantReport.familyReport.familiesTotal }}</span>
-        <span style="padding-left: 5px">(<a class="download-link" [href]="getDownloadLink()" download>Download</a>)</span>
+        <span style="padding-left: 5px"
+          >(<a class="download-link" [href]="getDownloadLink()" download>Download</a>)</span
+        >
       </h5>
     </div>
   </div>
@@ -69,21 +71,42 @@
         <span class="select-dropdown-icon" [style.content]="'url(' + imgPathPrefix + 'dropdown_icon.png)'"></span>
       </div>
     </div>
+    <div *ngIf="dropdownList.length !== 0 && currentPedigreeTable" id="tags-selector">
+      <ng-multiselect-dropdown
+        [placeholder]="'Select tags'"
+        [settings]="dropdownSettings"
+        [data]="dropdownList"
+        [(ngModel)]="selectedItems"
+        (onSelect)="updateTagFilters()"
+        (onDeSelect)="updateTagFilters()">
+      </ng-multiselect-dropdown>
+      <button
+        [disabled]="currentPedigreeTable.pedigrees.length === 0"
+        id="download-button"
+        (click)="getDownloadLinkTags()"
+        class="btn btn-md btn-primary">Download</button>
+    </div>
 
     <div *ngIf="currentPedigreeTable" id="families-by-pedigree-div" class="row">
       <div class="col-12">
         <table class="gpf-basic-table">
-          <colgroup>
+          <colgroup *ngIf="currentPedigreeTable.pedigrees.length !== 0">
             <col />
             <col />
             <col />
             <col />
           </colgroup>
-          <tbody>
+          <tbody *ngIf="currentPedigreeTable.pedigrees.length !== 0">
             <ng-template ngFor let-pedigreeGroup [ngForOf]="currentPedigreeTable.pedigrees">
               <tr gpf-common-reports-row [pedigreeGroup]="pedigreeGroup"></tr>
             </ng-template>
           </tbody>
+          <th
+            *ngIf="currentPedigreeTable.pedigrees.length === 0"
+            id="nothing-found"
+            class="table-row table-body-row">
+            <span>Nothing found</span>
+          </th>
         </table>
       </div>
     </div>
@@ -128,15 +151,12 @@
             <thead>
               <th>Effect type</th>
               <th class="rotate" *ngFor="let column of currentDenovoReport.columns">
-                <div class="column-header"
-                  [attr.title]="
-                    'children with the specific '
-                    + currentDenovoReport.groupName.toLowerCase()
-                    + ': '
-                    + column.substring(column.lastIndexOf('(') + 1, column.lastIndexOf(')'))
-                  "
-                  >{{ column }}</div
+                <div
+                  class="column-header"
+                  [attr.title]="'children with the specific ' + currentDenovoReport.groupName.toLowerCase() + ': ' + column.substring(column.lastIndexOf('(') + 1, column.lastIndexOf(')'))"
                 >
+                  <span>{{ column }}</span>
+                </div>
               </th>
             </thead>
             <tbody>
@@ -154,9 +174,9 @@
                   ">
                   <div
                     class="effect-type-data-values"
-                    title="{{ effectType }}&#10;{{ effectTypeData.column }}&#10;number of observed events: {{ effectTypeData.numberOfObservedEvents }}&#10;observed rate per individual: {{ effectTypeData.observedRatePerChild | number }}&#10;number of individuals with events: {{ effectTypeData.numberOfChildrenWithEvent }}&#10;percent of individuals with events: {{ effectTypeData.percentOfChildrenWithEvents | percent }}"
-                    >{{ effectTypeData.numberOfObservedEvents }}, {{ effectTypeData.observedRatePerChild | number }}<br />({{ effectTypeData.numberOfChildrenWithEvent }}, {{ effectTypeData.percentOfChildrenWithEvents | percent }})</div
-                  >
+                    title="{{ effectType }}&#10;{{ effectTypeData.column }}&#10;number of observed events: {{ effectTypeData.numberOfObservedEvents }}&#10;observed rate per individual: {{ effectTypeData.observedRatePerChild | number }}&#10;number of individuals with events: {{ effectTypeData.numberOfChildrenWithEvent }}&#10;percent of individuals with events: {{ effectTypeData.percentOfChildrenWithEvents | percent }}">
+                    <span>{{ effectTypeData.numberOfObservedEvents }}, {{ effectTypeData.observedRatePerChild | number }}<br />({{ effectTypeData.numberOfChildrenWithEvent }}, {{ effectTypeData.percentOfChildrenWithEvents | percent }})</span>
+                  </div>
                 </td>
               </tr>
             </tbody>

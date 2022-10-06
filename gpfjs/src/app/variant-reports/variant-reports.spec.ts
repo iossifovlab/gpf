@@ -183,16 +183,16 @@ describe('PedigreeCounter', () => {
         [5, 7],
         true,
         'label',
-        'smallLabel')], 5);
+        'smallLabel')], 5, ['tag1', 'tag2']);
 
     const pedigreeCounter2 = PedigreeCounter.fromJson(
       {
         counter_id: 1,
-        group_name: 'groupName',
         pedigree: [
           ['identifier', 'id', 'mother', 'father', 'gender', 'role', 'color', ':5,7', true, 'label', 'smallLabel']
         ],
-        pedigrees_count: 5
+        pedigrees_count: 5,
+        tags: ['tag1', 'tag2']
       }, 'groupName'
     );
 
@@ -222,7 +222,8 @@ describe('FamilyCounter', () => {
               'smallLabel1'
             ]
           ],
-          pedigrees_count: 5
+          pedigrees_count: 5,
+          tags: ['tag1', 'tag2'],
         },
         {
           counter_id: 2,
@@ -242,7 +243,8 @@ describe('FamilyCounter', () => {
               'smallLabel2'
             ]
           ],
-          pedigrees_count: 7
+          pedigrees_count: 7,
+          tags: ['tag3', 'tag4']
         }
       ], group_name: 'groupName1', phenotypes: ['phenotype4', 'phenotype5'], legend: [
         {
@@ -270,7 +272,7 @@ describe('FamilyCounter', () => {
           [2, 1],
           true,
           'label1',
-          'smallLabel1')], 5),
+          'smallLabel1')], 5, ['tag1', 'tag2']),
       new PedigreeCounter(2, 'groupName1', [
         new PedigreeData(
           'identifier2',
@@ -283,7 +285,7 @@ describe('FamilyCounter', () => {
           [5, 7],
           false,
           'label2',
-          'smallLabel2')], 7)
+          'smallLabel2')], 7, ['tag3', 'tag4']),
     ], 'groupName1', ['phenotype4', 'phenotype5'],
     new Legend([new LegendItem('id6', 'name7', 'color8'), new LegendItem('id9', 'name10', 'color11')]));
     expect(mockFamilyCounter).toEqual(mockFamilyCounter2);
@@ -298,11 +300,11 @@ describe('FamilyReport', () => {
         new PedigreeCounter(1, 'groupName1', [
           new PedigreeData(
             'identifier1', 'id1', 'mother1', 'father1', 'gender1', 'role1',
-            'color1', [2, 1], true, 'label1', 'smallLabel1')], 5),
+            'color1', [2, 1], true, 'label1', 'smallLabel1')], 5, ['tag1', 'tag2']),
         new PedigreeCounter(2, 'groupName1', [
           new PedigreeData(
             'identifier2', 'id2', 'mother2', 'father2', 'gender2', 'role2',
-            'color2', [5, 7], false, 'label2', 'smallLabel2')], 7)
+            'color2', [5, 7], false, 'label2', 'smallLabel2')], 7, ['tag3', 'tag4']),
       ], 'groupName1', ['phenotype4', 'phenotype5'],
       new Legend([new LegendItem('id6', 'name7', 'color8'), new LegendItem('id9', 'name10', 'color11')])
       ),
@@ -310,11 +312,11 @@ describe('FamilyReport', () => {
         new PedigreeCounter(3, 'groupName2', [
           new PedigreeData(
             'identifier3', 'id3', 'mother3', 'father3', 'gender3', 'role3',
-            'color3', [6, 8], false, 'label3', 'smallLabel3')], 1),
+            'color3', [6, 8], false, 'label3', 'smallLabel3')], 1, ['tag5', 'tag6']),
         new PedigreeCounter(4, 'groupName2', [
           new PedigreeData(
             'identifier4', 'id4', 'mother4', 'father4', 'gender4', 'role4',
-            'color4', [1, 1], true, 'label4', 'smallLabel4')], 10)
+            'color4', [1, 1], true, 'label4', 'smallLabel4')], 10, ['tag7', 'tag8'])
       ], 'groupName2', ['phenotype6', 'phenotype7'],
       new Legend([new LegendItem('id12', 'name13', 'color14'), new LegendItem('id15', 'name16', 'color17')])
       ),
@@ -322,11 +324,11 @@ describe('FamilyReport', () => {
         new PedigreeCounter(5, 'groupName3', [
           new PedigreeData(
             'identifier5', 'id5', 'mother5', 'father5',
-            'gender5', 'role5', 'color5', [2, 2], true, 'label5', 'smallLabel5')], 9),
+            'gender5', 'role5', 'color5', [2, 2], true, 'label5', 'smallLabel5')], 9, ['tag9', 'tag10']),
         new PedigreeCounter(6, 'groupName3', [
           new PedigreeData(
             'identifier6', 'id6', 'mother6', 'father6',
-            'gender6', 'role6', 'color6', [51, 7], false, 'label6', 'smallLabel6')], 85)
+            'gender6', 'role6', 'color6', [51, 7], false, 'label6', 'smallLabel6')], 85, ['tag11', 'tag12'])
       ], 'groupName3', ['phenotype8', 'phenotype9'],
       new Legend([new LegendItem('id18', 'name19', 'color20'), new LegendItem('id21', 'name22', 'color23')])
       ),
@@ -334,11 +336,11 @@ describe('FamilyReport', () => {
         new PedigreeCounter(7, 'groupName4', [
           new PedigreeData(
             'identifier7', 'id7', 'mother7', 'father7',
-            'gender7', 'role7', 'color7', [3, 3], false, 'label7', 'smallLabel7')], 14),
+            'gender7', 'role7', 'color7', [3, 3], false, 'label7', 'smallLabel7')], 14, ['tag13', 'tag14']),
         new PedigreeCounter(8, 'groupName4', [
           new PedigreeData(
             'identifier8', 'id8', 'mother8', 'father8',
-            'gender8', 'role8', 'color8', [16, 13], true, 'label8', 'smallLabel8')], 11)
+            'gender8', 'role8', 'color8', [16, 13], true, 'label8', 'smallLabel8')], 11, ['tag15', 'tag16'])
       ], 'groupName4', ['phenotype10', 'phenotype11'],
       new Legend([new LegendItem('id24', 'name25', 'color26'), new LegendItem('id27', 'name28', 'color29')])
       ),
@@ -366,7 +368,8 @@ describe('FamilyReport', () => {
                 'smallLabel1'
               ]
             ],
-            pedigrees_count: 5
+            pedigrees_count: 5,
+            tags: ['tag1', 'tag2']
           },
           {
             counter_id: 2,
@@ -386,7 +389,8 @@ describe('FamilyReport', () => {
                 'smallLabel2'
               ]
             ],
-            pedigrees_count: 7
+            pedigrees_count: 7,
+            tags: ['tag3', 'tag4']
           }
         ], group_name: 'groupName1', phenotypes: ['phenotype4', 'phenotype5'], legend: [
           {
@@ -420,7 +424,8 @@ describe('FamilyReport', () => {
                 'smallLabel3'
               ]
             ],
-            pedigrees_count: 1
+            pedigrees_count: 1,
+            tags: ['tag5', 'tag6']
           },
           {
             counter_id: 4,
@@ -440,7 +445,8 @@ describe('FamilyReport', () => {
                 'smallLabel4'
               ]
             ],
-            pedigrees_count: 10
+            pedigrees_count: 10,
+            tags: ['tag7', 'tag8']
           }
         ], group_name: 'groupName2', phenotypes: ['phenotype6', 'phenotype7'], legend: [
           {
@@ -474,7 +480,8 @@ describe('FamilyReport', () => {
                 'smallLabel5'
               ]
             ],
-            pedigrees_count: 9
+            pedigrees_count: 9,
+            tags: ['tag9', 'tag10']
           },
           {
             counter_id: 6,
@@ -494,7 +501,8 @@ describe('FamilyReport', () => {
                 'smallLabel6'
               ]
             ],
-            pedigrees_count: 85
+            pedigrees_count: 85,
+            tags: ['tag11', 'tag12']
           }
         ], group_name: 'groupName3', phenotypes: ['phenotype8', 'phenotype9'], legend: [
           {
@@ -528,7 +536,8 @@ describe('FamilyReport', () => {
                 'smallLabel7'
               ]
             ],
-            pedigrees_count: 14
+            pedigrees_count: 14,
+            tags: ['tag13', 'tag14']
           },
           {
             counter_id: 8,
@@ -548,7 +557,8 @@ describe('FamilyReport', () => {
                 'smallLabel8'
               ]
             ],
-            pedigrees_count: 11
+            pedigrees_count: 11,
+            tags: ['tag15', 'tag16']
           }
         ], group_name: 'groupName4', phenotypes: ['phenotype10', 'phenotype11'], legend: [
           {
@@ -835,11 +845,11 @@ describe('VariantReport', () => {
           new PedigreeCounter(1, 'groupName1', [
             new PedigreeData(
               'identifier1', 'id1', 'mother1', 'father1', 'gender1', 'role1',
-              'color1', [2, 1], true, 'label1', 'smallLabel1')], 5),
+              'color1', [2, 1], true, 'label1', 'smallLabel1')], 5, ['tag1', 'tag2']),
           new PedigreeCounter(2, 'groupName1', [
             new PedigreeData(
               'identifier2', 'id2', 'mother2', 'father2', 'gender2', 'role2',
-              'color2', [5, 7], false, 'label2', 'smallLabel2')], 7)
+              'color2', [5, 7], false, 'label2', 'smallLabel2')], 7, ['tag3', 'tag4'])
         ], 'groupName1', ['phenotype4', 'phenotype5'],
         new Legend([new LegendItem('id6', 'name7', 'color8'), new LegendItem('id9', 'name10', 'color11')])
         ),
@@ -847,11 +857,11 @@ describe('VariantReport', () => {
           new PedigreeCounter(3, 'groupName2', [
             new PedigreeData(
               'identifier3', 'id3', 'mother3', 'father3', 'gender3', 'role3',
-              'color3', [6, 8], false, 'label3', 'smallLabel3')], 1),
+              'color3', [6, 8], false, 'label3', 'smallLabel3')], 1, ['tag5', 'tag6']),
           new PedigreeCounter(4, 'groupName2', [
             new PedigreeData(
               'identifier4', 'id4', 'mother4', 'father4', 'gender4', 'role4',
-              'color4', [1, 1], true, 'label4', 'smallLabel4')], 10)
+              'color4', [1, 1], true, 'label4', 'smallLabel4')], 10, ['tag7', 'tag8'])
         ], 'groupName2', ['phenotype6', 'phenotype7'],
         new Legend([new LegendItem('id12', 'name13', 'color14'), new LegendItem('id15', 'name16', 'color17')])
         ),
@@ -859,11 +869,11 @@ describe('VariantReport', () => {
           new PedigreeCounter(5, 'groupName3', [
             new PedigreeData(
               'identifier5', 'id5', 'mother5', 'father5',
-              'gender5', 'role5', 'color5', [2, 2], true, 'label5', 'smallLabel5')], 9),
+              'gender5', 'role5', 'color5', [2, 2], true, 'label5', 'smallLabel5')], 9, ['tag9', 'tag10']),
           new PedigreeCounter(6, 'groupName3', [
             new PedigreeData(
               'identifier6', 'id6', 'mother6', 'father6',
-              'gender6', 'role6', 'color6', [51, 7], false, 'label6', 'smallLabel6')], 85)
+              'gender6', 'role6', 'color6', [51, 7], false, 'label6', 'smallLabel6')], 85, ['tag11', 'tag12'])
         ], 'groupName3', ['phenotype8', 'phenotype9'],
         new Legend([new LegendItem('id18', 'name19', 'color20'), new LegendItem('id21', 'name22', 'color23')])
         ),
@@ -871,11 +881,11 @@ describe('VariantReport', () => {
           new PedigreeCounter(7, 'groupName4', [
             new PedigreeData(
               'identifier7', 'id7', 'mother7', 'father7',
-              'gender7', 'role7', 'color7', [3, 3], false, 'label7', 'smallLabel7')], 14),
+              'gender7', 'role7', 'color7', [3, 3], false, 'label7', 'smallLabel7')], 14, ['tag13', 'tag14']),
           new PedigreeCounter(8, 'groupName4', [
             new PedigreeData(
               'identifier8', 'id8', 'mother8', 'father8',
-              'gender8', 'role8', 'color8', [16, 13], true, 'label8', 'smallLabel8')], 11)
+              'gender8', 'role8', 'color8', [16, 13], true, 'label8', 'smallLabel8')], 11, ['tag15', 'tag16'])
         ], 'groupName4', ['phenotype10', 'phenotype11'],
         new Legend([new LegendItem('id24', 'name25', 'color26'), new LegendItem('id27', 'name28', 'color29')])
         ),
@@ -901,7 +911,6 @@ describe('VariantReport', () => {
         id: 'id1',
         study_name: 'studyName1',
         study_description: 'studyDescription1',
-
         people_report: [{
           counters: [
             { column: 'col1', row1: 7, row2: 13, row3: 17 },
@@ -940,7 +949,8 @@ describe('VariantReport', () => {
                     'smallLabel1'
                   ]
                 ],
-                pedigrees_count: 5
+                pedigrees_count: 5,
+                tags: ['tag1', 'tag2']
               },
               {
                 counter_id: 2,
@@ -960,7 +970,8 @@ describe('VariantReport', () => {
                     'smallLabel2'
                   ]
                 ],
-                pedigrees_count: 7
+                pedigrees_count: 7,
+                tags: ['tag3', 'tag4']
               }
             ], group_name: 'groupName1', phenotypes: ['phenotype4', 'phenotype5'], legend: [
               {
@@ -994,7 +1005,8 @@ describe('VariantReport', () => {
                     'smallLabel3'
                   ]
                 ],
-                pedigrees_count: 1
+                pedigrees_count: 1,
+                tags: ['tag5', 'tag6']
               },
               {
                 counter_id: 4,
@@ -1014,7 +1026,8 @@ describe('VariantReport', () => {
                     'smallLabel4'
                   ]
                 ],
-                pedigrees_count: 10
+                pedigrees_count: 10,
+                tags: ['tag7', 'tag8']
               }
             ], group_name: 'groupName2', phenotypes: ['phenotype6', 'phenotype7'], legend: [
               {
@@ -1048,7 +1061,8 @@ describe('VariantReport', () => {
                     'smallLabel5'
                   ]
                 ],
-                pedigrees_count: 9
+                pedigrees_count: 9,
+                tags: ['tag9', 'tag10']
               },
               {
                 counter_id: 6,
@@ -1068,7 +1082,8 @@ describe('VariantReport', () => {
                     'smallLabel6'
                   ]
                 ],
-                pedigrees_count: 85
+                pedigrees_count: 85,
+                tags: ['tag11', 'tag12']
               }
             ], group_name: 'groupName3', phenotypes: ['phenotype8', 'phenotype9'], legend: [
               {
@@ -1102,7 +1117,8 @@ describe('VariantReport', () => {
                     'smallLabel7'
                   ]
                 ],
-                pedigrees_count: 14
+                pedigrees_count: 14,
+                tags: ['tag13', 'tag14']
               },
               {
                 counter_id: 8,
@@ -1122,7 +1138,8 @@ describe('VariantReport', () => {
                     'smallLabel8'
                   ]
                 ],
-                pedigrees_count: 11
+                pedigrees_count: 11,
+                tags: ['tag15', 'tag16']
               }
             ], group_name: 'groupName4', phenotypes: ['phenotype10', 'phenotype11'], legend: [
               {
