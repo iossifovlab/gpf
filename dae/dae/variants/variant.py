@@ -736,6 +736,8 @@ class SummaryVariant:
 
     def update_attributes(self, atts: Dict[str, Any]) -> None:
         for key, values in list(atts.items()):
+            if not values:
+                continue
             assert len(values) == 1 or len(values) == len(self.alt_alleles)
             for allele, val in zip(self.alt_alleles, itertools.cycle(values)):
                 allele.update_attributes({key: val})
