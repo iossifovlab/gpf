@@ -1,3 +1,4 @@
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
 import json
 import pytest
 
@@ -69,6 +70,47 @@ def test_family_counters_download(admin_client):
     print(b"".join(res).decode())
     assert len(res) == 863
     # assert data == ["f2", "f4"]
+
+
+def test_families_tags_download(admin_client):
+    url = (
+        "/api/v3/common_reports/families_data/download?"
+        "study_id=Study1&tags=tag_nuclear_family,tag_trio_family"
+    )
+    response = admin_client.get(
+        url, content_type="application/json"
+    )
+
+    assert response
+    assert response.status_code == status.HTTP_200_OK
+
+    res = list(response.streaming_content)
+    print(b"".join(res).decode())
+    assert len(res) == 7279
+
+
+def test_families_tags_download_succeeds_on_empty_tags(admin_client):
+    url = (
+        "/api/v3/common_reports/families_data/download?"
+        "study_id=Study1&tags="
+    )
+    response = admin_client.get(
+        url, content_type="application/json"
+    )
+
+    assert response
+    assert response.status_code == status.HTTP_200_OK
+
+    url = (
+        "/api/v3/common_reports/families_data/download?"
+        "study_id=Study1"
+    )
+    response = admin_client.get(
+        url, content_type="application/json"
+    )
+
+    assert response
+    assert response.status_code == status.HTTP_200_OK
 
 
 def test_variant_reports_no_permissions(user_client):

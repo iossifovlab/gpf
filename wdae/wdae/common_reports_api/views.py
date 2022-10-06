@@ -8,6 +8,7 @@ from datasets_api.permissions import user_has_permission
 from query_base.query_base import QueryBaseView
 
 from dae.pedigrees.family import FamiliesData
+from dae.pedigrees.family_tag_builder import check_tag
 
 
 class VariantReportsView(QueryBaseView):
@@ -104,6 +105,53 @@ class FamilyCounterDownloadView(QueryBaseView):
 
         response = StreamingHttpResponse(
             ped_df.to_csv(index=False, sep="\t"),
+            content_type="text/tab-separated-values"
+        )
+        response["Content-Disposition"] = "attachment; filename=families.ped"
+        response["Expires"] = "0"
+
+        return response
+
+
+class FamiliesDataTagDownload(QueryBaseView):
+    def get(self, request):
+        study_id = request.GET.get("study_id")
+        tags = request.GET.get("tags")
+
+        if study_id is None:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        study = self.gpf_instance.get_genotype_data(study_id)
+
+        if study is None:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        study_families = study.families
+
+        if tags is None or len(tags) == 0:
+            result = study_families
+        else:
+            result = {}
+            tags = set(tags.split(","))
+            for family_id, family in study_families.items():
+                has_tags = True
+                for tag in tags:
+                    try:
+                        tagged = check_tag(family, tag, True)
+                        if not tagged:
+                            has_tags = False
+                            break
+                    except ValueError as err:
+                        print(err)
+                        return Response(status=status.HTTP_400_BAD_REQUEST)
+
+                if has_tags:
+                    result[family_id] = family
+
+            result = FamiliesData.from_families(result)
+
+        response = StreamingHttpResponse(
+            result.ped_df.to_csv(index=False, sep="\t"),
             content_type="text/tab-separated-values"
         )
         response["Content-Disposition"] = "attachment; filename=families.ped"

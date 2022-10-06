@@ -29,6 +29,10 @@ urlpatterns = [
         name="family_counter_list",
     ),
     re_path(
+        r"^/families_data/download$",
+        views.FamiliesDataTagDownload.as_view(),
+    ),
+    re_path(
         r"^/families_data/(?P<dataset_id>.+)$",
         views.FamiliesDataDownloadView.as_view(),
     ),

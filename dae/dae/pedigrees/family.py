@@ -612,9 +612,14 @@ class FamiliesData(Mapping[str, Family]):
 
     @staticmethod
     def from_families(families: Dict[str, Family]) -> FamiliesData:
-        return FamiliesData.from_family_persons(
+        families_data = FamiliesData.from_family_persons(
             {fam.family_id: fam.full_members for fam in families.values()}
         )
+        # FIXME: Avoid this workaround
+        for family_id, family in families.items():
+            families_data[family_id]._tags = family.tags
+
+        return families_data
 
     def pedigree_samples(self):
         result = []
