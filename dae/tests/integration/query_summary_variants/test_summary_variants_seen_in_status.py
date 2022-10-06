@@ -28,10 +28,14 @@ def imported_study(tmp_path_factory, genotype_storage):
         ##fileformat=VCFv4.2
         ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
         ##contig=<ID=chrA>
-        #CHROM POS ID REF ALT QUAL FILTER INFO FORMAT m1  d1  p1  s1
-        chrA    1  .  A   C   .    .      .    GT     0/1 0/0 0/1 0/0
-        chrA    2  .  A   G   .    .      .    GT     0/0 0/0 0/1 0/0
-        chrA    3  .  A   G   .    .      .    GT     1/0 0/0 0/0 0/1
+        #CHROM POS ID REF ALT  QUAL FILTER INFO FORMAT m1  d1  p1  s1
+        chrA   1   .  A   T    .    .      .    GT     0/1 0/0 0/1 0/0
+        chrA   2   .  A   T    .    .      .    GT     0/0 0/0 0/1 0/0
+        chrA   3   .  A   T    .    .      .    GT     1/0 0/0 0/0 0/1
+        chrA   4   .  A   T,G  .    .      .    GT     1/0 2/0 0/0 0/0
+        chrA   5   .  A   T,G  .    .      .    GT     1/0 2/0 2/0 0/0
+        chrA   6   .  A   T,G  .    .      .    GT     1/0 2/0 1/0 0/0
+        chrA   7   .  A   T,G  .    .      .    GT     1/0 2/0 1/2 0/0
         """)
 
     study = alla_vcf_study(
@@ -48,7 +52,7 @@ def imported_study(tmp_path_factory, genotype_storage):
     (Region("chrA", 2, 2), 1, Status.affected.value),
     (Region("chrA", 3, 3), 1, Status.unaffected.value),
 ])
-def test_query_summary_variants_seen_in_status(
+def test_summary_variants_seen_in_status_single_allele(
         region, count, seen_in_status, imported_study):
 
     svs = list(imported_study.query_summary_variants(regions=[region]))
@@ -56,3 +60,29 @@ def test_query_summary_variants_seen_in_status(
     assert len(svs[0].alt_alleles) == 1
     aa = svs[0].alleles[1]
     assert aa.get_attribute("seen_in_status") == seen_in_status
+
+
+@pytest.mark.impala2
+@pytest.mark.parametrize("region,seen_in_status", [
+    (Region("chrA", 4, 4), [
+        Status.unaffected.value,
+        Status.unaffected.value]),
+    (Region("chrA", 5, 5), [
+        Status.unaffected.value,
+        Status.affected.value | Status.unaffected.value]),
+    (Region("chrA", 6, 6), [
+        Status.affected.value | Status.unaffected.value,
+        Status.unaffected.value]),
+    (Region("chrA", 7, 7), [
+        Status.affected.value | Status.unaffected.value,
+        Status.affected.value | Status.unaffected.value]),
+])
+def test_summary_variants_seen_in_status_multi_allele(
+        region, seen_in_status, imported_study):
+
+    svs = list(imported_study.query_summary_variants(regions=[region]))
+    assert len(svs) == 1
+    assert len(svs[0].alt_alleles) == 2
+    aa0, aa1 = svs[0].alt_alleles
+    assert aa0.get_attribute("seen_in_status") == seen_in_status[0]
+    assert aa1.get_attribute("seen_in_status") == seen_in_status[1]

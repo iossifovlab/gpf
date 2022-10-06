@@ -662,7 +662,7 @@ class VariantsParquetWriter:
             family_variants,
         ) in enumerate(self.full_variants_iterator):
             num_fam_alleles_written = 0
-            seen_in_status = 0
+            seen_in_status = summary_variant.allele_count * [0]
             for fv in family_variants:
                 family_variant_index += 1
 
@@ -689,17 +689,17 @@ class VariantsParquetWriter:
                     family_bin_writer.append_family_allele(
                         family_allele, family_variant_data_json
                     )
-                    seen_in_status = reduce(
+                    seen_in_status[family_allele.allele_index] = reduce(
                         lambda t, s: t | s.value,
                         filter(None, family_allele.variant_in_statuses),
-                        seen_in_status)
+                        seen_in_status[family_allele.allele_index])
 
                     num_fam_alleles_written += 1
 
             # don't store summary alleles withouth family ones
             if num_fam_alleles_written > 0:
                 summary_variant.update_attributes({
-                    "seen_in_status": [seen_in_status]
+                    "seen_in_status": seen_in_status[1:]
                 })
                 # build summary json blob (concat all other alleles)
                 # INSIDE summary_variant
