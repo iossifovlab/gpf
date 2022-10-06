@@ -53,8 +53,13 @@ export class VariantReportsService {
       searchParams = searchParams.set('tags', tags);
     }
 
-    const options = { headers: this.getHeaders(), withCredentials: true, params: searchParams };
-    const result = await this.http.get(`${this.config.baseUrl}${this.downloadUrl}download`, { ...options, responseType: 'blob' })
+    const headers = {
+      'X-CSRFToken': this.cookieService.get('csrftoken'),
+      'Content-Type': 'application/json'
+    };
+
+    const options = { headers: headers, withCredentials: true, params: searchParams };
+    return this.http.get(`${this.config.baseUrl}${this.downloadUrl}download`, { ...options, responseType: 'blob' })
       .subscribe(async res => {
         const a = document.createElement('a');
         a.download = 'families.ped';
@@ -69,13 +74,5 @@ export class VariantReportsService {
           a.click();
         }
       });
-    return result;
-  }
-
-  private getHeaders(): { 'X-CSRFToken': string, 'Content-Type':  string } {
-    const csrfToken = this.cookieService.get('csrftoken');
-    const headers = { 'X-CSRFToken': csrfToken, 'Content-Type': 'application/json' };
-
-    return headers;
   }
 }
