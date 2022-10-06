@@ -1,11 +1,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-import textwrap
-
 from dae.testing import \
-    setup_directories, setup_genome, setup_gene_models
-
-from dae.import_tools.import_tools import ImportProject, run_with_project
-from dae.gpf_instance import GPFInstance
+    setup_genome, setup_gene_models, setup_gpf_instance, \
+    vcf_import, vcf_study
 
 
 # this content follows the 'refflat' gene model format
@@ -34,61 +30,24 @@ def foobar_gpf(root_path, storage=None):
     genes = setup_gene_models(
         root_path / "foobar_genes" / "genes.txt",
         GMM_CONTENT, fileformat="refflat")
-    content = {
-        "gpf_instance": {
-            "gpf_instance.yaml": "",
-        }
-    }
-    setup_directories(root_path, content)
-    gpf_instance = GPFInstance(
-        work_dir=str(root_path / "gpf_instance"),
+
+    gpf_instance = setup_gpf_instance(
+        root_path / "gpf_instance",
         reference_genome=genome,
         gene_models=genes)
 
     if storage:
         gpf_instance\
             .genotype_storage_db\
-            .register_genotype_storage(storage)
+            .register_default_storage(storage)
     return gpf_instance
 
 
 def foobar_vcf_import(root_path, study_id, ped_path, vcf_path, storage):
-
-    gpf_instance = foobar_gpf(root_path)
-    gpf_instance.genotype_storage_db.register_genotype_storage(storage)
-
-    config = textwrap.dedent(f"""
-        id: {study_id}
-        processing_config:
-          work_dir: {root_path / "work"}
-        input:
-          pedigree:
-            file: {ped_path}
-          vcf:
-            files:
-             - {vcf_path}
-            denovo_mode: denovo
-            omission_mode: omission
-        destination:
-          storage_id: {storage.storage_id}
-        """)
-    setup_directories(root_path, {
-        "vcf_project": {
-            "vcf_project.yaml": config
-        },
-    })
-    project = ImportProject.build_from_file(
-        root_path / "vcf_project" / "vcf_project.yaml",
-        gpf_instance=gpf_instance)
-    run_with_project(project)
-    return project
+    gpf_instance = foobar_gpf(root_path, storage)
+    return vcf_import(root_path, study_id, ped_path, [vcf_path], gpf_instance)
 
 
 def foobar_vcf_study(root_path, study_id, ped_path, vcf_path, storage):
-    import_project = foobar_vcf_import(
-        root_path, study_id, ped_path, vcf_path, storage)
-    gpf_instance = import_project.get_gpf_instance()
-    gpf_instance.reload()
-
-    study = gpf_instance.get_genotype_data(study_id)
-    return study
+    gpf_instance = foobar_gpf(root_path, storage)
+    return vcf_study(root_path, study_id, ped_path, [vcf_path], gpf_instance)

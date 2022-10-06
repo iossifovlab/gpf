@@ -125,3 +125,17 @@ def setup_empty_gene_models(out_path: pathlib.Path):
 #geneName name chrom strand txStart txEnd cdsStart cdsEnd exonCount exonStarts exonEnds
     """  # noqa
     return setup_gene_models(out_path, content, fileformat="refflat")
+
+
+def setup_gpf_instance(
+        out_path: pathlib.Path,
+        reference_genome=None, gene_models=None,
+        grr=None):
+    """Set up a GPF instance using prebuild genome, gene models, etc."""
+    setup_directories(out_path, {"gpf_instance.yaml": ""})
+    # pylint: disable=import-outside-toplevel
+    from dae.gpf_instance import GPFInstance
+    return GPFInstance(
+        work_dir=out_path,
+        reference_genome=reference_genome, gene_models=gene_models,
+        grr=grr)

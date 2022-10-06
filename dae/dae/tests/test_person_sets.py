@@ -110,7 +110,7 @@ def test_from_pedigree(families_fixture, status_person_sets_collection):
         status_collection.person_sets["affected"].persons.keys()
     )
     assert result_person_ids == {
-        'prb2', 'sib2_3', 'sib2', 'prb1', 'sib1'
+        "prb2", "sib2_3", "sib2", "prb1", "sib1"
     }
 
 
@@ -286,8 +286,8 @@ def test_multiple_column_person_set(families_fixture):
         status_sex_collection.person_sets["affected_female"].persons.keys()
     )
 
-    assert affected_male == {'prb1', 'prb2'}
-    assert affected_female == {'sib1', 'sib2', 'sib2_3'}
+    assert affected_male == {"prb1", "prb2"}
+    assert affected_female == {"sib1", "sib2", "sib2_3"}
 
 
 def test_phenotype_person_set_categorical(
