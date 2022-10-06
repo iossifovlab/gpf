@@ -94,7 +94,7 @@ export class VariantReportsComponent implements OnInit {
     };
   }
 
-  private copyOriginalPedigreeCounters(): Record<string, PedigreeCounter[]>{
+  private copyOriginalPedigreeCounters(): Record<string, PedigreeCounter[]> {
     return this.familiesCounters.reduce(
       (obj, x) => {
         obj[x.groupName] = Array.from(x.pedigreeCounters); return obj;
