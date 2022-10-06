@@ -7,7 +7,7 @@ import { UserGroup } from '../users-groups/users-groups';
 @Component({
   selector: 'gpf-groups-table',
   templateUrl: './groups-table.component.html',
-  // Order of css styles is important (second file overwrites first when needed)
+  // Order of css styles is important (second file overwrites the first where needed)
   styleUrls: ['../users-table/users-table.component.css', './groups-table.component.css']
 })
 export class GroupsTableComponent {
