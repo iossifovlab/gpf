@@ -3,7 +3,7 @@
 from dae.genomic_resources import GenomicResource
 from dae.genomic_resources.genomic_scores import build_np_score_from_resource
 from dae.genomic_resources.testing import build_test_resource
-from dae.genomic_resources.testing import convert_to_tab_separated
+from dae.testing import convert_to_tab_separated
 from dae.genomic_resources.repository import GR_CONF_FILE_NAME
 
 

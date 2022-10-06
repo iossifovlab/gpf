@@ -7,7 +7,7 @@ from dae.variants_loaders.cnv.loader import CNVLoader
 from dae.variants.attributes import Inheritance
 from dae.variants.core import Allele
 
-from dae.genomic_resources.testing import convert_to_tab_separated
+from dae.testing import convert_to_tab_separated
 from dae.pedigrees.loader import FamiliesLoader
 
 

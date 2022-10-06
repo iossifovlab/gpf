@@ -16,7 +16,7 @@ from dae.genomic_resources.testing import \
     build_testing_protocol, \
     range_http_process_server_generator, \
     tabix_to_resource
-from dae.genomic_resources.testing import convert_to_tab_separated
+from dae.testing import convert_to_tab_separated
 from dae.genomic_resources import build_genomic_resource_repository
 
 logger = logging.getLogger(__name__)

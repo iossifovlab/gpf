@@ -1,7 +1,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pytest
 
-from ...foobar_import import setup_pedigree, setup_vcf
+from dae.testing import setup_pedigree, setup_vcf
 from ...foobar_import import foobar_vcf_study
 
 
