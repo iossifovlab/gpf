@@ -47,6 +47,7 @@ class AlleleParquetSerializer:
         "seen_as_denovo": pa.bool_(),
         "seen_in_status": pa.int8(),
         "family_variants_count": pa.int32(),
+        "family_alleles_count": pa.int32(),
     }
 
     FAMILY_ALLELE_BASE_SCHEMA = {
