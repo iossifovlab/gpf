@@ -131,7 +131,9 @@ table {
 }
 
 #total-number-of-families {
-  text-align: center;
+  position: absolute;
+  right: 0;
+  padding: 16px;
 }
 
 #families-by-number {
@@ -216,7 +218,7 @@ ng-multiselect-dropdown > span.selected-item {
   display: flex !important;
   flex-wrap: wrap !important;
   align-content: center !important;
-  border: 1px solid #dee2e6 !important;
+  border: 1px solid #ced4da !important;
   width: 434px !important;
 }
 
