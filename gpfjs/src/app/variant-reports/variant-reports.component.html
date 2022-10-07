@@ -1,6 +1,6 @@
 <div *ngIf="variantReport" class="variants-report-content">
   <div class="card" style="border: 0">
-    <ul ngbNav #nav="ngbNav" class="navbar bg-light nav-pills nav" style="justify-content: flex-start" [destroyOnHide]="false">
+    <ul ngbNav #nav="ngbNav" class="navbar bg-light nav-pills nav" style="justify-content: flex-start; margin-bottom: 16px" [destroyOnHide]="false">
       <li ngbNavItem>
         <a ngbNavLink>Families by number</a>
         <ng-template ngbNavContent>
@@ -34,7 +34,7 @@
 
   <ng-template #familiesByNumber>
     <div id="families-by-number">
-      <div class="col-sm-3" class="variants-report-selector">
+      <div *ngIf="variantReport.peopleReport.peopleCounters.length > 1" class="variants-report-selector">
         <div class="select-wrapper">
           <select id="families-by-number-dropdown-button" class="form-control" [(ngModel)]="currentPeopleCounter">
             <option *ngFor="let peopleCounter of variantReport.peopleReport.peopleCounters" [ngValue]="peopleCounter">
@@ -44,6 +44,7 @@
           <span class="select-dropdown-icon" [style.content]="'url(' + imgPathPrefix + 'dropdown_icon.png)'"></span>
         </div>
       </div>
+
       <div *ngIf="currentPeopleCounter" id="families-by-number-div" class="row">
         <div class="col-12">
           <table class="gpf-basic-table">
@@ -75,7 +76,7 @@
 
   <ng-template #familiesByPedigree>
     <div id="families-by-pedigree">
-      <div class="col-sm-3 variants-report-selector">
+      <div *ngIf="variantReport.peopleReport.peopleCounters.length > 1" class="col-sm-3 variants-report-selector">
         <div class="select-wrapper">
           <select class="form-control" [(ngModel)]="currentPedigreeTable">
             <option *ngFor="let pedigreeTable of pedigreeTables" [ngValue]="pedigreeTable">
@@ -133,7 +134,7 @@
   <ng-template #deNovoVariants>
     <div id="de-novo-variants">
       <div *ngIf="variantReport.denovoReport">
-        <div class="col-sm-3" class="variants-report-selector">
+        <div *ngIf="variantReport.peopleReport.peopleCounters.length > 1" class="col-sm-3" class="variants-report-selector">
           <div class="select-wrapper">
             <select
               id="denovo-variants-dropdown-button"
