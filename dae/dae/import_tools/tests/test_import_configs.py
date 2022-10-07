@@ -226,7 +226,8 @@ def test_get_genotype_storage_no_explicit_config():
     assert genotype_storage is not None
     assert (
         genotype_storage.storage_id
-        == project.get_gpf_instance().genotype_storage_db.default_storage_id
+        == project.get_gpf_instance().genotype_storage_db
+        .get_default_genotype_storage().storage_id
     )
 
 

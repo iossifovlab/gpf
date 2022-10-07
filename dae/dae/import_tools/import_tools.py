@@ -286,7 +286,9 @@ class ImportProject():
             genotype_storage_db = gpf_instance.genotype_storage_db
             storage_id = self.import_config.get("destination", {})\
                 .get("storage_id", None)
-            return genotype_storage_db.get_genotype_storage(storage_id)
+            if storage_id is not None:
+                return genotype_storage_db.get_genotype_storage(storage_id)
+            return genotype_storage_db.get_default_genotype_storage()
         # explicit storage config
         registry = GenotypeStorageRegistry()
         # FIXME: switch to using new storage configuration
