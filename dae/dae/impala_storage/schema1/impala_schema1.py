@@ -172,25 +172,28 @@ class ImpalaSchema1ImportStorage(ImportStorage):
 
     def generate_import_task_graph(self, project) -> TaskGraph:
         graph = TaskGraph()
-        pedigree_task = graph.create_task("ped task", self._do_write_pedigree,
-                                          [project], [])
+        pedigree_task = graph.create_task(
+            "Generating Pedigree", self._do_write_pedigree, [project], []
+        )
 
         bucket_tasks = []
         for bucket in project.get_import_variants_buckets():
-            task = graph.create_task(f"Task {bucket}", self._do_write_variant,
-                                     [project, bucket], [])
+            task = graph.create_task(
+                "Converting Variants", self._do_write_variant,
+                [project, bucket], []
+            )
             bucket_tasks.append(task)
 
         if project.has_destination() or project.has_gpf_instance():
             hdfs_task = graph.create_task(
-                "hdfs copy", self._do_load_in_hdfs,
+                "Copying to HDFS", self._do_load_in_hdfs,
                 [project], [pedigree_task] + bucket_tasks)
 
             impala_task = graph.create_task(
-                "impala import", self._do_load_in_impala,
+                "Importing into Impala", self._do_load_in_impala,
                 [project], [hdfs_task])
 
             graph.create_task(
-                "study config", self._do_study_config,
+                "Creating a study config", self._do_study_config,
                 [project], [impala_task])
         return graph

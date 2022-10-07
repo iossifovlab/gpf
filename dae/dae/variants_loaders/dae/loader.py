@@ -95,7 +95,6 @@ class DenovoLoader(VariantsGenotypesLoader):
             denovo_filename,
             genome,
             families=families,
-            adjust_chrom_prefix=self._adjust_chrom_prefix,
             **self.params,
         )
         self.set_attribute("extra_attributes", extra_attributes)
@@ -137,7 +136,10 @@ class DenovoLoader(VariantsGenotypesLoader):
 
     def _is_in_regions(self, summary_variant):
         isin = [
-            r.isin(summary_variant.chrom, summary_variant.position)
+            r.isin(
+                self._adjust_chrom_prefix(summary_variant.chrom),
+                summary_variant.position
+            )
             if r is not None
             else True
             for r in self.regions
@@ -177,11 +179,6 @@ class DenovoLoader(VariantsGenotypesLoader):
         return fvs
 
     def _full_variants_iterator_impl(self):
-        for region in self.regions:
-            if region is None:
-                continue
-            region.chrom = self._adjust_chrom_prefix(region.chrom)
-
         group = self.denovo_df.groupby(
             ["chrom", "position", "reference", "alternative"],
             sort=False).agg(list)
@@ -448,7 +445,6 @@ class DenovoLoader(VariantsGenotypesLoader):
             denovo_best_state: Optional[str] = None,
             denovo_genotype: Optional[str] = None,
             denovo_sep: str = "\t",
-            adjust_chrom_prefix=None,
             **_kwargs) -> Tuple[pd.DataFrame, Any]:
         # FIXME
         # pylint: disable=too-many-arguments,too-many-branches
@@ -501,9 +497,6 @@ class DenovoLoader(VariantsGenotypesLoader):
             assert denovo_pos is not None
             chrom_col = raw_df.loc[:, denovo_chrom]
             pos_col = raw_df.loc[:, denovo_pos]
-
-        if adjust_chrom_prefix is not None:
-            chrom_col = tuple(map(adjust_chrom_prefix, chrom_col))
 
         if denovo_variant:
             variant_col = raw_df.loc[:, denovo_variant]
@@ -648,7 +641,6 @@ class DenovoLoader(VariantsGenotypesLoader):
             denovo_best_state: Optional[str] = None,
             denovo_genotype: Optional[str] = None,
             denovo_sep: str = "\t",
-            adjust_chrom_prefix=None,
             **kwargs) -> pd.DataFrame:
         """Load de Novo variants from a file.
 
@@ -719,7 +711,6 @@ class DenovoLoader(VariantsGenotypesLoader):
             denovo_best_state=denovo_best_state,
             denovo_genotype=denovo_genotype,
             denovo_sep=denovo_sep,
-            adjust_chrom_prefix=adjust_chrom_prefix,
             **kwargs
         )
         return denovo_df
@@ -1004,7 +995,11 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
                         closing(pysam.Tabixfile(self.toomany_filename)) \
                         as too_tbf:
 
-                    region_unadjusted = self._unadjust_chrom_prefix(region)
+                    region_unadjusted = (
+                        self._unadjust_chrom_prefix(region)
+                        if region is not None
+                        else None
+                    )
                     summary_iterator = sum_tbf.fetch(
                         region=region_unadjusted, parser=pysam.asTuple()
                     )

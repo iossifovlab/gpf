@@ -198,6 +198,7 @@ class ImportProject():
             params=variants_params,
             genome=reference_genome,
         )
+        self._check_chrom_prefix(loader, variants_params)
         return loader
 
     def get_partition_description_dict(self) -> Optional[dict]:
@@ -285,7 +286,9 @@ class ImportProject():
             genotype_storage_db = gpf_instance.genotype_storage_db
             storage_id = self.import_config.get("destination", {})\
                 .get("storage_id", None)
-            return genotype_storage_db.get_genotype_storage(storage_id)
+            if storage_id is not None:
+                return genotype_storage_db.get_genotype_storage(storage_id)
+            return genotype_storage_db.get_default_genotype_storage()
         # explicit storage config
         registry = GenotypeStorageRegistry()
         # FIXME: switch to using new storage configuration
@@ -433,6 +436,36 @@ class ImportProject():
         return self.import_config.get("processing_config", {})\
             .get(loader_type, {})
 
+    @staticmethod
+    def _check_chrom_prefix(loader, variants_params):
+        prefix = variants_params.get("add_chrom_prefix")
+        if prefix:
+            all_already_have_prefix = True
+            for chrom in loader.chromosomes:
+                # the loader should have already added the prefix
+                assert chrom.startswith(prefix)
+                if not chrom[len(prefix):].startswith(prefix):
+                    all_already_have_prefix = False
+                    break
+            if all_already_have_prefix and len(loader.chromosomes):
+                raise ValueError(
+                    f"All chromosomes already have the prefix {prefix}. "
+                    "Consider removing add_chrom_prefix."
+                )
+
+        prefix = variants_params.get("del_chrom_prefix")
+        if prefix:
+            try:
+                # the chromosomes getter will assert for us if the prefix
+                # can be removed or not. If there is no prefix to begin with
+                # we will get an assertion error
+                loader.chromosomes
+            except AssertionError as exp:
+                raise ValueError(
+                    f"Chromosomes already missing the prefix {prefix}. "
+                    "Consider removing del_chrom_prefix."
+                ) from exp
+
 
 class ImportConfigNormalizer:
     """Class to normalize import configs.
@@ -541,10 +574,18 @@ def run(import_config_fn, executor=SequentialExecutor()):
 
 
 def run_with_project(project, executor=SequentialExecutor()):
+    """Import the project using the provided executor."""
     storage = project.get_import_storage()
 
     task_graph = storage.generate_import_task_graph(project)
-    executor.execute(task_graph)
+    tasks_iter = executor.execute(task_graph)
+    last_stagenames = _get_current_stagenames(executor)
+    _print_stagenames(last_stagenames)
+    for _ in tasks_iter:
+        current_stagenames = _get_current_stagenames(executor)
+        if current_stagenames != last_stagenames:
+            last_stagenames = current_stagenames
+            _print_stagenames(last_stagenames)
 
 
 _REGISTERED_IMPORT_STORAGE_FACTORIES: \
@@ -590,3 +631,18 @@ def register_import_storage_factory(
     if storage_type in _REGISTERED_IMPORT_STORAGE_FACTORIES:
         logger.warning("overwriting import storage type: %s", storage_type)
     _REGISTERED_IMPORT_STORAGE_FACTORIES[storage_type] = factory
+
+
+def _get_current_stagenames(executor):
+    # we use the task name is also the stagename
+    return {
+        t.name
+        for t in executor.get_active_tasks()
+        if t.name is not None
+    }
+
+
+def _print_stagenames(stagenames):
+    if stagenames:
+        stagenames_str = ", ".join(stagenames)
+        print(f"Executing stage: {stagenames_str}")

@@ -85,9 +85,9 @@ Import Tools configuration format
         (OR)
         embedded-annotation
 
-    (optional by default default storage of gpf instance)
+    (optional by default use the default storage of the gpf instance)
     destination:
-        gpf_storage_id: "id in gpf_instance"
+        storage_id: "id in gpf_instance"
         (OR)
         storage_type: impala_schema_1
             hdfs:

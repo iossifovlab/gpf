@@ -103,7 +103,6 @@ def _cnv_loader(
         filepath_or_buffer: Union[str, Path, TextIO],
         families: FamiliesData,
         genome: ReferenceGenome,
-        regions: List[Region],
         cnv_chrom: Optional[str] = None,
         cnv_start: Optional[str] = None,
         cnv_end: Optional[str] = None,
@@ -115,8 +114,6 @@ def _cnv_loader(
         cnv_plus_values: Optional[List[str]] = None,
         cnv_minus_values: Optional[List[str]] = None,
         cnv_sep: str = "\t",
-        add_chrom_prefix: Optional[str] = None,
-        del_chrom_prefix: Optional[str] = None,
         **kwargs) -> pd.DataFrame:
     """Flexible load of CNV variants.
 
@@ -131,7 +128,6 @@ def _cnv_loader(
         filepath_or_buffer,
         families,
         genome,
-        regions=regions,
         cnv_chrom=cnv_chrom,
         cnv_start=cnv_start,
         cnv_end=cnv_end,
@@ -143,8 +139,7 @@ def _cnv_loader(
         cnv_plus_values=cnv_plus_values,
         cnv_minus_values=cnv_minus_values,
         cnv_sep=cnv_sep,
-        add_chrom_prefix=add_chrom_prefix,
-        del_chrom_prefix=del_chrom_prefix)
+    )
 
     data = []
     for record in variant_generator:
@@ -202,17 +197,11 @@ class CNVLoader(VariantsGenotypesLoader):
         self.set_attribute("source_type", "cnv")
         self.reset_regions(regions)
 
-        regions_list: List[Region] = []
-        if regions is not None:
-            regions_list = [Region.from_str(r) for r in regions]
-        logger.info("CNV loader with regions list: %s", regions_list)
-
         logger.info("CNV loader params: %s", self.params)
         self.cnv_df = _cnv_loader(
             cnv_filename,
             families,
             genome,
-            regions_list,
             **self.params,
         )
 
@@ -220,6 +209,9 @@ class CNVLoader(VariantsGenotypesLoader):
 
     def _init_chromosomes(self):
         self.chromosomes = list(self.cnv_df.chrom.unique())
+        self.chromosomes = [
+            self._adjust_chrom_prefix(chrom) for chrom in self.chromosomes
+        ]
 
         all_chromosomes = self.genome.chromosomes
         if all(chrom in set(all_chromosomes) for chrom in self.chromosomes):
@@ -342,7 +334,8 @@ class CNVLoader(VariantsGenotypesLoader):
             return True
         isin = [
             r.isin(  # type: ignore
-                summary_variant.chrom, summary_variant.position
+                self._adjust_chrom_prefix(summary_variant.chrom),
+                summary_variant.position
             )
             for r in self.regions
         ]

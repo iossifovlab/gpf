@@ -5,11 +5,9 @@ from typing import Callable, List, Optional, Dict, Any, Tuple, \
 
 import numpy as np
 
-from dae.utils.regions import Region
 from dae.utils.variant_utils import get_interval_locus_ploidy
 
 from dae.variants_loaders.raw.flexible_variant_loader import \
-    adjust_chrom_prefix, \
     flexible_variant_loader
 
 from dae.variants.core import Allele
@@ -318,7 +316,6 @@ def flexible_cnv_loader(
         filepath_or_buffer: Union[str, Path, TextIO],
         families: FamiliesData,
         genome: ReferenceGenome,
-        regions: List[Region],
         cnv_chrom: Optional[str] = None,
         cnv_start: Optional[str] = None,
         cnv_end: Optional[str] = None,
@@ -330,8 +327,6 @@ def flexible_cnv_loader(
         cnv_plus_values: Optional[List[str]] = None,
         cnv_minus_values: Optional[List[str]] = None,
         cnv_sep: str = "\t",
-        add_chrom_prefix: Optional[str] = None,
-        del_chrom_prefix: Optional[str] = None,
         **_kwargs) -> Generator[Dict[str, Any], None, None]:
     """Load variants from CNVs input and transform them into DataFrames.
 
@@ -368,19 +363,10 @@ def flexible_cnv_loader(
             cnv_plus_values,
             cnv_minus_values)
 
-        transformers.append(adjust_chrom_prefix(
-            add_chrom_prefix, del_chrom_prefix))
-
-        def regions_filter(rec):
-            if len(regions) == 0:
-                return True
-            chrom = rec["chrom"]
-            pos = rec["pos"]
-            return any(r.isin(chrom, pos) for r in regions)
-
         variant_generator = flexible_variant_loader(
             infile, header, line_splitter, transformers,
-            filters=[regions_filter])
+            filters=[]
+        )
 
         for record in variant_generator:
             yield record

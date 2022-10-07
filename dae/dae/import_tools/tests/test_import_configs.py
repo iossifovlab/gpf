@@ -214,3 +214,54 @@ def test_project_input_dir(input_dir):
     )
     project = import_tools.ImportProject.build_from_config(config, "/dir")
     assert project.input_dir == os.path.join("/dir", input_dir)
+
+
+def test_get_genotype_storage_no_explicit_config():
+    config = dict(
+        id="test_import",
+        input={},
+    )
+    project = import_tools.ImportProject.build_from_config(config)
+    genotype_storage = project.get_genotype_storage()
+    assert genotype_storage is not None
+    assert (
+        genotype_storage.storage_id
+        == project.get_gpf_instance().genotype_storage_db
+        .get_default_genotype_storage().storage_id
+    )
+
+
+def test_add_chrom_prefix_already_present(resources_dir):
+    config = {
+        "id": "test_import",
+        "input": {
+            "pedigree": {
+                "file": f"{resources_dir}/vcf_import/multivcf.ped",
+            },
+            "vcf": {
+                "files": [f"{resources_dir}/vcf_prefix/with_prefix.vcf"],
+                "add_chrom_prefix": "chr",
+            }
+        }
+    }
+    project = import_tools.ImportProject.build_from_config(config)
+    with pytest.raises(ValueError):
+        project._get_variant_loader("vcf")
+
+
+def test_del_chrom_prefix_already_deleted(resources_dir):
+    config = {
+        "id": "test_import",
+        "input": {
+            "pedigree": {
+                "file": f"{resources_dir}/vcf_import/multivcf.ped",
+            },
+            "vcf": {
+                "files": [f"{resources_dir}/vcf_prefix/without_prefix.vcf"],
+                "del_chrom_prefix": "chr",
+            }
+        }
+    }
+    project = import_tools.ImportProject.build_from_config(config)
+    with pytest.raises(ValueError):
+        project._get_variant_loader("vcf")
