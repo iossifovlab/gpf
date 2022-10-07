@@ -9,7 +9,7 @@ import pandas as pd
 
 from dae.utils.helpers import str2bool
 from dae.variants.attributes import Role, Sex, Status
-from dae.backends.raw.loader import CLILoader, CLIArgument
+from dae.variants_loaders.raw.loader import CLILoader, CLIArgument
 
 from dae.pedigrees.family import FamiliesData, Person, PEDIGREE_COLUMN_NAMES
 from dae.pedigrees.family_role_builder import FamilyRoleBuilder

@@ -12,7 +12,7 @@ from abc import ABC, abstractmethod
 
 from typing import Dict, List, cast
 
-from dae.backends.query_runners import QueryResult
+from dae.query_variants.query_runners import QueryResult
 from dae.pedigrees.family import FamiliesData
 from dae.person_sets import PersonSetCollection
 from dae.utils.effect_utils import expand_effect_types

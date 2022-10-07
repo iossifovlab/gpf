@@ -1,34 +1,39 @@
 import argparse
 import os
 import sys
+import logging
 from abc import abstractmethod, ABC
 from copy import deepcopy
 from dataclasses import dataclass
+from functools import cache
 from typing import Optional, cast
+from typing import Callable, Dict, List, Tuple, Any
 
-from box import Box
-
-from dae.backends.cnv.loader import CNVLoader
-from dae.backends.dae.loader import DaeTransmittedLoader, DenovoLoader
-from dae.backends.storage.genotype_storage_factory import (
-    GenotypeStorageFactory
-)
-from dae.backends.vcf.loader import VcfLoader
-from dae.backends.impala.parquet_io import ParquetPartitionDescriptor
-from dae.backends.raw.loader import AnnotationPipelineDecorator,\
+from dae.variants_loaders.cnv.loader import CNVLoader
+from dae.variants_loaders.dae.loader import DaeTransmittedLoader, DenovoLoader
+from dae.variants_loaders.vcf.loader import VcfLoader
+from dae.variants_loaders.raw.loader import AnnotationPipelineDecorator,\
     EffectAnnotationDecorator, VariantsLoader
+
+from dae.genotype_storage.genotype_storage import GenotypeStorage
+from dae.genotype_storage.genotype_storage_registry import (
+    GenotypeStorageRegistry
+)
+from dae.parquet.schema1.parquet_io import ParquetPartitionDescriptor
 from dae.configuration.gpf_config_parser import GPFConfigParser
-from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.import_tools.task_graph import DaskExecutor, SequentialExecutor,\
     TaskGraph
 from dae.pedigrees.family import FamiliesData
 from dae.configuration.schemas.import_config import import_config_schema
 from dae.pedigrees.loader import FamiliesLoader
 from dae.utils import fs_utils
-from dae.backends.impala.import_commons import MakefilePartitionHelper,\
+from dae.impala_storage.schema1.import_commons import MakefilePartitionHelper,\
     construct_import_annotation_pipeline, construct_import_effect_annotator
 from dae.dask.client_factory import DaskClient
 from dae.utils.statistics import StatsCollection
+
+
+logger = logging.getLogger(__file__)
 
 
 @dataclass(frozen=True)
@@ -46,7 +51,8 @@ class ImportProject():
     (e.g. loaders, family data and so one).
     """
 
-    def __init__(self, import_config, base_input_dir):
+    # pylint: disable=too-many-public-methods
+    def __init__(self, import_config, base_input_dir, gpf_instance=None):
         """Create a new project from the provided config.
 
         It is best not to call this ctor directly but to use one of the
@@ -59,11 +65,11 @@ class ImportProject():
             assert len_files == 1, "Support for multiple denovo files is NYI"
 
         self._base_input_dir = base_input_dir
-
+        self._gpf_instance = gpf_instance
         self.stats: StatsCollection = StatsCollection()
 
     @staticmethod
-    def build_from_config(import_config, base_input_dir=""):
+    def build_from_config(import_config, base_input_dir="", gpf_instance=None):
         """Create a new project from the provided config.
 
         The config is first validated and normalized.
@@ -74,10 +80,11 @@ class ImportProject():
                                                         import_config_schema)
         normalizer = ImportConfigNormalizer()
         import_config = normalizer.normalize(import_config)
-        return ImportProject(import_config, base_input_dir)
+        return ImportProject(
+            import_config, base_input_dir, gpf_instance=gpf_instance)
 
     @staticmethod
-    def build_from_file(import_filename):
+    def build_from_file(import_filename, gpf_instance=None):
         """Create a new project from the provided config filename.
 
         The file is first parsed, validated and normalized. The path to the
@@ -89,20 +96,40 @@ class ImportProject():
         base_input_dir = os.path.dirname(os.path.realpath(import_filename))
         import_config = GPFConfigParser.parse_and_interpolate_file(
             import_filename)
-        return ImportProject.build_from_config(import_config, base_input_dir)
+        return ImportProject.build_from_config(
+            import_config, base_input_dir, gpf_instance=gpf_instance)
 
-    def get_pedigree(self) -> FamiliesData:
-        """Load, parse and return the pedigree data."""
+    def get_pedigree_params(self) -> Tuple[str, Dict[str, Any]]:
+        """Get params for loading the pedigree."""
         families_filename = self.import_config["input"]["pedigree"]["file"]
         families_filename = fs_utils.join(self.input_dir, families_filename)
 
         families_params = self.import_config["input"]["pedigree"]
         families_params = self._add_loader_prefix(families_params, "ped_")
 
+        return families_filename, families_params
+
+    def get_pedigree_loader(self) -> FamiliesLoader:
+        families_filename, families_params = self.get_pedigree_params()
         families_loader = FamiliesLoader(
             families_filename, **families_params
         )
+        return families_loader
+
+    def get_pedigree(self) -> FamiliesData:
+        """Load, parse and return the pedigree data."""
+        families_loader = self.get_pedigree_loader()
         return families_loader.load()
+
+    @cache
+    def get_import_variants_types(self) -> set[str]:
+        """Collect all variant import types used in the project."""
+        result = set()
+        for loader_type in ["denovo", "vcf", "cnv", "dae"]:
+            config = self.import_config["input"].get(loader_type)
+            if config is not None:
+                result.add(loader_type)
+        return result
 
     def get_import_variants_buckets(self) -> list[Bucket]:
         """Split variant files into buckets enabling parallel processing."""
@@ -114,18 +141,24 @@ class ImportProject():
                     buckets.append(bucket)
         return buckets
 
-    def get_variant_loader(self, bucket, reference_genome=None):
+    def get_variant_loader(
+            self,
+            bucket: Optional[Bucket] = None, loader_type: Optional[str] = None,
+            reference_genome=None):
         """Get the appropriate variant loader for the specified bucket."""
-        loader = self._get_variant_loader(bucket.type, reference_genome)
-        loader.reset_regions(bucket.regions)
+        if bucket is None and loader_type is None:
+            raise ValueError("loader_type or bucket is required")
+        if bucket is not None:
+            loader_type = bucket.type
+        loader = self._get_variant_loader(loader_type, reference_genome)
+        if bucket is not None and bucket.region_bin != "all":
+            loader.reset_regions(bucket.regions)
         return loader
 
-    def _get_variant_loader(self, loader_type, reference_genome=None) \
-            -> VariantsLoader:
+    def get_variant_params(self, loader_type):
+        """Return variant loader filenames and params."""
         assert loader_type in self.import_config["input"],\
             f"No input config for loader {loader_type}"
-        if reference_genome is None:
-            reference_genome = self.get_gpf_instance().reference_genome
 
         loader_config = self.import_config["input"][loader_type]
         if loader_type == "vcf" and "chromosomes" in loader_config:
@@ -143,7 +176,16 @@ class ImportProject():
             assert len(variants_filenames) == 1,\
                 f"Support for multiple {loader_type} files is NYI"
             variants_filenames = variants_filenames[0]
+        return variants_filenames, variants_params
 
+    def _get_variant_loader(self, loader_type, reference_genome=None) \
+            -> VariantsLoader:
+        assert loader_type in self.import_config["input"],\
+            f"No input config for loader {loader_type}"
+        if reference_genome is None:
+            reference_genome = self.get_gpf_instance().reference_genome
+        variants_filenames, variants_params = \
+            self.get_variant_params(loader_type)
         loader_cls = {
             "denovo": DenovoLoader,
             "vcf": VcfLoader,
@@ -183,25 +225,32 @@ class ImportProject():
 
     def get_gpf_instance(self):
         """Create and return a gpf instance as desribed in the config."""
-        instance_config = self.import_config.get("gpf_instance", {})
-        return GPFInstance(work_dir=instance_config.get("path", None))
+        if self._gpf_instance is None:
+            instance_config = self.import_config.get("gpf_instance", {})
+            # pylint: disable=import-outside-toplevel
+            from dae.gpf_instance.gpf_instance import GPFInstance
+            self._gpf_instance = \
+                GPFInstance(work_dir=instance_config.get("path", None))
+        return self._gpf_instance
 
+    @cache
     def get_import_storage(self):
         """Create an import storage as described in the import config."""
-        # pylint: disable=import-outside-toplevel
-        from dae.import_tools.impala_schema1 import ImpalaSchema1ImportStorage
-        from dae.import_tools.schema2_import_storage import (
-            Schema2ImportStorage
-        )
-        if self._is_schema2():
-            return Schema2ImportStorage()
-        return ImpalaSchema1ImportStorage()
+        storage_type = self._storage_type()
+        factory = get_import_storage_factory(storage_type)
+        return factory()
 
     @property
     def work_dir(self):
         """Where to store generated import files (e.g. parquet files)."""
         return self.import_config.get("processing_config", {})\
             .get("work_dir", "")
+
+    @property
+    def include_reference(self):
+        """Check if the import should include ref allele in the output data."""
+        return self.import_config.get("processing_config", {})\
+            .get("include_reference", False)
 
     @property
     def input_dir(self):
@@ -238,15 +287,10 @@ class ImportProject():
                 .get("storage_id", None)
             return genotype_storage_db.get_genotype_storage(storage_id)
         # explicit storage config
-        genotype_storage_db = GenotypeStorageFactory(Box({
-            "storage": {
-                "dummy_id": self.import_config["destination"]
-            },
-            "genotype_storage": {
-                "default": "dummy_id"
-            }
-        }))
-        return genotype_storage_db.get_genotype_storage(None)
+        registry = GenotypeStorageRegistry()
+        # FIXME: switch to using new storage configuration
+        return registry.register_storage_config(
+            self.import_config["destination"])
 
     def has_destination(self) -> bool:
         """Return if there is a *destination* section in the import config."""
@@ -257,7 +301,9 @@ class ImportProject():
             .get(bucket.type, 20_000)
         return cast(int, res)
 
-    def build_variants_loader_pipeline(self, variants_loader, gpf_instance):
+    def build_variants_loader_pipeline(
+            self, variants_loader: VariantsLoader,
+            gpf_instance) -> VariantsLoader:
         """Create an annotation pipeline around variants_loader."""
         effect_annotator = construct_import_effect_annotator(gpf_instance)
 
@@ -274,33 +320,26 @@ class ImportProject():
             variants_loader = AnnotationPipelineDecorator(
                 variants_loader, annotation_pipeline
             )
-
         return variants_loader
 
-    def _is_schema2(self) -> bool:
-        schema_version: int = 2
-
+    def _storage_type(self) -> str:
         if not self.has_destination():
             # get default storage schema from GPF instance
             gpf_instance = self.get_gpf_instance()
-            storage_id = gpf_instance\
-                .genotype_storage_db.default_storage_id
-            gpf_instance = self.get_gpf_instance()
-            schema_version = gpf_instance.dae_config\
-                .storage[storage_id].get("schema_version", 0)
-
-            return schema_version == 2
+            storage: GenotypeStorage = gpf_instance\
+                .genotype_storage_db.get_default_genotype_storage()
+            return storage.get_storage_type()
 
         destination = self.import_config["destination"]
         if "storage_id" in destination:
             storage_id = destination["storage_id"]
             gpf_instance = self.get_gpf_instance()
-            schema_version = gpf_instance.dae_config\
-                .storage[storage_id].get("schema_version", 0)
-        else:
-            schema_version = destination["schema_version"]
+            storage = gpf_instance\
+                .genotype_storage_db\
+                .get_genotype_storage(storage_id)
+            return storage.get_storage_type()
 
-        return schema_version == 2
+        return cast(str, destination["storage_type"])
 
     @staticmethod
     def _get_default_bucket_index(loader_type):
@@ -320,6 +359,19 @@ class ImportProject():
                 res[prefix + k] = val
             else:
                 res[k] = val
+        return res
+
+    @staticmethod
+    def del_loader_prefix(params, prefix):
+        """Remove prefix from parameter keys."""
+        res = {}
+        for k, val in params.items():
+            if val is None:
+                continue
+            key = k
+            if k.startswith(prefix):
+                key = k[len(prefix):]
+            res[key] = val
         return res
 
     def _loader_region_bins(self, loader_args, loader_type):
@@ -452,7 +504,7 @@ class ImportConfigNormalizer:
         return res
 
 
-class AbstractImportStorage(ABC):
+class ImportStorage(ABC):
     """Defines abstract base class for import storages."""
 
     def __init__(self):
@@ -493,3 +545,48 @@ def run_with_project(project, executor=SequentialExecutor()):
 
     task_graph = storage.generate_import_task_graph(project)
     executor.execute(task_graph)
+
+
+_REGISTERED_IMPORT_STORAGE_FACTORIES: \
+    Dict[str, Callable[[], ImportStorage]] = {}
+_EXTENTIONS_LOADED = False
+
+
+def _load_import_storage_factory_plugins():
+    # pylint: disable=global-statement
+    global _EXTENTIONS_LOADED
+    if _EXTENTIONS_LOADED:
+        return
+    # pylint: disable=import-outside-toplevel
+    from importlib_metadata import entry_points
+    discovered_entries = entry_points(group="dae.import_tools.storages")
+    for entry in discovered_entries:
+        storage_type = entry.name
+        factory = entry.load()
+        if storage_type in _REGISTERED_IMPORT_STORAGE_FACTORIES:
+            logger.warning("overwriting import storage type: %s", storage_type)
+        _REGISTERED_IMPORT_STORAGE_FACTORIES[storage_type] = factory
+    _EXTENTIONS_LOADED = True
+
+
+def get_import_storage_factory(
+        storage_type: str) -> Callable[[], ImportStorage]:
+    """Find and return a factory function for creation of a storage type."""
+    _load_import_storage_factory_plugins()
+    if storage_type not in _REGISTERED_IMPORT_STORAGE_FACTORIES:
+        raise ValueError(f"unsupported import storage type: {storage_type}")
+    return _REGISTERED_IMPORT_STORAGE_FACTORIES[storage_type]
+
+
+def get_import_storage_types() -> List[str]:
+    _load_import_storage_factory_plugins()
+    return list(_REGISTERED_IMPORT_STORAGE_FACTORIES.keys())
+
+
+def register_import_storage_factory(
+        storage_type: str,
+        factory: Callable[[], ImportStorage]) -> None:
+    _load_import_storage_factory_plugins()
+    if storage_type in _REGISTERED_IMPORT_STORAGE_FACTORIES:
+        logger.warning("overwriting import storage type: %s", storage_type)
+    _REGISTERED_IMPORT_STORAGE_FACTORIES[storage_type] = factory

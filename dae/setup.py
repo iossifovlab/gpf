@@ -50,6 +50,16 @@ setuptools.setup(
     default_grr=dae.genomic_resources.genomic_context:DefaultRepositoryContextProvider.register
     gpf_instance=dae.gpf_instance_plugin.gpf_instance_context_plugin:init_gpf_instance_genomic_context_plugin
 
+    [dae.genotype_storage.factories]
+    impala=dae.impala_storage.schema1.impala_genotype_storage:ImpalaGenotypeStorage
+    impala2=dae.impala_storage.schema2.schema2_genotype_storage:Schema2GenotypeStorage
+    filesystem=dae.filesystem_storage.in_memory.filesystem_genotype_storage:FilesystemGenotypeStorage
+
+    [dae.import_tools.storages]
+    impala=dae.impala_storage.schema1.impala_schema1:ImpalaSchema1ImportStorage
+    impala2=dae.impala_storage.schema2.schema2_import_storage:Schema2ImportStorage
+    filesystem=dae.filesystem_storage.in_memory.filesystem_import_storage:FilesystemImportStorage
+
     [console_scripts]
 
     grr_manage=dae.genomic_resources.cli:cli_manage

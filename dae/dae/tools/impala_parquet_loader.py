@@ -4,13 +4,14 @@ import sys
 import argparse
 
 from dae.gpf_instance.gpf_instance import GPFInstance
-from dae.backends.impala.import_commons import save_study_config
+from dae.impala_storage.schema1.import_commons import save_study_config
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.study_config_builder import StudyConfigBuilder
 from dae.utils.dict_utils import recursive_dict_update
 
 
 def parse_cli_arguments(argv, gpf_instance):
+    """Configure and create an CLI argument parser."""
     parser = argparse.ArgumentParser(
         description="loading study parquet files in impala db",
         conflict_handler="resolve",
@@ -74,18 +75,20 @@ def parse_cli_arguments(argv, gpf_instance):
     return argv
 
 
-def main(argv=sys.argv[1:], gpf_instance=None):
+def main(argv=None, gpf_instance=None):
+    """Upload parquet dataset into Impala."""
     if gpf_instance is None:
         gpf_instance = GPFInstance()
 
-    argv = parse_cli_arguments(argv, gpf_instance)
+    argv = parse_cli_arguments(argv or sys.argv[1:], gpf_instance)
 
     genotype_storage_db = gpf_instance.genotype_storage_db
     genotype_storage = genotype_storage_db.get_genotype_storage(
         argv.genotype_storage
     )
-    if not genotype_storage or (
-            genotype_storage and not genotype_storage.is_impala()):
+    if not genotype_storage or \
+            (genotype_storage
+             and genotype_storage.get_storage_type() != "impala"):
         print("missing or non-impala genotype storage")
         return
 

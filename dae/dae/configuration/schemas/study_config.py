@@ -1,7 +1,7 @@
-from dae.configuration.gpf_config_parser import (
-    validate_existing_path,
-    validate_path,
-)
+from dae.configuration.utils import \
+    validate_existing_path, \
+    validate_path
+
 from dae.configuration.schemas.person_sets import person_set_collections_schema
 
 phenotype_schema = {

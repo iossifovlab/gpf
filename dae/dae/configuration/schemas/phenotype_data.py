@@ -1,4 +1,4 @@
-from dae.configuration.gpf_config_parser import validate_existing_path
+from dae.configuration.utils import validate_existing_path
 
 regression_schema = {
     "instrument_name": {"type": "string"},

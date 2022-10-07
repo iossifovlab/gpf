@@ -1,7 +1,8 @@
 import os
 import pytest
 
-from dae.configuration.gpf_config_parser import validate_path
+from dae.configuration.utils import validate_path
+
 
 sample_conf_schema_1 = {
     "id": {"type": "string"},

@@ -2,8 +2,10 @@ import os
 import logging
 from typing import Union
 from dae.pedigrees.family import FamiliesData
-from dae.backends.impala.parquet_io import PartitionDescriptor as Schema1PD
-from dae.backends.schema2.parquet_io import PartitionDescriptor as Schema2PD
+from dae.parquet.schema1.parquet_io import \
+    PartitionDescriptor as Schema1PD
+from dae.parquet.schema2.parquet_io import \
+    PartitionDescriptor as Schema2PD
 
 
 logger = logging.getLogger(__file__)
@@ -34,6 +36,7 @@ class ParquetWriter:
             partition_description,
             bucket_index=bucket.index,
             rows=rows,
+            include_reference=project.include_reference,
         )
 
     @staticmethod

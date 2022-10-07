@@ -9,9 +9,17 @@ dae Interface
    annotation
    effect_annotation
    variants
-   backends
    pedigrees
+   variants_loaders
+
    import_tools
+
+   parquet
+   query_variants
+   genotype_storage
+   filesystem_storage
+   impala_storage
+
    configuration
    studies
    pheno

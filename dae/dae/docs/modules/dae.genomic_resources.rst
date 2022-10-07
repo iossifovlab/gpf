@@ -124,14 +124,6 @@ dae.genomic\_resources.repository\_factory module
    :undoc-members:
    :show-inheritance:
 
-dae.genomic\_resources.test\_tools module
------------------------------------------
-
-.. automodule:: dae.genomic_resources.test_tools
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 dae.genomic\_resources.testing module
 -------------------------------------
 

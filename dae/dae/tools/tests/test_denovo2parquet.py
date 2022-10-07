@@ -5,7 +5,7 @@ import glob
 import pyarrow.parquet as pq
 
 from dae.tools.denovo2parquet import main
-from dae.backends.impala.parquet_io import ParquetPartitionDescriptor
+from dae.parquet.schema1.parquet_io import ParquetPartitionDescriptor
 
 
 def test_denovo2parquet_denovo(
@@ -16,8 +16,8 @@ def test_denovo2parquet_denovo(
         "simple",
         "-o",
         temp_filename,
-        dae_denovo_config.family_filename,
-        dae_denovo_config.denovo_filename,
+        dae_denovo_config.pedigree,
+        dae_denovo_config.denovo,
     ]
 
     main(argv, gpf_instance=gpf_instance_2019)
@@ -50,8 +50,8 @@ def test_denovo2parquet_denovo_partition(
         partition_description,
         "-o",
         temp_dirname,
-        dae_denovo_config.family_filename,
-        dae_denovo_config.denovo_filename,
+        dae_denovo_config.pedigree,
+        dae_denovo_config.denovo,
     ]
 
     main(argv, gpf_instance=gpf_instance_2019)

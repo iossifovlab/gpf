@@ -1,7 +1,7 @@
-from dae.configuration.gpf_config_parser import (
-    validate_existing_path,
-    validate_path,
-)
+from dae.configuration.utils import \
+    validate_existing_path, \
+    validate_path
+
 
 config_reference_schema = {
     "conf_file": {
@@ -72,7 +72,19 @@ repository_schema = {
     },
 }
 grr_schema = {
-    **repository_schema,
+    "id": {"type": "string", },
+    "type": {"type": "string", },
+    "url": {"type": "string", },
+    "directory": {
+        "type": "string",
+        "required": False,
+        "coerce": "abspath",
+    },
+    "cache_dir": {
+        "type": "string",
+        "check_with": validate_path,
+        "coerce": "abspath",
+    },
     "children": {"type": "list", "schema": {
         "type": "dict",
         "schema": repository_schema
@@ -81,28 +93,8 @@ grr_schema = {
 }
 
 storage_schema = {
-    "storage_type": {"type": "string", "allowed": ["impala", "filesystem"]},
-    "schema_version": {"type": "integer", "allowed": [1, 2], "default": 1},
-    "dir": {
-        "type": "string",
-        "check_with": validate_path,
-        "coerce": "abspath",
-    },
-    "impala": {
-        "type": "dict",
-        "dependencies": {"storage_type": "impala"},
-        "schema": impala_schema,
-    },
-    "hdfs": {
-        "type": "dict",
-        "dependencies": {"storage_type": "impala"},
-        "schema": hdfs_schema,
-    },
-    "rsync": {
-        "type": "dict",
-        "schema": rsync_schema,
-        "dependencies": {"storage_type": "impala"},
-    }
+    "storage_type": {"type": "string"},
+    "id": {"type": "string"},
 }
 
 gene_scores_db_schema = {
@@ -140,16 +132,20 @@ dae_conf_schema = {
         "type": "dict",
         "schema": {"wd": {"type": "string"}, "data_dir": {"type": "string"}},
     },
-    # FIXME This is only used for the default genotype storage param
-    # It should be a key in the root section
+
     "genotype_storage": {
         "type": "dict",
-        "schema": {"default": {"type": "string"}},
-        "default": {"default": "genotype_filesystem"},
-    },
-    "storage": {
-        "type": "dict",
-        "valuesrules": {"type": "dict", "schema": storage_schema},
+        "schema": {
+            "default": {"type": "string"},
+            "storages": {
+                "type": "list",
+                "valuesrules": {
+                    "type": "dict",
+                    "schema": storage_schema,
+                    "allow_unknown": True,
+                },
+            }
+        },
     },
     "studies": {
         "type": "dict",

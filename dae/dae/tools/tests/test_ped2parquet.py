@@ -1,3 +1,4 @@
+# pylint: disable=W0621,C0114,C0116,W0212,W0613,no-member
 import os
 import pytest
 
@@ -5,7 +6,7 @@ import pyarrow.parquet as pq
 
 from dae.pedigrees.loader import FamiliesLoader
 from dae.pedigrees.family import FamiliesData
-from dae.backends.impala.parquet_io import (
+from dae.parquet.schema1.parquet_io import (
     ParquetPartitionDescriptor,
     ParquetManager,
 )
@@ -18,8 +19,8 @@ def test_partition_descriptor(global_dae_fixtures_dir):
         f"{global_dae_fixtures_dir}/"
         f"partition_descriptor/partition_description.conf"
     )
-    pd = ParquetPartitionDescriptor.from_config(pd_filename)
-    assert pd is not None
+    partition_descriptor = ParquetPartitionDescriptor.from_config(pd_filename)
+    assert partition_descriptor is not None
 
 
 @pytest.mark.parametrize(
@@ -83,14 +84,12 @@ def test_ped2parquet_patition(
     families = FamiliesData.from_pedigree_df(df)
 
     assert "f1" in families
-    f1 = families["f1"]
-    print([p.family_bin for p in f1.persons.values()])
-    assert all([p.family_bin == 9 for p in f1.persons.values()])
+    fam1 = families["f1"]
+    assert all(p.family_bin == 9 for p in fam1.persons.values())
 
     assert "f2" in families
-    f2 = families["f2"]
-    print([p.family_bin for p in f2.persons.values()])
-    assert all([p.family_bin == 6 for p in f2.persons.values()])
+    fam2 = families["f2"]
+    assert all(p.family_bin == 6 for p in fam2.persons.values())
 
 
 @pytest.mark.parametrize(
@@ -106,13 +105,13 @@ def test_ped2parquet_outfilename(mocker, pedigree_filename, parquet_filename):
 
     mocker.patch("dae.pedigrees.loader.FamiliesLoader.load")
     mocker.patch(
-        "dae.backends.impala.parquet_io.ParquetManager.families_to_parquet"
+        "dae.parquet.schema1.parquet_io.ParquetManager.families_to_parquet"
     )
 
     argv = ["pedigree_A.ped"]
     main(argv)
 
-    FamiliesLoader.load.assert_called_once()
+    FamiliesLoader.load.assert_called_once()  # pylint: disable=no-member
     ParquetManager.families_to_parquet.assert_called_once()
     call_args = ParquetManager.families_to_parquet.call_args
 

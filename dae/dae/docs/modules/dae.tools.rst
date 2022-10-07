@@ -44,14 +44,6 @@ dae.tools.dae2parquet module
    :undoc-members:
    :show-inheritance:
 
-dae.tools.dae\_liftover module
-------------------------------
-
-.. automodule:: dae.tools.dae_liftover
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 dae.tools.denovo2parquet module
 -------------------------------
 
@@ -72,14 +64,6 @@ dae.tools.denovo2vcf module
 ---------------------------
 
 .. automodule:: dae.tools.denovo2vcf
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-dae.tools.denovo\_liftover module
----------------------------------
-
-.. automodule:: dae.tools.denovo_liftover
    :members:
    :undoc-members:
    :show-inheritance:
@@ -280,14 +264,6 @@ dae.tools.simple\_study\_import module
 --------------------------------------
 
 .. automodule:: dae.tools.simple_study_import
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-dae.tools.stats\_liftover module
---------------------------------
-
-.. automodule:: dae.tools.stats_liftover
    :members:
    :undoc-members:
    :show-inheritance:

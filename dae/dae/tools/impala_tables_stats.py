@@ -8,7 +8,7 @@ from contextlib import closing
 
 
 from dae.gpf_instance.gpf_instance import GPFInstance
-from dae.backends.impala.impala_variants import ImpalaVariants
+from dae.impala_storage.schema1.impala_variants import ImpalaVariants
 
 
 logger = logging.getLogger("impala_tables_stats")

@@ -7,11 +7,9 @@ gene_models:
 
 genotype_storage:
   default: genotype_filesystem
-
-storage:
-
-  genotype_filesystem:
-    dir: "studies"
+  storages:
+  - id: genotype_filesystem
+    dir: "%(wd)s/studies"
     storage_type: filesystem
 
 phenotype_data:

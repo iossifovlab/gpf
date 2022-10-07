@@ -7,7 +7,7 @@ import logging
 import toml
 
 from dae.gpf_instance.gpf_instance import GPFInstance
-from dae.backends.impala.parquet_io import NoPartitionDescriptor, \
+from dae.parquet.schema1.parquet_io import NoPartitionDescriptor, \
     ParquetPartitionDescriptor
 
 
@@ -15,13 +15,14 @@ logger = logging.getLogger(__name__)
 
 
 def parse_cli_arguments(argv, gpf_instance):
+    """Configure and create a CLI arguments parser."""
     parser = argparse.ArgumentParser(
         description="loading study parquet files in impala db",
         conflict_handler="resolve",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
 
-    parser.add_argument('--verbose', '-V', action='count', default=0)
+    parser.add_argument("--verbose", "-V", action="count", default=0)
 
     parser.add_argument(
         "study_id",
@@ -90,11 +91,12 @@ def parse_cli_arguments(argv, gpf_instance):
     return argv
 
 
-def main(argv=sys.argv[1:], gpf_instance=None):
+def main(argv=None, gpf_instance=None):
+    """Import parquet dataset into Impala genotype storage."""
     if gpf_instance is None:
         gpf_instance = GPFInstance()
 
-    argv = parse_cli_arguments(argv, gpf_instance)
+    argv = parse_cli_arguments(argv or sys.argv[1:], gpf_instance)
 
     if argv.verbose == 1:
         logging.basicConfig(level=logging.WARNING)
@@ -111,7 +113,8 @@ def main(argv=sys.argv[1:], gpf_instance=None):
     genotype_storage = genotype_storage_db.get_genotype_storage(
         argv.genotype_storage)
 
-    if not genotype_storage or not genotype_storage.is_impala():
+    if not genotype_storage or \
+            genotype_storage.get_storage_type() != "impala":
         logger.error("missing or non-impala genotype storage")
         return
 
@@ -133,14 +136,14 @@ def main(argv=sys.argv[1:], gpf_instance=None):
         hdfs_pedigree_file = \
             genotype_storage.default_pedigree_hdfs_filename(study_id)
 
-    logger.info(f"HDFS variants dir: {hdfs_variants_dir}")
-    logger.info(f"HDFS pedigree file: {hdfs_pedigree_file}")
+    logger.info("HDFS variants dir: %s", hdfs_variants_dir)
+    logger.info("HDFS pedigree file: %s", hdfs_pedigree_file)
 
     partition_config_file = None
     if argv.partition_description is not None:
         partition_config_file = argv.partition_description
         assert os.path.isfile(partition_config_file), partition_config_file
-    logger.info(f"partition_config_file: {partition_config_file}")
+    logger.info("partition_config_file: %s", partition_config_file)
 
     if partition_config_file is not None and \
             os.path.isfile(partition_config_file):

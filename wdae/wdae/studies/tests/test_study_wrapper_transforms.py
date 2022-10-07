@@ -1,9 +1,11 @@
 import pytest
 
-from dae.variants.attributes import Inheritance, Role
-from dae.backends.attributes_query import inheritance_query, role_query, \
-    OrNode
 from studies.query_transformer import QueryTransformer
+
+from dae.variants.attributes import Inheritance, Role
+from dae.query_variants.attributes_query import inheritance_query, \
+    role_query, \
+    OrNode
 
 
 @pytest.mark.parametrize(
@@ -55,7 +57,7 @@ from studies.query_transformer import QueryTransformer
             set(["proband only", "proband and sibling", "neither"]),
             set(["mother only", "neither"]),
             [Inheritance.denovo, Inheritance.mendelian, Inheritance.missing],
-            [Role.prb, Role.sib, Role.mom], True),    
+            [Role.prb, Role.sib, Role.mom], True),
     ]
 )
 def test_transform_present_in_child_and_present_in_parent(

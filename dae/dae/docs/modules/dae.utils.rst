@@ -92,6 +92,14 @@ dae.utils.sql\_utils module
    :undoc-members:
    :show-inheritance:
 
+dae.utils.statistics module
+---------------------------
+
+.. automodule:: dae.utils.statistics
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 dae.utils.variant\_utils module
 -------------------------------
 

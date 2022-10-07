@@ -28,6 +28,14 @@ dae.configuration.study\_config\_builder module
    :undoc-members:
    :show-inheritance:
 
+dae.configuration.utils module
+------------------------------
+
+.. automodule:: dae.configuration.utils
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Module contents
 ---------------
 

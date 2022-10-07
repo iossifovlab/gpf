@@ -9,36 +9,33 @@ Subpackages
 
    dae.annotation
    dae.autism_gene_profile
-   dae.backends
    dae.common_reports
    dae.configuration
    dae.dask
    dae.docs
    dae.effect_annotation
    dae.enrichment_tool
+   dae.filesystem_storage
    dae.gene
    dae.genomic_resources
+   dae.genotype_storage
    dae.gpf_instance
    dae.gpf_instance_plugin
+   dae.impala_storage
    dae.import_tools
+   dae.parquet
    dae.pedigrees
    dae.pheno
    dae.pheno_tool
+   dae.query_variants
    dae.studies
    dae.tools
    dae.utils
    dae.variants
+   dae.variants_loaders
 
 Submodules
 ----------
-
-dae.conftest module
--------------------
-
-.. automodule:: dae.conftest
-   :members:
-   :undoc-members:
-   :show-inheritance:
 
 dae.person\_filters module
 --------------------------

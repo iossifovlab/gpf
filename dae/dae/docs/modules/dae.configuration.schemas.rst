@@ -20,26 +20,10 @@ dae.configuration.schemas.dae\_conf module
    :undoc-members:
    :show-inheritance:
 
-dae.configuration.schemas.gene\_info module
--------------------------------------------
-
-.. automodule:: dae.configuration.schemas.gene_info
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 dae.configuration.schemas.gene\_weights\_db module
 --------------------------------------------------
 
 .. automodule:: dae.configuration.schemas.gene_weights_db
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-dae.configuration.schemas.genomic\_scores module
-------------------------------------------------
-
-.. automodule:: dae.configuration.schemas.genomic_scores
    :members:
    :undoc-members:
    :show-inheritance:
@@ -64,14 +48,6 @@ dae.configuration.schemas.phenotype\_data module
 ------------------------------------------------
 
 .. automodule:: dae.configuration.schemas.phenotype_data
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-dae.configuration.schemas.score\_file\_conf module
---------------------------------------------------
-
-.. automodule:: dae.configuration.schemas.score_file_conf
    :members:
    :undoc-members:
    :show-inheritance:

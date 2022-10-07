@@ -4,9 +4,9 @@ vars:
 genotype_storage:
   default: genotype_impala
 
-storage:
-  genotype_impala:
-    dir: "work/"
+  storages:
+  - id: genotype_impala
+    storage_type: impala
     hdfs:
       base_dir: /user/%(instance_id)s/studies
       host: impala
@@ -18,7 +18,6 @@ storage:
       - impala
       pool_size: 3
       port: 21050
-    storage_type: impala
 
 # annotation:
 #   conf_file: "/annotation.yaml"

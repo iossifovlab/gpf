@@ -156,7 +156,8 @@ disable=missing-module-docstring,
         comprehension-escape,
         fixme,
         unspecified-encoding,
-        line-too-long
+        line-too-long,
+        duplicate-code
 
 # Enable the message, report, category or checker with the given id(s). You can
 # either give multiple identifier separated by comma (,) or put this option

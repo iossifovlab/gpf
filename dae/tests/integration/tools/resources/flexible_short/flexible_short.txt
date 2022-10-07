@@ -1,0 +1,4 @@
+familyId	location	variant	bestState
+f1	foo:11	ins(A)	2 2 1 2/0 0 1 0
+f2	foo:12	del(4)	2 2 1/0 0 1
+f1	bar:11	sub(C->T)	2 2 1 2/0 0 1 0

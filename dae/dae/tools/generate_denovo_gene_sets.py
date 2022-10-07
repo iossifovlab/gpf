@@ -2,13 +2,15 @@
 import argparse
 import logging
 
+from dae.utils.verbosity_configuration import VerbosityConfiguration
 from dae.gpf_instance.gpf_instance import GPFInstance
 
 
 def main(gpf_instance=None, argv=None):
+    """Generate denovo gene sets CLI."""
     description = "Generate genovo gene sets tool"
     parser = argparse.ArgumentParser(description=description)
-    parser.add_argument('--verbose', '-V', action='count', default=0)
+    VerbosityConfiguration.set_argumnets(parser)
 
     parser.add_argument(
         "--show-studies",
@@ -27,15 +29,7 @@ def main(gpf_instance=None, argv=None):
 
     args = parser.parse_args(argv)
 
-    if args.verbose == 1:
-        logging.basicConfig(level=logging.WARNING)
-    elif args.verbose == 2:
-        logging.basicConfig(level=logging.INFO)
-    elif args.verbose >= 3:
-        logging.basicConfig(level=logging.DEBUG)
-    else:
-        logging.basicConfig(level=logging.ERROR)
-
+    VerbosityConfiguration.set(args)
     logging.getLogger("impala").setLevel(logging.WARNING)
 
     if gpf_instance is None:
@@ -58,6 +52,7 @@ def main(gpf_instance=None, argv=None):
             for study_id in denovo_gene_sets_db.get_genotype_data_ids()
             if study_id in studies
         ]
+        # pylint: disable=protected-access
         denovo_gene_sets_db._build_cache(filter_studies_ids)
 
 

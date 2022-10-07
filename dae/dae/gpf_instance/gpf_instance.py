@@ -1,13 +1,9 @@
-"""Defines GPFInstance class that gives access to different parts of GPF"""
+"""Defines GPFInstance class that gives access to different parts of GPF."""
 
 import os
 import logging
 import json
 
-from dae.genomic_resources.reference_genome import ReferenceGenome, \
-    build_reference_genome_from_resource
-from dae.genomic_resources.gene_models import \
-    build_gene_models_from_resource
 from dae.enrichment_tool.background_facade import BackgroundFacade
 
 from dae.gene.gene_scores import GeneScoresDb, GeneScore
@@ -19,9 +15,6 @@ from dae.common_reports.common_report import CommonReport
 from dae.studies.variants_db import VariantsDb
 
 from dae.pheno.pheno_db import PhenoDb
-
-from dae.backends.storage.genotype_storage_factory import \
-    GenotypeStorageFactory
 
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.dae_conf import dae_conf_schema
@@ -38,8 +31,9 @@ logger = logging.getLogger(__name__)
 
 
 class GPFInstance:
-    """Class to access different parts of a GPF instance"""
+    """Class to access different parts of a GPF instance."""
 
+    # pylint: disable=too-many-public-methods
     def __init__(
             self,
             dae_config=None,
@@ -74,6 +68,7 @@ class GPFInstance:
         self._annotation_pipeline = None
 
         if load_eagerly:
+            # pylint: disable=pointless-statement
             self.reference_genome
             self.gene_models
             self.gene_sets_db
@@ -86,8 +81,12 @@ class GPFInstance:
 
     @property  # type: ignore
     @cached
-    def reference_genome(self) -> ReferenceGenome:
-        """Returns reference genome defined in the GPFInstance config"""
+    def reference_genome(self):
+        """Return reference genome defined in the GPFInstance config."""
+        # pylint: disable=import-outside-toplevel
+        from dae.genomic_resources.reference_genome import \
+            build_reference_genome_from_resource
+
         resource = self.grr.get_resource(
             self.dae_config.reference_genome.resource_id)
         result = build_reference_genome_from_resource(resource)
@@ -97,6 +96,11 @@ class GPFInstance:
     @property  # type: ignore
     @cached
     def gene_models(self):
+        """Return gene models used in the GPF instance."""
+        # pylint: disable=import-outside-toplevel
+        from dae.genomic_resources.gene_models import \
+            build_gene_models_from_resource
+
         resource = self.grr.get_resource(
             self.dae_config.gene_models.resource_id)
         assert resource is not None, \
@@ -113,13 +117,13 @@ class GPFInstance:
     @property  # type: ignore
     @cached
     def gene_scores_db(self):
-        "Loads and returns gene scores db"
+        """Load and return gene scores db."""
         gene_scores = self.dae_config.gene_scores_db.gene_scores
         result = []
-        for gs in gene_scores:
-            resource = self.grr.get_resource(gs)
+        for score in gene_scores:
+            resource = self.grr.get_resource(score)
             if resource is None:
-                logger.error("unable to find gene score: %s", gs)
+                logger.error("unable to find gene score: %s", score)
                 continue
             gene_scores = GeneScore.load_gene_scores_from_resource(
                 resource
@@ -131,7 +135,7 @@ class GPFInstance:
     @property  # type: ignore
     @cached
     def genomic_scores_db(self):
-        "Loads and returns genomic scores db"
+        """Load and return genomic scores db."""
         scores = []
         pipeline = self.get_annotation_pipeline()
         if pipeline is not None:
@@ -154,7 +158,6 @@ class GPFInstance:
                     score_name = field.source.attribute_config["source"]
                     scores.append((resource_id, score_name))
 
-
         if self.dae_config.genomic_scores_db is not None:
             for score_def in self.dae_config.genomic_scores_db:
                 scores.append((score_def["resource"], score_def["score"]))
@@ -164,8 +167,16 @@ class GPFInstance:
     @property  # type: ignore
     @cached
     def genotype_storage_db(self):
-        "Constructs and returns genotype storage factory"
-        return GenotypeStorageFactory(self.dae_config)
+        """Construct and return genotype storage registry."""
+        # pylint: disable=import-outside-toplevel
+        from dae.genotype_storage.genotype_storage_registry import \
+            GenotypeStorageRegistry
+
+        registry = GenotypeStorageRegistry()
+        if self.dae_config.genotype_storage:
+            registry.register_storages_configs(
+                self.dae_config.genotype_storage)
+        return registry
 
     @property  # type: ignore
     @cached
@@ -190,6 +201,7 @@ class GPFInstance:
         return agpdb
 
     def reload(self):
+        """Reload GPF instance studies, gene sets, etc."""
         reload_properties = [
             "__variants_db",
             "_denovo_gene_sets_db",
@@ -212,8 +224,7 @@ class GPFInstance:
         else:
             if not os.path.exists(agp_config.conf_file):
                 return None
-            else:
-                config_filename = agp_config.conf_file
+            config_filename = agp_config.conf_file
 
         assert config_filename is not None
         return GPFConfigParser.load_config(
@@ -224,8 +235,7 @@ class GPFInstance:
     @property  # type: ignore
     @cached
     def gene_sets_db(self):
-        """Returns GeneSetsDb populated with gene sets from the GPFInstance"""
-
+        """Return GeneSetsDb populated with gene sets from the GPFInstance."""
         logger.debug("creating new instance of GeneSetsDb")
         if "gene_sets_db" in self.dae_config:
             gsc_ids = self.dae_config.gene_sets_db.gene_set_collections
@@ -255,6 +265,7 @@ class GPFInstance:
         return BackgroundFacade(self._variants_db)
 
     def get_genotype_data_ids(self, local_only=False):
+        # pylint: disable=unused-argument
         return (
             self._variants_db.get_all_genotype_study_ids()
             + self._variants_db.get_all_genotype_group_ids()
@@ -319,6 +330,7 @@ class GPFInstance:
 
     # Common reports
     def get_common_report(self, study_id):
+        """Load and return common report (dataset statistics) for a study."""
         study = self.get_genotype_data(study_id)
         if study is None or study.is_remote:
             return None
@@ -337,6 +349,7 @@ class GPFInstance:
             return None
 
     def get_all_common_report_configs(self):
+        """Return all common report configuration."""
         configs = []
         local_ids = self.get_genotype_data_ids(True)
         for gd_id in local_ids:
@@ -346,6 +359,7 @@ class GPFInstance:
         return configs
 
     def get_common_report_families_data(self, common_report_id):
+        """Return common report families data."""
         genotype_data = GPFInstance.get_genotype_data(self, common_report_id)
         if not genotype_data:
             return None
@@ -366,17 +380,17 @@ class GPFInstance:
 
         families = list(genotype_data.families.values())
         families.sort(key=lambda f: f.family_id)
-        for f in families:
-            for p in f.members_in_order:
+        for fam in families:
+            for person in fam.members_in_order:
 
                 row = [
-                    p.family_id,
-                    p.person_id,
-                    p.dad_id if p.dad_id else "0",
-                    p.mom_id if p.mom_id else "0",
-                    p.sex,
-                    p.status,
-                    p.role,
+                    person.family_id,
+                    person.person_id,
+                    person.dad_id if person.dad_id else "0",
+                    person.mom_id if person.mom_id else "0",
+                    person.sex,
+                    person.status,
+                    person.role,
                     genotype_data.name,
                 ]
 
@@ -435,6 +449,7 @@ class GPFInstance:
 
     def query_agp_statistics(
             self, page, symbol_like=None, sort_by=None, order=None):
+        """Query AGR statistics and return results."""
         rows = self._autism_gene_profile_db.query_agps(
             page, symbol_like, sort_by, order
         )
@@ -451,6 +466,7 @@ class GPFInstance:
         return self.dae_config.gpfjs.selected_genotype_data
 
     def get_annotation_pipeline(self):
+        """Return the annotation pipeline configured in the GPF instance."""
         if self._annotation_pipeline is None:
 
             if self.dae_config.annotation is None:

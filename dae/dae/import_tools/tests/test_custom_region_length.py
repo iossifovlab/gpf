@@ -194,19 +194,21 @@ _denovo_multi_chrom_config = dict(
 def test_single_bucket_generation(add_chrom_prefix, gpf_instance_2019, mocker):
     import_config = deepcopy(_denovo_multi_chrom_config)
     import_config["processing_config"]["denovo"] = "single_bucket"
-    if add_chrom_prefix:
-        import_config["input"]["denovo"]["add_chrom_prefix"] = add_chrom_prefix
-        prefix = add_chrom_prefix
-    else:
-        prefix = ""
+    # if add_chrom_prefix:
+    #     import_config["input"]["denovo"]["add_chrom_prefix"] = \
+    #           add_chrom_prefix
+    #     prefix = add_chrom_prefix
+    # else:
+    #     prefix = ""
 
     mocker.patch.object(import_tools.ImportProject, "get_gpf_instance",
                         return_value=gpf_instance_2019)
     project = import_tools.ImportProject.build_from_config(import_config)
     buckets = list(project._loader_region_bins({}, "denovo"))
     assert len(buckets) == 1
-    assert buckets[0].regions == [f"{prefix}1", f"{prefix}2", f"{prefix}3",
-                                  f"{prefix}4", f"{prefix}5"]
+    # assert buckets[0].regions == [f"{prefix}1", f"{prefix}2", f"{prefix}3",
+    #                               f"{prefix}4", f"{prefix}5"]
+    assert buckets[0].regions == [None]
 
 
 def test_single_bucket_is_default_when_missing_processing_config(
@@ -219,7 +221,7 @@ def test_single_bucket_is_default_when_missing_processing_config(
     project = import_tools.ImportProject.build_from_config(import_config)
     buckets = list(project._loader_region_bins({}, "denovo"))
     assert len(buckets) == 1
-    assert buckets[0].regions == ["1", "2", "3", "4", "5"]
+    assert buckets[0].regions == [None]
 
 
 @pytest.mark.parametrize("add_chrom_prefix", [None, "chr"])

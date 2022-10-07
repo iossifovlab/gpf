@@ -1,7 +1,7 @@
 from typing import Any
-from dae.backends.dae.loader import DenovoLoader, DaeTransmittedLoader
-from dae.backends.vcf.loader import VcfLoader
-from dae.backends.cnv.loader import CNVLoader
+from dae.variants_loaders.dae.loader import DenovoLoader, DaeTransmittedLoader
+from dae.variants_loaders.vcf.loader import VcfLoader
+from dae.variants_loaders.cnv.loader import CNVLoader
 from dae.pedigrees.loader import FamiliesLoader
 from dae.configuration.schemas.dae_conf import storage_schema
 
@@ -71,6 +71,7 @@ import_config_schema = {
         "type": "dict",
         "schema": {
             "work_dir": {"type": "string"},
+            "include_reference": {"type": "boolean", "default": False},
             "vcf": _loader_processing_schema,
             "denovo": _loader_processing_schema,
             "cnv": _loader_processing_schema,
@@ -88,9 +89,11 @@ import_config_schema = {
     },
     "destination": {
         "type": "dict",
-        "anyof_schema": [{
-            "storage_id": {"type": "string"},
-        }, storage_schema],
+        "anyof_schema": [
+            {"storage_id": {"type": "string"}},
+            storage_schema
+        ],
+        "allow_unknown": True,
     },
     "gpf_instance": {
         "type": "dict",

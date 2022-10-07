@@ -1,4 +1,0 @@
-person_id	location	reference	alternative
-f1.p1	15:80137553	T	TA
-f2.p1	3:56627767	AAAGT	A
-f1.p1	4:83276456	C	T
