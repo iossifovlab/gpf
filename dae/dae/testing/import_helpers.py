@@ -87,3 +87,17 @@ def vcf_study(
         root_path, study_id, ped_path, vcf_paths, gpf_instance)
     gpf_instance.reload()
     return gpf_instance.get_genotype_data(study_id)
+
+
+def setup_dataset(dataset_id, gpf_instance, *studies):
+    """Create and register a dataset dataset_id with studies."""
+    # pylint: disable=import-outside-toplevel
+    from box import Box
+    from dae.studies.study import GenotypeDataGroup
+
+    dataset = GenotypeDataGroup(
+        Box({"id": dataset_id}, default_box=True), studies)
+    # pylint: disable=protected-access
+    gpf_instance._variants_db.register_genotype_data(dataset)
+
+    return dataset

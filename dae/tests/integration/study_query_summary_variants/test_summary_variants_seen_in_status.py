@@ -5,14 +5,14 @@ from dae.utils.regions import Region
 from dae.variants.attributes import Status
 from dae.testing import setup_pedigree, setup_vcf
 
-from ...alla_import import alla_vcf_study
+from ...alla_import import alla_vcf_study, alla_gpf
 
 
 @pytest.fixture(scope="module")
 def imported_study(tmp_path_factory, genotype_storage):
     root_path = tmp_path_factory.mktemp(
         f"vcf_path_{genotype_storage.storage_id}")
-
+    gpf_instance = alla_gpf(root_path, genotype_storage)
     ped_path = setup_pedigree(
         root_path / "vcf_data" / "in.ped",
         """
@@ -41,22 +41,22 @@ def imported_study(tmp_path_factory, genotype_storage):
     study = alla_vcf_study(
         root_path,
         "minimal_vcf", ped_path, vcf_path,
-        genotype_storage)
+        gpf_instance)
     return study
 
 
 @pytest.mark.impala
 @pytest.mark.impala2
-@pytest.mark.parametrize("region,count,seen_in_status", [
-    (Region("chrA", 1, 1), 1, Status.affected.value | Status.unaffected.value),
-    (Region("chrA", 2, 2), 1, Status.affected.value),
-    (Region("chrA", 3, 3), 1, Status.unaffected.value),
+@pytest.mark.parametrize("region,seen_in_status", [
+    (Region("chrA", 1, 1), Status.affected.value | Status.unaffected.value),
+    (Region("chrA", 2, 2), Status.affected.value),
+    (Region("chrA", 3, 3), Status.unaffected.value),
 ])
 def test_summary_variants_seen_in_status_single_allele(
-        region, count, seen_in_status, imported_study):
+        region, seen_in_status, imported_study):
 
     svs = list(imported_study.query_summary_variants(regions=[region]))
-    assert len(svs) == count
+    assert len(svs) == 1
     assert len(svs[0].alt_alleles) == 1
     aa = svs[0].alleles[1]
     assert aa.get_attribute("seen_in_status") == seen_in_status

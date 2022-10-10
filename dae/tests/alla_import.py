@@ -27,11 +27,9 @@ def alla_gpf(root_path, storage=None):
     return gpf_instance
 
 
-def alla_vcf_import(root_path, study_id, ped_path, vcf_path, storage):
-    gpf_instance = alla_gpf(root_path, storage)
+def alla_vcf_import(root_path, study_id, ped_path, vcf_path, gpf_instance):
     return vcf_import(root_path, study_id, ped_path, [vcf_path], gpf_instance)
 
 
-def alla_vcf_study(root_path, study_id, ped_path, vcf_path, storage):
-    gpf_instance = alla_gpf(root_path, storage)
+def alla_vcf_study(root_path, study_id, ped_path, vcf_path, gpf_instance):
     return vcf_study(root_path, study_id, ped_path, [vcf_path], gpf_instance)
