@@ -1,3 +1,6 @@
+SELECT bucket_index, summary_index, allele_index, chromosome, `position`, end_position, variant_type, transmission_type, reference, af_allele_count, af_allele_freq, af_parents_called, af_parents_freq, seen_as_denovo, seen_in_status, family_variants_count, family_alleles_count 
+FROM genotype_impala2_db.study_1_summary_alleles;
+
 SELECT variants.bucket_index, variants.summary_index, variants.chromosome, variants.`position`, variants.variant_type, variants.family_id, variants.inheritance_in_members, variants.variant_in_roles 
 FROM data_hg38_production_202005.iWES_v1_variants as variants JOIN data_hg38_production_202005.iWES_v1_pedigree as pedigree 
 WHERE

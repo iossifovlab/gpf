@@ -4,14 +4,14 @@ import pytest
 from dae.utils.regions import Region
 from dae.testing import setup_pedigree, setup_vcf
 
-from ...alla_import import alla_vcf_study
+from ...alla_import import alla_vcf_study, alla_gpf
 
 
 @pytest.fixture(scope="module")
 def imported_study(tmp_path_factory, genotype_storage):
     root_path = tmp_path_factory.mktemp(
         f"vcf_path_{genotype_storage.storage_id}")
-
+    gpf_instance = alla_gpf(root_path, genotype_storage)
     ped_path = setup_pedigree(
         root_path / "vcf_data" / "in.ped",
         """
@@ -41,7 +41,7 @@ def imported_study(tmp_path_factory, genotype_storage):
     study = alla_vcf_study(
         root_path,
         "minimal_vcf", ped_path, vcf_path,
-        genotype_storage)
+        gpf_instance)
     return study
 
 
