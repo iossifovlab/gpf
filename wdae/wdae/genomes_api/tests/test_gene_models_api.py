@@ -1,6 +1,7 @@
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
 
-def test_default_gene_models_id(admin_client):
-    response = admin_client.get("/api/v3/genome/gene_models/default")
+def test_default_gene_models_id(anonymous_client):
+    response = anonymous_client.get("/api/v3/genome/gene_models/default")
 
     assert response
     assert response.status_code == 200
@@ -8,8 +9,8 @@ def test_default_gene_models_id(admin_client):
         "hg19/gene_models/refGene_v20190211"
 
 
-def test_get_chd8_transcripts(admin_client):
-    response = admin_client.get("/api/v3/genome/gene_models/default/CHD8")
+def test_get_chd8_transcripts(anonymous_client):
+    response = anonymous_client.get("/api/v3/genome/gene_models/default/CHD8")
 
     assert response
     assert response.status_code == 200
@@ -33,22 +34,22 @@ def test_get_chd8_transcripts(admin_client):
     assert transcripts[1]["cds"]
 
 
-def test_get_nonexistant_gene_transcripts(admin_client):
-    response = admin_client.get("/api/v3/genome/gene_models/default/asdf")
+def test_get_nonexistant_gene_transcripts(anonymous_client):
+    response = anonymous_client.get("/api/v3/genome/gene_models/default/asdf")
 
     assert response
     assert response.status_code == 404
 
 
-def test_search_gene_symbols(admin_client):
-    response = admin_client.get("/api/v3/genome/gene_models/search/CHD8")
+def test_search_gene_symbols(anonymous_client):
+    response = anonymous_client.get("/api/v3/genome/gene_models/search/CHD8")
     assert response.data["gene_symbols"] == ["CHD8"]
 
-    response = admin_client.get("/api/v3/genome/gene_models/search/CHD")
+    response = anonymous_client.get("/api/v3/genome/gene_models/search/CHD")
     assert set(response.data["gene_symbols"]) == {
         "CHD3", "CHD2", "CHD8", "CHD1L", "CHD1",
         "CHD4", "CHD9", "CHD7", "CHD5", "CHDH", "CHD6"
     }
 
-    response = admin_client.get("/api/v3/genome/gene_models/search/C")
+    response = anonymous_client.get("/api/v3/genome/gene_models/search/C")
     assert len(response.data["gene_symbols"]) <= 20

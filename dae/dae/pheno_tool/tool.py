@@ -8,7 +8,7 @@ from collections import Counter
 import logging
 import numpy as np
 import pandas as pd
-from scipy.stats.stats import ttest_ind  # type: ignore
+from scipy.stats import ttest_ind  # type: ignore
 from dae.pheno.utils.lin_regress import LinearRegression
 
 from dae.pheno.common import MeasureType

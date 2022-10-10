@@ -1,3 +1,4 @@
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pytest
 
 from studies.query_transformer import QueryTransformer
@@ -63,33 +64,33 @@ from dae.query_variants.attributes_query import inheritance_query, \
 def test_transform_present_in_child_and_present_in_parent(
         present_in_child, present_in_parent, inheritance, roles, accepted):
 
-    rq = QueryTransformer._transform_present_in_child_and_parent_roles(
+    roles_q = QueryTransformer._transform_present_in_child_and_parent_roles(
         present_in_child, present_in_parent)
-    rm = role_query.transform_tree_to_matcher(rq)
+    roles_m = role_query.transform_tree_to_matcher(roles_q)
 
-    iq = QueryTransformer._transform_present_in_child_and_parent_inheritance(
-        present_in_child, present_in_parent)
+    inheritance_q = QueryTransformer\
+        ._transform_present_in_child_and_parent_inheritance(
+            present_in_child, present_in_parent)
 
-    assert iq is not None
+    assert inheritance_q is not None
 
-    print("roles query:      ", rq)
-    print("inheritance query:", iq)
+    print("roles query:      ", roles_q)
+    print("inheritance query:", inheritance_q)
 
-    it = inheritance_query.transform_query_string_to_tree(iq)
-    im = inheritance_query.transform_tree_to_matcher(it)
+    inheritance_m = inheritance_query.transform_tree_to_matcher(
+        inheritance_query.transform_query_string_to_tree(inheritance_q))
 
-    roles_matched = rm.match(roles)
-    inheritance_matched = im.match(inheritance)
+    roles_matched = roles_m.match(roles)
+    inheritance_matched = inheritance_m.match(inheritance)
 
-    assert (rm.match(roles) and im.match(inheritance)) == accepted, (
-        roles_matched, inheritance_matched)
+    assert (roles_m.match(roles) and inheritance_m.match(inheritance)) == \
+        accepted, (roles_matched, inheritance_matched)
 
 
 def test_attributes_query_roles():
-    rq = "sib and not prb"
-    rt = OrNode([role_query.transform_query_string_to_tree(rq)])
+    roles_q = "sib and not prb"
+    roles_m = role_query.transform_tree_to_matcher(
+        OrNode([role_query.transform_query_string_to_tree(roles_q)]))
 
-    rm = role_query.transform_tree_to_matcher(rt)
-
-    result = rm.match([Role.prb])
+    result = roles_m.match([Role.prb])
     assert not result

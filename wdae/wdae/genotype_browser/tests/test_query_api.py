@@ -1,3 +1,5 @@
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
+
 import copy
 import json
 import pytest
@@ -22,7 +24,7 @@ JSON_CONTENT_TYPE = "application/json"
 
 def test_simple_query(db, admin_client, preview_sources):
     data = copy.deepcopy(EXAMPLE_REQUEST_F1)
-    data['sources'] = list(preview_sources)
+    data["sources"] = list(preview_sources)
 
     response = admin_client.post(
         QUERY_VARIANTS_URL, json.dumps(data), content_type=JSON_CONTENT_TYPE
@@ -102,7 +104,7 @@ def test_simple_query_summary_variants(
     db, admin_client, summary_preview_sources
 ):
     data = copy.deepcopy(EXAMPLE_REQUEST_F1)
-    data['sources'] = list(summary_preview_sources)
+    data["sources"] = list(summary_preview_sources)
 
     response = admin_client.post(
         QUERY_VARIANTS_URL,
@@ -161,7 +163,7 @@ def test_simple_query_summary_variants_download(
 @pytest.mark.parametrize("url", [QUERY_VARIANTS_URL])
 def test_missing_dataset(db, user_client, url, preview_sources):
     data = copy.deepcopy(EXAMPLE_REQUEST_F1)
-    data['sources'] = list(preview_sources)
+    data["sources"] = list(preview_sources)
     del data["datasetId"]
 
     response = user_client.post(
@@ -173,7 +175,7 @@ def test_missing_dataset(db, user_client, url, preview_sources):
 @pytest.mark.parametrize("url", [QUERY_VARIANTS_URL])
 def test_bad_dataset(db, user_client, url, preview_sources):
     data = copy.deepcopy(EXAMPLE_REQUEST_F1)
-    data['sources'] = list(preview_sources)
+    data["sources"] = list(preview_sources)
     data["datasetId"] = "ala bala portokala"
 
     response = user_client.post(

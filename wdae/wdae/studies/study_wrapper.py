@@ -4,17 +4,19 @@ import logging
 from contextlib import closing
 from abc import abstractmethod
 
-from dae.variants.attributes import Role
 from remote.remote_phenotype_data import RemotePhenotypeData
 from remote.remote_variant import RemoteFamilyVariant, QUERY_SOURCES
 from studies.query_transformer import QueryTransformer
 from studies.response_transformer import ResponseTransformer
+
+from dae.variants.attributes import Role
 
 
 logger = logging.getLogger(__name__)
 
 
 class StudyWrapperBase:
+    """Defines WDAE wrapper class to DAE genotype data object."""
 
     def __init__(self, genotype_data):
         self.genotype_data = genotype_data
@@ -34,6 +36,7 @@ class StudyWrapperBase:
 
     @staticmethod
     def get_columns_as_sources(config, column_ids):
+        """Return the list of column sources."""
         column_groups = config.genotype_browser.column_groups
         genotype_cols = config.genotype_browser.columns.get("genotype", {})
         if genotype_cols is None:
@@ -41,7 +44,7 @@ class StudyWrapperBase:
         phenotype_cols = config.genotype_browser.columns.get("phenotype", {})
         if phenotype_cols is None:
             phenotype_cols = {}
-        result = list()
+        result = []
 
         for column_id in column_ids:
             if column_id in column_groups:
@@ -78,8 +81,8 @@ class StudyWrapperBase:
 
     @staticmethod
     def build_genotype_data_group_description(
-        gpf_instance, config, description, person_set_collection_configs
-    ):
+            gpf_instance, config, description, person_set_collection_configs):
+        """Build and return genotype data group description."""
         keys = [
             "id",
             "name",
@@ -122,15 +125,14 @@ class StudyWrapperBase:
         }
 
         # TODO Code below could be made a bit leaner and separated
-        table_columns = list()
+        table_columns = []
         for column in config.genotype_browser.preview_columns:
             logger.info(
-                f"processing preview column {column} "
-                f"for study {config.id}")
+                "processing preview column %s for study %s", column, config.id)
 
             if column in config.genotype_browser.column_groups:
                 new_col = dict(config.genotype_browser.column_groups[column])
-                new_col['columns'] = StudyWrapperBase.get_columns_as_sources(
+                new_col["columns"] = StudyWrapperBase.get_columns_as_sources(
                     config, [column]  # FIXME Hacky way of using that method
                 )
                 table_columns.append(new_col)
@@ -160,15 +162,15 @@ class StudyWrapperBase:
         if "coding_len_background_model" in \
                 result["enrichment"]["background"].keys():
             del result["enrichment"]["background"][
-                    "coding_len_background_model"]["file"]
+                "coding_len_background_model"]["file"]
         if "samocha_background_model" in \
                 result["enrichment"]["background"].keys():
             del result["enrichment"]["background"][
-                    "samocha_background_model"]["file"]
+                "samocha_background_model"]["file"]
 
         result["study_names"] = None
         if result["studies"] is not None:
-            logger.debug(f"found studies in {config.id}")
+            logger.debug("found studies in %s", config.id)
             study_names = []
             for study_id in result["studies"]:
                 wrapper = gpf_instance.get_wdae_wrapper(study_id)
@@ -185,7 +187,7 @@ class StudyWrapperBase:
     def query_variants_wdae(
             self, kwargs, sources, max_variants_count=10000,
             max_variants_message=False):
-
+        """Wrap query variants method for WDAE streaming."""
         variants_result = self.query_variants_wdae_streaming(
             kwargs, sources, max_variants_count,
             max_variants_message)
@@ -195,7 +197,7 @@ class StudyWrapperBase:
     def query_variants_wdae_streaming(
             self, kwargs, sources, max_variants_count=10000,
             max_variants_message=False):
-        pass
+        """Wrap query variants method for WDAE streaming."""
 
     @abstractmethod
     def has_pheno_data(self):
@@ -203,6 +205,9 @@ class StudyWrapperBase:
 
 
 class StudyWrapper(StudyWrapperBase):
+    """Genotype data study wrapper class for WDAE."""
+
+    # pylint: disable=too-many-instance-attributes
     def __init__(self, genotype_data_study, pheno_db, gene_scores_db):
 
         assert genotype_data_study is not None
@@ -237,6 +242,7 @@ class StudyWrapper(StudyWrapperBase):
 
     @property
     def person_set_collection_configs(self):
+        # pylint: disable=protected-access
         return self.genotype_data_study._person_set_collection_configs
 
     def get_studies_ids(self, leaves=True):
@@ -281,15 +287,14 @@ class StudyWrapper(StudyWrapperBase):
             )
 
     def _validate_column_groups(self):
-        genotype_cols = self.columns.get("genotype") or list()
-        phenotype_cols = self.columns.get("phenotype") or list()
+        genotype_cols = self.columns.get("genotype") or []
+        phenotype_cols = self.columns.get("phenotype") or []
         for column_group in self.column_groups.values():
             for column_id in column_group.columns:
                 if column_id not in genotype_cols \
                    and column_id not in phenotype_cols:
                     logger.warning(
-                        f"column {column_id} not defined in configuration"
-                    )
+                        "column %s not defined in configuration", column_id)
                     return False
         return True
 
@@ -303,17 +308,18 @@ class StudyWrapper(StudyWrapperBase):
     def transform_request(self, kwargs):
         return self.query_transformer.transform_kwargs(**kwargs)
 
-    def query_variants_wdae_streaming(
-        self, kwargs, sources, max_variants_count=10000,
-        max_variants_message=False
-    ):
+    def query_variants_wdae_streaming(  # noqa
+            self, kwargs, sources, max_variants_count=10000,
+            max_variants_message=False):
+        """Wrap query variants method for WDAE streaming of variants."""
+        # pylint: disable=too-many-locals,too-many-branches
         max_variants_count = kwargs.pop("maxVariantsCount", max_variants_count)
         summary_variant_ids = kwargs.pop("summaryVariantIds", None)
 
         kwargs = self.query_transformer.transform_kwargs(**kwargs)
 
         if summary_variant_ids is None:
-            def filter_allele(allele):
+            def filter_allele(allele):  # pylint: disable=unused-argument
                 return True
 
         elif len(summary_variant_ids) > 0:
@@ -331,9 +337,6 @@ class StudyWrapper(StudyWrapperBase):
         index = 0
         seen = set()
         unique_family_variants = kwargs.get("unique_family_variants", False)
-        print(100*"+")
-        print("unique_family_variants=", unique_family_variants, type(unique_family_variants))
-        print(100*"+")
         try:
             started = time.time()
             variants_result = \
@@ -344,8 +347,8 @@ class StudyWrapper(StudyWrapperBase):
             variants_result.start()
             elapsed = time.time() - started
             logger.info(
-                f"study wrapper ({self.name}) variant result started "
-                f"in {elapsed:0.3f}sec")
+                "study wrapper (%s) variant result started in %0.3fsec",
+                self.name, elapsed)
 
             with closing(variants_result) as variants:
 
@@ -379,6 +382,7 @@ class StudyWrapper(StudyWrapperBase):
                                 f"reached"
                             ]
                         break
+                    # pylint: disable=protected-access
                     row_variant = self.response_transformer._build_variant_row(
                         v, sources,
                         person_set_collection=kwargs.get(
@@ -391,27 +395,26 @@ class StudyWrapper(StudyWrapperBase):
         finally:
             elapsed = time.time() - started
             logger.info(
-                f"study wrapper ({self.study_id})  query returned "
-                f"{index} variants; "
-                f"closed in {elapsed:0.3f}sec")
+                "study wrapper (%s)  query returned %s variants; "
+                "closed in %0.3fsec", self.study_id, index, elapsed)
 
     def get_gene_view_summary_variants(self, frequency_column, **kwargs):
+        """Return gene browser summary variants."""
         kwargs = self.query_transformer.transform_kwargs(**kwargs)
         limit = kwargs.pop("maxVariantsCount", None)
         variants_from_studies = itertools.islice(
             self.genotype_data_study.query_summary_variants(**kwargs), limit
         )
         for v in variants_from_studies:
-            for a in self.response_transformer.\
-               transform_gene_view_summary_variant(v, frequency_column):
-                yield a
+            for aa in self.response_transformer.\
+                    transform_gene_view_summary_variant(v, frequency_column):
+                yield aa
 
     def get_gene_view_summary_variants_download(
             self, frequency_column, **kwargs):
+        """Return gene browser summary variants for downloading."""
         kwargs = self.query_transformer.transform_kwargs(**kwargs)
-        limit = None
-        if "limit" in kwargs:
-            limit = kwargs["limit"]
+        limit = kwargs.get("limit", None)
 
         summary_variant_ids = set(kwargs["summaryVariantIds"])
         variants_from_studies = itertools.islice(
@@ -422,7 +425,8 @@ class StudyWrapper(StudyWrapperBase):
                 variants_from_studies, frequency_column, summary_variant_ids
             )
 
-    def _get_roles_value(self, allele, roles):
+    @staticmethod
+    def _get_roles_value(allele, roles):
         result = []
         variant_in_members = allele.variant_in_members_objects
         for role in roles:
@@ -435,6 +439,7 @@ class StudyWrapper(StudyWrapperBase):
 
 
 class RemoteStudyWrapper(StudyWrapperBase):
+    """Wrapper class for remote (federation) studies."""
 
     def __init__(self, remote_genotype_data):
         self.remote_genotype_data = remote_genotype_data
@@ -461,7 +466,7 @@ class RemoteStudyWrapper(StudyWrapperBase):
 
     @property
     def is_group(self):
-        self.remote_genotype_data.is_group
+        return self.remote_genotype_data.is_group
 
     @property
     def config_columns(self):
@@ -469,6 +474,7 @@ class RemoteStudyWrapper(StudyWrapperBase):
 
     @property
     def families(self):
+        # pylint: disable=protected-access
         return self.remote_genotype_data._families
 
     @property
@@ -501,9 +507,9 @@ class RemoteStudyWrapper(StudyWrapperBase):
         kwargs["datasetId"] = self._remote_study_id
         kwargs["maxVariantsCount"] = max_variants_count
         new_sources = []
-        for qs in QUERY_SOURCES:
-            if not any([qs["source"] == s["source"] for s in sources]):
-                new_sources.append(qs)
+        for query_s in QUERY_SOURCES:
+            if not any(query_s["source"] == s["source"] for s in sources):
+                new_sources.append(query_s)
         sources.extend(new_sources)
         for source in sources:
             if "format" in source:
@@ -511,8 +517,8 @@ class RemoteStudyWrapper(StudyWrapperBase):
         kwargs["sources"] = sources
 
         fam_id_idx = -1
-        for idx, s in enumerate(sources):
-            if s["source"] == "family":
+        for idx, source in enumerate(sources):
+            if source["source"] == "family":
                 fam_id_idx = idx
                 break
 
@@ -523,8 +529,8 @@ class RemoteStudyWrapper(StudyWrapperBase):
         )
 
         def get_source(col):
-            res = col['source']
-            if 'role' in col:
+            res = col["source"]
+            if "role" in col:
                 res = f"{res}.{col['role']}"
             return res
 
@@ -532,12 +538,10 @@ class RemoteStudyWrapper(StudyWrapperBase):
             fam_id = variant[fam_id_idx][0]
             family = self.families.get(fam_id)
             fv = RemoteFamilyVariant(
-                variant, family, list(map(get_source, sources))
-            )
-
+                variant, family, list(map(get_source, sources)))
+            # pylint: disable=protected-access
             row_variant = self.response_transformer._build_variant_row(
-                fv, sources, person_set_collection=person_set_collection_id
-            )
+                fv, sources, person_set_collection=person_set_collection_id)
 
             yield row_variant
 
