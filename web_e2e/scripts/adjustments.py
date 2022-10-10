@@ -6,33 +6,36 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+def find_genotype_storage_config(config, storage_id):
+    storages = config['genotype_storage']['storages']
+    for storage_config in storages:
+        if storage_config['id'] == storage_id:
+            return storage_config
+
+
 def adjust_instance_id(config, adjustments):
-    vars = config["vars"]
-    vars["instance_id"] = adjustments["instance_id"]
+    vars = config['vars']
+    vars['instance_id'] = adjustments['instance_id']
     print(f"replacing instance id with {adjustments['instance_id']}")
 
 
-def adjust_impala(config, adjustments):
-    storage = config["storage"]
-    genotype_impala = storage["genotype_impala"]
-    impala = genotype_impala["impala"]
-    hosts = impala["hosts"]
-    impala["hosts"] = adjustments["impala_hosts"]
+def adjust_impala(storage_config, adjustments):
+    impala = storage_config['impala']
+    hosts = impala['hosts']
+    impala['hosts'] = adjustments['impala_hosts']
 
     print(f"replacing impala hosts: {hosts} with {impala['hosts']}")
 
 
-def adjust_hdfs(config, adjustments):
-    storage = config["storage"]
-    genotype_impala = storage["genotype_impala"]
-    hdfs = genotype_impala["hdfs"]
-    host = hdfs["host"]
-    hdfs["host"] = adjustments["hdfs_host"]
+def adjust_hdfs(storage_config, adjustments):
+    hdfs = storage_config['hdfs']
+    host = hdfs['host']
+    hdfs['host'] = adjustments['hdfs_host']
 
     print(f"replacing impala hosts: {host} with {hdfs['host']}")
 
-    if "rsync" in genotype_impala:
-        del genotype_impala["rsync"]
+    if "rsync" in storage_config:
+        del storage_config["rsync"]
 
 
 def adjust_available_studies(config, adjustments):
@@ -61,8 +64,13 @@ def main(adjustments):
     pprint.pprint(config)
 
     adjust_instance_id(config, adjustments)
-    adjust_impala(config, adjustments)
-    adjust_hdfs(config, adjustments)
+
+    storage_config = find_genotype_storage_config(
+        config, adjustments["impala_storage_id"]
+    )
+    adjust_impala(storage_config, adjustments)
+    adjust_hdfs(storage_config, adjustments)
+
     adjust_available_studies(config, adjustments)
 
     pprint.pprint(config)
