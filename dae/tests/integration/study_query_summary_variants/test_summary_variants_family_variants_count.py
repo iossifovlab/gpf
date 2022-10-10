@@ -2,9 +2,9 @@
 import pytest
 
 from dae.utils.regions import Region
-from dae.testing import setup_pedigree, setup_vcf
+from dae.testing import setup_pedigree, setup_vcf, vcf_study
 
-from ...alla_import import alla_vcf_study, alla_gpf
+from ...alla_import import alla_gpf
 
 
 @pytest.fixture(scope="module")
@@ -40,9 +40,9 @@ def imported_study(tmp_path_factory, genotype_storage):
         chrA   8   .  A   T,G  .    .      .    GT     0/1 2/0 0/0 0/1 2/0 0/0
         """)
 
-    study = alla_vcf_study(
+    study = vcf_study(
         root_path,
-        "minimal_vcf", ped_path, vcf_path,
+        "minimal_vcf", ped_path, [vcf_path],
         gpf_instance)
     return study
 

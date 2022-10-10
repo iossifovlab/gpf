@@ -2,9 +2,9 @@
 import pytest
 
 from dae.utils.regions import Region
-from dae.testing import setup_pedigree, setup_vcf, setup_dataset
+from dae.testing import setup_pedigree, setup_vcf, setup_dataset, vcf_study
 
-from ...alla_import import alla_gpf, alla_vcf_study
+from ...alla_import import alla_gpf
 
 
 @pytest.fixture(scope="module")
@@ -37,9 +37,9 @@ def imported_dataset(tmp_path_factory, genotype_storage):
         chrA   7   .  A   T    .    .      .    GT     1/0 0/0 0/0 0/1
         chrA   8   .  A   T    .    .      .    GT     0/0 1/0 0/0 0/1
         """)
-    study1 = alla_vcf_study(
+    study1 = vcf_study(
         root_path,
-        "study_1", ped_path1, vcf_path1,
+        "study_1", ped_path1, [vcf_path1],
         gpf_instance)
 
     ped_path2 = setup_pedigree(
@@ -68,9 +68,9 @@ def imported_dataset(tmp_path_factory, genotype_storage):
         chrA   8   .  A   T    .    .      .    GT     0/0 0/0 0/0 0/1
         """)
 
-    study2 = alla_vcf_study(
+    study2 = vcf_study(
         root_path,
-        "study_2", ped_path2, vcf_path2,
+        "study_2", ped_path2, [vcf_path2],
         gpf_instance)
 
     return setup_dataset("ds1", gpf_instance, study1, study2)

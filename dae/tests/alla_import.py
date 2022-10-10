@@ -1,7 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 from dae.testing import \
-    setup_genome, setup_empty_gene_models, setup_gpf_instance, \
-    vcf_import, vcf_study
+    setup_genome, setup_empty_gene_models, setup_gpf_instance
 
 
 def alla_gpf(root_path, storage=None):
@@ -25,11 +24,3 @@ def alla_gpf(root_path, storage=None):
             .genotype_storage_db\
             .register_default_storage(storage)
     return gpf_instance
-
-
-def alla_vcf_import(root_path, study_id, ped_path, vcf_path, gpf_instance):
-    return vcf_import(root_path, study_id, ped_path, [vcf_path], gpf_instance)
-
-
-def alla_vcf_study(root_path, study_id, ped_path, vcf_path, gpf_instance):
-    return vcf_study(root_path, study_id, ped_path, [vcf_path], gpf_instance)
