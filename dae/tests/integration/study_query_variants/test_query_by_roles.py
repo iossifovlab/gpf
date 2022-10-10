@@ -1,15 +1,15 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pytest
 
-from dae.testing import setup_pedigree, setup_vcf
-from ...foobar_import import foobar_vcf_study
+from dae.testing import setup_pedigree, setup_vcf, vcf_study
+from ...foobar_import import foobar_gpf
 
 
 @pytest.fixture(scope="module")
 def imported_study(tmp_path_factory, genotype_storage):
     root_path = tmp_path_factory.mktemp(
         f"vcf_path_{genotype_storage.storage_id}")
-
+    gpf_instance = foobar_gpf(root_path, genotype_storage)
     ped_path = setup_pedigree(
         root_path / "vcf_data" / "in.ped",
         """
@@ -33,10 +33,10 @@ def imported_study(tmp_path_factory, genotype_storage):
         bar    13  .  C   T   .    .      .    GT     0/0 1/0 1/0 1/0
         """)
 
-    study = foobar_vcf_study(
+    study = vcf_study(
         root_path,
-        "minimal_vcf", ped_path, vcf_path,
-        genotype_storage)
+        "minimal_vcf", ped_path, [vcf_path],
+        gpf_instance)
     return study
 
 

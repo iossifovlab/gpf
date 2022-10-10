@@ -2,7 +2,7 @@
 
 import pytest
 
-from dae.testing import setup_vcf, setup_pedigree
+from dae.testing import setup_vcf, setup_pedigree, vcf_study
 from dae.utils.regions import Region
 
 
@@ -42,13 +42,14 @@ f1       c2       d1    m1    1    1      sib
 @pytest.fixture(scope="module")
 def imported_study(tmp_path_factory, f1_vcf, genotype_storage):
     # pylint: disable=import-outside-toplevel
-    from ...foobar_import import foobar_vcf_study
+    from ...foobar_import import foobar_gpf
 
     root_path = tmp_path_factory.mktemp(genotype_storage.storage_id)
+    gpf_instance = foobar_gpf(root_path, genotype_storage)
     ped_path, vcf_path = f1_vcf
 
-    return foobar_vcf_study(
-        root_path, "f1_case", ped_path, vcf_path, genotype_storage)
+    return vcf_study(
+        root_path, "f1_case", ped_path, [vcf_path], gpf_instance)
 
 
 def test_f1_check_all_variants_effects(imported_study):
