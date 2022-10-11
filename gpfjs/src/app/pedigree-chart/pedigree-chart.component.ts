@@ -105,15 +105,20 @@ export class PedigreeChartComponent implements OnInit {
     let viewBoxHeightOffset = this.round((viewBoxHeight - this.height) / 2);
 
     if (this.curveLines.length !== 0) {
+      // if the pedigre has curved lines on top, add extra space on top
       const curveLinesOnTop = this.curveLines
         .map(curveLine => curveLine.startY)
         .filter(curveLineStartY => curveLineStartY <= 12).length !== 0;
 
       if (curveLinesOnTop) {
-        const curveLinesHeightOffset = 12;
-        viewBoxHeight += curveLinesHeightOffset;
-        viewBoxHeightOffset += curveLinesHeightOffset;
+        viewBoxHeight += 12;
+        viewBoxHeightOffset += 12;
       }
+    }
+
+    if (this.pedigreeDataWithLayout.map(a => a.yCenter).every((val, i, arr) => val === arr[0])) {
+      // if the pedigree has only a single row, add extra space on bottom for the proband arrow
+      viewBoxHeight += 6;
     }
 
     return `${-viewBoxWidthOffset} ${-viewBoxHeightOffset} ${viewBoxWidth} ${viewBoxHeight}`;
