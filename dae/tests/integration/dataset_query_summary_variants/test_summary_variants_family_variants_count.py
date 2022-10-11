@@ -72,8 +72,6 @@ def imported_dataset(tmp_path_factory, genotype_storage):
     return setup_dataset("ds1", gpf_instance, study1, study2)
 
 
-@pytest.mark.impala
-@pytest.mark.impala2
 @pytest.mark.parametrize("region,family_variants_count", [
     (Region("chrA", 1, 1), 4),
     (Region("chrA", 2, 2), 2),

@@ -45,8 +45,6 @@ def imported_study(tmp_path_factory, genotype_storage):
     return study
 
 
-@pytest.mark.impala
-@pytest.mark.impala2
 @pytest.mark.parametrize("region,seen_in_status", [
     (Region("chrA", 1, 1), Status.affected.value | Status.unaffected.value),
     (Region("chrA", 2, 2), Status.affected.value),
@@ -62,6 +60,7 @@ def test_summary_variants_seen_in_status_single_allele(
     assert aa.get_attribute("seen_in_status") == seen_in_status
 
 
+@pytest.mark.inmemory
 @pytest.mark.impala2
 @pytest.mark.parametrize("region,seen_in_status", [
     (Region("chrA", 4, 4), [

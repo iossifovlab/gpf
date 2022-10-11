@@ -73,8 +73,6 @@ def imported_dataset(tmp_path_factory, genotype_storage):
     return setup_dataset("ds1", gpf_instance, study1, study2)
 
 
-@pytest.mark.impala
-@pytest.mark.impala2
 @pytest.mark.parametrize("region,seen_in_status", [
     (Region("chrA", 1, 1), Status.affected.value | Status.unaffected.value),
     (Region("chrA", 2, 2), Status.affected.value),
