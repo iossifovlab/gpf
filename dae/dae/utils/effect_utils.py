@@ -184,7 +184,7 @@ def ge2str(eff):
 def gd2str(eff):
     return "|".join(
         [
-            t.details for t in eff.transcripts.values()
+            str(t) for t in eff.transcripts.values()
         ]
     )
 
