@@ -1,6 +1,19 @@
 <div class="card">
-  <div class="card-header card-title" style="font-family: Roboto; padding: 0px; position: relative; height: 40px">
-    <span class="header-item" style="left: 0">
+  <div
+    class="card-header card-title"
+    style="
+      font-family: Roboto;
+      padding: 0px;
+      position: relative;
+      height: 40px;
+      display: flex;
+      align-content: space-between;
+      flex-wrap: wrap;
+      flex-direction: column;
+      align-items: baseline;
+      overflow: hidden;
+    ">
+    <span class="header-item">
       <button
         type="button"
         id="undo-button"
@@ -32,23 +45,23 @@
       </button>
     </span>
 
-    <span class="header-item" style="left: 120px">
-      <label style="margin-left: 20px; font-size: 17px">
+    <span class="header-item" style="margin-left: -5%">
+      <label style="font-size: 17px; margin-left: 30px">
         <input type="checkbox" [checked]="!showTranscripts" (change)="showTranscripts = !showTranscripts; redraw()" />
         <span class="checkbox-option">Hide transcripts</span>
       </label>
-      <label style="margin-left: 15px; font-size: 17px">
+      <label style="font-size: 17px; margin-left: 10px">
         <input #checkbox type="checkbox" [checked]="condenseIntrons" (change)="toggleCondenseIntrons()" />
         <span class="checkbox-option">Condense introns</span>
       </label>
     </span>
 
-    <span id="gene-title" class="header-item" style="float: left; font-size: 20px; font-weight: bold; left: 45%">
+    <span id="gene-title" class="header-item" style="font-size: 20px; font-weight: bold">
       <span [attr.title]="'Gene symbol: ' + gene.geneSymbol + '\n' + chromosomesTitle">{{ gene?.geneSymbol }}</span>
     </span>
 
-    <span class="header-item" style="right: 0">
-      <span style="margin-left: 20px; font-size: 17px">
+    <span class="header-item">
+      <span style="margin-right: 17px; font-size: 17px">
         <span>Summary alleles:</span>
         <span
           id="summary-alleles-count"
@@ -56,7 +69,7 @@
           <span>{{ this.variantsArray?.totalSummaryAllelesCount }} / {{ this.allVariantsCounts[0] }}</span>
         </span>
       </span>
-      <span style="margin-left: 40px; font-size: 17px"
+      <span style="font-size: 17px"
         >Family variants:
         <span
           id="family-variants-count"
