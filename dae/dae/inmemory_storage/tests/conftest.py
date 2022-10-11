@@ -61,10 +61,10 @@ def simple_project(tmp_path_factory):
                 gene_models:
                     resource_id: "foobar_genes"
                 genotype_storage:
-                  default: genotype_filesystem
+                  default: genotype_inmemory
                   storages:
-                  - id: genotype_filesystem
-                    storage_type: filesystem
+                  - id: genotype_inmemory
+                    storage_type: inmemory
                     dir: "{root_path}/storage"
             """)
         },
@@ -91,7 +91,7 @@ def simple_project(tmp_path_factory):
                 gpf_instance:
                     path: {root_path / "gpf_instance"}
                 destination:
-                    storage_id: genotype_filesystem
+                    storage_id: genotype_inmemory
             """),
             "pedigree.ped": convert_to_tab_separated("""
                 fId pId      mId    dId    sex status      role

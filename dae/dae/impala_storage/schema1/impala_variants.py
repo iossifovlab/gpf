@@ -11,7 +11,7 @@ from sqlalchemy.exc import TimeoutError as SqlTimeoutError
 
 from dae.person_sets import PersonSetCollection
 
-from dae.filesystem_storage.in_memory.raw_variants import RawFamilyVariants
+from dae.inmemory_storage.raw_variants import RawFamilyVariants
 
 from dae.annotation.schema import Schema
 from dae.pedigrees.family import FamiliesData

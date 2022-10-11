@@ -15,8 +15,8 @@ from dae.import_tools.task_graph import TaskGraph
 logger = logging.getLogger(__file__)
 
 
-class FilesystemImportStorage(ImportStorage):
-    """Defines import storage for filesystem genotype storage."""
+class InmemoryImportStorage(ImportStorage):
+    """Defines import storage for in-memory genotype storage."""
 
     @staticmethod
     def _get_destination_study_dir(project: ImportProject) -> str:

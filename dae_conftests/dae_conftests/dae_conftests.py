@@ -24,7 +24,7 @@ from dae.annotation.annotation_factory import build_annotation_pipeline
 
 from dae.variants_loaders.raw.loader import EffectAnnotationDecorator, \
     AnnotationPipelineDecorator
-from dae.filesystem_storage.in_memory.raw_variants import RawMemoryVariants
+from dae.inmemory_storage.raw_variants import RawMemoryVariants
 
 from dae.variants_loaders.dae.loader import DaeTransmittedLoader, DenovoLoader
 from dae.variants_loaders.vcf.loader import VcfLoader

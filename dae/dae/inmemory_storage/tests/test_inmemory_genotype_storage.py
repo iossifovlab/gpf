@@ -4,8 +4,8 @@ import re
 import pytest
 
 from dae.import_tools.import_tools import run_with_project
-from dae.filesystem_storage.in_memory.filesystem_genotype_storage import \
-    FilesystemGenotypeStorage
+from dae.inmemory_storage.inmemory_genotype_storage import \
+    InmemoryGenotypeStorage
 
 
 @pytest.fixture(scope="module")
@@ -49,7 +49,7 @@ def test_query_summary_variants(
 
 
 def test_storage_type(filesystem_genotype_storage):
-    assert filesystem_genotype_storage.get_storage_type() == "filesystem"
+    assert filesystem_genotype_storage.get_storage_type() == "inmemory"
 
 
 @pytest.mark.parametrize(
@@ -68,24 +68,24 @@ def test_get_data_dir(
 
 def test_create_filesystem_storage(tmp_path):
     config = {
-        "storage_type": "filesystem",
+        "storage_type": "inmemory",
         "id": "aaaa",
         "dir": str(tmp_path)
     }
-    storage = FilesystemGenotypeStorage(config)
+    storage = InmemoryGenotypeStorage(config)
     assert storage is not None
 
 
 def test_create_filesystem_storage_missing_id(tmp_path):
     config = {
-        "storage_type": "filesystem",
+        "storage_type": "inmemory",
         # "id": "aaaa",
         "dir": str(tmp_path)
     }
     with pytest.raises(
             ValueError,
             match="genotype storage without ID; 'id' is required"):
-        FilesystemGenotypeStorage(config)
+        InmemoryGenotypeStorage(config)
 
 
 def test_create_missing_storage_type():
@@ -96,7 +96,7 @@ def test_create_missing_storage_type():
     with pytest.raises(
             ValueError,
             match="genotype storage without type; 'storage_type' is required"):
-        FilesystemGenotypeStorage(config)
+        InmemoryGenotypeStorage(config)
 
 
 def test_create_wrong_storage_type():
@@ -109,34 +109,34 @@ def test_create_wrong_storage_type():
             ValueError,
             match=re.escape(
                 "storage configuration for <filesystem2> passed to "
-                "genotype storage class type <filesystem>")):
-        FilesystemGenotypeStorage(config)
+                "genotype storage class type <inmemory>")):
+        InmemoryGenotypeStorage(config)
 
 
 def test_create_missing_dir():
     config = {
         "id": "aaaa",
-        "storage_type": "filesystem",
+        "storage_type": "inmemory",
         # "dir": "/tmp/aaaa_filesystem"
     }
     with pytest.raises(
             ValueError,
             match=re.escape(
-                "wrong config format for filesytem storage: "
+                "wrong config format for inmemory storage: "
                 "{'dir': ['required field']}")):
-        FilesystemGenotypeStorage(config)
+        InmemoryGenotypeStorage(config)
 
 
 def test_create_bad_dir():
     config = {
         "id": "aaaa",
-        "storage_type": "filesystem",
+        "storage_type": "inmemory",
         "dir": "tmp/aaaa_filesystem"
     }
     with pytest.raises(
             ValueError,
             match=re.escape(
-                "wrong config format for filesytem storage: "
+                "wrong config format for inmemory storage: "
                 "{'dir': ['path <tmp/aaaa_filesystem> "
                 "is not an absolute path']}")):
-        FilesystemGenotypeStorage(config)
+        InmemoryGenotypeStorage(config)

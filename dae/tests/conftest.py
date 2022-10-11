@@ -49,7 +49,7 @@ def default_genotype_storage_configs(root_path):
         # Filesystem InMemory
         {
             "id": "inmemory",
-            "storage_type": "filesystem",
+            "storage_type": "inmemory",
             "dir": f"{root_path}/genotype_filesystem_data"
         }
     ]

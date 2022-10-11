@@ -1,11 +1,11 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import os
-from dae.filesystem_storage.in_memory.filesystem_import_storage import \
-    FilesystemImportStorage
+from dae.inmemory_storage.inmemory_import_storage import \
+    InmemoryImportStorage
 
 
 def test_simple_project_storage_type(simple_project):
-    assert simple_project._storage_type() == "filesystem"
+    assert simple_project._storage_type() == "inmemory"
 
 
 def test_simple_project_pedigree_params(simple_project):
@@ -25,7 +25,7 @@ def test_simple_project_pedigree_size(simple_project):
 
 
 def test_simple_project_destination_study_dir(simple_project):
-    dest = FilesystemImportStorage._get_destination_study_dir(simple_project)
+    dest = InmemoryImportStorage._get_destination_study_dir(simple_project)
     assert dest.endswith("storage/test_import")
     assert os.path.exists(dest)
 
@@ -36,13 +36,13 @@ def test_simple_project_get_loader_types(simple_project):
 
 
 def test_study_dir_pedigree(simple_project):
-    dest = FilesystemImportStorage._do_copy_pedigree(simple_project)
+    dest = InmemoryImportStorage._do_copy_pedigree(simple_project)
     assert dest["path"].endswith("storage/test_import/pedigree.ped")
     assert os.path.exists(dest["path"])
 
 
 def test_study_dir_denovo_variants(simple_project):
-    dest = FilesystemImportStorage._do_copy_variants(simple_project, "denovo")
+    dest = InmemoryImportStorage._do_copy_variants(simple_project, "denovo")
     assert len(dest) == 1
 
     assert dest[0]["path"].endswith(
@@ -51,7 +51,7 @@ def test_study_dir_denovo_variants(simple_project):
 
 
 def test_study_import(simple_project):
-    FilesystemImportStorage._do_study_import(simple_project)
+    InmemoryImportStorage._do_study_import(simple_project)
     gpf_instance = simple_project.get_gpf_instance()
     gpf_instance.reload()
 

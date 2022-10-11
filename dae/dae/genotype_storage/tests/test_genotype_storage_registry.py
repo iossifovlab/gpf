@@ -3,8 +3,8 @@ import pytest
 
 from dae.impala_storage.schema1.impala_genotype_storage import \
     ImpalaGenotypeStorage
-from dae.filesystem_storage.in_memory.filesystem_genotype_storage import \
-    FilesystemGenotypeStorage
+from dae.inmemory_storage.inmemory_genotype_storage import \
+    InmemoryGenotypeStorage
 
 
 @pytest.fixture(scope="session")
@@ -47,7 +47,7 @@ def test_get_genotype_storage_filesystem(genotype_storage_registry):
         "genotype_filesystem"
     )
 
-    assert isinstance(genotype_filesystem, FilesystemGenotypeStorage)
+    assert isinstance(genotype_filesystem, InmemoryGenotypeStorage)
     assert (
         genotype_filesystem.storage_id
         == "genotype_filesystem"
@@ -57,7 +57,7 @@ def test_get_genotype_storage_filesystem(genotype_storage_registry):
 def test_get_default_genotype_storage(genotype_storage_registry):
     genotype_storage = genotype_storage_registry.get_default_genotype_storage()
 
-    assert isinstance(genotype_storage, FilesystemGenotypeStorage)
+    assert isinstance(genotype_storage, InmemoryGenotypeStorage)
     assert (
         genotype_storage.storage_id == "genotype_filesystem"
     )
