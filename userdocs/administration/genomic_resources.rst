@@ -137,6 +137,7 @@ When ready you should run ``grr_manage resource-repair`` from inside resource
 directory:
 
 .. code-block:: bash
+
     cd hg38/scores/score9
     grr_manage resource-repair
 

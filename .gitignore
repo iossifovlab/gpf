@@ -17,3 +17,4 @@ cache
 data
 results
 Jenkinsfile.generated-stages.all
+.DS_Store

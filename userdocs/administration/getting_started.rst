@@ -10,7 +10,7 @@ This guide assumes that you are working on a Linux distribution.
 Installation of `wget`
 ++++++++++++++++++++++
 
-You need wget to follow this guide - you can use your system's package manager
+You need `wget` to follow this guide - you can use your system's package manager
 to install it. For example, on Ubuntu:
 
 .. code-block:: bash
@@ -24,7 +24,7 @@ Working version of `anaconda` or `miniconda`
 The GPF system is distributed as an Anaconda package using the `conda`
 package manager.
 
-If you do not have a working version of Anaconda or Miniconda you need to
+If you do not have a working version of Anaconda or Miniconda, you must
 install one. We recommended using a Miniconda version.
 
 Go to the Miniconda 
@@ -44,13 +44,13 @@ and install it in your local environment:
 .. note::
 
     At the end of the installation process, you will be asked if you wish
-    to allow the installer to initialize Anaconda3 by running conda init.
+    to allow the installer to initialize Anaconda3 by running `conda` init.
     If you choose to, every terminal you open after that will have the ``base``
     Anaconda environment activated, and you'll have access to the ``conda``
     commands used below.
 
-Once Anaconda/Miniconda is installed we would recomend installing ``mamba`` 
-instead of ``conda`` when installing packages.
+Once Anaconda/Miniconda is installed, we would recommend installing ``mamba`` 
+instead of ``conda``. Mamba will speed up the installation of packages:
 
 .. code-block::
 
@@ -60,8 +60,8 @@ instead of ``conda`` when installing packages.
 GPF Installation
 ################
 
-The GPF system is developed in Python and supports Python 3.7 and up. The
-recommended way to setup the GPF development environment is to use Anaconda.
+The GPF system is developed in Python and supports Python 3.9 and up.
+The recommended way to set up the GPF development environment is to use Anaconda.
 
 Install GPF
 +++++++++++
@@ -94,7 +94,7 @@ This command is going to install GPF and all of its dependencies.
 
 .. note:: 
 
-    If you want to install development version of GPF you can use
+    If you want to install a development version of GPF, you can use
     the following command:
 
     .. code-block:: bash
@@ -116,7 +116,7 @@ Create an empty directory named ``data-hg38-empty``:
 
     mkdir data-hg38-empty
 
-and inside it create a file named ``gpf_instance.yaml`` with the following
+and inside it, create a file named ``gpf_instance.yaml`` with the following
 content:
 
 .. code-block:: yaml
@@ -133,18 +133,18 @@ content:
     gene_models:
         resource_id: "hg38/gene_models/refSeq_v20200330"
 
-This creates an GPF instance, that:
+This will create a GPF instance that:
 
-* uses a genomic resources repository as specified in ``grr`` section;
+* Uses a genomic resources repository as specified in the ``grr`` section;
   the repository is located at 
   `https://grr.seqpipe.org/ <https://grr.seqpipe.org>`_
   and the resources are cached locally in the home directory of the user as
   specified in ``cache_dir`` property;
 
-* the reference genome used by this GPF instance is ``hg38/genomes/GRCh38-hg38``
+* The reference genome used by this GPF instance is ``hg38/genomes/GRCh38-hg38``
   from GRR specified in ``grr`` section;
 
-* the gene models used by this GPF instance are 
+* The gene models used by this GPF instance are 
   ``hg38/gene_models/refSeq_v20200330`` from GRR specified in ``grr`` section.
 
 
@@ -152,9 +152,9 @@ This creates an GPF instance, that:
 Prepare the GPF web server
 ##########################
 
-First let us instruct the GPF system, that the we are going to use
-``data-hg38-empty`` as an instance directory. By default the GPF system
-look for an environment variable named ``DAE_DB_DIR`` to locate the GPF
+First, let us instruct the GPF system that the we are going to use
+``data-hg38-empty`` as an instance directory. By default, the GPF system
+looks for an environment variable named ``DAE_DB_DIR`` to locate the GPF
 instance directory.
 
 .. code-block:: bash
@@ -162,20 +162,20 @@ instance directory.
     cd data-hg38-empty
     export DAE_DB_DIR="$(pwd)"
 
-To setup initial empty database we need to run:
+To set up the initial empty database, we need to run:
 
 .. code-block:: bash
 
     wdaemanage.py migrate
 
-After that we will need to create an admin user to be able to have access and
+After that, we will need to create an admin user to be able to have access and
 manage the instance web server:
 
 .. code-block:: bash
 
     wdaemanage.py user_create admin@iossifovlab.com -p secret -g any_dataset:admin
 
-This will create an ``admin`` user with user name ``admin@iossifovlab.com``
+This will create an ``admin`` user with the user name ``admin@iossifovlab.com``
 and password ``secret``.
 
 Now we can run the GPF development web server and browse our empty GPF instance:
@@ -192,14 +192,14 @@ the runserver command:
     http://localhost:8000
 
 
-To stop the development GPF web server you should press ``Ctrl-C`` - the usual
-keybinding for stopping long running Linux commands in a terminal.
+To stop the development GPF web server, you should press ``Ctrl-C`` - the usual
+keybinding for stopping long-running Linux commands in a terminal.
 
 
 .. warning:: 
 
     The web server used in this guide is meant for development purposes only
-    and is not sutable for serving GPF system in production.
+    and is not suitable for serving the GPF system in production.
 
 
 Import genotype variants
@@ -209,40 +209,67 @@ Import genotype variants
 Data Storage
 ++++++++++++
 
-By default, GPF uses the filesystem for storing imported genotype data.
-This is fine for smaller sized studies, however, there is an option to use
-Apache Impala as storage. This can be especially useful for larger studies.
-If you wish to use Apache Impala as storage, refer to :ref:`impala_storage`.
 
-Simple study import
-+++++++++++++++++++
+The GPF system uses genotype storage for storing genomic variants. There are
+several genotype storages supported by GPF:
 
-Importing study data into a GPF instance involves multiple steps. To
-make initial bootstraping easier, you can use the ``simple_study_import.py``
-tool which combines all the necessary steps in one tool.
+* In-memory genotype storage that stores the genomic variants in the RAM. This
+  storage is fine for smaller-sized studies.
+* Apache Impala genotype storage that uses HDFS/Impala for storing genomic
+  variants.
+* (WIP) Filesystem genotype storage
+* (WIP) BigQuery genotype storage.
 
-`simple_study_import.py` tool
-*****************************
+We are going to use in-memory genotype storage for this guide. It is easiest
+to set up and use.
+
+Define In-Memory Storage
+++++++++++++++++++++++++
+
+Let us edit our GPF instance configuration to add genotype storage:
+
+.. code-block:: yaml
+
+    grr:
+        id: "seqpipe"
+        type: "url"
+        url: "https://grr.seqpipe.org/"
+        cache_dir: "%($HOME)s/grrCache"
+
+    reference_genome:
+        resource_id: "hg38/genomes/GRCh38-hg38"
+
+    gene_models:
+        resource_id: "hg38/gene_models/refSeq_v20200330"
+
+    genotype_storage:
+        default: inmemory_storage
+        storages:
+        - id: inmemory_storage
+          storage_type: inmemory
+          dir: "%(wd)s/inmemory_storage"
+
+
+Import Tools and Import Project
++++++++++++++++++++++++++++++++
+
+Importing genotype data into a GPF instance involves multiple steps. 
+The tool used to import genotype data is named `import_tool`. This tool
+expects an import project file that describes the import.
 
 This tool supports importing variants from three formats:
+
+* :ref:`List of de Novo variants <denovo_format>`
 
 * Variant Call Format (VCF)
 
 * CSHL transmitted variants format
 
-* :ref:`List of de Novo variants <denovo_format>`
-
-To see the available options supported by this tool use::
-
-    simple_study_import.py --help
+* CNV variants
 
 
 Example import of variants
-**************************
-
-.. warning::
-    Make sure not to extract the downloaded study in the gpf_test/studies folder,
-    as this is where the system imports and reads its data to/from.
+++++++++++++++++++++++++++
 
 * Download the sample study and extract it::
 
@@ -254,44 +281,60 @@ a VCF file ``comp.vcf`` with transmitted variants and a list of de Novo
 variants ``comp.tsv``.
 
 
-* Enter into the created directory ``comp``::
+.. code-block:: yaml
 
-    cd comp
+    id: comp
+    input:
+        pedigree:
+            file: comp.ped
+        denovo:
+            files:
+            - comp.tsv
+        vcf:
+            files:
+            - comp.vcf
+    destination:
+        storage_id: inmemory_storage
 
-* Run ``simple_study_import.py`` to import the VCF variants; this command uses
-  three arguments - pedigree file name, a VCF file name and an id to assign to the imported study in the system::
 
-        simple_study_import.py comp.ped \
-            --vcf-files comp.vcf \
-            --id comp_vcf
+.. * Enter into the created directory ``comp``::
 
-  | This command creates a study with ID `comp_vcf` that contains all VCF variants.
+..     cd comp
 
-* Run ``simple_study_import.py`` to import the de Novo variants; this command
-  uses three arguments - study ID to use, pedigree file name and de Novo variants file name::
+.. * Run ``simple_study_import.py`` to import the VCF variants; this command uses
+..   three arguments - pedigree file name, a VCF file name and an id to assign to the imported study in the system::
 
-        simple_study_import.py comp.ped \
-            --denovo-file comp.tsv \
-            --id comp_denovo
+..         simple_study_import.py comp.ped \
+..             --vcf-files comp.vcf \
+..             --id comp_vcf
 
-  | This command creates a study with ID `comp_denovo` that contains all de Novo variants.
+..   | This command creates a study with ID `comp_vcf` that contains all VCF variants.
 
-* Run ``simple_study_import.py`` to import all VCF and de Novo variants;
-  this command uses four arguments - study ID to use, pedigree file name,
-  VCF file name and de Novo variants file name::
+.. * Run ``simple_study_import.py`` to import the de Novo variants; this command
+..   uses three arguments - study ID to use, pedigree file name and de Novo variants file name::
 
-        simple_study_import.py comp.ped \
-            --denovo-file comp.tsv \
-            --vcf-files comp.vcf \
-            --id comp_all
+..         simple_study_import.py comp.ped \
+..             --denovo-file comp.tsv \
+..             --id comp_denovo
 
-  This command creates a study with ID `comp_all` that contains all
-  VCF and de Novo variants.
+..   | This command creates a study with ID `comp_denovo` that contains all de Novo variants.
+
+.. * Run ``simple_study_import.py`` to import all VCF and de Novo variants;
+..   this command uses four arguments - study ID to use, pedigree file name,
+..   VCF file name and de Novo variants file name::
+
+..         simple_study_import.py comp.ped \
+..             --denovo-file comp.tsv \
+..             --vcf-files comp.vcf \
+..             --id comp_all
+
+..   This command creates a study with ID `comp_all` that contains all
+..   VCF and de Novo variants.
 
 .. _denovo_format:
 
 .. note::
-    The expected format for the de Novo variants file is a tab-separated
+    The default format for the de Novo variants file is a tab-separated
     file that contains the following columns:
 
     - familyId - family id matching a family from the pedigree file
@@ -314,7 +357,7 @@ variants ``comp.tsv``.
 
 
 Example import of de Novo variants
-**********************************
+++++++++++++++++++++++++++++++++++
 
 As an example of importing a study with de Novo variants, you can use the `iossifov_2014` study.
 Download and extract the study::
