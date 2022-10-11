@@ -278,7 +278,7 @@ describe('PedigreeChartComponent', () => {
 
     component.family = mockFamilies.familiesWithoutPosition.f5;
     component.ngOnInit();
-    expect(component.getViewBox()).toBe('-3.38 -3.38 29.25 29.25');
+    expect(component.getViewBox()).toBe('-3.38 -3.38 29.25 35.25');
   });
 
   it('should return the proper viewbox values for pedigrees WITH positions', () => {
