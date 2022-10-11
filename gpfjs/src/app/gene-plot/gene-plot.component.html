@@ -1,18 +1,6 @@
 <div class="card">
   <div
-    class="card-header card-title"
-    style="
-      font-family: Roboto;
-      padding: 0px;
-      position: relative;
-      height: 40px;
-      display: flex;
-      align-content: space-between;
-      flex-wrap: wrap;
-      flex-direction: column;
-      align-items: baseline;
-      overflow: hidden;
-    ">
+    class="card-header card-title">
     <span class="header-item">
       <button
         type="button"
@@ -45,7 +33,7 @@
       </button>
     </span>
 
-    <span class="header-item" style="margin-left: -5%">
+    <span class="header-item" style="margin-left: -15%">
       <label style="font-size: 17px; margin-left: 30px">
         <input type="checkbox" [checked]="!showTranscripts" (change)="showTranscripts = !showTranscripts; redraw()" />
         <span class="checkbox-option">Hide transcripts</span>

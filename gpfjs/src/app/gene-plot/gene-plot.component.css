@@ -26,3 +26,15 @@ label {
   font-size: 17px;
   user-select: none;
 }
+
+.card-header.card-title {
+  font-family: Roboto;
+  padding: 0px;
+  position: relative;
+  height: 40px;
+  display: flex;
+  align-content: space-between;
+  flex-wrap: wrap;
+  flex-direction: column;
+  overflow: hidden;
+}
