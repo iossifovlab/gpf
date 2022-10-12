@@ -27,8 +27,7 @@ label {
   user-select: none;
 }
 
-.card-header.card-title {
-  font-family: Roboto;
+.gene-plot-header {
   padding: 0px;
   position: relative;
   height: 40px;
