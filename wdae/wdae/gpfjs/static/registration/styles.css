@@ -58,6 +58,10 @@ table .message {
   border: 0px;
 }
 
+.login-button-google {
+  background-color: #db603a;
+}
+
 img {
   height: 30px;
   padding-right: 6px;

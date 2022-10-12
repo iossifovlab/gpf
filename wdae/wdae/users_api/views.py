@@ -1,6 +1,7 @@
 import json
 import base64
 from typing import Optional, cast
+import requests
 import django.contrib.auth
 from django import forms
 from django.db import IntegrityError, models
@@ -437,6 +438,40 @@ def register(request):
                            " Please use a valid email address.")},
             status=status.HTTP_400_BAD_REQUEST
         )
+
+
+@request_logging_function_view(LOGGER)
+@csrf_clear
+@api_view(["GET"])
+@authentication_classes((SessionAuthentication,))
+def login_with_google(request):
+    """Log in with an OAuth access code received from Google."""
+    user_model = get_user_model()
+    code = request.GET.get("code")
+    if not code:
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+
+    response = requests.post(settings.GOOGLE_TOKEN_URL, json={
+        "grant_type": "authorization_code",
+        "code": code,
+        "client_id": settings.GOOGLE_CLIENT_ID,
+        "client_secret": settings.GOOGLE_CLIENT_SECRET,
+        "redirect_uri": settings.GOOGLE_REDIRECT_URI,
+    })
+
+    # extract ID token, "==" is added for base64 padding
+    id_token = json.loads(
+        base64.b64decode(response.json()["id_token"].split(".")[1] + "==")
+    )
+    try:
+        user = user_model.objects.get(email=id_token["email"])
+    except user_model.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    django.contrib.auth.login(request, user)
+    if request.GET.get("state"):
+        return redirect(request.GET.get("state"))
+    return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 @request_logging_function_view(LOGGER)

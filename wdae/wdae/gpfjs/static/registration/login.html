@@ -57,10 +57,24 @@
                     </td>
                 </tr>
             </table>
-
-
         </form>
-
+        <form method="post" action="{{ GOOGLE_AUTH_URL }}" style="text-align:center">
+          <table>
+            <tr>
+              <td>
+                <input class="login-button login-button-google" type="submit" value="Sign in with Google">
+                <input type="hidden" name="response_type" value="code">
+                <input type="hidden" name="client_id" value="{{ GOOGLE_CLIENT_ID }}">
+                <input type="hidden" name="redirect_uri" value="{{ GOOGLE_REDIRECT_URI }}">
+                <input type="hidden" name="scope" value="openid email">
+                <input type="hidden" name="state" value="{{ next }}">
+              </td>
+            </tr>
+          </table>
+        </form>
+        {% if form.errors %}
+        <div>Your username and password didn't match. Please try again.</div>
+        {% endif %}
     </body>
 
 </html>

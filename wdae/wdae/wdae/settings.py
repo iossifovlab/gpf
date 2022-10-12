@@ -2,6 +2,7 @@
 # flake8: noqa
 
 # pylint: disable=wildcard-import,unused-wildcard-import
+import os
 from .default_settings import *
 
 INSTALLED_APPS += [
@@ -27,3 +28,9 @@ CORS_ALLOW_CREDENTIALS = True
 STUDIES_EAGER_LOADING = False
 
 OPEN_REGISTRATION = True
+
+GOOGLE_AUTH_URL = os.environ["GOOGLE_AUTH_URL"]
+GOOGLE_TOKEN_URL = os.environ["GOOGLE_TOKEN_URL"]
+GOOGLE_CLIENT_ID = os.environ["GOOGLE_CLIENT_ID"]
+GOOGLE_CLIENT_SECRET = os.environ["GOOGLE_CLIENT_SECRET"]
+GOOGLE_REDIRECT_URI = os.environ["GOOGLE_REDIRECT_URI"]
