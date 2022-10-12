@@ -96,12 +96,12 @@ class GeneScoresPartitionsView(QueryBaseView):
         df = score.df
 
         try:
-            score_min = float(data["min"])
+            score_min = score.min()
         except TypeError:
             score_min = float("-inf")
 
         try:
-            score_max = float(data["max"])
+            score_max = score.max()
         except TypeError:
             score_max = float("inf")
 
