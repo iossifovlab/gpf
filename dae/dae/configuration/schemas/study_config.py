@@ -186,6 +186,7 @@ family_schema = {
     "params": {
         "type": "dict",
         "schema": {
+            "ped_file": {"type": "string"},
             "ped_family": {"type": "string"},
             "ped_person": {"type": "string"},
             "ped_mom": {"type": "string"},
@@ -200,6 +201,7 @@ family_schema = {
             "ped_layout_mode": {"type": "string"},
             "ped_sep": {"type": "string"},
             "ped_tags": {"type": "boolean"},
+            "ped_no_tags": {"type": "boolean"},
         },
         "default": {},
     },
