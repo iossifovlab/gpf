@@ -1,11 +1,13 @@
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
 import io
-import toml
 import textwrap
-import pytest
-
 from typing import cast, Any, Dict
 
-from dae.genomic_resources.testing import convert_to_tab_separated
+import pytest
+import toml
+
+
+from dae.testing import convert_to_tab_separated
 
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.person_sets import person_set_collections_schema
@@ -81,10 +83,10 @@ def test_produce_sets(status_person_sets_collection):
         status_person_sets_collection.status)
     assert people_sets == {
         "affected": PersonSet(
-            "affected", "Affected", {"affected_val"}, "#aabbcc", dict()
+            "affected", "Affected", {"affected_val"}, "#aabbcc", {}
         ),
         "unaffected": PersonSet(
-            "unaffected", "Unaffected", {"unaffected_val"}, "#ffffff", dict()
+            "unaffected", "Unaffected", {"unaffected_val"}, "#ffffff", {}
         ),
     }
 
@@ -93,8 +95,7 @@ def test_produce_default_person_set(status_person_sets_collection):
     people_set = PersonSetCollection._produce_default_person_set(
         status_person_sets_collection.status)
     assert people_set == PersonSet(
-            "unknown", "Unknown", {"DEFAULT"}, "#aaaaaa", dict()
-        )
+        "unknown", "Unknown", {"DEFAULT"}, "#aaaaaa", {})
 
 
 def test_from_pedigree(families_fixture, status_person_sets_collection):
@@ -109,7 +110,7 @@ def test_from_pedigree(families_fixture, status_person_sets_collection):
         status_collection.person_sets["affected"].persons.keys()
     )
     assert result_person_ids == {
-        'prb2', 'sib2_3', 'sib2', 'prb1', 'sib1'
+        "prb2", "sib2_3", "sib2", "prb1", "sib1"
     }
 
 
@@ -162,8 +163,7 @@ def test_from_pedigree_nonexistent_domain(fixture_dirname, families_fixture):
     config = get_person_set_collections_config(content)
 
     collection = PersonSetCollection.from_families(
-            config.invalid, families_fixture,
-        )
+        config.invalid, families_fixture)
     assert set(collection.person_sets.keys()) == {"unknown"}
 
 
@@ -286,8 +286,8 @@ def test_multiple_column_person_set(families_fixture):
         status_sex_collection.person_sets["affected_female"].persons.keys()
     )
 
-    assert affected_male == {'prb1', 'prb2'}
-    assert affected_female == {'sib1', 'sib2', 'sib2_3'}
+    assert affected_male == {"prb1", "prb2"}
+    assert affected_female == {"sib1", "sib2", "sib2_3"}
 
 
 def test_phenotype_person_set_categorical(
@@ -410,7 +410,7 @@ def test_genotype_group_person_sets_subset(fixtures_gpf_instance):
 
     # Remove a person to simulate a subset of people being used
     del genotype_data_group.families.persons["person4"]
-    genotype_data_group._person_set_collections = dict()
+    genotype_data_group._person_set_collections = {}
     genotype_data_group._build_person_set_collections()
 
     phenotype_collection = genotype_data_group.get_person_set_collection(

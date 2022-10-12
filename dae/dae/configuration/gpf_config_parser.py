@@ -117,7 +117,8 @@ class GPFConfigParser:
             content: str, parser=yaml.safe_load,
             conf_dir=None) -> dict:
         """Parse text content and perform variable interpolation on result."""
-        interpol_vars = parser(content).get("vars", {})
+        parsed_content = parser(content) or {}
+        interpol_vars = parsed_content.get("vars", {})
 
         env_vars = {f"${key}": val for key, val in os.environ.items()}
         interpol_vars = {
@@ -136,7 +137,7 @@ class GPFConfigParser:
         except KeyError as ex:
             raise ValueError("interpolation problems") from ex
 
-        config = parser(interpolated_text)
+        config = parser(interpolated_text) or {}
         config.pop("vars", None)
         return cast(dict, config)
 

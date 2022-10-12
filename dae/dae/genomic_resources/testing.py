@@ -1,7 +1,6 @@
 """Provides tools usefult for testing."""
 from __future__ import annotations
 import contextlib
-import pathlib
 import time
 
 import logging
@@ -10,7 +9,7 @@ import multiprocessing
 
 from http.server import HTTPServer  # ThreadingHTTPServer
 
-from typing import Any, cast, Optional, Dict, Union
+from typing import Any, cast, Optional
 from functools import partial
 
 from dae.genomic_resources.repository import \
@@ -249,33 +248,3 @@ def range_http_process_server_generator(directory):
 @contextlib.contextmanager
 def range_http_serve(directory):
     yield from range_http_process_server_generator(directory=directory)
-
-
-def setup_directories(
-        root_dir: pathlib.Path,
-        content: Union[str, Dict[str, Any]]) -> None:
-    """Set up directory and subdirectory structures using the content."""
-    root_dir = pathlib.Path(root_dir)
-    root_dir.parent.mkdir(parents=True, exist_ok=True)
-    if isinstance(content, str):
-        root_dir.write_text(content, encoding="utf8")
-    elif isinstance(content, dict):
-        for path_name, path_content in content.items():
-            setup_directories(root_dir / path_name, path_content)
-    else:
-        raise ValueError(
-            f"unexpected content type: {path_content} for {path_name}")
-
-
-def convert_to_tab_separated(content: str):
-    """Convert a string into tab separated file content.
-
-    Useful for testing purposes.
-    """
-    result = "\n".join(
-        "\t".join(line.strip("\n\r").split())
-        for line in content.split("\n")
-        if line.strip("\r\n") != "")
-    result = result.replace("||", " ")
-    # result = result.replace("EMPTY", "")
-    return result

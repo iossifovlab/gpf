@@ -4,7 +4,7 @@ import os
 
 import pytest
 
-from dae.genomic_resources.testing import convert_to_tab_separated
+from dae.testing import convert_to_tab_separated
 from dae.genomic_resources.testing import build_test_resource
 from dae.genomic_resources.fsspec_protocol import build_fsspec_protocol, \
     build_local_resource

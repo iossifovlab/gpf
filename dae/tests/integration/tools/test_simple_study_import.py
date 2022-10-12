@@ -2,12 +2,14 @@
 import textwrap
 import pytest
 
-from tests.foobar_import import foobar_gpf, setup_pedigree, setup_vcf, \
-    setup_dae_transmitted, setup_denovo
-from dae.genomic_resources.testing import setup_directories
+from dae.testing import setup_pedigree, setup_vcf, \
+    setup_dae_transmitted, setup_denovo, setup_directories
 
 from dae.import_tools.import_tools import ImportProject
 from dae.tools.simple_study_import import main
+
+
+from ...foobar_import import foobar_gpf
 
 
 def test_del_loader_prefix():

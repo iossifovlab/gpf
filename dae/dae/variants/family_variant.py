@@ -331,10 +331,7 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
     
     @property
     def variant_in_statuses(self):
-        """
-        Returns list of statuses (or 'None') of the members of the family that are 
-        affected by this family variant
-        """
+        """Return list of statuses (or 'None') of the members with variant."""
         if self._variant_in_statuses is None:
             self._variant_in_statuses = [
                 self.family.persons[pid].status if pid is not None else None

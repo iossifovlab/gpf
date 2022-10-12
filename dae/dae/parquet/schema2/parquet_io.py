@@ -1,3 +1,4 @@
+from functools import reduce
 import io
 import os
 import sys
@@ -17,7 +18,7 @@ import pyarrow as pa
 import pyarrow.parquet as pq
 
 from dae.utils.variant_utils import GENOTYPE_TYPE
-from dae.variants.attributes import TransmissionType
+from dae.variants.attributes import Inheritance, TransmissionType
 from dae.variants.family_variant import (
     FamilyAllele,
     FamilyVariant,
@@ -653,6 +654,7 @@ class VariantsParquetWriter:
         return self.data_writers[filename]
 
     def _write_internal(self):
+        # pylint: disable=too-many-locals
         family_variant_index = 0
         report = False
 
@@ -661,6 +663,10 @@ class VariantsParquetWriter:
             family_variants,
         ) in enumerate(self.full_variants_iterator):
             num_fam_alleles_written = 0
+            seen_in_status = summary_variant.allele_count * [0]
+            seen_as_denovo = summary_variant.allele_count * [False]
+            family_variants_count = summary_variant.allele_count * [0]
+
             for fv in family_variants:
                 family_variant_index += 1
 
@@ -670,27 +676,40 @@ class VariantsParquetWriter:
                 fv.summary_index = summary_variant_index
                 fv.family_index = family_variant_index
 
-                for family_allele in fv.alleles:
+                for fa in fv.alleles:
                     extra_atts = {
                         "bucket_index": self.bucket_index,
                         "family_index": family_variant_index,
                     }
-                    family_allele.update_attributes(extra_atts)
+                    fa.update_attributes(extra_atts)
 
                 family_variant_data_json = json.dumps(fv.to_record,
                                                       sort_keys=True)
 
-                for family_allele in fv.alt_alleles:
-                    family_bin_writer = self._get_bin_writer_family(
-                        family_allele
-                    )
+                for fa in fv.alt_alleles:
+                    family_bin_writer = self._get_bin_writer_family(fa)
                     family_bin_writer.append_family_allele(
-                        family_allele, family_variant_data_json
+                        fa, family_variant_data_json
                     )
+                    seen_in_status[fa.allele_index] = reduce(
+                        lambda t, s: t | s.value,
+                        filter(None, fa.allele_in_statuses),
+                        seen_in_status[fa.allele_index])
+                    seen_as_denovo[fa.allele_index] = reduce(
+                        lambda t, s: t or (s == Inheritance.denovo),
+                        filter(None, fa.inheritance_in_members),
+                        seen_as_denovo[fa.allele_index])
+                    family_variants_count[fa.allele_index] += 1
                     num_fam_alleles_written += 1
 
             # don't store summary alleles withouth family ones
             if num_fam_alleles_written > 0:
+                summary_variant.update_attributes({
+                    "seen_in_status": seen_in_status[1:],
+                    "seen_as_denovo": seen_as_denovo[1:],
+                    "family_variants_count": family_variants_count[1:],
+                    "family_alleles_count": family_variants_count[1:],
+                })
                 # build summary json blob (concat all other alleles)
                 # INSIDE summary_variant
                 summary_blobs_json = json.dumps(

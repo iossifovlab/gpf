@@ -2,8 +2,9 @@
 
 import pytest
 
-from tests.foobar_import import setup_pedigree, setup_vcf
+from tests.foobar_import import foobar_gpf
 
+from dae.testing import setup_pedigree, setup_vcf, vcf_study
 from dae.utils.regions import Region
 
 
@@ -49,13 +50,12 @@ f2       c2       d2    m2    2   2      prb
 @pytest.fixture(scope="module")
 def imported_study(request, tmp_path_factory, freq_vcf, genotype_storage):
     # pylint: disable=import-outside-toplevel
-    from ...foobar_import import foobar_vcf_study
-
     root_path = tmp_path_factory.mktemp(genotype_storage.storage_id)
+    gpf_instance = foobar_gpf(root_path, genotype_storage)
     ped_path, vcf_path = freq_vcf
 
-    study = foobar_vcf_study(
-        root_path, "freq_vcf", ped_path, vcf_path, genotype_storage)
+    study = vcf_study(
+        root_path, "freq_vcf", ped_path, [vcf_path], gpf_instance)
     return study
 
 

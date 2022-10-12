@@ -155,6 +155,17 @@ def pytest_generate_tests(metafunc):
 
         storages = GENOTYPE_STORAGES
 
+        if hasattr(metafunc, "function"):
+            marked_types = set()
+            for mark in getattr(metafunc.function, "pytestmark", []):
+                marked_types.add(mark.name)
+            result = {}
+            for storage_id, storage in GENOTYPE_STORAGES.items():
+                if storage.get_storage_type() in marked_types:
+                    result[storage_id] = storage
+            if result:
+                storages = result
+
         metafunc.parametrize(
             "genotype_storage",
             storages.values(),
