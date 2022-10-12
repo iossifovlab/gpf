@@ -78,6 +78,7 @@ def full_study_config():
                 "pedigree": {
                     "path": "test",
                     "params": {
+                        "ped_file": "test",
                         "ped_family": "test",
                         "ped_person": "test",
                         "ped_mom": "test",
@@ -92,6 +93,7 @@ def full_study_config():
                         "ped_layout_mode": "test",
                         "ped_sep": "test",
                         "ped_tags": True,
+                        "ped_no_tags": True,
                     }
                 },
                 "variants": [
