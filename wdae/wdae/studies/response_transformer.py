@@ -1,6 +1,7 @@
 import itertools
 import traceback
 import logging
+from functools import partial
 from typing import List, Dict, Set
 
 from dae.utils.dae_utils import join_line, split_iterable
@@ -24,6 +25,7 @@ def members_in_order_get_family_structure(mio):
 
 
 class ResponseTransformer:
+    """Helper class to transform genotype browser response."""
 
     STREAMING_CHUNK_SIZE = 20
 
@@ -63,7 +65,7 @@ class ResponseTransformer:
 
         "family_person_ids":
         lambda v: [";".join(list(map(
-            lambda m: m.person_id, v.members_in_order
+            lambda m: m.person_id, v.members_in_order  # type: ignore
         )))],
 
         "carrier_person_ids":
@@ -76,7 +78,8 @@ class ResponseTransformer:
         "carrier_person_attributes":
         lambda v: list(
             map(
-                lambda aa: members_in_order_get_family_structure(
+                lambda aa:
+                members_in_order_get_family_structure(  # type: ignore
                     filter(None, aa.variant_in_members_objects)
                 ),
                 v.alt_alleles
@@ -89,8 +92,8 @@ class ResponseTransformer:
             if Inheritance.denovo in aa.inheritance_in_members
             else "-"
             if set([
-                Inheritance.possible_denovo, Inheritance.possible_omission]) &
-                set(aa.inheritance_in_members)
+                Inheritance.possible_denovo, Inheritance.possible_omission])
+                & set(aa.inheritance_in_members)
             else "mendelian",
             v.alt_alleles)
         ),
@@ -129,17 +132,19 @@ class ResponseTransformer:
         "family_phenotypes":
         lambda v, phenotype_person_sets:
         [
-            ':'.join([
+            ":".join([
                 phenotype_person_sets.get_person_set_of_person(mid).name
                 for mid in v.members_ids])
         ],
 
         "carrier_phenotypes":
         lambda v, phenotype_person_sets:
-        [':'.join([
-            phenotype_person_sets.get_person_set_of_person(mid).name
-            for mid in filter(None, aa.variant_in_members)])
-         for aa in v.alt_alleles],
+        [
+            ":".join([  # type: ignore
+                phenotype_person_sets.get_person_set_of_person(mid).name
+                for mid in filter(None, aa.variant_in_members)])
+            for aa in v.alt_alleles
+        ],
     }
 
     def __init__(self, study_wrapper):
@@ -177,7 +182,8 @@ class ResponseTransformer:
         result = list(zip(pheno_column_dfs, pheno_column_names))
         return result
 
-    def _get_pheno_values_for_variant(self, variant, pheno_column_values):
+    @staticmethod
+    def _get_pheno_values_for_variant(variant, pheno_column_values):
         if not pheno_column_values:
             return None
 
@@ -210,6 +216,7 @@ class ResponseTransformer:
 
             gene_scores = self.study_wrapper.gene_scores_db[gwc]
             if gene != "":
+                # pylint: disable=protected-access
                 gene_scores_values[gwc] = gene_scores._to_dict().get(
                     gene, default
                 )
@@ -258,10 +265,10 @@ class ResponseTransformer:
                     )
                 )
             except IndexError:
-                import traceback
-                traceback.print_exc()
                 missing_members.add(member.person_id)
-                logger.error(f"{genotype}, {index}, {member}")
+                logger.error(
+                    "problems generating pedigree: %s, %s, %s",
+                    genotype, index, member, exc_info=True)
 
         for member in variant.family.full_members:
             if (member.generated or member.not_sequenced) \
@@ -284,9 +291,9 @@ class ResponseTransformer:
 
                 yield variant
 
-    def _build_variant_row(
+    def _build_variant_row(  # noqa
             self, v: FamilyVariant, column_descs: List[Dict], **kwargs):
-
+        # pylint: disable=too-many-branches
         row_variant = []
         for col_desc in column_descs:
             try:
@@ -295,21 +302,21 @@ class ResponseTransformer:
                 col_role = col_desc.get("role")
 
                 if col_format is None:
-                    def col_formatter(val):
+                    # pylint: disable=unused-argument
+                    def col_formatter(val, col_format):
                         if val is None:
                             return "-"
                         return str(val)
                 else:
-                    def col_formatter(val):
+                    def col_formatter(val, col_format):
                         if val is None:
                             return "-"
                         try:
                             return col_format % val
-                        except Exception:
+                        except Exception:  # pylint: disable=broad-except
                             logging.warning(
-                                f"error formatting variant: {v} "
-                                f"({col_format}) ({val})",
-                                exc_info=True)
+                                "error formatting variant: %s (%s) (%s)",
+                                v, col_format, val, exc_info=True)
                             return val
 
                 if col_role is not None:
@@ -327,9 +334,9 @@ class ResponseTransformer:
                     if phenotype_person_sets is None:
                         row_variant.append("-")
                     else:
-                        fn = self.PHENOTYPE_ATTRS[col_source]
+                        fn_format = self.PHENOTYPE_ATTRS[col_source]
                         row_variant.append(
-                            ",".join(fn(v, phenotype_person_sets)))
+                            ",".join(fn_format(v, phenotype_person_sets)))
                 elif col_source == "study_phenotype":
                     row_variant.append(
                         self.study_wrapper.config.study_phenotype
@@ -341,81 +348,67 @@ class ResponseTransformer:
                         attribute = v.get_attribute(col_source)
 
                     if kwargs.get("reduceAlleles", True):
-                        if all([a == attribute[0] for a in attribute]):
+                        if all(a == attribute[0] for a in attribute):
                             attribute = [attribute[0]]
-                    attribute = list(map(col_formatter, attribute))
+                    attribute = list(
+                        map(
+                            partial(col_formatter, col_format=col_format),
+                            attribute))
                     row_variant.append(attribute)
 
             except (AttributeError, KeyError, Exception):
-                logging.exception(f'error build variant: {v}')
+                logging.exception("error build variant: %s", v)
                 traceback.print_stack()
                 row_variant.append([""])
                 raise
 
         return row_variant
 
+    @staticmethod
     def _gene_view_summary_download_variants_iterator(
-        self, variants: List[SummaryVariant], frequency_column
-    ):
+            variants: List[SummaryVariant], frequency_column):
         for v in variants:
-            for a in v.alt_alleles:
+            for aa in v.alt_alleles:
                 yield [
-                    a.cshl_location,
-                    a.position,
-                    a.end_position,
-                    a.chrom,
-                    a.get_attribute(frequency_column),
-                    gene_effect_get_worst_effect(a.effects),
-                    a.cshl_variant,
-                    a.get_attribute("family_variants_count"),
-                    a.get_attribute("seen_as_denovo"),
-                    a.get_attribute("seen_in_status") in {2, 3},
-                    a.get_attribute("seen_in_status") in {1, 3},
+                    aa.cshl_location,
+                    aa.position,
+                    aa.end_position,
+                    aa.chrom,
+                    aa.get_attribute(frequency_column),
+                    gene_effect_get_worst_effect(aa.effects),
+                    aa.cshl_variant,
+                    aa.get_attribute("family_variants_count"),
+                    aa.get_attribute("seen_as_denovo"),
+                    aa.get_attribute("seen_in_status") in {2, 3},
+                    aa.get_attribute("seen_in_status") in {1, 3},
                 ]
 
+    @staticmethod
     def transform_gene_view_summary_variant(
-            self, variant: SummaryVariant, frequency_column):
-
+            variant: SummaryVariant, frequency_column):
+        """Transform gene view summary response into dicts."""
         out = {
             "svuid": variant.svuid,
             "alleles": []
         }
-        for a in variant.alt_alleles:
+        for aa in variant.alt_alleles:
             out["alleles"].append({
-                "location": a.cshl_location,
-                "position": a.position,
-                "end_position": a.end_position,
-                "chrom": a.chrom,
-                "frequency": a.get_attribute(frequency_column),
-                "effect": gene_effect_get_worst_effect(a.effects),
-                "variant": a.cshl_variant,
+                "location": aa.cshl_location,
+                "position": aa.position,
+                "end_position": aa.end_position,
+                "chrom": aa.chrom,
+                "frequency": aa.get_attribute(frequency_column),
+                "effect": gene_effect_get_worst_effect(aa.effects),
+                "variant": aa.cshl_variant,
                 "family_variants_count":
-                    a.get_attribute("family_variants_count"),
-                "is_denovo": a.get_attribute("seen_as_denovo"),
+                    aa.get_attribute("family_variants_count"),
+                "is_denovo": aa.get_attribute("seen_as_denovo"),
                 "seen_in_affected":
-                    a.get_attribute("seen_in_status") in {2, 3},
+                    aa.get_attribute("seen_in_status") in {2, 3},
                 "seen_in_unaffected":
-                    a.get_attribute("seen_in_status") in {1, 3},
+                    aa.get_attribute("seen_in_status") in {1, 3},
             })
         yield out
-
-        # for a in variant.alt_alleles:
-        #     yield {
-        #         "location": a.cshl_location,
-        #         "position": a.position,
-        #         "end_position": a.end_position,
-        #         "chrom": a.chrom,
-        #         "frequency": a.get_attribute(frequency_column),
-        #         "effect": gene_effect_get_worst_effect(a.effects),
-        #         "variant": a.cshl_variant,
-        #         "family_variants_count":
-        #             a.get_attribute("family_variants_count"),
-        #         "is_denovo": a.get_attribute("seen_as_denovo"),
-        #         "seen_in_affected":
-        #             a.get_attribute("seen_in_status") in {2, 3},
-        #         "seen_in_unaffected":
-        #             a.get_attribute("seen_in_status") in {1, 3},
-        #     }
 
     def transform_gene_view_summary_variant_download(
         self,
@@ -423,6 +416,7 @@ class ResponseTransformer:
         frequency_column,
         summary_variant_ids: Set[str],
     ):
+        """Transform gene view summary response into rows."""
         columns = [
             "location",
             "position",
@@ -446,6 +440,7 @@ class ResponseTransformer:
         return map(join_line, itertools.chain([columns], rows))
 
     def transform_variants(self, variants_iterable):
+        """Transform variant to add pheno and scores attributes."""
         for variants_chunk in split_iterable(
                 variants_iterable, self.STREAMING_CHUNK_SIZE):
 
@@ -471,6 +466,7 @@ class ResponseTransformer:
                 yield variant
 
     def variant_transformer(self):
+        """Build and return a variant transformer function."""
         pheno_column_values = self._get_all_pheno_values(self.families)
 
         def transformer(variant):

@@ -14,7 +14,7 @@ from users_api.models import WdaeUser
 
 from remote.rest_api_client import RESTClient
 
-from gpf_instance.gpf_instance import WGPFInstance,\
+from gpf_instance.gpf_instance import WGPFInstance, get_gpf_instance,\
     reload_datasets, load_gpf_instance
 
 from dae.autism_gene_profile.db import AutismGeneProfileDB
@@ -87,15 +87,20 @@ def user_client(user, client):
 
 
 @pytest.fixture()
-def anonymous_client(client):
+def anonymous_client(client, db):
     client.logout()
     return client
 
 
 @pytest.fixture()
-def admin_client(admin, client):
+def admin_client(admin, client, db):
     client.login(email=admin.email, password="secret")
     return client
+
+
+@pytest.fixture
+def datasets(db):
+    reload_datasets(get_gpf_instance())
 
 
 @pytest.fixture(scope="session")

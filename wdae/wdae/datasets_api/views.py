@@ -13,12 +13,14 @@ from .models import Dataset
 
 
 def augment_accessibility(dataset, user):
+    # pylint: disable=no-member
     dataset_object = Dataset.objects.get(dataset_id=dataset["id"])
     dataset["access_rights"] = user_has_permission(user, dataset_object)
     return dataset
 
 
 def augment_with_groups(dataset):
+    # pylint: disable=no-member
     dataset_object = Dataset.objects.get(dataset_id=dataset["id"])
     serializer = GroupSerializer(dataset_object.groups.all(), many=True)
     dataset["groups"] = serializer.data
@@ -79,6 +81,7 @@ class DatasetView(QueryBaseView):
                             status=status.HTTP_404_NOT_FOUND)
 
         if dataset:
+            # pylint: disable=no-member
             dataset_object = Dataset.objects.get(dataset_id=dataset_id)
 
             if user_has_permission(user, dataset_object):
@@ -180,7 +183,7 @@ class DatasetPedigreeView(QueryBaseView):
 class DatasetConfigView(DatasetView):
     """Provide a dataset's configuration. Used for remote instances."""
 
-    def get(self, request, dataset_id):
+    def get(self, request, dataset_id=None):
         genotype_data = self.gpf_instance.get_genotype_data(dataset_id)
 
         if genotype_data is None:
@@ -240,6 +243,7 @@ class DatasetHierarchyView(QueryBaseView):
                 for child in dataset.studies
                 if child.study_id in selected
             ]
+        # pylint: disable=no-member
         dataset_object = Dataset.objects.get(dataset_id=dataset.study_id)
         return {
             "dataset": dataset.study_id,

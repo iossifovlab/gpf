@@ -80,7 +80,8 @@ class WGPFInstance(GPFInstance):
 
     @property
     def remote_study_ids(self) -> Dict[str, str]:
-        """
+        """Return remote studies IDs.
+
         Returns a dictionary mapping local prefixed remote study ids
         to their real ids on the remote.
         """
