@@ -1,5 +1,5 @@
 import {
-  ContentChild, ViewChildren, ViewChild, HostListener, Input, Component, ContentChildren, QueryList
+  ContentChild, ViewChildren, ViewChild, HostListener, Input, Component, ContentChildren, QueryList, OnChanges
 } from '@angular/core';
 import { GpfTableColumnComponent } from './component/column.component';
 import { GpfTableSubheaderComponent } from './component/subheader.component';
@@ -17,7 +17,7 @@ export class SortInfo {
   templateUrl: './table.component.html',
   styleUrls: ['./table.component.css']
 })
-export class GpfTableComponent {
+export class GpfTableComponent implements OnChanges {
   @ViewChild('table') public tableViewChild: any;
   @ViewChildren('rows') public rowViewChildren: QueryList<any>;
 
@@ -32,9 +32,14 @@ export class GpfTableComponent {
   private tableTopPosition = 0;
 
   public noResultsWidth: string;
+  public tableData: Array<any> = [];
 
   public showFloatingHeader: boolean;
   public showLegend: boolean;
+
+  public ngOnChanges() {
+    this.tableData = this.getVisibleData();
+  }
 
   @HostListener('window:scroll', ['$event'])
   public onWindowScroll(): void {
@@ -53,6 +58,7 @@ export class GpfTableComponent {
     }
 
     this.showFloatingHeader = this.tableTop();
+    this.tableData = this.getVisibleData();
   }
 
   public set sortingInfo(sortingInfo: SortInfo) {
@@ -104,9 +110,9 @@ export class GpfTableComponent {
     return result > 0 ? result : 0;
   }
 
-  public get visibleData(): Array<any> {
+  public getVisibleData(): Array<any> {
     if (this.dataSource === undefined || this.dataSource === null || this.dataSource.length === 0) {
-      if (this.columnsChildren !== undefined || this.columnsChildren !== null) {
+      if (this.columnsChildren !== undefined && this.columnsChildren !== null) {
         let width = 0;
         this.columnsChildren.forEach(column => {
           width += Number(column.columnWidth.split('px')[0]);
