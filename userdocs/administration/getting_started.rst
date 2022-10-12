@@ -5,17 +5,7 @@ GPF Getting Started Guide
 Prerequisites
 #############
 
-This guide assumes that you are working on a Linux distribution.
-
-Installation of `wget`
-++++++++++++++++++++++
-
-You need `wget` to follow this guide - you can use your system's package manager
-to install it. For example, on Ubuntu:
-
-.. code-block:: bash
-
-    sudo apt-get install wget
+This guide assumes that you are working on a recent Linux box.
 
 
 Working version of `anaconda` or `miniconda`
@@ -121,12 +111,6 @@ content:
 
 .. code-block:: yaml
 
-    grr:
-        id: "seqpipe"
-        type: "url"
-        url: "https://grr.seqpipe.org/"
-        cache_dir: "%($HOME)s/grrCache"
-
     reference_genome:
         resource_id: "hg38/genomes/GRCh38-hg38"
 
@@ -135,61 +119,46 @@ content:
 
 This will create a GPF instance that:
 
-* Uses a genomic resources repository as specified in the ``grr`` section;
-  the repository is located at 
-  `https://grr.seqpipe.org/ <https://grr.seqpipe.org>`_
-  and the resources are cached locally in the home directory of the user as
-  specified in ``cache_dir`` property;
-
 * The reference genome used by this GPF instance is ``hg38/genomes/GRCh38-hg38``
-  from GRR specified in ``grr`` section;
+  from default GRR;
 
 * The gene models used by this GPF instance are 
-  ``hg38/gene_models/refSeq_v20200330`` from GRR specified in ``grr`` section.
+  ``hg38/gene_models/refSeq_v20200330`` from default GRR;
+
+* If not specified otherwise, the GPF uses the default genomic resources
+  repository located at 
+  `https://www.iossifovlab.com/distribution/public/genomic-resources-repository/ 
+  <https://www.iossifovlab.com/distribution/public/genomic-resources-repository/>`_.
+  Resources are used without caching.
 
 
 
 Prepare the GPF web server
 ##########################
 
-First, let us instruct the GPF system that the we are going to use
-``data-hg38-empty`` as an instance directory. By default, the GPF system
-looks for an environment variable named ``DAE_DB_DIR`` to locate the GPF
-instance directory.
+By default, the GPF system looks for a file ``gpf_instance.yaml`` in the
+current directory (and its parent directories). If GPF finds such a file, it
+uses it as a configuration for the GPF instance. Otherwise it throws an
+exception.
+
+For the initial setup of the GPF instance web server, we need to run
+```wgpf init`` command.
 
 .. code-block:: bash
 
-    cd data-hg38-empty
-    export DAE_DB_DIR="$(pwd)"
+    wgpf init admin@example.com -p secret
 
-To set up the initial empty database, we need to run:
-
-.. code-block:: bash
-
-    wdaemanage.py migrate
-
-After that, we will need to create an admin user to be able to have access and
-manage the instance web server:
-
-.. code-block:: bash
-
-    wdaemanage.py user_create admin@iossifovlab.com -p secret -g any_dataset:admin
-
-This will create an ``admin`` user with the user name ``admin@iossifovlab.com``
-and password ``secret``.
+This command will bootstrap the GPF instance development web server and will
+create an initial admin user with username ``admin@example.com`` and password
+``secret``.
 
 Now we can run the GPF development web server and browse our empty GPF instance:
 
 .. code-block:: bash
 
-    wdaemanage.py runserver 0.0.0.0:8000
+    wgpf run
 
-and browse the GPF development server using the IP address and port specified in
-the runserver command:
-
-.. code-block:: bash
-
-    http://localhost:8000
+and browse the GPF development server using at ``http://localhost:8000``.
 
 
 To stop the development GPF web server, you should press ``Ctrl-C`` - the usual
@@ -198,7 +167,8 @@ keybinding for stopping long-running Linux commands in a terminal.
 
 .. warning:: 
 
-    The web server used in this guide is meant for development purposes only
+    The development web server run by ``wgpf run`` used in this guide
+    is meant for development purposes only
     and is not suitable for serving the GPF system in production.
 
 
@@ -210,45 +180,12 @@ Data Storage
 ++++++++++++
 
 
-The GPF system uses genotype storage for storing genomic variants. There are
-several genotype storages supported by GPF:
-
-* In-memory genotype storage that stores the genomic variants in the RAM. This
-  storage is fine for smaller-sized studies.
-* Apache Impala genotype storage that uses HDFS/Impala for storing genomic
-  variants.
-* (WIP) Filesystem genotype storage
-* (WIP) BigQuery genotype storage.
+The GPF system uses genotype storage for storing genomic variants.
 
 We are going to use in-memory genotype storage for this guide. It is easiest
-to set up and use.
+to set up and use, but it is unsuitable for large studies.
 
-Define In-Memory Storage
-++++++++++++++++++++++++
-
-Let us edit our GPF instance configuration to add genotype storage:
-
-.. code-block:: yaml
-
-    grr:
-        id: "seqpipe"
-        type: "url"
-        url: "https://grr.seqpipe.org/"
-        cache_dir: "%($HOME)s/grrCache"
-
-    reference_genome:
-        resource_id: "hg38/genomes/GRCh38-hg38"
-
-    gene_models:
-        resource_id: "hg38/gene_models/refSeq_v20200330"
-
-    genotype_storage:
-        default: inmemory_storage
-        storages:
-        - id: inmemory_storage
-          storage_type: inmemory
-          dir: "%(wd)s/inmemory_storage"
-
+By default, each GPF instance has internal in-memory genotype storage.
 
 Import Tools and Import Project
 +++++++++++++++++++++++++++++++
@@ -268,36 +205,34 @@ This tool supports importing variants from three formats:
 * CNV variants
 
 
-Example import of variants
+Example import of variants: ``helloworld``
 ++++++++++++++++++++++++++
 
 * Download the sample study and extract it::
 
-    wget -c https://iossifovlab.com/distribution/public/studies/genotype-comp-latest.tar.gz
-    tar zxvf genotype-comp-latest.tar.gz
+    wget -c https://iossifovlab.com/distribution/public/studies/genotype-helloworld-latest.tar.gz
+    tar zxvf genotype-helloworld-latest.tar.gz
 
-It contains a pedigree file ``comp.ped`` with family information,
-a VCF file ``comp.vcf`` with transmitted variants and a list of de Novo
-variants ``comp.tsv``.
+It contains a pedigree file ``helloworld.ped`` with family information,
+a VCF file ``helloworld.vcf`` with transmitted variants and a list of de Novo
+variants ``helloworld.tsv``.
 
 
 .. code-block:: yaml
 
-    id: comp
+    id: helloworld
     input:
         pedigree:
-            file: comp.ped
+            file: helloworld.ped
         denovo:
             files:
-            - comp.tsv
+            - helloworld.tsv
         vcf:
             files:
-            - comp.vcf
-    destination:
-        storage_id: inmemory_storage
+            - helloworld.vcf
 
 
-.. * Enter into the created directory ``comp``::
+.. * Enter into the created directory ``helloworld``::
 
 ..     cd comp
 
