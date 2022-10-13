@@ -3,11 +3,10 @@ import os
 import pathlib
 
 import pytest
-
+from dae.utils.fs_utils import find_directory_with_a_file
 from dae.genomic_resources.repository import GR_CONF_FILE_NAME
 from dae.genomic_resources.repository import GR_CONTENTS_FILE_NAME
 from dae.genomic_resources.cli import cli_manage, \
-    _find_directory_with_filename, \
     _find_resource
 from dae.genomic_resources.testing import build_testing_repository
 
@@ -55,12 +54,12 @@ def test_cli_list(repo_fixture, tmp_path, capsys):
 
 def test_find_repo_dir_simple(repo_fixture, tmp_path):
     os.chdir(tmp_path)
-    res = _find_directory_with_filename(GR_CONTENTS_FILE_NAME)
+    res = find_directory_with_a_file(GR_CONTENTS_FILE_NAME)
     assert res is None
 
     cli_manage(["repo-manifest", "-R", str(tmp_path)])
 
-    res = _find_directory_with_filename(GR_CONTENTS_FILE_NAME)
+    res = find_directory_with_a_file(GR_CONTENTS_FILE_NAME)
     assert res == str(tmp_path)
 
 
@@ -69,10 +68,10 @@ def test_find_resource_dir_simple(repo_fixture, tmp_path):
     cli_manage(["repo-manifest", "-R", str(tmp_path)])
     os.chdir(tmp_path / "sub" / "two(1.0)" / "gene_models")
 
-    repo_dir = _find_directory_with_filename(GR_CONTENTS_FILE_NAME)
+    repo_dir = find_directory_with_a_file(GR_CONTENTS_FILE_NAME)
     assert repo_dir == str(tmp_path)
 
-    resource_dir = _find_directory_with_filename(GR_CONF_FILE_NAME)
+    resource_dir = find_directory_with_a_file(GR_CONF_FILE_NAME)
     assert resource_dir == str(tmp_path / "sub" / "two(1.0)")
 
     path = pathlib.Path(resource_dir)

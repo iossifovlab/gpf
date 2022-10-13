@@ -10,6 +10,7 @@ from urllib.parse import urlparse
 import yaml
 
 from dae.dask.client_factory import DaskClient
+from dae.utils.fs_utils import find_directory_with_a_file
 
 from dae.__version__ import VERSION, RELEASE
 from dae.genomic_resources.repository import \
@@ -118,9 +119,9 @@ def _configure_repo_init_subparser(subparsers):
 def _run_repo_init_command(**kwargs):
     repository = kwargs.get("repository")
     if repository is None:
-        repo_url = _find_directory_with_filename(GR_CONTENTS_FILE_NAME)
+        repo_url = find_directory_with_a_file(GR_CONTENTS_FILE_NAME)
     else:
-        repo_url = _find_directory_with_filename(
+        repo_url = find_directory_with_a_file(
             GR_CONTENTS_FILE_NAME, repository)
 
     if repo_url is not None:
@@ -303,7 +304,7 @@ def _find_resource(proto, repo_url, **kwargs):
             return None
 
         cwd = os.getcwd()
-        resource_dir = _find_directory_with_filename(GR_CONF_FILE_NAME, cwd)
+        resource_dir = find_directory_with_a_file(GR_CONF_FILE_NAME, cwd)
         if resource_dir is None:
             logger.error("Can't find resource starting from %s", cwd)
             return None
@@ -484,7 +485,7 @@ def cli_manage(cli_args=None):
         return
 
     if args.repository is None:
-        repo_url = _find_directory_with_filename(GR_CONTENTS_FILE_NAME)
+        repo_url = find_directory_with_a_file(GR_CONTENTS_FILE_NAME)
         if repo_url is None:
             logger.error(
                 "Can't find repository starting from: %s", os.getcwd())
@@ -534,21 +535,3 @@ def _create_proto(repo_url, extra_args: str = ""):
     proto = build_fsspec_protocol(
         proto_id="manage", root_url=repo_url, **kwargs)
     return proto
-
-
-def _find_directory_with_filename(filename, cwd=None):
-    if cwd is None:
-        cwd = pathlib.Path().absolute()
-    else:
-        cwd = pathlib.Path(cwd).absolute()
-
-    pathname = cwd / filename
-    if pathname.exists():
-        return str(cwd)
-
-    for work_dir in cwd.parents:
-        pathname = work_dir / filename
-        if pathname.exists():
-            return str(work_dir)
-
-    return None
