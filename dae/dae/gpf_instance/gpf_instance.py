@@ -34,17 +34,19 @@ class GPFInstance:
     """Class to access different parts of a GPF instance."""
 
     # pylint: disable=too-many-public-methods
+    @staticmethod
+    def build(config_filename=None, load_eagerly=False, **kwargs):
+        pass
+
     def __init__(
             self,
             dae_config=None,
             config_file="gpf_instance.yaml",
             work_dir=None,
-            defaults=None,
             load_eagerly=False,
             **kwargs):
         if dae_config is None:
             # FIXME Merge defaults with newly-loaded config
-            assert not defaults, defaults
             if work_dir is None:
                 work_dir = os.environ["DAE_DB_DIR"]
             config_file = os.path.join(work_dir, config_file)
@@ -53,7 +55,7 @@ class GPFInstance:
             )
 
         self.dae_config = dae_config
-        self.dae_db_dir = work_dir
+        self.dae_dir = work_dir
         # self.__autism_gene_profile_config = None
 
         self.load_eagerly = load_eagerly
@@ -202,7 +204,7 @@ class GPFInstance:
 
         agpdb = AutismGeneProfileDB(
             config,
-            os.path.join(self.dae_db_dir, "agpdb")
+            os.path.join(self.dae_dir, "agpdb")
         )
         return agpdb
 
@@ -218,7 +220,7 @@ class GPFInstance:
 
         if agp_config is None:
             config_filename = os.path.join(
-                self.dae_db_dir, "autismGeneTool.conf")
+                self.dae_dir, "autismGeneTool.conf")
             if not os.path.exists(config_filename):
                 return None
         else:

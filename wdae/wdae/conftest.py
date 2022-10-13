@@ -231,7 +231,7 @@ def wdae_gpf_instance_agp(  # pylint: disable=too-many-arguments
     wdae_gpf_instance._autism_gene_profile_db = \
         AutismGeneProfileDB(
             agp_config,
-            os.path.join(wdae_gpf_instance.dae_db_dir, temp_filename),
+            os.path.join(wdae_gpf_instance.dae_dir, temp_filename),
             clear=True
         )
     wdae_gpf_instance._autism_gene_profile_db.insert_agp(sample_agp)

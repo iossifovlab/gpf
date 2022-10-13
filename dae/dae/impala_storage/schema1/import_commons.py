@@ -941,7 +941,7 @@ class BatchImporter:
         context = {
             "study_id": study_id,
             "outdir": outdir,
-            "dae_db_dir": self.gpf_instance.dae_db_dir,
+            "dae_db_dir": self.gpf_instance.dae_dir,
         }
 
         verbose = ""

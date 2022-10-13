@@ -48,7 +48,7 @@ class GPFInstanceGenomicContextProvider(SimpleGenomicContextProvider):
                 }
 
             def get_source(self) -> Tuple[str, ...]:
-                return ("gpf_instance", self.gpf_instance.dae_db_dir)
+                return ("gpf_instance", self.gpf_instance.dae_dir)
         try:
             return GPFInstanceGenomicContext(GPFInstance())
         except Exception:  # pylint: disable=broad-except
