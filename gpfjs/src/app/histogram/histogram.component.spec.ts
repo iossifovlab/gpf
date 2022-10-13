@@ -1,7 +1,7 @@
 import { Component, ViewChild, SimpleChanges, SimpleChange } from '@angular/core';
 import { By } from '@angular/platform-browser';
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
-import { Observable, ReplaySubject, of } from 'rxjs';
+import { Observable, of } from 'rxjs';
 import * as d3 from 'd3';
 
 import { FormsModule } from '@angular/forms';
@@ -59,7 +59,7 @@ class TestHostComponentManyBins {
   @ViewChild('gpfhistogram') histogramEl;
 }
 
-xdescribe('HistogramComponent', () => {
+describe('HistogramComponent', () => {
   let component: TestHostComponent;
   let fixture: ComponentFixture<TestHostComponent>;
 
@@ -133,7 +133,7 @@ xdescribe('HistogramComponent', () => {
     const sliderLabelsText = sliderLabels.map((label) => (label.nativeElement as HTMLElement).textContent.trim());
     expect(sliderLabels.length).toBe(3);
     expect(sliderLabelsText.length).toBe(3);
-    expect(sliderLabelsText).toEqual(['2 (14.29%)', '5 (35.71%)', '7 (50.00%)']);
+    expect(sliderLabelsText).toEqual(['~2 (14.29%)', '~5 (35.71%)', '~7 (50.00%)']);
   });
 
   it('should not render range input fields if less than 10 bins', waitForAsync(() => {
@@ -144,7 +144,7 @@ xdescribe('HistogramComponent', () => {
   }));
 });
 
-xdescribe('HistogramComponentManyBins', () => {
+describe('HistogramComponentManyBins', () => {
   let component: TestHostComponentManyBins;
   let fixture: ComponentFixture<TestHostComponentManyBins>;
 
