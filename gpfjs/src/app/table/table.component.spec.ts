@@ -91,7 +91,7 @@ describe('GpfTableComponent', () => {
     expect(component.beforeDataCellHeight).toBe(0);
     expect(component.afterDataCellHeight).toBe(0);
 
-    expect(component.visibleData).toEqual([
+    expect(component.getVisibleData()).toEqual([
       {field: 3, arrayPosition: 0},
       {field: 2, arrayPosition: 0},
       {field: 4, arrayPosition: 0},
@@ -104,7 +104,7 @@ describe('GpfTableComponent', () => {
     expect(component.beforeDataCellHeight).toBe(0);
     expect(component.afterDataCellHeight).toBe(0);
 
-    expect(component.visibleData).toEqual([
+    expect(component.getVisibleData()).toEqual([
       {field: 3, arrayPosition: 0},
       {field: 2, arrayPosition: 0},
       {field: 4, arrayPosition: 0},
@@ -114,6 +114,6 @@ describe('GpfTableComponent', () => {
     component.dataSource = null;
 
     expect(component.getScrollIndices()).toEqual([0, 0]);
-    expect(component.visibleData).toEqual([]);
+    expect(component.getVisibleData()).toEqual([]);
   });
 });
