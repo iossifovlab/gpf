@@ -4,11 +4,11 @@ import itertools
 import logging
 from collections import OrderedDict
 from typing import Optional, List
+from functools import cache
 
 import numpy as np
 import pandas as pd
 
-from dae.gene.gene_sets_db import cached
 from dae.utils.dae_utils import join_line
 from dae.genomic_resources.aggregators import build_aggregator
 
@@ -145,31 +145,31 @@ class GeneScore:
 
         return aggregator.get_final()
 
-    @cached
+    @cache
     def _to_dict(self):
         """Return dictionary of all defined scores keyed by gene symbol."""
         if self._dict is None:
             self._dict = self.df.set_index("gene")[self.score_id].to_dict()
         return self._dict
 
-    @cached
+    @cache
     def _to_list(self):
         columns = self.df.applymap(str).columns.tolist()
         values = self.df.applymap(str).values.tolist()
 
         return itertools.chain([columns], values)
 
-    @cached
+    @cache
     def to_tsv(self):
         """Return a TSV version of the gene score data."""
         return map(join_line, self._to_list())
 
-    @cached
+    @cache
     def min(self):
         """Return minimal score value."""
         return self.df[self.score_id].min()
 
-    @cached
+    @cache
     def max(self):
         """Return maximal score value."""
         return self.df[self.score_id].max()
@@ -210,12 +210,12 @@ class GeneScoresDb:
         for score in gene_scores:
             self.scores[score.score_id] = score
 
-    @cached
+    @cache
     def get_gene_score_ids(self):
         """Return a list of the IDs of all the gene scores contained."""
         return sorted(list(self.scores.keys()))
 
-    @cached
+    @cache
     def get_gene_scores(self):
         """Return a list of all the gene scores contained in the DB."""
         return [self.get_gene_score(score_id) for score_id in self.scores]

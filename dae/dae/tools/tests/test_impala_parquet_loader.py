@@ -1,3 +1,5 @@
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
+
 from dae.tools.impala_parquet_loader import main
 
 
@@ -29,7 +31,8 @@ def test_impala_parquet_loader_no_partition(
 ):
 
     pedigree_path = fixture_dirname(
-        "studies/quads_f1_impala/data/pedigree/quads_f1_impala_pedigree.parquet")
+        "studies/quads_f1_impala/data/pedigree/"
+        "quads_f1_impala_pedigree.parquet")
     variants_path = fixture_dirname(
         "studies/quads_f1_impala/data/variants")
 

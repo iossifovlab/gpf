@@ -1,7 +1,7 @@
-from itertools import chain
 import logging
+from itertools import chain
+from functools import cache
 
-from dae.gene.gene_sets_db import cached
 
 LOGGER = logging.getLogger(__name__)
 
@@ -22,7 +22,7 @@ class DenovoGeneSetCollection(object):
         self.person_set_collections = person_set_collections
         self.cache = {}
 
-    @cached
+    @cache
     def get_gene_sets_types_legend(self):
         name = self.study_name if self.study_name else self.study_id
         # TODO Rename these dictionary keys accordingly
@@ -47,11 +47,10 @@ class DenovoGeneSetCollection(object):
         )
         if person_set_collection:
             return person_set_collection["domain"]
-        else:
-            return []
+        return []
 
     @classmethod
-    def get_all_gene_sets(cls, denovo_gene_sets, denovo_gene_set_spec={}):
+    def get_all_gene_sets(cls, denovo_gene_sets, denovo_gene_set_spec=None):
         sets = [
             cls.get_gene_set(name, denovo_gene_sets, denovo_gene_set_spec)
             for name in cls._get_gene_sets_names(denovo_gene_sets)
@@ -60,15 +59,14 @@ class DenovoGeneSetCollection(object):
 
     @classmethod
     def get_gene_set(
-        cls, gene_set_id, denovo_gene_set_collections, denovo_gene_set_spec={}
-    ):
+            cls, gene_set_id, denovo_gene_set_collections,
+            denovo_gene_set_spec=None):
         """
         Collect a single gene set from the provided
         denovo gene set collections.
         """
         syms = cls._get_gene_set_syms(
-            gene_set_id, denovo_gene_set_collections, denovo_gene_set_spec
-        )
+            gene_set_id, denovo_gene_set_collections, denovo_gene_set_spec)
         if not syms:
             return None
 
@@ -76,15 +74,14 @@ class DenovoGeneSetCollection(object):
             "name": gene_set_id,
             "count": len(syms),
             "syms": syms,
-            "desc": "{} ({})".format(
-                gene_set_id, cls._format_description(denovo_gene_set_spec)
-            ),
+            "desc": f"{gene_set_id} "
+            f"({cls._format_description(denovo_gene_set_spec)})"
         }
 
     @classmethod
     def _get_gene_set_syms(
-        cls, gene_set_id, denovo_gene_set_collections, denovo_gene_set_spec
-    ):
+            cls, gene_set_id, denovo_gene_set_collections,
+            denovo_gene_set_spec):
         """
         Collect the symbols of all genes belonging to a
         given gene set from a number of denovo gene set collections,
@@ -95,7 +92,7 @@ class DenovoGeneSetCollection(object):
         recurrency_criteria = criteria & set(rc.keys())
         standard_criteria = criteria - recurrency_criteria
 
-        genes_families = dict()
+        genes_families = {}
         for dataset_id, person_set_collection in denovo_gene_set_spec.items():
             for (
                 person_set_collection_id,
@@ -126,36 +123,36 @@ class DenovoGeneSetCollection(object):
         return set(matching_genes.keys())
 
     @classmethod
-    def _get_genes_to_families(cls, cache, criteria):
+    def _get_genes_to_families(cls, gs_cache, criteria):
         """
         Recursively collects all genes and their families
         which correspond to the set of given criteria.
 
-        The input cache must be nested dictionaries with
+        The input gs_cache must be nested dictionaries with
         leaf nodes of type 'set'.
         """
-        if len(cache) == 0:
+        if len(gs_cache) == 0:
             return dict()
-        cache_keys = list(cache.keys())
-        next_keys = criteria.intersection(cache_keys)
+        gs_cache_keys = list(gs_cache.keys())
+        next_keys = criteria.intersection(gs_cache_keys)
 
         if len(next_keys) == 0:
             result = dict()
-            if type(cache[cache_keys[0]]) is not set:
+            if type(gs_cache[gs_cache_keys[0]]) is not set:
                 # still not the end of the tree
-                for key in cache_keys:
+                for key in gs_cache_keys:
                     for gene, families in cls._get_genes_to_families(
-                        cache[key], criteria
+                        gs_cache[key], criteria
                     ).items():
                         result.setdefault(gene, set()).update(families)
             elif len(criteria) == 0:
                 # end of tree with satisfied criteria
-                result.update(cache)
+                result.update(gs_cache)
             return result
 
         next_key = next_keys.pop()
         return cls._get_genes_to_families(
-            cache[next_key], criteria - {next_key}
+            gs_cache[next_key], criteria - {next_key}
         )
 
     @staticmethod
@@ -184,8 +181,7 @@ class DenovoGeneSetCollection(object):
                     DenovoGeneSetCollection._narrowest_criteria(
                         ce,
                         recurrency_criteria,
-                        collection.recurrency_criteria
-                    )
+                        collection.recurrency_criteria)
 
             recurrency_criteria = new_recurrency_criteria
 
@@ -224,12 +220,12 @@ class DenovoGeneSetCollection(object):
 
     @staticmethod
     def _get_cache(denovo_gene_set_collections):
-        cache = {}
+        gs_cache = {}
 
         for collection in denovo_gene_set_collections:
-            cache[collection.study_id] = collection.cache
+            gs_cache[collection.study_id] = collection.cache
 
-        return cache
+        return gs_cache
 
     @staticmethod
     def _format_description(

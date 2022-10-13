@@ -4,6 +4,7 @@ from __future__ import annotations
 import logging
 from typing import Optional, List, Dict
 from threading import Lock
+from functools import cached_property
 
 from django.conf import settings
 
@@ -18,7 +19,6 @@ from remote.gene_sets_db import RemoteGeneSetsDb
 from remote.denovo_gene_sets_db import RemoteDenovoGeneSetsDb
 from remote.rest_api_client import RESTClient
 
-from dae.utils.dae_utils import cached
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.enrichment_tool.tool import EnrichmentTool
 from dae.enrichment_tool.event_counters import CounterBase
@@ -89,16 +89,14 @@ class WGPFInstance(GPFInstance):
             raise ValueError("remote study db not initialized.")
         return self._remote_study_db.remote_study_ids
 
-    @property  # type: ignore
-    @cached
+    @cached_property
     def gene_sets_db(self):
         logger.debug("creating new instance of GeneSetsDb")
         self.load_remotes()
         gene_sets_db = super().gene_sets_db
         return RemoteGeneSetsDb(self._clients, gene_sets_db)
 
-    @property  # type: ignore
-    @cached
+    @cached_property
     def denovo_gene_sets_db(self):
         self.load_remotes()
         denovo_gene_sets_db = super().denovo_gene_sets_db

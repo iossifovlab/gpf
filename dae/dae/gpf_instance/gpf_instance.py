@@ -3,6 +3,7 @@
 import os
 import logging
 import json
+from functools import cached_property
 
 from dae.enrichment_tool.background_facade import BackgroundFacade
 
@@ -24,7 +25,7 @@ from dae.configuration.schemas.autism_gene_profile import \
 from dae.autism_gene_profile.db import AutismGeneProfileDB
 from dae.annotation.annotation_factory import build_annotation_pipeline
 
-from dae.utils.dae_utils import cached, join_line
+from dae.utils.dae_utils import join_line
 
 logger = logging.getLogger(__name__)
 
@@ -73,8 +74,7 @@ class GPFInstance:
             self.genotype_storage_db
             self._background_facade
 
-    @property  # type: ignore
-    @cached
+    @cached_property
     def grr(self):
         """Return genomic resource repository configured for GPF instance."""
         if self._grr is not None:
@@ -89,8 +89,7 @@ class GPFInstance:
         self._grr = build_genomic_resource_repository()
         return self._grr
 
-    @property  # type: ignore
-    @cached
+    @cached_property
     def reference_genome(self):
         """Return reference genome defined in the GPFInstance config."""
         if self._reference_genome is not None:
@@ -106,8 +105,7 @@ class GPFInstance:
         result.open()
         return result
 
-    @property  # type: ignore
-    @cached
+    @cached_property
     def gene_models(self):
         """Return gene models used in the GPF instance."""
         if self._gene_models is not None:
@@ -125,13 +123,11 @@ class GPFInstance:
         result.load()
         return result
 
-    @property  # type: ignore
-    @cached
+    @cached_property
     def _pheno_db(self):
         return PhenoDb(dae_config=self.dae_config)
 
-    @property  # type: ignore
-    @cached
+    @cached_property
     def gene_scores_db(self):
         """Load and return gene scores db."""
         gene_scores = self.dae_config.gene_scores_db.gene_scores
@@ -148,8 +144,7 @@ class GPFInstance:
 
         return GeneScoresDb(result)
 
-    @property  # type: ignore
-    @cached
+    @cached_property
     def genomic_scores_db(self):
         """Load and return genomic scores db."""
         scores = []
@@ -178,8 +173,7 @@ class GPFInstance:
 
         return GenomicScoresDb(self.grr, scores)
 
-    @property  # type: ignore
-    @cached
+    @cached_property
     def genotype_storage_db(self):
         """Construct and return genotype storage registry."""
         # pylint: disable=import-outside-toplevel
@@ -192,8 +186,7 @@ class GPFInstance:
                 self.dae_config.genotype_storage)
         return registry
 
-    @property  # type: ignore
-    @cached
+    @cached_property
     def _variants_db(self):
         return VariantsDb(
             self.dae_config,
@@ -202,8 +195,7 @@ class GPFInstance:
             self.genotype_storage_db,
         )
 
-    @property  # type: ignore
-    @cached
+    @cached_property
     def _autism_gene_profile_db(self):
         config = None if self._autism_gene_profile_config is None else\
             self._autism_gene_profile_config.to_dict()
@@ -216,16 +208,17 @@ class GPFInstance:
 
     def reload(self):
         """Reload GPF instance studies, gene sets, etc."""
-        reload_properties = [
-            "__variants_db",
-            "_denovo_gene_sets_db",
-            "_gene_sets_db",
-        ]
-        for cached_val_name in reload_properties:
-            setattr(self, cached_val_name, None)
+        # reload_properties = [
+        #     # "_variants_db",
+        #     "_denovo_gene_sets_db",
+        #     "_gene_sets_db",
+        # ]
+        self._variants_db.reload()
 
-    @property  # type: ignore
-    @cached
+        # for cached_val_name in reload_properties:
+        #     setattr(self, cached_val_name, None)
+
+    @cached_property
     def _autism_gene_profile_config(self):
         agp_config = self.dae_config.autism_gene_tool_config
         config_filename = None
@@ -246,8 +239,7 @@ class GPFInstance:
             autism_gene_tool_config
         )
 
-    @property  # type: ignore
-    @cached
+    @cached_property
     def gene_sets_db(self):
         """Return GeneSetsDb populated with gene sets from the GPFInstance."""
         logger.debug("creating new instance of GeneSetsDb")
@@ -268,13 +260,11 @@ class GPFInstance:
         logger.debug("No gene sets DB configured")
         return GeneSetsDb([])
 
-    @property  # type: ignore
-    @cached
+    @cached_property
     def denovo_gene_sets_db(self):
         return DenovoGeneSetsDb(self)
 
-    @property  # type: ignore
-    @cached
+    @cached_property
     def _background_facade(self):
         return BackgroundFacade(self._variants_db)
 

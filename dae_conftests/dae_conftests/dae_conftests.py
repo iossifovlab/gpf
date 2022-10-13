@@ -7,6 +7,7 @@ import shutil
 import tempfile
 import logging
 from pathlib import Path
+from functools import cached_property
 
 from io import StringIO
 
@@ -151,14 +152,13 @@ def gpf_instance(default_dae_config, fixture_dirname):
 @pytest.fixture(scope="session")
 def gpf_instance_2013(
         default_dae_config, fixture_dirname, global_dae_fixtures_dir):
-    from dae.gpf_instance.gpf_instance import GPFInstance, cached
+    from dae.gpf_instance.gpf_instance import GPFInstance
 
     class GPFInstance2013(GPFInstance):
         def __init__(self, *args, **kwargs):
             super().__init__(*args, **kwargs)
 
-        @property  # type: ignore
-        @cached
+        @cached_property
         def gene_models(self):
             print(self.dae_config.gene_models)
             resource = self.grr.get_resource(
@@ -194,14 +194,13 @@ def fixtures_gpf_instance(gpf_instance, global_dae_fixtures_dir):
 @pytest.fixture(scope="session")
 def gpf_instance_2019(
         default_dae_config, fixture_dirname, global_dae_fixtures_dir):
-    from dae.gpf_instance.gpf_instance import GPFInstance, cached
+    from dae.gpf_instance.gpf_instance import GPFInstance
 
     class GPFInstance2019(GPFInstance):
         def __init__(self, *args, **kwargs):
             super().__init__(*args, **kwargs)
 
-        @property  # type: ignore
-        @cached
+        @cached_property
         def gene_models(self):
             resource = self.grr.get_resource(
                 "hg19/gene_models/refGene_v20190211")
@@ -233,14 +232,13 @@ def gpf_instance_2019(
 def _create_gpf_instance(
         gene_model_dir, ref_genome_dir,
         default_dae_config, global_dae_fixtures_dir, fixture_dirname):
-    from dae.gpf_instance.gpf_instance import GPFInstance, cached
+    from dae.gpf_instance.gpf_instance import GPFInstance
 
     class CustomGPFInstance(GPFInstance):
         def __init__(self, *args, **kwargs):
             super().__init__(*args, **kwargs)
 
-        @property  # type: ignore
-        @cached
+        @cached_property
         def gene_models(self):
             if gene_model_dir is None:
                 return super().gene_models
@@ -249,8 +247,7 @@ def _create_gpf_instance(
             result.load()
             return result
 
-        @property  # type: ignore
-        @cached
+        @cached_property
         def reference_genome(self):
             if ref_genome_dir is None:
                 return super().reference_genome
@@ -1099,7 +1096,7 @@ def agp_gpf_instance(
         "get_gene_set_ids",
         return_value=main_gene_sets
     )
-    fixtures_gpf_instance.__autism_gene_profile_db = \
+    fixtures_gpf_instance._autism_gene_profile_db = \
         AutismGeneProfileDB(
             fixtures_gpf_instance._autism_gene_profile_config,
             temp_dbfile,

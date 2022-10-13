@@ -174,7 +174,7 @@ def wdae_gpf_instance(
         "datasets_api.permissions.get_gpf_instance",
         return_value=fixtures_wgpf_instance,
     )
-    wdae_gpf_instance.__autism_gene_profile_config = None
+    wdae_gpf_instance._autism_gene_profile_config = None
 
     return fixtures_wgpf_instance
 
@@ -205,7 +205,7 @@ def wdae_gpf_instance_agp(  # pylint: disable=too-many-arguments
         return_value=wdae_gpf_instance,
     )
 
-    wdae_gpf_instance.__autism_gene_profile_config = agp_config
+    wdae_gpf_instance._autism_gene_profile_config = agp_config
     main_gene_sets = {
         "CHD8 target genes",
         "FMRP Darnell",
@@ -228,7 +228,7 @@ def wdae_gpf_instance_agp(  # pylint: disable=too-many-arguments
         "get_gene_set_ids",
         return_value=main_gene_sets
     )
-    wdae_gpf_instance.__autism_gene_profile_db = \
+    wdae_gpf_instance._autism_gene_profile_db = \
         AutismGeneProfileDB(
             agp_config,
             os.path.join(wdae_gpf_instance.dae_db_dir, temp_filename),

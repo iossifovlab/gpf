@@ -1,3 +1,5 @@
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
+
 import pytest
 
 pytestmark = pytest.mark.usefixtures(
@@ -5,11 +7,11 @@ pytestmark = pytest.mark.usefixtures(
     "dae_calc_gene_sets",
 )
 
-route_prefix = "/api/v3/autism_gene_tool"
+ROUTE_PREFIX = "/api/v3/autism_gene_tool"
 
 
 def test_configuration(admin_client):
-    response = admin_client.get(f"{route_prefix}/single-view/configuration")
+    response = admin_client.get(f"{ROUTE_PREFIX}/single-view/configuration")
 
     assert response.status_code == 200
     print(response.data)
@@ -38,16 +40,16 @@ def test_configuration(admin_client):
             "childrenCount": 11,
             "statistics": [
                 {
-                    'id': 'denovo_noncoding',
-                    'displayName': 'Noncoding',
-                    'effects': ['noncoding'],
-                    'category': 'denovo'
+                    "id": "denovo_noncoding",
+                    "displayName": "Noncoding",
+                    "effects": ["noncoding"],
+                    "category": "denovo"
                 },
                 {
-                    'id': 'denovo_missense',
-                    'displayName': 'Missense',
-                    'effects': ['missense'],
-                    'category': 'denovo'
+                    "id": "denovo_missense",
+                    "displayName": "Missense",
+                    "effects": ["missense"],
+                    "category": "denovo"
                 }
             ]
         },
@@ -60,16 +62,16 @@ def test_configuration(admin_client):
             "childrenCount": 10,
             "statistics": [
                 {
-                    'id': 'denovo_noncoding',
-                    'displayName': 'Noncoding',
-                    'effects': ['noncoding'],
-                    'category': 'denovo'
+                    "id": "denovo_noncoding",
+                    "displayName": "Noncoding",
+                    "effects": ["noncoding"],
+                    "category": "denovo"
                 },
                 {
-                    'id': 'denovo_missense',
-                    'displayName': 'Missense',
-                    'effects': ['missense'],
-                    'category': 'denovo'
+                    "id": "denovo_missense",
+                    "displayName": "Missense",
+                    "effects": ["missense"],
+                    "category": "denovo"
                 }
             ]
         }
@@ -77,13 +79,13 @@ def test_configuration(admin_client):
 
 
 def test_get_statistic(admin_client):
-    response = admin_client.get(f"{route_prefix}/single-view/gene/CHD8")
+    response = admin_client.get(f"{ROUTE_PREFIX}/single-view/gene/CHD8")
     assert response.status_code == 200
     print(response.data)
 
 
 def test_get_table_config(admin_client):
-    response = admin_client.get(f"{route_prefix}/table/configuration")
+    response = admin_client.get(f"{ROUTE_PREFIX}/table/configuration")
     assert response.status_code == 200
     assert "defaultDataset" in response.data
     assert "columns" in response.data
@@ -91,6 +93,6 @@ def test_get_table_config(admin_client):
 
 
 def test_get_statistics(admin_client):
-    response = admin_client.get(f"{route_prefix}/table/rows")
+    response = admin_client.get(f"{ROUTE_PREFIX}/table/rows")
     assert response.status_code == 200
     print(response.data)

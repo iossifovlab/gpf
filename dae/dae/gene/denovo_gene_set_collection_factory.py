@@ -9,6 +9,7 @@ from dae.utils.effect_utils import expand_effect_types
 
 
 class DenovoGeneSetCollectionFactory:
+
     @staticmethod
     def denovo_gene_set_cache_file(config, person_set_collection_id=""):
         cache_path = os.path.join(
@@ -20,10 +21,7 @@ class DenovoGeneSetCollectionFactory:
 
     @classmethod
     def load_collection(cls, genotype_data_study):
-        """
-        Loads a denovo gene set collection (from the filesystem)
-        for a given study.
-        """
+        """Loads a denovo gene set collection for a given study."""
         config = genotype_data_study.config
         assert config is not None, genotype_data_study.id
         selected_person_set_collections = \
@@ -35,12 +33,7 @@ class DenovoGeneSetCollectionFactory:
         }
         collection = DenovoGeneSetCollection(
             genotype_data_study.study_id, genotype_data_study.name, config,
-            {
-                collection_id: collection_config
-                for collection_id, collection_config
-                in person_set_collection_configs.items()
-            }
-        )
+            dict(person_set_collection_configs.items()))
 
         for (
             person_set_collection_id
@@ -50,8 +43,8 @@ class DenovoGeneSetCollectionFactory:
             )
             if not os.path.exists(cache_dir):
                 raise EnvironmentError(
-                    "Denovo gene sets caches dir '{}' "
-                    "does not exists".format(cache_dir)
+                    f"Denovo gene sets caches dir '{cache_dir}' "
+                    f"does not exists"
                 )
 
             with open(cache_dir, "r") as f:
@@ -63,10 +56,7 @@ class DenovoGeneSetCollectionFactory:
 
     @classmethod
     def build_collection(cls, genotype_data_study):
-        """
-        Builds a denovo gene set collection for the given study and
-        writes it to the filesystem.
-        """
+        """Build a denovo gene set collection for a study and saves it."""
         config = genotype_data_study.config
         assert config is not None, genotype_data_study.id
 

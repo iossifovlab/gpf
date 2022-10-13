@@ -1,6 +1,6 @@
 import logging
 
-from dae.gene.denovo_gene_set_collection import cached
+from functools import cache
 
 from dae.gene.denovo_gene_set_collection import DenovoGeneSetCollection
 from dae.gene.denovo_gene_set_collection_factory import \
@@ -80,7 +80,7 @@ class DenovoGeneSetsDb:
             "types": gene_sets_types,
         }
 
-    @cached
+    @cache
     def get_genotype_data_ids(self):
         genotype_data_ids = set(
             self.gpf_instance.get_genotype_data_ids(local_only=True)
