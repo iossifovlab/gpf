@@ -1,19 +1,21 @@
-.astext {
-  font-size: 25px;
+.gene-plot-header-icon {
+  font-size: 24px;
   background: none;
   border: none;
   margin: 0;
-  padding-right: 5px;
   outline: none;
+  padding: 0;
+  margin-left: 16px;
 }
 
 .header-item {
-  margin: 0;
+  display: flex;
+  align-items: center;
   position: relative;
   top: 50%;
   -ms-transform: translateY(-50%);
   transform: translateY(-50%);
-  padding-right: 15px;
+  padding-right: 16px;
 }
 
 .checkbox-option {
@@ -21,19 +23,29 @@
 }
 
 label {
-  margin-left: 20px;
-  padding: 7px;
-  font-size: 17px;
+  margin-left: 18px;
   user-select: none;
 }
 
 .gene-plot-header {
-  padding: 0px;
+  padding: 0;
   position: relative;
-  height: 40px;
+  height: 43px;
   display: flex;
   align-content: space-between;
   flex-wrap: wrap;
   flex-direction: column;
   overflow: hidden;
+}
+
+#summary-alleles-count {
+  padding-right: 16px;
+}
+
+#summary-alleles-count span,
+#family-variants-count span {
+  margin-left: 7px;
+  background-color: #eee;
+  padding: 2px;
+  border: 1px solid rgba(0, 0, 0, 12.5%);
 }
