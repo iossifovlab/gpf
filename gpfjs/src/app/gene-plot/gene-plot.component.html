@@ -1,66 +1,62 @@
 <div class="card">
-  <div class="card-header card-title" style="font-family: Roboto; padding: 0px; position: relative; height: 40px">
-    <span class="header-item" style="left: 0">
-      <button
-        type="button"
-        id="undo-button"
-        class="astext"
-        (click)="undo()"
-        [disabled]="!zoomHistory?.canGoBackward"
-        title="Undo (Ctrl+Z or Z)"
-        style="padding-left: 20px; font-weight: bold">
-        &#x021FD;
-      </button>
-      <button
-        type="button"
-        id="redo-button"
-        class="astext"
-        (click)="redo()"
-        [disabled]="!zoomHistory?.canGoForward"
-        title="Redo (Ctrl+Y or Y)"
-        style="padding-left: 7px; font-weight: bold">
-        &#x021FE;
-      </button>
-      <button
-        type="button"
-        id="reset-button"
-        class="astext"
-        (click)="reset()"
-        title="Reset (Double-click or 5)"
-        style="padding-left: 12px">
-        &#x021BB;
-      </button>
-    </span>
+  <div class="card-header card-title gene-plot-header">
+    <div class="header-item">
+      <span>
+        <button
+          type="button"
+          id="undo-button"
+          class="gene-plot-header-icon"
+          (click)="undo()"
+          [disabled]="!zoomHistory?.canGoBackward"
+          title="Undo (Ctrl+Z or Z)">
+          <span>&#x021FD;</span>
+        </button>
+        <button
+          type="button"
+          id="redo-button"
+          class="gene-plot-header-icon"
+          (click)="redo()"
+          [disabled]="!zoomHistory?.canGoForward"
+          title="Redo (Ctrl+Y or Y)">
+          <span>&#x021FE;</span>
+        </button>
+        <button
+          type="button"
+          id="reset-button"
+          class="gene-plot-header-icon"
+          (click)="reset()"
+          title="Reset (Double-click or 5)">
+          <span style="position: relative; top: 1px">⟳</span>
+        </button>
+      </span>
 
-    <span class="header-item" style="left: 120px">
-      <label style="margin-left: 20px; font-size: 17px">
-        <input type="checkbox" [checked]="!showTranscripts" (change)="showTranscripts = !showTranscripts; redraw()" />
-        <span class="checkbox-option">Hide transcripts</span>
-      </label>
-      <label style="margin-left: 15px; font-size: 17px">
-        <input #checkbox type="checkbox" [checked]="condenseIntrons" (change)="toggleCondenseIntrons()" />
-        <span class="checkbox-option">Condense introns</span>
-      </label>
-    </span>
+      <span style="position: relative; top: 1px">
+        <label>
+          <input type="checkbox" [checked]="!showTranscripts" (change)="showTranscripts = !showTranscripts; redraw()" />
+          <span class="checkbox-option">Hide transcripts</span>
+        </label>
+        <label>
+          <input #checkbox type="checkbox" [checked]="condenseIntrons" (change)="toggleCondenseIntrons()" />
+          <span class="checkbox-option">Condense introns</span>
+        </label>
+      </span>
+    </div>
 
-    <span id="gene-title" class="header-item" style="float: left; font-size: 20px; font-weight: bold; left: 45%">
+    <span id="gene-title" class="header-item" style="font-size: 20px; font-weight: bold">
       <span [attr.title]="'Gene symbol: ' + gene.geneSymbol + '\n' + chromosomesTitle">{{ gene?.geneSymbol }}</span>
     </span>
 
-    <span class="header-item" style="right: 0">
-      <span style="margin-left: 20px; font-size: 17px">
+    <span class="header-item">
+      <span>
         <span>Summary alleles:</span>
-        <span
-          id="summary-alleles-count"
-          style="margin-left: 7px; background-color: #eeeeee; padding: 2px; border: 1px solid rgba(0, 0, 0, 0.125)">
+        <span id="summary-alleles-count">
           <span>{{ this.variantsArray?.totalSummaryAllelesCount }} / {{ this.allVariantsCounts[0] }}</span>
         </span>
       </span>
-      <span style="margin-left: 40px; font-size: 17px"
-        >Family variants:
-        <span
-          id="family-variants-count"
-          style="margin-left: 7px; background-color: #eeeeee; padding: 2px; border: 1px solid rgba(0, 0, 0, 0.125)">
+
+      <span>
+        <span>Family variants:</span>
+        <span id="family-variants-count">
           <span>{{ this.variantsArray?.totalFamilyVariantsCount }} / {{ this.allVariantsCounts[1] }}</span>
         </span>
       </span>
