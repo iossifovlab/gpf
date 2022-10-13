@@ -39,6 +39,27 @@ class TestHostComponent {
 		    width="650" height="145"
 		    [bins]="bins"
         [bars]="bars"
+		    [rangesCounts]="rangesCounts | async"
+		    [(rangeStart)]="rangeStart" [(rangeEnd)]="rangeEnd">
+		  </gpf-histogram>
+    `
+})
+class TestHostComponentNoDomain {
+  bins = [1, 2, 3, 4];
+  bars = [2, 3, 4, 5];
+  rangeStart = 2;
+  rangeEnd = 4;
+  rangesCounts: Observable<Array<number>> = of([2, 7, 5]);
+
+  @ViewChild('gpfhistogram') histogramEl;
+}
+
+@Component({
+  template: `
+      <gpf-histogram #gpfhistogram
+		    width="650" height="145"
+		    [bins]="bins"
+        [bars]="bars"
         [domainMin]="domainMin"
         [domainMax]="domainMax"
 		    [rangesCounts]="rangesCounts | async"
@@ -184,5 +205,33 @@ describe('HistogramComponentManyBins', () => {
     expect(rangeInputElTo.queryAll(By.css('button')).length).toBe(2);
     expect(rangeInputElTo.query(By.css('.step.up'))).not.toBeNull();
     expect(rangeInputElTo.query(By.css('.step.down'))).not.toBeNull();
+  });
+});
+
+describe('HistogramComponentNoDomain', () => {
+  let fixture: ComponentFixture<TestHostComponentNoDomain>;
+
+  beforeEach(waitForAsync(() => {
+    TestBed.configureTestingModule({
+      imports: [ FormsModule ],
+      declarations: [
+        HistogramComponent, HistogramRangeSelectorLineComponent,
+        TestHostComponentNoDomain,
+      ]
+    })
+    .compileComponents();
+  }));
+
+  beforeEach(() => {
+    fixture = TestBed.createComponent(TestHostComponentNoDomain);
+    fixture.detectChanges();
+  });
+
+  it('should set the correct labels to the sliders', () => {
+    const sliderLabels = fixture.debugElement.queryAll(By.css('.partitions-text'));
+    const sliderLabelsText = sliderLabels.map((label) => (label.nativeElement as HTMLElement).textContent.trim());
+    expect(sliderLabels.length).toBe(3);
+    expect(sliderLabelsText.length).toBe(3);
+    expect(sliderLabelsText).toEqual(['~2 (14.29%)', '~5 (35.71%)', '~7 (50.00%)']);
   });
 });
