@@ -15,7 +15,6 @@ Subpackages
    dae.docs
    dae.effect_annotation
    dae.enrichment_tool
-   dae.filesystem_storage
    dae.gene
    dae.genomic_resources
    dae.genotype_storage
@@ -23,12 +22,14 @@ Subpackages
    dae.gpf_instance_plugin
    dae.impala_storage
    dae.import_tools
+   dae.inmemory_storage
    dae.parquet
    dae.pedigrees
    dae.pheno
    dae.pheno_tool
    dae.query_variants
    dae.studies
+   dae.testing
    dae.tools
    dae.utils
    dae.variants

@@ -17,7 +17,7 @@ dae Interface
    parquet
    query_variants
    genotype_storage
-   filesystem_storage
+   inmemory_storage
    impala_storage
 
    configuration

@@ -47,8 +47,6 @@ def imported_study(tmp_path_factory, genotype_storage):
     return study
 
 
-@pytest.mark.impala
-@pytest.mark.impala2
 @pytest.mark.parametrize("region,family_variants_count", [
     (Region("chrA", 1, 1), 2),
     (Region("chrA", 2, 2), 1),
@@ -65,6 +63,7 @@ def test_summary_variants_family_variants_count_single_allele(
     assert aa.get_attribute("family_variants_count") == family_variants_count
 
 
+@pytest.mark.inmemory
 @pytest.mark.impala2(reason="supported for impala schema2")
 @pytest.mark.parametrize("region,family_variants_count", [
     (Region("chrA", 5, 5), [1, 1]),

@@ -14,7 +14,7 @@ genotype_storage:
 
   - id: genotype_filesystem
     dir: "/tmp/studies"
-    storage_type: filesystem
+    storage_type: inmemory
 
 phenotype_data:
   dir: "dummy_pheno_dir"

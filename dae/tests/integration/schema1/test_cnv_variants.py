@@ -8,7 +8,7 @@ from dae.variants.core import Allele
 from dae.variants_loaders.cnv.loader import CNVLoader
 from dae.pedigrees.loader import FamiliesLoader
 from dae.variants_loaders.raw.loader import AnnotationPipelineDecorator
-from dae.filesystem_storage.in_memory.raw_variants import RawMemoryVariants
+from dae.inmemory_storage.raw_variants import RawMemoryVariants
 from dae.import_tools.import_tools import ImportProject, run_with_project
 
 from dae.configuration.gpf_config_parser import FrozenBox

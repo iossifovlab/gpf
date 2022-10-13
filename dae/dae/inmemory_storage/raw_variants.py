@@ -4,7 +4,9 @@ import queue
 import abc
 
 from contextlib import closing
+from functools import reduce
 
+from dae.variants.attributes import Inheritance
 from dae.variants.variant import SummaryAllele
 from dae.variants.family_variant import FamilyAllele
 
@@ -84,7 +86,29 @@ class RawFamilyVariants(abc.ABC):
                 yield v
 
     def summary_variants_iterator(self):
-        for sv, _ in self.full_variants_iterator():
+        """Create a generator to iterate over summary variants."""
+        for sv, fvs in self.full_variants_iterator():
+            seen_in_status = sv.allele_count * [0]
+            seen_as_denovo = sv.allele_count * [False]
+            family_variants_count = sv.allele_count * [0]
+
+            for fv in fvs:
+                for fa in fv.alt_alleles:
+                    seen_in_status[fa.allele_index] = reduce(
+                        lambda t, s: t | s.value,
+                        filter(None, fa.allele_in_statuses),
+                        seen_in_status[fa.allele_index])
+                    seen_as_denovo[fa.allele_index] = reduce(
+                        lambda t, s: t or (s == Inheritance.denovo),
+                        filter(None, fa.inheritance_in_members),
+                        seen_as_denovo[fa.allele_index])
+                    family_variants_count[fa.allele_index] += 1
+            sv.update_attributes({
+                "seen_in_status": seen_in_status[1:],
+                "seen_as_denovo": seen_as_denovo[1:],
+                "family_variants_count": family_variants_count[1:],
+                "family_alleles_count": family_variants_count[1:],
+            })
             yield sv
 
     @staticmethod

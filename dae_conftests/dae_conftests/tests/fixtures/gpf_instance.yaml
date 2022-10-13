@@ -56,15 +56,15 @@ genotype_storage:
 
     - id: genotype_filesystem
       dir: /tmp/studies
-      storage_type: filesystem
+      storage_type: inmemory
 
     - id: genotype_filesystem2
       dir: /tmp/data_dir
-      storage_type: filesystem
+      storage_type: inmemory
 
     - id: test_filesystem
       dir: /tmp/test_filesystem/studies
-      storage_type: filesystem
+      storage_type: inmemory
 
     - id: test_impala
       hdfs:

@@ -45,8 +45,6 @@ def imported_study(tmp_path_factory, genotype_storage):
     return study
 
 
-@pytest.mark.impala
-@pytest.mark.impala2
 @pytest.mark.parametrize("region,seen_as_denovo", [
     (Region("chrA", 1, 1), False),
     (Region("chrA", 2, 2), True),
@@ -63,7 +61,7 @@ def test_summary_variants_seen_as_denovo_single_allele(
     assert aa.get_attribute("seen_as_denovo") == seen_as_denovo
 
 
-# @pytest.mark.impala
+@pytest.mark.inmemory
 @pytest.mark.impala2
 @pytest.mark.parametrize("region,seen_as_denovo", [
     (Region("chrA", 5, 5), [False, False]),

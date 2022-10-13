@@ -10,7 +10,7 @@ genotype_storage:
   storages:
   - id: genotype_filesystem
     dir: "%(wd)s/studies"
-    storage_type: filesystem
+    storage_type: inmemory
 
 phenotype_data:
   dir: "dummy_pheno_dir"

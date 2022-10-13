@@ -11,7 +11,7 @@ from dae.pedigrees.loader import FamiliesLoader
 from dae.genotype_storage.genotype_storage import GenotypeStorage
 
 from dae.variants_loaders.raw.loader import StoredAnnotationDecorator
-from dae.filesystem_storage.in_memory.raw_variants import RawMemoryVariants
+from dae.inmemory_storage.raw_variants import RawMemoryVariants
 
 from dae.variants_loaders.vcf.loader import VcfLoader
 from dae.variants_loaders.dae.loader import DenovoLoader, DaeTransmittedLoader
@@ -20,11 +20,11 @@ from dae.variants_loaders.cnv.loader import CNVLoader
 logger = logging.getLogger(__name__)
 
 
-class FilesystemGenotypeStorage(GenotypeStorage):
-    """A storage that uses the filesystem as its backend."""
+class InmemoryGenotypeStorage(GenotypeStorage):
+    """A storage that uses the in-memory as its backend."""
 
     VALIDATION_SCHEMA = {
-        "storage_type": {"type": "string", "allowed": ["filesystem"]},
+        "storage_type": {"type": "string", "allowed": ["inmemory"]},
         "id": {
             "type": "string",
         },
@@ -41,7 +41,7 @@ class FilesystemGenotypeStorage(GenotypeStorage):
 
     @classmethod
     def get_storage_type(cls) -> str:
-        return "filesystem"
+        return "inmemory"
 
     @classmethod
     def validate_and_normalize_config(cls, config: Dict) -> Dict:
@@ -49,10 +49,10 @@ class FilesystemGenotypeStorage(GenotypeStorage):
         validator = Validator(cls.VALIDATION_SCHEMA)
         if not validator.validate(config):
             logger.error(
-                "wrong config format for fileystem genotype storage: %s",
+                "wrong config format for inmemory genotype storage: %s",
                 validator.errors)
             raise ValueError(
-                f"wrong config format for filesytem storage: "
+                f"wrong config format for inmemory storage: "
                 f"{validator.errors}")
         return cast(Dict, validator.document)
 

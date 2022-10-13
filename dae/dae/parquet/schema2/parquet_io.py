@@ -1,4 +1,3 @@
-from functools import reduce
 import io
 import os
 import sys
@@ -9,6 +8,7 @@ import itertools
 import logging
 import json
 import configparser
+from functools import reduce
 
 import toml
 from box import Box

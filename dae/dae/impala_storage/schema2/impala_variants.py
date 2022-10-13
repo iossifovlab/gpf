@@ -7,7 +7,7 @@ import numpy as np
 from impala.util import as_pandas
 from dae.person_sets import PersonSetCollection
 from dae.query_variants.query_runners import QueryResult, QueryRunner
-from dae.filesystem_storage.in_memory.raw_variants import RawFamilyVariants
+from dae.inmemory_storage.raw_variants import RawFamilyVariants
 from dae.pedigrees.family import FamiliesData
 from dae.pedigrees.loader import FamiliesLoader
 from dae.variants.attributes import Role, Status, Sex
