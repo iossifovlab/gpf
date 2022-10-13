@@ -101,7 +101,6 @@ class FamiliesGroupCounters:
         families,
         person_set_collection,
         draw_all_families,
-        families_count_show_id,
     ):
         """Create families group counters from a dict of families."""
         counters = {}
@@ -140,15 +139,7 @@ class FamiliesGroupCounters:
 
             for idx, items in enumerate(families_to_types.items()):
                 family_type, families = items
-                if (
-                    families_count_show_id
-                    and len(families) <= families_count_show_id
-                ):
-                    pedigree_label = ", ".join(
-                        [fam.family_id for fam in families]
-                    )
-                else:
-                    pedigree_label = str(len(families))
+                pedigree_label = str(len(families))
 
                 family = families[0]
                 counter = FamilyCounter({

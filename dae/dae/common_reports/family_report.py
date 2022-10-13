@@ -20,20 +20,18 @@ class FamiliesReport:
         config = genotype_data_study.config.common_report
         return FamiliesReport.from_families_data(
             genotype_data_study.families, person_set_collections,
-            config.draw_all_families,
-            config.families_count_show_id)
+            config.draw_all_families)
 
     @staticmethod
     def from_families_data(
             families, person_set_collections,
-            draw_all_families=True, families_count_show_id=5):
+            draw_all_families=True):
         """Create a family report from families data."""
         families_counters = [
             FamiliesGroupCounters.from_families(
                 families,
                 person_set_collection,
-                draw_all_families,
-                families_count_show_id
+                draw_all_families
             )
             for person_set_collection in person_set_collections
         ]

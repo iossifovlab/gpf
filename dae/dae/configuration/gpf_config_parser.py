@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 import glob
 import logging
+from copy import deepcopy
 
 from typing import List, Any, Dict, Optional, cast
 
@@ -178,8 +179,13 @@ class GPFConfigParser:
         if conf_dir is not None and "conf_dir" in schema:
             config["conf_dir"] = conf_dir
 
+        # This is done because cerberus validators may perform
+        # in-place edits to the schema,
+        # potentially resulting in inconsistent behavior
+        schema_copy = deepcopy(schema)
+
         validator = GPFConfigValidator(
-            schema, conf_dir=conf_dir
+            schema_copy, conf_dir=conf_dir
         )
         if not validator.validate(config):
             if conf_dir:
@@ -253,6 +259,11 @@ class GPFConfigParser:
         """Find and load all configs in a given root directory."""
         result = []
         for config_path in cls._collect_directory_configs(dirname):
+            if config_path.endswith(".conf") or config_path.endswith(".toml"):
+                logger.warning(
+                    "TOML configurations have been deprecated - %s",
+                    config_path
+                )
             try:
                 config = cls.load_config(
                     config_path, schema,

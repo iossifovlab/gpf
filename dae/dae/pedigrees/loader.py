@@ -52,6 +52,9 @@ class FamiliesLoader(CLILoader):
         pedigree_format["ped_no_header"] = str2bool(
             pedigree_format.get("ped_no_header", False)
         )
+        pedigree_format["ped_tags"] = str2bool(
+            pedigree_format.get("ped_tags", False)
+        )
 
         ped_df = FamiliesLoader.flexible_pedigree_read(
             pedigree_filename, **pedigree_format
