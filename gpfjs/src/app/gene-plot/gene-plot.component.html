@@ -1,6 +1,5 @@
 <div class="card">
-  <div
-    class="card-header card-title gene-plot-header">
+  <div class="card-header card-title gene-plot-header">
     <div class="header-item">
       <span>
         <button
@@ -35,11 +34,11 @@
       </span>
 
       <span style="left: 120px">
-        <label style="font-size: 17px; margin-left: 20px;">
+        <label style="font-size: 17px; margin-left: 20px">
           <input type="checkbox" [checked]="!showTranscripts" (change)="showTranscripts = !showTranscripts; redraw()" />
           <span class="checkbox-option">Hide transcripts</span>
         </label>
-        <label style="font-size: 17px; margin-left: 15px;">
+        <label style="font-size: 17px; margin-left: 15px">
           <input #checkbox type="checkbox" [checked]="condenseIntrons" (change)="toggleCondenseIntrons()" />
           <span class="checkbox-option">Condense introns</span>
         </label>

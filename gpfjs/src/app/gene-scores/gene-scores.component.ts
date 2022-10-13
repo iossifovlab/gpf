@@ -47,7 +47,7 @@ export class GeneScoresComponent extends StatefulComponent implements OnInit {
         console.warn(error);
         return of(null);
       })
-    )
+    );
 
     this.rangesCounts = this.partitions.pipe(map((partitions) => {
        return [partitions.leftCount, partitions.midCount, partitions.rightCount];
@@ -66,6 +66,7 @@ export class GeneScoresComponent extends StatefulComponent implements OnInit {
     ).subscribe(([geneScores, state]) => {
       this.geneScoresArray = geneScores;
       // restore state
+      // console.log(state);
       if (state.geneScore !== null) {
         for (const geneScore of this.geneScoresArray) {
           if (geneScore.score === state.geneScore.score) {
@@ -79,6 +80,9 @@ export class GeneScoresComponent extends StatefulComponent implements OnInit {
         this.selectedGeneScores = this.geneScoresArray[0];
       }
     });
+    if(this.geneScoresLocalState.score !== null && this.rangeStart !== null && this.rangeEnd !== null) {
+        this.updateHistogramState();
+    }
 }
 
   private updateLabels() {
@@ -87,6 +91,7 @@ export class GeneScoresComponent extends StatefulComponent implements OnInit {
       this.rangeStart,
       this.rangeEnd
     ]);
+    //console.log(this.geneScoresLocalState.score.score ,this.rangeStart, this.rangeEnd);
   }
 
   updateHistogramState() {
@@ -95,6 +100,7 @@ export class GeneScoresComponent extends StatefulComponent implements OnInit {
       this.geneScoresLocalState.rangeStart,
       this.geneScoresLocalState.rangeEnd,
     ));
+    console.log(this.geneScoresLocalState.rangeStart, this.geneScoresLocalState.rangeEnd);
   }
 
   get selectedGeneScores() {
