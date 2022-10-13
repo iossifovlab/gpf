@@ -3,7 +3,7 @@
 import os
 import logging
 import json
-from functools import cached_property
+from functools import cache, cached_property
 
 from dae.enrichment_tool.background_facade import BackgroundFacade
 
@@ -207,16 +207,9 @@ class GPFInstance:
         return agpdb
 
     def reload(self):
-        """Reload GPF instance studies, gene sets, etc."""
-        # reload_properties = [
-        #     # "_variants_db",
-        #     "_denovo_gene_sets_db",
-        #     "_gene_sets_db",
-        # ]
+        """Reload GPF instance studies, de Novo gene sets, etc."""
         self._variants_db.reload()
-
-        # for cached_val_name in reload_properties:
-        #     setattr(self, cached_val_name, None)
+        self.denovo_gene_sets_db.reload()
 
     @cached_property
     def _autism_gene_profile_config(self):
@@ -469,6 +462,7 @@ class GPFInstance:
             return None
         return self.dae_config.gpfjs.selected_genotype_data
 
+    @cache
     def get_annotation_pipeline(self):
         """Return the annotation pipeline configured in the GPF instance."""
         if self._annotation_pipeline is None:
