@@ -43,7 +43,9 @@ def test_gene_scores_get_genes_view(user_client):
 def test_gene_scores_partitions(user_client):
     url = "/api/v3/gene_scores/partitions"
     data = {
-        "score": "LGD_rank"
+        "score": "LGD_rank",
+        "min": 1.5,
+        "max": 5.0
     }
 
     response = user_client.post(
@@ -53,5 +55,59 @@ def test_gene_scores_partitions(user_client):
 
     data = response.data
     assert len(data) == 3
-    assert data["left"]["count"] == 0
-    assert data["right"]["count"] == 0
+    assert data["left"]["count"] == 1
+    assert data["right"]["count"] == 18454
+
+
+def test_gene_scores_partitions_bad_request_no_min(user_client):
+    url = "/api/v3/gene_scores/partitions"
+    data = {
+        "score": "LGD_rank",
+        "min": 1.5
+    }
+
+    response = user_client.post(
+        url, json.dumps(data), content_type="application/json", format="json"
+    )
+    assert response.status_code == 400
+
+
+def test_gene_scores_partitions_bad_request_no_max(user_client):
+    url = "/api/v3/gene_scores/partitions"
+    data = {
+        "score": "LGD_rank",
+        "max": 5.0
+    }
+
+    response = user_client.post(
+        url, json.dumps(data), content_type="application/json", format="json"
+    )
+    assert response.status_code == 400
+
+
+def test_gene_scores_partitions_bad_request_non_float_min(user_client):
+    url = "/api/v3/gene_scores/partitions"
+    data = {
+        "score": "LGD_rank",
+        "min": "non-float-value",
+        "max": 5.0
+    }
+
+    response = user_client.post(
+        url, json.dumps(data), content_type="application/json", format="json"
+    )
+    assert response.status_code == 400
+
+
+def test_gene_scores_partitions_bad_request_non_float_max(user_client):
+    url = "/api/v3/gene_scores/partitions"
+    data = {
+        "score": "LGD_rank",
+        "min": 1.5,
+        "max": "non-float-value"
+    }
+
+    response = user_client.post(
+        url, json.dumps(data), content_type="application/json", format="json"
+    )
+    assert response.status_code == 400
