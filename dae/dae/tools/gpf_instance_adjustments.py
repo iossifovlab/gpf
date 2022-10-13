@@ -150,26 +150,27 @@ class DefaultGenotypeStorage(StudyConfigsAdjustmentCommand):
         self.storage_id = storage_id
 
     def execute(self):
-        default_genotype_storage = self.config["genotype_storage"]
-        default = default_genotype_storage["default"]
+        genotype_storage_config = self.config["genotype_storage"]
+        default_storage = genotype_storage_config["default"]
+        storages = genotype_storage_config["storages"]
+        storage_ids = set(map(lambda s: s["id"], storages))
 
-        storages = self.config["storage"]
-        if default not in storages:
+        if default_storage not in storage_ids:
             logger.error(
                 "GPF instance misconfigured; "
                 "current default genotype storage %s not found "
                 "in the list of storages: %s",
-                default, list(storages.keys()))
-            raise ValueError(default)
-        if self.storage_id not in storages:
+                default_storage, storage_ids)
+            raise ValueError(default_storage)
+        if self.storage_id not in storage_ids:
             logger.error(
                 "bad storage for GPF instance; "
                 "passed genotype storage %s not found "
                 "in the list of configured storages: %s",
-                default, list(storages.keys()))
-            raise ValueError(default)
+                default_storage, storage_ids)
+            raise ValueError(default_storage)
 
-        default_genotype_storage["default"] = self.storage_id
+        genotype_storage_config["default"] = self.storage_id
         logger.info(
             "replacing default storage id with %s", self.storage_id)
 
@@ -178,7 +179,7 @@ class DefaultGenotypeStorage(StudyConfigsAdjustmentCommand):
     def adjust_study(self, study_id, study_config):
         genotype_storage = study_config.get("genotype_storage")
         if genotype_storage is not None and \
-                genotype_storage.get("id") is not None:
+                genotype_storage.get("id") is None:
             genotype_storage["id"] = self.storage_id
         return study_config
 
