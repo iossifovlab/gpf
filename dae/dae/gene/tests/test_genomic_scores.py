@@ -1,7 +1,11 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 
 import textwrap
+
 import pytest
+
+from dae.testing import setup_directories, setup_genome, \
+    setup_empty_gene_models, setup_gpf_instance
 
 from dae.gene.scores import GenomicScoresDb
 from dae.genomic_resources.testing import build_testing_repository
@@ -69,6 +73,55 @@ def test_genomic_scores_db(scores_repo):
         scores_repo,
         [("phastCons", "phastcons100")]
     )
+    assert len(db.get_scores()) == 1
+    assert "phastcons100" in db
+    assert db["phastcons100"] is not None
+
+    score = db["phastcons100"]
+    assert len(score.hist.bars) == 11
+    assert len(score.hist.bins) == 11
+    assert score.hist.x_scale == "linear"
+    assert score.hist.y_scale == "linear"
+
+
+@pytest.fixture
+def annotation_gpf(scores_repo, tmp_path_factory):
+    root_path = tmp_path_factory.mktemp("genomic_scores_db_gpf")
+
+    setup_directories(root_path / "gpf_instance", {
+        "gpf_instance.yaml": textwrap.dedent("""
+        annotation:
+            conf_file: annotation.yaml
+        """),
+        "annotation.yaml": textwrap.dedent("""
+        - position_score: phastCons
+        """)
+    })
+    genome = setup_genome(
+        root_path / "alla_gpf" / "genome" / "allChr.fa",
+        f"""
+        >chrA
+        {100 * "A"}
+        """
+    )
+    empty_gene_models = setup_empty_gene_models(
+        root_path / "alla_gpf" / "empty_gene_models" / "empty_genes.txt")
+    gpf_instance = setup_gpf_instance(
+        root_path / "gpf_instance",
+        reference_genome=genome,
+        gene_models=empty_gene_models,
+        grr=scores_repo
+    )
+    return gpf_instance
+
+
+def test_genomic_scores_db_with_annotation(annotation_gpf):
+    assert annotation_gpf is not None
+    annotaiton_pipeline = annotation_gpf.get_annotation_pipeline()
+    assert annotaiton_pipeline is not None
+
+    db = annotation_gpf.genomic_scores_db
+    assert db is not None
     assert len(db.get_scores()) == 1
     assert "phastcons100" in db
     assert db["phastcons100"] is not None
