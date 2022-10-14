@@ -94,7 +94,7 @@ def parse_cli_arguments(argv, gpf_instance):
 def main(argv=None, gpf_instance=None):
     """Import parquet dataset into Impala genotype storage."""
     if gpf_instance is None:
-        gpf_instance = GPFInstance()
+        gpf_instance = GPFInstance.build()
 
     argv = parse_cli_arguments(argv or sys.argv[1:], gpf_instance)
 

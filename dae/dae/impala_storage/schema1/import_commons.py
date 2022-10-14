@@ -1197,7 +1197,7 @@ class BatchImporter:
             try:
                 # pylint: disable=import-outside-toplevel
                 from dae.gpf_instance.gpf_instance import GPFInstance
-                gpf_instance = GPFInstance()
+                gpf_instance = GPFInstance.build()
             except Exception:  # pylint: disable=broad-except
                 logger.warning("GPF not configured properly...", exc_info=True)
 
@@ -1340,7 +1340,7 @@ class Variants2ParquetTool:
         if gpf_instance is None:
             # pylint: disable=import-outside-toplevel
             from dae.gpf_instance.gpf_instance import GPFInstance
-            gpf_instance = GPFInstance()
+            gpf_instance = GPFInstance.build()
 
         parser = cls.cli_arguments_parser(gpf_instance)
 
@@ -1362,7 +1362,7 @@ class Variants2ParquetTool:
         if gpf_instance is None:
             # pylint: disable=import-outside-toplevel
             from dae.gpf_instance.gpf_instance import GPFInstance
-            gpf_instance = GPFInstance()
+            gpf_instance = GPFInstance.build()
 
         families_filename, families_params = \
             FamiliesLoader.parse_cli_arguments(argv)
@@ -1509,7 +1509,7 @@ class DatasetHelpers:
         if gpf_instance is None:
             # pylint: disable=import-outside-toplevel
             from dae.gpf_instance.gpf_instance import GPFInstance
-            self.gpf_instance = GPFInstance()
+            self.gpf_instance = GPFInstance.build()
         else:
             self.gpf_instance = gpf_instance
 

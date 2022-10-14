@@ -117,11 +117,7 @@ def default_dae_config(request, fixture_dirname):
 def gpf_instance(default_dae_config, fixture_dirname):
     from dae.gpf_instance.gpf_instance import GPFInstance
 
-    class GPFInstanceInternal(GPFInstance):
-        def __init__(self, *args, **kwargs):
-            super().__init__(*args, **kwargs)
-
-    def build(work_dir=None, load_eagerly=False):
+    def build(config_filename):
         repositories = [
             build_genomic_resource_repository(
                 {
@@ -140,9 +136,7 @@ def gpf_instance(default_dae_config, fixture_dirname):
         ]
         grr = GenomicResourceGroupRepo(repositories)
 
-        instance = GPFInstanceInternal(
-            work_dir=work_dir, load_eagerly=load_eagerly, grr=grr
-        )
+        instance = GPFInstance.build(config_filename, grr=grr)
 
         return instance
 
@@ -155,8 +149,6 @@ def gpf_instance_2013(
     from dae.gpf_instance.gpf_instance import GPFInstance
 
     class GPFInstance2013(GPFInstance):
-        def __init__(self, *args, **kwargs):
-            super().__init__(*args, **kwargs)
 
         @cached_property
         def gene_models(self):
@@ -181,14 +173,18 @@ def gpf_instance_2013(
         build_genomic_resource_repository(),
     ]
     grr = GenomicResourceGroupRepo(repositories)
-    gpf_instance = GPFInstance2013(dae_config=default_dae_config, grr=grr)
+    gpf_instance = GPFInstance2013(
+        dae_config=default_dae_config,
+        dae_dir=default_dae_config.config_dir,
+        grr=grr)
 
     return gpf_instance
 
 
 @pytest.fixture(scope="session")
 def fixtures_gpf_instance(gpf_instance, global_dae_fixtures_dir):
-    return gpf_instance(global_dae_fixtures_dir)
+    return gpf_instance(
+        os.path.join(global_dae_fixtures_dir, "gpf_instance.yaml"))
 
 
 @pytest.fixture(scope="session")
@@ -197,8 +193,6 @@ def gpf_instance_2019(
     from dae.gpf_instance.gpf_instance import GPFInstance
 
     class GPFInstance2019(GPFInstance):
-        def __init__(self, *args, **kwargs):
-            super().__init__(*args, **kwargs)
 
         @cached_property
         def gene_models(self):
@@ -223,7 +217,7 @@ def gpf_instance_2019(
     ]
     grr = GenomicResourceGroupRepo(repositories)
     gpf_instance = GPFInstance2019(
-        dae_config=default_dae_config, work_dir=global_dae_fixtures_dir,
+        dae_config=default_dae_config, dae_dir=global_dae_fixtures_dir,
         grr=grr)
 
     return gpf_instance
@@ -235,8 +229,6 @@ def _create_gpf_instance(
     from dae.gpf_instance.gpf_instance import GPFInstance
 
     class CustomGPFInstance(GPFInstance):
-        def __init__(self, *args, **kwargs):
-            super().__init__(*args, **kwargs)
 
         @cached_property
         def gene_models(self):
@@ -271,7 +263,7 @@ def _create_gpf_instance(
     grr = GenomicResourceGroupRepo(repositories)
 
     instance = CustomGPFInstance(
-        dae_config=default_dae_config, work_dir=global_dae_fixtures_dir,
+        dae_config=default_dae_config, dae_dir=global_dae_fixtures_dir,
         grr=grr
     )
 

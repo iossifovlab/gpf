@@ -136,7 +136,7 @@ def setup_gpf_instance(
         setup_directories(out_path, {"gpf_instance.yaml": ""})
     # pylint: disable=import-outside-toplevel
     from dae.gpf_instance import GPFInstance
-    return GPFInstance(
-        work_dir=out_path,
+    return GPFInstance.build(
+        out_path / "gpf_instance.yaml",
         reference_genome=reference_genome, gene_models=gene_models,
         grr=grr)

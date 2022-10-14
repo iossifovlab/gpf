@@ -36,7 +36,7 @@ def cshl2vcf(loc, var, genome):
 if __name__ == "__main__":
     from dae.gpf_instance.gpf_instance import GPFInstance
 
-    gpf_instance = GPFInstance()
+    gpf_instance = GPFInstance.build()
 
     GENOME = gpf_instance.reference_genome
     with open(sys.argv[1], "r") as csvfile, open(sys.argv[2], "w") as output:

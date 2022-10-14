@@ -48,7 +48,7 @@ def main(argv, gpf_instance=None):
     logging.getLogger("impala.hiveserver2").setLevel(logging.ERROR)
 
     if gpf_instance is None:
-        gpf_instance = GPFInstance()
+        gpf_instance = GPFInstance.build()
 
     assert argv.source_id is not None
     assert argv.dest_id is not None

@@ -46,7 +46,7 @@ def main(argv, gpf_instance=None):
 
     start = time.time()
     if gpf_instance is None:
-        gpf_instance = GPFInstance()
+        gpf_instance = GPFInstance.build()
 
     available_studies = gpf_instance.get_genotype_data_ids(local_only=True)
 

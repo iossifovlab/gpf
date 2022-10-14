@@ -60,7 +60,7 @@ def test_find_repo_dir_simple(repo_fixture, tmp_path):
     cli_manage(["repo-manifest", "-R", str(tmp_path)])
 
     res = find_directory_with_a_file(GR_CONTENTS_FILE_NAME)
-    assert res == str(tmp_path)
+    assert res == tmp_path
 
 
 def test_find_resource_dir_simple(repo_fixture, tmp_path):
@@ -69,10 +69,10 @@ def test_find_resource_dir_simple(repo_fixture, tmp_path):
     os.chdir(tmp_path / "sub" / "two(1.0)" / "gene_models")
 
     repo_dir = find_directory_with_a_file(GR_CONTENTS_FILE_NAME)
-    assert repo_dir == str(tmp_path)
+    assert repo_dir == tmp_path
 
     resource_dir = find_directory_with_a_file(GR_CONF_FILE_NAME)
-    assert resource_dir == str(tmp_path / "sub" / "two(1.0)")
+    assert resource_dir == tmp_path / "sub" / "two(1.0)"
 
     path = pathlib.Path(resource_dir)
     assert str(path.relative_to(repo_dir)) == "sub/two(1.0)"

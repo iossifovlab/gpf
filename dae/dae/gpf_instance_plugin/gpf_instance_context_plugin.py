@@ -50,7 +50,7 @@ class GPFInstanceGenomicContextProvider(SimpleGenomicContextProvider):
             def get_source(self) -> Tuple[str, ...]:
                 return ("gpf_instance", self.gpf_instance.dae_dir)
         try:
-            return GPFInstanceGenomicContext(GPFInstance())
+            return GPFInstanceGenomicContext(GPFInstance.build())
         except Exception:  # pylint: disable=broad-except
             logger.error(
                 "unable to create gpf instance context", exc_info=True)

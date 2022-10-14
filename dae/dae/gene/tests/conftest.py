@@ -25,7 +25,8 @@ def path_to_fixtures(*args):
 
 @pytest.fixture(scope="session")
 def local_gpf_instance(gpf_instance):
-    return gpf_instance(fixtures_dir())
+    return gpf_instance(
+        os.path.join(fixtures_dir(), "gpf_instance.yaml"))
 
 
 @pytest.fixture(scope="session")

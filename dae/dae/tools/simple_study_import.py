@@ -223,7 +223,7 @@ def main(argv, gpf_instance=None):
         dae_config = gpf_instance.dae_config
     else:
         try:
-            gpf_instance = GPFInstance()
+            gpf_instance = GPFInstance.build()
             dae_config = gpf_instance.dae_config
         except Exception:  # pylint: disable=broad-except
             logger.warning("GPF not configured correctly", exc_info=True)

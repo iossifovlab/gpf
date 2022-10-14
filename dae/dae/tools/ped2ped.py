@@ -47,7 +47,7 @@ def main(argv, gpf_instance=None):
     It should be called from the command line.
     """
     if gpf_instance is None:
-        gpf_instance = GPFInstance()
+        gpf_instance = GPFInstance.build()
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--verbose", "-V", action="count", default=0)

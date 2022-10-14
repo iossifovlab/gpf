@@ -13,7 +13,7 @@ from users_api.models import WdaeUser
 from remote.rest_api_client import RESTClient
 
 from gpf_instance.gpf_instance import WGPFInstance, get_gpf_instance,\
-    reload_datasets, load_gpf_instance
+    reload_datasets
 
 from dae.autism_gene_profile.db import AutismGeneProfileDB
 
@@ -104,10 +104,7 @@ def datasets(db):
 @pytest.fixture(scope="session")
 def wgpf_instance(default_dae_config, fixture_dirname):
 
-    class WGPFInstanceInternal(WGPFInstance):
-        pass
-
-    def build(work_dir=None, load_eagerly=False):
+    def build(config_filename=None):
         repositories = [
             build_genomic_resource_repository(
                 {
@@ -126,9 +123,7 @@ def wgpf_instance(default_dae_config, fixture_dirname):
         ]
         grr = GenomicResourceGroupRepo(repositories)
 
-        result = WGPFInstanceInternal(
-            work_dir=work_dir, load_eagerly=load_eagerly, grr=grr
-        )
+        result = WGPFInstance.build(config_filename, grr=grr)
 
         remote_host = os.environ.get("TEST_REMOTE_HOST", "localhost")
         if result.dae_config.remotes[0].id == "TEST_REMOTE":
@@ -150,7 +145,8 @@ def wgpf_instance(default_dae_config, fixture_dirname):
 
 @pytest.fixture(scope="session")
 def fixtures_wgpf_instance(wgpf_instance, global_dae_fixtures_dir):
-    return wgpf_instance(global_dae_fixtures_dir)
+    return wgpf_instance(
+        os.path.join(global_dae_fixtures_dir, "gpf_instance.yaml"))
 
 
 @pytest.fixture(scope="function")
@@ -185,7 +181,8 @@ def wdae_gpf_instance_agp(  # pylint: disable=too-many-arguments
         global_dae_fixtures_dir, agp_config, temp_filename,
         fixture_dirname):
 
-    wdae_gpf_instance = wgpf_instance(global_dae_fixtures_dir)
+    wdae_gpf_instance = wgpf_instance(
+        os.path.join(global_dae_fixtures_dir, "gpf_instance.yaml"))
 
     reload_datasets(wdae_gpf_instance)
     mocker.patch(
@@ -243,7 +240,7 @@ def wdae_gpf_instance_agp(  # pylint: disable=too-many-arguments
 
 
 @pytest.fixture(scope="function")
-def remote_config():
+def remote_config(fixtures_wgpf_instance):
     host = os.environ.get("TEST_REMOTE_HOST", "localhost")
     remote = {
         "id": "TEST_REMOTE",
@@ -253,7 +250,7 @@ def remote_config():
         "user": "admin@iossifovlab.com",
         "password": "secret",
     }
-    reload_datasets(load_gpf_instance())
+    reload_datasets(fixtures_wgpf_instance)
 
     return remote
 

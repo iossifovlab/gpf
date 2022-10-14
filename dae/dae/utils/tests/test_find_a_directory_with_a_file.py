@@ -19,7 +19,7 @@ def test_one_parent(tmp_path):
     )
     dirname = find_directory_with_a_file(
         "file.test", str(tmp_path / "dir1" / "dir2"))
-    assert dirname == str(tmp_path / "dir1")
+    assert dirname == tmp_path / "dir1"
 
 
 def test_two_parents(tmp_path):
@@ -38,7 +38,7 @@ def test_two_parents(tmp_path):
 
     dirname = find_directory_with_a_file(
         "file.test", str(tmp_path / "dir1" / "dir2" / "dir3"))
-    assert dirname == str(tmp_path / "dir1")
+    assert dirname == tmp_path / "dir1"
 
 
 def test_first_parent(tmp_path):
@@ -58,7 +58,7 @@ def test_first_parent(tmp_path):
 
     dirname = find_directory_with_a_file(
         "file.test", str(tmp_path / "dir1" / "dir2" / "dir3"))
-    assert dirname == str(tmp_path / "dir1" / "dir2")
+    assert dirname == tmp_path / "dir1" / "dir2"
 
 
 def test_one_parent_getcwd(tmp_path, mocker):
@@ -77,7 +77,7 @@ def test_one_parent_getcwd(tmp_path, mocker):
     mocker.patch("os.getcwd", lambda: str(tmp_path / "dir1" / "dir2"))
 
     dirname = find_directory_with_a_file("file.test")
-    assert dirname == str(tmp_path / "dir1")
+    assert dirname == tmp_path / "dir1"
 
 
 def test_two_parents_getcwd(tmp_path, mocker):
@@ -96,7 +96,7 @@ def test_two_parents_getcwd(tmp_path, mocker):
     mocker.patch("os.getcwd", lambda: str(tmp_path / "dir1" / "dir2" / "dir3"))
 
     dirname = find_directory_with_a_file("file.test")
-    assert dirname == str(tmp_path / "dir1")
+    assert dirname == tmp_path / "dir1"
 
 
 def test_first_parent_getcwd(tmp_path, mocker):
@@ -116,4 +116,4 @@ def test_first_parent_getcwd(tmp_path, mocker):
 
     mocker.patch("os.getcwd", lambda: str(tmp_path / "dir1" / "dir2" / "dir3"))
     dirname = find_directory_with_a_file("file.test")
-    assert dirname == str(tmp_path / "dir1" / "dir2")
+    assert dirname == tmp_path / "dir1" / "dir2"

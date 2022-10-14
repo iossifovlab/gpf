@@ -273,7 +273,7 @@ def main(gpf_instance=None, argv=None):
 
     start = time.time()
     if gpf_instance is None:
-        gpf_instance = GPFInstance()
+        gpf_instance = GPFInstance.build()
 
     config = gpf_instance._autism_gene_profile_config
     collections_gene_sets = []

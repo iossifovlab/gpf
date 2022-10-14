@@ -37,11 +37,16 @@ _GPF_RECREATED_DATASET_PERM = False
 class WGPFInstance(GPFInstance):
     """GPF instance class for use in wdae."""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, dae_config, dae_dir, **kwargs):
         self._remote_study_db: Optional[RemoteStudyDB] = None
         self._clients: List[RESTClient] = []
         self._study_wrappers: Dict[str, StudyWrapperBase] = {}
-        super().__init__(*args, **kwargs)
+        super().__init__(dae_config, dae_dir, **kwargs)
+
+    @staticmethod
+    def build(config_filename=None, **kwargs):
+        dae_config, dae_dir = GPFInstance._build_gpf_config(config_filename)
+        return WGPFInstance(dae_config, dae_dir, **kwargs)
 
     def load_remotes(self):
         """Load remote instances for use in GPF federation."""
@@ -293,15 +298,15 @@ class WGPFInstance(GPFInstance):
             gene_set_id, types, datasets, collection_id)
 
 
-def get_gpf_instance(work_dir=None) -> WGPFInstance:
-    load_gpf_instance(work_dir=work_dir)
+def get_gpf_instance(config_filename=None) -> WGPFInstance:
+    load_gpf_instance(config_filename)
     _recreated_dataset_perm()
     if _GPF_INSTANCE is None:
         raise ValueError("can't create an WGPFInstance")
     return _GPF_INSTANCE
 
 
-def load_gpf_instance(work_dir=None) -> WGPFInstance:
+def load_gpf_instance(config_filename=None) -> WGPFInstance:
     """Load and return a WGPFInstance."""
     # pylint: disable=global-statement
     global _GPF_INSTANCE
@@ -309,9 +314,9 @@ def load_gpf_instance(work_dir=None) -> WGPFInstance:
     if _GPF_INSTANCE is None:
         with _GPF_INSTANCE_LOCK:
             if _GPF_INSTANCE is None:
-                gpf_instance = WGPFInstance(
-                    work_dir=work_dir,
-                    load_eagerly=settings.STUDIES_EAGER_LOADING)
+                gpf_instance = WGPFInstance.build(config_filename)
+                if settings.STUDIES_EAGER_LOADING:
+                    gpf_instance.load()
                 gpf_instance.load_remotes()
 
                 _GPF_INSTANCE = gpf_instance

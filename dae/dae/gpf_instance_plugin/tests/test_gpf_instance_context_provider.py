@@ -33,7 +33,6 @@ def test_gpf_instance_genomic_context_plugin(context_fixture, fixture_dirname):
     source = context_fixture.get_source()
 
     assert source[0] == "PriorityGenomicContext"
-    assert source[1] == f"('gpf_instance', '{fixture_dirname('')}')"
 
 
 def test_gpf_instance_context_reference_genome(context_fixture):

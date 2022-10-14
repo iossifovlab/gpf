@@ -48,19 +48,19 @@ class WDAETestingConfig(AppConfig):
     def ready(self):
 
         AppConfig.ready(self)
-        work_dir = None
+        config_filename = None
 
         if getattr(settings, "TESTING", None):
-            work_dir = Path(__file__).parents[3].joinpath(
-                "data/data-hg19-local")
+            config_filename = Path(__file__).parents[3].joinpath(
+                "data/data-hg19-local/gpf_instance.yaml")
 
-            logger.error("testing environment... work_dir: %s", work_dir)
+            logger.error("testing environment... config: %s", config_filename)
 
         try:
             logger.warning(
-                "going to call load_gpf_instance with "
-                "work_dir=%s", work_dir)
-            load_gpf_instance(work_dir=work_dir)
+                "going to call load_gpf_instance with %s",
+                config_filename)
+            load_gpf_instance(config_filename)
         except Exception:  # pylint: disable=broad-except
             logger.error(
                 "problem while preloading testing gpf instance",

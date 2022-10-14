@@ -19,7 +19,8 @@ def test_import_iossifov2014_filesystem(
         tmp_path_factory, storage_id, fixture_dirname):
     root_path = tmp_path_factory.mktemp(storage_id)
     foobar_gpf(root_path)
-    gpf_instance = GPFInstance(work_dir=str(root_path / "gpf_instance"))
+    gpf_instance = GPFInstance.build(
+        root_path / "gpf_instance" / "gpf_instance.yaml")
 
     pedigree_filename = \
         fixture_dirname("dae_iossifov2014/iossifov2014_families.ped")
