@@ -1,3 +1,4 @@
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
 import json
 from pprint import pprint
 
@@ -84,3 +85,73 @@ def test_password_validation():
     assert not is_password_valid("qwerty123456")
 
     assert is_password_valid(generic_password)
+
+
+def test_users_pagination(admin_client, hundred_users):
+    url = "/api/v3/users?page=1"
+    response = admin_client.get(url)
+    assert len(response.data) == 25
+    assert response.data[0]["email"] == "admin@example.com"
+    assert response.data[24]["email"] == "user30@example.com"
+
+    url = "/api/v3/users?page=2"
+    response = admin_client.get(url)
+    assert len(response.data) == 25
+    assert response.data[0]["email"] == "user31@example.com"
+    assert response.data[24]["email"] == "user53@example.com"
+
+    url = "/api/v3/users?page=3"
+    response = admin_client.get(url)
+    assert len(response.data) == 25
+    assert response.data[0]["email"] == "user54@example.com"
+    assert response.data[24]["email"] == "user76@example.com"
+
+    url = "/api/v3/users?page=4"
+    response = admin_client.get(url)
+    assert len(response.data) == 25
+    assert response.data[0]["email"] == "user77@example.com"
+    assert response.data[24]["email"] == "user99@example.com"
+
+    url = "/api/v3/users?page=5"
+    response = admin_client.get(url)
+    assert len(response.data) == 1
+    assert response.data[0]["email"] == "user9@example.com"
+
+    for idx, user in enumerate(response.data):
+        print(f"{idx}: {user['email']}")
+
+
+def test_users_search(admin_client, hundred_users):
+    url = "/api/v3/users?search=user9"
+    response = admin_client.get(url)
+    assert len(response.data) == 11
+
+
+def test_users_search_pagination(admin_client, hundred_users):
+    url = "/api/v3/users?page=1&search=user"
+    response = admin_client.get(url)
+    assert len(response.data) == 25
+    for idx, user in enumerate(response.data):
+        print(f"{idx}: {user['email']}")
+
+    url = "/api/v3/users?page=2&search=user"
+    response = admin_client.get(url)
+    assert len(response.data) == 25
+    for idx, user in enumerate(response.data):
+        print(f"{idx}: {user['email']}")
+
+    url = "/api/v3/users?page=3&search=user"
+    response = admin_client.get(url)
+    assert len(response.data) == 25
+    for idx, user in enumerate(response.data):
+        print(f"{idx}: {user['email']}")
+
+    url = "/api/v3/users?page=4&search=user"
+    response = admin_client.get(url)
+    assert len(response.data) == 25
+    for idx, user in enumerate(response.data):
+        print(f"{idx}: {user['email']}")
+
+    url = "/api/v3/users?page=5&search=user"
+    response = admin_client.get(url)
+    assert response.status_code == status.HTTP_404_NOT_FOUND

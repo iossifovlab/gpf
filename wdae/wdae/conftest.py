@@ -12,6 +12,8 @@ from django.test import Client
 from django.utils import timezone
 from oauth2_provider.models import \
     get_access_token_model, get_application_model
+from datasets_api.models import Dataset
+
 from remote.rest_api_client import RESTClient
 
 from gpf_instance.gpf_instance import WGPFInstance, get_gpf_instance,\
@@ -45,6 +47,42 @@ def user(db):
 
 
 @pytest.fixture()
+def fake_dataset(db):
+    return Dataset.objects.create(dataset_id="fake_dataset")
+
+
+@pytest.fixture()
+def hundred_users(db):
+    user_model = get_user_model()
+    users_data = []
+    for i in range(100):
+        users_data.append(user_model(
+            email=f"user{i+1}@example.com",
+            name=f"User{i+1}",
+            is_staff=False,
+            is_active=True,
+            is_superuser=False,
+        ))
+    users = user_model.objects.bulk_create(users_data)
+    return users
+
+
+@pytest.fixture()
+def hundred_groups(db, fake_dataset, user):
+    groups_data = []
+    for i in range(100):
+        groups_data.append(Group(
+            name=f"Group{i+1}",
+        ))
+    groups = Group.objects.bulk_create(groups_data)
+    for group in groups:
+        fake_dataset.groups.add(group)
+        user.groups.add(group)
+    print(groups)
+    return groups
+
+
+@pytest.fixture()
 def user_without_password(db):
     user_model = get_user_model()
     new_user = user_model.objects.create(
@@ -64,7 +102,7 @@ def admin(db):
     user_model = get_user_model()
     new_user = user_model.objects.create(
         email="admin@example.com",
-        name="User",
+        name="Admin",
         is_staff=True,
         is_active=True,
         is_superuser=True,
