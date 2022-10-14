@@ -7,6 +7,7 @@ import { ConfigService } from 'app/config/config.service';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { MeasuresService } from 'app/measures/measures.service';
 import { UsersService } from 'app/users/users.service';
+import { APP_BASE_HREF } from '@angular/common';
 
 import { PhenoToolMeasureComponent } from './pheno-tool-measure.component';
 
@@ -25,7 +26,8 @@ describe('PhenoToolMeasureComponent', () => {
         HttpHandler,
         ConfigService,
         DatasetsService,
-        UsersService
+        UsersService,
+        { provide: APP_BASE_HREF, useValue: '' }
       ],
       imports: [RouterTestingModule, NgxsModule.forRoot([], {developmentMode: true})],
       schemas: [NO_ERRORS_SCHEMA]

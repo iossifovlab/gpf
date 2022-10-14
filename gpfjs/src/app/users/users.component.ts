@@ -1,12 +1,15 @@
 import {
-  Component, OnInit, HostListener, ViewChild, ElementRef, ChangeDetectorRef, EventEmitter, Output
+  Component, OnInit, HostListener, ViewChild, ElementRef, ChangeDetectorRef, EventEmitter, Output, Inject
 } from '@angular/core';
 import { UsersService } from './users.service';
+import { ConfigService } from '../config/config.service';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { Observable } from 'rxjs';
 import { RegistrationComponent } from '../registration/registration.component';
 import { ForgotPasswordComponent } from '../forgot-password/forgot-password.component';
 import { share, take } from 'rxjs/operators';
+import { AuthService } from 'app/auth.service';
+import { APP_BASE_HREF } from '@angular/common';
 
 @Component({
   selector: 'gpf-users',
@@ -33,7 +36,10 @@ export class UsersComponent implements OnInit {
   public constructor(
     private modalService: NgbModal,
     private usersService: UsersService,
-    private changeDetectorRef: ChangeDetectorRef
+    private changeDetectorRef: ChangeDetectorRef,
+    private config: ConfigService,
+    private authService: AuthService,
+    @Inject(APP_BASE_HREF) private baseHref: string
   ) { }
 
   public ngOnInit(): void {
@@ -54,48 +60,16 @@ export class UsersComponent implements OnInit {
     this.showPasswordField = false;
   }
 
-  public next(): void {
-    this.usersService.login(this.username).subscribe(
-      (res) => {
-        if (res === true) {
-          this.showPasswordField = true;
-          this.errorMessage = undefined;
-        } else {
-          this.showPasswordField = false;
-          if (res['status'] === 404 || res['status'] === 400) {
-            this.errorMessage = 'Invalid email!';
-          } else if (res['status'] === 403) {
-            this.errorMessage = `Too many incorrect attempts! Please wait ${res['error']['lockout_time']} seconds!`;
-          }
-        }
-      });
-  }
-
   public login(): void {
-    this.loading = true;
-    this.usersService.login(this.username, this.password).subscribe(
-      (res) => {
-        if (res === true) {
-          this.reloadUserData();
-          this.username = null;
-          this.password = null;
-          this.showPasswordField = false;
-          this.errorMessage = undefined;
-        } else {
-          this.loading = false;
-          if (res['status'] === 401) {
-            this.passwordTimeout = true;
-            setTimeout(() => {
-              this.passwordTimeout = false;
-              this.showPasswordField = true;
-              this.errorMessage = 'Wrong password!';
-            }, 1000);
-          } else if (res['status'] === 403) {
-            this.showPasswordField = false;
-            this.errorMessage = `Too many incorrect attempts! Please wait ${res['error']['lockout_time']} seconds!`;
-          }
-        }
-      });
+    const codeChallenge = this.authService.generatePKCE();
+    window.open(
+      `${this.config.rootUrl}${this.baseHref}`
+        + `o/authorize/?response_type=code&code_challenge_method=S256&code_challenge=${codeChallenge}`
+        + '&scope=read'
+        + `&client_id=${this.config.oauthClientId}`,
+      '_blank',
+      `popup=true,width=600,height=300,left=${window.screenX},top=${window.screenY}`
+    );
   }
 
   public logout(): void {

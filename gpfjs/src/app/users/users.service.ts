@@ -5,17 +5,16 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { ConfigService } from '../config/config.service';
 import { CookieService } from 'ngx-cookie-service';
 import { User } from './users';
-import { Router } from '@angular/router';
-import { Location, LocationStrategy } from '@angular/common';
+import { LocationStrategy } from '@angular/common';
 import { Store } from '@ngxs/store';
 import { StateResetAll } from 'ngxs-reset-plugin';
-import { catchError, map, tap } from 'rxjs/operators';
+import { catchError, map, tap, take, switchMap } from 'rxjs/operators';
+import { AuthService } from '../auth.service';
 const oboe = require('oboe');
 
 @Injectable()
 export class UsersService {
   private readonly logoutUrl = 'users/logout';
-  private readonly loginUrl = 'users/login';
   private readonly userInfoUrl = 'users/get_user_info';
   private readonly registerUrl = 'users/register';
   private readonly resetPasswordUrl = 'users/reset_password';
@@ -27,8 +26,6 @@ export class UsersService {
   private userInfo$ = new ReplaySubject<{}>(1);
   private lastUserInfo = null;
 
-  private oboeInstance = null;
-  private connectionEstablished = false;
   public usersStreamingFinishedSubject = new Subject();
   public emailLog: BehaviorSubject<string>;
 
@@ -36,50 +33,30 @@ export class UsersService {
     private http: HttpClient,
     private config: ConfigService,
     private cookieService: CookieService,
-    private router: Router,
-    private location: Location,
     private store: Store,
-    private locationStrategy: LocationStrategy
+    private locationStrategy: LocationStrategy,
+    private authService: AuthService,
   ) {
     this.emailLog = new BehaviorSubject('');
+    this.authService.tokenExchangeSubject.subscribe(() => {
+      // Refresh user data when a token arrives
+      this.getUserInfo().pipe(take(1)).subscribe(() => {});
+    });
   }
 
-  public logout(): Observable<boolean> {
+  public logout(): Observable<object> {
     const csrfToken = this.cookieService.get('csrftoken');
     const headers = { 'X-CSRFToken': csrfToken };
     const options = { headers: headers, withCredentials: true };
 
-    return this.http.post(this.config.baseUrl + this.logoutUrl, {}, options).pipe(
-      map(() => {
+    return this.authService.revokeAccessToken().pipe(
+      take(1),
+      switchMap(() => { return this.http.post(this.config.baseUrl + this.logoutUrl, {}, options) }),
+      tap(() => {
         this.store.dispatch(new StateResetAll());
         window.location.href = this.locationStrategy.getBaseHref();
-
-        return true;
       })
     );
-  }
-
-  public login(username: string, password?: string): Observable<boolean> {
-    const csrfToken = this.cookieService.get('csrftoken');
-    const headers = { 'X-CSRFToken': csrfToken };
-    const options = { headers: headers, withCredentials: true };
-    const request = { username: username };
-
-    if (password) {
-      request['password'] = password;
-    }
-
-    return this.http.post(this.config.baseUrl + this.loginUrl, request, options).pipe(
-      map(() => {
-        if (request['password']) {
-          this.router.navigate([this.location.path()]);
-        }
-        return true;
-      }),
-      catchError(error => {
-        return of(error);
-      })
-    )
   }
 
   public cachedUserInfo() {
@@ -284,10 +261,10 @@ export class UsersService {
 
   public searchUsersByGroup(searchTerm: string): Observable<User> {
     const csrfToken = this.cookieService.get('csrftoken');
-    const headers = { 'X-CSRFToken': csrfToken };
+    const headers = { 'X-CSRFToken': csrfToken, 'Authorization': `Bearer ${this.authService.getAccessToken()}` };
     const usersSubject: Subject<User> = new Subject();
 
-    let url;
+    let url: string;
     if (searchTerm !== null) {
       const searchParams = new HttpParams().set('search', searchTerm);
       url = `${this.config.baseUrl}${this.usersStreamingUrl}?${searchParams.toString()}`;
@@ -295,20 +272,18 @@ export class UsersService {
       url = `${this.config.baseUrl}${this.usersStreamingUrl}`;
     }
 
-    this.oboeInstance = oboe({
+    oboe({
       url: url,
       method: "GET",
       headers: headers,
       withCredentials: true,
-    }).start(data => {
-      this.connectionEstablished = true;
+    }).start(() => {
       this.usersStreamingFinishedSubject.next(false);
     }).node('!.*', data => {
       usersSubject.next(data);
-    }).done(data => {
+    }).done(() => {
       this.usersStreamingFinishedSubject.next(true);
-    }).fail(error => {
-      this.connectionEstablished = false;
+    }).fail(() => {
       this.usersStreamingFinishedSubject.next(true);
       console.warn('oboejs encountered a fail event while streaming');
     });

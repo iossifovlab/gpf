@@ -6,6 +6,7 @@ import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { NgxsModule } from '@ngxs/store';
 import { ConfigService } from 'app/config/config.service';
 import { UsersService } from 'app/users/users.service';
+import { APP_BASE_HREF } from '@angular/common';
 
 import { RegistrationComponent } from './registration.component';
 
@@ -16,7 +17,10 @@ describe('RegistrationComponent', () => {
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [RegistrationComponent],
-      providers: [NgbActiveModal, UsersService, HttpClient, HttpHandler, ConfigService],
+      providers: [
+        NgbActiveModal, UsersService, HttpClient,
+        HttpHandler, ConfigService, { provide: APP_BASE_HREF, useValue: '' }
+      ],
       imports: [RouterTestingModule, FormsModule, NgxsModule.forRoot([], {developmentMode: true})],
     }).compileComponents();
   }));

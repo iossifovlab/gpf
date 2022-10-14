@@ -20,6 +20,7 @@ import { FullscreenLoadingComponent } from './fullscreen-loading/fullscreen-load
 import { UsersComponent } from './users/users.component';
 import { FullscreenLoadingService } from './fullscreen-loading/fullscreen-loading.service';
 import { FormsModule } from '@angular/forms';
+import { APP_BASE_HREF } from '@angular/common';
 
 class MockDatasetsService {
   public getSelectedDataset(): object {
@@ -57,7 +58,8 @@ describe('AppComponent', () => {
         { provide: DatasetsService, useValue: datasetsServiceMock },
         ConfigService,
         UsersService,
-        FullscreenLoadingService
+        FullscreenLoadingService,
+        { provide: APP_BASE_HREF, useValue: '' }
       ]
     });
     TestBed.compileComponents();

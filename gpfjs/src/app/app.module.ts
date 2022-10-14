@@ -2,7 +2,7 @@
 import { BrowserModule } from '@angular/platform-browser';
 import { NgModule, ErrorHandler } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { HttpClientModule } from '@angular/common/http';
+import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { AppComponent } from './app.component';
 import { DatasetsService } from './datasets/datasets.service';
@@ -55,7 +55,7 @@ import { EnrichmentTableRowComponent } from './enrichment-table/enrichment-table
 import { FullscreenLoadingComponent } from './fullscreen-loading/fullscreen-loading.component';
 import { FullscreenLoadingService } from './fullscreen-loading/fullscreen-loading.service';
 import { EncodeUriComponentPipe } from './utils/encode-uri-component.pipe';
-import { RouterModule, Routes } from '@angular/router';
+import { RouterModule, Routes, UrlSerializer } from '@angular/router';
 import { PersonFiltersComponent } from './person-filters/person-filters.component';
 import { PersonFiltersState } from './person-filters/person-filters.state';
 import { FamilyFiltersBlockComponent } from './family-filters-block/family-filters-block.component';
@@ -167,11 +167,16 @@ import { PedigreeChartMemberComponent } from './pedigree-chart/pedigree-chart-me
 import { JoinPipe } from './utils/join.pipe';
 import { LegendComponent } from './legend/legend.component';
 import { PedigreeComponent } from './pedigree/pedigree.component';
+import { AuthInterceptorService } from './auth-interceptor.service';
+import { AuthResolverService } from './auth-resolver.service';
+import { APP_BASE_HREF, PlatformLocation } from '@angular/common';
+import { CustomUrlSerializer } from './custom-url-serializer';
 
 const appRoutes: Routes = [
   {
     path: 'datasets',
-    component: DatasetsComponent
+    component: DatasetsComponent,
+    resolve: { _: AuthResolverService},
   },
   {
     path: 'datasets/:dataset',
@@ -423,7 +428,17 @@ const appRoutes: Routes = [
       provide: ErrorHandler,
       useClass: GlobalErrorHandler
     },
-    BnNgIdleService
+    BnNgIdleService,
+    { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptorService, multi: true },
+    {
+      provide: APP_BASE_HREF,
+      useFactory: (s: PlatformLocation) => s.getBaseHrefFromDOM(),
+      deps: [PlatformLocation]
+    },
+    {
+      provide: UrlSerializer,
+      useClass: CustomUrlSerializer
+    }
   ],
 
   bootstrap: [AppComponent]

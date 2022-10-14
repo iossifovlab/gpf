@@ -11,6 +11,7 @@ import { UsersService } from 'app/users/users.service';
 import { NgxsModule } from '@ngxs/store';
 import { MultipleSelectMenuComponent } from 'app/multiple-select-menu/multiple-select-menu.component';
 import { FormsModule } from '@angular/forms';
+import { APP_BASE_HREF } from '@angular/common';
 
 describe('AutismGeneProfilesBlockComponent', () => {
   let component: AutismGeneProfilesBlockComponent;
@@ -19,7 +20,9 @@ describe('AutismGeneProfilesBlockComponent', () => {
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [AutismGeneProfilesBlockComponent, AgpTableComponent, MultipleSelectMenuComponent],
-      providers: [ConfigService, QueryService, DatasetsService, UsersService],
+      providers: [
+        ConfigService, QueryService, DatasetsService, UsersService, { provide: APP_BASE_HREF, useValue: '' }
+      ],
       imports: [
         HttpClientTestingModule, NgbNavModule, RouterTestingModule, FormsModule,
         NgxsModule.forRoot([], {developmentMode: true})

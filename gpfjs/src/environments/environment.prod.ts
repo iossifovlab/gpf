@@ -4,5 +4,6 @@ export const environment = {
   production: true,
   basePath: basePath,
   apiPath: basePath + 'api/v3/',
-  imgPathPrefix: 'assets/'
+  imgPathPrefix: 'assets/',
+  oauthClientId: 'gpfjs'
 };

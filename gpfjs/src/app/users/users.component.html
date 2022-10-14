@@ -7,80 +7,12 @@
   <div style="display: flex; justify-content: flex-end">
     <button
       #dropdownButton
-      (click)="loginDropdownClick()"
+      (click)="login()"
       class="btn btn-secondary dropdown-toggle"
       id="login-dropdown-toggle-button"
       type="button"
       [disabled]="loading">
       <span>Login</span>
     </button>
-    <div #dialog id="login-window" class="open row" [hidden]="hideDropdown">
-      <form>
-        <div class="row">
-          <div class="col-12">
-            <div class="form-group">
-              <label for="username">Email</label>
-              <input
-                #emailInput
-                name="username"
-                id="username"
-                class="form-control"
-                [(ngModel)]="username"
-                [ngClass]="{ 'submitted-email-input': showPasswordField }"
-                type="text"
-                (focus)="back()"
-                spellcheck="false" />
-            </div>
-          </div>
-          <div *ngIf="!showPasswordField" class="col-12">
-            <button
-              class="btn btn-primary"
-              id="next-button"
-              style="width: 100%"
-              (click)="next(); focusPasswordInput()"
-              >Next</button
-            >
-          </div>
-        </div>
-
-        <div *ngIf="showPasswordField" class="row mt-1">
-          <div class="col-12">
-            <div class="form-group">
-              <label for="password">Password</label>
-              <input
-                #passwordInput
-                name="password"
-                id="password"
-                class="form-control"
-                [(ngModel)]="password"
-                type="password"
-                autocomplete="off" />
-            </div>
-          </div>
-          <div class="col-12">
-            <button
-              type="submit"
-              class="btn btn-primary"
-              id="login-button"
-              style="width: 100%"
-              (click)="login()"
-              [class.spinner]="passwordTimeout"
-              [disabled]="passwordTimeout">
-              <span>Login</span>
-            </button>
-          </div>
-        </div>
-
-        <div style="display: flex; justify-content: center">
-          <button class="btn btn-sm btn-link" (click)="showRegister()">Register</button>
-          <button class="btn btn-sm btn-link" (click)="showForgotPassword()">Forgotten password</button>
-        </div>
-        <div *ngIf="errorMessage" class="row mt-1">
-          <div class="col-12">
-            <div class="alert alert-danger" style="text-align: center; margin-bottom: 0">{{ errorMessage }}</div>
-          </div>
-        </div>
-      </form>
-    </div>
   </div>
 </div>

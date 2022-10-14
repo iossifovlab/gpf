@@ -18,6 +18,7 @@ import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { SummaryAllelesArray, SummaryAllelesFilter } from './summary-variants';
 import { GenePlotComponent } from 'app/gene-plot/gene-plot.component';
 import { GenotypePreviewTableComponent } from 'app/genotype-preview-table/genotype-preview-table.component';
+import { APP_BASE_HREF } from '@angular/common';
 
 jest.mock('../utils/svg-drawing');
 
@@ -67,6 +68,7 @@ describe('GeneBrowserComponent', () => {
         {provide: ActivatedRoute, useValue: new MockActivatedRoute()},
         {provide: GeneService, useValue: new MockGeneService()},
         {provide: DatasetsService, useValue: mockDatasetsService},
+        { provide: APP_BASE_HREF, useValue: '' }
       ],
       imports: [
         HttpClientTestingModule, RouterTestingModule,

@@ -11,6 +11,7 @@ import { GenotypePreviewVariantsArray } from '../genotype-preview-model/genotype
 import { SummaryAllelesArray } from '../gene-browser/summary-variants';
 import { map } from 'rxjs/operators';
 import { Dataset } from 'app/datasets/datasets';
+import { AuthService } from 'app/auth.service';
 
 @Injectable()
 export class QueryService {
@@ -36,6 +37,7 @@ export class QueryService {
     private router: Router,
     private http: HttpClient,
     private config: ConfigService,
+    private authService: AuthService
   ) { }
 
   public streamPost(url: string, filter) {
@@ -47,7 +49,7 @@ export class QueryService {
     this.oboeInstance = oboe({
       url: `${environment.apiPath}${url}`,
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${this.authService.getAccessToken()}` },
       body: filter,
       withCredentials: true
     }).node('!.*', data => {
@@ -75,7 +77,7 @@ export class QueryService {
     this.summaryOboeInstance = oboe({
       url: `${environment.apiPath}${url}`,
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${this.authService.getAccessToken()}` },
       body: filter,
       withCredentials: true
     }).node('!.*', data => {

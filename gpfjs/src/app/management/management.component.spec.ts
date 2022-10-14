@@ -1,17 +1,18 @@
-import { UsersService } from 'app/users/users.service';
 import { of } from 'rxjs';
 
 import { ManagementComponent } from './management.component';
 
 describe('ManagementComponent', () => {
   let component: ManagementComponent;
-  const usersService = new UsersService(undefined, undefined, undefined, undefined, undefined, undefined, undefined);
+  const usersService = {
+    getUserInfoObservable: jest.fn()
+  }
   const routerMock = {
     navigate: jest.fn()
   };
 
   beforeEach(() => {
-    component = new ManagementComponent(routerMock as any, usersService);
+    component = new ManagementComponent(routerMock as any, usersService as any);
   });
 
   it('should create', () => {

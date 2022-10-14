@@ -8,5 +8,6 @@ export const environment = {
   production: false,
   basePath: basePath,
   apiPath: basePath + '/api/v3/',
-  imgPathPrefix: 'assets/'
+  imgPathPrefix: 'assets/',
+  oauthClientId: 'gpfjs'
 };

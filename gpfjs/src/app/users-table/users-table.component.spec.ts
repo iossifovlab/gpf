@@ -1,3 +1,4 @@
+import { APP_BASE_HREF } from '@angular/common';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
@@ -39,7 +40,7 @@ describe('UsersTableComponent', () => {
         GpfTableSubcontentComponent,
         GpfTableNothingFoundRowComponent
       ],
-      providers: [UsersService, ConfigService, ResizeService],
+      providers: [UsersService, ConfigService, ResizeService, { provide: APP_BASE_HREF, useValue: '' }],
       imports: [HttpClientTestingModule, RouterTestingModule, NgxsModule.forRoot([], {developmentMode: true})]
     }).compileComponents();
   }));

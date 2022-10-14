@@ -9,6 +9,7 @@ import { DatasetsService } from 'app/datasets/datasets.service';
 import { UsersService } from 'app/users/users.service';
 import { MarkdownService } from 'ngx-markdown';
 import { DatasetDescriptionComponent } from './dataset-description.component';
+import { APP_BASE_HREF } from '@angular/common';
 
 class MarkdownServiceMock {
   public compile = (): void => null;
@@ -41,6 +42,7 @@ describe('DatasetDescriptionComponent', () => {
         UsersService,
         ConfigService,
         {provide: MarkdownService, useClass: MarkdownServiceMock},
+        { provide: APP_BASE_HREF, useValue: '' }
       ],
       imports: [RouterTestingModule, HttpClientTestingModule, NgxsModule.forRoot([], {developmentMode: true})]
     }).compileComponents();
