@@ -4,21 +4,15 @@
 # pylint: disable=wildcard-import,unused-wildcard-import
 from .default_settings import *
 
+DEFAULT_OAUTH_APPLICATION_CLIENT = "admin"
 
 INSTALLED_APPS += [
-    "corsheaders",
     "gpf_instance.apps.WDAETestingConfig",
 ]
 
 ALLOWED_HOSTS += [
     "gpfremote",
     "localhost",
-]
-
-
-MIDDLEWARE += [
-    "corsheaders.middleware.CorsMiddleware",
-    "django.middleware.common.CommonMiddleware",
 ]
 
 CORS_ORIGIN_WHITELIST = [
@@ -29,6 +23,5 @@ CORS_ORIGIN_WHITELIST = [
 ]
 
 CORS_ALLOW_CREDENTIALS = True
-
 
 TESTING = True

@@ -2,28 +2,28 @@
 
 import os
 import logging
+from datetime import timedelta
 
 import pytest
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
-
-from users_api.models import WdaeUser
-
+from django.test import Client
+from django.utils import timezone
+from oauth2_provider.models import \
+    get_access_token_model, get_application_model
 from remote.rest_api_client import RESTClient
 
 from gpf_instance.gpf_instance import WGPFInstance, get_gpf_instance,\
     reload_datasets
 
+from users_api.models import WdaeUser
 from dae.autism_gene_profile.db import AutismGeneProfileDB
-
 from dae.genomic_resources import build_genomic_resource_repository
 from dae.genomic_resources.group_repository import GenomicResourceGroupRepo
 from dae.tools import generate_common_report
 
-
 logger = logging.getLogger(__name__)
-
 
 pytest_plugins = ["dae_conftests.dae_conftests"]
 
@@ -31,56 +31,94 @@ pytest_plugins = ["dae_conftests.dae_conftests"]
 @pytest.fixture()
 def user(db):
     user_model = get_user_model()
-    user = user_model.objects.create(
+    new_user = user_model.objects.create(
         email="user@example.com",
         name="User",
         is_staff=False,
         is_active=True,
         is_superuser=False,
     )
-    user.set_password("secret")
-    user.save()
+    new_user.set_password("secret")
+    new_user.save()
 
-    return user
+    return new_user
 
 
 @pytest.fixture()
 def user_without_password(db):
     user_model = get_user_model()
-    user = user_model.objects.create(
+    new_user = user_model.objects.create(
         email="user_without_password@example.com",
         name="User",
         is_staff=False,
         is_active=True,
         is_superuser=False,
     )
-    user.save()
+    new_user.save()
 
-    return user
+    return new_user
 
 
 @pytest.fixture()
 def admin(db):
     user_model = get_user_model()
-    user = user_model.objects.create(
+    new_user = user_model.objects.create(
         email="admin@example.com",
         name="User",
         is_staff=True,
         is_active=True,
         is_superuser=True,
     )
-    user.set_password("secret")
-    user.save()
+    new_user.set_password("secret")
+    new_user.save()
 
     admin_group, _ = Group.objects.get_or_create(name=WdaeUser.SUPERUSER_GROUP)
-    user.groups.add(admin_group)
+    new_user.groups.add(admin_group)
 
-    return user
+    return new_user
 
 
 @pytest.fixture()
-def user_client(user, client):
-    client.login(email=user.email, password="secret")
+def oauth_app(admin):
+    application = get_application_model()
+    new_application = application(**{
+        "name": "testing client app",
+        "user_id": admin.id,
+        "client_type": "confidential",
+        "authorization_grant_type": "authorization-code",
+        "redirect_uris": "http://localhost:4200/datasets",
+        "client_id": "admin",
+        "client_secret": "secret"
+    })
+    new_application.save()
+    return new_application
+
+
+@pytest.fixture()
+def tokens(admin, user, oauth_app):
+    access_token = get_access_token_model()
+    user_access_token = access_token(
+        user=user,
+        scope="read write",
+        expires=timezone.now() + timedelta(seconds=300),
+        token="user-token",
+        application=oauth_app
+    )
+    admin_access_token = access_token(
+        user=admin,
+        scope="read write",
+        expires=timezone.now() + timedelta(seconds=300),
+        token="admin-token",
+        application=oauth_app
+    )
+    user_access_token.save()
+    admin_access_token.save()
+    return user_access_token, admin_access_token
+
+
+@pytest.fixture()
+def user_client(user, tokens):
+    client = Client(HTTP_AUTHORIZATION="Bearer user-token")
     return client
 
 
@@ -91,8 +129,8 @@ def anonymous_client(client, db):
 
 
 @pytest.fixture()
-def admin_client(admin, client, db):
-    client.login(email=admin.email, password="secret")
+def admin_client(admin, tokens):
+    client = Client(HTTP_AUTHORIZATION="Bearer admin-token")
     return client
 
 
@@ -151,8 +189,8 @@ def fixtures_wgpf_instance(wgpf_instance, global_dae_fixtures_dir):
 
 @pytest.fixture(scope="function")
 def wdae_gpf_instance(
-        db, mocker, admin_client, fixtures_wgpf_instance, fixture_dirname):
-
+    db, mocker, admin_client, fixtures_wgpf_instance, fixture_dirname
+):
     reload_datasets(fixtures_wgpf_instance)
     mocker.patch(
         "query_base.query_base.get_gpf_instance",
@@ -247,8 +285,7 @@ def remote_config(fixtures_wgpf_instance):
         "host": host,
         "base_url": "api/v3",
         "port": "21010",
-        "user": "admin@iossifovlab.com",
-        "password": "secret",
+        "credentials": "ZmVkZXJhdGlvbjpzZWNyZXQ=",
     }
     reload_datasets(fixtures_wgpf_instance)
 
@@ -260,14 +297,13 @@ def rest_client(admin_client, remote_config):
     client = RESTClient(
         remote_config["id"],
         remote_config["host"],
-        remote_config["user"],
-        remote_config["password"],
+        remote_config["credentials"],
         base_url=remote_config["base_url"],
         port=remote_config["port"]
     )
 
-    assert client.session is not None, \
-        "Failed to create session for REST client"
+    assert client.token is not None, \
+        "Failed to get auth token for REST client"
 
     return client
 

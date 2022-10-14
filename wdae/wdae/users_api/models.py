@@ -3,6 +3,7 @@ from datetime import timedelta
 
 from django.db import models, transaction
 from django.core.mail import send_mail
+from django.core.exceptions import ObjectDoesNotExist, ValidationError
 
 from django.contrib.auth.models import \
     AbstractBaseUser, \
@@ -127,8 +128,8 @@ class WdaeUser(AbstractBaseUser, PermissionsMixin):
             self.is_active = False
 
     def reset_password(self, by_admin=False):
-        verif_path = VerificationPath.create(self)
-        send_reset_email(self, verif_path, by_admin)
+        verif_code = ResetPasswordCode.create(self)
+        send_reset_email(self, verif_code, by_admin)
 
     def deauthenticate(self):
         all_sessions = Session.objects.all()
@@ -145,16 +146,14 @@ class WdaeUser(AbstractBaseUser, PermissionsMixin):
             if name is not None and name != "":
                 self.name = name
 
-            verif_path = VerificationPath.create(self)
-            send_verif_email(self, verif_path)
+            verif_code = SetPasswordCode.create(self)
+            send_verif_email(self, verif_code)
 
             self.save()
 
     @staticmethod
     def change_password(verification_path, new_password):
-        verif_path = VerificationPath.objects.get(path=verification_path)
-
-        user = verif_path.user
+        user = verification_path.user
         user.set_password(new_password)
         user.save()
 
@@ -165,7 +164,7 @@ class WdaeUser(AbstractBaseUser, PermissionsMixin):
             failed_attempt=0
         ).save()
 
-        verif_path.delete()
+        verification_path.delete()
 
         return user
 
@@ -176,25 +175,66 @@ class WdaeUser(AbstractBaseUser, PermissionsMixin):
         db_table = "users"
 
 
-class VerificationPath(models.Model):
-    """Used for verification of account registration, password change and
-    password reset.
-    """
-    path = models.CharField(max_length=255, unique=True)
-    user = models.OneToOneField(WdaeUser, on_delete=models.CASCADE)
+class BaseVerificationCode(models.Model):
+    """Base class for temporary codes for verifying the user without login."""
+
+    path: models.Field = models.CharField(max_length=255, unique=True)
+    user: models.Field = models.OneToOneField(
+        WdaeUser, on_delete=models.CASCADE)
+    created_at: models.Field = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return str(self.path)
 
-    class Meta(object):
-        db_table = "verification_paths"
+    def validate(self):
+        raise NotImplementedError
 
-    @staticmethod
-    def create(user):
-        verif_path, _ = VerificationPath.objects.get_or_create(
-            user=user, defaults={"path": uuid.uuid4()}
-        )
-        return verif_path
+    class Meta:
+        abstract = True
+
+    @classmethod
+    def get_code(cls, user):
+        try:
+            return cls.objects.get(user=user)
+        except ObjectDoesNotExist:
+            return None
+
+    @classmethod
+    def create(cls, user):
+        try:
+            verif_code = cls.objects.get(user=user)
+        except ObjectDoesNotExist:
+            verif_code = cls.objects.create(user=user, path=uuid.uuid4())
+            return verif_code
+
+        if verif_code.validate is not True:
+            verif_code.delete()
+            return cls.create(user)
+
+        return verif_code
+
+
+class SetPasswordCode(BaseVerificationCode):
+    """Base class for temporary paths for verifying user without login."""
+
+    class Meta:
+        db_table = "set_password_verification_codes"
+
+    def validate(self):
+        return True
+
+
+class ResetPasswordCode(BaseVerificationCode):
+    """Class used for verification of password resets."""
+
+    class Meta:
+        db_table = "reset_password_verification_codes"
+
+    def validate(self):
+        max_delta = timedelta(hours=settings.RESET_PASSWORD_TIMEOUT_HOURS)
+        if timezone.now() - self.created_at > max_delta:
+            return False
+        return True
 
 
 class AuthenticationLog(models.Model):
@@ -226,8 +266,23 @@ class AuthenticationLog(models.Model):
     @staticmethod
     def is_user_locked_out(email: str):
         last_login = AuthenticationLog.get_last_login_for(email)
-        return (last_login is not None
-                and last_login.failed_attempt > LOCKOUT_THRESHOLD)
+        return (
+            last_login is not None
+            and last_login.failed_attempt > LOCKOUT_THRESHOLD
+            and AuthenticationLog.get_remaining_lockout_time(email) > 0
+        )
+
+    @staticmethod
+    def get_locked_out_error(email: str):
+        seconds_left = AuthenticationLog.get_remaining_lockout_time(email)
+        hours = int(seconds_left / 3600)
+        minutes = int(seconds_left / 60) % 60
+        time_to_unlock = f"{hours} hours and {minutes} minutes"
+        return ValidationError(
+            "This account is locked out for %(time)s",
+            code="locked_out",
+            params={"time": time_to_unlock},
+        )
 
     @staticmethod
     def get_remaining_lockout_time(email: str):

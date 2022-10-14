@@ -1,29 +1,38 @@
 import json
+import base64
+from typing import Optional, cast
 import django.contrib.auth
-from django.db import IntegrityError
+from django import forms
+from django.db import IntegrityError, models
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import BaseUserManager
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.conf import settings
-from django.http.response import StreamingHttpResponse
+from django.http.response import StreamingHttpResponse, HttpResponseRedirect
 from django.db.models import Q
+from django.shortcuts import redirect, render
+from django.core.exceptions import ObjectDoesNotExist
 
 from rest_framework.decorators import action, api_view, authentication_classes
-from rest_framework import status, viewsets, permissions, filters
+from rest_framework import status, viewsets, permissions, filters, views
 from rest_framework.response import Response
 from rest_framework.authentication import SessionAuthentication
+from oauth2_provider.contrib.rest_framework import OAuth2Authentication
+from oauth2_provider.models import get_application_model
 
 from utils.logger import log_filter, LOGGER, request_logging, \
     request_logging_function_view
 from utils.email_regex import is_email_valid
 from utils.password_requirements import is_password_valid
 from utils.streaming_response_util import convert
+from utils.authentication import GPFOAuth2Authentication
 
-from .authentication import SessionAuthenticationWithUnauthenticatedCSRF
-from .models import VerificationPath, AuthenticationLog
+from .models import ResetPasswordCode, SetPasswordCode
 from .serializers import UserSerializer, UserWithoutEmailSerializer
+from .forms import WdaePasswordForgottenForm, WdaeResetPasswordForm, \
+    WdaeRegisterPasswordForm, WdaeLoginForm
 
-from .utils import LOCKOUT_THRESHOLD, csrf_clear
+from .utils import csrf_clear, get_default_application
 
 
 def iterator_to_json(users):
@@ -122,26 +131,229 @@ class UserViewSet(viewsets.ModelViewSet):
         )
 
 
-@request_logging_function_view(LOGGER)
-@api_view(["POST"])
-def reset_password(request):
-    email = request.data["email"]
-    user_model = get_user_model()
-    try:
-        user = user_model.objects.get(email=email)
-        user.reset_password()
-        user.deauthenticate()
+class ForgotPassword(views.APIView):
+    @request_logging(LOGGER)
+    def get(self, request):
+        form = WdaePasswordForgottenForm()
+        return render(
+            request,
+            "forgotten-password.html",
+            {"form": form, "show_form": True}
+        )
 
-        return Response({}, status.HTTP_200_OK)
-    except user_model.DoesNotExist:
-        return Response({}, status=status.HTTP_200_OK)
+    @request_logging(LOGGER)
+    def post(self, request):
+        form = WdaePasswordForgottenForm(request.data)
+        is_valid = form.is_valid()
+        if not is_valid:
+            return render(
+                request,
+                "forgotten-password.html",
+                {
+                    "form": form,
+                    "message": "Invalid email",
+                    "message_type": "warn",
+                    "show_form": True
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        email = form.data["email"]
+        user_model = get_user_model()
+        try:
+            user = user_model.objects.get(email=email)
+            user.reset_password()
+            user.deauthenticate()
+
+            message = (
+                f"An e-mail has been sent to {email}"
+                " containing the reset link"
+            )
+
+            return render(
+                request,
+                "forgotten-password.html",
+                {
+                    "form": form,
+                    "message": message,
+                    "message_type": "success",
+                    "show_form": False
+                }
+            )
+        except user_model.DoesNotExist:
+            form = WdaePasswordForgottenForm()
+            message = f"There is no user registered for {email}"
+            return render(
+                request,
+                "forgotten-password.html",
+                {
+                    "form": form,
+                    "message": message,
+                    "message_type": "warn",
+                    "show_form": True
+                },
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+
+class BasePasswordView(views.APIView):
+    """Base class for set/reset password views."""
+
+    verification_code_model: Optional[models.Model] = None
+    template: Optional[str] = None
+    form: Optional[forms.Form] = None
+    code_type: Optional[str] = None
+
+    def _check_request_verification_path(self, request):
+        """
+        Check, validate and return a verification path from a request.
+
+        Returns a tuple of the model instance and the error message if any.
+        When the instance is not found, None is returned.
+        """
+        verification_path = request.GET.get("code")
+        if verification_path is None:
+            verification_path = request.session.get(f"{self.code_type}_code")
+        if verification_path is None:
+            return None, f"No {self.code_type} code provided"
+        try:
+            verif_code = self.verification_code_model.objects.get(
+                path=verification_path)
+        except ObjectDoesNotExist:
+            return None, f"Invalid {self.code_type} code"
+
+        is_valid = verif_code.validate()
+
+        if not is_valid:
+            return verif_code, f"Expired {self.code_type} code"
+
+        return verif_code, None
+
+    @request_logging(LOGGER)
+    def get(self, request):
+        verif_code, msg = \
+            self._check_request_verification_path(request)
+
+        if msg is not None:
+            if verif_code is not None:
+                verif_code.delete()
+            return render(
+                request,
+                self.template,
+                {"message": msg},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        user = verif_code.user
+
+        form = self.form(user)  # pylint: disable=not-callable
+        request.session[f"{self.code_type}_code"] = verif_code.path
+        request.path = request.path[:request.path.find("?")]
+        return render(
+            request,
+            self.template,
+            {"form": form}
+        )
+
+    @request_logging(LOGGER)
+    def post(self, request):
+        verif_code, msg = \
+            self._check_request_verification_path(request)
+
+        if msg is not None:
+            if verif_code is not None:
+                verif_code.delete()
+            return render(
+                request,
+                self.template,
+                {"message": msg},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        user = verif_code.user
+        # pylint: disable=not-callable
+        form = self.form(user, data=request.data)
+        is_valid = form.is_valid()
+        if not is_valid:
+            return render(
+                request,
+                self.template,
+                {
+                    "form": form
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        new_password = form.cleaned_data["new_password1"]
+        user.change_password(verif_code, new_password)
+        del request.session[f"{self.code_type}_code"]
+        application = get_default_application()
+        redirect_uri = application.redirect_uris.split(" ")[0]
+        return HttpResponseRedirect(redirect_uri)
+
+
+class ResetPassword(BasePasswordView):
+    verification_code_model = cast(models.Model, ResetPasswordCode)
+    template = "reset-password.html"
+    form = cast(forms.Form, WdaeResetPasswordForm)
+    code_type = "reset"
+
+
+class SetPassword(BasePasswordView):
+    verification_code_model = cast(models.Model, SetPasswordCode)
+    template = "set-password.html"
+    form = cast(forms.Form, WdaeRegisterPasswordForm)
+    code_type = "set"
+
+
+class WdaeLoginView(views.APIView):
+
+    @request_logging(LOGGER)
+    def get(self, request):
+        next_uri = request.GET.get("next")
+        if next_uri is None:
+            next_uri = get_default_application().redirect_uris.split(" ")[0]
+        form = WdaeLoginForm()
+
+        return render(
+            request,
+            "registration/login.html",
+            {
+                "form": form,
+                "next": next_uri
+            }
+        )
+
+    @request_logging(LOGGER)
+    def post(self, request):
+        data = request.data
+        next_uri = data.get("next")
+        if next_uri is None:
+            next_uri = get_default_application().redirect_uris.split(" ")[0]
+
+        response_status = status.HTTP_200_OK
+        form = WdaeLoginForm(request, data=data)
+
+        if form.is_valid():
+            return redirect(next_uri)
+        response_status = form.status_code
+
+        return render(
+            request,
+            "registration/login.html",
+            {
+                "form": form,
+                "next": next_uri,
+                "show_errors": True
+            },
+            status=response_status
+        )
 
 
 @request_logging_function_view(LOGGER)
 @api_view(["POST"])
 def change_password(request):
     password = request.data["password"]
-    verif_path = request.data["verifPath"]
+    verif_code = request.data["verifPath"]
 
     if not is_password_valid(password):
         LOGGER.error(log_filter(
@@ -154,7 +366,7 @@ def change_password(request):
             status=status.HTTP_400_BAD_REQUEST
         )
 
-    get_user_model().change_password(verif_path, password)
+    get_user_model().change_password(verif_code, password)
     return Response({}, status.HTTP_201_CREATED)
 
 
@@ -180,9 +392,7 @@ def register(request):
             log_filter(
                 request,
                 "registration succeded; "
-                "email: '"
-                + str(email)
-                + "'",
+                "email: '" + str(email) + "'",
             )
         )
         return Response({}, status=status.HTTP_201_CREATED)
@@ -191,9 +401,7 @@ def register(request):
             log_filter(
                 request,
                 "Registration failed: IntegrityError; "
-                "email: '"
-                + str(email)
-                + "'",
+                "email: '" + str(email) + "'",
             )
         )
         return Response({}, status=status.HTTP_201_CREATED)
@@ -202,9 +410,7 @@ def register(request):
             log_filter(
                 request,
                 "Registration failed: Email or Researcher Id not found; "
-                "email: '"
-                + str(email)
-                + "'",
+                "email: '" + str(email) + "'",
             )
         )
         return Response(
@@ -236,65 +442,6 @@ def register(request):
 @request_logging_function_view(LOGGER)
 @csrf_clear
 @api_view(["POST"])
-@authentication_classes((SessionAuthenticationWithUnauthenticatedCSRF,))
-def login(request):
-    """Supports a two-step login procedure where only an email
-    is given at first.
-    """
-    username = request.data.get("username")
-    if not username:
-        return Response(status=status.HTTP_400_BAD_REQUEST)
-    password = request.data.get("password")
-    user_model = get_user_model()
-    userfound = user_model.objects.filter(email__iexact=username)
-
-    if userfound:
-        assert len(userfound) == 1
-        user_email = userfound[0].email
-        if AuthenticationLog.is_user_locked_out(user_email):
-            # check if still locked out
-            remaining_time = AuthenticationLog.get_remaining_lockout_time(
-                user_email
-            )
-            if remaining_time > 0:
-                return Response(
-                    {"lockout_time": remaining_time},
-                    status=status.HTTP_403_FORBIDDEN
-                )
-
-        if password is None:
-            return Response(status=status.HTTP_204_NO_CONTENT)
-
-        user = django.contrib.auth.authenticate(
-            username=user_email, password=password
-        )
-        if user is None or not user.is_active:
-            AuthenticationLog.log_authentication_attempt(
-                user_email, failed=True
-            )
-            last_login = AuthenticationLog.get_last_login_for(user_email)
-            failed_attempt = last_login.failed_attempt
-
-            if failed_attempt > LOCKOUT_THRESHOLD:
-                lockout_time = pow(2, failed_attempt - LOCKOUT_THRESHOLD) * 60
-                return Response(
-                    {"lockout_time": lockout_time},  # in seconds
-                    status=status.HTTP_403_FORBIDDEN
-                )
-            return Response(status=status.HTTP_401_UNAUTHORIZED)
-
-        django.contrib.auth.login(request, user)
-        LOGGER.info(log_filter(request, "login success: " + str(username)))
-        AuthenticationLog.log_authentication_attempt(user_email, failed=False)
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
-    LOGGER.info(log_filter(request, "login failure: " + str(username)))
-    return Response(status=status.HTTP_404_NOT_FOUND)
-
-
-@request_logging_function_view(LOGGER)
-@csrf_clear
-@api_view(["POST"])
 @authentication_classes((SessionAuthentication,))
 def logout(request):
     django.contrib.auth.logout(request)
@@ -304,7 +451,9 @@ def logout(request):
 @request_logging_function_view(LOGGER)
 @ensure_csrf_cookie
 @api_view(["GET"])
+@authentication_classes((GPFOAuth2Authentication,))
 def get_user_info(request):
+    """Get user info for currently logged-in user."""
     user = request.user
     if user.is_authenticated:
         return Response(
@@ -315,19 +464,62 @@ def get_user_info(request):
             },
             status.HTTP_200_OK,
         )
-    else:
-        return Response({"loggedIn": False}, status.HTTP_200_OK)
+    return Response({"loggedIn": False}, status.HTTP_200_OK)
 
 
 @request_logging_function_view(LOGGER)
 @api_view(["POST"])
-def check_verif_path(request):
-    verif_path = request.data["verifPath"]
+def check_verif_code(request):
+    verif_code = request.data["verifPath"]
     try:
-        VerificationPath.objects.get(path=verif_path)
+        ResetPasswordCode.objects.get(path=verif_code)
         return Response({}, status=status.HTTP_200_OK)
-    except VerificationPath.DoesNotExist:
+    except ObjectDoesNotExist:
         return Response(
             {"errors": "Verification path does not exist."},
             status=status.HTTP_400_BAD_REQUEST,
         )
+
+
+@api_view(["GET"])
+@authentication_classes((OAuth2Authentication,))
+def get_federation_credentials(request):
+    """Create a new federation application and return its credentials."""
+    user = request.user
+
+    if not user.is_authenticated:
+        return Response(status=status.HTTP_401_UNAUTHORIZED)
+
+    application = get_application_model()
+    if application.objects.filter(name=request.GET.get("name")).exists():
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+
+    new_application = application(**{
+        "name": request.GET.get("name"),
+        "user_id": user.id,
+        "client_type": "confidential",
+        "authorization_grant_type": "client-credentials"
+    })
+
+    new_application.full_clean()
+    cleartext_secret = new_application.client_secret
+    new_application.save()
+
+    credentials = base64.b64encode(
+        f"{new_application.client_id}:{cleartext_secret}".encode("utf-8")
+    )
+    return Response({"credentials": credentials}, status=status.HTTP_200_OK)
+
+
+@api_view(["GET"])
+@authentication_classes((OAuth2Authentication,))
+def revoke_federation_credentials(request):
+    """Delete a given federation app."""
+    user = request.user
+    if not user.is_authenticated:
+        return Response(status=status.HTTP_401_UNAUTHORIZED)
+    app = get_application_model().objects.get(name=request.GET.get("name"))
+    if not user.id == app.user_id:
+        return Response(status=status.HTTP_401_UNAUTHORIZED)
+    app.delete()
+    return Response(status=status.HTTP_200_OK)

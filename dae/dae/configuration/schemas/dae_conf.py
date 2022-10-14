@@ -52,8 +52,7 @@ remote_schema = {
     "gpf_prefix": {"type": "string"},
     "base_url": {"type": "string"},
     "port": {"type": "integer", "default": "8000"},
-    "user": {"type": "string"},
-    "password": {"type": "string"},
+    "credentials": {"type": "string"},
 }
 
 repository_schema = {
@@ -71,6 +70,7 @@ repository_schema = {
         "coerce": "abspath",
     },
 }
+
 grr_schema = {
     "id": {"type": "string", },
     "type": {"type": "string", },
@@ -89,7 +89,6 @@ grr_schema = {
         "type": "dict",
         "schema": repository_schema
     }}
-
 }
 
 storage_schema = {

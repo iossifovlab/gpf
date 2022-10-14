@@ -55,6 +55,8 @@ EOT
     /wd/wdae/wdae/wdaemanage.py migrate
 /opt/conda/bin/conda run --no-capture-output -n gpf \
     /wd/wdae/wdae/wdae_create_dev_users.sh
+/opt/conda/bin/conda run -n gpf \
+    /wd/wdae/wdae/wdae_create_dev_federation_app.sh
 
 /opt/conda/bin/conda run --no-capture-output -n gpf \
     grr_cache_repo --definition /wd/integration/grr_definition.yaml\

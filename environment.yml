@@ -35,7 +35,7 @@ dependencies:
   - setuptools=65.0.1
   - sqlalchemy=1.4.40
   - sqlite=3.39.2
-  - django=4.1
+  - django==4.1
   - django-cors-headers=3.13.0
   - djangorestframework=3.13.1
   - openjdk=8.0.312
@@ -51,3 +51,6 @@ dependencies:
   - tqdm=4.64.0
   - snakeobjects=3.1.1
   - google-cloud-bigquery=3.2.0
+  - pip=21.3.1
+  - pip:
+    - django-oauth-toolkit==2.1.0

@@ -4,24 +4,22 @@
 # pylint: disable=wildcard-import,unused-wildcard-import
 from .default_settings import *
 
-ALLOWED_HOSTS += ["localhost"]
-
 INSTALLED_APPS += [
-    "corsheaders",
     "gpf_instance.apps.WDAEConfig",
 ]
 
-
-MIDDLEWARE += [
-    "corsheaders.middleware.CorsMiddleware",
-    "django.middleware.common.CommonMiddleware",
-]
+ALLOWED_HOSTS += ["localhost"]
 
 CORS_ORIGIN_WHITELIST = [
-    "http://localhost:8000",
+    # For docker-compose
+    "http://localhost:9000",
     "http://127.0.0.1:9000",
+    # For local development with `ng serve`
     "http://localhost:4200",
     "http://127.0.0.1:4200",
+    # For local development
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
 ]
 
 CORS_ALLOW_CREDENTIALS = True

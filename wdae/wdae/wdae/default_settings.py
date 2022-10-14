@@ -24,8 +24,13 @@ AUTHENTICATION_BACKENDS = (
 
 MANAGERS = ADMINS
 
-EMAIL_VERIFICATION_HOST = "http://localhost:8000"
-EMAIL_VERIFICATION_PATH = "/gpfjs/validate/{}"
+EMAIL_HOST = "http://localhost:8000"
+EMAIL_SET_PATH = "/api/v3/users/set_password?code={}"
+EMAIL_RESET_PATH = "/api/v3/users/reset_password?code={}"
+
+RESET_PASSWORD_TIMEOUT_HOURS = 24
+
+DEFAULT_OAUTH_APPLICATION_CLIENT = "gpfjs"
 
 
 """ Set these for production"""
@@ -140,6 +145,9 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     # Uncomment the next line for simple clickjacking protection:
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "oauth2_provider.middleware.OAuth2TokenMiddleware",
 ]
 
 ROOT_URLCONF = "wdae.urls"
@@ -159,6 +167,8 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "rest_framework",
     "rest_framework.authtoken",
+    "corsheaders",
+    "oauth2_provider",
     "utils",
     "gene_scores",
     "gene_sets",
@@ -181,11 +191,14 @@ AUTH_USER_MODEL = "users_api.WdaeUser"
 REST_FRAMEWORK = {
     "PAGINATE_BY": 10,
     "DEFAULT_AUTHENTICATION_CLASSES": (
-        "users_api.authentication.SessionAuthenticationWithoutCSRF",
+        "utils.authentication.GPFOAuth2Authentication",
     ),
-    # 'DEFAULT_RENDERER_CLASSES': (
-    #     'rest_framework.renderers.JSONRenderer',
-    # )
+}
+
+OAUTH2_PROVIDER = {
+    "OAUTH2_BACKEND_CLASS": "oauth2_provider.oauth2_backends.JSONOAuthLibCore",
+    "REFRESH_TOKEN_EXPIRE_SECONDS": 18000,
+    "ACCESS_TOKEN_EXPIRE_SECONDS": 36000,
 }
 
 SESSION_SERIALIZER = "django.contrib.sessions.serializers.JSONSerializer"
@@ -329,10 +342,13 @@ TEMPLATES = [
         "BACKEND": "django.template.backends.django.DjangoTemplates",
         "DIRS": [
             os.path.normpath(
-                os.path.join(PROJECT_ROOT, "gpfjs", "static", "gpfjs")
+                os.path.join(PROJECT_ROOT, "gpfjs", "static")
             ),
             os.path.normpath(
                 os.path.join(PROJECT_ROOT, "gpfjs", "static", "empty")
+            ),
+            os.path.normpath(
+                os.path.join(PROJECT_ROOT, "gpfjs", "static", "registration")
             ),
         ],
         "APP_DIRS": True,
