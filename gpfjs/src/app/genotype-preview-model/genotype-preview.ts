@@ -73,8 +73,6 @@ export class GenotypePreview {
 export class GenotypePreviewVariantsArray {
   public genotypePreviews: GenotypePreview[] = [];
 
-  public constructor() { }
-
   public addPreviewVariant(row: Array<string>, columnIds: Array<string>): void {
     const genotypePreview = GenotypePreview.fromJson(row, columnIds);
     if (genotypePreview.data.size) {
@@ -88,9 +86,9 @@ export class GenotypePreviewVariantsArray {
     if (this.genotypePreviews.length > maxVariantsCount) {
       variantsCount = `more than ${maxVariantsCount} variants selected (${maxVariantsCount} shown)`;
     } else if (this.genotypePreviews.length !== 1) {
-      variantsCount = `${this.genotypePreviews.length} variants selected (${this.genotypePreviews.length} shown)`;
+      variantsCount = `${this.genotypePreviews.length} variants selected`;
     } else {
-      variantsCount = '1 variant selected (1 shown)';
+      variantsCount = '1 variant selected';
     }
 
     return variantsCount;
