@@ -5,6 +5,6 @@ describe('CustomUrlSerializer', () => {
     const cus = new CustomUrlSerializer();
     expect(
       cus.serialize(cus.parse('/bla1//bla2///////bla3////////////bla4//bla5/bla6'))
-    ).toEqual('/bla1/bla2/bla3/bla4/bla5/bla6');
+    ).toStrictEqual('/bla1/bla2/bla3/bla4/bla5/bla6');
   });
 });
