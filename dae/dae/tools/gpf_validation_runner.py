@@ -912,7 +912,7 @@ def main(argv=sys.argv[1:]):
         logging.basicConfig(level=logging.ERROR)
     logging.getLogger("impala").setLevel(logging.WARNING)
 
-    gpf_instance = GPFInstance()
+    gpf_instance = GPFInstance.build()
     main_runner = MainRunner(
         gpf_instance, args.output, args.detailed_reporting, skip_columns)
 

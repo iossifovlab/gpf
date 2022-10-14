@@ -230,8 +230,14 @@ class ImportProject():
             instance_config = self.import_config.get("gpf_instance", {})
             # pylint: disable=import-outside-toplevel
             from dae.gpf_instance.gpf_instance import GPFInstance
+            instance_dir = instance_config.get("path")
+            if instance_dir is None:
+                config_filename = None
+            else:
+                config_filename = os.path.join(
+                    instance_dir, "gpf_instance.yaml")
             self._gpf_instance = \
-                GPFInstance(work_dir=instance_config.get("path", None))
+                GPFInstance.build(config_filename)
         return self._gpf_instance
 
     @cache

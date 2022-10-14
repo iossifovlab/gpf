@@ -78,7 +78,7 @@ def main(argv, gpf_instance=None):
         logging.basicConfig(level=logging.ERROR)
 
     if gpf_instance is None:
-        gpf_instance = GPFInstance()
+        gpf_instance = GPFInstance.build()
 
     assert argv.columns is not None
     info_columns = [c.strip() for c in argv.columns.split(",")]

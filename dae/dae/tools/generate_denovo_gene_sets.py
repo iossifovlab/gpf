@@ -33,7 +33,7 @@ def main(gpf_instance=None, argv=None):
     logging.getLogger("impala").setLevel(logging.WARNING)
 
     if gpf_instance is None:
-        gpf_instance = GPFInstance()
+        gpf_instance = GPFInstance.build()
     denovo_gene_sets_db = gpf_instance.denovo_gene_sets_db
 
     if args.show_studies:

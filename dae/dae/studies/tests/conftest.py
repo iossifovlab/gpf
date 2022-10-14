@@ -20,7 +20,7 @@ def genotype_data_groups_dir(fixtures_dir):
 
 @pytest.fixture(scope="session")
 def local_gpf_instance(gpf_instance, fixtures_dir):
-    return gpf_instance(work_dir=fixtures_dir)
+    return gpf_instance(os.path.join(fixtures_dir, "gpf_instance.yaml"))
 
 
 @pytest.fixture(scope="session")

@@ -13,7 +13,7 @@ from users_api.models import WdaeUser
 from remote.rest_api_client import RESTClient
 
 from gpf_instance.gpf_instance import WGPFInstance, get_gpf_instance,\
-    reload_datasets, load_gpf_instance
+    reload_datasets
 
 from dae.autism_gene_profile.db import AutismGeneProfileDB
 
@@ -104,10 +104,7 @@ def datasets(db):
 @pytest.fixture(scope="session")
 def wgpf_instance(default_dae_config, fixture_dirname):
 
-    class WGPFInstanceInternal(WGPFInstance):
-        pass
-
-    def build(work_dir=None, load_eagerly=False):
+    def build(config_filename=None):
         repositories = [
             build_genomic_resource_repository(
                 {
@@ -126,9 +123,7 @@ def wgpf_instance(default_dae_config, fixture_dirname):
         ]
         grr = GenomicResourceGroupRepo(repositories)
 
-        result = WGPFInstanceInternal(
-            work_dir=work_dir, load_eagerly=load_eagerly, grr=grr
-        )
+        result = WGPFInstance.build(config_filename, grr=grr)
 
         remote_host = os.environ.get("TEST_REMOTE_HOST", "localhost")
         if result.dae_config.remotes[0].id == "TEST_REMOTE":
@@ -150,7 +145,8 @@ def wgpf_instance(default_dae_config, fixture_dirname):
 
 @pytest.fixture(scope="session")
 def fixtures_wgpf_instance(wgpf_instance, global_dae_fixtures_dir):
-    return wgpf_instance(global_dae_fixtures_dir)
+    return wgpf_instance(
+        os.path.join(global_dae_fixtures_dir, "gpf_instance.yaml"))
 
 
 @pytest.fixture(scope="function")
@@ -174,7 +170,7 @@ def wdae_gpf_instance(
         "datasets_api.permissions.get_gpf_instance",
         return_value=fixtures_wgpf_instance,
     )
-    wdae_gpf_instance.__autism_gene_profile_config = None
+    wdae_gpf_instance._autism_gene_profile_config = None
 
     return fixtures_wgpf_instance
 
@@ -185,7 +181,8 @@ def wdae_gpf_instance_agp(  # pylint: disable=too-many-arguments
         global_dae_fixtures_dir, agp_config, temp_filename,
         fixture_dirname):
 
-    wdae_gpf_instance = wgpf_instance(global_dae_fixtures_dir)
+    wdae_gpf_instance = wgpf_instance(
+        os.path.join(global_dae_fixtures_dir, "gpf_instance.yaml"))
 
     reload_datasets(wdae_gpf_instance)
     mocker.patch(
@@ -205,7 +202,7 @@ def wdae_gpf_instance_agp(  # pylint: disable=too-many-arguments
         return_value=wdae_gpf_instance,
     )
 
-    wdae_gpf_instance.__autism_gene_profile_config = agp_config
+    wdae_gpf_instance._autism_gene_profile_config = agp_config
     main_gene_sets = {
         "CHD8 target genes",
         "FMRP Darnell",
@@ -228,10 +225,10 @@ def wdae_gpf_instance_agp(  # pylint: disable=too-many-arguments
         "get_gene_set_ids",
         return_value=main_gene_sets
     )
-    wdae_gpf_instance.__autism_gene_profile_db = \
+    wdae_gpf_instance._autism_gene_profile_db = \
         AutismGeneProfileDB(
             agp_config,
-            os.path.join(wdae_gpf_instance.dae_db_dir, temp_filename),
+            os.path.join(wdae_gpf_instance.dae_dir, temp_filename),
             clear=True
         )
     wdae_gpf_instance._autism_gene_profile_db.insert_agp(sample_agp)
@@ -243,7 +240,7 @@ def wdae_gpf_instance_agp(  # pylint: disable=too-many-arguments
 
 
 @pytest.fixture(scope="function")
-def remote_config():
+def remote_config(fixtures_wgpf_instance):
     host = os.environ.get("TEST_REMOTE_HOST", "localhost")
     remote = {
         "id": "TEST_REMOTE",
@@ -253,7 +250,7 @@ def remote_config():
         "user": "admin@iossifovlab.com",
         "password": "secret",
     }
-    reload_datasets(load_gpf_instance())
+    reload_datasets(fixtures_wgpf_instance)
 
     return remote
 

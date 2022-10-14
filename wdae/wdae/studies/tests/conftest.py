@@ -14,7 +14,7 @@ def local_dir():
 
 @pytest.fixture(scope="session")
 def local_gpf_instance(local_dir):
-    return GPFInstance(work_dir=local_dir)
+    return GPFInstance.build(local_dir / "gpf_instance.yaml")
 
 
 @pytest.fixture(scope="session")

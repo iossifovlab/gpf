@@ -128,7 +128,7 @@ def main(argv):
     try:
         # Setup argument parser
 
-        gpf_instance = GPFInstance()
+        gpf_instance = GPFInstance.build()
         dae_conf = gpf_instance.dae_config
 
         parser = pheno_cli_parser()

@@ -307,7 +307,7 @@ def insert_into_summary_table(
 
 def main(argv=sys.argv[1:], gpf_instance=None):
     if gpf_instance is None:
-        gpf_instance = GPFInstance()
+        gpf_instance = GPFInstance.build()
 
     argv = parse_cli_arguments(argv, gpf_instance)
 

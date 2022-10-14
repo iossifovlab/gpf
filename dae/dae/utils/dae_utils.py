@@ -5,16 +5,6 @@ INS_RE = re.compile(r"^ins\(([NACGT]+)\)$")
 DEL_RE = re.compile(r"^del\((\d+)\)$")
 
 
-def cached(prop):
-    cached_val_name = "_" + prop.__name__
-
-    def wrap(self):
-        if getattr(self, cached_val_name, None) is None:
-            setattr(self, cached_val_name, prop(self))
-        return getattr(self, cached_val_name)
-    return wrap
-
-
 def dae2vcf_variant(chrom, position, var, genome):
     match = SUB_COMPLEX_RE.match(var)
     if match:

@@ -3,6 +3,7 @@
 import logging
 from typing import Dict, List, Optional, cast, Set
 from urllib.parse import urlparse
+from functools import cached_property
 
 from sqlalchemy import create_engine  # type: ignore
 from sqlalchemy import MetaData, Table, Column, String
@@ -13,7 +14,6 @@ from dae.genomic_resources.fsspec_protocol import FsspecReadOnlyProtocol
 from dae.gene.gene_term import read_ewa_set_file, read_gmt_file, \
     read_mapping_file
 from dae.genomic_resources.repository import GenomicResource
-from dae.utils.dae_utils import cached
 
 logger = logging.getLogger(__name__)
 
@@ -212,8 +212,7 @@ class GeneSetsDb:
             for gsc in gene_set_collections
         }
 
-    @property  # type: ignore
-    @cached
+    @cached_property
     def collections_descriptions(self):
         """Collect gene set descriptions.
 
