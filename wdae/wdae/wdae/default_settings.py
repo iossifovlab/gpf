@@ -208,6 +208,10 @@ REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "utils.authentication.GPFOAuth2Authentication",
     ),
+    "DEFAULT_PAGINATION_CLASS": (
+        "utils.pagination.WdaePageNumberPagination"
+    ),
+    "PAGE_SIZE": 25
 }
 
 OAUTH2_PROVIDER = {
