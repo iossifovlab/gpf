@@ -21,7 +21,7 @@ class DenovoGeneSetCollectionFactory:
 
     @classmethod
     def load_collection(cls, genotype_data_study):
-        """Loads a denovo gene set collection for a given study."""
+        """Load a denovo gene set collection for a given study."""
         config = genotype_data_study.config
         assert config is not None, genotype_data_study.id
         selected_person_set_collections = \
@@ -56,7 +56,7 @@ class DenovoGeneSetCollectionFactory:
 
     @classmethod
     def build_collection(cls, genotype_data_study):
-        """Build a denovo gene set collection for a study and saves it."""
+        """Build a denovo gene set collection for a study and save it."""
         config = genotype_data_study.config
         assert config is not None, genotype_data_study.id
 

@@ -65,12 +65,12 @@ class GPFInstance:
             config_filename: Optional[Union[str, Path]] = None, **kwargs):
         """Construct and return a GPF instance.
 
-        If the config_filename is Nont, tries to discover the GPF instance.
+        If the config_filename is None, tries to discover the GPF instance.
         First check if a DAE_DB_DIR environment variable is defined and if
-        defined uses is as a GPF instance directory.
+        defined use it as a GPF instance directory.
 
-        Otherwise looks for a gpf_instance.yaml file in the current directory
-        and its parents. If found uses it as a configuration file.
+        Otherwise look for a gpf_instance.yaml file in the current directory
+        and its parents. If found use it as a configuration file.
         """
         dae_config, dae_dir = GPFInstance._build_gpf_config(config_filename)
         return GPFInstance(dae_config, dae_dir, **kwargs)

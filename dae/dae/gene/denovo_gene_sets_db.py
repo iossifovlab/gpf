@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 
 class DenovoGeneSetsDb:
-    """Class to mange available de Novo gene sets."""
+    """Class to manage available de Novo gene sets."""
 
     def __init__(self, gpf_instance):
         self.gpf_instance = gpf_instance
@@ -26,7 +26,6 @@ class DenovoGeneSetsDb:
     def reload(self):
         self._gene_set_collections_cache = {}
         self._gene_set_configs_cache = {}
-        # self._load_cache()
 
     @property
     def _denovo_gene_set_collections(self):
