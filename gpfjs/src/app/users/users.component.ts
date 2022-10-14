@@ -68,7 +68,7 @@ export class UsersComponent implements OnInit {
         + '&scope=read'
         + `&client_id=${this.config.oauthClientId}`,
       '_blank',
-      'popup=true,width=600,height=300'
+      `popup=true,width=600,height=300,left=${window.screenX},top=${window.screenY}`
     );
   }
 
