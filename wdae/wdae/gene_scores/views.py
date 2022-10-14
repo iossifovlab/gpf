@@ -91,21 +91,24 @@ class GeneScoresPartitionsView(QueryBaseView):
 
         if not self.gpf_instance.has_gene_score(score_name):
             return Response(status=status.HTTP_404_NOT_FOUND)
+        if "min" not in data or "max" not in data:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
 
         score = self.gpf_instance.get_gene_score(score_name)
         df = score.df
 
         try:
             score_min = float(data["min"])
-        except TypeError:
-            score_min = float("-inf")
+        except ValueError:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
 
         try:
             score_max = float(data["max"])
-        except TypeError:
-            score_max = float("inf")
+        except ValueError:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
 
         total = 1.0 * len(df)
+
         ldf = df[df[score_name] < score_min]
         rdf = df[df[score_name] > score_max]
         mdf = df[
