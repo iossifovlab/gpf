@@ -20,6 +20,7 @@ gpf-table-view-cell {
 
 .table-header-sticky-div {
   display: table;
+  width: 100%;
   border-collapse: collapse;
   position: sticky;
   top: 0;
