@@ -1,6 +1,6 @@
 from functools import wraps
 from django.conf import settings
-from oauth2_provider.models import get_application_model
+from oauth2_provider.models import get_application_model  # type: ignore
 
 
 LOCKOUT_THRESHOLD = 4

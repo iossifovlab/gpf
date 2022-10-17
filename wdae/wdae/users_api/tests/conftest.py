@@ -8,7 +8,7 @@ from django.contrib.auth import get_user_model
 from django.utils import timezone
 
 from rest_framework.test import APIClient  # type: ignore
-from oauth2_provider.models import get_access_token_model
+from oauth2_provider.models import get_access_token_model  # type: ignore
 
 from users_api.models import WdaeUser
 

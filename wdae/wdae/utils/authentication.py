@@ -1,7 +1,8 @@
 """Module containing a custom OAuth2 authentication class."""
 
 from rest_framework import exceptions
-from oauth2_provider.contrib.rest_framework import OAuth2Authentication
+from oauth2_provider.contrib.rest_framework \
+    import OAuth2Authentication  # type: ignore
 
 
 class GPFOAuth2Authentication(OAuth2Authentication):

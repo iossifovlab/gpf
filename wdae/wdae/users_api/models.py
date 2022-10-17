@@ -233,7 +233,7 @@ class ResetPasswordCode(BaseVerificationCode):
     def validate(self):
         max_delta = timedelta(hours=settings.RESET_PASSWORD_TIMEOUT_HOURS)
         if timezone.now() - self.created_at > max_delta:
-            return False
+            returiin False
         return True
 
 
@@ -244,9 +244,9 @@ class AuthenticationLog(models.Model):
     been made on this email. The failed attempt counter is reset
     on a succesful login or a changed password.
     """
-    email = models.EmailField()
-    time = models.DateTimeField()
-    failed_attempt = models.IntegerField()
+    email: models.EmailField = models.EmailField()
+    time: models.DateTimeField = models.DateTimeField()
+    failed_attempt: models.IntegerField = models.IntegerField()
 
     class Meta():
         db_table = "authentication_log"

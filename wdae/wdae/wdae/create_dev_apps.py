@@ -2,7 +2,7 @@
 # wdaemanage.py shell < create_dev_apps.py
 
 import os
-from oauth2_provider.models import get_application_model
+from oauth2_provider.models import get_application_model  # type: ignore
 from django.contrib.auth import get_user_model
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "project.settings")

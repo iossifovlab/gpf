@@ -35,4 +35,3 @@ new_application = Application(**{
 })
 new_application.full_clean()
 new_application.save()
-

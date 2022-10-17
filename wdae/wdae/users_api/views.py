@@ -17,8 +17,9 @@ from rest_framework.decorators import action, api_view, authentication_classes
 from rest_framework import status, viewsets, permissions, filters, views
 from rest_framework.response import Response
 from rest_framework.authentication import SessionAuthentication
-from oauth2_provider.contrib.rest_framework import OAuth2Authentication
-from oauth2_provider.models import get_application_model
+from oauth2_provider.contrib.rest_framework \
+    import OAuth2Authentication  # type: ignore
+from oauth2_provider.models import get_application_model  # type: ignore
 
 from utils.logger import log_filter, LOGGER, request_logging, \
     request_logging_function_view
