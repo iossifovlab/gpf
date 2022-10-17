@@ -2,8 +2,8 @@ import { Component, OnInit, NgZone, Input, ChangeDetectionStrategy } from '@angu
 import { User } from '../users/users';
 import { UsersService } from '../users/users.service';
 import { take } from 'rxjs/operators';
-import { UserGroup } from 'app/users-groups/users-groups';
 import { ItemAddEvent } from 'app/item-add-menu/item-add-menu';
+import { UsersGroupsService } from 'app/users-groups/users-groups.service';
 
 @Component({
   selector: 'gpf-users-table',
@@ -13,16 +13,17 @@ import { ItemAddEvent } from 'app/item-add-menu/item-add-menu';
 })
 export class UsersTableComponent implements OnInit {
   @Input() public users: User[];
-  @Input() public allGroups: UserGroup[];
-  public allGroupNames: string[] = [];
   public currentUserEmail: string;
 
-  // Primitive used for triggering change detection
-  public manualPipeTrigger = 0;
+  public allGroupNames: string[] = [];
+  public shownGroupNames: string[] = [];
+  private addItemMenuPagesCounter = 0;
+  private loadingAddItemMenuPage = false;
 
   public constructor(
     private zone: NgZone,
     private usersService: UsersService,
+    private usersGroupsService: UsersGroupsService
   ) { }
 
   public ngOnInit(): void {
@@ -30,7 +31,8 @@ export class UsersTableComponent implements OnInit {
       this.currentUserEmail = currentUser.email;
     });
 
-    this.allGroupNames = this.allGroups.map(group => group.name);
+    this.addItemMenuPagesCounter++;
+    this.updateAddItemMenuItems();
   }
 
   public isDefaultGroup(user: User, group: string): boolean {
@@ -43,8 +45,6 @@ export class UsersTableComponent implements OnInit {
         window.location.reload();
       });
     });
-
-    this.manualPipeTrigger++;
   }
 
   public addGroup(user: User, event$: ItemAddEvent): void {
@@ -60,5 +60,20 @@ export class UsersTableComponent implements OnInit {
 
   public getUserAllowedDatasetIds(user: User): string[] {
     return user.allowedDatasets.map(dataset => dataset['datasetId']);
+  }
+
+  public updateAddItemMenuItems(): void {
+    if (!this.loadingAddItemMenuPage) {
+      this.loadingAddItemMenuPage = true;
+      // use addItemMenuPagesCounter for get groups
+      this.usersGroupsService.getAllGroups().subscribe(res => {
+        this.allGroupNames = this.allGroupNames.concat(res.map(group => group.name));
+        this.loadingAddItemMenuPage = false;
+      });
+    }
+  }
+
+  public filterShownGroupNames(userGroups: string[]): void {
+    this.shownGroupNames = this.allGroupNames.filter(element => userGroups.indexOf(element) === -1);
   }
 }

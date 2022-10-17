@@ -177,7 +177,6 @@ import { GetVariantReportRowsPipe } from './utils/get-variant-report-rows.pipe';
 import { BackgroundColorEnrichmentPipe } from './utils/background-color-enrichment.pipe';
 import { ContrastAdjustPipe } from './utils/contrast-adjust.pipe';
 import { ItemAddMenuComponent } from './item-add-menu/item-add-menu.component';
-import { ArrayDifferencePipe } from './item-add-menu/array-difference.pipe';
 
 const appRoutes: Routes = [
   {
@@ -384,7 +383,6 @@ const appRoutes: Routes = [
     LegendComponent,
     PedigreeComponent,
     ItemAddMenuComponent,
-    ArrayDifferencePipe
   ],
   imports: [
     BrowserModule,

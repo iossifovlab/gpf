@@ -34,9 +34,7 @@
               </div>
             </div>
           </div>
-          <ng-container *ngIf="groups">
-            <gpf-users-table *ngIf="groups" [users]="usersToShow$ | async" [allGroups]="groups"></gpf-users-table>
-          </ng-container>
+          <gpf-users-table [users]="usersToShow$ | async"></gpf-users-table>
         </ng-template>
       </li>
 

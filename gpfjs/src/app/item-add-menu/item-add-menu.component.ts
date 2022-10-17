@@ -9,7 +9,8 @@ import { ItemAddEvent } from './item-add-menu';
 export class ItemAddMenuComponent implements OnChanges {
   @Input() public id = '';
   @Input() public items: string[] = [];
-  @Output() public addItemEvent = new EventEmitter<ItemAddEvent>();
+  @Output() public addedItem = new EventEmitter<ItemAddEvent>();
+  @Output() public neededMoreItems = new EventEmitter<number>();
   public filteredItems: string[] = [];
   public searchText = '';
   public showMenu = false;
@@ -30,7 +31,13 @@ export class ItemAddMenuComponent implements OnChanges {
 
   public addItem(id: string, item: string): void {
     this.items.splice(this.items.indexOf(item), 1);
-    this.addItemEvent.emit(new ItemAddEvent(id, item));
+    this.addedItem.emit(new ItemAddEvent(id, item));
+  }
+
+  public updateItemsList(tableContainer: HTMLElement): void {
+    if (tableContainer.offsetHeight + tableContainer.scrollTop + 200 > tableContainer.scrollHeight) {
+      this.neededMoreItems.emit();
+    }
   }
 
   @HostListener('click')

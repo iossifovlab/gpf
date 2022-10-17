@@ -31,9 +31,11 @@
             </gpf-small-remove-button>
           </div>
           <gpf-item-add-menu
+            (click)="filterShownGroupNames(user.groups)"
             [id]="user.email"
-            [items]="user.groups | arrayDifference: allGroupNames:manualPipeTrigger"
-            (addItemEvent)="addGroup(user, $event)"></gpf-item-add-menu>
+            [items]="shownGroupNames"
+            (addedItem)="addGroup(user, $event)"
+            (neededMoreItems)="updateAddItemMenuItems()"></gpf-item-add-menu>
         </div>
 
         <div class="grid-cell">

@@ -24,7 +24,7 @@ export class UserManagementComponent implements OnInit {
 
   public imgPathPrefix = environment.imgPathPrefix;
 
-  private pageCount = 1;
+  private pageCount = 0;
   private tableName: TableName = 'USERS';
   private loadingPage = true;
 
@@ -37,40 +37,13 @@ export class UserManagementComponent implements OnInit {
 
   public ngOnInit(): void {
     this.focusSearchBox();
-    this.usersToShow$ = this.input$.pipe(
-      map(searchTerm => searchTerm.trim()),
-      debounceTime(300),
-      distinctUntilChanged(),
-      tap(searchTerm => {
-        this.users = [];
-        const queryParamsObject: any = {};
-        if (searchTerm) {
-          queryParamsObject.search = searchTerm;
-        }
-        this.router.navigate(['.'], {
-          relativeTo: this.route,
-          replaceUrl: true,
-          queryParams: queryParamsObject
-        });
-      }),
-      switchMap(searchTerm => this.usersService.searchUsersByGroup(searchTerm)),
-      map(user => {
-        this.users.push(this.sortGroups(user));
-        return this.users;
-      }),
-      share()
-    );
+    this.updateTable();
 
     this.route.queryParamMap.pipe(
       map(params => params.get('search') || ''),
       take(1)
     ).subscribe(searchTerm => {
       this.search(searchTerm);
-    });
-
-    this.usersGroupsService.getAllGroups().subscribe(res => {
-      this.groups = res;
-      this.loadingPage = false;
     });
   }
 
@@ -126,23 +99,68 @@ export class UserManagementComponent implements OnInit {
   }
 
   @HostListener('window:scroll', ['$event'])
-  private updateTable(): void {
+  private updateTableOnScroll(): void {
     if (!this.loadingPage && window.scrollY + window.innerHeight + 200 > document.body.scrollHeight) {
-      if (this.tableName === 'GROUPS') {
-        this.pageCount++;
-        this.loadingPage = true;
-
-        this.usersGroupsService.getAllGroups().subscribe(res => {
-          this.groups = this.groups.concat(res);
-          this.loadingPage = false;
-        });
-      }
+      this.updateTable();
     }
   }
 
   public switchTableName(newName: TableName): void {
     this.tableName = newName;
-    // Reset pagecount
-    this.pageCount = 1;
+    this.pageCount = 0;
+    this.updateTable();
+  }
+
+  private updateTable(): void {
+    this.pageCount++;
+    this.loadingPage = true;
+
+    switch (this.tableName) {
+    case 'USERS':
+      this.updateUsersTable();
+      break;
+    case 'GROUPS':
+      this.updateGroupsTable();
+      break;
+    case 'DATASETS':
+      // implement this.updateDatasetsTable()
+      break;
+    }
+  }
+
+  private updateUsersTable(): void {
+    this.usersToShow$ = this.input$.pipe(
+      map(searchTerm => searchTerm.trim()),
+      debounceTime(300),
+      distinctUntilChanged(),
+      tap(searchTerm => {
+        this.users = [];
+        const queryParamsObject: any = {};
+        if (searchTerm) {
+          queryParamsObject.search = searchTerm;
+        }
+        this.router.navigate(['.'], {
+          relativeTo: this.route,
+          replaceUrl: true,
+          queryParams: queryParamsObject
+        });
+      }),
+      switchMap(searchTerm => this.usersService.searchUsersByGroup(searchTerm)),
+      map(user => {
+        this.users.push(this.sortGroups(user));
+        return this.users;
+      }),
+      share()
+    );
+
+    // should be moved to user data subscribe
+    this.loadingPage = false;
+  }
+
+  private updateGroupsTable(): void {
+    this.usersGroupsService.getAllGroups().subscribe(res => {
+      this.groups = this.groups.concat(res);
+      this.loadingPage = false;
+    });
   }
 }
