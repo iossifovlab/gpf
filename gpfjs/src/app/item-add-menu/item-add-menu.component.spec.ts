@@ -1,32 +1,59 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
 import { ItemAddEvent } from './item-add-menu';
 
 import { ItemAddMenuComponent } from './item-add-menu.component';
 
 describe('ItemAddMenuComponent', () => {
   let component: ItemAddMenuComponent;
+  let fixture: ComponentFixture<ItemAddMenuComponent>;
 
-  beforeEach(() => {
-    component = new ItemAddMenuComponent();
-  });
+  beforeEach(waitForAsync(() => {
+    TestBed.configureTestingModule({
+      declarations: [
+        ItemAddMenuComponent,
+      ],
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(ItemAddMenuComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+  }));
 
   it('should create', () => {
     expect(component).toBeTruthy();
   });
 
-  // Search tests
-
   it('should add item', () => {
     component.items = ['item1', 'item2', 'item3'];
-    const emitSpy = jest.spyOn(component.addItemEvent, 'emit');
+    const emitSpy = jest.spyOn(component.addedItem, 'emit');
 
     component.addItem('id1', 'item2');
-    expect(component.items).toEqual(['item1', 'item3']);
-    expect(emitSpy).toHaveBeenLastCalledWith(new ItemAddEvent('id1', 'item2'))
+    expect(component.items).toStrictEqual(['item1', 'item3']);
+    expect(emitSpy).toHaveBeenLastCalledWith(new ItemAddEvent('id1', 'item2'));
 
     component.addItem('id4', 'item1');
-    expect(component.items).toEqual(['item3']);
-    expect(emitSpy).toHaveBeenLastCalledWith(new ItemAddEvent('id4', 'item1'))
+    expect(component.items).toStrictEqual(['item3']);
+    expect(emitSpy).toHaveBeenLastCalledWith(new ItemAddEvent('id4', 'item1'));
+  });
+
+  it('should request item list update when list is scrolled to bottom', () => {
+    const neededMoreItemsEmitSpy = jest.spyOn(component.neededMoreItems, 'emit');
+
+    const button = fixture.debugElement.query(By.css('.add-button'));
+    button.triggerEventHandler('click', {});
+    fixture.detectChanges();
+
+    const tableContainer = fixture.debugElement.query(By.css('.menu'));
+    const offsetHeightSpy = jest.spyOn(tableContainer.nativeElement as HTMLElement, 'offsetHeight', 'get');
+    const scrollTopSpy = jest.spyOn(tableContainer.nativeElement as HTMLElement, 'scrollTop', 'get');
+    const scrollHeightSpy = jest.spyOn(tableContainer.nativeElement as HTMLElement, 'scrollHeight', 'get');
+
+    offsetHeightSpy.mockReturnValue(100);
+    scrollTopSpy.mockReturnValue(150);
+    scrollHeightSpy.mockReturnValue(400);
+    tableContainer.triggerEventHandler('scroll', {});
+    expect(neededMoreItemsEmitSpy).toHaveBeenCalledWith();
   });
 
   it('should close menu when clicking outside', () => {
