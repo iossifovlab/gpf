@@ -233,7 +233,7 @@ class ResetPasswordCode(BaseVerificationCode):
     def validate(self):
         max_delta = timedelta(hours=settings.RESET_PASSWORD_TIMEOUT_HOURS)
         if timezone.now() - self.created_at > max_delta:
-            returiin False
+            return False
         return True
 
 
