@@ -2,24 +2,93 @@ Genomic resources repository (GRR)
 ==================================
 
 
+Introduction
+************
 
-Genomic resources and genomic resources repository
---------------------------------------------------
+Configuration
+*************
 
-Genomic resource is a set files stored in a directory. To make given
-directory a genomic resource it should contain ``genomic_resource.yaml``
-file.
+Genomic resources repository could be accessed via different protocols.
+Currently supported protocols for GRR access are:
 
-Genomic resources repository is a directory, that contains genomic resources.
-To make a give directory into a repository it should contain a ``.CONTENTS``
-file.
+* File system (directory) protocol.
+
+  .. code:: yaml
+
+    id: <repo id>
+    type: directory
+    directory: <path to the local file system>
+
+* HTTP/HTTPS protocol.
+
+  .. code:: yaml
+
+    id: <repo id>
+    type: url
+    url: <http(s) url>
+
+* S3 protocol.
+  
+  .. code:: yaml
+
+    id: <repo id>
+    type: url
+    url: <S3 url>
+    endpoint_url: <endpoint url>
+
+* In-memory (embedded) protocol.
+
+  .. code:: yaml
+
+    id: <repo id>
+    type: embedded
+
+
+
+Example configuration
+#####################
+
+
+.. code:: yaml
+
+    id: "development"
+    type: group
+    children:
+    - id: "grr_local"
+      type: "directory"
+      directory: "<path to local GRR directory>"
+
+    - id: "default"
+      type: "url"
+      url: "https://www.iossifovlab.com/distribution/public/genomic-resources-repository"
+      cache_dir: "<path to local filesystem cache>"
+
+
+Browse available resources
+**************************
+
+.. code:: bash
+
+    grr_browse --grr grr_definition.yaml
 
 
 Management of genomic resources repository (GRR)
-------------------------------------------------
+************************************************
+
+Genomic resources and genomic resources repository
+##################################################
+
+The genomic resource is a set of files stored in a directory. To make given
+directory a genomic resource, it should contain ``genomic_resource.yaml``
+file.
+
+A genomic resources repository is a directory that contains genomic resources.
+To make a given directory into a repository, it should have a ``.CONTENTS``
+file.
+
 
 Create an empty GRR
-*******************
+###################
 
 To create and empty GRR first create an empty directory. For example let us
 create an empty directory named ``grr_test``, enter inside that directory and
@@ -47,7 +116,7 @@ If we try to list all resources in this repository we should get an empty list:
 
 
 Create an empty genomic resource
-********************************
+################################
 
 Let us create our first genomic resource. Create a directory
 ``hg38/scores/score9`` inside
@@ -85,7 +154,7 @@ the resource.
 
 
 Add genomic score resources
----------------------------
++++++++++++++++++++++++++++
 
 Add all score resource files (score file and Tabix index) inside
 the created directory ``hg38/scores/score9``. Let's say these files are:
@@ -152,7 +221,7 @@ Once the resource is ready we need to regenerated the repository contents:
 
 
 Usage of genomic resources repositories (GRRs)
-----------------------------------------------
+++++++++++++++++++++++++++++++++++++++++++++++
 
 The GPF system can use genomic resources from different repositories. The
 default genomic resources repository used by GPF system is located at

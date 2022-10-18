@@ -18,3 +18,4 @@ data
 results
 Jenkinsfile.generated-stages.all
 .DS_Store
+._.DS_Store
