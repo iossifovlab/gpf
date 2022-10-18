@@ -1,12 +1,11 @@
-Annotation Tools
-================
+Annotation
+==========
 
 
 Introduction
 ************
 
-Introductory examples
-*********************
+   
 
 Example 1
 #########
@@ -36,12 +35,40 @@ Example 3
     - effect_annotator
 
 
-Annotator types
-***************
+Annotation pipeline
+*******************
+
+General structure
+#################
+
+The pipeline is a yaml file that to the top level is a list with annotators.
+Each annotator looks like:
+
+.. code:: yaml
+
+    - <annotator type>: 
+        A1: v1
+        A2: v2
+        ...
+
+There are syntax sort cuts possible, like
+
+.. code:: yaml
+
+    - <annotator type> 
+  
+or
+
+.. code:: yaml 
+
+    - <annotator type>: <resource id>
+    
+Some attributes are general and some are annotator specific. 
+General ones include: attributes and input_annotatable
 
 
 Position score
-##############
+++++++++++++++
 
 .. code:: yaml
 
@@ -54,7 +81,7 @@ Position score
 
 
 NP score
-########
+++++++++
 
 .. code:: yaml
 
@@ -66,7 +93,7 @@ NP score
           position_aggregator: <aggregator to use for INDELs>
 
 Allele score
-############
+++++++++++++
 
 .. code:: yaml
 
@@ -78,7 +105,7 @@ Allele score
 
 
 Effect annotator
-################
+++++++++++++++++
 
 
 .. code:: yaml
@@ -89,7 +116,7 @@ Effect annotator
 
 
 Normalize allele annotator
-##########################
+++++++++++++++++++++++++++
 
 .. code:: yaml
 
@@ -98,7 +125,7 @@ Normalize allele annotator
 
 
 Lift-over annotator
-###################
++++++++++++++++++++
 
 
 .. code:: yaml
@@ -113,9 +140,17 @@ Lift-over annotator
 
 
 Gene score annotator
-####################
+++++++++++++++++++++
 
 
 ClinVar annotator
-#################
++++++++++++++++++
 
+
+Command Line Tools
+*******************
+
+annotate_columns
+
+
+annotate_vcf

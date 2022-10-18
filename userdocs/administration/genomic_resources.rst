@@ -5,6 +5,49 @@ Genomic resources repository (GRR)
 Introduction
 ************
 
+Genomic Resource Repository (GRR) is a collection of genomic resources, 
+like reference genomes, gene models, etc. One can use one or more GRRs at the 
+same time. By default (or without any configuration), you will use the 
+public GRR build by Iossifov lab and accessible through  
+https://www.iossifovlab.com/distribution/public/genomic-resources-repository/.
+
+If you want to use additional genomic resources, you can build your own GRR 
+(see Management of GRR below) and add it to the GRRs you use. The set of GRR 
+that are accessible can be configured in several ways. 
+
+To configure the GRRs to be used by default for your user you can create 
+the file ~/.grr_definition.yaml. An example of what the contents of this file 
+can be is:
+
+.. code:: yaml
+
+    id: "development"
+    type: group
+    children:
+    - id: "grr_local"
+      type: "directory"
+      directory: "~/my_grr"
+
+    - id: "default"
+      type: "url"
+      url: "https://www.iossifovlab.com/distribution/public/genomic-resources-repository"
+      cache_dir: "~/default_grr_cache"
+
+This configures a group of two repositories with ids the 'grr_local' and 
+the 'default'. When you search for a resource, the system will first try 
+to find in the grr_local repository, because it is listed first and, if 
+it doesn't find it there, it will try the default GRR. The default GRR is  
+a remote GRR at the given URL and its configuration specified that resources 
+used from it will be cached in the "~/default_grr_cache" directory. It is 
+significantly faster to use cached resources, but it takes some time to cache
+them the first time they are used and they occupy substantial disk space.
+
+Alternatively, the system will use GRR configuration file pointed to by 
+the GRR_DEFINITION_FILE environment variable.
+
+Finally, most command line tools that use GRRs have a --grr <file name> argument 
+that overrides the defaults.
+
 Configuration
 *************
 
@@ -44,32 +87,12 @@ Currently supported protocols for GRR access are:
     type: embedded
 
 
-
-Example configuration
-#####################
-
-
-.. code:: yaml
-
-    id: "development"
-    type: group
-    children:
-    - id: "grr_local"
-      type: "directory"
-      directory: "<path to local GRR directory>"
-
-    - id: "default"
-      type: "url"
-      url: "https://www.iossifovlab.com/distribution/public/genomic-resources-repository"
-      cache_dir: "<path to local filesystem cache>"
-
-
 Browse available resources
 **************************
 
 .. code:: bash
 
-    grr_browse --grr grr_definition.yaml
+    grr_browse [--grr grr_definition.yaml]
 
 
 Management of genomic resources repository (GRR)
