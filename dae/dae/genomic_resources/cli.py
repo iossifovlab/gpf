@@ -4,7 +4,7 @@ import sys
 import logging
 import argparse
 import pathlib
-from typing import Dict
+from typing import Dict, Union
 from urllib.parse import urlparse
 
 import yaml
@@ -17,6 +17,7 @@ from dae.genomic_resources.repository import \
     GR_CONF_FILE_NAME, \
     GR_CONTENTS_FILE_NAME, \
     GenomicResource, \
+    GenomicResourceRepo, \
     ReadOnlyRepositoryProtocol, \
     ReadWriteRepositoryProtocol, \
     ManifestEntry, \
@@ -26,6 +27,8 @@ from dae.utils.verbosity_configuration import VerbosityConfiguration
 
 from dae.genomic_resources.fsspec_protocol import build_fsspec_protocol
 from dae.genomic_resources.histogram import HistogramBuilder
+from dae.genomic_resources.repository_factory import \
+    build_genomic_resource_repository
 
 
 logger = logging.getLogger(__file__)
@@ -99,7 +102,8 @@ def _configure_list_subparser(subparsers):
     _add_repository_resource_parameters_group(parser, use_resource=False)
 
 
-def _run_list_command(proto: ReadOnlyRepositoryProtocol, _args):
+def _run_list_command(
+        proto: Union[ReadOnlyRepositoryProtocol, GenomicResourceRepo], _args):
     for res in proto.get_all_resources():
         res_size = sum([fs for _, fs in res.get_manifest().get_files()])
         print(
@@ -450,9 +454,8 @@ def _run_resource_repair_command(proto, repo_url, region_size, **kwargs):
 def cli_manage(cli_args=None):
     """Provide CLI for repository management."""
     # pylint: disable=too-many-branches
-    if not cli_args:
+    if cli_args is None:
         cli_args = sys.argv[1:]
-
     desc = "Genomic Resource Repository Management Tool"
     parser = argparse.ArgumentParser(description=desc)
     parser.add_argument(
@@ -472,7 +475,7 @@ def cli_manage(cli_args=None):
     _configure_repo_repair_subparser(commands_parser)
     _configure_resource_repair_subparser(commands_parser)
 
-    args = parser.parse_args(cli_args)
+    args = parser.parse_args(cli_args or sys.argv[1:])
     VerbosityConfiguration.set(args)
 
     if args.version:
@@ -535,3 +538,30 @@ def _create_proto(repo_url, extra_args: str = ""):
     proto = build_fsspec_protocol(
         proto_id="manage", root_url=repo_url, **kwargs)
     return proto
+
+
+def cli_browse(cli_args=None):
+    """Provide CLI for repository browsing."""
+    desc = "Genomic Resource Repository Browse Tool"
+    parser = argparse.ArgumentParser(description=desc)
+    parser.add_argument(
+        "--version", action="store_true", default=False,
+        help="Prints GPF version and exists.")
+    VerbosityConfiguration.set_argumnets(parser)
+
+    group = parser.add_argument_group(title="Repository/Resource")
+    group.add_argument(
+        "-g", "--grr", type=str,
+        default=None,
+        help="path to GRR definition file.")
+
+    if cli_args is None:
+        cli_args = sys.argv[1:]
+    args = parser.parse_args(cli_args)
+    VerbosityConfiguration.set(args)
+
+    if args.version:
+        print(f"GPF version: {VERSION} ({RELEASE})")
+        sys.exit(0)
+    repo = build_genomic_resource_repository(file_name=args.grr)
+    _run_list_command(repo, args)
