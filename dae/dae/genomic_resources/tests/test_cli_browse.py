@@ -75,8 +75,9 @@ def test_cli_browse_with_env_variable(repo_fixture, repo_def, capsys, mocker):
 
 def test_cli_browse_default_defintion(repo_fixture, repo_def, capsys, mocker):
 
-    mocker.patch.dict(
-        os.environ, {"HOME": str(repo_def.parent)})
+    mocker.patch.dict(os.environ, {"HOME": str(repo_def.parent)})
+    if "GRR_DEFINITION_FILE" in os.environ:
+        del os.environ["GRR_DEFINITION_FILE"]
 
     cli_browse([])
     out, err = capsys.readouterr()
