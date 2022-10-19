@@ -1,8 +1,8 @@
 ---
 name: Bug report
-about: Create a bug report to help us improve dask-sql
+about: Create a bug report to help us improve GPF
 title: "[BUG]"
-labels: "bug, needs triage"
+labels: "bug"
 assignees: ''
 
 ---

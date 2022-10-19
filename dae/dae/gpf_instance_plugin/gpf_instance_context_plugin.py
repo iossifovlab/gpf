@@ -11,49 +11,50 @@ from dae.genomic_resources.genomic_context import register_context_provider
 logger = logging.getLogger(__name__)
 
 
+class GPFInstanceGenomicContext(GenomicContext):
+    """Defines GPFInstance genomic context."""
+
+    def __init__(self, gpf_instance):
+        self.gpf_instance = gpf_instance
+
+    def get_context_object(self, key) -> Optional[Any]:
+        if key == GC_GENE_MODELS_KEY:
+            return self.gpf_instance.gene_models
+        if key == GC_REFERENCE_GENOME_KEY:
+            return self.gpf_instance.reference_genome
+        if key == GC_GRR_KEY:
+            return self.gpf_instance.grr
+        if key == "annotation_pipeline":
+            return self.gpf_instance.get_annotation_pipeline()
+        if key == "gpf_instance":
+            return self.gpf_instance
+        logger.info(
+            "can't find %s in GPF instance genomic context", key)
+        return None
+
+    def get_context_keys(self) -> Set[str]:
+        return {
+            GC_GENE_MODELS_KEY, GC_REFERENCE_GENOME_KEY,
+            GC_GRR_KEY, "annotation_pipeline", "gpf_instance"
+        }
+
+    def get_source(self) -> Tuple[str, ...]:
+        return ("gpf_instance", self.gpf_instance.dae_dir)
+
+
 class GPFInstanceGenomicContextProvider(SimpleGenomicContextProvider):
     """Defines GPFInstance genomic context provider."""
 
     @staticmethod
     def context_builder():
         """Build GPF instance genomic context."""
-        # pylint: disable=import-outside-toplevel
-        from dae.gpf_instance.gpf_instance import GPFInstance
-
-        class GPFInstanceGenomicContext(GenomicContext):
-            """Defines GPFInstance genomic context."""
-
-            def __init__(self, gpf_instance: GPFInstance):
-                self.gpf_instance: GPFInstance = gpf_instance
-
-            def get_context_object(self, key) -> Optional[Any]:
-                if key == GC_GENE_MODELS_KEY:
-                    return self.gpf_instance.gene_models
-                if key == GC_REFERENCE_GENOME_KEY:
-                    return self.gpf_instance.reference_genome
-                if key == GC_GRR_KEY:
-                    return self.gpf_instance.grr
-                if key == "annotation_pipeline":
-                    return self.gpf_instance.get_annotation_pipeline()
-                if key == "gpf_instance":
-                    return self.gpf_instance
-                logger.info(
-                    "can't find %s in GPF instance genomic context", key)
-                return None
-
-            def get_context_keys(self) -> Set[str]:
-                return {
-                    GC_GENE_MODELS_KEY, GC_REFERENCE_GENOME_KEY,
-                    GC_GRR_KEY, "annotation_pipeline", "gpf_instance"
-                }
-
-            def get_source(self) -> Tuple[str, ...]:
-                return ("gpf_instance", self.gpf_instance.dae_dir)
         try:
+            # pylint: disable=import-outside-toplevel
+            from dae.gpf_instance.gpf_instance import GPFInstance
             return GPFInstanceGenomicContext(GPFInstance.build())
-        except Exception:  # pylint: disable=broad-except
-            logger.error(
-                "unable to create gpf instance context", exc_info=True)
+        except Exception as ex:  # pylint: disable=broad-except
+            logger.warning(
+                "unable to create default gpf instance context: %s", ex)
             return None
 
     def __init__(self):

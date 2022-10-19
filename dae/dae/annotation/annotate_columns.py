@@ -3,6 +3,8 @@ from __future__ import annotations
 import sys
 import gzip
 import argparse
+from typing import Optional
+
 from dae.annotation.context import CLIAnnotationContext
 from dae.annotation.record_to_annotatable import build_record_to_annotatable
 from dae.annotation.record_to_annotatable import \
@@ -36,9 +38,9 @@ def configure_argument_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def cli(raw_args: list[str] = None) -> None:
+def cli(raw_args: Optional[list[str]] = None) -> None:
     """Run command line interface for annotate columns."""
-    if not raw_args:
+    if raw_args is None:
         raw_args = sys.argv[1:]
 
     parser = configure_argument_parser()
@@ -69,7 +71,8 @@ def cli(raw_args: list[str] = None) -> None:
         out_file = open(args.output, "wt")
 
     hcs = in_file.readline().strip("\r\n").split(args.input_separator)
-    record_to_annotable = build_record_to_annotatable(vars(args), set(hcs))
+    record_to_annotable = build_record_to_annotatable(
+        vars(args), set(hcs), context=context)
     print(*(hcs + annotation_attributes),
           sep=args.output_separator, file=out_file)
 
