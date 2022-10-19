@@ -53,7 +53,7 @@ class GPFInstanceGenomicContextProvider(SimpleGenomicContextProvider):
             from dae.gpf_instance.gpf_instance import GPFInstance
             return GPFInstanceGenomicContext(GPFInstance.build())
         except Exception as ex:  # pylint: disable=broad-except
-            logger.warning(
+            logger.info(
                 "unable to create default gpf instance context: %s", ex)
             return None
 

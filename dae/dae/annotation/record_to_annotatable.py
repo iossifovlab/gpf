@@ -82,6 +82,10 @@ class CSHLAlleleRecordToVcfAllele(RecordToAnnotable):
         self.location_col, self.variant_col = columns
         self.context = context
         self.reference_genome = context.get_reference_genome()
+        if self.reference_genome is None:
+            raise ValueError(
+                "unable to instantialte CSHLAlleleRecordToVcfAllele "
+                "without a referrence genome")
 
     def build(self, record: dict[str, str]) -> Annotatable:
         return VCFAllele(*cshl2vcf(

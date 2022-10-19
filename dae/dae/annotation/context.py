@@ -17,7 +17,8 @@ class CLIAnnotationContext(CLIGenomicContext):
     def context_builder(args) -> CLIAnnotationContext:
         """Build a CLI genomic context."""
         context = CLIGenomicContext.context_builder(args)
-        context_objects = context.get_all_context_objects()
+        register_context(context)
+        context_objects = {}
 
         if hasattr(args, "pipeline") and \
                 args.pipeline is not None and args.pipeline != "context":

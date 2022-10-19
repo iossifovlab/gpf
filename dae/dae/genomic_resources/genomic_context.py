@@ -276,6 +276,7 @@ class CLIGenomicContext(SimpleGenomicContext):
             resource = grr.get_resource(args.reference_genome_resource_id)
 
             genome = build_reference_genome_from_resource(resource)
+            genome.open()
             context_objects[GC_REFERENCE_GENOME_KEY] = genome
 
         if args.gene_models_resource_id is not None:
