@@ -22,7 +22,7 @@ def data_import(root_path: pathlib.Path, study: StudyLayout, gpf_instance):
     params = asdict(study)
     params["work_dir"] = str(root_path / "work_dir")
     params["storage_id"] = gpf_instance\
-        .genotype_storage_db\
+        .genotype_storages\
         .get_default_genotype_storage()\
         .storage_id
 

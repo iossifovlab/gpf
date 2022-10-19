@@ -99,7 +99,7 @@ class GPFInstance:
         self._variants_db
         self.denovo_gene_sets_db
         self.genomic_scores_db
-        self.genotype_storage_db
+        self.genotype_storages
         self._background_facade
 
     @cached_property
@@ -202,7 +202,7 @@ class GPFInstance:
         return GenomicScoresDb(self.grr, scores)
 
     @cached_property
-    def genotype_storage_db(self):
+    def genotype_storages(self):
         """Construct and return genotype storage registry."""
         # pylint: disable=import-outside-toplevel
         from dae.genotype_storage.genotype_storage_registry import \
@@ -220,7 +220,7 @@ class GPFInstance:
             self.dae_config,
             self.reference_genome,
             self.gene_models,
-            self.genotype_storage_db,
+            self.genotype_storages,
         )
 
     @cached_property

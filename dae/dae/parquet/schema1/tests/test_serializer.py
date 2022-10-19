@@ -21,7 +21,7 @@ def extra_attrs_impala(
     variants_filename = fixture_dirname("backends/iossifov_extra_attrs.tsv")
     root_path = tmp_path_factory.mktemp(study_id)
     gpf_instance_2013\
-        .genotype_storage_db\
+        .genotype_storages\
         .register_genotype_storage(impala_genotype_storage)
 
     project = {

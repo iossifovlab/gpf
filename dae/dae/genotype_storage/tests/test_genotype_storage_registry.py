@@ -9,7 +9,7 @@ from dae.inmemory_storage.inmemory_genotype_storage import \
 
 @pytest.fixture(scope="session")
 def genotype_storage_registry(fixtures_gpf_instance):
-    return fixtures_gpf_instance.genotype_storage_db
+    return fixtures_gpf_instance.genotype_storages
 
 
 @pytest.fixture(scope="session")

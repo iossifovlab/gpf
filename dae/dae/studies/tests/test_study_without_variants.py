@@ -48,7 +48,7 @@ def no_variants_study(gpf_instance_2013, tmp_path):
         content, study_config_schema, default_config, tmp_path)
 
     genotype_storage = \
-        gpf_instance_2013.genotype_storage_db.get_genotype_storage(
+        gpf_instance_2013.genotype_storages.get_genotype_storage(
             "genotype_impala"
         )
 

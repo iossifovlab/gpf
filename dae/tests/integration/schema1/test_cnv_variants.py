@@ -89,7 +89,7 @@ def cnv_impala(
         impala_hosts=[impala_host], impala_port=21050)
 
     study_id = f"cnv_test_{impala_genotype_storage.storage_id}"
-    gpf_instance_2013.genotype_storage_db.register_genotype_storage(
+    gpf_instance_2013.genotype_storages.register_genotype_storage(
         impala_genotype_storage)
     (variant_table, pedigree_table) = \
         impala_genotype_storage.study_tables(

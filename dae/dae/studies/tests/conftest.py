@@ -45,7 +45,7 @@ def gene_scores_db(local_gpf_instance):
 
 @pytest.fixture(scope="session")
 def genotype_storage_factory(local_gpf_instance):
-    return local_gpf_instance.genotype_storage_db
+    return local_gpf_instance.genotype_storages
 
 
 @pytest.fixture(scope="session")

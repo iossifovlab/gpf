@@ -80,8 +80,8 @@ def main(argv=None, gpf_instance=None):
 
     logging.getLogger("impala").setLevel(logging.WARNING)
 
-    genotype_storage_db = gpf_instance.genotype_storage_db
-    genotype_storage = genotype_storage_db.get_genotype_storage(
+    genotype_storages = gpf_instance.genotype_storages
+    genotype_storage = genotype_storages.get_genotype_storage(
         argv.genotype_storage
     )
     if not genotype_storage or \
