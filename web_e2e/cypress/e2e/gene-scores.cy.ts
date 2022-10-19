@@ -162,7 +162,7 @@ describe('Gene weights panel tests', () => {
       genotypeBrowserController.pressTablePreviewButton();
       genotypeBrowserPage.overviewParagraph.should(
         'have.text',
-        geneScore.allVariants + ' variants selected (' + geneScore.allVariants + ' shown)'
+        geneScore.allVariants + ' variants selected'
       );
     });
   });
