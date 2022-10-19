@@ -175,7 +175,7 @@ def gpf_instance_2013(
     grr = GenomicResourceGroupRepo(repositories)
     gpf_instance = GPFInstance2013(
         dae_config=default_dae_config,
-        dae_dir=default_dae_config.config_dir,
+        dae_dir=global_dae_fixtures_dir,
         grr=grr)
 
     return gpf_instance

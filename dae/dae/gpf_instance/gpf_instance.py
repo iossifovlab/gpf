@@ -83,6 +83,7 @@ class GPFInstance:
 
         self.dae_config = dae_config
         self.dae_dir = str(dae_dir)
+        assert self.dae_dir is not None
 
         self._grr = kwargs.get("grr")
         self._reference_genome = kwargs.get("reference_genome")
@@ -207,8 +208,14 @@ class GPFInstance:
         # pylint: disable=import-outside-toplevel
         from dae.genotype_storage.genotype_storage_registry import \
             GenotypeStorageRegistry
-
         registry = GenotypeStorageRegistry()
+        internal_storage = registry.register_storage_config({
+            "id": "internal",
+            "storage_type": "inmemory",
+            "dir": os.path.join(self.dae_dir, "internal_storage"),
+        })
+        registry.register_default_storage(internal_storage)
+
         if self.dae_config.genotype_storage:
             registry.register_storages_configs(
                 self.dae_config.genotype_storage)
