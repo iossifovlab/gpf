@@ -19,11 +19,11 @@ Example 2
 #########
 
 .. code:: yaml
-
-    - position_score: hg38/scores/phyloP7way 
-    - effect_annotator: 
-        gene_models: hg38/GRCh38-hg38/gene_models/refSeq_20200330 
-        genome: hg38/GRCh38-hg38/genome 
+ 
+    - position_score: hg38/scores/phyloP7way
+    - effect_annotator:
+        gene_models: hg38/gene_models/refSeq_v20200330
+        genome: hg38/genomes/GRCh38-hg38       
 
 
 Example 3
@@ -34,6 +34,125 @@ Example 3
     - position_score: hg38/scores/phyloP7way 
     - effect_annotator
 
+This one will use the reference genome from the genomic context. The
+genomic context can an active gpf_instance or command line parameters like:
+
+.. code::
+
+    -ref hg38/genomes/GRCh38-hg38 -genes hg38/gene_models/refSeq_v20200330
+
+
+
+Example 4
+#########
+
+.. code:: yaml
+
+    - position_score: hg38/scores/phyloP100way
+    - position_score: hg38/scores/phyloP30way
+    - position_score: hg38/scores/phyloP20way
+    - position_score: hg38/scores/phyloP7way
+
+    - position_score: hg38/scores/phastCons100way
+    - position_score: hg38/scores/phastCons30way
+    - position_score: hg38/scores/phastCons20way
+    - position_score: hg38/scores/phastCons7way
+
+    - np_score: hg38/scores/CADD_v1.4
+
+    - liftover_annotator:
+        chain: liftover/hg38ToHg19
+        target_genome: hg19/genomes/GATK_ResourceBundle_5777_b37_phiX174
+        attributes:
+        - source: liftover_annotatable
+        destination: hg19_annotatable
+        internal: true
+
+    - position_score:
+        resource_id: hg19/scores/FitCons-i6-merged
+        input_annotatable: hg19_annotatable
+
+    - position_score:
+        resource_id: hg19/scores/Linsight
+        input_annotatable: hg19_annotatable
+
+    - position_score:
+        resource_id: hg19/scores/FitCons2_E067
+        input_annotatable: hg19_annotatable
+
+    - position_score:
+        resource_id: hg19/scores/FitCons2_E068
+        input_annotatable: hg19_annotatable
+
+    - position_score:
+        resource_id: hg19/scores/FitCons2_E069
+        input_annotatable: hg19_annotatable
+
+    - position_score:
+        resource_id: hg19/scores/FitCons2_E070
+        input_annotatable: hg19_annotatable
+
+    - position_score:
+        resource_id: hg19/scores/FitCons2_E071
+        input_annotatable: hg19_annotatable
+
+    - position_score:
+        resource_id: hg19/scores/FitCons2_E072
+        input_annotatable: hg19_annotatable
+
+    - position_score:
+        resource_id: hg19/scores/FitCons2_E073
+        input_annotatable: hg19_annotatable
+
+    - position_score:
+        resource_id: hg19/scores/FitCons2_E074
+        input_annotatable: hg19_annotatable
+
+    - position_score:
+        resource_id: hg19/scores/FitCons2_E081
+        input_annotatable: hg19_annotatable
+
+    - position_score:
+        resource_id: hg19/scores/FitCons2_E082
+        input_annotatable: hg19_annotatable
+
+    - np_score:
+        resource_id: hg19/scores/MPC
+        input_annotatable: hg19_annotatable
+
+    - normalize_allele_annotator:
+        genome: hg38/genomes/GRCh38-hg38
+
+    - allele_score:
+        resource_id: hg38/variant_frequencies/SSC_WG38_CSHL_2380
+        # input_annotatable: normalized_allele
+
+    - allele_score: 
+        resource_id: hg38/variant_frequencies/gnomAD_v2.1.1_liftover/exomes
+        input_annotatable: normalized_allele
+
+    - allele_score: 
+        resource_id: hg38/variant_frequencies/gnomAD_v2.1.1_liftover/genomes
+        input_annotatable: normalized_allele
+
+    - allele_score: 
+        resource_id: hg38/variant_frequencies/gnomAD_v3/genomes
+        input_annotatable: normalized_allele
+        
+
+
+
+Annotables 
+**********
+
+Genomic Position
+#################
+
+VCF Variant
+#################
+
+Genomic Region
+#################
 
 Annotation pipeline
 *******************
