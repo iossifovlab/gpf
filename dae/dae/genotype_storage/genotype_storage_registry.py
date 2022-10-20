@@ -1,5 +1,5 @@
 import logging
-from typing import Optional, Dict
+from typing import Dict
 
 from dae.genotype_storage import get_genotype_storage_factory
 from dae.genotype_storage.genotype_storage import GenotypeStorage
@@ -52,11 +52,13 @@ class GenotypeStorageRegistry:
         self.register_genotype_storage(genotype_storage)
         self._default_genotype_storage = genotype_storage
 
-    def get_default_genotype_storage(self) -> Optional[GenotypeStorage]:
+    def get_default_genotype_storage(self) -> GenotypeStorage:
         """Return the default genotype storage if one is defined.
 
         Otherwise, return None.
         """
+        if self._default_genotype_storage is None:
+            raise ValueError("default genotype storage not set")
         return self._default_genotype_storage
 
     def get_genotype_storage(self, storage_id) -> GenotypeStorage:
@@ -65,6 +67,8 @@ class GenotypeStorageRegistry:
         If the method can not find storage with the specified ID, it will raise
         ValueError exception.
         """
+        if storage_id is None:
+            return self.get_default_genotype_storage()
         if storage_id not in self._genotype_storages:
             raise ValueError(f"unknown storage id {storage_id}")
         return self._genotype_storages[storage_id]
