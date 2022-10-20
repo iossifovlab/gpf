@@ -21,6 +21,6 @@ def alla_gpf(root_path, storage=None):
 
     if storage:
         gpf_instance\
-            .genotype_storage_db\
+            .genotype_storages\
             .register_default_storage(storage)
     return gpf_instance

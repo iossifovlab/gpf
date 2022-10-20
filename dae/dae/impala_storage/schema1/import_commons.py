@@ -843,7 +843,7 @@ class BatchImporter:
         else:
             genotype_storage_id = argv.genotype_storage
 
-        genotype_storage = self.gpf_instance.genotype_storage_db \
+        genotype_storage = self.gpf_instance.genotype_storages \
             .get_genotype_storage(
                 genotype_storage_id
             )
@@ -1551,7 +1551,7 @@ class DatasetHelpers:
             return None
         gpf_instance = self.gpf_instance
         genotype_storage = gpf_instance \
-            .genotype_storage_db \
+            .genotype_storages \
             .get_genotype_storage(
                 config.genotype_storage.id)
         return genotype_storage

@@ -175,7 +175,7 @@ def gpf_instance_2013(
     grr = GenomicResourceGroupRepo(repositories)
     gpf_instance = GPFInstance2013(
         dae_config=default_dae_config,
-        dae_dir=default_dae_config.config_dir,
+        dae_dir=global_dae_fixtures_dir,
         grr=grr)
 
     return gpf_instance
@@ -843,7 +843,7 @@ def data_import(
 
     impala_helpers = ImpalaHelpers(
         impala_hosts=[impala_host], impala_port=21050)
-    gpf_instance_2013.genotype_storage_db.register_genotype_storage(
+    gpf_instance_2013.genotype_storages.register_genotype_storage(
         impala_genotype_storage)
 
     def build(dirname):
@@ -922,7 +922,7 @@ def iossifov2014_import(
                 impala_test_dbname(), pedigree_table):
         return
 
-    gpf_instance_2013.genotype_storage_db.register_genotype_storage(
+    gpf_instance_2013.genotype_storages.register_genotype_storage(
         impala_genotype_storage)
     config = from_prefix_denovo(
         fixture_dirname("dae_iossifov2014/iossifov2014"))

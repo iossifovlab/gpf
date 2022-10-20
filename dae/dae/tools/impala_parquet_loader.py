@@ -82,8 +82,8 @@ def main(argv=None, gpf_instance=None):
 
     argv = parse_cli_arguments(argv or sys.argv[1:], gpf_instance)
 
-    genotype_storage_db = gpf_instance.genotype_storage_db
-    genotype_storage = genotype_storage_db.get_genotype_storage(
+    genotype_storages = gpf_instance.genotype_storages
+    genotype_storage = genotype_storages.get_genotype_storage(
         argv.genotype_storage
     )
     if not genotype_storage or \
