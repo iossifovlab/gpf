@@ -72,6 +72,8 @@ setuptools.setup(
     annotate_columns=dae.annotation.annotate_columns:cli
     annotate_vcf=dae.annotation.annotate_vcf:cli
 
+    agp_exporter=dae.autism_gene_profile.exporter:cli_export
+
     dae2parquet.py=dae.tools.dae2parquet:main
     vcf2parquet.py=dae.tools.vcf2parquet:main
     vcf2schema2.py=dae.backends.schema2.vcf2schema2:main

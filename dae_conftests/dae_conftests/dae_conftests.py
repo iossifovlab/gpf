@@ -1099,7 +1099,7 @@ def agp_gpf_instance(
     return fixtures_gpf_instance
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 def sample_agp():
     gene_sets = ["main_CHD8 target genes"]
     genomic_scores = {
