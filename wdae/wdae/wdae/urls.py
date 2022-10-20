@@ -1,11 +1,12 @@
 from django.urls import path, re_path, include
 from users_api.views import WdaeLoginView
 
-from gpfjs.views import index
+from gpfjs.views import index, favicon
 
 urlpatterns = [
     re_path(r"^$", index),
     re_path(r"^gpfjs/.*$", index),
+    re_path(r"^favicon.ico$", favicon),
     re_path(r"^api/v3/datasets", include("datasets_api.urls")),
     re_path(r"^api/v3/gene_scores", include("gene_scores.urls")),
     re_path(r"^api/v3/gene_sets", include("gene_sets.urls")),
