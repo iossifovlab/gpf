@@ -64,6 +64,7 @@ export class GpfTableComponent implements OnChanges {
   public set sortingInfo(sortingInfo: SortInfo) {
     this.previousSortingInfo = sortingInfo;
     sortingInfo.sortBySubcolumn.sort(this.dataSource, sortingInfo.sortOrderAsc);
+    this.tableData = this.getVisibleData();
   }
 
   public get sortingInfo(): SortInfo {
