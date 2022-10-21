@@ -138,7 +138,7 @@ class ForgotPassword(views.APIView):
         form = WdaePasswordForgottenForm()
         return render(
             request,
-            "forgotten-password.html",
+            "users_api/registration/forgotten-password.html",
             {"form": form, "show_form": True}
         )
 
@@ -149,7 +149,7 @@ class ForgotPassword(views.APIView):
         if not is_valid:
             return render(
                 request,
-                "forgotten-password.html",
+                "users_api/registration/forgotten-password.html",
                 {
                     "form": form,
                     "message": "Invalid email",
@@ -172,7 +172,7 @@ class ForgotPassword(views.APIView):
 
             return render(
                 request,
-                "forgotten-password.html",
+                "users_api/registration/forgotten-password.html",
                 {
                     "form": form,
                     "message": message,
@@ -185,7 +185,7 @@ class ForgotPassword(views.APIView):
             message = f"There is no user registered for {email}"
             return render(
                 request,
-                "forgotten-password.html",
+                "users_api/registration/forgotten-password.html",
                 {
                     "form": form,
                     "message": message,
@@ -294,14 +294,14 @@ class BasePasswordView(views.APIView):
 
 class ResetPassword(BasePasswordView):
     verification_code_model = cast(models.Model, ResetPasswordCode)
-    template = "reset-password.html"
+    template = "users_api/registration/reset-password.html"
     form = cast(forms.Form, WdaeResetPasswordForm)
     code_type = "reset"
 
 
 class SetPassword(BasePasswordView):
     verification_code_model = cast(models.Model, SetPasswordCode)
-    template = "set-password.html"
+    template = "users_api/registration/set-password.html"
     form = cast(forms.Form, WdaeRegisterPasswordForm)
     code_type = "set"
 
@@ -317,7 +317,7 @@ class WdaeLoginView(views.APIView):
 
         return render(
             request,
-            "registration/login.html",
+            "users_api/registration/login.html",
             {
                 "form": form,
                 "next": next_uri
@@ -340,7 +340,7 @@ class WdaeLoginView(views.APIView):
 
         return render(
             request,
-            "registration/login.html",
+            "users_api/registration/login.html",
             {
                 "form": form,
                 "next": next_uri,

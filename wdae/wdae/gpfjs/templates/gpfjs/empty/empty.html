@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+    {% load static %}
 
 <head>
     <meta charset="utf-8" />
@@ -9,8 +10,8 @@
     <meta content="width=device-width, initial-scale=1, shrink-to-fit=no" name="viewport" />
     <link href="https://fonts.googleapis.com/css?family=Roboto:400,500,700&amp;subset=latin-ext" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css?family=Roboto:400,500,700&amp;subset=latin-ext" rel="stylesheet">
-    <link href="/static/empty/favicon.ico" rel="icon" type="image/x-icon">
-    <link href="/static/empty/styles.css" rel="stylesheet">
+    <link href="{% static 'gpfjs/empty/favicon.ico' %}" rel="icon" type="image/x-icon">
+    <link href="{% static 'gpfjs/empty/styles.css' %}" rel="stylesheet">
     <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet">
     <meta content="width=device-width, initial-scale=1, shrink-to-fit=no" name="viewport">
 </head>
@@ -18,7 +19,7 @@
 <body>
     <div _ngcontent-c0="" class="container-fluid" id="logo">
         <div _ngcontent-c0="" class="col-10 align-self-center">
-            <img _ngcontent-c0="" class="ng-tns-c0-0" src="/static/empty/logo-64x64.png" alt="GPF logo">
+            <img _ngcontent-c0="" class="ng-tns-c0-0" src="{% static 'gpfjs/empty/logo-64x64.png' %}" alt="GPF logo">
             <h3 _ngcontent-c0="" class="ng-tns-c0-0">GPF: Genotypes and Phenotypes in Families</h3>
         </div>
     </div>

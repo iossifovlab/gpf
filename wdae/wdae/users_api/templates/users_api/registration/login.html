@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+    {% load static %}
 
     <head>
         <meta charset="utf-8" />
@@ -8,34 +9,33 @@
         </title>
         <meta content="width=device-width, initial-scale=1, shrink-to-fit=no" name="viewport" />
         <link href="https://fonts.googleapis.com/css?family=Roboto:400,500,700&amp;subset=latin-ext" rel="stylesheet">
-        <link href="/static/registration/favicon.ico" rel="icon" type="image/x-icon">
-        <link href="/static/registration/styles.css" rel="stylesheet">
+        <link href="{% static 'users_api/registration/favicon.ico' %}" rel="icon" type="image/x-icon">
+        <link href="{% static 'users_api/registration/styles.css' %}" rel="stylesheet">
         <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet">
     </head>
 
     <body>
         <header>
-            <img src="/static/registration/logo-64x64.png">
+            <img src="{% static 'users_api/registration/logo-64x64.png' %}">
             <label class="login-header">GPF: Genotypes and Phenotypes in Families</label>
         </header>
 
-        {% if form != None %}
-        <form method="post" action="{% url 'set_password' %}" style="text-align:center">
+        <form method="post" action="{% url 'login_user' %}" style="text-align:center">
             {% csrf_token %}
             <table>
                 <tr>
                     <td>
-                        <div>{{ form.new_password1.label_tag }}</div>
-                        <div>{{ form.new_password1 }}</div>
+                        <div>{{ form.username.label_tag }}</div>
+                        <div>{{ form.username }}</div>
                     </td>
                 </tr>
                 <tr>
                     <td>
-                        <div>{{ form.new_password2.label_tag }}</div>
-                        <div>{{ form.new_password2 }}</div>
+                        <div>{{ form.password.label_tag }}</div>
+                        <div>{{ form.password }}</div>
                     </td>
                 </tr>
-                {% if form.errors %}
+                {% if form.errors and show_errors %}
                 <tr>
                     <td>
                         {% for errors in form.errors.values %}
@@ -48,17 +48,19 @@
                 {% endif %}
                 <tr>
                     <td>
-                        <input class="login-button" type="submit" value="Set password">
+                        <input class="login-button" type="submit" value="Login">
+                        <input type="hidden" name="next" value="{{ next }}">
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <a href="{% url 'forgotten_password' %}">Forgotten password</a>
                     </td>
                 </tr>
             </table>
 
 
         </form>
-        {% endif %}
-        {% if message != None %}
-        <div class="message warn">{{ message }}</div>
-        {% endif %}
 
     </body>
 

@@ -128,7 +128,6 @@ STATICFILES_DIRS = (
 STATICFILES_FINDERS = (
     "django.contrib.staticfiles.finders.FileSystemFinder",
     "django.contrib.staticfiles.finders.AppDirectoriesFinder",
-    # 'django.contrib.staticfiles.finders.DefaultStorageFinder',
 )
 
 # Make this unique, and don't share it with anybody.
@@ -159,6 +158,8 @@ PROJECT_ROOT = os.path.abspath(
     os.path.dirname(os.path.dirname(__file__)))
 
 INSTALLED_APPS = [
+    # BEGINNING OF THIRD-PARTY APPS
+
     "django.contrib.admin",
     "django.contrib.messages",
     "django.contrib.auth",
@@ -168,7 +169,16 @@ INSTALLED_APPS = [
     "rest_framework",
     "rest_framework.authtoken",
     "corsheaders",
-    "oauth2_provider",
+
+    # END OF THIRD-PARTY APPS
+
+
+    # BEGINNING OF FIRST-PARTY APPS (almost)
+
+    # the gpfjs application contains static files and a simple view
+    # that handles missing compiled gpfjs files with a friendly error message
+    # (please do not move it)
+    "gpfjs",
     "utils",
     "gene_scores",
     "gene_sets",
@@ -180,10 +190,14 @@ INSTALLED_APPS = [
     "common_reports_api",
     "pheno_tool_api",
     "users_api",
+    # oauth2_provider is a THIRD-PARTY APP, but must be placed AFTER users_api
+    # so that users_api app can override templates from oauth2_provider app
+    "oauth2_provider",
     "groups_api",
-    "gpfjs",
     "query_state_save",
     "user_queries",
+
+    # END OF FIRST-PARTY APPS
 ]
 
 AUTH_USER_MODEL = "users_api.WdaeUser"
@@ -340,17 +354,6 @@ CACHES = {
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [
-            os.path.normpath(
-                os.path.join(PROJECT_ROOT, "gpfjs", "static")
-            ),
-            os.path.normpath(
-                os.path.join(PROJECT_ROOT, "gpfjs", "static", "empty")
-            ),
-            os.path.normpath(
-                os.path.join(PROJECT_ROOT, "gpfjs", "static", "registration")
-            ),
-        ],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
