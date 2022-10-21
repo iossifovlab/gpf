@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpResponse } from '@angular/common/http';
 // eslint-disable-next-line no-restricted-imports
 import { Observable } from 'rxjs';
 
@@ -10,7 +10,7 @@ import { map } from 'rxjs/operators';
 @Injectable()
 export class PhenoToolService {
   private readonly phenoToolUrl = 'pheno_tool';
-  private headers = new Headers({ 'Content-Type': 'application/json' });
+  private readonly headers = new HttpHeaders({ 'Content-Type': 'application/json' });
 
   public constructor(
     private http: HttpClient,
@@ -23,5 +23,13 @@ export class PhenoToolService {
 
     return this.http.post(this.config.baseUrl + this.phenoToolUrl, filter, options)
       .pipe(map(res => PhenoToolResults.fromJson(res)));
+  }
+
+  public downloadPhenoToolResults(filter: object): Observable<HttpResponse<Blob>> {
+    return this.http.post(
+      this.config.baseUrl + this.phenoToolUrl + '/download',
+      filter,
+      {observe: 'response', headers: this.headers, responseType: 'blob'}
+    );
   }
 }

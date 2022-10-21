@@ -269,3 +269,8 @@ ng-multiselect-dropdown > span.selected-item {
   float: left;
   margin-bottom: 0;
 }
+
+.download-link {
+  cursor: pointer;
+  user-select: none;
+}

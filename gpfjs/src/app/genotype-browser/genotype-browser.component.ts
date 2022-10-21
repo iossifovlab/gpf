@@ -15,9 +15,9 @@ import { FamilyFiltersBlockComponent } from 'app/family-filters-block/family-fil
 import { PersonFiltersBlockComponent } from 'app/person-filters-block/person-filters-block.component';
 import { UniqueFamilyVariantsFilterState } from 'app/unique-family-variants-filter/unique-family-variants-filter.state';
 import { ErrorsState, ErrorsModel } from '../common/errors.state';
-import { clone } from 'lodash';
 import { take } from 'rxjs/operators';
 import { StudyFiltersBlockState } from 'app/study-filters-block/study-filters-block.state';
+import { downloadBlobResponse } from 'app/utils/blob-download';
 
 @Component({
   selector: 'gpf-genotype-browser',
@@ -36,6 +36,8 @@ export class GenotypeBrowserComponent implements OnInit {
   public selectedDataset: Dataset;
   public genotypeBrowserState: object;
   public loadingFinished: boolean;
+
+  public downloadInProgress = false;
 
   @Select(GenotypeBrowserComponent.genotypeBrowserStateSelector) private state$: Observable<any[]>;
   @Select(ErrorsState) private errorsState$: Observable<ErrorsModel>;
@@ -119,15 +121,22 @@ export class GenotypeBrowserComponent implements OnInit {
     );
   }
 
-  public onSubmit(event): void {
+  public onDownload(): void {
+    this.downloadInProgress = true;
     this.patchState();
-    this.genotypeBrowserState['datasetId'] = this.selectedDataset.id;
 
-    const args = clone(this.genotypeBrowserState);
-    args['download'] = true;
+    const args = {
+      ...this.genotypeBrowserState,
+      datasetId: this.selectedDataset.id,
+      download: true
+    };
 
-    event.target.queryData.value = JSON.stringify(args);
-    event.target.submit();
+    this.queryService.downloadVariants(args).pipe(take(1)).subscribe((response) => {
+      this.downloadInProgress = false;
+      downloadBlobResponse(response, 'variants.tsv');
+    }, (err) => {
+      this.downloadInProgress = false;
+    });
   }
 
   private patchState(): void {

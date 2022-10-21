@@ -39,26 +39,18 @@ describe('PhenoToolComponent', () => {
     TestBed.configureTestingModule({
       declarations: [
         PhenoToolComponent,
-        // PhenoToolGenotypeBlockComponent,
         GenesBlockComponent,
         GeneSymbolsComponent,
         PhenoToolMeasureComponent,
-        // PhenoMeasureSelectorComponent,
-        // ErrorsAlertComponent,
-        // SaveQueryComponent,
-        // PhenoToolEffectTypesComponent,
-        // EffecttypesColumnComponent,
-        // CheckboxListComponent,
       ],
       providers: [
         {provide: ActivatedRoute, useValue: new ActivatedRoute()},
         {provide: DatasetsService, useValue: new MockDatasetsService()},
         {provide: ConfigService, useValue: configMock},
+        {provide: PhenoToolService, useValue: phenoToolMockService},
         UsersService,
         FullscreenLoadingService,
-        {provide: PhenoToolService, useValue: phenoToolMockService},
         MeasuresService,
-        // QueryService
       ],
       imports: [
         HttpClientTestingModule,
@@ -115,20 +107,6 @@ describe('PhenoToolComponent', () => {
     fixture.detectChanges();
     component.submitQuery();
     expect(component.phenoToolResults).toEqual('fakeValue' as any);
-  });
-
-  it('should test on download event', () => {
-    const form = document.createElement('form');
-    form.onsubmit = (): boolean => false; // This supresses an error from JSDOM, purely cosmetic
-    const event = {target: form};
-    event.target.queryData = {
-      value: 'id'
-    };
-    const submitSpy = jest.spyOn(event.target, 'submit');
-
-    component.onDownload(event as any);
-    expect(submitSpy).toHaveBeenCalledTimes(1);
-    expect(event.target.queryData.value).toEqual('{"datasetId":"testDatasetId"}');
   });
 
   it('should hide results on a state change', () => {

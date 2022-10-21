@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Location } from '@angular/common';
 // eslint-disable-next-line no-restricted-imports
@@ -17,6 +17,7 @@ import { AuthService } from 'app/auth.service';
 export class QueryService {
   private readonly genotypePreviewVariantsUrl = 'genotype_browser/query';
   private readonly geneViewVariants = 'gene_view/query_summary_variants';
+  private readonly geneViewVariantsDownload = 'gene_view/download_summary_variants';
   private readonly saveQueryEndpoint = 'query_state/save';
   private readonly loadQueryEndpoint = 'query_state/load';
   private readonly deleteQueryEndpoint = 'query_state/delete';
@@ -118,6 +119,22 @@ export class QueryService {
     });
 
     return genotypePreviewVariantsArray;
+  }
+
+  public downloadVariants(filter: object): Observable<HttpResponse<Blob>> {
+    return this.http.post(
+      `${environment.apiPath}${this.genotypePreviewVariantsUrl}`,
+      filter,
+      {observe: 'response', headers: this.headers, responseType: 'blob'}
+    );
+  }
+
+  public downloadVariantsSummary(filter: object): Observable<HttpResponse<Blob>> {
+    return this.http.post(
+      `${environment.apiPath}${this.geneViewVariantsDownload}`,
+      filter,
+      {observe: 'response', headers: this.headers, responseType: 'blob'}
+    );
   }
 
   public getSummaryVariants(filter): SummaryAllelesArray {

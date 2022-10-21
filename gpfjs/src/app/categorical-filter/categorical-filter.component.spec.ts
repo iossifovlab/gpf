@@ -8,6 +8,7 @@ import { DatasetsService } from 'app/datasets/datasets.service';
 import { PhenoBrowserService } from 'app/pheno-browser/pheno-browser.service';
 import { UsersService } from 'app/users/users.service';
 import { CategoricalFilterComponent } from './categorical-filter.component';
+import { APP_BASE_HREF } from '@angular/common';
 
 class MockDatasetsService {
   public getSelectedDataset(): object {
@@ -27,7 +28,8 @@ describe('CategoricalFilterComponent', () => {
         { provide: DatasetsService, useValue: datasetsServiceMock },
         PhenoBrowserService,
         ConfigService,
-        UsersService
+        UsersService,
+        { provide: APP_BASE_HREF, useValue: '' }
       ],
       imports: [
         HttpClientTestingModule, RouterTestingModule, FormsModule,

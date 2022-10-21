@@ -31,7 +31,10 @@
 
     <h5 id="total-number-of-families">
       <span>Total number of families: {{ variantReport.familyReport.familiesTotal }}</span>
-      <span style="padding-left: 5px">(<a class="download-link" [href]="getDownloadLink()" download>Download</a>)</span>
+      <span style="padding-left: 5px">(<a class="download-link" (click)="onDownload()">
+          <span *ngIf="downloadInProgress">Downloading...</span>
+          <span *ngIf="!downloadInProgress">Download</span>
+      </a>)</span>
     </h5>
   </div>
 
