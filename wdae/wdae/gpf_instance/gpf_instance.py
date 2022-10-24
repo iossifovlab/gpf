@@ -6,8 +6,6 @@ from typing import Optional, List, Dict
 from threading import Lock
 from functools import cached_property
 
-from django.conf import settings
-
 from studies.study_wrapper import StudyWrapper, RemoteStudyWrapper, \
     StudyWrapperBase
 from studies.remote_study_db import RemoteStudyDB
@@ -314,8 +312,6 @@ def load_gpf_instance(config_filename=None) -> WGPFInstance:
         with _GPF_INSTANCE_LOCK:
             if _GPF_INSTANCE is None:
                 gpf_instance = WGPFInstance.build(config_filename)
-                if settings.STUDIES_EAGER_LOADING:
-                    gpf_instance.load()
                 gpf_instance.load_remotes()
 
                 _GPF_INSTANCE = gpf_instance

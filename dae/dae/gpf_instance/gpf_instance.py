@@ -102,6 +102,7 @@ class GPFInstance:
         self.genomic_scores_db
         self.genotype_storages
         self._background_facade
+        return self
 
     @cached_property
     def grr(self):

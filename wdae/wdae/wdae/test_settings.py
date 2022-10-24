@@ -7,7 +7,7 @@ from .default_settings import *
 DEFAULT_OAUTH_APPLICATION_CLIENT = "admin"
 
 INSTALLED_APPS += [
-    "gpf_instance.apps.WDAETestingConfig",
+    "gpf_instance.apps.WDAEConfig",
 ]
 
 ALLOWED_HOSTS += [
@@ -16,12 +16,13 @@ ALLOWED_HOSTS += [
 ]
 
 CORS_ORIGIN_WHITELIST = [
-    "localhost:8000",
-    "127.0.0.1:9000",
-    "localhost:4200",
-    "127.0.0.1:4200",
+    "http://localhost:8000",
+    "http://127.0.0.1:9000",
+    "http://localhost:4200",
+    "http://127.0.0.1:4200",
+    "http://localhost:8001",
 ]
 
 CORS_ALLOW_CREDENTIALS = True
 
-TESTING = True
+GPF_INSTANCE_CONFIG = "../../../data/data-hg19-local/gpf_instance.yaml"
