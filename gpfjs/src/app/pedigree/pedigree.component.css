@@ -57,3 +57,7 @@ form {
   left: 50%;
   font-size: 18px;
 }
+
+hr {
+  margin: 8px 0;
+}
