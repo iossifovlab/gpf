@@ -97,10 +97,8 @@ class ImpalaSchema1ImportStorage(ImportStorage):
             logger.error("missing or non-impala genotype storage")
             return
 
-        study_id = project.study_id
-
         hdfs_variants_dir = \
-            genotype_storage.default_variants_hdfs_dirname(study_id)
+            genotype_storage.default_variants_hdfs_dirname(project.study_id)
 
         hdfs_pedigree_file = \
             genotype_storage.default_pedigree_hdfs_filename(project.study_id)
