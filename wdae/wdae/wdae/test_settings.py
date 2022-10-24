@@ -6,10 +6,6 @@ from .default_settings import *
 
 DEFAULT_OAUTH_APPLICATION_CLIENT = "admin"
 
-INSTALLED_APPS += [
-    "gpf_instance.apps.WDAEConfig",
-]
-
 ALLOWED_HOSTS += [
     "gpfremote",
     "localhost",

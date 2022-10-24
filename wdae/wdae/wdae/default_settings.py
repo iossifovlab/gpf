@@ -196,6 +196,7 @@ INSTALLED_APPS = [
     "groups_api",
     "query_state_save",
     "user_queries",
+    "gpf_instance.apps.WDAEConfig",
 
     # END OF FIRST-PARTY APPS
 ]

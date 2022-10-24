@@ -375,7 +375,7 @@ EOT
           --durations 20 \
           --cov-config /wd/coveragerc \
           --junitxml=/wd/results/wdae-tests-junit.xml \
-          --cov dae \
+          --cov wdae \
           . || true'
 
     # Copy test and results and coverage information in test results directory
