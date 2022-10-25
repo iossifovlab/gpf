@@ -7,12 +7,12 @@ from dae.variants.attributes import Role, Status, Sex
 from dae.pedigrees.family import FamiliesData, Person, Family
 
 
-
 def _get_mom(family: Family) -> Optional[Person]:
     for person in family.members_in_order:
         if person.role == Role.mom:
             return person
     return None
+
 
 def _get_dad(family: Family) -> Optional[Person]:
     for person in family.members_in_order:
@@ -20,11 +20,13 @@ def _get_dad(family: Family) -> Optional[Person]:
             return person
     return None
 
+
 def _get_prb(family: Family) -> Optional[Person]:
     for person in family.members_in_order:
         if person.role == Role.prb:
             return person
     return None
+
 
 def _get_sibs(family: Family) -> Iterable[Person]:
     result = []
@@ -33,9 +35,11 @@ def _get_sibs(family: Family) -> Iterable[Person]:
             result.append(person)
     return result
 
+
 def _tag(family: Family, label: str, value) -> None:
     for person in family.persons.values():
         person.set_attr(label, value)
+
 
 def check_tag(family: Family, label: str, value) -> bool:
     for person in family.persons.values():
@@ -201,6 +205,62 @@ def tag_affected_sib_family(family: Family) -> bool:
     return value
 
 
+def check_unaffected_dad_family(family: Family) -> bool:
+    dad = _get_dad(family)
+    if dad is None:
+        return False
+    return bool(dad.status == Status.unaffected)
+
+
+def tag_unaffected_dad_family(family: Family) -> bool:
+    """Set unaffected dad family tag to the family."""
+    value = check_unaffected_dad_family(family)
+    _tag(family, "tag_unaffected_dad_family", value)
+    return value
+
+
+def check_unaffected_mom_family(family: Family) -> bool:
+    mom = _get_mom(family)
+    if mom is None:
+        return False
+    return bool(mom.status == Status.unaffected)
+
+
+def tag_unaffected_mom_family(family: Family) -> bool:
+    """Set unaffected mom family tag to the family."""
+    value = check_unaffected_mom_family(family)
+    _tag(family, "tag_unaffected_mom_family", value)
+    return value
+
+
+def check_unaffected_prb_family(family: Family) -> bool:
+    prb = _get_prb(family)
+    if prb is None:
+        return False
+    return bool(prb.status == Status.unaffected)
+
+
+def tag_unaffected_prb_family(family: Family) -> bool:
+    """Set unaffected proband family tag to the family."""
+    value = check_unaffected_prb_family(family)
+    _tag(family, "tag_unaffected_prb_family", value)
+    return value
+
+
+def check_unaffected_sib_family(family: Family) -> bool:
+    for sib in _get_sibs(family):
+        if sib.status == Status.unaffected:
+            return True
+    return False
+
+
+def tag_unaffected_sib_family(family: Family) -> bool:
+    """Set unaffected sibling family tag to the family."""
+    value = check_unaffected_sib_family(family)
+    _tag(family, "tag_unaffected_sib_family", value)
+    return value
+
+
 def check_male_prb_family(family: Family) -> bool:
     prb = _get_prb(family)
     if prb is None:
@@ -281,11 +341,16 @@ class FamilyTagsBuilder:
         "tag_affected_mom_family": tag_affected_mom_family,
         "tag_affected_prb_family": tag_affected_prb_family,
         "tag_affected_sib_family": tag_affected_sib_family,
+        "tag_unaffected_dad_family": tag_unaffected_dad_family,
+        "tag_unaffected_mom_family": tag_unaffected_mom_family,
+        "tag_unaffected_prb_family": tag_unaffected_prb_family,
+        "tag_unaffected_sib_family": tag_unaffected_sib_family,
         "tag_male_prb_family": tag_male_prb_family,
         "tag_female_prb_family": tag_female_prb_family,
         "tag_missing_mom_family": tag_missing_mom_family,
         "tag_missing_dad_family": tag_missing_dad_family,
     }
+
     def __init__(self):
         self._taggers = {}
         self._taggers.update(self.TAGS)
