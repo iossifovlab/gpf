@@ -1,5 +1,5 @@
 import {
-  ContentChild, ViewChildren, ViewChild, HostListener, Input, Component, ContentChildren, QueryList, OnChanges, AfterViewChecked, ChangeDetectorRef
+  ContentChild, ViewChildren, ViewChild, HostListener, Input, Component, ContentChildren, QueryList, OnChanges, AfterViewChecked, ChangeDetectorRef, ChangeDetectionStrategy
 } from '@angular/core';
 import { GpfTableColumnComponent } from './component/column.component';
 import { GpfTableSubheaderComponent } from './component/subheader.component';
@@ -15,7 +15,8 @@ export class SortInfo {
 @Component({
   selector: 'gpf-table',
   templateUrl: './table.component.html',
-  styleUrls: ['./table.component.css']
+  styleUrls: ['./table.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class GpfTableComponent implements OnChanges, AfterViewChecked {
   @ViewChild('table') public tableViewChild: any;
