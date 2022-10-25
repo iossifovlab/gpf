@@ -233,7 +233,7 @@ def test_datasets_permissions(admin_client, wdae_gpf_instance):
     assert len(response.data) == 18
 
     response = admin_client.get("/api/v3/datasets/permissions?page=3")
-    assert response.status_code == status.HTTP_404_NOT_FOUND
+    assert response.status_code == status.HTTP_204_NO_CONTENT
 
 
 def test_datasets_permissions_search(admin_client, wdae_gpf_instance):

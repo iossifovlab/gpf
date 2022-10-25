@@ -1,5 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import json
+import pytest
 
 from django.contrib.auth.models import Group
 from rest_framework import status
@@ -332,50 +333,56 @@ def test_cant_revoke_default_permissions(user_client, dataset):
         assert dataset.groups.filter(pk=group.pk).exists()
 
 
-def test_groups_pagination(admin_client, hundred_groups):
-    url = "/api/v3/groups?page=1"
+@pytest.mark.parametrize(
+    "page,status_code,length, first_name, last_name",
+    [
+        (1, status.HTTP_200_OK, 25, "Group1", "Group30"),
+        (2, status.HTTP_200_OK, 25, "Group31", "Group53"),
+        (3, status.HTTP_200_OK, 25, "Group54", "Group76"),
+        (4, status.HTTP_200_OK, 25, "Group77", "Group99"),
+        (5, status.HTTP_200_OK, 1, "admin", None),
+        (6, status.HTTP_204_NO_CONTENT, None, None, None),
+    ]
+)
+def test_groups_pagination(
+        admin_client, hundred_groups, page,
+        status_code, length, first_name, last_name
+):
+    url = f"/api/v3/groups?page={page}"
     response = admin_client.get(url)
-    assert len(response.data) == 25
-    assert response.data[0]["name"] == "Group1"
-    assert response.data[24]["name"] == "Group30"
-    url = "/api/v3/groups?page=2"
-    response = admin_client.get(url)
-    assert len(response.data) == 25
-    assert response.data[0]["name"] == "Group31"
-    assert response.data[24]["name"] == "Group53"
-    url = "/api/v3/groups?page=3"
-    response = admin_client.get(url)
-    assert len(response.data) == 25
-    assert response.data[0]["name"] == "Group54"
-    assert response.data[24]["name"] == "Group76"
-    url = "/api/v3/groups?page=4"
-    response = admin_client.get(url)
-    assert len(response.data) == 25
-    assert response.data[0]["name"] == "Group77"
-    assert response.data[24]["name"] == "Group99"
-    url = "/api/v3/groups?page=5"
-    response = admin_client.get(url)
-    assert len(response.data) == 1
-    assert response.data[0]["name"] == "admin"
+    assert response.status_code == status_code
+
+    if length is not None:
+        assert len(response.data) == length
+
+    if first_name is not None:
+        assert response.data[0]["name"] == first_name
+
+    if last_name is not None:
+        assert response.data[length - 1]["name"] == last_name
+
 
 def test_groups_search(admin_client, hundred_groups):
     url = "/api/v3/groups?search=Group1"
     response = admin_client.get(url)
     assert len(response.data) == 12
 
-def test_groups_search_pagination(admin_client, hundred_groups):
-    url = "/api/v3/groups?page=1&search=Group"
+
+@pytest.mark.parametrize(
+    "page,status_code,length",
+    [
+        (1, status.HTTP_200_OK, 25),
+        (2, status.HTTP_200_OK, 25),
+        (3, status.HTTP_200_OK, 25),
+        (4, status.HTTP_200_OK, 25),
+        (5, status.HTTP_204_NO_CONTENT, None),
+    ]
+)
+def test_groups_search_pagination(
+        admin_client, hundred_groups, page, status_code, length
+):
+    url = f"/api/v3/groups?page={page}&search=Group"
     response = admin_client.get(url)
-    assert len(response.data) == 25
-    url = "/api/v3/groups?page=2&search=Group"
-    response = admin_client.get(url)
-    assert len(response.data) == 25
-    url = "/api/v3/groups?page=3&search=Group"
-    response = admin_client.get(url)
-    assert len(response.data) == 25
-    url = "/api/v3/groups?page=4&search=Group"
-    response = admin_client.get(url)
-    assert len(response.data) == 25
-    url = "/api/v3/groups?page=5&search=Group"
-    response = admin_client.get(url)
-    assert response.status_code == status.HTTP_404_NOT_FOUND
+    assert response.status_code == status_code
+    if length is not None:
+        assert len(response.data) == length
