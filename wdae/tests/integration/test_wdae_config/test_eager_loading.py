@@ -1,6 +1,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613,C0415,
 
 import textwrap
+import requests
 
 import pytest
 
@@ -10,7 +11,7 @@ from dae.testing import setup_directories, setup_genome, \
 
 @pytest.fixture
 def gpf_fixture(tmp_path_factory):
-    root_path = tmp_path_factory.mktemp("wgp_instance")
+    root_path = tmp_path_factory.mktemp("eager_loading_wgpf_instance")
 
     setup_directories(root_path / "gpf_instance", {
         "gpf_instance.yaml": textwrap.dedent("""
@@ -77,3 +78,19 @@ def test_no_eager_loading(mocker, gpf_fixture, wdae_django_setup):
         assert server.url.startswith("http://localhost")
         assert not gpf_fixture.load.called
         assert not gpf_fixture.get_all_genotype_data.called
+
+
+def test_example_request(mocker, gpf_fixture, wdae_django_setup):
+
+    with wdae_django_setup(
+            gpf_fixture,
+            "tests.integration.test_wdae_config."
+            "eager_loading_true_settings") as server:
+
+        assert server.url.startswith("http://localhost")
+        response = requests.get(f"{server.url}/api/v3/datasets")
+
+        assert response.status_code == 200
+        assert "data" in response.json()
+        data = response.json()["data"]
+        assert len(data) == 0
