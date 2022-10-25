@@ -92,19 +92,19 @@ def test_password_validation():
     "page,status_code,length,first_email,last_email",
     [
         (
-            1, status.HTTP_200_OK, 25, 
+            1, status.HTTP_200_OK, 25,
             "admin@example.com", "user30@example.com"
         ),
         (
-            2, status.HTTP_200_OK, 25, 
+            2, status.HTTP_200_OK, 25,
             "user31@example.com", "user53@example.com"
         ),
         (
-            3, status.HTTP_200_OK, 25, 
+            3, status.HTTP_200_OK, 25,
             "user54@example.com", "user76@example.com"
         ),
         (
-            4, status.HTTP_200_OK, 25, 
+            4, status.HTTP_200_OK, 25,
             "user77@example.com", "user99@example.com"
         ),
         (5, status.HTTP_200_OK, 2, "user9@example.com", "user@example.com"),
@@ -133,6 +133,7 @@ def test_users_search(admin_client, hundred_users):
     url = "/api/v3/users?search=user9"
     response = admin_client.get(url)
     assert len(response.data) == 11
+
 
 @pytest.mark.parametrize(
     "page,status_code,length",
