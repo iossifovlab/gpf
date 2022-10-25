@@ -9,6 +9,7 @@ from query_base.query_base import QueryBaseView
 
 from dae.pedigrees.family import FamiliesData
 from dae.pedigrees.family_tag_builder import check_tag
+from dae.pedigrees.serializer import FamiliesTsvSerializer
 
 
 class VariantReportsView(QueryBaseView):
@@ -101,8 +102,10 @@ class FamilyCounterDownloadView(QueryBaseView):
             for family_id in counter_families
         })
 
+        serializer = FamiliesTsvSerializer(counter_families_data)
+
         response = StreamingHttpResponse(
-            counter_families_data.to_rows(),
+            serializer.serialize(),
             content_type="text/tab-separated-values"
         )
         response["Content-Disposition"] = "attachment; filename=families.ped"
@@ -115,7 +118,7 @@ class FamiliesDataDownloadView(QueryBaseView):
     def get(self, request, dataset_id):
         tags = request.GET.get("tags")
 
-        if dataset_id is None or dataset_id == "":
+        if not dataset_id:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
         study = self.gpf_instance.get_genotype_data(dataset_id)
@@ -147,8 +150,10 @@ class FamiliesDataDownloadView(QueryBaseView):
 
             result = FamiliesData.from_families(result)
 
+        serializer = FamiliesTsvSerializer(result)
+
         response = StreamingHttpResponse(
-            result.to_rows(),
+            serializer.serialize(),
             content_type="text/tab-separated-values"
         )
         response["Content-Disposition"] = "attachment; filename=families.ped"
