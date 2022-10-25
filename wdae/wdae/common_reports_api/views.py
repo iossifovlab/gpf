@@ -160,26 +160,3 @@ class FamiliesDataDownloadView(QueryBaseView):
         response["Expires"] = "0"
 
         return response
-
-
-class FamiliesDataDownloadView(QueryBaseView):
-    def get(self, request, dataset_id):
-        if not user_has_permission(
-            request.user, dataset_id
-        ):
-            return Response(status=status.HTTP_403_FORBIDDEN)
-
-        families_data = self.gpf_instance.get_common_report_families_data(
-            dataset_id
-        )
-        if not families_data:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-
-        response = StreamingHttpResponse(
-            families_data, content_type="text/tsv"
-        )
-
-        response["Content-Disposition"] = "attachment; filename=families.ped"
-        response["Expires"] = "0"
-
-        return response
