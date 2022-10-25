@@ -1,8 +1,30 @@
 import setuptools
 
+import os
+from pathlib import Path
+from typing import Dict, List
+
+def _expand_recursive_globs(root_dir: str, package_data: Dict[str, List[str]]) -> Dict[str, List[str]]:
+    root = (Path(__file__).parent / root_dir).resolve()
+    for module, patterns in package_data.items():
+        new_patterns = []
+        m_root = None
+        for p in patterns:
+            if "**" in p:
+                m_root = m_root or root / module.replace(".", os.sep)
+                for f in m_root.glob("**"):  # all subdirectories
+                    if f.name == "__pycache__":
+                        continue
+                    subdir_pattern = p.replace("**", str(f.relative_to(m_root)))
+                    new_patterns.append(subdir_pattern)
+            else:
+                new_patterns.append(p)
+        package_data[module] = new_patterns
+    return package_data
+
+
 with open("README.md", "r") as fh:
     long_description = fh.read()
-
 
 setuptools.setup(
     name="gpf_wdae",
@@ -18,13 +40,16 @@ setuptools.setup(
     ),
     include_package_data=True,
     package_dir={"": "wdae"},
-
-    package_data={"gpfjs": [
-        "static/gpfjs/*", "static/gpfjs/assets/*",
-        "static/empty/*",
-        "static/registration/*",
-        "static/oauth2_provider/*"], },
-
+    package_data=_expand_recursive_globs("wdae",{
+        "gpfjs": [
+            "static/**/*",
+            "templates/**/*",
+        ],
+        "users_api": [
+            "static/**/*",
+            "templates/**/*",
+        ]
+    }),
     scripts=[
         "wdae/wdaemanage.py",
         "wdae/wdae_create_dev_users.sh",
