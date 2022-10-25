@@ -4,7 +4,10 @@ import os
 from pathlib import Path
 from typing import Dict, List
 
-def _expand_recursive_globs(root_dir: str, package_data: Dict[str, List[str]]) -> Dict[str, List[str]]:
+
+def _expand_recursive_globs(
+        root_dir: str,
+        package_data: Dict[str, List[str]]) -> Dict[str, List[str]]:
     root = (Path(__file__).parent / root_dir).resolve()
     for module, patterns in package_data.items():
         new_patterns = []
@@ -15,7 +18,9 @@ def _expand_recursive_globs(root_dir: str, package_data: Dict[str, List[str]]) -
                 for f in m_root.glob("**"):  # all subdirectories
                     if f.name == "__pycache__":
                         continue
-                    subdir_pattern = p.replace("**", str(f.relative_to(m_root)))
+                    subdir_pattern = p.replace(
+                        "**", str(f.relative_to(m_root))
+                    )
                     new_patterns.append(subdir_pattern)
             else:
                 new_patterns.append(p)
@@ -40,7 +45,7 @@ setuptools.setup(
     ),
     include_package_data=True,
     package_dir={"": "wdae"},
-    package_data=_expand_recursive_globs("wdae",{
+    package_data=_expand_recursive_globs("wdae", {
         "gpfjs": [
             "static/**/*",
             "templates/**/*",
