@@ -114,11 +114,12 @@ def test_users_pagination(admin_client, hundred_users):
 
     url = "/api/v3/users?page=5"
     response = admin_client.get(url)
-    assert len(response.data) == 1
+    assert len(response.data) == 2
     assert response.data[0]["email"] == "user9@example.com"
-
-    for idx, user in enumerate(response.data):
-        print(f"{idx}: {user['email']}")
+    assert response.data[1]["email"] == "user@example.com"
+    url = "/api/v3/users?page=6"
+    response = admin_client.get(url)
+    assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
 def test_users_search(admin_client, hundred_users):
@@ -153,5 +154,9 @@ def test_users_search_pagination(admin_client, hundred_users):
         print(f"{idx}: {user['email']}")
 
     url = "/api/v3/users?page=5&search=user"
+    response = admin_client.get(url)
+    assert len(response.data) == 1
+
+    url = "/api/v3/users?page=6&search=user"
     response = admin_client.get(url)
     assert response.status_code == status.HTTP_404_NOT_FOUND

@@ -52,7 +52,7 @@ def fake_dataset(db):
 
 
 @pytest.fixture()
-def hundred_users(db):
+def hundred_users(db, user):
     user_model = get_user_model()
     users_data = []
     for i in range(100):
