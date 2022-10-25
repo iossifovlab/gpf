@@ -1,9 +1,7 @@
-import setuptools
-
-import os
-import sys
 from pathlib import Path
 from typing import Dict, List
+
+import setuptools
 
 
 def _expand_recursive_globs(
