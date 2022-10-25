@@ -378,4 +378,4 @@ def test_groups_search_pagination(admin_client, hundred_groups):
     assert len(response.data) == 25
     url = "/api/v3/groups?page=5&search=Group"
     response = admin_client.get(url)
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.status_code == status.HTTP_404_NOT_FOUND
