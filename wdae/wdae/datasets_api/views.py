@@ -283,7 +283,7 @@ class DatasetPermissionsView(QueryBaseView):
             })
 
         if len(dataset_details) == 0:
-            return Response(status=status.HTTP_404_NOT_FOUND)
+            return Response(status=status.HTTP_204_NO_CONTENT)
 
         return Response(dataset_details)
 
