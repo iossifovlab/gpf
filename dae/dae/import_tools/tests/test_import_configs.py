@@ -265,3 +265,10 @@ def test_del_chrom_prefix_already_deleted(resources_dir):
     project = import_tools.ImportProject.build_from_config(config)
     with pytest.raises(ValueError):
         project._get_variant_loader("vcf")
+
+
+def test_input_in_external_file(resources_dir):
+    config_fn = resources_dir / "external_input" / "import_config.yaml"
+    project = import_tools.ImportProject.build_from_file(config_fn)
+
+    assert project.input_dir == f"{resources_dir}/external_input/files/"

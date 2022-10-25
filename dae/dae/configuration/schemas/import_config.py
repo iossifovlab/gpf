@@ -37,35 +37,42 @@ _loader_processing_schema = {
     ],
 }
 
+embedded_input_schema = {
+    "vcf": {
+        "type": "dict",
+        "schema": {},
+    },
+    "denovo": {
+        "type": "dict",
+        "schema": {},
+    },
+    "cnv": {
+        "type": "dict",
+        "schema": {},
+    },
+    "dae": {
+        "type": "dict",
+        "schema": {},
+    },
+    "pedigree": {
+        "type": "dict",
+        "schema": {
+            "file": {"type": "string", "required": True},
+        },
+    },
+    "input_dir": {"type": "string"}
+}
+
 import_config_schema = {
     "id": {"type": "string"},
     "input": {
         "type": "dict",
-        "schema": {
-            "vcf": {
-                "type": "dict",
-                "schema": {},
+        "anyof_schema": [
+            {
+                "file": {"type": "string"}
             },
-            "denovo": {
-                "type": "dict",
-                "schema": {},
-            },
-            "cnv": {
-                "type": "dict",
-                "schema": {},
-            },
-            "dae": {
-                "type": "dict",
-                "schema": {},
-            },
-            "pedigree": {
-                "type": "dict",
-                "schema": {
-                    "file": {"type": "string", "required": True},
-                },
-            },
-            "input_dir": {"type": "string"}
-        },
+            embedded_input_schema
+        ],
     },
     "processing_config": {
         "type": "dict",
@@ -134,23 +141,23 @@ import_config_schema = {
 def _fill_with_loader_arguments():
     _set_loader_args(
         VcfLoader,
-        import_config_schema["input"]["schema"]["vcf"]["schema"],
+        import_config_schema["input"]["anyof_schema"][1]["vcf"]["schema"],
         "vcf_")
     _set_loader_args(
         DenovoLoader,
-        import_config_schema["input"]["schema"]["denovo"]["schema"],
+        import_config_schema["input"]["anyof_schema"][1]["denovo"]["schema"],
         "denovo_")
     _set_loader_args(
         CNVLoader,
-        import_config_schema["input"]["schema"]["cnv"]["schema"],
+        import_config_schema["input"]["anyof_schema"][1]["cnv"]["schema"],
         "cnv_")
     _set_loader_args(
         DaeTransmittedLoader,
-        import_config_schema["input"]["schema"]["dae"]["schema"],
+        import_config_schema["input"]["anyof_schema"][1]["dae"]["schema"],
         "dae_")
     _copy_loader_args(
         FamiliesLoader,
-        import_config_schema["input"]["schema"]["pedigree"]["schema"],
+        import_config_schema["input"]["anyof_schema"][1]["pedigree"]["schema"],
         "ped_")
 
 

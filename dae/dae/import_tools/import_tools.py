@@ -24,7 +24,8 @@ from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.import_tools.task_graph import DaskExecutor, SequentialExecutor,\
     TaskGraph
 from dae.pedigrees.family import FamiliesData
-from dae.configuration.schemas.import_config import import_config_schema
+from dae.configuration.schemas.import_config import import_config_schema,\
+    embedded_input_schema
 from dae.pedigrees.loader import FamiliesLoader
 from dae.utils import fs_utils
 from dae.impala_storage.schema1.import_commons import MakefilePartitionHelper,\
@@ -79,7 +80,8 @@ class ImportProject():
         import_config = GPFConfigParser.validate_config(import_config,
                                                         import_config_schema)
         normalizer = ImportConfigNormalizer()
-        import_config = normalizer.normalize(import_config)
+        import_config, base_input_dir = \
+            normalizer.normalize(import_config, base_input_dir)
         return ImportProject(
             import_config, base_input_dir, gpf_instance=gpf_instance)
 
@@ -477,12 +479,16 @@ class ImportConfigNormalizer:
     """Class to normalize import configs.
 
     Most of the normalization is done by Cerberus but it fails short in a few
-    cases. This class picks up the slack.
+    cases. This class picks up the slack. It also reads external files and
+    embeds them in the final configuration dict.
     """
 
-    def normalize(self, import_config: dict):
+    def normalize(self, import_config: dict, base_input_dir: str):
         """Normalize the import config."""
         config = deepcopy(import_config)
+        base_input_dir = self._load_external_files(
+            config, base_input_dir
+        )
         self._map_for_key(config, "region_length", self._int_shorthand)
         self._map_for_key(config, "chromosomes", self._normalize_chrom_list)
         if "parquet_row_group_size" in config:
@@ -490,7 +496,32 @@ class ImportConfigNormalizer:
             for loader in ["vcf", "denovo", "dae", "cnv"]:
                 self._map_for_key(group_size_config, loader,
                                   self._int_shorthand)
-        return config
+        return config, base_input_dir
+
+    @classmethod
+    def _load_external_files(cls, config, base_input_dir):
+        base_input_dir = cls._load_external_file(
+            config, "input", base_input_dir, embedded_input_schema
+        )
+        return base_input_dir
+
+    @staticmethod
+    def _load_external_file(config, section_key, base_input_dir, schema):
+        if section_key not in config:
+            return base_input_dir
+
+        sub_config = config[section_key]
+        while "file" in sub_config:
+            external_fn = os.path.join(base_input_dir, sub_config["file"])
+            sub_config = GPFConfigParser.parse_and_interpolate_file(
+                external_fn
+            )
+            sub_config = GPFConfigParser.validate_config(
+                sub_config, schema
+            )
+            base_input_dir = os.path.dirname(os.path.realpath(external_fn))
+        config[section_key] = sub_config
+        return base_input_dir
 
     @classmethod
     def _map_for_key(cls, config, key, func):

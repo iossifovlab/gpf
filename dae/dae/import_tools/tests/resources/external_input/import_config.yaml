@@ -1,0 +1,13 @@
+id: test_import
+
+input:
+  file: files/input.yaml
+
+partition_description:
+  region_bin:
+    chromosomes: 1, 2, 3, 4
+    region_length: 100000000
+  family_bin:
+    family_bin_size: 10
+  frequency_bin:
+    rare_boundary: 5
