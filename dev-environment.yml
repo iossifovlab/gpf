@@ -23,7 +23,7 @@ dependencies:
   - pytest-mock=3.10.0
   - pytest-django=4.5.2
   - pytest-doctestplus=0.12.1
-  - pylint=2.15.3
+  - pylint=2.13.8
 # Remove pinned version of Werkzeug when https://github.com/spulec/moto/issues/5341 is fixed
   - werkzeug=2.1.2
   - moto=3.1.16
