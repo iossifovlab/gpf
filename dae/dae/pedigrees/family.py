@@ -330,6 +330,39 @@ class Family:
             "tags": self.tags
         }
 
+    def get_columns(self):
+        column_names = set(self.members_in_order[0]._attributes.keys())
+        columns = [
+            col
+            for col in PEDIGREE_COLUMN_NAMES.values()
+            if col in column_names
+            or col in ["generated", "not_sequenced"]
+        ]
+        extension_columns = column_names.difference(set(columns))
+        extension_columns = extension_columns.difference(
+            set(["sample_index"])
+        )
+        columns.extend(sorted(extension_columns))
+        return columns
+
+    def to_rows(self, sep="\t", columns=None):
+        if columns is None:
+            columns = self.get_columns()
+        rows = []
+        for member in self.full_members:
+            record = copy.deepcopy(member._attributes)
+            record["mom_id"] = member.mom_id if member.mom_id else "0"
+            record["dad_id"] = member.dad_id if member.dad_id else "0"
+            record["generated"] = member.generated \
+                if member.generated else False
+            record["not_sequenced"] = member.not_sequenced \
+                if member.not_sequenced else False
+            row = []
+            for col in columns:
+                row.append(str(record[col]))
+            rows.append(f"{sep.join(row)}\n")
+        return rows
+
     def add_members(self, persons: List[Person]) -> None:
         assert all(isinstance(p, Person) for p in persons)
         assert all(p.family_id == self.family_id for p in persons)
@@ -661,6 +694,14 @@ class FamiliesData(Mapping[str, Family]):
             self._ped_df = ped_df
 
         return self._ped_df
+
+    def to_rows(self, sep="\t", columns=None) -> List[str]:
+        if columns is None:
+            columns = list(self.values())[0].get_columns()
+        rows = [f"{sep.join(columns)}\n"]
+        for family in self.values():
+            rows.extend(family.to_rows(sep=sep, columns=columns))
+        return rows
 
     def copy(self) -> FamiliesData:
         """Build a copy of a families data object."""
