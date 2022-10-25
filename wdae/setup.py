@@ -1,6 +1,7 @@
 import setuptools
 
 import os
+import sys
 from pathlib import Path
 from typing import Dict, List
 
@@ -11,15 +12,16 @@ def _expand_recursive_globs(
     root = (Path(__file__).parent / root_dir).resolve()
     for module, patterns in package_data.items():
         new_patterns = []
-        m_root = None
+        module_root = root / module
         for p in patterns:
             if "**" in p:
-                m_root = m_root or root / module.replace(".", os.sep)
-                for f in m_root.glob("**"):  # all subdirectories
+                pattern_prefix = p.split("**")[0]
+                path_to_glob = module_root / pattern_prefix
+                for f in path_to_glob.glob("**"):  # all subdirectories
                     if f.name == "__pycache__":
                         continue
                     subdir_pattern = p.replace(
-                        "**", str(f.relative_to(m_root))
+                        "**", str(f.relative_to(path_to_glob))
                     )
                     new_patterns.append(subdir_pattern)
             else:
