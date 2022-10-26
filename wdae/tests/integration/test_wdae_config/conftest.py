@@ -12,6 +12,14 @@ class LiveServer:
     """The liveserver fixture.
 
     Copied from `pytest_django`: https://github.com/pytest-dev/pytest-django/
+
+    This class is an exact copy of the one from the `pytest-django` plugin.
+    The problem with using this class directly from the `pytest_django` package
+    is that when I import the `pytest_django.live_server_helpers.LiveServer`
+    class, it triggers the initialization of the `pytest_django` plugin,
+    which initializes our Django application. And there is no way
+    (or at least I was unable to find one) to control how the Django
+    application is initialized.
     """
 
     def __init__(self, addr: str) -> None:
