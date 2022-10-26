@@ -5,7 +5,7 @@ from pathlib import Path
 from django.apps import AppConfig
 from django.conf import settings
 
-from gpf_instance.gpf_instance import load_gpf_instance
+from gpf_instance.gpf_instance import build_wgpf_instance
 
 logger = logging.getLogger(__name__)
 
@@ -26,15 +26,14 @@ class WDAEConfig(AppConfig):
 
             logger.error("GPF instance config: %s", config_filename)
 
+        gpf_instance = build_wgpf_instance(config_filename)
+
         if not settings.STUDIES_EAGER_LOADING:
-            load_gpf_instance(config_filename)
             logger.info("skip preloading gpf instance...")
             return
 
         try:
-            logger.warning(
-                "calling load_gpf_instance with STUDIES_EAGER_LOADING=True")
-            gpf_instance = load_gpf_instance(config_filename)
+            logger.warning("eager loading of GPF instance and studies")
             gpf_instance.load()
             result = gpf_instance.get_all_genotype_data()
             logger.info("preloading studies: %s", result)

@@ -296,14 +296,14 @@ class WGPFInstance(GPFInstance):
 
 
 def get_gpf_instance(config_filename=None) -> WGPFInstance:
-    load_gpf_instance(config_filename)
+    build_wgpf_instance(config_filename)
     _recreated_dataset_perm()
     if _GPF_INSTANCE is None:
         raise ValueError("can't create an WGPFInstance")
     return _GPF_INSTANCE
 
 
-def load_gpf_instance(config_filename=None) -> WGPFInstance:
+def build_wgpf_instance(config_filename=None) -> WGPFInstance:
     """Load and return a WGPFInstance."""
     # pylint: disable=global-statement
     global _GPF_INSTANCE
