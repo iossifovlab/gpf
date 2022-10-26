@@ -4,10 +4,6 @@
 # pylint: disable=wildcard-import,unused-wildcard-import
 from .default_settings import *
 
-INSTALLED_APPS += [
-    "gpf_instance.apps.WDAEConfig",
-]
-
 ALLOWED_HOSTS += ["localhost"]
 
 CORS_ORIGIN_WHITELIST = [
@@ -23,7 +19,5 @@ CORS_ORIGIN_WHITELIST = [
 ]
 
 CORS_ALLOW_CREDENTIALS = True
-
-STUDIES_EAGER_LOADING = False
 
 OPEN_REGISTRATION = True

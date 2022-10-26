@@ -6,8 +6,6 @@ from typing import Optional, List, Dict
 from threading import Lock
 from functools import cached_property
 
-from django.conf import settings
-
 from studies.study_wrapper import StudyWrapper, RemoteStudyWrapper, \
     StudyWrapperBase
 from studies.remote_study_db import RemoteStudyDB
@@ -298,14 +296,14 @@ class WGPFInstance(GPFInstance):
 
 
 def get_gpf_instance(config_filename=None) -> WGPFInstance:
-    load_gpf_instance(config_filename)
+    build_wgpf_instance(config_filename)
     _recreated_dataset_perm()
     if _GPF_INSTANCE is None:
         raise ValueError("can't create an WGPFInstance")
     return _GPF_INSTANCE
 
 
-def load_gpf_instance(config_filename=None) -> WGPFInstance:
+def build_wgpf_instance(config_filename=None) -> WGPFInstance:
     """Load and return a WGPFInstance."""
     # pylint: disable=global-statement
     global _GPF_INSTANCE
@@ -314,8 +312,6 @@ def load_gpf_instance(config_filename=None) -> WGPFInstance:
         with _GPF_INSTANCE_LOCK:
             if _GPF_INSTANCE is None:
                 gpf_instance = WGPFInstance.build(config_filename)
-                if settings.STUDIES_EAGER_LOADING:
-                    gpf_instance.load()
                 gpf_instance.load_remotes()
 
                 _GPF_INSTANCE = gpf_instance

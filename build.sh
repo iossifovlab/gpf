@@ -310,7 +310,7 @@ EOT
     build_run_container cp ./results/wdae-junit.xml ./test-results/
   }
 
-  build_stage "Tests - integration"
+  build_stage "Tests - dae integration"
   {
     # Run integration tests located at gpf/tests
   
@@ -330,26 +330,64 @@ EOT
         pip install -e .'
     done
 
-    # Run integration tests in gpf/tests
+    # Run integration tests in gpf/dae/tests
     build_run_container bash -c '
         cd /wd/dae/tests;
         export PYTHONHASHSEED=0;
         /opt/conda/bin/conda run --no-capture-output -n gpf py.test -v \
           --durations 20 \
           --cov-config /wd/coveragerc \
-          --junitxml=/wd/results/tests-junit.xml \
-          --cov dae \
+          --junitxml=/wd/results/dae-tests-junit.xml \
+          --cov .. \
           . || true'
 
-    # Combane coverage information from tests in dae/, wdae/ and tests/
-    build_run_container coverage combine dae/.coverage wdae/.coverage dae/tests/.coverage
+    # Copy test and results and coverage information in test results directory
+    build_run_container cp ./results/dae-tests-junit.xml coverage.xml ./test-results/
+
+  }
+
+
+  build_stage "Tests - wdae integration"
+  {
+    # Run integration tests located at gpf/wdae/tests
+  
+    # Setup execution context
+    build_run_ctx_init "container" "${gpf_dev_image_ref}" \
+      --network "${ctx_network["network_id"]}" \
+      --env DAE_DB_DIR="/wd/data/data-hg19-local/" \
+      --env GRR_DEFINITION_FILE="/wd/cache/grr_definition.yaml" \
+      --env TEST_REMOTE_HOST="gpfremote" \
+      --env DAE_HDFS_HOST="impala" \
+      --env DAE_IMPALA_HOST="impala"
+
+    defer_ret build_run_ctx_reset
+
+    for d in /wd/dae /wd/wdae /wd/dae_conftests; do
+      build_run_container bash -c 'cd "'"${d}"'"; /opt/conda/bin/conda run --no-capture-output -n gpf \
+        pip install -e .'
+    done
+
+    # Run integration tests in gpf/wdae/tests
+    build_run_container bash -c '
+        cd /wd/wdae/tests;
+        export PYTHONHASHSEED=0;
+        /opt/conda/bin/conda run --no-capture-output -n gpf py.test -v \
+          --durations 20 \
+          --cov-config /wd/coveragerc \
+          --junitxml=/wd/results/wdae-tests-junit.xml \
+          --cov .. \
+          . || true'
+
+    # Copy test and results and coverage information in test results directory
+    build_run_container cp ./results/wdae-tests-junit.xml coverage.xml ./test-results/
+
+    # Combine coverage information from tests in dae/, wdae/ and tests/
+    build_run_container coverage combine dae/.coverage wdae/.coverage dae/tests/.coverage wdae/tests/.coverage
 
     # Convert coverage information to XML coberture format
     build_run_container coverage xml
     build_run_container coverage html --title GPF -d ./test-results/coverage-html
 
-    # Copy test and results and coverage information in test results directory
-    build_run_container cp ./results/tests-junit.xml coverage.xml ./test-results/
   }
 
   build_stage "Package"
