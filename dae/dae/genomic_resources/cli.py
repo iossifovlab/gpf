@@ -31,7 +31,7 @@ from dae.genomic_resources.repository_factory import \
     build_genomic_resource_repository
 
 
-logger = logging.getLogger(__file__)
+logger = logging.getLogger("grr_manage")
 
 
 def _add_repository_resource_parameters_group(parser, use_resource=True):
@@ -475,19 +475,25 @@ def cli_manage(cli_args=None):
     _configure_repo_repair_subparser(commands_parser)
     _configure_resource_repair_subparser(commands_parser)
 
-    args = parser.parse_args(cli_args or sys.argv[1:])
+    args = parser.parse_args(cli_args)
     VerbosityConfiguration.set(args)
 
     if args.version:
         print(f"GPF version: {VERSION} ({RELEASE})")
         sys.exit(0)
 
-    command, repo_url = args.command, args.repository
+    command = args.command
+    if command is None:
+        logger.error("missing grr_manage subcommand")
+        parser.print_help()
+        sys.exit(1)
+
     if command == "repo-init":
         _run_repo_init_command(**vars(args))
         return
 
-    if args.repository is None:
+    repo_url = args.repository
+    if repo_url is None:
         repo_url = find_directory_with_a_file(GR_CONTENTS_FILE_NAME)
         if repo_url is None:
             logger.error(

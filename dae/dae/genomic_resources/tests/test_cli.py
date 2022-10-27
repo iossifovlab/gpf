@@ -41,6 +41,23 @@ def test_cli_manifest(repo_fixture, tmp_path):
     assert (tmp_path / "one/.MANIFEST").is_file()
 
 
+def test_cli_without_arguments(repo_fixture, tmp_path, mocker, capsys):
+    # Given
+    cli_manage(["repo-manifest", "-R", str(tmp_path)])
+    mocker.patch("os.getcwd", return_value=str(tmp_path))
+    capsys.readouterr()
+
+    # When
+    with pytest.raises(SystemExit, match="1"):
+        cli_manage([])
+
+        # Then
+        out, err = capsys.readouterr()
+
+        assert err == ""
+        assert out.startswith("usage: py.test [-h] [--version] [--verbose]")
+
+
 def test_cli_list(repo_fixture, tmp_path, capsys):
 
     cli_manage(["list", "-R", str(tmp_path)])
@@ -52,9 +69,10 @@ def test_cli_list(repo_fixture, tmp_path, capsys):
         "gene_models          1.0      2           50 sub/two\n"
 
 
-def test_cli_list_without_repo_argument(repo_fixture, tmp_path, capsys, mocker):
+def test_cli_list_without_repo_argument(
+        repo_fixture, tmp_path, capsys, mocker):
     # Given
-    cli_manage(["repo-repair", "-R", str(tmp_path)])
+    cli_manage(["repo-manifest", "-R", str(tmp_path)])
     mocker.patch("os.getcwd", return_value=str(tmp_path))
     capsys.readouterr()
 
