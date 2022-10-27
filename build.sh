@@ -342,7 +342,7 @@ EOT
           . || true'
 
     # Copy test and results and coverage information in test results directory
-    build_run_container cp ./results/dae-tests-junit.xml coverage.xml ./test-results/
+    build_run_container cp ./results/dae-tests-junit.xml ./test-results/
 
   }
 
@@ -379,13 +379,15 @@ EOT
           . || true'
 
     # Copy test and results and coverage information in test results directory
-    build_run_container cp ./results/wdae-tests-junit.xml coverage.xml ./test-results/
+    build_run_container cp ./results/wdae-tests-junit.xml ./test-results/
 
     # Combine coverage information from tests in dae/, wdae/ and tests/
     build_run_container coverage combine dae/.coverage wdae/.coverage dae/tests/.coverage wdae/tests/.coverage
 
     # Convert coverage information to XML coberture format
     build_run_container coverage xml
+    build_run_container cp coverage.xml ./test-results/
+
     build_run_container coverage html --title GPF -d ./test-results/coverage-html
 
   }
