@@ -47,6 +47,28 @@ def test_repo_manifest_simple(proto_fixture, tmp_path):
     assert (tmp_path / GR_CONTENTS_FILE_NAME).exists()
 
 
+def test_repo_manifest_no_agruments(proto_fixture, tmp_path, mocker, capsys):
+    # Given
+    cli_manage([
+        "repo-manifest", "-R", str(tmp_path)])
+    mocker.patch("os.getcwd", return_value=str(tmp_path))
+    capsys.readouterr()
+
+    # When
+    cli_manage(["repo-manifest"])
+
+    # Then
+    out, err = capsys.readouterr()
+
+    assert out.startswith(f"working with repository: {tmp_path}\n")
+    assert err == \
+        "manifest of <one> is up to date\n" \
+        "manifest of <sub/two> is up to date\n" \
+        "manifest of <sub/two(1.0)> is up to date\n" \
+        "manifest of <three(2.0)> is up to date\n" \
+        "manifest of <xxxxx-genome> is up to date\n"
+
+
 def test_check_manifest_update(proto_fixture, tmp_path):
     # Given
     res = proto_fixture.get_resource("one")
@@ -174,6 +196,26 @@ def test_resource_dry_run_manifest_no_update_message(
     captured = capsys.readouterr()
     print(captured.err)
     assert captured.err == \
+        "manifest of <one> is up to date\n"
+
+
+def test_resource_manifest_no_agruments(
+        proto_fixture, tmp_path, mocker, capsys):
+    # Given
+    cli_manage([
+        "repo-manifest", "-R", str(tmp_path)])
+
+    mocker.patch("os.getcwd", return_value=str(tmp_path / "one"))
+    capsys.readouterr()
+
+    # When
+    cli_manage(["resource-manifest"])
+
+    # Then
+    out, err = capsys.readouterr()
+
+    assert out.startswith(f"working with repository: {tmp_path}\n")
+    assert err == \
         "manifest of <one> is up to date\n"
 
 
