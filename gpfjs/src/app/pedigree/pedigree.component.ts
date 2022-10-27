@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, ViewChild } from '@angular/core';
 import { NgbModal, NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
 import { ConfigService } from 'app/config/config.service';
 import { DatasetsService } from 'app/datasets/datasets.service';
@@ -18,6 +18,7 @@ export class PedigreeComponent {
   @Input() public pedigreeMaxHeight: number;
 
   @Input() public modalSimpleView = true;
+  @ViewChild('pedigreeModal') public pedigreeModal;
   public modal: NgbModalRef;
   public familyIdsList: string[];
   public pedigreeScale = 2.5;
@@ -43,10 +44,14 @@ export class PedigreeComponent {
     });
   }
 
-  public openModal(pedigreeModal): void {
+  public openModal(): void {
+    if (this.modalService.hasOpenModals()) {
+      return;
+    }
+
     this.loadFamilyListData();
     this.modal = this.modalService.open(
-      pedigreeModal,
+      this.pedigreeModal,
       {animation: false, centered: true, size: 'lg', windowClass: 'pedigree-modal'}
     );
   }

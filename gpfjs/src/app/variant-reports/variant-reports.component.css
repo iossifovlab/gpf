@@ -268,3 +268,8 @@ ng-multiselect-dropdown > span.selected-item {
   cursor: pointer;
   user-select: none;
 }
+
+:host::ng-deep gpf-common-reports-pedigree-cell {
+  display: flex;
+  justify-content: center;
+}

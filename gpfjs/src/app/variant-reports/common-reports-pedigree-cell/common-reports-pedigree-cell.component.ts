@@ -1,4 +1,5 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, ViewChild } from '@angular/core';
+import { PedigreeComponent } from 'app/pedigree/pedigree.component';
 import { PedigreeCounter } from '../variant-reports';
 
 @Component({
@@ -8,5 +9,10 @@ import { PedigreeCounter } from '../variant-reports';
 })
 export class CommonReportsPedigreeCellComponent {
   @Input() public pedigree: PedigreeCounter;
+  @ViewChild(PedigreeComponent) public pedigreeComponent: PedigreeComponent;
   public pedigreeMaxWidth = 300;
+
+  public openModal(): void {
+    this.pedigreeComponent.openModal();
+  }
 }
