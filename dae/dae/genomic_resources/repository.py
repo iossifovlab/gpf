@@ -30,12 +30,15 @@ from dataclasses import dataclass, asdict
 import abc
 import yaml
 
+from dae.genomic_resources.templates import resource_template
+
 logger = logging.getLogger(__name__)
 
 
 GR_CONF_FILE_NAME = "genomic_resource.yaml"
 GR_MANIFEST_FILE_NAME = ".MANIFEST"
 GR_CONTENTS_FILE_NAME = ".CONTENTS"
+GR_INDEX_FILE_NAME = "index.html"
 
 GR_ENCODING = "utf-8"
 
@@ -328,6 +331,10 @@ class GenomicResource:
         return self.proto.get_file_content(
             self, filename, uncompress=uncompress, mode=mode)
 
+    def build_index(self) -> str:
+        """Build an index HTML file for the resource."""
+        return resource_template.render(data=self.get_config())
+
     def open_raw_file(
             self, filename, mode="rt", **kwargs):
         """Open a file in the resource and returns a File-like object."""
@@ -589,11 +596,16 @@ class ReadWriteRepositoryProtocol(ReadOnlyRepositoryProtocol):
         return manifest
 
     def save_manifest(self, resource, manifest: Manifest):
-        """Save manifest into genomic resources directory."""
+        """Save manifest into genomic resource's directory."""
         with self.open_raw_file(
                 resource, GR_MANIFEST_FILE_NAME, "wt") as outfile:
             yaml.dump(manifest.to_manifest_entries(), outfile)
         resource.invalidate()
+
+    def save_index(self, resource: GenomicResource, contents: str):
+        """Save an index HTML file into the genomic resource's directory."""
+        with self.open_raw_file(resource, GR_INDEX_FILE_NAME, "wt") as outfile:
+            outfile.write(contents)
 
     def get_manifest(self, resource):
         """Load or build a resource manifest."""

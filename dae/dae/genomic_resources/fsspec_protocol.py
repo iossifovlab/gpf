@@ -23,7 +23,10 @@ from dae.genomic_resources.repository import GR_CONF_FILE_NAME, Manifest, \
     GenomicResource, \
     parse_resource_id_version, \
     GR_CONTENTS_FILE_NAME, \
-    GR_MANIFEST_FILE_NAME
+    GR_MANIFEST_FILE_NAME, \
+    GR_INDEX_FILE_NAME
+
+from dae.genomic_resources.templates import repository_template
 
 
 logger = logging.getLogger(__name__)
@@ -497,6 +500,17 @@ class FsspecReadWriteProtocol(
             yaml.dump(content, outfile)
 
         return content
+
+    def build_index_file(self):
+        """Build an index HTML file for the repository."""
+        res = {}
+        for resource in self.get_all_resources():
+            res[resource.resource_id] = resource.config
+        content_filepath = os.path.join(self.url, GR_INDEX_FILE_NAME)
+        with self.filesystem.open(
+            content_filepath, "wt", encoding="utf8"
+        ) as outfile:
+            outfile.write(repository_template.render(data=res))
 
 
 def build_local_resource(

@@ -208,6 +208,16 @@ def _configure_resource_repair_subparser(subparsers):
     DaskClient.add_arguments(parser)
 
 
+def _configure_repo_info_subparser(subparsers):
+    parser = subparsers.add_parser(
+        "repo-info", help="Build the index.html for the whole GRR"
+    )
+    _add_repository_resource_parameters_group(parser)
+    _add_dry_run_and_force_parameters_group(parser)
+
+    DaskClient.add_arguments(parser)
+
+
 def collect_dvc_entries(
         proto: ReadWriteRepositoryProtocol,
         res: GenomicResource) -> Dict[str, ManifestEntry]:
@@ -451,6 +461,25 @@ def _run_resource_repair_command(proto, repo_url, region_size, **kwargs):
             client, proto, res, dry_run, force, region_size)
 
 
+def _run_repo_info_command(proto, **kwargs):
+    dry_run = kwargs.get("dry_run", False)
+    force = kwargs.get("force", False)
+
+    if dry_run and force:
+        logger.warning("please choose one of 'dry_run' and 'force' options")
+        return
+
+    # for res in proto.get_all_resources():
+        # Generate separate resource indices
+
+    proto.build_index_file()
+
+
+
+def _run_resource_info_command(proto, repo_url, **kwargs):
+    raise NotImplementedError()
+
+
 def cli_manage(cli_args=None):
     """Provide CLI for repository management."""
     # pylint: disable=too-many-branches,too-many-statements
@@ -474,6 +503,8 @@ def cli_manage(cli_args=None):
     _configure_resource_hist_subparser(commands_parser)
     _configure_repo_repair_subparser(commands_parser)
     _configure_resource_repair_subparser(commands_parser)
+    _configure_repo_info_subparser(commands_parser)
+    # _configure_resource_inf_subparser(commands_parser)
 
     args = parser.parse_args(cli_args)
     VerbosityConfiguration.set(args)
@@ -524,6 +555,10 @@ def cli_manage(cli_args=None):
         _run_repo_repair_command(proto, **vars(args))
     elif command == "resource-repair":
         _run_resource_repair_command(proto, repo_url, **vars(args))
+    elif command == "repo-info":
+        _run_repo_info_command(proto, **vars(args))
+    elif command == "resource-info":
+        _run_resource_info_command(proto, repo_url, **vars(args))
     else:
         logger.error(
             "Unknown command %s. The known commands are index, "
