@@ -493,6 +493,7 @@ def cli_manage(cli_args=None):
             logger.error(
                 "Can't find repository starting from: %s", os.getcwd())
             sys.exit(1)
+        repo_url = str(repo_url)
         print("working with repository:", repo_url)
 
     proto = _create_proto(repo_url, args.extra_args)

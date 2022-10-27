@@ -52,6 +52,24 @@ def test_cli_list(repo_fixture, tmp_path, capsys):
         "gene_models          1.0      2           50 sub/two\n"
 
 
+def test_cli_list_without_repo_argument(repo_fixture, tmp_path, capsys, mocker):
+    # Given
+    cli_manage(["repo-repair", "-R", str(tmp_path)])
+    mocker.patch("os.getcwd", return_value=str(tmp_path))
+    capsys.readouterr()
+
+    # When
+    cli_manage(["list"])
+
+    # Then
+    out, err = capsys.readouterr()
+    assert err == ""
+    assert out == \
+        f"working with repository: {str(tmp_path)}\n" \
+        "Basic                0        2            7 one\n" \
+        "gene_models          1.0      2           50 sub/two\n"
+
+
 def test_find_repo_dir_simple(repo_fixture, tmp_path):
     os.chdir(tmp_path)
     res = find_directory_with_a_file(GR_CONTENTS_FILE_NAME)
