@@ -1,6 +1,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import json
 import pytest
+from rest_framework import status  # type: ignore
 from dae.configuration.gpf_config_parser import FrozenBox
 
 pytestmark = pytest.mark.usefixtures(
@@ -217,3 +218,25 @@ def test_datasets_hierarchy(admin_client, wdae_gpf_instance):
         "name": "Dataset1",
         "access_rights": True,
     }
+
+
+def test_datasets_permissions(admin_client, wdae_gpf_instance):
+    response = admin_client.get("/api/v3/datasets/permissions")
+    assert len(response.data) == 25
+    assert set(response.data[0].keys()) == set([
+        "dataset_id",
+        "dataset_name",
+        "users",
+        "groups"
+    ])
+    response = admin_client.get("/api/v3/datasets/permissions?page=2")
+    assert len(response.data) == 18
+
+    response = admin_client.get("/api/v3/datasets/permissions?page=3")
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+
+
+def test_datasets_permissions_search(admin_client, wdae_gpf_instance):
+    response = admin_client.get("/api/v3/datasets/permissions?search=we2014")
+    assert len(response.data) == 1
+    assert response.data[0]["dataset_id"] == "iossifov_we2014_test"

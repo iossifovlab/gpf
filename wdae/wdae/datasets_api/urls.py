@@ -34,6 +34,11 @@ urlpatterns = [
         name="dataset_hierarchy"
     ),
     re_path(
+        r"^/permissions/?$",
+        views.DatasetPermissionsView.as_view(),
+        name="management_details"
+    ),
+    re_path(
         r"^/(?P<dataset_id>.+)$",
         views.DatasetView.as_view(),
         name="dataset"

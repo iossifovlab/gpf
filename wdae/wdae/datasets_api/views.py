@@ -1,5 +1,7 @@
 import os
 
+from django.contrib.auth import get_user_model
+from django.conf import settings
 from rest_framework.response import Response  # type: ignore
 from rest_framework import status  # type: ignore
 
@@ -228,6 +230,62 @@ class DatasetDescriptionView(QueryBaseView):
         genotype_data.description = description
 
         return Response(status=status.HTTP_200_OK)
+
+
+class DatasetPermissionsView(QueryBaseView):
+
+    page_size = settings.REST_FRAMEWORK["PAGE_SIZE"]
+
+    def get(self, request):
+        dataset_search = request.GET.get("search")
+        page = request.GET.get("page", 1)
+        query  = Dataset.objects
+        if dataset_search is not None and dataset_search != "":
+            query = query.filter(dataset_id__icontains=dataset_search)
+
+        if page is None:
+            return Response(status.HTTP_400_BAD_REQUEST)
+        if isinstance(page, str):
+            page = int(page)
+
+        page_start = (page - 1) * self.page_size
+        page_end = page * self.page_size
+        datasets = query.all()[page_start:page_end]
+
+        dataset_details = []
+        for dataset in datasets:
+            groups = dataset.groups.all()
+            group_names = [group.name for group in groups]
+
+            user_model = get_user_model()
+            users_list = []
+            for group in groups:
+                users = user_model.objects.filter(groups__name=group.name).all()
+                users_list += [
+                    {"name": user.name, "email": user.email}
+                    for user in users
+                ]
+
+            dataset_gd = self.gpf_instance.get_genotype_data(
+                dataset.dataset_id
+            )
+
+            name = dataset_gd.name
+            if name is None:
+                name = ""
+
+            dataset_details.append({
+                "dataset_id": dataset_gd.study_id,
+                "dataset_name": name,
+                "users": users_list,
+                "groups": group_names
+
+            })
+
+        if len(dataset_details) == 0:
+            return Response(status=status.HTTP_204_NO_CONTENT)
+
+        return Response(dataset_details)
 
 
 class DatasetHierarchyView(QueryBaseView):

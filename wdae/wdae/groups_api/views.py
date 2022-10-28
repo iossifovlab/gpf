@@ -1,5 +1,5 @@
 from django.db.models import Count, Q
-from rest_framework import viewsets, permissions, mixins, status
+from rest_framework import viewsets, permissions, mixins, status, filters
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 
@@ -16,7 +16,8 @@ class GroupsViewSet(
 ):
     serializer_class = GroupSerializer
     permission_classes = (permissions.IsAdminUser,)
-    pagination_class = None
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ("name",)
 
     def get_serializer_class(self):
         serializer_class = self.serializer_class
@@ -34,7 +35,7 @@ class GroupsViewSet(
             users_count=Count("user"), datasets_count=Count("dataset")
         ).filter(
             Q(users_count__gt=0) | Q(datasets_count__gt=0)
-        )
+        ).order_by("name")
 
 
 @api_view(["POST"])

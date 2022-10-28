@@ -1,5 +1,7 @@
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
 import json
 from pprint import pprint
+import pytest
 
 from rest_framework import status  # type: ignore
 
@@ -84,3 +86,73 @@ def test_password_validation():
     assert not is_password_valid("qwerty123456")
 
     assert is_password_valid(generic_password)
+
+
+@pytest.mark.parametrize(
+    "page,status_code,length,first_email,last_email",
+    [
+        (
+            1, status.HTTP_200_OK, 25,
+            "admin@example.com", "user30@example.com"
+        ),
+        (
+            2, status.HTTP_200_OK, 25,
+            "user31@example.com", "user53@example.com"
+        ),
+        (
+            3, status.HTTP_200_OK, 25,
+            "user54@example.com", "user76@example.com"
+        ),
+        (
+            4, status.HTTP_200_OK, 25,
+            "user77@example.com", "user99@example.com"
+        ),
+        (5, status.HTTP_200_OK, 2, "user9@example.com", "user@example.com"),
+        (6, status.HTTP_204_NO_CONTENT, None, None, None),
+    ]
+)
+def test_users_pagination(
+    admin_client, hundred_users, page, status_code,
+    length, first_email, last_email
+):
+    url = f"/api/v3/users?page={page}"
+    response = admin_client.get(url)
+    assert response.status_code == status_code
+
+    if length is not None:
+        assert len(response.data) == length
+
+    if first_email is not None:
+        assert response.data[0]["email"] == first_email
+
+    if last_email is not None:
+        assert response.data[length - 1]["email"] == last_email
+
+
+def test_users_search(admin_client, hundred_users):
+    url = "/api/v3/users?search=user9"
+    response = admin_client.get(url)
+    assert len(response.data) == 11
+
+
+@pytest.mark.parametrize(
+    "page,status_code,length",
+    [
+        (1, status.HTTP_200_OK, 25),
+        (2, status.HTTP_200_OK, 25),
+        (3, status.HTTP_200_OK, 25),
+        (4, status.HTTP_200_OK, 25),
+        (5, status.HTTP_200_OK, 1),
+        (6, status.HTTP_204_NO_CONTENT, None),
+    ]
+)
+def test_users_search_pagination(
+    admin_client, hundred_users, page, status_code, length
+):
+    url = f"/api/v3/users?page={page}&search=user"
+    response = admin_client.get(url)
+    assert response.status_code == status_code
+    if length is not None:
+        assert len(response.data) == length
+        for idx, user in enumerate(response.data):
+            print(f"{idx}: {user['email']}")

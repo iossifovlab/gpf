@@ -62,33 +62,32 @@ def iterator_to_json(users):
 
 class UserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
-    queryset = get_user_model().objects.all()
+    queryset = get_user_model().objects.order_by("email").all()
     permission_classes = (permissions.IsAdminUser,)
-    pagination_class = None
     filter_backends = (filters.SearchFilter,)
-    search_fields = ("groups__name", "email", "name")
+    search_fields = ("email", "name", "groups__name")
 
     @request_logging(LOGGER)
-    def list(self, request):
-        return super(UserViewSet, self).list(request)
+    def list(self, request, *args, **kwargs):
+        return super().list(request)
 
     @request_logging(LOGGER)
-    def create(self, request):
-        return super(UserViewSet, self).create(request)
+    def create(self, request, *args, **kwargs):
+        return super().create(request)
 
     @request_logging(LOGGER)
-    def retrieve(self, request, pk=None):
-        return super(UserViewSet, self).retrieve(request, pk=pk)
+    def retrieve(self, request, *args, pk=None, **kwargs):
+        return super().retrieve(request, pk=pk)
 
     @request_logging(LOGGER)
-    def update(self, request, pk=None, *args, **kwargs):
+    def update(self, request, *args, pk=None, **kwargs):
         if (
             request.user.pk == int(pk)
             and request.user.is_staff
             and "admin" not in request.data["groups"]
         ):
             return Response(status=status.HTTP_400_BAD_REQUEST)
-        return super(UserViewSet, self).update(request, pk=pk, *args, **kwargs)
+        return super().update(request, pk=pk, *args, **kwargs)
 
     @request_logging(LOGGER)
     def partial_update(self, request, pk=None):
@@ -98,10 +97,10 @@ class UserViewSet(viewsets.ModelViewSet):
             and "admin" not in request.data["groups"]
         ):
             return Response(status=status.HTTP_400_BAD_REQUEST)
-        return super(UserViewSet, self).partial_update(request, pk=pk)
+        return super().partial_update(request, pk=pk)
 
     @request_logging(LOGGER)
-    def destroy(self, request, pk=None):
+    def destroy(self, request, *args, pk=None, **kwargs):
         if request.user.pk == int(pk):
             return Response(status=status.HTTP_400_BAD_REQUEST)
         return super().destroy(request, pk=pk)
