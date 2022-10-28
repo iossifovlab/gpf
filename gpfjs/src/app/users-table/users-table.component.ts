@@ -31,7 +31,6 @@ export class UsersTableComponent implements OnInit {
       this.currentUserEmail = currentUser.email;
     });
 
-    this.addItemMenuPagesCounter++;
     this.updateAddItemMenuItems();
   }
 
@@ -40,10 +39,9 @@ export class UsersTableComponent implements OnInit {
   }
 
   public removeGroup(user: User, group: string): void {
-    this.usersService.removeUserGroup(user, group).pipe(take(1)).subscribe(() => {
-      this.zone.runOutsideAngular(() => {
-        window.location.reload();
-      });
+    this.usersService.removeUserGroup(user, group).pipe(take(1)).subscribe((res: User) => {
+      user.groups = res.groups;
+      user.allowedDatasets = res.allowedDatasets;
     });
   }
 
@@ -51,10 +49,9 @@ export class UsersTableComponent implements OnInit {
     const userClone = user.clone();
     userClone.groups.push(event$.item);
 
-    this.usersService.updateUser(userClone).pipe(take(1)).subscribe(() => {
-      this.zone.runOutsideAngular(() => {
-        window.location.reload();
-      });
+    this.usersService.updateUser(userClone).pipe(take(1)).subscribe((res: User) => {
+      user.groups = res.groups;
+      user.allowedDatasets = res.allowedDatasets;
     });
   }
 
@@ -64,9 +61,10 @@ export class UsersTableComponent implements OnInit {
 
   public updateAddItemMenuItems(): void {
     if (!this.loadingAddItemMenuPage) {
+      this.addItemMenuPagesCounter++;
       this.loadingAddItemMenuPage = true;
-      // use addItemMenuPagesCounter for get groups
-      this.usersGroupsService.getAllGroups().subscribe(res => {
+      // implement group search in menu
+      this.usersGroupsService.getGroups(this.addItemMenuPagesCounter, '').subscribe(res => {
         this.allGroupNames = this.allGroupNames.concat(res.map(group => group.name));
         this.loadingAddItemMenuPage = false;
       });

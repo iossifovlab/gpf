@@ -1,10 +1,9 @@
-import { Component, ElementRef, HostListener, OnDestroy, OnInit, ViewChild } from '@angular/core';
-import { Router, ActivatedRoute } from '@angular/router';
+import { Component, ElementRef, HostListener, OnInit, ViewChild } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import { UserGroup } from 'app/users-groups/users-groups';
 import { UsersGroupsService } from 'app/users-groups/users-groups.service';
 import { environment } from 'environments/environment';
-import { Observable, ReplaySubject } from 'rxjs';
-import { debounceTime, distinctUntilChanged, map, share, switchMap, take, tap } from 'rxjs/operators';
+import { map, take } from 'rxjs/operators';
 import { User } from '../users/users';
 import { UsersService } from '../users/users.service';
 
@@ -16,10 +15,9 @@ type TableName = 'USERS' | 'GROUPS' | 'DATASETS';
   styleUrls: ['./user-management.component.css']
 })
 export class UserManagementComponent implements OnInit {
-  public input$ = new ReplaySubject<string>(1);
   public users: User[] = [];
-  public usersToShow$: Observable<User[]>;
-  public groups: UserGroup[] | undefined;
+  public groups: UserGroup[] = [];
+  public searchText = '';
   @ViewChild('searchBox') private searchBox: ElementRef;
 
   public imgPathPrefix = environment.imgPathPrefix;
@@ -27,17 +25,17 @@ export class UserManagementComponent implements OnInit {
   private pageCount = 0;
   private tableName: TableName = 'USERS';
   private loadingPage = true;
+  private allPagesLoaded = false;
 
   public constructor(
     private usersService: UsersService,
     private usersGroupsService: UsersGroupsService,
-    private router: Router,
     private route: ActivatedRoute
   ) { }
 
   public ngOnInit(): void {
     this.focusSearchBox();
-    this.updateTable();
+    this.updateCurrentTable();
 
     this.route.queryParamMap.pipe(
       map(params => params.get('search') || ''),
@@ -48,7 +46,19 @@ export class UserManagementComponent implements OnInit {
   }
 
   public search(value: string): void {
-    this.input$.next(value);
+    if (value) {
+      this.searchText = value;
+      this.resetTablesData();
+      this.updateCurrentTable();
+    }
+  }
+
+  public resetTablesData(): void {
+    this.pageCount = 0;
+    this.users = [];
+    this.groups = [];
+    // this.datasets = [];
+    this.allPagesLoaded = false;
   }
 
   private sortGroups(user: User): User {
@@ -73,6 +83,7 @@ export class UserManagementComponent implements OnInit {
     return user;
   }
 
+  // Needed?
   private async waitForSearchBoxToLoad(): Promise<void> {
     return new Promise<void>(resolve => {
       const timer = setInterval(() => {
@@ -90,75 +101,56 @@ export class UserManagementComponent implements OnInit {
     });
   }
 
-  public onWindowScroll(): void {
-    const pos = (document.documentElement.scrollTop || document.body.scrollTop) + document.documentElement.offsetHeight;
-    const max = document.documentElement.scrollHeight;
-    if (pos > max - 100) {
-      this.updateTable();
-    }
-  }
-
   @HostListener('window:scroll', ['$event'])
-  private updateTableOnScroll(): void {
+  public updateTableOnScroll(): void {
     if (!this.loadingPage && window.scrollY + window.innerHeight + 200 > document.body.scrollHeight) {
-      this.updateTable();
+      this.updateCurrentTable();
     }
   }
 
   public switchTableName(newName: TableName): void {
     this.tableName = newName;
-    this.pageCount = 0;
-    this.updateTable();
+    this.searchText = '';
+    this.resetTablesData();
+    this.updateCurrentTable();
   }
 
-  private updateTable(): void {
-    this.pageCount++;
-    this.loadingPage = true;
+  public updateCurrentTable(): void {
+    if (!this.allPagesLoaded) {
+      this.pageCount++;
+      this.loadingPage = true;
 
-    switch (this.tableName) {
-    case 'USERS':
-      this.updateUsersTable();
-      break;
-    case 'GROUPS':
-      this.updateGroupsTable();
-      break;
-    case 'DATASETS':
-      // implement this.updateDatasetsTable()
-      break;
+      switch (this.tableName) {
+      case 'USERS':
+        this.updateUsersTable();
+        break;
+      case 'GROUPS':
+        this.updateGroupsTable();
+        break;
+      case 'DATASETS':
+        // implement this.updateDatasetsTable()
+        break;
+      }
     }
   }
 
   private updateUsersTable(): void {
-    this.usersToShow$ = this.input$.pipe(
-      map(searchTerm => searchTerm.trim()),
-      debounceTime(300),
-      distinctUntilChanged(),
-      tap(searchTerm => {
-        this.users = [];
-        const queryParamsObject: any = {};
-        if (searchTerm) {
-          queryParamsObject.search = searchTerm;
-        }
-        this.router.navigate(['.'], {
-          relativeTo: this.route,
-          replaceUrl: true,
-          queryParams: queryParamsObject
-        });
-      }),
-      switchMap(searchTerm => this.usersService.searchUsersByGroup(searchTerm)),
-      map(user => {
-        this.users.push(this.sortGroups(user));
-        return this.users;
-      }),
-      share()
-    );
-
-    // should be moved to user data subscribe
-    this.loadingPage = false;
+    this.usersService.getUsers(this.pageCount, this.searchText).subscribe(res => {
+      if (!res.length) {
+        this.allPagesLoaded = true;
+        return;
+      }
+      this.users = this.users.concat(res);
+      this.loadingPage = false;
+    });
   }
 
   private updateGroupsTable(): void {
-    this.usersGroupsService.getAllGroups().subscribe(res => {
+    this.usersGroupsService.getGroups(this.pageCount, this.searchText).subscribe(res => {
+      if (!res.length) {
+        this.allPagesLoaded = true;
+        return;
+      }
       this.groups = this.groups.concat(res);
       this.loadingPage = false;
     });

@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { UserGroup } from './users-groups';
 import { Dataset } from '../datasets/datasets';
 import { ConfigService } from '../config/config.service';
@@ -22,6 +22,22 @@ export class UsersGroupsService {
 
     return this.http.get(this.config.baseUrl + this.groupsUrl, options)
       .pipe(map((response: any) => UserGroup.fromJsonArray(response)));
+  }
+
+  public getGroups(page: number, searchTerm: string): Observable<UserGroup[]> {
+    let url = `${this.config.baseUrl}${this.groupsUrl}?page=${page}`;
+    if (searchTerm) {
+      const searchParams = new HttpParams().set('search', searchTerm);
+      url += `&search=${searchParams.toString()}`;
+    }
+    return this.http.get(url).pipe(
+      map((response) => {
+        if (response === null) {
+          return [] as UserGroup[];
+        }
+        return (response as object[]).map(group => UserGroup.fromJson(group));
+      })
+    );
   }
 
   public getGroup(groupId: number): Observable<UserGroup> {

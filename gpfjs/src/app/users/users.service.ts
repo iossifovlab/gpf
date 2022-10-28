@@ -1,7 +1,7 @@
 
-import {throwError as observableThrowError, Observable, Subject, ReplaySubject } from 'rxjs';
+import {throwError as observableThrowError, Observable, Subject, ReplaySubject, of, BehaviorSubject, throwError } from 'rxjs';
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { ConfigService } from '../config/config.service';
 import { CookieService } from 'ngx-cookie-service';
 import { User } from './users';
@@ -18,7 +18,6 @@ export class UsersService {
   private readonly userInfoUrl = 'users/get_user_info';
   private readonly resetPasswordUrl = 'users/reset_password';
   private readonly usersUrl = 'users';
-  private readonly usersStreamingUrl = `${this.usersUrl}/streaming_search`;
 
   private userInfo$ = new ReplaySubject<{}>(1);
   private lastUserInfo = null;
@@ -196,39 +195,20 @@ export class UsersService {
     return this.updateUser(clone);
   }
 
-  public searchUsersByGroup(searchTerm: string): Observable<User> {
-    const csrfToken = this.cookieService.get('csrftoken');
-    const headers = { 'X-CSRFToken': csrfToken };
-    const usersSubject: Subject<User> = new Subject();
-
-    if (this.authService.getAccessToken() !== '') {
-      headers['Authorization'] = `Bearer ${this.authService.getAccessToken()}`;
-    }
-
-    let url: string;
-    if (searchTerm !== null) {
+  public getUsers(page: number, searchTerm: string): Observable<User[]> {
+    let url = `${this.config.baseUrl}${this.usersUrl}?page=${page}`;
+    if (searchTerm) {
       const searchParams = new HttpParams().set('search', searchTerm);
-      url = `${this.config.baseUrl}${this.usersStreamingUrl}?${searchParams.toString()}`;
-    } else {
-      url = `${this.config.baseUrl}${this.usersStreamingUrl}`;
+      url += `&${searchParams.toString()}`;
     }
 
-    oboe({
-      url: url,
-      method: "GET",
-      headers: headers,
-      withCredentials: true,
-    }).start(() => {
-      this.usersStreamingFinishedSubject.next(false);
-    }).node('!.*', data => {
-      usersSubject.next(data);
-    }).done(() => {
-      this.usersStreamingFinishedSubject.next(true);
-    }).fail(() => {
-      this.usersStreamingFinishedSubject.next(true);
-      console.warn('oboejs encountered a fail event while streaming');
-    });
-
-    return usersSubject.pipe(map(data => { return User.fromJson(data); }));
+    return this.http.get(url).pipe(
+      map((response) => {
+        if (response === null) {
+          return [] as User[];
+        }
+        return (response as object[]).map(user => User.fromJson(user));
+      })
+    );
   }
 }

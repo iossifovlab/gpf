@@ -4,7 +4,7 @@
       <div class="nav-title-custom">Management</div>
 
       <li ngbNavItem id="users">
-        <a ngbNavLink (click)="focusSearchBox()">Users</a>
+        <a ngbNavLink (click)="switchTableName('USERS'); focusSearchBox()">Users</a>
         <ng-template ngbNavContent>
           <div class="row justify-content-between">
             <div class="col-7 btn-toolbar" style="padding-top: 15px; padding-left: 25px">
@@ -19,13 +19,13 @@
                     class="search-input form-control my-0 py-1"
                     type="text"
                     aria-label="Search"
-                    [ngModel]="input$ | async"
+                    [ngModel]="searchText"
                     spellcheck="false" />
                   <span
                     class="search-clear-icon"
                     [style.background-image]="'url(' + imgPathPrefix + 'search-clear-icon.png)'"
                     *ngIf="searchBox.value !== ''"
-                    (click)="searchBox.value = ''; search(searchBox.value)">
+                    (click)="searchBox.value = ''; resetTablesData(); updateCurrentTable()">
                   </span>
                 </div>
               </div>
@@ -34,7 +34,7 @@
               </div>
             </div>
           </div>
-          <gpf-users-table [users]="usersToShow$ | async"></gpf-users-table>
+          <gpf-users-table [users]="users"></gpf-users-table>
         </ng-template>
       </li>
 
