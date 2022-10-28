@@ -4,10 +4,12 @@ import sys
 import logging
 import argparse
 import pathlib
+import copy
 from typing import Dict, Union
 from urllib.parse import urlparse
 
 import yaml
+from markdown2 import markdown
 
 from dae.dask.client_factory import DaskClient
 from dae.utils.fs_utils import find_directory_with_a_file
@@ -23,7 +25,19 @@ from dae.genomic_resources.repository import \
     ManifestEntry, \
     parse_resource_id_version, \
     version_tuple_to_string
+
+from dae.genomic_resources.genomic_scores import \
+    build_allele_score_from_resource, \
+    build_np_score_from_resource, \
+    build_position_score_from_resource
+from dae.genomic_resources.liftover_resource import \
+    build_liftover_chain_from_resource
+from dae.genomic_resources.reference_genome import \
+    build_reference_genome_from_resource
+from dae.genomic_resources.gene_models import \
+    build_gene_models_from_resource
 from dae.utils.verbosity_configuration import VerbosityConfiguration
+from dae.genomic_resources.templates import resource_template
 
 from dae.genomic_resources.fsspec_protocol import build_fsspec_protocol
 from dae.genomic_resources.histogram import HistogramBuilder
@@ -211,6 +225,15 @@ def _configure_resource_repair_subparser(subparsers):
 def _configure_repo_info_subparser(subparsers):
     parser = subparsers.add_parser(
         "repo-info", help="Build the index.html for the whole GRR"
+    )
+    _add_repository_resource_parameters_group(parser)
+    _add_dry_run_and_force_parameters_group(parser)
+
+    DaskClient.add_arguments(parser)
+
+def _configure_resource_info_subparser(subparsers):
+    parser = subparsers.add_parser(
+        "resource-info", help="Build the index.html for the specific resource"
     )
     _add_repository_resource_parameters_group(parser)
     _add_dry_run_and_force_parameters_group(parser)
@@ -475,9 +498,64 @@ def _run_repo_info_command(proto, **kwargs):
     proto.build_index_file()
 
 
+SCORE_TYPE_TO_BUILD = {
+    "position_score": build_position_score_from_resource,
+    "np_score": build_np_score_from_resource,
+    "allele_score": build_allele_score_from_resource,
+    "liftover_chain": build_liftover_chain_from_resource,
+    "gene_models": build_gene_models_from_resource,
+    "genome": build_reference_genome_from_resource,
+}
+
+
+def build_score(res):
+    return SCORE_TYPE_TO_BUILD[res.get_type()](res)
+
+
+def _do_resource_info_command(proto, res, dry_run, force):
+    # manifest_outdated = bool(proto.check_update_manifest(res))
+
+    # if manifest_outdated:
+        # print(
+            # f"manifest of <{res.get_genomic_resource_id_version()}> "
+            # f"is not up to date",
+            # file=sys.stderr)
+
+    # if dry_run:
+        # return
+
+    # if not manifest_outdated or force:
+    score = build_score(res)
+
+    template = score.get_template()
+    template_data = copy.deepcopy(res.get_config())
+    template_data["meta"] = markdown(template_data["meta"])
+
+    with proto.open_raw_file(res, "index.html", mode="wt") as outfile:
+        content = template.render(
+            resource_id=res.resource_id,
+            data=template_data,
+            base=resource_template
+        )
+        outfile.write(content)
+
 
 def _run_resource_info_command(proto, repo_url, **kwargs):
-    raise NotImplementedError()
+    dry_run = kwargs.get("dry_run", False)
+    force = kwargs.get("force", False)
+
+    if dry_run and force:
+        logger.warning("please choose one of 'dry_run' and 'force' options")
+        return
+
+    res = _find_resource(proto, repo_url, **kwargs)
+    if res is None:
+        logger.error("resource not found...")
+        return
+
+    _do_resource_info_command(proto, res, dry_run, force)
+
+
 
 
 def cli_manage(cli_args=None):
@@ -504,7 +582,7 @@ def cli_manage(cli_args=None):
     _configure_repo_repair_subparser(commands_parser)
     _configure_resource_repair_subparser(commands_parser)
     _configure_repo_info_subparser(commands_parser)
-    # _configure_resource_inf_subparser(commands_parser)
+    _configure_resource_info_subparser(commands_parser)
 
     args = parser.parse_args(cli_args)
     VerbosityConfiguration.set(args)

@@ -4,9 +4,13 @@ from __future__ import annotations
 
 import abc
 import logging
+import textwrap
 from dataclasses import dataclass
+
 from typing import Generator, List, Tuple, cast, Type, Dict, Any, Optional, \
     Union
+
+from jinja2 import Template
 
 from . import GenomicResource
 from .genome_position_table import open_genome_position_table
@@ -285,6 +289,120 @@ class GenomicScore(abc.ABC):
 
             for _ in range(left, right + 1):
                 yield val
+
+    @staticmethod
+    def get_template():
+        return Template(textwrap.dedent("""
+            {% extends base %}
+            {% block content %}
+            <hr>
+            <h3>Score file:</h3>
+            <a href="{{ data["table"]["filename"] }}">
+            {{ data["table"]["filename"] }}
+            </a>
+            <p>
+            File format: {{ data["table"]["format"] }}
+            </p>
+
+            {% if data["table"]["chrom"] %}
+            {% if data["table"]["chrom"]["index"] is not none %}
+            <p>
+            chrom column index in file:
+            {{ data["table"]["chrom"]["index"] }}
+            </p>
+            {% endif %}
+            {% if data["table"]["chrom"]["name"] %}
+            <p>
+            chrom column name in header:
+            {{ data["table"]["chrom"]["name"] }}
+            </p>
+            {% endif %}
+            {% endif %}
+
+            {% if data["table"]["pos_begin"] %}
+            {% if data["table"]["pos_begin"]["index"] is not none %}
+            <p>
+            pos_begin column index in file:
+            {{ data["table"]["pos_begin"]["index"] }}
+            </p>
+            {% endif %}
+            {% if data["table"]["pos_begin"]["name"] %}
+            <p>
+            pos_begin column name in header:
+            {{ data["table"]["pos_begin"]["name"] }}
+            </p>
+            {% endif %}
+            {% endif %}
+
+            {% if data["table"]["pos_end"] %}
+            {% if data["table"]["pos_end"]["index"] is not none %}
+            <p>
+            pos_end column index in file:
+            {{ data["table"]["pos_end"]["index"] }}
+            </p>
+            {% endif %}
+            {% if data["table"]["pos_end"]["name"] %}
+            <p>
+            pos_end column name in header:
+            {{ data["table"]["pos_end"]["name"] }}
+            </p>
+            {% endif %}
+            {% endif %}
+
+            {% if data["table"]["reference"] %}
+            {% if data["table"]["reference"]["index"] is not none %}
+            <p>
+            reference column index in file:
+            {{ data["table"]["reference"]["index"] }}
+            </p>
+            {% endif %}
+            {% if data["table"]["reference"]["name"] %}
+            <p>
+            reference column name in header:
+            {{ data["table"]["reference"]["name"] }}
+            </p>
+            {% endif %}
+            {% endif %}
+
+            {% if data["table"]["alternative"] %}
+            {% if data["table"]["alternative"]["index"] is not none %}
+            <p>
+            alternative column index in file:
+            {{ data["table"]["alternative"]["index"] }}
+            </p>
+            {% endif %}
+            {% if data["table"]["alternative"]["name"] %}
+            <p>
+            alternative column name in header:
+            {{ data["table"]["alternative"]["name"] }}
+            </p>
+            {% endif %}
+            {% endif %}
+
+            <h3>Score definitions:</h2>
+            {% for score in data["scores"] %}
+            <div class="score-definition">
+            <p>Score ID: {{ score["id"] }}</p>
+            {% if "index" in score %}
+            <p>Column index in file: {{ score["index"] }}</p>
+            {% elif "name" in score %}
+            <p>Column name in file header: {{ score["name"] }}
+            {% endif %}
+            <p>Score data type: {{ score["type"] }}
+            <p> Description: {{ score["desc"] }}
+            </div>
+            {% endfor %}
+            <h3>Histograms:</h2>
+            {% for hist in data["histograms"] %}
+            <div class="histogram">
+            <h4>{{ hist["score"] }}</h1>
+            <img src="histograms/{{ hist["score"] }}.png"
+            alt={{ hist["score"] }}
+            title={{ hist["score"] }}>
+            </div>
+            {% endfor %}
+            {% endblock %}
+        """))
 
 
 class PositionScore(GenomicScore):

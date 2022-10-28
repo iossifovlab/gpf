@@ -78,8 +78,31 @@ repository_template = Template("""
 
 resource_template = Template("""
 <html>
-{%- for key, value in data.items() recursive%}
-     {{key}}: {{value}}
-{%- endfor %}
+<head>
+<style>
+h3,h4 {
+    margin-top:0.5em;
+    margin-bottom:0.5em;
+}
+
+{% block extra_styles %}{% endblock %}
+
+</style>
+</head>
+<body>
+<h1>{{ resource_id }}</h3>
+
+{% block content %}
+N/A
+{% endblock %}
+
+<div>
+<span class="description">
+{{ data["meta"] if data["meta"] else "N/A" }}
+</span>
+</div>
+
+
+</body>
 </html>
 """)
