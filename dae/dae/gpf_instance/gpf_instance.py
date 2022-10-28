@@ -391,46 +391,6 @@ class GPFInstance:
                 configs.append(config.common_report)
         return configs
 
-    def get_common_report_families_data(self, common_report_id):
-        """Return common report families data."""
-        genotype_data = GPFInstance.get_genotype_data(self, common_report_id)
-        if not genotype_data:
-            return None
-
-        data = []
-        data.append(
-            [
-                "familyId",
-                "personId",
-                "dadId",
-                "momId",
-                "sex",
-                "status",
-                "role",
-                "genotype_data_study",
-            ]
-        )
-
-        families = list(genotype_data.families.values())
-        families.sort(key=lambda f: f.family_id)
-        for fam in families:
-            for person in fam.members_in_order:
-
-                row = [
-                    person.family_id,
-                    person.person_id,
-                    person.dad_id if person.dad_id else "0",
-                    person.mom_id if person.mom_id else "0",
-                    person.sex,
-                    person.status,
-                    person.role,
-                    genotype_data.name,
-                ]
-
-                data.append(row)
-
-        return map(join_line, data)
-
     # Gene sets
     def get_gene_sets_collections(self):
         return self.gene_sets_db.collections_descriptions

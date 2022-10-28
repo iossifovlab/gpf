@@ -239,7 +239,7 @@ class DatasetPermissionsView(QueryBaseView):
     def get(self, request):
         dataset_search = request.GET.get("search")
         page = request.GET.get("page", 1)
-        query  = Dataset.objects
+        query = Dataset.objects
         if dataset_search is not None and dataset_search != "":
             query = query.filter(dataset_id__icontains=dataset_search)
 
@@ -260,7 +260,9 @@ class DatasetPermissionsView(QueryBaseView):
             user_model = get_user_model()
             users_list = []
             for group in groups:
-                users = user_model.objects.filter(groups__name=group.name).all()
+                users = user_model.objects.filter(
+                    groups__name=group.name
+                ).all()
                 users_list += [
                     {"name": user.name, "email": user.email}
                     for user in users

@@ -9,6 +9,7 @@ from query_base.query_base import QueryBaseView
 
 from dae.pedigrees.family import FamiliesData
 from dae.pedigrees.family_tag_builder import check_tag
+from dae.pedigrees.serializer import FamiliesTsvSerializer
 
 
 class VariantReportsView(QueryBaseView):
@@ -101,10 +102,10 @@ class FamilyCounterDownloadView(QueryBaseView):
             for family_id in counter_families
         })
 
-        ped_df = counter_families_data.ped_df
+        serializer = FamiliesTsvSerializer(counter_families_data)
 
         response = StreamingHttpResponse(
-            ped_df.to_csv(index=False, sep="\t"),
+            serializer.serialize(),
             content_type="text/tab-separated-values"
         )
         response["Content-Disposition"] = "attachment; filename=families.ped"
@@ -113,15 +114,14 @@ class FamilyCounterDownloadView(QueryBaseView):
         return response
 
 
-class FamiliesDataTagDownload(QueryBaseView):
-    def get(self, request):
-        study_id = request.GET.get("study_id")
+class FamiliesDataDownloadView(QueryBaseView):
+    def get(self, request, dataset_id):
         tags = request.GET.get("tags")
 
-        if study_id is None:
+        if not dataset_id:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
-        study = self.gpf_instance.get_genotype_data(study_id)
+        study = self.gpf_instance.get_genotype_data(dataset_id)
 
         if study is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
@@ -150,33 +150,12 @@ class FamiliesDataTagDownload(QueryBaseView):
 
             result = FamiliesData.from_families(result)
 
+        serializer = FamiliesTsvSerializer(result)
+
         response = StreamingHttpResponse(
-            result.ped_df.to_csv(index=False, sep="\t"),
+            serializer.serialize(),
             content_type="text/tab-separated-values"
         )
-        response["Content-Disposition"] = "attachment; filename=families.ped"
-        response["Expires"] = "0"
-
-        return response
-
-
-class FamiliesDataDownloadView(QueryBaseView):
-    def get(self, request, dataset_id):
-        if not user_has_permission(
-            request.user, dataset_id
-        ):
-            return Response(status=status.HTTP_403_FORBIDDEN)
-
-        families_data = self.gpf_instance.get_common_report_families_data(
-            dataset_id
-        )
-        if not families_data:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-
-        response = StreamingHttpResponse(
-            families_data, content_type="text/tsv"
-        )
-
         response["Content-Disposition"] = "attachment; filename=families.ped"
         response["Expires"] = "0"
 

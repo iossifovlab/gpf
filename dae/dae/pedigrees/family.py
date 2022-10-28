@@ -330,6 +330,21 @@ class Family:
             "tags": self.tags
         }
 
+    def get_columns(self):
+        column_names = set(self.members_in_order[0]._attributes.keys())
+        columns = [
+            col
+            for col in PEDIGREE_COLUMN_NAMES.values()
+            if col in column_names
+            or col in ["generated", "not_sequenced"]
+        ]
+        extension_columns = column_names.difference(set(columns))
+        extension_columns = extension_columns.difference(
+            set(["sample_index"])
+        )
+        columns.extend(sorted(extension_columns))
+        return columns
+
     def add_members(self, persons: List[Person]) -> None:
         assert all(isinstance(p, Person) for p in persons)
         assert all(p.family_id == self.family_id for p in persons)

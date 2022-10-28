@@ -68,14 +68,15 @@ def test_family_counters_download(admin_client):
 
     res = list(response.streaming_content)
     print(b"".join(res).decode())
-    assert len(res) == 863
+
+    assert len(res) == 13
     # assert data == ["f2", "f4"]
 
 
 def test_families_tags_download(admin_client):
     url = (
-        "/api/v3/common_reports/families_data/download?"
-        "study_id=Study1&tags=tag_nuclear_family,tag_trio_family"
+        "/api/v3/common_reports/families_data/Study1?"
+        "tags=tag_nuclear_family,tag_trio_family"
     )
     response = admin_client.get(
         url, content_type="application/json"
@@ -86,25 +87,12 @@ def test_families_tags_download(admin_client):
 
     res = list(response.streaming_content)
     print(b"".join(res).decode())
-    assert len(res) == 7279
+    assert len(res) == 24
 
 
 def test_families_tags_download_succeeds_on_empty_tags(admin_client):
-    url = (
-        "/api/v3/common_reports/families_data/download?"
-        "study_id=Study1&tags="
-    )
-    response = admin_client.get(
-        url, content_type="application/json"
-    )
+    url = "/api/v3/common_reports/families_data/Study1?tags="
 
-    assert response
-    assert response.status_code == status.HTTP_200_OK
-
-    url = (
-        "/api/v3/common_reports/families_data/download?"
-        "study_id=Study1"
-    )
     response = admin_client.get(
         url, content_type="application/json"
     )
@@ -144,30 +132,7 @@ def test_families_data_download(admin_client):
     streaming_content = list(response.streaming_content)
     assert streaming_content
 
-    assert len(streaming_content) == 31
-
-    header = streaming_content[0].decode("utf8")
-    assert header[-1] == "\n"
-    header = header[:-1].split("\t")
-    assert len(header) == 8
-
-    assert header == [
-        "familyId",
-        "personId",
-        "dadId",
-        "momId",
-        "sex",
-        "status",
-        "role",
-        "genotype_data_study",
-    ]
-
-    first_person = streaming_content[1].decode("utf8")
-    assert first_person[-1] == "\n"
-    first_person = first_person[:-1].split("\t")
-    assert len(first_person) == 8
-
-    assert first_person[-1] == "Study1"
+    assert len(streaming_content) == 34
 
 
 @pytest.mark.xfail(reason="this test is flipping; should be investigated")
