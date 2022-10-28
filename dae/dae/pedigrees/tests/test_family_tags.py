@@ -13,6 +13,10 @@ from dae.pedigrees.family_tag_builder import check_tag, \
     tag_affected_mom_family, \
     tag_affected_prb_family, \
     tag_affected_sib_family, \
+    tag_unaffected_dad_family, \
+    tag_unaffected_mom_family, \
+    tag_unaffected_prb_family, \
+    tag_unaffected_sib_family, \
     tag_male_prb_family, \
     tag_female_prb_family, \
     tag_missing_mom_family, \
@@ -100,13 +104,27 @@ def test_tag_control_family():
     assert check_tag(fam, "tag_control_family", True)
 
 
-def test_tag_affected_dad_family_simple(fam1_fixture):
+@pytest.mark.parametrize(
+    "tagger,tag,value",
+    [
+        (tag_affected_dad_family, "tag_affected_dad_family", False),
+        (tag_unaffected_dad_family, "tag_unaffected_dad_family", True)
+    ]
+)
+def test_tag_affected_dad_family_simple(fam1_fixture, tagger, tag, value):
 
-    assert not tag_affected_dad_family(fam1_fixture)
-    assert check_tag(fam1_fixture, "tag_affected_dad_family", False)
+    assert tagger(fam1_fixture) == value
+    assert check_tag(fam1_fixture, tag, value)
 
 
-def test_tag_affected_dad_family():
+@pytest.mark.parametrize(
+    "tagger,tag,value",
+    [
+        (tag_affected_dad_family, "tag_affected_dad_family", True),
+        (tag_unaffected_dad_family, "tag_unaffected_dad_family", False)
+    ]
+)
+def test_tag_affected_dad_family(tagger, tag, value):
 
     fam = build_family(
         """
@@ -117,38 +135,31 @@ def test_tag_affected_dad_family():
             f1       s1       d1     m1     1   1      sib
         """)
 
-    assert tag_affected_dad_family(fam)
-    assert check_tag(fam, "tag_affected_dad_family", True)
+    assert tagger(fam) == value
+    assert check_tag(fam, tag, value)
 
 
-def test_tag_affected_mom_family_simple(fam1_fixture):
+@pytest.mark.parametrize(
+    "tagger,tag,value",
+    [
+        (tag_affected_mom_family, "tag_affected_mom_family", False),
+        (tag_unaffected_mom_family, "tag_unaffected_mom_family", True)
+    ]
+)
+def test_tag_affected_mom_family_simple(fam1_fixture, tagger, tag, value):
 
-    assert not tag_affected_mom_family(fam1_fixture)
-    assert check_tag(fam1_fixture, "tag_affected_mom_family", False)
-
-
-def test_tag_affected_mom_family():
-
-    fam = build_family(
-        """
-            familyId personId dadId	 momId	sex status role
-            f1       m1       0      0      2   2      mom
-            f1       d1       0      0      1   1      dad
-            f1       p1       d1     m1     2   1      prb
-            f1       s1       d1     m1     1   1      sib
-        """)
-
-    assert tag_affected_mom_family(fam)
-    assert check_tag(fam, "tag_affected_mom_family", True)
+    assert tagger(fam1_fixture) == value
+    assert check_tag(fam1_fixture, tag, value)
 
 
-def test_tag_affected_prb_family_simple(fam1_fixture):
-
-    assert tag_affected_prb_family(fam1_fixture)
-    assert check_tag(fam1_fixture, "tag_affected_prb_family", True)
-
-
-def test_tag_affected_prb_family():
+@pytest.mark.parametrize(
+    "tagger,tag,value",
+    [
+        (tag_affected_mom_family, "tag_affected_mom_family", True),
+        (tag_unaffected_mom_family, "tag_unaffected_mom_family", False)
+    ]
+)
+def test_tag_affected_mom_family(tagger, tag, value):
 
     fam = build_family(
         """
@@ -159,17 +170,88 @@ def test_tag_affected_prb_family():
             f1       s1       d1     m1     1   1      sib
         """)
 
-    assert not tag_affected_prb_family(fam)
-    assert check_tag(fam, "tag_affected_prb_family", False)
+    assert tagger(fam) == value
+    assert check_tag(fam, tag, value)
 
 
-def test_tag_affected_sib_family_simple(fam1_fixture):
+@pytest.mark.parametrize(
+    "tagger,tag,value",
+    [
+        (tag_affected_prb_family, "tag_affected_prb_family", True),
+        (tag_unaffected_prb_family, "tag_unaffected_prb_family", False)
+    ]
+)
+def test_tag_affected_prb_family_simple(fam1_fixture, tagger, tag, value):
 
-    assert not tag_affected_sib_family(fam1_fixture)
-    assert check_tag(fam1_fixture, "tag_affected_sib_family", False)
+    assert tagger(fam1_fixture) == value
+    assert check_tag(fam1_fixture, tag, value)
 
 
-def test_tag_affected_sib_family():
+@pytest.mark.parametrize(
+    "tagger,tag,value",
+    [
+        (tag_affected_prb_family, "tag_affected_prb_family", False),
+        (tag_unaffected_prb_family, "tag_unaffected_prb_family", True)
+    ]
+)
+def test_tag_affected_prb_family(tagger, tag, value):
+
+    fam = build_family(
+        """
+            familyId personId dadId	 momId	sex status role
+            f1       m1       0      0      2   2      mom
+            f1       d1       0      0      1   1      dad
+            f1       p1       d1     m1     2   1      prb
+            f1       s1       d1     m1     1   1      sib
+        """)
+
+    assert tagger(fam) == value
+    assert check_tag(fam, tag, value)
+
+
+@pytest.mark.parametrize(
+    "tagger,tag,value",
+    [
+        (tag_affected_sib_family, "tag_affected_sib_family", False),
+        (tag_unaffected_sib_family, "tag_unaffected_sib_family", True)
+    ]
+)
+def test_tag_affected_sib_family_simple(fam1_fixture, tagger, tag, value):
+
+    assert tagger(fam1_fixture) == value
+    assert check_tag(fam1_fixture, tag, value)
+
+
+@pytest.mark.parametrize(
+    "tagger,tag,value",
+    [
+        (tag_affected_sib_family, "tag_affected_sib_family", True),
+        (tag_unaffected_sib_family, "tag_unaffected_sib_family", False)
+    ]
+)
+def test_tag_affected_sib_family(tagger, tag, value):
+
+    fam = build_family(
+        """
+            familyId personId dadId	 momId	sex status role
+            f1       m1       0      0      2   1      mom
+            f1       d1       0      0      1   1      dad
+            f1       p1       d1     m1     2   1      prb
+            f1       s1       d1     m1     1   2      sib
+        """)
+
+    assert tagger(fam) == value
+    assert check_tag(fam, tag, value)
+
+
+@pytest.mark.parametrize(
+    "tagger,tag,value",
+    [
+        (tag_affected_sib_family, "tag_affected_sib_family", True),
+        (tag_unaffected_sib_family, "tag_unaffected_sib_family", True)
+    ]
+)
+def test_tag_affected_sibs_family(tagger, tag, value):
 
     fam = build_family(
         """
@@ -181,8 +263,8 @@ def test_tag_affected_sib_family():
             f1       s2       d1     m1     1   2      sib
         """)
 
-    assert tag_affected_sib_family(fam)
-    assert check_tag(fam, "tag_affected_sib_family", True)
+    assert tagger(fam) == value
+    assert check_tag(fam, tag, value)
 
 
 def test_tag_male_prb_family_simple(fam1_fixture):

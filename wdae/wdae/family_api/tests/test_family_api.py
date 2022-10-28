@@ -55,6 +55,10 @@ def test_list_tags_view(admin_client):
         "tag_affected_mom_family",
         "tag_affected_prb_family",
         "tag_affected_sib_family",
+        "tag_unaffected_dad_family",
+        "tag_unaffected_mom_family",
+        "tag_unaffected_prb_family",
+        "tag_unaffected_sib_family",
         "tag_male_prb_family",
         "tag_female_prb_family",
         "tag_missing_mom_family",
@@ -77,7 +81,9 @@ def test_family_details_view(admin_client):
             "tag_male_prb_family",
             "tag_nuclear_family",
             "tag_simplex_family",
-            "tag_trio_family"
+            "tag_trio_family",
+            "tag_unaffected_dad_family",
+            "tag_unaffected_mom_family"
         ])
     }
 
