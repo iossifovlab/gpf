@@ -243,7 +243,7 @@ class ImportProject():
             if instance_dir is None:
                 config_filename = None
             else:
-                config_filename = os.path.join(
+                config_filename = fs_utils.join(
                     instance_dir, "gpf_instance.yaml")
             self._gpf_instance = \
                 GPFInstance.build(config_filename)
@@ -271,7 +271,7 @@ class ImportProject():
     @property
     def input_dir(self):
         """Return the path relative to which input files are specified."""
-        return os.path.join(
+        return fs_utils.join(
             self._base_input_dir,
             self.import_config["input"].get("input_dir", "")
         )
@@ -535,7 +535,7 @@ class ImportConfigNormalizer:
 
         sub_config = config[section_key]
         while "file" in sub_config:
-            external_fn = os.path.join(base_input_dir, sub_config["file"])
+            external_fn = fs_utils.join(base_input_dir, sub_config["file"])
             sub_config = GPFConfigParser.parse_and_interpolate_file(
                 external_fn
             )
