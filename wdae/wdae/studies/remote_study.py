@@ -93,7 +93,7 @@ class RemoteGenotypeData(GenotypeData):
 
     @property
     def is_group(self):
-        return len(self._study_ids)
+        return "studies" in self.config
 
     @property
     def families(self):
