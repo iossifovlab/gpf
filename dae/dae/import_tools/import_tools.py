@@ -8,6 +8,8 @@ from dataclasses import dataclass
 from functools import cache
 from typing import Optional, cast
 from typing import Callable, Dict, List, Tuple, Any
+from dae.annotation.annotation_factory import AnnotationConfigParser,\
+    build_annotation_pipeline
 
 from dae.variants_loaders.cnv.loader import CNVLoader
 from dae.variants_loaders.dae.loader import DaeTransmittedLoader, DenovoLoader
@@ -321,12 +323,7 @@ class ImportProject():
         variants_loader = EffectAnnotationDecorator(
             variants_loader, effect_annotator)
 
-        annotation_config_file = self.import_config.get("annotation", {})\
-            .get("file", None)
-        # TODO what about embeded annotation config
-        annotation_pipeline = construct_import_annotation_pipeline(
-            gpf_instance, annotation_configfile=annotation_config_file,
-        )
+        annotation_pipeline = self._build_annotation_pipeline(gpf_instance)
         if annotation_pipeline is not None:
             variants_loader = AnnotationPipelineDecorator(
                 variants_loader, annotation_pipeline
@@ -473,6 +470,25 @@ class ImportProject():
                     f"Chromosomes already missing the prefix {prefix}. "
                     "Consider removing del_chrom_prefix."
                 ) from exp
+
+    def _build_annotation_pipeline(self, gpf_instance):
+        if "annotation" not in self.import_config:
+            # build default annotation pipeline as described in the gpf
+            return construct_import_annotation_pipeline(gpf_instance)
+
+        annotation_config = self.import_config["annotation"]
+        if "file" in annotation_config:
+            # pipeline in external file
+            annotation_config_file = annotation_config["file"]
+            return construct_import_annotation_pipeline(
+                gpf_instance, annotation_configfile=annotation_config_file
+            )
+
+        # embedded annotation
+        annotation_config = AnnotationConfigParser.normalize(annotation_config)
+        return build_annotation_pipeline(
+            pipeline_config=annotation_config, grr_repository=gpf_instance.grr
+        )
 
 
 class ImportConfigNormalizer:

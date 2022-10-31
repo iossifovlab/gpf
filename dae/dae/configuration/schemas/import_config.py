@@ -94,6 +94,19 @@ import_config_schema = {
             "cnv": {"anyof_type": ["integer", "string"]},
         },
     },
+    "annotation": {
+        "anyof": [
+            {
+                "type": "dict",
+                "schema": {
+                    "file": {"type": "string"}
+                }
+            }, {
+                "type": "list",
+                "allow_unknown": True,
+            }
+        ]
+    },
     "destination": {
         "type": "dict",
         "anyof_schema": [

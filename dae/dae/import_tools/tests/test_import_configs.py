@@ -272,3 +272,19 @@ def test_input_in_external_file(resources_dir):
     project = import_tools.ImportProject.build_from_file(config_fn)
 
     assert project.input_dir == f"{resources_dir}/external_input/files/"
+
+
+def test_embedded_annotation_pipeline():
+    import_config = dict(
+        input={},
+        annotation=[
+            dict(np_score=dict(
+                resource_id="hg19/scores/CADD",
+            ))
+        ]
+    )
+    project = import_tools.ImportProject.build_from_config(import_config)
+    pipeline = project._build_annotation_pipeline(project.get_gpf_instance())
+    assert pipeline.config == [
+        {"resource_id": "hg19/scores/CADD", "annotator_type": "np_score"}
+    ]
