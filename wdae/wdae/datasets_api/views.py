@@ -297,7 +297,7 @@ class DatasetHierarchyView(QueryBaseView):
     def produce_tree(dataset: GenotypeData, user, selected):
         """Recursively collect a dataset's id, children and access rights."""
         children = None
-        if dataset.is_group:
+        if dataset.is_group():
             children = [
                 DatasetHierarchyView.produce_tree(child, user, selected)
                 for child in dataset.studies
