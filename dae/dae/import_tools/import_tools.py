@@ -55,7 +55,8 @@ class ImportProject():
     """
 
     # pylint: disable=too-many-public-methods
-    def __init__(self, import_config, base_input_dir, gpf_instance=None):
+    def __init__(self, import_config, base_input_dir, base_config_dir=None,
+                 gpf_instance=None):
         """Create a new project from the provided config.
 
         It is best not to call this ctor directly but to use one of the
@@ -68,6 +69,7 @@ class ImportProject():
             assert len_files == 1, "Support for multiple denovo files is NYI"
 
         self._base_input_dir = base_input_dir
+        self._base_config_dir = base_config_dir or base_input_dir
         self._gpf_instance = gpf_instance
         self.stats: StatsCollection = StatsCollection()
 
@@ -82,10 +84,13 @@ class ImportProject():
         import_config = GPFConfigParser.validate_config(import_config,
                                                         import_config_schema)
         normalizer = ImportConfigNormalizer()
+        base_config_dir = base_input_dir
         import_config, base_input_dir = \
             normalizer.normalize(import_config, base_input_dir)
         return ImportProject(
-            import_config, base_input_dir, gpf_instance=gpf_instance)
+            import_config, base_input_dir, base_config_dir,
+            gpf_instance=gpf_instance
+        )
 
     @staticmethod
     def build_from_file(import_filename, gpf_instance=None):
@@ -479,7 +484,9 @@ class ImportProject():
         annotation_config = self.import_config["annotation"]
         if "file" in annotation_config:
             # pipeline in external file
-            annotation_config_file = annotation_config["file"]
+            annotation_config_file = fs_utils.join(
+                self._base_config_dir, annotation_config["file"]
+            )
             return construct_import_annotation_pipeline(
                 gpf_instance, annotation_configfile=annotation_config_file
             )

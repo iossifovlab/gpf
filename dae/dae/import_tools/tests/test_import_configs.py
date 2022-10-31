@@ -3,7 +3,9 @@
 import os
 from glob import glob
 
+import yaml
 import pytest
+import fsspec
 
 from dae.import_tools import import_tools
 from dae.configuration.gpf_config_parser import GPFConfigParser
@@ -285,6 +287,68 @@ def test_embedded_annotation_pipeline():
     )
     project = import_tools.ImportProject.build_from_config(import_config)
     pipeline = project._build_annotation_pipeline(project.get_gpf_instance())
+    assert pipeline is not None
+    assert pipeline.config == [
+        {"resource_id": "hg19/scores/CADD", "annotator_type": "np_score"}
+    ]
+
+
+def test_annotation_file(tmpdir):
+    annotation = [
+        dict(np_score=dict(
+            resource_id="hg19/scores/CADD",
+        ))
+    ]
+    annotation_fn = str(tmpdir / "annotation.yaml")
+    with open(annotation_fn, "wt") as out_file:
+        yaml.safe_dump(annotation, out_file)
+
+    import_config = dict(
+        input={},
+        annotation=dict(
+            file="annotation.yaml"
+        )
+    )
+    config_fn = str(tmpdir / "import_config.yaml")
+    with open(config_fn, "wt") as out_file:
+        yaml.safe_dump(import_config, out_file)
+
+    project = import_tools.ImportProject.build_from_file(config_fn)
+    pipeline = project._build_annotation_pipeline(project.get_gpf_instance())
+    assert pipeline is not None
+    assert pipeline.config == [
+        {"resource_id": "hg19/scores/CADD", "annotator_type": "np_score"}
+    ]
+
+
+def test_annotation_file_and_external_input_config(tmpdir):
+    annotation = [
+        dict(np_score=dict(
+            resource_id="hg19/scores/CADD",
+        ))
+    ]
+    with open(str(tmpdir / "annotation.yaml"), "wt") as out_file:
+        yaml.safe_dump(annotation, out_file)
+
+    input_config = {}
+    with fsspec.open(str(tmpdir / "input" / "input.yaml"), "wt") as out_file:
+        yaml.safe_dump(input_config, out_file)
+
+    import_config = dict(
+        input=dict(
+            file="input/input.yaml"
+        ),
+        annotation=dict(
+            file="annotation.yaml"
+        )
+    )
+    config_fn = str(tmpdir / "import_config.yaml")
+    with open(config_fn, "wt") as out_file:
+        yaml.safe_dump(import_config, out_file)
+
+    project = import_tools.ImportProject.build_from_file(config_fn)
+    pipeline = project._build_annotation_pipeline(project.get_gpf_instance())
+    assert pipeline is not None
     assert pipeline.config == [
         {"resource_id": "hg19/scores/CADD", "annotator_type": "np_score"}
     ]
