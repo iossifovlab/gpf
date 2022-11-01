@@ -9,10 +9,11 @@ from django.http.response import StreamingHttpResponse
 
 from gene_sets.expand_gene_set_decorator import expand_gene_set
 
+from query_base.query_base import QueryBaseView
+from datasets_api.permissions import user_has_permission
+
 from dae.pheno_tool.tool import PhenoTool, PhenoToolHelper
 from dae.variants.attributes import Sex
-
-from query_base.query_base import QueryBaseView
 
 from .pheno_tool_adapter import PhenoToolAdapter, RemotePhenoToolAdapter
 
@@ -105,18 +106,15 @@ class PhenoToolView(QueryBaseView):
 
 
 class PhenoToolDownload(PhenoToolView):
-    def _parse_query_params(self, data):
-        res = {str(k): str(v) for k, v in list(data.items())}
-        assert "queryData" in res
-        query = json.loads(res["queryData"])
-        return query
-
     @expand_gene_set
     def post(self, request):
-        data = self._parse_query_params(request.data)
+        data = request.data
         adapter = self.prepare_pheno_tool_adapter(data)
         if not adapter:
             return Response(status=status.HTTP_404_NOT_FOUND)
+
+        if not user_has_permission(request.user, data["datasetId"]):
+            return Response(status=status.HTTP_403_FORBIDDEN)
 
         effect_groups = [effect for effect in data["effectTypes"]]
 

@@ -4,14 +4,11 @@ import json
 from rest_framework import status  # type: ignore
 
 
-def test_effect_details_download(
-        admin_client, datasets):
+def test_effect_details_download(admin_client, datasets):
     data = {
-        "queryData": json.dumps({
-            "datasetId": "iossifov_2014",
-            "effectTypes": ["missense"],
-            "download": True,
-        })
+        "datasetId": "iossifov_2014",
+        "effectTypes": ["missense"],
+        "download": True,
     }
     response = admin_client.post(
         "/api/v3/genotype_browser/query",

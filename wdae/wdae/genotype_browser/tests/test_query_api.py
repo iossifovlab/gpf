@@ -40,26 +40,21 @@ def test_simple_query(db, admin_client, preview_sources):
 def test_simple_query_download_anonymous(
         db, anonymous_client, download_sources):
     data = {
-        "queryData": json.dumps({
-            **EXAMPLE_REQUEST_F1,
-            "download": True,
-            "sources": download_sources
-        })
+        **EXAMPLE_REQUEST_F1,
+        "download": True,
+        "sources": download_sources
     }
-
     response = anonymous_client.post(
         QUERY_VARIANTS_URL, json.dumps(data), content_type=JSON_CONTENT_TYPE
     )
-    assert response.status_code == status.HTTP_403_FORBIDDEN
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
 
 def test_simple_query_download(db, admin_client, download_sources):
     data = {
-        "queryData": json.dumps({
-            **EXAMPLE_REQUEST_F1,
-            "download": True,
-            "sources": download_sources
-        })
+        **EXAMPLE_REQUEST_F1,
+        "download": True,
+        "sources": download_sources
     }
 
     response = admin_client.post(
@@ -122,11 +117,9 @@ def test_simple_query_summary_variants_download(
     db, admin_client, summary_download_sources
 ):
     data = {
-        "queryData": json.dumps({
-            **EXAMPLE_REQUEST_F1,
-            "download": True,
-            "sources": summary_download_sources
-        })
+        **EXAMPLE_REQUEST_F1,
+        "download": True,
+        "sources": summary_download_sources
     }
 
     response = admin_client.post(
@@ -268,11 +261,9 @@ def test_mixed_dataset_rights_download(
     db, user, user_client, download_sources
 ):
     data = {
-        "queryData": json.dumps({
-            "datasetId": "composite_dataset_ds",
-            "sources": list(download_sources),
-            "download": True,
-        })
+        "datasetId": "composite_dataset_ds",
+        "sources": list(download_sources),
+        "download": True,
     }
 
     add_group_perm_to_dataset("new_custom_group", "inheritance_trio")

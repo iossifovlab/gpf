@@ -19,9 +19,6 @@ class PhenoBrowserBaseView(QueryBaseView):
 
 
 class PhenoConfigView(PhenoBrowserBaseView):
-    def __init__(self):
-        super(PhenoConfigView, self).__init__()
-
     def get(self, request):
         logger.debug(f"pheno_config: {self.pheno_config}")
 
@@ -39,9 +36,6 @@ class PhenoConfigView(PhenoBrowserBaseView):
 
 
 class PhenoInstrumentsView(QueryBaseView):
-    def __init__(self):
-        super(PhenoInstrumentsView, self).__init__()
-
     def get(self, request):
         if "dataset_id" not in request.query_params:
             return Response(status=status.HTTP_400_BAD_REQUEST)
@@ -60,9 +54,6 @@ class PhenoInstrumentsView(QueryBaseView):
 
 
 class PhenoMeasuresInfoView(PhenoBrowserBaseView):
-    def __init__(self):
-        super(PhenoMeasuresInfoView, self).__init__()
-
     def get(self, request):
         if "dataset_id" not in request.query_params:
             return Response(status=status.HTTP_400_BAD_REQUEST)
@@ -104,9 +95,6 @@ class PhenoMeasureDescriptionView(PhenoBrowserBaseView):
 
 
 class PhenoMeasuresView(PhenoBrowserBaseView):
-    def __init__(self):
-        super(PhenoMeasuresView, self).__init__()
-
     def get(self, request):
         if "dataset_id" not in request.query_params:
             return Response(status=status.HTTP_400_BAD_REQUEST)

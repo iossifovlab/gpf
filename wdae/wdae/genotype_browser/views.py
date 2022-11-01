@@ -1,5 +1,4 @@
 """Genotype browser routes for browsing and listing variants in studies."""
-import json
 import logging
 import itertools
 
@@ -30,13 +29,6 @@ class GenotypeBrowserQueryView(QueryBaseView):
     """Genotype browser queries view."""
 
     MAX_SHOWN_VARIANTS = 1000
-
-    @staticmethod
-    def _parse_query_params(data):
-        res = {str(k): str(v) for k, v in list(data.items())}
-        assert "queryData" in res
-        query = json.loads(res["queryData"])
-        return query
 
     @expand_gene_set
     @request_logging(LOGGER)
@@ -113,15 +105,13 @@ class GenotypeBrowserQueryView(QueryBaseView):
         data = request.data
         user = request.user
 
-        if "queryData" in data:
-            data = self._parse_query_params(data)
-        dataset_id = data.pop("datasetId", None)
-
-        if not user_has_permission(request.user, dataset_id):
-            return Response(status=status.HTTP_403_FORBIDDEN)
+        dataset_id = data.get("datasetId", None)
 
         if dataset_id is None:
             return Response(status=status.HTTP_400_BAD_REQUEST)
+        if not user_has_permission(request.user, dataset_id):
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
         if "genomicScores" in data:
             scores = data["genomicScores"]
             for score in scores:
