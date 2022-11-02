@@ -70,19 +70,12 @@ class QueryVariantsView(QueryBaseView):
 
 
 class DownloadSummaryVariantsView(QueryBaseView):
-
     DOWNLOAD_LIMIT = 10000
-
-    def _parse_query_params(self, data):
-        res = {str(k): str(v) for k, v in list(data.items())}
-        assert "queryData" in res
-        query = json.loads(res["queryData"])
-        return query
 
     @expand_gene_set
     @request_logging(LOGGER)
     def post(self, request):
-        data = self._parse_query_params(request.data)
+        data = request.data
         dataset_id = data.pop("datasetId", None)
         if dataset_id is None:
             return Response(status=status.HTTP_400_BAD_REQUEST)
