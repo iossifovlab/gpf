@@ -3,6 +3,7 @@ import { DatasetsPage } from 'cypress/elements/datasets-page';
 import { UserManagementPage } from 'cypress/elements/user-management-page';
 import { datasetIds, sidenavPageLinks, toolPageLinks, userData } from 'cypress/elements/utils';
 import { GenotypeBrowserPage } from 'cypress/elements/genotype-browser-page';
+import { UsersPage } from 'cypress/elements/users-page';
 
 describe('App tests', () => {
   const page = new AppPage();
@@ -13,6 +14,24 @@ describe('App tests', () => {
 
   beforeEach(() => {
     page.navigateToHome(false);
+  });
+
+  it('should open oauth login window on login button click', () => {
+    cy.visit(`${Cypress.config().baseUrl}/datasets/ALL_genotypes/${toolPageLinks.geneBrowser}`, {
+      onBeforeLoad(window) {
+        cy.stub(window, 'open');
+      }
+    });
+
+    const usersPage = new UsersPage();
+    usersPage.loginDropdownToggleButton.click();
+
+    cy.window().its('open').should('be.called');
+  });
+
+  it('should login using oauth authentication', () => {
+    page.loginAdmin();
+    page.logout();
   });
 
   it('should display "GPF: Genotypes and Phenotypes in Families" as a title', () => {

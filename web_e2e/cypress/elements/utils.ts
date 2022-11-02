@@ -79,13 +79,24 @@ export class BasePage {
       return;
     }
 
-    usersPage.loginDropdownToggleButton.click();
-    usersPage.usernameInput.type(username);
-    usersPage.nextButton.click();
-    usersPage.passwordInput.type(password);
-    usersPage.loginSubmitButton.click();
-    usersPage.logoutButton.should('be.visible');
+    cy.window().then((win) => {
+      cy.stub(win, 'open', url => {
+        win.location.href = `${Cypress.config().baseUrl}accounts/login/?next=/gpf/o/authorize/%3F${url}`;
+      }).as('popup');
+    });
 
+    usersPage.loginDropdownToggleButton.click();
+    cy.get('@popup').should('be.called');
+    cy.get('#id_username').type('admin@iossifovlab.com');
+    cy.get('#id_password').type('secret');
+    cy.get('@popup').url().then(url => {
+      url = url.replace(`${Cypress.config().baseUrl}accounts/login/?next=/gpf/o/authorize/%3F`, '');
+      cy.get('input').last().invoke('attr', 'value', url);
+      cy.get('.login-button').click();
+    });
+    cy.get('input').contains('Authorize').click();
+
+    usersPage.logoutButton.should('be.visible');
     cy.url().then(currentUrl => {
       this.waitForPageToLoad(currentUrl.split('/').pop(), hasAccessRights);
     });
