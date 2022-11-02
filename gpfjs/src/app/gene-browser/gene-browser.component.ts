@@ -18,6 +18,7 @@ import * as d3 from 'd3';
 import * as draw from 'app/utils/svg-drawing';
 import { NgbDropdown } from '@ng-bootstrap/ng-bootstrap';
 import { LGDS, CNV, OTHER, CODING } from 'app/effect-types/effect-types';
+import { downloadBlobResponse } from 'app/utils/blob-download';
 
 @Component({
   selector: 'gpf-gene-browser',
@@ -60,6 +61,9 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
   private subscriptions: Subscription[] = [];
   private selectedDatasetId: string;
   private variantUpdate$: Subject<void> = new Subject();
+
+  public downloadInProgress = false;
+  public downloadInProgressSummary = false;
 
   public constructor(
     public readonly configService: ConfigService,
@@ -180,23 +184,38 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
     }
   }
 
-  public onSubmit(event: Event): void {
-    const target = event.target as HTMLFormElement;
+  public onDownload(): void {
+    this.downloadInProgress = true;
 
-    target.queryData.value = JSON.stringify({...this.requestParams, download: true});
-    target.submit();
+    const args = {
+      ...this.requestParams,
+      download: true
+    };
+
+    this.queryService.downloadVariants(args).pipe(take(1)).subscribe((response) => {
+      this.downloadInProgress = false;
+      downloadBlobResponse(response, 'variants.tsv');
+    }, (err) => {
+      this.downloadInProgress = false;
+    });
   }
 
-  public onSubmitSummary(event: Event): void {
-    const target = event.target as HTMLFormElement;
+  public onDownloadSummary(): void {
+    this.downloadInProgressSummary = true;
 
-    target.queryData.value = JSON.stringify({
+    const args = {
       ...this.requestParamsSummary,
       summaryVariantIds: this.summaryVariantsArrayFiltered.summaryAlleleIds.reduce(
         (a: string[], b) => a.concat(b), []
       ),
+    };
+
+    this.queryService.downloadVariantsSummary(args).pipe(take(1)).subscribe((response) => {
+      this.downloadInProgressSummary = false;
+      downloadBlobResponse(response, 'summary_variants.tsv');
+    }, (err) => {
+      this.downloadInProgressSummary = false;
     });
-    target.submit();
   }
 
   public updateVariants(): void {

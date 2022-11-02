@@ -6,6 +6,8 @@ import { CookieService } from 'ngx-cookie-service';
 import { of } from 'rxjs';
 import { fakeJsonMeasure } from './pheno-browser.spec';
 import { HttpClient } from '@angular/common/http';
+import { RouterTestingModule } from '@angular/router/testing';
+import { APP_BASE_HREF } from '@angular/common';
 
 describe('pheno browser service', () => {
   let phenoBrowserService: PhenoBrowserService;
@@ -21,11 +23,13 @@ describe('pheno browser service', () => {
     };
 
     TestBed.configureTestingModule({
+      imports: [ RouterTestingModule ],
       providers: [
         PhenoBrowserService,
         { provide: CookieService, useValue: cookieSpyObj },
         { provide: ConfigService, useValue: configMock },
         { provide: HttpClient, useValue: httpSpyObj },
+        { provide: APP_BASE_HREF, useValue: '' },
       ]
     });
 

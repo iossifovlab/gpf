@@ -10,6 +10,7 @@ import { environment } from 'environments/environment';
 import { Dictionary } from 'lodash';
 import * as _ from 'lodash';
 import { IDropdownSettings } from 'ng-multiselect-dropdown';
+import { downloadBlobResponse } from 'app/utils/blob-download';
 
 @Pipe({ name: 'getPeopleCounterRow' })
 export class PeopleCounterRowPipe implements PipeTransform {
@@ -44,6 +45,7 @@ export class VariantReportsComponent implements OnInit {
 
   public denovoVariantsTableWidth: number;
   private denovoVariantsTableColumnWidth = 140;
+  public downloadInProgress = false;
 
   public constructor(
     private variantReportsService: VariantReportsService,
@@ -160,8 +162,14 @@ export class VariantReportsComponent implements OnInit {
     return this.orderByColumnOrder(effectType.data, phenotypes);
   }
 
-  public getDownloadLink(): string {
-    return this.variantReportsService.getDownloadLink();
+  public onDownload(): void {
+    this.downloadInProgress = true;
+    this.variantReportsService.downloadFamilies().pipe(take(1)).subscribe((response) => {
+      this.downloadInProgress = false;
+      downloadBlobResponse(response, 'families.ped');
+    }, (err) => {
+      this.downloadInProgress = false;
+    });
   }
 
   public getDownloadLinkTags(): void {

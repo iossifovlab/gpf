@@ -5,6 +5,7 @@ import { CookieService } from 'ngx-cookie-service';
 import { PhenoInstruments, PhenoInstrument, PhenoMeasures, PhenoMeasure } from './pheno-browser';
 import { ConfigService } from '../config/config.service';
 import { map } from 'rxjs/operators';
+import { AuthService } from 'app/auth.service';
 
 const oboe = require('oboe');
 
@@ -16,14 +17,13 @@ export class PhenoBrowserService {
   private readonly downloadUrl = 'pheno_browser/download';
   private readonly measureDescription = 'pheno_browser/measure_description';
 
-  private oboeInstance = null;
-  private connectionEstablished = false;
   public measuresStreamingFinishedSubject = new Subject();
 
   public constructor(
     private http: HttpClient,
     private cookieService: CookieService,
-    private config: ConfigService
+    private config: ConfigService,
+    private authService: AuthService
   ) {}
 
   public getMeasureDescription(datasetId: string, measureId: string): Observable<object> {
@@ -59,13 +59,12 @@ export class PhenoBrowserService {
         .set('search', search);
     const measuresSubject: Subject<PhenoMeasure> = new Subject();
 
-    this.oboeInstance = oboe({
+    oboe({
       url: `${this.config.baseUrl}${this.measuresUrl}?${searchParams.toString()}`,
       method: 'GET',
-      headers: headers,
+      headers: { ...headers, 'Authorization': `Bearer ${this.authService.getAccessToken()}` },
       withCredentials: true,
     }).start(data => {
-      this.connectionEstablished = true;
       this.measuresStreamingFinishedSubject.next(false);
     }).node('!.*', data => {
       measuresSubject.next(data);
@@ -75,11 +74,10 @@ export class PhenoBrowserService {
       }
       this.measuresStreamingFinishedSubject.next(true);
     }).fail(error => {
-      this.connectionEstablished = false;
       this.measuresStreamingFinishedSubject.next(true);
       console.warn('oboejs encountered a fail event while streaming');
     });
-    
+
     return measuresSubject.pipe(map(data => { 
       if (data === null) {
         return null;

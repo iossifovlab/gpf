@@ -168,14 +168,13 @@
       </gpf-gene-plot>
       <div class="row" style="padding-top: 15px">
         <div class="col-12" *ngIf="selectedGene">
-          <form
-            id="summary_download"
-            (ngSubmit)="onSubmitSummary($event)"
-            action="{{ configService.baseUrl }}gene_view/download_summary_variants"
-            method="post">
-            <input name="queryData" type="hidden" />
-            <button class="btn btn-md btn-primary btn-right" id="download-summary-button" type="submit">Download Summary</button>
-          </form>
+          <button
+           class="btn btn-md btn-primary btn-right"
+           id="download-summary-button"
+           (click)="onDownloadSummary()">
+            <span *ngIf="downloadInProgressSummary">Downloading...</span>
+            <span *ngIf="!downloadInProgressSummary">Download Summary</span>
+          </button>
         </div>
       </div>
 
@@ -208,14 +207,13 @@
           </gpf-loading-spinner>
         </div>
         <div class="col-6" *ngIf="selectedGene">
-          <form
-            id="family_download"
-            (ngSubmit)="onSubmit($event)"
-            action="{{ configService.baseUrl }}genotype_browser/query"
-            method="post">
-            <input name="queryData" type="hidden" />
-            <button class="btn btn-md btn-primary btn-right" id="download-button" type="submit">Download</button>
-          </form>
+          <button
+           class="btn btn-md btn-primary btn-right"
+           id="download-button"
+           (click)="onDownload()">
+            <span *ngIf="downloadInProgress">Downloading...</span>
+            <span *ngIf="!downloadInProgress">Download</span>
+          </button>
         </div>
       </div>
 

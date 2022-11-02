@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpParams, HttpResponse } from '@angular/common/http';
 import { ConfigService } from '../config/config.service';
 import { Observable, Subscription } from 'rxjs';
 import { VariantReport } from './variant-reports';
@@ -28,9 +28,13 @@ export class VariantReportsService {
     return this.http.get(url, options).pipe(map(response => VariantReport.fromJson(response)));
   }
 
-  public getDownloadLink(): string {
+  private getDownloadLink(): string {
     const selectedDatasetId = this.datasetsService.getSelectedDataset().id;
     return `${environment.apiPath}${this.downloadUrl}${selectedDatasetId}`;
+  }
+
+  public downloadFamilies(): Observable<HttpResponse<Blob>> {
+    return this.http.get(this.getDownloadLink(), {observe: 'response', responseType: 'blob'});
   }
 
   public getFamilies(datasetId: string, groupName: string, counterId: number): Observable<string[]> {

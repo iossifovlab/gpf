@@ -6,12 +6,14 @@ import { PhenoToolService } from './pheno-tool.service';
 import { PhenoToolResults } from './pheno-tool-results';
 import { ConfigService } from '../config/config.service';
 import { Observable } from 'rxjs';
+import { take } from 'rxjs/operators';
 import { GenesBlockComponent } from 'app/genes-block/genes-block.component';
 import { PhenoToolGenotypeBlockComponent } from 'app/pheno-tool-genotype-block/pheno-tool-genotype-block.component';
 import { FamilyFiltersBlockComponent } from 'app/family-filters-block/family-filters-block.component';
 import { PhenoToolMeasureState } from 'app/pheno-tool-measure/pheno-tool-measure.state';
 import { Select, Selector } from '@ngxs/store';
 import { ErrorsState, ErrorsModel } from 'app/common/errors.state';
+import { downloadBlobResponse } from 'app/utils/blob-download';
 
 @Component({
   selector: 'gpf-pheno-tool',
@@ -28,6 +30,7 @@ export class PhenoToolComponent implements OnInit {
   public phenoToolState: object;
 
   public disableQueryButtons = false;
+  public downloadInProgress = false;
 
   public constructor(
     private datasetsService: DatasetsService,
@@ -82,10 +85,19 @@ export class PhenoToolComponent implements OnInit {
     });
   }
 
-  public onDownload(event: Event): void {
-    if (event.target instanceof HTMLFormElement) {
-      event.target.queryData.value = JSON.stringify({...this.phenoToolState, datasetId: this.selectedDataset.id});
-      event.target.submit();
-    }
+  public onDownload(): void {
+    this.downloadInProgress = true;
+
+    const args = {
+      ...this.phenoToolState,
+      datasetId: this.selectedDataset.id
+    };
+
+    this.phenoToolService.downloadPhenoToolResults(args).pipe(take(1)).subscribe((response) => {
+      this.downloadInProgress = false;
+      downloadBlobResponse(response, 'pheno_report.csv');
+    }, (err) => {
+      this.downloadInProgress = false;
+    });
   }
 }
