@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import logging
+import pathlib
+import os
 from typing import Optional, List, Dict
 from threading import Lock
 from functools import cached_property
@@ -17,6 +19,7 @@ from remote.gene_sets_db import RemoteGeneSetsDb
 from remote.denovo_gene_sets_db import RemoteDenovoGeneSetsDb
 from remote.rest_api_client import RESTClient
 
+from dae.utils.fs_utils import find_directory_with_a_file
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.enrichment_tool.tool import EnrichmentTool
 from dae.enrichment_tool.event_counters import CounterBase
@@ -301,6 +304,34 @@ def get_gpf_instance(config_filename=None) -> WGPFInstance:
     if _GPF_INSTANCE is None:
         raise ValueError("can't create an WGPFInstance")
     return _GPF_INSTANCE
+
+
+def get_wgpf_instance_path(config_filename=None):
+    """Return the path to the GPF instance in use."""
+    if _GPF_INSTANCE is not None:
+        return pathlib.Path(_GPF_INSTANCE.dae_dir)
+
+    if config_filename is not None:
+        dae_dir = pathlib.Path(config_filename).parent
+        return dae_dir
+
+    from django.conf import settings  # pylint: disable=import-outside-toplevel
+    if getattr(settings, "GPF_INSTANCE_CONFIG", None):
+        config_filename = pathlib.Path(__file__).parent.joinpath(
+            settings.GPF_INSTANCE_CONFIG)
+
+        logger.error("GPF instance config: %s", config_filename)
+        dae_dir = pathlib.Path(config_filename).parent
+        return dae_dir
+
+    if os.environ.get("DAE_DB_DIR"):
+        dae_dir = pathlib.Path(os.environ["DAE_DB_DIR"])
+        return pathlib.Path(dae_dir)
+
+    dae_dir = find_directory_with_a_file("gpf_instance.yaml")
+    if dae_dir is None:
+        raise ValueError("unable to locate GPF instance directory")
+    return dae_dir
 
 
 def build_wgpf_instance(config_filename=None) -> WGPFInstance:

@@ -116,29 +116,31 @@ def _module_cleaner(root_module):
 
 
 @pytest.fixture
-def wdae_django_setup(mocker):
+def wdae_django_setup(mocker, tmp_path):
 
     @contextlib.contextmanager
     def builder(gpf, test_settings):
-        import django
         from gpf_instance import gpf_instance
 
         mocker.patch.object(
             gpf_instance,
             "_GPF_INSTANCE",
             gpf)
+        mocker.patch.dict(
+            os.environ, {
+                "DJANGO_SETTINGS_MODULE": test_settings,
+            })
 
-        mocker.patch.dict(os.environ, {
-            "DJANGO_SETTINGS_MODULE":
-            test_settings,
-        })
+        import django.conf
+        mocker.patch.object(
+            django.conf.settings,
+            "GPF_INSTANCE_CONFIG",
+            gpf.instance_config)
+
+        import django
         django.setup()
 
-        server = LiveServer("localhost:0")
-
-        yield server
-
-        server.stop()
+        yield
 
         for app_name in [
                 "utils",
@@ -159,5 +161,24 @@ def wdae_django_setup(mocker):
             _module_cleaner(app_name)
         _module_cleaner("gpf_instance")
         _module_cleaner("django")
+        _module_cleaner(test_settings)
+        _module_cleaner("wdae.test_settings")
+        _module_cleaner("wdae.settings")
+        _module_cleaner("wdae.default_settings")
+        _module_cleaner("oauth2_provider")
+
+    return builder
+
+
+@pytest.fixture
+def wdae_django_server(mocker, wdae_django_setup):
+
+    @contextlib.contextmanager
+    def builder(gpf, test_settings):
+
+        with wdae_django_setup(gpf, test_settings):
+            server = LiveServer("localhost:0")
+            yield server
+            server.stop()
 
     return builder

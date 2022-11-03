@@ -6,11 +6,12 @@ import requests
 import pytest
 
 from dae.testing import setup_directories, setup_genome, \
-    setup_empty_gene_models, setup_gpf_instance
+    setup_empty_gene_models
+from ..testing import setup_wgpf_instance
 
 
 @pytest.fixture
-def gpf_fixture(tmp_path_factory):
+def wgpf_fixture(tmp_path_factory):
     root_path = tmp_path_factory.mktemp("eager_loading_wgpf_instance")
 
     setup_directories(root_path / "gpf_instance", {
@@ -26,7 +27,7 @@ def gpf_fixture(tmp_path_factory):
     )
     empty_gene_models = setup_empty_gene_models(
         root_path / "alla_gpf" / "empty_gene_models" / "empty_genes.txt")
-    gpf = setup_gpf_instance(
+    gpf = setup_wgpf_instance(
         root_path / "gpf_instance",
         reference_genome=genome,
         gene_models=empty_gene_models,
@@ -34,56 +35,56 @@ def gpf_fixture(tmp_path_factory):
     return gpf
 
 
-def test_eager_loading(mocker, gpf_fixture, wdae_django_setup):
+def test_eager_loading(mocker, wgpf_fixture, wdae_django_server):
 
     mocker.patch.object(
-        gpf_fixture,
+        wgpf_fixture,
         "get_all_genotype_data",
         return_value=[]
     )
     mocker.patch.object(
-        gpf_fixture,
+        wgpf_fixture,
         "load",
-        return_value=gpf_fixture
+        return_value=wgpf_fixture
     )
 
-    with wdae_django_setup(
-            gpf_fixture,
+    with wdae_django_server(
+            wgpf_fixture,
             "tests.integration.test_wdae_config."
             "eager_loading_true_settings") as server:
 
         assert server.url.startswith("http://localhost")
-        assert gpf_fixture.load.called
-        assert gpf_fixture.get_all_genotype_data.called
+        assert wgpf_fixture.load.called
+        assert wgpf_fixture.get_all_genotype_data.called
 
 
-def test_no_eager_loading(mocker, gpf_fixture, wdae_django_setup):
+def test_no_eager_loading(mocker, wgpf_fixture, wdae_django_server):
 
     mocker.patch.object(
-        gpf_fixture,
+        wgpf_fixture,
         "get_all_genotype_data",
         return_value=[]
     )
     mocker.patch.object(
-        gpf_fixture,
+        wgpf_fixture,
         "load",
-        return_value=gpf_fixture
+        return_value=wgpf_fixture
     )
 
-    with wdae_django_setup(
-            gpf_fixture,
+    with wdae_django_server(
+            wgpf_fixture,
             "tests.integration.test_wdae_config."
             "eager_loading_false_settings") as server:
 
         assert server.url.startswith("http://localhost")
-        assert not gpf_fixture.load.called
-        assert not gpf_fixture.get_all_genotype_data.called
+        assert not wgpf_fixture.load.called
+        assert not wgpf_fixture.get_all_genotype_data.called
 
 
-def test_example_request(mocker, gpf_fixture, wdae_django_setup):
+def test_example_request(mocker, wgpf_fixture, wdae_django_server):
 
-    with wdae_django_setup(
-            gpf_fixture,
+    with wdae_django_server(
+            wgpf_fixture,
             "tests.integration.test_wdae_config."
             "eager_loading_true_settings") as server:
 
