@@ -32,7 +32,7 @@ export class GpfTableComponent implements OnChanges, AfterViewChecked {
   private drawOutsideVisibleCount = 5;
   private tableTopPosition = 0;
 
-  public noResultsWidth: string;
+  public tableWidth: string;
   public tableData: Array<any> = [];
 
   public showFloatingHeader: boolean;
@@ -69,6 +69,11 @@ export class GpfTableComponent implements OnChanges, AfterViewChecked {
 
     this.showFloatingHeader = this.tableTop();
     this.tableData = this.getVisibleData();
+  }
+
+  @HostListener('window:resize', ['$event'])
+  public onWindowResize(): void {
+    this.tableWidth = this.tableViewChild?.nativeElement.offsetWidth;
   }
 
   public set sortingInfo(sortingInfo: SortInfo) {
@@ -122,15 +127,7 @@ export class GpfTableComponent implements OnChanges, AfterViewChecked {
   }
 
   public getVisibleData(): Array<any> {
-    if (this.dataSource === undefined || this.dataSource === null || this.dataSource.length === 0) {
-      if (this.columnsChildren !== undefined && this.columnsChildren !== null) {
-        let width = 0;
-        this.columnsChildren.forEach(column => {
-          width += Number(column.columnWidth.split('px')[0]);
-        });
-        this.noResultsWidth = String(width) + 'px';
-      }
-    }
+    this.tableWidth = this.tableViewChild?.nativeElement.offsetWidth;
     if (!this.dataSource) {
       return [];
     }

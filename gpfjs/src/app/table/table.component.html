@@ -35,8 +35,7 @@
 </div>
 
 <div *ngIf="tableData.length === 0">
-  <gpf-nothing-found-row [style.width]="noResultsWidth" [style.min-width]="noResultsWidth" style="height: 100%">
-  </gpf-nothing-found-row>
+  <gpf-nothing-found-row [width]="tableWidth" style="height: 100%"></gpf-nothing-found-row>
 </div>
 
 <div *ngIf="showLegend && tableData.length > 0" id="legend-wrapper">
