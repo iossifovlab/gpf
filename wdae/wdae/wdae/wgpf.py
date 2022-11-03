@@ -56,6 +56,11 @@ def _configure_init_subparser(subparsers):
     _add_create_user_parameters_group(parser)
     _add_gpf_instance_path(parser)
 
+    parser.add_argument(
+        "-f", "--force", default=False,
+        action="store_true",
+        help="ingore the state of the instance and re-init.")
+
 
 def _init_flag(wgpf_instance):
     return pathlib.Path(wgpf_instance.dae_dir) / ".wgpf_init.flag"
@@ -71,8 +76,8 @@ def _check_is_initialized(wgpf_instance):
 
 def _run_init_command(wgpf_instance, **kwargs):
     # import pdb; pdb.set_trace()
-
-    if _check_is_initialized(wgpf_instance) and not kwargs.get("force"):
+    force = kwargs.pop("force", False)
+    if _check_is_initialized(wgpf_instance) and not force:
         logger.error(
             "GPF instance %s already initialized. If you need to re-init "
             "please use '--force' flag.", wgpf_instance.dae_dir)
@@ -99,17 +104,24 @@ def _run_init_command(wgpf_instance, **kwargs):
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "wdae.settings")
 
     try:
+        try:
+            execute_from_command_line([
+                "wgpf", "migrate",
+                "--skip-checks",
+                "--settings", os.environ["DJANGO_SETTINGS_MODULE"]])
+        except SystemExit:
+            if not force:
+                raise
 
-        execute_from_command_line([
-            "wgpf", "migrate",
-            "--skip-checks",
-            "--settings", os.environ["DJANGO_SETTINGS_MODULE"]])
-
-        execute_from_command_line([
-            "wgpf", "user_create",
-            email, "-p", password, "-g", groups,
-            "--skip-checks",
-            "--settings", os.environ["DJANGO_SETTINGS_MODULE"]])
+        try:
+            execute_from_command_line([
+                "wgpf", "user_create",
+                email, "-p", password, "-g", groups,
+                "--skip-checks",
+                "--settings", os.environ["DJANGO_SETTINGS_MODULE"]])
+        except SystemExit:
+            if not force:
+                raise
 
     finally:
         _init_flag(wgpf_instance).touch()
