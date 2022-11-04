@@ -44,7 +44,7 @@ instead of ``conda``. Mamba will speed up the installation of packages:
 
 .. code-block::
 
-    conda -c conda-forge install mamba
+    conda install -c conda-forge mamba
 
 
 GPF Installation
