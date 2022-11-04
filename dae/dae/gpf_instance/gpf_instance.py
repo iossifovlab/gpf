@@ -28,7 +28,6 @@ from dae.configuration.schemas.autism_gene_profile import \
 from dae.autism_gene_profile.db import AutismGeneProfileDB
 from dae.annotation.annotation_factory import build_annotation_pipeline
 
-from dae.utils.dae_utils import join_line
 
 logger = logging.getLogger(__name__)
 
