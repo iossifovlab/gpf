@@ -62,6 +62,31 @@ def _configure_init_subparser(subparsers):
         help="ingore the state of the instance and re-init.")
 
 
+def _add_host_port_group(parser):
+    group = parser.add_argument_group(
+        title="Specify GPF development server host and port")
+
+    group.add_argument(
+        "-H", "--host", type=str,
+        default="0.0.0.0",
+        help="The host IP address on which the GPF development server will "
+        "listen for incoming connections.")
+
+    group.add_argument(
+        "-P", "--port", type=int,
+        default=8000,
+        help="The port on which the GPF development server will listen "
+        "for incomming connections.")
+
+
+def _configure_run_subparser(subparsers):
+    parser = subparsers.add_parser(
+        "run",
+        help="Run a GPF Development Web Server for a GPF instance")
+    _add_host_port_group(parser)
+    _add_gpf_instance_path(parser)
+
+
 def _init_flag(wgpf_instance):
     return pathlib.Path(wgpf_instance.dae_dir) / ".wgpf_init.flag"
 
@@ -75,7 +100,6 @@ def _check_is_initialized(wgpf_instance):
 
 
 def _run_init_command(wgpf_instance, **kwargs):
-    # import pdb; pdb.set_trace()
     force = kwargs.pop("force", False)
     if _check_is_initialized(wgpf_instance) and not force:
         logger.error(
@@ -127,6 +151,28 @@ def _run_init_command(wgpf_instance, **kwargs):
         _init_flag(wgpf_instance).touch()
 
 
+def _run_run_command(wgpf_instance, **kwargs):
+    if not _check_is_initialized(wgpf_instance):
+        logger.error(
+            "GPF instance %s should be initialized first. Run `wgpf init`.",
+            wgpf_instance.dae_dir)
+        sys.exit(1)
+    host = kwargs.get("host")
+    port = kwargs.get("port")
+
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "wdae.settings")
+
+    try:
+
+        execute_from_command_line([
+            "wgpf", "runserver", f"{host}:{port}",
+            "--skip-checks",
+            "--settings", os.environ["DJANGO_SETTINGS_MODULE"]])
+
+    finally:
+        pass
+
+
 def cli(argv=None):
     """Provide CLI for development GPF web server management."""
     if argv is None:
@@ -143,6 +189,7 @@ def cli(argv=None):
         dest="command", help="Command to execute")
 
     _configure_init_subparser(commands_parser)
+    _configure_run_subparser(commands_parser)
 
     args = parser.parse_args(argv[1:])
     VerbosityConfiguration.set(args)
@@ -162,3 +209,5 @@ def cli(argv=None):
 
     if command == "init":
         _run_init_command(wgpf_instance, **vars(args))
+    elif command == "run":
+        _run_run_command(wgpf_instance, **vars(args))
