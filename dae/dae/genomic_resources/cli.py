@@ -4,12 +4,12 @@ import sys
 import logging
 import argparse
 import pathlib
-import copy
 from typing import Dict, Union
 from urllib.parse import urlparse
 
 import yaml
-from markdown2 import markdown
+
+from cerberus.schema import SchemaError
 
 from dae.dask.client_factory import DaskClient
 from dae.utils.fs_utils import find_directory_with_a_file
@@ -36,6 +36,8 @@ from dae.genomic_resources.reference_genome import \
     build_reference_genome_from_resource
 from dae.genomic_resources.gene_models import \
     build_gene_models_from_resource
+from dae.gene.gene_sets_db import build_gene_set_collection_from_resource
+from dae.gene.gene_scores import build_gene_score_collection_from_resource
 from dae.utils.verbosity_configuration import VerbosityConfiguration
 from dae.genomic_resources.templates import resource_template
 
@@ -227,16 +229,15 @@ def _configure_repo_info_subparser(subparsers):
         "repo-info", help="Build the index.html for the whole GRR"
     )
     _add_repository_resource_parameters_group(parser)
-    _add_dry_run_and_force_parameters_group(parser)
 
     DaskClient.add_arguments(parser)
+
 
 def _configure_resource_info_subparser(subparsers):
     parser = subparsers.add_parser(
         "resource-info", help="Build the index.html for the specific resource"
     )
     _add_repository_resource_parameters_group(parser)
-    _add_dry_run_and_force_parameters_group(parser)
 
     DaskClient.add_arguments(parser)
 
@@ -485,17 +486,29 @@ def _run_resource_repair_command(proto, repo_url, region_size, **kwargs):
 
 
 def _run_repo_info_command(proto, **kwargs):
-    dry_run = kwargs.get("dry_run", False)
-    force = kwargs.get("force", False)
-
-    if dry_run and force:
-        logger.warning("please choose one of 'dry_run' and 'force' options")
-        return
-
-    # for res in proto.get_all_resources():
-        # Generate separate resource indices
-
     proto.build_index_file()
+
+    for res in proto.get_all_resources():
+        try:
+            _do_resource_info_command(proto, res)
+        except ValueError as err:
+            logger.error(
+                "Failed to generate repo index for %s\n%s",
+                res.resource_id,
+                err
+            )
+        except SchemaError as err:
+            logger.error(
+                "Resource %s has an invalid configuration\n%s",
+                res.resource_id,
+                err
+            )
+        except BaseException as err:
+            logger.error(
+                "Failed to load %s\n%s",
+                res.resource_id,
+                err
+            )
 
 
 SCORE_TYPE_TO_BUILD = {
@@ -505,6 +518,8 @@ SCORE_TYPE_TO_BUILD = {
     "liftover_chain": build_liftover_chain_from_resource,
     "gene_models": build_gene_models_from_resource,
     "genome": build_reference_genome_from_resource,
+    "gene_set": build_gene_set_collection_from_resource,
+    "gene_score": build_gene_score_collection_from_resource
 }
 
 
@@ -512,24 +527,11 @@ def build_score(res):
     return SCORE_TYPE_TO_BUILD[res.get_type()](res)
 
 
-def _do_resource_info_command(proto, res, dry_run, force):
-    # manifest_outdated = bool(proto.check_update_manifest(res))
-
-    # if manifest_outdated:
-        # print(
-            # f"manifest of <{res.get_genomic_resource_id_version()}> "
-            # f"is not up to date",
-            # file=sys.stderr)
-
-    # if dry_run:
-        # return
-
-    # if not manifest_outdated or force:
+def _do_resource_info_command(proto, res):
     score = build_score(res)
 
     template = score.get_template()
-    template_data = copy.deepcopy(res.get_config())
-    template_data["meta"] = markdown(template_data["meta"])
+    template_data = score.get_info()
 
     with proto.open_raw_file(res, "index.html", mode="wt") as outfile:
         content = template.render(
@@ -541,19 +543,12 @@ def _do_resource_info_command(proto, res, dry_run, force):
 
 
 def _run_resource_info_command(proto, repo_url, **kwargs):
-    dry_run = kwargs.get("dry_run", False)
-    force = kwargs.get("force", False)
-
-    if dry_run and force:
-        logger.warning("please choose one of 'dry_run' and 'force' options")
-        return
-
     res = _find_resource(proto, repo_url, **kwargs)
     if res is None:
         logger.error("resource not found...")
         return
 
-    _do_resource_info_command(proto, res, dry_run, force)
+    _do_resource_info_command(proto, res)
 
 
 
