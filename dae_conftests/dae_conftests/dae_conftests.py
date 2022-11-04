@@ -7,7 +7,6 @@ import shutil
 import tempfile
 import logging
 from pathlib import Path
-from functools import cached_property
 
 from io import StringIO
 
@@ -148,17 +147,6 @@ def gpf_instance_2013(
         default_dae_config, fixture_dirname, global_dae_fixtures_dir):
     from dae.gpf_instance.gpf_instance import GPFInstance
 
-    class GPFInstance2013(GPFInstance):
-
-        @cached_property
-        def gene_models(self):
-            print(self.dae_config.gene_models)
-            resource = self.grr.get_resource(
-                "hg19/gene_models/refGene_v201309")
-            result = build_gene_models_from_resource(resource)
-            result.load()
-            return result
-
     repositories = [
         build_genomic_resource_repository({
             "id": "grr_test_repo",
@@ -173,10 +161,21 @@ def gpf_instance_2013(
         build_genomic_resource_repository(),
     ]
     grr = GenomicResourceGroupRepo(repositories)
-    gpf_instance = GPFInstance2013(
+
+    resource = grr.get_resource(
+        "hg19/gene_models/refGene_v201309")
+    gene_models = build_gene_models_from_resource(resource)
+    gene_models.load()
+
+    resource = grr.get_resource(
+        "hg19/genomes/GATK_ResourceBundle_5777_b37_phiX174")
+    genome = build_reference_genome_from_resource(resource)
+    genome.open()
+
+    gpf_instance = GPFInstance(
         dae_config=default_dae_config,
         dae_dir=global_dae_fixtures_dir,
-        grr=grr)
+        grr=grr, gene_models=gene_models, reference_genome=genome)
 
     return gpf_instance
 
@@ -192,16 +191,6 @@ def gpf_instance_2019(
         default_dae_config, fixture_dirname, global_dae_fixtures_dir):
     from dae.gpf_instance.gpf_instance import GPFInstance
 
-    class GPFInstance2019(GPFInstance):
-
-        @cached_property
-        def gene_models(self):
-            resource = self.grr.get_resource(
-                "hg19/gene_models/refGene_v20190211")
-            result = build_gene_models_from_resource(resource)
-            result.load()
-            return result
-
     repositories = [
         build_genomic_resource_repository({
             "id": "grr_test_repo",
@@ -216,9 +205,20 @@ def gpf_instance_2019(
         build_genomic_resource_repository(),
     ]
     grr = GenomicResourceGroupRepo(repositories)
-    gpf_instance = GPFInstance2019(
-        dae_config=default_dae_config, dae_dir=global_dae_fixtures_dir,
-        grr=grr)
+    resource = grr.get_resource(
+        "hg19/gene_models/refGene_v20190211")
+    gene_models = build_gene_models_from_resource(resource)
+    gene_models.load()
+
+    resource = grr.get_resource(
+        "hg19/genomes/GATK_ResourceBundle_5777_b37_phiX174")
+    genome = build_reference_genome_from_resource(resource)
+    genome.open()
+
+    gpf_instance = GPFInstance(
+        dae_config=default_dae_config,
+        dae_dir=global_dae_fixtures_dir,
+        grr=grr, gene_models=gene_models, reference_genome=genome)
 
     return gpf_instance
 
@@ -228,25 +228,6 @@ def _create_gpf_instance(
         default_dae_config, global_dae_fixtures_dir, fixture_dirname):
     from dae.gpf_instance.gpf_instance import GPFInstance
 
-    class CustomGPFInstance(GPFInstance):
-
-        @cached_property
-        def gene_models(self):
-            if gene_model_dir is None:
-                return super().gene_models
-            resource = self.grr.get_resource(gene_model_dir)
-            result = build_gene_models_from_resource(resource)
-            result.load()
-            return result
-
-        @cached_property
-        def reference_genome(self):
-            if ref_genome_dir is None:
-                return super().reference_genome
-            resource = self.grr.get_resource(ref_genome_dir)
-            result = build_reference_genome_from_resource(resource)
-            result.open()
-            return result
     repositories = [
         build_genomic_resource_repository({
             "id": "grr_test_repo",
@@ -261,10 +242,21 @@ def _create_gpf_instance(
         build_genomic_resource_repository(),
     ]
     grr = GenomicResourceGroupRepo(repositories)
+    gene_models = None
+    if gene_model_dir is not None:
+        resource = grr.get_resource(gene_model_dir)
+        gene_models = build_gene_models_from_resource(resource)
+        gene_models.load()
 
-    instance = CustomGPFInstance(
+    genome = None
+    if ref_genome_dir is not None:
+        resource = grr.get_resource(ref_genome_dir)
+        genome = build_reference_genome_from_resource(resource)
+        genome.open()
+
+    instance = GPFInstance(
         dae_config=default_dae_config, dae_dir=global_dae_fixtures_dir,
-        grr=grr
+        grr=grr, gene_models=gene_models, reference_genome=genome
     )
 
     return instance
@@ -274,8 +266,8 @@ def _create_gpf_instance(
 def gpf_instance_short(
         default_dae_config, global_dae_fixtures_dir, fixture_dirname):
     return _create_gpf_instance(
-        "hg19/GATK_ResourceBundle_5777_b37_phiX174_short/\
-gene_models/refGene_201309",
+        "hg19/GATK_ResourceBundle_5777_b37_phiX174_short/"
+        "gene_models/refGene_201309",
         "hg19/GATK_ResourceBundle_5777_b37_phiX174_short/genome",
         default_dae_config, global_dae_fixtures_dir, fixture_dirname
     )
