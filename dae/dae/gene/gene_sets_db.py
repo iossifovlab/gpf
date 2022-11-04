@@ -1,19 +1,29 @@
 """Classes for handling of gene sets."""
 
 import logging
+import os
 from typing import Dict, List, Optional, cast, Set
 from urllib.parse import urlparse
 from functools import cached_property
+import copy
+import textwrap
 
 from sqlalchemy import create_engine  # type: ignore
 from sqlalchemy import MetaData, Table, Column, String
 from sqlalchemy.sql import insert
+
+from jinja2 import Template
+from markdown2 import markdown
+from cerberus import Validator
 
 
 from dae.genomic_resources.fsspec_protocol import FsspecReadOnlyProtocol
 from dae.gene.gene_term import read_ewa_set_file, read_gmt_file, \
     read_mapping_file
 from dae.genomic_resources.repository import GenomicResource
+from dae.genomic_resources.resource_implementation import \
+    GenomicResourceImplementation, get_base_resource_schema
+from dae.genomic_resources.fsspec_protocol import build_local_resource
 
 logger = logging.getLogger(__name__)
 
@@ -49,94 +59,67 @@ class GeneSet:
         raise KeyError()
 
 
-class GeneSetCollection:
-    """Class representing a collection of gene sets."""
+class GeneSetCollection(GenomicResourceImplementation):
+    """Class representing a collection of gene sets in a resource."""
 
-    def __init__(
-            self, collection_id: str, gene_sets: List[GeneSet],
-            web_label: str = None, web_format_str: str = None):
+    config_validator = Validator
 
-        assert collection_id != "denovo"
+    def __init__(self, resource: GenomicResource):
+        super().__init__(resource)
 
-        self.collection_id: str = collection_id
-        self.gene_sets: Dict[str, GeneSet] = {}
-        self.web_label = web_label
-        self.web_format_str = web_format_str
-
-        for gene_set in gene_sets:
-            self.gene_sets[gene_set.name] = gene_set
+        config = resource.get_config()
+        self.collection_id = self.config["id"]
+        assert self.collection_id != "denovo"
+        assert resource.get_type() == "gene_set", "Invalid resource type"
+        self.web_label = config.get("web_label", None)
+        self.web_format_str = config.get("web_format_str", None)
+        logger.debug("loading %s: %s", self.collection_id, config)
+        self.gene_sets: Dict[str, GeneSet] = self.load_gene_sets()
 
         assert self.collection_id, self.gene_sets
 
-    @staticmethod
-    def from_resource(resource: GenomicResource):
+    def load_gene_sets(self):
         """Build a gene set collection from a given GenomicResource."""
-        # pylint: disable=too-many-locals
-        assert resource is not None
-        gene_sets = []
-        config = resource.get_config()
-        collection_id = config["id"]
-        assert resource.get_type() == "gene_set", "Invalid resource type"
+        assert self.resource is not None
+        gene_sets = {}
+        config = self.resource.get_config()
         collection_format = config["format"]
-        web_label = config.get("web_label", None)
-        web_format_str = config.get("web_format_str", None)
-        logger.debug("loading %s: %s", collection_id, config)
+        logger.debug("loading %s: %s", self.collection_id, config)
 
         if collection_format == "map":
-            filename = config["filename"]
+            filename = self.config["filename"]
             names_filename = filename[:-4] + "names.txt"
             names_file = None
-            if resource.file_exists(names_filename):
-                names_file = resource.open_raw_file(names_filename)
+            if self.resource.file_exists(names_filename):
+                names_file = self.resource.open_raw_file(names_filename)
             gene_terms = read_mapping_file(
-                resource.open_raw_file(filename),
+                self.resource.open_raw_file(filename),
                 names_file
             )
         elif collection_format == "gmt":
             filename = config["filename"]
-            gene_terms = read_gmt_file(resource.open_raw_file(filename))
+            gene_terms = read_gmt_file(self.resource.open_raw_file(filename))
         elif collection_format == "directory":
             directory = config["directory"]
             filepaths = []
             if directory == ".":
                 directory = ""  # Easier check with startswith
-            for filepath, _ in resource.get_manifest().get_files():
+            for filepath, _ in self.resource.get_manifest().get_files():
                 if filepath.startswith(directory) and \
                         filepath.endswith(".txt"):
                     filepaths.append(filepath)
 
-            files = [resource.open_raw_file(f) for f in filepaths]
+            files = [self.resource.open_raw_file(f) for f in filepaths]
 
             gene_terms = read_ewa_set_file(files)
-        elif collection_format == "sqlite":
-            dbfile = config["dbfile"]
-            if not isinstance(resource.proto, FsspecReadOnlyProtocol) and \
-                    cast(FsspecReadOnlyProtocol,
-                         resource.proto).scheme != "file":
-                raise ValueError(
-                    "sqlite gene sets are supported only on local filesystem")
-            proto: FsspecReadOnlyProtocol = \
-                cast(FsspecReadOnlyProtocol, resource.proto)
-            dbfile_url = proto.get_resource_file_url(resource, dbfile)
-            dbfile_path = urlparse(dbfile_url).path
-
-            return SqliteGeneSetCollectionDB(
-                collection_id,
-                dbfile_path,
-                web_label,
-                web_format_str
-            )
         else:
             raise ValueError("Invalid collection format type")
 
         for key, value in gene_terms.tDesc.items():
             syms = list(gene_terms.t2G[key].keys())
-            gene_sets.append(GeneSet(key, value, syms))
-
-        return GeneSetCollection(
-            collection_id, gene_sets,
-            web_label=web_label, web_format_str=web_format_str
-        )
+            gene_set = GeneSet(key, value, syms)
+            gene_sets[gene_set.name] = gene_set
+        return gene_sets
 
     def get_gene_set(self, gene_set_id: str) -> Optional[GeneSet]:
         """Return the gene set if found; returns None if not found."""
@@ -150,21 +133,82 @@ class GeneSetCollection:
     def get_all_gene_sets(self) -> List[GeneSet]:
         return list(self.gene_sets.values())
 
+    @staticmethod
+    def get_template():
+        return Template(textwrap.dedent("""
+            {% extends base %}
+            {% block content %}
+            <hr>
+            <h2>Gene set ID: {{ data["id"] }}</h2>
+            {% if data["format"] == "directory" %}
+            <h3>Gene sets directory:</h3>
+            <a href="{{ data["directory"] }}">
+            {{ data["directory"] }}
+            </a>
+            {% else %}
+            <h3>Gene sets file:</h3>
+            <a href="{{ data["filename"] }}">
+            {{ data["filename"] }}
+            </a>
+            {% endif %}
+            <p>Format: {{ data["format"] }}</p>
+            {% if data["web_label"] %}
+            <p>Web label: {{ data["web_label"] }}</p>
+            {% endif %}
+            {% if data["web_format_str"] %}
+            <p>Web label: {{ data["web_format_str"] }}</p>
+            {% endif %}
+            {% endblock %}
+        """))
 
-class SqliteGeneSetCollectionDB:
+    def get_info(self):
+        info = copy.deepcopy(self.config)
+        if "meta" in info:
+            info["meta"] = markdown(info["meta"])
+        return info
+
+    @staticmethod
+    def get_schema():
+        return {
+            **get_base_resource_schema(),
+            "filename": {"type": "string"},
+            "id": {"type": "string"},
+            "directory": {"type": "string"},
+            "format": {"type": "string"},
+            "web_label": {"type": "string"},
+            "web_format_str": {"type": "string"}
+
+        }
+
+
+class SqliteGeneSetCollectionDB(GenomicResourceImplementation):
     """Collection of gene sets stored in a SQLite database."""
 
-    def __init__(
-        self, collection_id: str, dbfile: str,
-        web_label: str = None, web_format_str: str = None
-    ):
-        self.collection_id = collection_id
-        self.web_label = web_label
-        self.web_format_str = web_format_str
-        self.dbfile = dbfile
-        self.engine = create_engine(f"sqlite:///{dbfile}")
+    config_validator = Validator
+
+    def __init__(self, resource):
+        super().__init__(resource)
+        self.collection_id = self.config["id"]
+        assert self.collection_id != "denovo"
+        assert resource.get_type() == "gene_set", "Invalid resource type"
+        self.web_label = self.config.get("web_label", None)
+        self.web_format_str = self.config.get("web_format_str", None)
+        self.dbfile = self._get_dbfile_path()
+        self.engine = create_engine(f"sqlite:///{self.dbfile}")
         self.metadata = MetaData(self.engine)
         self._create_gene_sets_table()
+
+    def _get_dbfile_path(self):
+        dbfile = self.config["dbfile"]
+        proto: FsspecReadOnlyProtocol = \
+            cast(FsspecReadOnlyProtocol, self.resource.proto)
+        if not isinstance(proto, FsspecReadOnlyProtocol) \
+                and proto.scheme != "file":
+            raise ValueError(
+                "sqlite gene sets are supported only on local filesystem")
+        dbfile_url = proto.get_resource_file_url(self.resource, dbfile)
+        dbfile_path = urlparse(dbfile_url).path
+        return dbfile_path
 
     def _create_gene_sets_table(self):
         self.gene_sets_table = Table(
@@ -201,6 +245,44 @@ class SqliteGeneSetCollectionDB:
                 row["syms"].split(",")
             )
             return gene_set
+
+    @staticmethod
+    def get_template():
+        return Template(textwrap.dedent("""
+            {% extends base %}
+            {% block content %}
+            <hr>
+            <h3>Gene sets dbfile:</h3>
+            <a href="{{ data["dbfile"] }}">
+            {{ data["dbfile"] }}
+            </a>
+            <p>Format: {{ data["format"] }}</p>
+            {% if data["web_label"] %}
+            <p>Web label: {{ data["web_label"] }}</p>
+            {% endif %}
+            {% if data["web_format_str"] %}
+            <p>Web label: {{ data["web_format_str"] }}</p>
+            {% endif %}
+            {% endblock %}
+        """))
+
+    def get_info(self):
+        info = copy.deepcopy(self.config)
+        if "meta" in info:
+            info["meta"] = markdown(info["meta"])
+        return info
+
+    @staticmethod
+    def get_schema():
+        return {
+            **get_base_resource_schema(),
+            "dbfile": {"type": "string"},
+            "id": {"type": "string"},
+            "format": {"type": "string"},
+            "web_label": {"type": "string"},
+            "web_format_str": {"type": "string"}
+
+        }
 
 
 class GeneSetsDb:
@@ -266,3 +348,57 @@ class GeneSetsDb:
 
     def __len__(self):
         return len(self.gene_set_collections)
+
+
+def build_gene_set_collection_from_file(
+        filename: str,
+        collection_id: Optional[str] = None,
+        collection_format: Optional[str] = None,
+        web_label: Optional[str] = None,
+        web_format_str: Optional[str] = None
+):
+    dirname = os.path.dirname(filename)
+    basename = os.path.basename(filename)
+    if collection_format is None:
+        is_dir = os.path.isdir(filename)
+        if is_dir:
+            collection_format = "directory"
+        else:
+            extension = os.path.splitext(filename)[1]
+            if extension == ".txt":
+                collection_format = "map"
+            elif extension == ".gmt":
+                collection_format = "gmt"
+            elif extension == ".sql":
+                collection_format = "sqlite"
+            else:
+                raise ValueError("Cannot find collection format automatically")
+
+    if collection_id is None:
+        collection_id = basename
+
+    config = {
+        "type": "gene_set",
+        "id": collection_id,
+        "format": collection_format,
+        "web_label": web_label,
+        "web_format_str": web_format_str
+    }
+    if collection_format == "directory":
+        config["directory"] = basename
+    elif collection_format == "sqlite":
+        config["dbfile"] = basename
+    else:
+        config["filename"] = basename
+    resource = build_local_resource(dirname, config)
+    return build_gene_set_collection_from_resource(resource)
+
+
+def build_gene_set_collection_from_resource(resource: GenomicResource):
+    if resource is None:
+        raise ValueError(f"missing resource {resource}")
+
+    if resource.config["format"] == "sqlite":
+        return SqliteGeneSetCollectionDB(resource)
+    else:
+        return GeneSetCollection(resource)

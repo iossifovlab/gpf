@@ -2,14 +2,21 @@ from __future__ import annotations
 
 import itertools
 import logging
+import textwrap
+import copy
 from typing import Optional, List
 from functools import cache
 
 import numpy as np
 import pandas as pd
+from jinja2 import Template
+from markdown2 import markdown
+from cerberus import Validator
 
 from dae.utils.dae_utils import join_line
 from dae.genomic_resources.aggregators import build_aggregator
+from dae.genomic_resources.resource_implementation import \
+    GenomicResourceImplementation, get_base_resource_schema
 
 from dae.genomic_resources import GenomicResource
 from dae.genomic_resources.histogram import Histogram
@@ -196,6 +203,81 @@ class GeneScore:
         return set(genes.values)
 
 
+class GeneScoreCollection(GenomicResourceImplementation):
+    """Class used to represent all gene scores in a resource."""
+
+    config_validator = Validator
+
+    def __init__(self, resource):
+        super().__init__(resource)
+        self.scores = {
+            score.score_id: score for score in
+            GeneScore.load_gene_scores_from_resource(self.resource)
+        }
+
+    @staticmethod
+    def get_template():
+        return Template(textwrap.dedent("""
+            {% extends base %}
+            {% block content %}
+            <hr>
+            <h3>Gene scores file:</h3>
+            <a href="{{ data["filename"] }}">
+            {{ data["filename"] }}
+            </a>
+
+            <h3>Gene score definitions:</h2>
+            {% for score in data["gene_scores"] %}
+            <div class="score-definition">
+            <p>Gene score ID: {{ score["id"] }}</p>
+            <p>Description: {{ score["desc"] }}
+            </div>
+            <h3>Histograms:</h2>
+            {% for hist in data["histograms"] %}
+            <div class="histogram">
+            <h4>{{ hist["score"] }}</h1>
+            <img src="histograms/{{ hist["score"] }}.png"
+            alt={{ hist["score"] }}
+            title={{ hist["score"] }}>
+            </div>
+            {% endfor %}
+            {% endfor %}
+            {% endblock %}
+        """))
+
+    def get_info(self):
+        info = copy.deepcopy(self.config)
+        if "meta" in info:
+            info["meta"] = markdown(info["meta"])
+        return info
+
+    @staticmethod
+    def get_schema():
+        return {
+            **get_base_resource_schema(),
+            "filename": {"type": "string"},
+            "gene_scores": {"type": "list", "schema": {
+                "type": "dict",
+                "schema": {
+                    "id": {"type": "string"},
+                    "desc": {"type": "string"},
+                }
+            }},
+            "histograms": {"type": "list", "schema": {
+                "type": "dict",
+                "schema": {
+                    "score": {"type": "string"},
+                    "bins": {"type": "integer"},
+                    "min": {"type": "number"},
+                    "max": {"type": "number"},
+                    "x_min_log": {"type": "number"},
+                    "x_scale": {"type": "string"},
+                    "y_scale": {"type": "string"},
+                }
+            }},
+        }
+
+
 class GeneScoresDb:
     """
     Helper class used to load all defined gene scores.
@@ -206,8 +288,9 @@ class GeneScoresDb:
     def __init__(self, gene_scores):
         super().__init__()
         self.scores = {}
-        for score in gene_scores:
-            self.scores[score.score_id] = score
+        for collection in collections:
+            for score in collection.scores:
+                self.scores[score.score_id] = score
 
     @cache
     def get_gene_score_ids(self):
@@ -240,3 +323,8 @@ class GeneScoresDb:
 
     def __len__(self):
         return len(self.scores)
+
+def build_gene_score_collection_from_resource(resource: GenomicResource):
+    if resource is None:
+        raise ValueError(f"missing resource {resource}")
+    return GeneScoreCollection(resource)

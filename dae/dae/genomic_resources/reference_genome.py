@@ -3,9 +3,18 @@ from __future__ import annotations
 
 import os
 import logging
+import copy
+import textwrap
 
 from typing import List, Optional, Dict, Any, cast
+
+from jinja2 import Template
+from markdown2 import markdown
+from cerberus import Validator
+
 from dae.genomic_resources.fsspec_protocol import build_local_resource
+from dae.genomic_resources.resource_implementation import \
+    GenomicResourceImplementation, get_base_resource_schema
 
 from dae.utils.regions import Region
 from dae.genomic_resources import GenomicResource
@@ -14,10 +23,13 @@ from dae.genomic_resources import GenomicResource
 logger = logging.getLogger(__name__)
 
 
-class ReferenceGenome:
+class ReferenceGenome(GenomicResourceImplementation):
     """Provides an interface for quering a reference genome."""
 
+    config_validator = Validator
+
     def __init__(self, resource: GenomicResource):
+        super().__init__(resource)
         if resource.get_type() != "genome":
             raise ValueError(
                 f"wront type of resource passed: {resource.get_type()}")
@@ -25,7 +37,6 @@ class ReferenceGenome:
         self._chromosomes: List[str] = []
         self._sequence = None
 
-        self.resource = resource
         self.pars: dict = self._parse_pars(resource.get_config())
 
     @property
@@ -168,6 +179,61 @@ class ReferenceGenome:
                 chrom, pos, pars_regions  # type: ignore
             )
         return False
+
+    @staticmethod
+    def get_template():
+        return Template(textwrap.dedent("""
+            {% extends base %}
+            {% block content %}
+            <hr>
+            <h3>Genome file:</h3>
+            <a href="{{ data["filename"] }}">
+            {{ data["filename"] }}
+            </a>
+            {% if data["chrom_prefix"] %}
+            <p>chrom prefix: {{ data["chrom_prefix"] }}</p>
+            {% endif %}
+            {% if data["PARS"] %}
+            <h3>Pseudoautosomal regions:</h6>
+            {% if data["PARS"]["X"] %}
+            <p>X chromosome:</p>
+            <ul>
+            {% for region in data["PARS"]["X"] %}
+            <li>{{region}}</li>
+            {% endfor %}
+            </ul>
+            {% endif %}
+
+            {% if data["PARS"]["Y"] %}
+            <p>Y chromosome: </p>
+            <ul>
+            {% for region in data["PARS"]["Y"] %}
+            <li>{{region}}</li>
+            {% endfor %}
+            </ul>
+            {% endif %}
+
+            {% endif %}
+            {% endblock %}
+        """))
+
+    def get_info(self):
+        info = copy.deepcopy(self.config)
+        if "meta" in info:
+            info["meta"] = markdown(info["meta"])
+        return info
+
+    @staticmethod
+    def get_schema():
+        return {
+            **get_base_resource_schema(),
+            "filename": {"type": "string"},
+            "chrom_prefix": {"type": "string"},
+            "PARS": {"type": "dict", "schema": {
+                "X": {"type": "list", "schema": {"type": "string"}},
+                "Y": {"type": "list", "schema": {"type": "string"}},
+            }}
+        }
 
 
 def build_reference_genome_from_file(filename) -> ReferenceGenome:

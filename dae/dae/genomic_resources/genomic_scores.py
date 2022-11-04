@@ -2,20 +2,24 @@
 
 from __future__ import annotations
 
-import abc
 import logging
 import textwrap
 from dataclasses import dataclass
+import copy
 
 from typing import Generator, List, Tuple, cast, Type, Dict, Any, Optional, \
     Union
 
 from jinja2 import Template
+from markdown2 import markdown
+from cerberus import Validator
 
 from . import GenomicResource
+from .resource_implementation import GenomicResourceImplementation, \
+    get_base_resource_schema
 from .genome_position_table import open_genome_position_table
 
-from .aggregators import build_aggregator
+from .aggregators import build_aggregator, AGGREGATOR_SCHEMA
 
 
 logger = logging.getLogger(__name__)
@@ -59,6 +63,7 @@ class ScoreLine:
         return f"ScoreLine({self.values})"
 
 
+<<<<<<< HEAD
 @dataclass
 class ScoreDef:
     """Score configuration definition."""
@@ -76,11 +81,15 @@ class ScoreDef:
 
 
 class GenomicScore(abc.ABC):
+=======
+class GenomicScore(GenomicResourceImplementation):
+>>>>>>> b112bb3b1 (Update all genomic resource clients to be implementations)
     """Genomic scores base class."""
 
+    config_validator = Validator
+
     def __init__(self, resource):
-        self.resource = resource
-        self.config = resource.get_config()
+        super().__init__(resource)
         self.config["id"] = resource.resource_id
         self.score_columns = self._configure_score_columns(self.config)
         self.special_columns = _configure_special_columns(
@@ -91,6 +100,7 @@ class GenomicScore(abc.ABC):
     LONG_JUMP_THRESHOLD = 5000
     ACCESS_SWITCH_THRESHOLD = 1500
 
+<<<<<<< HEAD
     @staticmethod
     def _configure_score_columns(
             config):
@@ -151,6 +161,8 @@ class GenomicScore(abc.ABC):
     def get_config(self):
         return self.config
 
+=======
+>>>>>>> b112bb3b1 (Update all genomic resource clients to be implementations)
     def score_id(self):
         return self.get_config().get("id")
 
@@ -404,9 +416,78 @@ class GenomicScore(abc.ABC):
             {% endblock %}
         """))
 
+    def get_info(self):
+        info = copy.deepcopy(self.config)
+        if "meta" in info:
+            info["meta"] = markdown(info["meta"])
+        return info
+
+    @staticmethod
+    def get_schema():
+        return {
+            **get_base_resource_schema(),
+            "table": {"type": "dict", "schema": {
+                "filename": {"type": "string"},
+                "format": {"type": "string"},
+                "header_mode": {"type": "string"},
+                "chrom": {"type": "dict", "schema": {
+                    "index": {"type": "integer"},
+                    "name": {"type": "string", "excludes": "index"}
+                }},
+                "pos_begin": {"type": "dict", "schema": {
+                    "index": {"type": "integer"},
+                    "name": {"type": "string", "excludes": "index"}
+                }},
+                "pos_end": {"type": "dict", "schema": {
+                    "index": {"type": "integer"},
+                    "name": {"type": "string", "excludes": "index"}
+                }},
+            }},
+            "scores": {"type": "list", "schema": {
+                "type": "dict",
+                "schema": {
+                    "id": {"type": "string"},
+                    "index": {"type": "integer"},
+                    "name": {"type": "string", "excludes": "index"},
+                    "type": {"type": "string"},
+                    "desc": {"type": "string"},
+                }
+            }},
+            "histograms": {"type": "list", "schema": {
+                "type": "dict",
+                "schema": {
+                    "score": {"type": "string"},
+                    "bins": {"type": "integer"},
+                    "min": {"type": "number"},
+                    "max": {"type": "number"},
+                    "x_min_log": {"type": "number"},
+                    "x_scale": {"type": "string"},
+                    "y_scale": {"type": "string"},
+                }
+            }},
+            "default_annotation": {"type": "dict", "schema": {
+                "attributes": {"type": "list", "schema": {
+                    "type": "dict",
+                    "schema": {
+                        "source": {"type": "string"},
+                        "destination": {"type": "string"},
+                        "internal": {"type": "boolean", "default": False}
+                    }
+                }}
+            }}
+        }
+
 
 class PositionScore(GenomicScore):
     """Defines position genomic score."""
+
+    @staticmethod
+    def get_schema():
+        schema = copy.deepcopy(GenomicScore.get_schema())
+        annotation_schema = schema["default_annotation"]["schema"]
+        attr_schema = annotation_schema["attributes"]["schema"]["schema"]
+        attr_schema["position_aggregator"] = AGGREGATOR_SCHEMA
+        return schema
 
     def open(self) -> PositionScore:
         return cast(PositionScore, super().open())
@@ -483,6 +564,27 @@ class PositionScore(GenomicScore):
 
 class NPScore(GenomicScore):
     """Defines nucleotide-position genomic score."""
+
+    @staticmethod
+    def get_schema():
+        schema = copy.deepcopy(GenomicScore.get_schema())
+        schema["table"]["schema"]["reference"] = {
+            "type": "dict", "schema": {
+                "index": {"type": "integer"},
+                "name": {"type": "string", "excludes": "index"}
+            }
+        }
+        schema["table"]["schema"]["alternative"] = {
+            "type": "dict", "schema": {
+                "index": {"type": "integer"},
+                "name": {"type": "string", "excludes": "index"}
+            }
+        }
+        annotation_schema = schema["default_annotation"]["schema"]
+        attr_schema = annotation_schema["attributes"]["schema"]["schema"]
+        attr_schema["position_aggregator"] = AGGREGATOR_SCHEMA
+        attr_schema["nucleotide_aggregator"] = AGGREGATOR_SCHEMA
+        return schema
 
     def open(self) -> NPScore:
         return cast(NPScore, super().open())
@@ -598,6 +700,23 @@ class NPScore(GenomicScore):
 
 class AlleleScore(GenomicScore):
     """Defines allele genomic scores."""
+
+    @staticmethod
+    def get_schema():
+        schema = copy.deepcopy(GenomicScore.get_schema())
+        schema["table"]["schema"]["reference"] = {
+            "type": "dict", "schema": {
+                "index": {"type": "integer"},
+                "name": {"type": "string", "excludes": "index"}
+            }
+        }
+        schema["table"]["schema"]["alternative"] = {
+            "type": "dict", "schema": {
+                "index": {"type": "integer"},
+                "name": {"type": "string", "excludes": "index"}
+            }
+        }
+        return schema
 
     def open(self) -> AlleleScore:
         return cast(AlleleScore, super().open())
