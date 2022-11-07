@@ -21,8 +21,8 @@ Create a conda `gpf` environment with all of the conda package dependencies
 from `environment.yml` and `dev-environment.yml` files:
 
 ```bash
-conda env create --name gpf --file ./environment.yml
-conda env update --name gpf --file ./dev-environment.yml
+mamba env create --name gpf --file ./environment.yml
+mamba env update --name gpf --file ./dev-environment.yml
 ```
 
 To use this environment, you need to activate it using the following command:
