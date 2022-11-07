@@ -68,6 +68,7 @@ export class GpfTableComponent implements OnChanges, AfterViewChecked {
     }
 
     this.showFloatingHeader = this.tableTop();
+    this.tableData = this.getVisibleData();
   }
 
   public set sortingInfo(sortingInfo: SortInfo) {
