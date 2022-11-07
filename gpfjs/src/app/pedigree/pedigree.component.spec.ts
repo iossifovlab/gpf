@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { ConfigService } from 'app/config/config.service';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { VariantReportsService } from 'app/variant-reports/variant-reports.service';
@@ -20,19 +21,23 @@ class MockDatasetsService {
 describe('PedigreeComponent', () => {
   let component: PedigreeComponent;
   let fixture: ComponentFixture<PedigreeComponent>;
+  let modalService: NgbModal;
+  const mockDatasetsService = new MockDatasetsService();
+  const mockVariantReportsService = new MockVariantReportsService();
 
   beforeEach(async() => {
     await TestBed.configureTestingModule({
       declarations: [PedigreeComponent],
       providers: [
-        {provide: VariantReportsService, useValue: new MockVariantReportsService()},
+        {provide: VariantReportsService, useValue: mockVariantReportsService},
         ConfigService,
-        {provide: DatasetsService, useValue: MockDatasetsService},
+        {provide: DatasetsService, useValue: mockDatasetsService},
       ]
     }).compileComponents();
   });
 
   beforeEach(() => {
+    modalService = TestBed.inject(NgbModal);
     fixture = TestBed.createComponent(PedigreeComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
@@ -40,5 +45,24 @@ describe('PedigreeComponent', () => {
 
   it('should create', () => {
     expect(component).toBeTruthy();
+  });
+
+  it('should have working return guard in the loadFamilyListData() function', () => {
+    const getFamiliesSpy = jest.spyOn(mockVariantReportsService, 'getFamilies');
+
+    component.familyIdsList = ['1', '2', '3'];
+    component.loadFamilyListData();
+    expect(getFamiliesSpy).not.toHaveBeenCalled();
+
+    component.familyIdsList = undefined;
+    component.loadFamilyListData();
+    expect(getFamiliesSpy).toHaveBeenCalled();
+  });
+
+  it('should open modal', () => {
+    jest.spyOn(modalService, 'open');
+    jest.spyOn(component, 'loadFamilyListData');
+    component.openModal();
+    expect(modalService.open).toHaveBeenCalled();
   });
 });

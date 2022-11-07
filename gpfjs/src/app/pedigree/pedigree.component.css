@@ -48,4 +48,16 @@
 form {
   display: flex;
   justify-content: flex-end;
+  align-items: center;
+}
+
+#modal-family-count {
+  position: absolute;
+  transform: translate(-50%, 0);
+  left: 50%;
+  font-size: 18px;
+}
+
+hr {
+  margin: 8px 0;
 }

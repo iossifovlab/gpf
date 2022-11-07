@@ -1,4 +1,4 @@
-<div class="pedigree-container" (click)="openModal(pedigreeModal)">
+<div class="pedigree-container" (click)="openModal()">
   <gpf-pedigree-chart
     [family]="family"
     [groupName]="groupName"
@@ -22,6 +22,7 @@
           action="{{ configService.baseUrl }}common_reports/family_counters/download"
           method="post">
           <input name="queryData" type="hidden" />
+          <span *ngIf="familyIdsList" id="modal-family-count">{{ familyIdsList.length }}</span>
           <button class="btn btn-md btn-primary" id="download-button">
             <i class="fa fa-solid fa-download" style="scale: 1.2"></i>
           </button>

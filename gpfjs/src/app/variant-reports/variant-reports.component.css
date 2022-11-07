@@ -2,27 +2,21 @@
   background-color: #dadada;
 }
 
-tr:hover {
+#de-novo-variants tr:hover {
   background-color: #edf3ff;
 }
 
-.effect-type-group-row:hover {
+#de-novo-variants .effect-type-group-row:hover {
   background-color: #e3e5eb;
 }
 
-.variant-report-block {
-  padding: 20px;
-  border: 1px solid rgba(0 0 0 12.5%);
-  background-color: #fafafa;
+:host::ng-deep #families-by-pedigree-div td:hover {
+  background: #edf3ff;
 }
 
 .table-centered,
 .table-centered th,
 .table-centered td {
-  text-align: center;
-}
-
-.centered {
   text-align: center;
 }
 
@@ -273,4 +267,9 @@ ng-multiselect-dropdown > span.selected-item {
 .download-link {
   cursor: pointer;
   user-select: none;
+}
+
+:host::ng-deep gpf-common-reports-pedigree-cell {
+  display: flex;
+  justify-content: center;
 }

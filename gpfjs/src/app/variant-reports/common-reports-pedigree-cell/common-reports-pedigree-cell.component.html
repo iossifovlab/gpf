@@ -1,4 +1,4 @@
-<div *ngIf="pedigree">
+<div *ngIf="pedigree" class="pedigree-cell" (click)="openModal()">
   <gpf-pedigree
     [modalSimpleView]="false"
     [family]="pedigree.data"
