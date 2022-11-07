@@ -1,5 +1,6 @@
 import {
-  ContentChild, ViewChildren, ViewChild, HostListener, Input, Component, ContentChildren, QueryList, OnChanges, AfterViewChecked, ChangeDetectorRef, ChangeDetectionStrategy
+  ContentChild, ViewChildren, ViewChild, HostListener, Input, Component,
+  ContentChildren, QueryList, OnChanges, AfterViewChecked, ChangeDetectorRef
 } from '@angular/core';
 import { GpfTableColumnComponent } from './component/column.component';
 import { GpfTableSubheaderComponent } from './component/subheader.component';
@@ -16,7 +17,6 @@ export class SortInfo {
   selector: 'gpf-table',
   templateUrl: './table.component.html',
   styleUrls: ['./table.component.css'],
-  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class GpfTableComponent implements OnChanges, AfterViewChecked {
   @ViewChild('table') public tableViewChild: any;
@@ -38,10 +38,9 @@ export class GpfTableComponent implements OnChanges, AfterViewChecked {
   public showFloatingHeader: boolean;
   public showLegend: boolean;
 
-  constructor(private cdr: ChangeDetectorRef) {
-  }
+  public constructor(private cdr: ChangeDetectorRef) { }
 
-  public ngOnChanges() {
+  public ngOnChanges(): void {
     this.tableData = this.getVisibleData();
   }
 
@@ -69,7 +68,6 @@ export class GpfTableComponent implements OnChanges, AfterViewChecked {
     }
 
     this.showFloatingHeader = this.tableTop();
-    this.tableData = this.getVisibleData();
   }
 
   public set sortingInfo(sortingInfo: SortInfo) {
