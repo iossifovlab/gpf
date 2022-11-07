@@ -47,10 +47,15 @@ export class QueryService {
       this.oboeInstance = null;
     }
 
+    const headers = { 'Content-Type': 'application/json' };
+    if (this.authService.getAccessToken() !== '') {
+      headers['Authorization'] = `Bearer ${this.authService.getAccessToken()}`;
+    }
+
     this.oboeInstance = oboe({
       url: `${environment.apiPath}${url}`,
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${this.authService.getAccessToken()}` },
+      headers: headers,
       body: filter,
       withCredentials: true
     }).node('!.*', data => {
@@ -75,10 +80,15 @@ export class QueryService {
       this.summaryOboeInstance = null;
     }
 
+    const headers = { 'Content-Type': 'application/json' };
+    if (this.authService.getAccessToken() !== '') {
+      headers['Authorization'] = `Bearer ${this.authService.getAccessToken()}`;
+    }
+
     this.summaryOboeInstance = oboe({
       url: `${environment.apiPath}${url}`,
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${this.authService.getAccessToken()}` },
+      headers: headers,
       body: filter,
       withCredentials: true
     }).node('!.*', data => {
