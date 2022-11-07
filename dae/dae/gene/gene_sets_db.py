@@ -263,3 +263,6 @@ class GeneSetsDb:
         """Find and return a gene set in a gene set collection."""
         gsc = self.gene_set_collections[collection_id]
         return gsc.get_gene_set(gene_set_id)
+
+    def __len__(self):
+        return len(self.gene_set_collections)

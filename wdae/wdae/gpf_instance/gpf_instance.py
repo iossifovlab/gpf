@@ -182,24 +182,6 @@ class WGPFInstance(GPFInstance):
         common_report = client.get_common_report(remote_study_id, full=True)
         return CommonReport(common_report)
 
-    def get_common_report_families_data(self, common_report_id):
-        families_data = \
-            super().get_common_report_families_data(
-                common_report_id)
-        if families_data:
-            for family_data in families_data:
-                yield family_data
-        else:
-            client = self.remote_study_clients[common_report_id]
-            common_report_id = self.remote_study_ids[common_report_id]
-            response = client.get_common_report_families_data(
-                common_report_id)
-
-            for line in response.iter_lines():
-                if line:
-                    line += "\n".encode("UTF-8")
-                    yield line.decode("UTF-8")
-
     def get_study_enrichment_config(self, dataset_id):
         result = \
             super().get_study_enrichment_config(dataset_id)
@@ -285,6 +267,8 @@ class WGPFInstance(GPFInstance):
 
     @property
     def remote_studies(self):
+        if self._remote_study_db is None:
+            return []
         return list(self._remote_study_db.get_genotype_data_ids())
 
     def get_all_denovo_gene_sets(self, types, datasets, collection_id):

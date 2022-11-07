@@ -61,8 +61,6 @@ class LiveServer:
         self._live_server_modified_settings = modify_settings(
             ALLOWED_HOSTS={"append": host}
         )
-        # `_live_server_modified_settings` is enabled and disabled by
-        # `_live_server_helper`.
 
         self.thread.daemon = True
         self.thread.start()
@@ -111,6 +109,7 @@ def _module_cleaner(root_module):
         to_remove[module_name] = module
 
     for module_name, module in to_remove.items():
+        print("removing module:", module_name)
         del sys.modules[module_name]
         del module
 
@@ -126,6 +125,9 @@ def wdae_django_setup(mocker, tmp_path):
             gpf_instance,
             "_GPF_INSTANCE",
             gpf)
+        mocker.patch(
+            "gpf_instance.gpf_instance.build_wgpf_instance",
+            return_value=gpf)
         mocker.patch.dict(
             os.environ, {
                 "DJANGO_SETTINGS_MODULE": test_settings,
@@ -153,20 +155,23 @@ def wdae_django_setup(mocker, tmp_path):
                 "pheno_browser_api",
                 "common_reports_api",
                 "pheno_tool_api",
+                "query_base",
                 "users_api",
                 "groups_api",
                 "gpfjs",
                 "query_state_save",
-                "user_queries"]:
+                "user_queries", ]:
             _module_cleaner(app_name)
-        _module_cleaner("gpf_instance")
+
         _module_cleaner("django")
         _module_cleaner(test_settings)
         _module_cleaner("wdae.test_settings")
         _module_cleaner("wdae.settings")
         _module_cleaner("wdae.default_settings")
         _module_cleaner("oauth2_provider")
-
+        _module_cleaner("gpf_instance")
+        _module_cleaner("django")
+        _module_cleaner("tests.integration")
     return builder
 
 
@@ -177,8 +182,15 @@ def wdae_django_server(mocker, wdae_django_setup):
     def builder(gpf, test_settings):
 
         with wdae_django_setup(gpf, test_settings):
+            from django.core.management import execute_from_command_line
+            execute_from_command_line(["wgpf", "migrate", "--skip-checks"])
+
+            from gpf_instance import gpf_instance
+            gpf_instance.reload_datasets(gpf)
             server = LiveServer("localhost:0")
+
             yield server
+
             server.stop()
 
     return builder

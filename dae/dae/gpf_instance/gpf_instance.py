@@ -159,6 +159,9 @@ class GPFInstance:
     @cached_property
     def gene_scores_db(self):
         """Load and return gene scores db."""
+        if self.dae_config.gene_scores_db is None:
+            return []
+
         gene_scores = self.dae_config.gene_scores_db.gene_scores
         result = []
         for score in gene_scores:

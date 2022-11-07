@@ -62,6 +62,7 @@ class StudyWrapperBase:
 
     @staticmethod
     def build_genotype_data_all_datasets(config):
+        """Prepare response for all genotype datasets."""
         keys = [
             "id",
             "name",
@@ -159,14 +160,15 @@ class StudyWrapperBase:
         result["name"] = result["name"] or result["id"]
 
         result["enrichment"] = config.enrichment.to_dict()
-        if "coding_len_background_model" in \
-                result["enrichment"]["background"].keys():
-            del result["enrichment"]["background"][
-                "coding_len_background_model"]["file"]
-        if "samocha_background_model" in \
-                result["enrichment"]["background"].keys():
-            del result["enrichment"]["background"][
-                "samocha_background_model"]["file"]
+        if "background" in result["enrichment"]:
+            if "coding_len_background_model" in \
+                    result["enrichment"]["background"].keys():
+                del result["enrichment"]["background"][
+                    "coding_len_background_model"]["file"]
+            if "samocha_background_model" in \
+                    result["enrichment"]["background"].keys():
+                del result["enrichment"]["background"][
+                    "samocha_background_model"]["file"]
 
         result["study_names"] = None
         if result["studies"] is not None:
@@ -258,7 +260,8 @@ class StudyWrapper(StudyWrapperBase):
         self.family_filters = genotype_browser_config.family_filters or None
 
         # GENE SCORES
-        if genotype_browser_config.column_groups:
+        if genotype_browser_config.column_groups and \
+                genotype_browser_config.column_groups.scores:
             self.gene_score_column_sources = [
                 genotype_browser_config.columns.genotype[slot].source
                 for slot in (
