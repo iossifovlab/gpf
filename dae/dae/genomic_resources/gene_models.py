@@ -1459,7 +1459,8 @@ class GeneModels(GenomicResourceImplementation):
         return {
             **get_base_resource_schema(),
             "filename": {"type": "string"},
-            "format": {"type": "string"}
+            "format": {"type": "string"},
+            "gene_mapping": {"type": "string"}
         }
 
 

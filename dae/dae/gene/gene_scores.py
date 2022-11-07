@@ -289,8 +289,8 @@ class GeneScoresDb:
         super().__init__()
         self.scores = {}
         for collection in collections:
-            for score in collection.scores:
-                self.scores[score.score_id] = score
+            for score_id, score in collection.scores.items():
+                self.scores[score_id] = score
 
     @cache
     def get_gene_score_ids(self):

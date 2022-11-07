@@ -1,5 +1,6 @@
 """Classes for handling of gene sets."""
 
+import abc
 import logging
 import os
 from typing import Dict, List, Optional, cast, Set
@@ -59,7 +60,20 @@ class GeneSet:
         raise KeyError()
 
 
-class GeneSetCollection(GenomicResourceImplementation):
+class BaseGeneSetCollection(abc.ABC):
+
+    @abc.abstractmethod
+    def get_gene_set(self, gene_set_id: str) -> Optional[GeneSet]:
+        """Return the gene set if found; returns None if not found."""
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def get_all_gene_sets(self) -> List[GeneSet]:
+        """Return list of all gene sets in the collection."""
+        raise NotImplementedError()
+
+
+class GeneSetCollection(GenomicResourceImplementation, BaseGeneSetCollection):
     """Class representing a collection of gene sets in a resource."""
 
     config_validator = Validator

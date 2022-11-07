@@ -35,12 +35,13 @@ scores:
 
 # defined by score_type
 
-histogram:
-  bins_count: 10
-  x_min: 0
-  x_max: 1
-  x_scale: linear
-  y_scale: linear
+histograms:
+  - score: phastCons100way
+    bins: 10
+    min: 0
+    max: 1
+    x_scale: linear
+    y_scale: linear
 
 # score values
 
@@ -48,4 +49,4 @@ default_annotation:
   attributes:
     - source: phastCons100way
       destination: phastCons100way
-      position_aggregator: MaxAggregator
+      position_aggregator: max
