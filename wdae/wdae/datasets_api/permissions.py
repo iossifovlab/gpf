@@ -7,6 +7,7 @@ from .models import Dataset
 from utils.datasets import find_dataset_id_in_request
 from dae.studies.study import GenotypeData
 
+from django.conf import settings
 from django.contrib.auth.models import Group
 from django.utils.encoding import force_str
 
@@ -102,13 +103,12 @@ def get_wdae_children(dataset, leaves=False):
 
 
 def _user_has_permission_strict(user, dataset):
-    "Checks if a user has access strictly to the given datasets"
-
+    """Check if a user has access strictly to the given datasets."""
     dataset = get_wdae_dataset(dataset)
     if dataset is None:
         return False
 
-    if user.is_superuser or user.is_staff:
+    if user.is_superuser or user.is_staff or settings.DISABLE_PERMISSIONS:
         return True
 
     if not user.is_active:
@@ -119,7 +119,7 @@ def _user_has_permission_strict(user, dataset):
         return True
 
     dataset_groups = get_dataset_groups(dataset)
-    if 'any_user' in dataset_groups:
+    if "any_user" in dataset_groups:
         return True
 
     return bool(user_groups & dataset_groups)
