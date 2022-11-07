@@ -1,15 +1,18 @@
 import logging
 from typing import List, Dict
 
+from remote.rest_api_client import RESTClient
+
 from dae.gene.denovo_gene_sets_db import DenovoGeneSetsDb
 from dae.gene.gene_sets_db import GeneSet
-from remote.rest_api_client import RESTClient
 
 
 logger = logging.getLogger(__name__)
 
 
 class RemoteDenovoGeneSetsCollection:
+    """Represents remote de Novo gene sets collection."""
+
     rest_client: RESTClient
     collection_id: str
     collection_description: str
@@ -30,6 +33,7 @@ class RemoteDenovoGeneSetsCollection:
         self.collection_format = self.denovo_collection["format"]
         self.collection_types = self.denovo_collection["types"]
 
+    # pylint: disable=unused-argument
     def get_all_gene_sets(self, denovo_gene_set_spec, permitted_datasets=None):
         # TODO FIXME Utilise permitted datasets
         return self.rest_client.get_denovo_gene_sets(
@@ -38,9 +42,10 @@ class RemoteDenovoGeneSetsCollection:
 
     def get_gene_set(
             self, gene_set_id, denovo_gene_set_spec, permitted_datasets=None):
+        """Find and return a de Novo gene set."""
         logger.debug(
-            f"going to ged remote gene set: "
-            f"{gene_set_id}; {denovo_gene_set_spec}")
+            "going to ged remote gene set: %s; %s",
+            gene_set_id, denovo_gene_set_spec)
         # TODO FIXME Utilise permitted datasets
         raw_gene_set = self.rest_client.get_denovo_gene_set(
             gene_set_id, denovo_gene_set_spec).split("\n")
@@ -54,6 +59,8 @@ class RemoteDenovoGeneSetsCollection:
 
 
 class RemoteDenovoGeneSetsDb:
+    """Represents remote de Novo gene sets database."""
+
     _local_dgsdb: DenovoGeneSetsDb
     remote_clients: List[RESTClient]
     remote_denovo_gene_set_collections: Dict[
@@ -74,6 +81,10 @@ class RemoteDenovoGeneSetsDb:
     def __len__(self):
         return len(self.remote_clients) + len(self._local_dgsdb)
 
+    def reload(self):
+        self.remote_denovo_gene_set_collections = {}
+        self._load_remote_collections()
+
     def _load_remote_collections(self):
         for client in self.remote_clients:
             if not client.has_denovo_gene_sets():
@@ -84,6 +95,7 @@ class RemoteDenovoGeneSetsDb:
             ] = remote_collection
 
     def get_gene_set_descriptions(self, permitted_datasets=None):
+        """Collect and return the de Novo gene sets descriptions."""
         result = [
             self._local_dgsdb.get_gene_set_descriptions(permitted_datasets)
         ]
@@ -104,6 +116,7 @@ class RemoteDenovoGeneSetsDb:
         permitted_datasets=None,
         collection_id="denovo",
     ):
+        """Return a de Novo gene set."""
         if collection_id == "denovo":
             return self._local_dgsdb.get_gene_set(
                 gene_set_id, denovo_gene_set_spec, permitted_datasets
@@ -121,6 +134,7 @@ class RemoteDenovoGeneSetsDb:
         permitted_datasets=None,
         collection_id="denovo",
     ):
+        """Return all de Novo gene sets."""
         if collection_id == "denovo":
             return self._local_dgsdb.get_all_gene_sets(
                 denovo_gene_set_spec, permitted_datasets
