@@ -46,7 +46,7 @@ export class GpfTableComponent implements OnChanges, AfterViewChecked {
   }
 
   public ngAfterViewChecked(): void {
-    if (this.tableData.length === 0) {
+    if (this.tableData.length < (this.getScrollIndices()[1] - this.getScrollIndices()[0])) {
       this.tableData = this.getVisibleData();
       this.cdr.detectChanges();
     }
