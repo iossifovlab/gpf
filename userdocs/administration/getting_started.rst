@@ -158,7 +158,7 @@ Now we can run the GPF development web server and browse our empty GPF instance:
 
     wgpf run
 
-and browse the GPF development server using at ``http://localhost:8000``.
+and browse the GPF development server at ``http://localhost:8000``.
 
 
 To stop the development GPF web server, you should press ``Ctrl-C`` - the usual
@@ -196,7 +196,7 @@ expects an import project file that describes the import.
 
 This tool supports importing variants from three formats:
 
-* :ref:`List of de Novo variants <denovo_format>`
+* List of de Novo variants
 
 * Variant Call Format (VCF)
 
@@ -205,32 +205,80 @@ This tool supports importing variants from three formats:
 * CNV variants
 
 
-Example import of variants: ``helloworld``
-++++++++++++++++++++++++++
+Example import of de Novo variants: ``helloworld``
+++++++++++++++++++++++++++++++++++++++++++++++++++
 
-* Download the sample study and extract it::
+.. note:: 
 
-    wget -c https://iossifovlab.com/distribution/public/studies/genotype-helloworld-latest.tar.gz
-    tar zxvf genotype-helloworld-latest.tar.gz
+    Input files for this example can be downloaded from 
+    `denovo-helloworld.tar.gz <https://iossifovlab.com/distribution/public/denovo-helloworld.tar.gz>`_.
+    
+Let us import a small list of de Novo variants. We will need the list of
+de Novo variants ``helloworld.tsv``:
 
-It contains a pedigree file ``helloworld.ped`` with family information,
-a VCF file ``helloworld.vcf`` with transmitted variants and a list of de Novo
-variants ``helloworld.tsv``.
+.. code-block::
 
+    CHROM   POS	      REF    ALT  person_ids
+    chr14   21403214  T      C    f1.p1
+    chr14   21431459  G      C    f1.p1
+    chr14   21391016  A      AT   f2.p1
+    chr14   21403019  G      A    f2.p1
+    chr14   21402010  G      A    f3.p1
+    chr14   21393484  TCTTC  T    f3.p1
+
+and a pedigree file that describes the families ``helloworld.ped``:
+
+.. code-block::
+
+    familyId  personId  dadId   momId   sex   status  role  phenotype
+    f1        f1.mom    0       0       2     1       mom   unaffected
+    f1        f1.dad    0       0       1     1       dad   unaffected
+    f1        f1.p1     f1.dad  f1.mom  1     2       prb   autism
+    f1        f1.s1     f1.dad  f1.mom  2     2       sib   autism
+    f2        f2.mom    0       0       2     1       mom   unaffected
+    f2        f2.dad    0       0       1     1       dad   unaffected
+    f2        f2.p1     f2.dad  f2.mom  1     2       prb   autism
+    f2        f2.s1     f2.dad  f2.mom  2     2       sib   autism
+    f3        f3.mom    0       0       2     1       mom   unaffected
+    f3        f3.dad    0       0       1     1       dad   unaffected
+    f3        f3.p1     f3.dad  f3.mom  1     2       prb   autism
+    f3        f3.s1     f3.dad  f3.mom  2     2       sib   autism
+
+
+The project configuration file for importing this study:
 
 .. code-block:: yaml
 
     id: helloworld
-    input:
-        pedigree:
-            file: helloworld.ped
-        denovo:
-            files:
-            - helloworld.tsv
-        vcf:
-            files:
-            - helloworld.vcf
 
+    input:
+    pedigree:
+        file: helloworld.ped
+
+    denovo:
+        files:
+        - helloworld.tsv
+        person_id: person_ids
+        chrom: CHROM
+        pos: POS
+        ref: REF
+        alt: ALT    
+
+
+To run the import of this project you can use:
+
+.. code-block:: bash
+
+    import_tool -f helloworld_project.yaml
+
+
+When ready you can run the GPF development server using:
+
+.. code-block:: bash
+
+    wpgf run
+
+and browse the content of the GPF development server at `http://localhost:8000`
 
 .. * Enter into the created directory ``helloworld``::
 
