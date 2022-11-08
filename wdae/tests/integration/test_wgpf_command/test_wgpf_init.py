@@ -13,7 +13,7 @@ def test_wgpf_init_simple(wgpf_fixture, wdae_django_setup):
         assert not (wgpf_fixture.instance_dir / ".wgpf_init.flag").exists()
 
         # When
-        cli(["wgpf", "init", "admin@example.com", "-p", "secret"])
+        cli(["wgpf", "init"])
 
         # Then
         assert (wgpf_fixture.instance_dir / ".wgpf_init.flag").exists()
@@ -24,12 +24,12 @@ def test_wgpf_reinit(wgpf_fixture, wdae_django_setup, capsys):
     with wdae_django_setup(
             wgpf_fixture,
             "tests.integration.test_wgpf_command.wgpf_settings"):
-        cli(["wgpf", "init", "admin@example.com", "-p", "secret"])
+        cli(["wgpf", "init"])
         capsys.readouterr()
 
         # When
-        with pytest.raises(SystemExit, match="1"):
-            cli(["wgpf", "init", "admin@example.com", "-p", "secret"])
+        with pytest.raises(SystemExit, match="0"):
+            cli(["wgpf", "init"])
 
         _out, err = capsys.readouterr()
         assert err.endswith(
@@ -42,7 +42,7 @@ def test_wgpf_force_reinit(wgpf_fixture, wdae_django_setup):
     with wdae_django_setup(
             wgpf_fixture,
             "tests.integration.test_wgpf_command.wgpf_settings"):
-        cli(["wgpf", "init", "admin@example.com", "-p", "secret"])
+        cli(["wgpf", "init"])
 
         # When
-        cli(["wgpf", "init", "--force", "admin@example.com", "-p", "secret"])
+        cli(["wgpf", "init", "--force"])

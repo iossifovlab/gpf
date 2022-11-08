@@ -109,7 +109,6 @@ def _module_cleaner(root_module):
         to_remove[module_name] = module
 
     for module_name, module in to_remove.items():
-        print("removing module:", module_name)
         del sys.modules[module_name]
         del module
 
@@ -172,6 +171,7 @@ def wdae_django_setup(mocker, tmp_path):
         _module_cleaner("gpf_instance")
         _module_cleaner("django")
         _module_cleaner("tests.integration")
+        _module_cleaner("pytest_django")
     return builder
 
 

@@ -13,29 +13,6 @@ from dae.utils.verbosity_configuration import VerbosityConfiguration
 logger = logging.getLogger("wgpf")
 
 
-def _add_create_user_parameters_group(parser):
-
-    group = parser.add_argument_group(
-        title="Create a User in GPF Web Development Server")
-    group.add_argument(
-        "email", type=str,
-        default=None,
-        help="Email of the user. In GPF the email is used for username "
-        "and the user ID.")
-
-    group.add_argument(
-        "-p", "--password", type=str,
-        default=None,
-        help="The user password. If the password is not provided, then "
-        "the tool will ask the user to type the user password.")
-
-    group.add_argument(
-        "-g", "--groups", type=str,
-        default=None,
-        help="The groups of the user. If the groups is None, then the tool "
-        "assume `admin` group is applied.")
-
-
 def _add_gpf_instance_path(parser):
     parser.add_argument(
         "--gpf-instance", "--gpf", type=str,
@@ -53,7 +30,7 @@ def _configure_init_subparser(subparsers):
         "init",
         help="Initialize a GPF Development Web Server for a GPF instance")
 
-    _add_create_user_parameters_group(parser)
+    # _add_create_user_parameters_group(parser)
     _add_gpf_instance_path(parser)
 
     parser.add_argument(
@@ -105,25 +82,7 @@ def _run_init_command(wgpf_instance, **kwargs):
         logger.error(
             "GPF instance %s already initialized. If you need to re-init "
             "please use '--force' flag.", wgpf_instance.dae_dir)
-        sys.exit(1)
-
-    email = kwargs.get("email")
-    password = kwargs.get("password")
-    groups = kwargs.get("groups")
-    if groups is None:
-        groups = "admin:any_dataset"
-
-    if email is None:
-        logger.error("'init' command requires 'email' of the admin user")
-        sys.exit(1)
-
-    if password is None:
-        import getpass  # pylint: disable=import-outside-toplevel
-        password = getpass.getpass(f"Password for user {email}:")
-        password2 = getpass.getpass(f"Verify password for user {email}:")
-        if password != password2:
-            logger.error("Password verification error. Exiting.")
-            sys.exit(1)
+        sys.exit(0)
 
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "wdae.settings")
 
@@ -139,8 +98,11 @@ def _run_init_command(wgpf_instance, **kwargs):
 
         try:
             execute_from_command_line([
-                "wgpf", "user_create",
-                email, "-p", password, "-g", groups,
+                "wgpf", "createapplication",
+                "public", "authorization-code",
+                "--client-id", "gpfjs",
+                "--name", "GPF development server",
+                "--redirect-uris", "http://localhost:8000/datasets",
                 "--skip-checks",
                 "--settings", os.environ["DJANGO_SETTINGS_MODULE"]])
         except SystemExit:
@@ -154,9 +116,11 @@ def _run_init_command(wgpf_instance, **kwargs):
 def _run_run_command(wgpf_instance, **kwargs):
     if not _check_is_initialized(wgpf_instance):
         logger.error(
-            "GPF instance %s should be initialized first. Run `wgpf init`.",
+            "GPF instance %s should be initialized first. "
+            "Running `wgpf init`...",
             wgpf_instance.dae_dir)
-        sys.exit(1)
+        _run_init_command(wgpf_instance, **kwargs)
+
     host = kwargs.get("host")
     port = kwargs.get("port")
 
