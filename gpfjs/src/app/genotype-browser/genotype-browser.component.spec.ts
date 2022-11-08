@@ -32,7 +32,9 @@ import { PersonFiltersBlockComponent } from 'app/person-filters-block/person-fil
 import { FormsModule } from '@angular/forms';
 import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { of } from 'rxjs/internal/observable/of';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpResponse } from '@angular/common/http';
+import * as downloadBlobResponse from 'app/utils/blob-download';
+import { Observable } from 'rxjs/internal/Observable';
 
 
 const genotypeBrowserConfigMock = {
@@ -85,9 +87,16 @@ class MockErrorsModel {
   }
 }
 
+class MockQueryService {
+  public downloadVariants(filter: object): Observable<HttpResponse<Blob>> {
+    return of([] as any);
+  }
+}
+
 describe('GenotypeBrowserComponent', () => {
   let component: GenotypeBrowserComponent;
   let fixture: ComponentFixture<GenotypeBrowserComponent>;
+  let queryService = new MockQueryService();
 
   beforeEach(() => {
     TestBed.configureTestingModule({
@@ -100,7 +109,7 @@ describe('GenotypeBrowserComponent', () => {
         PersonFiltersBlockComponent, DisplayNamePipe
       ],
       providers: [
-        QueryService, ConfigService, FullscreenLoadingService, UsersService,
+        {provide: QueryService, useValue: queryService}, ConfigService, FullscreenLoadingService, UsersService,
         GenomicScoresBlockService, { provide: DatasetsService, useValue: new MockDatasetsService() },
         {provide: UniqueFamilyVariantsFilterComponent, useValue: new MockUniqueFamilyVariantsFilterComponent()},
         {provide: EffectTypesComponent, useValue: new MockEffectTypesComponent()},
@@ -128,7 +137,14 @@ describe('GenotypeBrowserComponent', () => {
 
   it('should test download', () => {
     const spy = jest.spyOn(component, 'onDownload');
+    const spyOnQueryService = jest.spyOn<any, any>(queryService, 'downloadVariants');
+    const spyOnBlobResponse = jest.spyOn(downloadBlobResponse, 'downloadBlobResponse');
     component.onDownload();
     expect(spy).toHaveBeenCalledTimes(1);
+    expect(spyOnBlobResponse).toHaveBeenCalledWith([], "variants.tsv");
+    expect(spyOnBlobResponse).toHaveBeenCalledTimes(1);
+    expect(spyOnQueryService).toHaveBeenCalledWith({"datasetId": "testDataset", "download": true});
+    expect(spyOnQueryService).toHaveBeenCalledTimes(1);
+    expect(spyOnQueryService.mock.results).toMatchObject([{"type":"return","value":{}}]);
   });
 });
