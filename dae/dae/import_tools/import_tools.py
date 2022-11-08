@@ -43,10 +43,18 @@ logger = logging.getLogger(__file__)
 
 @dataclass(frozen=True)
 class Bucket:
+    """A region of the input used for processing."""
+
     type: str
     region_bin: str
     regions: list[str]
     index: int
+
+    def __str__(self):
+        regions = ";".join(r if r else "all" for r in self.regions)
+        if not regions:
+            regions = "all"
+        return f"Bucket({self.type},{self.region_bin},{regions},{self.index})"
 
 
 class ImportProject():
@@ -514,6 +522,9 @@ class ImportProject():
         return build_annotation_pipeline(
             pipeline_config=annotation_config, grr_repository=gpf_instance.grr
         )
+
+    def __str__(self):
+        return f"Project({self.study_id})"
 
 
 class ImportConfigNormalizer:
