@@ -8,6 +8,8 @@ from dataclasses import dataclass
 from functools import cache
 from typing import Optional, cast
 from typing import Callable, Dict, List, Tuple, Any
+from dae.annotation.annotation_factory import AnnotationConfigParser,\
+    build_annotation_pipeline
 
 from dae.variants_loaders.cnv.loader import CNVLoader
 from dae.variants_loaders.dae.loader import DaeTransmittedLoader, DenovoLoader
@@ -24,7 +26,8 @@ from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.import_tools.task_graph import DaskExecutor, SequentialExecutor,\
     TaskGraph
 from dae.pedigrees.family import FamiliesData
-from dae.configuration.schemas.import_config import import_config_schema
+from dae.configuration.schemas.import_config import import_config_schema,\
+    embedded_input_schema
 from dae.pedigrees.loader import FamiliesLoader
 from dae.utils import fs_utils
 from dae.impala_storage.schema1.import_commons import MakefilePartitionHelper,\
@@ -52,7 +55,8 @@ class ImportProject():
     """
 
     # pylint: disable=too-many-public-methods
-    def __init__(self, import_config, base_input_dir, gpf_instance=None):
+    def __init__(self, import_config, base_input_dir, base_config_dir=None,
+                 gpf_instance=None):
         """Create a new project from the provided config.
 
         It is best not to call this ctor directly but to use one of the
@@ -65,6 +69,7 @@ class ImportProject():
             assert len_files == 1, "Support for multiple denovo files is NYI"
 
         self._base_input_dir = base_input_dir
+        self._base_config_dir = base_config_dir or base_input_dir
         self._gpf_instance = gpf_instance
         self.stats: StatsCollection = StatsCollection()
 
@@ -79,9 +84,13 @@ class ImportProject():
         import_config = GPFConfigParser.validate_config(import_config,
                                                         import_config_schema)
         normalizer = ImportConfigNormalizer()
-        import_config = normalizer.normalize(import_config)
+        base_config_dir = base_input_dir
+        import_config, base_input_dir = \
+            normalizer.normalize(import_config, base_input_dir)
         return ImportProject(
-            import_config, base_input_dir, gpf_instance=gpf_instance)
+            import_config, base_input_dir, base_config_dir,
+            gpf_instance=gpf_instance
+        )
 
     @staticmethod
     def build_from_file(import_filename, gpf_instance=None):
@@ -234,7 +243,7 @@ class ImportProject():
             if instance_dir is None:
                 config_filename = None
             else:
-                config_filename = os.path.join(
+                config_filename = fs_utils.join(
                     instance_dir, "gpf_instance.yaml")
             self._gpf_instance = \
                 GPFInstance.build(config_filename)
@@ -262,7 +271,7 @@ class ImportProject():
     @property
     def input_dir(self):
         """Return the path relative to which input files are specified."""
-        return os.path.join(
+        return fs_utils.join(
             self._base_input_dir,
             self.import_config["input"].get("input_dir", "")
         )
@@ -319,12 +328,7 @@ class ImportProject():
         variants_loader = EffectAnnotationDecorator(
             variants_loader, effect_annotator)
 
-        annotation_config_file = self.import_config.get("annotation", {})\
-            .get("file", None)
-        # TODO what about embeded annotation config
-        annotation_pipeline = construct_import_annotation_pipeline(
-            gpf_instance, annotation_configfile=annotation_config_file,
-        )
+        annotation_pipeline = self._build_annotation_pipeline(gpf_instance)
         if annotation_pipeline is not None:
             variants_loader = AnnotationPipelineDecorator(
                 variants_loader, annotation_pipeline
@@ -472,17 +476,42 @@ class ImportProject():
                     "Consider removing del_chrom_prefix."
                 ) from exp
 
+    def _build_annotation_pipeline(self, gpf_instance):
+        if "annotation" not in self.import_config:
+            # build default annotation pipeline as described in the gpf
+            return construct_import_annotation_pipeline(gpf_instance)
+
+        annotation_config = self.import_config["annotation"]
+        if "file" in annotation_config:
+            # pipeline in external file
+            annotation_config_file = fs_utils.join(
+                self._base_config_dir, annotation_config["file"]
+            )
+            return construct_import_annotation_pipeline(
+                gpf_instance, annotation_configfile=annotation_config_file
+            )
+
+        # embedded annotation
+        annotation_config = AnnotationConfigParser.normalize(annotation_config)
+        return build_annotation_pipeline(
+            pipeline_config=annotation_config, grr_repository=gpf_instance.grr
+        )
+
 
 class ImportConfigNormalizer:
     """Class to normalize import configs.
 
     Most of the normalization is done by Cerberus but it fails short in a few
-    cases. This class picks up the slack.
+    cases. This class picks up the slack. It also reads external files and
+    embeds them in the final configuration dict.
     """
 
-    def normalize(self, import_config: dict):
+    def normalize(self, import_config: dict, base_input_dir: str):
         """Normalize the import config."""
         config = deepcopy(import_config)
+        base_input_dir = self._load_external_files(
+            config, base_input_dir
+        )
         self._map_for_key(config, "region_length", self._int_shorthand)
         self._map_for_key(config, "chromosomes", self._normalize_chrom_list)
         if "parquet_row_group_size" in config:
@@ -490,7 +519,32 @@ class ImportConfigNormalizer:
             for loader in ["vcf", "denovo", "dae", "cnv"]:
                 self._map_for_key(group_size_config, loader,
                                   self._int_shorthand)
-        return config
+        return config, base_input_dir
+
+    @classmethod
+    def _load_external_files(cls, config, base_input_dir):
+        base_input_dir = cls._load_external_file(
+            config, "input", base_input_dir, embedded_input_schema
+        )
+        return base_input_dir
+
+    @staticmethod
+    def _load_external_file(config, section_key, base_input_dir, schema):
+        if section_key not in config:
+            return base_input_dir
+
+        sub_config = config[section_key]
+        while "file" in sub_config:
+            external_fn = fs_utils.join(base_input_dir, sub_config["file"])
+            sub_config = GPFConfigParser.parse_and_interpolate_file(
+                external_fn
+            )
+            sub_config = GPFConfigParser.validate_config(
+                sub_config, schema
+            )
+            base_input_dir = os.path.dirname(os.path.realpath(external_fn))
+        config[section_key] = sub_config
+        return base_input_dir
 
     @classmethod
     def _map_for_key(cls, config, key, func):

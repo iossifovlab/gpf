@@ -74,19 +74,10 @@ class ImpalaGenotypeStorage(GenotypeStorage):
     def __init__(self, storage_config: Dict[str, Any]):
         super().__init__(storage_config)
 
-        impala_hosts = self.storage_config["impala"]["hosts"]
-        impala_port = self.storage_config["impala"]["port"]
-        pool_size = self.storage_config["impala"]["pool_size"]
-
-        self._impala_helpers = ImpalaHelpers(
-            impala_hosts=impala_hosts, impala_port=impala_port,
-            pool_size=pool_size)
+        self._impala_helpers = None
 
         self._hdfs_helpers = None
         self._rsync_helpers = None
-        if self.storage_config.get("rsync"):
-            self._rsync_helpers = RsyncHelpers(
-                self.storage_config["rsync"]["location"])
 
     @classmethod
     def validate_and_normalize_config(cls, config: Dict) -> Dict:
@@ -119,7 +110,16 @@ class ImpalaGenotypeStorage(GenotypeStorage):
 
     @property
     def impala_helpers(self):
-        assert self._impala_helpers is not None
+        """Return an impala helper object."""
+        if self._impala_helpers is None:
+            impala_hosts = self.storage_config["impala"]["hosts"]
+            impala_port = self.storage_config["impala"]["port"]
+            pool_size = self.storage_config["impala"]["pool_size"]
+
+            self._impala_helpers = ImpalaHelpers(
+                impala_hosts=impala_hosts, impala_port=impala_port,
+                pool_size=pool_size)
+
         return self._impala_helpers
 
     @property
@@ -137,6 +137,10 @@ class ImpalaGenotypeStorage(GenotypeStorage):
 
     @property
     def rsync_helpers(self):
+        if self._rsync_helpers is None and self.storage_config.get("rsync"):
+            self._rsync_helpers = RsyncHelpers(
+                self.storage_config["rsync"]["location"]
+            )
         return self._rsync_helpers
 
     @classmethod

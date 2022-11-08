@@ -39,25 +39,26 @@ Import Tools configuration format
         file: "external file defining input"
         (OR)
         input_dir:
-    
+
         pedigree:
             file: %(input_dir)s/SFARI_SPARK_WES_2.ped
 
-    vcf:
-        files:
-            - wes2_15995_exome.gatk.vcf.gz
-        denovo_mode: ignore
-        omission_mode: ignore
-        add_chrom_prefix: chr
-    denovo:
-        files:
-            - wes2_merged_cohFreq_Cut17_final_v1_ALL_042921_GPF.tsv.txt
-        persion_id: spid
-        chrom: chrom
-        pos: pos
-        ref: ref
-        alt: alt
-        add_chrom_prefix: chr
+        vcf:
+            files:
+                - wes2_15995_exome.gatk.vcf.gz
+            denovo_mode: ignore
+            omission_mode: ignore
+            add_chrom_prefix: chr
+
+        denovo:
+            files:
+                - wes2_merged_cohFreq_Cut17_final_v1_ALL_042921_GPF.tsv.txt
+            persion_id: spid
+            chrom: chrom
+            pos: pos
+            ref: ref
+            alt: alt
+            add_chrom_prefix: chr
 
     processing_config:
         vcf: single_bucket
