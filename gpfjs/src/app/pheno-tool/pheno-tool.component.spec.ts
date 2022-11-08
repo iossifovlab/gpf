@@ -18,10 +18,15 @@ import { GeneSymbolsComponent } from 'app/gene-symbols/gene-symbols.component';
 import { GeneSymbolsState, SetGeneSymbols } from 'app/gene-symbols/gene-symbols.state';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { Observable, of } from 'rxjs';
+import { HttpResponse } from '@angular/common/http';
 
 class PhenoToolServiceMock {
   public getPhenoToolResults(): Observable<string> {
     return of('fakeValue');
+  }
+
+  public downloadPhenoToolResults(): Observable<HttpResponse<Blob>> {
+    return of([] as any);
   }
 }
 class MockDatasetsService {
@@ -115,5 +120,11 @@ describe('PhenoToolComponent', () => {
     expect(component.phenoToolResults).toEqual('fakeValue' as any);
     store.dispatch(new SetGeneSymbols(['POGZ']));
     expect(component.phenoToolResults).toEqual(null);
+  });
+
+  it('should test download', () => {
+    const spy = jest.spyOn(component, 'onDownload');
+    component.onDownload();
+    expect(spy).toHaveBeenCalledTimes(1);
   });
 });

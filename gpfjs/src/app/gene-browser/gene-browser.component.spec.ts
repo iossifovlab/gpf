@@ -209,4 +209,10 @@ describe('GeneBrowserComponent', () => {
       variantTypes: ['sub', 'ins', 'del', 'CNV+', 'CNV-']
     });
   });
+
+  it('should test download', () => {
+    const spy = jest.spyOn(component, 'onDownloadSummary');
+    component.onDownloadSummary();
+    expect(spy).toHaveBeenCalledTimes(1);
+  });
 });

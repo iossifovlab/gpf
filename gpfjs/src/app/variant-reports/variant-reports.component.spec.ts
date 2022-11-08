@@ -9,6 +9,7 @@ import { PerfectlyDrawablePedigreeService } from 'app/perfectly-drawable-pedigre
 import { ResizeService } from 'app/table/resize.service';
 import { DenovoReport, PedigreeCounter } from './variant-reports';
 import { PedigreeData } from 'app/genotype-preview-model/genotype-preview';
+import { HttpResponse } from '@angular/common/http';
 
 class MockDatasetsService {
   public getSelectedDataset() {
@@ -282,6 +283,10 @@ class VariantReportsServiceMock {
   public getTags(): Observable<string> {
     return undefined;
   }
+
+  public downloadFamilies(): Observable<HttpResponse<Blob>> {
+    return of([] as any);
+  }
 }
 
 describe('VariantReportsComponent', () => {
@@ -364,5 +369,11 @@ describe('VariantReportsComponent Denovo', () => {
       expect(component.currentDenovoReport).toBeDefined();
       done();
     }, 0);
+  });
+
+  it('should test download', () => {
+    const spy = jest.spyOn(component, 'onDownload');
+    component.onDownload();
+    expect(spy).toHaveBeenCalled();
   });
 });
