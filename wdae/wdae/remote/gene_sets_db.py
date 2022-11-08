@@ -75,13 +75,6 @@ class RemoteGeneSetCollection(BaseGeneSetCollection):
     def get_all_gene_sets(self) -> List[GeneSet]:
         self._load_remote_gene_sets()
         for gene_set_name in self.remote_gene_sets_names:
-            print(100*"*")
-            print(100*"*")
-            print(100*"*")
-            print(gene_set_name)
-            print(100*"*")
-            print(100*"*")
-            print(100*"*")
             self.get_gene_set(gene_set_name)
         return list(self.gene_sets.values())
 

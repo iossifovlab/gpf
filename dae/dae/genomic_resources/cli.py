@@ -558,8 +558,6 @@ def _run_resource_info_command(proto, repo_url, **kwargs):
     _do_resource_info_command(proto, res)
 
 
-
-
 def cli_manage(cli_args=None):
     """Provide CLI for repository management."""
     # pylint: disable=too-many-branches,too-many-statements

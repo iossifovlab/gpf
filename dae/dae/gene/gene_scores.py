@@ -324,6 +324,7 @@ class GeneScoresDb:
     def __len__(self):
         return len(self.scores)
 
+
 def build_gene_score_collection_from_resource(resource: GenomicResource):
     if resource is None:
         raise ValueError(f"missing resource {resource}")

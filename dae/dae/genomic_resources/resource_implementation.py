@@ -3,7 +3,6 @@ import textwrap
 from typing import Dict, Optional, Callable, cast, Any
 from abc import abstractmethod, ABC
 from jinja2 import Template
-from cerberus import Validator
 
 from .repository import GenomicResource
 
@@ -18,6 +17,12 @@ def get_base_resource_schema():
 
 
 class GenomicResourceImplementation(ABC):
+    """
+    Base class used by resource implementations.
+
+    Resources are just a folder on a repository. Resource implementations
+    are classes that know how to use the contents of the resource.
+    """
     config_validator: Optional[Callable[[Dict], Any]] = None
 
     def __init__(self, genomic_resource: GenomicResource):
