@@ -10,6 +10,8 @@ STUDIES_EAGER_LOADING = False
 
 OPEN_REGISTRATION = True
 
+DISABLE_PERMISSIONS = False
+
 SITE_URL = "localhost"
 
 BASE_DIR = os.path.dirname(__file__)

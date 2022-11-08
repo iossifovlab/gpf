@@ -3,6 +3,7 @@ import pytest
 from box import Box
 
 from django.contrib.auth import get_user_model
+from django.test import override_settings
 
 from dae.studies.study import GenotypeDataGroup
 from studies.study_wrapper import StudyWrapper
@@ -294,3 +295,11 @@ def test_get_allowed_dataset_from_parent(db, user, dataset_wrapper):
 
     allowed_datasets = _get_allowed_datasets_for_user(user, "Dataset1")
     assert "Dataset1" in allowed_datasets
+
+
+@override_settings(DISABLE_PERMISSIONS=True)
+def test_disable_permissions_flag_allows_all(db, na_user, dataset_wrapper):
+    data_ids = {*dataset_wrapper.get_studies_ids(),
+                *dataset_wrapper.get_studies_ids(leaves=False)}
+    for data_id in data_ids:
+        assert user_has_permission(na_user, data_id)
