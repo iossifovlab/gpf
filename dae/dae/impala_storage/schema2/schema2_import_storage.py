@@ -135,15 +135,19 @@ class Schema2ImportStorage(ImportStorage):
 
     def generate_import_task_graph(self, project) -> TaskGraph:
         graph = TaskGraph()
+        graph.input_files = project.config_filenames
+
         pedigree_task = graph.create_task(
-            "Generating Pedigree", self._do_write_pedigree, [project], []
+            "Generating Pedigree", self._do_write_pedigree, [project], [],
+            input_files=[project.get_pedigree_filename()]
         )
 
         bucket_tasks = []
         for bucket in project.get_import_variants_buckets():
             task = graph.create_task(
                 "Converting Variants", self._do_write_variant,
-                [project, bucket], []
+                [project, bucket], [],
+                input_files=project.get_input_filenames(bucket)
             )
             bucket_tasks.append(task)
 

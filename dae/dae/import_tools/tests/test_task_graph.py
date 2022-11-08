@@ -4,8 +4,9 @@ import pytest
 
 from dask.distributed import Client  # type: ignore
 
-from dae.import_tools.task_graph import DaskExecutor, SequentialExecutor,\
-    TaskGraph
+from dae.import_tools.task_graph import TaskGraph
+from dae.import_tools.task_graph_executor import \
+    DaskExecutor, SequentialExecutor
 
 
 @pytest.fixture(scope="module")
