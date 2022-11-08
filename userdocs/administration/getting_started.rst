@@ -138,19 +138,8 @@ Prepare the GPF web server
 
 By default, the GPF system looks for a file ``gpf_instance.yaml`` in the
 current directory (and its parent directories). If GPF finds such a file, it
-uses it as a configuration for the GPF instance. Otherwise it throws an
+uses it as a configuration for the GPF instance. Otherwise, it throws an
 exception.
-
-For the initial setup of the GPF instance web server, we need to run
-```wgpf init`` command.
-
-.. code-block:: bash
-
-    wgpf init admin@example.com -p secret
-
-This command will bootstrap the GPF instance development web server and will
-create an initial admin user with username ``admin@example.com`` and password
-``secret``.
 
 Now we can run the GPF development web server and browse our empty GPF instance:
 
@@ -265,7 +254,7 @@ The project configuration file for importing this study:
         alt: ALT    
 
 
-To run the import of this project you can use:
+To import this project run the following command:
 
 .. code-block:: bash
 
