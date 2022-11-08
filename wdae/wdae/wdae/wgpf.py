@@ -4,6 +4,8 @@ import argparse
 import logging
 import pathlib
 
+import django
+from django.conf import settings
 from django.core.management import execute_from_command_line
 
 from dae.__version__ import VERSION, RELEASE
@@ -30,7 +32,6 @@ def _configure_init_subparser(subparsers):
         "init",
         help="Initialize a GPF Development Web Server for a GPF instance")
 
-    # _add_create_user_parameters_group(parser)
     _add_gpf_instance_path(parser)
 
     parser.add_argument(
@@ -127,6 +128,9 @@ def _run_run_command(wgpf_instance, **kwargs):
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "wdae.settings")
 
     try:
+        django.setup()
+        settings.DISABLE_PERMISSIONS = True
+        settings.STUDIES_EAGER_LOADING = True
 
         execute_from_command_line([
             "wgpf", "runserver", f"{host}:{port}",
