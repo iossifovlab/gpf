@@ -63,7 +63,6 @@ class ScoreLine:
         return f"ScoreLine({self.values})"
 
 
-<<<<<<< HEAD
 @dataclass
 class ScoreDef:
     """Score configuration definition."""
@@ -80,10 +79,7 @@ class ScoreDef:
     # description: str
 
 
-class GenomicScore(abc.ABC):
-=======
 class GenomicScore(GenomicResourceImplementation):
->>>>>>> b112bb3b1 (Update all genomic resource clients to be implementations)
     """Genomic scores base class."""
 
     config_validator = Validator
@@ -100,7 +96,6 @@ class GenomicScore(GenomicResourceImplementation):
     LONG_JUMP_THRESHOLD = 5000
     ACCESS_SWITCH_THRESHOLD = 1500
 
-<<<<<<< HEAD
     @staticmethod
     def _configure_score_columns(
             config):
@@ -161,8 +156,6 @@ class GenomicScore(GenomicResourceImplementation):
     def get_config(self):
         return self.config
 
-=======
->>>>>>> b112bb3b1 (Update all genomic resource clients to be implementations)
     def score_id(self):
         return self.get_config().get("id")
 
@@ -391,7 +384,7 @@ class GenomicScore(GenomicResourceImplementation):
             {% endif %}
             {% endif %}
 
-            <h3>Score definitions:</h2>
+            <h3>Score definitions:</h3>
             {% for score in data["scores"] %}
             <div class="score-definition">
             <p>Score ID: {{ score["id"] }}</p>
@@ -404,10 +397,10 @@ class GenomicScore(GenomicResourceImplementation):
             <p> Description: {{ score["desc"] }}
             </div>
             {% endfor %}
-            <h3>Histograms:</h2>
+            <h3>Histograms:</h3>
             {% for hist in data["histograms"] %}
             <div class="histogram">
-            <h4>{{ hist["score"] }}</h1>
+            <h4>{{ hist["score"] }}</h4>
             <img src="histograms/{{ hist["score"] }}.png"
             alt={{ hist["score"] }}
             title={{ hist["score"] }}>

@@ -30,8 +30,6 @@ from dataclasses import dataclass, asdict
 import abc
 import yaml
 
-from dae.genomic_resources.templates import resource_template
-
 logger = logging.getLogger(__name__)
 
 
@@ -330,10 +328,6 @@ class GenomicResource:
         """Return the content of file in a resource."""
         return self.proto.get_file_content(
             self, filename, uncompress=uncompress, mode=mode)
-
-    def build_index(self) -> str:
-        """Build an index HTML file for the resource."""
-        return resource_template.render(data=self.get_config())
 
     def open_raw_file(
             self, filename, mode="rt", **kwargs):

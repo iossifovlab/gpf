@@ -26,7 +26,7 @@ from dae.genomic_resources.repository import GR_CONF_FILE_NAME, Manifest, \
     GR_MANIFEST_FILE_NAME, \
     GR_INDEX_FILE_NAME
 
-from dae.genomic_resources.templates import repository_template, convert_size
+from dae.utils.helpers import convert_size
 
 
 logger = logging.getLogger(__name__)
@@ -501,8 +501,8 @@ class FsspecReadWriteProtocol(
 
         return content
 
-    def build_index_file(self):
-        """Build an index HTML file for the repository."""
+    def build_index_info(self):
+        """Build info dict for the repository."""
         result = {}
         for res in self.get_all_resources():
             res_size = convert_size(
@@ -514,11 +514,7 @@ class FsspecReadWriteProtocol(
                 "res_files": len(list(res.get_manifest().get_files())),
                 "res_size": res_size
             }
-        content_filepath = os.path.join(self.url, GR_INDEX_FILE_NAME)
-        with self.filesystem.open(
-            content_filepath, "wt", encoding="utf8"
-        ) as outfile:
-            outfile.write(repository_template.render(data=result))
+        return result
 
 
 def build_local_resource(

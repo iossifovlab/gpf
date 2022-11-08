@@ -4,12 +4,15 @@ import sys
 import logging
 import argparse
 import pathlib
+import math
 from typing import Dict, Union
 from urllib.parse import urlparse
 
 import yaml
 
 from cerberus.schema import SchemaError
+
+from jinja2 import Template
 
 from dae.dask.client_factory import DaskClient
 from dae.utils.fs_utils import find_directory_with_a_file
@@ -39,7 +42,6 @@ from dae.genomic_resources.gene_models import \
 from dae.gene.gene_sets_db import build_gene_set_collection_from_resource
 from dae.gene.gene_scores import build_gene_score_collection_from_resource
 from dae.utils.verbosity_configuration import VerbosityConfiguration
-from dae.genomic_resources.templates import resource_template
 
 from dae.genomic_resources.fsspec_protocol import build_fsspec_protocol
 from dae.genomic_resources.histogram import HistogramBuilder
@@ -486,7 +488,12 @@ def _run_resource_repair_command(proto, repo_url, region_size, **kwargs):
 
 
 def _run_repo_info_command(proto, **kwargs):
-    proto.build_index_file()
+    info = proto.build_index_info()
+    content_filepath = os.path.join(proto.url, GR_INDEX_FILE_NAME)
+    with proto.open_raw_file(
+        content_filepath, "wt", encoding="utf8"
+    ) as outfile:
+        outfile.write(repository_template.render(data=result))
 
     for res in proto.get_all_resources():
         try:
@@ -511,7 +518,7 @@ def _run_repo_info_command(proto, **kwargs):
             )
 
 
-SCORE_TYPE_TO_BUILD = {
+RESOURCE_TYPE_BUILDERS = {
     "position_score": build_position_score_from_resource,
     "np_score": build_np_score_from_resource,
     "allele_score": build_allele_score_from_resource,
@@ -523,15 +530,15 @@ SCORE_TYPE_TO_BUILD = {
 }
 
 
-def build_score(res):
-    return SCORE_TYPE_TO_BUILD[res.get_type()](res)
+def build_resource_implementation(res):
+    return RESOURCE_TYPE_BUILDERS[res.get_type()](res)
 
 
 def _do_resource_info_command(proto, res):
-    score = build_score(res)
+    implementation = build_resource_implementation(res)
 
-    template = score.get_template()
-    template_data = score.get_info()
+    template = implementation.get_template()
+    template_data = implementation.get_info()
 
     with proto.open_raw_file(res, "index.html", mode="wt") as outfile:
         content = template.render(
@@ -680,3 +687,97 @@ def cli_browse(cli_args=None):
         sys.exit(0)
     repo = build_genomic_resource_repository(file_name=args.grr)
     _run_list_command(repo, args)
+
+
+repository_template = Template("""
+<html>
+ <head>
+    <style>
+        th {
+            background: lightgray;
+        }
+        td, th {
+            border: 1px solid black;
+            padding: 5px;
+        }
+        table {
+            border: 3px inset;
+            max-width: 60%;
+        }
+        table, td, th {
+            border-collapse: collapse;
+        }
+        .meta-div {
+            max-height: 250px;
+            overflow: scroll;
+        }
+        .nowrap {
+            white-space: nowrap
+        }
+    </style>
+ </head>
+ <body>
+     <table>
+        <thead>
+            <tr>
+                <th>Type</th>
+                <th>ID</th>
+                <th>Version</th>
+                <th>Number of files</th>
+                <th>Size in bytes (total)</th>
+                <th>Meta</th>
+            </tr>
+        </thead>
+        <tbody>
+            {%- for key, value in data.items() recursive%}
+            <tr>
+                <td class="nowrap">{{value['type']}}</td>
+                <td class="nowrap">
+                    <a href='/{{key}}/'>{{key}}</a>
+                </td>
+                <td class="nowrap">{{value['res_version']}}</td>
+                <td class="nowrap">{{value['res_files']}}</td>
+                <td class="nowrap">{{value['res_size']}}</td>
+                <td>
+                    <div class="meta-div">
+                        {{value.get('meta', 'N/A')}}
+                    </div>
+                </td>
+            </tr>
+            {%- endfor %}
+        </tbody>
+     </table>
+ </body>
+</html>
+""")
+
+resource_template = Template("""
+<html>
+<head>
+<style>
+h3,h4 {
+    margin-top:0.5em;
+    margin-bottom:0.5em;
+}
+
+{% block extra_styles %}{% endblock %}
+
+</style>
+</head>
+<body>
+<h1>{{ resource_id }}</h3>
+
+{% block content %}
+N/A
+{% endblock %}
+
+<div>
+<span class="description">
+{{ data["meta"] if data["meta"] else "N/A" }}
+</span>
+</div>
+
+
+</body>
+</html>
+""")
