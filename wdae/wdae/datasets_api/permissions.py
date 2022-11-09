@@ -2,14 +2,14 @@ import logging
 
 from rest_framework import permissions
 
-from gpf_instance.gpf_instance import get_gpf_instance
-from .models import Dataset
-from utils.datasets import find_dataset_id_in_request
-from dae.studies.study import GenotypeData
-
 from django.conf import settings
 from django.contrib.auth.models import Group
 from django.utils.encoding import force_str
+
+from gpf_instance.gpf_instance import get_gpf_instance
+from utils.datasets import find_dataset_id_in_request
+from dae.studies.study import GenotypeData
+from .models import Dataset
 
 
 logger = logging.getLogger(__name__)

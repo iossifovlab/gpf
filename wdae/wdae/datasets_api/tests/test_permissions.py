@@ -1,3 +1,4 @@
+# pylint: disable=redefined-outer-name,C0114,C0116,unused-argument,invalid-name
 import pytest
 
 from box import Box
@@ -5,9 +6,6 @@ from box import Box
 from django.contrib.auth import get_user_model
 from django.test import override_settings
 
-from dae.studies.study import GenotypeDataGroup
-from studies.study_wrapper import StudyWrapper
-from datasets_api.models import Dataset
 from datasets_api.permissions import user_has_permission, \
     add_group_perm_to_user, \
     add_group_perm_to_dataset, \
@@ -16,6 +14,9 @@ from datasets_api.permissions import user_has_permission, \
     get_user_groups, get_dataset_groups, \
     get_directly_allowed_genotype_data, \
     _user_has_permission_strict
+from datasets_api.models import Dataset
+from studies.study_wrapper import StudyWrapper
+from dae.studies.study import GenotypeDataGroup
 
 
 @pytest.fixture()
