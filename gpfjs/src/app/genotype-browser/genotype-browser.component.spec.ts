@@ -3,7 +3,7 @@ import { GenotypeBrowserComponent } from './genotype-browser.component';
 import { QueryService } from 'app/query/query.service';
 import { ConfigService } from 'app/config/config.service';
 import { RouterTestingModule } from '@angular/router/testing';
-import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
+import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { APP_BASE_HREF } from '@angular/common';
 import { NgxsModule } from '@ngxs/store';
 import { FullscreenLoadingService } from 'app/fullscreen-loading/fullscreen-loading.service';
@@ -32,7 +32,7 @@ import { PersonFiltersBlockComponent } from 'app/person-filters-block/person-fil
 import { FormsModule } from '@angular/forms';
 import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { of } from 'rxjs/internal/observable/of';
-import { HttpClient, HttpResponse } from '@angular/common/http';
+import { HttpResponse } from '@angular/common/http';
 import * as downloadBlobResponse from 'app/utils/blob-download';
 import { Observable } from 'rxjs/internal/Observable';
 
