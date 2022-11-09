@@ -50,43 +50,6 @@ class MockDatasetsService {
     return { id: 'testDataset', genotypeBrowserConfig: genotypeBrowserConfigMock };
   }
 }
-
-class MockUniqueFamilyVariantsFilterComponent {
-  public ngOnInit(): void {
-  }
-}
-
-class MockEffectTypesComponent {
-  public ngOnInit(): void {
-  }
-}
-
-class MockGenderComponent {
-  public ngOnInit(): void {
-  }
-}
-
-class MockVariantTypesComponent {
-  public ngOnInit(): void {
-  }
-}
-
-class MockGenesBlockComponent {
-  public ngOnInit(): void {
-  }
-}
-
-class MockRegionsBlockComponent {
-  public ngOnInit(): void {
-  }
-}
-
-class MockErrorsModel {
-  public ngOnInit(): any {
-    return of([]);
-  }
-}
-
 class MockQueryService {
   public downloadVariants(filter: object): Observable<HttpResponse<Blob>> {
     return of([] as any);
@@ -111,12 +74,8 @@ describe('GenotypeBrowserComponent', () => {
       providers: [
         {provide: QueryService, useValue: queryService}, ConfigService, FullscreenLoadingService, UsersService,
         GenomicScoresBlockService, { provide: DatasetsService, useValue: new MockDatasetsService() },
-        {provide: UniqueFamilyVariantsFilterComponent, useValue: new MockUniqueFamilyVariantsFilterComponent()},
-        {provide: EffectTypesComponent, useValue: new MockEffectTypesComponent()},
-        {provide: GenderComponent, useValue: new MockGenderComponent()},
-        {provide: VariantTypesComponent, useValue: new MockVariantTypesComponent()},
-        {provide: GenesBlockComponent, useValue: new MockGenesBlockComponent()},
-        {provide: RegionsBlockComponent, useValue: new MockRegionsBlockComponent()},
+        UniqueFamilyVariantsFilterComponent, EffectTypesComponent, GenderComponent, VariantTypesComponent,
+        GenesBlockComponent, RegionsBlockComponent,
         { provide: APP_BASE_HREF, useValue: '' }
       ],
       imports: [
