@@ -21,6 +21,7 @@ new_application = Application(**{
     "authorization_grant_type": "authorization-code",
     "redirect_uris": f"{gpfjs_url}/datasets",
     "client_id": "gpfjs",
+    "skip_authorization": True,
 })
 new_application.full_clean()
 new_application.save()
