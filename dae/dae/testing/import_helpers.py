@@ -89,6 +89,29 @@ def vcf_study(
     return gpf_instance.get_genotype_data(study_id)
 
 
+def denovo_import(
+        root_path: pathlib.Path,
+        study_id: str,
+        ped_path: pathlib.Path, denovo_paths: list[pathlib.Path],
+        gpf_instance):
+    """Import a de Novo study and return the import project."""
+    study = StudyLayout(study_id, ped_path, [], denovo_paths, [], [])
+    project = data_import(root_path, study, gpf_instance)
+    return project
+
+
+def denovo_study(
+        root_path: pathlib.Path,
+        study_id: str,
+        ped_path: pathlib.Path, denovo_paths: list[pathlib.Path],
+        gpf_instance):
+    """Import a de Novo study and return the imported study."""
+    denovo_import(
+        root_path, study_id, ped_path, denovo_paths, gpf_instance)
+    gpf_instance.reload()
+    return gpf_instance.get_genotype_data(study_id)
+
+
 def setup_dataset(dataset_id, gpf_instance, *studies):
     """Create and register a dataset dataset_id with studies."""
     # pylint: disable=import-outside-toplevel
