@@ -194,6 +194,12 @@ class DenovoLoader(VariantsGenotypesLoader):
                     "position": position,
                     "summary_variant_index": num_idx,
                     "allele_index": alt_index + 1,
+                    "af_parents_called_count": None,
+                    "af_parents_called_percent": None,
+                    "af_allele_count": None,
+                    "af_allele_freq": None,
+                    "af_ref_allele_count": None,
+                    "af_ref_allele_freq": None,
                 })
 
             svariant = SummaryVariantFactory.summary_variant_from_records(
