@@ -1,10 +1,9 @@
-"""Provides ClinVar annotator."""
 from __future__ import annotations
 
 import logging
 
 from typing import List, Dict, cast
-from dae.genomic_resources.clinvar import ClinVarVcf
+from dae.genomic_resources.vcf_info_resource import VcfInfoResource
 from dae.genomic_resources.repository import GenomicResource
 from dae.annotation.annotator_base import Annotator, ATTRIBUTES_SCHEMA
 from dae.annotation.annotatable import Annotatable
@@ -12,30 +11,25 @@ from dae.annotation.annotatable import Annotatable
 logger = logging.getLogger(__name__)
 
 
-def build_clinvar_annotator(pipeline, config):
-    """Construct a ClinVar annotator."""
-    config = ClinVarAnnotator.validate_config(config)
+def build_vcf_info_annotator(pipeline, config):
+    """Construct a VCF INFO field annotator."""
+    config = VcfInfoAnnotator.validate_config(config)
 
-    assert config["annotator_type"] == "clinvar_annotator"
+    assert config["annotator_type"] == "vcf_info_annotator"
 
-    clinvar_resource = pipeline.repository.get_resource(
+    vcf_info_resource = pipeline.repository.get_resource(
         config["resource_id"]
     )
-    if clinvar_resource is None:
+    if vcf_info_resource is None:
         raise ValueError(
-            f"can't create ClinVar annotator; "
-            f"can't find clinvar resource {config['resource_id']}")
+            f"can't create VCF INFO annotator; "
+            f"can't find VCF INFO resource {config['resource_id']}")
 
-    return ClinVarAnnotator(config, clinvar_resource)
+    return VcfInfoAnnotator(config, vcf_info_resource)
 
 
-class ClinVarAnnotator(Annotator):
-    """
-    Class for ClinVar annotator.
-
-    Uses a ClinVarVcf with a ClinVar resource to annotate with data from
-    https://ftp.ncbi.nlm.nih.gov/pub/clinvar/
-    """
+class VcfInfoAnnotator(Annotator):
+    """Class for VCF INFO field annotator."""
 
     ATTRIBUTE_TYPE_MAP = {
         "String": "str",
@@ -47,14 +41,14 @@ class ClinVarAnnotator(Annotator):
         super().__init__(config)
 
         self.resource = resource
-        self.clinvar_vcf = ClinVarVcf(resource)
+        self.vcf_info = VcfInfoResource(resource)
 
     def annotator_type(self) -> str:
-        return "clinvar_annotator"
+        return "vcf_info_annotator"
 
     def get_all_annotation_attributes(self) -> List[Dict]:
         result = []
-        for attr in self.clinvar_vcf.get_header_info().values():
+        for attr in self.vcf_info.get_header_info().values():
             attr_type = "object"
             if attr["number"] == 1:
                 attr_type = self.ATTRIBUTE_TYPE_MAP[cast(str, attr["type"])]
@@ -76,7 +70,7 @@ class ClinVarAnnotator(Annotator):
             "annotator_type": {
                 "type": "string",
                 "required": True,
-                "allowed": ["clinvar_annotator"]
+                "allowed": ["vcf_info_annotator"]
             },
             "input_annotatable": {
                 "type": "string",
@@ -93,28 +87,28 @@ class ClinVarAnnotator(Annotator):
         validator = cls.ConfigValidator(schema)
         validator.allow_unknown = True
 
-        logger.debug("validating clinvar annotator config: %s", config)
+        logger.debug("validating vcf info annotator config: %s", config)
         if not validator.validate(config):
             logger.error(
-                "wrong config format for clinvar annotator: %s",
+                "wrong config format for vcf_info annotator: %s",
                 "validator.errors"
             )
             raise ValueError(
-                f"wrong clinvar annotator config {validator.errors}")
+                f"wrong vcf info annotator config {validator.errors}")
         return cast(Dict, validator.document)
 
     def close(self):
-        self.clinvar_vcf.close()
+        self.vcf_info.close()
 
     def is_open(self):
-        return self.clinvar_vcf.is_open()
+        return self.vcf_info.is_open()
 
-    def open(self) -> ClinVarAnnotator:
+    def open(self) -> VcfInfoAnnotator:
         if self.is_open():
             return self
-        self.clinvar_vcf.open()
+        self.vcf_info.open()
         return self
 
     def _do_annotate(self, annotatable: Annotatable, _context: Dict):
-        return self.clinvar_vcf.get_variant_info(
+        return self.vcf_info.get_variant_info(
             annotatable.chrom, annotatable.pos)

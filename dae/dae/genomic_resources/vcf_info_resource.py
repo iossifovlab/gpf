@@ -1,4 +1,3 @@
-"""Module containing class for reading ClinVar VCF files from resource."""
 from __future__ import annotations
 
 import logging
@@ -9,8 +8,8 @@ from dae.genomic_resources.repository import GenomicResource
 logger = logging.getLogger(__name__)
 
 
-class ClinVarVcf:
-    """Class that handles reading ClinVar's release VCF files."""
+class VcfInfoResource:
+    """Class that handles reading VCF INFO field."""
 
     VCF_TYPE_CONVERSION_MAP = {
         "Integer": int,
@@ -18,7 +17,7 @@ class ClinVarVcf:
     }
 
     def __init__(self, resource: GenomicResource):
-        assert resource.get_type() == "clinvar_resource"
+        assert resource.get_type() == "vcf_info"
         self.resource = resource
         self.vcf = None
 
@@ -40,9 +39,9 @@ class ClinVarVcf:
 
     @cache
     def get_header_info(self) -> Dict[str, Dict[str, Union[str, int]]]:
-        """Return dictionary of ClinVar info description."""
+        """Return dictionary of VCF INFO field description."""
         if not self.is_open():
-            raise ValueError("trying to work with not open ClinVarVcf")
+            raise ValueError("trying to work with closed VcfInfoResource")
         assert self.vcf is not None
 
         output = {}
@@ -56,9 +55,9 @@ class ClinVarVcf:
         return output
 
     def get_variant_info(self, chrom: str, pos: int) -> Dict[str, Any]:
-        """Return dictionary of ClinVar info for given variant."""
+        """Return dictionary of VCF INFO field data for given variant."""
         if not self.is_open():
-            raise ValueError("trying to work with not open ClinVarVcf")
+            raise ValueError("trying to work with closed VcfInfoResource")
         assert self.vcf is not None
 
         start = pos - 1
@@ -73,7 +72,7 @@ class ClinVarVcf:
                 output[attribute_name] = value
         return output
 
-    def open(self) -> ClinVarVcf:
+    def open(self) -> VcfInfoResource:
         if self.is_open():
             return self
         config = self.resource.get_config()

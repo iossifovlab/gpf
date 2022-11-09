@@ -1,14 +1,14 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pytest
-from dae.annotation.clinvar_annotator import ClinVarAnnotator
+from dae.annotation.vcf_info_annotator import VcfInfoAnnotator
 from dae.annotation.annotatable import VCFAllele
 
 
 @pytest.fixture(scope="session")
-def clinvar_annotator_config():
+def vcf_info_annotator_config():
     config = {
-        "annotator_type": "clinvar_annotator",
-        "resource_id": "clinvar",
+        "annotator_type": "vcf_info_annotator",
+        "resource_id": "vcf_info",
         "attributes": [
             {
                 "source": "ALLELEID",
@@ -20,13 +20,13 @@ def clinvar_annotator_config():
             },
         ]
     }
-    return ClinVarAnnotator.validate_config(config)
+    return VcfInfoAnnotator.validate_config(config)
 
 
 @pytest.fixture(scope="function")
-def clinvar_annotator(grr_fixture, clinvar_annotator_config):
+def vcf_info_annotator(grr_fixture, vcf_info_annotator_config):
     resource = grr_fixture.get_resource("clinvar")
-    annotator = ClinVarAnnotator(clinvar_annotator_config, resource)
+    annotator = VcfInfoAnnotator(vcf_info_annotator_config, resource)
     annotator.open()
     return annotator
 
@@ -62,8 +62,8 @@ def test_annotatables_expected():
     ]
 
 
-def test_clinvar_annotator(clinvar_annotator, test_annotatables_expected):
+def test_vcf_info_annotator(vcf_info_annotator, test_annotatables_expected):
     for annotatable, expected in test_annotatables_expected:
         context = {}
-        result = clinvar_annotator.annotate(annotatable, context)
+        result = vcf_info_annotator.annotate(annotatable, context)
         assert result == expected
