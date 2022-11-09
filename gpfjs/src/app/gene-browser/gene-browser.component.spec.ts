@@ -3,7 +3,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute } from '@angular/router';
 import { RouterTestingModule } from '@angular/router/testing';
 import { NgxsModule } from '@ngxs/store';
-import { Observable, of } from 'rxjs';
+import { Observable, of, Subject } from 'rxjs';
 import { GeneSymbolsState } from 'app/gene-symbols/gene-symbols.state';
 import { ConfigService } from 'app/config/config.service';
 import { DatasetsService } from 'app/datasets/datasets.service';
@@ -19,6 +19,8 @@ import { SummaryAllelesArray, SummaryAllelesFilter } from './summary-variants';
 import { GenePlotComponent } from 'app/gene-plot/gene-plot.component';
 import { GenotypePreviewTableComponent } from 'app/genotype-preview-table/genotype-preview-table.component';
 import { APP_BASE_HREF } from '@angular/common';
+import { HttpResponse } from '@angular/common/http';
+import * as downloadBlobResponse from 'app/utils/blob-download';
 
 jest.mock('../utils/svg-drawing');
 
@@ -53,10 +55,33 @@ class MockGeneService {
   }
 }
 
+class MockQueryService {
+  public downloadVariantsSummary(filter: object): Observable<HttpResponse<Blob>> {
+    return of([] as any);
+  }
+
+  public getSummaryVariants() {
+    return new SummaryAllelesArray();
+  }
+
+  public downloadVariants(filter: object): Observable<HttpResponse<Blob>> {
+    return of([] as any);
+  }
+
+  public streamingFinishedSubject = new Subject();
+  public summaryStreamingFinishedSubject = new Subject();
+
+  public ngOnInit(): void {
+    this.streamingFinishedSubject.next([]);
+    this.summaryStreamingFinishedSubject.next([]);
+  }
+}
+
 describe('GeneBrowserComponent', () => {
   let component: GeneBrowserComponent;
   let fixture: ComponentFixture<GeneBrowserComponent>;
   const mockDatasetsService = new MockDatasetsService();
+  const mockQueryService = new MockQueryService();
 
   beforeEach(async() => {
     await TestBed.configureTestingModule({
@@ -65,7 +90,8 @@ describe('GeneBrowserComponent', () => {
         GenotypePreviewTableComponent, SearchableSelectComponent
       ],
       providers: [
-        ConfigService, UsersService, FullscreenLoadingService, QueryService,
+        ConfigService, UsersService, FullscreenLoadingService,
+        {provide: QueryService, useValue: mockQueryService},
         {provide: ActivatedRoute, useValue: new MockActivatedRoute()},
         {provide: GeneService, useValue: new MockGeneService()},
         {provide: DatasetsService, useValue: mockDatasetsService},
@@ -81,9 +107,7 @@ describe('GeneBrowserComponent', () => {
     fixture = TestBed.createComponent(GeneBrowserComponent);
     component = fixture.componentInstance;
     component.summaryVariantsArray = new SummaryAllelesArray();
-    jest.spyOn<any, any>(component['queryService'], 'getSummaryVariants').mockImplementation(
-      () => new SummaryAllelesArray()
-    );
+    jest.spyOn<any, any>(component['queryService'], 'getSummaryVariants');
     fixture.detectChanges();
   });
 
@@ -211,8 +235,24 @@ describe('GeneBrowserComponent', () => {
   });
 
   it('should test download', () => {
-    const spy = jest.spyOn(component, 'onDownloadSummary');
-    component.onDownloadSummary();
+    const spy = jest.spyOn(component, 'onDownload');
+    const spyOnQueryService = jest.spyOn<any, any>(mockQueryService, 'downloadVariants');
+    const spyOnBlobResponse = jest.spyOn(downloadBlobResponse, 'downloadBlobResponse');
+    component.onDownload();
     expect(spy).toHaveBeenCalledTimes(1);
+    expect(spyOnBlobResponse).toHaveBeenCalledWith([], 'variants.tsv');
+    expect(spyOnBlobResponse).toHaveBeenCalledTimes(1);
+    expect(spyOnQueryService).toHaveBeenCalledWith({
+      affectedStatus: ['Affected only', 'Unaffected only', 'Affected and unaffected'],
+      datasetId: 'testDatasetId', download: true,
+      effectTypes: [
+        'frame-shift', 'nonsense', 'splice-site', 'no-frame-shift-newStop',
+        'missense', 'synonymous', 'CNV+', 'CNV-', 'no-frame-shift', 'noEnd', 'noStart', 'CDS'
+      ],
+      geneSymbols: ['POGZ'], genomicScores: [{metric: 'testColumn', rangeEnd: 100, rangeStart: null}],
+      inheritanceTypeFilter: ['denovo', 'mendelian', 'omission', 'missing'],
+      regions: '', summaryVariantIds: [], variantTypes: ['sub', 'ins', 'del', 'CNV+', 'CNV-']});
+    expect(spyOnQueryService).toHaveBeenCalledTimes(1);
+    expect(spyOnQueryService.mock.results).toMatchObject([{type: 'return', value: {}}]);
   });
 });

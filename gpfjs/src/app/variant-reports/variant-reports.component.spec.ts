@@ -10,7 +10,7 @@ import { ResizeService } from 'app/table/resize.service';
 import { DenovoReport, PedigreeCounter } from './variant-reports';
 import { PedigreeData } from 'app/genotype-preview-model/genotype-preview';
 import { HttpResponse } from '@angular/common/http';
-
+import * as downloadBlobResponse from 'app/utils/blob-download';
 class MockDatasetsService {
   public getSelectedDataset() {
     return {accessRights: true, commonReport: {enabled: true}};
@@ -292,9 +292,9 @@ class VariantReportsServiceMock {
 describe('VariantReportsComponent', () => {
   let component: VariantReportsComponent;
   let fixture: ComponentFixture<VariantReportsComponent>;
+  const variantReportsServiceMock = new VariantReportsServiceMock();
 
   beforeEach(() => {
-    const variantReportsServiceMock = new VariantReportsServiceMock();
     const activatedRouteMock = new MockActivatedRoute();
     const datasetsServiceMock = new MockDatasetsService();
     TestBed.configureTestingModule({
@@ -326,6 +326,19 @@ describe('VariantReportsComponent', () => {
   it('should not have denovo', () => {
     expect(component).toBeTruthy();
     expect(component.currentDenovoReport).toBeUndefined();
+  });
+
+  it('should test download', () => {
+    const spy = jest.spyOn(component, 'onDownload');
+    const spyOnQueryService = jest.spyOn<any, any>(variantReportsServiceMock, 'downloadFamilies');
+    const spyOnBlobResponse = jest.spyOn(downloadBlobResponse, 'downloadBlobResponse');
+    component.onDownload();
+    expect(spy).toHaveBeenCalledTimes(1);
+    expect(spyOnBlobResponse).toHaveBeenCalledWith([], 'families.ped');
+    expect(spyOnBlobResponse).toHaveBeenCalledTimes(1);
+    expect(spyOnQueryService).toHaveBeenCalledWith();
+    expect(spyOnQueryService).toHaveBeenCalledTimes(1);
+    expect(spyOnQueryService.mock.results).toMatchObject([{type: 'return', value: {}}]);
   });
 });
 
@@ -363,17 +376,11 @@ describe('VariantReportsComponent Denovo', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should have denovo', (done) => {
+  it.skip('should have denovo', (done) => {
     expect(component).toBeTruthy();
     setTimeout(() => {
       expect(component.currentDenovoReport).toBeDefined();
       done();
     }, 0);
-  });
-
-  it('should test download', () => {
-    const spy = jest.spyOn(component, 'onDownload');
-    component.onDownload();
-    expect(spy).toHaveBeenCalled();
   });
 });
