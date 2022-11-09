@@ -1,4 +1,4 @@
-# pylint: disable=redefined-outer-name,C0114,C0116,unused-argument,invalid-name
+# pylint: disable=W0621,C0114,C0116,W0212,W0613,C0415,
 import pytest
 
 from box import Box
@@ -6,6 +6,8 @@ from box import Box
 from django.contrib.auth import get_user_model
 from django.test import override_settings
 
+from studies.study_wrapper import StudyWrapper
+from datasets_api.models import Dataset
 from datasets_api.permissions import user_has_permission, \
     add_group_perm_to_user, \
     add_group_perm_to_dataset, \
@@ -14,8 +16,6 @@ from datasets_api.permissions import user_has_permission, \
     get_user_groups, get_dataset_groups, \
     get_directly_allowed_genotype_data, \
     _user_has_permission_strict
-from datasets_api.models import Dataset
-from studies.study_wrapper import StudyWrapper
 from dae.studies.study import GenotypeDataGroup
 
 
@@ -239,7 +239,7 @@ def test_dataset_admin_group_rights(db, user, dataset_wrapper):
 def test_explore_datasets_users_and_groups(db, user, dataset_wrapper):
     add_group_perm_to_user("A", user)
     add_group_perm_to_dataset("A", "Dataset")
-
+    # pylint: disable=no-member
     dataset = Dataset.objects.get(dataset_id="Dataset")
 
     assert get_user_groups(user) & get_dataset_groups(dataset)
@@ -247,17 +247,17 @@ def test_explore_datasets_users_and_groups(db, user, dataset_wrapper):
 
 @pytest.fixture()
 def na_user(db):
-    User = get_user_model()
-    u = User.objects.create(
+    user_ctr = get_user_model()
+    user = user_ctr.objects.create(
         email="nauser@example.com",
         name="Non-Active User",
         is_staff=False,
         is_active=False,
         is_superuser=False,
     )
-    u.save()
+    user.save()
 
-    return u
+    return user
 
 
 def test_explore_datasets_nauser_and_groups(db, na_user, dataset_wrapper):

@@ -2,6 +2,7 @@
 # flake8: noqa
 
 # pylint: disable=wildcard-import,unused-wildcard-import
+import os
 from .default_settings import *
 
 ALLOWED_HOSTS += ["localhost"]
@@ -21,3 +22,39 @@ CORS_ORIGIN_WHITELIST = [
 CORS_ALLOW_CREDENTIALS = True
 
 OPEN_REGISTRATION = True
+
+########################################################
+
+DEFAULT_WDAE_DIR = os.path.join(
+    os.environ.get("DAE_DB_DIR", ""), "wdae")
+os.makedirs(DEFAULT_WDAE_DIR, exist_ok=True)
+
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": os.path.join(
+            DEFAULT_WDAE_DIR, "wdae.sql"),
+        "USER": "",
+        "PASSWORD": "",
+        "HOST": "",
+        "PORT": "",
+    }
+}
+
+
+LOGGING["handlers"].update({  # type: ignore
+        # Log to a text file that can be rotated by logrotate
+        "logfile": {
+            "class": "logging.handlers.WatchedFileHandler",
+            "filename": os.path.join(
+                DEFAULT_WDAE_DIR, "wdae-api.log"),
+            "filters": ["require_debug_false"],
+            "formatter": "verbose",
+        },
+        "logdebug": {
+            "class": "logging.handlers.WatchedFileHandler",
+            "filename": os.path.join(
+                DEFAULT_WDAE_DIR, "wdae-debug.log"),
+            "formatter": "verbose",
+        },
+})

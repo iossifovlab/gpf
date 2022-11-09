@@ -119,3 +119,6 @@ class GenomicScoresDb:
 
     def __contains__(self, score_id):
         return score_id in self.scores
+
+    def __len__(self):
+        return len(self.scores)

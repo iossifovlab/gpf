@@ -371,7 +371,8 @@ EOT
     build_run_container bash -c '
         cd /wd/wdae/tests;
         export PYTHONHASHSEED=0;
-        /opt/conda/bin/conda run --no-capture-output -n gpf py.test -v \
+        /opt/conda/bin/conda run --no-capture-output -n gpf py.test \
+          -p no:django -v \
           --durations 20 \
           --cov-config /wd/coveragerc \
           --junitxml=/wd/results/wdae-tests-junit.xml \

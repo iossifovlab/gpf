@@ -41,7 +41,7 @@ def test_gpf_instance_context_reference_genome(context_fixture):
 
     assert genome is not None
     assert genome.resource.resource_id == \
-        "hg19/genomes/GATK_ResourceBundle_5777_b37_phiX174"
+        "hg19/GATK_ResourceBundle_5777_b37_phiX174_short/genome"
 
 
 def test_gpf_instance_context_gene_models(context_fixture):
@@ -50,7 +50,8 @@ def test_gpf_instance_context_gene_models(context_fixture):
 
     assert gene_models is not None
     assert gene_models.resource.resource_id == \
-        "hg19/gene_models/refGene_v20190211"
+        "hg19/GATK_ResourceBundle_5777_b37_phiX174_short/" \
+        "gene_models/refGene_201309"
 
 
 def test_gpf_instance_context_keys(context_fixture):

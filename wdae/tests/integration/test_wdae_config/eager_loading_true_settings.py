@@ -3,6 +3,6 @@
 
 # pylint: disable=wildcard-import,unused-wildcard-import
 
-from wdae.settings import *
+from wdae.test_settings import *
 
 STUDIES_EAGER_LOADING = True

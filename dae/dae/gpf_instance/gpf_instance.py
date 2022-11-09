@@ -28,7 +28,6 @@ from dae.configuration.schemas.autism_gene_profile import \
 from dae.autism_gene_profile.db import AutismGeneProfileDB
 from dae.annotation.annotation_factory import build_annotation_pipeline
 
-from dae.utils.dae_utils import join_line
 
 logger = logging.getLogger(__name__)
 
@@ -160,6 +159,9 @@ class GPFInstance:
     @cached_property
     def gene_scores_db(self):
         """Load and return gene scores db."""
+        if self.dae_config.gene_scores_db is None:
+            return []
+
         gene_scores = self.dae_config.gene_scores_db.gene_scores
         result = []
         for score in gene_scores:

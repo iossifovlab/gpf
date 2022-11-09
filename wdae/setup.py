@@ -60,14 +60,14 @@ setuptools.setup(
         "wdae/wdae_create_dev_users.sh",
         "wdae/wdae_bootstrap.sh",
     ],
-    # entry_points={
-    #     'console_scripts': [
-    #         'scgview=scgv.qtmain:main',
-    #     ]
-    # },
+    entry_points={
+        "console_scripts": [
+            "wgpf=wdae.wgpf:cli",
+        ]
+    },
     classifiers=[
         "Development Status :: 4 - Beta",
-        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.9",
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],

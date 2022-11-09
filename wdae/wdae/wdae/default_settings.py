@@ -46,22 +46,6 @@ DEFAULT_FROM_EMAIL = "no-reply@iossifovlab.com"
 
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
-DEFAULT_WDAE_DIR = os.path.join(
-    os.environ.get("DAE_DB_DIR", ""), "wdae")
-os.makedirs(DEFAULT_WDAE_DIR, exist_ok=True)
-
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": os.path.join(
-            DEFAULT_WDAE_DIR, "wdae.sql"),
-        "USER": "",
-        "PASSWORD": "",
-        "HOST": "",
-        "PORT": "",
-    }
-}
-
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
 
@@ -257,20 +241,6 @@ LOGGING = {
             "filters": ["require_debug_false"],
             "class": "django.utils.log.AdminEmailHandler",
         },
-        # Log to a text file that can be rotated by logrotate
-        "logfile": {
-            "class": "logging.handlers.WatchedFileHandler",
-            "filename": os.path.join(
-                DEFAULT_WDAE_DIR, "wdae-api.log"),
-            "filters": ["require_debug_false"],
-            "formatter": "verbose",
-        },
-        "logdebug": {
-            "class": "logging.handlers.WatchedFileHandler",
-            "filename": os.path.join(
-                DEFAULT_WDAE_DIR, "wdae-debug.log"),
-            "formatter": "verbose",
-        },
     },
     "loggers": {
         "django": {
@@ -312,51 +282,51 @@ LOGGING = {
 }
 
 
-CACHES = {
-    "default": {
-        "BACKEND": "django.core.cache.backends.filebased.FileBasedCache",
-        "LOCATION": os.path.join(
-            os.environ.get("DAE_DB_DIR", ""),
-            "wdae/wdae_django_default.cache"),
-        "TIMEOUT": 3600,
-        "OPTIONS": {"MAX_ENTRIES": 10000},
-    },
-    "long": {
-        "BACKEND": "django.core.cache.backends.filebased.FileBasedCache",
-        "LOCATION": os.path.join(
-            os.environ.get("DAE_DB_DIR", ""),
-            "wdae/wdae_django_default.cache"),
-        "TIMEOUT": 86400,
-        "OPTIONS": {"MAX_ENTRIES": 1000, },
-    },
-    "pre": {
-        "BACKEND": "django.core.cache.backends.filebased.FileBasedCache",
-        "LOCATION": os.path.join(
-            os.environ.get("DAE_DB_DIR", ""), "wdae/wdae_django_pre.cache"),
-        "TIMEOUT": None,
-    },
-    "enrichment": {
-        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
-        "LOCATION": "unique-snowflake",
-        "TIMEOUT": 60,
-    },
-    # 'default': {
-    #     'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
-    #     'LOCATION': '127.0.0.1:11211',
-    #     'TIMEOUT': 3600,
-    #     'OPTIONS': {
-    #         'MAX_ENTRIES': 10000
-    #     }
-    # },
-    # 'long': {
-    #     'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
-    #     'LOCATION': '127.0.0.1:11211',
-    #     'TIMEOUT': 2592000,
-    #     'OPTIONS': {
-    #         'MAX_ENTRIES': 1000
-    #     }
-    # },
-}
+# CACHES = {
+#     "default": {
+#         "BACKEND": "django.core.cache.backends.filebased.FileBasedCache",
+#         "LOCATION": os.path.join(
+#             os.environ.get("DAE_DB_DIR", ""),
+#             "wdae/wdae_django_default.cache"),
+#         "TIMEOUT": 3600,
+#         "OPTIONS": {"MAX_ENTRIES": 10000},
+#     },
+#     "long": {
+#         "BACKEND": "django.core.cache.backends.filebased.FileBasedCache",
+#         "LOCATION": os.path.join(
+#             os.environ.get("DAE_DB_DIR", ""),
+#             "wdae/wdae_django_default.cache"),
+#         "TIMEOUT": 86400,
+#         "OPTIONS": {"MAX_ENTRIES": 1000, },
+#     },
+#     "pre": {
+#         "BACKEND": "django.core.cache.backends.filebased.FileBasedCache",
+#         "LOCATION": os.path.join(
+#             os.environ.get("DAE_DB_DIR", ""), "wdae/wdae_django_pre.cache"),
+#         "TIMEOUT": None,
+#     },
+#     "enrichment": {
+#         "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+#         "LOCATION": "unique-snowflake",
+#         "TIMEOUT": 60,
+#     },
+#     # 'default': {
+#     #     'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
+#     #     'LOCATION': '127.0.0.1:11211',
+#     #     'TIMEOUT': 3600,
+#     #     'OPTIONS': {
+#     #         'MAX_ENTRIES': 10000
+#     #     }
+#     # },
+#     # 'long': {
+#     #     'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
+#     #     'LOCATION': '127.0.0.1:11211',
+#     #     'TIMEOUT': 2592000,
+#     #     'OPTIONS': {
+#     #         'MAX_ENTRIES': 1000
+#     #     }
+#     # },
+# }
 
 TEMPLATES = [
     {
