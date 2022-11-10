@@ -45,12 +45,12 @@ def test_vcf_info_resource_vcf_get_header_info(
     alleleid = header["ALLELEID"]
     assert alleleid.score_id == "ALLELEID"
     assert alleleid.type == "int"
-    assert alleleid.description == "the ClinVar Allele ID"
+    assert alleleid.desc == "the ClinVar Allele ID"
 
     geneinfo = header["GENEINFO"]
     assert geneinfo.score_id == "GENEINFO"
     assert geneinfo.type == "str"
-    assert geneinfo.description == (
+    assert geneinfo.desc == (
         "Gene(s) for the variant reported "
         "as gene symbol:gene id. The gene "
         "symbol and id are delimited by a "

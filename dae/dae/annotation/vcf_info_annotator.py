@@ -44,7 +44,7 @@ class VcfInfoAnnotator(Annotator):
         self.vcf_info = VcfInfoResource(resource)
 
     def annotator_type(self) -> str:
-        return "vcf_info_annotator"
+        return "vcf_info"
 
     def get_all_annotation_attributes(self) -> List[Dict]:
         result = []

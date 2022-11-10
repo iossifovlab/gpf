@@ -5,13 +5,14 @@ from functools import cache
 from typing import Dict, Any, Union, List, Generator
 
 from dae.genomic_resources.repository import GenomicResource
-from dae.genomic_resources.genomic_scores import ScoreDef, ScoreValue
+from dae.genomic_resources.genomic_scores import ScoreDef, ScoreValue, \
+    GenomicScore
 
 
 logger = logging.getLogger(__name__)
 
 
-class VcfInfoResource:
+class VcfInfoResource(GenomicScore):
     """Class that handles reading VCF INFO field."""
 
     VCF_TYPE_CONVERSION_MAP = {
@@ -21,7 +22,38 @@ class VcfInfoResource:
         "Flag": "bool",
     }
 
+    @staticmethod
+    def _configure_score_columns(config):
+        """Parse score configuration."""
+        if "scores" not in config:
+            raise ValueError("VcfInfoResource missing list of scores configs")
+
+        scores = {}
+        for score_conf in config["scores"]:
+
+            scr_def = ScoreDef(
+                score_conf["id"],
+                score_conf.get("desc", ""),
+                None,  # col_index,
+                score_conf["type"],
+                None,  # value_parser
+                None,  # na_values
+                None,  # pos_aggregator
+                None,  # nuc_aggregator
+            )
+            scores[scr_def.score_id] = scr_def
+
+        return scores
+
+    def _update_score_columns(self):
+        score_columns = {}
+        for score_id in self.score_columns:
+            vcf_score_def = self.get_header_info()[score_id]
+            score_columns[score_id] = vcf_score_def
+        self.score_columns = score_columns
+
     def __init__(self, resource: GenomicResource):
+        super().__init__(resource)
         assert resource.get_type() == "vcf_info"
         self.resource = resource
         self.config = self.resource.get_config()
@@ -49,7 +81,7 @@ class VcfInfoResource:
         return self.get_config().get("id")
 
     def get_score_config(self, score_id):
-        return self.get_header_info().get(score_id)
+        return self.score_columns.get(score_id)
 
     @cache
     def get_header_info(self) -> Dict[str, Dict[str, Union[str, int]]]:
@@ -99,16 +131,16 @@ class VcfInfoResource:
                 None,  # na_values
                 None,  # pos_aggregator
                 None,  # nuc_aggregator
-                metadata.description,
+                # metadata.description,
             )
         return output
 
     def open(self) -> VcfInfoResource:
         if self.is_open():
             return self
-        config = self.resource.get_config()
         self.vcf = self.resource.open_vcf_file(
-            config["filename"], config["index_filename"])
+            self.config["filename"], self.config["index_filename"])
+        self._update_score_columns()
         return self
 
     def is_open(self):
@@ -123,12 +155,6 @@ class VcfInfoResource:
         if not self.is_open():
             raise ValueError("trying to work with closed VcfInfoResource")
         return list(self.vcf.header.contigs)
-
-    @cache
-    def get_all_scores(self):
-        if not self.is_open():
-            raise ValueError("trying to work with closed VcfInfoResource")
-        return list(self.get_header_info().values())
 
     def get_variant_info(self, chrom: str, pos: int) -> Dict[str, Any]:
         """Return dictionary of VCF INFO field data for given variant."""
@@ -160,7 +186,7 @@ class VcfInfoResource:
 
         requested_scores = scores if scores else self.get_all_scores()
         requested_score_defs = [
-            self.get_header_info()[score_id] for score_id in requested_scores]
+            self.score_columns[score_id] for score_id in requested_scores]
         for vcf_record in self.vcf.fetch(
                 contig=chrom, start=pos_begin - 1, end=pos_end):
             assert len(vcf_record.alts) == 1
@@ -207,7 +233,7 @@ class VcfInfoResource:
 
         requested_scores = scores if scores else self.get_all_scores()
         requested_score_defs = [
-            self.get_header_info()[score_id] for score_id in requested_scores
+            self.score_columns[score_id] for score_id in requested_scores
         ]
         return {
             score_def.score_id: score_def.value_parser(

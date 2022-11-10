@@ -4,6 +4,11 @@
     meta: 'TODO
 
       '
+    scores:
+    - id: ALLELEID
+      type: int
+    - id: GENEINFO
+      type: str
     type: vcf_info
   id: clinvar
   manifest:
@@ -13,9 +18,9 @@
   - md5: 134d77b28ee7df80adb8cb9d3cc51aa0
     name: clinvar.vcf.gz.tbi
     size: 113
-  - md5: f11633f20a3884e6b710491a2c851ab0
+  - md5: fc87f241ec41b9ca970e8d25ea41106d
     name: genomic_resource.yaml
-    size: 97
+    size: 161
   version: '0'
 - config:
     default_annotation:
