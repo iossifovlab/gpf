@@ -42,25 +42,20 @@ def test_vcf_info_resource_vcf_get_header_info(
     header = clinvar_vcf_info.get_header_info()
     assert len(header) == 2
     print(header)
-    assert header == {
-        "ALLELEID": {
-            "name": "ALLELEID",
-            "type": "Integer",
-            "number": 1,
-            "description": "the ClinVar Allele ID"
-        },
-        "GENEINFO": {
-            "name": "GENEINFO",
-            "type": "String",
-            "number": 1,
-            "description": (
-                "Gene(s) for the variant reported "
-                "as gene symbol:gene id. The gene "
-                "symbol and id are delimited by a "
-                "colon (:) and each pair is delimited by a vertical bar (|)"
-            )
-        }
-    }
+    alleleid = header["ALLELEID"]
+    assert alleleid.score_id == "ALLELEID"
+    assert alleleid.type == "int"
+    assert alleleid.description == "the ClinVar Allele ID"
+
+    geneinfo = header["GENEINFO"]
+    assert geneinfo.score_id == "GENEINFO"
+    assert geneinfo.type == "str"
+    assert geneinfo.description == (
+        "Gene(s) for the variant reported "
+        "as gene symbol:gene id. The gene "
+        "symbol and id are delimited by a "
+        "colon (:) and each pair is delimited by a vertical bar (|)"
+    )
 
 
 @pytest.mark.parametrize("resource_type", ["local", "http"])

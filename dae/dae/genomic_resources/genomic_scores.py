@@ -5,10 +5,8 @@ from __future__ import annotations
 import abc
 import logging
 from dataclasses import dataclass
-from numbers import Number
-
-from typing import Generator, List, Tuple, cast, Type, Dict, Any, Optional
-
+from typing import Generator, List, Tuple, cast, Type, Dict, Any, Optional, \
+    Union
 
 from . import GenomicResource
 from .genome_position_table import open_genome_position_table
@@ -17,6 +15,8 @@ from .aggregators import build_aggregator
 
 
 logger = logging.getLogger(__name__)
+
+ScoreValue = Union[str, int, float, bool, None]
 
 
 class ScoreLine:
@@ -184,7 +184,7 @@ class GenomicScore(abc.ABC):
 
     def fetch_region(self, chrom: str, pos_begin: int, pos_end: int,
                      scores: List[str]) \
-            -> Generator[dict[str, Number], None, None]:
+            -> Generator[dict[str, ScoreValue], None, None]:
         """Return score values in a region."""
         if not self.is_open():
             raise ValueError(f"genomic score <{self.score_id()}> is not open")
@@ -426,7 +426,7 @@ class AlleleScore(GenomicScore):
         if chrom not in self.get_all_chromosomes():
             raise ValueError(
                 f"{chrom} is not among the available chromosomes for "
-                f"NP Score resource {self.score_id()}")
+                f"Allele Score resource {self.score_id()}")
 
         lines = list(self._fetch_lines(chrom, position, position))
         if not lines:
@@ -449,37 +449,28 @@ class AlleleScore(GenomicScore):
             for sc in requested_scores}
 
 
+@dataclass
+class ScoreDef:
+    """Score configuration definition."""
+
+    # pylint: disable=too-many-instance-attributes
+    score_id: str
+    desc: str
+    col_index: Optional[int]
+    type: str
+    value_parser: Any
+    na_values: Any
+    pos_aggregator: Any
+    nuc_aggregator: Any
+    description: str
+
+
 def _configure_score_columns(
         # table,
         config):
     """Parse score configuration."""
     scores = {}
     for score_conf in config["scores"]:
-
-        @dataclass
-        class ScoreDef:
-            """Score configuration definition."""
-
-            # pylint: disable=too-many-instance-attributes
-            score_id: str
-            desc: str
-            col_index: Optional[int]
-            type: str
-            value_parser: Any
-            na_values: Any
-            pos_aggregator: Any
-            nuc_aggregator: Any
-            description: str
-
-        # if "index" in score_conf:
-        #     col_index = int(score_conf["index"])
-        # elif "name" in score_conf:
-        #     col_index = table.get_column_names().index(
-        #         score_conf["name"])
-        # else:
-        #     raise ValueError(
-        #         "The score configuration must have a column specified")
-
         scr_type = score_conf.get(
             "type", config.get("default.score.type", "float"))
 

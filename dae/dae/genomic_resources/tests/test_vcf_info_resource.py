@@ -72,9 +72,55 @@ def test_clinvar_vcf_resource(vcf_info_clinvar):
     assert "CLNDN" in header
     info = header["CLNDN"]
 
-    assert info["type"] == "String"
-    assert info["name"] == "CLNDN"
-    assert "description" in info
+    assert info.type == "str"
+    assert info.score_id == "CLNDN"
+    assert info.description is not None
+
+
+def test_clinvar_get_all_chromosomes(vcf_info_clinvar):
+    assert vcf_info_clinvar.get_all_chromosomes() == ["chrA"]
+
+
+@pytest.mark.parametrize("chrom,begin,end,scores,expected", [
+    (
+        "chrA", 1, 1, ["DBVARID"],
+        [{"DBVARID": None}]
+    ),
+    (
+        "chrA", 2, 3, ["DBVARID"],
+        [{"DBVARID": None}, {"DBVARID": None}]
+    ),
+
+])
+def test_clinvar_fetch_region(
+        vcf_info_clinvar, chrom, begin, end, scores, expected):
+    result = list(vcf_info_clinvar.fetch_region(chrom, begin, end, scores))
+    assert result == expected
+
+
+@pytest.mark.parametrize("chrom,pos,ref,alt,scores,expected", [
+    (
+        "chrA", 1, "A", "T", ["CLNDN", "ALLELEID"],
+        {"CLNDN": "not_provided", "ALLELEID": 1003021}
+    ),
+    (
+        "chrA", 1, "A", "G", ["CLNDN", "ALLELEID"],
+        None
+    ),
+    (
+        "chrA", 2, "A", "T", ["CLNDN", "CLNSIG"],
+        {"CLNDN": "Combined_immunodeficiency_due_to_OX40_deficiency",
+         "CLNSIG": "Likely_benign"}
+    ),
+    (
+        "chrA", 3, "A", "T", ["DBVARID"],
+        {"DBVARID": None}
+    )
+])
+def test_clinvar_fetch_scores(
+        vcf_info_clinvar, chrom, pos, ref, alt, scores, expected):
+    result = vcf_info_clinvar.fetch_scores(chrom, pos, ref, alt, scores)
+    assert result == expected
 
 
 @pytest.fixture
@@ -281,12 +327,78 @@ def test_gnomad_vcf_resource(vcf_info_gnomad):
     assert "AF" in header
     info = header["AF"]
 
-    assert info["type"] == "Float"
-    assert info["name"] == "AF"
-    assert "description" in info
-    assert info["number"] == "A"
+    assert info.type == "float"
+    assert info.score_id == "AF"
+    assert info.description is not None
+    # assert info["number"] == "A"
 
     info = header["AN"]
-    assert info["type"] == "Integer"
-    assert info["name"] == "AN"
-    assert info["number"] == 1
+    assert info.type == "int"
+    assert info.score_id == "AN"
+    # assert info["number"] == 1
+
+
+@pytest.mark.parametrize("chrom,start,end,scores,expected", [
+    (
+        "chrA", 1, 2, ["AN", "AC"],
+        [
+            {"AN": 53780, "AC": 0},
+            {"AN": 72762, "AC": 2},
+        ]
+    ),
+    (
+        "chrA", 1, 3, ["AN", "AC"],
+        [
+            {"AN": 53780, "AC": 0},
+            {"AN": 72762, "AC": 2},
+            {"AN": 81114, "AC": 1},
+        ]
+    ),
+    (
+        "chrA", 1, 2, ["lcr", "non_par", "variant_type"],
+        [
+            {"lcr": True, "non_par": False, "variant_type": "snv"},
+            {"lcr": True, "non_par": False, "variant_type": "snv"},
+        ]
+    ),
+    (
+        "chrA", 4, 5, ["culprit", "NEGATIVE_TRAIN_SITE", "AN_asj_female"],
+        [
+            {"culprit": "AS_QD", "NEGATIVE_TRAIN_SITE": True,
+             "AN_asj_female": 1166},
+            {"culprit": "AS_FS", "NEGATIVE_TRAIN_SITE": False,
+             "AN_asj_female": 1436},
+        ]
+    ),
+    (
+        "chrA", 4, 5, ["SB"],
+        [
+            {"SB": 47},
+            {"SB": 97},
+        ]
+    ),
+])
+def test_gnomad_vcf_fetch_region(
+        vcf_info_gnomad, chrom, start, end, scores, expected):
+    result = list(vcf_info_gnomad.fetch_region(chrom, start, end, scores))
+    assert result == expected
+
+
+@pytest.mark.parametrize("chrom,pos,ref,alt,scores,expected", [
+    (
+        "chrA", 1, "A", "C", ["AN", "AC"],
+        {"AN": 53780, "AC": 0},
+    ),
+    (
+        "chrA", 1, "A", "G", ["AN", "AC"],
+        None,
+    ),
+    (
+        "chrA", 4, "A", "C", ["AN", "AC"],
+        {"AN": 89638, "AC": 1},
+    ),
+])
+def test_gnomad_vcf_fetch_rscores(
+        vcf_info_gnomad, chrom, pos, ref, alt, scores, expected):
+    result = vcf_info_gnomad.fetch_scores(chrom, pos, ref, alt, scores)
+    assert result == expected
