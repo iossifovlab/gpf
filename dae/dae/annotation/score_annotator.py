@@ -323,7 +323,7 @@ class AlleleScoreAnnotator(VariantScoreAnnotatorBase):
         attributes_schema = copy.deepcopy(ATTRIBUTES_SCHEMA)
 
         schema = copy.deepcopy(cls.VALIDATION_SCHEMA)
-        schema["annotator_type"]["allowed"] = ["allele_score"]
+        schema["annotator_type"]["allowed"] = ["allele_score", "vcf_info"]
         schema["attributes"]["schema"] = attributes_schema
 
         validator = cls.ConfigValidator(schema)
@@ -358,7 +358,6 @@ class AlleleScoreAnnotator(VariantScoreAnnotatorBase):
 
     def _do_annotate(
             self, annotatable: Annotatable, context: Dict):
-
         attributes: dict = {}
 
         if not isinstance(annotatable, VCFAllele):
