@@ -92,32 +92,39 @@ class VcfInfoScore(GenomicScore):
 
         output = {}
         for attribute_name, metadata in self.vcf.header.info.items():
+            value_type = self.VCF_TYPE_CONVERSION_MAP[metadata.type]
             if metadata.number == "A":
                 def value_parser(v):
-                    logger.warning(
-                        "unable to handle list of score values; "
+                    logger.info(
+                        "unable to handle multi-allele values; "
                         "using one value only")
                     return v[0]
             elif metadata.number == ".":
-                def value_parser(v):
-                    logger.warning(
+                value_type = "str"
+
+                def value_parser(val):
+                    logger.info(
                         "unable to handle list of score values; "
                         "using one value only")
-                    return v[0] if v is not None else None
+                    return ",".join(str(v) for v in val) \
+                        if val is not None else None
             elif metadata.number == "R":
                 def value_parser(v):
-                    logger.warning(
-                        "unable to handle list of score values; "
+                    logger.info(
+                        "unable to handle multi-allele values; "
                         "using one value only")
                     return v[1]
             else:
                 number = int(metadata.number)
                 if number > 1:
-                    def value_parser(v):
-                        logger.warning(
+                    value_type = "str"
+
+                    def value_parser(val):
+                        logger.info(
                             "unable to handle list of score values; "
                             "using one value only")
-                        return v[0]
+                        return ",".join(str(v) for v in val) \
+                            if val is not None else None
                 else:
                     def value_parser(v):
                         return v
@@ -126,7 +133,7 @@ class VcfInfoScore(GenomicScore):
                 attribute_name,
                 metadata.description,
                 None,  # col_index
-                self.VCF_TYPE_CONVERSION_MAP[metadata.type],
+                value_type,
                 value_parser,  # value_parser
                 None,  # na_values
                 None,  # pos_aggregator

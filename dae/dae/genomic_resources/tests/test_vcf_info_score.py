@@ -426,8 +426,8 @@ def test_gnomad_vcf_resource(vcf_info_gnomad):
     (
         "chrA", 4, 5, ["SB"],
         [
-            {"SB": 47},
-            {"SB": 97},
+            {"SB": "47,22,6,7"},
+            {"SB": "97,29,13,19"},
         ]
     ),
 ])
