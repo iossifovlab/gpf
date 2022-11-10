@@ -4,7 +4,7 @@
       <div class="nav-title-custom">Management</div>
 
       <li ngbNavItem id="users">
-        <a ngbNavLink (click)="switchTableName('USERS'); focusSearchBox()">Users</a>
+        <a ngbNavLink (click)="switchTableName('USERS')">Users</a>
         <ng-template ngbNavContent>
           <div class="row justify-content-between">
             <div class="col-7 btn-toolbar" style="padding-top: 15px; padding-left: 25px">
@@ -25,7 +25,7 @@
                     class="search-clear-icon"
                     [style.background-image]="'url(' + imgPathPrefix + 'search-clear-icon.png)'"
                     *ngIf="searchBox.value !== ''"
-                    (click)="searchBox.value = ''; resetTablesData(); updateCurrentTable()">
+                    (click)="searchBox.value = ''; search(searchBox.value)">
                   </span>
                 </div>
               </div>
@@ -34,14 +34,14 @@
               </div>
             </div>
           </div>
-          <gpf-users-table [users]="users"></gpf-users-table>
+          <gpf-users-table [users]="users" [currentUserEmail]="currentUserEmail"></gpf-users-table>
         </ng-template>
       </li>
 
       <li ngbNavItem id="groups">
         <a ngbNavLink (click)="switchTableName('GROUPS')">Groups</a>
         <ng-template ngbNavContent>
-          <gpf-groups-table [groups]="groups"></gpf-groups-table>
+          <gpf-groups-table [groups]="groups" [currentUserEmail]="currentUserEmail"></gpf-groups-table>
         </ng-template>
       </li>
       <li ngbNavItem id="datasets">

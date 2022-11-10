@@ -28,8 +28,9 @@ export class UsersGroupsService {
     let url = `${this.config.baseUrl}${this.groupsUrl}?page=${page}`;
     if (searchTerm) {
       const searchParams = new HttpParams().set('search', searchTerm);
-      url += `&search=${searchParams.toString()}`;
+      url += `&${searchParams.toString()}`;
     }
+
     return this.http.get(url).pipe(
       map((response) => {
         if (response === null) {

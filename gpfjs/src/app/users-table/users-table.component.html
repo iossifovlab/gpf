@@ -1,6 +1,6 @@
 <div class="row">
   <div class="col-12 mt-3">
-    <div class="grid-container" *ngIf="users && allGroupNames">
+    <div class="grid-container" *ngIf="users">
       <div class="grid-header">User</div>
       <div class="grid-header">Has password</div>
       <div class="grid-header">Groups</div>
@@ -31,11 +31,9 @@
             </gpf-small-remove-button>
           </div>
           <gpf-item-add-menu
-            (click)="filterShownGroupNames(user.groups)"
             [id]="user.email"
-            [items]="shownGroupNames"
-            (addedItem)="addGroup(user, $event)"
-            (neededMoreItems)="updateAddItemMenuItems()"></gpf-item-add-menu>
+            [getItems]="getGroupNamesFunction(user)"
+            (addedItem)="addGroup(user, $event)"></gpf-item-add-menu>
         </div>
 
         <div class="grid-cell">

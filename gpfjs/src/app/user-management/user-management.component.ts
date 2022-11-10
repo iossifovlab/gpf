@@ -19,7 +19,7 @@ export class UserManagementComponent implements OnInit {
   public groups: UserGroup[] = [];
   public searchText = '';
   @ViewChild('searchBox') private searchBox: ElementRef;
-
+  public currentUserEmail: string;
   public imgPathPrefix = environment.imgPathPrefix;
 
   private pageCount = 0;
@@ -43,14 +43,16 @@ export class UserManagementComponent implements OnInit {
     ).subscribe(searchTerm => {
       this.search(searchTerm);
     });
+
+    this.usersService.getUserInfo().pipe(take(1)).subscribe((currentUser: User) => {
+      this.currentUserEmail = currentUser.email;
+    });
   }
 
   public search(value: string): void {
-    if (value) {
-      this.searchText = value;
-      this.resetTablesData();
-      this.updateCurrentTable();
-    }
+    this.searchText = value;
+    this.resetTablesData();
+    this.updateCurrentTable();
   }
 
   public resetTablesData(): void {
@@ -140,6 +142,7 @@ export class UserManagementComponent implements OnInit {
         this.allPagesLoaded = true;
         return;
       }
+      res = res.map(user => this.sortGroups(user));
       this.users = this.users.concat(res);
       this.loadingPage = false;
     });

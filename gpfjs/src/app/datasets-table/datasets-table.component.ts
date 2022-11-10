@@ -45,13 +45,13 @@ export class DatasetsTableComponent implements OnInit {
 
   public ngOnInit(): void {
     this.usersToShow = [];
-    this.users$ = this.usersService.searchUsersByGroup(null).pipe(
-      map(user => {
-        this.usersToShow.push(user);
-        return this.usersToShow;
-      }),
-      share()
-    );
+    // this.users$ = this.usersService.searchUsersByGroup(null).pipe(
+    //   map(user => {
+    //     this.usersToShow.push(user);
+    //     return this.usersToShow;
+    //   }),
+    //   share()
+    // );
 
     this.tableData$ = combineLatest(this.datasets$, this.users$)
       .pipe(map(([datasets, users]) => this.toDatasetTableRow(datasets, users)));

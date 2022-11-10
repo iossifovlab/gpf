@@ -13,20 +13,17 @@
         <div class="grid-cell">
           <div *ngFor="let user of group.users">
             <span>{{ user }}</span>
-            <!-- <gpf-small-remove-button
-              (clicked)="removeUser(user, group.name)"
-              [hide]="isDefaultGroup(user, group) || (user.email === currentUserEmail && group === 'admin')"
-              message="Removing the group '{{ group }}' could change which usersets {{ user.name }} ({{
-                user.email
-              }}) has access to."
-              confirmText="Remove group"
-              title="Remove group">
-            </gpf-small-remove-button> -->
+            <gpf-small-remove-button
+              (clicked)="removeUser(group, user)"
+              message="Removing the user '{{ user }}' could change which usersets he has access to."
+              confirmText="Remove user"
+              title="Remove user">
+            </gpf-small-remove-button>
           </div>
           <!-- <gpf-item-add-menu
             [id]="group.id"
-            [items]="filtered items"
-            (addItemEvent)="addUser(group, $event)"></gpf-item-add-menu> -->
+            [getItems]="getUserNamesLambda(user)"
+            (addedItem)="addUser(group, $event)"></gpf-item-add-menu> -->
         </div>
 
         <div class="grid-cell">
