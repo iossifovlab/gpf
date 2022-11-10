@@ -30,7 +30,7 @@ ANNOTATOR_BUILDER_REGISTRY = {
     "liftover_annotator": build_liftover_annotator,
     "normalize_allele_annotator": build_normalize_allele_annotator,
     "gene_score_annotator": build_gene_score_annotator,
-    "vcf_info_annotator": build_vcf_info_annotator
+    "vcf_info": build_vcf_info_annotator
 }
 
 

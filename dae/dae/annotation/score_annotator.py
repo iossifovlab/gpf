@@ -313,7 +313,7 @@ def build_allele_score_annotator(pipeline: AnnotationPipeline, config: Dict):
 
 
 class AlleleScoreAnnotator(VariantScoreAnnotatorBase):
-    """Defines Allele Score annoator."""
+    """Defines Allele Score annotator."""
 
     def __init__(self, config: dict, score):
         super().__init__(config, score)
@@ -379,7 +379,8 @@ class AlleleScoreAnnotator(VariantScoreAnnotatorBase):
             annotatable.chromosome,
             annotatable.position,
             annotatable.reference,
-            annotatable.alternative
+            annotatable.alternative,
+            self.get_scores()
         )
         logger.debug(
             "allele score found for annotatable %s: %s",
