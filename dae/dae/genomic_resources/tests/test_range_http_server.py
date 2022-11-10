@@ -7,7 +7,7 @@ from dae.genomic_resources.testing import \
     range_http_process_server_generator
 from dae.genomic_resources.repository_factory import \
     build_genomic_resource_repository
-from dae.genomic_resources.vcf_info_resource import VcfInfoResource
+from dae.genomic_resources.vcf_info_score import VcfInfoScore
 
 logger = logging.getLogger(__name__)
 
@@ -48,7 +48,7 @@ def test_process_server_simple(fixture_dirname):
     res = repo.get_resource("clinvar")
     assert res is not None
 
-    vcf_info = VcfInfoResource(res)
+    vcf_info = VcfInfoScore(res)
     assert vcf_info is not None
 
     vcf_info.open()

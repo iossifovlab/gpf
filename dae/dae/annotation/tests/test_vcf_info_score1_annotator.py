@@ -113,7 +113,7 @@ def test_vcf_info_config_annotation(score1_repo):
                 resource_id: score1
                 attributes:
                 - source: C
-                  destination: score1_c            
+                  destination: score1_c
             """)
 
     pipeline = build_annotation_pipeline(

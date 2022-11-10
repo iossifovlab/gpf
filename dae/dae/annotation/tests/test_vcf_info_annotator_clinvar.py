@@ -1,6 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pytest
-from dae.genomic_resources.vcf_info_resource import VcfInfoResource
+from dae.genomic_resources.vcf_info_score import VcfInfoScore
 from dae.annotation.vcf_info_annotator import VcfInfoAnnotator
 from dae.annotation.annotatable import VCFAllele
 
@@ -27,7 +27,7 @@ def vcf_info_annotator_config():
 @pytest.fixture(scope="function")
 def vcf_info_annotator(grr_fixture, vcf_info_annotator_config):
     resource = grr_fixture.get_resource("clinvar")
-    vcf_info = VcfInfoResource(resource)
+    vcf_info = VcfInfoScore(resource)
     annotator = VcfInfoAnnotator(vcf_info_annotator_config, vcf_info)
     annotator.open()
     return annotator

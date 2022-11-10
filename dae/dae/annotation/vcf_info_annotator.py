@@ -17,8 +17,8 @@ def build_vcf_info_annotator(pipeline, config):
         config["resource_id"]
     )
     # pylint: disable=import-outside-toplevel
-    from dae.genomic_resources.vcf_info_resource import VcfInfoResource
-    vcf_info_score = VcfInfoResource(resource)
+    from dae.genomic_resources.vcf_info_score import VcfInfoScore
+    vcf_info_score = VcfInfoScore(resource)
     return VcfInfoAnnotator(config, vcf_info_score)
 
 

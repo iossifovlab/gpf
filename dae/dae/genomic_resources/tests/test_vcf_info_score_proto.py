@@ -1,14 +1,14 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pytest
 import pysam
-from dae.genomic_resources.vcf_info_resource import VcfInfoResource
+from dae.genomic_resources.vcf_info_score import VcfInfoScore
 
 
 @pytest.fixture(scope="function")
 def vcf_info_fixtures(grr_fixture, grr_http):
-    local = VcfInfoResource(grr_fixture.get_resource("clinvar"))
+    local = VcfInfoScore(grr_fixture.get_resource("clinvar"))
     local.open()
-    http = VcfInfoResource(grr_http.get_resource("clinvar"))
+    http = VcfInfoScore(grr_http.get_resource("clinvar"))
     http.open()
     return {
         "local": local,

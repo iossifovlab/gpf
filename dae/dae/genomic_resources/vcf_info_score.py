@@ -12,7 +12,7 @@ from dae.genomic_resources.genomic_scores import ScoreDef, ScoreValue, \
 logger = logging.getLogger(__name__)
 
 
-class VcfInfoResource(GenomicScore):
+class VcfInfoScore(GenomicScore):
     """Class that handles reading VCF INFO field."""
 
     VCF_TYPE_CONVERSION_MAP = {
@@ -135,7 +135,7 @@ class VcfInfoResource(GenomicScore):
             )
         return output
 
-    def open(self) -> VcfInfoResource:
+    def open(self) -> VcfInfoScore:
         if self.is_open():
             return self
         self.vcf = self.resource.open_vcf_file(

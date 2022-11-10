@@ -4,7 +4,7 @@ import pytest
 
 from dae.testing import setup_directories, setup_vcf
 from dae.genomic_resources.fsspec_protocol import build_fsspec_protocol
-from dae.genomic_resources.vcf_info_resource import VcfInfoResource
+from dae.genomic_resources.vcf_info_score import VcfInfoScore
 
 
 @pytest.fixture
@@ -74,7 +74,7 @@ chrA   3   .  A   T   .    .       ALLELEID=1600580;CLNDISDB=MedGen:CN517202;CLN
     proto = build_fsspec_protocol("testing", str(root_path / "grr"))
     res = proto.get_resource("clinvar")
 
-    return VcfInfoResource(res)
+    return VcfInfoScore(res)
 
 
 def test_clinvar_vcf_resource(vcf_info_clinvar):
@@ -371,7 +371,7 @@ chrA   5   .  A   C   264.00 AS_VQSR     AC=3;AN=107374;AF=2.79397e-05;lcr;varia
     proto = build_fsspec_protocol("testing", str(root_path / "grr"))
     res = proto.get_resource("gnomad")
 
-    return VcfInfoResource(res).open()
+    return VcfInfoScore(res).open()
 
 
 def test_gnomad_vcf_resource(vcf_info_gnomad):
