@@ -168,6 +168,7 @@ import { AuthInterceptorService } from './auth-interceptor.service';
 import { AuthResolverService } from './auth-resolver.service';
 import { APP_BASE_HREF, PlatformLocation } from '@angular/common';
 import { CustomUrlSerializer } from './custom-url-serializer';
+import { ComparePipe } from './utils/compare.pipe';
 
 const appRoutes: Routes = [
   {
@@ -359,6 +360,7 @@ const appRoutes: Routes = [
     SplitPipe,
     AgpTableComponent,
     TruncatePipe,
+    ComparePipe,
     JoinPipe,
     UniqueFamilyVariantsFilterComponent,
     PedigreeChartComponent,
