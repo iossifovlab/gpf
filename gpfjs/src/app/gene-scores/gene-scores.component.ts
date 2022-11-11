@@ -101,9 +101,9 @@ export class GeneScoresComponent extends StatefulComponent implements OnInit {
 
   public set selectedGeneScores(selectedGeneScores: GeneScores) {
     this.geneScoresLocalState.score = selectedGeneScores;
-    this.rangeStart = null;
-    this.rangeEnd = null;
     this.changeDomain(selectedGeneScores);
+    this.rangeStart = this.geneScoresLocalState.domainMin;
+    this.rangeEnd = this.geneScoresLocalState.domainMax;
     this.updateLabels();
     this.downloadUrl = this.getDownloadUrl();
     this.store.dispatch(new SetGeneScore(this.geneScoresLocalState.score));
