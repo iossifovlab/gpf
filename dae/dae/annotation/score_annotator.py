@@ -313,7 +313,7 @@ def build_allele_score_annotator(pipeline: AnnotationPipeline, config: Dict):
 
 
 class AlleleScoreAnnotator(VariantScoreAnnotatorBase):
-    """Defines Allele Score annoator."""
+    """Defines Allele Score annotator."""
 
     def __init__(self, config: dict, score):
         super().__init__(config, score)
@@ -323,7 +323,7 @@ class AlleleScoreAnnotator(VariantScoreAnnotatorBase):
         attributes_schema = copy.deepcopy(ATTRIBUTES_SCHEMA)
 
         schema = copy.deepcopy(cls.VALIDATION_SCHEMA)
-        schema["annotator_type"]["allowed"] = ["allele_score"]
+        schema["annotator_type"]["allowed"] = ["allele_score", "vcf_info"]
         schema["attributes"]["schema"] = attributes_schema
 
         validator = cls.ConfigValidator(schema)
@@ -358,7 +358,6 @@ class AlleleScoreAnnotator(VariantScoreAnnotatorBase):
 
     def _do_annotate(
             self, annotatable: Annotatable, context: Dict):
-
         attributes: dict = {}
 
         if not isinstance(annotatable, VCFAllele):
@@ -380,7 +379,8 @@ class AlleleScoreAnnotator(VariantScoreAnnotatorBase):
             annotatable.chromosome,
             annotatable.position,
             annotatable.reference,
-            annotatable.alternative
+            annotatable.alternative,
+            self.get_scores()
         )
         logger.debug(
             "allele score found for annotatable %s: %s",

@@ -10,13 +10,17 @@ def convert_to_tab_separated(content: str):
     Useful for testing purposes.
     If you need to have a space in the file content use '||'.
     """
-    result = "\n".join(
-        "\t".join(line.strip("\n\r").split())
-        for line in content.split("\n")
-        if line.strip("\r\n") != "")
-    result = result.replace("||", " ")
-    # result = result.replace("EMPTY", "")
-    return result
+    result = []
+    for line in content.split("\n"):
+        line = line.strip("\n\r")
+        if not line:
+            continue
+        if line.startswith("##"):
+            result.append(line)
+        else:
+            result.append("\t".join(line.split()))
+    text = "\n".join(result)
+    return text.replace("||", " ")
 
 
 def setup_directories(
@@ -51,12 +55,12 @@ def setup_vcf(out_path: pathlib.Path, content):
     """Set up a VCF file using the content."""
     vcf_data = convert_to_tab_separated(content)
     vcf_path = out_path
-    if out_path.suffix == "gz":
+    if out_path.suffix == ".gz":
         vcf_path = out_path.with_suffix("")
 
     setup_directories(vcf_path, vcf_data)
 
-    if out_path.suffix == "gz":
+    if out_path.suffix == ".gz":
         vcf_gz_filename = str(vcf_path.parent / f"{vcf_path.name}.gz")
         # pylint: disable=no-member
         pysam.tabix_compress(str(vcf_path), vcf_gz_filename)

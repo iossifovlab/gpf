@@ -5,10 +5,8 @@ from __future__ import annotations
 import abc
 import logging
 from dataclasses import dataclass
-from numbers import Number
-
-from typing import Generator, List, Tuple, cast, Type, Dict, Any, Optional
-
+from typing import Generator, List, Tuple, cast, Type, Dict, Any, Optional, \
+    Union
 
 from . import GenomicResource
 from .genome_position_table import open_genome_position_table
@@ -17,6 +15,8 @@ from .aggregators import build_aggregator
 
 
 logger = logging.getLogger(__name__)
+
+ScoreValue = Union[str, int, float, bool, None]
 
 
 class ScoreLine:
@@ -55,6 +55,22 @@ class ScoreLine:
         return f"ScoreLine({self.values})"
 
 
+@dataclass
+class ScoreDef:
+    """Score configuration definition."""
+
+    # pylint: disable=too-many-instance-attributes
+    score_id: str
+    desc: str
+    col_index: Optional[int]
+    type: str
+    value_parser: Any
+    na_values: Any
+    pos_aggregator: Any
+    nuc_aggregator: Any
+    # description: str
+
+
 class GenomicScore(abc.ABC):
     """Genomic scores base class."""
 
@@ -62,7 +78,7 @@ class GenomicScore(abc.ABC):
         self.resource = resource
         self.config = resource.get_config()
         self.config["id"] = resource.resource_id
-        self.score_columns = _configure_score_columns(self.config)
+        self.score_columns = self._configure_score_columns(self.config)
         self.special_columns = _configure_special_columns(
             extra_special_columns=self.get_extra_special_columns())
 
@@ -70,6 +86,63 @@ class GenomicScore(abc.ABC):
 
     LONG_JUMP_THRESHOLD = 5000
     ACCESS_SWITCH_THRESHOLD = 1500
+
+    @staticmethod
+    def _configure_score_columns(
+            config):
+        """Parse score configuration."""
+        scores = {}
+        for score_conf in config["scores"]:
+            scr_type = score_conf.get(
+                "type", config.get("default.score.type", "float"))
+
+            type_parsers = {
+                "str": str,
+                "float": float,
+                "int": int
+            }
+            default_na_values = {
+                "str": {},
+                "float": {"", "nan", ".", "NA"},
+                "int": {"", "nan", ".", "NA"}
+            }
+            default_type_pos_aggregators = {
+                "float": "mean",
+                "int": "mean",
+                "str": "concatenate"
+            }
+            default_type_nuc_aggregators = {
+                "float": "max",
+                "int": "max",
+                "str": "concatenate"
+            }
+
+            scr_def = ScoreDef(
+                score_conf["id"],
+                score_conf.get("desc", ""),
+                None,  # col_index,
+                scr_type,
+                type_parsers[scr_type],
+                score_conf.get(
+                    "na_values",
+                    config.get(
+                        f"default_na_values.{scr_type}",
+                        default_na_values[scr_type])),
+                score_conf.get(
+                    "position_aggregator",
+                    config.get(
+                        f"{scr_type}.aggregator",
+                        default_type_pos_aggregators[scr_type])),
+                score_conf.get(
+                    "nucleotide_aggregator",
+                    config.get(
+                        f"{scr_type}.aggregator",
+                        default_type_nuc_aggregators[scr_type])),
+                # score_conf.get("description", None)
+            )
+            scores[scr_def.score_id] = scr_def
+
+        return scores
 
     def get_config(self):
         return self.config
@@ -184,7 +257,7 @@ class GenomicScore(abc.ABC):
 
     def fetch_region(self, chrom: str, pos_begin: int, pos_end: int,
                      scores: List[str]) \
-            -> Generator[dict[str, Number], None, None]:
+            -> Generator[dict[str, ScoreValue], None, None]:
         """Return score values in a region."""
         if not self.is_open():
             raise ValueError(f"genomic score <{self.score_id()}> is not open")
@@ -426,7 +499,7 @@ class AlleleScore(GenomicScore):
         if chrom not in self.get_all_chromosomes():
             raise ValueError(
                 f"{chrom} is not among the available chromosomes for "
-                f"NP Score resource {self.score_id()}")
+                f"Allele Score resource {self.score_id()}")
 
         lines = list(self._fetch_lines(chrom, position, position))
         if not lines:
@@ -447,89 +520,6 @@ class AlleleScore(GenomicScore):
         return {
             sc: selected_line.get_score_value(sc)
             for sc in requested_scores}
-
-
-def _configure_score_columns(
-        # table,
-        config):
-    """Parse score configuration."""
-    scores = {}
-    for score_conf in config["scores"]:
-
-        @dataclass
-        class ScoreDef:
-            """Score configuration definition."""
-
-            # pylint: disable=too-many-instance-attributes
-            score_id: str
-            desc: str
-            col_index: Optional[int]
-            type: str
-            value_parser: Any
-            na_values: Any
-            pos_aggregator: Any
-            nuc_aggregator: Any
-            description: str
-
-        # if "index" in score_conf:
-        #     col_index = int(score_conf["index"])
-        # elif "name" in score_conf:
-        #     col_index = table.get_column_names().index(
-        #         score_conf["name"])
-        # else:
-        #     raise ValueError(
-        #         "The score configuration must have a column specified")
-
-        scr_type = score_conf.get(
-            "type", config.get("default.score.type", "float"))
-
-        type_parsers = {
-            "str": str,
-            "float": float,
-            "int": int
-        }
-        default_na_values = {
-            "str": {},
-            "float": {"", "nan", ".", "NA"},
-            "int": {"", "nan", ".", "NA"}
-        }
-        default_type_pos_aggregators = {
-            "float": "mean",
-            "int": "mean",
-            "str": "concatenate"
-        }
-        default_type_nuc_aggregators = {
-            "float": "max",
-            "int": "max",
-            "str": "concatenate"
-        }
-
-        scr_def = ScoreDef(
-            score_conf["id"],
-            score_conf.get("desc", ""),
-            None,  # col_index,
-            scr_type,
-            type_parsers[scr_type],
-            score_conf.get(
-                "na_values",
-                config.get(
-                    f"default_na_values.{scr_type}",
-                    default_na_values[scr_type])),
-            score_conf.get(
-                "position_aggregator",
-                config.get(
-                    f"{scr_type}.aggregator",
-                    default_type_pos_aggregators[scr_type])),
-            score_conf.get(
-                "nucleotide_aggregator",
-                config.get(
-                    f"{scr_type}.aggregator",
-                    default_type_nuc_aggregators[scr_type])),
-            score_conf.get("description", None)
-        )
-        scores[scr_def.score_id] = scr_def
-
-    return scores
 
 
 def _configure_special_columns(

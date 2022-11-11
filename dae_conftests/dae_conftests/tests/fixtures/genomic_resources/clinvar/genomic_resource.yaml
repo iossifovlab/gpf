@@ -1,9 +1,16 @@
 ---
 
-type: clinvar_resource
+type: vcf_info
 
 filename: clinvar.vcf.gz
 index_filename: clinvar.vcf.gz.tbi
+
+scores:
+- id: ALLELEID
+  type: int
+
+- id: GENEINFO
+  type: str
 
 meta: |
   TODO

@@ -7,7 +7,7 @@ from dae.genomic_resources.testing import \
     range_http_process_server_generator
 from dae.genomic_resources.repository_factory import \
     build_genomic_resource_repository
-from dae.genomic_resources.clinvar import ClinVarVcf
+from dae.genomic_resources.vcf_info_score import VcfInfoScore
 
 logger = logging.getLogger(__name__)
 
@@ -48,11 +48,11 @@ def test_process_server_simple(fixture_dirname):
     res = repo.get_resource("clinvar")
     assert res is not None
 
-    clinvar = ClinVarVcf(res)
-    assert clinvar is not None
+    vcf_info = VcfInfoScore(res)
+    assert vcf_info is not None
 
-    clinvar.open()
-    assert clinvar.is_open()
+    vcf_info.open()
+    assert vcf_info.is_open()
 
     print(100 * "=")
     print(10 * "DONE  ")
