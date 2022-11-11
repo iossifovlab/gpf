@@ -273,3 +273,192 @@ annotate_columns
 
 
 annotate_vcf
+
+
+Example: How to use VCF INFO annotator to annotate variants with `ClinVar`
+**************************************************************************
+
+.. note:: 
+
+    Input files for this example can be downloaded from 
+    `clinvar-annotation.tar.gz <https://iossifovlab.com/distribution/public/clinvar-annotation.tar.gz>`_.
+
+
+Let us have a small list of de Novo variants saved into ``denovo-variants.tsv``:
+
+.. code-block::
+
+    CHROM   POS	      REF    ALT  person_ids
+    chr14   21403214  T      C    f1.p1
+    chr14   21431459  G      C    f1.p1
+    chr14   21391016  A      AT   f2.p1
+    chr14   21403019  G      A    f2.p1
+    chr14   21402010  G      A    f3.p1
+    chr14   21393484  TCTTC  T    f3.p1
+
+
+Prepare the ``ClinVar`` resource
+################################
+
+First, let us prepare the ClinVar resource.
+
+* Download the resource from https://www.ncbi.nlm.nih.gov/clinvar/
+* Since our variants are in a small region of chr14 let us get a subset of 
+  ClinVar to work with. Use ``bcftools`` to get a region 
+  chr14:10000000-30000000 from the ClinVar resource:
+
+  .. code-block:: bash
+
+    bcftools view -o clinvar_20221105_chr14_10000000_30000000.vcf.gz -O z \
+        -r 14:10000000-30000000 clinvar_20221105.vcf.gz
+
+* Since chromosomes names in ClinVar in GRCh38 reference genome are without
+  ``chr`` prefix, we need to rename them. Use ``bcftools annotate`` command
+  to rename them. First create a ``chr14_rename.txt`` file that describes
+  mapping of chromosome `14` name to `chr14`:
+
+  .. code-block:: bash
+
+    14 chr14
+
+  and run the ``bcftools annotate`` command:
+
+  .. code-block:: bash
+
+    bcftools annotate --rename-chrs chr14_rename \
+        clinvar_20221105_chr14_10000000_30000000.vcf.gz
+
+  and tabix the resulting file:
+
+  .. code-block:: bash
+
+    tabix -p vcf clinvar_20221105_chr14_10000000_30000000.vcf.gz
+
+Prepare local Genomic Resources Repository (GRR)
+################################################
+
+* Create a directory named ``local_repo``:
+  
+  .. code-block:: bash
+
+    mkdir local_repo
+    cd local_repo
+
+* Turn this directory into a GRR repository using ``grr_manage``:
+  
+  .. code-block:: bash
+
+    grr_manage init
+
+* Create a directory for the ``ClinVar`` resource:
+  
+  .. code-block:: bash
+
+    mkdir clinvar_20221105_chr14_10000000_30000000
+    cd clinvar_20221105_chr14_10000000_30000000
+
+* Copy ClinVar VCF file and tabix index into this directory:
+  
+  .. code-block:: bash
+
+    cp <path to ClinVar VCFs>/clinvar_20221105_chr14_10000000_30000000.vcf.gz* .
+
+* Create a genomic resource configuration file ``genomic_resource.yaml``:
+  
+  .. code-block:: yaml
+
+    type: vcf_info
+    
+    filename: clinvar_20221105_chr14_10000000_30000000.vcf.gz
+    index_filename: clinvar_20221105_chr14_10000000_30000000.vcf.gz.tbi
+    
+    desc: |
+      Fragment from the ClinVar resource downloaded at 20221105.
+    
+    scores:
+    
+    - id: AF_ESP
+      type: float
+      desc: allele frequencies from GO-ESP
+    
+    - id: AF_EXAC
+      type: float
+      desc: allele frequencies from ExAC
+    
+    - id: AF_TGP
+      type: float
+      desc: allele frequencies from TGP
+    
+    - id: ALLELEID
+      type: int
+      desc: the ClinVar Allele ID
+    
+    - id: CLNDN
+      type: str
+      desc: |
+        ClinVar's preferred disease name for the concept specified by disease 
+        identifiers in CLNDISDB
+    
+    - id: CLNDNINCL
+      type: str
+      desc: |
+        For included Variant : ClinVar's preferred disease name for the concept 
+        specified by disease identifiers in CLNDISDB
+    
+    - id: CLNDISDB
+      type: str
+      desc: Tag-value pairs of disease database name and identifier, e.g. OMIM:NNNNNN
+
+    ...
+
+* Create the manifest file and update the contents of the ``local_repo`` using 
+  ``grr_manage``:
+
+  .. code-block:: bash
+
+    grr_manage repo-repair
+
+* Create a ``grr_definition.yaml`` file that points to the ``local_repo``:
+  
+  .. code-block:: yaml
+
+    id: "local"
+    type: group
+    children:
+    - id: "local_repo"
+      type: "directory"
+      directory: <path to local_repo>/local_repo
+
+* Use ``grr_browse`` to check that ``clivar_20221105_chr14_10000000_30000000``
+  is available:
+
+  .. code-block:: bash
+
+    grr_browse -g grr_definition.yaml
+
+  with similar to the following output:
+
+  .. code-block:: bash
+
+    vcf_info             0        3       417014 clinvar_20221105_chr14_10000000_30000000
+
+
+Annotate variants with ClinVar resource
+#######################################
+
+Let us create an annotation configuration stored into 
+``clinvar-annotation.yaml``:
+
+.. code:: yaml
+    
+    - vcf_info: clinvar_20221105_chr14_10000000_30000000
+
+
+Run ``annotate_columns`` tool:
+
+.. code-block:: bash
+
+    annotate_columns -grr ./grr_definition.yaml \
+        --col_pos POS --col_chrom CHROM --col_ref REF --col_alt ALT \
+        denovo-variants.tsv clinvar_annotation.yaml
+
