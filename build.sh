@@ -187,12 +187,19 @@ EOT
     local iossifovlab_anaconda_infra_ref;
     iossifovlab_anaconda_infra_ref=$(e docker_img_iossifovlab_anaconda_infra)
 
-    build_run_ctx_init "container" "${iossifovlab_anaconda_infra_ref}"
+    build_run_local test "$BUILD_SCRIPTS_WIREGUARD_PRIVATE_KEY_SIMONS_AWS" != ""
+
+    build_run_ctx_init "container" "${iossifovlab_anaconda_infra_ref}" -- \
+      --cap-add NET_ADMIN \
+      --cap-add SYS_MODULE \
+      --sysctl net.ipv4.conf.all.src_valid_mark=1 \
+      --env WIREGUARD_PRIVATE_KEY_SIMONS_AWS="$BUILD_SCRIPTS_WIREGUARD_PRIVATE_KEY_SIMONS_AWS"
     defer_ret build_run_ctx_reset
 
     # copy host's .ssh dir as the root .ssh in the container
     build_run_container_cp_to /root/ $HOME/.ssh
     build_run_container chown -R root:root /root/.ssh
+    build_run_container wg-quick up simons-aws
     build_run_container bash -c "
         /opt/conda/bin/conda run --no-capture-output -n infra \
         ansible-playbook -i doc_inventory doc_publish.yml"
