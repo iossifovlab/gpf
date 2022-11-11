@@ -283,6 +283,9 @@ Example: How to use VCF INFO annotator to annotate variants with `ClinVar`
     Input files for this example can be downloaded from 
     `clinvar-annotation.tar.gz <https://iossifovlab.com/distribution/public/clinvar-annotation.tar.gz>`_.
 
+    If you use these files please edit the ``grr_defintion.yaml`` to reflect
+    your choice of repository directory.
+
 
 Let us have a small list of de Novo variants saved into ``denovo-variants.tsv``:
 
@@ -300,10 +303,14 @@ Let us have a small list of de Novo variants saved into ``denovo-variants.tsv``:
 Prepare the ``ClinVar`` resource
 ################################
 
-First, let us prepare the ClinVar resource.
+First, let us prepare the ClinVar resource. Since all our variants are located
+into a small region of **chr14** we are going to extract a small subset of the
+whole ClinVar resource to make this example more easy to distribute.
 
-* Download the resource from https://www.ncbi.nlm.nih.gov/clinvar/
-* Since our variants are in a small region of chr14 let us get a subset of 
+* Download the resource from https://www.ncbi.nlm.nih.gov/clinvar/. In our case
+  the downloaded file is ``clinvar_20221105.vcf.gz``.
+
+* Since all our variants are in a small region of chr14 let us get a subset of 
   ClinVar to work with. Use ``bcftools`` to get a region 
   chr14:10000000-30000000 from the ClinVar resource:
 
@@ -312,10 +319,13 @@ First, let us prepare the ClinVar resource.
     bcftools view -o clinvar_20221105_chr14_10000000_30000000.vcf.gz -O z \
         -r 14:10000000-30000000 clinvar_20221105.vcf.gz
 
-* Since chromosomes names in ClinVar in GRCh38 reference genome are without
+  This will produce a VCF file named ``clinvar_20221105_chr14_10000000_30000000.vcf.gz``
+  that contains all VCF records in the region 14:10000000-30000000.
+
+* Since chromosomes names in GRCh38 version of ClinVar are without
   ``chr`` prefix, we need to rename them. Use ``bcftools annotate`` command
-  to rename them. First create a ``chr14_rename.txt`` file that describes
-  mapping of chromosome `14` name to `chr14`:
+  to rename them. First create a ``chr14_rename.txt`` map file that describes
+  the mapping of chromosome `14` name to `chr14`:
 
   .. code-block:: bash
 
@@ -325,14 +335,16 @@ First, let us prepare the ClinVar resource.
 
   .. code-block:: bash
 
-    bcftools annotate --rename-chrs chr14_rename \
+    bcftools annotate --rename-chrs chr14_rename.txt \
         clinvar_20221105_chr14_10000000_30000000.vcf.gz
 
-  and tabix the resulting file:
+  Run ``tabix`` on the resulting file to index the file:
 
   .. code-block:: bash
 
     tabix -p vcf clinvar_20221105_chr14_10000000_30000000.vcf.gz
+
+  that will create an index file named ``clinvar_20221105_chr14_10000000_30000000.vcf.gz.tbi``
 
 Prepare local Genomic Resources Repository (GRR)
 ################################################
