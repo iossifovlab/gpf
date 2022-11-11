@@ -3,7 +3,7 @@ import { ItemAddEvent } from 'app/item-add-menu/item-add-menu';
 import { UsersGroupsService } from 'app/users-groups/users-groups.service';
 import { User } from 'app/users/users';
 import { UsersService } from 'app/users/users.service';
-import { mergeMap } from 'rxjs';
+import { map, mergeMap, Observable } from 'rxjs';
 
 import { UserGroup } from '../users-groups/users-groups';
 
@@ -53,7 +53,12 @@ export class GroupsTableComponent {
     // need dataset id or use name
   }
 
-  public isDefaultGroup(user: User, group: string): boolean {
-    return user.getDefaultGroups().indexOf(group) !== -1;
+  public getUserNamesFunction(group: UserGroup):  (page: number, searchText: string) => Observable<string[]> {
+    return (page: number, searchText: string): Observable<string[]> =>
+      this.usersService.getUsers(page, searchText).pipe(
+        map((users: User[]) => users
+          .map(user => user.email)
+          .filter(user => !group.users.includes(user)))
+      );
   }
 }

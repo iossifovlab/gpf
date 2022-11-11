@@ -20,10 +20,10 @@
               title="Remove user">
             </gpf-small-remove-button>
           </div>
-          <!-- <gpf-item-add-menu
-            [id]="group.id"
-            [getItems]="getUserNamesLambda(user)"
-            (addedItem)="addUser(group, $event)"></gpf-item-add-menu> -->
+          <gpf-item-add-menu
+            [id]="group.name"
+            [getItems]="getUserNamesFunction(group)"
+            (addedItem)="addUser(group, $event)"></gpf-item-add-menu>
         </div>
 
         <div class="grid-cell">

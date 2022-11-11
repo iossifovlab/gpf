@@ -9,6 +9,7 @@ import { ItemAddEvent } from './item-add-menu';
   styleUrls: ['./item-add-menu.component.css']
 })
 export class ItemAddMenuComponent {
+  // is id needed?
   @Input() public id = '';
   @Input() public getItems: (page: number, searchText: string) => Observable<string[]>;
   @Output() public addedItem = new EventEmitter<ItemAddEvent>();
