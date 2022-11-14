@@ -1,61 +1,103 @@
 from abc import abstractmethod
-from typing import cast
+from dataclasses import dataclass
+from enum import Enum
+import pickle
+from typing import Any, cast
 import fsspec
 
 from dae.import_tools.task_graph import TaskGraph, TaskNode
 from dae.utils import fs_utils
 
 
-class Progress:
-    """Determine if a task in a task graph need to run again or not."""
+class CacheRecordType(Enum):
+    MISSING = 0
+    COMPUTED = 1
+    ERROR = 2
+
+
+@dataclass(frozen=True)
+class CacheRecord:
+    """Encapsulate information about a task in the cache."""
+
+    type: CacheRecordType
+    result_or_exception: Any = None
+
+    @property
+    def result(self):
+        assert self.type == CacheRecordType.COMPUTED
+        return self.result_or_exception
+
+    @property
+    def error(self):
+        assert self.type == CacheRecordType.ERROR
+        return self.result_or_exception
+
+
+class TaskCache:
+    """Store the result of a task in a file and reuse it if possible."""
 
     @abstractmethod
-    def set_task_graph(self, graph: TaskGraph):
-        """Set the task graph for which we want to determine progress."""
+    def prepare(self, graph: TaskGraph):
+        """Prepare the cache for quering for the specific graph."""
 
     @abstractmethod
-    def needs_to_run(self, task_node: TaskNode) -> bool:
-        """Return true if the task needs to be rerun."""
+    def get_record(self, task_node: TaskNode) -> CacheRecord:
+        """Return a record describing the kind of cache entry for the task."""
 
     @abstractmethod
-    def finished(self, task_node: TaskNode):
-        """Call when a task has finished executing."""
+    def cache(self, task_node: TaskNode, is_error: bool, result: Any):
+        """Cache the result or excpetion of a task."""
 
 
-class AlwaysRunProgress(Progress):
+class NoTaskCache(dict, TaskCache):
     """Don't check any conditions and just run any task."""
 
-    def set_task_graph(self, graph: TaskGraph):
+    def prepare(self, graph: TaskGraph):
         pass
 
-    def needs_to_run(self, task_node: TaskNode) -> bool:
-        return True
+    def get_record(self, task_node: TaskNode) -> CacheRecord:
+        return CacheRecord(CacheRecordType.MISSING)
 
-    def finished(self, task_node: TaskNode) -> bool:
+    def cache(self, task_node: TaskNode, is_error: bool, result: Any):
         pass
 
 
-class FileProgress(Progress):
+class FileTaskCache(TaskCache):
     """Use file modification timestamps to determine if a task needs to run."""
 
-    def __init__(self, flag_dir="flags/"):
-        self.flag_dir = flag_dir
+    def __init__(self, force=False, work_dir=None):
+        self.force = force
+        self.cache_dir = fs_utils.join(work_dir or "", ".task-progress/")
         self._global_dependancies: list[str] = []
 
-    def set_task_graph(self, graph: TaskGraph):
+    def prepare(self, graph: TaskGraph):
         self._check_ids_are_unique(graph)
         self._global_dependancies = graph.input_files
 
-    def needs_to_run(self, task_node: TaskNode) -> bool:
+    def get_record(self, task_node: TaskNode) -> CacheRecord:
+        if self.force:
+            return CacheRecord(CacheRecordType.MISSING)
+
         input_files = task_node.input_files + self._global_dependancies
         for dep in task_node.deps:
             input_files.append(self._get_flag_filename(dep))
-        output_file = self._get_flag_filename(task_node)
-        return self._are_files_newer_than(input_files, [output_file])
+        output_fn = self._get_flag_filename(task_node)
+        if self._should_recompute_output(input_files, [output_fn]):
+            return CacheRecord(CacheRecordType.MISSING)
+        with fsspec.open(output_fn, "rb") as cache_file:
+            return cast(CacheRecord, pickle.load(cache_file))
 
-    def finished(self, task_node: TaskNode):
-        with fsspec.open(self._get_flag_filename(task_node), "w"):
-            pass
+    def cache(self, task_node: TaskNode, is_error: bool, result: Any):
+        cache_fn = self._get_flag_filename(task_node)
+        with fsspec.open(cache_fn, "wb") as cache_file:
+            record_type = (
+                CacheRecordType.ERROR if is_error else CacheRecordType.COMPUTED
+            )
+            record = CacheRecord(
+                record_type,
+                result
+            )
+            pickle.dump(record, cache_file)
 
     def _check_ids_are_unique(self, graph):
         seen = set()
@@ -76,14 +118,17 @@ class FileProgress(Progress):
         return f"{task_node.name}({args_str})"
 
     def _get_flag_filename(self, task_node):
-        return fs_utils.join(self.flag_dir, self._get_id(task_node) + ".flag")
+        return fs_utils.join(self.cache_dir, self._get_id(task_node) + ".flag")
 
-    def _are_files_newer_than(self, input_files, output_files) -> bool:
+    def _should_recompute_output(self, input_files, output_files) -> bool:
         input_mtime = self._get_last_mod_time(input_files)
         output_mtime = self._get_last_mod_time(output_files)
+        if len(input_files) == 0 and output_mtime is not None:
+            return False  # No input, already run, don't recompute
         if input_mtime is None or output_mtime is None:
             return True  # cannot determine mod times. Always run.
-        return cast(bool, input_mtime >= output_mtime)
+        should_run: bool = input_mtime > output_mtime
+        return should_run
 
     def _get_last_mod_time(self, filenames: list[str]):
         mtimes = [self._safe_getmtime(path) for path in filenames]

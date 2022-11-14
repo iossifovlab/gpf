@@ -32,6 +32,7 @@ class TaskGraph:
         :param func: Function to execute
         :param args: Arguments to that function
         :param deps: List of TaskNodes on which the current task depends
+        :param input_files: Files that were used to build the graph itself
         :return TaskNode: The newly created task node in the graph
         """
         # tasks that use the output of other tasks as input should

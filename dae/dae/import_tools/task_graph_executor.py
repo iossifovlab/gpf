@@ -1,9 +1,13 @@
 from abc import abstractmethod
 from copy import copy
-from typing import Iterator
+from typing import Any, Iterator
+import logging
 
 from dae.import_tools.task_graph import TaskGraph, TaskNode
-from dae.import_tools.progress import Progress, AlwaysRunProgress
+from dae.import_tools.progress import TaskCache, NoTaskCache, CacheRecordType
+
+
+logger = logging.getLogger(__file__)
 
 
 class TaskGraphExecutor:
@@ -11,9 +15,10 @@ class TaskGraphExecutor:
 
     @abstractmethod
     def execute(self, task_graph: TaskGraph) -> Iterator[TaskNode]:
-        """Start execute the graph.
+        """Start executing the graph.
 
-        Return an iterator that yields the task in the graph as they finish.
+        Return an iterator that yields the task in the graph as they finish not
+        nessessarily in DFS or BFS order.
         """
 
     @abstractmethod
@@ -24,23 +29,29 @@ class TaskGraphExecutor:
 class AbstractTaskGraphExecutor(TaskGraphExecutor):
     """Executor that walks the graph in order that satisfies dependancies."""
 
-    def __init__(self, progress: Progress = AlwaysRunProgress()):
+    def __init__(self, task_cache: TaskCache = NoTaskCache()):
         super().__init__()
-        self.progress = progress
+        self._task_cache = task_cache
 
     def execute(self, task_graph: TaskGraph) -> Iterator[TaskNode]:
-        """Execute the graph."""
         self._check_for_cyclic_deps(task_graph)
 
-        self.progress.set_task_graph(task_graph)
+        self._task_cache.prepare(task_graph)
+        already_computed_tasks = {}
         for task_node in self._in_exec_order(task_graph):
-            if self.progress.needs_to_run(task_node):
+            record = self._task_cache.get_record(task_node)
+            if record.type != CacheRecordType.COMPUTED:
                 self.queue_task(task_node)
-        return self.__await_tasks()
+            else:
+                already_computed_tasks[task_node] = record.result
+        return self.__await_tasks(already_computed_tasks)
 
-    def __await_tasks(self) -> Iterator[TaskNode]:
-        for task_node in self.await_tasks():
-            self.progress.finished(task_node)
+    def __await_tasks(self, already_computed_tasks) -> Iterator[TaskNode]:
+        for task_node, _result in already_computed_tasks.items():
+            yield task_node
+        for task_node, result in self.await_tasks():
+            is_error = isinstance(result, BaseException)
+            self._task_cache.cache(task_node, is_error, result)
             yield task_node
 
     @abstractmethod
@@ -48,7 +59,7 @@ class AbstractTaskGraphExecutor(TaskGraphExecutor):
         """Put the task on the execution queue."""
 
     @abstractmethod
-    def await_tasks(self) -> Iterator[TaskNode]:
+    def await_tasks(self) -> Iterator[tuple[TaskNode, Any]]:
         """Yield enqueued tasks as soon as they finish."""
 
     def _in_exec_order(self, task_graph):
@@ -90,8 +101,8 @@ class AbstractTaskGraphExecutor(TaskGraphExecutor):
 class SequentialExecutor(AbstractTaskGraphExecutor):
     """A Task Graph Executor that executes task in sequential order."""
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, task_cache=NoTaskCache()):
+        super().__init__(task_cache)
         self._task_queue = []
         self._task2result = {}
 
@@ -101,14 +112,30 @@ class SequentialExecutor(AbstractTaskGraphExecutor):
     def await_tasks(self):
         assert len(self._task2result) == 0, "Cannot call execute multipe times"
         for task_node in self._task_queue:
+            all_deps_satisfied = all(
+                d in self._task2result for d in task_node.deps
+            )
+            if not all_deps_satisfied:
+                # some of the dependancies were errors and didn't run
+                logger.info(
+                    "Skipping execution of task(id=%s) because one or more of "
+                    "its dependancies failed with an error", task_node.name)
+                continue
+
             # handle tasks that use the output of other tasks
             args = [
                 self._task2result[arg] if isinstance(arg, TaskNode) else arg
                 for arg in task_node.args
             ]
-            result = task_node.func(*args)
-            self._task2result[task_node] = result
-            yield task_node
+            is_error = False
+            try:
+                result = task_node.func(*args)
+            except Exception as exp:  # pylint: disable=broad-except
+                result = exp
+                is_error = True
+            if not is_error:
+                self._task2result[task_node] = result
+            yield task_node, result
 
         # all tasks have already executed. Let's clean the state.
         self._task_queue = []
@@ -124,8 +151,8 @@ class SequentialExecutor(AbstractTaskGraphExecutor):
 class DaskExecutor(AbstractTaskGraphExecutor):
     """Execute tasks in parallel using Dask to do the heavy lifting."""
 
-    def __init__(self, client):
-        super().__init__()
+    def __init__(self, client, task_cache=NoTaskCache()):
+        super().__init__(task_cache)
         self._client = client
         self._task2future = {}
         self._future2task = {}
@@ -149,9 +176,12 @@ class DaskExecutor(AbstractTaskGraphExecutor):
 
         futures = list(self._task2future.values())
         for future in as_completed(futures):
-            _ = future.result()
+            try:
+                result = future.result()
+            except Exception as exp:  # pylint: disable=broad-except
+                result = exp
             self._finished_futures.add(future.key)
-            yield self._future2task[future.key]
+            yield self._future2task[future.key], result
 
         # clean up
         self._task2future = {}

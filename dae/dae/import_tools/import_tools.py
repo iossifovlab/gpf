@@ -10,7 +10,7 @@ from typing import Optional, cast
 from typing import Callable, Dict, List, Tuple, Any
 from dae.annotation.annotation_factory import AnnotationConfigParser,\
     build_annotation_pipeline
-from dae.import_tools.progress import AlwaysRunProgress, FileProgress
+from dae.import_tools.progress import FileTaskCache
 
 from dae.variants_loaders.cnv.loader import CNVLoader
 from dae.variants_loaders.dae.loader import DaeTransmittedLoader, DenovoLoader
@@ -659,24 +659,19 @@ def main():
     DaskClient.add_arguments(parser)
     args = parser.parse_args()
 
-    progress = _create_progress(args)
+    project = ImportProject.build_from_file(args.config)
+    task_cache = _create_task_cache(args, project)
+
     if args.jobs == 1:
-        executor = SequentialExecutor()
-        executor.progress = progress
-        run(args.config, executor)
+        executor = SequentialExecutor(task_cache=task_cache)
+        run_with_project(project, executor)
     else:
         dask_client = DaskClient.from_arguments(args)
         if dask_client is None:
             sys.exit(1)
         with dask_client as client:
-            executor = DaskExecutor(client)
-            executor.progress = progress
-            run(args.config, executor)
-
-
-def run(import_config_fn, executor=SequentialExecutor()):
-    project = ImportProject.build_from_file(import_config_fn)
-    run_with_project(project, executor)
+            executor = DaskExecutor(client, task_cache=task_cache)
+            run_with_project(project, executor)
 
 
 def run_with_project(project, executor=SequentialExecutor()):
@@ -754,7 +749,5 @@ def _print_stagenames(stagenames):
         print(f"Executing stage: {stagenames_str}")
 
 
-def _create_progress(args):
-    if args.force:
-        return AlwaysRunProgress()
-    return FileProgress()
+def _create_task_cache(args, project):
+    return FileTaskCache(force=args.force, work_dir=project.work_dir)
