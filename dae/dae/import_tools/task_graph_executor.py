@@ -3,7 +3,7 @@ from copy import copy
 from typing import Any, Iterator
 import logging
 
-from dae.import_tools.task_graph import TaskGraph, TaskNode
+from dae.import_tools.task_graph import TaskGraph, Task
 from dae.import_tools.task_cache import TaskCache, NoTaskCache, CacheRecordType
 
 
@@ -14,7 +14,7 @@ class TaskGraphExecutor:
     """Class that executes a task graph."""
 
     @abstractmethod
-    def execute(self, task_graph: TaskGraph) -> Iterator[TaskNode]:
+    def execute(self, task_graph: TaskGraph) -> Iterator[Task]:
         """Start executing the graph.
 
         Return an iterator that yields the task in the graph as they finish not
@@ -22,7 +22,7 @@ class TaskGraphExecutor:
         """
 
     @abstractmethod
-    def get_active_tasks(self) -> list[TaskNode]:
+    def get_active_tasks(self) -> list[Task]:
         """Return the list of tasks currently being processed."""
 
 
@@ -33,7 +33,7 @@ class AbstractTaskGraphExecutor(TaskGraphExecutor):
         super().__init__()
         self._task_cache = task_cache
 
-    def execute(self, task_graph: TaskGraph) -> Iterator[TaskNode]:
+    def execute(self, task_graph: TaskGraph) -> Iterator[Task]:
         self._check_for_cyclic_deps(task_graph)
 
         self._task_cache.prepare(task_graph)
@@ -46,7 +46,7 @@ class AbstractTaskGraphExecutor(TaskGraphExecutor):
                 already_computed_tasks[task_node] = record.result
         return self.__await_tasks(already_computed_tasks)
 
-    def __await_tasks(self, already_computed_tasks) -> Iterator[TaskNode]:
+    def __await_tasks(self, already_computed_tasks) -> Iterator[Task]:
         for task_node, _result in already_computed_tasks.items():
             yield task_node
         for task_node, result in self.await_tasks():
@@ -55,11 +55,11 @@ class AbstractTaskGraphExecutor(TaskGraphExecutor):
             yield task_node
 
     @abstractmethod
-    def queue_task(self, task_node: TaskNode) -> None:
+    def queue_task(self, task_node: Task) -> None:
         """Put the task on the execution queue."""
 
     @abstractmethod
-    def await_tasks(self) -> Iterator[tuple[TaskNode, Any]]:
+    def await_tasks(self) -> Iterator[tuple[Task, Any]]:
         """Yield enqueued tasks as soon as they finish."""
 
     def _in_exec_order(self, task_graph):
@@ -124,7 +124,7 @@ class SequentialExecutor(AbstractTaskGraphExecutor):
 
             # handle tasks that use the output of other tasks
             args = [
-                self._task2result[arg] if isinstance(arg, TaskNode) else arg
+                self._task2result[arg] if isinstance(arg, Task) else arg
                 for arg in task_node.args
             ]
             is_error = False
@@ -161,7 +161,7 @@ class DaskExecutor(AbstractTaskGraphExecutor):
     def queue_task(self, task_node):
         deps = [self._task2future[d] for d in task_node.deps]
         # handle tasks that use the output of other tasks
-        args = [self._task2future[arg] if isinstance(arg, TaskNode) else arg
+        args = [self._task2future[arg] if isinstance(arg, Task) else arg
                 for arg in task_node.args]
         future = self._client.submit(self._exec, task_node.func, args, deps,
                                      pure=False)

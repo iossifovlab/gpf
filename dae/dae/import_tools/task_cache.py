@@ -5,7 +5,7 @@ import pickle
 from typing import Any, cast
 import fsspec
 
-from dae.import_tools.task_graph import TaskGraph, TaskNode
+from dae.import_tools.task_graph import TaskGraph, Task
 from dae.utils import fs_utils
 
 
@@ -41,11 +41,11 @@ class TaskCache:
         """Prepare the cache for quering for the specific graph."""
 
     @abstractmethod
-    def get_record(self, task_node: TaskNode) -> CacheRecord:
+    def get_record(self, task_node: Task) -> CacheRecord:
         """Return a record describing the kind of cache entry for the task."""
 
     @abstractmethod
-    def cache(self, task_node: TaskNode, is_error: bool, result: Any):
+    def cache(self, task_node: Task, is_error: bool, result: Any):
         """Cache the result or excpetion of a task."""
 
 
@@ -55,10 +55,10 @@ class NoTaskCache(dict, TaskCache):
     def prepare(self, graph: TaskGraph):
         pass
 
-    def get_record(self, task_node: TaskNode) -> CacheRecord:
+    def get_record(self, task_node: Task) -> CacheRecord:
         return CacheRecord(CacheRecordType.MISSING)
 
-    def cache(self, task_node: TaskNode, is_error: bool, result: Any):
+    def cache(self, task_node: Task, is_error: bool, result: Any):
         pass
 
 
@@ -74,7 +74,7 @@ class FileTaskCache(TaskCache):
         self._check_ids_are_unique(graph)
         self._global_dependancies = graph.input_files
 
-    def get_record(self, task_node: TaskNode) -> CacheRecord:
+    def get_record(self, task_node: Task) -> CacheRecord:
         if self.force:
             return CacheRecord(CacheRecordType.MISSING)
 
@@ -87,7 +87,7 @@ class FileTaskCache(TaskCache):
         with fsspec.open(output_fn, "rb") as cache_file:
             return cast(CacheRecord, pickle.load(cache_file))
 
-    def cache(self, task_node: TaskNode, is_error: bool, result: Any):
+    def cache(self, task_node: Task, is_error: bool, result: Any):
         cache_fn = self._get_flag_filename(task_node)
         with fsspec.open(cache_fn, "wb") as cache_file:
             record_type = (
@@ -112,7 +112,7 @@ class FileTaskCache(TaskCache):
     @staticmethod
     def _get_id(task_node):
         non_task_args = [
-            arg for arg in task_node.args if not isinstance(arg, TaskNode)
+            arg for arg in task_node.args if not isinstance(arg, Task)
         ]
         args_str = ",".join(str(arg) for arg in non_task_args)
         return f"{task_node.name}({args_str})"
