@@ -9,7 +9,7 @@ from typing import Any, Callable, Optional
 class Task:
     """Represent one node in a TaskGraph together with its dependancies."""
 
-    name: str
+    task_id: str
     func: Callable
     args: list[Any]
     deps: list[Task]
@@ -22,8 +22,9 @@ class TaskGraph:
     def __init__(self):
         self.nodes = []
         self.input_files = []
+        self._task_ids = set()
 
-    def create_task(self, name: str, func: Callable[..., Any], args: list,
+    def create_task(self, task_id: str, func: Callable[..., Any], args: list,
                     deps: list[Task],
                     input_files: Optional[list[str]] = None) -> Task:
         """Create a new task and add it to the graph.
@@ -35,12 +36,16 @@ class TaskGraph:
         :param input_files: Files that were used to build the graph itself
         :return TaskNode: The newly created task node in the graph
         """
+        if task_id in self._task_ids:
+            raise ValueError(f"Task with id='{task_id}' already in graph")
+
         # tasks that use the output of other tasks as input should
         # have those other tasks as dependancies
         deps = copy(deps)
         for arg in args:
             if isinstance(arg, Task):
                 deps.append(arg)
-        node = Task(name, func, args, deps, input_files or [])
+        node = Task(task_id, func, args, deps, input_files or [])
         self.nodes.append(node)
+        self._task_ids.add(task_id)
         return node

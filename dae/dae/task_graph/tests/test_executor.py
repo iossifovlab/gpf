@@ -35,8 +35,8 @@ def test_dependancy_chain(executor):
     graph.create_task("Task 2", do_work, [0], [task_1])
 
     tasks_in_finish_order = list(executor.execute(graph))
-    names_in_finish_order = [task.name for task in tasks_in_finish_order]
-    assert names_in_finish_order == ["Task 1", "Task 2"]
+    ids_in_finish_order = [task.task_id for task in tasks_in_finish_order]
+    assert ids_in_finish_order == ["Task 1", "Task 2"]
 
 
 def test_multiple_dependancies(executor):
@@ -51,13 +51,13 @@ def test_multiple_dependancies(executor):
         graph.create_task(f"Task {i}", do_work, [0], tasks)
 
     tasks_in_finish_order = list(executor.execute(graph))
-    names_in_finish_order = [task.name for task in tasks_in_finish_order]
+    ids_in_finish_order = [task.task_id for task in tasks_in_finish_order]
 
-    assert len(names_in_finish_order) == 15
-    assert set(names_in_finish_order[:10]) == set(
+    assert len(ids_in_finish_order) == 15
+    assert set(ids_in_finish_order[:10]) == set(
         f"Task {i}" for i in range(10)
     )
-    assert set(names_in_finish_order[10:]) == set(
+    assert set(ids_in_finish_order[10:]) == set(
         f"Task {i}" for i in range(100, 105)
     )
 
@@ -76,9 +76,9 @@ def test_implicit_dependancies(executor):
     graph.create_task("8", add_to_list, [8, last_task], [])
 
     tasks_in_finish_order = list(executor.execute(graph))
-    names_in_finish_order = [task.name for task in tasks_in_finish_order]
+    ids_in_finish_order = [task.task_id for task in tasks_in_finish_order]
 
-    assert names_in_finish_order == [f"{i}" for i in range(9)]
+    assert ids_in_finish_order == [f"{i}" for i in range(9)]
 
 
 def test_active_tasks(executor):
@@ -88,8 +88,8 @@ def test_active_tasks(executor):
     graph = TaskGraph()
     first_task = graph.create_task("First", noop, [], [])
     second_layer_tasks = [
-        graph.create_task("Second", noop, [], [first_task])
-        for _ in range(10)
+        graph.create_task(f"Second {i}", noop, [], [first_task])
+        for i in range(10)
     ]
     third_task = graph.create_task("Third", noop, [], second_layer_tasks)
     final_task = graph.create_task("Fourth", noop, [], [third_task])

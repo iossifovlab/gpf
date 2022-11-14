@@ -177,7 +177,7 @@ class ImpalaSchema1ImportStorage(ImportStorage):
         bucket_tasks = []
         for bucket in project.get_import_variants_buckets():
             task = graph.create_task(
-                "Converting Variants", self._do_write_variant,
+                f"Converting Variants {bucket}", self._do_write_variant,
                 [project, bucket], []
             )
             bucket_tasks.append(task)

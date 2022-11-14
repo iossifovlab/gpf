@@ -71,7 +71,6 @@ class FileTaskCache(TaskCache):
         self._global_dependancies: list[str] = []
 
     def prepare(self, graph: TaskGraph):
-        self._check_ids_are_unique(graph)
         self._global_dependancies = graph.input_files
 
     def get_record(self, task_node: Task) -> CacheRecord:
@@ -99,26 +98,8 @@ class FileTaskCache(TaskCache):
             )
             pickle.dump(record, cache_file)
 
-    def _check_ids_are_unique(self, graph):
-        seen = set()
-        for node in graph.nodes:
-            node_id = self._get_id(node)
-            if node_id in seen:
-                raise ValueError(
-                    f"The task graph has two nodes with the same id {node_id}"
-                )
-            seen.add(node_id)
-
-    @staticmethod
-    def _get_id(task_node):
-        non_task_args = [
-            arg for arg in task_node.args if not isinstance(arg, Task)
-        ]
-        args_str = ",".join(str(arg) for arg in non_task_args)
-        return f"{task_node.name}({args_str})"
-
     def _get_flag_filename(self, task_node):
-        return fs_utils.join(self.cache_dir, self._get_id(task_node) + ".flag")
+        return fs_utils.join(self.cache_dir, f"{task_node.task_id}.flag")
 
     def _should_recompute_output(self, input_files, output_files) -> bool:
         input_mtime = self._get_last_mod_time(input_files)

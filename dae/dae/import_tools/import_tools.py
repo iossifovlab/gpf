@@ -737,9 +737,9 @@ def register_import_storage_factory(
 def _get_current_stagenames(executor):
     # we use the task name is also the stagename
     return {
-        t.name
+        t.task_id
         for t in executor.get_active_tasks()
-        if t.name is not None
+        if t.task_id is not None
     }
 
 
