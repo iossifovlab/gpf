@@ -56,14 +56,33 @@ export const sidenavPageLinks = {
 export class BasePage {
   private readonly adminUsername = 'admin@iossifovlab.com';
   private readonly adminPassword = 'secret';
-
-  public cleanup(): void {
-    cy.clearCookie('sessionid');
-    cy.getCookie('sessionid').should('be.null');
+  private oauthTokens = {
+    accessToken: {
+      key: 'access_token',
+      value: ''
+    },
+    refreshToken: {
+      key: 'refresh_token',
+      value: ''
+    }
   }
 
   public preserveLogin(): void {
     Cypress.Cookies.preserveOnce('sessionid');
+
+    if (localStorage.length === 0) {
+      localStorage.setItem(this.oauthTokens.accessToken.key, this.oauthTokens.accessToken.value);
+      localStorage.setItem(this.oauthTokens.refreshToken.key, this.oauthTokens.refreshToken.value);
+    } else {
+      this.oauthTokens.accessToken.value = localStorage.getItem(this.oauthTokens.accessToken.key);
+      this.oauthTokens.refreshToken.value = localStorage.getItem(this.oauthTokens.refreshToken.key);
+    }
+  }
+
+  public cleanup(): void {
+    cy.clearCookie('sessionid');
+    cy.getCookie('sessionid').should('be.null');
+    localStorage.clear();
   }
 
   public navigateToHome(hasAccessRights = true): void {
@@ -87,8 +106,8 @@ export class BasePage {
 
     usersPage.loginDropdownToggleButton.click();
     cy.get('@popup').should('be.called');
-    cy.get('#id_username').type('admin@iossifovlab.com');
-    cy.get('#id_password').type('secret');
+    cy.get('#id_username').type(username);
+    cy.get('#id_password').type(password);
     cy.get('@popup').url().then(url => {
       url = url.replace(`${Cypress.config().baseUrl}accounts/login/?next=/gpf/o/authorize/%3F`, '');
       cy.get('input').last().invoke('attr', 'value', url);
