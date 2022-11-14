@@ -5,7 +5,7 @@ import pickle
 from typing import Any, cast
 import fsspec
 
-from dae.import_tools.task_graph import TaskGraph, Task
+from dae.task_graph.graph import TaskGraph, Task
 from dae.utils import fs_utils
 
 

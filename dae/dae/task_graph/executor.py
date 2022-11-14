@@ -3,8 +3,8 @@ from copy import copy
 from typing import Any, Iterator
 import logging
 
-from dae.import_tools.task_graph import TaskGraph, Task
-from dae.import_tools.task_cache import TaskCache, NoTaskCache, CacheRecordType
+from dae.task_graph.graph import TaskGraph, Task
+from dae.task_graph.cache import TaskCache, NoTaskCache, CacheRecordType
 
 
 logger = logging.getLogger(__file__)

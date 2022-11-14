@@ -9,7 +9,7 @@ from dae.variants_loaders.raw.loader import StoredAnnotationDecorator, \
     VariantsLoader
 from dae.configuration.study_config_builder import StudyConfigBuilder
 from dae.import_tools.import_tools import ImportProject, ImportStorage
-from dae.import_tools.task_graph import TaskGraph
+from dae.task_graph.graph import TaskGraph
 
 
 logger = logging.getLogger(__file__)

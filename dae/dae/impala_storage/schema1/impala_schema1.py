@@ -8,7 +8,7 @@ from dae.utils import fs_utils
 from dae.impala_storage.schema1.import_commons import save_study_config
 from dae.import_tools.parquet_writer import ParquetWriter
 from dae.import_tools.import_tools import ImportStorage
-from dae.import_tools.task_graph import TaskGraph
+from dae.task_graph.graph import TaskGraph
 from dae.parquet.schema1.parquet_io import NoPartitionDescriptor, \
     ParquetManager, ParquetPartitionDescriptor
 

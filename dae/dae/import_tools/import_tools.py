@@ -10,7 +10,7 @@ from typing import Optional, cast
 from typing import Callable, Dict, List, Tuple, Any
 from dae.annotation.annotation_factory import AnnotationConfigParser,\
     build_annotation_pipeline
-from dae.import_tools.task_cache import FileTaskCache
+from dae.task_graph.cache import FileTaskCache
 
 from dae.variants_loaders.cnv.loader import CNVLoader
 from dae.variants_loaders.dae.loader import DaeTransmittedLoader, DenovoLoader
@@ -24,8 +24,8 @@ from dae.genotype_storage.genotype_storage_registry import (
 )
 from dae.parquet.schema1.parquet_io import ParquetPartitionDescriptor
 from dae.configuration.gpf_config_parser import GPFConfigParser
-from dae.import_tools.task_graph import TaskGraph
-from dae.import_tools.task_graph_executor import \
+from dae.task_graph.graph import TaskGraph
+from dae.task_graph.executor import \
     DaskExecutor, SequentialExecutor
 from dae.pedigrees.family import FamiliesData
 from dae.configuration.schemas.import_config import import_config_schema,\

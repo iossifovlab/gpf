@@ -4,8 +4,8 @@ import pytest
 
 from dask.distributed import Client  # type: ignore
 
-from dae.import_tools.task_graph import TaskGraph
-from dae.import_tools.task_graph_executor import \
+from dae.task_graph.graph import TaskGraph
+from dae.task_graph.executor import \
     DaskExecutor, SequentialExecutor
 
 
