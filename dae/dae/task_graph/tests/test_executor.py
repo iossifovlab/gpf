@@ -34,7 +34,7 @@ def test_dependancy_chain(executor):
     task_1 = graph.create_task("Task 1", do_work, [0.01], [])
     graph.create_task("Task 2", do_work, [0], [task_1])
 
-    tasks_in_finish_order = list(executor.execute(graph))
+    tasks_in_finish_order = [task for task, _ in executor.execute(graph)]
     ids_in_finish_order = [task.task_id for task in tasks_in_finish_order]
     assert ids_in_finish_order == ["Task 1", "Task 2"]
 
@@ -50,7 +50,7 @@ def test_multiple_dependancies(executor):
     for i in range(100, 105):
         graph.create_task(f"Task {i}", do_work, [0], tasks)
 
-    tasks_in_finish_order = list(executor.execute(graph))
+    tasks_in_finish_order = [task for task, _ in executor.execute(graph)]
     ids_in_finish_order = [task.task_id for task in tasks_in_finish_order]
 
     assert len(ids_in_finish_order) == 15
@@ -75,7 +75,7 @@ def test_implicit_dependancies(executor):
 
     graph.create_task("8", add_to_list, [8, last_task], [])
 
-    tasks_in_finish_order = list(executor.execute(graph))
+    tasks_in_finish_order = [task for task, _ in executor.execute(graph)]
     ids_in_finish_order = [task.task_id for task in tasks_in_finish_order]
 
     assert ids_in_finish_order == [f"{i}" for i in range(9)]
@@ -96,14 +96,14 @@ def test_active_tasks(executor):
 
     tasks_as_complete = executor.execute(graph)
     assert executor.get_active_tasks() == [first_task]
-    assert next(tasks_as_complete) is first_task
+    assert next(tasks_as_complete)[0] is first_task
 
     for _ in range(10):
         assert set(executor.get_active_tasks()).issubset(second_layer_tasks)
-        assert next(tasks_as_complete) in second_layer_tasks
+        assert next(tasks_as_complete)[0] in second_layer_tasks
     assert executor.get_active_tasks() == [third_task]
 
-    assert next(tasks_as_complete) is third_task
+    assert next(tasks_as_complete)[0] is third_task
     assert executor.get_active_tasks() == [final_task]
-    assert next(tasks_as_complete) is final_task
+    assert next(tasks_as_complete)[0] is final_task
     assert len(executor.get_active_tasks()) == 0

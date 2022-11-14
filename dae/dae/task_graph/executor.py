@@ -14,7 +14,7 @@ class TaskGraphExecutor:
     """Class that executes a task graph."""
 
     @abstractmethod
-    def execute(self, task_graph: TaskGraph) -> Iterator[Task]:
+    def execute(self, task_graph: TaskGraph) -> Iterator[tuple[Task, Any]]:
         """Start executing the graph.
 
         Return an iterator that yields the task in the graph as they finish not
@@ -33,7 +33,7 @@ class AbstractTaskGraphExecutor(TaskGraphExecutor):
         super().__init__()
         self._task_cache = task_cache
 
-    def execute(self, task_graph: TaskGraph) -> Iterator[Task]:
+    def execute(self, task_graph: TaskGraph) -> Iterator[tuple[Task, Any]]:
         self._check_for_cyclic_deps(task_graph)
 
         self._task_cache.prepare(task_graph)
@@ -46,13 +46,14 @@ class AbstractTaskGraphExecutor(TaskGraphExecutor):
                 already_computed_tasks[task_node] = record.result
         return self.__await_tasks(already_computed_tasks)
 
-    def __await_tasks(self, already_computed_tasks) -> Iterator[Task]:
-        for task_node, _result in already_computed_tasks.items():
-            yield task_node
+    def __await_tasks(self, already_computed_tasks) \
+            -> Iterator[tuple[Task, Any]]:
+        for task_node, result in already_computed_tasks.items():
+            yield task_node, result
         for task_node, result in self.await_tasks():
             is_error = isinstance(result, BaseException)
             self._task_cache.cache(task_node, is_error, result)
-            yield task_node
+            yield task_node, result
 
     @abstractmethod
     def queue_task(self, task_node: Task) -> None:
