@@ -10,7 +10,7 @@ from typing import Optional, cast
 from typing import Callable, Dict, List, Tuple, Any
 from dae.annotation.annotation_factory import AnnotationConfigParser,\
     build_annotation_pipeline
-from dae.import_tools.progress import FileTaskCache
+from dae.import_tools.task_cache import FileTaskCache
 
 from dae.variants_loaders.cnv.loader import CNVLoader
 from dae.variants_loaders.dae.loader import DaeTransmittedLoader, DenovoLoader

@@ -4,7 +4,7 @@ from typing import Any, Iterator
 import logging
 
 from dae.import_tools.task_graph import TaskGraph, TaskNode
-from dae.import_tools.progress import TaskCache, NoTaskCache, CacheRecordType
+from dae.import_tools.task_cache import TaskCache, NoTaskCache, CacheRecordType
 
 
 logger = logging.getLogger(__file__)
