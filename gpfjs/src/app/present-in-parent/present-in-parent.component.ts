@@ -52,7 +52,6 @@ export class PresentInParentComponent extends StatefulComponent implements OnIni
   }
 
   public contains(string, value) {
-    console.log('1');
     return string.has(value);
   }
 
