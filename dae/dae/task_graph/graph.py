@@ -25,7 +25,7 @@ class TaskGraph:
     """An object representing a graph of tasks."""
 
     def __init__(self):
-        self.nodes = []
+        self.tasks = []
         self.input_files = []
         self._task_ids = set()
 
@@ -51,6 +51,6 @@ class TaskGraph:
             if isinstance(arg, Task):
                 deps.append(arg)
         node = Task(task_id, func, args, deps, input_files or [])
-        self.nodes.append(node)
+        self.tasks.append(node)
         self._task_ids.add(task_id)
         return node

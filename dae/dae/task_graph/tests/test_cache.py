@@ -40,7 +40,7 @@ def execute_with_file_cache(graph, work_dir):
 def test_file_cache_clear_state(graph: TaskGraph, tmpdir):
     cache = FileTaskCache(work_dir=tmpdir)
     cache.prepare(graph)
-    for task in graph.nodes:
+    for task in graph.tasks:
         assert cache.get_record(task).type == CacheRecordType.MISSING
 
 
@@ -51,7 +51,7 @@ def test_file_cache_just_executed(graph: TaskGraph, tmpdir):
 
     cache = FileTaskCache(work_dir=tmpdir)
     cache.prepare(graph)
-    for task in graph.nodes:
+    for task in graph.tasks:
         assert cache.get_record(task).type == CacheRecordType.COMPUTED
 
 
@@ -67,7 +67,7 @@ def test_file_cache_touch_input_file(graph: TaskGraph, tmpdir):
     touch(config_fn)
     cache = FileTaskCache(work_dir=tmpdir)
     cache.prepare(graph)
-    for task in graph.nodes:
+    for task in graph.tasks:
         assert cache.get_record(task).type == CacheRecordType.MISSING
 
 
@@ -125,14 +125,14 @@ def touch(filename):
 
 
 def get_task_by_id(graph, task_id):
-    for task in graph.nodes:
+    for task in graph.tasks:
         if task.task_id == task_id:
             return task
     return None
 
 
 def get_task_descendants(graph, parent_task):
-    for task in graph.nodes:
+    for task in graph.tasks:
         if is_task_descendant(task, parent_task):
             yield task
 

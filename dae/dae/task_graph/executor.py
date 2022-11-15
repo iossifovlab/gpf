@@ -65,7 +65,7 @@ class AbstractTaskGraphExecutor(TaskGraphExecutor):
 
     def _in_exec_order(self, task_graph):
         visited = set()
-        for node in task_graph.nodes:
+        for node in task_graph.tasks:
             yield from self._node_in_exec_order(node, visited)
 
     def _node_in_exec_order(self, node, visited):
@@ -79,7 +79,7 @@ class AbstractTaskGraphExecutor(TaskGraphExecutor):
     def _check_for_cyclic_deps(self, task_graph):
         visited = set()
         stack = []
-        for node in task_graph.nodes:
+        for node in task_graph.tasks:
             if node not in visited:
                 cycle = self._find_cycle(node, visited, stack)
                 if cycle is not None:
