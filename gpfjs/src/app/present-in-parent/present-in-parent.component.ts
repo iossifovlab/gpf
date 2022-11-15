@@ -51,10 +51,6 @@ export class PresentInParentComponent extends StatefulComponent implements OnIni
     });
   }
 
-  public contains(string, value) {
-    return string.has(value);
-  }
-
   public updatePresentInParent(newValues: Set<string>): void {
     this.selectedValues = newValues;
     if (newValues.size === 0) {
