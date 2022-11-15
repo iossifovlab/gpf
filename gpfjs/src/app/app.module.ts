@@ -169,6 +169,9 @@ import { AuthResolverService } from './auth-resolver.service';
 import { APP_BASE_HREF, PlatformLocation } from '@angular/common';
 import { CustomUrlSerializer } from './custom-url-serializer';
 import { ComparePipe } from './utils/compare.pipe';
+import { BackgroundColorPipe } from './utils/background-color.pipe';
+import { RegressionComparePipe } from './utils/regression-compare.pipe';
+import { GetRegressionIdsPipe } from './utils/get-regression-ids.pipe';
 
 const appRoutes: Routes = [
   {
@@ -361,6 +364,9 @@ const appRoutes: Routes = [
     AgpTableComponent,
     TruncatePipe,
     ComparePipe,
+    BackgroundColorPipe,
+    RegressionComparePipe,
+    GetRegressionIdsPipe,
     JoinPipe,
     UniqueFamilyVariantsFilterComponent,
     PedigreeChartComponent,

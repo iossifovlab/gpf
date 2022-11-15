@@ -53,7 +53,7 @@
             </gpf-table-subcontent>
         </gpf-table-content>
     </gpf-table-column>
-    <ng-container *ngFor="let regressionId of getRegressionIds()">
+    <ng-container *ngFor="let regressionId of measures.regressionNames | getRegressionIds">
         <gpf-table-column>
             <gpf-table-header caption="Regression by {{ measures.regressionNames[regressionId] ? measures.regressionNames[regressionId] : regressionId }}"></gpf-table-header>
             <gpf-table-content>
@@ -66,21 +66,21 @@
         </gpf-table-column>
         <gpf-table-column>
             <gpf-table-header caption="{{ measures.regressionNames[regressionId] ? measures.regressionNames[regressionId] : regressionId }} PV">
-                <gpf-table-subheader caption="male" field="pvalueRegressionMale" [comparator]="regressionCompare(regressionId, 'pvalueRegressionMale')"></gpf-table-subheader>
-                <gpf-table-subheader caption="female" field="pvalueRegressionFemale" [comparator]="regressionCompare(regressionId, 'pvalueRegressionFemale')"></gpf-table-subheader>
+                <gpf-table-subheader caption="male" field="pvalueRegressionMale" [comparator]="regressionId | regressionComparePipe: 'pvalueRegressionMale'"></gpf-table-subheader>
+                <gpf-table-subheader caption="female" field="pvalueRegressionFemale" [comparator]="regressionId | regressionComparePipe: 'pvalueRegressionFemale'"></gpf-table-subheader>
             </gpf-table-header>
             <gpf-table-content>
                 <gpf-table-subcontent>
                     <span class="expanded-span"
                      *gpfTableCellContent="let data"
-                      [style.background-color]="getBackgroundColor(data.regressions.getReg(regressionId).pvalueRegressionMale)">
+                      [style.background-color]="data.regressions.getReg(regressionId).pvalueRegressionMale | getBackgroundColor">
                       <span>{{ data.regressions.getReg(regressionId).pvalueRegressionMale | numberWithExp: "1.2-4" }}</span>
                     </span>
                 </gpf-table-subcontent>
                 <gpf-table-subcontent>
                     <span class="expanded-span"
                      *gpfTableCellContent="let data"
-                      [style.background-color]="getBackgroundColor(data.regressions.getReg(regressionId).pvalueRegressionFemale)">
+                      [style.background-color]="data.regressions.getReg(regressionId).pvalueRegressionFemale | getBackgroundColor">
                       <span>{{ data.regressions.getReg(regressionId).pvalueRegressionFemale | numberWithExp: "1.2-4" }}</span>
                     </span>
                 </gpf-table-subcontent>
