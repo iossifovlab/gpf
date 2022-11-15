@@ -15,6 +15,11 @@ class Task:
     deps: list[Task]
     input_files: list[str]
 
+    def __repr__(self):
+        deps = ",".join(dep.task_id for dep in self.deps)
+        in_files = ",".join(self.input_files)
+        return f"Task(id={self.task_id}, deps={deps}, in_files={in_files})"
+
 
 class TaskGraph:
     """An object representing a graph of tasks."""

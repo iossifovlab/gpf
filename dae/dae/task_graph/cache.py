@@ -1,4 +1,5 @@
 from abc import abstractmethod
+from copy import copy
 from dataclasses import dataclass
 from enum import Enum
 import pickle
@@ -77,14 +78,24 @@ class FileTaskCache(TaskCache):
         if self.force:
             return CacheRecord(CacheRecordType.MISSING)
 
-        input_files = task_node.input_files + self._global_dependancies
-        for dep in task_node.deps:
-            input_files.append(self._get_flag_filename(dep))
-        output_fn = self._get_flag_filename(task_node)
-        if self._should_recompute_output(input_files, [output_fn]):
+        if self._needs_compute(task_node):
             return CacheRecord(CacheRecordType.MISSING)
+
+        output_fn = self._get_flag_filename(task_node)
         with fsspec.open(output_fn, "rb") as cache_file:
             return cast(CacheRecord, pickle.load(cache_file))
+
+    def _needs_compute(self, task):
+        in_files = copy(self._global_dependancies)
+        self._add_dep_files(task, in_files)
+        output_fn = self._get_flag_filename(task)
+        return self._should_recompute_output(in_files, [output_fn])
+
+    def _add_dep_files(self, task, files):
+        files.extend(task.input_files)
+        for dep in task.deps:
+            files.append(self._get_flag_filename(dep))
+            self._add_dep_files(dep, files)
 
     def cache(self, task_node: Task, is_error: bool, result: Any):
         cache_fn = self._get_flag_filename(task_node)
@@ -105,7 +116,7 @@ class FileTaskCache(TaskCache):
         input_mtime = self._get_last_mod_time(input_files)
         output_mtime = self._get_last_mod_time(output_files)
         if len(input_files) == 0 and output_mtime is not None:
-            return False  # No input, already run, don't recompute
+            return False  # No input, but output file exists, don't recompute
         if input_mtime is None or output_mtime is None:
             return True  # cannot determine mod times. Always run.
         should_run: bool = input_mtime > output_mtime
@@ -122,7 +133,6 @@ class FileTaskCache(TaskCache):
 
     @staticmethod
     def _safe_getmtime(path):
-        try:
+        if fs_utils.exists(path):
             return fs_utils.modified(path)
-        except Exception:  # pylint: disable=broad-except
-            return None
+        return None
