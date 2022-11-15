@@ -21,17 +21,17 @@ class CacheRecord:
     """Encapsulate information about a task in the cache."""
 
     type: CacheRecordType
-    result_or_exception: Any = None
+    result_or_error: Any = None
 
     @property
     def result(self):
         assert self.type == CacheRecordType.COMPUTED
-        return self.result_or_exception
+        return self.result_or_error
 
     @property
     def error(self):
         assert self.type == CacheRecordType.ERROR
-        return self.result_or_exception
+        return self.result_or_error
 
 
 class TaskCache:
