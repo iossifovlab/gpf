@@ -38,28 +38,4 @@ export class DatasetsPage extends BasePage {
     cy.get('.navbar-custom').should('be.visible');
     return cy.get('a.nav-link').contains('Gene Browser');
   }
-
-  public get familiesByNumberDropdownButton(): element {
-    return cy.get('#families-by-number-dropdown-button');
-  }
-
-  public get allFamiliesByNumberHeaderCells(): element {
-    return cy.get('div#families-by-number-div tbody th');
-  }
-
-  public get allFamiliesByNumberDataCells(): element {
-    return cy.get('div#families-by-number-div td');
-  }
-
-  public get familiesByPedigreeDivs(): element {
-    return cy.get('gpf-common-reports-pedigree-cell .pedigree-count');
-  }
-
-  public findDenovoVariantsCountsByRowName(rowName: string): element {
-    return cy.get('div#denovo-variants-div th').contains(rowName).parent().find('div');
-  }
-
-  public get denovoVariantsDropdownButton(): element {
-    return cy.get('#denovo-variants-dropdown-button');
-  }
 }
