@@ -372,8 +372,36 @@ directory:
 
 
 
-Example import of de Novo variants
-++++++++++++++++++++++++++++++++++
+Example import of de Novo variants from `Rates of contributory de novo mutation in high and low-risk autism families`
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Let us import de Novo variants from the 
+`Yoon, S., Munoz, A., Yamrom, B. et al. Rates of contributory de novo mutation
+in high and low-risk autism families. Commun Biol 4, 1026 (2021). 
+<https://doi.org/10.1038/s42003-021-02533-z>`_.
+
+We will focus on de Novo variants from the SSC collection published in the 
+aforementioned paper.
+To import these variants into the GPF system we need a list of de Novo variants
+and a pedigree file describing the families.
+The list of de Novo variants is available from 
+`Supplementary Data 2 <https://static-content.springer.com/esm/art%3A10.1038%2Fs42003-021-02533-z/MediaObjects/42003_2021_2533_MOESM4_ESM.xlsx>`_.
+The pedigree file for this study is not available. Instead, we have a list of
+children available from `Supplementary Data 1 <https://static-content.springer.com/esm/art%3A10.1038%2Fs42003-021-02533-z/MediaObjects/42003_2021_2533_MOESM3_ESM.xlsx>`_.
+
+Let us first export these Excel spreadsheets into CSV files. Let us say that the
+list of de Novo variants from the SSC collection is saved into a file named
+``SupplementaryData2_SSC.tsv`` and the list of children is saved into a TSV file
+named ``SupplementaryData1_Children.tsv``.
+
+.. note:: 
+
+    Input files for this example can be downloaded from 
+    `denovo-in-high-and-low-risk-papter.tar.gz <https://iossifovlab.com/distribution/public/denovo-in-high-and-low-risk-papter.tar.gz>`_.
+
+
+
+
 
 As an example of importing a study with de Novo variants, you can use the `iossifov_2014` study.
 Download and extract the study::
