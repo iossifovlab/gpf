@@ -27,6 +27,9 @@ import { Observable, of } from 'rxjs';
 import { ResizeService } from '../table/resize.service';
 import { By } from '@angular/platform-browser';
 import { ConfigService } from 'app/config/config.service';
+import { RegressionComparePipe } from 'app/utils/regression-compare.pipe';
+import { GetRegressionIdsPipe } from 'app/utils/get-regression-ids.pipe';
+import { BackgroundColorPipe } from 'app/utils/background-color.pipe';
 
 const fakeJsonMeasurei1 = JSON.parse(JSON.stringify(fakeJsonMeasureOneRegression));
 fakeJsonMeasurei1.instrument_name = 'i1';
@@ -113,8 +116,8 @@ describe('PhenoBrowserComponent', () => {
         GpfTableColumnComponent, GpfTableContentComponent,
         GpfTableContentHeaderComponent, GpfTableSubcontentComponent,
         GpfTableSubheaderComponent, NumberWithExpPipe,
-        PValueIntensityPipe, GpfTableCellContentDirective,
-        PhenoBrowserComponent],
+        PValueIntensityPipe, GpfTableCellContentDirective, RegressionComparePipe,
+        PhenoBrowserComponent, GetRegressionIdsPipe, BackgroundColorPipe],
       providers: [
         PhenoBrowserComponent,
         { provide: DatasetsService, useValue: datasetServiceMock },

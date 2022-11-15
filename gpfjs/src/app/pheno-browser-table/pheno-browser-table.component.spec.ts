@@ -20,6 +20,9 @@ import { GpfTableSubheaderComponent } from '../table/component/subheader.compone
 import { NumberWithExpPipe } from '../utils/number-with-exp.pipe';
 import { PValueIntensityPipe } from '../utils/p-value-intensity.pipe';
 import { ResizeService } from '../table/resize.service';
+import { GetRegressionIdsPipe } from 'app/utils/get-regression-ids.pipe';
+import { RegressionComparePipe } from 'app/utils/regression-compare.pipe';
+import { BackgroundColorPipe } from 'app/utils/background-color.pipe';
 
 
 @Component({
@@ -53,6 +56,7 @@ describe('PhenoBrowserTableComponent; no regressions', () => {
         GpfTableHeaderComponent, GpfTableHeaderCellComponent, GpfTableColumnComponent,
         GpfTableContentHeaderComponent, GpfTableContentComponent, GpfTableCellContentDirective,
         GpfTableSubcontentComponent, GpfTableSubheaderComponent, NumberWithExpPipe,
+        GetRegressionIdsPipe
       ],
       providers: [
         { provide: PValueIntensityPipe, useClass: PValueIntensityPipe },
@@ -113,7 +117,8 @@ describe('PhenoBrowserTableComponent; one regression', () => {
         GpfTableComponent, GpfTableCellComponent, GpfTableEmptyCellComponent,
         GpfTableHeaderComponent, GpfTableHeaderCellComponent, GpfTableColumnComponent,
         GpfTableContentHeaderComponent, GpfTableContentComponent, GpfTableCellContentDirective,
-        GpfTableSubcontentComponent, GpfTableSubheaderComponent, NumberWithExpPipe,
+        GpfTableSubcontentComponent, GpfTableSubheaderComponent, NumberWithExpPipe, GetRegressionIdsPipe,
+        RegressionComparePipe, BackgroundColorPipe
       ],
       providers: [
         { provide: PValueIntensityPipe, useClass: PValueIntensityPipe },
@@ -178,7 +183,8 @@ describe('PhenoBrowserTableComponent; two regressions', () => {
         GpfTableComponent, GpfTableCellComponent, GpfTableEmptyCellComponent,
         GpfTableHeaderComponent, GpfTableHeaderCellComponent, GpfTableColumnComponent,
         GpfTableContentHeaderComponent, GpfTableContentComponent, GpfTableCellContentDirective,
-        GpfTableSubcontentComponent, GpfTableSubheaderComponent, NumberWithExpPipe,
+        GpfTableSubcontentComponent, GpfTableSubheaderComponent, NumberWithExpPipe, GetRegressionIdsPipe,
+        RegressionComparePipe, BackgroundColorPipe
       ],
       providers: [
         { provide: PValueIntensityPipe, useClass: PValueIntensityPipe },
