@@ -195,7 +195,7 @@ This tool supports importing variants from three formats:
 
 
 Example import of de Novo variants: ``helloworld``
-++++++++++++++++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 .. note:: 
 
@@ -208,43 +208,39 @@ de Novo variants ``helloworld.tsv``:
 .. code-block::
 
     CHROM   POS	      REF    ALT  person_ids
-    chr14   21403214  T      C    f1.p1
-    chr14   21431459  G      C    f1.p1
-    chr14   21391016  A      AT   f2.p1
-    chr14   21403019  G      A    f2.p1
-    chr14   21402010  G      A    f3.p1
-    chr14   21393484  TCTTC  T    f3.p1
+    chr14   21403214  T      C    p1
+    chr14   21431459  G      C    p1
+    chr14   21391016  A      AT   p2
+    chr14   21403019  G      A    p2
+    chr14   21402010  G      A    p1
+    chr14   21393484  TCTTC  T    p2
 
 and a pedigree file that describes the families ``helloworld.ped``:
 
 .. code-block::
 
     familyId  personId  dadId   momId   sex   status  role  phenotype
-    f1        f1.mom    0       0       2     1       mom   unaffected
-    f1        f1.dad    0       0       1     1       dad   unaffected
-    f1        f1.p1     f1.dad  f1.mom  1     2       prb   autism
-    f1        f1.s1     f1.dad  f1.mom  2     2       sib   autism
-    f2        f2.mom    0       0       2     1       mom   unaffected
-    f2        f2.dad    0       0       1     1       dad   unaffected
-    f2        f2.p1     f2.dad  f2.mom  1     2       prb   autism
-    f2        f2.s1     f2.dad  f2.mom  2     2       sib   autism
-    f3        f3.mom    0       0       2     1       mom   unaffected
-    f3        f3.dad    0       0       1     1       dad   unaffected
-    f3        f3.p1     f3.dad  f3.mom  1     2       prb   autism
-    f3        f3.s1     f3.dad  f3.mom  2     2       sib   autism
+    f1        m1        0       0       2     1       mom   unaffected
+    f1        d1        0       0       1     1       dad   unaffected
+    f1        p1        d1      m1      1     2       prb   autism
+    f1        s1        d1      m1      2     2       sib   unaffected
+    f2        m2        0       0       2     1       mom   unaffected
+    f2        d2        0       0       1     1       dad   unaffected
+    f2        p2        d2      m2      1     2       prb   autism
 
 
-The project configuration file for importing this study:
+The project configuration file for importing this study
+``denovo_helloworld.yaml`` should look like:
 
 .. code-block:: yaml
 
-    id: helloworld
+    id: denovo_helloworld
 
     input:
-    pedigree:
+      pedigree:
         file: helloworld.ped
 
-    denovo:
+      denovo:
         files:
         - helloworld.tsv
         person_id: person_ids
@@ -258,10 +254,10 @@ To import this project run the following command:
 
 .. code-block:: bash
 
-    import_tool -f helloworld_project.yaml
+    import_tool -f denovo_helloworld.yaml
 
 
-When ready you can run the GPF development server using:
+When the import finishes you can run the GPF development server using:
 
 .. code-block:: bash
 
@@ -269,62 +265,110 @@ When ready you can run the GPF development server using:
 
 and browse the content of the GPF development server at `http://localhost:8000`
 
-.. * Enter into the created directory ``helloworld``::
 
-..     cd comp
+Example import of VCF variants: ``vcf_helloworld``
+++++++++++++++++++++++++++++++++++++++++++++++++++
 
-.. * Run ``simple_study_import.py`` to import the VCF variants; this command uses
-..   three arguments - pedigree file name, a VCF file name and an id to assign to the imported study in the system::
 
-..         simple_study_import.py comp.ped \
-..             --vcf-files comp.vcf \
-..             --id comp_vcf
+.. note:: 
 
-..   | This command creates a study with ID `comp_vcf` that contains all VCF variants.
+    Input files for this example can be downloaded from 
+    `vcf-helloworld.tar.gz <https://iossifovlab.com/distribution/public/vcf-helloworld.tar.gz>`_.
 
-.. * Run ``simple_study_import.py`` to import the de Novo variants; this command
-..   uses three arguments - study ID to use, pedigree file name and de Novo variants file name::
 
-..         simple_study_import.py comp.ped \
-..             --denovo-file comp.tsv \
-..             --id comp_denovo
+Let us have a small VCF file ``hellowrold.vcf``:
 
-..   | This command creates a study with ID `comp_denovo` that contains all de Novo variants.
+.. code-block::
 
-.. * Run ``simple_study_import.py`` to import all VCF and de Novo variants;
-..   this command uses four arguments - study ID to use, pedigree file name,
-..   VCF file name and de Novo variants file name::
+  ##fileformat=VCFv4.2
+  ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+  ##contig=<ID=chr14>
+  #CHROM POS      ID REF  ALT QUAL FILTER INFO FORMAT m1  d1  p1  s1  m2  d2  p2
+  chr14  21385738 .  C    T   .    .      .    GT     0/0 0/1 0/1 0/0 0/0 0/1 0/0   
+  chr14  21385954 .  A    C   .    .      .    GT     0/0 0/0 0/0 0/0 0/1 0/0 0/1   
+  chr14  21393173 .  T    C   .    .      .    GT     0/1 0/0 0/0 0/1 0/0 0/0 0/0   
+  chr14  21393702 .  C    T   .    .      .    GT     0/0 0/0 0/0 0/0 0/0 0/1 0/1   
+  chr14  21393860 .  G    A   .    .      .    GT     0/0 0/1 0/1 0/1 0/0 0/0 0/0   
+  chr14  21403023 .  G    A   .    .      .    GT     0/0 0/1 0/0 0/1 0/1 0/0 0/0   
+  chr14  21405222 .  T    C   .    .      .    GT     0/0 0/0 0/0 0/0 0/0 0/1 0/0   
+  chr14  21409888 .  T    C   .    .      .    GT     0/1 0/0 0/1 0/0 0/1 0/0 1/0   
+  chr14  21429019 .  C    T   .    .      .    GT     0/0 0/1 0/1 0/0 0/0 0/1 0/1   
+  chr14  21431306 .  G    A   .    .      .    GT     0/0 0/1 0/1 0/1 0/0 0/0 0/0   
+  chr14  21431623 .  A    C   .    .      .    GT     0/0 0/0 0/0 0/0 0/1 1/1 1/1   
+  chr14  21393540 .  GGAA G   .    .      .    GT     0/1 0/1 1/1 0/0 0/0 0/0 0/0   
 
-..         simple_study_import.py comp.ped \
-..             --denovo-file comp.tsv \
-..             --vcf-files comp.vcf \
-..             --id comp_all
+and a pedigree file ``helloworld.ped`` (the same pedigree file used in 
+`Example import of de Novo variants: ``helloworld```_):
 
-..   This command creates a study with ID `comp_all` that contains all
-..   VCF and de Novo variants.
+.. code-block::
 
-.. _denovo_format:
+    familyId  personId  dadId   momId   sex   status  role  phenotype
+    f1        m1        0       0       2     1       mom   unaffected
+    f1        d1        0       0       1     1       dad   unaffected
+    f1        p1        d1      m1      1     2       prb   autism
+    f1        s1        d1      m1      2     2       sib   unaffected
+    f2        m2        0       0       2     1       mom   unaffected
+    f2        d2        0       0       1     1       dad   unaffected
+    f2        p2        d2      m2      1     2       prb   autism
 
-.. note::
-    The default format for the de Novo variants file is a tab-separated
-    file that contains the following columns:
 
-    - familyId - family id matching a family from the pedigree file
-    - location - location of the variant
-    - variant - description of the variant
-    - bestState - best state of the variant in the family
+The project configuration file for importing this VCF study
+``vcf_helloworld.yaml`` should look like:
 
-    The columns of your file may have different labels - if so, the
-    simple_study_import tool accepts arguments which specify the labels
-    of the columns in the input file.
+.. code-block:: yaml
 
-    Example::
+    id: vcf_helloworld
 
-        familyId       location       variant        bestState
-        f1             1:865664       sub(G->A)      2 2 1 2/0 0 1 0
-        f1             1:865691       sub(C->T)      2 2 1 2/0 0 1 0
-        f2             1:865664       sub(G->A)      2 2 1 2/0 0 1 0
-        f2             1:865691       sub(C->T)      2 2 1 2/0 0 1 0
+    input:
+      pedigree:
+        file: helloworld.ped
+
+      vcf:
+        files:
+        - helloworld.vcf
+
+To import this project run the following command:
+
+.. code-block:: bash
+
+    import_tool -f vcf_helloworld.yaml
+
+
+When the import finishes you can run the GPF development server using:
+
+.. code-block:: bash
+
+    wpgf run
+
+and browse the content of the GPF development server at `http://localhost:8000`
+
+
+Example of a dataset (group of genotype studies)
+++++++++++++++++++++++++++++++++++++++++++++++++
+
+The already imported studies ``denovo_helloworld`` and ``vcf_helloworld``
+have genomic variants for the same group of individuals ``helloworld.ped``.
+We can create a dataset (group of genotype studies) that include both studies.
+
+To this end create a directory ``datasets/helloworld`` inside the GPF instance
+directory ``data-hg38-empty``:
+
+.. code-block:: bash
+
+    cd data-hg38-empty
+    mkdir -p datasets/helloworld
+
+and place the following configuration file ``hellowrold.yaml`` inside that
+directory:
+
+.. code-block:: yaml
+
+    id: helloworld
+    name: Hello World Dataset
+    
+    studies:
+      - denovo_helloworld
+      - vcf_helloworld    
 
 
 
