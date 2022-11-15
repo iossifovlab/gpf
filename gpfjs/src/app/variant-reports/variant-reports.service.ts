@@ -51,10 +51,10 @@ export class VariantReportsService {
   }
 
   public async getDownloadLinkPedigreeTags(studyId: string, tags: string): Promise<Subscription> {
-    let searchParams = new HttpParams().set('study_id', studyId);
+    let searchParams: HttpParams;
 
     if (tags) {
-      searchParams = searchParams.set('tags', tags);
+      searchParams = new HttpParams().set('tags', tags);
     }
 
     const headers = {
@@ -63,7 +63,7 @@ export class VariantReportsService {
     };
 
     const options = { headers: headers, withCredentials: true, params: searchParams };
-    return this.http.get(`${this.config.baseUrl}${this.downloadUrl}download`, { ...options, responseType: 'blob' })
+    return this.http.get(`${this.config.baseUrl}${this.downloadUrl}${studyId}`, { ...options, responseType: 'blob' })
       .subscribe(async res => {
         const a = document.createElement('a');
         a.download = 'families.ped';
