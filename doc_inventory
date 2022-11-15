@@ -7,7 +7,7 @@
 
 
 [iossifovlab]
-iossifovlab.com ansible_ssh_host=iossifovlab.com  ansible_ssh_port=2022 ansible_ssh_user=lubo
+iossifovlab.com ansible_ssh_host=iossifovlab.com  ansible_ssh_port=22 ansible_ssh_user=lubo
 
 [iossifovlab:vars]
 base_path="/home/lubo/sites"
