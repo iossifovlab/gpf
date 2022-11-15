@@ -41,7 +41,7 @@ def test_file_cache_clear_state(graph: TaskGraph, tmpdir):
     cache = FileTaskCache(work_dir=tmpdir)
     cache.prepare(graph)
     for task in graph.tasks:
-        assert cache.get_record(task).type == CacheRecordType.MISSING
+        assert cache.get_record(task).type == CacheRecordType.NEEDS_COMPUTE
 
 
 def test_file_cache_just_executed(graph: TaskGraph, tmpdir):
@@ -68,7 +68,7 @@ def test_file_cache_touch_input_file(graph: TaskGraph, tmpdir):
     cache = FileTaskCache(work_dir=tmpdir)
     cache.prepare(graph)
     for task in graph.tasks:
-        assert cache.get_record(task).type == CacheRecordType.MISSING
+        assert cache.get_record(task).type == CacheRecordType.NEEDS_COMPUTE
 
 
 @pytest.mark.parametrize("operation", ["touch", "remove"])
@@ -90,9 +90,9 @@ def test_file_cache_mod_input_file_of_intermediate_node(
     cache = FileTaskCache(work_dir=tmpdir)
     cache.prepare(graph)
 
-    assert cache.get_record(int_node).type == CacheRecordType.MISSING
+    assert cache.get_record(int_node).type == CacheRecordType.NEEDS_COMPUTE
     for task in get_task_descendants(graph, int_node):
-        assert cache.get_record(task).type == CacheRecordType.MISSING
+        assert cache.get_record(task).type == CacheRecordType.NEEDS_COMPUTE
 
 
 @pytest.mark.parametrize("operation", ["touch", "remove"])
@@ -110,10 +110,11 @@ def test_file_cache_mod_flag_file_of_intermediate_node(
     else:
         assert operation == "remove"
         os.remove(cache._get_flag_filename(first_task))
-        assert cache.get_record(first_task).type == CacheRecordType.MISSING
+        assert cache.get_record(first_task).type == \
+            CacheRecordType.NEEDS_COMPUTE
 
     for task in get_task_descendants(graph, first_task):
-        assert cache.get_record(task).type == CacheRecordType.MISSING
+        assert cache.get_record(task).type == CacheRecordType.NEEDS_COMPUTE
 
 
 def touch(filename):

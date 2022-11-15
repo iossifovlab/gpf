@@ -11,7 +11,7 @@ from dae.utils import fs_utils
 
 
 class CacheRecordType(Enum):
-    MISSING = 0
+    NEEDS_COMPUTE = 0
     COMPUTED = 1
     ERROR = 2
 
@@ -57,7 +57,7 @@ class NoTaskCache(dict, TaskCache):
         pass
 
     def get_record(self, task_node: Task) -> CacheRecord:
-        return CacheRecord(CacheRecordType.MISSING)
+        return CacheRecord(CacheRecordType.NEEDS_COMPUTE)
 
     def cache(self, task_node: Task, is_error: bool, result: Any):
         pass
@@ -76,10 +76,10 @@ class FileTaskCache(TaskCache):
 
     def get_record(self, task_node: Task) -> CacheRecord:
         if self.force:
-            return CacheRecord(CacheRecordType.MISSING)
+            return CacheRecord(CacheRecordType.NEEDS_COMPUTE)
 
         if self._needs_compute(task_node):
-            return CacheRecord(CacheRecordType.MISSING)
+            return CacheRecord(CacheRecordType.NEEDS_COMPUTE)
 
         output_fn = self._get_flag_filename(task_node)
         with fsspec.open(output_fn, "rb") as cache_file:
