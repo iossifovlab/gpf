@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from copy import copy
 from dataclasses import dataclass
-from typing import Any, Callable, Optional
+from typing import Any, Callable, Iterable, Optional
 
 
 @dataclass(eq=False, frozen=True)
@@ -25,9 +25,9 @@ class TaskGraph:
     """An object representing a graph of tasks."""
 
     def __init__(self):
-        self.tasks = []
-        self.input_files = []
-        self._task_ids = set()
+        self.tasks: list[Task] = []
+        self.input_files: list[str] = []
+        self._task_ids: set[str] = set()
 
     def create_task(self, task_id: str, func: Callable[..., Any], args: list,
                     deps: list[Task],
@@ -54,3 +54,34 @@ class TaskGraph:
         self.tasks.append(node)
         self._task_ids.add(task_id)
         return node
+
+    def prune(self, ids_to_keep: Iterable[str]):
+        """Prune tasks which are not in ids_to_keep or in their deps.
+
+        tasks ids which are in ids_to_keep but not in the graph are simply
+        assumed to have already been removed and no error is raised.
+        """
+        ids_to_keep = set(ids_to_keep)
+        ids_not_found = ids_to_keep - self._task_ids
+        if ids_not_found:
+            raise KeyError(ids_not_found)
+
+        tasks_to_keep: set[str] = set()
+        for task in self.tasks:
+            if task.task_id in ids_to_keep:
+                tasks_to_keep.add(task.task_id)
+                self._add_task_deps(task, tasks_to_keep)
+
+        new_tasks = [t for t in self.tasks if t.task_id in tasks_to_keep]
+        res = TaskGraph()
+        res.tasks = new_tasks
+        res.input_files = self.input_files
+        res._task_ids |= tasks_to_keep
+        return res
+
+    @staticmethod
+    def _add_task_deps(task, task_set):
+        for dep in task.deps:
+            if dep not in task_set:
+                task_set.add(dep.task_id)
+                TaskGraph._add_task_deps(dep, task_set)
