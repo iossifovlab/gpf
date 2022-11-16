@@ -85,14 +85,12 @@ def _run_init_command(wgpf_instance, **kwargs):
             "please use '--force' flag.", wgpf_instance.dae_dir)
         sys.exit(0)
 
-    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "wdae.settings")
-
     try:
         try:
             execute_from_command_line([
                 "wgpf", "migrate",
                 "--skip-checks",
-                "--settings", os.environ["DJANGO_SETTINGS_MODULE"]])
+            ])
         except SystemExit:
             if not force:
                 raise
@@ -105,7 +103,7 @@ def _run_init_command(wgpf_instance, **kwargs):
                 "--name", "GPF development server",
                 "--redirect-uris", "http://localhost:8000/datasets",
                 "--skip-checks",
-                "--settings", os.environ["DJANGO_SETTINGS_MODULE"]])
+            ])
         except SystemExit:
             if not force:
                 raise
@@ -125,17 +123,11 @@ def _run_run_command(wgpf_instance, **kwargs):
     host = kwargs.get("host")
     port = kwargs.get("port")
 
-    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "wdae.settings")
-
     try:
-        django.setup()
-        settings.DISABLE_PERMISSIONS = True
-        settings.STUDIES_EAGER_LOADING = True
-
         execute_from_command_line([
             "wgpf", "runserver", f"{host}:{port}",
             "--skip-checks",
-            "--settings", os.environ["DJANGO_SETTINGS_MODULE"]])
+        ])
 
     finally:
         pass
@@ -174,6 +166,21 @@ def cli(argv=None):
     # pylint: disable=import-outside-toplevel
     from gpf_instance import gpf_instance
     wgpf_instance = gpf_instance.build_wgpf_instance(args.gpf_instance)
+    logger.info("using GPF instance at %s", wgpf_instance.dae_dir)
+
+    if command not in {"init", "run"}:
+        logger.error("unknown subcommand %s used in `wgpf`", command)
+        sys.exit(1)
+
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "wdae.settings")
+
+    django.setup()
+    settings.DISABLE_PERMISSIONS = True
+    settings.STUDIES_EAGER_LOADING = True
+    settings.DEFAULT_WDAE_DIR = os.path.join(
+        wgpf_instance.dae_dir, "wdae")
+    os.makedirs(settings.DEFAULT_WDAE_DIR, exist_ok=True)
+    logger.info("using wdae directory: %s", settings.DEFAULT_WDAE_DIR)
 
     if command == "init":
         _run_init_command(wgpf_instance, **vars(args))
