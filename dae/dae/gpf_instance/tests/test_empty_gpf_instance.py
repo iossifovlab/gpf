@@ -30,6 +30,18 @@ def test_empty_gene_scores(alla_instance):
     assert len(alla_instance.gene_scores_db) == 0
 
 
+def test_has_gene_score(alla_instance):
+    assert not alla_instance.has_gene_score("ala-bala")
+
+
+def test_get_gene_score(alla_instance):
+    assert alla_instance.get_gene_score("ala-bala") is None
+
+
+def test_get_all_gene_scores(alla_instance):
+    assert len(alla_instance.get_all_gene_scores()) == 0
+
+
 def test_empty_genomic_scores(alla_instance):
     assert len(alla_instance.genomic_scores_db) == 0
 

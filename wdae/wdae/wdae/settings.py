@@ -3,6 +3,9 @@
 
 # pylint: disable=wildcard-import,unused-wildcard-import
 import os
+
+from gpf_instance.gpf_instance import get_wgpf_instance_path
+
 from .default_settings import *
 
 ALLOWED_HOSTS += ["localhost"]
@@ -26,7 +29,7 @@ OPEN_REGISTRATION = True
 ########################################################
 
 DEFAULT_WDAE_DIR = os.path.join(
-    os.environ.get("DAE_DB_DIR", ""), "wdae")
+    get_wgpf_instance_path(), "wdae")
 os.makedirs(DEFAULT_WDAE_DIR, exist_ok=True)
 
 DATABASES = {
