@@ -40,10 +40,11 @@ class AbstractTaskGraphExecutor(TaskGraphExecutor):
         already_computed_tasks = {}
         for task_node in self._in_exec_order(task_graph):
             record = self._task_cache.get_record(task_node)
-            if record.type != CacheRecordType.COMPUTED:
-                self.queue_task(task_node)
-            else:
+            if record.type == CacheRecordType.COMPUTED:
                 already_computed_tasks[task_node] = record.result
+                self.set_task_result(task_node, record.result)
+            else:
+                self.queue_task(task_node)
         return self.__await_tasks(already_computed_tasks)
 
     def __await_tasks(self, already_computed_tasks) \
@@ -62,6 +63,10 @@ class AbstractTaskGraphExecutor(TaskGraphExecutor):
     @abstractmethod
     def await_tasks(self) -> Iterator[tuple[Task, Any]]:
         """Yield enqueued tasks as soon as they finish."""
+
+    @abstractmethod
+    def set_task_result(self, task: Task, result: Any) -> None:
+        """Set a precomputed result for a task."""
 
     def _in_exec_order(self, task_graph):
         visited = set()
@@ -111,7 +116,6 @@ class SequentialExecutor(AbstractTaskGraphExecutor):
         self._task_queue.append(task_node)
 
     def await_tasks(self):
-        assert len(self._task2result) == 0, "Cannot call execute multipe times"
         for task_node in self._task_queue:
             all_deps_satisfied = all(
                 d in self._task2result for d in task_node.deps
@@ -120,7 +124,7 @@ class SequentialExecutor(AbstractTaskGraphExecutor):
                 # some of the dependancies were errors and didn't run
                 logger.info(
                     "Skipping execution of task(id=%s) because one or more of "
-                    "its dependancies failed with an error", task_node.name)
+                    "its dependancies failed with an error", task_node.task_id)
                 continue
 
             # handle tasks that use the output of other tasks
@@ -142,6 +146,9 @@ class SequentialExecutor(AbstractTaskGraphExecutor):
         self._task_queue = []
         self._task2result = {}
 
+    def set_task_result(self, task, result):
+        self._task2result[task] = result
+
     def get_active_tasks(self):
         for task_node in self._task_queue:
             if task_node not in self._task2result:
@@ -158,12 +165,26 @@ class DaskExecutor(AbstractTaskGraphExecutor):
         self._task2future = {}
         self._future2task = {}
         self._finished_futures = set()
+        self._task2result = {}
 
     def queue_task(self, task_node):
-        deps = [self._task2future[d] for d in task_node.deps]
+        deps = []
+        for dep in task_node.deps:
+            future = self._task2future.get(dep)
+            if future:
+                deps.append(future)
+            else:
+                assert dep in self._task2result
+
         # handle tasks that use the output of other tasks
-        args = [self._task2future[arg] if isinstance(arg, Task) else arg
-                for arg in task_node.args]
+        args = []
+        for arg in task_node.args:
+            if isinstance(arg, Task):
+                value = self._get_future_or_result(arg)
+            else:
+                value = arg
+            args.append(value)
+
         future = self._client.submit(self._exec, task_node.func, args, deps,
                                      pure=False)
         self._task2future[task_node] = future
@@ -188,17 +209,25 @@ class DaskExecutor(AbstractTaskGraphExecutor):
         self._task2future = {}
         self._future2task = {}
         self._finished_futures = set()
+        self._task2result = {}
+
+    def set_task_result(self, task, result):
+        self._task2result[task] = result
 
     def get_active_tasks(self):
         res = []
         for task, future in self._task2future.items():
             all_deps_satisfied = all(
                 self._task2future[dep].key in self._finished_futures
-                for dep in task.deps
+                for dep in task.deps if dep in self._task2future
             )
             if future.key not in self._finished_futures and all_deps_satisfied:
                 res.append(task)
         return res
+
+    def _get_future_or_result(self, task):
+        future = self._task2future.get(task)
+        return future if future else self._task2result[task]
 
     @staticmethod
     def _exec(task_func, args, _deps):

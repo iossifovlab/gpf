@@ -1,9 +1,11 @@
 # pylint: disable=W0621,C0114,C0115,C0116,W0212,W0613
+import os
 import time
 import pytest
 
 from dask.distributed import Client  # type: ignore
 
+from dae.task_graph.cache import FileTaskCache
 from dae.task_graph.graph import TaskGraph
 from dae.task_graph.executor import \
     DaskExecutor, SequentialExecutor
@@ -107,3 +109,69 @@ def test_active_tasks(executor):
     assert executor.get_active_tasks() == [final_task]
     assert next(tasks_as_complete)[0] is final_task
     assert len(executor.get_active_tasks()) == 0
+
+
+def test_executing_with_cache(executor, tmpdir):
+    graph = _create_graph_with_result_passing()
+
+    # initial execution of the graph
+    executor._task_cache = FileTaskCache(work_dir=tmpdir)
+    task_results = list(executor.execute(graph))
+    assert len(task_results) == 9
+
+    # now make a change and make sure the correct function with the correct
+    # results are returned
+    executor._task_cache = FileTaskCache(work_dir=tmpdir)
+    task_to_delete = graph.tasks[-2]
+    assert task_to_delete.task_id == "7"
+    os.remove(executor._task_cache._get_flag_filename(task_to_delete))
+
+    task_results = list(executor.execute(graph))
+    assert len(task_results) == 9
+    for task, result in task_results:
+        if task.task_id == "final":
+            assert result == [0, 1, 0, 2, 0, 3, 0, 4, 0, 5, 0, 6, 0, 7]
+
+
+def test_get_active_tasks_when_partial_computation(executor, tmpdir):
+    graph = _create_graph_with_result_passing()
+
+    # initial execution of the graph
+    executor._task_cache = FileTaskCache(work_dir=tmpdir)
+    assert len(executor.get_active_tasks()) == 0
+    for _ in executor.execute(graph):
+        executor.get_active_tasks()
+    assert len(executor.get_active_tasks()) == 0
+
+    # now force partial recomputation
+    executor._task_cache = FileTaskCache(work_dir=tmpdir)
+    task_to_delete = graph.tasks[-2]
+    assert task_to_delete.task_id == "7"
+    os.remove(executor._task_cache._get_flag_filename(task_to_delete))
+
+    assert len(executor.get_active_tasks()) == 0
+    for _ in executor.execute(graph):
+        executor.get_active_tasks()
+    assert len(executor.get_active_tasks()) == 0
+
+
+def _create_graph_with_result_passing():
+    def add_to_list(what, where):
+        return where + [what]
+
+    def concat_lists(*lists):
+        res = []
+        for next_list in lists:
+            res.extend(next_list)
+        return res
+
+    # create the task graph
+    graph = TaskGraph()
+    first_task = graph.create_task("0", add_to_list, [0, []], [])
+    add_tasks = []
+    for i in range(1, 8):
+        add_tasks.append(
+            graph.create_task(f"{i}", add_to_list, [i, first_task], [])
+        )
+    graph.create_task("final", concat_lists, add_tasks, [])
+    return graph
