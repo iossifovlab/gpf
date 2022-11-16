@@ -172,6 +172,8 @@ import { ComparePipe } from './utils/compare.pipe';
 import { BackgroundColorPipe } from './utils/background-color.pipe';
 import { RegressionComparePipe } from './utils/regression-compare.pipe';
 import { GetRegressionIdsPipe } from './utils/get-regression-ids.pipe';
+import { GetEffectTypeOrderByColumOrderPipe } from './utils/get-effect-type-order-by-column-order.pipe';
+import { GetVariantReportRowsPipe } from './utils/get-variant-report-rows.pipe';
 
 const appRoutes: Routes = [
   {
@@ -368,6 +370,8 @@ const appRoutes: Routes = [
     RegressionComparePipe,
     GetRegressionIdsPipe,
     JoinPipe,
+    GetEffectTypeOrderByColumOrderPipe,
+    GetVariantReportRowsPipe,
     UniqueFamilyVariantsFilterComponent,
     PedigreeChartComponent,
     PedigreeChartMemberComponent,
