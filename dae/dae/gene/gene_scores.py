@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import itertools
 import logging
-from collections import OrderedDict
 from typing import Optional, List
 from functools import cache
 
@@ -206,7 +205,7 @@ class GeneScoresDb:
 
     def __init__(self, gene_scores):
         super().__init__()
-        self.scores = OrderedDict()
+        self.scores = {}
         for score in gene_scores:
             self.scores[score.score_id] = score
 
@@ -222,8 +221,10 @@ class GeneScoresDb:
 
     def get_gene_score(self, score_id):
         """Return a given gene score."""
-        assert self[score_id].df is not None
-        return self[score_id]
+        if score_id not in self.scores:
+            return None
+        assert self.scores[score_id].df is not None
+        return self.scores[score_id]
 
     def __getitem__(self, score_id):
         if score_id not in self.scores:

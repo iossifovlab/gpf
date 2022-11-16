@@ -160,7 +160,7 @@ class GPFInstance:
     def gene_scores_db(self):
         """Load and return gene scores db."""
         if self.dae_config.gene_scores_db is None:
-            return []
+            return GeneScoresDb([])
 
         gene_scores = self.dae_config.gene_scores_db.gene_scores
         result = []
@@ -358,7 +358,7 @@ class GPFInstance:
         return gene_score_id in self.gene_scores_db
 
     def get_gene_score(self, gene_score_id):
-        return self.gene_scores_db[gene_score_id]
+        return self.gene_scores_db.get_gene_score(gene_score_id)
 
     def get_all_gene_scores(self):
         return self.gene_scores_db.get_gene_scores()
