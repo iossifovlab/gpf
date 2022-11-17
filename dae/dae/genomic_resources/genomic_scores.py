@@ -2,16 +2,24 @@
 
 from __future__ import annotations
 
-import abc
 import logging
+import textwrap
 from dataclasses import dataclass
+import copy
+
 from typing import Generator, List, Tuple, cast, Type, Dict, Any, Optional, \
     Union
 
+from jinja2 import Template
+from markdown2 import markdown
+from cerberus import Validator
+
 from . import GenomicResource
+from .resource_implementation import GenomicResourceImplementation, \
+    get_base_resource_schema
 from .genome_position_table import open_genome_position_table
 
-from .aggregators import build_aggregator
+from .aggregators import build_aggregator, AGGREGATOR_SCHEMA
 
 
 logger = logging.getLogger(__name__)
@@ -71,12 +79,13 @@ class ScoreDef:
     # description: str
 
 
-class GenomicScore(abc.ABC):
+class GenomicScore(GenomicResourceImplementation):
     """Genomic scores base class."""
 
+    config_validator = Validator
+
     def __init__(self, resource):
-        self.resource = resource
-        self.config = resource.get_config()
+        super().__init__(resource)
         self.config["id"] = resource.resource_id
         self.score_columns = self._configure_score_columns(self.config)
         self.special_columns = _configure_special_columns(
@@ -286,9 +295,195 @@ class GenomicScore(abc.ABC):
             for _ in range(left, right + 1):
                 yield val
 
+    @staticmethod
+    def get_template():
+        return Template(textwrap.dedent("""
+            {% extends base %}
+            {% block content %}
+            <hr>
+            <h3>Score file:</h3>
+            <a href="{{ data["table"]["filename"] }}">
+            {{ data["table"]["filename"] }}
+            </a>
+            <p>
+            File format: {{ data["table"]["format"] }}
+            </p>
+
+            {% if data["table"]["chrom"] %}
+            {% if data["table"]["chrom"]["index"] is not none %}
+            <p>
+            chrom column index in file:
+            {{ data["table"]["chrom"]["index"] }}
+            </p>
+            {% endif %}
+            {% if data["table"]["chrom"]["name"] %}
+            <p>
+            chrom column name in header:
+            {{ data["table"]["chrom"]["name"] }}
+            </p>
+            {% endif %}
+            {% endif %}
+
+            {% if data["table"]["pos_begin"] %}
+            {% if data["table"]["pos_begin"]["index"] is not none %}
+            <p>
+            pos_begin column index in file:
+            {{ data["table"]["pos_begin"]["index"] }}
+            </p>
+            {% endif %}
+            {% if data["table"]["pos_begin"]["name"] %}
+            <p>
+            pos_begin column name in header:
+            {{ data["table"]["pos_begin"]["name"] }}
+            </p>
+            {% endif %}
+            {% endif %}
+
+            {% if data["table"]["pos_end"] %}
+            {% if data["table"]["pos_end"]["index"] is not none %}
+            <p>
+            pos_end column index in file:
+            {{ data["table"]["pos_end"]["index"] }}
+            </p>
+            {% endif %}
+            {% if data["table"]["pos_end"]["name"] %}
+            <p>
+            pos_end column name in header:
+            {{ data["table"]["pos_end"]["name"] }}
+            </p>
+            {% endif %}
+            {% endif %}
+
+            {% if data["table"]["reference"] %}
+            {% if data["table"]["reference"]["index"] is not none %}
+            <p>
+            reference column index in file:
+            {{ data["table"]["reference"]["index"] }}
+            </p>
+            {% endif %}
+            {% if data["table"]["reference"]["name"] %}
+            <p>
+            reference column name in header:
+            {{ data["table"]["reference"]["name"] }}
+            </p>
+            {% endif %}
+            {% endif %}
+
+            {% if data["table"]["alternative"] %}
+            {% if data["table"]["alternative"]["index"] is not none %}
+            <p>
+            alternative column index in file:
+            {{ data["table"]["alternative"]["index"] }}
+            </p>
+            {% endif %}
+            {% if data["table"]["alternative"]["name"] %}
+            <p>
+            alternative column name in header:
+            {{ data["table"]["alternative"]["name"] }}
+            </p>
+            {% endif %}
+            {% endif %}
+
+            <h3>Score definitions:</h3>
+            {% for score in data["scores"] %}
+            <div class="score-definition">
+            <p>Score ID: {{ score["id"] }}</p>
+            {% if "index" in score %}
+            <p>Column index in file: {{ score["index"] }}</p>
+            {% elif "name" in score %}
+            <p>Column name in file header: {{ score["name"] }}
+            {% endif %}
+            <p>Score data type: {{ score["type"] }}
+            <p> Description: {{ score["desc"] }}
+            </div>
+            {% endfor %}
+            <h3>Histograms:</h3>
+            {% for hist in data["histograms"] %}
+            <div class="histogram">
+            <h4>{{ hist["score"] }}</h4>
+            <img src="histograms/{{ hist["score"] }}.png"
+            alt={{ hist["score"] }}
+            title={{ hist["score"] }}>
+            </div>
+            {% endfor %}
+            {% endblock %}
+        """))
+
+    def get_info(self):
+        info = copy.deepcopy(self.config)
+        if "meta" in info:
+            info["meta"] = markdown(info["meta"])
+        return info
+
+    @staticmethod
+    def get_schema():
+        return {
+            **get_base_resource_schema(),
+            "table": {"type": "dict", "schema": {
+                "filename": {"type": "string"},
+                "format": {"type": "string"},
+                "header_mode": {"type": "string"},
+                "chrom": {"type": "dict", "schema": {
+                    "index": {"type": "integer"},
+                    "name": {"type": "string", "excludes": "index"}
+                }},
+                "pos_begin": {"type": "dict", "schema": {
+                    "index": {"type": "integer"},
+                    "name": {"type": "string", "excludes": "index"}
+                }},
+                "pos_end": {"type": "dict", "schema": {
+                    "index": {"type": "integer"},
+                    "name": {"type": "string", "excludes": "index"}
+                }},
+            }},
+            "scores": {"type": "list", "schema": {
+                "type": "dict",
+                "schema": {
+                    "id": {"type": "string"},
+                    "index": {"type": "integer"},
+                    "name": {"type": "string", "excludes": "index"},
+                    "type": {"type": "string"},
+                    "desc": {"type": "string"},
+                    "na_values": {"type": "string"}
+                }
+            }},
+            "histograms": {"type": "list", "schema": {
+                "type": "dict",
+                "schema": {
+                    "score": {"type": "string"},
+                    "bins": {"type": "integer"},
+                    "min": {"type": "number"},
+                    "max": {"type": "number"},
+                    "x_min_log": {"type": "number"},
+                    "x_scale": {"type": "string"},
+                    "y_scale": {"type": "string"},
+                }
+            }},
+            "default_annotation": {"type": "dict", "schema": {
+                "attributes": {"type": "list", "schema": {
+                    "type": "dict",
+                    "schema": {
+                        "source": {"type": "string"},
+                        "destination": {"type": "string"},
+                        "internal": {"type": "boolean", "default": False}
+                    }
+                }}
+            }}
+        }
+
 
 class PositionScore(GenomicScore):
     """Defines position genomic score."""
+
+    @staticmethod
+    def get_schema():
+        schema = copy.deepcopy(GenomicScore.get_schema())
+        annotation_schema = schema["default_annotation"]["schema"]
+        scores_schema = schema["scores"]["schema"]["schema"]
+        scores_schema["position_aggregator"] = AGGREGATOR_SCHEMA
+        attr_schema = annotation_schema["attributes"]["schema"]["schema"]
+        attr_schema["position_aggregator"] = AGGREGATOR_SCHEMA
+        return schema
 
     def open(self) -> PositionScore:
         return cast(PositionScore, super().open())
@@ -365,6 +560,31 @@ class PositionScore(GenomicScore):
 
 class NPScore(GenomicScore):
     """Defines nucleotide-position genomic score."""
+
+    @staticmethod
+    def get_schema():
+        schema = copy.deepcopy(GenomicScore.get_schema())
+        schema["table"]["schema"]["reference"] = {
+            "type": "dict", "schema": {
+                "index": {"type": "integer"},
+                "name": {"type": "string", "excludes": "index"}
+            }
+        }
+        schema["table"]["schema"]["alternative"] = {
+            "type": "dict", "schema": {
+                "index": {"type": "integer"},
+                "name": {"type": "string", "excludes": "index"}
+            }
+        }
+        annotation_schema = schema["default_annotation"]["schema"]
+        attr_schema = annotation_schema["attributes"]["schema"]["schema"]
+        attr_schema["position_aggregator"] = AGGREGATOR_SCHEMA
+        attr_schema["nucleotide_aggregator"] = AGGREGATOR_SCHEMA
+
+        scores_schema = schema["scores"]["schema"]["schema"]
+        scores_schema["position_aggregator"] = AGGREGATOR_SCHEMA
+        scores_schema["nucleotide_aggregator"] = AGGREGATOR_SCHEMA
+        return schema
 
     def open(self) -> NPScore:
         return cast(NPScore, super().open())
@@ -480,6 +700,23 @@ class NPScore(GenomicScore):
 
 class AlleleScore(GenomicScore):
     """Defines allele genomic scores."""
+
+    @staticmethod
+    def get_schema():
+        schema = copy.deepcopy(GenomicScore.get_schema())
+        schema["table"]["schema"]["reference"] = {
+            "type": "dict", "schema": {
+                "index": {"type": "integer"},
+                "name": {"type": "string", "excludes": "index"}
+            }
+        }
+        schema["table"]["schema"]["alternative"] = {
+            "type": "dict", "schema": {
+                "index": {"type": "integer"},
+                "name": {"type": "string", "excludes": "index"}
+            }
+        }
+        return schema
 
     def open(self) -> AlleleScore:
         return cast(AlleleScore, super().open())

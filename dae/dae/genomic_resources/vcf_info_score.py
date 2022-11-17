@@ -1,12 +1,17 @@
 from __future__ import annotations
 
 import logging
+import textwrap
 from functools import cache
 from typing import Dict, Any, Union, List, Generator
+
+from jinja2 import Template
 
 from dae.genomic_resources.repository import GenomicResource
 from dae.genomic_resources.genomic_scores import ScoreDef, ScoreValue, \
     GenomicScore
+
+from .resource_implementation import get_base_resource_schema
 
 
 logger = logging.getLogger(__name__)
@@ -246,3 +251,50 @@ class VcfInfoScore(GenomicScore):
             score_def.score_id: score_def.value_parser(
                 selected_vcf.info.get(score_def.score_id))
             for score_def in requested_score_defs}
+
+    @staticmethod
+    def get_schema():
+        return {
+            **get_base_resource_schema(),
+            "filename": {"type": "string"},
+            "index_filename": {"type": "string"},
+            "desc": {"type": "string"},
+            "scores": {"type": "list", "schema": {
+                "type": "dict",
+                "schema": {
+                    "id": {"type": "string"},
+                    "type": {"type": "string"},
+                    "name": {"type": "string"}
+                }
+            }},
+        }
+
+    @staticmethod
+    def get_template():
+        return Template(textwrap.dedent("""
+            {% extends base %}
+            {% block content %}
+            <hr>
+            <h3>Score file:</h3>
+            <a href="{{ data["filename"] }}">
+            {{ data["filename"] }}
+            </a>
+            {% if data["index_filename"] %}
+            <h3>Index file:</h3>
+            <a href="{{ data["index_filename"] }}">
+            {{ data["index_filename"] }}
+            </a>
+            {% endif %}
+
+            <p>{{ data["desc"] }}</p>
+
+            <h3>Score definitions:</h3>
+            {% for score in data["scores"] %}
+            <div class="score-definition">
+            <p>Score ID: {{ score["id"] }}</p>
+            <p>Score data type: {{ score["type"] }}
+            <p> Description: {{ score["desc"] }}
+            </div>
+            {% endfor %}
+            {% endblock %}
+        """))

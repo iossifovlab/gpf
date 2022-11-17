@@ -10,9 +10,10 @@ from pathlib import Path
 from dae.utils.fs_utils import find_directory_with_a_file
 from dae.enrichment_tool.background_facade import BackgroundFacade
 
-from dae.gene.gene_scores import GeneScoresDb, GeneScore
+from dae.gene.gene_scores import GeneScoresDb, GeneScoreCollection
 from dae.gene.scores import GenomicScoresDb
-from dae.gene.gene_sets_db import GeneSetsDb, GeneSetCollection
+from dae.gene.gene_sets_db import GeneSetsDb, \
+    build_gene_set_collection_from_resource
 from dae.gene.denovo_gene_sets_db import DenovoGeneSetsDb
 from dae.common_reports.common_report import CommonReport
 
@@ -163,18 +164,15 @@ class GPFInstance:
             return GeneScoresDb([])
 
         gene_scores = self.dae_config.gene_scores_db.gene_scores
-        result = []
+        collections = []
         for score in gene_scores:
             resource = self.grr.get_resource(score)
             if resource is None:
                 logger.error("unable to find gene score: %s", score)
                 continue
-            gene_scores = GeneScore.load_gene_scores_from_resource(
-                resource
-            )
-            result += gene_scores
+            collections.append(GeneScoreCollection(resource))
 
-        return GeneScoresDb(result)
+        return GeneScoresDb(collections)
 
     @cached_property
     def genomic_scores_db(self):
@@ -283,7 +281,7 @@ class GPFInstance:
                     logger.error("can't find resource %s", gsc_id)
                     continue
                 gscs.append(
-                    GeneSetCollection.from_resource(resource)
+                    build_gene_set_collection_from_resource(resource)
                 )
 
             return GeneSetsDb(gscs)

@@ -6,15 +6,21 @@ import os
 import gzip
 import logging
 import copy
+import textwrap
 
 from collections import defaultdict
 from contextlib import contextmanager
 from typing import Any, Optional, Dict, TextIO, cast
 
 import pandas as pd
+from jinja2 import Template
+from markdown2 import markdown
+from cerberus import Validator
 
 from dae.utils.regions import Region
 from dae.genomic_resources import GenomicResource
+from dae.genomic_resources.resource_implementation import \
+    GenomicResourceImplementation, get_base_resource_schema
 from dae.genomic_resources.fsspec_protocol import build_local_resource
 
 logger = logging.getLogger(__name__)
@@ -418,11 +424,13 @@ def _open_file(filename):
 #
 # GeneModel's
 #
-class GeneModels:
+class GeneModels(GenomicResourceImplementation):
     """Provides class for gene models."""
 
+    config_validator = Validator
+
     def __init__(self, resource: GenomicResource):
-        self.resource = resource
+        super().__init__(resource)
         self.gene_models = None
         self.utr_models = None
         self.transcript_models: Dict[str, Any] = {}
@@ -1425,6 +1433,35 @@ class GeneModels:
 
             parser(infile, gene_mapping=gene_mapping)
         return self
+
+    @staticmethod
+    def get_template():
+        return Template(textwrap.dedent("""
+            {% extends base %}
+            {% block content %}
+            <hr>
+            <h3>Gene models file:</h3>
+            <a href="{{ data["filename"] }}">
+            {{ data["filename"] }}
+            </a>
+            <p>Format: {{ data["format"] }}</p>
+            {% endblock %}
+        """))
+
+    def get_info(self):
+        info = copy.deepcopy(self.config)
+        if "meta" in info:
+            info["meta"] = markdown(info["meta"])
+        return info
+
+    @staticmethod
+    def get_schema():
+        return {
+            **get_base_resource_schema(),
+            "filename": {"type": "string"},
+            "format": {"type": "string"},
+            "gene_mapping": {"type": "string"}
+        }
 
 
 def join_gene_models(*gene_models):

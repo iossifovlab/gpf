@@ -3,7 +3,7 @@
 import textwrap
 import pytest
 
-from dae.gene.gene_scores import GeneScoresDb, GeneScore
+from dae.gene.gene_scores import GeneScoresDb, GeneScore, GeneScoreCollection
 from dae.genomic_resources.testing import build_testing_repository
 from dae.genomic_resources.repository import GR_CONF_FILE_NAME
 
@@ -79,10 +79,10 @@ def gene_scores_db(scores_repo):
         scores_repo.get_resource("LGD_rank"),
         scores_repo.get_resource("RVIS_rank"),
     ]
-    scores = []
+    collections = []
     for resource in resources:
-        scores += GeneScore.load_gene_scores_from_resource(resource)
-    return GeneScoresDb(scores)
+        collections.append(GeneScoreCollection(resource))
+    return GeneScoresDb(collections)
 
 
 def test_scores_rvis_rank(gene_scores_db):

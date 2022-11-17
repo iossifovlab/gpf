@@ -9,7 +9,8 @@ from pathlib import Path
 
 from dae.gene.gene_term import read_ewa_set_file, read_gmt_file, \
     read_mapping_file
-from dae.gene.gene_sets_db import SqliteGeneSetCollectionDB, GeneSet
+from dae.gene.gene_sets_db import SqliteGeneSetCollectionDB, GeneSet, \
+    build_gene_set_collection_from_file
 
 logger = logging.getLogger("create_sqlite_gene_set")
 
@@ -100,7 +101,11 @@ def main(argv):
     else:
         raise ValueError("Invalid arguments")
 
-    db = SqliteGeneSetCollectionDB(collection_id, argv.output)
+    db = build_gene_set_collection_from_file(
+        argv.output,
+        collection_id=collection_id,
+        collection_format="sqlite"
+    )
 
     print(gene_terms.tDesc)
 

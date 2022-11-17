@@ -1,13 +1,17 @@
 """Classes for handling of remote gene sets."""
 
+import logging
 from typing import Optional, List, Set, Dict, Any
 
 from remote.rest_api_client import RESTClient
 
-from dae.gene.gene_sets_db import GeneSet, GeneSetCollection, GeneSetsDb
+from dae.gene.gene_sets_db import GeneSet, GeneSetCollection, GeneSetsDb, \
+    BaseGeneSetCollection
+
+logger = logging.getLogger(__name__)
 
 
-class RemoteGeneSetCollection(GeneSetCollection):
+class RemoteGeneSetCollection(BaseGeneSetCollection):
     """Class for handling remote gene set collections."""
 
     def __init__(
@@ -22,10 +26,11 @@ class RemoteGeneSetCollection(GeneSetCollection):
         collection_id = self.rest_client.prefix_remote_identifier(
             collection_id
         )
+        self.collection_id = collection_id
         self.collection_description: str = \
             self.rest_client.prefix_remote_name(desc)
         self.collection_format: str = fmt
-        super().__init__(collection_id, [])
+        self.gene_sets: Dict[str, GeneSet] = {}
 
     def _load_remote_gene_sets(self):
         if self._remote_gene_sets_loaded:
@@ -46,8 +51,11 @@ class RemoteGeneSetCollection(GeneSetCollection):
     def get_gene_set(self, gene_set_id: str) -> Optional[GeneSet]:
         self._load_remote_gene_sets()
         if gene_set_id not in self.remote_gene_sets_names:
-            print(f"No such gene set '{gene_set_id}' available in remote"
-                  f" client '{self.rest_client.remote_id}'!")
+            logger.warning(
+                "No such gene set '%s' available in remote client '%s'!",
+                gene_set_id,
+                self.rest_client.remote_id
+            )
             return None
 
         gene_set = self.gene_sets.get(gene_set_id)

@@ -23,7 +23,10 @@ from dae.genomic_resources.repository import GR_CONF_FILE_NAME, Manifest, \
     GenomicResource, \
     parse_resource_id_version, \
     GR_CONTENTS_FILE_NAME, \
-    GR_MANIFEST_FILE_NAME
+    GR_MANIFEST_FILE_NAME, \
+    GR_INDEX_FILE_NAME
+
+from dae.utils.helpers import convert_size
 
 
 logger = logging.getLogger(__name__)
@@ -497,6 +500,21 @@ class FsspecReadWriteProtocol(
             yaml.dump(content, outfile)
 
         return content
+
+    def build_index_info(self):
+        """Build info dict for the repository."""
+        result = {}
+        for res in self.get_all_resources():
+            res_size = convert_size(
+                sum([f for _, f in res.get_manifest().get_files()])
+            )
+            result[res.resource_id] = {
+                **res.config,
+                "res_version": res.get_version_str(),
+                "res_files": len(list(res.get_manifest().get_files())),
+                "res_size": res_size
+            }
+        return result
 
 
 def build_local_resource(

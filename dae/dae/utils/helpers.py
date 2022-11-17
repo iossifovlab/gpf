@@ -45,3 +45,17 @@ def to_response_json(data) -> dict:
         else:
             result[camelize_string(key)] = value
     return result
+
+
+def convert_size(size_bytes: int) -> str:
+    """
+    Convert an integer representing size in bytes to a human-readable string.
+
+    Copied from https://stackoverflow.com/questions/5194057/better-way-to-convert-file-sizes-in-python
+    """
+    if size_bytes == 0:
+        return "0B"
+    suffix = ("B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB")
+    exponent = int(math.floor(math.log(size_bytes, 1024)))
+    size = round(size_bytes / math.pow(1024, exponent), 2)
+    return f"{size} {suffix[exponent]}"

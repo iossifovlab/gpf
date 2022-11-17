@@ -82,14 +82,14 @@ def gene_sets_db(gene_sets_repo):
         gene_sets_repo.get_resource("test_gmt"),
     ]
     gene_set_collections = [
-        GeneSetCollection.from_resource(r) for r in resources
+        GeneSetCollection(r) for r in resources
     ]
     return GeneSetsDb(gene_set_collections)
 
 
 def test_gene_set_collection_main(gene_sets_repo):
     resource = gene_sets_repo.get_resource("main")
-    gsc = GeneSetCollection.from_resource(resource)
+    gsc = GeneSetCollection(resource)
     gene_set = gsc.get_gene_set("main_candidates")
     assert gene_set is not None
     assert gene_set["name"] == "main_candidates"

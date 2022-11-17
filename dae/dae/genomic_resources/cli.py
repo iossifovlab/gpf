@@ -4,10 +4,15 @@ import sys
 import logging
 import argparse
 import pathlib
+import math
 from typing import Dict, Union
 from urllib.parse import urlparse
 
 import yaml
+
+from cerberus.schema import SchemaError
+
+from jinja2 import Template
 
 from dae.dask.client_factory import DaskClient
 from dae.utils.fs_utils import find_directory_with_a_file
@@ -23,6 +28,19 @@ from dae.genomic_resources.repository import \
     ManifestEntry, \
     parse_resource_id_version, \
     version_tuple_to_string
+
+from dae.genomic_resources.genomic_scores import \
+    build_allele_score_from_resource, \
+    build_np_score_from_resource, \
+    build_position_score_from_resource
+from dae.genomic_resources.liftover_resource import \
+    build_liftover_chain_from_resource
+from dae.genomic_resources.reference_genome import \
+    build_reference_genome_from_resource
+from dae.genomic_resources.gene_models import \
+    build_gene_models_from_resource
+from dae.gene.gene_sets_db import build_gene_set_collection_from_resource
+from dae.gene.gene_scores import build_gene_score_collection_from_resource
 from dae.utils.verbosity_configuration import VerbosityConfiguration
 
 from dae.genomic_resources.fsspec_protocol import build_fsspec_protocol
@@ -204,6 +222,24 @@ def _configure_resource_repair_subparser(subparsers):
     _add_dry_run_and_force_parameters_group(parser)
     _add_dvc_parameters_group(parser)
     _add_hist_parameters_group(parser)
+
+    DaskClient.add_arguments(parser)
+
+
+def _configure_repo_info_subparser(subparsers):
+    parser = subparsers.add_parser(
+        "repo-info", help="Build the index.html for the whole GRR"
+    )
+    _add_repository_resource_parameters_group(parser)
+
+    DaskClient.add_arguments(parser)
+
+
+def _configure_resource_info_subparser(subparsers):
+    parser = subparsers.add_parser(
+        "resource-info", help="Build the index.html for the specific resource"
+    )
+    _add_repository_resource_parameters_group(parser)
 
     DaskClient.add_arguments(parser)
 
@@ -451,6 +487,77 @@ def _run_resource_repair_command(proto, repo_url, region_size, **kwargs):
             client, proto, res, dry_run, force, region_size)
 
 
+def _run_repo_info_command(proto, **kwargs):
+    info = proto.build_index_info()
+    content_filepath = os.path.join(proto.url, GR_INDEX_FILE_NAME)
+    with proto.open_raw_file(
+        content_filepath, "wt", encoding="utf8"
+    ) as outfile:
+        outfile.write(repository_template.render(data=result))
+
+    for res in proto.get_all_resources():
+        try:
+            _do_resource_info_command(proto, res)
+        except ValueError as err:
+            logger.error(
+                "Failed to generate repo index for %s\n%s",
+                res.resource_id,
+                err
+            )
+        except SchemaError as err:
+            logger.error(
+                "Resource %s has an invalid configuration\n%s",
+                res.resource_id,
+                err
+            )
+        except BaseException as err:
+            logger.error(
+                "Failed to load %s\n%s",
+                res.resource_id,
+                err
+            )
+
+
+RESOURCE_TYPE_BUILDERS = {
+    "position_score": build_position_score_from_resource,
+    "np_score": build_np_score_from_resource,
+    "allele_score": build_allele_score_from_resource,
+    "liftover_chain": build_liftover_chain_from_resource,
+    "gene_models": build_gene_models_from_resource,
+    "genome": build_reference_genome_from_resource,
+    "gene_set": build_gene_set_collection_from_resource,
+    "gene_score": build_gene_score_collection_from_resource
+}
+
+
+def build_resource_implementation(res):
+    return RESOURCE_TYPE_BUILDERS[res.get_type()](res)
+
+
+def _do_resource_info_command(proto, res):
+    implementation = build_resource_implementation(res)
+
+    template = implementation.get_template()
+    template_data = implementation.get_info()
+
+    with proto.open_raw_file(res, "index.html", mode="wt") as outfile:
+        content = template.render(
+            resource_id=res.resource_id,
+            data=template_data,
+            base=resource_template
+        )
+        outfile.write(content)
+
+
+def _run_resource_info_command(proto, repo_url, **kwargs):
+    res = _find_resource(proto, repo_url, **kwargs)
+    if res is None:
+        logger.error("resource not found...")
+        return
+
+    _do_resource_info_command(proto, res)
+
+
 def cli_manage(cli_args=None):
     """Provide CLI for repository management."""
     # pylint: disable=too-many-branches,too-many-statements
@@ -474,6 +581,8 @@ def cli_manage(cli_args=None):
     _configure_resource_hist_subparser(commands_parser)
     _configure_repo_repair_subparser(commands_parser)
     _configure_resource_repair_subparser(commands_parser)
+    _configure_repo_info_subparser(commands_parser)
+    _configure_resource_info_subparser(commands_parser)
 
     args = parser.parse_args(cli_args)
     VerbosityConfiguration.set(args)
@@ -524,6 +633,10 @@ def cli_manage(cli_args=None):
         _run_repo_repair_command(proto, **vars(args))
     elif command == "resource-repair":
         _run_resource_repair_command(proto, repo_url, **vars(args))
+    elif command == "repo-info":
+        _run_repo_info_command(proto, **vars(args))
+    elif command == "resource-info":
+        _run_resource_info_command(proto, repo_url, **vars(args))
     else:
         logger.error(
             "Unknown command %s. The known commands are index, "
@@ -572,3 +685,97 @@ def cli_browse(cli_args=None):
         sys.exit(0)
     repo = build_genomic_resource_repository(file_name=args.grr)
     _run_list_command(repo, args)
+
+
+repository_template = Template("""
+<html>
+ <head>
+    <style>
+        th {
+            background: lightgray;
+        }
+        td, th {
+            border: 1px solid black;
+            padding: 5px;
+        }
+        table {
+            border: 3px inset;
+            max-width: 60%;
+        }
+        table, td, th {
+            border-collapse: collapse;
+        }
+        .meta-div {
+            max-height: 250px;
+            overflow: scroll;
+        }
+        .nowrap {
+            white-space: nowrap
+        }
+    </style>
+ </head>
+ <body>
+     <table>
+        <thead>
+            <tr>
+                <th>Type</th>
+                <th>ID</th>
+                <th>Version</th>
+                <th>Number of files</th>
+                <th>Size in bytes (total)</th>
+                <th>Meta</th>
+            </tr>
+        </thead>
+        <tbody>
+            {%- for key, value in data.items() recursive%}
+            <tr>
+                <td class="nowrap">{{value['type']}}</td>
+                <td class="nowrap">
+                    <a href='/{{key}}/'>{{key}}</a>
+                </td>
+                <td class="nowrap">{{value['res_version']}}</td>
+                <td class="nowrap">{{value['res_files']}}</td>
+                <td class="nowrap">{{value['res_size']}}</td>
+                <td>
+                    <div class="meta-div">
+                        {{value.get('meta', 'N/A')}}
+                    </div>
+                </td>
+            </tr>
+            {%- endfor %}
+        </tbody>
+     </table>
+ </body>
+</html>
+""")
+
+resource_template = Template("""
+<html>
+<head>
+<style>
+h3,h4 {
+    margin-top:0.5em;
+    margin-bottom:0.5em;
+}
+
+{% block extra_styles %}{% endblock %}
+
+</style>
+</head>
+<body>
+<h1>{{ resource_id }}</h3>
+
+{% block content %}
+N/A
+{% endblock %}
+
+<div>
+<span class="description">
+{{ data["meta"] if data["meta"] else "N/A" }}
+</span>
+</div>
+
+
+</body>
+</html>
+""")
