@@ -169,7 +169,7 @@ Data Storage
 ++++++++++++
 
 
-The GPF system uses genotype storage for storing genomic variants.
+The GPF system uses genotype storages for storing genomic variants.
 
 We are going to use in-memory genotype storage for this guide. It is easiest
 to set up and use, but it is unsuitable for large studies.
@@ -399,28 +399,115 @@ named ``SupplementaryData1_Children.tsv``.
     Input files for this example can be downloaded from 
     `denovo-in-high-and-low-risk-papter.tar.gz <https://iossifovlab.com/distribution/public/denovo-in-high-and-low-risk-papter.tar.gz>`_.
 
+Preprocess the families data
+____________________________
 
 
+To import the data into GPF we need a pedigree file describing the structure
+of the families. The ``SupplementaryData1_Children.tsv`` contains only the list
+of children. There is no information about their parents. Fortunately for the
+SSC collection it is not difficult to build the full families' structures from
+the information we have. For the SSC collection if you have a family with ID
+``<fam_id>``, then the identifiers of the individuals in the family are going to
+be formed as follows:
+
+* mother - ``<fam_id>.mo``;
+* father - ``<fam_id>.fa``;
+* proband - ``<fam_id>.p1``;
+* first sibling - ``<fam_id>.s1``;
+* second sibling - ``<fam_id>.s2``.
+
+Another important restriction for SSC is that the only affected person in the 
+family is the proband. The affected status of the mother, father and 
+siblings are ``unaffected``.
+
+Using all these conventions we can write a simple python script 
+``build_ssc_pedigree.py``
+to convert
+``SupplementaryData1_Children.tsv`` into a pedigree file ``sss_denovo.ped``:
+
+.. code-block:: python
+
+    """Converts SupplementaryData1_Children.tsv into a pedigree file."""
+    import pandas as pd
+    
+    children = pd.read_csv("SupplementaryData1_Children.tsv", sep="\t")
+    ssc = children[children.collection == "SSC"]
+    
+    # list of all individuals in SSC
+    persons = []
+    # each person is represented by a tuple:
+    # (familyId, personId, dadId, momId, status, sex)
+    
+    for fam_id, members in ssc.groupby("familyId"):
+        persons.append((fam_id, f"{fam_id}.mo", "0", "0", "unaffected", "F"))
+        persons.append((fam_id, f"{fam_id}.fa", "0", "0", "unaffected", "F"))
+        for child in members.to_dict(orient="records"):
+            persons.append((
+                fam_id, child["personId"], f"{fam_id}.fa", f"{fam_id}.mo",
+                child["affected status"], child["sex"]))
+    
+    with open("ssc_denovo.ped", "wt", encoding="utf8") as output:
+        output.write(
+            "\t".join(("familyId", "personId", "dadId", "momId", "status", "sex")))
+        output.write("\n")
+    
+        for person in persons:
+            output.write("\t".join(person))
+            output.write("\n")
+
+If we run this script it will read ``SupplementaryData1_Children.tsv`` and
+produce the appropriate pedigree file ``ssc_denovo.ped``.
+
+Preprocess the variants data
+____________________________
+
+The ``SupplementaryData2_SSC.tsv`` file contains 255231 variants. To import so
+many variants in in-memory genotype storage is not appropriate. For this
+example we are going to use a subset of 10000 variants:
+
+.. code-block:: bash
+
+    head -n 10001 SupplementaryData2_SSC.tsv > ssc_denovo.tsv
 
 
-As an example of importing a study with de Novo variants, you can use the `iossifov_2014` study.
-Download and extract the study::
+Data import of ``ssc_denovo``
+_____________________________
 
-    wget -c https://iossifovlab.com/distribution/public/studies/genotype-iossifov_2014-latest.tar.gz
-    tar zxf genotype-iossifov_2014-latest.tar.gz
+Now we have a pedigree file ``ssc_denovo.ped`` and a list of de Novo
+variants ``ssc_denovo.tsv``. Let us prepare an import project configuration
+file ``ssc_denovo.yaml``:
 
-Enter into the created directory ``iossifov_2014``::
+.. code-block:: yaml
 
-    cd iossifov_2014
+    id: ssc_denovo
+    
+    input:
+      pedigree:
+        file: ssc_denovo.ped
+    
+      denovo:
+        files:
+          - ssc_denovo.tsv
+        person_id: personIds
+        variant: variant
+        location: location
 
-and run the ``simple_study_import.py`` tool::
 
-    simple_study_import.py IossifovWE2014.ped \
-        --id iossifov_2014 \
-        --denovo-file IossifovWE2014.tsv
+To import the study we should run:
 
-To see the imported variants, restart the GPF development web server and navigate to the
-`iossifov_2014` study.
+.. code-block:: bash
+
+    import_tools -f ssc_denovo.yaml
+
+and when the import finishes we can run the development GPF server:
+
+.. code-block:: bash
+
+    wgpf run
+
+In the list of studies, we should have a new study ``ssc_denovo``.
+
 
 
 Getting Started with Enrichment Tool
