@@ -180,7 +180,7 @@ Import Tools and Import Project
 +++++++++++++++++++++++++++++++
 
 Importing genotype data into a GPF instance involves multiple steps. 
-The tool used to import genotype data is named `import_tool`. This tool
+The tool used to import genotype data is named `import_tools`. This tool
 expects an import project file that describes the import.
 
 This tool supports importing variants from three formats:
@@ -254,7 +254,7 @@ To import this project run the following command:
 
 .. code-block:: bash
 
-    import_tool -f denovo_helloworld.yaml
+    import_tools -f denovo_helloworld.yaml
 
 
 When the import finishes you can run the GPF development server using:
@@ -331,7 +331,7 @@ To import this project run the following command:
 
 .. code-block:: bash
 
-    import_tool -f vcf_helloworld.yaml
+    import_tools -f vcf_helloworld.yaml
 
 
 When the import finishes you can run the GPF development server using:
