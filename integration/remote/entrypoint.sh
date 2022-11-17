@@ -51,6 +51,15 @@ enrichment:
   enabled: true
 EOT
 
+mkdir -p /wd/data/data-hg19-remote/datasets/test_dataset
+
+cat > /wd/data/data-hg19-remote/datasets/test_dataset/test_dataset.yaml << EOT
+id: test_dataset
+
+studies:
+- iossifov_2014
+EOT
+
 /opt/conda/bin/conda run --no-capture-output -n gpf \
     /wd/wdae/wdae/wdaemanage.py migrate
 /opt/conda/bin/conda run --no-capture-output -n gpf \
