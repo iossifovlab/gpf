@@ -291,7 +291,7 @@ class VariantsDb:
 
         if default_config_filename is None or \
                 not os.path.exists(default_config_filename):
-            logger.warning(
+            logger.info(
                 "default config file is missing: %s", default_config_filename)
             default_config_filename = None
 
@@ -332,7 +332,7 @@ class VariantsDb:
 
         if default_config_filename is None or \
                 not os.path.exists(default_config_filename):
-            logger.warning(
+            logger.info(
                 "default config file is missing: %s", default_config_filename)
             default_config_filename = None
         if default_config_filename is None:

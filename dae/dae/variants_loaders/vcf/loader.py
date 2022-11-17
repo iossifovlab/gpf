@@ -391,10 +391,10 @@ class SingleVcfLoader(VariantsGenotypesLoader):
                     counters["missing"] += 1
                 counters["missing"] += 1
 
-        logger.warning("people stats: %s", counters)
+        logger.info("people stats: %s", counters)
 
         self.families.redefine()
-        logger.warning(
+        logger.info(
             "persons changed to not_sequenced %s in %s",
             len(not_sequenced), self.filenames)
         self.families_samples_indexes = [
