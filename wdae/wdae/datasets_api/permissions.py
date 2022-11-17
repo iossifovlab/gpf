@@ -120,23 +120,29 @@ def get_wdae_children(dataset, leaves=False):
 
 def _user_has_permission_strict(user, dataset):
     """Check if a user has access strictly to the given datasets."""
+    if settings.DISABLE_PERMISSIONS:
+        return True
+
     dataset = get_wdae_dataset(dataset)
     if dataset is None:
         return False
 
-    if user.is_superuser or user.is_staff or settings.DISABLE_PERMISSIONS:
+    dataset_groups = get_dataset_groups(dataset)
+
+    if "any_user" in dataset_groups:
         return True
 
     if not user.is_active:
         return False
 
+    if user.is_superuser or user.is_staff:
+        return True
+
+
     user_groups = get_user_groups(user)
     if "admin" in user_groups:
         return True
 
-    dataset_groups = get_dataset_groups(dataset)
-    if "any_user" in dataset_groups:
-        return True
 
     return bool(user_groups & dataset_groups)
 
