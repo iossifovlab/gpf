@@ -540,23 +540,29 @@ To generate family and de Novo variant reports, you can use
 the ``generate_common_report.py`` tool. It supports the option ``--show-studies``
 to list all studies and datasets configured in the GPF instance::
 
+.. code-block:: bash
+
     generate_common_report.py --show-studies
 
-To generate the reports for a given configured study, you can use the 
-``--studies`` option. For example, to generate the reports for
-the ``helloworld`` dataset, you should run:
+To generate the reports for a given study or dataset, you can use the 
+``--studies`` option. 
 
-    generate_common_report.py --studies helloworld
-
-By default the dataset statistics are disabled so the this command will
-report:
+By default the dataset statistics are disabled. If we try to run
 
 .. code-block:: bash
 
-    WARNING:generate_common_reports:skipping study helloworld since common report is disabled
+    generate_common_report.py --studies helloworld
 
-To enable the dataset statistics for ``helloworld`` dataset we need to add
-a new section to dataset configuration:
+it will not generate the dataset statistics. Instead, it will print 
+a message that the reports are disabled to study ``helloworld``:
+
+.. code-block:: bash
+
+    WARNING:generate_common_reports:skipping study helloworld 
+
+To enable the dataset statistics for the ``helloworld`` dataset we need to
+modify the configuration and add
+a new section that enables dataset statistics:
 
 .. code-block:: yaml
 
@@ -593,13 +599,47 @@ To generate de Novo gene sets, you can use the
 ``generate_denovo_gene_sets.py`` tool. Similar to :ref:`reports_tool` above,
 you can use the ``--show-studies`` and ``--studies`` option.
 
-To generate the de Novo gene sets for the `comp_all` study::
+By default the de Novo gene sets are disabled. If you want to enable them for a 
+specific study or dataset you need to update the configuration and add a section
+that enable the de Novo gene sets:
 
-    generate_denovo_gene_sets.py --studies comp_all
+.. code-block:: yaml
+
+    denovo_gene_sets:
+      enabled: true
+
+For example the configuration of ``helloworld`` dataset should become similar to:
+
+.. code-block:: yaml
+
+    id: helloworld
+    name: Hello World Dataset
+    
+    studies:
+      - denovo_helloworld
+      - vcf_helloworld
+    
+    common_report:
+      enabled: True
+    
+    denovo_gene_sets:
+      enabled: true
+    
+
+Then we can generate the de Novo gene sets for ``helloworld`` dataset by
+running:
+
+.. code-block:: bash
+
+    generate_denovo_gene_sets.py --studies helloworld
 
 
 Getting Started with Annotation Pipeline
 ########################################
+
+.. todo::
+
+    WIP
 
 Get Genomic Scores Database
 +++++++++++++++++++++++++++
