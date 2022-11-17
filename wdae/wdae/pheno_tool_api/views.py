@@ -8,7 +8,7 @@ from django.http.response import StreamingHttpResponse
 
 from gene_sets.expand_gene_set_decorator import expand_gene_set
 
-from query_base.query_base import QueryBaseView
+from query_base.query_base import QueryDatasetView
 from datasets_api.permissions import user_has_permission
 
 from dae.pheno_tool.tool import PhenoTool, PhenoToolHelper
@@ -20,7 +20,7 @@ from .pheno_tool_adapter import PhenoToolAdapter, RemotePhenoToolAdapter
 logger = logging.getLogger(__name__)
 
 
-class PhenoToolView(QueryBaseView):
+class PhenoToolView(QueryDatasetView):
     @staticmethod
     def get_result_by_sex(result, sex):
         return {
@@ -160,7 +160,7 @@ class PhenoToolDownload(PhenoToolView):
         return response
 
 
-class PhenoToolPersons(QueryBaseView):
+class PhenoToolPersons(QueryDatasetView):
     def post(self, request):
         data = request.data
         dataset_id = data["datasetId"]
@@ -187,7 +187,7 @@ class PhenoToolPersons(QueryBaseView):
         return Response(result)
 
 
-class PhenoToolPersonsValues(QueryBaseView):
+class PhenoToolPersonsValues(QueryDatasetView):
 
     def post(self, request):
         data = request.data
@@ -213,7 +213,7 @@ class PhenoToolPersonsValues(QueryBaseView):
         return Response(result)
 
 
-class PhenoToolMeasure(QueryBaseView):
+class PhenoToolMeasure(QueryDatasetView):
     def get(self, request):
         params = request.GET
         dataset_id = params.get("datasetId", None)
@@ -237,7 +237,7 @@ class PhenoToolMeasure(QueryBaseView):
         return Response(result.to_json())
 
 
-class PhenoToolMeasures(QueryBaseView):
+class PhenoToolMeasures(QueryDatasetView):
     def get(self, request):
         params = request.GET
         dataset_id = params.get("datasetId", None)
@@ -262,7 +262,7 @@ class PhenoToolMeasures(QueryBaseView):
         return Response([m.to_json() for m in result.values()])
 
 
-class PhenoToolMeasureValues(QueryBaseView):
+class PhenoToolMeasureValues(QueryDatasetView):
     def post(self, request):
         data = request.data
         dataset_id = data["datasetId"]
@@ -281,7 +281,7 @@ class PhenoToolMeasureValues(QueryBaseView):
         return Response(result)
 
 
-class PhenoToolValues(QueryBaseView):
+class PhenoToolValues(QueryDatasetView):
     def post(self, request):
         data = request.data
         dataset_id = data["datasetId"]
@@ -300,7 +300,7 @@ class PhenoToolValues(QueryBaseView):
         return Response(result.to_dict("records"))
 
 
-class PhenoToolInstruments(QueryBaseView):
+class PhenoToolInstruments(QueryDatasetView):
 
     def measure_to_json(self, measure):
         return {
@@ -341,7 +341,7 @@ class PhenoToolInstruments(QueryBaseView):
         return Response(result)
 
 
-class PhenoToolInstrumentValues(QueryBaseView):
+class PhenoToolInstrumentValues(QueryDatasetView):
     def post(self, request):
         data = request.data
         dataset_id = data["datasetId"]

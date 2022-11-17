@@ -6,12 +6,12 @@ from rest_framework.response import Response
 
 from dae.pheno.common import MeasureType
 
-from query_base.query_base import QueryBaseView
+from query_base.query_base import QueryDatasetView
 
 logger = logging.getLogger(__name__)
 
 
-class PhenoMeasuresView(QueryBaseView):
+class PhenoMeasuresView(QueryDatasetView):
     def get(self, request, measure_type):
         data = request.query_params
 
@@ -42,7 +42,7 @@ class PhenoMeasuresView(QueryBaseView):
         return Response(res, status=status.HTTP_200_OK)
 
 
-class PhenoMeasureHistogramView(QueryBaseView):
+class PhenoMeasureHistogramView(QueryDatasetView):
     def post(self, request):
         data = request.data
         dataset_id = data["datasetId"]
@@ -77,7 +77,7 @@ class PhenoMeasureHistogramView(QueryBaseView):
         return Response(result, status=status.HTTP_200_OK)
 
 
-class PhenoMeasurePartitionsView(QueryBaseView):
+class PhenoMeasurePartitionsView(QueryDatasetView):
     def post(self, request):
         data = request.data
         dataset_id = data["datasetId"]
@@ -117,7 +117,7 @@ class PhenoMeasurePartitionsView(QueryBaseView):
         return Response(res)
 
 
-class PhenoMeasureRegressionsView(QueryBaseView):
+class PhenoMeasureRegressionsView(QueryDatasetView):
     def __init__(self):
         super(PhenoMeasureRegressionsView, self).__init__()
         self.pheno_config = self.gpf_instance.get_phenotype_db_config()

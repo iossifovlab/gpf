@@ -16,7 +16,6 @@ class QueryBaseView(views.APIView):
     """
 
     authentication_classes = (GPFOAuth2Authentication,)
-    permission_classes = (IsDatasetAllowed,)
 
     def __init__(self):
         super().__init__()
@@ -27,3 +26,10 @@ class QueryBaseView(views.APIView):
     @staticmethod
     def get_permitted_datasets(user):
         return IsDatasetAllowed.permitted_datasets(user)
+
+
+class QueryDatasetView(QueryBaseView):
+    permission_classes = (IsDatasetAllowed,)
+
+    def __init__(self):
+        super().__init__()

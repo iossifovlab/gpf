@@ -3,7 +3,7 @@ from rest_framework import status
 from rest_framework.response import Response
 from django.http.response import StreamingHttpResponse, FileResponse
 
-from query_base.query_base import QueryBaseView
+from query_base.query_base import QueryDatasetView
 
 from utils.logger import request_logging
 from utils.streaming_response_util import iterator_to_json
@@ -16,7 +16,7 @@ from datasets_api.permissions import \
 LOGGER = logging.getLogger(__name__)
 
 
-class ConfigView(QueryBaseView):
+class ConfigView(QueryDatasetView):
     @expand_gene_set
     @request_logging(LOGGER)
     def get(self, request):
@@ -36,7 +36,7 @@ class ConfigView(QueryBaseView):
         return Response(config, status=status.HTTP_200_OK)
 
 
-class QueryVariantsView(QueryBaseView):
+class QueryVariantsView(QueryDatasetView):
     @expand_gene_set
     @request_logging(LOGGER)
     def post(self, request):
@@ -68,7 +68,7 @@ class QueryVariantsView(QueryBaseView):
         return response
 
 
-class DownloadSummaryVariantsView(QueryBaseView):
+class DownloadSummaryVariantsView(QueryDatasetView):
     DOWNLOAD_LIMIT = 10000
 
     @expand_gene_set

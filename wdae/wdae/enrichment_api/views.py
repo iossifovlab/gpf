@@ -1,9 +1,10 @@
+import logging
+
 from rest_framework.response import Response
 from rest_framework import status
 
-import logging
 
-from query_base.query_base import QueryBaseView
+from query_base.query_base import QueryDatasetView
 
 from gene_sets.expand_gene_set_decorator import expand_gene_set
 
@@ -15,9 +16,9 @@ from gene_sets.expand_gene_set_decorator import expand_gene_set
 LOGGER = logging.getLogger(__name__)
 
 
-class EnrichmentModelsView(QueryBaseView):
+class EnrichmentModelsView(QueryDatasetView):
     def __init__(self):
-        super(EnrichmentModelsView, self).__init__()
+        super().__init__()
 
     def get_from_config(self, dataset_id, property_name, selected):
         enrichment_config = self.gpf_instance.get_study_enrichment_config(
@@ -34,7 +35,7 @@ class EnrichmentModelsView(QueryBaseView):
             if el.name in selected_properties
         ]
 
-    def get(self, request, dataset_id=None):
+    def get(self, request, dataset_id=None):  # pylint: disable=unused-argument
         result = {
             "background": self.get_from_config(
                 dataset_id, "background", "selected_background_values"
@@ -46,26 +47,26 @@ class EnrichmentModelsView(QueryBaseView):
         return Response(result)
 
 
-class EnrichmentTestView(QueryBaseView):
+class EnrichmentTestView(QueryDatasetView):
     def __init__(self):
-        super(EnrichmentTestView, self).__init__()
-
+        super().__init__()
         self.gene_scores_db = self.gpf_instance.gene_scores_db
 
-    def _parse_gene_syms(self, query):
+    @staticmethod
+    def _parse_gene_syms(query):
         gene_syms = query.get("geneSymbols", None)
         if gene_syms is None:
             gene_syms = set([])
         else:
             if isinstance(gene_syms, str):
                 gene_syms = gene_syms.split(",")
-            gene_syms = set([g.strip() for g in gene_syms])
+            gene_syms = {g.strip() for g in gene_syms}
         return gene_syms
 
     def enrichment_description(self, query):
         gene_set = query.get("geneSet")
         if gene_set:
-            desc = "Gene Set: {}".format(gene_set)
+            desc = f"Gene Set: {gene_set}"
             return desc
 
         gene_score_request = query.get("geneScores", None)
@@ -77,24 +78,23 @@ class EnrichmentTestView(QueryBaseView):
         if gene_scores_id is not None and \
                 gene_scores_id in self.gene_scores_db:
             if range_start and range_end:
-                desc = "Gene Scores: {} from {} upto {}".format(
-                    gene_scores_id, range_start, range_end
+                desc = (
+                    f"Gene Scores: {gene_scores_id} "
+                    f"from {range_start} upto {range_end}"
                 )
             elif range_start:
-                desc = "Gene Scores: {} from {}".format(
-                    gene_scores_id, range_start
-                )
+                desc = f"Gene Scores: {gene_scores_id} from {range_start}"
             elif range_end:
-                desc = "Gene Scores: {} upto {}".format(
-                    gene_scores_id, range_end
-                )
+                desc = f"Gene Scores: {gene_scores_id} upto {range_end}"
             else:
-                desc = "Gene Scores: {}".format(gene_scores_id)
+                desc = f"Gene Scores: {gene_scores_id}"
             return desc
 
         gene_syms = self._parse_gene_syms(query)
 
-        desc = "Gene Symbols: {}".format(",".join(gene_syms))
+        gene_syms = ",".join(gene_syms)
+
+        desc = f"Gene Symbols: {gene_syms}"
         return desc
 
     @expand_gene_set
@@ -137,7 +137,7 @@ class EnrichmentTestView(QueryBaseView):
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
         desc = self.enrichment_description(query)
-        desc = "{} ({})".format(desc, len(gene_syms))
+        desc = f"{desc} ({len(gene_syms)})"
 
         background_name = query.get("enrichmentBackgroundModel", None)
         counting_name = query.get("enrichmentCountingModel", None)
