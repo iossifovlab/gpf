@@ -81,7 +81,7 @@ export class GeneScoresComponent extends StatefulComponent implements OnInit {
 
   private updateLabels(): void {
     this.rangeChanges.next([
-      this.geneScoresLocalState.score.score,
+      this.geneScoresLocalState.score?.score,
       this.rangeStart,
       this.rangeEnd
     ]);
@@ -128,16 +128,20 @@ export class GeneScoresComponent extends StatefulComponent implements OnInit {
   }
 
   private getDownloadUrl(): string {
-    return `${this.config.baseUrl}gene_scores/download/${this.selectedGeneScores.score}`;
+    if(this.selectedGeneScores !== undefined) {
+      return `${this.config.baseUrl}gene_scores/download/${this.selectedGeneScores.score}`;
+    }
   }
 
   private changeDomain(scores: GeneScores): void {
-    if (scores.domain !== null) {
-      this.geneScoresLocalState.domainMin = scores.domain[0];
-      this.geneScoresLocalState.domainMax = scores.domain[1];
-    } else {
-      this.geneScoresLocalState.domainMin = scores.bins[0];
-      this.geneScoresLocalState.domainMax = scores.bins[scores.bins.length - 1];
+    if(scores !== undefined) {
+      if (scores.domain !== null) {
+        this.geneScoresLocalState.domainMin = scores.domain[0];
+        this.geneScoresLocalState.domainMax = scores.domain[1];
+      } else {
+        this.geneScoresLocalState.domainMin = scores?.bins[0];
+        this.geneScoresLocalState.domainMax = scores?.bins[scores.bins.length - 1];
+      }
     }
   }
 }
