@@ -11,7 +11,7 @@ from utils.logger import LOGGER
 from utils.streaming_response_util import iterator_to_json
 from utils.logger import request_logging
 
-from query_base.query_base import QueryBaseView
+from query_base.query_base import QueryDatasetView
 
 from gene_sets.expand_gene_set_decorator import expand_gene_set
 
@@ -25,7 +25,7 @@ from dae.utils.dae_utils import join_line
 logger = logging.getLogger(__name__)
 
 
-class GenotypeBrowserQueryView(QueryBaseView):
+class GenotypeBrowserQueryView(QueryDatasetView):
     """Genotype browser queries view."""
 
     MAX_SHOWN_VARIANTS = 1000
