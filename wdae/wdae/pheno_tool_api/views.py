@@ -169,9 +169,9 @@ class PhenoToolPersons(QueryBaseView):
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         result = dataset.phenotype_data.get_persons(
-            data["roles"],
-            data["personIds"],
-            data["familyIds"],
+            data.get("roles", None),
+            data.get("personIds", None),
+            data.get("familyIds", None),
         )
 
         for key in result.keys():
@@ -198,9 +198,9 @@ class PhenoToolPersonsValues(QueryBaseView):
 
         result = dataset.phenotype_data.get_persons_values_df(
             data["measureIds"],
-            data["personIds"],
-            data["familyIds"],
-            data["roles"],
+            data.get("personIds", None),
+            data.get("familyIds", None),
+            data.get("roles", None),
         )
 
         result = result.to_dict("records")
@@ -265,7 +265,6 @@ class PhenoToolMeasures(QueryBaseView):
 class PhenoToolMeasureValues(QueryBaseView):
     def post(self, request):
         data = request.data
-        print(data)
         dataset_id = data["datasetId"]
         dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
         if not dataset:
@@ -273,10 +272,10 @@ class PhenoToolMeasureValues(QueryBaseView):
 
         result = dataset.phenotype_data.get_measure_values(
             data["measureId"],
-            data["personIds"],
-            data["familyIds"],
-            data["roles"],
-            data["defaultFilter"],
+            data.get("personIds", None),
+            data.get("familyIds", None),
+            data.get("roles", None),
+            data.get("defaultFilter", "skip"),
         )
 
         return Response(result)
@@ -292,10 +291,10 @@ class PhenoToolValues(QueryBaseView):
 
         result = dataset.phenotype_data.get_values_df(
             data["measureIds"],
-            data["personIds"],
-            data["familyIds"],
-            data["roles"],
-            data["defaultFilter"],
+            data.get("personIds", None),
+            data.get("familyIds", None),
+            data.get("roles", None),
+            data.get("defaultFilter", "apply"),
         )
 
         return Response(result.to_dict("records"))
@@ -361,10 +360,10 @@ class PhenoToolInstrumentValues(QueryBaseView):
 
         result = dataset.phenotype_data.get_instrument_values(
             instrument_name,
-            data["personIds"],
-            data["familyIds"],
-            data["roles"],
-            data.get("measures")
+            data.get("personIds", None),
+            data.get("familyIds", None),
+            data.get("roles", None),
+            data.get("measures", None)
         )
 
         return Response(result)

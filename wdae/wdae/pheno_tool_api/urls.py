@@ -30,7 +30,7 @@ urlpatterns = [
         name="pheno_tool_measure"
     ),
     re_path(
-        r"^/measures.*",
+        r"^/measures/?",
         views.PhenoToolMeasures.as_view(),
         name="pheno_tool_measures"
     ),
