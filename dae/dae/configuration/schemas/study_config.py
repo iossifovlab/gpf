@@ -349,12 +349,16 @@ study_config_schema = {
             "effect_groups": {
                 "type": "list",
                 "schema": {"type": "string"},
-                "default": [],
+                "default": ["LGDs", "nonsynonymous", "UTRs"],
             },
             "effect_types": {
                 "type": "list",
                 "schema": {"type": "string"},
-                "default": [],
+                "default": [
+                    "Nonsense", "Frame-shift", "Splice-site", "Missense",
+                    "No-frame-shift", "noStart", "noEnd", "Synonymous",
+                    "Non coding", "Intron", "Intergenic", "3'-UTR", "5'-UTR",
+                ],
             },
             "draw_all_families": {"type": "boolean", "default": False},
             "file_path": {
