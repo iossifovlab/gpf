@@ -229,6 +229,16 @@ and a pedigree file that describes the families ``helloworld.ped``:
     f2        p2        d2      m2      1     2       prb   autism
 
 
+.. warning::
+
+    Please note that the default separator for the list of de Novo and pedigree
+    files is ``TAB``. If you copy these snippets and paste them into
+    corresponding files the separators between values most probably will
+    become spaces. 
+    
+    You need to ensure that separators between column values 
+    are ``TAB`` symbols.
+
 The project configuration file for importing this study
 ``denovo_helloworld.yaml`` should look like:
 
@@ -311,6 +321,16 @@ and a pedigree file ``helloworld.ped`` (the same pedigree file used in
     f2        d2        0       0       1     1       dad   unaffected
     f2        p2        d2      m2      1     2       prb   autism
 
+
+.. warning::
+
+    Please note that the default separator for the VCF and pedigree
+    files is ``TAB``. If you copy these snippets and paste them into
+    corresponding files the separators between values most probably will
+    become spaces. 
+    
+    You need to ensure that separators between column values 
+    are ``TAB`` symbols for import to work.
 
 The project configuration file for importing this VCF study
 ``vcf_helloworld.yaml`` should look like:
