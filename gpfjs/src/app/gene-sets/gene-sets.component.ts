@@ -15,7 +15,7 @@ import { environment } from 'environments/environment';
 @Component({
   selector: 'gpf-gene-sets',
   templateUrl: './gene-sets.component.html',
-  styleUrls: ['./gene-sets.component.css'],
+  styleUrls: ['./gene-sets.component.css']
 })
 export class GeneSetsComponent extends StatefulComponent implements OnInit {
   public geneSetsCollections: Array<GeneSetsCollection>;
@@ -28,6 +28,7 @@ export class GeneSetsComponent extends StatefulComponent implements OnInit {
 
   private selectedDatasetId: string;
   public downloadUrl: string;
+  public geneSetsLoaded = 0;
 
   public imgPathPrefix = environment.imgPathPrefix;
 
@@ -44,6 +45,7 @@ export class GeneSetsComponent extends StatefulComponent implements OnInit {
   }
 
   public ngOnInit(): void {
+    this.geneSetsLoaded = null;
     super.ngOnInit();
 
     this.selectedDatasetId = this.datasetService.getSelectedDataset().id;
@@ -77,6 +79,7 @@ export class GeneSetsComponent extends StatefulComponent implements OnInit {
       this.geneSetsCollections = geneSetsCollections;
       this.selectedGeneSetsCollection = geneSetsCollections[0];
       this.restoreState(state);
+      this.geneSetsLoaded = geneSetsCollections.length;
     });
 
     this.geneSetsResult = this.geneSetsQueryChange.pipe(
@@ -193,7 +196,7 @@ export class GeneSetsComponent extends StatefulComponent implements OnInit {
     this.geneSetsLocalState.geneSetsTypes = Object.create(null);
     this.geneSets = [];
 
-    if (selectedGeneSetsCollection.types.length > 0) {
+    if (selectedGeneSetsCollection?.types.length > 0) {
       const geneSetType = selectedGeneSetsCollection.types.find(
         genesetType => genesetType.datasetId === this.selectedDatasetId
       ) || selectedGeneSetsCollection.types[0];

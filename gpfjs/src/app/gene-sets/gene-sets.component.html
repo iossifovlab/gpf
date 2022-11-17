@@ -1,70 +1,95 @@
-<div class="row panel" id="gene-sets-panel" style="margin-left: 0px; margin-right: 0px">
-  <div class="col-sm-3">
-    <div class="select-wrapper">
-      <select class="row-sm-3 form-control" [(ngModel)]="selectedGeneSetsCollection" required style="width: 100%">
-        <option *ngFor="let collection of geneSetsCollections" [ngValue]="collection">{{ collection.desc }}</option>
-      </select>
-      <span class="select-dropdown-icon" [style.content]="'url(' + imgPathPrefix + 'dropdown_icon.png)'"> </span>
-    </div>
-    <ngb-accordion
-      *ngIf="selectedGeneSetsCollection?.types"
-      activeIds="{{ defaultSelectedDenovoGeneSetId }}"
-      [destroyOnHide]="false"
-      #acc="ngbAccordion"
-      class="gene-sets-types row-sm-3">
-      <ngb-panel
-        *ngFor="let type of selectedGeneSetsCollection.types"
-        id="{{ type.datasetId }}-{{ type.personSetCollectionId }}-denovo-geneset">
-        <ng-template ngbPanelTitle *ngIf="selectedGeneSetsCollection?.types?.length > 0">
-          <div style="text-align: left">
-            <span style="display: block" class="btn-sm text-wrap"
-              >{{ type.datasetName }}: {{ type.personSetCollectionName }}</span
-            >
-          </div>
-        </ng-template>
-        <ng-template ngbPanelContent>
-          <div *ngFor="let personSet of type.personSetCollectionLegend">
-            <label [attr.for]="type.datasetId + '-checkbox-' + personSet.id">
-              <input
-                type="checkbox"
-                [attr.id]="type.datasetId + '-checkbox-' + personSet.id"
-                [ngModel]="isSelectedGeneType(type.datasetId, type.personSetCollectionId, personSet.id)"
-                (ngModelChange)="
-                  setSelectedGeneType(type.datasetId, type.personSetCollectionId, personSet.id, $event); onSearch()
-                " />
-              <span class="pedigree-icon" [style.background-color]="personSet.color"></span>
-              <span>{{ personSet.name }}</span>
-            </label>
-          </div>
-        </ng-template>
-      </ngb-panel>
-    </ngb-accordion>
-  </div>
-
-  <div class="col-sm-9">
-    <gpf-searchable-select
-      (search)="onSearch($event)"
-      (selectItem)="onSelect($event)"
-      [data]="geneSets"
-      caption="{{
-        selectedGeneSet ? selectedGeneSet.name + ' (' + selectedGeneSet.count + '): ' + selectedGeneSet.desc : ''
-      }}">
-      <div *gpf-searchable-select-template="let element">
-        <span
-          data-toggle="tooltip"
-          data-placement="bottom"
-          title="{{ element.name }} ({{ element.count }}): {{ element.desc }}"
-          innerHtml="{{ element.name | boldMatching: searchQuery }} ({{ element.count }}): {{
-            element.desc | boldMatching: searchQuery
-          }}">
-        </span>
+<div *ngIf="selectedGeneSetsCollection">
+  <div class="row panel" id="gene-sets-panel" style="margin-left: 0px; margin-right: 0px">
+    <div class="col-sm-3">
+      <div class="select-wrapper">
+        <select class="row-sm-3 form-control" [(ngModel)]="selectedGeneSetsCollection" required style="width: 100%">
+          <option *ngFor="let collection of geneSetsCollections" [ngValue]="collection">{{ collection.desc }}</option>
+        </select>
+        <span class="select-dropdown-icon" [style.content]="'url(' + imgPathPrefix + 'dropdown_icon.png)'"> </span>
       </div>
-    </gpf-searchable-select>
-    <div *ngIf="selectedGeneSet">
-      <span style="margin-right: 5px">Count: {{ selectedGeneSet.count }}</span>
-      <span>(<a class="download-link" href="{{ downloadUrl }}">Download</a>)</span>
+      <ngb-accordion
+        *ngIf="selectedGeneSetsCollection?.types"
+        activeIds="{{ defaultSelectedDenovoGeneSetId }}"
+        [destroyOnHide]="false"
+        #acc="ngbAccordion"
+        class="gene-sets-types row-sm-3">
+        <ngb-panel
+          *ngFor="let type of selectedGeneSetsCollection.types"
+          id="{{ type.datasetId }}-{{ type.personSetCollectionId }}-denovo-geneset">
+          <ng-template ngbPanelTitle *ngIf="selectedGeneSetsCollection?.types?.length > 0">
+            <div style="text-align: left">
+              <span style="display: block" class="btn-sm text-wrap"
+                >{{ type.datasetName }}: {{ type.personSetCollectionName }}</span
+              >
+            </div>
+          </ng-template>
+          <ng-template ngbPanelContent>
+            <div *ngFor="let personSet of type.personSetCollectionLegend">
+              <label [attr.for]="type.datasetId + '-checkbox-' + personSet.id">
+                <input
+                  type="checkbox"
+                  [attr.id]="type.datasetId + '-checkbox-' + personSet.id"
+                  [ngModel]="isSelectedGeneType(type.datasetId, type.personSetCollectionId, personSet.id)"
+                  (ngModelChange)="
+                    setSelectedGeneType(type.datasetId, type.personSetCollectionId, personSet.id, $event); onSearch()
+                  " />
+                <span class="pedigree-icon" [style.background-color]="personSet.color"></span>
+                <span>{{ personSet.name }}</span>
+              </label>
+            </div>
+          </ng-template>
+        </ngb-panel>
+      </ngb-accordion>
     </div>
 
-    <gpf-errors-alert [errors]="errors"></gpf-errors-alert>
+    <div class="col-sm-9">
+      <gpf-searchable-select
+        (search)="onSearch($event)"
+        (selectItem)="onSelect($event)"
+        [data]="geneSets"
+        caption="{{
+          selectedGeneSet ? selectedGeneSet.name + ' (' + selectedGeneSet.count + '): ' + selectedGeneSet.desc : ''
+        }}">
+        <div *gpf-searchable-select-template="let element">
+          <span
+            data-toggle="tooltip"
+            data-placement="bottom"
+            title="{{ element.name }} ({{ element.count }}): {{ element.desc }}"
+            innerHtml="{{ element.name | boldMatching: searchQuery }} ({{ element.count }}): {{
+              element.desc | boldMatching: searchQuery
+            }}">
+          </span>
+        </div>
+      </gpf-searchable-select>
+      <div *ngIf="selectedGeneSet">
+        <span style="margin-right: 5px">Count: {{ selectedGeneSet.count }}</span>
+        <span>(<a class="download-link" href="{{ downloadUrl }}">Download</a>)</span>
+      </div>
+
+      <gpf-errors-alert [errors]="errors"></gpf-errors-alert>
+    </div>
+  </div>
+</div>
+
+<div *ngIf="geneSetsLoaded === null">
+  <div class="form-block" style="display: contents">
+    <div class="card">
+      <ul ngbNav #nav="ngbNav" class="navbar bg-light nav-pills" style="justify-content: center">
+        <li ngbNavItem>
+          <span style="opacity: 75%"><i>Loading gene sets...</i></span>
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>
+<div *ngIf="!selectedGeneSetsCollection && geneSetsLoaded !== null">
+  <div class="form-block" style="display: contents">
+    <div class="card">
+      <ul ngbNav #nav="ngbNav" class="navbar bg-light nav-pills" style="justify-content: center">
+        <li ngbNavItem>
+          <span style="opacity: 75%"><i>No gene sets collections available</i></span>
+        </li>
+      </ul>
+    </div>
   </div>
 </div>
