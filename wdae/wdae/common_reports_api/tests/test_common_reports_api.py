@@ -9,6 +9,43 @@ pytestmark = pytest.mark.usefixtures(
 )
 
 
+@pytest.mark.parametrize("url,method,body", [
+    ("/api/v3/common_reports/studies/study4", "get", None),
+    ("/api/v3/common_reports/studies/study4/full", "get", None),
+    (
+        "/api/v3/common_reports/family_counters",
+        "post",
+        {
+            "study_id": "study4",
+            "group_name": "Phenotype",
+            "counter_id": "0"
+        }),
+    (
+        "/api/v3/common_reports/family_counters/download",
+        "post",
+        {
+            "queryData": json.dumps({
+                "study_id": "study4",
+                "group_name": "Phenotype",
+                "counter_id": "0"
+            })
+        }
+    ),
+    ("/api/v3/common_reports/families_data/Study1", "get", None),
+])
+def test_variant_reports_permissions(anonymous_client, url, method, body):
+    if method == "get":
+        response = anonymous_client.get(url)
+    else:
+        response = anonymous_client.post(
+            url, json.dumps(body), content_type="application/json"
+        )
+
+    assert response
+    print(response.headers)
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
+
 def test_variant_reports(admin_client):
     url = "/api/v3/common_reports/studies/study4"
     response = admin_client.get(url)

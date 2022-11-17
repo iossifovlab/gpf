@@ -2,9 +2,36 @@
 import json
 import pytest
 
+from rest_framework import status
+
 
 pytestmark = pytest.mark.usefixtures(
     "wdae_gpf_instance", "dae_calc_gene_sets")
+
+
+@pytest.mark.parametrize("url,method,body", [
+    ("/api/v3/enrichment/models/f1_trio", "get", None),
+    (
+        "/api/v3/enrichment/test",
+        "post",
+        {
+            "datasetId": "f1_trio",
+            "enrichmentBackgroundModel": "coding_len_background_model",
+            "enrichmentCountingModel": "enrichment_gene_counting",
+            "geneSymbols": ["SAMD11", "PLEKHN1", "POGZ"],
+        }
+    ),
+])
+def test_enrichment_api_permissions(anonymous_client, url, method, body):
+    if method == "get":
+        response = anonymous_client.get(url)
+    else:
+        response = anonymous_client.post(
+            url, json.dumps(body), content_type="application/json"
+        )
+
+    assert response
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
 
 def test_enrichment_models(admin_client):

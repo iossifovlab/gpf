@@ -1,10 +1,27 @@
 # pylint: disable=redefined-outer-name,C0114,C0116,protected-access
 
+import json
 import pytest
 from rest_framework import status  # type: ignore
 
 pytestmark = pytest.mark.usefixtures(
     "wdae_gpf_instance", "dae_calc_gene_sets")
+
+
+@pytest.mark.parametrize("url,method,body", [
+    ("/api/v3/person_sets/Study1/configs", "get", None),
+    ("/api/v3/person_sets/Study1/stats/phenotype", "get", None),
+])
+def test_person_sets_api_permissions(anonymous_client, url, method, body):
+    if method == "get":
+        response = anonymous_client.get(url)
+    else:
+        response = anonymous_client.post(
+            url, json.dumps(body), content_type="application/json"
+        )
+
+    assert response
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
 
 def test_collection_configs_view(admin_client):

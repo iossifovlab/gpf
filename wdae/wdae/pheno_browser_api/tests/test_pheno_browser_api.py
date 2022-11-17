@@ -1,6 +1,8 @@
-import pytest
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
 import json
+import pytest
 
+from rest_framework import status
 
 pytestmark = pytest.mark.usefixtures(
     "wdae_gpf_instance", "dae_calc_gene_sets")
@@ -11,6 +13,43 @@ MEASURES_URL = "/api/v3/pheno_browser/measures"
 MEASURES_INFO_URL = "/api/v3/pheno_browser/measures_info"
 MEASURE_DESCRIPTION_URL = "/api/v3/pheno_browser/measure_description"
 DOWNLOAD_URL = "/api/v3/pheno_browser/download"
+
+
+@pytest.mark.parametrize("url,method,body", [
+    (f"{URL}?dataset_id=quads_f1_ds", "get", None),
+    (f"{MEASURES_INFO_URL}?dataset_id=quads_f1_ds", "get", None),
+    (
+        f"{MEASURES_URL}?dataset_id=quads_f1_ds&instrument=instrument1", 
+        "get", 
+        None
+    ),
+    (
+        DOWNLOAD_URL,
+        "post",
+        {
+            "dataset_id": "quads_f1",
+            "instrument": "instrument1"
+        }
+    ),
+    (
+        (
+            f"{MEASURE_DESCRIPTION_URL}?dataset_id=quads_f1_ds"
+            "&measure_id=instrument1.categorical"
+        ),
+        "get",
+        None
+    ),
+])
+def test_pheno_browser_api_permissions(anonymous_client, url, method, body):
+    if method == "get":
+        response = anonymous_client.get(url)
+    else:
+        response = anonymous_client.post(
+            url, json.dumps(body), content_type="application/json"
+        )
+
+    assert response
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
 
 def test_instruments_missing_dataset_id(admin_client):
@@ -121,25 +160,6 @@ def test_download_specific_measures(admin_client):
     assert header[0] == "person_id"
     assert header[1] == "instrument1.continuous"
     assert header[2] == "instrument1.categorical"
-
-
-def test_download_forbidden(user_client):
-    data = {
-        "dataset_id": "quads_f1",
-        "instrument": "instrument1"
-    }
-    response = user_client.post(
-        DOWNLOAD_URL, json.dumps(data), "application/json"
-    )
-
-    assert response.status_code == 403
-
-    header = response.data
-    assert len(header.keys()) == 1
-    assert (
-        header["detail"]
-        == "You do not have permission to perform this action."
-    )
 
 
 def test_download_all_instruments(admin_client):
