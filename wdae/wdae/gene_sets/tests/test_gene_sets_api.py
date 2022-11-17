@@ -7,32 +7,6 @@ import pytest
 from rest_framework import status  # type: ignore
 
 
-@pytest.mark.parametrize("url,method,body", [
-    ("/api/v3/gene_sets/gene_sets_collections", "get", None),
-    (
-        "/api/v3/gene_sets/gene_set_download",
-        "post",
-        {
-            "geneSetsCollection": "denovo",
-            "geneSet": "Synonymous",
-            "geneSetsTypes": {
-                "f1_group": {"phenotype": ["phenotype1", "unaffected"]}
-            },
-        }
-    ),
-])
-def test_gene_sets_api_permissions(anonymous_client, url, method, body):
-    if method == "get":
-        response = anonymous_client.get(url)
-    else:
-        response = anonymous_client.post(
-            url, json.dumps(body), content_type="application/json"
-        )
-
-    assert response
-    assert response.status_code == status.HTTP_401_UNAUTHORIZED
-
-
 pytestmark = pytest.mark.usefixtures(
     "wdae_gpf_instance", "dae_calc_gene_sets")
 
