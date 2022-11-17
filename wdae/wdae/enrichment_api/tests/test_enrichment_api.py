@@ -109,7 +109,7 @@ def test_enrichment_test_missing_study(admin_client):
     )
 
     assert response
-    assert response.status_code == 403
+    assert response.status_code == 404
 
 
 def test_enrichment_test_missing_gene_symbols(admin_client):
