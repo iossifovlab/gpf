@@ -285,7 +285,7 @@ class GeneScoresDb:
     Used by Web interface.
     """
 
-    def __init__(self, gene_scores):
+    def __init__(self, collections):
         super().__init__()
         self.scores = {}
         for collection in collections:
