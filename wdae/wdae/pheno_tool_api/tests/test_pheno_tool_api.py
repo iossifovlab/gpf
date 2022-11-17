@@ -291,7 +291,7 @@ def test_pheno_tool_view_missing_dataset(admin_client):
         format="json",
         content_type="application/json",
     )
-    assert response.status_code == status.HTTP_403_FORBIDDEN
+    assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
 def test_pheno_tool_view_missing_measure(admin_client):
