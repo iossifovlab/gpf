@@ -125,7 +125,7 @@ def _user_has_permission_strict(user, dataset):
 
     dataset = get_wdae_dataset(dataset)
     if dataset is None:
-        return False
+        return True
 
     dataset_groups = get_dataset_groups(dataset)
 
@@ -155,7 +155,7 @@ def _user_has_permission_up(user, dataset):
     """
     dataset = get_wdae_dataset(dataset)
     if dataset is None:
-        return False
+        return True
 
     if _user_has_permission_strict(user, dataset):
         return True
@@ -176,7 +176,7 @@ def _user_has_permission_down(user, dataset):
     """
     dataset = get_wdae_dataset(dataset)
     if dataset is None:
-        return False
+        return True
 
     if _user_has_permission_strict(user, dataset):
         return True
@@ -193,8 +193,9 @@ def user_has_permission(user, dataset):
     """Check if a user has permission to browse the given dataset."""
     logger.debug("checking user <%s> permissions on %s", user, dataset)
     dataset = get_wdae_dataset(dataset)
+    print(dataset)
     if dataset is None:
-        return False
+        return True
 
     allowed_dataset_leaves = get_allowed_genotype_studies(user, dataset)
     return bool(allowed_dataset_leaves)
