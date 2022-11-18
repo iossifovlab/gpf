@@ -1,15 +1,79 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613,too-many-lines
 
+import textwrap
 import pytest
+import pysam
 
 from dae.genomic_resources.genome_position_table import \
     TabixGenomicPositionTable, \
+    VCFGenomicPositionTable, \
     open_genome_position_table
+from dae.genomic_resources.fsspec_protocol import build_fsspec_protocol
 
 from dae.genomic_resources.testing import \
     build_test_resource, \
     tabix_to_resource
-from dae.testing import convert_to_tab_separated
+from dae.testing import convert_to_tab_separated, setup_directories, setup_vcf
+
+
+@pytest.fixture
+def vcf_res(tmp_path_factory):
+    root_path = tmp_path_factory.mktemp("vcf")
+    setup_directories(
+        root_path / "grr",
+        {
+            "tmp": {
+                "genomic_resource.yaml": textwrap.dedent("""
+                    tabix_table:
+                        filename: data.vcf.gz
+                        format: vcf_info
+                """)
+            }
+        }
+    )
+    setup_vcf(
+        root_path / "grr" / "tmp" / "data.vcf.gz",
+        textwrap.dedent("""
+##fileformat=VCFv4.1
+##INFO=<ID=A,Number=1,Type=Integer,Description="Score A">
+##INFO=<ID=B,Number=1,Type=Integer,Description="Score B">
+##INFO=<ID=C,Number=.,Type=String,Description="Score C">
+##INFO=<ID=D,Number=.,Type=String,Description="Score D">
+#CHROM POS ID REF ALT QUAL FILTER  INFO
+chr1   5   .  A   T   .    .       A=1;C=c11,c12;D=d11
+chr1   15   .  A   T   .    .       A=2;B=21;C=c21;D=d21,d22
+chr1   30   .  A   T   .    .       A=3;B=31;C=c21;D=d31,d32
+    """)
+    )
+    proto = build_fsspec_protocol("testing", str(root_path / "grr"))
+    return proto.get_resource("tmp")
+
+
+@pytest.fixture
+def vcf_res_autodetect_format(tmp_path_factory):
+    root_path = tmp_path_factory.mktemp("vcf")
+    setup_directories(
+        root_path / "grr",
+        {
+            "tmp": {
+                "genomic_resource.yaml": textwrap.dedent("""
+                    tabix_table:
+                        filename: data.vcf.gz
+                """)
+            }
+        }
+    )
+    setup_vcf(
+        root_path / "grr" / "tmp" / "data.vcf.gz",
+        textwrap.dedent("""
+##fileformat=VCFv4.1
+##INFO=<ID=A,Number=1,Type=Integer,Description="Score A">
+#CHROM POS ID REF ALT QUAL FILTER  INFO
+chr1   5   .  A   T   .    .       A=1
+    """)
+    )
+    proto = build_fsspec_protocol("testing", str(root_path / "grr"))
+    return proto.get_resource("tmp")
 
 
 def test_default_setup():
@@ -52,6 +116,7 @@ def test_regions():
         ("1", "15", "20", "4.14"),
         ("1", "21", "30", "5.14")
     ]
+
     assert list(tab.get_records_in_region("1", 11, 11)) == [
         ("1", "10", "12", "3.14")
     ]
@@ -99,20 +164,21 @@ def test_regions_in_tabix(tmp_path, tabix_file, jump_threshold):
     assert tab.chrom_column_i == 0
     assert tab.pos_begin_column_i == 1
     assert tab.pos_end_column_i == 2
+    print(list(map(tuple, tab.get_all_records())))
     assert list(tab.get_all_records()) == [
-        ("1", "10", "12", "3.14"),
-        ("1", "15", "20", "4.14"),
-        ("1", "21", "30", "5.14")
+        ("1", 10, 12, "3.14"),
+        ("1", 15, 20, "4.14"),
+        ("1", 21, 30, "5.14")
     ]
     assert list(tab.get_records_in_region("1", 11, 11)) == [
-        ("1", "10", "12", "3.14")
+        ("1", 10, 12, "3.14")
     ]
 
     assert not list(tab.get_records_in_region("1", 13, 14))
 
     assert list(tab.get_records_in_region("1", 18, 21)) == [
-        ("1", "15", "20", "4.14"),
-        ("1", "21", "30", "5.14")
+        ("1", 15, 20, "4.14"),
+        ("1", 21, 30, "5.14")
     ]
 
 
@@ -142,7 +208,7 @@ def test_last_call_is_updated(tmp_path, tabix_file):
     assert tab._last_call == ("", -1, -1)
 
     assert list(tab.get_records_in_region("1", 11, 11)) == [
-        ("1", "10", "12", "3.14")
+        ("1", 10, 12, "3.14")
     ]
     assert tab._last_call == ("1", 11, 11)
 
@@ -150,8 +216,8 @@ def test_last_call_is_updated(tmp_path, tabix_file):
     assert tab._last_call == ("1", 13, 14)
 
     assert list(tab.get_records_in_region("1", 18, 21)) == [
-        ("1", "15", "20", "4.14"),
-        ("1", "21", "30", "5.14")
+        ("1", 15, 20, "4.14"),
+        ("1", 21, 30, "5.14")
     ]
     assert tab._last_call == ("1", 18, 21)
 
@@ -229,7 +295,9 @@ def test_chrom_mapping_file_with_tabix(tmp_path, tabix_file):
                 tabix_table:
                     filename: data.bgz
                     chrom_mapping:
-                        filename: chrom_map.txt""",
+                        filename: chrom_map.txt
+                    pos_end:
+                        name: pos2""",
             "chrom_map.txt": convert_to_tab_separated("""
                     chrom   file_chrom
                     gosho   chr1
@@ -252,11 +320,11 @@ def test_chrom_mapping_file_with_tabix(tmp_path, tabix_file):
 
     assert tab.get_chromosomes() == ["gosho", "pesho"]
     assert list(tab.get_all_records()) == [
-        ("gosho", "10", "12", "3.14"),
-        ("pesho", "11", "11", "4.14")
+        ("gosho", 10, 12, "3.14"),
+        ("pesho", 11, 11, "4.14")
     ]
     assert list(tab.get_records_in_region("pesho")) == [
-        ("pesho", "11", "11", "4.14"),
+        ("pesho", 11, 11, "4.14"),
     ]
 
 
@@ -492,37 +560,37 @@ def test_tabix_table(tabix_file, tmp_path, jump_threshold):
     table.jump_threshold = jump_threshold
 
     assert list(table.get_all_records()) == [
-        ("1", "3", "3.14", "aa"),
-        ("1", "4", "4.14", "bb"),
-        ("1", "4", "5.14", "cc"),
-        ("1", "5", "6.14", "dd"),
-        ("1", "8", "7.14", "ee"),
-        ("2", "3", "8.14", "ff")
+        ("1", 3, 3, "3.14", "aa"),
+        ("1", 4, 4, "4.14", "bb"),
+        ("1", 4, 4, "5.14", "cc"),
+        ("1", 5, 5, "6.14", "dd"),
+        ("1", 8, 8, "7.14", "ee"),
+        ("2", 3, 3, "8.14", "ff")
     ]
 
     assert list(table.get_records_in_region("1", 4, 5)) == [
-        ("1", "4", "4.14", "bb"),
-        ("1", "4", "5.14", "cc"),
-        ("1", "5", "6.14", "dd")
+        ("1", 4, 4, "4.14", "bb"),
+        ("1", 4, 4, "5.14", "cc"),
+        ("1", 5, 5, "6.14", "dd")
     ]
 
     assert list(table.get_records_in_region("1", 4, None)) == [
-        ("1", "4", "4.14", "bb"),
-        ("1", "4", "5.14", "cc"),
-        ("1", "5", "6.14", "dd"),
-        ("1", "8", "7.14", "ee")
+        ("1", 4, 4, "4.14", "bb"),
+        ("1", 4, 4, "5.14", "cc"),
+        ("1", 5, 5, "6.14", "dd"),
+        ("1", 8, 8, "7.14", "ee")
     ]
 
     assert list(table.get_records_in_region("1", None, 4)) == [
-        ("1", "3", "3.14", "aa"),
-        ("1", "4", "4.14", "bb"),
-        ("1", "4", "5.14", "cc")
+        ("1", 3, 3, "3.14", "aa"),
+        ("1", 4, 4, "4.14", "bb"),
+        ("1", 4, 4, "5.14", "cc")
     ]
 
     assert not list(table.get_records_in_region("1", 20, 25))
 
     assert list(table.get_records_in_region("2", None, None)) == [
-        ("2", "3", "8.14", "ff")
+        ("2", 3, 3, "8.14", "ff")
     ]
 
     with pytest.raises(Exception):
@@ -600,40 +668,40 @@ def regions_tabix_table(tmp_path, tabix_file):
     return table
 
 
-def test_tabix_table_should_use_sequential(tabix_table):
+def test_tabix_table_should_use_sequential_seek_forward(tabix_table):
     table = tabix_table
     assert table.get_column_names() == ("chrom", "pos_begin", "c1")
 
-    assert not table._should_use_sequential("1", 1)
+    assert not table._should_use_sequential_seek_forward("1", 1)
     for row in table.get_records_in_region("1", 1, 1):
         print(row)
 
-    assert not table._should_use_sequential("1", 1)
+    assert not table._should_use_sequential_seek_forward("1", 1)
 
-    assert table._should_use_sequential("1", 2)
-    assert table._should_use_sequential("1", 3)
+    assert table._should_use_sequential_seek_forward("1", 2)
+    assert table._should_use_sequential_seek_forward("1", 3)
 
     table.jump_threshold = 0
-    assert not table._should_use_sequential("1", 3)
+    assert not table._should_use_sequential_seek_forward("1", 3)
 
 
-def test_regions_tabix_table_should_use_sequential(regions_tabix_table):
+def test_regions_tabix_table_should_use_sequential_seek_forward(regions_tabix_table):
     table = regions_tabix_table
     assert table.get_column_names() == ("chrom", "pos_begin", "pos_end", "c1")
 
-    assert not table._should_use_sequential("1", 1)
+    assert not table._should_use_sequential_seek_forward("1", 1)
     for row in table.get_records_in_region("1", 2, 2):
         print(row)
 
-    assert not table._should_use_sequential("1", 1)
-    assert not table._should_use_sequential("1", 6)
-    assert table._should_use_sequential("1", 11)
-    assert table._should_use_sequential("1", 21)
+    assert not table._should_use_sequential_seek_forward("1", 1)
+    assert not table._should_use_sequential_seek_forward("1", 6)
+    assert table._should_use_sequential_seek_forward("1", 11)
+    assert table._should_use_sequential_seek_forward("1", 21)
 
     table.jump_threshold = 0
-    assert not table._should_use_sequential("1", 6)
-    assert not table._should_use_sequential("1", 11)
-    assert not table._should_use_sequential("1", 21)
+    assert not table._should_use_sequential_seek_forward("1", 6)
+    assert not table._should_use_sequential_seek_forward("1", 11)
+    assert not table._should_use_sequential_seek_forward("1", 21)
 
 
 def test_tabix_table_jumper_current_position(tabix_table):
@@ -682,13 +750,13 @@ def tabix_table_multiline(tmp_path, tabix_file):
 
 
 @pytest.mark.parametrize("pos_beg,pos_end,expected", [
-    (1, 1, [("1", "1", "1")]),
-    (2, 2, [("1", "2", "2"), ("1", "2", "3")]),
-    (3, 3, [("1", "3", "4"), ("1", "3", "5")]),
-    (4, 4, [("1", "4", "6"), ("1", "4", "7")]),
+    (1, 1, [("1", 1, 1, "1")]),
+    (2, 2, [("1", 2, 2, "2"), ("1", 2, 2, "3")]),
+    (3, 3, [("1", 3, 3, "4"), ("1", 3, 3, "5")]),
+    (4, 4, [("1", 4, 4, "6"), ("1", 4, 4, "7")]),
     (3, 4, [
-        ("1", "3", "4"), ("1", "3", "5"),
-        ("1", "4", "6"), ("1", "4", "7")
+        ("1", 3, 3, "4"), ("1", 3, 3, "5"),
+        ("1", 4, 4, "6"), ("1", 4, 4, "7")
     ]),
 ])
 def test_tabix_table_multi_get_regions(
@@ -696,7 +764,7 @@ def test_tabix_table_multi_get_regions(
     table = tabix_table_multiline
     assert table.get_column_names() == ("chrom", "pos_begin", "c1")
 
-    assert not table._should_use_sequential("1", 1)
+    assert not table._should_use_sequential_seek_forward("1", 1)
     for row in table.get_records_in_region("1", 1, 1):
         print(row)
 
@@ -711,7 +779,7 @@ def test_tabix_table_multi_get_regions_partial(tabix_table_multiline):
     table = tabix_table_multiline
     assert table.get_column_names() == ("chrom", "pos_begin", "c1")
 
-    assert not table._should_use_sequential("1", 1)
+    assert not table._should_use_sequential_seek_forward("1", 1)
     for row in table.get_records_in_region("1", 1, 1):
         print(row)
 
@@ -723,7 +791,7 @@ def test_tabix_table_multi_get_regions_partial(tabix_table_multiline):
     lines = table.get_records_in_region("1", 3, 3)
     lines = list(lines)
     print(lines)
-    assert lines == [("1", "3", "4"), ("1", "3", "5")]
+    assert lines == [("1", 3, 3, "4"), ("1", 3, 3, "5")]
 
 
 def test_tabix_middle_optimization(tmp_path, tabix_file):
@@ -757,14 +825,14 @@ def test_tabix_middle_optimization(tmp_path, tabix_file):
 
     row = None
     for row in table.get_records_in_region("1", 1, 1):
-        assert row == ("1", "1", "1")
+        assert row == ("1", 1, 1, "1")
         break
-    assert row == ("1", "1", "1")
+    assert row == ("1", 1, 1, "1")
 
     row = None
     for row in table.get_records_in_region("1", 1, 1):
-        assert row == ("1", "1", "1")
-    assert row == ("1", "1", "1")
+        assert row == ("1", 1, 1, "1")
+    assert row == ("1", 1, 1, "1")
 
     row = None
     for row in table.get_records_in_region("1", 2, 2):
@@ -796,29 +864,29 @@ def test_tabix_middle_optimization_regions(tmp_path, tabix_file):
 
     row = None
     for row in table.get_records_in_region("1", 1, 1):
-        assert row == ("1", "1", "1", "1")
+        assert row == ("1", 1, 1, "1")
         break
 
     row = None
     for row in table.get_records_in_region("1", 1, 1):
-        assert row == ("1", "1", "1", "1")
+        assert row == ("1", 1, 1, "1")
 
     row = None
     for row in table.get_records_in_region("1", 4, 4):
         print(row)
-    assert row == ("1", "4", "8", "2")
+    assert row == ("1", 4, 8, "2")
 
     row = None
     for row in table.get_records_in_region("1", 4, 4):
         print(row)
         break
-    assert row == ("1", "4", "8", "2")
+    assert row == ("1", 4, 8, "2")
 
     row = None
     for row in table.get_records_in_region("1", 5, 5):
         print(row)
         break
-    assert row == ("1", "4", "8", "2")
+    assert row == ("1", 4, 8, "2")
 
 
 def test_tabix_middle_optimization_regions_buggy_1(tmp_path, tabix_file):
@@ -858,20 +926,20 @@ def test_tabix_middle_optimization_regions_buggy_1(tmp_path, tabix_file):
 
     rows = None
     rows = list(table.get_records_in_region("chr1", 505637, 505637))
-    assert rows == [("chr1", "505637", "505637", "0.009")]
+    assert rows == [("chr1", 505637, 505637, "0.009")]
 
     rows = None
     rows = list(table.get_records_in_region("chr1", 505643, 505646))
     assert rows == [
-        ("chr1", "505643", "505643", "0.012"),
-        ("chr1", "505644", "505645", "0.006"),
-        ("chr1", "505646", "505646", "0.005"),
+        ("chr1", 505643, 505643, "0.012"),
+        ("chr1", 505644, 505645, "0.006"),
+        ("chr1", 505646, 505646, "0.005"),
     ]
 
     rows = None
     rows = list(table.get_records_in_region("chr1", 505762, 505762))
     assert rows == [
-        ("chr1", "505762", "505764", "0.002"),
+        ("chr1", 505762, 505764, "0.002"),
     ]
 
 
@@ -902,15 +970,14 @@ def test_buggy_fitcons_e67(tmp_path, tabix_file):
     rows = None
     rows = list(table.get_records_in_region("5", 180740299, 180740300))
     assert rows == [
-        ("5", "180739426", "180742735", "0.065122"),
+        ("5", 180739426, 180742735, "0.065122"),
     ]
 
     rows = None
     rows = list(table.get_records_in_region("5", 180740301, 180740301))
     assert rows == [
-        ("5", "180739426", "180742735", "0.065122"),
+        ("5", 180739426, 180742735, "0.065122"),
     ]
-
 
 @pytest.mark.parametrize("jump_threshold,expected", [
     ("none", 0),
@@ -946,13 +1013,13 @@ def test_tabix_jump_config(tmp_path, tabix_file, jump_threshold, expected):
     rows = None
     rows = list(table.get_records_in_region("5", 180740299, 180740300))
     assert rows == [
-        ("5", "180739426", "180742735", "0.065122"),
+        ("5", 180739426, 180742735, "0.065122"),
     ]
 
     rows = None
     rows = list(table.get_records_in_region("5", 180740301, 180740301))
     assert rows == [
-        ("5", "180739426", "180742735", "0.065122"),
+        ("5", 180739426, 180742735, "0.065122"),
     ]
 
 
@@ -995,19 +1062,19 @@ def test_tabix_max_buffer(
     rows = None
     rows = list(table.get_records_in_region("5", 180740299, 180740300))
     assert rows == [
-        ("5", "180739426", "180742735", "0.065122"),
+        ("5", 180739426, 180742735, "0.065122"),
     ]
 
     rows = None
     rows = list(table.get_records_in_region("5", 180740301, 180740301))
     assert rows == [
-        ("5", "180739426", "180742735", "0.065122"),
+        ("5", 180739426, 180742735, "0.065122"),
     ]
 
     rows = None
     rows = list(table.get_records_in_region("5", 180740301, 180742735))
     assert rows == [
-        ("5", "180739426", "180742735", "0.065122"),
+        ("5", 180739426, 180742735, "0.065122"),
     ]
 
 
@@ -1030,3 +1097,124 @@ def test_contig_length():
 
 def test_contig_length_tabix_table(tabix_table):
     assert tabix_table.get_chromosome_length("1") == 13
+
+
+def test_vcf_autodetect_format(vcf_res_autodetect_format):
+    tab = open_genome_position_table(
+        vcf_res_autodetect_format,
+        vcf_res_autodetect_format.config["tabix_table"]
+    )
+    assert isinstance(tab, VCFGenomicPositionTable)
+    assert tab.chrom_column_i == 0
+    assert tab.pos_begin_column_i == 1
+    assert tab.pos_end_column_i == 1
+    assert len(tuple(tab.get_all_records())) == 1
+
+
+def test_vcf_get_all_records(vcf_res):
+    tab = open_genome_position_table(vcf_res, vcf_res.config["tabix_table"])
+    assert isinstance(tab, VCFGenomicPositionTable)
+    assert tab.chrom_column_i == 0
+    assert tab.pos_begin_column_i == 1
+    assert tab.pos_end_column_i == 1
+
+    results = tuple(tab.get_all_records())
+    assert len(results) == 3
+    assert results[0][:3] == ("chr1", 5, 5)
+    assert results[1][:3] == ("chr1", 15, 15)
+    assert results[2][:3] == ("chr1", 30, 30)
+
+    assert "REF" in results[0].attributes
+    assert results[0].attributes["REF"] == "A"
+    assert "ALTS" in results[0].attributes
+    assert results[0].attributes["ALTS"] == ("T",)
+    assert "INFO" in results[0].attributes
+    assert isinstance(results[0].attributes["INFO"], pysam.VariantRecordInfo)
+
+
+def test_vcf_get_records_in_region(vcf_res):
+    tab = open_genome_position_table(vcf_res, vcf_res.config["tabix_table"])
+    assert not tuple(tab.get_records_in_region("chr1", 1, 4))
+    assert not tuple(tab.get_records_in_region("chr1", 6, 14))
+    assert not tuple(tab.get_records_in_region("chr1", 31, 42))
+
+    results = tuple(tab.get_records_in_region("chr1", 1, 6))
+    assert len(results) == 1
+    assert results[0][:3] == ("chr1", 5, 5)
+    results = tuple(tab.get_records_in_region("chr1", 14, 31))
+    assert len(results) == 2
+    assert results[0][:3] == ("chr1", 15, 15)
+    assert results[1][:3] == ("chr1", 30, 30)
+    results = tuple(tab.get_records_in_region("chr1", 4, 30))
+    assert len(results) == 3
+    assert results[0][:3] == ("chr1", 5, 5)
+    assert results[1][:3] == ("chr1", 15, 15)
+    assert results[2][:3] == ("chr1", 30, 30)
+
+
+def test_vcf_get_info_fields(vcf_res):
+    tab = open_genome_position_table(vcf_res, vcf_res.config["tabix_table"])
+    results = tuple(tab.get_all_records())
+    assert len(results) == 3
+    assert results[0][:3] == ("chr1", 5, 5)
+    assert results[1][:3] == ("chr1", 15, 15)
+    assert results[2][:3] == ("chr1", 30, 30)
+
+    expected = {
+        0: {"A": 1, "B": None, "C": ("c11", "c12"), "D": ("d11",)},
+        1: {"A": 2, "B": 21, "C": ("c21",), "D": ("d21", "d22")},
+        2: {"A": 3, "B": 31, "C": ("c21",), "D": ("d31", "d32")},
+    }
+    for i, result in enumerate(results):
+        for score in "A", "B", "C", "D":
+            assert "INFO" in result.attributes
+            assert result.attributes["INFO"].get(score) == expected[i][score]
+
+
+def test_vcf_jump_ahead_optimization_use_sequential(vcf_res):
+    """
+    First fetch gives us the following lines in the buffer:
+    # chr1 5 5
+    # chr1 15 15
+    We set jump threshold to 6 and request region:
+    # chr1 20 35
+
+    Distance between last line in buffer and requested region is:
+    # (20 - 15) == 5 < jump_threshold
+
+    Therefore it should sequentially seek forward
+    """
+    tab = open_genome_position_table(vcf_res, vcf_res.config["tabix_table"])
+    tab.jump_threshold = 6
+    assert isinstance(tab, VCFGenomicPositionTable)
+
+    assert tab.stats == {}
+    tuple(tab.get_records_in_region("chr1", 1, 6))
+    assert len(tab.buffer.deque) == 2
+    assert tab.stats["yield from tabix"] == 1
+    tuple(tab.get_records_in_region("chr1", 20, 35))
+    assert len(tab.buffer.deque) == 1
+    assert tab.stats["sequential seek forward"] == 1
+    assert tab.stats["yield from tabix"] == 1
+
+
+def test_vcf_jump_ahead_optimization_use_jump(vcf_res):
+    """
+    Same as previous test, but the jump threshold is now set to 5
+    Distance between last line in buffer and requested region is:
+    # (20 - 15) == 5 == jump_threshold
+
+    Therefore it should use the jump optimization
+    """
+    tab = open_genome_position_table(vcf_res, vcf_res.config["tabix_table"])
+    tab.jump_threshold = 5
+    assert isinstance(tab, VCFGenomicPositionTable)
+
+    assert tab.stats == {}
+    tuple(tab.get_records_in_region("chr1", 1, 6))
+    assert len(tab.buffer.deque) == 2
+    assert tab.stats["yield from tabix"] == 1
+    tuple(tab.get_records_in_region("chr1", 20, 35))
+    assert len(tab.buffer.deque) == 1
+    assert tab.stats["sequential seek forward"] == 0
+    assert tab.stats["yield from tabix"] == 2

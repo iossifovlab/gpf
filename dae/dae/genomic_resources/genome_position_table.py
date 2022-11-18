@@ -4,7 +4,7 @@ import collections
 import os
 import logging
 
-from typing import Optional, Tuple, Any, Deque
+from typing import Optional, Tuple, Any, Deque, Union, Dict, Generator
 from collections import Counter
 
 import pysam  # type: ignore
@@ -235,10 +235,10 @@ class GenomicPositionTable(abc.ABC):
 
 
 class FlatGenomicPositionTable(GenomicPositionTable):
-    """In memory genomic position table."""
+    """In-memory genomic position table."""
 
     FORMAT_DEF = {
-        # parameters are <column separator>, <strip_chars>, <space replacemnt>
+        # parameters are <column separator>, <strip_chars>, <space replacement>
         "mem": (None, " \t\n\r", True),
         "tsv": ("\t", "\n\r", False),
         "csv": (",", "\n\r", False)
@@ -333,11 +333,60 @@ class FlatGenomicPositionTable(GenomicPositionTable):
         """Nothing to close."""
 
 
+class Line:
+    """Represents a line read from a tabix-indexed genomic position table."""
+
+    def __init__(
+        self,
+        chrom: str,
+        pos_begin: Union[int, str],
+        pos_end: Union[int, str],
+        attributes: Dict[str, Any],
+    ):
+        self.chrom: str = chrom
+        self.pos_begin: int = int(pos_begin)
+        self.pos_end: int = int(pos_end)
+        self.attributes: Dict[str, Any] = attributes
+
+    def __eq__(self, other: object):
+        if isinstance(other, Line):
+            return self.chrom == other.chrom \
+                and self.pos_begin == other.pos_begin \
+                and self.pos_end == other.pos_end \
+                and self.attributes == other.attributes
+        if isinstance(other, tuple) and len(other) >= 3:
+            return tuple(self) == other
+        return False
+
+    def __iter__(self):
+        yield self.chrom
+        yield self.pos_begin
+        yield self.pos_end
+        for attr in self.attributes.values():
+            yield attr
+
+    def __getitem__(self, key: int):
+        if not isinstance(key, (int, slice)):
+            raise TypeError(f"Key '{key}' must be of integer or slice type!")
+        if isinstance(key, slice):
+            return tuple(self)[key]
+        if key == 0:
+            return self.chrom
+        if key == 1:
+            return self.pos_begin
+        if key == 2:
+            return self.pos_end
+        return tuple(self.attributes.values())[key - 3]
+
+    def __repr__(self):
+        return str(tuple(self))
+
+
 class LineBuffer:
     """Represent a line buffer for Tabix genome position table."""
 
     def __init__(self):
-        self.deque: Deque = collections.deque()
+        self.deque: Deque[Line] = collections.deque()
 
     def __len__(self):
         return len(self.deque)
@@ -345,32 +394,32 @@ class LineBuffer:
     def clear(self):
         self.deque.clear()
 
-    def append(self, chrom: str, pos_begin: int, pos_end: int, line: Any):
-        if len(self.deque) > 0 and self.peek_first()[0] != chrom:
+    def append(self, line: Line):
+        if len(self.deque) > 0 and self.peek_first().chrom != line.chrom:
             self.clear()
-        self.deque.append((chrom, pos_begin, pos_end, line))
+        self.deque.append(line)
 
-    def peek_first(self):
+    def peek_first(self) -> Line:
         return self.deque[0]
 
-    def pop_first(self):
+    def pop_first(self) -> Line:
         return self.deque.popleft()
 
-    def peek_last(self):
+    def peek_last(self) -> Optional[Line]:
         if len(self.deque) == 0:
-            return None, None, None, None
+            return None
         return self.deque[-1]
 
-    def region(self):
+    def region(self) -> Tuple[Optional[str], Optional[int], Optional[int]]:
         """Return region stored in the buffer."""
         if len(self.deque) == 0:
             return None, None, None
 
-        first_chrom, first_begin, first_end, _ = self.peek_first()
+        first_chrom, first_begin, first_end, *_ = self.peek_first()
         if len(self.deque) == 1:
             return first_chrom, first_begin, first_end
 
-        last_chrom, _, last_end, _ = self.peek_last()
+        last_chrom, _, last_end, *_ = self.peek_last()
         if first_chrom != last_chrom:
             self.clear()
             return None, None, None
@@ -384,13 +433,13 @@ class LineBuffer:
         if len(self.deque) == 0:
             return
 
-        first_chrom, _first_beg, _, _ = self.peek_first()
+        first_chrom, _first_beg, _, *_ = self.peek_first()
         if chrom != first_chrom:
             self.clear()
             return
 
         while len(self.deque) > 0:
-            _, _first_beg, first_end, _ = self.deque[0]
+            _, _first_beg, first_end, *_ = self.deque[0]
 
             if pos <= first_end:
                 break
@@ -418,7 +467,7 @@ class LineBuffer:
             if last_index <= first_index:
                 break
 
-            _, mid_beg, mid_end, _ = self.deque[mid_index]
+            _, mid_beg, mid_end, *_ = self.deque[mid_index]
             if mid_end >= pos >= mid_beg:
                 break
 
@@ -428,13 +477,13 @@ class LineBuffer:
                 first_index = mid_index + 1
 
         while mid_index > 0:
-            _, prev_beg, _prev_end, _ = self.deque[mid_index - 1]
+            _, prev_beg, _prev_end, *_ = self.deque[mid_index - 1]
             if pos > prev_beg:
                 break
             mid_index -= 1
 
         for index in range(mid_index, len(self.deque)):
-            _, t_beg, t_end, _ = self.deque[index]
+            _, t_beg, t_end, *_ = self.deque[index]
             if t_end >= pos >= t_beg:
                 mid_index = index
                 break
@@ -444,7 +493,7 @@ class LineBuffer:
 
         return mid_index
 
-    def fetch(self, chrom, pos_begin, pos_end):
+    def fetch(self, chrom, pos_begin, pos_end) -> Generator[Line, None, None]:
         """Return a generator of rows matching the region."""
         beg_index = self.find_index(chrom, pos_begin)
         if beg_index == -1:
@@ -452,12 +501,16 @@ class LineBuffer:
 
         for index in range(beg_index, len(self.deque)):
             row = self.deque[index]
-            _rchrom, rbeg, rend, _rline = row
+            _rchrom, rbeg, rend, *_rline = row
             if rend < pos_begin:
                 continue
             if pos_end is not None and rbeg > pos_end:
                 break
             yield row
+
+
+# pylint: disable=no-member
+PysamFile = Union[pysam.TabixFile, pysam.VariantFile]
 
 
 class TabixGenomicPositionTable(GenomicPositionTable):
@@ -466,9 +519,8 @@ class TabixGenomicPositionTable(GenomicPositionTable):
     BUFFER_MAXSIZE = 20_000
 
     def __init__(self, genomic_resource: GenomicResource, table_definition,
-                 tabix_file: pysam.TabixFile):  # pylint: disable=no-member
+                 variants_file: PysamFile):
         super().__init__(genomic_resource, table_definition)
-
         self.jump_threshold: int = 2_500
         if "jump_threshold" in self.definition:
             threshold = self.definition["jump_threshold"]
@@ -479,26 +531,26 @@ class TabixGenomicPositionTable(GenomicPositionTable):
 
         self.jump_threshold = min(
             self.jump_threshold, self.BUFFER_MAXSIZE // 2)
-        # pylint: disable=no-member
-        self.tabix_file: pysam.TabixFile = tabix_file
-        self.tabix_iterator = None
 
         self._last_call: Tuple[str, int, Optional[int]] = "", -1, -1
         self.buffer = LineBuffer()
         self.stats: Counter = Counter()
+        # pylint: disable=no-member
+        self.variants_file: PysamFile = variants_file
+        self.line_iterator = None
 
     def load(self):
         if self.header_mode == "file":
-            self.header = self._get_tabix_header()
+            self.header = self._get_header()
 
         self._set_special_column_indexes()
         self._build_chrom_mapping()
 
-    def _get_tabix_header(self):
-        return tuple(self.tabix_file.header[-1].strip("#").split("\t"))
+    def _get_header(self):
+        return tuple(self.variants_file.header[-1].strip("#").split("\t"))
 
     def get_file_chromosomes(self):
-        return self.tabix_file.contigs
+        return self.variants_file.contigs
 
     def _map_file_chrom(self, chrom: str) -> str:
         """Transfrom chromosome name to the chromosomes from score file."""
@@ -512,28 +564,31 @@ class TabixGenomicPositionTable(GenomicPositionTable):
             return self.rev_chrom_map[chrom]
         return chrom
 
-    def _transform_result(self, line):
-        result = list(line)
-        rchrom = self._map_result_chrom(result[self.chrom_column_i])
+    def _transform_result(self, line: Line) -> Line:
+        rchrom = self._map_result_chrom(line.chrom)
         if rchrom is None:
             return None
-        result[self.chrom_column_i] = rchrom
-        return tuple(result)
+        return Line(rchrom, line.pos_begin, line.pos_end, line.attributes)
 
     def get_all_records(self):
         # pylint: disable=no-member
-        for line in self.tabix_file.fetch(parser=pysam.asTuple()):
+        for line in self.get_line_iterator():
             if self.chrom_map:
-                fchrom = line[self.chrom_column_i]
-                if fchrom not in self.rev_chrom_map:
+                if line.chrom in self.rev_chrom_map:
+                    yield self._transform_result(line)
+                else:
                     continue
-                result = list(line)
-                result[self.chrom_column_i] = self.rev_chrom_map[fchrom]
-                yield tuple(result)
             else:
-                yield tuple(line)
+                yield line
 
-    def _should_use_sequential(self, chrom, pos):
+    def _should_use_sequential_seek_forward(self, chrom, pos) -> bool:
+        """Determine if sequentially seeking forward is appropriate.
+
+        Determine whether to use sequential access or jump-ahead
+        optimization for a given chromosome and position. Sequential access is
+        used if the position is on the same chromosome and the distance between
+        it and the last line in the buffer is less than the jump threshold.
+        """
         if self.jump_threshold == 0:
             return False
 
@@ -541,7 +596,7 @@ class TabixGenomicPositionTable(GenomicPositionTable):
         if len(self.buffer) == 0:
             return False
 
-        last_chrom, _last_begin, last_end, _ = self.buffer.peek_last()
+        last_chrom, _last_begin, last_end, *_ = self.buffer.peek_last()
         if chrom != last_chrom:
             return False
         if pos < last_end:
@@ -551,50 +606,47 @@ class TabixGenomicPositionTable(GenomicPositionTable):
             return False
         return True
 
+    def _sequential_seek_forward(self, chrom, pos):
+        """Advance the buffer forward to the given position."""
+        assert len(self.buffer) > 0
+        assert self.jump_threshold > 0
+
+        last_chrom, last_begin, last_end, *_ = self.buffer.peek_last()
+        assert chrom == last_chrom
+        assert pos >= last_begin
+
+        self.stats["sequential seek forward"] += 1
+
+        for row in self._gen_from_tabix(chrom, pos, buffering=True):
+            last_chrom, last_begin, last_end, *_ = row
+        return bool(pos >= last_end)
+
     def _gen_from_tabix(self, chrom, pos, buffering=True):
         try:
             while True:
-                line = next(self.tabix_iterator)  # type: ignore
-                line_chrom = line[self.chrom_column_i]
-                line_beg = int(line[self.pos_begin_column_i])
-                line_end = int(line[self.pos_end_column_i])
+                line = next(self.line_iterator)
 
                 if buffering:
-                    self.buffer.append(line_chrom, line_beg, line_end, line)
+                    self.buffer.append(line)
 
-                if line_chrom != chrom:
+                if line.chrom != chrom:
                     return
-                if pos is not None and line_beg > pos:
+                if pos is not None and line.pos_begin > pos:
                     return
                 result = self._transform_result(line)
                 self.stats["yield from tabix"] += 1
                 if result:
-                    yield line_chrom, line_beg, line_end, result
+                    yield result
         except StopIteration:
             pass
 
-    def _sequential_rewind(self, chrom, pos):
-        assert len(self.buffer) > 0
-        assert self.jump_threshold > 0
-
-        last_chrom, last_begin, last_end, _ = self.buffer.peek_last()
-        assert chrom == last_chrom
-        assert pos >= last_begin
-
-        self.stats["sequential rewind"] += 1
-
-        for row in self._gen_from_tabix(chrom, pos, buffering=True):
-            last_chrom, last_begin, last_end, _ = row
-        return bool(pos >= last_end)
-
     def _gen_from_buffer_and_tabix(self, chrom, beg, end):
-        for row in self.buffer.fetch(chrom, beg, end):
+        for line in self.buffer.fetch(chrom, beg, end):
             self.stats["yield from buffer"] += 1
-            line_chrom, line_beg, line_end, line = row
             result = self._transform_result(line)
             if result:
-                yield line_chrom, line_beg, line_end, result
-        _, _last_beg, last_end, _ = self.buffer.peek_last()
+                yield result
+        _, _last_beg, last_end, *_ = self.buffer.peek_last()
         if end < last_end:
             return
 
@@ -627,7 +679,7 @@ class TabixGenomicPositionTable(GenomicPositionTable):
 
         if buffering and len(self.buffer) > 0 and prev_call_chrom == fchrom:
 
-            first_chrom, first_beg, _first_end, _ = self.buffer.peek_first()
+            first_chrom, first_beg, _first_end, *_ = self.buffer.peek_first()
             if first_chrom == fchrom and prev_call_end is not None \
                     and pos_begin > prev_call_end and pos_end < first_beg:
 
@@ -638,42 +690,95 @@ class TabixGenomicPositionTable(GenomicPositionTable):
             if self.buffer.contains(fchrom, pos_begin):
                 for row in self._gen_from_buffer_and_tabix(
                         fchrom, pos_begin, pos_end):
-                    _, _, _, line = row
                     self.stats["yield from buffer and tabix"] += 1
-                    yield line
+                    yield row
 
                 self.buffer.prune(fchrom, pos_begin)
                 return
 
-            if self._should_use_sequential(fchrom, pos_begin):
-                self._sequential_rewind(fchrom, pos_begin)
+            if self._should_use_sequential_seek_forward(fchrom, pos_begin):
+                self._sequential_seek_forward(fchrom, pos_begin)
 
                 for row in self._gen_from_buffer_and_tabix(
                         fchrom, pos_begin, pos_end):
-                    _, _, _, line = row
-                    yield line
+                    yield row
 
                 self.buffer.prune(fchrom, pos_begin)
                 return
 
         # without using buffer
-        # pylint: disable=no-member
-        self.stats["tabix fetch"] += 1
-        self.tabix_iterator = self.tabix_file.fetch(
-            fchrom, pos_begin - 1, None, parser=pysam.asTuple())
-        self.buffer.clear()
+        self.line_iterator = self.get_line_iterator(fchrom, pos_begin)
 
         for row in self._gen_from_tabix(fchrom, pos_end, buffering=buffering):
-            _, _, _, line = row
-            yield line
+            yield row
 
         self.buffer.prune(fchrom, pos_begin)
 
+    def get_line_iterator(self, chrom=None, pos_begin=None, pos_end=None):
+        self.stats["tabix fetch"] += 1
+        self.buffer.clear()
+
+        if pos_begin is not None:
+            pos_begin = pos_begin - 1
+        args = filter(None, (chrom, pos_begin, pos_end))
+
+        other_indices, other_columns = zip(*(
+            (i, x) for i, x in enumerate(self.header)
+            if i not in (self.chrom_column_i,
+                         self.pos_begin_column_i,
+                         self.pos_end_column_i)
+        ))
+
+        for raw_line in self.variants_file.fetch(
+            # pylint: disable=no-member
+            *args, parser=pysam.asTuple()
+        ):
+            yield Line(
+                raw_line[self.chrom_column_i],
+                raw_line[self.pos_begin_column_i],
+                raw_line[self.pos_end_column_i],
+                dict(zip(other_columns, (raw_line[i] for i in other_indices)))
+            )
+
     def close(self):
-        self.tabix_file.close()
+        self.variants_file.close()
         print(
             f"genome position table: ({self.genomic_resource.resource_id})>",
             self.stats)
+
+
+class VCFGenomicPositionTable(TabixGenomicPositionTable):
+    """Represents a VCF file genome position table."""
+
+    # pylint: disable=too-many-instance-attributes
+    CHROM = "CHROM"
+    POS_BEGIN = "POS"
+    POS_END = "POS"
+
+    def _get_header(self):
+        return ("CHROM", "POS", "ID", "REF", "ALT", "QUAL", "FILTER", "INFO")
+
+    def get_file_chromosomes(self):
+        return self.variants_file.header.contigs
+
+    def get_line_iterator(self, chrom=None, pos_begin=None, pos_end=None):
+        self.stats["tabix fetch"] += 1
+        self.buffer.clear()
+
+        args = filter(None, (chrom, pos_begin, pos_end))
+
+        for raw_line in self.variants_file.fetch(*args):
+            yield Line(
+                raw_line.contig, raw_line.pos, raw_line.pos,
+                {
+                    "ID": raw_line.id,
+                    "REF": raw_line.ref,
+                    "ALTS": raw_line.alts,
+                    "QUAL": raw_line.qual,
+                    "FILTER": raw_line.filter,
+                    "INFO": raw_line.info
+                }
+            )
 
 
 def open_genome_position_table(
@@ -683,6 +788,8 @@ def open_genome_position_table(
 
     if filename.endswith(".bgz"):
         default_format = "tabix"
+    elif filename.endswith(".vcf.gz"):
+        default_format = "vcf_info"
     elif filename.endswith(".txt") or filename.endswith(".txt.gz") or \
             filename.endswith(".tsv") or filename.endswith(".tsv.gz"):
         default_format = "tsv"
@@ -705,6 +812,11 @@ def open_genome_position_table(
     if table_format == "tabix":
         table = TabixGenomicPositionTable(
             resource, table_definition, resource.open_tabix_file(filename))
+        table.load()
+        return table
+    if table_format == "vcf_info":
+        table = VCFGenomicPositionTable(
+            resource, table_definition, resource.open_vcf_file(filename))
         table.load()
         return table
 
