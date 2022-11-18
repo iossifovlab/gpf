@@ -109,6 +109,38 @@ class DatasetView(QueryBaseView):
             return Response({"data": res})
 
 
+class StudiesView(QueryBaseView):
+    def _collect_datasets_summary(self, user):
+        selected_genotype_data = \
+            self.gpf_instance.get_selected_genotype_data() \
+            or self.gpf_instance.get_genotype_data_ids()
+
+        datasets = filter(lambda study: study.is_group is False, [
+            self.gpf_instance.get_wdae_wrapper(genotype_data_id)
+            for genotype_data_id in selected_genotype_data
+        ])
+
+        res = [
+            StudyWrapperBase.build_genotype_data_all_datasets(
+                dataset.config
+            )
+            for dataset in datasets
+        ]
+
+        if not self.gpf_instance.get_selected_genotype_data():
+            res = sorted(res, key=lambda desc: desc["name"])
+
+        res = [augment_accessibility(ds, user) for ds in res]
+        res = [augment_with_groups(ds) for ds in res]
+        res = [augment_with_parents(ds) for ds in res]
+        return res
+
+
+    def get(self, request):
+        user = request.user
+
+        return Response({"data": self._collect_datasets_summary(user)})
+
 class PermissionDeniedPromptView(QueryBaseView):
     """Provide the markdown-formatted permission denied prompt text."""
 

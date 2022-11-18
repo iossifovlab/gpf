@@ -39,6 +39,11 @@ urlpatterns = [
         name="management_details"
     ),
     re_path(
+        r"^/studies/?$",
+        views.StudiesView.as_view(),
+        name="list_studies"
+    ),
+    re_path(
         r"^/(?P<dataset_id>.+)$",
         views.DatasetView.as_view(),
         name="dataset"

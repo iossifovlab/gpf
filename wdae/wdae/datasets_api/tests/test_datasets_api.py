@@ -16,6 +16,14 @@ def test_datasets_api_get_all(admin_client):
     assert len(response.data["data"]) == 43
 
 
+def test_datasets_api_get_all_studies(admin_client):
+    response = admin_client.get("/api/v3/datasets/studies")
+
+    assert response
+    assert response.status_code == 200
+    assert len(response.data["data"]) == 23
+
+
 def test_datasets_api_get_one(admin_client):
     response = admin_client.get("/api/v3/datasets/quads_in_parent")
     print(response.data)
