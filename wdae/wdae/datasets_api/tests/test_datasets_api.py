@@ -21,7 +21,7 @@ def test_datasets_api_get_all_studies(admin_client):
 
     assert response
     assert response.status_code == 200
-    assert len(response.data["data"]) == 23
+    assert len(response.data["data"]) == 24
 
 
 def test_datasets_api_get_one(admin_client):
