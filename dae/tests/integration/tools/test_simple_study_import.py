@@ -9,7 +9,7 @@ from dae.import_tools.import_tools import ImportProject
 from dae.tools.simple_study_import import main
 
 
-from ...foobar_import import foobar_gpf
+from dae.testing.foobar_import import foobar_gpf
 
 
 def test_del_loader_prefix():

@@ -17,7 +17,9 @@ class StudyLayout:
     cnv: list[pathlib.Path]
 
 
-def data_import(root_path: pathlib.Path, study: StudyLayout, gpf_instance):
+def data_import(
+        root_path: pathlib.Path, study: StudyLayout, gpf_instance,
+        study_config=None):
     """Set up an import project for a study and imports it."""
     params = asdict(study)
     params["work_dir"] = str(root_path / "work_dir")
@@ -63,6 +65,14 @@ def data_import(root_path: pathlib.Path, study: StudyLayout, gpf_instance):
         root_path / "import_project" / "import_config.yaml",
         gpf_instance=gpf_instance)
     run_with_project(project)
+
+    if study_config:
+        setup_directories(
+            root_path / "studies" / study.study_id,
+            {
+                f"{study.study_id}.yaml": study_config
+            }
+        )
     return project
 
 
@@ -70,10 +80,11 @@ def vcf_import(
         root_path: pathlib.Path,
         study_id: str,
         ped_path: pathlib.Path, vcf_paths: list[pathlib.Path],
-        gpf_instance):
+        gpf_instance,
+        study_config: str = None):
     """Import a VCF study and return the import project."""
     study = StudyLayout(study_id, ped_path, vcf_paths, [], [], [])
-    project = data_import(root_path, study, gpf_instance)
+    project = data_import(root_path, study, gpf_instance, study_config)
     return project
 
 
@@ -81,10 +92,11 @@ def vcf_study(
         root_path: pathlib.Path,
         study_id: str,
         ped_path: pathlib.Path, vcf_paths: list[pathlib.Path],
-        gpf_instance):
+        gpf_instance,
+        study_config: str = None):
     """Import a VCF study and return the imported study."""
     vcf_import(
-        root_path, study_id, ped_path, vcf_paths, gpf_instance)
+        root_path, study_id, ped_path, vcf_paths, gpf_instance, study_config)
     gpf_instance.reload()
     return gpf_instance.get_genotype_data(study_id)
 
@@ -93,10 +105,10 @@ def denovo_import(
         root_path: pathlib.Path,
         study_id: str,
         ped_path: pathlib.Path, denovo_paths: list[pathlib.Path],
-        gpf_instance):
+        gpf_instance, study_config=None):
     """Import a de Novo study and return the import project."""
     study = StudyLayout(study_id, ped_path, [], denovo_paths, [], [])
-    project = data_import(root_path, study, gpf_instance)
+    project = data_import(root_path, study, gpf_instance, study_config)
     return project
 
 
@@ -104,10 +116,12 @@ def denovo_study(
         root_path: pathlib.Path,
         study_id: str,
         ped_path: pathlib.Path, denovo_paths: list[pathlib.Path],
-        gpf_instance):
+        gpf_instance,
+        study_config: str = None):
     """Import a de Novo study and return the imported study."""
     denovo_import(
-        root_path, study_id, ped_path, denovo_paths, gpf_instance)
+        root_path, study_id, ped_path, denovo_paths, gpf_instance,
+        study_config=study_config)
     gpf_instance.reload()
     return gpf_instance.get_genotype_data(study_id)
 
