@@ -25,15 +25,8 @@ class RemoteGenotypeData(GenotypeData):
             )
             self._parents = list(config["parents"])
 
-        self._study_ids = []
-        if config.get("studies"):
-            config["studies"] = list(
-                map(
-                    self.rest_client.prefix_remote_identifier,
-                    config["studies"]
-                )
-            )
-            self._study_ids = config["studies"]
+        if config.get("studies") is not None:
+            raise ValueError("Tried to create remote dataset")
 
         super().__init__(FrozenBox(config), [self])
 
@@ -78,13 +71,7 @@ class RemoteGenotypeData(GenotypeData):
         self._person_set_collections = person_set_collections
 
     def get_studies_ids(self, leaves=True):
-        if not leaves:
-            return [st.study_id for st in self.studies]
-        else:
-            result = []
-            for st in self.studies:
-                result.extend(st.get_studies_ids())
-            return result
+        return [self]
 
     @property
     def description(self):
