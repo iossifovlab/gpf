@@ -145,7 +145,7 @@ class RESTClient:
         return None
 
     def get_studies(self):
-        response = self._get("datasets/list_studies")
+        response = self._get("datasets/studies")
         if response.status_code == 200:
             return response.json()
         return None
