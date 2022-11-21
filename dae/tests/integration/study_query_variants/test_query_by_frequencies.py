@@ -3,7 +3,7 @@ import pytest
 
 from dae.testing import setup_pedigree, setup_vcf, setup_denovo, \
     vcf_study, denovo_study
-from ...alla_import import alla_gpf
+from dae.testing.alla_import import alla_gpf
 
 
 @pytest.fixture(scope="module")
