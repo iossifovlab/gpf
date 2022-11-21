@@ -1,4 +1,5 @@
 import os
+import logging
 
 from django.contrib.auth import get_user_model
 from django.conf import settings
@@ -12,6 +13,9 @@ from groups_api.serializers import GroupSerializer
 from datasets_api.permissions import get_wdae_parents, user_has_permission
 from dae.studies.study import GenotypeData
 from .models import Dataset
+
+
+logger = logging.getLogger(__name__)
 
 
 def augment_accessibility(dataset, user):
@@ -303,6 +307,19 @@ class DatasetPermissionsView(QueryBaseView):
             dataset_gd = self.gpf_instance.get_genotype_data(
                 dataset.dataset_id
             )
+
+            if dataset_gd is None:
+                logger.warning(
+                    "Dataset %s missing in GPF instance!",
+                    dataset.dataset_id
+                )
+                dataset_details.append({
+                    "dataset_id": dataset.dataset_id,
+                    "dataset_name": "Missing dataset",
+                    "users": [],
+                    "groups": []
+                })
+                continue
 
             name = dataset_gd.name
             if name is None:
