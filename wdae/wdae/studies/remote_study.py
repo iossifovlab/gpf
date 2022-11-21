@@ -71,7 +71,7 @@ class RemoteGenotypeData(GenotypeData):
         self._person_set_collections = person_set_collections
 
     def get_studies_ids(self, leaves=True):
-        return [self]
+        return [self.study_id]
 
     @property
     def description(self):
