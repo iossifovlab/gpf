@@ -8,7 +8,7 @@ import pytest
 import pyarrow.parquet as pq  # type: ignore
 
 from dae.configuration.gpf_config_parser import GPFConfigParser
-from dae.import_tools import import_tools
+from dae.import_tools import import_tools, cli
 
 
 def test_import_task_bin_size(gpf_instance_2019, tmpdir, mocker,
@@ -25,7 +25,7 @@ def test_import_task_bin_size(gpf_instance_2019, tmpdir, mocker,
                         return_value=gpf_instance_2019)
     project = import_tools.ImportProject.build_from_config(
         import_config, input_dir)
-    import_tools.run_with_project(project)
+    cli.run_with_project(project)
 
     # Assert the expected output files and dirs are created in the work_dir
     # (i.e. tmpdir)

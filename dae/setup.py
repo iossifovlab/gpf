@@ -86,7 +86,7 @@ setuptools.setup(
     dae_liftover=dae.tools.dae_liftover:main
     stats_liftover=dae.tools.stats_liftover:main
 
-    import_tools=dae.import_tools.import_tools:main
+    import_tools=dae.import_tools.cli:main
     """,
     classifiers=[
         "Development Status :: 4 - Beta",

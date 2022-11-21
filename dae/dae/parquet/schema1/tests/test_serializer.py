@@ -6,7 +6,8 @@ from dae.parquet.schema1.serializers import AlleleParquetSerializer
 from dae.variants_loaders.dae.loader import DenovoLoader
 from dae.pedigrees.loader import FamiliesLoader
 
-from dae.import_tools.import_tools import ImportProject, run_with_project
+from dae.import_tools.import_tools import ImportProject
+from dae.import_tools.cli import run_with_project
 from dae.configuration.gpf_config_parser import FrozenBox
 
 

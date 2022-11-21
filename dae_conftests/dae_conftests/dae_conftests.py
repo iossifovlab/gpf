@@ -28,7 +28,8 @@ from dae.inmemory_storage.raw_variants import RawMemoryVariants
 
 from dae.variants_loaders.dae.loader import DaeTransmittedLoader, DenovoLoader
 from dae.variants_loaders.vcf.loader import VcfLoader
-from dae.import_tools.import_tools import ImportProject, run_with_project
+from dae.import_tools.import_tools import ImportProject
+from dae.import_tools.cli import run_with_project
 
 from dae.impala_storage.schema1.import_commons import \
     construct_import_effect_annotator
