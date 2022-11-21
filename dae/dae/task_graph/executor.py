@@ -42,30 +42,30 @@ class AbstractTaskGraphExecutor(TaskGraphExecutor):
             record = self._task_cache.get_record(task_node)
             if record.type == CacheRecordType.COMPUTED:
                 already_computed_tasks[task_node] = record.result
-                self.set_task_result(task_node, record.result)
+                self._set_task_result(task_node, record.result)
             else:
-                self.queue_task(task_node)
+                self._queue_task(task_node)
         return self.__await_tasks(already_computed_tasks)
 
     def __await_tasks(self, already_computed_tasks) \
             -> Iterator[tuple[Task, Any]]:
         for task_node, result in already_computed_tasks.items():
             yield task_node, result
-        for task_node, result in self.await_tasks():
+        for task_node, result in self._await_tasks():
             is_error = isinstance(result, BaseException)
             self._task_cache.cache(task_node, is_error, result)
             yield task_node, result
 
     @abstractmethod
-    def queue_task(self, task_node: Task) -> None:
+    def _queue_task(self, task_node: Task) -> None:
         """Put the task on the execution queue."""
 
     @abstractmethod
-    def await_tasks(self) -> Iterator[tuple[Task, Any]]:
+    def _await_tasks(self) -> Iterator[tuple[Task, Any]]:
         """Yield enqueued tasks as soon as they finish."""
 
     @abstractmethod
-    def set_task_result(self, task: Task, result: Any) -> None:
+    def _set_task_result(self, task: Task, result: Any) -> None:
         """Set a precomputed result for a task."""
 
     def _in_exec_order(self, task_graph):
@@ -112,10 +112,10 @@ class SequentialExecutor(AbstractTaskGraphExecutor):
         self._task_queue = []
         self._task2result = {}
 
-    def queue_task(self, task_node):
+    def _queue_task(self, task_node):
         self._task_queue.append(task_node)
 
-    def await_tasks(self):
+    def _await_tasks(self):
         for task_node in self._task_queue:
             all_deps_satisfied = all(
                 d in self._task2result for d in task_node.deps
@@ -146,7 +146,7 @@ class SequentialExecutor(AbstractTaskGraphExecutor):
         self._task_queue = []
         self._task2result = {}
 
-    def set_task_result(self, task, result):
+    def _set_task_result(self, task, result):
         self._task2result[task] = result
 
     def get_active_tasks(self):
@@ -167,7 +167,7 @@ class DaskExecutor(AbstractTaskGraphExecutor):
         self._finished_futures = set()
         self._task2result = {}
 
-    def queue_task(self, task_node):
+    def _queue_task(self, task_node):
         deps = []
         for dep in task_node.deps:
             future = self._task2future.get(dep)
@@ -190,7 +190,7 @@ class DaskExecutor(AbstractTaskGraphExecutor):
         self._task2future[task_node] = future
         self._future2task[future.key] = task_node
 
-    def await_tasks(self):
+    def _await_tasks(self):
         # pylint: disable=import-outside-toplevel
         from dask.distributed import as_completed
 
@@ -211,7 +211,7 @@ class DaskExecutor(AbstractTaskGraphExecutor):
         self._finished_futures = set()
         self._task2result = {}
 
-    def set_task_result(self, task, result):
+    def _set_task_result(self, task, result):
         self._task2result[task] = result
 
     def get_active_tasks(self):
