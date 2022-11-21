@@ -115,13 +115,13 @@ def test_executing_with_cache(executor, tmpdir):
     graph = _create_graph_with_result_passing()
 
     # initial execution of the graph
-    executor._task_cache = FileTaskCache(work_dir=tmpdir)
+    executor._task_cache = FileTaskCache(cache_dir=tmpdir)
     task_results = list(executor.execute(graph))
     assert len(task_results) == 9
 
     # now make a change and make sure the correct function with the correct
     # results are returned
-    executor._task_cache = FileTaskCache(work_dir=tmpdir)
+    executor._task_cache = FileTaskCache(cache_dir=tmpdir)
     task_to_delete = graph.tasks[-2]
     assert task_to_delete.task_id == "7"
     os.remove(executor._task_cache._get_flag_filename(task_to_delete))
@@ -137,14 +137,14 @@ def test_get_active_tasks_when_partial_computation(executor, tmpdir):
     graph = _create_graph_with_result_passing()
 
     # initial execution of the graph
-    executor._task_cache = FileTaskCache(work_dir=tmpdir)
+    executor._task_cache = FileTaskCache(cache_dir=tmpdir)
     assert len(executor.get_active_tasks()) == 0
     for _ in executor.execute(graph):
         executor.get_active_tasks()
     assert len(executor.get_active_tasks()) == 0
 
     # now force partial recomputation
-    executor._task_cache = FileTaskCache(work_dir=tmpdir)
+    executor._task_cache = FileTaskCache(cache_dir=tmpdir)
     task_to_delete = graph.tasks[-2]
     assert task_to_delete.task_id == "7"
     os.remove(executor._task_cache._get_flag_filename(task_to_delete))

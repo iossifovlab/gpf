@@ -66,9 +66,9 @@ class NoTaskCache(dict, TaskCache):
 class FileTaskCache(TaskCache):
     """Use file modification timestamps to determine if a task needs to run."""
 
-    def __init__(self, force=False, work_dir=None):
+    def __init__(self, cache_dir, force=False):
         self.force = force
-        self.cache_dir = fs_utils.join(work_dir or "", ".task-progress/")
+        self.cache_dir = cache_dir
         self._global_dependancies: list[str] = []
 
     def set_task_graph(self, graph: TaskGraph):

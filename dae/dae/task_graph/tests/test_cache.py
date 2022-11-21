@@ -32,24 +32,24 @@ def graph():
 
 
 def execute_with_file_cache(graph, work_dir):
-    executor = SequentialExecutor(FileTaskCache(work_dir=work_dir))
+    executor = SequentialExecutor(FileTaskCache(cache_dir=work_dir))
     for _ in executor.execute(graph):
         pass
 
 
 def test_file_cache_clear_state(graph: TaskGraph, tmpdir):
-    cache = FileTaskCache(work_dir=tmpdir)
+    cache = FileTaskCache(cache_dir=tmpdir)
     cache.set_task_graph(graph)
     for task in graph.tasks:
         assert cache.get_record(task).type == CacheRecordType.NEEDS_COMPUTE
 
 
 def test_file_cache_just_executed(graph: TaskGraph, tmpdir):
-    executor = SequentialExecutor(FileTaskCache(work_dir=tmpdir))
+    executor = SequentialExecutor(FileTaskCache(cache_dir=tmpdir))
     for _ in executor.execute(graph):
         pass
 
-    cache = FileTaskCache(work_dir=tmpdir)
+    cache = FileTaskCache(cache_dir=tmpdir)
     cache.set_task_graph(graph)
     for task in graph.tasks:
         assert cache.get_record(task).type == CacheRecordType.COMPUTED
@@ -60,12 +60,12 @@ def test_file_cache_touch_input_file(graph: TaskGraph, tmpdir):
     touch(config_fn)
     graph.input_files.append(config_fn)
 
-    executor = SequentialExecutor(FileTaskCache(work_dir=tmpdir))
+    executor = SequentialExecutor(FileTaskCache(cache_dir=tmpdir))
     for _ in executor.execute(graph):
         pass
 
     touch(config_fn)
-    cache = FileTaskCache(work_dir=tmpdir)
+    cache = FileTaskCache(cache_dir=tmpdir)
     cache.set_task_graph(graph)
     for task in graph.tasks:
         assert cache.get_record(task).type == CacheRecordType.NEEDS_COMPUTE
@@ -87,7 +87,7 @@ def test_file_cache_mod_input_file_of_intermediate_node(
     else:
         assert operation == "remove"
         os.remove(dep_fn)
-    cache = FileTaskCache(work_dir=tmpdir)
+    cache = FileTaskCache(cache_dir=tmpdir)
     cache.set_task_graph(graph)
 
     assert cache.get_record(int_node).type == CacheRecordType.NEEDS_COMPUTE
@@ -101,7 +101,7 @@ def test_file_cache_mod_flag_file_of_intermediate_node(
 ):
     execute_with_file_cache(graph, tmpdir)
 
-    cache = FileTaskCache(work_dir=tmpdir)
+    cache = FileTaskCache(cache_dir=tmpdir)
     cache.set_task_graph(graph)
     first_task = get_task_by_id(graph, "First")
     if operation == "touch":

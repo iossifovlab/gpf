@@ -7,6 +7,7 @@ from dae.task_graph.cache import FileTaskCache
 from dae.task_graph.executor import \
     DaskExecutor, SequentialExecutor
 from dae.dask.client_factory import DaskClient
+from dae.utils import fs_utils
 
 
 def main():
@@ -125,4 +126,7 @@ def _print_stagenames(stagenames):
 
 
 def _create_task_cache(args, project):
-    return FileTaskCache(force=args.force, work_dir=project.work_dir)
+    cache_dir = fs_utils.join(
+        project.work_dir, ".task-progress", project.study_id
+    )
+    return FileTaskCache(force=args.force, cache_dir=cache_dir)
