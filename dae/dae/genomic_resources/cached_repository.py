@@ -139,8 +139,7 @@ class GenomicResourceCachedRepo(GenomicResourceRepo):
             proto.invalidate()
 
     def get_all_resources(self):
-        for cache_proto in self.cache_protos.values():
-            yield from cache_proto.get_all_resources()
+        yield from self.child.get_all_resources()
 
     def _get_or_create_cache_proto(
             self, proto: ReadOnlyRepositoryProtocol) -> CachingProtocol:
