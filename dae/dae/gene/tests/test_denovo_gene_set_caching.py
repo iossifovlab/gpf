@@ -1,8 +1,4 @@
-"""
-Created on Feb 27, 2017
-
-@author: lubo
-"""
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pytest
 
 from dae.gene.denovo_gene_set_collection import DenovoGeneSetCollection
