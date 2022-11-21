@@ -36,7 +36,7 @@ class AbstractTaskGraphExecutor(TaskGraphExecutor):
     def execute(self, task_graph: TaskGraph) -> Iterator[tuple[Task, Any]]:
         self._check_for_cyclic_deps(task_graph)
 
-        self._task_cache.prepare(task_graph)
+        self._task_cache.set_task_graph(task_graph)
         already_computed_tasks = {}
         for task_node in self._in_exec_order(task_graph):
             record = self._task_cache.get_record(task_node)

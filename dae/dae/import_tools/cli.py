@@ -64,7 +64,7 @@ def _cmd_list(args, project, task_cache):
     task_graph = storage.generate_import_task_graph(project)
     task_graph = _prune_tasks(task_graph, args.task_ids or [])
 
-    task_cache.prepare(task_graph)
+    task_cache.set_task_graph(task_graph)
     id_col_len = max(len(t.task_id) for t in task_graph.tasks)
     id_col_len = min(120, max(50, id_col_len))
     columns = ["TaskID", "Status"]

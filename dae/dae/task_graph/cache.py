@@ -38,7 +38,7 @@ class TaskCache:
     """Store the result of a task in a file and reuse it if possible."""
 
     @abstractmethod
-    def prepare(self, graph: TaskGraph):
+    def set_task_graph(self, graph: TaskGraph):
         """Prepare the cache for quering for the specific graph."""
 
     @abstractmethod
@@ -47,13 +47,13 @@ class TaskCache:
 
     @abstractmethod
     def cache(self, task_node: Task, is_error: bool, result: Any):
-        """Cache the result or excpetion of a task."""
+        """Cache the result or exception of a task."""
 
 
 class NoTaskCache(dict, TaskCache):
     """Don't check any conditions and just run any task."""
 
-    def prepare(self, graph: TaskGraph):
+    def set_task_graph(self, graph: TaskGraph):
         pass
 
     def get_record(self, task_node: Task) -> CacheRecord:
@@ -71,7 +71,7 @@ class FileTaskCache(TaskCache):
         self.cache_dir = fs_utils.join(work_dir or "", ".task-progress/")
         self._global_dependancies: list[str] = []
 
-    def prepare(self, graph: TaskGraph):
+    def set_task_graph(self, graph: TaskGraph):
         self._global_dependancies = graph.input_files
 
     def get_record(self, task_node: Task) -> CacheRecord:

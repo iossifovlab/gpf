@@ -39,7 +39,7 @@ def execute_with_file_cache(graph, work_dir):
 
 def test_file_cache_clear_state(graph: TaskGraph, tmpdir):
     cache = FileTaskCache(work_dir=tmpdir)
-    cache.prepare(graph)
+    cache.set_task_graph(graph)
     for task in graph.tasks:
         assert cache.get_record(task).type == CacheRecordType.NEEDS_COMPUTE
 
@@ -50,7 +50,7 @@ def test_file_cache_just_executed(graph: TaskGraph, tmpdir):
         pass
 
     cache = FileTaskCache(work_dir=tmpdir)
-    cache.prepare(graph)
+    cache.set_task_graph(graph)
     for task in graph.tasks:
         assert cache.get_record(task).type == CacheRecordType.COMPUTED
 
@@ -66,7 +66,7 @@ def test_file_cache_touch_input_file(graph: TaskGraph, tmpdir):
 
     touch(config_fn)
     cache = FileTaskCache(work_dir=tmpdir)
-    cache.prepare(graph)
+    cache.set_task_graph(graph)
     for task in graph.tasks:
         assert cache.get_record(task).type == CacheRecordType.NEEDS_COMPUTE
 
@@ -88,7 +88,7 @@ def test_file_cache_mod_input_file_of_intermediate_node(
         assert operation == "remove"
         os.remove(dep_fn)
     cache = FileTaskCache(work_dir=tmpdir)
-    cache.prepare(graph)
+    cache.set_task_graph(graph)
 
     assert cache.get_record(int_node).type == CacheRecordType.NEEDS_COMPUTE
     for task in get_task_descendants(graph, int_node):
@@ -102,7 +102,7 @@ def test_file_cache_mod_flag_file_of_intermediate_node(
     execute_with_file_cache(graph, tmpdir)
 
     cache = FileTaskCache(work_dir=tmpdir)
-    cache.prepare(graph)
+    cache.set_task_graph(graph)
     first_task = get_task_by_id(graph, "First")
     if operation == "touch":
         touch(cache._get_flag_filename(first_task))
