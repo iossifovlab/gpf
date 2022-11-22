@@ -277,6 +277,8 @@ def test_input_in_external_file(resources_dir):
     project = import_tools.ImportProject.build_from_file(config_fn)
 
     assert project.input_dir == f"{resources_dir}/external_input/files/"
+    assert project.get_pedigree_filename() == \
+        f"{resources_dir}/external_input/files/multivcf.ped"
 
 
 def test_embedded_annotation_pipeline(fixture_dirname):
