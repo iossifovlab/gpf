@@ -419,7 +419,7 @@ class GenomicScore(GenomicResourceImplementation):
     def get_schema():
         return {
             **get_base_resource_schema(),
-            "table": {"type": "dict", "schema": {
+            "table": {"type": "dict", "allow_unknown": True, "schema": {
                 "filename": {"type": "string"},
                 "format": {"type": "string"},
                 "header_mode": {"type": "string"},
