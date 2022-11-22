@@ -90,20 +90,21 @@ Import Tools configuration format
     destination:
         storage_id: "id in gpf_instance"
         (OR)
-        storage_type: impala_schema_1
-            hdfs:
-                base_dir: "/user/impala_schema_1/studies"
-                host: seqclust0
-                port: 8020
-                replication: 1
-            impala:
-                db: "impala_schema_1"
-                hosts:
-                    - seqclust0
-                    - seqclust1
-                    - seqclust2
-                port: 21050
-                pool_size: 3
+        storage_type: impala
+        id: storage_id
+        hdfs:
+            base_dir: "/user/impala_schema_1/studies"
+            host: seqclust0
+            port: 8020
+            replication: 1
+        impala:
+            db: "impala_schema_1"
+            hosts:
+                - seqclust0
+                - seqclust1
+                - seqclust2
+            port: 21050
+            pool_size: 3
 
     parquet_row_group_size:
         vcf: 30M
