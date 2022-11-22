@@ -218,10 +218,13 @@ def test_project_input_dir(input_dir):
     assert project.input_dir == os.path.join("/dir", input_dir)
 
 
-def test_get_genotype_storage_no_explicit_config():
+def test_get_genotype_storage_no_explicit_config(fixture_dirname):
     config = dict(
         id="test_import",
         input={},
+        gpf_instance={
+            "path": fixture_dirname("")
+        }
     )
     project = import_tools.ImportProject.build_from_config(config)
     genotype_storage = project.get_genotype_storage()
@@ -276,14 +279,17 @@ def test_input_in_external_file(resources_dir):
     assert project.input_dir == f"{resources_dir}/external_input/files/"
 
 
-def test_embedded_annotation_pipeline():
+def test_embedded_annotation_pipeline(fixture_dirname):
     import_config = dict(
         input={},
         annotation=[
             dict(np_score=dict(
                 resource_id="hg19/scores/CADD",
             ))
-        ]
+        ],
+        gpf_instance={
+            "path": fixture_dirname("")
+        }
     )
     project = import_tools.ImportProject.build_from_config(import_config)
     pipeline = project._build_annotation_pipeline(project.get_gpf_instance())
@@ -293,7 +299,7 @@ def test_embedded_annotation_pipeline():
     ]
 
 
-def test_annotation_file(tmpdir):
+def test_annotation_file(tmpdir, fixture_dirname):
     annotation = [
         dict(np_score=dict(
             resource_id="hg19/scores/CADD",
@@ -307,7 +313,10 @@ def test_annotation_file(tmpdir):
         input={},
         annotation=dict(
             file="annotation.yaml"
-        )
+        ),
+        gpf_instance={
+            "path": fixture_dirname("")
+        }
     )
     config_fn = str(tmpdir / "import_config.yaml")
     with open(config_fn, "wt") as out_file:
@@ -321,7 +330,7 @@ def test_annotation_file(tmpdir):
     ]
 
 
-def test_annotation_file_and_external_input_config(tmpdir):
+def test_annotation_file_and_external_input_config(tmpdir, fixture_dirname):
     annotation = [
         dict(np_score=dict(
             resource_id="hg19/scores/CADD",
@@ -340,7 +349,10 @@ def test_annotation_file_and_external_input_config(tmpdir):
         ),
         annotation=dict(
             file="annotation.yaml"
-        )
+        ),
+        gpf_instance={
+            "path": fixture_dirname("")
+        }
     )
     config_fn = str(tmpdir / "import_config.yaml")
     with open(config_fn, "wt") as out_file:
