@@ -23,8 +23,7 @@ from dae.genomic_resources.repository import GR_CONF_FILE_NAME, Manifest, \
     GenomicResource, \
     parse_resource_id_version, \
     GR_CONTENTS_FILE_NAME, \
-    GR_MANIFEST_FILE_NAME, \
-    GR_INDEX_FILE_NAME
+    GR_MANIFEST_FILE_NAME
 
 from dae.utils.helpers import convert_size
 

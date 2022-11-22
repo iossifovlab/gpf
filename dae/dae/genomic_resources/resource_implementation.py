@@ -23,6 +23,7 @@ class GenomicResourceImplementation(ABC):
     Resources are just a folder on a repository. Resource implementations
     are classes that know how to use the contents of the resource.
     """
+
     config_validator: Optional[Callable[[Dict], Any]] = None
 
     def __init__(self, genomic_resource: GenomicResource):

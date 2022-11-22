@@ -2,14 +2,14 @@
 import sys
 import os
 import argparse
-import yaml
 import logging
 import glob
 from pathlib import Path
+import yaml
 
 from dae.gene.gene_term import read_ewa_set_file, read_gmt_file, \
     read_mapping_file
-from dae.gene.gene_sets_db import SqliteGeneSetCollectionDB, GeneSet, \
+from dae.gene.gene_sets_db import GeneSet, \
     build_gene_set_collection_from_file
 
 logger = logging.getLogger("create_sqlite_gene_set")
@@ -17,27 +17,27 @@ logger = logging.getLogger("create_sqlite_gene_set")
 
 def main(argv):
     parser = argparse.ArgumentParser()
-    parser.add_argument('--verbose', '-V', action='count', default=0)
+    parser.add_argument("--verbose", "-V", action="count", default=0)
     parser.add_argument(
-        '--resource',
+        "--resource",
         dest="resource",
         help="path to genomic_resource.yaml to use",
         default=None
     )
     parser.add_argument(
-        '--format',
+        "--format",
         dest="format",
         help="format of gene set (map, gmt, directory)",
         default=None
     )
     parser.add_argument(
-        '--filename',
+        "--filename",
         dest="filename",
         help="path to gmt or map file",
         default=None
     )
     parser.add_argument(
-        '--directory',
+        "--directory",
         dest="directory",
         help="path to directory collection data",
         default=None
@@ -86,9 +86,7 @@ def main(argv):
                 directory = os.path.join(
                     base_dir, resource_config["directory"]
                 )
-                print(f"{directory}/*.txt")
                 filepaths = glob.glob(f"{directory}/*.txt")
-                print(filepaths)
                 files = [
                     (Path(f).stem, open(f))
                     for f in filepaths
@@ -107,12 +105,9 @@ def main(argv):
         collection_format="sqlite"
     )
 
-    print(gene_terms.tDesc)
-
     for key, value in gene_terms.tDesc.items():
         syms = list(gene_terms.t2G[key].keys())
         gene_set = GeneSet(key, value, syms)
-        print(gene_set)
         db.add_gene_set(gene_set)
 
 
