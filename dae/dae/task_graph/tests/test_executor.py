@@ -83,6 +83,25 @@ def test_implicit_dependancies(executor):
     assert ids_in_finish_order == [f"{i}" for i in range(9)]
 
 
+def test_calling_execute_twice(executor):
+    graph = TaskGraph()
+    first_task = graph.create_task("First", lambda: None, [], [])
+    second_layer_tasks = [
+        graph.create_task(f"{i}", lambda: None, [], [first_task])
+        for i in range(10)
+    ]
+    graph.create_task("Third", lambda: None, [], second_layer_tasks)
+
+    # cannot execute a graph while executing another one
+    tasks_iter = executor.execute(graph)
+    with pytest.raises(AssertionError):
+        executor.execute(graph)
+
+    # but ones the original is finished we can execute a new one
+    list(tasks_iter)
+    executor.execute(graph)
+
+
 def test_active_tasks(executor):
     def noop():
         pass

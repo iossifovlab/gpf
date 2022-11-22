@@ -32,10 +32,14 @@ class AbstractTaskGraphExecutor(TaskGraphExecutor):
     def __init__(self, task_cache: TaskCache = NoTaskCache()):
         super().__init__()
         self._task_cache = task_cache
+        self._executing = False
 
     def execute(self, task_graph: TaskGraph) -> Iterator[tuple[Task, Any]]:
+        assert not self._executing, \
+            "Cannot execute a new graph while an old one is still running."
         self._check_for_cyclic_deps(task_graph)
 
+        self._executing = True
         self._task_cache.set_task_graph(task_graph)
         already_computed_tasks = {}
         for task_node in self._in_exec_order(task_graph):
@@ -55,6 +59,7 @@ class AbstractTaskGraphExecutor(TaskGraphExecutor):
             is_error = isinstance(result, BaseException)
             self._task_cache.cache(task_node, is_error, result)
             yield task_node, result
+        self._executing = False
 
     @abstractmethod
     def _queue_task(self, task_node: Task) -> None:
