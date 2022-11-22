@@ -1,8 +1,9 @@
 import argparse
 import sys
 import textwrap
+import traceback
 from dae.import_tools.import_tools import ImportProject
-from dae.task_graph.cache import FileTaskCache
+from dae.task_graph.cache import CacheRecordType, FileTaskCache
 
 from dae.task_graph.executor import \
     DaskExecutor, SequentialExecutor
@@ -32,6 +33,14 @@ def main(argv=None):
         "--force", "-f", default=False, action="store_true",
         help="Ignore precomputed state and always rerun the entire import"
     )
+    parser.add_argument(
+        "--keep-going", default=False, action="store_true",
+        help="Whether or not to keep executing in case of an error"
+    )
+    parser.add_argument(
+        "--verbose", "-v", default=False, action="store_true",
+        help="Enable verbose output"
+    )
     DaskClient.add_arguments(parser)
     args = parser.parse_args(argv or sys.argv[1:])
 
@@ -39,25 +48,31 @@ def main(argv=None):
     task_cache = _create_task_cache(args, project)
 
     if args.command is None or args.command == "run":
-        _cmd_run(args, project, task_cache)
-    elif args.command in {"list", "status"}:
-        _cmd_list(args, project, task_cache)
-    else:
-        parser.exit(message=f"Unknown command {args.command}\n")
+        return _cmd_run(args, project, task_cache)
+    if args.command in {"list", "status"}:
+        return _cmd_list(args, project, task_cache)
+    parser.exit(message=f"Unknown command {args.command}\n")
+    return 0
 
 
 def _cmd_run(args, project, task_cache):
     ids_to_run = args.task_ids or []
     if args.jobs == 1:
         executor = SequentialExecutor(task_cache=task_cache)
-        run_with_project(project, executor, ids_to_run=ids_to_run)
-    else:
-        dask_client = DaskClient.from_arguments(args)
-        if dask_client is None:
-            sys.exit(1)
-        with dask_client as client:
-            executor = DaskExecutor(client, task_cache=task_cache)
-            run_with_project(project, executor, ids_to_run=ids_to_run)
+        return run_with_project(
+            project, executor, ids_to_run=ids_to_run,
+            keep_going=args.keep_going
+        )
+
+    dask_client = DaskClient.from_arguments(args)
+    if dask_client is None:
+        sys.exit(1)
+    with dask_client as client:
+        executor = DaskExecutor(client, task_cache=task_cache)
+        return run_with_project(
+            project, executor, ids_to_run=ids_to_run,
+            keep_going=args.keep_going
+        )
 
 
 def _cmd_list(args, project, task_cache):
@@ -71,9 +86,19 @@ def _cmd_list(args, project, task_cache):
     columns = ["TaskID", "Status"]
     print(f"{columns[0]:{id_col_len}s} {columns[1]}")
     for task in task_graph.tasks:
-        status = task_cache.get_record(task).type.name
+        record = task_cache.get_record(task)
+        status = record.type.name
         msg = f"{task.task_id:{id_col_len}s} {status}"
+        is_error = record.type == CacheRecordType.ERROR
+        if is_error and not args.verbose:
+            msg += " (-v to see exception)"
         print(msg)
+        if is_error and args.verbose:
+            traceback.print_exception(
+                etype=None, value=record.error,
+                tb=record.error.__traceback__,
+                file=sys.stdout
+            )
 
 
 def _prune_tasks(graph, ids_to_run):
@@ -94,20 +119,35 @@ def _add_task_deps(task, task_set):
             _add_task_deps(dep, task_set)
 
 
-def run_with_project(project, executor=SequentialExecutor(), ids_to_run=None):
+def run_with_project(project, executor=SequentialExecutor(), ids_to_run=None,
+                     keep_going=False):
     """Import the project using the provided executor."""
     storage = project.get_import_storage()
     task_graph = storage.generate_import_task_graph(project)
     task_graph = _prune_tasks(task_graph, ids_to_run)
 
+    any_errors = False
+
     tasks_iter = executor.execute(task_graph)
     last_stagenames = _get_current_stagenames(executor)
     _print_stagenames(last_stagenames)
-    for _ in tasks_iter:
+    for task, result_or_error in tasks_iter:
+        if isinstance(result_or_error, Exception):
+            if keep_going:
+                print(f"Task {task.task_id} failed with:", file=sys.stderr)
+                traceback.print_exception(
+                    etype=None, value=result_or_error,
+                    tb=result_or_error.__traceback__
+                )
+                any_errors = True
+            else:
+                raise result_or_error
         current_stagenames = _get_current_stagenames(executor)
         if current_stagenames != last_stagenames:
             last_stagenames = current_stagenames
             _print_stagenames(last_stagenames)
+
+    return 1 if any_errors else 0
 
 
 def _get_current_stagenames(executor):
