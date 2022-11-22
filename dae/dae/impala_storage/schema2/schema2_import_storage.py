@@ -4,7 +4,7 @@ from typing import cast
 from dae.utils import fs_utils
 from dae.configuration.study_config_builder import StudyConfigBuilder
 from dae.impala_storage.schema1.import_commons import save_study_config
-from dae.import_tools.parquet_writer import ParquetWriter
+from dae.parquet.parquet_writer import ParquetWriter
 from dae.import_tools.import_tools import ImportStorage
 from dae.task_graph.graph import TaskGraph
 from dae.impala_storage.schema2.schema2_genotype_storage import \
