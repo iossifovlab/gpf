@@ -10,7 +10,7 @@ from dae.dask.client_factory import DaskClient
 from dae.utils import fs_utils
 
 
-def main():
+def main(argv=None):
     """Entry point for import tools when invoked as a cli tool."""
     parser = argparse.ArgumentParser(
         description="Import datasets into GPF",
@@ -19,7 +19,7 @@ def main():
     parser.add_argument("config", type=str,
                         help="Path to the import configuration")
     parser.add_argument(
-        "command", choices=["run", "list", "status"], default="run",
+        "command", choices=["run", "list", "status"], default="run", nargs="?",
         help=textwrap.dedent("""\
             Command to execute on the import configuration.
             run - runs the import process
@@ -33,7 +33,7 @@ def main():
         help="Ignore precomputed state and always rerun the entire import"
     )
     DaskClient.add_arguments(parser)
-    args = parser.parse_args()
+    args = parser.parse_args(argv or sys.argv[1:])
 
     project = ImportProject.build_from_file(args.config)
     task_cache = _create_task_cache(args, project)
