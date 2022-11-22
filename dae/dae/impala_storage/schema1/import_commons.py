@@ -116,35 +116,13 @@ class MakefilePartitionHelper:
     def __init__(
             self,
             partition_descriptor,
-            genome,
-            add_chrom_prefix=None,
-            del_chrom_prefix=None):
+            genome):
 
         self.genome = genome
         self.partition_descriptor = partition_descriptor
         self.chromosome_lengths = dict(
             self.genome.get_all_chrom_lengths()
         )
-
-        self._build_adjust_chrom(add_chrom_prefix, del_chrom_prefix)
-
-    def _build_adjust_chrom(self, add_chrom_prefix, del_chrom_prefix):
-        self._chrom_prefix = None
-
-        def same_chrom(chrom):
-            return chrom
-
-        self._adjust_chrom = same_chrom
-        self._unadjust_chrom = same_chrom
-
-        if add_chrom_prefix is not None:
-            self._chrom_prefix = add_chrom_prefix
-            self._adjust_chrom = self._prepend_chrom_prefix
-            self._unadjust_chrom = self._remove_chrom_prefix
-        elif del_chrom_prefix is not None:
-            self._chrom_prefix = del_chrom_prefix
-            self._adjust_chrom = self._remove_chrom_prefix
-            self._unadjust_chrom = self._prepend_chrom_prefix
 
     def region_bins_count(self, chrom):
         result = ceil(
@@ -153,22 +131,8 @@ class MakefilePartitionHelper:
         )
         return result
 
-    def _remove_chrom_prefix(self, chrom):
-        assert self._chrom_prefix
-        if chrom.startswith(self._chrom_prefix):
-            # fmt: off
-            return chrom[len(self._chrom_prefix):]
-            # fmt: on
-        return chrom
-
-    def _prepend_chrom_prefix(self, chrom):
-        assert self._chrom_prefix
-        if not chrom.startswith(self._chrom_prefix):
-            return f"{self._chrom_prefix}{chrom}"
-        return chrom
-
     def build_target_chromosomes(self, target_chromosomes):
-        return [self._adjust_chrom(tg) for tg in target_chromosomes]
+        return target_chromosomes[:]
 
     def generate_chrom_targets(self, target_chrom):
         """Generate variant targets based on partition descriptor."""
@@ -177,7 +141,7 @@ class MakefilePartitionHelper:
             target = "other"
         region_bins_count = self.region_bins_count(target_chrom)
 
-        chrom = self._unadjust_chrom(target_chrom)
+        chrom = target_chrom
 
         if region_bins_count == 1:
             return [(f"{target}_0", chrom)]
@@ -210,10 +174,7 @@ class MakefilePartitionHelper:
         if len(self.partition_descriptor.chromosomes) == 0:
             return {"none": [self.partition_descriptor.output]}
 
-        generated_target_chromosomes = [
-            self._adjust_chrom(tg) for tg in target_chromosomes[:]
-        ]
-
+        generated_target_chromosomes = target_chromosomes[:]
         if mode == "single_bucket":
             targets = {"all": [None]}
             return targets
@@ -822,14 +783,9 @@ class BatchImporter:
         else:
             partition_description = NoPartitionDescriptor(argv.output)
 
-        add_chrom_prefix = argv.add_chrom_prefix
-        del_chrom_prefix = argv.del_chrom_prefix
-
         self.partition_helper = MakefilePartitionHelper(
             partition_description,
             self.gpf_instance.reference_genome,
-            add_chrom_prefix=add_chrom_prefix,
-            del_chrom_prefix=del_chrom_prefix,
         )
 
         return self
@@ -1376,7 +1332,7 @@ class Variants2ParquetTool:
 
         partition_description = cls._build_partition_description(argv)
         generator = cls._build_partition_helper(
-            argv, gpf_instance, partition_description
+            gpf_instance, partition_description
         )
 
         target_chromosomes = cls._collect_target_chromosomes(
@@ -1477,16 +1433,11 @@ class Variants2ParquetTool:
         return partition_description
 
     @staticmethod
-    def _build_partition_helper(argv, gpf_instance, partition_description):
-
-        add_chrom_prefix = argv.add_chrom_prefix
-        del_chrom_prefix = argv.del_chrom_prefix
+    def _build_partition_helper(gpf_instance, partition_description):
 
         generator = MakefilePartitionHelper(
             partition_description,
             gpf_instance.reference_genome,
-            add_chrom_prefix=add_chrom_prefix,
-            del_chrom_prefix=del_chrom_prefix,
         )
         return generator
 

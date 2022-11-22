@@ -179,18 +179,18 @@ def test_target_generator_chrom_prefix_target_other(
     generator = MakefilePartitionHelper(
         partition_descriptor,
         gpf_instance_2013.reference_genome,
-        add_chrom_prefix="chr",
+        # add_chrom_prefix="chr",
     )
     print(generator.chromosome_lengths)
     assert len(generator.chromosome_lengths) == 4
 
-    result = generator.generate_variants_targets(["3", "4"])
+    result = generator.generate_variants_targets(["chr3", "chr4"])
     print(result)
     assert set(result.keys()) == targets
     for regions in result.values():
         for region in regions:
             print(region)
-            assert "chr" not in region
+            assert "chr" in region
 
 
 @pytest.mark.parametrize(
@@ -223,18 +223,18 @@ def test_target_generator_add_chrom_prefix_target_chrom(
     generator = MakefilePartitionHelper(
         partition_descriptor,
         gpf_instance_2013.reference_genome,
-        add_chrom_prefix="chr",
+        # add_chrom_prefix="chr",
     )
     print(generator.chromosome_lengths)
     assert len(generator.chromosome_lengths) == 4
 
-    result = generator.generate_variants_targets(["1", "2"])
+    result = generator.generate_variants_targets(["chr1", "chr2"])
     print(result)
     assert set(result.keys()) == targets
     for regions in result.values():
         for region in regions:
             print(region)
-            assert "chr" not in region
+            assert "chr" in region
 
 
 @pytest.mark.parametrize(
@@ -267,7 +267,7 @@ def test_target_generator_del_chrom_prefix_target_chrom(
     generator = MakefilePartitionHelper(
         partition_descriptor,
         gpf_instance_2013.reference_genome,
-        del_chrom_prefix="chr",
+        # del_chrom_prefix="chr",
     )
     print(generator.chromosome_lengths)
     assert len(generator.chromosome_lengths) == 4
@@ -331,7 +331,7 @@ def test_makefile_generator_bucket_numbering(
     generator = MakefilePartitionHelper(
         partition_descriptor,
         gpf_instance_2013.reference_genome,
-        add_chrom_prefix="chr",
+        # add_chrom_prefix="chr",
     )
     print(generator.chromosome_lengths)
     assert len(generator.chromosome_lengths) == 4
@@ -408,23 +408,23 @@ def test_makefile_generator_regions(
         (
             3_000_000_000,
             [
-                ("1_0", ["chr1"]),
-                ("2_0", ["chr2"]),
-                ("other_0", ["chr3", "chr4"]),
+                ("1_0", ["1"]),
+                ("2_0", ["2"]),
+                ("other_0", ["3", "4"]),
             ],
         ),
         (
             150_000_000,
             [
-                ("1_0", ["chr1"]),
-                ("2_0", ["chr2:1-150000000"]),
-                ("2_1", ["chr2:150000001-200000000"]),
-                ("other_0", ["chr3:1-150000000", "chr4:1-150000000"]),
+                ("1_0", ["1"]),
+                ("2_0", ["2:1-150000000"]),
+                ("2_1", ["2:150000001-200000000"]),
+                ("other_0", ["3:1-150000000", "4:1-150000000"]),
                 (
                     "other_1",
-                    ["chr3:150000001-300000000", "chr4:150000001-300000000"],
+                    ["3:150000001-300000000", "4:150000001-300000000"],
                 ),
-                ("other_2", ["chr4:300000001-400000000"]),
+                ("other_2", ["4:300000001-400000000"]),
             ],
         ),
     ],
@@ -451,14 +451,14 @@ def test_makefile_generator_regions_del_chrom_prefix(
     generator = MakefilePartitionHelper(
         partition_descriptor,
         gpf_instance_2013.reference_genome,
-        del_chrom_prefix="chr",
+        # del_chrom_prefix="chr",
     )
 
     print(generator.chromosome_lengths)
     assert len(generator.chromosome_lengths) == 4
 
     variants_targets = generator.generate_variants_targets(
-        ["chr1", "chr2", "chr3", "chr4"]
+        ["1", "2", "3", "4"]
     )
 
     for (region_bin, regions) in targets:
@@ -471,14 +471,14 @@ def test_makefile_generator_regions_del_chrom_prefix(
     [
         (
             3_000_000_000,
-            [("chr1_0", ["1"]), ("chr2_0", ["2"]), ("other_0", ["3", "4"])],
+            [("1_0", ["1"]), ("2_0", ["2"]), ("other_0", ["3", "4"])],
         ),
         (
             150_000_000,
             [
-                ("chr1_0", ["1"]),
-                ("chr2_0", ["2:1-150000000"]),
-                ("chr2_1", ["2:150000001-200000000"]),
+                ("1_0", ["1"]),
+                ("2_0", ["2:1-150000000"]),
+                ("2_1", ["2:150000001-200000000"]),
                 ("other_0", ["3:1-150000000", "4:1-150000000"]),
                 (
                     "other_1",
@@ -497,21 +497,21 @@ def test_makefile_generator_regions_add_chrom_prefix(
         ReferenceGenome,
         "get_all_chrom_lengths",
         return_value=[
-            ("chr1", 100_000_000),
-            ("chr2", 200_000_000),
-            ("chr3", 300_000_000),
-            ("chr4", 400_000_000),
+            ("1", 100_000_000),
+            ("2", 200_000_000),
+            ("3", 300_000_000),
+            ("4", 400_000_000),
         ],
     )
 
     partition_descriptor = ParquetPartitionDescriptor(
-        ["chr1", "chr2"], region_length
+        ["1", "2"], region_length
     )
 
     generator = MakefilePartitionHelper(
         partition_descriptor,
         gpf_instance_2013.reference_genome,
-        add_chrom_prefix="chr",
+        # add_chrom_prefix="chr",
     )
 
     print(generator.chromosome_lengths)
