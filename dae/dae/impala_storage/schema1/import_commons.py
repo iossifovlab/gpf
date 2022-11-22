@@ -131,7 +131,8 @@ class MakefilePartitionHelper:
         )
         return result
 
-    def build_target_chromosomes(self, target_chromosomes):
+    @staticmethod
+    def build_target_chromosomes(target_chromosomes):
         return target_chromosomes[:]
 
     def generate_chrom_targets(self, target_chrom):
