@@ -1,7 +1,8 @@
-import pytest
-
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
 import copy
 import json
+
+import pytest
 
 from rest_framework import status  # type: ignore
 
@@ -20,6 +21,66 @@ QUERY = {
     "presentInParent": {"presentInParent": ["neither"]},
     "effectTypes": ["missense", "frame-shift", "synonymous"],
 }
+
+
+@pytest.mark.parametrize("url,method,body", [
+    (TOOL_URL, "post", QUERY),
+    (TOOL_DOWNLOAD_URL, "post", QUERY),
+    (
+        "/api/v3/pheno_tool/persons",
+        "post",
+        {
+            "datasetId": "f1_trio",
+        }
+    ),
+    (
+        "/api/v3/pheno_tool/persons_values",
+        "post",
+        {
+            "datasetId": "f1_trio",
+            "measureIds": ["i1.m1"]
+        }
+    ),
+    (
+        "/api/v3/pheno_tool/measure",
+        "post",
+        {
+            "datasetId": "f1_trio",
+            "measureId": "i1.m1"
+        }
+    ),
+    (
+        "/api/v3/pheno_tool/measures?datasetId=f1_trio&instrument=i1",
+        "get", None
+    ),
+    (
+        "/api/v3/pheno_tool/measure_values",
+        "post",
+        {
+            "datasetId": "f1_trio",
+            "measureId": "i1.m1"
+        }
+    ),
+    ("/api/v3/pheno_tool/instruments?datasetId=f1_trio", "get", None),
+    (
+        "/api/v3/pheno_tool/instrument_values",
+        "post",
+        {
+            "datasetId": "f1_trio",
+            "instrumentName": "i1"
+        }
+    ),
+])
+def test_pheno_tool_api_permissions(anonymous_client, url, method, body):
+    if method == "get":
+        response = anonymous_client.get(url)
+    else:
+        response = anonymous_client.post(
+            url, json.dumps(body), content_type="application/json"
+        )
+
+    assert response
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
 
 def test_pheno_tool_view_valid_request(admin_client):
@@ -230,7 +291,7 @@ def test_pheno_tool_view_missing_dataset(admin_client):
         format="json",
         content_type="application/json",
     )
-    assert response.status_code == status.HTTP_403_FORBIDDEN
+    assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
 def test_pheno_tool_view_missing_measure(admin_client):

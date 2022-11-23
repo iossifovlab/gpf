@@ -4,6 +4,7 @@ import pytest
 from box import Box
 
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import AnonymousUser
 from django.test import override_settings
 
 from studies.study_wrapper import StudyWrapper
@@ -304,3 +305,60 @@ def test_disable_permissions_flag_allows_all(db, na_user, dataset_wrapper):
                 *dataset_wrapper.get_studies_ids(leaves=False)}
     for data_id in data_ids:
         assert user_has_permission(na_user, data_id)
+
+
+def test_unregistered_dataset_does_not_propagate_permissions(
+    db, wdae_gpf_instance
+):
+    """
+    Test for faulty permissions propagations.
+
+    Permissions were changed to return True for missing datasets, which
+    resulted in a bug where checking parent/child permissions would return
+    True when it shouldn't when a parent dataset suddenly disappears.
+    """
+    dataset1_wrapper = wdae_gpf_instance.get_wdae_wrapper("Dataset1")
+    assert dataset1_wrapper is not None
+    assert dataset1_wrapper.is_group
+
+    dataset2_wrapper = wdae_gpf_instance.get_wdae_wrapper("Dataset2")
+    assert dataset2_wrapper is not None
+    assert dataset2_wrapper.is_group
+
+    ds_config = Box(dataset1_wrapper.config.to_dict())
+    ds_config.studies = (
+        "Dataset1",
+        "Dataset2",
+    )
+    ds_config.id = "Dataset"
+
+    dataset = GenotypeDataGroup(
+        ds_config,
+        [
+            dataset1_wrapper.genotype_data_study,
+            dataset2_wrapper.genotype_data_study,
+        ])
+    assert dataset is not None
+    assert dataset.study_id == "Dataset"
+
+    dataset_wrapper = StudyWrapper(dataset, None, None)
+    assert dataset_wrapper is not None
+    assert dataset_wrapper.is_group
+
+    Dataset.recreate_dataset_perm("Dataset")
+
+    wdae_gpf_instance.register_genotype_data(dataset)
+
+    assert "Dataset" in wdae_gpf_instance.get_genotype_data_ids()
+    assert wdae_gpf_instance.get_genotype_data("Dataset") is not None
+
+    wdae_gpf_instance.unregister_genotype_data(dataset)
+    wdae_gpf_instance.get_genotype_data("Dataset1")._parents = [None]
+    wdae_gpf_instance.get_genotype_data("Dataset2")._parents = [None]
+
+    study1 = wdae_gpf_instance.get_genotype_data("Study1")
+    assert study1 is not None
+
+    user = AnonymousUser()
+
+    assert user_has_permission(user, study1) is False

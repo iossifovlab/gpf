@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.http.response import StreamingHttpResponse
 
-from query_base.query_base import QueryBaseView
+from query_base.query_base import QueryDatasetView
 
 from utils.streaming_response_util import iterator_to_json
 
@@ -12,7 +12,7 @@ from utils.streaming_response_util import iterator_to_json
 logger = logging.getLogger(__name__)
 
 
-class PhenoBrowserBaseView(QueryBaseView):
+class PhenoBrowserBaseView(QueryDatasetView):
     def __init__(self):
         super(PhenoBrowserBaseView, self).__init__()
         self.pheno_config = self.gpf_instance.get_phenotype_db_config()
@@ -35,7 +35,7 @@ class PhenoConfigView(PhenoBrowserBaseView):
         return Response(self.pheno_config[dbname])
 
 
-class PhenoInstrumentsView(QueryBaseView):
+class PhenoInstrumentsView(QueryDatasetView):
     def get(self, request):
         if "dataset_id" not in request.query_params:
             return Response(status=status.HTTP_400_BAD_REQUEST)
@@ -125,7 +125,7 @@ class PhenoMeasuresView(PhenoBrowserBaseView):
         return response
 
 
-class PhenoMeasuresDownload(QueryBaseView):
+class PhenoMeasuresDownload(QueryDatasetView):
     def post(self, request):
         data = request.data
         if "dataset_id" not in data:

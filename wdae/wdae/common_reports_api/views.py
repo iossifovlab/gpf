@@ -5,14 +5,14 @@ from rest_framework.response import Response
 
 from datasets_api.permissions import user_has_permission
 
-from query_base.query_base import QueryBaseView
+from query_base.query_base import QueryDatasetView
 
 from dae.pedigrees.family import FamiliesData
 from dae.pedigrees.family_tag_builder import check_tag
 from dae.pedigrees.serializer import FamiliesTsvSerializer
 
 
-class VariantReportsView(QueryBaseView):
+class VariantReportsView(QueryDatasetView):
     def get(self, request, common_report_id):
         assert common_report_id
 
@@ -28,7 +28,7 @@ class VariantReportsView(QueryBaseView):
         )
 
 
-class VariantReportsFullView(QueryBaseView):
+class VariantReportsFullView(QueryDatasetView):
     def get(self, request, common_report_id):
         assert common_report_id
 
@@ -44,7 +44,7 @@ class VariantReportsFullView(QueryBaseView):
         )
 
 
-class FamilyCounterListView(QueryBaseView):
+class FamilyCounterListView(QueryDatasetView):
     def post(self, request):
         data = request.data
 
@@ -71,7 +71,7 @@ class FamilyCounterListView(QueryBaseView):
         return Response(counter.families)
 
 
-class FamilyCounterDownloadView(QueryBaseView):
+class FamilyCounterDownloadView(QueryDatasetView):
     def post(self, request):
         data = json.loads(request.data["queryData"])
 
@@ -114,7 +114,7 @@ class FamilyCounterDownloadView(QueryBaseView):
         return response
 
 
-class FamiliesDataDownloadView(QueryBaseView):
+class FamiliesDataDownloadView(QueryDatasetView):
     def get(self, request, dataset_id):
         tags = request.GET.get("tags")
 

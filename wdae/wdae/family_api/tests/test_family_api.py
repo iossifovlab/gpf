@@ -7,6 +7,26 @@ pytestmark = pytest.mark.usefixtures(
     "wdae_gpf_instance", "dae_calc_gene_sets")
 
 
+@pytest.mark.parametrize("url,method,body", [
+    ("/api/v3/families/Study1", "get", None),
+    ("/api/v3/families/Study1/f6", "get", None),
+    ("/api/v3/families/Study1/f6/members", "get", None),
+    ("/api/v3/families/Study1/f6/members/ch6", "get", None),
+    ("/api/v3/families/Study1/f6/members/all", "get", None),
+    ("/api/v3/families/Study1/all", "get", None),
+])
+def test_family_api_permissions(anonymous_client, url, method, body):
+    if method == "get":
+        response = anonymous_client.get(url)
+    else:
+        response = anonymous_client.post(
+            url, json.dumps(body), content_type="application/json"
+        )
+
+    assert response
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
+
 def test_list_families_view(admin_client):
     url = "/api/v3/families/Study1"
     response = admin_client.get(url)
