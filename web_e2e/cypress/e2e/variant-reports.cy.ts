@@ -55,12 +55,12 @@ describe('Variant reports tests', () => {
   });
 
   it('should display the correct elements in the de novo variants tab', () => {
-    page.familiesByNumberTab.click();
+    page.deNovoVariantsTab.click();
     page.denovoVariantsSelect.should('be.visible');
     page.denovoLegend.should('be.visible');
     page.denovoVariants.should('be.visible');
 
-    page.deNovoVariantsTab.click();
+    page.familiesByNumberTab.click();
     page.denovoVariantsSelect.should('not.be.visible');
     page.denovoLegend.should('not.be.visible');
     page.denovoVariants.should('not.be.visible');
