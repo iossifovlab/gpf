@@ -19,8 +19,8 @@ DOWNLOAD_URL = "/api/v3/pheno_browser/download"
     (f"{URL}?dataset_id=quads_f1_ds", "get", None),
     (f"{MEASURES_INFO_URL}?dataset_id=quads_f1_ds", "get", None),
     (
-        f"{MEASURES_URL}?dataset_id=quads_f1_ds&instrument=instrument1", 
-        "get", 
+        f"{MEASURES_URL}?dataset_id=quads_f1_ds&instrument=instrument1",
+        "get",
         None
     ),
     (

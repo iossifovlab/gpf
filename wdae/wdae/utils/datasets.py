@@ -1,5 +1,6 @@
 import json
 
+
 def find_dataset_id_in_dict(dictionary):
     dataset_id = dictionary.get("dataset_id", None)
     if dataset_id is None:
@@ -19,6 +20,7 @@ def find_dataset_id_in_dict(dictionary):
                 query_data = json.loads(query_data)
             dataset_id = find_dataset_id_in_dict(query_data)
     return dataset_id
+
 
 def find_dataset_id_in_request(request):
     dataset_id = find_dataset_id_in_dict(request.query_params)
