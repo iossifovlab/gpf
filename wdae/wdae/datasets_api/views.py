@@ -139,11 +139,11 @@ class StudiesView(QueryBaseView):
         res = [augment_with_parents(ds) for ds in res]
         return res
 
-
     def get(self, request):
         user = request.user
 
         return Response({"data": self._collect_datasets_summary(user)})
+
 
 class PermissionDeniedPromptView(QueryBaseView):
     """Provide the markdown-formatted permission denied prompt text."""
