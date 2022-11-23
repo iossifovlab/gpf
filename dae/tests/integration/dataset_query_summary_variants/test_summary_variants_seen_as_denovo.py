@@ -4,7 +4,7 @@ import pytest
 from dae.utils.regions import Region
 from dae.testing import setup_pedigree, setup_vcf, setup_dataset, vcf_study
 
-from ...alla_import import alla_gpf
+from dae.testing.alla_import import alla_gpf
 
 
 @pytest.fixture(scope="module")

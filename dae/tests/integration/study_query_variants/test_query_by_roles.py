@@ -2,7 +2,7 @@
 import pytest
 
 from dae.testing import setup_pedigree, setup_vcf, vcf_study
-from ...foobar_import import foobar_gpf
+from dae.testing.foobar_import import foobar_gpf
 
 
 @pytest.fixture(scope="module")

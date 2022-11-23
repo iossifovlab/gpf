@@ -1,3 +1,4 @@
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pytest
 
 
@@ -66,9 +67,8 @@ def test_get_denovo_gene_set_f4(
     assert dgs is not None
     assert dgs["count"] == count
     assert dgs["name"] == denovo_gene_set_id
-    assert dgs["desc"] == "{} (f4_trio:phenotype:{})".format(
-        denovo_gene_set_id, ",".join(people_groups)
-    )
+    assert dgs["desc"] == \
+        f"{denovo_gene_set_id} (f4_trio:phenotype:{','.join(people_groups)})"
 
 
 @pytest.mark.parametrize(

@@ -1,6 +1,6 @@
-import pytest
-
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
 import json
+import pytest
 
 
 pytestmark = pytest.mark.usefixtures(
@@ -174,7 +174,7 @@ def test_enrichment_test_gene_set(admin_client, wdae_gpf_instance):
         "geneSet": {
             "geneSetsCollection": "denovo",
             "geneSet": "Missense",
-            "geneSetsTypes": {"f1_trio": {"phenotype": ["autism"]}},
+            "geneSetsTypes": {"f1_trio": {"phenotype": ["phenotype1"]}},
         },
     }
     response = admin_client.post(
@@ -187,6 +187,5 @@ def test_enrichment_test_gene_set(admin_client, wdae_gpf_instance):
     result = response.data
     assert len(result) == 2
 
-    assert (
-        result["desc"] == "Gene Set: Missense (f1_trio:phenotype:autism) (1)"
-    )
+    assert result["desc"] == \
+        "Gene Set: Missense (f1_trio:phenotype:phenotype1) (1)"

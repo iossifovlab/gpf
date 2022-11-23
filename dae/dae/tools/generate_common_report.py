@@ -6,16 +6,18 @@ import logging
 import os
 import json
 
+from dae.utils.verbosity_configuration import VerbosityConfiguration
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.common_reports.common_report import CommonReport
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("generate_common_reports")
 
 
 def main(argv, gpf_instance=None):
+    """Command line tool to generate dataset statistics."""
     description = "Generate common reports tool"
     parser = argparse.ArgumentParser(description=description)
-    parser.add_argument('--verbose', '-V', action='count', default=0)
+    VerbosityConfiguration.set_argumnets(parser)
 
     parser.add_argument(
         "--show-studies",
@@ -33,16 +35,7 @@ def main(argv, gpf_instance=None):
     )
 
     args = parser.parse_args(argv)
-    if args.verbose == 1:
-        logging.basicConfig(level=logging.WARNING)
-    elif args.verbose == 2:
-        logging.basicConfig(level=logging.INFO)
-    elif args.verbose >= 3:
-        logging.basicConfig(level=logging.DEBUG)
-    else:
-        logging.basicConfig(level=logging.WARNING)
-
-    logging.getLogger("impala").setLevel(logging.WARNING)
+    VerbosityConfiguration.set(args)
 
     start = time.time()
     if gpf_instance is None:

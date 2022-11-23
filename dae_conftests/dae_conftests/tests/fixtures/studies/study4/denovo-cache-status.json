@@ -1,35 +1,32 @@
 {
-    "phenotype1": {
+    "affected": {
         "LGDs": {
+            "Female": {},
+            "Male": {},
+            "Unspecified": {
+                "PLEKHN1": [
+                    "f2",
+                    "f4"
+                ],
+                "SAMD11": [
+                    "f2",
+                    "f4"
+                ]
+            }
+        },
+        "Missense": {
             "Female": {},
             "Male": {},
             "Unspecified": {}
         },
-        "Missense": {
-            "Female": {
-                "SAMD11": [
-                    "f1"
-                ]
-            },
-            "Male": {
-                "SAMD11": [
-                    "f2"
-                ]
-            },
-            "Unspecified": {}
-        },
         "Synonymous": {
-            "Female": {
+            "Female": {},
+            "Male": {},
+            "Unspecified": {
                 "SAMD11": [
-                    "f1"
+                    "f4"
                 ]
-            },
-            "Male": {
-                "SAMD11": [
-                    "f2"
-                ]
-            },
-            "Unspecified": {}
+            }
         }
     },
     "unaffected": {
@@ -44,11 +41,7 @@
             "Unspecified": {}
         },
         "Synonymous": {
-            "Female": {
-                "PLEKHN1": [
-                    "f2"
-                ]
-            },
+            "Female": {},
             "Male": {},
             "Unspecified": {}
         }

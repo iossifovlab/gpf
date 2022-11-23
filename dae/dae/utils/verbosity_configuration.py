@@ -20,3 +20,4 @@ class VerbosityConfiguration:
             logging.basicConfig(level=logging.DEBUG)
         else:
             logging.basicConfig(level=logging.WARNING)
+        logging.getLogger("impala").setLevel(logging.WARNING)

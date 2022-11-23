@@ -40,15 +40,6 @@ column_group_schema = {
     }
 }
 
-standard_criteria_schema = {
-    "segments": {"type": "dict", "valuesrules": {"type": "string"}}
-}
-
-recurrency_criteria_schema = {
-    "type": "dict",
-    "schema": {"start": {"type": "integer"}, "end": {"type": "integer"}},
-}
-
 background_model_schema = {
     "file": {
         "type": "string",
@@ -349,12 +340,16 @@ study_config_schema = {
             "effect_groups": {
                 "type": "list",
                 "schema": {"type": "string"},
-                "default": [],
+                "default": ["LGDs", "nonsynonymous", "UTRs"],
             },
             "effect_types": {
                 "type": "list",
                 "schema": {"type": "string"},
-                "default": [],
+                "default": [
+                    "Nonsense", "Frame-shift", "Splice-site", "Missense",
+                    "No-frame-shift", "noStart", "noEnd", "Synonymous",
+                    "Non coding", "Intron", "Intergenic", "3'-UTR", "5'-UTR",
+                ],
             },
             "draw_all_families": {"type": "boolean", "default": False},
             "file_path": {
@@ -373,7 +368,7 @@ study_config_schema = {
             "selected_person_set_collections": {
                 "type": "list",
                 "schema": {"type": "string"},
-                "default": [],
+                "default": ["status"],
             },
             "selected_standard_criterias_values": {
                 "type": "list",
@@ -384,17 +379,60 @@ study_config_schema = {
                 "type": "dict",
                 "valuesrules": {
                     "type": "dict",
-                    "schema": standard_criteria_schema,
+                    "schema": {
+                        "segments": {
+                            "type": "dict",
+                            "valuesrules": {"type": "string"}
+                        }
+                    },
                 },
+                "default": {
+                    "effect_types": {
+                        "segments": {
+                            "LGDs": "LGDs",
+                            "Missense": "missense",
+                            "Synonymous": "synonymous",
+                        }
+                    },
+                    "sexes": {
+                        "segments": {
+                            "Female": "F",
+                            "Male": "M",
+                            "Unspecified": "U",
+                        }
+                    }
+                }
             },
             "recurrency_criteria": {
                 "type": "dict",
                 "schema": {
                     "segments": {
                         "type": "dict",
-                        "valuesrules": recurrency_criteria_schema,
+                        "valuesrules": {
+                            "type": "dict",
+                            "schema": {
+                                "start": {"type": "integer"},
+                                "end": {"type": "integer"}
+                            },
+                        },
                     }
                 },
+                "default": {
+                    "segments": {
+                        "Single": {
+                            "start": 1,
+                            "end": 2,
+                        },
+                        "Triple": {
+                            "start": 3,
+                            "end": -1,
+                        },
+                        "Recurrent": {
+                            "start": 2,
+                            "end": -1,
+                        }
+                    }
+                }
             },
             "gene_sets_names": {"type": "list", "schema": {"type": "string"}},
         },

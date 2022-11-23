@@ -42,7 +42,7 @@ f1       c2       d1    m1    1    1      sib
 @pytest.fixture(scope="module")
 def imported_study(tmp_path_factory, f1_vcf, genotype_storage):
     # pylint: disable=import-outside-toplevel
-    from ...foobar_import import foobar_gpf
+    from dae.testing.foobar_import import foobar_gpf
 
     root_path = tmp_path_factory.mktemp(genotype_storage.storage_id)
     gpf_instance = foobar_gpf(root_path, genotype_storage)

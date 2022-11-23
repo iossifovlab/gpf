@@ -286,7 +286,6 @@ class DenovoReport:
         config = genotype_data.config.common_report
         effect_groups = config.effect_groups
         effect_types = config.effect_types
-
         print(
             f"DENOVO REPORTS: person set collections {person_set_collections}")
         start = time.time()

@@ -68,7 +68,7 @@ class FamilyRoleBuilder:  # pylint: disable=too-few-public-methods
         assert isinstance(role, Role)
         if person.role is None or person.role == Role.unknown:
             if role != person.role:
-                logger.warning(
+                logger.info(
                     "changing role for %s from %s to %s",
                     person, person.role, role)
                 # pylint: disable=protected-access
