@@ -235,9 +235,7 @@ def _get_allowed_datasets_for_user(user, dataset, collect=None):
 
 
 def get_allowed_genotype_studies(user, dataset):
-    """
-    Collect and return datasets IDs the user has access to.
-    """
+    """Collect and return datasets IDs the user has access to."""
     allowed_datasets = _get_allowed_datasets_for_user(user, dataset)
 
     result = []
