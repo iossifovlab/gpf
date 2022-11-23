@@ -64,7 +64,7 @@ def test_get_cached_resource(cache_repository, scheme):
     assert res.resource_id == "one"
 
 
-def test_cached_get_all_resources(cache_repository):
+def test_cached_repo_get_all_resources(cache_repository):
 
     demo_gtf_content = "TP53\tchr3\t300\t200"
     cache_repo = cache_repository(content={
@@ -84,7 +84,30 @@ def test_cached_get_all_resources(cache_repository):
         }
     })
 
-    assert len(list(cache_repo.get_all_resources())) == 0
+    assert len(list(cache_repo.get_all_resources())) == 3
+
+
+def test_cached_resource_after_access(cache_repository):
+
+    demo_gtf_content = "TP53\tchr3\t300\t200"
+    cache_repo = cache_repository(content={
+        "one": {
+            GR_CONF_FILE_NAME: "",
+            "data.txt": "alabala"
+        },
+        "sub": {
+            "two-unstable(1.0)": {
+                GR_CONF_FILE_NAME: "type: gene_models\nfile: genes.gtf",
+                "genes.txt": demo_gtf_content
+            },
+            "two(1.0)": {
+                GR_CONF_FILE_NAME: "type: gene_models\nfile: genes.gtf",
+                "genes.txt": demo_gtf_content,
+            }
+        }
+    })
+
+    # assert len(list(cache_repo.get_all_resources())) == 0
 
     src_gr = cache_repo.child.get_resource("sub/two")
     cache_gr = cache_repo.get_resource("sub/two")
@@ -124,11 +147,7 @@ def test_cache_all(cache_repository):
         }
     })
 
-    assert len(list(cache_repo.get_all_resources())) == 0
-
     cache_repo.cache_resources()
-
-    assert len(list(cache_repo.get_all_resources())) == 3
 
     cache_proto = cache_repo.get_resource("one").proto
     filesystem = cache_proto.local_protocol.filesystem
