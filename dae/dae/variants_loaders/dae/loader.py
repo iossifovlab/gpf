@@ -434,9 +434,8 @@ class DenovoLoader(VariantsGenotypesLoader):
 
         return argv.denovo_file, params
 
-    @classmethod
     def _flexible_denovo_load_internal(
-            cls,
+            self,
             filepath: str,
             genome: ReferenceGenome,
             families: FamiliesData,
@@ -496,7 +495,7 @@ class DenovoLoader(VariantsGenotypesLoader):
 
         if denovo_location:
             chrom_col, pos_col = zip(
-                *map(cls.split_location, raw_df[denovo_location])
+                *map(self.split_location, raw_df[denovo_location])
             )
         else:
             assert denovo_chrom is not None
@@ -508,7 +507,8 @@ class DenovoLoader(VariantsGenotypesLoader):
             variant_col = raw_df.loc[:, denovo_variant]
             ref_alt_tuples = [
                 dae2vcf_variant(
-                    variant_tuple[0], variant_tuple[1], variant_tuple[2],
+                    self._adjust_chrom_prefix(variant_tuple[0]),
+                    variant_tuple[1], variant_tuple[2],
                     genome
                 ) for variant_tuple in zip(chrom_col, pos_col, variant_col)
             ]
@@ -565,7 +565,7 @@ class DenovoLoader(VariantsGenotypesLoader):
                         "reference": variant[2],
                         "alternative": variant[3],
                         "family_id": family_id,
-                        "genotype": cls.produce_genotype(
+                        "genotype": self.produce_genotype(
                             variant[0],
                             variant[1],
                             genome,
@@ -630,9 +630,8 @@ class DenovoLoader(VariantsGenotypesLoader):
 
         return (denovo_df, extra_attributes_cols.tolist())
 
-    @classmethod
     def flexible_denovo_load(
-            cls,
+            self,
             filepath: str,
             genome: ReferenceGenome,
             families: FamiliesData,
@@ -702,7 +701,7 @@ class DenovoLoader(VariantsGenotypesLoader):
         """
         # FIXME too many arguments
         # pylint: disable=too-many-arguments
-        denovo_df, _ = cls._flexible_denovo_load_internal(
+        denovo_df, _ = self._flexible_denovo_load_internal(
             filepath,
             genome,
             families,

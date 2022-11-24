@@ -112,7 +112,7 @@ def test_bucket_generation(gpf_instance_2019, mocker):
     mocker.patch.object(import_tools.ImportProject, "get_gpf_instance",
                         return_value=gpf_instance_2019)
     project = import_tools.ImportProject.build_from_config(import_config)
-    buckets = list(project._loader_region_bins({}, "denovo"))
+    buckets = list(project._loader_region_bins("denovo"))
     assert len(buckets) == 4
     assert buckets[0].regions == ["1:1-70000000"]
     assert buckets[1].regions == ["1:70000001-140000000"]
@@ -204,7 +204,7 @@ def test_single_bucket_generation(add_chrom_prefix, gpf_instance_2019, mocker):
     mocker.patch.object(import_tools.ImportProject, "get_gpf_instance",
                         return_value=gpf_instance_2019)
     project = import_tools.ImportProject.build_from_config(import_config)
-    buckets = list(project._loader_region_bins({}, "denovo"))
+    buckets = list(project._loader_region_bins("denovo"))
     assert len(buckets) == 1
     # assert buckets[0].regions == [f"{prefix}1", f"{prefix}2", f"{prefix}3",
     #                               f"{prefix}4", f"{prefix}5"]
@@ -219,7 +219,7 @@ def test_single_bucket_is_default_when_missing_processing_config(
     mocker.patch.object(import_tools.ImportProject, "get_gpf_instance",
                         return_value=gpf_instance_2019)
     project = import_tools.ImportProject.build_from_config(import_config)
-    buckets = list(project._loader_region_bins({}, "denovo"))
+    buckets = list(project._loader_region_bins("denovo"))
     assert len(buckets) == 1
     assert buckets[0].regions == [None]
 
@@ -238,7 +238,7 @@ def test_chromosome_bucket_generation(add_chrom_prefix, gpf_instance_2019,
     mocker.patch.object(import_tools.ImportProject, "get_gpf_instance",
                         return_value=gpf_instance_2019)
     project = import_tools.ImportProject.build_from_config(import_config)
-    buckets = list(project._loader_region_bins({}, "denovo"))
+    buckets = list(project._loader_region_bins("denovo"))
     assert len(buckets) == 5
     assert buckets[0].regions == [f"{prefix}1"]
     assert buckets[1].regions == [f"{prefix}2"]
@@ -256,7 +256,7 @@ def test_chromosome_list_bucket_generation(gpf_instance_2019, mocker):
     mocker.patch.object(import_tools.ImportProject, "get_gpf_instance",
                         return_value=gpf_instance_2019)
     project = import_tools.ImportProject.build_from_config(import_config)
-    buckets = list(project._loader_region_bins({}, "denovo"))
+    buckets = list(project._loader_region_bins("denovo"))
     assert len(buckets) == 4
     assert buckets[0].regions == ["1"]
     assert buckets[1].regions == ["2"]

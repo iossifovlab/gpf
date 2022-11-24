@@ -146,7 +146,7 @@ class ImportProject():
         for loader_type in ["denovo", "vcf", "cnv", "dae"]:
             config = self.import_config["input"].get(loader_type, None)
             if config is not None:
-                for bucket in self._loader_region_bins(config, loader_type):
+                for bucket in self._loader_region_bins(loader_type):
                     buckets.append(bucket)
         return buckets
 
@@ -387,7 +387,7 @@ class ImportProject():
             res[key] = val
         return res
 
-    def _loader_region_bins(self, loader_args, loader_type):
+    def _loader_region_bins(self, loader_type):
         # pylint: disable=too-many-locals
         reference_genome = self.get_gpf_instance().reference_genome
 
@@ -408,8 +408,6 @@ class ImportProject():
         partition_helper = MakefilePartitionHelper(
             partition_description,
             reference_genome,
-            add_chrom_prefix=loader_args.get("add_chrom_prefix", None),
-            del_chrom_prefix=loader_args.get("del_chrom_prefix", None),
         )
 
         processing_config = self._get_loader_processing_config(loader_type)
