@@ -176,7 +176,7 @@ def test_empty_group_with_permissions_is_shown(admin_client, dataset):
         None,
     )
     assert new_group_reponse
-    assert new_group_reponse["datasets"][0] == dataset.dataset_id
+    assert new_group_reponse["datasets"][0]["datasetId"] == dataset.dataset_id
 
 
 def test_group_has_all_datasets(admin_client, group_with_user, dataset):
@@ -193,7 +193,9 @@ def test_group_has_all_datasets(admin_client, group_with_user, dataset):
     response = admin_client.get(url)
     assert response.status_code is status.HTTP_200_OK
     assert len(response.data["datasets"]) == 1
-    assert response.data["datasets"][0] == dataset.dataset_id
+    assert response.data["datasets"][0]["datasetId"] == dataset.dataset_id
+    assert response.data["datasets"][0]["datasetName"] == "Dataset1"
+    assert response.data["datasets"][0]["broken"] is False
 
 
 def test_grant_permission_for_group(admin_client, group_with_user, dataset):
@@ -386,3 +388,26 @@ def test_groups_search_pagination(
     assert response.status_code == status_code
     if length is not None:
         assert len(response.data) == length
+
+
+def test_user_group_routes(admin_client, user):
+    assert not user.groups.filter(name="Test group").exists()
+
+    group = Group.objects.create(name="Test group")
+    data = {"userEmail": user.email, "groupName": group.name}
+
+    url = "/api/v3/groups/add-user"
+    response = admin_client.post(
+        url, json.dumps(data), content_type="application/json", format="json"
+    )
+
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+    assert user.groups.filter(name='Test group').exists()
+
+    url = "/api/v3/groups/remove-user"
+    response = admin_client.post(
+        url, json.dumps(data), content_type="application/json", format="json"
+    )
+
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+    assert not user.groups.filter(name='Test group').exists()

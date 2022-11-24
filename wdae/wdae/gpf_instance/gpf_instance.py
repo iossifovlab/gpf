@@ -340,10 +340,12 @@ def reload_datasets(gpf_instance):
     from datasets_api.models import Dataset
     for genotype_data_id in gpf_instance.get_genotype_data_ids():
         Dataset.recreate_dataset_perm(genotype_data_id)
+        Dataset.set_broken(genotype_data_id, True)
 
         genotype_data = gpf_instance.get_genotype_data(genotype_data_id)
         if genotype_data is None:
             continue
+        Dataset.set_broken(genotype_data_id, False)
         if not genotype_data.studies:
             continue
 
@@ -351,6 +353,7 @@ def reload_datasets(gpf_instance):
             if study_id is None:
                 continue
             Dataset.recreate_dataset_perm(study_id)
+
 
 
 def _recreated_dataset_perm():

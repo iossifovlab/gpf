@@ -1,6 +1,7 @@
 from builtins import object
 from rest_framework import serializers
 from django.contrib.auth.models import Group
+from datasets_api.permissions import get_dataset_info
 
 
 class GroupCreateSerializer(serializers.ModelSerializer):
@@ -36,4 +37,6 @@ class GroupRetrieveSerializer(GroupSerializer):
         fields = ("id", "name", "users", "datasets")
 
     def get_datasets(self, group):
-        return [d.dataset_id for d in group.dataset_set.all()]
+        return [
+            get_dataset_info(d.dataset_id) for d in group.dataset_set.all()
+        ]

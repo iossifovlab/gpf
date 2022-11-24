@@ -247,15 +247,37 @@ def get_allowed_genotype_studies(user, dataset):
     return set(result)
 
 
+def get_dataset_info(dataset_id):
+    gpf_instance = get_gpf_instance()
+    study_wrapper = gpf_instance.get_wdae_wrapper(dataset_id)
+    if study_wrapper is None:
+        raise ValueError(f"Could not find study wrapper for {dataset_id}")
+    dataset = get_wdae_dataset(dataset_id)
+    if dataset is None:
+        raise ValueError(f"Could not find WDAE dataset for {dataset_id}")
+    return {
+        "datasetName": study_wrapper.name,
+        "datasetId": dataset_id,
+        "broken": dataset.broken
+    }
+
+
 def get_directly_allowed_genotype_data(user):
     gpf_instance = get_gpf_instance()
     dataset_ids = gpf_instance.get_genotype_data_ids()
     user_groups = get_user_groups(user)
 
-    return set(
-        dataset_id for dataset_id in dataset_ids
-        if user_groups & get_dataset_groups(dataset_id)
-    )
+    result = []
+
+    for dataset_id in dataset_ids:
+        if not (user_groups & get_dataset_groups(dataset_id)):
+            continue
+
+        study_wrapper = gpf_instance.get_wdae_wrapper(dataset_id)
+        dataset = get_wdae_dataset(dataset_id)
+        result.append(get_dataset_info(dataset_id))
+
+    return result
 
 
 def add_group_perm_to_user(group_name, user):

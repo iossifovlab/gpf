@@ -328,6 +328,7 @@ class DatasetPermissionsView(QueryBaseView):
             dataset_details.append({
                 "dataset_id": dataset_gd.study_id,
                 "dataset_name": name,
+                "broken": dataset.broken,
                 "users": users_list,
                 "groups": group_names
 

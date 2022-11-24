@@ -15,5 +15,5 @@ def group_with_user(db, group, user):
 
 
 @pytest.fixture()
-def dataset(db):
-    return Dataset.objects.create(dataset_id="My Dataset")
+def dataset(wdae_gpf_instance, db):
+    return Dataset.objects.get(dataset_id="Dataset1")
