@@ -339,11 +339,11 @@ def test_cant_revoke_default_permissions(user_client, dataset):
     "page,status_code,length, first_name, last_name",
     [
         (1, status.HTTP_200_OK, 25, "Dataset1", "Group27"),
-        (2, status.HTTP_200_OK, 25, "Group28", "Group49"),
+        (2, status.HTTP_200_OK, 25, "Group28", "Group5"),
         (3, status.HTTP_200_OK, 25, "Group50", "Group72"),
-        (4, status.HTTP_200_OK, 25, "Group73", "Group99"),
-        (5, status.HTTP_200_OK, 1, "admin", None),
-        (6, status.HTTP_204_NO_CONTENT, None, None, None),
+        (4, status.HTTP_200_OK, 25, "Group73", "Group95"),
+        (5, status.HTTP_200_OK, 25, "Group96", None),
+        (7, status.HTTP_204_NO_CONTENT, None, None, None),
     ]
 )
 def test_groups_pagination(
@@ -377,7 +377,8 @@ def test_groups_search(admin_client, hundred_groups):
         (2, status.HTTP_200_OK, 25),
         (3, status.HTTP_200_OK, 25),
         (4, status.HTTP_200_OK, 25),
-        (5, status.HTTP_204_NO_CONTENT, None),
+        (5, status.HTTP_200_OK, 3),
+        (6, status.HTTP_204_NO_CONTENT, None),
     ]
 )
 def test_groups_search_pagination(
