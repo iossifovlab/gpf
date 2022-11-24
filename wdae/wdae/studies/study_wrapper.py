@@ -231,8 +231,9 @@ class StudyWrapper(StudyWrapperBase):
     def __getattr__(self, name):
         return getattr(self.genotype_data_study, name)
 
+    @property
     def is_group(self):
-        return self.genotype_data_study.is_group()
+        return self.genotype_data_study.is_group
 
     @property
     def families(self):

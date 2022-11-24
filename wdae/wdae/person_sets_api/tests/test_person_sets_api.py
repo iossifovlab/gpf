@@ -1,6 +1,5 @@
 # pylint: disable=redefined-outer-name,C0114,C0116,protected-access
 
-import json
 import pytest
 from rest_framework import status  # type: ignore
 

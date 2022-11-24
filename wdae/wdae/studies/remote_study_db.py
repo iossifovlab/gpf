@@ -27,7 +27,7 @@ class RemoteStudyDB:
         self._fetch_remote_studies(rest_client)
 
     def _fetch_remote_studies(self, rest_client: RESTClient):
-        studies = rest_client.get_datasets()
+        studies = rest_client.get_studies()
         if studies is None:
             raise RESTClientRequestError(
                 f"Failed to get studies from {rest_client.remote_id}"

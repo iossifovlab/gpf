@@ -51,6 +51,9 @@ enrichment:
   enabled: true
 EOT
 
+rm -rf $DAE_DB_DIR/wdae/wdae.sql
+rm -rf $DAE_DB_DIR/wdae/wdae_django_pre.cache
+rm -rf $DAE_DB_DIR/wdae/wdae_django_default.cache
 /opt/conda/bin/conda run --no-capture-output -n gpf \
     /wd/wdae/wdae/wdaemanage.py migrate
 /opt/conda/bin/conda run --no-capture-output -n gpf \

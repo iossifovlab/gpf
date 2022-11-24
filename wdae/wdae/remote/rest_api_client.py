@@ -144,6 +144,12 @@ class RESTClient:
             return response.json()
         return None
 
+    def get_studies(self):
+        response = self._get("datasets/studies")
+        if response.status_code == 200:
+            return response.json()
+        return None
+
     def get_dataset_config(self, study_id):
         response = self._get(f"datasets/config/{study_id}")
         if response.status_code == 200:

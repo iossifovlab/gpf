@@ -1,4 +1,5 @@
 import os
+import logging
 
 from django.contrib.auth import get_user_model
 from django.conf import settings
@@ -12,6 +13,9 @@ from groups_api.serializers import GroupSerializer
 from datasets_api.permissions import get_wdae_parents, user_has_permission
 from dae.studies.study import GenotypeData
 from .models import Dataset
+
+
+logger = logging.getLogger(__name__)
 
 
 def augment_accessibility(dataset, user):
@@ -107,6 +111,38 @@ class DatasetView(QueryBaseView):
             res = augment_with_parents(res)
 
             return Response({"data": res})
+
+
+class StudiesView(QueryBaseView):
+    def _collect_datasets_summary(self, user):
+        selected_genotype_data = \
+            self.gpf_instance.get_selected_genotype_data() \
+            or self.gpf_instance.get_genotype_data_ids()
+
+        datasets = filter(lambda study: study.is_group is False, [
+            self.gpf_instance.get_wdae_wrapper(genotype_data_id)
+            for genotype_data_id in selected_genotype_data
+        ])
+
+        res = [
+            StudyWrapperBase.build_genotype_data_all_datasets(
+                dataset.config
+            )
+            for dataset in datasets
+        ]
+
+        if not self.gpf_instance.get_selected_genotype_data():
+            res = sorted(res, key=lambda desc: desc["name"])
+
+        res = [augment_accessibility(ds, user) for ds in res]
+        res = [augment_with_groups(ds) for ds in res]
+        res = [augment_with_parents(ds) for ds in res]
+        return res
+
+    def get(self, request):
+        user = request.user
+
+        return Response({"data": self._collect_datasets_summary(user)})
 
 
 class PermissionDeniedPromptView(QueryBaseView):
@@ -271,6 +307,19 @@ class DatasetPermissionsView(QueryBaseView):
             dataset_gd = self.gpf_instance.get_genotype_data(
                 dataset.dataset_id
             )
+
+            if dataset_gd is None:
+                logger.warning(
+                    "Dataset %s missing in GPF instance!",
+                    dataset.dataset_id
+                )
+                dataset_details.append({
+                    "dataset_id": dataset.dataset_id,
+                    "dataset_name": "Missing dataset",
+                    "users": [],
+                    "groups": []
+                })
+                continue
 
             name = dataset_gd.name
             if name is None:
