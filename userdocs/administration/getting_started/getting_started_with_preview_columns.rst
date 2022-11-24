@@ -1,30 +1,56 @@
-Getting Started with Preview Columns
-####################################
+Getting Started with Preview and Download Columns
+#################################################
 
-For each study you can specify which columns are shown in the variants' table preview, as well as those which will be downloaded.
+When importing data into a GPF instance we can run an annotation pipeline that
+adds additional attributes to each variant. To make these attributes available in
+the variants preview table and in the variants download file we need to change
+the configuration of the corresponding study or dataset.
 
-As an example we are going to redefine the `Frequency` column in the `comp_vcf`
-study imported in the previous example.
+For each study dataset, you can specify which columns are shown in the variants' 
+table preview, as well as those which will be downloaded.
 
-Navigate to the `comp_vcf` study folder:
+Example: Redefine the `Frequency` column in the preview table of `Hello World Dataset``
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-.. code::
+As an example, we are going to redefine the `Frequency` column for ``helloworld``
+dataset to include attributes from annotation with GnomAD v3 genomic score.
 
-    cd gpf_test/studies/comp_vcf
+Navigate to the ``helloworld`` dataset folder:
 
+.. code-block:: bash
 
-Edit the "genotype_browser" section in the configuration file ``comp_vcf.conf`` to looks like this:
+    cd datasets/helloworld
 
-.. code::
+and edit the ``helloworld.yaml`` file. Add the following section to the end:
 
-    [genotype_browser]
-    enabled = true
-    genotype.freq.name = "Frequency"
-    genotype.freq.slots = [
-        {source = "exome_gnomad_af_percent", name = "exome gnomad", format = "E %%.3f"},
-        {source = "genome_gnomad_af_percent", name = "genome gnomad", format = "G %%.3f"},
-        {source = "af_allele_freq", name = "study freq", format = "S %%.3f"}
-    ]
+.. code-block:: yaml
+
+    genotype_browser:
+      columns:
+        genotype:
+          genome_gnomad_v3_af_percent:
+            name: gnomAD v3 AF
+            source: genome_gnomad_v3_af_percent
+            format: "%%.3f"
+          genome_gnomad_v3_ac:
+            name: gnomAD v3 AC
+            source: genome_gnomad_v3_ac
+            format: "%%d"
+          genome_gnomad_v3_an:
+            name: gnomAD v3 AN
+            source: genome_gnomad_v3_an
+            format: "%%d"
+      column_groups:
+        freq:
+          name: "Frequency"
+          columns: 
+            - genome_gnomad_v3_af_percent
+            - genome_gnomad_v3_ac
+            - genome_gnomad_v3_an    
 
 This overwrites the definition of the default preview column `Frequency` to
-include not only the gnomAD frequencies, but also the allele frequencies.
+include the gnomAD v3 frequencies. If we now browse the `Hello World Dataset`
+and run preview in the genotype browser we will start seeing the GnomAD
+attributes:
+
+.. image:: getting_started_files/helloworld-gnomad-frequency-preview-columns.png
