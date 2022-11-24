@@ -76,7 +76,6 @@ import { PhenoToolResultsChartComponent } from './pheno-tool-results-chart/pheno
 import { PhenoToolResultsChartPerEffectComponent } from './pheno-tool-results-chart/pheno-tool-results-chart-per-effect.component';
 import { PhenoToolResultsChartPerResultComponent } from './pheno-tool-results-chart/pheno-tool-results-chart-per-result.component';
 import { PhenoToolEffectTypesComponent } from './pheno-tool-effect-types/pheno-tool-effect-types.component';
-import { RegistrationComponent } from './registration/registration.component';
 import { PhenoBrowserComponent } from './pheno-browser/pheno-browser.component';
 import { PhenoBrowserService } from './pheno-browser/pheno-browser.service';
 import { ResetPasswordComponent } from './reset-password/reset-password.component';
@@ -310,7 +309,6 @@ const appRoutes: Routes = [
     PhenoToolResultsChartPerEffectComponent,
     PhenoToolResultsChartPerResultComponent,
     PhenoToolEffectTypesComponent,
-    RegistrationComponent,
     PhenoBrowserComponent,
     ResetPasswordComponent,
     PhenoBrowserModalContentComponent,
