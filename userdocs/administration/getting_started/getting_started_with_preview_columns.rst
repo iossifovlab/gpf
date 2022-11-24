@@ -50,7 +50,52 @@ and edit the ``helloworld.yaml`` file. Add the following section to the end:
 
 This overwrites the definition of the default preview column `Frequency` to
 include the gnomAD v3 frequencies. If we now browse the `Hello World Dataset`
-and run preview in the genotype browser we will start seeing the GnomAD
-attributes:
+and run variants preview in the genotype browser we will start seeing the 
+GnomAD attributes:
 
 .. image:: getting_started_files/helloworld-gnomad-frequency-preview-columns.png
+
+
+Example: Add GnomAD v3 columns to the variants download
++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+As an example let us add GnomAD v3 columns to the variants downloads.
+
+By default, each genotype study or dataset has a list of predefined columns used
+when downloading variants. The users can replace the default list of download
+columns by defining the ``download_columns`` list or they can extend the predefined
+list of download columns by defining the ``download_columns_ext`` list of columns.
+
+In the example below we are going to use ``download_columns_ext`` to add
+GnomAD v3 columns to the properties of downloaded variants:
+
+.. code-block:: yaml
+
+    genotype_browser:
+      columns:
+        genotype:
+          genome_gnomad_v3_af_percent:
+            name: gnomAD v3 AF
+            source: genome_gnomad_v3_af_percent
+            format: "%%.3f"
+          genome_gnomad_v3_ac:
+            name: gnomAD v3 AC
+            source: genome_gnomad_v3_ac
+            format: "%%d"
+          genome_gnomad_v3_an:
+            name: gnomAD v3 AN
+            source: genome_gnomad_v3_an
+            format: "%%d"
+      column_groups:
+        freq:
+          name: "Frequency"
+          columns: 
+            - genome_gnomad_v3_af_percent
+            - genome_gnomad_v3_ac
+            - genome_gnomad_v3_an    
+
+      download_columns_ext:
+        - genome_gnomad_v3_af_percent
+        - genome_gnomad_v3_ac
+        - genome_gnomad_v3_an    
+
