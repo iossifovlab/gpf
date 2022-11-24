@@ -166,7 +166,7 @@ def test_empty_group_with_permissions_is_shown(admin_client, dataset):
     url = "/api/v3/groups"
     response = admin_client.get(url)
     assert response.status_code is status.HTTP_200_OK
-    assert len(response.data) == groups_count + 1
+    assert len(response.data) == 25
     new_group_reponse = next(
         (
             response_group
@@ -338,10 +338,10 @@ def test_cant_revoke_default_permissions(user_client, dataset):
 @pytest.mark.parametrize(
     "page,status_code,length, first_name, last_name",
     [
-        (1, status.HTTP_200_OK, 25, "Group1", "Group30"),
-        (2, status.HTTP_200_OK, 25, "Group31", "Group53"),
-        (3, status.HTTP_200_OK, 25, "Group54", "Group76"),
-        (4, status.HTTP_200_OK, 25, "Group77", "Group99"),
+        (1, status.HTTP_200_OK, 25, "Dataset1", "Group27"),
+        (2, status.HTTP_200_OK, 25, "Group28", "Group49"),
+        (3, status.HTTP_200_OK, 25, "Group50", "Group72"),
+        (4, status.HTTP_200_OK, 25, "Group73", "Group99"),
         (5, status.HTTP_200_OK, 1, "admin", None),
         (6, status.HTTP_204_NO_CONTENT, None, None, None),
     ]
