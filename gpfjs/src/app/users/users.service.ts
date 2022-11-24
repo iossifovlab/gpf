@@ -1,5 +1,5 @@
 
-import {throwError as observableThrowError, Observable, Subject, ReplaySubject, of, BehaviorSubject } from 'rxjs';
+import {throwError as observableThrowError, Observable, Subject, ReplaySubject } from 'rxjs';
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { ConfigService } from '../config/config.service';
@@ -16,10 +16,7 @@ const oboe = require('oboe');
 export class UsersService {
   private readonly logoutUrl = 'users/logout';
   private readonly userInfoUrl = 'users/get_user_info';
-  private readonly registerUrl = 'users/register';
   private readonly resetPasswordUrl = 'users/reset_password';
-  private readonly changePasswordUrl = 'users/change_password';
-  private readonly checkVerificationUrl = 'users/check_verif_path';
   private readonly usersUrl = 'users';
   private readonly usersStreamingUrl = `${this.usersUrl}/streaming_search`;
 
@@ -27,7 +24,6 @@ export class UsersService {
   private lastUserInfo = null;
 
   public usersStreamingFinishedSubject = new Subject();
-  public emailLog: BehaviorSubject<string>;
 
   public constructor(
     private http: HttpClient,
@@ -37,7 +33,6 @@ export class UsersService {
     private locationStrategy: LocationStrategy,
     private authService: AuthService,
   ) {
-    this.emailLog = new BehaviorSubject('');
     this.authService.tokenExchangeSubject.subscribe(() => {
       // Refresh user data when a token arrives
       this.getUserInfo().pipe(take(1)).subscribe(() => {});
@@ -92,34 +87,6 @@ export class UsersService {
     return !(name === undefined || name === '');
   }
 
-  public register(email: string, name: string): Observable<boolean> {
-    const csrfToken = this.cookieService.get('csrftoken');
-    const headers = { 'X-CSRFToken': csrfToken };
-    const options = { headers: headers, withCredentials: true };
-
-    if (!this.isEmailValid(email)) {
-      return observableThrowError(new Error(
-        'Invalid email address entered. Please use a valid email address.'
-      ));
-    }
-
-    if (!this.isNameValid(name)) {
-      return observableThrowError(new Error(
-        'Name field cannot be empty.'
-      ));
-    }
-
-    return this.http.post(this.config.baseUrl + this.registerUrl, {
-      email: email,
-      name: name,
-    }, options).pipe(
-      map(() => true),
-      catchError(error => {
-        return observableThrowError(new Error(error.error.error_msg));
-      })
-    );
-  }
-
   public resetPassword(email: string): Observable<boolean> {
     const csrfToken = this.cookieService.get('csrftoken');
     const headers = { 'X-CSRFToken': csrfToken };
@@ -135,36 +102,6 @@ export class UsersService {
       map(() => true),
       catchError(error => {
         return observableThrowError(new Error(error.error.error_msg));
-      })
-    );
-  }
-
-  public changePassword(password: string, verifPath: string): Observable<boolean | object> {
-    const csrfToken = this.cookieService.get('csrftoken');
-    const headers = { 'X-CSRFToken': csrfToken };
-    const options = { headers: headers, withCredentials: true };
-
-    return this.http.post(this.config.baseUrl + this.changePasswordUrl, {
-      password: password, verifPath: verifPath
-    }, options).pipe(
-      map(() => true),
-      catchError(res => {
-        return of({error: res.error.error_msg})
-      })
-    );
-  }
-
-  public checkVerification(verifPath: string): Observable<boolean> {
-    const csrfToken = this.cookieService.get('csrftoken');
-    const headers = { 'X-CSRFToken': csrfToken };
-    const options = { headers: headers, withCredentials: true };
-
-    return this.http.post(this.config.baseUrl + this.checkVerificationUrl, {
-      verifPath: verifPath
-    }, options).pipe(
-      map(() => true),
-      catchError(() => {
-        return of(false);
       })
     );
   }

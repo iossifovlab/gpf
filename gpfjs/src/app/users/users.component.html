@@ -1,18 +1,12 @@
-<div *ngIf="(userInfo$ | async)?.email as email" style="display: flex; justify-content: flex-end">
-  <span class="username-field" style="align-self: center">{{ email }}</span>
-  <button class="btn btn-sm" id="logout-button" (click)="logout()">Logout</button>
-</div>
-
-<div *ngIf="!(userInfo$ | async)?.email" class="row justify-content-end dropdown" data-backdrop="static">
+<div *ngIf="!(userInfo$ | async)?.email" class="row justify-content-end">
   <div style="display: flex; justify-content: flex-end">
-    <button
-      #dropdownButton
-      (click)="login()"
-      class="btn btn-secondary dropdown-toggle"
-      id="login-dropdown-toggle-button"
-      type="button"
-      [disabled]="loading">
+    <button (click)="login()" class="btn btn-secondary dropdown-toggle" id="login-dropdown-toggle-button" type="button">
       <span>Login</span>
     </button>
   </div>
+</div>
+
+<div *ngIf="(userInfo$ | async)?.email as email" style="display: flex; justify-content: flex-end">
+  <span class="username-field" style="align-self: center">{{ email }}</span>
+  <button class="btn btn-sm" id="logout-button" (click)="logout()">Logout</button>
 </div>
