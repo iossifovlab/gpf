@@ -179,7 +179,6 @@ def test_target_generator_chrom_prefix_target_other(
     generator = MakefilePartitionHelper(
         partition_descriptor,
         gpf_instance_2013.reference_genome,
-        # add_chrom_prefix="chr",
     )
     print(generator.chromosome_lengths)
     assert len(generator.chromosome_lengths) == 4
@@ -223,7 +222,6 @@ def test_target_generator_add_chrom_prefix_target_chrom(
     generator = MakefilePartitionHelper(
         partition_descriptor,
         gpf_instance_2013.reference_genome,
-        # add_chrom_prefix="chr",
     )
     print(generator.chromosome_lengths)
     assert len(generator.chromosome_lengths) == 4
@@ -331,7 +329,6 @@ def test_makefile_generator_bucket_numbering(
     generator = MakefilePartitionHelper(
         partition_descriptor,
         gpf_instance_2013.reference_genome,
-        # add_chrom_prefix="chr",
     )
     print(generator.chromosome_lengths)
     assert len(generator.chromosome_lengths) == 4
@@ -511,7 +508,6 @@ def test_makefile_generator_regions_add_chrom_prefix(
     generator = MakefilePartitionHelper(
         partition_descriptor,
         gpf_instance_2013.reference_genome,
-        # add_chrom_prefix="chr",
     )
 
     print(generator.chromosome_lengths)
