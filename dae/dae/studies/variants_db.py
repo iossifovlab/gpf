@@ -63,7 +63,7 @@ preview_columns = [
 	"variant",
 	"genotype",
 	"effect",
-	"weights",
+	"scores",
 	"freq"
 ]
 
@@ -84,18 +84,18 @@ download_columns = [
 	"effect",
 	"geneeffect",
 	"effectdetails",
-	"weights",
+	"scores",
 ]
 
-summary_preview_columns = ["variant", "effect", "weights", "freq"]
-summary_download_columns = ["variant", "effect", "weights", "freq"]
+summary_preview_columns = ["variant", "effect", "scores", "freq"]
+summary_download_columns = ["variant", "effect", "scores", "freq"]
 
 [genotype_browser.column_groups]
 effect.name = "effect"
 effect.columns = ["worst_effect", "genes"]
 
-weights.name = "vulnerability/intolerance"
-weights.columns = ["lgd_rank", "rvis_rank", "pli_rank"]
+scores.name = "vulnerability/intolerance"
+scores.columns = ["lgd_rank", "rvis_rank", "pli_rank"]
 
 family.name = "family"
 family.columns = ["family_id", "study"]
