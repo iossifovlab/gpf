@@ -24,16 +24,23 @@ export class GenotypePreviewFieldComponent implements OnInit, OnChanges {
     this.formattedValue = this.formatValue();
   }
 
+  private doFormat(format, value) {
+    if(value === 'nan') {
+      return value;
+    }
+    return sprintf(format, value);
+  }
+
   public formatValue() {
     if (this.value) {
       if (this.format) {
         if (this.value.constructor === Array) {
-          return this.value.map(x => x === "-" ? "-" : sprintf(this.format, x));
+          return this.value.map(x => x === '-' ? '-' : this.doFormat(this.format, x));
         }
         if (typeof this.value === 'string') {
           return this.value;
         }
-        return sprintf(this.format, this.value);
+        return this.doFormat(this.format, this.value);
       }
       return this.value;
     }
