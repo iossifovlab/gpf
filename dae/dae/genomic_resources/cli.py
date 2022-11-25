@@ -488,12 +488,7 @@ def _run_resource_repair_command(proto, repo_url, region_size, **kwargs):
 
 
 def _run_repo_info_command(proto, **kwargs):  # pylint: disable=unused-argument
-    info = proto.build_index_info()
-    content_filepath = os.path.join(proto.url, GR_INDEX_FILE_NAME)
-    with proto.open_raw_file(
-        content_filepath, "wt", encoding="utf8"
-    ) as outfile:
-        outfile.write(repository_template.render(data=info))
+    proto.build_index_info(repository_template)
 
     for res in proto.get_all_resources():
         try:
