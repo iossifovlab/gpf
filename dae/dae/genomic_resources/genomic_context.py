@@ -286,7 +286,7 @@ class CLIGenomicContext(SimpleGenomicContext):
                 args.gene_models_resource_id)
             resource = grr.get_resource(args.gene_models_resource_id)
 
-            gene_models = build_gene_models_from_resource(resource)
+            gene_models = build_gene_models_from_resource(resource).load()
             context_objects[GC_GENE_MODELS_KEY] = gene_models
 
         return CLIGenomicContext(

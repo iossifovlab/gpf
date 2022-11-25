@@ -105,7 +105,7 @@ class EffectAnnotatorBuilder:
         if self.args.gene_models_resource_id:
             resource = self.get_grr().get_resource(
                 self.args.gene_models_resource_id)
-            return build_gene_models_from_resource(resource)
+            return build_gene_models_from_resource(resource).load()
 
         if self.args.gene_models_filename:
             return build_gene_models_from_file(
