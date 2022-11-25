@@ -87,7 +87,7 @@ def test_get_reference_genome_bad():
 def test_get_gene_models_ok(grr_fixture):
     res = grr_fixture.get_resource(
         "hg38/GRCh38-hg38/gene_models/refSeq_20200330")
-    gene_models = build_gene_models_from_resource(res)
+    gene_models = build_gene_models_from_resource(res).load()
 
     context = SimpleGenomicContext(
         context_objects={
@@ -228,7 +228,7 @@ def test_cli_genomic_context_gene_models(fixture_dirname):
 def contexts(grr_fixture):
     gene_models1 = build_gene_models_from_resource(
         grr_fixture.get_resource(
-            "hg38/GRCh38-hg38/gene_models/refSeq_20200330"))
+            "hg38/GRCh38-hg38/gene_models/refSeq_20200330")).load()
 
     context1 = SimpleGenomicContext(
         context_objects={
@@ -238,7 +238,7 @@ def contexts(grr_fixture):
     gene_models2 = build_gene_models_from_resource(
         grr_fixture.get_resource(
             "hg19/GATK_ResourceBundle_5777_b37_phiX174_short/"
-            "gene_models/refGene_201309"))
+            "gene_models/refGene_201309")).load()
 
     context2 = SimpleGenomicContext(
         context_objects={

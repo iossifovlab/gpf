@@ -57,7 +57,7 @@ def build_effect_annotator(pipeline, config):
     else:
         gene_models_id = config.get("gene_models")
         resource = pipeline.repository.get_resource(gene_models_id)
-        gene_models = build_gene_models_from_resource(resource)
+        gene_models = build_gene_models_from_resource(resource).load()
 
     return EffectAnnotatorAdapter(config, genome, gene_models)
 

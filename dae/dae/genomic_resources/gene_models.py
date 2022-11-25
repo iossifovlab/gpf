@@ -1518,6 +1518,6 @@ def build_gene_models_from_resource(
         raise ValueError(f"wrong resource type: {resource.resource_id}")
 
     gene_models = GeneModels(resource)
-    gene_models.load()
+    # gene_models.load()
 
     return gene_models

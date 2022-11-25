@@ -20,7 +20,6 @@ from dae.__version__ import VERSION, RELEASE
 from dae.genomic_resources.repository import \
     GR_CONF_FILE_NAME, \
     GR_CONTENTS_FILE_NAME, \
-    GR_INDEX_FILE_NAME, \
     GenomicResource, \
     GenomicResourceRepo, \
     ReadOnlyRepositoryProtocol, \

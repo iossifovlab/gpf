@@ -14,7 +14,9 @@ import fsspec  # type: ignore
 
 import yaml
 
-from dae.genomic_resources.repository import GR_CONF_FILE_NAME, Manifest, \
+from dae.genomic_resources.repository import GR_CONF_FILE_NAME, \
+    GR_INDEX_FILE_NAME, \
+    Manifest, \
     ReadWriteRepositoryProtocol, \
     ReadOnlyRepositoryProtocol, \
     Mode, \
@@ -500,7 +502,7 @@ class FsspecReadWriteProtocol(
 
         return content
 
-    def build_index_info(self):
+    def build_index_info(self, repository_template):
         """Build info dict for the repository."""
         result = {}
         for res in self.get_all_resources():
@@ -513,6 +515,12 @@ class FsspecReadWriteProtocol(
                 "res_files": len(list(res.get_manifest().get_files())),
                 "res_size": res_size
             }
+
+        content_filepath = os.path.join(self.url, GR_INDEX_FILE_NAME)
+        with self.filesystem.open(
+                content_filepath, "wt", encoding="utf8") as outfile:
+            outfile.write(repository_template.render(data=result))
+
         return result
 
 
