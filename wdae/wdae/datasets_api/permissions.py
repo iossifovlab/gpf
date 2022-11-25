@@ -270,12 +270,21 @@ def get_directly_allowed_genotype_data(user):
     result = []
 
     for dataset_id in dataset_ids:
-        if not (user_groups & get_dataset_groups(dataset_id)):
+        if not user_groups & get_dataset_groups(dataset_id):
             continue
 
-        study_wrapper = gpf_instance.get_wdae_wrapper(dataset_id)
-        dataset = get_wdae_dataset(dataset_id)
-        result.append(get_dataset_info(dataset_id))
+        try:
+            result.append(get_dataset_info(dataset_id))
+        except ValueError:
+            logger.warning("Dataset %s is broken.", dataset_id)
+            dataset = get_wdae_dataset(dataset_id)
+            if dataset is None:
+                continue
+            result.append({
+                "datasetName": dataset_id,
+                "datasetId": dataset_id,
+                "broken": dataset.broken
+            })
 
     return result
 
