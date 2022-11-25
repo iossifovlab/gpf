@@ -184,6 +184,7 @@ def _configure_repo_hist_subparser(subparsers):
 
     _add_repository_resource_parameters_group(parser_hist, use_resource=False)
     _add_dry_run_and_force_parameters_group(parser_hist)
+    _add_dvc_parameters_group(parser_hist)
     _add_hist_parameters_group(parser_hist)
 
     DaskClient.add_arguments(parser_hist)
@@ -196,6 +197,7 @@ def _configure_resource_hist_subparser(subparsers):
 
     _add_repository_resource_parameters_group(parser_hist)
     _add_dry_run_and_force_parameters_group(parser_hist)
+    _add_dvc_parameters_group(parser_hist)
     _add_hist_parameters_group(parser_hist)
 
     DaskClient.add_arguments(parser_hist)
@@ -373,7 +375,7 @@ def _run_resource_manifest_command(proto, repo_url, **kwargs):
 
 
 def _do_resource_hist_command(  # pylint: disable=too-many-arguments
-        client, proto, res, dry_run, force, region_size):
+        client, proto, res, dry_run, force, use_dvc, region_size):
     if res.get_type() not in {
             "position_score", "np_score", "allele_score"}:
         print(
@@ -397,12 +399,19 @@ def _do_resource_hist_command(  # pylint: disable=too-many-arguments
     hist_out_dir = "histograms"
     logger.info("Saving histograms in %s", hist_out_dir)
     builder.save(histograms, hist_out_dir)
-    proto.save_manifest(res, proto.update_manifest(res))
+
+    prebuild_entries = {}
+    if use_dvc:
+        prebuild_entries = collect_dvc_entries(proto, res)
+    proto.save_manifest(
+        res,
+        proto.update_manifest(res, prebuild_entries))
 
 
 def _run_repo_hist_command(proto, region_size, **kwargs):
     dry_run = kwargs.get("dry_run", False)
     force = kwargs.get("force", False)
+    use_dvc = kwargs.get("use_dvc", True)
     if dry_run and force:
         logger.warning("please choose one of 'dry_run' and 'force' options")
         return
@@ -414,7 +423,7 @@ def _run_repo_hist_command(proto, region_size, **kwargs):
     with dask_client as client:
         for res in proto.get_all_resources():
             _do_resource_hist_command(
-                client, proto, res, dry_run, force, region_size)
+                client, proto, res, dry_run, force, use_dvc, region_size)
     if not dry_run:
         proto.build_content_file()
 
@@ -422,6 +431,7 @@ def _run_repo_hist_command(proto, region_size, **kwargs):
 def _run_resource_hist_command(proto, repo_url, region_size, **kwargs):
     dry_run = kwargs.get("dry_run", False)
     force = kwargs.get("force", False)
+    use_dvc = kwargs.get("use_dvc", True)
     if dry_run and force:
         logger.warning("please choose one of 'dry_run' and 'force' options")
         return
@@ -436,7 +446,7 @@ def _run_resource_hist_command(proto, repo_url, region_size, **kwargs):
 
     with dask_client as client:
         _do_resource_hist_command(
-            client, proto, res, dry_run, force, region_size)
+            client, proto, res, dry_run, force, use_dvc, region_size)
 
 
 def _run_repo_repair_command(proto, region_size, **kwargs):
@@ -456,7 +466,7 @@ def _run_repo_repair_command(proto, region_size, **kwargs):
             _do_resource_manifest_command(
                 proto, res, dry_run, force, use_dvc)
             _do_resource_hist_command(
-                client, proto, res, dry_run, force, region_size)
+                client, proto, res, dry_run, force, use_dvc, region_size)
     if not dry_run:
         proto.build_content_file()
 
@@ -483,7 +493,7 @@ def _run_resource_repair_command(proto, repo_url, region_size, **kwargs):
         _do_resource_manifest_command(
             proto, res, dry_run, force, use_dvc)
         _do_resource_hist_command(
-            client, proto, res, dry_run, force, region_size)
+            client, proto, res, dry_run, force, use_dvc, region_size)
 
 
 def _run_repo_info_command(proto, **kwargs):  # pylint: disable=unused-argument
