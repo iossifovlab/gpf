@@ -188,9 +188,6 @@ class MakefilePartitionHelper:
 
         targets = defaultdict(list)
         for target_chrom in generated_target_chromosomes:
-            if target_chrom not in self.chromosome_lengths:
-                continue
-
             assert target_chrom in self.chromosome_lengths, (
                 target_chrom,
                 self.chromosome_lengths,
