@@ -49,9 +49,9 @@ class AbstractTaskGraphExecutor(TaskGraphExecutor):
                 self._set_task_result(task_node, record.result)
             else:
                 self._queue_task(task_node)
-        return self.__await_tasks(already_computed_tasks)
+        return self._yield_task_results(already_computed_tasks)
 
-    def __await_tasks(self, already_computed_tasks) \
+    def _yield_task_results(self, already_computed_tasks) \
             -> Iterator[tuple[Task, Any]]:
         for task_node, result in already_computed_tasks.items():
             yield task_node, result
