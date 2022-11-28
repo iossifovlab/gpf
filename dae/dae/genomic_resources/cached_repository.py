@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 import logging
 
-from typing import Iterable, Optional, Dict, Generator
+from typing import Iterable, Optional, Dict, Generator, cast
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from .repository import GenomicResource, \
@@ -16,6 +16,7 @@ logger = logging.getLogger(__name__)
 
 
 class CacheResource(GenomicResource):
+    """Represents resources stored in cache."""
 
     def __init__(self, resource, protocol: CachingProtocol):
         super().__init__(
@@ -24,6 +25,10 @@ class CacheResource(GenomicResource):
             protocol,
             config=resource.config,
             manifest=resource.get_manifest())
+
+    def get_manifest(self) -> Manifest:
+        return cast(CachingProtocol, self.proto)\
+            .remote_protocol.get_manifest(self)
 
 
 class CachingProtocol(ReadOnlyRepositoryProtocol):

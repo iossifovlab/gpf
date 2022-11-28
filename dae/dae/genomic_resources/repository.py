@@ -545,8 +545,8 @@ class ReadWriteRepositoryProtocol(ReadOnlyRepositoryProtocol):
             manifest.add(entry)
             state = self.load_resource_file_state(resource, entry.name)
             if state is None:
-                entries_to_update.add(entry.name)
-                continue
+                state = self.build_resource_file_state(resource, entry.name)
+                self.save_resource_file_state(resource, state)
             if state.filename not in current_manifest:
                 entries_to_update.add(entry.name)
                 continue
@@ -608,7 +608,6 @@ class ReadWriteRepositoryProtocol(ReadOnlyRepositoryProtocol):
             return manifest
         except FileNotFoundError:
             manifest = self.build_manifest(resource)
-            self.save_manifest(resource, manifest)
             return manifest
 
     @abc.abstractmethod

@@ -440,7 +440,6 @@ class FsspecReadWriteProtocol(
             md5sum=md5)
 
         self.save_resource_file_state(dest_resource, state)
-        self.save_manifest(dest_resource, remote_manifest)
 
         return state
 
