@@ -76,6 +76,40 @@ chr1   5   .  A   T   .    .       A=1
     return proto.get_resource("tmp")
 
 
+@pytest.fixture
+def vcf_res_multiallelic(tmp_path_factory):
+    root_path = tmp_path_factory.mktemp("vcf")
+    setup_directories(
+        root_path / "grr",
+        {
+            "tmp": {
+                "genomic_resource.yaml": textwrap.dedent("""
+                    tabix_table:
+                        filename: data.vcf.gz
+                        format: vcf_info
+                """)
+            }
+        }
+    )
+    setup_vcf(
+        root_path / "grr" / "tmp" / "data.vcf.gz",
+        textwrap.dedent("""
+##fileformat=VCFv4.1
+##INFO=<ID=A,Number=1,Type=Integer,Description="Score A">
+##INFO=<ID=B,Number=.,Type=Integer,Description="Score B">
+##INFO=<ID=C,Number=R,Type=String,Description="Score C">
+##INFO=<ID=D,Number=A,Type=String,Description="Score D">
+#CHROM POS ID REF ALT QUAL FILTER  INFO
+chr1   2   .  A   .   .    .       A=0;B=01,02,03;C=c01
+chr1   5   .  A   T   .    .       A=1;B=11,12,13;C=c11,c12;D=d11
+chr1   15   .  A   T,G   .    .       A=2;B=21,22;C=c21,c22,c23;D=d21,d22
+chr1   30   .  A   T,G,C   .    .       A=3;B=31;C=c31,c32,c33,c34;D=d31,d32,d33
+    """)
+    )
+    proto = build_fsspec_protocol("testing", str(root_path / "grr"))
+    return proto.get_resource("tmp")
+
+
 def test_default_setup():
     res = build_test_resource({
         "genomic_resource.yaml": """
@@ -1126,8 +1160,8 @@ def test_vcf_get_all_records(vcf_res):
 
     assert "REF" in results[0].attributes
     assert results[0].attributes["REF"] == "A"
-    assert "ALTS" in results[0].attributes
-    assert results[0].attributes["ALTS"] == ("T",)
+    assert "ALT" in results[0].attributes
+    assert results[0].attributes["ALT"] == "T"
     assert "INFO" in results[0].attributes
     assert isinstance(results[0].attributes["INFO"], pysam.VariantRecordInfo)
 
@@ -1218,3 +1252,83 @@ def test_vcf_jump_ahead_optimization_use_jump(vcf_res):
     assert len(tab.buffer.deque) == 1
     assert tab.stats["sequential seek forward"] == 0
     assert tab.stats["yield from tabix"] == 2
+
+
+def test_vcf_multiallelic(vcf_res_multiallelic):
+    """
+    Test multiallelic variants are read
+    as separate lines and assigned proper allele indices.
+    """
+    tab = open_genome_position_table(
+        vcf_res_multiallelic,
+        vcf_res_multiallelic.config["tabix_table"]
+    )
+    assert isinstance(tab, VCFGenomicPositionTable)
+
+    results = tuple(map(
+        lambda r: (*r[:3], r.attributes["allele_index"]),
+        tab.get_all_records()
+    ))
+    assert results == (
+        ("chr1", 2, 2, None),
+        ("chr1", 5, 5, 0),
+        ("chr1", 15, 15, 0),
+        ("chr1", 15, 15, 1),
+        ("chr1", 30, 30, 0),
+        ("chr1", 30, 30, 1),
+        ("chr1", 30, 30, 2),
+    )
+
+def test_vcf_multiallelic_region(vcf_res_multiallelic):
+    """
+    Same as previous test, but for a given region.
+    """
+    tab = open_genome_position_table(
+        vcf_res_multiallelic,
+        vcf_res_multiallelic.config["tabix_table"]
+    )
+    assert isinstance(tab, VCFGenomicPositionTable)
+
+    results = tuple(map(
+        lambda r: (*r[:3], r.attributes["allele_index"]),
+        tab.get_records_in_region("chr1", 14, 15))
+    )
+    assert results == (
+        ("chr1", 15, 15, 0),
+        ("chr1", 15, 15, 1),
+    )
+
+
+def test_vcf_multiallelic_info_fields(vcf_res_multiallelic):
+    """
+    Test accessing an INFO field for multiallelic variants.
+    Should return the correct value for the given allele.
+    """
+    tab = open_genome_position_table(
+        vcf_res_multiallelic,
+        vcf_res_multiallelic.config["tabix_table"]
+    )
+    assert isinstance(tab, VCFGenomicPositionTable)
+
+    results = list()
+    for line in tab.get_all_records():
+        aidx = line.attributes["allele_index"]
+        info = line.attributes["INFO"]
+        results.append(
+            (*line[:3], aidx,
+             line.get("A"),
+             line.get("B"),
+             line.get("C"),
+             line.get("D"))
+        )
+
+    # chrom start stop allele_index A B C D
+    assert results == [
+        ("chr1", 2, 2, None, None, None, None, None),
+        ("chr1", 5, 5, 0, 1, (11, 12, 13), "c12", "d11"),
+        ("chr1", 15, 15, 0, 2, (21, 22), "c22", "d21"),
+        ("chr1", 15, 15, 1, 2, (21, 22), "c23", "d22"),
+        ("chr1", 30, 30, 0, 3, (31,), "c32", "d31"),
+        ("chr1", 30, 30, 1, 3, (31,), "c33", "d32"),
+        ("chr1", 30, 30, 2, 3, (31,), "c34", "d33"),
+    ]

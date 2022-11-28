@@ -381,6 +381,27 @@ class Line:
     def __repr__(self):
         return str(tuple(self))
 
+    def get(self, key: str, default=None):
+        allele_index = self.attributes["allele_index"]
+        if key == "chrom":
+            return self.chrom
+        if key == "pos_begin":
+            return self.pos_begin
+        if key == "pos_end":
+            return self.pos_end
+        if "INFO" in self.attributes and allele_index is not None:
+            value = self.attributes["INFO"][key]
+            value_metadata = self.attributes["header_info_metadata"][key]
+            if isinstance(value, tuple):
+                if value_metadata.number == "A":
+                    value = value[allele_index]
+                elif value_metadata.number == "R":
+                    value = value[allele_index + 1]
+            return value
+        if key in self.attributes:
+            return self.attributes[key]
+        return default
+
 
 class LineBuffer:
     """Represent a line buffer for Tabix genome position table."""
@@ -768,17 +789,19 @@ class VCFGenomicPositionTable(TabixGenomicPositionTable):
         args = filter(None, (chrom, pos_begin, pos_end))
 
         for raw_line in self.variants_file.fetch(*args):
-            yield Line(
-                raw_line.contig, raw_line.pos, raw_line.pos,
-                {
-                    "ID": raw_line.id,
-                    "REF": raw_line.ref,
-                    "ALTS": raw_line.alts,
-                    "QUAL": raw_line.qual,
-                    "FILTER": raw_line.filter,
-                    "INFO": raw_line.info
-                }
-            )
+            for allele_index, alt in enumerate(raw_line.alts or [None]):
+                if alt is None:
+                    allele_index = None
+                yield Line(
+                    raw_line.contig, raw_line.pos, raw_line.pos,
+                    {
+                        "REF": raw_line.ref,
+                        "ALT": alt,
+                        "INFO": raw_line.info,
+                        "allele_index": allele_index,
+                        "header_info_metadata": raw_line.header.info,
+                    }
+                )
 
 
 def open_genome_position_table(
