@@ -75,7 +75,8 @@ def data_import(
         project_config)
 
     # pylint: disable=import-outside-toplevel
-    from dae.import_tools.import_tools import ImportProject, run_with_project
+    from dae.import_tools.import_tools import ImportProject
+    from dae.import_tools.cli import run_with_project
     project = ImportProject.build_from_file(
         root_path / "import_project" / "import_config.yaml",
         gpf_instance=gpf_instance)

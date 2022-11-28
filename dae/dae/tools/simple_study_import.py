@@ -8,7 +8,8 @@ import logging
 
 from dae.gpf_instance.gpf_instance import GPFInstance
 
-from dae.import_tools.import_tools import ImportProject, run_with_project
+from dae.import_tools.import_tools import ImportProject
+from dae.import_tools.cli import run_with_project
 
 from dae.variants_loaders.dae.loader import DenovoLoader, DaeTransmittedLoader
 from dae.variants_loaders.vcf.loader import VcfLoader

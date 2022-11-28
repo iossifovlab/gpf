@@ -4,9 +4,9 @@ from typing import cast
 from dae.utils import fs_utils
 from dae.configuration.study_config_builder import StudyConfigBuilder
 from dae.impala_storage.schema1.import_commons import save_study_config
-from dae.import_tools.parquet_writer import ParquetWriter
+from dae.parquet.parquet_writer import ParquetWriter
 from dae.import_tools.import_tools import ImportStorage
-from dae.import_tools.task_graph import TaskGraph
+from dae.task_graph.graph import TaskGraph
 from dae.impala_storage.schema2.schema2_genotype_storage import \
     Schema2GenotypeStorage
 from dae.parquet.schema2.parquet_io import NoPartitionDescriptor, \
@@ -135,15 +135,18 @@ class Schema2ImportStorage(ImportStorage):
 
     def generate_import_task_graph(self, project) -> TaskGraph:
         graph = TaskGraph()
+
         pedigree_task = graph.create_task(
-            "Generating Pedigree", self._do_write_pedigree, [project], []
+            "Generating Pedigree", self._do_write_pedigree, [project], [],
+            input_files=[project.get_pedigree_filename()]
         )
 
         bucket_tasks = []
         for bucket in project.get_import_variants_buckets():
             task = graph.create_task(
-                "Converting Variants", self._do_write_variant,
-                [project, bucket], []
+                f"Converting Variants {bucket}", self._do_write_variant,
+                [project, bucket], [],
+                input_files=project.get_input_filenames(bucket)
             )
             bucket_tasks.append(task)
 

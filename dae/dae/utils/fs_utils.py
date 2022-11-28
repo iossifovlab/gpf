@@ -1,7 +1,8 @@
+import datetime
 import os
 from pathlib import Path
 from urllib.parse import urlparse
-from typing import Optional, Union
+from typing import Optional, Union, cast
 
 from fsspec.core import url_to_fs
 
@@ -40,3 +41,9 @@ def find_directory_with_a_file(
             return work_dir
 
     return None
+
+
+def modified(filename: str) -> datetime.datetime:
+    """Return the modified timestamp of a file."""
+    fs, relative_path = url_to_fs(filename)
+    return cast(datetime.datetime, fs.modified(relative_path))

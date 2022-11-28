@@ -1,4 +1,3 @@
-import argparse
 import os
 import sys
 import logging
@@ -6,8 +5,8 @@ from abc import abstractmethod, ABC
 from copy import deepcopy
 from dataclasses import dataclass
 from functools import cache
-from typing import Optional, cast
-from typing import Callable, Dict, List, Tuple, Any
+from typing import Callable, List, Optional, cast
+from typing import Dict, Tuple, Any
 from dae.annotation.annotation_factory import AnnotationConfigParser,\
     build_annotation_pipeline
 
@@ -23,8 +22,7 @@ from dae.genotype_storage.genotype_storage_registry import (
 )
 from dae.parquet.schema1.parquet_io import ParquetPartitionDescriptor
 from dae.configuration.gpf_config_parser import GPFConfigParser
-from dae.import_tools.task_graph import DaskExecutor, SequentialExecutor,\
-    TaskGraph
+from dae.task_graph.graph import TaskGraph
 from dae.pedigrees.family import FamiliesData
 from dae.configuration.schemas.import_config import import_config_schema,\
     embedded_input_schema
@@ -32,7 +30,6 @@ from dae.pedigrees.loader import FamiliesLoader
 from dae.utils import fs_utils
 from dae.impala_storage.schema1.import_commons import MakefilePartitionHelper,\
     construct_import_annotation_pipeline, construct_import_effect_annotator
-from dae.dask.client_factory import DaskClient
 from dae.utils.statistics import StatsCollection
 
 
@@ -41,10 +38,18 @@ logger = logging.getLogger(__file__)
 
 @dataclass(frozen=True)
 class Bucket:
+    """A region of the input used for processing."""
+
     type: str
     region_bin: str
     regions: list[str]
     index: int
+
+    def __str__(self):
+        regions = ";".join(r if r else "all" for r in self.regions)
+        if not regions:
+            regions = "all"
+        return f"Bucket({self.type},{self.region_bin},{regions},{self.index})"
 
 
 class ImportProject():
@@ -56,7 +61,7 @@ class ImportProject():
 
     # pylint: disable=too-many-public-methods
     def __init__(self, import_config, base_input_dir, base_config_dir=None,
-                 gpf_instance=None):
+                 gpf_instance=None, config_filenames=None):
         """Create a new project from the provided config.
 
         It is best not to call this ctor directly but to use one of the
@@ -71,7 +76,9 @@ class ImportProject():
         self._base_input_dir = base_input_dir
         self._base_config_dir = base_config_dir or base_input_dir
         self._gpf_instance = gpf_instance
+        self.config_filenames = config_filenames or []
         self.stats: StatsCollection = StatsCollection()
+        self._input_filenames_cache: dict[str, list[str]] = {}
 
     @staticmethod
     def build_from_config(import_config, base_input_dir="", gpf_instance=None):
@@ -85,11 +92,11 @@ class ImportProject():
                                                         import_config_schema)
         normalizer = ImportConfigNormalizer()
         base_config_dir = base_input_dir
-        import_config, base_input_dir = \
+        import_config, base_input_dir, external_files = \
             normalizer.normalize(import_config, base_input_dir)
         return ImportProject(
             import_config, base_input_dir, base_config_dir,
-            gpf_instance=gpf_instance
+            gpf_instance=gpf_instance, config_filenames=external_files
         )
 
     @staticmethod
@@ -105,18 +112,26 @@ class ImportProject():
         base_input_dir = os.path.dirname(os.path.realpath(import_filename))
         import_config = GPFConfigParser.parse_and_interpolate_file(
             import_filename)
-        return ImportProject.build_from_config(
+        project = ImportProject.build_from_config(
             import_config, base_input_dir, gpf_instance=gpf_instance)
+        # the path to the import filename should be the first config file
+        project.config_filenames.insert(0, import_filename)
+        return project
 
     def get_pedigree_params(self) -> Tuple[str, Dict[str, Any]]:
         """Get params for loading the pedigree."""
-        families_filename = self.import_config["input"]["pedigree"]["file"]
-        families_filename = fs_utils.join(self.input_dir, families_filename)
+        families_filename = self.get_pedigree_filename()
 
         families_params = self.import_config["input"]["pedigree"]
         families_params = self._add_loader_prefix(families_params, "ped_")
 
         return families_filename, families_params
+
+    def get_pedigree_filename(self) -> str:
+        """Return the path to the pedigree file."""
+        families_filename = self.import_config["input"]["pedigree"]["file"]
+        families_filename = fs_utils.join(self.input_dir, families_filename)
+        return cast(str, families_filename)
 
     def get_pedigree_loader(self) -> FamiliesLoader:
         families_filename, families_params = self.get_pedigree_params()
@@ -163,6 +178,14 @@ class ImportProject():
         if bucket is not None and bucket.region_bin != "all":
             loader.reset_regions(bucket.regions)
         return loader
+
+    def get_input_filenames(self, bucket: Bucket) -> list[str]:
+        """Get a list of input files for a specific bucket."""
+        # creating a loader is expensive so cache the results
+        if bucket.type not in self._input_filenames_cache:
+            loader = self.get_variant_loader(bucket)
+            self._input_filenames_cache[bucket.type] = loader.filenames
+        return self._input_filenames_cache[bucket.type]
 
     def get_variant_params(self, loader_type):
         """Return variant loader filenames and params."""
@@ -495,6 +518,9 @@ class ImportProject():
             pipeline_config=annotation_config, grr_repository=gpf_instance.grr
         )
 
+    def __str__(self):
+        return f"Project({self.study_id})"
+
 
 class ImportConfigNormalizer:
     """Class to normalize import configs.
@@ -507,9 +533,11 @@ class ImportConfigNormalizer:
     def normalize(self, import_config: dict, base_input_dir: str):
         """Normalize the import config."""
         config = deepcopy(import_config)
-        base_input_dir = self._load_external_files(
+
+        base_input_dir, external_files = self._load_external_files(
             config, base_input_dir
         )
+
         self._map_for_key(config, "region_length", self._int_shorthand)
         self._map_for_key(config, "chromosomes", self._normalize_chrom_list)
         if "parquet_row_group_size" in config:
@@ -517,23 +545,33 @@ class ImportConfigNormalizer:
             for loader in ["vcf", "denovo", "dae", "cnv"]:
                 self._map_for_key(group_size_config, loader,
                                   self._int_shorthand)
-        return config, base_input_dir
+        return config, base_input_dir, external_files
 
     @classmethod
     def _load_external_files(cls, config, base_input_dir):
+        external_files = []
+
         base_input_dir = cls._load_external_file(
-            config, "input", base_input_dir, embedded_input_schema
+            config, "input", base_input_dir, embedded_input_schema,
+            external_files
         )
-        return base_input_dir
+
+        if "file" in config.get("annotation", {}):
+            # don't load the config just add it to the list of external files
+            external_files.append(config["annotation"]["file"])
+
+        return base_input_dir, external_files
 
     @staticmethod
-    def _load_external_file(config, section_key, base_input_dir, schema):
+    def _load_external_file(config, section_key, base_input_dir, schema,
+                            external_files):
         if section_key not in config:
             return base_input_dir
 
         sub_config = config[section_key]
         while "file" in sub_config:
             external_fn = fs_utils.join(base_input_dir, sub_config["file"])
+            external_files.append(external_fn)
             sub_config = GPFConfigParser.parse_and_interpolate_file(
                 external_fn
             )
@@ -606,46 +644,6 @@ class ImportStorage(ABC):
         """Generate task grap for import of the project into this storage."""
 
 
-def main():
-    """Entry point for import tools when invoked as a cli tool."""
-    parser = argparse.ArgumentParser(description="Import datasets into GPF")
-    parser.add_argument("-f", "--config", type=str,
-                        help="Path to the import configuration")
-    DaskClient.add_arguments(parser)
-    args = parser.parse_args()
-
-    if args.jobs == 1:
-        executor = SequentialExecutor()
-        run(args.config, executor)
-    else:
-        dask_client = DaskClient.from_arguments(args)
-        if dask_client is None:
-            sys.exit(1)
-        with dask_client as client:
-            executor = DaskExecutor(client)
-            run(args.config, executor)
-
-
-def run(import_config_fn, executor=SequentialExecutor()):
-    project = ImportProject.build_from_file(import_config_fn)
-    run_with_project(project, executor)
-
-
-def run_with_project(project, executor=SequentialExecutor()):
-    """Import the project using the provided executor."""
-    storage = project.get_import_storage()
-
-    task_graph = storage.generate_import_task_graph(project)
-    tasks_iter = executor.execute(task_graph)
-    last_stagenames = _get_current_stagenames(executor)
-    _print_stagenames(last_stagenames)
-    for _ in tasks_iter:
-        current_stagenames = _get_current_stagenames(executor)
-        if current_stagenames != last_stagenames:
-            last_stagenames = current_stagenames
-            _print_stagenames(last_stagenames)
-
-
 _REGISTERED_IMPORT_STORAGE_FACTORIES: \
     Dict[str, Callable[[], ImportStorage]] = {}
 _EXTENTIONS_LOADED = False
@@ -689,18 +687,3 @@ def register_import_storage_factory(
     if storage_type in _REGISTERED_IMPORT_STORAGE_FACTORIES:
         logger.warning("overwriting import storage type: %s", storage_type)
     _REGISTERED_IMPORT_STORAGE_FACTORIES[storage_type] = factory
-
-
-def _get_current_stagenames(executor):
-    # we use the task name is also the stagename
-    return {
-        t.name
-        for t in executor.get_active_tasks()
-        if t.name is not None
-    }
-
-
-def _print_stagenames(stagenames):
-    if stagenames:
-        stagenames_str = ", ".join(stagenames)
-        print(f"Executing stage: {stagenames_str}")
