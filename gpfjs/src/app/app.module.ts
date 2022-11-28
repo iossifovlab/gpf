@@ -76,11 +76,8 @@ import { PhenoToolResultsChartComponent } from './pheno-tool-results-chart/pheno
 import { PhenoToolResultsChartPerEffectComponent } from './pheno-tool-results-chart/pheno-tool-results-chart-per-effect.component';
 import { PhenoToolResultsChartPerResultComponent } from './pheno-tool-results-chart/pheno-tool-results-chart-per-result.component';
 import { PhenoToolEffectTypesComponent } from './pheno-tool-effect-types/pheno-tool-effect-types.component';
-import { RegistrationComponent } from './registration/registration.component';
-import { ForgotPasswordComponent } from './forgot-password/forgot-password.component';
 import { PhenoBrowserComponent } from './pheno-browser/pheno-browser.component';
 import { PhenoBrowserService } from './pheno-browser/pheno-browser.service';
-import { ResetPasswordComponent } from './reset-password/reset-password.component';
 import { PhenoBrowserModalContentComponent } from './pheno-browser-modal-content/pheno-browser-modal-content.component';
 import { PhenoBrowserTableComponent } from './pheno-browser-table/pheno-browser-table.component';
 import { PValueIntensityPipe } from './utils/p-value-intensity.pipe';
@@ -244,10 +241,6 @@ const appRoutes: Routes = [
     ]
   },
   {
-    path: 'validate/:validateString',
-    component: ResetPasswordComponent,
-  },
-  {
     path: 'load-query/:uuid',
     component: LoadQueryComponent
   },
@@ -311,10 +304,7 @@ const appRoutes: Routes = [
     PhenoToolResultsChartPerEffectComponent,
     PhenoToolResultsChartPerResultComponent,
     PhenoToolEffectTypesComponent,
-    RegistrationComponent,
-    ForgotPasswordComponent,
     PhenoBrowserComponent,
-    ResetPasswordComponent,
     PhenoBrowserModalContentComponent,
     PhenoBrowserTableComponent,
     PValueIntensityPipe,
