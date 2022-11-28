@@ -11,10 +11,19 @@ describe('Forgotten password tests', () => {
 
   it('should open forgotten password window', () => {
     page.navigateToHome(false);
-    usersPage.loginDropdownToggleButton.click();
-    page.window.should('not.exist');
 
-    usersPage.forgottenPasswordButton.click();
-    page.window.should('be.visible');
+    cy.window().then((win) => {
+      cy.stub(win, 'open', url => {
+        win.location.href = `${Cypress.config().baseUrl}accounts/login/?next=/gpf/o/authorize/%3F${url}`;
+      }).as('popup');
+    });
+
+    page.forgottenPasswordButton.should('not.exist');
+
+    usersPage.loginButton.click();
+    page.forgottenPasswordButton.should('be.visible');
+
+    page.forgottenPasswordButton.click();
+    cy.get('@popup').should('be.called');
   });
 });
