@@ -31,6 +31,21 @@ def test_resource_manifest_simple(proto_fixture, tmp_path):
     assert not (tmp_path / GR_CONTENTS_FILE_NAME).exists()
 
 
+def test_resource_manifest_dry_run_simple(proto_fixture, tmp_path):
+    # Given
+    proto_fixture.filesystem.delete(str(tmp_path / "one/.MANIFEST"))
+
+    assert not (tmp_path / GR_CONTENTS_FILE_NAME).exists()
+    assert not (tmp_path / "one/.MANIFEST").exists()
+
+    # When
+    cli_manage([
+        "resource-manifest", "-R", str(tmp_path), "-r", "one", "--dry-run"])
+
+    # Then
+    assert not (tmp_path / "one/.MANIFEST").exists()
+
+
 def test_repo_manifest_simple(proto_fixture, tmp_path):
     # Given
     proto_fixture.filesystem.delete(str(tmp_path / "one/.MANIFEST"))
@@ -45,6 +60,21 @@ def test_repo_manifest_simple(proto_fixture, tmp_path):
     # Then
     assert (tmp_path / "one/.MANIFEST").is_file()
     assert (tmp_path / GR_CONTENTS_FILE_NAME).exists()
+
+
+def test_repo_manifest_dry_run_simple(proto_fixture, tmp_path):
+    # Given
+    proto_fixture.filesystem.delete(str(tmp_path / "one/.MANIFEST"))
+
+    assert not (tmp_path / GR_CONTENTS_FILE_NAME).exists()
+    assert not (tmp_path / "one/.MANIFEST").exists()
+
+    # When
+    cli_manage([
+        "repo-manifest", "-R", str(tmp_path), "--dry-run"])
+
+    # Then
+    assert not (tmp_path / "one/.MANIFEST").exists()
 
 
 def test_repo_manifest_no_agruments(proto_fixture, tmp_path, mocker, capsys):
@@ -159,6 +189,7 @@ def test_resource_dry_run_manifest_needs_update_message(
     assert captured.err == \
         "manifest of <one> should be updated; " \
         "entries to update in manifest ['data.txt']\n"
+    assert bool(proto_fixture.check_update_manifest(res))
 
 
 def test_repo_dry_run_manifest_needs_update_message(

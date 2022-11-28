@@ -87,6 +87,9 @@ def test_resource_repair_dry_run(proto_fixture, dask_mocker, tmp_path):
     # Given
     proto_fixture.filesystem.delete(
         os.path.join(proto_fixture.url, ".CONTENTS"))
+
+    proto_fixture.filesystem.delete(str(tmp_path / "one" / ".MANIFEST"))
+
     assert not (tmp_path / "one/histograms").exists()
     assert not (tmp_path / GR_CONTENTS_FILE_NAME).exists()
 
@@ -96,6 +99,7 @@ def test_resource_repair_dry_run(proto_fixture, dask_mocker, tmp_path):
 
     # Then
     assert not (tmp_path / "one/histograms").exists()
+    assert not (tmp_path / "one/.MANIFEST").exists()
 
 
 def test_repo_repair_dry_run(proto_fixture, dask_mocker, tmp_path):
@@ -223,8 +227,7 @@ def test_repo_repair_dry_run_needs_manifest_update_message(
     print(captured.err)
     assert captured.err == \
         "manifest of <one> should be updated; " \
-        "entries to update in manifest ['data.txt']\n" \
-        "histograms of <one> are up to date\n"
+        "entries to update in manifest ['data.txt']\n"
 
 
 def test_resource_repair_dry_run_needs_manifest_and_histogram_update_message(
@@ -306,8 +309,7 @@ def test_repo_repair_dry_run_needs_manifest_and_histogram_update_message(
     captured = capsys.readouterr()
     assert captured.err == \
         "manifest of <one> should be updated; entries to update in manifest " \
-        "['data.bgz', 'data.bgz.tbi']\n" \
-        "histograms of <one> are up to date\n"
+        "['data.bgz', 'data.bgz.tbi']\n"
 
     # And after that::
     # Given

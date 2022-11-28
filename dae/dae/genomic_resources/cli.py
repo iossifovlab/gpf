@@ -299,7 +299,7 @@ def _do_resource_manifest_command(proto, res, dry_run, force, use_dvc):
         print(msg, file=sys.stderr)
 
     if dry_run:
-        return
+        return bool(manifest_update)
 
     if force:
         print(
@@ -308,6 +308,7 @@ def _do_resource_manifest_command(proto, res, dry_run, force, use_dvc):
         manifest = proto.build_manifest(
             res, prebuild_entries)
         proto.save_manifest(res, manifest)
+        return True
 
     elif bool(manifest_update):
         print(
@@ -316,6 +317,7 @@ def _do_resource_manifest_command(proto, res, dry_run, force, use_dvc):
         manifest = proto.update_manifest(
             res, prebuild_entries)
         proto.save_manifest(res, manifest)
+    return bool(manifest_update)
 
 
 def _run_repo_manifest_command(proto, **kwargs):
@@ -330,7 +332,8 @@ def _run_repo_manifest_command(proto, **kwargs):
     for res in proto.get_all_resources():
         _do_resource_manifest_command(proto, res, dry_run, force, use_dvc)
 
-    proto.build_content_file()
+    if not dry_run:
+        proto.build_content_file()
 
 
 def _find_resource(proto, repo_url, **kwargs):
@@ -382,6 +385,7 @@ def _do_resource_hist_command(  # pylint: disable=too-many-arguments
             f"skip histograms update for {res.resource_id}; "
             f"not a score", file=sys.stderr)
         return
+
     builder = HistogramBuilder(res)
     if dry_run:
         builder.check_update()
@@ -403,6 +407,7 @@ def _do_resource_hist_command(  # pylint: disable=too-many-arguments
     prebuild_entries = {}
     if use_dvc:
         prebuild_entries = collect_dvc_entries(proto, res)
+
     proto.save_manifest(
         res,
         proto.update_manifest(res, prebuild_entries))
@@ -463,10 +468,16 @@ def _run_repo_repair_command(proto, region_size, **kwargs):
         sys.exit(1)
     with dask_client as client:
         for res in proto.get_all_resources():
-            _do_resource_manifest_command(
+            status = _do_resource_manifest_command(
                 proto, res, dry_run, force, use_dvc)
-            _do_resource_hist_command(
-                client, proto, res, dry_run, force, use_dvc, region_size)
+            if dry_run and status:
+                logger.info(
+                    "manfiest %s needs update; can't check histograms",
+                    res.resource_id)
+            else:
+                _do_resource_hist_command(
+                    client, proto, res, dry_run, force, use_dvc, region_size)
+
     if not dry_run:
         proto.build_content_file()
 
@@ -490,10 +501,15 @@ def _run_resource_repair_command(proto, repo_url, region_size, **kwargs):
         sys.exit(1)
 
     with dask_client as client:
-        _do_resource_manifest_command(
+        status = _do_resource_manifest_command(
             proto, res, dry_run, force, use_dvc)
-        _do_resource_hist_command(
-            client, proto, res, dry_run, force, use_dvc, region_size)
+        if dry_run and status:
+            logger.info(
+                "manfiest %s needs update; can't check histograms",
+                res.resource_id)
+        else:        
+            _do_resource_hist_command(
+                client, proto, res, dry_run, force, use_dvc, region_size)
 
 
 def _run_repo_info_command(proto, **kwargs):  # pylint: disable=unused-argument
