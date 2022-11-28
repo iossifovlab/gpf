@@ -126,7 +126,7 @@ def _run_list_command(
         print(
             f"{res.get_type():20} {res.get_version_str():7s} "
             f"{len(list(res.get_manifest().get_files())):2d} {res_size:12d} "
-            f"{res.get_id()}")
+            f"{res.get_id()}", file=sys.stderr)
 
 
 def _configure_repo_init_subparser(subparsers):
@@ -258,7 +258,7 @@ def collect_dvc_entries(
         basename = os.path.basename(filename)
 
         if filename not in manifest:
-            logger.warning(
+            logger.info(
                 "filling manifest of <%s> with entry for <%s> based on "
                 "dvc data only",
                 res.resource_id, filename)
@@ -281,10 +281,9 @@ def _do_resource_manifest_command(proto, res, dry_run, force, use_dvc):
 
     manifest_update = proto.check_update_manifest(res, prebuild_entries)
     if not bool(manifest_update):
-        print(
-            f"manifest of <{res.get_genomic_resource_id_version()}> "
-            f"is up to date",
-            file=sys.stderr)
+        logger.info(
+            "manifest of <%s> is up to date",
+            res.get_genomic_resource_id_version())
     else:
         msg = \
             f"manifest of " \
@@ -296,24 +295,22 @@ def _do_resource_manifest_command(proto, res, dry_run, force, use_dvc):
             msg = f"{msg}; " \
                 f"entries to delete from manifest " \
                 f"{sorted(manifest_update.entries_to_delete)}"
-        print(msg, file=sys.stderr)
+        logger.info(msg)
 
     if dry_run:
         return bool(manifest_update)
 
     if force:
-        print(
-            f"building manifest for resource <{res.resource_id}>...",
-            file=sys.stderr)
+        logger.info(
+            "building manifest for resource <%s>...", res.resource_id)
         manifest = proto.build_manifest(
             res, prebuild_entries)
         proto.save_manifest(res, manifest)
         return True
 
     elif bool(manifest_update):
-        print(
-            f"updating manifest for resource <{res.resource_id}>...",
-            file=sys.stderr)
+        logger.info(
+            "updating manifest for resource <%s>...", res.resource_id)
         manifest = proto.update_manifest(
             res, prebuild_entries)
         proto.save_manifest(res, manifest)
@@ -381,9 +378,8 @@ def _do_resource_hist_command(  # pylint: disable=too-many-arguments
         client, proto, res, dry_run, force, use_dvc, region_size):
     if res.get_type() not in {
             "position_score", "np_score", "allele_score"}:
-        print(
-            f"skip histograms update for {res.resource_id}; "
-            f"not a score", file=sys.stderr)
+        logger.info(
+            "skip histograms update for %s; not a score", res.resource_id)
         return
 
     builder = HistogramBuilder(res)
@@ -507,7 +503,7 @@ def _run_resource_repair_command(proto, repo_url, region_size, **kwargs):
             logger.info(
                 "manfiest %s needs update; can't check histograms",
                 res.resource_id)
-        else:        
+        else:
             _do_resource_hist_command(
                 client, proto, res, dry_run, force, use_dvc, region_size)
 
@@ -629,7 +625,7 @@ def cli_manage(cli_args=None):
                 "Can't find repository starting from: %s", os.getcwd())
             sys.exit(1)
         repo_url = str(repo_url)
-        print("working with repository:", repo_url)
+        print(f"working with repository: {repo_url}", file=sys.stderr)
 
     proto = _create_proto(repo_url, args.extra_args)
     if command == "list":

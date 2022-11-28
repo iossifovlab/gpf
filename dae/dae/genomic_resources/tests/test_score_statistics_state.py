@@ -100,8 +100,8 @@ def test_build_hashes_without_change(repo_fixture):
 
     resource = repo_fixture.get_resource("one")
     hbuilder = HistogramBuilder(resource)
-    hashes = hbuilder._build_hashes(resource.get_manifest())
-    hashes2 = hbuilder._build_hashes(resource.get_manifest())
+    hashes = hbuilder._build_hashes()
+    hashes2 = hbuilder._build_hashes()
 
     assert hashes == hashes2
 
@@ -110,7 +110,7 @@ def test_build_hashes_with_changed_description(repo_fixture):
     # Given
     res = repo_fixture.get_resource("one")
     hbuilder = HistogramBuilder(res)
-    hashes = hbuilder._build_hashes(res.get_manifest())
+    hashes = hbuilder._build_hashes()
 
     # When
     with res.open_raw_file(GR_CONF_FILE_NAME, "at") as outfile:
@@ -126,7 +126,7 @@ def test_build_hashes_with_changed_description(repo_fixture):
 
     # Then
     hbuilder = HistogramBuilder(res)
-    hashes2 = hbuilder._build_hashes(res.get_manifest())
+    hashes2 = hbuilder._build_hashes()
 
     assert hashes == hashes2
 
@@ -135,7 +135,7 @@ def test_build_hashes_with_changed_histogram_config(repo_fixture):
     # Given
     res = repo_fixture.get_resource("one")
     hbuilder = HistogramBuilder(res)
-    hashes = hbuilder._build_hashes(res.get_manifest())
+    hashes = hbuilder._build_hashes()
 
     # When
     with res.open_raw_file(GR_CONF_FILE_NAME, "rt") as infile:
@@ -150,7 +150,7 @@ def test_build_hashes_with_changed_histogram_config(repo_fixture):
 
     # Then
     hbuilder = HistogramBuilder(res)
-    hashes2 = hbuilder._build_hashes(res.get_manifest())
+    hashes2 = hbuilder._build_hashes()
 
     assert hashes != hashes2
 
@@ -159,7 +159,7 @@ def test_build_hashes_with_changed_scores_config(repo_fixture):
     # Given
     res = repo_fixture.get_resource("one")
     hbuilder = HistogramBuilder(res)
-    hashes = hbuilder._build_hashes(res.get_manifest())
+    hashes = hbuilder._build_hashes()
 
     # When
     with res.open_raw_file(GR_CONF_FILE_NAME, "rt") as infile:
@@ -173,7 +173,7 @@ def test_build_hashes_with_changed_scores_config(repo_fixture):
 
     # Then
     hbuilder = HistogramBuilder(res)
-    hashes2 = hbuilder._build_hashes(res.get_manifest())
+    hashes2 = hbuilder._build_hashes()
 
     assert hashes != hashes2
 
@@ -200,7 +200,7 @@ def test_build_hashes_with_changed_tabix_index(
     # Given
     res = repo_fixture.get_resource("one")
     hbuilder = HistogramBuilder(res)
-    hashes = hbuilder._build_hashes(res.get_manifest())
+    hashes = hbuilder._build_hashes()
 
     # When
     tabix_index_update(res)
@@ -209,7 +209,7 @@ def test_build_hashes_with_changed_tabix_index(
 
     # Then
     hbuilder = HistogramBuilder(res)
-    hashes2 = hbuilder._build_hashes(res.get_manifest())
+    hashes2 = hbuilder._build_hashes()
 
     assert hashes != hashes2
 
@@ -220,7 +220,7 @@ def test_build_hashes_with_changed_table(
     # Given
     res = repo_fixture.get_resource("one")
     hbuilder = HistogramBuilder(res)
-    hashes = hbuilder._build_hashes(res.get_manifest())
+    hashes = hbuilder._build_hashes()
 
     # When
     tabix_to_resource(
@@ -236,6 +236,6 @@ def test_build_hashes_with_changed_table(
 
     # Then
     hbuilder = HistogramBuilder(res)
-    hashes2 = hbuilder._build_hashes(res.get_manifest())
+    hashes2 = hbuilder._build_hashes()
 
     assert hashes != hashes2

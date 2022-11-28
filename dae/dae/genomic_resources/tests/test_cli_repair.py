@@ -126,11 +126,12 @@ def test_resource_repair_need_update_message(
         "resource-repair", "--dry-run", "-R", str(tmp_path), "-r", "one"])
 
     captured = capsys.readouterr()
-
-    assert captured.err == \
-        "manifest of <one> is up to date\n" \
-        "resource <one> histograms " \
-        "[{'score': 'phastCons100way', 'bins': 100}] need update\n"
+    assert captured.out == ""
+    assert captured.err == ""
+    # assert captured.err == \
+    #     "manifest of <one> is up to date\n" \
+    #     "resource <one> histograms " \
+    #     "[{'score': 'phastCons100way', 'bins': 100}] need update\n"
 
 
 def test_repo_repair_need_update_message(
@@ -141,11 +142,12 @@ def test_repo_repair_need_update_message(
         "repo-repair", "--dry-run", "-R", str(tmp_path)])
 
     captured = capsys.readouterr()
-
-    assert captured.err == \
-        "manifest of <one> is up to date\n" \
-        "resource <one> histograms " \
-        "[{'score': 'phastCons100way', 'bins': 100}] need update\n"
+    assert captured.out == ""
+    assert captured.err == ""
+    # assert captured.err == \
+    #     "manifest of <one> is up to date\n" \
+    #     "resource <one> histograms " \
+    #     "[{'score': 'phastCons100way', 'bins': 100}] need update\n"
 
 
 def test_resource_repair_no_update_message(
@@ -160,10 +162,12 @@ def test_resource_repair_no_update_message(
         "resource-repair", "--dry-run", "-R", str(tmp_path), "-r", "one"])
 
     # Then
-    _, err = capsys.readouterr()
-    assert err == \
-        "manifest of <one> is up to date\n" \
-        "histograms of <one> are up to date\n"
+    out, err = capsys.readouterr()
+    assert out == ""
+    assert err == ""
+    # assert err == \
+    #     "manifest of <one> is up to date\n" \
+    #     "histograms of <one> are up to date\n"
 
 
 def test_repo_repair_no_update_message(
@@ -178,10 +182,12 @@ def test_repo_repair_no_update_message(
         "repo-repair", "--dry-run", "-R", str(tmp_path)])
 
     # Then
-    _, err = capsys.readouterr()
-    assert err == \
-        "manifest of <one> is up to date\n" \
-        "histograms of <one> are up to date\n"
+    out, err = capsys.readouterr()
+    assert out == ""
+    assert err == ""
+    # assert err == \
+    #     "manifest of <one> is up to date\n" \
+    #     "histograms of <one> are up to date\n"
 
 
 def test_resource_repair_dry_run_needs_manifest_update_message(
@@ -201,11 +207,12 @@ def test_resource_repair_dry_run_needs_manifest_update_message(
 
     # Then
     captured = capsys.readouterr()
-    print(captured.err)
-    assert captured.err == \
-        "manifest of <one> should be updated; " \
-        "entries to update in manifest ['data.txt']\n" \
-        "histograms of <one> are up to date\n"
+    assert captured.out == ""
+    assert captured.err == ""
+    # assert captured.err == \
+    #     "manifest of <one> should be updated; " \
+    #     "entries to update in manifest ['data.txt']\n" \
+    #     "histograms of <one> are up to date\n"
 
 
 def test_repo_repair_dry_run_needs_manifest_update_message(
@@ -224,10 +231,11 @@ def test_repo_repair_dry_run_needs_manifest_update_message(
 
     # Then
     captured = capsys.readouterr()
-    print(captured.err)
-    assert captured.err == \
-        "manifest of <one> should be updated; " \
-        "entries to update in manifest ['data.txt']\n"
+    assert captured.out == ""
+    assert captured.err == ""
+    # assert captured.err == \
+    #     "manifest of <one> should be updated; " \
+    #     "entries to update in manifest ['data.txt']\n"
 
 
 def test_resource_repair_dry_run_needs_manifest_and_histogram_update_message(
@@ -257,10 +265,12 @@ def test_resource_repair_dry_run_needs_manifest_and_histogram_update_message(
 
     # Then
     captured = capsys.readouterr()
-    assert captured.err == \
-        "manifest of <one> should be updated; entries to update in manifest " \
-        "['data.bgz', 'data.bgz.tbi']\n" \
-        "histograms of <one> are up to date\n"
+    assert captured.out == ""
+    assert captured.err == ""
+    # assert captured.err == \
+    #     "manifest of <one> should be updated; entries to update in manifest " \
+    #     "['data.bgz', 'data.bgz.tbi']\n" \
+    #     "histograms of <one> are up to date\n"
 
     # And after that::
     # Given
@@ -274,10 +284,12 @@ def test_resource_repair_dry_run_needs_manifest_and_histogram_update_message(
 
     # Then
     captured = capsys.readouterr()
-    assert captured.err == \
-        "manifest of <one> is up to date\n" \
-        "resource <one> histograms " \
-        "[{'score': 'phastCons100way', 'bins': 100}] need update\n"
+    assert captured.out == ""
+    assert captured.err == ""
+    # assert captured.err == \
+    #     "manifest of <one> is up to date\n" \
+    #     "resource <one> histograms " \
+    #     "[{'score': 'phastCons100way', 'bins': 100}] need update\n"
 
 
 def test_repo_repair_dry_run_needs_manifest_and_histogram_update_message(
@@ -307,9 +319,11 @@ def test_repo_repair_dry_run_needs_manifest_and_histogram_update_message(
 
     # Then
     captured = capsys.readouterr()
-    assert captured.err == \
-        "manifest of <one> should be updated; entries to update in manifest " \
-        "['data.bgz', 'data.bgz.tbi']\n"
+    assert captured.out == ""
+    assert captured.err == ""
+    # assert captured.err == \
+    #     "manifest of <one> should be updated; entries to update in manifest " \
+    #     "['data.bgz', 'data.bgz.tbi']\n"
 
     # And after that::
     # Given
@@ -323,7 +337,9 @@ def test_repo_repair_dry_run_needs_manifest_and_histogram_update_message(
 
     # Then
     captured = capsys.readouterr()
-    assert captured.err == \
-        "manifest of <one> is up to date\n" \
-        "resource <one> histograms " \
-        "[{'score': 'phastCons100way', 'bins': 100}] need update\n"
+    assert captured.out == ""
+    assert captured.err == ""
+    # assert captured.err == \
+    #     "manifest of <one> is up to date\n" \
+    #     "resource <one> histograms " \
+    #     "[{'score': 'phastCons100way', 'bins': 100}] need update\n"

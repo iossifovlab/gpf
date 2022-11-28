@@ -34,7 +34,6 @@ class DummyClient:
     """Dummy Dask client for testing."""
 
     def __init__(self, **kwargs):
-        print("DUMMY CLIENT CREATED...")
         self.tasks = []
 
     @staticmethod

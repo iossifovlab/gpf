@@ -119,9 +119,11 @@ def test_resource_histograms_need_update_message(
 
     # Then
     captured = capsys.readouterr()
-    assert captured.err == \
-        "resource <one> histograms " \
-        "[{'score': 'phastCons100way', 'bins': 100}] need update\n"
+    assert captured.out == ""
+    assert captured.err == ""
+    # assert captured.err == \
+    #     "resource <one> histograms " \
+    #     "[{'score': 'phastCons100way', 'bins': 100}] need update\n"
 
 
 def test_repo_histograms_need_update_message(
@@ -136,9 +138,11 @@ def test_repo_histograms_need_update_message(
 
     # Then
     captured = capsys.readouterr()
-    assert captured.err == \
-        "resource <one> histograms " \
-        "[{'score': 'phastCons100way', 'bins': 100}] need update\n"
+    assert captured.out == ""
+    assert captured.err == ""
+    # assert captured.err == \
+    #     "resource <one> histograms " \
+    #     "[{'score': 'phastCons100way', 'bins': 100}] need update\n"
 
 
 def test_resource_histograms_no_update_message(
@@ -155,9 +159,11 @@ def test_resource_histograms_no_update_message(
         "resource-histograms", "--dry-run", "-R", str(tmp_path), "-r", "one"])
 
     # Then
-    _, err = capsys.readouterr()
-    assert err == \
-        "histograms of <one> are up to date\n"
+    out, err = capsys.readouterr()
+    assert out == ""
+    assert err == ""
+    # assert err == \
+    #     "histograms of <one> are up to date\n"
 
 
 def test_repo_histograms_no_update_message(
@@ -174,6 +180,8 @@ def test_repo_histograms_no_update_message(
         "repo-histograms", "--dry-run", "-R", str(tmp_path)])
 
     # Then
-    _, err = capsys.readouterr()
-    assert err == \
-        "histograms of <one> are up to date\n"
+    out, err = capsys.readouterr()
+    assert out == ""
+    assert err == ""
+    # assert err == \
+    #     "histograms of <one> are up to date\n"

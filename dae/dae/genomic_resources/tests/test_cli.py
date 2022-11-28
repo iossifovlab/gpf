@@ -63,8 +63,8 @@ def test_cli_list(repo_fixture, tmp_path, capsys):
     cli_manage(["list", "-R", str(tmp_path)])
     out, err = capsys.readouterr()
 
-    assert err == ""
-    assert out == \
+    assert out == ""
+    assert err == \
         "Basic                0        2            7 one\n" \
         "gene_models          1.0      2           50 sub/two\n"
 
@@ -81,8 +81,8 @@ def test_cli_list_without_repo_argument(
 
     # Then
     out, err = capsys.readouterr()
-    assert err == ""
-    assert out == \
+    assert out == ""
+    assert err == \
         f"working with repository: {str(tmp_path)}\n" \
         "Basic                0        2            7 one\n" \
         "gene_models          1.0      2           50 sub/two\n"

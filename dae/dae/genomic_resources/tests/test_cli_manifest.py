@@ -80,7 +80,7 @@ def test_repo_manifest_dry_run_simple(proto_fixture, tmp_path):
 def test_repo_manifest_no_agruments(proto_fixture, tmp_path, mocker, capsys):
     # Given
     cli_manage([
-        "repo-manifest", "-R", str(tmp_path)])
+        "-VV", "repo-manifest", "-R", str(tmp_path)])
     mocker.patch("os.getcwd", return_value=str(tmp_path))
     capsys.readouterr()
 
@@ -90,13 +90,15 @@ def test_repo_manifest_no_agruments(proto_fixture, tmp_path, mocker, capsys):
     # Then
     out, err = capsys.readouterr()
 
-    assert out.startswith(f"working with repository: {tmp_path}\n")
+    assert out == ""
     assert err == \
-        "manifest of <one> is up to date\n" \
-        "manifest of <sub/two> is up to date\n" \
-        "manifest of <sub/two(1.0)> is up to date\n" \
-        "manifest of <three(2.0)> is up to date\n" \
-        "manifest of <xxxxx-genome> is up to date\n"
+        f"working with repository: {tmp_path}\n"
+
+    # f"manifest of <one> is up to date\n" \
+    # f"manifest of <sub/two> is up to date\n" \
+    # f"manifest of <sub/two(1.0)> is up to date\n" \
+    # f"manifest of <three(2.0)> is up to date\n" \
+    # f"manifest of <xxxxx-genome> is up to date\n"
 
 
 def test_check_manifest_update(proto_fixture, tmp_path):
@@ -185,10 +187,11 @@ def test_resource_dry_run_manifest_needs_update_message(
 
     # Then
     captured = capsys.readouterr()
-    print(captured.err)
-    assert captured.err == \
-        "manifest of <one> should be updated; " \
-        "entries to update in manifest ['data.txt']\n"
+    assert captured.out == ""
+    assert captured.err == ""
+    # assert captured.err == \
+    #     "manifest of <one> should be updated; " \
+    #     "entries to update in manifest ['data.txt']\n"
     assert bool(proto_fixture.check_update_manifest(res))
 
 
@@ -205,14 +208,15 @@ def test_repo_dry_run_manifest_needs_update_message(
 
     # Then
     captured = capsys.readouterr()
-    print(captured.err)
-    assert captured.err == \
-        "manifest of <one> should be updated; " \
-        "entries to update in manifest ['data.txt']\n" \
-        "manifest of <sub/two> is up to date\n" \
-        "manifest of <sub/two(1.0)> is up to date\n" \
-        "manifest of <three(2.0)> is up to date\n" \
-        "manifest of <xxxxx-genome> is up to date\n"
+    assert captured.out == ""
+    assert captured.err == ""
+    # assert captured.err == \
+    #     "manifest of <one> should be updated; " \
+    #     "entries to update in manifest ['data.txt']\n" \
+    #     "manifest of <sub/two> is up to date\n" \
+    #     "manifest of <sub/two(1.0)> is up to date\n" \
+    #     "manifest of <three(2.0)> is up to date\n" \
+    #     "manifest of <xxxxx-genome> is up to date\n"
 
 
 def test_resource_dry_run_manifest_no_update_message(
@@ -225,9 +229,10 @@ def test_resource_dry_run_manifest_no_update_message(
 
     # Then
     captured = capsys.readouterr()
-    print(captured.err)
-    assert captured.err == \
-        "manifest of <one> is up to date\n"
+    assert captured.out == ""
+    assert captured.err == ""
+    # assert captured.err == \
+    #     "manifest of <one> is up to date\n"
 
 
 def test_resource_manifest_no_agruments(
@@ -245,9 +250,11 @@ def test_resource_manifest_no_agruments(
     # Then
     out, err = capsys.readouterr()
 
-    assert out.startswith(f"working with repository: {tmp_path}\n")
-    assert err == \
-        "manifest of <one> is up to date\n"
+    assert out == ""
+    assert err == f"working with repository: {tmp_path}\n"
+    # assert out.startswith(f"working with repository: {tmp_path}\n")
+    # assert err == \
+    #     "manifest of <one> is up to date\n"
 
 
 def test_repo_dry_run_manifest_no_update_message(
@@ -260,10 +267,11 @@ def test_repo_dry_run_manifest_no_update_message(
 
     # Then
     captured = capsys.readouterr()
-    print(captured.err)
-    assert captured.err == \
-        "manifest of <one> is up to date\n" \
-        "manifest of <sub/two> is up to date\n" \
-        "manifest of <sub/two(1.0)> is up to date\n" \
-        "manifest of <three(2.0)> is up to date\n" \
-        "manifest of <xxxxx-genome> is up to date\n"
+    assert captured.out == ""
+    assert captured.err == ""
+    # assert captured.err == \
+    #     "manifest of <one> is up to date\n" \
+    #     "manifest of <sub/two> is up to date\n" \
+    #     "manifest of <sub/two(1.0)> is up to date\n" \
+    #     "manifest of <three(2.0)> is up to date\n" \
+    #     "manifest of <xxxxx-genome> is up to date\n"

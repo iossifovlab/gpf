@@ -266,17 +266,14 @@ class HistogramBuilder:
         _, configs_to_calculate = \
             self._collect_histograms_to_build(path)
         if configs_to_calculate:
-            print(
-                f"resource <"
-                f"{self.resource.get_genomic_resource_id_version()}> "
-                f"histograms {configs_to_calculate} need update",
-                file=sys.stderr)
+            logger.info(
+                "resource <%s> histograms %s need update",
+                self.resource.get_genomic_resource_id_version(),
+                configs_to_calculate)
         else:
-            print(
-                f"histograms of <"
-                f"{self.resource.get_genomic_resource_id_version()}> "
-                f"are up to date",
-                file=sys.stderr)
+            logger.info(
+                "histograms of <%s> are up to date",
+                self.resource.get_genomic_resource_id_version())
         return configs_to_calculate
 
     def update(
