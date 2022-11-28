@@ -113,7 +113,6 @@ export class BasePage {
       cy.get('input').last().invoke('attr', 'value', url);
       cy.get('.login-button').click();
     });
-    cy.get('input').contains('Authorize').click();
 
     usersPage.logoutButton.should('be.visible');
     cy.url().then(currentUrl => {
