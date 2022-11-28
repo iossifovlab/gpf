@@ -102,7 +102,7 @@
         "@typescript-eslint/dot-notation": "off",
         "@typescript-eslint/explicit-function-return-type": "warn",
         "@typescript-eslint/no-extra-parens": ["warn", "all", { "nestedBinaryExpressions": false }],
-        "indent": ["warn", 2],
+        "indent": ["warn", 2, {"SwitchCase": 1}],
         "max-len": [
           "warn",
           {
