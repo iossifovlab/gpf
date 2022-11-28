@@ -170,6 +170,7 @@ class ImpalaSchema1ImportStorage(ImportStorage):
 
     def generate_import_task_graph(self, project) -> TaskGraph:
         graph = TaskGraph()
+
         pedigree_task = graph.create_task(
             "Generating Pedigree", self._do_write_pedigree, [project], []
         )

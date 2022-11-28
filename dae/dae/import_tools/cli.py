@@ -78,6 +78,7 @@ def _cmd_run(args, project, task_cache):
 def _cmd_list(args, project, task_cache):
     storage = project.get_import_storage()
     task_graph = storage.generate_import_task_graph(project)
+    task_graph.input_files.extend(project.config_filenames)
     task_graph = _prune_tasks(task_graph, args.task_ids or [])
 
     task_cache.set_task_graph(task_graph)
@@ -124,6 +125,7 @@ def run_with_project(project, executor=SequentialExecutor(), ids_to_run=None,
     """Import the project using the provided executor."""
     storage = project.get_import_storage()
     task_graph = storage.generate_import_task_graph(project)
+    task_graph.input_files.extend(project.config_filenames)
     task_graph = _prune_tasks(task_graph, ids_to_run)
 
     any_errors = False

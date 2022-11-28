@@ -135,7 +135,6 @@ class Schema2ImportStorage(ImportStorage):
 
     def generate_import_task_graph(self, project) -> TaskGraph:
         graph = TaskGraph()
-        graph.input_files = project.config_filenames
 
         pedigree_task = graph.create_task(
             "Generating Pedigree", self._do_write_pedigree, [project], [],
