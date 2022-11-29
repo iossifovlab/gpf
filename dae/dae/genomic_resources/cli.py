@@ -308,7 +308,7 @@ def _do_resource_manifest_command(proto, res, dry_run, force, use_dvc):
         proto.save_manifest(res, manifest)
         return True
 
-    elif bool(manifest_update):
+    if bool(manifest_update):
         logger.info(
             "updating manifest for resource <%s>...", res.resource_id)
         manifest = proto.update_manifest(
