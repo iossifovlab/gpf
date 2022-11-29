@@ -181,12 +181,12 @@ def test_failed_auth_lockouts(db, user, client, tokens):
         regex = r"locked out for (\d+) hours and (\d+) minutes"
         match = re.search(regex, response.content.decode())
         response_hours, response_minutes = map(int, match.groups())
-        total_minutes = pow(2, i)
-        hours = int(total_minutes / 60)
-        minutes = total_minutes % 60
-
-        assert response_hours == hours
-        assert response_minutes == minutes
+        response_td = timedelta(
+            hours=response_hours, minutes=response_minutes
+        )
+        expected_td = timedelta(minutes=pow(2, i))
+        # Give a tolerance of 5 seconds to prevent test from becoming flaky
+        assert abs(response_td - expected_td) <= timedelta(seconds=5)
         assert response.status_code == status.HTTP_403_FORBIDDEN
         expire_email_lockout(data["username"])
 
@@ -308,9 +308,12 @@ def test_authentication_logging(user, client, tokens):
         content_type="application/json", format="json"
     )
     last_login = AuthenticationLog.get_last_login_for(data["username"])
+    expected_time = timezone.now().replace(microsecond=0)
+    login_time = last_login.time.replace(microsecond=0)
     assert response.status_code == status.HTTP_302_FOUND
     assert last_login.email == "user@example.com"
-    assert last_login.time == timezone.now().replace(microsecond=0)
+    # Give a tolerance of 5 seconds to prevent test from becoming flaky
+    assert abs(login_time - expected_time) <= timedelta(seconds=5)
     assert last_login.failed_attempt == 0
 
     data["password"] = "wrongpassword"
@@ -320,7 +323,10 @@ def test_authentication_logging(user, client, tokens):
         content_type="application/json", format="json"
     )
     last_login = AuthenticationLog.get_last_login_for(data["username"])
+    expected_time = timezone.now().replace(microsecond=0)
+    login_time = last_login.time.replace(microsecond=0)
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
     assert last_login.email == "user@example.com"
-    assert last_login.time == timezone.now().replace(microsecond=0)
+    # Give a tolerance of 5 seconds to prevent test from becoming flaky
+    assert abs(login_time - expected_time) <= timedelta(seconds=5)
     assert last_login.failed_attempt == 1
