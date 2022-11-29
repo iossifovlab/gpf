@@ -63,7 +63,7 @@ preview_columns = [
 	"variant",
 	"genotype",
 	"effect",
-	"scores",
+	"gene_scores",
 	"freq"
 ]
 
@@ -84,7 +84,7 @@ download_columns = [
 	"effect",
 	"geneeffect",
 	"effectdetails",
-	"scores",
+	"gene_scores",
 ]
 
 summary_preview_columns = ["variant", "effect", "scores", "freq"]
@@ -94,8 +94,8 @@ summary_download_columns = ["variant", "effect", "scores", "freq"]
 effect.name = "effect"
 effect.columns = ["worst_effect", "genes"]
 
-scores.name = "vulnerability/intolerance"
-scores.columns = ["lgd_rank", "rvis_rank", "pli_rank"]
+gene_scores.name = "vulnerability/intolerance"
+gene_scores.columns = ["lgd_rank", "rvis_rank", "pli_rank"]
 
 family.name = "family"
 family.columns = ["family_id", "study"]
@@ -257,12 +257,13 @@ class VariantsDb:
         self.gene_models = gene_models
         self.genotype_storage_factory = genotype_storage_factory
 
-        self._genotype_study_cache = {}
-        self._genotype_group_cache = {}
         self.reload()
 
     def reload(self):
         """Load all studies and groups again."""
+        self._genotype_study_cache = {}
+        self._genotype_group_cache = {}
+
         genotype_study_configs = self._load_study_configs()
         genotype_group_configs = self._load_group_configs()
 
