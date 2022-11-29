@@ -14,7 +14,7 @@ import { GeneScoresState } from './gene-scores.state';
 
 class MockGeneScoresService {
   public provide = true;
-  public getGeneScores(_geneScoresIds?: string): Observable<GeneScores[]> {
+  public getGeneScores(): Observable<GeneScores[]> {
     if (this.provide) {
       return of([new GeneScores([1, 2], 'score3', [4, 5], 'desc6', [7, 8], 'xScale9', 'yScale10'),
         new GeneScores([11, 12], 'score13', [14, 15], 'desc16', [17, 18], 'xScale19', 'yScale20')
