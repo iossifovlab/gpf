@@ -104,7 +104,7 @@ describe('GeneSetsComponent', () => {
   it('should change the gene set', () => {
     const geneSetMock1 = new GeneSet('name1', 1, 'desc1', 'download1');
     component.selectedGeneSet = geneSetMock1;
-    expect(component.selectedGeneSet).toEqual(GeneSet.fromJson({
+    expect(component.selectedGeneSet).toStrictEqual(GeneSet.fromJson({
       name: 'name1',
       count: 1,
       desc: 'desc1',
@@ -168,7 +168,7 @@ describe('GeneSetsComponent', () => {
     expect(spy).not.toHaveBeenCalledWith();
 
     component.onSelect(null);
-    expect(spy).toHaveBeenCalled();
+    expect(spy).toHaveBeenCalledWith();
   });
 
   it('should set onSearch', () => {
@@ -187,7 +187,7 @@ describe('GeneSetsComponent', () => {
     ];
     component.onSearch('name15');
     expect(component.searchQuery).toBe('name15');
-    expect(component.geneSets).toEqual([]);
+    expect(component.geneSets).toStrictEqual([]);
 
     component.geneSets = [
       new GeneSet('name13', 14, 'desc15', 'download16'),
@@ -195,7 +195,7 @@ describe('GeneSetsComponent', () => {
       new GeneSet('name17', 21, 'desc20', 'download21')
     ];
     component.onSearch('name17');
-    expect(component.geneSets).toEqual([
+    expect(component.geneSets).toStrictEqual([
       new GeneSet('name17', 18, 'desc19', 'download20'),
       new GeneSet('name17', 21, 'desc20', 'download21')]);
   });
