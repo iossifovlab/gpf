@@ -50,6 +50,16 @@ setuptools.setup(
     default_grr=dae.genomic_resources.genomic_context:DefaultRepositoryContextProvider.register
     gpf_instance=dae.gpf_instance_plugin.gpf_instance_context_plugin:init_gpf_instance_genomic_context_plugin
 
+    [dae.genomic_resources.implementations]
+    gene_set=dae.gene.gene_sets_db:build_gene_set_collection_from_resource
+    gene_score=dae.gene.gene_scores:build_gene_score_collection_from_resource
+    position_score=dae.genomic_resources.genomic_scores:build_position_score_from_resource
+    np_score=dae.genomic_resources.genomic_scores:build_np_score_from_resource
+    allele_score=dae.genomic_resources.genomic_scores:build_allele_score_from_resource
+    liftover_chain=dae.genomic_resources.liftover_resource:build_liftover_chain_from_resource
+    genome=dae.genomic_resources.reference_genome:build_reference_genome_from_resource
+    vcf_info=dae.genomic_resources.vcf_info_score:build_vcf_info_from_resource
+
     [dae.genotype_storage.factories]
     impala=dae.impala_storage.schema1.impala_genotype_storage:ImpalaGenotypeStorage
     impala2=dae.impala_storage.schema2.schema2_genotype_storage:Schema2GenotypeStorage

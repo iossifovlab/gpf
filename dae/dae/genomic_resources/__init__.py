@@ -1,24 +1,56 @@
+from typing import Dict, Callable
+from importlib_metadata import entry_points
+
 from .repository_factory import build_genomic_resource_repository
 from .repository import GenomicResource
+from .resource_implementation import GenomicResourceImplementation
 
-# from .embeded_repository import GenomicResourceEmbededRepo
-# from .url_repository import GenomicResourceURLRepo
-# from .dir_repository import GenomicResourceDirRepo
+
+_REGISTERED_RESOURCE_IMPLEMENTATIONS: \
+    Dict[str, Callable[[GenomicResource], GenomicResourceImplementation]] = {}
+
 
 __all__ = [
     "build_genomic_resource_repository", "GenomicResource",
+    "get_resource_implementation_factory"
 ]
 
 
-# register_real_genomic_resource_repository_type(
-#     "url", GenomicResourceURLRepo)
-# register_real_genomic_resource_repository_type(
-#     "directory", GenomicResourceDirRepo)
-# register_real_genomic_resource_repository_type(
-#     "embeded", GenomicResourceEmbededRepo)
-
-
+_IMPLEMENTATIONS_LOADED = False
 _PLUGINS_LOADED = False
+
+
+def get_resource_implementation_factory(
+    implementation_type: str
+) -> Callable[[GenomicResource], GenomicResourceImplementation]:
+    if implementation_type not in _REGISTERED_RESOURCE_IMPLEMENTATIONS:
+        raise ValueError(
+            f"unsupported resource implementation type: {implementation_type}"
+        )
+    return _REGISTERED_RESOURCE_IMPLEMENTATIONS[implementation_type]
+
+
+def register_implementation(implementation_type, factory):
+    _REGISTERED_RESOURCE_IMPLEMENTATIONS[implementation_type] = factory
+
+
+def _load_implementations():
+    # pylint: disable=global-statement
+    global _IMPLEMENTATIONS_LOADED
+
+    if _IMPLEMENTATIONS_LOADED:
+        return
+
+    discovered_implementations = entry_points(
+        group="dae.genomic_resources.implementations"
+    )
+
+    for implementation_factory in discovered_implementations:
+        implementation_type = implementation_factory.name
+        factory = implementation_factory.load()
+        register_implementation(implementation_type, factory)
+
+    _IMPLEMENTATIONS_LOADED = True
 
 
 def _load_plugins():
@@ -29,7 +61,6 @@ def _load_plugins():
         return
 
     # pylint: disable=import-outside-toplevel
-    from importlib_metadata import entry_points
     discovered_plugins = entry_points(group="dae.genomic_resources.plugins")
     for plugin in discovered_plugins:
         plugin.load()()
@@ -37,3 +68,4 @@ def _load_plugins():
 
 
 _load_plugins()
+_load_implementations()
