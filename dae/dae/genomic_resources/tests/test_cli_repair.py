@@ -1,5 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import os
+import logging
 import textwrap
 
 import pytest
@@ -119,79 +120,106 @@ def test_repo_repair_dry_run(proto_fixture, dask_mocker, tmp_path):
 
 
 def test_resource_repair_need_update_message(
-        proto_fixture, dask_mocker, tmp_path, capsys):
+        proto_fixture, dask_mocker, tmp_path, capsys, caplog):
 
     assert not (tmp_path / "one/histograms").exists()
-    cli_manage([
-        "resource-repair", "--dry-run", "-R", str(tmp_path), "-r", "one"])
+    with caplog.at_level(logging.INFO):
+        cli_manage([
+            "resource-repair", "--dry-run",
+            "-R", str(tmp_path), "-r", "one"])
 
     captured = capsys.readouterr()
     assert captured.out == ""
     assert captured.err == ""
-    # assert captured.err == \
-    #     "manifest of <one> is up to date\n" \
-    #     "resource <one> histograms " \
-    #     "[{'score': 'phastCons100way', 'bins': 100}] need update\n"
+    assert caplog.record_tuples == [
+        ("grr_manage",
+         logging.INFO,
+         "manifest of <one> is up to date"),
+        ("dae.genomic_resources.histogram",
+         logging.INFO,
+         "resource <one> histograms "
+         "[{'score': 'phastCons100way', 'bins': 100}] need "
+         "update"),
+    ]
 
 
 def test_repo_repair_need_update_message(
-        proto_fixture, dask_mocker, tmp_path, capsys):
+        proto_fixture, dask_mocker, tmp_path, capsys, caplog):
 
     assert not (tmp_path / "one/histograms").exists()
-    cli_manage([
-        "repo-repair", "--dry-run", "-R", str(tmp_path)])
+    with caplog.at_level(logging.INFO):
+        cli_manage([
+            "repo-repair", "--dry-run", "-R", str(tmp_path)])
 
     captured = capsys.readouterr()
     assert captured.out == ""
     assert captured.err == ""
-    # assert captured.err == \
-    #     "manifest of <one> is up to date\n" \
-    #     "resource <one> histograms " \
-    #     "[{'score': 'phastCons100way', 'bins': 100}] need update\n"
+    assert caplog.record_tuples == [
+        ("grr_manage",
+         logging.INFO,
+         "manifest of <one> is up to date"),
+        ("dae.genomic_resources.histogram",
+         logging.INFO,
+         "resource <one> histograms "
+         "[{'score': 'phastCons100way', 'bins': 100}] need update"),
+    ]
 
 
 def test_resource_repair_no_update_message(
-        proto_fixture, dask_mocker, tmp_path, capsys):
+        proto_fixture, dask_mocker, tmp_path, capsys, caplog):
     # Given
     cli_manage([
         "resource-repair", "-R", str(tmp_path), "-r", "one"])
     _, _ = capsys.readouterr()
 
     # When
-    cli_manage([
-        "resource-repair", "--dry-run", "-R", str(tmp_path), "-r", "one"])
+    with caplog.at_level(logging.INFO):
+        cli_manage([
+            "resource-repair", "--dry-run",
+            "-R", str(tmp_path), "-r", "one"])
 
     # Then
     out, err = capsys.readouterr()
     assert out == ""
     assert err == ""
-    # assert err == \
-    #     "manifest of <one> is up to date\n" \
-    #     "histograms of <one> are up to date\n"
+    assert caplog.record_tuples == [
+        ("grr_manage",
+         logging.INFO,
+         "manifest of <one> is up to date"),
+        ("dae.genomic_resources.histogram",
+         logging.INFO,
+         "histograms of <one> are up to date"),
+    ]
 
 
 def test_repo_repair_no_update_message(
-        proto_fixture, dask_mocker, tmp_path, capsys):
+        proto_fixture, dask_mocker, tmp_path, capsys, caplog):
     # Given
     cli_manage([
         "repo-repair", "-R", str(tmp_path)])
     _, _ = capsys.readouterr()
 
     # When
-    cli_manage([
-        "repo-repair", "--dry-run", "-R", str(tmp_path)])
+    with caplog.at_level(logging.INFO):
+        cli_manage([
+            "repo-repair", "--dry-run", "-R", str(tmp_path)])
 
     # Then
     out, err = capsys.readouterr()
     assert out == ""
     assert err == ""
-    # assert err == \
-    #     "manifest of <one> is up to date\n" \
-    #     "histograms of <one> are up to date\n"
+    assert caplog.record_tuples == [
+        ("grr_manage",
+         logging.INFO,
+         "manifest of <one> is up to date"),
+        ("dae.genomic_resources.histogram",
+         logging.INFO,
+         "histograms of <one> are up to date"),
+    ]
 
 
 def test_resource_repair_dry_run_needs_manifest_update_message(
-        proto_fixture, dask_mocker, tmp_path, capsys):
+        proto_fixture, dask_mocker, tmp_path, capsys, caplog):
     # Given
     cli_manage([
         "resource-repair", "-R", str(tmp_path), "-r", "one"])
@@ -202,21 +230,27 @@ def test_resource_repair_dry_run_needs_manifest_update_message(
     _, _ = capsys.readouterr()
 
     # When
-    cli_manage([
-        "resource-repair", "--dry-run", "-R", str(tmp_path), "-r", "one"])
+    with caplog.at_level(logging.INFO):
+        cli_manage([
+            "resource-repair", "--dry-run", "-R", str(tmp_path), "-r", "one"])
 
     # Then
     captured = capsys.readouterr()
     assert captured.out == ""
     assert captured.err == ""
-    # assert captured.err == \
-    #     "manifest of <one> should be updated; " \
-    #     "entries to update in manifest ['data.txt']\n" \
-    #     "histograms of <one> are up to date\n"
+    assert caplog.record_tuples == [
+        ("grr_manage",
+         logging.INFO,
+         "manifest of <one> should be updated; entries to update in manifest "
+         "['data.txt']"),
+        ("grr_manage",
+         logging.INFO,
+         "manfiest one needs update; can't check histograms"),
+    ]
 
 
 def test_repo_repair_dry_run_needs_manifest_update_message(
-        proto_fixture, dask_mocker, tmp_path, capsys):
+        proto_fixture, dask_mocker, tmp_path, capsys, caplog):
     # Given
     cli_manage([
         "repo-repair", "-R", str(tmp_path)])
@@ -226,20 +260,27 @@ def test_repo_repair_dry_run_needs_manifest_update_message(
     _, _ = capsys.readouterr()
 
     # When
-    cli_manage([
-        "repo-repair", "--dry-run", "-R", str(tmp_path)])
+    with caplog.at_level(logging.INFO):
+        cli_manage([
+            "repo-repair", "--dry-run", "-R", str(tmp_path)])
 
     # Then
     captured = capsys.readouterr()
     assert captured.out == ""
     assert captured.err == ""
-    # assert captured.err == \
-    #     "manifest of <one> should be updated; " \
-    #     "entries to update in manifest ['data.txt']\n"
+    assert caplog.record_tuples == [
+        ("grr_manage",
+         logging.INFO,
+         "manifest of <one> should be updated; entries to update in manifest "
+         "['data.txt']"),
+        ("grr_manage",
+         logging.INFO,
+         "manfiest one needs update; can't check histograms"),
+    ]
 
 
 def test_resource_repair_dry_run_needs_manifest_and_histogram_update_message(
-        proto_fixture, tabix_file, dask_mocker, tmp_path, capsys):
+        proto_fixture, tabix_file, dask_mocker, tmp_path, capsys, caplog):
     # Given
     cli_manage([
         "resource-repair", "-R", str(tmp_path), "-r", "one"])
@@ -260,40 +301,53 @@ def test_resource_repair_dry_run_needs_manifest_and_histogram_update_message(
     _, _ = capsys.readouterr()
 
     # When
-    cli_manage([
-        "resource-repair", "--dry-run", "-R", str(tmp_path), "-r", "one"])
+    with caplog.at_level(logging.INFO):
+        cli_manage([
+            "resource-repair", "--dry-run", "-R", str(tmp_path), "-r", "one"])
 
     # Then
     captured = capsys.readouterr()
     assert captured.out == ""
     assert captured.err == ""
-    # assert captured.err == \
-    #     "manifest of <one> should be updated; entries to update in manifest " \
-    #     "['data.bgz', 'data.bgz.tbi']\n" \
-    #     "histograms of <one> are up to date\n"
+    assert caplog.record_tuples == [
+        ("grr_manage",
+         logging.INFO,
+         "manifest of <one> should be updated; entries to update in manifest "
+         "['data.bgz', 'data.bgz.tbi']"),
+        ("grr_manage",
+         logging.INFO,
+         "manfiest one needs update; can't check histograms"),
+    ]
 
     # And after that::
     # Given
     cli_manage([
         "resource-manifest", "-R", str(tmp_path), "-r", "one"])
     _, _ = capsys.readouterr()
+    caplog.clear()
 
     # When
-    cli_manage([
-        "resource-repair", "--dry-run", "-R", str(tmp_path), "-r", "one"])
+    with caplog.at_level(logging.INFO):
+        cli_manage([
+            "resource-repair", "--dry-run", "-R", str(tmp_path), "-r", "one"])
 
     # Then
     captured = capsys.readouterr()
     assert captured.out == ""
     assert captured.err == ""
-    # assert captured.err == \
-    #     "manifest of <one> is up to date\n" \
-    #     "resource <one> histograms " \
-    #     "[{'score': 'phastCons100way', 'bins': 100}] need update\n"
+    assert caplog.record_tuples == [
+        ("grr_manage",
+         logging.INFO,
+         "manifest of <one> is up to date"),
+        ("dae.genomic_resources.histogram",
+         logging.INFO,
+         "resource <one> histograms "
+         "[{'score': 'phastCons100way', 'bins': 100}] need update"),
+    ]
 
 
 def test_repo_repair_dry_run_needs_manifest_and_histogram_update_message(
-        proto_fixture, tabix_file, dask_mocker, tmp_path, capsys):
+        proto_fixture, tabix_file, dask_mocker, tmp_path, capsys, caplog):
     # Given
     cli_manage([
         "repo-repair", "-R", str(tmp_path)])
@@ -314,32 +368,46 @@ def test_repo_repair_dry_run_needs_manifest_and_histogram_update_message(
     _, _ = capsys.readouterr()
 
     # When
-    cli_manage([
-        "repo-repair", "--dry-run", "-R", str(tmp_path)])
+    with caplog.at_level(logging.INFO):
+        cli_manage([
+            "repo-repair", "--dry-run", "-R", str(tmp_path)])
 
     # Then
     captured = capsys.readouterr()
     assert captured.out == ""
     assert captured.err == ""
-    # assert captured.err == \
-    #     "manifest of <one> should be updated; entries to update in manifest " \
-    #     "['data.bgz', 'data.bgz.tbi']\n"
+    assert caplog.record_tuples == [
+        ("grr_manage",
+         logging.INFO,
+         "manifest of <one> should be updated; entries to update in manifest "
+         "['data.bgz', 'data.bgz.tbi']"),
+        ("grr_manage",
+         logging.INFO,
+         "manfiest one needs update; can't check histograms"),
+    ]
 
     # And after that::
     # Given
     cli_manage([
         "repo-manifest", "-R", str(tmp_path)])
     _, _ = capsys.readouterr()
+    caplog.clear()
 
     # When
-    cli_manage([
-        "repo-repair", "--dry-run", "-R", str(tmp_path)])
+    with caplog.at_level(logging.INFO):
+        cli_manage([
+            "repo-repair", "--dry-run", "-R", str(tmp_path)])
 
     # Then
     captured = capsys.readouterr()
     assert captured.out == ""
     assert captured.err == ""
-    # assert captured.err == \
-    #     "manifest of <one> is up to date\n" \
-    #     "resource <one> histograms " \
-    #     "[{'score': 'phastCons100way', 'bins': 100}] need update\n"
+    assert caplog.record_tuples == [
+        ("grr_manage",
+         logging.INFO,
+         "manifest of <one> is up to date"),
+        ("dae.genomic_resources.histogram",
+         logging.INFO,
+         "resource <one> histograms "
+         "[{'score': 'phastCons100way', 'bins': 100}] need update"),
+    ]

@@ -6,7 +6,6 @@ from __future__ import annotations
 
 import hashlib
 import os
-import sys
 import logging
 from typing import Dict, Any
 from copy import copy, deepcopy
@@ -253,9 +252,10 @@ class HistogramBuilder:
             actual_md5 = metadata.get(score_id, {}).get("md5", None)
             expected_md5 = hashes.get(score_id, None)
             if actual_md5 == expected_md5:
-                logger.info("Skipping calculation of score "
-                            "%s as it's already calculated",
-                            hist_conf["score"])
+                logger.debug(
+                    "Skipping calculation of score "
+                    "%s as it's already calculated",
+                    hist_conf["score"])
                 loaded_hists[score_id] = hists[score_id]
             else:
                 configs_to_calculate.append(hist_conf)

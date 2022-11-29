@@ -1,5 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import os
+import logging
 import textwrap
 
 import pytest
@@ -108,45 +109,54 @@ def test_repo_histograms_dry_run(proto_fixture, dask_mocker, tmp_path):
 
 
 def test_resource_histograms_need_update_message(
-        proto_fixture, dask_mocker, tmp_path, capsys):
+        proto_fixture, dask_mocker, tmp_path, capsys, caplog):
 
     # Given
     assert not (tmp_path / "one/histograms").exists()
 
     # When
-    cli_manage([
-        "resource-histograms", "--dry-run", "-R", str(tmp_path), "-r", "one"])
+    with caplog.at_level(logging.INFO):
+        cli_manage([
+            "resource-histograms", "--dry-run",
+            "-R", str(tmp_path), "-r", "one"])
 
     # Then
     captured = capsys.readouterr()
     assert captured.out == ""
     assert captured.err == ""
-    # assert captured.err == \
-    #     "resource <one> histograms " \
-    #     "[{'score': 'phastCons100way', 'bins': 100}] need update\n"
+    assert caplog.record_tuples == [
+        ("dae.genomic_resources.histogram",
+         logging.INFO,
+         "resource <one> histograms "
+         "[{'score': 'phastCons100way', 'bins': 100}] need update"),
+    ]
 
 
 def test_repo_histograms_need_update_message(
-        proto_fixture, dask_mocker, tmp_path, capsys):
+        proto_fixture, dask_mocker, tmp_path, capsys, caplog):
 
     # Given
     assert not (tmp_path / "one/histograms").exists()
 
     # When
-    cli_manage([
-        "repo-histograms", "--dry-run", "-R", str(tmp_path)])
+    with caplog.at_level(logging.INFO):
+        cli_manage([
+            "repo-histograms", "--dry-run", "-R", str(tmp_path)])
 
     # Then
     captured = capsys.readouterr()
     assert captured.out == ""
     assert captured.err == ""
-    # assert captured.err == \
-    #     "resource <one> histograms " \
-    #     "[{'score': 'phastCons100way', 'bins': 100}] need update\n"
+    assert caplog.record_tuples == [
+        ("dae.genomic_resources.histogram",
+         logging.INFO,
+         "resource <one> histograms "
+         "[{'score': 'phastCons100way', 'bins': 100}] need update"),
+    ]
 
 
 def test_resource_histograms_no_update_message(
-        proto_fixture, dask_mocker, tmp_path, capsys):
+        proto_fixture, dask_mocker, tmp_path, capsys, caplog):
     # Given
     assert not (tmp_path / "one/histograms").exists()
     cli_manage([
@@ -155,19 +165,23 @@ def test_resource_histograms_no_update_message(
     _, _ = capsys.readouterr()
 
     # When
-    cli_manage([
-        "resource-histograms", "--dry-run", "-R", str(tmp_path), "-r", "one"])
+    with caplog.at_level(logging.INFO):
+        cli_manage([
+            "resource-histograms", "--dry-run",
+            "-R", str(tmp_path), "-r", "one"])
 
     # Then
     out, err = capsys.readouterr()
     assert out == ""
     assert err == ""
-    # assert err == \
-    #     "histograms of <one> are up to date\n"
+    assert caplog.record_tuples == [
+        ("dae.genomic_resources.histogram", logging.INFO,
+         "histograms of <one> are up to date")
+    ]
 
 
 def test_repo_histograms_no_update_message(
-        proto_fixture, dask_mocker, tmp_path, capsys):
+        proto_fixture, dask_mocker, tmp_path, capsys, caplog):
     # Given
     assert not (tmp_path / "one/histograms").exists()
     cli_manage([
@@ -176,12 +190,15 @@ def test_repo_histograms_no_update_message(
     _, _ = capsys.readouterr()
 
     # When
-    cli_manage([
-        "repo-histograms", "--dry-run", "-R", str(tmp_path)])
+    with caplog.at_level(logging.INFO):
+        cli_manage([
+            "repo-histograms", "--dry-run", "-R", str(tmp_path)])
 
     # Then
     out, err = capsys.readouterr()
     assert out == ""
     assert err == ""
-    # assert err == \
-    #     "histograms of <one> are up to date\n"
+    assert caplog.record_tuples == [
+        ("dae.genomic_resources.histogram", logging.INFO,
+         "histograms of <one> are up to date")
+    ]

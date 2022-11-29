@@ -106,4 +106,3 @@ def test_repo_info(proto_fixture, dask_mocker, tmp_path):
     assert (tmp_path / "one/index.html").exists()
     assert (tmp_path / "two/index.html").exists()
     assert (tmp_path / "index.html").exists()
-
