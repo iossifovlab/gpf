@@ -262,11 +262,12 @@ class StudyWrapper(StudyWrapperBase):
 
         # GENE SCORES
         if genotype_browser_config.column_groups and \
-                genotype_browser_config.column_groups.scores:
+                genotype_browser_config.column_groups.gene_scores:
             self.gene_score_column_sources = [
                 genotype_browser_config.columns.genotype[slot].source
                 for slot in (
-                    genotype_browser_config.column_groups.scores.columns or []
+                    genotype_browser_config.column_groups.gene_scores.columns
+                    or []
                 )
             ]
         else:
