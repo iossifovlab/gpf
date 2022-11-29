@@ -23,11 +23,23 @@ _PLUGINS_LOADED = False
 def get_resource_implementation_factory(
     implementation_type: str
 ) -> Callable[[GenomicResource], GenomicResourceImplementation]:
-    if implementation_type not in _REGISTERED_RESOURCE_IMPLEMENTATIONS:
-        raise ValueError(
-            f"unsupported resource implementation type: {implementation_type}"
-        )
-    return _REGISTERED_RESOURCE_IMPLEMENTATIONS[implementation_type]
+    """
+    Return an implementation builder for a certain resource type.
+
+    If the builder is not registered, then it will search for an entry point
+    in the found implementations list. If an entry point is found, it will be
+    loaded and registered and returned.
+    """
+    if resource_type not in _REGISTERED_RESOURCE_IMPLEMENTATIONS:
+        if resource_type not in _FOUND_RESOURCE_IMPLEMENTATIONS:
+            raise ValueError(
+                f"unsupported resource implementation type: {resource_type}"
+            )
+        entry_point = _FOUND_RESOURCE_IMPLEMENTATIONS[resource_type]
+        loaded = entry_point.load()
+        register_implementation(resource_type, loaded)
+
+    return _REGISTERED_RESOURCE_IMPLEMENTATIONS[resource_type]
 
 
 def register_implementation(implementation_type, factory):
