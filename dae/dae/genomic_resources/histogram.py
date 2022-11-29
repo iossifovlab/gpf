@@ -6,7 +6,6 @@ from __future__ import annotations
 
 import hashlib
 import os
-import sys
 import logging
 from typing import Dict, Any
 from copy import copy, deepcopy
@@ -253,9 +252,10 @@ class HistogramBuilder:
             actual_md5 = metadata.get(score_id, {}).get("md5", None)
             expected_md5 = hashes.get(score_id, None)
             if actual_md5 == expected_md5:
-                logger.info("Skipping calculation of score "
-                            "%s as it's already calculated",
-                            hist_conf["score"])
+                logger.debug(
+                    "Skipping calculation of score "
+                    "%s as it's already calculated",
+                    hist_conf["score"])
                 loaded_hists[score_id] = hists[score_id]
             else:
                 configs_to_calculate.append(hist_conf)
@@ -266,17 +266,14 @@ class HistogramBuilder:
         _, configs_to_calculate = \
             self._collect_histograms_to_build(path)
         if configs_to_calculate:
-            print(
-                f"resource <"
-                f"{self.resource.get_genomic_resource_id_version()}> "
-                f"histograms {configs_to_calculate} need update",
-                file=sys.stderr)
+            logger.info(
+                "resource <%s> histograms %s need update",
+                self.resource.get_genomic_resource_id_version(),
+                configs_to_calculate)
         else:
-            print(
-                f"histograms of <"
-                f"{self.resource.get_genomic_resource_id_version()}> "
-                f"are up to date",
-                file=sys.stderr)
+            logger.info(
+                "histograms of <%s> are up to date",
+                self.resource.get_genomic_resource_id_version())
         return configs_to_calculate
 
     def update(

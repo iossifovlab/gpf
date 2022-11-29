@@ -1,5 +1,5 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-
+import logging
 import pytest
 
 from dae.genomic_resources.cli import cli_manage
@@ -31,6 +31,21 @@ def test_resource_manifest_simple(proto_fixture, tmp_path):
     assert not (tmp_path / GR_CONTENTS_FILE_NAME).exists()
 
 
+def test_resource_manifest_dry_run_simple(proto_fixture, tmp_path):
+    # Given
+    proto_fixture.filesystem.delete(str(tmp_path / "one/.MANIFEST"))
+
+    assert not (tmp_path / GR_CONTENTS_FILE_NAME).exists()
+    assert not (tmp_path / "one/.MANIFEST").exists()
+
+    # When
+    cli_manage([
+        "resource-manifest", "-R", str(tmp_path), "-r", "one", "--dry-run"])
+
+    # Then
+    assert not (tmp_path / "one/.MANIFEST").exists()
+
+
 def test_repo_manifest_simple(proto_fixture, tmp_path):
     # Given
     proto_fixture.filesystem.delete(str(tmp_path / "one/.MANIFEST"))
@@ -47,26 +62,56 @@ def test_repo_manifest_simple(proto_fixture, tmp_path):
     assert (tmp_path / GR_CONTENTS_FILE_NAME).exists()
 
 
-def test_repo_manifest_no_agruments(proto_fixture, tmp_path, mocker, capsys):
+def test_repo_manifest_dry_run_simple(proto_fixture, tmp_path):
+    # Given
+    proto_fixture.filesystem.delete(str(tmp_path / "one/.MANIFEST"))
+
+    assert not (tmp_path / GR_CONTENTS_FILE_NAME).exists()
+    assert not (tmp_path / "one/.MANIFEST").exists()
+
+    # When
+    cli_manage([
+        "repo-manifest", "-R", str(tmp_path), "--dry-run"])
+
+    # Then
+    assert not (tmp_path / "one/.MANIFEST").exists()
+
+
+def test_repo_manifest_no_agruments(
+        proto_fixture, tmp_path, mocker, capsys, caplog):
     # Given
     cli_manage([
-        "repo-manifest", "-R", str(tmp_path)])
+        "-VV", "repo-manifest", "-R", str(tmp_path)])
     mocker.patch("os.getcwd", return_value=str(tmp_path))
     capsys.readouterr()
 
     # When
-    cli_manage(["repo-manifest"])
+    with caplog.at_level(logging.INFO):
+        cli_manage(["repo-manifest"])
 
     # Then
     out, err = capsys.readouterr()
 
-    assert out.startswith(f"working with repository: {tmp_path}\n")
+    assert out == ""
     assert err == \
-        "manifest of <one> is up to date\n" \
-        "manifest of <sub/two> is up to date\n" \
-        "manifest of <sub/two(1.0)> is up to date\n" \
-        "manifest of <three(2.0)> is up to date\n" \
-        "manifest of <xxxxx-genome> is up to date\n"
+        f"working with repository: {tmp_path}\n"
+    assert caplog.record_tuples == [
+        ("grr_manage",
+         logging.INFO,
+         "manifest of <one> is up to date"),
+        ("grr_manage",
+         logging.INFO,
+         "manifest of <sub/two> is up to date"),
+        ("grr_manage",
+         logging.INFO,
+         "manifest of <sub/two(1.0)> is up to date"),
+        ("grr_manage",
+         logging.INFO,
+         "manifest of <three(2.0)> is up to date"),
+        ("grr_manage",
+         logging.INFO,
+         "manifest of <xxxxx-genome> is up to date"),
+    ]
 
 
 def test_check_manifest_update(proto_fixture, tmp_path):
@@ -143,64 +188,86 @@ def test_repo_dry_run_manifest_update(proto_fixture, tmp_path):
 
 
 def test_resource_dry_run_manifest_needs_update_message(
-        proto_fixture, tmp_path, capsys):
+        proto_fixture, tmp_path, capsys, caplog):
     # Given
     res = proto_fixture.get_resource("one")
     with res.open_raw_file("data.txt", "wt") as outfile:
         outfile.write("alabala2")
 
     # When
-    cli_manage([
-        "resource-manifest", "--dry-run", "-R", str(tmp_path), "-r", "one"])
+    with caplog.at_level(logging.INFO):
+        cli_manage([
+            "resource-manifest", "--dry-run",
+            "-R", str(tmp_path), "-r", "one"])
 
     # Then
+    assert bool(proto_fixture.check_update_manifest(res))
+
     captured = capsys.readouterr()
-    print(captured.err)
-    assert captured.err == \
-        "manifest of <one> should be updated; " \
-        "entries to update in manifest ['data.txt']\n"
+    assert captured.out == ""
+    assert captured.err == ""
+
+    assert caplog.record_tuples == [
+        ("grr_manage", logging.INFO,
+         "manifest of <one> should be updated; entries to update in manifest "
+         "['data.txt']"),
+    ]
 
 
 def test_repo_dry_run_manifest_needs_update_message(
-        proto_fixture, tmp_path, capsys):
+        proto_fixture, tmp_path, capsys, caplog):
     # Given
     res = proto_fixture.get_resource("one")
     with res.open_raw_file("data.txt", "wt") as outfile:
         outfile.write("alabala2")
 
     # When
-    cli_manage([
-        "repo-manifest", "--dry-run", "-R", str(tmp_path)])
+    with caplog.at_level(logging.INFO):
+        cli_manage([
+            "repo-manifest", "--dry-run", "-R", str(tmp_path)])
 
     # Then
     captured = capsys.readouterr()
-    print(captured.err)
-    assert captured.err == \
-        "manifest of <one> should be updated; " \
-        "entries to update in manifest ['data.txt']\n" \
-        "manifest of <sub/two> is up to date\n" \
-        "manifest of <sub/two(1.0)> is up to date\n" \
-        "manifest of <three(2.0)> is up to date\n" \
-        "manifest of <xxxxx-genome> is up to date\n"
+    assert captured.out == ""
+    assert captured.err == ""
+
+    assert caplog.record_tuples == [
+        ("grr_manage", logging.INFO,
+         "manifest of <one> should be updated; entries to update in manifest "
+         "['data.txt']"),
+        ("grr_manage", logging.INFO,
+         "manifest of <sub/two> is up to date"),
+        ("grr_manage", logging.INFO,
+         "manifest of <sub/two(1.0)> is up to date"),
+        ("grr_manage", logging.INFO,
+         "manifest of <three(2.0)> is up to date"),
+        ("grr_manage", logging.INFO,
+         "manifest of <xxxxx-genome> is up to date"),
+    ]
 
 
 def test_resource_dry_run_manifest_no_update_message(
-        proto_fixture, tmp_path, capsys):
+        proto_fixture, tmp_path, capsys, caplog):
     # Given
 
     # When
-    cli_manage([
-        "resource-manifest", "--dry-run", "-R", str(tmp_path), "-r", "one"])
+    with caplog.at_level(logging.INFO):
+        cli_manage([
+            "resource-manifest", "--dry-run",
+            "-R", str(tmp_path), "-r", "one"])
 
     # Then
     captured = capsys.readouterr()
-    print(captured.err)
-    assert captured.err == \
-        "manifest of <one> is up to date\n"
+    assert captured.out == ""
+    assert captured.err == ""
+
+    assert caplog.record_tuples == [
+        ("grr_manage", logging.INFO, "manifest of <one> is up to date")
+    ]
 
 
 def test_resource_manifest_no_agruments(
-        proto_fixture, tmp_path, mocker, capsys):
+        proto_fixture, tmp_path, mocker, capsys, caplog):
     # Given
     cli_manage([
         "repo-manifest", "-R", str(tmp_path)])
@@ -209,30 +276,41 @@ def test_resource_manifest_no_agruments(
     capsys.readouterr()
 
     # When
-    cli_manage(["resource-manifest"])
+    with caplog.at_level(logging.INFO):
+        cli_manage(["resource-manifest"])
 
     # Then
     out, err = capsys.readouterr()
 
-    assert out.startswith(f"working with repository: {tmp_path}\n")
-    assert err == \
-        "manifest of <one> is up to date\n"
+    assert out == ""
+    assert err == f"working with repository: {tmp_path}\n"
+    assert caplog.record_tuples == [
+        ("grr_manage", logging.INFO, "manifest of <one> is up to date")
+    ]
 
 
 def test_repo_dry_run_manifest_no_update_message(
-        proto_fixture, tmp_path, capsys):
+        proto_fixture, tmp_path, capsys, caplog):
     # Given
 
     # When
-    cli_manage([
-        "repo-manifest", "--dry-run", "-R", str(tmp_path)])
+    with caplog.at_level(logging.INFO):
+        cli_manage([
+            "repo-manifest", "--dry-run", "-R", str(tmp_path)])
 
     # Then
     captured = capsys.readouterr()
-    print(captured.err)
-    assert captured.err == \
-        "manifest of <one> is up to date\n" \
-        "manifest of <sub/two> is up to date\n" \
-        "manifest of <sub/two(1.0)> is up to date\n" \
-        "manifest of <three(2.0)> is up to date\n" \
-        "manifest of <xxxxx-genome> is up to date\n"
+    assert captured.out == ""
+    assert captured.err == ""
+    assert caplog.record_tuples == [
+        ("grr_manage", logging.INFO,
+         "manifest of <one> is up to date"),
+        ("grr_manage", logging.INFO,
+         "manifest of <sub/two> is up to date"),
+        ("grr_manage", logging.INFO,
+         "manifest of <sub/two(1.0)> is up to date"),
+        ("grr_manage", logging.INFO,
+         "manifest of <three(2.0)> is up to date"),
+        ("grr_manage", logging.INFO,
+         "manifest of <xxxxx-genome> is up to date"),
+    ]
