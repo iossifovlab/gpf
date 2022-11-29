@@ -1,4 +1,5 @@
 """Defines GPFInstance class that gives access to different parts of GPF."""
+# pylint: disable=import-outside-toplevel
 
 import os
 import logging
@@ -10,7 +11,6 @@ from pathlib import Path
 from dae.utils.fs_utils import find_directory_with_a_file
 from dae.enrichment_tool.background_facade import BackgroundFacade
 
-from dae.gene.gene_scores import GeneScoresDb, GeneScoreCollection
 from dae.gene.scores import GenomicScoresDb
 from dae.gene.gene_sets_db import GeneSetsDb, \
     build_gene_set_collection_from_resource
@@ -160,6 +160,7 @@ class GPFInstance:
     @cached_property
     def gene_scores_db(self):
         """Load and return gene scores db."""
+        from dae.gene.gene_scores import GeneScoresDb, GeneScoreCollection
         if self.dae_config.gene_scores_db is None:
             return GeneScoresDb([])
 
