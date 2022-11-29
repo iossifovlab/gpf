@@ -14,7 +14,7 @@ import { GeneScoresState } from './gene-scores.state';
 
 class MockGeneScoresService {
   public provide = true;
-  public getGeneScores(geneScoresIds?: string): Observable<GeneScores[]> {
+  public getGeneScores(_geneScoresIds?: string): Observable<GeneScores[]> {
     if (this.provide) {
       return of([new GeneScores([1, 2], 'score3', [4, 5], 'desc6', [7, 8], 'xScale9', 'yScale10'),
         new GeneScores([11, 12], 'score13', [14, 15], 'desc16', [17, 18], 'xScale19', 'yScale20')
@@ -53,13 +53,11 @@ describe('GeneScoresComponent', () => {
   it('should test empty gene sets', () => {
     expect(fixture.debugElement.query(By.css('div > div#gene-scores-panel'))).toBeTruthy();
     mockGeneScoresService.provide = false;
-    component.selectedGeneScores = undefined as any;
+    component.selectedGeneScores = undefined;
     component.ngOnInit();
     fixture.detectChanges();
-    fixture.whenStable().then(() => {
-      expect(fixture.debugElement.query(By.css('div > div.form-block > div.card > ul > li > span'))).toBeTruthy();
-      expect(fixture.debugElement.query(By.css('div > div#gene-scores-panel'))).not.toBeTruthy();
-    });
+    expect(fixture.debugElement.query(By.css('div > div.form-block > div.card > ul > li > span'))).toBeTruthy();
+    expect(fixture.debugElement.query(By.css('div > div#gene-scores-panel'))).not.toBeTruthy();
   });
 });
 

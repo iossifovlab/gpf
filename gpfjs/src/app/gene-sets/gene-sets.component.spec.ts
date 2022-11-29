@@ -15,15 +15,12 @@ import { Observable } from 'rxjs/internal/Observable';
 import { of } from 'rxjs';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { GeneSetsState } from './gene-sets.state';
-import { FormsModule } from '@angular/forms';
-
 
 class MockDatasetsService {
   public getSelectedDataset(): object {
     return { id: 'testDataset' };
   }
 }
-
 class MockGeneSetsService {
   public provide = true;
 

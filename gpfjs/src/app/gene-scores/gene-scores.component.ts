@@ -128,13 +128,13 @@ export class GeneScoresComponent extends StatefulComponent implements OnInit {
   }
 
   private getDownloadUrl(): string {
-    if(this.selectedGeneScores !== undefined) {
+    if (this.selectedGeneScores !== undefined) {
       return `${this.config.baseUrl}gene_scores/download/${this.selectedGeneScores.score}`;
     }
   }
 
   private changeDomain(scores: GeneScores): void {
-    if(scores !== undefined) {
+    if (scores !== undefined) {
       if (scores.domain !== null) {
         this.geneScoresLocalState.domainMin = scores.domain[0];
         this.geneScoresLocalState.domainMax = scores.domain[1];
