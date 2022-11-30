@@ -253,3 +253,31 @@ def test_position_score_fetch_region():
          {"phastCons5way": 3, "phastCons100way": 0.01},
          {"phastCons5way": 3, "phastCons100way": 0.01},
          {"phastCons5way": 3, "phastCons100way": 0.01}]
+
+
+def test_position_score_chrom_prefix():
+    res: GenomicResource = build_test_resource({
+        GR_CONF_FILE_NAME: """
+            type: position_score
+            table:
+                filename: data.mem
+                chrom_mapping:
+                    add_prefix: chr
+            scores:
+              - id: phastCons100way
+                type: float
+                desc: "The phastCons computed over the tree of 100 \
+                       verterbarte species"
+                name: s1""",
+        "data.mem": """
+            chrom  pos_begin  s1
+            1      10         0.02
+            1      11         0.03
+            1      15         0.46
+            2      8          0.01
+            """
+    })
+    score: PositionScore = build_position_score_from_resource(res)
+    score.open()
+
+    assert set(score.table.get_chromosomes()) == set(["chr1", "chr2"])
