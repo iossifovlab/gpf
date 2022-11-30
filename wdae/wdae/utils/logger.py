@@ -40,10 +40,12 @@ def request_logging(logger):
         @wraps(func)
         def func_wrapper(self, request, *args, **kwargs):
             message = []
+            if args:
+                message.append(f"{args}")
             if kwargs:
                 message.append(f"{kwargs}")
             message = "; ".join(message)
-            logger.info(log_filter(request, message, *args).strip())
+            logger.info(log_filter(request, message).strip())
 
             return func(self, request, *args, **kwargs)
 
@@ -59,10 +61,12 @@ def request_logging_function_view(logger):
         @wraps(func)
         def func_wrapper(request, *args, **kwargs):
             message = []
+            if args:
+                message.append(f"{args}")
             if kwargs:
                 message.append(f"{kwargs}")
             message = "; ".join(message)
-            logger.info(log_filter(request, message, *args).strip())
+            logger.info(log_filter(request, message).strip())
 
             return func(request, *args, **kwargs)
 
