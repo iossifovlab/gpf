@@ -6,6 +6,7 @@ import jinja2
 import yaml
 
 from dae.testing import setup_directories
+from dae.configuration.study_config_builder import StudyConfigBuilder
 
 
 @dataclass
@@ -28,8 +29,10 @@ def update_study_config(gpf_instance, study_id: str, study_config_update: str):
         config = yaml.safe_load(infile.read())
     config_update = yaml.safe_load(study_config_update)
     config.update(config_update)
+
+    builder = StudyConfigBuilder(config)
     with open(config_path, "wt", encoding="utf8") as outfile:
-        outfile.write(yaml.safe_dump(config))
+        outfile.write(builder.build_config())
 
 
 def data_import(
