@@ -66,6 +66,9 @@ class ImportProject():
         It is best not to call this ctor directly but to use one of the
         provided build_* methods.
         :param import_config: The parsed, validated and normalized config.
+        :param gpf_instance: Allow overwiting the gpf instance as described in
+        the configuration and instead injecting our own instance. Ideal for
+        testing.
         """
         self.import_config = import_config
         if "denovo" in import_config["input"]:
@@ -259,19 +262,19 @@ class ImportProject():
 
     def get_gpf_instance(self):
         """Create and return a gpf instance as desribed in the config."""
-        if self._gpf_instance is None:
-            instance_config = self.import_config.get("gpf_instance", {})
-            # pylint: disable=import-outside-toplevel
-            from dae.gpf_instance.gpf_instance import GPFInstance
-            instance_dir = instance_config.get("path")
-            if instance_dir is None:
-                config_filename = None
-            else:
-                config_filename = fs_utils.join(
-                    instance_dir, "gpf_instance.yaml")
-            self._gpf_instance = \
-                GPFInstance.build(config_filename)
-        return self._gpf_instance
+        if self._gpf_instance:
+            return self._gpf_instance
+
+        instance_config = self.import_config.get("gpf_instance", {})
+        # pylint: disable=import-outside-toplevel
+        from dae.gpf_instance.gpf_instance import GPFInstance
+        instance_dir = instance_config.get("path")
+        if instance_dir is None:
+            config_filename = None
+        else:
+            config_filename = fs_utils.join(
+                instance_dir, "gpf_instance.yaml")
+        return GPFInstance.build(config_filename)
 
     def get_import_storage(self):
         """Create an import storage as described in the import config."""
