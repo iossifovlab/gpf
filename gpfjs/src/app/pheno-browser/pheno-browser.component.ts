@@ -123,7 +123,7 @@ export class PhenoBrowserComponent implements OnInit {
 
     this.selectedInstrument$.pipe(take(1)).subscribe(instrument => {
       filename = `measures_${this.selectedDatasetId}_${instrument}.csv`;
-      
+
       if (instrument === '') {
         instrument = null;
         filename = `measures_${this.selectedDatasetId}.csv`;
@@ -134,12 +134,12 @@ export class PhenoBrowserComponent implements OnInit {
         instrument,
         this.measuresToShow.measures
       ).pipe(take(1)).subscribe(data => {
-          saveAs(data, filename);
-        }
+        saveAs(data, filename);
+      }
       );
-    })
+    });
   }
-  
+
   public search(value: string): void {
     this.input$.next(value);
   }
