@@ -47,3 +47,19 @@ def modified(filename: str) -> datetime.datetime:
     """Return the modified timestamp of a file."""
     fs, relative_path = url_to_fs(filename)
     return cast(datetime.datetime, fs.modified(relative_path))
+
+
+def containing_path(path: Union[str, os.PathLike]) -> str:
+    """Return url to the resource that contains path.
+
+    For file paths this is equivalent to the containing directory.
+    For urls this is equivalent to the containing resource.
+    """
+    if not path:
+        return str(path)
+    url = urlparse(str(path))
+    if url.scheme:
+        if url.path:
+            return os.path.dirname(path)
+        return url.scheme + "://"
+    return os.path.dirname(os.path.realpath(path))

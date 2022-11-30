@@ -1,4 +1,3 @@
-import os
 import sys
 import logging
 from abc import abstractmethod, ABC
@@ -109,7 +108,7 @@ class ImportProject():
         :param import_filename: Path to the config file
         :param gpf_instance: Gpf Instance to use.
         """
-        base_input_dir = os.path.dirname(os.path.realpath(import_filename))
+        base_input_dir = fs_utils.containing_path(import_filename)
         import_config = GPFConfigParser.parse_and_interpolate_file(
             import_filename)
         project = ImportProject.build_from_config(
@@ -584,7 +583,7 @@ class ImportConfigNormalizer:
             sub_config = GPFConfigParser.validate_config(
                 sub_config, schema
             )
-            base_input_dir = os.path.dirname(os.path.realpath(external_fn))
+            base_input_dir = fs_utils.containing_path(external_fn)
         config[section_key] = sub_config
         return base_input_dir
 
