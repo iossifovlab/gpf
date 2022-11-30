@@ -32,8 +32,8 @@ class DaskClient:
             "kubernetes workers")
         group.add_argument(
             "--container-image",
-            default="registry.seqpipe.org/seqpipe-gpf:"
-            "dask-for-hist-compute_fc69179-14",
+            default="registry.seqpipe.org/iossifovlab-gpf:"
+            "master",
             help="Docker image to use when submitting "
             "jobs to kubernetes")
         group.add_argument(
