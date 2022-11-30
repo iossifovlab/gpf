@@ -24,7 +24,7 @@ export class GeneSetsComponent extends StatefulComponent implements OnInit {
   public searchQuery: string;
   public defaultSelectedDenovoGeneSetId: string[] = [];
 
-  private geneSetsQueryChange = new Subject<[string, string, Object]>();
+  private geneSetsQueryChange = new Subject<[string, string, object]>();
   private geneSetsResult: Observable<GeneSet[]>;
 
   private selectedDatasetId: string;
