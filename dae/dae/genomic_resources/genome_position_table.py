@@ -73,9 +73,9 @@ class GenomicPositionTable(abc.ABC):
                     if hcs != ["chrom", "file_chrom"]:
                         raise ValueError(
                             f"The chromosome mapping file "
-                            f"{mapping['file']} in resource "
+                            f"{mapping['filename']} in resource "
                             f"{self.genomic_resource.get_id()} is "
-                            f"is expected to have the two columns "
+                            f"expected to have the two columns "
                             f"'chrom' and 'file_chrom'")
                     for line in infile:
                         chrom, fchrom = line.strip("\n\r").split("\t")

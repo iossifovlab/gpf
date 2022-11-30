@@ -260,6 +260,43 @@ def test_chrom_mapping_file_with_tabix(tmp_path, tabix_file):
     ]
 
 
+def test_invalid_chrom_mapping_file_with_tabix(tmp_path, tabix_file):
+    res = build_test_resource(
+        scheme="file",
+        root_path=str(tmp_path),
+        content={
+            "genomic_resource.yaml": """
+                tabix_table:
+                    filename: data.bgz
+                    chrom_mapping:
+                        filename: chrom_map.txt""",
+            "chrom_map.txt": convert_to_tab_separated("""
+                    something   else
+                    gosho       chr1
+                    pesho       chr22
+            """)})
+
+    tabix_to_resource(
+        tabix_file(
+            """
+            #chrom   pos_begin  pos2   c2
+            chr1     10         12     3.14
+            chr22    11         11     4.14
+            chrX     12         14     5.14
+            """,
+            seq_col=0, start_col=1, end_col=2),
+        res, "data.bgz"
+    )
+
+    with pytest.raises(ValueError) as exception:
+        tab = open_genome_position_table(res, res.config["tabix_table"])
+
+    assert str(exception.value) == (
+        "The chromosome mapping file chrom_map.txt in resource  "
+        "is expected to have the two columns 'chrom' and 'file_chrom'"
+    )
+
+
 def test_column_with_name():
     res = build_test_resource({
         "genomic_resource.yaml": """
