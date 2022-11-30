@@ -2,7 +2,7 @@ import { ConfigService } from '../config/config.service';
 import { GeneSetsLocalState } from './gene-sets-state';
 import { Component, OnInit } from '@angular/core';
 import { GeneSetsService } from './gene-sets.service';
-import { GeneSetsCollection, GeneSet } from './gene-sets';
+import { GeneSetsCollection, GeneSet, GeneSetType } from './gene-sets';
 import { Subject, Observable, combineLatest, of } from 'rxjs';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { ValidateNested } from 'class-validator';
@@ -11,6 +11,7 @@ import { SetGeneSetsValues, GeneSetsState } from './gene-sets.state';
 import { catchError, debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
 import { StatefulComponent } from 'app/common/stateful-component';
 import { environment } from 'environments/environment';
+import { PersonSet } from 'app/datasets/datasets';
 
 @Component({
   selector: 'gpf-gene-sets',
@@ -126,7 +127,7 @@ export class GeneSetsComponent extends StatefulComponent implements OnInit {
     }
   }
 
-  private restoreGeneTypes(geneSetsTypes, geneSetCollection: GeneSetsCollection): void {
+  private restoreGeneTypes(geneSetsTypes: GeneSetType[], geneSetCollection: GeneSetsCollection): void {
     const geneTypes = geneSetCollection.types
       .filter(geneType => geneType.datasetId in geneSetsTypes &&
               geneType.personSetCollectionId in geneSetsTypes[geneType.datasetId]);
@@ -135,7 +136,7 @@ export class GeneSetsComponent extends StatefulComponent implements OnInit {
       for (const geneType of geneTypes) {
         const datasetId = geneType.datasetId;
         const personSetCollectionId = geneType.personSetCollectionId;
-        for (const personSet of geneType.personSetCollectionLegend) {
+        for (const personSet of geneType.personSetCollectionLegend as PersonSet[]) {
           if (geneSetsTypes[datasetId][personSetCollectionId].indexOf(personSet.id) > -1) {
             const denovoGeneSetId = `${datasetId}-${personSetCollectionId}-denovo-geneset`;
             if (!this.defaultSelectedDenovoGeneSetId.includes(denovoGeneSetId)) {
@@ -162,7 +163,7 @@ export class GeneSetsComponent extends StatefulComponent implements OnInit {
     }
 
     this.geneSetsQueryChange.next(
-      [this.selectedGeneSetsCollection.name, searchTerm, this.geneSetsLocalState.geneSetsTypes]
+      [this.selectedGeneSetsCollection.name, searchTerm, this.geneSetsLocalState.geneSetsTypes as GeneSetType[]]
     );
   }
 
@@ -202,7 +203,8 @@ export class GeneSetsComponent extends StatefulComponent implements OnInit {
       ) || selectedGeneSetsCollection.types[0];
 
       this.setSelectedGeneType(
-        geneSetType.datasetId, geneSetType.personSetCollectionId, geneSetType.personSetCollectionLegend[0].id, true
+        geneSetType.datasetId, geneSetType.personSetCollectionId,
+        geneSetType.personSetCollectionLegend[0].id as string, true
       );
     }
 

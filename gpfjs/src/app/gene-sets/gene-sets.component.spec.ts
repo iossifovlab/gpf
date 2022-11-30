@@ -1,5 +1,5 @@
 import { HttpClientTestingModule } from '@angular/common/http/testing';
-import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
 import { NgxsModule } from '@ngxs/store';
 import { ConfigService } from 'app/config/config.service';
@@ -75,7 +75,7 @@ describe('GeneSetsComponent', () => {
   let fixture: ComponentFixture<GeneSetsComponent>;
   const datasetsServiceMock = new MockDatasetsService();
 
-  beforeEach(waitForAsync(() => {
+  beforeEach(() => {
     TestBed.configureTestingModule({
       declarations: [GeneSetsComponent],
       imports: [
@@ -89,9 +89,7 @@ describe('GeneSetsComponent', () => {
         ConfigService, GeneSetsService, { provide: DatasetsService, useValue: datasetsServiceMock }, UsersService
       ], schemas: [NO_ERRORS_SCHEMA]
     }).compileComponents();
-  }));
 
-  beforeEach(() => {
     fixture = TestBed.createComponent(GeneSetsComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
@@ -208,7 +206,7 @@ describe('GeneSetsComponent MockedGeneSetsService', () => {
   const datasetsServiceMock = new MockDatasetsService();
   const mockGeneSetsService = new MockGeneSetsService();
 
-  beforeEach(waitForAsync(() => {
+  beforeEach(() => {
     TestBed.configureTestingModule({
       declarations: [GeneSetsComponent],
       imports: [
@@ -224,9 +222,7 @@ describe('GeneSetsComponent MockedGeneSetsService', () => {
         }, { provide: DatasetsService, useValue: datasetsServiceMock }, UsersService
       ], schemas: [NO_ERRORS_SCHEMA]
     }).compileComponents();
-  }));
 
-  beforeEach(() => {
     fixture = TestBed.createComponent(GeneSetsComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();

@@ -29,7 +29,7 @@ describe('GeneScoresComponent', () => {
   let fixture: ComponentFixture<GeneScoresComponent>;
   const mockGeneScoresService: MockGeneScoresService = new MockGeneScoresService();
 
-  beforeEach(waitForAsync(() => {
+  beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [
         NgxsModule.forRoot([GeneScoresState], {developmentMode: true}), HttpClientTestingModule, NgbNavModule
@@ -38,9 +38,6 @@ describe('GeneScoresComponent', () => {
       providers: [{provide: GeneScoresService, useValue: mockGeneScoresService}, ConfigService],
       schemas: [NO_ERRORS_SCHEMA]
     }).compileComponents();
-  }));
-
-  beforeEach(() => {
     fixture = TestBed.createComponent(GeneScoresComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();

@@ -65,8 +65,8 @@ export class GeneScoresComponent extends StatefulComponent implements OnInit {
         for (const geneScore of this.geneScoresArray) {
           if (geneScore.score === state.geneScore.score) {
             this.selectedGeneScores = geneScore;
-            this.rangeStart = state.rangeStart;
-            this.rangeEnd = state.rangeEnd;
+            this.rangeStart = state.rangeStart as number;
+            this.rangeEnd = state.rangeEnd as number;
             break;
           }
         }
