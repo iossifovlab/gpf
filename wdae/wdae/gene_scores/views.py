@@ -99,12 +99,12 @@ class GeneScoresPartitionsView(QueryBaseView):
 
         try:
             score_min = float(data["min"])
-        except ValueError:
+        except (ValueError, TypeError):
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
         try:
             score_max = float(data["max"])
-        except ValueError:
+        except (ValueError, TypeError):
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
         total = 1.0 * len(df)
