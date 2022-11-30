@@ -747,7 +747,7 @@ repository_template = Template("""
             <tr>
                 <td class="nowrap">{{value['type']}}</td>
                 <td class="nowrap">
-                    <a href='/{{key}}/'>{{key}}</a>
+                    <a href='{{key}}/'>{{key}}</a>
                 </td>
                 <td class="nowrap">{{value['res_version']}}</td>
                 <td class="nowrap">{{value['res_files']}}</td>
