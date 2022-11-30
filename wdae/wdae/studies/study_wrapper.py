@@ -262,11 +262,12 @@ class StudyWrapper(StudyWrapperBase):
 
         # GENE SCORES
         if genotype_browser_config.column_groups and \
-                genotype_browser_config.column_groups.scores:
+                genotype_browser_config.column_groups.gene_scores:
             self.gene_score_column_sources = [
                 genotype_browser_config.columns.genotype[slot].source
                 for slot in (
-                    genotype_browser_config.column_groups.scores.columns or []
+                    genotype_browser_config.column_groups.gene_scores.columns
+                    or []
                 )
             ]
         else:
@@ -277,7 +278,14 @@ class StudyWrapper(StudyWrapperBase):
         self.column_groups = genotype_browser_config.column_groups
         self._validate_column_groups()
         self.preview_columns = genotype_browser_config.preview_columns
+        if genotype_browser_config.preview_columns_ext:
+            self.preview_columns.extend(
+                genotype_browser_config.preview_columns_ext)
         self.download_columns = genotype_browser_config.download_columns
+        if genotype_browser_config.download_columns_ext:
+            self.download_columns.extend(
+                genotype_browser_config.download_columns_ext)
+
         self.summary_preview_columns = \
             genotype_browser_config.summary_preview_columns
         self.summary_download_columns = \
@@ -293,7 +301,12 @@ class StudyWrapper(StudyWrapperBase):
     def _validate_column_groups(self):
         genotype_cols = self.columns.get("genotype") or []
         phenotype_cols = self.columns.get("phenotype") or []
-        for column_group in self.column_groups.values():
+        for column_group_name, column_group in self.column_groups.items():
+            if column_group is None:
+                logger.warning(
+                    "bad configuration for column group %s",
+                    column_group_name)
+                continue
             for column_id in column_group.columns:
                 if column_id not in genotype_cols \
                    and column_id not in phenotype_cols:

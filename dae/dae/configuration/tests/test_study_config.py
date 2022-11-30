@@ -172,6 +172,8 @@ def full_study_config():
             },
             "preview_columns": ["test"],
             "download_columns": ["test"],
+            "preview_columns_ext": ["test"],
+            "download_columns_ext": ["test"],
             "summary_preview_columns": ["test"],
             "summary_download_columns": ["test"],
             "person_filters": {

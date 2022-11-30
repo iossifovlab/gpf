@@ -127,7 +127,13 @@ genotype_browser_schema = {
         "preview_columns": {
             "type": "list", "schema": {"type": "string"}
         },
+        "preview_columns_ext": {
+            "type": "list", "schema": {"type": "string"}
+        },
         "download_columns": {
+            "type": "list", "schema": {"type": "string"}
+        },
+        "download_columns_ext": {
             "type": "list", "schema": {"type": "string"}
         },
         "summary_preview_columns": {
