@@ -185,7 +185,6 @@
         "jest/no-identical-title": 1,
         "jest/no-interpolation-in-snapshots": 1,
         "jest/no-jasmine-globals": 1,
-        "jest/no-jest-import": 1,
         "jest/no-large-snapshots": 1,
         "jest/no-mocks-import": 1,
         "jest/no-standalone-expect": 1,
