@@ -3,8 +3,8 @@ export class UsersPage {
     return cy.get('gpf-users');
   }
 
-  public get loginDropdownToggleButton(): element {
-    return this.window.find('#login-dropdown-toggle-button');
+  public get logInButton(): element {
+    return this.window.find('#log-in-button');
   }
 
   public get usernameInput(): element {
@@ -23,8 +23,8 @@ export class UsersPage {
     return this.window.find('#login-button');
   }
 
-  public get logoutButton(): element {
-    return this.window.find('#logout-button');
+  public get logOutButton(): element {
+    return this.window.find('#log-out-button');
   }
 
   public get forgottenPasswordButton(): element {

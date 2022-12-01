@@ -104,7 +104,7 @@ export class BasePage {
       }).as('popup');
     });
 
-    usersPage.loginDropdownToggleButton.click();
+    usersPage.logInButton.click();
     cy.get('@popup').should('be.called');
     cy.get('#id_username').type(username);
     cy.get('#id_password').type(password);
@@ -114,7 +114,7 @@ export class BasePage {
       cy.get('.login-button').click();
     });
 
-    usersPage.logoutButton.should('be.visible');
+    usersPage.logOutButton.should('be.visible');
     cy.url().then(currentUrl => {
       this.waitForPageToLoad(currentUrl.split('/').pop(), hasAccessRights);
     });
@@ -129,7 +129,7 @@ export class BasePage {
     const usersPage = new UsersPage();
     cy.intercept('GET', '/gpf/api/v3/datasets/ALL_genotypes').as('allGenotypesRequest');
 
-    usersPage.logoutButton.click();
+    usersPage.logOutButton.click();
 
     cy.location('pathname').should('eq', `/gpf/datasets/ALL_genotypes/${toolPageLinks.geneBrowser}`);
     cy.wait('@allGenotypesRequest');

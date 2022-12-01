@@ -24,7 +24,7 @@ describe('App tests', () => {
     });
 
     const usersPage = new UsersPage();
-    usersPage.loginDropdownToggleButton.click();
+    usersPage.logInButton.click();
 
     cy.window().its('open').should('be.called');
   });

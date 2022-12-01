@@ -20,7 +20,7 @@ describe('Forgotten password tests', () => {
 
     page.forgottenPasswordButton.should('not.exist');
 
-    usersPage.loginButton.click();
+    usersPage.logInButton.click();
     page.forgottenPasswordButton.should('be.visible');
 
     page.forgottenPasswordButton.click();
