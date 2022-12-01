@@ -9,7 +9,9 @@ from functools import wraps
 LOGGER = logging.getLogger("wdae.api")
 
 
-def log_filter(request, message):
+def log_filter(request, message, *args):
+    if len(args) > 0:
+        message = message % args
     request_method = getattr(request, "method", "-")
     path_info = getattr(request, "path_info", "-")
     username = "guest"

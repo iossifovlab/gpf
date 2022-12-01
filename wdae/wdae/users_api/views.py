@@ -358,7 +358,8 @@ def change_password(request):
     if not is_password_valid(password):
         LOGGER.error(log_filter(
             request,
-            f"Password change failed: Invalid password: '{str(password)}'"
+            "Password change failed: Invalid password: '%s'",
+            str(password)
         ))
         return Response(
             {"error_msg": ("Invalid password entered. Password is either too"
@@ -391,8 +392,8 @@ def register(request):
         LOGGER.info(
             log_filter(
                 request,
-                "registration succeded; "
-                "email: '" + str(email) + "'",
+                "registration succeeded; email: '%s'",
+                str(email)
             )
         )
         return Response({}, status=status.HTTP_201_CREATED)
@@ -400,8 +401,8 @@ def register(request):
         LOGGER.error(
             log_filter(
                 request,
-                "Registration failed: IntegrityError; "
-                "email: '" + str(email) + "'",
+                "Registration failed: IntegrityError; email: '%s'",
+                str(email)
             )
         )
         return Response({}, status=status.HTTP_201_CREATED)
@@ -410,7 +411,8 @@ def register(request):
             log_filter(
                 request,
                 "Registration failed: Email or Researcher Id not found; "
-                "email: '" + str(email) + "'",
+                "email: '%s'",
+                str(email)
             )
         )
         return Response(
@@ -421,7 +423,9 @@ def register(request):
     except KeyError:
         LOGGER.error(
             log_filter(
-                request, "Registration failed: KeyError; " + str(request.data)
+                request,
+                "Registration failed: KeyError; %s",
+                str(request.data)
             )
         )
         return Response({}, status=status.HTTP_201_CREATED)
@@ -429,7 +433,8 @@ def register(request):
         LOGGER.error(
             log_filter(
                 request,
-                f"Registration failed: Invalid email; email: '{str(email)}'"
+                f"Registration failed: Invalid email; email: '%s'",
+                str(email)
             )
         )
         return Response(
