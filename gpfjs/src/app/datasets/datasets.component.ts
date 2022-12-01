@@ -57,7 +57,7 @@ export class DatasetsComponent implements OnInit, OnDestroy {
         this.setupSelectedDataset();
       }),
       this.datasets$.pipe(take(1)).subscribe(() => {
-        if (this.router.url === '/datasets') {
+        if (this.router.url === '/datasets' && this.datasetTrees.length > 0) {
           this.router.navigate(['/', 'datasets', this.datasetTrees[0].dataset.id]);
         }
       }),

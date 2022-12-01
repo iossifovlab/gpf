@@ -1,5 +1,5 @@
 import { HttpClientTestingModule } from '@angular/common/http/testing';
-import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
 import { NgxsModule } from '@ngxs/store';
 import { ConfigService } from 'app/config/config.service';
@@ -7,14 +7,66 @@ import { DatasetsService } from 'app/datasets/datasets.service';
 import { UsersService } from 'app/users/users.service';
 import { GeneSetsComponent } from './gene-sets.component';
 import { GeneSetsService } from './gene-sets.service';
-import { NgbAccordionModule } from '@ng-bootstrap/ng-bootstrap';
+import { NgbAccordionModule, NgbNavModule } from '@ng-bootstrap/ng-bootstrap';
+import { BrowserModule, By } from '@angular/platform-browser';
 import { CommonModule } from '@angular/common';
-import { BrowserModule } from '@angular/platform-browser';
 import { GeneSet, GeneSetsCollection, GeneSetType } from './gene-sets';
+import { Observable } from 'rxjs/internal/Observable';
+import { of } from 'rxjs';
+import { NO_ERRORS_SCHEMA } from '@angular/core';
+import { GeneSetsState } from './gene-sets.state';
 
 class MockDatasetsService {
   public getSelectedDataset(): object {
     return { id: 'testDataset' };
+  }
+}
+class MockGeneSetsService {
+  public provide = true;
+
+  public getGeneSets(): Observable<GeneSet[]> {
+    if (this.provide) {
+      return of([new GeneSet('name1', 2, 'desc3', 'download4'), new GeneSet('name5', 6, 'desc7', 'download8')]);
+    } else {
+      return of(undefined);
+    }
+  }
+
+  public getGeneSetsCollections(): Observable<GeneSetsCollection[]> {
+    if (this.provide) {
+      return of([
+        new GeneSetsCollection('denovo', 'desc2',
+          [
+            new GeneSetType('id3', 'datasetName4', 'personSetCollectionId5', 'personSetCollectionName6',
+              [
+                '7', '8'
+              ]
+            ),
+            new GeneSetType('id9', 'datasetName10', 'personSetCollectionId11', 'personSetCollectionName12',
+              [
+                '13', '14'
+              ]
+            )
+          ]
+        ),
+        new GeneSetsCollection('name15', 'desc16',
+          [
+            new GeneSetType('id17', 'datasetName18', 'personSetCollectionId19', 'personSetCollectionName20',
+              [
+                '21', '22'
+              ]
+            ),
+            new GeneSetType('id23', 'datasetName24', 'personSetCollectionId25', 'personSetCollectionName26',
+              [
+                '27', '28'
+              ]
+            )
+          ]
+        )
+      ]);
+    } else {
+      return of(undefined);
+    }
   }
 }
 
@@ -23,23 +75,21 @@ describe('GeneSetsComponent', () => {
   let fixture: ComponentFixture<GeneSetsComponent>;
   const datasetsServiceMock = new MockDatasetsService();
 
-  beforeEach(waitForAsync(() => {
+  beforeEach(() => {
     TestBed.configureTestingModule({
-      declarations: [],
+      declarations: [GeneSetsComponent],
       imports: [
         NgxsModule.forRoot([], {developmentMode: true}),
         HttpClientTestingModule, RouterTestingModule,
-        NgbAccordionModule,
+        NgbAccordionModule, NgbNavModule,
         CommonModule,
         BrowserModule
       ],
       providers: [
         ConfigService, GeneSetsService, { provide: DatasetsService, useValue: datasetsServiceMock }, UsersService
-      ]
+      ], schemas: [NO_ERRORS_SCHEMA]
     }).compileComponents();
-  }));
 
-  beforeEach(() => {
     fixture = TestBed.createComponent(GeneSetsComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
@@ -52,7 +102,7 @@ describe('GeneSetsComponent', () => {
   it('should change the gene set', () => {
     const geneSetMock1 = new GeneSet('name1', 1, 'desc1', 'download1');
     component.selectedGeneSet = geneSetMock1;
-    expect(component.selectedGeneSet).toEqual(GeneSet.fromJson({
+    expect(component.selectedGeneSet).toStrictEqual(GeneSet.fromJson({
       name: 'name1',
       count: 1,
       desc: 'desc1',
@@ -61,7 +111,7 @@ describe('GeneSetsComponent', () => {
 
     const geneSetMock2 = new GeneSet('name2', 3, 'desc4', 'download5');
     component.selectedGeneSet = geneSetMock2;
-    expect(component.selectedGeneSet).toEqual(GeneSet.fromJson({
+    expect(component.selectedGeneSet).toStrictEqual(GeneSet.fromJson({
       name: 'name2',
       count: 3,
       desc: 'desc4',
@@ -79,7 +129,7 @@ describe('GeneSetsComponent', () => {
 
     component.selectedGeneSetsCollection = geneSetsCollectionMock1;
 
-    expect(component.selectedGeneSetsCollection).toEqual(GeneSetsCollection.fromJson({
+    expect(component.selectedGeneSetsCollection).toStrictEqual(GeneSetsCollection.fromJson({
       name: 'name1', desc: 'desc2',
       types: [{
         datasetId: 'datasetId3',
@@ -112,11 +162,11 @@ describe('GeneSetsComponent', () => {
   it('should set onSelect', () => {
     const spy = jest.spyOn(component, 'onSearch');
     component.onSelect(new GeneSet('name1', 2, 'desc3', 'download4'));
-    expect(component.selectedGeneSet).toEqual(new GeneSet('name1', 2, 'desc3', 'download4'));
+    expect(component.selectedGeneSet).toStrictEqual(new GeneSet('name1', 2, 'desc3', 'download4'));
     expect(spy).not.toHaveBeenCalledWith();
 
     component.onSelect(null);
-    expect(spy).toHaveBeenCalled();
+    expect(spy).toHaveBeenCalledWith();
   });
 
   it('should set onSearch', () => {
@@ -134,8 +184,8 @@ describe('GeneSetsComponent', () => {
       new GeneSet('name17', 18, 'desc19', 'download20')
     ];
     component.onSearch('name15');
-    expect(component.searchQuery).toEqual('name15');
-    expect(component.geneSets).toEqual([]);
+    expect(component.searchQuery).toBe('name15');
+    expect(component.geneSets).toStrictEqual([]);
 
     component.geneSets = [
       new GeneSet('name13', 14, 'desc15', 'download16'),
@@ -143,8 +193,52 @@ describe('GeneSetsComponent', () => {
       new GeneSet('name17', 21, 'desc20', 'download21')
     ];
     component.onSearch('name17');
-    expect(component.geneSets).toEqual([
+    expect(component.geneSets).toStrictEqual([
       new GeneSet('name17', 18, 'desc19', 'download20'),
       new GeneSet('name17', 21, 'desc20', 'download21')]);
+  });
+});
+
+
+describe('GeneSetsComponent MockedGeneSetsService', () => {
+  let component: GeneSetsComponent;
+  let fixture: ComponentFixture<GeneSetsComponent>;
+  const datasetsServiceMock = new MockDatasetsService();
+  const mockGeneSetsService = new MockGeneSetsService();
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      declarations: [GeneSetsComponent],
+      imports: [
+        NgxsModule.forRoot([GeneSetsState], {developmentMode: true}),
+        HttpClientTestingModule, RouterTestingModule,
+        NgbAccordionModule, NgbNavModule,
+        CommonModule,
+        BrowserModule
+      ],
+      providers: [
+        ConfigService, {
+          provide: GeneSetsService, useValue: mockGeneSetsService
+        }, { provide: DatasetsService, useValue: datasetsServiceMock }, UsersService
+      ], schemas: [NO_ERRORS_SCHEMA]
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(GeneSetsComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+  });
+
+  it('should test empty gene sets', () => {
+    expect(fixture.debugElement.query(By.css('div > div#gene-sets-panel'))).toBeTruthy();
+    mockGeneSetsService.provide = false;
+    component.ngOnInit();
+    component.geneSetsCollections = undefined;
+    component.selectedGeneSetsCollection = undefined;
+    fixture.detectChanges();
+    expect(fixture.debugElement.query(
+      By.css('div > div.form-block > div.card > ul > li > span'))
+    ).toBeTruthy();
+    expect(fixture.debugElement.query(By.css('div > div#gene-sets-panel'))).not.toBeTruthy();
+    mockGeneSetsService.provide = true;
   });
 });
