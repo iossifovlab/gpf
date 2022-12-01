@@ -5,7 +5,7 @@ from dae.annotation.annotation_factory import build_annotation_pipeline
 
 def test_empty():
     pipeline = build_annotation_pipeline([])
-    assert pipeline
+    assert pipeline is not None
 
 
 def test_effect_annotator(grr_fixture):

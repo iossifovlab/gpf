@@ -179,8 +179,13 @@ class GPFInstance:
     def genomic_scores_db(self):
         """Load and return genomic scores db."""
         scores = []
+        if self.dae_config.genomic_scores_db is not None:
+            for score_def in self.dae_config.genomic_scores_db:
+                scores.append((score_def["resource"], score_def["score"]))
+            return GenomicScoresDb(self.grr, scores)
+
         pipeline = self.get_annotation_pipeline()
-        if pipeline is not None:
+        if pipeline is not None and len(pipeline.annotators) > 0:
             for annotator in pipeline.annotators:
                 schema = annotator.annotation_schema
                 resource_id = annotator.config.get("resource_id")
@@ -197,10 +202,6 @@ class GPFInstance:
 
                 for field_name in schema.public_fields:
                     scores.append((resource_id, field_name))
-
-        elif self.dae_config.genomic_scores_db is not None:
-            for score_def in self.dae_config.genomic_scores_db:
-                scores.append((score_def["resource"], score_def["score"]))
 
         return GenomicScoresDb(self.grr, scores)
 
@@ -472,11 +473,12 @@ class GPFInstance:
 
             config_filename = self.dae_config.annotation.conf_file
             if not os.path.exists(config_filename):
-                logger.warning(
+                logger.error(
                     "missing annotation configuration: %s",
-                    config_filename
-                )
-                return None
+                    config_filename)
+                raise ValueError(
+                    f"missing annotaiton config file <{config_filename}>")
+
             self._annotation_pipeline = \
                 build_annotation_pipeline(
                     pipeline_config_file=config_filename,
