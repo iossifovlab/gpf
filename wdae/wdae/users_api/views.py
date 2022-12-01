@@ -433,7 +433,7 @@ def register(request):
         LOGGER.error(
             log_filter(
                 request,
-                f"Registration failed: Invalid email; email: '%s'",
+                "Registration failed: Invalid email; email: '%s'",
                 str(email)
             )
         )

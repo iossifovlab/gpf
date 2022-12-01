@@ -7,10 +7,13 @@ from .validators import SomeSuperuserLeftValidator
 
 
 class CreatableSlugRelatedField(serializers.SlugRelatedField):
-    """Tries to get related field and creates it if it does not exist.
+    """
+    Try to get and return related field and create it if it does not exist.
+
     Used for the 'groups' field in the user serializer - if a new group is
     given to a user, it will be created and then attached to the user.
     """
+
     def to_internal_value(self, data):
         try:
             return self.get_queryset().get_or_create(
@@ -20,11 +23,24 @@ class CreatableSlugRelatedField(serializers.SlugRelatedField):
             self.fail("does_not_exist", slug_name=self.slug_field, value=data)
         except (TypeError, ValueError):
             self.fail("invalid")
+        return None
 
 
 class DatasetSerializer(serializers.BaseSerializer):
     def to_representation(self, instance):
         return instance
+
+    def to_internal_value(self, data):
+        """Do nothing, method is for DB objects only."""
+        return
+
+    def create(self, validated_data):
+        """Do nothing, method is for DB objects only."""
+        return
+
+    def update(self, instance, validated_data):
+        """Do nothing, method is for DB objects only."""
+        return
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -47,7 +63,7 @@ class UserSerializer(serializers.ModelSerializer):
         child=DatasetSerializer()
     )
 
-    class Meta(object):
+    class Meta:
         model = get_user_model()
         fields = (
             "id", "email", "name",

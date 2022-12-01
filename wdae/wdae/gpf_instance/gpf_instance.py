@@ -355,7 +355,6 @@ def reload_datasets(gpf_instance):
             Dataset.recreate_dataset_perm(study_id)
 
 
-
 def _recreated_dataset_perm():
     # pylint: disable=global-statement
     global _GPF_RECREATED_DATASET_PERM

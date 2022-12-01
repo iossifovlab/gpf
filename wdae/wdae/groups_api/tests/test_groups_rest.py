@@ -158,7 +158,6 @@ def test_no_empty_groups_are_accessible(admin_client):
 
 
 def test_empty_group_with_permissions_is_shown(admin_client, dataset):
-    groups_count = Group.objects.all().count()
     group = Group.objects.create(name="New Group")
 
     dataset.groups.add(group)
@@ -403,7 +402,7 @@ def test_user_group_routes(admin_client, user):
     )
 
     assert response.status_code == status.HTTP_204_NO_CONTENT
-    assert user.groups.filter(name='Test group').exists()
+    assert user.groups.filter(name="Test group").exists()
 
     url = "/api/v3/groups/remove-user"
     response = admin_client.post(
@@ -411,4 +410,4 @@ def test_user_group_routes(admin_client, user):
     )
 
     assert response.status_code == status.HTTP_204_NO_CONTENT
-    assert not user.groups.filter(name='Test group').exists()
+    assert not user.groups.filter(name="Test group").exists()

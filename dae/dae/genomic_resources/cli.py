@@ -28,18 +28,6 @@ from dae.genomic_resources.repository import \
     parse_resource_id_version, \
     version_tuple_to_string
 
-from dae.genomic_resources.genomic_scores import \
-    build_allele_score_from_resource, \
-    build_np_score_from_resource, \
-    build_position_score_from_resource
-from dae.genomic_resources.liftover_resource import \
-    build_liftover_chain_from_resource
-from dae.genomic_resources.reference_genome import \
-    build_reference_genome_from_resource
-from dae.genomic_resources.gene_models import \
-    build_gene_models_from_resource
-from dae.gene.gene_sets_db import build_gene_set_collection_from_resource
-from dae.gene.gene_scores import build_gene_score_collection_from_resource
 from dae.utils.verbosity_configuration import VerbosityConfiguration
 
 from dae.genomic_resources.fsspec_protocol import build_fsspec_protocol

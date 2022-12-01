@@ -3,7 +3,7 @@ from dae.genomic_resources import get_resource_implementation_factory, \
     register_implementation
 
 
-def test_register_implementation(grr_test_repo):
+def test_register_implementation():
     register_implementation(
         "test_gene_score", build_gene_score_collection_from_resource
     )

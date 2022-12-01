@@ -364,5 +364,3 @@ def hundred_groups(db, sample_dataset, user):
         user.groups.add(group)
     print(groups)
     return groups
-
-
