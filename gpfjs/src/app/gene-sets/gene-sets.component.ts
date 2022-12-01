@@ -8,10 +8,11 @@ import { DatasetsService } from 'app/datasets/datasets.service';
 import { ValidateNested } from 'class-validator';
 import { Store } from '@ngxs/store';
 import { SetGeneSetsValues, GeneSetsState } from './gene-sets.state';
-import { catchError, debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
+import { catchError, debounceTime, distinctUntilChanged, switchMap, take } from 'rxjs/operators';
 import { StatefulComponent } from 'app/common/stateful-component';
 import { environment } from 'environments/environment';
 import { PersonSet } from 'app/datasets/datasets';
+import { downloadBlobResponse } from 'app/utils/blob-download';
 
 @Component({
   selector: 'gpf-gene-sets',
@@ -217,15 +218,12 @@ export class GeneSetsComponent extends StatefulComponent implements OnInit {
 
   public set selectedGeneSet(geneSet) {
     this.geneSetsLocalState.geneSet = geneSet;
-    this.downloadUrl = this.getDownloadUrl(geneSet);
     this.store.dispatch(new SetGeneSetsValues(this.geneSetsLocalState));
   }
 
-  private getDownloadUrl(selectedGeneSet: GeneSet): string {
-    if (!selectedGeneSet) {
-      return;
-    }
-
-    return `${this.config.baseUrl}${selectedGeneSet.download}`;
+  public onDownload(): void {
+    this.geneSetsService.downloadGeneSet(this.selectedGeneSet).pipe(take(1)).subscribe((response) => {
+      downloadBlobResponse(response, 'geneset.csv');
+    });
   }
 }

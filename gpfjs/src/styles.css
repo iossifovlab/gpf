@@ -375,6 +375,7 @@ ngb-modal-window {
 
 .download-link:hover {
   text-decoration: underline;
+  cursor: pointer;
 }
 
 .container {

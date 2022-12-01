@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { GeneSetsCollection, GeneSet } from './gene-sets';
 import { ConfigService } from '../config/config.service';
@@ -40,5 +40,12 @@ export class GeneSetsService {
         limit: 100
       }, options)
       .pipe(map((res: any) => GeneSet.fromJsonArray(res)));
+  }
+
+  public downloadGeneSet(geneSet: GeneSet): Observable<HttpResponse<Blob>> {
+    return this.http.get(
+      `${this.config.baseUrl}${geneSet.download}`,
+      {observe: 'response', responseType: 'blob'}
+    );
   }
 }
