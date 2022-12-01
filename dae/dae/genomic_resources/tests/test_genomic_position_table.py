@@ -1,4 +1,4 @@
-# pylint: disable=W0621,C0114,C0116,W0212,W0613
+# pylint: disable=W0621,C0114,C0116,W0212,W0613,too-many-lines
 
 import pytest
 
@@ -289,7 +289,7 @@ def test_invalid_chrom_mapping_file_with_tabix(tmp_path, tabix_file):
     )
 
     with pytest.raises(ValueError) as exception:
-        tab = open_genome_position_table(res, res.config["tabix_table"])
+        open_genome_position_table(res, res.config["tabix_table"])
 
     assert str(exception.value) == (
         "The chromosome mapping file chrom_map.txt in resource  "
