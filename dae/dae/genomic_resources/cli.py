@@ -47,6 +47,8 @@ from dae.genomic_resources.histogram import HistogramBuilder
 from dae.genomic_resources.repository_factory import \
     build_genomic_resource_repository
 
+from dae.genomic_resources import get_resource_implementation_factory
+
 
 logger = logging.getLogger("grr_manage")
 
@@ -534,20 +536,9 @@ def _run_repo_info_command(proto, **kwargs):  # pylint: disable=unused-argument
             )
 
 
-RESOURCE_TYPE_BUILDERS = {
-    "position_score": build_position_score_from_resource,
-    "np_score": build_np_score_from_resource,
-    "allele_score": build_allele_score_from_resource,
-    "liftover_chain": build_liftover_chain_from_resource,
-    "gene_models": build_gene_models_from_resource,
-    "genome": build_reference_genome_from_resource,
-    "gene_set": build_gene_set_collection_from_resource,
-    "gene_score": build_gene_score_collection_from_resource
-}
-
-
 def build_resource_implementation(res):
-    return RESOURCE_TYPE_BUILDERS[res.get_type()](res)
+    factory = get_resource_implementation_factory(res.get_type())
+    return factory(res)
 
 
 def _do_resource_info_command(proto, res):

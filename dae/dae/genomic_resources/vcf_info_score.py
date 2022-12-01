@@ -298,3 +298,7 @@ class VcfInfoScore(GenomicScore):
             {% endfor %}
             {% endblock %}
         """))
+
+
+def build_vcf_info_from_resource(resource: GenomicResource) -> VcfInfoScore:
+    return VcfInfoScore(resource)
