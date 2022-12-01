@@ -9,6 +9,7 @@ logger = logging.getLogger(__name__)
 
 class Dataset(models.Model):
     dataset_id: models.TextField = models.TextField()
+    broken: models.BooleanField = models.BooleanField(default=True)
     groups = models.ManyToManyField(Group)
 
     def __repr__(self):
@@ -26,3 +27,13 @@ class Dataset(models.Model):
         for group_name in dataset_object.default_groups:
             group, _created = Group.objects.get_or_create(name=group_name)
             dataset_object.groups.add(group)
+
+    @classmethod
+    def set_broken(cls, dataset_id, broken):
+        try:
+            dataset_object = cls.objects.get(dataset_id=dataset_id)
+        except Dataset.DoesNotExist:
+            logger.error("Failed validating %s", dataset_id)
+            return
+        dataset_object.broken = broken
+        dataset_object.save()

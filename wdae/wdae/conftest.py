@@ -47,11 +47,6 @@ def user(db):
 
 
 @pytest.fixture()
-def fake_dataset(db):
-    return Dataset.objects.create(dataset_id="fake_dataset")
-
-
-@pytest.fixture()
 def hundred_users(db, user):
     user_model = get_user_model()
     users_data = []
@@ -65,21 +60,6 @@ def hundred_users(db, user):
         ))
     users = user_model.objects.bulk_create(users_data)
     return users
-
-
-@pytest.fixture()
-def hundred_groups(db, fake_dataset, user):
-    groups_data = []
-    for i in range(100):
-        groups_data.append(Group(
-            name=f"Group{i+1}",
-        ))
-    groups = Group.objects.bulk_create(groups_data)
-    for group in groups:
-        fake_dataset.groups.add(group)
-        user.groups.add(group)
-    print(groups)
-    return groups
 
 
 @pytest.fixture()
@@ -364,3 +344,25 @@ def use_common_reports(wdae_gpf_instance):
     for temp_file in temp_files:
         if os.path.exists(temp_file):
             os.remove(temp_file)
+
+
+@pytest.fixture()
+def sample_dataset(db, wdae_gpf_instance):
+    return Dataset.objects.get(dataset_id="Dataset1")
+
+
+@pytest.fixture()
+def hundred_groups(db, sample_dataset, user):
+    groups_data = []
+    for i in range(100):
+        groups_data.append(Group(
+            name=f"Group{i+1}",
+        ))
+    groups = Group.objects.bulk_create(groups_data)
+    for group in groups:
+        sample_dataset.groups.add(group)
+        user.groups.add(group)
+    print(groups)
+    return groups
+
+

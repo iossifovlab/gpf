@@ -166,7 +166,7 @@ def test_empty_group_with_permissions_is_shown(admin_client, dataset):
     url = "/api/v3/groups"
     response = admin_client.get(url)
     assert response.status_code is status.HTTP_200_OK
-    assert len(response.data) == groups_count + 1
+    assert len(response.data) == 25
     new_group_reponse = next(
         (
             response_group
@@ -176,7 +176,7 @@ def test_empty_group_with_permissions_is_shown(admin_client, dataset):
         None,
     )
     assert new_group_reponse
-    assert new_group_reponse["datasets"][0] == dataset.dataset_id
+    assert new_group_reponse["datasets"][0]["datasetId"] == dataset.dataset_id
 
 
 def test_group_has_all_datasets(admin_client, group_with_user, dataset):
@@ -193,7 +193,9 @@ def test_group_has_all_datasets(admin_client, group_with_user, dataset):
     response = admin_client.get(url)
     assert response.status_code is status.HTTP_200_OK
     assert len(response.data["datasets"]) == 1
-    assert response.data["datasets"][0] == dataset.dataset_id
+    assert response.data["datasets"][0]["datasetId"] == dataset.dataset_id
+    assert response.data["datasets"][0]["datasetName"] == "Dataset1"
+    assert response.data["datasets"][0]["broken"] is False
 
 
 def test_grant_permission_for_group(admin_client, group_with_user, dataset):
@@ -336,12 +338,12 @@ def test_cant_revoke_default_permissions(user_client, dataset):
 @pytest.mark.parametrize(
     "page,status_code,length, first_name, last_name",
     [
-        (1, status.HTTP_200_OK, 25, "Group1", "Group30"),
-        (2, status.HTTP_200_OK, 25, "Group31", "Group53"),
-        (3, status.HTTP_200_OK, 25, "Group54", "Group76"),
-        (4, status.HTTP_200_OK, 25, "Group77", "Group99"),
-        (5, status.HTTP_200_OK, 1, "admin", None),
-        (6, status.HTTP_204_NO_CONTENT, None, None, None),
+        (1, status.HTTP_200_OK, 25, "Dataset1", "Group27"),
+        (2, status.HTTP_200_OK, 25, "Group28", "Group5"),
+        (3, status.HTTP_200_OK, 25, "Group50", "Group72"),
+        (4, status.HTTP_200_OK, 25, "Group73", "Group95"),
+        (5, status.HTTP_200_OK, 25, "Group96", None),
+        (7, status.HTTP_204_NO_CONTENT, None, None, None),
     ]
 )
 def test_groups_pagination(
@@ -375,7 +377,8 @@ def test_groups_search(admin_client, hundred_groups):
         (2, status.HTTP_200_OK, 25),
         (3, status.HTTP_200_OK, 25),
         (4, status.HTTP_200_OK, 25),
-        (5, status.HTTP_204_NO_CONTENT, None),
+        (5, status.HTTP_200_OK, 3),
+        (6, status.HTTP_204_NO_CONTENT, None),
     ]
 )
 def test_groups_search_pagination(
@@ -386,3 +389,26 @@ def test_groups_search_pagination(
     assert response.status_code == status_code
     if length is not None:
         assert len(response.data) == length
+
+
+def test_user_group_routes(admin_client, user):
+    assert not user.groups.filter(name="Test group").exists()
+
+    group = Group.objects.create(name="Test group")
+    data = {"userEmail": user.email, "groupName": group.name}
+
+    url = "/api/v3/groups/add-user"
+    response = admin_client.post(
+        url, json.dumps(data), content_type="application/json", format="json"
+    )
+
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+    assert user.groups.filter(name='Test group').exists()
+
+    url = "/api/v3/groups/remove-user"
+    response = admin_client.post(
+        url, json.dumps(data), content_type="application/json", format="json"
+    )
+
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+    assert not user.groups.filter(name='Test group').exists()

@@ -22,6 +22,11 @@ class CreatableSlugRelatedField(serializers.SlugRelatedField):
             self.fail("invalid")
 
 
+class DatasetSerializer(serializers.BaseSerializer):
+    def to_representation(self, instance):
+        return instance
+
+
 class UserSerializer(serializers.ModelSerializer):
     name = serializers.CharField(required=False, allow_blank=True)
 
@@ -39,7 +44,7 @@ class UserSerializer(serializers.ModelSerializer):
         required=False,
         read_only=True,
         source="allowed_datasets",
-        child=serializers.CharField()
+        child=DatasetSerializer()
     )
 
     class Meta(object):

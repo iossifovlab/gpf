@@ -275,9 +275,9 @@ def test_get_allowed_datasets_for_na_user_strict(db, na_user, dataset_wrapper):
     add_group_perm_to_user("A", na_user)
     add_group_perm_to_dataset("A", "Dataset")
 
-    allowed_dtasets = get_directly_allowed_genotype_data(na_user)
-    print(allowed_dtasets)
-    assert "Dataset" in allowed_dtasets
+    allowed_datasets = get_directly_allowed_genotype_data(na_user)
+    print(allowed_datasets)
+    assert any([ds["datasetId"] == "Dataset"] for ds in allowed_datasets)
     assert not _user_has_permission_strict(na_user, "Dataset")
 
 
@@ -285,9 +285,9 @@ def test_get_directly_allowed_genotype_data(db, user, dataset_wrapper):
     add_group_perm_to_user("A", user)
     add_group_perm_to_dataset("A", "Dataset")
 
-    allowed_dtasets = get_directly_allowed_genotype_data(user)
-    print(allowed_dtasets)
-    assert "Dataset" in allowed_dtasets
+    allowed_datasets = get_directly_allowed_genotype_data(user)
+    print(allowed_datasets)
+    assert any([ds["datasetId"] == "Dataset"] for ds in allowed_datasets)
     assert _user_has_permission_strict(user, "Dataset")
 
 

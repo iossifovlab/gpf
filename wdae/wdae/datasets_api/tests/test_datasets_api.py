@@ -234,6 +234,7 @@ def test_datasets_permissions(admin_client, wdae_gpf_instance):
     assert set(response.data[0].keys()) == set([
         "dataset_id",
         "dataset_name",
+        "broken",
         "users",
         "groups"
     ])
