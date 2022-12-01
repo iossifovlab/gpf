@@ -85,7 +85,7 @@ describe('UsersActionsComponent', () => {
 
   it('should get reset password popover message', () => {
     const expectedText = `'s password will be reset. `
-      + `An email with reset instructions will be sent and they won't be able to login until they set a new password.`;
+      + `An email with reset instructions will be sent and they won't be able to log in until they set a new password.`;
 
     expect(component.resetPasswordPopoverMessage(
       new User(1, 'fakeUser', 'mockMail@mail.com', [''], true, ['']))
