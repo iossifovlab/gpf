@@ -197,6 +197,7 @@ class ImpalaVariants:
         self.ped_df = self._fetch_pedigree()
         self.families = FamiliesData.from_pedigree_df(self.ped_df)
         # Temporary workaround for studies that are imported without tags
+        # e.g. production data that is too large to reimport
         FamiliesLoader._build_families_tags(
             self.families, {"ped_tags": True}
         )
