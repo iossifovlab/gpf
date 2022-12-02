@@ -103,7 +103,7 @@ describe('User management tests', () => {
     page.datasetsTableRows.last().should('include.text', 'test_group');
 
     page.groupsButton.click();
-    page.groupsTableRows.should('have.length', 10);
+    page.groupsTableRows.should('have.length', 12);
     page.groupsTableRows.last().should('include.text', 'test_group');
 
     page.datasetsButton.click();
@@ -112,7 +112,7 @@ describe('User management tests', () => {
     page.datasetsTableRows.should('not.include.text', 'test_group');
 
     page.groupsButton.click();
-    page.groupsTableRows.should('have.length', 9);
+    page.groupsTableRows.should('have.length', 11);
     page.groupsTableRows.last().should('not.include.text', 'test_group');
   });
 
