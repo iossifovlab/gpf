@@ -45,7 +45,10 @@ def parse_scoredef_config(config):
         col_type = score_conf.get(
             "type", config.get("default.score.type", "float"))
 
+        col_key = score_conf.get("name") or str(score_conf["index"])
+
         col_def = ScoreDef(
+            col_key,
             score_conf.get("desc", ""),
             col_type,
             type_parsers[col_type],
@@ -74,6 +77,7 @@ class ScoreDef:
     """Score configuration definition."""
 
     # pylint: disable=too-many-instance-attributes
+    col_key: str
     desc: str
     type: str
     value_parser: Any
@@ -164,7 +168,8 @@ class Line:
         except KeyError:
             return default
 
-    def get_score(self, key):
+    def get_score(self, score_id):
+        key = self.score_defs[score_id].col_key
         if self.info is not None:
             value, meta = self.info[key], self.info_meta[key]
             if isinstance(value, tuple):
@@ -179,8 +184,8 @@ class Line:
         else:
             value = self.attributes[key]
 
-        if key in self.score_defs:
-            col_def = self.score_defs[key]
+        if score_id in self.score_defs:
+            col_def = self.score_defs[score_id]
             if value in col_def.na_values:
                 value = None
             elif col_def.value_parser is not None:
@@ -840,17 +845,32 @@ class TabixGenomicPositionTable(GenomicPositionTable):
         self.stats["tabix fetch"] += 1
         self.buffer.clear()
 
-        other_indices, other_columns = zip(*(
-            (i, x) for i, x in enumerate(self.header)
-            if i not in (self.chrom_column_i,
-                         self.pos_begin_column_i,
-                         self.pos_end_column_i)
-        ))
+        if self.header is not None:
+            other_indices, other_columns = zip(*(
+                (i, x) for i, x in enumerate(self.header)
+                if i not in (self.chrom_column_i,
+                            self.pos_begin_column_i,
+                            self.pos_end_column_i)
+            ))
+        else:
+            other_indices, other_columns = None, None
+
+        ref_key, alt_key = None, None
+        if "ref" in self.definition:
+            ref_key = self.get_special_column_index("ref") \
+                if self.header_mode == "none" \
+                else self.get_special_column_name("ref")
+        if "alt" in self.definition:
+            alt_key = self.get_special_column_index("alt") \
+                if self.header_mode == "none" \
+                else self.get_special_column_name("alt")
 
         for raw in self.variants_file.fetch(*args, parser=pysam.asTuple()):
-            attributes = dict(zip(other_columns, (raw[i] for i in other_indices)))
-            ref = attributes.get(self.definition.get("ref"))
-            alt = attributes.get(self.definition.get("alt"))
+            if other_indices and other_columns:
+                attributes = dict(zip(other_columns, (raw[i] for i in other_indices)))
+            else:
+                attributes = {str(idx): value for idx, value in enumerate(raw)}
+            ref, alt = attributes.get(ref_key), attributes.get(alt_key)
             yield Line(
                 raw[self.chrom_column_i],
                 raw[self.pos_begin_column_i],
@@ -884,6 +904,7 @@ class VCFGenomicPositionTable(TabixGenomicPositionTable):
             tuple_conv = lambda x: ",".join(map(str, x))
             self.score_definitions = {
                 key: ScoreDef(
+                    key,
                     value.description,
                     None,
                     tuple_conv if value.number not in (1, "A", "R") else None,

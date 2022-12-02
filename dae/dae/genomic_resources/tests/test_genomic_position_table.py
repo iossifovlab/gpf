@@ -88,6 +88,7 @@ def vcf_res_score_conf_override(tmp_path_factory):
                         filename: data.vcf.gz
                         scores:
                         - id: A
+                          name: A
                           type: float
                           desc: Score A, but overriden
                 """)
@@ -149,6 +150,7 @@ def test_default_setup():
                 filename: data.mem
                 scores:
                 - id: c2
+                  name: c2
                   type: float""",
         "data.mem": convert_to_tab_separated("""
             chrom pos_begin pos2  c2
@@ -171,6 +173,7 @@ def test_regions():
                 filename: data.mem
                 scores:
                 - id: c2
+                  name: c2
                   type: float""",
         "data.mem": convert_to_tab_separated("""
             chrom pos_begin pos_end  c2
@@ -217,6 +220,7 @@ def test_regions_in_tabix(tmp_path, tabix_file, jump_threshold):
                     filename: data.bgz
                     scores:
                     - id: c2
+                      name: c2
                       type: float""",
         })
     assert res
@@ -267,6 +271,7 @@ def test_last_call_is_updated(tmp_path, tabix_file):
                     filename: data.bgz
                     scores:
                     - id: c2
+                      name: c2
                       type: float""",
         })
     assert res
@@ -309,6 +314,7 @@ def test_chr_add_pref():
                     add_prefix: chr
                 scores:
                 - id: c2
+                  name: c2
                   type: float""",
         "data.mem": convert_to_tab_separated(
             """
@@ -330,6 +336,7 @@ def test_chr_del_pref():
                     del_prefix: chr
                 scores:
                 - id: c2
+                  name: c2
                   type: float""",
         "data.mem": """
             chrom    pos_begin pos2  c2
@@ -349,6 +356,7 @@ def test_chrom_mapping_file():
                     filename: chrom_map.txt
                 scores:
                 - id: c2
+                  name: c2
                   type: float""",
         "data.mem": convert_to_tab_separated("""
             chrom    pos_begin pos2  c2
@@ -387,6 +395,7 @@ def test_chrom_mapping_file_with_tabix(tmp_path, tabix_file):
                         name: pos2
                     scores:
                     - id: c2
+                      name: c2
                       type: float""",
             "chrom_map.txt": convert_to_tab_separated("""
                     chrom   file_chrom
@@ -464,6 +473,7 @@ def test_column_with_name():
                     name: pos2
                 scores:
                 - id: c2
+                  name: c2
                   type: float""",
         "data.mem": convert_to_tab_separated(
             """
@@ -489,6 +499,7 @@ def test_column_with_index():
                     index: 2
                 scores:
                 - id: c2
+                  name: c2
                   type: float""",
         "data.mem": convert_to_tab_separated("""
             chrom pos pos2  c2
@@ -515,6 +526,7 @@ def test_no_header():
                     index: 2
                 scores:
                 - id: c2
+                  name: c2
                   type: float""",
         "data.mem": convert_to_tab_separated("""
             1   10  12  3.14
@@ -540,6 +552,7 @@ def test_header_in_config():
                     name: pos2
                 scores:
                 - id: c2
+                  name: c2
                   type: float""",
         "data.mem": convert_to_tab_separated("""
             1   10  12  3.14
@@ -559,6 +572,7 @@ def test_space_in_mem_table():
                 filename: data.mem
                 scores:
                 - id: c2
+                  name: c2
                   type: float""",
         "data.mem": convert_to_tab_separated("""
             chrom pos_begin pos2   c2
@@ -580,6 +594,7 @@ def test_text_table():
                     filename: data.mem
                     scores:
                     - id: c2
+                      name: c2
                       type: float""",
             "data.mem": convert_to_tab_separated("""
                 chrom pos_begin c1     c2
@@ -649,8 +664,10 @@ def test_tabix_table(tabix_file, tmp_path, jump_threshold):
                         filename: data.bgz
                         scores:
                         - id: c1
+                          name: c1
                           type: float
                         - id: c2
+                          name: c2
                           type: str""",
         })
 
@@ -721,6 +738,7 @@ def tabix_table(tmp_path, tabix_file):
                     filename: data.bgz
                     scores:
                     - id: c1
+                      name: c1
                       type: int""",
         })
 
@@ -761,6 +779,7 @@ def regions_tabix_table(tmp_path, tabix_file):
                     filename: data.bgz
                     scores:
                     - id: c1
+                      name: c1
                       type: int""",
             "data.mem": """
             """
@@ -850,6 +869,7 @@ def tabix_table_multiline(tmp_path, tabix_file):
                     filename: data.bgz
                     scores:
                     - id: c1
+                      name: c1
                       type: float""",
         })
     tabix_to_resource(
@@ -928,6 +948,7 @@ def test_tabix_middle_optimization(tmp_path, tabix_file):
                     filename: data.bgz
                     scores:
                     - id: c1
+                      name: c1
                       type: int""",
             "data.mem": """
             """
@@ -975,6 +996,7 @@ def test_tabix_middle_optimization_regions(tmp_path, tabix_file):
                     filename: data.bgz
                     scores:
                     - id: c1
+                      name: c1
                       type: int""",
         })
 
@@ -1029,6 +1051,7 @@ def test_tabix_middle_optimization_regions_buggy_1(tmp_path, tabix_file):
                         add_prefix: chr
                     scores:
                     - id: c1
+                      name: c1
                       type: float
             """,
         })
@@ -1085,6 +1108,7 @@ def test_buggy_fitcons_e67(tmp_path, tabix_file):
                     filename: data.bgz
                     scores:
                     - id: c1
+                      name: c1
                       type: float
             """,
         })
@@ -1129,6 +1153,7 @@ def test_tabix_jump_config(tmp_path, tabix_file, jump_threshold, expected):
                     jump_threshold: {jump_threshold}
                     scores:
                     - id: c1
+                      name: c1
                       type: float
             """,
         })
@@ -1179,6 +1204,7 @@ def test_tabix_max_buffer(
                     jump_threshold: {jump_threshold}
                     scores:
                     - id: c1
+                      name: c1
                       type: float
             """,
         })
@@ -1225,6 +1251,7 @@ def test_contig_length():
                 filename: data.mem
                 scores:
                 - id: c2
+                  name: c2
                   type: float""",
         "data.mem": """
             chrom pos_begin pos2  c2
@@ -1446,6 +1473,7 @@ def test_tables_properly_load_scoredefs():
                 filename: data.mem
                 scores:
                 - id: c2
+                  name: c2
                   type: float""",
         "data.mem": convert_to_tab_separated("""
             chrom pos_begin pos_end  c2
@@ -1524,6 +1552,7 @@ def test_line_score_value_parsing(tmp_path, tabix_file):
                     filename: data.bgz
                     scores:
                     - id: c2
+                      name: c2
                       type: float
             """,
         })
@@ -1556,6 +1585,7 @@ def test_line_score_na_values(tmp_path, tabix_file):
                     filename: data.bgz
                     scores:
                     - id: c2
+                      name: c2
                       type: float
                       na_values:
                       - "4.14"
@@ -1623,6 +1653,7 @@ def test_get_ref_alt_nonconfigured_missing(tmp_path, tabix_file):
                     filename: data.bgz
                     scores:
                     - id: c2
+                      name: c2
                       type: float
                       na_values:
                       - "4.14"
@@ -1659,6 +1690,7 @@ def test_get_ref_alt_nonconfigured_existing(tmp_path, tabix_file):
                     filename: data.bgz
                     scores:
                     - id: c2
+                      name: c2
                       type: float
                       na_values:
                       - "4.14"
@@ -1693,21 +1725,21 @@ def test_get_ref_alt_configured_existing(tmp_path, tabix_file):
             "genomic_resource.yaml": f"""
                 tabix_table:
                     filename: data.bgz
-                    ref: ref
-                    alt: alt
+                    ref:
+                      name: reference
+                    alt:
+                      name: alternative
                     scores:
                     - id: c2
+                      name: c2
                       type: float
-                      na_values:
-                      - "4.14"
-                      - "5.14"
             """,
         })
 
     tabix_to_resource(
         tabix_file(
             """
-            #chrom  pos_begin  pos_end  ref  alt    c2
+            #chrom  pos_begin  pos_end  reference  alternative    c2
             1     10        12       A      G       3.14
             1     15        20       A      T       4.14
             1     21        30       A      C       5.14
@@ -1733,3 +1765,80 @@ def test_vcf_get_missing_alt(vcf_res_multiallelic):
     no_alt_line = next(tab.get_all_records())
     assert no_alt_line.ref == "A"
     assert no_alt_line.alt is None
+
+
+def test_score_definition_via_index_headerless_tabix(tmp_path, tabix_file):
+    res = build_test_resource(
+        scheme="file",
+        root_path=str(tmp_path),
+        content={
+            "genomic_resource.yaml": f"""
+                tabix_table:
+                    filename: data.bgz
+                    header_mode: none
+                    chrom:
+                      index: 0
+                    pos_begin:
+                      index: 1
+                    pos_end:
+                      index: 2
+                    scores:
+                    - id: piscore
+                      index: 3
+                      type: float
+            """,
+        })
+    tabix_to_resource(
+        tabix_file("1     10        12       3.14",
+                   seq_col=0, start_col=1, end_col=2),
+        res, "data.bgz"
+    )
+    tab = open_genome_position_table(res, res.config["tabix_table"])
+    line = next(tab.get_all_records())
+    assert len(tab.score_definitions) == 1
+    assert "piscore" in tab.score_definitions
+    assert line.get_available_scores() == ("piscore",)
+    assert line.get_score("piscore") == 3.14
+
+
+
+def test_score_definition_list_header_tabix(tmp_path, tabix_file):
+    res = build_test_resource(
+        scheme="file",
+        root_path=str(tmp_path),
+        content={
+            "genomic_resource.yaml": f"""
+                tabix_table:
+                    filename: data.bgz
+                    header_mode: list
+                    header: ["chrom", "start", "stop", "reference", "alt", "score"]
+                    pos_begin:
+                      name: start
+                    pos_end:
+                      name: stop
+                    ref:
+                      name: reference
+                    alt:
+                      name: alt
+                    scores:
+                    - id: piscore
+                      name: score
+                      type: float
+            """,
+        })
+    tabix_to_resource(
+        tabix_file("1     10        12         A         G     3.14",
+                   seq_col=0, start_col=1, end_col=2),
+        res, "data.bgz"
+    )
+    tab = open_genome_position_table(res, res.config["tabix_table"])
+    line = next(tab.get_all_records())
+    assert len(tab.score_definitions) == 1
+    assert "piscore" in tab.score_definitions
+    assert line.get_available_scores() == ("piscore",)
+    assert line.chrom == "1"
+    assert line.pos_begin == 10
+    assert line.pos_end == 12
+    assert line.ref == "A"
+    assert line.alt == "G"
+    assert line.get_score("piscore") == 3.14
