@@ -97,8 +97,7 @@ class GenomicScore(GenomicResourceImplementation):
     ACCESS_SWITCH_THRESHOLD = 1500
 
     @staticmethod
-    def _configure_score_columns(
-            config):
+    def _configure_score_columns(config):
         """Parse score configuration."""
         scores = {}
         for score_conf in config["scores"]:

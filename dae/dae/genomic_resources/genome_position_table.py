@@ -6,6 +6,7 @@ import logging
 
 from typing import Optional, Tuple, Any, Deque, Union, Dict, Generator
 from collections import Counter
+from dataclasses import dataclass
 
 import pysam  # type: ignore
 from box import Box  # type: ignore
@@ -13,13 +14,313 @@ from box import Box  # type: ignore
 from dae.genomic_resources.repository import GenomicResource
 
 logger = logging.getLogger(__name__)
+# pylint: disable=no-member
+PysamFile = Union[pysam.TabixFile, pysam.VariantFile]
+
+
+def parse_scoredef_config(config):
+    """Parse ScoreDef configuration."""
+    scores = {}
+    type_parsers = {
+        "str": str,
+        "float": float,
+        "int": int
+    }
+    default_na_values = {
+        "str": {},
+        "float": {"", "nan", ".", "NA"},
+        "int": {"", "nan", ".", "NA"}
+    }
+    default_type_pos_aggregators = {
+        "float": "mean",
+        "int": "mean",
+        "str": "concatenate"
+    }
+    default_type_nuc_aggregators = {
+        "float": "max",
+        "int": "max",
+        "str": "concatenate"
+    }
+    for score_conf in config["scores"]:
+        col_type = score_conf.get(
+            "type", config.get("default.score.type", "float"))
+
+        col_def = ScoreDef(
+            score_conf.get("desc", ""),
+            col_type,
+            type_parsers[col_type],
+            score_conf.get(
+                "na_values",
+                config.get(
+                    f"default_na_values.{col_type}",
+                    default_na_values[col_type])),
+            score_conf.get(
+                "position_aggregator",
+                config.get(
+                    f"{col_type}.aggregator",
+                    default_type_pos_aggregators[col_type])),
+            score_conf.get(
+                "nucleotide_aggregator",
+                config.get(
+                    f"{col_type}.aggregator",
+                    default_type_nuc_aggregators[col_type])),
+        )
+        scores[score_conf["id"]] = col_def
+    return scores
+
+
+@dataclass
+class ScoreDef:
+    """Score configuration definition."""
+
+    # pylint: disable=too-many-instance-attributes
+    desc: str
+    type: str
+    value_parser: Any
+    na_values: Any
+    pos_aggregator: Any
+    nuc_aggregator: Any
+
+
+class Line:
+    """Represents a line read from a tabix-indexed genomic position table."""
+
+    def __init__(
+        self,
+        chrom: str,
+        pos_begin: Union[int, str],
+        pos_end: Union[int, str],
+        attributes: Dict[str, Any],
+        score_defs: Dict[str, ScoreDef],
+        ref: Optional[str]=None,
+        alt: Optional[str]=None,
+        allele_index: Optional[int]=None,
+        info: Optional[pysam.VariantRecordInfo]=None,
+        info_meta: Optional[pysam.VariantHeaderMetadata]=None,
+    ):
+        self.chrom: str = chrom
+        self.pos_begin: int = int(pos_begin)
+        self.pos_end: int = int(pos_end)
+        self.attributes: Dict[str, Any] = attributes
+        self.score_defs: Dict[str, ScoreDef] = score_defs
+        self.ref: Optional[str] = ref
+        self.alt: Optional[str] = alt
+        # Used for support of multiallelic variants in VCF files.
+        # The allele index is None if the variant for this line
+        # is missing its ALT, i.e. its value is '.'
+        self.allele_index: Optional[int] = allele_index
+        # VCF INFO fields column
+        self.info: Optional[pysam.VariantRecordInfo] = info
+        # VCF INFO fields metadata - holds metadata for info fields
+        # such as description, type, whether the value is a tuple
+        # of multiple score values, etc.
+        self.info_meta: Optional[pysam.VariantHeaderMetadata] = info_meta
+        if self.info is not None:
+            assert self.info_meta is not None, \
+                "Cannot use INFO without providing relevant metadata."
+
+    def __eq__(self, other: object):
+        if isinstance(other, Line):
+            return self.chrom == other.chrom \
+                and self.pos_begin == other.pos_begin \
+                and self.pos_end == other.pos_end \
+                and self.attributes == other.attributes
+        if isinstance(other, tuple) and len(other) >= 3:
+            return tuple(self) == other
+        return False
+
+    def __iter__(self):
+        yield self.chrom
+        yield self.pos_begin
+        yield self.pos_end
+        for attr in self.attributes.values():
+            yield attr
+
+    def __getitem__(self, key: int):
+        if not isinstance(key, (int, slice)):
+            raise TypeError(f"Key '{key}' must be of integer or slice type!")
+        if isinstance(key, slice):
+            return tuple(self)[key]
+        if key == 0:
+            return self.chrom
+        if key == 1:
+            return self.pos_begin
+        if key == 2:
+            return self.pos_end
+        return tuple(self.attributes.values())[key - 3]
+
+    def __repr__(self):
+        return str(tuple(self))
+
+    def get(self, key: str, default=None):
+        if key == "chrom":
+            return self.chrom
+        if key == "pos_begin":
+            return self.pos_begin
+        if key == "pos_end":
+            return self.pos_end
+        try:
+            return self.get_score(key)
+        except KeyError:
+            return default
+
+    def get_score(self, key):
+        if self.info is not None:
+            value, meta = self.info[key], self.info_meta[key]
+            if isinstance(value, tuple):
+                if meta.number == "A" and self.allele_index is not None:
+                    value = value[self.allele_index]
+                elif meta.number == "R":
+                    value = value[
+                        self.allele_index + 1
+                        if self.allele_index is not None
+                        else 0  # Get reference allele value if ALT is '.'
+                    ]
+        else:
+            value = self.attributes[key]
+
+        if key in self.score_defs:
+            col_def = self.score_defs[key]
+            if value in col_def.na_values:
+                value = None
+            elif col_def.value_parser is not None:
+                value = col_def.value_parser(value)
+        return value
+
+    def get_available_scores(self):
+        return tuple(self.score_defs.keys())
+
+
+class LineBuffer:
+    """Represent a line buffer for Tabix genome position table."""
+
+    def __init__(self):
+        self.deque: Deque[Line] = collections.deque()
+
+    def __len__(self):
+        return len(self.deque)
+
+    def clear(self):
+        self.deque.clear()
+
+    def append(self, line: Line):
+        if len(self.deque) > 0 and self.peek_first().chrom != line.chrom:
+            self.clear()
+        self.deque.append(line)
+
+    def peek_first(self) -> Line:
+        return self.deque[0]
+
+    def pop_first(self) -> Line:
+        return self.deque.popleft()
+
+    def peek_last(self) -> Optional[Line]:
+        if len(self.deque) == 0:
+            return None
+        return self.deque[-1]
+
+    def region(self) -> Tuple[Optional[str], Optional[int], Optional[int]]:
+        """Return region stored in the buffer."""
+        if len(self.deque) == 0:
+            return None, None, None
+
+        first_chrom, first_begin, first_end, *_ = self.peek_first()
+        if len(self.deque) == 1:
+            return first_chrom, first_begin, first_end
+
+        last_chrom, _, last_end, *_ = self.peek_last()
+        if first_chrom != last_chrom:
+            self.clear()
+            return None, None, None
+        if first_end > last_end:
+            self.clear()
+            return None, None, None
+        return first_chrom, first_begin, last_end
+
+    def prune(self, chrom: str, pos: int) -> None:
+        """Prune the buffer if needed."""
+        if len(self.deque) == 0:
+            return
+
+        first_chrom, _first_beg, _, *_ = self.peek_first()
+        if chrom != first_chrom:
+            self.clear()
+            return
+
+        while len(self.deque) > 0:
+            _, _first_beg, first_end, *_ = self.deque[0]
+
+            if pos <= first_end:
+                break
+            self.deque.popleft()
+
+    def contains(self, chrom: str, pos: int) -> bool:
+        bchrom, bbeg, bend = self.region()
+
+        if chrom == bchrom and bend >= pos >= bbeg:
+            return True
+        return False
+
+    def find_index(self, chrom: str, pos: int) -> int:
+        """Find index in line buffer that contains the passed position."""
+        if len(self.deque) == 0 or not self.contains(chrom, pos):
+            return -1
+
+        if len(self.deque) == 1:
+            return 0
+
+        first_index = 0
+        last_index = len(self.deque) - 1
+        while True:
+            mid_index = (last_index - first_index) // 2 + first_index
+            if last_index <= first_index:
+                break
+
+            _, mid_beg, mid_end, *_ = self.deque[mid_index]
+            if mid_end >= pos >= mid_beg:
+                break
+
+            if pos < mid_beg:
+                last_index = mid_index - 1
+            else:
+                first_index = mid_index + 1
+
+        while mid_index > 0:
+            _, prev_beg, _prev_end, *_ = self.deque[mid_index - 1]
+            if pos > prev_beg:
+                break
+            mid_index -= 1
+
+        for index in range(mid_index, len(self.deque)):
+            _, t_beg, t_end, *_ = self.deque[index]
+            if t_end >= pos >= t_beg:
+                mid_index = index
+                break
+            if t_beg >= pos:
+                mid_index = index
+                break
+
+        return mid_index
+
+    def fetch(self, chrom, pos_begin, pos_end) -> Generator[Line, None, None]:
+        """Return a generator of rows matching the region."""
+        beg_index = self.find_index(chrom, pos_begin)
+        if beg_index == -1:
+            return
+
+        for index in range(beg_index, len(self.deque)):
+            row = self.deque[index]
+            _rchrom, rbeg, rend, *_rline = row
+            if rend < pos_begin:
+                continue
+            if pos_end is not None and rbeg > pos_end:
+                break
+            yield row
 
 
 class GenomicPositionTable(abc.ABC):
     """Abstraction over genomic scores table."""
 
-    # FIXME:
-    # pylint: disable=too-many-instance-attributes
     CHROM = "chrom"
     POS_BEGIN = "pos_begin"
     POS_END = "pos_end"
@@ -28,6 +329,7 @@ class GenomicPositionTable(abc.ABC):
         self.genomic_resource = genomic_resource
 
         self.definition = Box(table_definition)
+        self.score_definitions = self._generate_scoredefs()
         self.chrom_map = None
         self.chrom_order = None
         self.rev_chrom_map = None
@@ -57,6 +359,10 @@ class GenomicPositionTable(abc.ABC):
                     f"list of strings. The current value "
                     f"{self.header_mode} does not meet these "
                     f"requirements.")
+
+    def _generate_scoredefs(self):
+        return parse_scoredef_config(self.definition) \
+            if "scores" in self.definition else {}
 
     def _build_chrom_mapping(self):
         self.chrom_map = None
@@ -177,14 +483,6 @@ class GenomicPositionTable(abc.ABC):
     @abc.abstractmethod
     def close(self):
         """Close the resource."""
-
-    # @abc.abstractmethod
-    # def open(self):
-    #     """Open the resource."""
-
-    # @abc.abstractmethod
-    # def is_open(self):
-    #     """Check if the resource is open."""
 
     def get_chromosomes(self):
         return self.chrom_order
@@ -333,207 +631,6 @@ class FlatGenomicPositionTable(GenomicPositionTable):
         """Nothing to close."""
 
 
-class Line:
-    """Represents a line read from a tabix-indexed genomic position table."""
-
-    def __init__(
-        self,
-        chrom: str,
-        pos_begin: Union[int, str],
-        pos_end: Union[int, str],
-        attributes: Dict[str, Any],
-    ):
-        self.chrom: str = chrom
-        self.pos_begin: int = int(pos_begin)
-        self.pos_end: int = int(pos_end)
-        self.attributes: Dict[str, Any] = attributes
-
-    def __eq__(self, other: object):
-        if isinstance(other, Line):
-            return self.chrom == other.chrom \
-                and self.pos_begin == other.pos_begin \
-                and self.pos_end == other.pos_end \
-                and self.attributes == other.attributes
-        if isinstance(other, tuple) and len(other) >= 3:
-            return tuple(self) == other
-        return False
-
-    def __iter__(self):
-        yield self.chrom
-        yield self.pos_begin
-        yield self.pos_end
-        for attr in self.attributes.values():
-            yield attr
-
-    def __getitem__(self, key: int):
-        if not isinstance(key, (int, slice)):
-            raise TypeError(f"Key '{key}' must be of integer or slice type!")
-        if isinstance(key, slice):
-            return tuple(self)[key]
-        if key == 0:
-            return self.chrom
-        if key == 1:
-            return self.pos_begin
-        if key == 2:
-            return self.pos_end
-        return tuple(self.attributes.values())[key - 3]
-
-    def __repr__(self):
-        return str(tuple(self))
-
-    def get(self, key: str, default=None):
-        allele_index = self.attributes["allele_index"]
-        if key == "chrom":
-            return self.chrom
-        if key == "pos_begin":
-            return self.pos_begin
-        if key == "pos_end":
-            return self.pos_end
-        if "INFO" in self.attributes and allele_index is not None:
-            value = self.attributes["INFO"][key]
-            value_metadata = self.attributes["header_info_metadata"][key]
-            if isinstance(value, tuple):
-                if value_metadata.number == "A":
-                    value = value[allele_index]
-                elif value_metadata.number == "R":
-                    value = value[allele_index + 1]
-            return value
-        if key in self.attributes:
-            return self.attributes[key]
-        return default
-
-
-class LineBuffer:
-    """Represent a line buffer for Tabix genome position table."""
-
-    def __init__(self):
-        self.deque: Deque[Line] = collections.deque()
-
-    def __len__(self):
-        return len(self.deque)
-
-    def clear(self):
-        self.deque.clear()
-
-    def append(self, line: Line):
-        if len(self.deque) > 0 and self.peek_first().chrom != line.chrom:
-            self.clear()
-        self.deque.append(line)
-
-    def peek_first(self) -> Line:
-        return self.deque[0]
-
-    def pop_first(self) -> Line:
-        return self.deque.popleft()
-
-    def peek_last(self) -> Optional[Line]:
-        if len(self.deque) == 0:
-            return None
-        return self.deque[-1]
-
-    def region(self) -> Tuple[Optional[str], Optional[int], Optional[int]]:
-        """Return region stored in the buffer."""
-        if len(self.deque) == 0:
-            return None, None, None
-
-        first_chrom, first_begin, first_end, *_ = self.peek_first()
-        if len(self.deque) == 1:
-            return first_chrom, first_begin, first_end
-
-        last_chrom, _, last_end, *_ = self.peek_last()
-        if first_chrom != last_chrom:
-            self.clear()
-            return None, None, None
-        if first_end > last_end:
-            self.clear()
-            return None, None, None
-        return first_chrom, first_begin, last_end
-
-    def prune(self, chrom: str, pos: int) -> None:
-        """Prune the buffer if needed."""
-        if len(self.deque) == 0:
-            return
-
-        first_chrom, _first_beg, _, *_ = self.peek_first()
-        if chrom != first_chrom:
-            self.clear()
-            return
-
-        while len(self.deque) > 0:
-            _, _first_beg, first_end, *_ = self.deque[0]
-
-            if pos <= first_end:
-                break
-            self.deque.popleft()
-
-    def contains(self, chrom: str, pos: int) -> bool:
-        bchrom, bbeg, bend = self.region()
-
-        if chrom == bchrom and bend >= pos >= bbeg:
-            return True
-        return False
-
-    def find_index(self, chrom: str, pos: int) -> int:
-        """Find index in line buffer that contains the passed position."""
-        if len(self.deque) == 0 or not self.contains(chrom, pos):
-            return -1
-
-        if len(self.deque) == 1:
-            return 0
-
-        first_index = 0
-        last_index = len(self.deque) - 1
-        while True:
-            mid_index = (last_index - first_index) // 2 + first_index
-            if last_index <= first_index:
-                break
-
-            _, mid_beg, mid_end, *_ = self.deque[mid_index]
-            if mid_end >= pos >= mid_beg:
-                break
-
-            if pos < mid_beg:
-                last_index = mid_index - 1
-            else:
-                first_index = mid_index + 1
-
-        while mid_index > 0:
-            _, prev_beg, _prev_end, *_ = self.deque[mid_index - 1]
-            if pos > prev_beg:
-                break
-            mid_index -= 1
-
-        for index in range(mid_index, len(self.deque)):
-            _, t_beg, t_end, *_ = self.deque[index]
-            if t_end >= pos >= t_beg:
-                mid_index = index
-                break
-            if t_beg >= pos:
-                mid_index = index
-                break
-
-        return mid_index
-
-    def fetch(self, chrom, pos_begin, pos_end) -> Generator[Line, None, None]:
-        """Return a generator of rows matching the region."""
-        beg_index = self.find_index(chrom, pos_begin)
-        if beg_index == -1:
-            return
-
-        for index in range(beg_index, len(self.deque)):
-            row = self.deque[index]
-            _rchrom, rbeg, rend, *_rline = row
-            if rend < pos_begin:
-                continue
-            if pos_end is not None and rbeg > pos_end:
-                break
-            yield row
-
-
-# pylint: disable=no-member
-PysamFile = Union[pysam.TabixFile, pysam.VariantFile]
-
-
 class TabixGenomicPositionTable(GenomicPositionTable):
     """Represents Tabix file genome position table."""
 
@@ -589,7 +686,11 @@ class TabixGenomicPositionTable(GenomicPositionTable):
         rchrom = self._map_result_chrom(line.chrom)
         if rchrom is None:
             return None
-        return Line(rchrom, line.pos_begin, line.pos_end, line.attributes)
+        return Line(
+            rchrom, line.pos_begin, line.pos_end,
+            line.attributes, line.score_defs,
+            allele_index=line.allele_index
+        )
 
     def get_all_records(self):
         # pylint: disable=no-member
@@ -728,20 +829,16 @@ class TabixGenomicPositionTable(GenomicPositionTable):
                 return
 
         # without using buffer
-        self.line_iterator = self.get_line_iterator(fchrom, pos_begin)
+        self.line_iterator = self.get_line_iterator(fchrom, pos_begin - 1)
 
         for row in self._gen_from_tabix(fchrom, pos_end, buffering=buffering):
             yield row
 
         self.buffer.prune(fchrom, pos_begin)
 
-    def get_line_iterator(self, chrom=None, pos_begin=None, pos_end=None):
+    def get_line_iterator(self, *args):
         self.stats["tabix fetch"] += 1
         self.buffer.clear()
-
-        if pos_begin is not None:
-            pos_begin = pos_begin - 1
-        args = filter(None, (chrom, pos_begin, pos_end))
 
         other_indices, other_columns = zip(*(
             (i, x) for i, x in enumerate(self.header)
@@ -750,15 +847,16 @@ class TabixGenomicPositionTable(GenomicPositionTable):
                          self.pos_end_column_i)
         ))
 
-        for raw_line in self.variants_file.fetch(
-            # pylint: disable=no-member
-            *args, parser=pysam.asTuple()
-        ):
+        for raw in self.variants_file.fetch(*args, parser=pysam.asTuple()):
+            attributes = dict(zip(other_columns, (raw[i] for i in other_indices)))
+            ref = attributes.get(self.definition.get("ref"))
+            alt = attributes.get(self.definition.get("alt"))
             yield Line(
-                raw_line[self.chrom_column_i],
-                raw_line[self.pos_begin_column_i],
-                raw_line[self.pos_end_column_i],
-                dict(zip(other_columns, (raw_line[i] for i in other_indices)))
+                raw[self.chrom_column_i],
+                raw[self.pos_begin_column_i],
+                raw[self.pos_end_column_i],
+                attributes, self.score_definitions,
+                ref=ref, alt=alt,
             )
 
     def close(self):
@@ -771,10 +869,29 @@ class TabixGenomicPositionTable(GenomicPositionTable):
 class VCFGenomicPositionTable(TabixGenomicPositionTable):
     """Represents a VCF file genome position table."""
 
-    # pylint: disable=too-many-instance-attributes
     CHROM = "CHROM"
     POS_BEGIN = "POS"
     POS_END = "POS"
+
+    def __init__(self, genomic_resource: GenomicResource, table_definition,
+                 variants_file: PysamFile):
+        super().__init__(genomic_resource, table_definition, variants_file)
+        if "scores" not in self.definition:
+            # We can safely put 'None' for most fields, because
+            # pysam casts the values to their correct types beforehand
+            # We only need to join tuple values, as annotators cannot
+            # handle tuples
+            tuple_conv = lambda x: ",".join(map(str, x))
+            self.score_definitions = {
+                key: ScoreDef(
+                    value.description,
+                    None,
+                    tuple_conv if value.number not in (1, "A", "R") else None,
+                    tuple(),
+                    None,
+                    None
+                ) for key, value in self.variants_file.header.info.items()
+            }
 
     def _get_header(self):
         return ("CHROM", "POS", "ID", "REF", "ALT", "QUAL", "FILTER", "INFO")
@@ -782,25 +899,19 @@ class VCFGenomicPositionTable(TabixGenomicPositionTable):
     def get_file_chromosomes(self):
         return self.variants_file.header.contigs
 
-    def get_line_iterator(self, chrom=None, pos_begin=None, pos_end=None):
+    def get_line_iterator(self, *args):
         self.stats["tabix fetch"] += 1
         self.buffer.clear()
-
-        args = filter(None, (chrom, pos_begin, pos_end))
-
         for raw_line in self.variants_file.fetch(*args):
             for allele_index, alt in enumerate(raw_line.alts or [None]):
-                if alt is None:
-                    allele_index = None
                 yield Line(
-                    raw_line.contig, raw_line.pos, raw_line.pos,
-                    {
-                        "REF": raw_line.ref,
-                        "ALT": alt,
-                        "INFO": raw_line.info,
-                        "allele_index": allele_index,
-                        "header_info_metadata": raw_line.header.info,
-                    }
+                    raw_line.contig, raw_line.pos, raw_line.pos, {},
+                    self.score_definitions,
+                    allele_index=allele_index if alt is not None else None,
+                    ref=raw_line.ref,
+                    alt=alt,
+                    info=raw_line.info,
+                    info_meta=raw_line.header.info,
                 )
 
 
