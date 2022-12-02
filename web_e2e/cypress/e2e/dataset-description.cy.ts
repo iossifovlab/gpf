@@ -105,25 +105,25 @@ describe('Dataset description access rights tests', () => {
 
     page.loginAdmin();
 
-    page.navigateToDatasetPage(datasetIds.allGenotypes, toolPageLinks.genotypeBrowser);
+    page.navigateToDatasetPage(datasetIds.allGenotypes, toolPageLinks.geneBrowser);
     datasetsPage.datasetDescriptionButton.should('be.visible');
 
-    page.navigateToDatasetPage(datasetIds.compGenotypes, toolPageLinks.genotypeBrowser);
+    page.navigateToDatasetPage(datasetIds.compGenotypes, toolPageLinks.geneBrowser);
     datasetsPage.datasetDescriptionButton.should('be.visible');
 
-    page.navigateToDatasetPage(datasetIds.compDenovo, toolPageLinks.genotypeBrowser);
+    page.navigateToDatasetPage(datasetIds.compDenovo, toolPageLinks.datasetStatistics);
     datasetsPage.datasetDescriptionButton.should('be.visible');
 
-    page.navigateToDatasetPage(datasetIds.compVcf, toolPageLinks.genotypeBrowser);
+    page.navigateToDatasetPage(datasetIds.compVcf, toolPageLinks.datasetStatistics);
     datasetsPage.datasetDescriptionButton.should('be.visible');
 
-    page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
+    page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.datasetStatistics);
     datasetsPage.datasetDescriptionButton.should('be.visible');
 
-    page.navigateToDatasetPage(datasetIds.iossifov2014, toolPageLinks.genotypeBrowser);
+    page.navigateToDatasetPage(datasetIds.iossifov2014, toolPageLinks.datasetStatistics);
     datasetsPage.datasetDescriptionButton.should('be.visible');
 
-    page.navigateToDatasetPage(datasetIds.multi, toolPageLinks.genotypeBrowser);
+    page.navigateToDatasetPage(datasetIds.multi, toolPageLinks.datasetStatistics);
     datasetsPage.datasetDescriptionButton.should('be.visible');
 
     page.logout();
@@ -134,25 +134,25 @@ describe('Dataset description access rights tests', () => {
 
     page.login(userData.normal.username, userData.normal.password, false);
 
-    page.navigateToDatasetPage(datasetIds.allGenotypes, toolPageLinks.genotypeBrowser, false);
+    page.navigateToDatasetPage(datasetIds.allGenotypes, toolPageLinks.geneBrowser, false);
     datasetsPage.datasetDescriptionButton.should('not.exist');
 
-    page.navigateToDatasetPage(datasetIds.compGenotypes, toolPageLinks.genotypeBrowser, false);
+    page.navigateToDatasetPage(datasetIds.compGenotypes, toolPageLinks.geneBrowser, false);
     datasetsPage.datasetDescriptionButton.should('not.exist');
 
-    page.navigateToDatasetPage(datasetIds.compDenovo, toolPageLinks.genotypeBrowser, false);
+    page.navigateToDatasetPage(datasetIds.compDenovo, toolPageLinks.datasetStatistics, false);
     datasetsPage.datasetDescriptionButton.should('not.exist');
 
-    page.navigateToDatasetPage(datasetIds.compVcf, toolPageLinks.genotypeBrowser, false);
+    page.navigateToDatasetPage(datasetIds.compVcf, toolPageLinks.datasetStatistics, false);
     datasetsPage.datasetDescriptionButton.should('not.exist');
 
-    page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser, false);
+    page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.datasetStatistics, false);
     datasetsPage.datasetDescriptionButton.should('not.exist');
 
-    page.navigateToDatasetPage(datasetIds.iossifov2014, toolPageLinks.genotypeBrowser, false);
+    page.navigateToDatasetPage(datasetIds.iossifov2014, toolPageLinks.datasetStatistics, false);
     datasetsPage.datasetDescriptionButton.should('not.exist');
 
-    page.navigateToDatasetPage(datasetIds.multi, toolPageLinks.genotypeBrowser, false);
+    page.navigateToDatasetPage(datasetIds.multi, toolPageLinks.datasetStatistics, false);
     datasetsPage.datasetDescriptionButton.should('not.exist');
 
     page.logout();
@@ -181,7 +181,7 @@ describe('Dataset description access rights tests', () => {
     page.editorSaveButton.click();
     page.logout();
 
-    page.login(userData.normal.username, userData.normal.password, false);
+    page.login(userData.normal.username, userData.normal.password);
     page.navigateToDatasetPage(datasetIds.iossifov2014, toolPageLinks.datasetDescription);
     page.descriptionText.should('have.text', 'IOSSIFOV TEST DESCRIPTION');
     page.editIcon.should('not.exist');
