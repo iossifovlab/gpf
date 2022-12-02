@@ -48,3 +48,6 @@ addMatchImageSnapshotCommand({
   capture: 'viewport', // capture viewport in screenshot
   customSnapshotsDir: 'cypress/fixtures/snapshots/'
 });
+
+
+require('cypress-delete-downloads-folder').addCustomCommand();

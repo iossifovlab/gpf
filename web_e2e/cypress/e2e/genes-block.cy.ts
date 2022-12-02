@@ -297,9 +297,10 @@ describe('Genes block gene set file length tests', () => {
       expectedCount = Number(expectedName.substring(expectedName.indexOf('(') + 1, expectedName.indexOf(')')));
 
       genotypeBrowserController.filterGenesByGeneSets(data.collection, geneSetName);
-      cy.window().document().then(function (doc) {
+      cy.deleteDownloadsFolder();
+      cy.window().document().then(doc => {
         doc.addEventListener('click', () => {
-          setTimeout(function () { doc.location.reload() }, 5000)
+          setTimeout(() => doc.location?.reload(), 5000);
         })
         page.downloadButton.click();
       });
