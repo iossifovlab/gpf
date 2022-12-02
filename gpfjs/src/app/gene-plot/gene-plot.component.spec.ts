@@ -1,4 +1,4 @@
-import { SimpleChange, SimpleChanges } from '@angular/core';
+import { SimpleChange } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Gene, Transcript } from 'app/gene-browser/gene';
 import { SummaryAllelesArray } from 'app/gene-browser/summary-variants';
@@ -35,7 +35,7 @@ const variantsArrayMock = {alleles: [{
   chrom: 'chr',
   variant: 'v1',
   effect: 'CNV+',
-  frequency: 1.000,
+  frequency: 1.00003,
   family_variants_count: 2,
   is_denovo: true,
   seen_in_affected: false,
@@ -48,7 +48,7 @@ const variantsArrayMock = {alleles: [{
   chrom: 'chr',
   variant: 'v2',
   effect: 'CNV-',
-  frequency: 2.000,
+  frequency: 2.00023,
   family_variants_count: 2,
   is_denovo: true,
   seen_in_affected: false,
@@ -61,7 +61,7 @@ const variantsArrayMock = {alleles: [{
   chrom: 'chr',
   variant: 'v3',
   effect: 'missense',
-  frequency: 3.000,
+  frequency: 3.00012,
   family_variants_count: 2,
   is_denovo: true,
   seen_in_affected: false,
@@ -74,7 +74,7 @@ const variantsArrayMock = {alleles: [{
   chrom: 'chr',
   variant: 'v4',
   effect: 'synonymous',
-  frequency: 4.000,
+  frequency: 4.00023,
   family_variants_count: 2,
   is_denovo: true,
   seen_in_affected: false,
@@ -87,7 +87,7 @@ const variantsArrayMock = {alleles: [{
   chrom: 'chr',
   variant: 'v5',
   effect: 'lgds',
-  frequency: 5.000,
+  frequency: 5.000456,
   family_variants_count: 2,
   is_denovo: true,
   seen_in_affected: false,
@@ -100,7 +100,7 @@ const variantsArrayMock = {alleles: [{
   chrom: 'chr',
   variant: 'v6',
   effect: 'no-frame-shift',
-  frequency: 6.000,
+  frequency: 6.000467,
   family_variants_count: 2,
   is_denovo: true,
   seen_in_affected: false,
@@ -121,8 +121,7 @@ describe('GenePlotComponent', () => {
     component = fixture.componentInstance;
     Object.defineProperty(component, 'gene', { value: geneMock });
     Object.defineProperty(component, 'frequencyDomain', { value: [1, 100] });
-    (component.allVariantsCounts as [number, number]) = [0, 0];
-
+    Object.defineProperty(component, 'allVariantsCounts', { value: [0, 0] });
     fixture.detectChanges();
   });
 
