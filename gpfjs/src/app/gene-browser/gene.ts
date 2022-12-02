@@ -34,6 +34,25 @@ function collapseTranscripts(transcripts: Transcript[]): Transcript {
   );
 }
 
+function collapseMultipleTranscripts(chromKeys: string[], transcripts: Transcript[]): Transcript[] {
+  let trans: Transcript[] = [];
+  for (const key of chromKeys) {
+    const chromosomeTranscripts = transcripts.filter(t => t.chromosome === key);
+    const allExons: Segment[] = [];
+    const allCodingSequences: Segment[] = [];
+    for (const transcript of chromosomeTranscripts) {
+      allExons.push(...transcript.exons);
+      allCodingSequences.push(...transcript.codingSequences);
+    }
+
+    trans.push(new Transcript(
+      'collapsed', key, transcripts[0].strand,
+      mergeSegments(allCodingSequences), mergeSegments(allExons)
+    ));
+  }
+  return trans;
+}
+
 export class TranscriptSegment {
   public readonly length: number;
 
@@ -151,6 +170,7 @@ export class Transcript {
 
 export class Gene {
   public readonly collapsedTranscript: Transcript;
+  public readonly collapsedTranscripts: Transcript[];
   public readonly chromosomes: Map<string, [number, number]>;
 
   public constructor(
@@ -170,6 +190,9 @@ export class Gene {
         ]);
       }
     }
+    this.collapsedTranscripts = collapseMultipleTranscripts(
+      new Array(...this.chromosomes).map(chrom => chrom[0]), this.transcripts
+    );
   }
 
   public static fromJson(json: object): Gene {
