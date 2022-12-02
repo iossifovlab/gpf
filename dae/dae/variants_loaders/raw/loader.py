@@ -172,8 +172,14 @@ class CLILoader(ABC):
 
     @classmethod
     def cli_defaults(cls):
-        argument_destinations = [arg.destination for arg in cls._arguments()]
-        defaults = [arg.default_value for arg in cls._arguments()]
+        argument_destinations = [
+            arg.destination for arg in cls._arguments()
+            if arg.destination is not None
+        ]
+        defaults = [
+            arg.default_value for arg in cls._arguments()
+            if arg.destination is not None
+        ]
         return dict(zip(argument_destinations, defaults))
 
     @classmethod

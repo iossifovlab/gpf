@@ -122,12 +122,13 @@ class ImportProject():
         """Get params for loading the pedigree."""
         families_filename = self.get_pedigree_filename()
 
-        default_families_params = FamiliesLoader.cli_defaults()
-        families_params = self.import_config["input"]["pedigree"]
-        families_params = self._add_loader_prefix(families_params, "ped_")
-        default_families_params.update(families_params)
+        families_params = {}
+        families_params.update(FamiliesLoader.cli_defaults())
+        config_params = self.import_config["input"]["pedigree"]
+        config_params = self._add_loader_prefix(config_params, "ped_")
+        families_params.update(config_params)
 
-        return families_filename, default_families_params
+        return families_filename, families_params
 
     def get_pedigree_filename(self) -> str:
         """Return the path to the pedigree file."""
