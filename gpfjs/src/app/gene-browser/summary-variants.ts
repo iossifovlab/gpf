@@ -1,20 +1,26 @@
 import { CNV, CODING, LGDS, OTHER } from 'app/effect-types/effect-types';
 
 export class SummaryAllele {
-  public location: string;
-  public position: number;
-  public endPosition: number;
-  public chrom: string;
-  public variant: string;
-  public effect: string;
-  public frequency: number;
-  public numberOfFamilyVariants: number;
-  public seenAsDenovo: boolean;
-
-  public seenInAffected: boolean;
-  public seenInUnaffected: boolean;
   public svuid: string;
   public sauid: string;
+
+  public constructor(
+    public location: string,
+    public position: number,
+    public endPosition: number,
+    public chrom: string,
+    public variant: string,
+    public effect: string,
+    public frequency: number,
+    public numberOfFamilyVariants: number,
+    public seenAsDenovo: boolean,
+    public seenInAffected: boolean,
+    public seenInUnaffected: boolean,
+    svuid?: string
+  ) {
+    this.sauid = this.location + ':' + this.variant;
+    this.svuid = svuid ? svuid : this.sauid;
+  }
 
   public static comparator(a: SummaryAllele, b: SummaryAllele): number {
     if (a.comparisonValue > b.comparisonValue) {
@@ -27,20 +33,21 @@ export class SummaryAllele {
   }
 
   public static fromRow(row: object, svuid?: string): SummaryAllele {
-    const result = new SummaryAllele();
-    result.location = row['location'] as string;
-    result.position = row['position'] as number;
-    result.endPosition = row['end_position'] as number;
-    result.chrom = row['chrom'] as string;
-    result.variant = row['variant'] as string;
-    result.effect = row['effect'] as string;
-    result.frequency = row['frequency'] as number;
-    result.numberOfFamilyVariants = row['family_variants_count'] as number;
-    result.seenAsDenovo = row['is_denovo'] as boolean;
-    result.seenInAffected = row['seen_in_affected'] as boolean;
-    result.seenInUnaffected = row['seen_in_unaffected'] as boolean;
-    result.sauid = result.location + ':' + result.variant;
-    result.svuid = svuid ? svuid : result.sauid;
+    const result = new SummaryAllele(
+      row['location'] as string,
+      row['position'] as number,
+      row['end_position'] as number,
+      row['chrom'] as string,
+      row['variant'] as string,
+      row['effect'] as string,
+      row['frequency'] as number,
+      row['family_variants_count'] as number,
+      row['is_denovo'] as boolean,
+      row['seen_in_affected'] as boolean,
+      row['seen_in_unaffected'] as boolean,
+      svuid
+    );
+
     return result;
   }
 
@@ -110,8 +117,10 @@ export class SummaryAllele {
 }
 
 export class SummaryAllelesArray {
-  public readonly summaryAlleles: SummaryAllele[] = [];
-  public readonly summaryAlleleIds: string[] = [];
+  public constructor(
+    public readonly summaryAlleles: SummaryAllele[] = [],
+    public readonly summaryAlleleIds: string[] = []
+  ) {}
 
   public addSummaryRow(row: object): void {
     if (!row) {

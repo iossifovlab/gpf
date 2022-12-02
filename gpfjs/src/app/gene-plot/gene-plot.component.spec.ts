@@ -1,7 +1,7 @@
 import { SimpleChange } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Gene, Transcript } from 'app/gene-browser/gene';
-import { SummaryAllelesArray } from 'app/gene-browser/summary-variants';
+import { SummaryAllelesArray, SummaryAllele } from 'app/gene-browser/summary-variants';
 import { GenePlotComponent } from './gene-plot.component';
 
 const geneMock = new Gene(
@@ -28,85 +28,14 @@ const geneMock = new Gene(
   ]
 );
 
-const variantsArrayMock = {alleles: [{
-  location: 'l1',
-  position: 1,
-  end_position: 20,
-  chrom: 'chr',
-  variant: 'v1',
-  effect: 'CNV+',
-  frequency: 1.00003,
-  family_variants_count: 2,
-  is_denovo: true,
-  seen_in_affected: false,
-  seen_in_unaffected: true
-},
-{
-  location: 'l2',
-  position: 2,
-  end_position: 20,
-  chrom: 'chr',
-  variant: 'v2',
-  effect: 'CNV-',
-  frequency: 2.00023,
-  family_variants_count: 2,
-  is_denovo: true,
-  seen_in_affected: false,
-  seen_in_unaffected: true
-},
-{
-  location: 'l3',
-  position: 3,
-  end_position: 20,
-  chrom: 'chr',
-  variant: 'v3',
-  effect: 'missense',
-  frequency: 3.00012,
-  family_variants_count: 2,
-  is_denovo: true,
-  seen_in_affected: false,
-  seen_in_unaffected: true
-},
-{
-  location: 'l4',
-  position: 4,
-  end_position: 20,
-  chrom: 'chr',
-  variant: 'v4',
-  effect: 'synonymous',
-  frequency: 4.00023,
-  family_variants_count: 2,
-  is_denovo: true,
-  seen_in_affected: false,
-  seen_in_unaffected: true
-},
-{
-  location: 'l5',
-  position: 5,
-  end_position: 20,
-  chrom: 'chr',
-  variant: 'v5',
-  effect: 'lgds',
-  frequency: 5.000456,
-  family_variants_count: 2,
-  is_denovo: true,
-  seen_in_affected: false,
-  seen_in_unaffected: true
-},
-{
-  location: 'l6',
-  position: 6,
-  end_position: 20,
-  chrom: 'chr',
-  variant: 'v6',
-  effect: 'no-frame-shift',
-  frequency: 6.000467,
-  family_variants_count: 2,
-  is_denovo: true,
-  seen_in_affected: false,
-  seen_in_unaffected: true
-}
-]};
+const variantsArrayMock = [
+  new SummaryAllele('l1', 1, 20, 'chr', 'v1', 'CNV+', 1.00003, 2, true, false, true),
+  new SummaryAllele('l2', 2, 20, 'chr', 'v2', 'CNV-', 2.00023, 2, true, false, true),
+  new SummaryAllele('l3', 3, 20, 'chr', 'v3', 'missense', 3.00012, 2, true, false, true),
+  new SummaryAllele('l4', 4, 20, 'chr', 'v4', 'synonymous', 4.00023, 2, true, false, true),
+  new SummaryAllele('l5', 5, 20, 'chr', 'v5', 'lgds', 5.000456, 2, true, false, true),
+  new SummaryAllele('l6', 6, 20, 'chr', 'v6', 'no-frame-shift', 6.000467, 2, true, false, true),
+];
 
 describe('GenePlotComponent', () => {
   let component: GenePlotComponent;
@@ -130,47 +59,46 @@ describe('GenePlotComponent', () => {
   });
 
   it('should draw plot', () => {
-    const summaryAllelesArray = new SummaryAllelesArray();
-    summaryAllelesArray.addSummaryRow(variantsArrayMock);
+    const summaryAllelesArray = new SummaryAllelesArray(variantsArrayMock);
     Object.defineProperty(component, 'variantsArray', {
       value: summaryAllelesArray
     });
 
     const alleleTitleCNVPlus =
-        `Effect type: ${variantsArrayMock.alleles[0].effect}`
-        + `\nPosition: ${variantsArrayMock.alleles[0].location}`
-        + `\nVariant: ${variantsArrayMock.alleles[0].variant}`
-        + `\nFrequency: ${variantsArrayMock.alleles[0].frequency.toFixed(3).toString()}`;
+        `Effect type: ${summaryAllelesArray.summaryAlleles[0].effect}`
+        + `\nPosition: ${summaryAllelesArray.summaryAlleles[0].location}`
+        + `\nVariant: ${summaryAllelesArray.summaryAlleles[0].variant}`
+        + `\nFrequency: ${summaryAllelesArray.summaryAlleles[0].frequency.toFixed(3).toString()}`;
 
     const alleleTitleCNVMinus =
-      `Effect type: ${variantsArrayMock.alleles[1].effect}`
-      + `\nPosition: ${variantsArrayMock.alleles[1].location}`
-      + `\nVariant: ${variantsArrayMock.alleles[1].variant}`
-      + `\nFrequency: ${variantsArrayMock.alleles[1].frequency.toFixed(3).toString()}`;
+      `Effect type: ${summaryAllelesArray.summaryAlleles[1].effect}`
+      + `\nPosition: ${summaryAllelesArray.summaryAlleles[1].location}`
+      + `\nVariant: ${summaryAllelesArray.summaryAlleles[1].variant}`
+      + `\nFrequency: ${summaryAllelesArray.summaryAlleles[1].frequency.toFixed(3).toString()}`;
 
     const alleleTitleMissense =
-      `Effect type: ${variantsArrayMock.alleles[2].effect}`
-      + `\nPosition: ${variantsArrayMock.alleles[2].location}`
-      + `\nVariant: ${variantsArrayMock.alleles[2].variant}`
-      + `\nFrequency: ${variantsArrayMock.alleles[2].frequency.toFixed(3).toString()}`;
+      `Effect type: ${summaryAllelesArray.summaryAlleles[2].effect}`
+      + `\nPosition: ${summaryAllelesArray.summaryAlleles[2].location}`
+      + `\nVariant: ${summaryAllelesArray.summaryAlleles[2].variant}`
+      + `\nFrequency: ${summaryAllelesArray.summaryAlleles[2].frequency.toFixed(3).toString()}`;
 
     const alleleTitleSynonymous =
-      `Effect type: ${variantsArrayMock.alleles[3].effect}`
-      + `\nPosition: ${variantsArrayMock.alleles[3].location}`
-      + `\nVariant: ${variantsArrayMock.alleles[3].variant}`
-      + `\nFrequency: ${variantsArrayMock.alleles[3].frequency.toFixed(3).toString()}`;
+      `Effect type: ${summaryAllelesArray.summaryAlleles[3].effect}`
+      + `\nPosition: ${summaryAllelesArray.summaryAlleles[3].location}`
+      + `\nVariant: ${summaryAllelesArray.summaryAlleles[3].variant}`
+      + `\nFrequency: ${summaryAllelesArray.summaryAlleles[3].frequency.toFixed(3).toString()}`;
 
     const alleleTitleLGDs =
-      `Effect type: ${variantsArrayMock.alleles[4].effect}`
-      + `\nPosition: ${variantsArrayMock.alleles[4].location}`
-      + `\nVariant: ${variantsArrayMock.alleles[4].variant}`
-      + `\nFrequency: ${variantsArrayMock.alleles[4].frequency.toFixed(3).toString()}`;
+      `Effect type: ${summaryAllelesArray.summaryAlleles[4].effect}`
+      + `\nPosition: ${summaryAllelesArray.summaryAlleles[4].location}`
+      + `\nVariant: ${summaryAllelesArray.summaryAlleles[4].variant}`
+      + `\nFrequency: ${summaryAllelesArray.summaryAlleles[4].frequency.toFixed(3).toString()}`;
 
     const alleleTitleOther =
-      `Effect type: ${variantsArrayMock.alleles[5].effect}`
-      + `\nPosition: ${variantsArrayMock.alleles[5].location}`
-      + `\nVariant: ${variantsArrayMock.alleles[5].variant}`
-      + `\nFrequency: ${variantsArrayMock.alleles[5].frequency.toFixed(3).toString()}`;
+      `Effect type: ${summaryAllelesArray.summaryAlleles[5].effect}`
+      + `\nPosition: ${summaryAllelesArray.summaryAlleles[5].location}`
+      + `\nVariant: ${summaryAllelesArray.summaryAlleles[5].variant}`
+      + `\nFrequency: ${summaryAllelesArray.summaryAlleles[5].frequency.toFixed(3).toString()}`;
 
     component.ngOnChanges({ gene: new SimpleChange(null, geneMock, true) });
     component.redraw();
