@@ -248,6 +248,7 @@ def get_allowed_genotype_studies(user, dataset):
 
 
 def get_dataset_info(dataset_id):
+    """Return a dictionary describing a Dataset object."""
     gpf_instance = get_gpf_instance()
     study_wrapper = gpf_instance.get_wdae_wrapper(dataset_id)
     if study_wrapper is None:
@@ -263,6 +264,7 @@ def get_dataset_info(dataset_id):
 
 
 def get_directly_allowed_genotype_data(user):
+    """Return list of genotype data the user has direct permissions to."""
     gpf_instance = get_gpf_instance()
     dataset_ids = gpf_instance.get_genotype_data_ids()
     user_groups = get_user_groups(user)

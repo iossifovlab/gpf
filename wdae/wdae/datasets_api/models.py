@@ -30,6 +30,12 @@ class Dataset(models.Model):
 
     @classmethod
     def set_broken(cls, dataset_id, broken):
+        """
+        Set a Dataset object's broken status to the given value.
+
+        Datasets should be flagged broken before loading and checked
+        after loading to be unflagged.
+        """
         try:
             dataset_object = cls.objects.get(dataset_id=dataset_id)
         except Dataset.DoesNotExist:
