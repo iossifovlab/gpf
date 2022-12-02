@@ -1,8 +1,6 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-// eslint-disable-next-line no-restricted-imports
+import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Observable } from 'rxjs';
-
 import { GeneSetsCollection, GeneSet } from './gene-sets';
 import { ConfigService } from '../config/config.service';
 import { map } from 'rxjs/operators';
@@ -12,23 +10,25 @@ export class GeneSetsService {
   private readonly geneSetsCollectionsUrl = 'gene_sets/gene_sets_collections';
   private readonly geneSetsSearchUrl = 'gene_sets/gene_sets';
 
-  constructor(
+  public constructor(
     private http: HttpClient,
     private config: ConfigService
   ) {}
 
-  getGeneSetsCollections(): Observable<GeneSetsCollection[]> {
+  public getGeneSetsCollections(): Observable<GeneSetsCollection[]> {
     const headers = { 'Content-Type': 'application/json' };
     const options = { headers: headers, withCredentials: true };
 
     return this.http
       .get(this.config.baseUrl + this.geneSetsCollectionsUrl, options)
-      .pipe(map((res: any) => {
-        return GeneSetsCollection.fromJsonArray(res);
-      }));
+      .pipe(map((res: any) => GeneSetsCollection.fromJsonArray(res)));
   }
 
-  getGeneSets(selectedGeneSetsCollection: string, searchTerm: string, geneSetsTypes: Object): Observable<GeneSet[]> {
+  public getGeneSets(
+    selectedGeneSetsCollection: string,
+    searchTerm: string,
+    geneSetsTypes: object
+  ): Observable<GeneSet[]> {
     const headers = { 'Content-Type': 'application/json' };
     const options = { headers: headers, withCredentials: true };
 
@@ -39,8 +39,13 @@ export class GeneSetsService {
         geneSetsTypes: geneSetsTypes,
         limit: 100
       }, options)
-      .pipe(map((res: any) => {
-        return GeneSet.fromJsonArray(res);
-      }));
+      .pipe(map((res: any) => GeneSet.fromJsonArray(res)));
+  }
+
+  public downloadGeneSet(geneSet: GeneSet): Observable<HttpResponse<Blob>> {
+    return this.http.get(
+      `${this.config.baseUrl}${geneSet.download}`,
+      {observe: 'response', responseType: 'blob'}
+    );
   }
 }
