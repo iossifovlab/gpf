@@ -34,7 +34,7 @@ and install it in your local environment:
 .. note::
 
     At the end of the installation process, you will be asked if you wish
-    to allow the installer to initialize Anaconda3 by running `conda` init.
+    to allow the installer to initialize Miniconda3 by running `conda` init.
     If you choose to, every terminal you open after that will have the ``base``
     Anaconda environment activated, and you'll have access to the ``conda``
     commands used below.
@@ -271,7 +271,7 @@ When the import finishes you can run the GPF development server using:
 
 .. code-block:: bash
 
-    wpgf run
+    wgpf run
 
 and browse the content of the GPF development server at `http://localhost:8000`
 
@@ -358,7 +358,7 @@ When the import finishes you can run the GPF development server using:
 
 .. code-block:: bash
 
-    wpgf run
+    wgpf run
 
 and browse the content of the GPF development server at `http://localhost:8000`
 
@@ -444,7 +444,7 @@ siblings are ``unaffected``.
 Using all these conventions we can write a simple python script 
 ``build_ssc_pedigree.py``
 to convert
-``SupplementaryData1_Children.tsv`` into a pedigree file ``sss_denovo.ped``:
+``SupplementaryData1_Children.tsv`` into a pedigree file ``ssc_denovo.ped``:
 
 .. code-block:: python
 
