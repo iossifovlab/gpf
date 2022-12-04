@@ -2,10 +2,14 @@ import { CNV, CODING, LGDS, OTHER } from 'app/effect-types/effect-types';
 import { SummaryAllele, SummaryAllelesArray, SummaryAllelesFilter } from './summary-variants';
 
 describe('SummaryAllele', () => {
-  it('should create from row', () => {
-    const a = new SummaryAllele();
+  let summaryAlleleMock: SummaryAllele;
+  beforeEach(() => {
+    summaryAlleleMock = new SummaryAllele('l1', 1, 20, 'chr', 'v1', 'CNV+', 1.00003, 2, true, false, true);
+  });
+  it('should compare alleles', () => {
+    const a = new SummaryAllele('l1', 1, 20, 'chr', 'v1', 'CNV+', 1.00003, 2, true, false, true);
     const aComparisonValue = jest.spyOn(a, 'comparisonValue', 'get');
-    const b = new SummaryAllele();
+    const b = new SummaryAllele('l2', 2, 20, 'chr', 'v2', 'CNV-', 2.00023, 2, true, false, true);
     const bComparisonValue = jest.spyOn(b, 'comparisonValue', 'get');
 
     aComparisonValue.mockReturnValue(1);
@@ -24,175 +28,162 @@ describe('SummaryAllele', () => {
 
   it('should create from row', () => {
     let summaryAllele: SummaryAllele;
+
     const row = {
       location: 'location1',
       position: 3,
-      end_position: 7,
+      end_position: 7, // eslint-disable-line
       chrom: 'chrom1',
       variant: 'variant1',
       effect: 'effect1',
       frequency: 13,
-      family_variants_count: 17,
-      is_denovo: true,
-      seen_in_affected: false,
-      seen_in_unaffected: true,
+      family_variants_count: 17, // eslint-disable-line
+      is_denovo: true, // eslint-disable-line
+      seen_in_affected: false, // eslint-disable-line
+      seen_in_unaffected: true, // eslint-disable-line
     };
     summaryAllele = SummaryAllele.fromRow(row);
 
-    expect(summaryAllele.location).toEqual('location1');
-    expect(summaryAllele.position).toEqual(3);
-    expect(summaryAllele.endPosition).toEqual(7);
-    expect(summaryAllele.chrom).toEqual('chrom1');
-    expect(summaryAllele.variant).toEqual('variant1');
-    expect(summaryAllele.effect).toEqual('effect1');
-    expect(summaryAllele.frequency).toEqual(13);
-    expect(summaryAllele.numberOfFamilyVariants).toEqual(17);
-    expect(summaryAllele.seenAsDenovo).toEqual(true);
-    expect(summaryAllele.seenInAffected).toEqual(false);
-    expect(summaryAllele.seenInUnaffected).toEqual(true);
-    expect(summaryAllele.sauid).toEqual(row.location + ':' + row.variant);
-    expect(summaryAllele.svuid).toEqual(row.location + ':' + row.variant);
+    expect(summaryAllele.location).toBe('location1');
+    expect(summaryAllele.position).toBe(3);
+    expect(summaryAllele.endPosition).toBe(7);
+    expect(summaryAllele.chrom).toBe('chrom1');
+    expect(summaryAllele.variant).toBe('variant1');
+    expect(summaryAllele.effect).toBe('effect1');
+    expect(summaryAllele.frequency).toBe(13);
+    expect(summaryAllele.numberOfFamilyVariants).toBe(17);
+    expect(summaryAllele.seenAsDenovo).toBe(true);
+    expect(summaryAllele.seenInAffected).toBe(false);
+    expect(summaryAllele.seenInUnaffected).toBe(true);
+    expect(summaryAllele.sauid).toStrictEqual(row.location + ':' + row.variant);
+    expect(summaryAllele.svuid).toStrictEqual(row.location + ':' + row.variant);
 
     row.is_denovo = false;
     row.seen_in_affected = true;
     row.seen_in_unaffected = false;
     summaryAllele = SummaryAllele.fromRow(row, 'svuid1');
-    expect(summaryAllele.seenAsDenovo).toEqual(false);
-    expect(summaryAllele.seenInAffected).toEqual(true);
-    expect(summaryAllele.seenInUnaffected).toEqual(false);
-    expect(summaryAllele.sauid).toEqual(row.location + ':' + row.variant);
-    expect(summaryAllele.svuid).toEqual('svuid1');
+    expect(summaryAllele.seenAsDenovo).toBe(false);
+    expect(summaryAllele.seenInAffected).toBe(true);
+    expect(summaryAllele.seenInUnaffected).toBe(false);
+    expect(summaryAllele.sauid).toStrictEqual(row.location + ':' + row.variant);
+    expect(summaryAllele.svuid).toBe('svuid1');
   });
 
   it('should get affected status', () => {
-    const summaryAllele = new SummaryAllele();
+    summaryAlleleMock.seenInAffected = true;
+    summaryAlleleMock.seenInUnaffected = true;
+    expect(summaryAlleleMock.affectedStatus).toBe('Affected and unaffected');
 
-    summaryAllele.seenInAffected = true;
-    summaryAllele.seenInUnaffected = true;
-    expect(summaryAllele.affectedStatus).toEqual('Affected and unaffected');
+    summaryAlleleMock.seenInAffected = true;
+    summaryAlleleMock.seenInUnaffected = false;
+    expect(summaryAlleleMock.affectedStatus).toBe('Affected only');
 
-    summaryAllele.seenInAffected = true;
-    summaryAllele.seenInUnaffected = false;
-    expect(summaryAllele.affectedStatus).toEqual('Affected only');
-
-    summaryAllele.seenInAffected = false;
-    summaryAllele.seenInUnaffected = true;
-    expect(summaryAllele.affectedStatus).toEqual('Unaffected only');
+    summaryAlleleMock.seenInAffected = false;
+    summaryAlleleMock.seenInUnaffected = true;
+    expect(summaryAlleleMock.affectedStatus).toBe('Unaffected only');
   });
 
   it('should get variant type', () => {
-    const summaryAllele = new SummaryAllele();
+    const summaryAllele = new SummaryAllele('l1', 1, 20, 'chr', 'v1', 'lgds', 1.00003, 2, true, false, true);
 
     summaryAllele.variant = 'sub???';
-    expect(summaryAllele.variantType).toEqual('sub');
+    expect(summaryAllele.variantType).toBe('sub');
     summaryAllele.variant = 'ins???';
-    expect(summaryAllele.variantType).toEqual('ins');
+    expect(summaryAllele.variantType).toBe('ins');
     summaryAllele.variant = 'CNV+???';
     summaryAllele.effect = 'CNV+';
-    expect(summaryAllele.variantType).toEqual('CNV+');
+    expect(summaryAllele.variantType).toBe('CNV+');
     summaryAllele.variant = 'CNV-???';
     summaryAllele.effect = 'CNV-';
-    expect(summaryAllele.variantType).toEqual('CNV-');
+    expect(summaryAllele.variantType).toBe('CNV-');
   });
 
   it('should check is lgds', () => {
-    const summaryAllele = new SummaryAllele();
-
-    summaryAllele.effect = 'lgds';
-    expect(summaryAllele.isLGDs()).toBeTruthy();
-    summaryAllele.effect = 'nonsense';
-    expect(summaryAllele.isLGDs()).toBeTruthy();
-    summaryAllele.effect = '';
-    expect(summaryAllele.isLGDs()).toBeFalsy();
+    summaryAlleleMock.effect = 'lgds';
+    expect(summaryAlleleMock.isLGDs()).toBeTruthy();
+    summaryAlleleMock.effect = 'nonsense';
+    expect(summaryAlleleMock.isLGDs()).toBeTruthy();
+    summaryAlleleMock.effect = '';
+    expect(summaryAlleleMock.isLGDs()).toBeFalsy();
   });
 
   it('should check is missense', () => {
-    const summaryAllele = new SummaryAllele();
-
-    summaryAllele.effect = 'missense';
-    expect(summaryAllele.isMissense()).toBeTruthy();
-    summaryAllele.effect = '';
-    expect(summaryAllele.isMissense()).toBeFalsy();
+    summaryAlleleMock.effect = 'missense';
+    expect(summaryAlleleMock.isMissense()).toBeTruthy();
+    summaryAlleleMock.effect = '';
+    expect(summaryAlleleMock.isMissense()).toBeFalsy();
   });
 
   it('should check is synonymous', () => {
-    const summaryAllele = new SummaryAllele();
-
-    summaryAllele.effect = 'synonymous';
-    expect(summaryAllele.isSynonymous()).toBeTruthy();
-    summaryAllele.effect = '';
-    expect(summaryAllele.isSynonymous()).toBeFalsy();
+    summaryAlleleMock.effect = 'synonymous';
+    expect(summaryAlleleMock.isSynonymous()).toBeTruthy();
+    summaryAlleleMock.effect = '';
+    expect(summaryAlleleMock.isSynonymous()).toBeFalsy();
   });
 
   it('should check is CNV+', () => {
-    const summaryAllele = new SummaryAllele();
-
-    summaryAllele.effect = 'CNV+';
-    expect(summaryAllele.isCNVPlus()).toBeTruthy();
-    summaryAllele.effect = '';
-    expect(summaryAllele.isCNVPlus()).toBeFalsy();
+    summaryAlleleMock.effect = 'CNV+';
+    expect(summaryAlleleMock.isCNVPlus()).toBeTruthy();
+    summaryAlleleMock.effect = '';
+    expect(summaryAlleleMock.isCNVPlus()).toBeFalsy();
   });
 
   it('should check is CNV-', () => {
-    const summaryAllele = new SummaryAllele();
-
-    summaryAllele.effect = 'CNV-';
-    expect(summaryAllele.isCNVMinus()).toBeTruthy();
-    summaryAllele.effect = '';
-    expect(summaryAllele.isCNVMinus()).toBeFalsy();
+    summaryAlleleMock.effect = 'CNV-';
+    expect(summaryAlleleMock.isCNVMinus()).toBeTruthy();
+    summaryAlleleMock.effect = '';
+    expect(summaryAlleleMock.isCNVMinus()).toBeFalsy();
   });
 
   it('should check is CNV', () => {
-    const summaryAllele = new SummaryAllele();
-
-    summaryAllele.effect = 'CNV+';
-    expect(summaryAllele.isCNV()).toBeTruthy();
-    summaryAllele.effect = 'CNV-';
-    expect(summaryAllele.isCNV()).toBeTruthy();
-    summaryAllele.effect = '';
-    expect(summaryAllele.isCNV()).toBeFalsy();
+    summaryAlleleMock.effect = 'CNV+';
+    expect(summaryAlleleMock.isCNV()).toBeTruthy();
+    summaryAlleleMock.effect = 'CNV-';
+    expect(summaryAlleleMock.isCNV()).toBeTruthy();
+    summaryAlleleMock.effect = '';
+    expect(summaryAlleleMock.isCNV()).toBeFalsy();
   });
 
   it('should get comparison value', () => {
-    const summaryAllele1 = new SummaryAllele();
+    const summaryAllele1 = new SummaryAllele('l1', 1, 20, 'chr', 'v1', 'CNV+', 1.00003, 2, true, false, true);
     summaryAllele1.seenAsDenovo = false;
     summaryAllele1.effect = 'CNV+';
     summaryAllele1.seenInAffected = true;
     summaryAllele1.seenInUnaffected = true;
 
-    const summaryAllele2 = new SummaryAllele();
+    const summaryAllele2 = new SummaryAllele('l1', 1, 20, 'chr', 'v1', 'CNV+', 1.00003, 2, true, false, true);
     summaryAllele2.seenAsDenovo = false;
     summaryAllele2.effect = 'CNV+';
     summaryAllele2.seenInAffected = false;
     summaryAllele2.seenInUnaffected = true;
 
-    const summaryAllele3 = new SummaryAllele();
+    const summaryAllele3 = new SummaryAllele('l1', 1, 20, 'chr', 'v1', 'CNV+', 1.00003, 2, true, false, true);
     summaryAllele3.seenAsDenovo = false;
     summaryAllele3.effect = 'CNV+';
     summaryAllele3.seenInAffected = true;
     summaryAllele3.seenInUnaffected = false;
 
-    const summaryAllele4 = new SummaryAllele();
+    const summaryAllele4 = new SummaryAllele('l1', 1, 20, 'chr', 'v1', 'CNV+', 1.00003, 2, true, false, true);
     summaryAllele4.seenAsDenovo = true;
     summaryAllele4.effect = 'CNV+';
 
-    const summaryAllele5 = new SummaryAllele();
+    const summaryAllele5 = new SummaryAllele('l1', 1, 20, 'chr', 'v1', 'CNV+', 1.00003, 2, true, false, true);
     summaryAllele5.seenAsDenovo = false;
     summaryAllele5.effect = 'intron';
 
-    const summaryAllele6 = new SummaryAllele();
+    const summaryAllele6 = new SummaryAllele('l1', 1, 20, 'chr', 'v1', 'CNV+', 1.00003, 2, true, false, true);
     summaryAllele6.seenAsDenovo = false;
     summaryAllele6.effect = 'synonymous';
 
-    const summaryAllele7 = new SummaryAllele();
+    const summaryAllele7 = new SummaryAllele('l1', 1, 20, 'chr', 'v1', 'CNV+', 1.00003, 2, true, false, true);
     summaryAllele7.seenAsDenovo = false;
     summaryAllele7.effect = 'missense';
 
-    const summaryAllele8 = new SummaryAllele();
+    const summaryAllele8 = new SummaryAllele('l1', 1, 20, 'chr', 'v1', 'CNV+', 1.00003, 2, true, false, true);
     summaryAllele8.seenAsDenovo = false;
     summaryAllele8.effect = 'lgds';
 
-    const summaryAllele9 = new SummaryAllele();
+    const summaryAllele9 = new SummaryAllele('l1', 1, 20, 'chr', 'v1', 'CNV+', 1.00003, 2, true, false, true);
     summaryAllele9.seenAsDenovo = true;
     summaryAllele9.effect = 'lgds';
 
@@ -207,8 +198,8 @@ describe('SummaryAllele', () => {
   });
 
   it('should check if intersects', () => {
-    const summaryAllele1 = new SummaryAllele();
-    const summaryAllele2 = new SummaryAllele();
+    const summaryAllele1 = new SummaryAllele('l1', 1, 20, 'chr', 'v1', 'CNV+', 1.00003, 2, true, false, true);
+    const summaryAllele2 = new SummaryAllele('l1', 1, 20, 'chr', 'v1', 'CNV+', 1.00003, 2, true, false, true);
 
     summaryAllele1.effect = 'lgds';
     summaryAllele1.position = 13;
@@ -269,61 +260,65 @@ describe('SummaryAllele', () => {
 });
 
 describe('SummaryAllelesArray', () => {
+  let summaryAlleleMock: SummaryAllele;
+  beforeEach(() => {
+    summaryAlleleMock = new SummaryAllele('l1', 1, 20, 'chr', 'v1', 'CNV+', 1.00003, 2, true, false, true);
+  });
   it('should add summary row', () => {
     const row = {
       alleles: [
         {
           location: 'location1',
           position: 3,
-          end_position: 7,
+          end_position: 7, //eslint-disable-line
           chrom: 'chrom1',
           variant: 'variant1',
           effect: 'effect1',
           frequency: 13,
-          family_variants_count: 17,
-          is_denovo: true,
-          seen_in_affected: false,
-          seen_in_unaffected: true,
+          family_variants_count: 17, //eslint-disable-line
+          is_denovo: true, //eslint-disable-line
+          seen_in_affected: false, //eslint-disable-line
+          seen_in_unaffected: true, //eslint-disable-line
         },
         {
           location: 'location2',
           position: 4,
-          end_position: 9,
+          end_position: 9, //eslint-disable-line
           chrom: 'chrom2',
           variant: 'variant2',
           effect: 'effect2',
           frequency: 14,
-          family_variants_count: 16,
-          is_denovo: false,
-          seen_in_affected: false,
-          seen_in_unaffected: false,
+          family_variants_count: 16, //eslint-disable-line
+          is_denovo: false, //eslint-disable-line
+          seen_in_affected: false, //eslint-disable-line
+          seen_in_unaffected: false, //eslint-disable-line
         }
       ]
     };
     const summaryAlleleArray = new SummaryAllelesArray();
     summaryAlleleArray.addSummaryRow(row);
-    expect(summaryAlleleArray.summaryAlleles).toEqual([
+    expect(summaryAlleleArray.summaryAlleles).toStrictEqual([
       SummaryAllele.fromRow(row.alleles[0]),
       SummaryAllele.fromRow(row.alleles[1])
     ]);
   });
 
   it('should add summary allele', () => {
-    const summaryAllele1 = new SummaryAllele();
+    const summaryAllele1 = new SummaryAllele('l1', 1, 20, 'chr', 'v1', 'CNV+', 1.00003, 2, true, false, true);
     summaryAllele1.numberOfFamilyVariants = 3;
     summaryAllele1.seenAsDenovo = false;
     summaryAllele1.seenInAffected = true;
     summaryAllele1.seenInUnaffected = false;
     summaryAllele1.sauid = 'sauid1';
 
-    const summaryAllele2 = new SummaryAllele();
+    const summaryAllele2 = new SummaryAllele('l1', 1, 20, 'chr', 'v1', 'CNV+', 1.00003, 2, true, false, true);
     summaryAllele2.numberOfFamilyVariants = 13;
     summaryAllele2.seenAsDenovo = true;
     summaryAllele2.seenInAffected = false;
     summaryAllele2.seenInUnaffected = true;
     summaryAllele2.sauid = 'sauid2';
 
-    const summaryAllele3 = new SummaryAllele();
+    const summaryAllele3 = new SummaryAllele('l1', 1, 20, 'chr', 'v1', 'CNV+', 1.00003, 2, true, false, true);
     summaryAllele3.numberOfFamilyVariants = 7;
     summaryAllele3.seenAsDenovo = true;
     summaryAllele3.seenInAffected = false;
@@ -334,21 +329,21 @@ describe('SummaryAllelesArray', () => {
 
     summaryAlleleArray.addSummaryAllele(summaryAllele1);
     summaryAlleleArray.addSummaryAllele(summaryAllele2);
-    expect(summaryAlleleArray.summaryAlleles).toEqual([summaryAllele1, summaryAllele2]);
-    expect(summaryAlleleArray.summaryAlleleIds).toEqual(['sauid1', 'sauid2']);
+    expect(summaryAlleleArray.summaryAlleles).toStrictEqual([summaryAllele1, summaryAllele2]);
+    expect(summaryAlleleArray.summaryAlleleIds).toStrictEqual(['sauid1', 'sauid2']);
 
     summaryAlleleArray.addSummaryAllele(summaryAllele3);
-    expect(summaryAlleleArray.summaryAlleles[0].sauid).toEqual('sauid1');
-    expect(summaryAlleleArray.summaryAlleles[0].numberOfFamilyVariants).toEqual(10);
+    expect(summaryAlleleArray.summaryAlleles[0].sauid).toBe('sauid1');
+    expect(summaryAlleleArray.summaryAlleles[0].numberOfFamilyVariants).toBe(10);
     expect(summaryAlleleArray.summaryAlleles[0].seenAsDenovo).toBeTruthy();
     expect(summaryAlleleArray.summaryAlleles[0].seenInAffected).toBeTruthy();
     expect(summaryAlleleArray.summaryAlleles[0].seenInUnaffected).toBeFalsy();
-    expect(summaryAlleleArray.summaryAlleleIds).toEqual(['sauid1', 'sauid2']);
+    expect(summaryAlleleArray.summaryAlleleIds).toStrictEqual(['sauid1', 'sauid2']);
   });
 
   it('should get total family variants count', () => {
     const summaryAlleleArray = new SummaryAllelesArray();
-    const summaryAllele = new SummaryAllele();
+    const summaryAllele = summaryAlleleMock;
 
     summaryAllele.numberOfFamilyVariants = 3;
     summaryAllele.sauid = 'sauid1';
@@ -363,7 +358,7 @@ describe('SummaryAllelesArray', () => {
     summaryAllele.sauid = 'sauid4';
     summaryAlleleArray.addSummaryAllele(summaryAllele);
 
-    expect(summaryAlleleArray.totalFamilyVariantsCount).toEqual(76);
+    expect(summaryAlleleArray.totalFamilyVariantsCount).toBe(76);
   });
 });
 
@@ -373,15 +368,15 @@ describe('SummaryAllelesFilter', () => {
     expect(summaryAllelesFilter.denovo).toBeTruthy();
     expect(summaryAllelesFilter.transmitted).toBeTruthy();
     expect(summaryAllelesFilter.codingOnly).toBeTruthy();
-    expect(summaryAllelesFilter.selectedAffectedStatus).toEqual(new Set());
-    expect(summaryAllelesFilter.selectedEffectTypes).toEqual(new Set());
-    expect(summaryAllelesFilter.selectedVariantTypes).toEqual(new Set());
+    expect(summaryAllelesFilter.selectedAffectedStatus).toStrictEqual(new Set());
+    expect(summaryAllelesFilter.selectedEffectTypes).toStrictEqual(new Set());
+    expect(summaryAllelesFilter.selectedVariantTypes).toStrictEqual(new Set());
   });
 
   it('should get min frequency', () => {
     const summaryAllelesFilter = new SummaryAllelesFilter();
     summaryAllelesFilter.selectedFrequencies = [-1, undefined];
-    expect(summaryAllelesFilter.minFreq).toBe(null);
+    expect(summaryAllelesFilter.minFreq).toBeNull();
     summaryAllelesFilter.selectedFrequencies = [13, undefined];
     expect(summaryAllelesFilter.minFreq).toBe(13);
   });
@@ -401,173 +396,173 @@ describe('SummaryAllelesFilter', () => {
         // wanted allele
         {
           location: '1',
-          is_denovo: false,
-          seen_in_affected: true,
-          seen_in_unaffected: false,
+          is_denovo: false, //eslint-disable-line
+          seen_in_affected: true, //eslint-disable-line
+          seen_in_unaffected: false, //eslint-disable-line
           variant: 'sub',
           effect: 'frame-shift',
           frequency: 10,
           position: 30,
-          end_position: 30,
-          family_variants_count: 1,
+          end_position: 30, //eslint-disable-line
+          family_variants_count: 1, //eslint-disable-line
           chrom: '',
         },
         // wanted allele
         {
           location: '2',
-          is_denovo: false,
-          seen_in_affected: true,
-          seen_in_unaffected: false,
+          is_denovo: false, //eslint-disable-line
+          seen_in_affected: true, //eslint-disable-line
+          seen_in_unaffected: false, //eslint-disable-line
           variant: 'CNV+',
           effect: 'CNV+',
           frequency: 5,
           position: 25,
-          end_position: 35,
-          family_variants_count: 1,
+          end_position: 35, //eslint-disable-line
+          family_variants_count: 1, //eslint-disable-line
           chrom: '',
         },
         // unwanted allele
         {
           location: '3',
           // filtered out because:
-          is_denovo: true,
+          is_denovo: true, //eslint-disable-line
           //
-          seen_in_affected: true,
-          seen_in_unaffected: false,
+          seen_in_affected: true, //eslint-disable-line
+          seen_in_unaffected: false, //eslint-disable-line
           variant: 'CNV+',
           effect: 'CNV+',
           frequency: 5,
           position: 25,
-          end_position: 35,
-          family_variants_count: 1,
+          end_position: 35, //eslint-disable-line
+          family_variants_count: 1, //eslint-disable-line
           chrom: '',
         },
         // unwanted allele
         {
           location: '4',
-          is_denovo: false,
+          is_denovo: false, //eslint-disable-line
           // filtered out because:
-          seen_in_affected: false,
-          seen_in_unaffected: true,
+          seen_in_affected: false, //eslint-disable-line
+          seen_in_unaffected: true, //eslint-disable-line
           //
           variant: 'sub',
           effect: 'CNV+',
           frequency: 5,
           position: 25,
-          end_position: 35,
-          family_variants_count: 1,
+          end_position: 35, //eslint-disable-line
+          family_variants_count: 1, //eslint-disable-line
           chrom: '',
         },
         // unwanted allele
         {
           location: '5',
-          is_denovo: false,
-          seen_in_affected: true,
-          seen_in_unaffected: false,
+          is_denovo: false, //eslint-disable-line
+          seen_in_affected: true, //eslint-disable-line
+          seen_in_unaffected: false, //eslint-disable-line
           // filtered out because:
           variant: 'fake',
           //
           effect: 'CNV+',
           frequency: 5,
           position: 25,
-          end_position: 35,
-          family_variants_count: 1,
+          end_position: 35, //eslint-disable-line
+          family_variants_count: 1, //eslint-disable-line
           chrom: '',
         },
         // unwanted allele
         {
           location: '6',
-          is_denovo: false,
-          seen_in_affected: true,
-          seen_in_unaffected: false,
+          is_denovo: false, //eslint-disable-line
+          seen_in_affected: true, //eslint-disable-line
+          seen_in_unaffected: false, //eslint-disable-line
           variant: 'sub',
           // filtered out because:
           effect: 'fake',
           //
           frequency: 5,
           position: 25,
-          end_position: 35,
-          family_variants_count: 1,
+          end_position: 35, //eslint-disable-line
+          family_variants_count: 1, //eslint-disable-line
           chrom: '',
         },
         // unwanted allele
         {
           location: '7',
-          is_denovo: false,
-          seen_in_affected: true,
-          seen_in_unaffected: false,
+          is_denovo: false, //eslint-disable-line
+          seen_in_affected: true, //eslint-disable-line
+          seen_in_unaffected: false, //eslint-disable-line
           variant: 'sub',
           effect: 'lgds',
           // filtered out because:
           frequency: 4,
           //
           position: 30,
-          end_position: 30,
-          family_variants_count: 1,
+          end_position: 30, //eslint-disable-line
+          family_variants_count: 1, //eslint-disable-line
           chrom: '',
         },
         // unwanted allele
         {
           location: '8',
-          is_denovo: false,
-          seen_in_affected: true,
-          seen_in_unaffected: false,
+          is_denovo: false, //eslint-disable-line
+          seen_in_affected: true, //eslint-disable-line
+          seen_in_unaffected: false, //eslint-disable-line
           variant: 'sub',
           effect: 'lgds',
           // filtered out because:
           frequency: 16,
           //
           position: 30,
-          end_position: 30,
-          family_variants_count: 1,
+          end_position: 30, //eslint-disable-line
+          family_variants_count: 1, //eslint-disable-line
           chrom: '',
         },
         // unwanted allele
         {
           location: '9',
-          is_denovo: false,
-          seen_in_affected: true,
-          seen_in_unaffected: false,
+          is_denovo: false, //eslint-disable-line
+          seen_in_affected: true, //eslint-disable-line
+          seen_in_unaffected: false, //eslint-disable-line
           variant: 'CNV+',
           effect: 'CNV+',
           frequency: 5,
           // filtered out because:
           position: 20,
-          end_position: 24,
+          end_position: 24, //eslint-disable-line
           //
-          family_variants_count: 1,
+          family_variants_count: 1, //eslint-disable-line
           chrom: '',
         },
         // unwanted allele
         {
           location: '10',
-          is_denovo: false,
-          seen_in_affected: true,
-          seen_in_unaffected: false,
+          is_denovo: false, //eslint-disable-line
+          seen_in_affected: true, //eslint-disable-line
+          seen_in_unaffected: false, //eslint-disable-line
           variant: 'CNV+',
           effect: 'CNV+',
           frequency: 5,
           // filtered out because:
           position: 36,
-          end_position: 45,
+          end_position: 45, //eslint-disable-line
           //
-          family_variants_count: 1,
+          family_variants_count: 1, //eslint-disable-line
           chrom: '',
         },
         // unwanted allele
         {
           location: '11',
-          is_denovo: false,
-          seen_in_affected: true,
-          seen_in_unaffected: false,
+          is_denovo: false, //eslint-disable-line
+          seen_in_affected: true, //eslint-disable-line
+          seen_in_unaffected: false, //eslint-disable-line
           variant: 'sub',
           effect: 'lgds',
           frequency: 10,
           // filtered out because:
           position: 24,
-          end_position: 24,
+          end_position: 24, //eslint-disable-line
           //
-          family_variants_count: 1,
+          family_variants_count: 1, //eslint-disable-line
           chrom: '',
         },
       ]
@@ -583,7 +578,7 @@ describe('SummaryAllelesFilter', () => {
 
     const filteredSummaryAllelesArray = summaryAllelesFilter.filterSummaryVariantsArray(summaryAlleleArray);
 
-    expect(filteredSummaryAllelesArray.summaryAlleles).toEqual([
+    expect(filteredSummaryAllelesArray.summaryAlleles).toStrictEqual([
       summaryAlleleArray.summaryAlleles[0],
       summaryAlleleArray.summaryAlleles[1]
     ]);
@@ -595,7 +590,7 @@ describe('SummaryAllelesFilter', () => {
     summaryAllelesFilter.selectedAffectedStatus = new Set(['Affected only']);
     summaryAllelesFilter.selectedEffectTypes = new Set([...LGDS, ...CODING, ...CNV, ...OTHER]);
     summaryAllelesFilter.selectedVariantTypes = new Set(['sub', 'ins']);
-    expect(summaryAllelesFilter.queryParams).toEqual({
+    expect(summaryAllelesFilter.queryParams).toStrictEqual({
       effectTypes: [
         'frame-shift',
         'nonsense',
