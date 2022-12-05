@@ -601,6 +601,16 @@ class FlatGenomicPositionTable(GenomicPositionTable):
             ps_begin = int(columns[self.pos_begin_column_i])
             ps_end = int(columns[self.pos_end_column_i])
 
+            ref_key, alt_key = None, None
+            if "ref" in self.definition:
+                ref_key = self.get_special_column_index("ref") \
+                    if self.header_mode == "none" \
+                    else self.get_special_column_name("ref")
+            if "alt" in self.definition:
+                alt_key = self.get_special_column_index("alt") \
+                    if self.header_mode == "none" \
+                    else self.get_special_column_name("alt")
+
             if other_indices and other_columns:
                 attributes = dict(zip(other_columns, (columns[i] for i in other_indices)))
             else:
@@ -608,11 +618,13 @@ class FlatGenomicPositionTable(GenomicPositionTable):
                               if idx not in (self.chrom_column_i,
                                              self.pos_begin_column_i,
                                              self.pos_end_column_i)}
+            ref, alt = attributes.get(ref_key), attributes.get(alt_key)
             records_by_chr[chrom].append(
-                Line(chrom, ps_begin, ps_end, attributes, self.score_definitions)
+                Line(chrom, ps_begin, ps_end, attributes, self.score_definitions,
+                     ref=ref, alt=alt)
             )
         self.records_by_chr = {
-            c: sorted(pss, key=lambda l: l[:3]) for c, pss in records_by_chr.items()
+            c: sorted(pss, key=lambda l: (l[:3], l.ref, l.alt)) for c, pss in records_by_chr.items()
         }
         self._build_chrom_mapping()
 

@@ -416,30 +416,26 @@ class NPScore(GenomicScore):
     @staticmethod
     def get_schema():
         schema = copy.deepcopy(GenomicScore.get_schema())
-        schema["table"]["schema"]["reference"] = {
+        schema["table"]["schema"]["ref"] = {
             "type": "dict", "schema": {
                 "index": {"type": "integer"},
                 "name": {"type": "string", "excludes": "index"}
             }
         }
-        schema["table"]["schema"]["alternative"] = {
+        schema["table"]["schema"]["alt"] = {
             "type": "dict", "schema": {
                 "index": {"type": "integer"},
                 "name": {"type": "string", "excludes": "index"}
             }
         }
 
-        scores_schema = schema["scores"]["schema"]["schema"]
+        scores_schema = schema["table"]["schema"]["scores"]["schema"]["schema"]
         scores_schema["position_aggregator"] = AGGREGATOR_SCHEMA
         scores_schema["nucleotide_aggregator"] = AGGREGATOR_SCHEMA
         return schema
 
     def open(self) -> NPScore:
         return cast(NPScore, super().open())
-
-    @staticmethod
-    def get_extra_special_columns():
-        return {"reference": str, "alternative": str}
 
     def fetch_scores(
             self, chrom: str, position: int, reference: str, alternative: str,
@@ -456,9 +452,7 @@ class NPScore(GenomicScore):
 
         selected_line = None
         for line in lines:
-            if line.get_special_column_value("reference") == reference \
-                    and line.get_special_column_value("alternative") \
-                    == alternative:
+            if line.ref == reference and line.alt == alternative:
                 selected_line = line
                 break
 
@@ -482,7 +476,7 @@ class NPScore(GenomicScore):
         nuc_aggregators = {}
 
         for scr_id in scores:
-            scr_def = self.score_columns[scr_id]
+            scr_def = self.table.score_definitions[scr_id]
             aggregator_type = non_default_pos_aggregators.get(
                 scr_id, scr_def.pos_aggregator)
             pos_aggregators[scr_id] = build_aggregator(aggregator_type)
@@ -519,28 +513,28 @@ class NPScore(GenomicScore):
                 pos_aggregators[col].add(nuc_agg.get_final())
                 nuc_agg.clear()
 
-        last_pos: int = score_lines[0].get_pos_begin()
+        last_pos: int = score_lines[0].pos_begin
         for line in score_lines:
-            if line.get_pos_begin() != last_pos:
+            if line.pos_begin != last_pos:
                 aggregate_nucleotides()
-            for col in line.score_columns:
+            for col in line.get_available_scores():
                 val = line.get_score(col)
 
                 if col not in nuc_aggregators:
                     continue
                 left = (
                     pos_begin
-                    if pos_begin >= line.get_pos_begin()
-                    else line.get_pos_begin()
+                    if pos_begin >= line.pos_begin
+                    else line.pos_begin
                 )
                 right = (
                     pos_end
-                    if pos_end <= line.get_pos_end()
-                    else line.get_pos_end()
+                    if pos_end <= line.pos_end
+                    else line.pos_end
                 )
                 for _ in range(left, right + 1):
                     nuc_aggregators[col].add(val)
-            last_pos = line.get_pos_begin()
+            last_pos = line.pos_begin
         aggregate_nucleotides()
 
         return pos_aggregators
@@ -592,9 +586,7 @@ class AlleleScore(GenomicScore):
 
         selected_line = None
         for line in lines:
-            if line.get_special_column_value("reference") == reference and \
-                    line.get_special_column_value("alternative") \
-                    == alternative:
+            if line.ref == reference and line.alt == alternative:
                 selected_line = line
                 break
 
