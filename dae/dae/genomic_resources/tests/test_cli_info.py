@@ -20,10 +20,10 @@ def proto_fixture(tmp_path, tabix_file):
                     type: position_score
                     table:
                         filename: data.bgz
-                    scores:
-                        - id: phastCons100way
-                          type: float
-                          name: s1
+                        scores:
+                            - id: phastCons100way
+                              type: float
+                              name: s1
                     histograms:
                         - score: phastCons100way
                           bins: 100
@@ -35,10 +35,14 @@ def proto_fixture(tmp_path, tabix_file):
                     table:
                         filename: data.bgz
                         format: tabix
-                    scores:
-                        - id: AC
-                          type: int
-                          name: AC
+                        scores:
+                            - id: AC
+                              type: int
+                              name: AC
+                        ref:
+                            name: REF
+                        alt:
+                            name: ALT
                     """),
             }
         })

@@ -460,8 +460,7 @@ class NPScore(GenomicScore):
             return None
         requested_scores = scores if scores else self.get_all_scores()
         return {
-            sc: selected_line.get_score(sc)
-            for sc in requested_scores
+            sc: selected_line.get_score(sc) for sc in requested_scores
         }
 
     def _construct_aggregators(

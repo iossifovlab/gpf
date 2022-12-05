@@ -8,7 +8,8 @@ from typing import Dict, Any, Union, List, Generator
 from jinja2 import Template
 
 from dae.genomic_resources.repository import GenomicResource
-from dae.genomic_resources.genomic_scores import ScoreDef, ScoreValue, \
+from dae.genomic_resources.genome_position_table import ScoreDef
+from dae.genomic_resources.genomic_scores import ScoreValue, \
     GenomicScore
 
 from .resource_implementation import get_base_resource_schema
