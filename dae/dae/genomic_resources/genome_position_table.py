@@ -166,7 +166,7 @@ class Line:
         try:
             return self.get_score(key)
         except KeyError:
-            return default
+            return self.attributes.get(key, default)
 
     def get_score(self, score_id):
         key = self.score_defs[score_id].col_key
