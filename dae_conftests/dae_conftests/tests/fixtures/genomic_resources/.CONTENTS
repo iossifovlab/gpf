@@ -437,20 +437,15 @@
     default_annotation:
       attributes:
       - destination: phastCons100way
-        position_aggregator: MaxAggregator
+        position_aggregator: max
         source: phastCons100way
-    histogram:
-      bins_count: 10
-      x_max: 1
-      x_min: 0
+    histograms:
+    - bins: 10
+      max: 1
+      min: 0
+      score: phastCons100way
       x_scale: linear
       y_scale: linear
-    scores:
-    - desc: phastCons100way
-      id: phastCons100way
-      index: 3
-      position_aggregator: max
-      type: float
     table:
       chrom:
         index: 0
@@ -461,6 +456,12 @@
         index: 1
       pos_end:
         index: 2
+      scores:
+      - desc: phastCons100way
+        id: phastCons100way
+        index: 3
+        position_aggregator: max
+        type: float
     type: position_score
   id: hg38/TESTphastCons100way
   manifest:
@@ -470,9 +471,18 @@
   - md5: 0cae8c2951f4c60954b94c0a0cb2e431
     name: TESTphastCons100way.bedGraph.gz.tbi
     size: 169
-  - md5: de4e51d2f1d46e6fad8864511860776a
+  - md5: 178c9485e7577066d181382a6ee2e559
     name: genomic_resource.yaml
-    size: 872
+    size: 914
+  - md5: d616082ad56b26177b0aa40c08d27f3f
+    name: histograms/phastCons100way.csv
+    size: 143
+  - md5: 80bcd5f88e69a7014e2263d034fe4cef
+    name: histograms/phastCons100way.metadata.yaml
+    size: 181
+  - md5: 6173d0d671742284f909423144c4f07a
+    name: histograms/phastCons100way.png
+    size: 8178
   - md5: 56feb878ed78769d5200702392b8e4b7
     name: scores/phastCons100way.yaml
     size: 583

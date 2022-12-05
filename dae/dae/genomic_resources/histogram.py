@@ -453,7 +453,7 @@ class HistogramBuilder:
             return {}
 
         for hist_score, hist_conf in hist_configs.items():
-            for score_desc in config["scores"]:
+            for score_desc in config["table"]["scores"]:
                 if hist_score == score_desc["id"]:
                     hist_conf["score_desc"] = score_desc
 

@@ -1,5 +1,4 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-
 from typing import cast
 
 import yaml
@@ -23,12 +22,12 @@ def test_the_simplest_position_score():
             type: position_score
             table:
                 filename: data.mem
-            scores:
-              - id: phastCons100way
-                type: float
-                desc: "The phastCons computed over the tree of 100 \
-                       verterbarte species"
-                name: s1""",
+                scores:
+                  - id: phastCons100way
+                    type: float
+                    desc: "The phastCons computed over the tree of 100 \
+                           verterbarte species"
+                    name: s1""",
         "data.mem": """
             chrom  pos_begin  s1
             1      10         0.02
@@ -60,19 +59,19 @@ def test_region_score():
             type: position_score
             table:
                 filename: data.mem
-            scores:
-              - id: phastCons100way
-                type: float
-                desc: "The phastCons computed over the tree of 100 \
-                       verterbarte species"
-                name: s1
-              - id: phastCons5way
-                type: int
-                position_aggregator: max
-                na_values: "-1"
-                desc: "The phastCons computed over the tree of 5 \
-                       verterbarte species"
-                name: s2""",
+                scores:
+                  - id: phastCons100way
+                    type: float
+                    desc: "The phastCons computed over the tree of 100 \
+                           verterbarte species"
+                    name: s1
+                  - id: phastCons5way
+                    type: int
+                    position_aggregator: max
+                    na_values: "-1"
+                    desc: "The phastCons computed over the tree of 5 \
+                           verterbarte species"
+                    name: s2""",
         "data.mem": """
             chrom  pos_begin  pos_end  s1    s2
             1      10         15       0.02  -1
@@ -114,12 +113,12 @@ def test_phastcons100way():
             type: position_score
             table:
                 filename: data.mem
-            scores:
-              - id: phastCons100way
-                type: float
-                desc: "The phastCons computed over the tree of 100 \
-                       verterbarte species"
-                name: phastCons100way
+                scores:
+                  - id: phastCons100way
+                    type: float
+                    desc: "The phastCons computed over the tree of 100 \
+                           verterbarte species"
+                    name: phastCons100way
         """,
         "data.mem": """
             chrom  pos_begin  pos_end  phastCons100way
@@ -185,10 +184,10 @@ def test_build_score_from_resource_with_pos_resource():
                     type: position_score
                     table:
                             filename: data.mem
-                    scores:
-                    - id: score
-                      type: float
-                      name: s1
+                            scores:
+                            - id: score
+                              type: float
+                              name: s1
                 data.mem: |
                         chrom  pos_begin  s1
                         chr1   23         0.01
@@ -208,19 +207,19 @@ def test_position_score_fetch_region():
             type: position_score
             table:
                 filename: data.mem
-            scores:
-              - id: phastCons100way
-                type: float
-                desc: "The phastCons computed over the tree of 100 \
-                       verterbarte species"
-                name: s1
-              - id: phastCons5way
-                type: int
-                position_aggregator: max
-                na_values: "-1"
-                desc: "The phastCons computed over the tree of 5 \
-                       verterbarte species"
-                name: s2""",
+                scores:
+                  - id: phastCons100way
+                    type: float
+                    desc: "The phastCons computed over the tree of 100 \
+                           verterbarte species"
+                    name: s1
+                  - id: phastCons5way
+                    type: int
+                    position_aggregator: max
+                    na_values: "-1"
+                    desc: "The phastCons computed over the tree of 5 \
+                           verterbarte species"
+                    name: s2""",
         "data.mem": """
             chrom  pos_begin  pos_end  s1    s2
             1      10         15       0.02  -1

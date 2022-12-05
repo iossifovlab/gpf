@@ -12,12 +12,12 @@ table:
     pos_end:
       index: 2
 
-scores:
-    - id: phastCons100way
-      type: float
-      desc: "phastCons100way"
-      position_aggregator: max
-      index: 3
+    scores:
+        - id: phastCons100way
+          type: float
+          desc: "phastCons100way"
+          position_aggregator: max
+          index: 3
 
 # resrouce_default_type_aggregators:
 #     float.aggregator: max
