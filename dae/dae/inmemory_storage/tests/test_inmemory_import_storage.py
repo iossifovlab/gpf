@@ -16,6 +16,7 @@ def test_simple_project_pedigree_params(simple_project):
     assert params["ped_person"] == "pId"
     assert params["ped_mom"] == "mId"
     assert params["ped_dad"] == "dId"
+    assert params["ped_tags"] is True
 
 
 def test_simple_project_pedigree_size(simple_project):

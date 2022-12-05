@@ -49,3 +49,11 @@ def test_config_filenames_external_input_and_annotation():
     )
     project = ImportProject.build_from_config(import_config)
     assert project.config_filenames == ["annotation.yaml"]
+
+
+def test_tags_on_by_default(resources_dir):
+    config_fn = str(resources_dir / "vcf_import" / "import_config.yaml")
+    project = ImportProject.build_from_file(config_fn)
+    _, params = project.get_pedigree_params()
+    assert "ped_tags" in params
+    assert params["ped_tags"] is True
