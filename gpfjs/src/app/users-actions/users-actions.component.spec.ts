@@ -35,14 +35,14 @@ describe('UsersActionsComponent', () => {
       ],
       providers: [
         {provide: UsersService, useValue: usersServiceMock},
-        {provide: User, useValue: new User(0, '', '', [''], true, [''])}
+        {provide: User, useValue: new User(0, '', '', [''], true, [])}
       ],
       imports: [HttpClientTestingModule, RouterTestingModule, NgxsModule.forRoot([], {developmentMode: true})],
     }).compileComponents();
 
     fixture = TestBed.createComponent(UsersActionsComponent);
     component = fixture.componentInstance;
-    component.user = new User(0, '', 'notMockMail@mail.com', [''], true, ['']);
+    component.user = new User(0, '', 'notMockMail@mail.com', [''], true, []);
     fixture.detectChanges();
 
     Object.defineProperty(window, 'location', {
@@ -66,7 +66,7 @@ describe('UsersActionsComponent', () => {
   it('should delete user', () => {
     const deleteUserSpy = jest.spyOn(usersServiceMock, 'deleteUser');
 
-    const user = new User(1, 'fakeUser', 'mockMail@mail.com', [''], true, ['']);
+    const user = new User(1, 'fakeUser', 'mockMail@mail.com', [''], true, []);
     component.deleteUser(user);
     expect(deleteUserSpy).toHaveBeenCalledTimes(1);
     expect(deleteUserSpy).toHaveBeenCalledWith(user);
@@ -76,7 +76,7 @@ describe('UsersActionsComponent', () => {
   it('should reset user password', () => {
     const resetUserSpy = jest.spyOn(usersServiceMock, 'resetUserPassword');
 
-    const user = new User(1, 'fakeUser', 'mockMail@mail.com', [''], true, ['']);
+    const user = new User(1, 'fakeUser', 'mockMail@mail.com', [''], true, []);
     component.resetPassword(user);
     expect(resetUserSpy).toHaveBeenCalledTimes(1);
     expect(resetUserSpy).toHaveBeenCalledWith(user);
@@ -88,13 +88,13 @@ describe('UsersActionsComponent', () => {
       + `An email with reset instructions will be sent and they won't be able to log in until they set a new password.`;
 
     expect(component.resetPasswordPopoverMessage(
-      new User(1, 'fakeUser', 'mockMail@mail.com', [''], true, ['']))
+      new User(1, 'fakeUser', 'mockMail@mail.com', [''], true, []))
     ).toStrictEqual(`(mockMail@mail.com) fakeUser` + expectedText);
     expect(component.resetPasswordPopoverMessage(
-      new User(1, undefined, 'mockMail@mail.com', [''], true, ['']))
+      new User(1, undefined, 'mockMail@mail.com', [''], true, []))
     ).toStrictEqual(`mockMail@mail.com` + expectedText);
     expect(component.resetPasswordPopoverMessage(
-      new User(1, '', 'mockMail@mail.com', [''], true, ['']))
+      new User(1, '', 'mockMail@mail.com', [''], true, []))
     ).toStrictEqual(`mockMail@mail.com` + expectedText);
   });
 
@@ -102,13 +102,13 @@ describe('UsersActionsComponent', () => {
     const expectedText = ` will be deleted. This action is irrevertible!`;
 
     expect(component.deleteUserPopoverMessage(
-      new User(1, 'fakeUser', 'mockMail@mail.com', [''], true, ['']))
+      new User(1, 'fakeUser', 'mockMail@mail.com', [''], true, []))
     ).toStrictEqual(`(mockMail@mail.com) fakeUser` + expectedText);
     expect(component.deleteUserPopoverMessage(
-      new User(1, undefined, 'mockMail@mail.com', [''], true, ['']))
+      new User(1, undefined, 'mockMail@mail.com', [''], true, []))
     ).toStrictEqual(`mockMail@mail.com` + expectedText);
     expect(component.deleteUserPopoverMessage(
-      new User(1, '', 'mockMail@mail.com', [''], true, ['']))
+      new User(1, '', 'mockMail@mail.com', [''], true, []))
     ).toStrictEqual(`mockMail@mail.com` + expectedText);
   });
 });
