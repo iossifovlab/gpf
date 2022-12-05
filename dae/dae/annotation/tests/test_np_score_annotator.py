@@ -50,7 +50,7 @@ def test_np_score_annotator(
                     ref:
                       name: reference
                     alt:
-                      name: alt
+                      name: alternative
                 """,
                 "data.mem": """
                     chrom  pos_begin  reference alternative raw
