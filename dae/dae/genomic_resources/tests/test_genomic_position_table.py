@@ -187,20 +187,20 @@ def test_regions():
     assert tab.pos_begin_column_i == 1
     assert tab.pos_end_column_i == 2
     assert list(tab.get_all_records()) == [
-        ("1", "10", "12", "3.14"),
-        ("1", "15", "20", "4.14"),
-        ("1", "21", "30", "5.14")
+        ("1", 10, 12, "3.14"),
+        ("1", 15, 20, "4.14"),
+        ("1", 21, 30, "5.14")
     ]
 
     assert list(tab.get_records_in_region("1", 11, 11)) == [
-        ("1", "10", "12", "3.14")
+        ("1", 10, 12, "3.14")
     ]
 
     assert not list(tab.get_records_in_region("1", 13, 14))
 
     assert list(tab.get_records_in_region("1", 18, 21)) == [
-        ("1", "15", "20", "4.14"),
-        ("1", "21", "30", "5.14")
+        ("1", 15, 20, "4.14"),
+        ("1", 21, 30, "5.14")
     ]
 
 
@@ -354,6 +354,8 @@ def test_chrom_mapping_file():
                 filename: data.mem
                 chrom_mapping:
                     filename: chrom_map.txt
+                pos_end:
+                    name: pos2
                 scores:
                 - id: c2
                   name: c2
@@ -373,11 +375,11 @@ def test_chrom_mapping_file():
 
     assert tab.get_chromosomes() == ["gosho", "pesho"]
     assert list(tab.get_all_records()) == [
-        ("gosho", "10", "12", "3.14"),
-        ("pesho", "11", "11", "4.14")
+        ("gosho", 10, 12, "3.14"),
+        ("pesho", 11, 11, "4.14")
     ]
     assert list(tab.get_records_in_region("pesho")) == [
-        ("pesho", "11", "11", "4.14"),
+        ("pesho", 11, 11, "4.14"),
     ]
 
 
@@ -487,7 +489,7 @@ def test_column_with_name():
     assert tab.chrom_column_i == 0
     assert tab.pos_begin_column_i == 2
     assert list(tab.get_records_in_region("1", 12, 12)) == [
-        ("1", "10", "12", "3.14")]
+        ("1", 12, 12, "10", "3.14")]
 
 
 def test_column_with_index():
@@ -511,7 +513,7 @@ def test_column_with_index():
     assert tab.chrom_column_i == 0
     assert tab.pos_begin_column_i == 2
     assert list(tab.get_records_in_region("1", 12, 12)) == [
-        ("1", "10", "12", "3.14")]
+        ("1", 12, 12, "10", "3.14")]
 
 
 def test_no_header():
@@ -538,7 +540,7 @@ def test_no_header():
     assert tab.chrom_column_i == 0
     assert tab.pos_begin_column_i == 2
     assert list(tab.get_records_in_region("1", 12, 12)) == [
-        ("1", "10", "12", "3.14")]
+        ("1", 12, 12, "10", "3.14")]
 
 
 def test_header_in_config():
@@ -562,7 +564,7 @@ def test_header_in_config():
     assert tab.chrom_column_i == 0
     assert tab.pos_begin_column_i == 2
     assert list(tab.get_records_in_region("1", 12, 12)) == [
-        ("1", "10", "12", "3.14")]
+        ("1", 12, 12, "10", "3.14")]
 
 
 def test_space_in_mem_table():
@@ -583,7 +585,7 @@ def test_space_in_mem_table():
     assert tab.chrom_column_i == 0
     assert tab.pos_begin_column_i == 1
     assert list(tab.get_records_in_region("1", 11, 11)) == [
-        ("1", "11", "", "4.14")]
+        ("1", 11, 11, "", "4.14")]
 
 
 def test_text_table():
@@ -611,37 +613,37 @@ def test_text_table():
     assert table.get_column_names() == ("chrom", "pos_begin", "c1", "c2")
 
     assert list(table.get_all_records()) == [
-        ("1", "3", "3.14", "aa"),
-        ("1", "4", "4.14", "bb"),
-        ("1", "4", "5.14", "cc"),
-        ("1", "5", "6.14", "dd"),
-        ("1", "8", "7.14", "ee"),
-        ("2", "3", "8.14", "ff")
+        ("1", 3, 3, "3.14", "aa"),
+        ("1", 4, 4, "4.14", "bb"),
+        ("1", 4, 4, "5.14", "cc"),
+        ("1", 5, 5, "6.14", "dd"),
+        ("1", 8, 8, "7.14", "ee"),
+        ("2", 3, 3, "8.14", "ff")
     ]
 
     assert list(table.get_records_in_region("1", 4, 5)) == [
-        ("1", "4", "4.14", "bb"),
-        ("1", "4", "5.14", "cc"),
-        ("1", "5", "6.14", "dd")
+        ("1", 4, 4, "4.14", "bb"),
+        ("1", 4, 4, "5.14", "cc"),
+        ("1", 5, 5, "6.14", "dd")
     ]
 
     assert list(table.get_records_in_region("1", 4, None)) == [
-        ("1", "4", "4.14", "bb"),
-        ("1", "4", "5.14", "cc"),
-        ("1", "5", "6.14", "dd"),
-        ("1", "8", "7.14", "ee")
+        ("1", 4, 4, "4.14", "bb"),
+        ("1", 4, 4, "5.14", "cc"),
+        ("1", 5, 5, "6.14", "dd"),
+        ("1", 8, 8, "7.14", "ee")
     ]
 
     assert list(table.get_records_in_region("1", None, 4)) == [
-        ("1", "3", "3.14", "aa"),
-        ("1", "4", "4.14", "bb"),
-        ("1", "4", "5.14", "cc")
+        ("1", 3, 3, "3.14", "aa"),
+        ("1", 4, 4, "4.14", "bb"),
+        ("1", 4, 4, "5.14", "cc")
     ]
 
     assert not list(table.get_records_in_region("1", 20, 25))
 
     assert list(table.get_records_in_region("2", None, None)) == [
-        ("2", "3", "8.14", "ff")
+        ("2", 3, 3, "8.14", "ff")
     ]
 
     with pytest.raises(Exception):

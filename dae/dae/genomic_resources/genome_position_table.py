@@ -469,6 +469,16 @@ class GenomicPositionTable(abc.ABC):
             return self.definition[key].name
         return key
 
+    def _get_other_columns(self) -> Tuple[Optional[tuple], Optional[tuple]]:
+        if self.header is not None:
+            return zip(*(
+                (i, x) for i, x in enumerate(self.header)
+                if i not in (self.chrom_column_i,
+                            self.pos_begin_column_i,
+                            self.pos_end_column_i)
+            ))
+        return None, None
+
     @abc.abstractmethod
     def load(self):
         pass
@@ -573,6 +583,8 @@ class FlatGenomicPositionTable(GenomicPositionTable):
 
         self._set_special_column_indexes()
 
+        other_indices, other_columns = self._get_other_columns()
+
         records_by_chr = collections.defaultdict(list)
         for line in self.str_stream:
             line = line.strip(strip_chars)
@@ -588,10 +600,20 @@ class FlatGenomicPositionTable(GenomicPositionTable):
             chrom = columns[self.chrom_column_i]
             ps_begin = int(columns[self.pos_begin_column_i])
             ps_end = int(columns[self.pos_end_column_i])
-            records_by_chr[chrom].append((ps_begin, ps_end, columns))
-        self.records_by_chr = {
-            c: sorted(pss) for c, pss in records_by_chr.items()}
 
+            if other_indices and other_columns:
+                attributes = dict(zip(other_columns, (columns[i] for i in other_indices)))
+            else:
+                attributes = {str(idx): value for idx, value in enumerate(columns)
+                              if idx not in (self.chrom_column_i,
+                                             self.pos_begin_column_i,
+                                             self.pos_end_column_i)}
+            records_by_chr[chrom].append(
+                Line(chrom, ps_begin, ps_end, attributes, self.score_definitions)
+            )
+        self.records_by_chr = {
+            c: sorted(pss, key=lambda l: l[:3]) for c, pss in records_by_chr.items()
+        }
         self._build_chrom_mapping()
 
     def get_file_chromosomes(self):
@@ -603,15 +625,14 @@ class FlatGenomicPositionTable(GenomicPositionTable):
                 if chrom not in self.chrom_map:
                     continue
                 fchrom = self.chrom_map[chrom]
-                pss = self.records_by_chr[fchrom]
-                for _, _, columns in pss:
-                    csl = list(columns)
-                    csl[self.chrom_column_i] = chrom
-                    yield tuple(csl)
+                for line in self.records_by_chr[fchrom]:
+                    yield Line(
+                        chrom, line.pos_begin, line.pos_end,
+                        line.attributes, self.score_definitions
+                    )
             else:
-                pss = self.records_by_chr[chrom]
-                for _, _, columns in pss:
-                    yield columns
+                for line in self.records_by_chr[chrom]:
+                    yield line
 
     def get_records_in_region(
             self, chrom: str, pos_begin: int = None, pos_end: int = None):
@@ -620,17 +641,18 @@ class FlatGenomicPositionTable(GenomicPositionTable):
             fch = self.chrom_map[chrom]
         else:
             fch = chrom
-        for ps_begin, ps_end, columns in self.records_by_chr[fch]:
-            if pos_begin and pos_begin > ps_end:
+        for line in self.records_by_chr[fch]:
+            if pos_begin and pos_begin > line.pos_end:
                 continue
-            if pos_end and pos_end < ps_begin:
+            if pos_end and pos_end < line.pos_begin:
                 continue
             if self.chrom_map:
-                csl = list(columns)
-                csl[self.chrom_column_i] = chrom
-                yield tuple(csl)
+                yield Line(
+                    chrom, line.pos_begin, line.pos_end,
+                    line.attributes, self.score_definitions
+                )
             else:
-                yield columns
+                yield line
 
     def close(self):
         """Nothing to close."""
@@ -845,15 +867,7 @@ class TabixGenomicPositionTable(GenomicPositionTable):
         self.stats["tabix fetch"] += 1
         self.buffer.clear()
 
-        if self.header is not None:
-            other_indices, other_columns = zip(*(
-                (i, x) for i, x in enumerate(self.header)
-                if i not in (self.chrom_column_i,
-                            self.pos_begin_column_i,
-                            self.pos_end_column_i)
-            ))
-        else:
-            other_indices, other_columns = None, None
+        other_indices, other_columns = self._get_other_columns()
 
         ref_key, alt_key = None, None
         if "ref" in self.definition:
@@ -869,7 +883,10 @@ class TabixGenomicPositionTable(GenomicPositionTable):
             if other_indices and other_columns:
                 attributes = dict(zip(other_columns, (raw[i] for i in other_indices)))
             else:
-                attributes = {str(idx): value for idx, value in enumerate(raw)}
+                attributes = {str(idx): value for idx, value in enumerate(raw)
+                              if idx not in (self.chrom_column_i,
+                                             self.pos_begin_column_i,
+                                             self.pos_end_column_i)}
             ref, alt = attributes.get(ref_key), attributes.get(alt_key)
             yield Line(
                 raw[self.chrom_column_i],
