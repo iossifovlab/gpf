@@ -262,19 +262,21 @@ class ImportProject():
 
     def get_gpf_instance(self):
         """Create and return a gpf instance as desribed in the config."""
-        if self._gpf_instance:
+        if self._gpf_instance is not None:
             return self._gpf_instance
 
-        instance_config = self.import_config.get("gpf_instance", {})
         # pylint: disable=import-outside-toplevel
         from dae.gpf_instance.gpf_instance import GPFInstance
+
+        instance_config = self.import_config.get("gpf_instance", {})
         instance_dir = instance_config.get("path")
         if instance_dir is None:
             config_filename = None
         else:
             config_filename = fs_utils.join(
                 instance_dir, "gpf_instance.yaml")
-        return GPFInstance.build(config_filename)
+        self._gpf_instance = GPFInstance.build(config_filename)
+        return self._gpf_instance
 
     def get_import_storage(self):
         """Create an import storage as described in the import config."""
@@ -528,6 +530,25 @@ class ImportProject():
 
     def __str__(self):
         return f"Project({self.study_id})"
+
+    def __getstate__(self):
+        """Return state of object used for pickling.
+
+        The state is the default state but doesn't include the _gpf_instance
+        as this property is transient.
+        """
+        gpf_instance = self.get_gpf_instance()
+        state = self.__dict__.copy()
+        del state["_gpf_instance"]
+        state["_gpf_dae_config"] = gpf_instance.dae_config
+        return state
+
+    def __setstate__(self, state):
+        """Set state of object after unpickling."""
+        self.__dict__.update(state)
+        # pylint: disable=import-outside-toplevel
+        from dae.gpf_instance.gpf_instance import GPFInstance
+        self._gpf_instance = GPFInstance(state["_gpf_dae_config"], None)
 
 
 class ImportConfigNormalizer:
