@@ -5,6 +5,7 @@ import os
 import logging
 
 from typing import Optional, Tuple, Any, Deque, Union, Dict, Generator
+from functools import cached_property
 from collections import Counter
 from dataclasses import dataclass
 
@@ -479,6 +480,24 @@ class GenomicPositionTable(abc.ABC):
             ))
         return None, None
 
+    @cached_property
+    def ref_key(self):
+        ref_key = None
+        if "ref" in self.definition:
+            ref_key = self.get_special_column_index("ref") \
+                if self.header_mode == "none" \
+                else self.get_special_column_name("ref")
+        return ref_key
+
+    @cached_property
+    def alt_key(self):
+        alt_key = None
+        if "alt" in self.definition:
+            alt_key = self.get_special_column_index("alt") \
+                if self.header_mode == "none" \
+                else self.get_special_column_name("alt")
+        return alt_key
+
     @abc.abstractmethod
     def load(self):
         pass
@@ -601,16 +620,6 @@ class FlatGenomicPositionTable(GenomicPositionTable):
             ps_begin = int(columns[self.pos_begin_column_i])
             ps_end = int(columns[self.pos_end_column_i])
 
-            ref_key, alt_key = None, None
-            if "ref" in self.definition:
-                ref_key = self.get_special_column_index("ref") \
-                    if self.header_mode == "none" \
-                    else self.get_special_column_name("ref")
-            if "alt" in self.definition:
-                alt_key = self.get_special_column_index("alt") \
-                    if self.header_mode == "none" \
-                    else self.get_special_column_name("alt")
-
             if other_indices and other_columns:
                 attributes = dict(zip(other_columns, (columns[i] for i in other_indices)))
             else:
@@ -618,7 +627,7 @@ class FlatGenomicPositionTable(GenomicPositionTable):
                               if idx not in (self.chrom_column_i,
                                              self.pos_begin_column_i,
                                              self.pos_end_column_i)}
-            ref, alt = attributes.get(ref_key), attributes.get(alt_key)
+            ref, alt = attributes.get(self.ref_key), attributes.get(self.alt_key)
             records_by_chr[chrom].append(
                 Line(chrom, ps_begin, ps_end, attributes, self.score_definitions,
                      ref=ref, alt=alt)
@@ -881,16 +890,6 @@ class TabixGenomicPositionTable(GenomicPositionTable):
 
         other_indices, other_columns = self._get_other_columns()
 
-        ref_key, alt_key = None, None
-        if "ref" in self.definition:
-            ref_key = self.get_special_column_index("ref") \
-                if self.header_mode == "none" \
-                else self.get_special_column_name("ref")
-        if "alt" in self.definition:
-            alt_key = self.get_special_column_index("alt") \
-                if self.header_mode == "none" \
-                else self.get_special_column_name("alt")
-
         for raw in self.variants_file.fetch(*args, parser=pysam.asTuple()):
             if other_indices and other_columns:
                 attributes = dict(zip(other_columns, (raw[i] for i in other_indices)))
@@ -899,7 +898,7 @@ class TabixGenomicPositionTable(GenomicPositionTable):
                               if idx not in (self.chrom_column_i,
                                              self.pos_begin_column_i,
                                              self.pos_end_column_i)}
-            ref, alt = attributes.get(ref_key), attributes.get(alt_key)
+            ref, alt = attributes.get(self.ref_key), attributes.get(self.alt_key)
             yield Line(
                 raw[self.chrom_column_i],
                 raw[self.pos_begin_column_i],
