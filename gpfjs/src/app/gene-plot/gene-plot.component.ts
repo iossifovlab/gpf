@@ -364,13 +364,15 @@ export class GenePlotComponent implements OnChanges {
       transcriptY += this.constants.frequencyPlotPadding
         + ((this.genePlotModel.gene.collapsedTranscripts.length - 1) * this.constants.multipleChromosomesGap);
     } else {
-      this.drawTranscript(collapsedTranscriptElement, this.genePlotModel.gene.collapsedTranscript, transcriptY);
+      this.drawTranscript(collapsedTranscriptElement, this.genePlotModel.gene.collapsedTranscripts[0], transcriptY);
     }
 
     if (this.showTranscripts) {
       const transcriptsElement = this.plotElement.append('g').attr('id', 'transcripts');
       transcriptY += this.constants.collapsedTranscriptTextHeight
-        + this.constants.collapsedTranscriptPadding; // Add some extra padding after the collapsed transcript
+        + this.constants.collapsedTranscriptPadding
+        + (this.genePlotModel.gene.collapsedTranscripts.length > 1
+          ? this.constants.multipleChromosomesGap : 0); // Add some extra padding after the collapsed transcript
       for (const geneViewTranscript of this.genePlotModel.gene.transcripts) {
         transcriptY += this.constants.transcriptHeight;
         this.drawTranscript(transcriptsElement, geneViewTranscript, transcriptY);

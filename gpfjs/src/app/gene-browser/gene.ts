@@ -21,7 +21,7 @@ function mergeSegments(exons: Segment[]): Segment[] {
   return result;
 }
 
-function collapseTranscripts(transcripts: Transcript[]): Transcript {
+function collapseSegments(transcripts: Transcript[]): Transcript {
   const allExons: Segment[] = [];
   const allCodingSequences: Segment[] = [];
   for (const transcript of transcripts) {
@@ -169,16 +169,16 @@ export class Transcript {
 }
 
 export class Gene {
-  public readonly collapsedTranscript: Transcript;
+  public readonly allSegments: TranscriptSegment[] = [];
   public readonly collapsedTranscripts: Transcript[];
   public readonly chromosomes: Map<string, [number, number]>;
+  public readonly medianExon: Map<string, number>;
+  public readonly medianExonLength;
 
   public constructor(
     public readonly geneSymbol: string,
     public readonly transcripts: Transcript[]
   ) {
-    this.collapsedTranscript = collapseTranscripts(this.transcripts);
-
     this.chromosomes = new Map<string, [number, number]>();
     for (const transcript of this.transcripts) {
       if (!this.chromosomes.has(transcript.chromosome)) {
@@ -193,6 +193,8 @@ export class Gene {
     this.collapsedTranscripts = collapseMultipleTranscripts(
       new Array(...this.chromosomes).map(chrom => chrom[0]), this.transcripts
     );
+    this.allSegments = collapseSegments(transcripts).segments;
+    this.medianExonLength = collapseSegments(transcripts).medianExonLength;
   }
 
   public static fromJson(json: object): Gene {

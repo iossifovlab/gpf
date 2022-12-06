@@ -1,3 +1,4 @@
+import { IS_RFC_3339 } from 'class-validator';
 import { Transcript, Gene, TranscriptSegment } from './gene';
 
 describe('TranscriptSegment', () => {
@@ -157,14 +158,14 @@ describe('Transcript', () => {
     ];
 
     for (let i = 0; i < transcript.segments.length; i++) {
-      expect(transcript.segments[i].chromosome).toEqual(expectedSegments[i].chromosome);
-      expect(transcript.segments[i].start).toEqual(expectedSegments[i].start);
-      expect(transcript.segments[i].stop).toEqual(expectedSegments[i].stop);
-      expect(transcript.segments[i].isExon).toEqual(expectedSegments[i].isExon);
-      expect(transcript.segments[i].isCDS).toEqual(expectedSegments[i].isCDS);
-      expect(transcript.segments[i].isSpacer).toEqual(expectedSegments[i].isSpacer);
-      expect(transcript.segments[i].label).toEqual(expectedSegments[i].label);
-      expect(transcript.segments[i].length).toEqual(expectedSegments[i].length);
+      expect(transcript.segments[i].chromosome).toStrictEqual(expectedSegments[i].chromosome);
+      expect(transcript.segments[i].start).toStrictEqual(expectedSegments[i].start);
+      expect(transcript.segments[i].stop).toStrictEqual(expectedSegments[i].stop);
+      expect(transcript.segments[i].isExon).toStrictEqual(expectedSegments[i].isExon);
+      expect(transcript.segments[i].isCDS).toStrictEqual(expectedSegments[i].isCDS);
+      expect(transcript.segments[i].isSpacer).toStrictEqual(expectedSegments[i].isSpacer);
+      expect(transcript.segments[i].label).toStrictEqual(expectedSegments[i].label);
+      expect(transcript.segments[i]).toHaveLength(expectedSegments[i].length);
     }
   });
 
@@ -176,14 +177,14 @@ describe('Transcript', () => {
       cds: [{ chromosome: 'chr1', start: 1, stop: 10 }, { chromosome: 'chr2', start: 11, stop: 20 }],
       exons: [{ chromosome: 'chr3', start: 21, stop: 31}, { chromosome: 'chr4', start: 32, stop: 43 }]
     });
-    expect(transcript.transcriptId).toEqual('testTranscriptId');
-    expect(transcript.chromosome).toEqual('testChrom');
-    expect(transcript.strand).toEqual('testStrand');
-    expect(transcript.codingSequences).toEqual([
+    expect(transcript.transcriptId).toBe('testTranscriptId');
+    expect(transcript.chromosome).toBe('testChrom');
+    expect(transcript.strand).toBe('testStrand');
+    expect(transcript.codingSequences).toStrictEqual([
       { chromosome: 'chr1', start: 1, stop: 10 },
       { chromosome: 'chr2', start: 11, stop: 20 }
     ]);
-    expect(transcript.exons).toEqual([
+    expect(transcript.exons).toStrictEqual([
       { chromosome: 'chr3', start: 21, stop: 31 },
       { chromosome: 'chr4', start: 32, stop: 43 }
     ]);
@@ -218,7 +219,7 @@ describe('Gene', () => {
         'id1',
         'chrom1',
         'strand1',
-        [{ chromosome: 'coding1', start: 1, stop: 5 },
+        [{ chromosome: 'coding1', start: 1, stop: 10 },
           { chromosome: 'coding2', start: 12, stop: 15 }],
         [{ chromosome: 'exon1', start: 7, stop: 11 },
           { chromosome: 'exon2', start: 20, stop: 25 }]
@@ -230,23 +231,31 @@ describe('Gene', () => {
         [{ chromosome: 'coding3', start: 3, stop: 10 },
           { chromosome: 'coding4', start: 18, stop: 20 }],
         [{ chromosome: 'exon3', start: 13, stop: 16 },
-          { chromosome: 'exon4', start: 18, stop: 22 }]
+          { chromosome: 'exon4', start: 18, stop: 25 }]
       )
     ];
-    const expectedCollapsedTranscript = new Transcript(
-      'collapsed',
-      'strand1',
-      'chrom1',
-      [{ chromosome: 'coding1', start: 1, stop: 10 },
-        { chromosome: 'coding2', start: 12, stop: 15 },
-        { chromosome: 'coding4', start: 18, stop: 20 }],
-      [{ chromosome: 'exon1', start: 7, stop: 11 },
-        { chromosome: 'exon3', start: 13, stop: 16 },
-        { chromosome: 'exon4', start: 18, stop: 25 }]
-    );
+
+    const expectedTranscripts = [
+      new Transcript(
+        'collapsed',
+        'chrom1',
+        'strand1',
+        [{ chromosome: 'coding1', start: 1, stop: 10 },
+          { chromosome: 'coding2', start: 12, stop: 15 }],
+        [{ chromosome: 'exon1', start: 7, stop: 11 }, { chromosome: 'exon2', start: 20, stop: 25 }]
+      ),
+      new Transcript(
+        'collapsed',
+        'chrom2',
+        'strand1',
+        [{chromosome: 'coding3', start: 3, stop: 10}, { chromosome: 'coding4', start: 18, stop: 20 }],
+        [{ chromosome: 'exon3', start: 13, stop: 16 },
+          { chromosome: 'exon4', start: 18, stop: 25 }]
+      )
+    ];
 
     const gene = new Gene('gene1', transcripts);
-    expect(gene.collapsedTranscript).toEqual(expectedCollapsedTranscript);
+    expect(gene.collapsedTranscripts).toStrictEqual(expectedTranscripts);
   });
 
   it('should set chromosomes during construction', () => {
@@ -278,8 +287,8 @@ describe('Gene', () => {
     ];
 
     const gene = new Gene('gene1', transcripts);
-    expect(gene.chromosomes.get('chrom1')).toEqual([3, 35]);
-    expect(gene.chromosomes.get('chrom2')).toEqual([13, 22]);
+    expect(gene.chromosomes.get('chrom1')).toStrictEqual([3, 35]);
+    expect(gene.chromosomes.get('chrom2')).toStrictEqual([13, 22]);
   });
 
   it('should create from json', () => {
@@ -319,7 +328,7 @@ describe('Gene', () => {
     ];
     const gene = new Gene('gene1', transcripts);
 
-    expect(geneFromJson).toEqual(gene);
+    expect(geneFromJson).toStrictEqual(gene);
   });
 
   it('should get region string', () => {
@@ -355,5 +364,61 @@ describe('Gene', () => {
     expect(gene.getRegionString(7, 10)).toEqual(['chrom1:7-10', 'chrom3:7-10']);
     expect(gene.getRegionString(0, 6)).toEqual(['chrom3:3-6']);
     expect(gene.getRegionString(27, 100)).toEqual(['chrom3:27-35']);
+  });
+
+  it('should check gene on multiple chromosomes', () => {
+    const transcripts = [
+      new Transcript(
+        'id1',
+        'chrom1',
+        'strand1',
+        [{ chromosome: '', start: 0, stop: 0 }],
+        [{ chromosome: 'exon1', start: 7, stop: 11 },
+          { chromosome: 'exon2', start: 20, stop: 25 }]
+      ),
+      new Transcript(
+        'id2',
+        'chrom2',
+        'strand2',
+        [{ chromosome: '', start: 0, stop: 0 }],
+        [{ chromosome: 'exon3', start: 13, stop: 16 },
+          { chromosome: 'exon4', start: 18, stop: 22 }]
+      ),
+      new Transcript(
+        'id3',
+        'chrom3',
+        'strand3',
+        [{ chromosome: '', start: 0, stop: 0 }],
+        [{ chromosome: 'exon5', start: 3, stop: 16 },
+          { chromosome: 'exon6', start: 18, stop: 35 }]
+      )
+    ];
+
+    const gene = new Gene('gene1', transcripts);
+    expect(gene.collapsedTranscripts).toHaveLength(transcripts.length);
+    expect(gene.collapsedTranscripts[0]).toStrictEqual(new Transcript(
+      'collapsed',
+      'chrom1',
+      'strand1',
+      [{ chromosome: '', start: 0, stop: 0 }],
+      [{ chromosome: 'exon1', start: 7, stop: 11 },
+        { chromosome: 'exon2', start: 20, stop: 25 }]
+    ));
+    expect(gene.collapsedTranscripts[1]).toStrictEqual(new Transcript(
+      'collapsed',
+      'chrom2',
+      'strand1',
+      [{ chromosome: '', start: 0, stop: 0 }],
+      [{ chromosome: 'exon3', start: 13, stop: 16 },
+        { chromosome: 'exon4', start: 18, stop: 22 }]
+    ));
+    expect(gene.collapsedTranscripts[2]).toStrictEqual(new Transcript(
+      'collapsed',
+      'chrom3',
+      'strand1',
+      [{ chromosome: '', start: 0, stop: 0 }],
+      [{ chromosome: 'exon5', start: 3, stop: 16 },
+        { chromosome: 'exon6', start: 18, stop: 35 }]
+    ));
   });
 });
