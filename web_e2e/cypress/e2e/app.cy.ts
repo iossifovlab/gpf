@@ -205,7 +205,7 @@ describe('App user access rights tests', () => {
     userManagementPage.waitForPageToLoad(sidenavPageLinks.management);
     page.logout();
 
-    page.navigateToDatasetPage(datasetIds.compVcf, toolPageLinks.datasetStatistics);
+    page.navigateToDatasetPage(datasetIds.compVcf, toolPageLinks.datasetStatistics, false);
     page.login(userData.normal.username, userData.normal.password);
     datasetsPage.permissionDeniedPrompt.should('not.exist');
     datasetsPage.datasetStatisticsWindow.should('be.visible');
@@ -231,7 +231,7 @@ describe('App user access rights tests', () => {
     page.logout();
 
     page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.datasetStatistics, false);
-    page.login(userData.normal.username, userData.normal.password, false);
+    page.login(userData.normal.username, userData.normal.password);
     datasetsPage.permissionDeniedPrompt.should('exist');
     datasetsPage.datasetStatisticsWindow.should('not.exist');
 
