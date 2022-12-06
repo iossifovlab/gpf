@@ -467,16 +467,7 @@ class GenomicScore(GenomicResourceImplementation):
                     "y_scale": {"type": "string"},
                 }
             }},
-            "default_annotation": {"type": "dict", "schema": {
-                "attributes": {"type": "list", "schema": {
-                    "type": "dict",
-                    "schema": {
-                        "source": {"type": "string"},
-                        "destination": {"type": "string"},
-                        "internal": {"type": "boolean", "default": False}
-                    }
-                }}
-            }}
+            "default_annotation": {"type": "dict", "allow_unknown": True}
         }
 
 
