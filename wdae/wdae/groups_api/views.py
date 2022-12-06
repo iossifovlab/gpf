@@ -23,6 +23,7 @@ class GroupsViewSet(
     permission_classes = (permissions.IsAdminUser,)
     filter_backends = (filters.SearchFilter,)
     search_fields = ("name",)
+    lookup_field = "name"
 
     def get_serializer_class(self):
         serializer_class = self.serializer_class

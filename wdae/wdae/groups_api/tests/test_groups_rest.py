@@ -411,3 +411,24 @@ def test_user_group_routes(admin_client, user):
 
     assert response.status_code == status.HTTP_204_NO_CONTENT
     assert not user.groups.filter(name="Test group").exists()
+
+
+def test_group_retrieve(admin_client, hundred_groups):
+    url = "/api/v3/groups/Group1"
+    response = admin_client.get(url)
+    assert response.status_code == status.HTTP_200_OK
+    data = response.data
+
+    assert data["name"] == "Group1"
+    assert data["users"] == ["user@example.com"]
+    assert data["datasets"] == [{
+        "datasetName": "Dataset1",
+        "datasetId": "Dataset1",
+        "broken": False,
+    }]
+
+
+def test_group_retrieve_missing(admin_client):
+    url = "/api/v3/groups/somegroupthatdoesnotexist"
+    response = admin_client.get(url)
+    assert response.status_code == status.HTTP_404_NOT_FOUND

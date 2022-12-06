@@ -268,28 +268,8 @@ class DatasetDescriptionView(QueryBaseView):
         return Response(status=status.HTTP_200_OK)
 
 
-class DatasetPermissionsView(QueryBaseView):
-
-    page_size = settings.REST_FRAMEWORK["PAGE_SIZE"]
-
-    def get(self, request):
-        dataset_search = request.GET.get("search")
-        page = request.GET.get("page", 1)
-        query = Dataset.objects
-        if dataset_search is not None and dataset_search != "":
-            query = query.filter(dataset_id__icontains=dataset_search)
-
-        if page is None:
-            return Response(status.HTTP_400_BAD_REQUEST)
-        if isinstance(page, str):
-            page = int(page)
-
-        page_start = (page - 1) * self.page_size
-        page_end = page * self.page_size
-        datasets = query.all()[page_start:page_end]
-
-        dataset_details = []
-        for dataset in datasets:
+class BaseDatasetPermissionsView(QueryBaseView):
+    def _get_dataset_info(self, dataset):
             groups = dataset.groups.all()
             group_names = [group.name for group in groups]
 
@@ -313,29 +293,67 @@ class DatasetPermissionsView(QueryBaseView):
                     "Dataset %s missing in GPF instance!",
                     dataset.dataset_id
                 )
-                dataset_details.append({
+                return {
                     "dataset_id": dataset.dataset_id,
                     "dataset_name": "Missing dataset",
                     "users": [],
                     "groups": []
-                })
-                continue
+                }
 
             name = dataset_gd.name
             if name is None:
                 name = ""
 
-            dataset_details.append({
+            return {
                 "dataset_id": dataset_gd.study_id,
                 "dataset_name": name,
                 "broken": dataset.broken,
                 "users": users_list,
                 "groups": group_names
 
-            })
+            }
+
+class DatasetPermissionsView(BaseDatasetPermissionsView):
+
+    page_size = settings.REST_FRAMEWORK["PAGE_SIZE"]
+
+    def get(self, request):
+        dataset_search = request.GET.get("search")
+        page = request.GET.get("page", 1)
+        query = Dataset.objects
+        if dataset_search is not None and dataset_search != "":
+            query = query.filter(dataset_id__icontains=dataset_search)
+
+        if page is None:
+            return Response(status.HTTP_400_BAD_REQUEST)
+        if isinstance(page, str):
+            page = int(page)
+
+        page_start = (page - 1) * self.page_size
+        page_end = page * self.page_size
+        datasets = query.all()[page_start:page_end]
+
+        dataset_details = []
+        for dataset in datasets:
+            dataset_details.append(self._get_dataset_info(dataset))
 
         if len(dataset_details) == 0:
             return Response(status=status.HTTP_204_NO_CONTENT)
+
+        return Response(dataset_details)
+
+
+class DatasetPermissionsSingleView(BaseDatasetPermissionsView):
+
+    page_size = settings.REST_FRAMEWORK["PAGE_SIZE"]
+
+    def get(self, request, dataset_id):
+        try:
+            dataset = Dataset.objects.get(dataset_id=dataset_id)
+        except Dataset.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        dataset_details = self._get_dataset_info(dataset)
 
         return Response(dataset_details)
 

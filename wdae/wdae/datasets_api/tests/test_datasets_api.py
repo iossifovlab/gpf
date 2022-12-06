@@ -245,6 +245,23 @@ def test_datasets_permissions(admin_client, wdae_gpf_instance):
     assert response.status_code == status.HTTP_204_NO_CONTENT
 
 
+def test_datasets_permissions_single(admin_client, wdae_gpf_instance):
+    response = admin_client.get("/api/v3/datasets/permissions/Dataset1")
+    assert response.status_code == status.HTTP_200_OK
+    assert set(response.data.keys()) == set([
+        "dataset_id",
+        "dataset_name",
+        "broken",
+        "users",
+        "groups"
+    ])
+
+
+def test_datasets_permissions_single_missing(admin_client, wdae_gpf_instance):
+    response = admin_client.get("/api/v3/datasets/permissions/alabala")
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+
+
 def test_datasets_permissions_search(admin_client, wdae_gpf_instance):
     response = admin_client.get("/api/v3/datasets/permissions?search=we2014")
     assert len(response.data) == 1
