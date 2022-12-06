@@ -117,11 +117,6 @@
         nucleotide_aggregator: max
         position_aggregator: max
         source: MPC
-    scores:
-    - desc: ''
-      id: MPC
-      name: MPC
-      type: float
     table:
       alternative:
         name: alt
@@ -133,6 +128,11 @@
         name: pos
       reference:
         name: ref
+      scores:
+      - desc: ''
+        id: MPC
+        name: MPC
+        type: float
     type: np_score
   id: hg19/MPC
   manifest:
@@ -142,9 +142,9 @@
   - md5: 5bb77f8efe6ed1b01b3422a3b5070307
     name: fordist_constraint_official_mpc_values_v2.txt.gz.tbi
     size: 257
-  - md5: 318ac12adf95f1aa2ecaefc4fc9b7701
+  - md5: 7ca14a15ab13af203cc49a59aeb0e33e
     name: genomic_resource.yaml
-    size: 467
+    size: 477
   version: '0'
 - config:
     default_annotation:
@@ -321,15 +321,6 @@
         nucleotide_aggregator: max
         position_aggregator: max
         source: cadd_phred
-    scores:
-    - desc: ''
-      id: cadd_raw
-      name: RawScore
-      type: float
-    - desc: ''
-      id: cadd_phred
-      name: PHRED
-      type: float
     table:
       alternative:
         name: Alt
@@ -341,6 +332,15 @@
         name: Pos
       reference:
         name: Ref
+      scores:
+      - desc: ''
+        id: cadd_raw
+        name: RawScore
+        type: float
+      - desc: ''
+        id: cadd_phred
+        name: PHRED
+        type: float
     type: np_score
   id: hg38/TESTCADD
   manifest:
@@ -350,9 +350,9 @@
   - md5: 64ea2e483af33f1ad35d771653889e1d
     name: TESTCADD.tsv.gz.tbi
     size: 99
-  - md5: b914ca8069ad2b83ef7ae58340ba9662
+  - md5: 9019fff7f6a069e4fb35d49ef396b75a
     name: genomic_resource.yaml
-    size: 647
+    size: 665
   version: '0'
 - config:
     default_annotation:

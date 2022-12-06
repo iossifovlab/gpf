@@ -17,15 +17,15 @@ table:
     name: Alt
 
 # score values
-scores:
-    - id: cadd_raw
-      type: float
-      desc: ""
-      name: RawScore
-    - id: cadd_phred
-      type: float
-      desc: ""
-      name: PHRED
+  scores:
+      - id: cadd_raw
+        type: float
+        desc: ""
+        name: RawScore
+      - id: cadd_phred
+        type: float
+        desc: ""
+        name: PHRED
 
 
 default_annotation:

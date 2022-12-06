@@ -37,7 +37,12 @@ class GenomicScore(GenomicResourceImplementation):
     def __init__(self, resource):
         super().__init__(resource)
         self.config["id"] = resource.resource_id
-        self.table = None
+        # self.table = None
+        self.table_loaded = False
+        self.table = open_genome_position_table(
+            self.resource,
+            self.config["table"]
+        )
 
     def get_config(self):
         return self.config
@@ -65,7 +70,8 @@ class GenomicScore(GenomicResourceImplementation):
         pass
 
     def is_open(self):
-        return self.table is not None
+        # return self.table is not None
+        return self.table_loaded
 
     def open(self) -> GenomicScore:
         """Open genomic score resource and returns it."""
@@ -75,10 +81,12 @@ class GenomicScore(GenomicResourceImplementation):
                 self.resource.resource_id)
             return self
 
-        self.table = open_genome_position_table(
-            self.resource,
-            self.config["table"]
-        )
+        # self.table = open_genome_position_table(
+        #     self.resource,
+        #     self.config["table"]
+        # )
+        self.table.load()
+        self.table_loaded = True
         return self
 
     def __enter__(self):

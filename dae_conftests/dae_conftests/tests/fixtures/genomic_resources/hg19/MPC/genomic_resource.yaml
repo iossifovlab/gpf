@@ -17,11 +17,11 @@ table:
     name: alt
 
 # score values
-scores:
-    - id: MPC
-      type: float
-      desc: ""
-      name: MPC
+  scores:
+      - id: MPC
+        type: float
+        desc: ""
+        name: MPC
 
 default_annotation:
   attributes:

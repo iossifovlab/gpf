@@ -18,21 +18,12 @@ def score1_repo(tmp_path_factory):
         {
             "score1": {
                 "genomic_resource.yaml": textwrap.dedent("""
-                    type: vcf_info
-                    filename: score1.vcf.gz
-                    index_filename: score1.vcf.gz.tbi
-                    desc: |
-                        Example testing Score1.
-                    scores:
-                    - id: A
-                      type: int
-                    - id: B
-                      type: int
-                    - id: C
-                      type: str
-                    - id: D
-                      type: str
-
+                    type: allele_score
+                    table:
+                        filename: score1.vcf.gz
+                        index_filename: score1.vcf.gz.tbi
+                        desc: |
+                            Example testing Score1.
             """)
             }
         }
@@ -57,7 +48,7 @@ chrA   3   .  A   T   .    .       A=3;B=31;C=c21;D=d31,d32
 
 def test_vcf_info_annotator_all_attributes(score1_repo):
     pipeline_config = textwrap.dedent("""
-            - vcf_info:
+            - allele_score:
                 resource_id: score1
             """)
 
@@ -70,10 +61,10 @@ def test_vcf_info_annotator_all_attributes(score1_repo):
     assert len(attributes) == 4
 
     assert annotator.get_all_annotation_attributes() == [
-        {"desc": "", "name": "A", "type": "int"},
-        {"desc": "", "name": "B", "type": "int"},
-        {"desc": "", "name": "C", "type": "str"},
-        {"desc": "", "name": "D", "type": "str"},
+        {"desc": "Score A", "name": "A", "type": "int"},
+        {"desc": "Score B", "name": "B", "type": "int"},
+        {"desc": "Score C", "name": "C", "type": "str"},
+        {"desc": "Score D", "name": "D", "type": "str"},
     ]
 
     annotator.open()
@@ -87,7 +78,7 @@ def test_vcf_info_annotator_all_attributes(score1_repo):
 
 def test_vcf_info_default_annotation(score1_repo):
     pipeline_config = textwrap.dedent("""
-            - vcf_info:
+            - allele_score:
                 resource_id: score1
             """)
 
@@ -109,7 +100,7 @@ def test_vcf_info_default_annotation(score1_repo):
 
 def test_vcf_info_config_annotation(score1_repo):
     pipeline_config = textwrap.dedent("""
-            - vcf_info:
+            - allele_score:
                 resource_id: score1
                 attributes:
                 - source: C
@@ -155,7 +146,7 @@ def test_vcf_info_annotator(
         vcf_allele, expected, score1_repo):
 
     pipeline_config = textwrap.dedent("""
-        - vcf_info:
+        - allele_score:
             resource_id: score1
             attributes:
             - source: A

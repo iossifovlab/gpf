@@ -14,10 +14,10 @@ def test_basic(tmp_path):
                     type: position_score
                     table:
                       filename: data.mem
-                    scores:
-                    - id: s1
-                      type: float
-                      name: s1""",
+                      scores:
+                      - id: s1
+                        type: float
+                        name: s1""",
                 "data.mem": """
                     chrom  pos_begin  s1
                     1      10         0.02

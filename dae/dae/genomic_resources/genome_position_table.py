@@ -925,6 +925,13 @@ class VCFGenomicPositionTable(TabixGenomicPositionTable):
     POS_BEGIN = "POS"
     POS_END = "POS"
 
+    VCF_TYPE_CONVERSION_MAP = {
+        "Integer": "int",
+        "Float": "float",
+        "String": "str",
+        "Flag": "bool",
+    }
+
     def __init__(self, genomic_resource: GenomicResource, table_definition,
                  variants_file: PysamFile):
         super().__init__(genomic_resource, table_definition, variants_file)
@@ -942,7 +949,7 @@ class VCFGenomicPositionTable(TabixGenomicPositionTable):
                 key: ScoreDef(
                     key,
                     value.description,
-                    None,
+                    self.VCF_TYPE_CONVERSION_MAP[value.type],
                     converter if value.number not in (1, "A", "R") else None,
                     tuple(),
                     None,
@@ -999,17 +1006,17 @@ def open_genome_position_table(
                 filename, mode="rt", uncompress=True) as infile:
             table = FlatGenomicPositionTable(
                 resource, table_definition, infile, table_format)
-            table.load()
+            # table.load()
         return table
     if table_format == "tabix":
         table = TabixGenomicPositionTable(
             resource, table_definition, resource.open_tabix_file(filename))
-        table.load()
+        # table.load()
         return table
     if table_format == "vcf_info":
         table = VCFGenomicPositionTable(
             resource, table_definition, resource.open_vcf_file(filename))
-        table.load()
+        # table.load()
         return table
 
     raise ValueError("unknown table format")
