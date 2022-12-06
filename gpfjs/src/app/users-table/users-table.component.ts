@@ -35,4 +35,8 @@ export class UsersTableComponent implements OnInit {
         });
       });
   }
+
+  public getUserAllowedDatasetIds(user: User): string[] {
+    return user.allowedDatasets.map(dataset => dataset['datasetId']);
+  }
 }
