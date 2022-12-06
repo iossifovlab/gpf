@@ -8,7 +8,8 @@ import tempfile
 from typing import Optional, Dict, Any
 
 from dask.distributed import Client, LocalCluster  # type: ignore
-from dask_kubernetes import KubeCluster, make_pod_spec  # type: ignore
+from dask_kubernetes import make_pod_spec  # type: ignore
+from dask_kubernetes.classic import KubeCluster  # type: ignore
 
 
 class DaskClient:
