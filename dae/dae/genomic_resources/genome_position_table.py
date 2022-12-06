@@ -5,7 +5,7 @@ import os
 import logging
 
 from typing import Optional, Tuple, Any, Deque, Union, Dict, Generator
-from functools import cached_property
+from functools import cache, cached_property
 from collections import Counter
 from dataclasses import dataclass
 
@@ -172,7 +172,8 @@ class Line:
     def get_score(self, score_id):
         key = self.score_defs[score_id].col_key
         if self.info is not None:
-            value, meta = self.info[key], self.info_meta[key]
+            print(list(self.info.keys()))
+            value, meta = self.info.get(key), self.info_meta.get(key)
             if isinstance(value, tuple):
                 if meta.number == "A" and self.allele_index is not None:
                     value = value[self.allele_index]
@@ -737,7 +738,10 @@ class TabixGenomicPositionTable(GenomicPositionTable):
         return Line(
             rchrom, line.pos_begin, line.pos_end,
             line.attributes, line.score_defs,
-            allele_index=line.allele_index
+            allele_index=line.allele_index,
+            ref=line.ref, alt=line.alt,
+            info=line.info,
+            info_meta=line.info_meta
         )
 
     def get_all_records(self):
@@ -929,13 +933,17 @@ class VCFGenomicPositionTable(TabixGenomicPositionTable):
             # pysam casts the values to their correct types beforehand
             # We only need to join tuple values, as annotators cannot
             # handle tuples
-            tuple_conv = lambda x: ",".join(map(str, x))
+            def converter(x):
+                try:
+                    return ",".join(map(str, x))
+                except TypeError:
+                    return x
             self.score_definitions = {
                 key: ScoreDef(
                     key,
                     value.description,
                     None,
-                    tuple_conv if value.number not in (1, "A", "R") else None,
+                    converter if value.number not in (1, "A", "R") else None,
                     tuple(),
                     None,
                     None
@@ -945,8 +953,9 @@ class VCFGenomicPositionTable(TabixGenomicPositionTable):
     def _get_header(self):
         return ("CHROM", "POS", "ID", "REF", "ALT", "QUAL", "FILTER", "INFO")
 
+    @cache
     def get_file_chromosomes(self):
-        return self.variants_file.header.contigs
+        return list(self.variants_file.header.contigs)
 
     def get_line_iterator(self, *args):
         self.stats["tabix fetch"] += 1
@@ -1024,3 +1033,4 @@ def save_as_tabix_table(
                       seq_col=table.chrom_column_i,
                       start_col=table.pos_begin_column_i,
                       end_col=table.pos_end_column_i)
+  

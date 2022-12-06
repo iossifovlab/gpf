@@ -1,15 +1,11 @@
 - config:
-    filename: clinvar.vcf.gz
-    index_filename: clinvar.vcf.gz.tbi
     meta: 'TODO
 
       '
-    scores:
-    - id: ALLELEID
-      type: int
-    - id: GENEINFO
-      type: str
-    type: vcf_info
+    table:
+      filename: clinvar.vcf.gz
+      index_filename: clinvar.vcf.gz.tbi
+    type: allele_score
   id: clinvar
   manifest:
   - md5: 23836a05d85b557e64928826dd2d7118
@@ -18,9 +14,9 @@
   - md5: 134d77b28ee7df80adb8cb9d3cc51aa0
     name: clinvar.vcf.gz.tbi
     size: 113
-  - md5: fc87f241ec41b9ca970e8d25ea41106d
+  - md5: 8c1772c537c0238af2106859469bb461
     name: genomic_resource.yaml
-    size: 161
+    size: 111
   version: '0'
 - config:
     default_annotation:
@@ -365,17 +361,8 @@
         source: altFreq
       - destination: alt_freq2
         source: altFreq2
-    scores:
-    - desc: ''
-      id: altFreq
-      name: all.altFreq
-      type: float
-    - desc: ''
-      id: altFreq2
-      name: all.altFreq2
-      type: float
     table:
-      alternative:
+      alt:
         name: alt
       chrom:
         name: chr
@@ -383,8 +370,17 @@
       format: tabix
       pos_begin:
         name: position
-      reference:
+      ref:
         name: ref
+      scores:
+      - desc: ''
+        id: altFreq
+        name: all.altFreq
+        type: float
+      - desc: ''
+        id: altFreq2
+        name: all.altFreq2
+        type: float
     type: allele_score
   id: hg38/TESTFreq
   manifest:
@@ -394,9 +390,9 @@
   - md5: 05e5bc2e111692d73e2c27e76fc7e2a7
     name: TESTFreq.tsv.gz.tbi
     size: 100
-  - md5: bb21193d676ed049712b0b17f815fcc0
+  - md5: 7a8f3cae33e0ddf9ad50cc6831997b60
     name: genomic_resource.yaml
-    size: 582
+    size: 588
   version: '0'
 - config:
     default_annotation:

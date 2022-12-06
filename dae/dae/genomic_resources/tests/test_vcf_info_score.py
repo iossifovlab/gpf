@@ -4,7 +4,7 @@ import pytest
 
 from dae.testing import setup_directories, setup_vcf
 from dae.genomic_resources.fsspec_protocol import build_fsspec_protocol
-from dae.genomic_resources.vcf_info_score import VcfInfoScore
+from dae.genomic_resources.genomic_scores import AlleleScore
 
 
 @pytest.fixture
@@ -15,22 +15,12 @@ def vcf_info_clinvar(tmp_path_factory):
         {
             "clinvar": {
                 "genomic_resource.yaml": textwrap.dedent("""
-                    type: vcf_info
-                    filename: clinvar.vcf.gz
-                    index_filename: clinvar.vcf.gz.tbi
-                    desc: |
-                        Example testing ClinVar.
-                    scores:
-                    - id: DBVARID
-                      type: str
-                      name: DBVARID
-                    - id: CLNDN
-                      type: str
-                    - id: ALLELEID
-                      type: int
-                    - id: CLNSIG
-                      type: str
-
+                    type: allele_score
+                    table:
+                        filename: clinvar.vcf.gz
+                        index_filename: clinvar.vcf.gz.tbi
+                        desc: |
+                            Example testing ClinVar.
             """)
             }
         }
@@ -74,19 +64,15 @@ chrA   3   .  A   T   .    .       ALLELEID=1600580;CLNDISDB=MedGen:CN517202;CLN
     proto = build_fsspec_protocol("testing", str(root_path / "grr"))
     res = proto.get_resource("clinvar")
 
-    return VcfInfoScore(res)
+    return AlleleScore(res)
 
 
 def test_clinvar_vcf_resource(vcf_info_clinvar):
     vcf_info_clinvar.open()
-    header = vcf_info_clinvar.get_header_info()
-
-    assert "CLNDN" in header
-    info = header["CLNDN"]
-
-    assert info.type == "str"
-    assert info.score_id == "CLNDN"
-    assert info.desc is not None
+    scores = vcf_info_clinvar.table.score_definitions
+    assert "CLNDN" in scores
+    assert scores["CLNDN"].col_key == "CLNDN"
+    assert scores["CLNDN"].desc == "ClinVar's preferred disease name for the concept specified by disease identifiers in CLNDISDB"
 
 
 def test_clinvar_get_all_chromosomes(vcf_info_clinvar):
@@ -95,19 +81,9 @@ def test_clinvar_get_all_chromosomes(vcf_info_clinvar):
 
 
 def test_clinvar_score_columns(vcf_info_clinvar):
-    assert len(vcf_info_clinvar.score_columns) == 4
-    assert list(vcf_info_clinvar.score_columns.keys()) == [
-        "DBVARID", "CLNDN", "ALLELEID", "CLNSIG"
-    ]
-    for score_def in vcf_info_clinvar.score_columns.values():
-        assert not score_def.desc
-
     vcf_info_clinvar.open()
-    assert list(vcf_info_clinvar.score_columns.keys()) == [
-        "DBVARID", "CLNDN", "ALLELEID", "CLNSIG"
-    ]
-
-    for score_def in vcf_info_clinvar.score_columns.values():
+    assert len(vcf_info_clinvar.get_all_scores()) == 22
+    for score_def in vcf_info_clinvar.table.score_definitions.values():
         assert score_def.desc
 
 
@@ -123,10 +99,10 @@ def test_clinvar_score_columns(vcf_info_clinvar):
 
 ])
 def test_clinvar_fetch_region(
-        vcf_info_clinvar, chrom, begin, end, scores, expected):
-    result = vcf_info_clinvar \
-        .open() \
-        .fetch_region(chrom, begin, end, scores)
+    vcf_info_clinvar, chrom, begin, end, scores, expected
+):
+    vcf_info_clinvar.open()
+    result = vcf_info_clinvar.fetch_region(chrom, begin, end, scores)
     assert list(result) == expected
 
 
@@ -165,30 +141,12 @@ def vcf_info_gnomad(tmp_path_factory):
         {
             "gnomad": {
                 "genomic_resource.yaml": textwrap.dedent("""
-                    type: vcf_info
-                    filename: gnomad.vcf.gz
-                    index_filename: gnomad.vcf.gz.tbi
-                    desc: |
-                        Example testing GnomAD.
-                    scores:
-                    - id: AN
-                      type: int
-                    - id: AC
-                      type: int
-                    - id: lcr
-                      type: bool
-                    - id: non_par
-                      type: str
-                    - id: variant_type
-                      type: str
-                    - id: culprit
-                      type: str
-                    - id: NEGATIVE_TRAIN_SITE
-                      type: bool
-                    - id: AN_asj_female
-                      type: int
-                    - id: SB
-                      type: int
+                    type: allele_score
+                    table:
+                        filename: gnomad.vcf.gz
+                        index_filename: gnomad.vcf.gz.tbi
+                        desc: |
+                            Example testing GnomAD.
                 """)
             }
         }
@@ -371,24 +329,21 @@ chrA   5   .  A   C   264.00 AS_VQSR     AC=3;AN=107374;AF=2.79397e-05;lcr;varia
     proto = build_fsspec_protocol("testing", str(root_path / "grr"))
     res = proto.get_resource("gnomad")
 
-    return VcfInfoScore(res).open()
+    return AlleleScore(res).open()
 
 
 def test_gnomad_vcf_resource(vcf_info_gnomad):
-    header = vcf_info_gnomad.get_header_info()
+    vcf_info_gnomad.open()
+    scores = vcf_info_gnomad.table.score_definitions
 
-    assert "AF" in header
-    info = header["AF"]
+    assert "AF" in scores
+    info = scores["AF"]
 
-    assert info.type == "float"
-    assert info.score_id == "AF"
+    assert info.col_key == "AF"
     assert info.desc is not None
-    # assert info["number"] == "A"
 
-    info = header["AN"]
-    assert info.type == "int"
-    assert info.score_id == "AN"
-    # assert info["number"] == 1
+    info = scores["AN"]
+    assert info.col_key == "AN"
 
 
 @pytest.mark.parametrize("chrom,start,end,scores,expected", [

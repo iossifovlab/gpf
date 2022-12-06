@@ -13,22 +13,22 @@ table:
     name: chr
   pos_begin:
     name: position
-  reference:
+  ref:
     name: ref
-  alternative:
+  alt:
     name: alt
 
 # score values
-scores:
-    - id: altFreq
-      type: float
-      desc: ""
-      name: all.altFreq
-
-    - id: altFreq2
-      type: float
-      desc: ""
-      name: all.altFreq2
+  scores:
+      - id: altFreq
+        type: float
+        desc: ""
+        name: all.altFreq
+  
+      - id: altFreq2
+        type: float
+        desc: ""
+        name: all.altFreq2
 
 default_annotation:
   attributes:

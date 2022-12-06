@@ -131,8 +131,8 @@ class GenomicScore(GenomicResourceImplementation):
             raise ValueError(
                 f"{chrom} is not among the available chromosomes.")
 
-        line_iter = self._fetch_lines(chrom, pos_begin, pos_end)
-        for line in line_iter:
+        for line in self._fetch_lines(chrom, pos_begin, pos_end):
+            print(line, line.attributes, line.info)
             line_pos_begin, line_pos_end = self._line_to_begin_end(line)
 
             val = {}
