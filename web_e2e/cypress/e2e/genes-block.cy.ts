@@ -298,12 +298,7 @@ describe('Genes block gene set file length tests', () => {
 
       genotypeBrowserController.filterGenesByGeneSets(data.collection, geneSetName);
       cy.deleteDownloadsFolder();
-      cy.window().document().then(doc => {
-        doc.addEventListener('click', () => {
-          setTimeout(() => doc.location?.reload(), 5000);
-        })
-        page.downloadButton.click();
-      });
+      page.downloadButton.click();
 
       cy.readFile(downloadFilePath, { timeout: 5000 }).then(text => {
         const textLines = text.split(/\r\n|\r|\n/);
@@ -361,24 +356,20 @@ describe('Genes block denovo gene set gene symbols tests', () => {
       const downloadedGeneSymbolsFilePath = Cypress.config('downloadsFolder') + '/geneset.csv';
 
       genotypeBrowserController.setStudy(datasetIds.iossifov2014);
+      page.geneSetsButton.click();
 
       for (let i = 0; i < data.expectedConditions.effectTypesSearchQueries.length; i++) {
-        page.geneSetsButton.click();
         page.geneSetsCollectionSelectorDropdownMenu.select('Denovo', {force: true});
         if (data.peopleGroup === 'unaffected') {
           page.findDenovoGeneSetCollectionCheckbox('iossifov_2014', 'affected').click();
           page.findDenovoGeneSetCollectionCheckbox('iossifov_2014', 'unaffected').click();
         }
-        page.geneSetsSearchbox.click();
+        page.geneSetsSearchbox.click({force: true});
         page.geneSetsSearchbox.type(data.expectedConditions.effectTypesSearchQueries[i]);
-
         page.firstGeneSetFromDropdownMenu.click();
-        cy.window().document().then(function (doc) {
-          doc.addEventListener('click', () => {
-            setTimeout(function () { doc.location.reload() }, 5000)
-          })
-          page.downloadButton.click();
-        });
+
+        cy.deleteDownloadsFolder();
+        page.downloadButton.click();
 
         cy.readFile(downloadedGeneSymbolsFilePath, { timeout: 5000 }).then(text => {
           const textLines = text.split(/\r\n|\r|\n/);
