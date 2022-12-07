@@ -21,7 +21,7 @@ export class GeneScoresService {
       const searchParams = new HttpParams().set('ids', geneScoresIds);
       url += `?${searchParams.toString()}`;
     }
-    return this.http.get(url).pipe(map((res: any) => GeneScores.fromJsonArray(res)));
+    return this.http.get(url).pipe(map((res: GeneScores[]) => GeneScores.fromJsonArray(res)));
   }
 
   public getPartitions(score: string, min: number, max: number): Observable<Partitions> {
@@ -30,6 +30,6 @@ export class GeneScoresService {
 
     return this.http
       .post(this.config.baseUrl + this.geneScoresPartitionsUrl, {score: score, min: min, max: max}, options)
-      .pipe(map((res: any) => Partitions.fromJson(res)));
+      .pipe(map((res: Partitions) => Partitions.fromJson(res)));
   }
 }

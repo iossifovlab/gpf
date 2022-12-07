@@ -59,14 +59,11 @@ describe('GenomicScoresBlockComponent', () => {
         { provide: GenomicScoresBlockService, useClass: MockGenomicScoresBlockService },
       ]
     }).compileComponents();
-  }));
-
-  beforeEach(() => {
     fixture = TestBed.createComponent(GenomicScoresBlockComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
     component.genomicScoresState = new GenomicScoresState();
-  });
+  }));
 
   it('should create', () => {
     expect(component).toBeTruthy();
@@ -92,13 +89,13 @@ describe('GenomicScoresBlockComponent', () => {
     });
     const newGenomicScoreState = new GenomicScoreState(newGenomicScores);
 
-    expect(component.genomicScoresState.genomicScoresState).toEqual([]);
+    expect(component.genomicScoresState.genomicScoresState).toStrictEqual([]);
     component.addFilter();
-    expect(component.genomicScoresState.genomicScoresState.length).toBe(1);
+    expect(component.genomicScoresState.genomicScoresState).toHaveLength(1);
     expect(component.genomicScoresState.genomicScoresState).toContainEqual(genomicScoreState);
 
     component.removeFilter(newGenomicScoreState);
-    expect(component.genomicScoresState.genomicScoresState.length).toBe(1);
+    expect(component.genomicScoresState.genomicScoresState).toHaveLength(1);
     expect(component.genomicScoresState.genomicScoresState).toContainEqual(genomicScoreState);
   });
 });

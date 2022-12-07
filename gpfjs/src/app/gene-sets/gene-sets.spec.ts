@@ -24,7 +24,7 @@ describe('GeneSets', () => {
         personSetCollectionLegend: ['personSetCollectionLegend13', 'personSetCollectionLegend14']
       }]
     });
-    expect(geneSetsCollectionMock1).toEqual(geneSetsCollectionMockFromJSON1);
+    expect(geneSetsCollectionMock1).toStrictEqual(geneSetsCollectionMockFromJSON1);
   });
 
   it('should create GeneSetsCollection from JSON array method', () => {
@@ -82,7 +82,7 @@ describe('GeneSets', () => {
       }
     ]);
 
-    expect(geneSetsCollectionMock1).toEqual(geneSetsCollectionFromJSONArray1);
+    expect(geneSetsCollectionMock1).toStrictEqual(geneSetsCollectionFromJSONArray1);
   });
 
   it('should create GeneSet from JSON method', () => {
@@ -93,7 +93,7 @@ describe('GeneSets', () => {
       desc: 'desc1',
       download: 'download1'
     });
-    expect(geneSetMock1).toEqual(geneSetMockFromJSON1);
+    expect(geneSetMock1).toStrictEqual(geneSetMockFromJSON1);
   });
 
   it('should create GeneSet from JSON method array', () => {
@@ -109,7 +109,7 @@ describe('GeneSets', () => {
       desc: 'desc7',
       download: 'download8'
     }]);
-    expect(geneSetMock1).toEqual(geneSetMockFromJSONArray1);
+    expect(geneSetMock1).toStrictEqual(geneSetMockFromJSONArray1);
   });
 
   it('should create GeneSetType from JSON', () => {
@@ -127,7 +127,7 @@ describe('GeneSets', () => {
       personSetCollectionLegend: ['personSetCollectionLegend5', 'personSetCollectionLegend6']
     });
 
-    expect(geneSetTypeMock1).toEqual(geneSetTypeMockFromJSON1);
+    expect(geneSetTypeMock1).toStrictEqual(geneSetTypeMockFromJSON1);
   });
 
   it('should create GeneSetType from JSON array', () => {
@@ -157,6 +157,6 @@ describe('GeneSets', () => {
       },
     ]);
 
-    expect(geneSetTypeArrayMock1).toEqual(geneSetTypeMockFromJSONArray1);
+    expect(geneSetTypeArrayMock1).toStrictEqual(geneSetTypeMockFromJSONArray1);
   });
 });

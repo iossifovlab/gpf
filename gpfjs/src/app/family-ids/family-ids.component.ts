@@ -53,7 +53,7 @@ export class FamilyIdsComponent extends StatefulComponent implements OnInit {
 
   private focusTextInputArea(): void {
     this.waitForTextInputAreaToLoad().then(() => {
-      this.textArea.nativeElement.focus();
+      (this.textArea.nativeElement as HTMLElement).focus();
     });
   }
 }

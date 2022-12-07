@@ -46,9 +46,6 @@ describe('GenomicScoresComponent', () => {
         set: {}
       })
       .compileComponents();
-  });
-
-  beforeEach(() => {
     modalService = TestBed.inject(NgbModal);
     modalRef = modalService.open(PopupComponent);
 
@@ -69,7 +66,9 @@ describe('GenomicScoresComponent', () => {
   it('should show help', () => {
     jest.spyOn(modalService, 'open').mockReturnValue(modalRef);
     component.showHelp();
-    expect(modalService.open).toHaveBeenCalled();
+    expect(modalService.open).toHaveBeenCalledWith(PopupComponent, {
+      size: 'lg'
+    });
     expect(modalService.open).toHaveBeenCalledWith(PopupComponent, {
       size: 'lg'
     });
@@ -79,8 +78,8 @@ describe('GenomicScoresComponent', () => {
   });
 
   it('should get and set range and domain', () => {
-    expect(component.rangeStart).toBe(null);
-    expect(component.rangeEnd).toBe(null);
+    expect(component.rangeStart).toBeNull();
+    expect(component.rangeEnd).toBeNull();
     expect(component.domainMin).toBe(4);
     expect(component.domainMax).toBe(6);
 

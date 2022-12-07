@@ -15,13 +15,11 @@ describe('FamilyIdsComponent', () => {
       declarations: [FamilyIdsComponent, ErrorsAlertComponent],
       imports: [FormsModule, NgxsModule.forRoot([FamilyIdsState], {developmentMode: true})]
     }).compileComponents();
-  }));
 
-  beforeEach(() => {
     fixture = TestBed.createComponent(FamilyIdsComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
-  });
+  }));
 
   it('should create', () => {
     expect(component).toBeTruthy();

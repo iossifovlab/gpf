@@ -28,7 +28,7 @@ export interface GeneScoresModel {
 @Injectable()
 export class GeneScoresState {
   @Action(SetHistogramValues)
-  setHistogramValues(ctx: StateContext<GeneScoresModel>, action: SetHistogramValues) {
+  public setHistogramValues(ctx: StateContext<GeneScoresModel>, action: SetHistogramValues): void {
     ctx.patchState({
       rangeStart: action.rangeStart,
       rangeEnd: action.rangeEnd,
@@ -36,20 +36,20 @@ export class GeneScoresState {
   }
 
   @Action(SetGeneScore)
-  setGeneScore(ctx: StateContext<GeneScoresModel>, action: SetGeneScore) {
+  public setGeneScore(ctx: StateContext<GeneScoresModel>, action: SetGeneScore): void {
     ctx.patchState({ geneScore: action.geneScore });
   }
 
   @Selector([GeneScoresState])
-  static queryStateSelector(geneScoresState: GeneScoresModel) {
+  public static queryStateSelector(geneScoresState: GeneScoresModel): object {
     if (geneScoresState.geneScore) {
       return {
         geneScores: {
-          'score': geneScoresState.geneScore['score'],
-          'rangeStart': geneScoresState.rangeStart,
-          'rangeEnd': geneScoresState.rangeEnd,
+          score: geneScoresState.geneScore['score'],
+          rangeStart: geneScoresState.rangeStart,
+          rangeEnd: geneScoresState.rangeEnd,
         }
-      }
+      };
     }
     return null;
   }

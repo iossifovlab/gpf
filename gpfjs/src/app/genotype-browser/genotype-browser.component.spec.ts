@@ -50,7 +50,7 @@ describe('GenotypeBrowserComponent', () => {
   let component: GenotypeBrowserComponent;
   let fixture: ComponentFixture<GenotypeBrowserComponent>;
 
-  beforeEach(waitForAsync(() => {
+  beforeEach(() => {
     TestBed.configureTestingModule({
       declarations: [
         GenotypeBrowserComponent, GenesBlockComponent, RegionsBlockComponent, GenotypeBlockComponent,
@@ -69,9 +69,6 @@ describe('GenotypeBrowserComponent', () => {
         NgxsModule.forRoot([], {developmentMode: true}),
       ],
     }).compileComponents();
-  }));
-
-  beforeEach(() => {
     fixture = TestBed.createComponent(GenotypeBrowserComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();

@@ -52,18 +52,17 @@ describe('GenotypeBlockComponent', () => {
         NO_ERRORS_SCHEMA
       ]
     }).compileComponents();
-  }));
-
-  beforeEach(() => {
     fixture = TestBed.createComponent(GenotypeBlockComponent);
     component = fixture.componentInstance;
-    component.dataset = {'genotypeBrowserConfig': {
-      'inheritanceTypeFilter': new Set(),
-      'variantTypes': new Set(),
-      'selectedVariantTypes': new Set(),
-    } as any} as any;
+    component.dataset = {
+      genotypeBrowserConfig: {
+        inheritanceTypeFilter: new Set(),
+        variantTypes: new Set(),
+        selectedVariantTypes: new Set(),
+      } as any
+    } as any;
     fixture.detectChanges();
-  });
+  }));
 
   it('should create', () => {
     expect(component).toBeTruthy();
