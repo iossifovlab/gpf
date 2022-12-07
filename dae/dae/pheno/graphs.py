@@ -4,14 +4,13 @@ from typing import Optional
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+from seaborn import violinplot, stripplot, diverging_palette
 
 import pandas as pd
 import numpy as np
 
 from dae.variants.attributes import Role
 from dae.variants.attributes import Status, Sex
-from dae.pheno.ploters.palletes import diverging_palette
-from dae.pheno.ploters.plots import violinplot, stripplot
 from dae.pheno.utils.lin_regress import LinearRegression
 
 mpl.use("PDF")
