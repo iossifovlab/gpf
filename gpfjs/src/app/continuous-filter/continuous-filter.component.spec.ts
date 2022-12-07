@@ -7,7 +7,7 @@ import { Observable, of } from 'rxjs';
 
 import { ContinuousFilterComponent } from './continuous-filter.component';
 
-export class MeasuresServiceMock {
+class MeasuresServiceMock {
   public getContinuousMeasures(): void {
     return null;
   }
@@ -30,16 +30,14 @@ describe('ContinuousFilterComponent', () => {
   let fixture: ComponentFixture<ContinuousFilterComponent>;
   const measuresServiceMock = new MeasuresServiceMock();
 
-  beforeEach(waitForAsync(() => {
+  beforeEach(() => {
     TestBed.configureTestingModule({
       declarations: [ContinuousFilterComponent],
       providers: [{provide: MeasuresService, useValue: measuresServiceMock}, ConfigService],
       imports: [HttpClientTestingModule]
     })
       .compileComponents();
-  }));
 
-  beforeEach(() => {
     fixture = TestBed.createComponent(ContinuousFilterComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
