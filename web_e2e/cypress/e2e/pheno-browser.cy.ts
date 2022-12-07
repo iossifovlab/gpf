@@ -84,24 +84,18 @@ describe('Pheno browser tests', () => {
     page.tableRows.eq(2).get('gpf-table-view-cell').eq(2).should('have.text', '');
   });
 
-  const dataArray = [
-    'i1ageThe age of the individual (in months)continuous[68.001,606.229]',
-    'i1iqThe IQ of the individualcontinuous[-1.111e+1,174.290]',
-    'i1m1Measure 1, a normally distributed continuous measure with a mean of 80continuous[28.877,143.029]0.97110.25120.02990.6413',
-    'i1m2Measure 2, a normally distributed continuous measure with a mean of 40continuous[17.650,69.721]0.43890.42630.55470.3443',
-    'i1m3Measure 3, a continuous measure with a normal distribution with mean of 80 for non-affected individuals, and 40 for affected individualscontinuous[20.349,122.832]0.11730.62940.05560.0393',
-    'i1m4Measure 4, an ordinal measure with a Poisson distribution with an average number of events per interval of 4 for non-affected individuals, and 1 for affected individualscontinuous[0.000,10.000]0.32060.32320.94930.5862',
-    'i1m5Measure 5, a categorical measure with random distribution of 5 distinct valuescategorical[val1][val2][val3][val4][val5]',
-    'pheno_commonsample_idraw[f1.dad][f1.mom][f1.p1][f1.s1][f2.dad][f2.mom][f2.p1][f2.s1][f3.dad][f3.mom][f3.p1][f3.s1][f4.dad][f4.mom][f4.p1][f4.s1][f5.dad][f5.mom][f5.p1][f5.s1]'
-  ]
-  for (let i = 0; i < dataArray.length; i++) {
-    it('should have the correct values in the row with index ' + String(i), () => {
-      page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.phenotypeBrowser);
+  it.only('should have the correct text values in all rows', () => {
+    page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.phenotypeBrowser);
 
-      const expectedRowText = dataArray[i];
-      page.tableRows.eq(i).should('have.text', expectedRowText);
+    const expectedFilePath = 'cypress/fixtures/pheno-browser/row_values.txt';
+    cy.readFile(expectedFilePath, { timeout: 5000 }).then((expectedFile: string) => {
+      const rowValues = expectedFile.split(',\n');
+
+      for (let i = 0; i < rowValues.length; i++) {
+        page.tableRows.eq(i).should('have.text', rowValues[i]);
+      }
     });
-  }
+  });
 
   it('should download all instruments and validate whether they are equal to the reference data', () => {
     const downloadFilePath = Cypress.config('downloadsFolder') + '/measures_comp_all.csv';
@@ -111,8 +105,8 @@ describe('Pheno browser tests', () => {
     page.instrumentsBox.select('All instruments');
 
     page.downloadInstrumentsButton.click();
-    cy.readFile(downloadFilePath, { timeout: 5000 }).then(downloadedFile => {
-      cy.readFile(expectedFilePath, { timeout: 5000 }).then(expectedFile => {
+    cy.readFile(downloadFilePath, { timeout: 5000 }).then((downloadedFile: string) => {
+      cy.readFile(expectedFilePath, { timeout: 5000 }).then((expectedFile: string) => {
         const downloadedFileLines = downloadedFile.split(/\r\n|\r|\n/);
         const expectedFileLines = expectedFile.split(/\r\n|\r|\n/);
         expect(downloadedFileLines).to.deep.eq(expectedFileLines);
