@@ -77,7 +77,7 @@ export class AutismGeneProfilesTablePage extends BasePage {
   public get legendSelectedGenes(): element {
     return cy.get('#compare-genes-menu > span');
   }
-  
+
   public get compareGeneItems(): element {
     return cy.get('.compare-gene-item');
   }
@@ -109,16 +109,16 @@ export class AutismGeneProfilesTablePage extends BasePage {
     return cy.get('nav span').contains('×').first();
   }
 
-  public getStudyExpectedDataFromGenotype(variantStatistics: any): void {
+  public getStudyExpectedDataFromGenotype(variantStatistics): void {
     const genotypeBlockPage = new GenotypeBlockPage();
 
     const studyWrapper = {
-      'denovo_lgds': genotypeBlockPage.effectTypesGroups.get('LGDs'),
-      'denovo_missense': [ 'missense' ],
-      'denovo_intron': [ 'intron' ]
+      denovo_lgds: genotypeBlockPage.effectTypesGroups.get('LGDs'),
+      denovo_missense: ['missense'],
+      denovo_intron: ['intron']
     }
-    let effectModelFromGenotypeWrapper = new Map<String, String>();
-    for(var value in studyWrapper) {
+    const effectModelFromGenotypeWrapper = new Map<string, string>();
+    for (const value in studyWrapper) {
       effectModelFromGenotypeWrapper.set(value, studyWrapper[value]);
     }
 
