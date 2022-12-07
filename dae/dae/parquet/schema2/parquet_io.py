@@ -487,7 +487,7 @@ class ContinuousParquetFileWriter:
         # chromosome is not guaranteed across all schemas - Kevin
         # return len(self._data["chromosome"])
 
-        return max([len(self._data[k]) for k in self._data.keys()])
+        return max(len(val) for val in self._data.values())
 
     def build_table(self):
         table = pa.Table.from_pydict(self._data, self.schema)
