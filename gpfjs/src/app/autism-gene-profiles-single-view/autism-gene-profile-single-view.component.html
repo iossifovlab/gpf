@@ -26,24 +26,24 @@
             <tr>
               <td style="border-right: 1px solid #dee2e6; padding-right: 25px">Links</td>
               <td>
-                <a class="link-external-page" [attr.href]="links.GeneBrowser" id="gene-browser-link" target="_blank"
+                <a class="link-external-page" [attr.href]="links.geneBrowser" id="gene-browser-link" target="_blank"
                   >Gene Browser</a
                 >
               </td>
               <td>
-                <a class="link-external-page" [attr.href]="links.UCSC" target="_blank">UCSC genome browser</a>
+                <a class="link-external-page" [attr.href]="links.ucsc" target="_blank">UCSC genome browser</a>
               </td>
               <td>
-                <a class="link-external-page" [attr.href]="links.GeneCards" target="_blank">GeneCards</a>
+                <a class="link-external-page" [attr.href]="links.geneCards" target="_blank">GeneCards</a>
               </td>
               <td>
-                <a class="link-external-page" [attr.href]="links.Pubmed" target="_blank">Pubmed</a>
+                <a class="link-external-page" [attr.href]="links.pubmed" target="_blank">Pubmed</a>
               </td>
               <td>
                 <a
-                  *ngIf="links.SFARIgene !== ''"
+                  *ngIf="links.sfariGene !== ''"
                   class="link-external-page"
-                  [attr.href]="links.SFARIgene"
+                  [attr.href]="links.sfariGene"
                   target="_blank"
                   >SFARI gene</a
                 >
