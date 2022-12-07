@@ -184,24 +184,24 @@ describe.skip('Gene weights visual tests', () => {
   });
 
   it.skip('should inspect gene weights on drag', () => {
-    function moveSlider(which: string, dragValue, heightValue = 0): void {
+    function moveSlider(which: string, dragValue: number, heightValue = 0): void {
       if (which === 'right') {
         dragValue = -dragValue;
       }
       cy.window().then(win => {
         cy.get('g[gpf-histogram-range-selector-line] > g > line').eq(which === 'left' ? 0 : 1)
-          .trigger("mousedown", 0, heightValue, { // start value, height value
+          .trigger('mousedown', 0, heightValue, { // start value, height value
             view: win,
             which: 1,
             force: true,
             bubbles: true
           })
-          .trigger("mousemove", dragValue, heightValue, { // how much to be dragged value, height value
+          .trigger('mousemove', dragValue, heightValue, { // how much to be dragged value, height value
             which: 1,
             force: true,
             bubbles: true
           })
-          .trigger("mouseup", 0, heightValue, { // end value, height value
+          .trigger('mouseup', 0, heightValue, { // end value, height value
             which: 1,
             force: true,
             view: win,
