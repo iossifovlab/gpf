@@ -192,9 +192,9 @@ describe('AgpTableConfig', () => {
       config.columns[2].columns[0].columns[0],
       config.columns[2].columns[0].columns[1]
     ];
-    expect(config.columns[2].columns[0].columns[0].parent.visibleChildren).toEqual(expectedChildren);
-    expect(config.columns[2].columns[0].columns[1].parent.visibleChildren).toEqual(expectedChildren);
-    expect(config.columns[2].columns[0].visibleChildren).toEqual(expectedChildren);
+    expect(config.columns[2].columns[0].columns[0].parent.visibleChildren).toStrictEqual(expectedChildren);
+    expect(config.columns[2].columns[0].columns[1].parent.visibleChildren).toStrictEqual(expectedChildren);
+    expect(config.columns[2].columns[0].visibleChildren).toStrictEqual(expectedChildren);
 
     // Frist child visible
     config.columns[2].columns[0].columns[0].visibility = false;
@@ -202,9 +202,9 @@ describe('AgpTableConfig', () => {
     expectedChildren = [
       config.columns[2].columns[0].columns[1]
     ];
-    expect(config.columns[2].columns[0].columns[0].parent.visibleChildren).toEqual(expectedChildren);
-    expect(config.columns[2].columns[0].columns[1].parent.visibleChildren).toEqual(expectedChildren);
-    expect(config.columns[2].columns[0].visibleChildren).toEqual(expectedChildren);
+    expect(config.columns[2].columns[0].columns[0].parent.visibleChildren).toStrictEqual(expectedChildren);
+    expect(config.columns[2].columns[0].columns[1].parent.visibleChildren).toStrictEqual(expectedChildren);
+    expect(config.columns[2].columns[0].visibleChildren).toStrictEqual(expectedChildren);
 
     // Second child visible
     config.columns[2].columns[0].columns[0].visibility = true;
@@ -212,71 +212,71 @@ describe('AgpTableConfig', () => {
     expectedChildren = [
       config.columns[2].columns[0].columns[0]
     ];
-    expect(config.columns[2].columns[0].columns[0].parent.visibleChildren).toEqual(expectedChildren);
-    expect(config.columns[2].columns[0].columns[1].parent.visibleChildren).toEqual(expectedChildren);
-    expect(config.columns[2].columns[0].visibleChildren).toEqual(expectedChildren);
+    expect(config.columns[2].columns[0].columns[0].parent.visibleChildren).toStrictEqual(expectedChildren);
+    expect(config.columns[2].columns[0].columns[1].parent.visibleChildren).toStrictEqual(expectedChildren);
+    expect(config.columns[2].columns[0].visibleChildren).toStrictEqual(expectedChildren);
 
     // No children visible
     config.columns[2].columns[0].columns[0].visibility = false;
     config.columns[2].columns[0].columns[1].visibility = false;
     expectedChildren = [];
-    expect(config.columns[2].columns[0].columns[0].parent.visibleChildren).toEqual(expectedChildren);
-    expect(config.columns[2].columns[0].columns[1].parent.visibleChildren).toEqual(expectedChildren);
-    expect(config.columns[2].columns[0].visibleChildren).toEqual(expectedChildren);
+    expect(config.columns[2].columns[0].columns[0].parent.visibleChildren).toStrictEqual(expectedChildren);
+    expect(config.columns[2].columns[0].columns[1].parent.visibleChildren).toStrictEqual(expectedChildren);
+    expect(config.columns[2].columns[0].visibleChildren).toStrictEqual(expectedChildren);
   });
 
   it('should set column parent and depth and get leaves', () => {
     const leaves = Column.leaves(config.columns);
 
-    expect(config.columns[0].parent).toBe(null);
+    expect(config.columns[0].parent).toBeNull();
     expect(config.columns[0].depth).toBe(1);
 
-    expect(config.columns[1].parent).toBe(null);
+    expect(config.columns[1].parent).toBeNull();
     expect(config.columns[1].depth).toBe(1);
 
-    expect(config.columns[1].columns[0].parent.id).toEqual('column2');
+    expect(config.columns[1].columns[0].parent.id).toBe('column2');
     expect(config.columns[1].columns[0].depth).toBe(2);
 
-    expect(config.columns[1].columns[1].parent.id).toEqual('column2');
+    expect(config.columns[1].columns[1].parent.id).toBe('column2');
     expect(config.columns[1].columns[1].depth).toBe(2);
 
-    expect(config.columns[2].parent).toBe(null);
+    expect(config.columns[2].parent).toBeNull();
     expect(config.columns[2].depth).toBe(1);
 
-    expect(config.columns[2].columns[0].parent.id).toEqual('column3');
+    expect(config.columns[2].columns[0].parent.id).toBe('column3');
     expect(config.columns[2].columns[0].depth).toBe(2);
 
-    expect(config.columns[2].columns[0].columns[0].parent.id).toEqual('column31');
+    expect(config.columns[2].columns[0].columns[0].parent.id).toBe('column31');
     expect(config.columns[2].columns[0].columns[0].depth).toBe(3);
 
-    expect(config.columns[2].columns[0].columns[1].parent.id).toEqual('column31');
+    expect(config.columns[2].columns[0].columns[1].parent.id).toBe('column31');
     expect(config.columns[2].columns[0].columns[1].depth).toBe(3);
 
-    expect(config.columns[2].columns[1].parent.id).toEqual('column3');
+    expect(config.columns[2].columns[1].parent.id).toBe('column3');
     expect(config.columns[2].columns[1].depth).toBe(2);
 
     expect(config.columns[2].columns[1].columns[0].depth).toBe(3);
-    expect(config.columns[2].columns[1].columns[0].parent.id).toEqual('column32');
+    expect(config.columns[2].columns[1].columns[0].parent.id).toBe('column32');
 
     expect(config.columns[2].columns[1].columns[1].depth).toBe(3);
-    expect(config.columns[2].columns[1].columns[1].parent.id).toEqual('column32');
+    expect(config.columns[2].columns[1].columns[1].parent.id).toBe('column32');
 
-    expect(leaves[0]).toEqual(config.columns[0]);
-    expect(leaves[1]).toEqual(config.columns[1].columns[0]);
-    expect(leaves[2]).toEqual(config.columns[1].columns[1]);
-    expect(leaves[3]).toEqual(config.columns[2].columns[0].columns[0]);
-    expect(leaves[4]).toEqual(config.columns[2].columns[0].columns[1]);
-    expect(leaves[5]).toEqual(config.columns[2].columns[1].columns[0]);
-    expect(leaves[6]).toEqual(config.columns[2].columns[1].columns[1]);
+    expect(leaves[0]).toStrictEqual(config.columns[0]);
+    expect(leaves[1]).toStrictEqual(config.columns[1].columns[0]);
+    expect(leaves[2]).toStrictEqual(config.columns[1].columns[1]);
+    expect(leaves[3]).toStrictEqual(config.columns[2].columns[0].columns[0]);
+    expect(leaves[4]).toStrictEqual(config.columns[2].columns[0].columns[1]);
+    expect(leaves[5]).toStrictEqual(config.columns[2].columns[1].columns[0]);
+    expect(leaves[6]).toStrictEqual(config.columns[2].columns[1].columns[1]);
   });
 
   it('should get column leaves', () => {
-    expect(config.columns[0].leaves).toEqual([]);
-    expect(config.columns[1].leaves).toEqual(config.columns[1].columns);
-    expect(config.columns[2].leaves).toEqual(
+    expect(config.columns[0].leaves).toStrictEqual([]);
+    expect(config.columns[1].leaves).toStrictEqual(config.columns[1].columns);
+    expect(config.columns[2].leaves).toStrictEqual(
       config.columns[2].columns[0].columns.concat(config.columns[2].columns[1].columns)
     );
-    expect(config.columns[2].columns[1].leaves).toEqual(config.columns[2].columns[1].columns);
+    expect(config.columns[2].columns[1].leaves).toStrictEqual(config.columns[2].columns[1].columns);
   });
 
   it('should calculate grid row', () => {
@@ -285,17 +285,17 @@ describe('AgpTableConfig', () => {
 
     leaves.forEach(leaf => Column.calculateGridRow(leaf, maxDepth));
 
-    expect(config.columns[0].gridRow).toEqual('1 / 4');
-    expect(config.columns[1].gridRow).toEqual('1');
-    expect(config.columns[1].columns[0].gridRow).toEqual('2 / 4');
-    expect(config.columns[1].columns[1].gridRow).toEqual('2 / 4');
-    expect(config.columns[2].gridRow).toEqual('1');
-    expect(config.columns[2].columns[0].gridRow).toEqual('2 / 3');
-    expect(config.columns[2].columns[0].columns[0].gridRow).toEqual('3');
-    expect(config.columns[2].columns[0].columns[1].gridRow).toEqual('3');
-    expect(config.columns[2].columns[1].gridRow).toEqual('2 / 3');
-    expect(config.columns[2].columns[1].columns[0].gridRow).toEqual('3');
-    expect(config.columns[2].columns[1].columns[1].gridRow).toEqual('3');
+    expect(config.columns[0].gridRow).toBe('1 / 4');
+    expect(config.columns[1].gridRow).toBe('1');
+    expect(config.columns[1].columns[0].gridRow).toBe('2 / 4');
+    expect(config.columns[1].columns[1].gridRow).toBe('2 / 4');
+    expect(config.columns[2].gridRow).toBe('1');
+    expect(config.columns[2].columns[0].gridRow).toBe('2 / 3');
+    expect(config.columns[2].columns[0].columns[0].gridRow).toBe('3');
+    expect(config.columns[2].columns[0].columns[1].gridRow).toBe('3');
+    expect(config.columns[2].columns[1].gridRow).toBe('2 / 3');
+    expect(config.columns[2].columns[1].columns[0].gridRow).toBe('3');
+    expect(config.columns[2].columns[1].columns[1].gridRow).toBe('3');
   });
 
   it('should calculate grid column', () => {
@@ -309,16 +309,16 @@ describe('AgpTableConfig', () => {
 
     config.columns.forEach(col => Column.calculateGridColumn(col));
 
-    expect(config.columns[0].gridColumn).toEqual('1');
-    expect(config.columns[1].gridColumn).toEqual('2 / 4');
-    expect(config.columns[1].columns[0].gridColumn).toEqual('2');
-    expect(config.columns[1].columns[1].gridColumn).toEqual('3');
-    expect(config.columns[2].gridColumn).toEqual('4 / 8');
-    expect(config.columns[2].columns[0].gridColumn).toEqual('4 / 6');
-    expect(config.columns[2].columns[0].columns[0].gridColumn).toEqual('4');
-    expect(config.columns[2].columns[0].columns[1].gridColumn).toEqual('5');
-    expect(config.columns[2].columns[1].gridColumn).toEqual('6 / 8');
-    expect(config.columns[2].columns[1].columns[0].gridColumn).toEqual('6');
-    expect(config.columns[2].columns[1].columns[1].gridColumn).toEqual('7');
+    expect(config.columns[0].gridColumn).toBe('1');
+    expect(config.columns[1].gridColumn).toBe('2 / 4');
+    expect(config.columns[1].columns[0].gridColumn).toBe('2');
+    expect(config.columns[1].columns[1].gridColumn).toBe('3');
+    expect(config.columns[2].gridColumn).toBe('4 / 8');
+    expect(config.columns[2].columns[0].gridColumn).toBe('4 / 6');
+    expect(config.columns[2].columns[0].columns[0].gridColumn).toBe('4');
+    expect(config.columns[2].columns[0].columns[1].gridColumn).toBe('5');
+    expect(config.columns[2].columns[1].gridColumn).toBe('6 / 8');
+    expect(config.columns[2].columns[1].columns[0].gridColumn).toBe('6');
+    expect(config.columns[2].columns[1].columns[1].gridColumn).toBe('7');
   });
 });
