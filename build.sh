@@ -225,7 +225,6 @@ EOT
           --pretty \
           --show-error-context \
           --no-incremental \
-          --check-untyped-defs \
           > /wd/results/mypy_dae_report || true'
 
     build_run_container bash -c '
@@ -237,7 +236,6 @@ EOT
           --pretty \
           --show-error-context \
           --no-incremental \
-          --check-untyped-defs \
           > /wd/results/mypy_wdae_report || true'
 
       build_run_local cp ./results/mypy_dae_report ./results/mypy_wdae_report ./test-results/
