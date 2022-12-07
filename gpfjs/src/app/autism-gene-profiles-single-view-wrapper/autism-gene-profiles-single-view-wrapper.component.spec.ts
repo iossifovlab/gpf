@@ -1,16 +1,16 @@
 import { HttpClientTestingModule } from '@angular/common/http/testing';
-import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ConfigService } from 'app/config/config.service';
 import { ActivatedRoute } from '@angular/router';
-import { Observable, of } from 'rxjs';
+import { lastValueFrom, Observable, of } from 'rxjs';
 import { AutismGeneProfileSingleViewWrapperComponent } from './autism-gene-profiles-single-view-wrapper.component';
 import { AutismGeneProfilesService } from 'app/autism-gene-profiles-block/autism-gene-profiles.service';
 
 class MockActivatedRoute {
-  params = {dataset: 'testDatasetId', get: () => ''};
-  parent = {params: of(this.params)};
-  queryParamMap = of(this.params);
-  snapshot = {params: {genes: 'abc1,def2,'}};
+  public params = {dataset: 'testDatasetId', get: (): string => ''};
+  public parent = {params: of(this.params)};
+  public queryParamMap = of(this.params);
+  public snapshot = {params: {genes: 'abc1,def2,'}};
 }
 
 class MockAutismGeneProfilesService {
@@ -23,7 +23,7 @@ describe('AutismGeneProfileSingleViewWrapperComponent', () => {
   let component: AutismGeneProfileSingleViewWrapperComponent;
   let fixture: ComponentFixture<AutismGeneProfileSingleViewWrapperComponent>;
 
-  beforeEach(waitForAsync(() => {
+  beforeEach(() => {
     TestBed.configureTestingModule({
       declarations: [AutismGeneProfileSingleViewWrapperComponent],
       providers: [
@@ -33,9 +33,7 @@ describe('AutismGeneProfileSingleViewWrapperComponent', () => {
       ],
       imports: [HttpClientTestingModule]
     }).compileComponents();
-  }));
 
-  beforeEach(() => {
     fixture = TestBed.createComponent(AutismGeneProfileSingleViewWrapperComponent);
     component = fixture.componentInstance;
   });
@@ -44,17 +42,15 @@ describe('AutismGeneProfileSingleViewWrapperComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should initialize', (done) => {
+  it('should initialize', async() => {
     component.ngOnInit();
-    component.$autismGeneToolConfig.subscribe(config => {
-      expect(config.defaultDataset).toEqual('mockDataset');
-      done();
-    });
+    const config = await lastValueFrom(component.$autismGeneToolConfig);
+    expect(config.defaultDataset).toBe('mockDataset');
   });
 
   it('should set gene symbols after view initialization', () => {
-    expect(component.geneSymbols).toEqual(new Set<string>());
+    expect(component.geneSymbols).toStrictEqual(new Set<string>());
     component.ngAfterViewInit();
-    expect(component.geneSymbols).toEqual(new Set<string>(['ABC1', 'DEF2']));
+    expect(component.geneSymbols).toStrictEqual(new Set<string>(['ABC1', 'DEF2']));
   });
 });
