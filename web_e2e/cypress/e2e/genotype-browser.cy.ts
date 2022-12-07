@@ -508,8 +508,8 @@ describe('Genotype browser family variants download tests', () => {
 
     page.downloadButton.click();
 
-    cy.readFile(downloadedVariantsPath, { timeout: 5000 }).then(downloadedFile => {
-      cy.readFile(expectedVariantsPath, { timeout: 5000 }).then(expectedFile => {
+    cy.readFile(downloadedVariantsPath, { timeout: 5000 }).then((downloadedFile: string) => {
+      cy.readFile(expectedVariantsPath, { timeout: 5000 }).then((expectedFile: string) => {
         const downloadedFileLines = downloadedFile.split(/\r\n|\r|\n/);
         const expectedFileLines = expectedFile.split(/\r\n|\r|\n/);
         expect(downloadedFileLines).to.deep.eq(expectedFileLines);
@@ -573,7 +573,7 @@ describe.skip('Genotype browser table preview visual tests', () => {
     page.navigateToDatasetPage(datasetIds.iossifov2014, toolPageLinks.genotypeBrowser);
     genesBlockPage.geneSymbolsButton.click();
 
-    [['POGZ', '2', 'pogz'], ['KDM5B', '4','kdm5b']].forEach(data => {
+    [['POGZ', '2', 'pogz'], ['KDM5B', '4', 'kdm5b']].forEach(data => {
       genesBlockPage.geneSymbolsTextarea.clear().type(data[0]);
 
       genotypeBrowserController.pressTablePreviewButton();
