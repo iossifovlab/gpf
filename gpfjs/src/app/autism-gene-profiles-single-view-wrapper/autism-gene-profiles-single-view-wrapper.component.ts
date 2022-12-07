@@ -26,11 +26,11 @@ export class AutismGeneProfileSingleViewWrapperComponent implements OnInit, Afte
 
   public ngAfterViewInit(): void {
     this.geneSymbols = new Set(
-      this.route.snapshot.params.genes
+      (this.route.snapshot.params.genes as string)
         .split(',')
         .filter(p => p)
         .map(p => p.trim().toUpperCase())
     );
-    this.location.replaceState('autism-gene-profiles/' + Array.from(this.geneSymbols));
+    this.location.replaceState('autism-gene-profiles/' + Array.from(this.geneSymbols).toString());
   }
 }
