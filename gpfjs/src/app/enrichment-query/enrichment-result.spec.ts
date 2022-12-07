@@ -6,12 +6,12 @@ describe('ChildrenStats', () => {
     const childrenStatsMock = new ChildrenStats(1, 2, 3);
 
     const childrenStatsMockFromJson = ChildrenStats.fromJson({
-      M: 1,
-      F: 2,
-      U: 3
+      M: 1, // eslint-disable-line
+      F: 2, // eslint-disable-line
+      U: 3 // eslint-disable-line
     });
 
-    expect(childrenStatsMock).toEqual(childrenStatsMockFromJson);
+    expect(childrenStatsMock).toStrictEqual(childrenStatsMockFromJson);
   });
 });
 
@@ -142,7 +142,7 @@ const enrichmentEffectResultMockFromJson = {
   }
 };
 
-xdescribe('EnrichmentTestResult', () => {
+describe('EnrichmentTestResult', () => {
   it('should create from json', () => {
     const enrichmentTestResultMock = new EnrichmentTestResult(
       'name1', 2, 3, 4, 5, browserQueryFilterMock1, browserQueryFilterMock2
@@ -153,13 +153,15 @@ xdescribe('EnrichmentTestResult', () => {
       countFilter: browserQueryFilterMockFromJson1,
       overlapFilter: browserQueryFilterMockFromJson2
     });
-    expect(enrichmentTestResultMock).toEqual(enrichmentTestResultFromJson);
+    expect(enrichmentTestResultMock).toStrictEqual(enrichmentTestResultFromJson);
   });
 });
 
-xdescribe('EnrichmentEffectResult', () => {
+describe('EnrichmentEffectResult', () => {
   it('should create from json', () => {
-    expect(enrichmentEffectResultMock).toEqual(EnrichmentEffectResult.fromJson(enrichmentEffectResultMockFromJson));
+    expect(enrichmentEffectResultMock).toStrictEqual(
+      EnrichmentEffectResult.fromJson(enrichmentEffectResultMockFromJson)
+    );
   });
 }
 );
@@ -421,7 +423,7 @@ const enrichmentResult2 = new EnrichmentResult('selector396',
 
 const enrichmentResultFromJson1 = {
   selector: 'selector1',
-  LGDs: enrichmentEffectResultMockFromJson,
+  LGDs: enrichmentEffectResultMockFromJson, // eslint-disable-line
   missense: {
     all: {
       name: 'name138', count: 139, expected: 140, overlapped: 141, pvalue: 142,
@@ -558,15 +560,15 @@ const enrichmentResultFromJson1 = {
     }
   },
   childrenStats: {
-    M: 393,
-    F: 394,
-    U: 395
+    M: 393, // eslint-disable-line
+    F: 394, // eslint-disable-line
+    U: 395 // eslint-disable-line
   }
 };
 
 const enrichmentResultFromJson2 = {
   selector: 'selector396',
-  LGDs: {
+  LGDs: { // eslint-disable-line
     all: {
       name: 'name396', count: 397, expected: 398, overlapped: 399, pvalue: 400,
       countFilter:
@@ -766,19 +768,19 @@ const enrichmentResultFromJson2 = {
       }
     }
   }, childrenStats: {
-    M: 782,
-    F: 783,
-    U: 784
+    M: 782, // eslint-disable-line
+    F: 783, // eslint-disable-line
+    U: 784 // eslint-disable-line
   }
 };
 
-xdescribe('EnrichmentResult', () => {
+describe('EnrichmentResult', () => {
   it('should create from json', () => {
-    expect(enrichmentResult1).toEqual(EnrichmentResult.fromJson(enrichmentResultFromJson1));
+    expect(enrichmentResult1).toStrictEqual(EnrichmentResult.fromJson(enrichmentResultFromJson1));
   });
 
   it('should create from json array', () => {
-    expect([enrichmentResult1, enrichmentResult2]).toEqual(EnrichmentResult.fromJsonArray([
+    expect([enrichmentResult1, enrichmentResult2]).toStrictEqual(EnrichmentResult.fromJsonArray([
       enrichmentResultFromJson1, enrichmentResultFromJson2
     ]));
   });
