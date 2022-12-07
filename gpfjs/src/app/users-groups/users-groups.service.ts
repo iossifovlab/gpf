@@ -5,6 +5,7 @@ import { Dataset } from '../datasets/datasets';
 import { ConfigService } from '../config/config.service';
 import { map } from 'rxjs/operators';
 import { Observable } from 'rxjs';
+import { User } from 'app/users/users';
 
 @Injectable()
 export class UsersGroupsService {
@@ -31,12 +32,21 @@ export class UsersGroupsService {
       url += `&${searchParams.toString()}`;
     }
 
-    return this.http.get(url).pipe(
+    return this.http.get<UserGroup[]>(url).pipe(
       map((response) => {
         if (response === null) {
           return [] as UserGroup[];
         }
-        return (response as object[]).map(group => UserGroup.fromJson(group));
+        return response.map(user => {
+          const usr = UserGroup.fromJson(user);
+          // Finding and fixing duplicate dataset names
+          usr.datasets.forEach((d, index) => {
+            if (usr.datasets.indexOf(d) !== index) {
+              d.datasetName += d.datasetId;
+            }
+          });
+          return usr;
+        });
       })
     );
   }
@@ -48,21 +58,56 @@ export class UsersGroupsService {
       .pipe(map((response: any) => UserGroup.fromJson(response)));
   }
 
-  public grantPermission(groupName: string, dataset: Dataset): Observable<object> {
+  public getGroupByName(group: string): Observable<UserGroup> {
+    const options = { withCredentials: true };
+
+    return this.http.get(`${this.config.baseUrl}${this.groupsUrl}/${group}`, options)
+      .pipe(map((response: any) => UserGroup.fromJson(response)));
+  }
+
+  public grantPermissionToDataset(groupName: string, datasetName: string): Observable<object> {
     const options = { withCredentials: true };
 
     return this.http.post(this.config.baseUrl + this.groupGrantPermissionUrl, {
       groupName: groupName,
-      datasetId: dataset.id
+      datasetName: datasetName
     }, options);
   }
 
-  public revokePermission(group: UserGroup, dataset: Dataset): Observable<object> {
+  public revokePermissionToDataset(groupName: string, datasetName: string): Observable<Dataset> {
     const options = { withCredentials: true };
 
-    return this.http.post(this.config.baseUrl + this.groupRevokePermissionUrl, {
-      groupId: group.id,
-      datasetId: dataset.id
+    return this.http.post<Dataset>(this.config.baseUrl + this.groupRevokePermissionUrl, {
+      groupName: groupName,
+      datasetName: datasetName
     }, options);
+  }
+
+  public addUser(userEmail: string, groupName: string): Observable<null> {
+    const url = `${this.config.baseUrl}`
+      + `${this.groupsUrl}/add-user`;
+    const options = { withCredentials: true };
+
+    return this.http.post<null>(
+      url,
+      {
+        userEmail: userEmail,
+        groupName: groupName
+      },
+      options);
+  }
+
+  public removeUser(userEmail: string, groupName: string): Observable<null> {
+    const url = `${this.config.baseUrl}`
+      + `${this.groupsUrl}/remove-user`;
+    const options = { withCredentials: true };
+
+    return this.http.post<null>(
+      url,
+      {
+        userEmail: userEmail,
+        groupName: groupName
+      },
+      options);
   }
 }

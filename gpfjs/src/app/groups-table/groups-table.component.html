@@ -27,7 +27,19 @@
         </div>
 
         <div class="grid-cell">
-          <div *ngFor="let dataset of group.datasets">{{ dataset }}</div>
+          <div *ngFor="let dataset of group.datasets">
+            <span>{{ dataset.datasetName }}</span>
+            <gpf-small-remove-button
+              (clicked)="removeDataset(group, dataset.datasetId)"
+              message="Removing the dataset '{{ dataset }}' will remove access to it from the group's users."
+              confirmText="Remove dataset"
+              title="Remove dataset">
+            </gpf-small-remove-button>
+          </div>
+          <gpf-item-add-menu
+            [id]="group.name"
+            [getItems]="getDatasetNamesFunction(group)"
+            (addedItem)="addDataset(group, $event)"></gpf-item-add-menu>
         </div>
 
         <div class="grid-cell">

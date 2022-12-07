@@ -4,7 +4,6 @@ import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
 import { NgxsModule } from '@ngxs/store';
 import { ConfigService } from 'app/config/config.service';
-import { ItemAddEvent } from 'app/item-add-menu/item-add-menu';
 import { UserGroup } from 'app/users-groups/users-groups';
 import { UsersGroupsService } from 'app/users-groups/users-groups.service';
 import { User } from 'app/users/users';
@@ -107,14 +106,6 @@ describe('UsersTableComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should initialize', () => {
-    const updateAddItemMenuItemsSpy = jest.spyOn(component, 'updateAddItemMenuItems');
-    component.ngOnInit();
-
-    expect(component.currentUserEmail).toBe('fakeEmail');
-    expect(updateAddItemMenuItemsSpy).toHaveBeenCalledWith();
-  });
-
   it('should check if group is default for user', () => {
     const user = new User(1, 'fakeName', 'fakeEmail', [], true, []);
     expect(component.isDefaultGroup(user, 'any_user')).toBe(true);
@@ -185,5 +176,16 @@ describe('UsersTableComponent', () => {
       true,
       ['dataset1', 'dataset2', 'dataset3', 'dataset5', 'dataset4', 'dataset6'],
     ));
+  });
+
+  it('should get group names function', () => {
+    const user = new User(
+      17,
+      'fakeName',
+      'fakeEmail',
+      ['group1', 'group2', 'group3', 'group4'],
+      true,
+      ['dataset1', 'dataset2', 'dataset3', 'dataset4', 'dataset5'],
+    );
   });
 });

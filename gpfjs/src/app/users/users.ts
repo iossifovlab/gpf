@@ -20,7 +20,7 @@ export class User {
     public email: string,
     public groups: Array<string>,
     public hasPassword: boolean,
-    public allowedDatasets: object[]
+    public allowedDatasets: Array<{datasetName: string; datasetId: string}>
   ) {}
 
   public getDefaultGroups(): string[] {

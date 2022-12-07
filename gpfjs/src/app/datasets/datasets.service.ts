@@ -1,11 +1,12 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable, ReplaySubject, BehaviorSubject, zip, Subject } from 'rxjs';
 
 import { Dataset } from '../datasets/datasets';
 import { UsersService } from '../users/users.service';
 import { ConfigService } from '../config/config.service';
 import { distinctUntilChanged, map, take } from 'rxjs/operators';
+import { DatasetPermissions } from 'app/datasets-table/datasets-table';
 
 @Injectable()
 export class DatasetsService {
@@ -57,6 +58,23 @@ export class DatasetsService {
 
     return zip(dataset$, details$).pipe(map(
       (datasetPack: [any, any]) => Dataset.fromDatasetAndDetailsJson(datasetPack[0]['data'], datasetPack[1]))
+    );
+  }
+
+  public getManagementDatasets(page: number, searchTerm: string): Observable<DatasetPermissions[]> {
+    let url = `${this.config.baseUrl}${this.datasetUrl}/permissions?page=${page}`;
+    if (searchTerm) {
+      const searchParams = new HttpParams().set('search', searchTerm);
+      url += `&${searchParams.toString()}`;
+    }
+
+    return this.http.get(url).pipe(
+      map((response) => {
+        if (response === null) {
+          return [] as DatasetPermissions[];
+        }
+        return (response as object[]).map(group => DatasetPermissions.fromJson(group));
+      })
     );
   }
 

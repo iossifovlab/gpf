@@ -26,23 +26,19 @@ export class UsersTableComponent {
   }
 
   public removeGroup(user: User, group: string): void {
-    this.usersService.removeUserGroup(user, group).pipe(take(1)).subscribe((res: User) => {
-      user.groups = res.groups;
-      user.allowedDatasets = res.allowedDatasets;
-    });
+    // this.usersGroupsService.removeUser(user.email, group).subscribe(() => {
+    //   user.groups = group.users.filter(user => user !== userEmail);
+    // });
   }
 
   public addGroup(user: User, event$: ItemAddEvent): void {
-    const userClone = user.clone();
-    userClone.groups.push(event$.item);
-
-    this.usersService.updateUser(userClone).pipe(take(1)).subscribe((res: User) => {
-      user.groups = res.groups;
-      user.allowedDatasets = res.allowedDatasets;
-    });
+    // this.usersGroupsService.addUser(user.email, event$.item).subscribe((res: UserGroup) => {
+    //   user.groups.push(res.name);
+    //   user.allowedDatasets.push(...res.datasets);
+    // });
   }
 
-  public getGroupNamesFunction(user: User):  (page: number, searchText: string) => Observable<string[]> {
+  public getGroupNamesFunction(user: User): (page: number, searchText: string) => Observable<string[]> {
     return (page: number, searchText: string): Observable<string[]> =>
       this.usersGroupsService.getGroups(page, searchText).pipe(
         map((groups: UserGroup[]) => groups

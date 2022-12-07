@@ -1,9 +1,11 @@
 import { Component, ElementRef, HostListener, OnInit, ViewChild } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { DatasetPermissions } from 'app/datasets-table/datasets-table';
+import { DatasetsService } from 'app/datasets/datasets.service';
 import { UserGroup } from 'app/users-groups/users-groups';
 import { UsersGroupsService } from 'app/users-groups/users-groups.service';
 import { environment } from 'environments/environment';
-import { map, take } from 'rxjs/operators';
+import { Observable } from 'rxjs';
+import { take } from 'rxjs/operators';
 import { User } from '../users/users';
 import { UsersService } from '../users/users.service';
 
@@ -17,6 +19,7 @@ type TableName = 'USERS' | 'GROUPS' | 'DATASETS';
 export class UserManagementComponent implements OnInit {
   public users: User[] = [];
   public groups: UserGroup[] = [];
+  public datasets: DatasetPermissions[];
   public searchText = '';
   @ViewChild('searchBox') private searchBox: ElementRef;
   public currentUserEmail: string;
@@ -30,19 +33,12 @@ export class UserManagementComponent implements OnInit {
   public constructor(
     private usersService: UsersService,
     private usersGroupsService: UsersGroupsService,
-    private route: ActivatedRoute
+    private datasetsService: DatasetsService
   ) { }
 
   public ngOnInit(): void {
     this.focusSearchBox();
     this.updateCurrentTable();
-
-    this.route.queryParamMap.pipe(
-      map(params => params.get('search') || ''),
-      take(1)
-    ).subscribe(searchTerm => {
-      this.search(searchTerm);
-    });
 
     this.usersService.getUserInfo().pipe(take(1)).subscribe((currentUser: User) => {
       this.currentUserEmail = currentUser.email;
@@ -59,7 +55,7 @@ export class UserManagementComponent implements OnInit {
     this.pageCount = 0;
     this.users = [];
     this.groups = [];
-    // this.datasets = [];
+    this.datasets = [];
     this.allPagesLoaded = false;
   }
 
@@ -124,37 +120,35 @@ export class UserManagementComponent implements OnInit {
 
       switch (this.tableName) {
       case 'USERS':
-        this.updateUsersTable();
+        this.updateTable(this.usersService.getUsers.bind(this.usersService));
         break;
       case 'GROUPS':
-        this.updateGroupsTable();
+        this.updateTable(this.usersGroupsService.getGroups.bind(this.usersGroupsService));
         break;
       case 'DATASETS':
-        // implement this.updateDatasetsTable()
+        this.updateTable(this.datasetsService.getManagementDatasets.bind(this.datasetsService));
         break;
       }
     }
   }
 
-  private updateUsersTable(): void {
-    this.usersService.getUsers(this.pageCount, this.searchText).subscribe(res => {
+  private updateTable<TableData>(getPage: (page: number, searchString: string) => Observable<TableData[]>): void {
+    getPage(this.pageCount, this.searchText).subscribe(res => {
       if (!res.length) {
         this.allPagesLoaded = true;
         return;
       }
-      res = res.map(user => this.sortGroups(user));
-      this.users = this.users.concat(res);
-      this.loadingPage = false;
-    });
-  }
 
-  private updateGroupsTable(): void {
-    this.usersGroupsService.getGroups(this.pageCount, this.searchText).subscribe(res => {
-      if (!res.length) {
-        this.allPagesLoaded = true;
-        return;
-      }
-      this.groups = this.groups.concat(res);
+      res.forEach(r => {
+        if (r instanceof User) {
+          this.users.push(this.sortGroups(r));
+        } else if (r instanceof UserGroup) {
+          this.groups.push(r);
+        } else if (r instanceof DatasetPermissions) {
+          this.datasets.push(r);
+        }
+      });
+
       this.loadingPage = false;
     });
   }

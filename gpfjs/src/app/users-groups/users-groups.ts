@@ -16,6 +16,6 @@ export class UserGroup {
     public id: number,
     public name: string,
     public users: string[],
-    public datasets: string[]
+    public datasets: Array<{datasetName: string; datasetId: string}>
   ) {}
 }

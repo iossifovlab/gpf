@@ -1,7 +1,7 @@
 
-import {throwError as observableThrowError, Observable, Subject, ReplaySubject, of, BehaviorSubject, throwError } from 'rxjs';
+import { throwError as observableThrowError, Observable, Subject, ReplaySubject, of, BehaviorSubject } from 'rxjs';
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { ConfigService } from '../config/config.service';
 import { CookieService } from 'ngx-cookie-service';
 import { User } from './users';
@@ -10,7 +10,6 @@ import { Store } from '@ngxs/store';
 import { StateResetAll } from 'ngxs-reset-plugin';
 import { catchError, map, tap, take, switchMap } from 'rxjs/operators';
 import { AuthService } from '../auth.service';
-const oboe = require('oboe');
 
 @Injectable()
 export class UsersService {
@@ -202,12 +201,21 @@ export class UsersService {
       url += `&${searchParams.toString()}`;
     }
 
-    return this.http.get(url).pipe(
+    return this.http.get<User[]>(url).pipe(
       map((response) => {
         if (response === null) {
           return [] as User[];
         }
-        return (response as object[]).map(user => User.fromJson(user));
+        return response.map(user => {
+          const usr = User.fromJson(user);
+          // Finding and fixing duplicate dataset names
+          usr.allowedDatasets.forEach((d, index) => {
+            if (usr.allowedDatasets.indexOf(d) !== index) {
+              d.datasetName += d.datasetId;
+            }
+          });
+          return usr;
+        });
       })
     );
   }
