@@ -1,18 +1,17 @@
 #!/usr/bin/env python
 import abc
-import networkx as nx  # type: ignore
 
 from collections import defaultdict
-
-# import argparse
 from functools import reduce
+
+import networkx as nx  # type: ignore
 
 from dae.pedigrees.interval_sandwich import SandwichInstance
 from dae.variants.attributes import Role, Sex, Status
 from dae.pedigrees.family import Person, Family
 
 
-class FamilyConnections(object):
+class FamilyConnections():
     def __init__(self, family, id_to_individual, id_to_mating_unit):
         assert family is not None
         assert "0" not in id_to_individual
@@ -37,25 +36,29 @@ class FamilyConnections(object):
         return True
 
     def get_graph(self):
-        g = nx.Graph()
+        graph = nx.Graph()
         for individual_id in self.id_to_individual:
-            g.add_node(individual_id)
-        for mu in self.get_mating_units():
-            g.add_edge(
-                mu.mother.member.person_id,
-                mu.father.member.person_id)
-            for child in mu.children_set():
-                g.add_edge(mu.mother.member.person_id, child.member.person_id)
-                g.add_edge(mu.father.member.person_id, child.member.person_id)
-        return g
+            graph.add_node(individual_id)
+        for mating_unit in self.get_mating_units():
+            graph.add_edge(
+                mating_unit.mother.member.person_id,
+                mating_unit.father.member.person_id)
+            for child in mating_unit.children_set():
+                graph.add_edge(
+                    mating_unit.mother.member.person_id, child.member.person_id
+                )
+                graph.add_edge(
+                    mating_unit.father.member.person_id, child.member.person_id
+                )
+        return graph
 
     def is_connected(self):
-        g = self.get_graph()
-        return nx.is_connected(g)
+        graph = self.get_graph()
+        return nx.is_connected(graph)
 
     def connected_components(self):
-        g = self.get_graph()
-        return nx.connected_components(g)
+        graph = self.get_graph()
+        return nx.connected_components(graph)
 
     @staticmethod
     def add_missing_members(family):
@@ -163,7 +166,7 @@ class FamilyConnections(object):
             father = id_to_individual[member.dad_id]
 
             mating_unit_key = member.mom_id + "," + member.dad_id
-            if mother != father and not (mating_unit_key in id_to_mating_unit):
+            if mother != father and mating_unit_key not in id_to_mating_unit:
                 id_to_mating_unit[mating_unit_key] = MatingUnit(mother, father)
 
             if mother != father:
@@ -182,6 +185,7 @@ class FamilyConnections(object):
     def create_sandwich_instance(self):
         """
         Generate an Interval Graph Sandwich problem instance.
+
         Based on
         https://academic.oup.com/bioinformatics/article-pdf/17/2/174/442086/170174.pdf
         Slightly modified to support people with multiple mates.
@@ -340,9 +344,7 @@ class FamilyConnections(object):
         return set(self.id_to_mating_unit.values())
 
     def get_sibship_units(self):
-        return set(
-            [mu.children for mu in list(self.id_to_mating_unit.values())]
-        )
+        return {mu.children for mu in self.id_to_mating_unit.values()}
 
 
 class IndividualGroup(metaclass=abc.ABCMeta):
@@ -399,12 +401,12 @@ class Individual(IndividualGroup):
 
         self.rank = rank
 
-        for mu in self.mating_units:
-            for child in mu.children.individuals:
+        for mating_unit in self.mating_units:
+            for child in mating_unit.children.individuals:
                 child.add_rank(rank - 1)
 
-            mu.father.add_rank(rank)
-            mu.mother.add_rank(rank)
+            mating_unit.father.add_rank(rank)
+            mating_unit.mother.add_rank(rank)
 
         if self.parents:
             if self.parents.father:
@@ -464,7 +466,7 @@ class MatingUnit(IndividualGroup):
         return set(self.children.individuals)
 
     def other_parent(self, this_parent):
-        assert this_parent == self.mother or this_parent == self.father
+        assert this_parent in (self.mother, self.father)
         if this_parent == self.mother:
             return self.father
         return self.mother
