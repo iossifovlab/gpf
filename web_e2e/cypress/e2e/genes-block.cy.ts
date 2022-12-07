@@ -156,26 +156,19 @@ describe('Genes block gene sets names and count tests', () => {
   ].forEach(data => {
     it('should properly display "' + data.expectedCondition + '" in "' +
       data.collection + '" collection, and the counts should match', () => {
-      let actualCount;
-      let expectedCount;
-      let geneSetName;
-      let expectedName;
-
       genotypeBrowserController.setStudy(datasetIds.iossifov2014);
-
       page.geneSetsButton.click();
-
       page.geneSetsSearchbox.click();
 
-      expectedName = data.expectedCondition;
-      geneSetName = expectedName.substring(0, expectedName.indexOf('(') - 1);
+      const expectedSetName = data.expectedCondition;
+      const geneSetName = expectedSetName.substring(0, expectedSetName.indexOf('(') - 1);
       genotypeBrowserController.filterGenesByGeneSets(data.collection, geneSetName);
 
-      page.selectedGeneSet.should('contain.text', expectedName);
+      page.selectedGeneSet.should('contain.text', expectedSetName);
 
       page.geneSetCountElement.invoke('text').then(actualText => {
-        actualCount = actualText.replace('Count: ', '').replace(' (Download)', '').trim();
-        expectedCount = expectedName.substring(expectedName.indexOf('(') + 1, expectedName.indexOf(')'));
+        const actualCount = actualText.replace('Count: ', '').replace(' (Download)', '').trim();
+        const expectedCount = expectedSetName.substring(expectedSetName.indexOf('(') + 1, expectedSetName.indexOf(')'));
         expect(actualCount).to.eq(expectedCount);
       });
 
@@ -279,9 +272,6 @@ describe('Genes block gene set file length tests', () => {
     it('should download "' + data.expectedCondition + '" in the "' + data.collection +
        '" collection and check whether the count in the name should matches ' +
        'the downloaded"s file length and the gene set"s name matches the first value of the file', () => {
-      let expectedCount;
-      let expectedName;
-      let geneSetName;
       const downloadFilePath = Cypress.config('downloadsFolder') + '/geneset.csv';
       const results = [];
 
@@ -292,15 +282,15 @@ describe('Genes block gene set file length tests', () => {
       page.geneSetsSearchbox.click();
 
       results.splice(0, results.length);
-      expectedName = data.expectedCondition;
-      geneSetName = expectedName.substring(0, expectedName.indexOf('(') - 1);
-      expectedCount = Number(expectedName.substring(expectedName.indexOf('(') + 1, expectedName.indexOf(')')));
+      let expectedName = data.expectedCondition;
+      const geneSetName = expectedName.substring(0, expectedName.indexOf('(') - 1);
+      const expectedCount = Number(expectedName.substring(expectedName.indexOf('(') + 1, expectedName.indexOf(')')));
 
       genotypeBrowserController.filterGenesByGeneSets(data.collection, geneSetName);
       cy.deleteDownloadsFolder();
       page.downloadButton.click();
 
-      cy.readFile(downloadFilePath, { timeout: 5000 }).then(text => {
+      cy.readFile(downloadFilePath, { timeout: 5000 }).then((text: string) => {
         const textLines = text.split(/\r\n|\r|\n/);
         expect(textLines.length - 2).to.eq(expectedCount);
         expectedName = expectedName.replace(/\s*\(\d+\)\s*/, '');
@@ -371,9 +361,11 @@ describe('Genes block denovo gene set gene symbols tests', () => {
         cy.deleteDownloadsFolder();
         page.downloadButton.click();
 
-        cy.readFile(downloadedGeneSymbolsFilePath, { timeout: 5000 }).then(text => {
+        cy.readFile(downloadedGeneSymbolsFilePath, { timeout: 5000 }).then((text: string) => {
           const textLines = text.split(/\r\n|\r|\n/);
-          cy.readFile(data.expectedConditions.expectedGeneSymbolsFiles[i], { timeout: 5000 }).then(expectedText => {
+          cy.readFile(
+            data.expectedConditions.expectedGeneSymbolsFiles[i], { timeout: 5000 }
+          ).then((expectedText: string) => {
             const expectedTextLines = expectedText.split(/\r\n|\r|\n/);
             expect(textLines.slice(1).sort()).to.deep.eq(expectedTextLines.slice(1).sort());
           });
