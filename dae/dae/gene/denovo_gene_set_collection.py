@@ -1,12 +1,13 @@
 import logging
 from itertools import chain
-from functools import cache
 
 
 LOGGER = logging.getLogger(__name__)
 
 
-class DenovoGeneSetCollection(object):
+class DenovoGeneSetCollection:
+    """Class representing a study's denovo gene sets."""
+
     def __init__(self, study_id, study_name, config, person_set_collections):
         assert config.denovo_gene_sets is not None
         assert config.denovo_gene_sets.selected_person_set_collections
@@ -21,25 +22,30 @@ class DenovoGeneSetCollection(object):
 
         self.person_set_collections = person_set_collections
         self.cache = {}
+        self._gene_sets_types_legend = None
 
-    @cache
     def get_gene_sets_types_legend(self):
-        name = self.study_name if self.study_name else self.study_id
-        # TODO Rename these dictionary keys accordingly
-        return [
-            {
-                "datasetId": self.study_id,
-                "datasetName": name,
-                "personSetCollectionId": collection_id,
-                "personSetCollectionName": person_set_collection["name"],
-                "personSetCollectionLegend":
-                    self.get_person_set_collection_legend(collection_id),
-            }
-            for collection_id, person_set_collection
-            in self.person_set_collections.items()
-        ]
+        """Return list of dictionaries for legends for each collection."""
+        if self._gene_sets_types_legend is None:
+            name = self.study_name if self.study_name else self.study_id
+            # TODO Rename these dictionary keys accordingly
+            self._gene_sets_types_legend = [
+                {
+                    "datasetId": self.study_id,
+                    "datasetName": name,
+                    "personSetCollectionId": collection_id,
+                    "personSetCollectionName": person_set_collection["name"],
+                    "personSetCollectionLegend":
+                        self.get_person_set_collection_legend(collection_id),
+                }
+                for collection_id, person_set_collection
+                in self.person_set_collections.items()
+            ]
+
+        return self._gene_sets_types_legend
 
     def get_person_set_collection_legend(self, person_set_collection_id):
+        """Return the domain (used as a legend) of a person set collection."""
         # TODO This could probably be removed, it just takes each domain
         # and returns a dict with a subset of the original keys
         person_set_collection = self.person_set_collections.get(
@@ -61,10 +67,7 @@ class DenovoGeneSetCollection(object):
     def get_gene_set(
             cls, gene_set_id, denovo_gene_set_collections,
             denovo_gene_set_spec=None):
-        """
-        Collect a single gene set from the provided
-        denovo gene set collections.
-        """
+        """Return a single set from provided denovo gene set collections."""
         syms = cls._get_gene_set_syms(
             gene_set_id, denovo_gene_set_collections, denovo_gene_set_spec)
         if not syms:
@@ -83,14 +86,18 @@ class DenovoGeneSetCollection(object):
             cls, gene_set_id, denovo_gene_set_collections,
             denovo_gene_set_spec):
         """
+        Return symbols of all genes in a given gene set.
+
         Collect the symbols of all genes belonging to a
         given gene set from a number of denovo gene set collections,
         while filtering by the supplied spec.
         """
         criteria = set(gene_set_id.split("."))
-        rc = cls._get_recurrency_criteria(denovo_gene_set_collections)
-        recurrency_criteria = criteria & set(rc.keys())
-        standard_criteria = criteria - recurrency_criteria
+        recurrency_criteria = cls._get_recurrency_criteria(
+            denovo_gene_set_collections
+        )
+        recurrency_criteria_names = criteria & set(recurrency_criteria.keys())
+        standard_criteria = criteria - recurrency_criteria_names
 
         genes_families = {}
         for dataset_id, person_set_collection in denovo_gene_set_spec.items():
@@ -113,9 +120,11 @@ class DenovoGeneSetCollection(object):
 
         matching_genes = genes_families
 
-        if recurrency_criteria:
-            assert len(recurrency_criteria) == 1, gene_set_id
-            recurrency_criterion = rc[recurrency_criteria.pop()]
+        if recurrency_criteria_names:
+            assert len(recurrency_criteria_names) == 1, gene_set_id
+            recurrency_criterion = recurrency_criteria[
+                recurrency_criteria_names.pop()
+            ]
             matching_genes = cls._apply_recurrency_criterion(
                 matching_genes, recurrency_criterion
             )
@@ -125,20 +134,22 @@ class DenovoGeneSetCollection(object):
     @classmethod
     def _get_genes_to_families(cls, gs_cache, criteria):
         """
-        Recursively collects all genes and their families
-        which correspond to the set of given criteria.
+        Recursively collect genes and families by given criteria.
+
+        Collects all genes and their families which
+        correspond to the set of given criteria.
 
         The input gs_cache must be nested dictionaries with
         leaf nodes of type 'set'.
         """
         if len(gs_cache) == 0:
-            return dict()
+            return {}
         gs_cache_keys = list(gs_cache.keys())
         next_keys = criteria.intersection(gs_cache_keys)
 
         if len(next_keys) == 0:
-            result = dict()
-            if type(gs_cache[gs_cache_keys[0]]) is not set:
+            result = {}
+            if not isinstance(gs_cache[gs_cache_keys[0]], set):
                 # still not the end of the tree
                 for key in gs_cache_keys:
                     for gene, families in cls._get_genes_to_families(
@@ -156,10 +167,10 @@ class DenovoGeneSetCollection(object):
         )
 
     @staticmethod
-    def _narrowest_criteria(crit, d, t):
+    def _narrowest_criteria(crit, left, right):
         return {
-            "start": max(d[crit]["start"], getattr(t.segments, crit).start),
-            "end": max(d[crit]["end"], getattr(t.segments, crit).end),
+            "start": max(left[crit]["start"], getattr(right, crit).start),
+            "end": max(left[crit]["end"], getattr(right, crit).end),
         }
 
     @staticmethod
@@ -176,12 +187,12 @@ class DenovoGeneSetCollection(object):
             ).intersection(collection.recurrency_criteria.segments.keys())
 
             new_recurrency_criteria = {}
-            for ce in common_elements:
-                new_recurrency_criteria[ce] = \
+            for element in common_elements:
+                new_recurrency_criteria[element] = \
                     DenovoGeneSetCollection._narrowest_criteria(
-                        ce,
+                        element,
                         recurrency_criteria,
-                        collection.recurrency_criteria)
+                        collection.recurrency_criteria.segments)
 
             recurrency_criteria = new_recurrency_criteria
 
@@ -189,10 +200,8 @@ class DenovoGeneSetCollection(object):
 
     @staticmethod
     def _apply_recurrency_criterion(genes_to_families, recurrency_criterion):
-        """
-        Apply a recurrency criterion to a dictionary of genes.
-        """
-        assert type(recurrency_criterion) is dict
+        """Apply a recurrency criterion to a dictionary of genes."""
+        assert isinstance(recurrency_criterion, dict)
         assert set(recurrency_criterion.keys()) == {
             "start",
             "end",
@@ -236,9 +245,7 @@ class DenovoGeneSetCollection(object):
         if full_description:
             return ";".join(
                 [
-                    "{}:{}:{}".format(
-                        genotype_data, group_id, ",".join(values)
-                    )
+                    f"{genotype_data}:{group_id}:{','.join(values)}"
                     for genotype_data, person_set_collection
                     in denovo_gene_set_spec.items()
                     for group_id, values in person_set_collection.items()
@@ -258,22 +265,18 @@ class DenovoGeneSetCollection(object):
         )
 
         if include_datasets_desc:
-            return "{}::{}".format(
-                ", ".join(
-                    set(
-                        [
-                            f"{genotype_data}:{person_set_collection_id}"
-                            for genotype_data, person_set_collection
-                            in denovo_gene_set_spec.items()
-                            for person_set_collection_id
-                            in person_set_collection
-                        ]
-                    )
-                ),
-                all_person_set_collection_values,
+            datasets_desc = ", ".join(
+                {
+                    f"{genotype_data}:{person_set_collection_id}"
+                    for genotype_data, person_set_collection
+                    in denovo_gene_set_spec.items()
+                    for person_set_collection_id
+                    in person_set_collection
+                }
             )
-        else:
-            return all_person_set_collection_values
+            return f"{datasets_desc}::{all_person_set_collection_values}"
+
+        return all_person_set_collection_values
 
     @staticmethod
     def _get_gene_sets_names(denovo_gene_set_collections):

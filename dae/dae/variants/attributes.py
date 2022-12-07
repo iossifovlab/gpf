@@ -65,7 +65,9 @@ _ROLE_SYNONYMS = {
 
 
 class Role(enum.Enum):
+    """Enumerator for a person's role in a pedigree."""
 
+    # pylint: disable=invalid-name
     maternal_grandmother = 1
     maternal_grandfather = 1 << 1
     paternal_grandmother = 1 << 2
@@ -110,13 +112,14 @@ class Role(enum.Enum):
 
     @staticmethod
     def from_name(name):
+        """Construct and return a Role from it's string representation."""
         if name is None:
             return None
-        elif isinstance(name, Role):
+        if isinstance(name, Role):
             return name
-        elif isinstance(name, int):
+        if isinstance(name, int):
             return Role.from_value(name)
-        elif isinstance(name, str):
+        if isinstance(name, str):
             key = name.lower()
             if key in Role.__members__:
                 return Role[key]
@@ -131,29 +134,33 @@ class Role(enum.Enum):
 
 
 class Sex(enum.Enum):
+    """Enumerator for a person's sex."""
+
     M = 1
     F = 2
     U = 0
 
+    # pylint: disable=invalid-name
     male = M
     female = F
     unspecified = U
 
     @staticmethod
     def from_name(name):
+        """Construct and return person Sex from string."""
         if name is None:
             return Sex.U
         if isinstance(name, Sex):
             return name
-        elif isinstance(name, int):
+        if isinstance(name, int):
             return Sex.from_value(name)
         assert isinstance(name, str)
         name = name.lower()
         if name in set(["male", "m", "1"]):
             return Sex.male
-        elif name in set(["female", "f", "2"]):
+        if name in set(["female", "f", "2"]):
             return Sex.female
-        elif name in set(["unspecified", "u", "0", "unknown"]):
+        if name in set(["unspecified", "u", "0", "unknown"]):
             return Sex.unspecified
         raise ValueError("unexpected sex type: " + str(name))
 
@@ -172,26 +179,29 @@ class Sex(enum.Enum):
 
 
 class Status(enum.Enum):
+    """Enumerator for a person's status."""
 
+    # pylint: disable=invalid-name
     unaffected = 1
     affected = 2
     unspecified = 0
 
     @staticmethod
     def from_name(name):
+        """Construct and return person status from string."""
         if name is None:
             return Status.unspecified
-        elif isinstance(name, Status):
+        if isinstance(name, Status):
             return name
-        elif isinstance(name, int):
+        if isinstance(name, int):
             return Status.from_value(name)
         assert isinstance(name, str)
         name = name.lower()
         if name in set(["unaffected", "1", "false"]):
             return Status.unaffected
-        elif name in set(["affected", "2", "true"]):
+        if name in set(["affected", "2", "true"]):
             return Status.affected
-        elif name in set(["unspecified", "-", "0", "unknown"]):
+        if name in set(["unspecified", "-", "0", "unknown"]):
             return Status.unspecified
         raise ValueError("unexpected status type: " + name)
 
@@ -230,6 +240,9 @@ class Status(enum.Enum):
 
 
 class Inheritance(enum.Enum):
+    """Enumerator for variant inheritance type."""
+
+    # pylint: disable=invalid-name
     reference = 1
     mendelian = 1 << 1
     denovo = 1 << 2
@@ -245,7 +258,7 @@ class Inheritance(enum.Enum):
     def from_name(name):
         assert (
             name in Inheritance.__members__
-        ), "Inheritance type {} does not exist!".format(name)
+        ), f"Inheritance type {name} does not exist!"
         return Inheritance[name]
 
     @staticmethod
@@ -260,6 +273,7 @@ class Inheritance(enum.Enum):
 
 
 class GeneticModel(enum.Enum):
+    # pylint: disable=invalid-name
     autosomal = 1
     autosomal_broken = 2
     pseudo_autosomal = 3
@@ -268,6 +282,7 @@ class GeneticModel(enum.Enum):
 
 
 class TransmissionType(enum.IntEnum):
+    # pylint: disable=invalid-name
     unknown = 0
     transmitted = 1
     denovo = 2
