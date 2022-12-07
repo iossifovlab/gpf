@@ -1,7 +1,8 @@
 import os
 import re
 import logging
-from collections import defaultdict, OrderedDict
+from collections import defaultdict
+from typing import Dict, Any, Tuple
 
 from multiprocessing import Pool
 
@@ -11,8 +12,7 @@ import pandas as pd
 from box import Box  # type: ignore
 
 from dae.pheno.db import DbManager
-from dae.pheno.common import RoleMapping, MeasureType
-from dae.variants.attributes import Role
+from dae.pheno.common import MeasureType
 from dae.pedigrees.loader import FamiliesLoader, PED_COLUMNS_REQUIRED
 from dae.pheno.prepare.measure_classifier import (
     MeasureClassifier,
@@ -25,13 +25,15 @@ from dae.pheno.prepare.measure_classifier import (
 logger = logging.getLogger(__name__)
 
 
-class PrepareCommon(object):
-    PID_COLUMN = "$PID"
+class PrepareCommon:
+    PID_COLUMN: str = "$Person_ID"
     PERSON_ID = "person_id"
     PED_COLUMNS_REQUIRED = tuple(PED_COLUMNS_REQUIRED)
 
 
 class PrepareBase(PrepareCommon):
+    """Base class for phenotype data preparation tasks."""
+
     def __init__(self, config):
         assert config is not None
         self.config = config
@@ -46,54 +48,11 @@ class PrepareBase(PrepareCommon):
 
 
 class PreparePersons(PrepareBase):
+    """Praparation of individuals DB tables."""
 
     def __init__(self, config):
         super().__init__(config)
         self.pedigree_df = None
-
-    def _prepare_families(self, ped_df):
-        if self.config.family.composite_key:
-            raise ValueError("unsupported composite key")
-        return ped_df
-
-    def _map_role_column(self, ped_df):
-        assert self.config.person.role.type == "column"
-        role_column = self.config.person.role.column
-        if role_column not in ped_df.columns:
-            raise ValueError(
-                "can't find column '{role_column}' into pedigree file")
-
-        mapping_name = self.config.person.role.mapping
-        mapping = getattr(RoleMapping(), mapping_name)
-        if mapping is None:
-            raise ValueError(f"bad role mapping '{mapping_name}'")
-
-        roles = pd.Series(ped_df.index)
-        for index, row in ped_df.iterrows():
-            if not isinstance(row["role"], Role):
-                role = mapping.get(row["role"])
-            else:
-                role = row["role"]
-            roles[index] = role
-        ped_df["role"] = roles
-        return ped_df
-
-    def _prepare_persons(self, ped_df):
-        assert self.config.person.role.type != "guess", (
-            "Guessing roles has been deprecated - "
-            " please provide a column with roles!"
-        )
-
-        if self.config.person.role.type == "column":
-            ped_df = self._map_role_column(ped_df)
-        return ped_df
-
-    def prepare_pedigree(self, ped_df):
-        assert set(self.PED_COLUMNS_REQUIRED) <= set(ped_df.columns)
-        ped_df = self._prepare_families(ped_df)
-        ped_df = self._prepare_persons(ped_df)
-        logger.info("pedigree columns: %s", ped_df.columns)
-        return ped_df
 
     def _save_families(self, ped_df):
         families = [{"family_id": fid} for fid in ped_df["family_id"].unique()]
@@ -113,7 +72,7 @@ class PreparePersons(PrepareBase):
         families = self.db.get_families()
         persons = []
         for _index, row in ped_df.iterrows():
-            p = {
+            person = {
                 "family_id": families[row["family_id"]].id,
                 self.PERSON_ID: row["person_id"],
                 "role": row["role"],
@@ -121,7 +80,7 @@ class PreparePersons(PrepareBase):
                 "sex": row["sex"],
                 "sample_id": self._build_sample_id(row.get("sample_id")),
             }
-            persons.append(p)
+            persons.append(person)
         ins = self.db.person.insert()
         with self.db.pheno_engine.connect() as connection:
             connection.execute(ins, persons)
@@ -132,13 +91,15 @@ class PreparePersons(PrepareBase):
 
     def build_pedigree(self, pedfile):
         ped_df = FamiliesLoader.flexible_pedigree_read(pedfile)
-        ped_df = self.prepare_pedigree(ped_df)
+        # ped_df = self.prepare_pedigree(ped_df)
         self.save_pedigree(ped_df)
         self.pedigree_df = ped_df
         return ped_df
 
 
 class Task(PrepareCommon):
+    """Preparation task that can be run in parallel."""
+
     def run(self):
         raise NotImplementedError()
 
@@ -150,9 +111,10 @@ class Task(PrepareCommon):
 
 
 class ClassifyMeasureTask(Task):
+    """Measure classification task."""
+
     def __init__(
-        self, config, instrument_name, measure_name, measure_desc, df
-    ):
+            self, config, instrument_name, measure_name, measure_desc, df):
         self.config = config
         self.mdf = df[[self.PERSON_ID, self.PID_COLUMN, measure_name]].copy()
         self.mdf.rename(columns={measure_name: "value"}, inplace=True)
@@ -164,6 +126,7 @@ class ClassifyMeasureTask(Task):
 
     @staticmethod
     def create_default_measure(instrument_name, measure_name, measure_desc):
+        """Create empty measrue description."""
         measure = {
             "measure_type": MeasureType.other,
             "measure_name": measure_name,
@@ -181,7 +144,9 @@ class ClassifyMeasureTask(Task):
         return measure
 
     def build_meta_measure(self):
+        """Build measure meta data."""
         measure_type = self.measure.measure_type
+        assert self.classifier_report is not None
 
         if measure_type in set([MeasureType.continuous, MeasureType.ordinal]):
             min_value = np.min(self.classifier_report.numeric_values)
@@ -223,6 +188,8 @@ class ClassifyMeasureTask(Task):
 
 
 class MeasureValuesTask(Task):
+    """Task to prepare measure values."""
+
     def __init__(self, measure, mdf):
         self.measure = measure
         self.mdf = mdf
@@ -232,12 +199,12 @@ class MeasureValuesTask(Task):
         measure_id = self.measure.db_id
         measure = self.measure
 
-        values = OrderedDict()
+        values: Dict[Tuple[int, int], Any] = {}
         measure_values = self.mdf.to_dict(orient="records")
         for record in measure_values:
-            pid = int(record[self.PID_COLUMN])
-            assert pid, measure.measure_id
-            k = (pid, measure_id)
+            person_id = int(record[self.PID_COLUMN])
+            assert person_id, measure.measure_id
+            k = (person_id, measure_id)
             value = record["value"]
             if MeasureType.is_text(measure.measure_type):
                 value = convert_to_string(value)
@@ -250,7 +217,11 @@ class MeasureValuesTask(Task):
                     continue
             else:
                 assert False, measure.measure_type.name
-            v = {self.PERSON_ID: pid, "measure_id": measure_id, "value": value}
+            v = {
+                self.PERSON_ID: person_id,
+                "measure_id": measure_id,
+                "value": value
+            }
 
             if k in values:
                 logger.info(
@@ -265,7 +236,9 @@ class MeasureValuesTask(Task):
         return self.measure, self.values
 
 
-class TaskQueue(object):
+class TaskQueue:
+    """Queue of preparation tasks."""
+
     def __init__(self):
         self.queue = []
 
@@ -280,6 +253,8 @@ class TaskQueue(object):
 
 
 class PrepareVariables(PreparePersons):
+    """Supports preparation of measurements."""
+
     def __init__(self, config):
         super().__init__(config)
         self.sample_ids = None
@@ -296,6 +271,7 @@ class PrepareVariables(PreparePersons):
         return person_id
 
     def load_instrument(self, instrument_name, filenames):
+        """Load all measures in an instrument."""
         assert filenames
         assert all([os.path.exists(f) for f in filenames])
 
@@ -348,6 +324,7 @@ class PrepareVariables(PreparePersons):
 
     @property
     def log_filename(self):
+        """Construct a filename to use for logging work on phenotype data."""
         db_filename = self.config.db.filename
         if self.config.report_only:
             filename = self.config.report_only
@@ -372,6 +349,7 @@ class PrepareVariables(PreparePersons):
             log.write("\n")
 
     def save_measure(self, measure):
+        """Save measure into sqlite database."""
         to_save = measure.to_dict()
         assert "db_id" not in to_save, to_save
         ins = self.db.measure.insert().values(**to_save)
@@ -382,6 +360,7 @@ class PrepareVariables(PreparePersons):
         return measure_id
 
     def save_measure_values(self, measure, values):
+        """Save measure values into sqlite database."""
         if len(values) == 0:
             logging.warning(
                 "skiping measure %s without values", measure.measure_id
@@ -417,6 +396,7 @@ class PrepareVariables(PreparePersons):
         return instruments
 
     def build_variables(self, instruments_dirname, description_path):
+        """Build and store phenotype data into an sqlite database."""
         self.log_header()
 
         self.build_pheno_common()
@@ -434,24 +414,27 @@ class PrepareVariables(PreparePersons):
 
     def _augment_person_ids(self, df):
         persons = self.get_persons()
-        pid = pd.Series(df.index)
+        person_id = pd.Series(df.index)
         for index, row in df.iterrows():
-            p = persons.get(row[self.PERSON_ID])
-            if p is None:
-                pid[index] = np.nan
+            person = persons.get(row[self.PERSON_ID])
+            if person is None:
+                person_id[index] = np.nan
                 logging.info(
                     "measure for missing person: %s", row[self.PERSON_ID])
             else:
-                assert p is not None
-                assert p.person_id == row[self.PERSON_ID]
-                pid[index] = p.id
+                assert person is not None
+                assert person.person_id == row[self.PERSON_ID]
+                person_id[index] = person.id
 
-        df[self.PID_COLUMN] = pid
+        df[self.PID_COLUMN] = person_id
         if len(df) > 0:
             df = df[np.logical_not(np.isnan(df[self.PID_COLUMN]))].copy()
         return df
 
     def build_pheno_common(self):
+        """Build a pheno common instrument."""
+        assert self.pedigree_df is not None
+
         pheno_common_measures = set(self.pedigree_df.columns) - (
             set(self.PED_COLUMNS_REQUIRED) | set(["sampleId", "role"])
         )
@@ -469,7 +452,7 @@ class PrepareVariables(PreparePersons):
         self.build_instrument("pheno_common", df[pheno_common_columns])
 
     def build_instrument(self, instrument_name, df, descriptions=None):
-
+        """Build and store all measures in an instrument."""
         assert df is not None
         assert self.PERSON_ID in df.columns
 
@@ -529,6 +512,7 @@ class PrepareVariables(PreparePersons):
 
     @staticmethod
     def create_default_measure(instrument_name, measure_name):
+        """Create default measure description."""
         measure = {
             "measure_type": MeasureType.other,
             "measure_name": measure_name,
@@ -541,6 +525,7 @@ class PrepareVariables(PreparePersons):
         return measure
 
     def classify_measure(self, instrument_name, measure_name, df):
+        """Classify a measure into a measure type."""
         measure = self.create_default_measure(instrument_name, measure_name)
         values = df["value"]
 
@@ -552,6 +537,7 @@ class PrepareVariables(PreparePersons):
 
     @staticmethod
     def load_descriptions(description_path):
+        """Load measure descriptions."""
         if not description_path:
             return None
         assert os.path.exists(
@@ -561,6 +547,8 @@ class PrepareVariables(PreparePersons):
         data = pd.read_csv(description_path, sep="\t")
 
         class DescriptionDf:
+            """Phenotype database support for measure descriptions."""
+
             def __init__(self, desc_df):
                 self.desc_df = desc_df
                 assert all(

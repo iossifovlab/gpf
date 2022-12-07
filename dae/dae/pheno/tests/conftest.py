@@ -1,28 +1,23 @@
-import pytest
-
+# pylint: disable=W0621,C0114,C0116,W0212,W0613,too-many-lines
 import os
-import pandas as pd
 import tempfile
 import shutil
+
+import pytest
+
+import pandas as pd
 from box import Box  # type: ignore
 
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.dae_conf import dae_conf_schema
 from dae.configuration.schemas.phenotype_data import pheno_conf_schema
 
-from dae.pheno.prepare.ped2individuals import SPARKCsvPedigreeReader
-from dae.pheno.prepare.individuals2ped import InternalCsvIndividualsReader
 from dae.pheno.common import default_config
 from dae.pheno.pheno_db import PhenoDb
 
 
 def relative_to_this_folder(path):
     return os.path.join(os.path.dirname(os.path.realpath(__file__)), path)
-
-
-@pytest.fixture(scope="session")
-def csv_individuals_reader():
-    return InternalCsvIndividualsReader()
 
 
 @pytest.fixture(scope="session")
@@ -35,11 +30,6 @@ def family_roles_file():
 @pytest.fixture(scope="session")
 def family_roles(csv_individuals_reader, family_roles_file):
     return csv_individuals_reader.read_filename(family_roles_file)
-
-
-@pytest.fixture(scope="session")
-def csv_pedigree_reader():
-    return SPARKCsvPedigreeReader()
 
 
 @pytest.fixture(scope="session")

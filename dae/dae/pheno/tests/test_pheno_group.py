@@ -1,3 +1,4 @@
+# pylint: disable=W0621,C0114,C0116,W0212,W0613,too-many-lines
 import pytest
 import pandas as pd
 import numpy as np
@@ -18,11 +19,11 @@ def fake_group(fake_pheno_db):
 
 def test_pheno_group_families(fake_group):
     assert fake_group is not None
-    assert len(fake_group.phenotype_datas) == 2
+    assert len(fake_group.phenotype_data) == 2
 
     assert all(
-        fake_group.families.ped_df ==
-        fake_group.phenotype_datas[0].families.ped_df)
+        fake_group.families.ped_df
+        == fake_group.phenotype_data[0].families.ped_df)
 
 
 @pytest.mark.parametrize(
@@ -35,7 +36,7 @@ def test_pheno_group_families(fake_group):
     ],
 )
 def test_pheno_group_get_persons_df(fake_group, roles, family_ids, person_ids):
-    fake = fake_group.phenotype_datas[0]
+    fake = fake_group.phenotype_data[0]
     ped_df = fake.get_persons_df(
         roles=roles,
         family_ids=family_ids,
@@ -69,9 +70,9 @@ def test_pheno_group_get_persons(fake_group, roles, family_ids, person_ids):
     print(persons)
     assert len(persons) == 1
     assert "f1.p1" in persons
-    p = persons["f1.p1"]
-    assert p is not None
-    assert p.person_id == "f1.p1"
+    person = persons["f1.p1"]
+    assert person is not None
+    assert person.person_id == "f1.p1"
 
 
 def test_pheno_group_instruments_and_measures(fake_group):
@@ -84,11 +85,11 @@ def test_pheno_group_instruments_and_measures(fake_group):
     assert fake_group.has_measure("i1.iq")
     assert fake_group.has_measure("i2.iq")
 
-    m1 = fake_group.get_measure("i1.iq")
-    assert m1.measure_id == "i1.iq"
+    mes1 = fake_group.get_measure("i1.iq")
+    assert mes1.measure_id == "i1.iq"
 
-    m2 = fake_group.get_measure("i2.iq")
-    assert m2.measure_id == "i2.iq"
+    mes2 = fake_group.get_measure("i2.iq")
+    assert mes2.measure_id == "i2.iq"
 
 
 @pytest.mark.parametrize(
@@ -110,7 +111,7 @@ def test_pheno_group_get_measure_values_df(
     expected = pd.DataFrame({
         "person_id": ["f1.p1"],
         "i1.iq": [86.41]
-        })
+    })
     pd.testing.assert_frame_equal(df, expected, atol=1e-2)
 
 
@@ -184,7 +185,7 @@ def test_pheno_group_i1_get_values_df(
     expected = pd.DataFrame({
         "person_id": ["f1.p1"],
         "i1.iq": [86.41]
-        })
+    })
     pd.testing.assert_frame_equal(df, expected, atol=1e-2)
 
 
@@ -208,7 +209,7 @@ def test_pheno_group_i2_get_values_df(
     expected = pd.DataFrame({
         "person_id": ["f1.p1"],
         "i2.iq": [86.41]
-        })
+    })
     pd.testing.assert_frame_equal(df, expected, atol=1e-2)
 
 
@@ -233,7 +234,7 @@ def test_pheno_group_i1_i2_get_values_df(
         "person_id": ["f1.p1"],
         "i1.iq": [86.41],
         "i2.iq": [86.41]
-        })
+    })
     pd.testing.assert_frame_equal(df, expected, atol=1e-2)
 
 
@@ -287,7 +288,7 @@ def test_pheno_group_i1_i2_get_person_values_df(
         "status": [Status.affected],
         "i1.iq": [86.41],
         "i2.iq": [86.41]
-        })
+    })
     expected = expected.set_index("person_id").reset_index()
 
     print(" ")

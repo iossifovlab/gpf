@@ -315,6 +315,7 @@ good-names=i,
            vs,
            aa,  # alternative allele
            gt,  # genotype
+           ax,  # matplotlib axes
 
 # Good variable names regexes, separated by a comma. If names match any regex,
 # they will always be accepted

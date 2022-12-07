@@ -1,25 +1,35 @@
-"""
-Created on Jul 24, 2017.
+from typing import Optional, Any
 
-@author: lubo
-"""
 from sqlalchemy import MetaData, create_engine
 from sqlalchemy import Table, Column, Integer, String, Float, Enum, \
     ForeignKey, or_, func
 from sqlalchemy.sql import select
+from sqlalchemy.sql.schema import UniqueConstraint, PrimaryKeyConstraint
+
 import pandas as pd
 
 from dae.variants.attributes import Sex, Status, Role
 from dae.pheno.common import MeasureType
-from sqlalchemy.sql.schema import UniqueConstraint, PrimaryKeyConstraint
 
 
 class DbManager(object):
+    """Class that manages access to phenotype databases."""
+
     STREAMING_CHUNK_SIZE = 25
 
     def __init__(self, dbfile, browser_dbfile=None):
         self.pheno_dbfile = dbfile
         self.pheno_metadata = MetaData()
+        self.variable_browser: Table
+        self.regressions: Table
+        self.regression_values: Table
+        self.family: Table
+        self.person: Table
+        self.measure: Table
+        self.value_continuous: Table
+        self.value_ordinal: Table
+        self.value_categorical: Table
+        self.value_other: Table
         if self.pheno_dbfile == "memory":
             self.pheno_engine = create_engine("sqlite://")
         else:
@@ -32,19 +42,20 @@ class DbManager(object):
 
     def update_browser_dbfile(self, browser_dbfile):
         self.browser_dbfile = browser_dbfile
+        self.browser_metadata: Optional[MetaData] = None
+        self.browser_engine: Any = None
         if browser_dbfile is not None:
             self.browser_metadata = MetaData()
             self.browser_engine = create_engine(f"sqlite:///{browser_dbfile}")
-        else:
-            self.browser_metadata = None
-            self.browser_engine = None
 
     def build_browser(self):
         if self.has_browser_dbfile():
+            assert self.browser_metadata is not None
             self._build_browser_tables()
             self.browser_metadata.create_all(self.browser_engine)
 
     def build(self):
+        """Construct all needed table connections."""
         self._build_person_tables()
         self._build_measure_tables()
         self._build_value_tables()
@@ -54,6 +65,8 @@ class DbManager(object):
         self.build_browser()
 
     def _build_browser_tables(self):
+        assert self.browser_metadata is not None
+
         self.variable_browser = Table(
             "variable_browser",
             self.browser_metadata,
@@ -196,12 +209,12 @@ class DbManager(object):
         )
 
     def save(self, v):
+        """Save measure values into the database."""
         try:
             insert = self.variable_browser.insert().values(**v)
             with self.browser_engine.begin() as connection:
                 connection.execute(insert)
-        except Exception:
-            # traceback.print_exc()
+        except Exception:  # pylint: disable=broad-except
             measure_id = v["measure_id"]
 
             del v["measure_id"]
@@ -213,36 +226,38 @@ class DbManager(object):
             with self.browser_engine.begin() as connection:
                 connection.execute(update)
 
-    def save_regression(self, r):
+    def save_regression(self, reg):
+        """Save regressions into the database."""
         try:
-            insert = self.regressions.insert().values(r)
+            insert = self.regressions.insert().values(reg)
             with self.browser_engine.begin() as connection:
                 connection.execute(insert)
-        except Exception:
-            regression_id = r["regression_id"]
-            del r["regression_id"]
+        except Exception:  # pylint: disable=broad-except
+            regression_id = reg["regression_id"]
+            del reg["regression_id"]
             update = (
                 self.regressions.update()
-                .values(r)
+                .values(reg)
                 .where(self.regressions.c.regression_id == regression_id)
             )
             with self.browser_engine.begin() as connection:
                 connection.execute(update)
 
-    def save_regression_values(self, r):
+    def save_regression_values(self, reg):
+        """Save regression values into the databases."""
         try:
-            insert = self.regression_values.insert().values(r)
+            insert = self.regression_values.insert().values(reg)
             with self.browser_engine.begin() as connection:
                 connection.execute(insert)
-        except Exception:
-            regression_id = r["regression_id"]
-            measure_id = r["measure_id"]
+        except Exception:  # pylint: disable=broad-except
+            regression_id = reg["regression_id"]
+            measure_id = reg["measure_id"]
 
-            del r["regression_id"]
-            del r["measure_id"]
+            del reg["regression_id"]
+            del reg["measure_id"]
             update = (
                 self.regression_values.update()
-                .values(r)
+                .values(reg)
                 .where(
                     (self.regression_values.c.regression_id == regression_id)
                     & (self.regression_values.c.measure_id == measure_id)
@@ -252,17 +267,17 @@ class DbManager(object):
                 connection.execute(update)
 
     def get_browser_measure(self, measure_id):
-        s = select([self.variable_browser])
-        s = s.where(self.variable_browser.c.measure_id == measure_id)
+        """Get measrue description from phenotype browser database."""
+        sel = select([self.variable_browser])
+        sel = sel.where(self.variable_browser.c.measure_id == measure_id)
         with self.browser_engine.connect() as connection:
-            vs = connection.execute(s).fetchall()
+            vs = connection.execute(sel).fetchall()
             if vs:
                 return vs[0]
-            else:
-                return None
+            return None
 
     def search_measures(self, instrument_name=None, keyword=None):
-
+        """Find measert by keyword search."""
         query_params = []
 
         if keyword:
@@ -313,7 +328,7 @@ class DbManager(object):
                 rows = cursor.fetchmany(self.STREAMING_CHUNK_SIZE)
 
     def search_measures_df(self, instrument_name=None, keyword=None):
-
+        """Find measures and return a dataframe with values."""
         query_params = []
 
         if keyword:
@@ -348,42 +363,48 @@ class DbManager(object):
         return df
 
     def get_regression(self, regression_id):
-        s = select([self.regressions])
-        s = s.where(self.regressions.c.regression_id == regression_id)
+        """Return regressions."""
+        selector = select([self.regressions])
+        selector = selector.where(
+            self.regressions.c.regression_id == regression_id)
         with self.browser_engine.connect() as connection:
-            vs = connection.execute(s).fetchall()
+            vs = connection.execute(selector).fetchall()
             if vs:
                 return vs[0]
-            else:
-                return None
+            return None
 
     def get_regression_values(self, measure_id):
-        s = select([self.regression_values])
-        s = s.where(self.regression_values.c.measure_id == measure_id)
+        selector = select([self.regression_values])
+        selector = selector.where(
+            self.regression_values.c.measure_id == measure_id)
         with self.browser_engine.connect() as connection:
-            return connection.execute(s).fetchall()
+            return connection.execute(selector).fetchall()
 
     @property
     def regression_ids(self):
-        s = select([self.regressions.c.regression_id])
+        selector = select([self.regressions.c.regression_id])
         with self.browser_engine.connect() as connection:
-            return list(map(lambda x: x.values()[0], connection.execute(s)))
+            return list(map(
+                lambda x: x.values()[0],  # type: ignore
+                connection.execute(selector)))
 
     @property
     def regression_display_names(self):
+        """Return regressions display name."""
         res = {}
-        s = select(
+        selector = select(
             [self.regressions.c.regression_id, self.regressions.c.display_name]
         )
         with self.browser_engine.connect() as connection:
-            for row in connection.execute(s):
+            for row in connection.execute(selector):
                 res[row.values()[0]] = row.values()[1]
         return res
 
     @property
     def regression_display_names_with_ids(self):
+        """Return regression display names with measure IDs."""
         res = {}
-        s = select(
+        selector = select(
             [
                 self.regressions.c.regression_id,
                 self.regressions.c.display_name,
@@ -392,7 +413,7 @@ class DbManager(object):
             ]
         )
         with self.browser_engine.connect() as connection:
-            for row in connection.execute(s):
+            for row in connection.execute(selector):
                 res[row.values()[0]] = {
                     "display_name": row.values()[1],
                     "instrument_name": row.values()[2],
@@ -402,39 +423,43 @@ class DbManager(object):
 
     @property
     def has_descriptions(self):
+        """Check if the database has a description data."""
         with self.browser_engine.connect() as connection:
             return bool(
                 connection.execute(
                     select([func.count()])
                     .select_from(self.variable_browser)
-                    .where(Column("description").isnot(None))
+                    .where(Column("description").isnot(None))  # type: ignore
                 ).scalar()
             )
 
     def get_value_table(self, value_type):
+        """Return the appropriate table for values based on the value type."""
         if isinstance(value_type, str) or isinstance(value_type, str):
             value_type = MeasureType.from_str(value_type)
 
         if value_type == MeasureType.continuous:
             return self.value_continuous
-        elif value_type == MeasureType.ordinal:
+        if value_type == MeasureType.ordinal:
             return self.value_ordinal
-        elif value_type == MeasureType.categorical:
+        if value_type == MeasureType.categorical:
             return self.value_categorical
-        elif value_type == MeasureType.raw or value_type == MeasureType.text:
+        if value_type == MeasureType.raw or value_type == MeasureType.text:
             return self.value_other
-        else:
-            raise ValueError("unsupported value type: {}".format(value_type))
+
+        raise ValueError(f"unsupported value type: {value_type}")
 
     def get_families(self):
-        s = select([self.family])
+        """Return families in the phenotype database."""
+        value_type = select([self.family])
         with self.pheno_engine.connect() as connection:
-            families = connection.execute(s).fetchall()
+            families = connection.execute(value_type).fetchall()
         families = {f.family_id: f for f in families}
         return families
 
     def get_persons(self):
-        s = select(
+        """Return individuals in the phenotype database."""
+        selector = select(
             [
                 self.person.c.id,
                 self.person.c.person_id,
@@ -444,14 +469,15 @@ class DbManager(object):
                 self.person.c.sex,
             ]
         )
-        s = s.select_from(self.person.join(self.family))
+        selector = selector.select_from(self.person.join(self.family))
         with self.pheno_engine.connect() as connection:
-            persons = connection.execute(s).fetchall()
+            persons = connection.execute(selector).fetchall()
         persons = {p.person_id: p for p in persons}
         return persons
 
     def get_measures(self):
-        s = select(
+        """Return measures in the phenotype database."""
+        selector = select(
             [
                 self.measure.c.id,
                 self.measure.c.measure_id,
@@ -460,8 +486,8 @@ class DbManager(object):
                 self.measure.c.measure_type,
             ]
         )
-        s = s.select_from(self.measure)
+        selector = selector.select_from(self.measure)
         with self.pheno_engine.begin() as connection:
-            measures = connection.execute(s).fetchall()
+            measures = connection.execute(selector).fetchall()
         measures = {m.measure_id: m for m in measures}
         return measures

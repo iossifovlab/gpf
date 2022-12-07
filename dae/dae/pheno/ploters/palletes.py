@@ -5,7 +5,7 @@ import numpy as np
 import matplotlib as mpl
 from matplotlib.colors import to_rgb  # type: ignore
 
-import dae.pheno.husl as husl
+import dae.pheno.ploters.husl as husl
 
 """
 Copyright (c) 2012-2021, Michael L. Waskom
