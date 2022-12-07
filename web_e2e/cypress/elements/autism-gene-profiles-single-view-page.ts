@@ -1,4 +1,3 @@
-import { AutismGeneProfilesTablePage } from './autism-gene-profiles-table-page';
 import { GenotypeBlockPage } from './genotype-block-page';
 import { BasePage, sidenavPageLinks } from './utils';
 
@@ -62,14 +61,18 @@ export class AutismGeneProfilesSingleViewPage extends BasePage {
     return cy.get('.datasets-table');
   }
 
-  public getGeneSymbols(id: string = null): any {
-    cy.get('gpf-autism-gene-profile-single-view' + (id !== null ? ('#' + id + '-single-view') : '') + ' > div > div > h2').then(symbols => {
+  public getGeneSymbols(id: string = null): void {
+    cy.get(
+      'gpf-autism-gene-profile-single-view'
+      + (id !== null ? ('#' + id + '-single-view') : '')
+      + ' > div > div > h2'
+    ).then(symbols => {
       cy.wrap(symbols.text()).as('geneSymbols');
     });
   }
 
-  public getGenomicScores(id: string = null): any {
-    let genomicScores: any = [];
+  public getGenomicScores(id: string = null) {
+    const genomicScores = [];
 
     cy.get((id !== null ? (('#' + id + '-single-view')) : 'div.ng-star-inserted >') + ' :nth-child(3) > table').each((table_iteration, index) => {
       genomicScores[index] = {
@@ -77,7 +80,6 @@ export class AutismGeneProfilesSingleViewPage extends BasePage {
       }
 
       cy.wrap(table_iteration).within(table => {
-
         cy.wrap(table).invoke('attr', 'id').then(id => {
           genomicScores[index].category = id;
         });
@@ -110,16 +112,14 @@ export class AutismGeneProfilesSingleViewPage extends BasePage {
     return genomicScores;
   }
 
-  public getGeneSets(id: string = null): any {
-    let geneSets: any = [
-    ];
+  public getGeneSets(id: string = null) {
+    let geneSets: any = [];
 
     cy.get((id !== null ? (('#' + id + '-single-view')) : 'div.ng-star-inserted >') + ' :nth-child(4) > table').each((table_iteration, index) => {
       cy.wrap(table_iteration).within(table => {
-
         geneSets[index] = {
           id: null, name: null, scores: [
-          ] 
+          ]
         };
 
         cy.wrap(table).invoke('attr', 'id').then(id => {
@@ -135,30 +135,30 @@ export class AutismGeneProfilesSingleViewPage extends BasePage {
               name: '',
               value: false
             };
-    
+
             cy.wrap(el).get('td').eq(0).then(name => {
               geneSets[index]['scores'][rowIndex]['name'] = name.text();
             });
             cy.wrap(el).get('td').eq(1).then(value => {
-              if(value.text().length === 1 && value.text() === '✓') {
+              if (value.text().length === 1 && value.text() === '✓') {
                 geneSets[index]['scores'][rowIndex]['value'] = true;
               }
             });
           });
         });
-
       });
     });
     cy.wrap(geneSets).as('geneSets');
+
     return geneSets;
   }
 
-  public getDatasetData(id: string = null): any {
-    let datasets = [];
+  public getDatasetData(id: string = null) {
+    const datasets = [];
 
     cy.get((id !== null ? (('#' + id + '-single-view')) : 'div.ng-star-inserted >') + ' :nth-child(5) > table').each((table_iterator,index) => {
       datasets[index] = {
-        name: '', columns: [ ], rows: [
+        name: '', columns: [], rows: [
           {
             variant_statistics: '', variant_ids: '', affected: '', unaffected: ''
           }
@@ -196,40 +196,41 @@ export class AutismGeneProfilesSingleViewPage extends BasePage {
     });
 
     cy.wrap(datasets).as('datasets');
+
     return datasets;
   }
 
-  public getStudyExpectedDataFromGenotype(variantStatistics: any) {
+  public getStudyExpectedDataFromGenotype(variantStatistics): void {
     const genotypeBlockPage = new GenotypeBlockPage();
 
     const studyWrapper = {
-      'denovo_lgds': genotypeBlockPage.effectTypesGroups.get('LGDs'),
-      'denovo_missense': [ 'missense' ],
-      'denovo_intron': [ 'intron' ]
+      denovo_lgds: genotypeBlockPage.effectTypesGroups.get('LGDs'),
+      denovo_missense: ['missense'],
+      denovo_intron: ['intron']
     }
-    let effectModelFromGenotypeWrapper = new Map<String, String>();
-    for(var value in studyWrapper) {
+    const effectModelFromGenotypeWrapper = new Map<string, string>();
+    for (const value in studyWrapper) {
       effectModelFromGenotypeWrapper.set(value, studyWrapper[value]);
     }
 
     cy.wrap(effectModelFromGenotypeWrapper.get(variantStatistics)).as('genotypeExpectedWrapper');
   }
 
-  public getStudyActualDataFromGenotype() {
-    let selectedEffects = [];
+  public getStudyActualDataFromGenotype(): void {
+    const selectedEffects = [];
 
     cy.get('.effect-card > .card-block label').each(label => {
       cy.wrap(label).within(checkBox => {
         cy.wrap(checkBox).get('input').then(check => {
           cy.wrap(check).invoke('prop', 'checked').then(isCheck => {
-            if(isCheck === true) {
+            if (isCheck === true) {
               selectedEffects.push(label.text());
             }
           });
         });
       });
     });
-    
+
     cy.wrap(selectedEffects).as('genotypeActualWrapper');
   }
 }
