@@ -27,9 +27,6 @@ describe('GenotypePreviewTableComponent', () => {
         GpfTableSubheaderComponent
       ]
     }).compileComponents();
-  }));
-
-  beforeEach(() => {
     fixture = TestBed.createComponent(GenotypePreviewTableComponent);
     component = fixture.componentInstance;
 
@@ -69,7 +66,7 @@ describe('GenotypePreviewTableComponent', () => {
       addPreviewVariant(['value31', 'value32'], columnIds);
 
     fixture.detectChanges();
-  });
+  }));
 
   it('should create', () => {
     expect(component).toBeTruthy();
@@ -115,14 +112,14 @@ describe('GenotypePreviewTableComponent', () => {
   });
 
   it('should have set legend on init', () => {
-    expect(component.legend).toEqual([
+    expect(component.legend).toStrictEqual([
       new PersonSet('id1', 'name1', ['value1', 'value2'], 'color1'),
       new PersonSet('id2', 'name2', ['value3', 'value4'], 'color2')
     ]);
   });
 
   it('should have set legend item on init', () => {
-    expect(component.legendItems).toEqual([
+    expect(component.legendItems).toStrictEqual([
       new LegendItem('id1', 'name1', 'color1'),
       new LegendItem('id2', 'name2', 'color2'),
     ]);

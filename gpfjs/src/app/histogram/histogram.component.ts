@@ -1,4 +1,4 @@
-import { Input, Component, OnInit, OnChanges, ViewChild, Output, EventEmitter, SimpleChanges } from '@angular/core';
+import { Input, Component, OnInit, OnChanges, ViewChild, Output, EventEmitter, SimpleChanges, ElementRef } from '@angular/core';
 import * as d3 from 'd3';
 // eslint-disable-next-line no-restricted-imports
 import { Subject } from 'rxjs';
@@ -26,7 +26,7 @@ export class HistogramComponent implements OnInit, OnChanges {
   @Input() public height: number;
   @Input() public marginLeft = 100;
   @Input() public marginTop = 10;
-  @ViewChild('histogramContainer', {static: true}) public histogramContainer;
+  @ViewChild('histogramContainer', {static: true}) public histogramContainer: ElementRef;
 
   @Input() public bins: Array<number>;
   @Input() public bars: Array<number>;
@@ -172,10 +172,9 @@ export class HistogramComponent implements OnInit, OnChanges {
   }
 
   private colorBars(): void {
-    this.svg.selectAll('rect').style('fill', (d, index, objects) => {
-      return d.index < this.selectedStartIndex || d.index > this.selectedEndIndex
-        ? 'lightsteelblue' : 'steelblue';
-    });
+    this.svg.selectAll('rect').style('fill', (d, index, objects) =>
+      d.index < this.selectedStartIndex || d.index > this.selectedEndIndex
+        ? 'lightsteelblue' : 'steelblue');
   }
 
   private formatEstimateText(count: number, estimate = true): string {

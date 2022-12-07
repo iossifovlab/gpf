@@ -1,6 +1,6 @@
 import {
   Input, Component, OnInit, AfterViewInit, ViewChild, ViewChildren,
-  ViewEncapsulation, Output, EventEmitter, SimpleChanges, QueryList
+  ViewEncapsulation, Output, EventEmitter, SimpleChanges, QueryList, ElementRef
 } from '@angular/core';
 import * as d3 from 'd3';
 
@@ -17,8 +17,8 @@ export class HistogramRangeSelectorLineComponent implements OnInit, AfterViewIni
   @Input() public minX: number;
   @Input() public maxX: number;
 
-  @ViewChild('draggable', {static: true}) public draggable: any;
-  @ViewChildren('triangle') public triangles: QueryList<any>;
+  @ViewChild('draggable', {static: true}) public draggable: ElementRef;
+  @ViewChildren('triangle') public triangles: QueryList<ElementRef>;
 
   @Input() public text: string;
   @Input() public textOnRight = true;

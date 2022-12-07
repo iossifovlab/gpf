@@ -32,13 +32,10 @@ describe('LoadQueryComponent', () => {
         NgxsModule.forRoot([ErrorsState], {developmentMode: true})
       ],
     }).compileComponents();
-  }));
-
-  beforeEach(() => {
     fixture = TestBed.createComponent(LoadQueryComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
-  });
+  }));
 
   it('should create', () => {
     expect(component).toBeTruthy();
