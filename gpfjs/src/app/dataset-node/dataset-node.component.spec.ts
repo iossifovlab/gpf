@@ -1,5 +1,5 @@
 import { HttpClient, HttpHandler } from '@angular/common/http';
-import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
 import { ConfigService } from 'app/config/config.service';
 import { DatasetsService } from 'app/datasets/datasets.service';
@@ -11,15 +11,13 @@ xdescribe('DatasetNodeComponent', () => {
   let component: DatasetNodeComponent;
   let fixture: ComponentFixture<DatasetNodeComponent>;
 
-  beforeEach(waitForAsync(() => {
+  beforeEach(() => {
     TestBed.configureTestingModule({
       declarations: [DatasetNodeComponent],
       providers: [DatasetsService, HttpClient, HttpHandler, ConfigService, UsersService],
       imports: [RouterTestingModule]
     }).compileComponents();
-  }));
 
-  beforeEach(() => {
     fixture = TestBed.createComponent(DatasetNodeComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
