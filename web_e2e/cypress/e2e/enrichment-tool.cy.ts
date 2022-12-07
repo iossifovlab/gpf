@@ -112,7 +112,7 @@ describe('Enrichment tool common tests', () => {
 
 
 if (Cypress.env().yamlPath !== undefined) {
-  const dynamicData: EnrichmentToolData[] = parseYamlData(Cypress.env('yamlFile'));
+  const dynamicData: EnrichmentToolData[] = parseYamlData(Cypress.env('yamlFile') as string);
 
   describe('Enrichment tool data tests', () => {
     const page = new EnrichmentToolPage();
