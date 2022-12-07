@@ -2,6 +2,7 @@ from copy import deepcopy
 
 
 def recursive_dict_update(input_dict: dict, updater_dict: dict) -> dict:
+    """Recursively update a dictionary with another dictionary."""
     # FIXME !
     # This method cannot handle nested dictionaries
     # that hold a reference to the dictionary that

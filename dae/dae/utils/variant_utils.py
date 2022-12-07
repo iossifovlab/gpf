@@ -1,8 +1,3 @@
-"""
-Created on Mar 5, 2018
-
-@author: lubo
-"""
 import logging
 import numpy as np
 
@@ -13,8 +8,8 @@ from dae.variants.attributes import Sex
 logger = logging.getLogger(__name__)
 
 
-GENOTYPE_TYPE = np.int8
-BEST_STATE_TYPE = np.int8
+GenotypeType = np.int8
+BestStateType = np.int8
 
 
 def mat2str(mat, col_sep="", row_sep="/"):
@@ -26,7 +21,7 @@ def mat2str(mat, col_sep="", row_sep="/"):
     )
 
 
-def str2mat(mat, col_sep="", row_sep="/", dtype=GENOTYPE_TYPE):
+def str2mat(mat, col_sep="", row_sep="/", dtype=GenotypeType):
     if col_sep == "":
         return np.array(
             [[int(c) for c in r] for r in mat.split(row_sep)],
@@ -39,10 +34,10 @@ def str2mat(mat, col_sep="", row_sep="/", dtype=GENOTYPE_TYPE):
 
 
 def best2gt(best_state):
+    """Convert a best state array to a genotype array."""
     rows, cols = best_state.shape
 
-    genotype = np.zeros(shape=(2, cols), dtype=GENOTYPE_TYPE)
-    # genotype[1, :] = -2
+    genotype = np.zeros(shape=(2, cols), dtype=GenotypeType)
     ploidy = np.sum(best_state, 0)
     for allele_index in range(rows):
         best_state_row = best_state[allele_index, :]
@@ -60,58 +55,62 @@ def best2gt(best_state):
     return genotype
 
 
-def fgt2str(fgt, sep=";"):
+def fgt2str(family_genotypes, sep=";"):
+    """Convert a family genotype array to a string."""
     result = []
-    for i in range(len(fgt)):
-        v0 = fgt[i][0]
-        v1 = fgt[i][1]
-        if v0 < 0:
-            v0 = "."
-        if v1 < 0:
-            v1 = "."
-        result.append(f"{v0}/{v1}")
+    for genotype in family_genotypes:
+        v_0 = genotype[0]
+        v_1 = genotype[1]
+        if v_0 < 0:
+            v_0 = "."
+        if v_1 < 0:
+            v_1 = "."
+        result.append(f"{v_0}/{v_1}")
     return sep.join(result)
 
 
-def str2fgt(fgt, split=";"):
+def str2fgt(fgt):
+    """Convert a string to a family genotype array."""
     cols = fgt.split(";")
-    result = np.zeros(shape=(2, len(cols)), dtype=GENOTYPE_TYPE)
+    result = np.zeros(shape=(2, len(cols)), dtype=GenotypeType)
     for idx, col in enumerate(cols):
-        sp = col.split("/")
+        tokens = col.split("/")
 
-        if sp[0] == ".":
-            v0 = -1
+        if tokens[0] == ".":
+            v_0 = -1
         else:
-            v0 = int(sp[0])
+            v_0 = int(tokens[0])
 
-        if sp[1] == ".":
-            v1 = -1
+        if tokens[1] == ".":
+            v_1 = -1
         else:
-            v1 = int(sp[1])
+            v_1 = int(tokens[1])
 
-        result[0][idx] = v0
-        result[1][idx] = v1
+        result[0][idx] = v_0
+        result[1][idx] = v_1
 
     return result
 
 
 def gt2str(gt):
+    """Convert a genotype array to a string."""
     assert gt.shape[0] == 2
     result = []
     for i in range(gt.shape[1]):
-        v0 = gt[0, i]
-        v1 = gt[1, i]
-        if v0 < 0:
-            v0 = "."
-        if v1 < 0:
-            v1 = "."
-        result.append(f"{v0}/{v1}")
+        v_0 = gt[0, i]
+        v_1 = gt[1, i]
+        if v_0 < 0:
+            v_0 = "."
+        if v_1 < 0:
+            v_1 = "."
+        result.append(f"{v_0}/{v_1}")
     return ",".join(result)
 
 
-def str2gt(gts, split=",", dtype=GENOTYPE_TYPE):
+def str2gt(gts, split=",", dtype=GenotypeType):
+    """Convert a string to a genotype array."""
     gts = gts.split(split)
-    result = np.zeros(shape=(2,  len(gts)), dtype=dtype)
+    result = np.zeros(shape=(2, len(gts)), dtype=dtype)
 
     for col, pgts in enumerate(gts):
         vals = [
@@ -124,7 +123,7 @@ def str2gt(gts, split=",", dtype=GENOTYPE_TYPE):
 
 
 def reference_genotype(size):
-    return np.zeros(shape=(2, size), dtype=GENOTYPE_TYPE)
+    return np.zeros(shape=(2, size), dtype=GenotypeType)
 
 
 def is_reference_genotype(gt):
@@ -144,69 +143,44 @@ def is_all_unknown_genotype(gt):
 
 
 def trim_str_left(pos, ref, alt):
-    assert alt, (pos, ref, alt)
-    assert ref, (pos, ref, alt)
-
-    n = 0
-    for n, s in enumerate(zip(ref, alt)):
-        if s[0] != s[1]:
+    """Trim identical nucleotides prefixes and adjust position accordingly."""
+    assert alt and ref, (pos, ref, alt)
+    idx = 0
+    for idx, sequence in enumerate(zip(ref, alt)):
+        if sequence[0] != sequence[1]:
             break
 
-    if ref[n] == alt[n]:
-        ref = ref[n + 1:]
-        alt = alt[n + 1:]
-        pos += n + 1
+    if ref[idx] == alt[idx]:
+        ref = ref[idx + 1:]
+        alt = alt[idx + 1:]
+        pos += idx + 1
     else:
-        ref = ref[n:]
-        alt = alt[n:]
-        pos += n
+        ref = ref[idx:]
+        alt = alt[idx:]
+        pos += idx
 
     return pos, ref, alt
 
-    # for n, s in enumerate(zip(ref[::-1], alt[::-1])):
-    #     if s[0] != s[1]:
-    #         break
-    # # not made simple
-    # if ref[-(n + 1)] == alt[-(n + 1)]:
-    #     r, a = ref[: -(n + 1)], alt[: -(n + 1)]
-    # else:
-    #     if n == 0:
-    #         r, a = ref[:], alt[:]
-    #     else:
-    #         r, a = ref[:-n], alt[:-n]
-    # if len(r) == 0 or len(a) == 0:
-    #     return pos, r, a
-
-    # return pos, r, a
-
 
 def trim_str_right(pos, ref, alt):
+    """Trim identical nucleotides suffixes and adjust position accordingly."""
     assert alt, (pos, ref, alt)
     assert ref, (pos, ref, alt)
 
-    n = 0
-    for n, s in enumerate(zip(ref[::-1], alt[::-1])):
-        if s[0] != s[1]:
+    idx = 0
+    for idx, sequence in enumerate(zip(ref[::-1], alt[::-1])):
+        if sequence[0] != sequence[1]:
             break
     # not made simple
-    if ref[-(n + 1)] == alt[-(n + 1)]:
-        r, a = ref[: -(n + 1)], alt[: -(n + 1)]
+    if ref[-(idx + 1)] == alt[-(idx + 1)]:
+        ref, alt = ref[: -(idx + 1)], alt[: -(idx + 1)]
     else:
-        if n == 0:
-            r, a = ref[:], alt[:]
+        if idx == 0:
+            ref, alt = ref[:], alt[:]
         else:
-            r, a = ref[:-n], alt[:-n]
+            ref, alt = ref[:-idx], alt[:-idx]
 
-    return pos, r, a
-
-    # for n, s in enumerate(zip(r, a)):
-    #     if s[0] != s[1]:
-    #         break
-
-    # if r[n] == a[n]:
-    #     return pos + n + 1, r[n + 1:], a[n + 1:]
-
-    # return pos + n, r[n:], a[n:]
+    return pos, ref, alt
 
 
 def trim_str_left_right(pos, ref, alt):
@@ -228,35 +202,36 @@ def trim_str_right_left(pos, ref, alt):
 
 
 def trim_parsimonious(pos, ref, alt):
+    """Trim identical nucleotides on both ends and adjust position."""
     assert alt, (pos, ref, alt)
     assert ref, (pos, ref, alt)
 
-    rp, rr, ra = trim_str_right(pos, ref, alt)
-    if len(rr) == 0:
-        ra = alt[:len(ra) + 1]
-        rr = ref[0:1]
-        assert ra[-1] == rr[-1]
-        return rp, rr, ra
+    r_pos, r_ref, r_alt = trim_str_right(pos, ref, alt)
+    if len(r_ref) == 0:
+        r_alt = alt[:len(r_alt) + 1]
+        r_ref = ref[0:1]
+        assert r_alt[-1] == r_ref[-1]
+        return r_pos, r_ref, r_alt
 
-    if len(ra) == 0:
-        rr = ref[:len(rr) + 1]
-        ra = alt[0:1]
-        assert ra[-1] == rr[-1]
-        return rp, rr, ra
+    if len(r_alt) == 0:
+        r_ref = ref[:len(r_ref) + 1]
+        r_alt = alt[0:1]
+        assert r_alt[-1] == r_ref[-1]
+        return r_pos, r_ref, r_alt
 
-    lp, lr, la = trim_str_left(rp, rr, ra)
-    if len(lr) == 0:
-        lr = ra[-len(la) - 1]
-        la = ra[-len(la) - 1:]
-        lp -= 1
-        return lp, lr, la
-    if len(la) == 0:
-        la = rr[-len(lr) - 1]
-        lr = rr[-len(lr) - 1:]
-        lp -= 1
-        return lp, lr, la
+    l_pos, l_ref, l_alt = trim_str_left(r_pos, r_ref, r_alt)
+    if len(l_ref) == 0:
+        l_ref = r_alt[-len(l_alt) - 1]
+        l_alt = r_alt[-len(l_alt) - 1:]
+        l_pos -= 1
+        return l_pos, l_ref, l_alt
+    if len(l_alt) == 0:
+        l_alt = r_ref[-len(l_ref) - 1]
+        l_ref = r_ref[-len(l_ref) - 1:]
+        l_pos -= 1
+        return l_pos, l_ref, l_alt
 
-    return lp, lr, la
+    return l_pos, l_ref, l_alt
 
 
 def get_locus_ploidy(

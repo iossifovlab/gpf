@@ -4,7 +4,7 @@ import numpy as np
 from io import StringIO
 from dae.variants.variant import SummaryAllele
 from dae.variants.family_variant import FamilyAllele
-from dae.utils.variant_utils import GENOTYPE_TYPE
+from dae.utils.variant_utils import GenotypeType
 
 from dae.pedigrees.loader import FamiliesLoader
 
@@ -38,8 +38,8 @@ def sample_family():
             "T",
             1,
             2,
-            np.array([[0, 0, 0], [0, 0, 1]], dtype=GENOTYPE_TYPE),
-            np.array([[2, 2, 1], [0, 0, 1]], dtype=GENOTYPE_TYPE),
+            np.array([[0, 0, 0], [0, 0, 1]], dtype=GenotypeType),
+            np.array([[2, 2, 1], [0, 0, 1]], dtype=GenotypeType),
         ),
         (
             "chr1",
@@ -48,8 +48,8 @@ def sample_family():
             "T",
             1,
             2,
-            np.array([[0, 0, 0], [0, 1, 1]], dtype=GENOTYPE_TYPE),
-            np.array([[2, 1, 1], [0, 1, 1]], dtype=GENOTYPE_TYPE),
+            np.array([[0, 0, 0], [0, 1, 1]], dtype=GenotypeType),
+            np.array([[2, 1, 1], [0, 1, 1]], dtype=GenotypeType),
         ),
         (
             "chr1",
@@ -58,8 +58,8 @@ def sample_family():
             "T",
             1,
             2,
-            np.array([[0, 0, 1], [0, 0, 1]], dtype=GENOTYPE_TYPE),
-            np.array([[2, 2, 0], [0, 0, 2]], dtype=GENOTYPE_TYPE),
+            np.array([[0, 0, 1], [0, 0, 1]], dtype=GenotypeType),
+            np.array([[2, 2, 0], [0, 0, 2]], dtype=GenotypeType),
         ),
         # (
         #     "chr1",
@@ -68,8 +68,8 @@ def sample_family():
         #     "G,T",
         #     1,
         #     3,
-        #     np.array([[0, 1, 2], [0, 0, 0]], dtype=GENOTYPE_TYPE),
-        #     np.array([[2, 1, 1], [0, 1, 0], [0, 0, 1]], dtype=GENOTYPE_TYPE),
+        #     np.array([[0, 1, 2], [0, 0, 0]], dtype=GenotypeType),
+        #     np.array([[2, 1, 1], [0, 1, 0], [0, 0, 1]], dtype=GenotypeType),
         # ),
         # (
         #     "chr1",
@@ -78,8 +78,8 @@ def sample_family():
         #     "G,T",
         #     2,
         #     3,
-        #     np.array([[0, 1, 2], [0, 0, 0]], dtype=GENOTYPE_TYPE),
-        #     np.array([[2, 1, 1], [0, 1, 0], [0, 0, 1]], dtype=GENOTYPE_TYPE),
+        #     np.array([[0, 1, 2], [0, 0, 0]], dtype=GenotypeType),
+        #     np.array([[2, 1, 1], [0, 1, 0], [0, 0, 1]], dtype=GenotypeType),
         # ),
     ],
 )

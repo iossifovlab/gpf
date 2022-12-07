@@ -21,13 +21,13 @@ def isnan(val):
 
 
 def camelize_string(data: str) -> str:
-    tokens = data.split('_')
-    return tokens[0] + ''.join(x.title() for x in tokens[1:])
+    tokens = data.split("_")
+    return tokens[0] + "".join(x.title() for x in tokens[1:])
 
 
 def to_response_json(data) -> dict:
-    """Converts a dict or Box to an acceptable response JSON."""
-    result: dict = dict()
+    """Convert a dict or Box to an acceptable response JSON."""
+    result: dict = {}
 
     for key, value in data.items():
         if isinstance(value, Box):
@@ -35,8 +35,8 @@ def to_response_json(data) -> dict:
 
         if isinstance(value, dict):
             result[camelize_string(key)] = to_response_json(value)
-        elif isinstance(value, list) or isinstance(value, tuple):
-            new_value = list()
+        elif isinstance(value, (list, tuple)):
+            new_value = []
             for item in value:
                 if isinstance(item, dict):
                     new_value.append(to_response_json(item))
@@ -52,7 +52,8 @@ def convert_size(size_bytes: int) -> str:
     """
     Convert an integer representing size in bytes to a human-readable string.
 
-    Copied from https://stackoverflow.com/questions/5194057/better-way-to-convert-file-sizes-in-python
+    Copied from:
+    https://stackoverflow.com/questions/5194057/better-way-to-convert-file-sizes-in-python
     """
     if size_bytes == 0:
         return "0B"

@@ -6,6 +6,7 @@ DEL_RE = re.compile(r"^del\((\d+)\)$")
 
 
 def dae2vcf_variant(chrom, position, var, genome):
+    """Convert a given CSHL-style variant to the VCF format."""
     match = SUB_COMPLEX_RE.match(var)
     if match:
         return position, match.group(2), match.group(3)
@@ -29,6 +30,7 @@ def dae2vcf_variant(chrom, position, var, genome):
 
 
 def split_iterable(iterable, max_chunk_length=50):
+    """Split an iterable into chunks of a list type."""
     i = 0
     result = []
 
@@ -45,7 +47,11 @@ def split_iterable(iterable, max_chunk_length=50):
         yield result
 
 
-def join_line(ln, sep="\t"):
-    lm = map(lambda v: "; ".join(v) if isinstance(v, list) else v, ln)
-    tl = map(lambda v: "" if v is None or v == "None" else str(v), lm)
-    return sep.join(tl) + "\n"
+def join_line(line, sep="\t"):
+    """Join an iterable representing a line into a string."""
+    flattened_line = map(
+        lambda v: "; ".join(v) if isinstance(v, list) else v, line)
+    none_as_str_line = map(
+        lambda v: "" if v is None or v == "None" else str(v),
+        flattened_line)
+    return sep.join(none_as_str_line) + "\n"

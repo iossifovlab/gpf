@@ -23,7 +23,7 @@ import pyarrow.parquet as pq
 
 import fsspec
 
-from dae.utils.variant_utils import GENOTYPE_TYPE
+from dae.utils.variant_utils import GenotypeType
 from dae.variants.attributes import TransmissionType
 from dae.variants.family_variant import FamilyAllele, FamilyVariant, \
     calculate_simple_best_state
@@ -499,7 +499,7 @@ class VariantsParquetWriter:
 
     @staticmethod
     def _setup_reference_allele(summary_variant, family):
-        genotype = -1 * np.ones(shape=(2, len(family)), dtype=GENOTYPE_TYPE)
+        genotype = -1 * np.ones(shape=(2, len(family)), dtype=GenotypeType)
         best_state = calculate_simple_best_state(
             genotype, summary_variant.allele_count
         )
@@ -511,7 +511,7 @@ class VariantsParquetWriter:
 
     @staticmethod
     def _setup_all_unknown_allele(summary_variant, family):
-        genotype = -1 * np.ones(shape=(2, len(family)), dtype=GENOTYPE_TYPE)
+        genotype = -1 * np.ones(shape=(2, len(family)), dtype=GenotypeType)
         best_state = calculate_simple_best_state(
             genotype, summary_variant.allele_count
         )
@@ -536,13 +536,13 @@ class VariantsParquetWriter:
 
     def _setup_all_unknown_variant(self, summary_variant, family_id):
         family = self.families[family_id]
-        genotype = -1 * np.ones(shape=(2, len(family)), dtype=GENOTYPE_TYPE)
+        genotype = -1 * np.ones(shape=(2, len(family)), dtype=GenotypeType)
         alleles = [
             self._setup_reference_allele(summary_variant, family),
             self._setup_all_unknown_allele(summary_variant, family),
         ]
         best_state = -1 * np.ones(
-            shape=(len(alleles), len(family)), dtype=GENOTYPE_TYPE
+            shape=(len(alleles), len(family)), dtype=GenotypeType
         )
         return FamilyVariant(
             SummaryVariant(alleles), family, genotype, best_state

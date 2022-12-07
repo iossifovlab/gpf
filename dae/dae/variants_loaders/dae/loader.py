@@ -17,7 +17,7 @@ from dae.utils.regions import Region
 from dae.utils import fs_utils
 
 from dae.genomic_resources.reference_genome import ReferenceGenome
-from dae.utils.variant_utils import str2mat, GENOTYPE_TYPE, str2gt
+from dae.utils.variant_utils import str2mat, GenotypeType, str2gt
 from dae.utils.helpers import str2bool
 
 from dae.utils.dae_utils import dae2vcf_variant
@@ -257,7 +257,7 @@ class DenovoLoader(VariantsGenotypesLoader):
         # TODO: Add support for multiallelic variants
         # This method currently assumes biallelic variants
 
-        genotype = np.zeros(shape=(2, len(family)), dtype=GENOTYPE_TYPE)
+        genotype = np.zeros(shape=(2, len(family)), dtype=GenotypeType)
 
         for person_id, person in family.persons.items():
 
