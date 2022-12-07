@@ -6,11 +6,10 @@ import { NgbDropdownMenu } from '@ng-bootstrap/ng-bootstrap';
 import { MultipleSelectMenuComponent } from 'app/multiple-select-menu/multiple-select-menu.component';
 import { SortingButtonsComponent } from 'app/sorting-buttons/sorting-buttons.component';
 import { debounceTime, distinctUntilChanged, switchMap, take, tap } from 'rxjs/operators';
-import { forkJoin, of, Subject, Subscription } from 'rxjs';
+import { forkJoin, Subject, Subscription } from 'rxjs';
 import { AgpTableConfig, Column } from './autism-gene-profiles-table';
 import { AgpTableService } from './autism-gene-profiles-table.service';
 import { environment } from 'environments/environment';
-import { interval } from 'd3';
 
 @Component({
   selector: 'gpf-autism-gene-profiles-table',
