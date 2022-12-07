@@ -100,7 +100,7 @@ export class BasePage {
       }
 
       cy.window().then((win) => {
-        cy.stub(win, 'open', url => {
+        cy.stub(win, 'open', (url: string) => {
           win.location.href = `${Cypress.config().baseUrl}accounts/login/?next=/gpf/o/authorize/%3F${url}`;
         }).as('popup');
       });
