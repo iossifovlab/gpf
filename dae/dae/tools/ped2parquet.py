@@ -13,6 +13,7 @@ from dae.pedigrees.loader import FamiliesLoader
 
 
 def main(argv):
+    """Entry point for ped2parquet."""
     parser = argparse.ArgumentParser()
 
     parser.add_argument('--verbose', '-V', action='count', default=0)
@@ -54,6 +55,7 @@ def main(argv):
 
 
 def run(argv):
+    """Run the ped to parquet conversion."""
     filename, params = FamiliesLoader.parse_cli_arguments(argv)
     if argv.study_id is not None:
         study_id = argv.study_id

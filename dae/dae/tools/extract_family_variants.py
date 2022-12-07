@@ -25,28 +25,31 @@ TESTRUN = 0
 PROFILE = 0
 
 
-class FilterFamilies(object):
+class FilterFamilies:
+    """A family filter."""
+
     def __init__(self, args):
         self.outdir = args.outdir
         self.name = args.name
-        self.families = set([f.strip() for f in args.families.split(",")])
+        self.families = set(f.strip() for f in args.families.split(","))
         self.summary_filename = args.transmittedfile
         self.tm_filename = args.toomanyfile
 
     def handle(self):
+        """Carries out the filtering."""
+        # pylint: disable=too-many-locals
         print(
-            "Working with summary filename: {}".format(self.summary_filename)
+            f"Working with summary filename: {self.summary_filename}"
         )
-        out_filename = os.path.join(self.outdir, "{}.txt".format(self.name))
+        out_filename = os.path.join(self.outdir, f"{self.name}.txt")
         out_tm_filename = os.path.join(
-            self.outdir, "{}-TOOMANY.txt".format(self.name)
+            self.outdir, f"{self.name}-TOOMANY.txt"
         )
         print(
-            "Storing result into: {} and {}".format(
-                out_filename, out_tm_filename
-            )
+            f"Storing result into: {out_filename} and {out_tm_filename}"
         )
 
+        # pylint: disable=invalid-name
         with gzip.open(self.summary_filename, "r") as fh, gzip.open(
             self.tm_filename, "r"
         ) as tmfh, open(out_filename, "w") as out, open(
@@ -72,7 +75,7 @@ class FilterFamilies(object):
             for line in fh:
                 try:
                     if line[0] == "#":
-                        print("skipping comment: {}".format(line.strip()))
+                        print(f"skipping comment: {line.strip()}")
                         continue
                     line = line.strip("\r\n")
                     data = line.split("\t")
@@ -83,7 +86,7 @@ class FilterFamilies(object):
                         tm_line = tm_line.strip("\r\n")
                         tm_data = tm_line.split("\t")
                         family_data = tm_data[3]
-                        check = any([f in family_data for f in self.families])
+                        check = any(f in family_data for f in self.families)
                         if check:
                             out.write(line)
                             out.write("\n")
@@ -91,7 +94,7 @@ class FilterFamilies(object):
                             out_tm.write("\n")
 
                     else:
-                        check = any([f in family_data for f in self.families])
+                        check = any(f in family_data for f in self.families)
                         if check:
                             out.write(line)
                             out.write("\n")
@@ -100,12 +103,10 @@ class FilterFamilies(object):
                         sys.stderr.write(".")
                     vrow += 1
                 except Exception as ex:
-                    import traceback
+                    import traceback  # pylint: disable=import-outside-toplevel
 
                     print(
-                        "exception thrown during processing line: |{}|".format(
-                            line
-                        )
+                        f"exception thrown during processing line: |{line}|"
                     )
                     traceback.print_exc()
                     raise ex
@@ -122,20 +123,16 @@ def main(argv=None):  # IGNORE:C0111
         sys.argv.extend(argv)
 
     program_name = os.path.basename(sys.argv[0])
-    program_version = "v%s" % __version__
+    program_version = f"v{__version__}"
     program_build_date = str(__updated__)
-    program_version_message = "%%(prog)s %s (%s)" % (
-        program_version,
-        program_build_date,
+    program_version_message = (
+        f"%(prog)s {program_version} ({program_build_date})"
     )
     program_shortdesc = __import__("__main__").__doc__.split("\n")[1]
-    program_desc = """%s
-%s
+    program_desc = f"""{program_shortdesc}
+{__date__}
 USAGE
-""" % (
-        program_shortdesc,
-        str(__date__),
-    )
+"""
 
     try:
         # Setup argument parser
@@ -196,15 +193,15 @@ USAGE
     except KeyboardInterrupt:
         # handle keyboard interrupt
         return 0
-    except Exception as e:
-        import traceback
+    except Exception as exc:  # pylint: disable=broad-except
+        import traceback  # pylint: disable=import-outside-toplevel
 
         traceback.print_exc()
 
         if DEBUG or TESTRUN:
-            raise (e)
+            raise exc
         indent = len(program_name) * " "
-        sys.stderr.write(program_name + ": " + repr(e) + "\n")
+        sys.stderr.write(program_name + ": " + repr(exc) + "\n")
         sys.stderr.write(indent + "  for help use --help")
         return 2
 

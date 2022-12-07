@@ -16,8 +16,8 @@ class Dae2ParquetTool(Variants2ParquetTool):
     VARIANTS_FREQUENCIES = False
 
 
-def main(argv=sys.argv[1:], gpf_instance=None):
-
+def main(argv=None, gpf_instance=None):
+    argv = argv or sys.argv[1:]
     Dae2ParquetTool.main(
         argv,
         gpf_instance=gpf_instance

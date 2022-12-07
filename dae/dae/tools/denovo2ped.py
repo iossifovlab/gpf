@@ -5,7 +5,9 @@ import argparse
 import pandas as pd
 
 
-def parse_cli_arguments(argv=sys.argv[1:]):
+def parse_cli_arguments(argv=None):
+    """Parse the cli arguments."""
+    argv = argv or sys.argv[1:]
     parser = argparse.ArgumentParser(description="Convert denovo data to DAE")
 
     parser.add_argument(
@@ -64,19 +66,19 @@ def parse_cli_arguments(argv=sys.argv[1:]):
 
 
 def import_file(filepath, skiprows=0):
+    """Import a file."""
     extension = filepath.split(".").pop()
     try:
-        if extension == "tsv" or extension == "ped":
+        if extension in {"tsv", "ped"}:
             return pd.read_table(filepath, sep="\t")
-        elif extension == "csv":
+        if extension == "csv":
             return pd.read_csv(filepath)
-        elif extension == "xlsx":
+        if extension == "xlsx":
             return pd.read_excel(filepath, skiprows=skiprows)
-        else:
-            raise IOError
+        raise IOError
     except IOError:
         print(
-            "ERROR: Incorrect filepath: {}".format(filepath), file=sys.stderr
+            f"ERROR: Incorrect filepath: {filepath}", file=sys.stderr
         )
         sys.exit(1)
 
@@ -89,19 +91,20 @@ def prepare_args(args):
 
 
 def handle_column(column_name, variants, default=""):
+    """Handle a column."""
     try:
         return variants[column_name]
     except KeyError:
         print(
-            "ERROR: '{}' column does not exist.\nAssigning {}...\n".format(
-                column_name, default
-            ),
+            f"ERROR: '{column_name}' column does not exist.\n"
+            f"Assigning {default}...\n",
             file=sys.stderr,
         )
         return default
 
 
 def denovo2ped(args):
+    """Convert denovo to pedigree."""
     variants = import_file(args["variantsFile"], args["skiprows"])
 
     families = pd.DataFrame(variants, columns=[args["sampleId"]]).rename(
@@ -118,7 +121,7 @@ def denovo2ped(args):
 
     families.to_csv(args["outputFile"], sep="\t", index=False)
     print(
-        "Exported to filepath: {}".format(args["outputFile"]), file=sys.stderr
+        f"Exported to filepath: {args['outputFile']}", file=sys.stderr
     )
 
 

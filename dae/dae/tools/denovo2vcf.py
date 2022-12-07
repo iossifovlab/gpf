@@ -1,10 +1,12 @@
 #!/usr/bin/env python
+# pylint: disable=invalid-name
 import argparse
-import pandas as pd
 import csv
+import pandas as pd
 
 
 def get_argument_parser():
+    """Create argument parser for denovo2vcf."""
     parser = argparse.ArgumentParser(description="Convert DAE file to vcf")
 
     parser.add_argument(
@@ -83,7 +85,9 @@ def get_argument_parser():
     return parser
 
 
-class DenovoToVcf(object):
+class DenovoToVcf:
+    """Convert denovo to vcf."""
+
     def __init__(
         self,
         pedigree_file,
@@ -111,7 +115,10 @@ class DenovoToVcf(object):
 
         return peopleIds
 
-    def convert(self, chromosome, position, skip_columns=[], sort_order=[]):
+    def convert(self, chromosome, position, skip_columns=None, sort_order=None):
+        """Convert variants at specified chromosome and position."""
+        skip_columns = skip_columns or []
+        sort_order = sort_order or []
         if self.denovo_personId not in skip_columns:
             skip_columns.append(self.denovo_personId)
         with open(self.input_filename, "r") as input_file:
@@ -144,7 +151,8 @@ class DenovoToVcf(object):
                 )
                 row_copy[row_copy[self.denovo_personId]] = "0/1"
 
-                [row_copy.pop(key_to_del, None) for key_to_del in skip_columns]
+                for key_to_del in skip_columns:
+                    row_copy.pop(key_to_del, None)
 
                 vcf_list.append(row_copy)
 
@@ -162,6 +170,7 @@ class DenovoToVcf(object):
 
 
 def main():
+    """Entry point for the converter."""
     parser = get_argument_parser()
     args = parser.parse_args()
 
