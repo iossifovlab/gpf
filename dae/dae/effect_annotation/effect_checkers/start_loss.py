@@ -1,8 +1,8 @@
-from ..effect import EffectFactory
 import logging
+from ..effect import EffectFactory
 
 
-class StartLossEffectChecker(object):
+class StartLossEffectChecker:
     def get_effect(self, request):
         logger = logging.getLogger(__name__)
 

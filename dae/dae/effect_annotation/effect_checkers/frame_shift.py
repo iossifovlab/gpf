@@ -1,8 +1,8 @@
-from ..effect import EffectFactory
 import logging
+from ..effect import EffectFactory
 
 
-class FrameShiftEffectChecker(object):
+class FrameShiftEffectChecker:
     def __init__(self):
         self.logger = logging.getLogger(__name__)
 
@@ -13,15 +13,15 @@ class FrameShiftEffectChecker(object):
                     effect_name = "no-frame-shift-newStop"
                 else:
                     effect_name = "no-frame-shift"
-                ef = EffectFactory.create_effect_with_aa_change(
+                effect = EffectFactory.create_effect_with_aa_change(
                     effect_name, request
                 )
             else:
                 effect_name = "frame-shift"
-                ef = EffectFactory.create_effect_with_aa_change(
+                effect = EffectFactory.create_effect_with_aa_change(
                     effect_name, request
                 )
-            return ef
+            return effect
         return None
 
     def check_if_new_stop(self, request):

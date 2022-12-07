@@ -1,8 +1,8 @@
-from ..effect import EffectFactory
 import logging
+from ..effect import EffectFactory
 
 
-class StopLossEffectChecker(object):
+class StopLossEffectChecker:
     def get_effect(self, request):
         logger = logging.getLogger(__name__)
         last_position = request.variant.position + len(
