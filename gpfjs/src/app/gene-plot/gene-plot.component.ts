@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, EventEmitter, Input, Output, OnChanges, SimpleChanges, HostListener } from '@angular/core';
 import { Gene, Transcript } from 'app/gene-browser/gene';
 import { GenePlotModel, GenePlotScaleState, GenePlotZoomHistory } from 'app/gene-plot/gene-plot';
 import { SummaryAllele, SummaryAllelesArray } from 'app/gene-browser/summary-variants';
@@ -8,8 +8,7 @@ import * as draw from 'app/utils/svg-drawing';
 @Component({
   selector: 'gpf-gene-plot',
   templateUrl: './gene-plot.component.html',
-  styleUrls: ['./gene-plot.component.css'],
-  host: {'(document:keydown)': 'handleKeyboardEvent($event)'}
+  styleUrls: ['./gene-plot.component.css']
 })
 export class GenePlotComponent implements OnChanges {
   @Input() public readonly gene: Gene;
@@ -414,9 +413,13 @@ export class GenePlotComponent implements OnChanges {
     let svgTitle: string;
 
     if (transcriptId !== 'collapsed') {
-      svgTitle = `Transcript id: ${transcriptId}\nChromosome: ${transcript.chromosome}\nExons length: ${this.commaSeparateNumber(exonsLength)}`;
+      svgTitle = `Transcript id: ${transcriptId}` +
+      `\nChromosome: ${transcript.chromosome}` +
+      `\nExons length: ${this.commaSeparateNumber(exonsLength)}`;
     } else {
-      svgTitle = `COLLAPSED TRANSCRIPT\n${this.chromosomesTitle}\nExons length: ${this.commaSeparateNumber(exonsLength)}`;
+      svgTitle = `COLLAPSED TRANSCRIPT` +
+      `\n${this.chromosomesTitle}` +
+      `\nExons length: ${this.commaSeparateNumber(exonsLength)}`;
     }
 
     draw.hoverText(
@@ -628,6 +631,7 @@ export class GenePlotComponent implements OnChanges {
     this.redraw();
   }
 
+  @HostListener('(document:keydown)', ['$event'])
   private handleKeyboardEvent($event: KeyboardEvent): void {
     if (!($event.target instanceof Element)) {
       return;
