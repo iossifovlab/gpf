@@ -1,4 +1,4 @@
-import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { CheckboxListComponent, DisplayNamePipe } from './checkbox-list.component';
 
@@ -6,13 +6,11 @@ describe('CheckboxListComponent', () => {
   let component: CheckboxListComponent;
   let fixture: ComponentFixture<CheckboxListComponent>;
 
-  beforeEach(waitForAsync(() => {
+  beforeEach(() => {
     TestBed.configureTestingModule({
       declarations: [CheckboxListComponent, DisplayNamePipe]
     }).compileComponents();
-  }));
 
-  beforeEach(() => {
     fixture = TestBed.createComponent(CheckboxListComponent);
     component = fixture.componentInstance;
     component.items = new Set(['testItem1', 'testItem2']);
@@ -33,7 +31,7 @@ describe('CheckboxListComponent', () => {
 
     component.selectedItems = undefined;
     component.ngOnInit();
-    expect(selectAllSpy).toHaveBeenCalled();
+    expect(selectAllSpy).toHaveBeenCalledWith();
   });
 
   it('should emit', () => {
@@ -45,7 +43,7 @@ describe('CheckboxListComponent', () => {
     component.selectedItems = new Set([...component.items]);
     component.emit();
 
-    expect(emitSpy.mock.calls).toEqual([
+    expect(emitSpy.mock.calls).toEqual([ // eslint-disable-line 
       [undefined],
       [component.selectedItems]
     ]);
@@ -56,8 +54,8 @@ describe('CheckboxListComponent', () => {
     component.selectedItems = new Set([...component.items]);
 
     component.selectNone();
-    expect(component.selectedItems).toEqual(new Set([]));
-    expect(emitSpy).toHaveBeenCalled();
+    expect(component.selectedItems).toStrictEqual(new Set([]));
+    expect(emitSpy).toHaveBeenCalledWith();
   });
 
   it('should select all', () => {
@@ -65,18 +63,18 @@ describe('CheckboxListComponent', () => {
     component.selectedItems = new Set();
 
     component.selectAll();
-    expect(component.selectedItems).toEqual(new Set([...component.items]));
-    expect(emitSpy).toHaveBeenCalled();
+    expect(component.selectedItems).toStrictEqual(new Set([...component.items]));
+    expect(emitSpy).toHaveBeenCalledWith();
   });
 
   it('should toggle item', () => {
     const emitSpy = jest.spyOn(component, 'emit');
 
     component.toggleItem('testItem3');
-    expect(component.selectedItems).toEqual(new Set(['testItem1', 'testItem2', 'testItem3']));
+    expect(component.selectedItems).toStrictEqual(new Set(['testItem1', 'testItem2', 'testItem3']));
     expect(emitSpy).toHaveBeenCalledTimes(1);
     component.toggleItem('testItem2');
-    expect(component.selectedItems).toEqual(new Set(['testItem1', 'testItem3']));
+    expect(component.selectedItems).toStrictEqual(new Set(['testItem1', 'testItem3']));
     expect(emitSpy).toHaveBeenCalledTimes(2);
   });
 });
