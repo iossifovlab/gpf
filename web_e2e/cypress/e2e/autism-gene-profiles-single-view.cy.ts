@@ -1,7 +1,7 @@
-import { AutismGeneProfilesBlockPage } from 'cypress/elements/autism-gene-profiles-block-page';
+// import { AutismGeneProfilesBlockPage } from 'cypress/elements/autism-gene-profiles-block-page';
 import { AutismGeneProfilesSingleViewPage } from 'cypress/elements/autism-gene-profiles-single-view-page';
-import { AutismGeneProfilesTablePage } from 'cypress/elements/autism-gene-profiles-table-page';
-import { GenotypeBlockPage } from 'cypress/elements/genotype-block-page';
+// import { AutismGeneProfilesTablePage } from 'cypress/elements/autism-gene-profiles-table-page';
+// import { GenotypeBlockPage } from 'cypress/elements/genotype-block-page';
 import { sidenavPageLinks } from 'cypress/elements/utils';
 
 describe('Autism gene profiles single view tests', () => {
@@ -56,7 +56,6 @@ describe('Autism gene profiles single view tests', () => {
 
 describe('Autism gene profiles single view links tests', () => {
   const page = new AutismGeneProfilesSingleViewPage();
-  const AutismGeneProfilesTablePagePage = new AutismGeneProfilesTablePage();
 
   before(() => {
     page.cleanup();
@@ -110,48 +109,48 @@ describe('Autism gene profiles single view links tests', () => {
   });
 });
 
-describe('Autism gene profiles single view dataset table tests', () => {
-  const page = new AutismGeneProfilesSingleViewPage();
+// describe('Autism gene profiles single view dataset table tests', () => {
+//   const page = new AutismGeneProfilesSingleViewPage();
 
-  // it('should test redirect logic', () => {
-  //   page.cleanup();
-  //   page.navigateToHome();
-  //   page.loginAdmin();
-  //   page.navigateToSidenavPage(sidenavPageLinks.autismGeneProfiles);
+//   it('should test redirect logic', () => {
+//     page.cleanup();
+//     page.navigateToHome();
+//     page.loginAdmin();
+//     page.navigateToSidenavPage(sidenavPageLinks.autismGeneProfiles);
 
-  //   page.openSingleViewPage('GRIN2B');
+//     page.openSingleViewPage('GRIN2B');
 
-  //   cy.intercept({
-  //     method: 'POST',
-  //     url: '/gpf/api/v3/query_state/save'
-  //   }).as('query');
-  //   cy.get('#denovo_missense > :nth-child(2) > .link-genotype-browser > span').then(value => {
-  //     cy.wrap(value).parent().parent().parent().invoke('attr', 'id').then(effectType => {
-  //       cy.wrap(effectType).as('effectType');
-  //     });
-  //     cy.wrap(value).click();
-  //   });
-  //   cy.get('@query').then(req => {
-  //     if (req !== null) {
-  //       const genotypeBlockPage = new GenotypeBlockPage();
-  //       cy.visit(Cypress.config().baseUrl + '/load-query/' + req['response'].body.uuid);
-  //       // add waitForPageToLoad logic after visit...
-  //       genotypeBlockPage.findCheckboxInComponentContainingText('.pedigree-selector-card', 'affected').parent().within(checkBoxes => {
-  //         cy.wrap(checkBoxes).get('input').should('be.checked');
-  //         cy.get('@effectType').then(effectType => {
-  //           page.getStudyExpectedDataFromGenotype(effectType);
-  //         });
-  //       });
-  //       page.getStudyActualDataFromGenotype();
-  //       cy.get('@genotypeExpectedWrapper').then(expected => {
-  //         cy.get('@genotypeActualWrapper').then(actual => {
-  //           expect(expected).to.deep.equal(actual);
-  //         });
-  //       });
-  //     }
-  //   });
-  // });
-});
+//     cy.intercept({
+//       method: 'POST',
+//       url: '/gpf/api/v3/query_state/save'
+//     }).as('query');
+//     cy.get('#denovo_missense > :nth-child(2) > .link-genotype-browser > span').then(value => {
+//       cy.wrap(value).parent().parent().parent().invoke('attr', 'id').then(effectType => {
+//         cy.wrap(effectType).as('effectType');
+//       });
+//       cy.wrap(value).click();
+//     });
+//     cy.get('@query').then(req => {
+//       if (req !== null) {
+//         const genotypeBlockPage = new GenotypeBlockPage();
+//         cy.visit(Cypress.config().baseUrl + '/load-query/' + req['response'].body.uuid);
+//         // add waitForPageToLoad logic after visit...
+//         genotypeBlockPage.findCheckboxInComponentContainingText('.pedigree-selector-card', 'affected').parent().within(checkBoxes => {
+//           cy.wrap(checkBoxes).get('input').should('be.checked');
+//           cy.get('@effectType').then(effectType => {
+//             page.getStudyExpectedDataFromGenotype(effectType);
+//           });
+//         });
+//         page.getStudyActualDataFromGenotype();
+//         cy.get('@genotypeExpectedWrapper').then(expected => {
+//           cy.get('@genotypeActualWrapper').then(actual => {
+//             expect(expected).to.deep.equal(actual);
+//           });
+//         });
+//       }
+//     });
+//   });
+// });
 
 describe.skip('Autism gene profiles single view visual tests', () => {
   const page = new AutismGeneProfilesSingleViewPage();
@@ -165,8 +164,9 @@ describe.skip('Autism gene profiles single view visual tests', () => {
   it('should compare histrograms', () => {
     page.openSingleViewPage('CHD8');
 
-    [{tableId: 'autism_scores', tableRows: ['SFARI_gene_score']},
-     {tableId: 'protection_scores', tableRows: ['RVIS_rank', 'LGD_rank', 'pLI_rank', 'pRec_rank']}
+    [
+      {tableId: 'autism_scores', tableRows: ['SFARI_gene_score']},
+      {tableId: 'protection_scores', tableRows: ['RVIS_rank', 'LGD_rank', 'pLI_rank', 'pRec_rank']}
     ].forEach(data => {
       cy.get('#' + data.tableId).within(scores => {
         data.tableRows.forEach((elements, index) => {
@@ -181,13 +181,13 @@ describe.skip('Autism gene profiles single view visual tests', () => {
   });
 });
 
-export const geneData: any = [
+export const geneData = [
   {
     geneSymbols: 'GRIN2B',
     genomicScores: [
       {
         category: 'autism_scores', name: 'Autism Scores', scores: [
-          { name:'SFARI_gene_score', value: 1 }
+          { name: 'SFARI_gene_score', value: 1 }
         ]
       }, {
         category: 'protection_scores', name: 'Protection Scores', scores: [
@@ -206,10 +206,10 @@ export const geneData: any = [
         ]
       }, {
         id: 'relevant_gene_sets', name: 'Relevant Gene Sets', scores: [
-          { name: 'CHD8 target genes', value:  false },
-          { name: 'chromatin modifiers', value:  false },
-          { name: 'essential genes', value:  true },
-          { name: 'FMRP Darnell', value:  true }
+          { name: 'CHD8 target genes', value: false },
+          { name: 'chromatin modifiers', value: false },
+          { name: 'essential genes', value: true },
+          { name: 'FMRP Darnell', value: true }
         ]
       }
     ], datasets: [
@@ -234,7 +234,7 @@ export const geneData: any = [
     genomicScores: [
       {
         category: 'autism_scores', name: 'Autism Scores', scores: [
-          { name:'SFARI_gene_score', value: 1 }
+          { name: 'SFARI_gene_score', value: 1 }
         ]
       }, {
         category: 'protection_scores', name: 'Protection Scores', scores: [
@@ -253,10 +253,10 @@ export const geneData: any = [
         ]
       }, {
         id: 'relevant_gene_sets', name: 'Relevant Gene Sets', scores: [
-          { name: 'CHD8 target genes', value:  true },
-          { name: 'chromatin modifiers', value:  false },
-          { name: 'essential genes', value:  false },
-          { name: 'FMRP Darnell', value:  false }
+          { name: 'CHD8 target genes', value: true },
+          { name: 'chromatin modifiers', value: false },
+          { name: 'essential genes', value: false },
+          { name: 'FMRP Darnell', value: false }
         ]
       }
     ], datasets: [
@@ -268,7 +268,10 @@ export const geneData: any = [
             variant_statistics: 'LGDs', variant_ids: 'denovo_lgds', affected: '2 (0.798)', unaffected: '–'
           },
           {
-            variant_statistics: 'missense', variant_ids: 'denovo_missense', affected: '2 (0.798)', unaffected: '1 (0.524)'
+            variant_statistics: 'missense',
+            variant_ids: 'denovo_missense',
+            affected: '2 (0.798)',
+            unaffected: '1 (0.524)'
           },
           {
             variant_statistics: 'intron', variant_ids: 'denovo_intron', affected: '–', unaffected: '–'
@@ -281,7 +284,7 @@ export const geneData: any = [
     genomicScores: [
       {
         category: 'autism_scores', name: 'Autism Scores', scores: [
-          { name:'SFARI_gene_score', value: 1 }
+          { name: 'SFARI_gene_score', value: 1 }
         ]
       }, {
         category: 'protection_scores', name: 'Protection Scores', scores: [
@@ -300,10 +303,10 @@ export const geneData: any = [
         ]
       }, {
         id: 'relevant_gene_sets', name: 'Relevant Gene Sets', scores: [
-          { name: 'CHD8 target genes', value:  false },
-          { name: 'chromatin modifiers', value:  true },
-          { name: 'essential genes', value:  true },
-          { name: 'FMRP Darnell', value:  true }
+          { name: 'CHD8 target genes', value: false },
+          { name: 'chromatin modifiers', value: true },
+          { name: 'essential genes', value: true },
+          { name: 'FMRP Darnell', value: true }
         ]
       }
     ], datasets: [
