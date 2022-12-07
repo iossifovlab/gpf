@@ -39,9 +39,9 @@ def proto_fixture(tmp_path, tabix_file):
                             - id: AC
                               type: int
                               name: AC
-                        ref:
+                        reference:
                             name: REF
-                        alt:
+                        alternative:
                             name: ALT
                     """),
             }

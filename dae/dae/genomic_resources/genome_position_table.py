@@ -484,19 +484,19 @@ class GenomicPositionTable(abc.ABC):
     @cached_property
     def ref_key(self):
         ref_key = None
-        if "ref" in self.definition:
-            ref_key = self.get_special_column_index("ref") \
+        if "reference" in self.definition:
+            ref_key = self.get_special_column_index("reference") \
                 if self.header_mode == "none" \
-                else self.get_special_column_name("ref")
+                else self.get_special_column_name("reference")
         return ref_key
 
     @cached_property
     def alt_key(self):
         alt_key = None
-        if "alt" in self.definition:
-            alt_key = self.get_special_column_index("alt") \
+        if "alternative" in self.definition:
+            alt_key = self.get_special_column_index("alternative") \
                 if self.header_mode == "none" \
-                else self.get_special_column_name("alt")
+                else self.get_special_column_name("alternative")
         return alt_key
 
     @abc.abstractmethod
@@ -677,7 +677,7 @@ class FlatGenomicPositionTable(GenomicPositionTable):
                 yield line
 
     def close(self):
-        """Nothing to close."""
+        self.str_stream.close()
 
 
 class TabixGenomicPositionTable(GenomicPositionTable):
@@ -981,7 +981,8 @@ class VCFGenomicPositionTable(TabixGenomicPositionTable):
 
 
 def open_genome_position_table(
-        resource: GenomicResource, table_definition: dict):
+    resource: GenomicResource, table_definition: dict, delayed=False
+):
     """Open a genome position table from genomic resource."""
     filename = table_definition["filename"]
 
@@ -1002,21 +1003,25 @@ def open_genome_position_table(
     table: GenomicPositionTable
 
     if table_format in ["mem", "csv", "tsv"]:
-        with resource.open_raw_file(
-                filename, mode="rt", uncompress=True) as infile:
-            table = FlatGenomicPositionTable(
-                resource, table_definition, infile, table_format)
-            # table.load()
+        table = FlatGenomicPositionTable(
+            resource, table_definition,
+            resource.open_raw_file(filename, mode="rt", uncompress=True),
+            table_format
+        )
+        if not delayed:
+            table.load()
         return table
     if table_format == "tabix":
         table = TabixGenomicPositionTable(
             resource, table_definition, resource.open_tabix_file(filename))
-        # table.load()
+        if not delayed:
+            table.load()
         return table
     if table_format == "vcf_info":
         table = VCFGenomicPositionTable(
             resource, table_definition, resource.open_vcf_file(filename))
-        # table.load()
+        if not delayed:
+            table.load()
         return table
 
     raise ValueError("unknown table format")

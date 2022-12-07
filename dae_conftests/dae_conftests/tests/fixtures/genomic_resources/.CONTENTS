@@ -362,7 +362,7 @@
       - destination: alt_freq2
         source: altFreq2
     table:
-      alt:
+      alternative:
         name: alt
       chrom:
         name: chr
@@ -370,7 +370,7 @@
       format: tabix
       pos_begin:
         name: position
-      ref:
+      reference:
         name: ref
       scores:
       - desc: ''
@@ -390,9 +390,9 @@
   - md5: 05e5bc2e111692d73e2c27e76fc7e2a7
     name: TESTFreq.tsv.gz.tbi
     size: 100
-  - md5: 7a8f3cae33e0ddf9ad50cc6831997b60
+  - md5: ed9aa42a1c20063132ce4fca1bda8c15
     name: genomic_resource.yaml
-    size: 588
+    size: 602
   version: '0'
 - config:
     default_annotation:
@@ -400,12 +400,6 @@
       - destination: test_score
         position_aggregator: mean
         source: test_score
-    scores:
-    - desc: ''
-      id: test_score
-      index: 3
-      position_aggregator: mean
-      type: float
     table:
       chrom:
         index: 0
@@ -416,12 +410,18 @@
         index: 1
       pos_end:
         index: 2
+      scores:
+      - desc: ''
+        id: test_score
+        index: 3
+        position_aggregator: mean
+        type: float
     type: position_score
   id: hg38/TESTPosAgg
   manifest:
-  - md5: 14c69783f5916ebdabe1a138f765b026
+  - md5: 6c5becaced1a489c78514aa1fe997aee
     name: genomic_resource.yaml
-    size: 445
+    size: 457
   - md5: 590e48aff9382edfa3330a072c98c6c5
     name: scores.tsv.gz
     size: 107

@@ -13,9 +13,9 @@ table:
     name: chr
   pos_begin:
     name: position
-  ref:
+  reference:
     name: ref
-  alt:
+  alternative:
     name: alt
 
 # score values

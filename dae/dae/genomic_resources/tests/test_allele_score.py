@@ -18,9 +18,9 @@ def test_the_simplest_allele_score():
                       type: float
                       desc: ""
                       name: freq
-                ref:
+                reference:
                   name: reference
-                alt:
+                alternative:
                   name: alternative
         """,
         "data.mem": """
@@ -53,9 +53,9 @@ def test_allele_score_fetch_region():
                       type: float
                       desc: ""
                       name: freq
-                ref:
+                reference:
                   name: reference
-                alt:
+                alternative:
                   name: alternative
         """,
         "data.mem": """

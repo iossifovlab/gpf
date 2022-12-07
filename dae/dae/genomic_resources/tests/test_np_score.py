@@ -20,9 +20,9 @@ def test_the_simplest_np_score(tmp_path):
                           name: s1
                           type: float
                           desc: ""
-                    ref:
+                    reference:
                       name: reference
-                    alt:
+                    alternative:
                       name: alternative
             """,
             "data.mem": """
@@ -66,9 +66,9 @@ def test_np_score_aggregation():
                           na_values: "-1"
                           desc: ""
                           name: s2
-                    ref:
+                    reference:
                       name: reference
-                    alt:
+                    alternative:
                       name: alternative
             """,
             "data.mem": convert_to_tab_separated("""
@@ -132,9 +132,9 @@ def test_np_score_fetch_region():
                       na_values: "-1"
                       desc: ""
                       name: s2
-                ref:
+                reference:
                   name: reference
-                alt:
+                alternative:
                   name: alternative
         """,
         "data.mem": convert_to_tab_separated("""

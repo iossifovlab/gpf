@@ -37,11 +37,11 @@ class GenomicScore(GenomicResourceImplementation):
     def __init__(self, resource):
         super().__init__(resource)
         self.config["id"] = resource.resource_id
-        # self.table = None
         self.table_loaded = False
         self.table = open_genome_position_table(
             self.resource,
-            self.config["table"]
+            self.config["table"],
+            delayed=True
         )
 
     def get_config(self):
@@ -80,11 +80,6 @@ class GenomicScore(GenomicResourceImplementation):
                 "opening already opened genomic score: %s",
                 self.resource.resource_id)
             return self
-
-        # self.table = open_genome_position_table(
-        #     self.resource,
-        #     self.config["table"]
-        # )
         self.table.load()
         self.table_loaded = True
         return self
@@ -249,7 +244,7 @@ class GenomicScore(GenomicResourceImplementation):
             {% endif %}
 
             <h3>Score definitions:</h3>
-            {% for score in data["scores"] %}
+            {% for score in data["table"]["scores"] %}
             <div class="score-definition">
             <p>Score ID: {{ score["id"] }}</p>
             {% if "index" in score %}
@@ -285,6 +280,8 @@ class GenomicScore(GenomicResourceImplementation):
             **get_base_resource_schema(),
             "table": {"type": "dict", "schema": {
                 "filename": {"type": "string"},
+                "index_filename": {"type": "string"},
+                "desc": {"type": "string"},
                 "format": {"type": "string"},
                 "header_mode": {"type": "string"},
                 "chrom": {"type": "dict", "schema": {
@@ -424,13 +421,13 @@ class NPScore(GenomicScore):
     @staticmethod
     def get_schema():
         schema = copy.deepcopy(GenomicScore.get_schema())
-        schema["table"]["schema"]["ref"] = {
+        schema["table"]["schema"]["reference"] = {
             "type": "dict", "schema": {
                 "index": {"type": "integer"},
                 "name": {"type": "string", "excludes": "index"}
             }
         }
-        schema["table"]["schema"]["alt"] = {
+        schema["table"]["schema"]["alternative"] = {
             "type": "dict", "schema": {
                 "index": {"type": "integer"},
                 "name": {"type": "string", "excludes": "index"}
@@ -609,7 +606,6 @@ class AlleleScore(GenomicScore):
 def _build_genomic_score_from_resource(
         clazz: Type[GenomicScore],
         resource: GenomicResource) -> GenomicScore:
-
     return clazz(resource)
 
 
@@ -619,7 +615,6 @@ def build_position_score_from_resource(
     result = _build_genomic_score_from_resource(
         PositionScore,
         resource)
-
     return cast(PositionScore, result)
 
 
@@ -629,7 +624,6 @@ def build_np_score_from_resource(
     result = _build_genomic_score_from_resource(
         NPScore,
         resource)
-
     return cast(NPScore, result)
 
 
@@ -652,5 +646,4 @@ def build_score_from_resource(resource: GenomicResource) -> GenomicScore:
     ctor = type_to_ctor.get(resource.get_type())
     if ctor is None:
         raise ValueError(f"Resource {resource.get_id()} is not of score type")
-
     return ctor(resource)

@@ -1727,9 +1727,9 @@ def test_get_ref_alt_configured_existing(tmp_path, tabix_file):
             "genomic_resource.yaml": f"""
                 tabix_table:
                     filename: data.bgz
-                    ref:
+                    reference:
                       name: reference
-                    alt:
+                    alternative:
                       name: alternative
                     scores:
                     - id: c2
@@ -1818,9 +1818,9 @@ def test_score_definition_list_header_tabix(tmp_path, tabix_file):
                       name: start
                     pos_end:
                       name: stop
-                    ref:
+                    reference:
                       name: reference
-                    alt:
+                    alternative:
                       name: alt
                     scores:
                     - id: piscore

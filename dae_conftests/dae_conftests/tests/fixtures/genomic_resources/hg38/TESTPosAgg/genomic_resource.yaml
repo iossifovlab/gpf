@@ -17,12 +17,12 @@ table:
 
 
 # score values
-scores:
-    - id: test_score
-      type: float
-      desc: ""
-      index: 3
-      position_aggregator: mean
+  scores:
+      - id: test_score
+        type: float
+        desc: ""
+        index: 3
+        position_aggregator: mean
 
 default_annotation:
   attributes:

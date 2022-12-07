@@ -262,12 +262,12 @@ def test_position_score_chrom_prefix():
                 filename: data.mem
                 chrom_mapping:
                     add_prefix: chr
-            scores:
-              - id: phastCons100way
-                type: float
-                desc: "The phastCons computed over the tree of 100 \
-                       verterbarte species"
-                name: s1""",
+                scores:
+                  - id: phastCons100way
+                    type: float
+                    desc: "The phastCons computed over the tree of 100 \
+                           verterbarte species"
+                    name: s1""",
         "data.mem": """
             chrom  pos_begin  s1
             1      10         0.02

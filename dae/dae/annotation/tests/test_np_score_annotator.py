@@ -47,9 +47,9 @@ def test_np_score_annotator(
                       type: float
                       desc: "test values"
                       name: raw
-                    ref:
+                    reference:
                       name: reference
-                    alt:
+                    alternative:
                       name: alternative
                 """,
                 "data.mem": """
