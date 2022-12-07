@@ -1,4 +1,5 @@
 #!/bin/env python
+# pylint: disable=invalid-name, redefined-outer-name
 
 import re
 import sys
@@ -11,6 +12,7 @@ delRE = re.compile(r"^del\((\d+)\)$")
 
 
 def cshl2vcf(loc, var, genome):
+    """Convert cshl to vcf."""
     chrom, pos = loc.split(":")
     pos = int(pos)
 

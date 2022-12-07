@@ -9,6 +9,7 @@ from dae.gpf_instance.gpf_instance import GPFInstance
 
 
 def main(argv, gpf_instance=None):
+    """Entry point for the genotype data tool."""
     parser = argparse.ArgumentParser()
 
     parser.add_argument('--verbose', '-V', action='count', default=0)

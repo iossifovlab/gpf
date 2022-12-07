@@ -15,7 +15,10 @@ from dae.gene.gene_sets_db import GeneSet, \
 logger = logging.getLogger("create_sqlite_gene_set")
 
 
+# pylint: disable=consider-using-with, too-many-locals, too-many-branches
+# pylint: disable=too-many-statements
 def main(argv):
+    """Entry point for the tool."""
     parser = argparse.ArgumentParser()
     parser.add_argument("--verbose", "-V", action="count", default=0)
     parser.add_argument(

@@ -16,9 +16,11 @@ logger = logging.getLogger(__file__)
 
 
 def generate_agp(gpf_instance, gene_symbol, collections_gene_sets):
+    """Generate AGP."""
+    # pylint: disable=protected-access, invalid-name, too-many-locals
     gene_scores_db = gpf_instance.gene_scores_db
     config = gpf_instance._autism_gene_profile_config
-    scores = dict()
+    scores = {}
 
     sets_in = []
     for collection_id, gs in collections_gene_sets:
@@ -28,7 +30,7 @@ def generate_agp(gpf_instance, gene_symbol, collections_gene_sets):
 
     for category in config.genomic_scores:
         category_name = category["category"]
-        scores[category_name] = dict()
+        scores[category_name] = {}
         for score in category["scores"]:
             gene_score_name = score["score_name"]
             gs = gene_scores_db.get_gene_score(gene_score_name)
@@ -38,17 +40,17 @@ def generate_agp(gpf_instance, gene_symbol, collections_gene_sets):
                 value = None
             scores[category_name][gene_score_name] = value
 
-    variant_counts = dict()
+    variant_counts = {}
 
     for dataset_id, filters in config.datasets.items():
-        current_counts = dict()
+        current_counts = {}
         for ps in filters.person_sets:
             person_set = ps.set_name
             for statistic in filters.statistics:
                 counts = current_counts.get(ps.set_name)
                 stat_id = statistic["id"]
                 if not counts:
-                    current_counts[person_set] = dict()
+                    current_counts[person_set] = {}
                     counts = current_counts[person_set]
 
                 counts[stat_id] = {
@@ -67,6 +69,7 @@ def generate_agp(gpf_instance, gene_symbol, collections_gene_sets):
 def get_variant_count(
         gene_symbol, person_set, effect,
         variants, person_ids, dataset_id):
+    """Return variant count."""
     pids = set(person_ids[dataset_id][person_set])
     ets = set(expand_effect_types(effect))
 
@@ -89,6 +92,8 @@ def get_variant_count(
 
 
 def add_variant_count(variant, agps, dataset_id, person_set, statistic_id):
+    """No idea. Please Edit."""
+    # pylint: disable=invalid-name
     for gs in variant.effect_gene_symbols:
         if gs not in agps:
             continue
@@ -105,6 +110,8 @@ def add_variant_count(variant, agps, dataset_id, person_set, statistic_id):
 
 
 def calculate_rates(instance, agps, config):
+    """No idea. Please edit."""
+    # pylint: disable=invalid-name
     for gs in agps.keys():
         agp = agps[gs]
         for dataset_id, filters in config.datasets.items():
@@ -148,6 +155,8 @@ def calculate_rates(instance, agps, config):
 
 
 def count_variant(v, dataset_id, agps, config, person_ids, denovo_flag):
+    """Count variant."""
+    # pylint: disable=invalid-name, too-many-locals, too-many-branches
     filters = config.datasets[dataset_id]
     members = set()
 
@@ -227,13 +236,13 @@ def count_variant(v, dataset_id, agps, config, person_ids, denovo_flag):
 
 def fill_variant_counts(
         variants, dataset_id, agps, config, person_ids, denovo_flag):
-
+    """If you know what this function does please edit."""
     seen = set()
 
     for idx, v in enumerate(variants, 1):
         if idx % 1000 == 0:
             logger.info(
-                f"{dataset_id}: Counted {idx} variants from {dataset_id}"
+                "%s: Counted %s variants from %s", dataset_id, idx, dataset_id
             )
         if v.fvuid in seen:
             continue
@@ -244,6 +253,8 @@ def fill_variant_counts(
 
 
 def main(gpf_instance=None, argv=None):
+    """Entry point for the generate AGP script."""
+    # pylint: disable=too-many-locals,too-many-branches,too-many-statements
     description = "Generate autism gene profile statistics tool"
     parser = argparse.ArgumentParser(description=description)
     parser.add_argument('--verbose', '-V', '-v', action='count', default=0)
@@ -275,6 +286,7 @@ def main(gpf_instance=None, argv=None):
     if gpf_instance is None:
         gpf_instance = GPFInstance.build()
 
+    # pylint: disable=protected-access, invalid-name
     config = gpf_instance._autism_gene_profile_config
     collections_gene_sets = []
 
@@ -291,7 +303,7 @@ def main(gpf_instance=None, argv=None):
 
             collections_gene_sets.append((collection_id, gene_set))
 
-    logger.info(f"collected gene sets: {len(collections_gene_sets)}")
+    logger.info("collected gene sets: %d", len(collections_gene_sets))
 
     gene_symbols = set()
     if args.genes:
@@ -304,22 +316,22 @@ def main(gpf_instance=None, argv=None):
         gene_models = gpf_instance.gene_models
         gene_symbols = set(gene_models.gene_names())
     gs_count = len(gene_symbols)
-    logger.info(f"Collected {gs_count} gene symbols")
+    logger.info("Collected %d gene symbols", gs_count)
 
     has_denovo = False
     has_rare = False
-    person_ids = dict()
+    person_ids = {}
     for dataset_id, filters in config.datasets.items():
         genotype_data = gpf_instance.get_genotype_data(dataset_id)
         genotype_data_children = {
-            p.person_id 
+            p.person_id
             for p in itertools.chain(
                     genotype_data.families.persons_with_parents(),
                     genotype_data.families.persons_with_roles(
                         ["prb", "sib", "child"]))
         }
         assert genotype_data is not None, dataset_id
-        person_ids[dataset_id] = dict()
+        person_ids[dataset_id] = {}
         for ps in filters.person_sets:
             person_set_query = (
                 ps.collection_name,
@@ -332,18 +344,18 @@ def main(gpf_instance=None, argv=None):
             children_person_set = person_set & genotype_data_children
 
             person_ids[dataset_id][ps.set_name] = children_person_set
-                
+
         for stat in filters.statistics:
             if stat.category == "denovo":
                 has_denovo = True
             elif stat.category == "rare":
                 has_rare = True
 
-    agps = dict()
+    agps = {}
     gene_symbols = list(gene_symbols)
     gs_count = len(gene_symbols)
     elapsed = time.time() - start
-    logger.info(f"data collected: {elapsed:.2f} secs")
+    logger.info("data collected: %.2f secs", elapsed)
 
     start = time.time()
     for idx, sym in enumerate(gene_symbols, 1):
@@ -354,13 +366,13 @@ def main(gpf_instance=None, argv=None):
         if idx % 1000 == 0:
             elapsed = time.time() - start
             logger.info(
-                f"Generated {idx}/{gs_count} AGP statistics "
-                f"{elapsed:.2f} secs")
+                "Generated %d/%d AGP statistics %.2f secs",
+                idx, gs_count, elapsed)
 
     logger.info("Done generating AGP statistics!")
     generate_end = time.time()
     elapsed = generate_end - start
-    logger.info(f"Took {elapsed:.2f} secs")
+    logger.info("Took %.2f secs", elapsed)
 
     if has_denovo:
         logger.info("Collecting denovo variants")
@@ -397,7 +409,7 @@ def main(gpf_instance=None, argv=None):
             for statistic in filters.statistics:
                 if statistic.category == "denovo":
                     continue
-                kwargs = dict()
+                kwargs = {}
                 kwargs["roles"] = "prb or sib or child"
 
                 if statistic.effects is not None:
@@ -406,6 +418,7 @@ def main(gpf_instance=None, argv=None):
 
                 if statistic.variant_types:
                     variant_types = [
+                        # pylint: disable=no-member
                         allele_type_from_name(statistic.variant_types).repr()
                     ]
                     kwargs["variant_type"] = " or ".join(variant_types)
@@ -444,7 +457,7 @@ def main(gpf_instance=None, argv=None):
     calculate_rates(gpf_instance, agps, config)
     logger.info("Done calculating rates")
     elapsed = time.time() - generate_end
-    logger.info(f"Took {elapsed:.2f} secs")
+    logger.info("Took %.2f secs", elapsed)
 
     agpdb = AutismGeneProfileDB(
         gpf_instance._autism_gene_profile_config.to_dict(),

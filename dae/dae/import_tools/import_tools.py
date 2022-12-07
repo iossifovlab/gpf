@@ -148,7 +148,6 @@ class ImportProject():
         families_loader = self.get_pedigree_loader()
         return families_loader.load()
 
-    @cache
     def get_import_variants_types(self) -> set[str]:
         """Collect all variant import types used in the project."""
         result = set()
@@ -275,10 +274,14 @@ class ImportProject():
                 GPFInstance.build(config_filename)
         return self._gpf_instance
 
-    @cache
     def get_import_storage(self):
         """Create an import storage as described in the import config."""
         storage_type = self._storage_type()
+        return self._get_import_storage(storage_type)
+
+    @staticmethod
+    @cache
+    def _get_import_storage(storage_type):
         factory = get_import_storage_factory(storage_type)
         return factory()
 
@@ -302,11 +305,11 @@ class ImportProject():
             self.import_config["input"].get("input_dir", "")
         )
 
-    def has_variants(self):  # pylint: disable=no-self-use
+    def has_variants(self):
         # FIXME: this method should check if the input has variants
         return True
 
-    def has_gpf_instance(self):  # pylint: disable=no-self-use
+    def has_gpf_instance(self):
         # FIXME: this method should check if project has access to a
         # GPF instance - configured in the project or through the
         # environment variable DAE_DB_DIR

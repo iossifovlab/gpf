@@ -14,12 +14,15 @@ logger = logging.getLogger("gpf_instance_adjustments")
 
 
 class VerbosityConfiguration:
+    """Configure verbosity."""
+
     @staticmethod
     def set_argumnets(parser: argparse.ArgumentParser) -> None:
         parser.add_argument("--verbose", "-v", "-V", action="count", default=0)
 
     @staticmethod
     def set(args):
+        """Set logging from cli arguments."""
         if args.verbose == 1:
             logging.basicConfig(level=logging.INFO)
         elif args.verbose >= 2:
@@ -46,7 +49,6 @@ class AdjustmentsCommand(abc.ABC):
     @abc.abstractmethod
     def execute(self):
         """Executes adjustment command."""
-        pass
 
     def close(self):
         """Saves adjusted config."""
@@ -100,9 +102,7 @@ class AdjustImpalaStorageCommand(AdjustmentsCommand):
 
 
 class StudyConfigsAdjustmentCommand(AdjustmentsCommand):
-
-    def __init__(self, instance_dir):
-        super().__init__(instance_dir)
+    """Command to adjust study configs."""
 
     def _execute_studies(self):
         study_configs_dir = os.path.join(self.instance_dir, "studies")
@@ -136,14 +136,15 @@ class StudyConfigsAdjustmentCommand(AdjustmentsCommand):
             with open(config_filename, "w", encoding="utf8") as outfile:
                 outfile.write(toml.dumps(result_config))
 
-    def adjust_study(self, study_id, study_config):
+    def adjust_study(self, _study_id, study_config):
         return study_config
 
-    def adjust_dataset(self, dataset_id, dataset_config):
+    def adjust_dataset(self, _dataset_id, dataset_config):
         return dataset_config
 
 
 class DefaultGenotypeStorage(StudyConfigsAdjustmentCommand):
+    """No Idea."""
 
     def __init__(self, instance_dir, storage_id):
         super().__init__(instance_dir)
@@ -176,7 +177,7 @@ class DefaultGenotypeStorage(StudyConfigsAdjustmentCommand):
 
         self._execute_studies()
 
-    def adjust_study(self, study_id, study_config):
+    def adjust_study(self, _study_id, study_config):
         genotype_storage = study_config.get("genotype_storage")
         if genotype_storage is not None and \
                 genotype_storage.get("id") is None:
@@ -185,6 +186,7 @@ class DefaultGenotypeStorage(StudyConfigsAdjustmentCommand):
 
 
 class EnableDisableStudies(StudyConfigsAdjustmentCommand):
+    """No idea."""
 
     def __init__(self, instance_dir, study_ids, enabled=False):
         super().__init__(instance_dir)
@@ -230,8 +232,9 @@ class EnableDisableStudies(StudyConfigsAdjustmentCommand):
         return dataset_config
 
 
-def cli(argv=sys.argv[1:]):
-
+def cli(argv=None):
+    """Handle cli invocation."""
+    argv = argv or sys.argv[1:]
     parser = argparse.ArgumentParser(
         description="adjustments in GPF instance configuration")
     VerbosityConfiguration.set_argumnets(parser)
