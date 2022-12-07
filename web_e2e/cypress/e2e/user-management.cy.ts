@@ -182,7 +182,7 @@ describe('User management tests', () => {
     page.userTableRemoveUserGroupButton.click();
     page.userTableRemoveUserGroupConfirmButton.click();
     waitForRequest('GET', '/gpf/api/v3/users/streaming_search?search=**', 'usersUpdate', 200);
-    page.datasetsButton.click(); 
+    page.datasetsButton.click();
     page.datasetsTableRows.last().should('not.contain.text', 'test_email@email.com');
 
     deleteTestGroup(page);
