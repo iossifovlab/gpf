@@ -631,7 +631,7 @@ export class GenePlotComponent implements OnChanges {
     this.redraw();
   }
 
-  @HostListener('(document:keydown)', ['$event'])
+  @HostListener('document:keydown', ['$event'])
   private handleKeyboardEvent($event: KeyboardEvent): void {
     if (!($event.target instanceof Element)) {
       return;
