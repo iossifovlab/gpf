@@ -4,6 +4,7 @@ import time
 import argparse
 import logging
 import itertools
+from typing import Dict, Any, Set, cast
 
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.autism_gene_profile.statistic import AGPStatistic
@@ -11,6 +12,7 @@ from dae.autism_gene_profile.db import AutismGeneProfileDB
 from dae.utils.effect_utils import expand_effect_types
 from dae.variants.attributes import Role
 from dae.variants.variant import allele_type_from_name
+from dae.studies.study import GenotypeData
 
 logger = logging.getLogger(__file__)
 
@@ -20,7 +22,7 @@ def generate_agp(gpf_instance, gene_symbol, collections_gene_sets):
     # pylint: disable=protected-access, invalid-name, too-many-locals
     gene_scores_db = gpf_instance.gene_scores_db
     config = gpf_instance._autism_gene_profile_config
-    scores = {}
+    scores: Dict[str, Any] = {}
 
     sets_in = []
     for collection_id, gs in collections_gene_sets:
@@ -43,7 +45,7 @@ def generate_agp(gpf_instance, gene_symbol, collections_gene_sets):
     variant_counts = {}
 
     for dataset_id, filters in config.datasets.items():
-        current_counts = {}
+        current_counts: Dict[str, Any] = {}
         for ps in filters.person_sets:
             person_set = ps.set_name
             for statistic in filters.statistics:
@@ -183,8 +185,7 @@ def count_variant(v, dataset_id, agps, config, person_ids, denovo_flag):
 
             if statistic.get("effects"):
                 ets = set(expand_effect_types(statistic.effects))
-                in_effect_types = ets.intersection(v.effect_types)
-                in_effect_types = len(in_effect_types) > 0
+                in_effect_types = len(ets.intersection(v.effect_types)) > 0
                 do_count = do_count and in_effect_types
 
             if statistic.get("scores"):
@@ -217,7 +218,7 @@ def count_variant(v, dataset_id, agps, config, person_ids, denovo_flag):
                     for t in statistic.variant_types
                 }
                 do_count = do_count and \
-                    len(variant_types.intersection(v.variant_types))
+                    (len(variant_types.intersection(v.variant_types)) > 0)
 
             if statistic.get("roles"):
                 roles = {
@@ -226,7 +227,7 @@ def count_variant(v, dataset_id, agps, config, person_ids, denovo_flag):
                 }
                 v_roles = set(v.alt_alleles[0].variant_in_roles)
                 do_count = do_count and \
-                    len(v_roles.intersection(roles))
+                    (len(v_roles.intersection(roles)) > 0)
 
             if do_count:
                 add_variant_count(
@@ -257,7 +258,7 @@ def main(gpf_instance=None, argv=None):
     # pylint: disable=too-many-locals,too-many-branches,too-many-statements
     description = "Generate autism gene profile statistics tool"
     parser = argparse.ArgumentParser(description=description)
-    parser.add_argument('--verbose', '-V', '-v', action='count', default=0)
+    parser.add_argument("--verbose", "-V", "-v", action="count", default=0)
     default_dbfile = os.path.join(os.getenv("DAE_DB_DIR", "./"), "agpdb")
     parser.add_argument("--dbfile", default=default_dbfile)
     parser.add_argument(
@@ -305,10 +306,9 @@ def main(gpf_instance=None, argv=None):
 
     logger.info("collected gene sets: %d", len(collections_gene_sets))
 
-    gene_symbols = set()
+    gene_symbols: Set[str] = set()
     if args.genes:
-        gene_symbols = [gs.strip() for gs in args.genes.split(",")]
-        gene_symbols = set(gene_symbols)
+        gene_symbols = set(gs.strip() for gs in args.genes.split(","))
     elif args.gene_sets_genes:
         for _, gs in collections_gene_sets:
             gene_symbols = gene_symbols.union(gs["syms"])
@@ -320,15 +320,17 @@ def main(gpf_instance=None, argv=None):
 
     has_denovo = False
     has_rare = False
-    person_ids = {}
+    person_ids: Dict[str, Any] = {}
     for dataset_id, filters in config.datasets.items():
-        genotype_data = gpf_instance.get_genotype_data(dataset_id)
+        genotype_data = cast(
+            GenotypeData, gpf_instance.get_genotype_data(dataset_id))
+        assert genotype_data is not None
         genotype_data_children = {
             p.person_id
             for p in itertools.chain(
-                    genotype_data.families.persons_with_parents(),
-                    genotype_data.families.persons_with_roles(
-                        ["prb", "sib", "child"]))
+                genotype_data.families.persons_with_parents(),
+                genotype_data.families.persons_with_roles(
+                    ["prb", "sib", "child"]))
         }
         assert genotype_data is not None, dataset_id
         person_ids[dataset_id] = {}
@@ -352,7 +354,7 @@ def main(gpf_instance=None, argv=None):
                 has_rare = True
 
     agps = {}
-    gene_symbols = list(gene_symbols)
+    gene_symbols = set(gene_symbols)
     gs_count = len(gene_symbols)
     elapsed = time.time() - start
     logger.info("data collected: %.2f secs", elapsed)
@@ -419,7 +421,8 @@ def main(gpf_instance=None, argv=None):
                 if statistic.variant_types:
                     variant_types = [
                         # pylint: disable=no-member
-                        allele_type_from_name(statistic.variant_types).repr()
+                        allele_type_from_name(
+                            statistic.variant_types).repr()  # type: ignore
                     ]
                     kwargs["variant_type"] = " or ".join(variant_types)
 
@@ -429,7 +432,7 @@ def main(gpf_instance=None, argv=None):
                         min_max = (score.min, score.max)
                         score_filter = (score.name, min_max)
                         scores.append(score_filter)
-                    kwargs["real_attr_filter"] = scores
+                    kwargs["real_attr_filter"] = scores  # type: ignore
 
                 if statistic.roles:
                     roles = [

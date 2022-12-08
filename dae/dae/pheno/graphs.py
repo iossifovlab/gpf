@@ -1,26 +1,50 @@
 import textwrap
 import traceback
+from typing import Optional
+
 import matplotlib as mpl
+import matplotlib.pyplot as plt
+from seaborn import violinplot, stripplot, diverging_palette
 
-mpl.use("PDF")  # noqa
-import matplotlib.pyplot as plt   # noqa
-plt.ioff()  # noqa
+import pandas as pd
+import numpy as np
 
-import pandas as pd  # noqa
-import numpy as np  # noqa
+from dae.variants.attributes import Role
+from dae.variants.attributes import Status, Sex
+from dae.pheno.utils.lin_regress import LinearRegression
 
-from dae.variants.attributes import Status, Sex  # noqa
-from dae.pheno.palletes import diverging_palette  # noqa
-from dae.pheno.plots import violinplot, stripplot  # noqa
-from dae.pheno.common import ROLES_GRAPHS_DEFINITION  # noqa
-from dae.pheno.utils.lin_regress import LinearRegression  # noqa
+mpl.use("PDF")
+plt.ioff()
 
 
 MAX_CATEGORIES_COUNT = 12
 ROLES_COUNT_CUTOFF = 7
 
+ROLES_GRAPHS_DEFINITION = {
+    "probands": [Role.prb],
+    "siblings": [Role.sib],
+    "parents": [Role.mom, Role.dad],
+    "grandparents": [
+        Role.paternal_grandfather,
+        Role.paternal_grandmother,
+        Role.maternal_grandfather,
+        Role.maternal_grandmother,
+    ],
+    "parental siblings": [
+        Role.paternal_uncle,
+        Role.paternal_aunt,
+        Role.maternal_uncle,
+        Role.maternal_aunt,
+    ],
+    "step parents": [Role.step_mom, Role.step_dad],
+    "half siblings": [Role.paternal_half_sibling, Role.maternal_half_sibling],
+    "children": [Role.child],
+}
+
 
 class GraphColumn(object):
+    """Build a colum to produce a graph from it."""
+
     def __init__(self, name, roles, status, df):
         self.name = name
         self.roles = roles
@@ -42,6 +66,7 @@ class GraphColumn(object):
 
     @staticmethod
     def build(df, role_name, role_subroles, status):
+        """Construct a graph column object."""
         roles = role_subroles
         default_name = ", ".join([role.name for role in roles])
         label = role_name if role_name != "" else default_name
@@ -64,9 +89,11 @@ def male_female_colors():
 
 
 def male_female_legend(color_male, color_female, ax=None):
+    """Consturct a legend for female graph."""
     if ax is None:
         ax = plt.gca()
 
+    # pylint: disable=import-outside-toplevel
     import matplotlib.patches as mpatches
 
     male_patch = mpatches.Patch(color=color_male, label="M")
@@ -74,14 +101,15 @@ def male_female_legend(color_male, color_female, ax=None):
     ax.legend(handles=[male_patch, female_patch], title="Sex")
 
 
-def draw_linregres(df, col1, col2, jitter=None, ax=None):
+def draw_linregres(df, col1, col2, jitter: Optional[int] = None, ax=None):
+    """Draw a graph display linear regression between two columns."""
     if ax is None:
         ax = plt.gca()
 
-    dd = df.dropna()
+    df = df.dropna()
 
-    dmale = dd[dd.sex == Sex.male]
-    dfemale = dd[dd.sex == Sex.female]
+    dmale = df[df.sex == Sex.male]
+    dfemale = df[df.sex == Sex.female]
 
     name1, name2 = names(col1, col2)
     ax.set_xlabel(name1)
@@ -89,7 +117,7 @@ def draw_linregres(df, col1, col2, jitter=None, ax=None):
 
     try:
         male_x = dmale[[col1]]
-        y = dmale[col2]
+        y = dmale[col2]  # pylint: disable=invalid-name
         res_male = LinearRegression().fit(male_x.to_numpy(), y)
     except ValueError:
         traceback.print_exc()
@@ -97,7 +125,7 @@ def draw_linregres(df, col1, col2, jitter=None, ax=None):
 
     try:
         female_x = dfemale[[col1]]
-        y = dfemale[col2]
+        y = dfemale[col2]  # pylint: disable=invalid-name
         res_female = LinearRegression().fit(female_x.to_numpy(), y)
     except ValueError:
         traceback.print_exc()
@@ -107,6 +135,8 @@ def draw_linregres(df, col1, col2, jitter=None, ax=None):
         jmale1 = jmale2 = np.zeros(len(dmale[col1]))
         jfemale1 = jfemale2 = np.zeros(len(dfemale[col1]))
     else:
+        assert jitter is not None
+        # pylint: disable=invalid-unary-operand-type
         jmale1 = np.random.uniform(-jitter, jitter, len(dmale[col1]))
         jmale2 = np.random.uniform(-jitter, jitter, len(dmale[col2]))
 
@@ -145,6 +175,7 @@ def draw_linregres(df, col1, col2, jitter=None, ax=None):
 
 
 def draw_distribution(df, measure_id, ax=None):
+    """Draw measure distribution."""
     if ax is None:
         ax = plt.gca()
 
@@ -167,6 +198,7 @@ def draw_distribution(df, measure_id, ax=None):
 
 
 def column_counts(column):
+    """Collect counts for a graph column."""
     counts = {
         "column_name": textwrap.fill(column.name, 9),
         "column_status": "$\\it{" + column.status.name + "}$",
@@ -217,7 +249,7 @@ def _enumerate_by_count(df, column_name):
 
 def _enumerate_by_natural_order(df, column_name):
     values_domain = df[column_name].unique()
-    values_domain = sorted(values_domain, key=lambda x: float(x))
+    values_domain = sorted(values_domain, key=float)
     values_map = {
         value: number for (number, value) in enumerate(values_domain)
     }
@@ -227,8 +259,11 @@ def _enumerate_by_natural_order(df, column_name):
 
 
 def draw_measure_violinplot(
-    df, measure_id, roles_definition=ROLES_GRAPHS_DEFINITION, ax=None
-):
+        df, measure_id, roles_definition=None, ax=None):
+    """Draw a violin plot for a measure."""
+    if roles_definition is None:
+        roles_definition = ROLES_GRAPHS_DEFINITION
+
     if ax is None:
         ax = plt.gca()
 
@@ -295,6 +330,7 @@ def draw_measure_violinplot(
 
 
 def get_columns_to_draw(roles, df):
+    """Collect columns needed for graphs."""
     columns = []
     for role_name, role_subroles in roles.items():
         for status in [Status.affected, Status.unaffected]:
@@ -314,11 +350,15 @@ def get_columns_to_draw(roles, df):
 def draw_categorical_violin_distribution(
     df,
     measure_id,
-    roles_definition=ROLES_GRAPHS_DEFINITION,
+    roles_definition=None,
     ax=None,
     numerical_categories=False,
     max_categories=MAX_CATEGORIES_COUNT,
 ):
+    """Draw violin distribution for categorical measures."""
+    if roles_definition is None:
+        roles_definition = ROLES_GRAPHS_DEFINITION
+
     if ax is None:
         ax = plt.gca()
 
@@ -390,7 +430,7 @@ def draw_categorical_violin_distribution(
         ax.barh(
             centers, female, height=heights, left=x_loc, color=color_female
         )
-
+        # pylint: disable=invalid-name
         for y, (male_count, female_count) in enumerate(zip(male, female)):
             ax.text(
                 x_loc - male_count,
@@ -426,8 +466,11 @@ def draw_categorical_violin_distribution(
 
 
 def draw_ordinal_violin_distribution(df, measure_id, ax=None):
+    if ax is None:
+        ax = plt.gca()
+
     df = df.copy()
-    df[measure_id] = df[measure_id].apply(lambda x: str(x))
+    df[measure_id] = df[measure_id].apply(str)
     return draw_categorical_violin_distribution(
-        df, measure_id, numerical_categories=True
+        df, measure_id, numerical_categories=True, ax=ax
     )

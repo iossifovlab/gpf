@@ -1,19 +1,19 @@
-"""
-Created on Nov 16, 2017
-
-@author: lubo
-"""
-import numpy as np
-import pandas as pd
 import itertools
 import enum
+import copy
+from collections import Counter
+from typing import Optional, List
+from numbers import Number
+
+import numpy as np
+import pandas as pd
+
 from dae.pheno.common import MeasureType
 from dae.pheno.utils.commons import remove_annoying_characters
-from collections import Counter
-import copy
 
 
 class ClassifierReport(object):
+    """Class used to collect clissifier reports."""
 
     MAX_CHARS = 32
     DISTRIBUTION_CUTOFF = 20
@@ -34,7 +34,7 @@ class ClassifierReport(object):
 
         self.unique_values = None
         self.numeric_values = None
-        self.string_values = None
+        self.string_values: Optional[np.ndarray] = None
         self.distribution = None
 
     def set_measure(self, measure):
@@ -63,12 +63,13 @@ class ClassifierReport(object):
         return self.log_line()
 
     def log_line(self, short=False):
+        """Construct a log line in clissifier report."""
         attributes = self.short_attributes()
         values = [str(getattr(self, attr)).strip() for attr in attributes]
         values = [v.replace("\n", " ") for v in values]
         if not short:
             distribution = self.calc_distribution_report()
-            distribution = ["{}\t{}".format(v, c) for (v, c) in distribution]
+            distribution = [f"{v}\t{c}" for (v, c) in distribution]
             values.extend(distribution)
         return "\t".join(values)
 
@@ -79,24 +80,26 @@ class ClassifierReport(object):
 
     @staticmethod
     def header_line(short=False):
+        """Construct clissifier report header line."""
         attributes = ClassifierReport.short_attributes()
         if not short:
             distribution = [
-                "v{}\tc{}".format(i, i)
+                f"v{i}\tc{i}"
                 for i in range(1, ClassifierReport.DISTRIBUTION_CUTOFF + 1)
             ]
             attributes.extend(distribution)
         return "\t".join(attributes)
 
     def calc_distribution_report(self):
+        """Construct measure distribution report."""
         if self.distribution:
             return copy.deepcopy(self.distribution)
+        counts: Counter = Counter()
 
         assert self.string_values is not None
-        counts = Counter()
-        for val in self.string_values:
+        for val in self.string_values:  # pylint: disable=not-an-iterable
             counts[val] += 1
-        distribution = [(val, count) for (val, count) in list(counts.items())]
+        distribution = list(counts.items())
         distribution = sorted(
             distribution, key=lambda _val_count: -_val_count[1]
         )
@@ -109,12 +112,13 @@ class ClassifierReport(object):
                 (" ", " ")
                 for _i in range(self.DISTRIBUTION_CUTOFF - len(distribution))
             ]
-            distribution.extend(ext)
+            distribution.extend(ext)  # type: ignore
         self.distribution = distribution
         return copy.deepcopy(self.distribution)
 
 
 def is_nan(val):
+    """Check if the passed value is a NaN."""
     if val is None:
         return True
     if isinstance(val, str):
@@ -126,12 +130,14 @@ def is_nan(val):
 
 
 class Convertible(enum.Enum):
+    # pylint: disable=invalid-name
     nan = 0
     numeric = 1
     non_numeric = 2
 
 
 def is_convertible_to_numeric(val):
+    """Check if the passed string is convertible to number."""
     if val is None:
         return Convertible.nan
     if isinstance(val, str):
@@ -156,12 +162,14 @@ def is_convertible_to_numeric(val):
 
 
 def convert_to_numeric(val):
+    """Convert passed value to float."""
     if is_convertible_to_numeric(val) == Convertible.numeric:
         return float(val)
     return np.nan
 
 
 def convert_to_string(val):
+    """Convert passed value to string."""
     if is_nan(val):
         return None
 
@@ -175,12 +183,15 @@ def convert_to_string(val):
         return str(val)
 
 
-class MeasureClassifier(object):
+class MeasureClassifier:
+    """Defines a measure classification report."""
+
     def __init__(self, config):
         self.config = config
 
     @staticmethod
     def meta_measures_numeric(values, report):
+        """Collect measure classification report for numeric values."""
         total = len(values)
         values = MeasureClassifier.convert_to_numeric(values)
         real_values = np.array([v for v in values if not is_nan(v)])
@@ -213,13 +224,14 @@ class MeasureClassifier(object):
 
     @staticmethod
     def meta_measures_text(values, report):
+        """Collect measure classification report for text values."""
         grouped = itertools.groupby(values, is_convertible_to_numeric)
         report.count_with_values = 0
         report.count_with_numeric_values = 0
         report.count_with_non_numeric_values = 0
-        numeric_values = []
-        for convertable, vals in grouped:
-            vals = list(vals)
+        numeric_values: List[Number] = []
+        for convertable, values_group in grouped:
+            vals = list(values_group)
 
             if convertable == Convertible.nan:
                 report.count_without_values += len(vals)
@@ -264,6 +276,7 @@ class MeasureClassifier(object):
 
     @staticmethod
     def meta_measures(series, report=None):
+        """Build classifier meta report."""
         assert isinstance(series, pd.Series)
 
         if report is None:
@@ -285,17 +298,16 @@ class MeasureClassifier(object):
         ):
             return MeasureClassifier.meta_measures_numeric(values, report)
 
-        if (
-            values.dtype == np.object
-            or values.dtype.char == "S"
-            or values.dtype == bool
-        ):
+        if (values.dtype == np.object  # type: ignore
+                or values.dtype.char == "S"  # type: ignore
+                or values.dtype == bool):  # type: ignore
             return MeasureClassifier.meta_measures_text(values, report)
 
         assert False, "NOT SUPPORTED VALUES TYPES"
 
     @staticmethod
     def convert_to_numeric(values):
+        """Convert value to numeric."""
         if values.dtype in set(
             [
                 int,
@@ -315,12 +327,13 @@ class MeasureClassifier(object):
         return result
 
     @staticmethod
-    def convert_to_string(values):
+    def convert_to_string(values) -> np.ndarray:
         if len(values) == 0:
             return np.array([])
         return np.array([convert_to_string(val) for val in values])
 
     def classify(self, rep):
+        """Classify a measure based on classification report."""
         conf = self.config.classification
 
         if rep.count_with_values < conf.min_individuals:
@@ -347,67 +360,3 @@ class MeasureClassifier(object):
                 return MeasureType.categorical
 
             return MeasureType.raw
-
-
-#     def classify(self, report):
-#         config = self.config.classification
-#         if report.count_with_values < config.min_individuals:
-#             return MeasureType.skipped
-#         non_numeric = (1.0 * report.count_with_non_numeric_values) / \
-#             report.count_with_values
-#
-#         if non_numeric <= config.non_numeric_cutoff:
-#             # numeric measure
-#             if report.count_unique_values >= config.continuous.min_rank:
-#                 return MeasureType.continuous
-#             if report.count_unique_values >= config.ordinal.min_rank:
-#                 return MeasureType.ordinal
-#             if report.count_unique_values >= config.categorical.min_rank:
-#                 return MeasureType.categorical
-#             return MeasureType.other
-#         else:
-#             # text measure
-#             if report.value_max_len > config.value_max_len:
-#                 return MeasureType.text
-#             if report.count_unique_values > report.count_with_values / 3.0:
-#                 return MeasureType.text
-#             if report.count_unique_values >= config.categorical.min_rank:
-#                 return MeasureType.categorical
-#             return MeasureType.other
-
-
-# type definition graph? correlation phenoTool
-# MeasureType.skipped <explicitly requested in config> NA NA NA
-# MeasureType.continuous more than a 'few' numeric possible Y Y Y
-# MeasureType.ordinal one or a 'few' numeric possible Y Y (but one v)
-#                                                           Y (but one v)
-# MeasureType.categorical one or a 'few' non-numeric possible Y F N
-# MeasureType.raw everything else N N N
-#
-# In the future we may fish out these from the 'raw'
-# MeasureType.text free text N N N
-# MeasureType.id id column N N N
-
-# The default configuration
-#     {
-#      'classification': {
-#      'min_individuals': 1,
-#      'non_numeric_cutoff': 0.06,
-#      'value_max_len': 32,
-#      'continuous': {
-#      'min_rank': 15
-#      },
-#      'ordinal': {
-#      'min_rank': 1
-#      },
-#      'categorical': {
-#      'min_rank': 1,
-#      'max_rank': 15
-#      }
-#     }
-# Report fields
-#     report.count_with_values
-#     report.count_with_non_numeric_values (## NEW)
-#     report.count_unique_values
-#     report.count_unique_numeric_values
-#     report.value_max_len

@@ -1,8 +1,4 @@
-# """
-# Created on Aug 31, 2017
-
-# @author: lubo
-# """
+# pylint: disable=W0621,C0114,C0116,W0212,W0613,too-many-lines
 import os
 from dae.pheno.db import DbManager
 
@@ -27,12 +23,12 @@ def test_db_save(output_dir):
 
     db.save(v)
 
-    r = db.get_browser_measure("test.measure")
-    assert r is not None
-    assert r.measure_id == "test.measure"
-    assert r.instrument_name == "test"
-    assert r.measure_name == "measure"
-    assert r.figure_distribution is None
+    res = db.get_browser_measure("test.measure")
+    assert res is not None
+    assert res.measure_id == "test.measure"
+    assert res.instrument_name == "test"
+    assert res.measure_name == "measure"
+    assert res.figure_distribution is None
 
 
 def test_db_update(output_dir):
@@ -57,12 +53,12 @@ def test_db_update(output_dir):
     v["figure_distribution"] = "test_figure.png"
     db.save(v)
 
-    r = db.get_browser_measure("test.measure")
-    assert r is not None
-    assert r.measure_id == "test.measure"
-    assert r.instrument_name == "test"
-    assert r.measure_name == "measure"
-    assert r.figure_distribution == "test_figure.png"
+    res = db.get_browser_measure("test.measure")
+    assert res is not None
+    assert res.measure_id == "test.measure"
+    assert res.instrument_name == "test"
+    assert res.measure_name == "measure"
+    assert res.figure_distribution == "test_figure.png"
 
 
 def test_has_descriptions(output_dir):
@@ -75,9 +71,9 @@ def test_has_descriptions(output_dir):
 
     for i in range(0, 3):
         v = {
-            "measure_id": "test.measure{}".format(i),
+            "measure_id": f"test.measure{i}",
             "instrument_name": "test",
-            "measure_name": "measure{}".format(i),
+            "measure_name": f"measure{i}",
             "measure_type": "other",
             "description": None,
         }
@@ -202,7 +198,7 @@ def test_db_search_character_escaping(output_dir):
     assert db is not None
     db.build()
 
-    v = {
+    val1 = {
         "measure_id": "test_one.measure1",
         "instrument_name": "test_one",
         "measure_name": "measure1",
@@ -210,7 +206,7 @@ def test_db_search_character_escaping(output_dir):
         "description": "desc",
     }
 
-    v2 = {
+    val2 = {
         "measure_id": "test%two.measure2",
         "instrument_name": "test%two",
         "measure_name": "measure2",
@@ -218,22 +214,22 @@ def test_db_search_character_escaping(output_dir):
         "description": "desc",
     }
 
-    db.save(v)
-    db.save(v2)
+    db.save(val1)
+    db.save(val2)
 
-    r = db.search_measures_df(keyword="test_one")
-    assert r is not None
-    assert len(r) == 1
-    assert r["measure_id"][0] == "test_one.measure1"
-    assert r["instrument_name"][0] == "test_one"
-    assert r["measure_name"][0] == "measure1"
+    res = db.search_measures_df(keyword="test_one")
+    assert res is not None
+    assert len(res) == 1
+    assert res["measure_id"][0] == "test_one.measure1"
+    assert res["instrument_name"][0] == "test_one"
+    assert res["measure_name"][0] == "measure1"
 
-    r = db.search_measures_df(keyword="test%two")
-    assert r is not None
-    assert len(r) == 1
-    assert r["measure_id"][0] == "test%two.measure2"
-    assert r["instrument_name"][0] == "test%two"
-    assert r["measure_name"][0] == "measure2"
+    res = db.search_measures_df(keyword="test%two")
+    assert res is not None
+    assert len(res) == 1
+    assert res["measure_id"][0] == "test%two.measure2"
+    assert res["instrument_name"][0] == "test%two"
+    assert res["measure_name"][0] == "measure2"
 
 
 def test_save_and_get_regressions(output_dir):
@@ -244,32 +240,32 @@ def test_save_and_get_regressions(output_dir):
     assert db is not None
     db.build()
 
-    r = {}
-    r["regression_id"] = "test_regression"
-    r["instrument_name"] = "test_instrument"
-    r["measure_name"] = "test_measure"
-    r["display_name"] = "a test regression with a display name"
-    db.save_regression(r)
+    reg = {}
+    reg["regression_id"] = "test_regression"
+    reg["instrument_name"] = "test_instrument"
+    reg["measure_name"] = "test_measure"
+    reg["display_name"] = "a test regression with a display name"
+    db.save_regression(reg)
 
-    r["regression_id"] = "test_regression2"
-    r["instrument_name"] = "test_instrument"
-    r["measure_name"] = "test_measure2"
-    del r["display_name"]
-    db.save_regression(r)
+    reg["regression_id"] = "test_regression2"
+    reg["instrument_name"] = "test_instrument"
+    reg["measure_name"] = "test_measure2"
+    del reg["display_name"]
+    db.save_regression(reg)
 
-    reg = db.get_regression("test_regression")
-    assert reg is not None
-    assert reg["regression_id"] == "test_regression"
-    assert reg["instrument_name"] == "test_instrument"
-    assert reg["measure_name"] == "test_measure"
-    assert reg["display_name"] == "a test regression with a display name"
+    res = db.get_regression("test_regression")
+    assert res is not None
+    assert res["regression_id"] == "test_regression"
+    assert res["instrument_name"] == "test_instrument"
+    assert res["measure_name"] == "test_measure"
+    assert res["display_name"] == "a test regression with a display name"
 
-    reg = db.get_regression("test_regression2")
-    assert reg is not None
-    assert reg["regression_id"] == "test_regression2"
-    assert reg["instrument_name"] == "test_instrument"
-    assert reg["measure_name"] == "test_measure2"
-    assert reg["display_name"] is None
+    res = db.get_regression("test_regression2")
+    assert res is not None
+    assert res["regression_id"] == "test_regression2"
+    assert res["instrument_name"] == "test_instrument"
+    assert res["measure_name"] == "test_measure2"
+    assert res["display_name"] is None
 
 
 def test_get_regression_names(output_dir):
@@ -280,18 +276,18 @@ def test_get_regression_names(output_dir):
     assert db is not None
     db.build()
 
-    r = {}
-    r["regression_id"] = "test_regression"
-    r["instrument_name"] = "test_instrument"
-    r["measure_name"] = "test_measure"
-    r["display_name"] = "a test regression with a display name"
-    db.save_regression(r)
+    reg = {}
+    reg["regression_id"] = "test_regression"
+    reg["instrument_name"] = "test_instrument"
+    reg["measure_name"] = "test_measure"
+    reg["display_name"] = "a test regression with a display name"
+    db.save_regression(reg)
 
-    r["regression_id"] = "test_regression2"
-    r["instrument_name"] = "test_instrument"
-    r["measure_name"] = "test_measure2"
-    r["display_name"] = "a second test regression with a display name"
-    db.save_regression(r)
+    reg["regression_id"] = "test_regression2"
+    reg["instrument_name"] = "test_instrument"
+    reg["measure_name"] = "test_measure2"
+    reg["display_name"] = "a second test regression with a display name"
+    db.save_regression(reg)
 
     reg_names = db.regression_display_names
     assert reg_names == {
@@ -313,17 +309,17 @@ def test_save_and_get_regression_values(output_dir):
         "figure_regression": "regfigpath",
         "figure_regression_small": "regfigsmallpath",
     }
-    r = regression_template
+    reg = regression_template
 
-    r["regression_id"] = "test_regression_1"
-    r["pvalue_regression_male"] = "0.1"
-    r["pvalue_regression_female"] = "0.2"
-    db.save_regression_values(r)
+    reg["regression_id"] = "test_regression_1"
+    reg["pvalue_regression_male"] = "0.1"
+    reg["pvalue_regression_female"] = "0.2"
+    db.save_regression_values(reg)
 
-    r["regression_id"] = "test_regression_2"
-    r["pvalue_regression_male"] = "0.3"
-    r["pvalue_regression_female"] = "0.4"
-    db.save_regression_values(r)
+    reg["regression_id"] = "test_regression_2"
+    reg["pvalue_regression_male"] = "0.3"
+    reg["pvalue_regression_female"] = "0.4"
+    db.save_regression_values(reg)
 
     reg = db.get_regression_values("test.measure")
     assert reg == [
@@ -359,15 +355,15 @@ def test_update_regression_values(output_dir):
         "figure_regression": "regfigpath",
         "figure_regression_small": "regfigsmallpath",
     }
-    r = regression_template
+    reg = regression_template
 
-    r["regression_id"] = "test_regression_1"
-    r["pvalue_regression_male"] = "0.1"
-    r["pvalue_regression_female"] = "0.2"
-    db.save_regression_values(r)
+    reg["regression_id"] = "test_regression_1"
+    reg["pvalue_regression_male"] = "0.1"
+    reg["pvalue_regression_female"] = "0.2"
+    db.save_regression_values(reg)
 
-    reg = db.get_regression_values("test.measure")
-    assert reg == [
+    res = db.get_regression_values("test.measure")
+    assert res == [
         (
             "test_regression_1",
             "test.measure",
@@ -378,12 +374,12 @@ def test_update_regression_values(output_dir):
         )
     ]
 
-    r["pvalue_regression_male"] = "0.3"
-    r["pvalue_regression_female"] = "0.4"
-    db.save_regression_values(r)
+    reg["pvalue_regression_male"] = "0.3"
+    reg["pvalue_regression_female"] = "0.4"
+    db.save_regression_values(reg)
 
-    reg = db.get_regression_values("test.measure")
-    assert reg == [
+    res = db.get_regression_values("test.measure")
+    assert res == [
         (
             "test_regression_1",
             "test.measure",
@@ -403,17 +399,17 @@ def test_regression_ids(output_dir):
     assert db is not None
     db.build()
 
-    r = {}
+    reg = {}
 
-    r["regression_id"] = "test_regression_1"
-    r["instrument_name"] = "test"
-    r["measure_name"] = "regressor1"
-    db.save_regression(r)
+    reg["regression_id"] = "test_regression_1"
+    reg["instrument_name"] = "test"
+    reg["measure_name"] = "regressor1"
+    db.save_regression(reg)
 
-    r["regression_id"] = "test_regression_2"
-    r["instrument_name"] = "test"
-    r["measure_name"] = "regressor2"
-    db.save_regression(r)
+    reg["regression_id"] = "test_regression_2"
+    reg["instrument_name"] = "test"
+    reg["measure_name"] = "regressor2"
+    db.save_regression(reg)
 
     reg_ids = db.regression_ids
     assert reg_ids == ["test_regression_1", "test_regression_2"]

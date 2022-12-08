@@ -1,3 +1,4 @@
+# pylint: disable=W0621,C0114,C0116,W0212,W0613,too-many-lines
 import pytest
 import pandas as pd
 from dae.pheno.graphs import draw_linregres

@@ -1,10 +1,13 @@
 import numpy as np
-import scipy as sp  # type: ignore
-from sklearn.linear_model import LinearRegression as LinearRegressionSK  # type: ignore
-from scipy.stats import t  # type: ignore
+import scipy as sp
+from sklearn.linear_model import \
+    LinearRegression as LinearRegressionSK
+from scipy.stats import t
 
 
 class LinearRegression(LinearRegressionSK):
+    """Class to build linear regression models."""
+
     def __init__(self, *args, **kwargs):
 
         super(LinearRegression, self).__init__(*args, **kwargs)
@@ -14,7 +17,7 @@ class LinearRegression(LinearRegressionSK):
 
     def fit(self, X, y, sample_weight=None):
         super().fit(X, y, sample_weight)
-        n = len(y)
+        n = len(y)  # pylint: disable=invalid-name
 
         x_consts = np.column_stack([np.ones(X.shape[0]), X])
         pinv_x, rank = sp.linalg.pinv(x_consts, return_rank=True)
@@ -32,7 +35,7 @@ class LinearRegression(LinearRegressionSK):
 
         tvalues = beta / bse
 
-        pvalues = t.sf(np.abs(tvalues), n-rank) * 2
+        pvalues = t.sf(np.abs(tvalues), n - rank) * 2
 
         self._tvalues = tvalues
         self._pvalues = pvalues

@@ -1,7 +1,9 @@
-import pytest
+# pylint: disable=W0621,C0114,C0116,W0212,W0613,too-many-lines
 import os
+import pytest
 
 import pandas as pd
+import matplotlib.pyplot as plt
 
 from dae.pheno.prepare_data import PreparePhenoBrowserBase
 from dae.pheno.graphs import violinplot, stripplot, gender_palette
@@ -9,7 +11,6 @@ from dae.pheno.graphs import violinplot, stripplot, gender_palette
 from dae.variants.attributes import Role, Sex
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.phenotype_data import pheno_conf_schema
-import matplotlib.pyplot as plt
 
 
 def test_augment_measure(fake_phenotype_data, output_dir):
@@ -149,10 +150,10 @@ def test_build_regression(mocker, fake_phenotype_data, output_dir):
 
     res = prep.build_regression(regressand, regressor, jitter)
     assert res is not None
-    assert type(res) is dict
+    assert isinstance(res, dict)
 
     mocked_linregres.assert_called_once()
-    df, col1, col2, jitter = mocked_linregres.call_args[0]
+    _dfdf, col1, col2, jitter = mocked_linregres.call_args[0]
     assert col1 == "age"
     assert col2 == "i1.m1"
     assert jitter == 0.32403423849
@@ -182,7 +183,7 @@ def test_build_regression_min_vals(mocker, fake_phenotype_data, output_dir):
     regressor = fake_phenotype_data.get_measure("i1.age")
     jitter = 0.32403423849
 
-    assert prep.build_regression(regressand, regressor, jitter) == {}
+    assert not prep.build_regression(regressand, regressor, jitter)
 
 
 def test_build_regression_min_unique_vals(
@@ -225,7 +226,7 @@ def test_build_regression_min_unique_vals(
     regressor = fake_phenotype_data.get_measure("i1.age")
     jitter = 0.32403423849
 
-    assert prep.build_regression(regressand, regressor, jitter) == {}
+    assert not prep.build_regression(regressand, regressor, jitter)
 
 
 def test_build_regression_identical_measures(
@@ -236,7 +237,7 @@ def test_build_regression_identical_measures(
     regressor = fake_phenotype_data.get_measure("i1.age")
     jitter = 0.32403423849
 
-    assert prep.build_regression(regressand, regressor, jitter) == {}
+    assert not prep.build_regression(regressand, regressor, jitter)
 
 
 def test_build_regression_aug_df_is_none(
@@ -256,7 +257,7 @@ def test_build_regression_aug_df_is_none(
     regressor = fake_phenotype_data.get_measure("i1.age")
     jitter = 0.32403423849
 
-    assert prep.build_regression(regressand, regressor, jitter) == {}
+    assert not prep.build_regression(regressand, regressor, jitter)
 
 
 def test_handle_regressions(
@@ -353,13 +354,13 @@ def test_handle_regressions_default_jitter(
         "fake", fake_phenotype_data, output_dir, reg
     )
     regressand = fake_phenotype_data.get_measure("i1.m1")
-    for i in prep.handle_regressions(regressand):
+    for _i in prep.handle_regressions(regressand):
         pass
 
     mocked.assert_called()
-    measure, reg_measure, jitter = mocked.call_args_list[0][0]
+    _measure, _reg_measure, jitter = mocked.call_args_list[0][0]
     assert jitter == 0.12
-    measure, reg_measure, jitter = mocked.call_args_list[1][0]
+    _measure, _reg_measure, jitter = mocked.call_args_list[1][0]
     assert jitter == 0.13
 
 
@@ -368,7 +369,7 @@ def test_draw_violinplot(fake_phenotype_data, temp_dirname_figures):
     df = fake_phenotype_data.get_persons_values_df(["i1.m5", "i1.m6"])
     for i in range(len(df)):
         df["i1.m5"][i] = i
-        df["i1.m6"][i] = i*2
+        df["i1.m6"][i] = i * 2
 
     violinplot(
         data=df,
@@ -392,7 +393,7 @@ def test_draw_stripplot(fake_phenotype_data, temp_dirname_figures):
     df = fake_phenotype_data.get_persons_values_df(["i1.m5", "i1.m6"])
     for i in range(len(df)):
         df["i1.m5"][i] = i
-        df["i1.m6"][i] = i*2
+        df["i1.m6"][i] = i * 2
 
     stripplot(
         data=df,

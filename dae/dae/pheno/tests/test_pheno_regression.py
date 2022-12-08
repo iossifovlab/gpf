@@ -1,8 +1,4 @@
-"""
-Created on Apr 10, 2017
-
-@author: lubo
-"""
+# pylint: disable=W0621,C0114,C0116,W0212,W0613,too-many-lines
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.phenotype_data import regression_conf_schema
 from dae.pheno.prepare_data import PreparePhenoBrowserBase
@@ -57,5 +53,5 @@ def test_has_regression_measure(
         ("regressor1", "i2"),
     ]
 
-    for e in expected_reg_measures:
-        assert prep._has_regression_measure(*e)
+    for expected in expected_reg_measures:
+        assert prep._has_regression_measure(*expected)

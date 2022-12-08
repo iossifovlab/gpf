@@ -1,4 +1,3 @@
-from multiprocessing.sharedctypes import Value
 import os
 import sys
 import logging
@@ -33,6 +32,7 @@ class VerbosityConfiguration:
 
 class AdjustmentsCommand(abc.ABC):
     """Abstract class for adjusting an GPF instance config."""
+
     def __init__(self, instance_dir):
         self.instance_dir = instance_dir
         self.filename = os.path.join(instance_dir, "gpf_instance.yaml")
@@ -48,10 +48,10 @@ class AdjustmentsCommand(abc.ABC):
 
     @abc.abstractmethod
     def execute(self):
-        """Executes adjustment command."""
+        """Execute adjustment command."""
 
     def close(self):
-        """Saves adjusted config."""
+        """Save adjusted config."""
         with open(self.filename, "w", encoding="utf8") as outfile:
             outfile.write(yaml.safe_dump(self.config))
 
@@ -64,6 +64,7 @@ class AdjustmentsCommand(abc.ABC):
 
 class InstanceIdCommand(AdjustmentsCommand):
     """Adjusts GPF instance ID."""
+
     def __init__(self, instance_dir, instance_id):
         super().__init__(instance_dir)
         self.instance_id = instance_id
@@ -77,6 +78,7 @@ class InstanceIdCommand(AdjustmentsCommand):
 
 class AdjustImpalaStorageCommand(AdjustmentsCommand):
     """Adjusts impala storage."""
+
     def __init__(self, instance_dir, storage_id, hdfs_host, impala_hosts):
         super().__init__(instance_dir)
         self.storage_id = storage_id
@@ -154,7 +156,7 @@ class DefaultGenotypeStorage(StudyConfigsAdjustmentCommand):
         genotype_storage_config = self.config["genotype_storage"]
         default_storage = genotype_storage_config["default"]
         storages = genotype_storage_config["storages"]
-        storage_ids = set(map(lambda s: s["id"], storages))
+        storage_ids = set(map(lambda s: s["id"], storages))  # type: ignore
 
         if default_storage not in storage_ids:
             logger.error(
