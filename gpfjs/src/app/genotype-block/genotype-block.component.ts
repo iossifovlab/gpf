@@ -20,8 +20,6 @@ import { FamilyTypeFilterState, FamilyTypeFilterModel } from 'app/family-type-fi
 export class GenotypeBlockComponent {
   @Input() public dataset: Dataset;
 
-  public constructor() { }
-
   @Selector([
     VarianttypesState, EffecttypesState, GenderState,
     InheritancetypesState, PresentInChildState,
@@ -34,7 +32,7 @@ export class GenotypeBlockComponent {
     genderState: GenderModel,
     inheritanceTypesState: InheritancetypesModel,
     presentInChildState: PresentInChildModel,
-    presentInParentState,
+    presentInParentState: PresentInParentState,
     studyTypesState: StudyTypesModel,
     pedigreeSelectorState: PedigreeSelectorModel,
     familyTypeFilterState: FamilyTypeFilterModel,

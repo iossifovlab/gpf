@@ -20,15 +20,12 @@ describe('InheritancetypesComponent', () => {
       ],
       imports: [NgxsModule.forRoot([InheritancetypesState], {developmentMode: true})],
     }).compileComponents();
-  }));
-
-  beforeEach(() => {
     store = TestBed.inject(Store);
     store.dispatch(new SetInheritanceTypes(new Set(['value1', 'value2'])));
     fixture = TestBed.createComponent(InheritancetypesComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
-  });
+  }));
 
   it('should create', () => {
     expect(component).toBeTruthy();
@@ -36,10 +33,10 @@ describe('InheritancetypesComponent', () => {
 
   it('should handle selected values input and/or restore state', () => {
     component.ngOnChanges();
-    expect(component.selectedValues).toEqual(new Set(['value1', 'value2']));
+    expect(component.selectedValues).toStrictEqual(new Set(['value1', 'value2']));
     component.updateInheritanceTypes(new Set(['value3']));
     component.ngOnChanges();
-    expect(component.selectedValues).toEqual(new Set(['value3']));
+    expect(component.selectedValues).toStrictEqual(new Set(['value3']));
   });
 
   it('should update variant types', () => {
@@ -49,7 +46,7 @@ describe('InheritancetypesComponent', () => {
 
     component.updateInheritanceTypes(mockSet);
 
-    expect(component.selectedValues).toEqual(mockSet);
+    expect(component.selectedValues).toStrictEqual(mockSet);
     expect(dispatchSpy).toHaveBeenNthCalledWith(1, new SetInheritanceTypes(mockSet));
   });
 });

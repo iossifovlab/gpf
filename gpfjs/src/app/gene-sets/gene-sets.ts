@@ -1,6 +1,5 @@
 export class GeneSetsCollection {
-
-  static fromJson(json: any): GeneSetsCollection {
+  public static fromJson(json: any): GeneSetsCollection {
     return new GeneSetsCollection(
       json['name'],
       json['desc'],
@@ -8,20 +7,19 @@ export class GeneSetsCollection {
     );
   }
 
-  static fromJsonArray(jsonArray: Array<Object>): Array<GeneSetsCollection> {
+  public static fromJsonArray(jsonArray: Array<Object>): Array<GeneSetsCollection> {
     return jsonArray.map((json) => GeneSetsCollection.fromJson(json));
   }
 
-  constructor(
-    readonly name: string,
-    readonly desc: string,
-    readonly types: Array<GeneSetType>,
+  public constructor(
+    public readonly name: string,
+    public readonly desc: string,
+    public readonly types: Array<GeneSetType>,
   ) { }
-
 }
 
 export class GeneSet {
-  static fromJson(json: any): GeneSet {
+  public static fromJson(json: object): GeneSet {
     return new GeneSet(
       json['name'],
       +json['count'],
@@ -30,22 +28,20 @@ export class GeneSet {
     );
   }
 
-  static fromJsonArray(jsonArray: Array<Object>): Array<GeneSet> {
+  public static fromJsonArray(jsonArray: Array<object>): Array<GeneSet> {
     return jsonArray.map((json) => GeneSet.fromJson(json));
   }
 
-  constructor(
-    readonly name: string,
-    readonly count: number,
-    readonly desc: string,
-    readonly download: string,
+  public constructor(
+    public readonly name: string,
+    public readonly count: number,
+    public readonly desc: string,
+    public readonly download: string,
   ) { }
-
 }
 
 export class GeneSetType {
-
-  static fromJsonArray(jsonArray: Array<Object>): Array<GeneSetType> {
+  public static fromJsonArray(jsonArray: Array<GeneSetType>): Array<GeneSetType> {
     const result: Array<GeneSetType> = [];
     for (const geneSetType of jsonArray) {
       result.push(GeneSetType.fromJson(geneSetType));
@@ -53,18 +49,18 @@ export class GeneSetType {
     return result;
   }
 
-  static fromJson(json: any): GeneSetType {
+  public static fromJson(json: GeneSetType): GeneSetType {
     return new GeneSetType(
       json.datasetId, json.datasetName, json.personSetCollectionId,
       json.personSetCollectionName, json.personSetCollectionLegend
     );
   }
 
-  constructor(
-    readonly datasetId: string,
-    readonly datasetName: string,
-    readonly personSetCollectionId: string,
-    readonly personSetCollectionName: string,
-    readonly personSetCollectionLegend: Array<any>
+  public constructor(
+    public readonly datasetId: string,
+    public readonly datasetName: string,
+    public readonly personSetCollectionId: string,
+    public readonly personSetCollectionName: string,
+    public readonly personSetCollectionLegend: Array<any>
   ) { }
 }

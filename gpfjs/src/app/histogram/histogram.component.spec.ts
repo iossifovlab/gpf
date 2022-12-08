@@ -22,15 +22,15 @@ import { HistogramRangeSelectorLineComponent } from './histogram-range-selector-
     `
 })
 class TestHostComponent {
-  bins = [1, 2, 3, 4];
-  bars = [2, 3, 4, 5];
-  rangeStart = 2;
-  rangeEnd = 4;
-  domainMin = 1;
-  domainMax = 12;
-  rangesCounts: Observable<Array<number>> = of([2, 7, 5]);
+  public bins = [1, 2, 3, 4];
+  public bars = [2, 3, 4, 5];
+  public rangeStart = 2;
+  public rangeEnd = 4;
+  public domainMin = 1;
+  public domainMax = 12;
+  public rangesCounts: Observable<Array<number>> = of([2, 7, 5]);
 
-  @ViewChild('gpfhistogram') histogramEl;
+  @ViewChild('gpfhistogram') public histogramEl;
 }
 
 @Component({
@@ -45,13 +45,13 @@ class TestHostComponent {
     `
 })
 class TestHostComponentNoDomain {
-  bins = [1, 2, 3, 4];
-  bars = [2, 3, 4, 5];
-  rangeStart = 2;
-  rangeEnd = 4;
-  rangesCounts: Observable<Array<number>> = of([2, 7, 5]);
+  public bins = [1, 2, 3, 4];
+  public bars = [2, 3, 4, 5];
+  public rangeStart = 2;
+  public rangeEnd = 4;
+  public rangesCounts: Observable<Array<number>> = of([2, 7, 5]);
 
-  @ViewChild('gpfhistogram') histogramEl;
+  @ViewChild('gpfhistogram') public histogramEl;
 }
 
 @Component({
@@ -68,16 +68,16 @@ class TestHostComponentNoDomain {
     `
 })
 class TestHostComponentManyBins {
-  bins = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-  bars = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
-  rangeStart = 2;
-  rangeEnd = 4;
-  domainMin = 1;
-  domainMax = 12;
-  isInteractive = true;
-  rangesCounts: Observable<Array<number>> = of([2, 7, 56]);
+  public bins = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+  public bars = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
+  public rangeStart = 2;
+  public rangeEnd = 4;
+  public domainMin = 1;
+  public domainMax = 12;
+  public isInteractive = true;
+  public rangesCounts: Observable<Array<number>> = of([2, 7, 56]);
 
-  @ViewChild('gpfhistogram') histogramEl;
+  @ViewChild('gpfhistogram') public histogramEl;
 }
 
 describe('HistogramComponent', () => {
@@ -91,15 +91,11 @@ describe('HistogramComponent', () => {
         HistogramComponent, HistogramRangeSelectorLineComponent,
         TestHostComponent,
       ]
-    })
-    .compileComponents();
-  }));
-
-  beforeEach(() => {
+    }).compileComponents();
     fixture = TestBed.createComponent(TestHostComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
-  });
+  }));
 
   it('should create', () => {
     expect(component).toBeTruthy();
@@ -110,13 +106,13 @@ describe('HistogramComponent', () => {
   });
 
   it('should have the correct width and height', () => {
-    expect(d3.select('svg').attr('width')).toEqual('650');
-    expect(d3.select('svg').attr('height')).toEqual('145');
+    expect(d3.select('svg').attr('width')).toBe('650');
+    expect(d3.select('svg').attr('height')).toBe('145');
   });
 
   it('should render the correct amount of bars', waitForAsync(() => {
     fixture.whenStable().then(() => {
-      expect(d3.select('svg').selectAll('rect').nodes().length).toEqual(6);
+      expect(d3.select('svg').selectAll('rect').nodes()).toHaveLength(6);
     });
   }));
 
@@ -138,7 +134,7 @@ describe('HistogramComponent', () => {
     fixture.whenStable().then(() => {
       const sumOfBarsLabelEl = fixture.debugElement.query(By.css('#sumOfBarsLabel'));
       expect(sumOfBarsLabelEl).not.toBeNull();
-      expect(sumOfBarsLabelEl.nativeElement.textContent.trim()).toEqual('7 (50.00%)');
+      expect((sumOfBarsLabelEl.nativeElement as HTMLElement).textContent.trim()).toBe('~7 (50.00%)');
     });
   }));
 
@@ -146,15 +142,15 @@ describe('HistogramComponent', () => {
     const sliderEls = fixture.debugElement.queryAll(
       el => el.nativeElement.attributes.getNamedItem('gpf-histogram-range-selector-line')
     );
-    expect(sliderEls.length).toBe(2);
+    expect(sliderEls).toHaveLength(2);
   }));
 
   it('should set the correct labels to the sliders', () => {
     const sliderLabels = fixture.debugElement.queryAll(By.css('.partitions-text'));
     const sliderLabelsText = sliderLabels.map((label) => (label.nativeElement as HTMLElement).textContent.trim());
-    expect(sliderLabels.length).toBe(3);
-    expect(sliderLabelsText.length).toBe(3);
-    expect(sliderLabelsText).toEqual(['~2 (14.29%)', '~5 (35.71%)', '~7 (50.00%)']);
+    expect(sliderLabels).toHaveLength(3);
+    expect(sliderLabelsText).toHaveLength(3);
+    expect(sliderLabelsText).toStrictEqual(['~2 (14.29%)', '~5 (35.71%)', '~7 (50.00%)']);
   });
 
   it('should not render range input fields if less than 10 bins', waitForAsync(() => {
@@ -177,13 +173,10 @@ describe('HistogramComponentManyBins', () => {
         TestHostComponentManyBins,
       ]
     }).compileComponents();
-  }));
-
-  beforeEach(() => {
     fixture = TestBed.createComponent(TestHostComponentManyBins);
     component = fixture.componentInstance;
     fixture.detectChanges();
-  });
+  }));
 
   it('should create', () => {
     expect(component).toBeTruthy();
@@ -199,10 +192,10 @@ describe('HistogramComponentManyBins', () => {
   it('should render buttons for the range input fields', () => {
     const rangeInputElFrom = fixture.debugElement.query(By.css('.histogram-from'));
     const rangeInputElTo = fixture.debugElement.query(By.css('.histogram-to'));
-    expect(rangeInputElFrom.queryAll(By.css('button')).length).toBe(2);
+    expect(rangeInputElFrom.queryAll(By.css('button'))).toHaveLength(2);
     expect(rangeInputElFrom.query(By.css('.step.up'))).not.toBeNull();
     expect(rangeInputElFrom.query(By.css('.step.down'))).not.toBeNull();
-    expect(rangeInputElTo.queryAll(By.css('button')).length).toBe(2);
+    expect(rangeInputElTo.queryAll(By.css('button'))).toHaveLength(2);
     expect(rangeInputElTo.query(By.css('.step.up'))).not.toBeNull();
     expect(rangeInputElTo.query(By.css('.step.down'))).not.toBeNull();
   });
@@ -218,20 +211,16 @@ describe('HistogramComponentNoDomain', () => {
         HistogramComponent, HistogramRangeSelectorLineComponent,
         TestHostComponentNoDomain,
       ]
-    })
-    .compileComponents();
-  }));
-
-  beforeEach(() => {
+    }).compileComponents();
     fixture = TestBed.createComponent(TestHostComponentNoDomain);
     fixture.detectChanges();
-  });
+  }));
 
   it('should set the correct labels to the sliders', () => {
     const sliderLabels = fixture.debugElement.queryAll(By.css('.partitions-text'));
     const sliderLabelsText = sliderLabels.map((label) => (label.nativeElement as HTMLElement).textContent.trim());
-    expect(sliderLabels.length).toBe(3);
-    expect(sliderLabelsText.length).toBe(3);
-    expect(sliderLabelsText).toEqual(['~2 (14.29%)', '~5 (35.71%)', '~7 (50.00%)']);
+    expect(sliderLabels).toHaveLength(3);
+    expect(sliderLabelsText).toHaveLength(3);
+    expect(sliderLabelsText).toStrictEqual(['~2 (14.29%)', '~5 (35.71%)', '~7 (50.00%)']);
   });
 });

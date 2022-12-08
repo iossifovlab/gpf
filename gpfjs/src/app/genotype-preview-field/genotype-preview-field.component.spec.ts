@@ -23,9 +23,6 @@ describe('GenotypePreviewFieldComponent', () => {
       providers: [DatasetsService, ConfigService, UsersService],
       imports: [HttpClientTestingModule, RouterTestingModule]
     }).compileComponents();
-  }));
-
-  beforeEach(() => {
     fixture = TestBed.createComponent(GenotypePreviewFieldComponent);
     component = fixture.componentInstance;
 
@@ -34,7 +31,7 @@ describe('GenotypePreviewFieldComponent', () => {
     component.format = '%.2f';
 
     fixture.detectChanges();
-  });
+  }));
 
   it('should be created', () => {
     expect(component).toBeTruthy();
@@ -49,7 +46,7 @@ describe('GenotypePreviewFieldComponent', () => {
     component.value = ['3.14159'];
     component.field = 'pi';
     component.format = '%.2f';
-    expect(component.formatValue()).toEqual(['3.14']);
+    expect(component.formatValue()).toStrictEqual(['3.14']);
 
     component.value = 3.14159;
     component.field = 'pi';

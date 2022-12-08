@@ -168,10 +168,7 @@
       </gpf-gene-plot>
       <div class="row" style="padding-top: 15px">
         <div class="col-12" *ngIf="selectedGene">
-          <button
-           class="btn btn-md btn-primary btn-right"
-           id="download-summary-button"
-           (click)="onDownloadSummary()">
+          <button class="btn btn-md btn-primary btn-right" id="download-summary-button" (click)="onDownloadSummary()">
             <span *ngIf="downloadInProgressSummary">Downloading...</span>
             <span *ngIf="!downloadInProgressSummary">Download Summary</span>
           </button>
@@ -207,10 +204,7 @@
           </gpf-loading-spinner>
         </div>
         <div class="col-6" *ngIf="selectedGene">
-          <button
-           class="btn btn-md btn-primary btn-right"
-           id="download-button"
-           (click)="onDownload()">
+          <button class="btn btn-md btn-primary btn-right" id="download-button" (click)="onDownload()">
             <span *ngIf="downloadInProgress">Downloading...</span>
             <span *ngIf="!downloadInProgress">Download</span>
           </button>

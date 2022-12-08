@@ -9,11 +9,7 @@ describe('LegendComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       declarations: [ LegendComponent ]
-    })
-    .compileComponents();
-  });
-
-  beforeEach(() => {
+    }).compileComponents();
     fixture = TestBed.createComponent(LegendComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();

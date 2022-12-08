@@ -18,20 +18,16 @@ describe('GenesBlockComponent', () => {
       declarations: [GeneSymbolsComponent, GenesBlockComponent],
       imports: [NgbModule, NgxsModule.forRoot([GeneSymbolsState], {developmentMode: true}), FormsModule],
     }).compileComponents();
-  }));
-
-  beforeEach(() => {
     fixture = TestBed.createComponent(GenesBlockComponent);
     component = fixture.componentInstance;
     component['store'] = {
-      selectOnce(f) {
+      selectOnce: function() {
         return of({geneSymbols: ['value1', 'value2']});
       },
-      dispatch(set) {}
-    } as any;
+      dispatch: function() {}
+    } as never;
     fixture.detectChanges();
-  });
-
+  }));
   it('should create', () => {
     expect(component).toBeTruthy();
   });

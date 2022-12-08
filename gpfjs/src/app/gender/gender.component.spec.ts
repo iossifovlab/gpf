@@ -16,13 +16,10 @@ describe('GenderComponent', () => {
       imports: [NgxsModule.forRoot([GenderState], {developmentMode: true})]
     })
       .compileComponents();
-  }));
-
-  beforeEach(() => {
     fixture = TestBed.createComponent(GenderComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
-  });
+  }));
 
   it('should create', () => {
     expect(component).toBeTruthy();
@@ -46,5 +43,4 @@ describe('GenderComponent', () => {
     expect(component.gender.male).toBe(false);
     expect(component.gender.female).toBe(false);
   });
-
 });

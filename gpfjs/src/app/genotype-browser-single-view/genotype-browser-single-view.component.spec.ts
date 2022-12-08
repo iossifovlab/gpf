@@ -28,13 +28,10 @@ describe('GenotypeBrowserSingleViewComponent', () => {
       imports: [NgxsModule.forRoot([ErrorsState], {developmentMode: true})],
       schemas: [NO_ERRORS_SCHEMA]
     }).compileComponents();
-  }));
-
-  beforeEach(() => {
     fixture = TestBed.createComponent(GenotypeBrowserSingleViewComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
-  });
+  }));
 
   it('should be created', () => {
     expect(component).toBeTruthy();

@@ -31,7 +31,7 @@
 }
 
 .no-arrows {
-  -moz-appearance:textfield;
+  -moz-appearance: textfield;
 }
 
 .no-arrows::-webkit-outer-spin-button,
