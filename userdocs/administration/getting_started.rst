@@ -197,7 +197,7 @@ Example import of de novo variants: ``helloworld``
 .. note:: 
 
     Input files for this example can be downloaded from 
-    `denovo-helloworld.tar.gz <https://iossifovlab.com/distribution/public/denovo-helloworld.tar.gz>`_.
+    :download:`denovo-helloworld.tar.gz <getting_started_files/denovo-helloworld.tar.gz>`.
     
 Let us import a small list of de novo variants. We will need the list of
 de novo variants ``helloworld.tsv``:
@@ -280,7 +280,7 @@ Example import of VCF variants: ``vcf_helloworld``
 .. note:: 
 
     Input files for this example can be downloaded from 
-    `vcf-helloworld.tar.gz <https://iossifovlab.com/distribution/public/vcf-helloworld.tar.gz>`_.
+    :download:`vcf-helloworld.tar.gz <getting_started_files/vcf-helloworld.tar.gz>`.
 
 
 Let us have a small VCF file ``hellowrold.vcf``:
@@ -414,7 +414,7 @@ named ``SupplementaryData1_Children.tsv``.
 .. note:: 
 
     Input files for this example can be downloaded from 
-    `denovo-in-high-and-low-risk-papter.tar.gz <https://iossifovlab.com/distribution/public/denovo-in-high-and-low-risk-papter.tar.gz>`_.
+    :download:`denovo-in-high-and-low-risk-papter.tar.gz <getting_started_files/denovo-in-high-and-low-risk-papter.tar.gz>`.
 
 Preprocess the families data
 ____________________________
