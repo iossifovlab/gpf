@@ -51,31 +51,45 @@ class MockDatasetsService {
   }
 }
 class MockQueryService {
-  public downloadVariants(filter: object): Observable<HttpResponse<Blob>> {
-    return of([] as any);
+  public downloadVariants(): Observable<HttpResponse<Blob>> {
+    return of([] as any) as Observable<HttpResponse<Blob>>;
   }
 }
 
 describe('GenotypeBrowserComponent', () => {
   let component: GenotypeBrowserComponent;
   let fixture: ComponentFixture<GenotypeBrowserComponent>;
-  let queryService = new MockQueryService();
+  const queryService = new MockQueryService();
 
   beforeEach(() => {
     TestBed.configureTestingModule({
       declarations: [
-        GenotypeBrowserComponent, GenotypeBlockComponent,
+        GenotypeBrowserComponent,
+        GenotypeBlockComponent,
         GenomicScoresBlockComponent,
         SaveQueryComponent,
-        PresentInChildComponent, PresentInParentComponent,
-        ErrorsAlertComponent, CheckboxListComponent, EffecttypesColumnComponent, FamilyFiltersBlockComponent,
-        PersonFiltersBlockComponent, DisplayNamePipe
+        PresentInChildComponent,
+        PresentInParentComponent,
+        ErrorsAlertComponent,
+        CheckboxListComponent,
+        EffecttypesColumnComponent,
+        FamilyFiltersBlockComponent,
+        PersonFiltersBlockComponent,
+        DisplayNamePipe
       ],
       providers: [
-        {provide: QueryService, useValue: queryService}, ConfigService, FullscreenLoadingService, UsersService,
-        GenomicScoresBlockService, { provide: DatasetsService, useValue: new MockDatasetsService() },
-        UniqueFamilyVariantsFilterComponent, EffectTypesComponent, GenderComponent, VariantTypesComponent,
-        GenesBlockComponent, RegionsBlockComponent,
+        {provide: QueryService, useValue: queryService},
+        ConfigService,
+        FullscreenLoadingService,
+        UsersService,
+        GenomicScoresBlockService,
+        { provide: DatasetsService, useValue: new MockDatasetsService() },
+        UniqueFamilyVariantsFilterComponent,
+        EffectTypesComponent,
+        GenderComponent,
+        VariantTypesComponent,
+        GenesBlockComponent,
+        RegionsBlockComponent,
         { provide: APP_BASE_HREF, useValue: '' }
       ],
       imports: [
@@ -89,21 +103,19 @@ describe('GenotypeBrowserComponent', () => {
     fixture.detectChanges();
   });
 
-  it.skip('should create', () => {
+  it('should create', () => {
     fixture.detectChanges();
     expect(component).toBeTruthy();
   });
 
   it('should test download', () => {
-    const spy = jest.spyOn(component, 'onDownload');
-    const spyOnQueryService = jest.spyOn<any, any>(queryService, 'downloadVariants');
-    const spyOnBlobResponse = jest.spyOn(downloadBlobResponse, 'downloadBlobResponse');
+    const downloadVariantsSpy = jest.spyOn<any, any>(queryService, 'downloadVariants');
+    const downloadBlobResponseSpy = jest.spyOn(downloadBlobResponse, 'downloadBlobResponse');
     component.onDownload();
-    expect(spy).toHaveBeenCalledTimes(1);
-    expect(spyOnBlobResponse).toHaveBeenCalledWith([], "variants.tsv");
-    expect(spyOnBlobResponse).toHaveBeenCalledTimes(1);
-    expect(spyOnQueryService).toHaveBeenCalledWith({"datasetId": "testDataset", "download": true});
-    expect(spyOnQueryService).toHaveBeenCalledTimes(1);
-    expect(spyOnQueryService.mock.results).toMatchObject([{"type":"return","value":{}}]);
+    expect(downloadBlobResponseSpy).toHaveBeenCalledWith([], "variants.tsv");
+    expect(downloadBlobResponseSpy).toHaveBeenCalledTimes(1);
+    expect(downloadVariantsSpy).toHaveBeenCalledWith({"datasetId": "testDataset", "download": true});
+    expect(downloadVariantsSpy).toHaveBeenCalledTimes(1);
+    expect(downloadVariantsSpy.mock.results).toMatchObject([{"type":"return","value":{}}]);
   });
 });

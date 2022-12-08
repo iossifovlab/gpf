@@ -235,13 +235,11 @@ describe('PhenoBrowserComponent', () => {
   }));
 
   it('should test download', () => {
-    const spy = jest.spyOn(component, 'downloadMeasures');
     const spyOnQueryService = jest.spyOn<any, any>(phenoBrowserServiceMock, 'downloadMeasures');
-    const spyOnBlobResponse = jest.spyOn(saveAs, 'saveAs');
+    const blobSaveSpy = jest.spyOn(saveAs, 'saveAs');
     component.downloadMeasures();
-    expect(spy).toHaveBeenCalledTimes(1);
-    expect(spyOnBlobResponse).toHaveBeenCalledWith([], 'measures_testDatasetId.csv');
-    expect(spyOnBlobResponse).toHaveBeenCalledTimes(1);
+    expect(blobSaveSpy).toHaveBeenCalledWith([], 'measures_testDatasetId.csv');
+    expect(blobSaveSpy).toHaveBeenCalledTimes(1);
     expect(spyOnQueryService).toHaveBeenCalledWith('testDatasetId', null,
       [{base_url: undefined, description: 'a test measure', figureDistribution: 'http://localhost:8000basetest.jpg',
         figureDistributionSmall: null, index: 1, instrumentName: 'i1', measureId: 'i1.test_measure',

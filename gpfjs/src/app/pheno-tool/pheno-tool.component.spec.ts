@@ -68,13 +68,10 @@ describe('PhenoToolComponent', () => {
     })
       .compileComponents();
     store = TestBed.inject(Store);
-  }));
-
-  beforeEach(() => {
     fixture = TestBed.createComponent(PhenoToolComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
-  });
+  }));
 
   it('should create', () => {
     expect(component).toBeTruthy();
@@ -95,7 +92,7 @@ describe('PhenoToolComponent', () => {
       testFamily: 'test4'
     });
 
-    expect(mockStateSelector).toEqual(
+    expect(mockStateSelector).toStrictEqual(
       Object({
         genesBlockState: 'state1',
         testGene: 'test1',
@@ -112,23 +109,21 @@ describe('PhenoToolComponent', () => {
   it('should test submit query', () => {
     fixture.detectChanges();
     component.submitQuery();
-    expect(component.phenoToolResults).toEqual('fakeValue' as any);
+    expect(component.phenoToolResults).toBe('fakeValue' as any);
   });
 
   it('should hide results on a state change', () => {
     fixture.detectChanges();
     component.submitQuery();
-    expect(component.phenoToolResults).toEqual('fakeValue' as any);
+    expect(component.phenoToolResults).toBe('fakeValue' as any);
     store.dispatch(new SetGeneSymbols(['POGZ']));
-    expect(component.phenoToolResults).toEqual(null);
+    expect(component.phenoToolResults).toBeNull();
   });
 
   it('should test download', () => {
-    const spy = jest.spyOn(component, 'onDownload');
     const spyOnQueryService = jest.spyOn<any, any>(phenoToolMockService, 'downloadPhenoToolResults');
     const spyOnBlobResponse = jest.spyOn(downloadBlobResponse, 'downloadBlobResponse');
     component.onDownload();
-    expect(spy).toHaveBeenCalledTimes(1);
     expect(spyOnBlobResponse).toHaveBeenCalledWith([], 'pheno_report.csv');
     expect(spyOnBlobResponse).toHaveBeenCalledTimes(1);
     expect(spyOnQueryService).toHaveBeenCalledWith({datasetId: 'testDatasetId'});

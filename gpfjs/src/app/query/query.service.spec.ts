@@ -10,7 +10,6 @@ describe('QueryService', () => {
   let service: QueryService;
   let httpController: HttpTestingController;
 
-
   beforeEach(() => {
     TestBed.configureTestingModule({
       providers: [ConfigService, QueryService, { provide: APP_BASE_HREF, useValue: '' }],

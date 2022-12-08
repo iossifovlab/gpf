@@ -235,13 +235,13 @@ describe('GeneBrowserComponent', () => {
   });
 
   it('should test download', () => {
-    const spy = jest.spyOn(component, 'onDownload');
+    const downloadVariantsSpy = jest.spyOn(component, 'onDownload');
     const spyOnQueryService = jest.spyOn<any, any>(mockQueryService, 'downloadVariants');
-    const spyOnBlobResponse = jest.spyOn(downloadBlobResponse, 'downloadBlobResponse');
+    const downloadBlobResponseSpy = jest.spyOn(downloadBlobResponse, 'downloadBlobResponse');
     component.onDownload();
-    expect(spy).toHaveBeenCalledTimes(1);
-    expect(spyOnBlobResponse).toHaveBeenCalledWith([], 'variants.tsv');
-    expect(spyOnBlobResponse).toHaveBeenCalledTimes(1);
+    expect(downloadVariantsSpy).toHaveBeenCalledTimes(1);
+    expect(downloadBlobResponseSpy).toHaveBeenCalledWith([], 'variants.tsv');
+    expect(downloadBlobResponseSpy).toHaveBeenCalledTimes(1);
     expect(spyOnQueryService).toHaveBeenCalledWith({
       affectedStatus: ['Affected only', 'Unaffected only', 'Affected and unaffected'],
       datasetId: 'testDatasetId', download: true,
