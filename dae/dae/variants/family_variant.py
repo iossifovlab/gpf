@@ -8,7 +8,7 @@ import numpy as np
 from deprecation import deprecated  # type: ignore
 
 from dae.pedigrees.family import Family
-from dae.utils.variant_utils import GENOTYPE_TYPE, \
+from dae.utils.variant_utils import GenotypeType, \
     is_all_unknown_genotype, \
     is_reference_genotype, \
     mat2str
@@ -31,15 +31,15 @@ def calculate_simple_best_state(
         genotype: np.ndarray, allele_count: int) -> np.ndarray:
     # Simple best state calculation
     # Treats every genotype as diploid (including male X non-PAR)
-    ref: np.ndarray = 2 * np.ones(genotype.shape[1], dtype=GENOTYPE_TYPE)
+    ref: np.ndarray = 2 * np.ones(genotype.shape[1], dtype=GenotypeType)
     unknown = np.any(genotype == -1, axis=0)
 
     best_st = [ref]
     for allele_index in range(1, allele_count):
-        alt_gt = np.zeros(genotype.shape, dtype=GENOTYPE_TYPE)
+        alt_gt = np.zeros(genotype.shape, dtype=GenotypeType)
         alt_gt[genotype == allele_index] = 1
 
-        alt = np.sum(alt_gt, axis=0, dtype=GENOTYPE_TYPE)
+        alt = np.sum(alt_gt, axis=0, dtype=GenotypeType)
         best_st[0] = best_st[0] - alt
         best_st.append(alt)
 
@@ -96,7 +96,7 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
 
         self.gt = genotype
 
-        # assert self.gt.dtype == GENOTYPE_TYPE, (self.gt, self.gt.dtype)
+        # assert self.gt.dtype == GenotypeType, (self.gt, self.gt.dtype)
         self._best_state = best_state
         self._genetic_model = genetic_model
         if self._genetic_model is None:

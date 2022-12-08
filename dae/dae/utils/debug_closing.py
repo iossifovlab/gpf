@@ -1,3 +1,4 @@
+# pylint: disable=W0603
 import logging
 from contextlib import AbstractContextManager
 
@@ -25,6 +26,7 @@ class closing(AbstractContextManager):
             f.close()
 
     """
+
     def __init__(self, thing):
         self.thing = thing
 
@@ -33,8 +35,7 @@ class closing(AbstractContextManager):
 
         LIVE_CONNECTIONS += 1
         logger.info(
-            f"[closing] enter {id(self.thing)}; live {LIVE_CONNECTIONS}",
-            # stack_info=True
+            "[closing] enter %s; live %s", id(self.thing), LIVE_CONNECTIONS,
         )
         return self.thing
 
@@ -44,8 +45,7 @@ class closing(AbstractContextManager):
 
         LIVE_CONNECTIONS -= 1
         logger.info(
-            f"[closing] exit {id(self.thing)}; live {LIVE_CONNECTIONS}",
-            # stack_info=True
+            "[closing] exit %s; live %s", id(self.thing), LIVE_CONNECTIONS,
         )
 
     async def __aenter__(self):

@@ -1,8 +1,8 @@
-from ..effect import EffectFactory
 import logging
+from ..effect import EffectFactory
 
 
-class UTREffectChecker(object):
+class UTREffectChecker:
     def __init__(self):
         self.logger = logging.getLogger(__name__)
 
@@ -12,7 +12,9 @@ class UTREffectChecker(object):
         else:
             effect_name = "3'UTR"
 
-        ef = EffectFactory.create_effect_with_prot_length(effect_name, request)
+        effect = EffectFactory.create_effect_with_prot_length(
+            effect_name, request
+        )
         self.logger.debug(
             "pos=%d cds end=%d",
             request.variant.ref_position_last - 1,
@@ -20,15 +22,15 @@ class UTREffectChecker(object):
         )
 
         if side == "+":
-            ef.dist_from_coding = request.get_exonic_distance(
+            effect.dist_from_coding = request.get_exonic_distance(
                 request.variant.corrected_ref_position_last,
                 request.transcript_model.cds[0],
             )
         else:
-            ef.dist_from_coding = request.get_exonic_distance(
+            effect.dist_from_coding = request.get_exonic_distance(
                 request.transcript_model.cds[1], request.variant.position
             )
-        return ef
+        return effect
 
     def create_effect(self, request, side):
         coding_regions = request.transcript_model.exons
@@ -38,7 +40,7 @@ class UTREffectChecker(object):
         for i, j in enumerate(coding_regions):
             if request.variant.position <= j.stop and j.start <= last_position:
                 return self.create_utr_effect(request, side)
-            elif (
+            if (
                 prev is not None
                 and prev <= request.variant.position
                 and last_position < j.start
@@ -65,11 +67,11 @@ class UTREffectChecker(object):
             alt_index = alt_aa.index("End")
 
             if ref_index == alt_index:
-                ef = EffectFactory.create_effect_with_prot_length(
+                effect = EffectFactory.create_effect_with_prot_length(
                     "3'UTR", request
                 )
-                ef.dist_from_coding = 0
-                return ef
+                effect.dist_from_coding = 0
+                return effect
         except ValueError:
             pass
         except IndexError:

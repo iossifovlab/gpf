@@ -1,14 +1,14 @@
-import networkx as nx  # type: ignore
 import itertools
-from collections import deque
 import copy
 import logging
+from collections import deque
+import networkx as nx  # type: ignore
 
 
 logger = logging.getLogger(__name__)
 
 
-class Interval(object):
+class Interval():
     def __init__(self, left=0.0, right=1.0):
         self.left = left
         self.right = right
@@ -23,14 +23,14 @@ class Interval(object):
 
 class IntervalForVertex(Interval):
     def __init__(self, vertex, left=0.0, right=1.0):
-        super(IntervalForVertex, self).__init__(left, right)
+        super().__init__(left, right)
         self.vertex = vertex
 
     def __repr__(self):
-        return "i[{}> {}:{}]".format(self.vertex, self.left, self.right)
+        return f"i[{self.vertex}> {self.left}:{self.right}]"
 
 
-class Realization(object):
+class Realization():
     def __init__(
         self,
         graph,
@@ -91,7 +91,6 @@ class Realization(object):
         return ";".join(ordered_domain)
 
     def extend(self, vertex):
-
         if not self.can_extend(vertex):
             return False
 
@@ -100,7 +99,6 @@ class Realization(object):
         return True
 
     def force_extend(self, vertex):
-
         max_right = next(
             self.get_interval(v).right for v in self.get_maximal_set()
         )
@@ -295,7 +293,7 @@ class Realization(object):
         return result
 
 
-class SandwichInstance(object):
+class SandwichInstance():
     def __init__(self, vertices, required_graph, forbidden_graph):
         self.vertices = vertices
         self.required_graph = required_graph
@@ -314,15 +312,14 @@ class SandwichInstance(object):
         return SandwichInstance(all_vertices, required_graph, forbidden_graph)
 
 
-def copy_graph(g):
+def copy_graph(graph):
     result = nx.Graph()
-    result.add_nodes_from(g.nodes())
-    result.add_edges_from(g.edges())
-
+    result.add_nodes_from(graph.nodes())
+    result.add_edges_from(graph.edges())
     return result
 
 
-class SandwichSolver(object):
+class SandwichSolver():
     @staticmethod
     def solve(sandwich_instance):
         forbidden_graph = sandwich_instance.forbidden_graph
@@ -330,14 +327,16 @@ class SandwichSolver(object):
         if len(sandwich_instance.required_graph.edges()) == 0:
             return SandwichSolver.try_solve(sandwich_instance)
         logger.info(
-            f"sandwitch forbidden graph edges: {len(forbidden_graph.edges())};"
-            f" {forbidden_graph.edges()}")
+            "sandwich forbidden graph edges: %s; %s",
+            len(forbidden_graph.edges()),
+            forbidden_graph.edges(),
+        )
 
         for count in range(0, len(forbidden_graph.edges())):
             for edges_to_remove in itertools.combinations(
                     sorted(forbidden_graph.edges()), count):
 
-                logger.debug(f"trying to remove edges: {edges_to_remove}")
+                logger.debug("trying to remove edges: %s", edges_to_remove)
                 # if count == 2:
                 #     return
 
@@ -394,7 +393,8 @@ class SandwichSolver(object):
 
             if current_iteration == 100000:
                 logger.warning(
-                    f"bailing at {current_iteration} iterations...")
+                    "bailing at %s iterations...", current_iteration
+                )
                 return None
 
             other_vertices = sandwich_instance.vertices.difference(
@@ -416,12 +416,12 @@ class SandwichSolver(object):
 
                 if len(cloned_realization.domain) == vertices_length:
                     logger.debug(
-                        f"sandwitch iterations count: {current_iteration}")
+                        "sandwitch iterations count: %s", current_iteration
+                    )
                     return cloned_realization.intervals
-                else:
-                    domain_string = repr(cloned_realization)
-                    if domain_string not in visited_realizations:
-                        visited_realizations.add(domain_string)
-                        realizations_queue.append(cloned_realization)
+                domain_string = repr(cloned_realization)
+                if domain_string not in visited_realizations:
+                    visited_realizations.add(domain_string)
+                    realizations_queue.append(cloned_realization)
 
         return None

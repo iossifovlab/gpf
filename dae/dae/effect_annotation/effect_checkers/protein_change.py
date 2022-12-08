@@ -1,7 +1,7 @@
 from ..effect import EffectFactory
 
 
-class ProteinChangeEffectChecker(object):
+class ProteinChangeEffectChecker:
     def mutation_type(self, aaref, aaalt):
         assert len(aaref) == len(aaalt)
 

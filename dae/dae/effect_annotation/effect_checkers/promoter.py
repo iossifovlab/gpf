@@ -1,22 +1,23 @@
 from ..effect import EffectFactory
 
 
-class PromoterEffectChecker(object):
+class PromoterEffectChecker:
     def create_effect(self, transcript_model):
         return EffectFactory.create_effect_with_tm(
             "promoter", transcript_model)
 
     def create_positive_strand_effect(self, transcript_model, variant):
-        ef = self.create_effect(transcript_model)
-        ef.dist_from_5utr = (
+        effect = self.create_effect(transcript_model)
+        effect.dist_from_5utr = (
             transcript_model.exons[0].start - variant.ref_position_last
         )
-        return ef
+        return effect
 
     def create_negative_strand_effect(self, transcript_model, variant):
-        ef = self.create_effect(transcript_model)
-        ef.dist_from_5utr = variant.position - transcript_model.exons[-1].stop
-        return ef
+        effect = self.create_effect(transcript_model)
+        effect.dist_from_5utr = \
+            variant.position - transcript_model.exons[-1].stop
+        return effect
 
     def get_effect(self, request):
         if request.annotator.promoter_len == 0:

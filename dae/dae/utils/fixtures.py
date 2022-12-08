@@ -12,6 +12,11 @@ def path_to_fixtures(module, *args, **kwargs):
 
 
 def change_environment(env_props):
+    """Change os.environ variables according to given dictionary.
+
+    Can be used with try/finally to restore the previous environment
+    afterwards in the `finally` block.
+    """
     env_props_copy = env_props.copy()
     old_env = {}
     for env_key, env_value in env_props_copy.items():

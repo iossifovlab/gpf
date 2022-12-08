@@ -2,8 +2,8 @@ import hashlib
 
 
 def hashsum(filename, hasher, blocksize=65536):
-    with open(filename, "rb") as f:
-        for block in iter(lambda: f.read(blocksize), b""):
+    with open(filename, "rb") as infile:
+        for block in iter(lambda: infile.read(blocksize), b""):
             hasher.update(block)
     return hasher.hexdigest()
 

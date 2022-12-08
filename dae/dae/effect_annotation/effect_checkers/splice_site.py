@@ -1,8 +1,8 @@
-from ..effect import EffectFactory
 import logging
+from ..effect import EffectFactory
 
 
-class SpliceSiteEffectChecker(object):
+class SpliceSiteEffectChecker:
     def __init__(self, splice_site_length=2):
         self.splice_site_length = splice_site_length
         self.logger = logging.getLogger(__name__)

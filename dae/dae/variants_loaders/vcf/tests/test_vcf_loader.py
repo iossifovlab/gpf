@@ -213,7 +213,7 @@ def test_multivcf_loader_fill_missing(
 #         [0, 0, 1, 1, 0, 1],
 #         [0, 1, 0, 1, -2, -2],
 #         [False, False, False, False, True, True]
-#     ], dtype=GENOTYPE_TYPE)
+#     ], dtype=GenotypeType)
 
 #     assert np.array_equal(
 #         expected, VcfLoader.transform_vcf_genotypes(genotypes)

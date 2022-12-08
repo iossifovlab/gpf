@@ -154,14 +154,14 @@ class VariantColumnInputFile:
     def set_argument(parser: ArgumentParser):
         variant_columns_group = parser.add_argument_group(
             "Variant columns")
-        for vc in VariantColumnInputFile.variant_columns:
+        for variant_column in VariantColumnInputFile.variant_columns:
             variant_columns_group.add_argument(
-                f"--{vc}-col",
-                default=vc)
+                f"--{variant_column}-col",
+                default=variant_column)
         input_file_group = parser.add_argument_group(
             "Input file")
         input_file_group.add_argument("input_filename",
-                                      nargs='?', default="-")
+                                      nargs="?", default="-")
         input_file_group.add_argument("--input-sep", default="\t")
 
     def __init__(self, args):
@@ -175,7 +175,7 @@ class VariantColumnInputFile:
             if filename.endswith("gz"):
                 self.file = gzip.open(filename, "rt")
             else:
-                self.file = open(filename, "rt")
+                self.file = open(filename, "rt")  # pylint: disable=R1732
 
         # read header
         self.header: List[str] = self.file.readline(). \
@@ -185,7 +185,7 @@ class VariantColumnInputFile:
         args_dict = vars(self.args)
         self.variant_attribute_index: Dict[str, int] = {}
         for variant_attribute in VariantColumnInputFile.variant_columns:
-            col = args_dict[f'{variant_attribute}_col']
+            col = args_dict[f"{variant_attribute}_col"]
             idx = [i for i, h in enumerate(self.header) if h == col]
             if len(idx) > 1:
                 raise Exception(f"the column {col} is repeated twice in the "
@@ -198,10 +198,11 @@ class VariantColumnInputFile:
 
     def get_lines(self) -> Iterator[Tuple[List[str], Dict[str, str]]]:
         for line in self.file:
-            cs = line.strip("\n\r").split(self.args.input_sep)
-            variant_attributes = \
-                {k: cs[i] for k, i in self.variant_attribute_index.items()}
-            yield cs, variant_attributes
+            columns = line.strip("\n\r").split(self.args.input_sep)
+            variant_attributes = {
+                k: columns[i] for k, i in self.variant_attribute_index.items()
+            }
+            yield columns, variant_attributes
 
     def close(self) -> None:
         self.file.close()
@@ -213,7 +214,7 @@ class VariantColumnOutputFile:
         output_file_group = parser.add_argument_group(
             "Output file")
         output_file_group.add_argument("output_filename",
-                                       nargs='?', default="-")
+                                       nargs="?", default="-")
         output_file_group.add_argument("--output-sep", default="\t")
 
     def __init__(self, args):
@@ -226,10 +227,10 @@ class VariantColumnOutputFile:
             if filename.endswith("gz"):
                 self.file = gzip.open(filename, "wt")
             else:
-                self.file = open(filename, "wt")
+                self.file = open(filename, "wt")  # pylint: disable=R1732
 
-    def write_columns(self, cs) -> None:
-        print(*cs, sep=self.args.output_sep, file=self.file)
+    def write_columns(self, columns) -> None:
+        print(*columns, sep=self.args.output_sep, file=self.file)
 
     def close(self) -> None:
         self.file.close()
@@ -243,7 +244,7 @@ class AnnotationAttributes:
     def set_argument(parser: ArgumentParser, default_columns: str =
                      "worst_effect,gene_effects,effect_details"):
         annotation_attributes_group = parser.add_argument_group(
-            'Annotation attributes.')
+            "Annotation attributes.")
         annotation_attributes_group. \
             add_argument("--annotation-attributes",
                          default=default_columns,
@@ -285,8 +286,8 @@ class AnnotationAttributes:
     def get_source_attributes(self) -> List[str]:
         return self.source_attributes
 
-    def get_values(self, E) -> List[str]:
-        full_desc = AnnotationEffect.effects_description(E)
+    def get_values(self, effect) -> List[str]:
+        full_desc = AnnotationEffect.effects_description(effect)
         return [full_desc[idx] for idx in self.value_idxs]
 
 
@@ -309,14 +310,18 @@ def cli_columns():
 
     output_file.write_columns(
         input_file.get_header() + annotation_attributes.get_out_attributes())
-    for cs, vdef in input_file.get_lines():
+    for columns, vdef in input_file.get_lines():
         logger.debug("vdef: %s AAA", vdef)
-        E = annotator.do_annotate_variant(**vdef)
-        output_file.write_columns(cs + annotation_attributes.get_values(E))
+        effect = annotator.do_annotate_variant(**vdef)
+        output_file.write_columns(
+            columns + annotation_attributes.get_values(effect)
+        )
 
 
 def cli_vcf():
-    import pysam  # type: ignore
+    # pylint: disable=C0415
+    # type: ignore
+    import pysam
 
     parser = ArgumentParser(
         description="Annotate Variant Effects in a VCF file.")
@@ -341,7 +346,7 @@ def cli_vcf():
     if args.output_filename is None:
         outfile = sys.stdout
     else:
-        outfile = open(args.output_filename, "w")
+        outfile = open(args.output_filename, "w")  # pylint: disable=R1732
 
     # handling the header
     header = infile.header
@@ -349,7 +354,7 @@ def cli_vcf():
         "variant_effect_annotation", "GPF variant effects annotation."
     )
     header.add_meta(
-        "variant_effect_annotation_command", '"{}"'.format(" ".join(sys.argv))
+        "variant_effect_annotation_command", f'"{" ".join(sys.argv)}"'
     )
     source_attribute_description = {
         "worst_effect": "The worst effect.",
@@ -369,13 +374,14 @@ def cli_vcf():
         buffers = [list([]) for _ in out_as]
 
         for alt in variant.alts:
-            E = annotator.do_annotate_variant(
+            effect = annotator.do_annotate_variant(
                 chrom=variant.chrom,
                 pos=variant.pos,
                 ref=variant.ref,
                 alt=alt
             )
-            for buff, v in zip(buffers, annotation_attributes.get_values(E)):
+            for buff, v in zip(buffers,
+                               annotation_attributes.get_values(effect)):
                 buff.append(v)
 
         for out_a, buff in zip(out_as, buffers):
