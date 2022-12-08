@@ -23,6 +23,13 @@ table:
         desc: ""
         name: MPC
 
+histograms:
+  - score: MPC
+    bins: 100
+    min: 0.0
+    max: 5.0
+    y_scale: "log"
+
 default_annotation:
   attributes:
     - source: MPC

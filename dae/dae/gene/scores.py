@@ -62,7 +62,7 @@ class GenomicScoresDb:
         source_score_id = attributes_mapping[selected_score_id]
         conf = resource.get_config()
         description = selected_score_id
-        for score_conf in conf["scores"]:
+        for score_conf in conf["table"]["scores"]:
             if score_conf["id"] == source_score_id:
                 description = score_conf.get(
                     "description", selected_score_id)
