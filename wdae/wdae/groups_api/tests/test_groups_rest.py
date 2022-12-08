@@ -51,7 +51,7 @@ def test_groups_have_users_and_datasets(admin_client):
 def test_single_group_has_users_and_datasets(admin_client):
     groups = Group.objects.all()
     for group in groups:
-        url = "/api/v3/groups/{}".format(group.id)
+        url = "/api/v3/groups/{}".format(group.name)
         response = admin_client.get(url)
 
         assert response.status_code is status.HTTP_200_OK
@@ -115,7 +115,7 @@ def test_admin_can_rename_groups(admin_client, group_with_user):
     test_name = "AwesomeGroup"
     assert group.name is not test_name
 
-    url = "/api/v3/groups/{}".format(group.pk)
+    url = "/api/v3/groups/{}".format(group.name)
 
     data = {"id": group.id, "name": test_name}
 
@@ -135,7 +135,7 @@ def test_group_has_all_users(admin_client, group):
     for email in test_emails:
         group.user_set.create(email=email)
 
-    url = "/api/v3/groups/{}".format(group.id)
+    url = "/api/v3/groups/{}".format(group.name)
     response = admin_client.get(url)
 
     assert response.status_code is status.HTTP_200_OK
@@ -181,14 +181,14 @@ def test_empty_group_with_permissions_is_shown(admin_client, dataset):
 def test_group_has_all_datasets(admin_client, group_with_user, dataset):
     group, _ = group_with_user
 
-    url = "/api/v3/groups/{}".format(group.id)
+    url = "/api/v3/groups/{}".format(group.name)
     response = admin_client.get(url)
     assert response.status_code is status.HTTP_200_OK
     assert len(response.data["datasets"]) == 0
 
     dataset.groups.add(group)
 
-    url = "/api/v3/groups/{}".format(group.id)
+    url = "/api/v3/groups/{}".format(group.name)
     response = admin_client.get(url)
     assert response.status_code is status.HTTP_200_OK
     assert len(response.data["datasets"]) == 1
