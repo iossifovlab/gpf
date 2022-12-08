@@ -1,3 +1,4 @@
+# pylint: disable=W0621,C0114,C0116,W0212,W0613,too-many-lines
 
 def test_pheno_factory_simple(fake_pheno_db):
     assert fake_pheno_db.config is not None

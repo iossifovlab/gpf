@@ -1,8 +1,4 @@
-"""
-Created on Sep 12, 2016
-
-@author: lubo
-"""
+# pylint: disable=W0621,C0114,C0116,W0212,W0613,too-many-lines
 import pytest
 import pandas as pd
 import numpy as np
@@ -20,8 +16,8 @@ def df_check(df, expected_count, expected_cols):
 
 def dict_check(dict_, expected_count, expected_cols):
     assert isinstance(dict_, dict)
-    for person, measures in dict_.items():
-        assert all([col in measures for col in expected_cols])
+    for _person, measures in dict_.items():
+        assert all(col in measures for col in expected_cols)
     assert expected_count == len(dict_)
 
 
@@ -37,14 +33,14 @@ def str_check(str_, expected_count, expected_cols):
 
 def dict_check_measure(dict_, expected_count, *args):
     assert isinstance(dict_, dict)
-    for m_id, measure in dict_.items():
+    for _id, measure in dict_.items():
         assert isinstance(measure, Measure)
     assert expected_count == len(dict_)
 
 
 def test_get_measure_type(fake_phenotype_data):
-    m = fake_phenotype_data.get_measure("i1.m1")
-    assert m.measure_type == MeasureType.continuous
+    mes = fake_phenotype_data.get_measure("i1.m1")
+    assert mes.measure_type == MeasureType.continuous
 
 
 @pytest.mark.parametrize("query_cols", [(["i1.m1"]), (["i1.m1", "i1.m2"])])
@@ -184,8 +180,8 @@ def test_get_values_families_filter(
 ):
     personlist = ["{}.dad", "{}.mom", "{}.p1"]
     vals = fake_phenotype_data.get_values(query_cols, family_ids=families)
-    for f in families:
-        assert all([p.format(f) in vals for p in personlist])
+    for fam in families:
+        assert all(p.format(fam) in vals for p in personlist)
     dict_check(vals, expected_count, query_cols)
 
 

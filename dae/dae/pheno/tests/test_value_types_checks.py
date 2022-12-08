@@ -1,8 +1,4 @@
-"""
-Created on Nov 16, 2017
-
-@author: lubo
-"""
+# pylint: disable=W0621,C0114,C0116,W0212,W0613,too-many-lines
 import numpy as np
 import pandas as pd
 
@@ -129,9 +125,7 @@ def test_should_convert_to_numeric_cutoff():
 
 
 def test_clasify_minus_values():
-    values = pd.Series(data=["-", "-", "-", np.nan, None, " ", "-",])
-    print(values)
-
+    values = pd.Series(data=["-", "-", "-", np.nan, None, " ", "-"])
     report = MeasureClassifier.meta_measures(values)
     assert report.count_with_numeric_values == 0
     assert report.count_without_values == 3

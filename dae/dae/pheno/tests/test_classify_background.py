@@ -1,8 +1,4 @@
-"""
-Created on Nov 21, 2017
-
-@author: lubo
-"""
+# pylint: disable=W0621,C0114,C0116,W0212,W0613,too-many-lines
 from dae.pheno.prepare.measure_classifier import MeasureClassifier
 from dae.pheno.common import default_config, MeasureType
 from dae.pheno.prepare.pheno_prepare import PrepareVariables
@@ -24,9 +20,11 @@ def test_fake_background_classify(fake_background_df):
             or measure_type == MeasureType.categorical
         )
 
-        values = classifier.convert_to_string(series.values)
-        values = [v for v in values if v is not None]
-        assert all([isinstance(v, str) for v in values])
+        values = [
+            v for v in classifier.convert_to_string(series.values)
+            if v is not None
+        ]
+        assert all(isinstance(v, str) for v in values)
 
 
 def test_fake_background_build(

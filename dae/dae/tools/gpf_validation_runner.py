@@ -99,6 +99,7 @@ class TestResult:
 
 class TestSuite:
     """A collection of tests."""
+
     def __init__(self, study, target, name):
         self.study = study
         self.name = name
@@ -223,7 +224,8 @@ class BaseGenotypeBrowserRunner(AbstractRunner):
 
 
 class GenotypeBrowserRunner(BaseGenotypeBrowserRunner):
-    """Run Genotype Browser."""
+    """Run Genotype Browser tests."""
+
     def __init__(
             self, expectations, gpf_instance,
             detailed_reporting, skip_columns):
@@ -231,116 +233,6 @@ class GenotypeBrowserRunner(BaseGenotypeBrowserRunner):
         self.skip_columns = set(skip_columns)
 
         super().__init__(expectations, gpf_instance)
-
-    # def _validate_families_report(self, expectation):
-    #     study_id = expectation["study"]
-    #     cases = expectation["cases"]
-    #     file = expectation["file"]
-    #     target = expectation["target"]
-
-    #     test_suite = TestSuite(study_id, target)
-    #     self.test_suites.append(test_suite)
-
-    #     for case_number, case in enumerate(cases):
-    #         start = time.time()
-    #         params = case["params"]
-    #         sex = None
-    #         collection = params["collection_id"]
-    #         value = params["collection_value"]
-    #         if "sex" in params:
-    #             sex = Sex.from_name(params["sex"])
-    #         print("--------------------------------")
-    #         print(f"Querying with params {params}")
-
-    #         expected = case["expected"]
-
-    #         if "count" in expected:
-    #             count = expected["count"]
-
-    #             facade = self.instance._common_report_facade
-    #             persons = facade.query_person_counters(
-    #                 study_id, collection, value, sex=sex
-    #             )
-
-    #             person_count = len(persons)
-
-    #             test_result = TestResult(
-    #                     study_id,
-    #                     file,
-    #                     target,
-    #                     "count",
-    #                     case_number,
-    #                     params,
-    #                     expected,
-    #                     person_count
-    #             )
-
-    #             print(f"Expected {count} persons")
-    #             if person_count == count:
-    #                 test_result.success = True
-    #                 print("PASSED")
-    #             else:
-    #                 test_result.success = False
-    #                 print(f"Got: {person_count}")
-    #                 self.failed_case_count += 1
-
-    #             end = time.time()
-    #             test_result.time = (end-start)
-    #             test_suite.append(test_result)
-
-    # def _validate_denovo_reports(self, expectation):
-    #     study_id = expectation["study"]
-    #     cases = expectation["cases"]
-    #     file = expectation["file"]
-    #     target = expectation["target"]
-
-    #     test_suite = TestSuite(study_id, target)
-
-    #     for case_number, case in enumerate(cases):
-    #         start = time.time()
-    #         params = case["params"]
-    #         collection = params["collection_id"]
-    #         value = params["collection_value"]
-    #         effect_type = params["effect_type"]
-    #         print("--------------------------------")
-    #         print(f"Querying with params {params}")
-
-    #         expected = case["expected"]
-
-    #         if "count" in expected:
-    #             count = expected["count"]
-
-    #             facade = self.instance._common_report_facade
-    #             results = facade.query_denovo_reports(
-    #                 study_id, collection, value, effect_type
-    #             )
-
-    #             person_count = results["number_of_observed_events"]
-
-    #             test_result = TestResult(
-    #                     study_id,
-    #                     file,
-    #                     target,
-    #                     "count",
-    #                     case_number,
-    #                     params,
-    #                     expected,
-    #                     person_count
-    #             )
-
-    #             print(f"Expected {count} persons")
-    #             if person_count == count:
-    #                 test_result.success = True
-    #                 print("PASSED")
-    #             else:
-    #                 test_result.success = False
-    #                 print(f"Got: {person_count}")
-    #                 self.failed_case_count += 1
-    #             end = time.time()
-    #             test_result.time = (end-start)
-    #             test_suite.append(test_result)
-
-    #     self.test_suites.append(test_suite)
 
     def _build_case_expections_filename(self, case, dirname=None):
         case_dirname, _ = os.path.splitext(self.expectations["file"])
@@ -353,107 +245,107 @@ class GenotypeBrowserRunner(BaseGenotypeBrowserRunner):
 
     def _checked_columns(self):
         keep = {
-            'af_allele_count',
-            'af_allele_freq',
-            'af_parents_called_count',
-            'af_parents_called_percent',
-            'allele_count',
-            'allele_index',
-            'alternative',
-            'bucket_index',
-            'cadd_phred',
-            'cadd_raw',
-            'chrom',
-            'chromosome',
-            'cshl_location',
-            'cshl_variant',
-            'effect_details_details',
-            'effect_details_transcript_ids',
-            'effect_gene_genes',
-            'effect_gene_types',
-            'effect_type',
-            'exome_gnomad_ac',
-            'exome_gnomad_af',
-            'exome_gnomad_af_percent',
-            'exome_gnomad_an',
-            'exome_gnomad_controls_ac',
-            'exome_gnomad_controls_af',
-            'exome_gnomad_controls_af_percent',
-            'exome_gnomad_controls_an',
-            'exome_gnomad_non_neuro_ac',
-            'exome_gnomad_non_neuro_af',
-            'exome_gnomad_non_neuro_af_percent',
-            'exome_gnomad_non_neuro_an',
-            'exome_gnomad_v2_1_1_ac',
-            'exome_gnomad_v2_1_1_af_percent',
-            'exome_gnomad_v2_1_1_an',
-            'exome_gnomad_v2_1_1_controls_ac',
-            'exome_gnomad_v2_1_1_controls_af_percent',
-            'exome_gnomad_v2_1_1_controls_an',
-            'exome_gnomad_v2_1_1_non_neuro_ac',
-            'exome_gnomad_v2_1_1_non_neuro_af_percent',
-            'exome_gnomad_v2_1_1_non_neuro_an',
-            'family_id',
-            'family_variant_index',
-            'fitcons2_e067',
-            'fitcons2_e068',
-            'fitcons2_e069',
-            'fitcons2_e070',
-            'fitcons2_e071',
-            'fitcons2_e072',
-            'fitcons2_e073',
-            'fitcons2_e074',
-            'fitcons2_e081',
-            'fitcons2_e082',
-            'fitcons_i6_merged',
-            'fvuid',
-            'genome_gnomad_ac',
-            'genome_gnomad_af',
-            'genome_gnomad_af_percent',
-            'genome_gnomad_an',
-            'genome_gnomad_controls_ac',
-            'genome_gnomad_controls_af',
-            'genome_gnomad_controls_af_percent',
-            'genome_gnomad_controls_an',
-            'genome_gnomad_non_neuro_ac',
-            'genome_gnomad_non_neuro_af',
-            'genome_gnomad_non_neuro_af_percent',
-            'genome_gnomad_non_neuro_an',
-            'genome_gnomad_v2_1_1_ac',
-            'genome_gnomad_v2_1_1_af_percent',
-            'genome_gnomad_v2_1_1_an',
-            'genome_gnomad_v2_1_1_controls_ac',
-            'genome_gnomad_v2_1_1_controls_af_percent',
-            'genome_gnomad_v2_1_1_controls_an',
-            'genome_gnomad_v2_1_1_non_neuro_ac',
-            'genome_gnomad_v2_1_1_non_neuro_af_percent',
-            'genome_gnomad_v2_1_1_non_neuro_an',
-            'genome_gnomad_v3_ac',
-            'genome_gnomad_v3_af_percent',
-            'genome_gnomad_v3_an',
-            'linsight',
-            'mpc',
-            'phastcons100',
-            'phastcons100way',
-            'phastcons20way',
-            'phastcons30way',
-            'phastcons46_placentals',
-            'phastcons46_primates',
-            'phastcons46_vertebrates',
-            'phastcons7way',
-            'phylop100',
-            'phylop100way',
-            'phylop20way',
-            'phylop30way',
-            'phylop46_placentals',
-            'phylop46_primates',
-            'phylop46_vertebrates',
-            'phylop7way',
-            'position',
-            'reference',
-            'ssc_freq',
-            'study_name',
-            'study_phenotype'
+            "af_allele_count",
+            "af_allele_freq",
+            "af_parents_called_count",
+            "af_parents_called_percent",
+            "allele_count",
+            "allele_index",
+            "alternative",
+            "bucket_index",
+            "cadd_phred",
+            "cadd_raw",
+            "chrom",
+            "chromosome",
+            "cshl_location",
+            "cshl_variant",
+            "effect_details_details",
+            "effect_details_transcript_ids",
+            "effect_gene_genes",
+            "effect_gene_types",
+            "effect_type",
+            "exome_gnomad_ac",
+            "exome_gnomad_af",
+            "exome_gnomad_af_percent",
+            "exome_gnomad_an",
+            "exome_gnomad_controls_ac",
+            "exome_gnomad_controls_af",
+            "exome_gnomad_controls_af_percent",
+            "exome_gnomad_controls_an",
+            "exome_gnomad_non_neuro_ac",
+            "exome_gnomad_non_neuro_af",
+            "exome_gnomad_non_neuro_af_percent",
+            "exome_gnomad_non_neuro_an",
+            "exome_gnomad_v2_1_1_ac",
+            "exome_gnomad_v2_1_1_af_percent",
+            "exome_gnomad_v2_1_1_an",
+            "exome_gnomad_v2_1_1_controls_ac",
+            "exome_gnomad_v2_1_1_controls_af_percent",
+            "exome_gnomad_v2_1_1_controls_an",
+            "exome_gnomad_v2_1_1_non_neuro_ac",
+            "exome_gnomad_v2_1_1_non_neuro_af_percent",
+            "exome_gnomad_v2_1_1_non_neuro_an",
+            "family_id",
+            "family_variant_index",
+            "fitcons2_e067",
+            "fitcons2_e068",
+            "fitcons2_e069",
+            "fitcons2_e070",
+            "fitcons2_e071",
+            "fitcons2_e072",
+            "fitcons2_e073",
+            "fitcons2_e074",
+            "fitcons2_e081",
+            "fitcons2_e082",
+            "fitcons_i6_merged",
+            "fvuid",
+            "genome_gnomad_ac",
+            "genome_gnomad_af",
+            "genome_gnomad_af_percent",
+            "genome_gnomad_an",
+            "genome_gnomad_controls_ac",
+            "genome_gnomad_controls_af",
+            "genome_gnomad_controls_af_percent",
+            "genome_gnomad_controls_an",
+            "genome_gnomad_non_neuro_ac",
+            "genome_gnomad_non_neuro_af",
+            "genome_gnomad_non_neuro_af_percent",
+            "genome_gnomad_non_neuro_an",
+            "genome_gnomad_v2_1_1_ac",
+            "genome_gnomad_v2_1_1_af_percent",
+            "genome_gnomad_v2_1_1_an",
+            "genome_gnomad_v2_1_1_controls_ac",
+            "genome_gnomad_v2_1_1_controls_af_percent",
+            "genome_gnomad_v2_1_1_controls_an",
+            "genome_gnomad_v2_1_1_non_neuro_ac",
+            "genome_gnomad_v2_1_1_non_neuro_af_percent",
+            "genome_gnomad_v2_1_1_non_neuro_an",
+            "genome_gnomad_v3_ac",
+            "genome_gnomad_v3_af_percent",
+            "genome_gnomad_v3_an",
+            "linsight",
+            "mpc",
+            "phastcons100",
+            "phastcons100way",
+            "phastcons20way",
+            "phastcons30way",
+            "phastcons46_placentals",
+            "phastcons46_primates",
+            "phastcons46_vertebrates",
+            "phastcons7way",
+            "phylop100",
+            "phylop100way",
+            "phylop20way",
+            "phylop30way",
+            "phylop46_placentals",
+            "phylop46_primates",
+            "phylop46_vertebrates",
+            "phylop7way",
+            "position",
+            "reference",
+            "ssc_freq",
+            "study_name",
+            "study_phenotype"
         }
         if self.skip_columns:
             keep = keep.difference(self.skip_columns)
@@ -534,80 +426,82 @@ class GenotypeBrowserRunner(BaseGenotypeBrowserRunner):
                 variants_df.sort_index(axis=1), expected_df.sort_index(axis=1)
             )
         except AssertionError as ex:
-            with io.StringIO() as out:
-                if not self.detailed_reporting:
-                    print("expected:\n", expected_df.head(), file=out)
-                    print("actual:\n", variants_df.head(), file=out)
-                    print(ex, file=out)
-                    return out.getvalue()
-
-                expected_columns = set(expected_df.columns)
-                variants_columns = set(variants_df.columns)
-                diff1 = expected_columns.difference(variants_columns)
-                if diff1:
-                    print(
-                        "columns expected but not found in variants:",
-                        diff1, file=out)
-                diff2 = variants_columns.difference(expected_columns)
-                if diff2:
-                    print(
-                        "columns found in variants but not expected:",
-                        diff2, file=out)
-                if diff1 or diff2:
-                    return out.getvalue()
-                if all(expected_df.columns != expected_df.columns):
-                    print(
-                        "columns are in different order: ",
-                        "expected>", expected_df.columns,
-                        "variants>", variants_df.columns,
-                        file=out)
-                    return out.getvalue()
-
-                differences = (expected_df != variants_df).stack()
-                last_printed_idx = -1
-                for idxs, has_diff in differences.items():
-                    if not has_diff:
-                        continue
-
-                    idx, col_name = idxs
-                    expected = expected_df[col_name][idx]
-                    result = variants_df[col_name][idx]
-
-                    if isinstance(expected, np.float64):
-                        if np.isclose(expected, result):
-                            continue
-
-                    if isinstance(expected, str):
-                        if expected == result:
-                            continue
-                    if isinstance(expected, np.float64) and \
-                            np.isnan(expected) and np.isnan(result):
-                        continue
-
-                    if last_printed_idx != idx:
-                        last_printed_idx = idx
-                        print(
-                            f"Differences in variant #{idx} "
-                            f"{expected_df['chromosome'][idx]} "
-                            f"{expected_df['position'][idx]} "
-                            f"{expected_df['reference'][idx]}->"
-                            f"{expected_df['alternative'][idx]} "
-                            f"{expected_df['cshl_variant'][idx]} ",
-                            file=out
-                        )
-                    print(
-                        f"\t{col_name}:\n"
-                        f"\t\tExpected: > {expected_df[col_name][idx]}\n"
-                        f"\t\tResult:   > {variants_df[col_name][idx]}",
-                        file=out
-                    )
-                return out.getvalue()
-        except Exception as ex:  # pylint: disable=broad-except
-            print(100*"@")
-            print(ex)
-            print(100*"@")
+            return self._error_reporter(ex, variants_df, expected_df)
+        except Exception:  # pylint: disable=broad-except
+            logger.error(
+                "unexpected exception whild running tests", exc_info=True)
 
         return None
+
+    def _error_reporter(self, ex, variants_df, expected_df):
+        with io.StringIO() as out:
+            if not self.detailed_reporting:
+                print("expected:\n", expected_df.head(), file=out)
+                print("actual:\n", variants_df.head(), file=out)
+                print(ex, file=out)
+                return out.getvalue()
+
+            expected_columns = set(expected_df.columns)
+            variants_columns = set(variants_df.columns)
+            diff1 = expected_columns.difference(variants_columns)
+            if diff1:
+                print(
+                    "columns expected but not found in variants:",
+                    diff1, file=out)
+            diff2 = variants_columns.difference(expected_columns)
+            if diff2:
+                print(
+                    "columns found in variants but not expected:",
+                    diff2, file=out)
+            if diff1 or diff2:
+                return out.getvalue()
+            if all(expected_df.columns != expected_df.columns):
+                print(
+                    "columns are in different order: ",
+                    "expected>", expected_df.columns,
+                    "variants>", variants_df.columns,
+                    file=out)
+                return out.getvalue()
+
+            differences = (expected_df != variants_df).stack()
+            last_printed_idx = -1
+            for idxs, has_diff in differences.items():
+                if not has_diff:
+                    continue
+
+                idx, col_name = idxs
+                expected = expected_df[col_name][idx]
+                result = variants_df[col_name][idx]
+
+                if isinstance(expected, np.float64):
+                    if np.isclose(expected, result):
+                        continue
+
+                if isinstance(expected, str):
+                    if expected == result:
+                        continue
+                if isinstance(expected, np.float64) and \
+                        np.isnan(expected) and np.isnan(result):
+                    continue
+
+                if last_printed_idx != idx:
+                    last_printed_idx = idx
+                    print(
+                        f"Differences in variant #{idx} "
+                        f"{expected_df['chromosome'][idx]} "
+                        f"{expected_df['position'][idx]} "
+                        f"{expected_df['reference'][idx]}->"
+                        f"{expected_df['alternative'][idx]} "
+                        f"{expected_df['cshl_variant'][idx]} ",
+                        file=out
+                    )
+                print(
+                    f"\t{col_name}:\n"
+                    f"\t\tExpected: > {expected_df[col_name][idx]}\n"
+                    f"\t\tResult:   > {variants_df[col_name][idx]}",
+                    file=out
+                )
+            return out.getvalue()
 
     def _execute_variants_test_case(self, case, params, variants):
         df = self._build_variants_df(variants)
@@ -871,13 +765,13 @@ class MainRunner:
 
     def summary(self):
         """Print a summary of the test results."""
-        print(100*"=")
+        print(100 * "=")
         print(
             f"FAILED: {self.failed_case_count}; "
             f"ERRORS: {self.errors_case_count}; "
             f"PASSED: {self.passed_case_count}; "
             f"TOTAL: {self.failed_case_count + self.passed_case_count}")
-        print(100*"=")
+        print(100 * "=")
 
 
 def main(argv=None):
@@ -886,9 +780,9 @@ def main(argv=None):
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "expectations", type=str,
-        help='expectation filename or glob'
+        help="expectation filename or glob"
     )
-    parser.add_argument('--verbose', '-V', action='count', default=0)
+    parser.add_argument("--verbose", "-V", action="count", default=0)
     parser.add_argument(
         "--output", "-o", type=str, default="validation-result.xml",
         help="output filename for JUnit result XML file")

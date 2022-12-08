@@ -1,8 +1,4 @@
-"""
-Created on Nov 22, 2017
-
-@author: lubo
-"""
+# pylint: disable=W0621,C0114,C0116,W0212,W0613,too-many-lines
 from dae.pheno.prepare.measure_classifier import MeasureClassifier
 
 
