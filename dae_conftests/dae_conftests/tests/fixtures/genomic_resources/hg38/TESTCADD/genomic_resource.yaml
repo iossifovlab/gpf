@@ -16,7 +16,7 @@ table:
   alternative:
     name: Alt
 
-# score values
+  # score values
   scores:
       - id: cadd_raw
         type: float

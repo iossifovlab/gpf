@@ -1,9 +1,9 @@
 - md5: 0861ec8c51f6d1909f42ef459e18fe4e
   name: MANIFEST
   size: 393
-- md5: c8c3134770dc4131022e55674b60442e
+- md5: 15ebb739fdcf745d3903c11e447b721f
   name: genomic_resource.yaml
-  size: 438
+  size: 448
 - md5: 28ee47e15cc15c1b8881cd453cdefc7d
   name: scores_incomplete_coverage.tsv.gz
   size: 176

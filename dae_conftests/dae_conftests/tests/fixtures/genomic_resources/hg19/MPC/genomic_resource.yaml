@@ -16,7 +16,7 @@ table:
   alternative:
     name: alt
 
-# score values
+  # score values
   scores:
       - id: MPC
         type: float

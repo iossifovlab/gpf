@@ -29,15 +29,6 @@
         nucleotide_aggregator: max
         position_aggregator: max
         source: cadd_phred
-    scores:
-    - desc: ''
-      id: cadd_raw
-      index: 4
-      type: float
-    - desc: ''
-      id: cadd_phred
-      index: 5
-      type: float
     table:
       alternative:
         index: 3
@@ -49,6 +40,15 @@
         index: 1
       reference:
         index: 2
+      scores:
+      - desc: ''
+        id: cadd_raw
+        index: 4
+        type: float
+      - desc: ''
+        id: cadd_phred
+        index: 5
+        type: float
     type: np_score
   id: hg19/CADD
   manifest:
@@ -58,9 +58,9 @@
   - md5: 5d95f08840be7f0f6fef13a5157d7f47
     name: CADD.bedgraph.gz.tbi
     size: 670
-  - md5: 4f48564ae662ee0f64afb805dc7599a4
+  - md5: 0a9b93caa4fdc19c93d2c1cc09a7a04d
     name: genomic_resource.yaml
-    size: 618
+    size: 638
   version: '0'
 - config:
     filename: refGene201309.txt
@@ -142,9 +142,9 @@
   - md5: 5bb77f8efe6ed1b01b3422a3b5070307
     name: fordist_constraint_official_mpc_values_v2.txt.gz.tbi
     size: 257
-  - md5: 7ca14a15ab13af203cc49a59aeb0e33e
+  - md5: 9089685904b0e2a8b0bdd2e3a659fa37
     name: genomic_resource.yaml
-    size: 477
+    size: 479
   version: '0'
 - config:
     default_annotation:
@@ -158,16 +158,6 @@
       - destination: score4
         position_aggregator: max
         source: score4
-    scores:
-    - id: score0
-      name: score0
-      type: float
-    - id: score2
-      name: score2
-      type: float
-    - id: score4
-      name: score4
-      type: float
     table:
       chrom:
         name: CHROM
@@ -177,15 +167,25 @@
         name: POS
       pos_end:
         name: POS
+      scores:
+      - id: score0
+        name: score0
+        type: float
+      - id: score2
+        name: score2
+        type: float
+      - id: score4
+        name: score4
+        type: float
     type: position_score
   id: hg19/internal/scores1
   manifest:
   - md5: 7eb9662b7995df530a9ac725a1316fbf
     name: MANIFEST
     size: 336
-  - md5: 32107e880baa6159a170017aa081f21d
+  - md5: 8a2255a344b7e774fb476a2717050fb1
     name: genomic_resource.yaml
-    size: 643
+    size: 665
   - md5: 093c47435b7440def543b99758a92afe
     name: scores1.tsv.gz
     size: 367
@@ -202,10 +202,6 @@
       - destination: score0_incomplete_cov
         position_aggregator: max
         source: score0_incomplete_cov
-    scores:
-    - id: score0_incomplete_cov
-      name: score0
-      type: float
     table:
       chrom:
         name: CHROM
@@ -215,15 +211,19 @@
         name: POS
       pos_end:
         name: POS
+      scores:
+      - id: score0_incomplete_cov
+        name: score0
+        type: float
     type: position_score
   id: hg19/internal/scores_incomplete_coverage
   manifest:
   - md5: 0861ec8c51f6d1909f42ef459e18fe4e
     name: MANIFEST
     size: 393
-  - md5: c8c3134770dc4131022e55674b60442e
+  - md5: 15ebb739fdcf745d3903c11e447b721f
     name: genomic_resource.yaml
-    size: 438
+    size: 448
   - md5: 28ee47e15cc15c1b8881cd453cdefc7d
     name: scores_incomplete_coverage.tsv.gz
     size: 176
@@ -240,11 +240,6 @@
       - dest: phastCons100
         position_aggregator: max
         source: phastCons100
-    scores:
-    - desc: phastCons100
-      id: phastCons100
-      index: 3
-      type: float
     table:
       chrom:
         index: 0
@@ -254,12 +249,17 @@
         index: 1
       pos_end:
         index: 2
+      scores:
+      - desc: phastCons100
+        id: phastCons100
+        index: 3
+        type: float
     type: position_score
   id: hg19/phastCons100
   manifest:
-  - md5: 50690d6288c6ca21e4755ef8b68d2511
+  - md5: b7f2bf65a45313dd8635359a9fb30f1e
     name: genomic_resource.yaml
-    size: 413
+    size: 425
   - md5: 00c69ea8fae8ab8445ff64616b8cc07a
     name: phastCons100.bedGraph.gz
     size: 2556019
@@ -350,9 +350,9 @@
   - md5: 64ea2e483af33f1ad35d771653889e1d
     name: TESTCADD.tsv.gz.tbi
     size: 99
-  - md5: 9019fff7f6a069e4fb35d49ef396b75a
+  - md5: c74b38ea7b2474a110aa3d88902fab1e
     name: genomic_resource.yaml
-    size: 665
+    size: 667
   version: '0'
 - config:
     default_annotation:
@@ -390,9 +390,9 @@
   - md5: 05e5bc2e111692d73e2c27e76fc7e2a7
     name: TESTFreq.tsv.gz.tbi
     size: 100
-  - md5: ed9aa42a1c20063132ce4fca1bda8c15
+  - md5: bd97e9a936a8a16868c6b8ac3ad612d7
     name: genomic_resource.yaml
-    size: 602
+    size: 604
   version: '0'
 - config:
     default_annotation:
@@ -419,9 +419,9 @@
     type: position_score
   id: hg38/TESTPosAgg
   manifest:
-  - md5: 6c5becaced1a489c78514aa1fe997aee
+  - md5: 9b5cb9d57c31dab0bf93ee1d394833dc
     name: genomic_resource.yaml
-    size: 457
+    size: 459
   - md5: 590e48aff9382edfa3330a072c98c6c5
     name: scores.tsv.gz
     size: 107

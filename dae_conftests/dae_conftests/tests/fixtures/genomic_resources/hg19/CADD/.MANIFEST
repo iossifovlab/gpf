@@ -4,6 +4,6 @@
 - md5: 5d95f08840be7f0f6fef13a5157d7f47
   name: CADD.bedgraph.gz.tbi
   size: 670
-- md5: 4f48564ae662ee0f64afb805dc7599a4
+- md5: 0a9b93caa4fdc19c93d2c1cc09a7a04d
   name: genomic_resource.yaml
-  size: 618
+  size: 638

@@ -17,16 +17,16 @@ table:
   alternative:
     index: 3
 
-# score values
-scores:
-    - id: cadd_raw
-      type: float
-      desc: ""
-      index: 4
-    - id: cadd_phred
-      type: float
-      desc: ""
-      index: 5
+  # score values
+  scores:
+      - id: cadd_raw
+        type: float
+        desc: ""
+        index: 4
+      - id: cadd_phred
+        type: float
+        desc: ""
+        index: 5
 
 default_annotation:
   attributes:

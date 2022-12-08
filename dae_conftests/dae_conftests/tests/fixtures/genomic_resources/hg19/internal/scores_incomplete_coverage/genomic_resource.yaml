@@ -14,11 +14,11 @@ table:
   pos_end: 
     name: POS
 
-# score values
-scores:
-    - id: score0_incomplete_cov
-      type: float
-      name: score0
+  # score values
+  scores:
+      - id: score0_incomplete_cov
+        type: float
+        name: score0
 
 default_annotation:
   attributes:

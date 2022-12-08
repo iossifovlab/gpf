@@ -16,7 +16,7 @@ table:
     index: 2
 
 
-# score values
+  # score values
   scores:
       - id: test_score
         type: float
