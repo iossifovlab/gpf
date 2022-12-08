@@ -477,11 +477,8 @@ class PositionScore(GenomicScore):
     @staticmethod
     def get_schema():
         schema = copy.deepcopy(GenomicScore.get_schema())
-        annotation_schema = schema["default_annotation"]["schema"]
         scores_schema = schema["scores"]["schema"]["schema"]
         scores_schema["position_aggregator"] = AGGREGATOR_SCHEMA
-        attr_schema = annotation_schema["attributes"]["schema"]["schema"]
-        attr_schema["position_aggregator"] = AGGREGATOR_SCHEMA
         return schema
 
     def open(self) -> PositionScore:
@@ -575,10 +572,6 @@ class NPScore(GenomicScore):
                 "name": {"type": "string", "excludes": "index"}
             }
         }
-        annotation_schema = schema["default_annotation"]["schema"]
-        attr_schema = annotation_schema["attributes"]["schema"]["schema"]
-        attr_schema["position_aggregator"] = AGGREGATOR_SCHEMA
-        attr_schema["nucleotide_aggregator"] = AGGREGATOR_SCHEMA
 
         scores_schema = schema["scores"]["schema"]["schema"]
         scores_schema["position_aggregator"] = AGGREGATOR_SCHEMA
