@@ -57,6 +57,7 @@ def test_vcf_info_annotator_all_attributes(score1_repo):
         grr_repository=score1_repo)
 
     annotator = pipeline.annotators[0]
+    annotator.score.open()
     attributes = annotator.get_all_annotation_attributes()
     assert len(attributes) == 4
 
@@ -87,6 +88,7 @@ def test_vcf_info_default_annotation(score1_repo):
         grr_repository=score1_repo)
 
     annotator = pipeline.annotators[0]
+    annotator.score.open()
     attributes = annotator.get_annotation_config()
     assert len(attributes) == 4
 

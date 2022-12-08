@@ -499,9 +499,20 @@ class GenomicPositionTable(abc.ABC):
                 else self.get_special_column_name("alternative")
         return alt_key
 
+    def __enter__(self):
+        self.open()
+        return self
+
+    def __exit__(self, *args):
+        self.close()
+
     @abc.abstractmethod
-    def load(self):
+    def open(self):
         pass
+
+    @abc.abstractmethod
+    def close(self):
+        """Close the resource."""
 
     @abc.abstractmethod
     def get_all_records(self):
@@ -514,10 +525,6 @@ class GenomicPositionTable(abc.ABC):
 
         The interval is closed on both sides and 1-based.
         """
-
-    @abc.abstractmethod
-    def close(self):
-        """Close the resource."""
 
     def get_chromosomes(self):
         return self.chrom_order
@@ -577,14 +584,18 @@ class FlatGenomicPositionTable(GenomicPositionTable):
         "csv": (",", "\n\r", False)
     }
 
-    def __init__(self, genomic_resource: GenomicResource, table_definition,
-                 str_stream, fileformat):
+    def __init__(
+        self, genomic_resource: GenomicResource, table_definition, fileformat
+    ):
         self.format = fileformat
-        self.str_stream = str_stream
+        self.str_stream = None
         self.records_by_chr: dict[str, Any] = {}
         super().__init__(genomic_resource, table_definition)
 
-    def load(self):
+    def open(self):
+        self.str_stream = self.genomic_resource.open_raw_file(
+            self.definition.filename, mode="rt", uncompress=True
+        )
         clmn_sep, strip_chars, space_replacement = \
             FlatGenomicPositionTable.FORMAT_DEF[self.format]
         if self.header_mode == "file":
@@ -685,8 +696,7 @@ class TabixGenomicPositionTable(GenomicPositionTable):
 
     BUFFER_MAXSIZE = 20_000
 
-    def __init__(self, genomic_resource: GenomicResource, table_definition,
-                 variants_file: PysamFile):
+    def __init__(self, genomic_resource: GenomicResource, table_definition):
         super().__init__(genomic_resource, table_definition)
         self.jump_threshold: int = 2_500
         if "jump_threshold" in self.definition:
@@ -703,13 +713,16 @@ class TabixGenomicPositionTable(GenomicPositionTable):
         self.buffer = LineBuffer()
         self.stats: Counter = Counter()
         # pylint: disable=no-member
-        self.variants_file: PysamFile = variants_file
+        self.variants_file: Optional[PysamFile] = None
         self.line_iterator = None
 
-    def load(self):
+    def _open_variants_file(self):
+        return self.genomic_resource.open_tabix_file(self.definition.filename)
+
+    def open(self):
+        self.variants_file = self._open_variants_file()
         if self.header_mode == "file":
             self.header = self._get_header()
-
         self._set_special_column_indexes()
         self._build_chrom_mapping()
 
@@ -932,19 +945,17 @@ class VCFGenomicPositionTable(TabixGenomicPositionTable):
         "Flag": "bool",
     }
 
-    def __init__(self, genomic_resource: GenomicResource, table_definition,
-                 variants_file: PysamFile):
-        super().__init__(genomic_resource, table_definition, variants_file)
-        if "scores" not in self.definition:
-            # We can safely put 'None' for most fields, because
-            # pysam casts the values to their correct types beforehand
-            # We only need to join tuple values, as annotators cannot
-            # handle tuples
-            def converter(x):
+    def _open_variants_file(self):
+        return self.genomic_resource.open_vcf_file(self.definition.filename)
+
+    def open(self):
+        super().open()
+        if "scores" not in self.definition and self.variants_file is not None:
+            def converter(val):
                 try:
-                    return ",".join(map(str, x))
+                    return ",".join(map(str, val))
                 except TypeError:
-                    return x
+                    return val
             self.score_definitions = {
                 key: ScoreDef(
                     key,
@@ -980,10 +991,10 @@ class VCFGenomicPositionTable(TabixGenomicPositionTable):
                 )
 
 
-def open_genome_position_table(
-    resource: GenomicResource, table_definition: dict, delayed=False
-):
-    """Open a genome position table from genomic resource."""
+def build_genome_position_table(
+    resource: GenomicResource, table_definition: dict
+) -> GenomicPositionTable:
+    """Instantiate a genome position table from a genomic resource."""
     filename = table_definition["filename"]
 
     if filename.endswith(".bgz"):
@@ -998,33 +1009,16 @@ def open_genome_position_table(
     else:
         default_format = "mem"
 
-    table_format = table_definition.get("format", default_format)
+    table_fmt = table_definition.get("format", default_format)
 
-    table: GenomicPositionTable
+    if table_fmt in ("mem", "csv", "tsv"):
+        return FlatGenomicPositionTable(resource, table_definition, table_fmt)
+    if table_fmt == "tabix":
+        return TabixGenomicPositionTable(resource, table_definition)
+    if table_fmt == "vcf_info":
+        return VCFGenomicPositionTable(resource, table_definition)
 
-    if table_format in ["mem", "csv", "tsv"]:
-        table = FlatGenomicPositionTable(
-            resource, table_definition,
-            resource.open_raw_file(filename, mode="rt", uncompress=True),
-            table_format
-        )
-        if not delayed:
-            table.load()
-        return table
-    if table_format == "tabix":
-        table = TabixGenomicPositionTable(
-            resource, table_definition, resource.open_tabix_file(filename))
-        if not delayed:
-            table.load()
-        return table
-    if table_format == "vcf_info":
-        table = VCFGenomicPositionTable(
-            resource, table_definition, resource.open_vcf_file(filename))
-        if not delayed:
-            table.load()
-        return table
-
-    raise ValueError("unknown table format")
+    raise ValueError(f"unknown table format {table_fmt}")
 
 
 def save_as_tabix_table(
@@ -1045,4 +1039,3 @@ def save_as_tabix_table(
                       seq_col=table.chrom_column_i,
                       start_col=table.pos_begin_column_i,
                       end_col=table.pos_end_column_i)
-  

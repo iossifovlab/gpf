@@ -17,7 +17,7 @@ from cerberus import Validator
 from . import GenomicResource
 from .resource_implementation import GenomicResourceImplementation, \
     get_base_resource_schema
-from .genome_position_table import open_genome_position_table, Line
+from .genome_position_table import build_genome_position_table, Line
 
 from .aggregators import build_aggregator, AGGREGATOR_SCHEMA
 
@@ -38,10 +38,8 @@ class GenomicScore(GenomicResourceImplementation):
         super().__init__(resource)
         self.config["id"] = resource.resource_id
         self.table_loaded = False
-        self.table = open_genome_position_table(
-            self.resource,
-            self.config["table"],
-            delayed=True
+        self.table = build_genome_position_table(
+            self.resource, self.config["table"]
         )
 
     def get_config(self):
@@ -80,7 +78,7 @@ class GenomicScore(GenomicResourceImplementation):
                 "opening already opened genomic score: %s",
                 self.resource.resource_id)
             return self
-        self.table.load()
+        self.table.open()
         self.table_loaded = True
         return self
 
