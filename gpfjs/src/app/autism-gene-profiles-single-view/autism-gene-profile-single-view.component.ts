@@ -41,7 +41,7 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
   @Input() public isInGeneCompare = false;
   public showTemplate = true;
 
-  public genomicScoresGeneScores = [];
+  public genomicScoresGeneScores: {category: string; scores: GeneScores[]}[] = [];
   public gene$: Observable<AgpGene>;
 
   public histogramOptions = {
@@ -53,11 +53,11 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
 
   public isGeneInSFARI = false;
   public links = {
-    GeneBrowser: '',
-    UCSC: '',
-    GeneCards: '',
-    Pubmed: '',
-    SFARIgene: ''
+    geneBrowser: '',
+    ucsc: '',
+    geneCards: '',
+    pubmed: '',
+    sfariGene: ''
   };
 
   private headerBottomYPosition = 116;
@@ -124,13 +124,13 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
   }
 
   public setLinks(geneSymbol: string, gene: Gene, datasetGenome: string): void {
-    this.links.GeneBrowser = this.getGeneBrowserLink();
-    this.links.UCSC = this.getUCSCLink(gene, datasetGenome);
-    this.links.GeneCards = 'https://www.genecards.org/cgi-bin/carddisp.pl?gene=' + geneSymbol;
-    this.links.Pubmed = 'https://pubmed.ncbi.nlm.nih.gov/?term=' + geneSymbol + '%20AND%20(autism%20OR%20asd)';
+    this.links.geneBrowser = this.getGeneBrowserLink();
+    this.links.ucsc = this.getUCSCLink(gene, datasetGenome);
+    this.links.geneCards = 'https://www.genecards.org/cgi-bin/carddisp.pl?gene=' + geneSymbol;
+    this.links.pubmed = 'https://pubmed.ncbi.nlm.nih.gov/?term=' + geneSymbol + '%20AND%20(autism%20OR%20asd)';
 
     if (this.isGeneInSFARI) {
-      this.links.SFARIgene = 'https://gene.sfari.org/database/human-gene/' + geneSymbol;
+      this.links.sfariGene = 'https://gene.sfari.org/database/human-gene/' + geneSymbol;
     }
   }
 
@@ -232,7 +232,7 @@ export class AutismGeneProfileSingleViewComponent implements OnInit {
     });
   }
 
-  public errorModalBack() {
+  public errorModalBack(): void {
     this.errorModal = false;
     this.router.navigate(['/autism-gene-profiles']);
   }

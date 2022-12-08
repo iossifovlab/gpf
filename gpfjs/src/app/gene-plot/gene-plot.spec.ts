@@ -39,23 +39,23 @@ describe('GenePlotModel', () => {
     expect(plotModel.buildDomain).toHaveBeenCalledWith(0, 3000000000);
     expect(plotModel.buildRange).toHaveBeenCalledWith(0, 3000000000, 123, false);
     expect(plotModel.buildRange).toHaveBeenCalledWith(0, 3000000000, 123, true);
-    expect(plotModel.domain).toEqual([1]);
-    expect(plotModel.normalRange).toEqual([2]);
-    expect(plotModel.condensedRange).toEqual([2]);
+    expect(plotModel.domain).toStrictEqual([1]);
+    expect(plotModel.normalRange).toStrictEqual([2]);
+    expect(plotModel.condensedRange).toStrictEqual([2]);
   });
 
   it('should build correct domains', () => {
     jest.spyOn(GenePlotModel.prototype, 'buildRange').mockImplementation(() => [1]);
     const gene = Gene.fromJson(simpleMockGene);
     const plotModel = new GenePlotModel(gene, null);
-    expect(plotModel.buildDomain(1, 7)).toEqual([1, 2, 3, 4, 5, 6, 7]);
+    expect(plotModel.buildDomain(1, 7)).toStrictEqual([1, 2, 3, 4, 5, 6, 7]);
   });
 
   it('should build correct normal ranges', () => {
     jest.spyOn(GenePlotModel.prototype, 'buildDomain').mockImplementation(() => [1]);
     const gene = Gene.fromJson(rangeMockGene);
     const plotModel = new GenePlotModel(gene, 1000);
-    expect(plotModel.buildRange(0, 18000, 1000, false).map(Math.round)).toEqual(
+    expect(plotModel.buildRange(0, 18000, 1000, false).map(Math.round)).toStrictEqual(
       [0, 142, 283, 433, 575, 858, 1000]
     );
   });
@@ -64,21 +64,21 @@ describe('GenePlotModel', () => {
     jest.spyOn(GenePlotModel.prototype, 'buildDomain').mockImplementation(() => [1]);
     const gene = Gene.fromJson(rangeMockGene);
     const plotModel = new GenePlotModel(gene, 1000);
-    expect(plotModel.buildRange(3000, 13000, 1000, true).map(Math.round)).toEqual(
+    expect(plotModel.buildRange(3000, 13000, 1000, true).map(Math.round)).toStrictEqual(
       [0, 155, 464, 614, 923, 1000]
     );
   });
 });
 
-describe('GenePlotScaleState ', () => {
+describe('GenePlotScaleState', () => {
   it('should have working x domain getters', () => {
     const scaleState = new GenePlotScaleState([1, 2, 3, 4, 5], null, null, null, null);
-    expect(scaleState.xMin).toEqual(1);
-    expect(scaleState.xMax).toEqual(5);
+    expect(scaleState.xMin).toBe(1);
+    expect(scaleState.xMax).toBe(5);
   });
 });
 
-describe('GenePlotZoomHistory ', () => {
+describe('GenePlotZoomHistory', () => {
   it('should reset to default on instantiation', () => {
     jest.spyOn(GenePlotZoomHistory.prototype, 'reset').mockImplementation(() => {});
     const history = new GenePlotZoomHistory(new GenePlotScaleState(null, null, null, null, null));
@@ -90,7 +90,7 @@ describe('GenePlotZoomHistory ', () => {
     const history = new GenePlotZoomHistory(new GenePlotScaleState([0, 1, 2], null, null, null, null));
     history.addStateToHistory(new GenePlotScaleState([1, 2, 3], null, null, null, null));
     history.reset();
-    expect(history.currentState.xDomain).toEqual([0, 1, 2]);
+    expect(history.currentState.xDomain).toStrictEqual([0, 1, 2]);
     expect(history.canGoForward).toBeFalsy();
     expect(history.canGoBackward).toBeFalsy();
   });
@@ -114,7 +114,7 @@ describe('GenePlotZoomHistory ', () => {
     history.addStateToHistory(new GenePlotScaleState([1, 2, 3], null, null, null, null));
     history.addStateToHistory(new GenePlotScaleState([2, 3, 4], null, null, null, null));
     expect(history.canGoBackward).toBeTruthy();
-    expect(history.currentState.xDomain).toEqual([2, 3, 4]);
+    expect(history.currentState.xDomain).toStrictEqual([2, 3, 4]);
   });
 
   it('should be able to overwrite history', () => {
@@ -128,13 +128,13 @@ describe('GenePlotZoomHistory ', () => {
   it('should be able to go forwards and backwards in history', () => {
     const history = new GenePlotZoomHistory(new GenePlotScaleState([0, 1, 2], null, null, null, null));
     history.addStateToHistory(new GenePlotScaleState([1, 2, 3], null, null, null, null));
-    expect(history.currentState.xDomain).toEqual([1, 2, 3]);
+    expect(history.currentState.xDomain).toStrictEqual([1, 2, 3]);
 
     history.moveToPrevious();
-    expect(history.currentState.xDomain).toEqual([0, 1, 2]);
+    expect(history.currentState.xDomain).toStrictEqual([0, 1, 2]);
 
     history.moveToNext();
-    expect(history.currentState.xDomain).toEqual([1, 2, 3]);
+    expect(history.currentState.xDomain).toStrictEqual([1, 2, 3]);
   });
 
   it('should test dynamic spacer length', () => {
@@ -149,9 +149,9 @@ describe('GenePlotZoomHistory ', () => {
       new Gene('CYP2D6', [new Transcript('id1', 'chr1', 'strand1', ['1', 2, 3] as any, ['2', 3, 4] as any)]), 5, 150
     );
     const length = geneModel.spacerLength;
-    expect(length).toEqual(150);
+    expect(length).toBe(150);
 
     geneModel = new GenePlotModel(new Gene('CYP2D6', transcripts), 5, 150);
-    expect(length).toEqual(150);
+    expect(length).toBe(150);
   });
 });

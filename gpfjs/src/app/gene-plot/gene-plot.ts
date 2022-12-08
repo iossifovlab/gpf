@@ -8,17 +8,18 @@ export class GenePlotModel {
   public readonly condensedRange: number[];
   public readonly spacerLength: number;
 
-  constructor(gene: Gene, rangeWidth: number, spacerLength: number = 150) {
+  public constructor(gene: Gene, rangeWidth: number, spacerLength: number = 150) {
     this.gene = gene;
     // Reduce the spacer length if a gene spans too many chromosomes, to improve visibility
-    this.spacerLength = spacerLength - (gene.chromosomes.size >= 3 ? (gene.chromosomes.size <= 5 ? 90 : gene.chromosomes.size * 18) : 0);
+    this.spacerLength = spacerLength - (gene.chromosomes.size >= 3 ?
+      gene.chromosomes.size <= 5 ? 90 : gene.chromosomes.size * 18 : 0);
     // TODO: Could use positive and negative infinity here instead of magic numbers
     this.domain = this.buildDomain(0, 3000000000);
     this.normalRange = this.buildRange(0, 3000000000, rangeWidth, false);
     this.condensedRange = this.buildRange(0, 3000000000, rangeWidth, true);
   }
 
-  public buildDomain(domainMin: number, domainMax: number) {
+  public buildDomain(domainMin: number, domainMax: number): number[] {
     const lastSegment = this.gene.collapsedTranscript.segments[this.gene.collapsedTranscript.segments.length - 1];
     return this.gene.collapsedTranscript.segments
       .filter(seg => seg.intersectionLength(domainMin, domainMax) > 0)
@@ -26,7 +27,7 @@ export class GenePlotModel {
       .concat(domainMax < lastSegment.stop ? domainMax : lastSegment.stop);
   }
 
-  public buildRange(domainMin: number, domainMax: number, rangeWidth: number, condenseIntrons: boolean) {
+  public buildRange(domainMin: number, domainMax: number, rangeWidth: number, condenseIntrons: boolean): number[] {
     const range: number[] = [0];
     const medianExonLength: number = this.gene.collapsedTranscript.medianExonLength;
     const filteredSegments = this.gene.collapsedTranscript.segments.filter(
@@ -66,7 +67,7 @@ export class GenePlotModel {
 }
 
 export class GenePlotScaleState {
-  constructor(
+  public constructor(
     public xDomain: number[],
     public xRange: number[],
     public yMin: number,
@@ -74,11 +75,11 @@ export class GenePlotScaleState {
     public condenseToggled: boolean,
   ) { }
 
-  get xMin(): number {
+  public get xMin(): number {
     return this.xDomain[0];
   }
 
-  get xMax(): number {
+  public get xMax(): number {
     return this.xDomain[this.xDomain.length - 1];
   }
 }
@@ -87,19 +88,19 @@ export class GenePlotZoomHistory {
   private stateList: GenePlotScaleState[];
   private currentStateIdx: number;
 
-  constructor(private defaultState: GenePlotScaleState) {
+  public constructor(private defaultState: GenePlotScaleState) {
     this.reset();
   }
 
-  get currentState(): GenePlotScaleState {
+  public get currentState(): GenePlotScaleState {
     return this.stateList[this.currentStateIdx];
   }
 
-  get canGoForward() {
+  public get canGoForward(): boolean {
     return this.currentStateIdx < this.stateList.length - 1;
   }
 
-  get canGoBackward() {
+  public get canGoBackward(): boolean {
     return this.currentStateIdx > 0;
   }
 

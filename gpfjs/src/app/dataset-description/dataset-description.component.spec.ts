@@ -23,7 +23,7 @@ class MarkdownServiceMock {
   templateUrl: './dataset-description.component.html',
   styleUrls: ['./dataset-description.component.css']
 })
-export class MockDatasetDescriptionComponent extends DatasetDescriptionComponent {
+class MockDatasetDescriptionComponent extends DatasetDescriptionComponent {
   public ngOnInit(): void {
     return null;
   }
@@ -33,7 +33,7 @@ describe('DatasetDescriptionComponent', () => {
   let component: MockDatasetDescriptionComponent;
   let fixture: ComponentFixture<MockDatasetDescriptionComponent>;
 
-  beforeEach(waitForAsync(() => {
+  beforeEach(() => {
     TestBed.configureTestingModule({
       declarations: [MockDatasetDescriptionComponent],
       providers: [
@@ -46,9 +46,7 @@ describe('DatasetDescriptionComponent', () => {
       ],
       imports: [RouterTestingModule, HttpClientTestingModule, NgxsModule.forRoot([], {developmentMode: true})]
     }).compileComponents();
-  }));
 
-  beforeEach(() => {
     fixture = TestBed.createComponent(MockDatasetDescriptionComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();

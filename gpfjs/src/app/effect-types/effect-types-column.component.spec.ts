@@ -1,4 +1,4 @@
-import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { EffecttypesColumnComponent } from './effect-types-column.component';
 
@@ -6,16 +6,14 @@ describe('EffecttypesColumnComponent', () => {
   let component: EffecttypesColumnComponent;
   let fixture: ComponentFixture<EffecttypesColumnComponent>;
 
-  beforeEach(waitForAsync(() => {
+  beforeEach(() => {
     TestBed.configureTestingModule({
       declarations: [
         EffecttypesColumnComponent,
       ],
       schemas: [NO_ERRORS_SCHEMA]
     }).compileComponents();
-  }));
 
-  beforeEach(() => {
     fixture = TestBed.createComponent(EffecttypesColumnComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
@@ -41,7 +39,7 @@ describe('EffecttypesColumnComponent', () => {
     component.checkEffectType('label2', false);
     component.checkEffectType('label3', true);
     component.checkEffectType('label3', false);
-    expect(emitSpy.mock.calls).toEqual([
+    expect(emitSpy.mock.calls).toEqual([ // eslint-disable-line
       [{ effectType: 'label1', checked: true }],
       [{ effectType: 'label1', checked: false }],
       [{ effectType: 'label2', checked: true }],

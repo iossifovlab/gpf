@@ -1,5 +1,5 @@
 import { HttpClientTestingModule } from '@angular/common/http/testing';
-import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NgbNavModule } from '@ng-bootstrap/ng-bootstrap';
 import { ConfigService } from 'app/config/config.service';
 import { QueryService } from 'app/query/query.service';
@@ -17,7 +17,7 @@ describe('AutismGeneProfilesBlockComponent', () => {
   let component: AutismGeneProfilesBlockComponent;
   let fixture: ComponentFixture<AutismGeneProfilesBlockComponent>;
 
-  beforeEach(waitForAsync(() => {
+  beforeEach(() => {
     TestBed.configureTestingModule({
       declarations: [AutismGeneProfilesBlockComponent, AgpTableComponent, MultipleSelectMenuComponent],
       providers: [
@@ -28,9 +28,7 @@ describe('AutismGeneProfilesBlockComponent', () => {
         NgxsModule.forRoot([], {developmentMode: true})
       ]
     }).compileComponents();
-  }));
 
-  beforeEach(() => {
     fixture = TestBed.createComponent(AutismGeneProfilesBlockComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();

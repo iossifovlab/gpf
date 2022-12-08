@@ -30,7 +30,7 @@ describe('AgpTableService', () => {
 
     expect(getConfigSpy).toHaveBeenCalledWith(service['config'].baseUrl + service['configUrl']);
     resultConfig.pipe(take(1)).subscribe(res => {
-      expect(res['mockConfigProperty']).toEqual('mockConfigValue');
+      expect(res['mockConfigProperty']).toBe('mockConfigValue');
       expect(res).toBeInstanceOf(AgpTableConfig);
     });
   });
@@ -42,7 +42,7 @@ describe('AgpTableService', () => {
     service.getGenes(1);
     service.getGenes(1, 'mockSearch');
     service.getGenes(1, 'mockSearch', 'mockSort', 'desc');
-    expect(getGenesSpy.mock.calls).toEqual([
+    expect(getGenesSpy.mock.calls).toEqual([ // eslint-disable-line
       [service['config'].baseUrl + service['genesUrl'] + '?page=1'],
       [service['config'].baseUrl + service['genesUrl'] + '?page=1&symbol=mockSearch'],
       [service['config'].baseUrl + service['genesUrl'] + '?page=1&symbol=mockSearch&sortBy=mockSort&order=desc']

@@ -30,7 +30,7 @@ describe('AutismGeneProfilesService', () => {
 
     expect(getConfigSpy).toHaveBeenCalledWith(service['config'].baseUrl + service['configUrl']);
     resultConfig.pipe(take(1)).subscribe(res => {
-      expect(res['mockConfigProperty']).toEqual('mockConfigValue');
+      expect(res['mockConfigProperty']).toBe('mockConfigValue');
       expect(res).toBeInstanceOf(AgpSingleViewConfig);
     });
   });
@@ -43,7 +43,7 @@ describe('AutismGeneProfilesService', () => {
 
     expect(getGeneSpy).toHaveBeenCalledWith(service['config'].baseUrl + service['genesUrl'] + 'geneMock1');
     resultGene.pipe(take(1)).subscribe(res => {
-      expect(res['mockGeneProperty']).toEqual('mockGeneValue');
+      expect(res['mockGeneProperty']).toBe('mockGeneValue');
       expect(res).toBeInstanceOf(AgpGene);
     });
   });

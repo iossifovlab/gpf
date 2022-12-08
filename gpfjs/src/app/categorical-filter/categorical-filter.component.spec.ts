@@ -21,7 +21,7 @@ describe('CategoricalFilterComponent', () => {
   let fixture: ComponentFixture<CategoricalFilterComponent>;
   const datasetsServiceMock = new MockDatasetsService();
 
-  beforeEach(waitForAsync(() => {
+  beforeEach(() => {
     TestBed.configureTestingModule({
       declarations: [CategoricalFilterComponent],
       providers: [
@@ -36,9 +36,7 @@ describe('CategoricalFilterComponent', () => {
         NgxsModule.forRoot([], {developmentMode: true})
       ]
     }).compileComponents();
-  }));
 
-  beforeEach(() => {
     fixture = TestBed.createComponent(CategoricalFilterComponent);
     component = fixture.componentInstance;
     (component.categoricalFilter as any) = {from: 'phenodb'};

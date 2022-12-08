@@ -7,7 +7,7 @@ import { environment } from '../../environments/environment';
   styleUrls: ['./add-button.component.css']
 })
 export class AddButtonComponent {
-  @Output() public addFilter: EventEmitter<any> = new EventEmitter(true);
+  @Output() public addFilter: EventEmitter<void> = new EventEmitter<void>(true);
   public imgPathPrefix = environment.imgPathPrefix;
 
   public add(): void {
