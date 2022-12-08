@@ -133,8 +133,8 @@ This will create a GPF instance that:
 
 
 
-Prepare the GPF web server
-##########################
+Run the GPF development web server
+##################################
 
 By default, the GPF system looks for a file ``gpf_instance.yaml`` in the
 current directory (and its parent directories). If GPF finds such a file, it
@@ -185,25 +185,22 @@ expects an import project file that describes the import.
 
 This tool supports importing variants from three formats:
 
-* List of de Novo variants
-
+* List of de novo variants
+* List of de novo CNV variants
 * Variant Call Format (VCF)
 
-* CSHL transmitted variants format
-
-* CNV variants
 
 
-Example import of de Novo variants: ``helloworld``
-+++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Example import of de novo variants: ``helloworld``
+++++++++++++++++++++++++++++++++++++++++++++++++++
 
 .. note:: 
 
     Input files for this example can be downloaded from 
     `denovo-helloworld.tar.gz <https://iossifovlab.com/distribution/public/denovo-helloworld.tar.gz>`_.
     
-Let us import a small list of de Novo variants. We will need the list of
-de Novo variants ``helloworld.tsv``:
+Let us import a small list of de novo variants. We will need the list of
+de novo variants ``helloworld.tsv``:
 
 .. code-block::
 
@@ -231,7 +228,7 @@ and a pedigree file that describes the families ``helloworld.ped``:
 
 .. warning::
 
-    Please note that the default separator for the list of de Novo and pedigree
+    Please note that the default separator for the list of de novo and pedigree
     files is ``TAB``. If you copy these snippets and paste them into
     corresponding files the separators between values most probably will
     become spaces. 
@@ -264,7 +261,7 @@ To import this project run the following command:
 
 .. code-block:: bash
 
-    import_tools -f denovo_helloworld.yaml
+    import_tools denovo_helloworld.yaml
 
 
 When the import finishes you can run the GPF development server using:
@@ -308,7 +305,7 @@ Let us have a small VCF file ``hellowrold.vcf``:
   chr14  21393540 .  GGAA G   .    .      .    GT     0/1 0/1 1/1 0/0 0/0 0/0 0/0   
 
 and a pedigree file ``helloworld.ped`` (the same pedigree file used in 
-`Example import of de Novo variants: ``helloworld```_):
+`Example import of de novo variants: ``helloworld```_):
 
 .. code-block::
 
@@ -351,7 +348,7 @@ To import this project run the following command:
 
 .. code-block:: bash
 
-    import_tools -f vcf_helloworld.yaml
+    import_tools vcf_helloworld.yaml
 
 
 When the import finishes you can run the GPF development server using:
@@ -392,25 +389,25 @@ directory:
 
 
 
-Example import of de Novo variants from `Rates of contributory de novo mutation in high and low-risk autism families`
+Example import of de novo variants from `Rates of contributory de novo mutation in high and low-risk autism families`
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-Let us import de Novo variants from the 
+Let us import de novo variants from the 
 `Yoon, S., Munoz, A., Yamrom, B. et al. Rates of contributory de novo mutation
 in high and low-risk autism families. Commun Biol 4, 1026 (2021). 
 <https://doi.org/10.1038/s42003-021-02533-z>`_.
 
-We will focus on de Novo variants from the SSC collection published in the 
+We will focus on de novo variants from the SSC collection published in the 
 aforementioned paper.
-To import these variants into the GPF system we need a list of de Novo variants
+To import these variants into the GPF system we need a list of de novo variants
 and a pedigree file describing the families.
-The list of de Novo variants is available from 
+The list of de novo variants is available from 
 `Supplementary Data 2 <https://static-content.springer.com/esm/art%3A10.1038%2Fs42003-021-02533-z/MediaObjects/42003_2021_2533_MOESM4_ESM.xlsx>`_.
 The pedigree file for this study is not available. Instead, we have a list of
 children available from `Supplementary Data 1 <https://static-content.springer.com/esm/art%3A10.1038%2Fs42003-021-02533-z/MediaObjects/42003_2021_2533_MOESM3_ESM.xlsx>`_.
 
 Let us first export these Excel spreadsheets into CSV files. Let us say that the
-list of de Novo variants from the SSC collection is saved into a file named
+list of de novo variants from the SSC collection is saved into a file named
 ``SupplementaryData2_SSC.tsv`` and the list of children is saved into a TSV file
 named ``SupplementaryData1_Children.tsv``.
 
@@ -494,7 +491,7 @@ example we are going to use a subset of 10000 variants:
 Data import of ``ssc_denovo``
 _____________________________
 
-Now we have a pedigree file ``ssc_denovo.ped`` and a list of de Novo
+Now we have a pedigree file ``ssc_denovo.ped`` and a list of de novo
 variants ``ssc_denovo.tsv``. Let us prepare an import project configuration
 file ``ssc_denovo.yaml``:
 
@@ -518,7 +515,7 @@ To import the study we should run:
 
 .. code-block:: bash
 
-    import_tools -f ssc_denovo.yaml
+    import_tools ssc_denovo.yaml
 
 and when the import finishes we can run the development GPF server:
 
@@ -536,9 +533,9 @@ Getting started with Dataset Statistics
 .. _reports_tool:
 
 
-To generate family and de Novo variant reports, you can use
+To generate family and de novo variant reports, you can use
 the ``generate_common_report.py`` tool. It supports the option ``--show-studies``
-to list all studies and datasets configured in the GPF instance::
+to list all studies and datasets configured in the GPF instance:
 
 .. code-block:: bash
 
@@ -592,16 +589,16 @@ and browse the ``helloworld`` dataset we will see the `Dataset Statistics`
 section available.
 
 
-Getting started with de Novo gene sets
+Getting started with de novo gene sets
 ######################################
 
-To generate de Novo gene sets, you can use the
+To generate de novo gene sets, you can use the
 ``generate_denovo_gene_sets.py`` tool. Similar to :ref:`reports_tool` above,
 you can use the ``--show-studies`` and ``--studies`` option.
 
-By default the de Novo gene sets are disabled. If you want to enable them for a 
+By default the de novo gene sets are disabled. If you want to enable them for a 
 specific study or dataset you need to update the configuration and add a section
-that enable the de Novo gene sets:
+that enable the de novo gene sets:
 
 .. code-block:: yaml
 
@@ -626,7 +623,7 @@ For example the configuration of ``helloworld`` dataset should become similar to
       enabled: true
     
 
-Then we can generate the de Novo gene sets for ``helloworld`` dataset by
+Then we can generate the de novo gene sets for ``helloworld`` dataset by
 running:
 
 .. code-block:: bash
