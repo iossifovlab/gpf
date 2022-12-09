@@ -21,7 +21,6 @@ from dae.genomic_resources import build_genomic_resource_repository
 
 logger = logging.getLogger(__name__)
 
-
 @pytest.fixture(scope="session")
 def fixtures_http_server(fixture_dirname):
     from dae.genomic_resources.testing import range_http_serve

@@ -2,15 +2,18 @@
 from __future__ import annotations
 import contextlib
 import time
-
+import pathlib
 import logging
 import threading
-import multiprocessing
+import tempfile
+from typing import Any, Dict, Union, cast, Optional, Generator
+from multiprocessing import Queue, Process
 
 from http.server import HTTPServer  # ThreadingHTTPServer
 
-from typing import Any, cast, Optional
 from functools import partial
+
+import pysam
 
 from dae.genomic_resources.repository import \
     GenomicResource, \
@@ -20,11 +23,155 @@ from dae.genomic_resources.repository import \
     is_gr_id_token, \
     GR_CONF_FILE_NAME
 from dae.genomic_resources.fsspec_protocol import \
-    FsspecReadWriteProtocol, \
+    FsspecReadWriteProtocol, FsspecReadOnlyProtocol, \
     build_fsspec_protocol
 
 
 logger = logging.getLogger(__name__)
+
+
+def convert_to_tab_separated(content: str):
+    """Convert a string into tab separated file content.
+
+    Useful for testing purposes.
+    If you need to have a space in the file content use '||'.
+    """
+    result = []
+    for line in content.split("\n"):
+        line = line.strip("\n\r")
+        if not line:
+            continue
+        if line.startswith("##"):
+            result.append(line)
+        else:
+            result.append("\t".join(line.split()))
+    text = "\n".join(result)
+    return text.replace("||", " ")
+
+
+def setup_directories(
+        root_dir: pathlib.Path,
+        content: Union[str, Dict[str, Any]]) -> None:
+    """Set up directory and subdirectory structures using the content."""
+    root_dir = pathlib.Path(root_dir)
+    root_dir.parent.mkdir(parents=True, exist_ok=True)
+    if isinstance(content, str):
+        root_dir.write_text(content, encoding="utf8")
+    elif isinstance(content, dict):
+        for path_name, path_content in content.items():
+            setup_directories(root_dir / path_name, path_content)
+    else:
+        raise ValueError(
+            f"unexpected content type: {path_content} for {path_name}")
+
+
+def setup_pedigree(ped_path, content):
+    ped_data = convert_to_tab_separated(content)
+    setup_directories(ped_path, ped_data)
+    return str(ped_path)
+
+
+def setup_denovo(denovo_path, content):
+    denovo_data = convert_to_tab_separated(content)
+    setup_directories(denovo_path, denovo_data)
+    return str(denovo_path)
+
+
+def setup_tabix(tabix_path: pathlib.Path, tabix_content: str, **kwargs):
+    """Set up a tabix file."""
+    content = convert_to_tab_separated(tabix_content)
+    out_path = tabix_path
+    if tabix_path.suffix == ".gz":
+        out_path = tabix_path.with_suffix("")
+    setup_directories(out_path, content)
+
+    tabix_filename = str(out_path.parent / f"{out_path.name}.gz")
+    index_filename = f"{tabix_filename}.tbi"
+    # pylint: disable=no-member
+    pysam.tabix_compress(str(out_path), tabix_filename)
+    pysam.tabix_index(tabix_filename, **kwargs)
+
+    return tabix_filename, index_filename
+
+
+def setup_vcf(out_path: pathlib.Path, content: str):
+    """Set up a VCF file using the content."""
+    vcf_data = convert_to_tab_separated(content)
+    vcf_path = out_path
+    if out_path.suffix == ".gz":
+        vcf_path = out_path.with_suffix("")
+
+    setup_directories(vcf_path, vcf_data)
+
+    if out_path.suffix == ".gz":
+        vcf_gz_filename = str(vcf_path.parent / f"{vcf_path.name}.gz")
+        # pylint: disable=no-member
+        pysam.tabix_compress(str(vcf_path), vcf_gz_filename)
+        pysam.tabix_index(vcf_gz_filename, preset="vcf")
+
+    return str(out_path)
+
+
+def setup_dae_transmitted(root_path, summary_content, toomany_content):
+    """Set up a DAE transmitted variants file using passed content."""
+    summary = convert_to_tab_separated(summary_content)
+    toomany = convert_to_tab_separated(toomany_content)
+
+    setup_directories(root_path, {
+        "dae_transmitted_data": {
+            "tr.txt": summary,
+            "tr-TOOMANY.txt": toomany
+        }
+    })
+
+    # pylint: disable=no-member
+    pysam.tabix_compress(
+        str(root_path / "dae_transmitted_data" / "tr.txt"),
+        str(root_path / "dae_transmitted_data" / "tr.txt.gz"))
+    pysam.tabix_compress(
+        str(root_path / "dae_transmitted_data" / "tr-TOOMANY.txt"),
+        str(root_path / "dae_transmitted_data" / "tr-TOOMANY.txt.gz"))
+
+    pysam.tabix_index(
+        str(root_path / "dae_transmitted_data" / "tr.txt.gz"),
+        seq_col=0, start_col=1, end_col=1, line_skip=1)
+    pysam.tabix_index(
+        str(root_path / "dae_transmitted_data" / "tr-TOOMANY.txt.gz"),
+        seq_col=0, start_col=1, end_col=1, line_skip=1)
+
+    return (str(root_path / "dae_transmitted_data" / "tr.txt.gz"),
+            str(root_path / "dae_transmitted_data" / "tr-TOOMANY.txt.gz"))
+
+
+def setup_genome(out_path: pathlib.Path, content):
+    """Set up reference genome using the content."""
+    if out_path.suffix != ".fa":
+        raise ValueError("genome output file is expected to have '.fa' suffix")
+    setup_directories(out_path, convert_to_tab_separated(content))
+
+    # pylint: disable=no-member
+    pysam.faidx(str(out_path))  # type: ignore
+
+    # pylint: disable=import-outside-toplevel
+    from dae.genomic_resources.reference_genome import \
+        build_reference_genome_from_file
+    return build_reference_genome_from_file(str(out_path)).open()
+
+
+def setup_gene_models(out_path: pathlib.Path, content, fileformat=None):
+    """Set up gene models in refflat format using the passed content."""
+    setup_directories(out_path, convert_to_tab_separated(content))
+    # pylint: disable=import-outside-toplevel
+    from dae.genomic_resources.gene_models import build_gene_models_from_file
+    return build_gene_models_from_file(str(out_path), fileformat=fileformat)
+
+
+def setup_empty_gene_models(out_path: pathlib.Path):
+    """Set up empty gene models."""
+    content = """
+#geneName name chrom strand txStart txEnd cdsStart cdsEnd exonCount exonStarts exonEnds
+    """  # noqa
+    return setup_gene_models(out_path, content, fileformat="refflat")
 
 
 def _scan_for_resource_files(content_dict: dict[str, Any], parent_dirs):
@@ -80,6 +227,96 @@ def _scan_for_resources(content_dict, parent_id):
             # scan children
             for rid, rver, rcontent in _scan_for_resources(content, curr_id):
                 yield rid, rver, rcontent
+
+
+def build_inmemory_test_protocol(
+        content: Dict[str, Any]) -> FsspecReadWriteProtocol:
+    """Build and return an embedded fsspec protocol for testing."""
+    with tempfile.TemporaryDirectory("embedded_test_protocol") as root_path:
+
+        proto = cast(
+            FsspecReadWriteProtocol,
+            build_fsspec_protocol(root_path, f"memory://{root_path}"))
+        for rid, rver, rcontent in _scan_for_resources(content, []):
+            resource = GenomicResource(rid, rver, proto)
+            for fname, fcontent in _scan_for_resource_files(rcontent, []):
+                mode = "wt"
+                if isinstance(fcontent, bytes):
+                    mode = "wb"
+                with proto.open_raw_file(resource, fname, mode) as outfile:
+                    outfile.write(fcontent)
+                proto.save_resource_file_state(
+                    resource, proto.build_resource_file_state(resource, fname))
+
+            proto.save_manifest(resource, proto.build_manifest(resource))
+
+    return proto
+
+
+def build_inmemory_test_repository(
+        content: dict[str, Any]) -> GenomicResourceProtocolRepo:
+    """Create an embedded GRR repository using passed content."""
+    proto = build_inmemory_test_protocol(content)
+    return GenomicResourceProtocolRepo(proto)
+
+
+def build_inmemory_test_resource(
+        content: dict[str, Any]) -> GenomicResource:
+    """Create a test resource based on content passed.
+
+    The passed content should appropriate for a single resource.
+    Example content:
+    {
+        "genomic_resource.yaml": textwrap.dedent('''
+            type: position_score
+            table:
+                filename: data.txt
+            scores:
+                - id: aaaa
+                    type: float
+                    desc: ""
+                    name: sc
+        '''),
+        "data.txt": convert_to_tab_separated('''
+            #chrom start end sc
+            1      10    12  1.1
+            2      13    14  1.2
+        ''')
+    }
+    """
+    proto = build_inmemory_test_protocol(content)
+    return proto.get_resource("")
+
+
+def build_filesystem_test_protocol(
+        root_path: pathlib.Path) -> FsspecReadWriteProtocol:
+    """Build and return an filesystem fsspec protocol for testing.
+
+    The root_path is expected to point to a directory structure with all the
+    resources.
+    """
+    proto = cast(
+        FsspecReadWriteProtocol,
+        build_fsspec_protocol(str(root_path), str(root_path)))
+    proto.build_content_file()
+    return proto
+
+
+def build_filesystem_test_repository(
+        root_path: pathlib.Path) -> GenomicResourceProtocolRepo:
+    """Build and return an filesystem fsspec repository for testing.
+
+    The root_path is expected to point to a directory structure with all the
+    resources.
+    """
+    proto = build_filesystem_test_protocol(root_path)
+    return GenomicResourceProtocolRepo(proto)
+
+
+def build_filesystem_test_resource(
+        root_path: pathlib.Path) -> GenomicResource:
+    proto = build_filesystem_test_protocol(root_path)
+    return proto.get_resource("")
 
 
 def build_testing_protocol(
@@ -183,7 +420,7 @@ def range_http_thread_server_generator(directory):
 
     handler_class = partial(
         RangeRequestHandler, directory=directory)
-    handler_class.protocol_version = "HTTP/1.0"
+    handler_class.protocol_version = "HTTP/1.0"  # type: ignore
     httpd = HTTPServer(("", 0), handler_class)
     try:
         server_address = httpd.server_address
@@ -211,7 +448,7 @@ def range_http_process_server_generator(directory):
     def runner(queue):
         handler_class = partial(
             RangeRequestHandler, directory=directory)
-        handler_class.protocol_version = "HTTP/1.0"
+        handler_class.protocol_version = "HTTP/1.0"  # type: ignore
         httpd = HTTPServer(("", 0), handler_class)
         try:
             server_address = httpd.server_address
@@ -234,8 +471,8 @@ def range_http_process_server_generator(directory):
             httpd.shutdown()
             server_thread.join()
 
-    queue = multiprocessing.Queue()
-    proc = multiprocessing.Process(target=runner, args=(queue, ))
+    queue: Queue = Queue()
+    proc = Process(target=runner, args=(queue, ))
     proc.start()
     # wait for server address
     server_address = queue.get()
@@ -248,3 +485,100 @@ def range_http_process_server_generator(directory):
 @contextlib.contextmanager
 def range_http_serve(directory):
     yield from range_http_process_server_generator(directory=directory)
+
+
+# @contextlib.contextmanager
+# def build_http_test_protocol(
+#         root_path: pathlib.Path) -> Generator[
+#             FsspecReadOnlyProtocol, None, None]:
+#     """Run an HTTP range server and construct genomic resource protocol.
+
+#     The HTTP range server is used to serve directory pointed by root_path.
+#     This directory should be a valid filesystem genomic resource repository.
+#     """
+#     # pylint: disable=import-outside-toplevel
+#     from RangeHTTPServer import RangeRequestHandler  # type: ignore
+
+#     def runner(queue):
+#         handler_class = partial(
+#             RangeRequestHandler, directory=str(root_path))
+#         handler_class.protocol_version = "HTTP/1.0"  # type: ignore
+#         httpd = HTTPServer(("", 0), handler_class)
+#         try:
+#             server_address = httpd.server_address
+#             queue.put(f"http://{server_address[0]}:{server_address[1]}")
+#             logger.info(
+#                 "HTTP range server at %s serving %s",
+#                 server_address, root_path)
+#             server_thread = threading.Thread(target=httpd.serve_forever)
+#             server_thread.daemon = True
+#             server_thread.start()
+
+#             while 1:
+#                 command = queue.get(timeout=5.0)
+#                 if command == "stop":
+#                     break
+#         finally:
+#             time.sleep(0.1)
+#             logger.info("shutting down HTT range server %s", server_address)
+#             httpd.socket.close()
+#             httpd.shutdown()
+#             server_thread.join()
+
+#     build_filesystem_test_protocol(root_path)
+
+#     queue: Queue = Queue()
+#     proc = Process(target=runner, args=(queue, ))
+#     proc.start()
+#     # wait for server address
+#     server_address = queue.get(timeout=0.5)
+#     proto = cast(
+#         FsspecReadOnlyProtocol,
+#         build_fsspec_protocol(str(root_path), server_address))
+
+#     yield proto
+
+#     # stop the server process
+#     queue.put("stop")
+
+
+@contextlib.contextmanager
+def build_http_test_protocol(
+        root_path: pathlib.Path) -> Generator[
+            FsspecReadOnlyProtocol, None, None]:
+    """Run an HTTP range server and construct fsspec genomic resource protocol.
+
+    The HTTP range server is used to serve directory pointed by root_path.
+    This directory should be a valid filesystem genomic resource repository.
+    """
+    build_filesystem_test_protocol(root_path)
+
+    # pylint: disable=import-outside-toplevel
+    from RangeHTTPServer import RangeRequestHandler  # type: ignore
+
+    handler_class = partial(
+        RangeRequestHandler, directory=str(root_path))
+    handler_class.protocol_version = "HTTP/1.0"  # type: ignore
+    httpd = HTTPServer(("", 0), handler_class)
+    try:
+        server_address = httpd.server_address
+        logger.info(
+            "HTTP range server at %s serving %s",
+            server_address, root_path)
+        server_thread = threading.Thread(target=httpd.serve_forever)
+        server_thread.daemon = True
+        server_thread.start()
+
+        server_url = f"http://{server_address[0]}:{server_address[1]}"
+        proto = cast(
+            FsspecReadOnlyProtocol,
+            build_fsspec_protocol(str(root_path), server_url))
+
+        yield proto
+
+    finally:
+        time.sleep(0.1)
+        logger.info("shutting down HTT range server %s", server_address)
+        httpd.socket.close()
+        httpd.shutdown()
+        server_thread.join()

@@ -12,20 +12,6 @@ from dae.genomic_resources.genomic_scores import NPScore
 logger = logging.getLogger(__name__)
 
 
-def test_simple_experiment(fixtures_http_server):
-    url = fixtures_http_server
-    print(100 * "=")
-    print(url)
-    print(100 * "=")
-
-    response = requests.get(f"{url}/.CONTENTS")
-    assert response.status_code == 200
-    logger.info("response: %s", response)
-    logger.info("shutting down range http server...")
-
-    logger.info("[DONE] shutting down range http server...")
-
-
 def test_process_server_simple(fixture_dirname):
     directory = fixture_dirname("genomic_resources")
     logger.info("serving directory %s", directory)
@@ -33,7 +19,7 @@ def test_process_server_simple(fixture_dirname):
     url = next(gen)
     logger.info("echo...")
 
-    response = requests.get(f"{url}/.CONTENTS")
+    response = requests.get(f"{url}/.CONTENTS", timeout=0.5)
     assert response.status_code == 200
     logger.info("response: %s", response)
     logger.info("shutting down range http server...")
