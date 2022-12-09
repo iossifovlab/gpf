@@ -4,11 +4,9 @@ from __future__ import annotations
 
 import logging
 import textwrap
-from dataclasses import dataclass
 import copy
 
-from typing import Iterator, List, Tuple, cast, Type, Dict, Any, Optional, \
-    Union
+from typing import Iterator, List, cast, Type, Dict, Any, Union
 
 from jinja2 import Template
 from markdown2 import markdown
