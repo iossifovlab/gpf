@@ -1,9 +1,0 @@
-- md5: 23836a05d85b557e64928826dd2d7118
-  name: clinvar.vcf.gz
-  size: 454
-- md5: 134d77b28ee7df80adb8cb9d3cc51aa0
-  name: clinvar.vcf.gz.tbi
-  size: 113
-- md5: 8c1772c537c0238af2106859469bb461
-  name: genomic_resource.yaml
-  size: 111

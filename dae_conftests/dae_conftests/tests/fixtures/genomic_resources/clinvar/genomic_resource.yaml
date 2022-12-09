@@ -1,9 +1,0 @@
----
-
-type: allele_score
-table:
-  filename: clinvar.vcf.gz
-  index_filename: clinvar.vcf.gz.tbi
-
-meta: |
-  TODO
