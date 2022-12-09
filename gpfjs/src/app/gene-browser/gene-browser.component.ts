@@ -168,8 +168,8 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
     this.variantTypeValues.forEach(vt => this.checkVariantType(vt, true));
 
     this.summaryVariantsFilter.selectedRegion = [
-      this.selectedGene.collapsedTranscript.start,
-      this.selectedGene.collapsedTranscript.stop
+      this.selectedGene.collapsedTranscripts[0].start,
+      this.selectedGene.collapsedTranscripts[this.selectedGene.collapsedTranscripts.length - 1].stop
     ];
     this.summaryVariantsFilter.selectedFrequencies = [
       0, this.geneBrowserConfig.domainMax

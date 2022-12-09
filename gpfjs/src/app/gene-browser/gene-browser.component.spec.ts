@@ -43,10 +43,10 @@ class MockGeneService {
   public getGene(): Observable<Record<string, unknown>> {
     return of({
       geneSymbol: 'POGZ',
-      collapsedTranscript: {
+      collapsedTranscripts: [{
         start: 1,
         stop: 2
-      },
+      }],
       getRegionString: () => ''
     });
   }
