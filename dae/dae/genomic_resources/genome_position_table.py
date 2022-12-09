@@ -97,11 +97,11 @@ class Line:
         pos_end: Union[int, str],
         attributes: Dict[str, Any],
         score_defs: Dict[str, ScoreDef],
-        ref: Optional[str]=None,
-        alt: Optional[str]=None,
-        allele_index: Optional[int]=None,
-        info: Optional[pysam.VariantRecordInfo]=None,
-        info_meta: Optional[pysam.VariantHeaderMetadata]=None,
+        ref: Optional[str] = None,
+        alt: Optional[str] = None,
+        allele_index: Optional[int] = None,
+        info: Optional[pysam.VariantRecordInfo] = None,
+        info_meta: Optional[pysam.VariantHeaderMetadata] = None,
     ):
         self.chrom: str = chrom
         self.pos_begin: int = int(pos_begin)
@@ -158,6 +158,7 @@ class Line:
         return str(tuple(self))
 
     def get(self, key: str, default=None):
+        """Universal getter function."""
         if key == "chrom":
             return self.chrom
         if key == "pos_begin":
@@ -170,6 +171,10 @@ class Line:
             return self.attributes.get(key, default)
 
     def get_score(self, score_id):
+        """Get and parse configured score from line.
+
+        Handles multiallelic scores for lines derived from a VCF file.
+        """
         key = self.score_defs[score_id].col_key
         if self.info is not None:
             print(list(self.info.keys()))
@@ -221,9 +226,7 @@ class LineBuffer:
     def pop_first(self) -> Line:
         return self.deque.popleft()
 
-    def peek_last(self) -> Optional[Line]:
-        if len(self.deque) == 0:
-            return None
+    def peek_last(self) -> Line:
         return self.deque[-1]
 
     def region(self) -> Tuple[Optional[str], Optional[int], Optional[int]]:
@@ -263,7 +266,8 @@ class LineBuffer:
 
     def contains(self, chrom: str, pos: int) -> bool:
         bchrom, bbeg, bend = self.region()
-
+        if bchrom is None or bbeg is None or bend is None:
+            return False
         if chrom == bchrom and bend >= pos >= bbeg:
             return True
         return False
@@ -471,18 +475,19 @@ class GenomicPositionTable(abc.ABC):
             return self.definition[key].name
         return key
 
-    def _get_other_columns(self) -> Tuple[Optional[tuple], Optional[tuple]]:
+    def _get_other_columns(self) -> Union[Tuple[None, None], zip]:
         if self.header is not None:
             return zip(*(
                 (i, x) for i, x in enumerate(self.header)
                 if i not in (self.chrom_column_i,
-                            self.pos_begin_column_i,
-                            self.pos_end_column_i)
+                             self.pos_begin_column_i,
+                             self.pos_end_column_i)
             ))
         return None, None
 
     @cached_property
     def ref_key(self):
+        """Get the index or name of the column for the reference base."""
         ref_key = None
         if "reference" in self.definition:
             ref_key = self.get_special_column_index("reference") \
@@ -492,6 +497,7 @@ class GenomicPositionTable(abc.ABC):
 
     @cached_property
     def alt_key(self):
+        """Get the index or name of the column for the alternative base."""
         alt_key = None
         if "alternative" in self.definition:
             alt_key = self.get_special_column_index("alternative") \
@@ -633,19 +639,25 @@ class FlatGenomicPositionTable(GenomicPositionTable):
             ps_end = int(columns[self.pos_end_column_i])
 
             if other_indices and other_columns:
-                attributes = dict(zip(other_columns, (columns[i] for i in other_indices)))
+                attributes = dict(
+                    zip(other_columns, (columns[i] for i in other_indices))
+                )
             else:
-                attributes = {str(idx): value for idx, value in enumerate(columns)
+                attributes = {str(idx): val for idx, val in enumerate(columns)
                               if idx not in (self.chrom_column_i,
                                              self.pos_begin_column_i,
                                              self.pos_end_column_i)}
-            ref, alt = attributes.get(self.ref_key), attributes.get(self.alt_key)
+            ref = attributes.get(self.ref_key)
+            alt = attributes.get(self.alt_key)
             records_by_chr[chrom].append(
-                Line(chrom, ps_begin, ps_end, attributes, self.score_definitions,
+                Line(chrom, ps_begin, ps_end,
+                     attributes,
+                     self.score_definitions,
                      ref=ref, alt=alt)
             )
         self.records_by_chr = {
-            c: sorted(pss, key=lambda l: (l[:3], l.ref, l.alt)) for c, pss in records_by_chr.items()
+            c: sorted(pss, key=lambda l: (l[:3], l.ref, l.alt))
+            for c, pss in records_by_chr.items()
         }
         self._build_chrom_mapping()
 
@@ -902,6 +914,7 @@ class TabixGenomicPositionTable(GenomicPositionTable):
         self.buffer.prune(fchrom, pos_begin)
 
     def get_line_iterator(self, *args):
+        """Extract raw lines and wrap them in our Line adapter."""
         self.stats["tabix fetch"] += 1
         self.buffer.clear()
 
@@ -909,13 +922,16 @@ class TabixGenomicPositionTable(GenomicPositionTable):
 
         for raw in self.variants_file.fetch(*args, parser=pysam.asTuple()):
             if other_indices and other_columns:
-                attributes = dict(zip(other_columns, (raw[i] for i in other_indices)))
+                attributes = dict(
+                    zip(other_columns, (raw[i] for i in other_indices))
+                )
             else:
                 attributes = {str(idx): value for idx, value in enumerate(raw)
                               if idx not in (self.chrom_column_i,
                                              self.pos_begin_column_i,
                                              self.pos_end_column_i)}
-            ref, alt = attributes.get(self.ref_key), attributes.get(self.alt_key)
+            ref = attributes.get(self.ref_key)
+            alt = attributes.get(self.alt_key)
             yield Line(
                 raw[self.chrom_column_i],
                 raw[self.pos_begin_column_i],
