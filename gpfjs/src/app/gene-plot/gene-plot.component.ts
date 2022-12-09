@@ -145,7 +145,7 @@ export class GenePlotComponent implements OnChanges {
   private get svgHeight(): number {
     const transcriptsCount = (
       this.showTranscripts ?
-        this.genePlotModel.gene.transcripts.length : this.genePlotModel.gene.collapsedTranscripts.length - 1) + 1;
+        this.genePlotModel.gene.transcripts.length : this.genePlotModel.gene.collapsedTranscripts.length);
     return this.frequencyPlotHeight
       + this.constants.frequencyPlotPadding
       + this.constants.margin.top
@@ -153,7 +153,7 @@ export class GenePlotComponent implements OnChanges {
       + this.constants.collapsedTranscriptTextHeight
       + (this.showTranscripts ? this.constants.collapsedTranscriptPadding : 0)
       + transcriptsCount * this.constants.transcriptHeight
-      + (this.constants.multipleChromosomesGap * (this.genePlotModel.gene.collapsedTranscripts.length - 1) * 1.5);
+      + (this.constants.multipleChromosomesGap * this.genePlotModel.gene.collapsedTranscripts.length * 1.5);
   }
 
   private get frequencyPlotHeight(): number {
@@ -370,9 +370,9 @@ export class GenePlotComponent implements OnChanges {
     if (this.showTranscripts) {
       const transcriptsElement = this.plotElement.append('g').attr('id', 'transcripts');
       transcriptY += this.constants.collapsedTranscriptTextHeight
-        + this.constants.collapsedTranscriptPadding
         + (this.genePlotModel.gene.collapsedTranscripts.length > 1
-          ? this.constants.multipleChromosomesGap : 0); // Add some extra padding after the collapsed transcript
+          ? this.constants.multipleChromosomesGap : 0)
+        + this.constants.collapsedTranscriptPadding; // Add some extra padding after the collapsed transcript;
       for (const geneViewTranscript of this.genePlotModel.gene.transcripts) {
         transcriptY += this.constants.transcriptHeight;
         this.drawTranscript(transcriptsElement, geneViewTranscript, transcriptY);
@@ -381,7 +381,8 @@ export class GenePlotComponent implements OnChanges {
   }
 
   private drawTranscript(
-    svgGroup: d3.Selection<SVGGElement, unknown, HTMLElement, any>, transcript: Transcript, yPos: number, flag = false
+    svgGroup: d3.Selection<SVGGElement, unknown, HTMLElement, any>,
+    transcript: Transcript, yPos: number, drawLabelsFlag = false
   ): void {
     const domainMin = this.scale.x.domain()[0];
     const domainMax = this.scale.x.domain()[this.scale.x.domain().length - 1];
@@ -407,7 +408,7 @@ export class GenePlotComponent implements OnChanges {
         nonCoding: this.constants.exonThickness.collapsed,
         coding: this.constants.cdsThickness.collapsed
       };
-      if (flag === false) {
+      if (!drawLabelsFlag) {
         this.drawChromosomeLabels(svgGroup, yPos);
       }
     }
@@ -431,13 +432,13 @@ export class GenePlotComponent implements OnChanges {
     let svgTitle: string;
 
     if (transcriptId !== 'collapsed') {
-      svgTitle =
-        `Transcript id: ${transcriptId}\nChromosome: ${transcript.chromosome}\nExons length: ${
-          this.commaSeparateNumber(exonsLength)
-        }`;
+      svgTitle = `Transcript id: ${transcriptId}` +
+        `\nChromosome: ${transcript.chromosome}` +
+        `\nExons length: ${this.commaSeparateNumber(exonsLength)}`;
     } else {
-      svgTitle =
-        `COLLAPSED TRANSCRIPT\n${this.chromosomesTitle}\nExons length: ${this.commaSeparateNumber(exonsLength)}`;
+      svgTitle = `COLLAPSED TRANSCRIPT` +
+        `\n${this.chromosomesTitle}` +
+        `\nExons length: ${this.commaSeparateNumber(exonsLength)}`;
     }
 
     draw.hoverText(
@@ -517,7 +518,7 @@ export class GenePlotComponent implements OnChanges {
           (this.scale.x(fromX) + this.scale.x(toX)) / 2 + chromosome.length * 3.3,
           yPos
           + this.constants.chromosomeLabelPadding
-          - this.constants.transcriptHeight + (counter * (this.constants.multipleChromosomesGap) * 2),
+          - this.constants.transcriptHeight + (counter * this.constants.multipleChromosomesGap * 2),
           chromosome,
           `Chromosome: ${chromosome}`,
           this.constants.fontSize

@@ -21,8 +21,4 @@ describe('GenePlotComponent', () => {
   it('should create', () => {
     expect(component).toBeTruthy();
   });
-
-  it('should check gene on multiple chromosomes', () => {
-    expect(component).toBeTruthy();
-  });
 });

@@ -19,7 +19,7 @@ export class GenePlotModel {
     this.condensedRange = this.buildRange(0, 3000000000, rangeWidth, true);
   }
 
-  public buildDomain(domainMin: number, domainMax: number) {
+  public buildDomain(domainMin: number, domainMax: number): number[] {
     const lastSegment = this.gene.allSegments[this.gene.allSegments.length - 1];
     return this.gene.allSegments
       .filter(seg => seg.intersectionLength(domainMin, domainMax) > 0)

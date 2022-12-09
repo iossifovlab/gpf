@@ -29,7 +29,7 @@ function collapseSegments(transcripts: Transcript[]): Transcript {
     allCodingSequences.push(...transcript.codingSequences);
   }
   return new Transcript(
-    'collapsed', transcripts[0].strand, transcripts[0].chromosome,
+    'collapsed', transcripts[0].chromosome, transcripts[0].strand,
     mergeSegments(allCodingSequences), mergeSegments(allExons)
   );
 }
@@ -38,17 +38,7 @@ function collapseMultipleTranscripts(chromKeys: string[], transcripts: Transcrip
   let trans: Transcript[] = [];
   for (const key of chromKeys) {
     const chromosomeTranscripts = transcripts.filter(t => t.chromosome === key);
-    const allExons: Segment[] = [];
-    const allCodingSequences: Segment[] = [];
-    for (const transcript of chromosomeTranscripts) {
-      allExons.push(...transcript.exons);
-      allCodingSequences.push(...transcript.codingSequences);
-    }
-
-    trans.push(new Transcript(
-      'collapsed', key, transcripts[0].strand,
-      mergeSegments(allCodingSequences), mergeSegments(allExons)
-    ));
+    trans.push(collapseSegments(chromosomeTranscripts));
   }
   return trans;
 }
@@ -193,8 +183,9 @@ export class Gene {
     this.collapsedTranscripts = collapseMultipleTranscripts(
       new Array(...this.chromosomes).map(chrom => chrom[0]), this.transcripts
     );
-    this.allSegments = collapseSegments(transcripts).segments;
-    this.medianExonLength = collapseSegments(transcripts).medianExonLength;
+    const collapsedSegments = collapseSegments(transcripts);
+    this.allSegments = collapsedSegments.segments;
+    this.medianExonLength = collapsedSegments.medianExonLength;
   }
 
   public static fromJson(json: object): Gene {

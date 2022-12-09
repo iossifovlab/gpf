@@ -1,4 +1,3 @@
-import { IS_RFC_3339 } from 'class-validator';
 import { Transcript, Gene, TranscriptSegment } from './gene';
 
 describe('TranscriptSegment', () => {
@@ -219,10 +218,17 @@ describe('Gene', () => {
         'id1',
         'chrom1',
         'strand1',
-        [{ chromosome: 'coding1', start: 1, stop: 10 },
+        [{ chromosome: 'coding1', start: 1, stop: 5 },
           { chromosome: 'coding2', start: 12, stop: 15 }],
         [{ chromosome: 'exon1', start: 7, stop: 11 },
           { chromosome: 'exon2', start: 20, stop: 25 }]
+      ),
+      new Transcript(
+        'id1.2',
+        'chrom1',
+        'strand1',
+        [{ chromosome: 'coding1.2', start: 3, stop: 10 }],
+        [{ chromosome: 'exon1', start: 7, stop: 11 }]
       ),
       new Transcript(
         'id2',
@@ -247,7 +253,7 @@ describe('Gene', () => {
       new Transcript(
         'collapsed',
         'chrom2',
-        'strand1',
+        'strand2',
         [{chromosome: 'coding3', start: 3, stop: 10}, { chromosome: 'coding4', start: 18, stop: 20 }],
         [{ chromosome: 'exon3', start: 13, stop: 16 },
           { chromosome: 'exon4', start: 18, stop: 25 }]
@@ -407,7 +413,7 @@ describe('Gene', () => {
     expect(gene.collapsedTranscripts[1]).toStrictEqual(new Transcript(
       'collapsed',
       'chrom2',
-      'strand1',
+      'strand2',
       [{ chromosome: '', start: 0, stop: 0 }],
       [{ chromosome: 'exon3', start: 13, stop: 16 },
         { chromosome: 'exon4', start: 18, stop: 22 }]
@@ -415,7 +421,7 @@ describe('Gene', () => {
     expect(gene.collapsedTranscripts[2]).toStrictEqual(new Transcript(
       'collapsed',
       'chrom3',
-      'strand1',
+      'strand3',
       [{ chromosome: '', start: 0, stop: 0 }],
       [{ chromosome: 'exon5', start: 3, stop: 16 },
         { chromosome: 'exon6', start: 18, stop: 35 }]
