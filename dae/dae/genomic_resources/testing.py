@@ -1,5 +1,6 @@
 """Provides tools usefult for testing."""
 from __future__ import annotations
+import os
 import contextlib
 import time
 import pathlib
@@ -582,3 +583,49 @@ def build_http_test_protocol(
         httpd.socket.close()
         httpd.shutdown()
         server_thread.join()
+
+
+@contextlib.contextmanager
+def build_s3_test_protocol(
+        root_path: pathlib.Path) -> Generator[
+            FsspecReadWriteProtocol, None, None]:
+    """Run an S3 moto server and construct fsspec genomic resource protocol.
+
+    The S3 moto server is populated with resource from filesystem GRR pointed
+    by the root_path.
+    """
+    src_proto = build_filesystem_test_protocol(root_path)
+
+    # pylint: disable=protected-access,import-outside-toplevel
+    if "AWS_SECRET_ACCESS_KEY" not in os.environ:
+        os.environ["AWS_SECRET_ACCESS_KEY"] = "foo"
+    if "AWS_ACCESS_KEY_ID" not in os.environ:
+        os.environ["AWS_ACCESS_KEY_ID"] = "foo"
+    from moto.server import ThreadedMotoServer  # type: ignore
+    from s3fs.core import S3FileSystem  # type: ignore
+
+    server = ThreadedMotoServer(ip_address="", port=0)
+    server.start()
+    server_address = server._server.server_address
+    endpoint_url = f"http://{server_address[0]}:{server_address[1]}"
+
+    with tempfile.TemporaryDirectory("s3_test_protocol") as tmp_path:
+
+        S3FileSystem.clear_instance_cache()
+        s3filesystem = S3FileSystem(
+            anon=False, client_kwargs={"endpoint_url": endpoint_url})
+        s3filesystem.invalidate_cache()
+        bucket_url = f"s3:/{tmp_path}"
+        s3filesystem.mkdir(bucket_url, acl="public-read")
+
+        proto = cast(
+            FsspecReadWriteProtocol,
+            build_fsspec_protocol(
+                str(root_path), bucket_url, endpoint_url=endpoint_url))
+        for res in src_proto.get_all_resources():
+            proto.copy_resource(res)
+        proto.filesystem.invalidate_cache()
+
+        yield proto
+
+        server.stop()

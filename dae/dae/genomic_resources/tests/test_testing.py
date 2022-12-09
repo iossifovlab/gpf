@@ -6,7 +6,7 @@ import pytest
 from dae.genomic_resources.testing import setup_tabix, \
     build_inmemory_test_protocol, build_inmemory_test_resource, \
     setup_directories, build_filesystem_test_resource, \
-    build_http_test_protocol
+    build_http_test_protocol, build_s3_test_protocol
 
 
 @pytest.fixture(scope="session")
@@ -162,5 +162,12 @@ def test_build_filesystem_resource(np_score_directory):
 def test_build_http_test_proto(np_score_directory):
 
     with build_http_test_protocol(np_score_directory) as proto:
+        res = proto.get_resource("")
+        assert res.get_type() == "np_score"
+
+
+def test_build_s3_test_proto(np_score_directory):
+
+    with build_s3_test_protocol(np_score_directory) as proto:
         res = proto.get_resource("")
         assert res.get_type() == "np_score"
