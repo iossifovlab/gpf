@@ -1,0 +1,8 @@
+histogram_config:
+  bins: 100
+  max: 5.0
+  min: 0.0
+  score: MPC
+  y_scale: log
+md5: 02b4b7e5448efa4e2072943310cc5add
+resource: hg19/MPC

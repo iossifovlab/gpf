@@ -21,11 +21,11 @@
 - config:
     default_annotation:
       attributes:
-      - dest: cadd_raw
+      - destination: cadd_raw
         nucleotide_aggregator: max
         position_aggregator: max
         source: cadd_raw
-      - dest: cadd_phred
+      - destination: cadd_phred
         nucleotide_aggregator: max
         position_aggregator: max
         source: cadd_phred
@@ -58,9 +58,9 @@
   - md5: 5d95f08840be7f0f6fef13a5157d7f47
     name: CADD.bedgraph.gz.tbi
     size: 670
-  - md5: 0a9b93caa4fdc19c93d2c1cc09a7a04d
+  - md5: 31d1ee4d60f329453415609d143769f1
     name: genomic_resource.yaml
-    size: 638
+    size: 652
   version: '0'
 - config:
     filename: refGene201309.txt
@@ -117,6 +117,12 @@
         nucleotide_aggregator: max
         position_aggregator: max
         source: MPC
+    histograms:
+    - bins: 100
+      max: 5.0
+      min: 0.0
+      score: MPC
+      y_scale: log
     table:
       alternative:
         name: alt
@@ -142,9 +148,18 @@
   - md5: 5bb77f8efe6ed1b01b3422a3b5070307
     name: fordist_constraint_official_mpc_values_v2.txt.gz.tbi
     size: 257
-  - md5: 9089685904b0e2a8b0bdd2e3a659fa37
+  - md5: d96f389e63b2f9f0d79ddec2b0082921
     name: genomic_resource.yaml
-    size: 479
+    size: 566
+  - md5: e8ee8861355ba3c1126e8ca7b48b2fe8
+    name: histograms/MPC.csv
+    size: 1481
+  - md5: 8c7946a6dd1d964550e497d68675aeb8
+    name: histograms/MPC.metadata.yaml
+    size: 137
+  - md5: 558273e259dee3322accc97e92e9d7d1
+    name: histograms/MPC.png
+    size: 8667
   version: '0'
 - config:
     default_annotation:
