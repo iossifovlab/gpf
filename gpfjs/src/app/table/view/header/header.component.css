@@ -5,5 +5,4 @@ gpf-table-view-header-cell {
   background: #eee;
   font-weight: 500;
   display: table-cell;
-  word-break: break-all;
 }
