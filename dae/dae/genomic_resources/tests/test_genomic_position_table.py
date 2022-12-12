@@ -4,10 +4,10 @@ import textwrap
 import pytest
 import pysam
 
-from dae.genomic_resources.genome_position_table import \
+from dae.genomic_resources.genomic_position_table import \
     TabixGenomicPositionTable, \
     VCFGenomicPositionTable, \
-    build_genome_position_table
+    build_genomic_position_table
 from dae.genomic_resources.fsspec_protocol import build_fsspec_protocol
 
 from dae.genomic_resources.testing import \
@@ -157,7 +157,7 @@ def test_default_setup():
             1     10        12    3.14
             1     11        11    4.14
             1     12        10    5.14""")})
-    with build_genome_position_table(res, res.config["table"]) as tab:
+    with build_genomic_position_table(res, res.config["table"]) as tab:
         assert tab.chrom_column_i == 0
         assert tab.pos_begin_column_i == 1
         assert tab.pos_end_column_i == 1
@@ -181,7 +181,7 @@ def test_regions():
             1     15        20       4.14
             1     21        30       5.14""")})
 
-    with build_genome_position_table(res, res.config["table"]) as tab:
+    with build_genomic_position_table(res, res.config["table"]) as tab:
         assert tab.chrom_column_i == 0
         assert tab.pos_begin_column_i == 1
         assert tab.pos_end_column_i == 2
@@ -235,7 +235,7 @@ def test_regions_in_tabix(tmp_path, tabix_file, jump_threshold):
         res, "data.bgz"
     )
 
-    with build_genome_position_table(res, res.config["tabix_table"]) as tab:
+    with build_genomic_position_table(res, res.config["tabix_table"]) as tab:
         assert tab
         tab.jump_threshold = jump_threshold
         assert tab.chrom_column_i == 0
@@ -282,7 +282,7 @@ def test_last_call_is_updated(tmp_path, tabix_file):
         res, "data.bgz"
     )
 
-    with build_genome_position_table(res, res.config["tabix_table"]) as tab:
+    with build_genomic_position_table(res, res.config["tabix_table"]) as tab:
         assert tab._last_call == ("", -1, -1)
         assert list(tab.get_records_in_region("1", 11, 11)) == [
             ("1", 10, 12, "3.14")
@@ -315,7 +315,7 @@ def test_chr_add_pref():
             X     11        11    4.14
             11    12        10    5.14
             """)})
-    with build_genome_position_table(res, res.config["table"]) as tab:
+    with build_genomic_position_table(res, res.config["table"]) as tab:
         assert tab.get_chromosomes() == ["chr1", "chr11", "chrX"]
 
 
@@ -335,7 +335,7 @@ def test_chr_del_pref():
             chr1     10        12    3.14
             chr22    11        11    4.14
             chrX     12        10    5.14"""})
-    with build_genome_position_table(res, res.config["table"]) as tab:
+    with build_genomic_position_table(res, res.config["table"]) as tab:
         assert tab.get_chromosomes() == ["1", "22", "X"]
 
 
@@ -362,7 +362,7 @@ def test_chrom_mapping_file():
             gosho   chr1
             pesho   chr22
         """)})
-    with build_genome_position_table(res, res.config["table"]) as tab:
+    with build_genomic_position_table(res, res.config["table"]) as tab:
         assert tab.get_chromosomes() == ["gosho", "pesho"]
         assert list(tab.get_all_records()) == [
             ("gosho", 10, 12, "3.14"),
@@ -406,7 +406,7 @@ def test_chrom_mapping_file_with_tabix(tmp_path, tabix_file):
             seq_col=0, start_col=1, end_col=2),
         res, "data.bgz"
     )
-    with build_genome_position_table(res, res.config["tabix_table"]) as tab:
+    with build_genomic_position_table(res, res.config["tabix_table"]) as tab:
         assert tab.get_chromosomes() == ["gosho", "pesho"]
         assert list(tab.get_all_records()) == [
             ("gosho", 10, 12, "3.14"),
@@ -446,7 +446,7 @@ def test_invalid_chrom_mapping_file_with_tabix(tmp_path, tabix_file):
     )
 
     with pytest.raises(ValueError) as exception:
-        build_genome_position_table(res, res.config["tabix_table"]).open()
+        build_genomic_position_table(res, res.config["tabix_table"]).open()
 
     assert str(exception.value) == (
         "The chromosome mapping file chrom_map.txt in resource  "
@@ -473,7 +473,7 @@ def test_column_with_name():
             1     12  14   5.14
             """)
     })
-    with build_genome_position_table(res, res.config["table"]) as tab:
+    with build_genomic_position_table(res, res.config["table"]) as tab:
         assert tab.chrom_column_i == 0
         assert tab.pos_begin_column_i == 2
         assert list(tab.get_records_in_region("1", 12, 12)) == [
@@ -497,7 +497,7 @@ def test_column_with_index():
             1     11  11    4.14
             1     12  14    5.14""")
     })
-    with build_genome_position_table(res, res.config["table"]) as tab:
+    with build_genomic_position_table(res, res.config["table"]) as tab:
         assert tab.chrom_column_i == 0
         assert tab.pos_begin_column_i == 2
         assert list(tab.get_records_in_region("1", 12, 12)) == [
@@ -524,7 +524,7 @@ def test_no_header():
             1   12  14  5.14
             """)
     })
-    with build_genome_position_table(res, res.config["table"]) as tab:
+    with build_genomic_position_table(res, res.config["table"]) as tab:
         assert tab.chrom_column_i == 0
         assert tab.pos_begin_column_i == 2
         assert list(tab.get_records_in_region("1", 12, 12)) == [
@@ -548,7 +548,7 @@ def test_header_in_config():
             1   10  12  3.14
             1   11  11  4.14
             1   12  10  5.14""")})
-    with build_genome_position_table(res, res.config["table"]) as tab:
+    with build_genomic_position_table(res, res.config["table"]) as tab:
         assert tab.chrom_column_i == 0
         assert tab.pos_begin_column_i == 2
         assert list(tab.get_records_in_region("1", 12, 12)) == [
@@ -569,7 +569,7 @@ def test_space_in_mem_table():
             1     10        12     3.14
             1     11        EMPTY  4.14
             1     12        10     5.14""")})
-    with build_genome_position_table(res, res.config["table"]) as tab:
+    with build_genomic_position_table(res, res.config["table"]) as tab:
         assert tab.chrom_column_i == 0
         assert tab.pos_begin_column_i == 1
         assert list(tab.get_records_in_region("1", 11, 11)) == [
@@ -597,7 +597,7 @@ def test_text_table():
                 """)
         })
 
-    with build_genome_position_table(res, res.config["table"]) as table:
+    with build_genomic_position_table(res, res.config["table"]) as table:
         assert table.get_column_names() == ("chrom", "pos_begin", "c1", "c2")
         assert list(table.get_all_records()) == [
             ("1", 3, 3, "3.14", "aa"),
@@ -668,7 +668,7 @@ def test_tabix_table(tabix_file, tmp_path, jump_threshold):
         res, "data.bgz"
     )
 
-    with build_genome_position_table(res, res.config["tabix_table"]) as table:
+    with build_genomic_position_table(res, res.config["tabix_table"]) as table:
         assert table.get_column_names() == ("chrom", "pos_begin", "c1", "c2")
         table.jump_threshold = jump_threshold
         assert list(table.get_all_records()) == [
@@ -738,7 +738,7 @@ def tabix_table(tmp_path, tabix_file):
         res, "data.bgz"
     )
 
-    table = build_genome_position_table(res, res.config["tabix_table"])
+    table = build_genomic_position_table(res, res.config["tabix_table"])
     table.open()
     return table
 
@@ -775,7 +775,7 @@ def regions_tabix_table(tmp_path, tabix_file):
         res, "data.bgz"
     )
 
-    table = build_genome_position_table(res, res.config["tabix_table"])
+    table = build_genomic_position_table(res, res.config["tabix_table"])
     table.open()
     assert table.chrom_column_i == 0
     assert table.pos_begin_column_i == 1
@@ -865,7 +865,7 @@ def tabix_table_multiline(tmp_path, tabix_file):
         res, "data.bgz"
     )
 
-    table = build_genome_position_table(res, res.config["tabix_table"])
+    table = build_genomic_position_table(res, res.config["tabix_table"])
     table.open()
     return table
 
@@ -946,7 +946,7 @@ def test_tabix_middle_optimization(tmp_path, tabix_file):
             """, seq_col=0, start_col=1, end_col=1),
         res, "data.bgz")
 
-    with build_genome_position_table(res, res.config["tabix_table"]) as table:
+    with build_genomic_position_table(res, res.config["tabix_table"]) as table:
         row = None
         for row in table.get_records_in_region("1", 1, 1):
             assert row == ("1", 1, 1, "1")
@@ -988,7 +988,7 @@ def test_tabix_middle_optimization_regions(tmp_path, tabix_file):
             """, seq_col=0, start_col=1, end_col=2),
         res, "data.bgz")
 
-    with build_genome_position_table(res, res.config["tabix_table"]) as table:
+    with build_genomic_position_table(res, res.config["tabix_table"]) as table:
         row = None
         for row in table.get_records_in_region("1", 1, 1):
             assert row == ("1", 1, 1, "1")
@@ -1053,7 +1053,7 @@ def test_tabix_middle_optimization_regions_buggy_1(tmp_path, tabix_file):
             """, seq_col=0, start_col=1, end_col=2),
         res, "data.bgz")
 
-    with build_genome_position_table(res, res.config["tabix_table"]) as table:
+    with build_genomic_position_table(res, res.config["tabix_table"]) as table:
         rows = None
         rows = list(table.get_records_in_region("chr1", 505637, 505637))
         assert rows == [("chr1", 505637, 505637, "0.009")]
@@ -1098,7 +1098,7 @@ def test_buggy_fitcons_e67(tmp_path, tabix_file):
             """, seq_col=0, start_col=1, end_col=2),
         res, "data.bgz")
 
-    with build_genome_position_table(res, res.config["tabix_table"]) as table:
+    with build_genomic_position_table(res, res.config["tabix_table"]) as table:
         rows = None
         rows = list(table.get_records_in_region("5", 180740299, 180740300))
         assert rows == [
@@ -1142,7 +1142,7 @@ def test_tabix_jump_config(tmp_path, tabix_file, jump_threshold, expected):
             """, seq_col=0, start_col=1, end_col=2),
         res, "data.bgz")
 
-    with build_genome_position_table(res, res.config["tabix_table"]) as table:
+    with build_genomic_position_table(res, res.config["tabix_table"]) as table:
         assert table.jump_threshold == expected
         rows = None
         rows = list(table.get_records_in_region("5", 180740299, 180740300))
@@ -1193,7 +1193,7 @@ def test_tabix_max_buffer(
 
     TabixGenomicPositionTable.BUFFER_MAXSIZE = buffer_maxsize
 
-    with build_genome_position_table(res, res.config["tabix_table"]) as table:
+    with build_genomic_position_table(res, res.config["tabix_table"]) as table:
         assert table.BUFFER_MAXSIZE == buffer_maxsize
         assert table.jump_threshold == jump_threshold
 
@@ -1232,7 +1232,7 @@ def test_contig_length():
             1     12        10    5.14
             1     12        11    6.13
             2     1         2     0"""})
-    with build_genome_position_table(res, res.config["table"]) as tab:
+    with build_genomic_position_table(res, res.config["table"]) as tab:
         assert tab.get_chromosome_length("1") == 13
         assert tab.get_chromosome_length("2") == 2
 
@@ -1242,7 +1242,7 @@ def test_contig_length_tabix_table(tabix_table):
 
 
 def test_vcf_autodetect_format(vcf_res_autodetect_format):
-    with build_genome_position_table(
+    with build_genomic_position_table(
         vcf_res_autodetect_format,
         vcf_res_autodetect_format.config["tabix_table"]
     ) as tab:
@@ -1254,7 +1254,7 @@ def test_vcf_autodetect_format(vcf_res_autodetect_format):
 
 
 def test_vcf_get_all_records(vcf_res):
-    with build_genome_position_table(
+    with build_genomic_position_table(
         vcf_res, vcf_res.config["tabix_table"]
     ) as tab:
         assert isinstance(tab, VCFGenomicPositionTable)
@@ -1274,7 +1274,7 @@ def test_vcf_get_all_records(vcf_res):
 
 
 def test_vcf_get_records_in_region(vcf_res):
-    with build_genome_position_table(
+    with build_genomic_position_table(
         vcf_res, vcf_res.config["tabix_table"]
     ) as tab:
         assert not tuple(tab.get_records_in_region("chr1", 1, 4))
@@ -1296,7 +1296,7 @@ def test_vcf_get_records_in_region(vcf_res):
 
 
 def test_vcf_get_info_fields(vcf_res):
-    with build_genome_position_table(
+    with build_genomic_position_table(
         vcf_res, vcf_res.config["tabix_table"]
     ) as tab:
         results = tuple(tab.get_all_records())
@@ -1329,7 +1329,7 @@ def test_vcf_jump_ahead_optimization_use_sequential(vcf_res):
 
     Therefore it should sequentially seek forward
     """
-    with build_genome_position_table(
+    with build_genomic_position_table(
         vcf_res, vcf_res.config["tabix_table"]
     ) as tab:
         tab.jump_threshold = 6
@@ -1353,7 +1353,7 @@ def test_vcf_jump_ahead_optimization_use_jump(vcf_res):
 
     Therefore it should use the jump optimization
     """
-    with build_genome_position_table(
+    with build_genomic_position_table(
         vcf_res, vcf_res.config["tabix_table"]
     ) as tab:
         tab.jump_threshold = 5
@@ -1374,7 +1374,7 @@ def test_vcf_multiallelic(vcf_res_multiallelic):
     Test multiallelic variants are read
     as separate lines and assigned proper allele indices.
     """
-    with build_genome_position_table(
+    with build_genomic_position_table(
         vcf_res_multiallelic,
         vcf_res_multiallelic.config["tabix_table"]
     ) as tab:
@@ -1398,7 +1398,7 @@ def test_vcf_multiallelic_region(vcf_res_multiallelic):
     """
     Same as previous test, but for a given region.
     """
-    with build_genome_position_table(
+    with build_genomic_position_table(
         vcf_res_multiallelic,
         vcf_res_multiallelic.config["tabix_table"]
     ) as tab:
@@ -1419,7 +1419,7 @@ def test_vcf_multiallelic_info_fields(vcf_res_multiallelic):
     Test accessing an INFO field for multiallelic variants.
     Should return the correct value for the given allele.
     """
-    with build_genome_position_table(
+    with build_genomic_position_table(
         vcf_res_multiallelic,
         vcf_res_multiallelic.config["tabix_table"]
     ) as tab:
@@ -1461,7 +1461,7 @@ def test_tables_properly_load_scoredefs():
             chrom pos_begin pos_end  c2
             1     10        12       3.14
         """)})
-    with build_genome_position_table(res, res.config["table"]) as tab:
+    with build_genomic_position_table(res, res.config["table"]) as tab:
         assert len(tab.score_definitions) == 1
         assert "c2" in tab.score_definitions
         assert tab.score_definitions["c2"].value_parser is float
@@ -1476,7 +1476,7 @@ def test_mem_tables_can_load_without_scoredefs():
             chrom pos_begin pos_end  c2
             1     10        12       3.14
         """)})
-    with build_genome_position_table(res, res.config["table"]) as tab:
+    with build_genomic_position_table(res, res.config["table"]) as tab:
         assert not tab.score_definitions
 
 
@@ -1497,12 +1497,12 @@ def test_tabix_tables_can_load_without_scoredefs(tmp_path, tabix_file):
             """, seq_col=0, start_col=1, end_col=2),
         res, "data.bgz"
     )
-    with build_genome_position_table(res, res.config["tabix_table"]) as tab:
+    with build_genomic_position_table(res, res.config["tabix_table"]) as tab:
         assert not tab.score_definitions
 
 
 def test_vcf_tables_autogenerate_scoredefs(vcf_res_multiallelic):
-    with build_genome_position_table(
+    with build_genomic_position_table(
         vcf_res_multiallelic, vcf_res_multiallelic.config["tabix_table"]
     ) as tab:
         assert isinstance(tab, VCFGenomicPositionTable)
@@ -1514,7 +1514,7 @@ def test_vcf_tables_autogenerate_scoredefs(vcf_res_multiallelic):
 def test_vcf_tables_can_override_autogenerated_scoredefs(
     vcf_res_score_conf_override
 ):
-    with build_genome_position_table(
+    with build_genomic_position_table(
         vcf_res_score_conf_override,
         vcf_res_score_conf_override.config["tabix_table"]
     ) as tab:
@@ -1549,7 +1549,7 @@ def test_line_score_value_parsing(tmp_path, tabix_file):
             """, seq_col=0, start_col=1, end_col=2),
         res, "data.bgz")
 
-    with build_genome_position_table(res, res.config["tabix_table"]) as tab:
+    with build_genomic_position_table(res, res.config["tabix_table"]) as tab:
         assert list(map(lambda l: l.get_score("c2"), tab.get_all_records())) == [
             3.14,
             4.14,
@@ -1585,7 +1585,7 @@ def test_line_score_na_values(tmp_path, tabix_file):
             """, seq_col=0, start_col=1, end_col=2),
         res, "data.bgz")
 
-    with build_genome_position_table(res, res.config["tabix_table"]) as tab:
+    with build_genomic_position_table(res, res.config["tabix_table"]) as tab:
         assert list(map(lambda l: l.get_score("c2"), tab.get_all_records())) == [
             3.14,
             None,
@@ -1594,7 +1594,7 @@ def test_line_score_na_values(tmp_path, tabix_file):
 
 
 def test_line_get_available_score_columns(vcf_res_multiallelic):
-    with build_genome_position_table(
+    with build_genomic_position_table(
         vcf_res_multiallelic, vcf_res_multiallelic.config["tabix_table"]
     ) as tab:
         assert isinstance(tab, VCFGenomicPositionTable)
@@ -1603,7 +1603,7 @@ def test_line_get_available_score_columns(vcf_res_multiallelic):
 
 
 def test_vcf_tuple_scores_autoconcat_to_string(vcf_res_multiallelic):
-    with build_genome_position_table(
+    with build_genomic_position_table(
         vcf_res_multiallelic, vcf_res_multiallelic.config["tabix_table"]
     ) as tab:
         assert isinstance(tab, VCFGenomicPositionTable)
@@ -1652,7 +1652,7 @@ def test_get_ref_alt_nonconfigured_missing(tmp_path, tabix_file):
             """, seq_col=0, start_col=1, end_col=2),
         res, "data.bgz")
 
-    with build_genome_position_table(res, res.config["tabix_table"]) as tab:
+    with build_genomic_position_table(res, res.config["tabix_table"]) as tab:
         results = tuple(map(lambda l: (l.ref, l.alt), tab.get_all_records()))
         assert results == (
             (None, None),
@@ -1689,7 +1689,7 @@ def test_get_ref_alt_nonconfigured_existing(tmp_path, tabix_file):
             """, seq_col=0, start_col=1, end_col=2),
         res, "data.bgz")
 
-    with build_genome_position_table(res, res.config["tabix_table"]) as tab:
+    with build_genomic_position_table(res, res.config["tabix_table"]) as tab:
         results = tuple(map(lambda l: (l.ref, l.alt), tab.get_all_records()))
         assert results == (
             (None, None),
@@ -1727,7 +1727,7 @@ def test_get_ref_alt_configured_existing(tmp_path, tabix_file):
             """, seq_col=0, start_col=1, end_col=2),
         res, "data.bgz")
 
-    with build_genome_position_table(res, res.config["tabix_table"]) as tab:
+    with build_genomic_position_table(res, res.config["tabix_table"]) as tab:
         results = tuple(map(lambda l: (l.ref, l.alt), tab.get_all_records()))
         assert results == (
             ("A", "G"),
@@ -1737,7 +1737,7 @@ def test_get_ref_alt_configured_existing(tmp_path, tabix_file):
 
 
 def test_vcf_get_missing_alt(vcf_res_multiallelic):
-    with build_genome_position_table(
+    with build_genomic_position_table(
         vcf_res_multiallelic, vcf_res_multiallelic.config["tabix_table"]
     ) as tab:
         assert isinstance(tab, VCFGenomicPositionTable)
@@ -1773,7 +1773,7 @@ def test_score_definition_via_index_headerless_tabix(tmp_path, tabix_file):
                    seq_col=0, start_col=1, end_col=2),
         res, "data.bgz"
     )
-    with build_genome_position_table(res, res.config["tabix_table"]) as tab:
+    with build_genomic_position_table(res, res.config["tabix_table"]) as tab:
         line = next(tab.get_all_records())
         assert len(tab.score_definitions) == 1
         assert "piscore" in tab.score_definitions
@@ -1811,7 +1811,7 @@ def test_score_definition_list_header_tabix(tmp_path, tabix_file):
                    seq_col=0, start_col=1, end_col=2),
         res, "data.bgz"
     )
-    with build_genome_position_table(res, res.config["tabix_table"]) as tab:
+    with build_genomic_position_table(res, res.config["tabix_table"]) as tab:
         line = next(tab.get_all_records())
         assert len(tab.score_definitions) == 1
         assert "piscore" in tab.score_definitions

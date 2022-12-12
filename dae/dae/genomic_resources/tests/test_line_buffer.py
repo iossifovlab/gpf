@@ -2,7 +2,7 @@
 
 import pytest
 
-from dae.genomic_resources.genome_position_table import Line, LineBuffer
+from dae.genomic_resources.genomic_position_table import Line, LineBuffer
 
 
 def test_line_buffer_simple():

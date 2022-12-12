@@ -1014,7 +1014,7 @@ class VCFGenomicPositionTable(TabixGenomicPositionTable):
                 )
 
 
-def build_genome_position_table(
+def build_genomic_position_table(
     resource: GenomicResource, table_definition: dict
 ) -> GenomicPositionTable:
     """Instantiate a genome position table from a genomic resource."""

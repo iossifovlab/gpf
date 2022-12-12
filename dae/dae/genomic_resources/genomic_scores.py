@@ -15,7 +15,7 @@ from cerberus import Validator
 from . import GenomicResource
 from .resource_implementation import GenomicResourceImplementation, \
     get_base_resource_schema
-from .genome_position_table import build_genome_position_table, Line
+from .genomic_position_table import build_genomic_position_table, Line
 
 from .aggregators import build_aggregator, AGGREGATOR_SCHEMA
 
@@ -36,7 +36,7 @@ class GenomicScore(GenomicResourceImplementation):
         super().__init__(resource)
         self.config["id"] = resource.resource_id
         self.table_loaded = False
-        self.table = build_genome_position_table(
+        self.table = build_genomic_position_table(
             self.resource, self.config["table"]
         )
 

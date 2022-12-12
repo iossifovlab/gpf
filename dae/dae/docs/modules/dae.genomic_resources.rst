@@ -52,10 +52,10 @@ dae.genomic\_resources.gene\_models module
    :undoc-members:
    :show-inheritance:
 
-dae.genomic\_resources.genome\_position\_table module
+dae.genomic\_resources.genomic\_position\_table module
 -----------------------------------------------------
 
-.. automodule:: dae.genomic_resources.genome_position_table
+.. automodule:: dae.genomic_resources.genomic_position_table
    :members:
    :undoc-members:
    :show-inheritance:
