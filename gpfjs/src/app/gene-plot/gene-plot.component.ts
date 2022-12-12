@@ -13,8 +13,8 @@ import * as draw from 'app/utils/svg-drawing';
 export class GenePlotComponent implements OnChanges {
   @Input() public readonly gene: Gene;
   @Input() public readonly variantsArray: SummaryAllelesArray;
-  @Input() private readonly frequencyDomain: [number, number];
-  @Input() private readonly yAxisLabel: string;
+  @Input() public readonly frequencyDomain: [number, number];
+  @Input() public readonly yAxisLabel: string;
   @Input() public readonly allVariantsCounts: [number, number];
 
   @Output() public selectedRegion = new EventEmitter<[number, number]>();
