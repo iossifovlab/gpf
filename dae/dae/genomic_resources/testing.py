@@ -251,7 +251,7 @@ def build_inmemory_test_protocol(
 
             proto.save_manifest(resource, proto.build_manifest(resource))
 
-    return proto
+        return proto
 
 
 def build_inmemory_test_repository(
@@ -629,3 +629,10 @@ def build_s3_test_protocol(
         yield proto
 
         server.stop()
+
+
+def copy_proto_genomic_resources(
+        dest_proto: ReadWriteRepositoryProtocol,
+        src_proto: FsspecReadOnlyProtocol):
+    for res in src_proto.get_all_resources():
+        dest_proto.copy_resource(res)
