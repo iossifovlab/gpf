@@ -9,8 +9,8 @@ describe('SplitPipe', () => {
   it('should split strings', () => {
     const pipe = new SplitPipe();
 
-    expect(pipe.transform('abc.de.f', '.')).toEqual(['abc', 'de', 'f']);
-    expect(pipe.transform('abc/def/g', '/')).toEqual(['abc', 'def', 'g']);
-    expect(pipe.transform('abcdbef', 'b')).toEqual(['a', 'cd', 'ef']);
+    expect(pipe.transform('abc.de.f', '.')).toStrictEqual(['abc', 'de', 'f']);
+    expect(pipe.transform('abc/def/g', '/')).toStrictEqual(['abc', 'def', 'g']);
+    expect(pipe.transform('abcdbef', 'b')).toStrictEqual(['a', 'cd', 'ef']);
   });
 });

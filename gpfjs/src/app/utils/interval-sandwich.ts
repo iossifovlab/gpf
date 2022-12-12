@@ -27,7 +27,7 @@ export class IntervalForVertex<T> extends Interval {
   }
 
   public toString(): string {
-    return `i[${this.vertex}> ${this.left}:${this.right}]`;
+    return `i[${this.vertex.toString()}> ${this.left}:${this.right}]`;
   }
 }
 
@@ -264,41 +264,43 @@ export class SandwichInstance<T> {
   ) {}
 }
 
-export function solveSandwich<T>(sandwichInstance: SandwichInstance<T>): IntervalForVertex<T>[] {
+export const solveSandwich = <T>(sandwichInstance: SandwichInstance<T>): IntervalForVertex<T>[] => {
   const requiredGraph = new UndirectedGraph<T>();
   const forbiddenGraph = new UndirectedGraph<T>();
 
-  for (let vertex of sandwichInstance.vertices) {
+  for (const vertex of sandwichInstance.vertices) {
     requiredGraph.addVertex(vertex);
     forbiddenGraph.addVertex(vertex);
   }
 
-  for (let edge of Array.from(sandwichInstance.required)) {
+  for (const edge of Array.from(sandwichInstance.required)) {
     requiredGraph.addEdge(edge[0], edge[1]);
   }
 
-  for (let edge of Array.from(sandwichInstance.forbidden)) {
+  for (const edge of Array.from(sandwichInstance.forbidden)) {
     forbiddenGraph.addEdge(edge[0], edge[1]);
   }
 
-  let start = Date.now();
-  let lexicalSort = (a: {}, b: {}) => a.toString().localeCompare(b.toString());
+  const lexicalSort = (a: unknown, b: unknown): number => a.toString().localeCompare(b.toString());
 
   let realizationsQueue = new Array<Realization<T>>();
 
-  for (let vertex of sandwichInstance.vertices) {
+  for (const vertex of sandwichInstance.vertices) {
     realizationsQueue.push(
-      new Realization(requiredGraph, forbiddenGraph,
-                      [new IntervalForVertex(vertex)], [vertex])
+      new Realization(
+        requiredGraph,
+        forbiddenGraph,
+        [new IntervalForVertex(vertex)],
+        [vertex]
+      )
     );
   }
   realizationsQueue = realizationsQueue.sort(lexicalSort);
 
-  let visitedRealizationMap = {};
-  let currentIteration = 0;
+  const visitedRealizationMap = {};
 
   while (realizationsQueue.length !== 0) {
-    let currentRealization = realizationsQueue.pop();
+    const currentRealization = realizationsQueue.pop();
 
     let leftVertices = sandwichInstance.vertices
       .filter(vertex => currentRealization.domain.indexOf(vertex) === -1);
@@ -307,22 +309,16 @@ export function solveSandwich<T>(sandwichInstance: SandwichInstance<T>): Interva
     }
     leftVertices = leftVertices.sort(lexicalSort);
 
-    if (currentIteration === 1000) {
-      console.warn('Premature termination on', currentIteration, 'iterations');
-      return null;
-    }
-
-
-    for (let vertex of leftVertices) {
-      let currentRealizationCopy = currentRealization.clone();
-      let successfulExtension = currentRealizationCopy.extend(vertex);
+    for (const vertex of leftVertices) {
+      const currentRealizationCopy = currentRealization.clone();
+      const successfulExtension = currentRealizationCopy.extend(vertex);
       if (!successfulExtension) {
         continue;
       }
       if (sandwichInstance.vertices.length === currentRealizationCopy.domain.length) {
         return currentRealizationCopy.intervals;
       }
-      let realizationString = currentRealizationCopy.toString();
+      const realizationString = currentRealizationCopy.toString();
       if (!visitedRealizationMap[realizationString]) {
         realizationsQueue.push(currentRealizationCopy);
         visitedRealizationMap[realizationString] = true;
@@ -331,4 +327,4 @@ export function solveSandwich<T>(sandwichInstance: SandwichInstance<T>): Interva
   }
 
   return null;
-}
+};

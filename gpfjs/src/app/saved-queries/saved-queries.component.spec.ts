@@ -46,13 +46,11 @@ describe('SavedQueriesComponent', () => {
         RouterTestingModule, HttpClientTestingModule, NgbNavModule, NgxsModule.forRoot([], {developmentMode: true})
       ]
     }).compileComponents();
-  }));
 
-  beforeEach(() => {
     fixture = TestBed.createComponent(SavedQueriesComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
-  });
+  }));
 
   it('should create', () => {
     expect(component).toBeTruthy();
