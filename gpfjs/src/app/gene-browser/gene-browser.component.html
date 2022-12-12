@@ -89,10 +89,7 @@
         </div>
       </div>
 
-      <div
-        id="effect-types-filters"
-        class="effect-card card filter"
-        [ngStyle]="{ 'margin-left': geneBrowserConfig.hasAffectedStatus ? '30px' : '0' }">
+      <div id="effect-types-filters" class="effect-card card filter">
         <div class="card-header card-title">Effect Types</div>
         <div class="card-block">
           <div *ngFor="let effect of effectTypeValues; let i = index" class="checkbox">
@@ -109,7 +106,7 @@
         </div>
       </div>
 
-      <div id="inheritance-types-filters" class="effect-card card filter" style="margin-left: 30px">
+      <div id="inheritance-types-filters" class="effect-card card filter">
         <div class="card-header card-title">Inheritance Types</div>
         <div class="card-block">
           <div class="checkbox">
@@ -138,7 +135,7 @@
         </div>
       </div>
 
-      <div id="variant-types-filters" class="effect-card card filter" style="margin-left: 30px">
+      <div id="variant-types-filters" class="effect-card card filter">
         <div class="card-header card-title">Variant Types</div>
         <div class="card-block">
           <div *ngFor="let variantType of variantTypeValues; let i = index" class="checkbox">
