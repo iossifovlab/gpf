@@ -128,8 +128,8 @@ class EnrichmentTestView(QueryDatasetView):
                     gene_score_id
                 )
                 gene_syms = gene_score.get_genes(
-                    wmin=range_start,
-                    wmax=range_end
+                    score_min=range_start,
+                    score_max=range_end
                 )
             else:
                 return Response(status=status.HTTP_404_NOT_FOUND)
