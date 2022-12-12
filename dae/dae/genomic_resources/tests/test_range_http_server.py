@@ -45,7 +45,7 @@ def test_process_server_simple(fixture_dirname):
     }
 
     repo = build_genomic_resource_repository(repositories)
-    res = repo.get_resource("hg19/CADD")
+    res = repo.get_resource("hg19/MPC")
     assert res is not None
 
     np_score = NPScore(res)
