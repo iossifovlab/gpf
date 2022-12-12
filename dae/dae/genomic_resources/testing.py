@@ -63,7 +63,7 @@ def setup_directories(
             setup_directories(root_dir / path_name, path_content)
     else:
         raise ValueError(
-            f"unexpected content type: {path_content} for {path_name}")
+            f"unexpected content type: {content} for {root_dir}")
 
 
 def setup_pedigree(ped_path, content):
@@ -88,9 +88,12 @@ def setup_tabix(tabix_path: pathlib.Path, tabix_content: str, **kwargs):
 
     tabix_filename = str(out_path.parent / f"{out_path.name}.gz")
     index_filename = f"{tabix_filename}.tbi"
+    force = kwargs.pop("force", False)
     # pylint: disable=no-member
-    pysam.tabix_compress(str(out_path), tabix_filename)
-    pysam.tabix_index(tabix_filename, **kwargs)
+    pysam.tabix_compress(str(out_path), tabix_filename, force=force)
+    pysam.tabix_index(tabix_filename, force=force, **kwargs)
+
+    out_path.unlink()
 
     return tabix_filename, index_filename
 
@@ -299,6 +302,9 @@ def build_filesystem_test_protocol(
     proto = cast(
         FsspecReadWriteProtocol,
         build_fsspec_protocol(str(root_path), str(root_path)))
+
+    for res in proto.get_all_resources():
+        proto.save_manifest(res, proto.build_manifest(res))
     proto.build_content_file()
     return proto
 

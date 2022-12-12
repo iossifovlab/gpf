@@ -5,18 +5,17 @@ import textwrap
 import pytest
 from dae.genomic_resources.repository import GR_CONF_FILE_NAME
 from dae.genomic_resources.cli import cli_browse
-from dae.genomic_resources.testing import build_testing_repository
-from dae.testing import setup_directories
+from dae.genomic_resources.testing import build_filesystem_test_repository, \
+    setup_directories
 
 
 @pytest.fixture
 def repo_fixture(tmp_path_factory):
-    repo_path = tmp_path_factory.mktemp("test_repo")
-    demo_gtf_content = "TP53\tchr3\t300\t200".encode("utf-8")
-    repo = build_testing_repository(
-        scheme="file",
-        root_path=str(repo_path),
-        content={
+    path = tmp_path_factory.mktemp("cli_browse_repo_fixture")
+    demo_gtf_content = "TP53\tchr3\t300\t200"
+    setup_directories(
+        path,
+        {
             "one": {
                 GR_CONF_FILE_NAME: "",
                 "data.txt": "alabala"
@@ -30,18 +29,19 @@ def repo_fixture(tmp_path_factory):
                 }
             }
         })
-    repo.path = repo_path
-    return repo
+    repo = build_filesystem_test_repository(path)
+    return path, repo
 
 
 @pytest.fixture
 def repo_def(tmp_path_factory, repo_fixture):
+    path, _repo = repo_fixture
     root_path = tmp_path_factory.mktemp("repo_def")
     setup_directories(root_path, {
         ".grr_definition.yaml": textwrap.dedent(f"""
         id: "test_grr"
         type: "directory"
-        directory: "{str(repo_fixture.path)}"
+        directory: "{str(path)}"
         """)
     })
 

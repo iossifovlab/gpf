@@ -3,86 +3,100 @@ import logging
 import pytest
 
 from dae.genomic_resources.cli import cli_manage
-from dae.genomic_resources.testing import build_testing_protocol
+from dae.genomic_resources.testing import build_filesystem_test_protocol, \
+    setup_directories
 from dae.genomic_resources.repository import GR_CONTENTS_FILE_NAME
 
 
 @pytest.fixture
-def proto_fixture(content_fixture, tmp_path):
-    return build_testing_protocol(
-        scheme="file",
-        root_path=str(tmp_path),
-        content=content_fixture)
+def proto_fixture(content_fixture, tmp_path_factory):
+    path = tmp_path_factory.mktemp("cli_manifest_proto_fixture")
+    setup_directories(
+        path,
+        content_fixture)
+    proto = build_filesystem_test_protocol(path)
+    return path, proto
 
 
-def test_resource_manifest_simple(proto_fixture, tmp_path):
+def test_resource_manifest_simple(proto_fixture):
     # Given
-    proto_fixture.filesystem.delete(str(tmp_path / "one/.MANIFEST"))
+    path, proto = proto_fixture
+    proto.filesystem.delete(str(path / ".CONTENTS"))
+    proto.filesystem.delete(str(path / "one/.MANIFEST"))
 
-    assert not (tmp_path / GR_CONTENTS_FILE_NAME).exists()
-    assert not (tmp_path / "one/.MANIFEST").exists()
+    assert not (path / GR_CONTENTS_FILE_NAME).exists()
+    assert not (path / "one/.MANIFEST").exists()
 
     # When
     cli_manage([
-        "resource-manifest", "-R", str(tmp_path), "-r", "one"])
+        "resource-manifest", "-R", str(path), "-r", "one"])
 
     # Then
-    assert (tmp_path / "one/.MANIFEST").is_file()
-    assert not (tmp_path / GR_CONTENTS_FILE_NAME).exists()
+    assert (path / "one/.MANIFEST").is_file()
+    assert not (path / GR_CONTENTS_FILE_NAME).exists()
 
 
-def test_resource_manifest_dry_run_simple(proto_fixture, tmp_path):
+def test_resource_manifest_dry_run_simple(proto_fixture):
     # Given
-    proto_fixture.filesystem.delete(str(tmp_path / "one/.MANIFEST"))
+    path, proto = proto_fixture
+    proto.filesystem.delete(str(path / ".CONTENTS"))
+    proto.filesystem.delete(str(path / "one/.MANIFEST"))
 
-    assert not (tmp_path / GR_CONTENTS_FILE_NAME).exists()
-    assert not (tmp_path / "one/.MANIFEST").exists()
+    assert not (path / GR_CONTENTS_FILE_NAME).exists()
+    assert not (path / "one/.MANIFEST").exists()
 
     # When
     cli_manage([
-        "resource-manifest", "-R", str(tmp_path), "-r", "one", "--dry-run"])
+        "resource-manifest", "-R", str(path), "-r", "one", "--dry-run"])
 
     # Then
-    assert not (tmp_path / "one/.MANIFEST").exists()
+    assert not (path / "one/.MANIFEST").exists()
 
 
-def test_repo_manifest_simple(proto_fixture, tmp_path):
+def test_repo_manifest_simple(proto_fixture):
     # Given
-    proto_fixture.filesystem.delete(str(tmp_path / "one/.MANIFEST"))
+    path, proto = proto_fixture
+    proto.filesystem.delete(str(path / ".CONTENTS"))
+    proto.filesystem.delete(str(path / "one/.MANIFEST"))
 
-    assert not (tmp_path / GR_CONTENTS_FILE_NAME).exists()
-    assert not (tmp_path / "one/.MANIFEST").exists()
+    assert not (path / GR_CONTENTS_FILE_NAME).exists()
+    assert not (path / "one/.MANIFEST").exists()
 
     # When
     cli_manage([
-        "repo-manifest", "-R", str(tmp_path)])
+        "repo-manifest", "-R", str(path)])
 
     # Then
-    assert (tmp_path / "one/.MANIFEST").is_file()
-    assert (tmp_path / GR_CONTENTS_FILE_NAME).exists()
+    assert (path / "one/.MANIFEST").is_file()
+    assert (path / GR_CONTENTS_FILE_NAME).exists()
 
 
-def test_repo_manifest_dry_run_simple(proto_fixture, tmp_path):
+def test_repo_manifest_dry_run_simple(proto_fixture):
     # Given
-    proto_fixture.filesystem.delete(str(tmp_path / "one/.MANIFEST"))
+    path, proto = proto_fixture
+    proto.filesystem.delete(str(path / ".CONTENTS"))
+    proto.filesystem.delete(str(path / "one/.MANIFEST"))
 
-    assert not (tmp_path / GR_CONTENTS_FILE_NAME).exists()
-    assert not (tmp_path / "one/.MANIFEST").exists()
+    assert not (path / GR_CONTENTS_FILE_NAME).exists()
+    assert not (path / "one/.MANIFEST").exists()
 
     # When
     cli_manage([
-        "repo-manifest", "-R", str(tmp_path), "--dry-run"])
+        "repo-manifest", "-R", str(path), "--dry-run"])
 
     # Then
-    assert not (tmp_path / "one/.MANIFEST").exists()
+    assert not (path / "one/.MANIFEST").exists()
 
 
 def test_repo_manifest_no_agruments(
-        proto_fixture, tmp_path, mocker, capsys, caplog):
+        proto_fixture, mocker, capsys, caplog):
     # Given
+    path, proto = proto_fixture
+    proto.filesystem.delete(str(path / ".CONTENTS"))
+    proto.filesystem.delete(str(path / "one/.MANIFEST"))
     cli_manage([
-        "-VV", "repo-manifest", "-R", str(tmp_path)])
-    mocker.patch("os.getcwd", return_value=str(tmp_path))
+        "-VV", "repo-manifest", "-R", str(path)])
+    mocker.patch("os.getcwd", return_value=str(path))
     capsys.readouterr()
 
     # When
@@ -94,7 +108,7 @@ def test_repo_manifest_no_agruments(
 
     assert out == ""
     assert err == \
-        f"working with repository: {tmp_path}\n"
+        f"working with repository: {path}\n"
     assert caplog.record_tuples == [
         ("grr_manage",
          logging.INFO,
@@ -114,83 +128,89 @@ def test_repo_manifest_no_agruments(
     ]
 
 
-def test_check_manifest_update(proto_fixture, tmp_path):
+def test_check_manifest_update(proto_fixture):
     # Given
-    res = proto_fixture.get_resource("one")
+    _path, proto = proto_fixture
+    res = proto.get_resource("one")
 
     # When
     with res.open_raw_file("data.txt", "wt") as outfile:
         outfile.write("alabala2")
 
     # Then
-    manifest_update = proto_fixture.check_update_manifest(res)
+    manifest_update = proto.check_update_manifest(res)
     assert bool(manifest_update)
 
 
-def test_resource_run_manifest_update(proto_fixture, tmp_path):
+def test_resource_run_manifest_update(proto_fixture):
     # Given
-    res = proto_fixture.get_resource("one")
+    path, proto = proto_fixture
+    res = proto.get_resource("one")
     with res.open_raw_file("data.txt", "wt") as outfile:
         outfile.write("alabala2")
-    assert bool(proto_fixture.check_update_manifest(res))
+    assert bool(proto.check_update_manifest(res))
 
     # When
     cli_manage([
-        "resource-manifest", "-R", str(tmp_path), "-r", "one"])
+        "resource-manifest", "-R", str(path), "-r", "one"])
 
     # Then
-    assert not bool(proto_fixture.check_update_manifest(res))
+    assert not bool(proto.check_update_manifest(res))
 
 
-def test_repo_run_manifest_update(proto_fixture, tmp_path):
+def test_repo_run_manifest_update(proto_fixture):
     # Given
-    res = proto_fixture.get_resource("one")
+    path, proto = proto_fixture
+    res = proto.get_resource("one")
     with res.open_raw_file("data.txt", "wt") as outfile:
         outfile.write("alabala2")
-    assert bool(proto_fixture.check_update_manifest(res))
+    assert bool(proto.check_update_manifest(res))
 
     # When
     cli_manage([
-        "repo-manifest", "-R", str(tmp_path)])
+        "repo-manifest", "-R", str(path)])
 
     # Then
-    assert not bool(proto_fixture.check_update_manifest(res))
+    assert not bool(proto.check_update_manifest(res))
 
 
-def test_resource_dry_run_manifest_update(proto_fixture, tmp_path):
+def test_resource_dry_run_manifest_update(proto_fixture):
     # Given
-    res = proto_fixture.get_resource("one")
+    path, proto = proto_fixture
+    res = proto.get_resource("one")
     with res.open_raw_file("data.txt", "wt") as outfile:
         outfile.write("alabala2")
-    assert bool(proto_fixture.check_update_manifest(res))
+    assert bool(proto.check_update_manifest(res))
 
     # When
     cli_manage([
-        "resource-manifest", "--dry-run", "-R", str(tmp_path), "-r", "one"])
+        "resource-manifest", "--dry-run", "-R", str(path), "-r", "one"])
 
     # Then
-    assert bool(proto_fixture.check_update_manifest(res))
+    assert bool(proto.check_update_manifest(res))
 
 
-def test_repo_dry_run_manifest_update(proto_fixture, tmp_path):
+def test_repo_dry_run_manifest_update(proto_fixture):
     # Given
-    res = proto_fixture.get_resource("one")
+    path, proto = proto_fixture
+    res = proto.get_resource("one")
     with res.open_raw_file("data.txt", "wt") as outfile:
         outfile.write("alabala2")
-    assert bool(proto_fixture.check_update_manifest(res))
+    assert bool(proto.check_update_manifest(res))
 
     # When
     cli_manage([
-        "repo-manifest", "--dry-run", "-R", str(tmp_path)])
+        "repo-manifest", "--dry-run", "-R", str(path)])
 
     # Then
-    assert bool(proto_fixture.check_update_manifest(res))
+    assert bool(proto.check_update_manifest(res))
 
 
 def test_resource_dry_run_manifest_needs_update_message(
-        proto_fixture, tmp_path, capsys, caplog):
+        proto_fixture, capsys, caplog):
     # Given
-    res = proto_fixture.get_resource("one")
+    path, proto = proto_fixture
+    res = proto.get_resource("one")
     with res.open_raw_file("data.txt", "wt") as outfile:
         outfile.write("alabala2")
 
@@ -198,10 +218,10 @@ def test_resource_dry_run_manifest_needs_update_message(
     with caplog.at_level(logging.INFO):
         cli_manage([
             "resource-manifest", "--dry-run",
-            "-R", str(tmp_path), "-r", "one"])
+            "-R", str(path), "-r", "one"])
 
     # Then
-    assert bool(proto_fixture.check_update_manifest(res))
+    assert bool(proto.check_update_manifest(res))
 
     captured = capsys.readouterr()
     assert captured.out == ""
@@ -215,16 +235,17 @@ def test_resource_dry_run_manifest_needs_update_message(
 
 
 def test_repo_dry_run_manifest_needs_update_message(
-        proto_fixture, tmp_path, capsys, caplog):
+        proto_fixture, capsys, caplog):
     # Given
-    res = proto_fixture.get_resource("one")
+    path, proto = proto_fixture
+    res = proto.get_resource("one")
     with res.open_raw_file("data.txt", "wt") as outfile:
         outfile.write("alabala2")
 
     # When
     with caplog.at_level(logging.INFO):
         cli_manage([
-            "repo-manifest", "--dry-run", "-R", str(tmp_path)])
+            "repo-manifest", "--dry-run", "-R", str(path)])
 
     # Then
     captured = capsys.readouterr()
@@ -247,14 +268,14 @@ def test_repo_dry_run_manifest_needs_update_message(
 
 
 def test_resource_dry_run_manifest_no_update_message(
-        proto_fixture, tmp_path, capsys, caplog):
+        proto_fixture, capsys, caplog):
     # Given
-
+    path, _proto = proto_fixture
     # When
     with caplog.at_level(logging.INFO):
         cli_manage([
             "resource-manifest", "--dry-run",
-            "-R", str(tmp_path), "-r", "one"])
+            "-R", str(path), "-r", "one"])
 
     # Then
     captured = capsys.readouterr()
@@ -267,12 +288,13 @@ def test_resource_dry_run_manifest_no_update_message(
 
 
 def test_resource_manifest_no_agruments(
-        proto_fixture, tmp_path, mocker, capsys, caplog):
+        proto_fixture, mocker, capsys, caplog):
     # Given
+    path, _proto = proto_fixture
     cli_manage([
-        "repo-manifest", "-R", str(tmp_path)])
+        "repo-manifest", "-R", str(path)])
 
-    mocker.patch("os.getcwd", return_value=str(tmp_path / "one"))
+    mocker.patch("os.getcwd", return_value=str(path / "one"))
     capsys.readouterr()
 
     # When
@@ -283,20 +305,20 @@ def test_resource_manifest_no_agruments(
     out, err = capsys.readouterr()
 
     assert out == ""
-    assert err == f"working with repository: {tmp_path}\n"
+    assert err == f"working with repository: {path}\n"
     assert caplog.record_tuples == [
         ("grr_manage", logging.INFO, "manifest of <one> is up to date")
     ]
 
 
 def test_repo_dry_run_manifest_no_update_message(
-        proto_fixture, tmp_path, capsys, caplog):
+        proto_fixture, capsys, caplog):
     # Given
-
+    path, _proto = proto_fixture
     # When
     with caplog.at_level(logging.INFO):
         cli_manage([
-            "repo-manifest", "--dry-run", "-R", str(tmp_path)])
+            "repo-manifest", "--dry-run", "-R", str(path)])
 
     # Then
     captured = capsys.readouterr()
