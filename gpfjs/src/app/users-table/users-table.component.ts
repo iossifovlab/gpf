@@ -1,7 +1,7 @@
 import { Component, OnInit, Input } from '@angular/core';
 import { User } from '../users/users';
 import { UsersService } from '../users/users.service';
-import { map, take } from 'rxjs/operators';
+import { map, mergeMap, take } from 'rxjs/operators';
 import { ItemAddEvent } from 'app/item-add-menu/item-add-menu';
 import { UsersGroupsService } from 'app/users-groups/users-groups.service';
 import { UserGroup } from 'app/users-groups/users-groups';
@@ -26,16 +26,21 @@ export class UsersTableComponent {
   }
 
   public removeGroup(user: User, group: string): void {
-    // this.usersGroupsService.removeUser(user.email, group).subscribe(() => {
-    //   user.groups = group.users.filter(user => user !== userEmail);
-    // });
+    this.usersGroupsService.removeUser(user.email, group).pipe(
+      mergeMap(() => this.usersService.getUser(user.id))
+    ).subscribe(updatedUser => {
+      user.groups = updatedUser.groups;
+      user.allowedDatasets = updatedUser.allowedDatasets;
+    });
   }
 
   public addGroup(user: User, event$: ItemAddEvent): void {
-    // this.usersGroupsService.addUser(user.email, event$.item).subscribe((res: UserGroup) => {
-    //   user.groups.push(res.name);
-    //   user.allowedDatasets.push(...res.datasets);
-    // });
+    this.usersGroupsService.addUser(user.email, event$.item).pipe(
+      mergeMap(() => this.usersService.getUser(user.id))
+    ).subscribe(updatedUser => {
+      user.groups = updatedUser.groups;
+      user.allowedDatasets = updatedUser.allowedDatasets;
+    });
   }
 
   public getGroupNamesFunction(user: User): (page: number, searchText: string) => Observable<string[]> {
