@@ -3,7 +3,7 @@ import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { DatasetsService } from './datasets.service';
 import { Dataset, toolPageLinks } from './datasets';
 import { Observable, Subscription } from 'rxjs';
-import { ActivatedRoute, NavigationEnd, NavigationStart, Params, Router } from '@angular/router';
+import { ActivatedRoute, NavigationEnd, Params, Router } from '@angular/router';
 import { isEmpty } from 'lodash';
 import { DatasetNode } from 'app/dataset-node/dataset-node';
 import { Store } from '@ngxs/store';
@@ -31,8 +31,9 @@ export class DatasetsComponent implements OnInit, OnDestroy {
   @HostListener('window:popstate')
   public goBack(): void {
     this.router.events.pipe(filter(event => event instanceof NavigationEnd)).subscribe((event: NavigationEnd) => {
-      if (event.urlAfterRedirects === '/datasets/' + this.selectedDataset.id
-        || event.urlAfterRedirects === '/datasets') {
+      if (event.urlAfterRedirects === '/datasets/' + this.selectedDataset?.id
+        || event.urlAfterRedirects === '/datasets'
+      ) {
         window.history.go(-2);
       }
     });
@@ -75,7 +76,7 @@ export class DatasetsComponent implements OnInit, OnDestroy {
         this.datasetsService.reloadSelectedDataset(true);
       }),
       this.datasetsService.getPermissionDeniedPrompt().subscribe(aprompt => {
-        this.permissionDeniedPrompt = aprompt as string;
+        this.permissionDeniedPrompt = aprompt;
       }),
     );
   }
