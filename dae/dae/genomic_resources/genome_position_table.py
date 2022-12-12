@@ -19,60 +19,6 @@ logger = logging.getLogger(__name__)
 PysamFile = Union[pysam.TabixFile, pysam.VariantFile]
 
 
-def parse_scoredef_config(config):
-    """Parse ScoreDef configuration."""
-    scores = {}
-    type_parsers = {
-        "str": str,
-        "float": float,
-        "int": int
-    }
-    default_na_values = {
-        "str": {},
-        "float": {"", "nan", ".", "NA"},
-        "int": {"", "nan", ".", "NA"}
-    }
-    default_type_pos_aggregators = {
-        "float": "mean",
-        "int": "mean",
-        "str": "concatenate"
-    }
-    default_type_nuc_aggregators = {
-        "float": "max",
-        "int": "max",
-        "str": "concatenate"
-    }
-    for score_conf in config["scores"]:
-        col_type = score_conf.get(
-            "type", config.get("default.score.type", "float"))
-
-        col_key = score_conf.get("name") or str(score_conf["index"])
-
-        col_def = ScoreDef(
-            col_key,
-            score_conf.get("desc", ""),
-            col_type,
-            type_parsers[col_type],
-            score_conf.get(
-                "na_values",
-                config.get(
-                    f"default_na_values.{col_type}",
-                    default_na_values[col_type])),
-            score_conf.get(
-                "position_aggregator",
-                config.get(
-                    f"{col_type}.aggregator",
-                    default_type_pos_aggregators[col_type])),
-            score_conf.get(
-                "nucleotide_aggregator",
-                config.get(
-                    f"{col_type}.aggregator",
-                    default_type_nuc_aggregators[col_type])),
-        )
-        scores[score_conf["id"]] = col_def
-    return scores
-
-
 @dataclass
 class ScoreDef:
     """Score configuration definition."""
@@ -88,7 +34,14 @@ class ScoreDef:
 
 
 class Line:
-    """Represents a line read from a tabix-indexed genomic position table."""
+    """Represents a line read from a genomic position table.
+
+    Provides uniform access to a number of important columns - chromosome,
+    start position, end position, reference allele and alternative allele,
+    as well as access to values of configured score columns. Score columns
+    are parsed depending on their configuration and the type of genome position
+    table they are read from.
+    """
 
     def __init__(
         self,
@@ -371,8 +324,62 @@ class GenomicPositionTable(abc.ABC):
                     f"{self.header_mode} does not meet these "
                     f"requirements.")
 
+    @staticmethod
+    def _parse_scoredef_config(config):
+        """Parse ScoreDef configuration."""
+        scores = {}
+        type_parsers = {
+            "str": str,
+            "float": float,
+            "int": int
+        }
+        default_na_values = {
+            "str": {},
+            "float": {"", "nan", ".", "NA"},
+            "int": {"", "nan", ".", "NA"}
+        }
+        default_type_pos_aggregators = {
+            "float": "mean",
+            "int": "mean",
+            "str": "concatenate"
+        }
+        default_type_nuc_aggregators = {
+            "float": "max",
+            "int": "max",
+            "str": "concatenate"
+        }
+        for score_conf in config["scores"]:
+            col_type = score_conf.get(
+                "type", config.get("default.score.type", "float"))
+
+            col_key = score_conf.get("name") or str(score_conf["index"])
+
+            col_def = ScoreDef(
+                col_key,
+                score_conf.get("desc", ""),
+                col_type,
+                type_parsers[col_type],
+                score_conf.get(
+                    "na_values",
+                    config.get(
+                        f"default_na_values.{col_type}",
+                        default_na_values[col_type])),
+                score_conf.get(
+                    "position_aggregator",
+                    config.get(
+                        f"{col_type}.aggregator",
+                        default_type_pos_aggregators[col_type])),
+                score_conf.get(
+                    "nucleotide_aggregator",
+                    config.get(
+                        f"{col_type}.aggregator",
+                        default_type_nuc_aggregators[col_type])),
+            )
+            scores[score_conf["id"]] = col_def
+        return scores
+
     def _generate_scoredefs(self):
-        return parse_scoredef_config(self.definition) \
+        return GenomicPositionTable._parse_scoredef_config(self.definition) \
             if "scores" in self.definition else {}
 
     def _build_chrom_mapping(self):
