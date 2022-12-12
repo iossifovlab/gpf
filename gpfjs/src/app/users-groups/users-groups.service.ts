@@ -51,18 +51,11 @@ export class UsersGroupsService {
     );
   }
 
-  public getGroup(groupId: number): Observable<UserGroup> {
-    const options = { withCredentials: true };
-
-    return this.http.get(`${this.config.baseUrl}${this.groupsUrl}/${groupId}`, options)
-      .pipe(map((response: any) => UserGroup.fromJson(response)));
-  }
-
-  public getGroupByName(group: string): Observable<UserGroup> {
+  public getGroup(group: string): Observable<UserGroup> {
     const options = { withCredentials: true };
 
     return this.http.get(`${this.config.baseUrl}${this.groupsUrl}/${group}`, options)
-      .pipe(map((response: any) => UserGroup.fromJson(response)));
+      .pipe(map(response => UserGroup.fromJson(response)));
   }
 
   public grantPermissionToDataset(groupName: string, datasetName: string): Observable<object> {
