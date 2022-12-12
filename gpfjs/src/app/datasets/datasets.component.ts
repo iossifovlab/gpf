@@ -1,14 +1,14 @@
 import { UsersService } from '../users/users.service';
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { DatasetsService } from './datasets.service';
 import { Dataset, toolPageLinks } from './datasets';
 import { Observable, Subscription } from 'rxjs';
-import { ActivatedRoute, Params, Router } from '@angular/router';
+import { ActivatedRoute, NavigationEnd, NavigationStart, Params, Router } from '@angular/router';
 import { isEmpty } from 'lodash';
 import { DatasetNode } from 'app/dataset-node/dataset-node';
 import { Store } from '@ngxs/store';
 import { StateResetAll } from 'ngxs-reset-plugin';
-import { map, take } from 'rxjs/operators';
+import { filter, map, take } from 'rxjs/operators';
 
 @Component({
   selector: 'gpf-datasets',
@@ -27,6 +27,16 @@ export class DatasetsComponent implements OnInit, OnDestroy {
   private subscriptions: Subscription[] = [];
 
   public showNoToolsWarning: boolean;
+
+  @HostListener('window:popstate')
+  public goBack(): void {
+    this.router.events.pipe(filter(event => event instanceof NavigationEnd)).subscribe((event: NavigationEnd) => {
+      if (event.urlAfterRedirects === '/datasets/' + this.selectedDataset.id
+        || event.urlAfterRedirects === '/datasets') {
+        window.history.go(-2);
+      }
+    });
+  }
 
   public constructor(
     private usersService: UsersService,
@@ -92,7 +102,9 @@ export class DatasetsComponent implements OnInit, OnDestroy {
     if (!this.isToolSelected()) {
       const firstTool = this.findFirstTool(this.selectedDataset);
       if (firstTool) {
-        this.router.navigate(['/', 'datasets', this.selectedDataset.id, this.findFirstTool(this.selectedDataset)]);
+        this.router.navigate(
+          ['/', 'datasets', this.selectedDataset.id, this.findFirstTool(this.selectedDataset)]
+        );
       } else {
         this.router.navigate(['/', 'datasets', this.selectedDataset.id]);
       }
@@ -109,27 +121,27 @@ export class DatasetsComponent implements OnInit, OnDestroy {
   private isToolEnabled(dataset: Dataset, toolName: string): boolean {
     let result: boolean;
     switch (toolName) {
-    case 'dataset-description':
-      result = dataset.description !== undefined;
-      break;
-    case 'dataset-statistics':
-      result = dataset.commonReport.enabled;
-      break;
-    case 'genotype-browser':
-      result = Boolean(dataset.genotypeBrowser && (dataset.genotypeBrowserConfig !== undefined) !== false);
-      break;
-    case 'phenotype-browser':
-      result = dataset.phenotypeBrowser;
-      break;
-    case 'phenotype-tool':
-      result = dataset.phenotypeTool;
-      break;
-    case 'enrichment-tool':
-      result = dataset.enrichmentTool;
-      break;
-    case 'gene-browser':
-      result = dataset.geneBrowser.enabled;
-      break;
+      case 'dataset-description':
+        result = dataset.description !== undefined;
+        break;
+      case 'dataset-statistics':
+        result = dataset.commonReport.enabled;
+        break;
+      case 'genotype-browser':
+        result = Boolean(dataset.genotypeBrowser && (dataset.genotypeBrowserConfig !== undefined) !== false);
+        break;
+      case 'phenotype-browser':
+        result = dataset.phenotypeBrowser;
+        break;
+      case 'phenotype-tool':
+        result = dataset.phenotypeTool;
+        break;
+      case 'enrichment-tool':
+        result = dataset.enrichmentTool;
+        break;
+      case 'gene-browser':
+        result = dataset.geneBrowser.enabled;
+        break;
     }
 
     return result;
