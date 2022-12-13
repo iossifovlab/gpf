@@ -42,7 +42,7 @@ export class UsersGroupsService {
           // Finding and fixing duplicate dataset names
           usr.datasets.forEach((d, index) => {
             if (usr.datasets.indexOf(d) !== index) {
-              d.datasetName += d.datasetId;
+              d.datasetName += `(${d.datasetId})`;
             }
           });
           return usr;

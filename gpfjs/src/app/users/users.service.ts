@@ -211,7 +211,7 @@ export class UsersService {
           // Finding and fixing duplicate dataset names
           usr.allowedDatasets.forEach((d, index) => {
             if (usr.allowedDatasets.indexOf(d) !== index) {
-              d.datasetName += d.datasetId;
+              d.datasetName += `(${d.datasetId})`;
             }
           });
           return usr;
