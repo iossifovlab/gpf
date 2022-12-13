@@ -5,7 +5,8 @@ import os
 import logging
 
 from copy import copy
-from typing import Optional, Tuple, Any, Deque, Union, Dict, Generator
+from typing import Optional, Tuple, Any, Deque, Union, Dict, List, Generator, \
+    TextIO
 from functools import cache, cached_property
 from collections import Counter
 from dataclasses import dataclass
@@ -131,18 +132,20 @@ class VCFLine(Line):
     """Line adapter for lines derived from a VCF file.
 
     Implements functionality for handling multi-allelic variants
-    and INFO fields."""
+    and INFO fields.
+    """
+
     def __init__(
         self,
         chrom: str,
         pos_begin: Union[int, str],
         pos_end: Union[int, str],
         score_defs: Dict[str, ScoreDef],
-        ref: Optional[str] = None,
-        alt: Optional[str] = None,
-        allele_index: Optional[int] = None,
-        info: Optional[pysam.VariantRecordInfo] = None,
-        info_meta: Optional[pysam.VariantHeaderMetadata] = None,
+        ref: str,
+        alt: Optional[str],
+        allele_index: Optional[int],
+        info: pysam.VariantRecordInfo,
+        info_meta: pysam.VariantHeaderMetadata,
     ):
         super().__init__(
             chrom, pos_begin, pos_end, {}, score_defs, ref, alt
@@ -152,14 +155,11 @@ class VCFLine(Line):
         # is missing its ALT, i.e. its value is '.'
         self.allele_index: Optional[int] = allele_index
         # VCF INFO fields column
-        self.info: Optional[pysam.VariantRecordInfo] = info
+        self.info: pysam.VariantRecordInfo = info
         # VCF INFO fields metadata - holds metadata for info fields
         # such as description, type, whether the value is a tuple
         # of multiple score values, etc.
-        self.info_meta: Optional[pysam.VariantHeaderMetadata] = info_meta
-        if self.info is not None:
-            assert self.info_meta is not None, \
-                "Cannot use INFO without providing relevant metadata."
+        self.info_meta: pysam.VariantHeaderMetadata = info_meta
 
     def _fetch_score_value(self, key):
         value, meta = self.info.get(key), self.info_meta.get(key)
@@ -313,9 +313,9 @@ class GenomicPositionTable(abc.ABC):
 
         self.definition = Box(table_definition)
         self.score_definitions = self._generate_scoredefs()
-        self.chrom_map = None
-        self.chrom_order = None
-        self.rev_chrom_map = None
+        self.chrom_map: Optional[Dict[str, str]] = None
+        self.chrom_order: Optional[List[str]] = None
+        self.rev_chrom_map: Optional[Dict[str, str]] = None
 
         self.chrom_column_i = None
         self.pos_begin_column_i = None
@@ -481,7 +481,7 @@ class GenomicPositionTable(abc.ABC):
 
     def get_special_column_index(self, key):
         """Get special columns index."""
-        if self.header_mode == "none":
+        if self.header_mode == "none" or not self.header:
             return self._get_index_prop_for_special_column(key)
         try:
             return self._get_index_prop_for_special_column(key)
@@ -562,7 +562,7 @@ class GenomicPositionTable(abc.ABC):
         return self.chrom_order
 
     @abc.abstractmethod
-    def get_file_chromosomes(self):
+    def get_file_chromosomes(self) -> List[str]:
         """Return chromosomes in a genomic table file.
 
         This is to be overwritten by the subclass. It should return a list of
@@ -620,7 +620,7 @@ class FlatGenomicPositionTable(GenomicPositionTable):
         self, genomic_resource: GenomicResource, table_definition, fileformat
     ):
         self.format = fileformat
-        self.str_stream = None
+        self.str_stream: Optional[TextIO] = None
         self.records_by_chr: dict[str, Any] = {}
         super().__init__(genomic_resource, table_definition)
 
@@ -628,6 +628,7 @@ class FlatGenomicPositionTable(GenomicPositionTable):
         self.str_stream = self.genomic_resource.open_raw_file(
             self.definition.filename, mode="rt", uncompress=True
         )
+        assert self.str_stream is not None
         clmn_sep, strip_chars, space_replacement = \
             FlatGenomicPositionTable.FORMAT_DEF[self.format]
         if self.header_mode == "file":
@@ -647,6 +648,10 @@ class FlatGenomicPositionTable(GenomicPositionTable):
         self._set_special_column_indexes()
 
         other_indices, other_columns = self._get_other_columns()
+
+        assert self.chrom_column_i is not None \
+            and self.pos_begin_column_i is not None \
+            and self.pos_end_column_i is not None
 
         records_by_chr = collections.defaultdict(list)
         for line in self.str_stream:
@@ -687,7 +692,7 @@ class FlatGenomicPositionTable(GenomicPositionTable):
         }
         self._build_chrom_mapping()
 
-    def get_file_chromosomes(self):
+    def get_file_chromosomes(self) -> List[str]:
         return sorted(self.records_by_chr.keys())
 
     def get_all_records(self):
@@ -705,8 +710,10 @@ class FlatGenomicPositionTable(GenomicPositionTable):
                     yield line
 
     def get_records_in_region(
-            self, chrom: str, pos_begin: int = None, pos_end: int = None):
-
+        self, chrom: str,
+        pos_begin: Optional[int] = None,
+        pos_end: Optional[int] = None
+    ):
         if self.chrom_map:
             fch = self.chrom_map[chrom]
         else:
@@ -724,7 +731,8 @@ class FlatGenomicPositionTable(GenomicPositionTable):
                 yield line
 
     def close(self):
-        self.str_stream.close()
+        if self.str_stream is not None:
+            self.str_stream.close()
 
 
 class TabixGenomicPositionTable(GenomicPositionTable):
@@ -763,20 +771,22 @@ class TabixGenomicPositionTable(GenomicPositionTable):
         self._build_chrom_mapping()
 
     def _get_header(self):
+        assert isinstance(self.variants_file, pysam.TabixFile)
         return tuple(self.variants_file.header[-1].strip("#").split("\t"))
 
-    def get_file_chromosomes(self):
+    def get_file_chromosomes(self) -> List[str]:
+        assert isinstance(self.variants_file, pysam.TabixFile)
         return self.variants_file.contigs
 
     def _map_file_chrom(self, chrom: str) -> str:
         """Transfrom chromosome name to the chromosomes from score file."""
         if self.chrom_map:
-            return self.chrom_map.get(chrom)
+            return self.chrom_map[chrom]
         return chrom
 
     def _map_result_chrom(self, chrom: str) -> str:
         """Transfroms chromosome from score file to the genome chromosomes."""
-        if self.chrom_map:
+        if self.rev_chrom_map:
             return self.rev_chrom_map[chrom]
         return chrom
 
@@ -791,7 +801,7 @@ class TabixGenomicPositionTable(GenomicPositionTable):
     def get_all_records(self):
         # pylint: disable=no-member
         for line in self.get_line_iterator():
-            if self.chrom_map:
+            if self.rev_chrom_map:
                 if line.chrom in self.rev_chrom_map:
                     yield self._transform_result(line)
                 else:
@@ -841,6 +851,7 @@ class TabixGenomicPositionTable(GenomicPositionTable):
 
     def _gen_from_tabix(self, chrom, pos, buffering=True):
         try:
+            assert self.line_iterator is not None
             while True:
                 line = next(self.line_iterator)
 
@@ -871,7 +882,10 @@ class TabixGenomicPositionTable(GenomicPositionTable):
         yield from self._gen_from_tabix(chrom, end, buffering=True)
 
     def get_records_in_region(
-            self, chrom: str, pos_begin: int = None, pos_end: int = None):
+        self, chrom: str,
+        pos_begin: Optional[int] = None,
+        pos_end: Optional[int] = None
+    ):
         self.stats["calls"] += 1
 
         if chrom not in self.get_chromosomes():
@@ -932,14 +946,19 @@ class TabixGenomicPositionTable(GenomicPositionTable):
 
         self.buffer.prune(fchrom, pos_begin)
 
-    def get_line_iterator(self, *args):
+    def get_line_iterator(self, chrom=None, pos_begin=None):
         """Extract raw lines and wrap them in our Line adapter."""
+        assert isinstance(self.variants_file, pysam.TabixFile)
+
         self.stats["tabix fetch"] += 1
         self.buffer.clear()
 
         other_indices, other_columns = self._get_other_columns()
 
-        for raw in self.variants_file.fetch(*args, parser=pysam.asTuple()):
+        # Yes, the argument for the chromosome/contig is called "reference".
+        for raw in self.variants_file.fetch(
+            reference=chrom, start=pos_begin, parser=pysam.asTuple()
+        ):
             if other_indices and other_columns:
                 attributes = dict(
                     zip(other_columns, (raw[i] for i in other_indices))
@@ -960,10 +979,8 @@ class TabixGenomicPositionTable(GenomicPositionTable):
             )
 
     def close(self):
-        self.variants_file.close()
-        print(
-            f"genome position table: ({self.genomic_resource.resource_id})>",
-            self.stats)
+        if self.variants_file is not None:
+            self.variants_file.close()
 
 
 class VCFGenomicPositionTable(TabixGenomicPositionTable):
@@ -985,6 +1002,7 @@ class VCFGenomicPositionTable(TabixGenomicPositionTable):
 
     def open(self):
         super().open()
+        assert isinstance(self.variants_file, pysam.VariantFile)
         if "scores" not in self.definition and self.variants_file is not None:
             def converter(val):
                 try:
@@ -994,7 +1012,7 @@ class VCFGenomicPositionTable(TabixGenomicPositionTable):
             self.score_definitions = {
                 key: ScoreDef(
                     key,
-                    value.description,
+                    value.description or "",
                     self.VCF_TYPE_CONVERSION_MAP[value.type],
                     converter if value.number not in (1, "A", "R") else None,
                     tuple(),
@@ -1007,14 +1025,17 @@ class VCFGenomicPositionTable(TabixGenomicPositionTable):
         return ("CHROM", "POS", "ID", "REF", "ALT", "QUAL", "FILTER", "INFO")
 
     @cache
-    def get_file_chromosomes(self):
-        return list(self.variants_file.header.contigs)
+    def get_file_chromosomes(self) -> List[str]:
+        assert isinstance(self.variants_file, pysam.VariantFile)
+        return list(map(str, self.variants_file.header.contigs))
 
     def get_line_iterator(self, *args):
+        assert isinstance(self.variants_file, pysam.VariantFile)
         self.stats["tabix fetch"] += 1
         self.buffer.clear()
         for raw_line in self.variants_file.fetch(*args):
             for allele_index, alt in enumerate(raw_line.alts or [None]):
+                assert raw_line.ref is not None
                 yield VCFLine(
                     raw_line.contig, raw_line.pos, raw_line.pos,
                     self.score_definitions,
