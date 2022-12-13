@@ -38,7 +38,7 @@ label {
   overflow: hidden;
 }
 
-.header-item:nth-child(3) span{
+#counters span{
   width: 15em;
 }
 
