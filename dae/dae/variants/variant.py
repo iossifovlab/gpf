@@ -284,8 +284,8 @@ class SummaryAllele(core.Allele):
         allele_index: int = 0,
         transmission_type: TransmissionType = TransmissionType.transmitted,
         allele_type=None,
-        attributes: Dict[str, Any] = None,
-        effect: str = None,
+        attributes: Optional[Dict[str, Any]] = None,
+        effect: Optional[str] = None,
     ):
         super().__init__(
             chrom=chromosome, pos=position, pos_end=end_position,
@@ -564,7 +564,7 @@ class SummaryVariant:
     """Represents summary variant."""
 
     # pylint: disable=R0913,R0902,R0904
-    def __init__(self, alleles):
+    def __init__(self, alleles: List[SummaryAllele]):
 
         assert len(alleles) >= 1
         assert len(set(sa.position for sa in alleles)) == 1
@@ -576,7 +576,7 @@ class SummaryVariant:
 
         self._chromosome: str = self.ref_allele.chromosome
         self._position: int = self.ref_allele.position
-        self._reference: str = self.ref_allele.reference
+        self._reference: Optional[str] = self.ref_allele.reference
         if len(alleles) > 1:
             self._end_position = alleles[1].end_position
         else:
@@ -602,10 +602,10 @@ class SummaryVariant:
 
     @property
     def end_position(self) -> Optional[int]:
-        return cast(Optional[int], self._end_position)
+        return self._end_position
 
     @property
-    def reference(self) -> str:
+    def reference(self) -> Optional[str]:
         return self._reference
 
     @property

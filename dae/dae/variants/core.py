@@ -12,6 +12,8 @@ logger = logging.getLogger(__name__)
 
 
 class Allele:
+    """Class representing alleles."""
+
     TYPE_DISPLAY_NAME = {
         "substitution": "sub",
         "small_insertion": "ins",
@@ -22,6 +24,9 @@ class Allele:
     }
 
     class Type(Enum):
+        """Enumerator for allele type."""
+
+        # pylint: disable=invalid-name,unsupported-binary-operation
         position = 0
         substitution = 1
         small_insertion = 1 << 1
@@ -78,9 +83,9 @@ class Allele:
                 return False
             return vt & cls.tandem_repeat
 
-    def __init__(self, chrom: str, pos: int, pos_end: int = None,
-                 ref: str = None, alt: str = None,
-                 allele_type: Allele.Type = None):
+    def __init__(self, chrom: str, pos: int, pos_end: Optional[int] = None,
+                 ref: Optional[str] = None, alt: Optional[str] = None,
+                 allele_type: Optional[Allele.Type] = None):
         self._chrom: str = chrom
         self._pos: int = pos
         self._pos_end: Optional[int] = pos_end
@@ -131,6 +136,7 @@ class Allele:
                 f"{self._chrom}:{self._pos} {self._ref}->{self._alt}")
 
     def get_annotatable(self) -> Annotatable:
+        """Return an annotatable version of the allele."""
         if Allele.Type.large_duplication & self.allele_type:
             return CNVAllele(
                 self.chrom, self.position, self.end_position,

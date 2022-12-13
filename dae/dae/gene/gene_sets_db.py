@@ -61,6 +61,7 @@ class GeneSet:
 
 
 class BaseGeneSetCollection(abc.ABC):
+    """Base class for gene set collections."""
 
     @abc.abstractmethod
     def get_gene_set(self, gene_set_id: str) -> Optional[GeneSet]:
@@ -212,7 +213,7 @@ class SqliteGeneSetCollectionDB(GenomicResourceImplementation):
         self.metadata = MetaData(self.engine)
         self._create_gene_sets_table()
 
-    def _get_dbfile_path(self):
+    def _get_dbfile_path(self) -> str:
         dbfile = self.config["dbfile"]
         proto: FsspecReadOnlyProtocol = \
             cast(FsspecReadOnlyProtocol, self.resource.proto)
@@ -302,7 +303,7 @@ class SqliteGeneSetCollectionDB(GenomicResourceImplementation):
 class GeneSetsDb:
     """Class that represents a dictionary of gene set collections."""
 
-    def __init__(self, gene_set_collections):
+    def __init__(self, gene_set_collections: List[GeneSetCollection]):
         self.gene_set_collections: Dict[str, GeneSetCollection] = {
             gsc.collection_id: gsc
             for gsc in gene_set_collections
@@ -371,6 +372,7 @@ def build_gene_set_collection_from_file(
         web_label: Optional[str] = None,
         web_format_str: Optional[str] = None
 ):
+    """Return a Gene Set Collection by adapting a file to a local resource."""
     dirname = os.path.dirname(filename)
     basename = os.path.basename(filename)
     if collection_format is None:
@@ -409,10 +411,11 @@ def build_gene_set_collection_from_file(
 
 
 def build_gene_set_collection_from_resource(resource: GenomicResource):
+    """Return a Gene Set Collection built from a resource."""
     if resource is None:
         raise ValueError(f"missing resource {resource}")
 
     if resource.config["format"] == "sqlite":
         return SqliteGeneSetCollectionDB(resource)
-    else:
-        return GeneSetCollection(resource)
+
+    return GeneSetCollection(resource)

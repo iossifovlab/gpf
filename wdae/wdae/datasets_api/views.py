@@ -270,48 +270,49 @@ class DatasetDescriptionView(QueryBaseView):
 
 class BaseDatasetPermissionsView(QueryBaseView):
     def _get_dataset_info(self, dataset):
-            groups = dataset.groups.all()
-            group_names = [group.name for group in groups]
+        groups = dataset.groups.all()
+        group_names = [group.name for group in groups]
 
-            user_model = get_user_model()
-            users_list = []
-            for group in groups:
-                users = user_model.objects.filter(
-                    groups__name=group.name
-                ).all()
-                users_list += [
-                    {"name": user.name, "email": user.email}
-                    for user in users
-                ]
+        user_model = get_user_model()
+        users_list = []
+        for group in groups:
+            users = user_model.objects.filter(
+                groups__name=group.name
+            ).all()
+            users_list += [
+                {"name": user.name, "email": user.email}
+                for user in users
+            ]
 
-            dataset_gd = self.gpf_instance.get_genotype_data(
+        dataset_gd = self.gpf_instance.get_genotype_data(
+            dataset.dataset_id
+        )
+
+        if dataset_gd is None:
+            logger.warning(
+                "Dataset %s missing in GPF instance!",
                 dataset.dataset_id
             )
-
-            if dataset_gd is None:
-                logger.warning(
-                    "Dataset %s missing in GPF instance!",
-                    dataset.dataset_id
-                )
-                return {
-                    "dataset_id": dataset.dataset_id,
-                    "dataset_name": "Missing dataset",
-                    "users": [],
-                    "groups": []
-                }
-
-            name = dataset_gd.name
-            if name is None:
-                name = ""
-
             return {
-                "dataset_id": dataset_gd.study_id,
-                "dataset_name": name,
-                "broken": dataset.broken,
-                "users": users_list,
-                "groups": group_names
-
+                "dataset_id": dataset.dataset_id,
+                "dataset_name": "Missing dataset",
+                "users": [],
+                "groups": []
             }
+
+        name = dataset_gd.name
+        if name is None:
+            name = ""
+
+        return {
+            "dataset_id": dataset_gd.study_id,
+            "dataset_name": name,
+            "broken": dataset.broken,
+            "users": users_list,
+            "groups": group_names
+
+        }
+
 
 class DatasetPermissionsView(BaseDatasetPermissionsView):
 

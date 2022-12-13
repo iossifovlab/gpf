@@ -9,9 +9,11 @@ from dae.utils.effect_utils import expand_effect_types
 
 
 class DenovoGeneSetCollectionFactory:
+    """Class for creating and loading created denovo gene sets."""
 
     @staticmethod
     def denovo_gene_set_cache_file(config, person_set_collection_id=""):
+        """Return the path to the cache file for a person set collection."""
         cache_path = os.path.join(
             config.conf_dir,
             "denovo-cache-" + person_set_collection_id + ".json",
@@ -47,8 +49,8 @@ class DenovoGeneSetCollectionFactory:
                     f"does not exists"
                 )
 
-            with open(cache_dir, "r") as f:
-                contents = json.load(f)
+            with open(cache_dir, "r") as infile:
+                contents = json.load(infile)
             # change all list to sets after loading from json
             contents = cls._convert_cache_innermost_types(contents, list, set)
             collection.cache[person_set_collection_id] = contents
@@ -77,10 +79,10 @@ class DenovoGeneSetCollectionFactory:
     def _format_criterias(cls, standard_criterias):
         """
         Replicates functionality from denovo gene set config parser.
+
         Given a TOML config's standard criterias, it does additional formatting
         which was done before in the parser.
         """
-
         effect_type_criterias = []
         for name, criteria in standard_criterias.effect_types.segments.items():
             effect_type_criterias.append(
@@ -105,7 +107,8 @@ class DenovoGeneSetCollectionFactory:
     def _generate_gene_set_for(
             cls, genotype_data, config, person_set_collection_id):
         """
-        Produces a nested dictionary which represents a denovo gene set.
+        Produce a nested dictionary which represents a denovo gene set.
+
         It maps denovo gene set criteria to an innermost dictionary mapping
         gene set symbols to lists of family IDs.
         """
@@ -145,9 +148,7 @@ class DenovoGeneSetCollectionFactory:
 
     @classmethod
     def _save_cache(cls, cache, cache_path):
-        """
-        Write a denovo gene set cache to the filesystem in JSON format.
-        """
+        """Write a denovo gene set cache to the filesystem in JSON format."""
         # change all sets to lists so they can be saved in json
         cache = cls._convert_cache_innermost_types(
             cache, set, list, sort_values=True
@@ -155,9 +156,9 @@ class DenovoGeneSetCollectionFactory:
 
         if not os.path.exists(os.path.dirname(cache_path)):
             os.makedirs(os.path.dirname(cache_path))
-        with open(cache_path, "w") as f:
+        with open(cache_path, "w") as out:
             json.dump(
-                cache, f, sort_keys=True, indent=4, separators=(",", ": ")
+                cache, out, sort_keys=True, indent=4, separators=(",", ": ")
             )
 
     @classmethod
@@ -165,8 +166,9 @@ class DenovoGeneSetCollectionFactory:
         cls, cache, from_type, to_type, sort_values=False
     ):
         """
-        Recursively coerce all values of a given type in a dictionary
-        to another type.
+        Coerce the types of all values in a dictionary matching a given type.
+
+        This is done recursively.
         """
         if isinstance(cache, from_type):
             if sort_values is True:
@@ -175,7 +177,7 @@ class DenovoGeneSetCollectionFactory:
 
         assert isinstance(
             cache, dict
-        ), "expected type 'dict', got '{}'".format(type(cache))
+        ), f"expected type 'dict', got '{type(cache)}'"
 
         res = {}
         for key, value in cache.items():
@@ -188,6 +190,8 @@ class DenovoGeneSetCollectionFactory:
     @staticmethod
     def _add_genes_families(variants, persons_in_set, search_args):
         """
+        Return a map of gene symbols in variants to family IDs.
+
         For the given variants and people with a certain people group,
         produce a dictionary which maps the gene symbols of those variants
         matching the given search_args to the IDs of the families in which
@@ -200,7 +204,7 @@ class DenovoGeneSetCollectionFactory:
             for aa in variant.alt_alleles:
                 if Inheritance.denovo not in aa.inheritance_in_members:
                     continue
-                if not (set(aa.variant_in_members) & persons_in_set):
+                if not set(aa.variant_in_members) & persons_in_set:
                     continue
 
                 filter_flag = False
