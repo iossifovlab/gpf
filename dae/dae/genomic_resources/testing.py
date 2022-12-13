@@ -592,16 +592,8 @@ def build_http_test_protocol(
 
 
 @contextlib.contextmanager
-def build_s3_test_protocol(
-        root_path: pathlib.Path) -> Generator[
-            FsspecReadWriteProtocol, None, None]:
-    """Run an S3 moto server and construct fsspec genomic resource protocol.
-
-    The S3 moto server is populated with resource from filesystem GRR pointed
-    by the root_path.
-    """
-    src_proto = build_filesystem_test_protocol(root_path)
-
+def build_s3_test_server():
+    """Run an S3 moto server for testing."""
     # pylint: disable=protected-access,import-outside-toplevel
     if "AWS_SECRET_ACCESS_KEY" not in os.environ:
         os.environ["AWS_SECRET_ACCESS_KEY"] = "foo"
@@ -614,7 +606,6 @@ def build_s3_test_protocol(
     server.start()
     server_address = server._server.server_address
     endpoint_url = f"http://{server_address[0]}:{server_address[1]}"
-
     with tempfile.TemporaryDirectory("s3_test_protocol") as tmp_path:
 
         S3FileSystem.clear_instance_cache()
@@ -624,21 +615,38 @@ def build_s3_test_protocol(
         bucket_url = f"s3:/{tmp_path}"
         s3filesystem.mkdir(bucket_url, acl="public-read")
 
+        yield bucket_url, endpoint_url
+
+    server.stop()
+
+
+@contextlib.contextmanager
+def build_s3_test_protocol(root_path) -> Generator[
+        FsspecReadWriteProtocol, None, None]:
+    """Run an S3 moto server and construct fsspec genomic resource protocol.
+
+    The S3 moto server is populated with resource from filesystem GRR pointed
+    by the root_path.
+    """
+    # pylint: disable=protected-access,import-outside-toplevel
+
+    with build_s3_test_server() as (bucket_url, endpoint_url):
+
         proto = cast(
             FsspecReadWriteProtocol,
             build_fsspec_protocol(
-                str(root_path), bucket_url, endpoint_url=endpoint_url))
-        for res in src_proto.get_all_resources():
-            proto.copy_resource(res)
-        proto.filesystem.invalidate_cache()
+                str(bucket_url), bucket_url, endpoint_url=endpoint_url))
+        copy_proto_genomic_resources(
+            proto,
+            build_filesystem_test_protocol(root_path))
 
         yield proto
 
-        server.stop()
-
 
 def copy_proto_genomic_resources(
-        dest_proto: ReadWriteRepositoryProtocol,
+        dest_proto: FsspecReadWriteProtocol,
         src_proto: FsspecReadOnlyProtocol):
     for res in src_proto.get_all_resources():
         dest_proto.copy_resource(res)
+    dest_proto.build_content_file()
+    dest_proto.filesystem.invalidate_cache()

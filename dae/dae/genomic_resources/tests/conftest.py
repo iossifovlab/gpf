@@ -16,7 +16,9 @@ from dae.genomic_resources.testing import \
     build_testing_protocol, \
     range_http_process_server_generator, \
     tabix_to_resource
-from dae.testing import convert_to_tab_separated
+from dae.genomic_resources.testing import convert_to_tab_separated, \
+    setup_directories, setup_tabix, build_filesystem_test_protocol
+
 from dae.genomic_resources import build_genomic_resource_repository
 
 logger = logging.getLogger(__name__)
@@ -209,6 +211,25 @@ def content_fixture():
             "chr.fa.fai": "xxxxx\t24\t7\t10\t11\n"
         }
     }
+
+
+@pytest.fixture
+def src_proto_fixture(content_fixture, tmp_path_factory):
+    root_path = tmp_path_factory.mktemp("source_proto_fixture")
+    setup_directories(root_path, content_fixture)
+    setup_tabix(
+        root_path / "one" / "test.txt.gz",
+        """
+            #chrom  pos_begin  pos_end    c1
+            1      1          10         1.0
+            2      1          10         2.0
+            2      11         20         2.5
+            3      1          10         3.0
+            3      11         20         3.5
+        """,
+        seq_col=0, start_col=1, end_col=2)
+    proto = build_filesystem_test_protocol(root_path)
+    return proto
 
 
 @pytest.fixture
