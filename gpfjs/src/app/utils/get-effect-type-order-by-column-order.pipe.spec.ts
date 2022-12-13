@@ -1,13 +1,13 @@
 import { DeNovoData, EffectTypeRow, EffectTypeTable } from 'app/variant-reports/variant-reports';
 import { GetEffectTypeOrderByColumOrderPipe } from './get-effect-type-order-by-column-order.pipe';
 
-describe('ComparePipe', () => {
+describe('GetEffectTypeOrderByColumnOrderPipe', () => {
   it('should create an instance', () => {
     const pipe = new GetEffectTypeOrderByColumOrderPipe();
     expect(pipe).toBeTruthy();
   });
 
-  it('should get regression ids', () => {
+  it('should order by column order and return DeNovoData', () => {
     const effectTypeTable1 = new EffectTypeTable(
       [
         new EffectTypeRow('\'3\'-UTR', [

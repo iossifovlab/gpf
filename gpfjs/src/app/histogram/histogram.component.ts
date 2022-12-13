@@ -499,5 +499,4 @@ export class HistogramComponent implements OnInit, OnChanges {
       }
     };
   }
-
 }

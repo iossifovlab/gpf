@@ -3,7 +3,7 @@ import { GenotypePreview } from 'app/genotype-preview-model/genotype-preview';
 
 @Pipe({name: 'compare'})
 export class ComparePipe implements PipeTransform {
-  public transform(field: string) {
+  public transform(field: string): any {
     if (field === 'variant.location') {
       return this.locationComparator;
     } else {
