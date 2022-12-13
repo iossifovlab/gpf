@@ -26,7 +26,7 @@
     <table>
       <tr *ngFor="let item of items">
         <td>
-          <button class="add-item-button" [attr.title]="item" (click)="addItem(id, item)">{{ item }}</button>
+          <button class="add-item-button" [attr.title]="item" (click)="addItem(item)">{{ item.name }}</button>
         </td>
       </tr>
     </table>

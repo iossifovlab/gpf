@@ -73,8 +73,16 @@ export class DatasetsService {
         if (response === null) {
           return [] as DatasetPermissions[];
         }
-        return (response as object[]).map(group => DatasetPermissions.fromJson(group));
+        return (response as object[]).map(dataset => DatasetPermissions.fromJson(dataset));
       })
+    );
+  }
+
+  public getManagementDataset(datasetId: string): Observable<DatasetPermissions> {
+    const url = `${this.config.baseUrl}${this.datasetUrl}/permissions/${datasetId}`;
+
+    return this.http.get(url).pipe(
+      map((response: object) => DatasetPermissions.fromJson(response))
     );
   }
 

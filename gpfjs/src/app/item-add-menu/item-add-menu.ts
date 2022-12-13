@@ -1,6 +1,6 @@
-export class ItemAddEvent {
+export class Item {
   public constructor(
     public id: string,
-    public item: string
+    public name: string
   ) {}
 }

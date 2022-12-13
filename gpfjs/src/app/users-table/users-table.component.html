@@ -31,7 +31,6 @@
             </gpf-small-remove-button>
           </div>
           <gpf-item-add-menu
-            [id]="user.email"
             [getItems]="getGroupNamesFunction(user)"
             (addedItem)="addGroup(user, $event)"></gpf-item-add-menu>
         </div>

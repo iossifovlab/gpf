@@ -2,7 +2,7 @@ import { Component, OnInit, Input } from '@angular/core';
 import { User } from '../users/users';
 import { UsersService } from '../users/users.service';
 import { map, mergeMap, take } from 'rxjs/operators';
-import { ItemAddEvent } from 'app/item-add-menu/item-add-menu';
+import { Item } from 'app/item-add-menu/item-add-menu';
 import { UsersGroupsService } from 'app/users-groups/users-groups.service';
 import { UserGroup } from 'app/users-groups/users-groups';
 import { Observable } from 'rxjs';
@@ -34,8 +34,8 @@ export class UsersTableComponent {
     });
   }
 
-  public addGroup(user: User, event$: ItemAddEvent): void {
-    this.usersGroupsService.addUser(user.email, event$.item).pipe(
+  public addGroup(user: User, event$: Item): void {
+    this.usersGroupsService.addUser(user.email, event$.name).pipe(
       mergeMap(() => this.usersService.getUser(user.id))
     ).subscribe(updatedUser => {
       user.groups = updatedUser.groups;
@@ -43,12 +43,12 @@ export class UsersTableComponent {
     });
   }
 
-  public getGroupNamesFunction(user: User): (page: number, searchText: string) => Observable<string[]> {
-    return (page: number, searchText: string): Observable<string[]> =>
+  public getGroupNamesFunction(user: User): (page: number, searchText: string) => Observable<Item[]> {
+    return (page: number, searchText: string): Observable<Item[]> =>
       this.usersGroupsService.getGroups(page, searchText).pipe(
         map((groups: UserGroup[]) => groups
-          .map(group => group.name)
-          .filter(group => !user.groups.includes(group)))
-      );
+          .filter(group => !user.groups.includes(group.name))
+          .map(group => new Item(group.id.toString(), group.name))
+        ));
   }
 }

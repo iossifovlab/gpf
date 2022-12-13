@@ -1,7 +1,7 @@
 import { Component, EventEmitter, HostListener, Input, OnInit, Output, ViewChild } from '@angular/core';
 import { environment } from 'environments/environment';
 import { Observable } from 'rxjs';
-import { ItemAddEvent } from './item-add-menu';
+import { Item } from './item-add-menu';
 
 @Component({
   selector: 'gpf-item-add-menu',
@@ -9,14 +9,12 @@ import { ItemAddEvent } from './item-add-menu';
   styleUrls: ['./item-add-menu.component.css']
 })
 export class ItemAddMenuComponent {
-  // is id needed?
-  @Input() public id = '';
-  @Input() public getItems: (page: number, searchText: string) => Observable<string[]>;
-  @Output() public addedItem = new EventEmitter<ItemAddEvent>();
+  @Input() public getItems: (page: number, searchText: string) => Observable<Item[]>;
+  @Output() public addedItem = new EventEmitter<Item>();
 
   @ViewChild('searchInput') private searchInput: HTMLInputElement;
 
-  public items: string[] = [];
+  public items: Item[] = [];
   public showMenu = false;
   public imgPathPrefix = environment.imgPathPrefix;
   public searchText = '';
@@ -24,9 +22,9 @@ export class ItemAddMenuComponent {
   private pageCounter = 0;
   private loadingPage = false;
 
-  public addItem(id: string, item: string): void {
+  public addItem(item: Item): void {
     this.items.splice(this.items.indexOf(item), 1);
-    this.addedItem.emit(new ItemAddEvent(id, item));
+    this.addedItem.emit(item);
   }
 
   public search(value: string): void {
@@ -45,7 +43,7 @@ export class ItemAddMenuComponent {
     if (!this.loadingPage) {
       this.pageCounter++;
       this.loadingPage = true;
-      this.getItems(this.pageCounter, this.searchText).subscribe((res: string[]) => {
+      this.getItems(this.pageCounter, this.searchText).subscribe((res: Item[]) => {
         this.items = this.items.concat(res);
         this.loadingPage = false;
       });
