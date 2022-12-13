@@ -67,10 +67,10 @@ export class UsersGroupsService {
     }, options);
   }
 
-  public revokePermissionToDataset(groupName: string, datasetId: string): Observable<Dataset> {
+  public revokePermissionToDataset(groupId: number, datasetId: string): Observable<Dataset> {
     const options = { withCredentials: true };
     return this.http.post<Dataset>(this.config.baseUrl + this.groupRevokePermissionUrl, {
-      groupName: groupName,
+      groupId: groupId,
       datasetId: datasetId
     }, options);
   }

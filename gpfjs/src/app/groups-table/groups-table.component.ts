@@ -38,9 +38,9 @@ export class GroupsTableComponent {
   }
 
   public removeDataset(group: UserGroup, datasetId: string): void {
-    // this.usersGroupsService.revokePermissionToDataset(group.name, datasetId).subscribe(() => {
-    //   group.datasets = group.datasets.filter(dataset => dataset.datasetId !== datasetId);
-    // });
+    this.usersGroupsService.revokePermissionToDataset(group.id, datasetId).subscribe(() => {
+      group.datasets = group.datasets.filter(dataset => dataset.datasetId !== datasetId);
+    });
   }
 
   public addDataset(group: UserGroup, datasetEvent: Item): void {
