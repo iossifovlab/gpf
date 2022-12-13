@@ -153,6 +153,7 @@ def pytest_sessionstart(session):
 def pytest_generate_tests(metafunc):
     if "genotype_storage" in metafunc.fixturenames:
 
+        assert GENOTYPE_STORAGES is not None
         storages = GENOTYPE_STORAGES
 
         if hasattr(metafunc, "function"):
