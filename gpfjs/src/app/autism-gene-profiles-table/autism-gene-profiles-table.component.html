@@ -23,8 +23,7 @@
             (click)="handleCellClick($event, row, column)"
             (middleclick)="handleCellClick($event, row, column)">
             <span *ngIf="column.clickable !== null && row[column.id]" class="clickable">{{ row[column.id] }}</span
-            >{{ column.clickable === null ? row[column.id] : '' }}
-          </div>
+            >{{ column.clickable === null ? row[column.id] : '' }}</div>
         </ng-container>
       </div>
 
@@ -193,9 +192,7 @@
           (middleclick)="openSingleView(gene)"
           >{{ gene }}</span
         >
-        <button (click)="toggleHighlightGene(gene)" class="compare-genes-close font-weight-light" type="button">
-          ×
-        </button>
+        <button (click)="toggleHighlightGene(gene)" class="compare-genes-close font-weight-light" type="button">×</button>
       </button>
     </div>
 
