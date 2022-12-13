@@ -2,6 +2,7 @@ import { SimpleChange } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Gene, Transcript } from 'app/gene-browser/gene';
 import { SummaryAllelesArray, SummaryAllele } from 'app/gene-browser/summary-variants';
+import * as d3 from 'd3';
 import { GenePlotComponent } from './gene-plot.component';
 
 const geneMock = new Gene(
@@ -130,5 +131,46 @@ describe('GenePlotComponent', () => {
     const filteredRectTitlesOther = rectTitles.filter(item => item.textContent === alleleTitleOther);
     const filteredCircleTitlesOther = circleTitles.filter(item => item.textContent === alleleTitleOther);
     expect(filteredRectTitlesOther).toStrictEqual(filteredCircleTitlesOther);
+  });
+
+  it('should create plot with different values', () => {
+    const summaryAllelesArray = new SummaryAllelesArray(variantsArrayMock);
+    Object.defineProperty(component, 'variantsArray', {
+      value: summaryAllelesArray
+    });
+    component.ngOnChanges({ gene: new SimpleChange(null, geneMock, true) });
+    component.redraw();
+    const plot = fixture.nativeElement as HTMLElement;
+    [
+      Array.from(plot.querySelectorAll('g polygon')),
+      Array.from(plot.querySelectorAll('g rect')),
+      Array.from(plot.querySelectorAll('svg g path'))
+    ].forEach((variantType, i) => {
+      expect(variantType).toHaveLength([1, 25, 5][i]);
+    });
+    Object.defineProperty(component, 'variantsArray', {
+      value: new SummaryAllelesArray([])
+    });
+    component.ngOnChanges({ gene: new SimpleChange(null, geneMock, true) });
+    component.redraw();
+    [
+      Array.from(plot.querySelectorAll('g polygon')),
+      Array.from(plot.querySelectorAll('g rect')),
+      Array.from(plot.querySelectorAll('svg g path'))
+    ].forEach((variantType, i) => {
+      expect(variantType).toHaveLength([0, 17, 4][i]);
+    });
+  });
+
+  it('should draw transcripts', () => {
+    const summaryAllelesArray = new SummaryAllelesArray(variantsArrayMock);
+    Object.defineProperty(component, 'variantsArray', {
+      value: summaryAllelesArray
+    });
+    component.ngOnChanges({ gene: new SimpleChange(null, geneMock, true) });
+    component.redraw();
+    expect(d3.selectAll('svg g rect').attr('height')).toBe('22');
+    expect(d3.selectAll('svg g rect').attr('width')).toBe('1835');
+    expect(d3.selectAll('#svg-container svg').attr('viewBox')).toBe('0 0 2000 517');
   });
 });
