@@ -4,6 +4,7 @@ import collections
 import os
 import logging
 
+from copy import copy
 from typing import Optional, Tuple, Any, Deque, Union, Dict, Generator
 from functools import cache, cached_property
 from collections import Counter
@@ -52,9 +53,6 @@ class Line:
         score_defs: Dict[str, ScoreDef],
         ref: Optional[str] = None,
         alt: Optional[str] = None,
-        allele_index: Optional[int] = None,
-        info: Optional[pysam.VariantRecordInfo] = None,
-        info_meta: Optional[pysam.VariantHeaderMetadata] = None,
     ):
         self.chrom: str = chrom
         self.pos_begin: int = int(pos_begin)
@@ -63,19 +61,6 @@ class Line:
         self.score_defs: Dict[str, ScoreDef] = score_defs
         self.ref: Optional[str] = ref
         self.alt: Optional[str] = alt
-        # Used for support of multiallelic variants in VCF files.
-        # The allele index is None if the variant for this line
-        # is missing its ALT, i.e. its value is '.'
-        self.allele_index: Optional[int] = allele_index
-        # VCF INFO fields column
-        self.info: Optional[pysam.VariantRecordInfo] = info
-        # VCF INFO fields metadata - holds metadata for info fields
-        # such as description, type, whether the value is a tuple
-        # of multiple score values, etc.
-        self.info_meta: Optional[pysam.VariantHeaderMetadata] = info_meta
-        if self.info is not None:
-            assert self.info_meta is not None, \
-                "Cannot use INFO without providing relevant metadata."
 
     def __eq__(self, other: object):
         if isinstance(other, Line):
@@ -110,6 +95,9 @@ class Line:
     def __repr__(self):
         return str(tuple(self))
 
+    def _fetch_score_value(self, key):
+        return self.attributes[key]
+
     def get(self, key: str, default=None):
         """Universal getter function."""
         if key == "chrom":
@@ -124,26 +112,9 @@ class Line:
             return self.attributes.get(key, default)
 
     def get_score(self, score_id):
-        """Get and parse configured score from line.
-
-        Handles multiallelic scores for lines derived from a VCF file.
-        """
+        """Get and parse configured score from line."""
         key = self.score_defs[score_id].col_key
-        if self.info is not None:
-            print(list(self.info.keys()))
-            value, meta = self.info.get(key), self.info_meta.get(key)
-            if isinstance(value, tuple):
-                if meta.number == "A" and self.allele_index is not None:
-                    value = value[self.allele_index]
-                elif meta.number == "R":
-                    value = value[
-                        self.allele_index + 1
-                        if self.allele_index is not None
-                        else 0  # Get reference allele value if ALT is '.'
-                    ]
-        else:
-            value = self.attributes[key]
-
+        value = self._fetch_score_value(key)
         if score_id in self.score_defs:
             col_def = self.score_defs[score_id]
             if value in col_def.na_values:
@@ -154,6 +125,54 @@ class Line:
 
     def get_available_scores(self):
         return tuple(self.score_defs.keys())
+
+
+class VCFLine(Line):
+    """Line adapter for lines derived from a VCF file.
+
+    Implements functionality for handling multi-allelic variants
+    and INFO fields."""
+    def __init__(
+        self,
+        chrom: str,
+        pos_begin: Union[int, str],
+        pos_end: Union[int, str],
+        score_defs: Dict[str, ScoreDef],
+        ref: Optional[str] = None,
+        alt: Optional[str] = None,
+        allele_index: Optional[int] = None,
+        info: Optional[pysam.VariantRecordInfo] = None,
+        info_meta: Optional[pysam.VariantHeaderMetadata] = None,
+    ):
+        super().__init__(
+            chrom, pos_begin, pos_end, {}, score_defs, ref, alt
+        )
+        # Used for support of multiallelic variants in VCF files.
+        # The allele index is None if the variant for this line
+        # is missing its ALT, i.e. its value is '.'
+        self.allele_index: Optional[int] = allele_index
+        # VCF INFO fields column
+        self.info: Optional[pysam.VariantRecordInfo] = info
+        # VCF INFO fields metadata - holds metadata for info fields
+        # such as description, type, whether the value is a tuple
+        # of multiple score values, etc.
+        self.info_meta: Optional[pysam.VariantHeaderMetadata] = info_meta
+        if self.info is not None:
+            assert self.info_meta is not None, \
+                "Cannot use INFO without providing relevant metadata."
+
+    def _fetch_score_value(self, key):
+        value, meta = self.info.get(key), self.info_meta.get(key)
+        if isinstance(value, tuple):
+            if meta.number == "A" and self.allele_index is not None:
+                value = value[self.allele_index]
+            elif meta.number == "R":
+                value = value[
+                    self.allele_index + 1
+                    if self.allele_index is not None
+                    else 0  # Get reference allele value if ALT is '.'
+                ]
+        return value
 
 
 class LineBuffer:
@@ -678,10 +697,9 @@ class FlatGenomicPositionTable(GenomicPositionTable):
                     continue
                 fchrom = self.chrom_map[chrom]
                 for line in self.records_by_chr[fchrom]:
-                    yield Line(
-                        chrom, line.pos_begin, line.pos_end,
-                        line.attributes, self.score_definitions
-                    )
+                    transformed_line = copy(line)
+                    transformed_line.chrom = chrom
+                    yield transformed_line
             else:
                 for line in self.records_by_chr[chrom]:
                     yield line
@@ -699,10 +717,9 @@ class FlatGenomicPositionTable(GenomicPositionTable):
             if pos_end and pos_end < line.pos_begin:
                 continue
             if self.chrom_map:
-                yield Line(
-                    chrom, line.pos_begin, line.pos_end,
-                    line.attributes, self.score_definitions
-                )
+                transformed_line = copy(line)
+                transformed_line.chrom = chrom
+                yield transformed_line
             else:
                 yield line
 
@@ -767,14 +784,9 @@ class TabixGenomicPositionTable(GenomicPositionTable):
         rchrom = self._map_result_chrom(line.chrom)
         if rchrom is None:
             return None
-        return Line(
-            rchrom, line.pos_begin, line.pos_end,
-            line.attributes, line.score_defs,
-            allele_index=line.allele_index,
-            ref=line.ref, alt=line.alt,
-            info=line.info,
-            info_meta=line.info_meta
-        )
+        line_copy = copy(line)
+        line_copy.chrom = rchrom
+        return line_copy
 
     def get_all_records(self):
         # pylint: disable=no-member
@@ -1003,8 +1015,8 @@ class VCFGenomicPositionTable(TabixGenomicPositionTable):
         self.buffer.clear()
         for raw_line in self.variants_file.fetch(*args):
             for allele_index, alt in enumerate(raw_line.alts or [None]):
-                yield Line(
-                    raw_line.contig, raw_line.pos, raw_line.pos, {},
+                yield VCFLine(
+                    raw_line.contig, raw_line.pos, raw_line.pos,
                     self.score_definitions,
                     allele_index=allele_index if alt is not None else None,
                     ref=raw_line.ref,
