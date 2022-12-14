@@ -47,6 +47,7 @@ class InmemoryGenomicPositionTable(GenomicPositionTable):
         col_number = len(self.header) if self.header else None
 
         self._set_special_column_indexes()
+        self._validate_scoredefs()
 
         other_indices, other_columns = self._get_other_columns()
 

@@ -45,6 +45,18 @@ class VCFGenomicPositionTable(TabixGenomicPositionTable):
                 ) for key, value in self.pysam_file.header.info.items()
             }
 
+    def _validate_scoredefs(self):
+        if "scores" not in self.definition:
+            return None
+        for score in self.definition.scores:
+            if "name" in score:
+                assert score.name in self.pysam_file.header.info
+            elif "index" in score:
+                assert 0 <= score.index < len(self.pysam_file.header.info)
+            else:
+                raise AssertionError("Either an index or name must"
+                                        " be configured for scores!")
+
     def _get_index_prop_for_special_column(self, key):
         return None
 

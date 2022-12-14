@@ -144,6 +144,37 @@ chr1   30   .  A   T,G,C   .    .       A=3;B=31;C=c31,c32,c33,c34;D=d31,d32,d33
     return proto.get_resource("tmp")
 
 
+@pytest.fixture
+def vcf_res_misconfigured_score(tmp_path_factory):
+    root_path = tmp_path_factory.mktemp("vcf")
+    setup_directories(
+        root_path / "grr",
+        {
+            "tmp": {
+                "genomic_resource.yaml": textwrap.dedent("""
+                    tabix_table:
+                        filename: data.vcf.gz
+                        scores:
+                        - id: A
+                          name: NO_SUCH_SCORE_IN_HEADER
+                          type: float
+                """)
+            }
+        }
+    )
+    setup_vcf(
+        root_path / "grr" / "tmp" / "data.vcf.gz",
+        textwrap.dedent("""
+##fileformat=VCFv4.1
+##INFO=<ID=A,Number=1,Type=Integer,Description="Score A">
+#CHROM POS ID REF ALT QUAL FILTER  INFO
+chr1   5   .  A   T   .    .       A=1
+    """)
+    )
+    proto = build_fsspec_protocol("testing", str(root_path / "grr"))
+    return proto.get_resource("tmp")
+
+
 def test_default_setup():
     res = build_test_resource({
         "genomic_resource.yaml": """
@@ -517,7 +548,7 @@ def test_no_header():
                     index: 2
                 scores:
                 - id: c2
-                  name: c2
+                  index: 3
                   type: float""",
         "data.mem": convert_to_tab_separated("""
             1   10  12  3.14
@@ -543,7 +574,7 @@ def test_header_in_config():
                     name: pos2
                 scores:
                 - id: c2
-                  name: c2
+                  name: score
                   type: float""",
         "data.mem": convert_to_tab_separated("""
             1   10  12  3.14
@@ -1817,3 +1848,81 @@ def test_score_definition_list_header_tabix(tmp_path, tabix_file):
         assert line.ref == "A"
         assert line.alt == "G"
         assert line.get_score("piscore") == 3.14
+
+
+def test_forbid_column_names_in_scores_when_no_header_configured():
+    res = build_test_resource({
+        "genomic_resource.yaml": """
+            table:
+                header_mode: none
+                filename: data.mem
+                chrom:
+                    index: 0
+                pos_begin:
+                    index: 1
+                scores:
+                - id: c2
+                  name: this_doesnt_make_sense
+                  type: float""",
+        "data.mem": convert_to_tab_separated("""
+            1   10  12  3.14
+            """)
+    })
+    with pytest.raises(AssertionError) as excinfo:
+        tab = build_genomic_position_table(res, res.config["table"])
+        tab.open()
+    assert str(excinfo.value) == ("Cannot configure score columns by name"
+                                  " when header_mode is 'none'!")
+
+
+def test_raise_error_when_missing_column_name_in_header():
+    res = build_test_resource({
+        "genomic_resource.yaml": """
+            table:
+                filename: data.mem
+                pos_begin:
+                    name: pos2
+                scores:
+                - id: c2
+                  name: this_doesnt_exist_in_header
+                  type: float""",
+        "data.mem": convert_to_tab_separated(
+            """
+            chrom pos pos2 c2
+            1     10  12   3.14
+            """)
+    })
+    with pytest.raises(AssertionError):
+        tab = build_genomic_position_table(res, res.config["table"])
+        tab.open()
+
+
+def test_raise_error_when_missing_column_name_in_header_as_list():
+    res = build_test_resource({
+        "genomic_resource.yaml": """
+            table:
+                header_mode: list
+                header: ["chrom", "pos", "pos2", "score"]
+                filename: data.mem
+                pos_begin:
+                    name: pos2
+                scores:
+                - id: c2
+                  name: this_doesnt_exist_in_header
+                  type: float""",
+        "data.mem": convert_to_tab_separated("""
+            1   10  12  3.14
+        """)
+    })
+    with pytest.raises(AssertionError):
+        tab = build_genomic_position_table(res, res.config["table"])
+        tab.open()
+
+
+def test_vcf_check_for_missing_score_columns(vcf_res_misconfigured_score):
+    with pytest.raises(AssertionError):
+        tab = build_genomic_position_table(
+            vcf_res_misconfigured_score,
+            vcf_res_misconfigured_score.config["tabix_table"]
+        )
+        tab.open()
