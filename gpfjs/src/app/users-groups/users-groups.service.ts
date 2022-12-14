@@ -5,7 +5,6 @@ import { Dataset } from '../datasets/datasets';
 import { ConfigService } from '../config/config.service';
 import { map } from 'rxjs/operators';
 import { Observable } from 'rxjs';
-import { User } from 'app/users/users';
 
 @Injectable()
 export class UsersGroupsService {
@@ -22,7 +21,7 @@ export class UsersGroupsService {
     const options = { withCredentials: true };
 
     return this.http.get(this.config.baseUrl + this.groupsUrl, options)
-      .pipe(map((response: any) => UserGroup.fromJsonArray(response)));
+      .pipe(map((response: object[]) => UserGroup.fromJsonArray(response)));
   }
 
   public getGroups(page: number, searchTerm: string): Observable<UserGroup[]> {
