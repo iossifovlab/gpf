@@ -93,8 +93,8 @@ export class DatasetsComponent implements OnInit, OnDestroy {
       const firstTool = this.findFirstTool(this.selectedDataset);
       if (firstTool) {
         this.router.navigate(
-          ['/', 'datasets', this.selectedDataset.id, this.findFirstTool(this.selectedDataset),
-            { skipLocationChange: true }]
+          ['/', 'datasets', this.selectedDataset.id, this.findFirstTool(this.selectedDataset)],
+            {skipLocationChange: true}
         );
       } else {
         this.router.navigate(['/', 'datasets', this.selectedDataset.id]);
