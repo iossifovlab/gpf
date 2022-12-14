@@ -7,6 +7,7 @@ from .line import VCFLine
 from .table import ScoreDef
 from .table_tabix import TabixGenomicPositionTable
 
+
 class VCFGenomicPositionTable(TabixGenomicPositionTable):
     """Represents a VCF file genome position table."""
 
@@ -37,7 +38,7 @@ class VCFGenomicPositionTable(TabixGenomicPositionTable):
                 key: ScoreDef(
                     key,
                     value.description or "",
-                    self.VCF_TYPE_CONVERSION_MAP[value.type],
+                    self.VCF_TYPE_CONVERSION_MAP[value.type],  # type: ignore
                     converter if value.number not in (1, "A", "R") else None,
                     tuple(),
                     None,
@@ -46,16 +47,16 @@ class VCFGenomicPositionTable(TabixGenomicPositionTable):
             }
 
     def _validate_scoredefs(self):
-        if "scores" not in self.definition:
-            return None
-        for score in self.definition.scores:
-            if "name" in score:
-                assert score.name in self.pysam_file.header.info
-            elif "index" in score:
-                assert 0 <= score.index < len(self.pysam_file.header.info)
-            else:
-                raise AssertionError("Either an index or name must"
-                                        " be configured for scores!")
+        if "scores" in self.definition:
+            assert isinstance(self.pysam_file, pysam.VariantFile)
+            for score in self.definition.scores:
+                if "name" in score:
+                    assert score.name in self.pysam_file.header.info
+                elif "index" in score:
+                    assert 0 <= score.index < len(self.pysam_file.header.info)
+                else:
+                    raise AssertionError("Either an index or name must"
+                                         " be configured for scores!")
 
     def _get_index_prop_for_special_column(self, key):
         return None

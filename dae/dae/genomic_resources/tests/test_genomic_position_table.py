@@ -109,7 +109,6 @@ chr1   5   .  A   T   .    .       A=1
     return proto.get_resource("tmp")
 
 
-
 @pytest.fixture
 def vcf_res_multiallelic(tmp_path_factory):
     root_path = tmp_path_factory.mktemp("vcf")
@@ -833,7 +832,9 @@ def test_tabix_table_should_use_sequential_seek_forward(tabix_table):
     assert not table._should_use_sequential_seek_forward("1", 3)
 
 
-def test_regions_tabix_table_should_use_sequential_seek_forward(regions_tabix_table):
+def test_regions_tabix_table_should_use_sequential_seek_forward(
+    regions_tabix_table
+):
     table = regions_tabix_table
     assert table.get_column_names() == ("chrom", "pos_begin", "pos_end", "c1")
 
@@ -1143,6 +1144,7 @@ def test_buggy_fitcons_e67(tmp_path, tabix_file):
             ("5", 180739426, 180742735, "0.065122"),
         ]
 
+
 @pytest.mark.parametrize("jump_threshold,expected", [
     ("none", 0),
     ("1", 1),
@@ -1331,19 +1333,22 @@ def test_vcf_get_info_fields(vcf_res):
         assert results[1][:3] == ("chr1", 15, 15)
         assert results[2][:3] == ("chr1", 30, 30)
 
-        expected = {
-            0: {"A": 1, "B": None, "C": ("c11", "c12"), "D": ("d11",)},
-            1: {"A": 2, "B": 21, "C": ("c21",), "D": ("d21", "d22")},
-            2: {"A": 3, "B": 31, "C": ("c21",), "D": ("d31", "d32")},
-        }
-        for i, result in enumerate(results):
+        expected_all = [
+            {"A": 1, "B": None, "C": ("c11", "c12"), "D": ("d11",)},
+            {"A": 2, "B": 21, "C": ("c21",), "D": ("d21", "d22")},
+            {"A": 3, "B": 31, "C": ("c21",), "D": ("d31", "d32")},
+        ]
+        for expected, result in zip(expected_all, results):
             for score in "A", "B", "C", "D":
                 assert result.info is not None
-                assert result.info.get(score) == expected[i][score]
+                assert result.info.get(score) == \
+                    expected[score]  # type: ignore
 
 
 def test_vcf_jump_ahead_optimization_use_sequential(vcf_res):
     """
+    Jump-ahead optimization test, use sequential case.
+
     First fetch gives us the following lines in the buffer:
     # chr1 5 5
     # chr1 15 15
@@ -1373,6 +1378,8 @@ def test_vcf_jump_ahead_optimization_use_sequential(vcf_res):
 
 def test_vcf_jump_ahead_optimization_use_jump(vcf_res):
     """
+    Jump-ahead optimization test, use jump case.
+
     Same as previous test, but the jump threshold is now set to 5
     Distance between last line in buffer and requested region is:
     # (20 - 15) == 5 == jump_threshold
@@ -1420,10 +1427,9 @@ def test_vcf_multiallelic(vcf_res_multiallelic):
             ("chr1", 30, 30, 2),
         )
 
+
 def test_vcf_multiallelic_region(vcf_res_multiallelic):
-    """
-    Same as previous test, but for a given region.
-    """
+    """Same as previous test, but for a given region."""
     with build_genomic_position_table(
         vcf_res_multiallelic,
         vcf_res_multiallelic.config["tabix_table"]
@@ -1455,11 +1461,11 @@ def test_vcf_multiallelic_info_fields(vcf_res_multiallelic):
         for line in tab.get_all_records():
             results.append(
                 (*line[:3],
-                line.allele_index,
-                line.get("A"),
-                line.get("B"),
-                line.get("C"),
-                line.get("D"))
+                 line.allele_index,
+                 line.get("A"),
+                 line.get("B"),
+                 line.get("C"),
+                 line.get("D"))
             )
 
         # chrom start stop allele_index A B C D
@@ -1576,11 +1582,8 @@ def test_line_score_value_parsing(tmp_path, tabix_file):
         res, "data.bgz")
 
     with build_genomic_position_table(res, res.config["tabix_table"]) as tab:
-        assert list(map(lambda l: l.get_score("c2"), tab.get_all_records())) == [
-            3.14,
-            4.14,
-            5.14,
-        ]
+        assert list(map(lambda l: l.get_score("c2"),
+                        tab.get_all_records())) == [3.14, 4.14, 5.14]
 
 
 def test_line_score_na_values(tmp_path, tabix_file):
@@ -1805,7 +1808,6 @@ def test_score_definition_via_index_headerless_tabix(tmp_path, tabix_file):
         assert "piscore" in tab.score_definitions
         assert line.get_available_scores() == ("piscore",)
         assert line.get_score("piscore") == 3.14
-
 
 
 def test_score_definition_list_header_tabix(tmp_path, tabix_file):

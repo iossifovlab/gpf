@@ -5,6 +5,7 @@ import pysam  # type: ignore
 
 from .table import ScoreDef
 
+
 class Line:
     """Represents a line read from a genomic position table.
 

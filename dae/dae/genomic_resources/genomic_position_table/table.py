@@ -118,22 +118,22 @@ class GenomicPositionTable(abc.ABC):
         return scores
 
     def _validate_scoredefs(self):
-        if "scores" not in self.definition:
-            return None
-        if self.header_mode == "none":
-            assert all("name" not in score
-                    for score in self.definition.scores), \
-                ("Cannot configure score columns by"
-                " name when header_mode is 'none'!")
-        else:
-            for score in self.definition.scores:
-                if "name" in score:
-                    assert score.name in self.header
-                elif "index" in score:
-                    assert 0 <= score.index < len(self.header)
-                else:
-                    raise AssertionError("Either an index or name must"
-                                         " be configured for scores!")
+        if "scores" in self.definition:
+            if self.header_mode == "none":
+                assert all("name" not in score
+                           for score in self.definition.scores), \
+                    ("Cannot configure score columns by"
+                     " name when header_mode is 'none'!")
+            else:
+                assert self.header is not None
+                for score in self.definition.scores:
+                    if "name" in score:
+                        assert score.name in self.header
+                    elif "index" in score:
+                        assert 0 <= score.index < len(self.header)
+                    else:
+                        raise AssertionError("Either an index or name must"
+                                             " be configured for scores!")
 
     def _generate_scoredefs(self):
         return GenomicPositionTable._parse_scoredef_config(self.definition) \

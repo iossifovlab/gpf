@@ -30,7 +30,8 @@ def build_genomic_position_table(
     table_fmt = table_definition.get("format", default_format)
 
     if table_fmt in ("mem", "csv", "tsv"):
-        return InmemoryGenomicPositionTable(resource, table_definition, table_fmt)
+        return InmemoryGenomicPositionTable(resource, table_definition,
+                                            table_fmt)
     if table_fmt == "tabix":
         return TabixGenomicPositionTable(resource, table_definition)
     if table_fmt == "vcf_info":
