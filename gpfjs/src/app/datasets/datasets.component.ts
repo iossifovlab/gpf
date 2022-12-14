@@ -65,7 +65,7 @@ export class DatasetsComponent implements OnInit, OnDestroy {
         this.datasetsService.reloadSelectedDataset(true);
       }),
       this.datasetsService.getPermissionDeniedPrompt().subscribe(aprompt => {
-        this.permissionDeniedPrompt = aprompt as string;
+        this.permissionDeniedPrompt = aprompt;
       }),
     );
   }
@@ -92,7 +92,10 @@ export class DatasetsComponent implements OnInit, OnDestroy {
     if (!this.isToolSelected()) {
       const firstTool = this.findFirstTool(this.selectedDataset);
       if (firstTool) {
-        this.router.navigate(['/', 'datasets', this.selectedDataset.id, this.findFirstTool(this.selectedDataset)]);
+        this.router.navigate(
+          ['/', 'datasets', this.selectedDataset.id, this.findFirstTool(this.selectedDataset)],
+          {skipLocationChange: true}
+        );
       } else {
         this.router.navigate(['/', 'datasets', this.selectedDataset.id]);
       }
@@ -109,27 +112,27 @@ export class DatasetsComponent implements OnInit, OnDestroy {
   private isToolEnabled(dataset: Dataset, toolName: string): boolean {
     let result: boolean;
     switch (toolName) {
-    case 'dataset-description':
-      result = dataset.description !== undefined;
-      break;
-    case 'dataset-statistics':
-      result = dataset.commonReport.enabled;
-      break;
-    case 'genotype-browser':
-      result = Boolean(dataset.genotypeBrowser && (dataset.genotypeBrowserConfig !== undefined) !== false);
-      break;
-    case 'phenotype-browser':
-      result = dataset.phenotypeBrowser;
-      break;
-    case 'phenotype-tool':
-      result = dataset.phenotypeTool;
-      break;
-    case 'enrichment-tool':
-      result = dataset.enrichmentTool;
-      break;
-    case 'gene-browser':
-      result = dataset.geneBrowser.enabled;
-      break;
+      case 'dataset-description':
+        result = dataset.description !== undefined;
+        break;
+      case 'dataset-statistics':
+        result = dataset.commonReport.enabled;
+        break;
+      case 'genotype-browser':
+        result = Boolean(dataset.genotypeBrowser && (dataset.genotypeBrowserConfig !== undefined) !== false);
+        break;
+      case 'phenotype-browser':
+        result = dataset.phenotypeBrowser;
+        break;
+      case 'phenotype-tool':
+        result = dataset.phenotypeTool;
+        break;
+      case 'enrichment-tool':
+        result = dataset.enrichmentTool;
+        break;
+      case 'gene-browser':
+        result = dataset.geneBrowser.enabled;
+        break;
     }
 
     return result;
