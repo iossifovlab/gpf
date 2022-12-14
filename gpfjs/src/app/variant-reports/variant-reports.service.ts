@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams, HttpResponse } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams, HttpResponse } from '@angular/common/http';
 import { ConfigService } from '../config/config.service';
 import { Observable, Subscription } from 'rxjs';
 import { VariantReport } from './variant-reports';
@@ -7,6 +7,7 @@ import { environment } from '../../environments/environment';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { map } from 'rxjs/operators';
 import { CookieService } from 'ngx-cookie-service';
+import { downloadBlobResponse } from 'app/utils/blob-download';
 
 @Injectable()
 export class VariantReportsService {
@@ -14,6 +15,7 @@ export class VariantReportsService {
   private readonly downloadUrl = 'common_reports/families_data/';
   private readonly familiesUrl = 'common_reports/family_counters';
   private readonly tagsUrl = 'families/tags';
+  private readonly pedigreeDownloadUrl = 'common_reports/family_counters/download';
 
   public constructor(
     private http: HttpClient,
@@ -50,6 +52,13 @@ export class VariantReportsService {
     return this.http.get(`${this.config.baseUrl}${this.tagsUrl}`, options);
   }
 
+  public downloadPedigreeCount(json): Observable<HttpResponse<Blob>> {
+    return this.http.post(`${environment.apiPath}${this.pedigreeDownloadUrl}`,
+      json, {
+        observe: 'response', headers: new HttpHeaders({ 'Content-Type': 'application/json'}), responseType: 'blob'
+      });
+  }
+
   public async getDownloadLinkPedigreeTags(studyId: string, tags: string): Promise<Subscription> {
     let searchParams: HttpParams;
 
@@ -62,21 +71,10 @@ export class VariantReportsService {
       'Content-Type': 'application/json'
     };
 
-    const options = { headers: headers, withCredentials: true, params: searchParams };
-    return this.http.get(`${this.config.baseUrl}${this.downloadUrl}${studyId}`, { ...options, responseType: 'blob' })
-      .subscribe(async res => {
-        const a = document.createElement('a');
-        a.download = 'families.ped';
-        if (tags) {
-          a.href = URL.createObjectURL(res);
-          const text = await res.text();
-          if (text && text !== ' ' && text !== '\n') {
-            a.click();
-          }
-        } else {
-          a.href = this.getDownloadLink();
-          a.click();
-        }
+    return this.http.get(`${this.config.baseUrl}${this.downloadUrl}${studyId}`,
+      { headers: headers, withCredentials: true, params: searchParams, observe: 'response', responseType: 'blob'})
+      .subscribe(res => {
+        downloadBlobResponse(res, 'families.ped');
       });
   }
 }
