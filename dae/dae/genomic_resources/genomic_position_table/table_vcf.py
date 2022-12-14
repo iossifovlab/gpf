@@ -21,13 +21,13 @@ class VCFGenomicPositionTable(TabixGenomicPositionTable):
         "Flag": "bool",
     }
 
-    def _open_variants_file(self):
+    def _open_pysam_file(self):
         return self.genomic_resource.open_vcf_file(self.definition.filename)
 
     def open(self):
         super().open()
-        assert isinstance(self.variants_file, pysam.VariantFile)
-        if "scores" not in self.definition and self.variants_file is not None:
+        assert isinstance(self.pysam_file, pysam.VariantFile)
+        if "scores" not in self.definition and self.pysam_file is not None:
             def converter(val):
                 try:
                     return ",".join(map(str, val))
@@ -42,7 +42,7 @@ class VCFGenomicPositionTable(TabixGenomicPositionTable):
                     tuple(),
                     None,
                     None
-                ) for key, value in self.variants_file.header.info.items()
+                ) for key, value in self.pysam_file.header.info.items()
             }
 
     def _get_index_prop_for_special_column(self, key):
@@ -53,14 +53,14 @@ class VCFGenomicPositionTable(TabixGenomicPositionTable):
 
     @cache
     def get_file_chromosomes(self) -> List[str]:
-        assert isinstance(self.variants_file, pysam.VariantFile)
-        return list(map(str, self.variants_file.header.contigs))
+        assert isinstance(self.pysam_file, pysam.VariantFile)
+        return list(map(str, self.pysam_file.header.contigs))
 
     def get_line_iterator(self, *args):
-        assert isinstance(self.variants_file, pysam.VariantFile)
+        assert isinstance(self.pysam_file, pysam.VariantFile)
         self.stats["tabix fetch"] += 1
         self.buffer.clear()
-        for raw_line in self.variants_file.fetch(*args):
+        for raw_line in self.pysam_file.fetch(*args):
             for allele_index, alt in enumerate(raw_line.alts or [None]):
                 assert raw_line.ref is not None
                 yield VCFLine(

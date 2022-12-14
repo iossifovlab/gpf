@@ -2,6 +2,7 @@
 
 import textwrap
 import pytest
+# pylint: disable=no-member
 import pysam
 
 from dae.genomic_resources.genomic_position_table import \

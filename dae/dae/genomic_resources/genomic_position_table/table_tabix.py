@@ -36,26 +36,26 @@ class TabixGenomicPositionTable(GenomicPositionTable):
         self.buffer = LineBuffer()
         self.stats: Counter = Counter()
         # pylint: disable=no-member
-        self.variants_file: Optional[PysamFile] = None
+        self.pysam_file: Optional[PysamFile] = None
         self.line_iterator = None
 
-    def _open_variants_file(self):
+    def _open_pysam_file(self):
         return self.genomic_resource.open_tabix_file(self.definition.filename)
 
     def open(self):
-        self.variants_file = self._open_variants_file()
+        self.pysam_file = self._open_pysam_file()
         if self.header_mode == "file":
             self.header = self._get_header()
         self._set_special_column_indexes()
         self._build_chrom_mapping()
 
     def _get_header(self):
-        assert isinstance(self.variants_file, pysam.TabixFile)
-        return tuple(self.variants_file.header[-1].strip("#").split("\t"))
+        assert isinstance(self.pysam_file, pysam.TabixFile)
+        return tuple(self.pysam_file.header[-1].strip("#").split("\t"))
 
     def get_file_chromosomes(self) -> List[str]:
-        assert isinstance(self.variants_file, pysam.TabixFile)
-        return self.variants_file.contigs
+        assert isinstance(self.pysam_file, pysam.TabixFile)
+        return self.pysam_file.contigs
 
     def _map_file_chrom(self, chrom: str) -> str:
         """Transfrom chromosome name to the chromosomes from score file."""
@@ -227,7 +227,7 @@ class TabixGenomicPositionTable(GenomicPositionTable):
 
     def get_line_iterator(self, chrom=None, pos_begin=None):
         """Extract raw lines and wrap them in our Line adapter."""
-        assert isinstance(self.variants_file, pysam.TabixFile)
+        assert isinstance(self.pysam_file, pysam.TabixFile)
 
         self.stats["tabix fetch"] += 1
         self.buffer.clear()
@@ -235,7 +235,7 @@ class TabixGenomicPositionTable(GenomicPositionTable):
         other_indices, other_columns = self._get_other_columns()
 
         # Yes, the argument for the chromosome/contig is called "reference".
-        for raw in self.variants_file.fetch(
+        for raw in self.pysam_file.fetch(
             reference=chrom, start=pos_begin, parser=pysam.asTuple()
         ):
             if other_indices and other_columns:
@@ -258,5 +258,5 @@ class TabixGenomicPositionTable(GenomicPositionTable):
             )
 
     def close(self):
-        if self.variants_file is not None:
-            self.variants_file.close()
+        if self.pysam_file is not None:
+            self.pysam_file.close()
