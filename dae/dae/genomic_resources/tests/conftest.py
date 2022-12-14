@@ -15,9 +15,13 @@ from dae.genomic_resources.fsspec_protocol import \
 from dae.genomic_resources.testing import \
     build_testing_protocol, \
     range_http_process_server_generator, \
-    tabix_to_resource
+    build_filesystem_test_protocol
 from dae.genomic_resources.testing import convert_to_tab_separated, \
-    setup_directories, setup_tabix, build_filesystem_test_protocol
+    setup_directories, setup_tabix
+from dae.genomic_resources.testing import \
+    s3_test_protocol, \
+    s3_process_test_server, \
+    copy_proto_genomic_resources
 
 from dae.genomic_resources import build_genomic_resource_repository
 
@@ -173,7 +177,7 @@ def resource_builder(proto_builder, embedded_proto):
     return builder
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def content_fixture():
     demo_gtf_content = "TP53\tchr3\t300\t200"
     return {
@@ -232,54 +236,30 @@ def src_proto_fixture(content_fixture, tmp_path_factory):
     return proto
 
 
-@pytest.fixture
-def fsspec_proto(proto_builder, embedded_proto, content_fixture, tabix_file):
-
-    def builder(
-            scheme="file", proto_id="testing"):
-
-        src_proto = embedded_proto(content_fixture)
-        res = src_proto.get_resource("one")
-        tabix_to_resource(
-            tabix_file(
-                """
-                    #chrom  pos_begin  pos_end    c1
-                    1      1          10         1.0
-                    2      1          10         2.0
-                    2      11         20         2.5
-                    3      1          10         3.0
-                    3      11         20         3.5
-                """,
-                seq_col=0, start_col=1, end_col=2),
-            res,
-            filename="test.txt.gz")
-
-        proto = proto_builder(
-            src_proto, scheme=scheme, proto_id=proto_id)
-
-        return proto
-
-    return builder
+@pytest.fixture(scope="module")
+def s3_server_fixture():
+    with s3_process_test_server() as endpoint_url:
+        yield endpoint_url
 
 
-@pytest.fixture
-def fsspec_repo(fsspec_proto):
+@pytest.fixture(params=["file", "s3"])
+def rw_fsspec_proto(
+        request, content_fixture, tmp_path_factory, s3_server_fixture):
 
-    def builder(scheme, repo_id="testing"):
-        proto = fsspec_proto(
-            scheme, proto_id=repo_id)
-        repo = GenomicResourceProtocolRepo(proto)
-        return repo
+    root_path = tmp_path_factory.mktemp("rw_fsspec_proto")
+    setup_directories(root_path, content_fixture)
 
-    return builder
+    scheme = request.param
+    if scheme == "file":
+        yield build_filesystem_test_protocol(root_path)
+        return
+    if scheme == "s3":
+        proto = s3_test_protocol(s3_server_fixture)
+        copy_proto_genomic_resources(
+            proto,
+            build_filesystem_test_protocol(root_path))
+        yield proto
+        return
 
+    raise ValueError(f"unexpected protocol scheme: <{scheme}>")
 
-@pytest.fixture
-def repo_builder(proto_builder, embedded_proto):
-
-    def builder(content, scheme="file", repo_id="testing"):
-        src_proto = embedded_proto(content=content)
-        proto = proto_builder(src_proto, scheme=scheme, proto_id=repo_id)
-        return GenomicResourceProtocolRepo(proto)
-
-    return builder

@@ -1,12 +1,16 @@
 # pylint: disable=W0621,C0114,C0116,C0415,W0212,W0613,C0302,C0115,W0102,W0603
 import os
 import textwrap
+import contextlib
+
+import requests
 import pytest
 
 from dae.genomic_resources.testing import setup_tabix, \
     build_inmemory_test_protocol, build_inmemory_test_resource, \
     setup_directories, build_filesystem_test_resource, \
-    build_http_test_protocol, build_s3_test_protocol
+    build_http_test_protocol, build_s3_test_protocol, \
+    process_server, s3_threaded_test_server
 
 
 @pytest.fixture(scope="session")
@@ -171,3 +175,27 @@ def test_build_s3_test_proto(np_score_directory):
     with build_s3_test_protocol(np_score_directory) as proto:
         res = proto.get_resource("")
         assert res.get_type() == "np_score"
+
+
+def test_process_server_simple():
+    @contextlib.contextmanager
+    def server_manager():
+
+        yield "started"
+
+    with process_server(server_manager()) as start_message:
+        assert start_message == "started"
+
+
+def test_s3_threaded_server_simple():
+    with s3_threaded_test_server() as endpoint_url:
+        response = requests.get(endpoint_url, timeout=1.0)
+        assert response.status_code == 200
+
+    with s3_threaded_test_server() as endpoint_url:
+        response = requests.get(endpoint_url, timeout=1.0)
+        assert response.status_code == 200
+
+    with s3_threaded_test_server() as endpoint_url:
+        response = requests.get(endpoint_url, timeout=1.0)
+        assert response.status_code == 200

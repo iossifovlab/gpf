@@ -7,8 +7,9 @@ import pathlib
 import logging
 import threading
 import tempfile
-from typing import Any, Dict, Union, cast, Optional, Generator
-from multiprocessing import Queue, Process
+from typing import Any, Dict, Union, cast, Optional, Generator, \
+    Tuple, ContextManager
+import multiprocessing as mp
 
 from http.server import HTTPServer  # ThreadingHTTPServer
 
@@ -441,7 +442,7 @@ def range_http_thread_server_generator(directory):
 
     finally:
         time.sleep(0.1)
-        logger.info("shutting down HTT range server %s", server_address)
+        logger.info("shutting down HTTP range server %s", server_address)
         httpd.socket.close()
         httpd.shutdown()
         server_thread.join()
@@ -473,13 +474,13 @@ def range_http_process_server_generator(directory):
                     break
         finally:
             time.sleep(0.1)
-            logger.info("shutting down HTT range server %s", server_address)
+            logger.info("shutting down HTTP range server %s", server_address)
             httpd.socket.close()
             httpd.shutdown()
             server_thread.join()
 
-    queue: Queue = Queue()
-    proc = Process(target=runner, args=(queue, ))
+    queue: mp.Queue = mp.Queue()
+    proc = mp.Process(target=runner, args=(queue, ))
     proc.start()
     # wait for server address
     server_address = queue.get()
@@ -487,6 +488,8 @@ def range_http_process_server_generator(directory):
 
     # stop the server process
     queue.put("stop")
+    queue.close()
+    proc.join()
 
 
 @contextlib.contextmanager
@@ -494,130 +497,279 @@ def range_http_serve(directory):
     yield from range_http_process_server_generator(directory=directory)
 
 
-# @contextlib.contextmanager
-# def build_http_test_protocol(
-#         root_path: pathlib.Path) -> Generator[
-#             FsspecReadOnlyProtocol, None, None]:
-#     """Run an HTTP range server and construct genomic resource protocol.
-
-#     The HTTP range server is used to serve directory pointed by root_path.
-#     This directory should be a valid filesystem genomic resource repository.
-#     """
-#     # pylint: disable=import-outside-toplevel
-#     from RangeHTTPServer import RangeRequestHandler  # type: ignore
-
-#     def runner(queue):
-#         handler_class = partial(
-#             RangeRequestHandler, directory=str(root_path))
-#         handler_class.protocol_version = "HTTP/1.0"  # type: ignore
-#         httpd = HTTPServer(("", 0), handler_class)
-#         try:
-#             server_address = httpd.server_address
-#             queue.put(f"http://{server_address[0]}:{server_address[1]}")
-#             logger.info(
-#                 "HTTP range server at %s serving %s",
-#                 server_address, root_path)
-#             server_thread = threading.Thread(target=httpd.serve_forever)
-#             server_thread.daemon = True
-#             server_thread.start()
-
-#             while 1:
-#                 command = queue.get(timeout=5.0)
-#                 if command == "stop":
-#                     break
-#         finally:
-#             time.sleep(0.1)
-#             logger.info("shutting down HTT range server %s", server_address)
-#             httpd.socket.close()
-#             httpd.shutdown()
-#             server_thread.join()
-
-#     build_filesystem_test_protocol(root_path)
-
-#     queue: Queue = Queue()
-#     proc = Process(target=runner, args=(queue, ))
-#     proc.start()
-#     # wait for server address
-#     server_address = queue.get(timeout=0.5)
-#     proto = cast(
-#         FsspecReadOnlyProtocol,
-#         build_fsspec_protocol(str(root_path), server_address))
-
-#     yield proto
-
-#     # stop the server process
-#     queue.put("stop")
-
-
 @contextlib.contextmanager
 def build_http_test_protocol(
         root_path: pathlib.Path) -> Generator[
             FsspecReadOnlyProtocol, None, None]:
-    """Run an HTTP range server and construct fsspec genomic resource protocol.
+    """Run an HTTP range server and construct genomic resource protocol.
 
     The HTTP range server is used to serve directory pointed by root_path.
     This directory should be a valid filesystem genomic resource repository.
     """
-    build_filesystem_test_protocol(root_path)
-
     # pylint: disable=import-outside-toplevel
     from RangeHTTPServer import RangeRequestHandler  # type: ignore
 
-    handler_class = partial(
-        RangeRequestHandler, directory=str(root_path))
-    handler_class.protocol_version = "HTTP/1.0"  # type: ignore
-    httpd = HTTPServer(("", 0), handler_class)
-    try:
-        server_address = httpd.server_address
-        logger.info(
-            "HTTP range server at %s serving %s",
-            server_address, root_path)
-        server_thread = threading.Thread(target=httpd.serve_forever)
-        server_thread.daemon = True
-        server_thread.start()
+    def runner(start_queue, stop_queue):
+        handler_class = partial(
+            RangeRequestHandler, directory=str(root_path))
+        handler_class.protocol_version = "HTTP/1.0"  # type: ignore
+        httpd = HTTPServer(("", 0), handler_class)
+        try:
+            server_address = httpd.server_address
+            start_queue.put(f"http://{server_address[0]}:{server_address[1]}")
+            logger.info(
+                "HTTP range server at %s serving %s",
+                server_address, root_path)
+            server_thread = threading.Thread(target=httpd.serve_forever)
+            server_thread.daemon = True
+            server_thread.start()
 
-        server_url = f"http://{server_address[0]}:{server_address[1]}"
-        proto = cast(
-            FsspecReadOnlyProtocol,
-            build_fsspec_protocol(str(root_path), server_url))
+            while 1:
+                command = stop_queue.get(timeout=5.0)
+                if command == "stop":
+                    break
+        finally:
+            time.sleep(0.1)
+            logger.info("shutting down HTTP range server %s", server_address)
+            httpd.socket.close()
+            httpd.shutdown()
+            server_thread.join()
 
-        yield proto
+    build_filesystem_test_protocol(root_path)
 
-    finally:
-        time.sleep(0.1)
-        logger.info("shutting down HTT range server %s", server_address)
-        httpd.socket.close()
-        httpd.shutdown()
-        server_thread.join()
+    start_queue: mp.Queue = mp.Queue()
+    stop_queue: mp.Queue = mp.Queue()
+    proc = mp.Process(target=runner, args=(start_queue, stop_queue))
+    proc.start()
+    # wait for server address
+    server_address = start_queue.get(timeout=0.5)
+    proto = cast(
+        FsspecReadOnlyProtocol,
+        build_fsspec_protocol(str(root_path), server_address))
+
+    yield proto
+
+    # stop the server process
+    stop_queue.put("stop")
+    stop_queue.close()
+    start_queue.close()
+    proc.join()
+
+# @contextlib.contextmanager
+# def build_http_test_protocol(
+#         root_path: pathlib.Path) -> Generator[
+#             FsspecReadOnlyProtocol, None, None]:
+#     """Run an HTTP range server and construct fsspec genomic resource proto.
+
+#     The HTTP range server is used to serve directory pointed by root_path.
+#     This directory should be a valid filesystem genomic resource repository.
+#     """
+#     build_filesystem_test_protocol(root_path)
+
+#     # pylint: disable=import-outside-toplevel
+#     from RangeHTTPServer import RangeRequestHandler  # type: ignore
+
+#     handler_class = partial(
+#         RangeRequestHandler, directory=str(root_path))
+#     handler_class.protocol_version = "HTTP/1.0"  # type: ignore
+#     httpd = HTTPServer(("", 0), handler_class)
+#     try:
+#         server_address = httpd.server_address
+#         logger.info(
+#             "HTTP range server at %s serving %s",
+#             server_address, root_path)
+#         server_thread = threading.Thread(target=httpd.serve_forever)
+#         server_thread.daemon = True
+#         server_thread.start()
+
+#         server_url = f"http://{server_address[0]}:{server_address[1]}"
+#         proto = cast(
+#             FsspecReadOnlyProtocol,
+#             build_fsspec_protocol(str(root_path), server_url))
+
+#         yield proto
+
+#     finally:
+#         time.sleep(0.1)
+#         logger.info("shutting down HTT range server %s", server_address)
+#         httpd.socket.close()
+#         httpd.shutdown()
+#         server_thread.join()
+
+
+# @contextlib.contextmanager
+# def build_s3_test_server():
+#     """Run an S3 moto serverfor testing."""
+#     def runner(start_queue, stop_queue):
+#         # pylint: disable=protected-access,import-outside-toplevel
+#         if "AWS_SECRET_ACCESS_KEY" not in os.environ:
+#             os.environ["AWS_SECRET_ACCESS_KEY"] = "foo"
+#         if "AWS_ACCESS_KEY_ID" not in os.environ:
+#             os.environ["AWS_ACCESS_KEY_ID"] = "foo"
+#         from moto.server import ThreadedMotoServer  # type: ignore
+#         from s3fs.core import S3FileSystem  # type: ignore
+#         server = ThreadedMotoServer(ip_address="localhost", port=0)
+#         server.start()
+#         server_address = server._server.server_address
+#         endpoint_url = f"http://{server_address[0]}:{server_address[1]}"
+#         with tempfile.TemporaryDirectory("s3_test_protocol") as tmp_path:
+
+#             S3FileSystem.clear_instance_cache()
+#             s3filesystem = S3FileSystem(
+#                 anon=False, client_kwargs={"endpoint_url": endpoint_url})
+#             s3filesystem.invalidate_cache()
+#             bucket_url = f"s3:/{tmp_path}"
+#             s3filesystem.mkdir(bucket_url, acl="public-read")
+#             logger.warning(
+#                 "S3 moto server at %s with bucket %s",
+#                 endpoint_url, bucket_url)
+
+#             start_queue.put((bucket_url, endpoint_url))
+#             logger.warning(
+#                 "[SENT] S3 moto server at %s with bucket %s",
+#                 endpoint_url, bucket_url)
+#             while 1:
+#                 try:
+#                     command = stop_queue.get(timeout=2.0)
+#                 except Empty:
+#                     logger.warning("closing S3 moto server by timeout.")
+#                     break
+#                 except ValueError:
+#                     logger.warning("closing S3 moto server.")
+#                     break
+#                 except Exception:
+#                     logger.error("unexpected exception", exc_info=True)
+
+#                 if command == "stop":
+#                     break
+
+#             logger.info(
+#                 "Stopping S3 Moto thread at %s, %s",
+#                 endpoint_url, bucket_url)
+#             server.stop()
+#             logger.info(
+#                 "[DONE] Stopping S3 Moto thread at %s, %s",
+#                 endpoint_url, bucket_url)
+
+#     start_queue: mp.Queue = mp.Queue()
+#     stop_queue: mp.Queue = mp.Queue()
+#     proc = mp.Process(target=runner, args=(start_queue, stop_queue))
+
+#     import pdb; pdb.set_trace()
+
+#     proc.start()
+#     # wait for server address
+#     try:
+#         bucker_url, endpoint_url = start_queue.get()
+#         yield bucker_url, endpoint_url
+
+#         logger.info(
+#             "Stopping S3 Moto server at %s, %s", endpoint_url, bucker_url)
+#     except Empty:
+#         logger.warning("unable to start S3 moto testing server")
+
+#     # stop the server process
+#     pdb.set_trace()
+
+#     stop_queue.put("stop")
+#     stop_queue.close()
+#     start_queue.close()
+#     proc.join()
 
 
 @contextlib.contextmanager
-def build_s3_test_server():
-    """Run an S3 moto server for testing."""
+def process_server(server_manager: ContextManager[str]):
+    """Run a process server."""
+
+    def runner(start_queue: mp.Queue, stop_queue: mp.Queue):
+        with server_manager as start_message:
+            logger.info("process server started")
+            start_queue.put(start_message)
+            stop_queue.get()
+            logger.info("process server stopped")
+
+    start_queue: mp.Queue = mp.Queue()
+    stop_queue: mp.Queue = mp.Queue()
+    proc = mp.Process(target=runner, args=(start_queue, stop_queue))
+    proc.start()
+
+    # wait for start message
+    start_message = start_queue.get()
+    yield start_message
+
+    # stop the server process
+    stop_queue.put("stop")
+    stop_queue.close()
+    start_queue.close()
+    proc.join()
+
+
+@contextlib.contextmanager
+def s3_threaded_test_server() -> Generator[str, None, None]:
+    """Run threaded s3 moto server."""
     # pylint: disable=protected-access,import-outside-toplevel
     if "AWS_SECRET_ACCESS_KEY" not in os.environ:
         os.environ["AWS_SECRET_ACCESS_KEY"] = "foo"
     if "AWS_ACCESS_KEY_ID" not in os.environ:
         os.environ["AWS_ACCESS_KEY_ID"] = "foo"
     from moto.server import ThreadedMotoServer  # type: ignore
-    from s3fs.core import S3FileSystem  # type: ignore
-
-    server = ThreadedMotoServer(ip_address="", port=0)
+    server = ThreadedMotoServer(ip_address="localhost", port=0)
     server.start()
     server_address = server._server.server_address
     endpoint_url = f"http://{server_address[0]}:{server_address[1]}"
-    with tempfile.TemporaryDirectory("s3_test_protocol") as tmp_path:
 
+    yield endpoint_url
+
+    logger.info(
+        "Stopping S3 Moto thread at %s", endpoint_url)
+    server.stop()
+    logger.info(
+        "[DONE] Stopping S3 Moto thread at %s", endpoint_url)
+
+
+@contextlib.contextmanager
+def s3_process_test_server() -> Generator[str, None, None]:
+    with process_server(s3_threaded_test_server()) as endpoint_url:
+        yield endpoint_url
+
+
+def s3_test_protocol(endpoint_url: str) -> FsspecReadWriteProtocol:
+    """Build an S3 fsspec testing protocol on top of existing S3 server."""
+    bucket_url = build_s3_test_bucket(endpoint_url)
+    proto = cast(
+        FsspecReadWriteProtocol,
+        build_fsspec_protocol(
+            str(bucket_url), bucket_url, endpoint_url=endpoint_url))
+    # copy_proto_genomic_resources(
+    #     proto,
+    #     build_filesystem_test_protocol(root_path))
+
+    return proto
+
+
+def build_s3_test_bucket(endpoint_url: str) -> str:
+    """Create an s3 test buckent."""
+    with tempfile.TemporaryDirectory("s3_test_bucket") as tmp_path:
+        from s3fs.core import S3FileSystem  # type: ignore
         S3FileSystem.clear_instance_cache()
         s3filesystem = S3FileSystem(
             anon=False, client_kwargs={"endpoint_url": endpoint_url})
         s3filesystem.invalidate_cache()
         bucket_url = f"s3:/{tmp_path}"
         s3filesystem.mkdir(bucket_url, acl="public-read")
+        logger.warning(
+            "S3 moto server at %s with bucket %s",
+            endpoint_url, bucket_url)
+        return bucket_url
 
-        yield bucket_url, endpoint_url
 
-    server.stop()
+@contextlib.contextmanager
+def build_s3_test_server() -> Generator[
+        Tuple[str, str], None, None]:
+    """Run an S3 moto server."""
+    with s3_process_test_server() as endpoint_url:
+        bucket_url = build_s3_test_bucket(endpoint_url)
+        yield (bucket_url, endpoint_url)
 
 
 @contextlib.contextmanager
@@ -630,7 +782,8 @@ def build_s3_test_protocol(root_path) -> Generator[
     """
     # pylint: disable=protected-access,import-outside-toplevel
 
-    with build_s3_test_server() as (bucket_url, endpoint_url):
+    with s3_process_test_server() as endpoint_url:
+        bucket_url = build_s3_test_bucket(endpoint_url)
 
         proto = cast(
             FsspecReadWriteProtocol,

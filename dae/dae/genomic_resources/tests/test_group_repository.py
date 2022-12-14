@@ -3,21 +3,18 @@
 import pytest
 
 from dae.genomic_resources.group_repository import GenomicResourceGroupRepo
+from dae.genomic_resources.testing import build_inmemory_test_repository
 
 
 @pytest.fixture
-def group_repo(repo_builder):
+def group_repo():
     repo = GenomicResourceGroupRepo(children=[
-        repo_builder(
-            repo_id="a",
-            scheme="memory",
-            content={
+        build_inmemory_test_repository(
+            {
                 "one": {"genomic_resource.yaml": ""}
             }),
-        repo_builder(
-            repo_id="b",
-            scheme="memory",
-            content={
+        build_inmemory_test_repository(
+            {
                 "one(1.0)": {"genomic_resource.yaml": ""}
             })
     ])
@@ -29,7 +26,7 @@ def test_lookup_priority_in_a_group_repository(group_repo):
     assert res
     assert res.resource_id == "one"
     assert res.version == (0,)
-    assert res.proto.get_id() == "a"
+    assert res.proto.get_id() == group_repo.children[0].proto.get_id()
 
 
 def test_lookup_in_a_group_repository_with_version_requirement(group_repo):
@@ -37,4 +34,4 @@ def test_lookup_in_a_group_repository_with_version_requirement(group_repo):
     assert res
     assert res.resource_id == "one"
     assert res.version == (1, 0)
-    assert res.proto.get_id() == "b"
+    assert res.proto.get_id() == group_repo.children[1].proto.get_id()
