@@ -28,17 +28,6 @@ export class DatasetsComponent implements OnInit, OnDestroy {
 
   public showNoToolsWarning: boolean;
 
-  @HostListener('window:popstate')
-  public goBack(): void {
-    this.router.events.pipe(filter(event => event instanceof NavigationEnd)).subscribe((event: NavigationEnd) => {
-      if (event.urlAfterRedirects === '/datasets/' + this.selectedDataset?.id
-        || event.urlAfterRedirects === '/datasets'
-      ) {
-        window.history.go(-2);
-      }
-    });
-  }
-
   public constructor(
     private usersService: UsersService,
     private datasetsService: DatasetsService,
@@ -104,7 +93,8 @@ export class DatasetsComponent implements OnInit, OnDestroy {
       const firstTool = this.findFirstTool(this.selectedDataset);
       if (firstTool) {
         this.router.navigate(
-          ['/', 'datasets', this.selectedDataset.id, this.findFirstTool(this.selectedDataset)]
+          ['/', 'datasets', this.selectedDataset.id, this.findFirstTool(this.selectedDataset),
+            { skipLocationChange: true }]
         );
       } else {
         this.router.navigate(['/', 'datasets', this.selectedDataset.id]);
