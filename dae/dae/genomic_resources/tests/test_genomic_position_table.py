@@ -1661,7 +1661,7 @@ def test_get_ref_alt_nonconfigured_existing(tmp_path, tabix_file):
         scheme="file",
         root_path=str(tmp_path),
         content={
-            "genomic_resource.yaml": f"""
+            "genomic_resource.yaml": """
                 tabix_table:
                     filename: data.bgz
                     scores:
@@ -1698,7 +1698,7 @@ def test_get_ref_alt_configured_existing(tmp_path, tabix_file):
         scheme="file",
         root_path=str(tmp_path),
         content={
-            "genomic_resource.yaml": f"""
+            "genomic_resource.yaml": """
                 tabix_table:
                     filename: data.bgz
                     reference:
@@ -1747,7 +1747,7 @@ def test_score_definition_via_index_headerless_tabix(tmp_path, tabix_file):
         scheme="file",
         root_path=str(tmp_path),
         content={
-            "genomic_resource.yaml": f"""
+            "genomic_resource.yaml": """
                 tabix_table:
                     filename: data.bgz
                     header_mode: none
@@ -1782,7 +1782,7 @@ def test_score_definition_list_header_tabix(tmp_path, tabix_file):
         scheme="file",
         root_path=str(tmp_path),
         content={
-            "genomic_resource.yaml": f"""
+            "genomic_resource.yaml": """
                 tabix_table:
                     filename: data.bgz
                     header_mode: list
