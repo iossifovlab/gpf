@@ -1247,9 +1247,6 @@ def test_vcf_autodetect_format(vcf_res_autodetect_format):
         vcf_res_autodetect_format.config["tabix_table"]
     ) as tab:
         assert isinstance(tab, VCFGenomicPositionTable)
-        assert tab.chrom_column_i == 0
-        assert tab.pos_begin_column_i == 1
-        assert tab.pos_end_column_i == 1
         assert len(tuple(tab.get_all_records())) == 1
 
 
@@ -1258,9 +1255,6 @@ def test_vcf_get_all_records(vcf_res):
         vcf_res, vcf_res.config["tabix_table"]
     ) as tab:
         assert isinstance(tab, VCFGenomicPositionTable)
-        assert tab.chrom_column_i == 0
-        assert tab.pos_begin_column_i == 1
-        assert tab.pos_end_column_i == 1
 
         results = tuple(tab.get_all_records())
         assert len(results) == 3

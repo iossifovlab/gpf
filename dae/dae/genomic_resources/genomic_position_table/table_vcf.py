@@ -45,8 +45,11 @@ class VCFGenomicPositionTable(TabixGenomicPositionTable):
                 ) for key, value in self.variants_file.header.info.items()
             }
 
+    def _get_index_prop_for_special_column(self, key):
+        return None
+
     def _get_header(self):
-        return ("CHROM", "POS", "ID", "REF", "ALT", "QUAL", "FILTER", "INFO")
+        return tuple()
 
     @cache
     def get_file_chromosomes(self) -> List[str]:

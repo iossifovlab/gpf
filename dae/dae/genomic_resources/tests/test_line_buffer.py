@@ -1,5 +1,5 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-
+# pylint: disable=no-member
 import pytest
 
 from dae.genomic_resources.genomic_position_table import Line, LineBuffer
