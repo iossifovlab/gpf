@@ -1,6 +1,6 @@
 import math
 from copy import copy
-from typing import List, Optional
+from typing import List, Optional, cast
 
 from dae.variants.variant import SummaryAllele, SummaryVariant
 
@@ -142,7 +142,7 @@ class RemoteVariant(SummaryVariant):
             )
         ref_allele = RemoteAllele.create_reference_allele(remote_alleles[0])
         remote_alleles.insert(0, ref_allele)
-        super(RemoteVariant, self).__init__(remote_alleles)
+        super().__init__(cast(List[SummaryAllele], remote_alleles))
 
 
 class RemoteFamilyVariant(FamilyVariant):

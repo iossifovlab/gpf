@@ -85,7 +85,7 @@ class RemoteGeneSetsDb(GeneSetsDb):
     def __init__(
         self, remote_clients: List[RESTClient], local_gene_sets_db: GeneSetsDb
     ):
-        super().__init__({})
+        super().__init__([])
         self._local_gsdb: GeneSetsDb = local_gene_sets_db
         self.gene_set_collections: Dict[str, GeneSetCollection] = {}
         self.remote_clients: List[RESTClient] = remote_clients
