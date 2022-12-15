@@ -57,18 +57,18 @@ export class UsersGroupsService {
       .pipe(map(response => UserGroup.fromJson(response)));
   }
 
-  public grantPermissionToDataset(groupName: string, datasetId: string): Observable<object> {
+  public grantPermissionToDataset(groupName: string, datasetId: string): Observable<null> {
     const options = { withCredentials: true };
 
-    return this.http.post(this.config.baseUrl + this.groupGrantPermissionUrl, {
+    return this.http.post<null>(this.config.baseUrl + this.groupGrantPermissionUrl, {
       groupName: groupName,
       datasetId: datasetId
     }, options);
   }
 
-  public revokePermissionToDataset(groupId: number, datasetId: string): Observable<Dataset> {
+  public revokePermissionToDataset(groupId: number, datasetId: string): Observable<null> {
     const options = { withCredentials: true };
-    return this.http.post<Dataset>(this.config.baseUrl + this.groupRevokePermissionUrl, {
+    return this.http.post<null>(this.config.baseUrl + this.groupRevokePermissionUrl, {
       groupId: groupId,
       datasetId: datasetId
     }, options);
