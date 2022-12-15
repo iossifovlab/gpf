@@ -47,7 +47,7 @@
       <li ngbNavItem id="datasets">
         <a ngbNavLink (click)="switchTableName('DATASETS')">Datasets</a>
         <ng-template ngbNavContent>
-          <!-- <gpf-datasets-table></gpf-datasets-table> -->
+          <gpf-datasets-table [datasets]="datasets"></gpf-datasets-table>
         </ng-template>
       </li>
     </ul>

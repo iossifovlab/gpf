@@ -1,160 +1,55 @@
-import { Component, ElementRef, OnInit, ViewChildren } from '@angular/core';
-import { combineLatest, Observable, ReplaySubject } from 'rxjs';
-import { User } from '../users/users';
-import { UsersService } from '../users/users.service';
-import { Dataset } from '../datasets/datasets';
+import { Component, Input } from '@angular/core';
+import { Observable } from 'rxjs';
 import { DatasetsService } from '../datasets/datasets.service';
 import { DatasetPermissions } from './datasets-table';
 import { UsersGroupsService } from '../users-groups/users-groups.service';
 import { UserGroup } from '../users-groups/users-groups';
-import { debounceTime, distinctUntilChanged, map, share, switchMap, take } from 'rxjs/operators';
+import { map, mergeMap } from 'rxjs/operators';
+import { Item } from 'app/item-add-menu/item-add-menu';
 
 @Component({
   selector: 'gpf-datasets-table',
   templateUrl: './datasets-table.component.html',
-  styleUrls: ['./datasets-table.component.css']
+  // Order of css files is important (second file overwrites the first where needed)
+  styleUrls: ['../users-table/users-table.component.css', './datasets-table.component.css']
 })
 export class DatasetsTableComponent {
-  // public tableData$: Observable<DatasetPermissions[]>;
-  // public groups: UserGroup[];
-  // private datasets$: Observable<Dataset[]>;
-  // private usersToShow: User[];
-  // private users$: Observable<User[]>;
-  // private datasetsRefresh$ = new ReplaySubject<boolean>(1);
-  // @ViewChildren('errorPopup') public errorPopup: ElementRef[];
-  // public errorDisplayStyles: {[key: string]: string} = {};
-  // public errorMessage: string;
-  // public delay = (ms: number): Promise<number> => new Promise(res => setTimeout(res, ms));
+  @Input() public datasets: DatasetPermissions[];
 
-  // public constructor(
-  //   private datasetsService: DatasetsService,
-  //   private usersService: UsersService,
-  //   private userGroupsService: UsersGroupsService
-  // ) {
-  //   this.datasets$ = this.datasetsRefresh$.pipe(
-  //     switchMap(() => this.datasetsService.getDatasets()),
-  //     share()
-  //   );
+  public constructor(
+    private usersGroupsService: UsersGroupsService,
+    private datasetsService: DatasetsService
+  ) { }
 
-  //   this.datasets$.pipe(take(1)).subscribe(datasets => {
-  //     datasets.forEach(dataset => {
-  //       this.errorDisplayStyles[dataset.id] = 'none';
-  //     });
-  //   });
-  // }
+  public isDefaultGroup(dataset: DatasetPermissions, group: string): boolean {
+    return dataset.getDefaultGroups().indexOf(group) !== -1;
+  }
 
-  // public ngOnInit(): void {
-  //   this.usersToShow = [];
-  //   // this.users$ = this.usersService.searchUsersByGroup(null).pipe(
-  //   //   map(user => {
-  //   //     this.usersToShow.push(user);
-  //   //     return this.usersToShow;
-  //   //   }),
-  //   //   share()
-  //   // );
+  public removeGroup(dataset: DatasetPermissions, groupToRemove: string): void {
+    this.usersGroupsService.getGroup(groupToRemove).pipe(
+      mergeMap(group => this.usersGroupsService.revokePermissionToDataset(group.id, dataset.id)),
+      mergeMap(() => this.datasetsService.getManagementDataset(dataset.id))
+    ).subscribe(updatedDataset => {
+      dataset.groups = updatedDataset.groups;
+      dataset.users = updatedDataset.users;
+    });
+  }
 
-  //   this.tableData$ = combineLatest(this.datasets$, this.users$)
-  //     .pipe(map(([datasets, users]) => this.toDatasetTableRow(datasets, users)));
+  public addGroup(dataset: DatasetPermissions, groupEvent: Item): void {
+    this.usersGroupsService.grantPermissionToDataset(groupEvent.name, dataset.id).pipe(
+      mergeMap(() => this.datasetsService.getManagementDataset(dataset.id))
+    ).subscribe(updatedDataset => {
+      dataset.groups = updatedDataset.groups;
+      dataset.users = updatedDataset.users;
+    });
+  }
 
-  //   this.userGroupsService.getAllGroups()
-  //     .pipe(take(1))
-  //     .subscribe(groups => {
-  //       this.groups = groups;
-  //     });
-  //   this.datasetsRefresh$.next(true);
-  // }
-
-  // public datasetComparator(leftDataset: any, rightDataset: any) {
-  //   return leftDataset.dataset.name.localeCompare(rightDataset.dataset.name);
-  // }
-
-  // public toDatasetTableRow(datasets: Dataset[], users: User[]): Array<DatasetPermissions> {
-  //   const result = new Array<DatasetPermissions>();
-  //   const groupsToUsers = users.reduce((acc: {[key: string]: string[]}, user) => {
-  //     for (const group of user.groups) {
-  //       if (acc[group]) {
-  //         acc[group].push(user.email);
-  //       } else {
-  //         acc[group] = [user.email];
-  //       }
-  //     }
-  //     return acc;
-  //   }, {});
-
-  //   for (const dataset of datasets) {
-  //     const groups = dataset.groups.map(group => group.name);
-  //     const datasetUsers = users.filter(user => {
-  //       const hasGroup = dataset.groups.find(group => (groupsToUsers[group.name] || []).indexOf(user.email) !== -1);
-  //       return Boolean(hasGroup);
-  //     });
-
-  //     const row = new DatasetPermissions(dataset, groups, datasetUsers);
-  //     result.push(row);
-  //   }
-
-  //   return result;
-  // }
-
-  // public alwaysSelected(groups: string[]): UserGroup[] {
-  //   return (this.groups || []).filter(g => groups.indexOf(g.name) === -1);
-  // }
-
-  // public async updatePermissions(dataset: Dataset, groupName: string): Promise<void> {
-  //   const groupNames = dataset.groups.map(group => group.name);
-
-  //   if (groupNames.indexOf(groupName) !== -1 || groupName === '') {
-  //     this.errorMessage = groupName === '' ? 'Please enter a group!' : 'This group already exists!';
-  //     this.errorPopup.find(
-  //       ele => ele.nativeElement.id === dataset.id + '-warning'
-  //     ).nativeElement.setAttribute('style', 'display: block');
-
-  //     this.errorDisplayStyles[dataset.id] = 'block';
-  //     await this.delay(3000).then(() => {
-  //       this.errorDisplayStyles[dataset.id] = 'none';
-  //     });
-
-  //     return;
-  //   }
-
-  //   this.userGroupsService.grantPermission(groupName, dataset).pipe(take(1))
-  //     .subscribe(() => {
-  //       this.datasetsRefresh$.next(true);
-  //     });
-  // }
-
-  // private search = (datasetGroups: string[], text$: Observable<string>): Observable<string[]> => text$.pipe(
-  //   debounceTime(200),
-  //   distinctUntilChanged(),
-  //   map(groupName => {
-  //     if (groupName === '') {
-  //       return [];
-  //     }
-
-  //     return this.groups
-  //       .map(g => g.name)
-  //       .filter(g => datasetGroups.indexOf(g) === -1)
-  //       .filter(g => g.toLowerCase().indexOf(groupName.toLowerCase()) !== -1)
-  //       .slice(0, 10);
-  //   })
-  // );
-
-  // public searchGroups =
-  //   (groups: string[]) => (text$: Observable<string>): Observable<string[]> => this.search(groups, text$);
-
-  // public isDefaultGroup(dataset: Dataset, group: string): boolean {
-  //   return dataset.getDefaultGroups().indexOf(group) !== -1;
-  // }
-
-  // public removeGroup(dataset: Dataset, groupName: string): void {
-  //   this.userGroupsService.getAllGroups().pipe(
-  //     take(1),
-  //     switchMap(groups => {
-  //       this.groups = groups;
-  //       const group = this.groups.find(g => g.name === groupName);
-  //       if (!group) {
-  //         return;
-  //       }
-  //       return this.userGroupsService.revokePermission(group, dataset).pipe(take(1));
-  //     })).subscribe(() => this.datasetsRefresh$.next(true));
-  // }
+  public getGroupNamesFunction(dataset: DatasetPermissions): (page: number, searchText: string) => Observable<Item[]> {
+    return (page: number, searchText: string): Observable<Item[]> =>
+      this.usersGroupsService.getGroups(page, searchText).pipe(
+        map((groups: UserGroup[]) => groups
+          .filter(group => !dataset.groups.includes(group.name))
+          .map(group => new Item(group.id.toString(), group.name))
+        ));
+  }
 }
