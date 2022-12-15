@@ -3,6 +3,7 @@ import { NgbModal, NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
 import { ConfigService } from 'app/config/config.service';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { PedigreeData } from 'app/genotype-preview-model/genotype-preview';
+import { downloadBlobResponse } from 'app/utils/blob-download';
 import { VariantReportsService } from 'app/variant-reports/variant-reports.service';
 
 @Component({
@@ -61,11 +62,14 @@ export class PedigreeComponent {
   }
 
   public onSubmit(event): void {
-    event.target.queryData.value = JSON.stringify({
+    const args = {
       study_id: this.datasetsService.getSelectedDataset().id,
       group_name: this.groupName,
       counter_id: this.counterId
+    };
+    this.variantReportsService.downloadPedigreeCount(args).subscribe((response) => {
+      downloadBlobResponse(response, 'family.ped');
+    }, (err) => {
     });
-    event.target.submit();
   }
 }

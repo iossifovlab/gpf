@@ -61,3 +61,10 @@ form {
 hr {
   margin: 8px 0;
 }
+
+.pedigree-download-panel {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 8px;
+}
