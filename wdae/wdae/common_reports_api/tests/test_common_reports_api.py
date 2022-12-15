@@ -89,11 +89,9 @@ def test_family_counters(admin_client):
 
 def test_family_counters_download(admin_client):
     data = {
-        "queryData": json.dumps({
-            "study_id": "study4",
-            "group_name": "Phenotype",
-            "counter_id": "0"
-        })
+        "study_id": "study4",
+        "group_name": "Phenotype",
+        "counter_id": "0"
     }
     url = "/api/v3/common_reports/family_counters/download"
     response = admin_client.post(

@@ -12,3 +12,4 @@ rm -rf $DAE_DB_DIR/wdae/wdae_django_default.cache
 wdaemanage.py migrate
 $SCRIPTPATH/wdae_create_dev_users.sh
 $SCRIPTPATH/wdae_create_dev_gpfjs_app.sh
+$SCRIPTPATH/wdae_create_dev_federation_app.sh

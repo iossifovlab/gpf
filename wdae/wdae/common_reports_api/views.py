@@ -73,7 +73,7 @@ class FamilyCounterListView(QueryDatasetView):
 
 class FamilyCounterDownloadView(QueryDatasetView):
     def post(self, request):
-        data = json.loads(request.data["queryData"])
+        data = request.data
 
         study_id = data["study_id"]
         group_name = data["group_name"]
