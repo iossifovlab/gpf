@@ -380,7 +380,7 @@ export class GenePlotComponent implements OnChanges {
     }
   }
 
-  private drawTranscript(
+  public drawTranscript(
     svgGroup: d3.Selection<SVGGElement, unknown, HTMLElement, any>,
     transcript: Transcript, yPos: number, drawLabelsFlag = false
   ): void {

@@ -162,7 +162,7 @@ describe('GenePlotComponent', () => {
     });
   });
 
-  it('should draw transcripts', () => {
+  it('should check viewbox and dimensions', () => {
     const summaryAllelesArray = new SummaryAllelesArray(variantsArrayMock);
     Object.defineProperty(component, 'variantsArray', {
       value: summaryAllelesArray
@@ -172,5 +172,109 @@ describe('GenePlotComponent', () => {
     expect(d3.selectAll('svg g rect').attr('height')).toBe('22');
     expect(d3.selectAll('svg g rect').attr('width')).toBe('1835');
     expect(d3.selectAll('#svg-container svg').attr('viewBox')).toBe('0 0 2000 517');
+  });
+
+  it('should call draw transcript on single chromosome', () => {
+    const spyOnDrawTranscript = jest.spyOn(component, 'drawTranscript');
+    const summaryAllelesArray = new SummaryAllelesArray(variantsArrayMock);
+    Object.defineProperty(component, 'variantsArray', {
+      value: summaryAllelesArray
+    });
+    component.ngOnChanges({ gene: new SimpleChange(null, geneMock, true) });
+    component.redraw();
+    expect(spyOnDrawTranscript).toHaveBeenCalledTimes(4);
+    [new Transcript('collapsed', 'chr3', '-', [
+      {
+        chromosome: 'chr3',
+        start: 120628380,
+        stop: 120682111
+      }
+    ], [
+      {
+        chromosome: 'chr3',
+        start: 120628168,
+        stop: 120628529
+      },
+      {
+        chromosome: 'chr3',
+        start: 120633147,
+        stop: 120633328
+      }
+    ])].forEach((trans, i) => {
+      expect(spyOnDrawTranscript.mock.calls[0][i+1]).toStrictEqual(trans);
+    });
+  });
+
+  it('should call draw transcript on multiple chromosomes', () => {
+    const genes = new Gene(
+      'HGD',
+      [
+        new Transcript(
+          'id1',
+          'chrom1',
+          '1',
+          [{ chromosome: 'chrom1', start: 1, stop: 5 }],
+          [{ chromosome: 'chrom1', start: 7, stop: 11 },
+            { chromosome: 'chrom2', start: 20, stop: 25 }]
+        ),
+        new Transcript(
+          'id2',
+          'chrom2',
+          '1',
+          [{ chromosome: 'chrom3', start: 3, stop: 4 }],
+          [{ chromosome: 'chrom3', start: 13, stop: 16 },
+            { chromosome: 'chrom7', start: 18, stop: 22 }]
+        ),
+        new Transcript(
+          'id3',
+          'chrom3',
+          '1',
+          [{ chromosome: 'chrom1', start: 7, stop: 15 }],
+          [{ chromosome: 'chrom2', start: 3, stop: 16 },
+            { chromosome: 'chrom3', start: 18, stop: 35 }]
+        )
+      ]
+    );
+
+    const spyOnDrawTranscript = jest.spyOn(component, 'drawTranscript');
+    const summaryAllelesArray = new SummaryAllelesArray(variantsArrayMock);
+    Object.defineProperty(component, 'variantsArray', {
+      value: summaryAllelesArray
+    });
+    Object.defineProperty(component, 'gene', { value: genes });
+    component.ngOnChanges({ gene: new SimpleChange(null, genes, true) });
+    component.redraw();
+    expect(spyOnDrawTranscript).toHaveBeenCalledTimes(12);
+    [
+      [
+        new Transcript(
+          'collapsed',
+          'chrom1',
+          '1',
+          [
+            { chromosome: 'chrom1', start: 1, stop: 5 }
+          ],
+          [
+            { chromosome: 'chrom1', start: 7, stop: 11 },
+            { chromosome: 'chrom2', start: 20, stop: 25 }
+          ]
+        ), 362, false],
+      [
+        new Transcript('collapsed', 'chrom2', '1',
+          [
+            {
+              chromosome: 'chrom3', start: 3, stop: 4
+            }
+          ],
+          [
+            { chromosome: 'chrom3', start: 13, stop: 16 },
+            { chromosome: 'chrom7', start: 18, stop: 22 }
+          ]
+        ), 422, true]
+    ].forEach((args, i) => {
+      args.forEach((data, y) => {
+        expect(spyOnDrawTranscript.mock.calls[i][y + 1]).toStrictEqual(data);
+      });
+    });
   });
 });
