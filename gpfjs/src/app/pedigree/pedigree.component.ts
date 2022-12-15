@@ -62,7 +62,6 @@ export class PedigreeComponent {
   }
 
   public onSubmit(event): void {
-    event.preventDefault();
     const args = {
       study_id: this.datasetsService.getSelectedDataset().id,
       group_name: this.groupName,

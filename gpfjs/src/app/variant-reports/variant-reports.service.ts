@@ -52,9 +52,9 @@ export class VariantReportsService {
     return this.http.get(`${this.config.baseUrl}${this.tagsUrl}`, options);
   }
 
-  public downloadPedigreeCount(json): Observable<HttpResponse<Blob>> {
+  public downloadPedigreeCount(params): Observable<HttpResponse<Blob>> {
     return this.http.post(`${environment.apiPath}${this.pedigreeDownloadUrl}`,
-      json, {
+      params, {
         observe: 'response', headers: new HttpHeaders({ 'Content-Type': 'application/json'}), responseType: 'blob'
       });
   }
