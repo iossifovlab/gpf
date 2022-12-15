@@ -29,6 +29,10 @@ export class VariantReportsPage extends BasePage {
     return cy.get('#families-by-pedigree-select');
   }
 
+  public get familiesByPedigreeSelectOptions(): element {
+    return cy.get('#families-by-pedigree-select').children('option');
+  }
+
   public get denovoVariantsSelect(): element {
     return cy.get('#denovo-variants-select');
   }
@@ -71,5 +75,13 @@ export class VariantReportsPage extends BasePage {
 
   public get denovoLegend(): element {
     return cy.get('#de-novo-variants-legend-report');
+  }
+
+  public get pedigreeLegendButton(): element {
+    return cy.get('button#expand-legend-button');
+  }
+
+  public get pedigreeLegendDropdown(): element {
+    return cy.get('div#legend');
   }
 }

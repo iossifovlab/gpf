@@ -65,6 +65,37 @@ describe('Variant reports tests', () => {
     page.denovoLegend.should('not.be.visible');
     page.denovoVariants.should('not.be.visible');
   });
+
+  [
+    {option: 'Affected Status', legendElements: ['affected', 'unaffected']}, 
+    {option: 'Role', legendElements: ['mom', 'dad', 'proband', 'sibling']},
+    {option: 'Phenotype', legendElements: ['autism', 'unaffected']}
+  ].forEach(data => {
+    it.only('should check content of the legend for each select option in the families by pedigree tab', () => {
+      page.familiesByPedigreeTab.click();
+      page.pedigreeLegendButton.should('be.visible');
+      page.pedigreeLegendDropdown.should('not.exist');
+      page.familiesByPedigreeSelect.select(data.option);
+      page.familiesByPedigreeSelect.find(':selected').contains(data.option);
+
+      page.pedigreeLegendButton.click();
+      page.pedigreeLegendDropdown.should('be.visible');
+      data.legendElements.forEach(e => {
+        page.pedigreeLegendDropdown.should('contain', e);
+      })
+
+      page.pedigreeLegendButton.click();
+      page.pedigreeLegendDropdown.should('not.exist');
+    })
+  })
+
+  it('should check content of the select in the families by pedigree tab', () => {
+    page.familiesByPedigreeTab.click();
+    page.familiesByPedigreeSelectOptions.then(options => {
+      const actual = options.toArray().map(o => o.innerText);
+      expect(actual).to.deep.eq(['Affected Status', 'Role', 'Phenotype'])
+    })
+  })
 });
 
 describe('Variant reports Iossifov count tests', () => {
