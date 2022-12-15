@@ -1,5 +1,4 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-from typing import cast
 
 import yaml
 
@@ -12,7 +11,7 @@ from dae.genomic_resources.genomic_scores import \
 from dae.genomic_resources.repository_factory import \
     build_genomic_resource_repository
 from dae.genomic_resources.testing import build_test_resource, \
-    build_fsspec_protocol
+    build_http_test_protocol
 from dae.genomic_resources.repository import GR_CONF_FILE_NAME
 
 
@@ -85,6 +84,7 @@ def test_region_score():
     score = build_position_score_from_resource(res)
     score.open()
 
+    assert score.table is not None
     assert score.table.chrom_column_i == 0
     assert score.table.pos_begin_column_i == 1
     assert score.table.pos_end_column_i == 2
@@ -151,27 +151,22 @@ def test_phastcons100way():
         {"phastCons100way": 0.000625}
 
 
-def test_position_score_over_http(fixture_dirname, proto_builder):
+def test_position_score_over_http(fixture_dirname):
     dirname = fixture_dirname("genomic_resources")
-    src_proto = build_fsspec_protocol("d", dirname)
 
-    proto = proto_builder(
-        src_proto,
-        scheme="http",
-        proto_id="testing_http")
-    repo = GenomicResourceProtocolRepo(proto)
+    with build_http_test_protocol(dirname) as proto:
+        repo = GenomicResourceProtocolRepo(proto)
 
-    resource = repo.get_resource(
-        "hg38/TESTphastCons100way")
-    assert isinstance(resource, GenomicResource)
-    resource = cast(GenomicResource, resource)
+        resource = repo.get_resource(
+            "hg38/TESTphastCons100way")
+        assert isinstance(resource, GenomicResource)
 
-    score = build_position_score_from_resource(resource)
-    score.open()
+        score = build_position_score_from_resource(resource)
+        score.open()
 
-    result = score.fetch_scores("1", 10918)
-    assert result
-    assert result["phastCons100way"] == 0.253
+        result = score.fetch_scores("1", 10918)
+        assert result
+        assert result["phastCons100way"] == 0.253
 
 
 def test_build_score_from_resource_with_pos_resource():
@@ -279,4 +274,5 @@ def test_position_score_chrom_prefix():
     score: PositionScore = build_position_score_from_resource(res)
     score.open()
 
+    assert score.table is not None
     assert set(score.table.get_chromosomes()) == set(["chr1", "chr2"])

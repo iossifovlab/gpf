@@ -1,5 +1,4 @@
 # pylint: disable=W0621,C0114,C0116,C0415,W0212,W0613,C0302,C0115,W0102,W0603
-import os
 import textwrap
 import contextlib
 
@@ -11,56 +10,6 @@ from dae.genomic_resources.testing import setup_tabix, \
     setup_directories, build_filesystem_test_resource, \
     build_http_test_protocol, build_s3_test_protocol, \
     process_server, s3_threaded_test_server
-
-
-@pytest.fixture(scope="session")
-def s3_moto_server_url():
-    """Start a moto (i.e. mocked) s3 server and return its URL."""
-    # pylint: disable=protected-access,import-outside-toplevel
-    if "AWS_SECRET_ACCESS_KEY" not in os.environ:
-        os.environ["AWS_SECRET_ACCESS_KEY"] = "foo"
-    if "AWS_ACCESS_KEY_ID" not in os.environ:
-        os.environ["AWS_ACCESS_KEY_ID"] = "foo"
-    from moto.server import ThreadedMotoServer  # type: ignore
-    server = ThreadedMotoServer(ip_address="", port=0)
-    server.start()
-    server_address = server._server.server_address
-
-    yield f"http://{server_address[0]}:{server_address[1]}"
-
-    server.stop()
-
-
-@pytest.fixture(scope="session")
-def s3_client(s3_moto_server_url):
-    """Return a boto client connected to the moto server."""
-    from botocore.session import Session  # type: ignore
-
-    session = Session()
-    client = session.create_client("s3", endpoint_url=s3_moto_server_url)
-    return client
-
-
-@pytest.fixture()
-def s3_filesystem(s3_moto_server_url):
-    from s3fs.core import S3FileSystem  # type: ignore
-
-    S3FileSystem.clear_instance_cache()
-    s3 = S3FileSystem(anon=False,
-                      client_kwargs={"endpoint_url": s3_moto_server_url})
-    s3.invalidate_cache()
-    yield s3
-
-
-@pytest.fixture()
-def s3_tmp_bucket_url(s3_client, s3_filesystem):
-    """Create a bucket called 'test-bucket' and return its URL."""
-    bucket_url = "s3://test-bucket"
-    s3_filesystem.mkdir(bucket_url, acl="public-read")
-
-    yield bucket_url
-
-    s3_filesystem.rm("s3://test-bucket", recursive=True)
 
 
 def test_setup_tabix(tmp_path):

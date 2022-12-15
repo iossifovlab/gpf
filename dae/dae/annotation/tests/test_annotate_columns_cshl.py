@@ -6,7 +6,7 @@ import pytest
 
 from dae.testing import convert_to_tab_separated, setup_directories, \
     setup_genome, setup_empty_gene_models, setup_gpf_instance
-from dae.genomic_resources.testing import build_testing_repository
+from dae.genomic_resources.testing import build_inmemory_test_repository
 
 from dae.annotation.annotate_columns import cli as cli_columns
 from dae.genomic_resources.genomic_context import register_context
@@ -21,7 +21,7 @@ def get_file_content_as_string(file):
 
 @pytest.fixture
 def scores_repo(tmp_path):
-    repo = build_testing_repository(repo_id="gene_sets", content={
+    repo = build_inmemory_test_repository({
         "one": {
             "genomic_resource.yaml": textwrap.dedent("""
                 type: position_score
@@ -42,7 +42,7 @@ def scores_repo(tmp_path):
                     chrA   11         0.2
                 """)
         }
-    }, root_path=str(tmp_path))
+    })
     return repo
 
 

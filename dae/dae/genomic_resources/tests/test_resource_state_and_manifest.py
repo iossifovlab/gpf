@@ -6,36 +6,33 @@ import pytest
 
 from dae.genomic_resources.cli import collect_dvc_entries
 from dae.genomic_resources.repository import GR_CONF_FILE_NAME
-from dae.genomic_resources.testing import build_testing_protocol
+from dae.genomic_resources.testing import build_inmemory_test_protocol
 
 
 @pytest.fixture
 def proto_fixture(tmp_path):
-    proto = build_testing_protocol(
-        scheme="memory",
-        root_path=str(tmp_path),
-        content={
-            "one": {
-                GR_CONF_FILE_NAME: "",
-                "data.txt": "alabala",
-                "b.big": "big",
-                "b.big.dvc": textwrap.dedent("""
+    proto = build_inmemory_test_protocol({
+        "one": {
+            GR_CONF_FILE_NAME: "",
+            "data.txt": "alabala",
+            "b.big": "big",
+            "b.big.dvc": textwrap.dedent("""
+                outs:
+                - md5: bbbb
+                  path: b.big
+                  size: 3000000000
+            """),
+            "sub": {
+                "a.big": "big",
+                "a.big.dvc": textwrap.dedent("""
                     outs:
-                    - md5: bbbb
-                      path: b.big
+                    - md5: aaaa
+                      path: a.big
                       size: 3000000000
-                """),
-                "sub": {
-                    "a.big": "big",
-                    "a.big.dvc": textwrap.dedent("""
-                        outs:
-                        - md5: aaaa
-                          path: a.big
-                          size: 3000000000
-                    """)
-                }
-            },
-        })
+                """)
+            }
+        },
+    })
     return proto
 
 

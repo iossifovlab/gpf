@@ -4,14 +4,14 @@ import textwrap
 import pytest
 
 from dae.annotation.annotatable import VCFAllele
-from dae.genomic_resources.testing import build_testing_repository
+from dae.genomic_resources.testing import build_inmemory_test_repository
 from dae.genomic_resources.repository import GR_CONF_FILE_NAME
 from dae.annotation.gene_score_annotator import GeneScoreAnnotator
 
 
 @pytest.fixture
 def scores_repo(tmp_path):
-    scores_repo = build_testing_repository(repo_id="scores", content={
+    scores_repo = build_inmemory_test_repository({
         "LGD_rank": {
             GR_CONF_FILE_NAME: """
                 type: gene_score
@@ -40,7 +40,7 @@ def scores_repo(tmp_path):
                 "UBR4",0.007496,59
             """)
         }
-    }, root_path=str(tmp_path))
+    })
     return scores_repo
 
 

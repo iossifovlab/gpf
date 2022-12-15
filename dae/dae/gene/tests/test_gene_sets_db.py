@@ -1,24 +1,24 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-
+import textwrap
 import pytest
 
 from dae.gene.gene_sets_db import GeneSetCollection, GeneSetsDb
-from dae.genomic_resources.testing import build_testing_repository
+from dae.genomic_resources.testing import build_inmemory_test_repository
 from dae.genomic_resources.repository import GR_CONF_FILE_NAME
 
 
 @pytest.fixture
 def gene_sets_repo(tmp_path):
-    sets_repo = build_testing_repository(repo_id="gene_sets", content={
+    sets_repo = build_inmemory_test_repository({
         "main": {
-            GR_CONF_FILE_NAME: (
-                "type: gene_set\n"
-                "id: main\n"
-                "format: directory\n"
-                "directory: GeneSets\n"
-                "web_label: Main\n"
-                "web_format_str: \"key| (|count|): |desc\"\n"
-            ),
+            GR_CONF_FILE_NAME: textwrap.dedent("""
+                type: gene_set
+                id: main
+                format: directory
+                directory: GeneSets
+                web_label: Main
+                web_format_str: "key| (|count|): |desc"
+                """),
             "GeneSets": {
                 "main_candidates.txt": (
                     "main_candidates\n"
@@ -36,14 +36,14 @@ def gene_sets_repo(tmp_path):
             }
         },
         "test_mapping": {
-            GR_CONF_FILE_NAME: (
-                "type: gene_set\n"
-                "id: test_mapping\n"
-                "format: map\n"
-                "filename: test-map.txt\n"
-                "web_label: Test mapping\n"
-                "web_format_str: \"key| (|count|)\"\n"
-            ),
+            GR_CONF_FILE_NAME: textwrap.dedent("""
+                type: gene_set
+                id: test_mapping
+                format: map
+                filename: test-map.txt
+                web_label: Test mapping
+                web_format_str: "key| (|count|)"
+            """),
             "test-map.txt": (
                 "#geneNS\tsym\n"
                 "POGZ\ttest:01 test:02\n"
@@ -56,21 +56,21 @@ def gene_sets_repo(tmp_path):
             )
         },
         "test_gmt": {
-            GR_CONF_FILE_NAME: (
-                "type: gene_set\n"
-                "id: test_gmt\n"
-                "format: gmt\n"
-                "filename: test-gmt.gmt\n"
-                "web_label: Test GMT\n"
-                "web_format_str: \"key| (|count|)\"\n"
-            ),
+            GR_CONF_FILE_NAME: textwrap.dedent("""
+                type: gene_set
+                id: test_gmt
+                format: gmt
+                filename: test-gmt.gmt
+                web_label: Test GMT
+                web_format_str: "key| (|count|)"
+            """),
             "test-gmt.gmt": (
                 "TEST_GENE_SET1\tsomedescription\tPOGZ\tCHD8\n"
                 "TEST_GENE_SET2\tsomedescription\tANK2\tFAT4\n"
                 "TEST_GENE_SET3\tsomedescription\tPOGZ\n"
             )
         }
-    }, root_path=str(tmp_path))
+    })
     return sets_repo
 
 

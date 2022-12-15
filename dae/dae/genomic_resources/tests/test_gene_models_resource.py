@@ -6,7 +6,7 @@ from dae.genomic_resources.gene_models import \
     build_gene_models_from_resource, GeneModels
 from dae.genomic_resources.testing import \
     build_inmemory_test_resource, convert_to_tab_separated, \
-    build_filesystem_test_repository
+    build_filesystem_test_repository, resource_builder
 from dae.genomic_resources.repository import \
     GenomicResource
 
@@ -82,20 +82,17 @@ def test_gene_models_resource_with_inferred_format_and_gene_mapping():
     "s3",
     "http"
 ])
-def test_against_against_different_repo_types(resource_builder, scheme):
-    res = resource_builder(
-        scheme=scheme,
-        content={
+def test_against_against_different_repo_types(scheme):
+    with resource_builder(scheme, {
             "genomic_resource.yaml":
-                "{type: gene_models, filename: genes.txt, format: refflat}",
-            "genes.txt": convert_to_tab_separated(GMM_CONTENT)
-        })
+            "{type: gene_models, filename: genes.txt, format: refflat}",
+            "genes.txt": convert_to_tab_separated(GMM_CONTENT)}) as res:
 
-    gene_models = build_gene_models_from_resource(res)
-    gene_models.load()
+        gene_models = build_gene_models_from_resource(res)
+        gene_models.load()
 
-    assert set(gene_models.gene_names()) == {"TP53", "POGZ"}
-    assert len(gene_models.transcript_models) == 3
+        assert set(gene_models.gene_names()) == {"TP53", "POGZ"}
+        assert len(gene_models.transcript_models) == 3
 
 
 def test_gene_models_resource(fixture_dirname):

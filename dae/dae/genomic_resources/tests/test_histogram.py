@@ -12,7 +12,8 @@ from dae.genomic_resources.repository import GR_CONF_FILE_NAME, \
 from dae.genomic_resources.histogram import Histogram, \
     HistogramBuilder, load_histograms
 from dae.genomic_resources.testing import build_test_resource, \
-    build_testing_repository
+    setup_directories, \
+    build_filesystem_test_repository
 from dae.testing import convert_to_tab_separated
 
 
@@ -371,9 +372,8 @@ def test_histogram_builder_save(tmp_path, client):
 
 def test_building_already_calculated_histograms(tmp_path, client):
     # the following config is missing min/max for phastCons100way
-    repo = build_testing_repository(
-        scheme="file",
-        root_path=str(tmp_path),
+    setup_directories(
+        tmp_path,
         content={
             "one": {
                 GR_CONF_FILE_NAME: """
@@ -407,6 +407,7 @@ def test_building_already_calculated_histograms(tmp_path, client):
                     """)
             }
         })
+    repo = build_filesystem_test_repository(tmp_path)
     resource = repo.get_resource("one")
     hbuilder = HistogramBuilder(resource)
     hists = hbuilder.build(client)
@@ -428,10 +429,8 @@ def test_building_already_calculated_histograms(tmp_path, client):
 
 
 def test_load_histograms(tmp_path, client):
-    repo = build_testing_repository(
-        scheme="file",
-        root_path=str(tmp_path),
-        content={
+    setup_directories(
+        tmp_path, {
             "one": {
                 GR_CONF_FILE_NAME: """
                     type: position_score
@@ -463,7 +462,9 @@ def test_load_histograms(tmp_path, client):
                     2      10         11       0.02  3
                     """)
             }
-        })
+        }
+    )
+    repo = build_filesystem_test_repository(tmp_path)
 
     res = repo.get_resource("one")
     hbuilder = HistogramBuilder(res)

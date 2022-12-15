@@ -8,7 +8,8 @@ from dae.genomic_resources.cached_repository import \
 from dae.genomic_resources.testing import \
     build_inmemory_test_protocol, \
     build_filesystem_test_protocol, \
-    build_s3_test_protocol
+    build_s3_test_protocol, \
+    setup_directories, setup_tabix
 
 
 def test_caching_repo_simple(content_fixture, tmp_path_factory):
@@ -29,11 +30,30 @@ def test_caching_repo_simple(content_fixture, tmp_path_factory):
 
 
 @pytest.fixture
-def caching_proto(tmp_path_factory, src_proto_fixture):
+def remote_proto_fixture(content_fixture, tmp_path_factory):
+    root_path = tmp_path_factory.mktemp("source_proto_fixture")
+    setup_directories(root_path, content_fixture)
+    setup_tabix(
+        root_path / "one" / "test.txt.gz",
+        """
+            #chrom  pos_begin  pos_end    c1
+            1      1          10         1.0
+            2      1          10         2.0
+            2      11         20         2.5
+            3      1          10         3.0
+            3      11         20         3.5
+        """,
+        seq_col=0, start_col=1, end_col=2)
+    proto = build_filesystem_test_protocol(root_path)
+    return proto
+
+
+@pytest.fixture
+def caching_proto(tmp_path_factory, remote_proto_fixture):
 
     @contextlib.contextmanager
     def builder(caching_scheme):
-        remote_proto = src_proto_fixture
+        remote_proto = remote_proto_fixture
 
         if caching_scheme == "file":
             root_path = tmp_path_factory.mktemp("file_caching_proto_path")

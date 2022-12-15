@@ -4,120 +4,114 @@ import textwrap
 import pytest
 import numpy as np
 
-from dae.genomic_resources.testing import build_testing_repository
+from dae.genomic_resources.testing import build_inmemory_test_repository
 from dae.genomic_resources.repository import GR_CONF_FILE_NAME
 from dae.gene.gene_scores import GeneScore
 
 
 @pytest.fixture
 def scores_repo(tmp_path):
-    scores_repo = build_testing_repository(
-        repo_id="scores",
-        content={
-            "LinearHist": {
-                GR_CONF_FILE_NAME: """
-                    type: gene_score
-                    filename: linear.csv
-                    gene_scores:
-                    - id: linear
-                      desc: linear gene score
-                    histograms:
-                    - score: linear
-                      bins: 3
-                      x_scale: linear
-                      y_scale: linear
-                    """,
-                "linear.csv": textwrap.dedent("""
-                    gene,linear
-                    G1,1
-                    G2,2
-                    G3,3
-                    G4,1
-                    G5,2
-                    G6,3
-                """)
-            },
-            "LogHist": {
-                GR_CONF_FILE_NAME: """
-                    type: gene_score
-                    filename: log.csv
-                    gene_scores:
-                    - id: log
-                      desc: log gene score
-                    histograms:
-                    - score: log
-                      bins: 5
-                      min: 0.0
-                      max: 1.0
-                      x_min_log: 0.001
-                      x_scale: log
-                      y_scale: linear
-                    """,
-                "log.csv": textwrap.dedent("""
-                    gene,log
-                    G1,0
-                    G2,0.0001
-                    G3,0.001
-                    G4,0.01
-                    G5,0.1
-                    G6,1.0
-                """)
-            },
-            "Oops": {
-                GR_CONF_FILE_NAME: "",
-            },
-            "OopsHist": {
-                GR_CONF_FILE_NAME: """
-                    type: gene_score
-                    filename: oops.csv
-                    gene_scores:
-                    - id: linear
-                      desc: linear gene score
-                    """,
-                "oops.csv": textwrap.dedent("""
-                    gene,linear
-                    G1,1
-                    G2,2
-                    G3,3
-                """)
-            },
-            "OopsScores": {
-                GR_CONF_FILE_NAME: """
-                    type: gene_score
-                    filename: oops.csv
-                    """,
-                "oops.csv": textwrap.dedent("""
-                    gene,linear
-                    G1,1
-                    G2,2
-                    G3,3
-                """)
-            },
-            "OopsMissingHist": {
-                GR_CONF_FILE_NAME: """
-                    type: gene_score
-                    filename: linear.csv
-                    gene_scores:
-                    - id: linear
-                      desc: linear gene score
-                    histograms:
-                    - score: alabala
-                      bins: 3
-                      x_scale: linear
-                      y_scale: linear
-                    """,
-                "linear.csv": textwrap.dedent("""
-                    gene,alabala
-                    G1,1
-                    G2,2
-                    G3,3
-                """)
-            },
-
+    scores_repo = build_inmemory_test_repository({
+        "LinearHist": {
+            GR_CONF_FILE_NAME: """
+                type: gene_score
+                filename: linear.csv
+                gene_scores:
+                - id: linear
+                  desc: linear gene score
+                histograms:
+                - score: linear
+                  bins: 3
+                  x_scale: linear
+                  y_scale: linear
+                """,
+            "linear.csv": textwrap.dedent("""
+                gene,linear
+                G1,1
+                G2,2
+                G3,3
+                G4,1
+                G5,2
+                G6,3
+            """)
         },
-        root_path=str(tmp_path)
-    )
-
+        "LogHist": {
+            GR_CONF_FILE_NAME: """
+                type: gene_score
+                filename: log.csv
+                gene_scores:
+                - id: log
+                  desc: log gene score
+                histograms:
+                - score: log
+                  bins: 5
+                  min: 0.0
+                  max: 1.0
+                  x_min_log: 0.001
+                  x_scale: log
+                  y_scale: linear
+                """,
+            "log.csv": textwrap.dedent("""
+                gene,log
+                G1,0
+                G2,0.0001
+                G3,0.001
+                G4,0.01
+                G5,0.1
+                G6,1.0
+            """)
+        },
+        "Oops": {
+            GR_CONF_FILE_NAME: "",
+        },
+        "OopsHist": {
+            GR_CONF_FILE_NAME: """
+                type: gene_score
+                filename: oops.csv
+                gene_scores:
+                - id: linear
+                  desc: linear gene score
+                """,
+            "oops.csv": textwrap.dedent("""
+                gene,linear
+                G1,1
+                G2,2
+                G3,3
+            """)
+        },
+        "OopsScores": {
+            GR_CONF_FILE_NAME: """
+                type: gene_score
+                filename: oops.csv
+                """,
+            "oops.csv": textwrap.dedent("""
+                gene,linear
+                G1,1
+                G2,2
+                G3,3
+            """)
+        },
+        "OopsMissingHist": {
+            GR_CONF_FILE_NAME: """
+                type: gene_score
+                filename: linear.csv
+                gene_scores:
+                - id: linear
+                  desc: linear gene score
+                histograms:
+                - score: alabala
+                  bins: 3
+                  x_scale: linear
+                  y_scale: linear
+                """,
+            "linear.csv": textwrap.dedent("""
+                gene,alabala
+                G1,1
+                G2,2
+                G3,3
+            """)
+        },
+    })
     return scores_repo
 
 

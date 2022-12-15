@@ -234,27 +234,41 @@ def _scan_for_resources(content_dict, parent_id):
                 yield rid, rver, rcontent
 
 
+def build_inmemory_protocol(
+        proto_id: str,
+        root_path: str,
+        content: Dict[str, Any]) -> FsspecReadWriteProtocol:
+    """Build and return an embedded fsspec protocol for testing."""
+    if not os.path.isabs(root_path):
+        logger.error(
+            "for embedded resources repository we expects an "
+            "absolute path: %s", root_path)
+        raise ValueError(f"not an absolute root path: {root_path}")
+
+    proto = cast(
+        FsspecReadWriteProtocol,
+        build_fsspec_protocol(proto_id, f"memory://{root_path}"))
+    for rid, rver, rcontent in _scan_for_resources(content, []):
+        resource = GenomicResource(rid, rver, proto)
+        for fname, fcontent in _scan_for_resource_files(rcontent, []):
+            mode = "wt"
+            if isinstance(fcontent, bytes):
+                mode = "wb"
+            with proto.open_raw_file(resource, fname, mode) as outfile:
+                outfile.write(fcontent)
+            proto.save_resource_file_state(
+                resource, proto.build_resource_file_state(resource, fname))
+
+        proto.save_manifest(resource, proto.build_manifest(resource))
+
+    return proto
+
+
 def build_inmemory_test_protocol(
         content: Dict[str, Any]) -> FsspecReadWriteProtocol:
     """Build and return an embedded fsspec protocol for testing."""
     with tempfile.TemporaryDirectory("embedded_test_protocol") as root_path:
-
-        proto = cast(
-            FsspecReadWriteProtocol,
-            build_fsspec_protocol(root_path, f"memory://{root_path}"))
-        for rid, rver, rcontent in _scan_for_resources(content, []):
-            resource = GenomicResource(rid, rver, proto)
-            for fname, fcontent in _scan_for_resource_files(rcontent, []):
-                mode = "wt"
-                if isinstance(fcontent, bytes):
-                    mode = "wb"
-                with proto.open_raw_file(resource, fname, mode) as outfile:
-                    outfile.write(fcontent)
-                proto.save_resource_file_state(
-                    resource, proto.build_resource_file_state(resource, fname))
-
-            proto.save_manifest(resource, proto.build_manifest(resource))
-
+        proto = build_inmemory_protocol(root_path, root_path, content)
         return proto
 
 
@@ -708,12 +722,8 @@ def process_server(server_manager: ContextManager[str]):
 def s3_threaded_test_server() -> Generator[str, None, None]:
     """Run threaded s3 moto server."""
     # pylint: disable=protected-access,import-outside-toplevel
-    if "AWS_SECRET_ACCESS_KEY" not in os.environ:
-        os.environ["AWS_SECRET_ACCESS_KEY"] = "foo"
-    if "AWS_ACCESS_KEY_ID" not in os.environ:
-        os.environ["AWS_ACCESS_KEY_ID"] = "foo"
     from moto.server import ThreadedMotoServer  # type: ignore
-    server = ThreadedMotoServer(ip_address="localhost", port=0)
+    server = ThreadedMotoServer(ip_address="", port=0)
     server.start()
     server_address = server._server.server_address
     endpoint_url = f"http://{server_address[0]}:{server_address[1]}"
@@ -740,10 +750,6 @@ def s3_test_protocol(endpoint_url: str) -> FsspecReadWriteProtocol:
         FsspecReadWriteProtocol,
         build_fsspec_protocol(
             str(bucket_url), bucket_url, endpoint_url=endpoint_url))
-    # copy_proto_genomic_resources(
-    #     proto,
-    #     build_filesystem_test_protocol(root_path))
-
     return proto
 
 
@@ -751,6 +757,10 @@ def build_s3_test_bucket(endpoint_url: str) -> str:
     """Create an s3 test buckent."""
     with tempfile.TemporaryDirectory("s3_test_bucket") as tmp_path:
         from s3fs.core import S3FileSystem  # type: ignore
+        if "AWS_SECRET_ACCESS_KEY" not in os.environ:
+            os.environ["AWS_SECRET_ACCESS_KEY"] = "foo"
+        if "AWS_ACCESS_KEY_ID" not in os.environ:
+            os.environ["AWS_ACCESS_KEY_ID"] = "foo"
         S3FileSystem.clear_instance_cache()
         s3filesystem = S3FileSystem(
             anon=False, client_kwargs={"endpoint_url": endpoint_url})
@@ -803,3 +813,36 @@ def copy_proto_genomic_resources(
         dest_proto.copy_resource(res)
     dest_proto.build_content_file()
     dest_proto.filesystem.invalidate_cache()
+
+
+@contextlib.contextmanager
+def proto_builder(
+        scheme: str, content: dict) -> Generator[
+            Union[FsspecReadOnlyProtocol, FsspecReadWriteProtocol],
+            None, None]:
+    """Build a test genomic resource protocol with specified content."""
+    with tempfile.TemporaryDirectory("s3_test_bucket") as tmp_path:
+        root_path = pathlib.Path(tmp_path)
+        setup_directories(root_path, content)
+
+        if scheme == "file":
+            yield build_filesystem_test_protocol(root_path)
+            return
+        if scheme == "s3":
+            with build_s3_test_protocol(root_path) as proto:
+                yield proto
+            return
+        if scheme == "http":
+            with build_http_test_protocol(root_path) as proto:
+                yield proto
+            return
+
+    raise ValueError(f"unexpected protocol scheme: <{scheme}>")
+
+
+@contextlib.contextmanager
+def resource_builder(
+        scheme: str, content: dict) -> Generator[GenomicResource, None, None]:
+    with proto_builder(scheme, content) as proto:
+        res = proto.get_resource("")
+        yield res
