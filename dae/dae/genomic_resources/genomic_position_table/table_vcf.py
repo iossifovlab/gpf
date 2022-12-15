@@ -25,26 +25,30 @@ class VCFGenomicPositionTable(TabixGenomicPositionTable):
     def _open_pysam_file(self):
         return self.genomic_resource.open_vcf_file(self.definition.filename)
 
-    def open(self):
-        super().open()
-        assert isinstance(self.pysam_file, pysam.VariantFile)
-        if "scores" not in self.definition and self.pysam_file is not None:
-            def converter(val):
-                try:
-                    return ",".join(map(str, val))
-                except TypeError:
-                    return val
-            self.score_definitions = {
-                key: ScoreDef(
-                    key,
-                    value.description or "",
-                    self.VCF_TYPE_CONVERSION_MAP[value.type],  # type: ignore
-                    converter if value.number not in (1, "A", "R") else None,
-                    tuple(),
-                    None,
-                    None
-                ) for key, value in self.pysam_file.header.info.items()
-            }
+    def _generate_scoredefs(self):
+        if "scores" in self.definition:
+            return super()._generate_scoredefs()
+
+        assert self.definition.get("header_mode", "file") == "file"
+        assert "header" in self.definition
+
+        header_pysam_file = self.genomic_resource.open_vcf_file(
+            self.definition.header)
+
+        def converter(val):
+            try:
+                return ",".join(map(str, val))
+            except TypeError:
+                return val
+        return {
+            key: ScoreDef(
+                key,
+                value.description or "",
+                self.VCF_TYPE_CONVERSION_MAP[value.type],  # type: ignore
+                converter if value.number not in (1, "A", "R") else None,
+                tuple(), None, None
+            ) for key, value in header_pysam_file.header.info.items()
+        }
 
     def _validate_scoredefs(self):
         if "scores" in self.definition:

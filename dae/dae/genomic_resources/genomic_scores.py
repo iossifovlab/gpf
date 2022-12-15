@@ -279,6 +279,7 @@ class GenomicScore(GenomicResourceImplementation):
                 "desc": {"type": "string"},
                 "format": {"type": "string"},
                 "header_mode": {"type": "string"},
+                "header": {"type": "string"},
                 "chrom": {"type": "dict", "schema": {
                     "index": {"type": "integer"},
                     "name": {"type": "string", "excludes": "index"}

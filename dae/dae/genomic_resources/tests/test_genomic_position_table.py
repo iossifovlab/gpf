@@ -19,6 +19,14 @@ from dae.testing import convert_to_tab_separated, setup_directories, setup_vcf
 
 @pytest.fixture
 def vcf_res(tmp_path_factory):
+    vcf_header = """
+##fileformat=VCFv4.1
+##INFO=<ID=A,Number=1,Type=Integer,Description="Score A">
+##INFO=<ID=B,Number=1,Type=Integer,Description="Score B">
+##INFO=<ID=C,Number=.,Type=String,Description="Score C">
+##INFO=<ID=D,Number=.,Type=String,Description="Score D">
+#CHROM POS ID REF ALT QUAL FILTER  INFO
+"""
     root_path = tmp_path_factory.mktemp("vcf")
     setup_directories(
         root_path / "grr",
@@ -27,6 +35,7 @@ def vcf_res(tmp_path_factory):
                 "genomic_resource.yaml": textwrap.dedent("""
                     tabix_table:
                         filename: data.vcf.gz
+                        header: data.header.vcf.gz
                         format: vcf_info
                 """)
             }
@@ -34,17 +43,16 @@ def vcf_res(tmp_path_factory):
     )
     setup_vcf(
         root_path / "grr" / "tmp" / "data.vcf.gz",
-        textwrap.dedent("""
-##fileformat=VCFv4.1
-##INFO=<ID=A,Number=1,Type=Integer,Description="Score A">
-##INFO=<ID=B,Number=1,Type=Integer,Description="Score B">
-##INFO=<ID=C,Number=.,Type=String,Description="Score C">
-##INFO=<ID=D,Number=.,Type=String,Description="Score D">
-#CHROM POS ID REF ALT QUAL FILTER  INFO
+        textwrap.dedent(f"""
+{vcf_header}
 chr1   5   .  A   T   .    .       A=1;C=c11,c12;D=d11
 chr1   15   .  A   T   .    .       A=2;B=21;C=c21;D=d21,d22
 chr1   30   .  A   T   .    .       A=3;B=31;C=c21;D=d31,d32
     """)
+    )
+    setup_vcf(
+        root_path / "grr" / "tmp" / "data.header.vcf.gz",
+        textwrap.dedent(vcf_header)
     )
     proto = build_fsspec_protocol("testing", str(root_path / "grr"))
     return proto.get_resource("tmp")
@@ -52,6 +60,11 @@ chr1   30   .  A   T   .    .       A=3;B=31;C=c21;D=d31,d32
 
 @pytest.fixture
 def vcf_res_autodetect_format(tmp_path_factory):
+    vcf_header = """
+##fileformat=VCFv4.1
+##INFO=<ID=A,Number=1,Type=Integer,Description="Score A">
+#CHROM POS ID REF ALT QUAL FILTER  INFO
+"""
     root_path = tmp_path_factory.mktemp("vcf")
     setup_directories(
         root_path / "grr",
@@ -60,18 +73,21 @@ def vcf_res_autodetect_format(tmp_path_factory):
                 "genomic_resource.yaml": textwrap.dedent("""
                     tabix_table:
                         filename: data.vcf.gz
+                        header: data.header.vcf.gz
                 """)
             }
         }
     )
     setup_vcf(
         root_path / "grr" / "tmp" / "data.vcf.gz",
-        textwrap.dedent("""
-##fileformat=VCFv4.1
-##INFO=<ID=A,Number=1,Type=Integer,Description="Score A">
-#CHROM POS ID REF ALT QUAL FILTER  INFO
+        textwrap.dedent(f"""
+{vcf_header}
 chr1   5   .  A   T   .    .       A=1
     """)
+    )
+    setup_vcf(
+        root_path / "grr" / "tmp" / "data.header.vcf.gz",
+        textwrap.dedent(vcf_header)
     )
     proto = build_fsspec_protocol("testing", str(root_path / "grr"))
     return proto.get_resource("tmp")
@@ -79,6 +95,11 @@ chr1   5   .  A   T   .    .       A=1
 
 @pytest.fixture
 def vcf_res_score_conf_override(tmp_path_factory):
+    vcf_header = """
+##fileformat=VCFv4.1
+##INFO=<ID=A,Number=1,Type=Integer,Description="Score A">
+#CHROM POS ID REF ALT QUAL FILTER  INFO
+"""
     root_path = tmp_path_factory.mktemp("vcf")
     setup_directories(
         root_path / "grr",
@@ -87,6 +108,7 @@ def vcf_res_score_conf_override(tmp_path_factory):
                 "genomic_resource.yaml": textwrap.dedent("""
                     tabix_table:
                         filename: data.vcf.gz
+                        header: data.header.vcf.gz
                         scores:
                         - id: A
                           name: A
@@ -98,12 +120,13 @@ def vcf_res_score_conf_override(tmp_path_factory):
     )
     setup_vcf(
         root_path / "grr" / "tmp" / "data.vcf.gz",
-        textwrap.dedent("""
-##fileformat=VCFv4.1
-##INFO=<ID=A,Number=1,Type=Integer,Description="Score A">
-#CHROM POS ID REF ALT QUAL FILTER  INFO
+        textwrap.dedent(f"""
+{vcf_header}
 chr1   5   .  A   T   .    .       A=1
-    """)
+    """))
+    setup_vcf(
+        root_path / "grr" / "tmp" / "data.header.vcf.gz",
+        textwrap.dedent(vcf_header)
     )
     proto = build_fsspec_protocol("testing", str(root_path / "grr"))
     return proto.get_resource("tmp")
@@ -111,6 +134,14 @@ chr1   5   .  A   T   .    .       A=1
 
 @pytest.fixture
 def vcf_res_multiallelic(tmp_path_factory):
+    vcf_header = """
+##fileformat=VCFv4.1
+##INFO=<ID=A,Number=1,Type=Integer,Description="Score A">
+##INFO=<ID=B,Number=.,Type=Integer,Description="Score B">
+##INFO=<ID=C,Number=R,Type=String,Description="Score C">
+##INFO=<ID=D,Number=A,Type=String,Description="Score D">
+#CHROM POS ID REF ALT QUAL FILTER  INFO
+    """
     root_path = tmp_path_factory.mktemp("vcf")
     setup_directories(
         root_path / "grr",
@@ -119,6 +150,7 @@ def vcf_res_multiallelic(tmp_path_factory):
                 "genomic_resource.yaml": textwrap.dedent("""
                     tabix_table:
                         filename: data.vcf.gz
+                        header: data.header.vcf.gz
                         format: vcf_info
                 """)
             }
@@ -126,18 +158,17 @@ def vcf_res_multiallelic(tmp_path_factory):
     )
     setup_vcf(
         root_path / "grr" / "tmp" / "data.vcf.gz",
-        textwrap.dedent("""
-##fileformat=VCFv4.1
-##INFO=<ID=A,Number=1,Type=Integer,Description="Score A">
-##INFO=<ID=B,Number=.,Type=Integer,Description="Score B">
-##INFO=<ID=C,Number=R,Type=String,Description="Score C">
-##INFO=<ID=D,Number=A,Type=String,Description="Score D">
-#CHROM POS ID REF ALT QUAL FILTER  INFO
+        textwrap.dedent(f"""
+{vcf_header}
 chr1   2   .  A   .   .    .       A=0;B=01,02,03;C=c01
 chr1   5   .  A   T   .    .       A=1;B=11,12,13;C=c11,c12;D=d11
 chr1   15   .  A   T,G   .    .       A=2;B=21,22;C=c21,c22,c23;D=d21,d22
 chr1   30   .  A   T,G,C   .    .       A=3;B=31;C=c31,c32,c33,c34;D=d31,d32,d33
     """)
+    )
+    setup_vcf(
+        root_path / "grr" / "tmp" / "data.header.vcf.gz",
+        textwrap.dedent(vcf_header)
     )
     proto = build_fsspec_protocol("testing", str(root_path / "grr"))
     return proto.get_resource("tmp")
@@ -145,6 +176,11 @@ chr1   30   .  A   T,G,C   .    .       A=3;B=31;C=c31,c32,c33,c34;D=d31,d32,d33
 
 @pytest.fixture
 def vcf_res_misconfigured_score(tmp_path_factory):
+    vcf_header = """
+##fileformat=VCFv4.1
+##INFO=<ID=A,Number=1,Type=Integer,Description="Score A">
+#CHROM POS ID REF ALT QUAL FILTER  INFO
+"""
     root_path = tmp_path_factory.mktemp("vcf")
     setup_directories(
         root_path / "grr",
@@ -153,6 +189,7 @@ def vcf_res_misconfigured_score(tmp_path_factory):
                 "genomic_resource.yaml": textwrap.dedent("""
                     tabix_table:
                         filename: data.vcf.gz
+                        header: data.header.vcf.gz
                         scores:
                         - id: A
                           name: NO_SUCH_SCORE_IN_HEADER
@@ -163,12 +200,13 @@ def vcf_res_misconfigured_score(tmp_path_factory):
     )
     setup_vcf(
         root_path / "grr" / "tmp" / "data.vcf.gz",
-        textwrap.dedent("""
-##fileformat=VCFv4.1
-##INFO=<ID=A,Number=1,Type=Integer,Description="Score A">
-#CHROM POS ID REF ALT QUAL FILTER  INFO
+        textwrap.dedent(f"""
+{vcf_header}
 chr1   5   .  A   T   .    .       A=1
-    """)
+    """))
+    setup_vcf(
+        root_path / "grr" / "tmp" / "data.header.vcf.gz",
+        textwrap.dedent(vcf_header)
     )
     proto = build_fsspec_protocol("testing", str(root_path / "grr"))
     return proto.get_resource("tmp")
@@ -1615,11 +1653,8 @@ def test_line_score_na_values(tmp_path, tabix_file):
         res, "data.bgz")
 
     with build_genomic_position_table(res, res.config["tabix_table"]) as tab:
-        assert list(map(lambda l: l.get_score("c2"), tab.get_all_records())) == [
-            3.14,
-            None,
-            None,
-        ]
+        assert list(map(lambda l: l.get_score("c2"),
+                        tab.get_all_records())) == [3.14, None, None]
 
 
 def test_line_get_available_score_columns(vcf_res_multiallelic):

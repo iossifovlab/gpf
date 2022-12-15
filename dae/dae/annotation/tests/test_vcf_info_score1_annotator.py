@@ -12,6 +12,14 @@ from dae.annotation.annotatable import VCFAllele
 
 @pytest.fixture
 def score1_repo(tmp_path_factory):
+    vcf_header = """
+##fileformat=VCFv4.1
+##INFO=<ID=A,Number=1,Type=Integer,Description="Score A">
+##INFO=<ID=B,Number=1,Type=Integer,Description="Score B">
+##INFO=<ID=C,Number=.,Type=String,Description="Score C">
+##INFO=<ID=D,Number=.,Type=String,Description="Score D">
+#CHROM POS ID REF ALT QUAL FILTER  INFO
+    """
     root_path = tmp_path_factory.mktemp("score1_repo")
     setup_directories(
         root_path / "grr",
@@ -22,6 +30,7 @@ def score1_repo(tmp_path_factory):
                     table:
                         filename: score1.vcf.gz
                         index_filename: score1.vcf.gz.tbi
+                        header: score1.header.vcf.gz
                         desc: |
                             Example testing Score1.
             """)
@@ -30,18 +39,18 @@ def score1_repo(tmp_path_factory):
     )
     setup_vcf(
         root_path / "grr" / "score1" / "score1.vcf.gz",
-        textwrap.dedent("""
-##fileformat=VCFv4.1
-##INFO=<ID=A,Number=1,Type=Integer,Description="Score A">
-##INFO=<ID=B,Number=1,Type=Integer,Description="Score B">
-##INFO=<ID=C,Number=.,Type=String,Description="Score C">
-##INFO=<ID=D,Number=.,Type=String,Description="Score D">
-#CHROM POS ID REF ALT QUAL FILTER  INFO
+        textwrap.dedent(f"""
+{vcf_header}
 chrA   1   .  A   T   .    .       A=1;C=c11,c12;D=d11
 chrA   2   .  A   T   .    .       A=2;B=21;C=c21;D=d21,d22
 chrA   3   .  A   T   .    .       A=3;B=31;C=c21;D=d31,d32
     """)
     )
+    setup_vcf(
+        root_path / "grr" / "score1" / "score1.header.vcf.gz",
+        textwrap.dedent(vcf_header)
+    )
+
     proto = build_fsspec_protocol("testing", str(root_path / "grr"))
     return GenomicResourceProtocolRepo(proto)
 
