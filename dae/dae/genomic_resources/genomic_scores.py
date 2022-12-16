@@ -271,6 +271,19 @@ class GenomicScore(GenomicResourceImplementation):
 
     @staticmethod
     def get_schema():
+        scores_schema = {
+            "type": "list", "schema": {
+                "type": "dict",
+                "schema": {
+                    "id": {"type": "string"},
+                    "index": {"type": "integer"},
+                    "name": {"type": "string", "excludes": "index"},
+                    "type": {"type": "string"},
+                    "desc": {"type": "string"},
+                    "na_values": {"type": "string"}
+                }
+            }
+        }
         return {
             **get_base_resource_schema(),
             "table": {"type": "dict", "schema": {
@@ -300,18 +313,9 @@ class GenomicScore(GenomicResourceImplementation):
                     "add_prefix": {"type": "string"},
                     "del_prefix": {"type": "string", "excludes": "add_prefix"}
                 }},
-                "scores": {"type": "list", "schema": {
-                    "type": "dict",
-                    "schema": {
-                        "id": {"type": "string"},
-                        "index": {"type": "integer"},
-                        "name": {"type": "string", "excludes": "index"},
-                        "type": {"type": "string"},
-                        "desc": {"type": "string"},
-                        "na_values": {"type": "string"}
-                    }
-                }},
+                "scores": scores_schema,
             }},
+            "scores": scores_schema,
             "histograms": {"type": "list", "schema": {
                 "type": "dict",
                 "schema": {

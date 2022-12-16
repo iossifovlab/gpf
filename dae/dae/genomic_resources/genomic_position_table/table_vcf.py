@@ -26,8 +26,9 @@ class VCFGenomicPositionTable(TabixGenomicPositionTable):
         return self.genomic_resource.open_vcf_file(self.definition.filename)
 
     def _generate_scoredefs(self):
-        if "scores" in self.definition:
-            return super()._generate_scoredefs()
+        res = super()._generate_scoredefs()
+        if res:
+            return res
 
         assert self.definition.get("header_mode", "file") == "file"
         assert "header" in self.definition

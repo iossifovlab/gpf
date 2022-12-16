@@ -1963,3 +1963,51 @@ def test_vcf_check_for_missing_score_columns(vcf_res_misconfigured_score):
             vcf_res_misconfigured_score.config["tabix_table"]
         )
         tab.open()
+
+
+def test_outer_scores_config():
+    res = build_test_resource({
+        "genomic_resource.yaml": """
+            table:
+                filename: data.mem
+                pos_begin:
+                    name: pos2
+            scores:
+                - id: c2_outer
+                  name: c2
+                  type: float""",
+        "data.mem": convert_to_tab_separated(
+            """
+            chrom pos pos2 c2
+            1     10  12   3.14
+            """)
+    })
+    with build_genomic_position_table(res, res.config["table"]) as tab:
+        res = next(tab.get_all_records())
+        assert res.get_score("c2_outer") == 3.14
+
+
+def test_outer_scores_config_overrides_inner():
+    res = build_test_resource({
+        "genomic_resource.yaml": """
+            table:
+                filename: data.mem
+                pos_begin:
+                    name: pos2
+                scores:
+                - id: c2
+                  name: c2
+                  type: float
+            scores:
+                - id: c2_relabeled
+                  name: c2
+                  type: float""",
+        "data.mem": convert_to_tab_separated(
+            """
+            chrom pos pos2 c2
+            1     10  12   3.14
+            """)
+    })
+    with build_genomic_position_table(res, res.config["table"]) as tab:
+        res = next(tab.get_all_records())
+        assert res.get_score("c2_relabeled") == 3.14

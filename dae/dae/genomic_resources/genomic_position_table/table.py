@@ -136,8 +136,13 @@ class GenomicPositionTable(abc.ABC):
                                              " be configured for scores!")
 
     def _generate_scoredefs(self):
-        return GenomicPositionTable._parse_scoredef_config(self.definition) \
-            if "scores" in self.definition else {}
+        if "scores" in self.genomic_resource.config:
+            return GenomicPositionTable._parse_scoredef_config(
+                self.genomic_resource.config)
+        if "scores" in self.definition:
+            return GenomicPositionTable._parse_scoredef_config(
+                self.definition)
+        return {}
 
     def _build_chrom_mapping(self):
         self.chrom_map = None
