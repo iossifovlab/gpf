@@ -67,11 +67,11 @@ describe('Variant reports tests', () => {
   });
 
   [
-    {option: 'Affected Status', legendElements: ['affected', 'unaffected']}, 
+    {option: 'Affected Status', legendElements: ['affected', 'unaffected']},
     {option: 'Role', legendElements: ['mom', 'dad', 'proband', 'sibling']},
     {option: 'Phenotype', legendElements: ['autism', 'unaffected']}
   ].forEach(data => {
-    it.only('should check content of the legend for each select option in the families by pedigree tab', () => {
+    it('should check content of the legend for ' + data.option + ' option in the families by pedigree tab', () => {
       page.familiesByPedigreeTab.click();
       page.pedigreeLegendButton.should('be.visible');
       page.pedigreeLegendDropdown.should('not.exist');
@@ -80,6 +80,9 @@ describe('Variant reports tests', () => {
 
       page.pedigreeLegendButton.click();
       page.pedigreeLegendDropdown.should('be.visible');
+
+      page.pedigreeLegendDropdownElements.should('have.length', data.legendElements.length);
+
       data.legendElements.forEach(e => {
         page.pedigreeLegendDropdown.should('contain', e);
       })
@@ -92,10 +95,177 @@ describe('Variant reports tests', () => {
   it('should check content of the select in the families by pedigree tab', () => {
     page.familiesByPedigreeTab.click();
     page.familiesByPedigreeSelectOptions.then(options => {
-      const actual = options.toArray().map(o => o.innerText);
-      expect(actual).to.deep.eq(['Affected Status', 'Role', 'Phenotype'])
+      const actual: string[] = options.toArray().map(o => o.innerText);
+      expect(actual).to.deep.eq(['Affected Status', 'Role', 'Phenotype']);
     })
   })
+
+  it('should open, close and check content for selecting tags', () => {
+    page.familiesByPedigreeTab.click();
+    page.denovoTagSelectorDropdown.should('have.text', 'Select tags');
+    page.denovoTagSelectorContent.should('be.hidden');
+
+    page.denovoTagSelectorDropdown.click();
+    page.denovoTagSelectorContent.should('not.be.hidden');
+
+    // page.denovoTagSelectorDropdown.click();
+    page.denovoTagSelectorDropdown.click(30, 30);
+    page.denovoTagSelectorContent.should('be.hidden');
+
+    page.denovoTagSelectorDropdown.click();
+    page.denovoTagSelectorSearch.should('be.visible');
+    page.denovoTagSelectorOptions.should('be.visible');
+    page.denovoTagSelectorOptions.then(options => {
+      const actual: string[] = options.toArray().map(o => o.innerText);
+      expect(actual).to.deep.eq([
+        'tag_nuclear_family',
+        'tag_quad_family',
+        'tag_trio_family',
+        'tag_simplex_family',
+        'tag_multiplex_family',
+        'tag_control_family',
+        'tag_affected_dad_family',
+        'tag_affected_mom_family',
+        'tag_affected_prb_family',
+        'tag_affected_sib_family',
+        'tag_unaffected_dad_family',
+        'tag_unaffected_mom_family',
+        'tag_unaffected_prb_family',
+        'tag_unaffected_sib_family',
+        'tag_male_prb_family',
+        'tag_female_prb_family',
+        'tag_missing_mom_family',
+        'tag_missing_dad_family'
+      ]);
+    })
+  });
+
+  [
+    'tag_nuclear_family',
+    'tag_quad_family',
+    'tag_trio_family',
+    'tag_simplex_family',
+    'tag_multiplex_family',
+    'tag_control_family',
+    'tag_affected_dad_family',
+    'tag_affected_mom_family',
+    'tag_affected_prb_family',
+    'tag_affected_sib_family',
+    'tag_unaffected_dad_family',
+    'tag_unaffected_mom_family',
+    'tag_unaffected_prb_family',
+    'tag_unaffected_sib_family',
+    'tag_male_prb_family',
+    'tag_female_prb_family',
+    'tag_missing_mom_family',
+    'tag_missing_dad_family'
+  ].forEach(tag => {
+    it('should select and unselect tags', () => {
+      page.familiesByPedigreeTab.click();
+
+      //open the content, check an item
+      page.denovoTagSelectorDropdown.click();
+      page.denovoTagSelectorOptionsInput(tag).check({force: true});
+      page.denovoTagSelectorOptions.find('input[aria-label="'+tag+'"]').should('be.checked');
+      page.denovoTagSelectorSelectedOptions.contains(tag);
+
+      // closing the content without unchecking
+      // page.denovoTagSelectorDropdown.click();
+      page.denovoTagSelectorDropdown.click(30, 30);
+      page.denovoTagSelectorContent.should('be.hidden');
+      page.denovoTagSelectorSelectedOptions.contains(tag);
+
+      //open the content, check an item, delete the item
+      page.denovoTagSelectorDropdown.click();
+      page.denovoTagSelectorOptionsInput(tag).check({force: true});
+      page.denovoTagSelectorOptions.find('input[aria-label="'+tag+'"]').should('be.checked');
+      page.denovoTagSelectorSelectedOptionBtn.click();
+      page.denovoTagSelectorSelectedOptions.should('not.contain', tag);
+      page.denovoTagSelectorOptions.find('input[aria-label="'+tag+'"]').should('not.be.checked');
+      page.denovoTagSelectorContent.should('be.hidden');
+
+      //open the content check and uncheck
+      page.denovoTagSelectorDropdown.click();
+      page.denovoTagSelectorOptionsInput(tag).check({force: true});
+      page.denovoTagSelectorOptions.find('input[aria-label="'+tag+'"]').should('be.checked');
+      page.denovoTagSelectorSelectedOptions.contains(tag);
+
+      page.denovoTagSelectorOptionsInput(tag).uncheck({force: true});
+      page.denovoTagSelectorOptions.find('input[aria-label="'+tag+'"]').should('not.be.checked');
+      page.denovoTagSelectorSelectedOptions.should('not.contain', tag);
+
+      //close
+      page.denovoTagSelectorDropdown.click();
+    })
+  });
+
+  [
+    {tag: 'tag_nuclear_family', expectedPredigrees: 8},
+    {tag: 'tag_quad_family', expectedPredigrees: 4},
+    {tag: 'tag_trio_family', expectedPredigrees: 4},
+    {tag: 'tag_simplex_family', expectedPredigrees: 6},
+    {tag: 'tag_multiplex_family', expectedPredigrees: 0},
+    {tag: 'tag_control_family', expectedPredigrees: 2},
+    {tag: 'tag_affected_dad_family', expectedPredigrees: 0},
+    {tag: 'tag_affected_mom_family', expectedPredigrees: 0},
+    {tag: 'tag_affected_prb_family', expectedPredigrees: 6},
+    {tag: 'tag_affected_sib_family', expectedPredigrees: 0},
+    {tag: 'tag_unaffected_dad_family', expectedPredigrees: 8},
+    {tag: 'tag_unaffected_mom_family', expectedPredigrees: 8},
+    {tag: 'tag_unaffected_prb_family', expectedPredigrees: 0},
+    {tag: 'tag_unaffected_sib_family', expectedPredigrees: 6},
+    {tag: 'tag_male_prb_family', expectedPredigrees: 3},
+    {tag: 'tag_female_prb_family', expectedPredigrees: 3},
+    {tag: 'tag_missing_mom_family', expectedPredigrees: 0},
+    {tag: 'tag_missing_dad_family', expectedPredigrees: 0}
+  ].forEach(element => {
+    it('should select a single tag and check number of pedigree charts', () => {
+      page.familiesByPedigreeTab.click();
+      page.denovoTagSelectorDropdown.click();
+      page.denovoTagSelectorOptionsInput(element.tag).check({force: true});
+      page.pedigreeCells.should('have.length', element.expectedPredigrees);
+    })
+  });
+
+
+  it('should search tags', () => {
+    const tags: string[] = [
+      'tag_nuclear_family',
+      'tag_quad_family',
+      'tag_trio_family',
+      'tag_simplex_family',
+      'tag_multiplex_family',
+      'tag_control_family',
+      'tag_affected_dad_family',
+      'tag_affected_mom_family',
+      'tag_affected_prb_family',
+      'tag_affected_sib_family',
+      'tag_unaffected_dad_family',
+      'tag_unaffected_mom_family',
+      'tag_unaffected_prb_family',
+      'tag_unaffected_sib_family',
+      'tag_male_prb_family',
+      'tag_female_prb_family',
+      'tag_missing_mom_family',
+      'tag_missing_dad_family'
+    ]
+    page.familiesByPedigreeTab.click();
+    page.denovoTagSelectorDropdown.click();
+    const serchingValues: string[] = ['a', 'ro', 'lex', 'as'];
+    for (let i = 0; i < serchingValues.length; i++) {
+      page.denovoTagSelectorSearchInput.type(serchingValues[i]);
+      const filtered: string[] = tags.filter(tag => tag.includes(serchingValues[i]));
+      if (filtered.length === 0) {
+        page.denovoTagSelectorSearchInputNothingFound.should('exist');
+      } else {
+        page.denovoTagSelectorOptions.then(options => {
+          const actual: string[] = options.toArray().map(o => o.innerText);
+          expect(actual).to.deep.eq(filtered);
+        })
+      }
+      page.denovoTagSelectorSearchInput.clear();
+    }
+  });
 });
 
 describe('Variant reports Iossifov count tests', () => {

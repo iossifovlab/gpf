@@ -84,4 +84,48 @@ export class VariantReportsPage extends BasePage {
   public get pedigreeLegendDropdown(): element {
     return cy.get('div#legend');
   }
+
+  public get pedigreeLegendDropdownElements(): element {
+    return cy.get('#legend-items-wrapper').children('.legend-item');
+  }
+
+  public get denovoTagSelectorDropdown(): element {
+    return cy.get('span.dropdown-btn');
+  }
+
+  public get denovoTagSelectorContent(): element {
+    return cy.get('.dropdown-list');
+  }
+
+  public get denovoTagSelectorSearch(): element {
+    return cy.get('ul.item1');
+  }
+
+  public get denovoTagSelectorOptions(): element {
+    return cy.get('ul.item2').children('li');
+  }
+
+  public denovoTagSelectorOptionsInput(label: string): element {
+    return cy.get('input[aria-label="'+label+'"]');
+  }
+
+  public get denovoTagSelectorSelectedOptions(): element {
+    return cy.get('span.dropdown-btn');
+  }
+
+  public get denovoTagSelectorSelectedOptionBtn(): element {
+    return cy.get('.selected-item a');
+  }
+
+  public get pedigreeCells(): element {
+    return cy.get('.pedigree-cell');
+  }
+
+  public get denovoTagSelectorSearchInput(): element {
+    return cy.get('input[aria-label="multiselect-search"]');
+  }
+
+  public get denovoTagSelectorSearchInputNothingFound(): element {
+    return cy.get('.no-filtered-data');
+  }
 }
