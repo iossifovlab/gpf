@@ -175,6 +175,7 @@ import { GetRegressionIdsPipe } from './utils/get-regression-ids.pipe';
 import { GetEffectTypeOrderByColumOrderPipe } from './utils/get-effect-type-order-by-column-order.pipe';
 import { GetVariantReportRowsPipe } from './utils/get-variant-report-rows.pipe';
 import { BackgroundColorEnrichmentPipe } from './utils/background-color-enrichment.pipe';
+import { ContrastAdjustPipe } from './utils/contrast-adjust.pipe';
 
 const appRoutes: Routes = [
   {
@@ -364,6 +365,7 @@ const appRoutes: Routes = [
     GenePlotComponent,
     PeopleCounterRowPipe,
     SplitPipe,
+    ContrastAdjustPipe,
     AgpTableComponent,
     TruncatePipe,
     ComparePipe,
