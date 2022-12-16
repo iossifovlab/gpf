@@ -11,7 +11,7 @@
             <gpf-table-subheader
               *ngIf="slot.source !== 'pedigree'"
               caption="{{ slot.name }}"
-              [comparator]="comparator(slot.source)">
+              [comparator]="slot.source | compare">
             </gpf-table-subheader>
           </ng-container>
         </gpf-table-header>

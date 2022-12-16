@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, Input, OnInit, OnChanges, SimpleChanges, ChangeDetectionStrategy } from '@angular/core';
 import { Validate } from 'class-validator';
 import { PersonSet, PersonSetCollection } from '../datasets/datasets';
 import { SetNotEmpty } from '../utils/set.validators';
@@ -10,6 +10,7 @@ import { StatefulComponent } from 'app/common/stateful-component';
   selector: 'gpf-pedigree-selector',
   templateUrl: './pedigree-selector.component.html',
   styleUrls: ['./pedigree-selector.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class PedigreeSelectorComponent extends StatefulComponent implements OnInit, OnChanges {
   @Input() public collections: PersonSetCollection[];

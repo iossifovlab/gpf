@@ -1,4 +1,4 @@
-import { Component, ElementRef, HostListener, OnInit, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, HostListener, OnInit, ViewChild } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { BehaviorSubject } from 'rxjs';
 import { User } from '../users/users';
@@ -12,7 +12,8 @@ import { map, switchMap, take } from 'rxjs/operators';
 @Component({
   selector: 'gpf-user-edit',
   templateUrl: './user-edit.component.html',
-  styleUrls: ['./user-edit.component.css']
+  styleUrls: ['./user-edit.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class UserEditComponent implements OnInit {
   @ViewChild(UserGroupsSelectorComponent)

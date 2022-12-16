@@ -1,4 +1,15 @@
-import { Input, Component, OnInit, OnChanges, ViewChild, Output, EventEmitter, SimpleChanges, ElementRef } from '@angular/core';
+import {
+  Input,
+  Component, OnInit,
+  OnChanges,
+  ViewChild,
+  Output,
+  EventEmitter,
+  SimpleChanges,
+  ChangeDetectionStrategy,
+  ElementRef
+} from '@angular/core';
+
 import * as d3 from 'd3';
 // eslint-disable-next-line no-restricted-imports
 import { Subject } from 'rxjs';
@@ -7,7 +18,8 @@ import { debounceTime } from 'rxjs/operators';
 @Component({
   selector: 'gpf-histogram',
   templateUrl: './histogram.component.html',
-  styleUrls: ['./histogram.component.css']
+  styleUrls: ['./histogram.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class HistogramComponent implements OnInit, OnChanges {
   private rangeStartSubject = new Subject<number>();
@@ -487,5 +499,4 @@ export class HistogramComponent implements OnInit, OnChanges {
       }
     };
   }
-
 }

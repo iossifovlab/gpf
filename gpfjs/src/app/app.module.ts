@@ -168,6 +168,14 @@ import { AuthInterceptorService } from './auth-interceptor.service';
 import { AuthResolverService } from './auth-resolver.service';
 import { APP_BASE_HREF, PlatformLocation } from '@angular/common';
 import { CustomUrlSerializer } from './custom-url-serializer';
+import { ComparePipe } from './utils/compare.pipe';
+import { BackgroundColorPipe } from './utils/background-color.pipe';
+import { RegressionComparePipe } from './utils/regression-compare.pipe';
+import { GetRegressionIdsPipe } from './utils/get-regression-ids.pipe';
+import { GetEffectTypeOrderByColumOrderPipe } from './utils/get-effect-type-order-by-column-order.pipe';
+import { GetVariantReportRowsPipe } from './utils/get-variant-report-rows.pipe';
+import { BackgroundColorEnrichmentPipe } from './utils/background-color-enrichment.pipe';
+import { ContrastAdjustPipe } from './utils/contrast-adjust.pipe';
 
 const appRoutes: Routes = [
   {
@@ -357,9 +365,17 @@ const appRoutes: Routes = [
     GenePlotComponent,
     PeopleCounterRowPipe,
     SplitPipe,
+    ContrastAdjustPipe,
     AgpTableComponent,
     TruncatePipe,
+    ComparePipe,
+    BackgroundColorPipe,
+    BackgroundColorEnrichmentPipe,
+    RegressionComparePipe,
+    GetRegressionIdsPipe,
     JoinPipe,
+    GetEffectTypeOrderByColumOrderPipe,
+    GetVariantReportRowsPipe,
     UniqueFamilyVariantsFilterComponent,
     PedigreeChartComponent,
     PedigreeChartMemberComponent,

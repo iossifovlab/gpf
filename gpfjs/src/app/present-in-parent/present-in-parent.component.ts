@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { Store } from '@ngxs/store';
 import { Validate, ValidateIf, Min, Max } from 'class-validator';
 import { IsLessThanOrEqual } from '../utils/is-less-than-validator';
@@ -10,6 +10,7 @@ import { StatefulComponent } from 'app/common/stateful-component';
 @Component({
   selector: 'gpf-present-in-parent',
   templateUrl: './present-in-parent.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class PresentInParentComponent extends StatefulComponent implements OnInit {
   @ValidateIf(o => o.selectedRarityType !== 'ultraRare' && o.rarityIntervalStart !== null)

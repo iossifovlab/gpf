@@ -31,10 +31,12 @@
 
     <h5 id="total-number-of-families">
       <span>Total number of families: {{ variantReport.familyReport.familiesTotal }}</span>
-      <span style="padding-left: 5px">(<a class="download-link" (click)="onDownload()">
+      <span style="padding-left: 5px"
+        >(<a class="download-link" (click)="onDownload()">
           <span *ngIf="downloadInProgress">Downloading...</span>
-          <span *ngIf="!downloadInProgress">Download</span>
-      </a>)</span>
+          <span *ngIf="!downloadInProgress">Download</span> </a
+        >)</span
+      >
     </h5>
   </div>
 
@@ -171,29 +173,42 @@
                 <th class="rotate" *ngFor="let column of currentDenovoReport.columns">
                   <div
                     class="column-header"
-                    [attr.title]="'children with the specific ' + currentDenovoReport.groupName.toLowerCase() + ': ' + column.substring(column.lastIndexOf('(') + 1, column.lastIndexOf(')'))"
-                  >
+                    [attr.title]="
+                      'children with the specific ' +
+                      currentDenovoReport.groupName.toLowerCase() +
+                      ': ' +
+                      column.substring(column.lastIndexOf('(') + 1, column.lastIndexOf(')'))
+                    ">
                     <span>{{ column }}</span>
                   </div>
                 </th>
               </thead>
               <tbody>
                 <tr
-                  *ngFor="let effectType of getRows(currentDenovoReport.effectGroups, currentDenovoReport.effectTypes)"
+                  *ngFor="let effectType of currentDenovoReport.effectGroups | getRows: currentDenovoReport.effectTypes"
                   [ngClass]="{ 'effect-type-group-row': currentDenovoReport.effectGroups.indexOf(effectType) !== -1 }">
                   <th>{{ effectType }}</th>
                   <td
                     *ngFor="
-                      let effectTypeData of getEffectTypeOrderByColumOrder(
-                        effectType,
-                        currentDenovoReport,
-                        currentDenovoReport.columns
-                      )
+                      let effectTypeData of effectType
+                        | getEffectTypeOrderByColumOrder: currentDenovoReport:currentDenovoReport.columns
                     ">
                     <div
                       class="effect-type-data-values"
-                      title="{{ effectType }}&#10;{{ effectTypeData.column }}&#10;number of observed events: {{ effectTypeData.numberOfObservedEvents }}&#10;observed rate per individual: {{ effectTypeData.observedRatePerChild | number }}&#10;number of individuals with events: {{ effectTypeData.numberOfChildrenWithEvent }}&#10;percent of individuals with events: {{ effectTypeData.percentOfChildrenWithEvents | percent }}">
-                      <span>{{ effectTypeData.numberOfObservedEvents }}, {{ effectTypeData.observedRatePerChild | number }}<br />({{ effectTypeData.numberOfChildrenWithEvent }}, {{ effectTypeData.percentOfChildrenWithEvents | percent }})</span>
+                      title="{{ effectType }}&#10;{{ effectTypeData.column }}&#10;number of observed events: {{
+                        effectTypeData.numberOfObservedEvents
+                      }}&#10;observed rate per individual: {{
+                        effectTypeData.observedRatePerChild | number
+                      }}&#10;number of individuals with events: {{
+                        effectTypeData.numberOfChildrenWithEvent
+                      }}&#10;percent of individuals with events: {{
+                        effectTypeData.percentOfChildrenWithEvents | percent
+                      }}">
+                      <span
+                        >{{ effectTypeData.numberOfObservedEvents }}, {{ effectTypeData.observedRatePerChild | number
+                        }}<br />({{ effectTypeData.numberOfChildrenWithEvent }},
+                        {{ effectTypeData.percentOfChildrenWithEvents | percent }})</span
+                      >
                     </div>
                   </td>
                 </tr>

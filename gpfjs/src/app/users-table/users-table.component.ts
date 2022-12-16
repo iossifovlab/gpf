@@ -1,4 +1,4 @@
-import { Component, OnInit, NgZone, Input } from '@angular/core';
+import { Component, OnInit, NgZone, Input, ChangeDetectionStrategy } from '@angular/core';
 import { User } from '../users/users';
 import { UsersService } from '../users/users.service';
 import { take } from 'rxjs/operators';
@@ -6,7 +6,8 @@ import { take } from 'rxjs/operators';
 @Component({
   selector: 'gpf-users-table',
   templateUrl: './users-table.component.html',
-  styleUrls: ['./users-table.component.css']
+  styleUrls: ['./users-table.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class UsersTableComponent implements OnInit {
   @Input() public users: User[];

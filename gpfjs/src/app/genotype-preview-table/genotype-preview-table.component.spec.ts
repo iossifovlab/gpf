@@ -10,10 +10,12 @@ import { GpfTableSubheaderComponent } from 'app/table/component/subheader.compon
 import { GenotypeBrowser, PersonSet } from 'app/datasets/datasets';
 import { GenotypePreview, GenotypePreviewVariantsArray } from 'app/genotype-preview-model/genotype-preview';
 import { LegendItem } from 'app/variant-reports/variant-reports';
+import { ComparePipe } from 'app/utils/compare.pipe';
 
 describe('GenotypePreviewTableComponent', () => {
   let component: GenotypePreviewTableComponent;
   let fixture: ComponentFixture<GenotypePreviewTableComponent>;
+  const comparePipe: ComparePipe = new ComparePipe();
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
@@ -24,7 +26,8 @@ describe('GenotypePreviewTableComponent', () => {
         GpfTableHeaderComponent,
         GpfTableCellComponent,
         GpfTableEmptyCellComponent,
-        GpfTableSubheaderComponent
+        GpfTableSubheaderComponent,
+        ComparePipe
       ]
     }).compileComponents();
     fixture = TestBed.createComponent(GenotypePreviewTableComponent);
@@ -73,39 +76,39 @@ describe('GenotypePreviewTableComponent', () => {
   });
 
   it('should have working comparator', () => {
-    expect(component.comparator('variant.location')).toBe(component.locationComparator);
+    expect(comparePipe.transform('variant.location')).toBe(comparePipe.locationComparator);
 
-    expect(component.comparator('field')(
+    expect(comparePipe.transform('field')(
       GenotypePreview.fromJson([null], ['field']),
       GenotypePreview.fromJson([null], ['field'])
     )).toBe(0);
 
-    expect(component.comparator('field')(
+    expect(comparePipe.transform('field')(
       GenotypePreview.fromJson(['value1'], ['field']),
       GenotypePreview.fromJson([null], ['field'])
     )).toBe(1);
 
-    expect(component.comparator('field')(
+    expect(comparePipe.transform('field')(
       GenotypePreview.fromJson([null], ['field']),
       GenotypePreview.fromJson(['value1'], ['field'])
     )).toBe(-1);
 
-    expect(component.comparator('field')(
+    expect(comparePipe.transform('field')(
       GenotypePreview.fromJson([0], ['field']),
       GenotypePreview.fromJson([10], ['field'])
     )).toBe(-10);
 
-    expect(component.locationComparator(
+    expect(comparePipe.locationComparator(
       GenotypePreview.fromJson(['X:123'], ['variant.location']),
       GenotypePreview.fromJson(['1:123'], ['variant.location'])
     )).toBe(99);
 
-    expect(component.locationComparator(
+    expect(comparePipe.locationComparator(
       GenotypePreview.fromJson(['Y:125'], ['variant.location']),
       GenotypePreview.fromJson(['Y:113'], ['variant.location'])
     )).toBe(12);
 
-    expect(component.locationComparator(
+    expect(comparePipe.locationComparator(
       GenotypePreview.fromJson(['Y:125'], ['variant.location']),
       GenotypePreview.fromJson(['M:113'], ['variant.location'])
     )).toBe(-1);
