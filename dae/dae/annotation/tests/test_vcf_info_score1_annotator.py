@@ -30,7 +30,6 @@ def score1_repo(tmp_path_factory):
                     table:
                         filename: score1.vcf.gz
                         index_filename: score1.vcf.gz.tbi
-                        header: score1.header.vcf.gz
                         desc: |
                             Example testing Score1.
             """)

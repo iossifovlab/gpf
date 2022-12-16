@@ -47,7 +47,6 @@ def vcf_info_clinvar(tmp_path_factory):
                     type: allele_score
                     table:
                         filename: clinvar.vcf.gz
-                        header: clinvar.header.vcf.gz
                         index_filename: clinvar.vcf.gz.tbi
                         desc: |
                             Example testing ClinVar.
@@ -318,7 +317,6 @@ def vcf_info_gnomad(tmp_path_factory):
                     type: allele_score
                     table:
                         filename: gnomad.vcf.gz
-                        header: gnomad.header.vcf.gz
                         index_filename: gnomad.vcf.gz.tbi
                         desc: |
                             Example testing GnomAD.

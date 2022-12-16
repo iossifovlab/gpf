@@ -35,7 +35,6 @@ def vcf_res(tmp_path_factory):
                 "genomic_resource.yaml": textwrap.dedent("""
                     tabix_table:
                         filename: data.vcf.gz
-                        header: data.header.vcf.gz
                         format: vcf_info
                 """)
             }
@@ -73,7 +72,6 @@ def vcf_res_autodetect_format(tmp_path_factory):
                 "genomic_resource.yaml": textwrap.dedent("""
                     tabix_table:
                         filename: data.vcf.gz
-                        header: data.header.vcf.gz
                 """)
             }
         }
@@ -108,7 +106,6 @@ def vcf_res_score_conf_override(tmp_path_factory):
                 "genomic_resource.yaml": textwrap.dedent("""
                     tabix_table:
                         filename: data.vcf.gz
-                        header: data.header.vcf.gz
                         scores:
                         - id: A
                           name: A
@@ -150,7 +147,6 @@ def vcf_res_multiallelic(tmp_path_factory):
                 "genomic_resource.yaml": textwrap.dedent("""
                     tabix_table:
                         filename: data.vcf.gz
-                        header: data.header.vcf.gz
                         format: vcf_info
                 """)
             }
@@ -189,7 +185,6 @@ def vcf_res_misconfigured_score(tmp_path_factory):
                 "genomic_resource.yaml": textwrap.dedent("""
                     tabix_table:
                         filename: data.vcf.gz
-                        header: data.header.vcf.gz
                         scores:
                         - id: A
                           name: NO_SUCH_SCORE_IN_HEADER

@@ -31,10 +31,13 @@ class VCFGenomicPositionTable(TabixGenomicPositionTable):
             return res
 
         assert self.definition.get("header_mode", "file") == "file"
-        assert "header" in self.definition
+
+        filename = self.definition.filename
+        idx = filename.index(".vcf")
+        header_filename = filename[:idx] + ".header" + filename[idx:]
 
         header_pysam_file = self.genomic_resource.open_vcf_file(
-            self.definition.header)
+            header_filename)
 
         def converter(val):
             try:
