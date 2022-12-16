@@ -44,7 +44,7 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
   public familyLoadingFinished: boolean;
   public geneBrowserConfig: GeneBrowser;
 
-  public readonly affectedStatusValues = ['Affected only', 'Unaffected only', 'Affected and unaffected'];;
+  public readonly affectedStatusValues = ['Affected only', 'Unaffected only', 'Affected and unaffected'];
   public readonly effectTypeValues = ['LGDs', 'missense', 'synonymous', 'CNV+', 'CNV-', 'Other'];
   public readonly variantTypeValues = ['sub', 'ins', 'del', 'CNV+', 'CNV-'];
 

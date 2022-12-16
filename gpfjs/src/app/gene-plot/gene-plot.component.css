@@ -38,6 +38,10 @@ label {
   overflow: hidden;
 }
 
+#counters span{
+  width: 15em;
+}
+
 #summary-alleles-count {
   padding-right: 16px;
 }

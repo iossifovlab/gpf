@@ -1,7 +1,7 @@
 .filter {
   margin-top: 40px;
-  margin-bottom: 40px;
-  height: 100px;
+  min-height: 100px;
+  margin-right: 30px;
 }
 
 .filter .card-block {
@@ -37,4 +37,5 @@
 #filters {
   display: flex;
   flex-wrap: wrap;
+  margin-bottom: 40px;
 }
