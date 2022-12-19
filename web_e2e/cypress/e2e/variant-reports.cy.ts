@@ -182,33 +182,54 @@ describe('Variant reports tests', () => {
   });
 
   [
-    {tag: 'tag_nuclear_family', expectedPredigrees: 8},
-    {tag: 'tag_quad_family', expectedPredigrees: 4},
-    {tag: 'tag_trio_family', expectedPredigrees: 4},
-    {tag: 'tag_simplex_family', expectedPredigrees: 6},
-    {tag: 'tag_multiplex_family', expectedPredigrees: 0},
-    {tag: 'tag_control_family', expectedPredigrees: 2},
-    {tag: 'tag_affected_dad_family', expectedPredigrees: 0},
-    {tag: 'tag_affected_mom_family', expectedPredigrees: 0},
-    {tag: 'tag_affected_prb_family', expectedPredigrees: 6},
-    {tag: 'tag_affected_sib_family', expectedPredigrees: 0},
-    {tag: 'tag_unaffected_dad_family', expectedPredigrees: 8},
-    {tag: 'tag_unaffected_mom_family', expectedPredigrees: 8},
-    {tag: 'tag_unaffected_prb_family', expectedPredigrees: 0},
-    {tag: 'tag_unaffected_sib_family', expectedPredigrees: 6},
-    {tag: 'tag_male_prb_family', expectedPredigrees: 3},
-    {tag: 'tag_female_prb_family', expectedPredigrees: 3},
-    {tag: 'tag_missing_mom_family', expectedPredigrees: 0},
-    {tag: 'tag_missing_dad_family', expectedPredigrees: 0}
+    {tag: tags[0], expectedPedigreeCounts: ['877', '789', '500', '128', '107', '106', '6', '3']},
+    {tag: tags[1], expectedPedigreeCounts: ['877', '789', '128', '107']},
+    {tag: tags[2], expectedPedigreeCounts: ['500', '106', '6', '3']},
+    {tag: tags[3], expectedPedigreeCounts: ['877', '789', '500', '128', '107', '106']},
+    {tag: tags[4], expectedPedigreeCounts: []},
+    {tag: tags[5], expectedPedigreeCounts: ['6', '3']},
+    {tag: tags[6], expectedPedigreeCounts: []},
+    {tag: tags[7], expectedPedigreeCounts: []},
+    {tag: tags[8], expectedPedigreeCounts: ['877', '789', '500', '128', '107', '106']},
+    {tag: tags[9], expectedPedigreeCounts: []},
+    {tag: tags[10], expectedPedigreeCounts: ['877', '789', '500', '128', '107', '106', '6', '3']},
+    {tag: tags[11], expectedPedigreeCounts: ['877', '789', '500', '128', '107', '106', '6', '3']},
+    {tag: tags[12], expectedPedigreeCounts: []},
+    {tag: tags[13], expectedPedigreeCounts: ['877', '789', '128', '107', '6', '3']},
+    {tag: tags[14], expectedPedigreeCounts: ['877', '789', '500']},
+    {tag: tags[15], expectedPedigreeCounts: ['128', '107', '106']},
+    {tag: tags[16], expectedPedigreeCounts: []},
+    {tag: tags[17], expectedPedigreeCounts: []}
   ].forEach(element => {
-    it('should select a single tag and check number of pedigree charts', () => {
+    it('should select a single tag and check pedigree charts', () => {
       page.familiesByPedigreeTab.click();
       page.denovoTagSelectorDropdown.click();
       page.denovoTagSelectorOptionsInput(element.tag).check({force: true});
-      page.pedigreeCells.should('have.length', element.expectedPredigrees);
+
+      if (element.expectedPedigreeCounts.length === 0) {
+        page.pedigreesNothingFound.should('exist');
+      } else {
+        page.pedigreeCells.should('have.length', element.expectedPedigreeCounts.length);
+        page.pedigreeCells.each((cell, i = 0) => {
+          if (i < element.expectedPedigreeCounts.length) {
+            expect(cell).to.have.text(element.expectedPedigreeCounts[i]);
+            i++;
+          }
+        });
+      }
+      page.denovoTagSelectorSelectedOptionBtn.click();
     })
   });
 
+  it.skip('should display pedigree chart content', () => {
+    page.familiesByPedigreeTab.click();
+    page.pedigreeCells.each((cell) => {
+      cell.trigger('click');
+      page.pedigreeModalContent.should('be.visible');
+      cy.get('body').click(30, 30);
+      page.pedigreeModalContent.should('not.have.attr', 'class', 'modal-open');
+    })
+  })
 
   it('should search tags', () => {
     page.familiesByPedigreeTab.click();

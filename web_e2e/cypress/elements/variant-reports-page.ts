@@ -128,4 +128,12 @@ export class VariantReportsPage extends BasePage {
   public get denovoTagSelectorSearchInputNothingFound(): element {
     return cy.get('.no-filtered-data');
   }
+
+  public get pedigreesNothingFound(): element {
+    return cy.get('#nothing-found');
+  }
+
+  public get pedigreeModalContent(): element {
+    return cy.get('.modal-content');
+  }
 }
