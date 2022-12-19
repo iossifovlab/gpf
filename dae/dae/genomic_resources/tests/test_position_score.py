@@ -154,7 +154,7 @@ def test_phastcons100way():
 def test_position_score_over_http(fixture_dirname):
     dirname = fixture_dirname("genomic_resources")
 
-    with build_http_test_protocol(dirname) as proto:
+    with build_http_test_protocol(dirname, repair=False) as proto:
         repo = GenomicResourceProtocolRepo(proto)
 
         resource = repo.get_resource(

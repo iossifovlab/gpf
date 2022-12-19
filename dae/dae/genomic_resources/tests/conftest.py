@@ -16,30 +16,7 @@ from dae.genomic_resources.testing import \
     s3_process_test_server, \
     copy_proto_genomic_resources
 
-from dae.genomic_resources import build_genomic_resource_repository
-
 logger = logging.getLogger(__name__)
-
-
-@pytest.fixture(scope="session")
-def fixtures_http_server(fixture_dirname):
-    from dae.genomic_resources.testing import range_http_serve
-    directory = fixture_dirname("genomic_resources")
-    with range_http_serve(directory) as httpd:
-        yield httpd
-
-
-@pytest.fixture
-def grr_http(fixtures_http_server):  # pylint: disable=unused-argument
-    # resources_http_server):
-    url = fixtures_http_server
-    repositories = {
-        "id": "test_grr",
-        "type": "url",
-        "url": url,
-    }
-
-    return build_genomic_resource_repository(repositories)
 
 
 @pytest.fixture
