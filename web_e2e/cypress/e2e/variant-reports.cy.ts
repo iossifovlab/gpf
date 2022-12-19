@@ -1,6 +1,26 @@
 import { datasetIds, toolPageLinks } from 'cypress/elements/utils';
 import { VariantReportsPage } from 'cypress/elements/variant-reports-page';
 
+const tags: string[] = [
+  'tag_nuclear_family',
+  'tag_quad_family',
+  'tag_trio_family',
+  'tag_simplex_family',
+  'tag_multiplex_family',
+  'tag_control_family',
+  'tag_affected_dad_family',
+  'tag_affected_mom_family',
+  'tag_affected_prb_family',
+  'tag_affected_sib_family',
+  'tag_unaffected_dad_family',
+  'tag_unaffected_mom_family',
+  'tag_unaffected_prb_family',
+  'tag_unaffected_sib_family',
+  'tag_male_prb_family',
+  'tag_female_prb_family',
+  'tag_missing_mom_family',
+  'tag_missing_dad_family'
+]
 describe('Variant reports tests', () => {
   const page = new VariantReportsPage();
 
@@ -117,49 +137,11 @@ describe('Variant reports tests', () => {
     page.denovoTagSelectorOptions.should('be.visible');
     page.denovoTagSelectorOptions.then(options => {
       const actual: string[] = options.toArray().map(o => o.innerText);
-      expect(actual).to.deep.eq([
-        'tag_nuclear_family',
-        'tag_quad_family',
-        'tag_trio_family',
-        'tag_simplex_family',
-        'tag_multiplex_family',
-        'tag_control_family',
-        'tag_affected_dad_family',
-        'tag_affected_mom_family',
-        'tag_affected_prb_family',
-        'tag_affected_sib_family',
-        'tag_unaffected_dad_family',
-        'tag_unaffected_mom_family',
-        'tag_unaffected_prb_family',
-        'tag_unaffected_sib_family',
-        'tag_male_prb_family',
-        'tag_female_prb_family',
-        'tag_missing_mom_family',
-        'tag_missing_dad_family'
-      ]);
+      expect(actual).to.deep.eq(tags);
     })
   });
 
-  [
-    'tag_nuclear_family',
-    'tag_quad_family',
-    'tag_trio_family',
-    'tag_simplex_family',
-    'tag_multiplex_family',
-    'tag_control_family',
-    'tag_affected_dad_family',
-    'tag_affected_mom_family',
-    'tag_affected_prb_family',
-    'tag_affected_sib_family',
-    'tag_unaffected_dad_family',
-    'tag_unaffected_mom_family',
-    'tag_unaffected_prb_family',
-    'tag_unaffected_sib_family',
-    'tag_male_prb_family',
-    'tag_female_prb_family',
-    'tag_missing_mom_family',
-    'tag_missing_dad_family'
-  ].forEach(tag => {
+  tags.forEach(tag => {
     it('should select and unselect tags', () => {
       page.familiesByPedigreeTab.click();
 
@@ -229,29 +211,10 @@ describe('Variant reports tests', () => {
 
 
   it('should search tags', () => {
-    const tags: string[] = [
-      'tag_nuclear_family',
-      'tag_quad_family',
-      'tag_trio_family',
-      'tag_simplex_family',
-      'tag_multiplex_family',
-      'tag_control_family',
-      'tag_affected_dad_family',
-      'tag_affected_mom_family',
-      'tag_affected_prb_family',
-      'tag_affected_sib_family',
-      'tag_unaffected_dad_family',
-      'tag_unaffected_mom_family',
-      'tag_unaffected_prb_family',
-      'tag_unaffected_sib_family',
-      'tag_male_prb_family',
-      'tag_female_prb_family',
-      'tag_missing_mom_family',
-      'tag_missing_dad_family'
-    ]
     page.familiesByPedigreeTab.click();
     page.denovoTagSelectorDropdown.click();
     const serchingValues: string[] = ['a', 'ro', 'lex', 'as'];
+
     for (let i = 0; i < serchingValues.length; i++) {
       page.denovoTagSelectorSearchInput.type(serchingValues[i]);
       const filtered: string[] = tags.filter(tag => tag.includes(serchingValues[i]));
