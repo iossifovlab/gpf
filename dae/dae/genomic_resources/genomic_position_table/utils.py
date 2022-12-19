@@ -40,6 +40,47 @@ def build_genomic_position_table(
     raise ValueError(f"unknown table format {table_fmt}")
 
 
+# def build_genome_position_table(
+#         resource: GenomicResource, table_definition: dict):
+#     """Open a genome position table from genomic resource."""
+#     filename = table_definition["filename"]
+
+#     compression = None
+#     if filename.endswith(".bgz"):
+#         default_format = "tabix"
+#     elif filename.endswith(".txt") or filename.endswith(".tsv"):
+#         default_format = "tsv"
+#     elif filename.endswith(".txt.gz") or filename.endswith(".tsv.gz"):
+#         default_format = "tsv"
+#         compression = "gzip"
+#     elif filename.endswith(".csv"):
+#         default_format = "csv"
+#     elif filename.endswith(".csv.gz"):
+#         default_format = "csv"
+#         compression = "gzip"
+#     else:
+#         default_format = "mem"
+
+#     table_format = table_definition.get("format", default_format)
+
+#     table: GenomicPositionTable
+
+#     if table_format in ["mem", "csv", "tsv"]:
+#         with resource.open_raw_file(
+#                 filename, mode="rt", compression=compression) as infile:
+#             table = FlatGenomicPositionTable(
+#                 resource, table_definition, infile, table_format)
+#             table.load()
+#         return table
+#     if table_format == "tabix":
+#         table = TabixGenomicPositionTable(
+#             resource, table_definition, resource.open_tabix_file(filename))
+#         table.load()
+#         return table
+
+#     raise ValueError("unknown table format")
+
+
 def save_as_tabix_table(
         table: GenomicPositionTable,
         full_file_path: str):

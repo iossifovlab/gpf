@@ -7,6 +7,7 @@ import pathlib
 import logging
 import threading
 import tempfile
+import gzip
 from typing import Any, Dict, Union, cast, Optional, Generator, \
     Tuple, ContextManager
 import multiprocessing as mp
@@ -97,6 +98,17 @@ def setup_tabix(tabix_path: pathlib.Path, tabix_content: str, **kwargs):
     out_path.unlink()
 
     return tabix_filename, index_filename
+
+
+def setup_gzip(gzip_path: pathlib.Path, gzip_content: str):
+    """Setup a gzipped TSV file."""
+    content = convert_to_tab_separated(gzip_content)
+    out_path = gzip_path
+    if gzip_path.suffix != ".gz":
+        out_path = gzip_path.with_suffix("gz")
+    with gzip.open(out_path, "wt") as outfile:
+        outfile.write(content)
+    return out_path
 
 
 def setup_vcf(out_path: pathlib.Path, content: str):
