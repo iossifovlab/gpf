@@ -25,6 +25,13 @@
           <gpf-item-add-menu
             [getItems]="getGroupNamesFunction(dataset)"
             (addedItem)="addGroup(dataset, $event)"></gpf-item-add-menu>
+          <input
+            #newGroupName
+            placeholder="Create group"
+            class="create-group form-control my-0 py-1"
+            type="text"
+            spellcheck="false"
+            (keydown.enter)="addGroup(dataset, { id: '', name: newGroupName.value }); newGroupName.value = ''" />
         </div>
 
         <div class="grid-cell">
