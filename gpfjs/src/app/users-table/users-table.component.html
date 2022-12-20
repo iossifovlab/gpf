@@ -23,9 +23,6 @@
             <gpf-small-remove-button
               (clicked)="removeGroup(user, group)"
               [hide]="isDefaultGroup(user, group) || (user.email === currentUserEmail && group === 'admin')"
-              message="Removing the group '{{ group }}' could change which usersets {{ user.name }} ({{
-                user.email
-              }}) has access to."
               confirmText="Remove group"
               title="Remove group">
             </gpf-small-remove-button>

@@ -13,11 +13,7 @@
         <div class="grid-cell">
           <div *ngFor="let user of group.users">
             <span>{{ user }}</span>
-            <gpf-small-remove-button
-              (clicked)="removeUser(group, user)"
-              message="Removing the user '{{ user }}' could change which usersets he has access to."
-              confirmText="Remove user"
-              title="Remove user">
+            <gpf-small-remove-button (clicked)="removeUser(group, user)" confirmText="Remove user" title="Remove user">
             </gpf-small-remove-button>
           </div>
           <gpf-item-add-menu
@@ -31,7 +27,6 @@
             <span>{{ dataset.datasetName }}</span>
             <gpf-small-remove-button
               (clicked)="removeDataset(group, dataset.datasetId)"
-              message="Removing the dataset '{{ dataset }}' will remove access to it from the group's users."
               confirmText="Remove dataset"
               title="Remove dataset">
             </gpf-small-remove-button>

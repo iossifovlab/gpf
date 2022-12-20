@@ -15,9 +15,6 @@
             <gpf-small-remove-button
               (clicked)="removeGroup(dataset, group)"
               [hide]="isDefaultGroup(dataset, group)"
-              message="Removing the group '{{ group }}' could change which users have access to the dataset {{
-                dataset.name
-              }}."
               confirmText="Remove group"
               title="Remove group">
             </gpf-small-remove-button>
