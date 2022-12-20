@@ -43,7 +43,8 @@
         </div>
 
         <div class="grid-cell">
-          <span class="action-buttons">[Remove group]</span>
+          <gpf-small-remove-button (clicked)="deleteGroup(group)" confirmText="Delete group" title="Delete group">
+          </gpf-small-remove-button>
         </div>
       </ng-container>
     </div>

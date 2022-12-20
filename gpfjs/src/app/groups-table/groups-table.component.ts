@@ -52,6 +52,12 @@ export class GroupsTableComponent {
     });
   }
 
+  public deleteGroup(group: UserGroup): void {
+    group.users.forEach(email => this.removeDataset(group, email));
+    group.datasets.forEach(dataset => this.removeDataset(group, dataset.datasetId));
+    this.groups.splice(this.groups.indexOf(group), 1);
+  }
+
   public getUserNamesFunction(group: UserGroup): (page: number, searchText: string) => Observable<Item[]> {
     return (page: number, searchText: string): Observable<Item[]> =>
       this.usersService.getUsers(page, searchText).pipe(
