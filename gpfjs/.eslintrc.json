@@ -125,6 +125,7 @@
         "@typescript-eslint/no-extra-parens": ["warn", "all", { "nestedBinaryExpressions": false }],
         "@typescript-eslint/no-floating-promises": "off",
         "@typescript-eslint/member-ordering": "off",
+        "@typescript-eslint/semi": "warn",
         "indent": ["warn", 2, {"SwitchCase": 1}],
         "max-len": [
           "warn",
