@@ -136,6 +136,26 @@ def test_process_server_simple():
         assert start_message == "started"
 
 
+def test_process_server_start_failed():
+    @contextlib.contextmanager
+    def server_manager():
+        raise ValueError("unexpected error")
+
+    with pytest.raises(ValueError):
+        with process_server(server_manager()) as start_message:
+            assert start_message == "started"
+
+
+def test_process_server_stop_failed():
+    @contextlib.contextmanager
+    def server_manager():
+        yield "started"
+        raise ValueError("unexpected error")
+
+    with process_server(server_manager()) as start_message:
+        assert start_message == "started"
+
+
 def test_s3_threaded_server_simple():
     with s3_threaded_test_server() as endpoint_url:
         response = requests.get(endpoint_url, timeout=1.0)

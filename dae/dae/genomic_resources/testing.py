@@ -2,12 +2,12 @@
 from __future__ import annotations
 import os
 import contextlib
-import time
 import pathlib
 import logging
 import threading
 import tempfile
 import gzip
+
 from typing import Any, Dict, Union, cast, Optional, Generator, \
     Tuple, ContextManager
 import multiprocessing as mp
@@ -467,7 +467,6 @@ def http_threaded_test_server(
 
     yield f"http://{server_address[0]}:{server_address[1]}"
 
-    time.sleep(0.1)
     logger.info("shutting down HTTP range server %s", server_address)
     httpd.socket.close()
     httpd.shutdown()
@@ -502,17 +501,21 @@ def build_http_test_protocol(
 @contextlib.contextmanager
 def process_server(server_manager: ContextManager[str]):
     """Run a process server."""
-
-    def runner(start_queue: mp.Queue, stop_queue: mp.Queue):
+    def _internal_process_runner(
+            server_manager: ContextManager[str],
+            start_queue: mp.Queue, stop_queue: mp.Queue):
         with server_manager as start_message:
             logger.info("process server started")
             start_queue.put(start_message)
             stop_queue.get()
             logger.info("process server stopped")
 
+    mp.set_start_method("fork", force=True)
     start_queue: mp.Queue = mp.Queue()
     stop_queue: mp.Queue = mp.Queue()
-    proc = mp.Process(target=runner, args=(start_queue, stop_queue))
+    proc = mp.Process(
+        target=_internal_process_runner,
+        args=(server_manager, start_queue, stop_queue))
     proc.start()
 
     # wait for start message
