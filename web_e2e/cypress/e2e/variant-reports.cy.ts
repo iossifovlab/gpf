@@ -20,7 +20,7 @@ const tags: string[] = [
   'tag_female_prb_family',
   'tag_missing_mom_family',
   'tag_missing_dad_family'
-]
+];
 describe('Variant reports tests', () => {
   const page = new VariantReportsPage();
 
@@ -71,7 +71,7 @@ describe('Variant reports tests', () => {
     page.familiesByPedigreeSelect.should('not.be.visible');
     page.denovoTagSelector.should('not.be.visible');
     page.familiesByPedigreeDownloadButton.should('not.be.visible');
-    page.familiesByPedigree.should('not.be.visible')
+    page.familiesByPedigree.should('not.be.visible');
   });
 
   it('should display the correct elements in the de novo variants tab', () => {
@@ -105,20 +105,20 @@ describe('Variant reports tests', () => {
 
       data.legendElements.forEach(e => {
         page.pedigreeLegendDropdown.should('contain', e);
-      })
+      });
 
       page.pedigreeLegendButton.click();
       page.pedigreeLegendDropdown.should('not.exist');
-    })
-  })
+    });
+  });
 
   it('should check content of the select in the families by pedigree tab', () => {
     page.familiesByPedigreeTab.click();
     page.familiesByPedigreeSelectOptions.then(options => {
       const actual: string[] = options.toArray().map(o => o.innerText);
       expect(actual).to.deep.eq(['Affected Status', 'Role', 'Phenotype']);
-    })
-  })
+    });
+  });
 
   it('should open, close and check content for selecting tags', () => {
     page.familiesByPedigreeTab.click();
@@ -138,7 +138,7 @@ describe('Variant reports tests', () => {
     page.denovoTagSelectorOptions.then(options => {
       const actual: string[] = options.toArray().map(o => o.innerText);
       expect(actual).to.deep.eq(tags);
-    })
+    });
   });
 
   tags.forEach(tag => {
@@ -178,7 +178,7 @@ describe('Variant reports tests', () => {
 
       //close
       page.denovoTagSelectorDropdown.click();
-    })
+    });
   });
 
   [
@@ -218,35 +218,95 @@ describe('Variant reports tests', () => {
         });
       }
       page.denovoTagSelectorSelectedOptionBtn.click();
-    })
+    });
   });
 
-  it.skip('should display pedigree chart content', () => {
+  it('should display pedigree chart modal', () => {
     page.familiesByPedigreeTab.click();
     page.pedigreeCells.each((cell) => {
-      cell.trigger('click');
+      cy.wrap(cell).click();
       page.pedigreeModalContent.should('be.visible');
       cy.get('body').click(30, 30);
-      page.pedigreeModalContent.should('not.have.attr', 'class', 'modal-open');
-    })
-  })
+      page.pedigreeModalContent.should('not.exist');
+    });
+  });
+
+  it('should check pedigree chart modal content', () => {
+    page.familiesByPedigreeTab.click();
+    page.pedigreeCells.each((cell) => {
+      cy.wrap(cell).click();
+      page.pedigreeModalChart.should('be.visible');
+      page.pedigreeModalCount.should('be.visible');
+      page.pedigreeModalDownloadBtn.should('be.visible');
+      page.pedigreeModalFamilyIds.should('be.visible');
+
+      cy.get('body').click(30, 30);
+      page.pedigreeModalChart.should('not.exist');
+      page.pedigreeModalCount.should('not.exist');
+      page.pedigreeModalDownloadBtn.should('not.exist');
+      page.pedigreeModalFamilyIds.should('not.exist');
+    });
+  });
+
+  it('should check the count of pedigree chart family ids', () => {
+    page.familiesByPedigreeTab.click();
+    page.pedigreeCells.each((cell) => {
+      cy.wrap(cell).click({force: true});
+      page.pedigreeModalFamilyIds.invoke('text').then((text) => {
+        let ids: string[] = [];
+        ids = text.split(',');
+        page.pedigreeModalCount.invoke('text').then(parseInt).should('eq', ids.length);
+      });
+      cy.get('body').click(30, 30);
+    });
+  });
+
+  it.skip('should download family counters report from pedigree modal', () => {
+    page.familiesByPedigreeTab.click();
+    page.pedigreeCells.each((cell) => {
+      cy.wrap(cell).click({force: true});
+
+      const downloadedVariantsPath = Cypress.config('downloadsFolder') + '/family-counters.tsv';
+      const expectedVariantsPath = 'cypress/fixtures/variant-reports/family-counters.tsv';
+
+      page.pedigreeModalDownloadBtn.click();
+
+      cy.readFile(downloadedVariantsPath, { timeout: 5000 }).then((downloadedFile: string) => {
+        cy.readFile(expectedVariantsPath, { timeout: 5000 }).then((expectedFile: string) => {
+          const downloadedFileLines = downloadedFile.split(/\r\n|\r|\n/);
+          const expectedFileLines = expectedFile.split(/\r\n|\r|\n/);
+          expect(downloadedFileLines).to.deep.eq(expectedFileLines);
+        });
+      });
+
+      cy.get('body').click(30, 30);
+    });
+  });
 
   it('should search tags', () => {
     page.familiesByPedigreeTab.click();
     page.denovoTagSelectorDropdown.click();
-    const serchingValues: string[] = ['a', 'ro', 'lex', 'as'];
+    const serchingValues: string[] = ['a', 'ro', 'lex'];
 
     for (let i = 0; i < serchingValues.length; i++) {
       page.denovoTagSelectorSearchInput.type(serchingValues[i]);
       const filtered: string[] = tags.filter(tag => tag.includes(serchingValues[i]));
-      if (filtered.length === 0) {
-        page.denovoTagSelectorSearchInputNothingFound.should('exist');
-      } else {
-        page.denovoTagSelectorOptions.then(options => {
-          const actual: string[] = options.toArray().map(o => o.innerText);
-          expect(actual).to.deep.eq(filtered);
-        })
-      }
+      page.denovoTagSelectorOptions.then(options => {
+        const actual: string[] = options.toArray().map(o => o.innerText);
+        expect(actual).to.deep.eq(filtered);
+      });
+      page.denovoTagSelectorSearchInput.clear();
+    }
+  });
+
+  it('should show nothing found when searching tags', () => {
+    page.familiesByPedigreeTab.click();
+    page.denovoTagSelectorDropdown.click();
+    const serchingValues: string[] = ['cot', 'riof', 'tsf', 'as'];
+
+    for (let i = 0; i < serchingValues.length; i++) {
+      page.denovoTagSelectorSearchInput.type(serchingValues[i]);
+      page.denovoTagSelectorSearchInputNothingFound.should('exist');
       page.denovoTagSelectorSearchInput.clear();
     }
   });
@@ -290,7 +350,7 @@ describe('Variant reports Iossifov count tests', () => {
     page.familiesByNumberTab.click();
     page.familiesByPedigreeDivs.each((ele, i) => {
       expect(ele.text()).to.eq(expectedValues[i]);
-    })
+    });
   });
 
   [

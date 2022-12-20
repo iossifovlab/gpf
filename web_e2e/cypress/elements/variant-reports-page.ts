@@ -136,4 +136,20 @@ export class VariantReportsPage extends BasePage {
   public get pedigreeModalContent(): element {
     return cy.get('.modal-content');
   }
+
+  public get pedigreeModalChart(): element {
+    return cy.get('#modal-pedigree-container');
+  }
+
+  public get pedigreeModalCount(): element {
+    return cy.get('#modal-family-count');
+  }
+
+  public get pedigreeModalDownloadBtn(): element {
+    return cy.get('.modal-family #download-button');
+  }
+
+  public get pedigreeModalFamilyIds(): element {
+    return cy.get('#family-ids-list > div');
+  }
 }
