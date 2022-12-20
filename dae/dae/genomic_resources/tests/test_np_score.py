@@ -15,15 +15,15 @@ def test_the_simplest_np_score(tmp_path):
                 type: np_score
                 table:
                     filename: data.mem
-                    scores:
-                        - id: cadd_raw
-                          name: s1
-                          type: float
-                          desc: ""
                     reference:
                       name: reference
                     alternative:
                       name: alternative
+                scores:
+                    - id: cadd_raw
+                      name: s1
+                      type: float
+                      desc: ""
             """,
             "data.mem": """
                 chrom  pos_begin  pos_end  reference  alternative  s1
@@ -53,23 +53,23 @@ def test_np_score_aggregation():
                 type: np_score
                 table:
                     filename: data.mem
-                    scores:
-                        - id: cadd_raw
-                          type: float
-                          desc: ""
-                          name: s1
-
-                        - id: cadd_test
-                          type: int
-                          position_aggregator: max
-                          nucleotide_aggregator: mean
-                          na_values: "-1"
-                          desc: ""
-                          name: s2
                     reference:
                       name: reference
                     alternative:
                       name: alternative
+                scores:
+                    - id: cadd_raw
+                      type: float
+                      desc: ""
+                      name: s1
+
+                    - id: cadd_test
+                      type: int
+                      position_aggregator: max
+                      nucleotide_aggregator: mean
+                      na_values: "-1"
+                      desc: ""
+                      name: s2
             """,
             "data.mem": convert_to_tab_separated("""
                 chrom  pos_begin  pos_end  reference  alternative  s1    s2
@@ -119,23 +119,23 @@ def test_np_score_fetch_region():
             type: np_score
             table:
                 filename: data.mem
-                scores:
-                    - id: cadd_raw
-                      type: float
-                      desc: ""
-                      name: s1
-
-                    - id: cadd_test
-                      type: int
-                      position_aggregator: max
-                      nucleotide_aggregator: mean
-                      na_values: "-1"
-                      desc: ""
-                      name: s2
                 reference:
                   name: reference
                 alternative:
                   name: alternative
+            scores:
+                - id: cadd_raw
+                  type: float
+                  desc: ""
+                  name: s1
+
+                - id: cadd_test
+                  type: int
+                  position_aggregator: max
+                  nucleotide_aggregator: mean
+                  na_values: "-1"
+                  desc: ""
+                  name: s2
         """,
         "data.mem": convert_to_tab_separated("""
             chrom  pos_begin  pos_end  reference  alternative  s1    s2

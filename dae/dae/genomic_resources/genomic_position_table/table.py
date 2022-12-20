@@ -1,24 +1,9 @@
 import abc
-from typing import Optional, Any, Dict, List, Union, Tuple
+from typing import Optional, Dict, List, Union, Tuple
 from functools import cached_property
-from dataclasses import dataclass
 from box import Box  # type: ignore
 
 from dae.genomic_resources.repository import GenomicResource
-
-
-@dataclass
-class ScoreDef:
-    """Score configuration definition."""
-
-    # pylint: disable=too-many-instance-attributes
-    col_key: str
-    desc: str
-    type: str
-    value_parser: Any
-    na_values: Any
-    pos_aggregator: Any
-    nuc_aggregator: Any
 
 
 class GenomicPositionTable(abc.ABC):
@@ -32,7 +17,6 @@ class GenomicPositionTable(abc.ABC):
         self.genomic_resource = genomic_resource
 
         self.definition = Box(table_definition)
-        self.score_definitions = self._generate_scoredefs()
         self.chrom_map: Optional[Dict[str, str]] = None
         self.chrom_order: Optional[List[str]] = None
         self.rev_chrom_map: Optional[Dict[str, str]] = None
@@ -62,87 +46,6 @@ class GenomicPositionTable(abc.ABC):
                     f"list of strings. The current value "
                     f"{self.header_mode} does not meet these "
                     f"requirements.")
-
-    @staticmethod
-    def _parse_scoredef_config(config):
-        """Parse ScoreDef configuration."""
-        scores = {}
-        type_parsers = {
-            "str": str,
-            "float": float,
-            "int": int
-        }
-        default_na_values = {
-            "str": {},
-            "float": {"", "nan", ".", "NA"},
-            "int": {"", "nan", ".", "NA"}
-        }
-        default_type_pos_aggregators = {
-            "float": "mean",
-            "int": "mean",
-            "str": "concatenate"
-        }
-        default_type_nuc_aggregators = {
-            "float": "max",
-            "int": "max",
-            "str": "concatenate"
-        }
-        for score_conf in config["scores"]:
-            col_type = score_conf.get(
-                "type", config.get("default.score.type", "float"))
-
-            col_key = score_conf.get("name") or str(score_conf["index"])
-
-            col_def = ScoreDef(
-                col_key,
-                score_conf.get("desc", ""),
-                col_type,
-                type_parsers[col_type],
-                score_conf.get(
-                    "na_values",
-                    config.get(
-                        f"default_na_values.{col_type}",
-                        default_na_values[col_type])),
-                score_conf.get(
-                    "position_aggregator",
-                    config.get(
-                        f"{col_type}.aggregator",
-                        default_type_pos_aggregators[col_type])),
-                score_conf.get(
-                    "nucleotide_aggregator",
-                    config.get(
-                        f"{col_type}.aggregator",
-                        default_type_nuc_aggregators[col_type])),
-            )
-            scores[score_conf["id"]] = col_def
-        return scores
-
-    def _validate_scoredefs(self):
-        if "scores" in self.definition:
-            if self.header_mode == "none":
-                assert all("name" not in score
-                           for score in self.definition.scores), \
-                    ("Cannot configure score columns by"
-                     " name when header_mode is 'none'!")
-            else:
-                assert self.header is not None
-                for score in self.definition.scores:
-                    if "name" in score:
-                        assert score.name in self.header
-                    elif "index" in score:
-                        assert 0 <= score.index < len(self.header)
-                    else:
-                        raise AssertionError("Either an index or name must"
-                                             " be configured for scores!")
-
-    def _generate_scoredefs(self):
-        if "scores" in self.genomic_resource.config:
-            return GenomicPositionTable._parse_scoredef_config(
-                self.genomic_resource.config)
-        if "scores" in self.definition:
-            return GenomicPositionTable._parse_scoredef_config(
-                self.definition)
-        return {}
 
     def _build_chrom_mapping(self):
         self.chrom_map = None

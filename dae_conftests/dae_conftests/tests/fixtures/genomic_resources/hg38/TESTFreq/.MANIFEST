@@ -4,6 +4,6 @@
 - md5: 05e5bc2e111692d73e2c27e76fc7e2a7
   name: TESTFreq.tsv.gz.tbi
   size: 100
-- md5: bd97e9a936a8a16868c6b8ac3ad612d7
+- md5: bb21193d676ed049712b0b17f815fcc0
   name: genomic_resource.yaml
-  size: 604
+  size: 582

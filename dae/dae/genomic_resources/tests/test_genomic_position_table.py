@@ -92,44 +92,6 @@ chr1   5   .  A   T   .    .       A=1
 
 
 @pytest.fixture
-def vcf_res_score_conf_override(tmp_path_factory):
-    vcf_header = """
-##fileformat=VCFv4.1
-##INFO=<ID=A,Number=1,Type=Integer,Description="Score A">
-#CHROM POS ID REF ALT QUAL FILTER  INFO
-"""
-    root_path = tmp_path_factory.mktemp("vcf")
-    setup_directories(
-        root_path / "grr",
-        {
-            "tmp": {
-                "genomic_resource.yaml": textwrap.dedent("""
-                    tabix_table:
-                        filename: data.vcf.gz
-                        scores:
-                        - id: A
-                          name: A
-                          type: float
-                          desc: Score A, but overriden
-                """)
-            }
-        }
-    )
-    setup_vcf(
-        root_path / "grr" / "tmp" / "data.vcf.gz",
-        textwrap.dedent(f"""
-{vcf_header}
-chr1   5   .  A   T   .    .       A=1
-    """))
-    setup_vcf(
-        root_path / "grr" / "tmp" / "data.header.vcf.gz",
-        textwrap.dedent(vcf_header)
-    )
-    proto = build_fsspec_protocol("testing", str(root_path / "grr"))
-    return proto.get_resource("tmp")
-
-
-@pytest.fixture
 def vcf_res_multiallelic(tmp_path_factory):
     vcf_header = """
 ##fileformat=VCFv4.1
@@ -170,52 +132,15 @@ chr1   30   .  A   T,G,C   .    .       A=3;B=31;C=c31,c32,c33,c34;D=d31,d32,d33
     return proto.get_resource("tmp")
 
 
-@pytest.fixture
-def vcf_res_misconfigured_score(tmp_path_factory):
-    vcf_header = """
-##fileformat=VCFv4.1
-##INFO=<ID=A,Number=1,Type=Integer,Description="Score A">
-#CHROM POS ID REF ALT QUAL FILTER  INFO
-"""
-    root_path = tmp_path_factory.mktemp("vcf")
-    setup_directories(
-        root_path / "grr",
-        {
-            "tmp": {
-                "genomic_resource.yaml": textwrap.dedent("""
-                    tabix_table:
-                        filename: data.vcf.gz
-                        scores:
-                        - id: A
-                          name: NO_SUCH_SCORE_IN_HEADER
-                          type: float
-                """)
-            }
-        }
-    )
-    setup_vcf(
-        root_path / "grr" / "tmp" / "data.vcf.gz",
-        textwrap.dedent(f"""
-{vcf_header}
-chr1   5   .  A   T   .    .       A=1
-    """))
-    setup_vcf(
-        root_path / "grr" / "tmp" / "data.header.vcf.gz",
-        textwrap.dedent(vcf_header)
-    )
-    proto = build_fsspec_protocol("testing", str(root_path / "grr"))
-    return proto.get_resource("tmp")
-
-
 def test_default_setup():
     res = build_test_resource({
         "genomic_resource.yaml": """
             table:
                 filename: data.mem
-                scores:
-                - id: c2
-                  name: c2
-                  type: float""",
+            scores:
+            - id: c2
+              name: c2
+              type: float""",
         "data.mem": convert_to_tab_separated("""
             chrom pos_begin pos2  c2
             1     10        12    3.14
@@ -235,10 +160,10 @@ def test_regions():
         "genomic_resource.yaml": """
             table:
                 filename: data.mem
-                scores:
-                - id: c2
-                  name: c2
-                  type: float""",
+            scores:
+            - id: c2
+              name: c2
+              type: float""",
         "data.mem": convert_to_tab_separated("""
             chrom pos_begin pos_end  c2
             1     10        12       3.14
@@ -281,10 +206,10 @@ def test_regions_in_tabix(tmp_path, tabix_file, jump_threshold):
             "genomic_resource.yaml": """
                 tabix_table:
                     filename: data.bgz
-                    scores:
-                    - id: c2
-                      name: c2
-                      type: float""",
+                scores:
+                - id: c2
+                  name: c2
+                  type: float""",
         })
     assert res
 
@@ -328,10 +253,10 @@ def test_last_call_is_updated(tmp_path, tabix_file):
             "genomic_resource.yaml": """
                 tabix_table:
                     filename: data.bgz
-                    scores:
-                    - id: c2
-                      name: c2
-                      type: float""",
+                scores:
+                - id: c2
+                  name: c2
+                  type: float""",
         })
     assert res
 
@@ -368,10 +293,10 @@ def test_chr_add_pref():
                 filename: data.mem
                 chrom_mapping:
                     add_prefix: chr
-                scores:
-                - id: c2
-                  name: c2
-                  type: float""",
+            scores:
+            - id: c2
+              name: c2
+              type: float""",
         "data.mem": convert_to_tab_separated(
             """
             chrom pos_begin pos2  c2
@@ -390,10 +315,10 @@ def test_chr_del_pref():
                 filename: data.mem
                 chrom_mapping:
                     del_prefix: chr
-                scores:
-                - id: c2
-                  name: c2
-                  type: float""",
+            scores:
+            - id: c2
+              name: c2
+              type: float""",
         "data.mem": """
             chrom    pos_begin pos2  c2
             chr1     10        12    3.14
@@ -412,10 +337,10 @@ def test_chrom_mapping_file():
                     filename: chrom_map.txt
                 pos_end:
                     name: pos2
-                scores:
-                - id: c2
-                  name: c2
-                  type: float""",
+            scores:
+            - id: c2
+              name: c2
+              type: float""",
         "data.mem": convert_to_tab_separated("""
             chrom    pos_begin pos2  c2
             chr1     10        12    3.14
@@ -449,10 +374,10 @@ def test_chrom_mapping_file_with_tabix(tmp_path, tabix_file):
                         filename: chrom_map.txt
                     pos_end:
                         name: pos2
-                    scores:
-                    - id: c2
-                      name: c2
-                      type: float""",
+                scores:
+                - id: c2
+                  name: c2
+                  type: float""",
             "chrom_map.txt": convert_to_tab_separated("""
                     chrom   file_chrom
                     gosho   chr1
@@ -525,10 +450,10 @@ def test_column_with_name():
                 filename: data.mem
                 pos_begin:
                     name: pos2
-                scores:
-                - id: c2
-                  name: c2
-                  type: float""",
+            scores:
+            - id: c2
+              name: c2
+              type: float""",
         "data.mem": convert_to_tab_separated(
             """
             chrom pos pos2 c2
@@ -551,10 +476,10 @@ def test_column_with_index():
                 filename: data.mem
                 pos_begin:
                     index: 2
-                scores:
-                - id: c2
-                  name: c2
-                  type: float""",
+            scores:
+            - id: c2
+              name: c2
+              type: float""",
         "data.mem": convert_to_tab_separated("""
             chrom pos pos2  c2
             1     10  12    3.14
@@ -578,10 +503,10 @@ def test_no_header():
                     index: 0
                 pos_begin:
                     index: 2
-                scores:
-                - id: c2
-                  index: 3
-                  type: float""",
+            scores:
+            - id: c2
+              index: 3
+              type: float""",
         "data.mem": convert_to_tab_separated("""
             1   10  12  3.14
             1   11  11  4.14
@@ -604,10 +529,10 @@ def test_header_in_config():
                 filename: data.mem
                 pos_begin:
                     name: pos2
-                scores:
-                - id: c2
-                  name: score
-                  type: float""",
+            scores:
+            - id: c2
+              name: score
+              type: float""",
         "data.mem": convert_to_tab_separated("""
             1   10  12  3.14
             1   11  11  4.14
@@ -624,10 +549,10 @@ def test_space_in_mem_table():
         "genomic_resource.yaml": """
             table:
                 filename: data.mem
-                scores:
-                - id: c2
-                  name: c2
-                  type: float""",
+            scores:
+            - id: c2
+              name: c2
+              type: float""",
         "data.mem": convert_to_tab_separated("""
             chrom pos_begin pos2   c2
             1     10        12     3.14
@@ -646,10 +571,10 @@ def test_text_table():
             "genomic_resource.yaml": """
                 table:
                     filename: data.mem
-                    scores:
-                    - id: c2
-                      name: c2
-                      type: float""",
+                scores:
+                - id: c2
+                  name: c2
+                  type: float""",
             "data.mem": convert_to_tab_separated("""
                 chrom pos_begin c1     c2
                 1     3         3.14   aa
@@ -709,13 +634,13 @@ def test_tabix_table(tabix_file, tmp_path, jump_threshold):
             "genomic_resource.yaml": """
                     tabix_table:
                         filename: data.bgz
-                        scores:
-                        - id: c1
-                          name: c1
-                          type: float
-                        - id: c2
-                          name: c2
-                          type: str""",
+                    scores:
+                    - id: c1
+                      name: c1
+                      type: float
+                    - id: c2
+                      name: c2
+                      type: str""",
         })
 
     tabix_to_resource(
@@ -776,10 +701,10 @@ def tabix_table(tmp_path, tabix_file):
             "genomic_resource.yaml": """
                 tabix_table:
                     filename: data.bgz
-                    scores:
-                    - id: c1
-                      name: c1
-                      type: int""",
+                scores:
+                - id: c1
+                  name: c1
+                  type: int""",
         })
 
     tabix_to_resource(
@@ -818,10 +743,10 @@ def regions_tabix_table(tmp_path, tabix_file):
                     filename: data.mem
                 tabix_table:
                     filename: data.bgz
-                    scores:
-                    - id: c1
-                      name: c1
-                      type: int""",
+                scores:
+                - id: c1
+                  name: c1
+                  type: int""",
             "data.mem": """
             """
         })
@@ -911,10 +836,10 @@ def tabix_table_multiline(tmp_path, tabix_file):
             "genomic_resource.yaml": """
                 tabix_table:
                     filename: data.bgz
-                    scores:
-                    - id: c1
-                      name: c1
-                      type: float""",
+                scores:
+                - id: c1
+                  name: c1
+                  type: float""",
         })
     tabix_to_resource(
         tabix_file(
@@ -991,10 +916,10 @@ def test_tabix_middle_optimization(tmp_path, tabix_file):
                     filename: data.mem
                 tabix_table:
                     filename: data.bgz
-                    scores:
-                    - id: c1
-                      name: c1
-                      type: int""",
+                scores:
+                - id: c1
+                  name: c1
+                  type: int""",
             "data.mem": """
             """
         })
@@ -1038,10 +963,10 @@ def test_tabix_middle_optimization_regions(tmp_path, tabix_file):
             "genomic_resource.yaml": """
                 tabix_table:
                     filename: data.bgz
-                    scores:
-                    - id: c1
-                      name: c1
-                      type: int""",
+                scores:
+                - id: c1
+                  name: c1
+                  type: int""",
         })
 
     tabix_to_resource(
@@ -1092,10 +1017,10 @@ def test_tabix_middle_optimization_regions_buggy_1(tmp_path, tabix_file):
                     filename: data.bgz
                     chrom_mapping:
                         add_prefix: chr
-                    scores:
-                    - id: c1
-                      name: c1
-                      type: float
+                scores:
+                - id: c1
+                  name: c1
+                  type: float
             """,
         })
 
@@ -1147,10 +1072,10 @@ def test_buggy_fitcons_e67(tmp_path, tabix_file):
             "genomic_resource.yaml": """
                 tabix_table:
                     filename: data.bgz
-                    scores:
-                    - id: c1
-                      name: c1
-                      type: float
+                scores:
+                - id: c1
+                  name: c1
+                  type: float
             """,
         })
 
@@ -1192,10 +1117,10 @@ def test_tabix_jump_config(tmp_path, tabix_file, jump_threshold, expected):
                 tabix_table:
                     filename: data.bgz
                     jump_threshold: {jump_threshold}
-                    scores:
-                    - id: c1
-                      name: c1
-                      type: float
+                scores:
+                - id: c1
+                  name: c1
+                  type: float
             """,
         })
 
@@ -1241,10 +1166,10 @@ def test_tabix_max_buffer(
                 tabix_table:
                     filename: data.bgz
                     jump_threshold: {jump_threshold}
-                    scores:
-                    - id: c1
-                      name: c1
-                      type: float
+                scores:
+                - id: c1
+                  name: c1
+                  type: float
             """,
         })
 
@@ -1288,10 +1213,10 @@ def test_contig_length():
         "genomic_resource.yaml": """
             table:
                 filename: data.mem
-                scores:
-                - id: c2
-                  name: c2
-                  type: float""",
+            scores:
+            - id: c2
+              name: c2
+              type: float""",
         "data.mem": """
             chrom pos_begin pos2  c2
             1     10        12    3.14
@@ -1503,184 +1428,14 @@ def test_vcf_multiallelic_info_fields(vcf_res_multiallelic):
 
         # chrom start stop allele_index A B C D
         assert results == [
-            ("chr1", 2, 2, None, 0, "1,2,3", "c01", None),
-            ("chr1", 5, 5, 0, 1, "11,12,13", "c12", "d11"),
-            ("chr1", 15, 15, 0, 2, "21,22", "c22", "d21"),
-            ("chr1", 15, 15, 1, 2, "21,22", "c23", "d22"),
-            ("chr1", 30, 30, 0, 3, "31", "c32", "d31"),
-            ("chr1", 30, 30, 1, 3, "31", "c33", "d32"),
-            ("chr1", 30, 30, 2, 3, "31", "c34", "d33"),
+            ("chr1", 2, 2, None, 0, (1, 2, 3), "c01", None),
+            ("chr1", 5, 5, 0, 1, (11, 12, 13), "c12", "d11"),
+            ("chr1", 15, 15, 0, 2, (21, 22), "c22", "d21"),
+            ("chr1", 15, 15, 1, 2, (21, 22), "c23", "d22"),
+            ("chr1", 30, 30, 0, 3, (31,), "c32", "d31"),
+            ("chr1", 30, 30, 1, 3, (31,), "c33", "d32"),
+            ("chr1", 30, 30, 2, 3, (31,), "c34", "d33"),
         ]
-
-
-def test_tables_properly_load_scoredefs():
-    res = build_test_resource({
-        "genomic_resource.yaml": """
-            table:
-                filename: data.mem
-                scores:
-                - id: c2
-                  name: c2
-                  type: float""",
-        "data.mem": convert_to_tab_separated("""
-            chrom pos_begin pos_end  c2
-            1     10        12       3.14
-        """)})
-    with build_genomic_position_table(res, res.config["table"]) as tab:
-        assert len(tab.score_definitions) == 1
-        assert "c2" in tab.score_definitions
-        assert tab.score_definitions["c2"].value_parser is float
-
-
-def test_mem_tables_can_load_without_scoredefs():
-    res = build_test_resource({
-        "genomic_resource.yaml": """
-            table:
-                filename: data.mem""",
-        "data.mem": convert_to_tab_separated("""
-            chrom pos_begin pos_end  c2
-            1     10        12       3.14
-        """)})
-    with build_genomic_position_table(res, res.config["table"]) as tab:
-        assert not tab.score_definitions
-
-
-def test_tabix_tables_can_load_without_scoredefs(tmp_path, tabix_file):
-    res = build_test_resource(
-        scheme="file",
-        root_path=str(tmp_path),
-        content={
-            "genomic_resource.yaml": """
-                tabix_table:
-                    filename: data.bgz""",
-        })
-    tabix_to_resource(
-        tabix_file(
-            """
-            #chrom pos_begin pos_end  c2
-            1     10        12       3.14
-            """, seq_col=0, start_col=1, end_col=2),
-        res, "data.bgz"
-    )
-    with build_genomic_position_table(res, res.config["tabix_table"]) as tab:
-        assert not tab.score_definitions
-
-
-def test_vcf_tables_autogenerate_scoredefs(vcf_res_multiallelic):
-    with build_genomic_position_table(
-        vcf_res_multiallelic, vcf_res_multiallelic.config["tabix_table"]
-    ) as tab:
-        assert isinstance(tab, VCFGenomicPositionTable)
-        assert set(tab.score_definitions.keys()) == {"A", "B", "C", "D"}
-        assert tab.score_definitions["A"].desc == "Score A"
-        assert tab.score_definitions["A"].value_parser is None
-
-
-def test_vcf_tables_can_override_autogenerated_scoredefs(
-    vcf_res_score_conf_override
-):
-    with build_genomic_position_table(
-        vcf_res_score_conf_override,
-        vcf_res_score_conf_override.config["tabix_table"]
-    ) as tab:
-        assert isinstance(tab, VCFGenomicPositionTable)
-        assert set(tab.score_definitions.keys()) == {"A"}
-        assert tab.score_definitions["A"].desc == "Score A, but overriden"
-        assert tab.score_definitions["A"].value_parser is float
-
-
-def test_line_score_value_parsing(tmp_path, tabix_file):
-    res = build_test_resource(
-        scheme="file",
-        root_path=str(tmp_path),
-        content={
-            "genomic_resource.yaml": """
-                tabix_table:
-                    filename: data.bgz
-                    scores:
-                    - id: c2
-                      name: c2
-                      type: float
-            """,
-        })
-
-    tabix_to_resource(
-        tabix_file(
-            """
-            #chrom  pos_begin  pos_end    c2
-            1     10        12       3.14
-            1     15        20       4.14
-            1     21        30       5.14
-            """, seq_col=0, start_col=1, end_col=2),
-        res, "data.bgz")
-
-    with build_genomic_position_table(res, res.config["tabix_table"]) as tab:
-        assert list(map(lambda l: l.get_score("c2"),
-                        tab.get_all_records())) == [3.14, 4.14, 5.14]
-
-
-def test_line_score_na_values(tmp_path, tabix_file):
-    res = build_test_resource(
-        scheme="file",
-        root_path=str(tmp_path),
-        content={
-            "genomic_resource.yaml": """
-                tabix_table:
-                    filename: data.bgz
-                    scores:
-                    - id: c2
-                      name: c2
-                      type: float
-                      na_values:
-                      - "4.14"
-                      - "5.14"
-            """,
-        })
-
-    tabix_to_resource(
-        tabix_file(
-            """
-            #chrom  pos_begin  pos_end    c2
-            1     10        12       3.14
-            1     15        20       4.14
-            1     21        30       5.14
-            """, seq_col=0, start_col=1, end_col=2),
-        res, "data.bgz")
-
-    with build_genomic_position_table(res, res.config["tabix_table"]) as tab:
-        assert list(map(lambda l: l.get_score("c2"),
-                        tab.get_all_records())) == [3.14, None, None]
-
-
-def test_line_get_available_score_columns(vcf_res_multiallelic):
-    with build_genomic_position_table(
-        vcf_res_multiallelic, vcf_res_multiallelic.config["tabix_table"]
-    ) as tab:
-        assert isinstance(tab, VCFGenomicPositionTable)
-        line = next(tab.get_all_records())
-        assert set(line.get_available_scores()) == {"A", "B", "C", "D"}
-
-
-def test_vcf_tuple_scores_autoconcat_to_string(vcf_res_multiallelic):
-    with build_genomic_position_table(
-        vcf_res_multiallelic, vcf_res_multiallelic.config["tabix_table"]
-    ) as tab:
-        assert isinstance(tab, VCFGenomicPositionTable)
-
-        results = tuple(map(
-            lambda r: (*r[:3], r.get_score("B")),
-            tab.get_all_records()
-        ))
-
-        assert results == (
-            ("chr1", 2, 2, "1,2,3"),
-            ("chr1", 5, 5, "11,12,13"),
-            ("chr1", 15, 15, "21,22"),
-            ("chr1", 15, 15, "21,22"),
-            ("chr1", 30, 30, "31"),
-            ("chr1", 30, 30, "31"),
-            ("chr1", 30, 30, "31"),
-        )
 
 
 def test_get_ref_alt_nonconfigured_missing(tmp_path, tabix_file):
@@ -1691,13 +1446,13 @@ def test_get_ref_alt_nonconfigured_missing(tmp_path, tabix_file):
             "genomic_resource.yaml": """
                 tabix_table:
                     filename: data.bgz
-                    scores:
-                    - id: c2
-                      name: c2
-                      type: float
-                      na_values:
-                      - "4.14"
-                      - "5.14"
+                scores:
+                - id: c2
+                  name: c2
+                  type: float
+                  na_values:
+                  - "4.14"
+                  - "5.14"
             """,
         })
 
@@ -1728,13 +1483,13 @@ def test_get_ref_alt_nonconfigured_existing(tmp_path, tabix_file):
             "genomic_resource.yaml": """
                 tabix_table:
                     filename: data.bgz
-                    scores:
-                    - id: c2
-                      name: c2
-                      type: float
-                      na_values:
-                      - "4.14"
-                      - "5.14"
+                scores:
+                - id: c2
+                  name: c2
+                  type: float
+                  na_values:
+                  - "4.14"
+                  - "5.14"
             """,
         })
 
@@ -1769,10 +1524,10 @@ def test_get_ref_alt_configured_existing(tmp_path, tabix_file):
                       name: reference
                     alternative:
                       name: alternative
-                    scores:
-                    - id: c2
-                      name: c2
-                      type: float
+                scores:
+                - id: c2
+                  name: c2
+                  type: float
             """,
         })
 
@@ -1804,205 +1559,3 @@ def test_vcf_get_missing_alt(vcf_res_multiallelic):
         no_alt_line = next(tab.get_all_records())
         assert no_alt_line.ref == "A"
         assert no_alt_line.alt is None
-
-
-def test_score_definition_via_index_headerless_tabix(tmp_path, tabix_file):
-    res = build_test_resource(
-        scheme="file",
-        root_path=str(tmp_path),
-        content={
-            "genomic_resource.yaml": """
-                tabix_table:
-                    filename: data.bgz
-                    header_mode: none
-                    chrom:
-                      index: 0
-                    pos_begin:
-                      index: 1
-                    pos_end:
-                      index: 2
-                    scores:
-                    - id: piscore
-                      index: 3
-                      type: float
-            """,
-        })
-    tabix_to_resource(
-        tabix_file("1     10        12       3.14",
-                   seq_col=0, start_col=1, end_col=2),
-        res, "data.bgz"
-    )
-    with build_genomic_position_table(res, res.config["tabix_table"]) as tab:
-        line = next(tab.get_all_records())
-        assert len(tab.score_definitions) == 1
-        assert "piscore" in tab.score_definitions
-        assert line.get_available_scores() == ("piscore",)
-        assert line.get_score("piscore") == 3.14
-
-
-def test_score_definition_list_header_tabix(tmp_path, tabix_file):
-    res = build_test_resource(
-        scheme="file",
-        root_path=str(tmp_path),
-        content={
-            "genomic_resource.yaml": """
-                tabix_table:
-                    filename: data.bgz
-                    header_mode: list
-                    header: ["chrom", "start", "stop", "reference", "alt", "score"]
-                    pos_begin:
-                      name: start
-                    pos_end:
-                      name: stop
-                    reference:
-                      name: reference
-                    alternative:
-                      name: alt
-                    scores:
-                    - id: piscore
-                      name: score
-                      type: float
-            """,
-        })
-    tabix_to_resource(
-        tabix_file("1     10        12         A         G     3.14",
-                   seq_col=0, start_col=1, end_col=2),
-        res, "data.bgz"
-    )
-    with build_genomic_position_table(res, res.config["tabix_table"]) as tab:
-        line = next(tab.get_all_records())
-        assert len(tab.score_definitions) == 1
-        assert "piscore" in tab.score_definitions
-        assert line.get_available_scores() == ("piscore",)
-        assert line.chrom == "1"
-        assert line.pos_begin == 10
-        assert line.pos_end == 12
-        assert line.ref == "A"
-        assert line.alt == "G"
-        assert line.get_score("piscore") == 3.14
-
-
-def test_forbid_column_names_in_scores_when_no_header_configured():
-    res = build_test_resource({
-        "genomic_resource.yaml": """
-            table:
-                header_mode: none
-                filename: data.mem
-                chrom:
-                    index: 0
-                pos_begin:
-                    index: 1
-                scores:
-                - id: c2
-                  name: this_doesnt_make_sense
-                  type: float""",
-        "data.mem": convert_to_tab_separated("""
-            1   10  12  3.14
-            """)
-    })
-    with pytest.raises(AssertionError) as excinfo:
-        tab = build_genomic_position_table(res, res.config["table"])
-        tab.open()
-    assert str(excinfo.value) == ("Cannot configure score columns by name"
-                                  " when header_mode is 'none'!")
-
-
-def test_raise_error_when_missing_column_name_in_header():
-    res = build_test_resource({
-        "genomic_resource.yaml": """
-            table:
-                filename: data.mem
-                pos_begin:
-                    name: pos2
-                scores:
-                - id: c2
-                  name: this_doesnt_exist_in_header
-                  type: float""",
-        "data.mem": convert_to_tab_separated(
-            """
-            chrom pos pos2 c2
-            1     10  12   3.14
-            """)
-    })
-    with pytest.raises(AssertionError):
-        tab = build_genomic_position_table(res, res.config["table"])
-        tab.open()
-
-
-def test_raise_error_when_missing_column_name_in_header_as_list():
-    res = build_test_resource({
-        "genomic_resource.yaml": """
-            table:
-                header_mode: list
-                header: ["chrom", "pos", "pos2", "score"]
-                filename: data.mem
-                pos_begin:
-                    name: pos2
-                scores:
-                - id: c2
-                  name: this_doesnt_exist_in_header
-                  type: float""",
-        "data.mem": convert_to_tab_separated("""
-            1   10  12  3.14
-        """)
-    })
-    with pytest.raises(AssertionError):
-        tab = build_genomic_position_table(res, res.config["table"])
-        tab.open()
-
-
-def test_vcf_check_for_missing_score_columns(vcf_res_misconfigured_score):
-    with pytest.raises(AssertionError):
-        tab = build_genomic_position_table(
-            vcf_res_misconfigured_score,
-            vcf_res_misconfigured_score.config["tabix_table"]
-        )
-        tab.open()
-
-
-def test_outer_scores_config():
-    res = build_test_resource({
-        "genomic_resource.yaml": """
-            table:
-                filename: data.mem
-                pos_begin:
-                    name: pos2
-            scores:
-                - id: c2_outer
-                  name: c2
-                  type: float""",
-        "data.mem": convert_to_tab_separated(
-            """
-            chrom pos pos2 c2
-            1     10  12   3.14
-            """)
-    })
-    with build_genomic_position_table(res, res.config["table"]) as tab:
-        res = next(tab.get_all_records())
-        assert res.get_score("c2_outer") == 3.14
-
-
-def test_outer_scores_config_overrides_inner():
-    res = build_test_resource({
-        "genomic_resource.yaml": """
-            table:
-                filename: data.mem
-                pos_begin:
-                    name: pos2
-                scores:
-                - id: c2
-                  name: c2
-                  type: float
-            scores:
-                - id: c2_relabeled
-                  name: c2
-                  type: float""",
-        "data.mem": convert_to_tab_separated(
-            """
-            chrom pos pos2 c2
-            1     10  12   3.14
-            """)
-    })
-    with build_genomic_position_table(res, res.config["table"]) as tab:
-        res = next(tab.get_all_records())
-        assert res.get_score("c2_relabeled") == 3.14

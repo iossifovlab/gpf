@@ -8,6 +8,7 @@ import copy
 
 from typing import Iterator, List, cast, Type, Dict, Any, Union
 
+from dataclasses import dataclass
 from jinja2 import Template
 from markdown2 import markdown
 from cerberus import Validator
@@ -15,7 +16,8 @@ from cerberus import Validator
 from . import GenomicResource
 from .resource_implementation import GenomicResourceImplementation, \
     get_base_resource_schema
-from .genomic_position_table import build_genomic_position_table, Line
+from .genomic_position_table import build_genomic_position_table, Line, \
+    VCFGenomicPositionTable
 
 from .aggregators import build_aggregator, AGGREGATOR_SCHEMA
 
@@ -23,6 +25,71 @@ from .aggregators import build_aggregator, AGGREGATOR_SCHEMA
 logger = logging.getLogger(__name__)
 
 ScoreValue = Union[str, int, float, bool, None]
+
+VCF_TYPE_CONVERSION_MAP = {
+    "Integer": "int",
+    "Float": "float",
+    "String": "str",
+    "Flag": "bool",
+}
+
+
+@dataclass
+class ScoreDef:
+    """Score configuration definition."""
+
+    # pylint: disable=too-many-instance-attributes
+    col_key: str
+    desc: str
+    type: str
+    value_parser: Any
+    na_values: Any
+    pos_aggregator: Any
+    nuc_aggregator: Any
+
+
+class ScoreLine:
+    """Abstraction for a genomic score line. Wraps the line adapter."""
+
+    def __init__(self, line: Line, score_defs: dict):
+        assert isinstance(line, Line)
+        self.line: Line = line
+        self.score_defs = score_defs
+
+    @property
+    def chrom(self):
+        return self.line.chrom
+
+    @property
+    def pos_begin(self):
+        return self.line.pos_begin
+
+    @property
+    def pos_end(self):
+        return self.line.pos_end
+
+    @property
+    def ref(self):
+        return self.line.ref
+
+    @property
+    def alt(self):
+        return self.line.alt
+
+    def get_score(self, score_id):
+        """Get and parse configured score from line."""
+        key = self.score_defs[score_id].col_key
+        value = self.line.get(key)
+        if score_id in self.score_defs:
+            col_def = self.score_defs[score_id]
+            if value in col_def.na_values:
+                value = None
+            elif col_def.value_parser is not None:
+                value = col_def.value_parser(value)
+        return value
+
+    def get_available_scores(self):
+        return tuple(self.score_defs.keys())
 
 
 class GenomicScore(GenomicResourceImplementation):
@@ -39,6 +106,103 @@ class GenomicScore(GenomicResourceImplementation):
         self.table = build_genomic_position_table(
             self.resource, self.config["table"]
         )
+        self.score_definitions = self._generate_scoredefs()
+
+    @staticmethod
+    def _parse_scoredef_config(config):
+        """Parse ScoreDef configuration."""
+        scores = {}
+        type_parsers = {
+            "str": str,
+            "float": float,
+            "int": int
+        }
+        default_na_values = {
+            "str": {},
+            "float": {"", "nan", ".", "NA"},
+            "int": {"", "nan", ".", "NA"}
+        }
+        default_type_pos_aggregators = {
+            "float": "mean",
+            "int": "mean",
+            "str": "concatenate"
+        }
+        default_type_nuc_aggregators = {
+            "float": "max",
+            "int": "max",
+            "str": "concatenate"
+        }
+        for score_conf in config["scores"]:
+            col_type = score_conf.get(
+                "type", config.get("default.score.type", "float"))
+
+            col_key = score_conf.get("name") or str(score_conf["index"])
+
+            col_def = ScoreDef(
+                col_key,
+                score_conf.get("desc", ""),
+                col_type,
+                type_parsers[col_type],
+                score_conf.get(
+                    "na_values",
+                    config.get(
+                        f"default_na_values.{col_type}",
+                        default_na_values[col_type])),
+                score_conf.get(
+                    "position_aggregator",
+                    config.get(
+                        f"{col_type}.aggregator",
+                        default_type_pos_aggregators[col_type])),
+                score_conf.get(
+                    "nucleotide_aggregator",
+                    config.get(
+                        f"{col_type}.aggregator",
+                        default_type_nuc_aggregators[col_type])),
+            )
+            scores[score_conf["id"]] = col_def
+        return scores
+
+    @staticmethod
+    def _get_vcf_scoredefs(vcf_header_info):
+        def converter(val):
+            try:
+                return ",".join(map(str, val))
+            except TypeError:
+                return val
+        return {
+            key: ScoreDef(
+                key,
+                value.description or "",
+                VCF_TYPE_CONVERSION_MAP[value.type],  # type: ignore
+                converter if value.number not in (1, "A", "R") else None,
+                tuple(), None, None
+            ) for key, value in vcf_header_info.items()
+        }
+
+    def _validate_scoredefs(self):
+        assert "scores" in self.config
+        if self.table.header_mode == "none":
+            assert all("name" not in score
+                       for score in self.config["scores"]), \
+                ("Cannot configure score columns by"
+                 " name when header_mode is 'none'!")
+        else:
+            assert self.table.header is not None
+            for score in self.config["scores"]:
+                if "name" in score:
+                    assert score["name"] in self.table.header
+                elif "index" in score:
+                    assert 0 <= score["index"] < len(self.table.header)
+                else:
+                    raise AssertionError("Either an index or name must"
+                                         " be configured for scores!")
+
+    def _generate_scoredefs(self):
+        if "scores" in self.config:
+            return GenomicScore._parse_scoredef_config(self.config)
+        if isinstance(self.table, VCFGenomicPositionTable):
+            return GenomicScore._get_vcf_scoredefs(self.table.header)
+        raise ValueError("No scores configured and not using a VCF")
 
     def get_config(self):
         return self.config
@@ -53,11 +217,11 @@ class GenomicScore(GenomicResourceImplementation):
         return {
             "attributes": [
                 {"source": score, "destination": score}
-                for score in self.table.score_definitions]
+                for score in self.score_definitions]
         }
 
     def get_score_config(self, score_id):
-        return self.table.score_definitions.get(score_id)
+        return self.score_definitions.get(score_id)
 
     def close(self):
         # FIXME: consider using weekrefs
@@ -66,7 +230,6 @@ class GenomicScore(GenomicResourceImplementation):
         pass
 
     def is_open(self):
-        # return self.table is not None
         return self.table_loaded
 
     def open(self) -> GenomicScore:
@@ -78,6 +241,8 @@ class GenomicScore(GenomicResourceImplementation):
             return self
         self.table.open()
         self.table_loaded = True
+        if "scores" in self.config:
+            self._validate_scoredefs()
         return self
 
     def __enter__(self):
@@ -107,8 +272,11 @@ class GenomicScore(GenomicResourceImplementation):
 
     def _fetch_lines(
         self, chrom: str, pos_begin: int, pos_end: int
-    ) -> Iterator[Line]:
-        return self.table.get_records_in_region(chrom, pos_begin, pos_end)
+    ) -> Iterator[ScoreLine]:
+        for line in self.table.get_records_in_region(
+            chrom, pos_begin, pos_end
+        ):
+            yield ScoreLine(line, self.score_definitions)
 
     def get_all_chromosomes(self):
         if not self.is_open():
@@ -117,7 +285,7 @@ class GenomicScore(GenomicResourceImplementation):
         return self.table.get_chromosomes()
 
     def get_all_scores(self):
-        return list(self.table.score_definitions)
+        return list(self.score_definitions)
 
     def fetch_region(
         self, chrom: str, pos_begin: int, pos_end: int, scores: List[str]
@@ -280,7 +448,7 @@ class GenomicScore(GenomicResourceImplementation):
                     "name": {"type": "string", "excludes": "index"},
                     "type": {"type": "string"},
                     "desc": {"type": "string"},
-                    "na_values": {"type": "string"}
+                    "na_values": {"type": ["string", "list"]}
                 }
             }
         }
@@ -292,7 +460,7 @@ class GenomicScore(GenomicResourceImplementation):
                 "desc": {"type": "string"},
                 "format": {"type": "string"},
                 "header_mode": {"type": "string"},
-                "header": {"type": "string"},
+                "header": {"type": ["string", "list"]},
                 "chrom": {"type": "dict", "schema": {
                     "index": {"type": "integer"},
                     "name": {"type": "string", "excludes": "index"}
@@ -312,8 +480,7 @@ class GenomicScore(GenomicResourceImplementation):
                     },
                     "add_prefix": {"type": "string"},
                     "del_prefix": {"type": "string", "excludes": "add_prefix"}
-                }},
-                "scores": scores_schema,
+                }}
             }},
             "scores": scores_schema,
             "histograms": {"type": "list", "schema": {
@@ -338,7 +505,7 @@ class PositionScore(GenomicScore):
     @staticmethod
     def get_schema():
         schema = copy.deepcopy(GenomicScore.get_schema())
-        scores_schema = schema["table"]["schema"]["scores"]["schema"]["schema"]
+        scores_schema = schema["scores"]["schema"]["schema"]
         scores_schema["position_aggregator"] = AGGREGATOR_SCHEMA
         return schema
 
@@ -390,7 +557,7 @@ class PositionScore(GenomicScore):
 
         for scr_id in requested_scores:
             aggregator_type = non_default_pos_aggregators.get(
-                scr_id, self.table.score_definitions[scr_id].pos_aggregator)
+                scr_id, self.score_definitions[scr_id].pos_aggregator)
             aggregators[scr_id] = build_aggregator(aggregator_type)
 
         for line in self._fetch_lines(chrom, pos_begin, pos_end):
@@ -434,7 +601,7 @@ class NPScore(GenomicScore):
             }
         }
 
-        scores_schema = schema["table"]["schema"]["scores"]["schema"]["schema"]
+        scores_schema = schema["scores"]["schema"]["schema"]
         scores_schema["position_aggregator"] = AGGREGATOR_SCHEMA
         scores_schema["nucleotide_aggregator"] = AGGREGATOR_SCHEMA
         return schema
@@ -480,7 +647,7 @@ class NPScore(GenomicScore):
         nuc_aggregators = {}
 
         for scr_id in scores:
-            scr_def = self.table.score_definitions[scr_id]
+            scr_def = self.score_definitions[scr_id]
             aggregator_type = non_default_pos_aggregators.get(
                 scr_id, scr_def.pos_aggregator)
             pos_aggregators[scr_id] = build_aggregator(aggregator_type)

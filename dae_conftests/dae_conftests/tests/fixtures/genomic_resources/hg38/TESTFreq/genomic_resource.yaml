@@ -18,17 +18,17 @@ table:
   alternative:
     name: alt
 
-  # score values
-  scores:
-      - id: altFreq
-        type: float
-        desc: ""
-        name: all.altFreq
-  
-      - id: altFreq2
-        type: float
-        desc: ""
-        name: all.altFreq2
+# score values
+scores:
+    - id: altFreq
+      type: float
+      desc: ""
+      name: all.altFreq
+
+    - id: altFreq2
+      type: float
+      desc: ""
+      name: all.altFreq2
 
 default_annotation:
   attributes:

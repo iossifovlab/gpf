@@ -28,11 +28,11 @@ def scores_repo(tmp_path):
                     index: 1
                   pos_end:
                     index: 2
-                  scores:
-                    - id: phastCons100
-                      index: 3
-                      type: float
-                      desc: phastCons100 desc
+                scores:
+                  - id: phastCons100
+                    index: 3
+                    type: float
+                    desc: phastCons100 desc
                 histograms:
                  - score: phastCons100
                    bins: 100

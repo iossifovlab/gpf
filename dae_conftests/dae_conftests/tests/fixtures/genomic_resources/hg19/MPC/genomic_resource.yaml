@@ -16,12 +16,12 @@ table:
   alternative:
     name: alt
 
-  # score values
-  scores:
-      - id: MPC
-        type: float
-        desc: ""
-        name: MPC
+# score values
+scores:
+    - id: MPC
+      type: float
+      desc: ""
+      name: MPC
 
 histograms:
   - score: MPC

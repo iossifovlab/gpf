@@ -14,12 +14,12 @@ table:
   pos_end: 
     index: 2
 
-  # score values
-  scores:
-      - id: phastCons100
-        type: float
-        desc: "phastCons100"
-        index: 3
+# score values
+scores:
+    - id: phastCons100
+      type: float
+      desc: "phastCons100"
+      index: 3
 
 default_annotation:
   attributes:

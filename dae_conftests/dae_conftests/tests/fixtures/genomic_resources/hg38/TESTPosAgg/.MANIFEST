@@ -1,6 +1,6 @@
-- md5: 9b5cb9d57c31dab0bf93ee1d394833dc
+- md5: 14c69783f5916ebdabe1a138f765b026
   name: genomic_resource.yaml
-  size: 459
+  size: 445
 - md5: 590e48aff9382edfa3330a072c98c6c5
   name: scores.tsv.gz
   size: 107

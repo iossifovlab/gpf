@@ -19,19 +19,19 @@ def genomic_resources_repo():
                 type: position_score
                 table:
                     filename: data.mem
-                    scores:
-                    - id: test100way
-                      type: float
-                      desc: "test values"
-                      name: 100way
-                    - id: t1
-                      type: float
-                      desc: "test score 1"
-                      name: t1
-                    - id: t2
-                      type: float
-                      desc: "test score 2"
-                      name: t2
+                scores:
+                - id: test100way
+                  type: float
+                  desc: "test values"
+                  name: 100way
+                - id: t1
+                  type: float
+                  desc: "test score 1"
+                  name: t1
+                - id: t2
+                  type: float
+                  desc: "test score 2"
+                  name: t2
                 default_annotation:
                     attributes:
                     - source: test100way
@@ -57,11 +57,11 @@ def genomic_resources_repo():
                 type: np_score
                 table:
                     filename: data.mem
-                    scores:
-                    - id: test_raw
-                      type: float
-                      desc: "test values"
-                      name: raw
+                scores:
+                - id: test_raw
+                  type: float
+                  desc: "test values"
+                  name: raw
                 """,
                 "data.mem": """
                     chrom  pos_begin  reference alternative raw

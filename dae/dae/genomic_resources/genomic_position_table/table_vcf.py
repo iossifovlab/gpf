@@ -4,7 +4,6 @@ from typing import List
 import pysam  # type: ignore
 
 from .line import VCFLine
-from .table import ScoreDef
 from .table_tabix import TabixGenomicPositionTable
 
 
@@ -15,62 +14,29 @@ class VCFGenomicPositionTable(TabixGenomicPositionTable):
     POS_BEGIN = "POS"
     POS_END = "POS"
 
-    VCF_TYPE_CONVERSION_MAP = {
-        "Integer": "int",
-        "Float": "float",
-        "String": "str",
-        "Flag": "bool",
-    }
+    def __init__(self, genomic_resource, table_definition):
+        super().__init__(genomic_resource, table_definition)
+        self.header = self._get_header()
 
     def _open_pysam_file(self):
         return self.genomic_resource.open_vcf_file(self.definition.filename)
-
-    def _generate_scoredefs(self):
-        res = super()._generate_scoredefs()
-        if res:
-            return res
-
-        assert self.definition.get("header_mode", "file") == "file"
-
-        filename = self.definition.filename
-        idx = filename.index(".vcf")
-        header_filename = filename[:idx] + ".header" + filename[idx:]
-
-        header_pysam_file = self.genomic_resource.open_vcf_file(
-            header_filename)
-
-        def converter(val):
-            try:
-                return ",".join(map(str, val))
-            except TypeError:
-                return val
-        return {
-            key: ScoreDef(
-                key,
-                value.description or "",
-                self.VCF_TYPE_CONVERSION_MAP[value.type],  # type: ignore
-                converter if value.number not in (1, "A", "R") else None,
-                tuple(), None, None
-            ) for key, value in header_pysam_file.header.info.items()
-        }
-
-    def _validate_scoredefs(self):
-        if "scores" in self.definition:
-            assert isinstance(self.pysam_file, pysam.VariantFile)
-            for score in self.definition.scores:
-                if "name" in score:
-                    assert score.name in self.pysam_file.header.info
-                elif "index" in score:
-                    assert 0 <= score.index < len(self.pysam_file.header.info)
-                else:
-                    raise AssertionError("Either an index or name must"
-                                         " be configured for scores!")
 
     def _get_index_prop_for_special_column(self, key):
         return None
 
     def _get_header(self):
-        return tuple()
+        if self.header is not None:
+            # Don't re-open header if already loaded -
+            # This check is useful because we already set the VCF header
+            # in the constructor of the class
+            return self.header
+        assert self.definition.get("header_mode", "file") == "file"
+        filename = self.definition.filename
+        idx = filename.index(".vcf")
+        header_filename = filename[:idx] + ".header" + filename[idx:]
+        assert self.genomic_resource.file_exists(header_filename), \
+            "VCF tables must have an accompanying *.header.vcf.gz file!"
+        return self.genomic_resource.open_vcf_file(header_filename).header.info
 
     @cache
     def get_file_chromosomes(self) -> List[str]:
@@ -86,7 +52,6 @@ class VCFGenomicPositionTable(TabixGenomicPositionTable):
                 assert raw_line.ref is not None
                 yield VCFLine(
                     raw_line.contig, raw_line.pos, raw_line.pos,
-                    self.score_definitions,
                     allele_index=allele_index if alt is not None else None,
                     ref=raw_line.ref,
                     alt=alt,

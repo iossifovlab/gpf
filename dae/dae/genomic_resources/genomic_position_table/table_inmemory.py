@@ -47,7 +47,6 @@ class InmemoryGenomicPositionTable(GenomicPositionTable):
         col_number = len(self.header) if self.header else None
 
         self._set_special_column_indexes()
-        self._validate_scoredefs()
 
         other_indices, other_columns = self._get_other_columns()
 
@@ -84,9 +83,7 @@ class InmemoryGenomicPositionTable(GenomicPositionTable):
             alt = attributes.get(self.alt_key)
             records_by_chr[chrom].append(
                 Line(chrom, ps_begin, ps_end,
-                     attributes,
-                     self.score_definitions,
-                     ref=ref, alt=alt)
+                     attributes, ref=ref, alt=alt)
             )
         self.records_by_chr = {
             c: sorted(pss, key=lambda l: (l[:3], l.ref, l.alt))

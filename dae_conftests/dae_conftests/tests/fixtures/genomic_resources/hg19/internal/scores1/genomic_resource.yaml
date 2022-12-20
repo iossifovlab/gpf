@@ -14,19 +14,19 @@ table:
   pos_end: 
     name: POS
 
-  # score values
-  scores:
-      - id: score0
-        type: float
-        name: score0
+# score values
+scores:
+    - id: score0
+      type: float
+      name: score0
 
-      - id: score2
-        type: float
-        name: score2
+    - id: score2
+      type: float
+      name: score2
 
-      - id: score4
-        type: float
-        name: score4
+    - id: score4
+      type: float
+      name: score4
 
 
 default_annotation:

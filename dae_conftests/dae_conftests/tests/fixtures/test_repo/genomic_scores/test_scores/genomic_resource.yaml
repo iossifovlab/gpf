@@ -3,16 +3,16 @@
 type: position_score
 table:
   filename: table.txt
-  scores:
-    - id: score_raw_rankscore
-      desc: "SCORE raw rankscore"
-      index: 3
-    - id: score_raw
-      desc: "SCORE raw"
-      index: 4
-    - id: score_phred
-      desc: "SCORE phred"
-      index: 5
+scores:
+  - id: score_raw_rankscore
+    desc: "SCORE raw rankscore"
+    index: 3
+  - id: score_raw
+    desc: "SCORE raw"
+    index: 4
+  - id: score_phred
+    desc: "SCORE phred"
+    index: 5
 histograms:
   - score: score_raw_rankscore
     bins: 101

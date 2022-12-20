@@ -13,15 +13,15 @@ def test_the_simplest_allele_score():
             type: allele_score
             table:
                 filename: data.mem
-                scores:
-                    - id: freq
-                      type: float
-                      desc: ""
-                      name: freq
                 reference:
                   name: reference
                 alternative:
                   name: alternative
+            scores:
+                - id: freq
+                  type: float
+                  desc: ""
+                  name: freq
         """,
         "data.mem": """
             chrom  pos_begin  reference  alternative  freq
@@ -48,15 +48,15 @@ def test_allele_score_fetch_region():
             type: allele_score
             table:
                 filename: data.mem
-                scores:
-                    - id: freq
-                      type: float
-                      desc: ""
-                      name: freq
                 reference:
                   name: reference
                 alternative:
                   name: alternative
+            scores:
+                - id: freq
+                  type: float
+                  desc: ""
+                  name: freq
         """,
         "data.mem": """
             chrom  pos_begin  reference  alternative  freq
@@ -102,15 +102,15 @@ def test_allele_score_missing_alt():
             type: allele_score
             table:
                 filename: data.mem
-                scores:
-                    - id: freq
-                      type: float
-                      desc: ""
-                      name: freq
                 reference:
                   name: reference
                 alternative:
                   name: alternative
+            scores:
+                - id: freq
+                  type: float
+                  desc: ""
+                  name: freq
         """,
         "data.mem": """
             chrom  pos_begin  reference  alternative  freq

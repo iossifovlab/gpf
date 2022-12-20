@@ -126,13 +126,13 @@ def test_build_a_configuration_with_embedded():
                     type: position_score
                     table:
                         filename: data.mem
-                        scores:
-                        - id: score
-                          type: float
-                          desc: >
-                                The phastCons computed over the tree of 100
-                                verterbarte species
-                          name: s1
+                    scores:
+                    - id: score
+                      type: float
+                      desc: >
+                            The phastCons computed over the tree of 100
+                            verterbarte species
+                      name: s1
                 data.mem: |
                     chrom  pos_begin  s1
                     chr1   23         0.01

@@ -46,7 +46,6 @@ class TabixGenomicPositionTable(GenomicPositionTable):
         self.pysam_file = self._open_pysam_file()
         if self.header_mode == "file":
             self.header = self._get_header()
-            self._validate_scoredefs()
         self._set_special_column_indexes()
         self._build_chrom_mapping()
 
@@ -254,8 +253,7 @@ class TabixGenomicPositionTable(GenomicPositionTable):
                 raw[self.chrom_column_i],
                 raw[self.pos_begin_column_i],
                 raw[self.pos_end_column_i],
-                attributes, self.score_definitions,
-                ref=ref, alt=alt,
+                attributes, ref=ref, alt=alt,
             )
 
     def close(self):

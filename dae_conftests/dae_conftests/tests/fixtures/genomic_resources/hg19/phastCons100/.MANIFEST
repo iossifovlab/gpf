@@ -1,6 +1,6 @@
-- md5: b7f2bf65a45313dd8635359a9fb30f1e
+- md5: 50690d6288c6ca21e4755ef8b68d2511
   name: genomic_resource.yaml
-  size: 425
+  size: 413
 - md5: 00c69ea8fae8ab8445ff64616b8cc07a
   name: phastCons100.bedGraph.gz
   size: 2556019

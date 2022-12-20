@@ -3,17 +3,12 @@ from typing import Optional, Tuple, Any, Deque, Union, Dict, Generator
 # pylint: disable=no-member
 import pysam  # type: ignore
 
-from .table import ScoreDef
-
 
 class Line:
     """Represents a line read from a genomic position table.
 
     Provides uniform access to a number of important columns - chromosome,
-    start position, end position, reference allele and alternative allele,
-    as well as access to values of configured score columns. Score columns
-    are parsed depending on their configuration and the type of genome position
-    table they are read from.
+    start position, end position, reference allele and alternative allele.
     """
 
     def __init__(
@@ -22,7 +17,6 @@ class Line:
         pos_begin: Union[int, str],
         pos_end: Union[int, str],
         attributes: Dict[str, Any],
-        score_defs: Dict[str, ScoreDef],
         ref: Optional[str] = None,
         alt: Optional[str] = None,
     ):
@@ -30,7 +24,6 @@ class Line:
         self.pos_begin: int = int(pos_begin)
         self.pos_end: int = int(pos_end)
         self.attributes: Dict[str, Any] = attributes
-        self.score_defs: Dict[str, ScoreDef] = score_defs
         self.ref: Optional[str] = ref
         self.alt: Optional[str] = alt
 
@@ -67,10 +60,10 @@ class Line:
     def __repr__(self):
         return str(tuple(self))
 
-    def _fetch_score_value(self, key):
+    def _fetch_value(self, key):
         return self.attributes[key]
 
-    def get(self, key: str, default=None):
+    def get(self, key: str):
         """Universal getter function."""
         if key == "chrom":
             return self.chrom
@@ -78,25 +71,7 @@ class Line:
             return self.pos_begin
         if key == "pos_end":
             return self.pos_end
-        try:
-            return self.get_score(key)
-        except KeyError:
-            return self.attributes.get(key, default)
-
-    def get_score(self, score_id):
-        """Get and parse configured score from line."""
-        key = self.score_defs[score_id].col_key
-        value = self._fetch_score_value(key)
-        if score_id in self.score_defs:
-            col_def = self.score_defs[score_id]
-            if value in col_def.na_values:
-                value = None
-            elif col_def.value_parser is not None:
-                value = col_def.value_parser(value)
-        return value
-
-    def get_available_scores(self):
-        return tuple(self.score_defs.keys())
+        return self._fetch_value(key)
 
 
 class VCFLine(Line):
@@ -111,7 +86,6 @@ class VCFLine(Line):
         chrom: str,
         pos_begin: Union[int, str],
         pos_end: Union[int, str],
-        score_defs: Dict[str, ScoreDef],
         ref: str,
         alt: Optional[str],
         allele_index: Optional[int],
@@ -119,7 +93,7 @@ class VCFLine(Line):
         info_meta: pysam.VariantHeaderMetadata,
     ):
         super().__init__(
-            chrom, pos_begin, pos_end, {}, score_defs, ref, alt
+            chrom, pos_begin, pos_end, {}, ref, alt
         )
         # Used for support of multiallelic variants in VCF files.
         # The allele index is None if the variant for this line
@@ -129,10 +103,10 @@ class VCFLine(Line):
         self.info: pysam.VariantRecordInfo = info
         # VCF INFO fields metadata - holds metadata for info fields
         # such as description, type, whether the value is a tuple
-        # of multiple score values, etc.
+        # of multiple values, etc.
         self.info_meta: pysam.VariantHeaderMetadata = info_meta
 
-    def _fetch_score_value(self, key):
+    def _fetch_value(self, key):
         value, meta = self.info.get(key), self.info_meta.get(key)
         if isinstance(value, tuple):
             if meta.number == "A" and self.allele_index is not None:

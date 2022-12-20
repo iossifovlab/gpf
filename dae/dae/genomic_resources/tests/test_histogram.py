@@ -81,19 +81,19 @@ def test_histogram_builder_position_resource(tmp_path, client, region_size):
                 type: position_score
                 table:
                     filename: data.mem
-                    scores:
-                        - id: phastCons100way
-                          type: float
-                          desc: "The phastCons computed over the tree of 100 \
-                                  verterbarte species"
-                          name: s1
-                        - id: phastCons5way
-                          type: int
-                          position_aggregator: max
-                          na_values: "-1"
-                          desc: "The phastCons computed over the tree of 5 \
-                                  verterbarte species"
-                          name: s2
+                scores:
+                    - id: phastCons100way
+                      type: float
+                      desc: "The phastCons computed over the tree of 100 \
+                              vertebrate species"
+                      name: s1
+                    - id: phastCons5way
+                      type: int
+                      position_aggregator: max
+                      na_values: "-1"
+                      desc: "The phastCons computed over the tree of 5 \
+                              vertebrate species"
+                      name: s2
                 histograms:
                     - score: phastCons100way
                       bins: 100
@@ -144,15 +144,15 @@ def test_histogram_builder_allele_resource(client, tmp_path):
                 type: allele_score
                 table:
                     filename: data.mem
-                    scores:
-                        - id: freq
-                          type: float
-                          desc: ""
-                          name: freq
                     reference:
                         name: reference
                     alternative:
                         name: alternative
+                scores:
+                    - id: freq
+                      type: float
+                      desc: ""
+                      name: freq
                 histograms:
                     - score: freq
                       bins: 100
@@ -198,22 +198,22 @@ def test_histogram_builder_np_resource(client, tmp_path):
                 type: np_score
                 table:
                     filename: data.mem
-                    scores:
-                        - id: cadd_raw
-                          type: float
-                          desc: ""
-                          name: s1
-                        - id: cadd_test
-                          type: int
-                          position_aggregator: max
-                          nucleotide_aggregator: mean
-                          na_values: "-1"
-                          desc: ""
-                          name: s2
                     reference:
                         name: reference
                     alternative:
                         name: alternative
+                scores:
+                    - id: cadd_raw
+                      type: float
+                      desc: ""
+                      name: s1
+                    - id: cadd_test
+                      type: int
+                      position_aggregator: max
+                      nucleotide_aggregator: mean
+                      na_values: "-1"
+                      desc: ""
+                      name: s2
                 histograms:
                     - score: cadd_raw
                       bins: 100
@@ -267,12 +267,12 @@ def test_histogram_builder_no_explicit_min_max(tmp_path, client, region_size):
                 type: position_score
                 table:
                     filename: data.mem
-                    scores:
-                        - id: phastCons100way
-                          type: float
-                          desc: "The phastCons computed over the tree of 100 \
-                                  verterbarte species"
-                          name: s1
+                scores:
+                    - id: phastCons100way
+                      type: float
+                      desc: "The phastCons computed over the tree of 100 \
+                              vertebrate species"
+                      name: s1
                 histograms:
                     - score: phastCons100way
                       bins: 100
@@ -303,19 +303,19 @@ def test_histogram_builder_save(tmp_path, client):
                 type: position_score
                 table:
                     filename: data.mem
-                    scores:
-                        - id: phastCons100way
-                          type: float
-                          desc: "The phastCons computed over the tree of 100 \
-                                  verterbarte species"
-                          name: s1
-                        - id: phastCons5way
-                          type: int
-                          position_aggregator: max
-                          na_values: "-1"
-                          desc: "The phastCons computed over the tree of 5 \
-                                  verterbarte species"
-                          name: s2
+                scores:
+                    - id: phastCons100way
+                      type: float
+                      desc: "The phastCons computed over the tree of 100 \
+                              vertebrate species"
+                      name: s1
+                    - id: phastCons5way
+                      type: int
+                      position_aggregator: max
+                      na_values: "-1"
+                      desc: "The phastCons computed over the tree of 5 \
+                              vertebrate species"
+                      name: s2
                 histograms:
                     - score: phastCons100way
                       bins: 100
@@ -380,15 +380,15 @@ def test_building_already_calculated_histograms(tmp_path, client):
                     type: position_score
                     table:
                         filename: data.mem
-                        scores:
-                            - id: phastCons100way
-                              type: float
-                              name: s1
-                            - id: phastCons5way
-                              type: int
-                              position_aggregator: max
-                              na_values: "-1"
-                              name: s2
+                    scores:
+                        - id: phastCons100way
+                          type: float
+                          name: s1
+                        - id: phastCons5way
+                          type: int
+                          position_aggregator: max
+                          na_values: "-1"
+                          name: s2
                     histograms:
                         - score: phastCons100way
                           bins: 100
@@ -437,15 +437,15 @@ def test_load_histograms(tmp_path, client):
                     type: position_score
                     table:
                         filename: data.mem
-                        scores:
-                            - id: phastCons100way
-                              type: float
-                              name: s1
-                            - id: phastCons5way
-                              type: int
-                              position_aggregator: max
-                              na_values: "-1"
-                              name: s2
+                    scores:
+                        - id: phastCons100way
+                          type: float
+                          name: s1
+                        - id: phastCons5way
+                          type: int
+                          position_aggregator: max
+                          na_values: "-1"
+                          name: s2
                     histograms:
                         - score: phastCons100way
                           bins: 100
@@ -489,19 +489,19 @@ def test_histogram_builder_build_hashes_stable(tmp_path):
                 type: position_score
                 table:
                     filename: data.mem
-                    scores:
-                        - id: phastCons100way
-                          type: float
-                          desc: "The phastCons computed over the tree of 100 \
-                                  verterbarte species"
-                          name: s1
-                        - id: phastCons5way
-                          type: int
-                          position_aggregator: max
-                          na_values: "-1"
-                          desc: "The phastCons computed over the tree of 5 \
-                                  verterbarte species"
-                          name: s2
+                scores:
+                    - id: phastCons100way
+                      type: float
+                      desc: "The phastCons computed over the tree of 100 \
+                              vertebrate species"
+                      name: s1
+                    - id: phastCons5way
+                      type: int
+                      position_aggregator: max
+                      na_values: "-1"
+                      desc: "The phastCons computed over the tree of 5 \
+                              vertebrate species"
+                      name: s2
                 histograms:
                     - score: phastCons100way
                       bins: 100

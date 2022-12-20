@@ -31,10 +31,10 @@ def repo_fixture(tmp_path, tabix_file):
                     type: position_score
                     table:
                         filename: data.bgz
-                        scores:
-                            - id: phastCons100way
-                              type: float
-                              name: s1
+                    scores:
+                        - id: phastCons100way
+                          type: float
+                          name: s1
                     histograms:
                         - score: phastCons100way
                           bins: 100
@@ -164,7 +164,7 @@ def test_build_hashes_with_changed_scores_config(repo_fixture):
     # When
     with res.open_raw_file(GR_CONF_FILE_NAME, "rt") as infile:
         config = yaml.safe_load(infile)
-    config["table"]["scores"][0]["desc"] = "ala bala desc"
+    config["scores"][0]["desc"] = "ala bala desc"
     with res.open_raw_file(GR_CONF_FILE_NAME, "wt") as outfile:
         outfile.write(yaml.safe_dump(config))
 

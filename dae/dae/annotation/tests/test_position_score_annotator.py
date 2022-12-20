@@ -22,19 +22,19 @@ def position_score_repo():
                 type: position_score
                 table:
                     filename: data.mem
-                    scores:
-                    - id: test100way
-                      type: float
-                      desc: "test values"
-                      name: 100way
-                    - id: t1
-                      type: float
-                      desc: "test score 1"
-                      name: t1
-                    - id: t2
-                      type: float
-                      desc: "test score 2"
-                      name: t2
+                scores:
+                - id: test100way
+                  type: float
+                  desc: "test values"
+                  name: 100way
+                - id: t1
+                  type: float
+                  desc: "test score 1"
+                  name: t1
+                - id: t2
+                  type: float
+                  desc: "test score 2"
+                  name: t2
                 default_annotation:
                     attributes:
                     - source: test100way

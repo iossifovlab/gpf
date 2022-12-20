@@ -4,6 +4,6 @@
 - md5: 64ea2e483af33f1ad35d771653889e1d
   name: TESTCADD.tsv.gz.tbi
   size: 99
-- md5: c74b38ea7b2474a110aa3d88902fab1e
+- md5: b914ca8069ad2b83ef7ae58340ba9662
   name: genomic_resource.yaml
-  size: 667
+  size: 647

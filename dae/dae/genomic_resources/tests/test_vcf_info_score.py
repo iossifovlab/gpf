@@ -76,7 +76,7 @@ chrA   3   .  A   T   .    .       ALLELEID=1600580;CLNDISDB=MedGen:CN517202;CLN
 
 def test_clinvar_vcf_resource(vcf_info_clinvar):
     vcf_info_clinvar.open()
-    scores = vcf_info_clinvar.table.score_definitions
+    scores = vcf_info_clinvar.score_definitions
     assert "CLNDN" in scores
     assert scores["CLNDN"].col_key == "CLNDN"
     assert scores["CLNDN"].desc == "ClinVar's preferred disease name for the concept specified by disease identifiers in CLNDISDB"
@@ -90,7 +90,7 @@ def test_clinvar_get_all_chromosomes(vcf_info_clinvar):
 def test_clinvar_score_columns(vcf_info_clinvar):
     vcf_info_clinvar.open()
     assert len(vcf_info_clinvar.get_all_scores()) == 22
-    for score_def in vcf_info_clinvar.table.score_definitions.values():
+    for score_def in vcf_info_clinvar.score_definitions.values():
         assert score_def.desc
 
 
@@ -347,7 +347,7 @@ chrA   5   .  A   C   264.00 AS_VQSR     AC=3;AN=107374;AF=2.79397e-05;lcr;varia
 
 def test_gnomad_vcf_resource(vcf_info_gnomad):
     vcf_info_gnomad.open()
-    scores = vcf_info_gnomad.table.score_definitions
+    scores = vcf_info_gnomad.score_definitions
 
     assert "AF" in scores
     info = scores["AF"]

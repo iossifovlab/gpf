@@ -27,13 +27,13 @@ def scores_repo(tmp_path):
                 type: position_score
                 table:
                   filename: data.tsv
-                  scores:
-                  - id: score
-                    type: float
-                    desc: |
-                        The phastCons computed over the tree of 100
-                        verterbarte species
-                    name: s1
+                scores:
+                - id: score
+                  type: float
+                  desc: |
+                      The phastCons computed over the tree of 100
+                      verterbarte species
+                  name: s1
             """),
 
             "data.tsv": convert_to_tab_separated("""
