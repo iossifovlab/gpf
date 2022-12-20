@@ -7,9 +7,11 @@ import logging
 import threading
 import tempfile
 import gzip
+import importlib
 
 from typing import Any, Dict, Union, cast, Optional, Generator, \
-    Tuple, ContextManager
+    Tuple, ContextManager, List
+from collections.abc import Callable
 import multiprocessing as mp
 
 from http.server import HTTPServer  # ThreadingHTTPServer
@@ -475,7 +477,7 @@ def http_threaded_test_server(
 
 @contextlib.contextmanager
 def http_process_test_server(path) -> Generator[str, None, None]:
-    with process_server(http_threaded_test_server(path)) as http_url:
+    with _process_server_manager(http_threaded_test_server, path) as http_url:
         yield http_url
 
 
@@ -498,28 +500,45 @@ def build_http_test_protocol(
         yield proto
 
 
-@contextlib.contextmanager
-def process_server(server_manager: ContextManager[str]):
-    """Run a process server."""
-    def _internal_process_runner(
-            server_manager: ContextManager[str],
-            start_queue: mp.Queue, stop_queue: mp.Queue):
-        with server_manager as start_message:
+def _internal_process_runner(
+        module_name: str, server_manager_name: str, args: List[Any],
+        start_queue: mp.Queue, stop_queue: mp.Queue):
+    module = importlib.import_module(module_name)
+    server_manager = getattr(module, server_manager_name)
+    try:
+        with server_manager(*args) as start_message:
             logger.info("process server started")
             start_queue.put(start_message)
             stop_queue.get()
-            logger.info("process server stopped")
+        logger.info("process server stopped")
+    except Exception as ex:  # pylint: disable=broad-except
+        start_queue.put(ex)
+    else:
+        start_queue.put(None)
 
-    mp.set_start_method("fork", force=True)
+
+@contextlib.contextmanager
+def _process_server_manager(
+        server_manager: Callable[..., ContextManager[str]],
+        *args):
+    """Run a process server."""
+    # mp.set_start_method("spawn", force=True)
     start_queue: mp.Queue = mp.Queue()
     stop_queue: mp.Queue = mp.Queue()
     proc = mp.Process(
         target=_internal_process_runner,
-        args=(server_manager, start_queue, stop_queue))
+        args=(
+            server_manager.__module__, server_manager.__name__, args,
+            start_queue, stop_queue))
     proc.start()
 
     # wait for start message
     start_message = start_queue.get()
+    if isinstance(start_message, Exception):
+        logger.error(
+            "unexpected execption in starting process: %s", start_message)
+        raise start_message
+
     yield start_message
 
     # stop the server process
@@ -550,7 +569,7 @@ def s3_threaded_test_server() -> Generator[str, None, None]:
 
 @contextlib.contextmanager
 def s3_process_test_server() -> Generator[str, None, None]:
-    with process_server(s3_threaded_test_server()) as endpoint_url:
+    with _process_server_manager(s3_threaded_test_server) as endpoint_url:
         yield endpoint_url
 
 

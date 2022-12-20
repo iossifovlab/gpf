@@ -1,4 +1,5 @@
 # pylint: disable=W0621,C0114,C0116,C0415,W0212,W0613,C0302,C0115,W0102,W0603
+import multiprocessing as mp
 import textwrap
 import contextlib
 
@@ -9,7 +10,8 @@ from dae.genomic_resources.testing import setup_tabix, \
     build_inmemory_test_protocol, build_inmemory_test_resource, \
     setup_directories, build_filesystem_test_resource, \
     build_http_test_protocol, build_s3_test_protocol, \
-    process_server, s3_threaded_test_server
+    s3_threaded_test_server, \
+    _process_server_manager, _internal_process_runner
 
 
 def test_setup_tabix(tmp_path):
@@ -126,33 +128,94 @@ def test_build_s3_test_proto(np_score_directory):
         assert res.get_type() == "np_score"
 
 
+@contextlib.contextmanager
+def _server_manager_simple():
+    yield "started"
+
+
+def test_internal_process_runner():
+    start_queue: mp.Queue = mp.Queue()
+    stop_queue: mp.Queue = mp.Queue()
+    stop_queue.put("stop")
+
+    _internal_process_runner(
+        "dae.genomic_resources.tests.test_testing",
+        "_server_manager_simple", [],
+        start_queue, stop_queue)
+    result = start_queue.get()
+    assert result == "started"
+
+    # clean up
+    start_queue.close()
+    stop_queue.close()
+    start_queue.join_thread()
+    stop_queue.join_thread()
+
+
 def test_process_server_simple():
-    @contextlib.contextmanager
-    def server_manager():
-
-        yield "started"
-
-    with process_server(server_manager()) as start_message:
+    with _process_server_manager(_server_manager_simple) as start_message:
         assert start_message == "started"
 
 
-def test_process_server_start_failed():
-    @contextlib.contextmanager
-    def server_manager():
-        raise ValueError("unexpected error")
+@contextlib.contextmanager
+def _server_manager_start_failed():
+    raise ValueError("unexpected error")
 
+
+def test_internal_process_runner_start_failed():
+    start_queue: mp.Queue = mp.Queue()
+    stop_queue: mp.Queue = mp.Queue()
+    stop_queue.put("stop")
+
+    _internal_process_runner(
+        "dae.genomic_resources.tests.test_testing",
+        "_server_manager_simple", [],
+        start_queue, stop_queue)
+    result = start_queue.get()
+    assert result == "started"
+
+    # clean up
+    start_queue.close()
+    stop_queue.close()
+    start_queue.join_thread()
+    stop_queue.join_thread()
+
+
+def test_process_server_start_failed():
     with pytest.raises(ValueError):
-        with process_server(server_manager()) as start_message:
-            assert start_message == "started"
+        with _process_server_manager(
+                _server_manager_start_failed) as _:
+            pass
+
+
+@contextlib.contextmanager
+def _server_manager_stop_failed():
+    yield "started"
+    raise ValueError("unexpected error")
+
+
+def test_internal_process_runner_stop_failed():
+    start_queue: mp.Queue = mp.Queue()
+    stop_queue: mp.Queue = mp.Queue()
+    stop_queue.put("stop")
+
+    _internal_process_runner(
+        "dae.genomic_resources.tests.test_testing",
+        "_server_manager_simple", [],
+        start_queue, stop_queue)
+    result = start_queue.get()
+    assert result == "started"
+    start_queue.get()
+
+    # clean up
+    start_queue.close()
+    stop_queue.close()
+    start_queue.join_thread()
+    stop_queue.join_thread()
 
 
 def test_process_server_stop_failed():
-    @contextlib.contextmanager
-    def server_manager():
-        yield "started"
-        raise ValueError("unexpected error")
-
-    with process_server(server_manager()) as start_message:
+    with _process_server_manager(_server_manager_stop_failed) as start_message:
         assert start_message == "started"
 
 
