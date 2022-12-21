@@ -35,6 +35,7 @@ class VCFGenomicPositionTable(TabixGenomicPositionTable):
             self.definition.filename)
         self._set_special_column_indexes()
         self._build_chrom_mapping()
+        return self
 
     @cache
     def get_file_chromosomes(self) -> List[str]:

@@ -26,9 +26,11 @@ class InmemoryGenomicPositionTable(GenomicPositionTable):
         super().__init__(genomic_resource, table_definition)
 
     def open(self):
+        compression = None
+        if self.definition.filename.endswith(".gz"):
+            compression = "gzip"
         self.str_stream = self.genomic_resource.open_raw_file(
-            self.definition.filename, mode="rt", uncompress=True
-        )
+            self.definition.filename, mode="rt", compression=compression)
         assert self.str_stream is not None
         clmn_sep, strip_chars, space_replacement = \
             InmemoryGenomicPositionTable.FORMAT_DEF[self.format]
@@ -90,6 +92,7 @@ class InmemoryGenomicPositionTable(GenomicPositionTable):
             for c, pss in records_by_chr.items()
         }
         self._build_chrom_mapping()
+        return self
 
     def get_file_chromosomes(self) -> List[str]:
         return sorted(self.records_by_chr.keys())

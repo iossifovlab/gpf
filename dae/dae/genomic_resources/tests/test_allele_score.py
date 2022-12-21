@@ -97,7 +97,7 @@ def test_allele_score_fetch_region():
 
 
 def test_allele_score_missing_alt():
-    res: GenomicResource = build_test_resource({
+    res: GenomicResource = build_inmemory_test_resource({
         GR_CONF_FILE_NAME: """
             type: allele_score
             table:

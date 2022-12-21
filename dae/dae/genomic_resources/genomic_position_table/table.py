@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import abc
 from typing import Optional, Dict, List, Union, Tuple
 from functools import cached_property
@@ -185,7 +187,7 @@ class GenomicPositionTable(abc.ABC):
         self.close()
 
     @abc.abstractmethod
-    def open(self):
+    def open(self) -> GenomicPositionTable:
         pass
 
     @abc.abstractmethod
