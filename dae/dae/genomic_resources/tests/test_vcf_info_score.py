@@ -79,7 +79,9 @@ def test_clinvar_vcf_resource(vcf_info_clinvar):
     scores = vcf_info_clinvar.score_definitions
     assert "CLNDN" in scores
     assert scores["CLNDN"].col_key == "CLNDN"
-    assert scores["CLNDN"].desc == "ClinVar's preferred disease name for the concept specified by disease identifiers in CLNDISDB"
+    assert scores["CLNDN"].desc == ("ClinVar's preferred disease name for the"
+                                    " concept specified by disease identifiers"
+                                    " in CLNDISDB")
 
 
 def test_clinvar_get_all_chromosomes(vcf_info_clinvar):

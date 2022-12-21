@@ -39,19 +39,14 @@ class TabixGenomicPositionTable(GenomicPositionTable):
         self.pysam_file: Optional[PysamFile] = None
         self.line_iterator = None
 
-    def _open_pysam_file(self):
-        return self.genomic_resource.open_tabix_file(self.definition.filename)
-
     def open(self):
-        self.pysam_file = self._open_pysam_file()
+        self.pysam_file = self.genomic_resource.open_tabix_file(
+            self.definition.filename)
         if self.header_mode == "file":
-            self.header = self._get_header()
+            self.header = tuple(
+                self.pysam_file.header[-1].strip("#").split("\t"))
         self._set_special_column_indexes()
         self._build_chrom_mapping()
-
-    def _get_header(self):
-        assert isinstance(self.pysam_file, pysam.TabixFile)
-        return tuple(self.pysam_file.header[-1].strip("#").split("\t"))
 
     def get_file_chromosomes(self) -> List[str]:
         assert isinstance(self.pysam_file, pysam.TabixFile)

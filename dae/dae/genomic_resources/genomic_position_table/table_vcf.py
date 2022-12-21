@@ -16,20 +16,12 @@ class VCFGenomicPositionTable(TabixGenomicPositionTable):
 
     def __init__(self, genomic_resource, table_definition):
         super().__init__(genomic_resource, table_definition)
-        self.header = self._get_header()
-
-    def _open_pysam_file(self):
-        return self.genomic_resource.open_vcf_file(self.definition.filename)
+        self.header = self._load_header()
 
     def _get_index_prop_for_special_column(self, key):
         return None
 
-    def _get_header(self):
-        if self.header is not None:
-            # Don't re-open header if already loaded -
-            # This check is useful because we already set the VCF header
-            # in the constructor of the class
-            return self.header
+    def _load_header(self):
         assert self.definition.get("header_mode", "file") == "file"
         filename = self.definition.filename
         idx = filename.index(".vcf")
@@ -37,6 +29,12 @@ class VCFGenomicPositionTable(TabixGenomicPositionTable):
         assert self.genomic_resource.file_exists(header_filename), \
             "VCF tables must have an accompanying *.header.vcf.gz file!"
         return self.genomic_resource.open_vcf_file(header_filename).header.info
+
+    def open(self):
+        self.pysam_file = self.genomic_resource.open_vcf_file(
+            self.definition.filename)
+        self._set_special_column_indexes()
+        self._build_chrom_mapping()
 
     @cache
     def get_file_chromosomes(self) -> List[str]:

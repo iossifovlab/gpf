@@ -37,7 +37,7 @@ def test_line_buffer_simple_2():
 ])
 def test_line_buffer_prune(pos, expected):
     buffer = LineBuffer()
-    buffer.PRUNE_CUTOFF = 0
+    buffer.PRUNE_CUTOFF = 0  # pylint: disable=C0103
 
     buffer.append(Line("1", 2, 2, {}, {}))
     buffer.append(Line("1", 4, 4, {}, {}))

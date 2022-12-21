@@ -44,7 +44,7 @@ def vcf_score(tmp_path_factory):
 chr1   2   .  A   .   .    .       A=0;B=01,02,03;C=c01
 chr1   5   .  A   T   .    .       A=1;B=11,12,13;C=c11,c12;D=d11
 chr1   15   .  A   T,G   .    .       A=2;B=21,22;C=c21,c22,c23;D=d21,d22
-chr1   30   .  A   T,G,C   .    .       A=3;B=31;C=c31,c32,c33,c34;D=d31,d32,d33
+chr1   30   .  A   T,G,C   .    .      A=3;B=31;C=c31,c32,c33,c34;D=d31,d32,d33
     """)
     )
     setup_vcf(
@@ -178,7 +178,13 @@ def test_score_definition_list_header_tabix(tmp_path, tabix_file):
                 table:
                     filename: data.bgz
                     header_mode: list
-                    header: ["chrom", "start", "stop", "reference", "alt", "score"]
+                    header:
+                    - chrom
+                    - start
+                    - stop
+                    - reference
+                    - alt
+                    - score
                     pos_begin:
                       name: start
                     pos_end:
