@@ -37,7 +37,7 @@ class VCFGenomicPositionTable(TabixGenomicPositionTable):
         self._build_chrom_mapping()
         return self
 
-    @cache
+    @cache  # pylint: disable=method-cache-max-size-none
     def get_file_chromosomes(self) -> List[str]:
         assert isinstance(self.pysam_file, pysam.VariantFile)
         return list(map(str, self.pysam_file.header.contigs))

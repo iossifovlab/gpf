@@ -9,131 +9,90 @@ from dae.genomic_resources.genomic_position_table import \
     TabixGenomicPositionTable, \
     VCFGenomicPositionTable, \
     build_genomic_position_table
-from dae.genomic_resources.fsspec_protocol import build_fsspec_protocol
 
 from dae.genomic_resources.testing import \
-    build_test_resource, \
-    tabix_to_resource
-from dae.testing import convert_to_tab_separated, setup_directories, setup_vcf
+    build_inmemory_test_resource, build_filesystem_test_resource, \
+    setup_directories, convert_to_tab_separated, setup_tabix, setup_vcf
 
 
 @pytest.fixture
-def vcf_res(tmp_path_factory):
-    vcf_header = """
+def vcf_res(tmp_path):
+    setup_directories(
+        tmp_path, {
+            "genomic_resource.yaml": textwrap.dedent("""
+                tabix_table:
+                    filename: data.vcf.gz
+                    format: vcf_info
+            """)
+        })
+    setup_vcf(
+        tmp_path / "data.vcf.gz",
+        textwrap.dedent("""
 ##fileformat=VCFv4.1
 ##INFO=<ID=A,Number=1,Type=Integer,Description="Score A">
 ##INFO=<ID=B,Number=1,Type=Integer,Description="Score B">
 ##INFO=<ID=C,Number=.,Type=String,Description="Score C">
 ##INFO=<ID=D,Number=.,Type=String,Description="Score D">
 #CHROM POS ID REF ALT QUAL FILTER  INFO
-"""
-    root_path = tmp_path_factory.mktemp("vcf")
-    setup_directories(
-        root_path / "grr",
-        {
-            "tmp": {
-                "genomic_resource.yaml": textwrap.dedent("""
-                    tabix_table:
-                        filename: data.vcf.gz
-                        format: vcf_info
-                """)
-            }
-        }
-    )
-    setup_vcf(
-        root_path / "grr" / "tmp" / "data.vcf.gz",
-        textwrap.dedent(f"""
-{vcf_header}
 chr1   5   .  A   T   .    .       A=1;C=c11,c12;D=d11
 chr1   15   .  A   T   .    .       A=2;B=21;C=c21;D=d21,d22
 chr1   30   .  A   T   .    .       A=3;B=31;C=c21;D=d31,d32
     """)
     )
-    setup_vcf(
-        root_path / "grr" / "tmp" / "data.header.vcf.gz",
-        textwrap.dedent(vcf_header)
-    )
-    proto = build_fsspec_protocol("testing", str(root_path / "grr"))
-    return proto.get_resource("tmp")
+    return build_filesystem_test_resource(tmp_path)
 
 
 @pytest.fixture
-def vcf_res_autodetect_format(tmp_path_factory):
-    vcf_header = """
+def vcf_res_autodetect_format(tmp_path):
+    setup_directories(
+        tmp_path, {
+            "genomic_resource.yaml": textwrap.dedent("""
+                tabix_table:
+                    filename: data.vcf.gz
+            """)
+        })
+    setup_vcf(
+        tmp_path / "data.vcf.gz",
+        textwrap.dedent("""
 ##fileformat=VCFv4.1
 ##INFO=<ID=A,Number=1,Type=Integer,Description="Score A">
 #CHROM POS ID REF ALT QUAL FILTER  INFO
-"""
-    root_path = tmp_path_factory.mktemp("vcf")
-    setup_directories(
-        root_path / "grr",
-        {
-            "tmp": {
-                "genomic_resource.yaml": textwrap.dedent("""
-                    tabix_table:
-                        filename: data.vcf.gz
-                """)
-            }
-        }
-    )
-    setup_vcf(
-        root_path / "grr" / "tmp" / "data.vcf.gz",
-        textwrap.dedent(f"""
-{vcf_header}
 chr1   5   .  A   T   .    .       A=1
     """)
     )
-    setup_vcf(
-        root_path / "grr" / "tmp" / "data.header.vcf.gz",
-        textwrap.dedent(vcf_header)
-    )
-    proto = build_fsspec_protocol("testing", str(root_path / "grr"))
-    return proto.get_resource("tmp")
+    return build_filesystem_test_resource(tmp_path)
 
 
 @pytest.fixture
-def vcf_res_multiallelic(tmp_path_factory):
-    vcf_header = """
+def vcf_res_multiallelic(tmp_path):
+    setup_directories(
+        tmp_path, {
+            "genomic_resource.yaml": textwrap.dedent("""
+                tabix_table:
+                    filename: data.vcf.gz
+                    format: vcf_info
+            """)
+        })
+    setup_vcf(
+        tmp_path / "data.vcf.gz",
+        textwrap.dedent("""
 ##fileformat=VCFv4.1
 ##INFO=<ID=A,Number=1,Type=Integer,Description="Score A">
 ##INFO=<ID=B,Number=.,Type=Integer,Description="Score B">
 ##INFO=<ID=C,Number=R,Type=String,Description="Score C">
 ##INFO=<ID=D,Number=A,Type=String,Description="Score D">
 #CHROM POS ID REF ALT QUAL FILTER  INFO
-    """
-    root_path = tmp_path_factory.mktemp("vcf")
-    setup_directories(
-        root_path / "grr",
-        {
-            "tmp": {
-                "genomic_resource.yaml": textwrap.dedent("""
-                    tabix_table:
-                        filename: data.vcf.gz
-                        format: vcf_info
-                """)
-            }
-        }
-    )
-    setup_vcf(
-        root_path / "grr" / "tmp" / "data.vcf.gz",
-        textwrap.dedent(f"""
-{vcf_header}
 chr1   2   .  A   .   .    .       A=0;B=01,02,03;C=c01
 chr1   5   .  A   T   .    .       A=1;B=11,12,13;C=c11,c12;D=d11
 chr1   15   .  A   T,G   .    .       A=2;B=21,22;C=c21,c22,c23;D=d21,d22
-chr1   30   .  A   T,G,C   .    .       A=3;B=31;C=c31,c32,c33,c34;D=d31,d32,d33
+chr1   30   .  A   T,G,C   .    .     A=3;B=31;C=c31,c32,c33,c34;D=d31,d32,d33
     """)
     )
-    setup_vcf(
-        root_path / "grr" / "tmp" / "data.header.vcf.gz",
-        textwrap.dedent(vcf_header)
-    )
-    proto = build_fsspec_protocol("testing", str(root_path / "grr"))
-    return proto.get_resource("tmp")
+    return build_filesystem_test_resource(tmp_path)
 
 
 def test_default_setup():
-    res = build_test_resource({
+    res = build_inmemory_test_resource({
         "genomic_resource.yaml": """
             table:
                 filename: data.mem
@@ -156,7 +115,7 @@ def test_default_setup():
 
 
 def test_regions():
-    res = build_test_resource({
+    res = build_inmemory_test_resource({
         "genomic_resource.yaml": """
             table:
                 filename: data.mem
@@ -198,33 +157,29 @@ def test_regions():
     2,
     1500,
 ])
-def test_regions_in_tabix(tmp_path, tabix_file, jump_threshold):
-    res = build_test_resource(
-        scheme="file",
-        root_path=str(tmp_path),
-        content={
-            "genomic_resource.yaml": """
-                tabix_table:
-                    filename: data.bgz
+def test_regions_in_tabix(tmp_path, jump_threshold):
+    setup_directories(
+        tmp_path, {
+            "genomic_resource.yaml": textwrap.dedent("""
+                table:
+                    format: tabix
+                    filename: data.txt.gz
                 scores:
                 - id: c2
                   name: c2
-                  type: float""",
+                  type: float""")
         })
-    assert res
+    setup_tabix(
+        tmp_path / "data.txt.gz",
+        """
+        #chrom pos_begin pos_end  c2
+        1     10        12       3.14
+        1     15        20       4.14
+        1     21        30       5.14
+        """, seq_col=0, start_col=1, end_col=2)
+    res = build_filesystem_test_resource(tmp_path)
 
-    tabix_to_resource(
-        tabix_file(
-            """
-            #chrom pos_begin pos_end  c2
-            1     10        12       3.14
-            1     15        20       4.14
-            1     21        30       5.14
-            """, seq_col=0, start_col=1, end_col=2),
-        res, "data.bgz"
-    )
-
-    with build_genomic_position_table(res, res.config["tabix_table"]) as tab:
+    with build_genomic_position_table(res, res.config["table"]) as tab:
         assert tab
         tab.jump_threshold = jump_threshold
         assert tab.chrom_column_i == 0
@@ -245,33 +200,29 @@ def test_regions_in_tabix(tmp_path, tabix_file, jump_threshold):
         ]
 
 
-def test_last_call_is_updated(tmp_path, tabix_file):
-    res = build_test_resource(
-        scheme="file",
-        root_path=str(tmp_path),
-        content={
-            "genomic_resource.yaml": """
-                tabix_table:
-                    filename: data.bgz
+def test_last_call_is_updated(tmp_path):
+    setup_directories(
+        tmp_path, {
+            "genomic_resource.yaml": textwrap.dedent("""
+                table:
+                    filename: data.txt.gz
+                    format: tabix
                 scores:
                 - id: c2
                   name: c2
-                  type: float""",
+                  type: float""")
         })
-    assert res
+    setup_tabix(
+        tmp_path / "data.txt.gz",
+        """
+        #chrom pos_begin pos_end  c2
+        1     10        12       3.14
+        1     15        20       4.14
+        1     21        30       5.14
+        """, seq_col=0, start_col=1, end_col=2)
+    res = build_filesystem_test_resource(tmp_path)
 
-    tabix_to_resource(
-        tabix_file(
-            """
-            #chrom pos_begin pos_end  c2
-            1     10        12       3.14
-            1     15        20       4.14
-            1     21        30       5.14
-            """, seq_col=0, start_col=1, end_col=2),
-        res, "data.bgz"
-    )
-
-    with build_genomic_position_table(res, res.config["tabix_table"]) as tab:
+    with build_genomic_position_table(res, res.config["table"]) as tab:
         assert tab._last_call == ("", -1, -1)
         assert list(tab.get_records_in_region("1", 11, 11)) == [
             ("1", 10, 12, "3.14")
@@ -287,7 +238,7 @@ def test_last_call_is_updated(tmp_path, tabix_file):
 
 
 def test_chr_add_pref():
-    res = build_test_resource({
+    res = build_inmemory_test_resource({
         "genomic_resource.yaml": """
             table:
                 filename: data.mem
@@ -309,7 +260,7 @@ def test_chr_add_pref():
 
 
 def test_chr_del_pref():
-    res = build_test_resource({
+    res = build_inmemory_test_resource({
         "genomic_resource.yaml": """
             table:
                 filename: data.mem
@@ -329,7 +280,7 @@ def test_chr_del_pref():
 
 
 def test_chrom_mapping_file():
-    res = build_test_resource({
+    res = build_inmemory_test_resource({
         "genomic_resource.yaml": """
             table:
                 filename: data.mem
@@ -362,40 +313,39 @@ def test_chrom_mapping_file():
         ]
 
 
-def test_chrom_mapping_file_with_tabix(tmp_path, tabix_file):
-    res = build_test_resource(
-        scheme="file",
-        root_path=str(tmp_path),
-        content={
+def test_chrom_mapping_file_with_tabix(tmp_path):
+    setup_directories(
+        tmp_path, {
             "genomic_resource.yaml": """
-                tabix_table:
-                    filename: data.bgz
-                    chrom_mapping:
-                        filename: chrom_map.txt
-                    pos_end:
-                        name: pos2
+                table:
+                  filename: data.txt.gz
+                  format: tabix
+                  chrom_mapping:
+                    filename: chrom_map.txt
+                  pos_end:
+                    name: pos2
                 scores:
                 - id: c2
                   name: c2
                   type: float""",
             "chrom_map.txt": convert_to_tab_separated("""
-                    chrom   file_chrom
-                    gosho   chr1
-                    pesho   chr22
+                chrom   file_chrom
+                gosho   chr1
+                pesho   chr22
             """)})
 
-    tabix_to_resource(
-        tabix_file(
-            """
-            #chrom   pos_begin  pos2   c2
-            chr1     10         12     3.14
-            chr22    11         11     4.14
-            chrX     12         14     5.14
-            """,
-            seq_col=0, start_col=1, end_col=2),
-        res, "data.bgz"
-    )
-    with build_genomic_position_table(res, res.config["tabix_table"]) as tab:
+    setup_tabix(
+        tmp_path / "data.txt.gz",
+        """
+        #chrom   pos_begin  pos2   c2
+        chr1     10         12     3.14
+        chr22    11         11     4.14
+        chrX     12         14     5.14
+        """,
+        seq_col=0, start_col=1, end_col=2)
+    res = build_filesystem_test_resource(tmp_path)
+
+    with build_genomic_position_table(res, res.config["table"]) as tab:
         assert tab.get_chromosomes() == ["gosho", "pesho"]
         assert list(tab.get_all_records()) == [
             ("gosho", 10, 12, "3.14"),
@@ -406,14 +356,13 @@ def test_chrom_mapping_file_with_tabix(tmp_path, tabix_file):
         ]
 
 
-def test_invalid_chrom_mapping_file_with_tabix(tmp_path, tabix_file):
-    res = build_test_resource(
-        scheme="file",
-        root_path=str(tmp_path),
-        content={
+def test_invalid_chrom_mapping_file_with_tabix(tmp_path):
+    setup_directories(
+        tmp_path, {
             "genomic_resource.yaml": """
-                tabix_table:
-                    filename: data.bgz
+                table:
+                    filename: data.txt.gz
+                    format: tabix
                     chrom_mapping:
                         filename: chrom_map.txt""",
             "chrom_map.txt": convert_to_tab_separated("""
@@ -421,21 +370,19 @@ def test_invalid_chrom_mapping_file_with_tabix(tmp_path, tabix_file):
                     gosho       chr1
                     pesho       chr22
             """)})
-
-    tabix_to_resource(
-        tabix_file(
-            """
-            #chrom   pos_begin  pos2   c2
-            chr1     10         12     3.14
-            chr22    11         11     4.14
-            chrX     12         14     5.14
-            """,
-            seq_col=0, start_col=1, end_col=2),
-        res, "data.bgz"
-    )
+    setup_tabix(
+        tmp_path / "data.txt.gz",
+        """
+        #chrom   pos_begin  pos2   c2
+        chr1     10         12     3.14
+        chr22    11         11     4.14
+        chrX     12         14     5.14
+        """,
+        seq_col=0, start_col=1, end_col=2)
+    res = build_filesystem_test_resource(tmp_path)
 
     with pytest.raises(ValueError) as exception:
-        build_genomic_position_table(res, res.config["tabix_table"]).open()
+        build_genomic_position_table(res, res.config["table"]).open()
 
     assert str(exception.value) == (
         "The chromosome mapping file chrom_map.txt in resource  "
@@ -444,7 +391,7 @@ def test_invalid_chrom_mapping_file_with_tabix(tmp_path, tabix_file):
 
 
 def test_column_with_name():
-    res = build_test_resource({
+    res = build_inmemory_test_resource({
         "genomic_resource.yaml": """
             table:
                 filename: data.mem
@@ -470,7 +417,7 @@ def test_column_with_name():
 
 
 def test_column_with_index():
-    res = build_test_resource({
+    res = build_inmemory_test_resource({
         "genomic_resource.yaml": """
             table:
                 filename: data.mem
@@ -494,7 +441,7 @@ def test_column_with_index():
 
 
 def test_no_header():
-    res = build_test_resource({
+    res = build_inmemory_test_resource({
         "genomic_resource.yaml": """
             table:
                 header_mode: none
@@ -521,7 +468,7 @@ def test_no_header():
 
 
 def test_header_in_config():
-    res = build_test_resource({
+    res = build_inmemory_test_resource({
         "genomic_resource.yaml": """
             table:
                 header_mode: list
@@ -545,7 +492,7 @@ def test_header_in_config():
 
 
 def test_space_in_mem_table():
-    res = build_test_resource({
+    res = build_inmemory_test_resource({
         "genomic_resource.yaml": """
             table:
                 filename: data.mem
@@ -566,7 +513,7 @@ def test_space_in_mem_table():
 
 
 def test_text_table():
-    res = build_test_resource(
+    res = build_inmemory_test_resource(
         content={
             "genomic_resource.yaml": """
                 table:
@@ -626,38 +573,36 @@ def test_text_table():
     2,
     1500,
 ])
-def test_tabix_table(tabix_file, tmp_path, jump_threshold):
-    res = build_test_resource(
-        scheme="file",
-        root_path=str(tmp_path),
-        content={
-            "genomic_resource.yaml": """
-                    tabix_table:
-                        filename: data.bgz
-                    scores:
-                    - id: c1
-                      name: c1
-                      type: float
-                    - id: c2
-                      name: c2
-                      type: str""",
+def test_tabix_table(tmp_path, jump_threshold):
+    setup_directories(
+        tmp_path, {
+            "genomic_resource.yaml": textwrap.dedent("""
+                table:
+                  filename: data.txt.gz
+                  format: tabix
+                scores:
+                - id: c1
+                  name: c1
+                  type: float
+                - id: c2
+                  name: c2
+                  type: str""")
         })
 
-    tabix_to_resource(
-        tabix_file(
-            """
-            #chrom pos_begin c1     c2
-            1      3         3.14   aa
-            1      4         4.14   bb
-            1      4         5.14   cc
-            1      5         6.14   dd
-            1      8         7.14   ee
-            2      3         8.14   ff
-            """, seq_col=0, start_col=1, end_col=1),
-        res, "data.bgz"
-    )
+    setup_tabix(
+        tmp_path / "data.txt.gz",
+        """
+        #chrom pos_begin c1     c2
+        1      3         3.14   aa
+        1      4         4.14   bb
+        1      4         5.14   cc
+        1      5         6.14   dd
+        1      8         7.14   ee
+        2      3         8.14   ff
+        """, seq_col=0, start_col=1, end_col=1)
+    res = build_filesystem_test_resource(tmp_path)
 
-    with build_genomic_position_table(res, res.config["tabix_table"]) as table:
+    with build_genomic_position_table(res, res.config["table"]) as table:
         assert table.get_column_names() == ("chrom", "pos_begin", "c1", "c2")
         table.jump_threshold = jump_threshold
         assert list(table.get_all_records()) == [
@@ -693,39 +638,36 @@ def test_tabix_table(tabix_file, tmp_path, jump_threshold):
 
 
 @pytest.fixture
-def tabix_table(tmp_path, tabix_file):
-    res = build_test_resource(
-        scheme="file",
-        root_path=str(tmp_path),
-        content={
+def tabix_table(tmp_path):
+    setup_directories(
+        tmp_path, {
             "genomic_resource.yaml": """
                 tabix_table:
-                    filename: data.bgz
+                    filename: data.txt.gz
+                    format: tabix
                 scores:
                 - id: c1
                   name: c1
                   type: int""",
         })
-
-    tabix_to_resource(
-        tabix_file(
-            """
-            #chrom pos_begin c1
-            1      1         1
-            1      2         2
-            1      3         3
-            1      4         4
-            1      5         5
-            1      6         6
-            1      7         7
-            1      8         8
-            1      9         9
-            1      10        10
-            1      11        11
-            1      12        12
-            """, seq_col=0, start_col=1, end_col=1),
-        res, "data.bgz"
-    )
+    setup_tabix(
+        tmp_path / "data.txt.gz",
+        """
+        #chrom pos_begin c1
+        1      1         1
+        1      2         2
+        1      3         3
+        1      4         4
+        1      5         5
+        1      6         6
+        1      7         7
+        1      8         8
+        1      9         9
+        1      10        10
+        1      11        11
+        1      12        12
+        """, seq_col=0, start_col=1, end_col=1)
+    res = build_filesystem_test_resource(tmp_path)
 
     table = build_genomic_position_table(res, res.config["tabix_table"])
     table.open()
@@ -733,16 +675,13 @@ def tabix_table(tmp_path, tabix_file):
 
 
 @pytest.fixture
-def regions_tabix_table(tmp_path, tabix_file):
-    res = build_test_resource(
-        scheme="file",
-        root_path=str(tmp_path),
-        content={
+def regions_tabix_table(tmp_path):
+    setup_directories(
+        tmp_path, {
             "genomic_resource.yaml": """
-                text_table:
-                    filename: data.mem
                 tabix_table:
-                    filename: data.bgz
+                    filename: data.txt.gz
+                    format: tabix
                 scores:
                 - id: c1
                   name: c1
@@ -750,19 +689,18 @@ def regions_tabix_table(tmp_path, tabix_file):
             "data.mem": """
             """
         })
-    tabix_to_resource(
-        tabix_file(
-            """
-            #chrom pos_begin pos_end  c1
-            1      1         5        1
-            1      6         10       2
-            1      11        15       3
-            1      16        20       4
-            1      21        25       5
-            1      26        30       6
-            """, seq_col=0, start_col=1, end_col=2),
-        res, "data.bgz"
-    )
+    setup_tabix(
+        tmp_path / "data.txt.gz",
+        """
+        #chrom pos_begin pos_end  c1
+        1      1         5        1
+        1      6         10       2
+        1      11        15       3
+        1      16        20       4
+        1      21        25       5
+        1      26        30       6
+        """, seq_col=0, start_col=1, end_col=2)
+    res = build_filesystem_test_resource(tmp_path)
 
     table = build_genomic_position_table(res, res.config["tabix_table"])
     table.open()
@@ -828,33 +766,31 @@ def test_tabix_table_jumper_current_position(tabix_table):
 
 
 @pytest.fixture
-def tabix_table_multiline(tmp_path, tabix_file):
-    res = build_test_resource(
-        scheme="file",
-        root_path=str(tmp_path),
-        content={
+def tabix_table_multiline(tmp_path):
+    setup_directories(
+        tmp_path, {
             "genomic_resource.yaml": """
                 tabix_table:
-                    filename: data.bgz
+                    filename: data.txt.gz
+                    format: tabix
                 scores:
                 - id: c1
                   name: c1
                   type: float""",
         })
-    tabix_to_resource(
-        tabix_file(
-            """
-            #chrom pos_begin c1
-            1      1         1
-            1      2         2
-            1      2         3
-            1      3         4
-            1      3         5
-            1      4         6
-            1      4         7
-            """, seq_col=0, start_col=1, end_col=1),
-        res, "data.bgz"
-    )
+    setup_tabix(
+        tmp_path / "data.txt.gz",
+        """
+        #chrom pos_begin c1
+        1      1         1
+        1      2         2
+        1      2         3
+        1      3         4
+        1      3         5
+        1      4         6
+        1      4         7
+        """, seq_col=0, start_col=1, end_col=1)
+    res = build_filesystem_test_resource(tmp_path)
 
     table = build_genomic_position_table(res, res.config["tabix_table"])
     table.open()
@@ -906,16 +842,13 @@ def test_tabix_table_multi_get_regions_partial(tabix_table_multiline):
     assert lines == [("1", 3, 3, "4"), ("1", 3, 3, "5")]
 
 
-def test_tabix_middle_optimization(tmp_path, tabix_file):
-    res = build_test_resource(
-        scheme="file",
-        root_path=str(tmp_path),
-        content={
+def test_tabix_middle_optimization(tmp_path):
+    setup_directories(
+        tmp_path, {
             "genomic_resource.yaml": """
-                text_table:
-                    filename: data.mem
                 tabix_table:
-                    filename: data.bgz
+                    filename: data.txt.gz
+                    format: tabix
                 scores:
                 - id: c1
                   name: c1
@@ -923,19 +856,19 @@ def test_tabix_middle_optimization(tmp_path, tabix_file):
             "data.mem": """
             """
         })
-    tabix_to_resource(
-        tabix_file(
-            """
-            #chrom pos_begin c1
-            1      1         1
-            1      4         2
-            1      4         3
-            1      8         4
-            1      8         5
-            1      12        6
-            1      12        7
-            """, seq_col=0, start_col=1, end_col=1),
-        res, "data.bgz")
+    setup_tabix(
+        tmp_path / "data.txt.gz",
+        """
+        #chrom pos_begin c1
+        1      1         1
+        1      4         2
+        1      4         3
+        1      8         4
+        1      8         5
+        1      12        6
+        1      12        7
+        """, seq_col=0, start_col=1, end_col=1)
+    res = build_filesystem_test_resource(tmp_path)
 
     with build_genomic_position_table(res, res.config["tabix_table"]) as table:
         row = None
@@ -955,29 +888,28 @@ def test_tabix_middle_optimization(tmp_path, tabix_file):
         assert row is None
 
 
-def test_tabix_middle_optimization_regions(tmp_path, tabix_file):
-    res = build_test_resource(
-        scheme="file",
-        root_path=str(tmp_path),
-        content={
+def test_tabix_middle_optimization_regions(tmp_path):
+    setup_directories(
+        tmp_path, {
             "genomic_resource.yaml": """
                 tabix_table:
-                    filename: data.bgz
+                    filename: data.txt.gz
+                    format: tabix
                 scores:
                 - id: c1
                   name: c1
                   type: int""",
         })
 
-    tabix_to_resource(
-        tabix_file(
-            """
-            #chrom pos_begin pos_end  c1
-            1      1         1        1
-            1      4         8        2
-            1      9         12       3
-            """, seq_col=0, start_col=1, end_col=2),
-        res, "data.bgz")
+    setup_tabix(
+        tmp_path / "data.txt.gz",
+        """
+        #chrom pos_begin pos_end  c1
+        1      1         1        1
+        1      4         8        2
+        1      9         12       3
+        """, seq_col=0, start_col=1, end_col=2)
+    res = build_filesystem_test_resource(tmp_path)
 
     with build_genomic_position_table(res, res.config["tabix_table"]) as table:
         row = None
@@ -1007,14 +939,13 @@ def test_tabix_middle_optimization_regions(tmp_path, tabix_file):
         assert row == ("1", 4, 8, "2")
 
 
-def test_tabix_middle_optimization_regions_buggy_1(tmp_path, tabix_file):
-    res = build_test_resource(
-        scheme="file",
-        root_path=str(tmp_path),
-        content={
+def test_tabix_middle_optimization_regions_buggy_1(tmp_path):
+    setup_directories(
+        tmp_path, {
             "genomic_resource.yaml": """
                 tabix_table:
-                    filename: data.bgz
+                    filename: data.txt.gz
+                    format: tabix
                     chrom_mapping:
                         add_prefix: chr
                 scores:
@@ -1024,25 +955,25 @@ def test_tabix_middle_optimization_regions_buggy_1(tmp_path, tabix_file):
             """,
         })
 
-    tabix_to_resource(
-        tabix_file(
-            """
-            #chrom pos_begin pos_end  c1
-            1      505636    505636   0.006
-            1      505637    505637   0.009
-            1      505638    505638   0.011
-            1      505639    505639   0.013
-            1      505640    505641   0.014
-            1      505642    505642   0.013
-            1      505643    505643   0.012
-            1      505644    505645   0.006
-            1      505646    505646   0.005
-            1      505755    505757   0.004
-            1      505758    505758   0.003
-            1      505759    505761   0.001
-            1      505762    505764   0.002
-            """, seq_col=0, start_col=1, end_col=2),
-        res, "data.bgz")
+    setup_tabix(
+        tmp_path / "data.txt.gz",
+        """
+        #chrom pos_begin pos_end  c1
+        1      505636    505636   0.006
+        1      505637    505637   0.009
+        1      505638    505638   0.011
+        1      505639    505639   0.013
+        1      505640    505641   0.014
+        1      505642    505642   0.013
+        1      505643    505643   0.012
+        1      505644    505645   0.006
+        1      505646    505646   0.005
+        1      505755    505757   0.004
+        1      505758    505758   0.003
+        1      505759    505761   0.001
+        1      505762    505764   0.002
+        """, seq_col=0, start_col=1, end_col=2)
+    res = build_filesystem_test_resource(tmp_path)
 
     with build_genomic_position_table(res, res.config["tabix_table"]) as table:
         rows = None
@@ -1064,30 +995,28 @@ def test_tabix_middle_optimization_regions_buggy_1(tmp_path, tabix_file):
         ]
 
 
-def test_buggy_fitcons_e67(tmp_path, tabix_file):
-    res = build_test_resource(
-        scheme="file",
-        root_path=str(tmp_path),
-        content={
+def test_buggy_fitcons_e67(tmp_path):
+    setup_directories(
+        tmp_path, {
             "genomic_resource.yaml": """
                 tabix_table:
-                    filename: data.bgz
+                    filename: data.txt.gz
+                    format: tabix
                 scores:
                 - id: c1
                   name: c1
                   type: float
             """,
         })
-
-    tabix_to_resource(
-        tabix_file(
-            """
-            #chrom  pos_begin  pos_end    c1
-            5       180739426  180742735  0.065122
-            5       180742736  180742736  0.156342
-            5       180742737  180742813  0.327393
-            """, seq_col=0, start_col=1, end_col=2),
-        res, "data.bgz")
+    setup_tabix(
+        tmp_path / "data.txt.gz",
+        """
+        #chrom  pos_begin  pos_end    c1
+        5       180739426  180742735  0.065122
+        5       180742736  180742736  0.156342
+        5       180742737  180742813  0.327393
+        """, seq_col=0, start_col=1, end_col=2)
+    res = build_filesystem_test_resource(tmp_path)
 
     with build_genomic_position_table(res, res.config["tabix_table"]) as table:
         rows = None
@@ -1108,14 +1037,13 @@ def test_buggy_fitcons_e67(tmp_path, tabix_file):
     ("1", 1),
     ("1500", 1500),
 ])
-def test_tabix_jump_config(tmp_path, tabix_file, jump_threshold, expected):
-    res = build_test_resource(
-        scheme="file",
-        root_path=str(tmp_path),
-        content={
+def test_tabix_jump_config(tmp_path, jump_threshold, expected):
+    setup_directories(
+        tmp_path, {
             "genomic_resource.yaml": f"""
                 tabix_table:
-                    filename: data.bgz
+                    filename: data.txt.gz
+                    format: tabix
                     jump_threshold: {jump_threshold}
                 scores:
                 - id: c1
@@ -1123,16 +1051,15 @@ def test_tabix_jump_config(tmp_path, tabix_file, jump_threshold, expected):
                   type: float
             """,
         })
-
-    tabix_to_resource(
-        tabix_file(
-            """
-            #chrom  pos_begin  pos_end    c1
-            5       180739426  180742735  0.065122
-            5       180742736  180742736  0.156342
-            5       180742737  180742813  0.327393
-            """, seq_col=0, start_col=1, end_col=2),
-        res, "data.bgz")
+    setup_tabix(
+        tmp_path / "data.txt.gz",
+        """
+        #chrom  pos_begin  pos_end    c1
+        5       180739426  180742735  0.065122
+        5       180742736  180742736  0.156342
+        5       180742737  180742813  0.327393
+        """, seq_col=0, start_col=1, end_col=2)
+    res = build_filesystem_test_resource(tmp_path)
 
     with build_genomic_position_table(res, res.config["tabix_table"]) as table:
         assert table.jump_threshold == expected
@@ -1157,14 +1084,13 @@ def test_tabix_jump_config(tmp_path, tabix_file, jump_threshold, expected):
     (20_000, 2_500),
 ])
 def test_tabix_max_buffer(
-        tmp_path, tabix_file, buffer_maxsize, jump_threshold):
-    res = build_test_resource(
-        scheme="file",
-        root_path=str(tmp_path),
-        content={
+        tmp_path, buffer_maxsize, jump_threshold):
+    setup_directories(
+        tmp_path, {
             "genomic_resource.yaml": f"""
                 tabix_table:
-                    filename: data.bgz
+                    filename: data.txt.gz
+                    format: tabix
                     jump_threshold: {jump_threshold}
                 scores:
                 - id: c1
@@ -1173,15 +1099,15 @@ def test_tabix_max_buffer(
             """,
         })
 
-    tabix_to_resource(
-        tabix_file(
-            """
-            #chrom  pos_begin  pos_end    c1
-            5       180739426  180742735  0.065122
-            5       180742736  180742736  0.156342
-            5       180742737  180742813  0.327393
-            """, seq_col=0, start_col=1, end_col=2),
-        res, "data.bgz")
+    setup_tabix(
+        tmp_path / "data.txt.gz",
+        """
+        #chrom  pos_begin  pos_end    c1
+        5       180739426  180742735  0.065122
+        5       180742736  180742736  0.156342
+        5       180742737  180742813  0.327393
+        """, seq_col=0, start_col=1, end_col=2)
+    res = build_filesystem_test_resource(tmp_path)
 
     TabixGenomicPositionTable.BUFFER_MAXSIZE = buffer_maxsize
 
@@ -1209,7 +1135,7 @@ def test_tabix_max_buffer(
 
 
 def test_contig_length():
-    res = build_test_resource({
+    res = build_inmemory_test_resource({
         "genomic_resource.yaml": """
             table:
                 filename: data.mem
@@ -1361,9 +1287,9 @@ def test_vcf_jump_ahead_optimization_use_jump(vcf_res):
 
 
 def test_vcf_multiallelic(vcf_res_multiallelic):
-    """
-    Test multiallelic variants are read
-    as separate lines and assigned proper allele indices.
+    """Test multiallelic variants are read as separate lines.
+
+    Check that each line has proper allele indices.
     """
     with build_genomic_position_table(
         vcf_res_multiallelic,
@@ -1405,8 +1331,8 @@ def test_vcf_multiallelic_region(vcf_res_multiallelic):
 
 
 def test_vcf_multiallelic_info_fields(vcf_res_multiallelic):
-    """
-    Test accessing an INFO field for multiallelic variants.
+    """Test accessing an INFO field for multiallelic variants.
+
     Should return the correct value for the given allele.
     """
     with build_genomic_position_table(
@@ -1438,14 +1364,13 @@ def test_vcf_multiallelic_info_fields(vcf_res_multiallelic):
         ]
 
 
-def test_get_ref_alt_nonconfigured_missing(tmp_path, tabix_file):
-    res = build_test_resource(
-        scheme="file",
-        root_path=str(tmp_path),
-        content={
+def test_get_ref_alt_nonconfigured_missing(tmp_path):
+    setup_directories(
+        tmp_path, {
             "genomic_resource.yaml": """
                 tabix_table:
-                    filename: data.bgz
+                  filename: data.txt.gz
+                  format: tabix
                 scores:
                 - id: c2
                   name: c2
@@ -1456,16 +1381,15 @@ def test_get_ref_alt_nonconfigured_missing(tmp_path, tabix_file):
             """,
         })
 
-    tabix_to_resource(
-        tabix_file(
-            """
-            #chrom  pos_begin  pos_end    c2
-            1     10        12       3.14
-            1     15        20       4.14
-            1     21        30       5.14
-            """, seq_col=0, start_col=1, end_col=2),
-        res, "data.bgz")
-
+    setup_tabix(
+        tmp_path / "data.txt.gz",
+        """
+        #chrom  pos_begin  pos_end    c2
+        1     10        12       3.14
+        1     15        20       4.14
+        1     21        30       5.14
+        """, seq_col=0, start_col=1, end_col=2)
+    res = build_filesystem_test_resource(tmp_path)
     with build_genomic_position_table(res, res.config["tabix_table"]) as tab:
         results = tuple(map(lambda l: (l.ref, l.alt), tab.get_all_records()))
         assert results == (
@@ -1475,14 +1399,13 @@ def test_get_ref_alt_nonconfigured_missing(tmp_path, tabix_file):
         )
 
 
-def test_get_ref_alt_nonconfigured_existing(tmp_path, tabix_file):
-    res = build_test_resource(
-        scheme="file",
-        root_path=str(tmp_path),
-        content={
+def test_get_ref_alt_nonconfigured_existing(tmp_path):
+    setup_directories(
+        tmp_path, {
             "genomic_resource.yaml": """
                 tabix_table:
-                    filename: data.bgz
+                    filename: data.txt.gz
+                    format: tabix
                 scores:
                 - id: c2
                   name: c2
@@ -1492,16 +1415,15 @@ def test_get_ref_alt_nonconfigured_existing(tmp_path, tabix_file):
                   - "5.14"
             """,
         })
-
-    tabix_to_resource(
-        tabix_file(
-            """
-            #chrom  pos_begin  pos_end  ref  alt    c2
-            1     10        12       A      G       3.14
-            1     15        20       A      T       4.14
-            1     21        30       A      C       5.14
-            """, seq_col=0, start_col=1, end_col=2),
-        res, "data.bgz")
+    setup_tabix(
+        tmp_path / "data.txt.gz",
+        """
+        #chrom  pos_begin  pos_end  ref  alt    c2
+        1     10        12       A      G       3.14
+        1     15        20       A      T       4.14
+        1     21        30       A      C       5.14
+        """, seq_col=0, start_col=1, end_col=2)
+    res = build_filesystem_test_resource(tmp_path)
 
     with build_genomic_position_table(res, res.config["tabix_table"]) as tab:
         results = tuple(map(lambda l: (l.ref, l.alt), tab.get_all_records()))
@@ -1512,14 +1434,13 @@ def test_get_ref_alt_nonconfigured_existing(tmp_path, tabix_file):
         )
 
 
-def test_get_ref_alt_configured_existing(tmp_path, tabix_file):
-    res = build_test_resource(
-        scheme="file",
-        root_path=str(tmp_path),
-        content={
+def test_get_ref_alt_configured_existing(tmp_path):
+    setup_directories(
+        tmp_path, {
             "genomic_resource.yaml": """
                 tabix_table:
-                    filename: data.bgz
+                    filename: data.txt.gz
+                    format: tabix
                     reference:
                       name: reference
                     alternative:
@@ -1530,17 +1451,15 @@ def test_get_ref_alt_configured_existing(tmp_path, tabix_file):
                   type: float
             """,
         })
-
-    tabix_to_resource(
-        tabix_file(
-            """
-            #chrom  pos_begin  pos_end  reference  alternative    c2
-            1     10        12       A      G       3.14
-            1     15        20       A      T       4.14
-            1     21        30       A      C       5.14
-            """, seq_col=0, start_col=1, end_col=2),
-        res, "data.bgz")
-
+    setup_tabix(
+        tmp_path / "data.txt.gz",
+        """
+        #chrom  pos_begin  pos_end  reference  alternative    c2
+        1     10        12       A      G       3.14
+        1     15        20       A      T       4.14
+        1     21        30       A      C       5.14
+        """, seq_col=0, start_col=1, end_col=2)
+    res = build_filesystem_test_resource(tmp_path)
     with build_genomic_position_table(res, res.config["tabix_table"]) as tab:
         results = tuple(map(lambda l: (l.ref, l.alt), tab.get_all_records()))
         assert results == (

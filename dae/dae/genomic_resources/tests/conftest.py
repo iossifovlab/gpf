@@ -3,7 +3,7 @@
 import logging
 
 import pytest
-import pysam
+# import pysam
 
 from dae.genomic_resources.repository import \
     GR_CONF_FILE_NAME
@@ -17,27 +17,6 @@ from dae.genomic_resources.testing import \
     copy_proto_genomic_resources
 
 logger = logging.getLogger(__name__)
-
-
-@pytest.fixture
-def tabix_file(tmp_path_factory):
-
-    def builder(content, **kwargs):
-        content = convert_to_tab_separated(content)
-        tmpfilename = tmp_path_factory.mktemp(
-            basename="tabix", numbered=True) / "temp_tabix.txt"
-        with open(tmpfilename, "wt", encoding="utf8") as outfile:
-            outfile.write(content)
-        tabix_filename = f"{tmpfilename}.gz"
-        index_filename = f"{tabix_filename}.tbi"
-
-        # pylint: disable=no-member
-        pysam.tabix_compress(tmpfilename, tabix_filename)
-        pysam.tabix_index(tabix_filename, **kwargs)
-
-        return tabix_filename, index_filename
-
-    return builder
 
 
 @pytest.fixture(scope="session")

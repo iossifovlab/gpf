@@ -1,5 +1,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import textwrap
+from typing import cast
+
 import pytest
 
 from dae.testing import setup_directories, setup_vcf
@@ -8,18 +10,11 @@ from dae.genomic_resources.repository import GenomicResourceProtocolRepo
 
 from dae.annotation.annotation_factory import build_annotation_pipeline
 from dae.annotation.annotatable import VCFAllele
+from dae.annotation.score_annotator import VariantScoreAnnotatorBase
 
 
 @pytest.fixture
 def score1_repo(tmp_path_factory):
-    vcf_header = """
-##fileformat=VCFv4.1
-##INFO=<ID=A,Number=1,Type=Integer,Description="Score A">
-##INFO=<ID=B,Number=1,Type=Integer,Description="Score B">
-##INFO=<ID=C,Number=.,Type=String,Description="Score C">
-##INFO=<ID=D,Number=.,Type=String,Description="Score D">
-#CHROM POS ID REF ALT QUAL FILTER  INFO
-    """
     root_path = tmp_path_factory.mktemp("score1_repo")
     setup_directories(
         root_path / "grr",
@@ -38,16 +33,17 @@ def score1_repo(tmp_path_factory):
     )
     setup_vcf(
         root_path / "grr" / "score1" / "score1.vcf.gz",
-        textwrap.dedent(f"""
-{vcf_header}
+        textwrap.dedent("""
+##fileformat=VCFv4.1
+##INFO=<ID=A,Number=1,Type=Integer,Description="Score A">
+##INFO=<ID=B,Number=1,Type=Integer,Description="Score B">
+##INFO=<ID=C,Number=.,Type=String,Description="Score C">
+##INFO=<ID=D,Number=.,Type=String,Description="Score D">
+#CHROM POS ID REF ALT QUAL FILTER  INFO
 chrA   1   .  A   T   .    .       A=1;C=c11,c12;D=d11
 chrA   2   .  A   T   .    .       A=2;B=21;C=c21;D=d21,d22
 chrA   3   .  A   T   .    .       A=3;B=31;C=c21;D=d31,d32
     """)
-    )
-    setup_vcf(
-        root_path / "grr" / "score1" / "score1.header.vcf.gz",
-        textwrap.dedent(vcf_header)
     )
 
     proto = build_fsspec_protocol("testing", str(root_path / "grr"))
@@ -64,7 +60,7 @@ def test_vcf_info_annotator_all_attributes(score1_repo):
         pipeline_config_str=pipeline_config,
         grr_repository=score1_repo)
 
-    annotator = pipeline.annotators[0]
+    annotator = cast(VariantScoreAnnotatorBase, pipeline.annotators[0])
     annotator.score.open()
     attributes = annotator.get_all_annotation_attributes()
     assert len(attributes) == 4
@@ -95,7 +91,7 @@ def test_vcf_info_default_annotation(score1_repo):
         pipeline_config_str=pipeline_config,
         grr_repository=score1_repo)
 
-    annotator = pipeline.annotators[0]
+    annotator = cast(VariantScoreAnnotatorBase, pipeline.annotators[0])
     annotator.score.open()
     attributes = annotator.get_annotation_config()
     assert len(attributes) == 4

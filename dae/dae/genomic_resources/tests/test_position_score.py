@@ -1,22 +1,15 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 
-import yaml
-
 from dae.genomic_resources import GenomicResource
-from dae.genomic_resources.repository import GenomicResourceProtocolRepo
 from dae.genomic_resources.genomic_scores import \
     PositionScore,\
-    build_position_score_from_resource,\
-    build_score_from_resource
-from dae.genomic_resources.repository_factory import \
-    build_genomic_resource_repository
-from dae.genomic_resources.testing import build_test_resource, \
-    build_http_test_protocol
+    build_position_score_from_resource
+from dae.genomic_resources.testing import build_inmemory_test_resource
 from dae.genomic_resources.repository import GR_CONF_FILE_NAME
 
 
 def test_the_simplest_position_score():
-    res: GenomicResource = build_test_resource({
+    res: GenomicResource = build_inmemory_test_resource({
         GR_CONF_FILE_NAME: """
             type: position_score
             table:
@@ -53,7 +46,7 @@ def test_the_simplest_position_score():
 
 
 def test_region_score():
-    res: GenomicResource = build_test_resource({
+    res: GenomicResource = build_inmemory_test_resource({
         GR_CONF_FILE_NAME: """
             type: position_score
             table:
@@ -108,7 +101,7 @@ def test_region_score():
 
 
 def test_phastcons100way():
-    res: GenomicResource = build_test_resource({
+    res: GenomicResource = build_inmemory_test_resource({
         GR_CONF_FILE_NAME: """
             type: position_score
             table:
@@ -151,53 +144,8 @@ def test_phastcons100way():
         {"phastCons100way": 0.000625}
 
 
-def test_position_score_over_http(fixture_dirname):
-    dirname = fixture_dirname("genomic_resources")
-
-    with build_http_test_protocol(dirname, repair=False) as proto:
-        repo = GenomicResourceProtocolRepo(proto)
-
-        resource = repo.get_resource(
-            "hg38/TESTphastCons100way")
-        assert isinstance(resource, GenomicResource)
-
-        score = build_position_score_from_resource(resource)
-        score.open()
-
-        result = score.fetch_scores("1", 10918)
-        assert result
-        assert result["phastCons100way"] == 0.253
-
-
-def test_build_score_from_resource_with_pos_resource():
-    definition = yaml.safe_load("""
-        id: mm
-        type: embedded
-        content:
-            pos_res:
-                genomic_resource.yaml: |
-                    type: position_score
-                    table:
-                        filename: data.mem
-                    scores:
-                    - id: score
-                      type: float
-                      name: s1
-                data.mem: |
-                        chrom  pos_begin  s1
-                        chr1   23         0.01
-    """)
-    repo = build_genomic_resource_repository(definition)
-    assert repo is not None
-    res = repo.get_resource("pos_res")
-    assert res.resource_id == "pos_res"
-
-    score = build_score_from_resource(res)
-    assert isinstance(score, PositionScore)
-
-
 def test_position_score_fetch_region():
-    res: GenomicResource = build_test_resource({
+    res: GenomicResource = build_inmemory_test_resource({
         GR_CONF_FILE_NAME: """
             type: position_score
             table:
@@ -250,7 +198,7 @@ def test_position_score_fetch_region():
 
 
 def test_position_score_chrom_prefix():
-    res: GenomicResource = build_test_resource({
+    res: GenomicResource = build_inmemory_test_resource({
         GR_CONF_FILE_NAME: """
             type: position_score
             table:

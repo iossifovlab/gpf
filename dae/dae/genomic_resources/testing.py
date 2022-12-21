@@ -9,7 +9,7 @@ import tempfile
 import gzip
 import importlib
 
-from typing import Any, Dict, Union, cast, Optional, Generator, \
+from typing import Any, Dict, Union, cast, Generator, \
     Tuple, ContextManager, List
 from collections.abc import Callable
 import multiprocessing as mp
@@ -23,7 +23,6 @@ import pysam
 from dae.genomic_resources.repository import \
     GenomicResource, \
     GenomicResourceProtocolRepo, \
-    ReadWriteRepositoryProtocol, \
     parse_gr_id_version_token, \
     is_gr_id_token, \
     GR_CONF_FILE_NAME
@@ -120,14 +119,27 @@ def setup_vcf(out_path: pathlib.Path, content: str):
     if out_path.suffix == ".gz":
         vcf_path = out_path.with_suffix("")
 
+    assert vcf_path.suffix == ".vcf"
+    header_path = vcf_path.with_suffix("")
+    header_path = header_path.parent / f"{header_path.name}.header.vcf"
+
     setup_directories(vcf_path, vcf_data)
 
+    # pylint: disable=no-member
     if out_path.suffix == ".gz":
         vcf_gz_filename = str(vcf_path.parent / f"{vcf_path.name}.gz")
-        # pylint: disable=no-member
         pysam.tabix_compress(str(vcf_path), vcf_gz_filename)
         pysam.tabix_index(vcf_gz_filename, preset="vcf")
 
+    with pysam.VariantFile(str(out_path)) as variant_file:
+        header = variant_file.header
+        with open(header_path, "wt", encoding="utf8") as outfile:
+            outfile.write(str(header))
+
+    if out_path.suffix == ".gz":
+        header_gz_filename = str(header_path.parent / f"{header_path.name}.gz")
+        pysam.tabix_compress(str(header_path), header_gz_filename)
+        pysam.tabix_index(header_gz_filename, preset="vcf")
     return str(out_path)
 
 
@@ -355,97 +367,6 @@ def build_filesystem_test_resource(
     return proto.get_resource("")
 
 
-def build_testing_protocol(
-        content: Optional[dict[str, Any]],
-        scheme: str = "memory",
-        proto_id: str = "testing",
-        root_path: str = "/testing",
-        **kwargs) -> ReadWriteRepositoryProtocol:
-    """Create an embedded or dir GRR protocol using passed content."""
-    if content is None:
-        content = {}
-
-    if not root_path.startswith("/"):
-        root_path = f"/{root_path}"
-
-    if scheme == "memory":
-        proto = build_fsspec_protocol(
-            proto_id, f"memory://{root_path}", **kwargs)
-    elif scheme == "file":
-        proto = build_fsspec_protocol(
-            proto_id, f"file://{root_path}", **kwargs)
-    else:
-        raise ValueError(f"unsupported testing protocol: {scheme}")
-
-    proto = cast(FsspecReadWriteProtocol, proto)
-
-    for rid, rver, rcontent in _scan_for_resources(content, []):
-        resource = GenomicResource(rid, rver, proto)
-        for fname, fcontent in _scan_for_resource_files(rcontent, []):
-            mode = "wt"
-            if isinstance(fcontent, bytes):
-                mode = "wb"
-            with proto.open_raw_file(resource, fname, mode) as outfile:
-                outfile.write(fcontent)
-            proto.save_resource_file_state(
-                resource, proto.build_resource_file_state(resource, fname))
-
-        proto.save_manifest(resource, proto.build_manifest(resource))
-
-    return proto
-
-
-def build_testing_repository(
-        content: dict[str, Any],
-        scheme: str = "memory",
-        repo_id: str = "testing",
-        root_path: str = "/testing",
-        **kwargs) -> GenomicResourceProtocolRepo:
-    """Create an embedded or dir GRR repository using passed content."""
-    proto = build_testing_protocol(
-        content, scheme=scheme, proto_id=repo_id,
-        root_path=root_path, **kwargs)
-
-    return GenomicResourceProtocolRepo(proto)
-
-
-def build_test_resource(
-        content: dict,
-        scheme="memory",
-        repo_id="testing",
-        root_path="/testing",
-        **kwargs) -> GenomicResource:
-    """Create a resource based on content passed."""
-    repo = build_testing_repository(
-        content,
-        scheme=scheme,
-        repo_id=repo_id,
-        root_path=root_path,
-        **kwargs)
-    return repo.get_resource("")
-
-
-def tabix_to_resource(tabix_source, resource, filename, update_repo=True):
-    """Store a tabix file into a resource."""
-    tabix_filename, index_filename = tabix_source
-    proto = resource.proto
-
-    with proto.open_raw_file(resource, filename, "wb") as outfile, \
-            open(tabix_filename, "rb") as infile:
-        data = infile.read()
-        outfile.write(data)
-
-    with proto.open_raw_file(resource, f"{filename}.tbi", "wb") as outfile, \
-            open(index_filename, "rb") as infile:
-        data = infile.read()
-        outfile.write(data)
-
-    if update_repo:
-        proto.save_manifest(resource, proto.build_manifest(resource))
-        proto.invalidate()
-        proto.build_content_file()
-
-
 @contextlib.contextmanager
 def http_threaded_test_server(
         path: pathlib.Path) -> Generator[str, None, None]:
@@ -522,7 +443,6 @@ def _process_server_manager(
         server_manager: Callable[..., ContextManager[str]],
         *args):
     """Run a process server."""
-    # mp.set_start_method("spawn", force=True)
     start_queue: mp.Queue = mp.Queue()
     stop_queue: mp.Queue = mp.Queue()
     proc = mp.Process(

@@ -10,7 +10,7 @@ from dae.genomic_resources.testing import build_filesystem_test_protocol, \
 
 
 @pytest.fixture
-def proto_fixture(tmp_path_factory, tabix_file):
+def proto_fixture(tmp_path_factory):
     path = tmp_path_factory.mktemp("cli_info_repo_fixture")
     setup_directories(
         path,
