@@ -42,6 +42,10 @@ def test_np_score_annotator(
                 type: np_score
                 table:
                     filename: data.mem
+                    reference:
+                      name: reference
+                    alternative:
+                      name: alternative
                 scores:
                 - id: test_raw
                   type: float

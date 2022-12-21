@@ -20,10 +20,10 @@ def grr_np_score1() -> GenomicResourceRepo:
                 table:
                     filename: data.mem
                 scores:
-                - id: test_raw
-                  type: float
-                  desc: "test values"
-                  name: raw
+                    - id: test_raw
+                      type: float
+                      desc: "test values"
+                      name: raw
                 """,
                 "data.mem": """
                     chrom  pos_begin  reference alternative raw

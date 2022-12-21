@@ -15,11 +15,15 @@ def test_the_simplest_np_score(tmp_path):
                 type: np_score
                 table:
                     filename: data.mem
+                    reference:
+                      name: reference
+                    alternative:
+                      name: alternative
                 scores:
                     - id: cadd_raw
+                      name: s1
                       type: float
                       desc: ""
-                      name: s1
             """,
             "data.mem": """
                 chrom  pos_begin  pos_end  reference  alternative  s1
@@ -49,6 +53,10 @@ def test_np_score_aggregation():
                 type: np_score
                 table:
                     filename: data.mem
+                    reference:
+                      name: reference
+                    alternative:
+                      name: alternative
                 scores:
                     - id: cadd_raw
                       type: float
@@ -111,6 +119,10 @@ def test_np_score_fetch_region():
             type: np_score
             table:
                 filename: data.mem
+                reference:
+                  name: reference
+                alternative:
+                  name: alternative
             scores:
                 - id: cadd_raw
                   type: float

@@ -63,9 +63,9 @@ class VariantScoreAnnotatorBase(Annotator):
 
     def get_all_annotation_attributes(self) -> List[Dict]:
         result = []
-        for score in self.score.score_columns.values():
+        for score_id, score in self.score.score_definitions.items():
             result.append({
-                "name": score.score_id,
+                "name": score_id,
                 "type": score.type,
                 "desc": score.desc
             })

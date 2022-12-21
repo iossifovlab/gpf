@@ -286,7 +286,7 @@ def test_embedded_annotation_pipeline(fixture_dirname):
         input={},
         annotation=[
             dict(np_score=dict(
-                resource_id="hg19/scores/CADD",
+                resource_id="hg19/CADD",
             ))
         ],
         gpf_instance={
@@ -297,14 +297,14 @@ def test_embedded_annotation_pipeline(fixture_dirname):
     pipeline = project._build_annotation_pipeline(project.get_gpf_instance())
     assert pipeline is not None
     assert pipeline.config == [
-        {"resource_id": "hg19/scores/CADD", "annotator_type": "np_score"}
+        {"resource_id": "hg19/CADD", "annotator_type": "np_score"}
     ]
 
 
 def test_annotation_file(tmpdir, fixture_dirname):
     annotation = [
         dict(np_score=dict(
-            resource_id="hg19/scores/CADD",
+            resource_id="hg19/CADD",
         ))
     ]
     annotation_fn = str(tmpdir / "annotation.yaml")
@@ -328,14 +328,14 @@ def test_annotation_file(tmpdir, fixture_dirname):
     pipeline = project._build_annotation_pipeline(project.get_gpf_instance())
     assert pipeline is not None
     assert pipeline.config == [
-        {"resource_id": "hg19/scores/CADD", "annotator_type": "np_score"}
+        {"resource_id": "hg19/CADD", "annotator_type": "np_score"}
     ]
 
 
 def test_annotation_file_and_external_input_config(tmpdir, fixture_dirname):
     annotation = [
         dict(np_score=dict(
-            resource_id="hg19/scores/CADD",
+            resource_id="hg19/CADD",
         ))
     ]
     with open(str(tmpdir / "annotation.yaml"), "wt") as out_file:
@@ -364,5 +364,5 @@ def test_annotation_file_and_external_input_config(tmpdir, fixture_dirname):
     pipeline = project._build_annotation_pipeline(project.get_gpf_instance())
     assert pipeline is not None
     assert pipeline.config == [
-        {"resource_id": "hg19/scores/CADD", "annotator_type": "np_score"}
+        {"resource_id": "hg19/CADD", "annotator_type": "np_score"}
     ]

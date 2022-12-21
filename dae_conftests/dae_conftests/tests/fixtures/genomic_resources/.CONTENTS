@@ -1,35 +1,11 @@
 - config:
-    filename: clinvar.vcf.gz
-    index_filename: clinvar.vcf.gz.tbi
-    meta: 'TODO
-
-      '
-    scores:
-    - id: ALLELEID
-      type: int
-    - id: GENEINFO
-      type: str
-    type: vcf_info
-  id: clinvar
-  manifest:
-  - md5: 23836a05d85b557e64928826dd2d7118
-    name: clinvar.vcf.gz
-    size: 454
-  - md5: 134d77b28ee7df80adb8cb9d3cc51aa0
-    name: clinvar.vcf.gz.tbi
-    size: 113
-  - md5: fc87f241ec41b9ca970e8d25ea41106d
-    name: genomic_resource.yaml
-    size: 161
-  version: '0'
-- config:
     default_annotation:
       attributes:
-      - dest: cadd_raw
+      - destination: cadd_raw
         nucleotide_aggregator: max
         position_aggregator: max
         source: cadd_raw
-      - dest: cadd_phred
+      - destination: cadd_phred
         nucleotide_aggregator: max
         position_aggregator: max
         source: cadd_phred
@@ -62,9 +38,9 @@
   - md5: 5d95f08840be7f0f6fef13a5157d7f47
     name: CADD.bedgraph.gz.tbi
     size: 670
-  - md5: 4f48564ae662ee0f64afb805dc7599a4
+  - md5: b0be61669206087266af3549cfc04b63
     name: genomic_resource.yaml
-    size: 618
+    size: 632
   version: '0'
 - config:
     filename: refGene201309.txt
@@ -121,6 +97,12 @@
         nucleotide_aggregator: max
         position_aggregator: max
         source: MPC
+    histograms:
+    - bins: 100
+      max: 5.0
+      min: 0.0
+      score: MPC
+      y_scale: log
     scores:
     - desc: ''
       id: MPC
@@ -146,9 +128,18 @@
   - md5: 5bb77f8efe6ed1b01b3422a3b5070307
     name: fordist_constraint_official_mpc_values_v2.txt.gz.tbi
     size: 257
-  - md5: 318ac12adf95f1aa2ecaefc4fc9b7701
+  - md5: 9019249e4fdf19106a5d77b64005ac0a
     name: genomic_resource.yaml
-    size: 467
+    size: 554
+  - md5: e8ee8861355ba3c1126e8ca7b48b2fe8
+    name: histograms/MPC.csv
+    size: 1481
+  - md5: 8c7946a6dd1d964550e497d68675aeb8
+    name: histograms/MPC.metadata.yaml
+    size: 137
+  - md5: 558273e259dee3322accc97e92e9d7d1
+    name: histograms/MPC.png
+    size: 8667
   version: '0'
 - config:
     default_annotation:
@@ -437,12 +428,13 @@
     default_annotation:
       attributes:
       - destination: phastCons100way
-        position_aggregator: MaxAggregator
+        position_aggregator: max
         source: phastCons100way
-    histogram:
-      bins_count: 10
-      x_max: 1
-      x_min: 0
+    histograms:
+    - bins: 10
+      max: 1
+      min: 0
+      score: phastCons100way
       x_scale: linear
       y_scale: linear
     scores:
@@ -470,9 +462,18 @@
   - md5: 0cae8c2951f4c60954b94c0a0cb2e431
     name: TESTphastCons100way.bedGraph.gz.tbi
     size: 169
-  - md5: de4e51d2f1d46e6fad8864511860776a
+  - md5: 865d73c2c2d3c40496232871df2ca10a
     name: genomic_resource.yaml
-    size: 872
+    size: 890
+  - md5: d616082ad56b26177b0aa40c08d27f3f
+    name: histograms/phastCons100way.csv
+    size: 143
+  - md5: 80bcd5f88e69a7014e2263d034fe4cef
+    name: histograms/phastCons100way.metadata.yaml
+    size: 181
+  - md5: 6173d0d671742284f909423144c4f07a
+    name: histograms/phastCons100way.png
+    size: 8178
   - md5: 56feb878ed78769d5200702392b8e4b7
     name: scores/phastCons100way.yaml
     size: 583

@@ -35,6 +35,10 @@ def proto_fixture(tmp_path, tabix_file):
                     table:
                         filename: data.bgz
                         format: tabix
+                        reference:
+                            name: REF
+                        alternative:
+                            name: ALT
                     scores:
                         - id: AC
                           type: int

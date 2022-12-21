@@ -2,14 +2,22 @@
 import textwrap
 import pytest
 
+from dae.genomic_resources import build_genomic_resource_repository
 from dae.testing import setup_gpf_instance, setup_genome, \
     setup_empty_gene_models, setup_directories
 
 
 @pytest.fixture
-def gpf_fixture(tmp_path_factory):
+def gpf_fixture(fixture_dirname, tmp_path_factory):
     def builder(instance_config):
         root_path = tmp_path_factory.mktemp("genomic_scores_db")
+        grr = build_genomic_resource_repository(
+            {
+                "id": "fixtures",
+                "type": "directory",
+                "directory": fixture_dirname("genomic_resources")
+            }
+        )
 
         genome = setup_genome(
             root_path / "alla_gpf" / "genome" / "allChr.fa",
@@ -28,6 +36,7 @@ def gpf_fixture(tmp_path_factory):
             root_path / "gpf_instance",
             reference_genome=genome,
             gene_models=empty_gene_models,
+            grr=grr,
         )
 
     return builder
@@ -37,13 +46,13 @@ def test_genomic_scores_db_with_config(gpf_fixture):
     gpf_instance = gpf_fixture({
         "gpf_instance.yaml": textwrap.dedent("""
             genomic_scores_db:
-            - resource: hg19/scores/MPC
+            - resource: hg19/MPC
               score: mpc
             annotation:
               conf_file: annotation.yaml
         """),
         "annotation.yaml": textwrap.dedent("""
-            - np_score: hg19/scores/MPC
+            - np_score: hg19/MPC
         """)
     })
     assert len(gpf_instance.genomic_scores_db) == 1
@@ -56,7 +65,7 @@ def test_genomic_scores_db_without_config_with_annotation(gpf_fixture):
               conf_file: annotation.yaml
         """),
         "annotation.yaml": textwrap.dedent("""
-            - np_score: hg19/scores/MPC
+            - np_score: hg19/MPC
         """)
     })
     assert len(gpf_instance.genomic_scores_db) == 1
@@ -77,7 +86,7 @@ def test_annotation_pipeline_with_config(gpf_fixture):
               conf_file: annotation.yaml
         """),
         "annotation.yaml": textwrap.dedent("""
-            - np_score: hg19/scores/MPC
+            - np_score: hg19/MPC
         """)
     })
     assert gpf_instance.get_annotation_pipeline() is not None

@@ -85,14 +85,14 @@ def test_histogram_builder_position_resource(tmp_path, client, region_size):
                     - id: phastCons100way
                       type: float
                       desc: "The phastCons computed over the tree of 100 \
-                              verterbarte species"
+                              vertebrate species"
                       name: s1
                     - id: phastCons5way
                       type: int
                       position_aggregator: max
                       na_values: "-1"
                       desc: "The phastCons computed over the tree of 5 \
-                              verterbarte species"
+                              vertebrate species"
                       name: s2
                 histograms:
                     - score: phastCons100way
@@ -144,6 +144,10 @@ def test_histogram_builder_allele_resource(client, tmp_path):
                 type: allele_score
                 table:
                     filename: data.mem
+                    reference:
+                        name: reference
+                    alternative:
+                        name: alternative
                 scores:
                     - id: freq
                       type: float
@@ -194,6 +198,10 @@ def test_histogram_builder_np_resource(client, tmp_path):
                 type: np_score
                 table:
                     filename: data.mem
+                    reference:
+                        name: reference
+                    alternative:
+                        name: alternative
                 scores:
                     - id: cadd_raw
                       type: float
@@ -263,7 +271,7 @@ def test_histogram_builder_no_explicit_min_max(tmp_path, client, region_size):
                     - id: phastCons100way
                       type: float
                       desc: "The phastCons computed over the tree of 100 \
-                              verterbarte species"
+                              vertebrate species"
                       name: s1
                 histograms:
                     - score: phastCons100way
@@ -299,14 +307,14 @@ def test_histogram_builder_save(tmp_path, client):
                     - id: phastCons100way
                       type: float
                       desc: "The phastCons computed over the tree of 100 \
-                              verterbarte species"
+                              vertebrate species"
                       name: s1
                     - id: phastCons5way
                       type: int
                       position_aggregator: max
                       na_values: "-1"
                       desc: "The phastCons computed over the tree of 5 \
-                              verterbarte species"
+                              vertebrate species"
                       name: s2
                 histograms:
                     - score: phastCons100way
@@ -485,14 +493,14 @@ def test_histogram_builder_build_hashes_stable(tmp_path):
                     - id: phastCons100way
                       type: float
                       desc: "The phastCons computed over the tree of 100 \
-                              verterbarte species"
+                              vertebrate species"
                       name: s1
                     - id: phastCons5way
                       type: int
                       position_aggregator: max
                       na_values: "-1"
                       desc: "The phastCons computed over the tree of 5 \
-                              verterbarte species"
+                              vertebrate species"
                       name: s2
                 histograms:
                     - score: phastCons100way

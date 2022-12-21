@@ -1,5 +1,4 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-
 from typing import cast
 
 import yaml
@@ -184,7 +183,7 @@ def test_build_score_from_resource_with_pos_resource():
                 genomic_resource.yaml: |
                     type: position_score
                     table:
-                            filename: data.mem
+                        filename: data.mem
                     scores:
                     - id: score
                       type: float

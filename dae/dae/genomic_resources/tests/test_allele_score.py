@@ -13,6 +13,10 @@ def test_the_simplest_allele_score():
             type: allele_score
             table:
                 filename: data.mem
+                reference:
+                  name: reference
+                alternative:
+                  name: alternative
             scores:
                 - id: freq
                   type: float
@@ -44,6 +48,10 @@ def test_allele_score_fetch_region():
             type: allele_score
             table:
                 filename: data.mem
+                reference:
+                  name: reference
+                alternative:
+                  name: alternative
             scores:
                 - id: freq
                   type: float
@@ -86,3 +94,32 @@ def test_allele_score_fetch_region():
         [{"freq": 0.05},
          {"freq": None},
          {"freq": 0.03}]
+
+
+def test_allele_score_missing_alt():
+    res: GenomicResource = build_test_resource({
+        GR_CONF_FILE_NAME: """
+            type: allele_score
+            table:
+                filename: data.mem
+                reference:
+                  name: reference
+                alternative:
+                  name: alternative
+            scores:
+                - id: freq
+                  type: float
+                  desc: ""
+                  name: freq
+        """,
+        "data.mem": """
+            chrom  pos_begin  reference  alternative  freq
+            1      10         A          .            0.03
+        """
+    })
+    score = build_allele_score_from_resource(res)
+    score.open()
+    assert score.fetch_scores("1", 10, "A", "A", ["freq"]) is None
+    assert score.fetch_scores("1", 10, "A", "G", ["freq"]) is None
+    assert score.fetch_scores("1", 10, "A", "T", ["freq"]) is None
+    assert score.fetch_scores("1", 10, "A", "C", ["freq"]) is None

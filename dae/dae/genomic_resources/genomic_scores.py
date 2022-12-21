@@ -4,12 +4,11 @@ from __future__ import annotations
 
 import logging
 import textwrap
-from dataclasses import dataclass
 import copy
 
-from typing import Generator, List, Tuple, cast, Type, Dict, Any, Optional, \
-    Union
+from typing import Iterator, List, cast, Type, Dict, Any, Union
 
+from dataclasses import dataclass
 from jinja2 import Template
 from markdown2 import markdown
 from cerberus import Validator
@@ -17,7 +16,8 @@ from cerberus import Validator
 from . import GenomicResource
 from .resource_implementation import GenomicResourceImplementation, \
     get_base_resource_schema
-from .genome_position_table import open_genome_position_table
+from .genomic_position_table import build_genomic_position_table, Line, \
+    VCFGenomicPositionTable
 
 from .aggregators import build_aggregator, AGGREGATOR_SCHEMA
 
@@ -26,41 +26,12 @@ logger = logging.getLogger(__name__)
 
 ScoreValue = Union[str, int, float, bool, None]
 
-
-class ScoreLine:
-    """Provides and abstraction for a genomic score line."""
-
-    def __init__(self, values: Tuple[str], scores: dict,
-                 special_columns: dict):
-        self.values = values
-        self.score_columns = scores
-        self.special_columns = special_columns
-
-    def get_score_value(self, score_id):
-        scr_def = self.score_columns[score_id]
-
-        str_value = self.values[scr_def.col_index]
-        if str_value in scr_def.na_values:
-            return None
-        return scr_def.value_parser(str_value)
-
-    def get_special_column_value(self, col_id):
-        clmn_def = self.special_columns[col_id]
-
-        str_value = self.values[clmn_def.col_index]
-        return clmn_def.value_parser(str_value)
-
-    def get_chrom(self):
-        return self.get_special_column_value("chrom")
-
-    def get_pos_begin(self):
-        return self.get_special_column_value("pos_begin")
-
-    def get_pos_end(self):
-        return self.get_special_column_value("pos_end")
-
-    def __repr__(self):
-        return f"ScoreLine({self.values})"
+VCF_TYPE_CONVERSION_MAP = {
+    "Integer": "int",
+    "Float": "float",
+    "String": "str",
+    "Flag": "bool",
+}
 
 
 @dataclass
@@ -68,90 +39,170 @@ class ScoreDef:
     """Score configuration definition."""
 
     # pylint: disable=too-many-instance-attributes
-    score_id: str
+    col_key: str
     desc: str
-    col_index: Optional[int]
     type: str
     value_parser: Any
     na_values: Any
     pos_aggregator: Any
     nuc_aggregator: Any
-    # description: str
+
+
+class ScoreLine:
+    """Abstraction for a genomic score line. Wraps the line adapter."""
+
+    def __init__(self, line: Line, score_defs: dict):
+        assert isinstance(line, Line)
+        self.line: Line = line
+        self.score_defs = score_defs
+
+    @property
+    def chrom(self):
+        return self.line.chrom
+
+    @property
+    def pos_begin(self):
+        return self.line.pos_begin
+
+    @property
+    def pos_end(self):
+        return self.line.pos_end
+
+    @property
+    def ref(self):
+        return self.line.ref
+
+    @property
+    def alt(self):
+        return self.line.alt
+
+    def get_score(self, score_id):
+        """Get and parse configured score from line."""
+        key = self.score_defs[score_id].col_key
+        value = self.line.get(key)
+        if score_id in self.score_defs:
+            col_def = self.score_defs[score_id]
+            if value in col_def.na_values:
+                value = None
+            elif col_def.value_parser is not None:
+                value = col_def.value_parser(value)
+        return value
+
+    def get_available_scores(self):
+        return tuple(self.score_defs.keys())
 
 
 class GenomicScore(GenomicResourceImplementation):
     """Genomic scores base class."""
 
     config_validator = Validator
+    LONG_JUMP_THRESHOLD = 5000
+    ACCESS_SWITCH_THRESHOLD = 1500
 
     def __init__(self, resource):
         super().__init__(resource)
         self.config["id"] = resource.resource_id
-        self.score_columns = self._configure_score_columns(self.config)
-        self.special_columns = _configure_special_columns(
-            extra_special_columns=self.get_extra_special_columns())
-
-        self.table = None
-
-    LONG_JUMP_THRESHOLD = 5000
-    ACCESS_SWITCH_THRESHOLD = 1500
+        self.table_loaded = False
+        self.table = build_genomic_position_table(
+            self.resource, self.config["table"]
+        )
+        self.score_definitions = self._generate_scoredefs()
 
     @staticmethod
-    def _configure_score_columns(
-            config):
-        """Parse score configuration."""
+    def _parse_scoredef_config(config):
+        """Parse ScoreDef configuration."""
         scores = {}
+        type_parsers = {
+            "str": str,
+            "float": float,
+            "int": int
+        }
+        default_na_values = {
+            "str": {},
+            "float": {"", "nan", ".", "NA"},
+            "int": {"", "nan", ".", "NA"}
+        }
+        default_type_pos_aggregators = {
+            "float": "mean",
+            "int": "mean",
+            "str": "concatenate"
+        }
+        default_type_nuc_aggregators = {
+            "float": "max",
+            "int": "max",
+            "str": "concatenate"
+        }
         for score_conf in config["scores"]:
-            scr_type = score_conf.get(
+            col_type = score_conf.get(
                 "type", config.get("default.score.type", "float"))
 
-            type_parsers = {
-                "str": str,
-                "float": float,
-                "int": int
-            }
-            default_na_values = {
-                "str": {},
-                "float": {"", "nan", ".", "NA"},
-                "int": {"", "nan", ".", "NA"}
-            }
-            default_type_pos_aggregators = {
-                "float": "mean",
-                "int": "mean",
-                "str": "concatenate"
-            }
-            default_type_nuc_aggregators = {
-                "float": "max",
-                "int": "max",
-                "str": "concatenate"
-            }
+            col_key = score_conf.get("name") or str(score_conf["index"])
 
-            scr_def = ScoreDef(
-                score_conf["id"],
+            col_def = ScoreDef(
+                col_key,
                 score_conf.get("desc", ""),
-                None,  # col_index,
-                scr_type,
-                type_parsers[scr_type],
+                col_type,
+                type_parsers[col_type],
                 score_conf.get(
                     "na_values",
                     config.get(
-                        f"default_na_values.{scr_type}",
-                        default_na_values[scr_type])),
+                        f"default_na_values.{col_type}",
+                        default_na_values[col_type])),
                 score_conf.get(
                     "position_aggregator",
                     config.get(
-                        f"{scr_type}.aggregator",
-                        default_type_pos_aggregators[scr_type])),
+                        f"{col_type}.aggregator",
+                        default_type_pos_aggregators[col_type])),
                 score_conf.get(
                     "nucleotide_aggregator",
                     config.get(
-                        f"{scr_type}.aggregator",
-                        default_type_nuc_aggregators[scr_type])),
-                # score_conf.get("description", None)
+                        f"{col_type}.aggregator",
+                        default_type_nuc_aggregators[col_type])),
             )
-            scores[scr_def.score_id] = scr_def
-
+            scores[score_conf["id"]] = col_def
         return scores
+
+    @staticmethod
+    def _get_vcf_scoredefs(vcf_header_info):
+        def converter(val):
+            try:
+                return ",".join(map(str, val))
+            except TypeError:
+                return val
+        return {
+            key: ScoreDef(
+                key,
+                value.description or "",
+                VCF_TYPE_CONVERSION_MAP[value.type],  # type: ignore
+                converter if value.number not in (1, "A", "R") else None,
+                tuple(), None, None
+            ) for key, value in vcf_header_info.items()
+        }
+
+    def _validate_scoredefs(self):
+        assert "scores" in self.config
+        if self.table.header_mode == "none":
+            assert all("name" not in score
+                       for score in self.config["scores"]), \
+                ("Cannot configure score columns by"
+                 " name when header_mode is 'none'!")
+        else:
+            assert self.table.header is not None
+            for score in self.config["scores"]:
+                if "name" in score:
+                    assert score["name"] in self.table.header
+                elif "index" in score:
+                    assert 0 <= score["index"] < len(self.table.header)
+                else:
+                    raise AssertionError("Either an index or name must"
+                                         " be configured for scores!")
+
+    def _generate_scoredefs(self):
+        if "scores" in self.config:
+            return GenomicScore._parse_scoredef_config(self.config)
+        if isinstance(self.table, VCFGenomicPositionTable):
+            return GenomicScore._get_vcf_scoredefs(self.table.header)
+        raise ValueError("No scores configured and not using a VCF")
 
     def get_config(self):
         return self.config
@@ -166,15 +217,11 @@ class GenomicScore(GenomicResourceImplementation):
         return {
             "attributes": [
                 {"source": score, "destination": score}
-                for score in self.score_columns]
+                for score in self.score_definitions]
         }
 
-    @staticmethod
-    def get_extra_special_columns():
-        return None
-
     def get_score_config(self, score_id):
-        return self.score_columns.get(score_id)
+        return self.score_definitions.get(score_id)
 
     def close(self):
         # FIXME: consider using weekrefs
@@ -183,7 +230,7 @@ class GenomicScore(GenomicResourceImplementation):
         pass
 
     def is_open(self):
-        return self.table is not None
+        return self.table_loaded
 
     def open(self) -> GenomicScore:
         """Open genomic score resource and returns it."""
@@ -192,12 +239,10 @@ class GenomicScore(GenomicResourceImplementation):
                 "opening already opened genomic score: %s",
                 self.resource.resource_id)
             return self
-
-        self.table = open_genome_position_table(
-            self.resource,
-            self.config["table"])
-        self._configure_score_columns_indices()
-        self._configure_special_columns_indices()
+        self.table.open()
+        self.table_loaded = True
+        if "scores" in self.config:
+            self._validate_scoredefs()
         return self
 
     def __enter__(self):
@@ -210,35 +255,14 @@ class GenomicScore(GenomicResourceImplementation):
                 exc_type, exc_value, exc_tb, exc_info=True)
         self.close()
 
-    def _configure_score_columns_indices(self):
-        for score_conf in self.config["scores"]:
-            if "index" in score_conf:
-                col_index = int(score_conf["index"])
-            elif "name" in score_conf:
-                col_index = self.table.get_column_names().index(
-                    score_conf["name"])
-            else:
-                raise ValueError(
-                    "The score configuration must have a column specified")
-
-            score_def = self.score_columns[score_conf["id"]]
-            score_def.col_index = col_index
-
-    def _configure_special_columns_indices(self):
-        for key, spec_def in self.special_columns.items():
-            col_index = self.table.get_special_column_index(key)
-            spec_def.col_index = col_index
-
     @staticmethod
     def _line_to_begin_end(line):
-        begin = line.get_pos_begin()
-        end = line.get_pos_end()
-        if end < begin:
+        if line.pos_end < line.pos_begin:
             raise IOError(
-                f"The resource line {line.values} has a regions "
-                f" with end {end} smaller that the "
-                f"begining {end}.")
-        return begin, end
+                f"The resource line {line} has a regions "
+                f" with end {line.pos_end} smaller that the "
+                f"begining {line.pos_end}.")
+        return line.pos_begin, line.pos_end
 
     def _get_header(self):
         return self.table.get_column_names()
@@ -247,13 +271,12 @@ class GenomicScore(GenomicResourceImplementation):
         return self.config["id"]
 
     def _fetch_lines(
-            self, chrom: str,
-            pos_begin: int, pos_end: int) -> Generator[ScoreLine, None, None]:
-        records = self.table.get_records_in_region(
-            chrom, pos_begin, pos_end)
-
-        for record in records:
-            yield ScoreLine(record, self.score_columns, self.special_columns)
+        self, chrom: str, pos_begin: int, pos_end: int
+    ) -> Iterator[ScoreLine]:
+        for line in self.table.get_records_in_region(
+            chrom, pos_begin, pos_end
+        ):
+            yield ScoreLine(line, self.score_definitions)
 
     def get_all_chromosomes(self):
         if not self.is_open():
@@ -262,11 +285,11 @@ class GenomicScore(GenomicResourceImplementation):
         return self.table.get_chromosomes()
 
     def get_all_scores(self):
-        return list(self.score_columns)
+        return list(self.score_definitions)
 
-    def fetch_region(self, chrom: str, pos_begin: int, pos_end: int,
-                     scores: List[str]) \
-            -> Generator[dict[str, ScoreValue], None, None]:
+    def fetch_region(
+        self, chrom: str, pos_begin: int, pos_end: int, scores: List[str]
+    ) -> Iterator[dict[str, ScoreValue]]:
         """Return score values in a region."""
         if not self.is_open():
             raise ValueError(f"genomic score <{self.score_id()}> is not open")
@@ -275,13 +298,12 @@ class GenomicScore(GenomicResourceImplementation):
             raise ValueError(
                 f"{chrom} is not among the available chromosomes.")
 
-        line_iter = self._fetch_lines(chrom, pos_begin, pos_end)
-        for line in line_iter:
+        for line in self._fetch_lines(chrom, pos_begin, pos_end):
             line_pos_begin, line_pos_end = self._line_to_begin_end(line)
 
             val = {}
             for scr_id in scores:
-                val[scr_id] = line.get_score_value(scr_id)
+                val[scr_id] = line.get_score(scr_id)
 
             if pos_begin is not None:
                 left = max(pos_begin, line_pos_begin)
@@ -385,7 +407,7 @@ class GenomicScore(GenomicResourceImplementation):
             {% endif %}
 
             <h3>Score definitions:</h3>
-            {% for score in data["scores"] %}
+            {% for score in data["table"]["scores"] %}
             <div class="score-definition">
             <p>Score ID: {{ score["id"] }}</p>
             {% if "index" in score %}
@@ -417,12 +439,28 @@ class GenomicScore(GenomicResourceImplementation):
 
     @staticmethod
     def get_schema():
+        scores_schema = {
+            "type": "list", "schema": {
+                "type": "dict",
+                "schema": {
+                    "id": {"type": "string"},
+                    "index": {"type": "integer"},
+                    "name": {"type": "string", "excludes": "index"},
+                    "type": {"type": "string"},
+                    "desc": {"type": "string"},
+                    "na_values": {"type": ["string", "list"]}
+                }
+            }
+        }
         return {
             **get_base_resource_schema(),
             "table": {"type": "dict", "schema": {
                 "filename": {"type": "string"},
+                "index_filename": {"type": "string"},
+                "desc": {"type": "string"},
                 "format": {"type": "string"},
                 "header_mode": {"type": "string"},
+                "header": {"type": ["string", "list"]},
                 "chrom": {"type": "dict", "schema": {
                     "index": {"type": "integer"},
                     "name": {"type": "string", "excludes": "index"}
@@ -444,17 +482,7 @@ class GenomicScore(GenomicResourceImplementation):
                     "del_prefix": {"type": "string", "excludes": "add_prefix"}
                 }}
             }},
-            "scores": {"type": "list", "schema": {
-                "type": "dict",
-                "schema": {
-                    "id": {"type": "string"},
-                    "index": {"type": "integer"},
-                    "name": {"type": "string", "excludes": "index"},
-                    "type": {"type": "string"},
-                    "desc": {"type": "string"},
-                    "na_values": {"type": "string"}
-                }
-            }},
+            "scores": scores_schema,
             "histograms": {"type": "list", "schema": {
                 "type": "dict",
                 "schema": {
@@ -503,7 +531,7 @@ class PositionScore(GenomicScore):
         line = lines[0]
 
         requested_scores = scores if scores else self.get_all_scores()
-        return {scr: line.get_score_value(scr) for scr in requested_scores}
+        return {scr: line.get_score(scr) for scr in requested_scores}
 
     def fetch_scores_agg(  # pylint: disable=too-many-arguments,too-many-locals
             self, chrom: str, pos_begin: int, pos_end: int,
@@ -529,14 +557,14 @@ class PositionScore(GenomicScore):
 
         for scr_id in requested_scores:
             aggregator_type = non_default_pos_aggregators.get(
-                scr_id, self.score_columns[scr_id].pos_aggregator)
+                scr_id, self.score_definitions[scr_id].pos_aggregator)
             aggregators[scr_id] = build_aggregator(aggregator_type)
 
         for line in self._fetch_lines(chrom, pos_begin, pos_end):
             line_pos_begin, line_pos_end = self._line_to_begin_end(line)
 
             for scr_id, aggregator in aggregators.items():
-                val = line.get_score_value(scr_id)
+                val = line.get_score(scr_id)
 
                 left = (
                     pos_begin
@@ -581,10 +609,6 @@ class NPScore(GenomicScore):
     def open(self) -> NPScore:
         return cast(NPScore, super().open())
 
-    @staticmethod
-    def get_extra_special_columns():
-        return {"reference": str, "alternative": str}
-
     def fetch_scores(
             self, chrom: str, position: int, reference: str, alternative: str,
             scores: List[str] = None):
@@ -600,9 +624,7 @@ class NPScore(GenomicScore):
 
         selected_line = None
         for line in lines:
-            if line.get_special_column_value("reference") == reference \
-                    and line.get_special_column_value("alternative") \
-                    == alternative:
+            if line.ref == reference and line.alt == alternative:
                 selected_line = line
                 break
 
@@ -610,8 +632,7 @@ class NPScore(GenomicScore):
             return None
         requested_scores = scores if scores else self.get_all_scores()
         return {
-            sc: selected_line.get_score_value(sc)
-            for sc in requested_scores
+            sc: selected_line.get_score(sc) for sc in requested_scores
         }
 
     def _construct_aggregators(
@@ -626,7 +647,7 @@ class NPScore(GenomicScore):
         nuc_aggregators = {}
 
         for scr_id in scores:
-            scr_def = self.score_columns[scr_id]
+            scr_def = self.score_definitions[scr_id]
             aggregator_type = non_default_pos_aggregators.get(
                 scr_id, scr_def.pos_aggregator)
             pos_aggregators[scr_id] = build_aggregator(aggregator_type)
@@ -663,28 +684,28 @@ class NPScore(GenomicScore):
                 pos_aggregators[col].add(nuc_agg.get_final())
                 nuc_agg.clear()
 
-        last_pos: int = score_lines[0].get_pos_begin()
+        last_pos: int = score_lines[0].pos_begin
         for line in score_lines:
-            if line.get_pos_begin() != last_pos:
+            if line.pos_begin != last_pos:
                 aggregate_nucleotides()
-            for col in line.score_columns:
-                val = line.get_score_value(col)
+            for col in line.get_available_scores():
+                val = line.get_score(col)
 
                 if col not in nuc_aggregators:
                     continue
                 left = (
                     pos_begin
-                    if pos_begin >= line.get_pos_begin()
-                    else line.get_pos_begin()
+                    if pos_begin >= line.pos_begin
+                    else line.pos_begin
                 )
                 right = (
                     pos_end
-                    if pos_end <= line.get_pos_end()
-                    else line.get_pos_end()
+                    if pos_end <= line.pos_end
+                    else line.pos_end
                 )
                 for _ in range(left, right + 1):
                     nuc_aggregators[col].add(val)
-            last_pos = line.get_pos_begin()
+            last_pos = line.pos_begin
         aggregate_nucleotides()
 
         return pos_aggregators
@@ -736,9 +757,7 @@ class AlleleScore(GenomicScore):
 
         selected_line = None
         for line in lines:
-            if line.get_special_column_value("reference") == reference and \
-                    line.get_special_column_value("alternative") \
-                    == alternative:
+            if line.ref == reference and line.alt == alternative:
                 selected_line = line
                 break
 
@@ -747,41 +766,13 @@ class AlleleScore(GenomicScore):
 
         requested_scores = scores if scores else self.get_all_scores()
         return {
-            sc: selected_line.get_score_value(sc)
+            sc: selected_line.get_score(sc)
             for sc in requested_scores}
-
-
-def _configure_special_columns(
-        # table,
-        extra_special_columns=None):
-    special_clmns = {"chrom": str, "pos_begin": int, "pos_end": int}
-    if extra_special_columns is not None:
-        special_clmns.update(extra_special_columns)
-
-    special_columns = {}
-    for key, parser in special_clmns.items():
-
-        @dataclass
-        class SpecialDef:
-            """Score special columns definition."""
-
-            key: str
-            col_index: int
-            value_parser: Any
-
-        spec_def = SpecialDef(
-            key,
-            None,  # table.get_special_column_index(key),
-            parser)
-        special_columns[key] = spec_def
-
-    return special_columns
 
 
 def _build_genomic_score_from_resource(
         clazz: Type[GenomicScore],
         resource: GenomicResource) -> GenomicScore:
-
     return clazz(resource)
 
 
@@ -791,7 +782,6 @@ def build_position_score_from_resource(
     result = _build_genomic_score_from_resource(
         PositionScore,
         resource)
-
     return cast(PositionScore, result)
 
 
@@ -801,7 +791,6 @@ def build_np_score_from_resource(
     result = _build_genomic_score_from_resource(
         NPScore,
         resource)
-
     return cast(NPScore, result)
 
 
@@ -824,5 +813,4 @@ def build_score_from_resource(resource: GenomicResource) -> GenomicScore:
     ctor = type_to_ctor.get(resource.get_type())
     if ctor is None:
         raise ValueError(f"Resource {resource.get_id()} is not of score type")
-
     return ctor(resource)
