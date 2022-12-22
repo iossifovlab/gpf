@@ -7,5 +7,6 @@
     "bracketSpacing": true,
     "bracketSameLine": true,
     "parser": "angular",
-    "printWidth": 120
+    "printWidth": 120,
+    "htmlWhitespaceSensitivity": "strict"
 }
