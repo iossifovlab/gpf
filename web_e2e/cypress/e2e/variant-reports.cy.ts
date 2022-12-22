@@ -152,7 +152,6 @@ describe('Variant reports tests', () => {
       page.denovoTagSelectorSelectedOptions.contains(tag);
 
       // closing the content without unchecking
-      // page.denovoTagSelectorDropdown.click();
       page.denovoTagSelectorDropdown.click(30, 30);
       page.denovoTagSelectorContent.should('be.hidden');
       page.denovoTagSelectorSelectedOptions.contains(tag);
@@ -179,6 +178,34 @@ describe('Variant reports tests', () => {
       //close
       page.denovoTagSelectorDropdown.click();
     });
+  });
+
+  it('should search tags', () => {
+    page.familiesByPedigreeTab.click();
+    page.denovoTagSelectorDropdown.click();
+    const serchingValues: string[] = ['a', 'ro', 'lex'];
+
+    for (let i = 0; i < serchingValues.length; i++) {
+      page.denovoTagSelectorSearchInput.type(serchingValues[i]);
+      const filtered: string[] = tags.filter(tag => tag.includes(serchingValues[i]));
+      page.denovoTagSelectorOptions.then(options => {
+        const actual: string[] = options.toArray().map(o => o.innerText);
+        expect(actual).to.deep.eq(filtered);
+      });
+      page.denovoTagSelectorSearchInput.clear();
+    }
+  });
+
+  it('should show nothing found when searching tags', () => {
+    page.familiesByPedigreeTab.click();
+    page.denovoTagSelectorDropdown.click();
+    const serchingValues: string[] = ['cot', 'riof', 'tsf', 'as'];
+
+    for (let i = 0; i < serchingValues.length; i++) {
+      page.denovoTagSelectorSearchInput.type(serchingValues[i]);
+      page.denovoTagSelectorSearchInputNothingFound.should('exist');
+      page.denovoTagSelectorSearchInput.clear();
+    }
   });
 
   [
@@ -218,6 +245,47 @@ describe('Variant reports tests', () => {
         });
       }
       page.denovoTagSelectorSelectedOptionBtn.click();
+    });
+  });
+
+  [
+    {selectedTags: [tags[2], tags[3]], expectedPedigreeCounts: ['500', '106']},
+    {selectedTags: [tags[0], tags[3], tags[15]], expectedPedigreeCounts: ['128', '107', '106']},
+    {selectedTags: [tags[3], tags[8], tags[13], tags[14]], expectedPedigreeCounts: ['877', '789']}
+  ].forEach(element => {
+    it('should select a multiple tags and check pedigree charts', () => {
+      page.familiesByPedigreeTab.click();
+      page.denovoTagSelectorDropdown.click();
+      element.selectedTags.forEach(tag => {
+        page.denovoTagSelectorOptionsInput(tag).check({force: true});
+      });
+
+      page.pedigreeCells.should('have.length', element.expectedPedigreeCounts.length);
+      page.pedigreeCells.each((cell, i = 0) => {
+        if (i < element.expectedPedigreeCounts.length) {
+          expect(cell).to.have.text(element.expectedPedigreeCounts[i]);
+          i++;
+        }
+      });
+
+      page.denovoTagSelectorSelectedOptionBtn.click({multiple: true});
+    });
+  });
+
+  [
+    {selectedTags: [tags[5], tags[9]], expectedPedigreeCounts: []},
+    {selectedTags: [tags[3], tags[7], tags[8], tags[13], tags[14]], expectedPedigreeCounts: []}
+  ].forEach(element => {
+    it.only('should select a multiple tags and check if nothing found is shown', () => {
+      page.familiesByPedigreeTab.click();
+      page.denovoTagSelectorDropdown.click();
+      element.selectedTags.forEach(tag => {
+        page.denovoTagSelectorOptionsInput(tag).check({force: true});
+      });
+
+      page.pedigreesNothingFound.should('exist');
+
+      page.denovoTagSelectorSelectedOptionBtn.click({multiple: true});
     });
   });
 
@@ -261,13 +329,17 @@ describe('Variant reports tests', () => {
     });
   });
 
-  it.skip('should download family counters report from pedigree modal', () => {
-    page.familiesByPedigreeTab.click();
-    page.pedigreeCells.each((cell) => {
-      cy.wrap(cell).click({force: true});
+  [
+    {index: 0, name: 'first'},
+    {index: 1, name: 'second'},
+    {index: 5, name: 'fifth'}
+  ].forEach(cell => {
+    it(`should download family counters report from ${cell.name} pedigree modal`, () => {
+      page.familiesByPedigreeTab.click();
+      page.pedigreeCells.eq(cell.index).click({force: true});
 
-      const downloadedVariantsPath = Cypress.config('downloadsFolder') + '/family-counters.tsv';
-      const expectedVariantsPath = 'cypress/fixtures/variant-reports/family-counters.tsv';
+      const downloadedVariantsPath = Cypress.config('downloadsFolder') + '/family.ped';
+      const expectedVariantsPath = `cypress/fixtures/variant-reports/family${cell.index}.ped`;
 
       page.pedigreeModalDownloadBtn.click();
 
@@ -281,34 +353,6 @@ describe('Variant reports tests', () => {
 
       cy.get('body').click(30, 30);
     });
-  });
-
-  it('should search tags', () => {
-    page.familiesByPedigreeTab.click();
-    page.denovoTagSelectorDropdown.click();
-    const serchingValues: string[] = ['a', 'ro', 'lex'];
-
-    for (let i = 0; i < serchingValues.length; i++) {
-      page.denovoTagSelectorSearchInput.type(serchingValues[i]);
-      const filtered: string[] = tags.filter(tag => tag.includes(serchingValues[i]));
-      page.denovoTagSelectorOptions.then(options => {
-        const actual: string[] = options.toArray().map(o => o.innerText);
-        expect(actual).to.deep.eq(filtered);
-      });
-      page.denovoTagSelectorSearchInput.clear();
-    }
-  });
-
-  it('should show nothing found when searching tags', () => {
-    page.familiesByPedigreeTab.click();
-    page.denovoTagSelectorDropdown.click();
-    const serchingValues: string[] = ['cot', 'riof', 'tsf', 'as'];
-
-    for (let i = 0; i < serchingValues.length; i++) {
-      page.denovoTagSelectorSearchInput.type(serchingValues[i]);
-      page.denovoTagSelectorSearchInputNothingFound.should('exist');
-      page.denovoTagSelectorSearchInput.clear();
-    }
   });
 });
 
