@@ -85,7 +85,8 @@ def test_vcf_loader_multi(fixture_dirname, multivcf_files, gpf_instance_2013):
 
     multivcf_files = list(
         map(
-            lambda x: os.path.join(fixture_dirname("backends"), x),
+            lambda x: os.path.join(  # type: ignore
+                fixture_dirname("backends"), x),
             multivcf_files,
         )
     )

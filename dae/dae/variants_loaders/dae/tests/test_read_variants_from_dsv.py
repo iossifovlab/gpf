@@ -1,9 +1,12 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
+from typing import List
+
 import pytest
 import pandas as pd
 import numpy as np
 
 from dae.variants.attributes import Inheritance
+from dae.variants.family_variant import FamilyVariant
 from dae.variants_loaders.dae.loader import DenovoLoader
 from dae.utils.variant_utils import GenotypeType
 
@@ -69,12 +72,12 @@ def test_families_instance_type_assertion(
         fake_families, filename, gpf_instance_2013.reference_genome)
     with pytest.raises(AssertionError) as excinfo:
         loader.flexible_denovo_load(
-            None,
-            None,
+            None,  # type: ignore
+            None,  # type: ignore
             denovo_location="foo",
             denovo_variant="bar",
             denovo_person_id="baz",
-            families="bla",
+            families="bla",  # type: ignore
         )
     assert str(excinfo.value) == error_message
 
@@ -428,7 +431,7 @@ def test_read_variants_genome_assertion(
             fake_families, filename, gpf_instance_2013.reference_genome)
         loader.flexible_denovo_load(
             filename,
-            None,
+            None,  # type: ignore
             families=fake_families,
             denovo_location="location",
             denovo_variant="variant",
@@ -603,7 +606,7 @@ def test_denovo_loader_avoids_duplicates(
     variants_iter = variants_loader.full_variants_iterator()
 
     svs = []
-    fvs = []
+    fvs: List[FamilyVariant] = []
     for sv, fvs_ in variants_iter:
         print(sv, fvs)
         svs.append(sv)

@@ -1,3 +1,5 @@
+# pylint: disable=W0621,C0114,C0116,W0212,W0613,too-many-lines
+
 import pytest
 import numpy as np
 from dae.pedigrees.loader import FamiliesLoader
@@ -29,7 +31,7 @@ def test_get_diploid_males(vcf, expected, vcf_variants_loaders):
     assert loader is not None
 
     counter = 0
-    for sv, fvs in loader.full_variants_iterator():
+    for _sv, fvs in loader.full_variants_iterator():
         for fv in fvs:
             assert (
                 VariantsGenotypesLoader._get_diploid_males(fv)
@@ -62,7 +64,7 @@ def test_vcf_loader_genetic_model(
     assert loader is not None
 
     counter = 0
-    for sv, fvs in loader.full_variants_iterator():
+    for _sv, fvs in loader.full_variants_iterator():
         for fv in fvs:
             assert fv._genetic_model is not None
             for fa in fv.alleles:
@@ -105,7 +107,7 @@ def test_vcf_loader_best_state(
     assert loader is not None
 
     counter = 0
-    for sv, fvs in loader.full_variants_iterator():
+    for _sv, fvs in loader.full_variants_iterator():
         for fv in fvs:
             assert fv._best_state is not None
             for fa in fv.alleles:
@@ -132,7 +134,7 @@ def test_families_genotypes_decorator_broken_x(
         gpf_instance_2013.reference_genome
     )
 
-    for sv, fvs in variants_loader.full_variants_iterator():
+    for _sv, fvs in variants_loader.full_variants_iterator():
         for fv in fvs:
             print(fv, fv.genetic_model)
             assert fv.genetic_model == GeneticModel.X_broken

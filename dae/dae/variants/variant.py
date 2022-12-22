@@ -572,7 +572,7 @@ class SummaryVariant:
         assert alleles[0].is_reference_allele
         self._alleles: List[SummaryAllele] = alleles
         self._allele_count: int = len(self.alleles)
-        self._matched_alleles = None
+        self._matched_alleles: Optional[List[int]] = None
 
         self._chromosome: str = self.ref_allele.chromosome
         self._position: int = self.ref_allele.position
@@ -705,8 +705,8 @@ class SummaryVariant:
         return list(ets)
 
     @property
-    def effect_gene_symbols(self):
-        egs = set()
+    def effect_gene_symbols(self) -> List[str]:
+        egs: Set[str] = set()
         for allele in self.alt_alleles:
             egs = egs.union(allele.effect_gene_symbols)
         return list(egs)
@@ -779,12 +779,14 @@ class SummaryVariant:
             and self.position > other.position
         )
 
-    def set_matched_alleles(self, alleles_indexes):
+    def set_matched_alleles(self, alleles_indexes: List[int]) -> None:
         # pylint: disable=protected-access
         self._matched_alleles = sorted(alleles_indexes)
 
     @property
     def matched_alleles(self):
+        if self._matched_alleles is None:
+            return []
         return [
             aa
             for aa in self.alleles

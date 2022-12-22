@@ -1,3 +1,5 @@
+# pylint: disable=W0621,C0114,C0116,W0212,W0613,too-many-lines
+
 def test_summary_sharing(variants_impl):
     fvars = variants_impl("variants_vcf")("backends/quads_two_families")
 
@@ -18,10 +20,10 @@ def test_summary_sharing(variants_impl):
         full_variants[1][1][0].summary_variant
     )
 
-    full_alleles = list()
+    full_alleles = []
     for sv, fvs in full_variants:
         summary_alleles = sv.alleles
-        family_alleles = list()
+        family_alleles = []
         for fv in fvs:
             family_alleles.append(fv.alleles)
         full_alleles.append((summary_alleles, family_alleles))

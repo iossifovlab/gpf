@@ -584,6 +584,16 @@ class FamilyVariant(SummaryVariant, FamilyDelegate):
 
         return self._family_alleles
 
+    @property
+    def family_alleles(self) -> List[FamilyAllele]:
+        if self._family_alleles is None:
+            self._build_family_alleles()
+        return cast(List[FamilyAllele], self._family_alleles)
+
+    @property
+    def family_alt_alleles(self) -> List[FamilyAllele]:
+        return self.family_alleles[1:]
+
     def gt_flatten(self):
         """Return genotype of the family variant flattened to a 1d array."""
         return self.gt.flatten(order="F")
