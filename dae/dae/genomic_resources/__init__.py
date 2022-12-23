@@ -15,7 +15,7 @@ _REGISTERED_RESOURCE_IMPLEMENTATIONS: Dict[
 
 __all__ = [
     "build_genomic_resource_repository", "GenomicResource",
-    "get_resource_implementation_factory"
+    "get_resource_implementation_builder"
 ]
 
 
@@ -23,7 +23,7 @@ _IMPLEMENTATIONS_LOADED = False
 _PLUGINS_LOADED = False
 
 
-def get_resource_implementation_factory(
+def get_resource_implementation_builder(
     resource_type: str
 ) -> Callable[[GenomicResource], GenomicResourceImplementation]:
     """
