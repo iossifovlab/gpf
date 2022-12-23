@@ -1469,6 +1469,48 @@ def test_get_ref_alt_configured_existing(tmp_path):
         )
 
 
+def test_get_ref_alt_by_index_on_no_header(tmp_path):
+    setup_directories(
+        tmp_path, {
+            "genomic_resource.yaml": """
+                tabix_table:
+                    filename: data.txt.gz
+                    format: tabix
+                    header_mode: none
+                    chrom:
+                      index: 0
+                    pos_begin:
+                      index: 1
+                    pos_end:
+                      index: 2
+                    reference:
+                      index: 3
+                    alternative:
+                      index: 4
+                scores:
+                - id: c2
+                  index: 5
+                  type: float
+            """,
+        })
+    setup_tabix(
+        tmp_path / "data.txt.gz",
+        """
+        #chrom  pos_begin  pos_end  reference  alternative    c2
+        1     10        12       A      G       3.14
+        1     15        20       A      T       4.14
+        1     21        30       A      C       5.14
+        """, seq_col=0, start_col=1, end_col=2)
+    res = build_filesystem_test_resource(tmp_path)
+    with build_genomic_position_table(res, res.config["tabix_table"]) as tab:
+        results = tuple(map(lambda l: (l.ref, l.alt), tab.get_all_records()))
+        assert results == (
+            ("A", "G"),
+            ("A", "T"),
+            ("A", "C"),
+        )
+
+
 def test_vcf_get_missing_alt(vcf_res_multiallelic):
     with build_genomic_position_table(
         vcf_res_multiallelic, vcf_res_multiallelic.config["tabix_table"]

@@ -239,7 +239,7 @@ class TabixGenomicPositionTable(GenomicPositionTable):
                     zip(other_columns, (raw[i] for i in other_indices))
                 )
             else:
-                attributes = {str(idx): value for idx, value in enumerate(raw)
+                attributes = {idx: value for idx, value in enumerate(raw)
                               if idx not in (self.chrom_column_i,
                                              self.pos_begin_column_i,
                                              self.pos_end_column_i)}

@@ -136,7 +136,7 @@ class GenomicScore(GenomicResourceImplementation):
             col_type = score_conf.get(
                 "type", config.get("default.score.type", "float"))
 
-            col_key = score_conf.get("name") or str(score_conf["index"])
+            col_key = score_conf.get("name") or score_conf["index"]
 
             col_def = ScoreDef(
                 col_key,
