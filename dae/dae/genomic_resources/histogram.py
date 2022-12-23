@@ -7,7 +7,7 @@ from __future__ import annotations
 import hashlib
 import os
 import logging
-from typing import Dict, Any
+from typing import Dict, Any, cast
 from copy import copy, deepcopy
 
 import yaml
@@ -18,28 +18,56 @@ from tqdm import tqdm  # type: ignore
 from dask.distributed import as_completed  # type: ignore
 
 from dae.genomic_resources.genomic_scores import build_score_from_resource
+from dae.genomic_resources.statistic import Statistic
 
 logger = logging.getLogger(__name__)
 
 
-class Histogram:
+class Histogram(Statistic):
     """Class to represent a histogram."""
 
     # pylint: disable=too-many-instance-attributes
     # FIXME:
-    def __init__(
-        self, bins, bars, bins_count,
-        x_min, x_max, x_scale, y_scale,
-        x_min_log=None
-    ):
+    def __init__(self, config, bins=None, bars=None):
+        super().__init__("histogram", "Collects values for histogram.")
+        self.config = config
         self.bins = bins
         self.bars = bars
-        self.bins_count = bins_count
-        self.x_min = x_min
-        self.x_max = x_max
-        self.x_scale = x_scale
-        self.y_scale = y_scale
-        self.x_min_log = x_min_log
+
+        try:
+            self.bins_count = self.config["bins"]
+            self.x_min = self.config["x_min"]
+            self.x_max = self.config["x_max"]
+            self.x_scale = self.config["x_scale"]
+            self.y_scale = self.config["y_scale"]
+        except KeyError as e:
+            raise ValueError(
+                f"Invalid histogram configuration, cannot find {e.args[0]}"
+            ) from e
+
+        self.x_min_log = self.config.get("x_min_log")
+
+        if self.bins is None and self.bars is None:
+            if self.x_scale == "linear":
+                self.bins = np.linspace(
+                    self.x_min,
+                    self.x_max,
+                    self.bins_count + 1,
+                )
+            elif self.x_scale == "log":
+                assert self.x_min_log is not None
+                self.bins = np.array([
+                    self.x_min,
+                    * np.logspace(
+                        np.log10(self.x_min_log),
+                        np.log10(self.x_max),
+                        self.bins_count
+                    )])
+            self.bars = np.zeros(self.bins_count, dtype=np.int64)
+        elif self.bins is None or self.bars is None:
+            raise ValueError(
+                f"Cannot instantiate histogram with only bins or only bars!"
+            )
 
         if self.x_scale not in ("linear", "log"):
             raise ValueError(f"unexpected histogram xscale: {self.x_scale}")
@@ -47,71 +75,15 @@ class Histogram:
         if self.y_scale not in ("linear", "log"):
             raise ValueError(f"unexpected yscale {self.y_scale}")
 
-    @staticmethod
-    def from_config(conf: Dict[str, Any]) -> Histogram:
-        """Construct a histogram from configuration dict."""
-        return Histogram(
-            None,
-            None,
-            conf["bins"],
-            conf.get("min"),
-            conf.get("max"),
-            conf.get("x_scale", "linear"),
-            conf.get("y_scale", "linear"),
-            conf.get("x_min_log")
-        )
-
-    def to_dict(self):
-        """Build dict representation of a histogram."""
-        return {
-            "bins_count": len(self.bins),
-            "bins": self.bins.tolist(),
-            "bars": self.bars.tolist(),
-            "x_min": self.x_min,
-            "x_max": self.x_max,
-            "x_scale": self.x_scale,
-            "y_scale": self.y_scale,
-        }
-
-    @staticmethod
-    def from_dict(data: Dict[str, Any]) -> Histogram:
-        """Create a histogram from dict."""
-        hist = Histogram(
-            data["bins"],
-            data["bars"],
-            data["bins_count"],
-            data["x_min"], data["x_max"],
-            data["x_scale"], data["y_scale"]
-        )
-
-        hist.bins = np.array(data["bins"])
-        hist.bars = np.array(data["bars"], dtype=np.int64)
-
-        return hist
-
-    @staticmethod
-    def merge(hist1: Histogram, hist2: Histogram) -> Histogram:
+    def merge(self, other: Histogram) -> None:
         """Merge two histograms."""
-        assert hist1.x_scale == hist2.x_scale
-        assert hist1.x_min == hist2.x_min
-        assert hist1.x_min_log == hist2.x_min_log
-        assert hist1.x_max == hist2.x_max
-        assert all(hist1.bins == hist2.bins)
+        assert self.x_scale == other.x_scale
+        assert self.x_min == other.x_min
+        assert self.x_min_log == other.x_min_log
+        assert self.x_max == other.x_max
+        assert all(self.bins == other.bins)
 
-        result = Histogram(
-            hist1.bins,
-            hist1.bars,
-            len(hist1.bins) - 1,
-            hist1.x_min,
-            hist1.x_max,
-            hist1.x_scale,
-            hist1.y_scale,
-            hist1.x_min_log
-        )
-
-        result.bars += hist2.bars
-
-        return result
+        self.bars += other.bars
 
     @property
     def range(self):
@@ -147,78 +119,23 @@ class Histogram:
         self.bars[index - 1] += 1
         return True
 
-    def set_empty(self):
-        """Reset the bins and bars of the histogram."""
-        assert self.x_min is not None
-        assert self.x_max is not None
-        if self.x_scale == "linear":
-            self.bins = np.linspace(
-                self.x_min,
-                self.x_max,
-                self.bins_count + 1,
-            )
-        elif self.x_scale == "log":
-            assert self.x_min_log is not None
-            self.bins = np.array([
-                self.x_min,
-                * np.logspace(
-                    np.log10(self.x_min_log),
-                    np.log10(self.x_max),
-                    self.bins_count
-                )])
-        self.bars = np.zeros(self.bins_count, dtype=np.int64)
+    def serialize(self) -> str:
+        return cast(str, yaml.dump(
+            {
+                "config": self.config,
+                "bins": self.bins,
+                "bars": self.bars
+            }
+        ))
 
-    def set_values(self, values):
-        """Reset the histogram and adds every given values."""
-        if self.x_min is None or self.x_max is None:
-            min_value = min(values)
-            max_value = max(values)
-            step = 1.0 * (max_value - min_value) / (self.bins_count - 1)
-            dec = -np.log10(step)
-            dec = dec if dec >= 0 else 0
-            dec = int(dec)
-            if self.x_min is None:
-                self.x_min = np.around(min_value - step / 2.0, dec)
-            if self.x_max is None:
-                self.x_max = np.around(max_value + step / 2.0, dec)
-
-        self.set_empty()
-        for value in values:
-            self.add_value(value)
-
-    # def set_bins_bars(self, values):
-    #     """Temp func to support legacy calculation used in gene scores."""
-    #     _min = min(values)
-    #     _max = max(values)
-    #     step = 1.0 * (_max - _min) / (self.bins_count - 1)
-    #     dec = -np.log10(step)
-    #     dec = dec if dec >= 0 else 0
-    #     dec = int(dec)
-
-    #     bleft = np.around(_min, dec)
-    #     bright = np.around(_max, dec)
-
-    #     if self.x_scale == "log":
-    #         # Max numbers of items in first bin
-    #         max_count = values.size / self.bins_count
-
-    #         # Find a bin small enough to fit max_count items
-    #         for bleft in range(-1, -200, -1):
-    #             if ((values) < 10 ** bleft).sum() < max_count:
-    #                 break
-
-    #         bins_in = [0] + list(
-    #             np.logspace(bleft, np.log10(bright), self.bins_count)
-    #         )
-    #     else:
-    #         bins_in = self.bins_count
-
-    #     bars, bins = np.histogram(
-    #         list(values), bins_in - 1, range=[bleft, bright]
-    #     )
-
-    #     self.bins = bins
-    #     self.bars = bars
+    @staticmethod
+    def deserialize(data) -> Histogram:
+        res = yaml.load(data, yaml.Loader)
+        return Histogram(
+            res.get("config"),
+            bins=res.get("bins"),
+            bars=res.get("bars")
+        )
 
 
 class HistogramBuilder:

@@ -5,19 +5,23 @@ from __future__ import annotations
 import logging
 import textwrap
 import copy
+import yaml
 
 from typing import Iterator, Optional, cast, Type, Any, Union
 
 from dataclasses import dataclass
 from jinja2 import Template
 from markdown2 import markdown
-from cerberus import Validator
 
 from . import GenomicResource
+from .statistic import Statistic
 from .resource_implementation import GenomicResourceImplementation, \
-    get_base_resource_schema
+    get_base_resource_schema, \
+    InfoImplementationMixin, \
+    ResourceConfigValidationMixin
 from .genomic_position_table import build_genomic_position_table, Line, \
     TabixGenomicPositionTable, VCFGenomicPositionTable
+from dae.task_graph.graph import TaskGraph
 
 from .aggregators import build_aggregator, AGGREGATOR_SCHEMA
 
@@ -92,15 +96,18 @@ class ScoreLine:
         return tuple(self.score_defs.keys())
 
 
-class GenomicScore(GenomicResourceImplementation):
+class GenomicScore(
+    GenomicResourceImplementation,
+    ResourceConfigValidationMixin,
+    InfoImplementationMixin
+):
     """Genomic scores base class."""
-
-    config_validator = Validator
-    LONG_JUMP_THRESHOLD = 5000
-    ACCESS_SWITCH_THRESHOLD = 1500
 
     def __init__(self, resource):
         super().__init__(resource)
+        self.config = self.validate_and_normalize_schema(
+            self.config, resource
+        )
         self.config["id"] = resource.resource_id
         self.table_loaded = False
         self.table = build_genomic_position_table(
@@ -232,7 +239,7 @@ class GenomicScore(GenomicResourceImplementation):
         return self.score_definitions.get(score_id)
 
     def close(self):
-        # FIXME: consider using weekrefs
+        # FIXME: consider using weakrefs
         # self.table.close()
         # self.table = None
         pass
@@ -440,7 +447,7 @@ class GenomicScore(GenomicResourceImplementation):
             {% endblock %}
         """))
 
-    def get_info(self):
+    def _get_template_data(self):
         info = copy.deepcopy(self.config)
         if "meta" in info:
             info["meta"] = markdown(info["meta"])
@@ -506,6 +513,26 @@ class GenomicScore(GenomicResourceImplementation):
             }},
             "default_annotation": {"type": "dict", "allow_unknown": True}
         }
+
+    def add_statistics_build_tasks(self, task_graph: TaskGraph):
+        score_minmax = self._add_min_max_tasks(task_graph)
+        for score_id, minmax_task in score_minmax:
+            self._add_histogram_task(
+                task_graph, score_id, minmax_task
+            )
+        task_graph.tasks
+
+    def _add_min_max_tasks(self, graph):
+        """Add tasks for generating min max values."""
+        pass
+
+    def _add_histogram_task(self, graph, score_id, minmax_task):
+        """
+        Add histogram task for specific score id.
+
+        The histogram task is dependant  on the provided minmax task.
+        """
+        pass
 
 
 class PositionScore(GenomicScore):
@@ -825,3 +852,45 @@ def build_score_from_resource(resource: GenomicResource) -> GenomicScore:
     if ctor is None:
         raise ValueError(f"Resource {resource.get_id()} is not of score type")
     return ctor(resource)
+
+
+class MinMaxValue(Statistic):
+    """Statistic that calculates Min and Max values in a genomic score."""
+
+    def __init__(self, min_value=None, max_value=None):
+        super().__init__("min_max", "Calculates Min and Max values")
+        self.min = min_value
+        self.max = max_value
+
+    def add_value(self, value):
+        if value is None:
+            return
+        if self.min is None or value < self.min:
+            self.min = value
+        if self.max is None or value > self.max:
+            self.max = value
+
+    def merge(self, other: MinMaxValue) -> None:
+        if not isinstance(other, MinMaxValue):
+            raise ValueError()
+        if self.min is None:
+            self.min = other.min
+        elif other.min is None:
+            pass
+        elif other.min < self.min:
+            self.min = other.min
+
+        if self.max is None:
+            self.max = other.max
+        elif other.max is None:
+            pass
+        elif other.max > self.max:
+            self.max = other.max
+
+    def serialize(self) -> str:
+        return cast(str, yaml.dump({"min": self.min, "max": self.max}))
+
+    @staticmethod
+    def deserialize(data) -> MinMaxValue:
+        res = yaml.load(data, yaml.Loader)
+        return MinMaxValue(res.get("min"), res.get("max"))
