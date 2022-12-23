@@ -73,14 +73,15 @@ def test_wild_vcf_loader_pedigree(
     families1 = variants_loader.vcf_loaders[0].families
     families2 = variants_loader.vcf_loaders[1].families
 
-    for p1, p2 in zip(families1.persons.values(), families2.persons.values()):
-        assert p1 == p2
+    for person1, person2 in zip(
+            families1.persons.values(), families2.persons.values()):
+        assert person1 == person2
 
     for fid in families1.keys():
 
-        f1 = families1[fid]
-        f2 = families2[fid]
-        assert f1 == f2
+        fam1 = families1[fid]
+        fam2 = families2[fid]
+        assert fam1 == fam2
 
 
 def test_wild_vcf_loader_pedigree_union(
@@ -122,14 +123,15 @@ def test_wild_vcf_loader_pedigree_union(
     families1 = variants_loader.vcf_loaders[0].families
     families2 = variants_loader.vcf_loaders[1].families
 
-    for p1, p2 in zip(families1.persons.values(), families2.persons.values()):
-        assert p1 == p2
+    for person1, person2 in zip(
+            families1.persons.values(), families2.persons.values()):
+        assert person1 == person2
 
     for fid in families1.keys():
 
-        f1 = families1[fid]
-        f2 = families2[fid]
-        assert f1 == f2
+        fam1 = families1[fid]
+        fam2 = families2[fid]
+        assert fam1 == fam2
 
     assert len(families.persons) == 20
     assert len(families1.persons) == 20

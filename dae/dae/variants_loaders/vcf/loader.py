@@ -3,8 +3,10 @@
 import itertools
 import logging
 from collections import Counter
-from urllib.parse import urlparse
+from collections.abc import Callable
+from typing import Set
 
+from urllib.parse import urlparse
 from fsspec.core import url_to_fs  # type: ignore
 
 import numpy as np
@@ -39,7 +41,7 @@ class VcfFamiliesGenotypes(FamiliesGenotypes):
 
         self.loader = loader
         self.vcf_variants = vcf_variants
-        self.known_independent_genotypes = None
+        self.known_independent_genotypes = []
 
     def full_families_genotypes(self):
         raise NotImplementedError()
@@ -60,16 +62,15 @@ class VcfFamiliesGenotypes(FamiliesGenotypes):
             if vcf_variant is None:
                 sample_genotype = (fill_value, fill_value)
             else:
-                sample_genotype = vcf_variant.samples.get(person.sample_id)
-                assert sample_genotype is not None, (
-                    person, self.vcf_variants)
+                vcf_sample = vcf_variant.samples.get(person.sample_id)
+                assert vcf_sample is not None, (person, self.vcf_variants)
 
-                sample_genotype = sample_genotype["GT"]
+                sample_genotype = vcf_sample["GT"]
                 if len(sample_genotype) == 1:
                     sample_genotype = (sample_genotype[0], -2)
                 assert len(sample_genotype) == 2, (
                     family, person, sample_genotype)
-                sample_genotype = tuple(map(
+                sample_genotype = tuple(map(  # type: ignore
                     lambda g: g if g is not None else -1,
                     sample_genotype))
             genotypes.append(sample_genotype)
@@ -146,7 +147,7 @@ class SingleVcfLoader(VariantsGenotypesLoader):
 
         fill_in_mode = params.get("vcf_multi_loader_fill_in_mode", "reference")
         if fill_in_mode == "reference":
-            self._fill_missing_value = 0
+            self._fill_missing_value: int = 0
         elif fill_in_mode == "unknown":
             self._fill_missing_value = -1
         else:
@@ -180,6 +181,7 @@ class SingleVcfLoader(VariantsGenotypesLoader):
 
     def _init_denovo_mode(self):
         denovo_mode = self.params.get("vcf_denovo_mode", "possible_denovo")
+        self._denovo_handler: Callable[[FamilyVariant], bool]
         if denovo_mode == "possible_denovo":
             self._denovo_handler = self._possible_denovo_mode_handler
         elif denovo_mode == "denovo":
@@ -221,6 +223,7 @@ class SingleVcfLoader(VariantsGenotypesLoader):
         omission_mode = self.params.get(
             "vcf_omission_mode", "possible_omission"
         )
+        self._omission_handler: Callable[[FamilyVariant], bool]
         if omission_mode == "possible_omission":
             self._omission_handler = self._possible_omission_mode_handler
         elif omission_mode == "omission":
@@ -316,7 +319,7 @@ class SingleVcfLoader(VariantsGenotypesLoader):
 
     def _match_pedigree_to_samples(self):
         # pylint: disable=too-many-branches
-        vcf_samples = []
+        vcf_samples: Set[str] = set()
         for vcf in self.vcfs:
             intersection = set(vcf_samples) & set(vcf.header.samples)
             if intersection:
@@ -324,7 +327,7 @@ class SingleVcfLoader(VariantsGenotypesLoader):
                     "vcf samples present in multiple batches: %s",
                     intersection)
 
-            vcf_samples.extend(list(vcf.header.samples))
+            vcf_samples.update(list(vcf.header.samples))
 
         logger.info("vcf samples (all): %s", len(vcf_samples))
 
@@ -346,7 +349,7 @@ class SingleVcfLoader(VariantsGenotypesLoader):
 
         seen = set()
         not_sequenced = set()
-        counters = Counter()
+        counters: Counter = Counter()
         for person in self.families.persons.values():
             if person.generated:
                 counters["generated"] += 1
@@ -427,6 +430,8 @@ class SingleVcfLoader(VariantsGenotypesLoader):
 
         l_chrom_idx = self.chrom_order.get(lhs.chrom)
         r_chrom_idx = self.chrom_order.get(rhs.chrom)
+        assert l_chrom_idx is not None
+        assert r_chrom_idx is not None
 
         if l_chrom_idx > r_chrom_idx:
             return True
@@ -557,12 +562,12 @@ class SingleVcfLoader(VariantsGenotypesLoader):
                         family_genotypes.known_independent_genotypes
                     assert known_independent_genotypes is not None
 
-                    known_independent_genotypes = np.array(
+                    independent_genotypes = np.array(
                         known_independent_genotypes, np.int8).T
 
                     self._calc_allele_frequencies(
                         current_summary_variant,
-                        known_independent_genotypes)
+                        independent_genotypes)
 
                     yield current_summary_variant, family_variants
 

@@ -385,15 +385,16 @@ class CNVLoader(VariantsGenotypesLoader):
                 lambda x: x not in ["best_state", "family_id"],
                 values.keys()
             )
-            for f_idx, family_id in enumerate(values.get("family_id")):
-                best_state = values.get("best_state")[f_idx]
+            for f_idx, family_id in enumerate(
+                    values.get("family_id")):  # type: ignore
+                best_state = values.get("best_state")[f_idx]  # type: ignore
                 family = self.families.get(family_id)
                 if family is None:
                     continue
                 fvar = FamilyVariant(svar, family, None, best_state)
                 extra_attributes = {}
                 for attr in extra_attributes_keys:
-                    attr_val = values.get(attr)[f_idx]
+                    attr_val = values.get(attr)[f_idx]  # type: ignore
                     extra_attributes[attr] = [attr_val]
                 fvar.update_attributes(extra_attributes)
                 fvs.append(fvar)
@@ -404,7 +405,7 @@ class CNVLoader(VariantsGenotypesLoader):
 
         for summary_variants, family_variants in full_iterator:
             for fvar in family_variants:
-                for fallele in fvar.alt_alleles:
+                for fallele in fvar.family_alt_alleles:
                     if self.transmission_type == TransmissionType.denovo:
                         inheritance = [
                             Inheritance.denovo if mem is not None else inh

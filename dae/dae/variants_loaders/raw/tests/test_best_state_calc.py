@@ -1,8 +1,4 @@
-"""
-Created on Jul 9, 2018
-
-@author: lubo
-"""
+# pylint: disable=W0621,C0114,C0116,W0212,W0613,too-many-lines
 import pytest
 
 import numpy as np
@@ -34,7 +30,7 @@ def fv1(fam1, sv1):
 
 
 @pytest.mark.parametrize(
-    "gt,bs",
+    "gt,best_state",
     [
         (np.array([[0, 0, 1], [0, 0, 2]], dtype="int8"), "220/001/001"),
         (np.array([[0, 0, 1], [0, 0, 0]], dtype="int8"), "221/001/000"),
@@ -42,15 +38,15 @@ def fv1(fam1, sv1):
         (np.array([[0, 0, 0], [0, 0, 0]], dtype="int8"), "222/000/000"),
     ],
 )
-def test_family_variant_simple_best_st(fv1, gt, bs):
+def test_family_variant_simple_best_st(fv1, gt, best_state):
     v = fv1(gt, calculate_simple_best_state(gt, 3))
     print(v)
     print(mat2str(v.best_state))
-    assert mat2str(v.best_state) == bs
+    assert mat2str(v.best_state) == best_state
 
 
 @pytest.mark.parametrize(
-    "gt,bs",
+    "gt,best_state",
     [
         (np.array([[-1, 0, 1], [0, 0, 2]], dtype="int8"), "?20/?01/?01"),
         (np.array([[-1, 0, 1], [0, 0, 0]], dtype="int8"), "?21/?01/?00"),
@@ -58,15 +54,15 @@ def test_family_variant_simple_best_st(fv1, gt, bs):
         (np.array([[-1, 0, 0], [0, 0, 0]], dtype="int8"), "?22/?00/?00"),
     ],
 )
-def test_family_variant_unknown_simple_best_st(fv1, gt, bs):
+def test_family_variant_unknown_simple_best_st(fv1, gt, best_state):
     v = fv1(gt, calculate_simple_best_state(gt, 3))
     print(v)
     print(mat2str(v.best_state))
-    assert mat2str(v.best_state) == bs
+    assert mat2str(v.best_state) == best_state
 
 
 @pytest.mark.parametrize(
-    "gt,bs",
+    "gt,expected_best_state",
     [
         (np.array([[0, 0, 1], [0, 0, 2]], dtype="int8"), "220/001/001"),
         (np.array([[0, 0, 1], [0, 0, 0]], dtype="int8"), "221/001/000"),
@@ -74,17 +70,18 @@ def test_family_variant_unknown_simple_best_st(fv1, gt, bs):
         (np.array([[0, 0, 0], [0, 0, 0]], dtype="int8"), "222/000/000"),
     ],
 )
-def test_family_variant_full_best_st(fv1, gt, bs, gpf_instance_2013):
+def test_family_variant_full_best_st(
+        fv1, gt, expected_best_state, gpf_instance_2013):
     v = fv1(gt, None)
     best_state = VariantsGenotypesLoader._calc_best_state(
         v, gpf_instance_2013.reference_genome)
     print(v)
     print(mat2str(best_state))
-    assert mat2str(best_state) == bs
+    assert mat2str(best_state) == expected_best_state
 
 
 @pytest.mark.parametrize(
-    "gt,bs",
+    "gt,expected_best_state",
     [
         (np.array([[-1, 0, 1], [0, 0, 2]], dtype="int8"), "?20/?01/?01"),
         (np.array([[-1, 0, 1], [0, 0, 0]], dtype="int8"), "?21/?01/?00"),
@@ -92,17 +89,18 @@ def test_family_variant_full_best_st(fv1, gt, bs, gpf_instance_2013):
         (np.array([[-1, 0, 0], [0, 0, 0]], dtype="int8"), "?22/?00/?00"),
     ],
 )
-def test_family_variant_unknown_full_best_st(fv1, gt, bs, gpf_instance_2013):
+def test_family_variant_unknown_full_best_st(
+        fv1, gt, expected_best_state, gpf_instance_2013):
     v = fv1(gt, None)
     best_state = VariantsGenotypesLoader._calc_best_state(
         v, gpf_instance_2013.reference_genome)
     print(v)
     print(mat2str(best_state))
-    assert mat2str(best_state) == bs
+    assert mat2str(best_state) == expected_best_state
 
 
 @pytest.mark.parametrize(
-    "bs, gt",
+    "best_state, gt",
     [
         (
             np.array([[2, 2, 1], [0, 0, 1]], dtype="int8"),
@@ -118,15 +116,15 @@ def test_family_variant_unknown_full_best_st(fv1, gt, bs, gpf_instance_2013):
         ),
     ],
 )
-def test_best2gt(bs, gt):
-    res = best2gt(bs)
+def test_best2gt(best_state, gt):
+    res = best2gt(best_state)
     print(mat2str(res))
 
     assert np.all(res == gt)
 
 
 @pytest.mark.parametrize(
-    "bs, gt, gm",
+    "best_state, gt, gm",
     [
         (
             np.array([[2, 2, 1], [0, 0, 1]], dtype="int8"),
@@ -145,8 +143,8 @@ def test_best2gt(bs, gt):
         ),
     ],
 )
-def test_family_variant_best2gt(bs, gt, gm, fv1, gpf_instance_2013):
-    v = fv1(None, bs)
+def test_family_variant_best2gt(best_state, gt, gm, fv1, gpf_instance_2013):
+    v = fv1(None, best_state)
     genotype, genetic_model = VariantsGenotypesLoader._calc_genotype(
         v, gpf_instance_2013.reference_genome
     )
@@ -195,7 +193,7 @@ def fv_x2(fam1, sv_x2):
 
 
 @pytest.mark.parametrize(
-    "bs, gt, gm1, gm2",
+    "best_state, gt, gm1, gm2",
     [
         (
             np.array([[2, 2, 1], [0, 0, 1]], dtype="int8"),
@@ -218,14 +216,14 @@ def fv_x2(fam1, sv_x2):
     ],
 )
 def test_family_variant_x_best2gt(
-        bs, gt, gm1, gm2, fv_x1, fv_x2, gpf_instance_2013):
+        best_state, gt, gm1, gm2, fv_x1, fv_x2, gpf_instance_2013):
     genomic_sequence = gpf_instance_2013.reference_genome
 
-    v1 = fv_x1(None, bs)
-    v2 = fv_x2(None, bs)
+    fv1 = fv_x1(None, best_state)
+    fv2 = fv_x2(None, best_state)
 
     genotype, genetic_model = VariantsGenotypesLoader._calc_genotype(
-        v1, genomic_sequence
+        fv1, genomic_sequence
     )
     print(genotype, genetic_model)
 
@@ -233,7 +231,7 @@ def test_family_variant_x_best2gt(
     assert genetic_model == gm1
 
     genotype, genetic_model = VariantsGenotypesLoader._calc_genotype(
-        v2, genomic_sequence
+        fv2, genomic_sequence
     )
     print(genotype, genetic_model)
 

@@ -73,7 +73,7 @@ class DenovoLoader(VariantsGenotypesLoader):
             families: FamiliesData,
             denovo_filename: str,
             genome: ReferenceGenome,
-            regions: List[str] = None,
+            regions: Optional[List[str]] = None,
             params: Optional[Dict[str, Any]] = None,
             sort: bool = True):
         super().__init__(
@@ -125,7 +125,7 @@ class DenovoLoader(VariantsGenotypesLoader):
     def reset_regions(self, regions):
         super().reset_regions(regions)
 
-        result = []
+        result: List[Optional[Region]] = []
         for reg in self.regions:
             if reg is None:
                 result.append(reg)
@@ -215,7 +215,7 @@ class DenovoLoader(VariantsGenotypesLoader):
         full_iterator = super().full_variants_iterator()
         for summary_variants, family_variants in full_iterator:
             for fvariant in family_variants:
-                for fallele in fvariant.alt_alleles:
+                for fallele in fvariant.family_alt_alleles:
                     inheritance = [
                         Inheritance.denovo
                         if vinmem is not None

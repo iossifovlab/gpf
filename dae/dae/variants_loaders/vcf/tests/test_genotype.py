@@ -1,10 +1,7 @@
-"""
-Created on Feb 15, 2018
-
-@author: lubo
-"""
-from dae.utils.regions import Region
+# pylint: disable=W0621,C0114,C0116,W0212,W0613,too-many-lines
 import numpy as np
+
+from dae.utils.regions import Region
 
 
 def test_11540_gt(variants_impl):
@@ -41,7 +38,7 @@ def test_11540_gt(variants_impl):
         [0, 0],
         [0, 0],
         [0, 0]]
-    assert all([eg == g for (eg, g) in zip(expected_genotype, v.genotype)])
+    assert all(eg == g for (eg, g) in zip(expected_genotype, v.genotype))
 
     expected_family_genotype = [
         [0, 0],
@@ -51,9 +48,9 @@ def test_11540_gt(variants_impl):
         [0, 0],
         [0, 0],
         [0, 0]]
-    assert all([
+    assert all(
         eg == g
-        for (eg, g) in zip(expected_family_genotype, v.family_genotype)])
+        for (eg, g) in zip(expected_family_genotype, v.family_genotype))
 
 
 def test_11540_family_alleles(variants_impl):
@@ -109,7 +106,7 @@ def test_11548_gt(variants_impl):
         [2, 2],
         [2, 2],
         [2, 2]]
-    assert all([eg == g for (eg, g) in zip(expected_genotype, v.genotype)])
+    assert all(eg == g for (eg, g) in zip(expected_genotype, v.genotype))
 
     expected_family_genotype = [
         [1, 1],
@@ -119,6 +116,6 @@ def test_11548_gt(variants_impl):
         [1, 1],
         [1, 1],
         [1, 1]]
-    assert all([
+    assert all(
         eg == g
-        for (eg, g) in zip(expected_family_genotype, v.family_genotype)])
+        for (eg, g) in zip(expected_family_genotype, v.family_genotype))

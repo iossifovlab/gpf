@@ -1,3 +1,5 @@
+# pylint: disable=W0621,C0114,C0116,W0212,W0613,too-many-lines
+
 import pytest
 from dae.pedigrees.loader import FamiliesLoader
 from dae.pedigrees.family import FamiliesData

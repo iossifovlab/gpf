@@ -18,11 +18,9 @@ def denovo_extra_attr_loader(
     variants_loader = DenovoLoader(
         families, variants_filename, gpf_instance_2013.reference_genome)
 
-    variants_loader = AnnotationPipelineDecorator(
+    return AnnotationPipelineDecorator(
         variants_loader, annotation_pipeline_internal
     )
-
-    return variants_loader
 
 
 def test_denovo_extra_attributes(denovo_extra_attr_loader):

@@ -172,6 +172,7 @@ class CLILoader(ABC):
 
     @classmethod
     def cli_defaults(cls):
+        """Build a dictionary with default values for CLI arguments."""
         argument_destinations = [
             arg.destination for arg in cls._arguments()
             if arg.destination is not None
@@ -309,16 +310,16 @@ class VariantsLoaderDecorator(VariantsLoader):
         return self.variants_loader.annotation_schema
 
     @classmethod
-    def build_cli_params(cls, params):
-        return cls.variants_loader.build_cli_params(params)
+    def build_cli_arguments(cls, params):
+        return cls.variants_loader.build_cli_arguments(params)
 
     @classmethod
     def cli_defaults(cls):
         return cls.variants_loader.cli_defaults()
 
     @classmethod
-    def cli_options(cls, parser):
-        return cls.variants_loader.cli_options(parser)
+    def cli_arguments(cls, parser, options_only=False):
+        return cls.variants_loader.cli_arguments(parser, options_only)
 
     def build_arguments_dict(self):
         return self.variants_loader.build_arguments_dict()
@@ -453,7 +454,7 @@ class EffectAnnotationDecorator(AnnotationDecorator):
         for (summary_variant, family_variants) in \
                 self.variants_loader.full_variants_iterator():
             for sallele in summary_variant.alt_alleles:
-                context = {}
+                context: Dict[str, Any] = {}
                 attributes = self.effect_annotator.annotate(
                     sallele.get_annotatable(), context)
                 assert "allele_effects" in attributes, attributes
@@ -639,7 +640,7 @@ class VariantsGenotypesLoader(VariantsLoader):
             filenames: List[str],
             transmission_type: TransmissionType,
             genome: ReferenceGenome,
-            regions: List[str] = None,
+            regions: Optional[List[str]] = None,
             expect_genotype: bool = True,
             expect_best_state: bool = False,
             params: Optional[Dict[str, Any]] = None):
