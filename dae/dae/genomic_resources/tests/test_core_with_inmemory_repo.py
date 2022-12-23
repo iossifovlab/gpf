@@ -2,29 +2,24 @@
 
 import pytest
 
-from dae.genomic_resources.testing import build_testing_repository
+from dae.genomic_resources.testing import build_inmemory_test_repository
 from dae.genomic_resources.repository import GenomicResource, Manifest
 
 
-def test_the_basic_resource_finding(tmp_path):
-    repo = build_testing_repository(
-        repo_id="oneResource",
-        root_path=str(tmp_path),
-        content={
+def test_the_basic_resource_finding():
+    repo = build_inmemory_test_repository(
+        {
             "one": {"genomic_resource.yaml": ""}
         })
     res = repo.get_resource("one")
     assert res
     assert res.resource_id == "one"
     assert res.version == (0,)
-    assert res.proto.proto_id == "oneResource"
 
 
-def test_not_finding_resource_with_the_required_version(tmp_path):
-    repo = build_testing_repository(
-        repo_id="oneResource",
-        root_path=str(tmp_path),
-        content={
+def test_not_finding_resource_with_the_required_version():
+    repo = build_inmemory_test_repository(
+        {
             "one": {"genomic_resource.yaml": ""}
         })
 
@@ -32,27 +27,21 @@ def test_not_finding_resource_with_the_required_version(tmp_path):
         repo.get_resource("one", version_constraint="1.0")
 
 
-def test_finding_resource_with_version_and_repo_id(tmp_path):
-    repo = build_testing_repository(
-        repo_id="oneResource",
-        root_path=str(tmp_path),
-        content={
+def test_finding_resource_with_version_and_repo_id():
+    repo = build_inmemory_test_repository(
+        {
             "one(1.0)": {"genomic_resource.yaml": ""}
         })
     res = repo.get_resource(
-        "one", version_constraint="=1.0",
-        repository_id="oneResource")
+        "one", version_constraint="=1.0")
     assert res
     assert res.resource_id == "one"
     assert res.version == (1, 0)
-    assert res.proto.proto_id == "oneResource"
 
 
-def test_md5_checksum(tmp_path):
-    repo = build_testing_repository(
-        repo_id="a",
-        root_path=str(tmp_path),
-        content={
+def test_md5_checksum():
+    repo = build_inmemory_test_repository(
+        {
             "one": {
                 "genomic_resource.yaml": "type: genome\nseqFile: chrAll.fa",
                 "chrAll.fa": ">chr1\nAACCCCACACACACACACACCAC\n",
@@ -65,11 +54,9 @@ def test_md5_checksum(tmp_path):
         "a778802ca2a9c24a08981f9be4f2f31f"
 
 
-def test_manifest_file_creation(tmp_path):
-    repo = build_testing_repository(
-        repo_id="a",
-        root_path=str(tmp_path),
-        content={
+def test_manifest_file_creation():
+    repo = build_inmemory_test_repository(
+        {
             "one": {
                 "genomic_resource.yaml": "",
                 "data.txt": "some data",
@@ -91,11 +78,9 @@ def test_manifest_file_creation(tmp_path):
          "md5": "9d9676541599e2054d98df2d361775c0"}])
 
 
-def test_type_of_genomic_resoruces(tmp_path):
-    repo = build_testing_repository(
-        root_id="a",
-        root_path=str(tmp_path),
-        content={"one": {
+def test_type_of_genomic_resoruces():
+    repo = build_inmemory_test_repository(
+        {"one": {
             "genomic_resource.yaml": "type: genome\nseqFile: chrAll.fa",
             "chrAll.fa": ">chr1\nAACCCCACACACACACACACCAC",
             "chrAll.fa.fai": "chr1\t30\t50",
@@ -106,11 +91,9 @@ def test_type_of_genomic_resoruces(tmp_path):
     assert res.get_type() == "genome"
 
 
-def test_resources_files(tmp_path):
-    repo = build_testing_repository(
-        repo_id="a",
-        root_path=str(tmp_path),
-        content={
+def test_resources_files():
+    repo = build_inmemory_test_repository(
+        {
             "one": {
                 "genomic_resource.yaml": "",
                 "data.txt": "some data",

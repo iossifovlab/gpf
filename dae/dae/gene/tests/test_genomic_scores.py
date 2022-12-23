@@ -8,13 +8,13 @@ from dae.testing import setup_directories, setup_genome, \
     setup_empty_gene_models, setup_gpf_instance
 
 from dae.gene.scores import GenomicScoresDb
-from dae.genomic_resources.testing import build_testing_repository
+from dae.genomic_resources.testing import build_inmemory_test_repository
 from dae.genomic_resources.repository import GR_CONF_FILE_NAME
 
 
 @pytest.fixture
 def scores_repo(tmp_path):
-    sets_repo = build_testing_repository(repo_id="gene_sets", content={
+    sets_repo = build_inmemory_test_repository({
         "phastCons": {
             GR_CONF_FILE_NAME: textwrap.dedent("""
                 type: position_score
@@ -64,7 +64,7 @@ def scores_repo(tmp_path):
                 """)
             }
         }
-    }, root_path=str(tmp_path))
+    })
     return sets_repo
 
 

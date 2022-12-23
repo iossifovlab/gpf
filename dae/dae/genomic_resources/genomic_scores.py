@@ -265,6 +265,7 @@ class GenomicScore(GenomicResourceImplementation):
         return line.pos_begin, line.pos_end
 
     def _get_header(self):
+        assert self.table is not None
         return self.table.get_column_names()
 
     def get_resource_id(self):

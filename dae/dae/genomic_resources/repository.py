@@ -29,6 +29,7 @@ from dataclasses import dataclass, asdict
 
 import abc
 import yaml
+import pysam
 
 logger = logging.getLogger(__name__)
 
@@ -314,9 +315,9 @@ class GenomicResource:
         """Check if filename exists in this resource."""
         return self.proto.file_exists(self, filename)
 
-    def file_local(self, filename):
-        """Check whether a file can be accessed locally in this resource."""
-        return self.proto.file_local(self, filename)
+    # def file_local(self, filename):
+    #     """Check whether a file can be accessed locally in this resource."""
+    #     return self.proto.file_local(self, filename)
 
     def get_manifest(self) -> Manifest:
         """Load resource manifest if it exists. Otherwise builds it."""
@@ -335,11 +336,13 @@ class GenomicResource:
         return self.proto.open_raw_file(
             self, filename, mode, **kwargs)
 
-    def open_tabix_file(self, filename, index_filename=None):
+    def open_tabix_file(
+            self, filename, index_filename=None) -> pysam.TabixFile:
         """Open a tabix file and returns a pysam.TabixFile."""
         return self.proto.open_tabix_file(self, filename, index_filename)
 
-    def open_vcf_file(self, filename, index_filename=None):
+    def open_vcf_file(
+            self, filename, index_filename=None) -> pysam.VariantFile:
         """Open a vcf file and returns a pysam.VariantFile."""
         return self.proto.open_vcf_file(self, filename, index_filename)
 
@@ -442,7 +445,8 @@ class ReadOnlyRepositoryProtocol(abc.ABC):
 
     @abc.abstractmethod
     def open_tabix_file(
-            self, resource, filename, index_filename=None):
+            self, resource, filename,
+            index_filename=None) -> pysam.TabixFile:
         """Open a tabix file in a resource and return a pysam tabix file.
 
         Not all repositories support this method. Repositories that do
@@ -451,7 +455,8 @@ class ReadOnlyRepositoryProtocol(abc.ABC):
 
     @abc.abstractmethod
     def open_vcf_file(
-            self, resource, filename, index_filename=None):
+            self, resource, filename,
+            index_filename=None) -> pysam.VariantFile:
         """Open a vcf file in a resource and return a pysam VariantFile.
 
         Not all repositories support this method. Repositories that do

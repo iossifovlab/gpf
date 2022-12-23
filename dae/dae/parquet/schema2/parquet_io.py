@@ -103,7 +103,8 @@ class NoPartitionDescriptor(PartitionDescriptor):
         )
 
         pq.write_table(
-            partition_desc_table, os.path.join(self.output, "meta.parquet")
+            partition_desc_table, os.path.join(self.output, "meta.parquet"),
+            version="1.0"
         )
 
     @staticmethod
@@ -419,7 +420,8 @@ class ParquetPartitionDescriptor(PartitionDescriptor):
         )
 
         pq.write_table(
-            partition_desc_table, os.path.join(self.output, "meta.parquet")
+            partition_desc_table, os.path.join(self.output, "meta.parquet"),
+            version="1.0"
         )
 
     def generate_file_access_glob(self):
@@ -474,7 +476,8 @@ class ContinuousParquetFileWriter:
         self.dirname = dirname
 
         self._writer = pq.ParquetWriter(
-            filepath, self.schema, compression="snappy", filesystem=filesystem
+            filepath, self.schema, compression="snappy", filesystem=filesystem,
+            version="1.0"
         )
         self.rows = rows
         self._data = None
@@ -946,4 +949,4 @@ def save_ped_df_to_parquet(ped_df, filename, filesystem=None):
     ped_df, pps = add_missing_parquet_fields(pps, ped_df)
 
     table = pa.Table.from_pandas(ped_df, schema=pps)
-    pq.write_table(table, filename, filesystem=filesystem)
+    pq.write_table(table, filename, filesystem=filesystem, version="1.0")

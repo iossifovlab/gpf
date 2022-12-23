@@ -3,17 +3,16 @@
 import time
 import pytest
 
+from dae.genomic_resources.testing import \
+    build_inmemory_test_protocol
 
-@pytest.mark.parametrize("scheme", [
-    "file",
-    "s3",
-])
+
 def test_update_resource_file_when_file_missing(
-        embedded_proto, fsspec_proto, scheme):
+        content_fixture, rw_fsspec_proto):
 
     # Given
-    src_proto = embedded_proto()
-    proto = fsspec_proto(scheme)
+    src_proto = build_inmemory_test_protocol(content_fixture)
+    proto = rw_fsspec_proto
 
     src_res = src_proto.get_resource("sub/two")
     dst_res = proto.get_resource("sub/two")
@@ -38,16 +37,12 @@ def test_update_resource_file_when_file_missing(
     assert state.md5 == "d9636a8dca9e5626851471d1c0ea92b1"
 
 
-@pytest.mark.parametrize("scheme", [
-    "file",
-    "s3",
-])
 def test_update_resource_file_when_state_missing(
-        embedded_proto, fsspec_proto, scheme):
+        content_fixture, rw_fsspec_proto):
 
     # Given
-    src_proto = embedded_proto()
-    proto = fsspec_proto(scheme)
+    src_proto = build_inmemory_test_protocol(content_fixture)
+    proto = rw_fsspec_proto
 
     src_res = src_proto.get_resource("sub/two")
     dst_res = proto.get_resource("sub/two")
@@ -71,16 +66,12 @@ def test_update_resource_file_when_state_missing(
     assert proto.filesystem.modified(fileurl) == timestamp
 
 
-@pytest.mark.parametrize("scheme", [
-    "file",
-    "s3",
-])
 def test_update_resource_file_when_changed(
-        embedded_proto, fsspec_proto, scheme):
+        content_fixture, rw_fsspec_proto):
 
     # Given
-    src_proto = embedded_proto()
-    proto = fsspec_proto(scheme)
+    src_proto = build_inmemory_test_protocol(content_fixture)
+    proto = rw_fsspec_proto
 
     src_res = src_proto.get_resource("sub/two")
     dst_res = proto.get_resource("sub/two")
@@ -104,16 +95,12 @@ def test_update_resource_file_when_changed(
     assert state.md5 == "d9636a8dca9e5626851471d1c0ea92b1"
 
 
-@pytest.mark.parametrize("scheme", [
-    "file",
-    "s3",
-])
 def test_do_not_update_resource_file_when_state_changed_but_file_not(
-        embedded_proto, fsspec_proto, scheme):
+        content_fixture, rw_fsspec_proto):
 
     # Given
-    src_proto = embedded_proto()
-    proto = fsspec_proto(scheme)
+    src_proto = build_inmemory_test_protocol(content_fixture)
+    proto = rw_fsspec_proto
 
     src_res = src_proto.get_resource("sub/two")
     dst_res = proto.get_resource("sub/two")

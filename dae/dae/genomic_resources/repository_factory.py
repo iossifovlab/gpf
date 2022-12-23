@@ -16,7 +16,7 @@ import yaml
 from .fsspec_protocol import build_fsspec_protocol
 from .repository import GenomicResourceRepo, GenomicResourceProtocolRepo
 from .cached_repository import GenomicResourceCachedRepo
-from .testing import build_testing_protocol
+from .testing import build_inmemory_protocol
 
 from .group_repository import GenomicResourceGroupRepo
 
@@ -126,18 +126,8 @@ def _build_real_repository(
 
     elif proto_type in {"embedded", "memory"}:
         root_url = tempfile.mkdtemp(prefix="memory", suffix=repo_id)
-        if not os.path.isabs(root_url):
-            logger.error(
-                "for embedded resources repository we expects an "
-                "absolute url: %s", root_url)
-            raise ValueError(f"not an absolute root url: {root_url}")
-
         content = kwargs.get("content", {})
-        protocol = build_testing_protocol(
-            content=content,
-            scheme="memory",
-            proto_id=repo_id,
-            root_path=root_url)
+        protocol = build_inmemory_protocol(repo_id, root_url, content)
         repo = GenomicResourceProtocolRepo(protocol)
 
     else:
@@ -180,7 +170,7 @@ def _build_group_repository(
 
 def build_genomic_resource_repository(
         definition: Optional[dict] = None,
-        file_name: str = None) -> GenomicResourceRepo:
+        file_name: Optional[str] = None) -> GenomicResourceRepo:
     """Build a GRR using a definition dict or yaml file."""
     if not definition:
         if file_name is not None:

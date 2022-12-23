@@ -491,7 +491,7 @@ class FsspecReadWriteProtocol(
                 "manifest": res.get_manifest().to_manifest_entries()
             }
             for res in self.get_all_resources()]
-        content = sorted(content, key=lambda x: x["id"])
+        content = sorted(content, key=lambda x: x["id"])  # type: ignore
 
         content_filepath = os.path.join(
             self.url, GR_CONTENTS_FILE_NAME)

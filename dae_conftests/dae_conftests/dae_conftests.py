@@ -1179,11 +1179,3 @@ def s3_tmp_bucket_url(s3_client, s3_filesystem):
     yield bucket_url
 
     s3_filesystem.rm("s3://test-bucket", recursive=True)
-
-
-@pytest.fixture(scope="session")
-def fixtures_http_server():
-    from dae.genomic_resources.testing import range_http_serve
-    directory = relative_to_this_test_folder("fixtures/genomic_resources")
-    with range_http_serve(directory) as httpd:
-        yield httpd

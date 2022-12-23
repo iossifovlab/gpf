@@ -1,6 +1,9 @@
-from .setup_helpers import convert_to_tab_separated, setup_directories, \
+from dae.genomic_resources.testing import convert_to_tab_separated, \
+    setup_directories, \
     setup_pedigree, setup_vcf, setup_denovo, setup_dae_transmitted, \
-    setup_genome, setup_gene_models, setup_empty_gene_models, \
+    setup_genome, setup_gene_models, setup_empty_gene_models
+
+from .setup_helpers import \
     setup_gpf_instance
 from .import_helpers import vcf_import, vcf_study, \
     denovo_import, denovo_study, setup_dataset, study_update

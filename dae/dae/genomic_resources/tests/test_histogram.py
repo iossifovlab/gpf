@@ -1,19 +1,21 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 
 import os
+from typing import cast
 
 import pytest
 import numpy as np
 
 from dask.distributed import Client  # type: ignore
 
-from dae.genomic_resources.repository import GR_CONF_FILE_NAME, \
-    GenomicResource
+from dae.genomic_resources.repository import GR_CONF_FILE_NAME
+from dae.genomic_resources.fsspec_protocol import FsspecReadWriteProtocol
 from dae.genomic_resources.histogram import Histogram, \
     HistogramBuilder, load_histograms
-from dae.genomic_resources.testing import build_test_resource, \
-    build_testing_repository
-from dae.testing import convert_to_tab_separated
+from dae.genomic_resources.testing import \
+    setup_directories, convert_to_tab_separated, \
+    build_filesystem_test_repository, \
+    build_filesystem_test_resource
 
 
 def test_histogram_simple_input():
@@ -75,8 +77,8 @@ def client():
 
 @pytest.mark.parametrize("region_size", [1, 10, 10000])
 def test_histogram_builder_position_resource(tmp_path, client, region_size):
-    res: GenomicResource = build_test_resource(
-        content={
+    setup_directories(
+        tmp_path, {
             GR_CONF_FILE_NAME: """
                 type: position_score
                 table:
@@ -112,10 +114,8 @@ def test_histogram_builder_position_resource(tmp_path, client, region_size):
                 2      5          80       0.01  3
                 2      10         11       0.02  3
                 """)
-        },
-        scheme="file",
-        root_path=str(tmp_path))
-
+        })
+    res = build_filesystem_test_resource(tmp_path)
     hbuilder = HistogramBuilder(res)
     hists = hbuilder.build(client, region_size=region_size)
     assert len(hists) == 2
@@ -138,8 +138,8 @@ def test_histogram_builder_position_resource(tmp_path, client, region_size):
 
 
 def test_histogram_builder_allele_resource(client, tmp_path):
-    res: GenomicResource = build_test_resource(
-        content={
+    setup_directories(
+        tmp_path, {
             GR_CONF_FILE_NAME: """
                 type: allele_score
                 table:
@@ -171,10 +171,8 @@ def test_histogram_builder_allele_resource(client, tmp_path):
                 2      16         C          T            EMPTY
                 2      16         C          A            0.05
             """)
-        },
-        scheme="file",
-        root_path=str(tmp_path))
-
+        })
+    res = build_filesystem_test_resource(tmp_path)
     hbuilder = HistogramBuilder(res)
     hists = hbuilder.build(client)
     assert len(hists) == 1
@@ -190,10 +188,8 @@ def test_histogram_builder_allele_resource(client, tmp_path):
 
 
 def test_histogram_builder_np_resource(client, tmp_path):
-    res: GenomicResource = build_test_resource(
-        scheme="file",
-        root_path=str(tmp_path),
-        content={
+    setup_directories(
+        tmp_path, {
             GR_CONF_FILE_NAME: """
                 type: np_score
                 table:
@@ -237,6 +233,7 @@ def test_histogram_builder_np_resource(client, tmp_path):
                 2      16         19       C          G            0.05  4
             """
         })
+    res = build_filesystem_test_resource(tmp_path)
     hbuilder = HistogramBuilder(res)
     hists = hbuilder.build(client)
     assert len(hists) == 2
@@ -259,10 +256,8 @@ def test_histogram_builder_np_resource(client, tmp_path):
 
 @pytest.mark.parametrize("region_size", [1, 10, 10000])
 def test_histogram_builder_no_explicit_min_max(tmp_path, client, region_size):
-    res: GenomicResource = build_test_resource(
-        scheme="file",
-        root_path=str(tmp_path),
-        content={
+    setup_directories(
+        tmp_path, {
             GR_CONF_FILE_NAME: """
                 type: position_score
                 table:
@@ -288,6 +283,7 @@ def test_histogram_builder_no_explicit_min_max(tmp_path, client, region_size):
                 3      18         20       0.01
             """)
         })
+    res = build_filesystem_test_resource(tmp_path)
     hbuilder = HistogramBuilder(res)
     hists = hbuilder.build(client, region_size=region_size)
     assert len(hists) == 1
@@ -297,8 +293,8 @@ def test_histogram_builder_no_explicit_min_max(tmp_path, client, region_size):
 
 
 def test_histogram_builder_save(tmp_path, client):
-    res: GenomicResource = build_test_resource(
-        content={
+    setup_directories(
+        tmp_path, {
             GR_CONF_FILE_NAME: """
                 type: position_score
                 table:
@@ -334,15 +330,13 @@ def test_histogram_builder_save(tmp_path, client):
                 2      5          80       0.01  3
                 2      10         11       0.02  3
                 """)
-        },
-        scheme="file",
-        root_path=str(tmp_path))
-
+        })
+    res = build_filesystem_test_resource(tmp_path)
     hbuilder = HistogramBuilder(res)
     hists = hbuilder.build(client)
     hbuilder.save(hists, "")
 
-    proto = res.proto
+    proto = cast(FsspecReadWriteProtocol, res.proto)
     filesystem = proto.filesystem
     res_url = proto.get_resource_url(res)
 
@@ -371,9 +365,8 @@ def test_histogram_builder_save(tmp_path, client):
 
 def test_building_already_calculated_histograms(tmp_path, client):
     # the following config is missing min/max for phastCons100way
-    repo = build_testing_repository(
-        scheme="file",
-        root_path=str(tmp_path),
+    setup_directories(
+        tmp_path,
         content={
             "one": {
                 GR_CONF_FILE_NAME: """
@@ -407,6 +400,7 @@ def test_building_already_calculated_histograms(tmp_path, client):
                     """)
             }
         })
+    repo = build_filesystem_test_repository(tmp_path)
     resource = repo.get_resource("one")
     hbuilder = HistogramBuilder(resource)
     hists = hbuilder.build(client)
@@ -428,10 +422,8 @@ def test_building_already_calculated_histograms(tmp_path, client):
 
 
 def test_load_histograms(tmp_path, client):
-    repo = build_testing_repository(
-        scheme="file",
-        root_path=str(tmp_path),
-        content={
+    setup_directories(
+        tmp_path, {
             "one": {
                 GR_CONF_FILE_NAME: """
                     type: position_score
@@ -463,7 +455,9 @@ def test_load_histograms(tmp_path, client):
                     2      10         11       0.02  3
                     """)
             }
-        })
+        }
+    )
+    repo = build_filesystem_test_repository(tmp_path)
 
     res = repo.get_resource("one")
     hbuilder = HistogramBuilder(res)
@@ -483,8 +477,8 @@ def test_load_histograms(tmp_path, client):
 
 
 def test_histogram_builder_build_hashes_stable(tmp_path):
-    res: GenomicResource = build_test_resource(
-        content={
+    setup_directories(
+        tmp_path, {
             GR_CONF_FILE_NAME: """
                 type: position_score
                 table:
@@ -520,9 +514,8 @@ def test_histogram_builder_build_hashes_stable(tmp_path):
                 2      5          80       0.01  3
                 2      10         11       0.02  3
                 """)
-        },
-        scheme="file",
-        root_path=str(tmp_path))
+        })
+    res = build_filesystem_test_resource(tmp_path)
 
     hbuilder = HistogramBuilder(res)
     hashes = hbuilder._build_hashes()

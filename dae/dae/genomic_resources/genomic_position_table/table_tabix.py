@@ -47,6 +47,7 @@ class TabixGenomicPositionTable(GenomicPositionTable):
                 self.pysam_file.header[-1].strip("#").split("\t"))
         self._set_special_column_indexes()
         self._build_chrom_mapping()
+        return self
 
     def get_file_chromosomes(self) -> List[str]:
         assert isinstance(self.pysam_file, pysam.TabixFile)

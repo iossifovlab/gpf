@@ -4,7 +4,7 @@ import textwrap
 import pytest
 
 from dae.testing import convert_to_tab_separated
-from dae.genomic_resources.testing import build_test_resource
+from dae.genomic_resources.testing import build_inmemory_test_resource
 from dae.genomic_resources.reference_genome import \
     build_reference_genome_from_resource
 from dae.annotation.annotatable import VCFAllele
@@ -20,7 +20,7 @@ def example_1_genome():
     # Example from
     # https://genome.sph.umich.edu/wiki/File:Normalization_mnp.png
 
-    res = build_test_resource({
+    res = build_inmemory_test_resource({
         "genomic_resource.yaml": "{type: genome, filename: chr.fa}",
         "chr.fa": convert_to_tab_separated("""
                 >1
@@ -52,7 +52,7 @@ def example_2_genome():
     # Example from
     # https://genome.sph.umich.edu/wiki/File:Normalization_str.png
 
-    res = build_test_resource({
+    res = build_inmemory_test_resource({
         "genomic_resource.yaml": "{type: genome, filename: chr.fa}",
         "chr.fa": convert_to_tab_separated("""
                 >1

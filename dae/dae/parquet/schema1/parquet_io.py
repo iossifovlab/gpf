@@ -420,7 +420,8 @@ class ContinuousParquetFileWriter:
             self.dirname = dirname
 
         self._writer = pq.ParquetWriter(
-            filepath, self.schema, compression="snappy", filesystem=filesystem
+            filepath, self.schema, compression="snappy", filesystem=filesystem,
+            version="1.0"
         )
         self.rows = rows
         self._data = None
@@ -836,4 +837,4 @@ def save_ped_df_to_parquet(ped_df, filename, filesystem=None):
 
     table = pa.Table.from_pandas(ped_df, schema=pps)
 
-    pq.write_table(table, filename, filesystem=filesystem)
+    pq.write_table(table, filename, filesystem=filesystem, version="1.0")

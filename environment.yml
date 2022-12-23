@@ -26,11 +26,11 @@ dependencies:
   - scikit-learn=1.1.2
   - matplotlib-base=3.5.1
   - seaborn=0.12.1
-  - pandas=1.4.3
-  - pyarrow=8.0.1
-  - aiohttp=3.8.1
-  - fsspec=2022.7.1
-  - s3fs=2022.7.1
+  - pandas=1.5.2
+  - pyarrow=10.0.1
+  - aiohttp=3.8.3
+  - fsspec=2022.11.0
+  - s3fs=2022.11.0
   - pyliftover=0.4
   - python-box=6.0.2
   - setuptools=65.0.1

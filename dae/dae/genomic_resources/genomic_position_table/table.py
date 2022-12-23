@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import abc
 from typing import Optional, Dict, List, Union, Tuple
 from functools import cached_property
@@ -138,7 +140,7 @@ class GenomicPositionTable(abc.ABC):
             except ValueError as ex:
                 raise ValueError(f"The column {column_name} for the "
                                  f"special column {key} is not in the "
-                                 f"header.") from ex
+                                 f"header {self.header}.") from ex
 
     def get_special_column_name(self, key):
         if self.header_mode == "none":
@@ -185,7 +187,7 @@ class GenomicPositionTable(abc.ABC):
         self.close()
 
     @abc.abstractmethod
-    def open(self):
+    def open(self) -> GenomicPositionTable:
         pass
 
     @abc.abstractmethod
@@ -198,7 +200,8 @@ class GenomicPositionTable(abc.ABC):
 
     @abc.abstractmethod
     def get_records_in_region(
-            self, chrom: str, pos_begin: int = None, pos_end: int = None):
+            self, chrom: str,
+            pos_begin: Optional[int] = None, pos_end: Optional[int] = None):
         """Return an iterable over the records in the specified range.
 
         The interval is closed on both sides and 1-based.
