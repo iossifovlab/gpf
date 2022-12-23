@@ -20,7 +20,8 @@ from cerberus import Validator
 from dae.utils.regions import Region
 from dae.genomic_resources import GenomicResource
 from dae.genomic_resources.resource_implementation import \
-    GenomicResourceImplementation, get_base_resource_schema
+    GenomicResourceImplementation, get_base_resource_schema, \
+    InfoImplementationMixin, ResourceConfigValidationMixin
 from dae.genomic_resources.fsspec_protocol import build_local_resource
 
 logger = logging.getLogger(__name__)
@@ -421,19 +422,29 @@ def _open_file(filename):
         infile.close()
 
 
-class GeneModels(GenomicResourceImplementation):
+class GeneModels(
+    GenomicResourceImplementation,
+    ResourceConfigValidationMixin,
+    InfoImplementationMixin
+):
     """Provides class for gene models."""
 
     config_validator = Validator
 
     def __init__(self, resource: GenomicResource):
         super().__init__(resource)
+
+        self.config = self.validate_and_normalize_schema(
+            self.config, resource
+        )
+
         self.gene_models = None
         self.utr_models = None
         self.transcript_models: dict[str, Any] = {}
         self.alternative_names: dict[str, Any] = {}
 
         self._reset()
+
 
     @property
     def resource_id(self):
@@ -1454,7 +1465,7 @@ class GeneModels(GenomicResourceImplementation):
             {% endblock %}
         """))
 
-    def get_info(self):
+    def _get_template_data(self):
         info = copy.deepcopy(self.config)
         if "meta" in info:
             info["meta"] = markdown(info["meta"])

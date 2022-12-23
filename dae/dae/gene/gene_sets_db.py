@@ -23,7 +23,8 @@ from dae.gene.gene_term import read_ewa_set_file, read_gmt_file, \
     read_mapping_file
 from dae.genomic_resources.repository import GenomicResource
 from dae.genomic_resources.resource_implementation import \
-    GenomicResourceImplementation, get_base_resource_schema
+    GenomicResourceImplementation, get_base_resource_schema, \
+    InfoImplementationMixin, ResourceConfigValidationMixin
 from dae.genomic_resources.fsspec_protocol import build_local_resource
 
 logger = logging.getLogger(__name__)
@@ -74,14 +75,20 @@ class BaseGeneSetCollection(abc.ABC):
         raise NotImplementedError()
 
 
-class GeneSetCollection(GenomicResourceImplementation, BaseGeneSetCollection):
+class GeneSetCollection(
+    GenomicResourceImplementation,
+    ResourceConfigValidationMixin,
+    InfoImplementationMixin,
+    BaseGeneSetCollection
+):
     """Class representing a collection of gene sets in a resource."""
-
-    config_validator = Validator
 
     def __init__(self, resource: GenomicResource):
         super().__init__(resource)
 
+        self.config = self.validate_and_normalize_schema(
+            self.config, resource
+        )
         config = resource.get_config()
         self.collection_id = self.config["id"]
         assert self.collection_id != "denovo"
@@ -180,7 +187,7 @@ class GeneSetCollection(GenomicResourceImplementation, BaseGeneSetCollection):
             {% endblock %}
         """))
 
-    def get_info(self):
+    def _get_template_data(self):
         info = copy.deepcopy(self.config)
         if "meta" in info:
             info["meta"] = markdown(info["meta"])
@@ -200,13 +207,18 @@ class GeneSetCollection(GenomicResourceImplementation, BaseGeneSetCollection):
         }
 
 
-class SqliteGeneSetCollectionDB(GenomicResourceImplementation):
+class SqliteGeneSetCollectionDB(
+    GenomicResourceImplementation,
+    ResourceConfigValidationMixin,
+    InfoImplementationMixin
+):
     """Collection of gene sets stored in a SQLite database."""
-
-    config_validator = Validator
 
     def __init__(self, resource):
         super().__init__(resource)
+        self.config = self.validate_and_normalize_schema(
+            self.config, resource
+        )
         self.collection_id = self.config["id"]
         assert self.collection_id != "denovo"
         assert resource.get_type() == "gene_set", "Invalid resource type"
@@ -285,7 +297,7 @@ class SqliteGeneSetCollectionDB(GenomicResourceImplementation):
             {% endblock %}
         """))
 
-    def get_info(self):
+    def _get_template_data(self):
         info = copy.deepcopy(self.config)
         if "meta" in info:
             info["meta"] = markdown(info["meta"])

@@ -4,6 +4,8 @@ import sys
 import logging
 import argparse
 import pathlib
+import traceback
+import copy
 from typing import Dict, Union
 from urllib.parse import urlparse
 
@@ -15,6 +17,9 @@ from jinja2 import Template
 
 from dae.dask.client_factory import DaskClient
 from dae.utils.fs_utils import find_directory_with_a_file
+
+from dae.task_graph.executor import DaskExecutor, SequentialExecutor
+from dae.task_graph.graph import TaskGraph, Task
 
 from dae.__version__ import VERSION, RELEASE
 from dae.genomic_resources.repository import \
@@ -35,7 +40,7 @@ from dae.genomic_resources.histogram import HistogramBuilder
 from dae.genomic_resources.repository_factory import \
     build_genomic_resource_repository
 
-from dae.genomic_resources import get_resource_implementation_factory
+from dae.genomic_resources import get_resource_implementation_builder
 
 
 logger = logging.getLogger("grr_manage")
@@ -167,9 +172,9 @@ def _configure_resource_manifest_subparser(subparsers):
     _add_dvc_parameters_group(parser)
 
 
-def _configure_repo_hist_subparser(subparsers):
+def _configure_repo_stats_subparser(subparsers):
     parser_hist = subparsers.add_parser(
-        "repo-histograms",
+        "repo-stats",
         help="Build the histograms for a resource")
 
     _add_repository_resource_parameters_group(parser_hist, use_resource=False)
@@ -180,9 +185,9 @@ def _configure_repo_hist_subparser(subparsers):
     DaskClient.add_arguments(parser_hist)
 
 
-def _configure_resource_hist_subparser(subparsers):
+def _configure_resource_stats_subparser(subparsers):
     parser_hist = subparsers.add_parser(
-        "resource-histograms",
+        "resource-stats",
         help="Build the histograms for a resource")
 
     _add_repository_resource_parameters_group(parser_hist)
@@ -364,65 +369,90 @@ def _run_resource_manifest_command(proto, repo_url, **kwargs):
     _do_resource_manifest_command(proto, res, dry_run, force, use_dvc)
 
 
-def _do_resource_hist_command(  # pylint: disable=too-many-arguments
-        client, proto, res, dry_run, force, use_dvc, region_size):
-    if res.get_type() not in {
-            "position_score", "np_score", "allele_score"}:
-        logger.info(
-            "skip histograms update for %s; not a score", res.resource_id)
-        return
-
-    builder = HistogramBuilder(res)
-    if dry_run:
-        builder.check_update()
-        return
-
-    if force:
-        histograms = builder.build(
-            client,
-            region_size=region_size)
-    else:
-        histograms = builder.update(
-            client,
-            region_size=region_size)
-
-    hist_out_dir = "histograms"
-    logger.info("Saving histograms in %s", hist_out_dir)
-    builder.save(histograms, hist_out_dir)
-
-    prebuild_entries = {}
-    if use_dvc:
-        prebuild_entries = collect_dvc_entries(proto, res)
-
-    proto.save_manifest(
-        res,
-        proto.update_manifest(res, prebuild_entries))
+def _store_stats_hash(proto, implementation):
+    res = implementation.resource
+    stats_dir = implementation.STATISTICS_FOLDER
+    with proto.open_raw_file(
+        res, f"{stats_dir}/stats_hash", mode="wt"
+    ) as outfile:
+        stats_hash = implementation.calc_statistics_hash()
+        outfile.write(stats_hash)
+    return True
 
 
-def _run_repo_hist_command(proto, region_size, **kwargs):
+def _collect_resource_stats_tasks(  # pylint: disable=too-many-arguments
+        graph, proto, res, dry_run, force, use_dvc, region_size):
+
+    impl = build_resource_implementation(res)
+
+    impl.add_statistics_build_tasks(graph)
+
+    stats_tasks = copy.copy(graph.tasks)
+
+    graph.create_task(
+        f"{res.resource_id}_store_stats_hash",
+        _store_stats_hash,
+        [proto, impl],
+        stats_tasks
+    )
+
+    graph.create_task(
+        f"{res.resource_id}_manifest_rebuild",
+        _do_resource_manifest_command,
+        [proto, res, dry_run, force, use_dvc],
+        stats_tasks
+    )
+
+
+def _run_repo_stats_command(proto, **kwargs):
+    _run_repo_manifest_command(proto, **kwargs)
     dry_run = kwargs.get("dry_run", False)
     force = kwargs.get("force", False)
     use_dvc = kwargs.get("use_dvc", True)
+    region_size = kwargs.get("region_size", 3_000_000)
+    jobs = kwargs.get("jobs", None)
     if dry_run and force:
         logger.warning("please choose one of 'dry_run' and 'force' options")
         return
 
-    dask_client = DaskClient.from_dict(kwargs)
-    if dask_client is None:
-        sys.exit(1)
+    graph = TaskGraph()
 
-    with dask_client as client:
-        for res in proto.get_all_resources():
-            _do_resource_hist_command(
-                client, proto, res, dry_run, force, use_dvc, region_size)
+    for res in proto.get_all_resources():
+        _collect_resource_stats_tasks(
+            graph, proto, res, dry_run, force, use_dvc, region_size)
+
+    if jobs is not None and jobs > 1:
+        dask_client = DaskClient.from_dict(kwargs)
+        if dask_client is None:
+            sys.exit(1)
+
+        with dask_client as client:
+            executor = DaskExecutor(client)
+            tasks_iter = executor.execute(graph)
+    else:
+        executor = SequentialExecutor()
+        tasks_iter = executor.execute(graph)
+
+    for task, result_or_error in tasks_iter:
+        if isinstance(result_or_error, Exception):
+            raise result_or_error
+
+        if result_or_error is True:
+            logger.info("Task %s successful!", task.task_id)
+        elif result_or_error is False:
+            logger.info("Task %s failed.", task.task_id)
+        else:
+            logger.info("Task %s status unknown.", task.task_id)
     if not dry_run:
         proto.build_content_file()
 
 
-def _run_resource_hist_command(proto, repo_url, region_size, **kwargs):
+def _run_resource_stats_command(proto, repo_url, **kwargs):
+    _run_resource_manifest_command(proto, repo_url, **kwargs)
     dry_run = kwargs.get("dry_run", False)
     force = kwargs.get("force", False)
     use_dvc = kwargs.get("use_dvc", True)
+    region_size = kwargs.get("region_size", 3_000_000)
     if dry_run and force:
         logger.warning("please choose one of 'dry_run' and 'force' options")
         return
@@ -431,74 +461,31 @@ def _run_resource_hist_command(proto, repo_url, region_size, **kwargs):
     if res is None:
         logger.error("unable to find resource...")
         return
-    dask_client = DaskClient.from_dict(kwargs)
-    if dask_client is None:
-        sys.exit(1)
 
-    with dask_client as client:
-        _do_resource_hist_command(
-            client, proto, res, dry_run, force, use_dvc, region_size)
+    graph = TaskGraph()
 
-
-def _run_repo_repair_command(proto, region_size, **kwargs):
-    dry_run = kwargs.get("dry_run", False)
-    force = kwargs.get("force", False)
-    use_dvc = kwargs.get("use_dvc", True)
-
-    if dry_run and force:
-        logger.warning("please choose one of 'dry_run' and 'force' options")
-        return
-
-    dask_client = DaskClient.from_dict(kwargs)
-    if dask_client is None:
-        sys.exit(1)
-    with dask_client as client:
-        for res in proto.get_all_resources():
-            status = _do_resource_manifest_command(
-                proto, res, dry_run, force, use_dvc)
-            if dry_run and status:
-                logger.info(
-                    "manfiest %s needs update; can't check histograms",
-                    res.resource_id)
-            else:
-                _do_resource_hist_command(
-                    client, proto, res, dry_run, force, use_dvc, region_size)
-
-    if not dry_run:
-        proto.build_content_file()
-
-
-def _run_resource_repair_command(proto, repo_url, region_size, **kwargs):
-    dry_run = kwargs.get("dry_run", False)
-    force = kwargs.get("force", False)
-    use_dvc = kwargs.get("use_dvc", True)
-
-    if dry_run and force:
-        logger.warning("please choose one of 'dry_run' and 'force' options")
-        return
-
-    res = _find_resource(proto, repo_url, **kwargs)
-    if res is None:
-        logger.error("unable to find a resource")
-        sys.exit(1)
+    _collect_resource_stats_tasks(
+        graph, proto, res, dry_run, force, use_dvc, region_size)
 
     dask_client = DaskClient.from_dict(kwargs)
     if dask_client is None:
         sys.exit(1)
 
     with dask_client as client:
-        status = _do_resource_manifest_command(
-            proto, res, dry_run, force, use_dvc)
-        if dry_run and status:
-            logger.info(
-                "manfiest %s needs update; can't check histograms",
-                res.resource_id)
-        else:
-            _do_resource_hist_command(
-                client, proto, res, dry_run, force, use_dvc, region_size)
+        executor = DaskExecutor(client)
+        executor.execute(graph)
+
+
+def _run_repo_repair_command(proto, **kwargs):
+    _run_repo_stats_command(proto, **kwargs)
+
+
+def _run_resource_repair_command(proto, repo_url, **kwargs):
+    _run_resource_stats_command(proto, repo_url, **kwargs)
 
 
 def _run_repo_info_command(proto, **kwargs):  # pylint: disable=unused-argument
+    _run_repo_repair_command(proto, **kwargs)
     proto.build_index_info(repository_template)
 
     for res in proto.get_all_resources():
@@ -525,26 +512,20 @@ def _run_repo_info_command(proto, **kwargs):  # pylint: disable=unused-argument
 
 
 def build_resource_implementation(res):
-    factory = get_resource_implementation_factory(res.get_type())
-    return factory(res)
+    builder = get_resource_implementation_builder(res.get_type())
+    return builder(res)
 
 
 def _do_resource_info_command(proto, res):
     implementation = build_resource_implementation(res)
 
-    template = implementation.get_template()
-    template_data = implementation.get_info()
-
     with proto.open_raw_file(res, "index.html", mode="wt") as outfile:
-        content = template.render(
-            resource_id=res.resource_id,
-            data=template_data,
-            base=resource_template
-        )
+        content = implementation.get_info()
         outfile.write(content)
 
 
 def _run_resource_info_command(proto, repo_url, **kwargs):
+    _run_resource_repair_command(proto, repo_url, **kwargs)
     res = _find_resource(proto, repo_url, **kwargs)
     if res is None:
         logger.error("resource not found...")
@@ -573,12 +554,12 @@ def cli_manage(cli_args=None):
     _configure_repo_init_subparser(commands_parser)
     _configure_repo_manifest_subparser(commands_parser)
     _configure_resource_manifest_subparser(commands_parser)
-    _configure_repo_hist_subparser(commands_parser)
-    _configure_resource_hist_subparser(commands_parser)
-    _configure_repo_repair_subparser(commands_parser)
-    _configure_resource_repair_subparser(commands_parser)
+    _configure_repo_stats_subparser(commands_parser)
+    _configure_resource_stats_subparser(commands_parser)
     _configure_repo_info_subparser(commands_parser)
     _configure_resource_info_subparser(commands_parser)
+    _configure_repo_repair_subparser(commands_parser)
+    _configure_resource_repair_subparser(commands_parser)
 
     args = parser.parse_args(cli_args)
     VerbosityConfiguration.set(args)
@@ -621,18 +602,18 @@ def cli_manage(cli_args=None):
         _run_repo_manifest_command(proto, **vars(args))
     elif command == "resource-manifest":
         _run_resource_manifest_command(proto, repo_url, **vars(args))
-    elif command == "repo-histograms":
-        _run_repo_hist_command(proto, **vars(args))
-    elif command == "resource-histograms":
-        _run_resource_hist_command(proto, repo_url, **vars(args))
-    elif command == "repo-repair":
-        _run_repo_repair_command(proto, **vars(args))
-    elif command == "resource-repair":
-        _run_resource_repair_command(proto, repo_url, **vars(args))
+    elif command == "repo-stats":
+        _run_repo_stats_command(proto, **vars(args))
+    elif command == "resource-stats":
+        _run_resource_stats_command(proto, repo_url, **vars(args))
     elif command == "repo-info":
         _run_repo_info_command(proto, **vars(args))
     elif command == "resource-info":
         _run_resource_info_command(proto, repo_url, **vars(args))
+    elif command == "repo-repair":
+        _run_repo_repair_command(proto, **vars(args))
+    elif command == "resource-repair":
+        _run_resource_repair_command(proto, repo_url, **vars(args))
     else:
         logger.error(
             "Unknown command %s. The known commands are index, "
@@ -742,36 +723,5 @@ repository_template = Template("""
         </tbody>
      </table>
  </body>
-</html>
-""")
-
-resource_template = Template("""
-<html>
-<head>
-<style>
-h3,h4 {
-    margin-top:0.5em;
-    margin-bottom:0.5em;
-}
-
-{% block extra_styles %}{% endblock %}
-
-</style>
-</head>
-<body>
-<h1>{{ resource_id }}</h3>
-
-{% block content %}
-N/A
-{% endblock %}
-
-<div>
-<span class="description">
-{{ data["meta"] if data["meta"] else "N/A" }}
-</span>
-</div>
-
-
-</body>
 </html>
 """)

@@ -16,7 +16,8 @@ from cerberus import Validator
 from dae.utils.dae_utils import join_line
 from dae.genomic_resources.aggregators import build_aggregator
 from dae.genomic_resources.resource_implementation import \
-    GenomicResourceImplementation, get_base_resource_schema
+    GenomicResourceImplementation, get_base_resource_schema, \
+    InfoImplementationMixin, ResourceConfigValidationMixin
 
 from dae.genomic_resources import GenomicResource
 from dae.genomic_resources.histogram import Histogram
@@ -203,13 +204,20 @@ class GeneScore:
         return set(genes.values)
 
 
-class GeneScoreCollection(GenomicResourceImplementation):
+class GeneScoreCollection(
+    GenomicResourceImplementation,
+    InfoImplementationMixin,
+    ResourceConfigValidationMixin
+):
     """Class used to represent all gene scores in a resource."""
 
     config_validator = Validator
 
     def __init__(self, resource):
         super().__init__(resource)
+        self.config = self.validate_and_normalize_schema(
+            self.config, resource
+        )
         self.scores = {
             score.score_id: score for score in
             GeneScore.load_gene_scores_from_resource(self.resource)
