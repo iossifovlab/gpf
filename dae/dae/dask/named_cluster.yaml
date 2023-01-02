@@ -1,0 +1,5 @@
+dae_named_cluster:
+  default: default
+  clusters:
+    default: 
+      type: local

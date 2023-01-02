@@ -96,6 +96,7 @@ setuptools.setup(
     stats_liftover=dae.tools.stats_liftover:main
 
     import_tools=dae.import_tools.cli:main
+    task_graph_demo=dae.task_graph.demo_graphs_cli:main
     """,
     classifiers=[
         "Development Status :: 4 - Beta",
