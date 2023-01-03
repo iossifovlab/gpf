@@ -71,12 +71,10 @@ class DaskClient:
                 "dashboard_address":
                 f":{kwargs.get('dashboard_port', 8787)}"
             }
-        if kwargs.get("log_dir"):
-            log_dir = kwargs.get("log_dir")
-        else:
-            # pylint: disable=consider-using-with
-            tmp_dir = tempfile.TemporaryDirectory()
-            log_dir = tmp_dir.name
+
+        # pylint: disable=consider-using-with
+        tmp_dir = tempfile.TemporaryDirectory()
+        log_dir = kwargs.get("log_dir", tmp_dir.name)
 
         if kwargs.get("kubernetes"):
             env = cls._get_env_vars(kwargs.get("envvars"))
