@@ -34,6 +34,7 @@ describe('Variant reports tests', () => {
     page.preserveLogin();
     page.navigateToHome();
     page.navigateToDatasetPage(datasetIds.iossifov2014, toolPageLinks.datasetStatistics);
+    cy.deleteDownloadsFolder();
   });
 
   it('should always display "total number of families" and download all button', () => {
@@ -276,7 +277,7 @@ describe('Variant reports tests', () => {
     {selectedTags: [tags[5], tags[9]], expectedPedigreeCounts: []},
     {selectedTags: [tags[3], tags[7], tags[8], tags[13], tags[14]], expectedPedigreeCounts: []}
   ].forEach(element => {
-    it.only('should select a multiple tags and check if nothing found is shown', () => {
+    it('should select a multiple tags and check if nothing found is shown', () => {
       page.familiesByPedigreeTab.click();
       page.denovoTagSelectorDropdown.click();
       element.selectedTags.forEach(tag => {
@@ -306,7 +307,8 @@ describe('Variant reports tests', () => {
       page.pedigreeModalChart.should('be.visible');
       page.pedigreeModalCount.should('be.visible');
       page.pedigreeModalDownloadBtn.should('be.visible');
-      page.pedigreeModalFamilyIds.should('be.visible');
+      page.pedigreeModalFamilyIds.parent().should('be.visible');
+      page.pedigreeModalFamilyIds.should('not.be.empty');
 
       cy.get('body').click(30, 30);
       page.pedigreeModalChart.should('not.exist');
