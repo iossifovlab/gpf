@@ -129,8 +129,7 @@ describe('Variant reports tests', () => {
     page.denovoTagSelectorDropdown.click();
     page.denovoTagSelectorContent.should('not.be.hidden');
 
-    // page.denovoTagSelectorDropdown.click();
-    page.denovoTagSelectorDropdown.click(30, 30);
+    page.denovoTagSelectorDropdown.click(-30, -30, {force: true});
     page.denovoTagSelectorContent.should('be.hidden');
 
     page.denovoTagSelectorDropdown.click();
@@ -153,15 +152,15 @@ describe('Variant reports tests', () => {
       page.denovoTagSelectorSelectedOptions.contains(tag);
 
       // closing the content without unchecking
-      page.denovoTagSelectorDropdown.click(30, 30);
+      page.denovoTagSelectorDropdown.click(-30, -30, {force: true});
       page.denovoTagSelectorContent.should('be.hidden');
       page.denovoTagSelectorSelectedOptions.contains(tag);
 
-      //open the content, check an item, delete the item
+      //open the content, check an item, remove the item
       page.denovoTagSelectorDropdown.click();
       page.denovoTagSelectorOptionsInput(tag).check({force: true});
       page.denovoTagSelectorOptions.find('input[aria-label="'+tag+'"]').should('be.checked');
-      page.denovoTagSelectorSelectedOptionBtn.click();
+      page.denovoTagSelectorSelectedOptionRemoveBtn.click();
       page.denovoTagSelectorSelectedOptions.should('not.contain', tag);
       page.denovoTagSelectorOptions.find('input[aria-label="'+tag+'"]').should('not.be.checked');
       page.denovoTagSelectorContent.should('be.hidden');
@@ -175,9 +174,6 @@ describe('Variant reports tests', () => {
       page.denovoTagSelectorOptionsInput(tag).uncheck({force: true});
       page.denovoTagSelectorOptions.find('input[aria-label="'+tag+'"]').should('not.be.checked');
       page.denovoTagSelectorSelectedOptions.should('not.contain', tag);
-
-      //close
-      page.denovoTagSelectorDropdown.click();
     });
   });
 
@@ -214,38 +210,40 @@ describe('Variant reports tests', () => {
     {tag: tags[1], expectedPedigreeCounts: ['877', '789', '128', '107']},
     {tag: tags[2], expectedPedigreeCounts: ['500', '106', '6', '3']},
     {tag: tags[3], expectedPedigreeCounts: ['877', '789', '500', '128', '107', '106']},
-    {tag: tags[4], expectedPedigreeCounts: []},
     {tag: tags[5], expectedPedigreeCounts: ['6', '3']},
-    {tag: tags[6], expectedPedigreeCounts: []},
-    {tag: tags[7], expectedPedigreeCounts: []},
     {tag: tags[8], expectedPedigreeCounts: ['877', '789', '500', '128', '107', '106']},
-    {tag: tags[9], expectedPedigreeCounts: []},
     {tag: tags[10], expectedPedigreeCounts: ['877', '789', '500', '128', '107', '106', '6', '3']},
     {tag: tags[11], expectedPedigreeCounts: ['877', '789', '500', '128', '107', '106', '6', '3']},
-    {tag: tags[12], expectedPedigreeCounts: []},
     {tag: tags[13], expectedPedigreeCounts: ['877', '789', '128', '107', '6', '3']},
     {tag: tags[14], expectedPedigreeCounts: ['877', '789', '500']},
-    {tag: tags[15], expectedPedigreeCounts: ['128', '107', '106']},
-    {tag: tags[16], expectedPedigreeCounts: []},
-    {tag: tags[17], expectedPedigreeCounts: []}
-  ].forEach(element => {
+    {tag: tags[15], expectedPedigreeCounts: ['128', '107', '106']}
+  ].forEach(data => {
     it('should select a single tag and check pedigree charts', () => {
       page.familiesByPedigreeTab.click();
       page.denovoTagSelectorDropdown.click();
-      page.denovoTagSelectorOptionsInput(element.tag).check({force: true});
+      page.denovoTagSelectorOptionsInput(data.tag).check({force: true});
 
-      if (element.expectedPedigreeCounts.length === 0) {
-        page.pedigreesNothingFound.should('exist');
-      } else {
-        page.pedigreeCells.should('have.length', element.expectedPedigreeCounts.length);
-        page.pedigreeCells.each((cell, i = 0) => {
-          if (i < element.expectedPedigreeCounts.length) {
-            expect(cell).to.have.text(element.expectedPedigreeCounts[i]);
-            i++;
-          }
-        });
-      }
-      page.denovoTagSelectorSelectedOptionBtn.click();
+      page.pedigreeCells.should('have.length', data.expectedPedigreeCounts.length);
+      page.pedigreeCells.each((cell, i) => {
+        expect(cell).to.have.text(data.expectedPedigreeCounts[i]);
+      });
+    });
+  });
+
+  [
+    {tag: tags[4], expectedPedigreeCounts: []},
+    {tag: tags[6], expectedPedigreeCounts: []},
+    {tag: tags[7], expectedPedigreeCounts: []},
+    {tag: tags[9], expectedPedigreeCounts: []},
+    {tag: tags[12], expectedPedigreeCounts: []},
+    {tag: tags[16], expectedPedigreeCounts: []},
+    {tag: tags[17], expectedPedigreeCounts: []}
+  ].forEach(data => {
+    it('should select a single tag and check if nothing found is displayed', () => {
+      page.familiesByPedigreeTab.click();
+      page.denovoTagSelectorDropdown.click();
+      page.denovoTagSelectorOptionsInput(data.tag).check({force: true});
+      page.pedigreesNothingFound.should('exist');
     });
   });
 
@@ -262,14 +260,11 @@ describe('Variant reports tests', () => {
       });
 
       page.pedigreeCells.should('have.length', element.expectedPedigreeCounts.length);
-      page.pedigreeCells.each((cell, i = 0) => {
-        if (i < element.expectedPedigreeCounts.length) {
-          expect(cell).to.have.text(element.expectedPedigreeCounts[i]);
-          i++;
-        }
+      page.pedigreeCells.each((cell, i) => {
+        expect(cell).to.have.text(element.expectedPedigreeCounts[i]);
       });
 
-      page.denovoTagSelectorSelectedOptionBtn.click({multiple: true});
+      page.denovoTagSelectorSelectedOptionRemoveBtn.click({multiple: true});
     });
   });
 
@@ -286,17 +281,7 @@ describe('Variant reports tests', () => {
 
       page.pedigreesNothingFound.should('exist');
 
-      page.denovoTagSelectorSelectedOptionBtn.click({multiple: true});
-    });
-  });
-
-  it('should display pedigree chart modal', () => {
-    page.familiesByPedigreeTab.click();
-    page.pedigreeCells.each((cell) => {
-      cy.wrap(cell).click();
-      page.pedigreeModalContent.should('be.visible');
-      cy.get('body').click(30, 30);
-      page.pedigreeModalContent.should('not.exist');
+      page.denovoTagSelectorSelectedOptionRemoveBtn.click({multiple: true});
     });
   });
 
@@ -304,10 +289,10 @@ describe('Variant reports tests', () => {
     page.familiesByPedigreeTab.click();
     page.pedigreeCells.each((cell) => {
       cy.wrap(cell).click();
+      page.pedigreeModalContent.should('be.visible');
       page.pedigreeModalChart.should('be.visible');
       page.pedigreeModalCount.should('be.visible');
       page.pedigreeModalDownloadBtn.should('be.visible');
-      page.pedigreeModalFamilyIds.parent().should('be.visible');
       page.pedigreeModalFamilyIds.should('not.be.empty');
 
       cy.get('body').click(30, 30);
@@ -315,6 +300,7 @@ describe('Variant reports tests', () => {
       page.pedigreeModalCount.should('not.exist');
       page.pedigreeModalDownloadBtn.should('not.exist');
       page.pedigreeModalFamilyIds.should('not.exist');
+      page.pedigreeModalContent.should('not.exist');
     });
   });
 
@@ -327,7 +313,7 @@ describe('Variant reports tests', () => {
         ids = text.split(',');
         page.pedigreeModalCount.invoke('text').then(parseInt).should('eq', ids.length);
       });
-      cy.get('body').click(30, 30);
+      cy.get('body').click(-30, -30, {force: true});
     });
   });
 
@@ -352,8 +338,6 @@ describe('Variant reports tests', () => {
           expect(downloadedFileLines).to.deep.eq(expectedFileLines);
         });
       });
-
-      cy.get('body').click(30, 30);
     });
   });
 });

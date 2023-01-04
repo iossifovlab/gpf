@@ -113,7 +113,7 @@ export class VariantReportsPage extends BasePage {
     return cy.get('span.dropdown-btn');
   }
 
-  public get denovoTagSelectorSelectedOptionBtn(): element {
+  public get denovoTagSelectorSelectedOptionRemoveBtn(): element {
     return cy.get('.selected-item a');
   }
 
