@@ -22,3 +22,7 @@ The description is a good place to include questions that came up during develop
 **Is this name the best one?**, *Could approach B be more applicable in this case?*, etc.
 
 This is also a good place to talk about performance and security considerations if any.
+
+## Related issues
+
+Link issues which concern/are resolved by this PR.
