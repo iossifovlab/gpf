@@ -66,13 +66,13 @@ describe('Variant reports tests', () => {
     page.familiesByPedigreeSelect.should('be.visible');
     page.denovoTagSelector.should('be.visible');
     page.familiesByPedigreeDownloadButton.should('be.visible');
-    page.familiesByPedigree.should('be.visible')
+    page.familiesByPedigreeTable.should('be.visible');
 
     page.deNovoVariantsTab.click();
     page.familiesByPedigreeSelect.should('not.be.visible');
     page.denovoTagSelector.should('not.be.visible');
     page.familiesByPedigreeDownloadButton.should('not.be.visible');
-    page.familiesByPedigree.should('not.be.visible');
+    page.familiesByPedigreeTable.should('not.be.visible');
   });
 
   it('should display the correct elements in the de novo variants tab', () => {
@@ -340,6 +340,19 @@ describe('Variant reports tests', () => {
       });
     });
   });
+
+  [
+    {option: 'Affected Status', screenshotName: 'families-by-pedigree-affected-status'},
+    {option: 'Role', screenshotName: 'families-by-pedigree-role'},
+    {option: 'Phenotype', screenshotName: 'families-by-pedigree-phenotype'}
+  ].forEach(data => {
+    it.skip(`should compare pedigree charts for ${data.option}`, () => {
+      page.familiesByPedigreeTab.click();
+      page.familiesByPedigreeSelect.select(data.option);
+      cy.wait(1000);
+      page.familiesByPedigreeTable.matchImageSnapshot(data.screenshotName);
+    });
+  });
 });
 
 describe('Variant reports Iossifov count tests', () => {
@@ -370,7 +383,7 @@ describe('Variant reports Iossifov count tests', () => {
 
       page.allFamiliesByNumberDataCells.as('tds');
       for (let i = 0; i < data.expectedCounts.length; i++) {
-        cy.get('@tds').eq((data.rowIndex * 3) + i).should('have.text', data.expectedCounts[i])
+        cy.get('@tds').eq((data.rowIndex * 3) + i).should('have.text', data.expectedCounts[i]);
       }
     });
   });

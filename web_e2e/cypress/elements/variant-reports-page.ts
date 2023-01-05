@@ -49,7 +49,7 @@ export class VariantReportsPage extends BasePage {
     return cy.get('div#families-by-number-div td');
   }
 
-  public get familiesByPedigree(): element {
+  public get familiesByPedigreeTable(): element {
     return cy.get('#families-by-pedigree-div');
   }
 
