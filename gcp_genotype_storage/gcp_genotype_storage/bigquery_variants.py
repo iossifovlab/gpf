@@ -2,9 +2,12 @@ import time
 import json
 import logging
 from contextlib import closing
+from typing import Optional
+
 import configparser
 import numpy as np
 from google.cloud import bigquery
+
 from dae.pedigrees.family import FamiliesData
 from dae.variants.attributes import Role, Status, Sex
 from dae.query_variants.sql.schema2.base_query_builder import Dialect
@@ -19,7 +22,7 @@ logger = logging.getLogger(__name__)
 class BigQueryDialect(Dialect):
     """Abstracts away details related to bigquery."""
 
-    def __init__(self, ns: str = None):
+    def __init__(self, ns: Optional[str] = None):
         super().__init__(namespace=ns)
 
     @staticmethod

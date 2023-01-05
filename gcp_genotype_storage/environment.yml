@@ -1,0 +1,16 @@
+# This file may be used to create an environment using:
+# $ conda env create --name <env> --file <this file>
+# platform: linux-64
+# conda create -c conda-forge -c bioconda -n <env name> --file <this file>
+# - conda-forge 
+
+name: gpf
+channels:
+  - bioconda
+  - conda-forge
+  - defaults
+  - iossifovlab
+dependencies:
+  - google-cloud-sdk=412.0.0
+  - google-cloud-bigquery=3.4.1
+  - gcsfs=2022.11.0
