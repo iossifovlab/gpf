@@ -12,11 +12,14 @@ from dae.dask.named_cluster import setup_client
 
 def add_arguments(parser: argparse.ArgumentParser):
     executor_group = parser.add_argument_group(title="Task Graph Executor")
+    # cluster_name
+    # cluster_config_file
     executor_group.add_argument(
             "-j", "--jobs", type=int, default=None,
             help="Number of jobs to run in parallel. Defaults to the number "
             "of processors on the machine")
     
+    # task_cache
     execution_mode_group = parser.add_argument_group(title="Execution Mode")
     execution_mode_group.add_argument("command",
                         choices=["run", "list", "status"],
@@ -49,7 +52,8 @@ def process_graph(args: argparse.Namespace, task_graph: TaskGraph) -> bool:
         if args.jobs == 1:
             executor = SequentialExecutor(task_cache=task_cache)
         else:
-            client, _, _ = setup_client(number_of_threads=args.jobs)
+            client, _  = setup_client(number_of_threads=args.jobs)
+            print("Working with client:", client)
             executor = DaskExecutor(client, task_cache=task_cache)
 
         no_errors = True
