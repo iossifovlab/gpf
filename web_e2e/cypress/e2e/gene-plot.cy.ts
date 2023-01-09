@@ -92,7 +92,7 @@ describe('Gene plot summary alleles count tests', () => {
       geneBrowserPage.getEffectTypesCheckbox(data.checkbox).click();
       page.summaryAllelesCount.should('have.text', data.expectedSummaryAllelesCount);
 
-      geneBrowserPage.getEffectTypesCheckbox(data.checkbox).click()
+      geneBrowserPage.getEffectTypesCheckbox(data.checkbox).click();
     });
   });
 

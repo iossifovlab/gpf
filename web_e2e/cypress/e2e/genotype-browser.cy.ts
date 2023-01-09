@@ -273,7 +273,7 @@ describe('Genotype browser table preview result tests', () => {
     {effectType: 'Coding', expectedOverviewParagraph: '30 variants selected'},
     {effectType: 'UTRs', expectedOverviewParagraph: '0 variants selected'}
   ].forEach(data => {
-    it('should display the correct data in overview paragraph whene effect types are ' + data.effectType, () => {
+    it('should display the correct data in overview paragraph where effect types are ' + data.effectType, () => {
       genotypeBrowserController.setStudy(datasetIds.compVcf);
       genotypeBrowserController.setEffectTypesGroup(data.effectType);
       genotypeBrowserController.pressTablePreviewButton();

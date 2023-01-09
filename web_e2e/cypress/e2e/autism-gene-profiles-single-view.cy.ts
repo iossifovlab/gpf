@@ -89,23 +89,23 @@ describe('Autism gene profiles single view links tests', () => {
       const baseUrl = Cypress.config().baseUrl;
       const headerName = headerText;
       const geneBrowserUrl = `${baseUrl}datasets/ALL_genotypes/gene-browser/${headerName}`;
-      page.geneBrowserLink.should('have.prop', 'href').and('equal', geneBrowserUrl)
+      page.geneBrowserLink.should('have.prop', 'href').and('equal', geneBrowserUrl);
     });
   });
 
   it('should have the correct href for the UCSC link', () => {
     const UCSCLink = 'https://genome.ucsc.edu/cgi-bin/hgTracks?db=hg19&position=chr14%3A21853353-21905457';
-    page.UCSCLink.should('have.prop', 'href').and('equal', UCSCLink)
+    page.UCSCLink.should('have.prop', 'href').and('equal', UCSCLink);
   });
 
   it('should have the correct href for the GeneCards link', () => {
     const geneCardsLink = 'https://www.genecards.org/cgi-bin/carddisp.pl?gene=CHD8';
-    page.geneCardsLink.should('have.prop', 'href').and('equal', geneCardsLink)
+    page.geneCardsLink.should('have.prop', 'href').and('equal', geneCardsLink);
   });
 
   it('should have the correct href for the Pubmed link', () => {
     const pubmedLink = 'https://pubmed.ncbi.nlm.nih.gov/?term=CHD8%20AND%20(autism%20OR%20asd)';
-    page.pubmedLink.should('have.prop', 'href').and('equal', pubmedLink)
+    page.pubmedLink.should('have.prop', 'href').and('equal', pubmedLink);
   });
 });
 
@@ -327,7 +327,7 @@ export const geneData = [
       }
     ]
   }
-]
+];
 
 describe.skip('Autism gene profiles single view dynamic data tests', () => {
   const page = new AutismGeneProfilesSingleViewPage();

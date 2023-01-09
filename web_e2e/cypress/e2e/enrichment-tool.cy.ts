@@ -149,7 +149,7 @@ if (Cypress.env().yamlPath !== undefined) {
           });
         });
       });
-    })
+    });
   });
 }
 
