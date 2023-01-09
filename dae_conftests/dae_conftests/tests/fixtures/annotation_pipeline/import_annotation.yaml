@@ -5,7 +5,7 @@
     attributes:
     - source: allele_effects
       destination: allele_effects
-      internal: true
+      internal: false
 
 
 - position_score: hg19/internal/scores1

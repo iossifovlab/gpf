@@ -339,6 +339,13 @@ def annotation_pipeline_config():
 
 
 @pytest.fixture(scope="session")
+def annotation_pipeline_no_effects_config():
+    filename = relative_to_this_test_folder(
+        "fixtures/annotation_pipeline/import_annotation_no_effects.yaml")
+    return filename
+
+
+@pytest.fixture(scope="session")
 def annotation_pipeline_default_config(default_dae_config):
     return default_dae_config.annotation.conf_file
 
