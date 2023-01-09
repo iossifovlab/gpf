@@ -83,7 +83,7 @@ describe('Datasets tests', () => {
       {id: datasetIds.compAll, url: 'comp_all'},
       {id: datasetIds.iossifov2014, url: 'iossifov_2014'},
       {id: datasetIds.multi, url: 'multi'}
-    ]
+    ];
 
     page.loginAdmin();
 

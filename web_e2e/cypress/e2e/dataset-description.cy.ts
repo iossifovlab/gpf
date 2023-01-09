@@ -30,7 +30,7 @@ describe('Dataset description tests', () => {
   });
 
   it('should display edit icon', () => {
-    page.editIcon.should('be.visible')
+    page.editIcon.should('be.visible');
   });
 
   it('should display angular markdown editor after clicking the edit button', () => {

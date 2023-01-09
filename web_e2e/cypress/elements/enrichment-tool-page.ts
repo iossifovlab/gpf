@@ -32,7 +32,7 @@ export class EnrichmentToolPage extends BasePage {
         .then(() => {
           result.shift();
           return resolve(result);
-        })
+        });
     });
   }
 
