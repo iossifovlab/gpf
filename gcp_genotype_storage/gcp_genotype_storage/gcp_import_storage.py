@@ -1,5 +1,5 @@
 import logging
-from typing import cast, Dict, Any
+from typing import cast
 
 from dae.utils import fs_utils
 from dae.configuration.study_config_builder import StudyConfigBuilder
@@ -89,7 +89,6 @@ class GcpImportStorage(ImportStorage):
         assert isinstance(genotype_storage, GcpGenotypeStorage)
         genotype_storage.gcp_import_dataset(
             project.study_id, parquet_data_layout)
-        
 
     @classmethod
     def _do_study_config(cls, project):
@@ -130,23 +129,27 @@ class GcpImportStorage(ImportStorage):
 
     def generate_import_task_graph(self, project) -> TaskGraph:
         graph = TaskGraph()
-        _pedigree_task = graph.create_task(
+        pedigree_task = graph.create_task(
             "Generating Pedigree", self._do_write_pedigree, [project], [],
             input_files=[project.get_pedigree_filename()]
         )
 
-        _bucket_tasks = []
+        bucket_tasks = []
         for bucket in project.get_import_variants_buckets():
             task = graph.create_task(
                 f"Converting Variants {bucket}", self._do_write_variant,
                 [project, bucket], [],
                 input_files=project.get_input_filenames(bucket)
             )
-            _bucket_tasks.append(task)
+            bucket_tasks.append(task)
+
+        import_task = graph.create_task(
+            "Import Dataset into GCP genotype storage",
+            self._do_import_dataset,
+            [project], [pedigree_task, *bucket_tasks])
 
         graph.create_task(
-            "Import Dataset inot GCP genotype storage",
-            self._do_import_dataset,
-            [project], [_pedigree_task, *_bucket_tasks])
-
+            "Create study config",
+            self._do_study_config,
+            [project], [import_task])
         return graph

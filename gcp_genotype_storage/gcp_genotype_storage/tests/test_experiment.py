@@ -1,6 +1,8 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pytest
 
+from google.cloud import bigquery
+
 from dae.testing import setup_pedigree, setup_vcf, vcf_study
 from dae.testing.alla_import import alla_gpf
 
@@ -13,13 +15,13 @@ from gcp_genotype_storage.gcp_import_storage import GcpImportStorage
 
 
 @pytest.fixture(scope="session")
-def gcp_storage_config():
+def gcp_storage_config(tmp_path_factory):
     return {
         "id": "dev_gcp_genotype_storage",
         "storage_type": "gcp",
         "project_id": "gcp-genotype-storage",
         "import_bucket": "gs://gcp-genotype-storage-input",
-        "big_query": {
+        "bigquery": {
             "db": "gpf_genotype_storage_dev_lubo",
         }
     }
@@ -93,3 +95,73 @@ def imported_study(tmp_path_factory, gcp_storage_fixture):
 
 def test_imported_study(imported_study):
     assert imported_study is not None
+
+
+def test_big_query_simple():
+
+    client = bigquery.Client()
+
+    query = """
+        SELECT corpus AS title, COUNT(word) AS unique_words
+        FROM `bigquery-public-data.samples.shakespeare`
+        GROUP BY title
+        ORDER BY unique_words
+        DESC LIMIT 10
+    """
+    results = client.query(query)
+
+    for row in results:
+        title = row["title"]
+        unique_words = row["unique_words"]
+        print(f"{title:<20} | {unique_words}")
+
+
+def test_big_query_simple_github():
+    client = bigquery.Client()
+
+    # GitHub public dataset
+    print("")
+    print(50 * "=")
+    print("GitHub public dataset")
+    print(50 * "=")
+    query = """
+        SELECT subject AS subject, COUNT(*) AS num_duplicates
+        FROM bigquery-public-data.github_repos.commits
+        GROUP BY subject
+        ORDER BY num_duplicates
+        DESC LIMIT 10
+    """
+    job_config = bigquery.job.QueryJobConfig(use_query_cache=False)
+    results = client.query(query, job_config=job_config)
+
+    for row in results:
+        subject = row["subject"]
+        num_duplicates = row["num_duplicates"]
+        print(f"{subject:<20} | {num_duplicates:>9,}")
+
+    print("-" * 60)
+    print(f"Created: {results.created}")
+    print(f"Ended:   {results.ended}")
+    print(f"Bytes:   {results.total_bytes_processed:,}")
+
+
+def test_big_query_simple_load_json():
+    client = bigquery.Client()
+
+    gcs_uri = "gs://cloud-samples-data/bigquery/us-states/us-states.json"
+
+    dataset = client.create_dataset("us_states_dataset", exists_ok=True)
+    table = dataset.table("us_states_table")
+
+    job_config = bigquery.job.LoadJobConfig()
+    job_config.schema = [
+        bigquery.SchemaField("name", "STRING"),
+        bigquery.SchemaField("post_abbr", "STRING"),
+    ]
+    job_config.source_format = bigquery.SourceFormat.NEWLINE_DELIMITED_JSON
+
+    load_job = client.load_table_from_uri(
+        gcs_uri, table, job_config=job_config)
+    assert load_job.result().done()
+
+    print("JSON file loaded to BigQuery")

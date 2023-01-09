@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from cerberus import Validator
 
 import gcsfs
+from google.cloud import bigquery
 
 from dae.utils import fs_utils
 from dae.genotype_storage.genotype_storage import GenotypeStorage
@@ -35,7 +36,7 @@ class GcpGenotypeStorage(GenotypeStorage):
         "import_bucket": {
             "type": "string", "required": True
         },
-        "big_query": {
+        "bigquery": {
             "type": "dict",
             "schema": {
                 "db": {
@@ -79,12 +80,12 @@ class GcpGenotypeStorage(GenotypeStorage):
         self.fs = None
 
     def get_db(self):
-        return self.storage_config["big_query"]["db"]
+        return self.storage_config["bigquery"]["db"]
 
     @staticmethod
     def _study_tables(study_config) -> GcpStudyLayout:
-        study_id = study_config.id
-        storage_config = study_config.genotype_storage
+        study_id = study_config["id"]
+        storage_config = study_config.get("genotype_storage")
         has_tables = storage_config and storage_config.get("tables")
         tables = storage_config["tables"] if has_tables else None
 
@@ -105,7 +106,7 @@ class GcpGenotypeStorage(GenotypeStorage):
             meta_table = tables["meta"]
 
         return GcpStudyLayout(
-            family_table, summary_table, pedigree_table, meta_table)
+            pedigree_table, summary_table, family_table, meta_table)
 
     def build_backend(self, study_config, genome, gene_models):
         assert study_config is not None
@@ -119,17 +120,17 @@ class GcpGenotypeStorage(GenotypeStorage):
         upload_path = fs_utils.join(
             self.storage_config["import_bucket"],
             self.storage_config["id"],
-            self.storage_config["big_query"]["db"],
+            self.storage_config["bigquery"]["db"],
             study_id)
 
         bucket_layout = GcpStudyLayout(
             fs_utils.join(upload_path, "pedigree.parquet"),
-            fs_utils.join(upload_path, "meta.parquet"),
             fs_utils.join(upload_path, "summary_variants"),
-            fs_utils.join(upload_path, "family_variants"))
+            fs_utils.join(upload_path, "family_variants"),
+            fs_utils.join(upload_path, "meta.parquet"))
 
         if self.fs.exists(upload_path):
-            self.fs.rmdir(upload_path)
+            self.fs.rm(upload_path, recursive=True)
         self.fs.mkdir(upload_path, create_parents=True)
         self.fs.put(
             study_dataset.pedigree,
@@ -147,9 +148,79 @@ class GcpGenotypeStorage(GenotypeStorage):
             recursive=True)
         return bucket_layout
 
+    def _load_dataset_into_bigquery(
+            self, study_id: str,
+            bucket_layout: GcpStudyLayout) -> GcpStudyLayout:
+        client = bigquery.Client()
+        dbname = self.storage_config["bigquery"]["db"]
+        dataset = client.create_dataset(dbname, exists_ok=True)
+        tables_layout = self._study_tables({"id": study_id})
+
+        pedigree_table = dataset.table(tables_layout.pedigree)
+        job_config = bigquery.LoadJobConfig()
+        job_config.source_format = bigquery.SourceFormat.PARQUET
+        job_config.autodetect = True
+        pedigree_job = client.load_table_from_uri(
+            bucket_layout.pedigree, pedigree_table, job_config=job_config)
+        if not pedigree_job.result().done():
+            logger.error("pedigree not loaded into BigQuery")
+            raise ValueError("pedigree not loaded into BigQuery")
+
+        meta_table = dataset.table(tables_layout.meta)
+        job_config = bigquery.LoadJobConfig()
+        job_config.source_format = bigquery.SourceFormat.PARQUET
+        job_config.autodetect = True
+        meta_job = client.load_table_from_uri(
+            bucket_layout.meta, meta_table, job_config=job_config)
+        if not meta_job.result().done():
+            logger.error("metadata not loaded into BigQuery")
+            raise ValueError("metadata not loaded into BigQuery")
+
+        if tables_layout.summary_variants is None:
+            assert tables_layout.family_variants is None
+            return tables_layout
+
+        assert tables_layout.summary_variants is not None
+        assert tables_layout.family_variants is not None
+
+        summary_table = dataset.table(tables_layout.summary_variants)
+        job_config = bigquery.LoadJobConfig()
+        job_config.source_format = bigquery.SourceFormat.PARQUET
+        job_config.autodetect = True
+        job_config.parquet_options = \
+            bigquery.format_options.ParquetOptions()
+        job_config.parquet_options.enable_list_inference = True
+        job_config.hive_partitioning = \
+            bigquery.external_config.HivePartitioningOptions()
+        summary_job = client.load_table_from_uri(
+            f"{bucket_layout.summary_variants}/*.parquet", summary_table,
+            job_config=job_config)
+        if not summary_job.result().done():
+            logger.error("summary variants not loaded into BigQuery")
+            raise ValueError("summary variants not loaded into BigQuery")
+
+        family_table = dataset.table(tables_layout.family_variants)
+        job_config = bigquery.LoadJobConfig()
+        job_config.source_format = bigquery.SourceFormat.PARQUET
+        job_config.autodetect = True
+        job_config.parquet_options = \
+            bigquery.format_options.ParquetOptions()
+        job_config.parquet_options.enable_list_inference = True
+        job_config.hive_partitioning = \
+            bigquery.external_config.HivePartitioningOptions()
+        family_job = client.load_table_from_uri(
+            f"{bucket_layout.family_variants}/*.parquet", family_table,
+            job_config=job_config)
+        if not family_job.result().done():
+            logger.error("family variants not loaded into BigQuery")
+            raise ValueError("family variants not loaded into BigQuery")
+
+        return tables_layout
+
     def gcp_import_dataset(
             self, study_id: str,
             study_dataset: GcpStudyLayout):
         """Create pedigree and variant tables for a study."""
         bucket_layout = self._upload_dataset_into_import_bucket(
             study_id, study_dataset)
+        return self._load_dataset_into_bigquery(study_id, bucket_layout)
