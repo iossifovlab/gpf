@@ -115,7 +115,7 @@ class GcpImportStorage(ImportStorage):
             assert study_tables.family_variants is not None
             storage_config = study_config["genotype_storage"]
             storage_config["tables"]["summary"] = study_tables.summary_variants
-            storage_config["tables"]["family"] = study_tables.summary_variants
+            storage_config["tables"]["family"] = study_tables.family_variants
             storage_config["tables"]["meta"] = study_tables.meta
             study_config["genotype_browser"]["enabled"] = True
 

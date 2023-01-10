@@ -10,6 +10,8 @@ from google.cloud import bigquery
 from dae.utils import fs_utils
 from dae.genotype_storage.genotype_storage import GenotypeStorage
 
+from gcp_genotype_storage.bigquery_variants import BigQueryVariants
+
 
 logger = logging.getLogger(__name__)
 
@@ -110,7 +112,17 @@ class GcpGenotypeStorage(GenotypeStorage):
 
     def build_backend(self, study_config, genome, gene_models):
         assert study_config is not None
-        raise NotImplementedError("not implemented yet")
+        tables_layout = self._study_tables(study_config)
+        project_id = self.storage_config["project_id"]
+        db = self.storage_config["bigquery"]["db"]
+        backend = BigQueryVariants(
+            project_id, db,
+            tables_layout.summary_variants,
+            tables_layout.family_variants,
+            tables_layout.pedigree,
+            tables_layout.meta,
+            gene_models=gene_models)
+        return backend
 
     def _upload_dataset_into_import_bucket(
             self, study_id: str,
@@ -155,6 +167,12 @@ class GcpGenotypeStorage(GenotypeStorage):
         dbname = self.storage_config["bigquery"]["db"]
         dataset = client.create_dataset(dbname, exists_ok=True)
         tables_layout = self._study_tables({"id": study_id})
+        for table_name in [
+                tables_layout.pedigree, tables_layout.meta,
+                tables_layout.summary_variants,
+                tables_layout.family_variants]:
+            sql = f"DROP TABLE IF EXISTS {dbname}.{table_name}"
+            client.query(sql).result()
 
         pedigree_table = dataset.table(tables_layout.pedigree)
         job_config = bigquery.LoadJobConfig()

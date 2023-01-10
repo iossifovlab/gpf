@@ -93,30 +93,37 @@ class BigQueryVariants:
         self.gene_models = gene_models
         assert gene_models is not None
 
-        # self._fetch_tblproperties()
-        # hardcoding relevant for specific dataset
-        # pass in table_properties OR table in datastore
-        _tbl_props = self._fetch_tblproperties(self.meta_table)
-
-        self.table_properties = {
-            "region_length": int(_tbl_props["region_bin"]["region_length"]),
-            "chromosomes": list(
-                map(
-                    lambda c: c.strip(),
-                    _tbl_props["region_bin"]["chromosomes"].split(","),
-                )
-            ),
-            "family_bin_size": int(
-                _tbl_props["family_bin"]["family_bin_size"]
-            ),
-            "rare_boundary": int(_tbl_props["frequency_bin"]["rare_boundary"]),
-            "coding_effect_types": {
-                s.strip()
-                for s in _tbl_props["coding_bin"][
-                    "coding_effect_types"
-                ].split(",")
-            },
-        }
+        # # self._fetch_tblproperties()
+        # # hardcoding relevant for specific dataset
+        # # pass in table_properties OR table in datastore
+        # _tbl_props = self._fetch_tblproperties(self.meta_table)
+        self.table_properties = dict({
+            "region_length": 0,
+            "chromosomes": [],
+            "family_bin_size": 0,
+            "coding_effect_types": [],
+            "rare_boundary": 0
+        })
+        # self.table_properties = {
+        #     "region_length": int(_tbl_props["region_bin"]["region_length"]),
+        #     "chromosomes": list(
+        #         map(
+        #             lambda c: c.strip(),
+        #             _tbl_props["region_bin"]["chromosomes"].split(","),
+        #         )
+        #     ),
+        #     "family_bin_size": int(
+        #         _tbl_props["family_bin"]["family_bin_size"]
+        #     ),
+        #     "rare_boundary": int(
+        #           _tbl_props["frequency_bin"]["rare_boundary"]),
+        #     "coding_effect_types": {
+        #         s.strip()
+        #         for s in _tbl_props["coding_bin"][
+        #             "coding_effect_types"
+        #         ].split(",")
+        #     },
+        # }
 
     def _fetch_tblproperties(self, meta_table):
         query = f"""SELECT value FROM {self.db}.{meta_table}
