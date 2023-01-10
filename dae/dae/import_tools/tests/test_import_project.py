@@ -17,6 +17,15 @@ def test_import_project_is_cpickle_serializable(fixture_dirname):
     _ = cloudpickle.dumps(project)
 
 
+def test_project_is_serializable_after_loader_reference_genome(resources_dir):
+    config_fn = str(resources_dir / "vcf_import" / "import_config.yaml")
+    project = ImportProject.build_from_file(config_fn)
+    assert project.get_gpf_instance().reference_genome is not None
+    pickled = cloudpickle.dumps(project)
+    unpickled_project = cloudpickle.loads(pickled)
+    assert unpickled_project.get_gpf_instance().reference_genome is not None
+
+
 def test_config_filenames_just_one_config(resources_dir):
     config_fn = str(resources_dir / "vcf_import" / "import_config.yaml")
     project = ImportProject.build_from_file(config_fn)

@@ -35,3 +35,5 @@ def test_list(simple_study_dir):
     cli.main([str(simple_study_dir / "import_config.yaml"), "list"])
     cli.main([str(simple_study_dir / "import_config.yaml"), "-j", "1"])
     cli.main([str(simple_study_dir / "import_config.yaml"), "list"])
+    cli.main([str(simple_study_dir / "import_config.yaml"), "list",
+              "--verbose"])

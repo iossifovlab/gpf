@@ -84,22 +84,38 @@ def _cmd_list(args, project, task_cache):
     task_cache.set_task_graph(task_graph)
     id_col_len = max(len(t.task_id) for t in task_graph.tasks)
     id_col_len = min(120, max(50, id_col_len))
-    columns = ["TaskID", "Status"]
-    print(f"{columns[0]:{id_col_len}s} {columns[1]}")
+    if not args.verbose:
+        columns = ["TaskID", "Status"]
+        print(f"{columns[0]:{id_col_len}s} {columns[1]}")
     for task in task_graph.tasks:
         record = task_cache.get_record(task)
         status = record.type.name
-        msg = f"{task.task_id:{id_col_len}s} {status}"
         is_error = record.type == CacheRecordType.ERROR
-        if is_error and not args.verbose:
-            msg += " (-v to see exception)"
-        print(msg)
+
+        if args.verbose:
+            print(f"Task-Id={task.task_id}")
+            print(f"Status={status}")
+        else:
+            id_and_status = f"{task.task_id:{id_col_len}s} {status}"
+            if is_error:
+                id_and_status += " (-v to see exception)"
+            print(id_and_status)
+
+        if args.verbose:
+            task_dep_ids_str = ",".join(dep.task_id for dep in task.deps)
+            print(f"Deps=[{task_dep_ids_str}]")
+            inputs = task.input_files if task.deps else task_graph.input_files
+            inputs_str = ",".join(inputs)
+            print(f"Input-files=[{inputs_str}]")
         if is_error and args.verbose:
+            print("Error=", end="")
             traceback.print_exception(
                 etype=None, value=record.error,
                 tb=record.error.__traceback__,
                 file=sys.stdout
             )
+        if args.verbose:
+            print()
 
 
 def _prune_tasks(graph, ids_to_run):

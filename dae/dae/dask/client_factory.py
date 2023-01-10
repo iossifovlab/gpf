@@ -8,7 +8,8 @@ import tempfile
 from typing import Optional, Dict, Any
 
 from dask.distributed import Client, LocalCluster  # type: ignore
-from dask_kubernetes import KubeCluster, make_pod_spec  # type: ignore
+from dask_kubernetes import make_pod_spec  # type: ignore
+from dask_kubernetes.classic import KubeCluster  # type: ignore
 
 
 class DaskClient:
@@ -32,8 +33,8 @@ class DaskClient:
             "kubernetes workers")
         group.add_argument(
             "--container-image",
-            default="registry.seqpipe.org/seqpipe-gpf:"
-            "dask-for-hist-compute_fc69179-14",
+            default="registry.seqpipe.org/iossifovlab-gpf:"
+            "master",
             help="Docker image to use when submitting "
             "jobs to kubernetes")
         group.add_argument(
@@ -70,12 +71,10 @@ class DaskClient:
                 "dashboard_address":
                 f":{kwargs.get('dashboard_port', 8787)}"
             }
-        if kwargs.get("log_dir"):
-            log_dir = kwargs.get("log_dir")
-        else:
-            # pylint: disable=consider-using-with
-            tmp_dir = tempfile.TemporaryDirectory()
-            log_dir = tmp_dir.name
+
+        # pylint: disable=consider-using-with
+        tmp_dir = tempfile.TemporaryDirectory()
+        log_dir = kwargs.get("log_dir", tmp_dir.name)
 
         if kwargs.get("kubernetes"):
             env = cls._get_env_vars(kwargs.get("envvars"))

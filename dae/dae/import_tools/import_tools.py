@@ -1,4 +1,3 @@
-import os
 import sys
 import logging
 from abc import abstractmethod, ABC
@@ -67,6 +66,9 @@ class ImportProject():
         It is best not to call this ctor directly but to use one of the
         provided build_* methods.
         :param import_config: The parsed, validated and normalized config.
+        :param gpf_instance: Allow overwiting the gpf instance as described in
+        the configuration and instead injecting our own instance. Ideal for
+        testing.
         """
         self.import_config = import_config
         if "denovo" in import_config["input"]:
@@ -109,7 +111,7 @@ class ImportProject():
         :param import_filename: Path to the config file
         :param gpf_instance: Gpf Instance to use.
         """
-        base_input_dir = os.path.dirname(os.path.realpath(import_filename))
+        base_input_dir = fs_utils.containing_path(import_filename)
         import_config = GPFConfigParser.parse_and_interpolate_file(
             import_filename)
         project = ImportProject.build_from_config(
@@ -260,18 +262,20 @@ class ImportProject():
 
     def get_gpf_instance(self):
         """Create and return a gpf instance as desribed in the config."""
-        if self._gpf_instance is None:
-            instance_config = self.import_config.get("gpf_instance", {})
-            # pylint: disable=import-outside-toplevel
-            from dae.gpf_instance.gpf_instance import GPFInstance
-            instance_dir = instance_config.get("path")
-            if instance_dir is None:
-                config_filename = None
-            else:
-                config_filename = fs_utils.join(
-                    instance_dir, "gpf_instance.yaml")
-            self._gpf_instance = \
-                GPFInstance.build(config_filename)
+        if self._gpf_instance is not None:
+            return self._gpf_instance
+
+        # pylint: disable=import-outside-toplevel
+        from dae.gpf_instance.gpf_instance import GPFInstance
+
+        instance_config = self.import_config.get("gpf_instance", {})
+        instance_dir = instance_config.get("path")
+        if instance_dir is None:
+            config_filename = None
+        else:
+            config_filename = fs_utils.join(
+                instance_dir, "gpf_instance.yaml")
+        self._gpf_instance = GPFInstance.build(config_filename)
         return self._gpf_instance
 
     def get_import_storage(self):
@@ -527,6 +531,25 @@ class ImportProject():
     def __str__(self):
         return f"Project({self.study_id})"
 
+    def __getstate__(self):
+        """Return state of object used for pickling.
+
+        The state is the default state but doesn't include the _gpf_instance
+        as this property is transient.
+        """
+        gpf_instance = self.get_gpf_instance()
+        state = self.__dict__.copy()
+        del state["_gpf_instance"]
+        state["_gpf_dae_config"] = gpf_instance.dae_config
+        return state
+
+    def __setstate__(self, state):
+        """Set state of object after unpickling."""
+        self.__dict__.update(state)
+        # pylint: disable=import-outside-toplevel
+        from dae.gpf_instance.gpf_instance import GPFInstance
+        self._gpf_instance = GPFInstance(state["_gpf_dae_config"], None)
+
 
 class ImportConfigNormalizer:
     """Class to normalize import configs.
@@ -584,7 +607,7 @@ class ImportConfigNormalizer:
             sub_config = GPFConfigParser.validate_config(
                 sub_config, schema
             )
-            base_input_dir = os.path.dirname(os.path.realpath(external_fn))
+            base_input_dir = fs_utils.containing_path(external_fn)
         config[section_key] = sub_config
         return base_input_dir
 
