@@ -33,8 +33,7 @@ class DaskClient:
             "kubernetes workers")
         group.add_argument(
             "--container-image",
-            default="registry.seqpipe.org/iossifovlab-gpf:"
-            "master",
+            default="registry.seqpipe.org/iossifovlab-gpf:latest",
             help="Docker image to use when submitting "
             "jobs to kubernetes")
         group.add_argument(
@@ -100,15 +99,16 @@ class DaskClient:
                       file=sys.stderr)
                 return None
 
-            cluster = SGECluster(n_workers=n_jobs,
-                                 queue="all.q",
+            cluster = SGECluster(queue="all.q",
                                  walltime="1500000",
                                  cores=1,
                                  processes=1,
-                                 memory="2GB",
+                                 memory="7GB",
+                                 resource_spec="h_rss=7G",
                                  log_directory=log_dir,
                                  local_directory=tmp_dir.name,
                                  **dashboard_config)
+            cluster.adapt(minimum=1, maximum=n_jobs)
         else:
             cluster = LocalCluster(n_workers=n_jobs, threads_per_worker=1,
                                    local_directory=tmp_dir.name,
