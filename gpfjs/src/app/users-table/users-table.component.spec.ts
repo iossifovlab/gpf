@@ -5,12 +5,38 @@ import { RouterTestingModule } from '@angular/router/testing';
 import { NgxsModule } from '@ngxs/store';
 import { ConfigService } from 'app/config/config.service';
 import { UserGroup } from 'app/users-groups/users-groups';
+import { Item } from 'app/item-add-menu/item-add-menu';
 import { UsersGroupsService } from 'app/users-groups/users-groups.service';
 import { User } from 'app/users/users';
 import { UsersService } from 'app/users/users.service';
-import { Observable, of } from 'rxjs';
+import { Observable, lastValueFrom, of } from 'rxjs';
 
 import { UsersTableComponent } from './users-table.component';
+
+const datasetMock1 = {datasetId: 'dataset1', datasetName: 'dataset1'};
+const datasetMock2 = {datasetId: 'dataset2', datasetName: 'dataset2'};
+const datasetMock3 = {datasetId: 'dataset3', datasetName: 'dataset3'};
+const datasetMock4 = {datasetId: 'dataset4', datasetName: 'dataset4'};
+const datasetMock5 = {datasetId: 'dataset5', datasetName: 'dataset5'};
+const datasetMock6 = {datasetId: 'dataset6', datasetName: 'dataset6'};
+
+const userMockConstructorArgs: [
+  number,
+  string,
+  string,
+  string[],
+  boolean,
+  { datasetId: string; datasetName: string}[]
+] = [
+  17,
+  'fakeName',
+  'fakeEmail',
+  ['group1', 'group2', 'group3', 'group4'],
+  true,
+  [datasetMock1, datasetMock2, datasetMock3, datasetMock4, datasetMock5, datasetMock6]
+];
+
+const userMock = new User(...userMockConstructorArgs);
 
 class UsersGroupsServiceMock {
   public getGroups(page: number, searchTerm: string): Observable<UserGroup[]> {
@@ -32,30 +58,27 @@ class UsersGroupsServiceMock {
     }
     return of(pageBody);
   }
+
+  public removeUser(email: string, group: string): Observable<null> {
+    return of(null);
+  }
+
+  public addUser(email: string, group: string): Observable<null> {
+    return of(null);
+  }
 }
 
 class UsersServiceMock {
-  public getUserInfo(): Observable<User> {
-    return of(new User(1, 'fakeName', 'fakeEmail', [], true, []));
-  }
-
-  public removeUserGroup(user: User, group: string): Observable<object> {
-    return of(new User(
-      user.id,
-      user.name,
-      user.email,
-      user.groups.filter(g => g !== group),
-      user.hasPassword,
-      user.allowedDatasets.filter(d => {
-        if (group === 'group1') {
-          return d !== 'dataset2' && d !== 'dataset3';
-        } else if (group === 'group3') {
-          return d!=='dataset1' && d!=='dataset4';
-        } else {
-          return false;
-        }
-      })
-    ));
+  public getUser(id: number): Observable<User> {
+    return of(
+      new User(
+        userMock.id,
+        userMock.name,
+        userMock.email,
+        ['groupAfterUpdate'],
+        userMock.hasPassword,
+        [{datasetId: 'datasetIdAfterUpdate', datasetName: 'datasetNameAfterUpdate'}]
+      ));
   }
 
   public updateUser(user: User): Observable<object> {
@@ -66,8 +89,14 @@ class UsersServiceMock {
       user.groups,
       user.hasPassword,
       user.allowedDatasets.concat(
-        user.groups.includes('group4') ? ['dataset4', 'dataset6'] :
-          user.groups.includes('group3') ? ['dataset3', 'dataset5'] :[]
+        user.groups.includes('group4') ? [
+          datasetMock4,
+          datasetMock6,
+        ] :
+          user.groups.includes('group3') ? [
+            datasetMock3,
+            datasetMock5,
+          ] : []
       )
     ));
   }
@@ -117,75 +146,64 @@ describe('UsersTableComponent', () => {
   });
 
   it('should remove group from user', () => {
-    const user = new User(
-      17,
-      'fakeName',
-      'fakeEmail',
-      ['group1', 'group2', 'group3', 'group4'],
-      true,
-      ['dataset1', 'dataset2', 'dataset3', 'dataset4', 'dataset5'],
-    );
+    const removeUserSpy = jest.spyOn(usersGroupsServiceMock, 'removeUser');
+    const getUserSpy = jest.spyOn(usersServiceMock, 'getUser');
+    const user = new User(...userMockConstructorArgs);
 
-    component.removeGroup(user, 'group3');
+    component.removeGroup(user, 'groupToRemove');
+    expect(removeUserSpy).toHaveBeenCalledWith(userMockConstructorArgs[2], 'groupToRemove');
+    expect(getUserSpy).toHaveBeenCalledWith(userMockConstructorArgs[0]);
     expect(user).toStrictEqual(new User(
-      17,
-      'fakeName',
-      'fakeEmail',
-      ['group1', 'group2', 'group4'],
-      true,
-      ['dataset2', 'dataset3', 'dataset5']
-    ));
-
-    component.removeGroup(user, 'group1');
-    expect(user).toStrictEqual(new User(
-      17,
-      'fakeName',
-      'fakeEmail',
-      ['group2', 'group4'],
-      true,
-      ['dataset5']
+      userMockConstructorArgs[0],
+      userMockConstructorArgs[1],
+      userMockConstructorArgs[2],
+      ['groupAfterUpdate'],
+      userMockConstructorArgs[4],
+      [{datasetId: 'datasetIdAfterUpdate', datasetName: 'datasetNameAfterUpdate'}]
     ));
   });
 
   it('should add group to user', () => {
-    const user = new User(
-      17,
-      'fakeName',
-      'fakeEmail',
-      ['group1', 'group2'],
-      true,
-      ['dataset1', 'dataset2'],
-    );
+    const removeUserSpy = jest.spyOn(usersGroupsServiceMock, 'addUser');
+    const getUserSpy = jest.spyOn(usersServiceMock, 'getUser');
+    const user = new User(...userMockConstructorArgs);
 
-    component.addGroup(user, {id: user.name, item: 'group3'});
+    component.addGroup(user, {id: 'groupToAddId', name: 'groupToAdd'});
+    expect(removeUserSpy).toHaveBeenCalledWith(userMockConstructorArgs[2], 'groupToAdd');
+    expect(getUserSpy).toHaveBeenCalledWith(userMockConstructorArgs[0]);
     expect(user).toStrictEqual(new User(
-      17,
-      'fakeName',
-      'fakeEmail',
-      ['group1', 'group2', 'group3'],
-      true,
-      ['dataset1', 'dataset2', 'dataset3', 'dataset5'],
-    ));
-
-    component.addGroup(user, {id: user.name, item: 'group4'});
-    expect(user).toStrictEqual(new User(
-      17,
-      'fakeName',
-      'fakeEmail',
-      ['group1', 'group2', 'group3', 'group4'],
-      true,
-      ['dataset1', 'dataset2', 'dataset3', 'dataset5', 'dataset4', 'dataset6'],
+      userMockConstructorArgs[0],
+      userMockConstructorArgs[1],
+      userMockConstructorArgs[2],
+      ['groupAfterUpdate'],
+      userMockConstructorArgs[4],
+      [{datasetId: 'datasetIdAfterUpdate', datasetName: 'datasetNameAfterUpdate'}]
     ));
   });
 
-  it('should get group names function', () => {
-    const user = new User(
-      17,
-      'fakeName',
-      'fakeEmail',
-      ['group1', 'group2', 'group3', 'group4'],
-      true,
-      ['dataset1', 'dataset2', 'dataset3', 'dataset4', 'dataset5'],
+  it('should get group names function', async() => {
+    const getGroupsSpy = jest.spyOn(usersGroupsServiceMock, 'getGroups');
+    const user = new User(...userMockConstructorArgs);
+    user.groups = ['group1', 'group3'];
+
+    const getGroupsLambda = component.getGroupNamesFunction(user);
+
+    let page = await lastValueFrom(getGroupsLambda(1, 'search1'));
+    expect(getGroupsSpy).toHaveBeenCalledWith(1, 'search1');
+    expect(page).toStrictEqual(
+      [new Item('2', 'group2'), new Item('4', 'group4')]
+    );
+
+    page = await lastValueFrom(getGroupsLambda(2, 'search2'));
+
+    expect(getGroupsSpy).toHaveBeenCalledWith(2, 'search2');
+    expect(page).toStrictEqual(
+      [
+        new Item('5', 'group5'),
+        new Item('6', 'group6'),
+        new Item('7', 'group7'),
+        new Item('8', 'group8')
+      ]
     );
   });
 });
