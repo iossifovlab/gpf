@@ -1,6 +1,7 @@
 from abc import abstractmethod
 from copy import copy
 from dataclasses import dataclass
+import logging
 from enum import Enum
 import pickle
 from typing import Any, cast
@@ -8,6 +9,9 @@ import fsspec
 
 from dae.task_graph.graph import TaskGraph, Task
 from dae.utils import fs_utils
+
+
+logger = logging.getLogger(__name__)
 
 
 class CacheRecordType(Enum):
@@ -98,16 +102,22 @@ class FileTaskCache(TaskCache):
             self._add_dep_files(dep, files)
 
     def cache(self, task_node: Task, is_error: bool, result: Any):
+        record_type = (
+            CacheRecordType.ERROR if is_error else CacheRecordType.COMPUTED
+        )
+        record = CacheRecord(
+            record_type,
+            result
+        )
         cache_fn = self._get_flag_filename(task_node)
-        with fsspec.open(cache_fn, "wb") as cache_file:
-            record_type = (
-                CacheRecordType.ERROR if is_error else CacheRecordType.COMPUTED
+        try:
+            with fsspec.open(cache_fn, "wb") as cache_file:
+                pickle.dump(record, cache_file)
+        except Exception:  # pylint: disable=broad-except
+            logger.error(
+                "Cannot write cache for task %s. Ignoring and continuing.",
+                task_node, exc_info=True
             )
-            record = CacheRecord(
-                record_type,
-                result
-            )
-            pickle.dump(record, cache_file)
 
     def _get_flag_filename(self, task_node):
         return fs_utils.join(self.cache_dir, f"{task_node.task_id}.flag")
