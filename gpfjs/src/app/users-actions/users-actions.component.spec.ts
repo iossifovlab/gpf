@@ -7,6 +7,11 @@ import { UsersService } from 'app/users/users.service';
 import { Observable, of } from 'rxjs';
 
 import { UsersActionsComponent } from './users-actions.component';
+import { NgxsBootstrapper } from '@ngxs/store/internals';
+import { ConfirmationPopoverDirective } from 'angular-confirmation-popover';
+import { BrowserDynamicTestingModule } from '@angular/platform-browser-dynamic/testing';
+import { ConfirmationPopoverOptions } from 'angular-confirmation-popover/lib/confirmation-popover-options.provider';
+import { NO_ERRORS_SCHEMA } from '@angular/core';
 
 class UsersServiceMock {
   public deleteUser(): Observable<object> {
@@ -35,9 +40,16 @@ describe('UsersActionsComponent', () => {
       ],
       providers: [
         {provide: UsersService, useValue: usersServiceMock},
-        {provide: User, useValue: new User(0, '', '', [''], true, [])}
+        {provide: User, useValue: new User(0, '', '', [''], true, [])},
       ],
-      imports: [HttpClientTestingModule, RouterTestingModule, NgxsModule.forRoot([], {developmentMode: true})],
+      imports: [
+        HttpClientTestingModule,
+        RouterTestingModule,
+        NgxsModule.forRoot([], {developmentMode: true})
+      ],
+      schemas: [
+        NO_ERRORS_SCHEMA
+      ]
     }).compileComponents();
 
     fixture = TestBed.createComponent(UsersActionsComponent);
