@@ -1,4 +1,4 @@
-import { Component, EventEmitter, HostListener, Input, OnInit, Output, ViewChild } from '@angular/core';
+import { Component, EventEmitter, HostListener, Input, Output, ViewChild } from '@angular/core';
 import { environment } from 'environments/environment';
 import { Observable } from 'rxjs';
 import { Item } from './item-add-menu';
@@ -39,7 +39,7 @@ export class ItemAddMenuComponent {
     }
   }
 
-  public updateItemsList(): void {
+  private updateItemsList(): void {
     if (!this.loadingPage) {
       this.pageCounter++;
       this.loadingPage = true;
@@ -50,7 +50,7 @@ export class ItemAddMenuComponent {
     }
   }
 
-  public resetItems(): void {
+  private resetItems(): void {
     this.items = [];
     this.pageCounter = 0;
   }
