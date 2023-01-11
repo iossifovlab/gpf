@@ -1,9 +1,12 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import os
 import contextlib
+import fcntl
+import threading
 import pytest
 
 from dae.genomic_resources.repository import GR_CONF_FILE_NAME
+from dae.genomic_resources.fsspec_protocol import FsspecReadWriteProtocol
 from dae.genomic_resources.cached_repository import GenomicResourceCachedRepo
 from dae.genomic_resources import build_genomic_resource_repository
 from dae.genomic_resources.testing import build_inmemory_test_repository, \
@@ -238,3 +241,77 @@ def test_cached_repository_file_level_cache(cache_repository, scheme):
             os.path.join(base_url, "one", "data.txt"))
         assert filesystem.exists(
             os.path.join(base_url, "one", "alabala.txt"))
+
+
+def test_filesystem_caching_lock_implementation(
+        mocker, cache_repository):
+    with cache_repository(content={
+            "one": {
+                GR_CONF_FILE_NAME: "config",
+                "data.txt": "data",
+            }}, scheme="file") as cache_repo:
+
+        resource = cache_repo.get_resource("one")
+        assert resource is not None
+
+        obtain_lock_spy = mocker.spy(
+            FsspecReadWriteProtocol, "obtain_resource_file_lock"
+        )
+        flock_spy = mocker.spy(fcntl, "flock")
+
+        with resource.open_raw_file("data.txt"):
+            lockfile_path = resource.proto.local_protocol\
+                ._get_resource_file_lockfile_path(resource, "data.txt")
+            assert os.path.exists(lockfile_path)
+            obtain_lock_spy.assert_called_once()
+            flock_spy.assert_called_once()
+            assert flock_spy.call_args[0][0].name == lockfile_path
+            assert flock_spy.call_args[0][1] == fcntl.LOCK_EX
+
+
+@pytest.mark.parametrize("scheme", [
+    "file",
+    # "s3",
+])
+def test_cached_repository_locks_file_when_caching(cache_repository, scheme):
+    with cache_repository(content={
+            "one": {
+                GR_CONF_FILE_NAME: "config",
+                "data.txt": "data",
+            }}, scheme=scheme) as cache_repo:
+
+        resource = cache_repo.get_resource("one")
+        assert resource is not None
+
+        finished = threading.Barrier(2)
+        resource_locked = threading.Barrier(2)
+
+        orig = resource.proto.local_protocol.update_resource_file
+
+        times_called = 0
+
+        def blocking_wrapper(*args):
+            nonlocal times_called
+            orig(*args)
+            times_called += 1
+            resource_locked.wait()
+            finished.wait()
+
+        resource.proto.local_protocol.update_resource_file = blocking_wrapper
+
+        x = threading.Thread(target=resource.open_raw_file,
+                             args=("data.txt",))
+        y = threading.Thread(target=resource.open_raw_file,
+                             args=("data.txt",))
+        y.start()
+        x.start()
+
+        for i in (1, 2):
+            resource_locked.wait()
+            assert times_called == i
+            # make sure the next thread calls blocking_wrapper only
+            # AFTER the assertion for times_called has happened
+            finished.wait()
+
+        x.join()
+        y.join()
