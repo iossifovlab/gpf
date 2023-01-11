@@ -77,7 +77,9 @@ def _cmd_run(args, project, task_cache):
 
 def _cmd_list(args, project, task_cache):
     storage = project.get_import_storage()
+    print("Generating Task Graph ...", end="")
     task_graph = storage.generate_import_task_graph(project)
+    print("Done")
     task_graph.input_files.extend(project.config_filenames)
     task_graph = _prune_tasks(task_graph, args.task_ids or [])
 
