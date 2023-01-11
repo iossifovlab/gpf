@@ -19,7 +19,7 @@ type TableName = 'USERS' | 'GROUPS' | 'DATASETS';
 export class UserManagementComponent implements OnInit {
   public users: User[] = [];
   public groups: UserGroup[] = [];
-  public datasets: DatasetPermissions[];
+  public datasets: DatasetPermissions[] = [];
   public searchText = '';
   @ViewChild('searchBox') private searchBox: ElementRef;
   public currentUserEmail: string;
