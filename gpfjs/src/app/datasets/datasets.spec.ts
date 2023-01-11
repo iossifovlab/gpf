@@ -572,8 +572,14 @@ describe('Dataset', () => {
       ]
     ),
     [
-      new UserGroup(3, 'name1', ['user1', 'user2'], ['dataset2', 'dataset3']),
-      new UserGroup(5, 'name2', ['user12', 'user5'], ['dataset1', 'dataset2'])
+      new UserGroup(3, 'name1', ['user1', 'user2'], [
+        {datasetId: 'dataset2', datasetName: 'dataset2'},
+        {datasetId: 'dataset3', datasetName: 'dataset3'}
+      ]),
+      new UserGroup(5, 'name2', ['user12', 'user5'], [
+        {datasetId: 'dataset1', datasetName: 'dataset1'},
+        {datasetId: 'dataset2', datasetName: 'dataset2'}
+      ])
     ],
     new GeneBrowser(true, 'frequencyCol1', 'frequencyName1', 'effectCol1', 'locationCol1', 5, 6, true),
     false,
@@ -646,8 +652,14 @@ describe('Dataset', () => {
       )
     ]),
     [
-      new UserGroup(9, 'name13', ['user9', 'user6'], ['dataset4', 'dataset3']),
-      new UserGroup(6, 'name8', ['user10', 'user12'], ['dataset14', 'dataset16'])
+      new UserGroup(9, 'name13', ['user9', 'user6'], [
+        {datasetId: 'dataset4', datasetName: 'dataset4'},
+        {datasetId: 'dataset3', datasetName: 'dataset3'}
+      ]),
+      new UserGroup(6, 'name8', ['user10', 'user12'], [
+        {datasetId: 'dataset14', datasetName: 'dataset14'},
+        {datasetId: 'dataset16', datasetName: 'dataset16'}
+      ])
     ],
     new GeneBrowser(false, 'frequencyCol6', 'frequencyName7', 'effectCol4', 'locationCol2', 7, 8, true),
     true,
