@@ -8,7 +8,7 @@ from dae.tools.vcf2parquet import main
 
 def test_vcf2parquet_vcf(
     fixture_dirname,
-    annotation_pipeline_config,
+    annotation_pipeline_no_effects_config,
     annotation_scores_dirname,
     temp_filename,
     gpf_instance_2013,
@@ -18,7 +18,7 @@ def test_vcf2parquet_vcf(
     argv = [
         "--rows", "10",
         "--annotation",
-        annotation_pipeline_config,
+        annotation_pipeline_no_effects_config,
         "-o",
         temp_filename,
         f"{prefix}.ped",
@@ -48,7 +48,7 @@ def test_vcf2parquet_vcf(
 
 def test_vcf2parquet_vcf_partition(
     fixture_dirname,
-    annotation_pipeline_config,
+    annotation_pipeline_no_effects_config,
     annotation_scores_dirname,
     temp_dirname,
     gpf_instance_2013,
@@ -62,7 +62,7 @@ def test_vcf2parquet_vcf_partition(
     argv = [
         "--rows", "10",
         "--annotation",
-        annotation_pipeline_config,
+        annotation_pipeline_no_effects_config,
         "-o",
         temp_dirname,
         "--pd",

@@ -51,11 +51,11 @@ class AnnotationPipeline:
             context.update(attributes)
 
         # TODO: Decide where context should be cleaned up
-        # for annotator in self.annotators:
-        #     for attr in annotator.get_annotation_config():
-        #         if attr.get("internal", False):
-        #             key = attr["destination"]
-        #             del context[key]
+        for annotator in self.annotators:
+            for attr in annotator.get_annotation_config():
+                if attr.get("internal", False):
+                    key = attr["destination"]
+                    del context[key]
 
         return context
 

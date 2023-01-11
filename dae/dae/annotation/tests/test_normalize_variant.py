@@ -149,6 +149,10 @@ def test_normalize_allele_annotator_pipeline(grr_fixture, pos, ref, alt):
     config = textwrap.dedent("""
         - normalize_allele_annotator:
             genome: hg19/GATK_ResourceBundle_5777_b37_phiX174_short/genome
+            attributes:
+            - source: normalized_allele
+              dest: normalized_allele
+              internal: False
         """)
 
     annotation_pipeline = build_annotation_pipeline(
@@ -184,6 +188,10 @@ def test_normalize_tandem_repeats(pos, ref, alt, npos, nref, nalt):
     config = textwrap.dedent("""
         - normalize_allele_annotator:
             genome: hg38/genomes/GRCh38-hg38
+            attributes:
+            - source: normalized_allele
+              dest: normalized_allele
+              internal: False
         """)
 
     annotation_pipeline = build_annotation_pipeline(
