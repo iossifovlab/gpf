@@ -53,7 +53,7 @@ export class GroupsTableComponent {
   }
 
   public deleteGroup(group: UserGroup): void {
-    group.users.forEach(email => this.removeDataset(group, email));
+    group.users.forEach(email => this.removeUser(group, email));
     group.datasets.forEach(dataset => this.removeDataset(group, dataset.datasetId));
     this.groups.splice(this.groups.indexOf(group), 1);
   }
