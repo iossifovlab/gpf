@@ -6,6 +6,7 @@ from typing import Optional
 
 import configparser
 import numpy as np
+
 from google.cloud import bigquery
 
 from dae.pedigrees.family import FamiliesData

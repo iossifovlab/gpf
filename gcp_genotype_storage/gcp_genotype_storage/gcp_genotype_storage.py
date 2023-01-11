@@ -203,13 +203,19 @@ class GcpGenotypeStorage(GenotypeStorage):
 
         summary_table = dataset.table(tables_layout.summary_variants)
         job_config = bigquery.LoadJobConfig()
-        job_config.source_format = bigquery.SourceFormat.PARQUET
         job_config.autodetect = True
-        job_config.parquet_options = \
+
+        job_config.source_format = bigquery.SourceFormat.PARQUET
+
+        parquet_options = \
             bigquery.format_options.ParquetOptions()
-        job_config.parquet_options.enable_list_inference = True
-        job_config.hive_partitioning = \
+        parquet_options.enable_list_inference = True
+        job_config.parquet_options = parquet_options
+
+        hive_partitioning = \
             bigquery.external_config.HivePartitioningOptions()
+        job_config.hive_partitioning = hive_partitioning
+
         summary_job = client.load_table_from_uri(
             f"{bucket_layout.summary_variants}/*.parquet", summary_table,
             job_config=job_config)
@@ -221,11 +227,15 @@ class GcpGenotypeStorage(GenotypeStorage):
         job_config = bigquery.LoadJobConfig()
         job_config.source_format = bigquery.SourceFormat.PARQUET
         job_config.autodetect = True
-        job_config.parquet_options = \
+        parquet_options = \
             bigquery.format_options.ParquetOptions()
-        job_config.parquet_options.enable_list_inference = True
-        job_config.hive_partitioning = \
+        parquet_options.enable_list_inference = True
+        job_config.parquet_options = parquet_options
+
+        hive_partitioning = \
             bigquery.external_config.HivePartitioningOptions()
+        job_config.hive_partitioning = hive_partitioning
+
         family_job = client.load_table_from_uri(
             f"{bucket_layout.family_variants}/*.parquet", family_table,
             job_config=job_config)
@@ -237,8 +247,8 @@ class GcpGenotypeStorage(GenotypeStorage):
 
     def gcp_import_dataset(
             self, study_id: str,
-            study_dataset: GcpStudyLayout):
+            study_layout: GcpStudyLayout):
         """Create pedigree and variant tables for a study."""
         bucket_layout = self._upload_dataset_into_import_bucket(
-            study_id, study_dataset)
+            study_id, study_layout)
         return self._load_dataset_into_bigquery(study_id, bucket_layout)
