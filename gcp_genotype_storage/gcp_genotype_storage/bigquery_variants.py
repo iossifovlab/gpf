@@ -11,6 +11,7 @@ from google.cloud import bigquery
 
 from dae.pedigrees.family import FamiliesData
 from dae.variants.attributes import Role, Status, Sex
+from dae.query_variants.sql.schema2.base_variants import SqlSchema2Variants
 from dae.query_variants.sql.schema2.base_query_builder import Dialect
 from dae.query_variants.sql.schema2.family_builder import FamilyQueryBuilder
 from dae.query_variants.sql.schema2.summary_builder import SummaryQueryBuilder
@@ -41,7 +42,7 @@ class BigQueryDialect(Dialect):
 
 # FIXME too-many-instance-attributes
 # pylint: disable=too-many-instance-attributes
-class BigQueryVariants:
+class BigQueryVariants(SqlSchema2Variants):
     """Backend for BigQuery."""
 
     def __init__(
@@ -54,80 +55,23 @@ class BigQueryVariants:
         meta_table,
         gene_models=None,
     ):
+        self.client = bigquery.Client(project=gcp_project_id)
 
-        super().__init__()
+        super().__init__(
+            BigQueryDialect(ns=gcp_project_id),
+            db,
+            family_variant_table,
+            summary_allele_table,
+            pedigree_table,
+            meta_table,
+            gene_models)
         assert db, db
         assert pedigree_table, pedigree_table
 
-        # instead of a connection handler bigquery has a client object
-        self.dialect = BigQueryDialect(ns=gcp_project_id)
-        self.client = bigquery.Client(project=gcp_project_id)
-        self.db = db
         self.start_time = time.time()
 
-        # meta table: partition settings
-        self.meta_table = meta_table
-
-        # family and summary tables
-        self.summary_allele_table = summary_allele_table
-        self.family_variant_table = family_variant_table
-        self.summary_allele_schema = self._fetch_schema(summary_allele_table)
-        self.family_variant_schema = self._fetch_schema(family_variant_table)
-        self.combined_columns = {
-            **self.family_variant_schema,
-            **self.summary_allele_schema,
-        }
-
-        # pedigree tables
-        self.pedigree_table = pedigree_table
-        self.pedigree_schema = self._fetch_schema(self.pedigree_table)
-        self.pedigree_df = self._fetch_pedigree()
-        self.families = FamiliesData.from_pedigree_df(self.pedigree_df)
-
-        # serializer
-        # VariantSchema = namedtuple('VariantSchema', 'col_names')
-        # self.variants_schema = VariantSchema(
-        #     col_names=list(self.combined_columns))
-        # self.serializer = AlleleParquetSerializer(
-        #     variants_schema=self.variants_schema)
-
-        self.gene_models = gene_models
-        assert gene_models is not None
-
-        # # self._fetch_tblproperties()
-        # # hardcoding relevant for specific dataset
-        # # pass in table_properties OR table in datastore
-        # _tbl_props = self._fetch_tblproperties(self.meta_table)
-        self.table_properties = dict({
-            "region_length": 0,
-            "chromosomes": [],
-            "family_bin_size": 0,
-            "coding_effect_types": [],
-            "rare_boundary": 0
-        })
-        # self.table_properties = {
-        #     "region_length": int(_tbl_props["region_bin"]["region_length"]),
-        #     "chromosomes": list(
-        #         map(
-        #             lambda c: c.strip(),
-        #             _tbl_props["region_bin"]["chromosomes"].split(","),
-        #         )
-        #     ),
-        #     "family_bin_size": int(
-        #         _tbl_props["family_bin"]["family_bin_size"]
-        #     ),
-        #     "rare_boundary": int(
-        #           _tbl_props["frequency_bin"]["rare_boundary"]),
-        #     "coding_effect_types": {
-        #         s.strip()
-        #         for s in _tbl_props["coding_bin"][
-        #             "coding_effect_types"
-        #         ].split(",")
-        #     },
-        # }
-
-    def _fetch_tblproperties(self, meta_table):
-        query = f"""SELECT value FROM {self.db}.{meta_table}
+    def _fetch_tblproperties(self):
+        query = f"""SELECT value FROM {self.db}.{self.meta_table}
                WHERE key = 'partition_description'
                LIMIT 1
             """
@@ -137,6 +81,7 @@ class BigQueryVariants:
         for row in result:
             config.read_string(row[0])
             return config
+        return None
 
     def _fetch_schema(self, table):
         query = f"""
@@ -208,7 +153,7 @@ class BigQueryVariants:
             self.summary_allele_schema,
             self.table_properties,
             self.pedigree_schema,
-            self.pedigree_df,
+            self.ped_df,
             gene_models=self.gene_models,
             do_join_affected=False,
         )
@@ -279,7 +224,7 @@ class BigQueryVariants:
             summary_allele_schema=self.summary_allele_schema,
             table_properties=self.table_properties,
             pedigree_schema=self.pedigree_schema,
-            pedigree_df=self.pedigree_df,
+            pedigree_df=self.ped_df,
             gene_models=self.gene_models,
             do_join_pedigree=do_join_pedigree,
         )

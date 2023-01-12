@@ -8,10 +8,9 @@ from impala.util import as_pandas
 from dae.person_sets import PersonSetCollection
 from dae.query_variants.query_runners import QueryResult, QueryRunner
 from dae.inmemory_storage.raw_variants import RawFamilyVariants
-from dae.pedigrees.family import FamiliesData
-from dae.pedigrees.loader import FamiliesLoader
 from dae.variants.attributes import Role, Status, Sex
 from dae.impala_storage.schema2.sql_query_runner import SqlQueryRunner
+from dae.query_variants.sql.schema2.base_variants import SqlSchema2Variants
 from dae.query_variants.sql.schema2.base_query_builder import Dialect
 from dae.query_variants.sql.schema2.family_builder import FamilyQueryBuilder
 from dae.query_variants.sql.schema2.summary_builder import SummaryQueryBuilder
@@ -26,7 +25,7 @@ class ImpalaDialect(Dialect):
         super().__init__()
 
 
-class ImpalaVariants:
+class ImpalaVariants(SqlSchema2Variants):
     """A backend implementing an impala backend."""
 
     # pylint: disable=too-many-instance-attributes
@@ -41,73 +40,15 @@ class ImpalaVariants:
         meta_table,
         gene_models=None,
     ):
-
-        super().__init__()
-        assert db
-        assert pedigree_table
-
-        self.dialect = ImpalaDialect()
-        self.db = db
         self._impala_helpers = impala_helpers
-        self.family_variant_table = family_variant_table
-        self.summary_allele_table = summary_allele_table
-        self.pedigree_table = pedigree_table
-        self.meta_table = meta_table
-        self.summary_allele_schema = self._fetch_schema(
-            self.summary_allele_table
-        )
-        self.family_variant_schema = self._fetch_schema(
-            self.family_variant_table
-        )
-        self.combined_columns = {
-            **self.family_variant_schema,
-            **self.summary_allele_schema,
-        }
-        self.pedigree_schema = self._fetch_pedigree_schema()
-        self.ped_df = self._fetch_pedigree()
-        self.families = FamiliesData.from_pedigree_df(self.ped_df)
-        # Temporary workaround for studies that are imported without tags
-        FamiliesLoader._build_families_tags(
-            self.families, {"ped_tags": True}
-        )
-
-        assert gene_models is not None
-        self.gene_models = gene_models
-
-        _tbl_props = self._fetch_tblproperties(self.meta_table)
-        self.table_properties = self._normalize_tblproperties(_tbl_props)
-
-    @staticmethod
-    def _normalize_tblproperties(tbl_props) -> dict:
-        if tbl_props is not None:
-            return {
-                "region_length": int(
-                    tbl_props["region_bin"]["region_length"]
-                ),
-                "chromosomes": [
-                    c.strip()
-                    for c in tbl_props["region_bin"]["chromosomes"].split(",")
-                ],
-                "family_bin_size": int(
-                    tbl_props["family_bin"]["family_bin_size"]
-                ),
-                "rare_boundary": int(
-                    tbl_props["frequency_bin"]["rare_boundary"]
-                ),
-                "coding_effect_types": set(
-                    s.strip()
-                    for s in tbl_props["coding_bin"][
-                        "coding_effect_types"
-                    ].split(",")
-                ),
-            }
-        return {
-            "region_length": 0,
-            "chromosomes": [],
-            "family_bin_size": 0,
-            "coding_effect_types": set(),
-            "rare_boundary": 0
-        }
+        super().__init__(
+            ImpalaDialect(),
+            db,
+            family_variant_table,
+            summary_allele_table,
+            pedigree_table,
+            meta_table,
+            gene_models)
 
     def connection(self):
         conn = self._impala_helpers.connection()
@@ -130,11 +71,11 @@ class ImpalaVariants:
             }
             return schema
 
-    def _fetch_tblproperties(self, meta_table) \
+    def _fetch_tblproperties(self) \
             -> Optional[configparser.ConfigParser]:
         with closing(self.connection()) as conn:
             with conn.cursor() as cursor:
-                query = f"""SELECT value FROM {self.db}.{meta_table}
+                query = f"""SELECT value FROM {self.db}.{self.meta_table}
                             WHERE key = 'partition_description'
                             LIMIT 1
                 """
@@ -495,16 +436,3 @@ class ImpalaVariants:
         ped_df.status = ped_df.status.apply(Status)
 
         return ped_df
-
-    def _fetch_pedigree_schema(self):
-        with closing(self.connection()) as conn:
-            with conn.cursor() as cursor:
-                query = f"""DESCRIBE {self.db}.{self.pedigree_table}"""
-                cursor.execute(query)
-                df = as_pandas(cursor)
-
-                records = df[["name", "type"]].to_records()
-                schema = {
-                    col_name: col_type for (_, col_name, col_type) in records
-                }
-                return schema
