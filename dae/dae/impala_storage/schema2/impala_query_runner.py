@@ -7,7 +7,7 @@ from dae.query_variants.query_runners import QueryRunner
 logger = logging.getLogger(__name__)
 
 
-class SqlQueryRunner(QueryRunner):
+class ImpalaQueryRunner(QueryRunner):
     """Run a query in a separate thread."""
 
     def __init__(self, connection_pool, query, deserializer=None):
@@ -101,6 +101,8 @@ class SqlQueryRunner(QueryRunner):
         self._finalize(started)
 
     def _put_value_in_result_queue(self, val):
+        assert self._result_queue is not None
+
         no_interest = 0
         while True:
             try:

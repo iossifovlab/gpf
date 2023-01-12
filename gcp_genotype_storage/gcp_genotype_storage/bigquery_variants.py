@@ -2,14 +2,13 @@ import time
 import json
 import logging
 from contextlib import closing
-from typing import Optional
+from typing import Optional, Any
 
 import configparser
 import numpy as np
 
 from google.cloud import bigquery
 
-from dae.pedigrees.family import FamiliesData
 from dae.variants.attributes import Role, Status, Sex
 from dae.query_variants.sql.schema2.base_variants import SqlSchema2Variants
 from dae.query_variants.sql.schema2.base_query_builder import Dialect
@@ -181,10 +180,7 @@ class BigQueryVariants(SqlSchema2Variants):
 
         for row in result:
             try:
-                sv_record = json.loads(row.summary_variant_data)
-                sv = SummaryVariantFactory.summary_variant_from_records(
-                    sv_record
-                )
+                sv = self._deserialize_summary_variant(row)
                 if sv is None:
                     continue
                 yield sv
@@ -260,18 +256,7 @@ class BigQueryVariants(SqlSchema2Variants):
 
         for row in result:
             try:
-                sv_record = json.loads(row.summary_variant_data)
-                fv_record = json.loads(row.family_variant_data)
-
-                fv = FamilyVariant(
-                    SummaryVariantFactory.summary_variant_from_records(
-                        sv_record
-                    ),
-                    self.families[fv_record["family_id"]],
-                    np.array(fv_record["genotype"]),
-                    np.array(fv_record["best_state"]),
-                )
-
+                fv = self._deserialize_family_variant(row)
                 if fv is None:
                     continue
                 yield fv
@@ -279,6 +264,29 @@ class BigQueryVariants(SqlSchema2Variants):
                 logger.error("unable to deserialize family variant (BQ)")
                 logger.exception(ex)
                 continue
+
+    def _get_connection_factory(self) -> Any:
+        # pylint: disable=protected-access
+        return self.client
+
+    def _deserialize_summary_variant(self, record):
+        sv_record = json.loads(record.summary_variant_data)
+        return SummaryVariantFactory.summary_variant_from_records(
+            sv_record
+        )
+
+    def _deserialize_family_variant(self, record):
+        sv_record = json.loads(record.summary_variant_data)
+        fv_record = json.loads(record.family_variant_data)
+
+        return FamilyVariant(
+            SummaryVariantFactory.summary_variant_from_records(
+                sv_record
+            ),
+            self.families[fv_record["family_id"]],
+            np.array(fv_record["genotype"]),
+            np.array(fv_record["best_state"]),
+        )
 
     def query_summary_variants(
         self,

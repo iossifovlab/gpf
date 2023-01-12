@@ -2,18 +2,15 @@ import json
 import logging
 import configparser
 from contextlib import closing
-from typing import Optional, Set, Tuple
+from typing import Optional, Set, Tuple, Any
 import numpy as np
 from impala.util import as_pandas
 from dae.person_sets import PersonSetCollection
 from dae.query_variants.query_runners import QueryResult, QueryRunner
-from dae.inmemory_storage.raw_variants import RawFamilyVariants
 from dae.variants.attributes import Role, Status, Sex
-from dae.impala_storage.schema2.sql_query_runner import SqlQueryRunner
+from dae.impala_storage.schema2.impala_query_runner import ImpalaQueryRunner
 from dae.query_variants.sql.schema2.base_variants import SqlSchema2Variants
 from dae.query_variants.sql.schema2.base_query_builder import Dialect
-from dae.query_variants.sql.schema2.family_builder import FamilyQueryBuilder
-from dae.query_variants.sql.schema2.summary_builder import SummaryQueryBuilder
 from dae.variants.variant import SummaryVariantFactory
 from dae.variants.family_variant import FamilyVariant
 
@@ -29,6 +26,7 @@ class ImpalaVariants(SqlSchema2Variants):
     """A backend implementing an impala backend."""
 
     # pylint: disable=too-many-instance-attributes
+    RUNNER_CLASS: type[QueryRunner] = ImpalaQueryRunner
 
     def __init__(
         self,
@@ -87,6 +85,40 @@ class ImpalaVariants(SqlSchema2Variants):
                     config.read_string(row[0])
                     return config
         return None
+
+    def _fetch_pedigree(self):
+        with closing(self.connection()) as conn:
+            with conn.cursor() as cursor:
+                query = f"""SELECT * FROM {self.db}.{self.pedigree_table}"""
+                cursor.execute(query)
+                ped_df = as_pandas(cursor)
+
+        ped_df.role = ped_df.role.apply(Role)
+        ped_df.sex = ped_df.sex.apply(Sex)
+        ped_df.status = ped_df.status.apply(Status)
+
+        return ped_df
+
+    def _get_connection_factory(self) -> Any:
+        # pylint: disable=protected-access
+        return self._impala_helpers._connection_pool
+
+    def _deserialize_summary_variant(self, record):
+        sv_record = json.loads(record[-1])
+        return SummaryVariantFactory.summary_variant_from_records(sv_record)
+
+    def _deserialize_family_variant(self, record):
+        sv_record = json.loads(record[-2])
+        fv_record = json.loads(record[-1])
+
+        return FamilyVariant(
+            SummaryVariantFactory.summary_variant_from_records(
+                sv_record
+            ),
+            self.families[fv_record["family_id"]],
+            np.array(fv_record["genotype"]),
+            np.array(fv_record["best_state"]),
+        )
 
     def query_summary_variants(
         self,
@@ -244,195 +276,3 @@ class ImpalaVariants(SqlSchema2Variants):
             [],
             pedigree_columns(available_person_sets - selected_person_sets)
         )
-
-    # pylint: disable=too-many-arguments
-    def build_summary_variants_query_runner(
-            self,
-            regions=None,
-            genes=None,
-            effect_types=None,
-            family_ids=None,
-            person_ids=None,
-            inheritance=None,
-            roles=None,
-            sexes=None,
-            variant_type=None,
-            real_attr_filter=None,
-            ultra_rare=None,
-            frequency_filter=None,
-            return_reference=None,
-            return_unknown=None,
-            limit=None) -> QueryRunner:
-        """Build a query selecting the appropriate summary variants."""
-        query_builder = SummaryQueryBuilder(
-            self.dialect,
-            self.db,
-            self.family_variant_table,
-            self.summary_allele_table,
-            self.pedigree_table,
-            self.family_variant_schema,
-            self.summary_allele_schema,
-            self.table_properties,
-            self.pedigree_schema,
-            self.ped_df,
-            gene_models=self.gene_models,
-            do_join_affected=False,
-        )
-
-        query = query_builder.build_query(
-            regions=regions,
-            genes=genes,
-            effect_types=effect_types,
-            family_ids=family_ids,
-            person_ids=person_ids,
-            inheritance=inheritance,
-            roles=roles,
-            sexes=sexes,
-            variant_type=variant_type,
-            real_attr_filter=real_attr_filter,
-            ultra_rare=ultra_rare,
-            frequency_filter=frequency_filter,
-            return_reference=return_reference,
-            return_unknown=return_unknown,
-            limit=limit,
-        )
-        logger.debug("SUMMARY VARIANTS QUERY: %s", query)
-
-        # pylint: disable=protected-access
-        runner = SqlQueryRunner(self._impala_helpers._connection_pool, query,
-                                deserializer=self._deserialize_summary_variant)
-
-        filter_func = RawFamilyVariants.summary_variant_filter_function(
-            regions=regions,
-            genes=genes,
-            effect_types=effect_types,
-            family_ids=family_ids,
-            person_ids=person_ids,
-            inheritance=inheritance,
-            roles=roles,
-            sexes=sexes,
-            variant_type=variant_type,
-            real_attr_filter=real_attr_filter,
-            ultra_rare=ultra_rare,
-            frequency_filter=frequency_filter,
-            return_reference=return_reference,
-            return_unknown=return_unknown,
-            limit=limit)
-
-        runner.adapt(filter_func)
-
-        return runner
-
-    # pylint: disable=too-many-arguments,too-many-locals
-    def build_family_variants_query_runner(
-            self,
-            regions=None,
-            genes=None,
-            effect_types=None,
-            family_ids=None,
-            person_ids=None,
-            inheritance=None,
-            roles=None,
-            sexes=None,
-            variant_type=None,
-            real_attr_filter=None,
-            ultra_rare=None,
-            frequency_filter=None,
-            return_reference=None,
-            return_unknown=None,
-            limit=None,
-            pedigree_fields=None):
-        """Build a query selecting the appropriate family variants."""
-        do_join_pedigree = pedigree_fields is not None
-        query_builder = FamilyQueryBuilder(
-            self.dialect,
-            self.db,
-            self.family_variant_table,
-            self.summary_allele_table,
-            self.pedigree_table,
-            self.family_variant_schema,
-            self.summary_allele_schema,
-            self.table_properties,
-            self.pedigree_schema,
-            self.ped_df,
-            gene_models=self.gene_models,
-            do_join_pedigree=do_join_pedigree,
-        )
-
-        query = query_builder.build_query(
-            regions=regions,
-            genes=genes,
-            effect_types=effect_types,
-            family_ids=family_ids,
-            person_ids=person_ids,
-            inheritance=inheritance,
-            roles=roles,
-            sexes=sexes,
-            variant_type=variant_type,
-            real_attr_filter=real_attr_filter,
-            ultra_rare=ultra_rare,
-            frequency_filter=frequency_filter,
-            return_reference=return_reference,
-            return_unknown=return_unknown,
-            limit=limit,
-            pedigree_fields=pedigree_fields
-        )
-
-        logger.debug("FAMILY VARIANTS QUERY: %s", query)
-        deserialize_row = self._deserialize_family_variant
-
-        # pylint: disable=protected-access
-        runner = SqlQueryRunner(self._impala_helpers._connection_pool, query,
-                                deserializer=deserialize_row)
-
-        filter_func = RawFamilyVariants.family_variant_filter_function(
-            regions=regions,
-            genes=genes,
-            effect_types=effect_types,
-            family_ids=family_ids,
-            person_ids=person_ids,
-            inheritance=inheritance,
-            roles=roles,
-            sexes=sexes,
-            variant_type=variant_type,
-            real_attr_filter=real_attr_filter,
-            ultra_rare=ultra_rare,
-            frequency_filter=frequency_filter,
-            return_reference=return_reference,
-            return_unknown=return_unknown,
-            limit=limit)
-
-        runner.adapt(filter_func)
-
-        return runner
-
-    @staticmethod
-    def _deserialize_summary_variant(row):
-        sv_record = json.loads(row[-1])
-        return SummaryVariantFactory.summary_variant_from_records(sv_record)
-
-    def _deserialize_family_variant(self, row):
-        sv_record = json.loads(row[-2])
-        fv_record = json.loads(row[-1])
-
-        return FamilyVariant(
-            SummaryVariantFactory.summary_variant_from_records(
-                sv_record
-            ),
-            self.families[fv_record["family_id"]],
-            np.array(fv_record["genotype"]),
-            np.array(fv_record["best_state"]),
-        )
-
-    def _fetch_pedigree(self):
-        with closing(self.connection()) as conn:
-            with conn.cursor() as cursor:
-                query = f"""SELECT * FROM {self.db}.{self.pedigree_table}"""
-                cursor.execute(query)
-                ped_df = as_pandas(cursor)
-
-        ped_df.role = ped_df.role.apply(Role)
-        ped_df.sex = ped_df.sex.apply(Sex)
-        ped_df.status = ped_df.status.apply(Status)
-
-        return ped_df
