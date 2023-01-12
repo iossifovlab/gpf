@@ -119,15 +119,15 @@ export class UserManagementComponent implements OnInit {
       this.loadingPage = true;
 
       switch (this.tableName) {
-      case 'USERS':
-        this.updateTable(this.usersService.getUsers.bind(this.usersService));
-        break;
-      case 'GROUPS':
-        this.updateTable(this.usersGroupsService.getGroups.bind(this.usersGroupsService));
-        break;
-      case 'DATASETS':
-        this.updateTable(this.datasetsService.getManagementDatasets.bind(this.datasetsService));
-        break;
+        case 'USERS':
+          this.updateTable(this.usersService.getUsers.bind(this.usersService));
+          break;
+        case 'GROUPS':
+          this.updateTable(this.usersGroupsService.getGroups.bind(this.usersGroupsService));
+          break;
+        case 'DATASETS':
+          this.updateTable(this.datasetsService.getManagementDatasets.bind(this.datasetsService));
+          break;
       }
     }
   }
