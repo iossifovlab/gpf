@@ -5,6 +5,7 @@
 }
 
 .menu {
+  z-index:99999;
   padding: 10px;
   display: grid;
   position: absolute;
