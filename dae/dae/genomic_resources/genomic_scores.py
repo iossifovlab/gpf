@@ -5,14 +5,19 @@ from __future__ import annotations
 import logging
 import textwrap
 import copy
-import yaml
 
 from typing import Iterator, Optional, cast, Type, Any, Union
 
 from dataclasses import dataclass
+
+import yaml
+
 from jinja2 import Template
 from markdown2 import markdown
 
+import matplotlib.pyplot as plt  # type: ignore
+
+from dae.task_graph.graph import TaskGraph
 from . import GenomicResource
 from .statistic import Statistic
 from .resource_implementation import GenomicResourceImplementation, \
@@ -22,6 +27,7 @@ from .resource_implementation import GenomicResourceImplementation, \
 from .genomic_position_table import build_genomic_position_table, Line, \
     TabixGenomicPositionTable, VCFGenomicPositionTable
 from dae.task_graph.graph import TaskGraph
+from .histogram import Histogram
 
 from .aggregators import build_aggregator, AGGREGATOR_SCHEMA
 
@@ -333,8 +339,7 @@ class GenomicScore(
             for _ in range(left, right + 1):
                 yield val
 
-    @staticmethod
-    def get_template():
+    def get_template(self):
         return Template(textwrap.dedent("""
             {% extends base %}
             {% block content %}
@@ -453,6 +458,9 @@ class GenomicScore(
             info["meta"] = markdown(info["meta"])
         return info
 
+    def get_info(self):
+        return super(InfoImplementationMixin, self).get_info()
+
     @staticmethod
     def get_schema():
         scores_schema = {
@@ -514,25 +522,207 @@ class GenomicScore(
             "default_annotation": {"type": "dict", "allow_unknown": True}
         }
 
-    def add_statistics_build_tasks(self, task_graph: TaskGraph):
-        score_minmax = self._add_min_max_tasks(task_graph)
-        for score_id, minmax_task in score_minmax:
-            self._add_histogram_task(
-                task_graph, score_id, minmax_task
+    def add_statistics_build_tasks(self, task_graph: TaskGraph, **kwargs):
+        with self.open():
+            region_size = kwargs.get("region_size", 1_000_000)
+            _, _, save_task = self._add_min_max_tasks(
+                task_graph, region_size
             )
-        task_graph.tasks
 
-    def _add_min_max_tasks(self, graph):
-        """Add tasks for generating min max values."""
-        pass
+            self._add_histogram_tasks(
+                task_graph, save_task, region_size
+            )
 
-    def _add_histogram_task(self, graph, score_id, minmax_task):
+    def _add_min_max_tasks(self, graph, region_size):
         """
-        Add histogram task for specific score id.
+        Add and return calculation, merging and saving tasks for min max.
 
-        The histogram task is dependant  on the provided minmax task.
+        The tasks are returned in a triple containing a list of calculation
+        tasks, the merge task and the save task.
         """
-        pass
+        min_max_tasks = []
+        for chrom, start, end in self._split_into_regions(region_size):
+            min_max_tasks.append(graph.create_task(
+                f"{self.score_id}_calculate_min_max_{chrom}_{start}_{end}",
+                self._do_min_max,
+                [chrom, start, end],
+                []
+            ))
+        merge_task = graph.create_task(
+            f"{self.score_id}_merge_min_max",
+            self._merge_min_max,
+            min_max_tasks,
+            min_max_tasks
+        )
+        save_task = graph.create_task(
+            f"{self.score_id}_save_min_max",
+            self._save_min_max,
+            [merge_task],
+            [merge_task]
+        )
+        return min_max_tasks, merge_task, save_task
+
+    def _do_min_max(self, chrom, start, end):
+        print(f"Calculating min max for {chrom}: {start}-{end}")
+        score_ids = self.get_all_scores()
+        res = {
+            scr_id: MinMaxValue(scr_id, None, None)
+            for scr_id in score_ids
+        }
+        for record in self.fetch_region(chrom, start, end, score_ids):
+            for scr_id in score_ids:
+                res[scr_id].add_record(record)
+        return res
+
+    def _merge_min_max(self, *calculate_tasks):
+        print("Merging min max")
+        score_ids = self.get_all_scores()
+
+        res = {score_id: None for score_id in score_ids}
+        for score_id in score_ids:
+            for min_max_region in calculate_tasks:
+                if res[score_id] is None:
+                    res[score_id] = min_max_region[score_id]
+                else:
+                    res[score_id].merge(min_max_region[score_id])
+        return res
+
+    def _save_min_max(self, merged_min_max):
+        print("Saving min max")
+        proto = self.resource.proto
+        for score_id, score_min_max in merged_min_max.items():
+            with proto.open_raw_file(
+                self.resource,
+                f"{self.STATISTICS_FOLDER}/min_max_{score_id}.yaml",
+                mode="wt"
+            ) as outfile:
+                outfile.write(score_min_max.serialize())
+        return merged_min_max
+
+    def _add_histogram_tasks(
+        self, graph, save_minmax_task, region_size
+    ):
+        """
+        Add histogram tasks for specific score id.
+
+        The histogram tasks are dependant on the provided minmax task.
+        """
+        histogram_tasks = []
+        for chrom, start, end in self._split_into_regions(region_size):
+            histogram_tasks.append(graph.create_task(
+                f"{self.score_id}_calculate_histogram_{chrom}_{start}_{end}",
+                self._do_histogram,
+                [chrom, start, end, save_minmax_task],
+                [save_minmax_task]
+            ))
+        merge_task = graph.create_task(
+            f"{self.score_id}_merge_histograms",
+            self._merge_histograms,
+            histogram_tasks,
+            histogram_tasks
+        )
+        save_task = graph.create_task(
+            f"{self.score_id}_save_histograms",
+            self._save_histograms,
+            [merge_task],
+            [merge_task]
+        )
+        return histogram_tasks, merge_task, save_task
+
+    def _do_histogram(self, chrom, start, end, save_minmax_task):
+        print(f"Calculating histogram data for {chrom}: {start} - {end}")
+        assert "histograms" in self.get_config()
+        hist_configs = self.get_config()["histograms"]
+        res = {}
+        for hist_config in hist_configs:
+            score_id = hist_config["score"]
+            if hist_config.get("x_min") is None:
+                hist_config["x_min"] = save_minmax_task[score_id].min
+            if hist_config.get("x_max") is None:
+                hist_config["x_max"] = save_minmax_task[score_id].max
+            res[score_id] = Histogram(hist_config)
+        score_ids = list(res.keys())
+        for record in self.fetch_region(chrom, start, end, score_ids):
+            for scr_id in score_ids:
+                res[scr_id].add_record(record)
+        return res
+
+    def _merge_histograms(self, *calculated_histograms):
+        print(
+            "Merging histogram data for"
+            f"{len(calculated_histograms)} histograms"
+        )
+        assert "histograms" in self.get_config()
+        hist_configs = self.get_config()["histograms"]
+        res = {}
+        for hist_config in hist_configs:
+            res[hist_config["score"]] = None
+        score_ids = list(res.keys())
+
+        for score_id in score_ids:
+            for histogram_region in calculated_histograms:
+                if res[score_id] is None:
+                    res[score_id] = histogram_region[score_id]
+                else:
+                    res[score_id].merge(histogram_region[score_id])
+        return res
+
+    def _save_histograms(self, merged_histograms):
+        print("Saving histogram data")
+        proto = self.resource.proto
+        for score_id, score_histogram in merged_histograms.items():
+            with proto.open_raw_file(
+                self.resource,
+                f"{self.STATISTICS_FOLDER}/histogram_{score_id}.yaml",
+                mode="wt"
+            ) as outfile:
+                outfile.write(score_histogram.serialize())
+
+            width = score_histogram.bins[1:] - score_histogram.bins[:-1]
+            plt.bar(
+                x=score_histogram.bins[:-1], height=score_histogram.bars,
+                log=score_histogram.y_scale == "log",
+                width=width,
+                align="edge")
+
+            if score_histogram.x_scale == "log":
+                plt.xscale("log")
+            plt.grid(axis="y")
+            plt.grid(axis="x")
+            with proto.open_raw_file(
+                self.resource,
+                f"{self.STATISTICS_FOLDER}/histogram_{score_id}.png",
+                mode="wb"
+            ) as outfile:
+                plt.savefig(outfile)
+            plt.clf()
+        return merged_histograms
+
+    def _split_into_regions(self, region_size):
+        chromosomes = self.get_all_chromosomes()
+        for chrom in chromosomes:
+            chrom_len = self.table.get_chromosome_length(chrom)
+            logger.debug(
+                "Chromosome '%s' has length %s",
+                chrom, chrom_len)
+            i = 1
+            while i < chrom_len - region_size:
+                yield chrom, i, i + region_size - 1
+                i += region_size
+            yield chrom, i, None
+
+    def calc_info_hash(self):
+        """Compute and return the info hash."""
+        return "infohash"
+
+    def calc_statistics_hash(self) -> str:
+        """
+        Compute the statistics hash.
+
+        This hash is used to decide whether the resource statistics should be
+        recomputed.
+        """
+        return "somehash"
 
 
 class PositionScore(GenomicScore):
@@ -549,8 +739,8 @@ class PositionScore(GenomicScore):
         return cast(PositionScore, super().open())
 
     def fetch_scores(
-            self, chrom: str, position: int, scores: Optional[list[str]] = None
-    ):
+            self, chrom: str, position: int,
+            scores: Optional[list[str]] = None):
         """Fetch score values at specific genomic position."""
         if chrom not in self.get_all_chromosomes():
             raise ValueError(
@@ -857,14 +1047,19 @@ def build_score_from_resource(resource: GenomicResource) -> GenomicScore:
 class MinMaxValue(Statistic):
     """Statistic that calculates Min and Max values in a genomic score."""
 
-    def __init__(self, min_value=None, max_value=None):
+    def __init__(self, score_id, min_value=None, max_value=None):
         super().__init__("min_max", "Calculates Min and Max values")
+        self.score_id = score_id
         self.min = min_value
         self.max = max_value
 
-    def add_value(self, value):
+    def add_record(self, record):
+        value = record[self.score_id]
         if value is None:
             return
+        self.add_value(value)
+
+    def add_value(self, value):
         if self.min is None or value < self.min:
             self.min = value
         if self.max is None or value > self.max:
@@ -873,6 +1068,10 @@ class MinMaxValue(Statistic):
     def merge(self, other: MinMaxValue) -> None:
         if not isinstance(other, MinMaxValue):
             raise ValueError()
+        if self.score_id != other.score_id:
+            raise ValueError(
+                "Attempting to merge min max values of different scores!"
+            )
         if self.min is None:
             self.min = other.min
         elif other.min is None:
@@ -888,9 +1087,11 @@ class MinMaxValue(Statistic):
             self.max = other.max
 
     def serialize(self) -> str:
-        return cast(str, yaml.dump({"min": self.min, "max": self.max}))
+        return cast(str, yaml.dump(
+            {"score_id": self.score_id, "min": self.min, "max": self.max})
+        )
 
     @staticmethod
     def deserialize(data) -> MinMaxValue:
         res = yaml.load(data, yaml.Loader)
-        return MinMaxValue(res.get("min"), res.get("max"))
+        return MinMaxValue(res["score_id"], res.get("min"), res.get("max"))

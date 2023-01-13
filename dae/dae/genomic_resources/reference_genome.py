@@ -242,6 +242,18 @@ class ReferenceGenome(GenomicResourceImplementation):
             }}
         }
 
+    def get_info(self):
+        return super(InfoImplementationMixin, self).get_info()
+
+    def calc_info_hash(self):
+        return "placeholder"
+
+    def calc_statistics_hash(self) -> str:
+        return "placeholder"
+
+    def add_statistics_build_tasks(self, task_graph, **kwargs) -> None:
+        return
+
 
 def build_reference_genome_from_file(filename) -> ReferenceGenome:
     """Open a reference genome from a file."""

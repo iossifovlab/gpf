@@ -50,14 +50,15 @@ class GenomicResourceImplementation(ABC):
         """
         raise NotImplementedError()
 
-    def add_statistics_build_tasks(self, task_graph) -> None:
+    @abstractmethod
+    def add_statistics_build_tasks(self, task_graph, **kwargs) -> None:
         """Add tasks for calculating resource statistics to a task graph."""
-        return None
+        raise NotImplementedError()
 
     @abstractmethod
     def calc_info_hash(self):
         """Compute and return the info hash."""
-        return None
+        raise NotImplementedError()
 
     @abstractmethod
     def get_info(self) -> str:

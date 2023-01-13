@@ -289,6 +289,18 @@ class GeneScoreCollection(
             }},
         }
 
+    def get_info(self):
+        return super(InfoImplementationMixin, self).get_info()
+
+    def calc_info_hash(self):
+        return "placeholder"
+
+    def calc_statistics_hash(self) -> str:
+        return "placeholder"
+
+    def add_statistics_build_tasks(self, task_graph, **kwargs) -> None:
+        return
+
 
 class GeneScoresDb:
     """
