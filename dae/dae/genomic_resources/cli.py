@@ -36,7 +36,6 @@ from dae.genomic_resources.repository import \
 from dae.utils.verbosity_configuration import VerbosityConfiguration
 
 from dae.genomic_resources.fsspec_protocol import build_fsspec_protocol
-from dae.genomic_resources.histogram import HistogramBuilder
 from dae.genomic_resources.repository_factory import \
     build_genomic_resource_repository
 
@@ -369,6 +368,17 @@ def _run_resource_manifest_command(proto, repo_url, **kwargs):
     _do_resource_manifest_command(proto, res, dry_run, force, use_dvc)
 
 
+def _read_stats_hash(proto, implementation):
+    res = implementation.resource
+    stats_dir = implementation.STATISTICS_FOLDER
+    if not proto.file_exists(res, f"{stats_dir}/stats_hash"):
+        return None
+    with proto.open_raw_file(
+        res, f"{stats_dir}/stats_hash", mode="rt"
+    ) as infile:
+        return infile.read()
+
+
 def _store_stats_hash(proto, implementation):
     res = implementation.resource
     stats_dir = implementation.STATISTICS_FOLDER
@@ -380,48 +390,56 @@ def _store_stats_hash(proto, implementation):
     return True
 
 
-def _collect_resource_stats_tasks(  # pylint: disable=too-many-arguments
-        graph, proto, res, dry_run, force, use_dvc, region_size):
+def _collect_impl_stats_tasks(  # pylint: disable=too-many-arguments
+        graph, proto, impl, dry_run, force, use_dvc, region_size):
 
-    impl = build_resource_implementation(res)
-
-    impl.add_statistics_build_tasks(graph)
+    impl.add_statistics_build_tasks(graph, region_size=region_size)
 
     stats_tasks = copy.copy(graph.tasks)
 
     graph.create_task(
-        f"{res.resource_id}_store_stats_hash",
+        f"{impl.resource.resource_id}_store_stats_hash",
         _store_stats_hash,
         [proto, impl],
         stats_tasks
     )
 
     graph.create_task(
-        f"{res.resource_id}_manifest_rebuild",
+        f"{impl.resource.resource_id}_manifest_rebuild",
         _do_resource_manifest_command,
-        [proto, res, dry_run, force, use_dvc],
+        [proto, impl.resource, dry_run, force, use_dvc],
         stats_tasks
     )
 
 
-def _run_repo_stats_command(proto, **kwargs):
-    _run_repo_manifest_command(proto, **kwargs)
-    dry_run = kwargs.get("dry_run", False)
-    force = kwargs.get("force", False)
-    use_dvc = kwargs.get("use_dvc", True)
-    region_size = kwargs.get("region_size", 3_000_000)
-    jobs = kwargs.get("jobs", None)
-    if dry_run and force:
-        logger.warning("please choose one of 'dry_run' and 'force' options")
-        return
+def _stats_need_rebuild(proto, impl):
+    """Check if an implementation's stats need rebuilding."""
+    current_hash = impl.calc_statistics_hash()
 
-    graph = TaskGraph()
+    stored_hash = _read_stats_hash(proto, impl)
 
-    for res in proto.get_all_resources():
-        _collect_resource_stats_tasks(
-            graph, proto, res, dry_run, force, use_dvc, region_size)
+    if stored_hash is None:
+        logger.info(
+            "No hash stored for %s, building required",
+            impl.resource.resource_id
+        )
+        return True
 
+    if stored_hash != current_hash:
+        logger.info(
+            "Stored hash for %s is outdated, rebuilding required",
+            impl.resource.resource_id
+        )
+        return True
+
+    logger.info("%s statistics hash is up to date")
+    return False
+
+
+def _execute_tasks(graph, **kwargs):
+    jobs = kwargs.get("jobs", 1)
     if jobs is not None and jobs > 1:
+        print("created DASK client")
         dask_client = DaskClient.from_dict(kwargs)
         if dask_client is None:
             sys.exit(1)
@@ -430,6 +448,7 @@ def _run_repo_stats_command(proto, **kwargs):
             executor = DaskExecutor(client)
             tasks_iter = executor.execute(graph)
     else:
+        print("created sequential executor")
         executor = SequentialExecutor()
         tasks_iter = executor.execute(graph)
 
@@ -443,12 +462,36 @@ def _run_repo_stats_command(proto, **kwargs):
             logger.info("Task %s failed.", task.task_id)
         else:
             logger.info("Task %s status unknown.", task.task_id)
+
+
+def _run_repo_stats_command(proto, **kwargs):
+    _run_repo_manifest_command(proto, **kwargs)
+    dry_run = kwargs.get("dry_run", False)
+    force = kwargs.get("force", False)
+    use_dvc = kwargs.get("use_dvc", True)
+    region_size = kwargs.get("region_size", 3_000_000)
+    if dry_run and force:
+        logger.warning("please choose one of 'dry_run' and 'force' options")
+        return
+
+    graph = TaskGraph()
+
+    for res in proto.get_all_resources():
+        impl = build_resource_implementation(res)
+        if force or _stats_need_rebuild(proto, impl):
+            _collect_impl_stats_tasks(
+                graph, proto, impl, dry_run, force, use_dvc, region_size)
+
+    _execute_tasks(graph, **kwargs)
+
     if not dry_run:
         proto.build_content_file()
 
 
 def _run_resource_stats_command(proto, repo_url, **kwargs):
+    print("performing manifest")
     _run_resource_manifest_command(proto, repo_url, **kwargs)
+    print("done manifest")
     dry_run = kwargs.get("dry_run", False)
     force = kwargs.get("force", False)
     use_dvc = kwargs.get("use_dvc", True)
@@ -464,28 +507,27 @@ def _run_resource_stats_command(proto, repo_url, **kwargs):
 
     graph = TaskGraph()
 
-    _collect_resource_stats_tasks(
-        graph, proto, res, dry_run, force, use_dvc, region_size)
+    impl = build_resource_implementation(res)
 
-    dask_client = DaskClient.from_dict(kwargs)
-    if dask_client is None:
-        sys.exit(1)
+    if force or _stats_need_rebuild(proto, impl):
+        print("needs rebuild")
+        _collect_impl_stats_tasks(
+            graph, proto, impl, dry_run, force, use_dvc, region_size)
+        print("collected tasks")
 
-    with dask_client as client:
-        executor = DaskExecutor(client)
-        executor.execute(graph)
+    _execute_tasks(graph, **kwargs)
 
 
 def _run_repo_repair_command(proto, **kwargs):
-    _run_repo_stats_command(proto, **kwargs)
+    _run_repo_info_command(proto, **kwargs)
 
 
 def _run_resource_repair_command(proto, repo_url, **kwargs):
-    _run_resource_stats_command(proto, repo_url, **kwargs)
+    _run_resource_info_command(proto, repo_url, **kwargs)
 
 
 def _run_repo_info_command(proto, **kwargs):  # pylint: disable=unused-argument
-    _run_repo_repair_command(proto, **kwargs)
+    _run_repo_stats_command(proto, **kwargs)
     proto.build_index_info(repository_template)
 
     for res in proto.get_all_resources():
@@ -525,7 +567,7 @@ def _do_resource_info_command(proto, res):
 
 
 def _run_resource_info_command(proto, repo_url, **kwargs):
-    _run_resource_repair_command(proto, repo_url, **kwargs)
+    _run_resource_stats_command(proto, repo_url, **kwargs)
     res = _find_resource(proto, repo_url, **kwargs)
     if res is None:
         logger.error("resource not found...")
