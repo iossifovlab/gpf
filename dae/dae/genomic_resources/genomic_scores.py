@@ -636,10 +636,10 @@ class GenomicScore(
         res = {}
         for hist_config in hist_configs:
             score_id = hist_config["score"]
-            if hist_config.get("x_min") is None:
-                hist_config["x_min"] = save_minmax_task[score_id].min
-            if hist_config.get("x_max") is None:
-                hist_config["x_max"] = save_minmax_task[score_id].max
+            if hist_config.get("min") is None:
+                hist_config["min"] = save_minmax_task[score_id].min
+            if hist_config.get("max") is None:
+                hist_config["max"] = save_minmax_task[score_id].max
             res[score_id] = Histogram(hist_config)
         score_ids = list(res.keys())
         for record in self.fetch_region(chrom, start, end, score_ids):
