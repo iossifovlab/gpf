@@ -1,7 +1,6 @@
 import time
 import json
 import logging
-from contextlib import closing
 from typing import Optional, Any
 
 import configparser
@@ -12,10 +11,9 @@ from google.cloud import bigquery
 from dae.variants.attributes import Role, Status, Sex
 from dae.query_variants.sql.schema2.base_variants import SqlSchema2Variants
 from dae.query_variants.sql.schema2.base_query_builder import Dialect
-from dae.query_variants.sql.schema2.family_builder import FamilyQueryBuilder
-from dae.query_variants.sql.schema2.summary_builder import SummaryQueryBuilder
 from dae.variants.variant import SummaryVariantFactory
 from dae.variants.family_variant import FamilyVariant
+from gcp_genotype_storage.bigquery_query_runner import BigQueryQueryRunner
 
 logger = logging.getLogger(__name__)
 
@@ -39,10 +37,10 @@ class BigQueryDialect(Dialect):
         return "FLOAT64"
 
 
-# FIXME too-many-instance-attributes
-# pylint: disable=too-many-instance-attributes
 class BigQueryVariants(SqlSchema2Variants):
     """Backend for BigQuery."""
+
+    RUNNER_CLASS = BigQueryQueryRunner
 
     def __init__(
         self,
@@ -112,158 +110,13 @@ class BigQueryVariants(SqlSchema2Variants):
             "layout": "layout",
             "phenotype": "phenotype",
         }
-        if "not_sequenced" in self.pedigree_schema:
-            columns = {"not_sequenced": "not_sequenced"}
 
         ped_df = ped_df.rename(columns=columns)
-        ped_df.role = ped_df.role.apply(Role)
-        ped_df.sex = ped_df.sex.apply(Sex)
-        ped_df.status = ped_df.status.apply(Status)
+        ped_df.role = ped_df.role.apply(Role)  # type: ignore
+        ped_df.sex = ped_df.sex.apply(Sex)  # type: ignore
+        ped_df.status = ped_df.status.apply(Status)  # type: ignore
 
         return ped_df
-
-    def _summary_variants_iterator(
-        self,
-        regions=None,
-        genes=None,
-        effect_types=None,
-        family_ids=None,
-        person_ids=None,
-        inheritance=None,
-        roles=None,
-        sexes=None,
-        variant_type=None,
-        real_attr_filter=None,
-        ultra_rare=None,
-        frequency_filter=None,
-        return_reference=None,
-        return_unknown=None,
-        limit=None,
-        pedigree_fields=None,
-    ):
-        # pylint: disable=too-many-arguments,too-many-locals
-        query_builder = SummaryQueryBuilder(
-            self.dialect,
-            self.db,
-            self.family_variant_table,
-            self.summary_allele_table,
-            self.pedigree_table,
-            self.family_variant_schema,
-            self.summary_allele_schema,
-            self.table_properties,
-            self.pedigree_schema,
-            self.ped_df,
-            gene_models=self.gene_models,
-            do_join_affected=False,
-        )
-
-        query = query_builder.build_query(
-            regions=regions,
-            genes=genes,
-            effect_types=effect_types,
-            family_ids=family_ids,
-            person_ids=person_ids,
-            inheritance=inheritance,
-            roles=roles,
-            sexes=sexes,
-            variant_type=variant_type,
-            real_attr_filter=real_attr_filter,
-            ultra_rare=ultra_rare,
-            frequency_filter=frequency_filter,
-            return_reference=return_reference,
-            return_unknown=return_unknown,
-            limit=limit,
-            pedigree_fields=pedigree_fields,
-        )
-
-        result = self.client.query(query)
-
-        for row in result:
-            try:
-                sv = self._deserialize_summary_variant(row)
-                if sv is None:
-                    continue
-                yield sv
-            except Exception as ex:  # pylint: disable=broad-except
-                logger.error("unable to deserialize summary variant (BQ)")
-                logger.exception(ex)
-                continue
-
-    def _family_variants_iterator(
-        self,
-        regions=None,
-        genes=None,
-        effect_types=None,
-        family_ids=None,
-        person_ids=None,
-        inheritance=None,
-        roles=None,
-        sexes=None,
-        variant_type=None,
-        real_attr_filter=None,
-        ultra_rare=None,
-        frequency_filter=None,
-        return_reference=None,
-        return_unknown=None,
-        limit=None,
-        pedigree_fields=None,
-    ):
-        # pylint: disable=too-many-arguments,too-many-locals
-        do_join_pedigree = pedigree_fields is not None
-        query_builder = FamilyQueryBuilder(
-            self.dialect,
-            self.db,
-            family_variant_table=self.family_variant_table,
-            summary_allele_table=self.summary_allele_table,
-            pedigree_table=self.pedigree_table,
-            family_variant_schema=self.family_variant_schema,
-            summary_allele_schema=self.summary_allele_schema,
-            table_properties=self.table_properties,
-            pedigree_schema=self.pedigree_schema,
-            pedigree_df=self.ped_df,
-            gene_models=self.gene_models,
-            do_join_pedigree=do_join_pedigree,
-        )
-
-        query = query_builder.build_query(
-            regions=regions,
-            genes=genes,
-            effect_types=effect_types,
-            family_ids=family_ids,
-            person_ids=person_ids,
-            inheritance=inheritance,
-            roles=roles,
-            sexes=sexes,
-            variant_type=variant_type,
-            real_attr_filter=real_attr_filter,
-            ultra_rare=ultra_rare,
-            frequency_filter=frequency_filter,
-            return_reference=return_reference,
-            return_unknown=return_unknown,
-            limit=limit,
-            pedigree_fields=pedigree_fields,
-        )
-
-        # ------------------ DEBUG ---------------------
-        result = []
-        logger.info("BQ QUERY BUILDER:\n%s}", query)
-        start = time.perf_counter()
-        bq_job = self.client.query(query)
-        end = time.perf_counter()
-        logger.info("TIME (BQ DB): %f", end - start)
-        result = bq_job
-        # ------------------ DEBUG ---------------------
-
-        for row in result:
-            try:
-                fv = self._deserialize_family_variant(row)
-                if fv is None:
-                    continue
-                yield fv
-            except Exception as ex:  # pylint: disable=broad-except
-                logger.error("unable to deserialize family variant (BQ)")
-                logger.exception(ex)
-                continue
 
     def _get_connection_factory(self) -> Any:
         # pylint: disable=protected-access
@@ -287,117 +140,3 @@ class BigQueryVariants(SqlSchema2Variants):
             np.array(fv_record["genotype"]),
             np.array(fv_record["best_state"]),
         )
-
-    def query_summary_variants(
-        self,
-        regions=None,
-        genes=None,
-        effect_types=None,
-        family_ids=None,
-        person_ids=None,
-        inheritance=None,
-        roles=None,
-        sexes=None,
-        variant_type=None,
-        real_attr_filter=None,
-        ultra_rare=None,
-        frequency_filter=None,
-        return_reference=None,
-        return_unknown=None,
-        limit=None,
-    ):
-        """Query summary variants."""
-        # FIXME too-many-arguments
-        # pylint: disable=too-many-arguments
-        if limit is None:
-            count = -1
-        else:
-            count = limit
-            limit = 10 * limit
-
-        with closing(
-            self._summary_variants_iterator(
-                regions=regions,
-                genes=genes,
-                effect_types=effect_types,
-                family_ids=family_ids,
-                person_ids=person_ids,
-                inheritance=inheritance,
-                roles=roles,
-                sexes=sexes,
-                variant_type=variant_type,
-                real_attr_filter=real_attr_filter,
-                ultra_rare=ultra_rare,
-                frequency_filter=frequency_filter,
-                return_reference=return_reference,
-                return_unknown=return_unknown,
-                limit=limit,
-            )
-        ) as sv_iterator:
-
-            for sv in sv_iterator:
-                if sv is None:
-                    continue
-                yield sv
-                count -= 1
-                if count == 0:
-                    break
-
-    def query_variants(
-        self,
-        regions=None,
-        genes=None,
-        effect_types=None,
-        family_ids=None,
-        person_ids=None,
-        inheritance=None,
-        roles=None,
-        sexes=None,
-        variant_type=None,
-        real_attr_filter=None,
-        ultra_rare=None,
-        frequency_filter=None,
-        return_reference=None,
-        return_unknown=None,
-        limit=None,
-        pedigree_fields=None,
-    ):
-        """Query summary variants."""
-        # FIXME too-many-arguments
-        # pylint: disable=too-many-arguments
-        if limit is None:
-            count = -1
-        else:
-            count = limit
-            limit = 10 * limit
-
-        with closing(
-            self._family_variants_iterator(
-                regions=regions,
-                genes=genes,
-                effect_types=effect_types,
-                family_ids=family_ids,
-                person_ids=person_ids,
-                inheritance=inheritance,
-                roles=roles,
-                sexes=sexes,
-                variant_type=variant_type,
-                real_attr_filter=real_attr_filter,
-                ultra_rare=ultra_rare,
-                frequency_filter=frequency_filter,
-                return_reference=return_reference,
-                return_unknown=return_unknown,
-                limit=limit,
-                pedigree_fields=pedigree_fields,
-            )
-        ) as fv_iterator:
-
-            for v in fv_iterator:
-                if v is None:
-                    continue
-                yield v
-                count -= 1
-                if count == 0:
-                    break
-
-        logger.debug("[DONE] FAMILY VARIANTS QUERY")

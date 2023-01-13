@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 class QueryRunner(abc.ABC):
     """Run a query in the backround using the provided executor."""
 
-    def __init__(self, deserializer=None):
+    def __init__(self, **kwargs):
         super().__init__()
 
         self._status_lock = threading.RLock()
@@ -26,6 +26,7 @@ class QueryRunner(abc.ABC):
         self._future: Optional[Future] = None
         self.study_id = None
 
+        deserializer = kwargs.get("deserializer")
         if deserializer is not None:
             self.deserializer = deserializer
         else:

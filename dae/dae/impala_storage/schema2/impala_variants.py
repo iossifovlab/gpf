@@ -2,11 +2,10 @@ import json
 import logging
 import configparser
 from contextlib import closing
-from typing import Optional, Set, Tuple, Any
+from typing import Optional, Any
 import numpy as np
 from impala.util import as_pandas
-from dae.person_sets import PersonSetCollection
-from dae.query_variants.query_runners import QueryResult, QueryRunner
+from dae.query_variants.query_runners import QueryRunner
 from dae.variants.attributes import Role, Status, Sex
 from dae.impala_storage.schema2.impala_query_runner import ImpalaQueryRunner
 from dae.query_variants.sql.schema2.base_variants import SqlSchema2Variants
@@ -25,7 +24,6 @@ class ImpalaDialect(Dialect):
 class ImpalaVariants(SqlSchema2Variants):
     """A backend implementing an impala backend."""
 
-    # pylint: disable=too-many-instance-attributes
     RUNNER_CLASS: type[QueryRunner] = ImpalaQueryRunner
 
     def __init__(
@@ -118,161 +116,4 @@ class ImpalaVariants(SqlSchema2Variants):
             self.families[fv_record["family_id"]],
             np.array(fv_record["genotype"]),
             np.array(fv_record["best_state"]),
-        )
-
-    def query_summary_variants(
-        self,
-        regions=None,
-        genes=None,
-        effect_types=None,
-        family_ids=None,
-        person_ids=None,
-        inheritance=None,
-        roles=None,
-        sexes=None,
-        variant_type=None,
-        real_attr_filter=None,
-        ultra_rare=None,
-        frequency_filter=None,
-        return_reference=None,
-        return_unknown=None,
-        limit=None,
-    ):
-        """Query summary variants."""
-        # pylint: disable=too-many-arguments,too-many-locals
-        if limit is None:
-            limit = -1
-            request_limit = None
-        else:
-            request_limit = 10 * limit  # TODO why?
-
-        runner = self.build_summary_variants_query_runner(
-            regions=regions,
-            genes=genes,
-            effect_types=effect_types,
-            family_ids=family_ids,
-            person_ids=person_ids,
-            inheritance=inheritance,
-            roles=roles,
-            sexes=sexes,
-            variant_type=variant_type,
-            real_attr_filter=real_attr_filter,
-            ultra_rare=ultra_rare,
-            frequency_filter=frequency_filter,
-            return_reference=return_reference,
-            return_unknown=return_unknown,
-            limit=request_limit,
-        )
-
-        result = QueryResult(runners=[runner], limit=limit)
-        result.start()
-
-        seen = set()
-        with closing(result) as result:
-            for v in result:
-                if v is None:
-                    continue
-                if v.svuid in seen:
-                    continue
-                if v is None:
-                    continue
-                yield v
-                seen.add(v.svuid)
-
-    def query_variants(
-        self,
-        regions=None,
-        genes=None,
-        effect_types=None,
-        family_ids=None,
-        person_ids=None,
-        inheritance=None,
-        roles=None,
-        sexes=None,
-        variant_type=None,
-        real_attr_filter=None,
-        ultra_rare=None,
-        frequency_filter=None,
-        return_reference=None,
-        return_unknown=None,
-        limit=None,
-        pedigree_fields=None
-    ):
-        """Query family variants."""
-        # pylint: disable=too-many-arguments,too-many-locals
-        if limit is None:
-            limit = -1
-            request_limit = None
-        else:
-            request_limit = 10 * limit
-
-        runner = self.build_family_variants_query_runner(
-            regions=regions,
-            genes=genes,
-            effect_types=effect_types,
-            family_ids=family_ids,
-            person_ids=person_ids,
-            inheritance=inheritance,
-            roles=roles,
-            sexes=sexes,
-            variant_type=variant_type,
-            real_attr_filter=real_attr_filter,
-            ultra_rare=ultra_rare,
-            frequency_filter=frequency_filter,
-            return_reference=return_reference,
-            return_unknown=return_unknown,
-            limit=request_limit,
-            pedigree_fields=pedigree_fields
-        )
-        result = QueryResult(runners=[runner], limit=limit)
-
-        result.start()
-        with closing(result) as result:
-            seen = set()
-            for v in result:
-                if v is None:
-                    continue
-                if v.fvuid in seen:
-                    continue
-                yield v
-                seen.add(v.fvuid)
-
-    @staticmethod
-    def build_person_set_collection_query(
-            person_set_collection: PersonSetCollection,
-            person_set_collection_query: Tuple[str, Set[str]]):
-        """No idea what it does. If you know please edit."""
-        collection_id, selected_person_sets = person_set_collection_query
-        assert collection_id == person_set_collection.id
-        selected_person_sets = set(selected_person_sets)
-        assert isinstance(selected_person_sets, set)
-
-        if not person_set_collection.is_pedigree_only():
-            return None
-
-        available_person_sets = set(person_set_collection.person_sets.keys())
-        if (available_person_sets & selected_person_sets) == \
-                available_person_sets:
-            return ()
-
-        def pedigree_columns(selected_person_sets):
-            result = []
-            for person_set_id in sorted(selected_person_sets):
-                if person_set_id not in person_set_collection.person_sets:
-                    continue
-                person_set = person_set_collection.person_sets[person_set_id]
-                assert len(person_set.values) == \
-                    len(person_set_collection.sources)
-                person_set_query = {}
-                for source, value in zip(
-                        person_set_collection.sources, person_set.values):
-                    person_set_query[source.ssource] = value
-                result.append(person_set_query)
-            return result
-
-        if person_set_collection.default.id not in selected_person_sets:
-            return (pedigree_columns(selected_person_sets), [])
-        return (
-            [],
-            pedigree_columns(available_person_sets - selected_person_sets)
         )

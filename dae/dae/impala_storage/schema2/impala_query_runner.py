@@ -8,12 +8,12 @@ logger = logging.getLogger(__name__)
 
 
 class ImpalaQueryRunner(QueryRunner):
-    """Run a query in a separate thread."""
+    """Run a Impala query in a separate thread."""
 
-    def __init__(self, connection_pool, query, deserializer=None):
+    def __init__(self, connection_factory, query, deserializer=None):
         super().__init__(deserializer=deserializer)
 
-        self.connection_pool = connection_pool
+        self.connection_pool = connection_factory
         self.query = query
 
     def connect(self):
