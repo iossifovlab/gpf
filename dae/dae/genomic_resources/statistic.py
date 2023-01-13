@@ -24,7 +24,7 @@ class Statistic:
     def serialize(self) -> str:
         pass
 
-    @abstractmethod
     @staticmethod
+    @abstractmethod
     def deserialize(data) -> Statistic:
         pass
