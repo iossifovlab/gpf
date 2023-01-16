@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 
 import { Observable } from 'rxjs';
@@ -18,7 +18,7 @@ import { ErrorsState, ErrorsModel } from 'app/common/errors.state';
   templateUrl: './enrichment-tool.component.html',
   styleUrls: ['./enrichment-tool.component.css'],
 })
-export class EnrichmentToolComponent implements OnInit {
+export class EnrichmentToolComponent implements OnInit, OnDestroy {
   public enrichmentResults: EnrichmentResults;
   public selectedDataset: Dataset;
   public disableQueryButtons = false;
@@ -49,6 +49,10 @@ export class EnrichmentToolComponent implements OnInit {
         this.disableQueryButtons = state.componentErrors.size > 0;
       });
     });
+  }
+
+  public ngOnDestroy(): void {
+    this.loadingService.setLoadingStop();
   }
 
   @Selector([GenesBlockComponent.genesBlockState, EnrichmentModelsState])

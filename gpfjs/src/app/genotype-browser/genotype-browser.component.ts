@@ -1,4 +1,4 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input, OnDestroy, OnInit } from '@angular/core';
 import { Observable } from 'rxjs';
 import { QueryService } from '../query/query.service';
 import { FullscreenLoadingService } from '../fullscreen-loading/fullscreen-loading.service';
@@ -24,7 +24,7 @@ import { downloadBlobResponse } from 'app/utils/blob-download';
   templateUrl: './genotype-browser.component.html',
   styleUrls: ['./genotype-browser.component.css'],
 })
-export class GenotypeBrowserComponent implements OnInit {
+export class GenotypeBrowserComponent implements OnInit, OnDestroy {
   public genotypePreviewVariantsArray: GenotypePreviewVariantsArray;
   public tablePreview: boolean;
   public legend: Array<PersonSet>;
@@ -97,6 +97,10 @@ export class GenotypeBrowserComponent implements OnInit {
     this.errorsState$.subscribe(state => {
       setTimeout(() => this.disableQueryButtons = state.componentErrors.size > 0);
     });
+  }
+
+  public ngOnDestroy(): void {
+    this.loadingService.setLoadingStop();
   }
 
   public submitQuery(): void {
