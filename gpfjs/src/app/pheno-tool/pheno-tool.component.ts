@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { DatasetsService } from '../datasets/datasets.service';
 import { Dataset } from '../datasets/datasets';
 import { FullscreenLoadingService } from '../fullscreen-loading/fullscreen-loading.service';
@@ -20,7 +20,7 @@ import { downloadBlobResponse } from 'app/utils/blob-download';
   templateUrl: './pheno-tool.component.html',
   styleUrls: ['./pheno-tool.component.css'],
 })
-export class PhenoToolComponent implements OnInit {
+export class PhenoToolComponent implements OnInit, OnDestroy {
   @Select(PhenoToolComponent.phenoToolStateSelector) public state$: Observable<object[]>;
   @Select(ErrorsState) public errorsState$: Observable<ErrorsModel>;
 
@@ -69,6 +69,10 @@ export class PhenoToolComponent implements OnInit {
         this.disableQueryButtons = state.componentErrors.size > 0;
       });
     });
+  }
+
+  public ngOnDestroy(): void {
+    this.loadingService.setLoadingStop();
   }
 
   public submitQuery(): void {

@@ -111,6 +111,7 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
   }
 
   public ngOnDestroy(): void {
+    this.loadingService.setLoadingStop();
     this.subscriptions.map(subscription => subscription.unsubscribe());
   }
 
