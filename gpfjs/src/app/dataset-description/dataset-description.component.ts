@@ -30,7 +30,7 @@ export class DatasetDescriptionComponent implements OnInit {
     fullscreen: {enable: false, icons: undefined},
     parser: (val: string) => {
       const sanitizedText = DOMPurify.sanitize(val.trim());
-      return this.markdownService.compile(sanitizedText);
+      return this.markdownService.parse(sanitizedText);
     }
   };
 
