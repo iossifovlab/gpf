@@ -2,6 +2,7 @@ import argparse
 import sys
 import textwrap
 import traceback
+from dae.dae.utils.verbosity_configuration import VerbosityConfiguration
 from dae.import_tools.import_tools import ImportProject
 from dae.task_graph.cache import CacheRecordType, FileTaskCache
 
@@ -9,6 +10,8 @@ from dae.task_graph.executor import \
     DaskExecutor, SequentialExecutor
 from dae.dask.client_factory import DaskClient
 from dae.utils import fs_utils
+
+from dae.task_graph import TaskGraphCli
 
 
 def main(argv=None):
@@ -19,39 +22,27 @@ def main(argv=None):
     )
     parser.add_argument("config", type=str,
                         help="Path to the import configuration")
-    parser.add_argument(
-        "command", choices=["run", "list", "status"], default="run", nargs="?",
-        help=textwrap.dedent("""\
-            Command to execute on the import configuration.
-            run - runs the import process
-            list - lists the tasks to be executed but doesn't run them
-            status - synonym for list
-        """),
-    )
-    parser.add_argument("--task-id", dest="task_ids", type=str, nargs="+")
-    parser.add_argument(
-        "--force", "-f", default=False, action="store_true",
-        help="Ignore precomputed state and always rerun the entire import"
-    )
-    parser.add_argument(
-        "--keep-going", default=False, action="store_true",
-        help="Whether or not to keep executing in case of an error"
-    )
-    parser.add_argument(
-        "--verbose", "-v", default=False, action="store_true",
-        help="Enable verbose output"
-    )
-    DaskClient.add_arguments(parser)
+    TaskGraphCli.add_arguments(parser)
+    VerbosityConfiguration.set_argumnets(parser)
     args = parser.parse_args(argv or sys.argv[1:])
-
+    VerbosityConfiguration.set(args)
+    
     project = ImportProject.build_from_file(args.config)
-    task_cache = _create_task_cache(args, project)
 
-    if args.command is None or args.command == "run":
-        return _cmd_run(args, project, task_cache)
-    if args.command in {"list", "status"}:
-        return _cmd_list(args, project, task_cache)
-    parser.exit(message=f"Unknown command {args.command}\n")
+    # task_cache = _create_task_cache(args, project)
+
+    storage = project.get_import_storage()
+    task_graph = storage.generate_import_task_graph(project)
+    task_graph.input_files.extend(project.config_filenames)
+
+    TaskGraphCli.process_graph(args, task_graph)
+
+    # if args.command is None or args.command == "run":
+    #     return _cmd_run(args, project, task_cache)
+    # if args.command in {"list", "status"}:
+    #     return _cmd_list(args, project, task_cache)
+    # parser.exit(message=f"Unknown command {args.command}\n")
+
     return 0
 
 
