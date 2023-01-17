@@ -3,8 +3,9 @@ import sys
 import time
 from typing import Optional, List
 
-from dae.task_graph.cli_tools import add_arguments
-from dae.task_graph.cli_tools import process_graph
+from dae.task_graph import TaskGraphCli
+# TaskGraphCli.add_arumgetts
+# TaksGraphClie.process_graph
 from dae.task_graph.graph import TaskGraph
 
 
@@ -41,9 +42,9 @@ def main(argv=None):
                         default="A", nargs="?")
     parser.add_argument("--graph_params", "-gp", type=str, nargs="+")
 
-    add_arguments(parser)
+    TaskGraphCli.add_arguments(parser)
 
     args = parser.parse_args(argv or sys.argv[1:])
 
     empty_graph = build_demo_graph(args.graph, args.graph_params)
-    process_graph(args, empty_graph)
+    TaskGraphCli.process_graph(args, empty_graph)

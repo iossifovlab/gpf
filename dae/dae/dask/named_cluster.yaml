@@ -1,5 +1,27 @@
 dae_named_cluster:
-  default: default
+  default: local
   clusters:
-    - name: default 
+    - name: local 
       type: local
+    - name: sge_quick 
+      type: sge
+      params:
+        cores: 1
+        memory: 1GB
+    - name: slurm
+      type: slurm
+      params:
+        cores: 1
+        memory: 1GB
+    - name: kubernetes
+      type: kubgernetes
+      params:
+        container_image: xxxxx
+        extra_pod_config:
+          A: B
+          b: 234234
+        envvars: 
+          - PATH
+          - MY_ENV
+
+
