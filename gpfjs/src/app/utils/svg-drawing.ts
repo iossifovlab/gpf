@@ -155,7 +155,9 @@ export const line = (
   xStart: number,
   xEnd: number,
   y: number,
-  svgTitle: string
+  svgTitle: string,
+  opacity = 100,
+  strokeWidth = 1
 ): void => {
   element.append('line')
     .attr('x1', xStart)
@@ -163,5 +165,7 @@ export const line = (
     .attr('x2', xEnd)
     .attr('y2', y)
     .attr('stroke', 'black')
+    .attr('opacity', `${opacity}%`)
+    .attr('stroke-width', strokeWidth)
     .append('svg:title').text(svgTitle);
 };
