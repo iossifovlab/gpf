@@ -188,9 +188,6 @@ class ParquetPartitionDescriptor(PartitionDescriptor):
     def rare_boundary(self):
         return self._rare_boundary
 
-    # reoganize to path
-    # def from_string
-
     @staticmethod
     def from_config(config_path, root_dirname=""):
         """Create a partition description from the provided config file."""

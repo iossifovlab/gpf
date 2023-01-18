@@ -1,7 +1,9 @@
 import logging
+import configparser
 from typing import Dict, Any, cast, Optional
 from dataclasses import dataclass
 
+import pyarrow.parquet as pq
 from cerberus import Validator
 
 import gcsfs
@@ -124,6 +126,15 @@ class GcpGenotypeStorage(GenotypeStorage):
             gene_models=gene_models)
         return backend
 
+    def _load_partition_description(self, metadata_path):
+        df = pq.read_table(metadata_path).to_pandas()
+        for record in df.to_dict(orient="row"):
+            if record["key"] == "partition_description":
+                parser = configparser.ConfigParser()
+                parser.read_string(record["value"])
+                return parser
+        return None
+
     def _upload_dataset_into_import_bucket(
             self, study_id: str,
             study_dataset: GcpStudyLayout) -> GcpStudyLayout:
@@ -162,7 +173,8 @@ class GcpGenotypeStorage(GenotypeStorage):
 
     def _load_dataset_into_bigquery(
             self, study_id: str,
-            bucket_layout: GcpStudyLayout) -> GcpStudyLayout:
+            bucket_layout: GcpStudyLayout,
+            partition_description: Dict[str, Any]) -> GcpStudyLayout:
         client = bigquery.Client()
         dbname = self.storage_config["bigquery"]["db"]
         dataset = client.create_dataset(dbname, exists_ok=True)
@@ -249,6 +261,10 @@ class GcpGenotypeStorage(GenotypeStorage):
             self, study_id: str,
             study_layout: GcpStudyLayout):
         """Create pedigree and variant tables for a study."""
+        partition_description = self._load_partition_description(
+            study_layout.meta)
+        import pdb; pdb.set_trace()
         bucket_layout = self._upload_dataset_into_import_bucket(
             study_id, study_layout)
-        return self._load_dataset_into_bigquery(study_id, bucket_layout)
+        return self._load_dataset_into_bigquery(
+            study_id, bucket_layout, partition_description)

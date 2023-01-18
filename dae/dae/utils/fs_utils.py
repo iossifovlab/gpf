@@ -12,11 +12,11 @@ def exists(filename):
     return fs.exists(relative_path)
 
 
-def join(path, *paths):
+def join(path, *paths) -> str:
     for i in range(len(paths) - 1, -1, -1):
         if urlparse(paths[i]).scheme:
-            return os.path.join(*paths[i:])
-    return os.path.join(path, *paths)
+            return str(os.path.join(*paths[i:]))
+    return str(os.path.join(path, *paths))
 
 
 def find_directory_with_a_file(
