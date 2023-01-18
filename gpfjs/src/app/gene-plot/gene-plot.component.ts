@@ -479,6 +479,9 @@ export class GenePlotComponent implements OnChanges {
     brushSize: { nonCoding?: number; coding: number }
   ): void {
     draw.line(svgGroup, xStart, xEnd, y + brushSize.coding / 2, title);
+
+    // draw 0 opacity line with bigger height to make hovering easier
+    draw.line(svgGroup, xStart, xEnd, y + brushSize.coding / 2, title, 0, 10);
   }
 
   private drawUTRLabels(
