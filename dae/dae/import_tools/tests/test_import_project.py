@@ -1,6 +1,16 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
+import os
+import pytest
 import cloudpickle  # type: ignore
 from dae.import_tools.import_tools import ImportProject
+from dae.gpf_instance.gpf_instance import GPFInstance
+
+
+@pytest.fixture
+def fixture_gpf_instance(fixture_dirname):
+    gpf_instance = GPFInstance.build(
+        os.path.join(fixture_dirname(""), "gpf_instance.yaml"))
+    return gpf_instance
 
 
 def test_import_project_is_cpickle_serializable(fixture_dirname):
@@ -17,13 +27,24 @@ def test_import_project_is_cpickle_serializable(fixture_dirname):
     _ = cloudpickle.dumps(project)
 
 
-def test_project_is_serializable_after_loader_reference_genome(resources_dir):
+def test_project_is_serializable_after_loader_reference_genome(
+        resources_dir, fixture_gpf_instance):
     config_fn = str(resources_dir / "vcf_import" / "import_config.yaml")
-    project = ImportProject.build_from_file(config_fn)
+    project = ImportProject.build_from_file(config_fn, fixture_gpf_instance)
     assert project.get_gpf_instance().reference_genome is not None
     pickled = cloudpickle.dumps(project)
     unpickled_project = cloudpickle.loads(pickled)
     assert unpickled_project.get_gpf_instance().reference_genome is not None
+
+
+def test_project_is_serializable_instance_dir(
+        resources_dir, fixture_gpf_instance):
+    config_fn = str(resources_dir / "vcf_import" / "import_config.yaml")
+    project = ImportProject.build_from_file(config_fn, fixture_gpf_instance)
+    assert project.get_gpf_instance().dae_dir is not None
+    pickled = cloudpickle.dumps(project)
+    unpickled_project = cloudpickle.loads(pickled)
+    assert unpickled_project.get_gpf_instance().dae_dir is not None
 
 
 def test_config_filenames_just_one_config(resources_dir):
