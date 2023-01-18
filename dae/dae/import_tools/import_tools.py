@@ -430,9 +430,9 @@ class ImportProject():
         if target_chromosomes is None:
             target_chromosomes = loader_chromosomes
 
-        # cannot use self.get_partition_description() here as the processing
-        # region length might be different than the region length specified in
-        # the parition description section of the import config
+        # cannot use self.get_partition_description() here as the
+        # processing region length might be different than the region length
+        # specified in the parition description section of the import config
         partition_description = ParquetPartitionDescriptor(
             target_chromosomes,
             self._get_processing_region_length(loader_type),
@@ -541,6 +541,7 @@ class ImportProject():
         state = self.__dict__.copy()
         del state["_gpf_instance"]
         state["_gpf_dae_config"] = gpf_instance.dae_config
+        state["_gpf_dae_dir"] = gpf_instance.dae_dir
         return state
 
     def __setstate__(self, state):
@@ -548,7 +549,8 @@ class ImportProject():
         self.__dict__.update(state)
         # pylint: disable=import-outside-toplevel
         from dae.gpf_instance.gpf_instance import GPFInstance
-        self._gpf_instance = GPFInstance(state["_gpf_dae_config"], None)
+        self._gpf_instance = GPFInstance(
+            state["_gpf_dae_config"], state["_gpf_dae_dir"])
 
 
 class ImportConfigNormalizer:

@@ -80,10 +80,10 @@ class GPFInstance:
             dae_config,
             dae_dir,
             **kwargs):
+        assert dae_dir is not None
 
         self.dae_config = dae_config
         self.dae_dir = str(dae_dir)
-        assert self.dae_dir is not None
 
         self._grr = kwargs.get("grr")
         self._reference_genome = kwargs.get("reference_genome")
