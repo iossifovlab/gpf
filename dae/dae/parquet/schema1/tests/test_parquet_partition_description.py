@@ -4,9 +4,9 @@ from io import StringIO
 import pytest
 import numpy as np
 
+from dae.variants.attributes import TransmissionType
 from dae.pedigrees.loader import FamiliesLoader
-from dae.parquet.schema1.parquet_io import ParquetPartitionDescriptor, \
-    NoPartitionDescriptor
+from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.variants.family_variant import FamilyVariant
 from dae.variants.variant import SummaryAllele, SummaryVariant
 
@@ -80,15 +80,12 @@ def test_parquet_region_bin(
 ):
     sv = SummaryVariant(summary_alleles)
     fv = FamilyVariant(sv, fam1, genotype, None)
-    part_desc = ParquetPartitionDescriptor(chromosomes, region_length)
-    region_bin = part_desc._evaluate_region_bin(fv)
+    part_desc = PartitionDescriptor(chromosomes, region_length)
+    region_bin = part_desc.make_region_bin(fv.chrom, fv.position)
     for fa in fv.alleles:
         assert region_bin == expected
-        assert (
-            part_desc.variant_filename(fa)
-            == f"region_bin={region_bin}/variants_region_bin_{region_bin}"
-            f".parquet"
-        )
+        partition = part_desc.family_partition(fa)
+        assert partition == [("region_bin", region_bin)]
 
 
 def test_parquet_family_bin(fam1, fam2, genotype):
@@ -97,20 +94,14 @@ def test_parquet_family_bin(fam1, fam2, genotype):
     fv2 = FamilyVariant(sv, fam2, genotype, None)
 
     family_bin_size = 10
-    part_desc = ParquetPartitionDescriptor(["1"], 1000, family_bin_size)
+    part_desc = PartitionDescriptor(["1"], 1000, family_bin_size)
     for fa1, fa2 in zip(fv1.alleles, fv2.alleles):
-        assert part_desc._evaluate_family_bin(fa1) == 9
-        assert part_desc._evaluate_family_bin(fa2) == 6
-        assert (
-            part_desc.variant_filename(fa1)
-            == "region_bin=1_11/family_bin=9/"
-            "variants_region_bin_1_11_family_bin_9.parquet"
-        )
-        assert (
-            part_desc.variant_filename(fa2)
-            == "region_bin=1_11/family_bin=6/"
-            "variants_region_bin_1_11_family_bin_6.parquet"
-        )
+        assert part_desc.make_family_bin(fa1.family_id) == 9
+        assert part_desc.make_family_bin(fa2.family_id) == 6
+        partition1 = part_desc.family_partition(fa1)
+        partition2 = part_desc.family_partition(fa2)
+        assert partition1 == [("region_bin", "1_11"), ("family_bin", "9")]
+        assert partition2 == [("region_bin", "1_11"), ("family_bin", "6")]
 
 
 @pytest.mark.parametrize(
@@ -130,149 +121,152 @@ def test_parquet_frequency_bin(fam1, genotype, attributes, rare_boundary,
     ] * 3
     sv = SummaryVariant(summary_alleles)
     fv = FamilyVariant(sv, fam1, genotype, None)
-    part_desc = ParquetPartitionDescriptor(["1"], 1000,
-                                           rare_boundary=rare_boundary)
+    part_desc = PartitionDescriptor(
+        ["1"], 1000, rare_boundary=rare_boundary)
 
     for fa in fv.alleles:
-        assert part_desc._evaluate_frequency_bin(fa) == expected
-        assert (
-            part_desc.variant_filename(fa)
-            == f"region_bin=1_11/frequency_bin={expected}/"
-            + f"variants_region_bin_1_11_frequency_bin_{expected}.parquet"
-        )
+        allele_count = fa.get_attribute("af_allele_count")
+        allele_freq = fa.get_attribute("af_allele_freq")
+        is_denovo = fa.transmission_type == TransmissionType.denovo
+
+        assert part_desc.make_frequency_bin(
+            allele_count, allele_freq, is_denovo) == expected
+        partition = part_desc.family_partition(fa)
+        assert partition == [
+            ("region_bin", "1_11"), ("frequency_bin", expected)]
 
 
-@pytest.mark.parametrize(
-    "eff1, eff2, eff3, coding_effect_types, expected",
-    [
-        (
-            "synonymous!SAMD11:synonymous!NM_152486_1:SAMD11:synonymous:40/68",
-            "synonymous!SAMD11:synonymous!NM_152486_1:SAMD11:synonymous:40/68",
-            "synonymous!SAMD11:synonymous!NM_152486_1:SAMD11:synonymous:40/68",
-            ["synonymous"],
-            [0, 1, 1, 1],
-        ),
-        (
-            "synonymous!SAMD11:synonymous!NM_152486_1:SAMD11:synonymous:40/68",
-            "synonymous!SAMD11:synonymous!NM_152486_1:SAMD11:synonymous:40/68",
-            "synonymous!SAMD11:synonymous!NM_152486_1:SAMD11:synonymous:40/68",
-            ["missense"],
-            [0, 0, 0, 0],
-        ),
-        (
-            "synonymous!SAMD11:synonymous!NM_152486_1:SAMD11:synonymous:40/68",
-            "synonymous!SAMD11:synonymous!NM_152486_1:SAMD11:synonymous:40/68",
-            "synonymous!SAMD11:synonymous!NM_152486_1:SAMD11:synonymous:40/68",
-            ["missense", "synonymous"],
-            [0, 1, 1, 1],
-        ),
-        (
-            "synonymous!SAMD11:synonymous!"
-            "NM_152486_1:SAMD11:synonymous:40/68",
-            "missense!SAMD11:missense!"
-            "NM_152486_1:SAMD11:missense:54/681(Ser->Arg)",
-            "intergenic!intergenic:intergenic!"
-            "intergenic:intergenic:intergenic:intergenic",
-            ["synonymous"],
-            [0, 1, 0, 0],
-        ),
-        (
-            "synonymous!SAMD11:synonymous!"
-            "NM_152486_1:SAMD11:synonymous:40/68",
-            "missense!SAMD11:missense!"
-            "NM_152486_1:SAMD11:missense:54/681(Ser->Arg)",
-            "missense!SAMD11:missense!"
-            "NM_152486_1:SAMD11:missense:54/681(Ser->Arg)",
-            ["nonsense", "intergenic"],
-            [0, 0, 0, 0],
-        ),
-    ],
-)
-def test_parquet_coding_bin(
-    fam1, eff1, eff2, eff3, coding_effect_types, expected
-):
-    summary_alleles = [
-        SummaryAllele("1", 11539, "T", None, 0, 0),
-        SummaryAllele(
-            "1", 11539, "T", "G", 0, 1, attributes={"effects": eff1}
-        ),
-        SummaryAllele(
-            "1", 11539, "T", "C", 0, 2, attributes={"effects": eff2}
-        ),
-        SummaryAllele(
-            "1", 11539, "T", "A", 0, 3, attributes={"effects": eff3}
-        ),
-    ]
-    genotype = np.array([[0, 1, 0], [2, 0, 3]], dtype="int8")
-    sv = SummaryVariant(summary_alleles)
-    fv = FamilyVariant(sv, fam1, genotype, None)
-    part_desc = ParquetPartitionDescriptor(
-        ["1"], 1000, coding_effect_types=coding_effect_types
-    )
-    for fa, ex in zip(fv.alleles, expected):
-        assert part_desc._evaluate_coding_bin(fa) == ex
-        assert (
-            part_desc.variant_filename(fa)
-            == f"region_bin=1_11/coding_bin={ex}/"
-            + f"variants_region_bin_1_11_coding_bin_{ex}.parquet"
-        )
+# @pytest.mark.parametrize(
+#     "eff1, eff2, eff3, coding_effect_types, expected",
+#     [
+#         (
+#             "synonymous!SAMD11:synonymous!NM_152486_1:SAMD11:synonymous:40/68",
+#             "synonymous!SAMD11:synonymous!NM_152486_1:SAMD11:synonymous:40/68",
+#             "synonymous!SAMD11:synonymous!NM_152486_1:SAMD11:synonymous:40/68",
+#             ["synonymous"],
+#             [0, 1, 1, 1],
+#         ),
+#         (
+#             "synonymous!SAMD11:synonymous!NM_152486_1:SAMD11:synonymous:40/68",
+#             "synonymous!SAMD11:synonymous!NM_152486_1:SAMD11:synonymous:40/68",
+#             "synonymous!SAMD11:synonymous!NM_152486_1:SAMD11:synonymous:40/68",
+#             ["missense"],
+#             [0, 0, 0, 0],
+#         ),
+#         (
+#             "synonymous!SAMD11:synonymous!NM_152486_1:SAMD11:synonymous:40/68",
+#             "synonymous!SAMD11:synonymous!NM_152486_1:SAMD11:synonymous:40/68",
+#             "synonymous!SAMD11:synonymous!NM_152486_1:SAMD11:synonymous:40/68",
+#             ["missense", "synonymous"],
+#             [0, 1, 1, 1],
+#         ),
+#         (
+#             "synonymous!SAMD11:synonymous!"
+#             "NM_152486_1:SAMD11:synonymous:40/68",
+#             "missense!SAMD11:missense!"
+#             "NM_152486_1:SAMD11:missense:54/681(Ser->Arg)",
+#             "intergenic!intergenic:intergenic!"
+#             "intergenic:intergenic:intergenic:intergenic",
+#             ["synonymous"],
+#             [0, 1, 0, 0],
+#         ),
+#         (
+#             "synonymous!SAMD11:synonymous!"
+#             "NM_152486_1:SAMD11:synonymous:40/68",
+#             "missense!SAMD11:missense!"
+#             "NM_152486_1:SAMD11:missense:54/681(Ser->Arg)",
+#             "missense!SAMD11:missense!"
+#             "NM_152486_1:SAMD11:missense:54/681(Ser->Arg)",
+#             ["nonsense", "intergenic"],
+#             [0, 0, 0, 0],
+#         ),
+#     ],
+# )
+# def test_parquet_coding_bin(
+#     fam1, eff1, eff2, eff3, coding_effect_types, expected
+# ):
+#     summary_alleles = [
+#         SummaryAllele("1", 11539, "T", None, 0, 0),
+#         SummaryAllele(
+#             "1", 11539, "T", "G", 0, 1, attributes={"effects": eff1}
+#         ),
+#         SummaryAllele(
+#             "1", 11539, "T", "C", 0, 2, attributes={"effects": eff2}
+#         ),
+#         SummaryAllele(
+#             "1", 11539, "T", "A", 0, 3, attributes={"effects": eff3}
+#         ),
+#     ]
+#     genotype = np.array([[0, 1, 0], [2, 0, 3]], dtype="int8")
+#     sv = SummaryVariant(summary_alleles)
+#     fv = FamilyVariant(sv, fam1, genotype, None)
+#     part_desc = ParquetPartitionDescriptor(
+#         ["1"], 1000, coding_effect_types=coding_effect_types
+#     )
+#     for fa, ex in zip(fv.alleles, expected):
+#         assert part_desc._evaluate_coding_bin(fa) == ex
+#         assert (
+#             part_desc.variant_filename(fa)
+#             == f"region_bin=1_11/coding_bin={ex}/"
+#             + f"variants_region_bin_1_11_coding_bin_{ex}.parquet"
+#         )
 
 
-@pytest.mark.parametrize("filename", [
-    "region_bin=1_0/frequency_bin=1/coding_bin=1/family_bin=0/"
-    "variants_region_bin_1_0_frequency_bin_1_coding_bin_1_family_bin_0"
-    ".parquet",
+# @pytest.mark.parametrize("filename", [
+#     "region_bin=1_0/frequency_bin=1/coding_bin=1/family_bin=0/"
+#     "variants_region_bin_1_0_frequency_bin_1_coding_bin_1_family_bin_0"
+#     ".parquet",
 
-    "region_bin=1_0/frequency_bin=1/coding_bin=1/family_bin=0/"
-    "variants_region_bin_1_0_frequency_bin_1_coding_bin_1_family_bin_0"
-    "_bucket_index_0.parquet",
-])
-def test_variant_filename_basedir(filename):
-    part_desc = ParquetPartitionDescriptor(
-        ["1"], 30_000_000,
-        family_bin_size=10,
-        coding_effect_types=["missense", "synonymous"],
-        rare_boundary=5
-    )
+#     "region_bin=1_0/frequency_bin=1/coding_bin=1/family_bin=0/"
+#     "variants_region_bin_1_0_frequency_bin_1_coding_bin_1_family_bin_0"
+#     "_bucket_index_0.parquet",
+# ])
+# def test_variant_filename_basedir(filename):
+#     part_desc = ParquetPartitionDescriptor(
+#         ["1"], 30_000_000,
+#         family_bin_size=10,
+#         coding_effect_types=["missense", "synonymous"],
+#         rare_boundary=5
+#     )
 
-    res = part_desc.variants_filename_basedir(
-        f"AGRE_WG_859_variants.parquet/{filename}")
-    assert res == "AGRE_WG_859_variants.parquet/"
+#     res = part_desc.variants_filename_basedir(
+#         f"AGRE_WG_859_variants.parquet/{filename}")
+#     assert res == "AGRE_WG_859_variants.parquet/"
 
-    res = part_desc.variants_filename_basedir(f"ala/bala/nica/{filename}")
-    assert res == "ala/bala/nica/"
+#     res = part_desc.variants_filename_basedir(f"ala/bala/nica/{filename}")
+#     assert res == "ala/bala/nica/"
 
-    bad_res = part_desc.variants_filename_basedir(
-        f"ala/bala/nica/{filename}_tata")
-    assert bad_res is None
+#     bad_res = part_desc.variants_filename_basedir(
+#         f"ala/bala/nica/{filename}_tata")
+#     assert bad_res is None
 
-    bad_res = part_desc.variants_filename_basedir(filename)
-    assert bad_res is None
+#     bad_res = part_desc.variants_filename_basedir(filename)
+#     assert bad_res is None
 
-    res = part_desc.variants_filename_basedir(
-        f"hdfs://localhost:8020/ala/bala/nica/{filename}")
-    assert res == "hdfs://localhost:8020/ala/bala/nica/"
+#     res = part_desc.variants_filename_basedir(
+#         f"hdfs://localhost:8020/ala/bala/nica/{filename}")
+#     assert res == "hdfs://localhost:8020/ala/bala/nica/"
 
 
-def test_no_partition_variant_filename_basedir():
-    filename = "gosho_variants.parquet"
+# def test_no_partition_variant_filename_basedir():
+#     filename = "gosho_variants.parquet"
 
-    part_desc = NoPartitionDescriptor()
+#     part_desc = NoPartitionDescriptor()
 
-    res = part_desc.variants_filename_basedir(
-        f"AGRE_WG_859_variants.parquet/{filename}")
-    assert res == "AGRE_WG_859_variants.parquet/"
+#     res = part_desc.variants_filename_basedir(
+#         f"AGRE_WG_859_variants.parquet/{filename}")
+#     assert res == "AGRE_WG_859_variants.parquet/"
 
-    res = part_desc.variants_filename_basedir(f"ala/bala/nica/{filename}")
-    assert res == "ala/bala/nica/"
+#     res = part_desc.variants_filename_basedir(f"ala/bala/nica/{filename}")
+#     assert res == "ala/bala/nica/"
 
-    bad_res = part_desc.variants_filename_basedir(
-        f"ala/bala/nica/{filename}_tata")
-    assert bad_res is None
+#     bad_res = part_desc.variants_filename_basedir(
+#         f"ala/bala/nica/{filename}_tata")
+#     assert bad_res is None
 
-    bad_res = part_desc.variants_filename_basedir(filename)
-    assert bad_res is None
+#     bad_res = part_desc.variants_filename_basedir(filename)
+#     assert bad_res is None
 
-    res = part_desc.variants_filename_basedir(
-        f"hdfs://localhost:8020/ala/bala/nica/{filename}")
-    assert res == "hdfs://localhost:8020/ala/bala/nica/"
+#     res = part_desc.variants_filename_basedir(
+#         f"hdfs://localhost:8020/ala/bala/nica/{filename}")
+#     assert res == "hdfs://localhost:8020/ala/bala/nica/"

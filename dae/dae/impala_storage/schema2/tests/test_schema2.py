@@ -1,7 +1,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 
 from dae.utils.regions import Region
-from dae.parquet.schema2.parquet_io import NoPartitionDescriptor
+from dae.parquet.partition_descriptor import PartitionDescriptor
 
 
 def test_import_and_query(testing_study_backend):
@@ -19,7 +19,7 @@ def test_import_denovo_with_custome_range(
     import_test_study, tmpdir
 ):
     study_id = "testStudy"
-    partition_description = NoPartitionDescriptor()
+    partition_description = PartitionDescriptor()
     backend = import_test_study(
         study_id, str(tmpdir), partition_description, ["denovo_variants.txt"],
         loader_args={

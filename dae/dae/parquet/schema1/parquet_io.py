@@ -2,15 +2,11 @@
 import os
 import sys
 import time
-import re
-import hashlib
-import itertools
 import logging
-import configparser
+from typing import Optional, Dict, Any
 
 from copy import copy
 from urllib.parse import urlparse
-from fsspec.core import url_to_fs
 
 import toml
 from box import Box
@@ -24,369 +20,16 @@ import pyarrow.parquet as pq
 import fsspec
 
 from dae.parquet.helpers import url_to_pyarrow_fs
+from dae.utils import fs_utils
 from dae.utils.variant_utils import GenotypeType
-from dae.variants.attributes import TransmissionType
 from dae.variants.family_variant import FamilyAllele, FamilyVariant, \
     calculate_simple_best_state
 from dae.variants.variant import SummaryVariant, SummaryAllele
+from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.parquet.schema1.serializers import AlleleParquetSerializer
 
 
 logger = logging.getLogger(__name__)
-
-
-class PartitionDescriptor:
-    """Abstract class for partition description."""
-
-    def __init__(self):
-        pass
-
-    def has_partitions(self):
-        raise NotImplementedError()
-
-    def build_impala_partitions(self):
-        raise NotImplementedError()
-
-    @property
-    def chromosomes(self):
-        raise NotImplementedError()
-
-    @property
-    def region_length(self):
-        raise NotImplementedError()
-
-    def variant_filename(self, family_allele):
-        raise NotImplementedError()
-
-    def write_partition_configuration(self):
-        raise NotImplementedError()
-
-
-class NoPartitionDescriptor(PartitionDescriptor):
-    """Defines class for missing partition description."""
-
-    def __init__(self, root_dirname=""):
-        super().__init__()
-        self.output = root_dirname
-
-    def has_partitions(self):
-        return False
-
-    def build_impala_partitions(self):
-        raise ValueError("unexpected use of build_impala_partitions")
-
-    @property
-    def chromosomes(self):
-        return []
-
-    @property
-    def region_length(self):
-        return 3_000_000_000
-
-    def variant_filename(self, family_allele):
-        bucket_index = family_allele.get_attribute("bucket_index")
-        filename = f"nopart_{bucket_index:0>6}_variants.parquet"
-        return os.path.join(self.output, filename)
-
-    def write_partition_configuration(self):
-        return None
-
-    @staticmethod
-    def generate_file_access_glob():
-        """Generate a glob for accessing parquet files in the partition."""
-        return "*variants.parquet"
-
-    @staticmethod
-    def variants_filename_basedir(filename):
-        """Extract the variants basedir from filename."""
-        regexp = re.compile(
-            "^(?P<basedir>.+)/(?P<prefix>.+)variants.parquet$")
-        match = regexp.match(filename)
-        if not match:
-            return None
-
-        assert "basedir" in match.groupdict()
-        basedir = match.groupdict()["basedir"]
-        if basedir and basedir[-1] != "/":
-            basedir += "/"
-        return basedir
-
-
-class ParquetPartitionDescriptor(PartitionDescriptor):
-    """Defines partition description used for parquet datasets."""
-
-    def __init__(
-            self,
-            chromosomes,
-            region_length,
-            family_bin_size=0,
-            coding_effect_types=None,
-            rare_boundary=0,
-            root_dirname=""):
-
-        super().__init__()
-        self.output = root_dirname
-        self._chromosomes = chromosomes
-        self._region_length = region_length
-        self._family_bin_size = family_bin_size
-        self._coding_effect_types = \
-            coding_effect_types if coding_effect_types else []
-        self._rare_boundary = rare_boundary
-
-    def has_partitions(self):
-        return True
-
-    def build_impala_partitions(self):
-        partitions = ["region_bin string"]
-
-        if self.rare_boundary > 0:
-            partitions.append("frequency_bin tinyint")
-        if self.coding_effect_types:
-            partitions.append("coding_bin tinyint")
-        if self.family_bin_size > 0:
-            partitions.append("family_bin tinyint")
-
-        return ", ".join(partitions)
-
-    @property
-    def chromosomes(self):
-        return self._chromosomes
-
-    @property
-    def region_length(self):
-        return self._region_length
-
-    @property
-    def family_bin_size(self):
-        return self._family_bin_size
-
-    @property
-    def coding_effect_types(self):
-        return self._coding_effect_types
-
-    @property
-    def rare_boundary(self):
-        return self._rare_boundary
-
-    @staticmethod
-    def from_config(config_path, root_dirname=""):
-        """Create a partition description from the provided config file."""
-        filesystem, _ = url_to_fs(config_path)
-        assert filesystem.exists(config_path), config_path
-
-        config = configparser.ConfigParser()
-        with filesystem.open(config_path, "rt") as input_config_file:
-            config.read_file(input_config_file, config_path)
-        return ParquetPartitionDescriptor.from_dict(config, root_dirname)
-
-    @staticmethod
-    def from_dict(config, root_dirname="") -> "ParquetPartitionDescriptor":
-        """Create a paritition description from the provided config."""
-        assert config["region_bin"] is not None
-
-        chromosomes = list(
-            map(str.strip, config["region_bin"]["chromosomes"].split(","))
-        )
-
-        region_length = int(config["region_bin"]["region_length"])
-        family_bin_size = 0
-        coding_effect_types = []
-        rare_boundary = 0
-
-        if "family_bin" in config:
-            family_bin_size = int(config["family_bin"]["family_bin_size"])
-        if "coding_bin" in config:
-            ce_types_str = config["coding_bin"]["coding_effect_types"]
-            coding_effect_types = [
-                et.strip() for et in ce_types_str.split(",")
-            ]
-            coding_effect_types = [et for et in coding_effect_types if et]
-
-        if "frequency_bin" in config:
-            rare_boundary = int(config["frequency_bin"]["rare_boundary"])
-
-        return ParquetPartitionDescriptor(
-            chromosomes,
-            region_length,
-            family_bin_size,
-            coding_effect_types,
-            rare_boundary,
-            root_dirname=root_dirname,
-        )
-
-    def _evaluate_region_bin(self, family_allele):
-        chromosome = family_allele.chromosome
-        pos = family_allele.position // self._region_length
-        if chromosome in self._chromosomes:
-            return f"{chromosome}_{pos}"
-
-        return f"other_{pos}"
-
-    def _family_bin_from_id(self, family_id):
-        sha256 = hashlib.sha256()
-        sha256.update(family_id.encode())
-        digest = int(sha256.hexdigest(), 16)
-        return digest % self.family_bin_size
-
-    def _evaluate_family_bin(self, family_allele):
-        return self._family_bin_from_id(family_allele.family_id)
-
-    def _evaluate_coding_bin(self, family_allele):
-        if family_allele.is_reference_allele:
-            return 0
-        variant_effects = set(family_allele.effects.types)
-        coding_effect_types = set(self._coding_effect_types)
-
-        result = variant_effects.intersection(coding_effect_types)
-        if len(result) == 0:
-            return 0
-        return 1
-
-    def _evaluate_frequency_bin(self, family_allele):
-        count = family_allele.get_attribute("af_allele_count")
-        frequency = family_allele.get_attribute("af_allele_freq")
-        transmission_type = family_allele.transmission_type
-        if transmission_type == TransmissionType.denovo:
-            frequency_bin = 0
-        elif count and int(count) == 1:  # Ultra rare
-            frequency_bin = 1
-        elif frequency and float(frequency) < self._rare_boundary:  # Rare
-            frequency_bin = 2
-        else:  # Common
-            frequency_bin = 3
-
-        return frequency_bin
-
-    def variant_filename(self, family_allele):
-        current_bin = self._evaluate_region_bin(family_allele)
-        filepath = os.path.join(self.output, f"region_bin={current_bin}")
-        bucket_index = family_allele.get_attribute("bucket_index")
-
-        filename = f"variants_region_bin_{current_bin}"
-        if self._rare_boundary > 0:
-            current_bin = self._evaluate_frequency_bin(family_allele)
-            filepath = os.path.join(filepath, f"frequency_bin={current_bin}")
-            filename += f"_frequency_bin_{current_bin}"
-        if len(self._coding_effect_types) > 0:
-            current_bin = self._evaluate_coding_bin(family_allele)
-            filepath = os.path.join(filepath, f"coding_bin={current_bin}")
-            filename += f"_coding_bin_{current_bin}"
-        if self._family_bin_size > 0:
-            current_bin = self._evaluate_family_bin(family_allele)
-            filepath = os.path.join(filepath, f"family_bin={current_bin}")
-            filename += f"_family_bin_{current_bin}"
-        if bucket_index is not None:
-            filename += f"_bucket_index_{bucket_index}"
-        filename += ".parquet"
-
-        return os.path.join(filepath, filename)
-
-    def _variants_partition_bins(self):
-        partition_bins = []
-        region_bins = [
-            ("region_bin", f"{chrom}_0") for chrom in self._chromosomes
-        ]
-        partition_bins.append(region_bins)
-
-        if self._rare_boundary > 0:
-            frequency_bins = [
-                ("frequency_bin", "1"),
-                ("frequency_bin", "2"),
-                ("frequency_bin", "3")
-            ]
-            partition_bins.append(frequency_bins)
-        if len(self._coding_effect_types) > 0:
-            coding_bins = [
-                ("coding_bin", "0"),
-                ("coding_bin", "1")
-            ]
-            partition_bins.append(coding_bins)
-        if self._family_bin_size > 0:
-            family_bins = [
-                ("family_bin", f"{fb}")
-                for fb in range(self._family_bin_size)
-            ]
-            partition_bins.append(family_bins)
-        return partition_bins
-
-    def _variants_filenames_regexp(self):
-        partition_bins = self._variants_partition_bins()
-        product = next(itertools.product(*partition_bins))
-        dirname_parts = [
-            f"{p[0]}=(?P<{p[0]}>.+)" for p in product
-        ]
-        filename_parts = [
-            f"{p[0]}_(?P={p[0]})" for p in product
-        ]
-        dirname = "/".join(dirname_parts)
-        dirname = os.path.join("^(?P<basedir>.+)", dirname)
-        filename = "_".join(filename_parts)
-        filename = filename + r"(_bucket_index_\d+)?"
-        filename = f"variants_{filename}\\.parquet$"
-
-        filename = os.path.join(dirname, filename)
-        return re.compile(filename, re.VERBOSE)
-
-    def variants_filename_basedir(self, filename):
-        """Return the basedir of the variant file."""
-        regexp = self._variants_filenames_regexp()
-        match = regexp.match(filename)
-        if not match:
-            return None
-
-        assert "basedir" in match.groupdict()
-        basedir = match.groupdict()["basedir"]
-        if basedir and basedir[-1] != "/":
-            basedir += "/"
-        return basedir
-
-    def write_partition_configuration(self):
-        config = configparser.ConfigParser()
-
-        config.add_section("region_bin")
-        config["region_bin"]["chromosomes"] = ", ".join(self._chromosomes)
-        config["region_bin"]["region_length"] = str(self._region_length)
-
-        if self._family_bin_size > 0:
-            config.add_section("family_bin")
-            config["family_bin"]["family_bin_size"] = str(
-                self._family_bin_size
-            )
-
-        if len(self._coding_effect_types) > 0:
-            config.add_section("coding_bin")
-            config["coding_bin"]["coding_effect_types"] = ", ".join(
-                self._coding_effect_types
-            )
-
-        if self._rare_boundary > 0:
-            config.add_section("frequency_bin")
-            config["frequency_bin"]["rare_boundary"] = str(self._rare_boundary)
-
-        filename = os.path.join(self.output, "_PARTITION_DESCRIPTION")
-
-        with fsspec.open(filename, "w") as configfile:
-            config.write(configfile)
-
-    def generate_file_access_glob(self):
-        """Return a glob for accessing every parquet file in the partition."""
-        glob = "*/"
-        if self.family_bin_size > 0:
-            glob += "*/"
-        if self.coding_effect_types:
-            glob += "*/"
-        if self.rare_boundary > 0:
-            glob += "*/"
-        glob += "*.parquet"
-        return glob
-
-    def add_family_bins_to_families(self, families):
-        for family in families.values():
-            family_bin = self._family_bin_from_id(family.family_id)
-            for person in family.persons.values():
-                person.set_attr("family_bin", family_bin)
-        families._ped_df = None  # pylint: disable=protected-access
-        return families
 
 
 class ContinuousParquetFileWriter:
@@ -433,6 +76,7 @@ class ContinuousParquetFileWriter:
         self._data = {name: [] for name in self.schema.names}
 
     def size(self):
+        assert self._data is not None
         return len(self._data["chromosome"])
 
     def build_table(self):
@@ -450,6 +94,8 @@ class ContinuousParquetFileWriter:
 
         :param list attributes: List of key-value tuples containing the data
         """
+        assert self._data is not None
+
         data = self.serializer.build_allele_batch_dict(
             allele, variant_data, extra_attributes_data, summary_vectors)
         for k, v in self._data.items():
@@ -475,12 +121,13 @@ class VariantsParquetWriter:
 
     def __init__(
             self,
+            out_dir,
             variants_loader,
             partition_descriptor,
             bucket_index=None,
             rows=100_000,
             include_reference=True):
-
+        self.out_dir = out_dir
         self.variants_loader = variants_loader
         self.families = variants_loader.families
         self.full_variants_iterator = variants_loader.full_variants_iterator()
@@ -551,8 +198,16 @@ class VariantsParquetWriter:
             SummaryVariant(alleles), family, genotype, best_state
         )
 
+    def _build_family_filename(self, allele):
+        partition = self.partition_descriptor.family_partition(allele)
+        partition_directory = self.partition_descriptor.partition_directory(
+            self.out_dir, partition)
+        partition_filename = self.partition_descriptor.partition_filename(
+            "variants", partition, self.bucket_index)
+        return fs_utils.join(partition_directory, partition_filename)
+
     def _get_bin_writer(self, family_allele):
-        filename = self.partition_descriptor.variant_filename(family_allele)
+        filename = self._build_family_filename(family_allele)
 
         if filename not in self.data_writers:
             if urlparse(filename).scheme:
@@ -672,7 +327,7 @@ class VariantsParquetWriter:
 
     def write_schema(self):
         """Write the schema to a separate file."""
-        config = {}
+        config: Dict[str, Any] = {}
 
         schema = self.serializer.schema
         config["variants_schema"] = {}
@@ -686,7 +341,7 @@ class VariantsParquetWriter:
             config["blob"][k] = v
 
         filename = os.path.join(
-            self.partition_descriptor.output, "_VARIANTS_SCHEMA")
+            self.out_dir, "_VARIANTS_SCHEMA")
 
         config["extra_attributes"] = {}
         extra_attributes = self.serializer.extra_attributes
@@ -697,11 +352,18 @@ class VariantsParquetWriter:
             content = toml.dumps(config)
             configfile.write(content)
 
+    def write_partition(self):
+        """Write dataset metadata."""
+        filename = os.path.join(self.out_dir, "_PARTITION_DESCRIPTION")
+
+        with fsspec.open(filename, "w") as configfile:
+            configfile.write(self.partition_descriptor.serialize())
+
     def write_dataset(self):
         """Write the variants, parittion description and schema."""
         filenames = self._write_internal()
 
-        self.partition_descriptor.write_partition_configuration()
+        self.write_partition()
         self.write_schema()
 
         self.variants_loader.close()
@@ -748,7 +410,19 @@ class ParquetManager:
         return Box(conf, default_box=True)
 
     @staticmethod
-    def families_to_parquet(families, pedigree_filename):
+    def families_to_parquet(
+            families, pedigree_filename,
+            partition_descriptor: Optional[PartitionDescriptor] = None):
+        """Write a FamiliesData object into paquet."""
+        if partition_descriptor is not None \
+                and partition_descriptor.has_family_bins():
+            for family in families.values():
+                family_bin = partition_descriptor.make_family_bin(
+                    family.family_id)
+                for person in family.persons.values():
+                    person.set_attr("family_bin", family_bin)
+            families._ped_df = None  # pylint: disable=protected-access
+
         dirname = os.path.dirname(pedigree_filename)
         if dirname:
             os.makedirs(dirname, exist_ok=True)
@@ -757,15 +431,16 @@ class ParquetManager:
 
     @staticmethod
     def variants_to_parquet(
+            out_dir,
             variants_loader, partition_descriptor,
             bucket_index=1, rows=100_000, include_reference=False):
         """Read variants from variant_loader and store them in parquet."""
         # assert variants_loader.get_attribute("annotation_schema") is not None
         print(f"variants to parquet ({rows} rows)", file=sys.stderr)
-
         start = time.time()
 
         variants_writer = VariantsParquetWriter(
+            out_dir,
             variants_loader,
             partition_descriptor,
             bucket_index=bucket_index,
@@ -812,7 +487,7 @@ def add_missing_parquet_fields(pps, ped_df):
         rename[column] = name
 
     ped_df = ped_df.rename(columns=rename)
-    missing_fields = [rename[col] for col in missing_fields]
+    missing_fields = set([rename[col] for col in missing_fields])
 
     for column in missing_fields:
         ped_df[column] = ped_df[column].apply(str)

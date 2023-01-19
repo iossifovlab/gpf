@@ -67,8 +67,7 @@ class ImpalaVariants(SqlSchema2Variants):
             }
             return schema
 
-    def _fetch_tblproperties(self) \
-            -> Optional[configparser.ConfigParser]:
+    def _fetch_tblproperties(self) -> str:
         with closing(self.connection()) as conn:
             with conn.cursor() as cursor:
                 query = f"""SELECT value FROM {self.db}.{self.meta_table}
@@ -77,12 +76,10 @@ class ImpalaVariants(SqlSchema2Variants):
                 """
 
                 cursor.execute(query)
-                config = configparser.ConfigParser()
 
                 for row in cursor:
-                    config.read_string(row[0])
-                    return config
-        return None
+                    return row[0]
+        return ""
 
     def _fetch_pedigree(self):
         with closing(self.connection()) as conn:

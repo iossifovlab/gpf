@@ -9,8 +9,8 @@ from dae.import_tools.import_tools import ImportStorage
 from dae.task_graph.graph import TaskGraph
 from dae.impala_storage.schema2.schema2_genotype_storage import \
     Schema2GenotypeStorage
-from dae.parquet.schema2.parquet_io import NoPartitionDescriptor, \
-    ParquetManager, ParquetPartitionDescriptor
+from dae.parquet.schema2.parquet_io import ParquetManager
+from dae.parquet.partition_descriptor import PartitionDescriptor
 
 
 logger = logging.getLogger(__file__)
@@ -35,9 +35,10 @@ class Schema2ImportStorage(ImportStorage):
     def _get_partition_description(project, out_dir=None):
         out_dir = out_dir if out_dir else project.work_dir
         config_dict = project.get_partition_description_dict()
+
         if config_dict is None:
-            return NoPartitionDescriptor(out_dir)
-        return ParquetPartitionDescriptor.from_dict(config_dict, out_dir)
+            return PartitionDescriptor()
+        return PartitionDescriptor.parse_dict(config_dict)
 
     @classmethod
     def _do_write_pedigree(cls, project):
@@ -53,11 +54,12 @@ class Schema2ImportStorage(ImportStorage):
         out_dir = cls._variants_dir(project)
         gpf_instance = project.get_gpf_instance()
         ParquetWriter.write_variant(
+            out_dir,
             project.get_variant_loader(bucket,
                                        gpf_instance.reference_genome),
             bucket,
             gpf_instance,
-            project, cls._get_partition_description(project, out_dir),
+            project, cls._get_partition_description(project),
             ParquetManager())
 
     @classmethod

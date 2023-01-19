@@ -8,8 +8,8 @@ from dae.variants_loaders.dae.loader import DenovoLoader
 from dae.pedigrees.loader import FamiliesLoader
 from dae.impala_storage.schema2.schema2_genotype_storage import \
     Schema2GenotypeStorage
-from dae.parquet.schema2.parquet_io import \
-    NoPartitionDescriptor, ParquetManager, ParquetPartitionDescriptor
+from dae.parquet.partition_descriptor import PartitionDescriptor
+from dae.parquet.schema2.parquet_io import ParquetManager
 from dae.impala_storage.schema1.import_commons import \
     construct_import_annotation_pipeline, construct_import_effect_annotator
 from dae.variants_loaders.raw.loader import AnnotationPipelineDecorator,\
@@ -57,6 +57,7 @@ def import_test_study(resources_dir, gpf_instance_2013, storage):
                 "denovo": run_denovo2schema2
             }[file_type]
             to_parquet_func(
+                tmpdir,
                 f"{resources_dir}/simple_variants.ped",
                 f"{resources_dir}/{filename}",
                 gpf_instance_2013, partition_description,
@@ -87,8 +88,9 @@ def import_test_study(resources_dir, gpf_instance_2013, storage):
 @pytest.fixture(
     scope="session",
     params=[
-        NoPartitionDescriptor(),
-        ParquetPartitionDescriptor(["1"], region_length=50, family_bin_size=2),
+        PartitionDescriptor(),
+        PartitionDescriptor(
+            chromosomes=["1"], region_length=50, family_bin_size=2),
     ]
 )
 def partition_description(request):
@@ -107,7 +109,7 @@ def testing_study_backend(
         )
 
 
-def run_vcf2schema2(ped_file, vcf_file, gpf_instance,
+def run_vcf2schema2(out_dir, ped_file, vcf_file, gpf_instance,
                     partition_description, loader_args=None):
     pedigree = FamiliesLoader(ped_file).load()
 
@@ -127,6 +129,7 @@ def run_vcf2schema2(ped_file, vcf_file, gpf_instance,
     )
 
     ParquetManager.variants_to_parquet(
+        out_dir,
         variants_loader,
         partition_description,
         bucket_index=0,
@@ -134,7 +137,7 @@ def run_vcf2schema2(ped_file, vcf_file, gpf_instance,
     )
 
 
-def run_denovo2schema2(ped_file, denovo_file, gpf_instance,
+def run_denovo2schema2(out_dir, ped_file, denovo_file, gpf_instance,
                        partition_description, loader_args=None):
     pedigree = FamiliesLoader(ped_file).load()
 
@@ -150,6 +153,7 @@ def run_denovo2schema2(ped_file, denovo_file, gpf_instance,
     )
 
     ParquetManager.variants_to_parquet(
+        out_dir,
         variants_loader,
         partition_description,
         bucket_index=100,

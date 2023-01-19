@@ -69,6 +69,7 @@ class GcpImportStorage(ImportStorage):
         out_dir = cls._variants_dir(project)
         gpf_instance = project.get_gpf_instance()
         ParquetWriter.write_variant(
+            out_dir,
             project.get_variant_loader(bucket,
                                        gpf_instance.reference_genome),
             bucket,

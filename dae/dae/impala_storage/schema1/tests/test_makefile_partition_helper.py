@@ -4,7 +4,7 @@ import pytest
 from dae.genomic_resources.reference_genome import \
     ReferenceGenome
 
-from dae.parquet.schema1.parquet_io import ParquetPartitionDescriptor
+from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.impala_storage.schema1.import_commons import MakefilePartitionHelper
 
 
@@ -26,7 +26,7 @@ def test_target_generator_region_bins_count(
     region_length, chrom, bins_count, gpf_instance_2013
 ):
 
-    partition_descriptor = ParquetPartitionDescriptor(
+    partition_descriptor = PartitionDescriptor(
         ["1", "2"], region_length
     )
 
@@ -58,7 +58,7 @@ def test_target_generator_region_bins(
     region_length, chrom, targets, gpf_instance_2013
 ):
 
-    partition_descriptor = ParquetPartitionDescriptor(
+    partition_descriptor = PartitionDescriptor(
         ["1", "2"], region_length
     )
 
@@ -85,7 +85,7 @@ def test_target_generator_other_0(
     region_length, target_chroms, targets, gpf_instance_2013
 ):
 
-    partition_descriptor = ParquetPartitionDescriptor(
+    partition_descriptor = PartitionDescriptor(
         ["1", "2"], region_length
     )
 
@@ -109,7 +109,7 @@ def test_target_generator_other_0(
 )
 def test_target_generator_chrom_1(region_length, targets, gpf_instance_2013):
 
-    partition_descriptor = ParquetPartitionDescriptor(
+    partition_descriptor = PartitionDescriptor(
         ["1", "2"], region_length
     )
 
@@ -134,7 +134,7 @@ def test_target_generator_chrom_1(region_length, targets, gpf_instance_2013):
 def test_target_generator_chrom_other(
         region_length, targets, gpf_instance_2013):
 
-    partition_descriptor = ParquetPartitionDescriptor(
+    partition_descriptor = PartitionDescriptor(
         ["1", "2"], region_length
     )
 
@@ -172,7 +172,7 @@ def test_target_generator_chrom_prefix_target_other(
         ],
     )
 
-    partition_descriptor = ParquetPartitionDescriptor(
+    partition_descriptor = PartitionDescriptor(
         ["chr1", "chr2"], region_length
     )
 
@@ -215,7 +215,7 @@ def test_target_generator_add_chrom_prefix_target_chrom(
         ],
     )
 
-    partition_descriptor = ParquetPartitionDescriptor(
+    partition_descriptor = PartitionDescriptor(
         ["chr1", "chr2"], region_length
     )
 
@@ -258,7 +258,7 @@ def test_target_generator_del_chrom_prefix_target_chrom(
         ],
     )
 
-    partition_descriptor = ParquetPartitionDescriptor(
+    partition_descriptor = PartitionDescriptor(
         ["1", "2"], region_length
     )
 
@@ -322,7 +322,7 @@ def test_makefile_generator_bucket_numbering(
         ],
     )
 
-    partition_descriptor = ParquetPartitionDescriptor(
+    partition_descriptor = PartitionDescriptor(
         ["chr1", "chr2"], region_length
     )
 
@@ -379,7 +379,7 @@ def test_makefile_generator_regions(
         ],
     )
 
-    partition_descriptor = ParquetPartitionDescriptor(
+    partition_descriptor = PartitionDescriptor(
         ["chr1", "chr2"], region_length
     )
 
@@ -441,7 +441,7 @@ def test_makefile_generator_regions_del_chrom_prefix(
         ],
     )
 
-    partition_descriptor = ParquetPartitionDescriptor(
+    partition_descriptor = PartitionDescriptor(
         ["1", "2"], region_length
     )
 
@@ -501,7 +501,7 @@ def test_makefile_generator_regions_add_chrom_prefix(
         ],
     )
 
-    partition_descriptor = ParquetPartitionDescriptor(
+    partition_descriptor = PartitionDescriptor(
         ["1", "2"], region_length
     )
 

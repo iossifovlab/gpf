@@ -3,7 +3,7 @@ import re
 import time
 import itertools
 import logging
-
+from typing import Optional
 from contextlib import closing
 
 from impala import dbapi  # type: ignore
@@ -37,7 +37,7 @@ class ImpalaHelpers:
             return connection
 
         if pool_size is None:
-            pool_size = 3 * len(impala_host) + 1
+            pool_size = 3 * len(impala_hosts) + 1
 
         logger.info("impala connection pool size is: %s", pool_size)
 
@@ -45,7 +45,7 @@ class ImpalaHelpers:
             create_connection, pool_size=pool_size,
             reset_on_return=False,
             max_overflow=pool_size,
-            timeout=1.0)
+            timeout=1)
 
         logger.debug(
             "created impala pool with %s connections",
@@ -54,7 +54,7 @@ class ImpalaHelpers:
     def close(self):
         self._connection_pool.dispose()
 
-    def connection(self, timeout: float = None):
+    def connection(self, timeout: Optional[int] = None):
         """Create a new connection to the impala host."""
         logger.debug("going to get impala connection from the pool; %s",
                      self._connection_pool.status())
@@ -130,6 +130,23 @@ class ImpalaHelpers:
         )
 
     @staticmethod
+    def _build_impala_partitions(partition_descriptor):
+        partitions = partition_descriptor.dataset_family_partition()
+        type_convertion = {
+            "int32": "INT",
+            "int16": "SMALLINT",
+            "int8": "TINYINT",
+            "float": "FLOAT",
+            "string": "STRING",
+            "binary": "STRING",
+        }
+        impala_partitions = ", ".join([
+            f"{bname} {type_convertion[btype]}"
+            for (bname, btype) in partitions
+        ])
+        return impala_partitions
+
+    @staticmethod
     def _create_dataset_table(
         cursor, db, table, sample_file, partition_description
     ):
@@ -143,10 +160,11 @@ class ImpalaHelpers:
                 STORED AS PARQUET LOCATION '{hdfs_dir}'
             """
         else:
-            partitions = partition_description.build_impala_partitions()
+            impala_partitions = \
+                ImpalaHelpers._build_impala_partitions(partition_description)
             statement = f"""
                 CREATE EXTERNAL TABLE {db}.{table} LIKE PARQUET '{sample_file}'
-                PARTITIONED BY ({partitions})
+                PARTITIONED BY ({impala_partitions})
                 STORED AS PARQUET LOCATION '{hdfs_dir}'
             """
         cursor.execute(statement)
@@ -204,9 +222,10 @@ class ImpalaHelpers:
                 ["LIKE PARQUET", f"'{variants_sample}'"])
 
         if partition_description.has_partitions():
-            partitions = partition_description.build_impala_partitions()
+            impala_partitions = \
+                ImpalaHelpers._build_impala_partitions(partition_description)
             statement.extend([
-                "PARTITIONED BY", f"({partitions})"
+                "PARTITIONED BY", f"({impala_partitions})"
             ])
 
         statement.extend([
@@ -320,10 +339,10 @@ class ImpalaHelpers:
 
     def rename_table(self, db, table, new_table):
         """Rename db.table to new_table."""
-        statement = [
+        parts = [
             f"ALTER TABLE {db}.{table} RENAME TO {db}.{new_table}"
         ]
-        statement = " ".join(statement)
+        statement = " ".join(parts)
         logger.info("going to execute %s", statement)
 
         with closing(self.connection()) as conn:

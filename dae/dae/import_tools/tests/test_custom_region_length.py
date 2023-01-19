@@ -193,13 +193,9 @@ _denovo_multi_chrom_config = dict(
 @pytest.mark.parametrize("add_chrom_prefix", [None, "chr"])
 def test_single_bucket_generation(add_chrom_prefix, gpf_instance_2019, mocker):
     import_config = deepcopy(_denovo_multi_chrom_config)
-    import_config["processing_config"]["denovo"] = "single_bucket"
-    # if add_chrom_prefix:
-    #     import_config["input"]["denovo"]["add_chrom_prefix"] = \
-    #           add_chrom_prefix
-    #     prefix = add_chrom_prefix
-    # else:
-    #     prefix = ""
+
+    import_config[
+        "processing_config"]["denovo"] = "single_bucket"  # type: ignore
 
     mocker.patch.object(import_tools.ImportProject, "get_gpf_instance",
                         return_value=gpf_instance_2019)
@@ -214,7 +210,7 @@ def test_single_bucket_generation(add_chrom_prefix, gpf_instance_2019, mocker):
 def test_single_bucket_is_default_when_missing_processing_config(
         gpf_instance_2019, mocker):
     import_config = deepcopy(_denovo_multi_chrom_config)
-    assert "denovo" not in import_config["processing_config"]
+    assert "denovo" not in import_config["processing_config"]  # type: ignore
 
     mocker.patch.object(import_tools.ImportProject, "get_gpf_instance",
                         return_value=gpf_instance_2019)
@@ -228,9 +224,10 @@ def test_single_bucket_is_default_when_missing_processing_config(
 def test_chromosome_bucket_generation(add_chrom_prefix, gpf_instance_2019,
                                       mocker):
     import_config = deepcopy(_denovo_multi_chrom_config)
-    import_config["processing_config"]["denovo"] = "chromosome"
+    import_config["processing_config"]["denovo"] = "chromosome"  # type: ignore
     if add_chrom_prefix:
-        import_config["input"]["denovo"]["add_chrom_prefix"] = add_chrom_prefix
+        import_config["input"]["denovo"][  # type: ignore
+            "add_chrom_prefix"] = add_chrom_prefix
         prefix = add_chrom_prefix
     else:
         prefix = ""
@@ -249,7 +246,7 @@ def test_chromosome_bucket_generation(add_chrom_prefix, gpf_instance_2019,
 
 def test_chromosome_list_bucket_generation(gpf_instance_2019, mocker):
     import_config = deepcopy(_denovo_multi_chrom_config)
-    import_config["processing_config"]["denovo"] = {
+    import_config["processing_config"]["denovo"] = {  # type: ignore
         "chromosomes": ["1", "2", "3"]
     }
 

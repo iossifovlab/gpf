@@ -7,7 +7,7 @@ import pandas as pd
 from fsspec.core import url_to_fs
 from dae.impala_storage.schema2.schema2_genotype_storage import \
     Schema2GenotypeStorage
-from dae.parquet.schema2.parquet_io import NoPartitionDescriptor
+from dae.parquet.partition_descriptor import PartitionDescriptor
 
 
 @dataclass(frozen=True)
@@ -57,7 +57,7 @@ def test_hdfs_upload_dataset(import_layout):
         },
     }
     config = Box(config)
-    partition_description = NoPartitionDescriptor(import_layout.variant_dir)
+    partition_description = PartitionDescriptor()
     hdfs, _ = url_to_fs(f"hdfs://{hdfs_host}:8020/")
     if hdfs.exists(base_dir):
         hdfs.rm(base_dir, recursive=True)  # cleanup from previous tests

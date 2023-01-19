@@ -218,11 +218,11 @@ class CLILoader(ABC):
     @classmethod
     def parse_cli_arguments(
             cls, argv: argparse.Namespace,
-            use_defaults=False) -> Tuple[str, Dict[str, Any]]:
+            use_defaults=False) -> Tuple[List[str], Dict[str, Any]]:
         """Parse cli arguments."""
         for arg in cls._arguments():
             arg.parse_cli_argument(argv, use_defaults=use_defaults)
-        return "", {}
+        return [], {}
 
 
 class VariantsLoader(CLILoader):
@@ -232,7 +232,8 @@ class VariantsLoader(CLILoader):
         self,
         families: FamiliesData,
         filenames: List[str],
-        transmission_type: TransmissionType,
+        genome: ReferenceGenome,
+        transmission_type: TransmissionType = TransmissionType.transmitted,
         params: Optional[Dict[str, Any]] = None,
         attributes: Optional[Dict[str, Any]] = None,
     ):
@@ -244,6 +245,7 @@ class VariantsLoader(CLILoader):
 
         assert isinstance(transmission_type, TransmissionType)
         self.transmission_type = transmission_type
+        self.genome = genome
         if attributes is None:
             self._attributes = {}
         else:
@@ -289,7 +291,8 @@ class VariantsLoaderDecorator(VariantsLoader):
         super().__init__(
             variants_loader.families,
             variants_loader.filenames,
-            variants_loader.transmission_type,
+            genome=variants_loader.genome,
+            transmission_type=variants_loader.transmission_type,
             params=variants_loader.params,
             attributes=variants_loader._attributes,
         )
@@ -638,8 +641,8 @@ class VariantsGenotypesLoader(VariantsLoader):
             self,
             families: FamiliesData,
             filenames: List[str],
-            transmission_type: TransmissionType,
             genome: ReferenceGenome,
+            transmission_type: TransmissionType = TransmissionType.transmitted,
             regions: Optional[List[str]] = None,
             expect_genotype: bool = True,
             expect_best_state: bool = False,
@@ -650,9 +653,8 @@ class VariantsGenotypesLoader(VariantsLoader):
             families=families,
             filenames=filenames,
             transmission_type=transmission_type,
+            genome=genome,
             params=params)
-
-        self.genome = genome
 
         self.regions: Sequence[Optional[str]]
         if regions is None or isinstance(regions, str):

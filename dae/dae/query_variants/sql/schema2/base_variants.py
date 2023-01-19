@@ -1,9 +1,7 @@
 import logging
 import abc
-import configparser
 from contextlib import closing
-
-from typing import Optional, Any, Tuple, Set
+from typing import Any, Tuple, Set
 
 import pandas as pd
 
@@ -12,6 +10,7 @@ from dae.pedigrees.family import FamiliesData
 from dae.pedigrees.loader import FamiliesLoader
 from dae.query_variants.query_runners import QueryResult, QueryRunner
 from dae.inmemory_storage.raw_variants import RawFamilyVariants
+from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.query_variants.sql.schema2.family_builder import FamilyQueryBuilder
 from dae.query_variants.sql.schema2.summary_builder import SummaryQueryBuilder
 
@@ -63,8 +62,8 @@ class SqlSchema2Variants(abc.ABC):
             self.families, {"ped_tags": True}
         )
 
-        _tbl_props = self._fetch_tblproperties()
-        self.table_properties = self._normalize_tblproperties(_tbl_props)
+        self.partition_descriptor = PartitionDescriptor.parse_string(
+            self._fetch_tblproperties())
 
     @abc.abstractmethod
     def _fetch_schema(self, table) -> dict[str, str]:
@@ -75,41 +74,8 @@ class SqlSchema2Variants(abc.ABC):
         """Fetch the pedigree and return it as a data frame."""
 
     @abc.abstractmethod
-    def _fetch_tblproperties(self) -> Optional[configparser.ConfigParser]:
+    def _fetch_tblproperties(self) -> str:
         """Fetch partion description from metadata table."""
-
-    @staticmethod
-    def _normalize_tblproperties(tbl_props) -> dict:
-        if tbl_props is None:
-            return {
-                "region_length": 0,
-                "chromosomes": [],
-                "family_bin_size": 0,
-                "coding_effect_types": set(),
-                "rare_boundary": 0
-            }
-
-        return {
-            "region_length": int(
-                tbl_props["region_bin"]["region_length"]
-            ),
-            "chromosomes": [
-                c.strip()
-                for c in tbl_props["region_bin"]["chromosomes"].split(",")
-            ],
-            "family_bin_size": int(
-                tbl_props["family_bin"]["family_bin_size"]
-            ),
-            "rare_boundary": int(
-                tbl_props["frequency_bin"]["rare_boundary"]
-            ),
-            "coding_effect_types": set(
-                s.strip()
-                for s in tbl_props["coding_bin"][
-                    "coding_effect_types"
-                ].split(",")
-            ),
-        }
 
     @abc.abstractmethod
     def _get_connection_factory(self) -> Any:
@@ -150,7 +116,7 @@ class SqlSchema2Variants(abc.ABC):
             self.pedigree_table,
             self.family_variant_schema,
             self.summary_allele_schema,
-            self.table_properties,
+            self.partition_descriptor.to_dict(),
             self.pedigree_schema,
             self.ped_df,
             gene_models=self.gene_models,
@@ -232,7 +198,7 @@ class SqlSchema2Variants(abc.ABC):
             self.pedigree_table,
             self.family_variant_schema,
             self.summary_allele_schema,
-            self.table_properties,
+            self.partition_descriptor.to_dict(),
             self.pedigree_schema,
             self.ped_df,
             gene_models=self.gene_models,

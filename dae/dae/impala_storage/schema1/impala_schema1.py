@@ -9,8 +9,8 @@ from dae.impala_storage.schema1.import_commons import save_study_config
 from dae.parquet.parquet_writer import ParquetWriter
 from dae.import_tools.import_tools import ImportStorage
 from dae.task_graph.graph import TaskGraph
-from dae.parquet.schema1.parquet_io import NoPartitionDescriptor, \
-    ParquetManager, ParquetPartitionDescriptor
+from dae.parquet.partition_descriptor import PartitionDescriptor
+from dae.parquet.schema1.parquet_io import ParquetManager
 
 
 logger = logging.getLogger(__file__)
@@ -32,8 +32,8 @@ class ImpalaSchema1ImportStorage(ImportStorage):
         out_dir = out_dir if out_dir else project.work_dir
         config_dict = project.get_partition_description_dict()
         if config_dict is None:
-            return NoPartitionDescriptor(out_dir)
-        return ParquetPartitionDescriptor.from_dict(config_dict, out_dir)
+            return PartitionDescriptor()
+        return PartitionDescriptor.parse_dict(config_dict)
 
     @classmethod
     def _do_write_pedigree(cls, project):
@@ -54,11 +54,12 @@ class ImpalaSchema1ImportStorage(ImportStorage):
         out_dir = cls._variants_dir(project)
         gpf_instance = project.get_gpf_instance()
         ParquetWriter.write_variant(
+            out_dir,
             project.get_variant_loader(bucket,
                                        gpf_instance.reference_genome),
             bucket,
             gpf_instance,
-            project, cls._get_partition_description(project, out_dir),
+            project, cls._get_partition_description(project),
             ParquetManager())
         elapsed = time.time() - start
         logger.info(

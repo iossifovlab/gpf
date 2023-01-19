@@ -23,8 +23,10 @@ class PartitionDescriptor:
             family_bin_size: int = 0,
             coding_effect_types: Optional[List[str]] = None,
             rare_boundary: float = 0):
-
-        self._chromosomes = chromosomes
+        if chromosomes is None:
+            self._chromosomes: List[str] = []
+        else:
+            self._chromosomes = chromosomes
         self._region_length = region_length
         self._family_bin_size = family_bin_size
         self._coding_effect_types: Set[str] = \
@@ -45,7 +47,7 @@ class PartitionDescriptor:
         """Parse partition description from a file."""
         if isinstance(path_name, str):
             path_name = pathlib.Path(path_name)
-        if path_name.suffix == ".conf":
+        if path_name.suffix in {"", ".conf"}:
             # parse configparser content
             with open(path_name, "r", encoding="utf8") as infile:
                 return PartitionDescriptor.parse_string(infile.read(), "conf")
@@ -81,25 +83,30 @@ class PartitionDescriptor:
             raise ValueError(
                 f"unsuported partition description format <{content_format}>")
 
-        if "region_bin" in parsed_data.keys():
+        return PartitionDescriptor.parse_dict(parsed_data)
+
+    @staticmethod
+    def parse_dict(config_dict) -> PartitionDescriptor:
+        config: Dict[str, Any] = {}
+        if "region_bin" in config_dict.keys():
             config["region_length"] = int(
-                parsed_data["region_bin"]["region_length"])
+                config_dict["region_bin"]["region_length"])
             config["chromosomes"] = [
                 c.strip()
-                for c in parsed_data["region_bin"]["chromosomes"].split(",")]
+                for c in config_dict["region_bin"]["chromosomes"].split(",")]
 
-        if "family_bin" in parsed_data.keys():
+        if "family_bin" in config_dict.keys():
             config["family_bin_size"] = int(
-                parsed_data["family_bin"]["family_bin_size"])
+                config_dict["family_bin"]["family_bin_size"])
 
-        if "frequency_bin" in parsed_data.keys():
+        if "frequency_bin" in config_dict.keys():
             config["rare_boundary"] = float(
-                parsed_data["frequency_bin"]["rare_boundary"])
+                config_dict["frequency_bin"]["rare_boundary"])
 
-        if "coding_bin" in parsed_data.keys():
+        if "coding_bin" in config_dict.keys():
             config["coding_effect_types"] = set(
                 s.strip()
-                for s in parsed_data["coding_bin"][
+                for s in config_dict["coding_bin"][
                     "coding_effect_types"
                 ].split(",")
             )
@@ -112,7 +119,7 @@ class PartitionDescriptor:
             region_length=config.get("region_length", 0),
             family_bin_size=config.get("family_bin_size", 0),
             rare_boundary=config.get("rare_boundary", 0.0),
-            coding_effect_types=config.get("conding_effect_types")
+            coding_effect_types=config.get("coding_effect_types")
         )
 
     def has_region_bins(self):
@@ -205,6 +212,24 @@ class PartitionDescriptor:
 
         return frequency_bin
 
+    def dataset_summary_partition(self) -> List[Tuple[str, str]]:
+        """Build summary dataset partition for table creation."""
+        result = []
+        if self.has_region_bins():
+            result.append(("region_bin", "string"))
+        if self.has_frequency_bins():
+            result.append(("frequency_bin", "int8"))
+        if self.has_coding_bins():
+            result.append(("coding_bin", "int8"))
+        return result
+
+    def dataset_family_partition(self) -> List[Tuple[str, str]]:
+        """Build family dataset partition for table creation."""
+        result = self.dataset_summary_partition()
+        if self.has_family_bins():
+            result.append(("family_bin", "int8"))
+        return result
+
     def summary_partition(self, allele) -> List[Tuple[str, str]]:
         """Produce summary partition for an allele."""
         result = []
@@ -233,6 +258,16 @@ class PartitionDescriptor:
 
         return result
 
+    def family_partition(self, allele) -> List[Tuple[str, str]]:
+        """Produce family partition for an allele."""
+        partition = self.summary_partition(allele)
+        if self.has_family_bins():
+            partition.append((
+                "family_bin",
+                str(self.make_family_bin(allele.family_id))
+            ))
+        return partition
+
     @staticmethod
     def partition_directory(
             output_dir: str, partition: List[Tuple[str, str]]) -> str:
@@ -249,7 +284,9 @@ class PartitionDescriptor:
         partition_parts = [
             f"{bname}_{bvalue}" for (bname, bvalue) in partition]
         parts = [
-            prefix, *partition_parts, f"bucket_index_{bucket_index:0>6}"]
+            prefix, *partition_parts]
+        if bucket_index is not None:
+            parts.append(f"bucket_index_{bucket_index:0>6}")
         result = "_".join(parts)
         result += ".parquet"
         return result
@@ -257,15 +294,11 @@ class PartitionDescriptor:
     def to_dict(self) -> Dict[str, Any]:
         """Convert the partition descriptor to a dict."""
         result = {}
-        if self.has_region_bins():
-            result["chromosomes"] = self.chromosomes
-            result["region_length"] = self.region_length
-        if self.has_family_bins():
-            result["rare_boundary"] = self.rare_boundary
-        if self.has_coding_bins():
-            result["coding_effect_types"] = self.coding_effect_types
-        if self.has_family_bins():
-            result["family_bin_size"] = self.family_bin_size
+        result["chromosomes"] = self.chromosomes
+        result["region_length"] = self.region_length
+        result["rare_boundary"] = self.rare_boundary
+        result["coding_effect_types"] = self.coding_effect_types
+        result["family_bin_size"] = self.family_bin_size
         return result
 
     def serialize(self, output_format: str = "conf") -> str:

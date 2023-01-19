@@ -19,7 +19,7 @@ from dae.genotype_storage.genotype_storage import GenotypeStorage
 from dae.genotype_storage.genotype_storage_registry import (
     GenotypeStorageRegistry
 )
-from dae.parquet.schema1.parquet_io import ParquetPartitionDescriptor
+from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.task_graph.graph import TaskGraph
 from dae.pedigrees.family import FamiliesData
@@ -433,9 +433,9 @@ class ImportProject():
         # cannot use self.get_partition_description() here as the
         # processing region length might be different than the region length
         # specified in the parition description section of the import config
-        partition_description = ParquetPartitionDescriptor(
-            target_chromosomes,
-            self._get_processing_region_length(loader_type),
+        partition_description = PartitionDescriptor(
+            chromosomes=target_chromosomes,
+            region_length=self._get_processing_region_length(loader_type),
         )
 
         partition_helper = MakefilePartitionHelper(

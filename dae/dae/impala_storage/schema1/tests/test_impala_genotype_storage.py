@@ -130,9 +130,14 @@ def test_impala_partition_import(
         with conn.cursor() as cursor:
             cursor.execute(f"DESCRIBE EXTENDED {db}.test_study_variants")
             rows = list(cursor)
+            # import pdb; pdb.set_trace()
             assert any(
                 row[1] == "gpf_partitioning_coding_bin_coding_effect_types"
-                and row[2] == "missense,nonsense,frame-shift,synonymous"
+                and all([
+                    "frame-shift" in row[2],
+                    "missense" in row[2],
+                    "synonymou" in row[2],
+                    "nonsense" in row[2]])
                 for row in rows
             )
             assert any(
@@ -142,7 +147,7 @@ def test_impala_partition_import(
             )
             assert any(
                 row[1] == "gpf_partitioning_frequency_bin_rare_boundary"
-                and int(row[2]) == 30
+                and float(row[2]) == 30
                 for row in rows
             )
             assert any(

@@ -3,20 +3,18 @@
 import os
 import sys
 import argparse
-import logging
 
-from dae.parquet.schema1.parquet_io import (
-    ParquetPartitionDescriptor,
-    ParquetManager,
-)
+from dae.utils.verbosity_configuration import VerbosityConfiguration
 from dae.pedigrees.loader import FamiliesLoader
+from dae.parquet.partition_descriptor import PartitionDescriptor
+from dae.parquet.schema1.parquet_io import ParquetManager
 
 
 def main(argv):
     """Entry point for ped2parquet."""
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--verbose', '-V', action='count', default=0)
+    VerbosityConfiguration.set_argumnets(parser)
 
     FamiliesLoader.cli_arguments(parser)
     parser.add_argument(
@@ -42,36 +40,26 @@ def main(argv):
         "construct study id [default: basename(families filename)]",
     )
     argv = parser.parse_args(argv)
-    if argv.verbose == 1:
-        logging.basicConfig(level=logging.WARNING)
-    elif argv.verbose == 2:
-        logging.basicConfig(level=logging.INFO)
-    elif argv.verbose >= 3:
-        logging.basicConfig(level=logging.DEBUG)
-    else:
-        logging.basicConfig(level=logging.ERROR)
-
+    VerbosityConfiguration.set(argv)
     run(argv)
 
 
 def run(argv):
     """Run the ped to parquet conversion."""
     filename, params = FamiliesLoader.parse_cli_arguments(argv)
-    if argv.study_id is not None:
-        study_id = argv.study_id
-    else:
-        study_id, _ = os.path.splitext(os.path.basename(filename))
+    # if argv.study_id is not None:
+    #     study_id = argv.study_id
+    # else:
+    #     study_id, _ = os.path.splitext(os.path.basename(filename))
 
     loader = FamiliesLoader(filename, **params)
     families = loader.load()
 
     if argv.partition_description:
-        partition_description = ParquetPartitionDescriptor.from_config(
-            argv.partition_description
-        )
-        if partition_description.family_bin_size > 0:
-            families = partition_description \
-                .add_family_bins_to_families(families)
+        partition_description = PartitionDescriptor.parse(
+            argv.partition_description)
+    else:
+        partition_description = PartitionDescriptor()
 
     if not argv.output_filename:
         output_filename, _ = os.path.splitext(os.path.basename(filename))
@@ -79,7 +67,8 @@ def run(argv):
     else:
         output_filename = argv.output_filename
 
-    ParquetManager.families_to_parquet(families, output_filename)
+    ParquetManager.families_to_parquet(
+        families, output_filename, partition_description)
 
 
 if __name__ == "__main__":
