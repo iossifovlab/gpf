@@ -2,7 +2,7 @@ import argparse
 import sys
 import textwrap
 import traceback
-from dae.dae.utils.verbosity_configuration import VerbosityConfiguration
+from dae.utils.verbosity_configuration import VerbosityConfiguration
 from dae.import_tools.import_tools import ImportProject
 from dae.task_graph.cache import CacheRecordType, FileTaskCache
 
@@ -22,14 +22,16 @@ def main(argv=None):
     )
     parser.add_argument("config", type=str,
                         help="Path to the import configuration")
-    TaskGraphCli.add_arguments(parser)
+    TaskGraphCli.add_arguments(parser, default_task_status_dir=None)
     VerbosityConfiguration.set_argumnets(parser)
     args = parser.parse_args(argv or sys.argv[1:])
     VerbosityConfiguration.set(args)
-    
+
     project = ImportProject.build_from_file(args.config)
 
-    # task_cache = _create_task_cache(args, project)
+    if args.task_status_dir is None:
+        args.task_status_dir = fs_utils.join(
+            project.work_dir, ".task-progress", project.study_id)
 
     storage = project.get_import_storage()
     task_graph = storage.generate_import_task_graph(project)

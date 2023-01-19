@@ -3,7 +3,7 @@ import argparse
 import textwrap
 import traceback
 import yaml
-from dae.task_graph.cache import CacheRecordType, FileTaskCache
+from dae.task_graph.cache import CacheRecordType, FileTaskCache, NoTaskCache
 from dae.task_graph.executor import DaskExecutor
 from dae.task_graph.executor import SequentialExecutor
 
@@ -14,7 +14,10 @@ from dae.dask.named_cluster import setup_client_from_config
 
 class TaskGraphCli:
     @staticmethod
-    def add_arguments(parser: argparse.ArgumentParser, defualt_cache=None):
+    def add_arguments(parser: argparse.ArgumentParser,
+                      force_mode="optional",
+                      default_task_status_dir="."):
+
         executor_group = parser.add_argument_group(title="Task Graph Executor")
         # cluster_name
         # cluster_config_file
@@ -33,31 +36,44 @@ class TaskGraphCli:
         )
 
         # task_cache
-        execution_mode_group = parser.add_argument_group(title="Execution Mode")
+        execution_mode_group = parser.add_argument_group(
+            title="Execution Mode")
         execution_mode_group.add_argument("command",
-                                        choices=["run", "list", "status"],
-                                        default="run", nargs="?",
-                                        help=textwrap.dedent("""\
+                                          choices=["run", "list", "status"],
+                                          default="run", nargs="?",
+                                          help=textwrap.dedent("""\
                     Command to execute on the import configuration.
                     run - runs the import process
                     list - lists the tasks to be executed but doesn't run them
                     status - synonym for list
                 """),
-                                        )
+                                          )
         execution_mode_group.add_argument(
             "--task-id", dest="task_ids", type=str, nargs="+")
-        execution_mode_group.add_argument(
-            "--force", "-f", default=False, action="store_true",
-            help="Ignore precomputed state and always rerun the entire import"
-        )
         execution_mode_group.add_argument(
             "--keep-going", default=False, action="store_true",
             help="Whether or not to keep executing in case of an error"
         )
+        if force_mode == "optional":
+            execution_mode_group.add_argument(
+                "--force", "-f", default=False, action="store_true",
+                help="Ignore precomputed state and always rerun all tasks."
+            )
+            execution_mode_group.add_argument(
+                "-tsd", "--task-status-dir", default=default_task_status_dir,
+                type=str, help="Directory to store the task progress."
+            )
+        else:
+            assert force_mode == "always"
 
     @staticmethod
     def process_graph(args: argparse.Namespace, task_graph: TaskGraph) -> bool:
-        task_cache = FileTaskCache(force=args.force, cache_dir=".")
+        if "force" not in vars(args):
+            # if the force_mode is set no 'always'
+            task_cache = NoTaskCache()
+        else:
+            task_cache = FileTaskCache(force=args.force,
+                                       cache_dir=args.task_status_dir)
 
         if args.task_ids:
             task_graph = task_graph.prune(ids_to_keep=args.task_ids)
@@ -74,13 +90,13 @@ class TaskGraphCli:
                     with open(args.dask_cluster_config_file) as F:
                         dask_cluster_config = yaml.safe_load(F)
                     print("THE CLUSTER CONFIG IS:", dask_cluster_config,
-                        "loaded from", args.dask_cluster_config_file)
+                          "loaded from", args.dask_cluster_config_file)
                     client, _ = setup_client_from_config(
                         dask_cluster_config,
                         number_of_threads=args.jobs)
                 else:
                     client, _ = setup_client(args.dask_cluster_name,
-                                            number_of_threads=args.jobs)
+                                             number_of_threads=args.jobs)
                 print("Working with client:", client)
                 executor = DaskExecutor(client, task_cache=task_cache)
 
@@ -89,7 +105,8 @@ class TaskGraphCli:
             for task, result_or_error in tasks_iter:
                 if isinstance(result_or_error, Exception):
                     if args.keep_going:
-                        print(f"Task {task.task_id} failed with:", file=sys.stderr)
+                        print(f"Task {task.task_id} failed with:",
+                              file=sys.stderr)
                         no_errors = False
                     else:
                         raise result_or_error
@@ -114,6 +131,7 @@ class TaskGraphCli:
                         tb=record.error.__traceback__,
                         file=sys.stdout
                     )
+            return True
         else:
             raise Exception("Unknown command")
 
