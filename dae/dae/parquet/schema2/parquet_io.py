@@ -111,10 +111,10 @@ class NoPartitionDescriptor(PartitionDescriptor):
             version="1.0"
         )
 
-    @staticmethod
-    def generate_file_access_glob():
-        """Return a glob for accessing every parquet file in the partition."""
-        return "*variants.parquet"
+    # @staticmethod
+    # def generate_file_access_glob():
+    #     """Return a glob for accessing every parquet file in the partition."""
+    #     return "*variants.parquet"
 
     @staticmethod
     def variants_filename_basedir(filename):
@@ -428,17 +428,17 @@ class ParquetPartitionDescriptor(PartitionDescriptor):
             version="1.0"
         )
 
-    def generate_file_access_glob(self):
-        """Return a glob for accessing every parquet file in the partition."""
-        glob = "*/"
-        if self.family_bin_size != 0:
-            glob += "*/"
-        if self.coding_effect_types:
-            glob += "*/"
-        if self.rare_boundary != 0:
-            glob += "*/"
-        glob += "*.parquet"
-        return glob
+    # def generate_file_access_glob(self):
+    #     """Return a glob for accessing every parquet file in the partition."""
+    #     glob = "*/"
+    #     if self.family_bin_size != 0:
+    #         glob += "*/"
+    #     if self.coding_effect_types:
+    #         glob += "*/"
+    #     if self.rare_boundary != 0:
+    #         glob += "*/"
+    #     glob += "*.parquet"
+    #     return glob
 
     def add_family_bins_to_families(self, families):
         for family in families.values():

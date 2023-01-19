@@ -62,3 +62,72 @@ def test_partition_filename():
     assert PartitionDescriptor.partition_filename(
         "summary", [("region_bin", "1")], 1) == \
         "summary_region_bin_1_bucket_index_000001.parquet"
+
+
+def test_partition_descriptor_serialization():
+    pd_content = textwrap.dedent("""
+        [region_bin]
+        chromosomes = foo,bar
+        region_length = 8
+
+        [family_bin]
+        family_bin_size = 2
+
+        [frequency_bin]
+        rare_boundary = 50
+    """)
+    pdesc1 = PartitionDescriptor.parse_string(pd_content)
+    output = pdesc1.serialize()
+    pdesc2 = PartitionDescriptor.parse_string(output)
+
+    assert pdesc1.chromosomes == pdesc2.chromosomes
+    assert pdesc1.region_length == pdesc2.region_length
+    assert pdesc1.family_bin_size == pdesc2.family_bin_size
+    assert pdesc1.rare_boundary == pdesc2.rare_boundary
+
+
+def test_empty_partition_descriptor_serialization():
+    pd_content = textwrap.dedent("""
+    """)
+    pdesc1 = PartitionDescriptor.parse_string(pd_content)
+    output = pdesc1.serialize()
+    pdesc2 = PartitionDescriptor.parse_string(output)
+
+    assert pdesc1.chromosomes == pdesc2.chromosomes
+    assert pdesc1.region_length == pdesc2.region_length
+    assert pdesc1.family_bin_size == pdesc2.family_bin_size
+    assert pdesc1.rare_boundary == pdesc2.rare_boundary
+
+
+def test_partition_descriptor_yaml_serialization():
+    pd_content = textwrap.dedent("""
+        region_bin:
+            chromosomes: foo,bar
+            region_length: 8
+        family_bin:
+            family_bin_size: 2
+        frequency_bin:
+            rare_boundary: 50
+    """)
+
+    pdesc1 = PartitionDescriptor.parse_string(pd_content, "yaml")
+    output = pdesc1.serialize("yaml")
+    pdesc2 = PartitionDescriptor.parse_string(output, "yaml")
+
+    assert pdesc1.chromosomes == pdesc2.chromosomes
+    assert pdesc1.region_length == pdesc2.region_length
+    assert pdesc1.family_bin_size == pdesc2.family_bin_size
+    assert pdesc1.rare_boundary == pdesc2.rare_boundary
+
+
+def test_empty_partition_descriptor_yaml_serialization():
+    pd_content = textwrap.dedent("""
+    """)
+    pdesc1 = PartitionDescriptor.parse_string(pd_content, "yaml")
+    output = pdesc1.serialize("yaml")
+    pdesc2 = PartitionDescriptor.parse_string(output, "yaml")
+
+    assert pdesc1.chromosomes == pdesc2.chromosomes
+    assert pdesc1.region_length == pdesc2.region_length
+    assert pdesc1.family_bin_size == pdesc2.family_bin_size
+    assert pdesc1.rare_boundary == pdesc2.rare_boundary

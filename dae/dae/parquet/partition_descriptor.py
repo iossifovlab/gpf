@@ -1,5 +1,5 @@
 from __future__ import annotations
-
+import textwrap
 import hashlib
 import pathlib
 import configparser
@@ -7,6 +7,7 @@ import configparser
 from typing import Optional, List, Iterable, Set, Tuple, Union, Dict, Any
 
 import yaml
+import jinja2
 
 from dae.variants.attributes import TransmissionType
 from dae.utils import fs_utils
@@ -59,7 +60,7 @@ class PartitionDescriptor:
 
     @staticmethod
     def parse_string(
-            content: Optional[str],
+            content: str,
             content_format: str = "conf") -> PartitionDescriptor:
         """Parse partition description from a string."""
         config = {
@@ -69,6 +70,7 @@ class PartitionDescriptor:
             "coding_effect_types": set(),
             "rare_boundary": 0.0
         }
+        content = content.strip()
         if not content:
             return PartitionDescriptor._from_dict(config)
         if content_format == "conf":
@@ -148,9 +150,6 @@ class PartitionDescriptor:
     @property
     def rare_boundary(self):
         return self._rare_boundary
-
-    def serialize(self) -> str:
-        return ""
 
     def make_region_bin(self, chrom: str, pos: int) -> str:
         """Produce region bin from chromosome and position."""
@@ -255,11 +254,62 @@ class PartitionDescriptor:
         result += ".parquet"
         return result
 
-    def summary_filename(self, summary_allele):
-        raise NotImplementedError()
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert the partition descriptor to a dict."""
+        result = {}
+        if self.has_region_bins():
+            result["chromosomes"] = self.chromosomes
+            result["region_length"] = self.region_length
+        if self.has_family_bins():
+            result["rare_boundary"] = self.rare_boundary
+        if self.has_coding_bins():
+            result["coding_effect_types"] = self.coding_effect_types
+        if self.has_family_bins():
+            result["family_bin_size"] = self.family_bin_size
+        return result
 
-    def family_filename(self, family_allele):
-        raise NotImplementedError()
-
-    def write_partition_configuration(self):
-        raise NotImplementedError()
+    def serialize(self, output_format: str = "conf") -> str:
+        """Serialize a partition descriptor into a string."""
+        if output_format == "conf":
+            return jinja2.Template(textwrap.dedent("""
+                {% if chromosomes %}
+                [region_bin]
+                chromosomes={{ chromosomes|join(', ') }}
+                region_length={{ region_length }}
+                {% endif %}
+                {% if rare_boundary %}
+                [frequency_bin]
+                rare_boundary={{ rare_boundary }}
+                {% endif %}
+                {% if coding_effect_types %}
+                [coding_bin]
+                conding_effect_types={{ coding_effect_types|join(', ') }}
+                {% endif %}
+                {% if family_bin_size %}
+                [family_bin]
+                family_bin_size={{ family_bin_size }}
+                {% endif %}
+            """)).render(self.to_dict())
+        if output_format == "yaml":
+            return jinja2.Template(textwrap.dedent("""
+                {% if chromosomes %}
+                region_bin:
+                  chromosomes: {{ chromosomes|join(', ') }}
+                  region_length: {{ region_length }}
+                {% endif %}
+                {% if rare_boundary %}
+                frequency_bin:
+                  rare_boundary: {{ rare_boundary }}
+                {% endif %}
+                {% if coding_effect_types %}
+                coding_bin:
+                  conding_effect_types: {{ coding_effect_types|join(', ') }}
+                {% endif %}
+                {% if family_bin_size %}
+                family_bin:
+                  family_bin_size: {{ family_bin_size }}
+                {% endif %}
+            """)).render(self.to_dict())
+        raise ValueError(
+            f"usupported output format for partition descriptor: "
+            f"<{output_format}>")
