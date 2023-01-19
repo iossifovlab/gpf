@@ -209,7 +209,6 @@ describe('Gene scores download tests', () => {
   });
 });
 
-
 describe.skip('Gene scores visual tests', () => {
   const page = new GeneScoresPage();
   const genesBlockPage = new GenesBlockPage();
@@ -225,7 +224,7 @@ describe.skip('Gene scores visual tests', () => {
     page.navigateToHome();
   });
 
-  it.skip('should inspect gene scores on drag', () => {
+  it('should inspect gene scores on drag', () => {
     function moveSlider(which: string, dragValue: number, heightValue = 0): void {
       if (which === 'right') {
         dragValue = -dragValue;
@@ -257,19 +256,27 @@ describe.skip('Gene scores visual tests', () => {
 
     moveSlider('left', 200);
     page.allGeneScores.should('not.contain.text', '~');
-    page.histogram.matchImageSnapshot('histogram-left-drag-200');
+    page.allGeneScores.should('to.contain.text', '506 (54.76%)');
+    page.histogram.scrollTo('center', {ensureScrollable: false});
+    cy.matchImageSnapshot('histogram-left-drag-200');
 
     moveSlider('left', -100);
     page.allGeneScores.should('not.contain.text', '~');
-    page.histogram.matchImageSnapshot('histogram-left-drag-100');
+    page.allGeneScores.should('to.contain.text', '717 (77.60%)');
+    page.histogram.scrollTo('center', {ensureScrollable: false});
+    cy.matchImageSnapshot('histogram-left-drag-100');
 
     moveSlider('left', -100);
     moveSlider('right', 100);
+    page.histogram.scrollTo('center', {ensureScrollable: false});
     page.allGeneScores.should('not.contain.text', '~');
-    page.histogram.matchImageSnapshot('histogram-right-drag-100');
+    page.allGeneScores.should('contain.text', '924 (100.00%)');
+    cy.matchImageSnapshot('histogram-right-drag-100');
 
     moveSlider('left', 200);
+    page.histogram.scrollTo('center', {ensureScrollable: false});
     page.allGeneScores.should('not.contain.text', '~');
-    page.histogram.matchImageSnapshot('histogram-left-right-drag-overlap');
+    page.allGeneScores.should('contain.text', '924 (100.00%)');
+    cy.matchImageSnapshot('histogram-left-right-drag-overlap');
   });
 });

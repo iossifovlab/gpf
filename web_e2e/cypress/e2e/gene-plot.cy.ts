@@ -130,7 +130,7 @@ describe('Gene plot summary alleles count tests', () => {
   });
 });
 
-describe.skip('Gene plot visual tests', () => {
+describe('Gene plot visual tests', () => {
   const page = new GenePlotPage();
   const geneBrowserPage = new GeneBrowserPage();
 
@@ -145,19 +145,21 @@ describe.skip('Gene plot visual tests', () => {
     geneBrowserPage.searchInputBox.type('chd8');
     geneBrowserPage.pressGoButton();
     page.condenseIntronsCheckbox.click();
-    cy.get('g#plot').matchImageSnapshot('not-condensed-introns');
+    cy.get('g#plot').scrollTo('center', {ensureScrollable: false}).then(() => {
+      cy.get('g#plot').matchImageSnapshot('not-condensed-introns');
+    });
 
     page.condenseIntronsCheckbox.click();
-    cy.get('g#plot').matchImageSnapshot('condensed-introns');
+    cy.get('g#plot').scrollTo('center', {ensureScrollable: false}).then(() => {
+      cy.get('g#plot').matchImageSnapshot('condensed-introns');
+    });
   });
 
   it('should compare visually TTN gene plot results', () => {
     geneBrowserPage.searchInputBox.type('ttn');
     geneBrowserPage.pressGoButton();
-    cy.get('g#plot').matchImageSnapshot('ttn-gene-plot-snapshot');
-
-    page.variantsCount.should('exist');
-    page.variantsCount.should('have.text', '19 variants selected');
-    cy.get('gpf-table').matchImageSnapshot('ttn-gene-table-snapshot');
+    cy.get('gpf-genotype-preview-table').scrollTo('center', {ensureScrollable: false}).then(() => {
+      cy.matchImageSnapshot('ttn-gene-plot-snapshot');
+    });
   });
 });

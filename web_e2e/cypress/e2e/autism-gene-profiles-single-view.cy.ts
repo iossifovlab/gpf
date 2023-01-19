@@ -152,7 +152,7 @@ describe('Autism gene profiles single view links tests', () => {
 //   });
 // });
 
-describe.skip('Autism gene profiles single view visual tests', () => {
+describe('Autism gene profiles single view visual tests', () => {
   const page = new AutismGeneProfilesSingleViewPage();
 
   before(() => {
@@ -165,8 +165,8 @@ describe.skip('Autism gene profiles single view visual tests', () => {
     page.openSingleViewPage('CHD8');
 
     [
-      {tableId: 'autism_scores', tableRows: ['SFARI_gene_score']},
-      {tableId: 'protection_scores', tableRows: ['RVIS_rank', 'LGD_rank', 'pLI_rank', 'pRec_rank']}
+      {tableId: 'autism_scores', tableRows: [' SFARI gene score ']},
+      {tableId: 'protection_scores', tableRows: [' RVIS_rank ', ' LGD_rank ', ' pLI_rank ', ' pRec_rank ']}
     ].forEach(data => {
       cy.get('#' + data.tableId).within(scores => {
         data.tableRows.forEach((elements, index) => {
@@ -175,7 +175,7 @@ describe.skip('Autism gene profiles single view visual tests', () => {
           });
         });
       });
-      cy.get('#' + data.tableId).scrollIntoView();
+      cy.get('#' + data.tableId).scrollTo('center', {ensureScrollable: false});
       cy.matchImageSnapshot('chd8-' + data.tableId);
     });
   });

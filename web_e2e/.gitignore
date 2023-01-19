@@ -13,4 +13,4 @@ Jenkinsfile.generated-stages.all
 ts-lint-report.xml
 cache/
 __pycache__
-
+scripts/wdae_create_dev_gpfjs_app.sh
