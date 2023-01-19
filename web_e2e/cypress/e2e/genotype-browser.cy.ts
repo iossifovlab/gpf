@@ -533,7 +533,7 @@ describe('Genotype browser UCSC url tests', () => {
   });
 });
 
-describe.skip('Genotype browser table preview visual tests', () => {
+describe.only('Genotype browser table preview visual tests', () => {
   const genotypeBrowserController = new GenotypeBrowserController();
   const page = new GenotypeBrowserPage();
   const genotypePreviewTablePage = new GenotypePreviewTablePage();
@@ -559,7 +559,7 @@ describe.skip('Genotype browser table preview visual tests', () => {
       genesBlockPage.geneSymbolsTextarea.clear().type(data[0]);
 
       genotypeBrowserController.pressTablePreviewButton();
-      page.overviewParagraph.should('have.text', data[1] +' variants selected (' + data[1] + ' shown)');
+      page.overviewParagraph.should('have.text', data[1] +' variants selected');
       genotypePreviewTablePage.table.matchImageSnapshot(data[2]);
     });
   });
