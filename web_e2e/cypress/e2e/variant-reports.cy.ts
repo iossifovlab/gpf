@@ -429,7 +429,7 @@ describe('Variant reports Iossifov count tests', () => {
   });
 });
 
-describe.skip('Variant reports visual tests', () => {
+describe('Variant reports visual tests', () => {
   const page = new VariantReportsPage();
 
   before(() => {
@@ -459,26 +459,32 @@ describe.skip('Variant reports visual tests', () => {
   it('should compare families by pedigree table data', () => {
     page.familiesByPedigreeTab.click();
 
-    cy.get('#families-by-pedigree-div').scrollIntoView().matchImageSnapshot('iossifov-pedigree-table-status');
+    cy.get('#families-by-pedigree-div').scrollTo('top', {ensureScrollable: false}).then(() =>
+      cy.matchImageSnapshot('iossifov-pedigree-table-status'));
 
     cy.get('.col-sm-3 > .select-wrapper > .form-control').select('Role');
     page.familiesByPedigreeDivs.should('have.length', 8);
-    cy.get('#families-by-pedigree-div').scrollIntoView().matchImageSnapshot('iossifov-pedigree-table-role');
+    cy.get('#families-by-pedigree-div').scrollTo('top', {ensureScrollable: false}).then(() =>
+      cy.matchImageSnapshot('iossifov-pedigree-table-role'));
 
     cy.get('.col-sm-3 > .select-wrapper > .form-control').select('Phenotype');
     page.familiesByPedigreeDivs.should('have.length', 8);
-    cy.get('#families-by-pedigree-div').scrollIntoView().matchImageSnapshot('iossifov-pedigree-table-phenotype');
+    cy.get('#families-by-pedigree-div').scrollTo('top', {ensureScrollable: false}).then(() =>
+      cy.matchImageSnapshot('iossifov-pedigree-table-phenotype'));
   });
 
   it('should compare de novo variants table data', () => {
     page.deNovoVariantsTab.click();
 
-    cy.get('#denovo-variants-div').scrollIntoView().matchImageSnapshot('iossifov-denovo-table-status');
+    cy.get('#denovo-variants-div').scrollTo('center', {ensureScrollable: false})
+      .then(() => cy.matchImageSnapshot('iossifov-denovo-table-status'));
 
     page.denovoVariantsSelect.select('Role');
-    cy.get('#denovo-variants-div').scrollIntoView().matchImageSnapshot('iossifov-denovo-table-role');
+    cy.get('#denovo-variants-div').scrollTo('center', {ensureScrollable: false})
+      .then(() => cy.matchImageSnapshot('iossifov-denovo-table-role'));
 
     page.denovoVariantsSelect.select('Phenotype');
-    cy.get('#denovo-variants-div').scrollIntoView().matchImageSnapshot('iossifov-denovo-table-phenotype');
+    cy.get('#denovo-variants-div').scrollTo('center', {ensureScrollable: false})
+      .then(() => cy.matchImageSnapshot('iossifov-denovo-table-phenotype'));
   });
 });
