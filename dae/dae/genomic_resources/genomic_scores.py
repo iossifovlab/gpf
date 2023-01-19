@@ -228,6 +228,7 @@ class GenomicScore(
     def get_config(self):
         return self.config
 
+    @property
     def score_id(self):
         return self.get_config().get("id")
 
@@ -302,7 +303,7 @@ class GenomicScore(
 
     def get_all_chromosomes(self):
         if not self.is_open():
-            raise ValueError(f"genomic score <{self.score_id()}> is not open")
+            raise ValueError(f"genomic score <{self.score_id}> is not open")
 
         return self.table.get_chromosomes()
 
@@ -314,7 +315,7 @@ class GenomicScore(
     ) -> Iterator[dict[str, ScoreValue]]:
         """Return score values in a region."""
         if not self.is_open():
-            raise ValueError(f"genomic score <{self.score_id()}> is not open")
+            raise ValueError(f"genomic score <{self.score_id}> is not open")
 
         if chrom not in self.get_all_chromosomes():
             raise ValueError(

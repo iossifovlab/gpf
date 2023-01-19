@@ -84,7 +84,7 @@ class VariantScoreAnnotatorBase(Annotator):
             return cast(list[dict[str, Any]], attributes)
         logger.warning(
             "can't find annotation config for resource: %s",
-            self.score.score_id())
+            self.score.score_id)
         return []
 
     @property
