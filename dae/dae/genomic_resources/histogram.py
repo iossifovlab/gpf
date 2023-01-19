@@ -29,16 +29,21 @@ class Histogram(Statistic):
         try:
             self.score_id = self.config["score"]
             self.bins_count = self.config["bins"]
-            self.x_min = self.config["min"]
-            self.x_max = self.config["max"]
-            self.x_scale = self.config["x_scale"]
-            self.y_scale = self.config["y_scale"]
         except KeyError as e:
             raise ValueError(
                 f"Invalid histogram configuration, cannot find {e.args[0]}"
             ) from e
 
+        limits = np.iinfo(np.int64)
+        self.x_min = self.config.get("min", limits.min)
+        self.x_max = self.config.get("max", limits.max)
+        self.x_scale = self.config.get("x_scale", "linear")
+        self.y_scale = self.config.get("y_scale", "linear")
         self.x_min_log = self.config.get("x_min_log")
+        if self.x_scale == "log" and self.x_min_log is None:
+            raise ValueError(
+                "Invalid histogram configuration, missing x_min_log"
+            )
 
         if self.bins is None and self.bars is None:
             if self.x_scale == "linear":

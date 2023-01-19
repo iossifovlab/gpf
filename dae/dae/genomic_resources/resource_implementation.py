@@ -41,7 +41,7 @@ class GenomicResourceImplementation(ABC):
         """Return a list of resource files the implementation utilises."""
 
     @abstractmethod
-    def calc_statistics_hash(self) -> str:
+    def calc_statistics_hash(self) -> bytes:
         """
         Compute the statistics hash.
 

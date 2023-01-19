@@ -15,6 +15,8 @@ from cerberus.schema import SchemaError
 
 from jinja2 import Template
 
+from dask.distributed import Client
+
 from dae.dask.client_factory import DaskClient
 from dae.utils.fs_utils import find_directory_with_a_file
 
@@ -379,13 +381,13 @@ def _read_stats_hash(proto, implementation):
         return infile.read()
 
 
-def _store_stats_hash(proto, implementation):
-    res = implementation.resource
-    stats_dir = implementation.STATISTICS_FOLDER
+def _store_stats_hash(proto, resource):
+    impl = build_resource_implementation(resource)
+    stats_dir = impl.STATISTICS_FOLDER
     with proto.open_raw_file(
-        res, f"{stats_dir}/stats_hash", mode="wt"
+        resource, f"{stats_dir}/stats_hash", mode="wt"
     ) as outfile:
-        stats_hash = implementation.calc_statistics_hash()
+        stats_hash = impl.calc_statistics_hash()
         outfile.write(stats_hash)
     return True
 
@@ -400,16 +402,16 @@ def _collect_impl_stats_tasks(  # pylint: disable=too-many-arguments
     graph.create_task(
         f"{impl.resource.resource_id}_store_stats_hash",
         _store_stats_hash,
-        [proto, impl],
+        [proto, impl.resource],
         stats_tasks
     )
 
-    graph.create_task(
-        f"{impl.resource.resource_id}_manifest_rebuild",
-        _do_resource_manifest_command,
-        [proto, impl.resource, dry_run, force, use_dvc],
-        stats_tasks
-    )
+    # graph.create_task(
+        # f"{impl.resource.resource_id}_manifest_rebuild",
+        # _do_resource_manifest_command,
+        # [proto, impl.resource, dry_run, force, use_dvc],
+        # stats_tasks
+    # )
 
 
 def _stats_need_rebuild(proto, impl):
@@ -439,29 +441,24 @@ def _stats_need_rebuild(proto, impl):
 def _execute_tasks(graph, **kwargs):
     jobs = kwargs.get("jobs", 1)
     if jobs is not None and jobs > 1:
-        print("created DASK client")
         dask_client = DaskClient.from_dict(kwargs)
+        # dask_client = Client(n_workers=jobs, threads_per_worker=1, processes=False)
         if dask_client is None:
             sys.exit(1)
 
-        with dask_client as client:
-            executor = DaskExecutor(client)
-            tasks_iter = executor.execute(graph)
+        executor = DaskExecutor(dask_client.__enter__())
+        tasks_iter = executor.execute(graph)
     else:
-        print("created sequential executor")
         executor = SequentialExecutor()
         tasks_iter = executor.execute(graph)
 
     for task, result_or_error in tasks_iter:
         if isinstance(result_or_error, Exception):
+            logger.info("Task %s failed!", task.task_id)
             raise result_or_error
-
-        if result_or_error is True:
-            logger.info("Task %s successful!", task.task_id)
-        elif result_or_error is False:
-            logger.info("Task %s failed.", task.task_id)
         else:
-            logger.info("Task %s status unknown.", task.task_id)
+            logger.info("Task %s successful!", task.task_id)
+    dask_client.__exit__()
 
 
 def _run_repo_stats_command(proto, **kwargs):
@@ -489,9 +486,7 @@ def _run_repo_stats_command(proto, **kwargs):
 
 
 def _run_resource_stats_command(proto, repo_url, **kwargs):
-    print("performing manifest")
     _run_resource_manifest_command(proto, repo_url, **kwargs)
-    print("done manifest")
     dry_run = kwargs.get("dry_run", False)
     force = kwargs.get("force", False)
     use_dvc = kwargs.get("use_dvc", True)
@@ -510,10 +505,8 @@ def _run_resource_stats_command(proto, repo_url, **kwargs):
     impl = build_resource_implementation(res)
 
     if force or _stats_need_rebuild(proto, impl):
-        print("needs rebuild")
         _collect_impl_stats_tasks(
             graph, proto, impl, dry_run, force, use_dvc, region_size)
-        print("collected tasks")
 
     _execute_tasks(graph, **kwargs)
 

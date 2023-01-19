@@ -5,6 +5,8 @@ from __future__ import annotations
 import logging
 import textwrap
 import copy
+import hashlib
+import json
 
 from typing import Iterator, Optional, cast, Type, Any, Union
 
@@ -545,39 +547,41 @@ class GenomicScore(
         for chrom, start, end in self._split_into_regions(region_size):
             min_max_tasks.append(graph.create_task(
                 f"{self.score_id}_calculate_min_max_{chrom}_{start}_{end}",
-                self._do_min_max,
-                [chrom, start, end],
+                GenomicScore._do_min_max,
+                [self.resource, chrom, start, end],
                 []
             ))
+        score_ids = self.get_all_scores()
         merge_task = graph.create_task(
             f"{self.score_id}_merge_min_max",
-            self._merge_min_max,
-            min_max_tasks,
+            GenomicScore._merge_min_max,
+            [score_ids, *min_max_tasks],
             min_max_tasks
         )
         save_task = graph.create_task(
             f"{self.score_id}_save_min_max",
-            self._save_min_max,
-            [merge_task],
+            GenomicScore._save_min_max,
+            [self.resource, merge_task],
             [merge_task]
         )
         return min_max_tasks, merge_task, save_task
 
-    def _do_min_max(self, chrom, start, end):
-        print(f"Calculating min max for {chrom}: {start}-{end}")
-        score_ids = self.get_all_scores()
+    @staticmethod
+    def _do_min_max(resource, chrom, start, end):
+        impl = build_score_from_resource(resource)
+        score_ids = impl.get_all_scores()
         res = {
             scr_id: MinMaxValue(scr_id, None, None)
             for scr_id in score_ids
         }
-        for record in self.fetch_region(chrom, start, end, score_ids):
-            for scr_id in score_ids:
-                res[scr_id].add_record(record)
+        with impl.open():
+            for record in impl.fetch_region(chrom, start, end, score_ids):
+                for scr_id in score_ids:
+                    res[scr_id].add_record(record)
         return res
 
-    def _merge_min_max(self, *calculate_tasks):
-        print("Merging min max")
-        score_ids = self.get_all_scores()
+    @staticmethod
+    def _merge_min_max(score_ids, *calculate_tasks):
 
         res = {score_id: None for score_id in score_ids}
         for score_id in score_ids:
@@ -588,13 +592,13 @@ class GenomicScore(
                     res[score_id].merge(min_max_region[score_id])
         return res
 
-    def _save_min_max(self, merged_min_max):
-        print("Saving min max")
-        proto = self.resource.proto
+    @staticmethod
+    def _save_min_max(resource, merged_min_max):
+        proto = resource.proto
         for score_id, score_min_max in merged_min_max.items():
             with proto.open_raw_file(
-                self.resource,
-                f"{self.STATISTICS_FOLDER}/min_max_{score_id}.yaml",
+                resource,
+                f"{GenomicScore.STATISTICS_FOLDER}/min_max_{score_id}.yaml",
                 mode="wt"
             ) as outfile:
                 outfile.write(score_min_max.serialize())
@@ -612,28 +616,29 @@ class GenomicScore(
         for chrom, start, end in self._split_into_regions(region_size):
             histogram_tasks.append(graph.create_task(
                 f"{self.score_id}_calculate_histogram_{chrom}_{start}_{end}",
-                self._do_histogram,
-                [chrom, start, end, save_minmax_task],
+                GenomicScore._do_histogram,
+                [self.resource, chrom, start, end, save_minmax_task],
                 [save_minmax_task]
             ))
         merge_task = graph.create_task(
             f"{self.score_id}_merge_histograms",
-            self._merge_histograms,
-            histogram_tasks,
+            GenomicScore._merge_histograms,
+            [self.resource, *histogram_tasks],
             histogram_tasks
         )
         save_task = graph.create_task(
             f"{self.score_id}_save_histograms",
-            self._save_histograms,
-            [merge_task],
+            GenomicScore._save_histograms,
+            [self.resource, merge_task],
             [merge_task]
         )
         return histogram_tasks, merge_task, save_task
 
-    def _do_histogram(self, chrom, start, end, save_minmax_task):
-        print(f"Calculating histogram data for {chrom}: {start} - {end}")
-        assert "histograms" in self.get_config()
-        hist_configs = self.get_config()["histograms"]
+    @staticmethod
+    def _do_histogram(resource, chrom, start, end, save_minmax_task):
+        impl = build_score_from_resource(resource)
+        assert "histograms" in impl.get_config()
+        hist_configs = impl.get_config()["histograms"]
         res = {}
         for hist_config in hist_configs:
             score_id = hist_config["score"]
@@ -643,18 +648,16 @@ class GenomicScore(
                 hist_config["max"] = save_minmax_task[score_id].max
             res[score_id] = Histogram(hist_config)
         score_ids = list(res.keys())
-        for record in self.fetch_region(chrom, start, end, score_ids):
-            for scr_id in score_ids:
-                res[scr_id].add_record(record)
+        with impl.open():
+            for record in impl.fetch_region(chrom, start, end, score_ids):
+                for scr_id in score_ids:
+                    res[scr_id].add_record(record)
         return res
 
-    def _merge_histograms(self, *calculated_histograms):
-        print(
-            "Merging histogram data for"
-            f"{len(calculated_histograms)} histograms"
-        )
-        assert "histograms" in self.get_config()
-        hist_configs = self.get_config()["histograms"]
+    @staticmethod
+    def _merge_histograms(resource, *calculated_histograms):
+        assert "histograms" in resource.config
+        hist_configs = resource.config["histograms"]
         res = {}
         for hist_config in hist_configs:
             res[hist_config["score"]] = None
@@ -668,13 +671,13 @@ class GenomicScore(
                     res[score_id].merge(histogram_region[score_id])
         return res
 
-    def _save_histograms(self, merged_histograms):
-        print("Saving histogram data")
-        proto = self.resource.proto
+    @staticmethod
+    def _save_histograms(resource, merged_histograms):
+        proto = resource.proto
         for score_id, score_histogram in merged_histograms.items():
             with proto.open_raw_file(
-                self.resource,
-                f"{self.STATISTICS_FOLDER}/histogram_{score_id}.yaml",
+                resource,
+                f"{GenomicScore.STATISTICS_FOLDER}/histogram_{score_id}.yaml",
                 mode="wt"
             ) as outfile:
                 outfile.write(score_histogram.serialize())
@@ -691,8 +694,8 @@ class GenomicScore(
             plt.grid(axis="y")
             plt.grid(axis="x")
             with proto.open_raw_file(
-                self.resource,
-                f"{self.STATISTICS_FOLDER}/histogram_{score_id}.png",
+                resource,
+                f"{GenomicScore.STATISTICS_FOLDER}/histogram_{score_id}.png",
                 mode="wb"
             ) as outfile:
                 plt.savefig(outfile)
@@ -716,14 +719,19 @@ class GenomicScore(
         """Compute and return the info hash."""
         return "infohash"
 
-    def calc_statistics_hash(self) -> str:
+    def calc_statistics_hash(self) -> bytes:
         """
         Compute the statistics hash.
 
         This hash is used to decide whether the resource statistics should be
         recomputed.
         """
-        return "somehash"
+        manifest = self.resource.get_manifest()
+        score_filename = self.get_config()["table"]["filename"]
+        return hashlib.md5(json.dumps({
+            "config": manifest["genomic_resource.yaml"].md5,
+            "score_file": manifest[score_filename].md5
+        }, sort_keys=True).encode()).digest()
 
 
 class PositionScore(GenomicScore):
@@ -753,7 +761,7 @@ class PositionScore(GenomicScore):
 
         if len(lines) != 1:
             raise ValueError(
-                f"The resource {self.score_id()} has "
+                f"The resource {self.score_id} has "
                 f"more than one ({len(lines)}) lines for position "
                 f"{chrom}:{position}")
         line = lines[0]
@@ -845,7 +853,7 @@ class NPScore(GenomicScore):
         if chrom not in self.get_all_chromosomes():
             raise ValueError(
                 f"{chrom} is not among the available chromosomes for "
-                f"NP Score resource {self.score_id()}")
+                f"NP Score resource {self.score_id}")
 
         lines = list(self._fetch_lines(chrom, position, position))
         if not lines:
@@ -897,7 +905,7 @@ class NPScore(GenomicScore):
         if chrom not in self.get_all_chromosomes():
             raise ValueError(
                 f"{chrom} is not among the available chromosomes for "
-                f"NP Score resource {self.score_id()}")
+                f"NP Score resource {self.score_id}")
 
         score_lines = list(self._fetch_lines(chrom, pos_begin, pos_end))
         if not score_lines:
@@ -978,7 +986,7 @@ class AlleleScore(GenomicScore):
         if chrom not in self.get_all_chromosomes():
             raise ValueError(
                 f"{chrom} is not among the available chromosomes for "
-                f"Allele Score resource {self.score_id()}")
+                f"Allele Score resource {self.score_id}")
 
         lines = list(self._fetch_lines(chrom, position, position))
         if not lines:
