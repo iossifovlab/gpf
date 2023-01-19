@@ -65,8 +65,9 @@ class GeneScore:
         self._load_data()
         self.df.dropna(inplace=True)
 
-        self.histogram = Histogram.from_config(histogram_config)
-        self.histogram.set_values(self.values())
+        self.histogram = Histogram(histogram_config)
+        for value in self.values():
+            self.histogram.add_value(value)
 
         self.histogram_bins = self.histogram.bins
         self.histogram_bars = self.histogram.bars
