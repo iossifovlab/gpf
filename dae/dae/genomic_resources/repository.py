@@ -547,6 +547,8 @@ class ReadWriteRepositoryProtocol(ReadOnlyRepositoryProtocol):
         manifest = Manifest()
         entries_to_update = set()
         for entry in self.collect_resource_entries(resource):
+            if entry.name.endswith("html"):  # Ignore generated info files
+                continue
             manifest.add(entry)
             state = self.load_resource_file_state(resource, entry.name)
             if state is None:
