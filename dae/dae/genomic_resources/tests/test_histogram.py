@@ -9,8 +9,8 @@ def test_histogram_simple_input():
     config = {
         "score": "test",
         "bins": 10,
-        "x_min": 0,
-        "x_max": 10,
+        "min": 0,
+        "max": 10,
         "x_scale": "linear",
         "y_scale": "linear"
     }
@@ -33,8 +33,8 @@ def test_histogram_log_scale():
     config = {
         "score": "test",
         "bins": 4,
-        "x_min": 0,
-        "x_max": 1000,
+        "min": 0,
+        "max": 1000,
         "x_scale": "log",
         "y_scale": "linear",
         "x_min_log": 1

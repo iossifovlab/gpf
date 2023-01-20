@@ -24,14 +24,14 @@ class SomeTestImplementation(GenomicResourceImplementation):
 
     STATISTICS_FOLDER = "statistics"
 
-    def calc_statistics_hash(self) -> str:
+    def calc_statistics_hash(self) -> bytes:
         """
         Compute the statistics hash.
 
         This hash is used to decide whether the resource statistics should be
         recomputed.
         """
-        return "somehash"
+        return b"somehash"
 
     def add_statistics_build_tasks(self, task_graph, **kwargs) -> None:
         """Add tasks for calculating resource statistics to a task graph."""

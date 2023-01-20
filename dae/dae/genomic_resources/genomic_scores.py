@@ -462,7 +462,7 @@ class GenomicScore(
         return info
 
     def get_info(self):
-        return super(InfoImplementationMixin, self).get_info()
+        return InfoImplementationMixin.get_info(self)
 
     @staticmethod
     def get_schema():
@@ -637,7 +637,8 @@ class GenomicScore(
     @staticmethod
     def _do_histogram(resource, chrom, start, end, save_minmax_task):
         impl = build_score_from_resource(resource)
-        assert "histograms" in impl.get_config()
+        if "histograms" not in impl.get_config():
+            return {}
         hist_configs = impl.get_config()["histograms"]
         res = {}
         for hist_config in hist_configs:
@@ -656,7 +657,8 @@ class GenomicScore(
 
     @staticmethod
     def _merge_histograms(resource, *calculated_histograms):
-        assert "histograms" in resource.config
+        if "histograms" not in resource.config:
+            return {}
         hist_configs = resource.config["histograms"]
         res = {}
         for hist_config in hist_configs:

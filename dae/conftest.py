@@ -63,7 +63,3 @@ def dask_mocker(mocker):
     mocker.patch(
         "dae.dask.client_factory.DaskClient.from_dict",
         DummyClient.from_dict)
-
-    mocker.patch(
-        "dae.genomic_resources.histogram.as_completed",
-        dummy_as_completed)

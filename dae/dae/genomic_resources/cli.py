@@ -310,6 +310,7 @@ def _do_resource_manifest_command(proto, res, dry_run, force, use_dvc):
         manifest = proto.update_manifest(
             res, prebuild_entries)
         proto.save_manifest(res, manifest)
+        return True
     return bool(manifest_update)
 
 
@@ -322,11 +323,16 @@ def _run_repo_manifest_command(proto, **kwargs):
         logger.warning("please choose one of 'dry_run' and 'force' options")
         return
 
+    updates_needed = {}
     for res in proto.get_all_resources():
-        _do_resource_manifest_command(proto, res, dry_run, force, use_dvc)
+        updates_needed[res.resource_id] = _do_resource_manifest_command(
+            proto, res, dry_run, force, use_dvc
+        )
 
     if not dry_run:
         proto.build_content_file()
+
+    return updates_needed
 
 
 def _find_resource(proto, repo_url, **kwargs):
@@ -367,7 +373,7 @@ def _run_resource_manifest_command(proto, repo_url, **kwargs):
     if res is None:
         logger.error("resource not found...")
         return
-    _do_resource_manifest_command(proto, res, dry_run, force, use_dvc)
+    return _do_resource_manifest_command(proto, res, dry_run, force, use_dvc)
 
 
 def _read_stats_hash(proto, implementation):
@@ -376,7 +382,7 @@ def _read_stats_hash(proto, implementation):
     if not proto.file_exists(res, f"{stats_dir}/stats_hash"):
         return None
     with proto.open_raw_file(
-        res, f"{stats_dir}/stats_hash", mode="rt"
+        res, f"{stats_dir}/stats_hash", mode="rb"
     ) as infile:
         return infile.read()
 
@@ -385,7 +391,7 @@ def _store_stats_hash(proto, resource):
     impl = build_resource_implementation(resource)
     stats_dir = impl.STATISTICS_FOLDER
     with proto.open_raw_file(
-        resource, f"{stats_dir}/stats_hash", mode="wt"
+        resource, f"{stats_dir}/stats_hash", mode="wb"
     ) as outfile:
         stats_hash = impl.calc_statistics_hash()
         outfile.write(stats_hash)
@@ -406,12 +412,12 @@ def _collect_impl_stats_tasks(  # pylint: disable=too-many-arguments
         stats_tasks
     )
 
-    # graph.create_task(
-        # f"{impl.resource.resource_id}_manifest_rebuild",
-        # _do_resource_manifest_command,
-        # [proto, impl.resource, dry_run, force, use_dvc],
-        # stats_tasks
-    # )
+    graph.create_task(
+        f"{impl.resource.resource_id}_manifest_rebuild",
+        _do_resource_manifest_command,
+        [proto, impl.resource, dry_run, force, use_dvc],
+        stats_tasks
+    )
 
 
 def _stats_need_rebuild(proto, impl):
@@ -422,19 +428,21 @@ def _stats_need_rebuild(proto, impl):
 
     if stored_hash is None:
         logger.info(
-            "No hash stored for %s, building required",
+            "No hash stored for <%s>, need update",
             impl.resource.resource_id
         )
         return True
 
     if stored_hash != current_hash:
         logger.info(
-            "Stored hash for %s is outdated, rebuilding required",
+            "Stored hash for <%s> is outdated, need update",
             impl.resource.resource_id
         )
         return True
 
-    logger.info("%s statistics hash is up to date")
+    logger.info(
+        "<%s> statistics hash is up to date", impl.resource.resource_id
+    )
     return False
 
 
@@ -446,9 +454,11 @@ def _execute_tasks(graph, **kwargs):
         if dask_client is None:
             sys.exit(1)
 
-        executor = DaskExecutor(dask_client.__enter__())
+        client = dask_client.__enter__()
+        executor = DaskExecutor(client)
         tasks_iter = executor.execute(graph)
     else:
+        client = None
         executor = SequentialExecutor()
         tasks_iter = executor.execute(graph)
 
@@ -458,11 +468,12 @@ def _execute_tasks(graph, **kwargs):
             raise result_or_error
         else:
             logger.info("Task %s successful!", task.task_id)
-    dask_client.__exit__()
+    if client is not None:
+        client.__exit__()
 
 
 def _run_repo_stats_command(proto, **kwargs):
-    _run_repo_manifest_command(proto, **kwargs)
+    updates_needed = _run_repo_manifest_command(proto, **kwargs)
     dry_run = kwargs.get("dry_run", False)
     force = kwargs.get("force", False)
     use_dvc = kwargs.get("use_dvc", True)
@@ -474,28 +485,44 @@ def _run_repo_stats_command(proto, **kwargs):
     graph = TaskGraph()
 
     for res in proto.get_all_resources():
+        if updates_needed[res.resource_id]:
+            logger.info(
+                "Manifest of <%s> needs update, cannot check statistics",
+                res.resource_id
+            )
+            continue
         impl = build_resource_implementation(res)
-        if force or _stats_need_rebuild(proto, impl):
+        needs_rebuild = _stats_need_rebuild(proto, impl) 
+        if (force or needs_rebuild) and not dry_run:
             _collect_impl_stats_tasks(
                 graph, proto, impl, dry_run, force, use_dvc, region_size)
+        elif dry_run and needs_rebuild:
+            logger.info(f"Statistics of <{res.resource_id}> need update")
 
-    _execute_tasks(graph, **kwargs)
+    if not dry_run:
+        _execute_tasks(graph, **kwargs)
 
     if not dry_run:
         proto.build_content_file()
 
 
 def _run_resource_stats_command(proto, repo_url, **kwargs):
-    _run_resource_manifest_command(proto, repo_url, **kwargs)
+    needs_update = _run_resource_manifest_command(proto, repo_url, **kwargs)
     dry_run = kwargs.get("dry_run", False)
     force = kwargs.get("force", False)
     use_dvc = kwargs.get("use_dvc", True)
     region_size = kwargs.get("region_size", 3_000_000)
+    res = _find_resource(proto, repo_url, **kwargs)
+    if needs_update:
+        logger.info(
+            "Manifest of <%s> needs update, cannot check statistics",
+            res.resource_id
+        )
+        return
     if dry_run and force:
         logger.warning("please choose one of 'dry_run' and 'force' options")
         return
 
-    res = _find_resource(proto, repo_url, **kwargs)
     if res is None:
         logger.error("unable to find resource...")
         return
@@ -504,9 +531,13 @@ def _run_resource_stats_command(proto, repo_url, **kwargs):
 
     impl = build_resource_implementation(res)
 
-    if force or _stats_need_rebuild(proto, impl):
+    needs_rebuild = _stats_need_rebuild(proto, impl)
+
+    if (force or needs_rebuild) and not dry_run:
         _collect_impl_stats_tasks(
             graph, proto, impl, dry_run, force, use_dvc, region_size)
+    elif dry_run and needs_rebuild:
+        logger.info(f"Statistics of <{res.resource_id}> need update")
 
     _execute_tasks(graph, **kwargs)
 
