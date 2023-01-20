@@ -5,7 +5,7 @@ import os
 import logging
 from dataclasses import dataclass
 from collections.abc import Iterator
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 from dae.impala_storage.helpers.hdfs_helpers import HdfsHelpers
 from dae.impala_storage.helpers.impala_helpers import ImpalaHelpers
 from dae.impala_storage.schema2.impala_variants import ImpalaVariants
@@ -30,8 +30,8 @@ class Schema2GenotypeStorage(GenotypeStorage):
 
     def __init__(self, storage_config: Dict[str, Any]):
         super().__init__(storage_config)
-        self._hdfs_helpers = None
-        self._impala_helpers = None
+        self._hdfs_helpers: Optional[HdfsHelpers] = None
+        self._impala_helpers: Optional[ImpalaHelpers] = None
 
     @classmethod
     def get_storage_type(cls) -> str:
@@ -63,9 +63,9 @@ class Schema2GenotypeStorage(GenotypeStorage):
         # TODO create a bigquery variants if so specified in the config
         return variants
 
-    def hdfs_upload_dataset(self, study_id, variants_dir, pedigree_file,
-                            meta_file, partition_description) \
-            -> HdfsStudyLayout:
+    def hdfs_upload_dataset(
+            self, study_id, variants_dir, pedigree_file,
+            meta_file) -> HdfsStudyLayout:
         """Upload local data to hdfs."""
         # Copy pedigree
         base_dir = self.storage_config["hdfs"]["base_dir"]
@@ -96,8 +96,7 @@ class Schema2GenotypeStorage(GenotypeStorage):
 
         # Copy variants if any
         summary_sample_hdfs_file, family_sample_hdfs_file = \
-            self._copy_variants(variants_dir, partition_description,
-                                study_path)
+            self._copy_variants(variants_dir, study_path)
 
         return HdfsStudyLayout(
             pedigree_file=pedigree_hdfs_path,
@@ -133,16 +132,14 @@ class Schema2GenotypeStorage(GenotypeStorage):
 
         return family_table, summary_table, pedigree_table, meta_table
 
-    def _copy_variants(self, variants_dir, partition_description, study_path):
+    def _copy_variants(self, variants_dir, study_path):
         hdfs_summary_dir = os.path.join(study_path, "summary")
         hdfs_family_dir = os.path.join(study_path, "family")
 
         # TODO why pass variants_dir as a independant input parameter ?
 
-        src_summary_dir = os.path.join(
-            variants_dir, partition_description.summary_alleles_dirname)
-        src_family_dir = os.path.join(
-            variants_dir, partition_description.family_alleles_dirname)
+        src_summary_dir = os.path.join(variants_dir, "summary")
+        src_family_dir = os.path.join(variants_dir, "family")
 
         summary_files_to_copy = list(self._enum_parquet_files_to_copy(
             src_summary_dir, hdfs_summary_dir))
@@ -206,8 +203,8 @@ class Schema2GenotypeStorage(GenotypeStorage):
 
         assert hdfs_study_layout.summary_sample is not None
         summary_pd = copy(partition_description)
-        # XXX summary_alleles have to family_bin
-        summary_pd._family_bin_size = 0  # pylint: disable=protected-access
+        # XXX summary_alleles has no family_bin
+        summary_pd.family_bin_size = 0  # pylint: disable=protected-access
         self.impala_helpers.import_variants_into_db(
             db, summary_variant_table, hdfs_study_layout.summary_variant_dir,
             summary_pd,

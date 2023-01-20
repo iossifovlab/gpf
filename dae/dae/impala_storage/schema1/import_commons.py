@@ -28,8 +28,9 @@ from dae.variants_loaders.dae.loader import DenovoLoader, DaeTransmittedLoader
 from dae.variants_loaders.vcf.loader import VcfLoader
 from dae.variants_loaders.cnv.loader import CNVLoader
 from dae.parquet.partition_descriptor import PartitionDescriptor
-from dae.parquet.schema1.parquet_io import ParquetManager
-
+from dae.parquet.parquet_writer import ParquetWriter
+from dae.parquet.schema1.parquet_io import \
+    VariantsParquetWriter as S1VariantsWriter
 from dae.impala_storage.helpers.rsync_helpers import RsyncHelpers
 
 from dae.configuration.study_config_builder import StudyConfigBuilder
@@ -1247,10 +1248,11 @@ class Variants2ParquetTool:
 
         out_dir = argv.output
         logger.debug("writing to output directory: %s", out_dir)
-        ParquetManager.variants_to_parquet(
+        ParquetWriter.variants_to_parquet(
             out_dir,
             variants_loader,
             partition_description,
+            S1VariantsWriter,
             bucket_index=bucket_index,
             rows=argv.rows,
         )

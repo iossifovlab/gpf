@@ -24,17 +24,14 @@ class PartitionDescriptor:
             coding_effect_types: Optional[List[str]] = None,
             rare_boundary: float = 0):
         if chromosomes is None:
-            self._chromosomes: List[str] = []
+            self.chromosomes: List[str] = []
         else:
-            self._chromosomes = chromosomes
-        self._region_length = region_length
-        self._family_bin_size = family_bin_size
-        self._coding_effect_types: Set[str] = \
+            self.chromosomes = chromosomes
+        self.region_length = region_length
+        self.family_bin_size = family_bin_size
+        self.coding_effect_types: Set[str] = \
             set(coding_effect_types) if coding_effect_types else set()
-        self._rare_boundary = rare_boundary
-
-    family_alleles_dirname: str = "family"
-    summary_alleles_dirname: str = "summary"
+        self.rare_boundary = rare_boundary
 
     @staticmethod
     def _configparser_parse(content: str):
@@ -87,6 +84,7 @@ class PartitionDescriptor:
 
     @staticmethod
     def parse_dict(config_dict) -> PartitionDescriptor:
+        """Parse configuration dictionary and create a partion descriptor."""
         config: Dict[str, Any] = {}
         if "region_bin" in config_dict.keys():
             config["region_length"] = int(
@@ -123,51 +121,31 @@ class PartitionDescriptor:
         )
 
     def has_region_bins(self):
-        return (self._chromosomes and self._region_length > 0)
+        return (self.chromosomes and self.region_length > 0)
 
     def has_family_bins(self):
-        return self._family_bin_size > 0
+        return self.family_bin_size > 0
 
     def has_coding_bins(self):
-        return self._coding_effect_types
+        return self.coding_effect_types
 
     def has_frequency_bins(self):
-        return self._rare_boundary > 0
+        return self.rare_boundary > 0
 
     def has_partitions(self):
         return self.has_region_bins() or self.has_frequency_bins() or \
             self.has_coding_bins() or self.has_family_bins()
-
-    @property
-    def chromosomes(self):
-        return self._chromosomes
-
-    @property
-    def region_length(self):
-        return self._region_length
-
-    @property
-    def family_bin_size(self):
-        return self._family_bin_size
-
-    @property
-    def coding_effect_types(self):
-        return self._coding_effect_types
-
-    @property
-    def rare_boundary(self):
-        return self._rare_boundary
 
     def make_region_bin(self, chrom: str, pos: int) -> str:
         """Produce region bin from chromosome and position."""
         if not self.has_region_bins():
             raise ValueError(
                 f"Partition <{self.serialize()}> does not define region bins.")
-        assert self._chromosomes is not None
-        assert self._region_length > 0
+        assert self.chromosomes is not None
+        assert self.region_length > 0
 
-        pos_bin = pos // self._region_length
-        if chrom in self._chromosomes:
+        pos_bin = pos // self.region_length
+        if chrom in self.chromosomes:
             return f"{chrom}_{pos_bin}"
 
         return f"other_{pos_bin}"
@@ -189,7 +167,7 @@ class PartitionDescriptor:
                 f"Partition <{self.serialize()}> does not define coding bins.")
         variant_effects = set(effect_types)
 
-        result = variant_effects.intersection(self._coding_effect_types)
+        result = variant_effects.intersection(self.coding_effect_types)
         if len(result) == 0:
             return 0
         return 1
@@ -205,7 +183,7 @@ class PartitionDescriptor:
             frequency_bin = 0
         elif allele_count and int(allele_count) == 1:  # Ultra rare
             frequency_bin = 1
-        elif allele_freq and float(allele_freq) < self._rare_boundary:  # Rare
+        elif allele_freq and float(allele_freq) < self.rare_boundary:  # Rare
             frequency_bin = 2
         else:  # Common
             frequency_bin = 3
@@ -293,7 +271,7 @@ class PartitionDescriptor:
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert the partition descriptor to a dict."""
-        result = {}
+        result: Dict[str, Any] = {}
         result["chromosomes"] = self.chromosomes
         result["region_length"] = self.region_length
         result["rare_boundary"] = self.rare_boundary

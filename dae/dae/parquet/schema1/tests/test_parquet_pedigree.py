@@ -4,7 +4,7 @@ import pytest
 
 import dae
 from dae.pedigrees.loader import FamiliesLoader
-from dae.parquet.schema1.parquet_io import ParquetManager
+from dae.parquet.parquet_writer import ParquetWriter
 
 
 @pytest.mark.parametrize(
@@ -27,7 +27,7 @@ def test_ped2parquet(pedigree, temp_dirname, global_dae_fixtures_dir):
 
     parquet_filename = os.path.join(temp_dirname, "pedigree.parquet")
 
-    ParquetManager.families_to_parquet(families, parquet_filename)
+    ParquetWriter.families_to_parquet(families, parquet_filename)
 
     assert os.path.exists(parquet_filename)
 
@@ -53,15 +53,15 @@ def test_ped2parquet_mock(
     assert families is not None
 
     mocker.patch("os.makedirs")
-    mocker.patch("dae.parquet.schema1.parquet_io.save_ped_df_to_parquet")
+    mocker.patch("dae.parquet.parquet_writer.save_ped_df_to_parquet")
 
-    ParquetManager.families_to_parquet(families, outfile)
+    ParquetWriter.families_to_parquet(families, outfile)
 
-    os.makedirs.assert_called_once_with(dirname, exist_ok=True)
-    dae.parquet.schema1.parquet_io\
-        .save_ped_df_to_parquet.assert_called_once()
+    os.makedirs.assert_called_once_with(dirname, exist_ok=True)  # type: ignore
+    dae.parquet.parquet_writer\
+        .save_ped_df_to_parquet.assert_called_once()  # type: ignore
 
-    call_args = dae.parquet.schema1.parquet_io\
-        .save_ped_df_to_parquet.call_args
+    call_args = dae.parquet.parquet_writer\
+        .save_ped_df_to_parquet.call_args  # type: ignore
     _, filename = call_args[0]
     assert filename == outfile

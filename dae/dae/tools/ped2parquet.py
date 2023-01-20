@@ -7,7 +7,7 @@ import argparse
 from dae.utils.verbosity_configuration import VerbosityConfiguration
 from dae.pedigrees.loader import FamiliesLoader
 from dae.parquet.partition_descriptor import PartitionDescriptor
-from dae.parquet.schema1.parquet_io import ParquetManager
+from dae.parquet.parquet_writer import ParquetWriter
 
 
 def main(argv):
@@ -67,7 +67,7 @@ def run(argv):
     else:
         output_filename = argv.output_filename
 
-    ParquetManager.families_to_parquet(
+    ParquetWriter.families_to_parquet(
         families, output_filename, partition_description)
 
 

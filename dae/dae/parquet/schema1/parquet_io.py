@@ -3,13 +3,12 @@ import os
 import sys
 import time
 import logging
-from typing import Optional, Dict, Any
+from typing import Dict, Any
 
 from copy import copy
 from urllib.parse import urlparse
 
 import toml
-from box import Box
 
 import numpy as np
 
@@ -369,150 +368,3 @@ class VariantsParquetWriter:
         self.variants_loader.close()
 
         return filenames
-
-
-class ParquetManager:
-    """Provide function for producing variants and pedigree parquet files."""
-
-    @staticmethod
-    def build_parquet_filenames(
-            prefix, study_id=None, bucket_index=0, suffix=None):
-        """Build parquet filenames."""
-        assert bucket_index >= 0
-
-        basename = os.path.basename(os.path.abspath(prefix))
-        if study_id is None:
-            study_id = basename
-        assert study_id
-
-        if suffix is None and bucket_index == 0:
-            filesuffix = ""
-        elif bucket_index > 0 and suffix is None:
-            filesuffix = f"_{bucket_index:0>6}"
-        elif bucket_index == 0 and suffix is not None:
-            filesuffix = f"{suffix}"
-        else:
-            filesuffix = f"_{bucket_index:0>6}{suffix}"
-
-        variants_dirname = os.path.join(prefix, "variants")
-        variant_filename = os.path.join(
-            variants_dirname, f"{study_id}{filesuffix}_variants.parquet")
-
-        pedigree_filename = os.path.join(
-            prefix, "pedigree", f"{study_id}{filesuffix}_pedigree.parquet")
-
-        conf = {
-            "variants_dirname": variants_dirname,
-            "variants": variant_filename,
-            "pedigree": pedigree_filename,
-        }
-
-        return Box(conf, default_box=True)
-
-    @staticmethod
-    def families_to_parquet(
-            families, pedigree_filename,
-            partition_descriptor: Optional[PartitionDescriptor] = None):
-        """Write a FamiliesData object into paquet."""
-        if partition_descriptor is not None \
-                and partition_descriptor.has_family_bins():
-            for family in families.values():
-                family_bin = partition_descriptor.make_family_bin(
-                    family.family_id)
-                for person in family.persons.values():
-                    person.set_attr("family_bin", family_bin)
-            families._ped_df = None  # pylint: disable=protected-access
-
-        dirname = os.path.dirname(pedigree_filename)
-        if dirname:
-            os.makedirs(dirname, exist_ok=True)
-
-        save_ped_df_to_parquet(families.ped_df, pedigree_filename)
-
-    @staticmethod
-    def variants_to_parquet(
-            out_dir,
-            variants_loader, partition_descriptor,
-            bucket_index=1, rows=100_000, include_reference=False):
-        """Read variants from variant_loader and store them in parquet."""
-        # assert variants_loader.get_attribute("annotation_schema") is not None
-        print(f"variants to parquet ({rows} rows)", file=sys.stderr)
-        start = time.time()
-
-        variants_writer = VariantsParquetWriter(
-            out_dir,
-            variants_loader,
-            partition_descriptor,
-            bucket_index=bucket_index,
-            rows=rows,
-            include_reference=include_reference)
-
-        variants_writer.write_dataset()
-        elapsed = time.time() - start
-
-        print(f"DONE: for {elapsed:.2f} sec", file=sys.stderr)
-
-
-def pedigree_parquet_schema():
-    """Return the schema for pedigree parquet file."""
-    fields = [
-        pa.field("family_id", pa.string()),
-        pa.field("person_id", pa.string()),
-        pa.field("dad_id", pa.string()),
-        pa.field("mom_id", pa.string()),
-        pa.field("sex", pa.int8()),
-        pa.field("status", pa.int8()),
-        pa.field("role", pa.int32()),
-        pa.field("sample_id", pa.string()),
-        pa.field("generated", pa.bool_()),
-        pa.field("layout", pa.string()),
-        pa.field("not_sequenced", pa.bool_()),
-    ]
-
-    return pa.schema(fields)
-
-
-def add_missing_parquet_fields(pps, ped_df):
-    """Add missing parquet fields."""
-    missing_fields = set(ped_df.columns.values) - set(pps.names)
-
-    if "family_bin" in missing_fields:
-        pps = pps.append(pa.field("family_bin", pa.int8()))
-        missing_fields = missing_fields - set(["family_bin"])
-
-    rename = {}
-    for column in missing_fields:
-        name = column.lower().replace(".", "_")
-        pps = pps.append(pa.field(name, pa.string()))
-        rename[column] = name
-
-    ped_df = ped_df.rename(columns=rename)
-    missing_fields = set([rename[col] for col in missing_fields])
-
-    for column in missing_fields:
-        ped_df[column] = ped_df[column].apply(str)
-
-    return ped_df, pps
-
-
-def save_ped_df_to_parquet(ped_df, filename, filesystem=None):
-    """Convert pdf_df from a dataframe to parquet and store it in filename."""
-    ped_df = ped_df.copy()
-
-    ped_df.role = ped_df.role.apply(lambda r: r.value)
-    ped_df.sex = ped_df.sex.apply(lambda s: s.value)
-    ped_df.status = ped_df.status.apply(lambda s: s.value)
-    if "generated" not in ped_df:
-        ped_df["generated"] = False
-    if "layout" not in ped_df:
-        ped_df["layout"] = None
-    if "not_sequenced" not in ped_df:
-        ped_df["not_sequenced"] = False
-
-    pps = pedigree_parquet_schema()
-    ped_df, pps = add_missing_parquet_fields(pps, ped_df)
-
-    table = pa.Table.from_pandas(ped_df, schema=pps)
-
-    filesystem, filename = url_to_pyarrow_fs(filename, filesystem)
-    pq.write_table(table, filename, filesystem=filesystem, version="1.0")

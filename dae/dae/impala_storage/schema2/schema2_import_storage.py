@@ -4,12 +4,13 @@ from typing import cast
 from dae.utils import fs_utils
 from dae.configuration.study_config_builder import StudyConfigBuilder
 from dae.impala_storage.schema1.import_commons import save_study_config
-from dae.parquet.parquet_writer import ParquetWriter
 from dae.import_tools.import_tools import ImportStorage
 from dae.task_graph.graph import TaskGraph
 from dae.impala_storage.schema2.schema2_genotype_storage import \
     Schema2GenotypeStorage
-from dae.parquet.schema2.parquet_io import ParquetManager
+from dae.parquet.parquet_writer import ParquetWriter
+from dae.parquet.schema2.parquet_io import \
+    VariantsParquetWriter as S2VariantsWriter
 from dae.parquet.partition_descriptor import PartitionDescriptor
 
 
@@ -44,30 +45,26 @@ class Schema2ImportStorage(ImportStorage):
     def _do_write_pedigree(cls, project):
         out_dir = cls._pedigree_dir(project)
         ParquetWriter.write_pedigree(
-            project.get_pedigree(), out_dir,
-            cls._get_partition_description(project),
-            ParquetManager(),
-        )
+            out_dir, project.get_pedigree(),
+            cls._get_partition_description(project))
 
     @classmethod
     def _do_write_variant(cls, project, bucket):
         out_dir = cls._variants_dir(project)
         gpf_instance = project.get_gpf_instance()
-        ParquetWriter.write_variant(
+        ParquetWriter.write_variants(
             out_dir,
-            project.get_variant_loader(bucket,
-                                       gpf_instance.reference_genome),
+            project.get_variant_loader(
+                bucket, gpf_instance.reference_genome),
+            cls._get_partition_description(project),
             bucket,
-            gpf_instance,
-            project, cls._get_partition_description(project),
-            ParquetManager())
+            project,
+            S2VariantsWriter)
 
     @classmethod
     def _do_load_in_hdfs(cls, project):
         genotype_storage = project.get_genotype_storage()
         assert isinstance(genotype_storage, Schema2GenotypeStorage)
-
-        partition_description = cls._get_partition_description(project)
 
         pedigree_file = fs_utils.join(cls._pedigree_dir(project),
                                       "pedigree.parquet")
@@ -76,8 +73,7 @@ class Schema2ImportStorage(ImportStorage):
             project.study_id,
             cls._variants_dir(project),
             pedigree_file,
-            meta_file,
-            partition_description)
+            meta_file)
 
     @classmethod
     def _do_load_in_impala(cls, project, hdfs_study_layout):
