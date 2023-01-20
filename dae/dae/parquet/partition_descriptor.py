@@ -120,21 +120,28 @@ class PartitionDescriptor:
             coding_effect_types=config.get("coding_effect_types")
         )
 
-    def has_region_bins(self):
-        return (self.chromosomes and self.region_length > 0)
+    def has_region_bins(self) -> bool:
+        return len(self.chromosomes) > 0 and self.region_length > 0
 
-    def has_family_bins(self):
+    def has_family_bins(self) -> bool:
         return self.family_bin_size > 0
 
-    def has_coding_bins(self):
-        return self.coding_effect_types
+    def has_coding_bins(self) -> bool:
+        return len(self.coding_effect_types) > 0
 
-    def has_frequency_bins(self):
+    def has_frequency_bins(self) -> bool:
         return self.rare_boundary > 0
 
-    def has_partitions(self):
+    def has_summary_partitions(self) -> bool:
+        return self.has_region_bins() or self.has_frequency_bins() or \
+            self.has_coding_bins()
+
+    def has_family_partitions(self) -> bool:
         return self.has_region_bins() or self.has_frequency_bins() or \
             self.has_coding_bins() or self.has_family_bins()
+
+    def has_partitions(self) -> bool:
+        return self.has_family_partitions()
 
     def make_region_bin(self, chrom: str, pos: int) -> str:
         """Produce region bin from chromosome and position."""

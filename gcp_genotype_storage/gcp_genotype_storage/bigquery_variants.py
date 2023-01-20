@@ -3,7 +3,6 @@ import json
 import logging
 from typing import Optional, Any
 
-import configparser
 import numpy as np
 
 from google.cloud import bigquery
@@ -74,11 +73,9 @@ class BigQueryVariants(SqlSchema2Variants):
             """
 
         result = self.client.query(query).result()
-        config = configparser.ConfigParser()
         for row in result:
-            config.read_string(row[0])
-            return config
-        return None
+            return row[0]
+        return ""
 
     def _fetch_schema(self, table):
         query = f"""

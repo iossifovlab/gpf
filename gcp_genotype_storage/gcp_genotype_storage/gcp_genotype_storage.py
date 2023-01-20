@@ -1,5 +1,4 @@
 import logging
-import configparser
 from typing import Dict, Any, cast, Optional
 from dataclasses import dataclass
 
@@ -11,6 +10,7 @@ from google.cloud import bigquery
 
 from dae.utils import fs_utils
 from dae.genotype_storage.genotype_storage import GenotypeStorage
+from dae.parquet.partition_descriptor import PartitionDescriptor
 
 from gcp_genotype_storage.bigquery_variants import BigQueryVariants
 
@@ -126,14 +126,13 @@ class GcpGenotypeStorage(GenotypeStorage):
             gene_models=gene_models)
         return backend
 
-    def _load_partition_description(self, metadata_path):
+    def _load_partition_description(
+            self, metadata_path) -> PartitionDescriptor:
         df = pq.read_table(metadata_path).to_pandas()
-        for record in df.to_dict(orient="row"):
+        for record in df.to_dict(orient="records"):
             if record["key"] == "partition_description":
-                parser = configparser.ConfigParser()
-                parser.read_string(record["value"])
-                return parser
-        return None
+                return PartitionDescriptor.parse_string(record["value"])
+        return PartitionDescriptor()
 
     def _upload_dataset_into_import_bucket(
             self, study_id: str,
@@ -174,7 +173,7 @@ class GcpGenotypeStorage(GenotypeStorage):
     def _load_dataset_into_bigquery(
             self, study_id: str,
             bucket_layout: GcpStudyLayout,
-            partition_descriptor: Dict[str, Any]) -> GcpStudyLayout:
+            partition_descriptor: PartitionDescriptor) -> GcpStudyLayout:
         client = bigquery.Client()
         dbname = self.storage_config["bigquery"]["db"]
         dataset = client.create_dataset(dbname, exists_ok=True)
@@ -213,6 +212,10 @@ class GcpGenotypeStorage(GenotypeStorage):
         assert tables_layout.summary_variants is not None
         assert tables_layout.family_variants is not None
 
+        type_convertions = {
+            "string": "STRING",
+            "int8": "INTEGER",
+        }
         summary_table = dataset.table(tables_layout.summary_variants)
         job_config = bigquery.LoadJobConfig()
         job_config.autodetect = True
@@ -224,9 +227,18 @@ class GcpGenotypeStorage(GenotypeStorage):
         parquet_options.enable_list_inference = True
         job_config.parquet_options = parquet_options
 
-        hive_partitioning = \
-            bigquery.external_config.HivePartitioningOptions()
-        job_config.hive_partitioning = hive_partitioning
+        if partition_descriptor.has_summary_partitions():
+            hive_partitioning = \
+                bigquery.external_config.HivePartitioningOptions()
+            hive_partitioning.mode = "CUSTOM"
+            summary_partition = "/".join([
+                f"{{{bname}:{type_convertions[btype]}}}"
+                for (bname, btype) in
+                partition_descriptor.dataset_summary_partition()
+            ])
+            hive_partitioning.source_uri_prefix = \
+                f"{bucket_layout.summary_variants}/{summary_partition}"
+            job_config.hive_partitioning = hive_partitioning
 
         summary_job = client.load_table_from_uri(
             f"{bucket_layout.summary_variants}/*.parquet", summary_table,
@@ -244,9 +256,18 @@ class GcpGenotypeStorage(GenotypeStorage):
         parquet_options.enable_list_inference = True
         job_config.parquet_options = parquet_options
 
-        hive_partitioning = \
-            bigquery.external_config.HivePartitioningOptions()
-        job_config.hive_partitioning = hive_partitioning
+        if partition_descriptor.has_family_partitions():
+            hive_partitioning = \
+                bigquery.external_config.HivePartitioningOptions()
+            hive_partitioning.mode = "CUSTOM"
+            family_partition = "/".join([
+                f"{{{bname}:{type_convertions[btype]}}}"
+                for (bname, btype) in
+                partition_descriptor.dataset_family_partition()
+            ])
+            hive_partitioning.source_uri_prefix = \
+                f"{bucket_layout.family_variants}/{family_partition}"
+            job_config.hive_partitioning = hive_partitioning
 
         family_job = client.load_table_from_uri(
             f"{bucket_layout.family_variants}/*.parquet", family_table,
