@@ -169,7 +169,7 @@ class CNVLoader(VariantsGenotypesLoader):
     def __init__(
             self,
             families: FamiliesData,
-            cnv_filename: str,
+            cnv_filenames: List[str],
             genome: ReferenceGenome,
             regions: Optional[List[str]] = None,
             params: Optional[Dict[str, Any]] = None):
@@ -183,7 +183,7 @@ class CNVLoader(VariantsGenotypesLoader):
 
         super().__init__(
             families=families,
-            filenames=[cnv_filename],
+            filenames=cnv_filenames,
             transmission_type=transmission_type,
             genome=genome,
             regions=regions,
@@ -196,6 +196,10 @@ class CNVLoader(VariantsGenotypesLoader):
         self.genome = genome
         self.set_attribute("source_type", "cnv")
         self.reset_regions(regions)
+
+        assert isinstance(cnv_filenames, list)
+        assert len(cnv_filenames) == 1
+        cnv_filename = cnv_filenames[0]
 
         logger.info("CNV loader params: %s", self.params)
         self.cnv_df = _cnv_loader(
@@ -423,6 +427,8 @@ class CNVLoader(VariantsGenotypesLoader):
     def parse_cli_arguments(
         cls, argv: argparse.Namespace, use_defaults: bool = False
     ) -> Tuple[List[str], Dict[str, Any]]:
+        if argv.cnv_file is None:
+            return [], {}
         return [argv.cnv_file], {
             "cnv_location": argv.cnv_location,
             "cnv_person_id": argv.cnv_person_id,

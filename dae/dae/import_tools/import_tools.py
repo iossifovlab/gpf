@@ -208,7 +208,7 @@ class ImportProject():
         variants_filenames = loader_config["files"]
         variants_filenames = [fs_utils.join(self.input_dir, f)
                               for f in variants_filenames]
-        if loader_type in {"denovo", "cnv", "dae"}:
+        if loader_type in {"denovo", "dae"}:
             assert len(variants_filenames) == 1,\
                 f"Support for multiple {loader_type} files is NYI"
             variants_filenames = variants_filenames[0]
@@ -425,7 +425,7 @@ class ImportProject():
         reference_genome = self.get_gpf_instance().reference_genome
 
         loader = self._get_variant_loader(loader_type, reference_genome)
-        loader_chromosomes = loader.chromosomes
+        loader_chromosomes = loader.chromosomes  # type: ignore
         target_chromosomes = self._get_loader_target_chromosomes(loader_type)
         if target_chromosomes is None:
             target_chromosomes = loader_chromosomes
@@ -580,7 +580,7 @@ class ImportConfigNormalizer:
 
     @classmethod
     def _load_external_files(cls, config, base_input_dir):
-        external_files = []
+        external_files: List[str] = []
 
         base_input_dir = cls._load_external_file(
             config, "input", base_input_dir, embedded_input_schema,
@@ -656,9 +656,9 @@ class ImportConfigNormalizer:
                     res.append(f"{i}")
                     res.append(f"chr{i}")
                 if chrom == "autosomesXY":
-                    for i in ["X", "Y"]:
-                        res.append(f"{i}")
-                        res.append(f"chr{i}")
+                    for j in ["X", "Y"]:
+                        res.append(f"{j}")
+                        res.append(f"chr{j}")
             else:
                 res.append(chrom)
         return res

@@ -47,7 +47,7 @@ def test_cnv_loader_expected_inheritance(
         transmission_type, expected_inheritance):
 
     loader = CNVLoader(
-        abn_families, canvas_cnv, gpf_instance_2013.reference_genome,
+        abn_families, [canvas_cnv], gpf_instance_2013.reference_genome,
         params={
             "cnv_person_id": "person_id",
             "cnv_location": "location",
@@ -77,7 +77,7 @@ def test_cnv_loader_expected_variant_type(
         variant_index, expected_variant_type):
 
     loader = CNVLoader(
-        abn_families, canvas_cnv, gpf_instance_2013.reference_genome,
+        abn_families, [canvas_cnv], gpf_instance_2013.reference_genome,
         params={
             "cnv_person_id": "person_id",
             "cnv_location": "location",
@@ -112,7 +112,7 @@ def test_cnv_loader_regions(
         add_chrom_prefix, region, expected):
 
     loader = CNVLoader(
-        abn_families, canvas_cnv, gpf_instance_2013.reference_genome,
+        abn_families, [canvas_cnv], gpf_instance_2013.reference_genome,
         params={
             "cnv_person_id": "person_id",
             "cnv_location": "location",
@@ -148,7 +148,7 @@ def test_cnv_loader_constructor_regions(
         add_chrom_prefix, region, expected):
 
     loader = CNVLoader(
-        abn_families, canvas_cnv, gpf_instance_2013.reference_genome,
+        abn_families, [canvas_cnv], gpf_instance_2013.reference_genome,
         regions=[region],
         params={
             "cnv_person_id": "person_id",
@@ -186,7 +186,8 @@ def test_cnv_loader_del_chrom_prefix_regions(
     )))
 
     loader = CNVLoader(
-        abn_families, content, gpf_instance_2013.reference_genome,
+        abn_families, [content],  # type: ignore
+        genome=gpf_instance_2013.reference_genome,
         params={
             "cnv_person_id": "person_id",
             "cnv_location": "location",

@@ -597,15 +597,14 @@ class BatchImporter:
 
     def build_cnv_loader(self, argv):
         """Construct a CNV loader based on the CLI arguments."""
-        variants_filename, variants_params = \
+        variants_filenames, variants_params = \
             CNVLoader.parse_cli_arguments(argv)
-
         logger.info("CNV loader parameters: %s", variants_params)
-        if variants_filename is None:
+        if not variants_filenames:
             return self
         variants_loader = CNVLoader(
             self.families,
-            variants_filename,
+            variants_filenames,
             params=variants_params,
             genome=self.gpf_instance.reference_genome,
         )

@@ -341,7 +341,7 @@ def flexible_cnv_loader(
     if isinstance(filepath_or_buffer, (str, Path)):
         infile = open(filepath_or_buffer, "rt")
     else:
-        infile = filepath_or_buffer
+        infile = filepath_or_buffer  # type: ignore
 
     with infile as infile:
         # FIXME don't throw StopIteration and fix the next line
