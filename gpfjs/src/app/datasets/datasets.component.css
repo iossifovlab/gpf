@@ -39,6 +39,11 @@
   color: #fff;
 }
 
+.show .dropdown-toggle {
+  background-color: #6c757d;
+  border-color: #6c757d;
+}
+
 .warning-alert {
   position: absolute;
   top: 70px;
