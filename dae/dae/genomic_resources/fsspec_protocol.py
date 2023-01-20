@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import os
+import fcntl
 import hashlib
 import logging
 import datetime
@@ -159,6 +160,7 @@ class FsspecReadOnlyProtocol(ReadOnlyRepositoryProtocol):
         compression = None
         if kwargs.get("compression"):
             compression = "gzip"
+
         return self.filesystem.open(
             filepath, mode=mode,
             compression=compression)  # pylint: disable=unspecified-encoding
@@ -218,6 +220,42 @@ class FsspecReadWriteProtocol(
         super().__init__(proto_id, url, filesystem)
 
         self.filesystem.makedirs(self.url, exist_ok=True)
+
+    def _get_resource_file_lockfile_path(
+        self, resource: GenomicResource, filename: str
+    ) -> str:
+        """Return path of the resource file's lockfile."""
+        if self.scheme != "file":
+            raise NotImplementedError()
+        resource_url = self.get_resource_url(resource)
+        path = os.path.join(resource_url, ".grr", f"{filename}.lockfile")
+        return path.removeprefix(f"{self.scheme}://")
+
+    def obtain_resource_file_lock(
+        self, resource: GenomicResource, filename: str
+    ):
+        """Lock a resource's file."""
+        class Lock:
+            def __enter__(self):
+                pass
+
+            def __exit__(self, *args):
+                pass
+
+        lock = Lock()
+
+        if self.scheme == "file":
+            path = self._get_resource_file_lockfile_path(resource, filename)
+            if not self.filesystem.exists(os.path.dirname(path)):
+                self.filesystem.makedirs(
+                    os.path.dirname(path), exist_ok=True)
+            lockfile = open(path, "wt", encoding="utf8")
+            lockfile.write(str(datetime.datetime.now()) + "\n")
+            fcntl.flock(lockfile, fcntl.LOCK_EX)
+            lock.__enter__ = lockfile.__enter__
+            lock.__exit__ = lockfile.__exit__
+
+        return lock
 
     def _scan_path_for_resources(self, path_array):
 
@@ -324,7 +362,7 @@ class FsspecReadWriteProtocol(
 
     def _get_resource_file_state_path(
             self, resource: GenomicResource, filename: str) -> str:
-        """Return filename of the rersource file state path."""
+        """Return filename of the resource file state path."""
         resource_url = self.get_resource_url(resource)
         return os.path.join(resource_url, ".grr", f"{filename}.state")
 

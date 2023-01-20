@@ -74,12 +74,18 @@ class CachingProtocol(ReadOnlyRepositoryProtocol):
             self, resource: GenomicResource, filename: str) -> None:
         assert resource.proto == self
 
+        if filename.endswith(".lockfile"):
+            # Ignore lockfiles
+            return
+
         remote_resource = self.remote_protocol.get_resource(
             resource.resource_id,
             f"={resource.get_version_str()}")
 
-        self.local_protocol.update_resource_file(
-            remote_resource, resource, filename)
+        # Lock the resource file to avoid caching it simultaneously
+        with self.local_protocol.obtain_resource_file_lock(resource, filename):
+            self.local_protocol.update_resource_file(
+                remote_resource, resource, filename)
 
     def open_raw_file(self, resource, filename, mode="rt", **kwargs):
         if "w" in mode:
