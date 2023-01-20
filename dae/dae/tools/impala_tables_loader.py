@@ -7,8 +7,7 @@ import logging
 import toml
 
 from dae.gpf_instance.gpf_instance import GPFInstance
-from dae.parquet.schema1.parquet_io import NoPartitionDescriptor, \
-    ParquetPartitionDescriptor
+from dae.parquet.partition_descriptor import PartitionDescriptor
 
 
 logger = logging.getLogger(__name__)
@@ -147,10 +146,10 @@ def main(argv=None, gpf_instance=None):
 
     if partition_config_file is not None and \
             os.path.isfile(partition_config_file):
-        partition_description = ParquetPartitionDescriptor.from_config(
+        partition_description = PartitionDescriptor.parse(
             partition_config_file)
     else:
-        partition_description = NoPartitionDescriptor()
+        partition_description = PartitionDescriptor()
 
     variants_schema = None
     if argv.variants_schema is not None:

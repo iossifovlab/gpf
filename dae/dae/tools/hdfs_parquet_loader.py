@@ -5,8 +5,7 @@ import argparse
 import logging
 
 from dae.gpf_instance.gpf_instance import GPFInstance
-from dae.parquet.schema1.parquet_io import NoPartitionDescriptor, \
-    ParquetPartitionDescriptor
+from dae.parquet.partition_descriptor import PartitionDescriptor
 
 
 logger = logging.getLogger("hdfs_parquet_loader")
@@ -97,13 +96,11 @@ def main(argv=None, gpf_instance=None):
 
         if os.path.isdir(argv.variants) and \
                 os.path.exists(partition_config_file):
-            partition_descriptor = ParquetPartitionDescriptor.from_config(
-                partition_config_file, root_dirname=argv.variants
-            )
+            partition_descriptor = PartitionDescriptor.parse(
+                partition_config_file)
 
     if partition_descriptor is None:
-        partition_descriptor = NoPartitionDescriptor(
-            root_dirname=argv.variants)
+        partition_descriptor = PartitionDescriptor()
 
     genotype_storage.hdfs_upload_dataset(
         argv.study_id, argv.variants, argv.pedigree, partition_descriptor)

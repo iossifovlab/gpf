@@ -1,8 +1,7 @@
 import json
 import logging
-import configparser
 from contextlib import closing
-from typing import Optional, Any
+from typing import Any
 import numpy as np
 from impala.util import as_pandas
 from dae.query_variants.query_runners import QueryRunner
@@ -78,7 +77,7 @@ class ImpalaVariants(SqlSchema2Variants):
                 cursor.execute(query)
 
                 for row in cursor:
-                    return row[0]
+                    return str(row[0])
         return ""
 
     def _fetch_pedigree(self):

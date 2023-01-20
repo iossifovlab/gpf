@@ -5,7 +5,7 @@ import os
 import sys
 import argparse
 import logging
-from dae.parquet.schema1.parquet_io import ParquetPartitionDescriptor
+from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.pedigrees.loader import FamiliesLoader
 from dae.variants_loaders.vcf.loader import VcfLoader
 from dae.gpf_instance.gpf_instance import GPFInstance
@@ -16,10 +16,16 @@ logger = logging.getLogger("ped2ped")
 
 def _handle_partition_description(families, argv):
     if argv.partition_description:
-        partition_description = ParquetPartitionDescriptor.from_config(
+        partition_descriptor = PartitionDescriptor.parse(
             argv.partition_description
         )
-        families = partition_description.add_family_bins_to_families(families)
+        for family in families.values():
+            family_bin = partition_descriptor.make_family_bin(
+                family.family_id)
+            for person in family.persons.values():
+                person.set_attr("family_bin", family_bin)
+        families._ped_df = None  # pylint: disable=protected-access
+
     return families
 
 

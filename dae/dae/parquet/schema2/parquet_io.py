@@ -4,7 +4,7 @@ import time
 import logging
 import json
 from functools import reduce
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 
 import toml
 from box import Box
@@ -490,7 +490,8 @@ class ParquetManager:
     @staticmethod
     def families_to_parquet(
             families, pedigree_filename,
-            partition_descriptor: PartitionDescriptor = None):
+            partition_descriptor: Optional[PartitionDescriptor] = None):
+        """Save families data into a parquet file."""
         if partition_descriptor is not None \
                 and partition_descriptor.has_family_bins():
             for family in families.values():

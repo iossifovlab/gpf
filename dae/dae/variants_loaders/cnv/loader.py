@@ -422,18 +422,17 @@ class CNVLoader(VariantsGenotypesLoader):
     @classmethod
     def parse_cli_arguments(
         cls, argv: argparse.Namespace, use_defaults: bool = False
-    ) -> Tuple[str, Dict[str, Any]]:
-        return argv.cnv_file, \
-            {
-                "cnv_location": argv.cnv_location,
-                "cnv_person_id": argv.cnv_person_id,
-                "cnv_family_id": argv.cnv_family_id,
-                "cnv_variant_type": argv.cnv_variant_type,
-                "cnv_plus_values": argv.cnv_plus_values,
-                "cnv_minus_values": argv.cnv_minus_values,
-                "cnv_best_state": argv.cnv_best_state,
-                "cnv_sep": argv.cnv_sep,
-                "cnv_transmission_type": argv.cnv_transmission_type,
-                "add_chrom_prefix": argv.add_chrom_prefix,
-                "del_chrom_prefix": argv.del_chrom_prefix,
-            }
+    ) -> Tuple[List[str], Dict[str, Any]]:
+        return [argv.cnv_file], {
+            "cnv_location": argv.cnv_location,
+            "cnv_person_id": argv.cnv_person_id,
+            "cnv_family_id": argv.cnv_family_id,
+            "cnv_variant_type": argv.cnv_variant_type,
+            "cnv_plus_values": argv.cnv_plus_values,
+            "cnv_minus_values": argv.cnv_minus_values,
+            "cnv_best_state": argv.cnv_best_state,
+            "cnv_sep": argv.cnv_sep,
+            "cnv_transmission_type": argv.cnv_transmission_type,
+            "add_chrom_prefix": argv.add_chrom_prefix,
+            "del_chrom_prefix": argv.del_chrom_prefix,
+        }

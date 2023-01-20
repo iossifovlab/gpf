@@ -174,7 +174,7 @@ class GcpGenotypeStorage(GenotypeStorage):
     def _load_dataset_into_bigquery(
             self, study_id: str,
             bucket_layout: GcpStudyLayout,
-            partition_description: Dict[str, Any]) -> GcpStudyLayout:
+            partition_descriptor: Dict[str, Any]) -> GcpStudyLayout:
         client = bigquery.Client()
         dbname = self.storage_config["bigquery"]["db"]
         dataset = client.create_dataset(dbname, exists_ok=True)
@@ -263,7 +263,6 @@ class GcpGenotypeStorage(GenotypeStorage):
         """Create pedigree and variant tables for a study."""
         partition_description = self._load_partition_description(
             study_layout.meta)
-        import pdb; pdb.set_trace()
         bucket_layout = self._upload_dataset_into_import_bucket(
             study_id, study_layout)
         return self._load_dataset_into_bigquery(
