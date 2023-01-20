@@ -1,6 +1,5 @@
 import argparse
 import sys
-import textwrap
 import traceback
 from dae.utils.verbosity_configuration import VerbosityConfiguration
 from dae.import_tools.import_tools import ImportProject
@@ -37,15 +36,7 @@ def main(argv=None):
     task_graph = storage.generate_import_task_graph(project)
     task_graph.input_files.extend(project.config_filenames)
 
-    TaskGraphCli.process_graph(args, task_graph)
-
-    # if args.command is None or args.command == "run":
-    #     return _cmd_run(args, project, task_cache)
-    # if args.command in {"list", "status"}:
-    #     return _cmd_list(args, project, task_cache)
-    # parser.exit(message=f"Unknown command {args.command}\n")
-
-    return 0
+    return TaskGraphCli.process_graph(args, task_graph)
 
 
 def _cmd_run(args, project, task_cache):
