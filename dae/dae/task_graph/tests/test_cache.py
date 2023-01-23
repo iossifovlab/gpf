@@ -117,6 +117,15 @@ def test_file_cache_mod_flag_file_of_intermediate_node(
         assert cache.get_record(task).type == CacheRecordType.NEEDS_COMPUTE
 
 
+def test_file_cache_very_large_task_name(tmpdir):
+    graph = TaskGraph()
+    graph.create_task("Task" * 500, noop, [], [])
+
+    executor = SequentialExecutor(FileTaskCache(cache_dir=tmpdir))
+    for _ in executor.execute(graph):
+        pass
+
+
 def touch(filename):
     if os.path.exists(filename):
         # fsspec local file system has a resolution of 1 second so we have to

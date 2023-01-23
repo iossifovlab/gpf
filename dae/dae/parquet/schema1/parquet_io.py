@@ -23,6 +23,7 @@ import pyarrow.parquet as pq
 
 import fsspec
 
+from dae.parquet.helpers import url_to_pyarrow_fs
 from dae.utils.variant_utils import GenotypeType
 from dae.variants.attributes import TransmissionType
 from dae.variants.family_variant import FamilyAllele, FamilyVariant, \
@@ -419,6 +420,7 @@ class ContinuousParquetFileWriter:
                 os.makedirs(dirname)
             self.dirname = dirname
 
+        filesystem, filepath = url_to_pyarrow_fs(filepath, filesystem)
         self._writer = pq.ParquetWriter(
             filepath, self.schema, compression="snappy", filesystem=filesystem,
             version="1.0"
@@ -837,4 +839,5 @@ def save_ped_df_to_parquet(ped_df, filename, filesystem=None):
 
     table = pa.Table.from_pandas(ped_df, schema=pps)
 
+    filesystem, filename = url_to_pyarrow_fs(filename, filesystem)
     pq.write_table(table, filename, filesystem=filesystem, version="1.0")

@@ -270,8 +270,13 @@ class SingleVcfLoader(VariantsGenotypesLoader):
         logger.debug("SingleVcfLoader input files: %s", self.filenames)
 
         for file in self.filenames:
+            # pylint: disable=no-member
             self.vcfs.append(
-                pysam.VariantFile(file))  # pylint: disable=no-member
+                pysam.VariantFile(
+                    fs_utils.sign(file),
+                    index_filename=fs_utils.sign(file + ".tbi")
+                )
+            )
 
     def _build_vcf_iterators(self, region):
         if region is None:
@@ -310,7 +315,11 @@ class SingleVcfLoader(VariantsGenotypesLoader):
             res = seqnames
 
         try:
-            with pysam.Tabixfile(filename) as tbx:  # pylint: disable=no-member
+            # pylint: disable=no-member
+            with pysam.Tabixfile(
+                fs_utils.sign(filename),
+                index=fs_utils.sing(tabix_index_filename)
+            ) as tbx:
                 res = list(tbx.contigs)
         except Exception:  # pylint: disable=broad-except
             res = seqnames

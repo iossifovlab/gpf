@@ -63,3 +63,45 @@ def containing_path(path: Union[str, os.PathLike]) -> str:
             return os.path.dirname(path)
         return url.scheme + "://"
     return os.path.dirname(os.path.realpath(path))
+
+
+def sign(filename: str) -> str:
+    """Create a signed URL representing the given path.
+
+    If the coresponding filesystem doesn't support signing then the filename
+    is returned as is.
+    """
+    fs, relative_path = url_to_fs(filename)
+    try:
+        return cast(str, fs.sign(relative_path))
+    except NotImplementedError:
+        return filename
+
+
+def _handle_env_variables(envdict=None):
+    """Handle filesystem-related environment variables.
+
+    Passing certain settings as env variables is useful in certain scenarios
+    like running on k8s. However certain fsspec settings canNOT be
+    passed as env vars - see:
+     * https://github.com/fsspec/s3fs/issues/432
+     * https://github.com/fsspec/filesystem_spec/issues/1130
+
+    To work around this issue we have our own set of environment variables. On
+    module import we get these env variables and set the appropriate config
+    variables for fsspec.
+    """
+    envdict = envdict if envdict is not None else os.environ
+    if "S3_ENDPOINT_URL" not in envdict:
+        return
+    endpoint_url = envdict["S3_ENDPOINT_URL"]
+
+    from fsspec.config import conf  # pylint: disable=import-outside-toplevel
+    conf["s3"] = conf.get("s3", {})
+    conf["s3"]["client_kwargs"] = conf["s3"].get("client_kwargs", {})
+    client_kwargs = conf["s3"]["client_kwargs"]
+    if "endpoint_url" not in client_kwargs:
+        client_kwargs["endpoint_url"] = endpoint_url
+
+
+_handle_env_variables()

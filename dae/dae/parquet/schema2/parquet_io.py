@@ -17,6 +17,7 @@ import numpy as np
 import pyarrow as pa
 import pyarrow.parquet as pq
 
+from dae.parquet.helpers import url_to_pyarrow_fs
 from dae.utils.variant_utils import GenotypeType
 from dae.variants.attributes import Inheritance, TransmissionType
 from dae.variants.family_variant import (
@@ -102,8 +103,11 @@ class NoPartitionDescriptor(PartitionDescriptor):
             schema=pa.schema({"key": pa.string(), "value": pa.string()}),
         )
 
+        filesystem, meta_fn = url_to_pyarrow_fs(
+            os.path.join(self.output, "meta.parquet"), None
+        )
         pq.write_table(
-            partition_desc_table, os.path.join(self.output, "meta.parquet"),
+            partition_desc_table, meta_fn, filesystem=filesystem,
             version="1.0"
         )
 
@@ -419,8 +423,11 @@ class ParquetPartitionDescriptor(PartitionDescriptor):
             schema=pa.schema({"key": pa.string(), "value": pa.string()}),
         )
 
+        filesystem, meta_fn = url_to_pyarrow_fs(
+            os.path.join(self.output, "meta.parquet"), None
+        )
         pq.write_table(
-            partition_desc_table, os.path.join(self.output, "meta.parquet"),
+            partition_desc_table, meta_fn, filesystem=filesystem,
             version="1.0"
         )
 
@@ -475,6 +482,7 @@ class ContinuousParquetFileWriter:
             os.makedirs(dirname)
         self.dirname = dirname
 
+        filesystem, filepath = url_to_pyarrow_fs(filepath, filesystem)
         self._writer = pq.ParquetWriter(
             filepath, self.schema, compression="snappy", filesystem=filesystem,
             version="1.0"
@@ -949,4 +957,5 @@ def save_ped_df_to_parquet(ped_df, filename, filesystem=None):
     ped_df, pps = add_missing_parquet_fields(pps, ped_df)
 
     table = pa.Table.from_pandas(ped_df, schema=pps)
+    filesystem, filename = url_to_pyarrow_fs(filename, filesystem)
     pq.write_table(table, filename, filesystem=filesystem, version="1.0")

@@ -87,7 +87,7 @@ class HdfsHelpers:
         self.hdfs.rename(path, new_path)
 
     def put(self, local_filename, hdfs_filename):
-        assert os.path.exists(local_filename)
+        assert os.path.exists(local_filename), local_filename
 
         self.hdfs.upload(local_filename, hdfs_filename)
 
