@@ -16,6 +16,7 @@ from dae.utils import fs_utils
 class PartitionDescriptor:
     """Class to represent partition of a genotype dataset."""
 
+    # pylint: disable=too-many-public-methods
     def __init__(
             self,
             chromosomes: Optional[List[str]] = None,
@@ -41,7 +42,15 @@ class PartitionDescriptor:
 
     @staticmethod
     def parse(path_name: Union[pathlib.Path, str]) -> PartitionDescriptor:
-        """Parse partition description from a file."""
+        """Parse partition description from a file.
+
+        When the file name has a `.conf` suffix or is without suffix the format
+        of the file is assumed to be python config file and it is parsed
+        using the Python ConfigParser class.
+
+        When the file name has `.yaml` suffix the file is parsed using the
+        YAML parser.
+        """
         if isinstance(path_name, str):
             path_name = pathlib.Path(path_name)
         if path_name.suffix in {"", ".conf"}:
@@ -61,17 +70,40 @@ class PartitionDescriptor:
     def parse_string(
             content: str,
             content_format: str = "conf") -> PartitionDescriptor:
-        """Parse partition description from a string."""
-        config = {
-            "region_length": 0,
-            "chromosomes": [],
-            "family_bin_size": 0,
-            "coding_effect_types": set(),
-            "rare_boundary": 0.0
-        }
+        """Parse partition description from a string.
+
+        The supported formats are the Python config format and YAML. Example
+        string content should be as follows.
+
+        Example Python config format:
+        ```
+        [region_bin]
+        chromosomes = chr1, chr2
+        region_length = 10
+        [frequency_bin]
+        rare_boundary = 5.0
+        [coding_bin]
+        coding_effect_types = frame-shift,splice-site,nonsense,missense
+        [family_bin]
+        family_bin_size=10
+        ```
+
+        Example YAML format:
+        ```
+        region_bin:
+            chromosomes: chr1, chr2
+            region_length: 10
+        frequency_bin:
+            rare_boundary: 5.0
+        coding_bin:
+            coding_effect_types: frame-shift,splice-site,nonsense,missense
+        family_bin:
+            family_bin_size: 10
+        ```
+        """
         content = content.strip()
         if not content:
-            return PartitionDescriptor._from_dict(config)
+            return PartitionDescriptor()
         if content_format == "conf":
             parsed_data = PartitionDescriptor._configparser_parse(content)
         elif content_format == "yaml":
@@ -108,10 +140,6 @@ class PartitionDescriptor:
                     "coding_effect_types"
                 ].split(",")
             )
-        return PartitionDescriptor._from_dict(config)
-
-    @staticmethod
-    def _from_dict(config: Dict[str, Any]) -> PartitionDescriptor:
         return PartitionDescriptor(
             chromosomes=config.get("chromosomes"),
             region_length=config.get("region_length", 0),
@@ -133,18 +161,21 @@ class PartitionDescriptor:
         return self.rare_boundary > 0
 
     def has_summary_partitions(self) -> bool:
+        """Check if partition applicable to summary allele are defined."""
         return self.has_region_bins() or self.has_frequency_bins() or \
             self.has_coding_bins()
 
     def has_family_partitions(self) -> bool:
+        """Check if partition applicable to family allele are defined."""
         return self.has_region_bins() or self.has_frequency_bins() or \
             self.has_coding_bins() or self.has_family_bins()
 
     def has_partitions(self) -> bool:
+        """Equivalent to `has_family_partitions` method."""
         return self.has_family_partitions()
 
     def make_region_bin(self, chrom: str, pos: int) -> str:
-        """Produce region bin from chromosome and position."""
+        """Produce region bin for given chromosome and position."""
         if not self.has_region_bins():
             raise ValueError(
                 f"Partition <{self.serialize()}> does not define region bins.")
@@ -158,7 +189,7 @@ class PartitionDescriptor:
         return f"other_{pos_bin}"
 
     def make_family_bin(self, family_id: str) -> int:
-        """Produce family bin from family ID."""
+        """Produce family bin for given family ID."""
         if not self.has_family_bins():
             raise ValueError(
                 f"Partition <{self.serialize()}> does not define family bins.")
@@ -168,7 +199,7 @@ class PartitionDescriptor:
         return int(digest % self.family_bin_size)
 
     def make_coding_bin(self, effect_types: Iterable[str]) -> int:
-        """Produce coding bin from list of effect types."""
+        """Produce coding bin for given list of effect types."""
         if not self.has_coding_bins():
             raise ValueError(
                 f"Partition <{self.serialize()}> does not define coding bins.")
@@ -182,7 +213,7 @@ class PartitionDescriptor:
     def make_frequency_bin(
             self, allele_count: Optional[int], allele_freq: Optional[float],
             is_denovo: bool = False):
-        """Produce frequency bin.
+        """Produce frequency bin from allele count, frequency and de Novo flag.
 
         Params are allele count, allele frequence and de Novo flag.
         """
@@ -198,7 +229,11 @@ class PartitionDescriptor:
         return frequency_bin
 
     def dataset_summary_partition(self) -> List[Tuple[str, str]]:
-        """Build summary dataset partition for table creation."""
+        """Build summary parquet dataset partition for table creation.
+
+        When creating an Impala or BigQuery table it is helpful to have
+        the list of partitions and types used in the parquet dataset.
+        """
         result = []
         if self.has_region_bins():
             result.append(("region_bin", "string"))
@@ -209,14 +244,29 @@ class PartitionDescriptor:
         return result
 
     def dataset_family_partition(self) -> List[Tuple[str, str]]:
-        """Build family dataset partition for table creation."""
+        """Build family dataset partition for table creation.
+
+        When creating an Impala or BigQuery table it is helpful to have
+        the list of partitions and types used in the parquet dataset.
+        """
         result = self.dataset_summary_partition()
         if self.has_family_bins():
             result.append(("family_bin", "int8"))
         return result
 
     def summary_partition(self, allele) -> List[Tuple[str, str]]:
-        """Produce summary partition for an allele."""
+        """Produce summary partition for an allele.
+
+        The partition is returned as a list of tuples consiting of the
+        name of the partition and the value.
+
+        Example:
+        [
+            ("region_bin", "chr1_0"),
+            ("frequency_bin", "0"),
+            ("coding_bin", "1"),
+        ]
+        """
         result = []
         if self.has_region_bins():
             result.append((
@@ -244,7 +294,19 @@ class PartitionDescriptor:
         return result
 
     def family_partition(self, allele) -> List[Tuple[str, str]]:
-        """Produce family partition for an allele."""
+        """Produce family partition for an allele.
+
+        The partition is returned as a list of tuples consiting of the
+        name of the partition and the value.
+
+        Example:
+        [
+            ("region_bin", "chr1_0"),
+            ("frequency_bin", "0"),
+            ("coding_bin", "1"),
+            ("family_bin", "1)
+        ]
+        """
         partition = self.summary_partition(allele)
         if self.has_family_bins():
             partition.append((
@@ -256,7 +318,12 @@ class PartitionDescriptor:
     @staticmethod
     def partition_directory(
             output_dir: str, partition: List[Tuple[str, str]]) -> str:
-        """Construct a partition dataset directory."""
+        """Construct a partition dataset directory.
+
+        Given a partition in the format returned by `summary_parition` or
+        `family_partition` methods, this function constructs the directory name
+        corresponding to the partition.
+        """
         return fs_utils.join(
             output_dir, *[
                 f"{bname}={bvalue}" for (bname, bvalue) in partition])
@@ -265,7 +332,12 @@ class PartitionDescriptor:
     def partition_filename(
             prefix: str, partition: List[Tuple[str, str]],
             bucket_index: int) -> str:
-        """Construct a partition dataset base filename."""
+        """Construct a partition dataset base filename.
+
+        Given a partition in the format returned by `summary_parition` or
+        `family_partition` methods, this function constructs the file name
+        corresponding to the partition.
+        """
         partition_parts = [
             f"{bname}_{bvalue}" for (bname, bvalue) in partition]
         parts = [
