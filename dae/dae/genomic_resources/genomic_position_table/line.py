@@ -44,7 +44,7 @@ class Line:
         for attr in self.attributes.values():
             yield attr
 
-    def __getitem__(self, key: int):
+    def __getitem__(self, key: Union[int, slice]):
         if not isinstance(key, (int, slice)):
             raise TypeError(f"Key '{key}' must be of integer or slice type!")
         if isinstance(key, slice):
