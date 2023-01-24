@@ -202,8 +202,6 @@ def test_single_bucket_generation(add_chrom_prefix, gpf_instance_2019, mocker):
     project = import_tools.ImportProject.build_from_config(import_config)
     buckets = list(project._loader_region_bins("denovo"))
     assert len(buckets) == 1
-    # assert buckets[0].regions == [f"{prefix}1", f"{prefix}2", f"{prefix}3",
-    #                               f"{prefix}4", f"{prefix}5"]
     assert buckets[0].regions == [None]
 
 

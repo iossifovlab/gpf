@@ -47,10 +47,6 @@ def main(argv):
 def run(argv):
     """Run the ped to parquet conversion."""
     filename, params = FamiliesLoader.parse_cli_arguments(argv)
-    # if argv.study_id is not None:
-    #     study_id = argv.study_id
-    # else:
-    #     study_id, _ = os.path.splitext(os.path.basename(filename))
 
     loader = FamiliesLoader(filename, **params)
     families = loader.load()

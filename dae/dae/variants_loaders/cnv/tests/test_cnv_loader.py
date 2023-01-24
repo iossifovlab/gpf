@@ -1,5 +1,5 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-from typing import List, Any
+from typing import Any
 import numpy as np
 
 import pytest
@@ -44,7 +44,7 @@ def test_cnv_loader_avoids_duplication(fixture_dirname, gpf_instance_2013):
         })
 
     svs = []
-    fvs: List[Any] = []
+    fvs: list[Any] = []
     for sv, fvs_ in loader.full_variants_iterator():
         print(sv, fvs)
         svs.append(sv)
@@ -104,7 +104,7 @@ def test_cnv_loader_alt_best_state(fixture_dirname, gpf_instance_2013):
     )
 
     svs = []
-    fvs: List[Any] = []
+    fvs: list[Any] = []
     for sv, _fvs in loader.full_variants_iterator():
         print(sv, fvs)
         svs.append(sv)
@@ -135,7 +135,7 @@ def test_cnv_loader_alt_2(fixture_dirname, gpf_instance_2013):
     )
 
     svs = []
-    fvs: List[Any] = []
+    fvs: list[Any] = []
     for sv, _fvs in loader.full_variants_iterator():
         print(sv, fvs)
         svs.append(sv)

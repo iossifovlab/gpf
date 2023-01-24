@@ -210,8 +210,6 @@ class RawFamilyVariants(abc.ABC):
         """Return True if a family allele meets the required conditions."""
         assert isinstance(allele, FamilyAllele)
         if inheritance is not None:
-            # if v.is_reference_allele:
-            #     return False
             for inh in inheritance:
                 if not inh.match(allele.inheritance_in_members):
                     return False
@@ -261,7 +259,6 @@ class RawFamilyVariants(abc.ABC):
             genes=None,
             effect_types=None,
             variant_type=None,
-            # person_ids=None,
             **_kwargs):
         # pylint: disable=too-many-return-statements,too-many-branches
         """Return True if a summary allele meets the required conditions."""
@@ -283,11 +280,6 @@ class RawFamilyVariants(abc.ABC):
         if variant_type is not None:
             if not variant_type.match([allele.allele_type]):
                 return False
-        # if person_ids is not None:
-        #     if allele.is_reference_allele:
-        #         return False
-        #     if not set(allele.variant_in_members) & set(person_ids):
-        #         return False
         return True
 
     @classmethod
