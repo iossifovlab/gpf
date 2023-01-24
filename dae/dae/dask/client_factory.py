@@ -8,8 +8,10 @@ import tempfile
 from typing import Optional, Dict, Any
 
 from dask.distributed import Client, LocalCluster  # type: ignore
-from dask_kubernetes import make_pod_spec  # type: ignore
-from dask_kubernetes.classic import KubeCluster  # type: ignore
+from dask_kubernetes.operator.kubecluster import (
+    KubeCluster,
+    make_cluster_spec
+)  # type: ignore
 
 
 class DaskClient:
@@ -77,17 +79,22 @@ class DaskClient:
 
         if kwargs.get("kubernetes"):
             env = cls._get_env_vars(kwargs.get("envvars"))
-            extra_pod_config = {}
+            spec = make_cluster_spec(
+                name="gpf-dask-cluster",
+                image=kwargs.get("container_image"),
+                env=env,
+            )
+
             if kwargs.get("image_pull_secrets"):
-                extra_pod_config["imagePullSecrets"] = [
+                secrets = [
                     {"name": name}
                     for name in kwargs.get(
                         "image_pull_secrets", [])
                 ]
-            pod_spec = make_pod_spec(
-                image=kwargs.get("container_image"),
-                extra_pod_config=extra_pod_config)
-            cluster = KubeCluster(pod_spec, env=env)
+                spec["spec"]["worker"]["spec"]["imagePullSecrets"] = secrets
+                spec["spec"]["scheduler"]["spec"]["imagePullSecrets"] = secrets
+
+            cluster = KubeCluster(n_workers=1, custom_cluster_spec=spec)
             cluster.scale(n_jobs)
         elif kwargs.get("sge"):
             try:
