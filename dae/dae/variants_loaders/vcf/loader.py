@@ -318,7 +318,7 @@ class SingleVcfLoader(VariantsGenotypesLoader):
             # pylint: disable=no-member
             with pysam.Tabixfile(
                 fs_utils.sign(filename),
-                index=fs_utils.sing(tabix_index_filename)
+                index=fs_utils.sign(tabix_index_filename)
             ) as tbx:
                 res = list(tbx.contigs)
         except Exception:  # pylint: disable=broad-except
