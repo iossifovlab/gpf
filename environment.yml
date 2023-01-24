@@ -33,7 +33,7 @@ dependencies:
   - s3fs=2022.11.0
   - pyliftover=0.4
   - python-box=6.0.2
-  - setuptools=65.0.1
+  - setuptools=65.6.3
   - sqlalchemy=1.4.40
   - sqlite=3.39.2
   - django=4.1.3
