@@ -38,12 +38,11 @@ label {
   overflow: hidden;
 }
 
-#counters span {
-  width: 15em;
-}
-
-#summary-alleles-count {
-  padding-right: 16px;
+#summary-alleles-count,
+#family-variants-count {
+  display: inline-grid;
+  min-width: 150px;
+  text-align: center;
 }
 
 #summary-alleles-count span,
