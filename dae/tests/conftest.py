@@ -143,6 +143,7 @@ def pytest_sessionstart(session):
                 storage_config = yaml.safe_load(infile.read())
             storage = GENOTYPE_STORAGE_REGISTRY\
                 .register_storage_config(storage_config)
+            storage.start()
             GENOTYPE_STORAGES = {
                 storage.storage_id: storage
             }
