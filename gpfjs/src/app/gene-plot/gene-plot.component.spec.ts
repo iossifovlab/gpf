@@ -183,7 +183,7 @@ describe('GenePlotComponent', () => {
     component.ngOnChanges({ gene: new SimpleChange(null, geneMock, true) });
     component.redraw();
     expect(spyOnDrawTranscript).toHaveBeenCalledTimes(4);
-    [new Transcript('collapsed', 'chr3', '-', [
+    expect(spyOnDrawTranscript.mock.calls[0][1]).toStrictEqual(new Transcript('collapsed', 'chr3', '-', [
       {
         chromosome: 'chr3',
         start: 120628380,
@@ -200,9 +200,7 @@ describe('GenePlotComponent', () => {
         start: 120633147,
         stop: 120633328
       }
-    ])].forEach((trans, i) => {
-      expect(spyOnDrawTranscript.mock.calls[0][i+1]).toStrictEqual(trans);
-    });
+    ]));
   });
 
   it('should call draw transcript on multiple chromosomes', () => {
