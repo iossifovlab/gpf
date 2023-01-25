@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Component, EventEmitter, Input, Output, OnChanges, SimpleChanges, HostListener } from '@angular/core';
 import { Gene, Transcript } from 'app/gene-browser/gene';
 import { GenePlotModel, GenePlotScaleState, GenePlotZoomHistory } from 'app/gene-plot/gene-plot';
