@@ -47,15 +47,19 @@
     </span>
 
     <span id="counters" class="header-item">
-      <span style="padding-right: 32px">
-        <span>Summary alleles:</span>
+      <span title="Summary alleles">
+        <span class="d-none d-xl-inline">Summary alleles:</span>
+        <span class="d-none d-md-inline d-xl-none d-xxl-none">SA:</span>
         <span id="summary-alleles-count">
           <span>{{ this.variantsArray?.totalSummaryAllelesCount }} / {{ this.allVariantsCounts[0] }}</span>
         </span>
       </span>
 
-      <span>
-        <span>Family variants:</span>
+      <div style="padding-right: 24px"></div>
+
+      <span title="Family variants">
+        <span class="d-none d-xl-inline">Family variants:</span>
+        <span class="d-none d-md-inline d-xl-none d-xxl-none">FV:</span>
         <span id="family-variants-count">
           <span>{{ this.variantsArray?.totalFamilyVariantsCount }} / {{ this.allVariantsCounts[1] }}</span>
         </span>
