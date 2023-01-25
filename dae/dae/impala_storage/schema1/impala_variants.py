@@ -125,6 +125,7 @@ class ImpalaQueryRunner(QueryRunner):
         self._finalize(started)
 
     def _put_value_in_result_queue(self, val):
+        assert self._result_queue is not None
         no_interest = 0
         while True:
             try:
@@ -725,7 +726,7 @@ class ImpalaVariants:
                     elif prop_name == \
                             "gpf_partitioning_frequency_bin_rare_boundary":
                         self.table_properties["rare_boundary"] = \
-                            int(prop_value)
+                            float(prop_value)
 
     def _check_summary_variants_table(self):
         with closing(self.connection()) as conn:

@@ -5,7 +5,8 @@ import glob
 import pyarrow.parquet as pq
 
 from dae.tools.denovo2parquet import main
-from dae.parquet.schema1.parquet_io import ParquetPartitionDescriptor
+from dae.parquet.partition_descriptor import PartitionDescriptor
+from dae.impala_storage.schema1.utils import generate_file_access_glob
 
 
 def test_denovo2parquet_denovo(
@@ -24,7 +25,7 @@ def test_denovo2parquet_denovo(
 
     assert os.path.exists(temp_filename)
 
-    files_glob = os.path.join(temp_filename, "*variants.parquet")
+    files_glob = os.path.join(temp_filename, "*variants*.parquet")
     parquet_files = glob.glob(files_glob)
     assert len(parquet_files) == 1
 
@@ -56,9 +57,9 @@ def test_denovo2parquet_denovo_partition(
 
     main(argv, gpf_instance=gpf_instance_2019)
 
-    part_desc = ParquetPartitionDescriptor.from_config(partition_description)
+    part_desc = PartitionDescriptor.parse(partition_description)
     file_glob = os.path.join(
-        temp_dirname, part_desc.generate_file_access_glob())
+        temp_dirname, generate_file_access_glob(part_desc))
     partition_files = glob.glob(file_glob)
 
     assert len(partition_files) == 5

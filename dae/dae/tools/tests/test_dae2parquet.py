@@ -26,7 +26,9 @@ def test_dae2parquet_transmitted(
 
     assert os.path.exists(temp_filename)
 
-    files_glob = os.path.join(temp_filename, "*variants.parquet")
+    files_glob = os.path.join(temp_filename, "*variants*.parquet")
+    # import pdb; pdb.set_trace()
+
     parquet_files = glob.glob(files_glob)
     assert len(parquet_files) == 1
 

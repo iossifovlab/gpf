@@ -3,8 +3,8 @@ import threading
 import logging
 import queue
 import time
-
-from concurrent.futures import ThreadPoolExecutor
+from typing import Optional
+from concurrent.futures import ThreadPoolExecutor, Future
 
 
 logger = logging.getLogger(__name__)
@@ -13,19 +13,20 @@ logger = logging.getLogger(__name__)
 class QueryRunner(abc.ABC):
     """Run a query in the backround using the provided executor."""
 
-    def __init__(self, deserializer=None):
+    def __init__(self, **kwargs):
         super().__init__()
 
         self._status_lock = threading.RLock()
         self._closed = False
         self._started = False
         self._done = False
-        self.timestamp = None
+        self.timestamp = time.time()
 
-        self._result_queue = None
-        self._future = None
+        self._result_queue: Optional[queue.Queue] = None
+        self._future: Optional[Future] = None
         self.study_id = None
 
+        deserializer = kwargs.get("deserializer")
         if deserializer is not None:
             self.deserializer = deserializer
         else:
@@ -53,10 +54,12 @@ class QueryRunner(abc.ABC):
             return self._closed
 
     def close(self):
+        """Close query runner."""
         elapsed = time.time() - self.timestamp
         logger.debug("closing runner after %0.3f", elapsed)
         with self._status_lock:
             if self._started:
+                assert self._future is not None
                 self._future.cancel()
             self._closed = True
 

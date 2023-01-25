@@ -8,12 +8,13 @@ from cerberus import Validator
 
 from dae.configuration.utils import validate_path
 from dae.genotype_storage.genotype_storage import GenotypeStorage
-from dae.parquet.schema1.parquet_io import NoPartitionDescriptor, \
-    ParquetPartitionDescriptor
+from dae.parquet.partition_descriptor import PartitionDescriptor
 
 from dae.impala_storage.helpers.hdfs_helpers import HdfsHelpers
 from dae.impala_storage.helpers.impala_helpers import ImpalaHelpers
 from dae.impala_storage.schema1.impala_variants import ImpalaVariants
+from dae.impala_storage.schema1.utils import generate_file_access_glob, \
+    variants_filename_basedir
 
 from dae.impala_storage.helpers.rsync_helpers import RsyncHelpers
 
@@ -246,12 +247,13 @@ class ImpalaGenotypeStorage(GenotypeStorage):
             self.storage_config["hdfs"]["base_dir"], study_id)
         hdfs_variants_dir = os.path.join(study_path, "variants")
 
-        files_glob = partition_description.generate_file_access_glob()
+        files_glob = generate_file_access_glob(partition_description)
         files_glob = os.path.join(variants_dir, files_glob)
         local_variants_files = glob.glob(files_glob)
         # logger.debug(f"{variants_dir}, {files_glob}, {local_variants_files}")
 
-        local_basedir = partition_description.variants_filename_basedir(
+        local_basedir = variants_filename_basedir(
+            partition_description,
             local_variants_files[0])
         assert local_basedir.endswith("/")
 
@@ -421,11 +423,10 @@ class ImpalaGenotypeStorage(GenotypeStorage):
                 variants_dir, "_PARTITION_DESCRIPTION"
             )
             if os.path.exists(partition_config_file):
-                partition_description = ParquetPartitionDescriptor.from_config(
-                    partition_config_file, root_dirname=variants_dir)
+                partition_description = PartitionDescriptor.parse(
+                    partition_config_file)
             else:
-                partition_description = NoPartitionDescriptor(
-                    root_dirname=variants_dir)
+                partition_description = PartitionDescriptor()
 
             variants_schema_file = os.path.join(
                 variants_dir, "_VARIANTS_SCHEMA"

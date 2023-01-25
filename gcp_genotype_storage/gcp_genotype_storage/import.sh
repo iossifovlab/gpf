@@ -149,13 +149,16 @@ bq --sync rm -r -f --dataset $PROJECT:$DATASET
 bq --sync --location=$REGION mk --dataset $PROJECT:$DATASET
 
 # BigQuery load uploaded parquet files
-bq load --source_format=PARQUET --autodetect --replace=true --parquet_enable_list_inference=true \
+bq load --source_format=PARQUET --autodetect --replace=true \
+    --parquet_enable_list_inference=true \
 	$DATASET.imported_meta gs://gpf/import/meta/*.parquet 
 
-bq load --source_format=PARQUET --autodetect --replace=true --parquet_enable_list_inference=true \
+bq load --source_format=PARQUET --autodetect --replace=true \
+    --parquet_enable_list_inference=true \
 	$DATASET.imported_pedigree gs://gpf/import/pedigree/*.parquet
 
-bq load --source_format=PARQUET --autodetect --replace=true --parquet_enable_list_inference=true \
+bq load --source_format=PARQUET --autodetect --replace=true \
+    --parquet_enable_list_inference=true \
 	--hive_partitioning_mode=CUSTOM \
 	--hive_partitioning_source_uri_prefix=gs://gpf/import/summary/{region_bin:STRING}/{frequency_bin:INTEGER}/{coding_bin:INTEGER} \
  	$DATASET.imported_summary_alleles gs://gpf/import/summary/*.parquet 

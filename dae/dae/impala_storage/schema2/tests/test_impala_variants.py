@@ -1,8 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 
-import configparser
-
-from dae.impala_storage.schema2.impala_variants import ImpalaVariants
+from dae.parquet.partition_descriptor import PartitionDescriptor
 
 
 def test_normalize_tblproperties():
@@ -20,9 +18,7 @@ def test_normalize_tblproperties():
     [frequency_bin]
     rare_boundary = 5
     """
-    config = configparser.ConfigParser()
-    config.read_string(props_str)
-    table_properties = ImpalaVariants._normalize_tblproperties(config)
+    table_properties = PartitionDescriptor.parse_string(props_str).to_dict()
 
     assert table_properties["region_length"] == 30000000
     assert table_properties["chromosomes"] == [

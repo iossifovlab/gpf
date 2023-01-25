@@ -6,10 +6,8 @@ import pyarrow.parquet as pq
 
 from dae.pedigrees.loader import FamiliesLoader
 from dae.pedigrees.family import FamiliesData
-from dae.parquet.schema1.parquet_io import (
-    ParquetPartitionDescriptor,
-    ParquetManager,
-)
+from dae.parquet.partition_descriptor import PartitionDescriptor
+from dae.parquet.parquet_writer import ParquetWriter
 
 from dae.tools.ped2parquet import main
 
@@ -19,7 +17,7 @@ def test_partition_descriptor(global_dae_fixtures_dir):
         f"{global_dae_fixtures_dir}/"
         f"partition_descriptor/partition_description.conf"
     )
-    partition_descriptor = ParquetPartitionDescriptor.from_config(pd_filename)
+    partition_descriptor = PartitionDescriptor.parse(pd_filename)
     assert partition_descriptor is not None
 
 
@@ -105,15 +103,15 @@ def test_ped2parquet_outfilename(mocker, pedigree_filename, parquet_filename):
 
     mocker.patch("dae.pedigrees.loader.FamiliesLoader.load")
     mocker.patch(
-        "dae.parquet.schema1.parquet_io.ParquetManager.families_to_parquet"
+        "dae.parquet.parquet_writer.ParquetWriter.families_to_parquet"
     )
 
     argv = ["pedigree_A.ped"]
     main(argv)
 
     FamiliesLoader.load.assert_called_once()  # pylint: disable=no-member
-    ParquetManager.families_to_parquet.assert_called_once()
-    call_args = ParquetManager.families_to_parquet.call_args
+    ParquetWriter.families_to_parquet.assert_called_once()
+    call_args = ParquetWriter.families_to_parquet.call_args
 
-    _, outfile = call_args[0]
+    _, outfile, _ = call_args[0]
     assert outfile == parquet_filename

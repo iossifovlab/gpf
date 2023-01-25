@@ -8,7 +8,7 @@ import time
 import logging
 import shutil
 from urllib.parse import urlparse
-from typing import Optional, Callable
+from typing import Optional, Dict, Any, Type
 from math import ceil
 from collections import defaultdict
 
@@ -27,11 +27,10 @@ from dae.variants_loaders.raw.loader import AnnotationPipelineDecorator, \
 from dae.variants_loaders.dae.loader import DenovoLoader, DaeTransmittedLoader
 from dae.variants_loaders.vcf.loader import VcfLoader
 from dae.variants_loaders.cnv.loader import CNVLoader
-
-from dae.parquet.schema1.parquet_io import ParquetManager, \
-    ParquetPartitionDescriptor, \
-    NoPartitionDescriptor
-
+from dae.parquet.partition_descriptor import PartitionDescriptor
+from dae.parquet.parquet_writer import ParquetWriter
+from dae.parquet.schema1.parquet_io import \
+    VariantsParquetWriter as S1VariantsWriter
 from dae.impala_storage.helpers.rsync_helpers import RsyncHelpers
 
 from dae.configuration.study_config_builder import StudyConfigBuilder
@@ -173,7 +172,7 @@ class MakefilePartitionHelper:
     def generate_variants_targets(self, target_chromosomes, mode=None):
         """Produce variants targets."""
         if len(self.partition_descriptor.chromosomes) == 0:
-            return {"none": [self.partition_descriptor.output]}
+            return {"none": [""]}
 
         generated_target_chromosomes = target_chromosomes[:]
         if mode == "single_bucket":
@@ -208,136 +207,7 @@ class BatchGenerator:
         """Generate a Makefile/Snakemakefile."""
 
 
-class MakefileGenerator(BatchGenerator):
-
-    def generate(self, context):
-        return MakefileGenerator.TEMPLATE.render(context)
-
-    TEMPLATE = Template(
-        """\
-
-{%- for prefix, context in variants.items() %}
-
-{{prefix}}_bins={{context.bins|join(" ")}}
-{{prefix}}_bins_flags=$(foreach bin,$({{prefix}}_bins),{{prefix}}_$(bin).flag)
-
-{%- endfor %}
-
-defaults: parquet.flag
-
-all: pedigree.flag \\
-{%- for prefix in variants %}
-\t\t$({{prefix}}_bins_flags) \\
-{%- endfor %}
-\t\thdfs.flag impala.flag \\
-\t\tsetup_instance.flag \\
-{%- if mirror_of %}
-\t\treports.flag \\
-\t\tsetup_remote.flag
-{%- else %}
-\t\treports.flag
-{%- endif %}
-
-pedigree: pedigree.flag
-
-pedigree.flag:
-\t(time ped2parquet.py --study-id {{study_id}} \\
-\t\t{{pedigree.params}} {{pedigree.pedigree}} \\
-{%- if partition_description %}
-\t\t--pd {{partition_description}} \\
-{%- endif %}
-\t\t-o {{pedigree.output}} \\
-\t\t> logs/pedigree_stdout.log 2> logs/pedigree_stderr.log && touch $@) \\
-\t\t\t2> logs/pedigree_benchmark.txt
-
-
-{%- for prefix, context in variants.items() %}
-
-{{prefix}}_%.flag:
-\t(time {{prefix}}2parquet.py --study-id {{study_id}} \\
-\t\t{{pedigree.params}} {{pedigree.pedigree}} \\
-\t\t{{context.params}} {{context.variants}} \\
-{%- if partition_description %}
-\t\t--pd {{partition_description}} \\
-{%- endif %}
-\t\t-o {{ variants_output }} \\
-\t\t--rb $* > logs/{{prefix}}_$*_stdout.log \\
-\t\t2> logs/{{prefix}}_$*_stderr.log && touch $@) \\
-\t\t2> logs/{{prefix}}_$*_benchmark.txt
-
-{%- endfor %}
-
-
-parquet: parquet.flag
-
-parquet.flag: \\
-{%- for prefix in variants %}
-\t\t$({{prefix}}_bins_flags) \\
-{%- endfor %}
-\t\tpedigree.flag
-\ttouch parquet.flag
-
-hdfs: hdfs.flag
-
-hdfs.flag: \\
-{%- for prefix in variants %}
-\t\t$({{prefix}}_bins_flags) \\
-{%- endfor %}
-\t\tpedigree.flag
-\thdfs_parquet_loader.py {{study_id}} \\
-\t\t{{pedigree.output}} \\
-{%- if variants %}
-\t\t--variants {{variants_output}} \\
-{%- endif -%}
-\t\t--gs {{genotype_storage}} \\
-\t\t&& touch $@
-
-
-impala: impala.flag
-
-impala.flag: hdfs.flag
-\timpala_tables_loader.py \\
-\t\t{{study_id}} \\
-{%- if genotype_storage %}
-\t\t--gs {{genotype_storage}} \\
-{%- endif %}
-{%- if partition_description %}
-\t\t--pd {{variants_output}}/_PARTITION_DESCRIPTION \\
-{%- endif %}
-\t\t--variants-schema {{variants_output}}/_VARIANTS_SCHEMA \\
-\t\t&& touch $@
-
-
-setup_instance: setup_instance.flag
-
-setup_instance.flag: impala.flag
-\trsync -avPHt  \\
-\t\t--rsync-path "mkdir -p {{dae_db_dir}}/studies/{{study_id}}/ && rsync" \\
-\t\t--ignore-existing {{outdir}}/ {{dae_db_dir}}/studies/{{study_id}}/ \\
-\t\t&& touch $@
-
-
-reports: reports.flag
-
-reports.flag: setup_instance.flag
-\tgenerate_common_report.py --studies {{study_id}} \\
-\t\t&& generate_denovo_gene_sets.py --studies {{study_id}} \\
-\t\t&& touch $@
-
-
-setup_remote: setup_remote.flag
-
-setup_remote.flag: reports.flag
-\trsync -avPHt \\
-\t\t--rsync-path \\
-\t\t"mkdir -p {{mirror_of.path}}/studies/{{study_id}}/ && rsync" \\
-\t\t--ignore-existing {{dae_db_dir}}/studies/{study_id}}/ \\
-\t\t{{mirror_of.location}}/studies/{{study_id}}/ && touch $@
-
-        """)
-
-
-class SnakefileGenerator:
+class SnakefileGenerator(BatchGenerator):
     """Generate a Snakefile which when executed imports a study."""
 
     def generate(self, context):
@@ -728,15 +598,14 @@ class BatchImporter:
 
     def build_cnv_loader(self, argv):
         """Construct a CNV loader based on the CLI arguments."""
-        variants_filename, variants_params = \
+        variants_filenames, variants_params = \
             CNVLoader.parse_cli_arguments(argv)
-
         logger.info("CNV loader parameters: %s", variants_params)
-        if variants_filename is None:
+        if not variants_filenames:
             return self
         variants_loader = CNVLoader(
             self.families,
-            variants_filename,
+            variants_filenames,
             params=variants_params,
             genome=self.gpf_instance.reference_genome,
         )
@@ -775,11 +644,10 @@ class BatchImporter:
     def build_partition_helper(self, argv):
         """Load and adjust the parition description."""
         if argv.partition_description is not None:
-            partition_description = ParquetPartitionDescriptor.from_config(
-                argv.partition_description, root_dirname=argv.output
-            )
+            partition_description = PartitionDescriptor.parse(
+                argv.partition_description)
         else:
-            partition_description = NoPartitionDescriptor(argv.output)
+            partition_description = PartitionDescriptor()
 
         self.partition_helper = MakefilePartitionHelper(
             partition_description,
@@ -829,11 +697,8 @@ class BatchImporter:
         """Generate instruction for importing a study using CLI arguments."""
         dirname = argv.generator_output or argv.output
         context = self.build_context(argv)
-        if argv.tool == "make":
-            generator = MakefileGenerator()
-            filename = os.path.join(dirname, "Makefile")
-        elif argv.tool == "snakemake":
-            generator = SnakefileGenerator()
+        if argv.tool == "snakemake":
+            generator: BatchGenerator = SnakefileGenerator()
             filename = os.path.join(dirname, "Snakefile")
         elif argv.tool == "snakemake-kubernetes":
             generator = SnakefileKubernetesGenerator()
@@ -868,9 +733,10 @@ class BatchImporter:
                 urlparse(argv.partition_description).path[1:]
 
         study_id = context["study_id"]
-
         pedigree_output = os.path.join(
             outdir, f"{study_id}_pedigree", "pedigree.parquet")
+
+        assert self.families_loader is not None
         pedigree_pedigree = urlparse(self.families_loader.filename).path[1:]
         context["pedigree"].update({
             "pedigree": pedigree_pedigree,
@@ -907,6 +773,7 @@ class BatchImporter:
         if argv.partition_description:
             context["partition_description"] = argv.partition_description
 
+        assert self.families_loader is not None
         pedigree_params_dict = self.families_loader.build_arguments_dict()
         pedigree_params = self.families_loader.build_cli_arguments(
             pedigree_params_dict)
@@ -927,13 +794,14 @@ class BatchImporter:
                 outdir, f"{study_id}_variants"))
 
         for prefix, variants_loader in self.variants_loaders.items():
-            variants_context = {}
+            variants_context: Dict[str, Any] = {}
             if "target_chromosomes" in argv and \
                     argv.target_chromosomes is not None:
                 target_chromosomes = argv.target_chromosomes
             else:
                 target_chromosomes = variants_loader.chromosomes
 
+            assert self.partition_helper is not None
             variants_targets = self.partition_helper.generate_variants_targets(
                 target_chromosomes
             )
@@ -1176,7 +1044,7 @@ class BatchImporter:
 class Variants2ParquetTool:
     """Tool for importing variants into parquet dataset."""
 
-    VARIANTS_LOADER_CLASS: Optional[Callable[..., VariantsLoader]] = None
+    VARIANTS_LOADER_CLASS: Optional[Type[VariantsLoader]] = None
     VARIANTS_TOOL: Optional[str] = None
     VARIANTS_FREQUENCIES: bool = False
 
@@ -1193,6 +1061,8 @@ class Variants2ParquetTool:
         parser.add_argument("--verbose", "-V", action="count", default=0)
 
         FamiliesLoader.cli_arguments(parser)
+
+        assert cls.VARIANTS_LOADER_CLASS is not None
         cls.VARIANTS_LOADER_CLASS.cli_arguments(parser)
 
         parser.add_argument(
@@ -1376,9 +1246,13 @@ class Variants2ParquetTool:
 
         logger.debug("argv.rows: %s", argv.rows)
 
-        ParquetManager.variants_to_parquet(
+        out_dir = argv.output
+        logger.debug("writing to output directory: %s", out_dir)
+        ParquetWriter.variants_to_parquet(
+            out_dir,
             variants_loader,
             partition_description,
+            S1VariantsWriter,
             bucket_index=bucket_index,
             rows=argv.rows,
         )
@@ -1415,19 +1289,18 @@ class Variants2ParquetTool:
         variants_loader = cls.VARIANTS_LOADER_CLASS(
             families,
             variants_filenames,
-            params=variants_params,
             genome=gpf_instance.reference_genome,
+            params=variants_params,
         )
         return variants_loader
 
     @staticmethod
     def _build_partition_description(argv):
         if argv.partition_description is not None:
-            partition_description = ParquetPartitionDescriptor.from_config(
-                argv.partition_description, root_dirname=argv.output
-            )
+            partition_description = PartitionDescriptor.parse(
+                argv.partition_description)
         else:
-            partition_description = NoPartitionDescriptor(argv.output)
+            partition_description = PartitionDescriptor()
         return partition_description
 
     @staticmethod

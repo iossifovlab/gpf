@@ -3,8 +3,7 @@ import os
 import pytest
 
 from dae.impala_storage.schema1.import_commons import BatchImporter, \
-    SnakefileGenerator, \
-    MakefileGenerator
+    SnakefileGenerator
 
 
 @pytest.fixture
@@ -81,7 +80,7 @@ def test_makefile_generator_multivcf_simple(
     assert importer.dae_loader is None
 
 
-def test_makefile_generator_denovo_and_dae(
+def test_snakefile_generator_denovo_and_dae(
         fixture_dirname, cli_parse, importer, temp_dirname):
 
     denovo_file = fixture_dirname("dae_denovo/denovo.txt")
@@ -94,7 +93,7 @@ def test_makefile_generator_denovo_and_dae(
 
     argv = cli_parse(
         [
-            "--tool", "make",
+            "--tool", "snakemake",
             "-o",
             temp_dirname,
             ped_file,
@@ -121,8 +120,8 @@ def test_makefile_generator_denovo_and_dae(
 
     importer.generate_instructions(argv)
 
-    assert os.path.exists(os.path.join(temp_dirname, "Makefile"))
-    with open(os.path.join(temp_dirname, "Makefile"), "rt") as infile:
+    assert os.path.exists(os.path.join(temp_dirname, "Snakefile"))
+    with open(os.path.join(temp_dirname, "Snakefile"), "rt") as infile:
         makefile = infile.read()
 
     print(makefile)
@@ -172,17 +171,6 @@ def test_snakefile_generator(temp_dirname):
 
     print(result)
     with open(os.path.join(temp_dirname, "Snakefile"), "wt") as outfile:
-        outfile.write(result)
-
-
-def test_makefile_generator(temp_dirname):
-
-    generator = MakefileGenerator()
-    result = generator.generate(CONTEXT)
-
-    print(result)
-
-    with open(os.path.join(temp_dirname, "Makefile"), "wt") as outfile:
         outfile.write(result)
 
 

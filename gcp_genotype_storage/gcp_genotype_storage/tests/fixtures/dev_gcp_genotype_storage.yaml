@@ -1,0 +1,6 @@
+id: dev_gcp_genotype_storage
+storage_type: gcp
+project_id: gcp-genotype-storage
+import_bucket: gs://gcp-genotype-storage-input
+bigquery:
+  db: gpf_genotype_storage_dev_lubo

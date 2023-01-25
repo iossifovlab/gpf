@@ -78,10 +78,6 @@ class AlleleParquetSerializer:
         self._schema_summary = None
         self._schema_family = None
 
-        scores_binary = {}
-
-        self.scores_serializers = scores_binary
-
         self.extra_attributes = []
         if extra_attributes:
             for attribute_name in extra_attributes:

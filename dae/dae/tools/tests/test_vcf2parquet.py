@@ -1,3 +1,5 @@
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
+
 import os
 import glob
 
@@ -30,7 +32,7 @@ def test_vcf2parquet_vcf(
         gpf_instance=gpf_instance_2013
     )
 
-    files_glob = os.path.join(temp_filename, "*variants.parquet")
+    files_glob = os.path.join(temp_filename, "*variants*.parquet")
     parquet_files = glob.glob(files_glob)
     assert len(parquet_files) == 1
 

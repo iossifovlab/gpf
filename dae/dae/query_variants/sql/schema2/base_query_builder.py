@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 class Dialect(ABC):
     """Caries info about a SQL dialect."""
 
-    def __init__(self, namespace: str = None):
+    def __init__(self, namespace: Optional[str] = None):
         # namespace,
         self.namespace = namespace
 
