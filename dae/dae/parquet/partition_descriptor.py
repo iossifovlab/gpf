@@ -373,7 +373,7 @@ class PartitionDescriptor:
                 {% endif %}
                 {% if coding_effect_types %}
                 [coding_bin]
-                conding_effect_types={{ coding_effect_types|join(', ') }}
+                coding_effect_types={{ coding_effect_types|join(', ') }}
                 {% endif %}
                 {% if family_bin_size %}
                 [family_bin]
@@ -393,7 +393,7 @@ class PartitionDescriptor:
                 {% endif %}
                 {% if coding_effect_types %}
                 coding_bin:
-                  conding_effect_types: {{ coding_effect_types|join(', ') }}
+                  coding_effect_types: {{ coding_effect_types|join(', ') }}
                 {% endif %}
                 {% if family_bin_size %}
                 family_bin:
