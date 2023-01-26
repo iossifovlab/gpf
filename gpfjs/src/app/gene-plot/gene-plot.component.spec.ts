@@ -175,7 +175,7 @@ describe('GenePlotComponent', () => {
   });
 
   it('should call draw transcript on single chromosome', () => {
-    const spyOnDrawTranscript = jest.spyOn(component, 'drawTranscript');
+    const spyOnDrawTranscript = jest.spyOn(component as any, 'drawTranscript');
     const summaryAllelesArray = new SummaryAllelesArray(variantsArrayMock);
     Object.defineProperty(component, 'variantsArray', {
       value: summaryAllelesArray
@@ -233,8 +233,7 @@ describe('GenePlotComponent', () => {
         )
       ]
     );
-
-    const spyOnDrawTranscript = jest.spyOn(component, 'drawTranscript');
+    const spyOnDrawTranscript = jest.spyOn(component as any, 'drawTranscript');
     const summaryAllelesArray = new SummaryAllelesArray(variantsArrayMock);
     Object.defineProperty(component, 'variantsArray', {
       value: summaryAllelesArray
