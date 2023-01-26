@@ -3,7 +3,8 @@ import argparse
 import textwrap
 import traceback
 import yaml
-from dae.task_graph.cache import CacheRecordType, FileTaskCache, NoTaskCache
+from dae.task_graph.cache import CacheRecordType, TaskCache, \
+    FileTaskCache, NoTaskCache
 from dae.task_graph.executor import DaskExecutor
 from dae.task_graph.executor import SequentialExecutor
 
@@ -68,6 +69,7 @@ class TaskGraphCli:
 
     @staticmethod
     def process_graph(args: argparse.Namespace, task_graph: TaskGraph) -> bool:
+        task_cache: TaskCache
         if "force" not in vars(args):
             # if the force_mode is set no 'always'
             task_cache = NoTaskCache()

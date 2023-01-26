@@ -1,6 +1,8 @@
 import argparse
 import sys
 import traceback
+from typing import Union
+
 from dae.utils.verbosity_configuration import VerbosityConfiguration
 from dae.import_tools.import_tools import ImportProject
 from dae.task_graph.cache import CacheRecordType, FileTaskCache
@@ -41,6 +43,7 @@ def main(argv=None):
 
 def _cmd_run(args, project, task_cache):
     ids_to_run = args.task_ids or []
+    executor: Union[SequentialExecutor, DaskExecutor]
     if args.jobs == 1:
         executor = SequentialExecutor(task_cache=task_cache)
         return run_with_project(
