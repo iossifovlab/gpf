@@ -318,7 +318,6 @@ describe('GenotypeBrowser', () => {
       true,
       false,
       false,
-      true,
       [
         new Column('name1', 'source1', 'format1'),
         new Column('name2', 'source2', 'format2')
@@ -348,7 +347,6 @@ describe('GenotypeBrowser', () => {
       has_person_filters: true,
       has_study_filters: false,
       has_study_types: false,
-      has_graphical_preview: true,
       table_columns: [
         {
           name: 'name1',
@@ -462,7 +460,6 @@ describe('GenotypeBrowser', () => {
       true,
       false,
       false,
-      true,
       [
         new Column('name1', 'source1', 'format1'),
         new Column('name2', 'source2', 'format2')
@@ -532,7 +529,6 @@ describe('Dataset', () => {
       true,
       false,
       false,
-      true,
       [
         new Column('name1', 'source1', 'format1'),
         new Column('name2', 'source2', 'format2')
@@ -609,7 +605,6 @@ describe('Dataset', () => {
       true,
       false,
       false,
-      true,
       [
         new Column('name2', 'source12', 'format2'),
         new Column('name4', 'source2', 'format3')
@@ -684,7 +679,6 @@ describe('Dataset', () => {
       has_person_filters: true,
       has_study_filters: false,
       has_study_types: false,
-      has_graphical_preview: true,
       table_columns: [
         {
           name: 'name1',
@@ -840,7 +834,6 @@ describe('Dataset', () => {
       has_person_filters: true,
       has_study_filters: false,
       has_study_types: false,
-      has_graphical_preview: true,
       table_columns: [
         {
           name: 'name2',
@@ -1012,7 +1005,6 @@ describe('Dataset', () => {
         has_person_filters: true,
         has_study_filters: false,
         has_study_types: false,
-        has_graphical_preview: true,
         table_columns: [{
           name: 'name1',
           source: 'source1',

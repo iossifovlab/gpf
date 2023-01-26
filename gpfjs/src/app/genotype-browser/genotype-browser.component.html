@@ -34,13 +34,7 @@
         class="btn btn-md btn-primary"
         id="table-preview-button"
         value="Table Preview"
-        (click)="tablePreview = true; submitQuery()" />
-      <input
-        *ngIf="selectedDataset?.genotypeBrowserConfig?.hasGraphicalPreview"
-        type="button"
-        class="btn btn-md btn-primary"
-        value="Graphical Preview"
-        (click)="tablePreview = false; submitQuery()" />
+        (click)="submitQuery()" />
       <gpf-save-query [disabled]="disableQueryButtons" queryType="genotype"></gpf-save-query>
     </div>
   </div>
