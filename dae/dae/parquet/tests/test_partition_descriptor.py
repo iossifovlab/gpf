@@ -18,6 +18,9 @@ def test_parse_toml_partition_description(tmp_path):
 
           [frequency_bin]
           rare_boundary = 50
+
+          [coding_bin]
+          coding_effect_types = splice-site,missense,frame-shift
         """)
     )
     pd_filename = tmp_path / "partition_description.conf"
@@ -40,6 +43,8 @@ def test_parse_yaml_partition_description(tmp_path):
               family_bin_size: 2
             frequency_bin:
               rare_boundary: 50
+            coding_bin:
+              coding_effect_types: splice-site,missense,frame-shift
         """)
     )
     pd_filename = tmp_path / "partition_description.yaml"
@@ -75,6 +80,10 @@ def test_partition_descriptor_serialization():
 
         [frequency_bin]
         rare_boundary = 50
+
+        [coding_bin]
+        coding_effect_types = splice-site,missense,frame-shift
+
     """)
     pdesc1 = PartitionDescriptor.parse_string(pd_content)
     output = pdesc1.serialize()
@@ -84,6 +93,7 @@ def test_partition_descriptor_serialization():
     assert pdesc1.region_length == pdesc2.region_length
     assert pdesc1.family_bin_size == pdesc2.family_bin_size
     assert pdesc1.rare_boundary == pdesc2.rare_boundary
+    assert pdesc1.coding_effect_types == pdesc2.coding_effect_types
 
 
 def test_empty_partition_descriptor_serialization():
@@ -97,6 +107,7 @@ def test_empty_partition_descriptor_serialization():
     assert pdesc1.region_length == pdesc2.region_length
     assert pdesc1.family_bin_size == pdesc2.family_bin_size
     assert pdesc1.rare_boundary == pdesc2.rare_boundary
+    assert pdesc1.coding_effect_types == pdesc2.coding_effect_types
 
 
 def test_partition_descriptor_yaml_serialization():
@@ -108,6 +119,8 @@ def test_partition_descriptor_yaml_serialization():
             family_bin_size: 2
         frequency_bin:
             rare_boundary: 50
+        coding_bin:
+            coding_effect_types: splice-site,missense,frame-shift
     """)
 
     pdesc1 = PartitionDescriptor.parse_string(pd_content, "yaml")
@@ -118,6 +131,7 @@ def test_partition_descriptor_yaml_serialization():
     assert pdesc1.region_length == pdesc2.region_length
     assert pdesc1.family_bin_size == pdesc2.family_bin_size
     assert pdesc1.rare_boundary == pdesc2.rare_boundary
+    assert pdesc1.coding_effect_types == pdesc2.coding_effect_types
 
 
 def test_empty_partition_descriptor_yaml_serialization():
@@ -131,3 +145,4 @@ def test_empty_partition_descriptor_yaml_serialization():
     assert pdesc1.region_length == pdesc2.region_length
     assert pdesc1.family_bin_size == pdesc2.family_bin_size
     assert pdesc1.rare_boundary == pdesc2.rare_boundary
+    assert pdesc1.coding_effect_types == pdesc2.coding_effect_types
