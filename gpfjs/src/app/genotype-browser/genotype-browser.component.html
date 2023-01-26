@@ -34,7 +34,7 @@
         class="btn btn-md btn-primary"
         id="table-preview-button"
         value="Table Preview"
-        (click)="submitQuery()" />
+        (click)="tablePreview = false; submitQuery()" />
       <gpf-save-query [disabled]="disableQueryButtons" queryType="genotype"></gpf-save-query>
     </div>
   </div>

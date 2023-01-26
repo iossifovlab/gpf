@@ -26,7 +26,7 @@ import { downloadBlobResponse } from 'app/utils/blob-download';
 })
 export class GenotypeBrowserComponent implements OnInit, OnDestroy {
   public genotypePreviewVariantsArray: GenotypePreviewVariantsArray;
-  public tablePreview: boolean;
+  public tablePreview = false;
   public legend: Array<PersonSet>;
 
   public disableQueryButtons = false;
@@ -112,10 +112,12 @@ export class GenotypeBrowserComponent implements OnInit, OnDestroy {
     this.legend = this.selectedDataset.personSetCollections.getLegend(this.genotypeBrowserState['personSetCollection']);
 
     this.queryService.streamingSubject.pipe(take(1)).subscribe(() => {
+      this.tablePreview = true;
       this.loadingService.setLoadingStop();
     });
 
     this.queryService.streamingFinishedSubject.pipe(take(1)).subscribe(() => {
+      this.tablePreview = true;
       this.loadingFinished = true;
     });
 
