@@ -2,6 +2,7 @@ import { SimpleChange } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Gene, Transcript } from 'app/gene-browser/gene';
 import { SummaryAllelesArray, SummaryAllele } from 'app/gene-browser/summary-variants';
+import * as d3 from 'd3';
 import { GenePlotComponent } from './gene-plot.component';
 
 const geneMock = new Gene(
@@ -130,5 +131,147 @@ describe('GenePlotComponent', () => {
     const filteredRectTitlesOther = rectTitles.filter(item => item.textContent === alleleTitleOther);
     const filteredCircleTitlesOther = circleTitles.filter(item => item.textContent === alleleTitleOther);
     expect(filteredRectTitlesOther).toStrictEqual(filteredCircleTitlesOther);
+  });
+
+  it('should create plot with different values', () => {
+    const summaryAllelesArray = new SummaryAllelesArray(variantsArrayMock);
+    Object.defineProperty(component, 'variantsArray', {
+      value: summaryAllelesArray
+    });
+    component.ngOnChanges({ gene: new SimpleChange(null, geneMock, true) });
+    component.redraw();
+    const plot = fixture.nativeElement as HTMLElement;
+    [
+      Array.from(plot.querySelectorAll('g polygon')),
+      Array.from(plot.querySelectorAll('g rect')),
+      Array.from(plot.querySelectorAll('svg g path'))
+    ].forEach((variantType, i) => {
+      expect(variantType).toHaveLength([1, 25, 5][i]);
+    });
+    Object.defineProperty(component, 'variantsArray', {
+      value: new SummaryAllelesArray([])
+    });
+    component.ngOnChanges({ gene: new SimpleChange(null, geneMock, true) });
+    component.redraw();
+    [
+      Array.from(plot.querySelectorAll('g polygon')),
+      Array.from(plot.querySelectorAll('g rect')),
+      Array.from(plot.querySelectorAll('svg g path'))
+    ].forEach((variantType, i) => {
+      expect(variantType).toHaveLength([0, 17, 4][i]);
+    });
+  });
+
+  it('should check viewbox and dimensions', () => {
+    const summaryAllelesArray = new SummaryAllelesArray(variantsArrayMock);
+    Object.defineProperty(component, 'variantsArray', {
+      value: summaryAllelesArray
+    });
+    component.ngOnChanges({ gene: new SimpleChange(null, geneMock, true) });
+    component.redraw();
+    expect(d3.selectAll('svg g rect').attr('height')).toBe('22');
+    expect(d3.selectAll('svg g rect').attr('width')).toBe('1835');
+    expect(d3.selectAll('#svg-container svg').attr('viewBox')).toBe('0 0 2000 517');
+  });
+
+  it('should call draw transcript on single chromosome', () => {
+    const spyOnDrawTranscript = jest.spyOn(component as any, 'drawTranscript');
+    const summaryAllelesArray = new SummaryAllelesArray(variantsArrayMock);
+    Object.defineProperty(component, 'variantsArray', {
+      value: summaryAllelesArray
+    });
+    component.ngOnChanges({ gene: new SimpleChange(null, geneMock, true) });
+    component.redraw();
+    expect(spyOnDrawTranscript).toHaveBeenCalledTimes(4);
+    expect(spyOnDrawTranscript.mock.calls[0][1]).toStrictEqual(new Transcript('collapsed', 'chr3', '-', [
+      {
+        chromosome: 'chr3',
+        start: 120628380,
+        stop: 120682111
+      }
+    ], [
+      {
+        chromosome: 'chr3',
+        start: 120628168,
+        stop: 120628529
+      },
+      {
+        chromosome: 'chr3',
+        start: 120633147,
+        stop: 120633328
+      }
+    ]));
+  });
+
+  it('should call draw transcript on multiple chromosomes', () => {
+    const genes = new Gene(
+      'HGD',
+      [
+        new Transcript(
+          'id1',
+          'chrom1',
+          '1',
+          [{ chromosome: 'chrom1', start: 1, stop: 5 }],
+          [{ chromosome: 'chrom1', start: 7, stop: 11 },
+            { chromosome: 'chrom2', start: 20, stop: 25 }]
+        ),
+        new Transcript(
+          'id2',
+          'chrom2',
+          '1',
+          [{ chromosome: 'chrom3', start: 3, stop: 4 }],
+          [{ chromosome: 'chrom3', start: 13, stop: 16 },
+            { chromosome: 'chrom7', start: 18, stop: 22 }]
+        ),
+        new Transcript(
+          'id3',
+          'chrom3',
+          '1',
+          [{ chromosome: 'chrom1', start: 7, stop: 15 }],
+          [{ chromosome: 'chrom2', start: 3, stop: 16 },
+            { chromosome: 'chrom3', start: 18, stop: 35 }]
+        )
+      ]
+    );
+    const spyOnDrawTranscript = jest.spyOn(component as any, 'drawTranscript');
+    const summaryAllelesArray = new SummaryAllelesArray(variantsArrayMock);
+    Object.defineProperty(component, 'variantsArray', {
+      value: summaryAllelesArray
+    });
+    Object.defineProperty(component, 'gene', { value: genes });
+    component.ngOnChanges({ gene: new SimpleChange(null, genes, true) });
+    component.redraw();
+    expect(spyOnDrawTranscript).toHaveBeenCalledTimes(12);
+    [
+      [
+        new Transcript(
+          'collapsed',
+          'chrom1',
+          '1',
+          [
+            { chromosome: 'chrom1', start: 1, stop: 5 }
+          ],
+          [
+            { chromosome: 'chrom1', start: 7, stop: 11 },
+            { chromosome: 'chrom2', start: 20, stop: 25 }
+          ]
+        ), 362, false],
+      [
+        new Transcript('collapsed', 'chrom2', '1',
+          [
+            {
+              chromosome: 'chrom3', start: 3, stop: 4
+            }
+          ],
+          [
+            { chromosome: 'chrom3', start: 13, stop: 16 },
+            { chromosome: 'chrom7', start: 18, stop: 22 }
+          ]
+        ), 422, true]
+    ].forEach((args, i) => {
+      args.forEach((data, y) => {
+        expect(spyOnDrawTranscript.mock.calls[i][y + 1]).toStrictEqual(data);
+      });
+    });
   });
 });
