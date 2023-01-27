@@ -200,7 +200,6 @@ describe('App user access rights tests', () => {
     userManagementPage.userWindowGroupDropDownMenuButton.click();
     userManagementPage.userWindowGroupDropdownSearch.type('comp_vcf');
     userManagementPage.userWindowGroupDropdownListCheckboxes.last().click();
-    userManagementPage.userWindowGroupDropDownMenuButton.click();
     userManagementPage.userWindowSubmitButton.click();
     userManagementPage.waitForPageToLoad(sidenavPageLinks.management);
     page.logout();
@@ -225,7 +224,6 @@ describe('App user access rights tests', () => {
     userManagementPage.userWindowGroupDropDownMenuButton.click();
     userManagementPage.userWindowGroupDropdownSearch.type('COMP_genotypes');
     userManagementPage.userWindowGroupDropdownListCheckboxes.last().click();
-    userManagementPage.userWindowGroupDropDownMenuButton.click();
     userManagementPage.userWindowSubmitButton.click();
     userManagementPage.waitForPageToLoad(sidenavPageLinks.management);
     page.logout();
@@ -278,7 +276,6 @@ describe('App user access rights tests', () => {
     userManagementPage.userWindowGroupDropDownMenuButton.click();
     userManagementPage.userWindowGroupDropdownSearch.type('ALL_Genotypes');
     userManagementPage.userWindowGroupDropdownListCheckboxes.last().click();
-    userManagementPage.userWindowGroupDropDownMenuButton.click();
     userManagementPage.userWindowSubmitButton.click();
     userManagementPage.waitForPageToLoad(sidenavPageLinks.management);
     page.logout();
@@ -320,7 +317,7 @@ describe('App user access rights tests', () => {
     const genotypeBrowserPage = new GenotypeBrowserPage();
 
     page.loginAdmin();
-    page.navigateToSidenavPage(sidenavPageLinks.management); 
+    page.navigateToSidenavPage(sidenavPageLinks.management);
     userManagementPage.getUserEditorButtonByEmail(userData.normal.username).click();
     userManagementPage.allUserEditGroupRemoveButtons.click({multiple: true});
     userManagementPage.userWindowSubmitButton.click();
