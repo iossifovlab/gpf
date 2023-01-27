@@ -1,13 +1,13 @@
 <div style="padding: 30px">
   <div class="effect-card card">
-    <div style="font-family: Roboto; font-weight: 500; border-bottom: none" class="card-header card-title">Gene Symbols</div>
+    <div style="font-family: Roboto; font-weight: 500; border-bottom: none" class="card-header card-title">Gene Symbol</div>
     <div class="card-block">
       <div ngbDropdown class="input-group panel" style="padding: 15px">
         <input
           ngbDropdownAnchor
           #searchBox
           id="search-box"
-          placeholder="Select or start typing to search"
+          placeholder="Search gene"
           autocomplete="off"
           spellcheck="false"
           [(ngModel)]="geneSymbol"
@@ -15,7 +15,7 @@
           (click)="selectGeneSymbol(''); showResults = false"
           (keydown.enter)="submitGeneRequest()"
           (keydown.escape)="closeDropdown()" />
-        <div ngbDropdownMenu style="width: 17%; z-index: 3; min-width: 250px">
+        <div ngbDropdownMenu id="genes-dropdown">
           <button
             *ngFor="let suggestion of geneSymbolSuggestions"
             class="dropdown-item"
