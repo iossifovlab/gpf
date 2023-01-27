@@ -214,6 +214,7 @@
       </div>
 
       <gpf-genotype-preview-table
+        *ngIf="familyLoadingFinished"
         [columns]="selectedDataset?.genotypeBrowserConfig?.tableColumns"
         [genotypePreviewVariantsArray]="genotypePreviewVariantsArray"
         [legend]="legend">
