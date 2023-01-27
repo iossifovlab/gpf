@@ -95,14 +95,17 @@
         </div>
       </div>
       <div *ngIf="dropdownList.length !== 0 && currentPedigreeTable" id="tags-selector">
-        <ng-multiselect-dropdown
-          [placeholder]="'Select tags'"
-          [settings]="dropdownSettings"
-          [data]="dropdownList"
-          [(ngModel)]="selectedItems"
-          (onSelect)="updateTagFilters()"
-          (onDeSelect)="updateTagFilters()">
-        </ng-multiselect-dropdown>
+        <div id="tags-dropdown-wrapper">
+          <ng-multiselect-dropdown
+            [placeholder]="'Select tags'"
+            [settings]="dropdownSettings"
+            [data]="dropdownList"
+            [(ngModel)]="selectedItems"
+            (onSelect)="updateTagFilters()"
+            (onDeSelect)="updateTagFilters()">
+          </ng-multiselect-dropdown>
+          <span class="select-dropdown-icon" [style.content]="'url(' + imgPathPrefix + 'dropdown_icon.png)'"></span>
+        </div>
         <button
           [disabled]="currentPedigreeTable.pedigrees.length === 0"
           id="download-button"

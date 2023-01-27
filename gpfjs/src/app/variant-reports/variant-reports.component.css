@@ -213,7 +213,7 @@ ng-multiselect-dropdown > span.selected-item {
   flex-wrap: wrap !important;
   align-content: center !important;
   border: 1px solid #ced4da !important;
-  width: 434px !important;
+  width: 447px !important;
 }
 
 :host::ng-deep.multiselect-item-checkbox div::before {
@@ -272,4 +272,18 @@ ng-multiselect-dropdown > span.selected-item {
 :host::ng-deep gpf-common-reports-pedigree-cell {
   display: flex;
   justify-content: center;
+}
+
+#tags-dropdown-wrapper {
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+#tags-dropdown-wrapper .select-dropdown-icon {
+  position: absolute;
+  right: 10px;
+  transform: rotate(180deg);
+  pointer-events: none;
 }
