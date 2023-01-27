@@ -97,7 +97,11 @@ class ScoreLine:
             if value in col_def.na_values:
                 value = None
             elif col_def.value_parser is not None:
-                value = col_def.value_parser(value)
+                try:  # Temporary workaround for GRR generation
+                    value = col_def.value_parser(value)
+                except Exception as err:
+                    logger.error(err)
+                    value = None
         return value
 
     def get_available_scores(self):
@@ -963,6 +967,12 @@ class AlleleScore(GenomicScore):
             }
         }
         schema["table"]["schema"]["alternative"] = {
+            "type": "dict", "schema": {
+                "index": {"type": "integer"},
+                "name": {"type": "string", "excludes": "index"}
+            }
+        }
+        schema["table"]["schema"]["variant"] = {
             "type": "dict", "schema": {
                 "index": {"type": "integer"},
                 "name": {"type": "string", "excludes": "index"}
