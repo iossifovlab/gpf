@@ -11,10 +11,11 @@ from dae.task_graph.graph import TaskGraph
 
 def build_demo_graph(graph_type: str,
                      graph_params: Optional[List[str]]) -> TaskGraph:
+    """Build a demo graph."""
     task_graph = TaskGraph()
 
     if graph_type == "A":
-        NP, SP, SS = 10, 1, 1
+        NP, SP, SS = 10, 1, 1  # pylint: disable=invalid-name
 
         if graph_params:
             if len(graph_params) != 3:
@@ -22,10 +23,10 @@ def build_demo_graph(graph_type: str,
                 raise Exception("The graph A needs three parameters: "
                                 "<number of parts>, <seconds for parts>, "
                                 "<seconds for summary>")
-            NP, SP, SS = map(int, graph_params)  
+            NP, SP, SS = map(int, graph_params)  # pylint: disable=invalid-name
         print(f"Bulding graph A with {NP} parts, {SP} seconds for "
               f"each parts, and {SS} secoconds for the summary")
-          
+
         parts = [task_graph.create_task(
             f"part {p}", lambda: time.sleep(SP), [], []) for p in range(NP)]
         task_graph.create_task("summary", lambda: time.sleep(SS), [], parts)
@@ -36,6 +37,7 @@ def build_demo_graph(graph_type: str,
 
 
 def main(argv=None):
+    """Entry point for the demo script."""
     parser = argparse.ArgumentParser(description="test_basic")
 
     parser.add_argument("graph", type=str, help="Demo graph",

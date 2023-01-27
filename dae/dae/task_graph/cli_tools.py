@@ -21,7 +21,6 @@ class TaskGraphCli:
                       force_mode="optional",
                       default_task_status_dir="."):
         """Add arguments needed to execute a task graph."""
-
         executor_group = parser.add_argument_group(title="Task Graph Executor")
         # cluster_name
         # cluster_config_file
