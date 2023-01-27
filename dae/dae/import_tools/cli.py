@@ -33,7 +33,7 @@ def main(argv=None):
     task_graph = storage.generate_import_task_graph(project)
     task_graph.input_files.extend(project.config_filenames)
 
-    return TaskGraphCli.process_graph(task_graph, args)
+    return TaskGraphCli.process_graph(task_graph, **vars(args))
 
 
 def run_with_project(project, executor=SequentialExecutor()):

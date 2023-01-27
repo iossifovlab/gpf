@@ -12,7 +12,7 @@ def test_basic_defalt_executor():
     args = parser.parse_args([])
 
     empty_graph = TaskGraph()
-    TaskGraphCli.process_graph(empty_graph, args)
+    TaskGraphCli.process_graph(empty_graph, **vars(args))
 
 
 def test_basic_sequential_executor():
@@ -21,7 +21,7 @@ def test_basic_sequential_executor():
     args = parser.parse_args(["-j", "1"])
 
     empty_graph = TaskGraph()
-    TaskGraphCli.process_graph(empty_graph, args)
+    TaskGraphCli.process_graph(empty_graph, **vars(args))
 
 
 def test_force_alwasy():
@@ -42,7 +42,7 @@ def test_force_optional():
     assert not args.force
     assert args.task_status_dir == "gosho"
 
-    args = parser.parse_args(["-tsd", "pesho"])
+    args = parser.parse_args(["-d", "pesho"])
     assert not args.force
     assert args.task_status_dir == "pesho"
 

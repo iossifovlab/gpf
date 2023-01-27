@@ -3,8 +3,8 @@ import argparse
 import textwrap
 import traceback
 import yaml
-from dae.task_graph.cache import CacheRecordType, TaskCache, \
-    FileTaskCache, NoTaskCache
+from box import Box
+from dae.task_graph.cache import CacheRecordType, TaskCache
 from dae.task_graph.executor import DaskExecutor, TaskGraphExecutor, \
     SequentialExecutor
 
@@ -75,20 +75,15 @@ class TaskGraphCli:
             assert force_mode == "always"
 
     @staticmethod
-    def process_graph(task_graph: TaskGraph, args: argparse.Namespace) -> bool:
+    def process_graph(task_graph: TaskGraph, **kwargs) -> bool:
         """Process task_graph in according with the arguments in args."""
-        task_cache: TaskCache
-        if "force" not in vars(args):
-            # if the force_mode is set no 'always'
-            task_cache = NoTaskCache()
-        else:
-            task_cache = FileTaskCache(force=args.force,
-                                       cache_dir=args.task_status_dir)
+        args = Box(kwargs)
 
+        task_cache = TaskCache.create(args.force, args.task_status_dir)
         if args.task_ids:
             task_graph = task_graph.prune(ids_to_keep=args.task_ids)
 
-        executor = TaskGraphCli.create_executor(args)
+        executor = TaskGraphCli.create_executor(**kwargs)
         if args.command is None or args.command == "run":
             return TaskGraphCli.run(task_graph, executor, args.keep_going)
 
@@ -138,10 +133,11 @@ class TaskGraphCli:
         return no_errors
 
     @staticmethod
-    def create_executor(args) -> TaskGraphExecutor:
+    def create_executor(**kwargs) -> TaskGraphExecutor:
         """Create a task graph executor according to the args specified."""
-        task_cache = FileTaskCache(force=args.force,
-                                   cache_dir=args.task_status_dir)
+        args = Box(kwargs)
+        task_cache = TaskCache.create(
+            force=args.force, cache_dir=args.task_status_dir)
 
         if args.jobs == 1:
             assert args.dask_cluster_name is None
@@ -151,7 +147,9 @@ class TaskGraphCli:
         assert args.dask_cluster_name is None or \
             args.dask_cluster_config_file is None
         if args.dask_cluster_config_file is not None:
-            with open(args.dask_cluster_config_file) as conf_file:
+            dask_cluster_config_file = args.dask_cluster_config_file
+            assert dask_cluster_config_file is not None
+            with open(dask_cluster_config_file) as conf_file:
                 dask_cluster_config = yaml.safe_load(conf_file)
             print("THE CLUSTER CONFIG IS:", dask_cluster_config,
                   "loaded from", args.dask_cluster_config_file)
