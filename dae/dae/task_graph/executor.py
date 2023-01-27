@@ -74,7 +74,7 @@ class AbstractTaskGraphExecutor(TaskGraphExecutor):
         """Set a precomputed result for a task."""
 
     def _in_exec_order(self, task_graph):
-        visited = set()
+        visited: set[Task] = set()
         for node in task_graph.tasks:
             yield from self._node_in_exec_order(node, visited)
 
@@ -87,8 +87,8 @@ class AbstractTaskGraphExecutor(TaskGraphExecutor):
         yield node
 
     def _check_for_cyclic_deps(self, task_graph):
-        visited = set()
-        stack = []
+        visited: set[Task] = set()
+        stack: list[Task] = []
         for node in task_graph.tasks:
             if node not in visited:
                 cycle = self._find_cycle(node, visited, stack)

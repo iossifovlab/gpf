@@ -1,7 +1,5 @@
 import argparse
 import sys
-import traceback
-from typing import Union
 
 from dae.utils.verbosity_configuration import VerbosityConfiguration
 from dae.import_tools.import_tools import ImportProject

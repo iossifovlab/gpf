@@ -1,3 +1,4 @@
+# pylint: disable=W0621,C0114,C0116,W0212,W0613,too-many-lines
 import argparse
 
 
@@ -38,14 +39,13 @@ def test_force_optional():
                                default_task_status_dir="gosho")
 
     args = parser.parse_args([])
-    assert args.force == False
+    assert not args.force
     assert args.task_status_dir == "gosho"
 
     args = parser.parse_args(["-tsd", "pesho"])
-    assert args.force == False
+    assert not args.force
     assert args.task_status_dir == "pesho"
 
     args = parser.parse_args(["-f"])
-    assert args.force == True
+    assert args.force
     assert args.task_status_dir == "gosho"
-
