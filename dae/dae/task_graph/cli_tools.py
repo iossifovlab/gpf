@@ -30,11 +30,15 @@ class TaskGraphCli:
             "of processors on the machine")
 
         executor_group.add_argument(
-            "-dcn", "--dask_cluster_name", type=str, default=None,
+            "-N", "--dask-cluster-name", "--dcn",
+            dest="dask_cluster_name",
+            type=str, default=None,
             help="The named of the named dask cluster"
         )
         executor_group.add_argument(
-            "-dccf", "--dask_cluster_config_file", type=str, default=None,
+            "-c", "--dccf", "--dask-cluster-config-file",
+            dest="dask_cluster_config_file",
+            type=str, default=None,
             help="dask cluster config file"
         )
 
@@ -52,7 +56,7 @@ class TaskGraphCli:
                 """),
                                           )
         execution_mode_group.add_argument(
-            "--task-id", dest="task_ids", type=str, nargs="+")
+            "-t", "--task-ids", dest="task_ids", type=str, nargs="+")
         execution_mode_group.add_argument(
             "--keep-going", default=False, action="store_true",
             help="Whether or not to keep executing in case of an error"
@@ -63,14 +67,15 @@ class TaskGraphCli:
                 help="Ignore precomputed state and always rerun all tasks."
             )
             execution_mode_group.add_argument(
-                "-tsd", "--task-status-dir", default=default_task_status_dir,
+                "-d", "--task-status-dir", "--tsd",
+                default=default_task_status_dir,
                 type=str, help="Directory to store the task progress."
             )
         else:
             assert force_mode == "always"
 
     @staticmethod
-    def process_graph(args: argparse.Namespace, task_graph: TaskGraph) -> bool:
+    def process_graph(task_graph: TaskGraph, args: argparse.Namespace) -> bool:
         """Process task_graph in according with the arguments in args."""
         task_cache: TaskCache
         if "force" not in vars(args):
