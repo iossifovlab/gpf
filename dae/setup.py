@@ -59,6 +59,7 @@ setuptools.setup(
     liftover_chain=dae.genomic_resources.liftover_resource:build_liftover_chain_from_resource
     genome=dae.genomic_resources.reference_genome:build_reference_genome_from_resource
     vcf_info=dae.genomic_resources.vcf_info_score:build_vcf_info_from_resource
+    gene_models=dae.genomic_resources.gene_models:build_gene_models_from_resource
 
     [dae.genotype_storage.factories]
     impala=dae.impala_storage.schema1.impala_genotype_storage:ImpalaGenotypeStorage

@@ -14,7 +14,8 @@ from cerberus import Validator
 
 from dae.genomic_resources.fsspec_protocol import build_local_resource
 from dae.genomic_resources.resource_implementation import \
-    GenomicResourceImplementation, get_base_resource_schema
+    GenomicResourceImplementation, get_base_resource_schema, \
+    InfoImplementationMixin, ResourceConfigValidationMixin
 
 from dae.utils.regions import Region
 from dae.genomic_resources import GenomicResource
@@ -23,7 +24,11 @@ from dae.genomic_resources import GenomicResource
 logger = logging.getLogger(__name__)
 
 
-class ReferenceGenome(GenomicResourceImplementation):
+class ReferenceGenome(
+    GenomicResourceImplementation,
+    InfoImplementationMixin,
+    ResourceConfigValidationMixin
+):
     """Provides an interface for quering a reference genome."""
 
     config_validator = Validator
@@ -224,7 +229,7 @@ class ReferenceGenome(GenomicResourceImplementation):
             {% endblock %}
         """))
 
-    def get_info(self):
+    def _get_template_data(self):
         info = copy.deepcopy(self.config)
         if "meta" in info:
             info["meta"] = markdown(info["meta"])
@@ -243,13 +248,13 @@ class ReferenceGenome(GenomicResourceImplementation):
         }
 
     def get_info(self):
-        return super(InfoImplementationMixin, self).get_info()
+        return InfoImplementationMixin.get_info(self)
 
     def calc_info_hash(self):
         return "placeholder"
 
-    def calc_statistics_hash(self) -> str:
-        return "placeholder"
+    def calc_statistics_hash(self) -> bytes:
+        return b"placeholder"
 
     def add_statistics_build_tasks(self, task_graph, **kwargs) -> None:
         return

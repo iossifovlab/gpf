@@ -16,13 +16,18 @@ from cerberus import Validator
 from dae.genomic_resources import GenomicResource
 
 from dae.genomic_resources.resource_implementation import \
-    GenomicResourceImplementation, get_base_resource_schema
+    GenomicResourceImplementation, get_base_resource_schema, \
+    InfoImplementationMixin, ResourceConfigValidationMixin
 
 
 logger = logging.getLogger(__name__)
 
 
-class LiftoverChain(GenomicResourceImplementation):
+class LiftoverChain(
+    GenomicResourceImplementation,
+    InfoImplementationMixin,
+    ResourceConfigValidationMixin
+):
     """Defines Lift Over chain wrapper around pyliftover objects."""
 
     config_validator = Validator
@@ -122,7 +127,7 @@ class LiftoverChain(GenomicResourceImplementation):
             {% endblock %}
         """))
 
-    def get_info(self):
+    def _get_template_data(self):
         info = copy.deepcopy(self.config)
 
         if self.chrom_variant_coordinates is not None:
@@ -174,13 +179,13 @@ class LiftoverChain(GenomicResourceImplementation):
         }
 
     def get_info(self):
-        return super(InfoImplementationMixin, self).get_info()
+        return InfoImplementationMixin.get_info(self)
 
     def calc_info_hash(self):
         return "placeholder"
 
-    def calc_statistics_hash(self) -> str:
-        return "placeholder"
+    def calc_statistics_hash(self) -> bytes:
+        return b"placeholder"
 
     def add_statistics_build_tasks(self, task_graph, **kwargs) -> None:
         return

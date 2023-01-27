@@ -1481,13 +1481,13 @@ class GeneModels(
         }
 
     def get_info(self):
-        return super(InfoImplementationMixin, self).get_info()
+        return InfoImplementationMixin.get_info(self)
 
     def calc_info_hash(self):
         return "placeholder"
 
-    def calc_statistics_hash(self) -> str:
-        return "placeholder"
+    def calc_statistics_hash(self) -> bytes:
+        return b"placeholder"
 
     def add_statistics_build_tasks(self, task_graph, **kwargs) -> None:
         return
