@@ -113,6 +113,7 @@ def _add_hist_parameters_group(parser):
 def _configure_list_subparser(subparsers):
     parser = subparsers.add_parser("list", help="List a GR Repo")
     _add_repository_resource_parameters_group(parser, use_resource=False)
+    VerbosityConfiguration.set_argumnets(parser)
 
 
 def _run_list_command(
@@ -131,6 +132,7 @@ def _configure_repo_init_subparser(subparsers):
 
     _add_repository_resource_parameters_group(parser, use_resource=False)
     _add_dry_run_and_force_parameters_group(parser)
+    VerbosityConfiguration.set_argumnets(parser)
 
 
 def _run_repo_init_command(**kwargs):
@@ -162,6 +164,7 @@ def _configure_repo_manifest_subparser(subparsers):
     _add_repository_resource_parameters_group(parser, use_resource=False)
     _add_dry_run_and_force_parameters_group(parser)
     _add_dvc_parameters_group(parser)
+    VerbosityConfiguration.set_argumnets(parser)
 
 
 def _configure_resource_manifest_subparser(subparsers):
@@ -171,32 +174,35 @@ def _configure_resource_manifest_subparser(subparsers):
     _add_repository_resource_parameters_group(parser)
     _add_dry_run_and_force_parameters_group(parser)
     _add_dvc_parameters_group(parser)
+    VerbosityConfiguration.set_argumnets(parser)
 
 
 def _configure_repo_stats_subparser(subparsers):
-    parser_hist = subparsers.add_parser(
+    parser = subparsers.add_parser(
         "repo-stats",
         help="Build the histograms for a resource")
 
-    _add_repository_resource_parameters_group(parser_hist, use_resource=False)
-    _add_dry_run_and_force_parameters_group(parser_hist)
-    _add_dvc_parameters_group(parser_hist)
-    _add_hist_parameters_group(parser_hist)
+    _add_repository_resource_parameters_group(parser, use_resource=False)
+    _add_dry_run_and_force_parameters_group(parser)
+    _add_dvc_parameters_group(parser)
+    _add_hist_parameters_group(parser)
+    VerbosityConfiguration.set_argumnets(parser)
 
-    DaskClient.add_arguments(parser_hist)
+    DaskClient.add_arguments(parser)
 
 
 def _configure_resource_stats_subparser(subparsers):
-    parser_hist = subparsers.add_parser(
+    parser = subparsers.add_parser(
         "resource-stats",
         help="Build the histograms for a resource")
 
-    _add_repository_resource_parameters_group(parser_hist)
-    _add_dry_run_and_force_parameters_group(parser_hist)
-    _add_dvc_parameters_group(parser_hist)
-    _add_hist_parameters_group(parser_hist)
+    _add_repository_resource_parameters_group(parser)
+    _add_dry_run_and_force_parameters_group(parser)
+    _add_dvc_parameters_group(parser)
+    _add_hist_parameters_group(parser)
+    VerbosityConfiguration.set_argumnets(parser)
 
-    DaskClient.add_arguments(parser_hist)
+    DaskClient.add_arguments(parser)
 
 
 def _configure_repo_repair_subparser(subparsers):
@@ -207,6 +213,7 @@ def _configure_repo_repair_subparser(subparsers):
     _add_dry_run_and_force_parameters_group(parser)
     _add_dvc_parameters_group(parser)
     _add_hist_parameters_group(parser)
+    VerbosityConfiguration.set_argumnets(parser)
 
     DaskClient.add_arguments(parser)
 
@@ -219,6 +226,7 @@ def _configure_resource_repair_subparser(subparsers):
     _add_dry_run_and_force_parameters_group(parser)
     _add_dvc_parameters_group(parser)
     _add_hist_parameters_group(parser)
+    VerbosityConfiguration.set_argumnets(parser)
 
     DaskClient.add_arguments(parser)
 
@@ -228,6 +236,7 @@ def _configure_repo_info_subparser(subparsers):
         "repo-info", help="Build the index.html for the whole GRR"
     )
     _add_repository_resource_parameters_group(parser)
+    VerbosityConfiguration.set_argumnets(parser)
 
     DaskClient.add_arguments(parser)
 
@@ -237,6 +246,7 @@ def _configure_resource_info_subparser(subparsers):
         "resource-info", help="Build the index.html for the specific resource"
     )
     _add_repository_resource_parameters_group(parser)
+    VerbosityConfiguration.set_argumnets(parser)
 
     DaskClient.add_arguments(parser)
 
@@ -465,7 +475,7 @@ def _execute_tasks(graph, **kwargs):
     for task, result_or_error in tasks_iter:
         if isinstance(result_or_error, Exception):
             logger.info("Task %s failed!", task.task_id)
-            raise result_or_error
+            logger.error(result_or_error)
         else:
             logger.info("Task %s successful!", task.task_id)
     if client is not None:
