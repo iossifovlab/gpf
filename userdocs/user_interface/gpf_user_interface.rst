@@ -46,6 +46,51 @@ The description is in Markdown format and can be edited directly from the browse
 
 .. _genotype_browser_ui:
 
+Dataset Statistics
+------------------
+
+The Dataset Statistics tool provides different overviews of the families in the dataset.
+A download button (see fig. zzzzzz) can be clicked to download a .ped file with all individuals in the dataset.
+
+Families by number
+##################
+
+A table with the amount of individuals, separated by phenotype and sex.
+
+Families by pedigree
+####################
+
+A table of all types of pedigrees and the amount of families for each pedigree.
+Each pedigree can be clicked to display its family IDs and a download link for the .ped file.
+The table can be filtered by various tags provided by a dropdown menu in the upper-left corner (see fig. ??).
+The user can download the families found in table via the download button (see fig. zzzz).
+Additionally, a legend can be opened in the bottom-right corner (see fig. ??).
+
+De Novo variants
+################
+
+Provides a table with the rates of de novo variants, split by variant effect type and the individual’s diagnosis.
+
+.. figure:: imgs/gpf_screenshots/gpf-pedigrees-blur.png
+   :align: center
+
+   Figure 8.a
+
+.. figure:: imgs/gpf_screenshots/gpf-denovo-variants.png
+   :align: center
+
+   Figure 8.b
+
+Gene Browser
+------------
+
+The Gene Browser tool can be used to graphically display a gene's structure (exomes, introns, transcripts) and the dataset's variants found on it. 
+
+The variants can be filtered (see fig. zzz) by different properties. The user can hover over each variant on the plot to show additional information.
+The plot can be zoomed (by click-and-drag) to select specific variants in a region.
+Below the plot is a table showing the currently selected variants.
+Two download buttons are provided - for summary and family variants.
+
 Genotype Browser
 ----------------
 
@@ -142,52 +187,6 @@ Additional filters are also provided. The results are available for downloading.
    Figure 7.b
 
 .. _dataset_statistics_ui:
-
-Dataset Statistics
-------------------
-
-The Dataset Statistics tool provides different overviews of the families in the dataset.
-A download button (see fig. zzzzzz) can be clicked to download a .ped file with all individuals in the dataset.
-
-Families by number
-##################
-
-A table with the amount of individuals, separated by phenotype and sex.
-
-Families by pedigree
-####################
-
-A table of all types of pedigrees and the amount of families for each pedigree.
-Each pedigree can be clicked to display its family IDs and a download link for the .ped file.
-The table can be filtered by various tags provided by a dropdown menu in the upper-left corner (see fig. ??).
-The user can download the families found in table via the download button (see fig. zzzz).
-Additionally, a legend can be opened in the bottom-right corner (see fig. ??).
-
-De Novo variants
-################
-
-Provides a table with the rates of de novo variants, split by variant effect type and the individual’s diagnosis.
-
-.. figure:: imgs/gpf_screenshots/gpf-pedigrees-blur.png
-   :align: center
-
-   Figure 8.a
-
-.. figure:: imgs/gpf_screenshots/gpf-denovo-variants.png
-   :align: center
-
-   Figure 8.b
-
-Gene Browser
-------------
-
-The Gene Browser tool can be used to graphically display a gene's structure (exomes, introns, transcripts) and the dataset's variants found on it. 
-
-The variants can be filtered (see fig. zzz) by different properties. The user can hover over each variant on the plot to show additional information.
-The plot can be zoomed (by click-and-drag) to select specific variants in a region.
-Below the plot is a table showing the currently selected variants.
-Two download buttons are provided - for summary and family variants.
-
 
 Autism Gene Profiles
 --------------------
