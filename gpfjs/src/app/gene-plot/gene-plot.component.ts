@@ -32,7 +32,7 @@ export class GenePlotComponent implements OnChanges {
     // in pixels
     frequencyPlotSize: 310,
     frequencyPlotPadding: 40, // Padding between the frequency plot and the transcripts
-    denovoAxisGap: 8, // Gap between subdomain and denovo axis
+    denovoAxisGap: 12, // Gap between subdomain and denovo axis
     transcriptHeight: 20,
     chromosomeLabelPadding: 60,
     collapsedTranscriptTextHeight: 20,
@@ -122,10 +122,11 @@ export class GenePlotComponent implements OnChanges {
       .range(this.condenseIntrons ? this.condensedRange : this.normalRange);
     this.scale.y
       .domain(this.frequencyDomain)
-      .range([this.subdomainAxisY, 0]);
+      .range([this.subdomainAxisY - this.constants.denovoAxisGap / 2, 0]);
     this.scale.ySubdomain
       .domain([0, this.frequencyDomain[0]])
-      .range([this.noFrequencyYAxis, this.subdomainAxisY]);
+      .range([this.noFrequencyYAxis - this.constants.denovoAxisGap,
+        this.subdomainAxisY - this.constants.denovoAxisGap / 2]);
 
     this.scale.yNoFrequencyDomain
       .domain(['0'])
@@ -320,7 +321,7 @@ export class GenePlotComponent implements OnChanges {
     this.plotElement.append('text')
       .style('text-anchor', 'end')
       .attr('x', -10)
-      .attr('y', this.scale.yNoFrequencyDomain.range()[1] + 17)
+      .attr('y', (this.scale.yNoFrequencyDomain.range()[0] + this.scale.yNoFrequencyDomain.range()[1]) / 2 + 4)
       .style('font', `${this.constants.fontSize}px sans-serif`)
       .text('No frequency');
 
