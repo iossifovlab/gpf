@@ -28,7 +28,7 @@ export class GenePlotComponent implements OnChanges {
     fontSize: 14,
     minDomainDistance: 12,
     // in percentages
-    axisSizes: { domain: 0.85, subdomain: 0.08, tempdomain: 0.05 },
+    axisSizes: { domain: 0.85, subdomain: 0.08 },
     // in pixels
     frequencyPlotSize: 310,
     frequencyPlotPadding: 40, // Padding between the frequency plot and the transcripts
