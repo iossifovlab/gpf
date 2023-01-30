@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Component, EventEmitter, Input, Output, OnChanges, SimpleChanges, HostListener } from '@angular/core';
 import { Gene, Transcript } from 'app/gene-browser/gene';
 import { GenePlotModel, GenePlotScaleState, GenePlotZoomHistory } from 'app/gene-plot/gene-plot';
@@ -27,11 +28,11 @@ export class GenePlotComponent implements OnChanges {
     fontSize: 14,
     minDomainDistance: 12,
     // in percentages
-    axisSizes: { domain: 0.90, subdomain: 0.05 },
+    axisSizes: { domain: 0.85, subdomain: 0.08 },
     // in pixels
-    frequencyPlotSize: 300,
+    frequencyPlotSize: 310,
     frequencyPlotPadding: 40, // Padding between the frequency plot and the transcripts
-    denovoAxisGap: 8, // Gap between subdomain and denovo axis
+    denovoAxisGap: 12, // Gap between subdomain and denovo axis
     transcriptHeight: 20,
     chromosomeLabelPadding: 60,
     collapsedTranscriptTextHeight: 20,
@@ -47,6 +48,7 @@ export class GenePlotComponent implements OnChanges {
     x: d3.scaleLinear(),
     y: d3.scaleLog(),
     ySubdomain: d3.scaleLinear(),
+    yNoFrequencyDomain: d3.scalePoint(),
     yDenovo: d3.scalePoint().padding(0.5),
   };
 
@@ -54,11 +56,13 @@ export class GenePlotComponent implements OnChanges {
     x: d3.axisBottom(this.scale.x).tickValues(this.xAxisTicks),
     y: d3.axisLeft(this.scale.y).tickValues(null).tickFormat(d3.format('1')),
     ySubdomain: d3.axisLeft(this.scale.ySubdomain).tickValues([0]),
+    yNoFrequencyDomain: d3.axisLeft(this.scale.yNoFrequencyDomain).tickValues([]),
     yDenovo: d3.axisLeft(this.scale.yDenovo).tickValues([]),
   };
 
   private readonly svgWidth = 2000;
   private subdomainAxisY: number;
+  private noFrequencyYAxis: number;
   private svgElement: d3.Selection<SVGSVGElement, unknown, HTMLElement, any>;
   private plotElement: d3.Selection<SVGGElement, unknown, HTMLElement, any>;
   private brush: d3.BrushBehavior<unknown>;
@@ -76,6 +80,8 @@ export class GenePlotComponent implements OnChanges {
 
   public constructor() {
     this.subdomainAxisY = this.constants.frequencyPlotSize * this.constants.axisSizes.domain;
+    this.noFrequencyYAxis = this.subdomainAxisY
+      + (this.constants.frequencyPlotSize * this.constants.axisSizes.subdomain);
   }
 
   public ngOnChanges(changes: SimpleChanges): void {
@@ -116,15 +122,21 @@ export class GenePlotComponent implements OnChanges {
       .range(this.condenseIntrons ? this.condensedRange : this.normalRange);
     this.scale.y
       .domain(this.frequencyDomain)
-      .range([this.subdomainAxisY, 0]);
+      .range([this.subdomainAxisY - this.constants.denovoAxisGap / 2, 0]);
     this.scale.ySubdomain
       .domain([0, this.frequencyDomain[0]])
-      .range([this.constants.frequencyPlotSize - this.constants.denovoAxisGap, this.subdomainAxisY]);
-    // The yDenovo scale is set in calculateDenovoAllelesSpacings for convenience
+      .range([this.noFrequencyYAxis - this.constants.denovoAxisGap,
+        this.subdomainAxisY - this.constants.denovoAxisGap / 2]);
 
+    this.scale.yNoFrequencyDomain
+      .domain(['0'])
+      .range([this.constants.frequencyPlotSize, this.noFrequencyYAxis]);
+
+    // The yDenovo scale is set in calculateDenovoAllelesSpacings for convenience
     this.axis.x = d3.axisBottom(this.scale.x).tickValues(this.xAxisTicks);
     this.axis.y = d3.axisLeft(this.scale.y).tickValues(this.yAxisTicks).tickFormat(d3.format('1'));
     this.axis.ySubdomain = d3.axisLeft(this.scale.ySubdomain).tickValues([0]);
+    this.axis.yNoFrequencyDomain = d3.axisLeft(this.scale.yNoFrequencyDomain).tickValues([]);
     this.axis.yDenovo = d3.axisLeft(this.scale.yDenovo).tickValues([]);
 
     this.zoomHistory = new GenePlotZoomHistory(
@@ -260,7 +272,6 @@ export class GenePlotComponent implements OnChanges {
         zoomElement, 0, this.plotWidth, yMaxPosition, 1, this.constants.selectionColor, 1, 'yMaxSelectionBorder'
       );
     }
-
     this.plotElement.append('g')
       .attr('id', 'xAxis')
       .style('font', `${this.constants.fontSize}px sans-serif`)
@@ -275,6 +286,10 @@ export class GenePlotComponent implements OnChanges {
       .style('font', `${this.constants.fontSize}px sans-serif`)
       .call(this.axis.ySubdomain);
     this.plotElement.append('g')
+      .attr('id', 'yNoFrequencyDomain')
+      .style('font', `${this.constants.fontSize}px sans-serif`)
+      .call(this.axis.yNoFrequencyDomain);
+    this.plotElement.append('g')
       .attr('id', 'yDenovoAxis')
       .style('font', `${this.constants.fontSize}px sans-serif`)
       .call(this.axis.yDenovo);
@@ -286,20 +301,38 @@ export class GenePlotComponent implements OnChanges {
       .style('font', `${this.constants.fontSize}px sans-serif`)
       .text(this.yAxisLabel);
     this.plotElement.append('text')
-      .attr('transform', 'rotate(-90)')
-      .attr('y', 0 - this.constants.margin.left / 2 - 20)
-      .attr('x', 0 - ((this.constants.frequencyPlotSize + this.frequencyPlotHeight) / 2))
-      .style('text-anchor', 'middle')
+      .style('text-anchor', 'end')
+      .attr('x', -10)
+      .attr('y', (this.constants.frequencyPlotSize + this.frequencyPlotHeight) / 2 + 4)
       .style('font', `${this.constants.fontSize}px sans-serif`)
       .text('Denovo');
-    // Denovo rectangle
+
+    // Denovo background
     this.plotElement
       .append('rect')
-      .attr('height', this.frequencyPlotHeight - this.scale.ySubdomain(0) - this.constants.denovoAxisGap)
+      .attr('height', this.scale.yDenovo.range()[1] - this.scale.yDenovo.range()[0])
       .attr('width', this.plotWidth)
       .attr('x', 1)
-      .attr('y', this.scale.ySubdomain(0) + this.constants.denovoAxisGap)
+      .attr('y', this.scale.yDenovo.range()[0])
       .attr('fill', '#FFAD18')
+      .attr('fill-opacity', '0.25');
+
+    // No frequency text
+    this.plotElement.append('text')
+      .style('text-anchor', 'end')
+      .attr('x', -10)
+      .attr('y', (this.scale.yNoFrequencyDomain.range()[0] + this.scale.yNoFrequencyDomain.range()[1]) / 2 + 4)
+      .style('font', `${this.constants.fontSize}px sans-serif`)
+      .text('No frequency');
+
+    // No frequency background
+    this.plotElement
+      .append('rect')
+      .attr('height', this.scale.yNoFrequencyDomain.range()[0] - this.scale.yNoFrequencyDomain.range()[1])
+      .attr('width', this.plotWidth)
+      .attr('x', 1)
+      .attr('y', this.scale.yNoFrequencyDomain.range()[1])
+      .attr('fill', '#63b2ea')
       .attr('fill-opacity', '0.25');
   }
 
@@ -536,8 +569,10 @@ export class GenePlotComponent implements OnChanges {
       return this.scale.y(allele.frequency);
     } else if (allele.seenAsDenovo && !allele.frequency) {
       return this.scale.yDenovo(`${this.denovoAllelesSpacings.get(allele.svuid)}`);
+    } else if (allele.frequency === null) {
+      return this.scale.yNoFrequencyDomain('0');
     } else {
-      return this.scale.ySubdomain(allele.frequency || 0); // OR 0 handles null frequency alleles
+      return this.scale.ySubdomain(allele.frequency);
     }
   }
 
