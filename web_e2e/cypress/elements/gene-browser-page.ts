@@ -5,8 +5,8 @@ export class GeneBrowserPage extends BasePage {
     return cy.get('gpf-gene-browser');
   }
 
-  public get geneSymbolsHeader(): element {
-    return cy.get('div').contains('Gene Symbols');
+  public get geneSymbolHeader(): element {
+    return cy.get('div').contains('Gene Symbol');
   }
 
   public get searchInputBox(): element {

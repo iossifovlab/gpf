@@ -14,8 +14,8 @@ describe('Gene browser basic display tests before query', () => {
     page.navigateToDatasetPage(datasetIds.iossifov2014, toolPageLinks.geneBrowser);
   });
 
-  it('should display "Gene Symbols" card title', () => {
-    page.geneSymbolsHeader.should('be.visible');
+  it('should display "Gene Symbol" card title', () => {
+    page.geneSymbolHeader.should('be.visible');
   });
 
   it('should display search box', () => {
