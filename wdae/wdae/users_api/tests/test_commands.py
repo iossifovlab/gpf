@@ -33,7 +33,7 @@ class UsersApiCommandsTests(TestCase):
             f"\nshefa@test.abv,shf,{groups_str},{new_admin_user.password}"
             "\n"
         )
-        temp = tempfile.NamedTemporaryFile(mode='w+', delete=False)
+        temp = tempfile.NamedTemporaryFile(mode="w+", delete=False)
         call_command("users_export", file=temp.name)
         try:
             self.assertEqual(temp.read(), expected_output)
@@ -49,7 +49,7 @@ class UsersApiCommandsTests(TestCase):
             "\nshefa@test.abv,shf,testgroup:admin,123123"
             "\n"
         )
-        temp = tempfile.NamedTemporaryFile(mode='w+', delete=False)
+        temp = tempfile.NamedTemporaryFile(mode="w+", delete=False)
         temp.write(input_csv)
         temp.close()
         call_command("users_restore", temp.name)

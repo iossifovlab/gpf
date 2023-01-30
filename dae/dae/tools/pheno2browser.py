@@ -1,9 +1,6 @@
 #!/usr/bin/env python
 # encoding: utf-8
-"""
-pheno2browser -- prepares a DAE pheno browser data
-
-"""
+"""pheno2browser -- prepares a DAE pheno browser data."""
 import sys
 import os
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
@@ -75,7 +72,6 @@ def build_pheno_browser(
 
 def main(argv=None):  # IGNORE:C0111
     """Command line options."""
-
     if argv is None:
         argv = sys.argv
     else:

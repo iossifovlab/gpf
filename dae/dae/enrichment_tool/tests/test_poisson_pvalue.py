@@ -1,8 +1,3 @@
-"""
-Created on Nov 8, 2016
-
-@author: lubo
-"""
 from dae.enrichment_tool.background import poisson_test
 import pytest
 from scipy import stats

@@ -555,6 +555,7 @@ def _run_resource_info_command(proto, repo_url, **kwargs):
 
 def cli_manage(cli_args=None):
     """Provide CLI for repository management."""
+    # flake8: noqa: C901
     # pylint: disable=too-many-branches,too-many-statements
     if cli_args is None:
         cli_args = sys.argv[1:]

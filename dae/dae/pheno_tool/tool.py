@@ -1,8 +1,3 @@
-"""
-Created on Nov 9, 2016
-
-@author: lubo
-"""
 from collections import Counter
 
 import logging
@@ -46,8 +41,8 @@ class PhenoResult(object):
 
 
 class PhenoToolHelper(object):
-    """
-    Helper class for PhenoTool.
+    """Helper class for PhenoTool.
+
     Collects variants and person ids from genotype data.
 
     Arguments of the constructor are:
@@ -317,7 +312,8 @@ class PhenoTool(object):
         return result
 
     def calc(self, variants, sex_split=False):
-        """
+        """Perform calculation.
+
         `variants` -- an instance of Counter, matching personIds to
         an amount of variants
 

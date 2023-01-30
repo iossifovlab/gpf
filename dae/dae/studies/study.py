@@ -194,6 +194,7 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
             pedigree_fields=None,
             **_kwargs):
         """Build a query result."""
+        # flake8: noqa: C901
         # pylint: disable=too-many-locals,too-many-arguments
         del pedigree_fields  # Unused argument
         if person_ids is not None and len(person_ids) == 0:

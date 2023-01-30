@@ -1,3 +1,6 @@
+# flake8: noqa
+# TODO reenable flake8 when tests are restored
+
 # import pytest
 # import pandas as pd
 # from collections import Counter

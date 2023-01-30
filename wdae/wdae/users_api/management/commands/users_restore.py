@@ -13,7 +13,7 @@ class Command(ImportUsersBase, BaseCommand):
     )
 
     def add_arguments(self, parser):
-        parser.add_argument('file', type=str)
+        parser.add_argument("file", type=str)
 
     def handle(self, *args, **options):
         csvfilename = options["file"]

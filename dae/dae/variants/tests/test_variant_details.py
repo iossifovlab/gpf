@@ -1,8 +1,3 @@
-"""
-Created on Mar 30, 2018
-
-@author: lubo
-"""
 import pytest
 from dae.variants.variant import VariantDetails
 

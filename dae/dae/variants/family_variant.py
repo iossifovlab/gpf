@@ -343,9 +343,7 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
 
     @property
     def variant_in_sexes(self):
-        """
-        Return list of sexes that are affected by this variant in the family.
-        """
+        """Return list of sexes that are affected by this variant in family."""
         if self._variant_in_sexes is None:
             self._variant_in_sexes = [
                 self.family.persons[pid].sex if pid is not None else None
@@ -359,8 +357,7 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
 
     @staticmethod
     def check_mendelian_trio(parent_1, parent_2, child, allele_index):
-        """
-        Checks if the inheritance type for a trio family is `mendelian`.
+        """Check if the inheritance type for a trio family is `mendelian`.
 
         :param parent_1: genotype of the first parent (pair of allele indexes).
         :param parent_2: genotype of the second parent.
@@ -400,8 +397,7 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
 
     @staticmethod
     def check_omission_trio(parent_1, parent_2, child, allele_index):
-        """
-        Checks if the inheritance type for a trio family is `omission`.
+        """Check if the inheritance type for a trio family is `omission`.
 
         :param parent_1: genotype of the first parent (pair of allele indexes).
         :param parent_2: genotype of the second parent.
@@ -427,8 +423,7 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
 
     @classmethod
     def calc_inheritance_trio(cls, parent_1, parent_2, child, allele_index):
-        """
-        Calculates the inheritance type of a trio family.
+        """Calculate the inheritance type of a trio family.
 
         :param parent_1: genotype of the first parent (pair of allele indexes).
         :param parent_2: genotype of the second parent.

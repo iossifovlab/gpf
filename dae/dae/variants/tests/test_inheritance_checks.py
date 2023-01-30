@@ -1,8 +1,3 @@
-"""
-Created on Feb 27, 2018
-
-@author: lubo
-"""
 import numpy as np
 from dae.variants.family_variant import FamilyAllele as FV
 

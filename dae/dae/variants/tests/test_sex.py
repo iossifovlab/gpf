@@ -1,8 +1,3 @@
-"""
-Created on Feb 23, 2018
-
-@author: lubo
-"""
 from dae.variants.attributes import Sex
 import pytest
 

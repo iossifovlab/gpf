@@ -115,7 +115,9 @@ class DenovoToVcf:
 
         return peopleIds
 
-    def convert(self, chromosome, position, skip_columns=None, sort_order=None):
+    def convert(
+        self, chromosome, position, skip_columns=None, sort_order=None
+    ):
         """Convert variants at specified chromosome and position."""
         skip_columns = skip_columns or []
         sort_order = sort_order or []

@@ -116,7 +116,6 @@ class FilterFamilies:
 
 def main(argv=None):  # IGNORE:C0111
     """Command line options."""
-
     if argv is None:
         argv = sys.argv
     else:

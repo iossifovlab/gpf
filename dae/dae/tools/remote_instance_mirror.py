@@ -17,14 +17,13 @@ logger = logging.getLogger("remote_instance_mirror")
 
 
 def parse_cli_arguments(argv):
-    """Parses CLI arguments."""
-
+    """Parse CLI arguments."""
     parser = argparse.ArgumentParser(
         description="mirrors remote GPF data instance",
         conflict_handler="resolve",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
-    parser.add_argument('--verbose', '-V', action='count', default=0)
+    parser.add_argument("--verbose", "-V", action="count", default=0)
 
     parser.add_argument(
         "remote_instance",
@@ -72,15 +71,14 @@ def parse_cli_arguments(argv):
 
 
 def load_mirror_config(filename):
-    """Loads mirrored instance configuration."""
+    """Load mirrored instance configuration."""
     with open(filename, "rt", encoding="utf8") as infile:
         config = yaml.safe_load(infile)
     return config
 
 
 def update_mirror_config(rsync_helpers, work_dir, argv):
-    """Updates mirrored GPF instance configuration."""
-
+    """Update mirrored GPF instance configuration."""
     config_filename = os.path.join(work_dir, "gpf_instance.yaml")
     config_dict = load_mirror_config(config_filename)
 
@@ -145,7 +143,7 @@ def get_active_conda_environment():
 
 
 def build_setenv(work_dir):
-    """Prepares 'setenv.sh' script."""
+    """Prepare 'setenv.sh' script."""
     conda_environment = get_active_conda_environment()
     dirname = os.path.basename(work_dir)
 
@@ -201,7 +199,7 @@ def run_wdae_bootstrap(work_dir):
 
 
 def main(argv):
-    """Main function to run remote instance mirroring tool."""
+    """Entry point for the remote instance mirroring tool."""
     argv = parse_cli_arguments(argv)
 
     if argv.verbose == 1:

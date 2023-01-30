@@ -2,8 +2,6 @@ from django.http.response import StreamingHttpResponse
 from rest_framework import status
 from rest_framework.response import Response
 
-from datasets_api.permissions import user_has_permission
-
 from query_base.query_base import QueryDatasetView
 
 from dae.pedigrees.family import FamiliesData

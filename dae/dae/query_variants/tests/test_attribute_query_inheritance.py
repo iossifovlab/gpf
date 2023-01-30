@@ -1,8 +1,10 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pytest
 from dae.variants.attributes import Inheritance
-from dae.query_variants.attributes_query_inheritance import inheritance_parser, \
+from dae.query_variants.attributes_query_inheritance import (
+    inheritance_parser,
     InheritanceTransformer
+)
 from dae.query_variants.attributes_query import inheritance_query
 
 

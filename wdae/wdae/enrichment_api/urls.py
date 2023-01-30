@@ -1,8 +1,3 @@
-"""
-Created on Feb 17, 2017
-
-@author: lubo
-"""
 from django.urls import re_path
 from . import views
 

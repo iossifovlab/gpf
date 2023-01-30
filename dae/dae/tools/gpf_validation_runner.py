@@ -585,7 +585,7 @@ class GenotypeBrowserRunner(BaseGenotypeBrowserRunner):
                     params=params,
                     result=None,
                 )
-                test_result.message = f"can't find study {study_id}",
+                test_result.message = (f"can't find study {study_id}",)
                 test_result.status = TestStatus.ERROR
                 return (test_result, )
 
@@ -608,7 +608,7 @@ class GenotypeBrowserRunner(BaseGenotypeBrowserRunner):
                 params=params,
                 result=None,
             )
-            test_result.message = f"unexpected error {study_id}: {ex}",
+            test_result.message = (f"unexpected error {study_id}: {ex}",)
             test_result.status = TestStatus.ERROR
             return (test_result, )
 

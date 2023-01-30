@@ -21,7 +21,7 @@ def parse_cli_arguments(argv, gpf_instance):
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
 
-    parser.add_argument('--verbose', '-V', action='count', default=0)
+    parser.add_argument("--verbose", "-V", action="count", default=0)
 
     parser.add_argument(
         "--studies",

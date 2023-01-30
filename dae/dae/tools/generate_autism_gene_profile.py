@@ -255,6 +255,7 @@ def fill_variant_counts(
 
 def main(gpf_instance=None, argv=None):
     """Entry point for the generate AGP script."""
+    # flake8: noqa: C901
     # pylint: disable=too-many-locals,too-many-branches,too-many-statements
     description = "Generate autism gene profile statistics tool"
     parser = argparse.ArgumentParser(description=description)

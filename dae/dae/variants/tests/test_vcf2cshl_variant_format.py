@@ -1,8 +1,3 @@
-"""
-Created on Mar 12, 2018
-
-@author: lubo
-"""
 from dae.variants.core import Allele
 import pytest
 

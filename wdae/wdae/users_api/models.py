@@ -24,10 +24,10 @@ from .utils import send_reset_email, send_already_existing_email, \
 
 
 class WdaeUserManager(BaseUserManager):
+    """User manager for wdae users."""
+
     def _create_user(self, email, password, **kwargs):
-        """
-        Creates and saves a User with the given email and password.
-        """
+        """Create and save a User with the given email and password."""
         if not email:
             raise ValueError("The given email must be set")
 
@@ -55,6 +55,7 @@ class WdaeUserManager(BaseUserManager):
         return user
 
     def create_superuser(self, email, password, **kwargs):
+        """Create and save a superuser."""
         user = self._create_user(email, password, **kwargs)
 
         user.is_superuser = True
@@ -67,6 +68,8 @@ class WdaeUserManager(BaseUserManager):
 
 
 class WdaeUser(AbstractBaseUser, PermissionsMixin):
+    """Class representing a user in wdae."""
+
     name: models.CharField = models.CharField(max_length=100)
     email: models.EmailField = models.EmailField(unique=True)
 
@@ -238,12 +241,14 @@ class ResetPasswordCode(BaseVerificationCode):
 
 
 class AuthenticationLog(models.Model):
-    """A model to keep track of all requests for
-    authentication: which email was used, when they were
+    """A model to keep track of all requests for authentication.
+
+    Which email was used, when they were
     made and what number of consecutive failed attempts have
     been made on this email. The failed attempt counter is reset
     on a succesful login or a changed password.
     """
+
     email: models.EmailField = models.EmailField()
     time: models.DateTimeField = models.DateTimeField()
     failed_attempt: models.IntegerField = models.IntegerField()
@@ -313,9 +318,7 @@ class AuthenticationLog(models.Model):
 
 
 def staff_update(sender, **kwargs):
-    """Updates whether a user is part of the staff when the SUPERUSER_GROUP is
-    added or removed to them.
-    """
+    """Update if user is part of staff when SUPERUSER_GROUP is added/rmed."""
     for key in ["action", "instance", "reverse"]:
         if key not in kwargs:
             return
@@ -338,7 +341,9 @@ def staff_update(sender, **kwargs):
 
 
 def group_post_delete(sender, **kwargs):
-    """Automatically remove staff privileges of users who belonged to the
+    """Automatically remove staff privileges of SUPERUSER_GROUP users.
+
+    Automatically remove staff privileges of users belonging to the
     SUPERUSER_GROUP group if that group is deleted.
     """
     if "instance" not in kwargs:
@@ -357,7 +362,9 @@ def group_post_delete(sender, **kwargs):
 
 # a hack to save the users the group had, used in the post_delete signal
 def group_pre_delete(sender, **kwargs):
-    """When deleting a group, attaches the ids of the users who belonged to it
+    """Attach user-ids when a group is being deleted.
+
+    When deleting a group, attaches the ids of the users who belonged to it
     in order to be used in the post_delete signal. Used only for the
     SUPERUSER_GROUP group.
     """

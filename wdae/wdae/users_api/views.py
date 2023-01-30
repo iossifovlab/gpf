@@ -37,9 +37,7 @@ from .utils import csrf_clear, get_default_application
 
 
 def iterator_to_json(users):
-    """Wraps an iterator over WdaeUser models to produce json objects
-    using the appropriate serializer.
-    """
+    """Wrap an iterator over WdaeUser models to produce json objects."""
     yield "["
     curr = next(users, None)
     post = next(users, None)

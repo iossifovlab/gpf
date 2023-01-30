@@ -279,6 +279,7 @@ class QueryTransformer:
     # minParentsCalled
     # TMM_ALL
     def transform_kwargs(self, **kwargs):
+        # flake8: noqa: C901
         logger.debug(f"kwargs in study wrapper: {kwargs}")
         self._add_inheritance_to_query(
             "not possible_denovo and not possible_omission",
