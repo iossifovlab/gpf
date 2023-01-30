@@ -2,6 +2,8 @@ import sys
 import argparse
 import textwrap
 import traceback
+from typing import Optional
+
 import yaml
 from box import Box
 from dae.task_graph.cache import CacheRecordType, TaskCache
@@ -75,64 +77,6 @@ class TaskGraphCli:
             assert force_mode == "always"
 
     @staticmethod
-    def process_graph(task_graph: TaskGraph, **kwargs) -> bool:
-        """Process task_graph in according with the arguments in args."""
-        args = Box(kwargs)
-
-        task_cache = TaskCache.create(args.force, args.task_status_dir)
-        if args.task_ids:
-            task_graph = task_graph.prune(ids_to_keep=args.task_ids)
-
-        executor = TaskGraphCli.create_executor(**kwargs)
-        if args.command is None or args.command == "run":
-            return TaskGraphCli.run(task_graph, executor, args.keep_going)
-
-        if args.command == "list":
-            id_col_len = max(len(t.task_id) for t in task_graph.tasks)
-            id_col_len = min(120, max(50, id_col_len))
-            columns = ["TaskID", "Status"]
-            print(f"{columns[0]:{id_col_len}s} {columns[1]}")
-            task_cache = getattr(executor, "_task_cache")
-            for task in task_graph.tasks:
-                record = task_cache.get_record(task)
-                status = record.type.name
-                msg = f"{task.task_id:{id_col_len}s} {status}"
-                is_error = record.type == CacheRecordType.ERROR
-                if is_error and not args.verbose:
-                    msg += " (-v to see exception)"
-                print(msg)
-                if is_error and args.verbose:
-                    traceback.print_exception(
-                        etype=None, value=record.error,
-                        tb=record.error.__traceback__,
-                        file=sys.stdout
-                    )
-            return True
-
-        raise Exception("Unknown command")
-
-    @staticmethod
-    def run(
-        task_graph: TaskGraph, executor: TaskGraphExecutor, keep_going: bool
-    ) -> bool:
-        """Execute (runs) the task_graph with the given executor."""
-        tasks_iter = executor.execute(task_graph)
-        no_errors = True
-        for task, result_or_error in tasks_iter:
-            if isinstance(result_or_error, Exception):
-                if keep_going:
-                    print(f"Task {task.task_id} failed with:",
-                          file=sys.stderr)
-                    traceback.print_exception(
-                        etype=None, value=result_or_error,
-                        tb=result_or_error.__traceback__
-                    )
-                    no_errors = False
-                else:
-                    raise result_or_error
-        return no_errors
-
-    @staticmethod
     def create_executor(**kwargs) -> TaskGraphExecutor:
         """Create a task graph executor according to the args specified."""
         args = Box(kwargs)
@@ -162,3 +106,68 @@ class TaskGraphCli:
                                      number_of_threads=args.jobs)
         print("Working with client:", client)
         return DaskExecutor(client, task_cache=task_cache)
+
+    @staticmethod
+    def process_graph(task_graph: TaskGraph, **kwargs) -> bool:
+        """Process task_graph in according with the arguments in args."""
+        args = Box(kwargs)
+
+        if args.task_ids:
+            task_graph = task_graph.prune(ids_to_keep=args.task_ids)
+
+        executor = TaskGraphCli.create_executor(**kwargs)
+        if args.command is None or args.command == "run":
+            return TaskGraphCli.run(task_graph, executor, args.keep_going)
+
+        if args.command == "list":
+            return TaskGraphCli.list(
+                task_graph, executor, args.verbose)
+
+        raise Exception("Unknown command")
+
+    @staticmethod
+    def list(
+            task_graph: TaskGraph, executor: TaskGraphExecutor,
+            verbose: Optional[int]) -> bool:
+        """Show the status of each task from the task graph."""
+        id_col_len = max(len(t.task_id) for t in task_graph.tasks)
+        id_col_len = min(120, max(50, id_col_len))
+        columns = ["TaskID", "Status"]
+        print(f"{columns[0]:{id_col_len}s} {columns[1]}")
+        task_cache = getattr(executor, "_task_cache")
+        for task in task_graph.tasks:
+            record = task_cache.get_record(task)
+            status = record.type.name
+            msg = f"{task.task_id:{id_col_len}s} {status}"
+            is_error = record.type == CacheRecordType.ERROR
+            if is_error and not verbose:
+                msg += " (-v to see exception)"
+            print(msg)
+            if is_error and verbose:
+                traceback.print_exception(
+                    etype=None, value=record.error,
+                    tb=record.error.__traceback__,
+                    file=sys.stdout
+                )
+        return True
+
+    @staticmethod
+    def run(
+        task_graph: TaskGraph, executor: TaskGraphExecutor, keep_going: bool
+    ) -> bool:
+        """Execute (runs) the task_graph with the given executor."""
+        tasks_iter = executor.execute(task_graph)
+        no_errors = True
+        for task, result_or_error in tasks_iter:
+            if isinstance(result_or_error, Exception):
+                if keep_going:
+                    print(f"Task {task.task_id} failed with:",
+                          file=sys.stderr)
+                    traceback.print_exception(
+                        etype=None, value=result_or_error,
+                        tb=result_or_error.__traceback__
+                    )
+                    no_errors = False
+                else:
+                    raise result_or_error
+        return no_errors
