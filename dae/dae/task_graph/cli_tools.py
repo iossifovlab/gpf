@@ -116,7 +116,7 @@ class TaskGraphCli:
         if args.command is None or args.command == "run":
             return task_graph_run(task_graph, executor, args.keep_going)
 
-        if args.command == "list" or args.command == "status":
+        if args.command in {"list", "status"}:
             return task_graph_status(
                 task_graph, executor, args.verbose)
 
