@@ -5,6 +5,7 @@ import pytest
 import dask.distributed
 import dask_jobqueue
 
+import dae.dask.named_cluster
 from dae.task_graph import TaskGraphCli
 
 
@@ -79,5 +80,35 @@ def test_cli_named_cluster_sge_large(mocker, argv):
             scheduler_options={"dashboard_address": ":8898"},
             cores=1, memory="10GB", log_directory="./sge_worker_logs"
         )  # type: ignore
-    # dask_jobqueue\
-    #     .SGECluster.adapt.assert_called_once_with()
+
+    cluster_mock = dae.dask.named_cluster\
+        .Client.call_args.args[0]  # type: ignore
+    cluster_mock.adapt.assert_called_once_with(minimum=3, maximum=200)
+
+
+@pytest.mark.parametrize("argv", [
+    ["-N", "slurm"],
+    ["--dcn", "slurm"],
+    ["--dask-cluster-name", "slurm"],
+])
+def test_cli_named_cluster_slurm(mocker, argv):
+    parser = argparse.ArgumentParser(description="test_basic")
+    TaskGraphCli.add_arguments(parser)
+    args = parser.parse_args(argv)
+
+    mocker.patch(
+        "dae.dask.named_cluster.Client",
+        autospec=True)
+    mocker.patch(
+        "dask_jobqueue.SLURMCluster",
+        autospec=True)
+
+    TaskGraphCli.create_executor(**vars(args))
+    dask_jobqueue\
+        .SLURMCluster.assert_called_once_with(
+            cores=1, memory="1GB", log_directory="./slurm_worker_logs"
+        )  # type: ignore
+
+    cluster_mock = dae.dask.named_cluster\
+        .Client.call_args.args[0]  # type: ignore
+    cluster_mock.scale.assert_called_once_with(n=10)
