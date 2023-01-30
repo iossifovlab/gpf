@@ -303,7 +303,7 @@ export class GenePlotComponent implements OnChanges {
     this.plotElement.append('text')
       .style('text-anchor', 'end')
       .attr('x', -10)
-      .attr('y', (this.constants.frequencyPlotSize + this.frequencyPlotHeight) / 2 + 5)
+      .attr('y', (this.constants.frequencyPlotSize + this.frequencyPlotHeight) / 2 + 4)
       .style('font', `${this.constants.fontSize}px sans-serif`)
       .text('Denovo');
 
