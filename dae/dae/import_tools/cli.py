@@ -4,7 +4,7 @@ import sys
 from dae.utils.verbosity_configuration import VerbosityConfiguration
 from dae.import_tools.import_tools import ImportProject
 
-from dae.task_graph.executor import SequentialExecutor
+from dae.task_graph.executor import SequentialExecutor, task_graph_run
 from dae.utils import fs_utils
 
 from dae.task_graph import TaskGraphCli
@@ -41,4 +41,4 @@ def run_with_project(project, executor=SequentialExecutor()):
     task_graph = storage.generate_import_task_graph(project)
     task_graph.input_files.extend(project.config_filenames)
 
-    return TaskGraphCli.run(task_graph, executor, keep_going=False)
+    return task_graph_run(task_graph, executor, keep_going=False)
