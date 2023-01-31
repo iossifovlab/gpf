@@ -28,4 +28,12 @@ export class FamilyFilterBlockPage extends BasePage {
   public get familyIdsTextarea(): element {
     return cy.get('gpf-family-ids textarea');
   }
+
+  public get histogram(): element {
+    return cy.get('div.histogram > svg');
+  }
+
+  public get searchbox(): element {
+    return cy.get('gpf-family-filters-block input#search-box');
+  }
 }
