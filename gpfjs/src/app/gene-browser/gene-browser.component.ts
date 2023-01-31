@@ -208,7 +208,7 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
     this.queryService.downloadVariants(args).pipe(take(1)).subscribe((response) => {
       this.downloadInProgress = false;
       downloadBlobResponse(response, 'variants.tsv');
-    }, (err) => {
+    }, () => {
       this.downloadInProgress = false;
     });
   }
@@ -226,7 +226,7 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
     this.queryService.downloadVariantsSummary(args).pipe(take(1)).subscribe((response) => {
       this.downloadInProgressSummary = false;
       downloadBlobResponse(response, 'summary_variants.tsv');
-    }, (err) => {
+    }, () => {
       this.downloadInProgressSummary = false;
     });
   }
