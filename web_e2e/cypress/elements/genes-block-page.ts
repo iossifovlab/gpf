@@ -69,4 +69,8 @@ export class GenesBlockPage extends BasePage {
     const checkboxId: string = genotypeDataId + '-checkbox-' + peopleGroupValue;
     return cy.get(`#${checkboxId}`);
   }
+
+  public findGenotypeButton(genotype: string): element {
+    return cy.get('button').contains(genotype);
+  }
 }
