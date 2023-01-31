@@ -177,9 +177,6 @@ describe('GeneBrowserComponent', () => {
 
   it('should reset filters on new request', async() => {
     jest.spyOn<any, any>(component, 'updateShownTablePreviewVariantsArray').mockImplementation(() => null);
-    jest.spyOn<any, any>(component, 'waitForGenePlotComponent').mockImplementation(
-      () => new Promise<void>(resolve => resolve())
-    );
     component.summaryVariantsFilter = new SummaryAllelesFilter(true, false, true);
     component.checkEffectType('CNV+', true);
     component.checkEffectType('missense', true);

@@ -158,6 +158,7 @@
       <gpf-gene-plot
         [gene]="selectedGene"
         [variantsArray]="summaryVariantsArrayFiltered"
+        [condenseIntrons]="summaryVariantsFilter.codingOnly"
         [frequencyDomain]="[geneBrowserConfig.domainMin, geneBrowserConfig.domainMax]"
         [yAxisLabel]="geneBrowserConfig.frequencyName || geneBrowserConfig.frequencyColumn"
         [allVariantsCounts]="[

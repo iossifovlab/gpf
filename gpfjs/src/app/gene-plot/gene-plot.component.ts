@@ -17,6 +17,7 @@ export class GenePlotComponent implements OnChanges {
   @Input() public readonly frequencyDomain: [number, number];
   @Input() public readonly yAxisLabel: string;
   @Input() public readonly allVariantsCounts: [number, number];
+  @Input() public condenseIntrons: boolean;
 
   @Output() public selectedRegion = new EventEmitter<[number, number]>();
   @Output() public selectedFrequencies = new EventEmitter<[number, number]>();
@@ -70,7 +71,6 @@ export class GenePlotComponent implements OnChanges {
   private genePlotModel: GenePlotModel;
   public zoomHistory: GenePlotZoomHistory;
   public showTranscripts = true;
-  public condenseIntrons = true;
   private normalRange: number[];
   private condensedRange: number[];
   private denovoLevels: number;
