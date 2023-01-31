@@ -4,7 +4,7 @@
       >Gene Symbol</div
     >
     <div class="card-block">
-      <div ngbDropdown class="input-group panel" style="padding: 15px">
+      <div ngbDropdown class="input-group panel" style="padding: 15px; align-items: baseline">
         <input
           ngbDropdownAnchor
           #searchBox
@@ -17,6 +17,7 @@
           (click)="reset(); geneSymbol = ''"
           (keydown.enter)="submitGeneRequest()"
           (keydown.escape)="closeDropdown()" />
+
         <div ngbDropdownMenu id="genes-dropdown">
           <button
             *ngFor="let suggestion of geneSymbolSuggestions"
@@ -27,24 +28,25 @@
             <span>{{ suggestion }}</span>
           </button>
         </div>
+
+        <div style="padding-left: 16px">
+          <label>
+            <input
+              (change)="reset()"
+              style="margin-right: 6px"
+              type="checkbox"
+              id="coding-only-checkbox"
+              [(ngModel)]="summaryVariantsFilter.codingOnly" />Coding only</label
+          >
+        </div>
       </div>
+
       <div
         [hidden]="!showError"
         class="alert alert-danger"
         role="alert"
         style="display: inline-block; margin: 20px; margin-top: 0px; width: 45%">
         <span>No such gene found!</span>
-      </div>
-
-      <div style="padding: 0px 10px 10px 20px">
-        <label>
-          <input
-            (change)="reset()"
-            style="margin-right: 6px"
-            type="checkbox"
-            id="coding-only-checkbox"
-            [(ngModel)]="summaryVariantsFilter.codingOnly" />Coding only</label
-        >
       </div>
     </div>
   </div>
