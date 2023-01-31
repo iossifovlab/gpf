@@ -11,7 +11,6 @@ import { Subject, Subscription } from 'rxjs';
 import { Dataset, GeneBrowser, PersonSet } from 'app/datasets/datasets';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { FullscreenLoadingService } from 'app/fullscreen-loading/fullscreen-loading.service';
-import { GenePlotComponent } from 'app/gene-plot/gene-plot.component';
 import { ConfigService } from 'app/config/config.service';
 import { clone } from 'lodash';
 import * as d3 from 'd3';
@@ -26,7 +25,6 @@ import { downloadBlobResponse } from 'app/utils/blob-download';
   styleUrls: ['./gene-browser.component.css'],
 })
 export class GeneBrowserComponent implements OnInit, OnDestroy {
-  @ViewChild(GenePlotComponent) private genePlotComponent: GenePlotComponent;
   @ViewChild(NgbDropdown) private dropdown: NgbDropdown;
   @ViewChild('searchBox') private searchBox: ElementRef;
   @ViewChild('filters', { static: false }) public set filters(element: HTMLElement) {
@@ -188,8 +186,6 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
       0, this.geneBrowserConfig.domainMax
     ];
 
-    await this.waitForGenePlotComponent();
-
     this.updateShownTablePreviewVariantsArray();
   }
 
@@ -296,18 +292,6 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
 
   public getAffectedStatusColor(affectedStatus: string): string {
     return draw.affectedStatusColors[affectedStatus];
-  }
-
-
-  private async waitForGenePlotComponent(): Promise<void> {
-    return new Promise<void>(resolve => {
-      const timer = setInterval(() => {
-        if (this.genePlotComponent !== undefined) {
-          resolve();
-          clearInterval(timer);
-        }
-      }, 100);
-    });
   }
 
   private get requestParams(): Record<string, unknown> {
