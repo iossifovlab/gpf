@@ -1,5 +1,6 @@
-from dae.dask.named_cluster import setup_client
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
 import dask.config as config
+from dae.dask.named_cluster import setup_client
 
 
 def test_default():
@@ -9,6 +10,6 @@ def test_default():
 
 
 def test_config_access():
-    with config.set({'dask.config.get': None}):
+    with config.set({"dask.config.get": None}):
         client, _ = setup_client()
         assert client
