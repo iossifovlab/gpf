@@ -25,6 +25,10 @@ export class PhenoToolPage extends BasePage {
     return cy.get('gpf-pheno-tool button').contains('Report');
   }
 
+  public get downloadButton(): element {
+    return cy.get('gpf-pheno-tool button').contains('Download');
+  }
+
   public pressReportButton(): void {
     this.reportButton.click();
     cy.get('gpf-pheno-tool-results-chart', {timeout: longTimeout}).should('be.visible');

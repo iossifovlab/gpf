@@ -1,4 +1,5 @@
 import { FamilyFilterBlockPage } from 'cypress/elements/family-filter-block-page';
+import { GeneScoresPage } from 'cypress/elements/gene-scores-page';
 import { GenesBlockPage } from 'cypress/elements/genes-block-page';
 import { PhenoToolMeasurePage } from 'cypress/elements/pheno-tool-measure-page';
 import { PhenoToolPage } from 'cypress/elements/pheno-tool-page';
@@ -19,6 +20,32 @@ describe('Pheno tool tests', () => {
     page.navigateToHome();
     cy.deleteDownloadsFolder();
   });
+
+  function moveSlider(which: string, dragValue: number, heightValue = 0): void {
+    if (which === 'right') {
+      dragValue = -dragValue;
+    }
+    cy.window().then(win => {
+      cy.get('g[gpf-histogram-range-selector-line] > g > line').eq(which === 'left' ? 0 : 1)
+        .trigger('mousedown', 0, heightValue, { // start value, height value
+          view: win,
+          which: 1,
+          force: true,
+          bubbles: true
+        })
+        .trigger('mousemove', dragValue, heightValue, { // how much to be dragged value, height value
+          which: 1,
+          force: true,
+          bubbles: true
+        })
+        .trigger('mouseup', 0, heightValue, { // end value, height value
+          which: 1,
+          force: true,
+          view: win,
+          bubbles: true
+        });
+    });
+  }
 
   it('should display genes block panel', () => {
     const genesBlockPage = new GenesBlockPage();
@@ -121,7 +148,7 @@ describe('Pheno tool tests', () => {
     const downloadedVariantsPath = Cypress.config('downloadsFolder') + '/pheno_report.csv';
     const expectedVariantsPath = 'cypress/fixtures/pheno-tool/pheno_report1.csv';
 
-    page.findButtonInComponentContainingText('gpf-pheno-tool', 'Download').click();
+    page.downloadButton.click();
 
     cy.readFile(downloadedVariantsPath, { timeout: 5000 }).then((downloadedFile: string) => {
       cy.readFile(expectedVariantsPath, { timeout: 5000 }).then((expectedFile: string) => {
@@ -136,9 +163,10 @@ describe('Pheno tool tests', () => {
     {id: '2', measure: 'i1.m2', normalizedBy: 'Age'},
     {id: '3', measure: 'i1.age', normalizedBy: 'Non verbal IQ'}
   ].forEach(data => {
-    it(`should test "Download" button with normalization ${data.normalizedBy}`, () => {
+    it(`should test check downloaded report with normalization ${data.normalizedBy}`, () => {
       page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.phenotypeTool);
       const phenoToolMeasurePage = new PhenoToolMeasurePage();
+
       phenoToolMeasurePage.searchbox.click();
       page.findButtonInComponentContainingText('gpf-pheno-measure-selector', data.measure).click();
       phenoToolMeasurePage.block.contains(data.normalizedBy).find('input[type="checkbox"]').click();
@@ -146,7 +174,7 @@ describe('Pheno tool tests', () => {
       const downloadedVariantsPath = Cypress.config('downloadsFolder') + '/pheno_report.csv';
       const expectedVariantsPath = `cypress/fixtures/pheno-tool/pheno_report${data.id}.csv`;
 
-      page.findButtonInComponentContainingText('gpf-pheno-tool', 'Download').click();
+      page.downloadButton.click();
 
       cy.readFile(downloadedVariantsPath, { timeout: 5000 }).then((downloadedFile: string) => {
         cy.readFile(expectedVariantsPath, { timeout: 5000 }).then((expectedFile: string) => {
@@ -162,7 +190,7 @@ describe('Pheno tool tests', () => {
     {id: '4', filters: ['father only', 'mother and father', 'Nonsense', 'Nonsynonymous', 'Synonymous'] },
     {id: '5', filters: ['mother only', 'mother and father', 'neither', 'LGDs', 'Splice-site', 'Frame-shift'] }
   ].forEach(data => {
-    it.only(`should test "Download" button with ${data.filters.toString()}`, () => {
+    it(`should test check downloaded report with ${data.filters.toString()}`, () => {
       page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.phenotypeTool);
 
       const phenoToolMeasurePage = new PhenoToolMeasurePage();
@@ -179,7 +207,7 @@ describe('Pheno tool tests', () => {
       const downloadedVariantsPath = Cypress.config('downloadsFolder') + '/pheno_report.csv';
       const expectedVariantsPath = `cypress/fixtures/pheno-tool/pheno_report${data.id}.csv`;
 
-      page.findButtonInComponentContainingText('gpf-pheno-tool', 'Download').click();
+      page.downloadButton.click();
 
       cy.readFile(downloadedVariantsPath, { timeout: 5000 }).then((downloadedFile: string) => {
         cy.readFile(expectedVariantsPath, { timeout: 5000 }).then((expectedFile: string) => {
@@ -241,4 +269,186 @@ describe('Pheno tool tests', () => {
     page.reportButton.should('be.enabled');
     page.findButtonInComponentContainingText('gpf-pheno-tool', 'Download').should('be.enabled');
   });
+
+  [
+    {id: '6', familyId: 'f1' },
+    {id: '7', familyId: 'f3' }
+  ].forEach(data => {
+    it(`should check downloaded report with family id ${data.familyId}`, () => {
+      page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.phenotypeTool);
+      const phenoToolMeasurePage = new PhenoToolMeasurePage();
+      const familyPage = new FamilyFilterBlockPage();
+
+      phenoToolMeasurePage.searchbox.click();
+      page.findButtonInComponentContainingText('gpf-pheno-measure-selector', 'i1.age').click();
+
+      familyPage.familyIdsButton.click();
+      familyPage.familyIdsTextarea.type(data.familyId);
+
+      const downloadedVariantsPath = Cypress.config('downloadsFolder') + '/pheno_report.csv';
+      const expectedVariantsPath = `cypress/fixtures/pheno-tool/pheno_report${data.id}.csv`;
+
+      page.downloadButton.click();
+
+      cy.readFile(downloadedVariantsPath, { timeout: 5000 }).then((downloadedFile: string) => {
+        cy.readFile(expectedVariantsPath, { timeout: 5000 }).then((expectedFile: string) => {
+          const downloadedFileLines = downloadedFile.split(/\r\n|\r|\n/);
+          const expectedFileLines = expectedFile.split(/\r\n|\r|\n/);
+          expect(downloadedFileLines).to.deep.eq(expectedFileLines);
+        });
+      });
+    });
+  });
+
+  [
+    {id: '8', measure: 'i1.iq', borders: [100, 100]},
+    {id: '9', measure: 'i1.m1', borders: [200, 150]}
+  ].forEach(data => {
+    it('should test advanced family filters', () => {
+      page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.phenotypeTool);
+      const phenoToolMeasurePage = new PhenoToolMeasurePage();
+      const familyPage = new FamilyFilterBlockPage();
+
+      phenoToolMeasurePage.searchbox.click();
+      page.findButtonInComponentContainingText('gpf-pheno-measure-selector', 'i1.age').click();
+
+      familyPage.advancedButton.click();
+      familyPage.searchbox.click();
+      familyPage.findButtonInComponentContainingText('gpf-family-filters-block', data.measure).click();
+
+      familyPage.histogram.should('be.visible');
+      moveSlider('left', data.borders[0]);
+      moveSlider('right', data.borders[1]);
+
+      const downloadedVariantsPath = Cypress.config('downloadsFolder') + '/pheno_report.csv';
+      const expectedVariantsPath = `cypress/fixtures/pheno-tool/pheno_report${data.id}.csv`;
+
+      page.downloadButton.click();
+
+      cy.readFile(downloadedVariantsPath, { timeout: 5000 }).then((downloadedFile: string) => {
+        cy.readFile(expectedVariantsPath, { timeout: 5000 }).then((expectedFile: string) => {
+          const downloadedFileLines = downloadedFile.split(/\r\n|\r|\n/);
+          const expectedFileLines = expectedFile.split(/\r\n|\r|\n/);
+          expect(downloadedFileLines).to.deep.eq(expectedFileLines);
+        });
+});
+    });
+  });
+
+  [
+    {id: '10', symbol: 'CAMSAP1' },
+    {id: '11', symbol: 'SAMD11' }
+  ].forEach(data => {
+    it(`should check downloaded report with gene symbol ${data.symbol}`, () => {
+      page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.phenotypeTool);
+      const phenoToolMeasurePage = new PhenoToolMeasurePage();
+      const genesBlockPage = new GenesBlockPage();
+
+      page.findButtonInComponentContainingText('gpf-genes-block', 'Gene Symbols').click();
+      genesBlockPage.geneSymbolsTextarea.type(data.symbol);
+
+      phenoToolMeasurePage.searchbox.click();
+      page.findButtonInComponentContainingText('gpf-pheno-measure-selector', 'i1.age').click();
+
+      const downloadedVariantsPath = Cypress.config('downloadsFolder') + '/pheno_report.csv';
+      const expectedVariantsPath = `cypress/fixtures/pheno-tool/pheno_report${data.id}.csv`;
+
+      page.downloadButton.click();
+
+      cy.readFile(downloadedVariantsPath, { timeout: 5000 }).then((downloadedFile: string) => {
+        cy.readFile(expectedVariantsPath, { timeout: 5000 }).then((expectedFile: string) => {
+          const downloadedFileLines = downloadedFile.split(/\r\n|\r|\n/);
+          const expectedFileLines = expectedFile.split(/\r\n|\r|\n/);
+          expect(downloadedFileLines).to.deep.eq(expectedFileLines);
+        });
+      });
+    });
+  });
+
+  [
+    {id: '12', collection: 'SFARI Genes', set: 'SFARI ALL (910): SFARI Genes (2017-09): All genes', measure: 'i1.age'},
+    {id: '13', collection: 'Protein domains', set: 'ANX (15):', measure: 'i1.iq' }
+
+  ].forEach(data => {
+    it('should check downloaded report with gene sets', () => {
+      page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.phenotypeTool);
+      const phenoToolMeasurePage = new PhenoToolMeasurePage();
+      const genesBlockPage = new GenesBlockPage();
+
+      genesBlockPage.geneSetsButton.click();
+
+      genesBlockPage.geneSetsCollectionSelectorDropdownMenu.select(data.collection);
+      genesBlockPage.geneSetsSearchbox.click();
+      genesBlockPage.findGeneSetsSearchboxDropdownOptionsByText(data.set).click();
+
+
+      phenoToolMeasurePage.searchbox.click();
+      page.findButtonInComponentContainingText('gpf-pheno-measure-selector', data.measure).click();
+
+      const downloadedVariantsPath = Cypress.config('downloadsFolder') + '/pheno_report.csv';
+      const expectedVariantsPath = `cypress/fixtures/pheno-tool/pheno_report${data.id}.csv`;
+
+      page.downloadButton.click();
+
+      cy.readFile(downloadedVariantsPath, { timeout: 5000 }).then((downloadedFile: string) => {
+        cy.readFile(expectedVariantsPath, { timeout: 5000 }).then((expectedFile: string) => {
+          const downloadedFileLines = downloadedFile.split(/\r\n|\r|\n/);
+          const expectedFileLines = expectedFile.split(/\r\n|\r|\n/);
+          expect(downloadedFileLines).to.deep.eq(expectedFileLines);
+        });
+      });
+    });
+  });
+
+  [
+    {
+      id: '14',
+      genotype: 'comp_vcf',
+      affectedStatus: 'affected',
+      set: 'Missense.Male (1): Missense.Male (comp_all:status:affected;comp_vcf:status:affected)',
+      measure: 'i1.age'
+    },
+    {
+      id: '15',
+      genotype: 'iossifov_2014',
+      affectedStatus: 'unaffected',
+      set: 'LGDs.Recurrent (3): LGDs.Recurrent (comp_all:status:affected;iossifov_2014:status:unaffected)',
+      measure: 'i1.iq'
+    }
+
+  ].forEach(data => {
+    it('should check downloaded report with gene set Denovo', () => {
+      page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.phenotypeTool);
+      const phenoToolMeasurePage = new PhenoToolMeasurePage();
+      const genesBlockPage = new GenesBlockPage();
+
+      genesBlockPage.geneSetsButton.click();
+
+      genesBlockPage.geneSetsCollectionSelectorDropdownMenu.select('Denovo');
+
+      genesBlockPage.findGenotypeButton(data.genotype + ': Affected Status').click();
+      genesBlockPage.findDenovoGeneSetCollectionCheckbox(data.genotype, data.affectedStatus).click();
+
+      genesBlockPage.geneSetsSearchbox.click();
+      genesBlockPage.findGeneSetsSearchboxDropdownOptionsByText(data.set).click();
+
+
+      phenoToolMeasurePage.searchbox.click();
+      page.findButtonInComponentContainingText('gpf-pheno-measure-selector', data.measure).click();
+
+      const downloadedVariantsPath = Cypress.config('downloadsFolder') + '/pheno_report.csv';
+      const expectedVariantsPath = `cypress/fixtures/pheno-tool/pheno_report${data.id}.csv`;
+
+      page.downloadButton.click();
+
+      cy.readFile(downloadedVariantsPath, { timeout: 5000 }).then((downloadedFile: string) => {
+        cy.readFile(expectedVariantsPath, { timeout: 5000 }).then((expectedFile: string) => {
+          const downloadedFileLines = downloadedFile.split(/\r\n|\r|\n/);
+          const expectedFileLines = expectedFile.split(/\r\n|\r|\n/);
+          expect(downloadedFileLines).to.deep.eq(expectedFileLines);
+        });
+      });
+    });
+  });
+
 });
