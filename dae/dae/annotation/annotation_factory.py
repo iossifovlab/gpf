@@ -1,7 +1,7 @@
 """Factory for creation of annotation pipeline."""
 
 import logging
-from typing import List, Dict
+from typing import List, Dict, Optional
 
 import yaml
 
@@ -80,12 +80,13 @@ class AnnotationConfigParser:
 
 
 def build_annotation_pipeline(
-        pipeline_config: List[Dict] = None,
-        pipeline_config_file: str = None,
-        pipeline_config_str: str = None,
-        grr_repository: GenomicResourceRepo = None,
-        grr_repository_file: str = None,
-        grr_repository_definition: dict = None) -> AnnotationPipeline:
+        pipeline_config: Optional[List[Dict]] = None,
+        pipeline_config_file: Optional[str] = None,
+        pipeline_config_str: Optional[str] = None,
+        grr_repository: Optional[GenomicResourceRepo] = None,
+        grr_repository_file: Optional[str] = None,
+        grr_repository_definition: Optional[dict] = None
+) -> AnnotationPipeline:
     """Build an annotation pipeline."""
     if pipeline_config_file is not None:
         assert pipeline_config is None

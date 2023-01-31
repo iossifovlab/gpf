@@ -31,7 +31,7 @@ class GenomicResourceImplementation(ABC):
         self.config = self.validate_and_normalize_schema(self.resource.config)
 
     def get_config(self) -> Dict:
-        return cast(Dict, self.config)
+        return self.config
 
     @staticmethod
     def get_template() -> Template:

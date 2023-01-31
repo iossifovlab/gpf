@@ -8,10 +8,10 @@ import tempfile
 from typing import Optional, Dict, Any
 
 from dask.distributed import Client, LocalCluster  # type: ignore
-from dask_kubernetes.operator.kubecluster import (
+from dask_kubernetes.operator.kubecluster import (  # type: ignore
     KubeCluster,
     make_cluster_spec
-)  # type: ignore
+)
 
 
 class DaskClient:

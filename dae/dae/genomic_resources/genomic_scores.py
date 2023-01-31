@@ -6,7 +6,7 @@ import logging
 import textwrap
 import copy
 
-from typing import Iterator, List, cast, Type, Dict, Any, Union
+from typing import Iterator, List, Optional, cast, Type, Dict, Any, Union
 
 from dataclasses import dataclass
 from jinja2 import Template
@@ -514,7 +514,8 @@ class PositionScore(GenomicScore):
         return cast(PositionScore, super().open())
 
     def fetch_scores(
-            self, chrom: str, position: int, scores: List[str] = None):
+            self, chrom: str, position: int, scores: Optional[List[str]] = None
+    ):
         """Fetch score values at specific genomic position."""
         if chrom not in self.get_all_chromosomes():
             raise ValueError(
@@ -536,7 +537,8 @@ class PositionScore(GenomicScore):
 
     def fetch_scores_agg(  # pylint: disable=too-many-arguments,too-many-locals
             self, chrom: str, pos_begin: int, pos_end: int,
-            scores: List[str] = None, non_default_pos_aggregators=None):
+            scores: Optional[List[str]] = None,
+            non_default_pos_aggregators=None):
         """Fetch score values in a region and aggregates them.
 
         Case 1:
@@ -612,7 +614,7 @@ class NPScore(GenomicScore):
 
     def fetch_scores(
             self, chrom: str, position: int, reference: str, alternative: str,
-            scores: List[str] = None):
+            scores: Optional[List[str]] = None):
         """Fetch score values at specified genomic position and nucleotide."""
         if chrom not in self.get_all_chromosomes():
             raise ValueError(
@@ -660,7 +662,7 @@ class NPScore(GenomicScore):
 
     def fetch_scores_agg(
             self, chrom: str, pos_begin: int, pos_end: int,
-            scores: List[str] = None,
+            scores: Optional[List[str]] = None,
             non_default_pos_aggregators=None,
             non_default_nuc_aggregators=None):
         """Fetch score values in a region and aggregates them."""
@@ -745,7 +747,7 @@ class AlleleScore(GenomicScore):
 
     def fetch_scores(
             self, chrom: str, position: int, reference: str, alternative: str,
-            scores: List[str] = None):
+            scores: Optional[List[str]] = None):
         """Fetch scores values for specific allele."""
         if chrom not in self.get_all_chromosomes():
             raise ValueError(

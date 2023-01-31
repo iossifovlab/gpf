@@ -164,7 +164,7 @@ class GPFConfigParser:
     @staticmethod
     def merge_config(
             config: Dict[str, Any],
-            default_config: Dict[str, Any] = None) -> Dict[str, Any]:
+            default_config: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         if default_config is not None:
             config = recursive_dict_update(default_config, config)
         return config
@@ -173,7 +173,7 @@ class GPFConfigParser:
     def validate_config(
         config: Dict[str, Any],
         schema: dict,
-        conf_dir: str = None
+        conf_dir: Optional[str] = None
     ) -> dict:
         """Perform validation on a parsed config."""
         if conf_dir is not None and "conf_dir" in schema:
@@ -198,8 +198,8 @@ class GPFConfigParser:
     def process_config(
         config: Dict[str, Any],
         schema: dict,
-        default_config: Dict[str, Any] = None,
-        conf_dir: str = None,
+        default_config: Optional[Dict[str, Any]] = None,
+        conf_dir: Optional[str] = None,
     ) -> Box:
         """
         Pass an interpolated config to validation and prepare it for use.

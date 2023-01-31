@@ -3,7 +3,7 @@ from __future__ import annotations
 import sys
 import argparse
 import logging
-from typing import List
+from typing import List, Optional
 
 from pysam import VariantFile  # pylint: disable=no-name-in-module
 
@@ -35,7 +35,7 @@ def configure_argument_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def cli(raw_args: list[str] = None) -> None:
+def cli(raw_args: Optional[list[str]] = None) -> None:
     """Run command line interface for annotate_vcf tool."""
     # FIXME:
     # pylint: disable=too-many-locals

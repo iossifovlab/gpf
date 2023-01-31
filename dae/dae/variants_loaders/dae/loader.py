@@ -487,7 +487,7 @@ class DenovoLoader(VariantsGenotypesLoader):
                 sep=denovo_sep,
                 converters={
                     denovo_pos: lambda p: int(p) if p else None,
-                },
+                } if denovo_pos is not None else {},
                 dtype=str,
                 comment="#",
                 encoding="utf-8",
