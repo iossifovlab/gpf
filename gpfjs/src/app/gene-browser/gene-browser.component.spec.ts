@@ -24,6 +24,7 @@ jest.mock('../utils/svg-drawing');
 
 class MockActivatedRoute {
   public static params = {dataset: 'testDatasetId', get: (): string => ''};
+  public queryParams = of({coding_only: true});
   public parent = {params: of(MockActivatedRoute.params)};
   public queryParamMap = of(MockActivatedRoute.params);
   public snapshot = {params: {gene: 'mockGeneSymbol'}};
@@ -76,9 +77,7 @@ describe('GeneBrowserComponent', () => {
         NgbModule, FormsModule
       ],
     }).compileComponents();
-  });
 
-  beforeEach(() => {
     fixture = TestBed.createComponent(GeneBrowserComponent);
     component = fixture.componentInstance;
     component.summaryVariantsArray = new SummaryAllelesArray();
@@ -87,6 +86,7 @@ describe('GeneBrowserComponent', () => {
     );
     fixture.detectChanges();
   });
+
 
   it('should create', () => {
     expect(component).toBeTruthy();
