@@ -39,13 +39,12 @@ dae_named_cluster:
     - name: kubernetes
       type: kubgernetes
       params:
-        container_image: xxxxx
-        extra_pod_config:
-          A: B
-          b: 234234
-        envvars: 
-          - PATH
-          - MY_ENV
+        container_image: registry.seqpipe.org/iossifovlab-gpf:latest
+        # extra_pod_config:
+        #   A: B
+        #   b: 234234
+        # envvars: 
+        #   - PATH
     - name: slurm
       type: slurm
       number_of_threads: 10

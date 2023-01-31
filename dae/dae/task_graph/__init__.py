@@ -1,4 +1,3 @@
 # flake8: noqa: F401
-from .cli_tools import TaskGraphCli
-from .graph import TaskGraph
-from .graph import Task
+from dae.task_graph.cli_tools import TaskGraphCli
+from dae.task_graph.graph import TaskGraph, Task
