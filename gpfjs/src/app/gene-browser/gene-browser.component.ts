@@ -191,10 +191,6 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
     await this.waitForGenePlotComponent();
 
     this.updateShownTablePreviewVariantsArray();
-
-    if (!this.summaryVariantsFilter.codingOnly) {
-      this.genePlotComponent.toggleCondenseIntrons();
-    }
   }
 
   public onDownload(): void {
