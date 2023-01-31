@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 import abc
 
-from typing import Any, List, Dict
+from typing import Any, List, Dict, Set
 from cerberus.validator import Validator  # type: ignore
 
 from .annotatable import Annotatable
@@ -138,6 +138,11 @@ class Annotator(abc.ABC):
     @abc.abstractmethod
     def is_open(self) -> bool:
         """Check if an annotator is open and ready."""
+
+    @property
+    @abc.abstractmethod
+    def resource_files(self) -> Dict[str, Set[str]]:
+        """Genomic resources and their files needed by the annotator."""
 
     def _empty_result(self) -> Dict[str, Any]:
         result: Dict[str, Any] = {}

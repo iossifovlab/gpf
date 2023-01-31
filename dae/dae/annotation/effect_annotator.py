@@ -210,6 +210,13 @@ class EffectAnnotatorAdapter(Annotator):
                     self.DEFAULT_ANNOTATION["attributes"])
         return self._annotation_config
 
+    @property
+    def resource_files(self):
+        return {
+            self.gene_models.resource_id: self.gene_models.files,
+            self.genome.resource_id: self.genome.files
+        }
+
     def _do_annotate(
             self, annotatable: Annotatable, _context: Dict):
 

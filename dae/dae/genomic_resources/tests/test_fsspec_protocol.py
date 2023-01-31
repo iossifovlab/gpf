@@ -4,6 +4,8 @@ import gzip
 import time
 import pytest
 
+from dae.genomic_resources.repository import ReadWriteRepositoryProtocol, \
+    GR_CONF_FILE_NAME
 from dae.genomic_resources.testing import \
     build_inmemory_test_protocol
 
@@ -313,3 +315,49 @@ def test_copy_resource(content_fixture, rw_fsspec_proto):
     assert state.timestamp == timestamp
     assert state.timestamp == pytest.approx(time.time(), abs=5)
     assert state.md5 == "d9636a8dca9e5626851471d1c0ea92b1"
+
+
+def test_update_resource_all_files(
+    rw_fsspec_proto: ReadWriteRepositoryProtocol
+):
+    # Given
+    src_proto = build_inmemory_test_protocol({
+        "sample": {
+            GR_CONF_FILE_NAME: "",
+            "prim.txt": "alabala",
+            "second.txt": "labalaa"
+        },
+    })
+    src_res = src_proto.get_resource("sample")
+    proto = rw_fsspec_proto
+
+    # When
+    proto.update_resource(src_res)
+
+    # Then
+    dst_res = proto.get_resource("sample")
+    assert proto.file_exists(dst_res, "prim.txt")
+    assert proto.file_exists(dst_res, "second.txt")
+
+
+def test_update_resource_specific_file(
+    rw_fsspec_proto: ReadWriteRepositoryProtocol
+):
+    # Given
+    src_proto = build_inmemory_test_protocol({
+        "sample": {
+            GR_CONF_FILE_NAME: "",
+            "prim.txt": "alabala",
+            "second.txt": "labalaa"
+        },
+    })
+    src_res = src_proto.get_resource("sample")
+    proto = rw_fsspec_proto
+
+    # When
+    proto.update_resource(src_res, {"prim.txt"})
+
+    # Then
+    dst_res = proto.get_resource("sample")
+    assert proto.file_exists(dst_res, "prim.txt")
+    assert not proto.file_exists(dst_res, "second.txt")

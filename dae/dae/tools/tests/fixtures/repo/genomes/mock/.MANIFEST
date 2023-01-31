@@ -1,6 +1,6 @@
+- md5: 8a69076afc4bc86af83e9e40de4ba37f
+  name: genomic_resource.yaml
+  size: 33
 - md5: 39407e7570763e1b085527daa17d1438
   name: mock_file
-  size: 20
-- md5: 39407e7570763e1b085527daa17d1438
-  name: genomic_resource.yaml
   size: 20

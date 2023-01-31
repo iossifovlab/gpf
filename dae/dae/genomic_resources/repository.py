@@ -738,8 +738,15 @@ class ReadWriteRepositoryProtocol(ReadOnlyRepositoryProtocol):
             version_constraint=f"={remote_resource.get_version_str()}")
 
     def update_resource(
-            self, remote_resource: GenomicResource) -> GenomicResource:
-        """Copy a remote resource into repository."""
+        self,
+        remote_resource: GenomicResource,
+        files: Optional[Set[str]] = None
+    ) -> GenomicResource:
+        """Copy a remote resource into repository.
+
+        Allows copying of only specific files from the resource.
+        If no files are explicitly given, copies the whole resource.
+        """
         local_resource = self.get_or_create_resource(
             remote_resource.resource_id, remote_resource.version)
 
@@ -747,12 +754,18 @@ class ReadWriteRepositoryProtocol(ReadOnlyRepositoryProtocol):
         local_manifest = self.get_manifest(local_resource)
         filenames_to_delete = local_manifest.names() - remote_manifest.names()
 
+        if files is not None:
+            # resource config is mandatory, otherwise the resource is not valid
+            files.add(GR_CONF_FILE_NAME)
+
         for filename in filenames_to_delete:
             self.delete_resource_file(local_resource, filename)
 
         for manifest_entry in remote_manifest:
-            self.update_resource_file(
-                remote_resource, local_resource, manifest_entry.name)
+            if files is None or manifest_entry.name in files:
+                self.update_resource_file(
+                    remote_resource, local_resource, manifest_entry.name
+                )
 
         self.save_manifest(local_resource, remote_resource.get_manifest())
         self.invalidate()

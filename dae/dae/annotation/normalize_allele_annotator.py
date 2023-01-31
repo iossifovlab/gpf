@@ -92,6 +92,10 @@ class NormalizeAlleleAnnotator(Annotator):
     def is_open(self):  # FIXME:
         return True
 
+    @property
+    def resource_files(self):
+        return {self.genome.resource_id: self.genome.files}
+
     @classmethod
     def validate_config(cls, config: Dict) -> Dict:
         schema = {

@@ -442,6 +442,15 @@ class GeneModels(GenomicResourceImplementation):
     def resource_id(self):
         return self.resource.resource_id
 
+    @property
+    def files(self):
+        res = set()
+        res.add(self.resource.get_config()["filename"])
+        gene_mapping_filename = self.resource.get_config().get("gene_mapping")
+        if gene_mapping_filename is not None:
+            res.add(gene_mapping_filename)
+        return res
+
     def _reset(self):
         self._shift = None
         self.alternative_names = None

@@ -86,6 +86,13 @@ class ReferenceGenome(GenomicResourceImplementation):
             }
         self._chromosomes = list(self._index.keys())
 
+    @property
+    def files(self):
+        config = self.resource.get_config()
+        file_name = config["filename"]
+        index_file_name = config.get("index_file", f"{file_name}.fai")
+        return {file_name, index_file_name}
+
     def close(self):
         """Close reference genome sequence file-like objects."""
         # FIXME: consider using weakref to work around this problem

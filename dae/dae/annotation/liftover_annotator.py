@@ -92,6 +92,14 @@ class LiftOverAnnotator(Annotator):
             }
         ]
 
+    @property
+    def resource_files(self):
+        chain_res = self.chain.resource
+        return {
+            chain_res.resource_id: {chain_res.get_config()["filename"], },
+            self.target_genome.resource_id: self.target_genome.files
+        }
+
     @classmethod
     def validate_config(cls, config: Dict) -> Dict:
         schema = {

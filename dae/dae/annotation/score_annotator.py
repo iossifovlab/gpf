@@ -3,16 +3,19 @@
 import logging
 import copy
 
-from typing import Dict, List, cast, Any
+from typing import Dict, List, cast, Any, Set
 
 from dae.genomic_resources.genomic_scores import \
     build_allele_score_from_resource, build_position_score_from_resource, \
     build_np_score_from_resource
 from dae.genomic_resources.aggregators import AGGREGATOR_SCHEMA
+from dae.genomic_resources.genomic_position_table.table_tabix import \
+    TabixGenomicPositionTable
 
 from .annotatable import Annotatable, VCFAllele
 from .annotator_base import Annotator, ATTRIBUTES_SCHEMA
 from .annotation_pipeline import AnnotationPipeline
+
 
 
 logger = logging.getLogger(__name__)
@@ -85,6 +88,14 @@ class VariantScoreAnnotatorBase(Annotator):
             "can't find annotation config for resource: %s",
             self.score.score_id())
         return []
+
+    @property
+    def resource_files(self) -> Dict[str, Set[str]]:
+        files = set()
+        files.add(self.score.table.definition.filename)
+        if isinstance(self.score.table, TabixGenomicPositionTable):
+            files.add(f"{self.score.table.definition.filename}.tbi")
+        return {self.score.config["id"]: files}
 
     def _collect_non_default_aggregators(self):
         non_default_position_aggregators = {}

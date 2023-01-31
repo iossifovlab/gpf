@@ -85,3 +85,22 @@ def test_gene_score_annotator_default_aggregator(scores_repo):
     context = {"gene_list": ["LRP1", "TRRAP"]}
     result = annotator._do_annotate(annotatable, context)
     assert result == {"LGD_rank": {"LRP1": 1, "TRRAP": 3}}
+
+
+def test_gene_score_annotator_resource_files(scores_repo):
+    resource = scores_repo.get_resource("LGD_rank")
+    config = {
+        "annotator_type": "gene_score_annotator",
+        "resource_id": "LGD_rank",
+        "input_gene_list": "gene_list",
+        "attributes": [
+            {
+                "source": "LGD_rank",
+                "destination": "LGD_rank",
+                "gene_aggregator": "dict"
+            },
+        ]
+    }
+
+    annotator = GeneScoreAnnotator(config, resource)
+    assert annotator.resource_files == {"LGD_rank": {"LGD.csv", }}

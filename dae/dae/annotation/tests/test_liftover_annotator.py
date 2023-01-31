@@ -128,3 +128,37 @@ def test_liftover_annotator_denovo_db_examples(
 
     liftover_allele = cast(VCFAllele, result.get("liftover_annotatable"))
     assert liftover_allele is None
+
+
+def test_liftover_annotator_resource_files(grr_fixture):
+    config = {
+        "annotator_type": "liftover_annotator",
+        "chain": "hg38/hg38tohg19",
+        "target_genome":
+            "hg19/GATK_ResourceBundle_5777_b37_phiX174_short/genome",
+    }
+
+    grr = grr_fixture
+
+    target_genome_resource = grr.get_resource(
+        "hg19/GATK_ResourceBundle_5777_b37_phiX174_short/genome"
+    )
+    assert target_genome_resource is not None
+    target_genome = build_reference_genome_from_resource(
+        target_genome_resource)
+    target_genome.open()
+
+    lifover_chain_resource = grr.get_resource("hg38/hg38tohg19")
+    assert lifover_chain_resource is not None
+    lifover_chain = build_liftover_chain_from_resource(lifover_chain_resource)
+    assert lifover_chain is not None
+
+    liftover_annotator = LiftOverAnnotator(
+        config, lifover_chain, target_genome)
+
+    assert liftover_annotator.resource_files == {
+        "hg38/hg38tohg19": {"hg38ToHg19.over.chain.gz"},
+        "hg19/GATK_ResourceBundle_5777_b37_phiX174_short/genome": {
+            "chrAll.fa", "chrAll.fa.fai"
+        }
+    }

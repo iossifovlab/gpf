@@ -5,6 +5,7 @@ import copy
 
 from typing import List, Dict, cast, Any
 from dae.gene.gene_scores import GeneScore
+from dae.genomic_resources import GenomicResource
 from dae.genomic_resources.aggregators import AGGREGATOR_SCHEMA
 
 from .annotator_base import Annotator, ATTRIBUTES_SCHEMA
@@ -33,9 +34,7 @@ def build_gene_score_annotator(pipeline, config):
 class GeneScoreAnnotator(Annotator):
     """Annotator that annotates variants by using gene score resources."""
 
-    def __init__(
-            self, config: dict,
-            resource):
+    def __init__(self, config: dict, resource: GenomicResource):
         super().__init__(config)
 
         self.resource = resource
@@ -101,6 +100,12 @@ class GeneScoreAnnotator(Annotator):
             raise ValueError(
                 f"wrong gene score annotator config {validator.errors}")
         return cast(Dict, validator.document)
+
+    @property
+    def resource_files(self):
+        return {
+            self.resource.get_id(): {self.resource.get_config()["filename"], }
+        }
 
     def _do_annotate(self, annotatable: Annotatable, _context: Dict):
         attributes: dict = {}

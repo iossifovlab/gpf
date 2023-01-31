@@ -6,7 +6,7 @@ import argparse
 import time
 import logging
 
-from typing import cast
+from typing import cast, Dict, Tuple, Set
 
 from dae.utils.verbosity_configuration import VerbosityConfiguration
 from dae.genomic_resources.repository_factory import load_definition_file, \
@@ -15,7 +15,8 @@ from dae.genomic_resources.repository_factory import load_definition_file, \
 from dae.genomic_resources.cached_repository import GenomicResourceCachedRepo
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.dae_conf import dae_conf_schema
-from dae.annotation.annotation_factory import AnnotationConfigParser
+from dae.annotation.annotation_factory import AnnotationConfigParser, \
+    build_annotation_pipeline
 
 
 logger = logging.getLogger("grr_cache_tool")
@@ -63,7 +64,9 @@ def cli_cache_repo(argv=None):
             "repository is cached.")
     repository = cast(GenomicResourceCachedRepo, repository)
 
-    resources = set()
+    resources: Set[str] = set()
+    # Explicitly specify which files to cache. Optional.
+    resource_files: Dict[str, Set[str]] = dict()
     annotation = None
 
     if args.instance is not None and args.annotation is not None:
@@ -83,30 +86,39 @@ def cli_cache_repo(argv=None):
 
     if annotation is not None:
         config = AnnotationConfigParser.parse_config_file(annotation)
-        resources.update(_extract_resource_ids_from_annotation_conf(config))
+        annotation_resources = extract_resource_ids_and_files_from_annotation(
+            config, repository
+        )
+        resources.update(annotation_resources[0])
+        resource_files.update(annotation_resources[1])
 
     if len(resources) > 0:
         resources = list(resources)
     else:
         resources = None
 
-    repository.cache_resources(workers=args.jobs, resource_ids=resources)
+    repository.cache_resources(
+        workers=args.jobs,
+        resource_ids=resources,
+        resource_files=resource_files
+    )
 
     elapsed = time.time() - start
-
     logger.info("Cached all resources in %.2f secs", elapsed)
 
 
-def _extract_resource_ids_from_annotation_conf(config):
-    resources = set()
-    for annotator in config:
-        print(annotator)
-        for key, val in annotator.items():
-            if key in [
-                "resource_id",
-                "target_genome",
-                "chain",
-                "genome"
-            ]:
-                resources.add(val)
-    return resources
+def extract_resource_ids_and_files_from_annotation(
+    config, repository
+) -> Tuple[Set[str], Dict[str, Set[str]]]:
+    resources: Set[str] = set()
+    resource_files: Dict[str, Set[str]] = dict()
+    with build_annotation_pipeline(
+        pipeline_config=config, grr_repository=repository
+    ) as pipeline:
+        for annotator in pipeline.annotators:
+            for gr_id, files in annotator.resource_files.items():
+                resource_files[gr_id] = resource_files.setdefault(
+                    gr_id, set()
+                ) | files
+    resources = set(resource_files.keys())
+    return resources, resource_files
