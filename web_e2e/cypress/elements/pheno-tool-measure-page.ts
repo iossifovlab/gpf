@@ -8,4 +8,8 @@ export class PhenoToolMeasurePage extends BasePage {
   public get searchbox(): element {
     return cy.get('gpf-pheno-tool-measure input#search-box');
   }
+
+  public get dropdown(): element {
+    return cy.get('.dropdown-menu.show');
+  }
 }

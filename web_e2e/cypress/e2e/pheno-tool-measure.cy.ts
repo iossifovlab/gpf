@@ -35,4 +35,19 @@ describe('Pheno tool measure tests', () => {
     page.findButtonInComponentContainingText('gpf-pheno-measure-selector', 'i1.iq').click();
     page.block.contains('Non verbal IQ').find('input[type="checkbox"]').should('be.disabled');
   });
+
+  it('should check the remove button with empty input', () => {
+    page.searchbox.click();
+    page.dropdown.should('be.visible');
+    page.findButtonInComponentContainingText('gpf-pheno-measure-selector', '×').click();
+    page.dropdown.should('not.exist');
+  });
+
+  it('should check the remove button with selected measure', () => {
+    page.searchbox.click();
+    page.dropdown.should('be.visible');
+    page.findButtonInComponentContainingText('gpf-pheno-measure-selector', 'i1.iq').click();
+    page.findButtonInComponentContainingText('gpf-pheno-measure-selector', '×').click();
+    page.dropdown.should('not.exist');
+  });
 });
