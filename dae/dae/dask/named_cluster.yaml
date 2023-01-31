@@ -1,0 +1,56 @@
+dae_named_cluster:
+  default: local
+  clusters:
+    - name: local
+      type: local
+      # By default, the local cluster will allocate by default as many threads 
+      # as the number of cores on the host, spread accross several workers each
+      # with cerain number of threads.  See the documentation of LocalCluster
+      # for more information. 
+      # To set the default a number of threads we can set:
+      # number_of_threads: 10
+      #
+      # If present, the params will be provided to the LocalCluster 
+      # constructor. Some usefull params are given, but the LocalCluster 
+      # documentation provides the complete description.
+      # params:
+      #  threads_per_worker: 1
+      #   dashboard_address: :8898
+    - name: sge_small
+      type: sge
+      number_of_threads: 10
+      params:
+        scheduler_options:
+          dashboard_address: :8898
+        cores: 1
+        memory: 1GB
+        log_directory: ./sge_worker_logs
+    - name: sge_large
+      type: sge
+      adapt_params:
+        minimum: 3
+        maximum: 200
+      params:
+        scheduler_options:
+          dashboard_address: :8898
+        cores: 1
+        memory: 10GB
+        log_directory: ./sge_worker_logs
+    - name: kubernetes
+      type: kubgernetes
+      params:
+        container_image: registry.seqpipe.org/iossifovlab-gpf:latest
+        # extra_pod_config:
+        #   A: B
+        #   b: 234234
+        # envvars: 
+        #   - PATH
+    - name: slurm
+      type: slurm
+      number_of_threads: 10
+      params:
+        cores: 1
+        memory: 1GB
+        log_directory: ./slurm_worker_logs
+
+

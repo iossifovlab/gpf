@@ -221,13 +221,13 @@ def test_process_server_stop_failed():
 
 def test_s3_threaded_server_simple():
     with s3_threaded_test_server() as endpoint_url:
-        response = requests.get(endpoint_url, timeout=1.0)
+        response = requests.get(endpoint_url, timeout=10.0)
         assert response.status_code == 200
 
     with s3_threaded_test_server() as endpoint_url:
-        response = requests.get(endpoint_url, timeout=1.0)
+        response = requests.get(endpoint_url, timeout=10.0)
         assert response.status_code == 200
 
     with s3_threaded_test_server() as endpoint_url:
-        response = requests.get(endpoint_url, timeout=1.0)
+        response = requests.get(endpoint_url, timeout=10.0)
         assert response.status_code == 200

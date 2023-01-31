@@ -1,10 +1,11 @@
+from __future__ import annotations
 from abc import abstractmethod
 from copy import copy
 from dataclasses import dataclass
 import logging
 from enum import Enum
 import pickle
-from typing import Any, cast
+from typing import Any, cast, Optional
 import fsspec
 
 from dae.task_graph.graph import TaskGraph, Task
@@ -52,6 +53,17 @@ class TaskCache:
     @abstractmethod
     def cache(self, task_node: Task, is_error: bool, result: Any):
         """Cache the result or exception of a task."""
+
+    @staticmethod
+    def create(
+            force: Optional[bool] = None,
+            cache_dir: Optional[str] = None) -> TaskCache:
+        """Create the appropriate task cache."""
+        if force is None:
+            # the force_mode is set to 'always'
+            return NoTaskCache()
+
+        return FileTaskCache(force=force, cache_dir=cache_dir)
 
 
 class NoTaskCache(dict, TaskCache):
