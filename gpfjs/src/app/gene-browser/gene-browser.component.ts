@@ -123,10 +123,11 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
 
   public selectGeneSymbol(geneSymbol: string): void {
     this.geneSymbol = geneSymbol;
+  }
 
-    if (geneSymbol === '') {
-      this.location.replaceState(`datasets/${this.selectedDatasetId}/gene-browser`);
-    }
+  public reset(): void {
+    this.showResults = false;
+    this.location.replaceState(`datasets/${this.selectedDatasetId}/gene-browser`);
   }
 
   public openDropdown(): void {
@@ -160,7 +161,12 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
       this.showError = true;
       return;
     }
-    this.toggleCodingOnly();
+
+    this.location.replaceState(
+      `datasets/${this.selectedDatasetId}/gene-browser/${this.geneSymbol.toUpperCase()}`
+      + `?coding_only=${String(this.summaryVariantsFilter.codingOnly)}`
+    );
+
     this.showResults = false;
     this.loadingService.setLoadingStart();
     this.genotypePreviewVariantsArray = null;
@@ -189,12 +195,6 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
     if (!this.summaryVariantsFilter.codingOnly) {
       this.genePlotComponent.toggleCondenseIntrons();
     }
-  }
-
-  public toggleCodingOnly(): void {
-    this.showResults = false;
-    this.location.replaceState(`datasets/${this.selectedDatasetId}/gene-browser/${this.geneSymbol.toUpperCase()}` +
-      `?coding_only=${this.summaryVariantsFilter.codingOnly}`);
   }
 
   public onDownload(): void {

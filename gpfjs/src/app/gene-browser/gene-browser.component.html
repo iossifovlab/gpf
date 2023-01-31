@@ -12,7 +12,7 @@
           spellcheck="false"
           [(ngModel)]="geneSymbol"
           (keyup)="openDropdown(); searchBoxInput$.next(geneSymbol)"
-          (click)="selectGeneSymbol(''); showResults = false"
+          (click)="reset(); geneSymbol = ''"
           (keydown.enter)="submitGeneRequest()"
           (keydown.escape)="closeDropdown()" />
         <div ngbDropdownMenu id="genes-dropdown">
@@ -37,7 +37,7 @@
       <div style="padding: 0px 10px 10px 20px">
         <label>
           <input
-            (change)="toggleCodingOnly()"
+            (change)="reset()"
             style="margin-right: 6px"
             type="checkbox"
             id="coding-only-checkbox"
