@@ -146,7 +146,8 @@ def test_families_data_families_by_type(
         {
             "trio_family": Family.from_persons(trio_persons()),
             "quad_family": Family.from_persons(quad_persons),
-            "multigenerational_family": Family.from_persons(multigenerational_persons),
+            "multigenerational_family":
+                Family.from_persons(multigenerational_persons),
             "simplex_family": Family.from_persons(simplex_persons),
             "multiplex_family": Family.from_persons(multiplex_persons),
         }

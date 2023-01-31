@@ -1,8 +1,3 @@
-"""
-Created on Feb 6, 2017
-
-@author: lubo
-"""
 from django.urls import re_path
 from genotype_browser import views
 

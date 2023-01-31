@@ -1,8 +1,3 @@
-"""
-Created on Jun 12, 2015
-
-@author: lubo
-"""
 import logging
 from functools import wraps
 
@@ -34,7 +29,7 @@ def log_filter(request, message, *args):
 
 
 def request_logging(logger):
-    """Automatically log request info on views"""
+    """Automatically log request info on views."""
 
     def logging_decorator(func):
         @wraps(func)
@@ -55,7 +50,7 @@ def request_logging(logger):
 
 
 def request_logging_function_view(logger):
-    """Automatically log request info on view functions"""
+    """Automatically log request info on view functions."""
 
     def logging_decorator(func):
         @wraps(func)

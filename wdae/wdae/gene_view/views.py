@@ -59,10 +59,10 @@ class QueryVariantsView(QueryDatasetView):
         variants = dataset.get_gene_view_summary_variants(freq_col, **data)
 
         response = StreamingHttpResponse(
-                iterator_to_json(variants),
-                status=status.HTTP_200_OK,
-                content_type="text/event-stream"
-            )
+            iterator_to_json(variants),
+            status=status.HTTP_200_OK,
+            content_type="text/event-stream"
+        )
         response["Cache-Control"] = "no-cache"
 
         return response

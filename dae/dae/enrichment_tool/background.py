@@ -1,8 +1,3 @@
-"""
-Created on Nov 7, 2016
-
-@author: lubo
-"""
 from collections import Counter
 from scipy import stats  # type: ignore
 import numpy as np

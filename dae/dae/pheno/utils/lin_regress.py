@@ -10,7 +10,7 @@ class LinearRegression(LinearRegressionSK):
 
     def __init__(self, *args, **kwargs):
 
-        super(LinearRegression, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         self._pvalues = None
         self._tvalues = None

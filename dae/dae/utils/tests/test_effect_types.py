@@ -1,8 +1,3 @@
-"""
-Created on Feb 6, 2017
-
-@author: lubo
-"""
 import pytest
 from dae.utils.effect_utils import EffectTypesMixin
 
@@ -61,7 +56,7 @@ def test_build_effect_types_bad_not_safe(query_base):
 
     res = query_base.build_effect_types(effect_types, safe=False)
     assert set(
-        ["frame-shift", "nonsense", "splice-site", "no-frame-shift-newStop",]
+        ["frame-shift", "nonsense", "splice-site", "no-frame-shift-newStop"]
     ) == set(res)
 
 
@@ -70,8 +65,8 @@ def test_build_effect_types_naming(query_base):
         ("nonsense", ["Nonsense"]),
         (["nonsense"], ["Nonsense"]),
         (
-            ["frame-shift", "nonsense", "splice-site",],
-            ["Frame-shift", "Nonsense", "Splice-site",],
+            ["frame-shift", "nonsense", "splice-site"],
+            ["Frame-shift", "Nonsense", "Splice-site"],
         ),
         (["noStart"], ["noStart"]),
         (["Synonymous"], ["Synonymous"]),

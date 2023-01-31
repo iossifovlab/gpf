@@ -1,8 +1,3 @@
-"""
-Created on Apr 21, 2017
-
-@author: lubo
-"""
 from django.urls import re_path
 from pheno_browser_api import views
 

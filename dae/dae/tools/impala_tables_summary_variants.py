@@ -23,7 +23,7 @@ def parse_cli_arguments(argv, gpf_instance):
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
 
-    parser.add_argument('--verbose', '-V', action='count', default=0)
+    parser.add_argument("--verbose", "-V", action="count", default=0)
 
     parser.add_argument(
         "--studies",
@@ -306,6 +306,7 @@ def insert_into_summary_table(
 
 
 def main(argv=sys.argv[1:], gpf_instance=None):
+    # flake8: noqa: C901
     if gpf_instance is None:
         gpf_instance = GPFInstance.build()
 
@@ -393,11 +394,11 @@ def main(argv=sys.argv[1:], gpf_instance=None):
 
             part_started = time.time()
             for q in insert_into_summary_table(
-                        pedigree_table, variants_table, summary_table,
-                        summary_schema, partition,
-                        region_bin_helpers.region_bins,
-                        argv.split_size
-                    ):
+                pedigree_table, variants_table, summary_table,
+                summary_schema, partition,
+                region_bin_helpers.region_bins,
+                argv.split_size
+            ):
                 repeat = 10
                 while repeat > 0:
                     try:

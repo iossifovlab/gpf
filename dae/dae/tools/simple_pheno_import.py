@@ -89,7 +89,7 @@ def verify_phenotype_data_name(input_name):
 
 def generate_phenotype_data_config(args, regressions):
     dbfile = os.path.join("%(wd)s", os.path.basename(args.pheno_db_filename))
-    pheno_db_path = os.path.dirname("%(wd)s")
+    pheno_db_path = os.path.dirname("%(wd)s")  # noqa
     browser_dbfile = os.path.join(
         "%(wd)s", "browser", "{}_browser.db".format(args.pheno_name)
     )

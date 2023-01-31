@@ -1,9 +1,6 @@
 #!/usr/bin/env python
 # encoding: utf-8
-"""
-pheno2dae -- prepares a DAE pheno DB cache
-
-"""
+"""pheno2dae -- prepares a DAE pheno DB cache."""
 import sys
 import os
 import logging
@@ -97,7 +94,6 @@ def parse_config(args):
 
 def main(argv=None):  # IGNORE:C0111
     """Command line options."""
-
     if argv is None:
         argv = sys.argv
     else:

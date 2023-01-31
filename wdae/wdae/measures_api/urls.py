@@ -1,9 +1,3 @@
-"""
-Created on Mar 30, 2017
-
-@author: lubo
-"""
-
 from django.urls import re_path
 from measures_api import views
 

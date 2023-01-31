@@ -1,8 +1,3 @@
-"""
-Created on Nov 7, 2016
-
-@author: lubo
-"""
 import itertools
 
 from dae.variants.attributes import Sex
@@ -72,8 +67,9 @@ def filter_denovo_one_gene_per_events(vs, requested_effect_types):
 
 
 class EnrichmentResult(object):
-    """
-    Represents result of enrichment tool calculations. Supported fields are:
+    """Represents result of enrichment tool calculations.
+
+    Supported fields are:
 
     `name`
 

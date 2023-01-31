@@ -1,3 +1,3 @@
 RELEASE = "3.7.dev5"
 
-VERSION = '.'.join(RELEASE.split('.')[:2])
+VERSION = ".".join(RELEASE.split(".")[:2])

@@ -115,7 +115,7 @@ def add_record_to_annotable_arguments(parser: argparse.ArgumentParser):
 def build_record_to_annotatable(
         parameters: dict[str, str],
         available_columns: set[str],
-        context: GenomicContext = None) -> RecordToAnnotable:
+        context: Optional[GenomicContext] = None) -> RecordToAnnotable:
     """Transform a variant record into an annotable."""
     for columns, record_to_annotabale_class in \
             RECORD_TO_ANNOTABALE_CONFIGUATION.items():

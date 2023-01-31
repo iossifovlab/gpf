@@ -12,11 +12,11 @@ def main(argv, gpf_instance=None):
     """Entry point for the genotype data tool."""
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--verbose', '-V', action='count', default=0)
+    parser.add_argument("--verbose", "-V", action="count", default=0)
 
     parser.add_argument(
-        '--dry-run', '-n',
-        action='store_true', default=None)
+        "--dry-run", "-n",
+        action="store_true", default=None)
 
     parser.add_argument(
         "--source-id",

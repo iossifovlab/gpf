@@ -38,9 +38,10 @@ def info_get_allele_percent(info, column=None):
 
 
 def main(argv, gpf_instance=None):
+    # flake8: noqa: C901
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--verbose', '-V', action='count', default=0)
+    parser.add_argument("--verbose", "-V", action="count", default=0)
 
     parser.add_argument(
         "vcf_filename",

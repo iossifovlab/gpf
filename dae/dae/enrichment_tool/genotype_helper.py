@@ -24,7 +24,7 @@ class GenotypeHelper(object):
         families = self.genotype_data.families
         children = list(
             families.persons_with_roles(
-                    roles=[Role.prb, Role.sib, Role.child]))
+                roles=[Role.prb, Role.sib, Role.child]))
 
         for person_set_id, person_set in \
                 self.person_set_collection.person_sets.items():

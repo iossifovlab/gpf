@@ -54,7 +54,7 @@ Dataset1,any_dataset;Dataset1
 Dataset4,any_dataset;Dataset4
 TEST_REMOTE_iossifov_2014,any_dataset;TEST_REMOTE_iossifov_2014
 """
-    temp = tempfile.NamedTemporaryFile(mode='w+', delete=False)
+    temp = tempfile.NamedTemporaryFile(mode="w+", delete=False)
     command = Command(gpf_instance=fixtures_wgpf_instance)
     call_command(command, file=temp.name)
     try:
@@ -71,7 +71,7 @@ def test_datasets_restore(db):
     input_csv = """dataset,groups
 comp,any_dataset;comp;new_test_group
 """
-    temp = tempfile.NamedTemporaryFile(mode='w+', delete=False)
+    temp = tempfile.NamedTemporaryFile(mode="w+", delete=False)
     temp.write(input_csv)
     temp.seek(0)
     call_command("datasets_restore", file=temp.name)

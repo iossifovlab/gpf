@@ -4,6 +4,7 @@ import pytest
 from dae.pedigrees.testing import build_families_data
 from dae.pedigrees.family_tag_builder import FamilyTagsBuilder
 
+
 @pytest.mark.parametrize("tag,value", [
     ("tag_nuclear_family", True),
     ("tag_quad_family", False),

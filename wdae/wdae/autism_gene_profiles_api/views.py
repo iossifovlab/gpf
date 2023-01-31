@@ -60,7 +60,8 @@ class ConfigurationView(QueryBaseView):
                             "description": description,
                             "parentsCount": stats["parents"],
                             "childrenCount": stats["children"],
-                            "statistics": to_response_json(dataset)["statistics"],
+                            "statistics":
+                                to_response_json(dataset)["statistics"],
                         })
 
                 display_name = dataset.get("display_name")

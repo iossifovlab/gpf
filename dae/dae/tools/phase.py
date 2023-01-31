@@ -9,16 +9,16 @@ def getDims(inp):
 
 def checkConsistency(inp):
     L, P, nCpies = getDims(inp)
-    for l, m in enumerate(inp):
+    for locus, m in enumerate(inp):
         if m.shape != (2, P):
             raise Exception(
-                "The matrix for the ", l, "th locus has inconsisten shape"
+                "The matrix for the ", locus, "th locus has inconsisten shape"
             )
 
         lNC = sum(m, 0)
         if not np.array_equal(lNC, nCpies):
             raise Exception(
-                "The ", l, "th loci has inconsisten", "copynumber profile"
+                "The ", locus, "th loci has inconsisten", "copynumber profile"
             )
     return True
 
@@ -72,13 +72,13 @@ def phase(inp):
                 for dh in dph:
                     m = np.zeros((L, 2), dtype=int)
                     for h in (mh, dh):
-                        for l in range(L):
-                            m[l, h[l]] += 1
+                        for locus in range(L):
+                            m[locus, h[locus]] += 1
                     posChSts.add(str(m))
                 if nCpies[1] == 1:
                     m = np.matrix(np.zeros((L, 2)))
-                    for l in range(L):
-                        m[l, mh[l]] += 1
+                    for locus in range(L):
+                        m[locus, mh[locus]] += 1
                     posChSts.add(str(m))
             print(chSts)
             print(posChSts)

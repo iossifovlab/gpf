@@ -1,8 +1,3 @@
-"""
-Created on Mar 12, 2018
-
-@author: lubo
-"""
 from io import StringIO
 
 from dae.pedigrees.loader import FamiliesLoader

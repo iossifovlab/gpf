@@ -3,8 +3,6 @@ import os
 import tempfile
 import shutil
 
-import pandas as pd
-
 
 def relative_to_this_test_folder(path):
     return os.path.join(os.path.dirname(os.path.realpath(__file__)), path)
@@ -37,7 +35,7 @@ def temp_filename(request):
 
 #     command = (
 #         f"cut -f 1-3 {denovo_filename} "
-#         f"| annotate_variants.py --Traw {gene_model_file} --TrawFormat default"
+#         f"| annotate_variants.py --Traw {gene_model_file} --TrawFormat default"  # noqa
 #         f"| head -n 9 > {temp_filename}"
 #     )
 #     print(command)
@@ -75,5 +73,5 @@ def temp_filename(request):
 #     ref_seq_gene_model = getattr(genome_config.gene_models, "RefSeq")
 
 #     assert ref_seq_gene_model is not None
-#     # gene_models = load_gene_models(ref_seq_gene_model.file, format="default")
+#     # gene_models = load_gene_models(ref_seq_gene_model.file, format="default")  # noqa
 #     # assert gene_models is not None

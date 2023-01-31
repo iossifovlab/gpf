@@ -1,8 +1,3 @@
-"""
-Created on May 22, 2017
-
-@author: lubo
-"""
 from django.urls import re_path
 
 from common_reports_api import views

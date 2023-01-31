@@ -1,9 +1,9 @@
-from utils.datasets import find_dataset_id_in_request
 from functools import wraps
+from utils.datasets import find_dataset_id_in_request
 
 
 def inject_dataset(func):
-    """Injects a dataset property into the request of a view method"""
+    """Inject a dataset property into the request of a view method."""
 
     @wraps(func)
     def wrapper(self, request, *args, **kwargs):
