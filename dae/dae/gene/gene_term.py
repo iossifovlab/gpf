@@ -1,4 +1,5 @@
 #!/bin/env python
+# pylint: disable=invalid-name
 
 from collections import defaultdict
 
@@ -7,7 +8,9 @@ def dd():
     return defaultdict(int)
 
 
-class GeneTerms(object):
+class GeneTerms:
+    """Class representing gene terms."""
+
     def __init__(self):
         self.g2T = defaultdict(dd)
         self.t2G = defaultdict(dd)
@@ -15,6 +18,7 @@ class GeneTerms(object):
         self.geneNS = None
 
     def filterGenes(self, filterF):
+        """Filter the genese."""
         keepGs = filterF(list(self.g2T.keys()))
         self.g2T = {g: ts for g, ts in list(self.g2T.items()) if g in keepGs}
         self.t2G = defaultdict(dd)
@@ -25,6 +29,7 @@ class GeneTerms(object):
             del self.tDesc[t]
 
     def renameGenes(self, geneNS, renameF):
+        """Rename genese."""
         g2T = self.g2T
         self.g2T = defaultdict(dd)
         self.t2G = defaultdict(dd)
@@ -40,6 +45,7 @@ class GeneTerms(object):
         self.geneNS = geneNS
 
     def save(self, fn):
+        """Save to `fn`."""
         if fn.endswith("-map.txt"):
             mapFn = fn
             dscFn = fn[:-4] + "names.txt"
@@ -47,26 +53,25 @@ class GeneTerms(object):
             mapFn = fn + "-map.txt"
             dscFn = fn + "-mapnames.txt"
 
-        mapF = open(mapFn, "w")
-        mapF.write("#geneNS\t" + self.geneNS + "\n")
-        for g in sorted(self.g2T):
-            ts = []
-            for t, tn in sorted(self.g2T[g].items()):
-                ts += [t] * tn
-            mapF.write(g + "\t" + " ".join(ts) + "\n")
-        mapF.close()
+        with open(mapFn, "w") as mapF:
+            mapF.write("#geneNS\t" + self.geneNS + "\n")
+            for g in sorted(self.g2T):
+                ts = []
+                for t, tn in sorted(self.g2T[g].items()):
+                    ts += [t] * tn
+                mapF.write(g + "\t" + " ".join(ts) + "\n")
 
-        dscFn = open(dscFn, "w")
-        dscFn.write(
-            "\n".join(
-                [t + "\t" + dsc for t, dsc in sorted(self.tDesc.items())]
+        with open(dscFn, "w") as dscFn:
+            dscFn.write(
+                "\n".join(
+                    [t + "\t" + dsc for t, dsc in sorted(self.tDesc.items())]
+                )
+                + "\n"
             )
-            + "\n"
-        )
-        dscFn.close()
 
 
 def read_ewa_set_file(set_files):
+    """Read a set of ewa files."""
     r = GeneTerms()
     r.geneNS = "sym"
     for f in set_files:
@@ -82,6 +87,7 @@ def read_ewa_set_file(set_files):
 
 
 def read_gmt_file(input_file):
+    """Read a gmt file."""
     r = GeneTerms()
     r.geneNS = "sym"
 
@@ -98,6 +104,7 @@ def read_gmt_file(input_file):
 
 
 def read_mapping_file(input_file, names_file):
+    """Read a mapping file."""
     r = GeneTerms()
     r.geneNS = "id"
     for ln in input_file:

@@ -1,7 +1,8 @@
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
+from inspect import isgenerator
 import pytest
 
 from dae.utils.dae_utils import split_iterable
-from inspect import isgenerator
 
 
 def test_splits_empty_iterable():
@@ -46,10 +47,10 @@ def test_imperfectly_yields_all_parts():
 
 
 def test_consumes_given_iterable():
-    it = iter("asddsa")
-    gen = split_iterable(it, 3)
+    iterator = iter("asddsa")
+    gen = split_iterable(iterator, 3)
 
     gen = list(gen)  # consumes result
 
-    for val in it:
+    for _ in iterator:
         pytest.fail("should have been consumed")

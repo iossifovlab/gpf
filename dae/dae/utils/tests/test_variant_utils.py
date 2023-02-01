@@ -1,7 +1,7 @@
-import pytest
-
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
 from typing import List, Union
 
+import pytest
 import numpy as np
 
 from dae.utils.variant_utils import get_locus_ploidy, reverse_complement, \

@@ -1,10 +1,11 @@
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pytest
-
-from dae.variants.attributes import Sex
-from dae.pheno_tool.tool import PhenoResult
 
 from pheno_tool_api.views import PhenoToolView
 from pheno_tool_api.pheno_tool_adapter import PhenoToolAdapter
+
+from dae.variants.attributes import Sex
+from dae.pheno_tool.tool import PhenoResult
 
 
 pytestmark = pytest.mark.usefixtures(
@@ -22,7 +23,7 @@ def test_pheno_tool_view_build_report_description():
     assert desc == "measure ~ norm1 + norm2"
 
 
-def test_pheno_tool_view_align_NA_results_valid():
+def test_pheno_tool_view_align_na_results_valid():
     results = {
         "maleResults": {
             "positive": {"count": 0, "mean": 0, "deviation": 0},
@@ -40,7 +41,7 @@ def test_pheno_tool_view_align_NA_results_valid():
     assert results["femaleResults"]["positive"]["mean"] == 1
 
 
-def test_pheno_tool_view_align_NA_results_invalid():
+def test_pheno_tool_view_align_na_results_invalid():
     results = {
         "maleResults": {
             "positive": {"count": 0, "mean": 5, "deviation": 0.2},
@@ -82,7 +83,7 @@ def test_pheno_tool_view_calc_by_effect():
             return {Sex.M.name: pr_m, Sex.F.name: pr_f}
 
     mocked_tool = MockPhenoTool()
-    res = PhenoToolView.calc_by_effect("effectName", mocked_tool, dict())
+    res = PhenoToolView.calc_by_effect("effectName", mocked_tool, {})
     assert res["effect"] == "effectName"
     assert res["maleResults"]["positive"]["count"] == 1
     assert res["maleResults"]["positive"]["mean"] == 2

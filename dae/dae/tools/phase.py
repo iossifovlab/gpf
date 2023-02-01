@@ -1,4 +1,5 @@
 #!/bin/env python
+# pylint: disable=invalid-name, redefined-outer-name
 
 import numpy as np
 
@@ -8,7 +9,8 @@ def getDims(inp):
 
 
 def checkConsistency(inp):
-    L, P, nCpies = getDims(inp)
+    """Check consistency."""
+    _L, P, nCpies = getDims(inp)
     for locus, m in enumerate(inp):
         if m.shape != (2, P):
             raise Exception(
@@ -24,6 +26,7 @@ def checkConsistency(inp):
 
 
 def possiblePersonPhasingR(inp, L, P, p, ll, cPh, posPhs, seenHet):
+    """Is person phasing R possible."""
     if ll == L:
         posPhs.append(cPh)
         return
@@ -52,6 +55,7 @@ def possiblePersonPhasing(inp, L, P, nCpies, p):
 
 
 def phase(inp):
+    """Calculate phase."""
     L, P, nCpies = getDims(inp)
     # print >>sys.stderr, "inp:", inp
     # print >>sys.stderr, "L:", L
@@ -64,6 +68,7 @@ def phase(inp):
     for c in range(2, P):
         chSts.add(str(np.array([st[:, c] for st in inp])))
 
+    # pylint: disable=too-many-nested-blocks
     posFamilyPhs = []
     for mph in possiblePersonPhasing(inp, L, P, nCpies, 0):
         for dph in possiblePersonPhasing(inp, L, P, nCpies, 1):
@@ -82,7 +87,7 @@ def phase(inp):
                     posChSts.add(str(m))
             print(chSts)
             print(posChSts)
-            if all([x in posChSts for x in chSts]):
+            if all(x in posChSts for x in chSts):
                 posFamilyPhs.append((mph, dph))
 
     return posFamilyPhs

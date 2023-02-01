@@ -9,6 +9,8 @@ from dae.enrichment_tool.event_counters import overlap_enrichment_result_dict
 
 
 class BackgroundBase:
+    """Base class for Background."""
+
     # @staticmethod
     # def backgrounds():
     #     return {
@@ -17,11 +19,12 @@ class BackgroundBase:
     #         "samocha_background_model": SamochaBackground,
     #     }
 
+    # pylint: disable=inconsistent-return-statements
     @staticmethod
     def build_background(background_kind, enrichment_config):
         if background_kind == "coding_len_background_model":
             return CodingLenBackground(enrichment_config)
-        elif background_kind == "samocha_background_model":
+        if background_kind == "samocha_background_model":
             return SamochaBackground(enrichment_config)
 
     def __init__(self, name, config):
@@ -38,7 +41,7 @@ class BackgroundBase:
 
 class BackgroundCommon(BackgroundBase):
     def __init__(self, name, config):
-        super(BackgroundCommon, self).__init__(name, config)
+        super().__init__(name, config)
 
     def _prob(self, gene_syms):
         return 1.0 * self._count(gene_syms) / self._total
@@ -53,7 +56,7 @@ class BackgroundCommon(BackgroundBase):
     def calc_stats(
         self, effect_type, enrichment_events, gene_set, children_by_sex
     ):
-
+        """Calculate statistics."""
         gene_syms = [gs.upper() for gs in gene_set]
         overlap_enrichment_result_dict(enrichment_events, gene_syms)
 
@@ -81,7 +84,7 @@ class SynonymousBackground(BackgroundCommon):
     @staticmethod
     def _collect_affected_gene_syms(vs):
         return [
-            set([ge["sym"].upper() for ge in v.requestedGeneEffects])
+            set(ge["sym"].upper() for ge in v.requestedGeneEffects)
             for v in vs
         ]
 
@@ -131,7 +134,7 @@ class SynonymousBackground(BackgroundCommon):
         pass
 
     def __init__(self, config, variants_db=None):
-        super(SynonymousBackground, self).__init__(
+        super().__init__(
             "synonymousBackgroundModel", config
         )
         assert variants_db is not None
@@ -188,7 +191,7 @@ class CodingLenBackground(BackgroundCommon):
         return df
 
     def __init__(self, config):
-        super(CodingLenBackground, self).__init__(
+        super().__init__(
             "coding_len_background_model", config
         )
 
@@ -239,7 +242,7 @@ class SamochaBackground(BackgroundBase):
         return df
 
     def __init__(self, config):
-        super(SamochaBackground, self).__init__(
+        super().__init__(
             "samocha_background_model", config
         )
 
@@ -250,7 +253,7 @@ class SamochaBackground(BackgroundBase):
     def calc_stats(
         self, effect_type, enrichment_results, gene_set, children_by_sex
     ):
-
+        """Calculate statistics."""
         children_stats = Counter()
         for sex, persons in children_by_sex.items():
             children_stats[sex] = len(persons)

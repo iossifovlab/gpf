@@ -1,5 +1,5 @@
+# pylint: disable=W0621,C0114,C0116,W0212,W0613,missing-class-docstring
 import tempfile
-import os
 
 from django.core.management import call_command
 from django.contrib.auth import get_user_model
@@ -11,6 +11,7 @@ from users_api.management.commands.export_base import ExportUsersBase
 
 class UsersApiCommandsTests(TestCase):
     def test_users_export(self):
+        # pylint: disable=invalid-name
         User = get_user_model()
         new_user = User.objects.create_user(
             "john@test.abv", name="user john"
@@ -33,15 +34,12 @@ class UsersApiCommandsTests(TestCase):
             f"\nshefa@test.abv,shf,{groups_str},{new_admin_user.password}"
             "\n"
         )
-        temp = tempfile.NamedTemporaryFile(mode="w+", delete=False)
-        call_command("users_export", file=temp.name)
-        try:
+        with tempfile.NamedTemporaryFile(mode="w+", delete=False) as temp:
+            call_command("users_export", file=temp.name)
             self.assertEqual(temp.read(), expected_output)
-        finally:
-            temp.close()
-            os.unlink(temp.name)
 
     def test_users_restore(self):
+        # pylint: disable=invalid-name
         User = get_user_model()
         input_csv = (
             "Email,Name,Groups,Password"
@@ -49,11 +47,10 @@ class UsersApiCommandsTests(TestCase):
             "\nshefa@test.abv,shf,testgroup:admin,123123"
             "\n"
         )
-        temp = tempfile.NamedTemporaryFile(mode="w+", delete=False)
-        temp.write(input_csv)
-        temp.close()
-        call_command("users_restore", temp.name)
-        try:
+        with tempfile.NamedTemporaryFile(mode="w+", delete=False) as temp:
+            temp.write(input_csv)
+            temp.close()
+            call_command("users_restore", temp.name)
             second_user = User.objects.last()
             self.assertEqual(len(User.objects.all()), 2)
             self.assertEqual(
@@ -71,5 +68,3 @@ class UsersApiCommandsTests(TestCase):
             self.assertEqual(
                 len(second_user.groups.all()), 2
             )
-        finally:
-            os.unlink(temp.name)

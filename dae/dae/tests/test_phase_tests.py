@@ -1,10 +1,12 @@
-import numpy as np
+# pylint: disable=W0621,C0114,C0116,W0212,W0613,missing-class-docstring
 import unittest
+import numpy as np
 
 from dae.tools.phase import phase, getDims, checkConsistency
 
 
 class PhaseTest(unittest.TestCase):
+    # pylint: disable=invalid-name
 
     inpR = [
         [[1, 2, 2, 1], [1, 0, 0, 1]],
@@ -18,15 +20,15 @@ class PhaseTest(unittest.TestCase):
     ]
 
     def test_dims_length(self):
-        L, P, nCpies = getDims(self.inp)
+        L, _P, _nCpies = getDims(self.inp)
         self.assertEqual(2, L)
 
     def test_dims_p(self):
-        L, P, nCpies = getDims(self.inp)
+        _L, P, _nCpies = getDims(self.inp)
         self.assertEqual(4, P)
 
     def test_dims_copies(self):
-        L, P, nCpies = getDims(self.inp)
+        _L, _P, nCpies = getDims(self.inp)
         self.assertTrue(np.array_equal(np.array([2, 2, 2, 2]), nCpies))
 
     def test_consistence(self):

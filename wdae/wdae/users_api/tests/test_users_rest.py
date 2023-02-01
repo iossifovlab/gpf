@@ -1,3 +1,4 @@
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
 import json
 
 from rest_framework import status
@@ -129,7 +130,7 @@ def test_new_user_is_not_active(admin_client):
 
 
 def test_admin_can_partial_update_user(admin_client, active_user):
-    url = "/api/v3/users/{}".format(active_user.pk)
+    url = f"/api/v3/users/{active_user.pk}"
     data = {"name": "Ivan"}
 
     response = admin_client.patch(
@@ -143,7 +144,7 @@ def test_admin_can_partial_update_user(admin_client, active_user):
 
 
 def test_admin_cant_partial_update_user_email(admin_client, active_user):
-    url = "/api/v3/users/{}".format(active_user.pk)
+    url = f"/api/v3/users/{active_user.pk}"
     data = {"email": "test@test.com"}
 
     assert active_user.email != data["email"]
@@ -159,7 +160,7 @@ def test_admin_cant_partial_update_user_email(admin_client, active_user):
 
 
 def test_user_name_can_be_updated_to_blank(admin_client, active_user):
-    url = "/api/v3/users/{}".format(active_user.id)
+    url = f"/api/v3/users/{active_user.id}"
     data = {
         "id": active_user.id,
         "name": "",
@@ -180,7 +181,7 @@ def test_user_name_can_be_updated_to_blank(admin_client, active_user):
 def test_admin_can_add_user_group(admin_client, active_user, empty_group):
     user = active_user
 
-    url = "/api/v3/users/{}".format(user.pk)
+    url = f"/api/v3/users/{user.pk}"
     data = {"groups": [empty_group.name]}
 
     assert not user.groups.filter(name=empty_group.name).exists()
@@ -198,7 +199,7 @@ def test_admin_can_update_with_new_group(admin_client, active_user):
     group_name = "new group"
     user = active_user
 
-    url = "/api/v3/users/{}".format(user.pk)
+    url = f"/api/v3/users/{user.pk}"
     data = {"groups": [group_name]}
 
     assert not Group.objects.filter(name=group_name).exists()
@@ -216,7 +217,7 @@ def test_admin_can_update_with_new_group(admin_client, active_user):
 def test_admin_can_remove_user_group(admin_client, empty_group, active_user):
     active_user.groups.add(empty_group)
 
-    url = "/api/v3/users/{}".format(active_user.pk)
+    url = f"/api/v3/users/{active_user.pk}"
     data = {
         "groups": [
             group.name
@@ -239,7 +240,7 @@ def test_single_admin_cant_remove_superuser_group_from_self(
     admin_group, _ = Group.objects.get_or_create(name=WdaeUser.SUPERUSER_GROUP)
     admin.groups.add(admin_group)
 
-    url = "/api/v3/users/{}".format(admin.pk)
+    url = f"/api/v3/users/{admin.pk}"
     data = {
         "groups": [
             group.name
@@ -268,7 +269,7 @@ def test_two_admins_can_not_remove_superuser_group_from_self(
         Group.objects.get(name=WdaeUser.SUPERUSER_GROUP)
     )
 
-    url = "/api/v3/users/{}".format(admin.pk)
+    url = f"/api/v3/users/{admin.pk}"
     data = {
         "groups": [
             group.name
@@ -294,7 +295,7 @@ def test_two_admins_can_remove_superuser_group_from_other(
         "other_admin@test.com", "supersecret"
     )
 
-    url = "/api/v3/users/{}".format(other_superuser.pk)
+    url = f"/api/v3/users/{other_superuser.pk}"
     data = {
         "groups": [
             group.name
@@ -320,7 +321,7 @@ def test_admin_can_delete_user(admin_client, user_model):
     user_id = user.pk
     assert user_model.objects.filter(pk=user_id).exists()
 
-    url = "/api/v3/users/{}".format(user_id)
+    url = f"/api/v3/users/{user_id}"
     response = admin_client.delete(url)
 
     assert response.status_code is status.HTTP_204_NO_CONTENT

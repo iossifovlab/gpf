@@ -1,3 +1,4 @@
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
 from dae.variants.attributes import Inheritance
 
 from dae.enrichment_tool.event_counters import (
@@ -76,12 +77,12 @@ def test_get_sym_2_fn(f1_trio):
 
 
 def test_filter_overlapping_events(f1_trio):
-    oe = filter_overlapping_events(
+    overlapping_events = filter_overlapping_events(
         [["SAMD11"], ["SAMD11"], ["PLEKHN1"]], ["SAMD11", "POGZ"]
     )
 
-    assert len(oe) == 2
-    assert oe == [["SAMD11"], ["SAMD11"]]
+    assert len(overlapping_events) == 2
+    assert overlapping_events == [["SAMD11"], ["SAMD11"]]
 
 
 def test_overlap_enrichment_result_dict(f1_trio):
@@ -117,9 +118,9 @@ def test_events_counter(f1_trio):
         f1_trio.query_variants(inheritance=str(Inheritance.denovo.name))
     )
     psc = f1_trio.get_person_set_collection("phenotype")
-    gh = GenotypeHelper(f1_trio, psc)
+    genotype_helper = GenotypeHelper(f1_trio, psc)
     # children_stats = gh.get_children_stats()
-    children_by_sex = gh.children_by_sex("phenotype1")
+    children_by_sex = genotype_helper.children_by_sex("phenotype1")
     effect_types = set(["missense", "synonymous"])
     event_counter = EventsCounter()
     print(children_by_sex)
@@ -142,9 +143,9 @@ def test_gene_events_counter(f1_trio):
         f1_trio.query_variants(inheritance=str(Inheritance.denovo.name))
     )
     psc = f1_trio.get_person_set_collection("phenotype")
-    gh = GenotypeHelper(f1_trio, psc)
+    genotype_helper = GenotypeHelper(f1_trio, psc)
     # children_stats = gh.get_children_stats()
-    children_by_sex = gh.children_by_sex("phenotype1")
+    children_by_sex = genotype_helper.children_by_sex("phenotype1")
     effect_types = set(["missense", "synonymous"])
     event_counter = GeneEventsCounter()
 
