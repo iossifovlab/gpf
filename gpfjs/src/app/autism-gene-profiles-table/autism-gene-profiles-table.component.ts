@@ -130,7 +130,6 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
 
   private fillTable(): void {
     const agpRequests = [];
-    this.genes = [];
     this.pageIndex = 1;
     this.loadMoreGenes = true;
     this.showNothingFound = false;
