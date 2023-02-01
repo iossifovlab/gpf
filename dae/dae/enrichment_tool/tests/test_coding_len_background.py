@@ -1,3 +1,4 @@
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
 import numpy as np
 
 from dae.variants.attributes import Inheritance
@@ -26,7 +27,7 @@ def test_load(f1_trio_coding_len_background):
 
 
 def test_calc_stats(f1_trio, f1_trio_coding_len_background):
-
+    # pylint: disable=too-many-statements
     variants = list(
         f1_trio.query_variants(inheritance=str(Inheritance.denovo.name))
     )
@@ -40,9 +41,9 @@ def test_calc_stats(f1_trio, f1_trio_coding_len_background):
     event_counter = EventsCounter()
 
     psc = f1_trio.get_person_set_collection("phenotype")
-    gh = GenotypeHelper(f1_trio, psc)
-    children_stats = gh.get_children_stats("phenotype1")
-    children_by_sex = gh.children_by_sex("phenotype1")
+    genotype_helper = GenotypeHelper(f1_trio, psc)
+    children_stats = genotype_helper.get_children_stats("phenotype1")
+    children_by_sex = genotype_helper.children_by_sex("phenotype1")
 
     enrichment_events = event_counter.events(
         variants, children_by_sex, set(["missense", "synonymous"])

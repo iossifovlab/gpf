@@ -1,3 +1,4 @@
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pytest
 from dae.pedigrees.family_role_builder import FamilyRoleBuilder
 from dae.pedigrees.loader import FamiliesLoader

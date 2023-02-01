@@ -4,11 +4,12 @@ import argparse
 import sys
 
 
+# pylint: disable=invalid-name
 mateships_count = 20
 members_per_mateship = 3
 
 
-class Person(object):
+class Person:
     def __init__(self, _id, sex, mom=None, dad=None, status=None):
         self.sex = sex
         self.mom = mom
@@ -19,7 +20,7 @@ class Person(object):
         self.id = _id
 
 
-class Mateship(object):
+class Mateship:
     def __init__(self, mom, dad):
         self.mom = mom
         self.dad = dad
@@ -36,13 +37,13 @@ class Mateship(object):
         self.children.append(person)
 
 
-class Family(object):
+class Family:
     def __init__(self, members=None, mateships=None):
         self.members = members
         self.mateships = mateships
 
 
-class FamilyGenerator(object):
+class FamilyGenerator:
     def generate(self, mateships_count, children_per_mateship):
         members = {}
         mateships = {}
@@ -82,7 +83,7 @@ class FamilyGenerator(object):
         return Family(members, mateships)
 
 
-class DeepFamilyGenerator(object):
+class DeepFamilyGenerator:
     def generate(self, depth, children_per_mateship):
         members = {}
         mateships = {}
@@ -148,6 +149,7 @@ def save_family(family, filename=None):
 
 
 def main():
+    """Entry-point for the script."""
     desc = "Program to generate family pedigree file."
     parser = argparse.ArgumentParser(
         description=desc,

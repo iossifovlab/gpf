@@ -1,8 +1,9 @@
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
+from collections import Counter
 import pytest
 from box import Box
 from dae.pheno_tool.tool import PhenoToolHelper
 from dae.variants.attributes import Role
-from collections import Counter
 
 
 def mock_allele(effect, in_members):

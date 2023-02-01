@@ -16,7 +16,8 @@ from dae.utils.regions import Region
 logger = logging.getLogger("impala_tables_summary_variants")
 
 
-def parse_cli_arguments(argv, gpf_instance):
+def parse_cli_arguments(argv, _gpf_instance):
+    """Parse CLI arguments."""
     parser = argparse.ArgumentParser(
         description="loading study parquet files in impala db",
         conflict_handler="resolve",
@@ -43,22 +44,26 @@ def parse_cli_arguments(argv, gpf_instance):
 
 
 def variants_parition_bins(study_backend, partition):
+    """Return partition bins."""
+    # pylint: disable=protected-access
     impala = study_backend._impala_helpers
 
     partition_bins = []
     with closing(impala.connection()) as connection:
         with connection.cursor() as cursor:
-            q = f"SELECT DISTINCT({partition}) FROM " \
+            query = f"SELECT DISTINCT({partition}) FROM " \
                 f"{study_backend.db}.{study_backend.variants_table}"
-            logger.info(f"collecting patitions: {q}")
-            cursor.execute(q)
+            logger.info("collecting patitions: %s", query)
+            cursor.execute(query)
             for row in cursor:
                 partition_bins.append(row[0])
-    logger.info(f"partitions found: {partition_bins}")
+    logger.info("partitions found: %s", partition_bins)
     return partition_bins
 
 
 def collect_summary_schema(impala_variants):
+    """Collect summary schema."""
+    # pylint: disable=invalid-name
     FAMILY_FIELDS = set([
         "family_index",
         "family_id",
@@ -101,31 +106,36 @@ PARTITIONS = set([
 
 
 def drop_summary_table(study_id, impala_variants):
+    """Drop summary table."""
+    # pylint: disable=protected-access
     impala = impala_variants._impala_helpers
     with closing(impala.connection()) as connection:
         with connection.cursor() as cursor:
-            q = f"DROP TABLE IF EXISTS " \
+            query = f"DROP TABLE IF EXISTS " \
                 f"{summary_table_name(study_id, impala_variants)}"
-            logger.info(f"drop summary table: {q}")
-            cursor.execute(q)
+            logger.info("drop summary table: %s", query)
+            cursor.execute(query)
 
-            q = f"DROP TABLE IF EXISTS " \
+            query = f"DROP TABLE IF EXISTS " \
                 f"{summary_table_name_temp(study_id, impala_variants)}"
-            logger.info(f"drop summary table: {q}")
-            cursor.execute(q)
+            logger.info("drop summary table: %s", query)
+            cursor.execute(query)
 
 
 def rename_summary_table(study_id, impala_variants):
+    """Rename summary table."""
+    # pylint: disable=protected-access
     impala = impala_variants._impala_helpers
-    q = f"ALTER TABLE {summary_table_name_temp(study_id, impala_variants)} " \
+    qry = f"ALTER TABLE {summary_table_name_temp(study_id, impala_variants)} " \
         f"RENAME TO {summary_table_name(study_id, impala_variants)}"
     with closing(impala.connection()) as connection:
         with connection.cursor() as cursor:
-            logger.info(f"drop summary table: {q}")
-            cursor.execute(q)
+            logger.info("drop summary table: %s", qry)
+            cursor.execute(qry)
 
 
 def create_summary_table(study_id, impala_variants):
+    """Create summary table."""
     schema = collect_summary_schema(impala_variants)
     partition_bins = []
 
@@ -145,23 +155,26 @@ def create_summary_table(study_id, impala_variants):
         partition_statement = ", ".join(partition_statement)
         partition_statement = f"PARTITIONED BY ({partition_statement}) "
 
+    # pylint: disable=protected-access
     impala = impala_variants._impala_helpers
     with closing(impala.connection()) as connection:
         with connection.cursor() as cursor:
 
-            q = f"CREATE TABLE IF NOT EXISTS " \
+            qry = f"CREATE TABLE IF NOT EXISTS " \
                 f"{summary_table_name_temp(study_id, impala_variants)} " \
                 f"({schema_statement}) " \
                 f"{partition_statement}" \
                 f"STORED AS PARQUET"
 
-            logger.info(f"create summary table: {q}")
-            cursor.execute(q)
+            logger.info("create summary table: %s", qry)
+            cursor.execute(qry)
 
     return partition_bins
 
 
 class RegionBinsHelper:
+    """Encapsulates data related to region bins."""
+    # pylint: disable=too-few-public-methods
 
     def __init__(self, table_properties, genome):
         self.table_properties = table_properties
@@ -173,6 +186,7 @@ class RegionBinsHelper:
 
         self.region_bins = {}
 
+    # pylint: disable=inconsistent-return-statements
     def _build_region_bins(self):
         if not self.chromosomes or self.region_length == 0:
             return []
@@ -206,6 +220,8 @@ class RegionBinsHelper:
 def insert_into_summary_table(
         pedigree_table, variants_table, summary_table,
         summary_schema, parition, region_bins, region_split=0):
+    """Insert into a summary table."""
+    # pylint: disable=too-many-locals
 
     grouping_fields = [
         "bucket_index",
@@ -225,7 +241,7 @@ def insert_into_summary_table(
 
     other_fields = []
 
-    for field_name, field_type in summary_schema.items():
+    for field_name, _field_type in summary_schema.items():
         if field_name in parition:
             # handle partition
             pass
@@ -281,7 +297,7 @@ def insert_into_summary_table(
 
     queries = []
     for region_statement in region_statements:
-        q = f"INSERT INTO {summary_table} ( " \
+        qry = f"INSERT INTO {summary_table} ( " \
             f"{grouping_statement}, " \
             f"{insert_other_statement}, " \
             f"{insert_family_summary_fields}) " \
@@ -301,12 +317,15 @@ def insert_into_summary_table(
             f"BITAND(32, variants.inheritance_in_members) = 0 ) AND " \
             f"variants.variant_in_members = pedigree.person_id "\
             f"GROUP BY {grouping_statement}"
-        queries.append(q)
+        queries.append(qry)
     return queries
 
 
-def main(argv=sys.argv[1:], gpf_instance=None):
+def main(argv=None, gpf_instance=None):
+    """Entry point for the script."""
     # flake8: noqa: C901
+    # pylint: disable=too-many-branches, too-many-statements, too-many-locals
+    argv = sys.argv[1:] if argv is None else argv
     if gpf_instance is None:
         gpf_instance = GPFInstance.build()
 
@@ -330,20 +349,21 @@ def main(argv=sys.argv[1:], gpf_instance=None):
     else:
         study_ids = [sid.strip() for sid in argv.studies.split(",")]
 
-    logger.info(f"building summary variants tables for studies: {study_ids}")
+    logger.info("building summary variants tables for studies: %s", study_ids)
 
     for study_id in study_ids:
         study = gpf_instance.get_genotype_data(study_id)
         assert study.study_id == study_id
 
+        # pylint: disable=protected-access
         study_backend = study._backend
         if not isinstance(study_backend, ImpalaVariants):
-            logger.warning(f"not an impala study: {study_id}; skipping...")
+            logger.warning("not an impala study: %s; skipping...", study_id)
             continue
 
         if study_backend.variants_table is None:
             logger.warning(
-                f"study {study_id} has no variants; skipping...")
+                "study %s has no variants; skipping...", study_id)
             continue
 
         drop_summary_table(study_id, study_backend)
@@ -357,15 +377,16 @@ def main(argv=sys.argv[1:], gpf_instance=None):
         partition_bins = {}
 
         logger.info(
-            f"collecting partitions {partitions} from "
-            f"variants table {variants_table}")
+            "collecting partitions %s from "
+            "variants table %s", partitions, variants_table)
 
         for partition in partitions:
             partition_bins[partition] = variants_parition_bins(
                 study_backend, partition)
 
-        logger.info(f"variant table partitions: {partition_bins}")
+        logger.info("variant table partitions: %s", partition_bins)
 
+        # pylint: disable=protected-access
         impala = study_backend._impala_helpers
         started = time.time()
 
@@ -376,24 +397,20 @@ def main(argv=sys.argv[1:], gpf_instance=None):
         region_bin_helpers._build_region_bins()
 
         logger.info(
-            f"region bins calculated: {region_bin_helpers.region_bins}")
+            "region bins calculated: %s", region_bin_helpers.region_bins)
 
         assert set(partition_bins["region_bin"]).issubset(
             set(region_bin_helpers.region_bins.keys()))
 
         all_partitions = list(itertools.product(*partition_bins.values()))
         for index, partition in enumerate(all_partitions):
-            partition = {
-                key: value
-                for key, value in zip(partition_bins.keys(), partition)
-            }
+            partition = dict(zip(partition_bins.keys(), partition))
             logger.info(
-                f"building summary table for partition: "
-                f"{index}/{len(all_partitions)}; "
-                f"{partition} of {study_id}")
+                "building summary table for partition: %d/%d; %s of %s",
+                index, len(all_partitions), partition, study_id)
 
             part_started = time.time()
-            for q in insert_into_summary_table(
+            for qry in insert_into_summary_table(
                 pedigree_table, variants_table, summary_table,
                 summary_schema, partition,
                 region_bin_helpers.region_bins,
@@ -405,11 +422,11 @@ def main(argv=sys.argv[1:], gpf_instance=None):
                         with closing(impala.connection()) as connection:
                             with connection.cursor() as cursor:
                                 logger.debug(
-                                    f"going to run summary query: {q}")
-                                cursor.execute(q)
+                                    "going to run summary query: %s", qry)
+                                cursor.execute(qry)
                                 break
-                    except Exception as ex:
-                        logger.exception(f"error executing {q}")
+                    except Exception as ex:  # pylint: disable=broad-except
+                        logger.exception("error executing %s", qry)
                         time.sleep(6)
                         repeat -= 1
                         if repeat == 0:
@@ -418,16 +435,19 @@ def main(argv=sys.argv[1:], gpf_instance=None):
             part_elapsed = time.time() - part_started
 
             logger.info(
-                f"processing partition "
-                f"{index}/{len(all_partitions)} of {study_id} "
-                f"took {part_elapsed:.2f} secs; "
-                f"{partition} "
+                "processing partition "
+                "%d/%d of %s "
+                "took %.2f secs; "
+                "%s ",
+                index, len(all_partitions), study_id, part_elapsed, partition
+
             )
             elapsed = time.time() - started
             logger.info(
-                f"processing partition "
-                f"{index}/{len(all_partitions)} of {study_id}; "
-                f"total time {elapsed:.2f} secs"
+                "processing partition "
+                "%d/%d of %s; "
+                "total time %.2f secs",
+                index, len(all_partitions), study_id, elapsed
             )
 
         rename_summary_table(study_id, study_backend)

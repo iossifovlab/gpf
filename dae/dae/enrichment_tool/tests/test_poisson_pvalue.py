@@ -1,6 +1,7 @@
-from dae.enrichment_tool.background import poisson_test
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pytest
 from scipy import stats
+from dae.enrichment_tool.background import poisson_test
 
 
 def test_experiments():
@@ -28,7 +29,7 @@ def test_samocha_poisson_vs_binom():
     poisson_pvalue = poisson_test(observed, expected)
     binom_pvalue = stats.binom_test(observed, trails, p=bg_prob)
 
-    print("poisson: {}, binom: {}".format(poisson_pvalue, binom_pvalue))
+    print(f"poisson: {poisson_pvalue}, binom: {binom_pvalue}")
 
     observed = 10
     trails = 10
@@ -37,7 +38,7 @@ def test_samocha_poisson_vs_binom():
 
     poisson_pvalue = poisson_test(observed, expected)
     binom_pvalue = stats.binom_test(observed, trails, p=bg_prob)
-    print("poisson: {}, binom: {}".format(poisson_pvalue, binom_pvalue))
+    print(f"poisson: {poisson_pvalue}, binom: {binom_pvalue}")
 
     observed = 46
     trails = 546
@@ -46,7 +47,7 @@ def test_samocha_poisson_vs_binom():
 
     poisson_pvalue = poisson_test(observed, expected)
     binom_pvalue = stats.binom_test(observed, trails, p=bg_prob)
-    print("poisson: {}, binom: {}".format(poisson_pvalue, binom_pvalue))
+    print(f"poisson: {poisson_pvalue}, binom: {binom_pvalue}")
 
     observed = 95
     trails = 2583
@@ -55,4 +56,4 @@ def test_samocha_poisson_vs_binom():
 
     poisson_pvalue = poisson_test(observed, expected)
     binom_pvalue = stats.binom_test(observed, trails, p=bg_prob)
-    print("poisson: {}, binom: {}".format(poisson_pvalue, binom_pvalue))
+    print(f"poisson: {poisson_pvalue}, binom: {binom_pvalue}")

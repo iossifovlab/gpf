@@ -1,13 +1,14 @@
-from dae.variants.core import Allele
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pytest
 
+from dae.variants.core import Allele
 from dae.variants.variant import vcf2cshl, trim_str_right_left, \
     tandem_repeat
 from dae.utils.dae_utils import dae2vcf_variant
 
 
 @pytest.mark.parametrize(
-    "ref,alt,vt,pos,length", [
+    "ref,alt,variant_type,pos,length", [
 
         ("A", "AA",
          "ins(A)",
@@ -33,17 +34,17 @@ from dae.utils.dae_utils import dae2vcf_variant
          "ins(CAAC)",
          2, 4),
     ])
-def test_vcf2cshl_variant_format(ref, alt, vt, pos, length):
+def test_vcf2cshl_variant_format(ref, alt, variant_type, pos, length):
 
-    vd = vcf2cshl(1, ref, alt, trimmer=trim_str_right_left)
+    variant_desc = vcf2cshl(1, ref, alt, trimmer=trim_str_right_left)
 
-    assert vd.position == pos
-    assert str(vd) == vt
-    assert vd.length == length
+    assert variant_desc.position == pos
+    assert str(variant_desc) == variant_type
+    assert variant_desc.length == length
 
 
 @pytest.mark.parametrize(
-    "ref,alt,vt,pos,length", [
+    "ref,alt,variant_type,pos,length", [
 
         ("AA", "AA",
          "comp(->)",
@@ -69,16 +70,16 @@ def test_vcf2cshl_variant_format(ref, alt, vt, pos, length):
          "ins(CAAA)",
          1, 4),
     ])
-def test_vcf2cshl_variant_format2(ref, alt, vt, pos, length):
+def test_vcf2cshl_variant_format2(ref, alt, variant_type, pos, length):
 
-    vd = vcf2cshl(1, ref, alt, trimmer=trim_str_right_left)
-    assert vd.position == pos
-    assert str(vd) == vt
-    assert vd.length == length
+    variant_desc = vcf2cshl(1, ref, alt, trimmer=trim_str_right_left)
+    assert variant_desc.position == pos
+    assert str(variant_desc) == variant_type
+    assert variant_desc.length == length
 
 
 @pytest.mark.parametrize(
-    "ref,alt,vt,pos,length", [
+    "ref,alt,variant_type,pos,length", [
 
         ("AAAAAA", "AAAAAC",
          "sub(A->C)",
@@ -112,12 +113,12 @@ def test_vcf2cshl_variant_format2(ref, alt, vt, pos, length):
          "ins(C)",
          7, 1),
     ])
-def test_vcf2cshl_variant_format3(ref, alt, vt, pos, length):
+def test_vcf2cshl_variant_format3(ref, alt, variant_type, pos, length):
 
-    vd = vcf2cshl(1, ref, alt, trimmer=trim_str_right_left)
-    assert vd.position == pos
-    assert str(vd) == vt
-    assert vd.length == length
+    variant_desc = vcf2cshl(1, ref, alt, trimmer=trim_str_right_left)
+    assert variant_desc.position == pos
+    assert str(variant_desc) == variant_type
+    assert variant_desc.length == length
 
 
 def test_insert_long():
@@ -126,9 +127,9 @@ def test_insert_long():
         "CCCCCTCATCACCTCCCCAGCCACGGTGAGGACCCACCCTGGCATGATCT"
         "CCCCTCATCACCTCCCCAGCCACGGTGAGGACCCACCCTGGCATGATCT"
     )
-    vd = vcf2cshl(1, ref, alt, trimmer=trim_str_right_left)
+    variant_desc = vcf2cshl(1, ref, alt, trimmer=trim_str_right_left)
 
-    assert vd.position == 2  # FIXME
+    assert variant_desc.position == 2  # FIXME
 
 
 def test_cshl_to_vcf_problem(gpf_instance_2013):
@@ -145,13 +146,13 @@ def test_cshl_to_vcf_problem(gpf_instance_2013):
     assert reference == "G"
     assert alternative == "A"
 
-    vd = vcf2cshl(
+    variant_desc = vcf2cshl(
         position, reference, alternative, trimmer=trim_str_right_left
     )
 
-    assert vd.position == position
-    assert str(vd) == variant
-    assert vd.length == 1
+    assert variant_desc.position == position
+    assert str(variant_desc) == variant
+    assert variant_desc.length == 1
 
 
 def test_spark_v3_problems_check():
@@ -159,12 +160,12 @@ def test_spark_v3_problems_check():
     # chrom = '1'
     position = 865461
     ref = "AGCCCCACCTTCCTCTCCTCCT"
-    alt = "AGCCCCACCTTCCTCTCCTCCT" "GCCCCACCTTCCTCTCCTCCT"
+    alt = "AGCCCCACCTTCCTCTCCTCCT" + "GCCCCACCTTCCTCTCCTCCT"
 
-    vd = vcf2cshl(position, ref, alt, trimmer=trim_str_right_left)
+    variant_desc = vcf2cshl(position, ref, alt, trimmer=trim_str_right_left)
 
-    assert str(vd) == "ins(GCCCCACCTTCCTCTCCTCCT)"
-    assert vd.position == position + 1
+    assert str(variant_desc) == "ins(GCCCCACCTTCCTCTCCTCCT)"
+    assert variant_desc.position == position + 1
 
 
 @pytest.mark.parametrize(
@@ -222,9 +223,9 @@ def test_tandem_repeat_unit(
     assert tr_ref == ref_repeats
     assert tr_alt == alt_repeats
 
-    vd = vcf2cshl(position, ref, alt)
-    assert vd.variant_type & Allele.Type.tandem_repeat
+    variant_desc = vcf2cshl(position, ref, alt)
+    assert variant_desc.variant_type & Allele.Type.tandem_repeat
     if ref_repeats < alt_repeats:
-        assert vd.variant_type & Allele.Type.small_insertion
+        assert variant_desc.variant_type & Allele.Type.small_insertion
     elif ref_repeats > alt_repeats:
-        assert vd.variant_type & Allele.Type.small_deletion
+        assert variant_desc.variant_type & Allele.Type.small_deletion

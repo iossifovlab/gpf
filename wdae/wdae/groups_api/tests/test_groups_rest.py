@@ -51,7 +51,7 @@ def test_groups_have_users_and_datasets(admin_client):
 def test_single_group_has_users_and_datasets(admin_client):
     groups = Group.objects.all()
     for group in groups:
-        url = "/api/v3/groups/{}".format(group.name)
+        url = f"/api/v3/groups/{group.name}"
         response = admin_client.get(url)
 
         assert response.status_code is status.HTTP_200_OK
@@ -64,7 +64,7 @@ def test_admin_cant_delete_groups(admin_client):
     assert len(all_groups) > 0
 
     for group in all_groups:
-        url = "/api/v3/groups/{}".format(group.pk)
+        url = f"/api/v3/groups/{group.pk}"
         del_response = admin_client.delete(
             url, content_type="application/json", format="json"
         )
@@ -115,7 +115,7 @@ def test_admin_can_rename_groups(admin_client, group_with_user):
     test_name = "AwesomeGroup"
     assert group.name is not test_name
 
-    url = "/api/v3/groups/{}".format(group.name)
+    url = f"/api/v3/groups/{group.name}"
 
     data = {"id": group.id, "name": test_name}
 
@@ -135,7 +135,7 @@ def test_group_has_all_users(admin_client, group):
     for email in test_emails:
         group.user_set.create(email=email)
 
-    url = "/api/v3/groups/{}".format(group.name)
+    url = f"/api/v3/groups/{group.name}"
     response = admin_client.get(url)
 
     assert response.status_code is status.HTTP_200_OK
@@ -152,7 +152,7 @@ def test_no_empty_groups_are_accessible(admin_client):
     assert response.status_code is status.HTTP_200_OK
     assert len(response.data) == groups_count
 
-    url = "/api/v3/groups/{}".format(new_group.id)
+    url = f"/api/v3/groups/{new_group.id}"
     response = admin_client.get(url)
     assert response.status_code is status.HTTP_404_NOT_FOUND
 
@@ -181,14 +181,14 @@ def test_empty_group_with_permissions_is_shown(admin_client, dataset):
 def test_group_has_all_datasets(admin_client, group_with_user, dataset):
     group, _ = group_with_user
 
-    url = "/api/v3/groups/{}".format(group.name)
+    url = f"/api/v3/groups/{group.name}"
     response = admin_client.get(url)
     assert response.status_code is status.HTTP_200_OK
     assert len(response.data["datasets"]) == 0
 
     dataset.groups.add(group)
 
-    url = "/api/v3/groups/{}".format(group.name)
+    url = f"/api/v3/groups/{group.name}"
     response = admin_client.get(url)
     assert response.status_code is status.HTTP_200_OK
     assert len(response.data["datasets"]) == 1
@@ -213,8 +213,8 @@ def test_grant_permission_for_group(admin_client, group_with_user, dataset):
 
 
 def test_grant_permission_creates_new_group(admin_client, user, dataset):
-    groupName = "NewGroup"
-    data = {"datasetId": dataset.dataset_id, "groupName": groupName}
+    group_name = "NewGroup"
+    data = {"datasetId": dataset.dataset_id, "groupName": group_name}
 
     assert not user_has_permission(user, dataset)
 
@@ -224,7 +224,7 @@ def test_grant_permission_creates_new_group(admin_client, user, dataset):
     )
 
     assert response.status_code == status.HTTP_200_OK
-    assert Group.objects.filter(name=groupName).count() == 1
+    assert Group.objects.filter(name=group_name).count() == 1
 
 
 def test_grant_permission_creates_new_group_case_sensitive(
@@ -265,8 +265,8 @@ def test_not_admin_cant_grant_permissions(
 def test_not_admin_grant_permissions_does_not_create_group(
     user_client, dataset
 ):
-    groupName = "NewGroup"
-    data = {"datasetId": dataset.dataset_id, "groupName": groupName}
+    group_name = "NewGroup"
+    data = {"datasetId": dataset.dataset_id, "groupName": group_name}
 
     url = "/api/v3/groups/grant-permission"
     response = user_client.post(
@@ -274,7 +274,7 @@ def test_not_admin_grant_permissions_does_not_create_group(
     )
 
     assert response.status_code == status.HTTP_403_FORBIDDEN
-    assert Group.objects.filter(name=groupName).count() == 0
+    assert Group.objects.filter(name=group_name).count() == 0
 
 
 def test_revoke_permission_for_group(admin_client, group_with_user, dataset):

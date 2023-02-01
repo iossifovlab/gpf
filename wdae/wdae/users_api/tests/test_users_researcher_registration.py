@@ -1,7 +1,8 @@
-import pytest
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
 import json
 from pprint import pprint
 
+import pytest
 from rest_framework import status
 
 from users_api.models import WdaeUser, SetPasswordCode
@@ -97,8 +98,8 @@ def test_successful_register(client, researcher_without_password):
         url, json.dumps(data), content_type="application/json", format="json"
     )
     assert response.status_code == status.HTTP_201_CREATED
-    u = WdaeUser.objects.get(email=researcher_without_password.email)
-    assert u.name == name
+    user = WdaeUser.objects.get(email=researcher_without_password.email)
+    assert user.name == name
 
 
 def test_successful_register_empty_name(client, researcher_without_password):
@@ -111,8 +112,8 @@ def test_successful_register_empty_name(client, researcher_without_password):
         url, json.dumps(data), content_type="application/json", format="json"
     )
     assert response.status_code == status.HTTP_201_CREATED
-    u = WdaeUser.objects.get(email=researcher_without_password.email)
-    assert u.name == old_name
+    user = WdaeUser.objects.get(email=researcher_without_password.email)
+    assert user.name == old_name
 
 
 def test_successful_register_missing_name(client, researcher_without_password):
@@ -127,8 +128,8 @@ def test_successful_register_missing_name(client, researcher_without_password):
         url, json.dumps(data), content_type="application/json", format="json"
     )
     assert response.status_code == status.HTTP_201_CREATED
-    u = WdaeUser.objects.get(email=researcher_without_password.email)
-    assert u.name == old_name
+    user = WdaeUser.objects.get(email=researcher_without_password.email)
+    assert user.name == old_name
 
 
 def test_register_twice(client, researcher_without_password):

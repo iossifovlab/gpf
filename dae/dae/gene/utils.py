@@ -1,12 +1,14 @@
+# pylint: disable=invalid-name, unused-variable
+
 import sys
 from copy import deepcopy
 from box import Box  # type: ignore
 
 from dae.configuration.gpf_config_parser import FrozenBox
-# from dae.gene.gene_term import loadGeneTerm
 
 
 def rename_gene_terms(config, gene_terms, inNS):
+    """Rename gene terms."""
     assert {gene_terms.geneNS, inNS} <= {"id", "sym"}, (
         f'The provided namespaces "{gene_terms.geneNS}",'
         ' "{inNS}" must be either "id" or "sym"!'
@@ -16,11 +18,12 @@ def rename_gene_terms(config, gene_terms, inNS):
 
     if result.geneNS == inNS:
         return result
-    elif result.geneNS == "id" and inNS == "sym":
+    if result.geneNS == "id" and inNS == "sym":
 
         if not (config.gene_info and config.gene_info.genes):
             config = getGenes(config)
 
+        # pylint: disable=inconsistent-return-statements
         def rF(x):
             genes = config.gene_info.genes
             if x in genes:
@@ -55,6 +58,7 @@ def getGeneTermAtt(config, gt_id, attName):
 
 
 def _parseNCBIGeneInfo(config):
+    # pylint: disable=too-many-locals
     genes = {}
     nsTokens = {}
     with open(config.gene_info_file) as f:
@@ -126,7 +130,9 @@ def _addNSTokenToGeneInfo(nsTokens, ns, token, gi):
     tokens[token].append(gi)
 
 
+# pylint: disable=inconsistent-return-statements
 def getCleanGeneId(config, ns, t):
+    """Return clean gene id."""
     ns_tokens = getNsTokens(config)
 
     if ns not in ns_tokens:
@@ -140,9 +146,10 @@ def getCleanGeneId(config, ns, t):
 
 
 def loadNCBIGeneInfo(config):
+    """Load NCBI Gene Info."""
     genes, ns_tokens = _parseNCBIGeneInfo(config.gene_info)
     config = config.to_dict()
-    config.setdefault("gene_info", dict())
+    config.setdefault("gene_info", {})
     config["gene_info"]["genes"] = genes
     config["gene_info"]["ns_tokens"] = ns_tokens
     config = FrozenBox(config)

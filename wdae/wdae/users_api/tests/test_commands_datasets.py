@@ -1,5 +1,5 @@
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
 import tempfile
-import os
 
 from django.core.management import call_command
 from django.contrib.auth.models import Group
@@ -54,14 +54,10 @@ Dataset1,any_dataset;Dataset1
 Dataset4,any_dataset;Dataset4
 TEST_REMOTE_iossifov_2014,any_dataset;TEST_REMOTE_iossifov_2014
 """
-    temp = tempfile.NamedTemporaryFile(mode="w+", delete=False)
-    command = Command(gpf_instance=fixtures_wgpf_instance)
-    call_command(command, file=temp.name)
-    try:
+    with tempfile.NamedTemporaryFile(mode="w+", delete=False) as temp:
+        command = Command(gpf_instance=fixtures_wgpf_instance)
+        call_command(command, file=temp.name)
         assert set(temp.read().split()) == set(expected_output.split())
-    finally:
-        os.unlink(temp.name)
-        temp.close()
 
 
 def test_datasets_restore(db):
@@ -71,11 +67,10 @@ def test_datasets_restore(db):
     input_csv = """dataset,groups
 comp,any_dataset;comp;new_test_group
 """
-    temp = tempfile.NamedTemporaryFile(mode="w+", delete=False)
-    temp.write(input_csv)
-    temp.seek(0)
-    call_command("datasets_restore", file=temp.name)
-    try:
+    with tempfile.NamedTemporaryFile(mode="w+", delete=False) as temp:
+        temp.write(input_csv)
+        temp.seek(0)
+        call_command("datasets_restore", file=temp.name)
         # I needed to refresh the dataset object, otherwise
         # its groups are empty
         comp = Dataset.objects.get(dataset_id="comp")
@@ -85,6 +80,3 @@ comp,any_dataset;comp;new_test_group
             "comp",
             "new_test_group"
         }
-    finally:
-        os.unlink(temp.name)
-        temp.close()

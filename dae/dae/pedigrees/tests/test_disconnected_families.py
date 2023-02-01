@@ -1,3 +1,4 @@
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
 import os
 import pytest
 
@@ -33,8 +34,8 @@ def test_not_connected_aunts(families_loader):
     print(family_connections.get_mating_units())
     print(family_connections.get_sibship_units())
 
-    g = family_connections.get_graph()
-    print(g)
+    graph = family_connections.get_graph()
+    print(graph)
 
     assert not family_connections.is_connected()
 
@@ -50,9 +51,9 @@ def test_not_connected_aunts_roles(families_loader):
     assert len(fam) == 7
     assert len(fam.full_members) == 7
 
-    fc = FamilyConnections.from_family(fam)
+    fam_connections = FamilyConnections.from_family(fam)
 
-    fam1 = fc.family
+    fam1 = fam_connections.family
     assert len(fam) == 7
     assert len(fam1.full_members) == 9
     print(fam1.full_members)
