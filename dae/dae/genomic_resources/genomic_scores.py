@@ -332,7 +332,17 @@ class GenomicScore(
 
             val = {}
             for scr_id in scores:
-                val[scr_id] = line.get_score(scr_id)
+                try:
+                    val[scr_id] = line.get_score(scr_id)
+                except (KeyError, IndexError):
+                    logger.exception(
+                        "Failed to fetch score %s in region %s:%s-%s",
+                        scr_id,
+                        chrom,
+                        line_pos_begin,
+                        line_pos_end
+                    )
+                    val[scr_id] = None
 
             if pos_begin is not None:
                 left = max(pos_begin, line_pos_begin)

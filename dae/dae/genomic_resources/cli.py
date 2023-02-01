@@ -475,11 +475,11 @@ def _execute_tasks(graph, **kwargs):
     for task, result_or_error in tasks_iter:
         if isinstance(result_or_error, Exception):
             logger.info("Task %s failed!", task.task_id)
-            logger.error(result_or_error)
+            raise result_or_error
         else:
             logger.info("Task %s successful!", task.task_id)
     if client is not None:
-        client.__exit__()
+        client.__exit__(*sys.exc_info())
 
 
 def _run_repo_stats_command(proto, **kwargs):
