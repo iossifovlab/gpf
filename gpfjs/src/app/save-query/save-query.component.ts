@@ -1,7 +1,7 @@
 import { Observable } from 'rxjs';
 import { Component, OnInit, Input, ViewChild, ElementRef, ChangeDetectorRef } from '@angular/core';
 import { QueryService } from '../query/query.service';
-import { NgbDropdownMenu, NgbTooltip } from '@ng-bootstrap/ng-bootstrap';
+import { NgbDropdown, NgbTooltip } from '@ng-bootstrap/ng-bootstrap';
 import { UsersService } from '../users/users.service';
 import { Store } from '@ngxs/store';
 import { DatasetsService } from 'app/datasets/datasets.service';
@@ -20,12 +20,12 @@ export class SaveQueryComponent implements OnInit {
   @ViewChild('nameInput') public nameInputRef: ElementRef;
   @ViewChild('descInput') public descInputRef: ElementRef;
   @ViewChild('copiedTooltip') public copiedTooltip: NgbTooltip;
-  @ViewChild(NgbDropdownMenu) public ngbDropdownMenu: NgbDropdownMenu;
+  @ViewChild(NgbDropdown) private dropdown: NgbDropdown;
+
   public userInfo$: Observable<any>;
 
   private urlUUID: string;
   public url: string;
-  private savedUrlUUID: string;
   private copiedTimeoutHandle: NodeJS.Timeout;
   private savedTimeoutHandle: NodeJS.Timeout;
   public imgPathPrefix = environment.imgPathPrefix;
@@ -72,8 +72,9 @@ export class SaveQueryComponent implements OnInit {
     this.nameInputRef.nativeElement.focus();
   }
 
-  public openDropdown(opened: boolean): void {
-    if (!opened) {
+  public toggleDropdown(): void {
+    if (this.dropdown.isOpen()) {
+      this.dropdown.close();
       this.resetUrl();
       return;
     }
@@ -87,16 +88,15 @@ export class SaveQueryComponent implements OnInit {
         .subscribe(response => {
           this.urlUUID = response['uuid'];
           this.setUrl();
+          this.dropdown.open();
         });
-    },
-    error => {
+    }, () => {
       this.resetUrl();
     }
     );
   }
 
   private resetUrl(): void {
-    this.savedUrlUUID = null;
     this.url = null;
   }
 
@@ -105,10 +105,7 @@ export class SaveQueryComponent implements OnInit {
       return;
     }
 
-    if (this.savedUrlUUID !== this.urlUUID) {
-      this.url = this.queryService.getLoadUrl(this.urlUUID);
-      this.savedUrlUUID = this.urlUUID;
-    }
+    this.url = this.queryService.getLoadUrl(this.urlUUID);
   }
 
   public openCopiedTooltip(): void {
