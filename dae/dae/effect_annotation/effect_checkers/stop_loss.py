@@ -1,22 +1,8 @@
-import logging
 from ..effect import EffectFactory
 
 
 class StopLossEffectChecker:
     def get_effect(self, request):
-        logger = logging.getLogger(__name__)
-        last_position = request.variant.position + len(
-            request.variant.reference
-        )
-
-        logger.debug(
-            "position check %d <= %d-%d <= %d",
-            request.transcript_model.cds[1] - 2,
-            request.variant.position,
-            last_position,
-            request.transcript_model.cds[0],
-        )
-
         if request.is_stop_codon_affected():
             try:
                 ref_aa, alt_aa = request.get_amino_acids()
@@ -24,8 +10,6 @@ class StopLossEffectChecker:
                 if len(ref_aa) == len(alt_aa):
                     if alt_aa[ref_aa.index("End")] == "End":
                         return
-
-                logger.debug("ref aa=%s, alt aa=%s", ref_aa, alt_aa)
 
             except IndexError:
                 pass

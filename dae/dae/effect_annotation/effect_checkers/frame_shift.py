@@ -1,11 +1,7 @@
-import logging
 from ..effect import EffectFactory
 
 
 class FrameShiftEffectChecker:
-    def __init__(self):
-        self.logger = logging.getLogger(__name__)
-
     def create_effect(self, request, change_length):
         if change_length > 0:
             if change_length % 3 == 0:
@@ -68,26 +64,5 @@ class FrameShiftEffectChecker:
             if len(request.variant.reference) == 0:
                 stop += 1
 
-            self.logger.debug(
-                "frameshift %d<=%d<=%d cds:%d-%d exon:%d-%d",
-                start,
-                request.variant.position,
-                stop,
-                request.transcript_model.cds[0],
-                request.transcript_model.cds[1],
-                j.start,
-                j.stop,
-            )
-
             if start <= request.variant.position <= stop:
-                self.logger.debug(
-                    "fs detected %d<=%d-%d<=%d cds:%d-%d",
-                    start,
-                    request.variant.position,
-                    request.variant.ref_position_last,
-                    stop,
-                    request.transcript_model.cds[0],
-                    request.transcript_model.cds[1],
-                )
-
                 return self.create_effect(request, length)
