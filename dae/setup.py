@@ -17,9 +17,10 @@ setuptools.setup(
     packages=setuptools.find_packages(
         where=".", exclude=["dae.docs", "dae.tests", "*.tests.*", "*.tests", ],
     ),
-    # include_package_data=True,
+    include_package_data=True,
     package_data={
         "dae": ["py.typed"],
+        "dae.dask": ["named_cluster.yaml"],
     },
     scripts=[
         "dae/tools/impala_parquet_loader.py",
