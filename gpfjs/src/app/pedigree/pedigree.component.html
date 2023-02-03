@@ -9,26 +9,28 @@
 </div>
 
 <ng-template #pedigreeModal let-modal>
-  <div id="modal-pedigree-container">
-    <gpf-pedigree-chart [scale]="pedigreeScale" [family]="family" [groupName]="groupName" [counterId]="counterId">
-    </gpf-pedigree-chart>
-  </div>
+  <ng-container *ngIf="!modalSimpleView ? familyIdsList : true">
+    <div id="modal-pedigree-container">
+      <gpf-pedigree-chart [scale]="pedigreeScale" [family]="family" [groupName]="groupName" [counterId]="counterId">
+      </gpf-pedigree-chart>
+    </div>
 
-  <ng-container *ngIf="!modalSimpleView">
-    <div class="modal-family">
-      <div class="pedigree-download-panel">
-        <span *ngIf="familyIdsList" id="modal-family-count">{{ familyIdsList.length }}</span>
-        <button (click)="onSubmit($event)" class="btn btn-md btn-primary" id="download-button">
-          <i class="fa fa-solid fa-download" style="scale: 1.2"></i>
-        </button>
-      </div>
-      <hr />
+    <ng-container *ngIf="!modalSimpleView">
+      <div class="modal-family">
+        <div class="pedigree-download-panel">
+          <span id="modal-family-count">{{ familyIdsList.length }}</span>
+          <button (click)="onSubmit($event)" class="btn btn-md btn-primary" id="download-button">
+            <i class="fa fa-solid fa-download" style="scale: 1.2"></i>
+          </button>
+        </div>
+        <hr />
 
-      <div id="family-ids-list-wrapper" style="height: 100px">
-        <div *ngIf="familyIdsList" id="family-ids-list">
-          <div>{{ familyIdsList | join : ', ' }}</div>
+        <div id="family-ids-list-wrapper" style="height: 100px">
+          <div id="family-ids-list">
+            <div>{{ familyIdsList | join : ', ' }}</div>
+          </div>
         </div>
       </div>
-    </div>
+    </ng-container>
   </ng-container>
 </ng-template>
