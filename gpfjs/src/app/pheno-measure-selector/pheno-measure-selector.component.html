@@ -1,4 +1,6 @@
-<div ngbDropdown *ngIf="filteredMeasures" class="input-group" style="display: inline-flex; flex-wrap: nowrap">
+<gpf-fullscreen-loading></gpf-fullscreen-loading>
+
+<div ngbDropdown *ngIf="measures.length" class="input-group" style="display: inline-flex; flex-wrap: nowrap">
   <input
     ngbDropdownAnchor
     #searchBox

@@ -12,6 +12,7 @@ import { Observable, of } from 'rxjs';
 import { NgxsModule } from '@ngxs/store';
 import { FormsModule } from '@angular/forms';
 import { PhenoMeasure } from 'app/pheno-browser/pheno-browser';
+import { FullscreenLoadingService } from 'app/fullscreen-loading/fullscreen-loading.service';
 
 @Component({
   selector: 'gpf-searchable-select',
@@ -76,6 +77,7 @@ describe('MultiContinuousFilterComponent', () => {
         ConfigService,
         {provide: DatasetsService, useValue: mockDatasetsService},
         UsersService,
+        FullscreenLoadingService
       ],
       imports: [
         RouterTestingModule,
