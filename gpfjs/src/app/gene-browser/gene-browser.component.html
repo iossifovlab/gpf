@@ -14,7 +14,7 @@
           spellcheck="false"
           [(ngModel)]="geneSymbol"
           (keyup)="openDropdown(); searchBoxInput$.next(geneSymbol)"
-          (click)="reset(); geneSymbol = ''"
+          (click)="reset(); geneSymbol = ''; showError = false"
           (keydown.enter)="submitGeneRequest()"
           (keydown.escape)="closeDropdown()" />
 
@@ -45,7 +45,7 @@
         [hidden]="!showError"
         class="alert alert-danger"
         role="alert"
-        style="display: inline-block; margin: 20px; margin-top: 0px; width: 45%">
+        style="display: inline-block; margin: 14px; margin-top: 0px; width: 400px">
         <span>No such gene found!</span>
       </div>
     </div>
