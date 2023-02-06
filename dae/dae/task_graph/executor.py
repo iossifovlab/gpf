@@ -265,8 +265,9 @@ def task_graph_status(
     columns = ["TaskID", "Status"]
     print(f"{columns[0]:{id_col_len}s} {columns[1]}")
     task_cache = getattr(executor, "_task_cache")
+    task2record = dict(task_cache.load(task_graph))
     for task in task_graph.tasks:
-        record = task_cache.get_record(task)
+        record = task2record[task]
         status = record.type.name
         msg = f"{task.task_id:{id_col_len}s} {status}"
         is_error = record.type == CacheRecordType.ERROR
