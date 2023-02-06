@@ -17,7 +17,7 @@ from jinja2 import Template
 
 from dask.distributed import Client
 
-from dae.dask.client_factory import DaskClient
+from dae.task_graph.cli_tools import TaskGraphCli
 from dae.utils.fs_utils import find_directory_with_a_file
 
 from dae.task_graph.executor import DaskExecutor, SequentialExecutor
@@ -84,7 +84,7 @@ def _add_dry_run_and_force_parameters_group(parser):
         help="only checks if the manifest update is needed whithout "
         "actually updating it")
     group.add_argument(
-        "-f", "--force", default=False,
+        "-i", "--ignore", default=False,
         action="store_true",
         help="ignore resource state and rebuild manifest")
 
@@ -92,7 +92,7 @@ def _add_dry_run_and_force_parameters_group(parser):
 def _add_dvc_parameters_group(parser):
     group = parser.add_argument_group(title="DVC params")
     group.add_argument(
-        "-d", "--with-dvc", default=True,
+        "--with-dvc", default=True,
         action="store_true", dest="use_dvc",
         help="use '.dvc' files if present to get md5 sum of resource files "
         "(default)")
@@ -180,7 +180,7 @@ def _configure_resource_manifest_subparser(subparsers):
 def _configure_repo_stats_subparser(subparsers):
     parser = subparsers.add_parser(
         "repo-stats",
-        help="Build the histograms for a resource")
+        help="Build the statistics for a resource")
 
     _add_repository_resource_parameters_group(parser, use_resource=False)
     _add_dry_run_and_force_parameters_group(parser)
@@ -188,13 +188,13 @@ def _configure_repo_stats_subparser(subparsers):
     _add_hist_parameters_group(parser)
     VerbosityConfiguration.set_argumnets(parser)
 
-    DaskClient.add_arguments(parser)
+    TaskGraphCli.add_arguments(parser, use_commands=False, force_mode="always")
 
 
 def _configure_resource_stats_subparser(subparsers):
     parser = subparsers.add_parser(
         "resource-stats",
-        help="Build the histograms for a resource")
+        help="Build the statistics for a resource")
 
     _add_repository_resource_parameters_group(parser)
     _add_dry_run_and_force_parameters_group(parser)
@@ -202,7 +202,7 @@ def _configure_resource_stats_subparser(subparsers):
     _add_hist_parameters_group(parser)
     VerbosityConfiguration.set_argumnets(parser)
 
-    DaskClient.add_arguments(parser)
+    TaskGraphCli.add_arguments(parser, use_commands=False, force_mode="always")
 
 
 def _configure_repo_repair_subparser(subparsers):
@@ -215,7 +215,7 @@ def _configure_repo_repair_subparser(subparsers):
     _add_hist_parameters_group(parser)
     VerbosityConfiguration.set_argumnets(parser)
 
-    DaskClient.add_arguments(parser)
+    TaskGraphCli.add_arguments(parser, use_commands=False, force_mode="always")
 
 
 def _configure_resource_repair_subparser(subparsers):
@@ -228,7 +228,7 @@ def _configure_resource_repair_subparser(subparsers):
     _add_hist_parameters_group(parser)
     VerbosityConfiguration.set_argumnets(parser)
 
-    DaskClient.add_arguments(parser)
+    TaskGraphCli.add_arguments(parser, use_commands=False, force_mode="always")
 
 
 def _configure_repo_info_subparser(subparsers):
@@ -238,7 +238,7 @@ def _configure_repo_info_subparser(subparsers):
     _add_repository_resource_parameters_group(parser)
     VerbosityConfiguration.set_argumnets(parser)
 
-    DaskClient.add_arguments(parser)
+    TaskGraphCli.add_arguments(parser, use_commands=False, force_mode="always")
 
 
 def _configure_resource_info_subparser(subparsers):
@@ -248,7 +248,7 @@ def _configure_resource_info_subparser(subparsers):
     _add_repository_resource_parameters_group(parser)
     VerbosityConfiguration.set_argumnets(parser)
 
-    DaskClient.add_arguments(parser)
+    TaskGraphCli.add_arguments(parser, use_commands=False, force_mode="always")
 
 
 def collect_dvc_entries(
@@ -456,32 +456,6 @@ def _stats_need_rebuild(proto, impl):
     return False
 
 
-def _execute_tasks(graph, **kwargs):
-    jobs = kwargs.get("jobs", 1)
-    if jobs is not None and jobs > 1:
-        dask_client = DaskClient.from_dict(kwargs)
-        # dask_client = Client(n_workers=jobs, threads_per_worker=1, processes=False)
-        if dask_client is None:
-            sys.exit(1)
-
-        client = dask_client.__enter__()
-        executor = DaskExecutor(client)
-        tasks_iter = executor.execute(graph)
-    else:
-        client = None
-        executor = SequentialExecutor()
-        tasks_iter = executor.execute(graph)
-
-    for task, result_or_error in tasks_iter:
-        if isinstance(result_or_error, Exception):
-            logger.info("Task %s failed!", task.task_id)
-            raise result_or_error
-        else:
-            logger.info("Task %s successful!", task.task_id)
-    if client is not None:
-        client.__exit__(*sys.exc_info())
-
-
 def _run_repo_stats_command(proto, **kwargs):
     updates_needed = _run_repo_manifest_command(proto, **kwargs)
     dry_run = kwargs.get("dry_run", False)
@@ -510,7 +484,9 @@ def _run_repo_stats_command(proto, **kwargs):
             logger.info(f"Statistics of <{res.resource_id}> need update")
 
     if not dry_run:
-        _execute_tasks(graph, **kwargs)
+        modified_kwargs = copy.copy(kwargs)
+        modified_kwargs["command"] = "run"
+        TaskGraphCli.process_graph(graph, **modified_kwargs)
 
     if not dry_run:
         proto.build_content_file()
@@ -549,7 +525,9 @@ def _run_resource_stats_command(proto, repo_url, **kwargs):
     elif dry_run and needs_rebuild:
         logger.info(f"Statistics of <{res.resource_id}> need update")
 
-    _execute_tasks(graph, **kwargs)
+    modified_kwargs = copy.copy(kwargs)
+    modified_kwargs["command"] = "run"
+    TaskGraphCli.process_graph(graph, **modified_kwargs)
 
 
 def _run_repo_repair_command(proto, **kwargs):

@@ -18,7 +18,8 @@ class TaskGraphCli:
     @staticmethod
     def add_arguments(parser: argparse.ArgumentParser,
                       force_mode="optional",
-                      default_task_status_dir="."):
+                      default_task_status_dir=".",
+                      use_commands=True):
         """Add arguments needed to execute a task graph."""
         executor_group = parser.add_argument_group(title="Task Graph Executor")
         # cluster_name
@@ -44,16 +45,18 @@ class TaskGraphCli:
         # task_cache
         execution_mode_group = parser.add_argument_group(
             title="Execution Mode")
-        execution_mode_group.add_argument("command",
-                                          choices=["run", "list", "status"],
-                                          default="run", nargs="?",
-                                          help=textwrap.dedent("""\
+        if use_commands:
+            execution_mode_group.add_argument(
+                "command",
+                choices=["run", "list", "status"],
+                default="run", nargs="?",
+                help=textwrap.dedent("""\
                     Command to execute on the import configuration.
                     run - runs the import process
                     list - lists the tasks to be executed but doesn't run them
                     status - synonym for list
                 """),
-                                          )
+            )
         execution_mode_group.add_argument(
             "-t", "--task-ids", dest="task_ids", type=str, nargs="+")
         execution_mode_group.add_argument(
@@ -78,7 +81,7 @@ class TaskGraphCli:
         """Create a task graph executor according to the args specified."""
         args = Box(kwargs)
         task_cache = TaskCache.create(
-            force=args.force, cache_dir=args.task_status_dir)
+            force=args.get("force"), cache_dir=args.get("task_status_dir"))
 
         if args.jobs == 1:
             assert args.dask_cluster_name is None
