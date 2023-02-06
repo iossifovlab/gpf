@@ -171,8 +171,8 @@ class DaskExecutor(AbstractTaskGraphExecutor):
         super().__init__(task_cache)
         self._client = client
         self._task2future = {}
-        self._future2task = {}
-        self._finished_futures = set()
+        self._future_id2task = {}
+        self._finished_future_ids = set()
         self._task2result = {}
 
     def _queue_task(self, task_node):
@@ -196,27 +196,37 @@ class DaskExecutor(AbstractTaskGraphExecutor):
         future = self._client.submit(self._exec, task_node.func, args, deps,
                                      pure=False)
         self._task2future[task_node] = future
-        self._future2task[future.key] = task_node
+        self._future_id2task[future.key] = task_node
 
     def _await_tasks(self):
         # pylint: disable=import-outside-toplevel
         from dask.distributed import as_completed
 
-        assert len(self._finished_futures) == 0, "Cannot call execute twice"
+        assert len(self._finished_future_ids) == 0, "Cannot call execute twice"
 
-        futures = list(self._task2future.values())
-        for future in as_completed(futures):
+        while True:
+            try:
+                future = next(as_completed(list(self._task2future.values())))
+            except StopIteration:
+                break
+
             try:
                 result = future.result()
             except Exception as exp:  # pylint: disable=broad-except
                 result = exp
-            self._finished_futures.add(future.key)
-            yield self._future2task[future.key], result
+            self._finished_future_ids.add(future.key)
+            task = self._future_id2task[future.key]
+            yield task, result
+            # del ref to future in order to make dask gc its resources
+            del self._task2future[task]
+            del task
 
         # clean up
+        if len(self._task2future) > 0:
+            logger.error("[BUG] Dask Executor's future q is not empty.")
         self._task2future = {}
-        self._future2task = {}
-        self._finished_futures = set()
+        self._future_id2task = {}
+        self._finished_future_ids = set()
         self._task2result = {}
 
     def _set_task_result(self, task, result):
@@ -226,10 +236,11 @@ class DaskExecutor(AbstractTaskGraphExecutor):
         res = []
         for task, future in self._task2future.items():
             all_deps_satisfied = all(
-                self._task2future[dep].key in self._finished_futures
+                self._task2future[dep].key in self._finished_future_ids
                 for dep in task.deps if dep in self._task2future
             )
-            if future.key not in self._finished_futures and all_deps_satisfied:
+            future_not_finished = future.key not in self._finished_future_ids
+            if future_not_finished and all_deps_satisfied:
                 res.append(task)
         return res
 
