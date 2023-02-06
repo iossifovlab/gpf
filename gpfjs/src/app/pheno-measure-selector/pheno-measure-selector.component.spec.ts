@@ -10,7 +10,6 @@ import { SearchableSelectComponent } from 'app/searchable-select/searchable-sele
 import { UsersService } from 'app/users/users.service';
 
 import { PhenoMeasureSelectorComponent } from './pheno-measure-selector.component';
-import { FullscreenLoadingService } from 'app/fullscreen-loading/fullscreen-loading.service';
 
 class MockDatasetsService {
   public getSelectedDataset(): object {
@@ -31,8 +30,7 @@ describe('PhenoMeasureSelectorComponent', () => {
         ConfigService,
         {provide: DatasetsService, useValue: mockDatasetsService},
         UsersService,
-        SearchableSelectComponent,
-        FullscreenLoadingService
+        SearchableSelectComponent
       ],
       imports: [HttpClientTestingModule, RouterTestingModule, NgxsModule.forRoot([], {developmentMode: true})],
       schemas: [NO_ERRORS_SCHEMA]

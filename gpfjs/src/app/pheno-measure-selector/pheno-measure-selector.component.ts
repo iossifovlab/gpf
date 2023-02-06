@@ -4,7 +4,6 @@ import { MeasuresService } from '../measures/measures.service';
 import { ContinuousMeasure } from '../measures/measures';
 import { first } from 'rxjs/operators';
 import { NgbDropdown } from '@ng-bootstrap/ng-bootstrap';
-import { FullscreenLoadingService } from 'app/fullscreen-loading/fullscreen-loading.service';
 
 @Component({
   selector: 'gpf-pheno-measure-selector',
@@ -26,7 +25,6 @@ export class PhenoMeasureSelectorComponent implements OnChanges {
 
   public constructor(
     private measuresService: MeasuresService,
-    private fullscreenLoadingService: FullscreenLoadingService
   ) { }
 
   public ngOnChanges(): void {
