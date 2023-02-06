@@ -207,6 +207,7 @@ class DaskExecutor(AbstractTaskGraphExecutor):
         assert len(self._finished_future_keys) == 0, "Don't call execute twice"
 
         while True:
+            # iterate in this funny manner to allow dask to gc tasks ASAP
             try:
                 future = next(as_completed(list(self._task2future.values())))
             except StopIteration:
