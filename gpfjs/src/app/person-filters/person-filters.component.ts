@@ -5,7 +5,6 @@ import { Store } from '@ngxs/store';
 import { SetFamilyFilters, SetPersonFilters, PersonFiltersState } from './person-filters.state';
 import { StatefulComponent } from 'app/common/stateful-component';
 import { IsNotEmpty, ValidateNested } from 'class-validator';
-import { filter } from 'lodash';
 
 @Component({
   selector: 'gpf-person-filters',
@@ -72,6 +71,7 @@ export class PersonFiltersComponent extends StatefulComponent implements OnChang
         }
       }
     });
+    this.updateFilters();
   }
 
   public get categoricalFilters(): PersonFilterState[] {
