@@ -202,7 +202,7 @@ class DaskExecutor(AbstractTaskGraphExecutor):
         # pylint: disable=import-outside-toplevel
         from dask.distributed import as_completed
 
-        assert len(self._finished_future_keys), "Cannot call execute twice"
+        assert len(self._finished_future_keys) == 0, "Don't call execute twice"
 
         while True:
             try:
