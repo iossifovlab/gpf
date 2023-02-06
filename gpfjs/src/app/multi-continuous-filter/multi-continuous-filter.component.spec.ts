@@ -75,7 +75,7 @@ describe('MultiContinuousFilterComponent', () => {
         HttpClientTestingModule,
         ConfigService,
         {provide: DatasetsService, useValue: mockDatasetsService},
-        UsersService,
+        UsersService
       ],
       imports: [
         RouterTestingModule,

@@ -1,5 +1,5 @@
 import { HttpClientTestingModule } from '@angular/common/http/testing';
-import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ConfigService } from 'app/config/config.service';
 import { HistogramData } from 'app/measures/measures';
 import { MeasuresService } from 'app/measures/measures.service';

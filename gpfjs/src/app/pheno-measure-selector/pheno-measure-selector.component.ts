@@ -1,4 +1,5 @@
-import { Component, OnChanges, Input, ViewChild, Output, EventEmitter } from '@angular/core';
+import { Component, OnChanges, Input, ViewChild, Output, EventEmitter, 
+  ElementRef } from '@angular/core';
 
 import { MeasuresService } from '../measures/measures.service';
 import { ContinuousMeasure } from '../measures/measures';
@@ -15,7 +16,7 @@ export class PhenoMeasureSelectorComponent implements OnChanges {
   @Output() public selectedMeasureChange = new EventEmitter(true);
   @Output() public measuresChange = new EventEmitter(true);
 
-  @ViewChild('searchBox') private searchBox;
+  @ViewChild('searchBox') private searchBox: ElementRef;
   @ViewChild(NgbDropdown) private dropdown: NgbDropdown;
 
   public measures: Array<ContinuousMeasure> = [];
@@ -24,7 +25,7 @@ export class PhenoMeasureSelectorComponent implements OnChanges {
   public selectedMeasure: ContinuousMeasure;
 
   public constructor(
-    private measuresService: MeasuresService
+    private measuresService: MeasuresService,
   ) { }
 
   public ngOnChanges(): void {
@@ -53,23 +54,28 @@ export class PhenoMeasureSelectorComponent implements OnChanges {
   public closeDropdown(): void {
     if (this.dropdown && this.dropdown.isOpen()) {
       this.dropdown.close();
-      this.searchBox.nativeElement.blur();
+      (this.searchBox.nativeElement as HTMLInputElement).blur();
     }
   }
 
   public clear(): void {
     this.selectMeasure(null);
-    this.searchBoxChange();
+    this.loadDropdownData();
   }
 
-  public searchBoxChange(): void {
-    if (this.searchString.length) {
-      this.filteredMeasures = this.measures.filter(value =>
-        value.name.toLowerCase().indexOf(this.searchString.toLowerCase()) !== -1
-      );
-    } else {
-      this.filteredMeasures = this.measures;
+  public loadDropdownData(): void {
+    if (this.measures.length === 0) {
+      // Wait and try again if measures are not loaded yet.
+      setTimeout(this.loadDropdownData.bind(this), 200);
+      return;
     }
-    this.filteredMeasures = this.filteredMeasures.slice(0, 25);
+
+    this.filteredMeasures = this.measures;
+
+    if (this.searchString.length) {
+      this.filteredMeasures = this.filteredMeasures.filter(measure =>
+        measure.name.toLowerCase().indexOf(this.searchString.toLowerCase()) !== -1
+      );
+    }
   }
 }
