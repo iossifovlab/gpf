@@ -34,7 +34,7 @@
         class="btn btn-md btn-primary"
         id="table-preview-button"
         value="Table Preview"
-        (click)="tablePreview = false; submitQuery()" />
+        (click)="submitQuery()" />
       <gpf-save-query [disabled]="disableQueryButtons" queryType="genotype"></gpf-save-query>
     </div>
   </div>
@@ -48,7 +48,7 @@
   </gpf-loading-spinner>
 
   <gpf-genotype-preview-table
-    *ngIf="tablePreview"
+    *ngIf="showTable"
     [columns]="selectedDataset?.genotypeBrowserConfig?.tableColumns"
     [genotypePreviewVariantsArray]="genotypePreviewVariantsArray"
     [legend]="legend">
