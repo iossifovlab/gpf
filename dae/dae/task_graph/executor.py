@@ -41,15 +41,17 @@ class AbstractTaskGraphExecutor(TaskGraphExecutor):
         assert not self._executing, \
             "Cannot execute a new graph while an old one is still running."
         self._check_for_cyclic_deps(task_graph)
-
         self._executing = True
-        self._task_cache.set_task_graph(task_graph)
+
         already_computed_tasks = {}
-        for task_node in self._in_exec_order(task_graph):
-            record = self._task_cache.get_record(task_node)
+        for task_node, record in self._task_cache.load(task_graph):
             if record.type == CacheRecordType.COMPUTED:
                 already_computed_tasks[task_node] = record.result
-                self._set_task_result(task_node, record.result)
+
+        for task_node in self._in_exec_order(task_graph):
+            if task_node in already_computed_tasks:
+                task_result = already_computed_tasks[task_node]
+                self._set_task_result(task_node, task_result)
             else:
                 self._queue_task(task_node)
         return self._yield_task_results(already_computed_tasks)
