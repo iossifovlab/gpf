@@ -1,6 +1,4 @@
-<gpf-fullscreen-loading></gpf-fullscreen-loading>
-
-<div ngbDropdown *ngIf="measures.length" class="input-group" style="display: inline-flex; flex-wrap: nowrap">
+<div ngbDropdown class="input-group" style="display: inline-flex; flex-wrap: nowrap">
   <input
     ngbDropdownAnchor
     #searchBox
@@ -9,11 +7,12 @@
     autocomplete="off"
     spellcheck="false"
     [(ngModel)]="searchString"
-    (keyup)="openDropdown(); searchBoxChange()"
-    (click)="clear(); openDropdown(); searchBoxChange()"
+    (keyup)="openDropdown(); loadDropdownData()"
+    (click)="clear(); openDropdown(); loadDropdownData()"
     (keydown.escape)="closeDropdown()"
     style="width: 100%" />
   <div ngbDropdownMenu style="z-index: 3; width: 100%; max-height: 200px; overflow-y: scroll">
+    <div id="loading-text" *ngIf="filteredMeasures.length === 0"> Loading...</div>
     <button
       *ngFor="let measure of filteredMeasures"
       class="dropdown-item"

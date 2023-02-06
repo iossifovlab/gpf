@@ -31,11 +31,9 @@ export class PhenoMeasureSelectorComponent implements OnChanges {
 
   public ngOnChanges(): void {
     if (this.datasetId && this.measures.length === 0) {
-      this.fullscreenLoadingService.setLoadingStart();
       this.measuresService.getContinuousMeasures(this.datasetId).pipe(first()).subscribe(measures => {
         this.measures = measures;
         this.measuresChange.emit(this.measures);
-        this.fullscreenLoadingService.setLoadingStop();
       });
     }
   }
@@ -63,17 +61,19 @@ export class PhenoMeasureSelectorComponent implements OnChanges {
 
   public clear(): void {
     this.selectMeasure(null);
-    this.searchBoxChange();
+    this.loadDropdownData();
   }
 
-  public searchBoxChange(): void {
-    if (this.searchString.length) {
+  public loadDropdownData(): void {
+    if (this.measures.length === 0) {
+      // Wait and try again if measures are not loaded yet.
+      setTimeout(this.loadDropdownData.bind(this), 500);
+    } else if (this.searchString.length) {
       this.filteredMeasures = this.measures.filter(value =>
         value.name.toLowerCase().indexOf(this.searchString.toLowerCase()) !== -1
-      );
+      ).slice(0, 25);
     } else {
-      this.filteredMeasures = this.measures;
+      this.filteredMeasures = this.measures.slice(0, 25);
     }
-    this.filteredMeasures = this.filteredMeasures.slice(0, 25);
   }
 }
