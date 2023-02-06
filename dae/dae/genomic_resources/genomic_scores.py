@@ -63,10 +63,11 @@ class ScoreDef:
 class ScoreLine:
     """Abstraction for a genomic score line. Wraps the line adapter."""
 
-    def __init__(self, line: Line, score_defs: dict):
+    def __init__(self, line: Line, score_defs: dict, off_by_one=False):
         assert isinstance(line, Line)
         self.line: Line = line
         self.score_defs = score_defs
+        self.off_by_one = off_by_one
 
     @property
     def chrom(self):
@@ -91,7 +92,12 @@ class ScoreLine:
     def get_score(self, score_id):
         """Get and parse configured score from line."""
         key = self.score_defs[score_id].col_key
-        value = self.line.get(key)
+        if not isinstance(key, int):
+            value = self.line.get(key)
+        else:
+            if self.off_by_one:
+                key = key + 1
+            value = self.line[key]
         if score_id in self.score_defs:
             col_def = self.score_defs[score_id]
             if value in col_def.na_values:
@@ -305,7 +311,10 @@ class GenomicScore(
         for line in self.table.get_records_in_region(
             chrom, pos_begin, pos_end
         ):
-            yield ScoreLine(line, self.score_definitions)
+            if self.table.pos_begin_column_i == self.table.pos_end_column_i:
+                yield ScoreLine(line, self.score_definitions, True)
+            else:
+                yield ScoreLine(line, self.score_definitions)
 
     def get_all_chromosomes(self):
         if not self.is_open():
