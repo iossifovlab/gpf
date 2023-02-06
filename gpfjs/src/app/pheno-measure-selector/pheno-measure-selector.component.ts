@@ -1,4 +1,5 @@
-import { Component, OnChanges, Input, ViewChild, Output, EventEmitter } from '@angular/core';
+import { Component, OnChanges, Input, ViewChild, Output, EventEmitter, 
+  ElementRef } from '@angular/core';
 
 import { MeasuresService } from '../measures/measures.service';
 import { ContinuousMeasure } from '../measures/measures';
@@ -15,7 +16,7 @@ export class PhenoMeasureSelectorComponent implements OnChanges {
   @Output() public selectedMeasureChange = new EventEmitter(true);
   @Output() public measuresChange = new EventEmitter(true);
 
-  @ViewChild('searchBox') private searchBox;
+  @ViewChild('searchBox') private searchBox: ElementRef;
   @ViewChild(NgbDropdown) private dropdown: NgbDropdown;
 
   public measures: Array<ContinuousMeasure> = [];
@@ -53,7 +54,7 @@ export class PhenoMeasureSelectorComponent implements OnChanges {
   public closeDropdown(): void {
     if (this.dropdown && this.dropdown.isOpen()) {
       this.dropdown.close();
-      this.searchBox.nativeElement.blur();
+      (this.searchBox.nativeElement as HTMLInputElement).blur();
     }
   }
 
@@ -65,13 +66,16 @@ export class PhenoMeasureSelectorComponent implements OnChanges {
   public loadDropdownData(): void {
     if (this.measures.length === 0) {
       // Wait and try again if measures are not loaded yet.
-      setTimeout(this.loadDropdownData.bind(this), 500);
-    } else if (this.searchString.length) {
-      this.filteredMeasures = this.measures.filter(value =>
-        value.name.toLowerCase().indexOf(this.searchString.toLowerCase()) !== -1
-      ).slice(0, 25);
-    } else {
-      this.filteredMeasures = this.measures.slice(0, 25);
+      setTimeout(this.loadDropdownData.bind(this), 200);
+      return;
+    }
+
+    this.filteredMeasures = this.measures;
+
+    if (this.searchString.length) {
+      this.filteredMeasures = this.filteredMeasures.filter(measure =>
+        measure.name.toLowerCase().indexOf(this.searchString.toLowerCase()) !== -1
+      );
     }
   }
 }
