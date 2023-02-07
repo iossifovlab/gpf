@@ -7,7 +7,9 @@
 .container{
   padding-bottom: 0;
   margin-top: 20px;
+  margin-left: 15px;
   width: fit-content;
+  float: left;
 }
 
 .form-block-title {
