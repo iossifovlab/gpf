@@ -258,10 +258,7 @@ class GenomicScore(
         return self.score_definitions.get(score_id)
 
     def close(self):
-        # FIXME: consider using weakrefs
-        # self.table.close()
-        # self.table = None
-        pass
+        self.table.close()
 
     def is_open(self):
         return self.table_loaded

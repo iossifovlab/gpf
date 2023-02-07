@@ -3,6 +3,9 @@ dae_named_cluster:
   clusters:
     - name: local
       type: local
+      params:
+        memory_limit: 2GB
+        threads_per_worker: 1
       # By default, the local cluster will allocate by default as many threads 
       # as the number of cores on the host, spread accross several workers each
       # with cerain number of threads.  See the documentation of LocalCluster
