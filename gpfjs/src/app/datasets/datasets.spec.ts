@@ -242,6 +242,7 @@ describe('PersonSetCollections', () => {
 describe('PersonFilter', () => {
   it('should create person filter instance from json', () => {
     const mockPersonFilter1 = PersonFilter.fromJson({
+      /* eslint-disable */
       name: {
         name: 'name1',
         from: 'from1',
@@ -258,6 +259,7 @@ describe('PersonFilter', () => {
         filter_type: 'filterType2',
         role: 'role2',
       }
+      /* eslint-enable */
     });
 
     const mockPersonFilter2 = [
@@ -337,6 +339,7 @@ describe('GenotypeBrowser', () => {
       5,
     );
 
+    /* eslint-disable */
     const genotypeMock2 = GenotypeBrowser.fromJson({
       has_pedigree_selector: false,
       has_present_in_child: true,
@@ -401,8 +404,9 @@ describe('GenotypeBrowser', () => {
       selected_variant_types: ['selectedVariant', 'string1'],
       max_variants_count: 5,
     });
+    /* eslint-enable */
 
-    expect(genotypeMock1).toEqual(genotypeMock2);
+    expect(genotypeMock1).toStrictEqual(genotypeMock2);
   });
 
   it('should create table columns from json', () => {
@@ -416,7 +420,7 @@ describe('GenotypeBrowser', () => {
           new Column('name4', 'source1', 'format2')
         ]
       )
-    ] as any;
+    ];
 
     const genotypeMock2 = GenotypeBrowser.tableColumnsFromJson([
       {
@@ -489,6 +493,7 @@ describe('GeneBrowser', () => {
       true, 'frequencyCol1', 'frequencyName1', 'effectCol1', 'locationCol1', 5, 6, true
     );
     const mockBrowser2 = GeneBrowser.fromJson({
+      /* eslint-disable */
       enabled: true,
       frequency_column: 'frequencyCol1',
       frequency_name: 'frequencyName1',
@@ -497,6 +502,7 @@ describe('GeneBrowser', () => {
       domain_min: 5,
       domain_max: 6,
       has_affected_status: true
+      /* eslint-enable */
     });
 
     expect(mockBrowser1).toStrictEqual(mockBrowser2);
@@ -666,6 +672,7 @@ describe('Dataset', () => {
     'genome2'
   );
 
+  /* eslint-disable */
   const datasetJson1 = {
     id: 'id1',
     description: 'desc1',
@@ -798,13 +805,19 @@ describe('Dataset', () => {
         id: 3,
         name: 'name1',
         users: ['user1', 'user2'],
-        datasets: ['dataset2', 'dataset3']
+        datasets: [
+          {datasetId: 'dataset2', datasetName: 'dataset2'},
+          {datasetId: 'dataset3', datasetName: 'dataset3'}
+        ]
       },
       {
         id: 5,
         name: 'name2',
         users: ['user12', 'user5'],
-        datasets: ['dataset1', 'dataset2']
+        datasets: [
+          {datasetId: 'dataset1', datasetName: 'dataset1'},
+          {datasetId: 'dataset2', datasetName: 'dataset2'}
+        ]
       }
     ],
     gene_browser: {
@@ -953,13 +966,18 @@ describe('Dataset', () => {
         id: 9,
         name: 'name13',
         users: ['user9', 'user6'],
-        datasets: ['dataset4', 'dataset3']
+        datasets: [
+          { datasetId: 'dataset4', datasetName: 'dataset4' },
+          { datasetId: 'dataset3', datasetName: 'dataset3' }
+        ]
       },
       {
         id: 6,
         name: 'name8',
         users: ['user10', 'user12'],
-        datasets: ['dataset14', 'dataset16']
+        datasets: [
+          { datasetId: 'dataset14', datasetName: 'dataset14' },
+          { datasetId: 'dataset16', datasetName: 'dataset16' }]
       }
     ],
     gene_browser: {
@@ -975,6 +993,7 @@ describe('Dataset', () => {
     has_denovo: true,
     genome: 'genome2'
   };
+  /* eslint-enable */
 
   it('should create dataset from json', () => {
     const datasetMockFromJson = Dataset.fromJson(datasetJson1);
@@ -992,6 +1011,7 @@ describe('Dataset', () => {
   });
 
   it('should create dataset from dataset and details json\'s', () => {
+    /* eslint-disable */
     const datasetMockFromJson = Dataset.fromDatasetAndDetailsJson({
       id: 'id1',
       description: 'desc1',
@@ -1119,12 +1139,18 @@ describe('Dataset', () => {
           id: 3,
           name: 'name1',
           users: ['user1', 'user2'],
-          datasets: ['dataset2', 'dataset3']
+          datasets: [
+            {datasetId: 'dataset2', datasetName: 'dataset2'},
+            {datasetId: 'dataset3', datasetName: 'dataset3'}
+          ]
         }, {
           id: 5,
           name: 'name2',
           users: ['user12', 'user5'],
-          datasets: ['dataset1', 'dataset2']
+          datasets: [
+            {datasetId: 'dataset1', datasetName: 'dataset1'},
+            {datasetId: 'dataset2', datasetName: 'dataset2'}
+          ]
         }
       ], gene_browser: {
         enabled: true,
@@ -1140,6 +1166,7 @@ describe('Dataset', () => {
       has_denovo: false,
       genome: 'genome1'
     });
+    /* eslint-enable */
 
     expect(datasetMock1).toStrictEqual(datasetMockFromJson);
   });
