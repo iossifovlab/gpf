@@ -2,6 +2,18 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { UniqueFamilyVariantsFilterComponent } from './unique-family-variants-filter.component';
 import { NgxsModule } from '@ngxs/store';
 import { FormsModule } from '@angular/forms';
+import { HttpClientModule } from '@angular/common/http';
+import { ConfigService } from 'app/config/config.service';
+import { UsersService } from 'app/users/users.service';
+import { APP_BASE_HREF } from '@angular/common';
+import { Dataset } from 'app/datasets/datasets';
+import { DatasetsService } from 'app/datasets/datasets.service';
+
+class DatasetsServiceMock {
+  public getSelectedDataset() {
+    return {parents: []};
+  }
+}
 
 describe('UniqueFamilyVariantsFilterComponent', () => {
   let component: UniqueFamilyVariantsFilterComponent;
@@ -10,7 +22,8 @@ describe('UniqueFamilyVariantsFilterComponent', () => {
   beforeEach(async() => {
     await TestBed.configureTestingModule({
       declarations: [UniqueFamilyVariantsFilterComponent],
-      imports: [NgxsModule.forRoot([], {developmentMode: true}), FormsModule]
+      providers: [{provide: DatasetsService, useValue: new DatasetsServiceMock}, ConfigService, UsersService, { provide: APP_BASE_HREF, useValue: '' }],
+      imports: [HttpClientModule, NgxsModule.forRoot([], {developmentMode: true}), FormsModule]
     }).compileComponents();
   });
 

@@ -1,5 +1,5 @@
 <div
-  *ngIf="datasetService.getSelectedDataset().parents.length > 0" id="unique-family-variants-block" class="form-block"
+  *ngIf="datasetService.getSelectedDataset().studies?.length !== null" id="unique-family-variants-block" class="form-block"
 >
   <div class="card">
     <ul ngbNav class="navbar bg-light nav-pills" style="justify-content: flex-start">
