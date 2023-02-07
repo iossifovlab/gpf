@@ -6,7 +6,7 @@ import { HttpClientModule } from '@angular/common/http';
 import { DatasetsService } from 'app/datasets/datasets.service';
 
 class DatasetsServiceMock {
-  public getSelectedDataset() {
+  public getSelectedDataset(): object {
     return {parents: []};
   }
 }
