@@ -17,7 +17,7 @@ import { PhenoMeasure } from 'app/pheno-browser/pheno-browser';
   selector: 'gpf-searchable-select',
   template: ''
 })
-export class SearchableSelectMockComponent {
+class SearchableSelectMockComponent {
   @Input() public data;
   @Input() public caption;
 }
@@ -83,16 +83,14 @@ describe('MultiContinuousFilterComponent', () => {
         FormsModule
       ]
     }).compileComponents();
-  }));
 
-  beforeEach(() => {
     fixture = TestBed.createComponent(MultiContinuousFilterComponent);
     component = fixture.componentInstance;
     component.continuousFilter = PersonFilterMock;
     component.datasetId = '';
     component.continuousFilterState = ContinuousFilterStateMock;
     fixture.detectChanges();
-  });
+  }));
 
   it('should create', () => {
     expect(component).toBeTruthy();
