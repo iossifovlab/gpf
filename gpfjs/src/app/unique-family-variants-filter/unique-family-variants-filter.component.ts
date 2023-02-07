@@ -3,6 +3,7 @@ import { Store } from '@ngxs/store';
 import { UniqueFamilyVariantsFilterState, SetUniqueFamilyVariantsFilter } from './unique-family-variants-filter.state';
 import { Validate, IsDefined } from 'class-validator';
 import { StatefulComponent } from '../common/stateful-component';
+import { DatasetsService } from 'app/datasets/datasets.service';
 
 @Component({
   selector: 'gpf-unique-family-variants-filter',
@@ -13,7 +14,7 @@ export class UniqueFamilyVariantsFilterComponent extends StatefulComponent imple
   @Validate(IsDefined, {message: 'Must have a boolean value.'})
   private enabled = false;
 
-  public constructor(protected store: Store) {
+  public constructor(protected store: Store, public datasetService: DatasetsService) {
     super(store, UniqueFamilyVariantsFilterState, 'uniqueFamilyVariantsFilter');
   }
 
