@@ -46,6 +46,8 @@ export class ItemAddMenuComponent {
       this.getItems(this.pageCounter, this.searchText).subscribe((res: Item[]) => {
         this.items = this.items.concat(res);
         this.loadingPage = false;
+
+        document.getElementById('menu').scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'start' });
       });
     }
   }
