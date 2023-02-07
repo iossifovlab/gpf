@@ -1,5 +1,5 @@
 .grid-container {
-  grid-template-columns: auto auto auto;
+  grid-template-columns: 30% 35% 35%;
 }
 
 .create-group {
