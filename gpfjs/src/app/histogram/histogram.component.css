@@ -9,21 +9,29 @@
 }
 
 .step {
-  font-size: 6px;
+  font-size: 8px;
   width: 20px;
-  height: 10px;
+  height: 18px;
   position: absolute;
   right: 0px;
-  margin: 2px;
+  margin: 1px;
   z-index: 100;
   vertical-align: middle;
   line-height: 3px;
-  border-radius: revert;
+  border-radius: 0 0 3px 0;
+  border: none;
+  text-align: center;
+}
+
+.step:hover{
+  background-color: #6c757d;
+  color: white;
 }
 
 .step.up {
   transform: rotateX(180deg);
   top: 0px;
+  
 }
 
 .step.down {
