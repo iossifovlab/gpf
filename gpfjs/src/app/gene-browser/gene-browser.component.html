@@ -179,7 +179,7 @@
 
       <hr />
 
-      <div *ngIf="isUniqueFamilyVariantsVisible" id="unique-family-variants-block" class="form-block">
+      <div *ngIf="selectedDataset.studies?.length > 1" id="unique-family-variants-block" class="form-block">
         <div class="card">
           <ul ngbNav class="navbar bg-light nav-pills" style="justify-content: flex-start">
             <label
