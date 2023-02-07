@@ -1,11 +1,18 @@
 .pheno-instrument-block {
   padding: 20px;
   background-color: #f7f7f7;
+  width: fit-content;
+}
+
+.container{
+  padding-bottom: 0;
+  margin-top: 20px;
+  width: fit-content;
 }
 
 .form-block-title {
-  display: inline-block;
-  margin: auto 0;
+  width: auto;
+  margin-right: 20px;
 }
 
 :host ::ng-deep .card-block {
@@ -25,4 +32,37 @@
 
 .centered-label {
   line-height: 38px;
+}
+
+#instruments-wrapper{
+  display :grid;
+  grid-template-columns: 300px 300px;
+  grid-template-rows: 20px 50px;
+  column-gap: 20px;
+}
+
+.search-input-wrapper{
+  margin-bottom: 6px;
+}
+
+.select-wrapper{
+  margin-right: 30px;
+}
+
+#search-term{
+  margin-top: 5px;
+  align-self: center;
+}
+
+#select-instrument{
+  cursor: pointer;
+  align-self: center;
+}
+
+.search-clear-icon{
+  margin-top: 5px;
+}
+
+.search-clear-icon:hover{
+  cursor: pointer;
 }
