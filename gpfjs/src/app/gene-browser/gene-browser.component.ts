@@ -55,6 +55,7 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
   public legend: Array<PersonSet>;
   public geneSymbolSuggestions: string[] = [];
   public searchBoxInput$: Subject<string> = new Subject();
+  public isUniqueFamilyVariantsVisible = false;
 
   private subscriptions: Subscription[] = [];
   private selectedDatasetId: string;
@@ -112,6 +113,10 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
           });
       })
     );
+
+    if (this.datasetsService.getSelectedDataset().studies?.length > 1) {
+      this.isUniqueFamilyVariantsVisible = true;
+    }
   }
 
   public ngOnDestroy(): void {

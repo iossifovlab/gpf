@@ -22,7 +22,7 @@ describe('UniqueFamilyVariantsFilterComponent', () => {
   beforeEach(async() => {
     await TestBed.configureTestingModule({
       declarations: [UniqueFamilyVariantsFilterComponent],
-      providers: [{provide: DatasetsService, useValue: new DatasetsServiceMock}, ConfigService, UsersService, { provide: APP_BASE_HREF, useValue: '' }],
+      providers: [{provide: DatasetsService, useValue: new DatasetsServiceMock()}],
       imports: [HttpClientModule, NgxsModule.forRoot([], {developmentMode: true}), FormsModule]
     }).compileComponents();
   });
