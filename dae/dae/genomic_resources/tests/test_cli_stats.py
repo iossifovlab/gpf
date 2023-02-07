@@ -1,6 +1,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import os
 import textwrap
+from typing import List
 
 import pytest
 
@@ -16,7 +17,7 @@ from dae.genomic_resources.cli import cli_manage
 from dae.genomic_resources import register_implementation
 from dae.genomic_resources.genomic_scores import MinMaxValue
 
-from dae.testing import convert_to_tab_separated
+from dae.task_graph.graph import Task
 
 
 class SomeTestImplementation(GenomicResourceImplementation):
@@ -33,14 +34,15 @@ class SomeTestImplementation(GenomicResourceImplementation):
         """
         return b"somehash"
 
-    def add_statistics_build_tasks(self, task_graph, **kwargs) -> None:
+    def add_statistics_build_tasks(self, task_graph, **kwargs) -> List[Task]:
         """Add tasks for calculating resource statistics to a task graph."""
-        task_graph.create_task(
+        task = task_graph.create_task(
             "test_resource_sample_statistic",
             self._do_sample_statistic,
             [],
             []
         )
+        return [task]
 
     def _do_sample_statistic(self):
         proto = self.resource.proto
