@@ -3,10 +3,6 @@ import { UniqueFamilyVariantsFilterComponent } from './unique-family-variants-fi
 import { NgxsModule } from '@ngxs/store';
 import { FormsModule } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';
-import { ConfigService } from 'app/config/config.service';
-import { UsersService } from 'app/users/users.service';
-import { APP_BASE_HREF } from '@angular/common';
-import { Dataset } from 'app/datasets/datasets';
 import { DatasetsService } from 'app/datasets/datasets.service';
 
 class DatasetsServiceMock {
@@ -25,9 +21,7 @@ describe('UniqueFamilyVariantsFilterComponent', () => {
       providers: [{provide: DatasetsService, useValue: new DatasetsServiceMock()}],
       imports: [HttpClientModule, NgxsModule.forRoot([], {developmentMode: true}), FormsModule]
     }).compileComponents();
-  });
 
-  beforeEach(() => {
     fixture = TestBed.createComponent(UniqueFamilyVariantsFilterComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
