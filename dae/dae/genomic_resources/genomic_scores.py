@@ -555,9 +555,11 @@ class GenomicScore(
                 task_graph, region_size
             )
 
-            self._add_histogram_tasks(
+            _, _, save_task = self._add_histogram_tasks(
                 task_graph, save_task, region_size
             )
+
+            return [save_task]
 
     def _add_min_max_tasks(self, graph, region_size):
         """

@@ -411,22 +411,20 @@ def _store_stats_hash(proto, resource):
 def _collect_impl_stats_tasks(  # pylint: disable=too-many-arguments
         graph, proto, impl, dry_run, force, use_dvc, region_size):
 
-    impl.add_statistics_build_tasks(graph, region_size=region_size)
-
-    stats_tasks = copy.copy(graph.tasks)
+    tasks = impl.add_statistics_build_tasks(graph, region_size=region_size)
 
     graph.create_task(
         f"{impl.resource.resource_id}_store_stats_hash",
         _store_stats_hash,
         [proto, impl.resource],
-        stats_tasks
+        tasks
     )
 
     graph.create_task(
         f"{impl.resource.resource_id}_manifest_rebuild",
         _do_resource_manifest_command,
         [proto, impl.resource, dry_run, force, use_dvc],
-        stats_tasks
+        tasks
     )
 
 

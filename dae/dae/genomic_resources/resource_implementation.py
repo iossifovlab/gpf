@@ -4,6 +4,7 @@ from typing import Optional, Callable, cast, Any
 from abc import abstractmethod, ABC
 from jinja2 import Template
 from cerberus import Validator
+from dae.task_graph.graph import Task
 
 from .repository import GenomicResource
 
@@ -51,7 +52,7 @@ class GenomicResourceImplementation(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def add_statistics_build_tasks(self, task_graph, **kwargs) -> None:
+    def add_statistics_build_tasks(self, task_graph, **kwargs) -> List[Task]:
         """Add tasks for calculating resource statistics to a task graph."""
         raise NotImplementedError()
 
