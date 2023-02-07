@@ -41,6 +41,34 @@
       <li ngbNavItem id="groups">
         <a ngbNavLink (click)="switchTableName('GROUPS')">Groups</a>
         <ng-template ngbNavContent>
+          <div class="row justify-content-between">
+            <div class="col-7 btn-toolbar" style="padding-top: 15px; padding-left: 25px">
+              <div class="input-group" style="width: 55%">
+                <div class="search-input-wrapper">
+                  <input
+                    #searchBox
+                    placeholder="Search"
+                    autocomplete="off"
+                    (keyup)="search(searchBox.value)"
+                    id="search-field"
+                    class="search-input form-control my-0 py-1"
+                    type="text"
+                    aria-label="Search"
+                    [ngModel]="searchText"
+                    spellcheck="false" />
+                  <span
+                    class="search-clear-icon"
+                    [style.background-image]="'url(' + imgPathPrefix + 'search-clear-icon.png)'"
+                    *ngIf="searchBox.value !== ''"
+                    (click)="searchBox.value = ''; search(searchBox.value)">
+                  </span>
+                </div>
+              </div>
+              <div class="btn-toolbar" style="padding-left: 10px">
+                <a [routerLink]="['users', 'create']" class="btn btn-primary">Create user</a>
+              </div>
+            </div>
+          </div>
           <gpf-groups-table [groups]="groups" [currentUserEmail]="currentUserEmail"></gpf-groups-table>
         </ng-template>
       </li>
