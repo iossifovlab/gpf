@@ -13,6 +13,7 @@ import { DatasetsService } from 'app/datasets/datasets.service';
 export class UniqueFamilyVariantsFilterComponent extends StatefulComponent implements OnChanges, OnInit {
   @Validate(IsDefined, {message: 'Must have a boolean value.'})
   private enabled = false;
+  public isVisible = false;
 
   public constructor(protected store: Store, public datasetService: DatasetsService) {
     super(store, UniqueFamilyVariantsFilterState, 'uniqueFamilyVariantsFilter');
@@ -29,6 +30,9 @@ export class UniqueFamilyVariantsFilterComponent extends StatefulComponent imple
     this.store.selectOnce(UniqueFamilyVariantsFilterState).subscribe(state => {
       this.filterValue = state.uniqueFamilyVariants;
     });
+    if (this.datasetService.getSelectedDataset().studies?.length > 1) {
+      this.isVisible = true;
+    }
   }
 
   public get filterValue(): boolean {
