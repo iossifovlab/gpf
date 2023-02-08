@@ -1,6 +1,5 @@
 import { PhenoToolMeasurePage } from 'cypress/elements/pheno-tool-measure-page';
 import { datasetIds, toolPageLinks } from 'cypress/elements/utils';
-import { measureMemory } from 'vm';
 
 describe('Pheno tool measure tests', () => {
   const page = new PhenoToolMeasurePage();
