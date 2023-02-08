@@ -77,7 +77,7 @@ class BaseQueryBuilder(ABC):
         pedigree_table: str,
         family_variant_schema: TableSchema,
         summary_allele_schema: TableSchema,
-        table_properties: Optional[dict],
+        partition_descriptor: Optional[dict],
         pedigree_schema: TableSchema,
         pedigree_df: pd.DataFrame,
         gene_models: Optional[GeneModels] = None,
@@ -92,7 +92,7 @@ class BaseQueryBuilder(ABC):
         self.family_variant_table = family_variant_table
         self.summary_allele_table = summary_allele_table
         self.pedigree_table = pedigree_table
-        self.table_properties = table_properties
+        self.partition_descriptor = partition_descriptor
 
         self.family_columns = family_variant_schema.keys()
         self.summary_columns = summary_allele_schema.keys()
@@ -141,7 +141,7 @@ class BaseQueryBuilder(ABC):
         return_reference=None,
         return_unknown=None,
         limit=None,
-        pedigree_fields=None,
+        pedigree_fields=None,  # pylint: disable=unused-argument
     ):
         # pylint: disable=too-many-arguments,too-many-locals
         """Build an SQL query in the correct order."""
@@ -175,7 +175,7 @@ class BaseQueryBuilder(ABC):
 
     def _build_select(self):
         columns = ", ".join(self.query_columns)
-        select_clause = f"SELECT DISTINCT {columns}"
+        select_clause = f"SELECT {columns}"
         self._add_to_product(select_clause)
 
     def _build_from(self):
@@ -453,8 +453,7 @@ class BaseQueryBuilder(ABC):
         assert isinstance(query_values, (list, set)), type(query_values)
 
         if not query_values:
-            where = f" {column_name} IS NULL"
-            return where
+            return f" {column_name} IS NULL"
 
         values = [
             " {q}{val}{q} ".format(
@@ -463,7 +462,7 @@ class BaseQueryBuilder(ABC):
             for val in query_values
         ]
 
-        where = []
+        where: list[str] = []
         for i in range(0, len(values), self.MAX_CHILD_NUMBER):
             chunk_values = values[i: i + self.MAX_CHILD_NUMBER]
             in_expr = f" {column_name} in ( {','.join(chunk_values)} ) "
@@ -513,6 +512,8 @@ class BaseQueryBuilder(ABC):
 
     def _build_gene_regions_heuristic(self, genes, regions):
         assert genes is not None
+        assert self.gene_models is not None
+
         if len(genes) == 0 or len(genes) > self.GENE_REGIONS_HEURISTIC_CUTOFF:
             return regions
 
@@ -550,10 +551,11 @@ class BaseQueryBuilder(ABC):
         self, inheritance, ultra_rare, real_attr_filter
     ):
         # pylint: disable=too-many-branches
+        assert self.partition_descriptor is not None
         if "frequency_bin" not in self.combined_columns:
             return ""
 
-        rare_boundary = self.table_properties["rare_boundary"]
+        rare_boundary = self.partition_descriptor["rare_boundary"]
 
         frequency_bin = set()
         frequency_bin_col = self.where_accessors["frequency_bin"]
@@ -632,19 +634,20 @@ class BaseQueryBuilder(ABC):
         return " OR ".join(frequency_bin)
 
     def _build_coding_heuristic(self, effect_types):
+        assert self.partition_descriptor is not None
         if effect_types is None:
             return ""
         if "coding_bin" not in self.combined_columns:
             return ""
         effect_types = set(effect_types)
         intersection = effect_types & set(
-            self.table_properties["coding_effect_types"]
+            self.partition_descriptor["coding_effect_types"]
         )
 
         logger.debug(
             "coding bin heuristic: query effect types: %s; "
             "coding_effect_types: %s; => %s",
-            effect_types, self.table_properties["coding_effect_types"],
+            effect_types, self.partition_descriptor["coding_effect_types"],
             intersection == effect_types
         )
 
@@ -657,11 +660,12 @@ class BaseQueryBuilder(ABC):
         return ""
 
     def _build_region_bin_heuristic(self, regions):
-        if not regions or self.table_properties["region_length"] == 0:
+        assert self.partition_descriptor is not None
+        if not regions or self.partition_descriptor["region_length"] == 0:
             return ""
 
-        chroms = set(self.table_properties["chromosomes"])
-        region_length = self.table_properties["region_length"]
+        chroms = set(self.partition_descriptor["chromosomes"])
+        region_length = self.partition_descriptor["region_length"]
         region_bins = []
         for region in regions:
             if region.chrom in chroms:
@@ -679,11 +683,12 @@ class BaseQueryBuilder(ABC):
         return f"{region_bin_col} IN ({bins_str})"
 
     def _build_family_bin_heuristic(self, family_ids, person_ids):
+        assert self.partition_descriptor is not None
         if "family_bin" not in self.combined_columns:
             return ""
         if "family_bin" not in self.pedigree_columns:
             return ""
-        family_bins = set()
+        family_bins: set[str] = set()
         if family_ids:
             family_ids = set(family_ids)
             family_bins = family_bins.union(
@@ -706,7 +711,7 @@ class BaseQueryBuilder(ABC):
 
         family_bin_col = self.where_accessors["family_bin"]
 
-        if 0 < len(family_bins) < self.table_properties["family_bin_size"]:
+        if 0 < len(family_bins) < self.partition_descriptor["family_bin_size"]:
             family_bins_str = ", ".join(str(fb) for fb in family_bins)
             return f"{family_bin_col} IN ({family_bins_str})"
 
