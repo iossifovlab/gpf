@@ -276,14 +276,13 @@ class DaskExecutor(AbstractTaskGraphExecutor):
 
 
 def task_graph_status(
-        task_graph: TaskGraph, executor: TaskGraphExecutor,
+        task_graph: TaskGraph, task_cache: TaskCache,
         verbose: Optional[int]) -> bool:
     """Show the status of each task from the task graph."""
     id_col_len = max(len(t.task_id) for t in task_graph.tasks)
     id_col_len = min(120, max(50, id_col_len))
     columns = ["TaskID", "Status"]
     print(f"{columns[0]:{id_col_len}s} {columns[1]}")
-    task_cache = getattr(executor, "_task_cache")
     task2record = dict(task_cache.load(task_graph))
     for task in task_graph.tasks:
         record = task2record[task]

@@ -3,7 +3,7 @@ import textwrap
 
 import yaml
 from box import Box
-from dae.task_graph.cache import TaskCache
+from dae.task_graph.cache import NoTaskCache, TaskCache
 from dae.task_graph.executor import DaskExecutor, TaskGraphExecutor, \
     SequentialExecutor, task_graph_run, task_graph_status
 
@@ -77,11 +77,12 @@ class TaskGraphCli:
             assert force_mode == "always"
 
     @staticmethod
-    def create_executor(**kwargs) -> TaskGraphExecutor:
+    def create_executor(task_cache=None, **kwargs) -> TaskGraphExecutor:
         """Create a task graph executor according to the args specified."""
         args = Box(kwargs)
-        task_cache = TaskCache.create(
-            force=args.get("force"), cache_dir=args.get("task_status_dir"))
+
+        if task_cache is None:
+            task_cache = NoTaskCache()
 
         if args.jobs == 1:
             assert args.dask_cluster_name is None
@@ -115,12 +116,15 @@ class TaskGraphCli:
         if args.task_ids:
             task_graph = task_graph.prune(ids_to_keep=args.task_ids)
 
-        with TaskGraphCli.create_executor(**kwargs) as executor:
-            if args.command is None or args.command == "run":
-                return task_graph_run(task_graph, executor, args.keep_going)
+        task_cache = TaskCache.create(
+            force=args.get("force"), cache_dir=args.get("task_status_dir"))
 
-            if args.command in {"list", "status"}:
-                res = task_graph_status(task_graph, executor, args.verbose)
-                return res
+        if args.command is None or args.command == "run":
+            with TaskGraphCli.create_executor(task_cache, **kwargs) as xtor:
+                return task_graph_run(task_graph, xtor, args.keep_going)
 
-            raise Exception("Unknown command")
+        if args.command in {"list", "status"}:
+            res = task_graph_status(task_graph, task_cache, args.verbose)
+            return res
+
+        raise Exception("Unknown command")
