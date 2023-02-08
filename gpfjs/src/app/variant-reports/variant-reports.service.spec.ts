@@ -1,10 +1,11 @@
 import { TestBed, inject } from '@angular/core/testing';
 
 import { VariantReportsService } from './variant-reports.service';
-import { HttpClientModule } from '@angular/common/http';
+import { HttpClient, HttpClientModule, HttpHeaders, HttpParams } from '@angular/common/http';
 import { ConfigService } from 'app/config/config.service';
 import { Observable, of } from 'rxjs';
 import { DatasetsService } from 'app/datasets/datasets.service';
+import { environment } from 'environments/environment';
 
 class MockDatasetsService {
   public getSelectedDatasetId(): string {
@@ -33,5 +34,20 @@ describe('VariantReportsService', () => {
 
   it('should ...', inject([VariantReportsService], (service: VariantReportsService) => {
     expect(service).toBeTruthy();
+  }));
+
+  it('should download families', inject([VariantReportsService], (service: VariantReportsService) => {
+    const httpGetSpy = jest.spyOn(HttpClient.prototype, 'get');
+    service.downloadFamilies();
+    expect(httpGetSpy).toHaveBeenCalledWith(`${environment.apiPath}common_reports/families_data/undefined`,
+      {observe: 'response', responseType: 'blob'}
+    );
+    expect(JSON.stringify(httpGetSpy.mock.results)).toStrictEqual(JSON.stringify(
+      [
+        {
+          type: 'return', value: { source: {source: {}}}
+        }
+      ]
+    ));
   }));
 });

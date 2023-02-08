@@ -18,10 +18,16 @@ import { GeneSymbolsComponent } from 'app/gene-symbols/gene-symbols.component';
 import { GeneSymbolsState, SetGeneSymbols } from 'app/gene-symbols/gene-symbols.state';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { Observable, of } from 'rxjs';
+import { HttpResponse } from '@angular/common/http';
+import * as downloadBlobResponse from 'app/utils/blob-download';
 
 class PhenoToolServiceMock {
   public getPhenoToolResults(): Observable<string> {
     return of('fakeValue');
+  }
+
+  public downloadPhenoToolResults(): Observable<HttpResponse<Blob>> {
+    return of([] as any);
   }
 }
 class MockDatasetsService {
@@ -62,13 +68,10 @@ describe('PhenoToolComponent', () => {
     })
       .compileComponents();
     store = TestBed.inject(Store);
-  }));
-
-  beforeEach(() => {
     fixture = TestBed.createComponent(PhenoToolComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
-  });
+  }));
 
   it('should create', () => {
     expect(component).toBeTruthy();
@@ -89,7 +92,7 @@ describe('PhenoToolComponent', () => {
       testFamily: 'test4'
     });
 
-    expect(mockStateSelector).toEqual(
+    expect(mockStateSelector).toStrictEqual(
       Object({
         genesBlockState: 'state1',
         testGene: 'test1',
@@ -106,14 +109,26 @@ describe('PhenoToolComponent', () => {
   it('should test submit query', () => {
     fixture.detectChanges();
     component.submitQuery();
-    expect(component.phenoToolResults).toEqual('fakeValue' as any);
+    expect(component.phenoToolResults).toBe('fakeValue' as any);
   });
 
   it('should hide results on a state change', () => {
     fixture.detectChanges();
     component.submitQuery();
-    expect(component.phenoToolResults).toEqual('fakeValue' as any);
+    expect(component.phenoToolResults).toBe('fakeValue' as any);
     store.dispatch(new SetGeneSymbols(['POGZ']));
-    expect(component.phenoToolResults).toEqual(null);
+    expect(component.phenoToolResults).toBeNull();
+  });
+
+  it('should test download', () => {
+    const spyOnQueryService = jest.spyOn<any, any>(phenoToolMockService, 'downloadPhenoToolResults');
+    const spyOnBlobResponse = jest.spyOn(downloadBlobResponse, 'downloadBlobResponse');
+    component.onDownload();
+    expect(spyOnBlobResponse).toHaveBeenCalledWith([], 'pheno_report.csv');
+    expect(spyOnBlobResponse).toHaveBeenCalledTimes(1);
+    expect(spyOnQueryService).toHaveBeenCalledWith({datasetId: 'testDatasetId'});
+    expect(spyOnQueryService).toHaveBeenCalledTimes(1);
+    expect(spyOnQueryService.mock.results).toMatchObject([{type: 'return', value: {}}]);
   });
 });
+

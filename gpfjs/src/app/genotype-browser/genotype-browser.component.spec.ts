@@ -30,6 +30,11 @@ import { EffecttypesColumnComponent } from 'app/effect-types/effect-types-column
 import { FamilyFiltersBlockComponent } from 'app/family-filters-block/family-filters-block.component';
 import { PersonFiltersBlockComponent } from 'app/person-filters-block/person-filters-block.component';
 import { FormsModule } from '@angular/forms';
+import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+import { of } from 'rxjs/internal/observable/of';
+import { HttpResponse } from '@angular/common/http';
+import * as downloadBlobResponse from 'app/utils/blob-download';
+import { Observable } from 'rxjs/internal/Observable';
 
 
 const genotypeBrowserConfigMock = {
@@ -45,29 +50,53 @@ class MockDatasetsService {
     return { id: 'testDataset', genotypeBrowserConfig: genotypeBrowserConfigMock };
   }
 }
+class MockQueryService {
+  public downloadVariants(): Observable<HttpResponse<Blob>> {
+    return of([] as any) as Observable<HttpResponse<Blob>>;
+  }
+}
 
 describe('GenotypeBrowserComponent', () => {
   let component: GenotypeBrowserComponent;
   let fixture: ComponentFixture<GenotypeBrowserComponent>;
+  const queryService = new MockQueryService();
 
   beforeEach(() => {
     TestBed.configureTestingModule({
       declarations: [
-        GenotypeBrowserComponent, GenesBlockComponent, RegionsBlockComponent, GenotypeBlockComponent,
-        GenomicScoresBlockComponent, UniqueFamilyVariantsFilterComponent, SaveQueryComponent,
-        EffectTypesComponent, GenderComponent, VariantTypesComponent, PresentInChildComponent, PresentInParentComponent,
-        ErrorsAlertComponent, CheckboxListComponent, EffecttypesColumnComponent, FamilyFiltersBlockComponent,
-        PersonFiltersBlockComponent, DisplayNamePipe
+        GenotypeBrowserComponent,
+        GenotypeBlockComponent,
+        GenomicScoresBlockComponent,
+        SaveQueryComponent,
+        PresentInChildComponent,
+        PresentInParentComponent,
+        ErrorsAlertComponent,
+        CheckboxListComponent,
+        EffecttypesColumnComponent,
+        FamilyFiltersBlockComponent,
+        PersonFiltersBlockComponent,
+        DisplayNamePipe
       ],
       providers: [
-        QueryService, ConfigService, FullscreenLoadingService, UsersService,
-        GenomicScoresBlockService, { provide: DatasetsService, useValue: new MockDatasetsService() },
+        {provide: QueryService, useValue: queryService},
+        ConfigService,
+        FullscreenLoadingService,
+        UsersService,
+        GenomicScoresBlockService,
+        { provide: DatasetsService, useValue: new MockDatasetsService() },
+        UniqueFamilyVariantsFilterComponent,
+        EffectTypesComponent,
+        GenderComponent,
+        VariantTypesComponent,
+        GenesBlockComponent,
+        RegionsBlockComponent,
         { provide: APP_BASE_HREF, useValue: '' }
       ],
       imports: [
         HttpClientTestingModule, RouterTestingModule, NgbNavModule, FormsModule,
         NgxsModule.forRoot([], {developmentMode: true}),
       ],
+      schemas: [CUSTOM_ELEMENTS_SCHEMA]
     }).compileComponents();
     fixture = TestBed.createComponent(GenotypeBrowserComponent);
     component = fixture.componentInstance;
@@ -75,6 +104,18 @@ describe('GenotypeBrowserComponent', () => {
   });
 
   it('should create', () => {
+    fixture.detectChanges();
     expect(component).toBeTruthy();
+  });
+
+  it('should test download', () => {
+    const downloadVariantsSpy = jest.spyOn<any, any>(queryService, 'downloadVariants');
+    const downloadBlobResponseSpy = jest.spyOn(downloadBlobResponse, 'downloadBlobResponse');
+    component.onDownload();
+    expect(downloadBlobResponseSpy).toHaveBeenCalledWith([], "variants.tsv");
+    expect(downloadBlobResponseSpy).toHaveBeenCalledTimes(1);
+    expect(downloadVariantsSpy).toHaveBeenCalledWith({"datasetId": "testDataset", "download": true});
+    expect(downloadVariantsSpy).toHaveBeenCalledTimes(1);
+    expect(downloadVariantsSpy.mock.results).toMatchObject([{"type":"return","value":{}}]);
   });
 });

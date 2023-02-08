@@ -42,4 +42,35 @@ describe('PhenoToolService', () => {
       ]
     );
   });
+
+  it('should download pheno tool results', () => {
+    const httpPostSpy = jest.spyOn(HttpClient.prototype, 'post');
+    service.downloadPhenoToolResults('filter' as any);
+    expect(JSON.stringify(httpPostSpy.mock.calls)).toStrictEqual(JSON.stringify(
+      [
+        [
+          'testUrl/pheno_tool',
+          'filter',
+          { headers: {'Content-Type': 'application/json'}, withCredentials: true }
+        ],
+        [
+          'testUrl/pheno_tool/download',
+          'filter',
+          {
+            observe: 'response',
+            headers: {normalizedNames: {}, lazyUpdate: null},
+            responseType: 'blob'
+          }
+        ]
+      ]
+    ));
+    expect(JSON.stringify(httpPostSpy.mock.results)).toStrictEqual(JSON.stringify([
+      {
+        type: 'return',
+        value: of([]),
+      }, {
+        type: 'return',
+        value: {}}
+    ]));
+  });
 });

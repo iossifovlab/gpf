@@ -30,6 +30,7 @@ import { ConfigService } from 'app/config/config.service';
 import { RegressionComparePipe } from 'app/utils/regression-compare.pipe';
 import { GetRegressionIdsPipe } from 'app/utils/get-regression-ids.pipe';
 import { BackgroundColorPipe } from 'app/utils/background-color.pipe';
+import * as saveAs from 'file-saver';
 
 const fakeJsonMeasurei1 = JSON.parse(JSON.stringify(fakeJsonMeasureOneRegression));
 fakeJsonMeasurei1.instrument_name = 'i1';
@@ -57,6 +58,10 @@ class MockPhenoBrowserService {
   public getDownloadLink(instrument: PhenoInstrument, datasetId: string): string {
     return `${environment.apiPath}pheno_browser/download`
            + `?dataset_id=${datasetId}&instrument=${instrument}`;
+  }
+
+  public downloadMeasures(): Observable<Blob> {
+    return of([] as any);
   }
 }
 
@@ -228,4 +233,23 @@ describe('PhenoBrowserComponent', () => {
       expect(highPValueElement.nativeElement.style.backgroundColor).toEqual('rgba(255, 255, 255, 0.8)');
     });
   }));
+
+  it('should test download', () => {
+    const spyOnQueryService = jest.spyOn<any, any>(phenoBrowserServiceMock, 'downloadMeasures');
+    const blobSaveSpy = jest.spyOn(saveAs, 'saveAs');
+    component.downloadMeasures();
+    expect(blobSaveSpy).toHaveBeenCalledWith([], 'measures_testDatasetId.csv');
+    expect(blobSaveSpy).toHaveBeenCalledTimes(1);
+    expect(spyOnQueryService).toHaveBeenCalledWith('testDatasetId', null,
+      [{base_url: undefined, description: 'a test measure', figureDistribution: 'http://localhost:8000basetest.jpg',
+        figureDistributionSmall: null, index: 1, instrumentName: 'i1', measureId: 'i1.test_measure',
+        measureName: 'test_measure', measureType: 'ordinal',
+        regressions:
+        {age: {figureRegression: 'http://localhost:8000baseimagepath',
+          figureRegressionSmall: 'http://localhost:8000baseimagepathsmall', measureId: 'i1.test_measure',
+          pvalueRegressionFemale: 0.2, pvalueRegressionMale: 0.000001, regressionId: 'age'}
+        }, valuesDomain: '0,1'}]);
+    expect(spyOnQueryService).toHaveBeenCalledTimes(1);
+    expect(spyOnQueryService.mock.results).toMatchObject([{type: 'return', value: {}}]);
+  });
 });
