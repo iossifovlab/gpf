@@ -19,6 +19,7 @@ class Line:
         attributes: Dict[str, Any],
         ref: Optional[str] = None,
         alt: Optional[str] = None,
+        single_position=False
     ):
         self.chrom: str = chrom
         self.pos_begin: int = int(pos_begin)
@@ -26,6 +27,7 @@ class Line:
         self.attributes: Dict[str, Any] = attributes
         self.ref: Optional[str] = ref
         self.alt: Optional[str] = alt
+        self.single_position = single_position
 
     def __eq__(self, other: object):
         if isinstance(other, Line):
@@ -47,15 +49,22 @@ class Line:
     def __getitem__(self, key: Union[int, slice]):
         if not isinstance(key, (int, slice)):
             raise TypeError(f"Key '{key}' must be of integer or slice type!")
-        if isinstance(key, slice):
-            return tuple(self)[key]
-        if key == 0:
-            return self.chrom
-        if key == 1:
-            return self.pos_begin
-        if key == 2:
-            return self.pos_end
-        return tuple(self.attributes.values())[key - 3]
+        if self.single_position:
+            # Adjust index if the raw line only has a single position column.
+            # This is necessary since our Line interface always maintains a
+            # separate entry for the end position, which can offset the original
+            # indices by one.
+            if isinstance(key, int) and key > 1:
+                key += 1
+            if isinstance(key, slice):
+                start = key.start
+                stop = key.stop
+                if start and start > 1:
+                    start = start + 1
+                if stop and stop > 1:
+                    stop = stop + 1
+                key = slice(start, stop, key.step)
+        return tuple(self)[key]
 
     def __repr__(self):
         return str(tuple(self))
@@ -93,7 +102,7 @@ class VCFLine(Line):
         info_meta: pysam.VariantHeaderMetadata,
     ):
         super().__init__(
-            chrom, pos_begin, pos_end, {}, ref, alt
+            chrom, pos_begin, pos_end, {}, ref, alt, True
         )
         # Used for support of multiallelic variants in VCF files.
         # The allele index is None if the variant for this line

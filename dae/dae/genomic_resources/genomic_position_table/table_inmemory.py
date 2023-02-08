@@ -85,7 +85,8 @@ class InmemoryGenomicPositionTable(GenomicPositionTable):
             alt = attributes.get(self.alt_key)
             records_by_chr[chrom].append(
                 Line(chrom, ps_begin, ps_end,
-                     attributes, ref=ref, alt=alt)
+                     attributes, ref=ref, alt=alt,
+                     single_position=self.single_pos)
             )
         self.records_by_chr = {
             c: sorted(pss, key=lambda l: (l[:3], l.ref, l.alt))

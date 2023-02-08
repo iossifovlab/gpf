@@ -1520,3 +1520,49 @@ def test_vcf_get_missing_alt(vcf_res_multiallelic):
         no_alt_line = next(tab.get_all_records())
         assert no_alt_line.ref == "A"
         assert no_alt_line.alt is None
+
+
+def test_overlapping_nonattribute_columns_config(tmp_path):
+    setup_directories(
+        tmp_path, {
+            "genomic_resource.yaml": """
+                table:
+                  filename: data.txt.gz
+                  format: tabix
+                  header_mode: none
+                  chrom:
+                    index: 0
+                  pos_begin:
+                    index: 1
+                  pos_end:
+                    index: 1
+                  reference:
+                    index: 2
+                  alternative:
+                    index: 3
+                scores:
+                  - id: raw
+                    index: 4
+                    type: float
+                    desc: "raw"
+                  - id: phred
+                    index: 5
+                    type: float
+                    desc: "phred"
+            """,
+        })
+    setup_tabix(
+        tmp_path / "data.txt.gz",
+        """
+        1       101   A       C       0.123        1
+        1       102   A       C       0.456        2
+        1       103   A       C       0.789        3
+        """, seq_col=0, start_col=1, end_col=1)
+    res = build_filesystem_test_resource(tmp_path)
+    with build_genomic_position_table(res, res.config["table"]) as tab:
+        results = tuple(map(lambda l: (l[4], l[5]), tab.get_all_records()))
+        assert results == (
+            ("0.123", "1"),
+            ("0.456", "2"),
+            ("0.789", "3"),
+        )

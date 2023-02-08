@@ -26,6 +26,7 @@ class GenomicPositionTable(abc.ABC):
         self.chrom_column_i = None
         self.pos_begin_column_i = None
         self.pos_end_column_i = None
+        self.single_pos = False
 
         # handling the header property
         self.header: Optional[tuple] = None
@@ -99,6 +100,7 @@ class GenomicPositionTable(abc.ABC):
         self.chrom_column_i = self.get_special_column_index(self.CHROM)
         self.pos_begin_column_i = self.get_special_column_index(self.POS_BEGIN)
         self.pos_end_column_i = self.pos_begin_column_i
+        self.single_pos = self.pos_begin_column_i == self.pos_end_column_i
         try:
             self.pos_end_column_i = self.get_special_column_index(self.POS_END)
         except (ValueError, KeyError):

@@ -273,4 +273,5 @@ class TabixGenomicPositionTable(GenomicPositionTable):
                 raw[self.pos_begin_column_i],
                 raw[self.pos_end_column_i],
                 attributes, ref=ref, alt=alt,
+                single_position=self.single_pos
             )
