@@ -43,6 +43,12 @@ VCF_TYPE_CONVERSION_MAP = {
     "Flag": "bool",
 }
 
+SCORE_TYPE_PARSERS = {
+    "str": str,
+    "float": float,
+    "int": int
+}
+
 
 @dataclass
 class ScoreDef:
@@ -143,11 +149,6 @@ class GenomicScore(
     def _parse_scoredef_config(config):
         """Parse ScoreDef configuration."""
         scores = {}
-        type_parsers = {
-            "str": str,
-            "float": float,
-            "int": int
-        }
         default_na_values = {
             "str": {},
             "float": {"", "nan", ".", "NA"},
@@ -173,7 +174,7 @@ class GenomicScore(
                 col_key,
                 score_conf.get("desc", ""),
                 col_type,
-                type_parsers[col_type],
+                SCORE_TYPE_PARSERS[col_type],
                 score_conf.get(
                     "na_values",
                     config.get(
@@ -229,10 +230,22 @@ class GenomicScore(
                                          " be configured for scores!")
 
     def _generate_scoredefs(self):
+        if isinstance(self.table, VCFGenomicPositionTable):
+            vcf_scoredefs = GenomicScore._get_vcf_scoredefs(self.table.header)
+            scoredefs = dict()
+            if "scores" in self.config:
+                # allow overriding vcf-generated scoredefs
+                for sc in self.config["scores"]:
+                    score = vcf_scoredefs[sc["id"]]
+                    score.desc = sc.get("desc", score.desc)
+                    score.type = sc.get("type", score.type)
+                    score.value_parser = SCORE_TYPE_PARSERS[score.type]
+                    score.na_values = sc.get("na_values", score.na_values)
+                    scoredefs[sc["id"]] = score
+                return scoredefs
+            return vcf_scoredefs
         if "scores" in self.config:
             return GenomicScore._parse_scoredef_config(self.config)
-        if isinstance(self.table, VCFGenomicPositionTable):
-            return GenomicScore._get_vcf_scoredefs(self.table.header)
         raise ValueError("No scores configured and not using a VCF")
 
     def get_config(self):
