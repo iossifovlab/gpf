@@ -86,8 +86,13 @@ class AdjustImpalaStorageCommand(AdjustmentsCommand):
         self.impala_hosts = impala_hosts
 
     def execute(self):
-        storages = self.config["storage"]
-        storage = storages.get(self.storage_id)
+        storages = self.config["genotype_storage"]["storages"]
+        storage = None
+        for current in storages:
+            if current["id"] == self.storage_id:
+                storage = current
+                break
+
         if storage is None:
             logger.error(
                 "unable to find storage (%s) in instance at %s",
