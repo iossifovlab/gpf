@@ -28,6 +28,16 @@ class TaskGraphExecutor:
     def get_active_tasks(self) -> list[Task]:
         """Return the list of tasks currently being processed."""
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()
+
+    @abstractmethod
+    def close(self):
+        """Clean-up any resources used by the executor."""
+
 
 class AbstractTaskGraphExecutor(TaskGraphExecutor):
     """Executor that walks the graph in order that satisfies dependancies."""
@@ -112,6 +122,9 @@ class AbstractTaskGraphExecutor(TaskGraphExecutor):
 
         stack.pop()
         return None
+
+    def close(self):
+        pass
 
 
 class SequentialExecutor(AbstractTaskGraphExecutor):
@@ -254,6 +267,12 @@ class DaskExecutor(AbstractTaskGraphExecutor):
     @staticmethod
     def _exec(task_func, args, _deps):
         return task_func(*args)
+
+    def close(self):
+        self._client.close()
+        cluster = self._client.cluster
+        if cluster is not None:
+            cluster.close()
 
 
 def task_graph_status(

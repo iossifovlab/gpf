@@ -115,12 +115,12 @@ class TaskGraphCli:
         if args.task_ids:
             task_graph = task_graph.prune(ids_to_keep=args.task_ids)
 
-        executor = TaskGraphCli.create_executor(**kwargs)
-        if args.command is None or args.command == "run":
-            return task_graph_run(task_graph, executor, args.keep_going)
+        with TaskGraphCli.create_executor(**kwargs) as executor:
+            if args.command is None or args.command == "run":
+                return task_graph_run(task_graph, executor, args.keep_going)
 
-        if args.command in {"list", "status"}:
-            return task_graph_status(
-                task_graph, executor, args.verbose)
+            if args.command in {"list", "status"}:
+                res = task_graph_status(task_graph, executor, args.verbose)
+                return res
 
-        raise Exception("Unknown command")
+            raise Exception("Unknown command")
