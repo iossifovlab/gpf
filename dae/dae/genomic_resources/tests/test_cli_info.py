@@ -76,13 +76,13 @@ def test_resource_info(proto_fixture):
     path, _proto = proto_fixture
     assert not (path / "one/index.html").exists()
 
-    cli_manage(["resource-info", "-R", str(path), "-r", "one"])
+    cli_manage(["resource-info", "-R", str(path), "-r", "one", "-j", 1])
 
     assert (path / "one/index.html").exists()
     assert not (path / "two/index.html").exists()
     assert not (path / "index.html").exists()
 
-    cli_manage(["resource-info", "-R", str(path), "-r", "two"])
+    cli_manage(["resource-info", "-R", str(path), "-r", "two", "-j", 1])
 
     assert (path / "one/index.html").exists()
     assert (path / "two/index.html").exists()
@@ -104,7 +104,7 @@ def test_repo_info(proto_fixture):
 
     assert not (path / "one/index.html").exists()
 
-    cli_manage(["repo-info", "-R", str(path)])
+    cli_manage(["repo-info", "-R", str(path), "-j", "-1"])
 
     assert (path / "one/index.html").exists()
     assert (path / "two/index.html").exists()
