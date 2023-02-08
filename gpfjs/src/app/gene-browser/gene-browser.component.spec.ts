@@ -247,7 +247,8 @@ describe('GeneBrowserComponent', () => {
       datasetId: 'testDatasetId', download: true,
       effectTypes: [
         'frame-shift', 'nonsense', 'splice-site', 'no-frame-shift-newStop',
-        'missense', 'synonymous', 'CNV+', 'CNV-', 'no-frame-shift', 'noEnd', 'noStart', 'CDS'
+        'missense', 'synonymous', 'CNV+', 'CNV-', '3\'UTR', '3\'UTR-intron', '5\'UTR', '5\'UTR-intron', 'intergenic',
+        'intron', 'no-frame-shift', 'noEnd', 'noStart', 'non-coding', 'non-coding-intron', 'CDS'
       ],
       geneSymbols: ['POGZ'], genomicScores: [{metric: 'testColumn', rangeEnd: 100, rangeStart: null}],
       inheritanceTypeFilter: ['denovo', 'mendelian', 'omission', 'missing'],
