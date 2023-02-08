@@ -104,7 +104,7 @@ def test_repo_info(proto_fixture):
 
     assert not (path / "one/index.html").exists()
 
-    cli_manage(["repo-info", "-R", str(path), "-j", "-1"])
+    cli_manage(["repo-info", "-R", str(path), "-j", "1"])
 
     assert (path / "one/index.html").exists()
     assert (path / "two/index.html").exists()
