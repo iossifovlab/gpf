@@ -18,6 +18,7 @@ describe('Pheno tool tests', () => {
   beforeEach(() => {
     page.preserveLogin();
     page.navigateToHome();
+    page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.phenotypeTool);
     cy.deleteDownloadsFolder();
   });
 
@@ -49,53 +50,44 @@ describe('Pheno tool tests', () => {
 
   it('should display genes block panel', () => {
     const genesBlockPage = new GenesBlockPage();
-    page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.phenotypeTool);
     genesBlockPage.window.should('be.visible');
   });
 
   it('should display pheno tool measure block panel', () => {
     const phenoToolMeasurePage = new PhenoToolMeasurePage();
-    page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.phenotypeTool);
     phenoToolMeasurePage.block.should('be.visible');
   });
 
   it('should display pheno tool genotye block panel', () => {
-    page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.phenotypeTool);
     page.genotypeBlockPanel.should('be.visible');
   });
 
   it('should display family filters block panel', () => {
     const familyFilterBlockPage = new FamilyFilterBlockPage();
-    page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.phenotypeTool);
     familyFilterBlockPage.window.should('be.visible');
   });
 
   it('should display "Report" button', () => {
-    page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.phenotypeTool);
     page.reportButton.should('be.visible');
   });
 
   it('should display "Share query" button', () => {
     const saveQueryPage = new SaveQueryPage();
-    page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.phenotypeTool);
     saveQueryPage.button.should('be.visible');
   });
 
   it('should display "Save query" button', () => {
     const saveQueryPage = new SaveQueryPage();
-    page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.phenotypeTool);
     saveQueryPage.button.should('be.visible');
   });
 
   it('should display "Download" button', () => {
-    page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.phenotypeTool);
     page.findButtonInComponentContainingText('gpf-pheno-tool', 'Download').should('be.visible');
   });
 
   it('should display pheno tool results chart after "Report" button click', () => {
     const phenoToolMeasurePage = new PhenoToolMeasurePage();
 
-    page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.phenotypeTool);
     page.resultsChart.should('not.exist');
     page.findErrorAlertInComponent('gpf-pheno-tool-measure').should('be.visible');
 
@@ -106,8 +98,6 @@ describe('Pheno tool tests', () => {
   });
 
   it('should test "All" and "None" buttons for checkboxes of Present in Parent', () => {
-    page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.phenotypeTool);
-
     page.phenoToolPresentInParent.find('button').contains('None').click();
     page.phenoToolPresentInParent.find('input[type="checkbox"]').should('not.be.checked');
     page.findErrorAlertInComponent('gpf-present-in-parent').should('be.visible');
@@ -128,8 +118,6 @@ describe('Pheno tool tests', () => {
   });
 
   it('should test "All" and "None" buttons for checkboxes of Effect Types', () => {
-    page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.phenotypeTool);
-
     page.phenoToolEffectTypes.find('button').contains('None').click();
     page.phenoToolEffectTypes.find('input[type="checkbox"]').should('not.be.checked');
     page.findErrorAlertInComponent('gpf-pheno-tool-effect-types').should('be.visible');
@@ -140,8 +128,8 @@ describe('Pheno tool tests', () => {
   });
 
   it('should test "Download" button', () => {
-    page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.phenotypeTool);
     const phenoToolMeasurePage = new PhenoToolMeasurePage();
+
     phenoToolMeasurePage.searchbox.click();
     page.findButtonInComponentContainingText('gpf-pheno-measure-selector', 'i1.m1').click();
 
@@ -164,7 +152,6 @@ describe('Pheno tool tests', () => {
     {id: '3', measure: 'i1.age', normalizedBy: 'Non verbal IQ'}
   ].forEach(data => {
     it(`should test check downloaded report with normalization ${data.normalizedBy}`, () => {
-      page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.phenotypeTool);
       const phenoToolMeasurePage = new PhenoToolMeasurePage();
 
       phenoToolMeasurePage.searchbox.click();
@@ -191,9 +178,8 @@ describe('Pheno tool tests', () => {
     {id: '5', filters: ['mother only', 'mother and father', 'neither', 'LGDs', 'Splice-site', 'Frame-shift'] }
   ].forEach(data => {
     it(`should test check downloaded report with ${data.filters.toString()}`, () => {
-      page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.phenotypeTool);
-
       const phenoToolMeasurePage = new PhenoToolMeasurePage();
+
       phenoToolMeasurePage.searchbox.click();
       page.findButtonInComponentContainingText('gpf-pheno-measure-selector', 'i1.m1').click();
 
@@ -220,7 +206,6 @@ describe('Pheno tool tests', () => {
   });
 
   it('should test if buttons are enabled when there is measure', () => {
-    page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.phenotypeTool);
     const phenoToolMeasurePage = new PhenoToolMeasurePage();
     const saveQueryPage = new SaveQueryPage();
 
@@ -233,7 +218,6 @@ describe('Pheno tool tests', () => {
   });
 
   it('should test if buttons are disabled when there is no measure', () => {
-    page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.phenotypeTool);
     const saveQueryPage = new SaveQueryPage();
 
     saveQueryPage.button.should('be.disabled');
@@ -242,7 +226,6 @@ describe('Pheno tool tests', () => {
   });
 
   it('should check if buttons are enabled when there are All and None Effect types and Present in Parent', () => {
-    page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.phenotypeTool);
     const saveQueryPage = new SaveQueryPage();
     const phenoToolMeasurePage = new PhenoToolMeasurePage();
 
@@ -275,7 +258,6 @@ describe('Pheno tool tests', () => {
     {id: '7', familyId: 'f3' }
   ].forEach(data => {
     it(`should check downloaded report with family id ${data.familyId}`, () => {
-      page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.phenotypeTool);
       const phenoToolMeasurePage = new PhenoToolMeasurePage();
       const familyPage = new FamilyFilterBlockPage();
 
@@ -305,9 +287,9 @@ describe('Pheno tool tests', () => {
     {id: '9', measure: 'i1.m1', borders: [200, 150]}
   ].forEach(data => {
     it('should test advanced family filters', () => {
-      page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.phenotypeTool);
       const phenoToolMeasurePage = new PhenoToolMeasurePage();
       const familyPage = new FamilyFilterBlockPage();
+      cy.intercept('POST', '/gpf/api/v3/measures/partitions').as('partitions');
 
       phenoToolMeasurePage.searchbox.click();
       page.findButtonInComponentContainingText('gpf-pheno-measure-selector', 'i1.age').click();
@@ -323,6 +305,7 @@ describe('Pheno tool tests', () => {
       const downloadedVariantsPath = Cypress.config('downloadsFolder') + '/pheno_report.csv';
       const expectedVariantsPath = `cypress/fixtures/pheno-tool/pheno_report${data.id}.csv`;
 
+      cy.wait('@partitions');
       page.downloadButton.click();
 
       cy.readFile(downloadedVariantsPath, { timeout: 5000 }).then((downloadedFile: string) => {
@@ -331,7 +314,7 @@ describe('Pheno tool tests', () => {
           const expectedFileLines = expectedFile.split(/\r\n|\r|\n/);
           expect(downloadedFileLines).to.deep.eq(expectedFileLines);
         });
-});
+      });
     });
   });
 
@@ -340,7 +323,6 @@ describe('Pheno tool tests', () => {
     {id: '11', symbol: 'SAMD11' }
   ].forEach(data => {
     it(`should check downloaded report with gene symbol ${data.symbol}`, () => {
-      page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.phenotypeTool);
       const phenoToolMeasurePage = new PhenoToolMeasurePage();
       const genesBlockPage = new GenesBlockPage();
 
@@ -367,11 +349,10 @@ describe('Pheno tool tests', () => {
 
   [
     {id: '12', collection: 'SFARI Genes', set: 'SFARI ALL (910): SFARI Genes (2017-09): All genes', measure: 'i1.age'},
-    {id: '13', collection: 'Protein domains', set: 'ANX (15):', measure: 'i1.iq' }
+    {id: '13', collection: 'Protein domains', set: 'AMOP (3): ', measure: 'i1.iq' }
 
   ].forEach(data => {
     it('should check downloaded report with gene sets', () => {
-      page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.phenotypeTool);
       const phenoToolMeasurePage = new PhenoToolMeasurePage();
       const genesBlockPage = new GenesBlockPage();
 
@@ -380,7 +361,6 @@ describe('Pheno tool tests', () => {
       genesBlockPage.geneSetsCollectionSelectorDropdownMenu.select(data.collection);
       genesBlockPage.geneSetsSearchbox.click();
       genesBlockPage.findGeneSetsSearchboxDropdownOptionsByText(data.set).click();
-
 
       phenoToolMeasurePage.searchbox.click();
       page.findButtonInComponentContainingText('gpf-pheno-measure-selector', data.measure).click();
@@ -418,7 +398,6 @@ describe('Pheno tool tests', () => {
 
   ].forEach(data => {
     it('should check downloaded report with gene set Denovo', () => {
-      page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.phenotypeTool);
       const phenoToolMeasurePage = new PhenoToolMeasurePage();
       const genesBlockPage = new GenesBlockPage();
 
@@ -431,7 +410,6 @@ describe('Pheno tool tests', () => {
 
       genesBlockPage.geneSetsSearchbox.click();
       genesBlockPage.findGeneSetsSearchboxDropdownOptionsByText(data.set).click();
-
 
       phenoToolMeasurePage.searchbox.click();
       page.findButtonInComponentContainingText('gpf-pheno-measure-selector', data.measure).click();
@@ -451,4 +429,40 @@ describe('Pheno tool tests', () => {
     });
   });
 
+  [
+    { id: '16', measure: 'i1.age', geneScore: 'LGD rank', borders: [70, 90] },
+    { id: '17', measure: 'i1.m1', geneScore: 'ExAC pRec', borders: [10, 10] }
+
+  ].forEach(data => {
+    it(`should check downloaded report with gene score ${data.geneScore}`, () => {
+      const phenoToolMeasurePage = new PhenoToolMeasurePage();
+      const genesBlockPage = new GenesBlockPage();
+      const geneScoresPage = new GeneScoresPage();
+      cy.intercept('POST', '/gpf/api/v3/gene_scores/partitions').as('partitions');
+
+      genesBlockPage.geneScoresButton.click();
+
+      geneScoresPage.dropdownButton.select(data.geneScore);
+
+      phenoToolMeasurePage.searchbox.click();
+      page.findButtonInComponentContainingText('gpf-pheno-measure-selector', data.measure).click();
+
+      moveSlider('left', data.borders[0]);
+      moveSlider('right', data.borders[1]);
+
+      const downloadedVariantsPath = Cypress.config('downloadsFolder') + '/pheno_report.csv';
+      const expectedVariantsPath = `cypress/fixtures/pheno-tool/pheno_report${data.id}.csv`;
+
+      cy.wait('@partitions');
+      page.downloadButton.click();
+
+      cy.readFile(downloadedVariantsPath, { timeout: 5000 }).then((downloadedFile: string) => {
+        cy.readFile(expectedVariantsPath, { timeout: 5000 }).then((expectedFile: string) => {
+          const downloadedFileLines = downloadedFile.split(/\r\n|\r|\n/);
+          const expectedFileLines = expectedFile.split(/\r\n|\r|\n/);
+          expect(downloadedFileLines).to.deep.eq(expectedFileLines);
+        });
+      });
+    });
+  });
 });
