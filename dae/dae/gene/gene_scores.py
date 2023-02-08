@@ -21,6 +21,7 @@ from dae.genomic_resources.resource_implementation import \
 
 from dae.genomic_resources import GenomicResource
 from dae.genomic_resources.histogram import Histogram
+from dae.task_graph.graph import Task
 
 logger = logging.getLogger(__name__)
 
@@ -299,8 +300,8 @@ class GeneScoreCollection(
     def calc_statistics_hash(self) -> bytes:
         return b"placeholder"
 
-    def add_statistics_build_tasks(self, task_graph, **kwargs) -> None:
-        return
+    def add_statistics_build_tasks(self, task_graph, **kwargs) -> List[Task]:
+        return []
 
 
 class GeneScoresDb:

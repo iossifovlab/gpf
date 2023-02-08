@@ -1,7 +1,7 @@
 """Provides LiftOver chain resource."""
 
 from __future__ import annotations
-from typing import Optional
+from typing import Optional, List
 import copy
 import textwrap
 
@@ -18,6 +18,7 @@ from dae.genomic_resources import GenomicResource
 from dae.genomic_resources.resource_implementation import \
     GenomicResourceImplementation, get_base_resource_schema, \
     InfoImplementationMixin, ResourceConfigValidationMixin
+from dae.task_graph.cache import Task
 
 
 logger = logging.getLogger(__name__)
@@ -187,8 +188,8 @@ class LiftoverChain(
     def calc_statistics_hash(self) -> bytes:
         return b"placeholder"
 
-    def add_statistics_build_tasks(self, task_graph, **kwargs) -> None:
-        return
+    def add_statistics_build_tasks(self, task_graph, **kwargs) -> List[Task]:
+        return []
 
 
 def build_liftover_chain_from_resource(

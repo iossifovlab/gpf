@@ -19,6 +19,7 @@ from dae.genomic_resources.resource_implementation import \
 
 from dae.utils.regions import Region
 from dae.genomic_resources import GenomicResource
+from dae.task_graph.graph import Task
 
 
 logger = logging.getLogger(__name__)
@@ -256,8 +257,8 @@ class ReferenceGenome(
     def calc_statistics_hash(self) -> bytes:
         return b"placeholder"
 
-    def add_statistics_build_tasks(self, task_graph, **kwargs) -> None:
-        return
+    def add_statistics_build_tasks(self, task_graph, **kwargs) -> List[Task]:
+        return []
 
 
 def build_reference_genome_from_file(filename) -> ReferenceGenome:

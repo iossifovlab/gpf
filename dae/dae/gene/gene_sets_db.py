@@ -15,8 +15,6 @@ from sqlalchemy.sql import insert
 
 from jinja2 import Template
 from markdown2 import markdown
-from cerberus import Validator
-
 
 from dae.genomic_resources.fsspec_protocol import FsspecReadOnlyProtocol
 from dae.gene.gene_term import read_ewa_set_file, read_gmt_file, \
@@ -26,6 +24,7 @@ from dae.genomic_resources.resource_implementation import \
     GenomicResourceImplementation, get_base_resource_schema, \
     InfoImplementationMixin, ResourceConfigValidationMixin
 from dae.genomic_resources.fsspec_protocol import build_local_resource
+from dae.task_graph.graph import Task
 
 logger = logging.getLogger(__name__)
 
@@ -215,8 +214,8 @@ class GeneSetCollection(
     def calc_statistics_hash(self) -> bytes:
         return b"placeholder"
 
-    def add_statistics_build_tasks(self, task_graph, **kwargs) -> None:
-        return
+    def add_statistics_build_tasks(self, task_graph, **kwargs) -> List[Task]:
+        return []
 
 
 class SqliteGeneSetCollectionDB(
@@ -340,8 +339,8 @@ class SqliteGeneSetCollectionDB(
     def calc_statistics_hash(self) -> bytes:
         return b"placeholder"
 
-    def add_statistics_build_tasks(self, task_graph, **kwargs) -> None:
-        return
+    def add_statistics_build_tasks(self, task_graph, **kwargs) -> List[Task]:
+        return []
 
 
 class GeneSetsDb:
