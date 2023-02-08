@@ -259,6 +259,7 @@ class GenomicScore(
 
     def close(self):
         self.table.close()
+        self.table_loaded = False
 
     def is_open(self):
         return self.table_loaded
