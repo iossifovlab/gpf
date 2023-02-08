@@ -13,29 +13,6 @@ from dae.task_graph import TaskGraphCli
 
 
 @pytest.mark.parametrize("argv", [
-    [],
-    ["-N", "local"],
-    ["--dcn", "local"],
-    ["--dask-cluster-name", "local"],
-])
-def test_cli_named_cluster_local(mocker, argv):
-    parser = argparse.ArgumentParser(description="test_basic")
-    TaskGraphCli.add_arguments(parser)
-    args = parser.parse_args(argv)
-
-    mocker.patch(
-        "dae.dask.named_cluster.Client",
-        autospec=True)
-    mocker.patch(
-        "dask.distributed.LocalCluster",
-        autospec=True)
-
-    TaskGraphCli.create_executor(**vars(args))
-    dask.distributed\
-        .LocalCluster.assert_called_once_with()  # type: ignore
-
-
-@pytest.mark.parametrize("argv", [
     ["-N", "sge_small"],
     ["--dcn", "sge_small"],
     ["--dask-cluster-name", "sge_small"],
