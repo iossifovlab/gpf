@@ -312,7 +312,7 @@ def _do_resource_manifest_command(proto, res, dry_run, force, use_dvc):
         manifest = proto.build_manifest(
             res, prebuild_entries)
         proto.save_manifest(res, manifest)
-        return True
+        return False
 
     if bool(manifest_update):
         logger.info(
@@ -320,7 +320,7 @@ def _do_resource_manifest_command(proto, res, dry_run, force, use_dvc):
         manifest = proto.update_manifest(
             res, prebuild_entries)
         proto.save_manifest(res, manifest)
-        return True
+        return False
     return bool(manifest_update)
 
 
