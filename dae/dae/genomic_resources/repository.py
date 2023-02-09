@@ -24,7 +24,7 @@ import logging
 import enum
 import hashlib
 
-from typing import List, Optional, Tuple, Dict, Any, Generator, Union, Set
+from typing import Optional, Any, Generator, Union
 from dataclasses import dataclass, asdict
 
 import abc
@@ -117,7 +117,7 @@ def version_string_to_suffix(version: str):
     return f"({version})"
 
 
-def version_tuple_to_string(version: Tuple[int, ...]) -> str:
+def version_tuple_to_string(version: tuple[int, ...]) -> str:
     return ".".join(map(str, version))
 
 
@@ -173,7 +173,7 @@ class Manifest:
     """Provides genomic resource manifest object."""
 
     def __init__(self):
-        self.entries: Dict[str, ManifestEntry] = {}
+        self.entries: dict[str, ManifestEntry] = {}
 
     @staticmethod
     def from_file_content(file_content: str) -> Manifest:
@@ -185,7 +185,7 @@ class Manifest:
 
     @staticmethod
     def from_manifest_entries(
-            manifest_entries: List[Dict[str, Any]]) -> Manifest:
+            manifest_entries: list[dict[str, Any]]) -> Manifest:
         """Produce a manifest from parsed manifest file content."""
         result = Manifest()
         for data in manifest_entries:
@@ -194,7 +194,7 @@ class Manifest:
             result.entries[entry.name] = entry
         return result
 
-    def get_files(self) -> List[Tuple[str, int]]:
+    def get_files(self) -> list[tuple[str, int]]:
         return [
             (entry.name, entry.size)
             for entry in self.entries.values()
@@ -242,7 +242,7 @@ class Manifest:
         """Add manifest enry to the manifest."""
         self.entries[entry.name] = entry
 
-    def update(self, entries: Dict[str, ManifestEntry]) -> None:
+    def update(self, entries: dict[str, ManifestEntry]) -> None:
         for entry in entries.values():
             self.add(entry)
 
@@ -256,8 +256,8 @@ class ManifestUpdate:
     """Provides a manifest update object."""
 
     manifest: Manifest
-    entries_to_delete: Set[str]
-    entries_to_update: Set[str]
+    entries_to_delete: set[str]
+    entries_to_update: set[str]
 
     def __bool__(self):
         return bool(self.entries_to_delete or self.entries_to_update)
@@ -267,14 +267,14 @@ class GenomicResource:
     """Base class for genomic resources."""
 
     def __init__(
-            self, resource_id: str, version: Tuple[int, ...],
+            self, resource_id: str, version: tuple[int, ...],
             protocol: Union[
                 ReadOnlyRepositoryProtocol, ReadWriteRepositoryProtocol],
             config=None,
             manifest: Optional[Manifest] = None):
 
         self.resource_id = resource_id
-        self.version: Tuple[int, ...] = version
+        self.version: tuple[int, ...] = version
         self.config = config
         self.proto = protocol
         self._manifest: Optional[Manifest] = manifest
@@ -381,7 +381,7 @@ class ReadOnlyRepositoryProtocol(abc.ABC):
         version_constraint: Optional[str] = None
     ) -> Optional[GenomicResource]:
         """Return requested resource or None if not found."""
-        matching_resources: List[GenomicResource] = []
+        matching_resources: list[GenomicResource] = []
         for res in self.get_all_resources():
             if res.resource_id != resource_id:
                 continue
@@ -522,7 +522,7 @@ class ReadWriteRepositoryProtocol(ReadOnlyRepositoryProtocol):
 
     def build_manifest(
             self, resource,
-            prebuild_entries: Optional[Dict[str, ManifestEntry]] = None):
+            prebuild_entries: Optional[dict[str, ManifestEntry]] = None):
         """Build full manifest for the resource."""
         if prebuild_entries is None:
             prebuild_entries = {}
@@ -536,7 +536,7 @@ class ReadWriteRepositoryProtocol(ReadOnlyRepositoryProtocol):
 
     def check_update_manifest(
         self, resource: GenomicResource,
-        prebuild_entries: Optional[Dict[str, ManifestEntry]] = None
+        prebuild_entries: Optional[dict[str, ManifestEntry]] = None
     ) -> ManifestUpdate:
         """Check if the resource manifest needs update."""
         try:
@@ -574,7 +574,7 @@ class ReadWriteRepositoryProtocol(ReadOnlyRepositoryProtocol):
 
     def update_manifest(
         self, resource: GenomicResource,
-        prebuild_entries: Optional[Dict[str, ManifestEntry]] = None
+        prebuild_entries: Optional[dict[str, ManifestEntry]] = None
     ) -> Manifest:
         """Update or create full manifest for the resource."""
         manifest_update = self.check_update_manifest(
@@ -690,7 +690,7 @@ class ReadWriteRepositoryProtocol(ReadOnlyRepositoryProtocol):
 
     def get_or_create_resource(
             self, resource_id: str,
-            version: Tuple[int, ...]) -> GenomicResource:
+            version: tuple[int, ...]) -> GenomicResource:
         """Return a resource with specified ID and version.
 
         If the resource is not found create an empty resource.
@@ -740,7 +740,7 @@ class ReadWriteRepositoryProtocol(ReadOnlyRepositoryProtocol):
     def update_resource(
         self,
         remote_resource: GenomicResource,
-        files: Optional[Set[str]] = None
+        files: Optional[set[str]] = None
     ) -> GenomicResource:
         """Copy a remote resource into repository.
 

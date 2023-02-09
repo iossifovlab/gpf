@@ -1,6 +1,6 @@
 import logging
 import textwrap
-from typing import Dict, Optional, Callable, cast, Any
+from typing import Optional, Callable, cast, Any
 from abc import abstractmethod, ABC
 from jinja2 import Template
 
@@ -24,14 +24,19 @@ class GenomicResourceImplementation(ABC):
     are classes that know how to use the contents of the resource.
     """
 
-    config_validator: Optional[Callable[[Dict], Any]] = None
+    config_validator: Optional[Callable[[dict], Any]] = None
 
     def __init__(self, genomic_resource: GenomicResource):
         self.resource = genomic_resource
         self.config = self.validate_and_normalize_schema(self.resource.config)
 
-    def get_config(self) -> Dict:
+    def get_config(self) -> dict:
         return self.config
+
+    @property
+    @abstractmethod
+    def files(self):
+        """A list of files the implementation utilises from its resource."""
 
     @staticmethod
     def get_template() -> Template:
@@ -56,7 +61,7 @@ class GenomicResourceImplementation(ABC):
         """Return schema to be used for config validation."""
         raise NotImplementedError()
 
-    def validate_and_normalize_schema(self, config) -> Dict:
+    def validate_and_normalize_schema(self, config) -> dict:
         """Validate the resource schema and return the normalized version."""
         # pylint: disable=not-callable
         if self.config_validator is None:
@@ -73,7 +78,7 @@ class GenomicResourceImplementation(ABC):
                 f"of type {self.resource.get_type()} "
                 f"has an invalid configuration: {validator.errors}"
             )
-        return cast(Dict, validator.document)
+        return cast(dict, validator.document)
 
     @abstractmethod
     def get_info(self):

@@ -6,7 +6,7 @@ import argparse
 import time
 import logging
 
-from typing import cast, Dict, Tuple, Set
+from typing import cast
 
 from dae.utils.verbosity_configuration import VerbosityConfiguration
 from dae.genomic_resources.repository_factory import load_definition_file, \
@@ -64,9 +64,9 @@ def cli_cache_repo(argv=None):
             "repository is cached.")
     repository = cast(GenomicResourceCachedRepo, repository)
 
-    resources: Set[str] = set()
+    resources: set[str] = set()
     # Explicitly specify which files to cache. Optional.
-    resource_files: Dict[str, Set[str]] = dict()
+    resource_files: dict[str, set[str]] = dict()
     annotation = None
 
     if args.instance is not None and args.annotation is not None:
@@ -109,9 +109,9 @@ def cli_cache_repo(argv=None):
 
 def extract_resource_ids_and_files_from_annotation(
     config, repository
-) -> Tuple[Set[str], Dict[str, Set[str]]]:
-    resources: Set[str] = set()
-    resource_files: Dict[str, Set[str]] = dict()
+) -> tuple[set[str], dict[str, set[str]]]:
+    resources: set[str] = set()
+    resource_files: dict[str, set[str]] = dict()
     with build_annotation_pipeline(
         pipeline_config=config, grr_repository=repository
     ) as pipeline:

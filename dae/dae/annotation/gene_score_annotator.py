@@ -3,7 +3,7 @@
 import logging
 import copy
 
-from typing import List, Dict, cast, Any
+from typing import cast, Any
 from dae.gene.gene_scores import GeneScore
 from dae.genomic_resources import GenomicResource
 from dae.genomic_resources.aggregators import AGGREGATOR_SCHEMA
@@ -48,7 +48,7 @@ class GeneScoreAnnotator(Annotator):
     def annotator_type(self) -> str:
         return "gene_score_annotator"
 
-    def get_all_annotation_attributes(self) -> List[Dict]:
+    def get_all_annotation_attributes(self) -> list[dict]:
         result = []
         for gene_score in self.gene_scores.values():
             result.append({
@@ -58,14 +58,14 @@ class GeneScoreAnnotator(Annotator):
             })
         return result
 
-    def get_annotation_config(self) -> List[Dict]:
-        attributes: List[dict] = self.config.get("attributes", [])
+    def get_annotation_config(self) -> list[dict]:
+        attributes: list[dict] = self.config.get("attributes", [])
 
         return attributes
 
     @classmethod
-    def validate_config(cls, config: Dict) -> Dict:
-        attr_schema = cast(Dict[str, Any], copy.deepcopy(ATTRIBUTES_SCHEMA))
+    def validate_config(cls, config: dict) -> dict:
+        attr_schema = cast(dict[str, Any], copy.deepcopy(ATTRIBUTES_SCHEMA))
         aggr_schema = copy.deepcopy(AGGREGATOR_SCHEMA)
         attr_schema["schema"]["gene_aggregator"] = aggr_schema
 
@@ -99,7 +99,7 @@ class GeneScoreAnnotator(Annotator):
             )
             raise ValueError(
                 f"wrong gene score annotator config {validator.errors}")
-        return cast(Dict, validator.document)
+        return cast(dict, validator.document)
 
     @property
     def resource_files(self):
@@ -107,7 +107,7 @@ class GeneScoreAnnotator(Annotator):
             self.resource.get_id(): {self.resource.get_config()["filename"], }
         }
 
-    def _do_annotate(self, annotatable: Annotatable, _context: Dict):
+    def _do_annotate(self, annotatable: Annotatable, _context: dict):
         attributes: dict = {}
 
         input_gene_list = self.config["input_gene_list"]

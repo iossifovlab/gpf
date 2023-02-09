@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 import abc
 
-from typing import Any, List, Dict, Set
+from typing import Any
 from cerberus.validator import Validator  # type: ignore
 
 from .annotatable import Annotatable
@@ -54,7 +54,7 @@ class Annotator(abc.ABC):
 
     @classmethod
     @abc.abstractmethod
-    def validate_config(cls, config: Dict) -> Dict:
+    def validate_config(cls, config: dict) -> dict:
         """Normalize and validate the annotation configuration.
 
         When validation passes returns the normalized and validated
@@ -65,7 +65,7 @@ class Annotator(abc.ABC):
         return config
 
     @abc.abstractmethod
-    def get_all_annotation_attributes(self) -> List[Dict]:
+    def get_all_annotation_attributes(self) -> list[dict]:
         """Return list of all available attributes provided by the annotator.
 
         The result is a list of dicts. Each dict contains following
@@ -77,7 +77,7 @@ class Annotator(abc.ABC):
         """
         return []
 
-    def get_annotation_attribute(self, attribute_name) -> Dict[str, str]:
+    def get_annotation_attribute(self, attribute_name) -> dict[str, str]:
         """Return configuration of an attribute."""
         for attribute in self.get_all_annotation_attributes():
             if attribute_name == attribute["name"]:
@@ -117,14 +117,15 @@ class Annotator(abc.ABC):
 
     @abc.abstractmethod
     def _do_annotate(
-            self, annotatable: Annotatable, context: Dict) -> Dict:
+        self, annotatable: Annotatable, context: dict
+    ) -> dict:
         """Annotate the annotatable.
 
         Internal abstract method used for annotation.
         """
 
     @abc.abstractmethod
-    def get_annotation_config(self) -> List[Dict]:
+    def get_annotation_config(self) -> list[dict]:
         """Return annotation config."""
 
     @abc.abstractmethod
@@ -141,17 +142,17 @@ class Annotator(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def resource_files(self) -> Dict[str, Set[str]]:
+    def resource_files(self) -> dict[str, set[str]]:
         """Genomic resources and their files needed by the annotator."""
 
-    def _empty_result(self) -> Dict[str, Any]:
-        result: Dict[str, Any] = {}
+    def _empty_result(self) -> dict[str, Any]:
+        result: dict[str, Any] = {}
         for attr in self.get_annotation_config():
             result[attr["destination"]] = None
         return result
 
     def annotate(self, annotatable: Annotatable,
-                 context: Dict[str, Any]) -> Dict[str, Any]:
+                 context: dict[str, Any]) -> dict[str, Any]:
         """Annotate and relabel attributes as configured."""
         if self.input_annotatable is not None:
             if self.input_annotatable not in context:

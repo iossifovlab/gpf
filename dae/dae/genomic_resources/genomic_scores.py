@@ -6,7 +6,7 @@ import logging
 import textwrap
 import copy
 
-from typing import Iterator, List, Optional, cast, Type, Dict, Any, Union
+from typing import Iterator, Optional, cast, Type, Any, Union
 
 from dataclasses import dataclass
 from jinja2 import Template
@@ -17,7 +17,7 @@ from . import GenomicResource
 from .resource_implementation import GenomicResourceImplementation, \
     get_base_resource_schema
 from .genomic_position_table import build_genomic_position_table, Line, \
-    VCFGenomicPositionTable
+    TabixGenomicPositionTable, VCFGenomicPositionTable
 
 from .aggregators import build_aggregator, AGGREGATOR_SCHEMA
 
@@ -107,6 +107,14 @@ class GenomicScore(GenomicResourceImplementation):
             self.resource, self.config["table"]
         )
         self.score_definitions = self._generate_scoredefs()
+
+    @property
+    def files(self):
+        files = set()
+        files.add(self.table.definition.filename)
+        if isinstance(self.table, TabixGenomicPositionTable):
+            files.add(f"{self.table.definition.filename}.tbi")
+        return files
 
     @staticmethod
     def _parse_scoredef_config(config):
@@ -210,10 +218,10 @@ class GenomicScore(GenomicResourceImplementation):
     def score_id(self):
         return self.get_config().get("id")
 
-    def get_default_annotation(self) -> Dict[str, Any]:
+    def get_default_annotation(self) -> dict[str, Any]:
         if "default_annotation" in self.get_config():
             return cast(
-                Dict[str, Any], self.get_config()["default_annotation"])
+                dict[str, Any], self.get_config()["default_annotation"])
         return {
             "attributes": [
                 {"source": score, "destination": score}
@@ -289,7 +297,7 @@ class GenomicScore(GenomicResourceImplementation):
         return list(self.score_definitions)
 
     def fetch_region(
-        self, chrom: str, pos_begin: int, pos_end: int, scores: List[str]
+        self, chrom: str, pos_begin: int, pos_end: int, scores: list[str]
     ) -> Iterator[dict[str, ScoreValue]]:
         """Return score values in a region."""
         if not self.is_open():
@@ -514,7 +522,7 @@ class PositionScore(GenomicScore):
         return cast(PositionScore, super().open())
 
     def fetch_scores(
-            self, chrom: str, position: int, scores: Optional[List[str]] = None
+            self, chrom: str, position: int, scores: Optional[list[str]] = None
     ):
         """Fetch score values at specific genomic position."""
         if chrom not in self.get_all_chromosomes():
@@ -537,7 +545,7 @@ class PositionScore(GenomicScore):
 
     def fetch_scores_agg(  # pylint: disable=too-many-arguments,too-many-locals
             self, chrom: str, pos_begin: int, pos_end: int,
-            scores: Optional[List[str]] = None,
+            scores: Optional[list[str]] = None,
             non_default_pos_aggregators=None):
         """Fetch score values in a region and aggregates them.
 
@@ -614,7 +622,7 @@ class NPScore(GenomicScore):
 
     def fetch_scores(
             self, chrom: str, position: int, reference: str, alternative: str,
-            scores: Optional[List[str]] = None):
+            scores: Optional[list[str]] = None):
         """Fetch score values at specified genomic position and nucleotide."""
         if chrom not in self.get_all_chromosomes():
             raise ValueError(
@@ -662,7 +670,7 @@ class NPScore(GenomicScore):
 
     def fetch_scores_agg(
             self, chrom: str, pos_begin: int, pos_end: int,
-            scores: Optional[List[str]] = None,
+            scores: Optional[list[str]] = None,
             non_default_pos_aggregators=None,
             non_default_nuc_aggregators=None):
         """Fetch score values in a region and aggregates them."""
@@ -747,7 +755,7 @@ class AlleleScore(GenomicScore):
 
     def fetch_scores(
             self, chrom: str, position: int, reference: str, alternative: str,
-            scores: Optional[List[str]] = None):
+            scores: Optional[list[str]] = None):
         """Fetch scores values for specific allele."""
         if chrom not in self.get_all_chromosomes():
             raise ValueError(

@@ -3,7 +3,7 @@
 import logging
 import copy
 
-from typing import Dict, List, Optional, cast
+from typing import Optional, cast
 from dae.genomic_resources.reference_genome import \
     ReferenceGenome, build_reference_genome_from_resource
 from dae.genomic_resources.liftover_resource import \
@@ -83,7 +83,7 @@ class LiftOverAnnotator(Annotator):
         ]
     }
 
-    def get_all_annotation_attributes(self) -> List[Dict]:
+    def get_all_annotation_attributes(self) -> list[dict]:
         return [
             {
                 "name": "liftover_annotatable",
@@ -94,14 +94,13 @@ class LiftOverAnnotator(Annotator):
 
     @property
     def resource_files(self):
-        chain_res = self.chain.resource
         return {
-            chain_res.resource_id: {chain_res.get_config()["filename"], },
+            self.chain.resource.resource_id: self.chain.files,
             self.target_genome.resource_id: self.target_genome.files
         }
 
     @classmethod
-    def validate_config(cls, config: Dict) -> Dict:
+    def validate_config(cls, config: dict) -> dict:
         schema = {
             "annotator_type": {
                 "type": "string",
@@ -139,10 +138,10 @@ class LiftOverAnnotator(Annotator):
                 validator.errors)
             raise ValueError(
                 f"wrong liftover annotator config {validator.errors}")
-        return cast(Dict, validator.document)
+        return cast(dict, validator.document)
 
-    def get_annotation_config(self) -> List[Dict]:
-        attributes: Optional[List[dict]] = self.config.get("attributes")
+    def get_annotation_config(self) -> list[dict]:
+        attributes: Optional[list[dict]] = self.config.get("attributes")
         if attributes:
             return attributes
         attributes = copy.deepcopy(self.DEFAULT_ANNOTATION["attributes"])
@@ -202,7 +201,7 @@ class LiftOverAnnotator(Annotator):
                 allele, ex, exc_info=True)
             return None
 
-    def _do_annotate(self, annotatable: Annotatable, _context: Dict):
+    def _do_annotate(self, annotatable: Annotatable, _context: dict):
         assert annotatable is not None
 
         if annotatable.type in {

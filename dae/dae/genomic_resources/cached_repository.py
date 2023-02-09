@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 import logging
 
-from typing import Iterable, Optional, Dict, Generator, cast, Set
+from typing import Iterable, Optional, Generator, cast
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from .repository import GenomicResource, \
@@ -141,7 +141,7 @@ class GenomicResourceCachedRepo(GenomicResourceRepo):
 
         self.child: GenomicResourceProtocolRepo = child
         self.cache_url = cache_url
-        self.cache_protos: Dict[str, CachingProtocol] = {}
+        self.cache_protos: dict[str, CachingProtocol] = {}
         self.additional_kwargs = kwargs
 
     def invalidate(self):
@@ -203,8 +203,8 @@ class GenomicResourceCachedRepo(GenomicResourceRepo):
 
     def cache_resources(
         self, workers=4,
-        resource_ids: Optional[Set[str]] = None,
-        resource_files: Optional[Dict[str, Set[str]]] = None,
+        resource_ids: Optional[set[str]] = None,
+        resource_files: Optional[dict[str, set[str]]] = None,
     ):
         """Cache resources from a list of remote resource IDs."""
         executor = ThreadPoolExecutor(max_workers=workers)
