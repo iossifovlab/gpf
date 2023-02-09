@@ -29,12 +29,15 @@ def _handle_partition_description(families, argv):
     return families
 
 
-def _handle_vcf_files(families, argv, gpf_instance):
+def _handle_vcf_files(families, argv, gpf_instance=None):
     variants_filenames, variants_params = \
         VcfLoader.parse_cli_arguments(argv)
 
     if variants_filenames:
         assert variants_filenames is not None
+
+        if gpf_instance is None:
+            gpf_instance = GPFInstance.build()
 
         variants_loader = VcfLoader(
             families,
@@ -52,9 +55,6 @@ def main(argv, gpf_instance=None):
 
     It should be called from the command line.
     """
-    if gpf_instance is None:
-        gpf_instance = GPFInstance.build()
-
     parser = argparse.ArgumentParser()
     parser.add_argument("--verbose", "-V", action="count", default=0)
 
