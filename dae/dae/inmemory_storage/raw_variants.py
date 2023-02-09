@@ -324,10 +324,15 @@ class RawFamilyVariants(abc.ABC):
             ] = variant_type_query.transform_tree_to_matcher(parsed)
 
         return_reference = kwargs.get("return_reference", False)
+        seen = kwargs.get("seen", set())
 
         def filter_func(sv):
             if sv is None:
                 return None
+            if sv.svuid in seen:
+                return None
+            seen.add(sv.svuid)
+
             if not cls.filter_summary_variant(sv, **kwargs):
                 return None
 
@@ -428,11 +433,14 @@ class RawFamilyVariants(abc.ABC):
 
         return_reference = kwargs.get("return_reference", False)
         return_unknown = kwargs.get("return_unknown", False)
+        seen = kwargs.get("seen", set())
 
         def filter_func(v):
             try:
-                if v is None:
+                if v is None or v.fvuid in seen:
                     return None
+                seen.add(v.fvuid)
+
                 if v.is_unknown() and not return_unknown:
                     return None
 

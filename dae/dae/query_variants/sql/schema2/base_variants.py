@@ -163,7 +163,8 @@ class SqlSchema2Variants(abc.ABC):
             frequency_filter=frequency_filter,
             return_reference=return_reference,
             return_unknown=return_unknown,
-            limit=limit)
+            limit=limit,
+            seen=set())
 
         runner.adapt(filter_func)
 
@@ -248,7 +249,8 @@ class SqlSchema2Variants(abc.ABC):
             frequency_filter=frequency_filter,
             return_reference=return_reference,
             return_unknown=return_unknown,
-            limit=limit)
+            limit=limit,
+            seen=set())
 
         runner.adapt(filter_func)
 
