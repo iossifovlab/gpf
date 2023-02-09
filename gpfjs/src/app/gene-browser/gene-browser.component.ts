@@ -329,8 +329,10 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
 
   private updateShownTablePreviewVariantsArray(): void {
     this.familyLoadingFinished = false;
+    const tempRequestParam = this.requestParams;
+    delete tempRequestParam['summaryVariantIds'];
     const requestParams = {
-      ...this.requestParams,
+      ...tempRequestParam,
       maxVariantsCount: this.maxFamilyVariants,
       uniqueFamilyVariants: this.uniqueFamilyVariants,
     };
