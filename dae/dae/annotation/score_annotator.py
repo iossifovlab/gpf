@@ -9,8 +9,6 @@ from dae.genomic_resources.genomic_scores import \
     build_allele_score_from_resource, build_position_score_from_resource, \
     build_np_score_from_resource
 from dae.genomic_resources.aggregators import AGGREGATOR_SCHEMA
-from dae.genomic_resources.genomic_position_table.table_tabix import \
-    TabixGenomicPositionTable
 
 from .annotatable import Annotatable, VCFAllele
 from .annotator_base import Annotator, ATTRIBUTES_SCHEMA
@@ -143,9 +141,6 @@ def build_position_score_annotator(pipeline: AnnotationPipeline, config: dict):
 
 class PositionScoreAnnotator(VariantScoreAnnotatorBase):
     """Defines position score annotator."""
-
-    def __init__(self, config: dict, resource):
-        super().__init__(config, resource)
 
     def annotator_type(self) -> str:
         return "position_score"
@@ -321,9 +316,6 @@ def build_allele_score_annotator(pipeline: AnnotationPipeline, config: dict):
 
 class AlleleScoreAnnotator(VariantScoreAnnotatorBase):
     """Defines Allele Score annotator."""
-
-    def __init__(self, config: dict, score):
-        super().__init__(config, score)
 
     @classmethod
     def validate_config(cls, config: dict) -> dict:

@@ -93,6 +93,10 @@ class GeneSetCollection(GenomicResourceImplementation, BaseGeneSetCollection):
 
         assert self.collection_id, self.gene_sets
 
+    @property
+    def files(self):
+        raise NotImplementedError
+
     def load_gene_sets(self):
         """Build a gene set collection from a given GenomicResource."""
         assert self.resource is not None
@@ -286,6 +290,10 @@ class SqliteGeneSetCollectionDB(GenomicResourceImplementation):
         if "meta" in info:
             info["meta"] = markdown(info["meta"])
         return info
+
+    @property
+    def files(self):
+        raise NotImplementedError
 
     @staticmethod
     def get_schema():

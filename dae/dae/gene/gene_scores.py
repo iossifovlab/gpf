@@ -245,6 +245,10 @@ class GeneScoreCollection(GenomicResourceImplementation):
             {% endblock %}
         """))
 
+    @property
+    def files(self):
+        raise NotImplementedError
+
     def get_info(self):
         info = copy.deepcopy(self.config)
         if "meta" in info:

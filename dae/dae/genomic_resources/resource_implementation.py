@@ -36,7 +36,7 @@ class GenomicResourceImplementation(ABC):
     @property
     @abstractmethod
     def files(self):
-        """A list of files the implementation utilises from its resource."""
+        """Return a list of resource files the implementation utilises."""
 
     @staticmethod
     def get_template() -> Template:

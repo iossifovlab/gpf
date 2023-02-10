@@ -421,9 +421,6 @@ def _open_file(filename):
         infile.close()
 
 
-#
-# GeneModel's
-#
 class GeneModels(GenomicResourceImplementation):
     """Provides class for gene models."""
 
