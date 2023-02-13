@@ -87,3 +87,30 @@ def test_tags_on_by_default(resources_dir):
     _, params = project.get_pedigree_params()
     assert "ped_tags" in params
     assert params["ped_tags"] is True
+
+
+@pytest.mark.parametrize("import_config, expected", [
+    ({"input": {}}, True),
+    ({
+        "input": {},
+        "destination": {}
+    }, True),
+    ({
+        "input": {},
+        "destination": {"storage_id": "storage"}
+    }, True),
+    ({
+        "input": {},
+        "destination": {
+            "storage_type": "schema2",
+            "hdfs": {},
+        },
+    }, True),
+    ({
+        "input": {},
+        "destination": {"storage_type": "schema2"}
+    }, False),
+])
+def test_has_genotype_storage(import_config, expected):
+    project = ImportProject.build_from_config(import_config)
+    assert project.has_genotype_storage() == expected

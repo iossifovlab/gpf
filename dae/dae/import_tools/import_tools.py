@@ -313,20 +313,24 @@ class ImportProject():
         # FIXME: this method should check if the input has variants
         return True
 
-    def has_gpf_instance(self):
-        # FIXME: this method should check if project has access to a
-        # GPF instance - configured in the project or through the
-        # environment variable DAE_DB_DIR
-        return True
-
     @property
     def study_id(self):
         return self.import_config["id"]
 
+    def has_genotype_storage(self):
+        """Return if a genotype storage can be created."""
+        if not self._has_destination():
+            return True  # Use default genotype storage
+        if "storage_type" not in self.import_config["destination"]:
+            return True  # External genotype storage
+        if len(self.import_config["destination"]) > 1:
+            return True  # Embedded configuration
+        return False
+
     def get_genotype_storage(self):
         """Find, create and return the correct genotype storage."""
         explicit_config = (
-            self.has_destination()
+            self._has_destination()
             and "storage_id" not in self.import_config["destination"]
         )
         if not explicit_config:
@@ -343,7 +347,7 @@ class ImportProject():
         return registry.register_storage_config(
             self.import_config["destination"])
 
-    def has_destination(self) -> bool:
+    def _has_destination(self) -> bool:
         """Return if there is a *destination* section in the import config."""
         return "destination" in self.import_config
 
@@ -369,7 +373,7 @@ class ImportProject():
         return variants_loader
 
     def _storage_type(self) -> str:
-        if not self.has_destination():
+        if not self._has_destination():
             # get default storage schema from GPF instance
             gpf_instance = self.get_gpf_instance()
             storage: GenotypeStorage = gpf_instance\
