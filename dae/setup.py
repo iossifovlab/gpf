@@ -86,6 +86,9 @@ setuptools.setup(
 
     agp_exporter=dae.autism_gene_profile.exporter:cli_export
 
+    ped2ped=dae.tools.ped2ped:main
+    draw_pedigree=dae.tools.draw_pedigree:main
+
     dae2parquet.py=dae.tools.dae2parquet:main
     vcf2parquet.py=dae.tools.vcf2parquet:main
     vcf2schema2.py=dae.backends.schema2.vcf2schema2:main
