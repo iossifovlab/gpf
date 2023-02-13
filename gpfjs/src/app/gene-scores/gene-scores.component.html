@@ -1,5 +1,9 @@
+<div *ngIf="!selectedGeneScores && !finishedLoading" [style.height.px]="componentHeight">
+  <div style="border-top: 1px solid rgba(0, 0, 0, 12.5%)" [style.height.px]="componentHeight"></div>
+</div>
+
 <div *ngIf="selectedGeneScores">
-  <div class="row panel" id="gene-scores-panel" style="margin-left: 0px; margin-right: 0px">
+  <div class="row panel" id="gene-scores-panel" [style.height.px]="componentHeight">
     <div class="col-sm-3">
       <div class="select-wrapper">
         <select class="form-control" [(ngModel)]="selectedGeneScores" required>
@@ -29,14 +33,7 @@
     </div>
   </div>
 </div>
-<div *ngIf="!selectedGeneScores">
-  <div class="form-block" style="display: contents">
-    <div class="card">
-      <ul ngbNav #nav="ngbNav" class="navbar bg-light nav-pills" style="justify-content: center">
-        <li ngbNavItem>
-          <span style="opacity: 75%"><i>No gene scores available</i></span>
-        </li>
-      </ul>
-    </div>
-  </div>
+
+<div *ngIf="!selectedGeneScores && finishedLoading" class="no-available-warning">
+  <span>No gene scores available</span>
 </div>

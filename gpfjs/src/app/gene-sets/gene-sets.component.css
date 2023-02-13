@@ -1,3 +1,9 @@
+#gene-sets-panel {
+  margin-left: 0;
+  margin-right: 0;
+  height: 100%;
+}
+
 .text-wrap {
   white-space: normal;
 }
