@@ -2,20 +2,18 @@
   <div class="card">
     <div class="pheno-instrument-block">
       <div id="instruments-wrapper">
-        <label class="form-block-title" for="reports">Instrument</label>
-        <label class="form-block-title bottom-space">Search</label>
-        <div class="select-wrapper">
-          <select
-            class="form-control"
-            id="select-instrument"
-            [ngModel]="selectedInstrument$ | async"
-            (ngModelChange)="emitInstrument($event)">
-            <option value="">All instruments</option>
-            <option *ngFor="let instrument of (instruments | async)?.instruments" [ngValue]="instrument">{{ instrument }}</option>
-          </select>
-          <span class="select-dropdown-icon" [style.content]="'url(' + imgPathPrefix + 'dropdown_icon.png)'"> </span>
-        </div>
         <div class="search-input-wrapper">
+          <label id="search-term-label" for="search-term">
+            <svg
+              id="search-icon"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="currentColor"
+              class="bi bi-search"
+              viewBox="0 0 16 16">
+              <path
+                d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z" />
+            </svg>
+          </label>
           <input
             placeholder="Search"
             [ngModel]="input$ | async"
@@ -33,8 +31,19 @@
             (click)="searchBox.value = ''; search(searchBox.value)">
           </span>
         </div>
+        <div class="select-wrapper">
+          <select
+            class="form-control"
+            id="select-instrument"
+            [ngModel]="selectedInstrument$ | async"
+            (ngModelChange)="emitInstrument($event)">
+            <option value="">All instruments</option>
+            <option *ngFor="let instrument of (instruments | async)?.instruments" [ngValue]="instrument">{{ instrument }}</option>
+          </select>
+          <span class="select-dropdown-icon" [style.content]="'url(' + imgPathPrefix + 'dropdown_icon.png)'"> </span>
+        </div>
+        <a (click)="downloadMeasures()" class="download-link" href="javascript:;" id="download-measures">Download measures</a>
       </div>
-      <a (click)="downloadMeasures()" class="download-link" href="javascript:;" id="download-measures">Download measures</a>
     </div>
   </div>
 </div>
