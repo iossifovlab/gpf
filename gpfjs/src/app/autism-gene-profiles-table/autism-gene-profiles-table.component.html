@@ -98,14 +98,10 @@
     <div id="above-table-bar">
       <div style="width: 270px">
         <div class="search-input-wrapper">
-          <label
-            for="gene-search-input"
-            style="display: flex; align-items: center; padding-left: 10px; height: 38px; cursor: text">
+          <label id="gene-search-label" for="gene-search-input">
             <svg
-              style="opacity: 60%"
+              id="search-icon"
               xmlns="http://www.w3.org/2000/svg"
-              width="16"
-              height="16"
               fill="currentColor"
               class="bi bi-search"
               viewBox="0 0 16 16">
@@ -121,7 +117,6 @@
             autocomplete="off"
             placeholder="Search gene"
             type="text"
-            style="line-height: normal; padding-left: 10px"
             spellcheck="false" />
           <span
             *ngIf="searchBox.value !== '' && !showSearchLoading"
