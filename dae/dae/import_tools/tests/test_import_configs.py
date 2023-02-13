@@ -13,9 +13,8 @@ from dae.configuration.gpf_config_parser import GPFConfigParser
 
 @pytest.mark.parametrize("config_dir", ["denovo_import", "vcf_import",
                                         "cnv_import", "dae_import"])
-@pytest.mark.parametrize("schema", ["schema1", "schema2"])
 def test_parquet_files_are_generated(tmpdir, gpf_instance_2019, config_dir,
-                                     mocker, resources_dir, schema):
+                                     mocker, resources_dir):
     input_dir = resources_dir / config_dir
     config_fn = input_dir / "import_config.yaml"
 

@@ -325,6 +325,8 @@ class ImportProject():
             return True  # External genotype storage
         if len(self.import_config["destination"]) > 1:
             return True  # Embedded configuration
+        # storage_type is the only property in destination
+        # this is a special case and we assume there is no genotype storage
         return False
 
     def get_genotype_storage(self):

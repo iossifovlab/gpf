@@ -27,4 +27,4 @@ partition_description:
 
 
 destination:
-  storage_id: genotype_impala_2
+  storage_type: impala2

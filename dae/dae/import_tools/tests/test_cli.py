@@ -16,7 +16,11 @@ def simple_study_dir(tmpdir, gpf_instance_grch38, mocker, resources_dir):
     config_fn = str(tmpdir / "import_config.yaml")
     with open(config_fn, "rt") as file:
         config = yaml.safe_load(file.read())
-    del config["destination"]
+    config["destination"] = {
+        "id": "genotype_inmemory",
+        "storage_type": "inmemory",
+        "dir": str(tmpdir),
+    }  # don't import into impala
     with open(config_fn, "wt") as file:
         yaml.safe_dump(config, file)
 
@@ -28,12 +32,12 @@ def simple_study_dir(tmpdir, gpf_instance_grch38, mocker, resources_dir):
 
 
 def test_run(simple_study_dir):
-    cli.main([str(simple_study_dir / "import_config.yaml"), "-j", "1"])
+    assert cli.main([str(simple_study_dir / "import_config.yaml"), "-j", "1"])
 
 
 def test_list(simple_study_dir):
-    cli.main([str(simple_study_dir / "import_config.yaml"), "list"])
-    cli.main([str(simple_study_dir / "import_config.yaml"), "-j", "1"])
-    cli.main([str(simple_study_dir / "import_config.yaml"), "list"])
-    cli.main([str(simple_study_dir / "import_config.yaml"), "list",
-              "--verbose"])
+    assert cli.main([str(simple_study_dir / "import_config.yaml"), "list"])
+    assert cli.main([str(simple_study_dir / "import_config.yaml"), "-j", "1"])
+    assert cli.main([str(simple_study_dir / "import_config.yaml"), "list"])
+    assert cli.main([str(simple_study_dir / "import_config.yaml"), "list",
+                     "--verbose"])
