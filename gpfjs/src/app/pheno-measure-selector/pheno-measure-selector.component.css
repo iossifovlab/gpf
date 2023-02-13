@@ -2,4 +2,8 @@
   font-style: italic;
   text-align: center;
   opacity: 75%;
+  height: 32px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
