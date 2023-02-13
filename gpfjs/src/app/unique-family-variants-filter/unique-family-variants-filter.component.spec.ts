@@ -2,6 +2,14 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { UniqueFamilyVariantsFilterComponent } from './unique-family-variants-filter.component';
 import { NgxsModule } from '@ngxs/store';
 import { FormsModule } from '@angular/forms';
+import { HttpClientModule } from '@angular/common/http';
+import { DatasetsService } from 'app/datasets/datasets.service';
+
+class DatasetsServiceMock {
+  public getSelectedDataset(): object {
+    return {parents: []};
+  }
+}
 
 describe('UniqueFamilyVariantsFilterComponent', () => {
   let component: UniqueFamilyVariantsFilterComponent;
@@ -10,11 +18,10 @@ describe('UniqueFamilyVariantsFilterComponent', () => {
   beforeEach(async() => {
     await TestBed.configureTestingModule({
       declarations: [UniqueFamilyVariantsFilterComponent],
-      imports: [NgxsModule.forRoot([], {developmentMode: true}), FormsModule]
+      providers: [{provide: DatasetsService, useValue: new DatasetsServiceMock()}],
+      imports: [HttpClientModule, NgxsModule.forRoot([], {developmentMode: true}), FormsModule]
     }).compileComponents();
-  });
 
-  beforeEach(() => {
     fixture = TestBed.createComponent(UniqueFamilyVariantsFilterComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();

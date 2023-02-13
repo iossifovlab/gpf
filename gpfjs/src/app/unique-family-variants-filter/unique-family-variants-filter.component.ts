@@ -3,6 +3,7 @@ import { Store } from '@ngxs/store';
 import { UniqueFamilyVariantsFilterState, SetUniqueFamilyVariantsFilter } from './unique-family-variants-filter.state';
 import { Validate, IsDefined } from 'class-validator';
 import { StatefulComponent } from '../common/stateful-component';
+import { DatasetsService } from 'app/datasets/datasets.service';
 
 @Component({
   selector: 'gpf-unique-family-variants-filter',
@@ -12,8 +13,9 @@ import { StatefulComponent } from '../common/stateful-component';
 export class UniqueFamilyVariantsFilterComponent extends StatefulComponent implements OnChanges, OnInit {
   @Validate(IsDefined, {message: 'Must have a boolean value.'})
   private enabled = false;
+  public isVisible = false;
 
-  public constructor(protected store: Store) {
+  public constructor(protected store: Store, public datasetService: DatasetsService) {
     super(store, UniqueFamilyVariantsFilterState, 'uniqueFamilyVariantsFilter');
   }
 
@@ -28,6 +30,9 @@ export class UniqueFamilyVariantsFilterComponent extends StatefulComponent imple
     this.store.selectOnce(UniqueFamilyVariantsFilterState).subscribe(state => {
       this.filterValue = state.uniqueFamilyVariants;
     });
+    if (this.datasetService.getSelectedDataset().studies?.length > 1) {
+      this.isVisible = true;
+    }
   }
 
   public get filterValue(): boolean {
