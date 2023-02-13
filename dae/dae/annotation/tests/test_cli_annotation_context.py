@@ -38,7 +38,7 @@ def test_cli_genomic_context_reference_genome(
 
     argv = [
         "--grr-directory", fixture_dirname("genomic_resources"),
-        "-ref", "hg38/GRCh38-hg38/genome"
+        "--ref", "hg38/GRCh38-hg38/genome"
     ]
 
     # When

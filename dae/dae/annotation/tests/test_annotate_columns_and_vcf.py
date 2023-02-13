@@ -125,7 +125,7 @@ def test_basic_setup(tmp_path, annotate_directory_fixture):
 
     cli_columns([
         str(a) for a in [
-            in_file, annotation_file, out_file, "-grr", grr_file
+            in_file, annotation_file, out_file, "--grr", grr_file
         ]
     ])
     out_file_content = get_file_content_as_string(out_file)
@@ -154,7 +154,7 @@ def test_basic_setup_vcf(tmp_path, annotate_directory_fixture):
 
     cli_vcf([
         str(a) for a in [
-            in_file, annotation_file, out_file, "-grr", grr_file
+            in_file, annotation_file, out_file, "--grr", grr_file
         ]
     ])
 
