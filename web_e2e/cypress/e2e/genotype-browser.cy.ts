@@ -77,10 +77,10 @@ describe('Genotype browser tests', () => {
   });
 
   datasetList.forEach(dataset => {
-    it('should display unique family variants block at /' + dataset + '/browser', () => {
+    it('should not display unique family variants block at /' + dataset + '/browser', () => {
       const uniqueFamilyVariantsFilterPage = new UniqueFamilyVariantsFilterPage();
       page.navigateToDatasetPage(dataset, toolPageLinks.genotypeBrowser);
-      uniqueFamilyVariantsFilterPage.block.should('be.visible');
+      uniqueFamilyVariantsFilterPage.block.should('not.exist');
     });
   });
 

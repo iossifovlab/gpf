@@ -72,9 +72,9 @@ describe('Gene browser basic display tests after query', () => {
     genePlotPage.window.should('be.visible');
   });
 
-  it('should display unique family variants filter block', () => {
+  it('should not display unique family variants filter block', () => {
     const uniqueFamilyVariantsFilterPage = new UniqueFamilyVariantsFilterPage();
-    uniqueFamilyVariantsFilterPage.block.should('be.visible');
+    uniqueFamilyVariantsFilterPage.block.should('not.exist');
   });
 
   it('should display the genotype preview table', () => {
