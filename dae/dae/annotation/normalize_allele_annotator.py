@@ -1,7 +1,7 @@
 """Provides normalize allele annotator and helpers."""
 import logging
 
-from typing import List, Dict, Optional, cast
+from typing import Optional, cast
 
 from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.genomic_resources.reference_genome import \
@@ -92,8 +92,12 @@ class NormalizeAlleleAnnotator(Annotator):
     def is_open(self):  # FIXME:
         return True
 
+    @property
+    def resource_files(self):
+        return {self.genome.resource_id: self.genome.files}
+
     @classmethod
-    def validate_config(cls, config: Dict) -> Dict:
+    def validate_config(cls, config: dict) -> dict:
         schema = {
             "annotator_type": {
                 "type": "string",
@@ -128,9 +132,9 @@ class NormalizeAlleleAnnotator(Annotator):
                 validator.errors)
             raise ValueError(
                 f"wrong liftover annotator config {validator.errors}")
-        return cast(Dict, validator.document)
+        return cast(dict, validator.document)
 
-    def get_all_annotation_attributes(self) -> List[Dict]:
+    def get_all_annotation_attributes(self) -> list[dict]:
         return [
             {
                 "name": "normalized_allele",
@@ -139,8 +143,8 @@ class NormalizeAlleleAnnotator(Annotator):
             }
         ]
 
-    def get_annotation_config(self) -> List[Dict]:
-        attributes: Optional[List[Dict]] = self.config.get("attributes")
+    def get_annotation_config(self) -> list[dict]:
+        attributes: Optional[list[dict]] = self.config.get("attributes")
         if attributes:
             return attributes
         attributes = [
@@ -153,7 +157,7 @@ class NormalizeAlleleAnnotator(Annotator):
         return attributes
 
     def _do_annotate(
-            self, annotatable: Annotatable, _context: Dict) -> Dict:
+            self, annotatable: Annotatable, _context: dict) -> dict:
 
         if annotatable.type in {
                 Annotatable.Type.LARGE_DELETION,

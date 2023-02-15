@@ -1,1 +1,2 @@
-type: mock_resource
+type: liftover_chain
+filename: mock_file

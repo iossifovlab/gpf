@@ -10,7 +10,7 @@ import textwrap
 
 from collections import defaultdict
 from contextlib import contextmanager
-from typing import Any, Optional, Dict, TextIO, cast
+from typing import Any, Optional, TextIO, cast
 
 import pandas as pd
 from jinja2 import Template
@@ -421,9 +421,6 @@ def _open_file(filename):
         infile.close()
 
 
-#
-# GeneModel's
-#
 class GeneModels(GenomicResourceImplementation):
     """Provides class for gene models."""
 
@@ -433,14 +430,23 @@ class GeneModels(GenomicResourceImplementation):
         super().__init__(resource)
         self.gene_models = None
         self.utr_models = None
-        self.transcript_models: Dict[str, Any] = {}
-        self.alternative_names: Dict[str, Any] = {}
+        self.transcript_models: dict[str, Any] = {}
+        self.alternative_names: dict[str, Any] = {}
 
         self._reset()
 
     @property
     def resource_id(self):
         return self.resource.resource_id
+
+    @property
+    def files(self):
+        res = set()
+        res.add(self.resource.get_config()["filename"])
+        gene_mapping_filename = self.resource.get_config().get("gene_mapping")
+        if gene_mapping_filename is not None:
+            res.add(gene_mapping_filename)
+        return res
 
     def _reset(self):
         self._shift = None
@@ -591,7 +597,7 @@ class GeneModels(GenomicResourceImplementation):
 
     def _parse_default_gene_models_format(
         self, infile: TextIO,
-        gene_mapping: Optional[Dict[str, str]] = None,
+        gene_mapping: Optional[dict[str, str]] = None,
         nrows: Optional[int] = None
     ) -> bool:
         # pylint: disable=too-many-locals
@@ -676,7 +682,7 @@ class GeneModels(GenomicResourceImplementation):
 
     def _parse_ref_flat_gene_models_format(
         self, infile: TextIO,
-        gene_mapping: Optional[Dict[str, str]] = None,
+        gene_mapping: Optional[dict[str, str]] = None,
         nrows: Optional[int] = None
     ) -> bool:
         # pylint: disable=too-many-locals
@@ -702,7 +708,7 @@ class GeneModels(GenomicResourceImplementation):
 
         records = df.to_dict(orient="records")
 
-        transcript_ids_counter: Dict[str, int] = defaultdict(int)
+        transcript_ids_counter: dict[str, int] = defaultdict(int)
 
         for rec in records:
             gene = rec["#geneName"]
@@ -746,7 +752,7 @@ class GeneModels(GenomicResourceImplementation):
 
     def _parse_ref_seq_gene_models_format(
         self, infile: TextIO,
-        gene_mapping: Optional[Dict[str, str]] = None,
+        gene_mapping: Optional[dict[str, str]] = None,
         nrows: Optional[int] = None
     ) -> bool:
         # FIXME:
@@ -777,7 +783,7 @@ class GeneModels(GenomicResourceImplementation):
 
         records = df.to_dict(orient="records")
 
-        transcript_ids_counter: Dict[str, int] = defaultdict(int)
+        transcript_ids_counter: dict[str, int] = defaultdict(int)
 
         for rec in records:
             gene = rec["name2"]
@@ -870,7 +876,7 @@ class GeneModels(GenomicResourceImplementation):
 
     def _parse_ccds_gene_models_format(
         self, infile: TextIO,
-        gene_mapping: Optional[Dict[str, str]] = None,
+        gene_mapping: Optional[dict[str, str]] = None,
         nrows: Optional[int] = None
     ) -> bool:
         # FIXME:
@@ -902,7 +908,7 @@ class GeneModels(GenomicResourceImplementation):
 
         records = df.to_dict(orient="records")
 
-        transcript_ids_counter: Dict[str, int] = defaultdict(int)
+        transcript_ids_counter: dict[str, int] = defaultdict(int)
         self.alternative_names = {}
         if gene_mapping is not None:
             self.alternative_names = copy.deepcopy(gene_mapping)
@@ -961,7 +967,7 @@ class GeneModels(GenomicResourceImplementation):
 
     def _parse_known_gene_models_format(
         self, infile: TextIO,
-        gene_mapping: Optional[Dict[str, str]] = None,
+        gene_mapping: Optional[dict[str, str]] = None,
         nrows: Optional[int] = None
     ) -> bool:
         # FIXME:
@@ -988,7 +994,7 @@ class GeneModels(GenomicResourceImplementation):
 
         records = df.to_dict(orient="records")
 
-        transcript_ids_counter: Dict[str, int] = defaultdict(int)
+        transcript_ids_counter: dict[str, int] = defaultdict(int)
         self.alternative_names = {}
         if gene_mapping is not None:
             self.alternative_names = copy.deepcopy(gene_mapping)
@@ -1037,7 +1043,7 @@ class GeneModels(GenomicResourceImplementation):
 
     def _parse_ucscgenepred_models_format(
         self, infile: TextIO,
-        gene_mapping: Optional[Dict[str, str]] = None,
+        gene_mapping: Optional[dict[str, str]] = None,
         nrows: Optional[int] = None
     ) -> bool:
         """Parse UCSC gene prediction models file fomrat.
@@ -1111,7 +1117,7 @@ class GeneModels(GenomicResourceImplementation):
 
         records = df.to_dict(orient="records")
 
-        transcript_ids_counter: Dict[str, int] = defaultdict(int)
+        transcript_ids_counter: dict[str, int] = defaultdict(int)
         self.alternative_names = {}
         if gene_mapping is not None:
             self.alternative_names = copy.deepcopy(gene_mapping)
@@ -1165,7 +1171,7 @@ class GeneModels(GenomicResourceImplementation):
 
     def _parse_gtf_gene_models_format(
         self, infile: TextIO,
-        gene_mapping: Optional[Dict[str, str]] = None,
+        gene_mapping: Optional[dict[str, str]] = None,
         nrows: Optional[int] = None
     ) -> bool:
         # FIXME:
@@ -1295,7 +1301,7 @@ class GeneModels(GenomicResourceImplementation):
         return True
 
     @classmethod
-    def _gene_mapping(cls, filename: str) -> Dict[str, str]:
+    def _gene_mapping(cls, filename: str) -> dict[str, str]:
         """Load alternative names for genes.
 
         Assume that its first line has two column names

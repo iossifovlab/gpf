@@ -315,3 +315,47 @@ def test_cached_repository_locks_file_when_caching(cache_repository, scheme):
 
         x.join()
         y.join()
+
+
+@pytest.mark.parametrize("scheme", [
+    "file",
+    "s3",
+])
+def test_cached_repository_resource_selective_file_caching(
+    cache_repository, scheme
+):
+    with cache_repository(content={
+            "one": {
+                GR_CONF_FILE_NAME: "config",
+                "data.txt": "data",
+                "alabala.txt": "alabala",
+            }}, scheme=scheme) as cache_repo:
+
+        # we get the cache_proto without calling get_resource on the local
+        # resource so that it doesn't automatically grab the GR_CONF - we want
+        # to test that selective file caching will always grab the GR_CONF
+        # file even if it isn't explicitly given in the file list
+        cache_proto = cache_repo._get_or_create_cache_proto(
+            cache_repo.child.get_resource("one").proto
+        )
+        filesystem = cache_proto.local_protocol.filesystem
+        base_url = cache_proto.local_protocol.url
+
+        assert not filesystem.exists(
+            os.path.join(base_url, "one", GR_CONF_FILE_NAME))
+        assert not filesystem.exists(
+            os.path.join(base_url, "one", "data.txt"))
+        assert not filesystem.exists(
+            os.path.join(base_url, "one", "alabala.txt"))
+
+        cache_repo.cache_resources(
+            resource_ids={"one", },
+            resource_files={"one": {"data.txt", }}
+        )
+
+        assert filesystem.exists(
+            os.path.join(base_url, "one", GR_CONF_FILE_NAME))
+        assert filesystem.exists(
+            os.path.join(base_url, "one", "data.txt"))
+        assert not filesystem.exists(
+            os.path.join(base_url, "one", "alabala.txt"))

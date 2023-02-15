@@ -3,7 +3,7 @@
 import copy
 import logging
 
-from typing import Dict, List, cast
+from typing import cast
 
 from dae.effect_annotation.annotator import EffectAnnotator
 from dae.effect_annotation.effect import AlleleEffects, AnnotationEffect
@@ -120,7 +120,7 @@ class EffectAnnotatorAdapter(Annotator):
         for attr in self.get_annotation_config():
             attributes[attr.destination] = ""
 
-    def get_all_annotation_attributes(self) -> List[Dict]:
+    def get_all_annotation_attributes(self) -> list[dict]:
         result = [
             {
                 "name": "worst_effect",
@@ -160,7 +160,7 @@ class EffectAnnotatorAdapter(Annotator):
         return result
 
     @classmethod
-    def validate_config(cls, config: Dict) -> Dict:
+    def validate_config(cls, config: dict) -> dict:
         schema = {
             "annotator_type": {
                 "type": "string",
@@ -195,7 +195,7 @@ class EffectAnnotatorAdapter(Annotator):
                 validator.errors)
             raise ValueError(
                 f"wrong effect annotator config {validator.errors}")
-        return cast(Dict, validator.document)
+        return cast(dict, validator.document)
 
     def annotator_type(self) -> str:
         return "effect_annotator"
@@ -210,8 +210,15 @@ class EffectAnnotatorAdapter(Annotator):
                     self.DEFAULT_ANNOTATION["attributes"])
         return self._annotation_config
 
+    @property
+    def resource_files(self):
+        return {
+            self.gene_models.resource_id: self.gene_models.files,
+            self.genome.resource_id: self.genome.files
+        }
+
     def _do_annotate(
-            self, annotatable: Annotatable, _context: Dict):
+            self, annotatable: Annotatable, _context: dict):
 
         result: dict = {}
         if annotatable is None:

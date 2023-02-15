@@ -3,7 +3,7 @@
 import logging
 import copy
 
-from typing import Dict, List, cast, Any
+from typing import cast, Any
 
 from dae.genomic_resources.genomic_scores import \
     build_allele_score_from_resource, build_position_score_from_resource, \
@@ -13,6 +13,7 @@ from dae.genomic_resources.aggregators import AGGREGATOR_SCHEMA
 from .annotatable import Annotatable, VCFAllele
 from .annotator_base import Annotator, ATTRIBUTES_SCHEMA
 from .annotation_pipeline import AnnotationPipeline
+
 
 
 logger = logging.getLogger(__name__)
@@ -44,7 +45,7 @@ class VariantScoreAnnotatorBase(Annotator):
         }
     }
 
-    def __init__(self, config: Dict, score):
+    def __init__(self, config: dict, score):
 
         super().__init__(config)
 
@@ -61,7 +62,7 @@ class VariantScoreAnnotatorBase(Annotator):
     def is_open(self):
         return self.score.is_open()
 
-    def get_all_annotation_attributes(self) -> List[Dict]:
+    def get_all_annotation_attributes(self) -> list[dict]:
         result = []
         for score_id, score in self.score.score_definitions.items():
             result.append({
@@ -71,20 +72,24 @@ class VariantScoreAnnotatorBase(Annotator):
             })
         return result
 
-    def get_annotation_config(self) -> List[Dict[str, Any]]:
+    def get_annotation_config(self) -> list[dict[str, Any]]:
         if self.config.get("attributes"):
-            return cast(List[Dict[str, Any]], self.config["attributes"])
+            return cast(list[dict[str, Any]], self.config["attributes"])
 
         if self.score.get_default_annotation():
             attributes = self.score.get_default_annotation()["attributes"]
             logger.debug(
                 "using default score annotation for %s: %s",
                 self.score.score_id(), attributes)
-            return cast(List[Dict[str, Any]], attributes)
+            return cast(list[dict[str, Any]], attributes)
         logger.warning(
             "can't find annotation config for resource: %s",
             self.score.score_id())
         return []
+
+    @property
+    def resource_files(self) -> dict[str, set[str]]:
+        return {self.score.resource.resource_id: self.score.files}
 
     def _collect_non_default_aggregators(self):
         non_default_position_aggregators = {}
@@ -117,7 +122,7 @@ class VariantScoreAnnotatorBase(Annotator):
         self.score.close()
 
 
-def build_position_score_annotator(pipeline: AnnotationPipeline, config: Dict):
+def build_position_score_annotator(pipeline: AnnotationPipeline, config: dict):
     """Construct position score annotator."""
     config = PositionScoreAnnotator.validate_config(config)
 
@@ -137,14 +142,11 @@ def build_position_score_annotator(pipeline: AnnotationPipeline, config: Dict):
 class PositionScoreAnnotator(VariantScoreAnnotatorBase):
     """Defines position score annotator."""
 
-    def __init__(self, config: dict, resource):
-        super().__init__(config, resource)
-
     def annotator_type(self) -> str:
         return "position_score"
 
     @classmethod
-    def validate_config(cls, config: Dict) -> Dict:
+    def validate_config(cls, config: dict) -> dict:
         attributes_schema = copy.deepcopy(ATTRIBUTES_SCHEMA)
         aschema = cast(dict, attributes_schema["schema"])
         aschema["position_aggregator"] = AGGREGATOR_SCHEMA
@@ -170,7 +172,7 @@ class PositionScoreAnnotator(VariantScoreAnnotatorBase):
                 result)
             raise ValueError(
                 "nucleotide_aggregator is not allowed in position score")
-        return cast(Dict, validator.document)
+        return cast(dict, validator.document)
 
     def _fetch_substitution_scores(self, allele):
         scores = self.score.fetch_scores(
@@ -225,7 +227,7 @@ class PositionScoreAnnotator(VariantScoreAnnotatorBase):
         return attributes
 
 
-def build_np_score_annotator(pipeline: AnnotationPipeline, config: Dict):
+def build_np_score_annotator(pipeline: AnnotationPipeline, config: dict):
     """Construct an NP Score annotator."""
     config = NPScoreAnnotator.validate_config(config)
 
@@ -246,7 +248,7 @@ class NPScoreAnnotator(PositionScoreAnnotator):
     """Defines nucleotide-position score annotator."""
 
     @classmethod
-    def validate_config(cls, config: Dict) -> Dict:
+    def validate_config(cls, config: dict) -> dict:
         attributes_schema = copy.deepcopy(ATTRIBUTES_SCHEMA)
         aschema = cast(dict, attributes_schema["schema"])
         aschema["position_aggregator"] = AGGREGATOR_SCHEMA
@@ -264,7 +266,7 @@ class NPScoreAnnotator(PositionScoreAnnotator):
                 validator.errors)
             raise ValueError(f"wrong NP score config {validator.errors}")
 
-        return cast(Dict, validator.document)
+        return cast(dict, validator.document)
 
     def annotator_type(self) -> str:
         return "np_score"
@@ -295,7 +297,7 @@ class NPScoreAnnotator(PositionScoreAnnotator):
         return scores
 
 
-def build_allele_score_annotator(pipeline: AnnotationPipeline, config: Dict):
+def build_allele_score_annotator(pipeline: AnnotationPipeline, config: dict):
     """Construct an Allele Score annotator."""
     config = AlleleScoreAnnotator.validate_config(config)
 
@@ -315,11 +317,8 @@ def build_allele_score_annotator(pipeline: AnnotationPipeline, config: Dict):
 class AlleleScoreAnnotator(VariantScoreAnnotatorBase):
     """Defines Allele Score annotator."""
 
-    def __init__(self, config: dict, score):
-        super().__init__(config, score)
-
     @classmethod
-    def validate_config(cls, config: Dict) -> Dict:
+    def validate_config(cls, config: dict) -> dict:
         attributes_schema = copy.deepcopy(ATTRIBUTES_SCHEMA)
 
         schema = copy.deepcopy(cls.VALIDATION_SCHEMA)
@@ -334,7 +333,7 @@ class AlleleScoreAnnotator(VariantScoreAnnotatorBase):
                 validator.errors)
             raise ValueError(f"wrong allele score config {validator.errors}")
 
-        result: Dict = validator.document
+        result: dict = validator.document
         if result.get("attributes"):
             if any("nucleotide_aggregator" in attr
                     for attr in result["attributes"]):
@@ -357,7 +356,7 @@ class AlleleScoreAnnotator(VariantScoreAnnotatorBase):
         return "allele_score"
 
     def _do_annotate(
-            self, annotatable: Annotatable, context: Dict):
+            self, annotatable: Annotatable, context: dict):
         attributes: dict = {}
 
         if not isinstance(annotatable, VCFAllele):

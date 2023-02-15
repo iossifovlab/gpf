@@ -65,6 +65,10 @@ class LiftoverChain(GenomicResourceImplementation):
     def is_open(self):
         return self.liftover is not None
 
+    @property
+    def files(self):
+        return {self.resource.get_config()["filename"], }
+
     @staticmethod
     def map_chromosome(chrom, mapping):
         """Map a chromosome (contig) name according to configuration."""

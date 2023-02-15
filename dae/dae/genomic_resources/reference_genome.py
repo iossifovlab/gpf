@@ -6,7 +6,7 @@ import logging
 import copy
 import textwrap
 
-from typing import List, Optional, Dict, Any, cast
+from typing import Optional, Any, cast
 
 from jinja2 import Template
 from markdown2 import markdown
@@ -33,8 +33,8 @@ class ReferenceGenome(GenomicResourceImplementation):
         if resource.get_type() != "genome":
             raise ValueError(
                 f"wront type of resource passed: {resource.get_type()}")
-        self._index: Dict[str, Any] = {}
-        self._chromosomes: List[str] = []
+        self._index: dict[str, Any] = {}
+        self._chromosomes: list[str] = []
         self._sequence = None
 
         self.pars: dict = self._parse_pars(resource.get_config())
@@ -67,7 +67,7 @@ class ReferenceGenome(GenomicResourceImplementation):
         return result
 
     @property
-    def chromosomes(self) -> List[str]:
+    def chromosomes(self) -> list[str]:
         """Return a list of all chromosomes of the reference genome."""
         return self._chromosomes
 
@@ -85,6 +85,13 @@ class ReferenceGenome(GenomicResourceImplementation):
                 "lineLength": int(line[4]),
             }
         self._chromosomes = list(self._index.keys())
+
+    @property
+    def files(self):
+        config = self.resource.get_config()
+        file_name = config["filename"]
+        index_file_name = config.get("index_file", f"{file_name}.fai")
+        return {file_name, index_file_name}
 
     def close(self):
         """Close reference genome sequence file-like objects."""
@@ -170,7 +177,7 @@ class ReferenceGenome(GenomicResourceImplementation):
     def is_pseudoautosomal(self, chrom: str, pos: int) -> bool:
         """Return true if specified position is pseudoautosomal."""
         def in_any_region(
-                chrom: str, pos: int, regions: List[Region]) -> bool:
+                chrom: str, pos: int, regions: list[Region]) -> bool:
             return any(map(lambda reg: reg.isin(chrom, pos), regions))
 
         pars_regions = self.pars.get(chrom, None)

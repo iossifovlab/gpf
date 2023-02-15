@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 import logging
 
-from typing import Iterable, Optional, Dict, Generator, cast
+from typing import Iterable, Optional, Generator, cast
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from .repository import GenomicResource, \
@@ -125,8 +125,8 @@ class CachingProtocol(ReadOnlyRepositoryProtocol):
 
         return self.local_protocol.load_manifest(resource)
 
-    def cache_resource(self, resource) -> None:
-        self.local_protocol.update_resource(resource)
+    def cache_resource(self, resource, resource_files) -> None:
+        self.local_protocol.update_resource(resource, resource_files)
 
 
 class GenomicResourceCachedRepo(GenomicResourceRepo):
@@ -141,7 +141,7 @@ class GenomicResourceCachedRepo(GenomicResourceRepo):
 
         self.child: GenomicResourceProtocolRepo = child
         self.cache_url = cache_url
-        self.cache_protos: Dict[str, CachingProtocol] = {}
+        self.cache_protos: dict[str, CachingProtocol] = {}
         self.additional_kwargs = kwargs
 
     def invalidate(self):
@@ -203,7 +203,8 @@ class GenomicResourceCachedRepo(GenomicResourceRepo):
 
     def cache_resources(
         self, workers=4,
-        resource_ids: Optional[list[str]] = None
+        resource_ids: Optional[set[str]] = None,
+        resource_files: Optional[dict[str, set[str]]] = None,
     ):
         """Cache resources from a list of remote resource IDs."""
         executor = ThreadPoolExecutor(max_workers=workers)
@@ -219,11 +220,18 @@ class GenomicResourceCachedRepo(GenomicResourceRepo):
                 assert remote_res is not None, resource_id
                 resources.append(remote_res)
 
+        if resource_files is None:
+            resource_files = dict()
+
         for rem_resource in resources:
             cached_proto = self._get_or_create_cache_proto(
                 rem_resource.proto)
             futures.append(
-                executor.submit(cached_proto.cache_resource, rem_resource)
+                executor.submit(
+                    cached_proto.cache_resource,
+                    rem_resource,
+                    resource_files.get(rem_resource.get_id())
+                )
             )
         for future in as_completed(futures):
             future.result()
