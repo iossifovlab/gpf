@@ -14,12 +14,12 @@
 .histogram-controls {
   display: flex;
   width: 100%;
-  max-width: 850px;
+  max-width: 650px;
   margin: auto;
   margin-bottom: 20px;
 }
 
-.histogram-to{
+.histogram-to {
   margin-right: 20px;
 }
 

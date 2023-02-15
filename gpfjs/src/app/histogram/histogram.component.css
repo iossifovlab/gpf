@@ -13,8 +13,7 @@
   width: 20px;
   height: 18px;
   position: absolute;
-  /* stylelint-disable-next-line length-zero-no-unit */
-  right: 0px;
+  right: 0;
   margin: 1px;
   z-index: 100;
   vertical-align: middle;
@@ -34,8 +33,7 @@
 }
 
 .step.down {
-  /* stylelint-disable-next-line length-zero-no-unit */
-  bottom: 0px;
+  bottom: 0;
 }
 
 .no-arrows {
