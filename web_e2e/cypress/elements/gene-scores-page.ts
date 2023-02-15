@@ -36,4 +36,8 @@ export class GeneScoresPage extends BasePage {
   public get histogram(): element {
     return cy.get('div.histogram > svg');
   }
+
+  public get downloadLink(): element {
+    return cy.get('.download-link');
+  }
 }
