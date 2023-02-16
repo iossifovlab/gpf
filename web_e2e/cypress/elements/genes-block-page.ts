@@ -69,4 +69,8 @@ export class GenesBlockPage extends BasePage {
     const checkboxId: string = genotypeDataId + '-checkbox-' + peopleGroupValue;
     return cy.get(`#${checkboxId}`);
   }
+
+  public findDenovoGeneSetsAccordionButtonByText(text: string): element {
+    return cy.get('ngb-accordion').find('span').contains(text);
+  }
 }

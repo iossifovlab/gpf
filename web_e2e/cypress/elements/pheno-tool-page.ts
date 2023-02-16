@@ -9,12 +9,24 @@ export class PhenoToolPage extends BasePage {
     return cy.get('gpf-pheno-tool-genotype-block');
   }
 
+  public get presentInParent(): element {
+    return cy.get('gpf-present-in-parent');
+  }
+
+  public get effectTypes(): element {
+    return cy.get('gpf-pheno-tool-effect-types');
+  }
+
   public get resultsChart(): element {
     return cy.get('gpf-pheno-tool-results-chart');
   }
 
   public get reportButton(): element {
     return cy.get('gpf-pheno-tool button').contains('Report');
+  }
+
+  public get downloadButton(): element {
+    return cy.get('gpf-pheno-tool button').contains('Download');
   }
 
   public pressReportButton(): void {
