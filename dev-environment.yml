@@ -8,6 +8,9 @@ channels:
   - defaults
   - iossifovlab
 dependencies:
+  - dask-jobqueue=0.8.1
+  - dask-kubernetes=2022.12.0
+  - hadoop=3.1.2
   - bump2version=1.0.1
   - sphinx=5.3.0
   - sphinx_rtd_theme=1.1.1
@@ -33,7 +36,6 @@ dependencies:
   - types-toml=0.10.3
   - types-python-dateutil=2.8.9
   - types-requests=2.27.30
-  - dask-jobqueue=0.8.1
   - bandit=1.7.4
   - pip=22.3.1
   - pip:
