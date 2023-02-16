@@ -8,7 +8,6 @@ import { GenotypePreviewTablePage } from 'cypress/elements/genotype-preview-tabl
 import { PersonFiltersBlockPage } from 'cypress/elements/person-filters-block-page';
 import { RegionsBlockPage } from 'cypress/elements/regions-block-page';
 import { SaveQueryPage } from 'cypress/elements/save-query-page';
-import { UniqueFamilyVariantsFilterPage } from 'cypress/elements/unique-family-variants-filter-page';
 import { datasetIds, toolPageLinks } from 'cypress/elements/utils';
 
 describe('Genotype browser tests', () => {
@@ -73,14 +72,6 @@ describe('Genotype browser tests', () => {
       const personFiltersBlockPage = new PersonFiltersBlockPage();
       page.navigateToDatasetPage(dataset, toolPageLinks.genotypeBrowser);
       personFiltersBlockPage.block.should('be.visible');
-    });
-  });
-
-  datasetList.forEach(dataset => {
-    it('should not display unique family variants block at /' + dataset + '/browser', () => {
-      const uniqueFamilyVariantsFilterPage = new UniqueFamilyVariantsFilterPage();
-      page.navigateToDatasetPage(dataset, toolPageLinks.genotypeBrowser);
-      uniqueFamilyVariantsFilterPage.block.should('not.exist');
     });
   });
 

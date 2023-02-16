@@ -1,7 +1,6 @@
 import { GeneBrowserPage } from 'cypress/elements/gene-browser-page';
 import { GenePlotPage } from 'cypress/elements/gene-plot-page';
 import { GenotypePreviewTablePage } from 'cypress/elements/genotype-preview-table-page';
-import { UniqueFamilyVariantsFilterPage } from 'cypress/elements/unique-family-variants-filter-page';
 import { datasetIds, toolPageLinks } from 'cypress/elements/utils';
 
 describe('Gene browser basic display tests before query', () => {
@@ -40,11 +39,6 @@ describe('Gene browser basic display tests before query', () => {
     genePlotPage.window.should('not.exist');
   });
 
-  it('should NOT display unique family variants filter block', () => {
-    const uniqueFamilyVariantsFilterPage = new UniqueFamilyVariantsFilterPage();
-    uniqueFamilyVariantsFilterPage.block.should('not.exist');
-  });
-
   it('should NOT display the genotype preview table', () => {
     const genotypePreviewTablePage = new GenotypePreviewTablePage();
     genotypePreviewTablePage.table.should('not.exist');
@@ -70,11 +64,6 @@ describe('Gene browser basic display tests after query', () => {
   it('should display the gene plot', () => {
     const genePlotPage = new GenePlotPage();
     genePlotPage.window.should('be.visible');
-  });
-
-  it('should not display unique family variants filter block', () => {
-    const uniqueFamilyVariantsFilterPage = new UniqueFamilyVariantsFilterPage();
-    uniqueFamilyVariantsFilterPage.block.should('not.exist');
   });
 
   it('should display the genotype preview table', () => {
