@@ -4,7 +4,6 @@ import itertools
 import logging
 import textwrap
 from typing import Optional, List
-from functools import lru_cache
 
 import numpy as np
 import pandas as pd
@@ -148,29 +147,24 @@ class GeneScore:
 
         return aggregator.get_final()
 
-    @lru_cache(maxsize=32)
     def _to_dict(self):
         """Return dictionary of all defined scores keyed by gene symbol."""
         return self.df.set_index("gene")[self.score_id].to_dict()
 
-    @lru_cache(maxsize=32)
     def _to_list(self):
         columns = self.df.applymap(str).columns.tolist()
         values = self.df.applymap(str).values.tolist()
 
         return itertools.chain([columns], values)
 
-    @lru_cache(maxsize=32)
     def to_tsv(self):
         """Return a TSV version of the gene score data."""
         return map(join_line, self._to_list())
 
-    @lru_cache(maxsize=32)
     def min(self):
         """Return minimal score value."""
         return self.df[self.score_id].min()
 
-    @lru_cache(maxsize=32)
     def max(self):
         """Return maximal score value."""
         return self.df[self.score_id].max()
@@ -307,12 +301,10 @@ class GeneScoresDb:
             for score_id, score in collection.scores.items():
                 self.scores[score_id] = score
 
-    @lru_cache(maxsize=1)
     def get_gene_score_ids(self):
         """Return a list of the IDs of all the gene scores contained."""
         return sorted(list(self.scores.keys()))
 
-    @lru_cache(maxsize=1)
     def get_gene_scores(self):
         """Return a list of all the gene scores contained in the DB."""
         return [self.get_gene_score(score_id) for score_id in self.scores]
