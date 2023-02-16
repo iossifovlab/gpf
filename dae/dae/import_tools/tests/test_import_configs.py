@@ -9,11 +9,18 @@ import fsspec
 
 from dae.import_tools import import_tools, cli
 from dae.configuration.gpf_config_parser import GPFConfigParser
+from dae.testing.alla_import import alla_gpf
+
+
+@pytest.fixture()
+def gpf_instance(tmp_path_factory):
+    root_path = tmp_path_factory.mktemp(__name__)
+    return alla_gpf(root_path)
 
 
 @pytest.mark.parametrize("config_dir", ["denovo_import", "vcf_import",
                                         "cnv_import", "dae_import"])
-def test_parquet_files_are_generated(tmpdir, gpf_instance_2019, config_dir,
+def test_parquet_files_are_generated(tmpdir, gpf_instance, config_dir,
                                      mocker, resources_dir):
     input_dir = resources_dir / config_dir
     config_fn = input_dir / "import_config.yaml"
@@ -24,7 +31,7 @@ def test_parquet_files_are_generated(tmpdir, gpf_instance_2019, config_dir,
     }
 
     mocker.patch.object(import_tools.ImportProject, "get_gpf_instance",
-                        return_value=gpf_instance_2019)
+                        return_value=gpf_instance)
     mocker.patch.object(import_tools.ImportProject, "_storage_type",
                         return_value="impala2")
     project = import_tools.ImportProject.build_from_config(
@@ -66,12 +73,12 @@ def test_import_with_add_chrom_prefix(tmpdir, gpf_instance_grch38, mocker,
 
 
 def test_add_chrom_prefix_is_propagated_to_the_loader(resources_dir, mocker,
-                                                      gpf_instance_2019):
+                                                      gpf_instance):
     config_fn = resources_dir / "vcf_import" \
         / "import_config_add_chrom_prefix.yaml"
 
     mocker.patch.object(import_tools.ImportProject, "get_gpf_instance",
-                        return_value=gpf_instance_2019)
+                        return_value=gpf_instance)
     project = import_tools.ImportProject.build_from_file(config_fn)
     loader = project._get_variant_loader("vcf")
     assert loader._chrom_prefix == "chr"

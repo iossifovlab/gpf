@@ -4,10 +4,17 @@ import shutil
 import yaml
 import pytest
 from dae.import_tools import import_tools, cli
+from dae.testing.alla_import import alla_gpf
 
 
 @pytest.fixture()
-def simple_study_dir(tmpdir, gpf_instance_grch38, mocker, resources_dir):
+def gpf_instance(tmp_path_factory):
+    root_path = tmp_path_factory.mktemp(__name__)
+    return alla_gpf(root_path)
+
+
+@pytest.fixture()
+def simple_study_dir(tmpdir, gpf_instance, mocker, resources_dir):
     shutil.copytree(
         resources_dir / "vcf_import", tmpdir, dirs_exist_ok=True
     )
@@ -25,7 +32,7 @@ def simple_study_dir(tmpdir, gpf_instance_grch38, mocker, resources_dir):
         yaml.safe_dump(config, file)
 
     mocker.patch.object(import_tools.ImportProject, "get_gpf_instance",
-                        return_value=gpf_instance_grch38)
+                        return_value=gpf_instance)
     mocker.patch.object(import_tools.ImportProject, "work_dir",
                         new=str(tmpdir))
     return tmpdir
