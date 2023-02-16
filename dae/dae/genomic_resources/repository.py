@@ -746,8 +746,8 @@ class ReadWriteRepositoryProtocol(ReadOnlyRepositoryProtocol):
     ) -> GenomicResource:
         """Copy a remote resource into repository.
 
-        Allows copying of a subset of files from the resource via files_to_copy.
-        If files_to_copy is None, copies all files.
+        Allows copying of a subset of files from the resource via
+        files_to_copy. If files_to_copy is None, copies all files.
         """
         local_resource = self.get_or_create_resource(
             remote_resource.resource_id, remote_resource.version)
@@ -756,7 +756,8 @@ class ReadWriteRepositoryProtocol(ReadOnlyRepositoryProtocol):
         filenames_to_delete = local_manifest.names() - remote_manifest.names()
 
         if files_to_copy is None:
-            files_to_copy = set(map(lambda entry: entry.name, remote_manifest))
+            files_to_copy = set(map(
+                lambda entry: entry.name, remote_manifest))  # type: ignore
         else:
             files_to_copy.add(GR_CONF_FILE_NAME)  # config is always required
 

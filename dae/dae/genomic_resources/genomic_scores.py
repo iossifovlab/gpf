@@ -1,5 +1,4 @@
-"""Genomic scores resources."""
-
+# pylint: disable=too-many-lines
 from __future__ import annotations
 
 import logging
@@ -28,7 +27,6 @@ from .resource_implementation import GenomicResourceImplementation, \
     ResourceConfigValidationMixin
 from .genomic_position_table import build_genomic_position_table, Line, \
     TabixGenomicPositionTable, VCFGenomicPositionTable
-from dae.task_graph.graph import TaskGraph
 from .histogram import Histogram
 
 from .aggregators import build_aggregator, AGGREGATOR_SCHEMA
@@ -105,7 +103,7 @@ class ScoreLine:
             elif col_def.value_parser is not None:
                 try:  # Temporary workaround for GRR generation
                     value = col_def.value_parser(value)
-                except Exception as err:
+                except Exception as err:  # pylint: disable=broad-except
                     logger.error(err)
                     value = None
         return value
@@ -606,13 +604,16 @@ class GenomicScore(
     @staticmethod
     def _merge_min_max(score_ids, *calculate_tasks):
 
-        res = {score_id: None for score_id in score_ids}
+        res: dict[str, Optional[MinMaxValue]] = {
+            score_id: None for score_id in score_ids}
         for score_id in score_ids:
             for min_max_region in calculate_tasks:
                 if res[score_id] is None:
                     res[score_id] = min_max_region[score_id]
                 else:
-                    res[score_id].merge(min_max_region[score_id])
+                    assert res[score_id] is not None
+                    res[score_id].merge(  # type: ignore
+                        min_max_region[score_id])
         return res
 
     @staticmethod
@@ -683,7 +684,7 @@ class GenomicScore(
         if "histograms" not in resource.config:
             return {}
         hist_configs = resource.config["histograms"]
-        res = {}
+        res: dict = {}
         for hist_config in hist_configs:
             res[hist_config["score"]] = None
         score_ids = list(res.keys())

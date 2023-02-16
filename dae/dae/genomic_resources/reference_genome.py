@@ -165,7 +165,7 @@ class ReferenceGenome(
                 "chromosome %s not found in %s",
                 chrom, self.resource.resource_id)
             return None
-
+        assert self._sequence is not None
         self._sequence.seek(
             self._index[chrom]["startBit"]
             + start
@@ -193,8 +193,7 @@ class ReferenceGenome(
             )
         return False
 
-    @staticmethod
-    def get_template():
+    def get_template(self):
         return Template(textwrap.dedent("""
             {% extends base %}
             {% block content %}
@@ -257,7 +256,7 @@ class ReferenceGenome(
     def calc_statistics_hash(self) -> bytes:
         return b"placeholder"
 
-    def add_statistics_build_tasks(self, task_graph, **kwargs) -> List[Task]:
+    def add_statistics_build_tasks(self, task_graph, **kwargs) -> list[Task]:
         return []
 
 

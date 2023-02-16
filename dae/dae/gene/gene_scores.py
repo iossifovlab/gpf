@@ -1,16 +1,14 @@
 from __future__ import annotations
-
+import copy
 import itertools
 import logging
 import textwrap
-import copy
 from typing import Optional, List
 from functools import lru_cache
 
 import numpy as np
 import pandas as pd
 from jinja2 import Template
-from markdown2 import markdown
 from cerberus import Validator
 
 from dae.utils.dae_utils import join_line
@@ -53,9 +51,6 @@ class GeneScore:
         self.histogram_config = histogram_config
 
         self.score_id = score_id
-        self.df = None
-        self._dict = None
-
         self.genomic_values_col = "gene"
 
         self.desc = desc
@@ -63,7 +58,7 @@ class GeneScore:
 
         self.meta = meta
 
-        self._load_data()
+        self.df = self._load_data()
         self.df.dropna(inplace=True)
 
         self.histogram = Histogram(histogram_config)
@@ -89,8 +84,7 @@ class GeneScore:
         df = pd.read_csv(self.file)
         assert self.score_id in df.columns, \
             f"{self.score_id} not found in {df.columns}"
-        self.df = df[[self.genomic_values_col, self.score_id]].copy()
-        return self.df
+        return df[[self.genomic_values_col, self.score_id]].copy()
 
     @staticmethod
     def load_gene_scores_from_resource(
@@ -157,9 +151,7 @@ class GeneScore:
     @lru_cache(maxsize=32)
     def _to_dict(self):
         """Return dictionary of all defined scores keyed by gene symbol."""
-        if self._dict is None:
-            self._dict = self.df.set_index("gene")[self.score_id].to_dict()
-        return self._dict
+        return self.df.set_index("gene")[self.score_id].to_dict()
 
     @lru_cache(maxsize=32)
     def _to_list(self):
@@ -225,8 +217,7 @@ class GeneScoreCollection(
             GeneScore.load_gene_scores_from_resource(self.resource)
         }
 
-    @staticmethod
-    def get_template():
+    def get_template(self):
         return Template(textwrap.dedent("""
             {% extends base %}
             {% block content %}
@@ -255,15 +246,13 @@ class GeneScoreCollection(
             {% endblock %}
         """))
 
+    def _get_template_data(self):
+        data = copy.deepcopy(self.config)
+        return data
+
     @property
     def files(self):
         raise NotImplementedError
-
-    def get_info(self):
-        info = copy.deepcopy(self.config)
-        if "meta" in info:
-            info["meta"] = markdown(info["meta"])
-        return info
 
     @staticmethod
     def get_schema():

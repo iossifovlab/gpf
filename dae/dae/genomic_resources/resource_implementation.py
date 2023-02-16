@@ -1,5 +1,4 @@
 import logging
-import textwrap
 from typing import Optional, Callable, cast, Any
 from abc import abstractmethod, ABC
 from jinja2 import Template
@@ -31,15 +30,15 @@ class GenomicResourceImplementation(ABC):
 
     def __init__(self, genomic_resource: GenomicResource):
         self.resource = genomic_resource
-        self.config = self.resource.config
+        self.config: dict = self.resource.config
 
     def get_config(self) -> dict:
         return self.config
 
     @property
-    @abstractmethod
-    def files(self):
+    def files(self) -> set[str]:
         """Return a list of resource files the implementation utilises."""
+        return set()
 
     @abstractmethod
     def calc_statistics_hash(self) -> bytes:
@@ -52,7 +51,7 @@ class GenomicResourceImplementation(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def add_statistics_build_tasks(self, task_graph, **kwargs) -> List[Task]:
+    def add_statistics_build_tasks(self, task_graph, **kwargs) -> list[Task]:
         """Add tasks for calculating resource statistics to a task graph."""
         raise NotImplementedError()
 
@@ -82,7 +81,7 @@ class InfoImplementationMixin:
         """Construct the contents of the implementation's HTML info page."""
         template_data = self._get_template_data()
         return self.get_template().render(
-            resource_id=self.resource.resource_id,
+            resource_id=self.resource.resource_id,  # type: ignore
             data=template_data,
             base=resource_template
         )
@@ -109,7 +108,7 @@ class ResourceConfigValidationMixin:
                 resource.get_type(),
                 validator.errors)
             raise ValueError("Invalid configuration")
-        return cast(Dict, validator.document)
+        return cast(dict, validator.document)
 
 
 resource_template = Template("""
