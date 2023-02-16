@@ -6,8 +6,6 @@ import argparse
 import time
 import logging
 
-from typing import cast
-
 from dae.utils.verbosity_configuration import VerbosityConfiguration
 from dae.genomic_resources.repository_factory import load_definition_file, \
     get_configured_definition, \
@@ -62,11 +60,10 @@ def cli_cache_repo(argv=None):
         raise ValueError(
             "This tool works only if the top configured "
             "repository is cached.")
-    repository = cast(GenomicResourceCachedRepo, repository)
 
     resources: set[str] = set()
     # Explicitly specify which files to cache. Optional.
-    resource_files: dict[str, set[str]] = dict()
+    resource_files: dict[str, set[str]] = {}
     annotation = None
 
     if args.instance is not None and args.annotation is not None:
@@ -76,11 +73,12 @@ def cli_cache_repo(argv=None):
 
     if args.instance is not None:
         instance_file = os.path.abspath(args.instance)
-        config = GPFConfigParser.load_config(instance_file, dae_conf_schema)
-        resources.add(config.reference_genome.resource_id)
-        resources.add(config.gene_models.resource_id)
-        if config.annotation is not None:
-            annotation = config.annotation.conf_file
+        gpf_config = GPFConfigParser.load_config(
+            instance_file, dae_conf_schema)
+        resources.add(gpf_config.reference_genome.resource_id)
+        resources.add(gpf_config.gene_models.resource_id)
+        if gpf_config.annotation is not None:
+            annotation = gpf_config.annotation.conf_file
     elif args.annotation is not None:
         annotation = args.annotation
 
@@ -92,14 +90,9 @@ def cli_cache_repo(argv=None):
         resources.update(annotation_resources[0])
         resource_files.update(annotation_resources[1])
 
-    if len(resources) > 0:
-        resources = list(resources)
-    else:
-        resources = None
-
     repository.cache_resources(
         workers=args.jobs,
-        resource_ids=resources,
+        resource_ids=resources or None,
         resource_files=resource_files
     )
 
@@ -110,8 +103,9 @@ def cli_cache_repo(argv=None):
 def extract_resource_ids_and_files_from_annotation(
     config, repository
 ) -> tuple[set[str], dict[str, set[str]]]:
+    """Collect resources and resource files used by annotation."""
     resources: set[str] = set()
-    resource_files: dict[str, set[str]] = dict()
+    resource_files: dict[str, set[str]] = {}
     with build_annotation_pipeline(
         pipeline_config=config, grr_repository=repository
     ) as pipeline:

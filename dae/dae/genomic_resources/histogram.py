@@ -29,10 +29,10 @@ class Histogram(Statistic):
         try:
             self.score_id = self.config["score"]
             self.bins_count = self.config["bins"]
-        except KeyError as e:
+        except KeyError as exc:
             raise ValueError(
-                f"Invalid histogram configuration, cannot find {e.args[0]}"
-            ) from e
+                f"Invalid histogram configuration, cannot find {exc.args[0]}"
+            ) from exc
 
         limits = np.iinfo(np.int64)
         self.x_min = self.config.get("min", limits.min)
@@ -64,7 +64,7 @@ class Histogram(Statistic):
             self.bars = np.zeros(self.bins_count, dtype=np.int64)
         elif self.bins is None or self.bars is None:
             raise ValueError(
-                f"Cannot instantiate histogram with only bins or only bars!"
+                "Cannot instantiate histogram with only bins or only bars!"
             )
 
         if self.x_scale not in ("linear", "log"):

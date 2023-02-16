@@ -1490,7 +1490,7 @@ class GeneModels(
     def calc_statistics_hash(self) -> bytes:
         return b"placeholder"
 
-    def add_statistics_build_tasks(self, task_graph, **kwargs) -> List[Task]:
+    def add_statistics_build_tasks(self, task_graph, **kwargs) -> list[Task]:
         return []
 
 

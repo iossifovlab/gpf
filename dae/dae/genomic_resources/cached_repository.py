@@ -7,7 +7,9 @@ from typing import Iterable, Optional, Generator, cast
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from .repository import GenomicResource, \
-    ReadOnlyRepositoryProtocol, ReadWriteRepositoryProtocol
+    ReadOnlyRepositoryProtocol
+from .fsspec_protocol import FsspecReadWriteProtocol
+
 from .repository import GenomicResourceRepo, GenomicResourceProtocolRepo, \
     GR_CONF_FILE_NAME, Manifest
 from .fsspec_protocol import build_fsspec_protocol
@@ -37,7 +39,7 @@ class CachingProtocol(ReadOnlyRepositoryProtocol):
     def __init__(
             self,
             remote_protocol: ReadOnlyRepositoryProtocol,
-            local_protocol: ReadWriteRepositoryProtocol):
+            local_protocol: FsspecReadWriteProtocol):
 
         super().__init__(local_protocol.proto_id)
         self.remote_protocol = remote_protocol
@@ -122,7 +124,6 @@ class CachingProtocol(ReadOnlyRepositoryProtocol):
 
     def load_manifest(self, resource: GenomicResource) -> Manifest:
         self._refresh_resource_file(resource, GR_CONF_FILE_NAME)
-
         return self.local_protocol.load_manifest(resource)
 
     def cache_resource(self, resource, resource_files) -> None:
@@ -165,7 +166,7 @@ class GenomicResourceCachedRepo(GenomicResourceRepo):
                 f"{proto_id}.cached",
                 cached_proto_url,
                 **self.additional_kwargs)
-            if not isinstance(cache_proto, ReadWriteRepositoryProtocol):
+            if not isinstance(cache_proto, FsspecReadWriteProtocol):
                 raise ValueError(
                     f"caching protocol should be RW;"
                     f"{cached_proto_url} is not RW")
@@ -221,7 +222,7 @@ class GenomicResourceCachedRepo(GenomicResourceRepo):
                 resources.append(remote_res)
 
         if resource_files is None:
-            resource_files = dict()
+            resource_files = {}
 
         for rem_resource in resources:
             cached_proto = self._get_or_create_cache_proto(

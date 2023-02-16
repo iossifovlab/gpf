@@ -3,7 +3,6 @@
 import textwrap
 import pathlib
 import pytest
-import yaml
 import pysam
 
 from dask.distributed import Client  # type: ignore

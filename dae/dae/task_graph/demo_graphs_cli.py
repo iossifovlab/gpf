@@ -14,7 +14,7 @@ def build_demo_graph(graph_type: str,
     task_graph = TaskGraph()
 
     if graph_type == "A":
-        NP, SP, SS = 2, 5, 10  # pylint: disable=invalid-name
+        NP, SP, SS = "2", "5", "10"  # pylint: disable=invalid-name
 
         if graph_params:
             if len(graph_params) != 3:
