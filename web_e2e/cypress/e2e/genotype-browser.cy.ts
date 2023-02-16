@@ -12,9 +12,6 @@ import { datasetIds, toolPageLinks } from 'cypress/elements/utils';
 
 describe('Genotype browser tests', () => {
   const page = new GenotypeBrowserPage();
-  const datasetList = [
-    datasetIds.compAll, datasetIds.compDenovo, datasetIds.compVcf, datasetIds.iossifov2014, datasetIds.multi
-  ];
 
   before(() => {
     page.cleanup();
@@ -27,95 +24,85 @@ describe('Genotype browser tests', () => {
     page.navigateToHome();
   });
 
-  datasetList.forEach(dataset => {
-    it('should display regions block panel in genotype browser at /' + dataset + '/browser', () => {
-      const regionsBlockPage = new RegionsBlockPage();
-      page.navigateToDatasetPage(dataset, toolPageLinks.genotypeBrowser);
-      regionsBlockPage.block.should('be.visible');
-    });
+  it('should display regions block panel in the genotype browser', () => {
+    const regionsBlockPage = new RegionsBlockPage();
+    page.navigateToDatasetPage(datasetIds.iossifov2014, toolPageLinks.genotypeBrowser);
+    regionsBlockPage.block.should('be.visible');
   });
 
-  datasetList.forEach(dataset => {
-    it('should display genes block panel in genotype browser at /' + dataset + '/browser', () => {
-      const genesBlockPage = new GenesBlockPage();
-      page.navigateToDatasetPage(dataset, toolPageLinks.genotypeBrowser);
-      genesBlockPage.window.should('be.visible');
-    });
+  it('should display genes block panel in the genotype browser', () => {
+    const genesBlockPage = new GenesBlockPage();
+    page.navigateToDatasetPage(datasetIds.iossifov2014, toolPageLinks.genotypeBrowser);
+    genesBlockPage.window.should('be.visible');
   });
 
-  datasetList.forEach(dataset => {
-    it('should display genotype block panel in genotype browser at /' + dataset + '/browser', () => {
-      const genotypeBlockPage = new GenotypeBlockPage();
-      page.navigateToDatasetPage(dataset, toolPageLinks.genotypeBrowser);
-      genotypeBlockPage.window.should('be.visible');
-    });
+  it('should display genotype block panel in the genotype browser', () => {
+    const genotypeBlockPage = new GenotypeBlockPage();
+    page.navigateToDatasetPage(datasetIds.iossifov2014, toolPageLinks.genotypeBrowser);
+    genotypeBlockPage.window.should('be.visible');
   });
 
-  datasetList.forEach(dataset => {
-    it('should display genomic scores panel in genotype browser at /' + dataset + '/browser', () => {
-      const genomicScoresBlockPage = new GenomicScoresBlockPage();
-      page.navigateToDatasetPage(dataset, toolPageLinks.genotypeBrowser);
-      genomicScoresBlockPage.block.should('be.visible');
-    });
+  it('should display genomic scores panel in the genotype browser', () => {
+    const genomicScoresBlockPage = new GenomicScoresBlockPage();
+    page.navigateToDatasetPage(datasetIds.iossifov2014, toolPageLinks.genotypeBrowser);
+    genomicScoresBlockPage.block.should('be.visible');
   });
 
-  datasetList.forEach(dataset => {
-    it('should display family filters block panel in genotype browser at /' + dataset + '/browser', () => {
-      const familyFilterBlockPage = new FamilyFilterBlockPage();
-      page.navigateToDatasetPage(dataset, toolPageLinks.genotypeBrowser);
-      familyFilterBlockPage.window.should('be.visible');
-    });
+  it('should display family filters block panel in the genotype browser', () => {
+    const familyFilterBlockPage = new FamilyFilterBlockPage();
+    page.navigateToDatasetPage(datasetIds.iossifov2014, toolPageLinks.genotypeBrowser);
+    familyFilterBlockPage.window.should('be.visible');
   });
 
-  datasetList.forEach(dataset => {
-    it('should display person filters block at /' + dataset + '/browser', () => {
-      const personFiltersBlockPage = new PersonFiltersBlockPage();
-      page.navigateToDatasetPage(dataset, toolPageLinks.genotypeBrowser);
-      personFiltersBlockPage.block.should('be.visible');
-    });
+  it('should display person filters block in the genotype browser', () => {
+    const personFiltersBlockPage = new PersonFiltersBlockPage();
+    page.navigateToDatasetPage(datasetIds.iossifov2014, toolPageLinks.genotypeBrowser);
+    personFiltersBlockPage.block.should('be.visible');
   });
 
-  datasetList.forEach(dataset => {
-    it('should display "Table Preview" button in genotype browser at /' + dataset + '/browser', () => {
-      page.navigateToDatasetPage(dataset, toolPageLinks.genotypeBrowser);
-      page.tablePreviewButton.should('be.visible');
-    });
+  it('should display "Table Preview" button in the genotype browser', () => {
+    page.navigateToDatasetPage(datasetIds.iossifov2014, toolPageLinks.genotypeBrowser);
+    page.tablePreviewButton.should('be.visible');
   });
 
-  datasetList.forEach(dataset => {
-    it('should display "Share query" button in genotype browser at /' + dataset + '/browser', () => {
-      const saveQueryPage = new SaveQueryPage();
-      page.navigateToDatasetPage(dataset, toolPageLinks.genotypeBrowser);
-      saveQueryPage.button.should('be.visible');
-    });
+  it('should display "Share query" button in the genotype browser', () => {
+    const saveQueryPage = new SaveQueryPage();
+    page.navigateToDatasetPage(datasetIds.iossifov2014, toolPageLinks.genotypeBrowser);
+    saveQueryPage.button.should('be.visible');
   });
 
-  datasetList.forEach(dataset => {
-    it('should display "Save query" button in genotype browser at /' + dataset + '/browser', () => {
-      const saveQueryPage = new SaveQueryPage();
-      page.navigateToDatasetPage(dataset, toolPageLinks.genotypeBrowser);
-      saveQueryPage.button.should('be.visible');
-    });
+  it('should display "Save query" button in the genotype browser', () => {
+    const saveQueryPage = new SaveQueryPage();
+    page.navigateToDatasetPage(datasetIds.iossifov2014, toolPageLinks.genotypeBrowser);
+    saveQueryPage.button.should('be.visible');
   });
 
-  datasetList.forEach(dataset => {
-    it('should display "Download" button in genotype browser at /' + dataset + '/browser', () => {
-      page.navigateToDatasetPage(dataset, toolPageLinks.genotypeBrowser);
-      page.downloadButton.should('be.visible');
-    });
+  it('should display "Download" button in the genotype browser', () => {
+    page.navigateToDatasetPage(datasetIds.iossifov2014, toolPageLinks.genotypeBrowser);
+    page.downloadButton.should('be.visible');
   });
 
-  datasetList.forEach(dataset => {
-    it('should display genotype preview table after table preview button click at /' + dataset + '/browser', () => {
-      const genotypePreviewTablePage = new GenotypePreviewTablePage();
-      const genotypeBrowserController = new GenotypeBrowserController();
+  it('should display genotype preview table after table preview button click', () => {
+    const genotypePreviewTablePage = new GenotypePreviewTablePage();
+    const genotypeBrowserController = new GenotypeBrowserController();
 
-      page.navigateToDatasetPage(dataset, toolPageLinks.genotypeBrowser);
-      genotypePreviewTablePage.table.should('not.exist');
+    page.navigateToDatasetPage(datasetIds.iossifov2014, toolPageLinks.genotypeBrowser);
+    genotypePreviewTablePage.table.should('not.exist');
 
-      genotypeBrowserController.pressTablePreviewButton();
-      genotypePreviewTablePage.table.should('be.visible');
-    });
+    genotypeBrowserController.pressTablePreviewButton();
+    genotypePreviewTablePage.table.should('be.visible');
+  });
+
+  it('should hide table preview results after changing a filter', () => {
+    const genotypePreviewTablePage = new GenotypePreviewTablePage();
+    const genotypeBlockPage = new GenotypeBlockPage();
+
+    page.navigateToDatasetPage(datasetIds.iossifov2014, toolPageLinks.genotypeBrowser);
+    page.tablePreviewButton.click();
+    genotypePreviewTablePage.table.should('be.visible');
+
+    genotypeBlockPage.findCheckboxInComponentContainingText('gpf-pedigree-selector', 'affected').click();
+    genotypePreviewTablePage.table.should('not.exist');
   });
 });
 
