@@ -84,7 +84,7 @@ describe('Pheno browser tests', () => {
     page.tableRows.eq(2).get('gpf-table-view-cell').eq(2).should('have.text', '');
   });
 
-  it.only('should have the correct text values in all rows', () => {
+  it('should have the correct text values in all rows', () => {
     page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.phenotypeBrowser);
 
     const expectedFilePath = 'cypress/fixtures/pheno-browser/row_values.txt';

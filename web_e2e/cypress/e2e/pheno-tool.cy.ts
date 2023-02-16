@@ -379,7 +379,7 @@ describe('Pheno tool download tests', () => {
       measure: 'i1.iq'
     }
   ].forEach(data => {
-    it.only('should check downloaded report with gene set Denovo', () => {
+    it('should check downloaded report with gene set Denovo', () => {
       const genesBlockPage = new GenesBlockPage();
 
       genesBlockPage.geneSetsButton.click();
