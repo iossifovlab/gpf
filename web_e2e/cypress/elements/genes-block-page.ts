@@ -70,7 +70,7 @@ export class GenesBlockPage extends BasePage {
     return cy.get(`#${checkboxId}`);
   }
 
-  public findGenotypeButton(genotype: string): element {
-    return cy.get('button').contains(genotype);
+  public findDenovoGeneSetsAccordionButtonByText(text: string): element {
+    return cy.get('ngb-accordion').find('span').contains(text);
   }
 }

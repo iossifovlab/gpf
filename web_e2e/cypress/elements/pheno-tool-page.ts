@@ -9,11 +9,11 @@ export class PhenoToolPage extends BasePage {
     return cy.get('gpf-pheno-tool-genotype-block');
   }
 
-  public get phenoToolPresentInParent(): element {
+  public get presentInParent(): element {
     return cy.get('gpf-present-in-parent');
   }
 
-  public get phenoToolEffectTypes(): element {
+  public get effectTypes(): element {
     return cy.get('gpf-pheno-tool-effect-types');
   }
 

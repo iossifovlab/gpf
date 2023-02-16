@@ -36,4 +36,20 @@ export class FamilyFilterBlockPage extends BasePage {
   public get searchbox(): element {
     return cy.get('gpf-family-filters-block input#search-box');
   }
+
+  public get dropdownMenu(): element {
+    return this.window.find('.dropdown-menu');
+  }
+
+  public getDropdownMenuOptionByText(text: string): element {
+    return this.dropdownMenu.find('span').contains(text);
+  }
+
+  public get fromInputField(): element {
+    return cy.get('#from-input-field');
+  }
+
+  public get toInputField(): element {
+    return cy.get('#to-input-field');
+  }
 }

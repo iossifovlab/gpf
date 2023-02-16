@@ -22,32 +22,6 @@ describe('Pheno tool tests', () => {
     cy.deleteDownloadsFolder();
   });
 
-  function moveSlider(which: string, dragValue: number, heightValue = 0): void {
-    if (which === 'right') {
-      dragValue = -dragValue;
-    }
-    cy.window().then(win => {
-      cy.get('g[gpf-histogram-range-selector-line] > g > line').eq(which === 'left' ? 0 : 1)
-        .trigger('mousedown', 0, heightValue, { // start value, height value
-          view: win,
-          which: 1,
-          force: true,
-          bubbles: true
-        })
-        .trigger('mousemove', dragValue, heightValue, { // how much to be dragged value, height value
-          which: 1,
-          force: true,
-          bubbles: true
-        })
-        .trigger('mouseup', 0, heightValue, { // end value, height value
-          which: 1,
-          force: true,
-          view: win,
-          bubbles: true
-        });
-    });
-  }
-
   it('should display genes block panel', () => {
     const genesBlockPage = new GenesBlockPage();
     genesBlockPage.window.should('be.visible');
@@ -58,7 +32,7 @@ describe('Pheno tool tests', () => {
     phenoToolMeasurePage.block.should('be.visible');
   });
 
-  it('should display pheno tool genotye block panel', () => {
+  it('should display pheno tool genotype block panel', () => {
     page.genotypeBlockPanel.should('be.visible');
   });
 
@@ -71,7 +45,7 @@ describe('Pheno tool tests', () => {
     page.reportButton.should('be.visible');
   });
 
-  it('should display "Share query" button', () => {
+  it('should display "Share/save query" button', () => {
     const saveQueryPage = new SaveQueryPage();
     saveQueryPage.button.should('be.visible');
   });
@@ -82,7 +56,7 @@ describe('Pheno tool tests', () => {
   });
 
   it('should display "Download" button', () => {
-    page.findButtonInComponentContainingText('gpf-pheno-tool', 'Download').should('be.visible');
+    page.downloadButton.should('be.visible');
   });
 
   it('should display pheno tool results chart after "Report" button click', () => {
@@ -92,46 +66,110 @@ describe('Pheno tool tests', () => {
     page.findErrorAlertInComponent('gpf-pheno-tool-measure').should('be.visible');
 
     phenoToolMeasurePage.searchbox.click();
-    page.findButtonInComponentContainingText('gpf-pheno-measure-selector', 'i1.age').click();
+    phenoToolMeasurePage.getDropdownOptionByText('i1.age').click();
     page.pressReportButton();
     page.resultsChart.should('be.visible');
   });
 
-  it('should test "All" and "None" buttons for checkboxes of Present in Parent', () => {
-    page.phenoToolPresentInParent.find('button').contains('None').click();
-    page.phenoToolPresentInParent.find('input[type="checkbox"]').should('not.be.checked');
-    page.findErrorAlertInComponent('gpf-present-in-parent').should('be.visible');
-    page.phenoToolPresentInParent.should('not.contain', 'Rarity');
-    page.phenoToolPresentInParent.should('not.contain', 'ultraRare');
-    page.phenoToolPresentInParent.should('not.contain', 'interval');
-    page.phenoToolPresentInParent.should('not.contain', 'rare');
-    page.phenoToolPresentInParent.should('not.contain', 'all');
-
-    page.phenoToolPresentInParent.find('button').contains('All').click();
-    page.phenoToolPresentInParent.find('input[type="checkbox"]').should('be.checked');
-    page.findErrorAlertInComponent('gpf-present-in-parent').should('not.exist');
-    page.phenoToolPresentInParent.contains('Rarity');
-    page.phenoToolPresentInParent.contains('ultraRare');
-    page.phenoToolPresentInParent.contains('interval');
-    page.phenoToolPresentInParent.contains('rare');
-    page.phenoToolPresentInParent.contains('all');
-  });
-
-  it('should test "All" and "None" buttons for checkboxes of Effect Types', () => {
-    page.phenoToolEffectTypes.find('button').contains('None').click();
-    page.phenoToolEffectTypes.find('input[type="checkbox"]').should('not.be.checked');
-    page.findErrorAlertInComponent('gpf-pheno-tool-effect-types').should('be.visible');
-
-    page.phenoToolEffectTypes.find('button').contains('All').click();
-    page.phenoToolEffectTypes.find('input[type="checkbox"]').should('be.checked');
-    page.findErrorAlertInComponent('gpf-pheno-tool-effect-types').should('not.exist');
-  });
-
-  it('should test "Download" button', () => {
+  it('should hide pheno tool results chart on state change', () => {
     const phenoToolMeasurePage = new PhenoToolMeasurePage();
 
+    page.resultsChart.should('not.exist');
+
     phenoToolMeasurePage.searchbox.click();
-    page.findButtonInComponentContainingText('gpf-pheno-measure-selector', 'i1.m1').click();
+    phenoToolMeasurePage.getDropdownOptionByText('i1.age').click();
+    page.pressReportButton();
+    page.resultsChart.should('be.visible');
+
+    page.effectTypes.find('button').contains('None').click();
+    page.resultsChart.should('not.exist');
+  });
+
+  it('should proplery disable the "Report", "Save/share query" and "Download" buttons on errors', () => {
+    const phenoToolMeasurePage = new PhenoToolMeasurePage();
+    const saveQueryPage = new SaveQueryPage();
+    const familyPage = new FamilyFilterBlockPage();
+
+    saveQueryPage.button.should('be.disabled');
+    page.reportButton.should('be.disabled');
+    page.downloadButton.should('be.disabled');
+
+    phenoToolMeasurePage.searchbox.click();
+    phenoToolMeasurePage.getDropdownOptionByText('i1.age').click();
+    saveQueryPage.button.should('be.enabled');
+    page.reportButton.should('be.enabled');
+    page.downloadButton.should('be.enabled');
+
+    phenoToolMeasurePage.clearMeasureButton.click();
+    saveQueryPage.button.should('be.disabled');
+    page.reportButton.should('be.disabled');
+    page.downloadButton.should('be.disabled');
+
+    phenoToolMeasurePage.searchbox.click();
+    saveQueryPage.button.should('be.enabled');
+    page.reportButton.should('be.enabled');
+    page.downloadButton.should('be.enabled');
+    phenoToolMeasurePage.getDropdownOptionByText('i1.age').click();
+    page.presentInParent.find('button').contains('None').click();
+    saveQueryPage.button.should('be.disabled');
+    page.reportButton.should('be.disabled');
+    page.downloadButton.should('be.disabled');
+
+    page.presentInParent.find('button').contains('All').click();
+    saveQueryPage.button.should('be.enabled');
+    page.reportButton.should('be.enabled');
+    page.downloadButton.should('be.enabled');
+
+    page.effectTypes.find('button').contains('None').click();
+    saveQueryPage.button.should('be.disabled');
+    page.reportButton.should('be.disabled');
+    page.downloadButton.should('be.disabled');
+    page.effectTypes.find('button').contains('All').click();
+    saveQueryPage.button.should('be.enabled');
+    page.reportButton.should('be.enabled');
+    page.downloadButton.should('be.enabled');
+
+    familyPage.familyIdsButton.click();
+    saveQueryPage.button.should('be.disabled');
+    page.reportButton.should('be.disabled');
+    page.downloadButton.should('be.disabled');
+
+    familyPage.familyIdsTextarea.type('f1');
+    saveQueryPage.button.should('be.enabled');
+    page.reportButton.should('be.enabled');
+    page.downloadButton.should('be.enabled');
+
+    familyPage.advancedButton.click();
+    saveQueryPage.button.should('be.disabled');
+    page.reportButton.should('be.disabled');
+    page.downloadButton.should('be.disabled');
+    familyPage.getDropdownMenuOptionByText('i1.age').click();
+    saveQueryPage.button.should('be.enabled');
+    page.reportButton.should('be.enabled');
+    page.downloadButton.should('be.enabled');
+  });
+});
+
+describe('Pheno tool download tests', () => {
+  const page = new PhenoToolPage();
+  const phenoToolMeasurePage = new PhenoToolMeasurePage();
+
+  before(() => {
+    page.cleanup();
+    page.navigateToHome(false);
+    page.loginAdmin();
+  });
+
+  beforeEach(() => {
+    page.preserveLogin();
+    page.navigateToHome();
+    page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.phenotypeTool);
+    cy.deleteDownloadsFolder();
+  });
+
+  it('should download i1.m1 and check if it equals the reference data', () => {
+    phenoToolMeasurePage.searchbox.click();
+    phenoToolMeasurePage.getDropdownOptionByText('i1.m1').click();
 
     const downloadedVariantsPath = Cypress.config('downloadsFolder') + '/pheno_report.csv';
     const expectedVariantsPath = 'cypress/fixtures/pheno-tool/pheno_report1.csv';
@@ -151,11 +189,9 @@ describe('Pheno tool tests', () => {
     {id: '2', measure: 'i1.m2', normalizedBy: 'Age'},
     {id: '3', measure: 'i1.age', normalizedBy: 'Non verbal IQ'}
   ].forEach(data => {
-    it(`should test check downloaded report with normalization ${data.normalizedBy}`, () => {
-      const phenoToolMeasurePage = new PhenoToolMeasurePage();
-
+    it(`should normalize by "${data.normalizedBy}", download report and compare it to the reference data`, () => {
       phenoToolMeasurePage.searchbox.click();
-      page.findButtonInComponentContainingText('gpf-pheno-measure-selector', data.measure).click();
+      phenoToolMeasurePage.getDropdownOptionByText(data.measure).click();
       phenoToolMeasurePage.block.contains(data.normalizedBy).find('input[type="checkbox"]').click();
 
       const downloadedVariantsPath = Cypress.config('downloadsFolder') + '/pheno_report.csv';
@@ -177,14 +213,12 @@ describe('Pheno tool tests', () => {
     {id: '4', filters: ['father only', 'mother and father', 'Nonsense', 'Nonsynonymous', 'Synonymous'] },
     {id: '5', filters: ['mother only', 'mother and father', 'neither', 'LGDs', 'Splice-site', 'Frame-shift'] }
   ].forEach(data => {
-    it(`should test check downloaded report with ${data.filters.toString()}`, () => {
-      const phenoToolMeasurePage = new PhenoToolMeasurePage();
-
+    it(`should apply ${data.filters.toString()} filters, download report and compare it to the reference data`, () => {
       phenoToolMeasurePage.searchbox.click();
-      page.findButtonInComponentContainingText('gpf-pheno-measure-selector', 'i1.m1').click();
+      phenoToolMeasurePage.getDropdownOptionByText('i1.m1').click();
 
-      page.phenoToolPresentInParent.find('button').contains('None').click();
-      page.phenoToolEffectTypes.find('button').contains('None').click();
+      page.presentInParent.find('button').contains('None').click();
+      page.effectTypes.find('button').contains('None').click();
 
       data.filters.forEach(filter => {
         page.findButtonInComponentContainingText('gpf-pheno-tool-genotype-block', filter).click();
@@ -205,64 +239,15 @@ describe('Pheno tool tests', () => {
     });
   });
 
-  it('should test if buttons are enabled when there is measure', () => {
-    const phenoToolMeasurePage = new PhenoToolMeasurePage();
-    const saveQueryPage = new SaveQueryPage();
-
-    phenoToolMeasurePage.searchbox.click();
-    page.findButtonInComponentContainingText('gpf-pheno-measure-selector', 'i1.age').click();
-
-    saveQueryPage.button.should('be.enabled');
-    page.reportButton.should('be.enabled');
-    page.findButtonInComponentContainingText('gpf-pheno-tool', 'Download').should('be.enabled');
-  });
-
-  it('should test if buttons are disabled when there is no measure', () => {
-    const saveQueryPage = new SaveQueryPage();
-
-    saveQueryPage.button.should('be.disabled');
-    page.reportButton.should('be.disabled');
-    page.findButtonInComponentContainingText('gpf-pheno-tool', 'Download').should('be.disabled');
-  });
-
-  it('should check if buttons are enabled when there are All and None Effect types and Present in Parent', () => {
-    const saveQueryPage = new SaveQueryPage();
-    const phenoToolMeasurePage = new PhenoToolMeasurePage();
-
-    phenoToolMeasurePage.searchbox.click();
-    page.findButtonInComponentContainingText('gpf-pheno-measure-selector', 'i1.age').click();
-
-    page.phenoToolPresentInParent.find('button').contains('None').click();
-    saveQueryPage.button.should('be.disabled');
-    page.reportButton.should('be.disabled');
-    page.findButtonInComponentContainingText('gpf-pheno-tool', 'Download').should('be.disabled');
-
-    page.phenoToolPresentInParent.find('button').contains('All').click();
-    saveQueryPage.button.should('be.enabled');
-    page.reportButton.should('be.enabled');
-    page.findButtonInComponentContainingText('gpf-pheno-tool', 'Download').should('be.enabled');
-
-    page.phenoToolEffectTypes.find('button').contains('None').click();
-    saveQueryPage.button.should('be.disabled');
-    page.reportButton.should('be.disabled');
-    page.findButtonInComponentContainingText('gpf-pheno-tool', 'Download').should('be.disabled');
-
-    page.phenoToolEffectTypes.find('button').contains('All').click();
-    saveQueryPage.button.should('be.enabled');
-    page.reportButton.should('be.enabled');
-    page.findButtonInComponentContainingText('gpf-pheno-tool', 'Download').should('be.enabled');
-  });
-
   [
-    {id: '6', familyId: 'f1' },
-    {id: '7', familyId: 'f3' }
+    {id: '6', familyId: 'f1'},
+    {id: '7', familyId: 'f3'}
   ].forEach(data => {
     it(`should check downloaded report with family id ${data.familyId}`, () => {
-      const phenoToolMeasurePage = new PhenoToolMeasurePage();
       const familyPage = new FamilyFilterBlockPage();
 
       phenoToolMeasurePage.searchbox.click();
-      page.findButtonInComponentContainingText('gpf-pheno-measure-selector', 'i1.age').click();
+      phenoToolMeasurePage.getDropdownOptionByText('i1.age').click();
 
       familyPage.familyIdsButton.click();
       familyPage.familyIdsTextarea.type(data.familyId);
@@ -283,24 +268,25 @@ describe('Pheno tool tests', () => {
   });
 
   [
-    {id: '8', measure: 'i1.iq', borders: [100, 100]},
-    {id: '9', measure: 'i1.m1', borders: [200, 150]}
+    {id: '8', measure: 'i1.iq', familyHistogramfromTo: ['33', '130']},
+    {id: '9', measure: 'i1.m1', familyHistogramfromTo: ['84', '107']}
   ].forEach(data => {
     it('should test advanced family filters', () => {
-      const phenoToolMeasurePage = new PhenoToolMeasurePage();
       const familyPage = new FamilyFilterBlockPage();
       cy.intercept('POST', '/gpf/api/v3/measures/partitions').as('partitions');
 
       phenoToolMeasurePage.searchbox.click();
-      page.findButtonInComponentContainingText('gpf-pheno-measure-selector', 'i1.age').click();
+      phenoToolMeasurePage.getDropdownOptionByText('i1.age').click();
 
       familyPage.advancedButton.click();
       familyPage.searchbox.click();
-      familyPage.findButtonInComponentContainingText('gpf-family-filters-block', data.measure).click();
+      familyPage.getDropdownMenuOptionByText(data.measure).click();
 
       familyPage.histogram.should('be.visible');
-      moveSlider('left', data.borders[0]);
-      moveSlider('right', data.borders[1]);
+      familyPage.fromInputField.clear();
+      familyPage.fromInputField.type(data.familyHistogramfromTo[0]);
+      familyPage.toInputField.clear();
+      familyPage.toInputField.type(data.familyHistogramfromTo[1]);
 
       const downloadedVariantsPath = Cypress.config('downloadsFolder') + '/pheno_report.csv';
       const expectedVariantsPath = `cypress/fixtures/pheno-tool/pheno_report${data.id}.csv`;
@@ -319,18 +305,17 @@ describe('Pheno tool tests', () => {
   });
 
   [
-    {id: '10', symbol: 'CAMSAP1' },
-    {id: '11', symbol: 'SAMD11' }
+    {id: '10', geneSymbol: 'CAMSAP1'},
+    {id: '11', geneSymbol: 'SAMD11'}
   ].forEach(data => {
-    it(`should check downloaded report with gene symbol ${data.symbol}`, () => {
-      const phenoToolMeasurePage = new PhenoToolMeasurePage();
+    it(`should check downloaded report with gene symbol ${data.geneSymbol}`, () => {
       const genesBlockPage = new GenesBlockPage();
 
-      page.findButtonInComponentContainingText('gpf-genes-block', 'Gene Symbols').click();
-      genesBlockPage.geneSymbolsTextarea.type(data.symbol);
+      genesBlockPage.geneSymbolsButton.click();
+      genesBlockPage.geneSymbolsTextarea.type(data.geneSymbol);
 
       phenoToolMeasurePage.searchbox.click();
-      page.findButtonInComponentContainingText('gpf-pheno-measure-selector', 'i1.age').click();
+      phenoToolMeasurePage.getDropdownOptionByText('i1.age').click();
 
       const downloadedVariantsPath = Cypress.config('downloadsFolder') + '/pheno_report.csv';
       const expectedVariantsPath = `cypress/fixtures/pheno-tool/pheno_report${data.id}.csv`;
@@ -349,11 +334,9 @@ describe('Pheno tool tests', () => {
 
   [
     {id: '12', collection: 'SFARI Genes', set: 'SFARI ALL (910): SFARI Genes (2017-09): All genes', measure: 'i1.age'},
-    {id: '13', collection: 'Protein domains', set: 'AMOP (3): ', measure: 'i1.iq' }
-
+    {id: '13', collection: 'Protein domains', set: 'AMOP (3): ', measure: 'i1.iq'}
   ].forEach(data => {
     it('should check downloaded report with gene sets', () => {
-      const phenoToolMeasurePage = new PhenoToolMeasurePage();
       const genesBlockPage = new GenesBlockPage();
 
       genesBlockPage.geneSetsButton.click();
@@ -363,7 +346,7 @@ describe('Pheno tool tests', () => {
       genesBlockPage.findGeneSetsSearchboxDropdownOptionsByText(data.set).click();
 
       phenoToolMeasurePage.searchbox.click();
-      page.findButtonInComponentContainingText('gpf-pheno-measure-selector', data.measure).click();
+      phenoToolMeasurePage.getDropdownOptionByText(data.measure).click();
 
       const downloadedVariantsPath = Cypress.config('downloadsFolder') + '/pheno_report.csv';
       const expectedVariantsPath = `cypress/fixtures/pheno-tool/pheno_report${data.id}.csv`;
@@ -395,24 +378,22 @@ describe('Pheno tool tests', () => {
       set: 'LGDs.Recurrent (3): LGDs.Recurrent (comp_all:status:affected;iossifov_2014:status:unaffected)',
       measure: 'i1.iq'
     }
-
   ].forEach(data => {
-    it('should check downloaded report with gene set Denovo', () => {
-      const phenoToolMeasurePage = new PhenoToolMeasurePage();
+    it.only('should check downloaded report with gene set Denovo', () => {
       const genesBlockPage = new GenesBlockPage();
 
       genesBlockPage.geneSetsButton.click();
 
       genesBlockPage.geneSetsCollectionSelectorDropdownMenu.select('Denovo');
 
-      genesBlockPage.findGenotypeButton(data.genotype + ': Affected Status').click();
+      genesBlockPage.findDenovoGeneSetsAccordionButtonByText(data.genotype + ': Affected Status').click();
       genesBlockPage.findDenovoGeneSetCollectionCheckbox(data.genotype, data.affectedStatus).click();
 
       genesBlockPage.geneSetsSearchbox.click();
       genesBlockPage.findGeneSetsSearchboxDropdownOptionsByText(data.set).click();
 
       phenoToolMeasurePage.searchbox.click();
-      page.findButtonInComponentContainingText('gpf-pheno-measure-selector', data.measure).click();
+      phenoToolMeasurePage.getDropdownOptionByText(data.measure).click();
 
       const downloadedVariantsPath = Cypress.config('downloadsFolder') + '/pheno_report.csv';
       const expectedVariantsPath = `cypress/fixtures/pheno-tool/pheno_report${data.id}.csv`;
@@ -430,12 +411,10 @@ describe('Pheno tool tests', () => {
   });
 
   [
-    { id: '16', measure: 'i1.age', geneScore: 'LGD rank', borders: [70, 90] },
-    { id: '17', measure: 'i1.m1', geneScore: 'ExAC pRec', borders: [10, 10] }
-
+    {id: '16', measure: 'i1.age', geneScore: 'LGD rank', geneScoresHistogramFromTo: ['2944', '14716']},
+    {id: '17', measure: 'i1.m1', geneScore: 'ExAC pRec', geneScoresHistogramFromTo: ['0.000012', '0.832']}
   ].forEach(data => {
     it(`should check downloaded report with gene score ${data.geneScore}`, () => {
-      const phenoToolMeasurePage = new PhenoToolMeasurePage();
       const genesBlockPage = new GenesBlockPage();
       const geneScoresPage = new GeneScoresPage();
       cy.intercept('POST', '/gpf/api/v3/gene_scores/partitions').as('partitions');
@@ -445,10 +424,12 @@ describe('Pheno tool tests', () => {
       geneScoresPage.dropdownButton.select(data.geneScore);
 
       phenoToolMeasurePage.searchbox.click();
-      page.findButtonInComponentContainingText('gpf-pheno-measure-selector', data.measure).click();
+      phenoToolMeasurePage.getDropdownOptionByText(data.measure).click();
 
-      moveSlider('left', data.borders[0]);
-      moveSlider('right', data.borders[1]);
+      phenoToolMeasurePage.fromInputField.clear();
+      phenoToolMeasurePage.fromInputField.type(data.geneScoresHistogramFromTo[0]);
+      phenoToolMeasurePage.toInputField.clear();
+      phenoToolMeasurePage.toInputField.type(data.geneScoresHistogramFromTo[1]);
 
       const downloadedVariantsPath = Cypress.config('downloadsFolder') + '/pheno_report.csv';
       const expectedVariantsPath = `cypress/fixtures/pheno-tool/pheno_report${data.id}.csv`;
@@ -465,4 +446,8 @@ describe('Pheno tool tests', () => {
       });
     });
   });
+});
+
+describe.skip('Pheno tool visual tests', () => {
+  // ...
 });

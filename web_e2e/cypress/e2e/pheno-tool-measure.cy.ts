@@ -16,30 +16,40 @@ describe('Pheno tool measure tests', () => {
     page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.phenotypeTool);
   });
 
-  it('should display error alert when measure searchbox is empty', () => {
+  it('should check whether when the measure is empty, an error message appears' +
+     'and the normalization checkboxes get disabled', () => {
     page.findErrorAlertInComponent('gpf-pheno-tool-measure').should('be.visible');
+    page.ageCheckbox.should('be.disabled');
+    page.iqCheckbox.should('be.disabled');
 
     page.searchbox.click();
-    page.findButtonInComponentContainingText('gpf-pheno-measure-selector', 'i1.age').click();
+    page.getDropdownOptionByText('i1.m1').click();
     page.findErrorAlertInComponent('gpf-pheno-tool-measure').should('not.exist');
+    page.ageCheckbox.should('not.be.disabled');
+    page.iqCheckbox.should('not.be.disabled');
+
+    page.clearMeasureButton.click();
+    page.findErrorAlertInComponent('gpf-pheno-tool-measure').should('be.visible');
+    page.ageCheckbox.should('be.disabled');
+    page.iqCheckbox.should('be.disabled');
   });
 
-  it('should check if Age checkbox is disabled', () => {
+  it('should check if the normalization checkboxes get disabled when' +
+     'the measure is the same as the normalization criteria', () => {
     page.searchbox.click();
-    page.findButtonInComponentContainingText('gpf-pheno-measure-selector', 'i1.age').click();
-    page.block.contains('Age').find('input[type="checkbox"]').should('be.disabled');
-  });
+    page.getDropdownOptionByText('i1.age').click();
+    page.ageCheckbox.should('be.disabled');
 
-  it('should check if Non verbal IQ checkbox is disabled', () => {
+    page.clearMeasureButton.click();
     page.searchbox.click();
-    page.findButtonInComponentContainingText('gpf-pheno-measure-selector', 'i1.iq').click();
-    page.block.contains('Non verbal IQ').find('input[type="checkbox"]').should('be.disabled');
+    page.getDropdownOptionByText('i1.iq').click();
+    page.iqCheckbox.should('be.disabled');
   });
 
   it('should check if the dropdown menu closes when clicking the remove button', () => {
     page.searchbox.click();
     page.dropdown.should('be.visible');
-    page.findButtonInComponentContainingText('gpf-pheno-measure-selector', '×').click();
+    page.clearMeasureButton.click();
     page.dropdown.should('not.exist');
   });
 
@@ -53,8 +63,8 @@ describe('Pheno tool measure tests', () => {
   it('should check the remove button with selected measure', () => {
     page.searchbox.click();
     page.dropdown.should('be.visible');
-    page.findButtonInComponentContainingText('gpf-pheno-measure-selector', 'i1.iq').click();
-    page.findButtonInComponentContainingText('gpf-pheno-measure-selector', '×').click();
+    page.getDropdownOptionByText('i1.iq').click();
+    page.clearMeasureButton.click();
     page.searchbox.should('be.empty');
     page.dropdown.should('not.exist');
   });
@@ -68,7 +78,7 @@ describe('Pheno tool measure tests', () => {
       page.searchbox.click();
       page.searchbox.type(data.searchText);
       data.options.forEach(measure => {
-        page.findButtonInComponentContainingText('gpf-pheno-measure-selector', measure).should('exist');
+        page.getDropdownOptionByText(measure).should('exist');
       });
     });
   });
