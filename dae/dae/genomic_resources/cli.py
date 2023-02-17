@@ -114,7 +114,7 @@ def _configure_list_subparser(subparsers):
 def _run_list_command(
         proto: Union[ReadOnlyRepositoryProtocol, GenomicResourceRepo], _args):
     for res in proto.get_all_resources():
-        res_size = sum([fs for _, fs in res.get_manifest().get_files()])
+        res_size = sum(fs for _, fs in res.get_manifest().get_files())
         print(
             f"{res.get_type():20} {res.get_version_str():7s} "
             f"{len(list(res.get_manifest().get_files())):2d} {res_size:12d} "
@@ -377,7 +377,7 @@ def _run_resource_manifest_command(proto, repo_url, **kwargs):
     res = _find_resource(proto, repo_url, **kwargs)
     if res is None:
         logger.error("resource not found...")
-        return
+        return False
     return _do_resource_manifest_command(proto, res, dry_run, force, use_dvc)
 
 
