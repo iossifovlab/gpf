@@ -107,3 +107,72 @@ describe('Gene browser basic display tests after query', () => {
     page.downloadButton.should('be.visible');
   });
 });
+
+describe('Gene browser download tests', () => {
+  const page = new GeneBrowserPage();
+
+  before(() => {
+    page.cleanup();
+    page.navigateToHome(false);
+    page.loginAdmin();
+  });
+
+  beforeEach(() => {
+    page.navigateToDatasetPage(datasetIds.iossifov2014, toolPageLinks.geneBrowser);
+    cy.deleteDownloadsFolder();
+  });
+
+  [
+    {
+      gene: 'chd8',
+      filtersToUncheck: ['Other', 'ins'],
+      expectedPaths: [
+        'summary_variants1.tsv',
+        'variants1.tsv'
+      ]
+    },
+    {
+      gene: 'chd8',
+      filtersToUncheck: ['Affected only'],
+      expectedPaths: [
+        'summary_variants2.tsv',
+        'variants2.tsv'
+      ]
+    },
+    {
+      gene: 'pogz',
+      filtersToUncheck: ['missense', 'synonymous'],
+      expectedPaths: [
+        'summary_variants3.tsv',
+        'variants3.tsv'
+      ]
+    }
+  ].forEach(data => {
+    it('should go to ' + data.gene + ' gene page, filter out ' + data.filtersToUncheck.toString() +
+       'download summary and family variants and compare the files to the reference data', () => {
+      page.searchInputBox.type(data.gene);
+      page.pressGoButton();
+
+      data.filtersToUncheck.forEach(filter => {
+        page.getAffectedStatusCheckbox(filter).click();
+      });
+
+      page.downloadSummaryButton.click();
+      page.downloadButton.click();
+
+      const paths = ['/summary_variants.tsv', '/variants.tsv'];
+      paths.forEach((path, i) => {
+        const downloadedSummaryVariantsPath = Cypress.config('downloadsFolder') + path;
+        const expectedVariantsPath = 'cypress/fixtures/gene-browser/' + data.expectedPaths[i];
+
+        cy.readFile(downloadedSummaryVariantsPath, { timeout: 5000 }).then((downloadedFile: string) => {
+          cy.readFile(expectedVariantsPath, { timeout: 5000 }).then((expectedFile: string) => {
+            const downloadedFileLines = downloadedFile.split(/\r\n|\r|\n/);
+            const expectedFileLines = expectedFile.split(/\r\n|\r|\n/);
+            expect(downloadedFileLines).to.deep.eq(expectedFileLines);
+          });
+        });
+      });
+    });
+  });
+});

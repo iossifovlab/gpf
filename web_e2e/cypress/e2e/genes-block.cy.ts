@@ -55,10 +55,10 @@ describe('Genes block tests', () => {
 
   it('should display gene weights panel', () => {
     page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
-    page.genesWeightsPanel.should('not.exist');
+    page.geneScoresPanel.should('not.exist');
 
     page.geneScoresButton.click();
-    page.genesWeightsPanel.should('be.visible');
+    page.geneScoresPanel.should('be.visible');
   });
 });
 
