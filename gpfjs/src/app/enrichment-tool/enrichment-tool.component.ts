@@ -1,7 +1,7 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 
-import { Observable } from 'rxjs';
+import { Observable, Subscription } from 'rxjs';
 
 import { EnrichmentResults } from '../enrichment-query/enrichment-result';
 import { EnrichmentQueryService } from '../enrichment-query/enrichment-query.service';
@@ -26,6 +26,7 @@ export class EnrichmentToolComponent implements OnInit, OnDestroy {
   @Select(EnrichmentToolComponent.enrichmentToolStateSelector) public state$: Observable<object[]>;
   @Select(ErrorsState) public errorsState$: Observable<ErrorsModel>;
   private enrichmentToolState = {};
+  private enrichmentQuerySubscription: Subscription = null;
 
   public constructor(
     private enrichmentQueryService: EnrichmentQueryService,
@@ -42,6 +43,15 @@ export class EnrichmentToolComponent implements OnInit, OnDestroy {
         ...state
       };
       this.enrichmentResults = null;
+    });
+
+    this.loadingService.interruptEvent.subscribe(_ => {
+      if (this.enrichmentQuerySubscription !== null) {
+        this.enrichmentQuerySubscription.unsubscribe();
+        this.enrichmentResults = null;
+        this.enrichmentQuerySubscription = null;
+        this.loadingService.setLoadingStop();
+      }
     });
 
     this.errorsState$.subscribe(state => {
@@ -63,17 +73,20 @@ export class EnrichmentToolComponent implements OnInit, OnDestroy {
   }
 
   public submitQuery(): void {
+    this.enrichmentResults = null;
     this.loadingService.setLoadingStart();
-    this.enrichmentQueryService.getEnrichmentTest(this.enrichmentToolState).subscribe(
-      (enrichmentResults) => {
-        this.enrichmentResults = enrichmentResults;
-        this.loadingService.setLoadingStop();
-      },
-      () => {
-        this.loadingService.setLoadingStop();
-      },
-      () => {
-        this.loadingService.setLoadingStop();
-      });
+    this.enrichmentQuerySubscription =
+      this.enrichmentQueryService.getEnrichmentTest(this.enrichmentToolState).subscribe(
+        (enrichmentResults) => {
+          this.enrichmentResults = enrichmentResults;
+          this.loadingService.setLoadingStop();
+        },
+        () => {
+          this.loadingService.setLoadingStop();
+        },
+        () => {
+          this.loadingService.setLoadingStop();
+        }
+      );
   }
 }

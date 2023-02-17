@@ -5,7 +5,7 @@ import { FullscreenLoadingService } from '../fullscreen-loading/fullscreen-loadi
 import { PhenoToolService } from './pheno-tool.service';
 import { PhenoToolResults } from './pheno-tool-results';
 import { ConfigService } from '../config/config.service';
-import { Observable } from 'rxjs';
+import { Observable, Subscription } from 'rxjs';
 import { take } from 'rxjs/operators';
 import { GenesBlockComponent } from 'app/genes-block/genes-block.component';
 import { PhenoToolGenotypeBlockComponent } from 'app/pheno-tool-genotype-block/pheno-tool-genotype-block.component';
@@ -31,6 +31,8 @@ export class PhenoToolComponent implements OnInit, OnDestroy {
 
   public disableQueryButtons = false;
   public downloadInProgress = false;
+
+  private phenoToolSubscription: Subscription = null;
 
   public constructor(
     private datasetsService: DatasetsService,
@@ -64,6 +66,15 @@ export class PhenoToolComponent implements OnInit, OnDestroy {
       this.phenoToolResults = null;
     });
 
+    this.loadingService.interruptEvent.subscribe(_ => {
+      if (this.phenoToolSubscription !== null) {
+        this.phenoToolSubscription.unsubscribe();
+        this.phenoToolSubscription = null;
+      }
+      this.loadingService.setLoadingStop();
+      this.phenoToolResults = null;
+    });
+
     this.errorsState$.subscribe(state => {
       setTimeout(() => {
         this.disableQueryButtons = state.componentErrors.size > 0;
@@ -76,8 +87,9 @@ export class PhenoToolComponent implements OnInit, OnDestroy {
   }
 
   public submitQuery(): void {
+    this.phenoToolResults = null;
     this.loadingService.setLoadingStart();
-    this.phenoToolService.getPhenoToolResults(
+    this.phenoToolSubscription = this.phenoToolService.getPhenoToolResults(
       {datasetId: this.selectedDataset.id, ...this.phenoToolState}
     ).subscribe((phenoToolResults) => {
       this.phenoToolResults = phenoToolResults;

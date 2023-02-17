@@ -41,11 +41,15 @@ export class QueryService {
     private authService: AuthService
   ) { }
 
-  public streamPost(url: string, filter) {
+  public cancelStreamPost(): void {
     if (this.oboeInstance) {
       this.oboeInstance.abort();
       this.oboeInstance = null;
     }
+  }
+
+  public streamPost(url: string, filter) {
+    this.cancelStreamPost();
 
     const headers = { 'Content-Type': 'application/json' };
     if (this.authService.getAccessToken() !== '') {
@@ -72,6 +76,13 @@ export class QueryService {
     });
 
     return this.streamingSubject;
+  }
+
+  public cancelSummaryStreamPost(): void {
+    if (this.summaryOboeInstance) {
+      this.summaryOboeInstance.abort();
+      this.summaryOboeInstance = null;
+    }
   }
 
   public summaryStreamPost(url: string, filter): Subject<unknown> {

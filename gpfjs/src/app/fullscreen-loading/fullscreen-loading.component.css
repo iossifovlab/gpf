@@ -20,6 +20,17 @@ img {
   margin: auto;
 }
 
+.close-button {
+  font-size: 20px;
+  position: fixed;
+  left: 50%;
+  cursor: pointer;
+  transform: translateX(-60%);
+  bottom: 44%;
+  opacity: 50%;
+  z-index: 9999;
+}
+
 .dna {
   z-index: 1050;
   position: fixed;

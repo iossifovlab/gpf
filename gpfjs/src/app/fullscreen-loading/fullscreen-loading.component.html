@@ -1,4 +1,7 @@
 <div *ngIf="showLoading" class="overlay"></div>
+<button *ngIf="showLoading" (click)="cancelLoading()" type="button" class="btn btn-md btn-primary close-button"
+  >Cancel request</button
+>
 <div *ngIf="showLoading">
   <div class="dna">
     <div class="ele">

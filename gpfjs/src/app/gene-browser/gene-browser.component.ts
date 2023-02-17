@@ -113,6 +113,13 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
           });
       })
     );
+
+    this.loadingService.interruptEvent.subscribe(_ => {
+      this.queryService.cancelStreamPost();
+      this.queryService.cancelSummaryStreamPost();
+      this.loadingService.setLoadingStop();
+    });
+
     if (this.selectedDataset.studies?.length > 1) {
       this.isUniqueFamilyFitlerVisible = true;
     }
