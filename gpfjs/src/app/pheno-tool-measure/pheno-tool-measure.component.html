@@ -12,7 +12,7 @@
 
       <gpf-errors-alert [errors]="errors"></gpf-errors-alert>
     </div>
-    <div *ngIf="regressionNames.length" class="col-lg-6">
+    <div *ngIf="regressionNames.length" class="col-lg-6" id="normalize-checkboxes-container">
       <span>Normalized by:</span>
       <div *ngFor="let regressionName of regressionNames">
         <label style="padding-bottom: 2px; padding-top: 2px">
