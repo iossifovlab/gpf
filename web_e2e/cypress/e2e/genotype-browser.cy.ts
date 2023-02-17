@@ -122,7 +122,7 @@ describe('Genotype browser table preview result tests', () => {
   });
 
   [
-    {study: datasetIds.compAll, expectedOverviewParagraph: '35 variants selected'},
+    {study: datasetIds.compAll, expectedOverviewParagraph: '30 variants selected'},
     {study: datasetIds.compDenovo, expectedOverviewParagraph: '5 variants selected'},
     {study: datasetIds.compVcf, expectedOverviewParagraph: '30 variants selected'},
     {study: datasetIds.iossifov2014, expectedOverviewParagraph: '0 variants selected'},
@@ -157,7 +157,7 @@ describe('Genotype browser table preview result tests', () => {
     {
       study: datasetIds.compAll,
       affectedStatus: 'affected',
-      expectedOverviewParagraph: '35 variants selected'
+      expectedOverviewParagraph: '30 variants selected'
     },
     {
       study: datasetIds.compDenovo,
