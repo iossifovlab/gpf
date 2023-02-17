@@ -93,7 +93,7 @@ class Histogram(Statistic):
         value = record[self.score_id]
         if value is None:
             return False
-        self.add_value(value)
+        return self.add_value(value)
 
     def add_value(self, value):
         """Add value to the histogram."""

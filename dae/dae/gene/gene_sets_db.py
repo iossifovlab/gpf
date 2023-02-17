@@ -158,8 +158,7 @@ class GeneSetCollection(
     def get_all_gene_sets(self) -> List[GeneSet]:
         return list(self.gene_sets.values())
 
-    @staticmethod
-    def get_template():
+    def get_template(self):
         return Template(textwrap.dedent("""
             {% extends base %}
             {% block content %}
@@ -288,8 +287,7 @@ class SqliteGeneSetCollectionDB(
             )
             return gene_set
 
-    @staticmethod
-    def get_template():
+    def get_template(self):
         return Template(textwrap.dedent("""
             {% extends base %}
             {% block content %}

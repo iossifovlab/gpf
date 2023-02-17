@@ -4,7 +4,6 @@ import sys
 import logging
 import argparse
 import pathlib
-import traceback
 import copy
 from typing import Dict, Union
 from urllib.parse import urlparse
@@ -15,13 +14,9 @@ from cerberus.schema import SchemaError
 
 from jinja2 import Template
 
-from dask.distributed import Client
-
 from dae.task_graph.cli_tools import TaskGraphCli
 from dae.utils.fs_utils import find_directory_with_a_file
-
-from dae.task_graph.executor import DaskExecutor, SequentialExecutor
-from dae.task_graph.graph import TaskGraph, Task
+from dae.task_graph.graph import TaskGraph
 
 from dae.__version__ import VERSION, RELEASE
 from dae.genomic_resources.repository import \
@@ -331,7 +326,7 @@ def _run_repo_manifest_command(proto, **kwargs):
 
     if dry_run and force:
         logger.warning("please choose one of 'dry_run' and 'force' options")
-        return
+        return {}
 
     updates_needed = {}
     for res in proto.get_all_resources():
@@ -378,7 +373,7 @@ def _run_resource_manifest_command(proto, repo_url, **kwargs):
 
     if dry_run and force:
         logger.warning("please choose one of 'dry_run' and 'force' options")
-        return
+        return False
     res = _find_resource(proto, repo_url, **kwargs)
     if res is None:
         logger.error("resource not found...")
@@ -474,12 +469,12 @@ def _run_repo_stats_command(proto, **kwargs):
             )
             continue
         impl = build_resource_implementation(res)
-        needs_rebuild = _stats_need_rebuild(proto, impl) 
+        needs_rebuild = _stats_need_rebuild(proto, impl)
         if (force or needs_rebuild) and not dry_run:
             _collect_impl_stats_tasks(
                 graph, proto, impl, dry_run, force, use_dvc, region_size)
         elif dry_run and needs_rebuild:
-            logger.info(f"Statistics of <{res.resource_id}> need update")
+            logger.info("Statistics of <%s> need update", res.resource_id)
 
     if not dry_run:
         modified_kwargs = copy.copy(kwargs)
@@ -521,7 +516,7 @@ def _run_resource_stats_command(proto, repo_url, **kwargs):
         _collect_impl_stats_tasks(
             graph, proto, impl, dry_run, force, use_dvc, region_size)
     elif dry_run and needs_rebuild:
-        logger.info(f"Statistics of <{res.resource_id}> need update")
+        logger.info("Statistics of <%s> need update", res.resource_id)
 
     modified_kwargs = copy.copy(kwargs)
     modified_kwargs["command"] = "run"

@@ -1452,8 +1452,7 @@ class GeneModels(
             parser(infile, gene_mapping=gene_mapping)
         return self
 
-    @staticmethod
-    def get_template():
+    def get_template(self):
         return Template(textwrap.dedent("""
             {% extends base %}
             {% block content %}

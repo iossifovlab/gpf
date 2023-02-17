@@ -92,7 +92,7 @@ class LiftoverChain(
     def convert_coordinate(self, chrom, pos):
         """Lift over a genomic coordinate."""
         chrom = self.map_chromosome(chrom, self.chrom_variant_coordinates)
-
+        assert self.liftover is not None
         lo_coordinates = self.liftover.convert_coordinate(chrom, pos - 1)
 
         if not lo_coordinates:
@@ -108,8 +108,7 @@ class LiftoverChain(
 
         return tuple(coordinates)
 
-    @staticmethod
-    def get_template():
+    def get_template(self):
         return Template(textwrap.dedent("""
             {% extends base %}
             {% block content %}
