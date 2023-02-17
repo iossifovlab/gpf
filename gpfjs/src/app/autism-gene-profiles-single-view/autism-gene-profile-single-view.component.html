@@ -61,9 +61,9 @@
             <tr *ngFor="let score of genomicScoreCategory.scores" class="card-block">
               <td
                 style="height: 135px; max-height: 135px; width: 135px; max-width: 135px; overflow-wrap: break-word"
-                [attr.title]="score.scoreName">
-                {{ score.scoreName }}
-              </td>
+                [attr.title]="score.scoreName"
+                >{{ score.scoreName }}</td
+              >
               <ng-container *ngIf="genomicScoresGeneScores.length === gene.genomicScores.length">
                 <td>
                   <gpf-histogram
@@ -102,9 +102,9 @@
             <tr *ngFor="let set of geneSetCategory.sets" class="card-block">
               <td
                 style="max-width: 665px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis"
-                [attr.title]="set.setId">
-                {{ set.setId }}
-              </td>
+                [attr.title]="set.setId"
+                >{{ set.setId }}</td
+              >
               <td style="text-align: center; width: 55px">
                 <span style="font-size: 20px" *ngIf="gene.geneSets.indexOf(set.collectionId + '_' + set.setId) !== -1"
                   >&#10003;</span
@@ -151,7 +151,7 @@
                             (click)="goToQuery(gene.geneSymbol, personSet, dataset.id, statistic)"
                             (middleclick)="goToQuery(gene.geneSymbol, personSet, dataset.id, statistic)">
                             <span style="white-space: nowrap"
-                              >{{ effectType.value.count }} ({{ effectType.value.rate | number: '1.0-3' }})</span
+                              >{{ effectType.value.count }} ({{ effectType.value.rate | number : '1.0-3' }})</span
                             >
                           </a>
                         </ng-container>
