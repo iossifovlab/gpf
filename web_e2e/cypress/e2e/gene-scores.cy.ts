@@ -8,7 +8,7 @@ const geneScoresData = [
   {
     desc: 'SFARI gene score',
     inputField: false,
-    allVariants: '35'
+    allVariants: '30'
   },
   {
     desc: 'RVIS rank',
@@ -23,32 +23,32 @@ const geneScoresData = [
   {
     desc: 'LGD rank',
     inputField: true,
-    allVariants: '35'
+    allVariants: '30'
   },
   {
     desc: 'LGD score',
     inputField: true,
-    allVariants: '35'
+    allVariants: '30'
   },
   {
     desc: 'ExAC pLI rank',
     inputField: true,
-    allVariants: '35'
+    allVariants: '30'
   },
   {
     desc: 'ExAC pLI',
     inputField: true,
-    allVariants: '35'
+    allVariants: '30'
   },
   {
     desc: 'ExAC pRec rank',
     inputField: true,
-    allVariants: '35'
+    allVariants: '30'
   },
   {
     desc: 'ExAC pRec',
     inputField: true,
-    allVariants: '35'
+    allVariants: '30'
   }
 ];
 
