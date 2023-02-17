@@ -3,6 +3,7 @@ import sys
 import time
 from typing import Optional, List
 
+from dae.utils.verbosity_configuration import VerbosityConfiguration
 from dae.task_graph import TaskGraphCli
 from dae.task_graph.graph import TaskGraph
 
@@ -13,7 +14,7 @@ def build_demo_graph(graph_type: str,
     task_graph = TaskGraph()
 
     if graph_type == "A":
-        NP, SP, SS = 10, 1, 1  # pylint: disable=invalid-name
+        NP, SP, SS = "2", "5", "10"  # pylint: disable=invalid-name
 
         if graph_params:
             if len(graph_params) != 3:
@@ -21,13 +22,21 @@ def build_demo_graph(graph_type: str,
                 raise Exception("The graph A needs three parameters: "
                                 "<number of parts>, <seconds for parts>, "
                                 "<seconds for summary>")
-            NP, SP, SS = map(int, graph_params)  # pylint: disable=invalid-name
+            NP, SP, SS = graph_params  # pylint: disable=invalid-name
         print(f"Bulding graph A with {NP} parts, {SP} seconds for "
               f"each parts, and {SS} secoconds for the summary")
 
+        def task_part():
+            time.sleep(float(SP))
+            return 1000 * "B"
+
+        def task_summary(*args):
+            time.sleep(float(SS))
+            return "b".join(args)
+
         parts = [task_graph.create_task(
-            f"part {p}", lambda: time.sleep(SP), [], []) for p in range(NP)]
-        task_graph.create_task("summary", lambda: time.sleep(SS), [], parts)
+            f"part {p}", task_part, [], []) for p in range(int(NP))]
+        task_graph.create_task("summary", task_summary, parts, parts)
     else:
         raise Exception("Unknown graph")
 
@@ -40,11 +49,13 @@ def main(argv=None):
 
     parser.add_argument("graph", type=str, help="Demo graph",
                         default="A", nargs="?")
-    parser.add_argument("--graph_params", "-gp", type=str, nargs="+")
+    VerbosityConfiguration.set_argumnets(parser)
+
+    parser.add_argument("--graph-params", "-gp", type=str, nargs="+")
 
     TaskGraphCli.add_arguments(parser)
 
     args = parser.parse_args(argv or sys.argv[1:])
-
-    empty_graph = build_demo_graph(args.graph, args.graph_params)
-    TaskGraphCli.process_graph(empty_graph, **vars(args))
+    VerbosityConfiguration.set(args)
+    graph = build_demo_graph(args.graph, args.graph_params)
+    TaskGraphCli.process_graph(graph, **vars(args))

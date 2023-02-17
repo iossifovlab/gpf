@@ -3,7 +3,7 @@ import textwrap
 
 import yaml
 from box import Box
-from dae.task_graph.cache import TaskCache
+from dae.task_graph.cache import NoTaskCache, TaskCache
 from dae.task_graph.executor import DaskExecutor, TaskGraphExecutor, \
     SequentialExecutor, task_graph_run, task_graph_status
 
@@ -18,7 +18,8 @@ class TaskGraphCli:
     @staticmethod
     def add_arguments(parser: argparse.ArgumentParser,
                       force_mode="optional",
-                      default_task_status_dir="."):
+                      default_task_status_dir=".",
+                      use_commands=True):
         """Add arguments needed to execute a task graph."""
         executor_group = parser.add_argument_group(title="Task Graph Executor")
         # cluster_name
@@ -44,16 +45,18 @@ class TaskGraphCli:
         # task_cache
         execution_mode_group = parser.add_argument_group(
             title="Execution Mode")
-        execution_mode_group.add_argument("command",
-                                          choices=["run", "list", "status"],
-                                          default="run", nargs="?",
-                                          help=textwrap.dedent("""\
+        if use_commands:
+            execution_mode_group.add_argument(
+                "command",
+                choices=["run", "list", "status"],
+                default="run", nargs="?",
+                help=textwrap.dedent("""\
                     Command to execute on the import configuration.
                     run - runs the import process
                     list - lists the tasks to be executed but doesn't run them
                     status - synonym for list
                 """),
-                                          )
+            )
         execution_mode_group.add_argument(
             "-t", "--task-ids", dest="task_ids", type=str, nargs="+")
         execution_mode_group.add_argument(
@@ -74,11 +77,12 @@ class TaskGraphCli:
             assert force_mode == "always"
 
     @staticmethod
-    def create_executor(**kwargs) -> TaskGraphExecutor:
+    def create_executor(task_cache=None, **kwargs) -> TaskGraphExecutor:
         """Create a task graph executor according to the args specified."""
         args = Box(kwargs)
-        task_cache = TaskCache.create(
-            force=args.force, cache_dir=args.task_status_dir)
+
+        if task_cache is None:
+            task_cache = NoTaskCache()
 
         if args.jobs == 1:
             assert args.dask_cluster_name is None
@@ -112,12 +116,15 @@ class TaskGraphCli:
         if args.task_ids:
             task_graph = task_graph.prune(ids_to_keep=args.task_ids)
 
-        executor = TaskGraphCli.create_executor(**kwargs)
+        task_cache = TaskCache.create(
+            force=args.get("force"), cache_dir=args.get("task_status_dir"))
+
         if args.command is None or args.command == "run":
-            return task_graph_run(task_graph, executor, args.keep_going)
+            with TaskGraphCli.create_executor(task_cache, **kwargs) as xtor:
+                return task_graph_run(task_graph, xtor, args.keep_going)
 
         if args.command in {"list", "status"}:
-            return task_graph_status(
-                task_graph, executor, args.verbose)
+            res = task_graph_status(task_graph, task_cache, args.verbose)
+            return res
 
         raise Exception("Unknown command")

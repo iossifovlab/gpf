@@ -15,7 +15,6 @@ from .annotator_base import Annotator, ATTRIBUTES_SCHEMA
 from .annotation_pipeline import AnnotationPipeline
 
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -80,11 +79,11 @@ class VariantScoreAnnotatorBase(Annotator):
             attributes = self.score.get_default_annotation()["attributes"]
             logger.debug(
                 "using default score annotation for %s: %s",
-                self.score.score_id(), attributes)
+                self.score.score_id, attributes)
             return cast(list[dict[str, Any]], attributes)
         logger.warning(
             "can't find annotation config for resource: %s",
-            self.score.score_id())
+            self.score.score_id)
         return []
 
     @property

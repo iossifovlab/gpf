@@ -1,8 +1,9 @@
 import logging
-import textwrap
 from typing import Optional, Callable, cast, Any
 from abc import abstractmethod, ABC
 from jinja2 import Template
+from cerberus import Validator
+from dae.task_graph.graph import Task
 
 from .repository import GenomicResource
 
@@ -25,35 +26,69 @@ class GenomicResourceImplementation(ABC):
     """
 
     config_validator: Optional[Callable[[dict], Any]] = None
+    STATISTICS_FOLDER = "statistics"
 
     def __init__(self, genomic_resource: GenomicResource):
         self.resource = genomic_resource
-        self.config = self.validate_and_normalize_schema(self.resource.config)
+        self.config: dict = self.resource.config
 
     def get_config(self) -> dict:
         return self.config
 
     @property
-    @abstractmethod
-    def files(self):
+    def files(self) -> set[str]:
         """Return a list of resource files the implementation utilises."""
+        return set()
 
-    @staticmethod
-    def get_template() -> Template:
+    @abstractmethod
+    def calc_statistics_hash(self) -> bytes:
         """
-        Return a jinja2 template for GRR information page generation.
+        Compute the statistics hash.
 
-        The template must extend a template, which will be passed into
-        the context as a variable named "base" and it must define a block
-        named "content". The template must access it's passed info through
-        a context variable named "data".
+        This hash is used to decide whether the resource statistics should be
+        recomputed.
         """
-        return Template(textwrap.dedent("""
-            {% extends base %}
-            {% block content %}
-            No template defined
-            {% endblock %}
-        """))
+        raise NotImplementedError()
+
+    @abstractmethod
+    def add_statistics_build_tasks(self, task_graph, **kwargs) -> list[Task]:
+        """Add tasks for calculating resource statistics to a task graph."""
+        raise NotImplementedError()
+
+    @abstractmethod
+    def calc_info_hash(self):
+        """Compute and return the info hash."""
+        raise NotImplementedError()
+
+    @abstractmethod
+    def get_info(self) -> str:
+        """Construct the contents of the implementation's HTML info page."""
+        raise NotImplementedError()
+
+
+class InfoImplementationMixin:
+    """Mixin that provides generic template info page generation interface."""
+
+    @abstractmethod
+    def get_template(self) -> Template:
+        raise NotImplementedError()
+
+    @abstractmethod
+    def _get_template_data(self):
+        raise NotImplementedError()
+
+    def get_info(self) -> str:
+        """Construct the contents of the implementation's HTML info page."""
+        template_data = self._get_template_data()
+        return self.get_template().render(
+            resource_id=self.resource.resource_id,  # type: ignore
+            data=template_data,
+            base=resource_template
+        )
+
+
+class ResourceConfigValidationMixin:
+    """Mixin that provides validation of resource configuration."""
 
     @staticmethod
     @abstractmethod
@@ -61,26 +96,48 @@ class GenomicResourceImplementation(ABC):
         """Return schema to be used for config validation."""
         raise NotImplementedError()
 
-    def validate_and_normalize_schema(self, config) -> dict:
+    @classmethod
+    def validate_and_normalize_schema(cls, config, resource) -> dict:
         """Validate the resource schema and return the normalized version."""
         # pylint: disable=not-callable
-        if self.config_validator is None:
-            raise ValueError("No defined validator for class")
-        validator = self.config_validator(self.get_schema())
+        validator = Validator(cls.get_schema())
         if not validator.validate(config):
             logger.error(
                 "Resource %s of type %s has an invalid configuration. %s",
-                self.resource.resource_id,
-                self.resource.get_type(),
+                resource.resource_id,
+                resource.get_type(),
                 validator.errors)
-            raise ValueError(
-                f"Resource {self.resource.resource_id} "
-                f"of type {self.resource.get_type()} "
-                f"has an invalid configuration: {validator.errors}"
-            )
+            raise ValueError("Invalid configuration")
         return cast(dict, validator.document)
 
-    @abstractmethod
-    def get_info(self):
-        """Return dictionary to use as data in the template."""
-        raise NotImplementedError()
+
+resource_template = Template("""
+<html>
+<head>
+<style>
+h3,h4 {
+    margin-top:0.5em;
+    margin-bottom:0.5em;
+}
+
+{% block extra_styles %}{% endblock %}
+
+</style>
+</head>
+<body>
+<h1>{{ resource_id }}</h3>
+
+{% block content %}
+N/A
+{% endblock %}
+
+<div>
+<span class="description">
+{{ data["meta"] if data["meta"] else "N/A" }}
+</span>
+</div>
+
+
+</body>
+</html>
+""")

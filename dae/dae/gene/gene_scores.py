@@ -1,25 +1,25 @@
 from __future__ import annotations
-
+import copy
 import itertools
 import logging
 import textwrap
-import copy
 from typing import Optional, List
 from functools import lru_cache
 
 import numpy as np
 import pandas as pd
 from jinja2 import Template
-from markdown2 import markdown
 from cerberus import Validator
 
 from dae.utils.dae_utils import join_line
 from dae.genomic_resources.aggregators import build_aggregator
 from dae.genomic_resources.resource_implementation import \
-    GenomicResourceImplementation, get_base_resource_schema
+    GenomicResourceImplementation, get_base_resource_schema, \
+    InfoImplementationMixin, ResourceConfigValidationMixin
 
 from dae.genomic_resources import GenomicResource
 from dae.genomic_resources.histogram import Histogram
+from dae.task_graph.graph import Task
 
 logger = logging.getLogger(__name__)
 
@@ -51,9 +51,6 @@ class GeneScore:
         self.histogram_config = histogram_config
 
         self.score_id = score_id
-        self.df = None
-        self._dict = None
-
         self.genomic_values_col = "gene"
 
         self.desc = desc
@@ -61,11 +58,12 @@ class GeneScore:
 
         self.meta = meta
 
-        self._load_data()
+        self.df = self._load_data()
         self.df.dropna(inplace=True)
 
-        self.histogram = Histogram.from_config(histogram_config)
-        self.histogram.set_values(self.values())
+        self.histogram = Histogram(histogram_config)
+        for value in self.values():
+            self.histogram.add_value(value)
 
         self.histogram_bins = self.histogram.bins
         self.histogram_bars = self.histogram.bars
@@ -86,8 +84,7 @@ class GeneScore:
         df = pd.read_csv(self.file)
         assert self.score_id in df.columns, \
             f"{self.score_id} not found in {df.columns}"
-        self.df = df[[self.genomic_values_col, self.score_id]].copy()
-        return self.df
+        return df[[self.genomic_values_col, self.score_id]].copy()
 
     @staticmethod
     def load_gene_scores_from_resource(
@@ -154,9 +151,7 @@ class GeneScore:
     @lru_cache(maxsize=32)
     def _to_dict(self):
         """Return dictionary of all defined scores keyed by gene symbol."""
-        if self._dict is None:
-            self._dict = self.df.set_index("gene")[self.score_id].to_dict()
-        return self._dict
+        return self.df.set_index("gene")[self.score_id].to_dict()
 
     @lru_cache(maxsize=32)
     def _to_list(self):
@@ -203,20 +198,26 @@ class GeneScore:
         return set(genes.values)
 
 
-class GeneScoreCollection(GenomicResourceImplementation):
+class GeneScoreCollection(
+    GenomicResourceImplementation,
+    InfoImplementationMixin,
+    ResourceConfigValidationMixin
+):
     """Class used to represent all gene scores in a resource."""
 
     config_validator = Validator
 
     def __init__(self, resource):
         super().__init__(resource)
+        self.config = self.validate_and_normalize_schema(
+            self.config, resource
+        )
         self.scores = {
             score.score_id: score for score in
             GeneScore.load_gene_scores_from_resource(self.resource)
         }
 
-    @staticmethod
-    def get_template():
+    def get_template(self):
         return Template(textwrap.dedent("""
             {% extends base %}
             {% block content %}
@@ -245,15 +246,13 @@ class GeneScoreCollection(GenomicResourceImplementation):
             {% endblock %}
         """))
 
+    def _get_template_data(self):
+        data = copy.deepcopy(self.config)
+        return data
+
     @property
     def files(self):
         raise NotImplementedError
-
-    def get_info(self):
-        info = copy.deepcopy(self.config)
-        if "meta" in info:
-            info["meta"] = markdown(info["meta"])
-        return info
 
     @staticmethod
     def get_schema():
@@ -280,6 +279,18 @@ class GeneScoreCollection(GenomicResourceImplementation):
                 }
             }},
         }
+
+    def get_info(self):
+        return InfoImplementationMixin.get_info(self)
+
+    def calc_info_hash(self):
+        return "placeholder"
+
+    def calc_statistics_hash(self) -> bytes:
+        return b"placeholder"
+
+    def add_statistics_build_tasks(self, task_graph, **kwargs) -> List[Task]:
+        return []
 
 
 class GeneScoresDb:

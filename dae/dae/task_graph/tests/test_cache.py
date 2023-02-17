@@ -39,9 +39,9 @@ def execute_with_file_cache(graph, work_dir):
 
 def test_file_cache_clear_state(graph: TaskGraph, tmpdir):
     cache = FileTaskCache(cache_dir=tmpdir)
-    cache.set_task_graph(graph)
+    task2record = dict(cache.load(graph))
     for task in graph.tasks:
-        assert cache.get_record(task).type == CacheRecordType.NEEDS_COMPUTE
+        assert task2record[task].type == CacheRecordType.NEEDS_COMPUTE
 
 
 def test_file_cache_just_executed(graph: TaskGraph, tmpdir):
@@ -50,9 +50,9 @@ def test_file_cache_just_executed(graph: TaskGraph, tmpdir):
         pass
 
     cache = FileTaskCache(cache_dir=tmpdir)
-    cache.set_task_graph(graph)
+    task2record = dict(cache.load(graph))
     for task in graph.tasks:
-        assert cache.get_record(task).type == CacheRecordType.COMPUTED
+        assert task2record[task].type == CacheRecordType.COMPUTED
 
 
 def test_file_cache_touch_input_file(graph: TaskGraph, tmpdir):
@@ -66,9 +66,9 @@ def test_file_cache_touch_input_file(graph: TaskGraph, tmpdir):
 
     touch(config_fn)
     cache = FileTaskCache(cache_dir=tmpdir)
-    cache.set_task_graph(graph)
+    task2record = dict(cache.load(graph))
     for task in graph.tasks:
-        assert cache.get_record(task).type == CacheRecordType.NEEDS_COMPUTE
+        assert task2record[task].type == CacheRecordType.NEEDS_COMPUTE
 
 
 @pytest.mark.parametrize("operation", ["touch", "remove"])
@@ -88,11 +88,11 @@ def test_file_cache_mod_input_file_of_intermediate_node(
         assert operation == "remove"
         os.remove(dep_fn)
     cache = FileTaskCache(cache_dir=tmpdir)
-    cache.set_task_graph(graph)
+    task2record = dict(cache.load(graph))
 
-    assert cache.get_record(int_node).type == CacheRecordType.NEEDS_COMPUTE
+    assert task2record[int_node].type == CacheRecordType.NEEDS_COMPUTE
     for task in get_task_descendants(graph, int_node):
-        assert cache.get_record(task).type == CacheRecordType.NEEDS_COMPUTE
+        assert task2record[task].type == CacheRecordType.NEEDS_COMPUTE
 
 
 @pytest.mark.parametrize("operation", ["touch", "remove"])
@@ -102,19 +102,23 @@ def test_file_cache_mod_flag_file_of_intermediate_node(
     execute_with_file_cache(graph, tmpdir)
 
     cache = FileTaskCache(cache_dir=tmpdir)
-    cache.set_task_graph(graph)
+    task2record = dict(cache.load(graph))
+    for _task, record in task2record.items():
+        assert record.type == CacheRecordType.COMPUTED
+
     first_task = get_task_by_id(graph, "First")
     if operation == "touch":
         touch(cache._get_flag_filename(first_task))
-        assert cache.get_record(first_task).type == CacheRecordType.COMPUTED
+        task2record = dict(cache.load(graph))
+        assert task2record[first_task].type == CacheRecordType.COMPUTED
     else:
         assert operation == "remove"
         os.remove(cache._get_flag_filename(first_task))
-        assert cache.get_record(first_task).type == \
-            CacheRecordType.NEEDS_COMPUTE
+        task2record = dict(cache.load(graph))
+        assert task2record[first_task].type == CacheRecordType.NEEDS_COMPUTE
 
     for task in get_task_descendants(graph, first_task):
-        assert cache.get_record(task).type == CacheRecordType.NEEDS_COMPUTE
+        assert task2record[task].type == CacheRecordType.NEEDS_COMPUTE
 
 
 def test_file_cache_very_large_task_name(tmpdir):

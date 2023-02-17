@@ -68,7 +68,7 @@ class GenomicScoresDb:
                     "description", selected_score_id)
         for histogram_config in conf["histograms"]:
             try:
-                hist = Histogram.from_config(
+                hist = Histogram(
                     histogram_config
                 )
                 score_id = histogram_config["score"]

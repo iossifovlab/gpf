@@ -20,6 +20,7 @@ def proto_fixture(tmp_path_factory):
                     type: position_score
                     table:
                         filename: data.txt.gz
+                        format: tabix
                     scores:
                         - id: phastCons100way
                           type: float
@@ -59,13 +60,13 @@ def proto_fixture(tmp_path_factory):
     setup_tabix(
         path / "two" / "data.txt.gz",
         """
-        #CHROM  POS    chrom  variant    REF  ALT  AC
-        1       12198  1      sub(G->C)  G    C    0
-        1       12237  1      sub(G->A)  G    A    0
-        1       12259  1      sub(G->C)  G    C    0
-        1       12266  1      sub(G->A)  G    A    0
-        1       12272  1      sub(G->A)  G    A    0
-        1       12554  1      sub(A->G)  A    G    0
+        #chrom  pos_begin    chrom  variant    REF  ALT  AC
+        1       12198        1      sub(G->C)  G    C    0
+        1       12237        1      sub(G->A)  G    A    0
+        1       12259        1      sub(G->C)  G    C    0
+        1       12266        1      sub(G->A)  G    A    0
+        1       12272        1      sub(G->A)  G    A    0
+        1       12554        1      sub(A->G)  A    G    0
         """, seq_col=0, start_col=1, end_col=1)
     proto = build_filesystem_test_protocol(path)
     return path, proto
@@ -75,13 +76,13 @@ def test_resource_info(proto_fixture):
     path, _proto = proto_fixture
     assert not (path / "one/index.html").exists()
 
-    cli_manage(["resource-info", "-R", str(path), "-r", "one"])
+    cli_manage(["resource-info", "-R", str(path), "-r", "one", "-j", "1"])
 
     assert (path / "one/index.html").exists()
     assert not (path / "two/index.html").exists()
     assert not (path / "index.html").exists()
 
-    cli_manage(["resource-info", "-R", str(path), "-r", "two"])
+    cli_manage(["resource-info", "-R", str(path), "-r", "two", "-j", "1"])
 
     assert (path / "one/index.html").exists()
     assert (path / "two/index.html").exists()
@@ -103,7 +104,7 @@ def test_repo_info(proto_fixture):
 
     assert not (path / "one/index.html").exists()
 
-    cli_manage(["repo-info", "-R", str(path)])
+    cli_manage(["repo-info", "-R", str(path), "-j", "1"])
 
     assert (path / "one/index.html").exists()
     assert (path / "two/index.html").exists()

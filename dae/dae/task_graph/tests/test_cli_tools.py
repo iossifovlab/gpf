@@ -6,7 +6,7 @@ from dae.task_graph import TaskGraph
 from dae.task_graph import TaskGraphCli
 
 
-def test_basic_defalt_executor():
+def test_basic_default_executor():
     parser = argparse.ArgumentParser(description="test_basic")
     TaskGraphCli.add_arguments(parser)
     args = parser.parse_args([])
@@ -24,7 +24,7 @@ def test_basic_sequential_executor():
     TaskGraphCli.process_graph(empty_graph, **vars(args))
 
 
-def test_force_alwasy():
+def test_force_always():
     parser = argparse.ArgumentParser(description="test_basic")
     TaskGraphCli.add_arguments(parser, force_mode="always")
     args = parser.parse_args([])

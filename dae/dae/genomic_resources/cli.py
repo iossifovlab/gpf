@@ -4,6 +4,8 @@ import sys
 import logging
 import argparse
 import pathlib
+import traceback
+import copy
 from typing import Dict, Union
 from urllib.parse import urlparse
 
@@ -13,8 +15,13 @@ from cerberus.schema import SchemaError
 
 from jinja2 import Template
 
-from dae.dask.client_factory import DaskClient
+from dask.distributed import Client
+
+from dae.task_graph.cli_tools import TaskGraphCli
 from dae.utils.fs_utils import find_directory_with_a_file
+
+from dae.task_graph.executor import DaskExecutor, SequentialExecutor
+from dae.task_graph.graph import TaskGraph, Task
 
 from dae.__version__ import VERSION, RELEASE
 from dae.genomic_resources.repository import \
@@ -31,11 +38,10 @@ from dae.genomic_resources.repository import \
 from dae.utils.verbosity_configuration import VerbosityConfiguration
 
 from dae.genomic_resources.fsspec_protocol import build_fsspec_protocol
-from dae.genomic_resources.histogram import HistogramBuilder
 from dae.genomic_resources.repository_factory import \
     build_genomic_resource_repository
 
-from dae.genomic_resources import get_resource_implementation_factory
+from dae.genomic_resources import get_resource_implementation_builder
 
 
 logger = logging.getLogger("grr_manage")
@@ -78,7 +84,7 @@ def _add_dry_run_and_force_parameters_group(parser):
         help="only checks if the manifest update is needed whithout "
         "actually updating it")
     group.add_argument(
-        "-f", "--force", default=False,
+        "-i", "--ignore", default=False,
         action="store_true",
         help="ignore resource state and rebuild manifest")
 
@@ -86,7 +92,7 @@ def _add_dry_run_and_force_parameters_group(parser):
 def _add_dvc_parameters_group(parser):
     group = parser.add_argument_group(title="DVC params")
     group.add_argument(
-        "-d", "--with-dvc", default=True,
+        "--with-dvc", default=True,
         action="store_true", dest="use_dvc",
         help="use '.dvc' files if present to get md5 sum of resource files "
         "(default)")
@@ -107,6 +113,7 @@ def _add_hist_parameters_group(parser):
 def _configure_list_subparser(subparsers):
     parser = subparsers.add_parser("list", help="List a GR Repo")
     _add_repository_resource_parameters_group(parser, use_resource=False)
+    VerbosityConfiguration.set_argumnets(parser)
 
 
 def _run_list_command(
@@ -125,6 +132,7 @@ def _configure_repo_init_subparser(subparsers):
 
     _add_repository_resource_parameters_group(parser, use_resource=False)
     _add_dry_run_and_force_parameters_group(parser)
+    VerbosityConfiguration.set_argumnets(parser)
 
 
 def _run_repo_init_command(**kwargs):
@@ -156,6 +164,7 @@ def _configure_repo_manifest_subparser(subparsers):
     _add_repository_resource_parameters_group(parser, use_resource=False)
     _add_dry_run_and_force_parameters_group(parser)
     _add_dvc_parameters_group(parser)
+    VerbosityConfiguration.set_argumnets(parser)
 
 
 def _configure_resource_manifest_subparser(subparsers):
@@ -165,32 +174,35 @@ def _configure_resource_manifest_subparser(subparsers):
     _add_repository_resource_parameters_group(parser)
     _add_dry_run_and_force_parameters_group(parser)
     _add_dvc_parameters_group(parser)
+    VerbosityConfiguration.set_argumnets(parser)
 
 
-def _configure_repo_hist_subparser(subparsers):
-    parser_hist = subparsers.add_parser(
-        "repo-histograms",
-        help="Build the histograms for a resource")
+def _configure_repo_stats_subparser(subparsers):
+    parser = subparsers.add_parser(
+        "repo-stats",
+        help="Build the statistics for a resource")
 
-    _add_repository_resource_parameters_group(parser_hist, use_resource=False)
-    _add_dry_run_and_force_parameters_group(parser_hist)
-    _add_dvc_parameters_group(parser_hist)
-    _add_hist_parameters_group(parser_hist)
+    _add_repository_resource_parameters_group(parser, use_resource=False)
+    _add_dry_run_and_force_parameters_group(parser)
+    _add_dvc_parameters_group(parser)
+    _add_hist_parameters_group(parser)
+    VerbosityConfiguration.set_argumnets(parser)
 
-    DaskClient.add_arguments(parser_hist)
+    TaskGraphCli.add_arguments(parser, use_commands=False, force_mode="always")
 
 
-def _configure_resource_hist_subparser(subparsers):
-    parser_hist = subparsers.add_parser(
-        "resource-histograms",
-        help="Build the histograms for a resource")
+def _configure_resource_stats_subparser(subparsers):
+    parser = subparsers.add_parser(
+        "resource-stats",
+        help="Build the statistics for a resource")
 
-    _add_repository_resource_parameters_group(parser_hist)
-    _add_dry_run_and_force_parameters_group(parser_hist)
-    _add_dvc_parameters_group(parser_hist)
-    _add_hist_parameters_group(parser_hist)
+    _add_repository_resource_parameters_group(parser)
+    _add_dry_run_and_force_parameters_group(parser)
+    _add_dvc_parameters_group(parser)
+    _add_hist_parameters_group(parser)
+    VerbosityConfiguration.set_argumnets(parser)
 
-    DaskClient.add_arguments(parser_hist)
+    TaskGraphCli.add_arguments(parser, use_commands=False, force_mode="always")
 
 
 def _configure_repo_repair_subparser(subparsers):
@@ -201,8 +213,9 @@ def _configure_repo_repair_subparser(subparsers):
     _add_dry_run_and_force_parameters_group(parser)
     _add_dvc_parameters_group(parser)
     _add_hist_parameters_group(parser)
+    VerbosityConfiguration.set_argumnets(parser)
 
-    DaskClient.add_arguments(parser)
+    TaskGraphCli.add_arguments(parser, use_commands=False, force_mode="always")
 
 
 def _configure_resource_repair_subparser(subparsers):
@@ -213,8 +226,9 @@ def _configure_resource_repair_subparser(subparsers):
     _add_dry_run_and_force_parameters_group(parser)
     _add_dvc_parameters_group(parser)
     _add_hist_parameters_group(parser)
+    VerbosityConfiguration.set_argumnets(parser)
 
-    DaskClient.add_arguments(parser)
+    TaskGraphCli.add_arguments(parser, use_commands=False, force_mode="always")
 
 
 def _configure_repo_info_subparser(subparsers):
@@ -222,8 +236,9 @@ def _configure_repo_info_subparser(subparsers):
         "repo-info", help="Build the index.html for the whole GRR"
     )
     _add_repository_resource_parameters_group(parser)
+    VerbosityConfiguration.set_argumnets(parser)
 
-    DaskClient.add_arguments(parser)
+    TaskGraphCli.add_arguments(parser, use_commands=False, force_mode="always")
 
 
 def _configure_resource_info_subparser(subparsers):
@@ -231,8 +246,9 @@ def _configure_resource_info_subparser(subparsers):
         "resource-info", help="Build the index.html for the specific resource"
     )
     _add_repository_resource_parameters_group(parser)
+    VerbosityConfiguration.set_argumnets(parser)
 
-    DaskClient.add_arguments(parser)
+    TaskGraphCli.add_arguments(parser, use_commands=False, force_mode="always")
 
 
 def collect_dvc_entries(
@@ -296,7 +312,7 @@ def _do_resource_manifest_command(proto, res, dry_run, force, use_dvc):
         manifest = proto.build_manifest(
             res, prebuild_entries)
         proto.save_manifest(res, manifest)
-        return True
+        return False
 
     if bool(manifest_update):
         logger.info(
@@ -304,6 +320,7 @@ def _do_resource_manifest_command(proto, res, dry_run, force, use_dvc):
         manifest = proto.update_manifest(
             res, prebuild_entries)
         proto.save_manifest(res, manifest)
+        return False
     return bool(manifest_update)
 
 
@@ -316,11 +333,16 @@ def _run_repo_manifest_command(proto, **kwargs):
         logger.warning("please choose one of 'dry_run' and 'force' options")
         return
 
+    updates_needed = {}
     for res in proto.get_all_resources():
-        _do_resource_manifest_command(proto, res, dry_run, force, use_dvc)
+        updates_needed[res.resource_id] = _do_resource_manifest_command(
+            proto, res, dry_run, force, use_dvc
+        )
 
     if not dry_run:
         proto.build_content_file()
+
+    return updates_needed
 
 
 def _find_resource(proto, repo_url, **kwargs):
@@ -361,144 +383,161 @@ def _run_resource_manifest_command(proto, repo_url, **kwargs):
     if res is None:
         logger.error("resource not found...")
         return
-    _do_resource_manifest_command(proto, res, dry_run, force, use_dvc)
+    return _do_resource_manifest_command(proto, res, dry_run, force, use_dvc)
 
 
-def _do_resource_hist_command(  # pylint: disable=too-many-arguments
-        client, proto, res, dry_run, force, use_dvc, region_size):
-    if res.get_type() not in {
-            "position_score", "np_score", "allele_score"}:
+def _read_stats_hash(proto, implementation):
+    res = implementation.resource
+    stats_dir = implementation.STATISTICS_FOLDER
+    if not proto.file_exists(res, f"{stats_dir}/stats_hash"):
+        return None
+    with proto.open_raw_file(
+        res, f"{stats_dir}/stats_hash", mode="rb"
+    ) as infile:
+        return infile.read()
+
+
+def _store_stats_hash(proto, resource):
+    impl = build_resource_implementation(resource)
+    stats_dir = impl.STATISTICS_FOLDER
+    with proto.open_raw_file(
+        resource, f"{stats_dir}/stats_hash", mode="wb"
+    ) as outfile:
+        stats_hash = impl.calc_statistics_hash()
+        outfile.write(stats_hash)
+    return True
+
+
+def _collect_impl_stats_tasks(  # pylint: disable=too-many-arguments
+        graph, proto, impl, dry_run, force, use_dvc, region_size):
+
+    tasks = impl.add_statistics_build_tasks(graph, region_size=region_size)
+
+    graph.create_task(
+        f"{impl.resource.resource_id}_store_stats_hash",
+        _store_stats_hash,
+        [proto, impl.resource],
+        tasks
+    )
+
+    graph.create_task(
+        f"{impl.resource.resource_id}_manifest_rebuild",
+        _do_resource_manifest_command,
+        [proto, impl.resource, dry_run, force, use_dvc],
+        tasks
+    )
+
+
+def _stats_need_rebuild(proto, impl):
+    """Check if an implementation's stats need rebuilding."""
+    current_hash = impl.calc_statistics_hash()
+
+    stored_hash = _read_stats_hash(proto, impl)
+
+    if stored_hash is None:
         logger.info(
-            "skip histograms update for %s; not a score", res.resource_id)
-        return
+            "No hash stored for <%s>, need update",
+            impl.resource.resource_id
+        )
+        return True
 
-    builder = HistogramBuilder(res)
-    if dry_run:
-        builder.check_update()
-        return
+    if stored_hash != current_hash:
+        logger.info(
+            "Stored hash for <%s> is outdated, need update",
+            impl.resource.resource_id
+        )
+        return True
 
-    if force:
-        histograms = builder.build(
-            client,
-            region_size=region_size)
-    else:
-        histograms = builder.update(
-            client,
-            region_size=region_size)
-
-    hist_out_dir = "histograms"
-    logger.info("Saving histograms in %s", hist_out_dir)
-    builder.save(histograms, hist_out_dir)
-
-    prebuild_entries = {}
-    if use_dvc:
-        prebuild_entries = collect_dvc_entries(proto, res)
-
-    proto.save_manifest(
-        res,
-        proto.update_manifest(res, prebuild_entries))
+    logger.info(
+        "<%s> statistics hash is up to date", impl.resource.resource_id
+    )
+    return False
 
 
-def _run_repo_hist_command(proto, region_size, **kwargs):
+def _run_repo_stats_command(proto, **kwargs):
+    updates_needed = _run_repo_manifest_command(proto, **kwargs)
     dry_run = kwargs.get("dry_run", False)
     force = kwargs.get("force", False)
     use_dvc = kwargs.get("use_dvc", True)
+    region_size = kwargs.get("region_size", 3_000_000)
     if dry_run and force:
         logger.warning("please choose one of 'dry_run' and 'force' options")
         return
 
-    dask_client = DaskClient.from_dict(kwargs)
-    if dask_client is None:
-        sys.exit(1)
+    graph = TaskGraph()
 
-    with dask_client as client:
-        for res in proto.get_all_resources():
-            _do_resource_hist_command(
-                client, proto, res, dry_run, force, use_dvc, region_size)
+    for res in proto.get_all_resources():
+        if updates_needed[res.resource_id]:
+            logger.info(
+                "Manifest of <%s> needs update, cannot check statistics",
+                res.resource_id
+            )
+            continue
+        impl = build_resource_implementation(res)
+        needs_rebuild = _stats_need_rebuild(proto, impl) 
+        if (force or needs_rebuild) and not dry_run:
+            _collect_impl_stats_tasks(
+                graph, proto, impl, dry_run, force, use_dvc, region_size)
+        elif dry_run and needs_rebuild:
+            logger.info(f"Statistics of <{res.resource_id}> need update")
+
+    if not dry_run:
+        modified_kwargs = copy.copy(kwargs)
+        modified_kwargs["command"] = "run"
+        TaskGraphCli.process_graph(graph, **modified_kwargs)
+
     if not dry_run:
         proto.build_content_file()
 
 
-def _run_resource_hist_command(proto, repo_url, region_size, **kwargs):
+def _run_resource_stats_command(proto, repo_url, **kwargs):
+    needs_update = _run_resource_manifest_command(proto, repo_url, **kwargs)
     dry_run = kwargs.get("dry_run", False)
     force = kwargs.get("force", False)
     use_dvc = kwargs.get("use_dvc", True)
+    region_size = kwargs.get("region_size", 3_000_000)
+    res = _find_resource(proto, repo_url, **kwargs)
+    if needs_update:
+        logger.info(
+            "Manifest of <%s> needs update, cannot check statistics",
+            res.resource_id
+        )
+        return
     if dry_run and force:
         logger.warning("please choose one of 'dry_run' and 'force' options")
         return
 
-    res = _find_resource(proto, repo_url, **kwargs)
     if res is None:
         logger.error("unable to find resource...")
         return
-    dask_client = DaskClient.from_dict(kwargs)
-    if dask_client is None:
-        sys.exit(1)
 
-    with dask_client as client:
-        _do_resource_hist_command(
-            client, proto, res, dry_run, force, use_dvc, region_size)
+    graph = TaskGraph()
 
+    impl = build_resource_implementation(res)
 
-def _run_repo_repair_command(proto, region_size, **kwargs):
-    dry_run = kwargs.get("dry_run", False)
-    force = kwargs.get("force", False)
-    use_dvc = kwargs.get("use_dvc", True)
+    needs_rebuild = _stats_need_rebuild(proto, impl)
 
-    if dry_run and force:
-        logger.warning("please choose one of 'dry_run' and 'force' options")
-        return
+    if (force or needs_rebuild) and not dry_run:
+        _collect_impl_stats_tasks(
+            graph, proto, impl, dry_run, force, use_dvc, region_size)
+    elif dry_run and needs_rebuild:
+        logger.info(f"Statistics of <{res.resource_id}> need update")
 
-    dask_client = DaskClient.from_dict(kwargs)
-    if dask_client is None:
-        sys.exit(1)
-    with dask_client as client:
-        for res in proto.get_all_resources():
-            status = _do_resource_manifest_command(
-                proto, res, dry_run, force, use_dvc)
-            if dry_run and status:
-                logger.info(
-                    "manfiest %s needs update; can't check histograms",
-                    res.resource_id)
-            else:
-                _do_resource_hist_command(
-                    client, proto, res, dry_run, force, use_dvc, region_size)
-
-    if not dry_run:
-        proto.build_content_file()
+    modified_kwargs = copy.copy(kwargs)
+    modified_kwargs["command"] = "run"
+    TaskGraphCli.process_graph(graph, **modified_kwargs)
 
 
-def _run_resource_repair_command(proto, repo_url, region_size, **kwargs):
-    dry_run = kwargs.get("dry_run", False)
-    force = kwargs.get("force", False)
-    use_dvc = kwargs.get("use_dvc", True)
+def _run_repo_repair_command(proto, **kwargs):
+    _run_repo_info_command(proto, **kwargs)
 
-    if dry_run and force:
-        logger.warning("please choose one of 'dry_run' and 'force' options")
-        return
 
-    res = _find_resource(proto, repo_url, **kwargs)
-    if res is None:
-        logger.error("unable to find a resource")
-        sys.exit(1)
-
-    dask_client = DaskClient.from_dict(kwargs)
-    if dask_client is None:
-        sys.exit(1)
-
-    with dask_client as client:
-        status = _do_resource_manifest_command(
-            proto, res, dry_run, force, use_dvc)
-        if dry_run and status:
-            logger.info(
-                "manfiest %s needs update; can't check histograms",
-                res.resource_id)
-        else:
-            _do_resource_hist_command(
-                client, proto, res, dry_run, force, use_dvc, region_size)
+def _run_resource_repair_command(proto, repo_url, **kwargs):
+    _run_resource_info_command(proto, repo_url, **kwargs)
 
 
 def _run_repo_info_command(proto, **kwargs):  # pylint: disable=unused-argument
+    _run_repo_stats_command(proto, **kwargs)
     proto.build_index_info(repository_template)
 
     for res in proto.get_all_resources():
@@ -525,26 +564,20 @@ def _run_repo_info_command(proto, **kwargs):  # pylint: disable=unused-argument
 
 
 def build_resource_implementation(res):
-    factory = get_resource_implementation_factory(res.get_type())
-    return factory(res)
+    builder = get_resource_implementation_builder(res.get_type())
+    return builder(res)
 
 
 def _do_resource_info_command(proto, res):
     implementation = build_resource_implementation(res)
 
-    template = implementation.get_template()
-    template_data = implementation.get_info()
-
     with proto.open_raw_file(res, "index.html", mode="wt") as outfile:
-        content = template.render(
-            resource_id=res.resource_id,
-            data=template_data,
-            base=resource_template
-        )
+        content = implementation.get_info()
         outfile.write(content)
 
 
 def _run_resource_info_command(proto, repo_url, **kwargs):
+    _run_resource_stats_command(proto, repo_url, **kwargs)
     res = _find_resource(proto, repo_url, **kwargs)
     if res is None:
         logger.error("resource not found...")
@@ -573,12 +606,12 @@ def cli_manage(cli_args=None):
     _configure_repo_init_subparser(commands_parser)
     _configure_repo_manifest_subparser(commands_parser)
     _configure_resource_manifest_subparser(commands_parser)
-    _configure_repo_hist_subparser(commands_parser)
-    _configure_resource_hist_subparser(commands_parser)
-    _configure_repo_repair_subparser(commands_parser)
-    _configure_resource_repair_subparser(commands_parser)
+    _configure_repo_stats_subparser(commands_parser)
+    _configure_resource_stats_subparser(commands_parser)
     _configure_repo_info_subparser(commands_parser)
     _configure_resource_info_subparser(commands_parser)
+    _configure_repo_repair_subparser(commands_parser)
+    _configure_resource_repair_subparser(commands_parser)
 
     args = parser.parse_args(cli_args)
     VerbosityConfiguration.set(args)
@@ -621,18 +654,18 @@ def cli_manage(cli_args=None):
         _run_repo_manifest_command(proto, **vars(args))
     elif command == "resource-manifest":
         _run_resource_manifest_command(proto, repo_url, **vars(args))
-    elif command == "repo-histograms":
-        _run_repo_hist_command(proto, **vars(args))
-    elif command == "resource-histograms":
-        _run_resource_hist_command(proto, repo_url, **vars(args))
-    elif command == "repo-repair":
-        _run_repo_repair_command(proto, **vars(args))
-    elif command == "resource-repair":
-        _run_resource_repair_command(proto, repo_url, **vars(args))
+    elif command == "repo-stats":
+        _run_repo_stats_command(proto, **vars(args))
+    elif command == "resource-stats":
+        _run_resource_stats_command(proto, repo_url, **vars(args))
     elif command == "repo-info":
         _run_repo_info_command(proto, **vars(args))
     elif command == "resource-info":
         _run_resource_info_command(proto, repo_url, **vars(args))
+    elif command == "repo-repair":
+        _run_repo_repair_command(proto, **vars(args))
+    elif command == "resource-repair":
+        _run_resource_repair_command(proto, repo_url, **vars(args))
     else:
         logger.error(
             "Unknown command %s. The known commands are index, "
@@ -742,36 +775,5 @@ repository_template = Template("""
         </tbody>
      </table>
  </body>
-</html>
-""")
-
-resource_template = Template("""
-<html>
-<head>
-<style>
-h3,h4 {
-    margin-top:0.5em;
-    margin-bottom:0.5em;
-}
-
-{% block extra_styles %}{% endblock %}
-
-</style>
-</head>
-<body>
-<h1>{{ resource_id }}</h3>
-
-{% block content %}
-N/A
-{% endblock %}
-
-<div>
-<span class="description">
-{{ data["meta"] if data["meta"] else "N/A" }}
-</span>
-</div>
-
-
-</body>
 </html>
 """)

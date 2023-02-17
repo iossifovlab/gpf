@@ -39,15 +39,37 @@ class TabixGenomicPositionTable(GenomicPositionTable):
         self.pysam_file: Optional[PysamFile] = None
         self.line_iterator = None
 
+    def _load_header(self):
+        header_lines = []
+        with self.genomic_resource.open_raw_file(
+                self.definition.filename, compression="gzip") as infile:
+            while True:
+                line = infile.readline()
+                if line[0] != "#":
+                    break
+                header_lines.append(line)
+        assert len(header_lines) > 0
+        return tuple(header_lines[-1].strip("#\n").split("\t"))
+
     def open(self):
         self.pysam_file = self.genomic_resource.open_tabix_file(
             self.definition.filename)
         if self.header_mode == "file":
-            self.header = tuple(
-                self.pysam_file.header[-1].strip("#").split("\t"))
+            self.header = self._load_header()
         self._set_special_column_indexes()
         self._build_chrom_mapping()
         return self
+
+    def close(self):
+        self.buffer.clear()
+        if self.pysam_file is not None:
+            if self.line_iterator:
+                self.line_iterator.close()
+            self.pysam_file.close()
+
+        self.stats = Counter()
+        self.pysam_file = None
+        self.line_iterator = None
 
     def get_file_chromosomes(self) -> List[str]:
         assert isinstance(self.pysam_file, pysam.TabixFile)
@@ -229,7 +251,6 @@ class TabixGenomicPositionTable(GenomicPositionTable):
         self.buffer.clear()
 
         other_indices, other_columns = self._get_other_columns()
-
         # Yes, the argument for the chromosome/contig is called "reference".
         for raw in self.pysam_file.fetch(
             reference=chrom, start=pos_begin, parser=pysam.asTuple()
@@ -239,10 +260,12 @@ class TabixGenomicPositionTable(GenomicPositionTable):
                     zip(other_columns, (raw[i] for i in other_indices))
                 )
             else:
-                attributes = {idx: value for idx, value in enumerate(raw)
-                              if idx not in (self.chrom_column_i,
-                                             self.pos_begin_column_i,
-                                             self.pos_end_column_i)}
+                attributes = {
+                    idx: value for idx, value in enumerate(raw)
+                    if idx not in (self.chrom_column_i,
+                                   self.pos_begin_column_i,
+                                   self.pos_end_column_i)
+                }
             ref = attributes.get(self.ref_key)
             alt = attributes.get(self.alt_key)
             yield Line(
@@ -251,7 +274,3 @@ class TabixGenomicPositionTable(GenomicPositionTable):
                 raw[self.pos_end_column_i],
                 attributes, ref=ref, alt=alt,
             )
-
-    def close(self):
-        if self.pysam_file is not None:
-            self.pysam_file.close()

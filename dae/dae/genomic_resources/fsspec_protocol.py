@@ -136,7 +136,7 @@ class FsspecReadOnlyProtocol(ReadOnlyRepositoryProtocol):
         filepath = self.get_resource_file_url(resource, filename)
         return cast(bool, self.filesystem.exists(filepath))
 
-    def load_manifest(self, resource):
+    def load_manifest(self, resource) -> Manifest:
         """Load resource manifest."""
         content = self.get_file_content(resource, GR_MANIFEST_FILE_NAME)
         return Manifest.from_file_content(content)

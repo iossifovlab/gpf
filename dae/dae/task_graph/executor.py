@@ -28,6 +28,16 @@ class TaskGraphExecutor:
     def get_active_tasks(self) -> list[Task]:
         """Return the list of tasks currently being processed."""
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()
+
+    @abstractmethod
+    def close(self):
+        """Clean-up any resources used by the executor."""
+
 
 class AbstractTaskGraphExecutor(TaskGraphExecutor):
     """Executor that walks the graph in order that satisfies dependancies."""
@@ -41,15 +51,17 @@ class AbstractTaskGraphExecutor(TaskGraphExecutor):
         assert not self._executing, \
             "Cannot execute a new graph while an old one is still running."
         self._check_for_cyclic_deps(task_graph)
-
         self._executing = True
-        self._task_cache.set_task_graph(task_graph)
+
         already_computed_tasks = {}
-        for task_node in self._in_exec_order(task_graph):
-            record = self._task_cache.get_record(task_node)
+        for task_node, record in self._task_cache.load(task_graph):
             if record.type == CacheRecordType.COMPUTED:
                 already_computed_tasks[task_node] = record.result
-                self._set_task_result(task_node, record.result)
+
+        for task_node in self._in_exec_order(task_graph):
+            if task_node in already_computed_tasks:
+                task_result = already_computed_tasks[task_node]
+                self._set_task_result(task_node, task_result)
             else:
                 self._queue_task(task_node)
         return self._yield_task_results(already_computed_tasks)
@@ -111,6 +123,9 @@ class AbstractTaskGraphExecutor(TaskGraphExecutor):
         stack.pop()
         return None
 
+    def close(self):
+        pass
+
 
 class SequentialExecutor(AbstractTaskGraphExecutor):
     """A Task Graph Executor that executes task in sequential order."""
@@ -171,8 +186,8 @@ class DaskExecutor(AbstractTaskGraphExecutor):
         super().__init__(task_cache)
         self._client = client
         self._task2future = {}
-        self._future2task = {}
-        self._finished_futures = set()
+        self._future_key2task = {}
+        self._finished_future_keys = set()
         self._task2result = {}
 
     def _queue_task(self, task_node):
@@ -196,27 +211,38 @@ class DaskExecutor(AbstractTaskGraphExecutor):
         future = self._client.submit(self._exec, task_node.func, args, deps,
                                      pure=False)
         self._task2future[task_node] = future
-        self._future2task[future.key] = task_node
+        self._future_key2task[future.key] = task_node
 
     def _await_tasks(self):
         # pylint: disable=import-outside-toplevel
         from dask.distributed import as_completed
 
-        assert len(self._finished_futures) == 0, "Cannot call execute twice"
+        assert len(self._finished_future_keys) == 0, "Don't call execute twice"
 
-        futures = list(self._task2future.values())
-        for future in as_completed(futures):
+        while True:
+            # iterate in this funny manner to allow dask to gc tasks ASAP
+            try:
+                future = next(as_completed(list(self._task2future.values())))
+            except StopIteration:
+                break
+
             try:
                 result = future.result()
             except Exception as exp:  # pylint: disable=broad-except
                 result = exp
-            self._finished_futures.add(future.key)
-            yield self._future2task[future.key], result
+            self._finished_future_keys.add(future.key)
+            task = self._future_key2task[future.key]
+            yield task, result
+            # del ref to future in order to make dask gc its resources
+            del self._task2future[task]
+            del task
 
         # clean up
+        if len(self._task2future) > 0:
+            logger.error("[BUG] Dask Executor's future q is not empty.")
         self._task2future = {}
-        self._future2task = {}
-        self._finished_futures = set()
+        self._future_key2task = {}
+        self._finished_future_keys = set()
         self._task2result = {}
 
     def _set_task_result(self, task, result):
@@ -226,10 +252,11 @@ class DaskExecutor(AbstractTaskGraphExecutor):
         res = []
         for task, future in self._task2future.items():
             all_deps_satisfied = all(
-                self._task2future[dep].key in self._finished_futures
+                self._task2future[dep].key in self._finished_future_keys
                 for dep in task.deps if dep in self._task2future
             )
-            if future.key not in self._finished_futures and all_deps_satisfied:
+            future_not_finished = future.key not in self._finished_future_keys
+            if future_not_finished and all_deps_satisfied:
                 res.append(task)
         return res
 
@@ -241,18 +268,24 @@ class DaskExecutor(AbstractTaskGraphExecutor):
     def _exec(task_func, args, _deps):
         return task_func(*args)
 
+    def close(self):
+        self._client.close()
+        cluster = self._client.cluster
+        if cluster is not None:
+            cluster.close()
+
 
 def task_graph_status(
-        task_graph: TaskGraph, executor: TaskGraphExecutor,
+        task_graph: TaskGraph, task_cache: TaskCache,
         verbose: Optional[int]) -> bool:
     """Show the status of each task from the task graph."""
     id_col_len = max(len(t.task_id) for t in task_graph.tasks)
     id_col_len = min(120, max(50, id_col_len))
     columns = ["TaskID", "Status"]
     print(f"{columns[0]:{id_col_len}s} {columns[1]}")
-    task_cache = getattr(executor, "_task_cache")
+    task2record = dict(task_cache.load(task_graph))
     for task in task_graph.tasks:
-        record = task_cache.get_record(task)
+        record = task2record[task]
         status = record.type.name
         msg = f"{task.task_id:{id_col_len}s} {status}"
         is_error = record.type == CacheRecordType.ERROR
