@@ -1,277 +1,330 @@
 GPF User Interface
 ==================
 
-The data are organized by datasets.
-Each dataset represents a set of families and the available phenotypic and
-genotypic data for the members of these families. Typically, a user selects a
-dataset to operate on first and then uses the applicable views or tools over
-the selected dataset, which are organized as tabs (See Figure 1).
-Alternatively, a user can use the meta-analysis tools that allow simultaneous
-queries over all datasets he has access to (See Figure 2). Finally, the system
-provides a management interface allowing the system administrator to control
-the registered users and the datasets they are authorized to access. We provide
-a brief description of the available tools below.
+This guide will give a brief description of the available tools in GPF.
 
-.. figure:: imgs/gpf_screenshots/gpf-tabs.png
-   :align: center
+Depending on the instance's configuration, the user may require permission to access certain datasets. In that case, the user should
+log into their account or contact an admin if they don't have one.
 
-   Figure 2
+The data in the GPF instance is organized into datasets.
+Each dataset represents a set of families and the available phenotypic and/or
+genotypic data for the members of these families.
 
-Dataset Tools
-*************
+To select a dataset, the user can click on the dataset dropdown menu (see fig. 1).
+Each dataset has its own selection of available tools, which are organized as tabs (see fig. 2).
+The availability of these tools is dependent on the configuration of the dataset.
 
-.. figure:: imgs/gpf_screenshots/gpf-tools.png
+Additionally the user can click on the navigation button (see fig. 3) to access other functionality.
+
+
+.. figure:: imgs/gpf_screenshots/dataset-dropdown.png
    :align: center
 
    Figure 1
 
-.. _dataset_description_ui:
+|
 
-Dataset Description
--------------------
+.. figure:: imgs/gpf_screenshots/dataset-tools.png
+   :align: center
 
-The “Dataset Description” provides a high level description of the dataset.
-The description can contain the reason for building the dataset, its size and
-scope, its rules for access and usage, details of the technology used to
-generate the phenotypic and genotypic data, and relevant references.
+   Figure 2
 
-.. _genotype_browser_ui:
+|
 
-Genotype Browser
-----------------
-
-.. figure:: imgs/gpf_screenshots/07-gpf-genotype-browser-genomic.png
+.. figure:: imgs/gpf_screenshots/sidebar-button.png
    :align: center
 
    Figure 3
 
-The “Genotype Browser” provides a powerful query interface to the dataset’s
-genetic variants.
-Users can filter variants based on properties of the variants, such as:
+Dataset Description
+-------------------
 
-   - Their type (SNP, short indel, CNV).
-   - Their effect on proteins (i.e. missense, synonymous, LGD, etc.).
-   - Whether they are de novo or transmitted, and their frequency.
-   - Genomic scores assigned to variants (i.e. phyloP, CADD, MPC, etc.).
-   - The genes targeted by the variant and the family the variant occurs in.
+The Dataset Description tool provides an overview of the dataset.
+For example it can contain the reason for building the dataset, its size and scope, details of the technology used to
+generate the data, rules for access, relevant references and etc.
+
+The description is in Markdown format and can be edited directly from the browser.
+
+
+.. figure:: imgs/gpf_screenshots/dataset-description.png
+   :align: center
+
+Dataset Statistics
+------------------
+
+The Dataset Statistics tool provides various overviews of the families in the dataset.
+A download button can be clicked to download a .ped file with all individuals in the dataset.
+
+.. figure:: imgs/gpf_screenshots/dataset-statistics-download-all.png
+   :align: center
+
+Families by number
+##################
+
+A table with the amount of individuals, separated by phenotype and sex.
+
+.. figure:: imgs/gpf_screenshots/families-by-number.png
+   :align: center
+
+Families by pedigree
+####################
+
+A table of all types of pedigrees and the amount of families for each pedigree.
+Each pedigree can be clicked to display its family IDs and a download link for the .ped file.
+The table can be filtered by various tags provided by a dropdown menu in the upper-left corner (see fig. 4.1).
+The user can download the families found in table via the download button (see fig. 4.2).
+Additionally, a legend can be opened in the bottom-right corner (see fig. 4.3).
+
+.. figure:: imgs/gpf_screenshots/families-by-pedigree.png
+   :align: center
+
+   Figure 4
+
+De Novo variants
+################
+
+Provides a table with the rates of de novo variants, split by variant effect type and the individual’s diagnosis.
+
+.. figure:: imgs/gpf_screenshots/denovo-variants.png
+   :align: center
+
+Gene Browser
+------------
+
+The Gene Browser tool can be used to graphically display a gene's structure (exomes, introns, transcripts) and the dataset's variants found on it. 
+
+The variants can be filtered by different properties. The user can hover over each variant on the plot to show additional information.
+The plot can be zoomed (by click-and-drag) to select specific variants in a region.
+Below the plot is a table showing the currently selected variants.
+Two download buttons are provided - for summary and family variants.
+
+.. figure:: imgs/gpf_screenshots/gene-browser.png
+   :align: center
+
+Genotype Browser
+----------------
+
+The Genotype Browser tool provides a powerful query interface to the dataset’s genetic variants.
+Users can filter by properties of the variants, such as:
+
+   - Their type (SNP, short indel, CNV)
+   - Their effect on proteins (i.e. missense, synonymous, LGD, etc.)
+   - Whether they are de novo or transmitted, and their frequency
+   - Genomic scores assigned to variants (i.e. phyloP, CADD, MPC, etc.)
+   - The genes targeted by the variant and the family the variant occurs in
 
 Additionally, the user can filter by properties of the target genes, such as:
 
    - Protection scores (pLI, RVIS, etc.)
    - Pathway membership
    - SFARI Gene score and phenotypic properties associated with individuals in
-     the dataset families.
+     the dataset families
+
+More information on the filters can be found :ref:`here<Filters>`.
+
+.. figure:: imgs/gpf_screenshots/genotype-browser.png
+   :align: center
 
 After the query is set up, the user can preview the variants of interest within
 the website or download them as an Excel file for further analysis.
-Figure 4 shows an example query.
 
-.. figure:: imgs/gpf_screenshots/01-gpf-variants-table.png
+.. figure:: imgs/gpf_screenshots/genotype-browser-3.png
    :align: center
-
-   Figure 4
-
-
-The "Genotype Browser" also provides a graphical preview which displays
-variants at their location on the corresponding chromosome.
-
-.. figure:: imgs/gpf_screenshots/gpf-genotype-browser-graphical.png
-   :align: center
-
-   Graphical preview
-
-Genotype Browser Filters
-++++++++++++++++++++++++
-
-The "Genotype Browser", as already mentioned, provides filters for various
-properties of variants.
-
-.. figure:: imgs/gpf_screenshots/gpf-genotype-browser-general-filters.png
-   :align: center
-
-   General filters
-
-Gene sets filter
-^^^^^^^^^^^^^^^^
-
-The gene sets filter has support for various preconfigured sets of genes,
-published gene sets and De Novo variants gene sets. It provides a dropdown
-list of groups of gene sets and a simple search bar from which to select the
-desired gene set.
-
-.. figure:: imgs/gpf_screenshots/11-gpf-genotype-browser-gene-sets-edited.png
-   :align: center
-
-   Groups of gene sets
-
-.. figure:: imgs/gpf_screenshots/gpf-gene-sets-search.png
-   :align: center
-
-   Gene sets search bar
-
-.. figure:: imgs/gpf_screenshots/10-gpf-genotype-browser-gene-sets-denovo-combined.png
-   :align: center
-
-   De Novo gene sets
-
-Gene properties
-^^^^^^^^^^^^^^^
-
-The gene properties filter has support for filtering based on various
-preconfigured gene properties, which are presented as a histogram with two
-sliders. The sliders may be moved to select a particular range, or it may
-be entered in the fields below the histogram.
-
-.. figure:: imgs/gpf_screenshots/12-gpf-genotype-browser-gene-weights.png
-   :align: center
-
-   Gene properties
-
-Family filters
-^^^^^^^^^^^^^^
-
-Specific families can be queried by using the "Family Ids" tab.
-Family ids can be listed as comma separated values.
-
-.. figure:: imgs/gpf_screenshots/gpf-genotype-browser-family-ids.png
-   :align: center
-
-   Family ids filter bar
-
-Phenotype filters
-^^^^^^^^^^^^^^^^^
-
-Under the family filters section, the "Advanced" tab provides the ability to
-filter results by a given range for a specific phenotype measure. The measure
-is selected from a search bar, and the range is given as in `Gene properties`_.
-The phenotype filters depend on available phenotype information for the
-dataset.
-
-.. figure:: imgs/gpf_screenshots/gpf-genotype-browser-pheno-filters.png
-   :align: center
-
-   Phenotype filters search bar
-
-.. figure:: imgs/gpf_screenshots/gpf-genotype-browser-pheno-filters-histogram.png
-   :align: center
-
-   Phenotype filters range selector
-
-
-Genomic scores filters
-^^^^^^^^^^^^^^^^^^^^^^
-
-Results can be filtered by their genomic scores' values as well.
-A genomic score is selected from a preconfigured list, and the histogram
-range selector from `Gene properties`_ and `Phenotype filters`_
-is used to determine the range.
-This filtering is dependent on variant annotation during genotype data import.
-
-.. figure:: imgs/gpf_screenshots/16-gpf-genomic-scores.png
-   :align: center
-
-   Genomic score selector
-
-.. figure:: imgs/gpf_screenshots/08-gpf-genotype-browser-genomic-combined.png
-   :align: center
-
-   Genomic score range selector
-
-.. _phenotype_browser_ui:
 
 Phenotype Browser
 -----------------
 
-The “Phenotype Browser” shows the phenotypic data associated with a data set.
-The Phenotypic data is organized by instruments applied to individuals, where
-each instrument has a set of measures. The user can easily see all of the
-instruments and all of the measures within each instrument represented by the
-histograms of the measures across the individuals in the datasets, split by
-role and diagnosis. In addition, the “Phenotype Browser” provides a simple
-keyword search for measures of interest (see Figure 5) and allows the user to
-download the data in Excel format for further analysis.
+The Phenotype Browser tool shows the phenotypic data associated with a data set.
+The data is organized by instruments applied to individuals, where
+each instrument has a set of measures.
+These measures are displayed in a table alongside their histograms across the individuals in the datasets (split by role and diagnosis).
+A search bar and an instruments dropdown menu are provided.
+The table can be downloaded as a spreadsheet file.
 
-.. figure:: imgs/gpf_screenshots/04-gpf-pheno-browser-search.png
+.. figure:: imgs/gpf_screenshots/pheno-browser-search.png
    :align: center
-
-   Figure 5
-
-.. _enrichment_tool_ui:
 
 Enrichment Tool
 ---------------
 
-The “Enrichment Tool” allows the user to test if a given set of genes is
-affected more or less by de novo mutations than expected in the children in the
-dataset. We, and others, have used such a simple approach to demonstrate that
+The Enrichment Tool allows the user to test how strongly a given set of genes are affected by de novo mutations.
+
+Such an approach has been used to demonstrate that
 there is functional convergence of de novo mutations in autism (i.e., damaging
 de novo mutations in children with autism target synaptic genes and genes
 encoding chromatin modifiers) and that the de novo mutation in autism targets
 similar genes as the de novo mutation in intellectual disability and epilepsy.
-The same technique was applied in studies of various other disorders. Moreover,
-users can use the “Enrichment Tool” over existing datasets to tests hypotheses
-driven by their own research against the large amount of genetic data managed
-by GPF. (See Figure 6)
+The same technique was applied in studies of various other disorders.
+Moreover, users can use the Enrichment Tool to tests hypotheses driven by
+their own research against the large amount of genetic data managed by GPF.
+To use the tool, the user has to choose a gene or a set of genes to test.
+Enrichment models can be applies as additional normalization criteria.
 
-.. figure:: imgs/gpf_screenshots/14-gpf-enrichment.png
+.. figure:: imgs/gpf_screenshots/enrichment-tool.png
    :align: center
-
-   Figure 6
-
-.. _phenotype_tool_ui:
 
 Phenotype Tool
 --------------
 
-The “Phenotype Tool” (see Figures 7.a and 7.b) is used to study correlation of
-variants in gene sets and phenotype measures. A phenotype measure, optional
-measures to normalize by, and various filters are selected before producing a
-report. Additionally, gene sets, symbols and weights are available to filter
-results by. The result can be downloaded for later usage.
+The Phenotype Tool is used to study correlation of variants in gene sets and phenotype measures.
+To produce a report, the user selects a phenotype measure and optional measures to normalize by.
+Additional :ref:`filters<Filters>` are also provided. The results are available for downloading.
 
-.. figure:: imgs/gpf_screenshots/gpf-pheno-tool-main.png
+.. figure:: imgs/gpf_screenshots/pheno-tool.png
    :align: center
 
-   Figure 7.a
+Autism Gene Profiles
+--------------------
 
-.. figure:: imgs/gpf_screenshots/gpf-pheno-tool-results.png
+The Autism Gene Profiles tool can be used to view a table of statistics about genes in the configured datasets.
+The table is interactive - columns can be sorted, toggled and reordered (see video below).
+Each gene symbol can be clicked to open the single view for that gene.
+Some of the columns represent a statistic for a dataset - their cells can be clicked to open the corresponding genotype browser query.
+Rows can be highlighted using the middle mouse button or CTRL / ⌘ + click. Highlighted genes are listed in the bottom right
+and can be opened for comparison (see fig. 5).
+
+.. video:: ../_static/agp.mp4
+   :width: 100%
+
+|
+
+.. figure:: imgs/gpf_screenshots/agp-1.png
    :align: center
 
-   Figure 7.b
+   Figure 5
 
-.. _dataset_statistics_ui:
 
-Dataset Statistics
-------------------
+Autism Gene Profiles - single view
+##################################
 
-"Dataset Statistics" shows the number of people by role (proband, mother,
-grandfather, etc), by primary diagnosis, or other relevant phenotypic
-parameters, as well as the number of families by pedigree structure and, if
-applicable, the rates of de novo variants by variant type and effect and by the
-person’s role and diagnosis (see Figures 3.a and 3.b).
+The single view is a dedicated view for one or more genes. It contains the information you'd find in the table, but presented in more detail.
+For example, scores are presented in the context of the histogram for the whole range of score values.
+There are also useful links for external resources such as the UCSC Genome Browser.
 
-.. figure:: imgs/gpf_screenshots/gpf-pedigrees-blur.png
+
+.. figure:: imgs/gpf_screenshots/agp.png
    :align: center
 
-   Figure 3.a
+Filters
+-------
 
-.. figure:: imgs/gpf_screenshots/gpf-denovo-variants.png
+Below is a list of the available filters in GPF.
+
+General Filters
+###############
+
+.. figure:: imgs/gpf_screenshots/general-filters.png
    :align: center
 
-   Figure 3.b
+   General filters
 
-metaTools
-*********
 
-MetaQuery
----------
+Present in parent
++++++++++++++++++
 
-The “metaQuery” (“All data sets”)
+This filter allows querying whether the variant is found in a parent and the frequency with which it occurs.
+When choosing the frequency, the user can select:
 
-Management Tools
-****************
+- All variants (via "all")
+- Variants that occur less than X % (via "rare")
+- Variants that occur between X and Y % (via "interval")
+- Variants that occur in only a single individual (via "ultraRare")
 
-.. toctree::
-   :maxdepth: 3
+.. figure:: imgs/gpf_screenshots/present-in-parent.png
+   :align: center
 
-   user_management
+
+Pedigree selector
++++++++++++++++++
+
+The pedigree selector has a dropdown to choose a criteria from:
+
+.. figure:: imgs/gpf_screenshots/pedigree-selector.png
+   :align: center
+
+Gene symbols filter
+##############
+
+Specific genes can be queried for using this filter.
+Gene symbols can be listed as comma or newline separated values.
+
+.. figure:: imgs/gpf_screenshots/gene-symbols.png
+   :align: center
+
+Gene sets filter
+################
+
+This filter allows the user to limit his query to a specific set of genes.
+We provide collections of published gene sets as well as sets based on de novo variants in our datasets.
+A download link is available for the selected gene set.
+
+.. figure:: imgs/gpf_screenshots/gene-sets.png
+   :align: center
+
+.. figure:: imgs/gpf_screenshots/gene-sets-denovo.png
+   :align: center
+
+Gene scores
+###########
+
+This filter allows the user to limit his query to a range of values for a given gene score.
+The gene score is presented as a histogram with two sliders which can be moved to select a range.
+The text next to the left and right sliders represents the amount of genes excluded from the selection.
+The text in the middle is the amount of genes that are selected.
+A download link is available for the gene scores. 
+
+.. figure:: imgs/gpf_screenshots/gene-scores.png
+   :align: center
+
+Regions filter
+##############
+
+This filter can be used to limit the query to a specific genomic region.
+The format is a comma or a newline separate list of a region strings.
+Each region string follows a "CHR:POS" or "CHR:POS_BEG-POS_END" format.
+
+.. figure:: imgs/gpf_screenshots/regions-filter.png
+   :align: center
+
+The user can also filter by phenotypic measures through the "Advanced" tab.
+A measure is selected and the user is provided with a histogram, similar to the `Gene scores`_ filter.
+
+.. figure:: imgs/gpf_screenshots/family-filter-advanced.png
+   :align: center
+
+Study filters
+#############
+
+This filter can be found on genotype data groups and allows selecting a subset of its studies.
+
+.. figure:: imgs/gpf_screenshots/study-filters.png
+   :align: center
+
+
+Genomic scores filters
+######################
+
+This filter allows the user to limit his query to a range of values for a given genomic score, similar to the `Gene scores`_ filter.
+The user can filter by multiple genomic scores.
+This filter is dependent on variant annotation during genotype data import.
+
+.. figure:: imgs/gpf_screenshots/genomic-scores.png
+   :align: center
+
+Family and person filters
+##############
+
+These two filters have identical interfaces, but work on families or individuals respectively.
+Specific families or individuals can be queried for using the "IDs" tab.
+IDs can be listed as comma or newline separated values.
+
+.. figure:: imgs/gpf_screenshots/family-ids.png
+   :align: center
+
+Unique family variants 
+######################
+
+This toggles how identical family variants from different studies are shown.
+
+.. figure:: imgs/gpf_screenshots/unique-family-variants.png
+   :align: center
