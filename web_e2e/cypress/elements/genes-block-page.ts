@@ -61,7 +61,7 @@ export class GenesBlockPage extends BasePage {
     return cy.get('#gene-scores');
   }
 
-  public get genesWeightsPanel(): element {
+  public get geneScoresPanel(): element {
     return cy.get('#gene-scores-panel');
   }
 

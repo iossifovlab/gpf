@@ -1,8 +1,12 @@
 import { BasePage } from './utils';
 
 export class GeneScoresPage extends BasePage {
+  public get block(): element {
+    return cy.get('gpf-gene-scores');
+  }
+
   public get dropdownButton(): element {
-    return cy.get('gpf-gene-scores select');
+    return this.block.find('select');
   }
 
   public get fromInputField(): element {
@@ -38,6 +42,6 @@ export class GeneScoresPage extends BasePage {
   }
 
   public get downloadLink(): element {
-    return cy.get('.download-link');
+    return this.block.find('.download-link');
   }
 }

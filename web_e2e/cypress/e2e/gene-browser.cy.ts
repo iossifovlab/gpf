@@ -108,7 +108,7 @@ describe('Gene browser basic display tests after query', () => {
   });
 });
 
-describe('Gene browser tests for download', () => {
+describe('Gene browser download tests', () => {
   const page = new GeneBrowserPage();
 
   before(() => {
@@ -125,7 +125,7 @@ describe('Gene browser tests for download', () => {
   [
     {
       gene: 'chd8',
-      filters: ['Other', 'ins'],
+      filtersToUncheck: ['Other', 'ins'],
       expectedPaths: [
         'summary_variants1.tsv',
         'variants1.tsv'
@@ -133,7 +133,7 @@ describe('Gene browser tests for download', () => {
     },
     {
       gene: 'chd8',
-      filters: ['Affected only'],
+      filtersToUncheck: ['Affected only'],
       expectedPaths: [
         'summary_variants2.tsv',
         'variants2.tsv'
@@ -141,19 +141,19 @@ describe('Gene browser tests for download', () => {
     },
     {
       gene: 'pogz',
-      filters: ['missense', 'synonymous'],
+      filtersToUncheck: ['missense', 'synonymous'],
       expectedPaths: [
         'summary_variants3.tsv',
         'variants3.tsv'
       ]
     }
   ].forEach(data => {
-    it(`should test download summary and download button for gene ${data.gene} 
-    with filters ${data.filters.toString()}`, () => {
+    it('should go to ' + data.gene + ' gene page, filter out ' + data.filtersToUncheck.toString() +
+       'download summary and family variants and compare the files to the reference data', () => {
       page.searchInputBox.type(data.gene);
       page.pressGoButton();
 
-      data.filters.forEach(filter => {
+      data.filtersToUncheck.forEach(filter => {
         page.getAffectedStatusCheckbox(filter).click();
       });
 

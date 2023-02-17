@@ -52,7 +52,7 @@ const geneScoresData = [
   }
 ];
 
-describe('Gene weights panel tests', () => {
+describe('Gene scores tests', () => {
   const page = new GeneScoresPage();
   const genesBlockPage = new GenesBlockPage();
 
@@ -67,15 +67,15 @@ describe('Gene weights panel tests', () => {
     page.navigateToHome();
   });
 
-  it('should display gene weights panel', () => {
+  it('should display gene scores panel', () => {
     page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
-    genesBlockPage.genesWeightsPanel.should('not.exist');
+    genesBlockPage.geneScoresPanel.should('not.exist');
 
     genesBlockPage.geneScoresButton.click();
-    genesBlockPage.genesWeightsPanel.should('be.visible');
+    genesBlockPage.geneScoresPanel.should('be.visible');
   });
 
-  it('should display the correct gene weights in the selector dropdown', () => {
+  it('should show all the gene scores in the selector dropdown', () => {
     page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
     genesBlockPage.geneScoresButton.click();
 
@@ -84,7 +84,7 @@ describe('Gene weights panel tests', () => {
     });
   });
 
-  it('should go through all gene weights and check whether from/to buttons are shown', () => {
+  it('should go through all gene scores and check whether the from/to buttons are shown or hidden', () => {
     page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
     genesBlockPage.geneScoresButton.click();
 
@@ -168,7 +168,73 @@ describe('Gene weights panel tests', () => {
   });
 });
 
-describe.skip('Gene weights visual tests', () => {
+describe('Gene scores download tests', () => {
+  const page = new GeneScoresPage();
+  const genesBlockPage = new GenesBlockPage();
+
+  before(() => {
+    page.cleanup();
+    page.navigateToHome(false);
+    page.loginAdmin();
+  });
+
+  beforeEach(() => {
+    page.preserveLogin();
+    page.navigateToHome();
+    cy.deleteDownloadsFolder();
+  });
+
+  it('should download file', () => {
+    page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
+    genesBlockPage.geneScoresButton.click();
+    page.dropdownButton.select('RVIS');
+
+    const downloadedVariantsPath = Cypress.config('downloadsFolder') + '/scores.csv';
+    const expectedVariantsPath = 'cypress/fixtures/gene-scores/scores.csv';
+
+    cy.window().document().then(doc => {
+      doc.addEventListener('click', () => {
+        setTimeout(() => doc.location?.reload(), 5000);
+      });
+      page.downloadLink.click();
+    });
+
+    cy.readFile(downloadedVariantsPath, { timeout: 5000 }).then((downloadedFile: string) => {
+      cy.readFile(expectedVariantsPath, { timeout: 5000 }).then((expectedFile: string) => {
+        const downloadedFileLines = downloadedFile.split(/\r\n|\r|\n/);
+        const expectedFileLines = expectedFile.split(/\r\n|\r|\n/);
+        expect(downloadedFileLines).to.deep.eq(expectedFileLines);
+      });
+    });
+  });
+
+  it('should download RVIS and compare the file to the reference data', () => {
+    page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
+    genesBlockPage.geneScoresButton.click();
+    page.dropdownButton.select('RVIS');
+
+    const downloadedVariantsPath = Cypress.config('downloadsFolder') + '/scores.csv';
+    const expectedVariantsPath = 'cypress/fixtures/gene-scores/scores.csv';
+
+    cy.window().document().then(doc => {
+      doc.addEventListener('click', () => {
+        setTimeout(() => doc.location?.reload(), 5000);
+      });
+      page.downloadLink.click();
+    });
+
+    cy.readFile(downloadedVariantsPath, { timeout: 5000 }).then((downloadedFile: string) => {
+      cy.readFile(expectedVariantsPath, { timeout: 5000 }).then((expectedFile: string) => {
+        const downloadedFileLines = downloadedFile.split(/\r\n|\r|\n/);
+        const expectedFileLines = expectedFile.split(/\r\n|\r|\n/);
+        expect(downloadedFileLines).to.deep.eq(expectedFileLines);
+      });
+    });
+  });
+});
+
+
+describe.skip('Gene scores visual tests', () => {
   const page = new GeneScoresPage();
   const genesBlockPage = new GenesBlockPage();
 
@@ -183,7 +249,7 @@ describe.skip('Gene weights visual tests', () => {
     page.navigateToHome();
   });
 
-  it.skip('should inspect gene weights on drag', () => {
+  it.skip('should inspect gene scores on drag', () => {
     function moveSlider(which: string, dragValue: number, heightValue = 0): void {
       if (which === 'right') {
         dragValue = -dragValue;
@@ -229,46 +295,5 @@ describe.skip('Gene weights visual tests', () => {
     moveSlider('left', 200);
     page.allGeneScores.should('not.contain.text', '~');
     page.histogram.matchImageSnapshot('histogram-left-right-drag-overlap');
-  });
-});
-
-describe('Gene scores download', () => {
-  const page = new GeneScoresPage();
-  const genesBlockPage = new GenesBlockPage();
-
-  before(() => {
-    page.cleanup();
-    page.navigateToHome(false);
-    page.loginAdmin();
-  });
-
-  beforeEach(() => {
-    page.preserveLogin();
-    page.navigateToHome();
-    cy.deleteDownloadsFolder();
-  });
-
-  it.only('should download file', () => {
-    page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
-    genesBlockPage.geneScoresButton.click();
-    page.dropdownButton.select('RVIS');
-
-    const downloadedVariantsPath = Cypress.config('downloadsFolder') + '/scores.csv';
-    const expectedVariantsPath = 'cypress/fixtures/gene-scores/scores.csv';
-
-    cy.window().document().then(doc => {
-      doc.addEventListener('click', () => {
-        setTimeout(() => doc.location?.reload(), 5000);
-      });
-      page.downloadLink.click();
-    });
-
-    cy.readFile(downloadedVariantsPath, { timeout: 5000 }).then((downloadedFile: string) => {
-      cy.readFile(expectedVariantsPath, { timeout: 5000 }).then((expectedFile: string) => {
-        const downloadedFileLines = downloadedFile.split(/\r\n|\r|\n/);
-        const expectedFileLines = expectedFile.split(/\r\n|\r|\n/);
-        expect(downloadedFileLines).to.deep.eq(expectedFileLines);
-      });
-    });
   });
 });
