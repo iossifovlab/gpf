@@ -8,39 +8,119 @@ from dae.task_graph import TaskGraphCli
 from dae.task_graph.graph import TaskGraph
 
 
+def _build_graph_a(graph_params) -> TaskGraph:
+    task_graph = TaskGraph()
+
+    num_of_parts, parts_sleep, summary_sleep = 10, 2, 2
+
+    if graph_params:
+        if len(graph_params) != 3:
+            raise ValueError(
+                "The graph A needs three parameters: "
+                "<number of parts>, <seconds for parts>, "
+                "<seconds for summary>")
+        num_of_parts, parts_sleep, summary_sleep = graph_params
+    print(
+        f"Bulding graph A with {num_of_parts} parts, "
+        f"{parts_sleep} seconds for each parts, and "
+        f"{summary_sleep} secoconds for the summary")
+
+    def task_part():
+        time.sleep(float(parts_sleep))
+
+    def task_summary():
+        time.sleep(float(summary_sleep))
+
+    parts = [task_graph.create_task(
+        f"part {p}", task_part, [], [])
+        for p in range(int(num_of_parts))]
+    task_graph.create_task("summary", task_summary, [], parts)
+    return task_graph
+
+
+def _build_graph_b(graph_params) -> TaskGraph:
+    task_graph = TaskGraph()
+
+    num_of_parts, parts_sleep, summary_sleep = "2", "5", "10"
+
+    if graph_params:
+        if len(graph_params) != 3:
+            raise ValueError(
+                "The graph A needs three parameters: "
+                "<number of parts>, <seconds for parts>, "
+                "<seconds for summary>")
+        num_of_parts, parts_sleep, summary_sleep = graph_params
+    print(
+        f"Bulding graph A with {num_of_parts} parts, "
+        f"{parts_sleep} seconds for each parts, and "
+        f"{summary_sleep} secoconds for the summary")
+
+    def task_part():
+        time.sleep(float(parts_sleep))
+        return 1000 * "B"
+
+    def task_summary(*args):
+        time.sleep(float(summary_sleep))
+        return "b".join(args)
+
+    parts = [task_graph.create_task(
+        f"part {p}", task_part, [], [])
+        for p in range(int(num_of_parts))]
+    task_graph.create_task("summary", task_summary, parts, parts)
+    return task_graph
+
+
+def _build_graph_c(graph_params) -> TaskGraph:
+    task_graph = TaskGraph()
+
+    num_of_parts, parts_sleep, summary_sleep = "2", "5", "10"
+
+    if graph_params:
+        if len(graph_params) != 3:
+            raise ValueError(
+                "The graph C needs three parameters: "
+                "<number of parts>, <sleep for parts>, "
+                "<sleep for summary>")
+        num_of_parts, parts_sleep, summary_sleep = graph_params
+    print(
+        f"Bulding graph C with {num_of_parts} parts, "
+        f"{parts_sleep} seconds sleep for each parts, and "
+        f"{summary_sleep} secoconds sleep for the summary")
+
+    def task_part(*_args):
+        time.sleep(float(parts_sleep))
+        return 1000 * "B"
+
+    def task_summary(*args):
+        time.sleep(float(summary_sleep))
+        return "b".join(args)
+
+    parts = [
+        task_graph.create_task(f"part {p}", task_part, [], [])
+        for p in range(int(num_of_parts))
+    ]
+    summary = task_graph.create_task("summary", task_summary, parts, parts)
+    parts2 = [
+        task_graph.create_task(f"part2 {p}", task_part, [summary], [summary])
+        for p in range(int(num_of_parts))
+    ]
+    task_graph.create_task("summary2", task_summary, parts2, parts2)
+    return task_graph
+
+
 def build_demo_graph(graph_type: str,
                      graph_params: Optional[List[str]]) -> TaskGraph:
     """Build a demo graph."""
-    task_graph = TaskGraph()
-
     if graph_type == "A":
-        NP, SP, SS = "2", "5", "10"  # pylint: disable=invalid-name
+        return _build_graph_a(graph_params)
 
-        if graph_params:
-            if len(graph_params) != 3:
+    if graph_type == "B":
+        return _build_graph_b(graph_params)
 
-                raise Exception("The graph A needs three parameters: "
-                                "<number of parts>, <seconds for parts>, "
-                                "<seconds for summary>")
-            NP, SP, SS = graph_params  # pylint: disable=invalid-name
-        print(f"Bulding graph A with {NP} parts, {SP} seconds for "
-              f"each parts, and {SS} secoconds for the summary")
+    if graph_type == "C":
+        return _build_graph_c(graph_params)
 
-        def task_part():
-            time.sleep(float(SP))
-            return 1000 * "B"
-
-        def task_summary(*args):
-            time.sleep(float(SS))
-            return "b".join(args)
-
-        parts = [task_graph.create_task(
-            f"part {p}", task_part, [], []) for p in range(int(NP))]
-        task_graph.create_task("summary", task_summary, parts, parts)
-    else:
-        raise Exception("Unknown graph")
-
-    return task_graph
+    raise ValueError(f"Unknown graph <{graph_type}>")
 
 
 def main(argv=None):
