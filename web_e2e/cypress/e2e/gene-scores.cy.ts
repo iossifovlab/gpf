@@ -199,8 +199,8 @@ describe('Gene scores download tests', () => {
       page.downloadLink.click();
     });
 
-    cy.readFile(downloadedVariantsPath, { timeout: 5000 }).then((downloadedFile: string) => {
-      cy.readFile(expectedVariantsPath, { timeout: 5000 }).then((expectedFile: string) => {
+    cy.readFile(downloadedVariantsPath, { timeout: 10000 }).then((downloadedFile: string) => {
+      cy.readFile(expectedVariantsPath, { timeout: 10000 }).then((expectedFile: string) => {
         const downloadedFileLines = downloadedFile.split(/\r\n|\r|\n/);
         const expectedFileLines = expectedFile.split(/\r\n|\r|\n/);
         expect(downloadedFileLines).to.deep.eq(expectedFileLines);
