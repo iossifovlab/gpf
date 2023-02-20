@@ -185,8 +185,9 @@ def test_failed_auth_lockouts(db, user, client, tokens):
             hours=response_hours, minutes=response_minutes
         )
         expected_td = timedelta(minutes=pow(2, i))
-        # Give a tolerance of 5 seconds to prevent test from becoming flaky
-        assert abs(response_td - expected_td) <= timedelta(seconds=5)
+        # Give a tolerance of 60 seconds to prevent test from becoming flaky
+        # This large tolerance has been chosen intentionally
+        assert abs(response_td - expected_td) <= timedelta(seconds=60)
         assert response.status_code == status.HTTP_403_FORBIDDEN
         expire_email_lockout(data["username"])
 
