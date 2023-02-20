@@ -118,6 +118,7 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
       this.queryService.cancelStreamPost();
       this.queryService.cancelSummaryStreamPost();
       this.loadingService.setLoadingStop();
+      this.location.replaceState(`datasets/${this.selectedDatasetId}/gene-browser`);
     });
 
     if (this.selectedDataset.studies?.length > 1) {
