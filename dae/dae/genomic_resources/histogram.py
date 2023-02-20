@@ -127,8 +127,8 @@ class Histogram(Statistic):
         return cast(str, yaml.dump(
             {
                 "config": self.config,
-                "bins": self.bins,
-                "bars": self.bars
+                "bins": self.bins.tolist(),
+                "bars": self.bars.tolist()
             }
         ))
 
@@ -137,6 +137,6 @@ class Histogram(Statistic):
         res = yaml.load(data, yaml.Loader)
         return Histogram(
             res.get("config"),
-            bins=res.get("bins"),
-            bars=res.get("bars")
+            bins=np.array(res.get("bins")),
+            bars=np.array(res.get("bars"))
         )

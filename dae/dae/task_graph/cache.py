@@ -127,6 +127,7 @@ class FileTaskCache(TaskCache):
             in_files = copy(self._global_dependancies)
         else:
             in_files = []
+        assert in_files is not None
         in_files.extend(task.input_files)
         for dep in task.deps:
             in_files.append(self._get_flag_filename(dep))
@@ -175,6 +176,7 @@ class FileTaskCache(TaskCache):
         return None
 
     def _safe_getmtime(self, path):
+        assert self._mtime_cache is not None
         if path in self._mtime_cache:
             return self._mtime_cache[path]
         if fs_utils.exists(path):
