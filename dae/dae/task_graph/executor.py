@@ -5,6 +5,7 @@ from abc import abstractmethod
 from copy import copy
 from typing import Any, Iterator
 from typing import Optional
+from toolz.itertoolz import partition_all
 
 from dae.task_graph.graph import TaskGraph, Task
 from dae.task_graph.cache import TaskCache, NoTaskCache, CacheRecordType
@@ -189,8 +190,12 @@ class DaskExecutor(AbstractTaskGraphExecutor):
         self._future_key2task = {}
         self._finished_future_keys = set()
         self._task2result = {}
+        self._task_queue = []
 
     def _queue_task(self, task_node):
+        self._task_queue.append(task_node)
+
+    def _submit_task(self, task_node):
         deps = []
         for dep in task_node.deps:
             future = self._task2future.get(dep)
@@ -218,24 +223,25 @@ class DaskExecutor(AbstractTaskGraphExecutor):
         from dask.distributed import as_completed
 
         assert len(self._finished_future_keys) == 0, "Don't call execute twice"
+        for tasks in partition_all(500, self._task_queue):
+            for task_node in tasks:
+                self._submit_task(task_node)
 
-        while True:
-            # iterate in this funny manner to allow dask to gc tasks ASAP
-            try:
-                future = next(as_completed(list(self._task2future.values())))
-            except StopIteration:
-                break
+            for future in as_completed(list(self._task2future.values())):
+                try:
+                    result = future.result()
+                except Exception as exp:  # pylint: disable=broad-except
+                    result = exp
+                self._finished_future_keys.add(future.key)
+                task = self._future_key2task[future.key]
+                self._task2result[task] = result
 
-            try:
-                result = future.result()
-            except Exception as exp:  # pylint: disable=broad-except
-                result = exp
-            self._finished_future_keys.add(future.key)
-            task = self._future_key2task[future.key]
-            yield task, result
-            # del ref to future in order to make dask gc its resources
-            del self._task2future[task]
-            del task
+                yield task, result
+
+                # del ref to future in order to make dask gc its resources
+                logger.debug("clean up task %s", task)
+
+            self._task2future = {}
 
         # clean up
         if len(self._task2future) > 0:
@@ -243,22 +249,17 @@ class DaskExecutor(AbstractTaskGraphExecutor):
         self._task2future = {}
         self._future_key2task = {}
         self._finished_future_keys = set()
+        self._task_queue = []
         self._task2result = {}
 
     def _set_task_result(self, task, result):
         self._task2result[task] = result
 
     def get_active_tasks(self):
-        res = []
-        for task, future in self._task2future.items():
-            all_deps_satisfied = all(
-                self._task2future[dep].key in self._finished_future_keys
-                for dep in task.deps if dep in self._task2future
-            )
-            future_not_finished = future.key not in self._finished_future_keys
-            if future_not_finished and all_deps_satisfied:
-                res.append(task)
-        return res
+        for task_node in self._task_queue:
+            if task_node not in self._task2result:
+                return [task_node]
+        return []
 
     def _get_future_or_result(self, task):
         future = self._task2future.get(task)
