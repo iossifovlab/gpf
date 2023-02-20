@@ -72,6 +72,8 @@ function main() {
       ./integration/local/data/pheno \
       ./integration/local/data/wdae
 
+    build_run rm -rvf \
+        dae/.coverage*
   }
 
   local gpf_dev_image="gpf-dev"
@@ -401,6 +403,8 @@ EOT
     build_run_ctx_init "container" "ubuntu:20.04"
     defer_ret build_run_ctx_reset
 
+    build_run rm -rf dae/.coverage*
+
     local gpf_tag=$(e gpf_tag)
     build_run echo "${gpf_tag}"
     local __gpf_build_no=$(e __gpf_build_no)
@@ -431,7 +435,6 @@ EOT
           --exclude results \
           --exclude .gitignore \
           --exclude gpf_dae.egg-info \
-          --exclude dae/.coverage \
           --exclude dae/tmp \
           --exclude dae/build \
           --exclude wdae/build \
@@ -441,6 +444,9 @@ EOT
           --exclude TESTphastCons100way.bedGraph.gz.tbi \
           --exclude conftest.py \
           --exclude gpf_wdae.egg-info \
+          --exclude mypy.ini \
+          --exclude pylintrc \
+          --exclude setup.cfg \
           --transform "s,^,gpf/," \
           dae/ wdae/ environment.yml dev-environment.yml VERSION
     )
