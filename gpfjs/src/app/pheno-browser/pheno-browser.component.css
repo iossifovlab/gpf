@@ -80,6 +80,7 @@
   background-color: #eee;
   overflow: hidden;
   text-overflow: ellipsis;
+  box-shadow: none;
 }
 
 #select-instrument > option {
