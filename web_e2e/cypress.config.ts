@@ -1,6 +1,8 @@
-import { defineConfig } from 'cypress'
+import { defineConfig } from 'cypress';
 
 export default defineConfig({
+  viewportWidth: 1920,
+  viewportHeight: 1080,
   defaultCommandTimeout: 5000,
   reporter: 'cypress-multi-reporters',
   reporterOptions: {
