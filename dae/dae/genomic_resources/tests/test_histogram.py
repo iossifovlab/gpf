@@ -1,5 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 
+import yaml
 import numpy as np
 
 from dae.genomic_resources.histogram import Histogram
@@ -76,3 +77,32 @@ def test_histogram_merge():
 
     hist1.merge(hist2)
     assert (hist1.bars == np.array([0, 0, 0, 1, 0, 1, 0, 2, 0, 2])).all()
+
+
+def test_histogram_serialize_deserialize():
+    config = {
+        "score": "test",
+        "bins": 10,
+        "x_min": 0,
+        "x_max": 10,
+        "x_scale": "linear",
+        "y_scale": "linear"
+    }
+    hist1 = Histogram(
+        config,
+        bins=np.arange(0, 11),
+        bars=np.array([0, 0, 0, 1, 0, 0, 0, 1, 0, 2])
+    )
+
+    serialized = hist1.serialize()
+    print(serialized)
+
+    loaded = yaml.load(serialized, yaml.Loader)
+    print(loaded)
+    assert loaded["bins"] == [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    assert loaded["bars"] == [0, 0, 0, 1, 0, 0, 0, 1, 0, 2]
+
+    hist2 = Histogram.deserialize(serialized)
+
+    assert np.array_equal(hist2.bins, hist1.bins)
+    assert np.array_equal(hist2.bars, hist1.bars)
