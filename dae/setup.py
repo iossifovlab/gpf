@@ -72,6 +72,7 @@ setuptools.setup(
     inmemory=dae.inmemory_storage.inmemory_import_storage:InmemoryImportStorage
 
     [console_scripts]
+    demo_graphs_cli=dae.task_graph.demo_graphs_cli:main
 
     grr_manage=dae.genomic_resources.cli:cli_manage
     grr_browse=dae.genomic_resources.cli:cli_browse

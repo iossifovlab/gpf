@@ -46,7 +46,7 @@ def _build_graph_b(graph_params) -> TaskGraph:
     if graph_params:
         if len(graph_params) != 3:
             raise ValueError(
-                "The graph A needs three parameters: "
+                "The graph B needs three parameters: "
                 "<number of parts>, <seconds for parts>, "
                 "<seconds for summary>")
         num_of_parts, parts_sleep, summary_sleep = graph_params
