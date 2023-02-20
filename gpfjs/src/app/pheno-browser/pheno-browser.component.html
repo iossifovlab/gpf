@@ -10,7 +10,9 @@
             [ngModel]="selectedInstrument$ | async"
             (ngModelChange)="emitInstrument($event)">
             <option value="">All instruments</option>
-            <option *ngFor="let instrument of (instruments | async)?.instruments" [ngValue]="instrument">{{ instrument }}</option>
+            <option *ngFor="let instrument of (instruments | async)?.instruments" [ngValue]="instrument">{{
+              instrument
+            }}</option>
           </select>
           <span class="select-dropdown-icon" [style.content]="'url(' + imgPathPrefix + 'dropdown_icon.png)'"> </span>
         </div>
@@ -43,7 +45,9 @@
             (click)="searchBox.value = ''; search(searchBox.value)">
           </span>
         </div>
-        <a (click)="downloadMeasures()" class="download-link" href="javascript:;" id="download-measures">Download measures</a>
+        <a (click)="downloadMeasures()" class="download-link" href="javascript:;" id="download-measures"
+          >Download measures</a
+        >
       </div>
     </div>
   </div>
