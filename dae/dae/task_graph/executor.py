@@ -240,6 +240,9 @@ class DaskExecutor(AbstractTaskGraphExecutor):
 
                 # del ref to future in order to make dask gc its resources
                 logger.debug("clean up task %s", task)
+                logger.info(
+                    "finished %s/%s", len(self._task2result),
+                    len(self._task_queue))
 
             self._task2future = {}
 
