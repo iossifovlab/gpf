@@ -82,7 +82,7 @@ class GenomicScoresDb:
                 assert set(df.columns) == set(["bars", "bins"]), \
                     "Incorrect CSV file"
                 bins = df["bins"].values
-                bars = df["bars"].values
+                bars = list(map(float, filter(None, df["bars"].values)))
                 hist.bins = bins
                 hist.bars = bars
 
