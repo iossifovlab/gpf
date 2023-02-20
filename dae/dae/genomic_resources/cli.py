@@ -79,7 +79,7 @@ def _add_dry_run_and_force_parameters_group(parser):
         help="only checks if the manifest update is needed whithout "
         "actually updating it")
     group.add_argument(
-        "-i", "--ignore", default=False,
+        "-f", "--force", default=False,
         action="store_true",
         help="ignore resource state and rebuild manifest")
 
@@ -479,7 +479,8 @@ def _run_repo_stats_command(proto, **kwargs):
     if not dry_run:
         modified_kwargs = copy.copy(kwargs)
         modified_kwargs["command"] = "run"
-        TaskGraphCli.process_graph(graph, **modified_kwargs)
+        TaskGraphCli.process_graph(
+            graph, force_mode="always", **modified_kwargs)
 
     if not dry_run:
         proto.build_content_file()
@@ -520,7 +521,7 @@ def _run_resource_stats_command(proto, repo_url, **kwargs):
 
     modified_kwargs = copy.copy(kwargs)
     modified_kwargs["command"] = "run"
-    TaskGraphCli.process_graph(graph, **modified_kwargs)
+    TaskGraphCli.process_graph(graph, force_mode="always", **modified_kwargs)
 
 
 def _run_repo_repair_command(proto, **kwargs):

@@ -109,15 +109,20 @@ class TaskGraphCli:
         return DaskExecutor(client, task_cache=task_cache)
 
     @staticmethod
-    def process_graph(task_graph: TaskGraph, **kwargs) -> bool:
+    def process_graph(
+            task_graph: TaskGraph, force_mode="optional", **kwargs) -> bool:
         """Process task_graph in according with the arguments in args."""
         args = Box(kwargs)
 
         if args.task_ids:
             task_graph = task_graph.prune(ids_to_keep=args.task_ids)
 
+        if force_mode == "always":
+            force = None
+        else:
+            force = args.get("force")
         task_cache = TaskCache.create(
-            force=args.get("force"), cache_dir=args.get("task_status_dir"))
+            force=force, cache_dir=args.get("task_status_dir"))
 
         if args.command is None or args.command == "run":
             with TaskGraphCli.create_executor(task_cache, **kwargs) as xtor:
