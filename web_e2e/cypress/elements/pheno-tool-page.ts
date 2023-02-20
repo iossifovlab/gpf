@@ -26,7 +26,7 @@ export class PhenoToolPage extends BasePage {
   }
 
   public get downloadButton(): element {
-    return this.window.contains('Download');
+    return cy.get('#download-button');
   }
 
   public pressReportButton(): void {
