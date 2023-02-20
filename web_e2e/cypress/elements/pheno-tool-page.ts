@@ -22,11 +22,11 @@ export class PhenoToolPage extends BasePage {
   }
 
   public get reportButton(): element {
-    return cy.get('gpf-pheno-tool button').contains('Report');
+    return this.window.contains('Report');
   }
 
   public get downloadButton(): element {
-    return cy.get('gpf-pheno-tool button').contains('Download');
+    return this.window.contains('Download');
   }
 
   public pressReportButton(): void {

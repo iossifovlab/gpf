@@ -106,10 +106,10 @@ describe('Pheno tool tests', () => {
     page.downloadButton.should('be.disabled');
 
     phenoToolMeasurePage.searchbox.click();
+    phenoToolMeasurePage.getDropdownOptionByText('i1.age').click();
     saveQueryPage.button.should('be.enabled');
     page.reportButton.should('be.enabled');
     page.downloadButton.should('be.enabled');
-    phenoToolMeasurePage.getDropdownOptionByText('i1.age').click();
     page.presentInParent.find('button').contains('None').click();
     saveQueryPage.button.should('be.disabled');
     page.reportButton.should('be.disabled');
@@ -143,6 +143,7 @@ describe('Pheno tool tests', () => {
     saveQueryPage.button.should('be.disabled');
     page.reportButton.should('be.disabled');
     page.downloadButton.should('be.disabled');
+    familyPage.searchbox.click();
     familyPage.getDropdownMenuOptionByText('i1.age').click();
     saveQueryPage.button.should('be.enabled');
     page.reportButton.should('be.enabled');

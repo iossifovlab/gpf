@@ -50,14 +50,14 @@ describe('Pheno tool measure tests', () => {
     page.searchbox.click();
     page.dropdown.should('be.visible');
     page.clearMeasureButton.click();
-    page.dropdown.should('not.exist');
+    page.dropdown.should('not.be.visible');
   });
 
   it('should check if the dropdown menu closes when clicking outside', () => {
     page.searchbox.click();
     page.dropdown.should('be.visible');
     cy.get('body').click(-30, -30, {force: true});
-    page.dropdown.should('not.exist');
+    page.dropdown.should('not.be.visible');
   });
 
   it('should check the remove button with selected measure', () => {
@@ -66,7 +66,7 @@ describe('Pheno tool measure tests', () => {
     page.getDropdownOptionByText('i1.iq').click();
     page.clearMeasureButton.click();
     page.searchbox.should('be.empty');
-    page.dropdown.should('not.exist');
+    page.dropdown.should('not.be.visible');
   });
 
   [

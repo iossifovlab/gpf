@@ -6,7 +6,7 @@ export class PhenoToolMeasurePage extends BasePage {
   }
 
   public get searchbox(): element {
-    return cy.get('gpf-pheno-tool-measure input#search-box');
+    return this.block.find('input#search-box');
   }
 
   public get ageCheckbox(): element {

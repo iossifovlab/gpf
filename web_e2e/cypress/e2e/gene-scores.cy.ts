@@ -184,30 +184,6 @@ describe('Gene scores download tests', () => {
     cy.deleteDownloadsFolder();
   });
 
-  it('should download file', () => {
-    page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
-    genesBlockPage.geneScoresButton.click();
-    page.dropdownButton.select('RVIS');
-
-    const downloadedVariantsPath = Cypress.config('downloadsFolder') + '/scores.csv';
-    const expectedVariantsPath = 'cypress/fixtures/gene-scores/scores.csv';
-
-    cy.window().document().then(doc => {
-      doc.addEventListener('click', () => {
-        setTimeout(() => doc.location?.reload(), 5000);
-      });
-      page.downloadLink.click();
-    });
-
-    cy.readFile(downloadedVariantsPath, { timeout: 5000 }).then((downloadedFile: string) => {
-      cy.readFile(expectedVariantsPath, { timeout: 5000 }).then((expectedFile: string) => {
-        const downloadedFileLines = downloadedFile.split(/\r\n|\r|\n/);
-        const expectedFileLines = expectedFile.split(/\r\n|\r|\n/);
-        expect(downloadedFileLines).to.deep.eq(expectedFileLines);
-      });
-    });
-  });
-
   it('should download RVIS and compare the file to the reference data', () => {
     page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
     genesBlockPage.geneScoresButton.click();
