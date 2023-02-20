@@ -1,11 +1,21 @@
 .pheno-instrument-block {
-  padding: 20px;
-  background-color: #f7f7f7;
+  width: fit-content;
+}
+
+.container {
+  padding-bottom: 0;
+  margin-top: 20px;
+  margin-left: 15px;
+  width: fit-content;
+}
+
+.card {
+  border: none;
 }
 
 .form-block-title {
-  display: inline-block;
-  margin: auto 0;
+  width: auto;
+  margin-right: 20px;
 }
 
 :host ::ng-deep .card-block {
@@ -25,4 +35,69 @@
 
 .centered-label {
   line-height: 38px;
+}
+
+#instruments-wrapper {
+  display: flex;
+  gap: 15px;
+}
+
+.search-input-wrapper {
+  border: 1px solid #ddd;
+  height: 40px;
+  align-self: center;
+}
+
+.search-input-wrapper:hover {
+  border: 1px solid #c2c8cf;
+}
+
+.search-input-wrapper:focus-within {
+  border: 1px solid #83befc;
+}
+
+.download-link {
+  width: 100%;
+  align-self: center;
+}
+
+#search-term {
+  border: 0;
+  line-height: normal;
+  padding-left: 10px;
+  width: 250px;
+}
+
+#search-term:focus {
+  box-shadow: none;
+}
+
+#select-instrument {
+  cursor: pointer;
+  border-radius: 0;
+  height: 40px;
+  width: 200px;
+  background-color: #eee;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-shadow: none;
+}
+
+#select-instrument > option {
+  background-color: white;
+  border-radius: 0;
+}
+
+#search-term-label {
+  padding-left: 10px;
+}
+
+#search-icon {
+  width: 16px;
+  height: 16px;
+  opacity: 60%;
+}
+
+.search-clear-icon:hover {
+  cursor: pointer;
 }

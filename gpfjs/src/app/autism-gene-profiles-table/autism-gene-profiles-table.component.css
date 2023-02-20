@@ -167,11 +167,27 @@
 
 #gene-search-input {
   border: 0;
+  line-height: normal;
+  padding-left: 10px;
 }
 
 #gene-search-input:focus {
   box-shadow: none;
   border-color: #ced4da;
+}
+
+#gene-search-label {
+  display: flex;
+  align-items: center;
+  padding-left: 10px;
+  height: 38px;
+  cursor: text;
+}
+
+#search-icon {
+  width: 16px;
+  height: 16px;
+  opacity: 60%;
 }
 
 #compare-genes-modal {
