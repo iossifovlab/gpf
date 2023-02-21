@@ -15,13 +15,13 @@ export class GpfTableHeaderComponent {
 
   public get subheadersCount(): number[] {
     if (this.columns.first) {
-      const length = this.columns.first.headerChildren.length;
+      const length: number = this.columns.first.headerChildren.length;
       return Array(length).fill(0).map((x, i) => i);
     }
     return [];
   }
 
-  public getMaxWidth(column) {
+  public getMaxWidth(column): number {
     if (column.columnMaxWidth) {
       return column.columnMaxWidth;
     }
