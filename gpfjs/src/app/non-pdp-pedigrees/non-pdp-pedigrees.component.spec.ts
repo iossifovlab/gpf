@@ -26,13 +26,11 @@ describe('NonPdpPedigreesComponent', () => {
       ],
       imports: [BrowserDynamicTestingModule]
     }).compileComponents();
-  }));
 
-  beforeEach(() => {
     fixture = TestBed.createComponent(NonPdpPedigreesComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
-  });
+  }));
 
   it('should create', () => {
     expect(component).toBeTruthy();
