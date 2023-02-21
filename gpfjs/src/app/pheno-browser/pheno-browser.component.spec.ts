@@ -158,13 +158,13 @@ describe('PhenoBrowserComponent', () => {
     for (const option of selectElemOptions) {
       receivedInstruments.push(option.nativeElement.textContent);
     }
-    expect(receivedInstruments).toEqual(expect.arrayContaining(expectedInstruments));
+    expect(receivedInstruments).toStrictEqual(expect.arrayContaining(expectedInstruments));
   }));
 
   it('should set the selected instrument to all instruments by default', (done) => {
     fixture.whenStable().then(() => {
       component.selectedInstrument$.subscribe(value => {
-        expect(value).toEqual(''),
+        expect(value).toBe(''),
         done();
       });
     });
@@ -174,7 +174,7 @@ describe('PhenoBrowserComponent', () => {
     setQuery(fixture, 2, '');
     fixture.whenStable().then(() => {
       component.selectedInstrument$.subscribe(value => {
-        expect(value).toEqual('i2');
+        expect(value).toBe('i2');
         done();
       });
     });
@@ -210,7 +210,7 @@ describe('PhenoBrowserComponent', () => {
     });
   }));
 
-  xit('should fetch and display all fields of a measure', waitForAsync(() => {
+  it.skip('should fetch and display all fields of a measure', waitForAsync(() => {
     fixture.detectChanges();
     fixture.whenStable().then(() => {
       expect(fixture.nativeElement.textContent).toEqual(expect.stringMatching('i1'));
@@ -222,7 +222,7 @@ describe('PhenoBrowserComponent', () => {
     });
   }));
 
-  xit('should color p values appropriately', waitForAsync(() => {
+  it.skip('should color p values appropriately', waitForAsync(() => {
     fixture.detectChanges();
     fixture.whenStable().then(() => {
       const lowPValueElement = fixture.debugElement.queryAll(
