@@ -74,9 +74,7 @@ describe('GpfTableHeaderComponent', () => {
         GpfTableContentComponent
       ]
     }).compileComponents();
-  }));
 
-  beforeEach(() => {
     testFixture = TestBed.createComponent(TestGpfTableColumnComponent);
     testComponent = testFixture.debugElement.children[0].componentInstance;
     testFixture.detectChanges();
@@ -87,18 +85,18 @@ describe('GpfTableHeaderComponent', () => {
     component.columns = [testComponent];
 
     fixture.detectChanges();
-  });
+  }));
 
   it('should be created', () => {
     expect(component).toBeTruthy();
   });
 
   it('should give sub headers count', () => {
-    expect(component.subheadersCount).toEqual([ ]);
+    expect(component.subheadersCount).toStrictEqual([]);
   });
 
   it('should give column width', () => {
     expect(component.getWidth(testComponent)).toBe('50.0');
-    expect(component.getWidth(null)).toBe(null);
+    expect(component.getWidth(null)).toBeNull();
   });
 });
