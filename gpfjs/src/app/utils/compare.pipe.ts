@@ -16,13 +16,13 @@ export class ComparePipe implements PipeTransform {
         if (rightVal === '-') {
           rightVal = null;
         }
-        if (leftVal == null && rightVal == null) {
+        if (leftVal === null && rightVal === null) {
           return 0;
         }
-        if (leftVal == null) {
+        if (leftVal === null) {
           return -1;
         }
-        if (rightVal == null) {
+        if (rightVal === null) {
           return 1;
         }
         if (leftVal.constructor === Array) {
