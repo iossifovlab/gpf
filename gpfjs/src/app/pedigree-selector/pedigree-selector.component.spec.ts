@@ -12,14 +12,12 @@ describe('PedigreeSelectorComponent', () => {
       declarations: [PedigreeSelectorComponent],
       imports: [NgxsModule.forRoot([PedigreeSelectorState], {developmentMode: true})],
     }).compileComponents();
-  }));
 
-  beforeEach(() => {
     fixture = TestBed.createComponent(PedigreeSelectorComponent);
     component = fixture.componentInstance;
     component.collections = [];
     fixture.detectChanges();
-  });
+  }));
 
   it('should create', () => {
     expect(component).toBeTruthy();
