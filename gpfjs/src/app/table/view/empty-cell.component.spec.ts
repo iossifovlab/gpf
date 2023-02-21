@@ -9,8 +9,8 @@ import { ResizeService } from '../resize.service';
 import { GenotypePreviewFieldComponent } from 'app/genotype-preview-field/genotype-preview-field.component';
 
 @Component({
-    selector: 'gpf-tgtcc',
-    template: `
+  selector: 'gpf-tgtcc',
+  template: `
       <gpf-table-column>
         <gpf-table-header>
           <gpf-table-subheader caption="caption" field="fieldH">
@@ -52,8 +52,9 @@ import { GenotypePreviewFieldComponent } from 'app/genotype-preview-field/genoty
         </gpf-table-content>
       </gpf-table-column>
     `,
-  })
-  class TestGpfTableColumnComponent { }
+})
+
+class TestGpfTableColumnComponent { }
 
 describe('GpfTableEmptyCellComponent', () => {
   let component: GpfTableEmptyCellComponent;
@@ -77,9 +78,7 @@ describe('GpfTableEmptyCellComponent', () => {
         ResizeService
       ]
     }).compileComponents();
-  }));
 
-  beforeEach(() => {
     testFixture = TestBed.createComponent(TestGpfTableColumnComponent);
     testComponent = testFixture.debugElement.children[0].componentInstance;
     testFixture.detectChanges();
@@ -90,13 +89,13 @@ describe('GpfTableEmptyCellComponent', () => {
     component.columnInfo = testComponent;
 
     fixture.detectChanges();
-  });
+  }));
 
   it('should be created', () => {
     expect(component).toBeTruthy();
   });
 
   it('should have cell content', () => {
-    expect(component.columnInfo.contentChildren.length).toBe(2);
+    expect(component.columnInfo.contentChildren).toHaveLength(2);
   });
 });
