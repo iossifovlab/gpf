@@ -1,4 +1,4 @@
-import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { GenotypeBrowserComponent } from './genotype-browser.component';
 import { QueryService } from 'app/query/query.service';
 import { ConfigService } from 'app/config/config.service';
@@ -112,10 +112,10 @@ describe('GenotypeBrowserComponent', () => {
     const downloadVariantsSpy = jest.spyOn<any, any>(queryService, 'downloadVariants');
     const downloadBlobResponseSpy = jest.spyOn(downloadBlobResponse, 'downloadBlobResponse');
     component.onDownload();
-    expect(downloadBlobResponseSpy).toHaveBeenCalledWith([], "variants.tsv");
+    expect(downloadBlobResponseSpy).toHaveBeenCalledWith([], 'variants.tsv');
     expect(downloadBlobResponseSpy).toHaveBeenCalledTimes(1);
-    expect(downloadVariantsSpy).toHaveBeenCalledWith({"datasetId": "testDataset", "download": true});
+    expect(downloadVariantsSpy).toHaveBeenCalledWith({'datasetId': 'testDataset', 'download': true});
     expect(downloadVariantsSpy).toHaveBeenCalledTimes(1);
-    expect(downloadVariantsSpy.mock.results).toMatchObject([{"type":"return","value":{}}]);
+    expect(downloadVariantsSpy.mock.results).toMatchObject([{'type': 'return', 'value': {}}]);
   });
 });
