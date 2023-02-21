@@ -21,9 +21,7 @@ describe('EffectTypesComponent', () => {
       imports: [NgxsModule.forRoot([EffecttypesState], {developmentMode: true})],
       schemas: [NO_ERRORS_SCHEMA]
     }).compileComponents();
-  }));
 
-  beforeEach(() => {
     fixture = TestBed.createComponent(EffectTypesComponent);
     component = fixture.componentInstance;
     component['store'] = {
@@ -33,7 +31,7 @@ describe('EffectTypesComponent', () => {
       dispatch(_: any) {}
     } as any;
     fixture.detectChanges();
-  });
+  }));
 
   it('should create', () => {
     expect(component).toBeTruthy();
@@ -84,7 +82,7 @@ describe('EffectTypesComponent', () => {
 
     component.setEffectTypes(mockSet);
 
-    expect(component.effectTypes.selected).toEqual(mockSet);
+    expect(component.effectTypes.selected).toStrictEqual(mockSet);
     expect(dispatchSpy).toHaveBeenNthCalledWith(1, new SetEffectTypes(mockSet));
   });
 
@@ -93,25 +91,25 @@ describe('EffectTypesComponent', () => {
     component.effectTypes.selected = new Set();
 
     component.onEffectTypeChange({checked: true, effectType: 'effectType1'});
-    expect(component.effectTypes.selected).toEqual(new Set(['effectType1']));
+    expect(component.effectTypes.selected).toStrictEqual(new Set(['effectType1']));
 
     component.onEffectTypeChange({checked: true, effectType: 'effectType2'});
-    expect(component.effectTypes.selected).toEqual(new Set(['effectType1', 'effectType2']));
+    expect(component.effectTypes.selected).toStrictEqual(new Set(['effectType1', 'effectType2']));
 
     component.onEffectTypeChange({checked: false, effectType: 'effectType1'});
-    expect(component.effectTypes.selected).toEqual(new Set(['effectType2']));
+    expect(component.effectTypes.selected).toStrictEqual(new Set(['effectType2']));
 
     component.onEffectTypeChange({checked: false, effectType: 'effectType1'});
-    expect(component.effectTypes.selected).toEqual(new Set(['effectType2']));
+    expect(component.effectTypes.selected).toStrictEqual(new Set(['effectType2']));
 
     component.onEffectTypeChange({checked: true, effectType: 'effectType2'});
-    expect(component.effectTypes.selected).toEqual(new Set(['effectType2']));
+    expect(component.effectTypes.selected).toStrictEqual(new Set(['effectType2']));
 
     component.onEffectTypeChange({checked: false, effectType: 'effectType2'});
-    expect(component.effectTypes.selected).toEqual(new Set([]));
+    expect(component.effectTypes.selected).toStrictEqual(new Set([]));
 
     component.onEffectTypeChange({checked: false, effectType: 'effectType2'});
-    expect(component.effectTypes.selected).toEqual(new Set([]));
+    expect(component.effectTypes.selected).toStrictEqual(new Set([]));
 
     expect(dispatchSpy.mock.calls).toEqual([
       [new AddEffectType('effectType1')],
@@ -126,8 +124,8 @@ describe('EffectTypesComponent', () => {
     component.setEffectTypes(initial);
     component.onEffectTypeChange({effectType: 'newTestEffect', checked: true});
     // component has properly selected new effect
-    expect(component.effectTypes.selected).toEqual(new Set(['testEffect', 'newTestEffect']));
+    expect(component.effectTypes.selected).toStrictEqual(new Set(['testEffect', 'newTestEffect']));
     // but the original set is not modified
-    expect(initial).toEqual(new Set(['testEffect']));
+    expect(initial).toStrictEqual(new Set(['testEffect']));
   });
 });
