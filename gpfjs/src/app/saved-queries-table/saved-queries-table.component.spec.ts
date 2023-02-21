@@ -42,13 +42,11 @@ describe('SavedQueriesTableComponent', () => {
       ],
       imports: [RouterTestingModule, HttpClientTestingModule, NgxsModule.forRoot([], {developmentMode: true})]
     }).compileComponents();
-  }));
 
-  beforeEach(() => {
     fixture = TestBed.createComponent(SavedQueriesTableComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
-  });
+  }));
 
   it('should create', () => {
     expect(component).toBeTruthy();
@@ -81,7 +79,7 @@ describe('SavedQueriesTableComponent', () => {
 
     component.queries = queriesMock;
     component.deleteQuery('uuid2');
-    expect(component.queries).toEqual([
+    expect(component.queries).toStrictEqual([
       {
         name: 'name1',
         description: 'desc1',
@@ -101,7 +99,7 @@ describe('SavedQueriesTableComponent', () => {
     component.queries = queriesMock;
     component.deleteQuery('uuid1');
     component.deleteQuery('uuid3');
-    expect(component.queries).toEqual([
+    expect(component.queries).toStrictEqual([
       {
         name: 'name2',
         description: 'desc2',
