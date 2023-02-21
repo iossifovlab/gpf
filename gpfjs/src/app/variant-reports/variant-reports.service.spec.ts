@@ -1,7 +1,7 @@
 import { TestBed, inject } from '@angular/core/testing';
 
 import { VariantReportsService } from './variant-reports.service';
-import { HttpClient, HttpClientModule, HttpHeaders, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpClientModule} from '@angular/common/http';
 import { ConfigService } from 'app/config/config.service';
 import { Observable, of } from 'rxjs';
 import { DatasetsService } from 'app/datasets/datasets.service';
