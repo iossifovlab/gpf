@@ -63,13 +63,11 @@ describe('PhenoBrowserTableComponent; no regressions', () => {
         { provide: ResizeService, useClass: ResizeService },
       ]
     }).compileComponents();
-  }));
 
-  beforeEach(() => {
     fixture = TestBed.createComponent(HostComponentNoRegressions);
     component = fixture.componentInstance;
     fixture.detectChanges();
-  });
+  }));
 
   it('should create', () => {
     expect(component).toBeTruthy();
@@ -125,13 +123,11 @@ describe('PhenoBrowserTableComponent; one regression', () => {
         { provide: ResizeService, useClass: ResizeService },
       ]
     }).compileComponents();
-  }));
 
-  beforeEach(() => {
     fixture = TestBed.createComponent(HostComponentOneRegression);
     component = fixture.componentInstance;
     fixture.detectChanges();
-  });
+  }));
 
   it('should create', () => {
     expect(component).toBeTruthy();
@@ -191,13 +187,11 @@ describe('PhenoBrowserTableComponent; two regressions', () => {
         { provide: ResizeService, useClass: ResizeService },
       ]
     }).compileComponents();
-  }));
 
-  beforeEach(() => {
     fixture = TestBed.createComponent(HostComponentTwoRegressions);
     component = fixture.componentInstance;
     fixture.detectChanges();
-  });
+  }));
 
   it('should create', () => {
     expect(component).toBeTruthy();
