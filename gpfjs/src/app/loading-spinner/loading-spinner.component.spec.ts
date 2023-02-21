@@ -10,13 +10,11 @@ describe('LoadingSpinnerComponent', () => {
     TestBed.configureTestingModule({
       declarations: [LoadingSpinnerComponent]
     }).compileComponents();
-  }));
 
-  beforeEach(() => {
     fixture = TestBed.createComponent(LoadingSpinnerComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
-  });
+  }));
 
   it('should create', () => {
     expect(component).toBeTruthy();
