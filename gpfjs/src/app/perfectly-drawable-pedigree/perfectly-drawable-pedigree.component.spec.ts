@@ -9,13 +9,11 @@ describe('PerfectlyDrawablePedigreeComponent', () => {
     TestBed.configureTestingModule({
       declarations: [PerfectlyDrawablePedigreeComponent]
     }).compileComponents();
-  }));
 
-  beforeEach(() => {
     fixture = TestBed.createComponent(PerfectlyDrawablePedigreeComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
-  });
+  }));
 
   it('should create', () => {
     expect(component).toBeTruthy();
