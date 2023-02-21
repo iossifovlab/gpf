@@ -11,14 +11,12 @@ describe('MultipleSelectMenuComponent', () => {
       declarations: [MultipleSelectMenuComponent],
       imports: [FormsModule]
     }).compileComponents();
-  }));
 
-  beforeEach(() => {
     fixture = TestBed.createComponent(MultipleSelectMenuComponent);
     component = fixture.componentInstance;
     component.columns = [];
     fixture.detectChanges();
-  });
+  }));
 
   it('should create', () => {
     expect(component).toBeTruthy();
@@ -27,8 +25,8 @@ describe('MultipleSelectMenuComponent', () => {
   it('should toggle checking all', () => {
     component.buttonLabel = 'Uncheck all';
     component.toggleCheckingAll();
-    expect(component.buttonLabel).toEqual('Check all');
+    expect(component.buttonLabel).toBe('Check all');
     component.toggleCheckingAll();
-    expect(component.buttonLabel).toEqual('Uncheck all');
+    expect(component.buttonLabel).toBe('Uncheck all');
   });
 });
