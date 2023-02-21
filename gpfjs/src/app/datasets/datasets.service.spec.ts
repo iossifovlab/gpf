@@ -49,9 +49,9 @@ describe('DatasetService', () => {
     httpGetSpy.mockReturnValue(of('fakeResponse'));
 
     service.getDataset('geneSymbol').pipe(take(1)).subscribe((response) => {
-      expect(response).toEqual('fakeDataset' as any);
-      expect(httpGetSpy.mock.calls[0][0]).toEqual('testUrl/datasets/geneSymbol');
-      expect(httpGetSpy.mock.calls[1][0]).toEqual('testUrl/datasets/details/geneSymbol');
+      expect(response).toBe('fakeDataset' as any);
+      expect(httpGetSpy.mock.calls[0][0]).toBe('testUrl/datasets/geneSymbol');
+      expect(httpGetSpy.mock.calls[1][0]).toBe('testUrl/datasets/details/geneSymbol');
       expect(datasetFromJsonSpy.mock.calls).toEqual([[undefined, 'fakeResponse' as any]]);
     });
   });
