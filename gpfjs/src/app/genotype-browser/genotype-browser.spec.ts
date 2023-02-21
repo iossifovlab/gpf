@@ -16,13 +16,13 @@ describe('BrowserQueryFilter', () => {
       }
     );
 
-    expect(browserQueryFilterMock).toEqual(browserQueryFilterMockFromJson);
+    expect(browserQueryFilterMock).toStrictEqual(browserQueryFilterMockFromJson);
   });
 });
 
 describe('PersonSetCollection', () => {
   it('should create from json', () => {
-    expect(new PersonSetCollection('id1', ['check1', 'check2'])).toEqual(PersonSetCollection.fromJson({
+    expect(new PersonSetCollection('id1', ['check1', 'check2'])).toStrictEqual(PersonSetCollection.fromJson({
       id: 'id1',
       checkedValues: ['check1', 'check2']
     }));
@@ -31,13 +31,13 @@ describe('PersonSetCollection', () => {
 
 describe('GenomicScore', () => {
   it('should create from json', () => {
-    expect(new GenomicScore('1', 2, 3)).toEqual(GenomicScore.fromJson({
+    expect(new GenomicScore('1', 2, 3)).toStrictEqual(GenomicScore.fromJson({
       metric: '1', rangeStart: 2, rangeEnd: 3
     }));
   });
 
   it('should create from json array', () => {
-    expect([new GenomicScore('1', 2, 3), new GenomicScore('4', 5, 6)]).toEqual(GenomicScore.fromJsonArray([
+    expect([new GenomicScore('1', 2, 3), new GenomicScore('4', 5, 6)]).toStrictEqual(GenomicScore.fromJsonArray([
       { metric: '1', rangeStart: 2, rangeEnd: 3 },
       { metric: '4', rangeStart: 5, rangeEnd: 6 }
     ]
