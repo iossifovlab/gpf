@@ -10,16 +10,16 @@ import { HistogramRangeSelectorLineComponent } from './histogram-range-selector-
 
 @Component({
   template: `
-      <gpf-histogram #gpfhistogram
-		    width="650" height="145"
-		    [bins]="bins"
-        [bars]="bars"
-        [domainMin]="domainMin"
-        [domainMax]="domainMax"
-		    [rangesCounts]="rangesCounts | async"
-		    [(rangeStart)]="rangeStart" [(rangeEnd)]="rangeEnd">
-		  </gpf-histogram>
-    `
+    <gpf-histogram #gpfhistogram
+      width="650" height="145"
+      [bins]="bins"
+      [bars]="bars"
+      [domainMin]="domainMin"
+      [domainMax]="domainMax"
+      [rangesCounts]="rangesCounts | async"
+      [(rangeStart)]="rangeStart" [(rangeEnd)]="rangeEnd">
+    </gpf-histogram>
+  `
 })
 class TestHostComponent {
   public bins = [1, 2, 3, 4];
@@ -35,14 +35,14 @@ class TestHostComponent {
 
 @Component({
   template: `
-      <gpf-histogram #gpfhistogram
-		    width="650" height="145"
-		    [bins]="bins"
-        [bars]="bars"
-		    [rangesCounts]="rangesCounts | async"
-		    [(rangeStart)]="rangeStart" [(rangeEnd)]="rangeEnd">
-		  </gpf-histogram>
-    `
+    <gpf-histogram #gpfhistogram
+      width="650" height="145"
+      [bins]="bins"
+      [bars]="bars"
+      [rangesCounts]="rangesCounts | async"
+      [(rangeStart)]="rangeStart" [(rangeEnd)]="rangeEnd">
+    </gpf-histogram>
+  `
 })
 class TestHostComponentNoDomain {
   public bins = [1, 2, 3, 4];
@@ -56,16 +56,16 @@ class TestHostComponentNoDomain {
 
 @Component({
   template: `
-      <gpf-histogram #gpfhistogram
-		    width="650" height="145"
-		    [bins]="bins"
-        [bars]="bars"
-        [domainMin]="domainMin"
-        [domainMax]="domainMax"
-		    [rangesCounts]="rangesCounts | async"
-		    [(rangeStart)]="rangeStart" [(rangeEnd)]="rangeEnd">
-		  </gpf-histogram>
-    `
+    <gpf-histogram #gpfhistogram
+      width="650" height="145"
+      [bins]="bins"
+      [bars]="bars"
+      [domainMin]="domainMin"
+      [domainMax]="domainMax"
+      [rangesCounts]="rangesCounts | async"
+      [(rangeStart)]="rangeStart" [(rangeEnd)]="rangeEnd">
+    </gpf-histogram>
+  `
 })
 class TestHostComponentManyBins {
   public bins = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
