@@ -14,13 +14,11 @@ describe('RegionsBlockComponent', () => {
       declarations: [RegionsBlockComponent],
       imports: [NgbModule, RouterTestingModule, NgxsModule.forRoot([RegionsFilterState], {developmentMode: true})],
     }).compileComponents();
-  }));
 
-  beforeEach(() => {
     fixture = TestBed.createComponent(RegionsBlockComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
-  });
+  }));
 
   it('should create', () => {
     expect(component).toBeTruthy();
