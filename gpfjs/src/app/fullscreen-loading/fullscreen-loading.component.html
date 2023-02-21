@@ -1,9 +1,6 @@
 <div *ngIf="showLoading" class="overlay"></div>
-<button *ngIf="showLoading" (click)="cancelLoading()" type="button" class="btn btn-md btn-primary close-button"
-  >Cancel request</button
->
 <div *ngIf="showLoading">
-  <div class="dna">
+  <div class="dna centered">
     <div class="ele">
       <div class="dot"></div>
     </div>
@@ -185,4 +182,7 @@
       <div class="dot"></div>
     </div>
   </div>
+  <button id="cancel-request-button" (click)="cancelLoading()" type="button" class="btn btn-md btn-primary centered"
+    >Cancel request</button
+  >
 </div>

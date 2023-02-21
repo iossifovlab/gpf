@@ -11,8 +11,8 @@
   opacity: 50%;
 }
 
-img {
-  position: absolute;
+.centered {
+  position: fixed;
   top: 0;
   bottom: 0;
   left: 0;
@@ -20,25 +20,18 @@ img {
   margin: auto;
 }
 
-.close-button {
-  font-size: 20px;
-  position: fixed;
-  left: 50%;
+#cancel-request-button {
   cursor: pointer;
-  transform: translateX(-60%);
-  bottom: 44%;
-  opacity: 50%;
   z-index: 9999;
+  background: #cc636d;
+  border: 0;
+  width: fit-content;
+  height: fit-content;
+  top: 98px;
 }
 
 .dna {
   z-index: 1050;
-  position: fixed;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  margin: auto;
   width: 360px;
   perspective: 270px;
   transform-style: preserve-3d;
@@ -47,12 +40,13 @@ img {
 }
 
 .dna::after {
-  letter-spacing: 5px;
+  letter-spacing: 1px;
   display: block;
-  padding-top: 50px;
+  padding-top: 40px;
   color: white;
   text-align: center;
-  content: "loading...";
+  content: "Loading...";
+  font-size: 18px;
 }
 
 .ele {
