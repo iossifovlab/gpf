@@ -7,7 +7,7 @@ import { UsersService } from 'app/users/users.service';
 
 import { DatasetNodeComponent } from './dataset-node.component';
 
-xdescribe('DatasetNodeComponent', () => {
+describe.skip('DatasetNodeComponent', () => {
   let component: DatasetNodeComponent;
   let fixture: ComponentFixture<DatasetNodeComponent>;
 
