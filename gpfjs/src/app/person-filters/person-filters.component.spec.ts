@@ -14,13 +14,11 @@ describe('PersonFiltersComponent', () => {
       declarations: [PersonFiltersComponent, ErrorsAlertComponent],
       imports: [NgxsModule.forRoot([PersonFiltersState], {developmentMode: true})],
     }).compileComponents();
-  }));
 
-  beforeEach(() => {
     fixture = TestBed.createComponent(PersonFiltersComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
-  });
+  }));
 
   it('should create', () => {
     expect(component).toBeTruthy();
