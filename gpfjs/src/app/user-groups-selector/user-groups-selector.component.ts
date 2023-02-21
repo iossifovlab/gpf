@@ -14,7 +14,7 @@ export class UserGroupsSelectorComponent implements OnInit {
   @Input() public allInputtedGroups: UserGroup[];
   @Input() public defaultGroups: string[] = [];
   @Input() public userGroups;
-  public _displayedGroups;
+  public displayGroups;
   @Output() public createGroupEvent = new EventEmitter<string>();
   @ViewChild(NgbDropdownMenu) public ngbDropdownMenu: NgbDropdownMenu;
   @ViewChild('groupInput') public groupInputRef: ElementRef;
@@ -35,11 +35,11 @@ export class UserGroupsSelectorComponent implements OnInit {
 
     this.data = this.groupsToOptions(this.allInputtedGroups);
     if (this.defaultGroups.length !== 0) {
-      this._displayedGroups = this.filterOutDefaultGroups(this.userGroups);
+      this.displayGroups = this.filterOutDefaultGroups(this.userGroups);
     }
   }
 
-  private groupsToOptions(groups: UserGroup[]) {
+  private groupsToOptions(groups: UserGroup[]): object[] {
     if (!groups) {
       return null;
     }
@@ -58,7 +58,7 @@ export class UserGroupsSelectorComponent implements OnInit {
     });
   }
 
-  private filterOutDefaultGroups(groups: string[]) {
+  private filterOutDefaultGroups(groups: string[]): string[] {
     return groups.filter(group =>
       this.defaultGroups.indexOf(group) === -1);
   }
@@ -83,11 +83,11 @@ export class UserGroupsSelectorComponent implements OnInit {
   public get displayedGroups() {
     const groupsArray = [];
 
-    if (!this._displayedGroups) {
+    if (!this.displayGroups) {
       return;
     }
 
-    for (const group of this._displayedGroups) {
+    for (const group of this.displayGroups) {
       groupsArray.push(group.text);
     }
 
