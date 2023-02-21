@@ -17,9 +17,7 @@ describe('StudyTypesComponent', () => {
       imports: [NgxsModule.forRoot([], {developmentMode: true})],
       schemas: [NO_ERRORS_SCHEMA]
     }).compileComponents();
-  }));
 
-  beforeEach(() => {
     fixture = TestBed.createComponent(StudyTypesComponent);
     component = fixture.componentInstance;
     component['store'] = {
@@ -29,7 +27,7 @@ describe('StudyTypesComponent', () => {
       dispatch() {}
     } as any;
     fixture.detectChanges();
-  });
+  }));
 
   it('should create', () => {
     expect(component).toBeTruthy();
@@ -37,7 +35,7 @@ describe('StudyTypesComponent', () => {
 
   it('should restore state on initialization', () => {
     component.ngOnInit();
-    expect(component.selectedValues).toEqual(new Set(['value1', 'value2']));
+    expect(component.selectedValues).toStrictEqual(new Set(['value1', 'value2']));
   });
 
   it('should update variant types', () => {
@@ -48,7 +46,7 @@ describe('StudyTypesComponent', () => {
 
     component.updateStudyTypes(mockSet);
 
-    expect(component.selectedValues).toEqual(mockSet);
+    expect(component.selectedValues).toStrictEqual(mockSet);
     expect(dispatchSpy).toHaveBeenNthCalledWith(1, new SetStudyTypes(mockSet));
   });
 });
