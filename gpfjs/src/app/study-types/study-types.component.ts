@@ -14,7 +14,7 @@ export class StudyTypesComponent extends StatefulComponent implements OnInit {
   public studyTypesDisplayNames: Map<string, string>;
 
   @Validate(SetNotEmpty, {message: 'Select at least one.'})
-  public selectedValues: Set<string> = new Set([]);
+  public selectedValues: Set<string> = new Set<string>([]);
 
   public constructor(protected store: Store) {
     super(store, StudyTypesState, 'studyTypes');
