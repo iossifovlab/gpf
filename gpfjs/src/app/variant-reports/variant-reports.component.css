@@ -10,14 +10,14 @@
   background-color: #e3e5eb;
 }
 
-:host::ng-deep #families-by-pedigree-div td:hover {
-  background: #edf3ff;
-}
-
 .table-centered,
 .table-centered th,
 .table-centered td {
   text-align: center;
+}
+
+:host::ng-deep #families-by-pedigree-div td:hover {
+  background: #edf3ff;
 }
 
 .variants-report-content {
@@ -82,6 +82,10 @@ table {
       #dee2e6,
       white 51%
     );
+}
+
+:host::ng-deep.selected-item span {
+  width: 90% !important;
 }
 
 #de-novo-variants-legend-report {
@@ -194,10 +198,6 @@ ng-multiselect-dropdown > span.selected-item {
   overflow: hidden;
   height: 28px;
   display: flex;
-}
-
-:host::ng-deep.selected-item span {
-  width: 90% !important;
 }
 
 :host::ng-deep.selected-item a {
