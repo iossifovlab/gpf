@@ -10,13 +10,11 @@ describe('CommonReportsPedigreeCellComponent', () => {
     TestBed.configureTestingModule({
       declarations: [CommonReportsPedigreeCellComponent]
     }).compileComponents();
-  }));
 
-  beforeEach(() => {
     fixture = TestBed.createComponent(CommonReportsPedigreeCellComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
-  });
+  }));
 
   it('should create', () => {
     expect(component).toBeTruthy();
