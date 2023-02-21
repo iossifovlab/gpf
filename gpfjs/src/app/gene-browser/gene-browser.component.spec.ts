@@ -60,7 +60,7 @@ class MockQueryService {
     return of([] as any);
   }
 
-  public getSummaryVariants() {
+  public getSummaryVariants(): SummaryAllelesArray {
     return new SummaryAllelesArray();
   }
 
@@ -131,52 +131,52 @@ describe('GeneBrowserComponent', () => {
     // There are default values to account for, so we use prevLength
     const prevLength = component.summaryVariantsFilter.selectedAffectedStatus.size;
     component.checkAffectedStatus('test', true);
-    expect(component.summaryVariantsFilter.selectedAffectedStatus.size).toEqual(prevLength + 1);
+    expect(component.summaryVariantsFilter.selectedAffectedStatus.size).toStrictEqual(prevLength + 1);
     component.checkAffectedStatus('test', false);
-    expect(component.summaryVariantsFilter.selectedAffectedStatus.size).toEqual(prevLength);
+    expect(component.summaryVariantsFilter.selectedAffectedStatus.size).toStrictEqual(prevLength);
   });
 
   it('should select effect type', () => {
     const prevLength = component.summaryVariantsFilter.selectedEffectTypes.size;
     component.checkEffectType('test', true);
-    expect(component.summaryVariantsFilter.selectedEffectTypes.size).toEqual(prevLength + 1);
+    expect(component.summaryVariantsFilter.selectedEffectTypes.size).toStrictEqual(prevLength + 1);
     component.checkEffectType('test', false);
-    expect(component.summaryVariantsFilter.selectedEffectTypes.size).toEqual(prevLength);
+    expect(component.summaryVariantsFilter.selectedEffectTypes.size).toStrictEqual(prevLength);
   });
 
   it('should select variant type', () => {
     const prevLength = component.summaryVariantsFilter.selectedVariantTypes.size;
     component.checkVariantType('test', true);
-    expect(component.summaryVariantsFilter.selectedVariantTypes.size).toEqual(prevLength + 1);
+    expect(component.summaryVariantsFilter.selectedVariantTypes.size).toStrictEqual(prevLength + 1);
     component.checkVariantType('test', false);
-    expect(component.summaryVariantsFilter.selectedVariantTypes.size).toEqual(prevLength);
+    expect(component.summaryVariantsFilter.selectedVariantTypes.size).toStrictEqual(prevLength);
   });
 
   it('should toggle denovo', () => {
     component.checkShowDenovo(true);
-    expect(component.summaryVariantsFilter.denovo).toEqual(true);
+    expect(component.summaryVariantsFilter.denovo).toBe(true);
     component.checkShowDenovo(false);
-    expect(component.summaryVariantsFilter.denovo).toEqual(false);
+    expect(component.summaryVariantsFilter.denovo).toBe(false);
   });
 
   it('should toggle transmitted', () => {
     component.checkShowTransmitted(true);
-    expect(component.summaryVariantsFilter.transmitted).toEqual(true);
+    expect(component.summaryVariantsFilter.transmitted).toBe(true);
     component.checkShowTransmitted(false);
-    expect(component.summaryVariantsFilter.transmitted).toEqual(false);
+    expect(component.summaryVariantsFilter.transmitted).toBe(false);
   });
 
   it('should set selected region', () => {
     jest.spyOn<any, any>(component, 'updateVariants');
     component.setSelectedRegion([1, 2]);
-    expect(component.summaryVariantsFilter.selectedRegion).toEqual([1, 2]);
+    expect(component.summaryVariantsFilter.selectedRegion).toStrictEqual([1, 2]);
     expect(component['updateVariants']).toHaveBeenCalled();
   });
 
   it('should set selected frequencies', () => {
     jest.spyOn<any, any>(component, 'updateVariants');
     component.setSelectedFrequencies([3, 4]);
-    expect(component.summaryVariantsFilter.selectedFrequencies).toEqual([3, 4]);
+    expect(component.summaryVariantsFilter.selectedFrequencies).toStrictEqual([3, 4]);
     expect(component['updateVariants']).toHaveBeenCalled();
   });
 
@@ -185,7 +185,7 @@ describe('GeneBrowserComponent', () => {
     component.effectTypeValues.forEach(eff => component.checkEffectType(eff, true));
 
     // Make sure "Coding only" didn't get re-toggled
-    expect(component.summaryVariantsFilter.queryParams['effectTypes']).toEqual([
+    expect(component.summaryVariantsFilter.queryParams['effectTypes']).toStrictEqual([
       'frame-shift', 'nonsense', 'splice-site', 'no-frame-shift-newStop',
       'missense', 'synonymous', 'CNV+', 'CNV-', '3\'UTR', '3\'UTR-intron', '5\'UTR', '5\'UTR-intron',
       'intergenic', 'intron', 'no-frame-shift', 'noEnd', 'noStart', 'non-coding', 'non-coding-intron', 'CDS',
@@ -193,7 +193,7 @@ describe('GeneBrowserComponent', () => {
 
     // Untoggling "Other" shouldn't remove CNVs
     component.checkEffectType('Other', false);
-    expect(component.summaryVariantsFilter.queryParams['effectTypes']).toEqual([
+    expect(component.summaryVariantsFilter.queryParams['effectTypes']).toStrictEqual([
       'frame-shift', 'nonsense', 'splice-site', 'no-frame-shift-newStop',
       'missense', 'synonymous', 'CNV+', 'CNV-'
     ]);
@@ -206,14 +206,14 @@ describe('GeneBrowserComponent', () => {
     component.checkEffectType('missense', true);
     component.checkVariantType('sub', true);
     component.checkAffectedStatus('Affected only', true);
-    expect(component.summaryVariantsFilter.queryParams).toEqual({
+    expect(component.summaryVariantsFilter.queryParams).toStrictEqual({
       effectTypes: ['CNV+', 'missense'],
       inheritanceTypeFilter: ['denovo'],
       affectedStatus: ['Affected only'],
       variantTypes: ['sub']
     });
     await component.submitGeneRequest('POGZ');
-    expect(component.summaryVariantsFilter.queryParams).toEqual({
+    expect(component.summaryVariantsFilter.queryParams).toStrictEqual({
       effectTypes: [
         'frame-shift',
         'nonsense',
