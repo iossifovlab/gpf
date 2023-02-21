@@ -9,9 +9,7 @@ describe('PedigreeChartMemberComponent', () => {
     TestBed.configureTestingModule({
       declarations: [PedigreeChartMemberComponent]
     }).compileComponents();
-  }));
 
-  beforeEach(() => {
     fixture = TestBed.createComponent(PedigreeChartMemberComponent);
     component = fixture.componentInstance;
     component.pedigreeData = {
@@ -28,7 +26,7 @@ describe('PedigreeChartMemberComponent', () => {
       smallLabel: 'sl'
     };
     fixture.detectChanges();
-  });
+  }));
 
   it('should be created', () => {
     expect(component).toBeTruthy();
