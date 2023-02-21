@@ -1,5 +1,5 @@
 import { Component, Input } from '@angular/core';
-import { EnrichmentEffectResult, EnrichmentTestResult } from '../enrichment-query/enrichment-result';
+import { EnrichmentEffectResult } from '../enrichment-query/enrichment-result';
 import { PValueIntensityPipe } from '../utils/p-value-intensity.pipe';
 import { QueryService } from '../query/query.service';
 import { BrowserQueryFilter } from 'app/genotype-browser/genotype-browser';
