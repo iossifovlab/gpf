@@ -31,7 +31,7 @@ export class UndirectedGraph<T> implements Graph<T> {
   private vertices = new Array<T>();
   private edges = new Array<Array<Edge<T>>>();
 
-  addVertex(vertex: Vertex<T>, edges: Array<Edge<T>> = []) {
+  public addVertex(vertex: Vertex<T>, edges: Array<Edge<T>> = []): void {
     this.checkCorrectEdges(vertex, edges);
 
     this.vertices.push(vertex);
@@ -42,7 +42,7 @@ export class UndirectedGraph<T> implements Graph<T> {
     }
   }
 
-  addEdge(vertex1: Vertex<T>, vertex2: Vertex<T>) {
+  public addEdge(vertex1: Vertex<T>, vertex2: Vertex<T>): void {
     this.checkVertex(vertex1);
     this.checkVertex(vertex2);
 
@@ -51,10 +51,9 @@ export class UndirectedGraph<T> implements Graph<T> {
 
     this.getEdgesForVertex(vertex1).push(edge1);
     this.getEdgesForVertex(vertex2).push(edge2);
-
   }
 
-  getEdgesForVertex(vertex: Vertex<T>) {
+  public getEdgesForVertex(vertex: Vertex<T>): Edge<T>[] {
     const index = this.vertices.indexOf(vertex);
 
     if (index === -1) {
@@ -64,11 +63,11 @@ export class UndirectedGraph<T> implements Graph<T> {
     return this.edges[index];
   }
 
-  hasVertex(vertex: Vertex<T>) {
+  public hasVertex(vertex: Vertex<T>): boolean {
     return this.vertices.indexOf(vertex) !== -1;
   }
 
-  hasEdge(vertex1: Vertex<T>, vertex2: Vertex<T>) {
+  public hasEdge(vertex1: Vertex<T>, vertex2: Vertex<T>): boolean {
     if (!this.hasVertex(vertex1) || !this.hasVertex(vertex2)) {
       return false;
     }
@@ -82,11 +81,11 @@ export class UndirectedGraph<T> implements Graph<T> {
     return false;
   }
 
-  getVertices() {
+  public getVertices(): T[] {
     return this.vertices;
   }
 
-  getEdges() {
+  public getEdges(): Edge<T>[] {
     const allEdges: Edge<T>[] = [];
     const alreadyAddedVertices: Vertex<T>[] = [];
 
@@ -108,7 +107,7 @@ export class UndirectedGraph<T> implements Graph<T> {
     return allEdges;
   }
 
-  private checkCorrectEdges(vertex: Vertex<T>, edges: Array<Edge<T>>) {
+  private checkCorrectEdges(vertex: Vertex<T>, edges: Array<Edge<T>>): void {
     for (const edge of edges) {
       const otherVertex: Vertex<T> = getOtherVertex(vertex, edge);
 
@@ -120,7 +119,7 @@ export class UndirectedGraph<T> implements Graph<T> {
     }
   }
 
-  private checkVertex(vertex: Vertex<T>) {
+  private checkVertex(vertex: Vertex<T>): void {
     if (!this.hasVertex(vertex)) {
       throw new Error(`Graph does not have vertex ${ vertex }`);
     }
