@@ -148,7 +148,7 @@ class Schema2ImportStorage(ImportStorage):
             )
             bucket_tasks.append(task)
 
-        if project.has_destination():
+        if project.has_genotype_storage():
             hdfs_task = graph.create_task(
                 "Copying to HDFS", self._do_load_in_hdfs,
                 [project], [pedigree_task] + bucket_tasks)
