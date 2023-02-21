@@ -128,7 +128,7 @@ describe('GenotypePreviewTableComponent', () => {
     ]);
   });
 
-  xit('should calculate single column width in onResize()', () => {
+  it.skip('should calculate single column width in onResize()', () => {
     // const windowSpy = spyOnProperty(window, 'innerWidth');
 
     // windowSpy.mockReturnValue(85);
