@@ -9,13 +9,11 @@ describe('RemoveButtonComponent', () => {
     TestBed.configureTestingModule({
       declarations: [RemoveButtonComponent]
     }).compileComponents();
-  }));
 
-  beforeEach(() => {
     fixture = TestBed.createComponent(RemoveButtonComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
-  });
+  }));
 
   it('should create', () => {
     expect(component).toBeTruthy();
