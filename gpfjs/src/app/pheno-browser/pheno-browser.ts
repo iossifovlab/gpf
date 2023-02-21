@@ -39,9 +39,9 @@ export class PhenoRegressions {
   });
 
   public constructor(regArr: object[]) {
-    for (let i = 0; i < regArr.length; i++) {
-      this[regArr[i]['regression_id']] = new PhenoRegression(regArr[i]);
-    }
+    regArr.forEach(reg => {
+      this[reg['regression_id']] = new PhenoRegression(reg);
+    });
   }
 
   public addBasePath(basePath: string): void {
@@ -134,7 +134,7 @@ export class PhenoMeasure {
 }
 
 export class PhenoMeasures {
-  public _addMeasure(measure: PhenoMeasure): void {
+  public addMeasure(measure: PhenoMeasure): void {
     let basePath: string;
     if (measure.base_url) {
       basePath = measure.base_url + this.baseImageUrl;
@@ -173,7 +173,7 @@ export class PhenoMeasures {
     if (json['measures']) {
       for (const measure of json['measures']) {
         const m = PhenoMeasure.fromJson(measure as object);
-        measures._addMeasure(m);
+        measures.addMeasure(m);
       }
     }
     return measures;
