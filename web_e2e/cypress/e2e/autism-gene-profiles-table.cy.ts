@@ -142,6 +142,8 @@ describe('Autism gene profiles table row highlight tests', {scrollBehavior: fals
     page.allTableRows.eq(3).click('left', {ctrlKey: true});
     page.allTableRows.eq(4).click('left', {ctrlKey: true});
 
+    page.allTableRows.eq(5).trigger('mouseover');
+
     page.allTableRows.eq(0).should('have.css', 'background-color').and('eq', oddHighlightColor);
     page.allTableRows.eq(1).should('have.css', 'background-color').and('eq', evenHighlightColor);
     page.allTableRows.eq(2).should('have.css', 'background-color').and('eq', oddHighlightColor);
