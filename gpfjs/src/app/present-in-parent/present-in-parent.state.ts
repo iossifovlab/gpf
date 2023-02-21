@@ -40,7 +40,7 @@ export class PresentInParentState {
   }
 
   @Selector([PresentInParentState])
-  public static queryStateSelector(state: PresentInParentModel) {
+  public static queryStateSelector(state: PresentInParentModel): object {
     const res = {
       presentInParent: state.presentInParent
     };
