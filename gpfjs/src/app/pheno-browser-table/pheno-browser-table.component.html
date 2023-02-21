@@ -46,13 +46,13 @@
             <span
               >[{{
                 +data.valuesDomain.slice(data.valuesDomain.indexOf('[') + 1, data.valuesDomain.indexOf(','))
-                  | numberWithExp: '1.3-3'
+                  | numberWithExp : '1.3-3'
               }},</span
             >
             <span
               >{{
                 +data.valuesDomain.slice(data.valuesDomain.indexOf(',') + 1, data.valuesDomain.indexOf(']'))
-                  | numberWithExp: '1.3-3'
+                  | numberWithExp : '1.3-3'
               }}]</span
             >
           </ng-container>
@@ -91,11 +91,11 @@
         <gpf-table-subheader
           caption="male"
           field="pvalueRegressionMale"
-          [comparator]="regressionId | regressionComparePipe: 'pvalueRegressionMale'"></gpf-table-subheader>
+          [comparator]="regressionId | regressionComparePipe : 'pvalueRegressionMale'"></gpf-table-subheader>
         <gpf-table-subheader
           caption="female"
           field="pvalueRegressionFemale"
-          [comparator]="regressionId | regressionComparePipe: 'pvalueRegressionFemale'"></gpf-table-subheader>
+          [comparator]="regressionId | regressionComparePipe : 'pvalueRegressionFemale'"></gpf-table-subheader>
       </gpf-table-header>
       <gpf-table-content>
         <gpf-table-subcontent>
@@ -103,7 +103,7 @@
             class="expanded-span"
             *gpfTableCellContent="let data"
             [style.background-color]="data.regressions.getReg(regressionId).pvalueRegressionMale | getBackgroundColor">
-            <span>{{ data.regressions.getReg(regressionId).pvalueRegressionMale | numberWithExp: '1.2-4' }}</span>
+            <span>{{ data.regressions.getReg(regressionId).pvalueRegressionMale | numberWithExp : '1.2-4' }}</span>
           </span>
         </gpf-table-subcontent>
         <gpf-table-subcontent>
@@ -113,7 +113,7 @@
             [style.background-color]="
               data.regressions.getReg(regressionId).pvalueRegressionFemale | getBackgroundColor
             ">
-            <span>{{ data.regressions.getReg(regressionId).pvalueRegressionFemale | numberWithExp: '1.2-4' }}</span>
+            <span>{{ data.regressions.getReg(regressionId).pvalueRegressionFemale | numberWithExp : '1.2-4' }}</span>
           </span>
         </gpf-table-subcontent>
       </gpf-table-content>
