@@ -26,13 +26,11 @@ describe('VariantTypesComponent', () => {
       imports: [HttpClientTestingModule, RouterTestingModule, NgxsModule.forRoot([], {developmentMode: true})]
     })
       .compileComponents();
-  }));
 
-  beforeEach(() => {
     fixture = TestBed.createComponent(VariantTypesComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
-  });
+  }));
 
   it('should create', () => {
     expect(component).toBeTruthy();
@@ -49,7 +47,7 @@ describe('VariantTypesComponent', () => {
     } as any;
     dispatchSpy = jest.spyOn(component['store'], 'dispatch');
     component.ngOnChanges();
-    expect(component.selectedVariantTypes).toEqual(new Set(['value1', 'value2']));
+    expect(component.selectedVariantTypes).toStrictEqual(new Set(['value1', 'value2']));
     expect(dispatchSpy).not.toHaveBeenCalled();
 
     component.selectedVariantTypes = new Set(['value3']);
@@ -61,7 +59,7 @@ describe('VariantTypesComponent', () => {
     } as any;
     dispatchSpy = jest.spyOn(component['store'], 'dispatch');
     component.ngOnChanges();
-    expect(component.selectedVariantTypes).toEqual(new Set(['value3']));
+    expect(component.selectedVariantTypes).toStrictEqual(new Set(['value3']));
     expect(dispatchSpy).toHaveBeenCalled();
   });
 
@@ -73,7 +71,7 @@ describe('VariantTypesComponent', () => {
 
     component.updateVariantTypes(mockSet);
 
-    expect(component.selectedVariantTypes).toEqual(mockSet);
+    expect(component.selectedVariantTypes).toStrictEqual(mockSet);
     expect(dispatchSpy).toHaveBeenNthCalledWith(1, new SetVariantTypes(mockSet));
   });
 });
