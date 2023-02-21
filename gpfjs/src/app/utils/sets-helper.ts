@@ -1,4 +1,4 @@
-export function difference<T>(setA: Set<T>, setB: Set<T>) {
+export function difference<T>(setA: Set<T>, setB: Set<T>): Set<T> {
   let result = new Set<T>();
 
   setA.forEach(element => {
@@ -10,11 +10,11 @@ export function difference<T>(setA: Set<T>, setB: Set<T>) {
   return result;
 }
 
-export function hasIntersection<T>(setA: Set<T>, setB: Set<T>) {
+export function hasIntersection<T>(setA: Set<T>, setB: Set<T>): boolean {
   return intersection(setA, setB).size !== 0;
 }
 
-export function intersection<T>(setA: Set<T>, setB: Set<T>) {
+export function intersection<T>(setA: Set<T>, setB: Set<T>): Set<T> {
   let result = new Set<T>();
 
   setA.forEach(element => {
@@ -26,7 +26,7 @@ export function intersection<T>(setA: Set<T>, setB: Set<T>) {
   return result;
 }
 
-export function equal<T>(setA: Set<T>, setB: Set<T>) {
+export function equal<T>(setA: Set<T>, setB: Set<T>): boolean {
   if (setA.size !== setB.size) {
     return false;
   }
@@ -38,7 +38,7 @@ export function equal<T>(setA: Set<T>, setB: Set<T>) {
   return true;
 }
 
-export function isSubset<T>(setA: Set<T>, setB: Set<T>) {
+export function isSubset<T>(setA: Set<T>, setB: Set<T>): boolean {
   for (let a of Array.from(setA)) {
     if (!setB.has(a)) {
       return false;
