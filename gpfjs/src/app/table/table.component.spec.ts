@@ -40,9 +40,7 @@ describe('GpfTableComponent', () => {
         ChangeDetectorRef,
       ]
     }).compileComponents();
-  }));
 
-  beforeEach(() => {
     testFixture = TestBed.createComponent(TestGpfTableSubheaderComponent);
     testComponent = testFixture.debugElement.children[0].componentInstance;
     testFixture.detectChanges();
@@ -59,7 +57,7 @@ describe('GpfTableComponent', () => {
     ];
 
     fixture.detectChanges();
-  });
+  }));
 
   it('should create', () => {
     expect(component).toBeTruthy();
@@ -76,7 +74,7 @@ describe('GpfTableComponent', () => {
     component.sortingInfo = sortingInfo;
     expect(component.sortingInfo).toBe(sortingInfo);
 
-    expect(component.dataSource).toEqual([
+    expect(component.dataSource).toStrictEqual([
       {field: -1, arrayPosition: 3},
       {field: 2, arrayPosition: 1},
       {field: 3, arrayPosition: 0},
@@ -85,13 +83,13 @@ describe('GpfTableComponent', () => {
     ]);
   });
 
-  it('should give scroll indices ', () => {
-    expect(component.getScrollIndices()).toEqual([0, 10 + Math.ceil(window.innerHeight / 80.0)]);
+  it('should give scroll indices', () => {
+    expect(component.getScrollIndices()).toStrictEqual([0, 10 + Math.ceil(window.innerHeight / 80.0)]);
 
     expect(component.beforeDataCellHeight).toBe(0);
     expect(component.afterDataCellHeight).toBe(0);
 
-    expect(component.getVisibleData()).toEqual([
+    expect(component.getVisibleData()).toStrictEqual([
       {field: 3, arrayPosition: 0},
       {field: 2, arrayPosition: 0},
       {field: 4, arrayPosition: 0},
@@ -104,7 +102,7 @@ describe('GpfTableComponent', () => {
     expect(component.beforeDataCellHeight).toBe(0);
     expect(component.afterDataCellHeight).toBe(0);
 
-    expect(component.getVisibleData()).toEqual([
+    expect(component.getVisibleData()).toStrictEqual([
       {field: 3, arrayPosition: 0},
       {field: 2, arrayPosition: 0},
       {field: 4, arrayPosition: 0},
@@ -113,7 +111,7 @@ describe('GpfTableComponent', () => {
     ]);
     component.dataSource = null;
 
-    expect(component.getScrollIndices()).toEqual([0, 0]);
-    expect(component.getVisibleData()).toEqual([]);
+    expect(component.getScrollIndices()).toStrictEqual([0, 0]);
+    expect(component.getVisibleData()).toStrictEqual([]);
   });
 });
