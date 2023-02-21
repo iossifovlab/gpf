@@ -1,11 +1,27 @@
+.container {
+  margin-top: 20px;
+}
+
+#edit-container {
+  display: flex;
+}
+
+#edit-description {
+  display: flex;
+  position: relative;
+}
+
 #empty-description {
+  padding-top: 7px;
+}
+
+#empty-description > span {
   font-style: italic;
   opacity: 75%;
+  margin-right: 558px;
 }
 
 #edit-icon {
-  position: absolute;
-  right: 0;
   padding: 6px;
   cursor: pointer;
   margin-top: 5px;
@@ -34,7 +50,6 @@
   border: none;
   outline: none;
   cursor: not-allowed;
-
 }
 
 :host::ng-deep.md-header .btn-sm[title="Preview"] {

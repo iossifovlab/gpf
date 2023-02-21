@@ -1,6 +1,10 @@
-<div *ngIf="dataset$ | async as dataset" class="container" style="margin-top: 20px">
-  <div *ngIf="!editMode">
-    <div style="position: relative">
+<div *ngIf="dataset$ | async as dataset" class="container">
+  <div id="edit-container" *ngIf="!editMode">
+    <div *ngIf="!dataset.description" id="empty-description">
+      <span>Empty description. Write a description using the pencil button to the right.</span>
+    </div>
+    <div id="edit-description">
+      <markdown [data]="dataset.description || ''"></markdown>
       <i
         *ngIf="('' | userInfo)?.isAdministrator"
         (click)="edit()"
@@ -8,10 +12,6 @@
         class="fa fa-pencil fa-lg"
         title="Edit">
       </i>
-      <markdown [data]="dataset.description || ''"></markdown>
-    </div>
-    <div *ngIf="!dataset.description" style="padding-top: 7px">
-      <span id="empty-description">Empty description. Write a description using the pencil button to the right.</span>
     </div>
   </div>
 
