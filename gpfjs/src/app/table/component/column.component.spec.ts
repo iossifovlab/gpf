@@ -69,21 +69,19 @@ describe('GpfTableColumnComponent', () => {
       ],
       providers: [ViewContainerRef]
     }).compileComponents();
-  }));
 
-  beforeEach(() => {
     fixture = TestBed.createComponent(TestWrapperComponent);
     component = fixture.debugElement.children[0].componentInstance;
     fixture.detectChanges();
-  });
+  }));
 
   it('should be created', () => {
     expect(component).toBeTruthy();
   });
 
   it('should have content children', () => {
-    expect(component.headerChildren.length).toBe(1);
-    expect(component.contentChildren.length).toBe(2);
+    expect(component.headerChildren).toHaveLength(1);
+    expect(component.contentChildren).toHaveLength(2);
   });
 
   it('should have column width', () => {
