@@ -33,7 +33,7 @@ describe('PersonSet', () => {
 
   it('should create person set from json', () => {
     const mockPerson = PersonSet.fromJson(personSetJsons[0]);
-    expect(new PersonSet(...personSetParams[0])).toEqual(mockPerson);
+    expect(new PersonSet(...personSetParams[0])).toStrictEqual(mockPerson);
   });
 
   it('should create person from array of json', () => {
@@ -41,7 +41,7 @@ describe('PersonSet', () => {
     expect([
       new PersonSet(...personSetParams[0]),
       new PersonSet(...personSetParams[1])
-    ]).toEqual(mockPerson);
+    ]).toStrictEqual(mockPerson);
   });
 });
 
@@ -123,7 +123,7 @@ describe('PersonSetCollection', () => {
       }
     });
 
-    expect(mockPersonSetCollection1).toEqual(mockPersonSetCollection2);
+    expect(mockPersonSetCollection1).toStrictEqual(mockPersonSetCollection2);
   });
 });
 
@@ -201,7 +201,7 @@ describe('PersonSetCollections', () => {
       }
     });
 
-    expect(mockPersonSetCollections1).toEqual(mockPersonSetCollections2);
+    expect(mockPersonSetCollections1).toStrictEqual(mockPersonSetCollections2);
   });
 
   it('should get legend from person set collection', () => {
@@ -235,7 +235,7 @@ describe('PersonSetCollections', () => {
     mockPersonSetCollections2.push({color: '#E0E0E0', id: 'missing-person', name: 'missing-person'});
 
     expect(mockPersonSetCollections1.getLegend(mockPersonSetCollections1.collections[0]))
-      .toEqual(mockPersonSetCollections2);
+      .toStrictEqual(mockPersonSetCollections2);
   });
 });
 
@@ -265,14 +265,14 @@ describe('PersonFilter', () => {
       new PersonFilter('name2', 'from2', 'source2', 'sourceType2', 'filterType2', 'role2')
     ];
 
-    expect(mockPersonFilter1).toEqual(mockPersonFilter2);
+    expect(mockPersonFilter1).toStrictEqual(mockPersonFilter2);
   });
 });
 
 describe('Column', () => {
   it('should create column from json', () => {
     expect(new Column('name', 'source', 'format'))
-      .toEqual(Column.fromJson({ name: 'name', source: 'source', format: 'format' }));
+      .toStrictEqual(Column.fromJson({ name: 'name', source: 'source', format: 'format' }));
   });
 });
 
@@ -302,7 +302,7 @@ describe('ColumnGroup', () => {
       ]
     });
 
-    expect(columnGroupMock1).toEqual(columnGroupMock2);
+    expect(columnGroupMock1).toStrictEqual(columnGroupMock2);
   });
 });
 
@@ -446,7 +446,7 @@ describe('GenotypeBrowser', () => {
       }
     ]);
 
-    expect(genotypeMock1).toEqual(genotypeMock2);
+    expect(genotypeMock1).toStrictEqual(genotypeMock2);
   });
 
   it('should get the ids', () => {
@@ -479,7 +479,7 @@ describe('GenotypeBrowser', () => {
       5,
     );
 
-    expect(genotypeMock1.columnIds).toEqual(['source1', 'source2']);
+    expect(genotypeMock1.columnIds).toStrictEqual(['source1', 'source2']);
   });
 });
 
@@ -499,7 +499,7 @@ describe('GeneBrowser', () => {
       has_affected_status: true
     });
 
-    expect(mockBrowser1).toEqual(mockBrowser2);
+    expect(mockBrowser1).toStrictEqual(mockBrowser2);
   });
 });
 
@@ -966,17 +966,17 @@ describe('Dataset', () => {
 
   it('should create dataset from json', () => {
     const datasetMockFromJson = Dataset.fromJson(datasetJson1);
-    expect(datasetMock1).toEqual(datasetMockFromJson);
+    expect(datasetMock1).toStrictEqual(datasetMockFromJson);
   });
 
   it('should create dataset from json array', () => {
     const datasetMockArray = [datasetMock1, datasetMock2];
     const datasetMockArrayFromJson = Dataset.fromJsonArray([datasetJson1, datasetJson2]);
-    expect(datasetMockArray).toEqual(datasetMockArrayFromJson);
+    expect(datasetMockArray).toStrictEqual(datasetMockArrayFromJson);
   });
 
   it('should get dataset id', () => {
-    expect(datasetMock1.getDefaultGroups()).toEqual(['any_dataset', 'id1']);
+    expect(datasetMock1.getDefaultGroups()).toStrictEqual(['any_dataset', 'id1']);
   });
 
   it('should create dataset from dataset and details json\'s', () => {
@@ -1129,6 +1129,6 @@ describe('Dataset', () => {
       genome: 'genome1'
     });
 
-    expect(datasetMock1).toEqual(datasetMockFromJson);
+    expect(datasetMock1).toStrictEqual(datasetMockFromJson);
   });
 });
