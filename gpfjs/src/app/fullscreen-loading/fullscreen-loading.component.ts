@@ -18,4 +18,8 @@ export class FullscreenLoadingComponent {
       this.showLoading = state;
     });
   }
+
+  public cancelLoading(): void {
+    this.fullscreenLoadingService.interruptEvent.emit(true);
+  }
 }
