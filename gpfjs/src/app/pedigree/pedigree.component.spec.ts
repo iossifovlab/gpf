@@ -34,9 +34,7 @@ describe('PedigreeComponent', () => {
         {provide: DatasetsService, useValue: mockDatasetsService},
       ]
     }).compileComponents();
-  });
 
-  beforeEach(() => {
     modalService = TestBed.inject(NgbModal);
     fixture = TestBed.createComponent(PedigreeComponent);
     component = fixture.componentInstance;
