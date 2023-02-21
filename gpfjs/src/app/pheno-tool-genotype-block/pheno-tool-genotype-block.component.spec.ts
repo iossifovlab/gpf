@@ -12,13 +12,11 @@ describe('PhenoToolGenotypeBlockComponent', () => {
       declarations: [PhenoToolGenotypeBlockComponent],
       schemas: [NO_ERRORS_SCHEMA]
     }).compileComponents();
-  }));
 
-  beforeEach(() => {
     fixture = TestBed.createComponent(PhenoToolGenotypeBlockComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
-  });
+  }));
 
   it('should create', () => {
     expect(component).toBeTruthy();
