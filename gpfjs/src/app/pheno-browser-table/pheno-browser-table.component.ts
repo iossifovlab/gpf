@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
+import { Component, Input } from '@angular/core';
 
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import {
@@ -9,8 +9,7 @@ import { PhenoMeasures } from '../pheno-browser/pheno-browser';
 @Component({
   selector: 'gpf-pheno-browser-table',
   templateUrl: './pheno-browser-table.component.html',
-  styleUrls: ['./pheno-browser-table.component.css'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  styleUrls: ['./pheno-browser-table.component.css']
 })
 export class PhenoBrowserTableComponent {
   @Input() public measures: PhenoMeasures;
