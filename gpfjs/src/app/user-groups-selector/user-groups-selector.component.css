@@ -3,3 +3,7 @@
   top: 2px;
   opacity: 45%;
 }
+
+.btn btn-light {
+  border-color: #d3d3d3;
+}
