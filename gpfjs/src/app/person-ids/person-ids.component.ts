@@ -29,7 +29,7 @@ export class PersonIdsComponent extends StatefulComponent implements OnInit {
     this.store.selectOnce(state => state.personIdsState).subscribe(state => {
       // restore state
       let separator = '\n';
-      if(state.personIds.length >= 3) {
+      if (state.personIds.length >= 3) {
         separator = ', ';
       }
 
