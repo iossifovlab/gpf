@@ -1,8 +1,5 @@
 /* eslint-disable indent */
-import { EffectTypes } from 'app/effect-types/effect-types';
 import { EnrichmentTestResult } from 'app/enrichment-query/enrichment-result';
-import { Gender } from 'app/gender/gender';
-import { GeneSymbols } from 'app/gene-symbols/gene-symbols.component';
 import { BrowserQueryFilter, PersonSetCollection } from 'app/genotype-browser/genotype-browser';
 import { BackgroundColorEnrichmentPipe } from './background-color-enrichment.pipe';
 import { PValueIntensityPipe } from './p-value-intensity.pipe';
