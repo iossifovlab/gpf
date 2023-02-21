@@ -3,7 +3,7 @@ import { NgbNavModule } from '@ng-bootstrap/ng-bootstrap';
 
 import { FamilyFiltersBlockComponent } from './family-filters-block.component';
 
-xdescribe('FamilyFiltersBlockComponent', () => {
+describe.skip('FamilyFiltersBlockComponent', () => {
   let component: FamilyFiltersBlockComponent;
   let fixture: ComponentFixture<FamilyFiltersBlockComponent>;
 
@@ -12,13 +12,11 @@ xdescribe('FamilyFiltersBlockComponent', () => {
       declarations: [FamilyFiltersBlockComponent],
       imports: [NgbNavModule]
     }).compileComponents();
-  }));
 
-  beforeEach(() => {
     fixture = TestBed.createComponent(FamilyFiltersBlockComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
-  });
+  }));
 
   it('should create', () => {
     expect(component).toBeTruthy();
