@@ -53,7 +53,8 @@ export class UsersActionsComponent implements OnInit {
   }
 
   public resetPasswordPopoverMessage(user: User): string {
-    return `${this.getUserString(user)}'s password will be reset. An email with reset instructions will be sent and they won't be able to log in until they set a new password.`;
+    return `${this.getUserString(user)}'s password will be reset. An email with reset instructions will `
+    + `be sent and they won't be able to log in until they set a new password.`;
   }
 
   public deleteUserPopoverMessage(user: User): string {
