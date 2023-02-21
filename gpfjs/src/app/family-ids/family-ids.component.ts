@@ -37,9 +37,10 @@ export class FamilyIdsComponent extends StatefulComponent implements OnInit {
   }
 
   /**
-  * Waits text input area element to load.
-  * @returns promise
-  */
+   * Waits text input area element to load.
+   *
+   * @returns promise
+   */
   private async waitForTextInputAreaToLoad(): Promise<void> {
     return new Promise<void>(resolve => {
       const timer = setInterval(() => {
