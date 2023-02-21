@@ -13,7 +13,7 @@ export class ChildrenCounter {
 }
 
 export class GroupCounter {
-  public static fromJson(json: any, rows: string[]) {
+  public static fromJson(json: any, rows: string[]): GroupCounter {
     return new GroupCounter(
       json['column'],
       rows.map((row) => ChildrenCounter.fromJson(json, row))
@@ -69,7 +69,6 @@ export class PeopleReport {
 
 export class PedigreeCounter {
   public static fromJson(json: any, groupName: string): PedigreeCounter {
-
     return new PedigreeCounter(
       json['counter_id'],
       groupName,
@@ -79,7 +78,8 @@ export class PedigreeCounter {
     );
   }
 
-  constructor(public readonly counterId: number, public readonly groupName: string, public readonly data: PedigreeData[], public readonly count: number, public readonly tags: string[]) {}
+  public constructor(public readonly counterId: number, public readonly groupName: string,
+    public readonly data: PedigreeData[], public readonly count: number, public readonly tags: string[]) {}
 }
 
 export class FamilyCounter {
