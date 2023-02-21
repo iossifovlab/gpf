@@ -33,8 +33,7 @@ label {
   height: 43px;
   display: flex;
   align-content: space-between;
-  flex-wrap: wrap;
-  flex-direction: column;
+  flex-flow: column wrap;
   overflow: hidden;
 }
 
