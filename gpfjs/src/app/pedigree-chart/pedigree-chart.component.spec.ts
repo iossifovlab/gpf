@@ -241,12 +241,10 @@ describe('PedigreeChartComponent', () => {
       ]
     })
       .compileComponents();
-  }));
 
-  beforeEach(() => {
     fixture = TestBed.createComponent(PedigreeChartComponent);
     component = fixture.componentInstance;
-  });
+  }));
 
   it('should be created', () => {
     component.family = mockFamilies.familiesWithPositions.f1;
