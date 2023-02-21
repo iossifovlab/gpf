@@ -23,7 +23,8 @@
             (click)="handleCellClick($event, row, column)"
             (middleclick)="handleCellClick($event, row, column)">
             <span *ngIf="column.clickable !== null && row[column.id]" class="clickable">{{ row[column.id] }}</span
-            >{{ column.clickable === null ? row[column.id] : '' }}</div>
+            >{{ column.clickable === null ? row[column.id] : '' }}</div
+          >
         </ng-container>
       </div>
 
@@ -71,7 +72,7 @@
                 'header-gene-symbol-span': column.id === geneSymbolColumnId,
                 'grid-row-2-3': column.gridRow === '2 / 3'
               }"
-              >{{ column.displayName | truncate: 48 }}</span
+              >{{ column.displayName | truncate : 48 }}</span
             >
             <gpf-sorting-buttons
               *ngIf="column.sortable"
