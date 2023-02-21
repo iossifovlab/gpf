@@ -6,13 +6,11 @@ describe('CommonReportsRowComponent', () => {
   let component: CommonReportsRowComponent;
   let fixture: ComponentFixture<CommonReportsRowComponent>;
 
-  beforeEach(waitForAsync(() => {
+  beforeEach(() => {
     TestBed.configureTestingModule({
       declarations: [CommonReportsRowComponent, SearchableSelectComponent]
     }).compileComponents();
-  }));
 
-  beforeEach(() => {
     fixture = TestBed.createComponent(CommonReportsRowComponent);
     component = fixture.componentInstance;
     component.pedigreeGroup = [{
