@@ -6,33 +6,42 @@ import { GpfTableCellContentDirective } from './content.directive';
   template: '',
 })
 export class GpfTableSubheaderComponent implements AfterContentInit {
-  @ContentChildren(GpfTableCellContentDirective) contentChildren: QueryList<GpfTableCellContentDirective>;
-  @Input() field: string;
-  @Input() caption: string;
-  @Input() comparator: (leftVal: any, rightVal: any) => number = this.defaultComparator;
+  @ContentChildren(GpfTableCellContentDirective) public contentChildren: QueryList<GpfTableCellContentDirective>;
+  @Input() public field: string;
+  @Input() public caption: string;
+  @Input() public comparator: (leftVal: any, rightVal: any) => number = this.defaultComparator;
 
-  contentTemplateRef: TemplateRef<any>;
+  public contentTemplateRef: TemplateRef<any>;
 
-  get sortable () {
-      return this.field || this.comparator !== this.defaultComparator;
+  public get sortable () {
+    return this.field || this.comparator !== this.defaultComparator;
   }
 
-  ngAfterContentInit() {
+  public ngAfterContentInit(): void {
     if (this.contentChildren.first) {
       this.contentTemplateRef = this.contentChildren.first.templateRef;
     }
   }
 
-  defaultComparator(a: any, b: any): number {
+  public defaultComparator(a: any, b: any): number {
     let leftVal = a[this.field];
     let rightVal = b[this.field];
 
-    if (leftVal == "-") leftVal = null;
-    if (rightVal == "-") rightVal = null;
-
-    if (leftVal == null && rightVal == null) { return 0; }
-    if (leftVal == null) { return -1; }
-    if (rightVal == null) { return 1; }
+    if (leftVal === '-') {
+      leftVal = undefined;
+    }
+    if (rightVal === '-') {
+      rightVal = undefined;
+    }
+    if (leftVal === undefined && rightVal === undefined) {
+      return 0;
+    }
+    if (leftVal === undefined) {
+      return -1;
+    }
+    if (rightVal === undefined) {
+      return 1;
+    }
 
     if (!isNaN(leftVal) && !isNaN(rightVal)) {
       return +leftVal - +rightVal;
@@ -40,7 +49,7 @@ export class GpfTableSubheaderComponent implements AfterContentInit {
     return leftVal.localeCompare(rightVal);
   }
 
-  sort(data: any, ascending: boolean) {
+  public sort(data: any, ascending: boolean) {
     data.forEach((element, idx) => {
         element.arrayPosition = idx;
     });
