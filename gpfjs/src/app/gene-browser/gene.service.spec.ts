@@ -32,11 +32,11 @@ describe('GeneService', () => {
     httpGetSpy.mockReturnValue(of('fakeResponse'));
 
     service.getGene('fakeSymbol').pipe(take(1)).subscribe((response) => {
-      expect(response).toEqual('fakeGene' as any);
-      expect(httpGetSpy.mock.calls).toEqual([[
+      expect(response).toBe('fakeGene' as any);
+      expect(httpGetSpy.mock.calls).toStrictEqual([[
         environment.apiPath + 'genome/gene_models/default/fakeSymbol'
       ]]);
-      expect(geneFromJsonSpy.mock.calls).toEqual([['fakeResponse' as any]]);
+      expect(geneFromJsonSpy.mock.calls).toStrictEqual([['fakeResponse' as any]]);
     });
   });
 
@@ -45,8 +45,8 @@ describe('GeneService', () => {
     httpGetSpy.mockReturnValue(of('fakeResponse'));
 
     service.searchGenes('fakeSearchTerm').pipe(take(1)).subscribe((response) => {
-      expect(response).toEqual('fakeResponse' as any);
-      expect(httpGetSpy.mock.calls).toEqual([[
+      expect(response).toBe('fakeResponse' as any);
+      expect(httpGetSpy.mock.calls).toStrictEqual([[
         environment.apiPath + 'genome/gene_models/search/FAKESEARCHTERM'
       ]]);
     });
