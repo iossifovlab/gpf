@@ -27,10 +27,8 @@ describe('StudyFiltersBlockComponent', () => {
       providers: [NgbNavModule, NgbModule, FormsModule],
       imports: [NgbNavModule, NgbModule, FormsModule, NgxsModule.forRoot([], {developmentMode: true})],
     })
-    .compileComponents();
-  }));
+      .compileComponents();
 
-  beforeEach(() => {
     fixture = TestBed.createComponent(StudyFiltersBlockComponent);
     component = fixture.componentInstance;
     component['store'] = {
@@ -41,7 +39,7 @@ describe('StudyFiltersBlockComponent', () => {
     } as any;
     component.dataset = datasetConfigMock;
     fixture.detectChanges();
-  });
+  }));
 
   it('should create', () => {
     expect(component).toBeTruthy();
