@@ -4,7 +4,9 @@
     [disabled]="disabled"
     id="save-query-dropdown-button"
     class="btn btn-default"
-    ngbDropdownToggle>Share/save query</button>
+    ngbDropdownToggle
+    >Share/save query</button
+  >
 
   <div id="save-query-dropdown" ngbDropdownMenu aria-labelledby="dropdownQuerySave">
     <p>Share</p>
@@ -62,7 +64,9 @@
           id="save-button"
           type="button"
           class="btn btn-success"
-          [disabled]="!nameInput.value">{{ saveButtonText }}</button>
+          [disabled]="!nameInput.value"
+          >{{ saveButtonText }}</button
+        >
       </div>
     </div>
   </div>
