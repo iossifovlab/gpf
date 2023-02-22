@@ -38,6 +38,37 @@ def _build_graph_a(graph_params) -> TaskGraph:
     return task_graph
 
 
+def _build_graph_d(graph_params) -> TaskGraph:
+    task_graph = TaskGraph()
+
+    num_of_clicks, num_of_parts, parts_sleep, summary_sleep = 5, 10, 2, 2
+
+    if graph_params:
+        if len(graph_params) != 4:
+            raise ValueError(
+                "The graph D needs three parameters: "
+                "<number of parts>, <seconds for parts>, "
+                "<seconds for summary>")
+        num_of_clicks, num_of_parts, parts_sleep, summary_sleep = graph_params
+    print(
+        f"Bulding graph D with {num_of_clicks} clicks, {num_of_parts} parts, "
+        f"{parts_sleep} seconds for each parts, and "
+        f"{summary_sleep} secoconds for the summary")
+
+    def task_part():
+        time.sleep(float(parts_sleep))
+
+    def task_summary():
+        time.sleep(float(summary_sleep))
+
+    for click in range(int(num_of_clicks)):
+        parts = [task_graph.create_task(
+            f"part {click}:{p}", task_part, [], [])
+            for p in range(int(num_of_parts))]
+        task_graph.create_task(f"summary {click}", task_summary, [], parts)
+    return task_graph
+
+
 def _build_graph_b(graph_params) -> TaskGraph:
     task_graph = TaskGraph()
 
@@ -61,7 +92,9 @@ def _build_graph_b(graph_params) -> TaskGraph:
 
     def task_summary(*args):
         time.sleep(float(summary_sleep))
-        return "b".join(args)
+        if len(args) <= 5:
+            return "b".join(args)
+        return "c".join(args[:5])
 
     parts = [task_graph.create_task(
         f"part {p}", task_part, [], [])
@@ -93,7 +126,9 @@ def _build_graph_c(graph_params) -> TaskGraph:
 
     def task_summary(*args):
         time.sleep(float(summary_sleep))
-        return "b".join(args)
+        if len(args) <= 5:
+            return "b".join(args)
+        return "c".join(args[:5])
 
     parts = [
         task_graph.create_task(f"part {p}", task_part, [], [])
@@ -119,6 +154,9 @@ def build_demo_graph(graph_type: str,
 
     if graph_type == "C":
         return _build_graph_c(graph_params)
+
+    if graph_type == "D":
+        return _build_graph_d(graph_params)
 
     raise ValueError(f"Unknown graph <{graph_type}>")
 
