@@ -37,6 +37,7 @@ def _build_graph_a(graph_params) -> TaskGraph:
     task_graph.create_task("summary", task_summary, [], parts)
     return task_graph
 
+
 def _build_graph_d(graph_params) -> TaskGraph:
     task_graph = TaskGraph()
 
@@ -91,7 +92,9 @@ def _build_graph_b(graph_params) -> TaskGraph:
 
     def task_summary(*args):
         time.sleep(float(summary_sleep))
-        return "b".join(args)
+        if len(args) <= 5:
+            return "b".join(args)
+        return "c".join(args[:5])
 
     parts = [task_graph.create_task(
         f"part {p}", task_part, [], [])
@@ -123,7 +126,9 @@ def _build_graph_c(graph_params) -> TaskGraph:
 
     def task_summary(*args):
         time.sleep(float(summary_sleep))
-        return "b".join(args)
+        if len(args) <= 5:
+            return "b".join(args)
+        return "c".join(args[:5])
 
     parts = [
         task_graph.create_task(f"part {p}", task_part, [], [])
