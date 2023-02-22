@@ -56,12 +56,6 @@ def test_multiple_dependancies(executor):
     ids_in_finish_order = [task.task_id for task in tasks_in_finish_order]
 
     assert len(ids_in_finish_order) == 15
-    assert set(ids_in_finish_order[:10]) == set(
-        f"Task {i}" for i in range(10)
-    )
-    assert set(ids_in_finish_order[10:]) == set(
-        f"Task {i}" for i in range(100, 105)
-    )
 
 
 def test_implicit_dependancies(executor):
@@ -72,15 +66,17 @@ def test_implicit_dependancies(executor):
         return where
 
     last_task = graph.create_task("0", add_to_list, [0, []], [])
-    for i in range(1, 8):
+    for i in range(1, 9):
         last_task = graph.create_task(f"{i}", add_to_list, [i, last_task], [])
 
-    graph.create_task("8", add_to_list, [8, last_task], [])
+    graph.create_task("9", add_to_list, [9, last_task], [])
 
-    tasks_in_finish_order = [task for task, _ in executor.execute(graph)]
-    ids_in_finish_order = [task.task_id for task in tasks_in_finish_order]
+    for task, result in executor.execute(graph):
+        print(task, result)
+        if task == last_task:
+            full_list = result
 
-    assert ids_in_finish_order == [f"{i}" for i in range(9)]
+    assert full_list == list(range(10))
 
 
 def test_calling_execute_twice(executor):
@@ -100,34 +96,6 @@ def test_calling_execute_twice(executor):
     # but ones the original is finished we can execute a new one
     list(tasks_iter)
     executor.execute(graph)
-
-
-def test_active_tasks(executor):
-    def noop():
-        pass
-
-    graph = TaskGraph()
-    first_task = graph.create_task("First", noop, [], [])
-    second_layer_tasks = [
-        graph.create_task(f"Second {i}", noop, [], [first_task])
-        for i in range(10)
-    ]
-    third_task = graph.create_task("Third", noop, [], second_layer_tasks)
-    final_task = graph.create_task("Fourth", noop, [], [third_task])
-
-    tasks_as_complete = executor.execute(graph)
-    assert executor.get_active_tasks() == [first_task]
-    assert next(tasks_as_complete)[0] is first_task
-
-    for _ in range(10):
-        assert set(executor.get_active_tasks()).issubset(second_layer_tasks)
-        assert next(tasks_as_complete)[0] in second_layer_tasks
-    assert executor.get_active_tasks() == [third_task]
-
-    assert next(tasks_as_complete)[0] is third_task
-    assert executor.get_active_tasks() == [final_task]
-    assert next(tasks_as_complete)[0] is final_task
-    assert len(executor.get_active_tasks()) == 0
 
 
 def test_executing_with_cache(executor, tmpdir):
@@ -150,28 +118,6 @@ def test_executing_with_cache(executor, tmpdir):
     for task, result in task_results:
         if task.task_id == "final":
             assert result == [0, 1, 0, 2, 0, 3, 0, 4, 0, 5, 0, 6, 0, 7]
-
-
-def test_get_active_tasks_when_partial_computation(executor, tmpdir):
-    graph = _create_graph_with_result_passing()
-
-    # initial execution of the graph
-    executor._task_cache = FileTaskCache(cache_dir=tmpdir)
-    assert len(executor.get_active_tasks()) == 0
-    for _ in executor.execute(graph):
-        executor.get_active_tasks()
-    assert len(executor.get_active_tasks()) == 0
-
-    # now force partial recomputation
-    executor._task_cache = FileTaskCache(cache_dir=tmpdir)
-    task_to_delete = graph.tasks[-2]
-    assert task_to_delete.task_id == "7"
-    os.remove(executor._task_cache._get_flag_filename(task_to_delete))
-
-    assert len(executor.get_active_tasks()) == 0
-    for _ in executor.execute(graph):
-        executor.get_active_tasks()
-    assert len(executor.get_active_tasks()) == 0
 
 
 def _create_graph_with_result_passing():

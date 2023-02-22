@@ -12,7 +12,7 @@ def set_up_local_cluster(cluster_conf):
     # pylint: disable=import-outside-toplevel
     from dask.distributed import LocalCluster
     kwargs = copy.copy(cluster_conf)
-    if "n_workers" not in kwargs:
+    if "n_workers" not in kwargs and "cores" not in kwargs:
         kwargs["n_workers"] = 1
     cluster = LocalCluster(**kwargs)
     return cluster
