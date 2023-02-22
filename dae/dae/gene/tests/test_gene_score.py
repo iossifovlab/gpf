@@ -6,7 +6,7 @@ import numpy as np
 
 from dae.genomic_resources.testing import build_inmemory_test_repository
 from dae.genomic_resources.repository import GR_CONF_FILE_NAME
-from dae.gene.gene_scores import GeneScore
+from dae.gene.gene_scores import GeneScore, GeneScoreCollection
 
 
 @pytest.fixture
@@ -33,7 +33,27 @@ def scores_repo(tmp_path):
                 G4,1
                 G5,2
                 G6,3
-            """)
+            """),
+            "statistics": {
+                "histogram_linear.yaml": textwrap.dedent("""
+                    bars:
+                    - 2
+                    - 2
+                    - 2
+                    bins:
+                    - 1.0
+                    - 1.665
+                    - 2.333
+                    - 3.0
+                    config:
+                      bins: 10
+                      score: linear
+                      max: 3.0
+                      min: 1.0
+                      x_scale: linear
+                      y_scale: linear
+                """)
+            }
         },
         "LogHist": {
             GR_CONF_FILE_NAME: """
@@ -59,7 +79,32 @@ def scores_repo(tmp_path):
                 G4,0.01
                 G5,0.1
                 G6,1.0
-            """)
+            """),
+            "statistics": {
+                "histogram_log.yaml": textwrap.dedent("""
+                    bars:
+                    - 2
+                    - 1
+                    - 1
+                    - 1
+                    - 1
+                    bins:
+                    - 0.0,
+                    - 0.001,
+                    - 0.005623413251903491,
+                    - 0.03162277660168379,
+                    - 0.1778279410038923,
+                    - 1.0
+                    config:
+                      score: log
+                      bins: 5
+                      min: 0.0
+                      max: 1.0
+                      x_min_log: 0.001
+                      x_scale: log
+                      y_scale: linear
+                """)
+            }
         },
         "Oops": {
             GR_CONF_FILE_NAME: "",
@@ -115,7 +160,6 @@ def scores_repo(tmp_path):
     return scores_repo
 
 
-@pytest.mark.xfail(reason="Gene scores are not updated with min max yet")
 def test_load_linear_gene_scores_from_resource(scores_repo):
 
     res = scores_repo.get_resource("LinearHist")
@@ -189,3 +233,17 @@ def test_gene_score(scores_repo):
 
     assert gene_score.get_gene_value("G2") == 2
     assert gene_score.get_gene_value("G3") == 3
+
+
+def test_calculate_histogram(scores_repo):
+    res = scores_repo.get_resource("LinearHist")
+    result = GeneScore.load_gene_scores_from_resource(res)
+    assert len(result) == 1
+
+    gene_score = result[0]
+
+    histogram = GeneScoreCollection._calc_histogram(gene_score)
+    assert histogram is not None
+    print(histogram.x_min)
+    print(type(histogram.x_min))
+    print(histogram.serialize())
