@@ -1,6 +1,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import os
 import argparse
+from typing import Optional
 
 import pytest
 
@@ -39,7 +40,8 @@ def context_fixture(fixture_dirname, mocker):
 def test_get_reference_genome_ok(grr_fixture):
     # Given
     res = grr_fixture.get_resource("hg38/GRCh38-hg38/genome")
-    genome = build_reference_genome_from_resource(res)
+    genome: Optional[ReferenceGenome] = \
+        build_reference_genome_from_resource(res)
 
     context = SimpleGenomicContext(
         context_objects={
@@ -87,7 +89,8 @@ def test_get_reference_genome_bad():
 def test_get_gene_models_ok(grr_fixture):
     res = grr_fixture.get_resource(
         "hg38/GRCh38-hg38/gene_models/refSeq_20200330")
-    gene_models = build_gene_models_from_resource(res).load()
+    gene_models: Optional[GeneModels] = \
+        build_gene_models_from_resource(res).load()
 
     context = SimpleGenomicContext(
         context_objects={
@@ -179,7 +182,7 @@ def test_cli_genomic_context_reference_genome(fixture_dirname):
 
     argv = [
         "--grr-directory", fixture_dirname("genomic_resources"),
-        "-ref", "hg38/GRCh38-hg38/genome"
+        "--ref", "hg38/GRCh38-hg38/genome"
     ]
 
     # When
@@ -206,7 +209,7 @@ def test_cli_genomic_context_gene_models(fixture_dirname):
 
     argv = [
         "--grr-directory", fixture_dirname("genomic_resources"),
-        "-genes", "hg38/GRCh38-hg38/gene_models/refSeq_20200330"
+        "--genes", "hg38/GRCh38-hg38/gene_models/refSeq_20200330"
     ]
 
     # When
@@ -258,6 +261,7 @@ def test_register_context(context_fixture, contexts):
     gene_models = get_genomic_context().get_gene_models()
 
     # Then
+    assert gene_models is not None
     assert gene_models.resource.resource_id == \
         "hg19/GATK_ResourceBundle_5777_b37_phiX174_short/" \
         "gene_models/refGene_201309"
@@ -269,13 +273,13 @@ def test_register_context_provider(context_fixture, contexts):
 
     register_context_provider(
         SimpleGenomicContextProvider(
-            lambda: context2,
+            lambda: context2,  # type: ignore
             "gene_models2",
             2)
     )
     register_context_provider(
         SimpleGenomicContextProvider(
-            lambda: context1,
+            lambda: context1,  # type: ignore
             "gene_models1",
             1)
     )
@@ -284,5 +288,6 @@ def test_register_context_provider(context_fixture, contexts):
     gene_models = get_genomic_context().get_gene_models()
 
     # Then
+    assert gene_models is not None
     assert gene_models.resource.resource_id == \
         "hg38/GRCh38-hg38/gene_models/refSeq_20200330"

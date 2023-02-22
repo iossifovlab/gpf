@@ -4,7 +4,7 @@ import argparse
 import logging
 from abc import ABC, abstractmethod
 from typing import List, Optional, Any, Tuple, Set, Callable, Dict
-from functools import cache
+from functools import lru_cache
 
 from dae.genomic_resources.repository_factory import \
     build_genomic_resource_repository
@@ -196,7 +196,7 @@ class PriorityGenomicContext(GenomicContext):
             result = result.union(context.get_context_keys())
         return result
 
-    @cache
+    @lru_cache(maxsize=32)
     def get_source(self) -> Tuple[str, ...]:
         result = ["PriorityGenomicContext"]
         for context in self.contexts:
@@ -220,7 +220,7 @@ class CLIGenomicContext(SimpleGenomicContext):
     def add_context_arguments(parser: argparse.ArgumentParser):
         """Add command line arguments to the argument parser."""
         parser.add_argument(
-            "-grr", "--grr-filename", default=None,
+            "-g", "--grr-filename", "--grr", default=None,
             help="The GRR configuration file. If the argument is absent, "
             "the a GRR repository from the current genomic context "
             "(i.e. gpf_instance) will be used or, if that fails, the "
@@ -229,15 +229,20 @@ class CLIGenomicContext(SimpleGenomicContext):
             "--grr-directory", default=None,
             help="Local GRR directory to use as repository.")
         parser.add_argument(
-            "-ref", "--reference-genome-resource-id", default=None,
+            "-R", "--reference-genome-resource-id", "--ref", default=None,
             help="The resource id for the reference genome. If the argument "
                  "is absent the reference genome from the current genomic "
                  "context will be used.")
         parser.add_argument(
-            "-genes", "--gene-models-resource-id", default=None,
+            "-G", "--gene-models-resource-id", "--genes", default=None,
             help="The resource is of the gene models resource. If the argument"
                  " is absent the gene models from the current genomic "
                  "context will be used.")
+
+    @staticmethod
+    def register(args):
+        context = CLIGenomicContext.context_builder(args)
+        register_context(context)
 
     @staticmethod
     def context_builder(args) -> CLIGenomicContext:

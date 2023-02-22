@@ -5,11 +5,12 @@ import os
 import sys
 import argparse
 import logging
+from dae.utils.verbosity_configuration import VerbosityConfiguration
 from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.pedigrees.loader import FamiliesLoader
 from dae.variants_loaders.vcf.loader import VcfLoader
-from dae.gpf_instance.gpf_instance import GPFInstance
-
+from dae.genomic_resources.genomic_context import CLIGenomicContext, \
+    get_genomic_context
 
 logger = logging.getLogger("ped2ped")
 
@@ -29,37 +30,39 @@ def _handle_partition_description(families, argv):
     return families
 
 
-def _handle_vcf_files(families, argv, gpf_instance):
+def _handle_vcf_files(families, argv):
     variants_filenames, variants_params = \
         VcfLoader.parse_cli_arguments(argv)
 
     if variants_filenames:
         assert variants_filenames is not None
 
+        context = get_genomic_context()
+        genome = context.get_reference_genome()
+        if genome is None:
+            raise ValueError("unable to find reference genome")
+
         variants_loader = VcfLoader(
             families,
             variants_filenames,
             params=variants_params,
-            genome=gpf_instance.reference_genome,
+            genome=genome,
         )
 
         families = variants_loader.families
     return families
 
 
-def main(argv, gpf_instance=None):
+def main(argv):
     """Transform a pedigree file into cannonical GPF pedigree.
 
     It should be called from the command line.
     """
-    if gpf_instance is None:
-        gpf_instance = GPFInstance.build()
-
     parser = argparse.ArgumentParser()
-    parser.add_argument("--verbose", "-V", action="count", default=0)
-
+    VerbosityConfiguration.set_argumnets(parser)
     FamiliesLoader.cli_arguments(parser)
     VcfLoader.cli_arguments(parser, options_only=True)
+    CLIGenomicContext.add_context_arguments(parser)
 
     parser.add_argument(
         "-o",
@@ -82,14 +85,8 @@ def main(argv, gpf_instance=None):
     )
 
     argv = parser.parse_args(argv)
-    if argv.verbose == 1:
-        logging.basicConfig(level=logging.WARNING)
-    elif argv.verbose == 2:
-        logging.basicConfig(level=logging.INFO)
-    elif argv.verbose >= 3:
-        logging.basicConfig(level=logging.DEBUG)
-    else:
-        logging.basicConfig(level=logging.WARNING)
+    VerbosityConfiguration.set(argv)
+    CLIGenomicContext.register(argv)
 
     filename, params = FamiliesLoader.parse_cli_arguments(argv)
     logger.info("PED PARAMS: %s", params)
@@ -98,7 +95,7 @@ def main(argv, gpf_instance=None):
     families = loader.load()
 
     families = _handle_partition_description(families, argv)
-    families = _handle_vcf_files(families, argv, gpf_instance)
+    families = _handle_vcf_files(families, argv)
 
     if families.broken_families:
         for family_id, family in families.broken_families.items():
