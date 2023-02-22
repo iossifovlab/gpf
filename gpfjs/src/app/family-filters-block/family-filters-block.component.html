@@ -1,11 +1,6 @@
 <div class="family-filters-block form-block">
   <div class="card">
-    <ul
-      ngbNav
-      #nav="ngbNav"
-      (navChange)="onNavChange()"
-      class="navbar bg-light nav-pills"
-      style="justify-content: flex-start">
+    <ul ngbNav #nav="ngbNav" (navChange)="onNavChange()" class="navbar bg-light nav-pills" id="list">
       <div class="nav-title-custom">Family filters</div>
       <li [ngbNavItem]="'allFamilies'" id="all-families">
         <a ngbNavLink>All</a>
@@ -19,8 +14,8 @@
       <li [ngbNavItem]="'advanced'" *ngIf="showAdvancedButton" id="advanced">
         <a ngbNavLink>Advanced</a>
         <ng-template ngbNavContent>
-          <div style="padding-bottom: 5px">
-            <gpf-family-type-filter *ngIf="showFamilyTypeFilter" style="padding: 10px"></gpf-family-type-filter>
+          <div id="filters">
+            <gpf-family-type-filter *ngIf="showFamilyTypeFilter" id="family-filter"></gpf-family-type-filter>
             <gpf-person-filters
               [dataset]="dataset"
               [filters]="dataset?.genotypeBrowserConfig?.familyFilters"
