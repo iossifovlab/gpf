@@ -609,7 +609,7 @@ describe('EffectTypeRow', () => {
 
     const mockEffectTypeRow2 = EffectTypeRow.fromJson({
       effect_type: 'effectType1',
-      row : [
+      row: [
         {
           column: '1',
           number_of_observed_events: 2,
@@ -636,8 +636,8 @@ describe('EffectTypeTable', () => {
   it('should create effect type table from json', () => {
     const mockEffectTypeTable1 = new EffectTypeTable(
       [
-        new EffectTypeRow('effectType1', [ new DeNovoData('1', 2, 3, 4, 5), new DeNovoData('2', 6, 7, 8, 9)]),
-        new EffectTypeRow('effectType2', [ new DeNovoData('6', 7, 8, 9, 10), new DeNovoData('1', 2, 3, 4, 5)])
+        new EffectTypeRow('effectType1', [new DeNovoData('1', 2, 3, 4, 5), new DeNovoData('2', 6, 7, 8, 9)]),
+        new EffectTypeRow('effectType2', [new DeNovoData('6', 7, 8, 9, 10), new DeNovoData('1', 2, 3, 4, 5)])
       ], 'groupName1', ['col1', 'col2'], ['effectGroup1', 'effectGroup2'], ['effectType1', 'effectType2']
     );
 
@@ -645,7 +645,7 @@ describe('EffectTypeTable', () => {
       rows: [
         {
           effect_type: 'effectType1',
-          row : [
+          row: [
             {
               column: '1',
               number_of_observed_events: 2,
@@ -663,7 +663,7 @@ describe('EffectTypeTable', () => {
           ]},
         {
           effect_type: 'effectType2',
-          row : [
+          row: [
             {
               column: '6',
               number_of_observed_events: 7,
@@ -696,13 +696,13 @@ describe('DenovoReport', () => {
       [
         new EffectTypeTable(
           [
-            new EffectTypeRow('effectType1', [ new DeNovoData('1', 2, 3, 4, 5), new DeNovoData('2', 6, 7, 8, 9)]),
-            new EffectTypeRow('effectType2', [ new DeNovoData('6', 7, 8, 9, 10), new DeNovoData('1', 2, 3, 4, 5)])
+            new EffectTypeRow('effectType1', [new DeNovoData('1', 2, 3, 4, 5), new DeNovoData('2', 6, 7, 8, 9)]),
+            new EffectTypeRow('effectType2', [new DeNovoData('6', 7, 8, 9, 10), new DeNovoData('1', 2, 3, 4, 5)])
           ], 'groupName1', ['col1', 'col2'], ['effectGroup1', 'effectGroup2'], ['effectType1', 'effectType2']),
         new EffectTypeTable(
           [
-            new EffectTypeRow('effectType3', [ new DeNovoData('5', 5, 6, 2, 1), new DeNovoData('2', 5, 4, 6, 4)]),
-            new EffectTypeRow('effectType4', [ new DeNovoData('7', 4, 5, 6, 1), new DeNovoData('7', 2, 1, 8, 3)])
+            new EffectTypeRow('effectType3', [new DeNovoData('5', 5, 6, 2, 1), new DeNovoData('2', 5, 4, 6, 4)]),
+            new EffectTypeRow('effectType4', [new DeNovoData('7', 4, 5, 6, 1), new DeNovoData('7', 2, 1, 8, 3)])
           ], 'groupName2', ['col3', 'col4'], ['effectGroup2', 'effectGroup3'], ['effectType2', 'effectType3'])
       ]
     );
@@ -713,7 +713,7 @@ describe('DenovoReport', () => {
           rows: [
             {
               effect_type: 'effectType1',
-              row : [
+              row: [
                 {
                   column: '1',
                   number_of_observed_events: 2,
@@ -731,7 +731,7 @@ describe('DenovoReport', () => {
               ]},
             {
               effect_type: 'effectType2',
-              row : [
+              row: [
                 {
                   column: '6',
                   number_of_observed_events: 7,
@@ -757,7 +757,7 @@ describe('DenovoReport', () => {
           rows: [
             {
               effect_type: 'effectType3',
-              row : [
+              row: [
                 {
                   column: '5',
                   number_of_observed_events: 5,
@@ -775,7 +775,7 @@ describe('DenovoReport', () => {
               ]},
             {
               effect_type: 'effectType4',
-              row : [
+              row: [
                 {
                   column: '7',
                   number_of_observed_events: 4,
@@ -896,13 +896,13 @@ describe('VariantReport', () => {
         [
           new EffectTypeTable(
             [
-              new EffectTypeRow('effectType1', [ new DeNovoData('1', 2, 3, 4, 5), new DeNovoData('2', 6, 7, 8, 9)]),
-              new EffectTypeRow('effectType2', [ new DeNovoData('6', 7, 8, 9, 10), new DeNovoData('1', 2, 3, 4, 5)])
+              new EffectTypeRow('effectType1', [new DeNovoData('1', 2, 3, 4, 5), new DeNovoData('2', 6, 7, 8, 9)]),
+              new EffectTypeRow('effectType2', [new DeNovoData('6', 7, 8, 9, 10), new DeNovoData('1', 2, 3, 4, 5)])
             ], 'groupName1', ['col1', 'col2'], ['effectGroup1', 'effectGroup2'], ['effectType1', 'effectType2']),
           new EffectTypeTable(
             [
-              new EffectTypeRow('effectType3', [ new DeNovoData('5', 5, 6, 2, 1), new DeNovoData('2', 5, 4, 6, 4)]),
-              new EffectTypeRow('effectType4', [ new DeNovoData('7', 4, 5, 6, 1), new DeNovoData('7', 2, 1, 8, 3)])
+              new EffectTypeRow('effectType3', [new DeNovoData('5', 5, 6, 2, 1), new DeNovoData('2', 5, 4, 6, 4)]),
+              new EffectTypeRow('effectType4', [new DeNovoData('7', 4, 5, 6, 1), new DeNovoData('7', 2, 1, 8, 3)])
             ], 'groupName2', ['col3', 'col4'], ['effectGroup2', 'effectGroup3'], ['effectType2', 'effectType3'])
         ]
       )
