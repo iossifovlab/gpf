@@ -100,9 +100,10 @@ class TabixGenomicPositionTable(GenomicPositionTable):
         if rchrom is None:
             return None
         new_data = list(line.data)
-        chrom_idx = self.header.index(self.chrom_key) \
-            if isinstance(self.chrom_key, str) \
-            else self.chrom_key
+        if isinstance(self.chrom_key, int):
+            chrom_idx = self.chrom_key
+        else:
+            chrom_idx = self.header.index(self.chrom_key)
         new_data[chrom_idx] = rchrom
         return self._make_line(tuple(new_data))
 
@@ -220,8 +221,10 @@ class TabixGenomicPositionTable(GenomicPositionTable):
         if buffering and len(self.buffer) > 0 and prev_call_chrom == fchrom:
 
             first = self.buffer.peek_first()
-            if first.chrom == fchrom and prev_call_end is not None \
-                    and pos_begin > prev_call_end and pos_end < first.pos_begin:
+            if first.chrom == fchrom \
+               and prev_call_end is not None \
+               and pos_begin > prev_call_end \
+               and pos_end < first.pos_begin:
 
                 assert first.chrom == prev_call_chrom
                 self.stats["not found"] += 1

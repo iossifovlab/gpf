@@ -1,5 +1,5 @@
 import collections
-from typing import Optional, Tuple, Any, Deque, Union, Dict, Generator
+from typing import Optional, Deque, Union, Generator
 # pylint: disable=no-member
 import pysam  # type: ignore
 
@@ -22,7 +22,7 @@ class Line:
         pos_end_key: Key = 2,
         ref_key: Optional[Key] = None,
         alt_key: Optional[Key] = None,
-        header: tuple[str] = None,
+        header: tuple[str] = tuple(),
     ):
         self.data: tuple = raw_line
         self.header: tuple[str] = header
@@ -62,6 +62,7 @@ class VCFLine:
         self.info_meta: pysam.VariantHeaderMetadata = raw_line.header.info
 
     def get(self, key):
+        """Get a value from the INFO field of the VCF line."""
         value, meta = self.info.get(key), self.info_meta.get(key)
         if isinstance(value, tuple):
             if meta.number == "A" and self.allele_index is not None:
@@ -101,7 +102,7 @@ class LineBuffer:
     def peek_last(self) -> Line:
         return self.deque[-1]
 
-    def region(self) -> Tuple[Optional[str], Optional[int], Optional[int]]:
+    def region(self) -> tuple[Optional[str], Optional[int], Optional[int]]:
         """Return region stored in the buffer."""
         if len(self.deque) == 0:
             return None, None, None
@@ -171,11 +172,11 @@ class LineBuffer:
             mid_index -= 1
 
         for index in range(mid_index, len(self.deque)):
-            t = self.deque[index]
-            if t.pos_end >= pos >= t.pos_begin:
+            line = self.deque[index]
+            if line.pos_end >= pos >= line.pos_begin:
                 mid_index = index
                 break
-            if t.pos_begin >= pos:
+            if line.pos_begin >= pos:
                 mid_index = index
                 break
 

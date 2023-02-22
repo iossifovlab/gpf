@@ -19,9 +19,6 @@ class VCFGenomicPositionTable(TabixGenomicPositionTable):
         super().__init__(genomic_resource, table_definition)
         self.header = self._load_header()
 
-    def _get_index_prop_for_special_column(self, key):
-        return None
-
     def _load_header(self):
         assert self.definition.get("header_mode", "file") == "file"
         filename = self.definition.filename
@@ -31,7 +28,7 @@ class VCFGenomicPositionTable(TabixGenomicPositionTable):
             "VCF tables must have an accompanying *.header.vcf.gz file!"
         return self.genomic_resource.open_vcf_file(header_filename).header.info
 
-    def _transform_result(self, line: VCFLine) -> VCFLine:
+    def _transform_result(self, line):
         rchrom = self._map_result_chrom(line.chrom)
         if rchrom is None:
             return None

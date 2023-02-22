@@ -68,7 +68,7 @@ class ScoreLine:
     """Abstraction for a genomic score line. Wraps the line adapter."""
 
     def __init__(self, line: Line, score_defs: dict):
-        assert isinstance(line, Line) or isinstance(line, VCFLine)
+        assert isinstance(line, (Line, VCFLine))
         self.line: Line = line
         self.score_defs = score_defs
 
@@ -226,16 +226,16 @@ class GenomicScore(
     def _generate_scoredefs(self):
         if isinstance(self.table, VCFGenomicPositionTable):
             vcf_scoredefs = GenomicScore._get_vcf_scoredefs(self.table.header)
-            scoredefs = dict()
+            scoredefs = {}
             if "scores" in self.config:
-                # allow overriding vcf-generated scoredefs
-                for sc in self.config["scores"]:
-                    score = vcf_scoredefs[sc["id"]]
-                    score.desc = sc.get("desc", score.desc)
-                    score.type = sc.get("type", score.type)
+                # allow overriding of vcf-generated scoredefs
+                for over in self.config["scores"]:
+                    score = vcf_scoredefs[over["id"]]
+                    score.desc = over.get("desc", score.desc)
+                    score.type = over.get("type", score.type)
                     score.value_parser = SCORE_TYPE_PARSERS[score.type]
-                    score.na_values = sc.get("na_values", score.na_values)
-                    scoredefs[sc["id"]] = score
+                    score.na_values = over.get("na_values", score.na_values)
+                    scoredefs[over["id"]] = score
                 return scoredefs
             return vcf_scoredefs
         if "scores" in self.config:

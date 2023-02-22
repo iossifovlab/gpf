@@ -6,6 +6,7 @@ from .utils import build_genomic_position_table
 
 __all__ = [
     "Line",
+    "VCFLine",
     "LineBuffer",
     "TabixGenomicPositionTable",
     "VCFGenomicPositionTable",

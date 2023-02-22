@@ -1,12 +1,11 @@
 from __future__ import annotations
 
 import abc
-from typing import Optional, Dict, List, Union, Tuple
-from functools import cached_property
+from typing import Optional, Dict, List
 from box import Box  # type: ignore
 
 from dae.genomic_resources.repository import GenomicResource
-
+from .line import Key
 
 class GenomicPositionTable(abc.ABC):
     """Abstraction over genomic scores table."""

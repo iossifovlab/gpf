@@ -5,10 +5,8 @@ import pytest
 # pylint: disable=no-member
 import pysam
 
-from typing import Union
-
 from dae.genomic_resources.genomic_position_table import \
-    Line, VCFLine, \
+    Line, \
     TabixGenomicPositionTable, \
     VCFGenomicPositionTable, \
     build_genomic_position_table
@@ -1287,7 +1285,7 @@ def test_vcf_multiallelic_info_fields(vcf_res_multiallelic):
     ) as tab:
         assert isinstance(tab, VCFGenomicPositionTable)
 
-        results = list()
+        results = []
         for line in tab.get_all_records():
             results.append(
                 (line.chrom,

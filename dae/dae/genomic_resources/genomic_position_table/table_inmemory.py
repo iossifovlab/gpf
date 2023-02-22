@@ -88,9 +88,10 @@ class InmemoryGenomicPositionTable(GenomicPositionTable):
 
     def _transform_result(self, line: Line, chrom) -> Line:
         new_data = list(line.data)
-        chrom_idx = self.header.index(self.chrom_key) \
-            if isinstance(self.chrom_key, str) \
-            else self.chrom_key
+        if isinstance(self.chrom_key, int):
+            chrom_idx = self.chrom_key
+        else:
+            chrom_idx = self.header.index(self.chrom_key)
         new_data[chrom_idx] = chrom
         return self._make_line(tuple(new_data))
 
