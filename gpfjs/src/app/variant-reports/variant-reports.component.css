@@ -180,6 +180,7 @@ ng-multiselect-dropdown > span.selected-item {
   font-weight: normal;
 }
 
+/* stylelint-disable-next-line selector-class-pattern */
 :host::ng-deep.dropdown-multiselect__caret {
   display: none !important;
 }
