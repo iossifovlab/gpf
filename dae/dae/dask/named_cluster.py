@@ -1,4 +1,5 @@
 import os
+import copy
 from typing import Any, Dict, Optional, Tuple
 from distributed.client import Client
 import dask
@@ -7,9 +8,13 @@ _CLUSTER_TYPES = {}
 
 
 def set_up_local_cluster(cluster_conf):
+    """Create a local cluster using the passed cluster configuration."""
     # pylint: disable=import-outside-toplevel
     from dask.distributed import LocalCluster
-    cluster = LocalCluster(**cluster_conf)
+    kwargs = copy.copy(cluster_conf)
+    if "n_workers" not in kwargs:
+        kwargs["n_workers"] = 1
+    cluster = LocalCluster(**kwargs)
     return cluster
 
 
