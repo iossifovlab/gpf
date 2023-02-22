@@ -53,7 +53,7 @@ def _handle_vcf_files(families, argv):
     return families
 
 
-def main(argv):
+def main(argv=None):
     """Transform a pedigree file into cannonical GPF pedigree.
 
     It should be called from the command line.
@@ -83,6 +83,9 @@ def main(argv):
         metavar="<VCF filename>",
         help="VCF file to import",
     )
+
+    if argv is None:
+        argv = sys.argv[1:]
 
     argv = parser.parse_args(argv)
     VerbosityConfiguration.set(argv)
