@@ -13,7 +13,7 @@ export class GpfTableSubheaderComponent implements AfterContentInit {
 
   public contentTemplateRef: TemplateRef<any>;
 
-  public get sortable () {
+  public get sortable(): string | boolean {
     return this.field || this.comparator !== this.defaultComparator;
   }
 
@@ -44,14 +44,14 @@ export class GpfTableSubheaderComponent implements AfterContentInit {
     }
 
     if (!isNaN(leftVal) && !isNaN(rightVal)) {
-      return +leftVal - +rightVal;
+      return Number(leftVal) - Number(rightVal);
     }
     return leftVal.localeCompare(rightVal);
   }
 
   public sort(data: any, ascending: boolean) {
     data.forEach((element, idx) => {
-        element.arrayPosition = idx;
+      element.arrayPosition = idx;
     });
     data.sort((a, b) => {
       const compareResult = ascending ? this.comparator(a, b) : this.comparator(b, a);
