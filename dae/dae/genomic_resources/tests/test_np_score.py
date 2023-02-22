@@ -84,9 +84,9 @@ def test_np_score_aggregation():
     score = build_np_score_from_resource(res)
     score.open()
 
-    assert score.table.chrom_column_i == 0
-    assert score.table.pos_begin_column_i == 1
-    assert score.table.pos_end_column_i == 2
+    assert score.table.chrom_key == "chrom"
+    assert score.table.pos_begin_key == "pos_begin"
+    assert score.table.pos_end_key == "pos_end"
 
     assert score.fetch_scores_agg("1", 14, 18, ["cadd_raw"]) == \
         {"cadd_raw": (2 * 0.04 + 2 * 0.05) / 4.}

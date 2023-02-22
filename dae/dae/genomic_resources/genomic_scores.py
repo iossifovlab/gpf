@@ -26,7 +26,7 @@ from .resource_implementation import GenomicResourceImplementation, \
     InfoImplementationMixin, \
     ResourceConfigValidationMixin
 from .genomic_position_table import build_genomic_position_table, Line, \
-    TabixGenomicPositionTable, VCFGenomicPositionTable
+    TabixGenomicPositionTable, VCFGenomicPositionTable, VCFLine
 from .histogram import Histogram
 
 from .aggregators import build_aggregator, AGGREGATOR_SCHEMA
@@ -67,11 +67,10 @@ class ScoreDef:
 class ScoreLine:
     """Abstraction for a genomic score line. Wraps the line adapter."""
 
-    def __init__(self, line: Line, score_defs: dict, off_by_one=False):
-        assert isinstance(line, Line)
+    def __init__(self, line: Line, score_defs: dict):
+        assert isinstance(line, Line) or isinstance(line, VCFLine)
         self.line: Line = line
         self.score_defs = score_defs
-        self.off_by_one = off_by_one
 
     @property
     def chrom(self):
@@ -96,12 +95,7 @@ class ScoreLine:
     def get_score(self, score_id):
         """Get and parse configured score from line."""
         key = self.score_defs[score_id].col_key
-        if not isinstance(key, int):
-            value = self.line.get(key)
-        else:
-            if self.off_by_one:
-                key = key + 1
-            value = self.line[key]
+        value = self.line.get(key)
         if score_id in self.score_defs:
             col_def = self.score_defs[score_id]
             if value in col_def.na_values:
@@ -309,7 +303,7 @@ class GenomicScore(
 
     def _get_header(self):
         assert self.table is not None
-        return self.table.get_column_names()
+        return self.table.header
 
     def get_resource_id(self):
         return self.config["id"]
@@ -320,10 +314,7 @@ class GenomicScore(
         for line in self.table.get_records_in_region(
             chrom, pos_begin, pos_end
         ):
-            if self.table.pos_begin_column_i == self.table.pos_end_column_i:
-                yield ScoreLine(line, self.score_definitions, True)
-            else:
-                yield ScoreLine(line, self.score_definitions)
+            yield ScoreLine(line, self.score_definitions)
 
     def get_all_chromosomes(self):
         if not self.is_open():
@@ -1015,14 +1006,6 @@ class AlleleScore(GenomicScore):
 
     def open(self) -> AlleleScore:
         return cast(AlleleScore, super().open())
-
-    @classmethod
-    def required_columns(cls):
-        return ("chrom", "pos_begin", "pos_end", "variant")
-
-    @staticmethod
-    def get_extra_special_columns():
-        return {"reference": str, "alternative": str}
 
     def fetch_scores(
             self, chrom: str, position: int, reference: str, alternative: str,
