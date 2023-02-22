@@ -110,7 +110,7 @@ export class PhenoBrowserService {
     instrument: PhenoInstrument,
     selectedMeasures: PhenoMeasure[]
   ): Observable<Blob> {
-    const measureIds = selectedMeasures.map(m => m.measureId); 
+    const measureIds = selectedMeasures.map(m => m.measureId);
     return this.http.post(
       this.config.baseUrl + this.downloadUrl,
       { dataset_id: datasetId, instrument: instrument, measure_ids: measureIds },
