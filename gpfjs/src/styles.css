@@ -381,7 +381,7 @@ ngb-modal-window {
 .container {
   width: 1140px;
   margin: auto;
-  padding: 0 15px 30px 15px;
+  padding: 0 15px 30px;
 }
 
 .form-group {
@@ -403,6 +403,7 @@ ngb-modal-window {
 
 .pedigree-modal .modal-lg {
   --bs-modal-width: fit-content;
+
   min-width: 620px;
   padding: 0 50px;
 }
