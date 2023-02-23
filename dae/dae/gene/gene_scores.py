@@ -75,12 +75,22 @@ class GeneScore:
     @property
     def x_scale(self):
         """Return the scale type of the X axis."""
-        return self.histogram.x_scale
+        if self.histogram is not None:
+            return self.histogram.x_scale
+        return self.histogram_config.get("x_scale")
 
     @property
     def y_scale(self):
         """Return the scale type of the Y axis."""
-        return self.histogram.y_scale
+        if self.histogram is not None:
+            return self.histogram.y_scale
+        return self.histogram_config.get("y_scale")
+
+    @property
+    def range(self):
+        if self.histogram is not None:
+            return self.histogram.range
+        return None
 
     def _load_data(self):
         assert self.file is not None

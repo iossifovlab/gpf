@@ -242,7 +242,7 @@ def test_calculate_histogram(scores_repo):
 
     gene_score = result[0]
 
-    histogram = GeneScoreCollection._calc_histogram(gene_score)
+    histogram = GeneScoreCollection._calc_histogram(res, "linear")
     assert histogram is not None
     print(histogram.x_min)
     print(type(histogram.x_min))
