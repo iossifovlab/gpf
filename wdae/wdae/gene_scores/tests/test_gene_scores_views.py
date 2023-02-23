@@ -95,3 +95,18 @@ def test_gene_scores_partitions_bad_request(user_client, data):
         url, json.dumps(data), content_type="application/json", format="json"
     )
     assert response.status_code == 400
+
+
+def test_gene_score_download(user_client):
+    url = "/api/v3/gene_scores/download/LGD_rank"
+
+    response = user_client.get(url)
+    assert response.status_code == 200
+    assert len(list(response.streaming_content)) > 0
+
+    # This is due to a bug that downloaded empty list
+    # the second time that request has been made
+
+    response = user_client.get(url)
+    assert response.status_code == 200
+    assert len(list(response.streaming_content)) > 0
