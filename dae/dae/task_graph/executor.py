@@ -240,6 +240,7 @@ class DaskExecutor(AbstractTaskGraphExecutor):
 
         not_completed: set = set()
         completed = set()
+        initial_task_count = len(self._task_queue)
 
         not_completed = self._schedule_tasks(not_completed)
         while not_completed:
@@ -260,7 +261,7 @@ class DaskExecutor(AbstractTaskGraphExecutor):
                 logger.debug("clean up task %s", task)
                 logger.info(
                     "finished %s/%s", len(self._task2result),
-                    len(self._task_queue))
+                    initial_task_count)
                 del self._task2future[task]
 
             not_completed = self._schedule_tasks(not_completed)
