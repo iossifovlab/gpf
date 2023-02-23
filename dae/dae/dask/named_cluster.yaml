@@ -23,11 +23,22 @@ dae_named_cluster:
       type: sge
       number_of_threads: 10
       params:
+        walltime: "24:00:00"
         scheduler_options:
           dashboard_address: :8898
         cores: 1
         memory: 1GB
-        log_directory: ./sge_worker_logs
+        log_directory: ./.sge_worker_logs
+    - name: sge
+      type: sge
+      number_of_threads: 150
+      params:
+        scheduler_options:
+          dashboard_address: :8898
+        cores: 1
+        memory: 2GB
+        walltime: "72:00:00"
+        log_directory: ./.sge_worker_logs
     - name: sge_large
       type: sge
       adapt_params:
@@ -38,7 +49,8 @@ dae_named_cluster:
           dashboard_address: :8898
         cores: 1
         memory: 10GB
-        log_directory: ./sge_worker_logs
+        walltime: "72:00:00"
+        log_directory: ./.sge_worker_logs
     - name: kubernetes
       type: kubgernetes
       params:
