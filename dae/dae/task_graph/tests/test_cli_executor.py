@@ -33,7 +33,8 @@ def test_cli_named_cluster_sge_small(mocker, argv):
     dask_jobqueue\
         .SGECluster.assert_called_once_with(
             scheduler_options={"dashboard_address": ":8898"},
-            cores=1, memory="1GB", log_directory="./sge_worker_logs"
+            cores=1, memory="1GB", log_directory="./.sge_worker_logs",
+            walltime="24:00:00"
         )  # type: ignore
 
 
@@ -58,7 +59,8 @@ def test_cli_named_cluster_sge_large(mocker, argv):
     dask_jobqueue\
         .SGECluster.assert_called_once_with(
             scheduler_options={"dashboard_address": ":8898"},
-            cores=1, memory="10GB", log_directory="./sge_worker_logs"
+            cores=1, memory="10GB", log_directory="./.sge_worker_logs",
+            walltime="72:00:00"
         )  # type: ignore
 
     cluster_mock = dae.dask.named_cluster\
