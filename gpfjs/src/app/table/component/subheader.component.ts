@@ -28,18 +28,18 @@ export class GpfTableSubheaderComponent implements AfterContentInit {
     let rightVal = b[this.field];
 
     if (leftVal === '-') {
-      leftVal = undefined;
+      leftVal = null;
     }
     if (rightVal === '-') {
-      rightVal = undefined;
+      rightVal = null;
     }
-    if (leftVal === undefined && rightVal === undefined) {
+    if ((leftVal === undefined || leftVal === null) && (rightVal === undefined || rightVal === null)) {
       return 0;
     }
-    if (leftVal === undefined) {
+    if (leftVal === undefined || leftVal === null) {
       return -1;
     }
-    if (rightVal === undefined) {
+    if (rightVal === undefined || rightVal === null) {
       return 1;
     }
 
