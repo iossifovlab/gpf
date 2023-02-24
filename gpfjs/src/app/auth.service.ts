@@ -74,7 +74,7 @@ export class AuthService {
       return this.http.post(`${this.config.rootUrl}${this.baseHref}o/token/`, {
         grant_type: 'refresh_token',
         client_id: this.config.oauthClientId,
-        refresh_token: this.refreshToken,
+        refresh_token: this.refreshAccessToken,
       }, this.options).pipe(
         take(1),
         tap(res => {
