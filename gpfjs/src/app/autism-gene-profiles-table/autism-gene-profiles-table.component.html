@@ -81,6 +81,7 @@
               style="pointer-events: none"
               [hideState]="column.id !== sortBy ? 0 : orderBy === 'asc' ? -1 : 1">
             </gpf-sorting-buttons>
+            <!-- prettier-ignore -->
             <button
               *ngIf="column.columns.length"
               #columnFilteringButton
@@ -136,6 +137,7 @@
       <div class="vertical-line"></div>
 
       <div class="above-table-bar-item">
+        <!-- prettier-ignore -->
         <button
           #columnFilteringButton
           id="category-filtering-button"
@@ -188,6 +190,7 @@
           (middleclick)="openSingleView(gene)"
           >{{ gene }}</span
         >
+        <!-- prettier-ignore -->
         <button (click)="toggleHighlightGene(gene)" class="compare-genes-close font-weight-light" type="button">×</button>
       </button>
     </div>
