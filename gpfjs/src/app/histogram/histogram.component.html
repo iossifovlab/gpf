@@ -12,6 +12,7 @@
           [textOnRight]="false"
           [text]="beforeRangeText"></g>
         <g gpf-histogram-range-selector-line [width]="2" [(x)]="endX" [textOnRight]="true" [text]="afterRangeText"></g>
+        <!-- prettier-ignore -->
         <text
           id="sumOfBarsLabel"
           [attr.x]="(startX + endX) / 2"
@@ -21,6 +22,7 @@
           class="partitions-text">{{ insideRangeText }}</text>
       </g>
       <g *ngIf="!isInteractive && singleScoreValueIsValid()">
+        <!-- prettier-ignore -->
         <text [attr.x]="scaleXAxis(singleScoreValue)" [attr.y]="-10" class="small" text-anchor="middle">{{ singleScoreValue }}</text>
         <line
           class="single-score-marker"
