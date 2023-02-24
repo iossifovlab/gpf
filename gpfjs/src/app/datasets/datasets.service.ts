@@ -114,8 +114,10 @@ export class DatasetsService {
 
   public writeDatasetDescription(datasetId: string, description: string): Observable<object> {
     const options = { headers: this.headers, withCredentials: true };
-    return this.http.post(`${this.config.baseUrl}${this.datasetUrl}/description/${datasetId}`,
-      {description: description}, options
+    return this.http.post(
+      `${this.config.baseUrl}${this.datasetUrl}/description/${datasetId}`,
+      {description: description},
+      options
     );
   }
 }
