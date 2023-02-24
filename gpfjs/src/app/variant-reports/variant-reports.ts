@@ -78,8 +78,13 @@ export class PedigreeCounter {
     );
   }
 
-  public constructor(public readonly counterId: number, public readonly groupName: string,
-    public readonly data: PedigreeData[], public readonly count: number, public readonly tags: string[]) {}
+  public constructor(
+    public readonly counterId: number,
+    public readonly groupName: string,
+    public readonly data: PedigreeData[],
+    public readonly count: number,
+    public readonly tags: string[]
+  ) {}
 }
 
 export class FamilyCounter {
