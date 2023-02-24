@@ -2,7 +2,7 @@ import { ValidatorConstraint, ValidatorConstraintInterface } from 'class-validat
 
 @ValidatorConstraint({ name: 'customText', async: false })
 export class RegionsFilterValidator implements ValidatorConstraintInterface {
-  private static lineRegex = new RegExp('^(?:chr)?(?:[0-9xXyY]|[0-1][0-9]|2[0-2])(:([0-9,]+)(?:\-([0-9,]+))?)?$', 'i');
+  private static lineRegex = new RegExp('^[\\w\\d]+(:([0-9,]+)(?:\-([0-9,]+))?)?$', 'i');
 
   public validate(text: string): boolean {
     if (!text) {
