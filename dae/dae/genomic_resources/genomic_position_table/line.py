@@ -22,10 +22,10 @@ class Line:
         pos_end_key: Key = 2,
         ref_key: Optional[Key] = None,
         alt_key: Optional[Key] = None,
-        header: tuple[str] = tuple(),
+        header: tuple[str, ...] = tuple(),
     ):
         self.data: tuple = raw_line
-        self.header: tuple[str] = header
+        self.header: tuple[str, ...] = header
         self.chrom: str = self.get(chrom_key)
         self.pos_begin: int = int(self.get(pos_begin_key))
         self.pos_end: int = int(self.get(pos_end_key))

@@ -963,13 +963,15 @@ def test_buggy_fitcons_e67(tmp_path):
     res = build_filesystem_test_resource(tmp_path)
 
     with build_genomic_position_table(res, res.config["tabix_table"]) as table:
-        assert compare(table.get_records_in_region("5", 180740299, 180740300), [
-            ("5", "180739426", "180742735", "0.065122"),
-        ])
+        assert compare(
+            table.get_records_in_region("5", 180740299, 180740300),
+            [("5", "180739426", "180742735", "0.065122")]
+        )
 
-        assert compare(table.get_records_in_region("5", 180740301, 180740301), [
-            ("5", "180739426", "180742735", "0.065122"),
-        ])
+        assert compare(
+            table.get_records_in_region("5", 180740301, 180740301),
+            [("5", "180739426", "180742735", "0.065122")]
+        )
 
 
 @pytest.mark.parametrize("jump_threshold,expected", [
@@ -1003,12 +1005,14 @@ def test_tabix_jump_config(tmp_path, jump_threshold, expected):
 
     with build_genomic_position_table(res, res.config["tabix_table"]) as table:
         assert table.jump_threshold == expected
-        assert compare(table.get_records_in_region("5", 180740299, 180740300), [
-            ("5", "180739426", "180742735", "0.065122"),
-        ])
-        assert compare(table.get_records_in_region("5", 180740301, 180740301), [
-            ("5", "180739426", "180742735", "0.065122"),
-        ])
+        assert compare(
+            table.get_records_in_region("5", 180740299, 180740300),
+            [("5", "180739426", "180742735", "0.065122")]
+        )
+        assert compare(
+            table.get_records_in_region("5", 180740301, 180740301),
+            [("5", "180739426", "180742735", "0.065122")]
+        )
 
 
 @pytest.mark.parametrize("buffer_maxsize,jump_threshold", [
@@ -1049,15 +1053,18 @@ def test_tabix_max_buffer(
     with build_genomic_position_table(res, res.config["tabix_table"]) as table:
         assert table.BUFFER_MAXSIZE == buffer_maxsize
         assert table.jump_threshold == jump_threshold
-        assert compare(table.get_records_in_region("5", 180740299, 180740300), [
-            ("5", "180739426", "180742735", "0.065122"),
-        ])
-        assert compare(table.get_records_in_region("5", 180740301, 180740301), [
-            ("5", "180739426", "180742735", "0.065122"),
-        ])
-        assert compare(table.get_records_in_region("5", 180740301, 180742735), [
-            ("5", "180739426", "180742735", "0.065122"),
-        ])
+        assert compare(
+            table.get_records_in_region("5", 180740299, 180740300),
+            [("5", "180739426", "180742735", "0.065122")]
+        )
+        assert compare(
+            table.get_records_in_region("5", 180740301, 180740301),
+            [("5", "180739426", "180742735", "0.065122")]
+        )
+        assert compare(
+            table.get_records_in_region("5", 180740301, 180742735),
+            [("5", "180739426", "180742735", "0.065122")]
+        )
 
 
 def test_contig_length():
@@ -1506,7 +1513,9 @@ def test_overlapping_nonattribute_columns_config(tmp_path):
         """, seq_col=0, start_col=1, end_col=1)
     res = build_filesystem_test_resource(tmp_path)
     with build_genomic_position_table(res, res.config["table"]) as tab:
-        results = tuple(map(lambda l: (l.get(4), l.get(5)), tab.get_all_records()))
+        results = tuple(
+            map(lambda l: (l.get(4), l.get(5)), tab.get_all_records())
+        )
         assert results == (
             ("0.123", "1"),
             ("0.456", "2"),

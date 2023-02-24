@@ -5,7 +5,7 @@ from typing import Optional, Dict, List
 from box import Box  # type: ignore
 
 from dae.genomic_resources.repository import GenomicResource
-from .line import Key
+
 
 class GenomicPositionTable(abc.ABC):
     """Abstraction over genomic scores table."""
