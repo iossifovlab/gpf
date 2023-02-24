@@ -1,6 +1,5 @@
 import collections
 from typing import Optional, List, Any, TextIO
-from copy import copy
 
 from dae.genomic_resources.repository import GenomicResource
 from .table import GenomicPositionTable
@@ -25,6 +24,15 @@ class InmemoryGenomicPositionTable(GenomicPositionTable):
         self.records_by_chr: dict[str, Any] = {}
         super().__init__(genomic_resource, table_definition)
 
+    def _make_line(self, data):
+        return Line(
+            data,
+            self.chrom_key,
+            self.pos_begin_key, self.pos_end_key,
+            self.ref_key, self.alt_key,
+            self.header
+        )
+
     def open(self):
         compression = None
         if self.definition.filename.endswith(".gz"):
@@ -48,15 +56,10 @@ class InmemoryGenomicPositionTable(GenomicPositionTable):
             self.header = tuple(hcs)
         col_number = len(self.header) if self.header else None
 
-        self._set_special_column_indexes()
-
-        other_indices, other_columns = self._get_other_columns()
-
-        assert self.chrom_column_i is not None \
-            and self.pos_begin_column_i is not None \
-            and self.pos_end_column_i is not None
+        self._set_core_column_keys()
 
         records_by_chr = collections.defaultdict(list)
+
         for line in self.str_stream:
             line = line.strip(strip_chars)
             if not line:
@@ -68,27 +71,13 @@ class InmemoryGenomicPositionTable(GenomicPositionTable):
             col_number = len(columns)
             if space_replacement:
                 columns = tuple("" if v == "EMPTY" else v for v in columns)
-            chrom = columns[self.chrom_column_i]
-            ps_begin = int(columns[self.pos_begin_column_i])
-            ps_end = int(columns[self.pos_end_column_i])
 
-            if other_indices and other_columns:
-                attributes = dict(
-                    zip(other_columns, (columns[i] for i in other_indices))
-                )
-            else:
-                attributes = {str(idx): val for idx, val in enumerate(columns)
-                              if idx not in (self.chrom_column_i,
-                                             self.pos_begin_column_i,
-                                             self.pos_end_column_i)}
-            ref = attributes.get(self.ref_key)
-            alt = attributes.get(self.alt_key)
-            records_by_chr[chrom].append(
-                Line(chrom, ps_begin, ps_end,
-                     attributes, ref=ref, alt=alt)
-            )
+            line = self._make_line(columns)
+            records_by_chr[line.chrom].append(line)
+
         self.records_by_chr = {
-            c: sorted(pss, key=lambda l: (l[:3], l.ref, l.alt))
+            c: sorted(pss, key=lambda l: (l.chrom, l.pos_begin, l.pos_end,
+                                          l.ref, l.alt))
             for c, pss in records_by_chr.items()
         }
         self._build_chrom_mapping()
@@ -97,6 +86,15 @@ class InmemoryGenomicPositionTable(GenomicPositionTable):
     def get_file_chromosomes(self) -> List[str]:
         return sorted(self.records_by_chr.keys())
 
+    def _transform_result(self, line: Line, chrom) -> Line:
+        new_data = list(line.data)
+        if isinstance(self.chrom_key, int):
+            chrom_idx = self.chrom_key
+        else:
+            chrom_idx = self.header.index(self.chrom_key)
+        new_data[chrom_idx] = chrom
+        return self._make_line(tuple(new_data))
+
     def get_all_records(self):
         for chrom in self.get_chromosomes():
             if self.chrom_map:
@@ -104,9 +102,7 @@ class InmemoryGenomicPositionTable(GenomicPositionTable):
                     continue
                 fchrom = self.chrom_map[chrom]
                 for line in self.records_by_chr[fchrom]:
-                    transformed_line = copy(line)
-                    transformed_line.chrom = chrom
-                    yield transformed_line
+                    yield self._transform_result(line, chrom)
             else:
                 for line in self.records_by_chr[chrom]:
                     yield line
@@ -126,9 +122,7 @@ class InmemoryGenomicPositionTable(GenomicPositionTable):
             if pos_end and pos_end < line.pos_begin:
                 continue
             if self.chrom_map:
-                transformed_line = copy(line)
-                transformed_line.chrom = chrom
-                yield transformed_line
+                yield self._transform_result(line, chrom)
             else:
                 yield line
 

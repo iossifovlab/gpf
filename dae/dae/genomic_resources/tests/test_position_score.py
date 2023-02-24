@@ -78,9 +78,9 @@ def test_region_score():
     score.open()
 
     assert score.table is not None
-    assert score.table.chrom_column_i == 0
-    assert score.table.pos_begin_column_i == 1
-    assert score.table.pos_end_column_i == 2
+    assert score.table.chrom_key == "chrom"
+    assert score.table.pos_begin_key == "pos_begin"
+    assert score.table.pos_end_key == "pos_end"
 
     assert score.fetch_scores("1", 12) == {
         "phastCons100way": 0.02, "phastCons5way": None}

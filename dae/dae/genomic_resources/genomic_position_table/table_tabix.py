@@ -1,6 +1,5 @@
 import logging
 from typing import Optional, Tuple, List, Union
-from copy import copy
 from collections import Counter
 # pylint: disable=no-member
 import pysam  # type: ignore
@@ -56,7 +55,7 @@ class TabixGenomicPositionTable(GenomicPositionTable):
             self.definition.filename)
         if self.header_mode == "file":
             self.header = self._load_header()
-        self._set_special_column_indexes()
+        self._set_core_column_keys()
         self._build_chrom_mapping()
         return self
 
@@ -87,13 +86,26 @@ class TabixGenomicPositionTable(GenomicPositionTable):
             return self.rev_chrom_map[chrom]
         return chrom
 
+    def _make_line(self, data):
+        return Line(
+            data,
+            self.chrom_key,
+            self.pos_begin_key, self.pos_end_key,
+            self.ref_key, self.alt_key,
+            self.header
+        )
+
     def _transform_result(self, line: Line) -> Line:
         rchrom = self._map_result_chrom(line.chrom)
         if rchrom is None:
             return None
-        line_copy = copy(line)
-        line_copy.chrom = rchrom
-        return line_copy
+        new_data = list(line.data)
+        if isinstance(self.chrom_key, int):
+            chrom_idx = self.chrom_key
+        else:
+            chrom_idx = self.header.index(self.chrom_key)
+        new_data[chrom_idx] = rchrom
+        return self._make_line(tuple(new_data))
 
     def get_all_records(self):
         # pylint: disable=no-member
@@ -121,13 +133,13 @@ class TabixGenomicPositionTable(GenomicPositionTable):
         if len(self.buffer) == 0:
             return False
 
-        last_chrom, _last_begin, last_end, *_ = self.buffer.peek_last()
-        if chrom != last_chrom:
+        last = self.buffer.peek_last()
+        if chrom != last.chrom:
             return False
-        if pos < last_end:
+        if pos < last.pos_end:
             return False
 
-        if pos - last_end >= self.jump_threshold:
+        if pos - last.pos_end >= self.jump_threshold:
             return False
         return True
 
@@ -136,15 +148,15 @@ class TabixGenomicPositionTable(GenomicPositionTable):
         assert len(self.buffer) > 0
         assert self.jump_threshold > 0
 
-        last_chrom, last_begin, last_end, *_ = self.buffer.peek_last()
-        assert chrom == last_chrom
-        assert pos >= last_begin
+        last = self.buffer.peek_last()
+        assert chrom == last.chrom
+        assert pos >= last.pos_begin
 
         self.stats["sequential seek forward"] += 1
 
         for row in self._gen_from_tabix(chrom, pos, buffering=True):
-            last_chrom, last_begin, last_end, *_ = row
-        return bool(pos >= last_end)
+            last = row
+        return bool(pos >= last.pos_end)
 
     def _gen_from_tabix(self, chrom, pos, buffering=True):
         try:
@@ -172,8 +184,8 @@ class TabixGenomicPositionTable(GenomicPositionTable):
             result = self._transform_result(line)
             if result:
                 yield result
-        _, _last_beg, last_end, *_ = self.buffer.peek_last()
-        if end < last_end:
+        last = self.buffer.peek_last()
+        if end < last.pos_end:
             return
 
         yield from self._gen_from_tabix(chrom, end, buffering=True)
@@ -208,11 +220,13 @@ class TabixGenomicPositionTable(GenomicPositionTable):
 
         if buffering and len(self.buffer) > 0 and prev_call_chrom == fchrom:
 
-            first_chrom, first_beg, _first_end, *_ = self.buffer.peek_first()
-            if first_chrom == fchrom and prev_call_end is not None \
-                    and pos_begin > prev_call_end and pos_end < first_beg:
+            first = self.buffer.peek_first()
+            if first.chrom == fchrom \
+               and prev_call_end is not None \
+               and pos_begin > prev_call_end \
+               and pos_end < first.pos_begin:
 
-                assert first_chrom == prev_call_chrom
+                assert first.chrom == prev_call_chrom
                 self.stats["not found"] += 1
                 return
 
@@ -250,27 +264,8 @@ class TabixGenomicPositionTable(GenomicPositionTable):
         self.stats["tabix fetch"] += 1
         self.buffer.clear()
 
-        other_indices, other_columns = self._get_other_columns()
         # Yes, the argument for the chromosome/contig is called "reference".
         for raw in self.pysam_file.fetch(
             reference=chrom, start=pos_begin, parser=pysam.asTuple()
         ):
-            if other_indices and other_columns:
-                attributes = dict(
-                    zip(other_columns, (raw[i] for i in other_indices))
-                )
-            else:
-                attributes = {
-                    idx: value for idx, value in enumerate(raw)
-                    if idx not in (self.chrom_column_i,
-                                   self.pos_begin_column_i,
-                                   self.pos_end_column_i)
-                }
-            ref = attributes.get(self.ref_key)
-            alt = attributes.get(self.alt_key)
-            yield Line(
-                raw[self.chrom_column_i],
-                raw[self.pos_begin_column_i],
-                raw[self.pos_end_column_i],
-                attributes, ref=ref, alt=alt,
-            )
+            yield self._make_line(raw)

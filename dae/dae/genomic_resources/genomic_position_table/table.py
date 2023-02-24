@@ -1,12 +1,11 @@
 from __future__ import annotations
 
 import abc
-from typing import Optional, Dict, List, Union, Tuple
-from functools import cached_property
+from typing import Optional, Dict, List
 from box import Box  # type: ignore
 
 from dae.genomic_resources.repository import GenomicResource
-
+from .line import Key
 
 class GenomicPositionTable(abc.ABC):
     """Abstraction over genomic scores table."""
@@ -14,6 +13,8 @@ class GenomicPositionTable(abc.ABC):
     CHROM = "chrom"
     POS_BEGIN = "pos_begin"
     POS_END = "pos_end"
+    REF = "reference"
+    ALT = "alternative"
 
     def __init__(self, genomic_resource: GenomicResource, table_definition):
         self.genomic_resource = genomic_resource
@@ -23,11 +24,12 @@ class GenomicPositionTable(abc.ABC):
         self.chrom_order: Optional[List[str]] = None
         self.rev_chrom_map: Optional[Dict[str, str]] = None
 
-        self.chrom_column_i = None
-        self.pos_begin_column_i = None
-        self.pos_end_column_i = None
+        self.chrom_key = None
+        self.pos_begin_key = None
+        self.pos_end_key = None
+        self.ref_key = None
+        self.alt_key = None
 
-        # handling the header property
         self.header: Optional[tuple] = None
 
         self.header_mode = self.definition.get("header_mode", "file")
@@ -38,16 +40,15 @@ class GenomicPositionTable(abc.ABC):
                     raise ValueError(
                         f"The {hindex}-th header {hcolumn} in the table "
                         f"definition is not a string.")
+        elif self.header_mode in {"file", "none"}:
+            self.header = None
         else:
-            if self.header_mode in {"file", "none"}:
-                self.header = None
-            else:
-                raise ValueError(
-                    f"The 'header' property in a table definition "
-                    f"must be 'file' [by default], 'none', or a "
-                    f"list of strings. The current value "
-                    f"{self.header_mode} does not meet these "
-                    f"requirements.")
+            raise ValueError(
+                f"The 'header' property in a table definition "
+                f"must be 'file' [by default], 'none', or a "
+                f"list of strings. The current value "
+                f"{self.header_mode} does not meet these "
+                f"requirements.")
 
     def _build_chrom_mapping(self):
         self.chrom_map = None
@@ -95,89 +96,33 @@ class GenomicPositionTable(abc.ABC):
             self.rev_chrom_map = {
                 fch: ch for ch, fch in self.chrom_map.items()}
 
-    def _set_special_column_indexes(self):
-        self.chrom_column_i = self.get_special_column_index(self.CHROM)
-        self.pos_begin_column_i = self.get_special_column_index(self.POS_BEGIN)
-        self.pos_end_column_i = self.pos_begin_column_i
-        try:
-            self.pos_end_column_i = self.get_special_column_index(self.POS_END)
-        except (ValueError, KeyError):
-            definition = self.definition.to_dict()
-            definition[self.POS_END] = {"index": self.pos_end_column_i}
-            self.definition = Box(definition)
+    def _get_column_key(self, col):
+        if col not in self.definition:
+            return None
+        if "name" in self.definition[col]:
+            return self.definition[col].name
+        if "index" in self.definition[col]:
+            return self.definition[col].index
+        return None
 
-    def get_column_names(self):
-        return self.header
+    def _set_core_column_keys(self):
+        self.chrom_key = self._get_column_key(self.CHROM)
+        if self.chrom_key is None:
+            self.chrom_key = self.CHROM
 
-    def _get_index_prop_for_special_column(self, key):
-        index_prop = key + ".index"
+        self.pos_begin_key = self._get_column_key(self.POS_BEGIN)
+        if self.pos_begin_key is None:
+            self.pos_begin_key = self.POS_BEGIN
 
-        if key not in self.definition:
-            raise KeyError(f"The table definition has no index "
-                           f"({index_prop} property) for the special "
-                           f"column {key}.")
-        if "index" not in self.definition[key]:
-            raise KeyError(f"The table definition has no index "
-                           f"({index_prop} property) for the special "
-                           f"column {key}.")
+        self.pos_end_key = self._get_column_key(self.POS_END)
+        if self.pos_end_key is None:
+            if self.header and self.POS_END in self.header:
+                self.pos_end_key = self.POS_END
+            else:
+                self.pos_end_key = self.pos_begin_key
 
-        try:
-            return int(self.definition[key].index)
-        except ValueError as ex:
-            raise ValueError(f"The {index_prop} property in the table "
-                             f"definition should be an integer.") from ex
-
-    def get_special_column_index(self, key):
-        """Get special columns index."""
-        if self.header_mode == "none" or not self.header:
-            return self._get_index_prop_for_special_column(key)
-        try:
-            return self._get_index_prop_for_special_column(key)
-        except KeyError:
-            column_name = self.get_special_column_name(key)
-            try:
-                return self.header.index(column_name)
-            except ValueError as ex:
-                raise ValueError(f"The column {column_name} for the "
-                                 f"special column {key} is not in the "
-                                 f"header {self.header}.") from ex
-
-    def get_special_column_name(self, key):
-        if self.header_mode == "none":
-            raise AttributeError("The table has no header.")
-        if key in self.definition and "name" in self.definition[key]:
-            return self.definition[key].name
-        return key
-
-    def _get_other_columns(self) -> Union[Tuple[None, None], zip]:
-        if self.header is not None:
-            return zip(*(
-                (i, x) for i, x in enumerate(self.header)
-                if i not in (self.chrom_column_i,
-                             self.pos_begin_column_i,
-                             self.pos_end_column_i)
-            ))
-        return None, None
-
-    @cached_property
-    def ref_key(self):
-        """Get the index or name of the column for the reference base."""
-        ref_key = None
-        if "reference" in self.definition:
-            ref_key = self.get_special_column_index("reference") \
-                if self.header_mode == "none" \
-                else self.get_special_column_name("reference")
-        return ref_key
-
-    @cached_property
-    def alt_key(self):
-        """Get the index or name of the column for the alternative base."""
-        alt_key = None
-        if "alternative" in self.definition:
-            alt_key = self.get_special_column_index("alternative") \
-                if self.header_mode == "none" \
-                else self.get_special_column_name("alternative")
-        return alt_key
+        self.ref_key = self._get_column_key(self.REF)
+        self.alt_key = self._get_column_key(self.ALT)
 
     def __enter__(self):
         self.open()
@@ -200,8 +145,11 @@ class GenomicPositionTable(abc.ABC):
 
     @abc.abstractmethod
     def get_records_in_region(
-            self, chrom: str,
-            pos_begin: Optional[int] = None, pos_end: Optional[int] = None):
+        self,
+        chrom: str,
+        pos_begin: Optional[int] = None,
+        pos_end: Optional[int] = None
+    ):
         """Return an iterable over the records in the specified range.
 
         The interval is closed on both sides and 1-based.

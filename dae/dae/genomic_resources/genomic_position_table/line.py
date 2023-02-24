@@ -1,112 +1,68 @@
 import collections
-from typing import Optional, Tuple, Any, Deque, Union, Dict, Generator
+from typing import Optional, Deque, Union, Generator
 # pylint: disable=no-member
 import pysam  # type: ignore
+
+
+Key = Union[str, int]
 
 
 class Line:
     """Represents a line read from a genomic position table.
 
-    Provides uniform access to a number of important columns - chromosome,
+    Provides attribute access to a number of important columns - chromosome,
     start position, end position, reference allele and alternative allele.
     """
 
     def __init__(
         self,
-        chrom: str,
-        pos_begin: Union[int, str],
-        pos_end: Union[int, str],
-        attributes: Dict[str, Any],
-        ref: Optional[str] = None,
-        alt: Optional[str] = None,
+        raw_line: tuple,
+        chrom_key: Key = 0,
+        pos_begin_key: Key = 1,
+        pos_end_key: Key = 2,
+        ref_key: Optional[Key] = None,
+        alt_key: Optional[Key] = None,
+        header: tuple[str] = tuple(),
     ):
-        self.chrom: str = chrom
-        self.pos_begin: int = int(pos_begin)
-        self.pos_end: int = int(pos_end)
-        self.attributes: Dict[str, Any] = attributes
-        self.ref: Optional[str] = ref
-        self.alt: Optional[str] = alt
+        self.data: tuple = raw_line
+        self.header: tuple[str] = header
+        self.chrom: str = self.get(chrom_key)
+        self.pos_begin: int = int(self.get(pos_begin_key))
+        self.pos_end: int = int(self.get(pos_end_key))
+        self.ref: Optional[str] = \
+            self.get(ref_key) if ref_key is not None else None
+        self.alt: Optional[str] = \
+            self.get(alt_key) if alt_key is not None else None
 
-    def __eq__(self, other: object):
-        if isinstance(other, Line):
-            return self.chrom == other.chrom \
-                and self.pos_begin == other.pos_begin \
-                and self.pos_end == other.pos_end \
-                and self.attributes == other.attributes
-        if isinstance(other, tuple) and len(other) >= 3:
-            return tuple(self) == other
-        return False
-
-    def __iter__(self):
-        yield self.chrom
-        yield self.pos_begin
-        yield self.pos_end
-        for attr in self.attributes.values():
-            yield attr
-
-    def __getitem__(self, key: Union[int, slice]):
-        if not isinstance(key, (int, slice)):
-            raise TypeError(f"Key '{key}' must be of integer or slice type!")
-        if isinstance(key, slice):
-            return tuple(self)[key]
-        if key == 0:
-            return self.chrom
-        if key == 1:
-            return self.pos_begin
-        if key == 2:
-            return self.pos_end
-        return tuple(self.attributes.values())[key - 3]
-
-    def __repr__(self):
-        return str(tuple(self))
-
-    def _fetch_value(self, key):
-        return self.attributes[key]
-
-    def get(self, key: str):
-        """Universal getter function."""
-        if key == "chrom":
-            return self.chrom
-        if key == "pos_begin":
-            return self.pos_begin
-        if key == "pos_end":
-            return self.pos_end
-        return self._fetch_value(key)
+    def get(self, key: Key):
+        idx = key if isinstance(key, int) else self.header.index(key)
+        return self.data[idx]
 
 
-class VCFLine(Line):
+class VCFLine:
     """Line adapter for lines derived from a VCF file.
 
     Implements functionality for handling multi-allelic variants
     and INFO fields.
     """
 
-    def __init__(
-        self,
-        chrom: str,
-        pos_begin: Union[int, str],
-        pos_end: Union[int, str],
-        ref: str,
-        alt: Optional[str],
-        allele_index: Optional[int],
-        info: pysam.VariantRecordInfo,
-        info_meta: pysam.VariantHeaderMetadata,
-    ):
-        super().__init__(
-            chrom, pos_begin, pos_end, {}, ref, alt
-        )
-        # Used for support of multiallelic variants in VCF files.
+    def __init__(self, raw_line, allele_index):
+        self.chrom: str = raw_line.contig
+        self.pos_begin: int = raw_line.pos
+        self.pos_end: int = raw_line.pos
+        self.ref: str = raw_line.ref
+        self.alt: Optional[str] = None
+        # Used to handle multiallelic variants in VCF files.
         # The allele index is None if the variant for this line
         # is missing its ALT, i.e. its value is '.'
         self.allele_index: Optional[int] = allele_index
-        # VCF INFO fields column
-        self.info: pysam.VariantRecordInfo = info
-        # VCF INFO fields metadata - holds metadata for info fields
-        # such as description, type, whether the value is a tuple
-        # of multiple values, etc.
-        self.info_meta: pysam.VariantHeaderMetadata = info_meta
+        if self.allele_index is not None:
+            self.alt = raw_line.alts[allele_index]
+        self.info: pysam.VariantRecordInfo = raw_line.info
+        self.info_meta: pysam.VariantHeaderMetadata = raw_line.header.info
 
-    def _fetch_value(self, key):
+    def get(self, key):
+        """Get a value from the INFO field of the VCF line."""
         value, meta = self.info.get(key), self.info_meta.get(key)
         if isinstance(value, tuple):
             if meta.number == "A" and self.allele_index is not None:
@@ -146,38 +102,34 @@ class LineBuffer:
     def peek_last(self) -> Line:
         return self.deque[-1]
 
-    def region(self) -> Tuple[Optional[str], Optional[int], Optional[int]]:
+    def region(self) -> tuple[Optional[str], Optional[int], Optional[int]]:
         """Return region stored in the buffer."""
         if len(self.deque) == 0:
             return None, None, None
 
-        first_chrom, first_begin, first_end, *_ = self.peek_first()
-        if len(self.deque) == 1:
-            return first_chrom, first_begin, first_end
+        first = self.peek_first()
+        last = self.peek_last()
 
-        last_chrom, _, last_end, *_ = self.peek_last()
-        if first_chrom != last_chrom:
+        if first.chrom != last.chrom or first.pos_end > last.pos_end:
             self.clear()
             return None, None, None
-        if first_end > last_end:
-            self.clear()
-            return None, None, None
-        return first_chrom, first_begin, last_end
+
+        return first.chrom, first.pos_begin, last.pos_end
 
     def prune(self, chrom: str, pos: int) -> None:
         """Prune the buffer if needed."""
         if len(self.deque) == 0:
             return
 
-        first_chrom, _first_beg, _, *_ = self.peek_first()
-        if chrom != first_chrom:
+        first = self.peek_first()
+
+        if chrom != first.chrom:
             self.clear()
             return
 
         while len(self.deque) > 0:
-            _, _first_beg, first_end, *_ = self.deque[0]
-
-            if pos <= first_end:
+            first = self.peek_first()
+            if pos <= first.pos_end:
                 break
             self.deque.popleft()
 
@@ -204,27 +156,27 @@ class LineBuffer:
             if last_index <= first_index:
                 break
 
-            _, mid_beg, mid_end, *_ = self.deque[mid_index]
-            if mid_end >= pos >= mid_beg:
+            mid = self.deque[mid_index]
+            if mid.pos_end >= pos >= mid.pos_begin:
                 break
 
-            if pos < mid_beg:
+            if pos < mid.pos_begin:
                 last_index = mid_index - 1
             else:
                 first_index = mid_index + 1
 
         while mid_index > 0:
-            _, prev_beg, _prev_end, *_ = self.deque[mid_index - 1]
-            if pos > prev_beg:
+            prev = self.deque[mid_index - 1]
+            if pos > prev.pos_begin:
                 break
             mid_index -= 1
 
         for index in range(mid_index, len(self.deque)):
-            _, t_beg, t_end, *_ = self.deque[index]
-            if t_end >= pos >= t_beg:
+            line = self.deque[index]
+            if line.pos_end >= pos >= line.pos_begin:
                 mid_index = index
                 break
-            if t_beg >= pos:
+            if line.pos_begin >= pos:
                 mid_index = index
                 break
 
@@ -238,9 +190,8 @@ class LineBuffer:
 
         for index in range(beg_index, len(self.deque)):
             row = self.deque[index]
-            _rchrom, rbeg, rend, *_rline = row
-            if rend < pos_begin:
+            if row.pos_end < pos_begin:
                 continue
-            if pos_end is not None and rbeg > pos_end:
+            if pos_end is not None and row.pos_begin > pos_end:
                 break
             yield row

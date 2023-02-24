@@ -1,5 +1,6 @@
 from functools import cache
 from typing import List
+from copy import copy
 # pylint: disable=no-member
 import pysam  # type: ignore
 
@@ -18,9 +19,6 @@ class VCFGenomicPositionTable(TabixGenomicPositionTable):
         super().__init__(genomic_resource, table_definition)
         self.header = self._load_header()
 
-    def _get_index_prop_for_special_column(self, key):
-        return None
-
     def _load_header(self):
         assert self.definition.get("header_mode", "file") == "file"
         filename = self.definition.filename
@@ -30,10 +28,18 @@ class VCFGenomicPositionTable(TabixGenomicPositionTable):
             "VCF tables must have an accompanying *.header.vcf.gz file!"
         return self.genomic_resource.open_vcf_file(header_filename).header.info
 
+    def _transform_result(self, line):
+        rchrom = self._map_result_chrom(line.chrom)
+        if rchrom is None:
+            return None
+        new_line = copy(line)
+        new_line.chrom = rchrom
+        return new_line
+
     def open(self):
         self.pysam_file = self.genomic_resource.open_vcf_file(
             self.definition.filename)
-        self._set_special_column_indexes()
+        self._set_core_column_keys()
         self._build_chrom_mapping()
         return self
 
@@ -49,11 +55,5 @@ class VCFGenomicPositionTable(TabixGenomicPositionTable):
         for raw_line in self.pysam_file.fetch(*args):
             for allele_index, alt in enumerate(raw_line.alts or [None]):
                 assert raw_line.ref is not None
-                yield VCFLine(
-                    raw_line.contig, raw_line.pos, raw_line.pos,
-                    allele_index=allele_index if alt is not None else None,
-                    ref=raw_line.ref,
-                    alt=alt,
-                    info=raw_line.info,
-                    info_meta=raw_line.header.info,
-                )
+                allele_index = allele_index if alt is not None else None
+                yield VCFLine(raw_line, allele_index)

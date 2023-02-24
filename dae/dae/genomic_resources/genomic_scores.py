@@ -26,7 +26,7 @@ from .resource_implementation import GenomicResourceImplementation, \
     InfoImplementationMixin, \
     ResourceConfigValidationMixin
 from .genomic_position_table import build_genomic_position_table, Line, \
-    TabixGenomicPositionTable, VCFGenomicPositionTable
+    TabixGenomicPositionTable, VCFGenomicPositionTable, VCFLine
 from .histogram import Histogram
 
 from .aggregators import build_aggregator, AGGREGATOR_SCHEMA
@@ -41,6 +41,12 @@ VCF_TYPE_CONVERSION_MAP = {
     "Float": "float",
     "String": "str",
     "Flag": "bool",
+}
+
+SCORE_TYPE_PARSERS = {
+    "str": str,
+    "float": float,
+    "int": int
 }
 
 
@@ -61,11 +67,10 @@ class ScoreDef:
 class ScoreLine:
     """Abstraction for a genomic score line. Wraps the line adapter."""
 
-    def __init__(self, line: Line, score_defs: dict, off_by_one=False):
-        assert isinstance(line, Line)
+    def __init__(self, line: Line, score_defs: dict):
+        assert isinstance(line, (Line, VCFLine))
         self.line: Line = line
         self.score_defs = score_defs
-        self.off_by_one = off_by_one
 
     @property
     def chrom(self):
@@ -90,12 +95,7 @@ class ScoreLine:
     def get_score(self, score_id):
         """Get and parse configured score from line."""
         key = self.score_defs[score_id].col_key
-        if not isinstance(key, int):
-            value = self.line.get(key)
-        else:
-            if self.off_by_one:
-                key = key + 1
-            value = self.line[key]
+        value = self.line.get(key)
         if score_id in self.score_defs:
             col_def = self.score_defs[score_id]
             if value in col_def.na_values:
@@ -143,11 +143,6 @@ class GenomicScore(
     def _parse_scoredef_config(config):
         """Parse ScoreDef configuration."""
         scores = {}
-        type_parsers = {
-            "str": str,
-            "float": float,
-            "int": int
-        }
         default_na_values = {
             "str": {},
             "float": {"", "nan", ".", "NA"},
@@ -173,7 +168,7 @@ class GenomicScore(
                 col_key,
                 score_conf.get("desc", ""),
                 col_type,
-                type_parsers[col_type],
+                SCORE_TYPE_PARSERS[col_type],
                 score_conf.get(
                     "na_values",
                     config.get(
@@ -229,10 +224,22 @@ class GenomicScore(
                                          " be configured for scores!")
 
     def _generate_scoredefs(self):
+        if isinstance(self.table, VCFGenomicPositionTable):
+            vcf_scoredefs = GenomicScore._get_vcf_scoredefs(self.table.header)
+            scoredefs = {}
+            if "scores" in self.config:
+                # allow overriding of vcf-generated scoredefs
+                for over in self.config["scores"]:
+                    score = vcf_scoredefs[over["id"]]
+                    score.desc = over.get("desc", score.desc)
+                    score.type = over.get("type", score.type)
+                    score.value_parser = SCORE_TYPE_PARSERS[score.type]
+                    score.na_values = over.get("na_values", score.na_values)
+                    scoredefs[over["id"]] = score
+                return scoredefs
+            return vcf_scoredefs
         if "scores" in self.config:
             return GenomicScore._parse_scoredef_config(self.config)
-        if isinstance(self.table, VCFGenomicPositionTable):
-            return GenomicScore._get_vcf_scoredefs(self.table.header)
         raise ValueError("No scores configured and not using a VCF")
 
     def get_config(self):
@@ -296,7 +303,7 @@ class GenomicScore(
 
     def _get_header(self):
         assert self.table is not None
-        return self.table.get_column_names()
+        return self.table.header
 
     def get_resource_id(self):
         return self.config["id"]
@@ -307,10 +314,7 @@ class GenomicScore(
         for line in self.table.get_records_in_region(
             chrom, pos_begin, pos_end
         ):
-            if self.table.pos_begin_column_i == self.table.pos_end_column_i:
-                yield ScoreLine(line, self.score_definitions, True)
-            else:
-                yield ScoreLine(line, self.score_definitions)
+            yield ScoreLine(line, self.score_definitions)
 
     def get_all_chromosomes(self):
         if not self.is_open():
@@ -1002,14 +1006,6 @@ class AlleleScore(GenomicScore):
 
     def open(self) -> AlleleScore:
         return cast(AlleleScore, super().open())
-
-    @classmethod
-    def required_columns(cls):
-        return ("chrom", "pos_begin", "pos_end", "variant")
-
-    @staticmethod
-    def get_extra_special_columns():
-        return {"reference": str, "alternative": str}
 
     def fetch_scores(
             self, chrom: str, position: int, reference: str, alternative: str,
