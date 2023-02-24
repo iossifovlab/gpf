@@ -1,13 +1,5 @@
-#bg {
-  height: 12px;
-  width: 12px;
-}
-
-#asc {
-  height: 12px;
-  width: 12px;
-}
-
+#bg,
+#asc,
 #desc {
   height: 12px;
   width: 12px;
