@@ -293,22 +293,32 @@ class BaseQueryBuilder(ABC):
         for region in regions:
             assert isinstance(region, Region)
             end_position = "COALESCE(end_position, -1)"
-            where.append(
-                "(`chromosome` = {q}{chrom}{q} AND "
-                "("
-                "(`position` >= {start} AND `position` <= {stop}) "
-                "OR "
-                "({end_position} >= {start} AND {end_position} <= {stop}) "
-                "OR "
-                "({start} >= `position` AND {stop} <= {end_position})"
-                "))".format(
+            query = "(`chromosome` = {q}{chrom}{q}"
+            if region.start is None and region.end is None:
+                query += ")"
+                query = query.format(
+                    q=self.QUOTE,
+                    chrom=region.chrom
+                )
+            else:
+                query += (
+                    " AND "
+                    "("
+                    "(`position` >= {start} AND `position` <= {stop}) "
+                    "OR "
+                    "({end_position} >= {start} AND {end_position} <= {stop}) "
+                    "OR "
+                    "({start} >= `position` AND {stop} <= {end_position})"
+                    "))"
+                )
+                query = query.format(
                     q=self.QUOTE,
                     chrom=region.chrom,
                     start=region.start,
                     stop=region.stop,
                     end_position=end_position
                 )
-            )
+            where.append(query)
         return " OR ".join(where)
 
     def _build_iterable_string_attr_where(self, column_name, query_values):
@@ -513,7 +523,6 @@ class BaseQueryBuilder(ABC):
             return ""
 
         chroms = set(self.table_properties["chromosomes"])
-
         region_length = self.table_properties["region_length"]
         region_bins = []
         for region in regions:
@@ -521,6 +530,8 @@ class BaseQueryBuilder(ABC):
                 chrom_bin = region.chrom
             else:
                 chrom_bin = "other"
+            if region.start is None and region.end is None:
+                continue
             start = region.start // region_length
             stop = region.stop // region_length
             for position_bin in range(start, stop + 1):

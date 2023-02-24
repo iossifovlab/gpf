@@ -121,6 +121,8 @@ class RawFamilyVariants(abc.ABC):
             end_position = v.end_position
 
         for reg in regions:
+            if reg.start is None and reg.stop is None:
+                return reg.chrom == v.chromosome
             if (
                 reg.chrom == v.chromosome
                 and (
