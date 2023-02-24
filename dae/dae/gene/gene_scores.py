@@ -3,6 +3,8 @@ import copy
 import itertools
 import logging
 import textwrap
+import hashlib
+import json
 from typing import Optional, List
 
 import numpy as np
@@ -46,7 +48,9 @@ class GeneScore:
 
     DEFAULT_AGGREGATOR_TYPE = "dict"
 
-    def __init__(self, score_id, file, desc, histogram_config, meta=None):
+    def __init__(
+        self, score_id, file, desc, histogram_config, meta=None, histogram=None
+    ):
         self.histogram_config = histogram_config
 
         self.score_id = score_id
@@ -60,22 +64,33 @@ class GeneScore:
         self.df = self._load_data()
         self.df.dropna(inplace=True)
 
-        self.histogram = Histogram(histogram_config)
-        for value in self.values():
-            self.histogram.add_value(value)
+        self.histogram = histogram
+        self.histogram_bins = None
+        self.histogram_bars = None
 
-        self.histogram_bins = self.histogram.bins
-        self.histogram_bars = self.histogram.bars
+        if histogram is not None:
+            self.histogram_bins = self.histogram.bins
+            self.histogram_bars = self.histogram.bars
 
     @property
     def x_scale(self):
         """Return the scale type of the X axis."""
-        return self.histogram.x_scale
+        if self.histogram is not None:
+            return self.histogram.x_scale
+        return self.histogram_config.get("x_scale")
 
     @property
     def y_scale(self):
         """Return the scale type of the Y axis."""
-        return self.histogram.y_scale
+        if self.histogram is not None:
+            return self.histogram.y_scale
+        return self.histogram_config.get("y_scale")
+
+    @property
+    def range(self):
+        if self.histogram is not None:
+            return self.histogram.range
+        return None
 
     def _load_data(self):
         assert self.file is not None
@@ -105,27 +120,66 @@ class GeneScore:
             raise ValueError(
                 f"missing histograms config {resource.resource_id}")
 
-        meta = getattr(config, "meta", None)
         scores = []
         for gs_config in config["gene_scores"]:
-            gene_score_id = gs_config["id"]
-            file = resource.open_raw_file(config["filename"])
-            desc = gs_config["desc"]
-            histogram_config = None
-            for hist_config in config["histograms"]:
-                if hist_config["score"] == gene_score_id:
-                    histogram_config = hist_config
-                    break
-            if histogram_config is None:
-                raise ValueError(
-                    f"missing histogram config for score {gene_score_id} in "
-                    f"resource {resource.resource_id}"
-                )
-            gene_score = GeneScore(
-                gene_score_id, file, desc, histogram_config, meta)
+            gene_score = GeneScore._load_gene_score(resource, gs_config)
             scores.append(gene_score)
 
         return scores
+
+    @staticmethod
+    def load_gene_score_from_resource(
+        resource: GenomicResource, score_id: str
+    ):
+        """Create and return specific gene score in a resource."""
+        if resource.get_type() != "gene_score":
+            logger.error(
+                "invalid resource type for gene score %s",
+                resource.resource_id)
+            raise ValueError(f"invalid resource type {resource.resource_id}")
+
+        config = resource.get_config()
+        for gs_config in config["gene_scores"]:
+            if gs_config["id"] == score_id:
+                return GeneScore._load_gene_score(resource, gs_config)
+
+        return None
+
+    @staticmethod
+    def _load_gene_score(resource, gs_config):
+        proto = resource.proto
+        resource_config = resource.get_config()
+        gene_score_id = gs_config["id"]
+        file = resource.open_raw_file(resource_config["filename"])
+        desc = gs_config["desc"]
+        histogram_config = None
+        for hist_config in resource_config["histograms"]:
+            if hist_config["score"] == gene_score_id:
+                histogram_config = hist_config
+                break
+        if histogram_config is None:
+            raise ValueError(
+                f"missing histogram config for score {gene_score_id} in "
+                f"resource {resource.resource_id}"
+            )
+        histogram_filename = (
+            f"{GeneScoreCollection.STATISTICS_FOLDER}"
+            f"/histogram_{gene_score_id}.yaml"
+        )
+        histogram = None
+        if proto.file_exists(resource, histogram_filename):
+            with proto.open_raw_file(
+                resource,
+                histogram_filename,
+                mode="rt"
+            ) as infile:
+                histogram = Histogram.deserialize(infile.read())
+
+        meta = resource_config.get("meta")
+
+        return GeneScore(
+            gene_score_id, file, desc, histogram_config,
+            meta=meta, histogram=histogram)
 
     def values(self):
         """Return a list of score values."""
@@ -163,11 +217,11 @@ class GeneScore:
 
     def min(self):
         """Return minimal score value."""
-        return self.df[self.score_id].min()
+        return self.df[self.score_id].min().item()
 
     def max(self):
         """Return maximal score value."""
-        return self.df[self.score_id].max()
+        return self.df[self.score_id].max().item()
 
     def get_genes(self, score_min=None, score_max=None):
         """
@@ -281,10 +335,62 @@ class GeneScoreCollection(
         return "placeholder"
 
     def calc_statistics_hash(self) -> bytes:
-        return b"placeholder"
+        manifest = self.resource.get_manifest()
+        score_filename = self.get_config()["filename"]
+        return hashlib.md5(json.dumps({
+            "config": manifest["genomic_resource.yaml"].md5,
+            "score_file": manifest[score_filename].md5
+        }, sort_keys=True).encode()).digest()
 
     def add_statistics_build_tasks(self, task_graph, **kwargs) -> List[Task]:
-        return []
+        save_tasks = []
+        for score_id, score in self.scores.items():
+            if score.histogram_config is None:
+                logger.warning(
+                    "Gene score %s in %s has no histogram config!",
+                    score_id, self.resource.resource_id
+                )
+                continue
+            create_task = task_graph.create_task(
+                f"{self.resource.resource_id}_{score_id}_calc_histogram",
+                self._calc_histogram,
+                [self.resource, score_id],
+                []
+            )
+            save_task = task_graph.create_task(
+                f"{self.resource.resource_id}_{score_id}_save_histogram",
+                self._save_histogram,
+                [create_task, self.resource],
+                [create_task]
+            )
+            save_tasks.append(save_task)
+        return save_tasks
+
+    @staticmethod
+    def _calc_histogram(resource, score_id):
+        score = GeneScore.load_gene_score_from_resource(resource, score_id)
+        histogram_config = score.histogram_config
+        if "min" not in histogram_config:
+            histogram_config["min"] = score.min()
+        if "max" not in histogram_config:
+            histogram_config["max"] = score.max()
+        histogram = Histogram(score.histogram_config)
+        for value in score.values():
+            histogram.add_value(value)
+        return histogram
+
+    @staticmethod
+    def _save_histogram(histogram, resource):
+        proto = resource.proto
+        score_id = histogram.score_id
+        with proto.open_raw_file(
+            resource,
+            f"{GeneScoreCollection.STATISTICS_FOLDER}"
+            f"/histogram_{score_id}.yaml",
+            mode="wt"
+        ) as outfile:
+            outfile.write(histogram.serialize())
+        return histogram
 
 
 class GeneScoresDb:

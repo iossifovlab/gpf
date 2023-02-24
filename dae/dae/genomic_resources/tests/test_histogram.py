@@ -59,8 +59,8 @@ def test_histogram_merge():
     config = {
         "score": "test",
         "bins": 10,
-        "x_min": 0,
-        "x_max": 10,
+        "min": 0,
+        "max": 10,
         "x_scale": "linear",
         "y_scale": "linear"
     }
@@ -83,8 +83,8 @@ def test_histogram_serialize_deserialize():
     config = {
         "score": "test",
         "bins": 10,
-        "x_min": 0,
-        "x_max": 10,
+        "min": 0,
+        "max": 10,
         "x_scale": "linear",
         "y_scale": "linear"
     }
