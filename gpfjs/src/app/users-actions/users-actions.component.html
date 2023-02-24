@@ -1,6 +1,6 @@
 <ng-template #confirmation let-options="options">
   <div [ngClass]="['popover', 'show', 'bs-popover-' + options.placement, options.popoverClass]">
-    <div class="arrow"></div>
+    <div class="arrow" id="arrow-id"></div>
     <h3 class="popover-header" [innerHTML]="options.title"></h3>
     <div class="popover-body">
       <p [innerHTML]="options.popoverMessage"></p>
