@@ -240,8 +240,6 @@ def test_calculate_histogram(scores_repo):
     result = GeneScore.load_gene_scores_from_resource(res)
     assert len(result) == 1
 
-    gene_score = result[0]
-
     histogram = GeneScoreCollection._calc_histogram(res, "linear")
     assert histogram is not None
     print(histogram.x_min)
