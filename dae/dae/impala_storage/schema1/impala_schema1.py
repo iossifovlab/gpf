@@ -183,10 +183,15 @@ class ImpalaSchema1ImportStorage(ImportStorage):
             )
             bucket_tasks.append(task)
 
+        # dummy task used for running the parquet generation w/o impala import
+        all_parquet_task = graph.create_task(
+            "Parquet Tasks", lambda: None, [], bucket_tasks
+        )
+
         if project.has_genotype_storage():
             hdfs_task = graph.create_task(
                 "Copying to HDFS", self._do_load_in_hdfs,
-                [project], [pedigree_task] + bucket_tasks)
+                [project], [pedigree_task, all_parquet_task])
 
             impala_task = graph.create_task(
                 "Importing into Impala", self._do_load_in_impala,

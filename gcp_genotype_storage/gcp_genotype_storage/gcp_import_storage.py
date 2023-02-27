@@ -141,10 +141,15 @@ class GcpImportStorage(ImportStorage):
             )
             bucket_tasks.append(task)
 
+        # dummy task used for running the parquet generation w/o impala import
+        all_parquet_task = graph.create_task(
+            "Parquet Tasks", lambda: None, [], bucket_tasks
+        )
+
         import_task = graph.create_task(
             "Import Dataset into GCP genotype storage",
             self._do_import_dataset,
-            [project], [pedigree_task, *bucket_tasks])
+            [project], [pedigree_task, all_parquet_task])
 
         graph.create_task(
             "Create study config",
