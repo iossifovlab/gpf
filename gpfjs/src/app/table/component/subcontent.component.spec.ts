@@ -39,20 +39,18 @@ describe('GpfTableSubcontentComponent', () => {
         GpfTableCellContentDirective
       ]
     }).compileComponents();
-  }));
 
-  beforeEach(() => {
     fixture = TestBed.createComponent(TestWrapperComponent);
     component = fixture.debugElement.children[0].componentInstance;
     fixture.detectChanges();
-  });
+  }));
 
   it('should be created', () => {
     expect(component).toBeTruthy();
   });
 
   it('should have content children', () => {
-    expect(component.contentChildren.length).toBe(2);
+    expect(component.contentChildren).toHaveLength(2);
 
     expect(component.contentTemplateRef).toBe(component.contentChildren.first.templateRef);
   });

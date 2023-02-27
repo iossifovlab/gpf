@@ -42,9 +42,7 @@ describe('GpfTableHeaderCellComponent', () => {
       ],
       providers: [ViewContainerRef]
     }).compileComponents();
-  }));
 
-  beforeEach(() => {
     testFixture = TestBed.createComponent(TestGpfTableContentHeaderComponent);
     testComponent = testFixture.debugElement.children[0].componentInstance;
     testFixture.detectChanges();
@@ -55,7 +53,7 @@ describe('GpfTableHeaderCellComponent', () => {
     component.columnInfo = testComponent;
 
     fixture.detectChanges();
-  });
+  }));
 
   it('should be created', () => {
     expect(component).toBeTruthy();
@@ -68,7 +66,7 @@ describe('GpfTableHeaderCellComponent', () => {
   it('should sort on click', () => {
     jest.spyOn(component.sortingInfoChange, 'emit').mockImplementation(() => {});
 
-    expect(testComponent.subcolumnsChildren.length).toBe(1);
+    expect(testComponent.subcolumnsChildren).toHaveLength(1);
     expect(component.onSortClick(testComponent.subcolumnsChildren.first)).toBe(true);
 
     expect(component.sortingInfoChange.emit).toHaveBeenCalledWith(

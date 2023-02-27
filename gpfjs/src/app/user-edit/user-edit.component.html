@@ -111,7 +111,8 @@
             [appendToBody]="true"
             [customTemplate]="confirmation"
             [popoverMessage]="'Changes on this screen will not be saved.'"
-            (confirm)="goBack()">Back</button
+            (confirm)="goBack()"
+            >Back</button
           >
           <button class="btn btn-primary" type="submit" (click)="submit(user)">Submit</button>
         </div>

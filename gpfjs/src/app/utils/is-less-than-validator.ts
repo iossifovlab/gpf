@@ -9,7 +9,7 @@ export function IsLessThanOrEqual(property: string, validationOptions?: Validati
       options: validationOptions,
       constraints: [property],
       validator: {
-        validate(value: any, args: ValidationArguments) {
+        validate(value: any, args: ValidationArguments): boolean {
           const [relatedPropertyName] = args.constraints;
           try {
             const relatedValue = relatedPropertyName.split('.').reduce((a, b) => a[b], (args.object as any));
@@ -23,7 +23,7 @@ export function IsLessThanOrEqual(property: string, validationOptions?: Validati
             return false;
           }
         },
-        defaultMessage(args: ValidationArguments) {
+        defaultMessage(args: ValidationArguments): string {
           const [relatedPropertyName] = args.constraints;
           return `${propertyName} should be less than or equal to ${relatedPropertyName}`;
         }

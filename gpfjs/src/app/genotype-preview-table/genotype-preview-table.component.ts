@@ -1,5 +1,5 @@
 import { Input, Component, HostListener, OnInit } from '@angular/core';
-import { GenotypePreview, GenotypePreviewVariantsArray } from '../genotype-preview-model/genotype-preview';
+import { GenotypePreviewVariantsArray } from '../genotype-preview-model/genotype-preview';
 import { PersonSet } from '../datasets/datasets';
 import { LegendItem } from 'app/variant-reports/variant-reports';
 

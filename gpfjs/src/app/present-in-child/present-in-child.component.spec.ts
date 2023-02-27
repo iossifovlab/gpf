@@ -18,9 +18,7 @@ describe('PresentInChildComponent', () => {
       imports: [NgxsModule.forRoot([], {developmentMode: true})],
       schemas: [NO_ERRORS_SCHEMA]
     }).compileComponents();
-  }));
 
-  beforeEach(() => {
     fixture = TestBed.createComponent(PresentInChildComponent);
     component = fixture.componentInstance;
     component['store'] = {
@@ -30,7 +28,7 @@ describe('PresentInChildComponent', () => {
       dispatch() {}
     } as any;
     fixture.detectChanges();
-  });
+  }));
 
   it('should create', () => {
     expect(component).toBeTruthy();
@@ -38,7 +36,7 @@ describe('PresentInChildComponent', () => {
 
   it('should restore state on initialization', () => {
     component.ngOnInit();
-    expect(component.selectedValues).toEqual(new Set(['value1', 'value2']));
+    expect(component.selectedValues).toStrictEqual(new Set(['value1', 'value2']));
   });
 
 
@@ -50,7 +48,7 @@ describe('PresentInChildComponent', () => {
 
     component.updatePresentInChild(mockSet);
 
-    expect(component.selectedValues).toEqual(mockSet);
+    expect(component.selectedValues).toStrictEqual(mockSet);
     expect(dispatchSpy).toHaveBeenNthCalledWith(1, new SetPresentInChildValues(mockSet));
   });
 });

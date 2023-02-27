@@ -9,9 +9,7 @@ describe('PhenoToolResultsChartComponent', () => {
     TestBed.configureTestingModule({
       declarations: [PhenoToolResultsChartComponent]
     }).compileComponents();
-  }));
 
-  beforeEach(() => {
     fixture = TestBed.createComponent(PhenoToolResultsChartComponent);
     component = fixture.componentInstance;
     component.phenoToolResults = {
@@ -19,7 +17,7 @@ describe('PhenoToolResultsChartComponent', () => {
       results: undefined
     };
     fixture.detectChanges();
-  });
+  }));
 
   it('should create', () => {
     expect(component).toBeTruthy();

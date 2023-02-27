@@ -29,19 +29,17 @@ describe('GpfTableContentHeaderComponent', () => {
         GpfTableSubheaderComponent
       ]
     }).compileComponents();
-  }));
 
-  beforeEach(() => {
     fixture = TestBed.createComponent(TestWrapperComponent);
     component = fixture.debugElement.children[0].componentInstance;
     fixture.detectChanges();
-  });
+  }));
 
   it('should be created', () => {
     expect(component).toBeTruthy();
   });
 
   it('should have content children', () => {
-    expect(component.subcolumnsChildren.length).toBe(1);
+    expect(component.subcolumnsChildren).toHaveLength(1);
   });
 });

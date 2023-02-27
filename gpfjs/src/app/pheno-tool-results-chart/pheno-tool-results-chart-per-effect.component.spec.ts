@@ -39,15 +39,13 @@ describe('PhenoToolResultsChartPerEffectComponent', () => {
       ],
       schemas: [NO_ERRORS_SCHEMA]
     }).compileComponents();
-  }));
 
-  beforeEach(() => {
     fixture = TestBed.createComponent(PhenoToolResultsChartPerEffectComponent);
     component = fixture.componentInstance;
     component.effectResults = phenoToolResultsPerEffectMock as any;
     component.yScale = d3.scaleLinear<number, number>();
     fixture.detectChanges();
-  });
+  }));
 
   it('should create', () => {
     expect(component).toBeTruthy();

@@ -1,5 +1,5 @@
-<div class="clickable" (click)="emitSort()" style="display: table-cell; vertical-align: middle; text-align: right">
-  <img *ngIf="hideState === 0" src="{{ imgPathPrefix }}bg.gif" style="height: 12px; width: 12px" />
-  <img *ngIf="hideState === -1" src="{{ imgPathPrefix }}asc.gif" style="height: 12px; width: 12px" />
-  <img *ngIf="hideState === 1" src="{{ imgPathPrefix }}desc.gif" style="height: 12px; width: 12px" />
+<div class="clickable" (click)="emitSort()" id="sorting-buttons">
+  <img *ngIf="hideState === 0" src="{{ imgPathPrefix }}bg.gif" id="bg" />
+  <img *ngIf="hideState === -1" src="{{ imgPathPrefix }}asc.gif" id="asc" />
+  <img *ngIf="hideState === 1" src="{{ imgPathPrefix }}desc.gif" id="desc" />
 </div>

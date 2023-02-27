@@ -48,15 +48,15 @@ describe('Transcript', () => {
         { chromosome: 'exon3', start: 15, stop: 16 },
         { chromosome: 'exon4', start: 18, stop: 20 }]
     );
-    expect(transcript.start).toEqual(1);
-    expect(transcript.stop).toEqual(20);
-    expect(transcript.length).toEqual(19);
-    expect(transcript.medianExonLength).toEqual(1);
-    expect(transcript.transcriptId).toEqual('id');
-    expect(transcript.chromosome).toEqual('chrom');
-    expect(transcript.strand).toEqual('strand');
-    expect(transcript.codingSequences).toEqual([{ chromosome: 'coding1', start: 1, stop: 5 }]);
-    expect(transcript.exons).toEqual([
+    expect(transcript.start).toBe(1);
+    expect(transcript.stop).toBe(20);
+    expect(transcript.length).toBe(19);
+    expect(transcript.medianExonLength).toBe(1);
+    expect(transcript.transcriptId).toBe('id');
+    expect(transcript.chromosome).toBe('chrom');
+    expect(transcript.strand).toBe('strand');
+    expect(transcript.codingSequences).toStrictEqual([{ chromosome: 'coding1', start: 1, stop: 5 }]);
+    expect(transcript.exons).toStrictEqual([
       { chromosome: 'exon1', start: 1, stop: 5 },
       { chromosome: 'exon2', start: 7, stop: 12 },
       { chromosome: 'exon3', start: 15, stop: 16 },
@@ -366,10 +366,10 @@ describe('Gene', () => {
     ];
 
     const gene = new Gene('gene1', transcripts);
-    expect(gene.getRegionString(0, 100)).toEqual(['chrom1:7-25', 'chrom2:13-22', 'chrom3:3-35']);
-    expect(gene.getRegionString(7, 10)).toEqual(['chrom1:7-10', 'chrom3:7-10']);
-    expect(gene.getRegionString(0, 6)).toEqual(['chrom3:3-6']);
-    expect(gene.getRegionString(27, 100)).toEqual(['chrom3:27-35']);
+    expect(gene.getRegionString(0, 100)).toStrictEqual(['chrom1:7-25', 'chrom2:13-22', 'chrom3:3-35']);
+    expect(gene.getRegionString(7, 10)).toStrictEqual(['chrom1:7-10', 'chrom3:7-10']);
+    expect(gene.getRegionString(0, 6)).toStrictEqual(['chrom3:3-6']);
+    expect(gene.getRegionString(27, 100)).toStrictEqual(['chrom3:27-35']);
   });
 
   it('should check gene on multiple chromosomes', () => {

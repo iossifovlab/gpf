@@ -259,7 +259,7 @@ export class AgpTableComponent implements OnInit, OnChanges, OnDestroy {
     }
   }
 
-  public reorderHeader($event) {
+  public reorderHeader($event): void {
     this.config.columns.sort((a, b) => $event.indexOf(a.id) - $event.indexOf(b.id));
     this.calculateHeaderLayout();
   }

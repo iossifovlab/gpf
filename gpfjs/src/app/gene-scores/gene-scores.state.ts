@@ -2,13 +2,13 @@ import { Injectable } from '@angular/core';
 import { State, Action, StateContext, Selector } from '@ngxs/store';
 
 export class SetHistogramValues {
-  static readonly type = '[Genotype] Set geneScores histogram values';
-  constructor(public rangeStart: number, public rangeEnd: number) {}
+  public static readonly type = '[Genotype] Set geneScores histogram values';
+  public constructor(public rangeStart: number, public rangeEnd: number) {}
 }
 
 export class SetGeneScore {
-  static readonly type = '[Genotype] Set geneScore';
-  constructor(public geneScore: object) {}
+  public static readonly type = '[Genotype] Set geneScore';
+  public constructor(public geneScore: object) {}
 }
 
 export interface GeneScoresModel {

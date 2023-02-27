@@ -1,0 +1,30 @@
+.holder {
+  font-weight: bold;
+  user-select: none;
+}
+
+#bg,
+#asc,
+#desc {
+  height: 12px;
+}
+
+#sorting-buttons {
+  display: table-cell;
+  vertical-align: middle;
+  text-align: right;
+  padding-left: 5px;
+}
+
+#sort {
+  width: 100%;
+  display: table-cell;
+  vertical-align: middle;
+  text-align: center;
+}
+
+#sort-child {
+  display: table-cell;
+  vertical-align: middle;
+  text-align: right;
+}

@@ -29,7 +29,7 @@ export class GeneSymbolsComponent extends StatefulComponent implements OnInit {
     this.store.selectOnce(GeneSymbolsState).subscribe(state => {
       // restore state
       let separator = '\n';
-      if(state.geneSymbols.length >= 3) {
+      if (state.geneSymbols.length >= 3) {
         separator = ', ';
       }
       this.setGeneSymbols(state.geneSymbols.join(separator));

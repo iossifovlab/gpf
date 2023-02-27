@@ -2,13 +2,13 @@ import { GeneSetsCollection, GeneSet } from './gene-sets';
 import { IsNotEmpty } from 'class-validator';
 
 export class GeneSetsLocalState {
-  geneSetsCollection: GeneSetsCollection;
-  geneSetsTypes = Object.create(null);
+  public geneSetsCollection: GeneSetsCollection;
+  public geneSetsTypes = Object.create(null);
 
   @IsNotEmpty({message: 'Please select a gene set.'})
-  geneSet: GeneSet;
+  public geneSet: GeneSet;
 
-  select(datasetId: string, personSetCollectionId: string, phenotype: string) {
+  public select(datasetId: string, personSetCollectionId: string, phenotype: string): void {
     if (datasetId in this.geneSetsTypes && personSetCollectionId in this.geneSetsTypes[datasetId]) {
       this.geneSetsTypes[datasetId][personSetCollectionId].push(phenotype);
     } else {
@@ -20,7 +20,7 @@ export class GeneSetsLocalState {
     }
   }
 
-  deselect(datasetId: string, personSetCollectionId: string, phenotype: string) {
+  public deselect(datasetId: string, personSetCollectionId: string, phenotype: string): void {
     if (datasetId in this.geneSetsTypes && personSetCollectionId in this.geneSetsTypes[datasetId]) {
       const index = this.geneSetsTypes[datasetId][personSetCollectionId].indexOf(phenotype);
       if (index > -1) {
@@ -29,7 +29,7 @@ export class GeneSetsLocalState {
     }
   }
 
-  isSelected(datasetId: string, personSetCollectionId: string, phenotype: string): boolean {
+  public isSelected(datasetId: string, personSetCollectionId: string, phenotype: string): boolean {
     return datasetId in this.geneSetsTypes &&
         personSetCollectionId in this.geneSetsTypes[datasetId] &&
         this.geneSetsTypes[datasetId][personSetCollectionId].indexOf(phenotype) !== -1;

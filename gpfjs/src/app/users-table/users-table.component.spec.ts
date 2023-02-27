@@ -43,13 +43,11 @@ describe('UsersTableComponent', () => {
       providers: [UsersService, ConfigService, ResizeService, { provide: APP_BASE_HREF, useValue: '' }],
       imports: [HttpClientTestingModule, RouterTestingModule, NgxsModule.forRoot([], {developmentMode: true})]
     }).compileComponents();
-  }));
 
-  beforeEach(() => {
     fixture = TestBed.createComponent(UsersTableComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
-  });
+  }));
 
   it('should create', () => {
     expect(component).toBeTruthy();

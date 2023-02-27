@@ -13,13 +13,11 @@ describe('UserGroupsSelectorComponent', () => {
       declarations: [UserGroupsSelectorComponent],
       imports: [FormsModule, NgMultiSelectDropDownModule]
     }).compileComponents();
-  }));
 
-  beforeEach(() => {
     fixture = TestBed.createComponent(UserGroupsSelectorComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
-  });
+  }));
 
   it('should create', () => {
     expect(component).toBeTruthy();

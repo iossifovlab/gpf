@@ -63,13 +63,11 @@ describe('PhenoBrowserTableComponent; no regressions', () => {
         { provide: ResizeService, useClass: ResizeService },
       ]
     }).compileComponents();
-  }));
 
-  beforeEach(() => {
     fixture = TestBed.createComponent(HostComponentNoRegressions);
     component = fixture.componentInstance;
     fixture.detectChanges();
-  });
+  }));
 
   it('should create', () => {
     expect(component).toBeTruthy();
@@ -82,7 +80,7 @@ describe('PhenoBrowserTableComponent; no regressions', () => {
         (dE) => dE.nativeElement.tagName === 'GPF-TABLE-VIEW-HEADER-CELL'
                 && dE.nativeElement.innerText.indexOf('Regression by') !== -1
       );
-      expect(regressionColumns.length).toEqual(0);
+      expect(regressionColumns).toHaveLength(0);
     });
   });
 });
@@ -125,13 +123,11 @@ describe('PhenoBrowserTableComponent; one regression', () => {
         { provide: ResizeService, useClass: ResizeService },
       ]
     }).compileComponents();
-  }));
 
-  beforeEach(() => {
     fixture = TestBed.createComponent(HostComponentOneRegression);
     component = fixture.componentInstance;
     fixture.detectChanges();
-  });
+  }));
 
   it('should create', () => {
     expect(component).toBeTruthy();
@@ -144,11 +140,11 @@ describe('PhenoBrowserTableComponent; one regression', () => {
         (dE) => dE.nativeElement.tagName === 'GPF-TABLE-VIEW-HEADER-CELL'
                 && dE.nativeElement.innerText.indexOf('Regression by') !== -1
       );
-      expect(regressionColumns.length).toEqual(1);
-      expect(fixture.nativeElement.textContent).toEqual(expect.stringMatching('Regression by age'));
-      expect(fixture.nativeElement.textContent).toEqual(expect.stringMatching('age PV'));
-      expect(fixture.nativeElement.textContent).toEqual(expect.stringMatching('1.00e-6'));
-      expect(fixture.nativeElement.textContent).toEqual(expect.stringMatching('0.2'));
+      expect(regressionColumns).toHaveLength(1);
+      expect(fixture.nativeElement.textContent).toStrictEqual(expect.stringMatching('Regression by age'));
+      expect(fixture.nativeElement.textContent).toStrictEqual(expect.stringMatching('age PV'));
+      expect(fixture.nativeElement.textContent).toStrictEqual(expect.stringMatching('1.00e-6'));
+      expect(fixture.nativeElement.textContent).toStrictEqual(expect.stringMatching('0.2'));
     });
   });
 });
@@ -191,13 +187,11 @@ describe('PhenoBrowserTableComponent; two regressions', () => {
         { provide: ResizeService, useClass: ResizeService },
       ]
     }).compileComponents();
-  }));
 
-  beforeEach(() => {
     fixture = TestBed.createComponent(HostComponentTwoRegressions);
     component = fixture.componentInstance;
     fixture.detectChanges();
-  });
+  }));
 
   it('should create', () => {
     expect(component).toBeTruthy();
@@ -210,15 +204,15 @@ describe('PhenoBrowserTableComponent; two regressions', () => {
         (dE) => dE.nativeElement.tagName === 'GPF-TABLE-VIEW-HEADER-CELL'
                 && dE.nativeElement.innerText.indexOf('Regression by') !== -1
       );
-      expect(regressionColumns.length).toEqual(2);
-      expect(fixture.nativeElement.textContent).toEqual(expect.stringMatching('Regression by age'));
-      expect(fixture.nativeElement.textContent).toEqual(expect.stringMatching('age PV'));
-      expect(fixture.nativeElement.textContent).toEqual(expect.stringMatching('0.01'));
-      expect(fixture.nativeElement.textContent).toEqual(expect.stringMatching('1.00'));
-      expect(fixture.nativeElement.textContent).toEqual(expect.stringMatching('Regression by iq'));
-      expect(fixture.nativeElement.textContent).toEqual(expect.stringMatching('iq PV'));
-      expect(fixture.nativeElement.textContent).toEqual(expect.stringMatching('0.02'));
-      expect(fixture.nativeElement.textContent).toEqual(expect.stringMatching('2.00'));
+      expect(regressionColumns).toHaveLength(2);
+      expect(fixture.nativeElement.textContent).toStrictEqual(expect.stringMatching('Regression by age'));
+      expect(fixture.nativeElement.textContent).toStrictEqual(expect.stringMatching('age PV'));
+      expect(fixture.nativeElement.textContent).toStrictEqual(expect.stringMatching('0.01'));
+      expect(fixture.nativeElement.textContent).toStrictEqual(expect.stringMatching('1.00'));
+      expect(fixture.nativeElement.textContent).toStrictEqual(expect.stringMatching('Regression by iq'));
+      expect(fixture.nativeElement.textContent).toStrictEqual(expect.stringMatching('iq PV'));
+      expect(fixture.nativeElement.textContent).toStrictEqual(expect.stringMatching('0.02'));
+      expect(fixture.nativeElement.textContent).toStrictEqual(expect.stringMatching('2.00'));
     });
   });
 });

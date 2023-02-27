@@ -9,9 +9,9 @@ describe('TruncatePipe', () => {
   it('should truncate strings', () => {
     const pipe = new TruncatePipe();
 
-    expect(pipe.transform('abcdefg', 3)).toEqual('abc...');
-    expect(pipe.transform('abcdefg', 5)).toEqual('abcde...');
-    expect(pipe.transform('abcdefg', 3, '/')).toEqual('abc/');
-    expect(pipe.transform('abcdefg', 7)).toEqual('abcdefg');
+    expect(pipe.transform('abcdefg', 3)).toBe('abc...');
+    expect(pipe.transform('abcdefg', 5)).toBe('abcde...');
+    expect(pipe.transform('abcdefg', 3, '/')).toBe('abc/');
+    expect(pipe.transform('abcdefg', 7)).toBe('abcdefg');
   });
 });

@@ -27,20 +27,18 @@ describe('GpfTableSubheaderComponent', () => {
         GpfTableCellContentDirective
       ]
     }).compileComponents();
-  }));
 
-  beforeEach(() => {
     fixture = TestBed.createComponent(TestWrapperComponent);
     component = fixture.debugElement.children[0].componentInstance;
     fixture.detectChanges();
-  });
+  }));
 
   it('should be created', () => {
     expect(component).toBeTruthy();
   });
 
   it('should have content children', () => {
-    expect(component.contentChildren.length).toBe(1);
+    expect(component.contentChildren).toHaveLength(1);
 
     expect(component.contentTemplateRef).toBe(component.contentChildren.first.templateRef);
   });
@@ -65,7 +63,7 @@ describe('GpfTableSubheaderComponent', () => {
       {field: 5, arrayPosition: 0}];
 
     component.sort(data, true);
-    expect(data).toEqual([
+    expect(data).toStrictEqual([
       {field: -1, arrayPosition: 3},
       {field: 2, arrayPosition: 1},
       {field: 3, arrayPosition: 0},
@@ -75,7 +73,7 @@ describe('GpfTableSubheaderComponent', () => {
     ]);
 
     component.sort(data, false);
-    expect(data).toEqual([
+    expect(data).toStrictEqual([
       {field: 5, arrayPosition: 4},
       {field: 5, arrayPosition: 5},
       {field: 4, arrayPosition: 3},

@@ -38,13 +38,11 @@ describe('GroupsTableComponent', () => {
       ],
       imports: [HttpClientTestingModule]
     }).compileComponents();
-  }));
 
-  beforeEach(() => {
     fixture = TestBed.createComponent(GroupsTableComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
-  });
+  }));
 
   it('should create', () => {
     expect(component).toBeTruthy();

@@ -8,8 +8,7 @@ import { Observable } from 'rxjs';
   providedIn: 'root'
 })
 export class AuthResolverService implements Resolve<object> {
-
-  constructor(
+  public constructor(
     private authService: AuthService,
   ) { }
 
@@ -19,7 +18,7 @@ export class AuthResolverService implements Resolve<object> {
     }
     if (window.opener) {
       window.opener.location.reload();
-      window.close()
+      window.close();
     }
   }
 }

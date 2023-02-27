@@ -12,13 +12,11 @@ describe('SmallRemoveButtonComponent', () => {
       declarations: [SmallRemoveButtonComponent],
       schemas: [NO_ERRORS_SCHEMA],
     }).compileComponents();
-  }));
 
-  beforeEach(() => {
     fixture = TestBed.createComponent(SmallRemoveButtonComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
-  });
+  }));
 
   it('should create', () => {
     expect(component).toBeTruthy();

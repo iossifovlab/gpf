@@ -82,13 +82,12 @@ export class PhenoBrowserService {
       console.warn('oboejs encountered a fail event while streaming');
     });
 
-    return measuresSubject.pipe(map(data => { 
+    return measuresSubject.pipe(map(data => {
       if (data === null) {
         return null;
       }
-      return PhenoMeasure.fromJson(data['measure'] as object)
+      return PhenoMeasure.fromJson(data['measure'] as object);
     }));
-
   }
 
   public getMeasuresInfo(datasetId: string): Observable<PhenoMeasures> {
@@ -111,11 +110,11 @@ export class PhenoBrowserService {
     instrument: PhenoInstrument,
     selectedMeasures: PhenoMeasure[]
   ): Observable<Blob> {
-    const measureIds = selectedMeasures.map(m => m.measureId); 
+    const measureIds = selectedMeasures.map(m => m.measureId);
     return this.http.post(
       this.config.baseUrl + this.downloadUrl,
       { dataset_id: datasetId, instrument: instrument, measure_ids: measureIds },
-      { 
+      {
         responseType: 'blob',
         headers: new HttpHeaders().append('Content-Type', 'application/json'),
         withCredentials: true

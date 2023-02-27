@@ -12,8 +12,8 @@ import pkceChallenge from 'pkce-challenge';
 export class AuthService {
   private readonly headers = new HttpHeaders({ 'Content-Type': 'application/json' });
   private readonly options = { headers: this.headers };
-  private _accessToken = '';
-  private _refreshToken = '';
+  private accessToken = '';
+  private refreshAccessToken = '';
 
   public tokenExchangeSubject = new Subject<boolean>();
 
@@ -23,12 +23,12 @@ export class AuthService {
     private router: Router,
     @Inject(APP_BASE_HREF) private baseHref: string
   ) {
-    this._accessToken = localStorage.getItem('access_token') || '';
-    this._refreshToken = localStorage.getItem('refresh_token') || '';
+    this.accessToken = localStorage.getItem('access_token') || '';
+    this.refreshAccessToken = localStorage.getItem('refresh_token') || '';
   }
 
   public getAccessToken(): string {
-    return this._accessToken;
+    return this.accessToken;
   }
 
   public generatePKCE(): string {
@@ -50,7 +50,7 @@ export class AuthService {
       this.router.navigate([], {
         queryParams: {'code': null},
         queryParamsHandling: 'merge'
-      })
+      });
       this.tokenExchangeSubject.next(true);
     }));
   }
@@ -58,24 +58,23 @@ export class AuthService {
   public revokeAccessToken(): Observable<object> {
     return this.http.post(`${this.config.rootUrl}${this.baseHref}o/revoke_token/`, {
       client_id: this.config.oauthClientId,
-      token: this._accessToken,
+      token: this.accessToken,
     }, this.options).pipe(take(1), tap(this.clearTokens));
-
   }
 
   public clearTokens(): void {
-    this._accessToken = '';
-    this._refreshToken = '';
+    this.accessToken = '';
+    this.refreshAccessToken = '';
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
   }
 
   public refreshToken(): Observable<object> {
-    if (this._refreshToken !== '') {
+    if (this.refreshAccessToken !== '') {
       return this.http.post(`${this.config.rootUrl}${this.baseHref}o/token/`, {
         grant_type: 'refresh_token',
         client_id: this.config.oauthClientId,
-        refresh_token: this._refreshToken,
+        refresh_token: this.refreshAccessToken,
       }, this.options).pipe(
         take(1),
         tap(res => {
@@ -84,7 +83,7 @@ export class AuthService {
         catchError((err, caught) => {
           if (err.status === 400 && err.error.error === 'invalid_grant') {
             this.clearTokens();
-            window.location.reload()
+            window.location.reload();
           }
           return caught;
         })
@@ -95,9 +94,9 @@ export class AuthService {
   }
 
   private setTokens(res: object): void {
-    this._accessToken = res['access_token'];
-    this._refreshToken = res['refresh_token'];
-    localStorage.setItem('access_token', this._accessToken);
-    localStorage.setItem('refresh_token', this._refreshToken);
+    this.accessToken = res['access_token'];
+    this.refreshAccessToken = res['refresh_token'];
+    localStorage.setItem('access_token', this.accessToken);
+    localStorage.setItem('refresh_token', this.refreshAccessToken);
   }
 }

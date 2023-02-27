@@ -24,8 +24,8 @@
       id="download-button"
       (click)="onDownload()"
       [disabled]="disableQueryButtons">
-       <span *ngIf="downloadInProgress">Downloading...</span>
-       <span *ngIf="!downloadInProgress">Download</span>
+      <span *ngIf="downloadInProgress">Downloading...</span>
+      <span *ngIf="!downloadInProgress">Download</span>
     </button>
     <div class="button">
       <input

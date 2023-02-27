@@ -1,0 +1,11 @@
+#list {
+  justify-content: flex-start;
+}
+
+#filters {
+  padding-bottom: 5px;
+}
+
+#family-filter {
+  padding: 10px;
+}

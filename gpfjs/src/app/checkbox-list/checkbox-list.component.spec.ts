@@ -1,5 +1,4 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-
 import { CheckboxListComponent, DisplayNamePipe } from './checkbox-list.component';
 
 describe('CheckboxListComponent', () => {

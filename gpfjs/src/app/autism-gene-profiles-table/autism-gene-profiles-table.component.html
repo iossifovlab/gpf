@@ -23,7 +23,8 @@
             (click)="handleCellClick($event, row, column)"
             (middleclick)="handleCellClick($event, row, column)">
             <span *ngIf="column.clickable !== null && row[column.id]" class="clickable">{{ row[column.id] }}</span
-            >{{ column.clickable === null ? row[column.id] : '' }}</div>
+            >{{ column.clickable === null ? row[column.id] : '' }}</div
+          >
         </ng-container>
       </div>
 
@@ -71,7 +72,7 @@
                 'header-gene-symbol-span': column.id === geneSymbolColumnId,
                 'grid-row-2-3': column.gridRow === '2 / 3'
               }"
-              >{{ column.displayName | truncate: 48 }}</span
+              >{{ column.displayName | truncate : 48 }}</span
             >
             <gpf-sorting-buttons
               *ngIf="column.sortable"
@@ -80,6 +81,7 @@
               style="pointer-events: none"
               [hideState]="column.id !== sortBy ? 0 : orderBy === 'asc' ? -1 : 1">
             </gpf-sorting-buttons>
+            <!-- prettier-ignore -->
             <button
               *ngIf="column.columns.length"
               #columnFilteringButton
@@ -135,6 +137,7 @@
       <div class="vertical-line"></div>
 
       <div class="above-table-bar-item">
+        <!-- prettier-ignore -->
         <button
           #columnFilteringButton
           id="category-filtering-button"
@@ -187,6 +190,7 @@
           (middleclick)="openSingleView(gene)"
           >{{ gene }}</span
         >
+        <!-- prettier-ignore -->
         <button (click)="toggleHighlightGene(gene)" class="compare-genes-close font-weight-light" type="button">×</button>
       </button>
     </div>

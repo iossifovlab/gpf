@@ -52,5 +52,4 @@ export class PersonFiltersBlockComponent implements OnInit, AfterViewInit {
     this.store.dispatch(new SetPersonFilters([]));
     this.store.dispatch(new StateReset(PersonIdsState));
   }
-
 }

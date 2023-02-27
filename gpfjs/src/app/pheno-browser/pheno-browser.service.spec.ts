@@ -44,12 +44,12 @@ describe('pheno browser service', () => {
 
     httpSpy.get.mockReturnValue(of(response));
     phenoBrowserService.getInstruments(null).subscribe(instruments => {
-      expect(instruments).toEqual(expectedInstruments);
+      expect(instruments).toStrictEqual(expectedInstruments);
       done();
     });
   });
 
-  xit('should fetch measures by parameters', (done) => {
+  it.skip('should fetch measures by parameters', (done) => {
     // Test was very slow >5000ms and Jest failed it, so skipping for now
     const phenoMeasuresJson = {base_image_url: 'base', has_descriptions: true, regression_names: []};
     const expectedMeasure: PhenoMeasure = PhenoMeasure.fromJson(fakeJsonMeasure);

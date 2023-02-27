@@ -6,13 +6,11 @@ describe('CommonReportsRowComponent', () => {
   let component: CommonReportsRowComponent;
   let fixture: ComponentFixture<CommonReportsRowComponent>;
 
-  beforeEach(waitForAsync(() => {
+  beforeEach(() => {
     TestBed.configureTestingModule({
       declarations: [CommonReportsRowComponent, SearchableSelectComponent]
     }).compileComponents();
-  }));
 
-  beforeEach(() => {
     fixture = TestBed.createComponent(CommonReportsRowComponent);
     component = fixture.componentInstance;
     component.pedigreeGroup = [{
@@ -31,7 +29,7 @@ describe('CommonReportsRowComponent', () => {
         label: 'label',
         smallLabel: 'sl'
       }],
-      count: 1, tags: ['tag1','tag2']
+      count: 1, tags: ['tag1', 'tag2']
     }];
     fixture.detectChanges();
   });

@@ -6,7 +6,7 @@ describe('ManagementComponent', () => {
   let component: ManagementComponent;
   const usersService = {
     getUserInfoObservable: jest.fn()
-  }
+  };
   const routerMock = {
     navigate: jest.fn()
   };
@@ -25,16 +25,16 @@ describe('ManagementComponent', () => {
 
     getUserInfoSpy.mockReturnValue(of({isAdministrator: true}));
     component.ngOnInit();
-    expect(routerNavigateSpy).not.toBeCalled();
+    expect(routerNavigateSpy).not.toHaveBeenCalled();
 
     getUserInfoSpy.mockReturnValue(of({isAdministrator: false}));
     component.ngOnInit();
-    expect(routerNavigateSpy).toBeCalledWith(['/']);
+    expect(routerNavigateSpy).toHaveBeenCalledWith(['/']);
 
     routerNavigateSpy.mockReset();
 
     getUserInfoSpy.mockReturnValue(of(undefined));
     component.ngOnInit();
-    expect(routerNavigateSpy).toBeCalledWith(['/']);
+    expect(routerNavigateSpy).toHaveBeenCalledWith(['/']);
   });
 });

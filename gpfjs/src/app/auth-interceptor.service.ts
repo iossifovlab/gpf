@@ -18,9 +18,9 @@ export class AuthInterceptorService implements HttpInterceptor {
 
   public intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
     const request = this.addAuthHeader(req);
-    return next.handle(request).pipe(catchError(error => {
-      return this.handleResponseError(error, request, next);
-    }));
+    return next.handle(request).pipe(
+      catchError((error: HttpErrorResponse) => this.handleResponseError(error, request, next))
+    );
   }
 
   public addAuthHeader(req: HttpRequest<any>): HttpRequest<any> {
@@ -41,11 +41,11 @@ export class AuthInterceptorService implements HttpInterceptor {
       return throwError(() => err);
     }
     return this.refreshToken().pipe(
-      switchMap(() => { return next.handle(this.addAuthHeader(req)); }),
+      switchMap(() => next.handle(this.addAuthHeader(req))),
     );
   }
 
-  public refreshToken() {
+  public refreshToken(): Observable<object> {
     if (this.refreshTokenInProgress) {
       return new Observable(observer => {
         this.tokenRefreshed$.subscribe(() => {

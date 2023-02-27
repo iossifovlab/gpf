@@ -12,13 +12,11 @@ describe('PhenoBrowserModalContentComponent', () => {
       declarations: [PhenoBrowserModalContentComponent],
       providers: [NgbActiveModal],
     }).compileComponents();
-  }));
 
-  beforeEach(() => {
     fixture = TestBed.createComponent(PhenoBrowserModalContentComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
-  });
+  }));
 
   it('should create', () => {
     expect(component).toBeTruthy();

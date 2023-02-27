@@ -128,35 +128,35 @@ describe('GenotypePreviewTableComponent', () => {
     ]);
   });
 
-  xit('should calculate single column width in onResize()', () => {
-    // const windowSpy = spyOnProperty(window, 'innerWidth');
+  // it.skip('should calculate single column width in onResize()', () => {
+  // const windowSpy = spyOnProperty(window, 'innerWidth');
 
-    // windowSpy.mockReturnValue(85);
-    // component.columns = new Array<any>(1);
-    // component.onResize();
-    // expect((component as any).singleColumnWidth).toEqual('10px');
+  // windowSpy.mockReturnValue(85);
+  // component.columns = new Array<any>(1);
+  // component.onResize();
+  // expect((component as any).singleColumnWidth).toEqual('10px');
 
-    // windowSpy.mockReturnValue(2075);
-    // component.columns = new Array<any>(10);
-    // component.onResize();
-    // expect((component as any).singleColumnWidth).toEqual('200px');
+  // windowSpy.mockReturnValue(2075);
+  // component.columns = new Array<any>(10);
+  // component.onResize();
+  // expect((component as any).singleColumnWidth).toEqual('200px');
 
-    // component.columns = new Array<any>(25);
-    // component.onResize();
-    // expect((component as any).singleColumnWidth).toEqual('80px');
+  // component.columns = new Array<any>(25);
+  // component.onResize();
+  // expect((component as any).singleColumnWidth).toEqual('80px');
 
-    // windowSpy.mockReturnValue(1920);
-    // component.columns = new Array<any>(12);
-    // component.onResize();
-    // expect((component as any).singleColumnWidth).toEqual('153.75px');
+  // windowSpy.mockReturnValue(1920);
+  // component.columns = new Array<any>(12);
+  // component.onResize();
+  // expect((component as any).singleColumnWidth).toEqual('153.75px');
 
-    // component.columns = new Array<any>(15);
-    // component.onResize();
-    // expect((component as any).singleColumnWidth).toEqual('123px');
+  // component.columns = new Array<any>(15);
+  // component.onResize();
+  // expect((component as any).singleColumnWidth).toEqual('123px');
 
-    // windowSpy.mockReturnValue(1366);
-    // component.columns = new Array<any>(8);
-    // component.onResize();
-    // expect((component as any).singleColumnWidth).toEqual('161.375px');
-  });
+  // windowSpy.mockReturnValue(1366);
+  // component.columns = new Array<any>(8);
+  // component.onResize();
+  // expect((component as any).singleColumnWidth).toEqual('161.375px');
+  // });
 });

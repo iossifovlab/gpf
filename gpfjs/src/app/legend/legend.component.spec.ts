@@ -6,9 +6,9 @@ describe('LegendComponent', () => {
   let component: LegendComponent;
   let fixture: ComponentFixture<LegendComponent>;
 
-  beforeEach(async () => {
+  beforeEach(async() => {
     await TestBed.configureTestingModule({
-      declarations: [ LegendComponent ]
+      declarations: [LegendComponent]
     }).compileComponents();
     fixture = TestBed.createComponent(LegendComponent);
     component = fixture.componentInstance;

@@ -12,10 +12,10 @@ import { PedigreeData } from 'app/genotype-preview-model/genotype-preview';
 import { HttpResponse } from '@angular/common/http';
 import * as downloadBlobResponse from 'app/utils/blob-download';
 class MockDatasetsService {
-  public getSelectedDataset() {
+  public getSelectedDataset(): object {
     return {accessRights: true, commonReport: {enabled: true}};
   }
-  public getSelectedDatasetObservable() {
+  public getSelectedDatasetObservable(): object {
     return of({accessRights: true, commonReport: {enabled: true}});
   }
   public getDatasetsLoadedObservable = function() {
@@ -27,10 +27,10 @@ class MockDatasetsService {
 }
 
 class MockDatasetsDenovoService {
-  public getSelectedDataset() {
+  public getSelectedDataset(): object {
     return {id: 'Denovo', accessRights: true, commonReport: {enabled: true}};
   }
-  public getSelectedDatasetObservable() {
+  public getSelectedDatasetObservable(): object {
     return of({id: 'Denovo', accessRights: true, commonReport: {enabled: true}});
   }
   public getDatasetsLoadedObservable = function() {
@@ -212,7 +212,7 @@ class VariantReportsServiceMock {
             groupName: 'Role',
             rows: ['people_male', 'people_female', 'people_total'],
             columns: ['prb', 'mom', 'sib', 'dad'],
-            getChildrenCounter: function() {return 0}
+            getChildrenCounter: function() { return 0 }
           }
         ],
       },

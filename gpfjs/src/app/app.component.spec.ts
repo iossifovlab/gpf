@@ -74,7 +74,7 @@ describe('AppComponent', () => {
   it('should have as title "GPF: Genotypes and Phenotypes in Families"', () => {
     const fixture = TestBed.createComponent(AppComponent);
     const app = fixture.debugElement.componentInstance;
-    expect(app.title).toEqual(app.title);
+    expect(app.title).toStrictEqual(app.title);
   });
 
   it('should render title in a h3 tag', () => {

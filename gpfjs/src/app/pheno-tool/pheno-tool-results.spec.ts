@@ -122,34 +122,34 @@ describe('PhenoToolResult', () => {
       deviation: 3,
       mean: 4
     });
-    expect(phenoToolFromJson).toEqual(new PhenoToolResult(5, 3, 4));
+    expect(phenoToolFromJson).toStrictEqual(new PhenoToolResult(5, 3, 4));
   });
 
   it('should get range start', () => {
-    expect(new PhenoToolResult(6, 3, 4).rangeStart).toEqual(1);
+    expect(new PhenoToolResult(6, 3, 4).rangeStart).toBe(1);
   });
 
   it('should get range end', () => {
-    expect(new PhenoToolResult(5, 3, 4).rangeEnd).toEqual(7);
+    expect(new PhenoToolResult(5, 3, 4).rangeEnd).toBe(7);
   });
 });
 
 describe('PhenoToolResultsPerGender', () => {
   it('should create from json', () => {
     const phenoToolResultsPerGenderFromJson = PhenoToolResultsPerGender.fromJson(phenoToolResultsPerGenderJson1);
-    expect(phenoToolResultsPerGender1).toEqual(phenoToolResultsPerGenderFromJson);
+    expect(phenoToolResultsPerGender1).toStrictEqual(phenoToolResultsPerGenderFromJson);
   });
 });
 
 describe('PhenoToolResultsPerEffect', () => {
   it('should create from json', () => {
     const phenoToolResultsPerEffectFromJson = PhenoToolResultsPerEffect.fromJson(phenoToolResultsPerEffectJson1);
-    expect(phenoToolResultsPerEffect1).toEqual(phenoToolResultsPerEffectFromJson);
+    expect(phenoToolResultsPerEffect1).toStrictEqual(phenoToolResultsPerEffectFromJson);
   });
 
   it('should create from json array', () => {
     const phenoToolEffectFromJsonArrayMock = PhenoToolResultsPerEffect.fromJsonArray(phenoToolEffectArrayJson1);
-    expect(phenoToolEffectArray1).toEqual(phenoToolEffectFromJsonArrayMock);
+    expect(phenoToolEffectArray1).toStrictEqual(phenoToolEffectFromJsonArrayMock);
   });
 });
 
@@ -161,6 +161,6 @@ describe('PhenoToolResults', () => {
       results: phenoToolEffectArrayJson1
     });
 
-    expect(phenoResultsMock).toEqual(phenoResultsMockFromJson);
+    expect(phenoResultsMock).toStrictEqual(phenoResultsMockFromJson);
   });
 });

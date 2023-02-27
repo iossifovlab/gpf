@@ -19,7 +19,7 @@ export interface StudyFiltersBlockModel {
 @Injectable()
 export class StudyFiltersBlockState {
   @Action(SetStudyFilters)
-  setStudyFilters(ctx: StateContext<StudyFiltersBlockModel>, action: SetStudyFilters): void {
+  public setStudyFilters(ctx: StateContext<StudyFiltersBlockModel>, action: SetStudyFilters): void {
     ctx.patchState({
       studyFilters: [...action.studyFilters]
     });

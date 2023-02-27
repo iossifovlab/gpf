@@ -44,9 +44,9 @@ describe('GroupCounter', () => {
       ['row1', 'row2', 'row3']
     );
 
-    expect(groupCounter.column).toEqual('fakeColumn');
+    expect(groupCounter.column).toBe('fakeColumn');
 
-    expect(groupCounter.childrenCounters as ChildrenCounter[]).toEqual([
+    expect(groupCounter.childrenCounters as ChildrenCounter[]).toStrictEqual([
       new ChildrenCounter('row1', 'fakeColumn', 7),
       new ChildrenCounter('row2', 'fakeColumn', 13),
       new ChildrenCounter('row3', 'fakeColumn', 17),
@@ -83,7 +83,7 @@ describe('PeopleCounter', () => {
       columns: ['col1', 'col2', 'col3'],
     });
 
-    expect(peopleCounter).toEqual(mockPeopleCounter);
+    expect(peopleCounter).toStrictEqual(mockPeopleCounter);
   });
 
   it('should create children counter', () => {
@@ -103,8 +103,10 @@ describe('PeopleCounter', () => {
     ['row1', 'row2', 'row3'],
     ['col1', 'col2', 'col3']
     );
-    expect(mockPeopleCounter.getChildrenCounter('col1', 'row1')).toEqual(new ChildrenCounter('row1', 'col1', 7));
-    expect(mockPeopleCounter.getChildrenCounter('col2', 'row2')).toEqual(new ChildrenCounter('row2', 'col2', 666));
+    expect(mockPeopleCounter.getChildrenCounter('col1', 'row1')).toStrictEqual(new ChildrenCounter('row1', 'col1', 7));
+    expect(mockPeopleCounter.getChildrenCounter('col2', 'row2')).toStrictEqual(
+      new ChildrenCounter('row2', 'col2', 666)
+    );
   });
 });
 
@@ -165,7 +167,7 @@ describe('PeopleReport', () => {
       )
     ];
 
-    expect(peopleCounter).toEqual(PeopleReport.fromJson(peopleReport).peopleCounters);
+    expect(peopleCounter).toStrictEqual(PeopleReport.fromJson(peopleReport).peopleCounters);
   });
 });
 
@@ -196,7 +198,7 @@ describe('PedigreeCounter', () => {
       }, 'groupName'
     );
 
-    expect(pedigreeCounter).toEqual(pedigreeCounter2);
+    expect(pedigreeCounter).toStrictEqual(pedigreeCounter2);
   });
 });
 
@@ -288,7 +290,7 @@ describe('FamilyCounter', () => {
           'smallLabel2')], 7, ['tag3', 'tag4']),
     ], 'groupName1', ['phenotype4', 'phenotype5'],
     new Legend([new LegendItem('id6', 'name7', 'color8'), new LegendItem('id9', 'name10', 'color11')]));
-    expect(mockFamilyCounter).toEqual(mockFamilyCounter2);
+    expect(mockFamilyCounter).toStrictEqual(mockFamilyCounter2);
   });
 });
 
@@ -574,7 +576,7 @@ describe('FamilyReport', () => {
       }
     ], 5);
 
-    expect(mockFamilyReport1).toEqual(mockFamilyReport2);
+    expect(mockFamilyReport1).toStrictEqual(mockFamilyReport2);
   });
 });
 
@@ -591,7 +593,7 @@ describe('DeNovoData', () => {
       }
     );
 
-    expect(denovo1).toEqual(denovo2);
+    expect(denovo1).toStrictEqual(denovo2);
   });
 });
 
@@ -607,7 +609,7 @@ describe('EffectTypeRow', () => {
 
     const mockEffectTypeRow2 = EffectTypeRow.fromJson({
       effect_type: 'effectType1',
-      row : [
+      row: [
         {
           column: '1',
           number_of_observed_events: 2,
@@ -626,7 +628,7 @@ describe('EffectTypeRow', () => {
     }
     );
 
-    expect(mockEffectTypeRow1).toEqual(mockEffectTypeRow2);
+    expect(mockEffectTypeRow1).toStrictEqual(mockEffectTypeRow2);
   });
 });
 
@@ -634,8 +636,8 @@ describe('EffectTypeTable', () => {
   it('should create effect type table from json', () => {
     const mockEffectTypeTable1 = new EffectTypeTable(
       [
-        new EffectTypeRow('effectType1', [ new DeNovoData('1', 2, 3, 4, 5), new DeNovoData('2', 6, 7, 8, 9)]),
-        new EffectTypeRow('effectType2', [ new DeNovoData('6', 7, 8, 9, 10), new DeNovoData('1', 2, 3, 4, 5)])
+        new EffectTypeRow('effectType1', [new DeNovoData('1', 2, 3, 4, 5), new DeNovoData('2', 6, 7, 8, 9)]),
+        new EffectTypeRow('effectType2', [new DeNovoData('6', 7, 8, 9, 10), new DeNovoData('1', 2, 3, 4, 5)])
       ], 'groupName1', ['col1', 'col2'], ['effectGroup1', 'effectGroup2'], ['effectType1', 'effectType2']
     );
 
@@ -643,7 +645,7 @@ describe('EffectTypeTable', () => {
       rows: [
         {
           effect_type: 'effectType1',
-          row : [
+          row: [
             {
               column: '1',
               number_of_observed_events: 2,
@@ -661,7 +663,7 @@ describe('EffectTypeTable', () => {
           ]},
         {
           effect_type: 'effectType2',
-          row : [
+          row: [
             {
               column: '6',
               number_of_observed_events: 7,
@@ -684,7 +686,7 @@ describe('EffectTypeTable', () => {
       effect_types: ['effectType1', 'effectType2']
     });
 
-    expect(mockEffectTypeTable1).toEqual(mockEffectTypeTable2);
+    expect(mockEffectTypeTable1).toStrictEqual(mockEffectTypeTable2);
   });
 });
 
@@ -694,13 +696,13 @@ describe('DenovoReport', () => {
       [
         new EffectTypeTable(
           [
-            new EffectTypeRow('effectType1', [ new DeNovoData('1', 2, 3, 4, 5), new DeNovoData('2', 6, 7, 8, 9)]),
-            new EffectTypeRow('effectType2', [ new DeNovoData('6', 7, 8, 9, 10), new DeNovoData('1', 2, 3, 4, 5)])
+            new EffectTypeRow('effectType1', [new DeNovoData('1', 2, 3, 4, 5), new DeNovoData('2', 6, 7, 8, 9)]),
+            new EffectTypeRow('effectType2', [new DeNovoData('6', 7, 8, 9, 10), new DeNovoData('1', 2, 3, 4, 5)])
           ], 'groupName1', ['col1', 'col2'], ['effectGroup1', 'effectGroup2'], ['effectType1', 'effectType2']),
         new EffectTypeTable(
           [
-            new EffectTypeRow('effectType3', [ new DeNovoData('5', 5, 6, 2, 1), new DeNovoData('2', 5, 4, 6, 4)]),
-            new EffectTypeRow('effectType4', [ new DeNovoData('7', 4, 5, 6, 1), new DeNovoData('7', 2, 1, 8, 3)])
+            new EffectTypeRow('effectType3', [new DeNovoData('5', 5, 6, 2, 1), new DeNovoData('2', 5, 4, 6, 4)]),
+            new EffectTypeRow('effectType4', [new DeNovoData('7', 4, 5, 6, 1), new DeNovoData('7', 2, 1, 8, 3)])
           ], 'groupName2', ['col3', 'col4'], ['effectGroup2', 'effectGroup3'], ['effectType2', 'effectType3'])
       ]
     );
@@ -711,7 +713,7 @@ describe('DenovoReport', () => {
           rows: [
             {
               effect_type: 'effectType1',
-              row : [
+              row: [
                 {
                   column: '1',
                   number_of_observed_events: 2,
@@ -729,7 +731,7 @@ describe('DenovoReport', () => {
               ]},
             {
               effect_type: 'effectType2',
-              row : [
+              row: [
                 {
                   column: '6',
                   number_of_observed_events: 7,
@@ -755,7 +757,7 @@ describe('DenovoReport', () => {
           rows: [
             {
               effect_type: 'effectType3',
-              row : [
+              row: [
                 {
                   column: '5',
                   number_of_observed_events: 5,
@@ -773,7 +775,7 @@ describe('DenovoReport', () => {
               ]},
             {
               effect_type: 'effectType4',
-              row : [
+              row: [
                 {
                   column: '7',
                   number_of_observed_events: 4,
@@ -798,7 +800,7 @@ describe('DenovoReport', () => {
       ]
     });
 
-    expect(mockDenovoReport1).toEqual(mockDenovoReport2);
+    expect(mockDenovoReport1).toStrictEqual(mockDenovoReport2);
   });
 });
 
@@ -894,13 +896,13 @@ describe('VariantReport', () => {
         [
           new EffectTypeTable(
             [
-              new EffectTypeRow('effectType1', [ new DeNovoData('1', 2, 3, 4, 5), new DeNovoData('2', 6, 7, 8, 9)]),
-              new EffectTypeRow('effectType2', [ new DeNovoData('6', 7, 8, 9, 10), new DeNovoData('1', 2, 3, 4, 5)])
+              new EffectTypeRow('effectType1', [new DeNovoData('1', 2, 3, 4, 5), new DeNovoData('2', 6, 7, 8, 9)]),
+              new EffectTypeRow('effectType2', [new DeNovoData('6', 7, 8, 9, 10), new DeNovoData('1', 2, 3, 4, 5)])
             ], 'groupName1', ['col1', 'col2'], ['effectGroup1', 'effectGroup2'], ['effectType1', 'effectType2']),
           new EffectTypeTable(
             [
-              new EffectTypeRow('effectType3', [ new DeNovoData('5', 5, 6, 2, 1), new DeNovoData('2', 5, 4, 6, 4)]),
-              new EffectTypeRow('effectType4', [ new DeNovoData('7', 4, 5, 6, 1), new DeNovoData('7', 2, 1, 8, 3)])
+              new EffectTypeRow('effectType3', [new DeNovoData('5', 5, 6, 2, 1), new DeNovoData('2', 5, 4, 6, 4)]),
+              new EffectTypeRow('effectType4', [new DeNovoData('7', 4, 5, 6, 1), new DeNovoData('7', 2, 1, 8, 3)])
             ], 'groupName2', ['col3', 'col4'], ['effectGroup2', 'effectGroup3'], ['effectType2', 'effectType3'])
         ]
       )
@@ -1160,7 +1162,7 @@ describe('VariantReport', () => {
               rows: [
                 {
                   effect_type: 'effectType1',
-                  row : [
+                  row: [
                     {
                       column: '1',
                       number_of_observed_events: 2,
@@ -1178,7 +1180,7 @@ describe('VariantReport', () => {
                   ]},
                 {
                   effect_type: 'effectType2',
-                  row : [
+                  row: [
                     {
                       column: '6',
                       number_of_observed_events: 7,
@@ -1204,7 +1206,7 @@ describe('VariantReport', () => {
               rows: [
                 {
                   effect_type: 'effectType3',
-                  row : [
+                  row: [
                     {
                       column: '5',
                       number_of_observed_events: 5,
@@ -1222,7 +1224,7 @@ describe('VariantReport', () => {
                   ]},
                 {
                   effect_type: 'effectType4',
-                  row : [
+                  row: [
                     {
                       column: '7',
                       number_of_observed_events: 4,
@@ -1248,7 +1250,7 @@ describe('VariantReport', () => {
         }
       });
 
-    expect(mockVariantReport1).toEqual(mockVariantReport2);
+    expect(mockVariantReport1).toStrictEqual(mockVariantReport2);
   });
 });
 
@@ -1262,7 +1264,7 @@ describe('LegendItem', () => {
       }
     );
 
-    expect(mockLegendItem).toEqual(new LegendItem('id1', 'name1', 'color1'));
+    expect(mockLegendItem).toStrictEqual(new LegendItem('id1', 'name1', 'color1'));
   });
 });
 
@@ -1281,6 +1283,8 @@ describe('Legend', () => {
       }]
     );
 
-    expect(mockLegend).toEqual(new Legend([new LegendItem('id1', 'name1', 'color1'), new LegendItem('id2', 'name2', 'color2')]));
+    expect(mockLegend).toStrictEqual(
+      new Legend([new LegendItem('id1', 'name1', 'color1'), new LegendItem('id2', 'name2', 'color2')])
+    );
   });
 });

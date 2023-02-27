@@ -73,9 +73,7 @@ describe('GpfTableCellComponent', () => {
       ],
       providers: [ViewContainerRef]
     }).compileComponents();
-  }));
 
-  beforeEach(() => {
     testFixture = TestBed.createComponent(TestGpfTableColumnComponent);
     testComponent = testFixture.debugElement.children[0].componentInstance;
     testFixture.detectChanges();
@@ -88,15 +86,15 @@ describe('GpfTableCellComponent', () => {
     component.noScrollOptimization = false;
 
     fixture.detectChanges();
-  });
+  }));
 
   it('should be created', () => {
     expect(component).toBeTruthy();
   });
 
   it('should give cell content', () => {
-    expect(component.columnInfo.contentChildren.length).toBe(2);
-    expect(component.columnInfo.contentChildren.length).toBe(testComponent.contentChildren.length);
+    expect(component.columnInfo.contentChildren).toHaveLength(2);
+    expect(component.columnInfo.contentChildren).toHaveLength(testComponent.contentChildren.length);
 
     expect(component.cellContent).toBe(testComponent.contentChildren.first);
   });

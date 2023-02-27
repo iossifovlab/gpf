@@ -2,8 +2,8 @@ import { Injectable } from '@angular/core';
 import { State, Action, StateContext, Selector } from '@ngxs/store';
 
 export class SetGeneSetsValues {
-  static readonly type = '[Genotype] Set geneSets values';
-  constructor(public geneSetsValues: object) {}
+  public static readonly type = '[Genotype] Set geneSets values';
+  public constructor(public geneSetsValues: object) {}
 }
 
 export interface GeneSetsModel {

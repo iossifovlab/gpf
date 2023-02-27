@@ -110,7 +110,9 @@
           [disabled]="currentPedigreeTable.pedigrees.length === 0"
           id="download-button"
           (click)="getDownloadLinkTags()"
-          class="btn btn-md btn-primary">Download</button>
+          class="btn btn-md btn-primary"
+          >Download</button
+        >
       </div>
 
       <div *ngIf="currentPedigreeTable" id="families-by-pedigree-div" class="row">
@@ -188,13 +190,15 @@
               </thead>
               <tbody>
                 <tr
-                  *ngFor="let effectType of currentDenovoReport.effectGroups | getRows: currentDenovoReport.effectTypes"
+                  *ngFor="
+                    let effectType of currentDenovoReport.effectGroups | getRows : currentDenovoReport.effectTypes
+                  "
                   [ngClass]="{ 'effect-type-group-row': currentDenovoReport.effectGroups.indexOf(effectType) !== -1 }">
                   <th>{{ effectType }}</th>
                   <td
                     *ngFor="
                       let effectTypeData of effectType
-                        | getEffectTypeOrderByColumOrder: currentDenovoReport:currentDenovoReport.columns
+                        | getEffectTypeOrderByColumOrder : currentDenovoReport : currentDenovoReport.columns
                     ">
                     <div
                       class="effect-type-data-values"
