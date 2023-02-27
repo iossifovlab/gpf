@@ -10,6 +10,7 @@ import { StatefulComponent } from 'app/common/stateful-component';
 @Component({
   selector: 'gpf-present-in-parent',
   templateUrl: './present-in-parent.component.html',
+  styleUrls: ['./present-in-parent.css'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class PresentInParentComponent extends StatefulComponent implements OnInit {
@@ -31,7 +32,7 @@ export class PresentInParentComponent extends StatefulComponent implements OnIni
   public selectedValues: Set<string> = new Set();
 
   public rarityTypes: Set<string> = new Set([
-    'ultraRare', 'interval', 'rare', 'all'
+    'all', 'rare', 'ultraRare', 'interval'
   ]);
   public selectedRarityType = '';
 
