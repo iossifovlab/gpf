@@ -1,5 +1,4 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-import pytest
 
 pytest_plugins = ["dae_conftests.dae_conftests"]
 
@@ -55,11 +54,3 @@ def dummy_as_completed(futures):
     for future in futures:
         future.run()
         yield future
-
-
-@pytest.fixture
-def dask_mocker(mocker):
-
-    mocker.patch(
-        "dae.dask.client_factory.DaskClient.from_dict",
-        DummyClient.from_dict)

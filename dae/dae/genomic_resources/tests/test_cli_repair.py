@@ -47,7 +47,7 @@ def proto_fixture(tmp_path_factory):
     return path, proto
 
 
-def test_resource_repair_simple(proto_fixture, dask_mocker):
+def test_resource_repair_simple(proto_fixture):
     # Given
     path, proto = proto_fixture
     proto.filesystem.delete(
@@ -65,7 +65,7 @@ def test_resource_repair_simple(proto_fixture, dask_mocker):
     assert not (path / GR_CONTENTS_FILE_NAME).exists()
 
 
-def test_repo_repair_simple(proto_fixture, dask_mocker):
+def test_repo_repair_simple(proto_fixture):
     # Given
     path, proto = proto_fixture
     proto.filesystem.delete(
@@ -83,7 +83,7 @@ def test_repo_repair_simple(proto_fixture, dask_mocker):
     assert (path / GR_CONTENTS_FILE_NAME).exists()
 
 
-def test_resource_repair_dry_run(proto_fixture, dask_mocker):
+def test_resource_repair_dry_run(proto_fixture):
     # Given
     path, proto = proto_fixture
     proto.filesystem.delete(
@@ -105,7 +105,7 @@ def test_resource_repair_dry_run(proto_fixture, dask_mocker):
     assert not (path / "one/.MANIFEST").exists()
 
 
-def test_repo_repair_dry_run(proto_fixture, dask_mocker):
+def test_repo_repair_dry_run(proto_fixture):
     # Given
     path, proto = proto_fixture
     proto.filesystem.delete(
@@ -124,7 +124,7 @@ def test_repo_repair_dry_run(proto_fixture, dask_mocker):
 
 @pytest.mark.skip()
 def test_resource_repair_need_update_message(
-        proto_fixture, dask_mocker, capsys, caplog, mocker):
+        proto_fixture, capsys, caplog, mocker):
     path, _proto = proto_fixture
     assert not (path / "one/statistics").exists()
     with caplog.at_level(logging.INFO):
@@ -150,7 +150,7 @@ def test_resource_repair_need_update_message(
 
 @pytest.mark.skip()
 def test_repo_repair_need_update_message(
-        proto_fixture, dask_mocker, capsys, caplog):
+        proto_fixture, capsys, caplog):
     path, proto_fixture = proto_fixture
     assert not (path / "one/statistics").exists()
     with caplog.at_level(logging.INFO):
@@ -175,7 +175,7 @@ def test_repo_repair_need_update_message(
 
 @pytest.mark.skip()
 def test_resource_repair_no_update_message(
-        proto_fixture, dask_mocker, capsys, caplog):
+        proto_fixture, capsys, caplog):
     # Given
     path, _proto = proto_fixture
     cli_manage([
@@ -204,7 +204,7 @@ def test_resource_repair_no_update_message(
 
 @pytest.mark.skip()
 def test_repo_repair_no_update_message(
-        proto_fixture, dask_mocker, capsys, caplog):
+        proto_fixture, capsys, caplog):
     # Given
     path, _proto = proto_fixture
     cli_manage([
@@ -232,7 +232,7 @@ def test_repo_repair_no_update_message(
 
 @pytest.mark.skip()
 def test_resource_repair_dry_run_needs_manifest_update_message(
-        proto_fixture, dask_mocker, capsys, caplog):
+        proto_fixture, capsys, caplog):
     # Given
     path, proto = proto_fixture
     cli_manage([
@@ -267,7 +267,7 @@ def test_resource_repair_dry_run_needs_manifest_update_message(
 
 @pytest.mark.skip()
 def test_repo_repair_dry_run_needs_manifest_update_message(
-        proto_fixture, dask_mocker, capsys, caplog):
+        proto_fixture, capsys, caplog):
     # Given
     path, proto = proto_fixture
     cli_manage([
@@ -299,7 +299,7 @@ def test_repo_repair_dry_run_needs_manifest_update_message(
 
 @pytest.mark.skip()
 def test_resource_repair_dry_run_needs_manifest_and_histogram_update_message(
-        proto_fixture, dask_mocker, capsys, caplog):
+        proto_fixture, capsys, caplog):
     # Given
     path, _proto = proto_fixture
     cli_manage([
@@ -371,7 +371,7 @@ def test_resource_repair_dry_run_needs_manifest_and_histogram_update_message(
 
 @pytest.mark.skip()
 def test_repo_repair_dry_run_needs_manifest_and_histogram_update_message(
-        proto_fixture, dask_mocker, capsys, caplog):
+        proto_fixture, capsys, caplog):
     # Given
     path, _proto = proto_fixture
     cli_manage([
