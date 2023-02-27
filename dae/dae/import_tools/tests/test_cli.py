@@ -39,12 +39,13 @@ def simple_study_dir(tmpdir, gpf_instance, mocker, resources_dir):
 
 
 def test_run(simple_study_dir):
-    assert cli.main([str(simple_study_dir / "import_config.yaml"), "-j", "1"])
+    import_config_fn = str(simple_study_dir / "import_config.yaml")
+    assert cli.main([import_config_fn, "-j", "1"]) == 0
 
 
 def test_list(simple_study_dir):
-    assert cli.main([str(simple_study_dir / "import_config.yaml"), "list"])
-    assert cli.main([str(simple_study_dir / "import_config.yaml"), "-j", "1"])
-    assert cli.main([str(simple_study_dir / "import_config.yaml"), "list"])
-    assert cli.main([str(simple_study_dir / "import_config.yaml"), "list",
-                     "--verbose"])
+    import_config_fn = str(simple_study_dir / "import_config.yaml")
+    assert cli.main([import_config_fn, "list"]) == 0
+    assert cli.main([import_config_fn, "-j", "1"]) == 0
+    assert cli.main([import_config_fn, "list"]) == 0
+    assert cli.main([import_config_fn, "list", "--verbose"]) == 0
