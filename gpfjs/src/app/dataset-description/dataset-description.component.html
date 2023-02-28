@@ -36,7 +36,8 @@
         textareaId="editor1"
         [options]="editorOptions"
         [(ngModel)]="editorText"
-        (onChange)="togglePreview()">
+        (onChange)="togglePreview()"
+        (onShow)="disablePreview()">
       </angular-markdown-editor>
       <button (click)="save()" id="save-btn" class="btn btn-success" title="Save (ctrl+enter)">Save</button>
       <button (click)="close()" id="close-btn" class="btn" title="Close">Close</button>

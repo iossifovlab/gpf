@@ -96,4 +96,9 @@ export class DatasetDescriptionComponent implements OnInit {
       previewButton.removeAttribute('disabled');
     }
   }
+
+  public disablePreview(): void {
+    const previewButton = document.querySelector('[title="Preview"]');
+    previewButton.setAttribute('disabled', '');
+  }
 }
