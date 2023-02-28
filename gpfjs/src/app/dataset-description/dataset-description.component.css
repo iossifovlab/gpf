@@ -51,21 +51,27 @@
 }
 
 :host::ng-deep.md-header .btn-sm[title="Preview"] {
-  height: 30px;
+  height: 37px;
   width: 90px;
   margin-left: 10px;
-  background-color: #2a6395;
+  background-color: #eee;
+  color: black;
   border-radius: 6px;
   align-self: center;
 }
 
+:host::ng-deep.md-preview {
+  margin-top: 15px;
+  margin-left: 13px;
+}
+
 :host::ng-deep.btn-sm[title="Preview"]:hover,
 :host::ng-deep.btn-sm[title="Preview"]:focus {
-  background-color: #2a6395;
+  background-color: #ddd;
 }
 
 :host::ng-deep.btn-sm.active[title="Preview"] {
-  background-color: #0b355a !important;
+  background-color: #6c757d !important;
 }
 
 :host::ng-deep#editor1 {
