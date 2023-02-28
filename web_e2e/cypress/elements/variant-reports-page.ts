@@ -148,4 +148,8 @@ export class VariantReportsPage extends BasePage {
   public get pedigreeModalFamilyIds(): element {
     return cy.get('#family-ids-list > div');
   }
+
+  public get familiesByPedigreeSelectOptions(): element {
+    return cy.get('#families-by-pedigree-select').children('option');
+  }
 }

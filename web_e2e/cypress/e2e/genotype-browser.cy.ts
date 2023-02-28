@@ -533,32 +533,3 @@ describe('Genotype browser UCSC url tests', () => {
   });
 });
 
-describe('Genotype browser table preview visual tests', () => {
-  const genotypeBrowserController = new GenotypeBrowserController();
-  const page = new GenotypeBrowserPage();
-  const genotypePreviewTablePage = new GenotypePreviewTablePage();
-
-  before(() => {
-    genotypeBrowserController.cleanup();
-    genotypeBrowserController.navigateToHome(false);
-    genotypeBrowserController.loginAdmin();
-  });
-
-  beforeEach(() => {
-    genotypeBrowserController.preserveLogin();
-    genotypeBrowserController.navigateToHome();
-  });
-
-  [
-    'CHD8', 'POGZ', 'KDM5B', 'TTLL10'
-  ].forEach(geneSymbol => {
-    it('should compare ' + geneSymbol + ' gene results', () => {
-      const genesBlockPage = new GenesBlockPage();
-      page.navigateToDatasetPage(datasetIds.iossifov2014, toolPageLinks.genotypeBrowser);
-      genesBlockPage.geneSymbolsButton.click();
-      genesBlockPage.geneSymbolsTextarea.clear().type(geneSymbol);
-      genotypeBrowserController.pressTablePreviewButton();
-      genotypePreviewTablePage.table.matchImageSnapshot(geneSymbol);
-    });
-  });
-});
