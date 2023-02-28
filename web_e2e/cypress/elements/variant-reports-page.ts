@@ -29,10 +29,6 @@ export class VariantReportsPage extends BasePage {
     return cy.get('#families-by-pedigree-select');
   }
 
-  public get familiesByPedigreeSelectOptions(): element {
-    return cy.get('#families-by-pedigree-select').children('option');
-  }
-
   public get denovoVariantsSelect(): element {
     return cy.get('#denovo-variants-select');
   }

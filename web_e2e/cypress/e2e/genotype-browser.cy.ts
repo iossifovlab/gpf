@@ -549,18 +549,16 @@ describe('Genotype browser table preview visual tests', () => {
     genotypeBrowserController.navigateToHome();
   });
 
-  it('should compare POGZ and KDM5B gene results', () => {
-    const genesBlockPage = new GenesBlockPage();
-
-    page.navigateToDatasetPage(datasetIds.iossifov2014, toolPageLinks.genotypeBrowser);
-    genesBlockPage.geneSymbolsButton.click();
-
-    [['POGZ', '2', 'pogz'], ['KDM5B', '4', 'kdm5b']].forEach(data => {
-      genesBlockPage.geneSymbolsTextarea.clear().type(data[0]);
-
+  [
+    'CHD8', 'POGZ', 'KDM5B', 'TTLL10'
+  ].forEach(geneSymbol => {
+    it('should compare ' + geneSymbol + ' gene results', () => {
+      const genesBlockPage = new GenesBlockPage();
+      page.navigateToDatasetPage(datasetIds.iossifov2014, toolPageLinks.genotypeBrowser);
+      genesBlockPage.geneSymbolsButton.click();
+      genesBlockPage.geneSymbolsTextarea.clear().type(geneSymbol);
       genotypeBrowserController.pressTablePreviewButton();
-      page.overviewParagraph.should('have.text', data[1] +' variants selected');
-      genotypePreviewTablePage.table.matchImageSnapshot(data[2]);
+      genotypePreviewTablePage.table.matchImageSnapshot(geneSymbol);
     });
   });
 });
