@@ -1,4 +1,4 @@
-<div class="form-block">
+<div *ngIf="rootDataset" class="form-block">
   <div class="card">
     <ul
       ngbNav
@@ -10,15 +10,14 @@
       <li [ngbNavItem]="'allStudies'" id="all-studies">
         <a ngbNavLink>All</a>
       </li>
-      <li [ngbNavItem]="'studyNames'" id="study-names">
+      <li [ngbNavItem]="'studies'" id="study-names">
         <a ngbNavLink>Studies</a>
         <ng-template ngbNavContent>
           <div class="panel">
-            <gpf-checkbox-list
-              [items]="allStudies"
-              [selectedItems]="selectedStudies"
-              (itemsUpdateEvent)="updateSelectedStudies($event)">
-            </gpf-checkbox-list>
+            <gpf-treelist-checkbox
+              [data]="rootDataset"
+              [selectedStudies]="selectedStudies"
+              (checkboxChangeEvent)="updateState(selectedStudies)"></gpf-treelist-checkbox>
             <gpf-errors-alert [errors]="errors"></gpf-errors-alert>
           </div>
         </ng-template>

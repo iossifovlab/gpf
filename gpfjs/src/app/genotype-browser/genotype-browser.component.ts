@@ -16,7 +16,7 @@ import { PersonFiltersBlockComponent } from 'app/person-filters-block/person-fil
 import { UniqueFamilyVariantsFilterState } from 'app/unique-family-variants-filter/unique-family-variants-filter.state';
 import { ErrorsState, ErrorsModel } from '../common/errors.state';
 import { filter, take } from 'rxjs/operators';
-import { StudyFiltersBlockState } from 'app/study-filters-block/study-filters-block.state';
+import { StudyFiltersState } from 'app/study-filters/study-filters.state';
 import { clone } from 'lodash';
 import { NavigationStart, Router } from '@angular/router';
 
@@ -52,7 +52,7 @@ export class GenotypeBrowserComponent implements OnInit, OnDestroy {
     FamilyFiltersBlockComponent.familyFiltersBlockState,
     PersonFiltersBlockComponent.personFiltersBlockState,
     UniqueFamilyVariantsFilterState,
-    StudyFiltersBlockState
+    StudyFiltersState
   ])
   public static genotypeBrowserStateSelector(
     genotypeBlockState,
@@ -62,7 +62,7 @@ export class GenotypeBrowserComponent implements OnInit, OnDestroy {
     familyFiltersBlockState,
     personFiltersBlockState,
     uniqueFamilyVariantsFilterState,
-    StudyFiltersBlockState
+    StudyFiltersState
   ): object {
     const res = {
       ...genotypeBlockState,
@@ -71,7 +71,7 @@ export class GenotypeBrowserComponent implements OnInit, OnDestroy {
       ...familyFiltersBlockState,
       ...personFiltersBlockState,
       ...uniqueFamilyVariantsFilterState,
-      ...StudyFiltersBlockState
+      ...StudyFiltersState
     };
     if (regionsFilterState.regionsFilters.length) {
       res.regions = regionsFilterState.regionsFilters;

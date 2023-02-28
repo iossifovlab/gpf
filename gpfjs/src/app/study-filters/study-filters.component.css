@@ -1,3 +1,7 @@
 :host ::ng-deep gpf-checkbox-list .card {
   border: none;
 }
+
+.children {
+  position: relative;
+}

@@ -1,0 +1,28 @@
+<ng-container
+  *ngTemplateOutlet="
+    datasetNodeTemplate;
+    context: { children: data !== undefined ? data.children : null, depth: 0 }
+  "></ng-container>
+
+<ng-template #datasetNodeTemplate let-nodes="children" let-depth="depth">
+  <div *ngFor="let node of nodes">
+    <div class="dropdown" style="width: 15px">
+      <button
+        class="{{ hide.value !== 'true' ? 'dropdown-toggle dropdown dropdown-toggle-after' : 'dropdown-toggle' }}"
+        #hide
+        [hidden]="node.children.length === 0"
+        (click)="updateFilters($event)"></button>
+    </div>
+    <input
+      [ngModel]="this.selectedStudies.has(node.dataset.id)"
+      class="form-check-input"
+      id="{{ node.dataset.id }}"
+      (click)="updateFilters($event)"
+      type="checkbox" />
+    <label for="{{ node.dataset.id }}">{{ node.dataset.name }}</label>
+    <div class="children" *ngIf="hide.value !== 'true'">
+      <ng-container
+        *ngTemplateOutlet="datasetNodeTemplate; context: { children: node.children, depth: depth + 1 }"></ng-container>
+    </div>
+  </div>
+</ng-template>

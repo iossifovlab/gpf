@@ -6,20 +6,20 @@ export class SetStudyFilters {
   public constructor(public studyFilters: string[]) {}
 }
 
-export interface StudyFiltersBlockModel {
+export interface StudyFiltersModel {
   studyFilters: string[];
 }
 
-@State<StudyFiltersBlockModel>({
-  name: 'studyFiltersBlockState',
+@State<StudyFiltersModel>({
+  name: 'studyFiltersState',
   defaults: {
     studyFilters: []
   },
 })
 @Injectable()
-export class StudyFiltersBlockState {
+export class StudyFiltersState {
   @Action(SetStudyFilters)
-  public setStudyFilters(ctx: StateContext<StudyFiltersBlockModel>, action: SetStudyFilters): void {
+  public setStudyFilters(ctx: StateContext<StudyFiltersModel>, action: SetStudyFilters): void {
     ctx.patchState({
       studyFilters: [...action.studyFilters]
     });

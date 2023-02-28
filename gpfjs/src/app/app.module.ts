@@ -108,8 +108,8 @@ import { PerfectlyDrawablePedigreeComponent } from './perfectly-drawable-pedigre
 import { PedigreeMockService } from './perfectly-drawable-pedigree/pedigree-mock.service';
 import { NonPdpPedigreesComponent } from './non-pdp-pedigrees/non-pdp-pedigrees.component';
 import { PerfectlyDrawablePedigreeService } from './perfectly-drawable-pedigree/perfectly-drawable-pedigree.service';
-import { StudyFiltersBlockComponent } from './study-filters-block/study-filters-block.component';
-import { StudyFiltersBlockState } from './study-filters-block/study-filters-block.state';
+import { StudyFiltersComponent } from './study-filters/study-filters.component';
+import { StudyFiltersState } from './study-filters/study-filters.state';
 import { AddButtonComponent } from './add-button/add-button.component';
 import { RemoveButtonComponent } from './remove-button/remove-button.component';
 import { PopupComponent } from './popup/popup.component';
@@ -177,6 +177,7 @@ import { ItemAddMenuComponent } from './item-add-menu/item-add-menu.component';
 import { ConfirmButtonComponent } from './confirm-button/confirm-button.component';
 import * as Sentry from '@sentry/angular-ivy';
 import { FederationCredentialsComponent } from './federation-credentials/federation-credentials.component';
+import { StudyFiltersTreeComponent } from './treelist-checkbox/treelist-checkbox.component';
 
 const appRoutes: Routes = [
   {
@@ -332,7 +333,7 @@ const appRoutes: Routes = [
     PerfectlyDrawablePedigreeComponent,
     NonPdpPedigreesComponent,
     ConfirmButtonComponent,
-    StudyFiltersBlockComponent,
+    StudyFiltersComponent,
     AddButtonComponent,
     RemoveButtonComponent,
     PopupComponent,
@@ -378,6 +379,7 @@ const appRoutes: Routes = [
     PedigreeComponent,
     ItemAddMenuComponent,
     FederationCredentialsComponent,
+    StudyFiltersTreeComponent
   ],
   imports: [
     BrowserModule,
@@ -398,7 +400,7 @@ const appRoutes: Routes = [
       InheritancetypesState, PersonIdsState, PresentInChildState, PresentInParentState,
       GeneSymbolsState, FamilyIdsState, RegionsFilterState, StudyTypesState, GeneSetsState,
       GeneScoresState, EnrichmentModelsState, PedigreeSelectorState, FamilyTypeFilterState,
-      StudyFiltersBlockState, PersonFiltersState, GenomicScoresBlockState, PhenoToolMeasureState,
+      StudyFiltersState, PersonFiltersState, GenomicScoresBlockState, PhenoToolMeasureState,
       UniqueFamilyVariantsFilterState, ErrorsState
     ], {compatibility: { strictContentSecurityPolicy: true }}
     ),
