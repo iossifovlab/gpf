@@ -45,6 +45,9 @@ def vcf_res(tmp_path):
 ##INFO=<ID=B,Number=1,Type=Integer,Description="Score B">
 ##INFO=<ID=C,Number=.,Type=String,Description="Score C">
 ##INFO=<ID=D,Number=.,Type=String,Description="Score D">
+##contig=<ID=chr1>
+##contig=<ID=chr2>
+##contig=<ID=chr3>
 #CHROM POS ID REF ALT QUAL FILTER  INFO
 chr1   5   .  A   T   .    .       A=1;C=c11,c12;D=d11
 chr1   15   .  A   T   .    .       A=2;B=21;C=c21;D=d21,d22
@@ -1521,3 +1524,10 @@ def test_overlapping_nonattribute_columns_config(tmp_path):
             ("0.456", "2"),
             ("0.789", "3"),
         )
+
+
+def test_vcf_get_chromosomes(vcf_res):
+    with build_genomic_position_table(
+        vcf_res, vcf_res.config["tabix_table"]
+    ) as tab:
+        assert tab.get_chromosomes() == ["chr1"]

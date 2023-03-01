@@ -45,8 +45,10 @@ class VCFGenomicPositionTable(TabixGenomicPositionTable):
 
     @cache  # pylint: disable=method-cache-max-size-none
     def get_file_chromosomes(self) -> List[str]:
-        assert isinstance(self.pysam_file, pysam.VariantFile)
-        return list(map(str, self.pysam_file.header.contigs))
+        with self.genomic_resource.open_tabix_file(
+                self.definition.filename) as pysam_file_tabix:
+            contigs = pysam_file_tabix.contigs
+        return list(map(str, contigs))
 
     def get_line_iterator(self, *args):
         assert isinstance(self.pysam_file, pysam.VariantFile)
