@@ -360,7 +360,7 @@ class ReadOnlyRepositoryProtocol(abc.ABC):
     def __init__(self, proto_id: str):
         self.proto_id = proto_id
 
-    def mode(self):  # pylint: disable=no-self-use
+    def mode(self):
         """Return repository protocol mode - READONLY or READWRITE."""
         return Mode.READONLY
 
@@ -495,6 +495,8 @@ class ReadOnlyRepositoryProtocol(abc.ABC):
 class ReadWriteRepositoryProtocol(ReadOnlyRepositoryProtocol):
     """Defines read write genomic resources repository protocol."""
 
+    # pylint: disable=too-many-public-methods
+
     def mode(self):
         return Mode.READWRITE
 
@@ -508,6 +510,8 @@ class ReadWriteRepositoryProtocol(ReadOnlyRepositoryProtocol):
 
     def _update_manifest_entry_and_state(
             self, resource, entry, prebuild_entries):
+        pre_state = self.load_resource_file_state(resource, entry.name)
+
         size = None
         md5 = None
         if entry.name in prebuild_entries:
@@ -516,7 +520,8 @@ class ReadWriteRepositoryProtocol(ReadOnlyRepositoryProtocol):
             md5 = ready_entry.md5
         state = self.build_resource_file_state(
             resource, entry.name, size=size, md5=md5)
-        self.save_resource_file_state(resource, state)
+        if state != pre_state:
+            self.save_resource_file_state(resource, state)
         entry.md5 = state.md5
         entry.size = state.size
 
