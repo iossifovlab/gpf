@@ -932,15 +932,11 @@ class PhenotypeStudy(PhenotypeData):
                 results = connection.execute(query)
                 for row in results:
                     person_id = row["person_id"]
-                    measure_id = row["measure_id"]
-                    measure_value = row["value"]
-
                     if person_id not in output:
                         output[person_id] = {"person_id": person_id}
                         for measure_id in measure_ids:
                             output[person_id][measure_id] = "-"
-
-                    output[person_id][measure_id] = measure_value
+                    output[person_id][row["measure_id"]] = row["value"]
 
         for value in output.values():
             writer.writerow(value)
