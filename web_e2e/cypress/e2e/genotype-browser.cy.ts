@@ -96,9 +96,10 @@ describe('Genotype browser tests', () => {
   it('should hide table preview results after changing a filter', () => {
     const genotypePreviewTablePage = new GenotypePreviewTablePage();
     const genotypeBlockPage = new GenotypeBlockPage();
+    const genotypeBrowserController = new GenotypeBrowserController();
 
     page.navigateToDatasetPage(datasetIds.iossifov2014, toolPageLinks.genotypeBrowser);
-    page.tablePreviewButton.click();
+    genotypeBrowserController.pressTablePreviewButton();
     genotypePreviewTablePage.table.should('be.visible');
 
     genotypeBlockPage.findCheckboxInComponentContainingText('gpf-pedigree-selector', 'affected').click();
@@ -429,7 +430,7 @@ describe('Genotype browser table preview result tests', () => {
       genotypeBrowserController.filterGenesByGeneSets('GO Terms', 'GO:0016917');
       genotypeBrowserController.setEffectTypes(data.effectTypes);
       genotypeBrowserController.pressTablePreviewButton();
-      page.overviewParagraph.should('have.text', data.count + ' variant selected');
+      page.overviewParagraph.should('have.text', data.count + ' variants selected');
     });
   });
 
