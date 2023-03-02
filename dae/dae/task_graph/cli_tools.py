@@ -111,7 +111,11 @@ class TaskGraphCli:
     @staticmethod
     def process_graph(
             task_graph: TaskGraph, force_mode="optional", **kwargs) -> bool:
-        """Process task_graph in according with the arguments in args."""
+        """
+        Process task_graph in according with the arguments in args.
+
+        Return true if the graph get's successfully processed.
+        """
         args = Box(kwargs)
 
         if args.task_ids:
