@@ -49,8 +49,9 @@ export class PedigreeComponent {
     if (this.modalService.hasOpenModals()) {
       return;
     }
-
-    this.loadFamilyListData();
+    if (!this.modalSimpleView) {
+      this.loadFamilyListData();
+    }
     this.modal = this.modalService.open(
       this.pedigreeModal,
       {animation: false, centered: true, size: 'lg', windowClass: 'pedigree-modal'}
