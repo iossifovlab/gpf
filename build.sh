@@ -187,13 +187,13 @@ EOT
     local branch=$(e gpf_documentation_git_branch)
 
     if [ "$branch" == "master" ]; then
-        local iossifovlab_anaconda_infra_ref;
-        iossifovlab_anaconda_infra_ref=$(e docker_img_iossifovlab_anaconda_infra)
+        local iossifovlab_infra_ref;
+        iossifovlab_infra_ref=$(e docker_img_iossifovlab_infra)
 
         build_run_local echo "++++++++++++++++++PUBLISH DOCUMENTATION+++++++++++++++++++++++"
         build_run_local test "$BUILD_SCRIPTS_WIREGUARD_PRIVATE_KEY_SIMONS_AWS" != ""
 
-        build_run_ctx_init "container" "${iossifovlab_anaconda_infra_ref}" \
+        build_run_ctx_init "container" "${iossifovlab_infra_ref}" \
         --cap-add NET_ADMIN \
         --cap-add SYS_MODULE \
         --sysctl net.ipv4.conf.all.src_valid_mark=1 \
