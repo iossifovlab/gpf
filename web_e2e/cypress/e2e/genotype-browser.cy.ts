@@ -533,34 +533,3 @@ describe('Genotype browser UCSC url tests', () => {
   });
 });
 
-describe.skip('Genotype browser table preview visual tests', () => {
-  const genotypeBrowserController = new GenotypeBrowserController();
-  const page = new GenotypeBrowserPage();
-  const genotypePreviewTablePage = new GenotypePreviewTablePage();
-
-  before(() => {
-    genotypeBrowserController.cleanup();
-    genotypeBrowserController.navigateToHome(false);
-    genotypeBrowserController.loginAdmin();
-  });
-
-  beforeEach(() => {
-    genotypeBrowserController.preserveLogin();
-    genotypeBrowserController.navigateToHome();
-  });
-
-  it('should compare POGZ and KDM5B gene results', () => {
-    const genesBlockPage = new GenesBlockPage();
-
-    page.navigateToDatasetPage(datasetIds.iossifov2014, toolPageLinks.genotypeBrowser);
-    genesBlockPage.geneSymbolsButton.click();
-
-    [['POGZ', '2', 'pogz'], ['KDM5B', '4', 'kdm5b']].forEach(data => {
-      genesBlockPage.geneSymbolsTextarea.clear().type(data[0]);
-
-      genotypeBrowserController.pressTablePreviewButton();
-      page.overviewParagraph.should('have.text', data[1] +' variants selected (' + data[1] + ' shown)');
-      genotypePreviewTablePage.table.matchImageSnapshot(data[2]);
-    });
-  });
-});

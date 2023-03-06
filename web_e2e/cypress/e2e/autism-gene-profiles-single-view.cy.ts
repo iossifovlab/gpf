@@ -152,35 +152,6 @@ describe('Autism gene profiles single view links tests', () => {
 //   });
 // });
 
-describe.skip('Autism gene profiles single view visual tests', () => {
-  const page = new AutismGeneProfilesSingleViewPage();
-
-  before(() => {
-    page.cleanup();
-    page.navigateToHome(false);
-    page.navigateToSidenavPage(sidenavPageLinks.autismGeneProfiles);
-  });
-
-  it('should compare histrograms', () => {
-    page.openSingleViewPage('CHD8');
-
-    [
-      {tableId: 'autism_scores', tableRows: ['SFARI_gene_score']},
-      {tableId: 'protection_scores', tableRows: ['RVIS_rank', 'LGD_rank', 'pLI_rank', 'pRec_rank']}
-    ].forEach(data => {
-      cy.get('#' + data.tableId).within(scores => {
-        data.tableRows.forEach((elements, index) => {
-          cy.wrap(scores).get('tr').eq(index).within(row => {
-            cy.wrap(row).get('td').eq(0).should('have.text', elements);
-          });
-        });
-      });
-      cy.get('#' + data.tableId).scrollIntoView();
-      cy.matchImageSnapshot('chd8-' + data.tableId);
-    });
-  });
-});
-
 export const geneData = [
   {
     geneSymbols: 'GRIN2B',

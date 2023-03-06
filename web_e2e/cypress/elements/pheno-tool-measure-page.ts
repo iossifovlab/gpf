@@ -17,6 +17,10 @@ export class PhenoToolMeasurePage extends BasePage {
     return cy.contains('Non verbal IQ').find('input');
   }
 
+  public getCheckboxByText(text: string): element {
+    return cy.get('span').contains(text).parent();
+  }
+
   public get dropdown(): element {
     return cy.get('.dropdown-menu');
   }

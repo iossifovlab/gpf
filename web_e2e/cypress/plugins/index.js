@@ -1,5 +1,4 @@
 /// <reference types="cypress" />
-/// <reference types="cypress-image-snapshot" />
 // ***********************************************************
 // This example plugins/index.js can be used to load plugins
 //
@@ -12,7 +11,8 @@
 
 // This function is called when a project is opened or re-opened (e.g. due to
 // the project's config changing)
-const { addMatchImageSnapshotPlugin } = require('cypress-image-snapshot/plugin');
+
+const { initPlugin } = require('@frsource/cypress-plugin-visual-regression-diff/plugins');
 const { removeDirectory } = require('cypress-delete-downloads-folder');
 const fs = require('fs');
 /**
@@ -26,7 +26,7 @@ module.exports = (on, config) => {
   on('before:browser:launch', (browser = {}, launchOptions) => {
     const width = 1920;
     const height = 1080;
-  
+
     if (browser.name === 'chrome' && browser.isHeadless) {
       launchOptions.args.push(`--window-size=${width},${height}`);
       launchOptions.args.push('--force-device-scale-factor=1');
@@ -55,11 +55,11 @@ module.exports = (on, config) => {
 
   on('task', { removeDirectory });
 
-  addMatchImageSnapshotPlugin(on, config);
-
   if (config.env.yamlPath) {
     config.env.yamlFile = fs.readFileSync(config.env.yamlPath, 'utf8');
   }
+
+  initPlugin(on, config);
 
   return config;
 }

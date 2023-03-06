@@ -340,19 +340,6 @@ describe('Variant reports tests', () => {
       });
     });
   });
-
-  [
-    {option: 'Affected Status', screenshotName: 'families-by-pedigree-affected-status'},
-    {option: 'Role', screenshotName: 'families-by-pedigree-role'},
-    {option: 'Phenotype', screenshotName: 'families-by-pedigree-phenotype'}
-  ].forEach(data => {
-    it.skip(`should compare pedigree charts for ${data.option}`, () => {
-      page.familiesByPedigreeTab.click();
-      page.familiesByPedigreeSelect.select(data.option);
-      cy.wait(1000);
-      page.familiesByPedigreeTable.matchImageSnapshot(data.screenshotName);
-    });
-  });
 });
 
 describe('Variant reports Iossifov count tests', () => {
@@ -426,59 +413,5 @@ describe('Variant reports Iossifov count tests', () => {
         expect(ele.text()).to.eq(data.expectedCounts[i]);
       });
     });
-  });
-});
-
-describe.skip('Variant reports visual tests', () => {
-  const page = new VariantReportsPage();
-
-  before(() => {
-    page.cleanup();
-    page.navigateToHome(false);
-    page.loginAdmin();
-  });
-
-  beforeEach(() => {
-    page.preserveLogin();
-    page.navigateToHome();
-    page.navigateToDatasetPage(datasetIds.iossifov2014, toolPageLinks.datasetStatistics);
-  });
-
-  it('should compare family by number table data', () => {
-    page.familiesByNumberTab.click();
-
-    cy.get('#families-by-number-div').matchImageSnapshot('iossifov-family-table-status');
-
-    page.familiesByNumberSelect.select('Role');
-    cy.get('#families-by-number-div').matchImageSnapshot('iossifov-family-table-role');
-
-    page.familiesByNumberSelect.select('Phenotype');
-    cy.get('#families-by-number-div').matchImageSnapshot('iossifov-family-table-phenotype');
-  });
-
-  it('should compare families by pedigree table data', () => {
-    page.familiesByPedigreeTab.click();
-
-    cy.get('#families-by-pedigree-div').scrollIntoView().matchImageSnapshot('iossifov-pedigree-table-status');
-
-    cy.get('.col-sm-3 > .select-wrapper > .form-control').select('Role');
-    page.familiesByPedigreeDivs.should('have.length', 8);
-    cy.get('#families-by-pedigree-div').scrollIntoView().matchImageSnapshot('iossifov-pedigree-table-role');
-
-    cy.get('.col-sm-3 > .select-wrapper > .form-control').select('Phenotype');
-    page.familiesByPedigreeDivs.should('have.length', 8);
-    cy.get('#families-by-pedigree-div').scrollIntoView().matchImageSnapshot('iossifov-pedigree-table-phenotype');
-  });
-
-  it('should compare de novo variants table data', () => {
-    page.deNovoVariantsTab.click();
-
-    cy.get('#denovo-variants-div').scrollIntoView().matchImageSnapshot('iossifov-denovo-table-status');
-
-    page.denovoVariantsSelect.select('Role');
-    cy.get('#denovo-variants-div').scrollIntoView().matchImageSnapshot('iossifov-denovo-table-role');
-
-    page.denovoVariantsSelect.select('Phenotype');
-    cy.get('#denovo-variants-div').scrollIntoView().matchImageSnapshot('iossifov-denovo-table-phenotype');
   });
 });

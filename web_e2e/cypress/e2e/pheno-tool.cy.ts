@@ -449,7 +449,3 @@ describe('Pheno tool download tests', () => {
     });
   });
 });
-
-describe.skip('Pheno tool visual tests', () => {
-  // ...
-});
