@@ -11,7 +11,7 @@ channels:
   - defaults
   - iossifovlab
 dependencies:
-  - python=3.9.12
+  - python=3.10.9
   - importlib_metadata=4.11.3
   - pysam=0.20.0
   - samtools=1.15.1
@@ -31,7 +31,7 @@ dependencies:
   - python-box=6.0.2
   - setuptools=65.6.3
   - sqlalchemy=1.4.40
-  - sqlite=3.39.2
+  - sqlite=3.40.1
   - django=4.1.7
   - django-cors-headers=3.13.0
   - djangorestframework=3.13.1
