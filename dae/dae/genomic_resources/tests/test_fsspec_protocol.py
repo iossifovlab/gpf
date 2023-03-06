@@ -361,3 +361,20 @@ def test_update_resource_specific_file(
     dst_res = proto.get_resource("sample")
     assert proto.file_exists(dst_res, "prim.txt")
     assert not proto.file_exists(dst_res, "second.txt")
+
+
+def test_build_manifest_should_not_update_existing_resource_state(
+    rw_fsspec_proto: ReadWriteRepositoryProtocol, mocker
+):
+    # Given
+    proto = rw_fsspec_proto
+    res = proto.get_resource("one")
+    proto.build_manifest(res)
+
+    mocker.patch.object(proto, "save_resource_file_state")
+
+    # When
+    proto.build_manifest(res)
+
+    # Then
+    assert not proto.save_resource_file_state.called  # type: ignore
