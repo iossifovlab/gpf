@@ -9,9 +9,9 @@
 
 #interval-fields {
   padding-left: 15px;
-  margin-top: 25px;
+  margin-top: 20px;
   display: grid;
-  grid-template-columns: 85px 20px 85px;
+  grid-template-columns: 85px 30px 85px;
   grid-template-rows: 30px;
 }
 
@@ -21,7 +21,7 @@
 }
 
 #max-field {
-  margin-top: 25px;
+  margin-top: 20px;
   padding-left: 15px;
   height: 30px;
 }
