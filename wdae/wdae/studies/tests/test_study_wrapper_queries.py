@@ -387,6 +387,27 @@ def test_query_family_filters(iossifov_2014_wrappers, wrapper_type):
     assert len(variants) == 15
 
 
+@pytest.mark.parametrize("wrapper_type", ["local", "remote"])
+def test_query_study_filters(iossifov_2014_wrappers, wrapper_type):
+    study_wrapper = iossifov_2014_wrappers[wrapper_type]
+    query = {
+        "studyFilters": ["iossifov_2014"],
+        "regions": ["12"]
+    }
+
+    variants = list(study_wrapper.query_variants_wdae(
+        query, [{"source": "location"}])
+    )
+
+    assert len(variants) == 2
+
+    variants = list(study_wrapper.query_variants_wdae(
+        {"studyFilters": ["iossifov_2014"]}, [{"source": "location"}])
+    )
+
+    assert len(variants) == 16
+
+
 @pytest.mark.parametrize(
     "wrapper_type",
     [
