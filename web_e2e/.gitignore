@@ -4,7 +4,6 @@ downloads
 import
 package-lock.json
 cypress/screenshots
-cypress/fixtures/snapshots/**/__diff_output__
 cypress/videos
 results
 /build-env/*
@@ -13,3 +12,5 @@ Jenkinsfile.generated-stages.all
 ts-lint-report.xml
 cache/
 __pycache__
+*actual.png
+*diff.png
