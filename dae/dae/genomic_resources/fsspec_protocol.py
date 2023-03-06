@@ -249,11 +249,12 @@ class FsspecReadWriteProtocol(
             if not self.filesystem.exists(os.path.dirname(path)):
                 self.filesystem.makedirs(
                     os.path.dirname(path), exist_ok=True)
+            # pylint: disable=consider-using-with
             lockfile = open(path, "wt", encoding="utf8")
             lockfile.write(str(datetime.datetime.now()) + "\n")
             fcntl.flock(lockfile, fcntl.LOCK_EX)
-            lock.__enter__ = lockfile.__enter__
-            lock.__exit__ = lockfile.__exit__
+            lock.__enter__ = lockfile.__enter__  # type: ignore
+            lock.__exit__ = lockfile.__exit__  # type: ignore
 
         return lock
 
@@ -544,7 +545,7 @@ class FsspecReadWriteProtocol(
         result = {}
         for res in self.get_all_resources():
             res_size = convert_size(
-                sum([f for _, f in res.get_manifest().get_files()])
+                sum(f for _, f in res.get_manifest().get_files())
             )
             result[res.resource_id] = {
                 **res.config,
