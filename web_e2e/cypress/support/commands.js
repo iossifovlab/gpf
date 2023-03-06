@@ -41,13 +41,7 @@
 //     });
 // }
 
-import { addMatchImageSnapshotCommand } from 'cypress-image-snapshot/command';
-
-addMatchImageSnapshotCommand({
-  // customDiffConfig: { threshold: 0.1 }, // threshold for each pixel
-  capture: 'fullPage', // capture viewport in screenshot
-  customSnapshotsDir: 'cypress/fixtures/snapshots/'
-});
-
-
 require('cypress-delete-downloads-folder').addCustomCommand();
+
+
+require('@frsource/cypress-plugin-visual-regression-diff');

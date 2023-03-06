@@ -1,13 +1,11 @@
 import { GenesBlockPage } from 'cypress/elements/genes-block-page';
 import { GenotypeBrowserController } from 'cypress/elements/genotype-browser-controller';
 import { GenotypeBrowserPage } from 'cypress/elements/genotype-browser-page';
-import { GenotypePreviewTablePage } from 'cypress/elements/genotype-preview-table-page';
 import { datasetIds, toolPageLinks } from 'cypress/elements/utils';
 
 describe('Genotype browser visual tests', () => {
   const genotypeBrowserPage = new GenotypeBrowserPage();
   const genotypeBrowserController = new GenotypeBrowserController();
-  const genotypePreviewTablePage = new GenotypePreviewTablePage();
 
   before(() => {
     genotypeBrowserPage.cleanup();
@@ -18,6 +16,7 @@ describe('Genotype browser visual tests', () => {
   beforeEach(() => {
     genotypeBrowserPage.preserveLogin();
     genotypeBrowserPage.navigateToHome();
+    genotypeBrowserPage.prepareForVisualTest();
   });
 
   [
@@ -31,7 +30,7 @@ describe('Genotype browser visual tests', () => {
       genesBlockPage.geneSymbolsTextarea.clear().type(geneSymbol);
 
       genotypeBrowserController.pressTablePreviewButton();
-      genotypePreviewTablePage.table.matchImageSnapshot(geneSymbol);
+      cy.matchImage();
     });
   });
 });

@@ -1,6 +1,6 @@
 
 
-describe('Autism gene profiles visual tests', () => {
+describe.skip('Autism gene profiles visual tests', () => {
   it('should', () => {
     // ...
   });

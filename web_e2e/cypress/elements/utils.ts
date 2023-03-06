@@ -213,6 +213,11 @@ export class BasePage {
     cy.wait(1000);
   }
 
+  public prepareForVisualTest(): void {
+    cy.get('html, body').invoke('attr', 'style', 'height: auto; scroll-behavior: auto;');
+    // ?TODO: hide sticky table header; legend
+  }
+
   public navigateToSidenavPage(sidenavPageLink: string): void {
     this.sidenavTogglerButton.scrollIntoView();
     this.toggleSidenav();

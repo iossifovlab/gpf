@@ -10,10 +10,7 @@ cd ${E2E}
 rm -rf node_modules package-lock.json
 npm install --legacy-peer-deps
 
-
 ${WD}/scripts/wait-for-it.sh ${CONTAINER_GPF_DEV}:9001 --timeout=360
 ${WD}/scripts/wait-for-it.sh ${CONTAINER_GPF_DEV}:80 --timeout=360
 
-
-# ng e2e --baseUrl http://${CONTAINER_GPF_DEV}/gpf/
-./node_modules/.bin/cypress run --browser chrome --config baseUrl=http://${CONTAINER_GPF_DEV}/gpf/
+npm run test -- --config baseUrl=http://${CONTAINER_GPF_DEV}/gpf/

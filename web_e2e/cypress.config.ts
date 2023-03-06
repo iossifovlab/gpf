@@ -1,4 +1,5 @@
 import { defineConfig } from 'cypress';
+import { initPlugin } from '@frsource/cypress-plugin-visual-regression-diff/plugins';
 
 export default defineConfig({
   viewportWidth: 1920,
@@ -19,9 +20,13 @@ export default defineConfig({
     runMode: 2,
     openMode: 0,
   },
+  env: {
+    pluginVisualRegressionImagesPath: 'cypress/e2e/visual-tests/reference-images'
+  },
   e2e: {
     setupNodeEvents(on, config) {
+      initPlugin(on, config);
       return require('./cypress/plugins/index.js')(on, config)
     },
-  },
+  }
 });

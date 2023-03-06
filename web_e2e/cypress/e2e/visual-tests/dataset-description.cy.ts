@@ -1,6 +1,6 @@
 
 
-describe('Dataset description visual tests', () => {
+describe.skip('Dataset description visual tests', () => {
   it('should', () => {
     // ...
   });

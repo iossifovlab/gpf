@@ -340,19 +340,6 @@ describe('Variant reports tests', () => {
       });
     });
   });
-
-  [
-    {option: 'Affected Status', screenshotName: 'families-by-pedigree-affected-status'},
-    {option: 'Role', screenshotName: 'families-by-pedigree-role'},
-    {option: 'Phenotype', screenshotName: 'families-by-pedigree-phenotype'}
-  ].forEach(data => {
-    it.skip(`should compare pedigree charts for ${data.option}`, () => {
-      page.familiesByPedigreeTab.click();
-      page.familiesByPedigreeSelect.select(data.option);
-      cy.wait(1000);
-      page.familiesByPedigreeTable.matchImageSnapshot(data.screenshotName);
-    });
-  });
 });
 
 describe('Variant reports Iossifov count tests', () => {

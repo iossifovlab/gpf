@@ -1,6 +1,6 @@
 
 
-describe('Histograms visual tests', () => {
+describe.skip('Histograms visual tests', () => {
   it('should properly display gene scores histograms', () => {
     // ...
   });

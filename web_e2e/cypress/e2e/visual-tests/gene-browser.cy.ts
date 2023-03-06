@@ -11,27 +11,22 @@ describe('Gene browser visual tests', () => {
     geneBrowserPage.navigateToHome(false);
     geneBrowserPage.loginAdmin();
     geneBrowserPage.navigateToDatasetPage(datasetIds.iossifov2014, toolPageLinks.geneBrowser);
+    geneBrowserPage.prepareForVisualTest();
   });
 
   it('should condense introns', () => {
     geneBrowserPage.searchInputBox.type('chd8');
     geneBrowserPage.pressGoButton();
     genePlotPage.condenseIntronsCheckbox.click();
-    cy.get('g#plot').scrollTo('center', {ensureScrollable: false}).then(() => {
-      cy.get('g#plot').matchImageSnapshot('not-condensed-introns');
-    });
+    genePlotPage.window.matchImage();
 
     genePlotPage.condenseIntronsCheckbox.click();
-    cy.get('g#plot').scrollTo('center', {ensureScrollable: false}).then(() => {
-      cy.get('g#plot').matchImageSnapshot('condensed-introns');
-    });
+    genePlotPage.window.matchImage();
   });
 
   it('should compare visually TTN gene plot results', () => {
     geneBrowserPage.searchInputBox.type('ttn');
     geneBrowserPage.pressGoButton();
-    cy.get('gpf-genotype-preview-table').scrollTo('center', {ensureScrollable: false}).then(() => {
-      cy.matchImageSnapshot('ttn-gene-plot-snapshot');
-    });
+    genePlotPage.window.matchImage();
   });
 });

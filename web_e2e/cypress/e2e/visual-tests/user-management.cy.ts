@@ -1,6 +1,6 @@
 
 
-describe('User management visual tests', () => {
+describe.skip('User management visual tests', () => {
   it('should', () => {
     // ...
   });

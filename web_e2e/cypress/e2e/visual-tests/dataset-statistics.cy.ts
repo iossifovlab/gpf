@@ -14,48 +14,43 @@ describe('Dataset statistics visual tests', () => {
     variantReportsPage.preserveLogin();
     variantReportsPage.navigateToHome();
     variantReportsPage.navigateToDatasetPage(datasetIds.iossifov2014, toolPageLinks.datasetStatistics);
+    variantReportsPage.prepareForVisualTest();
   });
 
   it('should compare family by number table data', () => {
     variantReportsPage.familiesByNumberTab.click();
-    variantReportsPage.familiesByNumber.matchImageSnapshot('iossifov-family-table-status');
+    cy.matchImage();
 
     variantReportsPage.familiesByNumberSelect.select('Role');
-    variantReportsPage.familiesByNumber.matchImageSnapshot('iossifov-family-table-role');
+    cy.matchImage();
 
     variantReportsPage.familiesByNumberSelect.select('Phenotype');
-    variantReportsPage.familiesByNumber.matchImageSnapshot('iossifov-family-table-phenotype');
+    cy.matchImage();
   });
 
 
   it('should compare families by pedigree table data', () => {
     variantReportsPage.familiesByPedigreeTab.click();
-
     variantReportsPage.pedigreeCells.should('have.length', 8);
-    variantReportsPage.familiesByPedigreeTable.matchImageSnapshot('iossifov-pedigree-table-status');
+    cy.matchImage();
 
     variantReportsPage.familiesByPedigreeSelect.select('Role');
     variantReportsPage.pedigreeCells.should('have.length', 8);
-    variantReportsPage.familiesByPedigreeTable.matchImageSnapshot('iossifov-pedigree-table-role');
+    cy.matchImage();
 
     variantReportsPage.familiesByPedigreeSelect.select('Phenotype');
     variantReportsPage.pedigreeCells.should('have.length', 8);
-    variantReportsPage.familiesByPedigreeTable.matchImageSnapshot('iossifov-pedigree-table-phenotype');
+    cy.matchImage();
   });
 
-  it.only('should compare de novo variants table data', { scrollBehavior: false }, () => {
+  it('should compare de novo variants table data', () => {
     variantReportsPage.deNovoVariantsTab.click();
+    cy.matchImage();
 
-    // cy.document().matchImageSnapshot('iossifov-denovo-table-status', { capture: 'fullPage'});
-    // variantReportsPage.denovoVariants.matchImageSnapshot('iossifov-denovo-table-status');
-
-    // variantReportsPage.denovoVariantsSelect.select('Role');
-    // cy.document().matchImageSnapshot('iossifov-denovo-table-role', { capture: 'fullPage'});
-
+    variantReportsPage.denovoVariantsSelect.select('Role');
+    cy.matchImage();
 
     variantReportsPage.denovoVariantsSelect.select('Phenotype');
-    cy.document().matchImageSnapshot('iossifov-denovo-table-phenotype', { capture: 'fullPage'});
-
-    // variantReportsPage.denovoVariants.matchImageSnapshot('iossifov-denovo-table-phenotype', { capture: 'fullPage'});
+    cy.matchImage();
   });
 });

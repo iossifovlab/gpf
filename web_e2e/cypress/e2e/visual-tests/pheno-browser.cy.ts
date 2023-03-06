@@ -1,6 +1,6 @@
 
 
-describe('Pheno browser visual tests', () => {
+describe.skip('Pheno browser visual tests', () => {
   it('should', () => {
     // ...
   });

@@ -1,6 +1,6 @@
 
 
-describe('Enrichment tool visual tests', () => {
+describe.skip('Enrichment tool visual tests', () => {
   it('should', () => {
     // ...
   });

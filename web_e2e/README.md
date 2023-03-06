@@ -62,7 +62,7 @@ npm install .
 To run the tests in the terminal:
 
 ```
-./node_modules/.bin/cypress run --config baseUrl=http://<instance ip>/gpf/
+npm run test -- --config baseUrl=http://<instance ip>/gpf/
 ```
 
 To run the tests using the cypress UI:
