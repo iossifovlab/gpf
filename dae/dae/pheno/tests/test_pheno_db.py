@@ -87,6 +87,12 @@ def test_get_values_streaming_csv(fake_phenotype_data, query_cols):
     str_check(result, 39, query_cols)
 
 
+def test_get_values_streaming_csv_correct_values(fake_phenotype_data):
+    result_list = list(fake_phenotype_data.get_values_streaming_csv(
+        ["i1.m1", "i1.m2"], roles=["prb"]))
+    assert result_list[-1] == "f1.p1,34.76285793898369,48.44644402952317\r\n"
+
+
 @pytest.mark.parametrize(
     "get,check",
     [
