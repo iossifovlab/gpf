@@ -29,6 +29,10 @@ from dae.genomic_resources.repository import \
     ManifestEntry, \
     parse_resource_id_version, \
     version_tuple_to_string
+from dae.genomic_resources.group_repository import \
+    GenomicResourceGroupRepo
+from dae.genomic_resources.cached_repository import \
+    GenomicResourceCachedRepo
 
 from dae.utils.verbosity_configuration import VerbosityConfiguration
 
@@ -120,12 +124,25 @@ def _configure_list_subparser(subparsers):
 
 def _run_list_command(
         proto: Union[ReadOnlyRepositoryProtocol, GenomicResourceRepo], _args):
-    for res in proto.get_all_resources():
-        res_size = sum(fs for _, fs in res.get_manifest().get_files())
-        print(
-            f"{res.get_type():20} {res.get_version_str():7s} "
-            f"{len(list(res.get_manifest().get_files())):2d} {res_size:12d} "
-            f"{res.get_id()}", file=sys.stderr)
+    protocols = []
+    if type(proto) is GenomicResourceGroupRepo:
+        protocols.extend(proto.children)
+    else:
+        protocols.append(proto)
+
+    for proto in protocols:
+        for res in proto.get_all_resources():
+            res_size = sum(fs for _, fs in res.get_manifest().get_files())
+
+            files = f"{len(list(res.get_manifest().get_files())):2d}"
+            if type(proto) is GenomicResourceCachedRepo:
+                files = f"{len(proto.get_resource_cached_files(res.get_id())):2d}/{files}"
+
+            print(
+                f"{res.get_type():20} {res.get_version_str():7s} "
+                f"{files} {res_size:12d} "
+                f"{proto.repo_id} ",
+                f"{res.get_id()}", file=sys.stderr)
 
 
 def _configure_repo_init_subparser(subparsers):
