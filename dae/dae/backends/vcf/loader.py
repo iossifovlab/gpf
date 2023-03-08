@@ -290,10 +290,12 @@ class SingleVcfLoader(VariantsGenotypesLoader):
         filename = self.filenames[0]
         tabix_index_filename = f"{filename}.tbi"
         if not fs_utils.exists(tabix_index_filename):
-            return seqnames
+            tabix_index_filename = f"{filename}.csi"
+            if not fs_utils.exists(tabix_index_filename):
+                return seqnames
 
         try:
-            with pysam.Tabixfile(filename) as tbx:
+            with pysam.Tabixfile(filename, index=tabix_index_filename) as tbx:
                 return list(tbx.contigs)
         except Exception:
             return seqnames
