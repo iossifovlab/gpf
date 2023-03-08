@@ -51,7 +51,7 @@ def repo_def(tmp_path_factory, repo_fixture):
 def test_cli_browse_with_grr_argument(repo_fixture, repo_def, capsys):
 
     cli_browse(["--grr", str(repo_def)])
-    out, err = capsys.readouterr()
+    err, out = capsys.readouterr()
 
     assert out == ""
     assert err == \
@@ -65,7 +65,7 @@ def test_cli_browse_with_env_variable(repo_fixture, repo_def, capsys, mocker):
         os.environ, {"GRR_DEFINITION_FILE": str(repo_def)})
 
     cli_browse([])
-    out, err = capsys.readouterr()
+    err, out = capsys.readouterr()
 
     assert out == ""
     assert err == \
@@ -79,7 +79,7 @@ def test_cli_browse_default_defintion(repo_fixture, repo_def, capsys, mocker):
     os.environ.pop("GRR_DEFINITION_FILE", None)
 
     cli_browse([])
-    out, err = capsys.readouterr()
+    err, out = capsys.readouterr()
 
     assert out == ""
     assert err == \

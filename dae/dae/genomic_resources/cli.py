@@ -125,10 +125,15 @@ def _configure_list_subparser(subparsers):
 def _run_list_command(
         proto: Union[ReadOnlyRepositoryProtocol, GenomicResourceRepo], _args):
     protocols = []
-    if type(proto) is GenomicResourceGroupRepo:
-        protocols.extend(proto.children)
-    else:
-        protocols.append(proto)
+
+    def is_group_repo(repo):
+        if type(repo) is GenomicResourceGroupRepo:
+            for child in repo.children:
+                is_group_repo(child)
+        else:
+            protocols.append(repo)
+
+    is_group_repo(proto)
 
     for proto in protocols:
         for res in proto.get_all_resources():
@@ -142,7 +147,7 @@ def _run_list_command(
                 f"{res.get_type():20} {res.get_version_str():7s} "
                 f"{files} {res_size:12d} "
                 f"{proto.repo_id} ",
-                f"{res.get_id()}", file=sys.stderr)
+                f"{res.get_id()}")
 
 
 def _configure_repo_init_subparser(subparsers):
