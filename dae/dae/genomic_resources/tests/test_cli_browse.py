@@ -55,8 +55,8 @@ def test_cli_browse_with_grr_argument(repo_fixture, repo_def, capsys):
 
     assert out == ""
     assert err == \
-        "Basic                0        2            7 one\n" \
-        "gene_models          1.0      2           50 sub/two\n"
+        "Basic                0        2            7 test_grr  one\n" \
+        "gene_models          1.0      2           50 test_grr  sub/two\n"
 
 
 def test_cli_browse_with_env_variable(repo_fixture, repo_def, capsys, mocker):
@@ -69,8 +69,8 @@ def test_cli_browse_with_env_variable(repo_fixture, repo_def, capsys, mocker):
 
     assert out == ""
     assert err == \
-        "Basic                0        2            7 one\n" \
-        "gene_models          1.0      2           50 sub/two\n"
+        "Basic                0        2            7 test_grr  one\n" \
+        "gene_models          1.0      2           50 test_grr  sub/two\n"
 
 
 def test_cli_browse_default_defintion(repo_fixture, repo_def, capsys, mocker):
@@ -83,5 +83,5 @@ def test_cli_browse_default_defintion(repo_fixture, repo_def, capsys, mocker):
 
     assert out == ""
     assert err == \
-        "Basic                0        2            7 one\n" \
-        "gene_models          1.0      2           50 sub/two\n"
+        "Basic                0        2            7 test_grr  one\n" \
+        "gene_models          1.0      2           50 test_grr  sub/two\n"

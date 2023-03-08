@@ -359,3 +359,45 @@ def test_cached_repository_resource_selective_file_caching(
             os.path.join(base_url, "one", "data.txt"))
         assert not filesystem.exists(
             os.path.join(base_url, "one", "alabala.txt"))
+
+
+@pytest.mark.parametrize("scheme", [
+    "file",
+    "s3",
+])
+def test_get_resource_cached_files(cache_repository, scheme):
+    with cache_repository(content={
+            "one": {
+                GR_CONF_FILE_NAME: "",
+                "data1.txt": "alabala",
+                "data2.txt": "alabala",
+                "data3.txt": "alabala"
+            }}, scheme=scheme) as cache_repo:
+        cache_gr = cache_repo.get_resource("one")
+
+        cache_proto = cache_gr.proto
+
+        filesystem = cache_proto.local_protocol.filesystem
+        base_url = cache_proto.local_protocol.url
+
+        assert not filesystem.exists(
+            os.path.join(base_url, "one", "data1.txt"))
+        assert cache_repo.get_resource_cached_files("one") == set()
+
+        with cache_gr.open_raw_file("data1.txt") as infile:
+            content = infile.read()
+            assert content == "alabala"
+
+        assert filesystem.exists(
+            os.path.join(base_url, "one", "data1.txt"))
+        assert cache_repo.get_resource_cached_files("one") == {"data1.txt"}
+
+        with cache_gr.open_raw_file("data2.txt") as infile:
+            content = infile.read()
+            assert content == "alabala"
+
+        assert filesystem.exists(
+            os.path.join(base_url, "one", "data2.txt"))
+        assert cache_repo.get_resource_cached_files("one") == {
+            "data1.txt", "data2.txt"
+        }
