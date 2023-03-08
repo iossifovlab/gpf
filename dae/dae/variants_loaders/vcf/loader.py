@@ -265,17 +265,32 @@ class SingleVcfLoader(VariantsGenotypesLoader):
         for vcf in self.vcfs:
             vcf.close()
 
+    @staticmethod
+    def _get_vcf_index_filename(vcf_filename):
+        tbi_index_filename = f"{vcf_filename}.tbi"
+        if fs_utils.exists(tbi_index_filename):
+            return tbi_index_filename
+
+        csi_index_filename = f"{vcf_filename}.csi"
+        if fs_utils.exists(csi_index_filename):
+            return csi_index_filename
+
+        return None
+
     def _init_vcf_readers(self):
         self.vcfs = []
         logger.debug("SingleVcfLoader input files: %s", self.filenames)
 
         for file in self.filenames:
             # pylint: disable=no-member
+            index_filename = self._get_vcf_index_filename(file)
+            if index_filename is not None:
+                index_filename = fs_utils.sign(index_filename
+                                               )
             self.vcfs.append(
                 pysam.VariantFile(
                     fs_utils.sign(file),
-                    index_filename=fs_utils.sign(file + ".tbi")
-                )
+                    index_filename=index_filename)
             )
 
     def _build_vcf_iterators(self, region):
@@ -316,9 +331,12 @@ class SingleVcfLoader(VariantsGenotypesLoader):
 
         try:
             # pylint: disable=no-member
+            index_filename = self._get_vcf_index_filename(filename)
+            if index_filename is not None:
+                index_filename = fs_utils.sign(index_filename)
             with pysam.Tabixfile(
                 fs_utils.sign(filename),
-                index=fs_utils.sign(tabix_index_filename)
+                index=index_filename
             ) as tbx:
                 res = list(tbx.contigs)
         except Exception:  # pylint: disable=broad-except

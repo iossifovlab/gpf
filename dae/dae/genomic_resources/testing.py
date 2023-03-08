@@ -112,7 +112,7 @@ def setup_gzip(gzip_path: pathlib.Path, gzip_content: str):
     return out_path
 
 
-def setup_vcf(out_path: pathlib.Path, content: str):
+def setup_vcf(out_path: pathlib.Path, content: str, csi=False):
     """Set up a VCF file using the content."""
     vcf_data = convert_to_tab_separated(content)
     vcf_path = out_path
@@ -129,7 +129,7 @@ def setup_vcf(out_path: pathlib.Path, content: str):
     if out_path.suffix == ".gz":
         vcf_gz_filename = str(vcf_path.parent / f"{vcf_path.name}.gz")
         pysam.tabix_compress(str(vcf_path), vcf_gz_filename)
-        pysam.tabix_index(vcf_gz_filename, preset="vcf")
+        pysam.tabix_index(vcf_gz_filename, preset="vcf", csi=csi)
 
     with pysam.VariantFile(str(out_path)) as variant_file:
         header = variant_file.header
