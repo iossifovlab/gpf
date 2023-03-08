@@ -91,3 +91,4 @@ temp
 *.egg-info
 /data/
 dae/test.txt.gz.tbi
+tmpvcf
