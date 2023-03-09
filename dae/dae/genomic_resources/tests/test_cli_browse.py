@@ -51,10 +51,10 @@ def repo_def(tmp_path_factory, repo_fixture):
 def test_cli_browse_with_grr_argument(repo_fixture, repo_def, capsys):
 
     cli_browse(["--grr", str(repo_def)])
-    err, out = capsys.readouterr()
+    out, err = capsys.readouterr()
 
-    assert out == ""
-    assert err == \
+    assert err == ""
+    assert out == \
         "Basic                0        2            7 test_grr  one\n" \
         "gene_models          1.0      2           50 test_grr  sub/two\n"
 
@@ -65,10 +65,10 @@ def test_cli_browse_with_env_variable(repo_fixture, repo_def, capsys, mocker):
         os.environ, {"GRR_DEFINITION_FILE": str(repo_def)})
 
     cli_browse([])
-    err, out = capsys.readouterr()
+    out, err = capsys.readouterr()
 
-    assert out == ""
-    assert err == \
+    assert err == ""
+    assert out == \
         "Basic                0        2            7 test_grr  one\n" \
         "gene_models          1.0      2           50 test_grr  sub/two\n"
 
@@ -79,9 +79,9 @@ def test_cli_browse_default_defintion(repo_fixture, repo_def, capsys, mocker):
     os.environ.pop("GRR_DEFINITION_FILE", None)
 
     cli_browse([])
-    err, out = capsys.readouterr()
+    out, err = capsys.readouterr()
 
-    assert out == ""
-    assert err == \
+    assert err == ""
+    assert out == \
         "Basic                0        2            7 test_grr  one\n" \
         "gene_models          1.0      2           50 test_grr  sub/two\n"
