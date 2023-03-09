@@ -31,13 +31,35 @@
   min-height: 6rem;
   border: 1px solid #ddd;
   text-align: center;
+  padding: 5px;
   display: flex;
   flex-direction: column;
   justify-content: center;
 }
 
-.delete-button {
-  border: none;
-  background: none;
-  color: blue;
+span {
+  line-height: 30px;
+  padding: 0 10px;
+}
+
+.list-cell {
+  justify-content: space-between;
+}
+
+.item {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: left;
+  padding: 0 10px;
+  line-height: 30px;
+}
+
+.item-wrapper {
+  display: flex;
+  justify-content: space-between;
+}
+
+gpf-item-add-menu {
+  border-top: 1px solid rgba(128, 128, 128, 10.3%);
 }

@@ -8,7 +8,10 @@
       <div class="grid-header">Actions</div>
       <ng-container *ngFor="let user of users">
         <div class="grid-cell">
-          <a [routerLink]="['/management/users', user.id]">{{ user.name + ' ' + user.email }}</a>
+          <a [routerLink]="['/management/users', user.id]">
+            <div>{{ user.name }}</div>
+            <div>{{ user.email }}</div>
+          </a>
         </div>
 
         <div class="grid-cell">
@@ -17,6 +20,10 @@
           </span>
         </div>
 
+        <div class="grid-cell list-cell">
+          <div>
+            <div class="item-wrapper" *ngFor="let group of user.groups">
+              <span class="item" [title]="group">{{ group }}</span>
               <gpf-confirm-button
                 (clicked)="removeGroup(user, group)"
                 [hide]="isDefaultGroup(user, group) || (user.email === currentUserEmail && group === 'admin')"
@@ -25,14 +32,17 @@
                 message="Remove group?"
                 [iconStyle]="['fa', 'fa-thin', 'fa-times']">
               </gpf-confirm-button>
+            </div>
           </div>
           <gpf-item-add-menu
             [getItems]="getGroupNamesFunction(user)"
             (addedItem)="addGroup(user, $event)"></gpf-item-add-menu>
         </div>
 
-        <div class="grid-cell">
-          <div *ngFor="let dataset of user.allowedDatasets">{{ dataset.datasetName }}</div>
+        <div class="grid-cell list-cell">
+          <div>
+            <div class="item" [title]="dataset.datasetName" *ngFor="let dataset of user.allowedDatasets">{{ dataset.datasetName }}</div>
+          </div>
         </div>
 
         <div class="grid-cell">

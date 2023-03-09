@@ -6,9 +6,13 @@
       <div class="grid-header">Users</div>
       <ng-container *ngFor="let dataset of datasets">
         <div class="grid-cell">
-          <a [routerLink]="['/management/users', dataset.id]">{{ dataset.name }}</a>
+          <span>{{ dataset.name }}</span>
         </div>
 
+        <div class="grid-cell list-cell">
+          <div>
+            <div class="item-wrapper" *ngFor="let group of dataset.groups">
+              <span class="item" [title]="group">{{ group }}</span>
               <gpf-confirm-button
                 (clicked)="removeGroup(dataset, group)"
                 [hide]="isDefaultGroup(dataset, group)"
@@ -17,6 +21,7 @@
                 message="Remove group?"
                 [iconStyle]="['fa', 'fa-thin', 'fa-times']">
               </gpf-confirm-button>
+            </div>
           </div>
           <gpf-item-add-menu
             [getItems]="getGroupNamesFunction(dataset)"
@@ -24,14 +29,16 @@
           <input
             #newGroupName
             placeholder="Create group"
-            class="create-group form-control my-0 py-1"
+            class="create-group form-control"
             type="text"
             spellcheck="false"
             (keydown.enter)="addGroup(dataset, { id: '', name: newGroupName.value }); newGroupName.value = ''" />
         </div>
 
-        <div class="grid-cell">
-          <div *ngFor="let user of dataset.users">{{ user.name + ' ' + user.email }}</div>
+        <div class="grid-cell list-cell">
+          <div>
+            <div class="item" [title]="user.name + ' ' + user.email" *ngFor="let user of dataset.users">{{ user.name + ' ' + user.email }}</div>
+          </div>
         </div>
       </ng-container>
     </div>

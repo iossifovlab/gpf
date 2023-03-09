@@ -40,7 +40,7 @@ export class ItemAddMenuComponent {
   }
 
   private updateItemsList(): void {
-    if (!this.loadingPage) {
+    if (this.showMenu && !this.loadingPage) {
       this.pageCounter++;
       this.loadingPage = true;
       this.getItems(this.pageCounter, this.searchText).subscribe((res: Item[]) => {
@@ -68,5 +68,10 @@ export class ItemAddMenuComponent {
       this.showMenu = false;
     }
     this.isInside = false;
+  }
+
+  @HostListener('document:keydown.escape')
+  public onEscapeButtonPress(): void {
+    this.showMenu = false;
   }
 }

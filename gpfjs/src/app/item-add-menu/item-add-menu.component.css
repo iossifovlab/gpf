@@ -1,11 +1,19 @@
 .add-button {
   border: none;
   background: none;
-  color: blue;
+  font-weight: 500;
+  color: #2a6395;
+}
+
+.add-button:hover {
+  border: none;
+  background-color: transparent;
+  color: #68abe6;
 }
 
 .menu {
-  z-index:99999;
+  min-width: 350px;
+  z-index: 99999;
   padding: 10px;
   display: grid;
   position: absolute;

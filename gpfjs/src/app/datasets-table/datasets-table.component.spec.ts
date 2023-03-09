@@ -7,7 +7,6 @@ import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { NgxsModule } from '@ngxs/store';
 import { Observable, lastValueFrom, of } from 'rxjs';
 import { DatasetPermissions } from './datasets-table';
-import { User } from 'app/users/users';
 import * as lodash from 'lodash';
 import { UserGroup } from 'app/users-groups/users-groups';
 import { Item } from 'app/item-add-menu/item-add-menu';

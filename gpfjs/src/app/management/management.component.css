@@ -1,5 +1,7 @@
-.container {
-  overflow: auto;
+.management-container {
+  margin: auto;
+  padding: 0 15px 30px 15px;
+  width: 60%;
   min-width: 1000px;
   min-height: 1000px;
 }

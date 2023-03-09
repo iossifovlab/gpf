@@ -4,7 +4,7 @@ import { DatasetsService } from 'app/datasets/datasets.service';
 import { UserGroup } from 'app/users-groups/users-groups';
 import { UsersGroupsService } from 'app/users-groups/users-groups.service';
 import { environment } from 'environments/environment';
-import { Observable } from 'rxjs';
+import { Observable, Subscription } from 'rxjs';
 import { take } from 'rxjs/operators';
 import { User } from '../users/users';
 import { UsersService } from '../users/users.service';
@@ -25,6 +25,7 @@ export class UserManagementComponent implements OnInit {
   public currentUserEmail: string;
   public imgPathPrefix = environment.imgPathPrefix;
 
+  private getPageSubscription: Subscription = new Subscription();
   private pageCount = 0;
   private tableName: TableName = 'USERS';
   private loadingPage = true;
@@ -132,8 +133,11 @@ export class UserManagementComponent implements OnInit {
     }
   }
 
-  private updateTable<TableData>(getPage: (page: number, searchString: string) => Observable<TableData[]>): void {
-    getPage(this.pageCount, this.searchText).subscribe(res => {
+  private updateTable(
+    getPage: (page: number, searchString: string) => Observable<User[] | UserGroup[] | DatasetPermissions[]>
+  ): void {
+    this.getPageSubscription?.unsubscribe();
+    this.getPageSubscription = getPage(this.pageCount, this.searchText).subscribe(res => {
       if (!res.length) {
         this.allPagesLoaded = true;
         return;
@@ -150,6 +154,7 @@ export class UserManagementComponent implements OnInit {
       });
 
       this.loadingPage = false;
+      this.getPageSubscription.unsubscribe();
     });
   }
 }

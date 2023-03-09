@@ -36,6 +36,10 @@ export class DatasetsTableComponent {
   }
 
   public addGroup(dataset: DatasetPermissions, groupEvent: Item): void {
+    if (!groupEvent.name) {
+      return;
+    }
+
     this.usersGroupsService.grantPermissionToDataset(groupEvent.name, dataset.id).pipe(
       mergeMap(() => this.datasetsService.getManagementDataset(dataset.id))
     ).subscribe(updatedDataset => {

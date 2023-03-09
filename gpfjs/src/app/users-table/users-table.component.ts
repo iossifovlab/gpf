@@ -1,4 +1,4 @@
-import { Component, OnInit, Input } from '@angular/core';
+import { Component, Input } from '@angular/core';
 import { User } from '../users/users';
 import { UsersService } from '../users/users.service';
 import { map, mergeMap, take } from 'rxjs/operators';
@@ -23,6 +23,16 @@ export class UsersTableComponent {
 
   public isDefaultGroup(user: User, group: string): boolean {
     return user.getDefaultGroups().indexOf(group) !== -1;
+  }
+
+  public deleteUser(user: User): void {
+    this.usersService.deleteUser(user).pipe(take(1)).subscribe(() => {
+      this.users.splice(this.users.indexOf(user), 1);
+    });
+  }
+
+  public resetPassword(user: User): void {
+    this.usersService.resetUserPassword(user).pipe(take(1)).subscribe();
   }
 
   public removeGroup(user: User, group: string): void {

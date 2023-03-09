@@ -1,6 +1,6 @@
-<button class="add-button" (click)="showMenu = !showMenu; search('')">Add</button>
+<button class="add-button" title="Add more to the list" (click)="showMenu = !showMenu; search('')">Add</button>
 
-<div class="menu" *ngIf="showMenu">
+<div class="menu" id="menu" *ngIf="showMenu && items">
   <div class="search">
     <div class="search-input-wrapper">
       <input

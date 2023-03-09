@@ -10,6 +10,10 @@
           <span>{{ group.name }}</span>
         </div>
 
+        <div class="grid-cell list-cell">
+          <div>
+            <div class="item-wrapper" *ngFor="let user of group.users">
+              <span class="item" [title]="user">{{ user }}</span>
               <gpf-confirm-button
                 (clicked)="removeUser(group, user)"
                 confirmText="Remove"
@@ -17,6 +21,7 @@
                 message="Remove user?"
                 [iconStyle]="['fa', 'fa-thin', 'fa-times']">
               </gpf-confirm-button>
+            </div>
           </div>
           <gpf-item-add-menu
             [id]="group.name"
@@ -24,14 +29,18 @@
             (addedItem)="addUser(group, $event)"></gpf-item-add-menu>
         </div>
 
-        <div class="grid-cell">
-          <div *ngFor="let dataset of group.datasets">
-            <span>{{ dataset.datasetName }}</span>
-            <gpf-small-remove-button
-              (clicked)="removeDataset(group, dataset.datasetId)"
-              confirmText="Remove dataset"
-              title="Remove dataset">
-            </gpf-small-remove-button>
+        <div class="grid-cell list-cell">
+          <div>
+            <div class="item-wrapper" *ngFor="let dataset of group.datasets">
+              <span class="item" [title]="dataset.datasetName">{{ dataset.datasetName }}</span>
+              <gpf-confirm-button
+                (clicked)="removeDataset(group, dataset.datasetId)"
+                confirmText="Remove"
+                title="Remove dataset"
+                message="Remove dataset?"
+                [iconStyle]="['fa', 'fa-thin', 'fa-times']">
+              </gpf-confirm-button>
+            </div>
           </div>
           <gpf-item-add-menu
             [id]="group.name"
@@ -40,8 +49,13 @@
         </div>
 
         <div class="grid-cell">
-          <gpf-small-remove-button (clicked)="deleteGroup(group)" confirmText="Delete group" title="Delete group">
-          </gpf-small-remove-button>
+          <gpf-confirm-button
+            (clicked)="deleteGroup(group)"
+            confirmText="Delete"
+            title="Delete group"
+            message="Delete group?"
+            [iconStyle]="['fa', 'fa-times', 'fa-lg']">
+          </gpf-confirm-button>
         </div>
       </ng-container>
     </div>
