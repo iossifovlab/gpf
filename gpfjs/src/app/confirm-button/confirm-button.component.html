@@ -1,9 +1,9 @@
 <ng-template #confirmation let-options="options">
   <div [ngClass]="['popover', 'show', 'bs-popover-' + options.placement, options.popoverClass]">
-    <div style="left: calc(50% - 5px)" class="arrow"></div>
+    <div class="arrow" id="arrow-id"></div>
     <h3 class="popover-header" [innerHTML]="options.title"></h3>
     <div class="popover-body">
-      <p [innerHTML]="options.message"></p>
+      <p [innerHTML]="options.popoverMessage"></p>
       <div class="row">
         <div class="col-xs-12 col-12 text-center">
           <button
@@ -25,13 +25,12 @@
 </ng-template>
 <button
   *ngIf="!hide"
-  class="close clickable"
-  style="background: none; border: none; outline: none; opacity: 0.5; position: relative; top: 3px"
+  id="confirm-button"
   mwlConfirmationPopover
   [confirmText]="confirmText"
   [title]="title"
   [customTemplate]="confirmation"
   [popoverMessage]="message"
   (confirm)="onClick($event)">
-  <div style="font-size: 1.3rem">&times;</div>
+  <i [ngClass]="iconStyle" aria-hidden="true"></i>
 </button>

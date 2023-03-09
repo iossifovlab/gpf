@@ -3,7 +3,6 @@ import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { NgbNavModule } from '@ng-bootstrap/ng-bootstrap';
 import { UsersGroupsService } from 'app/users-groups/users-groups.service';
 import { UsersTableComponent } from 'app/users-table/users-table.component';
-import { ItemAddMenuComponent } from 'app/item-add-menu/item-add-menu.component';
 import { UsersService } from 'app/users/users.service';
 
 import { UserManagementComponent } from './user-management.component';
@@ -12,13 +11,9 @@ import { User } from 'app/users/users';
 import { Observable, of } from 'rxjs';
 import { UserGroup } from 'app/users-groups/users-groups';
 import { DatasetPermissions } from 'app/datasets-table/datasets-table';
-import { By } from '@angular/platform-browser';
 import { FormsModule } from '@angular/forms';
-import { RouterModule } from '@angular/router';
 import { RouterTestingModule } from '@angular/router/testing';
-import { UsersActionsComponent } from 'app/users-actions/users-actions.component';
-import { SmallRemoveButtonComponent } from 'app/small-remove-button/small-remove-button.component';
-import { CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA } from '@angular/core';
+import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 
 
 class UsersGroupsServiceMock {

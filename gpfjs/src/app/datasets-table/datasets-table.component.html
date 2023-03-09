@@ -9,15 +9,14 @@
           <a [routerLink]="['/management/users', dataset.id]">{{ dataset.name }}</a>
         </div>
 
-        <div class="grid-cell">
-          <div *ngFor="let group of dataset.groups">
-            <span>{{ group }}</span>
-            <gpf-small-remove-button
-              (clicked)="removeGroup(dataset, group)"
-              [hide]="isDefaultGroup(dataset, group)"
-              confirmText="Remove group"
-              title="Remove group">
-            </gpf-small-remove-button>
+              <gpf-confirm-button
+                (clicked)="removeGroup(dataset, group)"
+                [hide]="isDefaultGroup(dataset, group)"
+                confirmText="Remove"
+                title="Remove group"
+                message="Remove group?"
+                [iconStyle]="['fa', 'fa-thin', 'fa-times']">
+              </gpf-confirm-button>
           </div>
           <gpf-item-add-menu
             [getItems]="getGroupNamesFunction(dataset)"

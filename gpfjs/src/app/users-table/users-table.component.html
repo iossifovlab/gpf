@@ -17,15 +17,14 @@
           </span>
         </div>
 
-        <div class="grid-cell">
-          <div *ngFor="let group of user.groups">
-            <span>{{ group }}</span>
-            <gpf-small-remove-button
-              (clicked)="removeGroup(user, group)"
-              [hide]="isDefaultGroup(user, group) || (user.email === currentUserEmail && group === 'admin')"
-              confirmText="Remove group"
-              title="Remove group">
-            </gpf-small-remove-button>
+              <gpf-confirm-button
+                (clicked)="removeGroup(user, group)"
+                [hide]="isDefaultGroup(user, group) || (user.email === currentUserEmail && group === 'admin')"
+                confirmText="Remove"
+                title="Remove group"
+                message="Remove group?"
+                [iconStyle]="['fa', 'fa-thin', 'fa-times']">
+              </gpf-confirm-button>
           </div>
           <gpf-item-add-menu
             [getItems]="getGroupNamesFunction(user)"
@@ -38,7 +37,26 @@
 
         <div class="grid-cell">
           <span class="action-buttons">
-            <gpf-users-actions [user]="user"></gpf-users-actions>
+            <gpf-confirm-button
+              (clicked)="resetPassword(user)"
+              confirmText="Reset"
+              title="Reset password"
+              [message]="
+                user.name +
+                ' ' +
+                user.email +
+                ' password will be reset. An email with reset instructions will be sent and they won&lsquo;t be able to log in until they set a new password.'
+              "
+              [iconStyle]="['fa', 'fa-lg', 'fa-refresh']">
+            </gpf-confirm-button>
+            <gpf-confirm-button
+              *ngIf="currentUserEmail !== user.email"
+              (clicked)="deleteUser(user)"
+              confirmText="Delete"
+              title="Delete user"
+              [message]="user.name + ' ' + user.email + ' will be deleted. This action is irrevertible!'"
+              [iconStyle]="['fa', 'fa-lg', 'fa-times']">
+            </gpf-confirm-button>
           </span>
         </div>
       </ng-container>

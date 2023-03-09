@@ -10,11 +10,13 @@
           <span>{{ group.name }}</span>
         </div>
 
-        <div class="grid-cell">
-          <div *ngFor="let user of group.users">
-            <span>{{ user }}</span>
-            <gpf-small-remove-button (clicked)="removeUser(group, user)" confirmText="Remove user" title="Remove user">
-            </gpf-small-remove-button>
+              <gpf-confirm-button
+                (clicked)="removeUser(group, user)"
+                confirmText="Remove"
+                title="Remove user"
+                message="Remove user?"
+                [iconStyle]="['fa', 'fa-thin', 'fa-times']">
+              </gpf-confirm-button>
           </div>
           <gpf-item-add-menu
             [id]="group.name"
