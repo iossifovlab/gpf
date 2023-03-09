@@ -265,25 +265,13 @@ class SingleVcfLoader(VariantsGenotypesLoader):
         for vcf in self.vcfs:
             vcf.close()
 
-    @staticmethod
-    def _get_vcf_index_filename(vcf_filename):
-        tbi_index_filename = f"{vcf_filename}.tbi"
-        if fs_utils.exists(tbi_index_filename):
-            return tbi_index_filename
-
-        csi_index_filename = f"{vcf_filename}.csi"
-        if fs_utils.exists(csi_index_filename):
-            return csi_index_filename
-
-        return None
-
     def _init_vcf_readers(self):
         self.vcfs = []
         logger.debug("SingleVcfLoader input files: %s", self.filenames)
 
         for file in self.filenames:
             # pylint: disable=no-member
-            index_filename = self._get_vcf_index_filename(file)
+            index_filename = fs_utils.tabix_index_filename(file)
             if index_filename is not None:
                 index_filename = fs_utils.sign(index_filename
                                                )
@@ -325,13 +313,13 @@ class SingleVcfLoader(VariantsGenotypesLoader):
 
         seqnames = list(self.vcfs[0].header.contigs)
         filename = self.filenames[0]
-        tabix_index_filename = f"{filename}.tbi"
-        if not fs_utils.exists(tabix_index_filename):
+        tabix_index_filename = fs_utils.tabix_index_filename(filename)
+        if tabix_index_filename is None:
             res = seqnames
 
         try:
             # pylint: disable=no-member
-            index_filename = self._get_vcf_index_filename(filename)
+            index_filename = fs_utils.tabix_index_filename(filename)
             if index_filename is not None:
                 index_filename = fs_utils.sign(index_filename)
             with pysam.Tabixfile(

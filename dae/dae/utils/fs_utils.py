@@ -78,6 +78,22 @@ def sign(filename: str) -> str:
         return filename
 
 
+def tabix_index_filename(tabix_filename: str) -> Optional[str]:
+    """Given a Tabix/VCF filename returns a tabix index filename if exists."""
+    if not exists(tabix_filename):
+        raise IOError(f"tabix file '{tabix_filename}' not found")
+
+    tbi_index_filename = f"{tabix_filename}.tbi"
+    if exists(tbi_index_filename):
+        return tbi_index_filename
+
+    csi_index_filename = f"{tabix_filename}.csi"
+    if exists(csi_index_filename):
+        return csi_index_filename
+
+    return None
+
+
 def _handle_env_variables(envdict=None):
     """Handle filesystem-related environment variables.
 

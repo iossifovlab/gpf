@@ -29,3 +29,23 @@ def test_join(segments, expected):
 def test_containing_path(url, expected):
     expected = expected if expected is not None else os.getcwd()
     assert fs_utils.containing_path(url) == expected
+
+
+@pytest.mark.parametrize("filename, exists_mockery, expected", [
+    ("test", {"test": True, "test.tbi": True}, "test.tbi"),
+    ("test", {"test": True, "test.csi": True}, "test.csi"),
+    ("test", {"test": True}, None),
+])
+def test_tabix_index_filename(mocker, filename, exists_mockery, expected):
+    mocker.patch(
+        "dae.utils.fs_utils.exists",
+        lambda tf: exists_mockery.get(tf, False))
+    assert fs_utils.tabix_index_filename(filename) == expected
+
+
+def test_tabix_index_filename_file_not_found(mocker):
+    mocker.patch(
+        "dae.utils.fs_utils.exists",
+        lambda tf: False)
+    with pytest.raises(IOError, match="tabix file 'test' not found"):
+        fs_utils.tabix_index_filename("test")
