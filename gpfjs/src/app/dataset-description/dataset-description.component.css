@@ -57,7 +57,7 @@
   height: 37px;
   width: 90px;
   margin-left: 10px;
-  color: black;
+  color: #2a6395;
   border-radius: 6px;
   align-self: center;
 }
@@ -66,8 +66,8 @@
   height: 310px;
 }
 
-:host::ng-deep.md-preview p {
-  padding: 6px 13px;
+:host::ng-deep.md-preview {
+  padding: 20px 13px;
   overflow-wrap: break-word;
 }
 

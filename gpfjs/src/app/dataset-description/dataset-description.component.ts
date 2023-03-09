@@ -97,8 +97,10 @@ export class DatasetDescriptionComponent implements OnInit {
     }
   }
 
-  public disablePreviewOnLoad(): void {
-    const previewButton = document.querySelector('[title="Preview"]');
-    previewButton.setAttribute('disabled', '');
+  public disablePreviewOnLoad(toDisable: boolean): void {
+    if (toDisable) {
+      const previewButton = document.querySelector('[title="Preview"]');
+      previewButton.setAttribute('disabled', '');
+    }
   }
 }
