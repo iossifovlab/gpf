@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-#
+# pylint: skip-file
 # type: ignore
 # wdae documentation build configuration file, created by
 # sphinx-quickstart on Tue Aug 21 14:50:04 2018.
@@ -25,8 +25,8 @@
 import os
 import sys
 import django
-sys.path.insert(0, os.path.abspath('..'))
-os.environ['DJANGO_SETTINGS_MODULE'] = 'wdae.settings'
+sys.path.insert(0, os.path.abspath(".."))
+os.environ["DJANGO_SETTINGS_MODULE"] = "wdae.settings"
 django.setup()
 
 # -- General configuration ------------------------------------------------

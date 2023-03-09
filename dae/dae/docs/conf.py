@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-#
+# pylint: skip-file
 # type: ignore
 # pheno documentation build configuration file, created by
 # sphinx-quickstart on Fri Nov 11 14:34:13 2016.

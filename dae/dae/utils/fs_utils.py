@@ -27,7 +27,7 @@ def find_directory_with_a_file(
     Starts from current working directory or from a directory passed.
     """
     if cwd is None:
-        curr_dir = Path().absolute()
+        curr_dir = Path(os.getcwd()).absolute()
     else:
         curr_dir = Path(cwd).absolute()
 
