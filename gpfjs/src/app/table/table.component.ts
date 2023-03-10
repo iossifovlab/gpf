@@ -1,6 +1,6 @@
 import {
   ContentChild, ViewChildren, ViewChild, HostListener, Input, Component,
-  ContentChildren, QueryList, OnChanges, AfterViewChecked, ChangeDetectorRef
+  ContentChildren, QueryList, OnChanges, AfterViewChecked, ChangeDetectorRef, ElementRef
 } from '@angular/core';
 import { GpfTableColumnComponent } from './component/column.component';
 import { GpfTableSubheaderComponent } from './component/subheader.component';
@@ -20,7 +20,9 @@ export class SortInfo {
 })
 export class GpfTableComponent implements OnChanges, AfterViewChecked {
   @ViewChild('table') public tableViewChild: any;
+  @ViewChild('header', { read: ElementRef }) public tableHeader: ElementRef;
   @ViewChildren('rows') public rowViewChildren: QueryList<any>;
+
 
   @ContentChildren(GpfTableColumnComponent) public columnsChildren: QueryList<GpfTableColumnComponent>;
   @ContentChild(GpfTableLegendDirective) public legend: GpfTableLegendDirective;
@@ -55,8 +57,8 @@ export class GpfTableComponent implements OnChanges, AfterViewChecked {
   public onWindowScroll(): void {
     this.tableTopPosition = this.tableViewChild.nativeElement.getBoundingClientRect().top;
 
-    if (this.rowViewChildren && this.rowViewChildren.first) {
-      this.showLegend = this.rowViewChildren.first.nativeElement.getBoundingClientRect().bottom < window.innerHeight;
+    if (this.tableHeader) {
+      this.showLegend = this.tableHeader.nativeElement.getBoundingClientRect().bottom < window.innerHeight - 100;
     }
 
     if (
