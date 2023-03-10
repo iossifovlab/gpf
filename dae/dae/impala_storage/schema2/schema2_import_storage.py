@@ -12,7 +12,6 @@ from dae.parquet.parquet_writer import ParquetWriter
 from dae.parquet.schema2.parquet_io import \
     VariantsParquetWriter as S2VariantsWriter
 from dae.parquet.partition_descriptor import PartitionDescriptor
-from dae.parquet import helpers as parquet_helpers
 
 
 logger = logging.getLogger(__file__)
@@ -78,30 +77,9 @@ class Schema2ImportStorage(ImportStorage):
     @classmethod
     def _merge_parquets(cls, project, out_dir, partitions):
         full_out_dir = fs_utils.join(cls._variants_dir(project), out_dir)
-        output_parquet_file = fs_utils.join(
-            full_out_dir,
-            cls._get_partition_description(project)
-               .partition_filename("merged", partitions, bucket_index=None)
+        ParquetWriter.merge_parquets(
+            cls._get_partition_description(project), full_out_dir, partitions
         )
-        parquet_files = fs_utils.glob(
-            fs_utils.join(full_out_dir, "*.parquet")
-        )
-
-        is_output_in_input = \
-            any(fn.endswith(output_parquet_file) for fn in parquet_files)
-        if is_output_in_input:
-            # a leftover file from a previous run. Remove from list of files.
-            # we use endswith instead of == because of path normalization
-            for i, filename in enumerate(parquet_files):
-                if filename.endswith(output_parquet_file):
-                    parquet_files.pop(i)
-                    break
-
-        if len(parquet_files) > 1:
-            logger.info(
-                "Merging %d files in %s", len(parquet_files), full_out_dir
-            )
-            parquet_helpers.merge_parquets(parquet_files, output_parquet_file)
 
     @classmethod
     def _do_load_in_hdfs(cls, project):

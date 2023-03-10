@@ -378,7 +378,7 @@ class PartitionDescriptor:
     @staticmethod
     def partition_filename(
             prefix: str, partition: List[Tuple[str, str]],
-            bucket_index: int) -> str:
+            bucket_index: Optional[int]) -> str:
         """Construct a partition dataset base filename.
 
         Given a partition in the format returned by `summary_parition` or

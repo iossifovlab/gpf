@@ -5,6 +5,8 @@ from typing import Optional, Union, Type
 import pyarrow as pa
 import pyarrow.parquet as pq
 
+from dae.utils import fs_utils
+from dae.parquet import helpers as parquet_helpers
 from dae.pedigrees.family import FamiliesData
 from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.parquet.helpers import url_to_pyarrow_fs
@@ -172,3 +174,36 @@ class ParquetWriter:
 
         ParquetWriter.families_to_parquet(
             families, output_filename, partition_descriptor)
+
+    @staticmethod
+    def merge_parquets(
+        partition_descriptor: PartitionDescriptor,
+        variants_dir: str,
+        partitions: list[tuple[str, str]]
+    ) -> None:
+        """Mergee parquet files in variants_dir."""
+        output_parquet_file = fs_utils.join(
+            variants_dir,
+            partition_descriptor.partition_filename(
+                "merged", partitions, bucket_index=None
+            )
+        )
+        parquet_files = fs_utils.glob(
+            fs_utils.join(variants_dir, "*.parquet")
+        )
+
+        is_output_in_input = \
+            any(fn.endswith(output_parquet_file) for fn in parquet_files)
+        if is_output_in_input:
+            # a leftover file from a previous run. Remove from list of files.
+            # we use endswith instead of == because of path normalization
+            for i, filename in enumerate(parquet_files):
+                if filename.endswith(output_parquet_file):
+                    parquet_files.pop(i)
+                    break
+
+        if len(parquet_files) > 1:
+            logger.info(
+                "Merging %d files in %s", len(parquet_files), variants_dir
+            )
+            parquet_helpers.merge_parquets(parquet_files, output_parquet_file)
