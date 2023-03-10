@@ -306,7 +306,7 @@ def task_graph_status(
         print(msg)
         if is_error and verbose:
             traceback.print_exception(
-                etype=None, value=record.error,
+                None, value=record.error,
                 tb=record.error.__traceback__,
                 file=sys.stdout
             )
@@ -325,8 +325,9 @@ def task_graph_run(
                 print(f"Task {task.task_id} failed with:",
                       file=sys.stderr)
                 traceback.print_exception(
-                    etype=None, value=result_or_error,
-                    tb=result_or_error.__traceback__
+                    None, value=result_or_error,
+                    tb=result_or_error.__traceback__,
+                    file=sys.stdout
                 )
                 no_errors = False
             else:
