@@ -9,6 +9,13 @@ services:
       - "21050:21050"
       - "8020:8020"
 
+  mail:
+    image: mailhog/mailhog
+    hostname: mail
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+
   setup:
     build:
       context: .

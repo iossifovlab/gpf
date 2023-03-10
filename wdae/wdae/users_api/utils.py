@@ -25,14 +25,15 @@ def get_default_application():
 
 def send_verif_email(user, verif_path):
     email = _create_verif_email(
-        settings.EMAIL_HOST,
-        settings.EMAIL_SET_PATH,
+        settings.EMAIL_VERIFICATION_HOST,
+        settings.EMAIL_VERIFICATION_SET_PATH,
         str(verif_path.path),
     )
     user.email_user(email["subject"], email["message"])
 
 
 def send_already_existing_email(user):
+    """Send an email to already existing user."""
     subject = "GPF: Attempted registration with email in use"
     message = (
         "Hello. Someone has attempted to create an account in GPF "
@@ -46,6 +47,7 @@ def send_already_existing_email(user):
 
 
 def send_reset_inactive_acc_email(user):
+    """Send an email to an inactive user."""
     subject = "GPF: Password reset for inactive account"
     message = (
         "Hello. You've requested a password reset for an inactive account. "
@@ -61,8 +63,8 @@ def send_reset_inactive_acc_email(user):
 def send_reset_email(user, verif_path, by_admin=False):
     """Return dict with subject and message of the email."""
     email = _create_reset_mail(
-        settings.EMAIL_HOST,
-        settings.EMAIL_RESET_PATH,
+        settings.EMAIL_VERIFICATION_HOST,
+        settings.EMAIL_VERIFICATION_RESET_PATH,
         str(verif_path.path),
         by_admin,
     )
@@ -77,7 +79,7 @@ def _create_verif_email(host, path, verification_path):
         "and set your password:\n {link}"
     )
 
-    settings = {
+    email_settings = {
         "subject": "GPF: Registration validation",
         "initial_message": message,
         "host": host,
@@ -85,7 +87,7 @@ def _create_verif_email(host, path, verification_path):
         "verification_path": verification_path,
     }
 
-    return _build_email_template(settings)
+    return _build_email_template(email_settings)
 
 
 def _create_reset_mail(host, path, verification_path, by_admin=False):
@@ -102,7 +104,7 @@ def _create_reset_mail(host, path, verification_path, by_admin=False):
             "GPF: Genotype and Phenotype in Families "
             "please follow the link below:\n {link}"
         )
-    settings = {
+    email_settings = {
         "subject": "GPF: Password reset request",
         "initial_message": message,
         "host": host,
@@ -110,14 +112,14 @@ def _create_reset_mail(host, path, verification_path, by_admin=False):
         "verification_path": verification_path,
     }
 
-    return _build_email_template(settings)
+    return _build_email_template(email_settings)
 
 
-def _build_email_template(settings):
-    subject = settings["subject"]
-    message = settings["initial_message"]
-    path = settings["path"].format(settings["verification_path"])
+def _build_email_template(email_settings):
+    subject = email_settings["subject"]
+    message = email_settings["initial_message"]
+    path = email_settings["path"].format(email_settings["verification_path"])
 
-    message = message.format(link="{0}{1}".format(settings["host"], path))
+    message = message.format(link=f"{email_settings['host']}{path}")
 
     return {"subject": subject, "message": message}

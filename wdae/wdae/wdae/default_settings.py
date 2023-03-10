@@ -28,25 +28,30 @@ AUTHENTICATION_BACKENDS = (
 
 MANAGERS = ADMINS
 
-EMAIL_HOST = "http://localhost:8000"
-EMAIL_SET_PATH = "/api/v3/users/set_password?code={}"
-EMAIL_RESET_PATH = "/api/v3/users/reset_password?code={}"
-
 RESET_PASSWORD_TIMEOUT_HOURS = 24
 
 DEFAULT_OAUTH_APPLICATION_CLIENT = "gpfjs"
 
+EMAIL_VERIFICATION_HOST = "http://localhost:8000"
+EMAIL_VERIFICATION_SET_PATH = "/api/v3/users/set_password?code={}"
+EMAIL_VERIFICATION_RESET_PATH = "/api/v3/users/reset_password?code={}"
 
-""" Set these for production"""
-# EMAIL_USE_TLS = True
-# EMAIL_HOST =
-# EMAIL_PORT =
-# EMAIL_HOST_USER
-# EMAIL_HOST_PASSWORD
+EMAIL_HOST = os.environ.get("WDAE_EMAIL_HOST", "localhost")
+EMAIL_USET_TLS = os.environ.get("WDAE_EMAIL_USET_TLS", False)
+EMAIL_HOST_USER = os.environ.get("WDAE_EMAIL_HOST_USER", None)
+EMAIL_HOST_PASSWORD = os.environ.get("WDAE_EMAIL_HOST_PASSWORD", None)
 
-DEFAULT_FROM_EMAIL = "no-reply@iossifovlab.com"
+EMAIL_PORT = os.environ.get("WDAE_EMAIL_PORT", 1025)
+if EMAIL_PORT is not None:
+    EMAIL_PORT = int(EMAIL_PORT)
 
-EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+EMAIL_SUBJECT_PREFIX = "[GPF] "
+
+DEFAULT_FROM_EMAIL = os.environ.get(
+    "WDAE_DEFAULT_FROM_EMAIL", "no-reply@iossifovlab.com")
+
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+# EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 

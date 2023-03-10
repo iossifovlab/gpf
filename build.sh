@@ -111,6 +111,18 @@ function main() {
     }
   }
 
+  # run MailHog
+  build_stage "Run MailHog"
+  {
+      local -A ctx_mailhog
+      build_run_ctx_init ctx:ctx_mailhog "persistent" "container" "mailhog/mailhog" \
+          "cmd-from-image" "no-def-mounts" \
+          ports:1025,8025 --hostname mailhog --network "${ctx_network["network_id"]}"
+
+      defer_ret build_run_ctx_reset ctx:ctx_mailhog
+      build_run_ctx_persist ctx:ctx_mailhog
+  }
+
   # prepare gpf data
   build_stage "Prepare GPF data"
   {
@@ -130,7 +142,8 @@ EOT
       --env DAE_DB_DIR="/wd/data/data-hg19-local/" \
       --env GRR_DEFINITION_FILE="/wd/cache/grr_definition.yaml" \
       --env DAE_HDFS_HOST="impala" \
-      --env DAE_IMPALA_HOST="impala"
+      --env DAE_IMPALA_HOST="impala" \
+      --env WDAE_EMAIL_HOST="mailhog"
     defer_ret build_run_ctx_reset
 
 
@@ -148,7 +161,8 @@ EOT
       --env DAE_DB_DIR="/wd/data/data-hg19-remote/" \
       --env GRR_DEFINITION_FILE="/wd/cache/grr_definition.yaml" \
       --env DAE_HDFS_HOST="impala" \
-      --env DAE_IMPALA_HOST="impala"
+      --env DAE_IMPALA_HOST="impala" \
+      --env WDAE_EMAIL_HOST="mailhog"
     defer_ret build_run_ctx_reset ctx:ctx_gpf_remote
 
     build_run_container_detached ctx:ctx_gpf_remote /wd/integration/remote/entrypoint.sh
@@ -256,7 +270,8 @@ EOT
       --env GRR_DEFINITION_FILE="/wd/cache/grr_definition.yaml" \
       --env TEST_REMOTE_HOST="gpfremote" \
       --env DAE_HDFS_HOST="impala" \
-      --env DAE_IMPALA_HOST="impala"
+      --env DAE_IMPALA_HOST="impala" \
+      --env WDAE_EMAIL_HOST="mailhog"
 
     defer_ret build_run_ctx_reset
 
@@ -288,7 +303,8 @@ EOT
       --env GRR_DEFINITION_FILE="/wd/cache/grr_definition.yaml" \
       --env TEST_REMOTE_HOST="gpfremote" \
       --env DAE_HDFS_HOST="impala" \
-      --env DAE_IMPALA_HOST="impala"
+      --env DAE_IMPALA_HOST="impala" \
+      --env WDAE_EMAIL_HOST="mailhog"
 
     defer_ret build_run_ctx_reset
 
@@ -326,7 +342,8 @@ EOT
       --env GRR_DEFINITION_FILE="/wd/cache/grr_definition.yaml" \
       --env TEST_REMOTE_HOST="gpfremote" \
       --env DAE_HDFS_HOST="impala" \
-      --env DAE_IMPALA_HOST="impala"
+      --env DAE_IMPALA_HOST="impala" \
+      --env WDAE_EMAIL_HOST="mailhog"
 
     defer_ret build_run_ctx_reset
 
@@ -363,7 +380,8 @@ EOT
       --env GRR_DEFINITION_FILE="/wd/cache/grr_definition.yaml" \
       --env TEST_REMOTE_HOST="gpfremote" \
       --env DAE_HDFS_HOST="impala" \
-      --env DAE_IMPALA_HOST="impala"
+      --env DAE_IMPALA_HOST="impala" \
+      --env WDAE_EMAIL_HOST="mailhog"
 
     defer_ret build_run_ctx_reset
 

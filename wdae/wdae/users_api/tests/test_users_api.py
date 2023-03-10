@@ -27,7 +27,6 @@ def test_invalid_reset_code(client, researcher):
 def test_reset_pass(client, researcher):
     url = "/api/v3/users/forgotten_password"
     data = {"email": researcher.email}
-    pprint(data)
 
     response = client.post(
         url, json.dumps(data), content_type="application/json", format="json"
