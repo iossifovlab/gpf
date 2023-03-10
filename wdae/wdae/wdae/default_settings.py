@@ -1,4 +1,5 @@
 """Default Django settings for wdae project."""
+# flake8: noqa: F501
 
 import os
 import logging
@@ -214,6 +215,8 @@ SESSION_SERIALIZER = "django.contrib.sessions.serializers.JSONSerializer"
 
 
 class CustomFormatter(logging.Formatter):
+    """A custom formatter that uses color for console output."""
+
     grey = "\x1b[38;20m"
     yellow = "\x1b[33;20m"
     red = "\x1b[31;20m"
