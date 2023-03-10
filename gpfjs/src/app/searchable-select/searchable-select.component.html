@@ -1,6 +1,7 @@
 <div ngbDropdown role="group" style="display: inline-flex; flex-wrap: nowrap; width: 100%" placement="bottom-right">
   <input
     [hidden]="caption"
+    [disabled]="data.length === 0"
     #searchBox
     id="search-box"
     style="width: 100%"
@@ -20,6 +21,7 @@
   </span>
   <button
     ngbDropdownToggle
+    [disabled]="data.length === 0"
     style="border-top-left-radius: 0; border-bottom-left-radius: 0"
     type="button"
     class="dropdown-toggle btn btn-secondary dropdown-toggle-split">
