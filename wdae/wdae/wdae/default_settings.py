@@ -1,6 +1,7 @@
 """Default Django settings for wdae project."""
 
 import os
+import logging
 from dae.pheno.pheno_db import get_pheno_browser_images_dir
 
 DEBUG = True
@@ -212,11 +213,34 @@ SESSION_SERIALIZER = "django.contrib.sessions.serializers.JSONSerializer"
 # CSRF_COOKIE_SECURE = True
 
 
-# A sample logging configuration. The only tangible logging
-# performed by this configuration is to send an email to
-# the site admins on every HTTP 500 error when DEBUG=False.
-# See http://docs.djangoproject.com/en/dev/topics/logging for
-# more details on how to customize your logging configuration.
+class CustomFormatter(logging.Formatter):
+    grey = "\x1b[38;20m"
+    yellow = "\x1b[33;20m"
+    red = "\x1b[31;20m"
+    bold_red = "\x1b[31;1m"
+    reset = "\x1b[0m"
+    fmt_normal = "%(levelname)s %(asctime)s [%(module)s] %(message)s"
+    # fmt_invert highlights the `levelname` variable by swapping
+    # the background and foreground colors
+    fmt_invert = "\x1b[7m%(levelname)s\x1b[27m %(asctime)s [%(module)s] %(message)s"
+    time_fmt = "%H:%M:%S"
+
+    FORMATS = {
+        logging.DEBUG: logging.Formatter(grey + fmt_normal + reset, time_fmt),
+        logging.INFO: logging.Formatter(grey + fmt_normal + reset, time_fmt),
+        logging.WARNING: logging.Formatter(yellow + fmt_invert + reset, time_fmt),
+        logging.ERROR: logging.Formatter(red + fmt_invert + reset, time_fmt),
+        logging.CRITICAL: logging.Formatter(bold_red + fmt_invert + reset, time_fmt),
+    }
+
+    def format(self, record):
+        formatter = self.FORMATS.get(record.levelno)
+        return formatter.format(record)
+
+
+CONSOLE_LOGGING_LEVEL = "INFO"
+
+
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
@@ -228,13 +252,13 @@ LOGGING = {
             "format": "%(levelname)s %(asctime)s %(module)s %(process)d "
             "%(thread)d %(message)s"
         },
-        "simple": {"format": "%(levelname)s %(message)s"},
+        "verbose_console": {"()": CustomFormatter},
     },
     "handlers": {
         "console": {
-            "level": "DEBUG",
+            "level": CONSOLE_LOGGING_LEVEL,
             "class": "logging.StreamHandler",
-            "formatter": "verbose",
+            "formatter": "verbose_console",
         },
         "mail_admins": {
             "level": "ERROR",
@@ -248,33 +272,28 @@ LOGGING = {
             "propagate": True,
             "level": "INFO",
         },
-        # 'django.request': {
-        #     'handlers': ['console'],
-        #     'level': 'WARN',
-        #     'propagate': True,
-        # },
         "wdae.api": {
             "handlers": ["logfile"],
             "level": "DEBUG",
             "propagate": True,
         },
         "impala": {
-            "handlers": ["console", "logdebug"],  # 'logfile'],
+            "handlers": ["console", "logdebug"],
             "level": "WARNING",
             "propagate": True,
         },
         "fsspec": {
-            "handlers": ["console", "logdebug"],  # 'logfile'],
+            "handlers": ["console", "logdebug"],
             "level": "WARNING",
             "propagate": True,
         },
         "matplotlib": {
-            "handlers": ["console", "logdebug"],  # 'logfile'],
+            "handlers": ["console", "logdebug"],
             "level": "INFO",
             "propagate": True,
         },
         "": {
-            "handlers": ["console", "logdebug"],  # 'logfile'],
+            "handlers": ["console", "logdebug"],
             "level": "DEBUG",
             "propagate": True,
         },
