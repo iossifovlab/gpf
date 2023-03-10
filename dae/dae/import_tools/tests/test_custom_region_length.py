@@ -45,32 +45,43 @@ def test_import_task_bin_size(gpf_instance_2019, tmpdir, mocker,
     out_dir = join(
         variants_dir,
         "summary/region_bin=1_0/frequency_bin=0")
-    parquet_files = [f"{fn}.parquet" for fn in [
-        "summary_region_bin_1_0_frequency_bin_0_bucket_index_000000",
-        "summary_region_bin_1_0_frequency_bin_0_bucket_index_000001",
-        "summary_region_bin_1_0_frequency_bin_0_bucket_index_000003",
-    ]]
+    parquet_files = [
+        "merged_region_bin_1_0_frequency_bin_0.parquet",
+    ]
     assert set(os.listdir(out_dir)) == set(parquet_files)
-    _assert_variants(join(out_dir, parquet_files[0]), bucket_index=0,
-                     positions=[123, 123, 150, 150, 30000000, 30000000])
-    _assert_variants(join(out_dir, parquet_files[1]), bucket_index=1,
-                     positions=[30000001, 30000001, 40000000, 40000000])
-    _assert_variants(join(out_dir, parquet_files[2]), bucket_index=3,
-                     positions=[99999999, 99999999])
+    _assert_variants(
+        join(out_dir, parquet_files[0]),
+        bucket_index=[
+            0, 0, 0, 0, 0, 0,
+            1, 1, 1, 1,
+            3, 3,
+        ],
+        positions=[
+            123, 123, 150, 150, 30000000, 30000000,
+            30000001, 30000001, 40000000, 40000000,
+            99999999, 99999999
+        ]
+    )
 
     # Same for the second directory
     out_dir = join(
         variants_dir,
         "summary/region_bin=1_1/frequency_bin=0")
-    parquet_files = [f"{fn}.parquet" for fn in [
-        "summary_region_bin_1_1_frequency_bin_0_bucket_index_000003",
-        "summary_region_bin_1_1_frequency_bin_0_bucket_index_000004",
-    ]]
+    parquet_files = [
+        "merged_region_bin_1_1_frequency_bin_0.parquet",
+    ]
     assert set(os.listdir(out_dir)) == set(parquet_files)
-    _assert_variants(join(out_dir, parquet_files[0]), bucket_index=3,
-                     positions=[100000000, 100000000, 120000000, 120000000])
-    _assert_variants(join(out_dir, parquet_files[1]), bucket_index=4,
-                     positions=[120000001, 120000001])
+    _assert_variants(
+        join(out_dir, parquet_files[0]),
+        bucket_index=[
+            3, 3, 3, 3,
+            4, 4,
+        ],
+        positions=[
+            100000000, 100000000, 120000000, 120000000,
+            120000001, 120000001,
+        ]
+    )
 
 
 def _assert_variants(parquet_fn, bucket_index, positions):
