@@ -146,3 +146,63 @@ def test_empty_partition_descriptor_yaml_serialization():
     assert pdesc1.family_bin_size == pdesc2.family_bin_size
     assert pdesc1.rare_boundary == pdesc2.rare_boundary
     assert pdesc1.coding_effect_types == pdesc2.coding_effect_types
+
+
+def test_partition_descriptor_varint_dirs_simple():
+    pd_content = textwrap.dedent("""
+        region_bin:
+            chromosomes: foo,bar
+            region_length: 8
+    """)
+
+    part_desc = PartitionDescriptor.parse_string(pd_content, "yaml")
+    sum_parts, fam_parts = part_desc.get_variant_partitions(
+        {"foo": 16, "bar": 4}
+    )
+    assert len(sum_parts) == 3
+    assert len(fam_parts) == 3
+
+    assert sum_parts[0] == [("region_bin", "foo_0")]
+    assert sum_parts[1] == [("region_bin", "foo_1")]
+    assert sum_parts[2] == [("region_bin", "bar_0")]
+
+
+def test_partition_descriptor_varint_dirs_full():
+    family_bin_size = 2
+    pd_content = textwrap.dedent(f"""
+        region_bin:
+            chromosomes: foo,bar
+            region_length: 8
+        family_bin:
+            family_bin_size: {family_bin_size}
+        frequency_bin:
+            rare_boundary: 50
+        coding_bin:
+            coding_effect_types: splice-site,missense,frame-shift
+    """)
+
+    part_desc = PartitionDescriptor.parse_string(pd_content, "yaml")
+    sum_parts, fam_parts = part_desc.get_variant_partitions(
+        {"foo": 16, "bar": 4, "barz": 10}
+    )
+    # num region bins * num freq_bins * num coding_bins
+    assert len(sum_parts) == 5 * 4 * 2
+    assert len(fam_parts) == 2 * len(sum_parts)
+
+    assert sum_parts[0] == [
+        ("region_bin", "foo_0"), ("frequency_bin", "0"), ("coding_bin", "0")
+    ]
+    assert sum_parts[1] == [
+        ("region_bin", "foo_0"), ("frequency_bin", "0"), ("coding_bin", "1")
+    ]
+    assert sum_parts[2] == [
+        ("region_bin", "foo_0"), ("frequency_bin", "1"), ("coding_bin", "0")
+    ]
+    assert sum_parts[-1] == [
+        ("region_bin", "other_1"), ("frequency_bin", "3"), ("coding_bin", "1")
+    ]
+
+    for i, fam_part in enumerate(fam_parts):
+        sum_part = sum_parts[i // family_bin_size]
+        assert fam_part[:-1] == sum_part
+        assert fam_part[-1] == ("family_bin", str(i % family_bin_size))

@@ -1,4 +1,5 @@
 from __future__ import annotations
+import math
 import textwrap
 import hashlib
 import pathlib
@@ -314,6 +315,52 @@ class PartitionDescriptor:
                 str(self.make_family_bin(allele.family_id))
             ))
         return partition
+
+    def get_variant_partitions(self, chrom_lens: dict[str, int]) \
+            -> tuple[list[list[tuple[str, str]]], list[list[tuple[str, str]]]]:
+        """Return the output summary and family variant partition names."""
+        summary_parts = []
+        if self.has_region_bins():
+            other_max_len = -1
+            for chrom, chrom_len in chrom_lens.items():
+                if chrom not in self.chromosomes:
+                    other_max_len = max(other_max_len, chrom_len)
+                    continue
+
+                num_buckets = math.ceil(chrom_len / self.region_length)
+                for bin_i in range(num_buckets):
+                    summary_parts.append([("region_bin", f"{chrom}_{bin_i}")])
+
+            if other_max_len > 0:
+                num_buckets = math.ceil(other_max_len / self.region_length)
+                for bin_i in range(num_buckets):
+                    summary_parts.append([("region_bin", f"other_{bin_i}")])
+        if self.has_frequency_bins():
+            summary_parts = self._add_product(
+                summary_parts, [("frequency_bin", str(i)) for i in range(4)]
+            )
+        if self.has_coding_bins():
+            summary_parts = self._add_product(
+                summary_parts, [("coding_bin", str(i)) for i in range(2)]
+            )
+
+        if self.has_family_bins():
+            family_parts = self._add_product(
+                summary_parts,
+                [("family_bin", str(i)) for i in range(self.family_bin_size)]
+            )
+        else:
+            family_parts = summary_parts
+
+        return summary_parts, family_parts
+
+    @staticmethod
+    def _add_product(names, to_add):
+        res = []
+        for name in names:
+            for name_to_add in to_add:
+                res.append([*name, name_to_add])
+        return res
 
     @staticmethod
     def partition_directory(
