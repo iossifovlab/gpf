@@ -94,6 +94,18 @@ def tabix_index_filename(tabix_filename: str) -> Optional[str]:
     return None
 
 
+def glob(path: str) -> list[str]:
+    """Find files by glob-matching."""
+    fs, relative_path = url_to_fs(path)
+    return cast(list[str], fs.glob(relative_path))
+
+
+def rm_file(path: str):
+    """Remove a file."""
+    fs, relative_path = url_to_fs(path)
+    return fs.rm_file(relative_path)
+
+
 def _handle_env_variables(envdict=None):
     """Handle filesystem-related environment variables.
 

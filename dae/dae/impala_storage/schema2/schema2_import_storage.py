@@ -62,6 +62,26 @@ class Schema2ImportStorage(ImportStorage):
             S2VariantsWriter)
 
     @classmethod
+    def _variant_partitions(cls, project):
+        part_desc = cls._get_partition_description(project)
+        chromosome_lengths = dict(
+            project.get_gpf_instance().reference_genome.get_all_chrom_lengths()
+        )
+        sum_parts, fam_parts = \
+            part_desc.get_variant_partitions(chromosome_lengths)
+        for part in sum_parts:
+            yield part_desc.partition_directory("summary", part), part
+        for part in fam_parts:
+            yield part_desc.partition_directory("family", part), part
+
+    @classmethod
+    def _merge_parquets(cls, project, out_dir, partitions):
+        full_out_dir = fs_utils.join(cls._variants_dir(project), out_dir)
+        ParquetWriter.merge_parquets(
+            cls._get_partition_description(project), full_out_dir, partitions
+        )
+
+    @classmethod
     def _do_load_in_hdfs(cls, project):
         genotype_storage = project.get_genotype_storage()
         assert isinstance(genotype_storage, Schema2GenotypeStorage)
@@ -148,9 +168,20 @@ class Schema2ImportStorage(ImportStorage):
             )
             bucket_tasks.append(task)
 
+        # merge small parquet files into larger ones
+        bucket_sync = graph.create_task(
+            "Sync Parquet Generation", lambda: None, [], bucket_tasks
+        )
+        output_dir_tasks = []
+        for output_dir, partitions in self._variant_partitions(project):
+            output_dir_tasks.append(graph.create_task(
+                f"Merging {output_dir}", self._merge_parquets,
+                [project, output_dir, partitions], [bucket_sync]
+            ))
+
         # dummy task used for running the parquet generation w/o impala import
         all_parquet_task = graph.create_task(
-            "Parquet Tasks", lambda: None, [], bucket_tasks
+            "Parquet Tasks", lambda: None, [], output_dir_tasks + [bucket_sync]
         )
 
         if project.has_genotype_storage():
