@@ -5,7 +5,13 @@ import os
 import logging
 from dae.pheno.pheno_db import get_pheno_browser_images_dir
 
-DEBUG = True
+DEBUG = os.environ.get("WDAE_DEBUG", "False") == "True"
+
+
+# Make this unique, and don't share it with anybody.
+SECRET_KEY = os.environ.get(
+    "WDAE_SECRET_KEY", "#mhbhbjgub==v$cjdu7jay@*$ux$novw#t2tmgjr^5(pr@ycxp"
+)
 
 
 STUDIES_EAGER_LOADING = False
@@ -31,10 +37,14 @@ MANAGERS = ADMINS
 RESET_PASSWORD_TIMEOUT_HOURS = 24
 
 DEFAULT_OAUTH_APPLICATION_CLIENT = "gpfjs"
+WDAE_PREFIX = os.environ.get("WDAE_PREFIX")
 
-EMAIL_VERIFICATION_HOST = "http://localhost:8000"
-EMAIL_VERIFICATION_SET_PATH = "/api/v3/users/set_password?code={}"
-EMAIL_VERIFICATION_RESET_PATH = "/api/v3/users/reset_password?code={}"
+if WDAE_PREFIX:
+    LOGIN_URL = f"/{WDAE_PREFIX}/accounts/login/"
+    FORCE_SCRIPT_NAME = f"/{WDAE_PREFIX}"
+else:
+    LOGIN_URL = "/accounts/login/"
+    FORCE_SCRIPT_NAME = "/"
 
 EMAIL_HOST = os.environ.get("WDAE_EMAIL_HOST", "localhost")
 EMAIL_USET_TLS = os.environ.get("WDAE_EMAIL_USET_TLS", False)
@@ -51,23 +61,46 @@ DEFAULT_FROM_EMAIL = os.environ.get(
     "WDAE_DEFAULT_FROM_EMAIL", "no-reply@iossifovlab.com")
 
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-# EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+
+EMAIL_VERIFICATION_ENDPOINT = os.environ.get("WDAE_EMAIL_VERIFICATION_ENDPOINT", "http://localhost:8000")
+EMAIL_VERIFICATION_SET_PATH = "/api/v3/users/set_password?code={}"
+EMAIL_VERIFICATION_RESET_PATH = "/api/v3/users/reset_password?code={}"
+
+
+
 
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
+if os.environ.get("WDAE_DB_HOST"):
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': os.environ.get("WDAE_DB_NAME"),
+            'USER': os.environ.get("WDAE_DB_USER"),
+            'PASSWORD': os.environ.get("WDAE_DB_PASSWORD"),
+            'HOST': os.environ.get("WDAE_DB_HOST"),
+            'PORT': os.environ.get("WDAE_DB_PORT"),
+        }
+    }
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": "wdae.sql",
+            "USER": "",
+            "PASSWORD": "",
+            "HOST": "",
+            "PORT": "",
+        }
+    }
 
-# Hosts/domain names that are valid for this site; required if DEBUG is False
-# See https://docs.djangoproject.com/en/1.5/ref/settings/#allowed-hosts
-ALLOWED_HOSTS = ["*"]
 
-# Local time zone for this installation. Choices can be found here:
-# http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
-# although not all choices may be available on all operating systems.
-# In a Windows environment this must be set to your system time zone.
-TIME_ZONE = "America/Chicago"
+ALLOWED_HOSTS = [
+    os.environ.get("WDAE_ALLOWED_HOST", "*")
+]
 
-# Language code for this installation. All choices can be found here:
-# http://www.i18nguy.com/unicode/language-identifiers.html
+TIME_ZONE = "US/Eastern"
+
 LANGUAGE_CODE = "en-us"
 
 SITE_ID = 1
@@ -122,12 +155,6 @@ STATICFILES_FINDERS = (
     "django.contrib.staticfiles.finders.FileSystemFinder",
     "django.contrib.staticfiles.finders.AppDirectoriesFinder",
 )
-
-# Make this unique, and don't share it with anybody.
-SECRET_KEY = os.environ.get(
-    "SECRET_KEY", "#mhbhbjgub==v$cjdu7jay@*$ux$novw#t2tmgjr^5(pr@ycxp"
-)
-
 
 MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
@@ -194,6 +221,22 @@ INSTALLED_APPS = [
     # END OF FIRST-PARTY APPS
 ]
 
+if os.environ.get("SENTRY_API_URL", None):
+    # type: ignore
+    import raven  # pylint: disable=unused-import
+
+    INSTALLED_APPS += [
+        'raven.contrib.django.raven_compat',
+    ]
+
+    RAVEN_CONFIG = {
+        'dsn': os.environ.get("SENTRY_API_URL", None),
+        # If you are using git, you can also automatically configure the
+        # release based on the git info.
+        # 'release': raven.fetch_git_sha(os.path.dirname(__file__)),
+    }
+
+
 AUTH_USER_MODEL = "users_api.WdaeUser"
 
 REST_FRAMEWORK = {
@@ -206,6 +249,16 @@ REST_FRAMEWORK = {
     ),
     "PAGE_SIZE": 25
 }
+
+DEFAULT_RENDERER_CLASSES = [
+    "rest_framework.renderers.JSONRenderer",
+]
+
+if DEBUG:
+    DEFAULT_RENDERER_CLASSES = DEFAULT_RENDERER_CLASSES + \
+        ["rest_framework.renderers.BrowsableAPIRenderer", ]
+
+REST_FRAMEWORK["DEFAULT_RENDERER_CLASSES"] = DEFAULT_RENDERER_CLASSES
 
 OAUTH2_PROVIDER = {
     "OAUTH2_BACKEND_CLASS": "oauth2_provider.oauth2_backends.JSONOAuthLibCore",
@@ -242,12 +295,16 @@ class CustomFormatter(logging.Formatter):
     }
 
     def format(self, record):
-        formatter = self.FORMATS.get(record.levelno)
+        if record.levelno not in self.FORMATS:
+            formatter = self.FORMATS[logging.DEBUG]
+        else:
+            formatter = self.FORMATS[record.levelno]
         return formatter.format(record)
 
 
 CONSOLE_LOGGING_LEVEL = "INFO"
 
+LOG_DIR = os.environ.get("WDAE_LOG_DIR", ".")
 
 LOGGING = {
     "version": 1,
@@ -268,92 +325,40 @@ LOGGING = {
             "class": "logging.StreamHandler",
             "formatter": "verbose_console",
         },
-        "mail_admins": {
-            "level": "ERROR",
-            "filters": ["require_debug_false"],
-            "class": "django.utils.log.AdminEmailHandler",
+        "logfile": {
+            "class": "logging.handlers.WatchedFileHandler",
+            "filename": f"{LOG_DIR}/wdae-api.log",
+            "formatter": "verbose",
         },
     },
     "loggers": {
         "django": {
-            "handlers": ["logfile", "logdebug"],
+            "handlers": ["logfile"],
             "propagate": True,
             "level": "INFO",
         },
-        "wdae.api": {
-            "handlers": ["logfile"],
-            "level": "DEBUG",
-            "propagate": True,
-        },
         "impala": {
-            "handlers": ["console", "logdebug"],
+            "handlers": ["console", "logfile"],
             "level": "WARNING",
             "propagate": True,
         },
         "fsspec": {
-            "handlers": ["console", "logdebug"],
+            "handlers": ["console", "logfile"],
             "level": "WARNING",
             "propagate": True,
         },
         "matplotlib": {
-            "handlers": ["console", "logdebug"],
+            "handlers": ["console", "logfile"],
             "level": "INFO",
             "propagate": True,
         },
         "": {
-            "handlers": ["console", "logdebug"],
+            "handlers": ["console", "logfile"],
             "level": "DEBUG",
             "propagate": True,
         },
     },
 }
-
-
-# CACHES = {
-#     "default": {
-#         "BACKEND": "django.core.cache.backends.filebased.FileBasedCache",
-#         "LOCATION": os.path.join(
-#             os.environ.get("DAE_DB_DIR", ""),
-#             "wdae/wdae_django_default.cache"),
-#         "TIMEOUT": 3600,
-#         "OPTIONS": {"MAX_ENTRIES": 10000},
-#     },
-#     "long": {
-#         "BACKEND": "django.core.cache.backends.filebased.FileBasedCache",
-#         "LOCATION": os.path.join(
-#             os.environ.get("DAE_DB_DIR", ""),
-#             "wdae/wdae_django_default.cache"),
-#         "TIMEOUT": 86400,
-#         "OPTIONS": {"MAX_ENTRIES": 1000, },
-#     },
-#     "pre": {
-#         "BACKEND": "django.core.cache.backends.filebased.FileBasedCache",
-#         "LOCATION": os.path.join(
-#             os.environ.get("DAE_DB_DIR", ""), "wdae/wdae_django_pre.cache"),
-#         "TIMEOUT": None,
-#     },
-#     "enrichment": {
-#         "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
-#         "LOCATION": "unique-snowflake",
-#         "TIMEOUT": 60,
-#     },
-#     # 'default': {
-#     #     'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
-#     #     'LOCATION': '127.0.0.1:11211',
-#     #     'TIMEOUT': 3600,
-#     #     'OPTIONS': {
-#     #         'MAX_ENTRIES': 10000
-#     #     }
-#     # },
-#     # 'long': {
-#     #     'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
-#     #     'LOCATION': '127.0.0.1:11211',
-#     #     'TIMEOUT': 2592000,
-#     #     'OPTIONS': {
-#     #         'MAX_ENTRIES': 1000
-#     #     }
-#     # },
-# }
 
 TEMPLATES = [
     {
@@ -370,9 +375,3 @@ TEMPLATES = [
         },
     },
 ]
-
-# try:
-#     from local_settings import *  # @UnusedWildImport
-# except ImportError as e:
-#     if "local_settings" not in str(e):
-#         raise e

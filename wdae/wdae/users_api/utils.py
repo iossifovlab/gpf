@@ -25,7 +25,7 @@ def get_default_application():
 
 def send_verif_email(user, verif_path):
     email = _create_verif_email(
-        settings.EMAIL_VERIFICATION_HOST,
+        settings.EMAIL_VERIFICATION_ENDPOINT,
         settings.EMAIL_VERIFICATION_SET_PATH,
         str(verif_path.path),
     )
@@ -63,7 +63,7 @@ def send_reset_inactive_acc_email(user):
 def send_reset_email(user, verif_path, by_admin=False):
     """Return dict with subject and message of the email."""
     email = _create_reset_mail(
-        settings.EMAIL_VERIFICATION_HOST,
+        settings.EMAIL_VERIFICATION_ENDPOINT,
         settings.EMAIL_VERIFICATION_RESET_PATH,
         str(verif_path.path),
         by_admin,
@@ -72,7 +72,7 @@ def send_reset_email(user, verif_path, by_admin=False):
     user.email_user(email["subject"], email["message"])
 
 
-def _create_verif_email(host, path, verification_path):
+def _create_verif_email(endpoint, path, verification_path):
     message = (
         "Welcome to GPF: Genotype and Phenotype in Families! "
         "Follow the link below to validate your new account "
@@ -82,7 +82,7 @@ def _create_verif_email(host, path, verification_path):
     email_settings = {
         "subject": "GPF: Registration validation",
         "initial_message": message,
-        "host": host,
+        "endpoint": endpoint,
         "path": path,
         "verification_path": verification_path,
     }
@@ -90,7 +90,7 @@ def _create_verif_email(host, path, verification_path):
     return _build_email_template(email_settings)
 
 
-def _create_reset_mail(host, path, verification_path, by_admin=False):
+def _create_reset_mail(endpoint, path, verification_path, by_admin=False):
     message = (
         "Hello. You have requested to reset your password for "
         "your GPF account. To do so, please follow the link below:\n {link}\n"
@@ -107,7 +107,7 @@ def _create_reset_mail(host, path, verification_path, by_admin=False):
     email_settings = {
         "subject": "GPF: Password reset request",
         "initial_message": message,
-        "host": host,
+        "endpoint": endpoint,
         "path": path,
         "verification_path": verification_path,
     }
@@ -120,6 +120,6 @@ def _build_email_template(email_settings):
     message = email_settings["initial_message"]
     path = email_settings["path"].format(email_settings["verification_path"])
 
-    message = message.format(link=f"{email_settings['host']}{path}")
+    message = message.format(link=f"{email_settings['endpoint']}{path}")
 
     return {"subject": subject, "message": message}
