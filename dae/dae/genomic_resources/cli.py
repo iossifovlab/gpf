@@ -36,7 +36,7 @@ from dae.genomic_resources.cached_repository import \
 
 from dae.utils.verbosity_configuration import VerbosityConfiguration
 
-from dae.genomic_resources.fsspec_protocol import build_fsspec_protocol
+from dae.genomic_resources.fsspec_protocol import FsspecReadWriteProtocol, build_fsspec_protocol
 from dae.genomic_resources.repository_factory import \
     build_genomic_resource_repository, \
     load_definition_file
@@ -146,7 +146,7 @@ def _run_list_command(
             print(
                 f"{res.get_type():20} {res.get_version_str():7s} "
                 f"{files} {res_size:12d} "
-                f"{proto.repo_id} ",
+                f"{proto.repo_id if isinstance(proto, GenomicResourceRepo) else proto.get_id()} "
                 f"{res.get_id()}")
 
 
@@ -665,7 +665,7 @@ def cli_manage(cli_args=None):
                 "Can't find repository starting from: %s", os.getcwd())
             sys.exit(1)
         repo_url = str(repo_url)
-        print(f"working with repository: {repo_url}", file=sys.stderr)
+        print(f"working with repository: {repo_url}")
 
     local_grr_definition = {
         "id": "local",
