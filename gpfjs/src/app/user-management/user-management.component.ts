@@ -60,28 +60,6 @@ export class UserManagementComponent implements OnInit {
     this.allPagesLoaded = false;
   }
 
-  private sortGroups(user: User): User {
-    if (!user || !user.groups) {
-      return user;
-    }
-    const defaultGroups = user.groups
-      .filter(group => user.getDefaultGroups().indexOf(group) !== -1);
-    let otherGroups = user.groups
-      .filter(group => user.getDefaultGroups().indexOf(group) === -1);
-
-    if (defaultGroups.length === 2 && defaultGroups[0] !== 'any_user') {
-      const group = defaultGroups[0];
-      defaultGroups[0] = defaultGroups[1];
-      defaultGroups[1] = group;
-    }
-
-    otherGroups = otherGroups
-      .sort((group1, group2) => group1.localeCompare(group2));
-
-    user.groups = defaultGroups.concat(otherGroups);
-    return user;
-  }
-
   private async waitForSearchBoxToLoad(): Promise<void> {
     return new Promise<void>(resolve => {
       const timer = setInterval(() => {
@@ -144,7 +122,8 @@ export class UserManagementComponent implements OnInit {
 
       res.forEach(r => {
         if (r instanceof User) {
-          this.users.push(this.sortGroups(r));
+          r.sortGroups();
+          this.users.push(r);
         } else if (r instanceof UserGroup) {
           this.groups.push(r);
         } else if (r instanceof DatasetPermissions) {
