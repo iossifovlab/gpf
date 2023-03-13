@@ -82,7 +82,6 @@ export class UserManagementComponent implements OnInit {
     return user;
   }
 
-  // Needed?
   private async waitForSearchBoxToLoad(): Promise<void> {
     return new Promise<void>(resolve => {
       const timer = setInterval(() => {

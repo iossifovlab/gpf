@@ -15,7 +15,7 @@ import { AuthService } from '../auth.service';
 export class UsersService {
   private readonly logoutUrl = 'users/logout';
   private readonly userInfoUrl = 'users/get_user_info';
-  private readonly resetPasswordUrl = 'users/reset_password';
+  private readonly resetPasswordUrl = 'users/forgotten_password';
   private readonly usersUrl = 'users';
 
   private userInfo$ = new ReplaySubject<{}>(1);
@@ -85,22 +85,14 @@ export class UsersService {
     return !(name === undefined || name === '');
   }
 
-  public resetPassword(email: string): Observable<boolean> {
+  public resetPassword(email: string): void {
     const csrfToken = this.cookieService.get('csrftoken');
-    const headers = { 'X-CSRFToken': csrfToken };
-    const options = { headers: headers, withCredentials: true };
+    const headers = { 'X-CSRFToken': csrfToken, 'Content-Type': 'application/json'};
 
-    if (!this.isEmailValid(email)) {
-      return observableThrowError(new Error(
-        'Invalid email address entered. Please use a valid email address.'
-      ));
-    }
-
-    return this.http.post(this.config.baseUrl + this.resetPasswordUrl, { email: email }, options).pipe(
-      map(() => true),
-      catchError(error => {
-        return observableThrowError(new Error(error.error.error_msg));
-      })
+    // Using plain js fetch, because the API end-point does not return JSON
+    fetch(
+      this.config.baseUrl + this.resetPasswordUrl,
+      { body: JSON.stringify({ email: email }), headers: headers, credentials: 'include', method: 'POST'}
     );
   }
 
@@ -176,16 +168,6 @@ export class UsersService {
     const options = { withCredentials: true };
 
     return this.http.delete(url, options);
-  }
-
-  public resetUserPassword(user: User): Observable<object> {
-    if (!user.id) {
-      return observableThrowError('No user id');
-    }
-    const url = `${this.config.baseUrl}${this.usersUrl}/${user.id}/password_reset`;
-    const options = { withCredentials: true };
-
-    return this.http.post(url, null, options);
   }
 
   public removeUserGroup(user: User, group: string): Observable<object> {

@@ -32,7 +32,7 @@ export class UsersTableComponent {
   }
 
   public resetPassword(user: User): void {
-    this.usersService.resetUserPassword(user).pipe(take(1)).subscribe();
+    this.usersService.resetPassword(user.email);
   }
 
   public removeGroup(user: User, group: string): void {
