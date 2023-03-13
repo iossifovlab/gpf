@@ -1468,7 +1468,7 @@ class GeneModels(
     def _get_template_data(self):
         info = copy.deepcopy(self.config)
         if "meta" in info:
-            info["meta"] = markdown(info["meta"])
+            info["meta"] = markdown(str(info["meta"]))
         return info
 
     @staticmethod

@@ -55,7 +55,7 @@ def _add_repository_resource_parameters_group(parser, use_resource=True):
         "directory. If found the directory is assumed for root repository "
         "directory; otherwise error is reported.")
     group.add_argument(
-        "--definition", type=str,
+        "--definition", "--grr", "-g", type=str,
         default=None,
         help="Path to an extra GRR definition file. This GRR will be loaded"
         "in a group alongside the local one.")

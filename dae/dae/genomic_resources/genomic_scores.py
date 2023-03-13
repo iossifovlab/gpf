@@ -482,7 +482,7 @@ class GenomicScore(
     def _get_template_data(self):
         info = copy.deepcopy(self.config)
         if "meta" in info:
-            info["meta"] = markdown(info["meta"])
+            info["meta"] = markdown(str(info["meta"]))
         return info
 
     def get_info(self):
@@ -565,13 +565,12 @@ class GenomicScore(
 
     def _get_chrom_regions(self, region_size, grr=None):
         ref_genome_id = self.get_label("reference_genome")
-        if ref_genome_id is None or grr is None:
+        ref_genome = None
+        if ref_genome_id is not None or grr is not None:
             logger.warning(
                 "Couldn't use reference genome tag for %s",
                 self.resource.resource_id
             )
-            regions = self._split_into_regions(region_size)
-        else:
             try:
                 ref_genome = build_reference_genome_from_resource(
                     grr.get_resource(ref_genome_id)
@@ -582,8 +581,11 @@ class GenomicScore(
                     ref_genome_id,
                     self.resource.resource_id
                 )
+        if ref_genome is not None:
             with ref_genome.open():
-                regions = ref_genome.split_into_regions(region_size)
+                regions = self._split_into_regions(region_size, ref_genome)
+        else:
+            regions = self._split_into_regions(region_size)
         return regions
 
     def _add_min_max_tasks(self, graph, region_size, grr=None):
@@ -765,10 +767,13 @@ class GenomicScore(
             plt.clf()
         return merged_histograms
 
-    def _split_into_regions(self, region_size):
+    def _split_into_regions(self, region_size, reference_genome):
         chromosomes = self.get_all_chromosomes()
         for chrom in chromosomes:
-            chrom_len = self.table.get_chromosome_length(chrom)
+            if reference_genome is not None:
+                chrom_len = reference_genome.get_chrom_length(chrom)
+            else:
+                chrom_len = self.table.get_chromosome_length(chrom)
             logger.debug(
                 "Chromosome '%s' has length %s",
                 chrom, chrom_len)

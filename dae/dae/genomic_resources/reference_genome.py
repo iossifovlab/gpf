@@ -158,19 +158,19 @@ class ReferenceGenome(
             (key, value["length"])
             for key, value in self._index.items()]
 
-    def split_into_regions(self, region_size):
-        chromosome_lengths = self.get_all_chrom_lengths()
-        print(chromosome_lengths)
-        for chrom, chrom_len in chromosome_lengths:
-            print(chrom, chrom_len)
-            logger.debug(
-                "Chromosome '%s' has length %s",
-                chrom, chrom_len)
-            i = 1
-            while i < chrom_len - region_size:
-                yield chrom, i, i + region_size - 1
-                i += region_size
-            yield chrom, i, None
+    # def split_into_regions(self, region_size):
+    #     chromosome_lengths = self.get_all_chrom_lengths()
+    #     print(chromosome_lengths)
+    #     for chrom, chrom_len in chromosome_lengths:
+    #         print(chrom, chrom_len)
+    #         logger.debug(
+    #             "Chromosome '%s' has length %s",
+    #             chrom, chrom_len)
+    #         i = 1
+    #         while i < chrom_len - region_size:
+    #             yield chrom, i, i + region_size - 1
+    #             i += region_size
+    #         yield chrom, i, None
 
     def get_sequence(self, chrom, start, stop):
         """Return sequence of nucleotides from specified chromosome region."""
@@ -246,7 +246,7 @@ class ReferenceGenome(
     def _get_template_data(self):
         info = copy.deepcopy(self.config)
         if "meta" in info:
-            info["meta"] = markdown(info["meta"])
+            info["meta"] = markdown(str(info["meta"]))
         return info
 
     @staticmethod
