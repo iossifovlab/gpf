@@ -155,6 +155,6 @@ def test_regions(query_builder):
     assert "15 >= COALESCE(`end_position`, `position`)" in query
 
     query = query_builder._build_regions_where([
-        Region('13')
+        Region("13")
     ])
     assert "(`chromosome` = '13')" in query

@@ -19,6 +19,6 @@ def test_regions(query_builder):
             ) in query
 
     query = query_builder._build_regions_where(query_builder, [
-        Region('13')
+        Region("13")
     ])
     assert "(`chromosome` = '13')" in query
