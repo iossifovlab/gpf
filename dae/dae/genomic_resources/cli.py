@@ -34,7 +34,8 @@ from dae.utils.verbosity_configuration import VerbosityConfiguration
 
 from dae.genomic_resources.fsspec_protocol import build_fsspec_protocol
 from dae.genomic_resources.repository_factory import \
-    build_genomic_resource_repository
+    build_genomic_resource_repository, \
+    load_definition_file
 
 from dae.genomic_resources import get_resource_implementation_builder
 
@@ -53,6 +54,11 @@ def _add_repository_resource_parameters_group(parser, use_resource=True):
         "for .CONTENTS file from the current working directory up to the root "
         "directory. If found the directory is assumed for root repository "
         "directory; otherwise error is reported.")
+    group.add_argument(
+        "--definition", type=str,
+        default=None,
+        help="Path to an extra GRR definition file. This GRR will be loaded"
+        "in a group alongside the local one.")
 
     group.add_argument(
         "--extra-args", type=str, default=None,
@@ -404,9 +410,9 @@ def _store_stats_hash(proto, resource):
 
 
 def _collect_impl_stats_tasks(  # pylint: disable=too-many-arguments
-        graph, proto, impl, dry_run, force, use_dvc, region_size):
+        graph, proto, impl, grr, dry_run, force, use_dvc, region_size):
 
-    tasks = impl.add_statistics_build_tasks(graph, region_size=region_size)
+    tasks = impl.add_statistics_build_tasks(graph, region_size=region_size, grr=grr)
 
     graph.create_task(
         f"{impl.resource.resource_id}_store_stats_hash",
@@ -449,7 +455,7 @@ def _stats_need_rebuild(proto, impl):
     return False
 
 
-def _run_repo_stats_command(proto, **kwargs):
+def _run_repo_stats_command(repo, proto, **kwargs):
     updates_needed = _run_repo_manifest_command(proto, **kwargs)
     dry_run = kwargs.get("dry_run", False)
     force = kwargs.get("force", False)
@@ -472,7 +478,7 @@ def _run_repo_stats_command(proto, **kwargs):
         needs_rebuild = _stats_need_rebuild(proto, impl)
         if (force or needs_rebuild) and not dry_run:
             _collect_impl_stats_tasks(
-                graph, proto, impl, dry_run, force, use_dvc, region_size)
+                graph, proto, impl, repo, dry_run, force, use_dvc, region_size)
         elif dry_run and needs_rebuild:
             logger.info("Statistics of <%s> need update", res.resource_id)
 
@@ -486,7 +492,7 @@ def _run_repo_stats_command(proto, **kwargs):
         proto.build_content_file()
 
 
-def _run_resource_stats_command(proto, repo_url, **kwargs):
+def _run_resource_stats_command(repo, proto, repo_url, **kwargs):
     needs_update = _run_resource_manifest_command(proto, repo_url, **kwargs)
     dry_run = kwargs.get("dry_run", False)
     force = kwargs.get("force", False)
@@ -515,7 +521,7 @@ def _run_resource_stats_command(proto, repo_url, **kwargs):
 
     if (force or needs_rebuild) and not dry_run:
         _collect_impl_stats_tasks(
-            graph, proto, impl, dry_run, force, use_dvc, region_size)
+            graph, proto, impl, repo, dry_run, force, use_dvc, region_size)
     elif dry_run and needs_rebuild:
         logger.info("Statistics of <%s> need update", res.resource_id)
 
@@ -524,16 +530,16 @@ def _run_resource_stats_command(proto, repo_url, **kwargs):
     TaskGraphCli.process_graph(graph, force_mode="always", **modified_kwargs)
 
 
-def _run_repo_repair_command(proto, **kwargs):
-    _run_repo_info_command(proto, **kwargs)
+def _run_repo_repair_command(repo, proto, **kwargs):
+    _run_repo_info_command(repo, proto, **kwargs)
 
 
-def _run_resource_repair_command(proto, repo_url, **kwargs):
-    _run_resource_info_command(proto, repo_url, **kwargs)
+def _run_resource_repair_command(repo, proto, repo_url, **kwargs):
+    _run_resource_info_command(repo, proto, repo_url, **kwargs)
 
 
-def _run_repo_info_command(proto, **kwargs):  # pylint: disable=unused-argument
-    _run_repo_stats_command(proto, **kwargs)
+def _run_repo_info_command(repo, proto, **kwargs):  # pylint: disable=unused-argument
+    _run_repo_stats_command(repo, proto, **kwargs)
     proto.build_index_info(repository_template)
 
     for res in proto.get_all_resources():
@@ -572,8 +578,8 @@ def _do_resource_info_command(proto, res):
         outfile.write(content)
 
 
-def _run_resource_info_command(proto, repo_url, **kwargs):
-    _run_resource_stats_command(proto, repo_url, **kwargs)
+def _run_resource_info_command(repo, proto, repo_url, **kwargs):
+    _run_resource_stats_command(repo, proto, repo_url, **kwargs)
     res = _find_resource(proto, repo_url, **kwargs)
     if res is None:
         logger.error("resource not found...")
@@ -636,6 +642,32 @@ def cli_manage(cli_args=None):
         repo_url = str(repo_url)
         print(f"working with repository: {repo_url}", file=sys.stderr)
 
+    local_grr_definition = {
+        "id": "local",
+        "type": "dir",
+        "directory": repo_url
+    }
+
+    extra_definition_path = args.definition
+    if extra_definition_path:
+        if not os.path.exists(extra_definition_path):
+            raise FileNotFoundError(
+                f"Definition {extra_definition_path} not found!"
+            )
+        extra_definition = load_definition_file(extra_definition_path)
+        grr_definition = {
+            "id": "cli_grr",
+            "type": "group",
+            "children": [
+                {**local_grr_definition},
+                {**extra_definition}
+            ]
+        }
+    else:
+        grr_definition = local_grr_definition
+
+    repo = build_genomic_resource_repository(definition=grr_definition)
+
     proto = _create_proto(repo_url, args.extra_args)
     if command == "list":
         _run_list_command(proto, args)
@@ -651,17 +683,17 @@ def cli_manage(cli_args=None):
     elif command == "resource-manifest":
         _run_resource_manifest_command(proto, repo_url, **vars(args))
     elif command == "repo-stats":
-        _run_repo_stats_command(proto, **vars(args))
+        _run_repo_stats_command(repo, proto, **vars(args))
     elif command == "resource-stats":
-        _run_resource_stats_command(proto, repo_url, **vars(args))
+        _run_resource_stats_command(repo, proto, repo_url, **vars(args))
     elif command == "repo-info":
-        _run_repo_info_command(proto, **vars(args))
+        _run_repo_info_command(repo, proto, **vars(args))
     elif command == "resource-info":
-        _run_resource_info_command(proto, repo_url, **vars(args))
+        _run_resource_info_command(repo, proto, repo_url, **vars(args))
     elif command == "repo-repair":
-        _run_repo_repair_command(proto, **vars(args))
+        _run_repo_repair_command(repo, proto, **vars(args))
     elif command == "resource-repair":
-        _run_resource_repair_command(proto, repo_url, **vars(args))
+        _run_resource_repair_command(repo, proto, repo_url, **vars(args))
     else:
         logger.error(
             "Unknown command %s. The known commands are index, "

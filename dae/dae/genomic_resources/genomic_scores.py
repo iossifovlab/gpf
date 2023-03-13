@@ -21,6 +21,7 @@ import matplotlib.pyplot as plt  # type: ignore
 from dae.task_graph.graph import TaskGraph
 from . import GenomicResource
 from .statistic import Statistic
+from .reference_genome import build_reference_genome_from_resource
 from .resource_implementation import GenomicResourceImplementation, \
     get_base_resource_schema, \
     InfoImplementationMixin, \
@@ -551,17 +552,41 @@ class GenomicScore(
     def add_statistics_build_tasks(self, task_graph: TaskGraph, **kwargs):
         with self.open():
             region_size = kwargs.get("region_size", 1_000_000)
+            grr = kwargs.get("grr")
             _, _, save_task = self._add_min_max_tasks(
-                task_graph, region_size
+                task_graph, region_size, grr
             )
 
             _, _, save_task = self._add_histogram_tasks(
-                task_graph, save_task, region_size
+                task_graph, save_task, region_size, grr
             )
 
             return [save_task]
 
-    def _add_min_max_tasks(self, graph, region_size):
+    def _get_chrom_regions(self, region_size, grr=None):
+        ref_genome_id = self.get_label("reference_genome")
+        if ref_genome_id is None or grr is None:
+            logger.warning(
+                "Couldn't use reference genome tag for %s",
+                self.resource.resource_id
+            )
+            regions = self._split_into_regions(region_size)
+        else:
+            try:
+                ref_genome = build_reference_genome_from_resource(
+                    grr.get_resource(ref_genome_id)
+                )
+            except FileNotFoundError:
+                logger.warning(
+                    "Couldn't find reference genome %s for %s",
+                    ref_genome_id,
+                    self.resource.resource_id
+                )
+            with ref_genome.open():
+                regions = ref_genome.split_into_regions(region_size)
+        return regions
+
+    def _add_min_max_tasks(self, graph, region_size, grr=None):
         """
         Add and return calculation, merging and saving tasks for min max.
 
@@ -569,7 +594,8 @@ class GenomicScore(
         tasks, the merge task and the save task.
         """
         min_max_tasks = []
-        for chrom, start, end in self._split_into_regions(region_size):
+        regions = self._get_chrom_regions(region_size, grr)
+        for chrom, start, end in regions:
             min_max_tasks.append(graph.create_task(
                 f"{self.score_id}_calculate_min_max_{chrom}_{start}_{end}",
                 GenomicScore._do_min_max,
@@ -624,6 +650,9 @@ class GenomicScore(
     def _save_min_max(resource, merged_min_max):
         proto = resource.proto
         for score_id, score_min_max in merged_min_max.items():
+            if score_min_max is None:
+                logger.warning("Min max for %s is None", score_id)
+                continue
             with proto.open_raw_file(
                 resource,
                 f"{GenomicScore.STATISTICS_FOLDER}/min_max_{score_id}.yaml",
@@ -633,7 +662,7 @@ class GenomicScore(
         return merged_min_max
 
     def _add_histogram_tasks(
-        self, graph, save_minmax_task, region_size
+        self, graph, save_minmax_task, region_size, grr=None
     ):
         """
         Add histogram tasks for specific score id.
@@ -641,7 +670,8 @@ class GenomicScore(
         The histogram tasks are dependant on the provided minmax task.
         """
         histogram_tasks = []
-        for chrom, start, end in self._split_into_regions(region_size):
+        regions = self._get_chrom_regions(region_size, grr)
+        for chrom, start, end in regions:
             histogram_tasks.append(graph.create_task(
                 f"{self.score_id}_calculate_histogram_{chrom}_{start}_{end}",
                 GenomicScore._do_histogram,
@@ -705,6 +735,9 @@ class GenomicScore(
     def _save_histograms(resource, merged_histograms):
         proto = resource.proto
         for score_id, score_histogram in merged_histograms.items():
+            if score_histogram is None:
+                logger.warning("Histogram for %s is None", score_id)
+                continue
             with proto.open_raw_file(
                 resource,
                 f"{GenomicScore.STATISTICS_FOLDER}/histogram_{score_id}.yaml",
