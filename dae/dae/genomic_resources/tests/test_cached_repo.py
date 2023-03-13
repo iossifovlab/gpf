@@ -427,4 +427,4 @@ def test_cached_repo_list_cli(cache_repository, capsys):
         print(out)
         assert err == ""
         assert out == \
-            "Basic                0        1/ 3           14 test_grr  one\n"
+            "Basic                0        1/ 3           14 test_grr one\n"
