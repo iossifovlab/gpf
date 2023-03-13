@@ -28,7 +28,6 @@ export class UserManagementComponent implements OnInit {
   private getPageSubscription: Subscription = new Subscription();
   private pageCount = 0;
   private tableName: TableName = 'USERS';
-  private loadingPage = true;
   private allPagesLoaded = false;
 
   public constructor(
@@ -79,7 +78,7 @@ export class UserManagementComponent implements OnInit {
 
   @HostListener('window:scroll', ['$event'])
   public updateTableOnScroll(): void {
-    if (!this.loadingPage && window.scrollY + window.innerHeight + 200 > document.body.scrollHeight) {
+    if (this.getPageSubscription.closed && window.scrollY + window.innerHeight + 200 > document.body.scrollHeight) {
       this.updateCurrentTable();
     }
   }
@@ -94,7 +93,6 @@ export class UserManagementComponent implements OnInit {
   public updateCurrentTable(): void {
     if (!this.allPagesLoaded) {
       this.pageCount++;
-      this.loadingPage = true;
 
       switch (this.tableName) {
         case 'USERS':
@@ -131,7 +129,6 @@ export class UserManagementComponent implements OnInit {
         }
       });
 
-      this.loadingPage = false;
       this.getPageSubscription.unsubscribe();
     });
   }
