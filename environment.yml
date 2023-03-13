@@ -43,7 +43,8 @@ dependencies:
   - snakemake-minimal=7.18.2
   - ijson=3.1.4
   - s3fs=2022.11.0
-  - openjdk=8.0.312
+  - openjdk=8.0.312  # [not osx]
+  - hadoop=3.1.2  # [not osx]
   - impyla=0.17.0
   - thriftpy2=0.4.14
   - thrift=0.16.0
