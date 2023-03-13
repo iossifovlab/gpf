@@ -86,6 +86,7 @@ class CachingProtocol(ReadOnlyRepositoryProtocol):
 
         # Lock the resource file to avoid caching it simultaneously
         with self.local_protocol.obtain_resource_file_lock(resource, filename):
+            print("Caching resource file: ", filename)
             self.local_protocol.update_resource_file(
                 remote_resource, resource, filename)
 
@@ -127,6 +128,7 @@ class CachingProtocol(ReadOnlyRepositoryProtocol):
         return self.local_protocol.load_manifest(resource)
 
     def cache_resource(self, resource, resource_files) -> None:
+        print("Caching resource: ", resource.get_id())
         self.local_protocol.update_resource(resource, resource_files)
 
 

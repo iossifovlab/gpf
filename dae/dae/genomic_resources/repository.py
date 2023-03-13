@@ -28,6 +28,7 @@ from typing import Optional, Any, Generator, Union, Iterator
 from dataclasses import dataclass, asdict
 
 import abc
+from tqdm import tqdm
 import yaml
 import pysam
 
@@ -769,7 +770,7 @@ class ReadWriteRepositoryProtocol(ReadOnlyRepositoryProtocol):
         for filename in filenames_to_delete:
             self.delete_resource_file(local_resource, filename)
 
-        for entry in files_to_copy:
+        for entry in tqdm(files_to_copy):
             self.update_resource_file(remote_resource, local_resource, entry)
 
         self.save_manifest(local_resource, remote_resource.get_manifest())
