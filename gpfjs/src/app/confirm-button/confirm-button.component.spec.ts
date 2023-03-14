@@ -6,17 +6,16 @@ describe('ConfirmButtonComponent', () => {
   let component: ConfirmButtonComponent;
   let fixture: ComponentFixture<ConfirmButtonComponent>;
 
-  beforeEach(waitForAsync(() => {
+  beforeEach(() => {
     TestBed.configureTestingModule({
       declarations: [ConfirmButtonComponent],
       schemas: [NO_ERRORS_SCHEMA],
     }).compileComponents();
 
-  beforeEach(() => {
     fixture = TestBed.createComponent(ConfirmButtonComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
-  }));
+  });
 
   it('should create', () => {
     expect(component).toBeTruthy();
