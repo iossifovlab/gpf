@@ -4,52 +4,206 @@ import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
 import { NgxsModule } from '@ngxs/store';
 import { ConfigService } from 'app/config/config.service';
-import { GpfTableColumnComponent } from 'app/table/component/column.component';
-import { GpfTableContentComponent } from 'app/table/component/content.component';
-import { GpfTableContentHeaderComponent } from 'app/table/component/header.component';
-import { GpfTableSubcontentComponent } from 'app/table/component/subcontent.component';
-import { GpfTableSubheaderComponent } from 'app/table/component/subheader.component';
-import { ResizeService } from 'app/table/resize.service';
-import { GpfTableComponent } from 'app/table/table.component';
-import { GpfTableCellComponent } from 'app/table/view/cell.component';
-import { GpfTableEmptyCellComponent } from 'app/table/view/empty-cell.component';
-import { GpfTableHeaderCellComponent } from 'app/table/view/header/header-cell.component';
-import { GpfTableHeaderComponent } from 'app/table/view/header/header.component';
-import { GpfTableNothingFoundRowComponent } from 'app/table/view/nothing-found-row.component';
+import { UserGroup } from 'app/users-groups/users-groups';
+import { Item } from 'app/item-add-menu/item-add-menu';
+import { UsersGroupsService } from 'app/users-groups/users-groups.service';
+import { User } from 'app/users/users';
 import { UsersService } from 'app/users/users.service';
+import { Observable, lastValueFrom, of } from 'rxjs';
 
 import { UsersTableComponent } from './users-table.component';
+
+const datasetMock1 = {datasetId: 'dataset1', datasetName: 'dataset1'};
+const datasetMock2 = {datasetId: 'dataset2', datasetName: 'dataset2'};
+const datasetMock3 = {datasetId: 'dataset3', datasetName: 'dataset3'};
+const datasetMock4 = {datasetId: 'dataset4', datasetName: 'dataset4'};
+const datasetMock5 = {datasetId: 'dataset5', datasetName: 'dataset5'};
+const datasetMock6 = {datasetId: 'dataset6', datasetName: 'dataset6'};
+
+const userMockConstructorArgs: [
+  number,
+  string,
+  string,
+  string[],
+  boolean,
+  { datasetId: string; datasetName: string}[]
+] = [
+  17,
+  'fakeName',
+  'fakeEmail',
+  ['group1', 'group2', 'group3', 'group4'],
+  true,
+  [datasetMock1, datasetMock2, datasetMock3, datasetMock4, datasetMock5, datasetMock6]
+];
+
+const userMock = new User(...userMockConstructorArgs);
+
+class UsersGroupsServiceMock {
+  public getGroups(page: number, searchTerm: string): Observable<UserGroup[]> {
+    let pageBody: UserGroup[];
+    if (page === 1) {
+      pageBody = [
+        new UserGroup(1, 'group1', [], []),
+        new UserGroup(2, 'group2', [], []),
+        new UserGroup(3, 'group3', [], []),
+        new UserGroup(4, 'group4', [], [])
+      ];
+    } else if (page === 2) {
+      pageBody = [
+        new UserGroup(5, 'group5', [], []),
+        new UserGroup(6, 'group6', [], []),
+        new UserGroup(7, 'group7', [], []),
+        new UserGroup(8, 'group8', [], [])
+      ];
+    }
+    return of(pageBody);
+  }
+
+  public removeUser(email: string, group: string): Observable<null> {
+    return of(null);
+  }
+
+  public addUser(email: string, group: string): Observable<null> {
+    return of(null);
+  }
+}
+
+class UsersServiceMock {
+  public getUser(id: number): Observable<User> {
+    return of(
+      new User(
+        userMock.id,
+        userMock.name,
+        userMock.email,
+        ['groupAfterUpdate'],
+        userMock.hasPassword,
+        [{datasetId: 'datasetIdAfterUpdate', datasetName: 'datasetNameAfterUpdate'}]
+      ));
+  }
+
+  public updateUser(user: User): Observable<object> {
+    return of(new User(
+      user.id,
+      user.name,
+      user.email,
+      user.groups,
+      user.hasPassword,
+      user.allowedDatasets.concat(
+        user.groups.includes('group4') ? [
+          datasetMock4,
+          datasetMock6,
+        ] :
+          user.groups.includes('group3') ? [
+            datasetMock3,
+            datasetMock5,
+          ] : []
+      )
+    ));
+  }
+}
 
 describe('UsersTableComponent', () => {
   let component: UsersTableComponent;
   let fixture: ComponentFixture<UsersTableComponent>;
+  const usersServiceMock = new UsersServiceMock();
+  const usersGroupsServiceMock = new UsersGroupsServiceMock();
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [
-        UsersTableComponent,
-        GpfTableComponent,
-        GpfTableColumnComponent,
-        GpfTableContentComponent,
-        GpfTableHeaderComponent,
-        GpfTableCellComponent,
-        GpfTableContentHeaderComponent,
-        GpfTableEmptyCellComponent,
-        GpfTableHeaderCellComponent,
-        GpfTableSubheaderComponent,
-        GpfTableSubcontentComponent,
-        GpfTableNothingFoundRowComponent
+        UsersTableComponent
       ],
-      providers: [UsersService, ConfigService, ResizeService, { provide: APP_BASE_HREF, useValue: '' }],
-      imports: [HttpClientTestingModule, RouterTestingModule, NgxsModule.forRoot([], {developmentMode: true})]
+      providers: [
+        UsersService,
+        ConfigService,
+        { provide: APP_BASE_HREF, useValue: '' },
+        { provide: UsersService, useValue: usersServiceMock },
+        { provide: UsersGroupsService, useValue: usersGroupsServiceMock }
+      ],
+      imports: [
+        HttpClientTestingModule,
+        RouterTestingModule,
+        NgxsModule.forRoot([], {developmentMode: true})
+      ]
     }).compileComponents();
 
     fixture = TestBed.createComponent(UsersTableComponent);
     component = fixture.componentInstance;
-    fixture.detectChanges();
   }));
 
   it('should create', () => {
     expect(component).toBeTruthy();
+  });
+
+  it('should check if group is default for user', () => {
+    const user = new User(1, 'fakeName', 'fakeEmail', [], true, []);
+    expect(component.isDefaultGroup(user, 'any_user')).toBe(true);
+    expect(component.isDefaultGroup(user, 'fakeemail')).toBe(true);
+    expect(component.isDefaultGroup(user, '')).toBe(false);
+    expect(component.isDefaultGroup(user, undefined)).toBe(false);
+    expect(component.isDefaultGroup(user, 'fakeEmail')).toBe(false);
+    expect(component.isDefaultGroup(user, 'fakename')).toBe(false);
+  });
+
+  it('should remove group from user', () => {
+    const removeUserSpy = jest.spyOn(usersGroupsServiceMock, 'removeUser');
+    const getUserSpy = jest.spyOn(usersServiceMock, 'getUser');
+    const user = new User(...userMockConstructorArgs);
+
+    component.removeGroup(user, 'groupToRemove');
+    expect(removeUserSpy).toHaveBeenCalledWith(userMockConstructorArgs[2], 'groupToRemove');
+    expect(getUserSpy).toHaveBeenCalledWith(userMockConstructorArgs[0]);
+    expect(user).toStrictEqual(new User(
+      userMockConstructorArgs[0],
+      userMockConstructorArgs[1],
+      userMockConstructorArgs[2],
+      ['groupAfterUpdate'],
+      userMockConstructorArgs[4],
+      [{datasetId: 'datasetIdAfterUpdate', datasetName: 'datasetNameAfterUpdate'}]
+    ));
+  });
+
+  it('should add group to user', () => {
+    const removeUserSpy = jest.spyOn(usersGroupsServiceMock, 'addUser');
+    const getUserSpy = jest.spyOn(usersServiceMock, 'getUser');
+    const user = new User(...userMockConstructorArgs);
+
+    component.addGroup(user, {id: 'groupToAddId', name: 'groupToAdd'});
+    expect(removeUserSpy).toHaveBeenCalledWith(userMockConstructorArgs[2], 'groupToAdd');
+    expect(getUserSpy).toHaveBeenCalledWith(userMockConstructorArgs[0]);
+    expect(user).toStrictEqual(new User(
+      userMockConstructorArgs[0],
+      userMockConstructorArgs[1],
+      userMockConstructorArgs[2],
+      ['groupAfterUpdate'],
+      userMockConstructorArgs[4],
+      [{datasetId: 'datasetIdAfterUpdate', datasetName: 'datasetNameAfterUpdate'}]
+    ));
+  });
+
+  it('should get group names function', async() => {
+    const getGroupsSpy = jest.spyOn(usersGroupsServiceMock, 'getGroups');
+    const user = new User(...userMockConstructorArgs);
+    user.groups = ['group1', 'group3'];
+
+    const getGroupsLambda = component.getGroupNamesFunction(user);
+
+    let page = await lastValueFrom(getGroupsLambda(1, 'search1'));
+    expect(getGroupsSpy).toHaveBeenCalledWith(1, 'search1');
+    expect(page).toStrictEqual(
+      [new Item('2', 'group2'), new Item('4', 'group4')]
+    );
+
+    page = await lastValueFrom(getGroupsLambda(2, 'search2'));
+
+    expect(getGroupsSpy).toHaveBeenCalledWith(2, 'search2');
+    expect(page).toStrictEqual(
+      [
+        new Item('5', 'group5'),
+        new Item('6', 'group6'),
+        new Item('7', 'group7'),
+        new Item('8', 'group8')
+      ]
+    );
   });
 });

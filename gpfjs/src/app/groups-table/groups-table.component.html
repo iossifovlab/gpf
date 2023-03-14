@@ -1,28 +1,65 @@
-<gpf-table [noScrollOptimization]="true" [dataSource]="groups$ | async">
-  <gpf-table-column columnWidth="25px" columnMaxWidth="35px">
-    <gpf-table-header caption="Group" field="name"></gpf-table-header>
-    <gpf-table-content>
-      <gpf-table-subcontent field="name"></gpf-table-subcontent>
-    </gpf-table-content>
-  </gpf-table-column>
-  <gpf-table-column columnWidth="45px" columnMaxWidth="45px">
-    <gpf-table-header caption="Users"></gpf-table-header>
-    <gpf-table-content>
-      <gpf-table-subcontent>
-        <span *gpfTableCellContent="let data">
-          <div *ngFor="let user of data.users">{{ user }}</div>
-        </span>
-      </gpf-table-subcontent>
-    </gpf-table-content>
-  </gpf-table-column>
-  <gpf-table-column columnWidth="35px" columnMaxWidth="45px">
-    <gpf-table-header caption="Datasets"></gpf-table-header>
-    <gpf-table-content>
-      <gpf-table-subcontent>
-        <span *gpfTableCellContent="let data">
-          <div *ngFor="let dataset of data.datasets">{{ dataset }}</div>
-        </span>
-      </gpf-table-subcontent>
-    </gpf-table-content>
-  </gpf-table-column>
-</gpf-table>
+<div class="row">
+  <div class="col-12 mt-3">
+    <div class="grid-container" *ngIf="groups">
+      <div class="grid-header">Groups</div>
+      <div class="grid-header">Users</div>
+      <div class="grid-header">Datasets</div>
+      <div class="grid-header">Actions</div>
+      <ng-container *ngFor="let group of groups">
+        <div class="grid-cell">
+          <span>{{ group.name }}</span>
+        </div>
+
+        <div class="grid-cell list-cell">
+          <div>
+            <div class="item-wrapper" *ngFor="let user of group.users">
+              <span class="item" [title]="user">{{ user }}</span>
+              <gpf-confirm-button
+                (clicked)="removeUser(group, user)"
+                confirmText="Remove"
+                title="Remove user"
+                message="Remove user?"
+                [iconStyle]="['fa', 'fa-thin', 'fa-times']">
+              </gpf-confirm-button>
+            </div>
+          </div>
+          <gpf-item-add-menu
+            [id]="group.name"
+            [getItems]="getUserNamesFunction(group)"
+            (addedItem)="addUser(group, $event)"></gpf-item-add-menu>
+        </div>
+
+        <div class="grid-cell list-cell">
+          <div>
+            <div class="item-wrapper" *ngFor="let dataset of group.datasets">
+              <span class="item" [title]="dataset.datasetName">{{ dataset.datasetName }}</span>
+              <gpf-confirm-button
+                (clicked)="removeDataset(group, dataset.datasetId)"
+                confirmText="Remove"
+                title="Remove dataset"
+                message="Remove dataset?"
+                [iconStyle]="['fa', 'fa-thin', 'fa-times']">
+              </gpf-confirm-button>
+            </div>
+          </div>
+          <gpf-item-add-menu
+            [id]="group.name"
+            [getItems]="getDatasetNamesFunction(group)"
+            (addedItem)="addDataset(group, $event)"></gpf-item-add-menu>
+        </div>
+
+        <div class="grid-cell">
+          <gpf-confirm-button
+            (clicked)="deleteGroup(group)"
+            confirmText="Delete"
+            title="Delete group"
+            message="Delete group?"
+            [iconStyle]="['fa', 'fa-times', 'fa-lg']">
+          </gpf-confirm-button>
+        </div>
+      </ng-container>
+    </div>
+
+    <div *ngIf="groups?.length === 0">No results</div>
+  </div>
+</div>

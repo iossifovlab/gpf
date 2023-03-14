@@ -100,12 +100,10 @@ import { UsersGroupsService } from './users-groups/users-groups.service';
 import { ConfirmationPopoverModule } from 'angular-confirmation-popover';
 import { UserCreateComponent } from './user-create/user-create.component';
 import { UserGroupsSelectorComponent } from './user-groups-selector/user-groups-selector.component';
-import { UsersActionsComponent } from './users-actions/users-actions.component';
 import { DatasetsTableComponent } from './datasets-table/datasets-table.component';
 import { GenotypeBrowserSingleViewComponent } from './genotype-browser-single-view/genotype-browser-single-view.component';
 import { GenotypePreviewFieldComponent } from './genotype-preview-field/genotype-preview-field.component';
 import { ErrorsAlertComponent } from './errors-alert/errors-alert.component';
-import { SmallRemoveButtonComponent } from './small-remove-button/small-remove-button.component';
 import { LoadQueryComponent } from './load-query/load-query.component';
 import { PerfectlyDrawablePedigreeComponent } from './perfectly-drawable-pedigree/perfectly-drawable-pedigree.component';
 import { PedigreeMockService } from './perfectly-drawable-pedigree/pedigree-mock.service';
@@ -176,6 +174,8 @@ import { GetEffectTypeOrderByColumOrderPipe } from './utils/get-effect-type-orde
 import { GetVariantReportRowsPipe } from './utils/get-variant-report-rows.pipe';
 import { BackgroundColorEnrichmentPipe } from './utils/background-color-enrichment.pipe';
 import { ContrastAdjustPipe } from './utils/contrast-adjust.pipe';
+import { ItemAddMenuComponent } from './item-add-menu/item-add-menu.component';
+import { ConfirmButtonComponent } from './confirm-button/confirm-button.component';
 
 const appRoutes: Routes = [
   {
@@ -328,7 +328,6 @@ const appRoutes: Routes = [
     ManagementComponent,
     UserCreateComponent,
     UserGroupsSelectorComponent,
-    UsersActionsComponent,
     DatasetsTableComponent,
     GenotypeBrowserSingleViewComponent,
     GenotypePreviewFieldComponent,
@@ -336,7 +335,7 @@ const appRoutes: Routes = [
     LoadQueryComponent,
     PerfectlyDrawablePedigreeComponent,
     NonPdpPedigreesComponent,
-    SmallRemoveButtonComponent,
+    ConfirmButtonComponent,
     StudyFiltersBlockComponent,
     AddButtonComponent,
     RemoveButtonComponent,
@@ -380,7 +379,8 @@ const appRoutes: Routes = [
     PedigreeChartComponent,
     PedigreeChartMemberComponent,
     LegendComponent,
-    PedigreeComponent
+    PedigreeComponent,
+    ItemAddMenuComponent,
   ],
   imports: [
     BrowserModule,

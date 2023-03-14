@@ -1,0 +1,28 @@
+.popover-body button:first-child {
+  margin-right: 5px;
+}
+
+.popover-body p {
+  text-align: center;
+  font-size: 18px;
+}
+
+.popover-body {
+  padding: 8px;
+}
+
+p {
+  margin-bottom: 8px;
+}
+
+#confirm-button {
+  border: none;
+  background-color: transparent;
+  color: #2a6395;
+}
+
+#confirm-button:hover {
+  border: none;
+  background-color: transparent;
+  color: #68abe6;
+}

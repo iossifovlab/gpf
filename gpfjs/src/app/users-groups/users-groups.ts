@@ -1,5 +1,5 @@
 export class UserGroup {
-  public static fromJsonArray(jsonArray: any[]): UserGroup[] {
+  public static fromJsonArray(jsonArray: object[]): UserGroup[] {
     return jsonArray.map(v => UserGroup.fromJson(v));
   }
 
@@ -16,6 +16,6 @@ export class UserGroup {
     public id: number,
     public name: string,
     public users: string[],
-    public datasets: string[]
+    public datasets: Array<{datasetName: string; datasetId: string}>
   ) {}
 }

@@ -1,10 +1,15 @@
-import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
-import { Router, ActivatedRoute } from '@angular/router';
+import { Component, ElementRef, HostListener, OnInit, ViewChild } from '@angular/core';
+import { DatasetPermissions } from 'app/datasets-table/datasets-table';
+import { DatasetsService } from 'app/datasets/datasets.service';
+import { UserGroup } from 'app/users-groups/users-groups';
+import { UsersGroupsService } from 'app/users-groups/users-groups.service';
 import { environment } from 'environments/environment';
-import { Observable, ReplaySubject } from 'rxjs';
-import { debounceTime, distinctUntilChanged, map, share, switchMap, take, tap } from 'rxjs/operators';
+import { Observable, Subscription } from 'rxjs';
+import { take } from 'rxjs/operators';
 import { User } from '../users/users';
 import { UsersService } from '../users/users.service';
+
+type TableName = 'USERS' | 'GROUPS' | 'DATASETS';
 
 @Component({
   selector: 'gpf-user-management',
@@ -12,77 +17,46 @@ import { UsersService } from '../users/users.service';
   styleUrls: ['./user-management.component.css']
 })
 export class UserManagementComponent implements OnInit {
-  public input$ = new ReplaySubject<string>(1);
   public users: User[] = [];
-  public usersToShow$: Observable<User[]>;
+  public groups: UserGroup[] = [];
+  public datasets: DatasetPermissions[] = [];
+  public searchText = '';
   @ViewChild('searchBox') private searchBox: ElementRef;
-
+  public currentUserEmail: string;
   public imgPathPrefix = environment.imgPathPrefix;
+
+  private getPageSubscription: Subscription = new Subscription();
+  private pageCount = 0;
+  private tableName: TableName = 'USERS';
+  private allPagesLoaded = false;
 
   public constructor(
     private usersService: UsersService,
-    private router: Router,
-    private route: ActivatedRoute
+    private usersGroupsService: UsersGroupsService,
+    private datasetsService: DatasetsService
   ) { }
 
   public ngOnInit(): void {
     this.focusSearchBox();
-    this.usersToShow$ = this.input$.pipe(
-      map(searchTerm => searchTerm.trim()),
-      debounceTime(300),
-      distinctUntilChanged(),
-      tap(searchTerm => {
-        this.users = [];
-        const queryParamsObject: any = {};
-        if (searchTerm) {
-          queryParamsObject.search = searchTerm;
-        }
-        this.router.navigate(['.'], {
-          relativeTo: this.route,
-          replaceUrl: true,
-          queryParams: queryParamsObject
-        });
-      }),
-      switchMap(searchTerm => this.usersService.searchUsersByGroup(searchTerm)),
-      map(user => {
-        this.users.push(this.sortGroups(user));
-        return this.users;
-      }),
-      share()
-    );
+    this.updateCurrentTable();
 
-    this.route.queryParamMap.pipe(
-      map(params => params.get('search') || ''),
-      take(1)
-    ).subscribe(searchTerm => {
-      this.search(searchTerm);
+    this.usersService.getUserInfo().pipe(take(1)).subscribe((currentUser: User) => {
+      this.currentUserEmail = currentUser.email;
     });
   }
 
   public search(value: string): void {
-    this.input$.next(value);
+    this.searchText = value;
+    this.resetTablesData();
+    this.updateCurrentTable();
   }
 
-  private sortGroups(user: User): User {
-    if (!user || !user.groups) {
-      return user;
-    }
-    const defaultGroups = user.groups
-      .filter(group => user.getDefaultGroups().indexOf(group) !== -1);
-    let otherGroups = user.groups
-      .filter(group => user.getDefaultGroups().indexOf(group) === -1);
-
-    if (defaultGroups.length === 2 && defaultGroups[0] !== 'any_user') {
-      const group = defaultGroups[0];
-      defaultGroups[0] = defaultGroups[1];
-      defaultGroups[1] = group;
-    }
-
-    otherGroups = otherGroups
-      .sort((group1, group2) => group1.localeCompare(group2));
-
-    user.groups = defaultGroups.concat(otherGroups);
-    return user;
+  public resetTablesData(): void {
+    this.pageCount = 0;
+    this.users = [];
+    this.groups = [];
+    this.datasets = [];
+    this.allPagesLoaded = false;
   }
 
   private async waitForSearchBoxToLoad(): Promise<void> {
@@ -98,7 +72,64 @@ export class UserManagementComponent implements OnInit {
 
   public focusSearchBox(): void {
     this.waitForSearchBoxToLoad().then(() => {
-      this.searchBox.nativeElement.focus();
+      (this.searchBox.nativeElement as HTMLInputElement).focus();
+    });
+  }
+
+  @HostListener('window:scroll', ['$event'])
+  public updateTableOnScroll(): void {
+    if (this.getPageSubscription.closed && window.scrollY + window.innerHeight + 200 > document.body.scrollHeight) {
+      this.updateCurrentTable();
+    }
+  }
+
+  public switchTableName(newName: TableName): void {
+    this.tableName = newName;
+    this.searchText = '';
+    this.resetTablesData();
+    this.updateCurrentTable();
+  }
+
+  public updateCurrentTable(): void {
+    if (!this.allPagesLoaded) {
+      this.pageCount++;
+
+      switch (this.tableName) {
+        case 'USERS':
+          this.updateTable(this.usersService.getUsers.bind(this.usersService));
+          break;
+        case 'GROUPS':
+          this.updateTable(this.usersGroupsService.getGroups.bind(this.usersGroupsService));
+          break;
+        case 'DATASETS':
+          this.updateTable(this.datasetsService.getManagementDatasets.bind(this.datasetsService));
+          break;
+      }
+    }
+  }
+
+  private updateTable(
+    getPage: (page: number, searchString: string) => Observable<User[] | UserGroup[] | DatasetPermissions[]>
+  ): void {
+    this.getPageSubscription?.unsubscribe();
+    this.getPageSubscription = getPage(this.pageCount, this.searchText).subscribe(res => {
+      if (!res.length) {
+        this.allPagesLoaded = true;
+        return;
+      }
+
+      res.forEach(r => {
+        if (r instanceof User) {
+          r.sortGroups();
+          this.users.push(r);
+        } else if (r instanceof UserGroup) {
+          this.groups.push(r);
+        } else if (r instanceof DatasetPermissions) {
+          this.datasets.push(r);
+        }
+      });
+
+      this.getPageSubscription.unsubscribe();
     });
   }
 }

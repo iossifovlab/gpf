@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { UserGroup } from './users-groups';
 import { Dataset } from '../datasets/datasets';
 import { ConfigService } from '../config/config.service';
@@ -21,31 +21,84 @@ export class UsersGroupsService {
     const options = { withCredentials: true };
 
     return this.http.get(this.config.baseUrl + this.groupsUrl, options)
-      .pipe(map((response: any) => UserGroup.fromJsonArray(response)));
+      .pipe(map((response: object[]) => UserGroup.fromJsonArray(response)));
   }
 
-  public getGroup(groupId: number): Observable<UserGroup> {
-    const options = { withCredentials: true };
+  public getGroups(page: number, searchTerm: string): Observable<UserGroup[]> {
+    let url = `${this.config.baseUrl}${this.groupsUrl}?page=${page}`;
+    if (searchTerm) {
+      const searchParams = new HttpParams().set('search', searchTerm);
+      url += `&${searchParams.toString()}`;
+    }
 
-    return this.http.get(`${this.config.baseUrl}${this.groupsUrl}/${groupId}`, options)
-      .pipe(map((response: any) => UserGroup.fromJson(response)));
+    return this.http.get<UserGroup[]>(url).pipe(
+      map((response) => {
+        if (response === null) {
+          return [] as UserGroup[];
+        }
+        return response.map(user => {
+          const usr = UserGroup.fromJson(user);
+          // Finding and fixing duplicate dataset names
+          usr.datasets.forEach((d, index) => {
+            if (usr.datasets.indexOf(d) !== index) {
+              d.datasetName += `(${d.datasetId})`;
+            }
+          });
+          return usr;
+        });
+      })
+    );
   }
 
-  public grantPermission(groupName: string, dataset: Dataset): Observable<object> {
+  public getGroup(group: string): Observable<UserGroup> {
     const options = { withCredentials: true };
 
-    return this.http.post(this.config.baseUrl + this.groupGrantPermissionUrl, {
+    return this.http.get(`${this.config.baseUrl}${this.groupsUrl}/${group}`, options)
+      .pipe(map(response => UserGroup.fromJson(response)));
+  }
+
+  public grantPermissionToDataset(groupName: string, datasetId: string): Observable<null> {
+    const options = { withCredentials: true };
+
+    return this.http.post<null>(this.config.baseUrl + this.groupGrantPermissionUrl, {
       groupName: groupName,
-      datasetId: dataset.id
+      datasetId: datasetId
     }, options);
   }
 
-  public revokePermission(group: UserGroup, dataset: Dataset): Observable<object> {
+  public revokePermissionToDataset(groupId: number, datasetId: string): Observable<null> {
+    const options = { withCredentials: true };
+    return this.http.post<null>(this.config.baseUrl + this.groupRevokePermissionUrl, {
+      groupId: groupId,
+      datasetId: datasetId
+    }, options);
+  }
+
+  public addUser(userEmail: string, groupName: string): Observable<null> {
+    const url = `${this.config.baseUrl}`
+      + `${this.groupsUrl}/add-user`;
     const options = { withCredentials: true };
 
-    return this.http.post(this.config.baseUrl + this.groupRevokePermissionUrl, {
-      groupId: group.id,
-      datasetId: dataset.id
-    }, options);
+    return this.http.post<null>(
+      url,
+      {
+        userEmail: userEmail,
+        groupName: groupName
+      },
+      options);
+  }
+
+  public removeUser(userEmail: string, groupName: string): Observable<null> {
+    const url = `${this.config.baseUrl}`
+      + `${this.groupsUrl}/remove-user`;
+    const options = { withCredentials: true };
+
+    return this.http.post<null>(
+      url,
+      {
+        userEmail: userEmail,
+        groupName: groupName
+      },
+      options);
   }
 }

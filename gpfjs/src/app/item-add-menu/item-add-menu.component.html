@@ -1,0 +1,34 @@
+<button class="add-button" title="Add more to the list" (click)="showMenu = !showMenu; search('')">Add</button>
+
+<div class="menu" id="menu" *ngIf="showMenu && items">
+  <div class="search">
+    <div class="search-input-wrapper">
+      <input
+        #searchInput
+        class="search-input form-control"
+        type="text"
+        name="search"
+        placeholder="Search"
+        (keyup)="search(searchInput.value)"
+        autocomplete="off"
+        [ngModel]="searchText"
+        spellcheck="false" />
+      <span
+        class="search-clear-icon"
+        [style.background-image]="'url(' + imgPathPrefix + 'search-clear-icon.png)'"
+        *ngIf="searchInput.value !== ''"
+        (click)="searchInput.value = ''; search(searchInput.value)">
+      </span>
+    </div>
+  </div>
+
+  <div class="table-container" #tableContainer (scroll)="updateItemsIfScrolled(searchInput.value, tableContainer)">
+    <table>
+      <tr *ngFor="let item of items">
+        <td>
+          <button class="add-item-button" [attr.title]="item" (click)="addItem(item)">{{ item.name }}</button>
+        </td>
+      </tr>
+    </table>
+  </div>
+</div>

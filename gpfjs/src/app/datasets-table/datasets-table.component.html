@@ -1,69 +1,46 @@
 <div class="row">
-  <div class="col-12">
-    <gpf-table [noScrollOptimization]="true" [dataSource]="tableData$ | async" style="width: 100%">
-      <gpf-table-column columnWidth="15px" columnMaxWidth="25px">
-        <gpf-table-header caption="Dataset" field="dataset" [comparator]="datasetComparator"></gpf-table-header>
-        <gpf-table-content>
-          <gpf-table-subcontent>
-            <span *gpfTableCellContent="let data">{{ data.dataset.name || data.dataset.id }}</span>
-          </gpf-table-subcontent>
-        </gpf-table-content>
-      </gpf-table-column>
-      <gpf-table-column columnWidth="35px" columnMaxWidth="45px">
-        <gpf-table-header caption="Groups with access"></gpf-table-header>
-        <gpf-table-content>
-          <gpf-table-subcontent>
-            <span *gpfTableCellContent="let data">
-              <div *ngFor="let group of data.groups">
-                <span>{{ group }}</span>
-                <gpf-small-remove-button
-                  (clicked)="removeGroup(data.dataset, group)"
-                  [hide]="isDefaultGroup(data.dataset, group)"
-                  message="Removing the group '{{ group }}' could change which users have access to the dataset {{
-                    data.dataset.id
-                  }}."
-                  confirmText="Remove group"
-                  title="Remove group">
-                </gpf-small-remove-button>
-              </div>
-              <div class="input-group">
-                <span
-                  #errorPopup
-                  [style.display]="errorDisplayStyles[data.dataset.id]"
-                  id="{{ data.dataset.id }}-warning"
-                  class="error-popup card"
-                  >{{ errorMessage }}</span
-                >
-                <input
-                  #input
-                  class="form-control"
-                  style="border-top-left-radius: 5px; border-bottom-left-radius: 5px"
-                  [ngbTypeahead]="searchGroups(data.groups)"
-                  container="body"
-                  spellcheck="false" />
-                <div class="input-group-btn">
-                  <button
-                    class="btn btn-primary"
-                    style="border-top-left-radius: 0; border-bottom-left-radius: 0"
-                    (click)="updatePermissions(data.dataset, input.value)"
-                    >Add</button
-                  >
-                </div>
-              </div>
-            </span>
-          </gpf-table-subcontent>
-        </gpf-table-content>
-      </gpf-table-column>
-      <gpf-table-column columnWidth="35px" columnMaxWidth="45px">
-        <gpf-table-header caption="Users with access"></gpf-table-header>
-        <gpf-table-content>
-          <gpf-table-subcontent>
-            <div *gpfTableCellContent="let data" class="height-limited">
-              <div *ngFor="let user of data.users">{{ user.email }}</div>
+  <div class="col-12 mt-3">
+    <div class="grid-container" *ngIf="datasets">
+      <div class="grid-header">Dataset</div>
+      <div class="grid-header">Groups</div>
+      <div class="grid-header">Users</div>
+      <ng-container *ngFor="let dataset of datasets">
+        <div class="grid-cell">
+          <span>{{ dataset.name }}</span>
+        </div>
+
+        <div class="grid-cell list-cell">
+          <div>
+            <div class="item-wrapper" *ngFor="let group of dataset.groups">
+              <span class="item" [title]="group">{{ group }}</span>
+              <gpf-confirm-button
+                (clicked)="removeGroup(dataset, group)"
+                [hide]="isDefaultGroup(dataset, group)"
+                confirmText="Remove"
+                title="Remove group"
+                message="Remove group?"
+                [iconStyle]="['fa', 'fa-thin', 'fa-times']">
+              </gpf-confirm-button>
             </div>
-          </gpf-table-subcontent>
-        </gpf-table-content>
-      </gpf-table-column>
-    </gpf-table>
+          </div>
+          <gpf-item-add-menu
+            [getItems]="getGroupNamesFunction(dataset)"
+            (addedItem)="addGroup(dataset, $event)"></gpf-item-add-menu>
+          <input
+            #newGroupName
+            placeholder="Create group"
+            class="create-group form-control"
+            type="text"
+            spellcheck="false"
+            (keydown.enter)="addGroup(dataset, { id: '', name: newGroupName.value }); newGroupName.value = ''" />
+        </div>
+
+        <div class="grid-cell list-cell">
+          <div>
+            <div class="item" [title]="user.name + ' ' + user.email" *ngFor="let user of dataset.users">{{ user.name + ' ' + user.email }}</div>
+          </div>
+        </div>
+      </ng-container>
+    </div>
   </div>
 </div>

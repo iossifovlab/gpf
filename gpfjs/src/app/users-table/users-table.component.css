@@ -1,7 +1,3 @@
-gpf-table {
-  width: 100%;
-}
-
 .action-buttons .btn {
   cursor: pointer;
   color: #2a6395;
@@ -15,4 +11,55 @@ gpf-table {
 
 .select-unselect-all {
   text-align: center;
+}
+
+.grid-container {
+  display: grid;
+  grid-template-columns: 20% 15% 25% 25% 15%;
+}
+
+.grid-header {
+  min-height: 2rem;
+  line-height: 2rem;
+  border: 1px solid #ddd;
+  background-color: #eee;
+  text-align: center;
+  font-weight: bold;
+}
+
+.grid-cell {
+  min-height: 6rem;
+  border: 1px solid #ddd;
+  text-align: center;
+  padding: 5px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+span {
+  line-height: 30px;
+  padding: 0 10px;
+}
+
+.list-cell {
+  justify-content: space-between;
+}
+
+.item {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: left;
+  padding: 0 10px;
+  line-height: 30px;
+}
+
+.item-wrapper {
+  display: flex;
+  justify-content: space-between;
+}
+
+gpf-item-add-menu {
+  border-top: 1px solid rgba(128, 128, 128, 10.3%);
 }

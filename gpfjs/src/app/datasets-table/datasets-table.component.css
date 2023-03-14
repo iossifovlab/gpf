@@ -1,10 +1,9 @@
-.height-limited {
-  max-height: 252px;
-  overflow: auto;
+.grid-container {
+  grid-template-columns: 30% 35% 35%;
 }
 
-.error-popup {
-  position: absolute;
-  bottom: 130%;
-  padding: 8px;
+.create-group {
+  display: block;
+  margin: 6px auto 6px auto;
+  width: 50%;
 }

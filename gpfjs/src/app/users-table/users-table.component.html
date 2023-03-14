@@ -1,83 +1,75 @@
 <div class="row">
   <div class="col-12 mt-3">
-    <gpf-table [dataSource]="users">
-      <gpf-table-column columnWidth="75px">
-        <gpf-table-header caption="Name"></gpf-table-header>
-        <gpf-table-content>
-          <gpf-table-subcontent>
-            <span *gpfTableCellContent="let user">{{ user.name }}</span>
-          </gpf-table-subcontent>
-        </gpf-table-content>
-      </gpf-table-column>
+    <div class="grid-container" *ngIf="users">
+      <div class="grid-header">User</div>
+      <div class="grid-header">Has password</div>
+      <div class="grid-header">Groups</div>
+      <div class="grid-header">Datasets</div>
+      <div class="grid-header">Actions</div>
+      <ng-container *ngFor="let user of users">
+        <div class="grid-cell">
+          <a [routerLink]="['/management/users', user.id]">
+            <div>{{ user.name }}</div>
+            <div>{{ user.email }}</div>
+          </a>
+        </div>
 
-      <gpf-table-column columnWidth="75px">
-        <gpf-table-header caption="Email"></gpf-table-header>
-        <gpf-table-content>
-          <gpf-table-subcontent>
-            <div *gpfTableCellContent="let user">
-              <a [routerLink]="['/management/users', user.id]">{{ user.email }}</a>
+        <div class="grid-cell">
+          <span *ngIf="user.hasPassword">
+            <i class="fa fa-check" aria-hidden="true"></i>
+          </span>
+        </div>
+
+        <div class="grid-cell list-cell">
+          <div>
+            <div class="item-wrapper" *ngFor="let group of user.groups">
+              <span class="item" [title]="group">{{ group }}</span>
+              <gpf-confirm-button
+                (clicked)="removeGroup(user, group)"
+                [hide]="isDefaultGroup(user, group) || (user.email === currentUserEmail && group === 'admin')"
+                confirmText="Remove"
+                title="Remove group"
+                message="Remove group?"
+                [iconStyle]="['fa', 'fa-thin', 'fa-times']">
+              </gpf-confirm-button>
             </div>
-          </gpf-table-subcontent>
-        </gpf-table-content>
-      </gpf-table-column>
+          </div>
+          <gpf-item-add-menu
+            [getItems]="getGroupNamesFunction(user)"
+            (addedItem)="addGroup(user, $event)"></gpf-item-add-menu>
+        </div>
 
-      <gpf-table-column columnWidth="75px">
-        <gpf-table-header caption="Groups"></gpf-table-header>
-        <gpf-table-content>
-          <gpf-table-subcontent>
-            <span *gpfTableCellContent="let user">
-              <div *ngFor="let group of user.groups">
-                <div>
-                  <span>{{ group }}</span>
-                  <gpf-small-remove-button
-                    (clicked)="removeGroup(user, group)"
-                    [hide]="isDefaultGroup(user, group) || (user.email === currentUserEmail && group === 'admin')"
-                    message="Removing the group '{{ group }}' could change which usersets {{ user.name }} ({{ user.email }}) has access to."
-                    confirmText="Remove group"
-                    title="Remove group">
-                  </gpf-small-remove-button>
-                </div>
-              </div>
-            </span>
-          </gpf-table-subcontent>
-        </gpf-table-content>
-      </gpf-table-column>
+        <div class="grid-cell list-cell">
+          <div>
+            <div class="item" [title]="dataset.datasetName" *ngFor="let dataset of user.allowedDatasets">{{ dataset.datasetName }}</div>
+          </div>
+        </div>
 
-      <gpf-table-column columnWidth="50px">
-        <gpf-table-header caption="Has password"></gpf-table-header>
-        <gpf-table-content>
-          <gpf-table-subcontent>
-            <span *gpfTableCellContent="let user">
-              <span *ngIf="user.hasPassword">
-                <i class="fa fa-check" aria-hidden="true"></i>
-              </span>
-            </span>
-          </gpf-table-subcontent>
-        </gpf-table-content>
-      </gpf-table-column>
-
-      <gpf-table-column columnWidth="75px">
-        <gpf-table-header caption="Allowed datasets"></gpf-table-header>
-        <gpf-table-content>
-          <gpf-table-subcontent>
-            <div *gpfTableCellContent="let user" style="height: 150px; overflow: auto">
-              <div *ngFor="let datasetId of getUserAllowedDatasetIds(user)">{{ datasetId }}</div>
-            </div>
-          </gpf-table-subcontent>
-        </gpf-table-content>
-      </gpf-table-column>
-
-      <gpf-table-column columnWidth="75px">
-        <gpf-table-header caption="Actions"></gpf-table-header>
-        <gpf-table-content>
-          <gpf-table-subcontent>
-            <span *gpfTableCellContent="let user" class="action-buttons">
-              <gpf-users-actions [user]="user"></gpf-users-actions>
-            </span>
-          </gpf-table-subcontent>
-        </gpf-table-content>
-      </gpf-table-column>
-    </gpf-table>
-    <div *ngIf="users?.length === 0">Nothing found</div>
+        <div class="grid-cell">
+          <span class="action-buttons">
+            <gpf-confirm-button
+              (clicked)="resetPassword(user)"
+              confirmText="Reset"
+              title="Reset password"
+              [message]="
+                user.name +
+                ' ' +
+                user.email +
+                ' password will be reset. An email with reset instructions will be sent and they won&lsquo;t be able to log in until they set a new password.'
+              "
+              [iconStyle]="['fa', 'fa-lg', 'fa-refresh']">
+            </gpf-confirm-button>
+            <gpf-confirm-button
+              *ngIf="currentUserEmail !== user.email"
+              (clicked)="deleteUser(user)"
+              confirmText="Delete"
+              title="Delete user"
+              [message]="user.name + ' ' + user.email + ' will be deleted. This action is irrevertible!'"
+              [iconStyle]="['fa', 'fa-lg', 'fa-times']">
+            </gpf-confirm-button>
+          </span>
+        </div>
+      </ng-container>
+    </div>
   </div>
 </div>

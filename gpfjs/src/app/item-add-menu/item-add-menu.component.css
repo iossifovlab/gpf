@@ -1,0 +1,57 @@
+.add-button {
+  border: none;
+  background: none;
+  font-weight: 500;
+  color: #2a6395;
+}
+
+.add-button:hover {
+  border: none;
+  background-color: transparent;
+  color: #68abe6;
+}
+
+.menu {
+  min-width: 350px;
+  z-index: 99999;
+  padding: 10px;
+  display: grid;
+  position: absolute;
+  border: 2px solid #ddd;
+  background: #fff;
+  margin: 10px;
+}
+
+tr {
+  height: 30px;
+}
+
+tr > td {
+  padding-top: 8px;
+}
+
+.add-item-button {
+  border: none;
+  background: none;
+  padding-left: 10px;
+  width: 300px;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 6px;
+  border: 1px solid #dedede;
+  background-color: #fff;
+}
+
+.form-control {
+  border-radius: 0;
+}
+
+.form-control:focus {
+  box-shadow: inset 0 -1px 0 #ddd;
+}
+
+.table-container {
+  overflow-y: scroll;
+  height: 215px;
+  margin-top: 4px;
+}

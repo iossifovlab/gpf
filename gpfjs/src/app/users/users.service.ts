@@ -1,5 +1,5 @@
 
-import {throwError as observableThrowError, Observable, Subject, ReplaySubject } from 'rxjs';
+import { throwError as observableThrowError, Observable, Subject, ReplaySubject, of, BehaviorSubject } from 'rxjs';
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { ConfigService } from '../config/config.service';
@@ -10,15 +10,13 @@ import { Store } from '@ngxs/store';
 import { StateResetAll } from 'ngxs-reset-plugin';
 import { catchError, map, tap, take, switchMap } from 'rxjs/operators';
 import { AuthService } from '../auth.service';
-const oboe = require('oboe');
 
 @Injectable()
 export class UsersService {
   private readonly logoutUrl = 'users/logout';
   private readonly userInfoUrl = 'users/get_user_info';
-  private readonly resetPasswordUrl = 'users/reset_password';
+  private readonly resetPasswordUrl = 'users/forgotten_password';
   private readonly usersUrl = 'users';
-  private readonly usersStreamingUrl = `${this.usersUrl}/streaming_search`;
 
   private userInfo$ = new ReplaySubject<{}>(1);
   private lastUserInfo = null;
@@ -87,22 +85,14 @@ export class UsersService {
     return !(name === undefined || name === '');
   }
 
-  public resetPassword(email: string): Observable<boolean> {
+  public resetPassword(email: string): void {
     const csrfToken = this.cookieService.get('csrftoken');
-    const headers = { 'X-CSRFToken': csrfToken };
-    const options = { headers: headers, withCredentials: true };
+    const headers = { 'X-CSRFToken': csrfToken, 'Content-Type': 'application/json'};
 
-    if (!this.isEmailValid(email)) {
-      return observableThrowError(new Error(
-        'Invalid email address entered. Please use a valid email address.'
-      ));
-    }
-
-    return this.http.post(this.config.baseUrl + this.resetPasswordUrl, { email: email }, options).pipe(
-      map(() => true),
-      catchError(error => {
-        return observableThrowError(new Error(error.error.error_msg));
-      })
+    // Using plain js fetch, because the API end-point does not return JSON
+    fetch(
+      this.config.baseUrl + this.resetPasswordUrl,
+      { body: JSON.stringify({ email: email }), headers: headers, credentials: 'include', method: 'POST'}
     );
   }
 
@@ -180,55 +170,35 @@ export class UsersService {
     return this.http.delete(url, options);
   }
 
-  public resetUserPassword(user: User): Observable<object> {
-    if (!user.id) {
-      return observableThrowError('No user id');
-    }
-    const url = `${this.config.baseUrl}${this.usersUrl}/${user.id}/password_reset`;
-    const options = { withCredentials: true };
-
-    return this.http.post(url, null, options);
-  }
-
   public removeUserGroup(user: User, group: string): Observable<object> {
     const clone = user.clone();
     clone.groups = clone.groups.filter(grp => grp !== group);
     return this.updateUser(clone);
   }
 
-  public searchUsersByGroup(searchTerm: string): Observable<User> {
-    const csrfToken = this.cookieService.get('csrftoken');
-    const headers = { 'X-CSRFToken': csrfToken };
-    const usersSubject: Subject<User> = new Subject();
-
-    if (this.authService.getAccessToken() !== '') {
-      headers['Authorization'] = `Bearer ${this.authService.getAccessToken()}`;
-    }
-
-    let url: string;
-    if (searchTerm !== null) {
+  public getUsers(page: number, searchTerm: string): Observable<User[]> {
+    let url = `${this.config.baseUrl}${this.usersUrl}?page=${page}`;
+    if (searchTerm) {
       const searchParams = new HttpParams().set('search', searchTerm);
-      url = `${this.config.baseUrl}${this.usersStreamingUrl}?${searchParams.toString()}`;
-    } else {
-      url = `${this.config.baseUrl}${this.usersStreamingUrl}`;
+      url += `&${searchParams.toString()}`;
     }
 
-    oboe({
-      url: url,
-      method: "GET",
-      headers: headers,
-      withCredentials: true,
-    }).start(() => {
-      this.usersStreamingFinishedSubject.next(false);
-    }).node('!.*', data => {
-      usersSubject.next(data);
-    }).done(() => {
-      this.usersStreamingFinishedSubject.next(true);
-    }).fail(() => {
-      this.usersStreamingFinishedSubject.next(true);
-      console.warn('oboejs encountered a fail event while streaming');
-    });
-
-    return usersSubject.pipe(map(data => { return User.fromJson(data); }));
+    return this.http.get<User[]>(url).pipe(
+      map((response) => {
+        if (response === null) {
+          return [] as User[];
+        }
+        return response.map(user => {
+          const usr = User.fromJson(user);
+          // Finding and fixing duplicate dataset names
+          usr.allowedDatasets.forEach((d, index) => {
+            if (usr.allowedDatasets.indexOf(d) !== index) {
+              d.datasetName += `(${d.datasetId})`;
+            }
+          });
+          return usr;
+        });
+      })
+    );
   }
 }
