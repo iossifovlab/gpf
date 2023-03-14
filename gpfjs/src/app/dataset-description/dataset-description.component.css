@@ -36,14 +36,12 @@
   width: 40px;
   height: 40px;
   border: 1px solid transparent !important;
-  border-radius: 0%;
   font-size: 15px;
+  border-radius: 0.375rem !important;
 }
 
 :host::ng-deep.btn-sm:hover {
-  background-color: #eee;
-  color: rgb(197, 197, 197);
-  border-radius: 0%;
+  background-color: #e2e2e2 !important;
 }
 
 :host::ng-deep.btn-sm:disabled {
@@ -54,7 +52,7 @@
 }
 
 :host::ng-deep.md-header .btn-sm[title="Preview"] {
-  height: 37px;
+  height: 40px;
   width: 90px;
   margin-left: 10px;
   color: #2a6395;
@@ -96,12 +94,16 @@
   transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
 }
 
-#close-btn {
+#save-button {
+  width: 85px;
+}
+
+#close-button {
   margin-left: 8px;
   background-color: #eee;
   border: 1px solid #ddd;
 }
 
-#close-btn:hover {
+#close-button:hover {
   background-color: #ddd;
 }
