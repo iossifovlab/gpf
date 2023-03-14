@@ -45,7 +45,9 @@ def scores_repo(tmp_path):
                     - source: phastCons100
                       destination: phastcons100
                 meta:
-                  test_help
+                  description:
+                    test_help
+                  labels: ~
             """),
             "histograms": {
                 "phastCons100.csv": textwrap.dedent("""

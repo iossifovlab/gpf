@@ -768,7 +768,7 @@ class GenomicScore(
             plt.clf()
         return merged_histograms
 
-    def _split_into_regions(self, region_size, reference_genome):
+    def _split_into_regions(self, region_size, reference_genome=None):
         chromosomes = self.get_all_chromosomes()
         for chrom in chromosomes:
             if reference_genome is not None \
