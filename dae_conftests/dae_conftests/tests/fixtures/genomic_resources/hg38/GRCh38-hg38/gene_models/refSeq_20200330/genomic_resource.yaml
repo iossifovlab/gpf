@@ -5,7 +5,9 @@ filename: refSeq_20200330.txt
 format: "refseq"
 
 
-meta: |
-  ## refSeq gene models for HG38 from 2020-03
+meta:
+  description: |
+    ## refSeq gene models for HG38 from 2020-03
 
-  Default gene models used by GPF for HG38.
+    Default gene models used by GPF for HG38.
+  labels: ~
