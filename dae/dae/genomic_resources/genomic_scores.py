@@ -801,11 +801,16 @@ class GenomicScore(
         recomputed.
         """
         manifest = self.resource.get_manifest()
-        score_filename = self.get_config()["table"]["filename"]
-        return hashlib.md5(json.dumps({
-            "config": manifest["genomic_resource.yaml"].md5,
+        config = self.get_config()
+        score_filename = config["table"]["filename"]
+        return json.dumps({
+            "config": {
+                "scores": config["scores"],
+                "histograms": config["histograms"],
+                "table": config["table"]
+            },
             "score_file": manifest[score_filename].md5
-        }, sort_keys=True).encode()).digest()
+        }, sort_keys=True).encode()
 
 
 class PositionScore(GenomicScore):
