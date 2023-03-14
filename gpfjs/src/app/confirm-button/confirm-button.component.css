@@ -2,17 +2,17 @@
   margin-right: 5px;
 }
 
-.popover-body p {
-  text-align: center;
-  font-size: 18px;
-}
-
 .popover-body {
   padding: 8px;
 }
 
 p {
   margin-bottom: 8px;
+}
+
+.popover-body p {
+  text-align: center;
+  font-size: 18px;
 }
 
 #confirm-button {
