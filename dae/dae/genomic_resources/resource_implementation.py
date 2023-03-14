@@ -18,7 +18,7 @@ def get_base_resource_schema():
             "allow_unknown": True,
             "schema": {
                 "description": {"type": "string"},
-                "labels": {"type": "dict", "required": False}
+                "labels": {"type": "dict", "nullable": True}
             }
         }
     }
