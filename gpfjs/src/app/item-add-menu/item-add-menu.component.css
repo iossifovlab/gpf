@@ -31,13 +31,11 @@ tr > td {
 }
 
 .add-item-button {
-  border: none;
   background: none;
   padding-left: 10px;
   width: 300px;
   padding-top: 4px;
   padding-bottom: 4px;
-  padding-left: 6px;
   border: 1px solid #dedede;
   background-color: #fff;
 }
