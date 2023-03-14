@@ -809,7 +809,7 @@ class GenomicScore(
                 "table": config["table"]
             },
             "score_file": manifest[score_filename].md5
-        }, sort_keys=True).encode()
+        }, sort_keys=True, indent=2).encode()
 
 
 class PositionScore(GenomicScore):

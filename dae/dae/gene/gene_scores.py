@@ -343,7 +343,7 @@ class GeneScoreCollection(
                 "histograms": config["histograms"]
             },
             "score_file": manifest[score_filename].md5
-        }, sort_keys=True).encode()
+        }, sort_keys=True, indent=2).encode()
 
     def add_statistics_build_tasks(self, task_graph, **kwargs) -> List[Task]:
         save_tasks = []
