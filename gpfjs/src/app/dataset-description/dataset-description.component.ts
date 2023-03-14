@@ -97,8 +97,8 @@ export class DatasetDescriptionComponent implements OnInit {
     }
   }
 
-  public disablePreviewOnLoad(): void {
-    if (this.editorText.length === 0) {
+  public disablePreviewOnLoad(toDisable: boolean): void {
+    if (toDisable) {
       const previewButton = document.querySelector('[title="Preview"]');
       previewButton.setAttribute('disabled', '');
     }
