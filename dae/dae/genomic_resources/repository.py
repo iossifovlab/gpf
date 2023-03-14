@@ -770,8 +770,10 @@ class ReadWriteRepositoryProtocol(ReadOnlyRepositoryProtocol):
         for filename in filenames_to_delete:
             self.delete_resource_file(local_resource, filename)
 
-        for entry in tqdm(files_to_copy):
-            self.update_resource_file(remote_resource, local_resource, entry)
+        for index, file in enumerate(files_to_copy):
+            print("Copying: " + file + ", file " +
+                  str(index) + " of " + str(len(files_to_copy)))
+            self.update_resource_file(remote_resource, local_resource, file)
 
         self.save_manifest(local_resource, remote_resource.get_manifest())
         self.invalidate()
