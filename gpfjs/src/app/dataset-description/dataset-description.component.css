@@ -9,9 +9,6 @@
 #edit-description {
   display: flex;
   position: relative;
-}
-
-#empty-description {
   padding-top: 7px;
 }
 
@@ -28,21 +25,23 @@
 }
 
 :host::ng-deep.md-header {
-  margin-bottom: 8px;
+  background-color: #eee;
+  padding: 5px;
+  border-radius: 0.375rem 0.375rem 0 0;
+  height: 50px;
 }
 
 :host::ng-deep.md-header .btn-sm {
-  background-color: unset;
-  width: 30px;
-  height: 30px;
+  background-color: #eee;
+  width: 40px;
+  height: 40px;
   border: 1px solid transparent !important;
-  border-radius: 0%;
+  font-size: 15px;
+  border-radius: 0.375rem !important;
 }
 
 :host::ng-deep.btn-sm:hover {
-  background-color: #eee;
-  border: 1px solid rgb(197, 197, 197) !important;
-  border-radius: 0%;
+  background-color: #e2e2e2 !important;
 }
 
 :host::ng-deep.btn-sm:disabled {
@@ -53,17 +52,58 @@
 }
 
 :host::ng-deep.md-header .btn-sm[title="Preview"] {
-  height: 30px;
+  height: 40px;
   width: 90px;
-  background-color: #2a6395;
-  border: none;
+  margin-left: 10px;
+  color: #2a6395;
+  border-radius: 6px;
+  align-self: center;
+}
+
+:host::ng-deep.md-editor {
+  height: 310px;
+}
+
+:host::ng-deep.md-preview {
+  padding: 20px 13px;
+  overflow-wrap: break-word;
 }
 
 :host::ng-deep.btn-sm[title="Preview"]:hover,
 :host::ng-deep.btn-sm[title="Preview"]:focus {
-  background-color: #2a6395;
+  background-color: #ddd;
 }
 
 :host::ng-deep.btn-sm.active[title="Preview"] {
-  background-color: #0b355a !important;
+  background-color: #6c757d !important;
+}
+
+:host::ng-deep#editor1 {
+  border: 1px solid #eee;
+  border-top: none;
+  border-radius: 0 0 0.375rem 0.375rem;
+  padding: 6px 12px;
+  min-width: 542px;
+  min-height: 100px;
+}
+
+:host::ng-deep#editor1:focus {
+  border: 1px solid #a4c9fe;
+  border-top: none;
+  outline: 0;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+#save-button {
+  width: 85px;
+}
+
+#close-button {
+  margin-left: 8px;
+  background-color: #eee;
+  border: 1px solid #ddd;
+}
+
+#close-button:hover {
+  background-color: #ddd;
 }

@@ -87,4 +87,20 @@ export class DatasetDescriptionComponent implements OnInit {
       });
     }
   }
+
+  public togglePreview(): void {
+    const previewButton = document.querySelector('[title="Preview"]');
+    if (this.editorText.length !== 0) {
+      previewButton.removeAttribute('disabled');
+    } else {
+      previewButton.setAttribute('disabled', '');
+    }
+  }
+
+  public disablePreviewOnLoad(toDisable: boolean): void {
+    if (toDisable) {
+      const previewButton = document.querySelector('[title="Preview"]');
+      previewButton.setAttribute('disabled', '');
+    }
+  }
 }

@@ -5,22 +5,42 @@
     </div>
     <div id="edit-description">
       <markdown [data]="dataset.description || ''"></markdown>
-      <i
-        *ngIf="('' | userInfo)?.isAdministrator"
-        (click)="edit()"
-        id="edit-icon"
-        class="fa fa-pencil fa-lg"
-        title="Edit">
-      </i>
+      <div *ngIf="!editMode">
+        <div style="position: relative">
+          <i
+            *ngIf="('' | userInfo)?.isAdministrator"
+            (click)="edit()"
+            id="edit-icon"
+            class="fa fa-pencil fa-lg"
+            title="Edit">
+          </i>
+        </div>
+      </div>
+
+      <div *ngIf="editMode">
+        <div class="editor">
+          <angular-markdown-editor textareaId="editor1" [options]="editorOptions" [(ngModel)]="editorText">
+          </angular-markdown-editor>
+          <button (click)="save()" id="save-btn" class="btn btn-success" title="Save (ctrl+enter)">Save</button>
+          <button (click)="close()" id="close-btn" class="btn" title="Close">Close</button>
+        </div>
+      </div>
+
+      <hr *ngIf="!dataset.description && !editMode" style="margin-top: 5px" />
     </div>
   </div>
 
   <div *ngIf="editMode">
     <div class="editor">
-      <angular-markdown-editor textareaId="editor1" [options]="editorOptions" [(ngModel)]="editorText">
+      <angular-markdown-editor
+        textareaId="editor1"
+        [options]="editorOptions"
+        [(ngModel)]="editorText"
+        (onChange)="togglePreview()"
+        (onShow)="disablePreviewOnLoad(!dataset.description)">
       </angular-markdown-editor>
-      <button (click)="save()" class="btn btn-success" title="Save (ctrl+enter)">Save</button>
-      <button (click)="close()" class="btn" style="margin-left: 8px" tutle="Close">Close</button>
+      <button (click)="save()" id="save-button" class="btn btn-success" title="Save (ctrl+enter)">Save</button>
+      <button (click)="close()" id="close-button" class="btn" title="Close">Close</button>
     </div>
   </div>
 
