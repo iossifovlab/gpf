@@ -567,13 +567,15 @@ class GenomicScore(
         ref_genome_id = self.get_label("reference_genome")
         ref_genome = None
         if ref_genome_id is not None or grr is not None:
-            logger.warning(
-                "Couldn't use reference genome tag for %s",
-                self.resource.resource_id
-            )
             try:
                 ref_genome = build_reference_genome_from_resource(
                     grr.get_resource(ref_genome_id)
+                )
+                logger.info(
+                    "Using reference genome label <%s> "
+                    "for chromosome lengths of <%s>",
+                    ref_genome_id,
+                    self.resource.resource_id
                 )
             except FileNotFoundError:
                 logger.warning(
@@ -770,9 +772,13 @@ class GenomicScore(
     def _split_into_regions(self, region_size, reference_genome):
         chromosomes = self.get_all_chromosomes()
         for chrom in chromosomes:
-            if reference_genome is not None:
+            if reference_genome is not None \
+                    and chrom in reference_genome.chromosomes:
                 chrom_len = reference_genome.get_chrom_length(chrom)
             else:
+                logger.info(
+                    "chromosome %s of %s not found in reference genome %s",
+                    chrom, self.resource_id, reference_genome.resource_id)
                 chrom_len = self.table.get_chromosome_length(chrom)
             logger.debug(
                 "Chromosome '%s' has length %s",

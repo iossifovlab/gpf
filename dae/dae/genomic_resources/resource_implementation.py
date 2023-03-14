@@ -18,7 +18,7 @@ def get_base_resource_schema():
             "allow_unknown": True,
             "schema": {
                 "description": {"type": "string"},
-                "labels": {"type": "dict"}
+                "labels": {"type": "dict", "required": False}
             }
         }
     }
@@ -38,6 +38,10 @@ class GenomicResourceImplementation(ABC):
     def __init__(self, genomic_resource: GenomicResource):
         self.resource = genomic_resource
         self.config: dict = self.resource.config
+
+    @property
+    def resource_id(self):
+        self.resource.resource_id
 
     def get_config(self) -> dict:
         return self.config
