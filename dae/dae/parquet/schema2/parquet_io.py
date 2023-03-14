@@ -61,7 +61,7 @@ class ContinuousParquetFileWriter:
         filesystem, filepath = url_to_pyarrow_fs(filepath, filesystem)
         self._writer = pq.ParquetWriter(
             filepath, self.schema, compression="snappy", filesystem=filesystem,
-            version="1.0"
+            version="1.0", use_compliant_nested_type=True
         )
         self.rows = rows
         self._data = None

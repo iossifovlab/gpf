@@ -59,3 +59,35 @@ def test_query_by_roles(
     vs = imported_study.query_variants(roles=roles)
     vs = list(vs)
     assert len(vs) == count
+
+
+@pytest.mark.parametrize(
+    "person_ids,count",
+    [
+        (None, 5),
+        (set(["m1"]), 2),
+        (set(["d1"]), 3),
+        (set(["p1"]), 4),
+        (set(["s1"]), 2),
+    ],
+)
+def test_query_person_id(
+        person_ids, count, imported_study):
+    vs = imported_study.query_variants(person_ids=person_ids)
+    vs = list(vs)
+    assert len(vs) == count
+
+
+@pytest.mark.parametrize(
+    "family_ids,count",
+    [
+        (None, 5),
+        (set(["f1"]), 5)
+    ],
+)
+def test_query_family_id(family_ids, count, imported_study):
+    vs = imported_study.query_variants(family_ids=family_ids)
+    vs = list(vs)
+    assert len(vs) == count
+
+# TODO: add _status

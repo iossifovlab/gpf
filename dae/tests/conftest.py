@@ -109,7 +109,7 @@ def pytest_addoption(parser):
         help="list of genotype storage IDs to use in integartion tests")
 
     parser.addoption(
-        "--genotype-storage-config",
+        "--genotype-storage-config", "--gsf",
         dest="storage_config",
         default=None,
         help="genotype storage configuration file to use integration tests")
