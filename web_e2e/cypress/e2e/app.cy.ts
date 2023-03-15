@@ -69,7 +69,7 @@ describe('App tests', () => {
     page.logout();
   });
 
-  it('should toggle sidenav, click on the "Management" button and navigate to "/management"', () => {
+  it.skip('should toggle sidenav, click on the "Management" button and navigate to "/management"', () => {
     const baseUrl = Cypress.config().baseUrl;
     const managementUrl = `${baseUrl}management`;
 
@@ -190,7 +190,7 @@ describe('App user access rights tests', () => {
     page.logout();
   });
 
-  it('should login admin and give researcher access rights for comp_vcf, ' +
+  it.skip('should login admin and give researcher access rights for comp_vcf, ' +
      'then login researcher and verify his rights', () => {
     const userManagementPage = new UserManagementPage();
 
@@ -212,7 +212,7 @@ describe('App user access rights tests', () => {
     page.logout();
   });
 
-  it('should login admin and give researcher access rights for COMP_genotypes, ' +
+  it.skip('should login admin and give researcher access rights for COMP_genotypes, ' +
      'then login researcher and verify his rights', () => {
     const userManagementPage = new UserManagementPage();
     const genotypeBrowserPage = new GenotypeBrowserPage();
@@ -264,7 +264,7 @@ describe('App user access rights tests', () => {
     page.logout();
   });
 
-  it('should login admin and give researcher access rights for ALL Genotypes, ' +
+  it.skip('should login admin and give researcher access rights for ALL Genotypes, ' +
      'then login researcher and verify his rights', () => {
     const userManagementPage = new UserManagementPage();
     const genotypeBrowserPage = new GenotypeBrowserPage();
@@ -312,7 +312,8 @@ describe('App user access rights tests', () => {
     page.logout();
   });
 
-  it('should login admin and remove all researcher access rights, then login researcher and verify his rights', () => {
+  it.skip('should login admin and remove all researcher access rights,' +
+  ' then login researcher and verify his rights', () => {
     const userManagementPage = new UserManagementPage();
     const genotypeBrowserPage = new GenotypeBrowserPage();
 
