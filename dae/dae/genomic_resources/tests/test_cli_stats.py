@@ -473,15 +473,15 @@ def test_reference_genome_usage(tmp_path, mocker):
 
     assert repo is not None
 
-    ref_genome_split_mock = mocker.Mock(return_value=[])
+    ref_genome_length_mock = mocker.Mock(return_value=30)
     mocker.patch(
         "dae.genomic_resources.reference_genome"
-        ".ReferenceGenome.split_into_regions",
-        new=ref_genome_split_mock
+        ".ReferenceGenome.get_chrom_length",
+        new=ref_genome_length_mock
     )
-    assert ref_genome_split_mock.call_count == 0
+    assert ref_genome_length_mock.call_count == 0
     cli_manage(["repo-stats", "-R", str(tmp_path), "-j", "1"])
-    assert ref_genome_split_mock.call_count == 2
+    assert ref_genome_length_mock.call_count == 6
 
     label_mock = mocker.Mock(return_value=None)
     mocker.patch(
@@ -490,18 +490,18 @@ def test_reference_genome_usage(tmp_path, mocker):
         new=label_mock
     )
 
-    genomic_score_split_mock = mocker.Mock(return_value=[])
+    genomic_table_length_mock = mocker.Mock(return_value=30)
     mocker.patch(
-        "dae.genomic_resources.genomic_scores"
-        ".GenomicScore._split_into_regions",
-        new=genomic_score_split_mock
+        "dae.genomic_resources.genomic_position_table.table"
+        ".GenomicPositionTable.get_chromosome_length",
+        new=genomic_table_length_mock
     )
 
     os.remove(os.path.join(tmp_path, "one", "statistics", "stats_hash"))
 
-    assert genomic_score_split_mock.call_count == 0
+    assert genomic_table_length_mock.call_count == 0
 
     cli_manage(["repo-stats", "-R", str(tmp_path), "-j", "1"])
 
-    assert genomic_score_split_mock.call_count == 2
-    assert ref_genome_split_mock.call_count == 2
+    assert genomic_table_length_mock.call_count == 6
+    assert ref_genome_length_mock.call_count == 6

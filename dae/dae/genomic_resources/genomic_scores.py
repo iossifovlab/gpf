@@ -775,9 +775,17 @@ class GenomicScore(
                     and chrom in reference_genome.chromosomes:
                 chrom_len = reference_genome.get_chrom_length(chrom)
             else:
-                logger.info(
-                    "chromosome %s of %s not found in reference genome %s",
-                    chrom, self.resource_id, reference_genome.resource_id)
+                if reference_genome is not None:
+                    logger.info(
+                        "chromosome %s of %s not found in reference genome %s",
+                        chrom, self.resource.resource_id,
+                        reference_genome.resource_id
+                    )
+                else:
+                    logger.info(
+                        "chromosome %s of %s using table, no reference genome",
+                        chrom, self.resource.resource_id
+                    )
                 chrom_len = self.table.get_chromosome_length(chrom)
             logger.debug(
                 "Chromosome '%s' has length %s",
@@ -805,7 +813,7 @@ class GenomicScore(
         return json.dumps({
             "config": {
                 "scores": config["scores"],
-                "histograms": config["histograms"],
+                "histograms": config.get("histograms", {}),
                 "table": config["table"]
             },
             "score_file": manifest[score_filename].md5
