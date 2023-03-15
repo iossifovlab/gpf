@@ -38,6 +38,10 @@ class Dialect(ABC):
         return "float"
 
     @staticmethod
+    def array_item_suffix() -> str:
+        return ".item"
+
+    @staticmethod
     def int_type() -> str:
         return "int"
 
@@ -277,8 +281,7 @@ class BaseQueryBuilder(ABC):
             person_ids = set(person_ids)
             where.append(
                 self._build_iterable_string_attr_where(
-                    self.where_accessors["allele_in_members"], person_ids
-                )
+                    "pi" + self.dialect.array_item_suffix(), person_ids)
             )
 
         if inheritance is not None:

@@ -34,6 +34,11 @@ class BigQueryDialect(Dialect):
     @staticmethod
     def float_type() -> str:
         return "FLOAT64"
+    
+    @staticmethod
+    def array_item_suffix() -> str:
+        return ""
+
 
 
 class BigQueryVariants(SqlSchema2Variants):

@@ -21,7 +21,6 @@ class SummaryQueryBuilder(BaseQueryBuilder):
         pedigree_schema,
         pedigree_df,
         gene_models=None,
-        do_join_affected=False,
     ):
         # pylint: disable=too-many-arguments
         self.family_variant_table = family_variant_table
@@ -40,8 +39,6 @@ class SummaryQueryBuilder(BaseQueryBuilder):
             pedigree_df,
             gene_models=gene_models,
         )
-
-        self.do_join_affected = do_join_affected
 
     def _query_columns(self):
         return [

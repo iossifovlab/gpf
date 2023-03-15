@@ -191,6 +191,7 @@ class SqlSchema2Variants(abc.ABC):
             pedigree_fields=None):
         """Build a query selecting the appropriate family variants."""
         do_join_pedigree = pedigree_fields is not None
+        do_join_allele_in_members = person_ids is not None
         query_builder = FamilyQueryBuilder(
             self.dialect,
             self.db,
@@ -204,6 +205,7 @@ class SqlSchema2Variants(abc.ABC):
             self.ped_df,
             gene_models=self.gene_models,
             do_join_pedigree=do_join_pedigree,
+            do_join_allele_in_members=do_join_allele_in_members
         )
 
         query = query_builder.build_query(
