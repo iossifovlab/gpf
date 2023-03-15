@@ -55,7 +55,7 @@ class ContinuousParquetFileWriter:
 
         dirname = os.path.dirname(filepath)
         if dirname and not os.path.exists(dirname):
-            os.makedirs(dirname)
+            os.makedirs(dirname, exist_ok=True)
         self.dirname = dirname
 
         filesystem, filepath = url_to_pyarrow_fs(filepath, filesystem)
