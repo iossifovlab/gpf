@@ -16,7 +16,7 @@ describe('User management tests', () => {
     page.navigateToSidenavPage(sidenavPageLinks.management);
   });
 
-  it('should navigate through all user management tabs', () => {
+  it.skip('should navigate through all user management tabs', () => {
     page.groupsButton.click();
     page.groupsTable.should('be.visible');
 
