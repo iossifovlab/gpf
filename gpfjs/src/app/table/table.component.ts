@@ -75,8 +75,18 @@ export class GpfTableComponent implements OnChanges, AfterViewChecked {
 
   @HostListener('window:resize', ['$event'])
   public onWindowResize(): void {
-    this.tableWidth = this.tableViewChild?.nativeElement.offsetWidth;
+    this.tableWidth = '0';
+    if (this.columnsChildren !== undefined && this.columnsChildren !== null) {
+      this.columnsChildren.forEach(column => {
+        this.tableWidth = String(parseFloat(this.tableWidth) + parseFloat(column.columnWidth));
+      });
+      this.tableWidth += 'px';
+      if (parseFloat(this.tableWidth) <= this.tableViewChild?.nativeElement.offsetWidth) {
+        this.tableWidth = this.tableViewChild?.nativeElement.offsetWidth;
+      }
+    }
   }
+
 
   public set sortingInfo(sortingInfo: SortInfo) {
     this.previousSortingInfo = sortingInfo;
@@ -129,7 +139,17 @@ export class GpfTableComponent implements OnChanges, AfterViewChecked {
   }
 
   public getVisibleData(): Array<any> {
-    this.tableWidth = this.tableViewChild?.nativeElement.offsetWidth;
+    this.tableWidth = '0';
+    if (this.columnsChildren !== undefined && this.columnsChildren !== null) {
+      this.columnsChildren.forEach(column => {
+        this.tableWidth = String(parseFloat(this.tableWidth) + parseFloat(column.columnWidth));
+      });
+      this.tableWidth += 'px';
+      if (parseFloat(this.tableWidth) <= this.tableViewChild?.nativeElement.offsetWidth) {
+        this.tableWidth = this.tableViewChild?.nativeElement.offsetWidth;
+      }
+    }
+    //this.tableWidth = this.tableViewChild?.nativeElement.offsetWidth;
     if (!this.dataSource) {
       return [];
     }
