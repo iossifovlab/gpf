@@ -69,12 +69,14 @@ repository_schema = {
         "check_with": validate_path,
         "coerce": "abspath",
     },
+    "endpoint_url": {"type": "string"},
 }
 
 grr_schema = {
     "id": {"type": "string", },
     "type": {"type": "string", },
     "url": {"type": "string", },
+    "endpoint_url": {"type": "string"},
     "directory": {
         "type": "string",
         "required": False,

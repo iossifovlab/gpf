@@ -4,7 +4,7 @@
 import os
 import logging
 import json
-from functools import cache, cached_property
+from functools import cached_property
 from typing import Optional, Union
 from pathlib import Path
 
@@ -460,7 +460,6 @@ class GPFInstance:
             return None
         return self.dae_config.gpfjs.selected_genotype_data
 
-    @cache
     def get_annotation_pipeline(self):
         """Return the annotation pipeline configured in the GPF instance."""
         if self._annotation_pipeline is None:
