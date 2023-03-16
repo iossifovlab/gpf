@@ -9,7 +9,7 @@
           <div class="row justify-content-between">
             <div class="col-7 btn-toolbar" style="padding-top: 15px; padding-left: 25px">
               <div class="input-group" style="width: 55%">
-                <div class="search-input-wrapper">
+                <div *ngIf="!createMode" class="search-input-wrapper">
                   <input
                     #searchBox
                     placeholder="Search"
@@ -18,7 +18,6 @@
                     id="search-field"
                     class="search-input form-control my-0 py-1"
                     type="text"
-                    aria-label="Search"
                     [ngModel]="searchText"
                     spellcheck="false" />
                   <span
@@ -28,9 +27,38 @@
                     (click)="searchBox.value = ''; search(searchBox.value)">
                   </span>
                 </div>
+
+                <div *ngIf="createMode" class="search-input-wrapper">
+                  <input
+                    #nameBox
+                    placeholder="Name"
+                    autocomplete="off"
+                    id="name-box"
+                    class="search-input form-control my-0 py-1"
+                    type="text"
+                    pattern=".{2,}"
+                    required
+                    spellcheck="false" />
+                  <input
+                    #emailBox
+                    placeholder="Email"
+                    autocomplete="off"
+                    id="email-box"
+                    class="search-input form-control my-0 py-1"
+                    type="email"
+                    email="true"
+                    pattern="^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$"
+                    required
+                    spellcheck="false" />
+                  <button id="create-button" class="btn btn-primary" (click)="createUser(nameBox.value, emailBox.value)"
+                    >Create</button
+                  >
+                  <button id="cancel-button" class="btn btn-danger" (click)="createMode = false">Cancel</button>
+                </div>
               </div>
-              <div class="btn-toolbar" style="padding-left: 10px">
-                <a [routerLink]="['users', 'create']" class="btn btn-primary">Create user</a>
+
+              <div *ngIf="!createMode" class="btn-toolbar" style="padding-left: 10px">
+                <button class="btn btn-primary" (click)="createMode = true">Create user</button>
               </div>
             </div>
           </div>

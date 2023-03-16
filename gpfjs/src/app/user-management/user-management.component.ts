@@ -21,10 +21,13 @@ export class UserManagementComponent implements OnInit {
   public groups: UserGroup[] = [];
   public datasets: DatasetPermissions[] = [];
   public searchText = '';
-  @ViewChild('searchBox') private searchBox: ElementRef;
   public currentUserEmail: string;
   public imgPathPrefix = environment.imgPathPrefix;
+  public createMode = false;
 
+  @ViewChild('searchBox') private searchBox: ElementRef;
+  @ViewChild('nameBox') private nameBox: ElementRef;
+  @ViewChild('emailBox') private emailBox: ElementRef;
   private getPageSubscription: Subscription = new Subscription();
   private pageCount = 0;
   private tableName: TableName = 'USERS';
@@ -74,6 +77,33 @@ export class UserManagementComponent implements OnInit {
     this.waitForSearchBoxToLoad().then(() => {
       (this.searchBox.nativeElement as HTMLInputElement).focus();
     });
+  }
+
+  public createUser(name: string, email: string): void {
+    if (!this.isNameValid(name)) {
+      (this.nameBox.nativeElement as HTMLInputElement).focus();
+      return;
+    }
+    if (!this.isEmailValid(email)) {
+      (this.emailBox.nativeElement as HTMLInputElement).focus();
+      return;
+    }
+    const newUser = new User(null, name, email, ['any_user', email], false, []);
+
+    this.usersService.createUser(newUser).subscribe((user: User) => {
+      this.users.unshift(user);
+      this.createMode = false;
+    });
+  }
+
+  public isEmailValid(email: string): boolean {
+    const re = new RegExp(/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/);
+    return re.test(String(email).toLowerCase());
+  }
+
+  public isNameValid(name: string): boolean {
+    const re = new RegExp(/.{2,}/);
+    return re.test(String(name).toLowerCase());
   }
 
   @HostListener('window:scroll', ['$event'])

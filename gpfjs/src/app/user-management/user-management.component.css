@@ -1,3 +1,21 @@
 .card > ul {
   justify-content: flex-start;
 }
+
+#name-box,
+#email-box {
+  width: 350px;
+  height: 38px;
+}
+
+#email-box,
+#create-button,
+#cancel-button {
+  margin-left: 10px;
+}
+
+input:invalid:focus {
+  outline: rgb(255, 0, 0);
+  border-color: rgb(255, 0, 0);
+  box-shadow: 0 0 0 4px rgba(244, 15, 15, 30%);
+}
