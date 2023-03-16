@@ -31,4 +31,5 @@ urlpatterns = [
     re_path(r"^api/v3/person_sets", include("person_sets_api.urls")),
     path("o/", include("oauth2_provider.urls", namespace="oauth2_provider")),
     re_path(r"^accounts/login/?$", WdaeLoginView.as_view(), name="login_user"),
+    re_path(r"^api/v3/sentry", include("sentry.urls")),
 ]
