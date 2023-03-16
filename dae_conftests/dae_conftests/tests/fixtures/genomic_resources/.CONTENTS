@@ -45,18 +45,20 @@
 - config:
     filename: refGene201309.txt
     format: default
-    meta: '## refGene gene models from 2013-09
+    meta:
+      description: '## refGene gene models from 2013-09
 
 
-      Old gene models used by GPF up to 2019-02.
+        Old gene models used by GPF up to 2019-02.
 
-      '
+        '
+      labels: null
     type: gene_models
   id: hg19/GATK_ResourceBundle_5777_b37_phiX174_short/gene_models/refGene_201309
   manifest:
-  - md5: de9bb55d6b9b6ae93f6be89d14a42b84
+  - md5: ed67a675e3f2d06a4f0736ca535a00f9
     name: genomic_resource.yaml
-    size: 161
+    size: 192
   - md5: a42701941f92c7b999a4f8f26e4a3a47
     name: refGene201309.txt
     size: 3761
@@ -71,12 +73,14 @@
       - Y:59034050-59363566
     chrom_prefix: ''
     filename: chrAll.fa
-    meta: '## HG19 Reference Genome Fragment
+    meta:
+      description: '## HG19 Reference Genome Fragment
 
 
-      Default HG19 reference genome used by GPF
+        Default HG19 reference genome used by GPF
 
-      '
+        '
+      labels: null
     type: genome
   id: hg19/GATK_ResourceBundle_5777_b37_phiX174_short/genome
   manifest:
@@ -86,9 +90,9 @@
   - md5: e195bffa62daa1d82e341f0bd4fb72ad
     name: chrAll.fa.fai
     size: 62
-  - md5: d63b87a473bbccda1e645fbc82c1aaac
+  - md5: bd5e747b25ab3eca4dafef208c8c2cbf
     name: genomic_resource.yaml
-    size: 270
+    size: 302
   version: '0'
 - config:
     default_annotation:
@@ -265,18 +269,20 @@
 - config:
     filename: refSeq_20200330.txt
     format: refseq
-    meta: '## refSeq gene models for HG38 from 2020-03
+    meta:
+      description: '## refSeq gene models for HG38 from 2020-03
 
 
-      Default gene models used by GPF for HG38.
+        Default gene models used by GPF for HG38.
 
-      '
+        '
+      labels: null
     type: gene_models
   id: hg38/GRCh38-hg38/gene_models/refSeq_20200330
   manifest:
-  - md5: c8fa6ee43d327a1f0b3d4f835f68fd39
+  - md5: 81951889cca5c55bb9a63b8d8aff00a3
     name: genomic_resource.yaml
-    size: 169
+    size: 200
   - md5: 05d8bbd9616407e862d82593d5fd1756
     name: refSeq_20200330.txt
     size: 30558
@@ -291,7 +297,10 @@
       - chrY:56887902-57217415
     chrom_prefix: ''
     filename: GRCh38_full_analysis_set_plus_decoy_hla.fa
-    meta: "## HG38 Reference Genome \n\nDefault HG38 reference genome used by GPF\n"
+    meta:
+      description: "## HG38 Reference Genome \n\nDefault HG38 reference genome used\
+        \ by GPF\n"
+      labels: null
     type: genome
   id: hg38/GRCh38-hg38/genome
   manifest:
@@ -301,9 +310,9 @@
   - md5: 2e3b716901f9da348a3ea6a424d54006
     name: GRCh38_full_analysis_set_plus_decoy_hla.fa.fai
     size: 50
-  - md5: 2b8da3803f78b512a4ae2d8dd06655a3
+  - md5: b151ecdcef68d9014ab78823b5147711
     name: genomic_resource.yaml
-    size: 308
+    size: 339
   version: '0'
 - config:
     default_annotation:

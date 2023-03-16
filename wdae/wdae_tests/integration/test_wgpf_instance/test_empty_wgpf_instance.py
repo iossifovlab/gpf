@@ -62,7 +62,7 @@ def test_empty_wgpf_instance_study(alla_wgpf, wdae_django_server):
 
     with wdae_django_server(
             alla_wgpf,
-            "tests.integration.test_wgpf_instance."
+            "wdae_tests.integration.test_wgpf_instance."
             "wgpf_settings") as server:
 
         assert server.url.startswith("http://localhost")

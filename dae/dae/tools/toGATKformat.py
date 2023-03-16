@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from dae.genomic_resources.gene_models import load_gene_models_from_file
+from dae.genomic_resources.gene_models import build_gene_models_from_file
 import sys
 import optparse
 
@@ -43,7 +43,7 @@ fromGMFile = args[0]
 toGMFile = args[1]
 
 
-gmDB = load_gene_models_from_file(
+gmDB = build_gene_models_from_file(
     fromGMFile, gene_mapping_filename=opts.gm_names, fileformat=opts.gm_format
 )
 if opts.chr_names is not None:

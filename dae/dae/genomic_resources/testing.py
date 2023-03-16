@@ -388,7 +388,7 @@ def http_threaded_test_server(
     server_thread.daemon = True
     server_thread.start()
 
-    yield f"http://{server_address[0]}:{server_address[1]}"
+    yield f"http://{server_address[0]}:{server_address[1]}"  # type: ignore
 
     logger.info("shutting down HTTP range server %s", server_address)
     httpd.socket.close()

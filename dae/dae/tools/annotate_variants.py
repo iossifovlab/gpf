@@ -9,8 +9,8 @@ import argparse
 import pysam  # type: ignore
 
 from dae.genomic_resources.reference_genome import \
-    open_reference_genome_from_file
-from dae.genomic_resources.gene_models import load_gene_models_from_file
+    build_reference_genome_from_file
+from dae.genomic_resources.gene_models import build_gene_models_from_file
 from dae.effect_annotation.annotator import EffectAnnotator
 from dae.effect_annotation.effect import AnnotationEffect
 
@@ -70,14 +70,15 @@ def parse_cli_genome_options(args):
     genomic_sequence = None
     gene_models = None
     if args.gene_models_filename:
-        gene_models = load_gene_models_from_file(
+        gene_models = build_gene_models_from_file(
             args.gene_models_filename,
             fileformat=args.gene_models_fileformat,
             gene_mapping_filename=args.gene_mapping_filename,
         )
     if args.genome_filename:
-        genomic_sequence = open_reference_genome_from_file(
+        genomic_sequence = build_reference_genome_from_file(
             args.genome_filename)
+        genomic_sequence = genomic_sequence.open()
     if gene_models and genomic_sequence:
         return genomic_sequence, gene_models
 
@@ -287,6 +288,7 @@ def cli_vcf(argv=sys.argv[1:]):
     )
 
     assert os.path.exists(args.input_filename), args.input_filename
+    # pylint: disable=no-member
     infile = pysam.VariantFile(args.input_filename)
 
     if args.output_filename is None:

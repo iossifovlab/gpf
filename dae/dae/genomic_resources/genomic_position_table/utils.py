@@ -47,6 +47,7 @@ def save_as_tabix_table(
     tmp_file = full_file_path + ".tmp"
     with open(tmp_file, "wt", encoding="utf8") as text_file:
         if table.header_mode != "none":
+            assert table.header is not None
             print("#" + "\t".join(table.header), file=text_file)
         for rec in table.get_all_records():
             print(*rec, sep="\t", file=text_file)

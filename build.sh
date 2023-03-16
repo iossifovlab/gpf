@@ -371,7 +371,7 @@ EOT
 
   build_stage "Tests - wdae integration"
   {
-    # Run integration tests located at gpf/wdae/tests
+    # Run integration tests located at gpf/wdae/wdae_tests
   
     # Setup execution context
     build_run_ctx_init "container" "${gpf_dev_image_ref}" \
@@ -390,9 +390,9 @@ EOT
         pip install -e .'
     done
 
-    # Run integration tests in gpf/wdae/tests
+    # Run integration tests in gpf/wdae/wdae_tests
     build_run_container bash -c '
-        cd /wd/wdae/tests;
+        cd /wd/wdae/wdae_tests;
         export PYTHONHASHSEED=0;
         /opt/conda/bin/conda run --no-capture-output -n gpf py.test \
           -p no:django -v \
@@ -406,7 +406,7 @@ EOT
     build_run_container cp ./results/wdae-tests-junit.xml ./test-results/
 
     # Combine coverage information from tests in dae/, wdae/ and tests/
-    build_run_container coverage combine dae/.coverage wdae/.coverage dae/tests/.coverage wdae/tests/.coverage
+    build_run_container coverage combine dae/.coverage wdae/.coverage dae/tests/.coverage wdae/wdae_tests/.coverage
 
     # Convert coverage information to XML coberture format
     build_run_container coverage xml

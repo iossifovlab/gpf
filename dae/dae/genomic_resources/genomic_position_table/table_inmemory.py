@@ -24,7 +24,8 @@ class InmemoryGenomicPositionTable(GenomicPositionTable):
         self.records_by_chr: dict[str, Any] = {}
         super().__init__(genomic_resource, table_definition)
 
-    def _make_line(self, data):
+    def _make_line(self, data) -> Line:
+        assert self.chrom_key is not None
         return Line(
             data,
             self.chrom_key,
@@ -44,11 +45,11 @@ class InmemoryGenomicPositionTable(GenomicPositionTable):
             InmemoryGenomicPositionTable.FORMAT_DEF[self.format]
         if self.header_mode == "file":
             hcs = None
-            for line in self.str_stream:
-                line = line.strip(strip_chars)
-                if not line:
+            for row in self.str_stream:
+                row = row.strip(strip_chars)
+                if not row:
                     continue
-                hcs = line.split(clmn_sep)
+                hcs = row.split(clmn_sep)
                 break
             if not hcs:
                 raise ValueError("No header found")
@@ -60,11 +61,11 @@ class InmemoryGenomicPositionTable(GenomicPositionTable):
 
         records_by_chr = collections.defaultdict(list)
 
-        for line in self.str_stream:
-            line = line.strip(strip_chars)
-            if not line:
+        for row in self.str_stream:
+            row = row.strip(strip_chars)
+            if not row:
                 continue
-            columns = tuple(line.split(clmn_sep))
+            columns = tuple(row.split(clmn_sep))
             if col_number and len(columns) != col_number:
                 raise ValueError("Inconsistent number of columns")
 
@@ -91,6 +92,7 @@ class InmemoryGenomicPositionTable(GenomicPositionTable):
         if isinstance(self.chrom_key, int):
             chrom_idx = self.chrom_key
         else:
+            assert self.header is not None
             chrom_idx = self.header.index(self.chrom_key)
         new_data[chrom_idx] = chrom
         return self._make_line(tuple(new_data))
