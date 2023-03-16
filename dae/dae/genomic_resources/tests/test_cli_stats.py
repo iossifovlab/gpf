@@ -407,3 +407,101 @@ def test_minmax(tmp_path):
 
     assert minmax.min == 0
     assert minmax.max == 1
+
+def test_reference_genome_usage(tmp_path, mocker):
+    setup_directories(tmp_path, {
+        "one": {
+            GR_CONF_FILE_NAME: """
+                type: position_score
+                table:
+                    filename: data.mem
+                scores:
+                    - id: phastCons100way
+                      type: float
+                      desc: "The phastCons computed over the tree of 100 \
+                              verterbarte species"
+                      name: s1
+                histograms:
+                    - score: phastCons100way
+                      bins: 100
+                      x_scale: linear
+                      y_scale: linear
+                meta:
+                    labels:
+                        reference_genome: genome
+            """,
+            "data.mem": convert_to_tab_separated("""
+                chrom  pos_begin  pos_end  s1
+                1      10         15       0.0
+                1      17         19       0.03
+                1      22         25       0.46
+                2      5          8        0.01
+                2      10         11       1.0
+                3      5          17       1.0
+                3      18         20       0.01
+            """)
+        },
+        "genome": {
+            GR_CONF_FILE_NAME: """
+                type: genome
+                filename: data.fa
+            """,
+            "data.fa": textwrap.dedent("""
+                >1
+                NACGTNACGT
+                NACGTNACGT
+                NACGTNACGT
+                >2
+                NACGTNACGT
+                NACGTNACGT
+                NACGTNACGT
+                >3
+                NACGTNACGT
+                NACGTNACGT
+                NACGTNACGT
+            """),
+            "data.fa.fai": textwrap.dedent("""\
+                1	30	3	10	11
+                2	30	39	10	11
+                3	30	75	10	11
+            """)
+
+        }
+    })
+
+    repo = build_filesystem_test_repository(tmp_path)
+
+    assert repo is not None
+
+    ref_genome_length_mock = mocker.Mock(return_value=30)
+    mocker.patch(
+        "dae.genomic_resources.reference_genome"
+        ".ReferenceGenome.get_chrom_length",
+        new=ref_genome_length_mock
+    )
+    assert ref_genome_length_mock.call_count == 0
+    cli_manage(["repo-stats", "-R", str(tmp_path), "-j", "1"])
+    assert ref_genome_length_mock.call_count == 6
+
+    label_mock = mocker.Mock(return_value=None)
+    mocker.patch(
+        "dae.genomic_resources.resource_implementation."
+        "GenomicResourceImplementation.get_label",
+        new=label_mock
+    )
+
+    genomic_table_length_mock = mocker.Mock(return_value=30)
+    mocker.patch(
+        "dae.genomic_resources.genomic_position_table.table"
+        ".GenomicPositionTable.get_chromosome_length",
+        new=genomic_table_length_mock
+    )
+
+    os.remove(os.path.join(tmp_path, "one", "statistics", "stats_hash"))
+
+    assert genomic_table_length_mock.call_count == 0
+
+    cli_manage(["repo-stats", "-R", str(tmp_path), "-j", "1"])
+
+    assert genomic_table_length_mock.call_count == 6
+    assert ref_genome_length_mock.call_count == 6

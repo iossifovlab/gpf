@@ -158,7 +158,7 @@ class LiftoverChain(
                     " to variants after performing liftover."
                 )
         if "meta" in info:
-            info["meta"] = markdown(info["meta"])
+            info["meta"] = markdown(str(info["meta"]))
         return info
 
     @staticmethod

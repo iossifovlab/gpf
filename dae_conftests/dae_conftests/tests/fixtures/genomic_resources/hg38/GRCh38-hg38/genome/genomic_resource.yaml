@@ -13,7 +13,9 @@ PARS:
     - "chrY:56887902-57217415"
 
 
-meta: |
-  ## HG38 Reference Genome 
+meta:
+  description: |
+    ## HG38 Reference Genome 
 
-  Default HG38 reference genome used by GPF
+    Default HG38 reference genome used by GPF
+  labels: ~

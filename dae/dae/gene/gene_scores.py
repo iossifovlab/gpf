@@ -3,7 +3,6 @@ import copy
 import itertools
 import logging
 import textwrap
-import hashlib
 import json
 from typing import Optional, List
 
@@ -34,9 +33,9 @@ class GeneScore:
 
     Gene Score resource configuration format:
     type: gene_score
+    filename: (filename to gene score)
     gene_scores:
       - id: (gene score id)
-        filename: (filename to gene score)
         desc: (gene score description)
     histograms:
       - score: (gene score id)
@@ -336,11 +335,15 @@ class GeneScoreCollection(
 
     def calc_statistics_hash(self) -> bytes:
         manifest = self.resource.get_manifest()
-        score_filename = self.get_config()["filename"]
-        return hashlib.md5(json.dumps({
-            "config": manifest["genomic_resource.yaml"].md5,
+        config = self.get_config()
+        score_filename = config["filename"]
+        return json.dumps({
+            "config": {
+                "gene_scores": config["gene_scores"],
+                "histograms": config["histograms"]
+            },
             "score_file": manifest[score_filename].md5
-        }, sort_keys=True).encode()).digest()
+        }, sort_keys=True, indent=2).encode()
 
     def add_statistics_build_tasks(self, task_graph, **kwargs) -> List[Task]:
         save_tasks = []
