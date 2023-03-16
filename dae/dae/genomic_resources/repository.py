@@ -769,8 +769,8 @@ class ReadWriteRepositoryProtocol(ReadOnlyRepositoryProtocol):
         for filename in filenames_to_delete:
             self.delete_resource_file(local_resource, filename)
         for index, file in enumerate(files_to_copy):
-            logger.info(f"Copying: {file},"
-                        f"{index} file of {len(files_to_copy)}")
+            logger.info("Copying: %s, %d file of %d",
+                        file, index, len(files_to_copy))
             self.update_resource_file(remote_resource, local_resource, file)
 
         self.save_manifest(local_resource, remote_resource.get_manifest())
