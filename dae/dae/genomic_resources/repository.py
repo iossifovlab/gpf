@@ -28,7 +28,6 @@ from typing import Optional, Any, Generator, Union, Iterator
 from dataclasses import dataclass, asdict
 
 import abc
-from tqdm import tqdm
 import yaml
 import pysam
 
