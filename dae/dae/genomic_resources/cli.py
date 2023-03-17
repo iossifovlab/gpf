@@ -124,30 +124,19 @@ def _configure_list_subparser(subparsers):
 
 def _run_list_command(
         proto: Union[ReadOnlyRepositoryProtocol, GenomicResourceRepo], _args):
-    protocols = []
 
-    def is_group_repo(repo):
-        if type(repo) is GenomicResourceGroupRepo:
-            for child in repo.children:
-                is_group_repo(child)
-        else:
-            protocols.append(repo)
+    for res in proto.get_all_resources():
+        res_size = sum(fs for _, fs in res.get_manifest().get_files())
 
-    is_group_repo(proto)
+        files = f"{len(list(res.get_manifest().get_files())):2d}"
+        if type(proto) is GenomicResourceCachedRepo:
+            files = f"{len(proto.get_resource_cached_files(res.get_id())):2d}/{files}"
 
-    for proto in protocols:
-        for res in proto.get_all_resources():
-            res_size = sum(fs for _, fs in res.get_manifest().get_files())
-
-            files = f"{len(list(res.get_manifest().get_files())):2d}"
-            if type(proto) is GenomicResourceCachedRepo:
-                files = f"{len(proto.get_resource_cached_files(res.get_id())):2d}/{files}"
-
-            print(
-                f"{res.get_type():20} {res.get_version_str():7s} "
-                f"{files} {res_size:12d} "
-                f"{proto.repo_id if isinstance(proto, GenomicResourceRepo) else proto.get_id()} "
-                f"{res.get_id()}")
+        print(
+            f"{res.get_type():20} {res.get_version_str():7s} "
+            f"{files} {res_size:12d} "
+            f"{proto.repo_id if isinstance(proto, GenomicResourceRepo) else proto.get_id()} "
+            f"{res.get_id()}")
 
 
 def _configure_repo_init_subparser(subparsers):
