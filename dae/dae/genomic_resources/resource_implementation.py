@@ -41,7 +41,7 @@ class GenomicResourceImplementation(ABC):
 
     @property
     def resource_id(self):
-        self.resource.resource_id
+        return self.resource.resource_id
 
     def get_config(self) -> dict:
         return self.config
@@ -77,6 +77,7 @@ class GenomicResourceImplementation(ABC):
         raise NotImplementedError()
 
     def get_label(self, label):
+        """Return a metadata label value."""
         metadata = self.config.get("meta")
         if metadata is None:
             return None

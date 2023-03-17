@@ -408,6 +408,7 @@ def test_minmax(tmp_path):
     assert minmax.min == 0
     assert minmax.max == 1
 
+
 def test_reference_genome_usage(tmp_path, mocker):
     setup_directories(tmp_path, {
         "one": {
