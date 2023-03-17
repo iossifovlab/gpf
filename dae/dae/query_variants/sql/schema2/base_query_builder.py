@@ -693,8 +693,15 @@ class BaseQueryBuilder(ABC):
         if not region_bins:
             return ""
         region_bin_col = self.where_accessors["region_bin"]
+        cols = []
+        if "region_bin" in self.family_columns:
+            cols.append("fa.region_bin")
+        if "region_bin" in self.summary_columns:
+            cols.append("sa.region_bin")
         bins_str = ",".join([f"'{rb}'" for rb in region_bins])
-        return f"{region_bin_col} IN ({bins_str})"
+        parts = [f"{col} IN ({bins_str})" for col in cols]
+        return " AND ".join(parts)
+        # return f"{region_bin_col} IN ({bins_str})"
 
     def _build_family_bin_heuristic(self, family_ids, person_ids):
         assert self.partition_descriptor is not None

@@ -38,7 +38,8 @@ def update_study_config(gpf_instance, study_id: str, study_config_update: str):
 def data_import(
         root_path: pathlib.Path, study: StudyLayout, gpf_instance,
         study_config_update: str = "",
-        partition_description: str = ""):
+        partition_description: str = "",
+        processing_details: str = ""):
     """Set up an import project for a study and imports it."""
     params = asdict(study)
     params["work_dir"] = str(root_path / "work_dir")
@@ -47,11 +48,13 @@ def data_import(
         .get_default_genotype_storage()\
         .storage_id
     params["partition_description"] = partition_description
+    params["processing_details"] = processing_details
 
     project_config = jinja2.Template(textwrap.dedent("""
         id: {{ study_id}}
         processing_config:
-          work_dir: {{ work_dir }}
+            work_dir: {{ work_dir }}
+            {{processing_details}}
         input:
           pedigree:
             file: {{ pedigree }}
@@ -78,7 +81,6 @@ def data_import(
         {{ partition_description }}
         {% endif %}
         """)).render(params)
-
     setup_directories(
         root_path / "import_project" / "import_config.yaml",
         project_config)
@@ -103,13 +105,15 @@ def vcf_import(
         ped_path: pathlib.Path, vcf_paths: list[pathlib.Path],
         gpf_instance,
         study_config_update: str = "",
-        partition_description: str = ""):
+        partition_description: str = "",
+        processing_details: str = ""):
     """Import a VCF study and return the import project."""
     study = StudyLayout(study_id, ped_path, vcf_paths, [], [], [])
     project = data_import(
         root_path, study, gpf_instance,
         study_config_update=study_config_update,
-        partition_description=partition_description)
+        partition_description=partition_description,
+        processing_details=processing_details)
     return project
 
 
@@ -119,12 +123,14 @@ def vcf_study(
         ped_path: pathlib.Path, vcf_paths: list[pathlib.Path],
         gpf_instance,
         study_config_update: str = "",
-        partition_description: str = ""):
+        partition_description: str = "",
+        processing_details: str = ""):
     """Import a VCF study and return the imported study."""
     vcf_import(
         root_path, study_id, ped_path, vcf_paths, gpf_instance,
         study_config_update=study_config_update,
-        partition_description=partition_description)
+        partition_description=partition_description,
+        processing_details=processing_details)
     gpf_instance.reload()
     return gpf_instance.get_genotype_data(study_id)
 

@@ -362,6 +362,8 @@ class VariantsParquetWriter:
         """Write the variants, parittion description and schema."""
         filenames = self._write_internal()
 
+        # TODO: This should be move to a different place so that these are
+        # not written with every bucket.
         self.write_partition()
         self.write_schema()
 
