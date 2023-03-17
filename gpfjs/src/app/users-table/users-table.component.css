@@ -63,3 +63,44 @@ span {
 gpf-item-add-menu {
   border-top: 1px solid rgba(128, 128, 128, 10.3%);
 }
+
+#cancel-button {
+  background-color: transparent;
+  border: none;
+}
+
+#cancel-button > i {
+  color: red;
+}
+
+#cancel-button > i:hover {
+  color: rgb(255, 110, 110);
+}
+
+#edit-icon {
+  font-size: 12px;
+  padding-bottom: 5px;
+}
+
+#edit-icon:hover {
+  cursor: pointer;
+}
+
+#user-name {
+  padding: 0 5px;
+}
+
+#name-field {
+  width: 135px;
+  font-size: 15px;
+}
+
+#edit-wrapper {
+  display: flex;
+  justify-content: center;
+}
+
+#add-user-name {
+  font-style: italic;
+  opacity: 50%;
+}
