@@ -149,7 +149,12 @@ def test_limit(query_builder):
 
 
 def test_regions(query_builder):
-    query = query_builder.build_query(regions=[Region("X", 5, 15)])
+    query = query_builder._build_regions_where(regions=[Region("X", 5, 15)])
     assert "`chromosome` = 'X'" in query
     assert "5 <= `position`" in query
     assert "15 >= COALESCE(`end_position`, `position`)" in query
+
+    query = query_builder._build_regions_where([
+        Region("13")
+    ])
+    assert "(`chromosome` = '13')" in query
