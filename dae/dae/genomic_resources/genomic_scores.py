@@ -1,6 +1,7 @@
 # pylint: disable=too-many-lines
 from __future__ import annotations
 
+import os
 import logging
 import textwrap
 import copy
@@ -20,6 +21,7 @@ from . import GenomicResource
 from .statistic import Statistic
 from .reference_genome import build_reference_genome_from_resource
 from .resource_implementation import GenomicResourceImplementation, \
+    ResourceStatistics, \
     get_base_resource_schema, \
     InfoImplementationMixin, \
     ResourceConfigValidationMixin
@@ -110,6 +112,48 @@ class ScoreLine:
         return tuple(self.score_defs.keys())
 
 
+class GenomicScoreStatistics(ResourceStatistics):
+    def __init__(self, genomic_score):
+        super().__init__(genomic_score.resource)
+        self.score = genomic_score
+        self.score_min_maxes = {}
+        self.score_histograms = {}
+
+    @staticmethod
+    def get_min_max_file(score_id):
+        return f"min_max_{score_id}.yaml"
+
+    @staticmethod
+    def get_histogram_file(score_id):
+        return f"histogram_{score_id}.yaml"
+
+    @staticmethod
+    def get_histogram_image_file(score_id):
+        return f"histogram_{score_id}.png"
+
+    def _load_statistics(self):
+        self.score_min_maxes = {}
+        self.score_histograms = {}
+        for score_id in self.score.score_definitions.keys():
+            min_max_filepath = os.path.join(
+                self.get_statistics_folder(),
+                self.get_min_max_file(score_id)
+            )
+            with self.resource.open_raw_file(
+                    min_max_filepath, mode="r") as infile:
+                min_max = MinMaxValue.deserialize(infile.read())
+                self.score_min_maxes[score_id] = min_max
+
+            histogram_filepath = os.path.join(
+                self.get_statistics_folder(),
+                self.get_histogram_file(score_id)
+            )
+            with self.resource.open_raw_file(
+                    histogram_filepath, mode="r") as infile:
+                histogram = Histogram.deserialize(infile.read())
+                self.score_histograms[score_id] = histogram
+
+
 class GenomicScore(
     GenomicResourceImplementation,
     ResourceConfigValidationMixin,
@@ -128,6 +172,9 @@ class GenomicScore(
             self.resource, self.config["table"]
         )
         self.score_definitions = self._generate_scoredefs()
+
+    def _create_statistics_access(self):
+        return GenomicScoreStatistics(self)
 
     @property
     def files(self):
@@ -664,7 +711,8 @@ class GenomicScore(
                 continue
             with proto.open_raw_file(
                 resource,
-                f"{GenomicScore.STATISTICS_FOLDER}/min_max_{score_id}.yaml",
+                f"{GenomicScoreStatistics.get_statistics_folder()}"
+                f"/{GenomicScoreStatistics.get_min_max_file(score_id)}",
                 mode="wt"
             ) as outfile:
                 outfile.write(score_min_max.serialize())
@@ -749,14 +797,16 @@ class GenomicScore(
                 continue
             with proto.open_raw_file(
                 resource,
-                f"{GenomicScore.STATISTICS_FOLDER}/histogram_{score_id}.yaml",
+                f"{GenomicScoreStatistics.get_statistics_folder()}"
+                f"/{GenomicScoreStatistics.get_histogram_file(score_id)}",
                 mode="wt"
             ) as outfile:
                 outfile.write(score_histogram.serialize())
 
             with proto.open_raw_file(
                 resource,
-                f"{GenomicScore.STATISTICS_FOLDER}/histogram_{score_id}.png",
+                f"{GenomicScoreStatistics.get_statistics_folder()}/"
+                f"{GenomicScoreStatistics.get_histogram_image_file(score_id)}",
                 mode="wb"
             ) as outfile:
                 score_histogram.plot(outfile)

@@ -24,6 +24,21 @@ def get_base_resource_schema():
     }
 
 
+class ResourceStatistics:
+
+    def __init__(self, resource: GenomicResource):
+        self.resource = resource
+        self._load_statistics()
+
+    @staticmethod
+    def get_statistics_folder():
+        return "statistics"
+
+    @abstractmethod
+    def _load_statistics(self):
+        raise NotImplementedError()
+
+
 class GenomicResourceImplementation(ABC):
     """
     Base class used by resource implementations.
@@ -33,11 +48,11 @@ class GenomicResourceImplementation(ABC):
     """
 
     config_validator: Optional[Callable[[dict], Any]] = None
-    STATISTICS_FOLDER = "statistics"
 
     def __init__(self, genomic_resource: GenomicResource):
         self.resource = genomic_resource
         self.config: dict = self.resource.config
+        self._statistics: Optional[ResourceStatistics] = None
 
     @property
     def resource_id(self):
@@ -87,6 +102,23 @@ class GenomicResourceImplementation(ABC):
             return None
 
         return labels.get(label)
+
+    def _create_statistics_access(self) -> Optional[ResourceStatistics]:
+        return None
+
+    def get_statistics(self) -> Optional[ResourceStatistics]:
+        """Try and load resource statistics."""
+        if self._statistics is None:
+            try:
+                statistics: Optional[ResourceStatistics] = \
+                    self._create_statistics_access()
+                self._statistics = statistics
+            except Exception:  # pylint: disable=broad-except
+                logger.exception(
+                    "Something went wrong trying to get %s statistics",
+                    self.resource.resource_id
+                )
+        return self._statistics
 
 
 class InfoImplementationMixin:

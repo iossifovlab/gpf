@@ -1,4 +1,5 @@
 from __future__ import annotations
+import os
 import copy
 import itertools
 import logging
@@ -15,13 +16,42 @@ from dae.utils.dae_utils import join_line
 from dae.genomic_resources.aggregators import build_aggregator
 from dae.genomic_resources.resource_implementation import \
     GenomicResourceImplementation, get_base_resource_schema, \
-    InfoImplementationMixin, ResourceConfigValidationMixin
+    InfoImplementationMixin, ResourceConfigValidationMixin, \
+    ResourceStatistics
 
 from dae.genomic_resources import GenomicResource
 from dae.genomic_resources.histogram import Histogram
 from dae.task_graph.graph import Task
 
 logger = logging.getLogger(__name__)
+
+
+class GeneScoreStatistics(ResourceStatistics):
+    def __init__(self, genomic_score):
+        super().__init__(genomic_score.resource)
+        self.score = genomic_score
+        self.score_histograms = {}
+        self.histogram = None
+
+    @staticmethod
+    def get_histogram_file(score_id):
+        return f"histogram_{score_id}.yaml"
+
+    @staticmethod
+    def get_histogram_image_file(score_id):
+        return f"histogram_{score_id}.png"
+
+    def _load_statistics(self):
+        self.score_histograms = {}
+        for score_id in self.score.score_definitions.keys():
+            histogram_filepath = os.path.join(
+                self.get_statistics_folder(),
+                self.get_histogram_file(score_id)
+            )
+            with self.resource.open_raw_file(
+                    histogram_filepath, mode="r") as infile:
+                histogram = Histogram.deserialize(infile.read())
+                self.score_histograms[score_id] = histogram
 
 
 class GeneScore:
@@ -146,7 +176,6 @@ class GeneScore:
 
     @staticmethod
     def _load_gene_score(resource, gs_config):
-        proto = resource.proto
         resource_config = resource.get_config()
         gene_score_id = gs_config["id"]
         file = resource.open_raw_file(resource_config["filename"])
@@ -161,18 +190,10 @@ class GeneScore:
                 f"missing histogram config for score {gene_score_id} in "
                 f"resource {resource.resource_id}"
             )
-        histogram_filename = (
-            f"{GeneScoreCollection.STATISTICS_FOLDER}"
-            f"/histogram_{gene_score_id}.yaml"
-        )
-        histogram = None
-        if proto.file_exists(resource, histogram_filename):
-            with proto.open_raw_file(
-                resource,
-                histogram_filename,
-                mode="rt"
-            ) as infile:
-                histogram = Histogram.deserialize(infile.read())
+
+        gsc = GeneScoreCollection(resource)
+        statistics = gsc.get_statistics()
+        histogram = statistics.score_histograms[gene_score_id]
 
         meta = resource_config.get("meta")
 
@@ -388,11 +409,18 @@ class GeneScoreCollection(
         score_id = histogram.score_id
         with proto.open_raw_file(
             resource,
-            f"{GeneScoreCollection.STATISTICS_FOLDER}"
-            f"/histogram_{score_id}.yaml",
+            f"{GeneScoreStatistics.get_statistics_folder()}"
+            f"/{GeneScoreStatistics.get_histogram_file(score_id)}",
             mode="wt"
         ) as outfile:
             outfile.write(histogram.serialize())
+        with proto.open_raw_file(
+            resource,
+            f"{GeneScoreStatistics.get_statistics_folder()}"
+            f"/{GeneScoreStatistics.get_histogram_image_file(score_id)}",
+            mode="wb"
+        ) as outfile:
+            histogram.write_image(outfile)
         return histogram
 
 
