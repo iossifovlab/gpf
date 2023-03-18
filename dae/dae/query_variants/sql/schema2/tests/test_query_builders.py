@@ -126,8 +126,7 @@ def summary_query_builder(pedigree_df):
         table_properties=NO_PARTITIONING_PROPERTIES,
         pedigree_schema=PEDIGREE_SCHEMA,
         pedigree_df=pedigree_df,
-        gene_models=None,
-        do_join_affected=False,
+        gene_models=None
     )
 
 

@@ -119,8 +119,7 @@ class SqlSchema2Variants(abc.ABC):
             self.partition_descriptor.to_dict(),
             self.pedigree_schema,
             self.ped_df,
-            gene_models=self.gene_models,
-            do_join_affected=False,
+            gene_models=self.gene_models
         )
 
         query = query_builder.build_query(

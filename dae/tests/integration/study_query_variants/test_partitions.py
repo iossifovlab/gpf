@@ -7,7 +7,6 @@ from dae.testing.foobar_import import foobar_gpf
 from dae.utils.regions import Region
 
 
-
 @pytest.fixture(scope="module")
 def imported_study(tmp_path_factory, genotype_storage):
     root_path = tmp_path_factory.mktemp(
@@ -21,6 +20,9 @@ def imported_study(tmp_path_factory, genotype_storage):
         f1       d1       0      0      1   1      dad
         f1       p1       d1     m1     1   2      prb
         f1       s1       d1     m1     2   1      sib
+        f2       m2       0      0      2   1      mom
+        f2       d2       0      0      1   1      dad
+        f2       p2       d2     m2     2   2      prb
         """)
     vcf_path = setup_vcf(
         root_path / "vcf_data" / "in.vcf.gz",
@@ -28,21 +30,14 @@ def imported_study(tmp_path_factory, genotype_storage):
         ##fileformat=VCFv4.2
         ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
         ##contig=<ID=foo>
-        #CHROM POS ID REF ALT QUAL FILTER INFO FORMAT m1  d1  p1  s1
-        foo    7   .  A   C   .    .      .    GT     0/1 0/0 0/1 0/0
-        foo    10  .  C   G   .    .      .    GT     0/0 0/1 0/1 0/0
-        bar    11  .  C   G   .    .      .    GT     1/0 0/0 0/0 0/1
-        bar    12  .  A   T   .    .      .    GT     0/0 1/0 1/0 0/0
-        bar    13  .  C   T   .    .      .    GT     0/0 1/0 1/0 1/0
+        #CHROM POS ID REF ALT QUAL FILTER INFO FORMAT m1  d1  p1  s1  m2   d2 p2 
+        foo    7   .  A   C   .    .      .    GT     0/1 0/0 0/1 0/0 0/0 0/0 0/0
+        foo    10  .  C   G   .    .      .    GT     0/0 0/1 0/1 0/0 0/0 0/0 0/0
+        bar    11  .  C   G   .    .      .    GT     1/0 0/0 0/0 0/1 1/1 1/1 1/1
+        bar    12  .  A   T   .    .      .    GT     0/0 1/0 1/0 0/0 0/1 0/1 0/1
+        bar    13  .  C   T   .    .      .    GT     0/0 1/0 1/0 1/0 0/1 0/0 0/0
         """)
-    
-    partition_def = textwrap.dedent("""
-      partition_description:
-        region_bin:
-            chromosomes: ['foo', 'bar']
-            region_length: 100
-    """)
-    
+
     partition_def = textwrap.dedent("""
       partition_description:
         region_bin:
@@ -51,11 +46,11 @@ def imported_study(tmp_path_factory, genotype_storage):
         family_bin:
             family_bin_size: 2
         frequency_bin:
-            rare_boundary: 5
+            rare_boundary: 30
         coding_bin:
             coding_effect_types: "splice-site,frame-shift,nonsense,no-frame-shift-newStop,noStart,noEnd,missense,no-frame-shift,CDS,synonymous,coding_unknown,regulatory,3'UTR,5'UTR"
     """)
-    
+
     processing_details = textwrap.dedent("""vcf:
        chromosomes: ['foo', 'bar']
        region_length: 8
@@ -63,14 +58,15 @@ def imported_study(tmp_path_factory, genotype_storage):
     study = vcf_study(
         root_path,
         "partitoned_vcf", ped_path, [vcf_path],
-        gpf_instance, partition_description=partition_def, 
+        gpf_instance, partition_description=partition_def,
         processing_details=processing_details)
     return study
+
 
 @pytest.mark.parametrize(
     "family_ids,count",
     [
-        (None, 5),
+        (None, 8),
         (set(["f1"]), 5)
     ],
 )
@@ -83,7 +79,7 @@ def test_query_family_id(family_ids, count, imported_study):
 @pytest.mark.parametrize(
     "person_ids,count",
     [
-        (None, 5),
+        (None, 8),
         (set(["m1"]), 2),
         (set(["d1"]), 3),
         (set(["p1"]), 4),
@@ -98,13 +94,20 @@ def test_query_person_id(
 
 
 @pytest.mark.parametrize(
-    "region,count",
+    "region,family_count,summary_count",
     [
-        (Region("foo", 1, 20), 2),
-        (Region("bar", 1, 20), 3)
+        (Region("foo", 1, 20), 2, 2),
+        (Region("bar", 1, 20), 6, 3)
     ],
 )
-def test_query_region(region, count, imported_study):
-    vs = imported_study.query_variants(regions=[region])
-    vs = list(vs)
-    assert len(vs) == count
+def test_query_region(region, family_count, summary_count, imported_study):
+    assert len(list(imported_study.
+                    query_variants(regions=[region]))) == family_count
+
+    assert len(list(imported_study.
+                    query_summary_variants(regions=[region]))) == summary_count
+
+
+def test_query_ultra_rare(imported_study):
+    assert len(list(imported_study.query_summary_variants(ultra_rare=True))) == 2
+    assert len(list(imported_study.query_variants(ultra_rare=True))) == 2
