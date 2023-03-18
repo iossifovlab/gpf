@@ -23,16 +23,16 @@ class SummaryQueryBuilder(BaseQueryBuilder):
         gene_models=None,
     ):
         # pylint: disable=too-many-arguments
-        self.family_variant_table = family_variant_table
-        self.summary_allele_table = summary_allele_table
+        # self.family_variant_table = family_variant_table
+        # self.summary_allele_table = summary_allele_table
 
         super().__init__(
             dialect,
             db,
-            family_variant_table,
+            None,                      # family_variant_table,
             summary_allele_table,
             pedigree_table,
-            family_variant_schema,
+            None,                      # family_variant_schema,
             summary_allele_schema,
             table_properties,
             pedigree_schema,

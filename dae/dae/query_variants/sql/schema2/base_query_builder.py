@@ -76,10 +76,10 @@ class BaseQueryBuilder(ABC):
         self,
         dialect: Dialect,
         db: str,
-        family_variant_table: str,
+        family_variant_table: Optional[str],
         summary_allele_table: str,
         pedigree_table: str,
-        family_variant_schema: TableSchema,
+        family_variant_schema: Optional[TableSchema],
         summary_allele_schema: TableSchema,
         partition_descriptor: Optional[dict],
         pedigree_schema: TableSchema,
@@ -89,7 +89,6 @@ class BaseQueryBuilder(ABC):
         # pylint: disable=too-many-arguments
 
         assert summary_allele_table is not None
-        assert family_variant_table is not None
 
         self.dialect = dialect
         self.db = db
@@ -97,6 +96,9 @@ class BaseQueryBuilder(ABC):
         self.summary_allele_table = summary_allele_table
         self.pedigree_table = pedigree_table
         self.partition_descriptor = partition_descriptor
+
+        if not family_variant_schema:
+            family_variant_schema = {}
 
         self.family_columns = family_variant_schema.keys()
         self.summary_columns = summary_allele_schema.keys()
@@ -559,18 +561,11 @@ class BaseQueryBuilder(ABC):
 
         return regions
 
-    def _build_frequency_bin_heuristic(
-        self, inheritance, ultra_rare, real_attr_filter
+    def _build_frequency_bin_heuristic_compute_bins(
+        self, inheritance, ultra_rare, real_attr_filter, rare_boundary
     ):
-        # pylint: disable=too-many-branches
-        assert self.partition_descriptor is not None
-        if "frequency_bin" not in self.combined_columns:
-            return ""
+        frequency_bins: set[int] = set([])
 
-        rare_boundary = self.partition_descriptor["rare_boundary"]
-
-        frequency_bin = set()
-        frequency_bin_col = self.where_accessors["frequency_bin"]
         matchers = []
         if inheritance is not None:
             logger.debug(
@@ -588,7 +583,7 @@ class BaseQueryBuilder(ABC):
             ]
 
             if any(m.match([Inheritance.denovo]) for m in matchers):
-                frequency_bin.add(f"{frequency_bin_col} = 0")
+                frequency_bins.add(0)
 
         if inheritance is None or any(
             m.match(
@@ -600,50 +595,45 @@ class BaseQueryBuilder(ABC):
             )
             for m in matchers
         ):
-
             if ultra_rare:
-                frequency_bin.update(
-                    [
-                        f"{frequency_bin_col} = 0",
-                        f"{frequency_bin_col} = 1",
-                    ]
-                )
+                frequency_bins |= set([0, 1])
             elif real_attr_filter:
                 for name, (begin, end) in real_attr_filter:
                     if name == "af_allele_freq":
 
                         if end and end < rare_boundary:
-                            frequency_bin.update(
-                                [
-                                    f"{frequency_bin_col} = 0",
-                                    f"{frequency_bin_col} = 1",
-                                    f"{frequency_bin_col} = 2",
-                                ]
-                            )
+                            frequency_bins |= set([0, 1, 2])
                         elif begin and begin >= rare_boundary:
-                            frequency_bin.add(f"{frequency_bin_col} = 3")
+                            frequency_bins.add(3)
                         elif end is not None and end >= rare_boundary:
-                            frequency_bin.update(
-                                [
-                                    f"{frequency_bin_col} = 0",
-                                    f"{frequency_bin_col} = 1",
-                                    f"{frequency_bin_col} = 2",
-                                    f"{frequency_bin_col} = 3",
-                                ]
-                            )
-
+                            frequency_bins |= set([0, 1, 2, 3])
             elif inheritance is not None:
-                frequency_bin.update(
-                    [
-                        f"{frequency_bin_col} = 1",
-                        f"{frequency_bin_col} = 2",
-                        f"{frequency_bin_col} = 3",
-                    ]
-                )
+                frequency_bins |= set([1, 2, 3])
+        return frequency_bins
 
-        if len(frequency_bin) == 4:
+    def _build_frequency_bin_heuristic(
+        self, inheritance, ultra_rare, real_attr_filter
+    ):
+        # pylint: disable=too-many-branches
+        assert self.partition_descriptor is not None
+        if "frequency_bin" not in self.combined_columns:
             return ""
-        return " OR ".join(frequency_bin)
+
+        rare_boundary = self.partition_descriptor["rare_boundary"]
+
+        frequency_bins = self._build_frequency_bin_heuristic_compute_bins(
+            inheritance, ultra_rare, real_attr_filter, rare_boundary)
+        if len(frequency_bins) in [0, 4]:
+            return ""
+
+        cols = []
+        if "frequency_bin" in self.family_columns:
+            cols.append("fa.frequency_bin")
+        if "frequency_bin" in self.summary_columns:
+            cols.append("sa.frequency_bin")
+        bins_str = ",".join([f"{rb}" for rb in frequency_bins])
+        parts = [f"{col} IN ({bins_str})" for col in cols]
+        return " AND ".join(parts)
 
     def _build_coding_heuristic(self, effect_types):
         assert self.partition_descriptor is not None
