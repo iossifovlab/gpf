@@ -64,7 +64,7 @@ class BaseQueryBuilder(ABC):
 
     QUOTE = "'"
     WHERE = """
-    WHERE
+  WHERE
     {where}
     """
     GENE_REGIONS_HEURISTIC_CUTOFF = 20
@@ -561,6 +561,26 @@ class BaseQueryBuilder(ABC):
 
         return regions
 
+    def _build_partition_bin_heuristic_where(self, bin_column, bins,
+                                             number_of_possible_bins=None,
+                                             str_bins=False):
+        if len(bins) == 0:
+            return ""
+        if number_of_possible_bins is not None and \
+                len(bins) == number_of_possible_bins:
+            return ""
+        cols = []
+        if bin_column in self.family_columns:
+            cols.append("fa." + bin_column)
+        if bin_column in self.summary_columns:
+            cols.append("sa." + bin_column)
+        if str_bins:
+            bins_str = ",".join([f"'{rb}'" for rb in bins])
+        else:
+            bins_str = ",".join([f"{rb}" for rb in bins])
+        parts = [f"{col} IN ({bins_str})" for col in cols]
+        return " AND ".join(parts)
+
     def _build_frequency_bin_heuristic_compute_bins(
         self, inheritance, ultra_rare, real_attr_filter, rare_boundary
     ):
@@ -623,17 +643,18 @@ class BaseQueryBuilder(ABC):
 
         frequency_bins = self._build_frequency_bin_heuristic_compute_bins(
             inheritance, ultra_rare, real_attr_filter, rare_boundary)
-        if len(frequency_bins) in [0, 4]:
-            return ""
 
-        cols = []
-        if "frequency_bin" in self.family_columns:
-            cols.append("fa.frequency_bin")
-        if "frequency_bin" in self.summary_columns:
-            cols.append("sa.frequency_bin")
-        bins_str = ",".join([f"{rb}" for rb in frequency_bins])
-        parts = [f"{col} IN ({bins_str})" for col in cols]
-        return " AND ".join(parts)
+        return self._build_partition_bin_heuristic_where(
+            "frequency_bin", frequency_bins, 4)
+
+        # cols = []
+        # if "frequency_bin" in self.family_columns:
+        #     cols.append("fa.frequency_bin")
+        # if "frequency_bin" in self.summary_columns:
+        #     cols.append("sa.frequency_bin")
+        # bins_str = ",".join([f"{rb}" for rb in frequency_bins])
+        # parts = [f"{col} IN ({bins_str})" for col in cols]
+        # return " AND ".join(parts)
 
     def _build_coding_heuristic(self, effect_types):
         assert self.partition_descriptor is not None
@@ -653,13 +674,15 @@ class BaseQueryBuilder(ABC):
             intersection == effect_types
         )
 
-        coding_bin_col = self.where_accessors["coding_bin"]
+        coding_bins = set([])
 
         if intersection == effect_types:
-            return f"{coding_bin_col} = 1"
-        if not intersection:
-            return f"{coding_bin_col} = 0"
-        return ""
+            coding_bins.add(1)
+        elif not intersection:
+            coding_bins.add(0)
+
+        return self._build_partition_bin_heuristic_where(
+            "coding_bin", coding_bins, 2)
 
     def _build_region_bin_heuristic(self, regions):
         assert self.partition_descriptor is not None
@@ -680,17 +703,20 @@ class BaseQueryBuilder(ABC):
             stop = region.stop // region_length
             for position_bin in range(start, stop + 1):
                 region_bins.append(f"{chrom_bin}_{position_bin}")
-        if not region_bins:
-            return ""
-        region_bin_col = self.where_accessors["region_bin"]
-        cols = []
-        if "region_bin" in self.family_columns:
-            cols.append("fa.region_bin")
-        if "region_bin" in self.summary_columns:
-            cols.append("sa.region_bin")
-        bins_str = ",".join([f"'{rb}'" for rb in region_bins])
-        parts = [f"{col} IN ({bins_str})" for col in cols]
-        return " AND ".join(parts)
+
+        return self._build_partition_bin_heuristic_where(
+            "region_bin", region_bins, str_bins=True)
+
+        # region_bin_col = self.where_accessors["region_bin"]
+        # cols = []
+        # if "region_bin" in self.family_columns:
+        #     cols.append("fa.region_bin")
+        # if "region_bin" in self.summary_columns:
+        #     cols.append("sa.region_bin")
+        # bins_str = ",".join([f"'{rb}'" for rb in region_bins])
+        # parts = [f"{col} IN ({bins_str})" for col in cols]
+        # return " AND ".join(parts)
+
         # return f"{region_bin_col} IN ({bins_str})"
 
     def _build_family_bin_heuristic(self, family_ids, person_ids):
@@ -720,13 +746,9 @@ class BaseQueryBuilder(ABC):
                 )
             )
 
-        family_bin_col = self.where_accessors["family_bin"]
-
-        if 0 < len(family_bins) < self.partition_descriptor["family_bin_size"]:
-            family_bins_str = ", ".join(str(fb) for fb in family_bins)
-            return f"{family_bin_col} IN ({family_bins_str})"
-
-        return ""
+        return self._build_partition_bin_heuristic_where(
+            "family_bin", family_bins,
+            self.partition_descriptor["family_bin_size"])
 
     def _build_return_reference_and_return_unknown(
         self, return_reference=None, _return_unknown=None

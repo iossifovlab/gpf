@@ -62,45 +62,42 @@ class FamilyQueryBuilder(BaseQueryBuilder):
         return columns
 
     def _build_join(self, genes=None, effect_types=None):
-        join_clause = ""
 
         if self.do_join_allele_in_members or self.do_join_allele_in_members:
             inner = "fa.allele_in_members"
             if self.dialect.add_unnest_in_join():
                 inner = f"UNNEST({inner})"
-            join_clause += f"JOIN {inner} as pi\n"
+            self._add_to_product(f"\n    JOIN\n    {inner} AS pi")
 
         if self.do_join_pedigree:
             pedigree_table = self.dialect.build_table_name(
                 self.pedigree_table, self.db)
             pi_ref = "pi" + self.dialect.array_item_suffix()
-            join_clause += (f"JOIN {pedigree_table} as pedigree "
-                            f"ON ({pi_ref} = pedigree.person_id)\n")
+            self._add_to_product(f"\n    JOIN"
+                                 f"\n    {pedigree_table} AS pedigree"
+                                 f"\n    ON ({pi_ref} = pedigree.person_id)")
 
         if genes is not None or effect_types is not None:
-            effect_gene_abs = self.where_accessors["effect_gene"]
             inner_clause = (
-                f"UNNEST({effect_gene_abs})"
+                "UNNEST(sa.effect_gene)"
                 if self.dialect.add_unnest_in_join()
-                else effect_gene_abs
+                else "sa.effect_gene"
             )
-            join_clause = join_clause + f"JOIN {inner_clause}  as eg\n"
-
-        self._add_to_product(join_clause)
+            self._add_to_product(f"\n    JOIN\n    {inner_clause} AS eg")
 
     def _build_from(self):
-        # implicit join on family_allele and summary variants table
-        from_clause = f"""FROM
-        {self.dialect.build_table_name(self.summary_allele_table, self.db)}
-            AS sa
-        JOIN
-        {self.dialect.build_table_name(self.family_variant_table, self.db)}
-            AS fa
-        ON (fa.summary_index = sa.summary_index AND
-        fa.bucket_index = sa.bucket_index AND
-        fa.allele_index = sa.allele_index)"""
-
-        self._add_to_product(from_clause)
+        summary_table_name = self.dialect.build_table_name(
+            self.summary_allele_table, self.db)
+        family_table_name = self.dialect.build_table_name(
+            self.family_variant_table, self.db)
+        self._add_to_product(
+            f"\n  FROM"
+            f"\n    {summary_table_name} AS sa"
+            f"\n    JOIN"
+            f"\n    {family_table_name} AS fa"
+            f"\n    ON (fa.summary_index = sa.summary_index AND"
+            f"\n        fa.bucket_index = sa.bucket_index AND"
+            f"\n        fa.allele_index = sa.allele_index)")
 
     def _build_group_by(self):
         pass

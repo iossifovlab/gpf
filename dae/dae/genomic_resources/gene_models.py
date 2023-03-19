@@ -734,9 +734,9 @@ class GeneModels(
             cds = (int(rec["cdsStart"]) + 1, int(rec["cdsEnd"]))
 
             exon_starts = list(map(
-                int, rec["exonStarts"].strip(",").split(",")))
+                int, str(rec["exonStarts"]).strip(",").split(",")))
             exon_ends = list(map(
-                int, rec["exonEnds"].strip(",").split(",")))
+                int, str(rec["exonEnds"]).strip(",").split(",")))
             assert len(exon_starts) == len(exon_ends)
 
             exons = [
