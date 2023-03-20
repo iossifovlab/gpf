@@ -131,10 +131,17 @@ def _run_list_command(
         files = f"{len(list(res.get_manifest().get_files())):2d}"
         if type(proto) is GenomicResourceCachedRepo:
             files = f"{len(proto.get_resource_cached_files(res.get_id())):2d}/{files}"
+        def convert_bytes(num):
+            step_unit = 1000.0 #1024
+
+            for x in ['bytes', 'KB', 'MB', 'GB', 'TB']:
+                if num < step_unit:
+                    return "%3.1f %s" % (num, x)
+                num /= step_unit
 
         print(
             f"{res.get_type():20} {res.get_version_str():7s} "
-            f"{files} {res_size:12d} "
+            f"{files} {(res_size if _args.h == False else convert_bytes(res_size)):12} "
             f"{proto.repo_id if isinstance(proto, GenomicResourceRepo) else proto.get_id()} "
             f"{res.get_id()}")
 
@@ -745,6 +752,8 @@ def cli_browse(cli_args=None):
         "-g", "--grr", type=str,
         default=None,
         help="path to GRR definition file.")
+    
+    parser.add_argument("--h", default=False, action="store_true", help="Projects the size in human-readable format.")
 
     if cli_args is None:
         cli_args = sys.argv[1:]
@@ -756,6 +765,7 @@ def cli_browse(cli_args=None):
         sys.exit(0)
     repo = build_genomic_resource_repository(file_name=args.grr)
     _run_list_command(repo, args)
+
 
 
 repository_template = Template("""
