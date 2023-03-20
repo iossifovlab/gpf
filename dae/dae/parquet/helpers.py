@@ -60,7 +60,8 @@ def _try_merge_parquets(in_files, out_file, delete_in_files):
                 out_filesystem, out_filename = url_to_pyarrow_fs(out_file)
                 out_parquet = pq.ParquetWriter(
                     out_filename, parq_file.schema_arrow,
-                    filesystem=out_filesystem
+                    filesystem=out_filesystem,
+                    version="1.0"
                 )
 
             for batch in parq_file.iter_batches():

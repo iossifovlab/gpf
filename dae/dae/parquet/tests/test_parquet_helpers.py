@@ -33,7 +33,7 @@ def test_merge_parquets(tmpdir):
     for i in range(0, len(full_data), 2):
         table = pa.table(full_data.iloc[i:i + 2])
         in_files.append(str(tmpdir / f"p{i}.parquet"))
-        writer = pq.ParquetWriter(in_files[-1], table.schema)
+        writer = pq.ParquetWriter(in_files[-1], table.schema, version="1.0")
         writer.write_table(table)
         writer.close()
 
@@ -58,7 +58,7 @@ def test_merge_parquets_single_file(tmpdir):
         ]
     })
     in_file = str(tmpdir / "in.parquet")
-    writer = pq.ParquetWriter(in_file, table.schema)
+    writer = pq.ParquetWriter(in_file, table.schema, version="1.0")
     writer.write_table(table)
     writer.close()
 
@@ -84,7 +84,8 @@ def test_merge_parquets_broken_input_file(tmpdir):
             "Flamingo", "Parrot", "Dog", "Horse", "Brittle stars", "Centipede"
         ]
     })
-    writer = pq.ParquetWriter(str(tmpdir / "p1.parquet"), table.schema)
+    writer = pq.ParquetWriter(
+        str(tmpdir / "p1.parquet"), table.schema, version="1.0")
     writer.write_table(table)
     writer.close()
 
