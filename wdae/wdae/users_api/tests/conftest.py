@@ -1,5 +1,5 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-
+import uuid
 from datetime import timedelta
 import pytest
 
@@ -114,6 +114,17 @@ def researcher(db):
 def researcher_without_password(db):
     res = WdaeUser.objects.create_user(email="fake@fake.com")
     res.name = "fname"
+    res.save()
+
+    return res
+
+
+@pytest.fixture()
+def unique_test_user(db):
+    uid = uuid.uuid1()
+    res = WdaeUser.objects.create_user(email=f"fake{uid}@unique.com")
+    res.name = f"fname{uid}"
+    res.set_password("alabala")
     res.save()
 
     return res

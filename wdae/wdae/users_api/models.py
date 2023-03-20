@@ -44,7 +44,7 @@ class WdaeUserManager(BaseUserManager):
     def get_or_create(self, **kwargs):
         try:
             return self.get(**kwargs), False
-        except WdaeUser.DoesNotExist:
+        except WdaeUser.DoesNotExist:  # pylint: disable=no-member
             return self.create_user(**kwargs), True
 
     def create(self, **kwargs):
@@ -87,7 +87,7 @@ class WdaeUser(AbstractBaseUser, PermissionsMixin):
 
     @property
     def has_unlimited_download(self):
-        return self.groups.filter(
+        return self.groups.filter(  # pylint: disable=no-member
             name=self.UMLIMITED_DOWNLOAD_GROUP).count() > 0
 
     @property
@@ -95,13 +95,14 @@ class WdaeUser(AbstractBaseUser, PermissionsMixin):
         return get_directly_allowed_genotype_data(self)
 
     def email_user(self, subject, message, from_email=None):
+        """Send an email to the user."""
         if from_email is None:
             from_email = settings.DEFAULT_FROM_EMAIL
 
         override = None
         try:
             override = settings.EMAIL_OVERRIDE
-        except Exception:
+        except Exception:  # pylint: disable=broad-exception-caught
             LOGGER.debug("no email override; sending email")
             override = None
         if override:
@@ -110,10 +111,10 @@ class WdaeUser(AbstractBaseUser, PermissionsMixin):
             to_email = self.email
 
         mail = send_mail(subject, message, from_email, [to_email])
-        LOGGER.info("email sent: to:      <" + str(self.email) + ">")
-        LOGGER.info("email sent: from:    <" + str(from_email) + ">")
-        LOGGER.info("email sent: subject: " + str(subject))
-        LOGGER.info("email sent: message: " + str(message))
+        LOGGER.info("email sent: to:      <%s>", str(self.email))
+        LOGGER.info("email sent: from:    <%s>", str(from_email))
+        LOGGER.info("email sent: subject:  %s", str(subject))
+        LOGGER.info("email sent: message:  %s", str(message))
 
         return mail
 
@@ -142,6 +143,7 @@ class WdaeUser(AbstractBaseUser, PermissionsMixin):
                 session.delete()
 
     def register_preexisting_user(self, name):
+        """Register already existing user."""
         if self.is_active:
             send_already_existing_email(self)
         else:
@@ -156,6 +158,7 @@ class WdaeUser(AbstractBaseUser, PermissionsMixin):
 
     @staticmethod
     def change_password(verification_path, new_password):
+        """Initiate password reset for the user."""
         user = verification_path.user
         user.set_password(new_password)
         user.save()
@@ -172,7 +175,7 @@ class WdaeUser(AbstractBaseUser, PermissionsMixin):
         return user
 
     def __str__(self):
-        return self.email
+        return str(self.email)
 
     class Meta(object):
         db_table = "users"
@@ -198,15 +201,18 @@ class BaseVerificationCode(models.Model):
     @classmethod
     def get_code(cls, user):
         try:
-            return cls.objects.get(user=user)
+            return cls.objects.get(user=user)  # pylint: disable=no-member
         except ObjectDoesNotExist:
             return None
 
     @classmethod
     def create(cls, user):
+        """Create an email verification code."""
         try:
+            # pylint: disable=no-member
             verif_code = cls.objects.get(user=user)
         except ObjectDoesNotExist:
+            # pylint: disable=no-member
             verif_code = cls.objects.create(user=user, path=uuid.uuid4())
             return verif_code
 
@@ -259,7 +265,7 @@ class AuthenticationLog(models.Model):
     @staticmethod
     def get_last_login_for(email: str):
         """Get the latest authentication attempt for a specified email."""
-        query = AuthenticationLog.objects.filter(
+        query = AuthenticationLog.objects.filter(  # pylint: disable=no-member
             email__iexact=email
         ).order_by("-time", "-failed_attempt")
         try:
@@ -301,6 +307,7 @@ class AuthenticationLog(models.Model):
 
     @staticmethod
     def log_authentication_attempt(email: str, failed: bool):
+        """Log an attempt for authentication."""
         last_login = AuthenticationLog.get_last_login_for(email)
 
         if failed:
@@ -317,7 +324,7 @@ class AuthenticationLog(models.Model):
         login_attempt.save()
 
 
-def staff_update(sender, **kwargs):
+def staff_update(sender, **kwargs):  # pylint: disable=unused-argument
     """Update if user is part of staff when SUPERUSER_GROUP is added/rmed."""
     for key in ["action", "instance", "reverse"]:
         if key not in kwargs:
@@ -328,7 +335,7 @@ def staff_update(sender, **kwargs):
     if kwargs["reverse"]:
         users = WdaeUser.objects.filter(pk__in=kwargs["pk_set"])
     else:
-        users = [kwargs["instance"]]
+        users = [kwargs["instance"]]  # type: ignore
 
     with transaction.atomic():
         for user in users:
@@ -340,7 +347,7 @@ def staff_update(sender, **kwargs):
                 user.save()
 
 
-def group_post_delete(sender, **kwargs):
+def group_post_delete(sender, **kwargs):  # pylint: disable=unused-argument
     """Automatically remove staff privileges of SUPERUSER_GROUP users.
 
     Automatically remove staff privileges of users belonging to the
@@ -355,13 +362,14 @@ def group_post_delete(sender, **kwargs):
         return
 
     with transaction.atomic():
+        # pylint: disable=protected-access
         for user in WdaeUser.objects.filter(pk__in=group._user_ids).all():
             user.is_staff = False
             user.save()
 
 
 # a hack to save the users the group had, used in the post_delete signal
-def group_pre_delete(sender, **kwargs):
+def group_pre_delete(sender, **kwargs):  # pylint: disable=unused-argument
     """Attach user-ids when a group is being deleted.
 
     When deleting a group, attaches the ids of the users who belonged to it
@@ -372,9 +380,12 @@ def group_pre_delete(sender, **kwargs):
         return
     group = kwargs["instance"]
     if group.name == WdaeUser.SUPERUSER_GROUP:
+        # pylint: disable=protected-access
         group._user_ids = [u.pk for u in group.user_set.all()]
 
 
-m2m_changed.connect(staff_update, WdaeUser.groups.through, weak=False)
+m2m_changed.connect(
+    staff_update, WdaeUser.groups.through,  # pylint: disable=no-member
+    weak=False)
 post_delete.connect(group_post_delete, Group, weak=False)
 pre_delete.connect(group_pre_delete, Group, weak=False)

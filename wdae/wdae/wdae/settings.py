@@ -8,6 +8,8 @@ from gpf_instance.gpf_instance import get_wgpf_instance_path
 
 from .default_settings import *
 
+DEBUG = True
+
 ALLOWED_HOSTS += ["localhost"]
 
 CORS_ORIGIN_WHITELIST = [
