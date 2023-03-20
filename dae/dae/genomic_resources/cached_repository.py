@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 import logging
 
-from typing import Iterable, Optional, Generator, cast
+from typing import Optional, Generator, cast
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from .repository import GenomicResource, \
@@ -225,10 +225,9 @@ class GenomicResourceCachedRepo(GenomicResourceRepo):
         """Cache resources from a list of remote resource IDs."""
         executor = ThreadPoolExecutor(max_workers=workers)
         futures = []
-
         if resource_ids is None:
-            resources: Iterable[GenomicResource] = \
-                self.child.get_all_resources()
+            resources: list[GenomicResource] = \
+                list(self.child.get_all_resources())
         else:
             resources = []
             for resource_id in resource_ids:
@@ -236,18 +235,27 @@ class GenomicResourceCachedRepo(GenomicResourceRepo):
                 assert remote_res is not None, resource_id
                 resources.append(remote_res)
 
-        if resource_files is None:
+        if not resource_files:
             resource_files = {}
+            for resource in resources:
+                remote_manifest = resource.get_manifest()
+                resource_files[resource.get_id()] = set(
+                    remote_manifest.names()
+                )
 
         for rem_resource in resources:
-            cached_proto = self._get_or_create_cache_proto(
-                rem_resource.proto)
-            futures.append(
-                executor.submit(
-                    cached_proto.cache_resource,
-                    rem_resource,
-                    resource_files.get(rem_resource.get_id())
+            files_to_cache = resource_files.get(rem_resource.get_id())
+            for index, res_file in enumerate(files_to_cache):
+                logger.info("Copying: %s, %d file of %d",
+                            res_file, index + 1, len(files_to_cache))
+                cached_proto = self._get_or_create_cache_proto(
+                    rem_resource.proto)
+                futures.append(
+                    executor.submit(
+                        cached_proto.cache_resource,
+                        rem_resource,
+                        {res_file, }
+                    )
                 )
-            )
-        for future in as_completed(futures):
-            future.result()
+            for future in as_completed(futures):
+                future.result()
