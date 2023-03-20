@@ -47,7 +47,7 @@ else:
     FORCE_SCRIPT_NAME = "/"
 
 EMAIL_HOST = os.environ.get("WDAE_EMAIL_HOST", "localhost")
-EMAIL_USET_TLS = os.environ.get("WDAE_EMAIL_USET_TLS", False)
+EMAIL_USE_TLS = os.environ.get("WDAE_EMAIL_USE_TLS", False)
 EMAIL_HOST_USER = os.environ.get("WDAE_EMAIL_HOST_USER", None)
 EMAIL_HOST_PASSWORD = os.environ.get("WDAE_EMAIL_HOST_PASSWORD", None)
 
