@@ -14,7 +14,6 @@ import { environment } from 'environments/environment';
   encapsulation: ViewEncapsulation.None, // TODO: What is this?
   selector: 'gpf-gene-scores',
   templateUrl: './gene-scores.component.html',
-  styleUrls: ['./gene-scores.component.css']
 })
 export class GeneScoresComponent extends StatefulComponent implements OnInit {
   private rangeChanges = new ReplaySubject<[string, number, number]>(1);
@@ -22,9 +21,7 @@ export class GeneScoresComponent extends StatefulComponent implements OnInit {
 
   public geneScoresArray: GeneScores[];
   public rangesCounts: Observable<Array<number>>;
-  public finishedLoading = false;
   public downloadUrl: string;
-  public componentHeight = 252.33;
 
   @ValidateNested() private geneScoresLocalState = new GeneScoresLocalState();
 
@@ -76,7 +73,6 @@ export class GeneScoresComponent extends StatefulComponent implements OnInit {
       } else {
         this.selectedGeneScores = this.geneScoresArray[0];
       }
-      this.finishedLoading = true;
     });
     if (this.geneScoresLocalState.score !== null && this.rangeStart !== null && this.rangeEnd !== null) {
       this.updateHistogramState();

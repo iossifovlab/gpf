@@ -11,12 +11,11 @@
     (keydown.enter)="onEnterPress()"
     spellcheck="false" />
   <span
-    style="width: 100%; height: 38px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis"
+    style="width: 100%"
     [hidden]="!caption"
     id="selected-value"
     class="clickable"
-    (click)="searchBox.value = ''; onFocus($event)"
-    [attr.title]="caption">
+    (click)="searchBox.value = ''; onFocus($event)">
     <span>{{ caption }}</span>
   </span>
   <div *ngIf="showLoadingSpinner" id="loading-wrapper">
@@ -37,8 +36,7 @@
       class="dropdown-item"
       type="button"
       style="cursor: pointer; padding: 8px"
-      (click)="onSelect(element)"
-      [attr.title]="element">
+      (click)="onSelect(element)">
       <ng-template
         *ngIf="template?.templateRef"
         [ngTemplateOutlet]="template.templateRef"

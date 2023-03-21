@@ -415,14 +415,3 @@ gpf-genotype-preview-field gpf-pedigree gpf-pedigree-chart .svg-container {
 .pedigree-modal .modal-lg .svg-container {
   max-width: 100% !important;
 }
-
-.no-available-warning {
-  padding: 8px;
-  text-align: center;
-  border-top: 1px solid rgba(0, 0, 0, 12.5%);
-}
-
-.no-available-warning span {
-  font-style: italic;
-  opacity: 75%;
-}

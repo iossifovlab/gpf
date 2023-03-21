@@ -1,12 +1,5 @@
-<div
-  *ngIf="!selectedGeneSetsCollection && !finishedLoading"
-  style="max-height: 100%"
-  [style.height.px]="componentHeight">
-  <div style="border-top: 1px solid rgba(0, 0, 0, 12.5%)" [style.height.px]="componentHeight"></div>
-</div>
-
 <div *ngIf="selectedGeneSetsCollection">
-  <div class="row panel" id="gene-sets-panel" [style.max-height.px]="componentHeight">
+  <div class="row panel" id="gene-sets-panel" style="margin-left: 0px; margin-right: 0px">
     <div class="col-sm-3">
       <div class="select-wrapper">
         <select
@@ -88,6 +81,26 @@
     </div>
   </div>
 </div>
-<div *ngIf="!selectedGeneSetsCollection && finishedLoading" class="no-available-warning">
-  <span>No gene sets collections available</span>
+
+<div *ngIf="geneSetsLoaded === null">
+  <div class="form-block" style="display: contents">
+    <div class="card">
+      <ul ngbNav #nav="ngbNav" class="navbar bg-light nav-pills" style="justify-content: center">
+        <li ngbNavItem>
+          <span style="opacity: 75%"><i>Loading gene sets...</i></span>
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>
+<div *ngIf="!selectedGeneSetsCollection && geneSetsLoaded !== null">
+  <div class="form-block" style="display: contents">
+    <div class="card">
+      <ul ngbNav #nav="ngbNav" class="navbar bg-light nav-pills" style="justify-content: center">
+        <li ngbNavItem>
+          <span style="opacity: 75%"><i>No gene sets collections available</i></span>
+        </li>
+      </ul>
+    </div>
+  </div>
 </div>
