@@ -178,3 +178,19 @@ def test_query_complex(imported_study):
                     )
                     )
                ) == 1
+
+
+def test_query_pedigree_fields(imported_study):
+    assert len(list(imported_study.
+                    query_variants(person_set_collection=('status', ['affected', 'unaffected', 'unspecified'])))) == 8
+
+
+def test_af_parent_count(imported_study):
+    for v in imported_study.query_variants():
+        # import pdb; pdb.set_trace()
+        assert v.get_attribute("af_parents_called_count") == [4]
+
+
+def test_query_denovo(imported_study):
+    assert len(list(imported_study.query_variants(inheritance=["denovo"]))) == 0
+

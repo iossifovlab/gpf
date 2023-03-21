@@ -63,7 +63,7 @@ class FamilyQueryBuilder(BaseQueryBuilder):
 
     def _build_join(self, genes=None, effect_types=None):
 
-        if self.do_join_allele_in_members or self.do_join_allele_in_members:
+        if self.do_join_allele_in_members or self.do_join_pedigree:
             inner = "fa.allele_in_members"
             if self.dialect.add_unnest_in_join():
                 inner = f"UNNEST({inner})"
@@ -105,6 +105,7 @@ class FamilyQueryBuilder(BaseQueryBuilder):
     def _build_having(self, **kwargs):
         pass
 
+    """
     def _build_where(
         self,
         regions=None,
@@ -153,3 +154,4 @@ class FamilyQueryBuilder(BaseQueryBuilder):
         # else:
         #     in_members = "WHERE {pi_ref} = pedigree.person_id"
         # self._add_to_product(in_members)
+    """
