@@ -146,6 +146,6 @@ class HdfsHelpers:
 
         assert self.isdir(hdfs_dirname), hdfs_dirname
 
-        result = []
+        result: list[str] = []
         list_parquet_files_recursive(hdfs_dirname, result)
         return result

@@ -1,7 +1,7 @@
 import os
 import glob
 import logging
-from typing import Dict, Any, cast
+from typing import Dict, Any, cast, Optional
 
 import toml
 from cerberus import Validator
@@ -75,10 +75,10 @@ class ImpalaGenotypeStorage(GenotypeStorage):
     def __init__(self, storage_config: Dict[str, Any]):
         super().__init__(storage_config)
 
-        self._impala_helpers = None
+        self._impala_helpers: Optional[ImpalaHelpers] = None
 
-        self._hdfs_helpers = None
-        self._rsync_helpers = None
+        self._hdfs_helpers: Optional[HdfsHelpers] = None
+        self._rsync_helpers: Optional[RsyncHelpers] = None
 
     @classmethod
     def validate_and_normalize_config(cls, config: Dict) -> Dict:
@@ -227,12 +227,6 @@ class ImpalaGenotypeStorage(GenotypeStorage):
         study_path = self.default_hdfs_study_path(study_id)
         return os.path.join(study_path, "variants")
 
-    def full_hdfs_path(self, hdfs_path):
-        result = \
-            f"hdfs://{self.storage_config.hdfs.host}:" \
-            f"{self.storage_config.hdfs.port}{hdfs_path}"
-        return result
-
     def _build_hdfs_pedigree(
             self, study_id, pedigree_file):
         study_path = os.path.join(
@@ -272,6 +266,9 @@ class ImpalaGenotypeStorage(GenotypeStorage):
 
         study_path = os.path.join(
             self.storage_config["hdfs"]["base_dir"], study_id)
+        if self.hdfs_helpers.exists(study_path):
+            self.hdfs_helpers.delete(study_path, recursive=True)
+
         pedigree_hdfs_path = os.path.join(
             study_path, "pedigree", "pedigree.parquet"
         )
@@ -320,7 +317,7 @@ class ImpalaGenotypeStorage(GenotypeStorage):
         assert self.rsync_helpers is not None
 
         study_path = os.path.join(
-            self.storage_config.hdfs.base_dir, study_id)
+            self.storage_config["hdfs"]["base_dir"], study_id)
         if not study_path.endswith("/"):
             study_path += "/"
         self.rsync_helpers.clear_remote(study_path)

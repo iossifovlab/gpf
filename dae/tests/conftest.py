@@ -1,5 +1,5 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-
+from typing import Optional, Any
 from dae.genotype_storage.genotype_storage_registry import \
     GenotypeStorageRegistry
 
@@ -56,7 +56,7 @@ def default_genotype_storage_configs(root_path):
 
 
 GENOTYPE_STORAGE_REGISTRY = GenotypeStorageRegistry()
-GENOTYPE_STORAGES = None
+GENOTYPE_STORAGES: Optional[dict[str, Any]] = None
 
 
 def _select_storages_by_type(storage_types):
