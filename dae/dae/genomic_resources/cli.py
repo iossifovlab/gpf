@@ -105,10 +105,11 @@ def _add_dvc_parameters_group(parser):
 
 
 def _add_hist_parameters_group(parser):
-    group = parser.add_argument_group(title="Histograms")
+    group = parser.add_argument_group(title="Statistics")
     group.add_argument(
-        "--region-size", type=int, default=3_000_000,
-        help="Number of records to process in parallel")
+        "--region-size", type=int, default=300_000_000,
+        help="Region size to use for splitting statistics calculation into "
+        "tasks")
 
 
 def _configure_list_subparser(subparsers):
