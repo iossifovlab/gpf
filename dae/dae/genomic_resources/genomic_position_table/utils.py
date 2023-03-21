@@ -53,7 +53,6 @@ def save_as_tabix_table(
             print(*rec, sep="\t", file=text_file)
     pysam.tabix_compress(tmp_file, full_file_path, force=True)
     os.remove(tmp_file)
-
     pysam.tabix_index(full_file_path, force=True,
                       seq_col=table.chrom_key,
                       start_col=table.pos_begin_key,

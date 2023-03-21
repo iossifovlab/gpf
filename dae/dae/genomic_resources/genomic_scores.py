@@ -15,8 +15,6 @@ import yaml
 from jinja2 import Template
 from markdown2 import markdown
 
-import matplotlib.pyplot as plt  # type: ignore
-
 from dae.task_graph.graph import TaskGraph
 from . import GenomicResource
 from .statistic import Statistic
@@ -748,24 +746,12 @@ class GenomicScore(
             ) as outfile:
                 outfile.write(score_histogram.serialize())
 
-            width = score_histogram.bins[1:] - score_histogram.bins[:-1]
-            plt.bar(
-                x=score_histogram.bins[:-1], height=score_histogram.bars,
-                log=score_histogram.y_scale == "log",
-                width=width,
-                align="edge")
-
-            if score_histogram.x_scale == "log":
-                plt.xscale("log")
-            plt.grid(axis="y")
-            plt.grid(axis="x")
             with proto.open_raw_file(
                 resource,
                 f"{GenomicScore.STATISTICS_FOLDER}/histogram_{score_id}.png",
                 mode="wb"
             ) as outfile:
-                plt.savefig(outfile)
-            plt.clf()
+                score_histogram.plot(outfile)
         return merged_histograms
 
     def _split_into_regions(self, region_size, reference_genome=None):
@@ -812,7 +798,7 @@ class GenomicScore(
         score_filename = config["table"]["filename"]
         return json.dumps({
             "config": {
-                "scores": config["scores"],
+                "scores": config.get("scores", {}),
                 "histograms": config.get("histograms", {}),
                 "table": config["table"]
             },

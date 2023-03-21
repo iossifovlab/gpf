@@ -105,10 +105,11 @@ def _add_dvc_parameters_group(parser):
 
 
 def _add_hist_parameters_group(parser):
-    group = parser.add_argument_group(title="Histograms")
+    group = parser.add_argument_group(title="Statistics")
     group.add_argument(
-        "--region-size", type=int, default=3_000_000,
-        help="Number of records to process in parallel")
+        "--region-size", type=int, default=300_000_000,
+        help="Region size to use for splitting statistics calculation into "
+        "tasks")
 
 
 def _configure_list_subparser(subparsers):
@@ -482,7 +483,7 @@ def _run_repo_stats_command(repo, proto, **kwargs):
         elif dry_run and needs_rebuild:
             logger.info("Statistics of <%s> need update", res.resource_id)
 
-    if not dry_run:
+    if not dry_run and len(graph.tasks) > 0:
         modified_kwargs = copy.copy(kwargs)
         modified_kwargs["command"] = "run"
         TaskGraphCli.process_graph(
@@ -513,21 +514,23 @@ def _run_resource_stats_command(repo, proto, repo_url, **kwargs):
         logger.error("unable to find resource...")
         return
 
-    graph = TaskGraph()
-
     impl = build_resource_implementation(res)
 
     needs_rebuild = _stats_need_rebuild(proto, impl)
 
+    if dry_run and needs_rebuild:
+        logger.info("Statistics of <%s> need update", res.resource_id)
+        return
+
     if (force or needs_rebuild) and not dry_run:
+        graph = TaskGraph()
         _collect_impl_stats_tasks(
             graph, proto, impl, repo, dry_run, force, use_dvc, region_size)
-    elif dry_run and needs_rebuild:
-        logger.info("Statistics of <%s> need update", res.resource_id)
-
-    modified_kwargs = copy.copy(kwargs)
-    modified_kwargs["command"] = "run"
-    TaskGraphCli.process_graph(graph, force_mode="always", **modified_kwargs)
+        if len(graph.tasks) == 0:
+            return
+        modified_kwargs = copy.copy(kwargs)
+        modified_kwargs["command"] = "run"
+        TaskGraphCli.process_graph(graph, force_mode="always", **modified_kwargs)
 
 
 def _run_repo_repair_command(repo, proto, **kwargs):

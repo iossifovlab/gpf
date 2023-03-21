@@ -70,6 +70,9 @@ class Schema2GenotypeStorage(GenotypeStorage):
         # Copy pedigree
         base_dir = self.storage_config["hdfs"]["base_dir"]
         study_path = os.path.join(base_dir, study_id)
+        if self.hdfs_helpers.exists(study_path):
+            self.hdfs_helpers.delete(study_path, recursive=True)
+
         pedigree_hdfs_path = os.path.join(
             study_path, "pedigree", "pedigree.parquet"
         )

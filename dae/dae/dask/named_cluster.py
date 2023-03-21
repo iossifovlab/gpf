@@ -1,10 +1,12 @@
 import os
 import copy
+import logging
 from typing import Any, Dict, Optional, Tuple
 from distributed.client import Client
 import dask
 
 _CLUSTER_TYPES = {}
+logger = logging.getLogger(__name__)
 
 
 def set_up_local_cluster(cluster_conf):
@@ -12,8 +14,10 @@ def set_up_local_cluster(cluster_conf):
     # pylint: disable=import-outside-toplevel
     from dask.distributed import LocalCluster
     kwargs = copy.copy(cluster_conf)
-    if "n_workers" not in kwargs and "cores" not in kwargs:
-        kwargs["n_workers"] = 1
+    number_of_workers = kwargs.pop("number_of_workers", None)
+    if number_of_workers is not None:
+        if "n_workers" not in kwargs and "cores" not in kwargs:
+            kwargs["n_workers"] = 1
     cluster = LocalCluster(**kwargs)
     return cluster
 
@@ -21,12 +25,14 @@ def set_up_local_cluster(cluster_conf):
 def set_up_sge_cluster(cluster_conf):
     # pylint: disable=import-outside-toplevel
     from dask_jobqueue import SGECluster
+    cluster_conf.pop("number_of_workers", None)
     return SGECluster(**cluster_conf)
 
 
 def set_up_slurm_cluster(cluster_conf):
     # pylint: disable=import-outside-toplevel
     from dask_jobqueue import SLURMCluster
+    cluster_conf.pop("number_of_workers", None)
     return SLURMCluster(**cluster_conf)
 
 
@@ -37,6 +43,7 @@ def set_up_kubernetes_cluster(cluster_conf):
         KubeCluster, \
         make_cluster_spec
 
+    cluster_conf.pop("number_of_workers", None)
     env = {}
     if "envvars" in cluster_conf:
         env = {v: os.environ[v] for v in cluster_conf["envvars"]}
@@ -69,10 +76,12 @@ def setup_client_from_config(cluster_config,
                              number_of_threads_param: Optional[int] = None) \
         -> Tuple[Client, Dict[str, Any]]:
     """Create a dask client from the provided config."""
-    print("CLUSTER CONFIG:", cluster_config)
+    logger.info("CLUSTER CONFIG: %s", cluster_config)
     cluster_type = cluster_config["type"]
 
     cluster_params = cluster_config.get("params", {})
+    cluster_params["number_of_workers"] = number_of_threads_param
+
     cluster = _CLUSTER_TYPES[cluster_type](cluster_params)
 
     number_of_threads = cluster_config.get("number_of_threads", None)
