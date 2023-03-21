@@ -22,10 +22,10 @@ class Line:
         pos_end_key: Key = 2,
         ref_key: Optional[Key] = None,
         alt_key: Optional[Key] = None,
-        header: tuple[str, ...] = tuple(),
+        header: Optional[tuple[str, ...]] = None,
     ):
         self.data: tuple = raw_line
-        self.header: tuple[str, ...] = header
+        self.header: Optional[tuple[str, ...]] = header
         self.chrom: str = self.get(chrom_key)
         self.pos_begin: int = int(self.get(pos_begin_key))
         self.pos_end: int = int(self.get(pos_end_key))
@@ -35,7 +35,11 @@ class Line:
             self.get(alt_key) if alt_key is not None else None
 
     def get(self, key: Key):
-        idx = key if isinstance(key, int) else self.header.index(key)
+        if isinstance(key, int):
+            return self.data[key]
+
+        assert self.header is not None
+        idx = self.header.index(key)
         return self.data[idx]
 
 

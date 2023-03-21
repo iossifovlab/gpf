@@ -26,6 +26,8 @@ class InmemoryGenomicPositionTable(GenomicPositionTable):
 
     def _make_line(self, data) -> Line:
         assert self.chrom_key is not None
+        assert self.pos_begin_key is not None
+        assert self.pos_end_key is not None
         return Line(
             data,
             self.chrom_key,

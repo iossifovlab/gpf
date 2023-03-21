@@ -24,9 +24,9 @@ class GenomicPositionTable(abc.ABC):
         self.chrom_order: Optional[List[str]] = None
         self.rev_chrom_map: Optional[Dict[str, str]] = None
 
-        self.chrom_key = None
-        self.pos_begin_key = None
-        self.pos_end_key = None
+        self.chrom_key: Optional[int] = None
+        self.pos_begin_key: Optional[int] = None
+        self.pos_end_key: Optional[int] = None
         self.ref_key = None
         self.alt_key = None
 
@@ -108,16 +108,16 @@ class GenomicPositionTable(abc.ABC):
     def _set_core_column_keys(self):
         self.chrom_key = self._get_column_key(self.CHROM)
         if self.chrom_key is None:
-            self.chrom_key = self.CHROM
+            self.chrom_key = self.CHROM  # type: ignore
 
         self.pos_begin_key = self._get_column_key(self.POS_BEGIN)
         if self.pos_begin_key is None:
-            self.pos_begin_key = self.POS_BEGIN
+            self.pos_begin_key = self.POS_BEGIN  # type: ignore
 
         self.pos_end_key = self._get_column_key(self.POS_END)
         if self.pos_end_key is None:
             if self.header and self.POS_END in self.header:
-                self.pos_end_key = self.POS_END
+                self.pos_end_key = self.POS_END  # type: ignore
             else:
                 self.pos_end_key = self.pos_begin_key
 
@@ -166,19 +166,18 @@ class GenomicPositionTable(abc.ABC):
         the chromomes in the file in the order determinted by the file.
         """
 
-    def get_chromosome_length(self, chrom, step=1_000_000):
+    def get_chromosome_length(self, chrom, step=100_000_000):
         """Return the length of a chromosome (or contig).
 
-        The returned value is
-        the index of the last record for the chromosome + 1.
+        Returned value is guarnteed to be larget than the actual contig length.
         """
         def any_records(riter):
             try:
                 next(riter)
             except StopIteration:
                 return False
-            else:
-                return True
+
+            return True
 
         # First we find any region that includes the last record i.e.
         # the length of the chromosome
@@ -191,10 +190,9 @@ class GenomicPositionTable(abc.ABC):
             else:
                 right = pos
                 pos = pos // 2
-
         # Second we use binary search to narrow the region until we find the
         # index of the last element (in left) and the length (in right)
-        while (right - left) > 1:
+        while (right - left) > 5_000_000:
             pos = (left + right) // 2
             if any_records(self.get_records_in_region(chrom, pos, None)):
                 left = pos
