@@ -132,6 +132,29 @@ class Histogram(Statistic):
             }
         ))
 
+    def plot(self, outfile):
+        """Plot histogram and save it into outfile."""
+        # pylint: disable=import-outside-toplevel
+        import matplotlib.pyplot as plt
+        width = self.bins[1:] - self.bins[:-1]
+        plt.bar(
+            x=self.bins[:-1], height=self.bars,
+            log=self.y_scale == "log",
+            width=width,
+            align="edge")
+
+        if self.x_scale == "log":
+            plt.xscale("log")
+
+        plt.xlabel(self.score_id)
+        plt.ylabel("count")
+
+        plt.grid(axis="y")
+        plt.grid(axis="x")
+
+        plt.savefig(outfile)
+        plt.clf()
+
     @staticmethod
     def deserialize(data) -> Histogram:
         res = yaml.load(data, yaml.Loader)
