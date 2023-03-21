@@ -812,7 +812,7 @@ class GenomicScore(
         score_filename = config["table"]["filename"]
         return json.dumps({
             "config": {
-                "scores": config["scores"],
+                "scores": config.get("scores", {}),
                 "histograms": config.get("histograms", {}),
                 "table": config["table"]
             },
