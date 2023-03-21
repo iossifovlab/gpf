@@ -111,8 +111,7 @@ class TaskGraphCli:
     @staticmethod
     def process_graph(
             task_graph: TaskGraph, force_mode="optional", **kwargs) -> bool:
-        """
-        Process task_graph in according with the arguments in args.
+        """Process task_graph in according with the arguments in args.
 
         Return true if the graph get's successfully processed.
         """
@@ -136,4 +135,4 @@ class TaskGraphCli:
             res = task_graph_status(task_graph, task_cache, args.verbose)
             return res
 
-        raise Exception("Unknown command")
+        raise ValueError(f"Unknown command {args.command}")
