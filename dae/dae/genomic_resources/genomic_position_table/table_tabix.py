@@ -86,7 +86,8 @@ class TabixGenomicPositionTable(GenomicPositionTable):
             return self.rev_chrom_map[chrom]
         return chrom
 
-    def _make_line(self, data):
+    def _make_line(self, data) -> Line:
+        assert self.chrom_key is not None
         return Line(
             data,
             self.chrom_key,
@@ -95,7 +96,7 @@ class TabixGenomicPositionTable(GenomicPositionTable):
             self.header
         )
 
-    def _transform_result(self, line: Line) -> Line:
+    def _transform_result(self, line: Line) -> Optional[Line]:
         rchrom = self._map_result_chrom(line.chrom)
         if rchrom is None:
             return None
@@ -103,6 +104,7 @@ class TabixGenomicPositionTable(GenomicPositionTable):
         if isinstance(self.chrom_key, int):
             chrom_idx = self.chrom_key
         else:
+            assert self.header is not None
             chrom_idx = self.header.index(self.chrom_key)
         new_data[chrom_idx] = rchrom
         return self._make_line(tuple(new_data))
@@ -221,6 +223,7 @@ class TabixGenomicPositionTable(GenomicPositionTable):
         if buffering and len(self.buffer) > 0 and prev_call_chrom == fchrom:
 
             first = self.buffer.peek_first()
+            assert pos_end is not None
             if first.chrom == fchrom \
                and prev_call_end is not None \
                and pos_begin > prev_call_end \

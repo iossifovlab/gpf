@@ -8,7 +8,7 @@ def test_wgpf_init_simple(wgpf_fixture, wdae_django_setup):
     # Given
     with wdae_django_setup(
             wgpf_fixture,
-            "tests.integration.test_wgpf_command.wgpf_settings"):
+            "wdae_tests.integration.test_wgpf_command.wgpf_settings"):
 
         assert not (wgpf_fixture.instance_dir / ".wgpf_init.flag").exists()
 
@@ -23,7 +23,7 @@ def test_wgpf_reinit(wgpf_fixture, wdae_django_setup, capsys):
     # Given
     with wdae_django_setup(
             wgpf_fixture,
-            "tests.integration.test_wgpf_command.wgpf_settings"):
+            "wdae_tests.integration.test_wgpf_command.wgpf_settings"):
         cli(["wgpf", "init"])
         capsys.readouterr()
 
@@ -41,7 +41,7 @@ def test_wgpf_force_reinit(wgpf_fixture, wdae_django_setup):
     # Given
     with wdae_django_setup(
             wgpf_fixture,
-            "tests.integration.test_wgpf_command.wgpf_settings"):
+            "wdae_tests.integration.test_wgpf_command.wgpf_settings"):
         cli(["wgpf", "init"])
 
         # When

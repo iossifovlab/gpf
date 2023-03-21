@@ -170,7 +170,7 @@ def wdae_django_setup(mocker, tmp_path):
         _module_cleaner("oauth2_provider")
         _module_cleaner("gpf_instance")
         _module_cleaner("django")
-        _module_cleaner("tests.integration")
+        _module_cleaner("wdae_tests.integration")
         _module_cleaner("pytest_django")
     return builder
 

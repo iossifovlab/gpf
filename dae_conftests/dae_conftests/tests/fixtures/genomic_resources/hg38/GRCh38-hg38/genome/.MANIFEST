@@ -4,6 +4,6 @@
 - md5: 2e3b716901f9da348a3ea6a424d54006
   name: GRCh38_full_analysis_set_plus_decoy_hla.fa.fai
   size: 50
-- md5: 2b8da3803f78b512a4ae2d8dd06655a3
+- md5: b151ecdcef68d9014ab78823b5147711
   name: genomic_resource.yaml
-  size: 308
+  size: 339

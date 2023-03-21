@@ -1,6 +1,6 @@
-- md5: c8fa6ee43d327a1f0b3d4f835f68fd39
+- md5: 81951889cca5c55bb9a63b8d8aff00a3
   name: genomic_resource.yaml
-  size: 169
+  size: 200
 - md5: 05d8bbd9616407e862d82593d5fd1756
   name: refSeq_20200330.txt
   size: 30558

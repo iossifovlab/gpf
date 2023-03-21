@@ -7,7 +7,7 @@ def test_wgpf_run_simple(wgpf_fixture, wdae_django_setup, mocker):
     # Given
     with wdae_django_setup(
             wgpf_fixture,
-            "tests.integration.test_wgpf_command.wgpf_settings"):
+            "wdae_tests.integration.test_wgpf_command.wgpf_settings"):
 
         (wgpf_fixture.instance_dir / ".wgpf_init.flag").touch()
         mocker.patch(
@@ -28,7 +28,7 @@ def test_wgpf_run_without_init(wgpf_fixture, wdae_django_setup, mocker):
     # Given
     with wdae_django_setup(
             wgpf_fixture,
-            "tests.integration.test_wgpf_command.wgpf_settings"):
+            "wdae_tests.integration.test_wgpf_command.wgpf_settings"):
 
         mocker.patch(
             "wdae.wgpf.execute_from_command_line",
@@ -63,7 +63,7 @@ def test_wgpf_run_with_port(wgpf_fixture, wdae_django_setup, mocker):
     # Given
     with wdae_django_setup(
             wgpf_fixture,
-            "tests.integration.test_wgpf_command.wgpf_settings"):
+            "wdae_tests.integration.test_wgpf_command.wgpf_settings"):
 
         (wgpf_fixture.instance_dir / ".wgpf_init.flag").touch()
         mocker.patch(
@@ -84,7 +84,7 @@ def test_wgpf_run_with_host(wgpf_fixture, wdae_django_setup, mocker):
     # Given
     with wdae_django_setup(
             wgpf_fixture,
-            "tests.integration.test_wgpf_command.wgpf_settings"):
+            "wdae_tests.integration.test_wgpf_command.wgpf_settings"):
 
         (wgpf_fixture.instance_dir / ".wgpf_init.flag").touch()
         mocker.patch(
@@ -106,7 +106,7 @@ def test_wgpf_run_check_wdae_directory(
     # Given
     with wdae_django_setup(
             wgpf_fixture,
-            "tests.integration.test_wgpf_command.wgpf_settings"):
+            "wdae_tests.integration.test_wgpf_command.wgpf_settings"):
 
         (wgpf_fixture.instance_dir / ".wgpf_init.flag").touch()
         mocker.patch(

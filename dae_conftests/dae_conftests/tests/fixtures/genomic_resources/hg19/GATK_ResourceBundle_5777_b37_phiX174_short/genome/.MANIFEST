@@ -4,6 +4,6 @@
 - md5: e195bffa62daa1d82e341f0bd4fb72ad
   name: chrAll.fa.fai
   size: 62
-- md5: d63b87a473bbccda1e645fbc82c1aaac
+- md5: bd5e747b25ab3eca4dafef208c8c2cbf
   name: genomic_resource.yaml
-  size: 270
+  size: 302

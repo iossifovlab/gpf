@@ -268,7 +268,7 @@ class FsspecReadWriteProtocol(
             return
 
         content = []
-        for direntry in self.filesystem.ls(url):
+        for direntry in self.filesystem.ls(url, detail=False):
             if self.netloc and direntry.startswith(self.netloc):
                 direntry = direntry[len(self.netloc):]
             name = os.path.relpath(direntry, path)
@@ -297,7 +297,7 @@ class FsspecReadWriteProtocol(
 
         path = os.path.join(self.root_path, resource_path, *path_array)
         content = []
-        for direntry in self.filesystem.ls(url):
+        for direntry in self.filesystem.ls(url, detail=False):
             if self.netloc and direntry.startswith(self.netloc):
                 direntry = direntry[len(self.netloc):]
 

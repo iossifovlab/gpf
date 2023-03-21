@@ -16,7 +16,6 @@ from .effect_annotator import build_effect_annotator
 from .liftover_annotator import build_liftover_annotator
 from .normalize_allele_annotator import build_normalize_allele_annotator
 from .gene_score_annotator import build_gene_score_annotator
-from .vcf_info_annotator import build_vcf_info_annotator
 
 
 logger = logging.getLogger(__name__)
@@ -30,7 +29,6 @@ ANNOTATOR_BUILDER_REGISTRY = {
     "liftover_annotator": build_liftover_annotator,
     "normalize_allele_annotator": build_normalize_allele_annotator,
     "gene_score_annotator": build_gene_score_annotator,
-    "vcf_info": build_vcf_info_annotator
 }
 
 

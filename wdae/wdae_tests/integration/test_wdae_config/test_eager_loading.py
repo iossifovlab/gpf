@@ -50,7 +50,7 @@ def test_eager_loading(mocker, wgpf_fixture, wdae_django_server):
 
     with wdae_django_server(
             wgpf_fixture,
-            "tests.integration.test_wdae_config."
+            "wdae_tests.integration.test_wdae_config."
             "eager_loading_true_settings") as server:
 
         assert server.url.startswith("http://localhost")
@@ -73,7 +73,7 @@ def test_no_eager_loading(mocker, wgpf_fixture, wdae_django_server):
 
     with wdae_django_server(
             wgpf_fixture,
-            "tests.integration.test_wdae_config."
+            "wdae_tests.integration.test_wdae_config."
             "eager_loading_false_settings") as server:
 
         assert server.url.startswith("http://localhost")
@@ -86,7 +86,7 @@ def test_example_request(mocker, wgpf_fixture, wdae_django_server):
 
     with wdae_django_server(
             wgpf_fixture,
-            "tests.integration.test_wdae_config."
+            "wdae_tests.integration.test_wdae_config."
             "eager_loading_true_settings") as server:
 
         response = requests.get(f"{server.url}/api/v3/datasets")

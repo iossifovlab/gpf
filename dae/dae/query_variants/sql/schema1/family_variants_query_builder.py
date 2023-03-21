@@ -136,6 +136,7 @@ class FamilyVariantsQueryBuilder(BaseQueryBuilder):
         return_unknown=None,
         pedigree_fields=None
     ):
+        logger.info("pedigree fields: %s", pedigree_fields)
         where_clause = self._base_build_where(
             regions=regions,
             genes=genes,
