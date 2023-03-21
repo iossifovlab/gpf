@@ -30,6 +30,10 @@ class Dialect(ABC):
         self.namespace = namespace
 
     @staticmethod
+    def use_bit_and_function() -> bool:
+        return True
+
+    @staticmethod
     def add_unnest_in_join() -> bool:
         return False
 
@@ -289,7 +293,8 @@ class BaseQueryBuilder(ABC):
         if inheritance is not None:
             where.extend(
                 self._build_inheritance_where(
-                    self.where_accessors["inheritance_in_members"], inheritance
+                    self.where_accessors["inheritance_in_members"],
+                    inheritance, self.dialect.use_bit_and_function()
                 )
             )
         if roles is not None:
@@ -496,12 +501,13 @@ class BaseQueryBuilder(ABC):
             )
 
         transformer = QueryTreeToSQLBitwiseTransformer(
-            column_name, self.dialect.add_unnest_in_join()
+            column_name, self.dialect.use_bit_and_function()
         )
         return transformer.transform(parsed)
 
     @staticmethod
-    def _build_inheritance_where(column_name, query_value):
+    def _build_inheritance_where(column_name, query_value, 
+                                 use_bit_and_function):
         trees = []
         if isinstance(query_value, str):
             tree = inheritance_parser.parse(query_value)
@@ -519,7 +525,8 @@ class BaseQueryBuilder(ABC):
 
         result = []
         for tree in trees:
-            transformer = InheritanceTransformer(column_name)
+            transformer = InheritanceTransformer(column_name,
+                                                 use_bit_and_function)
             res = transformer.transform(tree)
             result.append(res)
         return result
