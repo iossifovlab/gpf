@@ -30,11 +30,14 @@ class PlainTextParser(BaseParser):
 @api_view(["POST"])
 @parser_classes([PlainTextParser])
 def sentry(request):
-    data = request.data.split("\n")
-    header = json.loads(data[0])
-    dsn = urlparse(header["dsn"])
-    project_id = dsn.path.strip("/")
-    sentry_host = os.environ.get("SENTRY_HOST")
+    dsn = os.environ.get("SENTRY_DSN")
+    fake_dsn = "https://0@0.ingest.sentry.io/0"  # gpfjs: main.ts
+    project_id = urlparse(dsn).path.strip("/")
+    sentry_host = dsn.split("@")[1].split("/")[0]
     upstream_sentry_url = f"https://{sentry_host}/api/{project_id}/envelope/"
-    requests.post(upstream_sentry_url, data=request.data.encode(), timeout=30)
+    requests.post(
+        upstream_sentry_url,
+        data=request.data.replace(fake_dsn, dsn).encode(),
+        timeout=30
+    )
     return Response({}, status.HTTP_200_OK)
