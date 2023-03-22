@@ -239,12 +239,12 @@ class DaskExecutor(AbstractTaskGraphExecutor):
         handler = configure_task_logging(log_dir, task_id, verbose)
         root_logger.addHandler(handler)
 
-        task_logger = logging.getLogger(task_id)
-        task_logger.warning("Starting task: %s", task_id)
+        task_logger = logging.getLogger("task_executor")
+        task_logger.info("task <%s> started", task_id)
         start = time.time()
         result = task_func(*args)
         elapsed = time.time() - start
-        task_logger.warning("Finish task %s in %0.2fsec", task_id, elapsed)
+        task_logger.info("task <%s> finished in %0.2fsec", task_id, elapsed)
 
         root_logger.removeHandler(handler)
         handler.close()
