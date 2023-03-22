@@ -1,3 +1,4 @@
+from __future__ import annotations
 import logging
 from typing import Optional, Callable, cast, Any
 from abc import abstractmethod, ABC
@@ -25,17 +26,18 @@ def get_base_resource_schema():
 
 
 class ResourceStatistics:
-
-    def __init__(self, resource: GenomicResource):
-        self.resource = resource
-        self._load_statistics()
+    def __init__(self, resource_id: str):
+        self.resource_id = resource_id
 
     @staticmethod
     def get_statistics_folder():
         return "statistics"
 
+    @staticmethod
     @abstractmethod
-    def _load_statistics(self):
+    def build_statistics(
+        genomic_resource: GenomicResource
+    ) -> ResourceStatistics:
         raise NotImplementedError()
 
 
@@ -103,22 +105,13 @@ class GenomicResourceImplementation(ABC):
 
         return labels.get(label)
 
-    def _create_statistics_access(self) -> Optional[ResourceStatistics]:
-        return None
-
     def get_statistics(self) -> Optional[ResourceStatistics]:
         """Try and load resource statistics."""
-        if self._statistics is None:
-            try:
-                statistics: Optional[ResourceStatistics] = \
-                    self._create_statistics_access()
-                self._statistics = statistics
-            except Exception:  # pylint: disable=broad-except
-                logger.exception(
-                    "Something went wrong trying to get %s statistics",
-                    self.resource.resource_id
-                )
-        return self._statistics
+        return None
+
+    def reload_statistics(self):
+        self._statistics = None
+        return self.get_statistics()
 
 
 class InfoImplementationMixin:

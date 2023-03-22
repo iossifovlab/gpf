@@ -11,7 +11,7 @@ from dae.genomic_resources.testing import \
     setup_directories, convert_to_tab_separated, \
     build_filesystem_test_repository
 from dae.genomic_resources.resource_implementation import \
-    GenomicResourceImplementation
+    GenomicResourceImplementation, ResourceStatistics
 
 from dae.genomic_resources.cli import cli_manage
 from dae.genomic_resources import register_implementation
@@ -52,6 +52,9 @@ class SomeTestImplementation(GenomicResourceImplementation):
             outfile.write("test")
         return True
 
+    def get_statistics(self):
+        return TestStatistics.build_statistics(self)
+
     def calc_info_hash(self):
         """Compute and return the info hash."""
         return "infohash"
@@ -63,6 +66,12 @@ class SomeTestImplementation(GenomicResourceImplementation):
             <h1>Test page</h1>
             """
         )
+
+
+class TestStatistics(ResourceStatistics):
+    @staticmethod
+    def build_statistics(genomic_resource):
+        return TestStatistics(genomic_resource.resource_id)
 
 
 def build_test_implementation(resource):

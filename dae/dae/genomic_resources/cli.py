@@ -403,7 +403,13 @@ def _run_resource_manifest_command(proto, repo_url, **kwargs):
 
 def _read_stats_hash(proto, implementation):
     res = implementation.resource
-    stats_dir = implementation.STATISTICS_FOLDER
+    stats = implementation.get_statistics()
+    stats_dir = None
+    if stats is not None:
+        stats_dir = stats.get_statistics_folder()
+    if stats is None or stats_dir is None:
+        logger.warning("Couldn't read stats hash for %s", res.resource_id)
+        return False
     if not proto.file_exists(res, f"{stats_dir}/stats_hash"):
         return None
     with proto.open_raw_file(
@@ -414,7 +420,15 @@ def _read_stats_hash(proto, implementation):
 
 def _store_stats_hash(proto, resource):
     impl = build_resource_implementation(resource)
-    stats_dir = impl.STATISTICS_FOLDER
+    stats = impl.get_statistics()
+    stats_dir = None
+    if stats is not None:
+        stats_dir = stats.get_statistics_folder()
+    if stats is None or stats_dir is None:
+        logger.warning(
+            "Couldn't store stats hash for %s", resource.resource_id
+        )
+        return False
     with proto.open_raw_file(
         resource, f"{stats_dir}/stats_hash", mode="wb"
     ) as outfile:

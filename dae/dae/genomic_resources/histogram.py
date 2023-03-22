@@ -12,7 +12,7 @@ import numpy as np
 
 import matplotlib.pyplot as plt  # type: ignore
 
-from dae.genomic_resources.statistic import Statistic
+from dae.genomic_resources.statistics.base_statistic import Statistic
 
 logger = logging.getLogger(__name__)
 
@@ -180,3 +180,13 @@ class Histogram(Statistic):
         plt.grid(axis="x")
         plt.savefig(file)
         plt.clf()
+
+
+class HistogramStatisticMixin:
+    @staticmethod
+    def get_histogram_file(score_id):
+        return f"histogram_{score_id}.yaml"
+
+    @staticmethod
+    def get_histogram_image_file(score_id):
+        return f"histogram_{score_id}.png"
