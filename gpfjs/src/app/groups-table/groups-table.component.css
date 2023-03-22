@@ -1,3 +1,8 @@
 .grid-container {
   grid-template-columns: 25% 30% 30% 15%;
 }
+
+#group-deletion-warning {
+  padding: 5px;
+  margin-top: 5px;
+}

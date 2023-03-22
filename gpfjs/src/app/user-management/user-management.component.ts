@@ -4,8 +4,8 @@ import { DatasetsService } from 'app/datasets/datasets.service';
 import { UserGroup } from 'app/users-groups/users-groups';
 import { UsersGroupsService } from 'app/users-groups/users-groups.service';
 import { environment } from 'environments/environment';
-import { Observable, Subscription } from 'rxjs';
-import { take } from 'rxjs/operators';
+import { Observable, Subscription, of } from 'rxjs';
+import { catchError, take } from 'rxjs/operators';
 import { User } from '../users/users';
 import { UsersService } from '../users/users.service';
 
@@ -25,9 +25,11 @@ export class UserManagementComponent implements OnInit {
   public imgPathPrefix = environment.imgPathPrefix;
   public createMode = false;
 
+  public creationError = '';
   @ViewChild('searchBox') private searchBox: ElementRef;
   @ViewChild('nameBox') private nameBox: ElementRef;
   @ViewChild('emailBox') private emailBox: ElementRef;
+  @ViewChild('groupNameBox') private groupNameBox: ElementRef;
   private getPageSubscription: Subscription = new Subscription();
   private pageCount = 0;
   private tableName: TableName = 'USERS';
@@ -90,18 +92,51 @@ export class UserManagementComponent implements OnInit {
     }
     const newUser = new User(null, name, email, ['any_user', email], false, []);
 
-    this.usersService.createUser(newUser).subscribe((user: User) => {
-      this.users.unshift(user);
-      this.createMode = false;
-    });
+    this.usersService.createUser(newUser)
+      .pipe(catchError(err => {
+        this.creationError = err as string;
+        return of(null);
+      }))
+      .subscribe((user: User) => {
+        if (user !== null) {
+          this.cancelCreation();
+          this.users.unshift(user);
+        }
+      });
   }
 
-  public isEmailValid(email: string): boolean {
-    const re = new RegExp(/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/);
+  public createGroup(name: string): void {
+    if (!this.isNameValid(name)) {
+      (this.groupNameBox.nativeElement as HTMLInputElement).focus();
+      return;
+    }
+
+    this.usersGroupsService.getGroup(name)
+      // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
+      .pipe(catchError(_ => {
+        this.cancelCreation();
+        const newGroup = new UserGroup(null, name, [], []);
+        this.groups.unshift(newGroup);
+        return of(null);
+      }))
+      .subscribe((group: UserGroup) => {
+        if (group !== null) {
+          this.creationError = `'${group.name}' already exists choose another name!`;
+        }
+      });
+  }
+
+  public cancelCreation(): void {
+    this.creationError = '';
+    this.createMode = false;
+  }
+
+  private isEmailValid(email: string): boolean {
+    const re = new RegExp(/^\w+([\.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/);
     return re.test(String(email).toLowerCase());
   }
 
-  public isNameValid(name: string): boolean {
+  private isNameValid(name: string): boolean {
     const re = new RegExp(/.{2,}/);
     return re.test(String(name).toLowerCase());
   }
@@ -115,7 +150,9 @@ export class UserManagementComponent implements OnInit {
 
   public switchTableName(newName: TableName): void {
     this.tableName = newName;
+    this.createMode = false;
     this.searchText = '';
+    this.creationError = '';
     this.resetTablesData();
     this.updateCurrentTable();
   }

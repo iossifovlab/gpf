@@ -8,6 +8,12 @@
       <ng-container *ngFor="let group of groups">
         <div class="grid-cell">
           <span>{{ group.name }}</span>
+          <span
+            id="group-deletion-warning"
+            class="alert alert-warning"
+            *ngIf="!group.users.length && !group.datasets.length"
+            >Empty groups with no users or datasets will be deleted!</span
+          >
         </div>
 
         <div class="grid-cell list-cell">
@@ -59,7 +65,5 @@
         </div>
       </ng-container>
     </div>
-
-    <div *ngIf="groups?.length === 0">No results</div>
   </div>
 </div>
