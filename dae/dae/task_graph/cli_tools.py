@@ -41,7 +41,10 @@ class TaskGraphCli:
             type=str, default=None,
             help="dask cluster config file"
         )
-
+        executor_group.add_argument(
+            "--tasks-log-dir", dest="log_dir", type=str, default=None,
+            help="Path to directory where to store tasks' logs"
+        )
         # task_cache
         execution_mode_group = parser.add_argument_group(
             title="Execution Mode")
@@ -106,7 +109,7 @@ class TaskGraphCli:
             client, _ = setup_client(args.dask_cluster_name,
                                      number_of_threads=args.jobs)
         print("Working with client:", client)
-        return DaskExecutor(client, task_cache=task_cache)
+        return DaskExecutor(client, task_cache=task_cache, **kwargs)
 
     @staticmethod
     def process_graph(
