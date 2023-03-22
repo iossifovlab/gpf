@@ -129,7 +129,7 @@ def _run_list_command(
 
         files_msg = f"{len(list(res.get_manifest().get_files())):2d}"
         if isinstance(proto, GenomicResourceCachedRepo):
-            files = f"{len(proto.get_resource_cached_files(res.get_id())):2d}/{files}"
+            files_msg = f"{len(proto.get_resource_cached_files(res.get_id())):2d}/{files_msg}"
 
         res_size_msg = convert_size(res_size) if hasattr(args, 'hr') and args.hr is True else res_size
         print(
