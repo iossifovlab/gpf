@@ -119,6 +119,7 @@ def _add_hist_parameters_group(parser):
 
 def _configure_list_subparser(subparsers):
     parser = subparsers.add_parser("list", help="List a GR Repo")
+    parser.add_argument("--hr", default=False, action="store_true", help="Projects the size in human-readable format.")
     _add_repository_resource_parameters_group(parser, use_resource=False)
     VerbosityConfiguration.set_argumnets(parser)
 
@@ -133,9 +134,10 @@ def _run_list_command(
         if type(proto) is GenomicResourceCachedRepo:
             files = f"{len(proto.get_resource_cached_files(res.get_id())):2d}/{files}"
 
+        file_data = convert_size(res_size) if hasattr(_args, 'hr') and _args.hr == True else res_size
         print(
             f"{res.get_type():20} {res.get_version_str():7s} "
-            f"{files} {(res_size if _args.hr == False else convert_size(res_size)):12} "
+            f"{files} {file_data:12} "
             f"{proto.repo_id if isinstance(proto, GenomicResourceRepo) else proto.get_id()} "
             f"{res.get_id()}")
 
