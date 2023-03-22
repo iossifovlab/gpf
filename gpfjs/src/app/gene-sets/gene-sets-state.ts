@@ -25,6 +25,12 @@ export class GeneSetsLocalState {
       const index = this.geneSetsTypes[datasetId][personSetCollectionId].indexOf(phenotype);
       if (index > -1) {
         this.geneSetsTypes[datasetId][personSetCollectionId].splice(index, 1);
+        if (this.geneSetsTypes[datasetId][personSetCollectionId].length === 0) {
+          delete this.geneSetsTypes[datasetId][personSetCollectionId];
+          if (Object.keys(this.geneSetsTypes[datasetId]).length === 0) {
+            delete this.geneSetsTypes[datasetId];
+          }
+        }
       }
     }
   }

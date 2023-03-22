@@ -24,6 +24,7 @@ export class GeneSetsComponent extends StatefulComponent implements OnInit {
   public geneSets: Array<GeneSet>;
   public searchQuery: string;
   public defaultSelectedDenovoGeneSetId: string[] = [];
+  public isLoading = false;
 
   private geneSetsQueryChange = new Subject<[string, string, object]>();
   private geneSetsResult: Observable<GeneSet[]>;
@@ -35,7 +36,10 @@ export class GeneSetsComponent extends StatefulComponent implements OnInit {
   public imgPathPrefix = environment.imgPathPrefix;
 
   @ValidateNested()
-  private geneSetsLocalState = new GeneSetsLocalState();
+  public geneSetsLocalState = new GeneSetsLocalState();
+
+  // The template needs local component reference to use Object static methods
+  public object = Object;
 
   public constructor(
     protected store: Store,
@@ -181,11 +185,16 @@ export class GeneSetsComponent extends StatefulComponent implements OnInit {
 
   public setSelectedGeneType(datasetId: string, personSetCollectionId: string, geneType: string, value: boolean): void {
     this.selectedGeneSet = null;
-    if (value) {
-      this.geneSetsLocalState.select(datasetId, personSetCollectionId, geneType);
-    } else {
-      this.geneSetsLocalState.deselect(datasetId, personSetCollectionId, geneType);
-    }
+    this.isLoading = true;
+    const intervalId = setInterval(() => {
+      if (value) {
+        this.geneSetsLocalState.select(datasetId, personSetCollectionId, geneType);
+      } else {
+        this.geneSetsLocalState.deselect(datasetId, personSetCollectionId, geneType);
+      }
+      this.isLoading = false;
+      clearInterval(intervalId);
+    }, 350);
   }
 
   public get selectedGeneSetsCollection(): GeneSetsCollection {
