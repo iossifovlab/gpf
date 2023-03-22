@@ -125,7 +125,7 @@ def _configure_list_subparser(subparsers):
 
 
 def _run_list_command(
-        proto: Union[ReadOnlyRepositoryProtocol, GenomicResourceRepo], _args):
+        proto: Union[ReadOnlyRepositoryProtocol, GenomicResourceRepo], args):
 
     for res in proto.get_all_resources():
         res_size = sum(fs for _, fs in res.get_manifest().get_files())
@@ -134,7 +134,7 @@ def _run_list_command(
         if type(proto) is GenomicResourceCachedRepo:
             files = f"{len(proto.get_resource_cached_files(res.get_id())):2d}/{files}"
 
-        file_data = convert_size(res_size) if hasattr(_args, 'hr') and _args.hr == True else res_size
+        file_data = convert_size(res_size) if hasattr(args, 'hr') and args.hr == True else res_size
         print(
             f"{res.get_type():20} {res.get_version_str():7s} "
             f"{files} {file_data:12} "
