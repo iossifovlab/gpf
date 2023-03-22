@@ -245,6 +245,8 @@ class GenomicResourceCachedRepo(GenomicResourceRepo):
 
         for rem_resource in resources:
             files_to_cache = resource_files.get(rem_resource.get_id())
+            if files_to_cache is None:
+                continue
             for index, res_file in enumerate(files_to_cache):
                 logger.info("Copying: %s, %d file of %d",
                             res_file, index + 1, len(files_to_cache))
