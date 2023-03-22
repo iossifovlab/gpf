@@ -5,10 +5,12 @@ import logging
 import argparse
 import pathlib
 import copy
-import yaml
 from typing import Dict, Union
 from urllib.parse import urlparse
 from dae.utils.helpers import convert_size
+
+import yaml
+
 from cerberus.schema import SchemaError
 
 from jinja2 import Template
@@ -125,14 +127,14 @@ def _run_list_command(
     for res in proto.get_all_resources():
         res_size = sum(fs for _, fs in res.get_manifest().get_files())
 
-        files = f"{len(list(res.get_manifest().get_files())):2d}"
+        files_msg = f"{len(list(res.get_manifest().get_files())):2d}"
         if isinstance(proto, GenomicResourceCachedRepo):
             files = f"{len(proto.get_resource_cached_files(res.get_id())):2d}/{files}"
 
-        file_data = convert_size(res_size) if hasattr(args, 'hr') and args.hr is True else res_size
+        res_size_msg = convert_size(res_size) if hasattr(args, 'hr') and args.hr is True else res_size
         print(
             f"{res.get_type():20} {res.get_version_str():7s} "
-            f"{files} {file_data:12} "
+            f"{files_msg} {res_size_msg:12} "
             f"{proto.repo_id if isinstance(proto, GenomicResourceRepo) else proto.get_id()} "
             f"{res.get_id()}")
 
