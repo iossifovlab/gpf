@@ -27,13 +27,13 @@ def imported_study(tmp_path_factory, genotype_storage):
     )
 
     genes = setup_gene_models(
-        root_path / "foobar_genes" / "genes.txt", """
-            #geneName name chrom strand txStart txEnd cdsStart cdsEnd exonCount exonStarts exonEnds
-            g1        tx1  foo   +      3       19    3        17     2         3,13       6,17
-            g1        tx2  foo   +      3       9     3        6      1         3          6
-            g2        tx3  bar   -      3       20    3        18     1         3          17
-            """  # noqa
-        , fileformat="refflat")
+        root_path / "foobar_genes" / "genes.txt", textwrap.dedent("""
+        #geneName name chrom strand txStart txEnd cdsStart cdsEnd exonCount exonStarts exonEnds
+        g1        tx1  foo   +      3       19    3        17     2         3,13       6,17
+        g1        tx2  foo   +      3       9     3        6      1         3          6
+        g2        tx3  bar   -      3       20    3        18     1         3          17
+        """),  # noqa
+        fileformat="refflat")
 
     gpf_instance = setup_gpf_instance(
         root_path / "gpf_instance",
@@ -68,7 +68,7 @@ def imported_study(tmp_path_factory, genotype_storage):
         bar    11  .  C   G   .    .      .    GT     1/0 0/0 0/0 0/1 1/1 1/1 1/1  # freq 5/8 = 62.5%, missense, g2
         bar    12  .  A   T   .    .      .    GT     0/0 1/0 1/0 0/0 0/1 0/1 0/1  # freq 3/8 = 37.5%, synonymous, g2
         bar    13  .  C   T   .    .      .    GT     0/0 1/0 1/0 1/0 0/1 0/0 0/0  # freq 2/8 = 25.0%, missense, g2
-        """)
+        """)  # noqa
 
     partition_def = textwrap.dedent("""
       partition_description:
@@ -145,7 +145,8 @@ def test_query_region(region, family_count, summary_count, imported_study):
 
 
 def test_query_ultra_rare(imported_study):
-    assert len(list(imported_study.query_summary_variants(ultra_rare=True))) == 2
+    assert len(list(
+        imported_study.query_summary_variants(ultra_rare=True))) == 2
     assert len(list(imported_study.query_variants(ultra_rare=True))) == 2
 
 
@@ -181,8 +182,10 @@ def test_query_complex(imported_study):
 
 
 def test_query_pedigree_fields(imported_study):
-    assert len(list(imported_study.
-                    query_variants(person_set_collection=('status', ['affected', 'unaffected', 'unspecified'])))) == 8
+    assert len(list(
+        imported_study.query_variants(
+            person_set_collection=(
+                "status", ["affected", "unaffected", "unspecified"])))) == 8
 
 
 def test_af_parent_count(imported_study):
@@ -192,5 +195,5 @@ def test_af_parent_count(imported_study):
 
 
 def test_query_denovo(imported_study):
-    assert len(list(imported_study.query_variants(inheritance=["denovo"]))) == 0
-
+    assert len(list(
+        imported_study.query_variants(inheritance=["denovo"]))) == 0

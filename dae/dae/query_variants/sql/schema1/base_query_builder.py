@@ -145,13 +145,17 @@ class BaseQueryBuilder(ABC):
         if regions is not None:
             where.append(self._build_regions_where(regions))
         if family_ids is not None:
+            # pylint: disable=no-member
+            family_ids = set(family_ids) & \
+                set(self.families.keys())  # type: ignore
             where.append(
                 self._build_iterable_string_attr_where(
                     self.where_accessors["family_id"], family_ids)
             )
         if person_ids is not None:
             # pylint: disable=no-member
-            person_ids = set(person_ids) & set(self.families.persons.keys())
+            person_ids = set(person_ids) & \
+                set(self.families.persons.keys())  # type: ignore
             where.append(
                 self._build_iterable_string_attr_where(
                     self.where_accessors["variant_in_members"], person_ids
@@ -337,14 +341,14 @@ class BaseQueryBuilder(ABC):
             for val in query_values
         ]
 
-        where = []
+        where_list: list[str] = []
         for i in range(0, len(values), self.MAX_CHILD_NUMBER):
             chunk_values = ",".join(values[i: i + self.MAX_CHILD_NUMBER])
             where_str = f" {column_name} in ( {chunk_values} ) "
 
-            where.append(where_str)
+            where_list.append(where_str)
 
-        where_clause = " OR ".join([f"( {w} )" for w in where])
+        where_clause = " OR ".join([f"( {w} )" for w in where_list])
         return where_clause
 
     @staticmethod
@@ -547,7 +551,7 @@ class BaseQueryBuilder(ABC):
             return ""
         if "family_bin" not in self.pedigree_columns:
             return ""
-        family_bins = set()
+        family_bins: set[str] = set()
         if family_ids:
             family_ids = set(family_ids)
             family_bins = family_bins.union(

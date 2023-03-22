@@ -114,7 +114,7 @@ class BaseQueryTransformerMatcher:
         return self.transform_tree_to_matcher(self.transformer.transform(tree))
 
     def transform_tree_to_matcher(self, tree):
-        return self.transformer2.transform(tree)
+        return self.transformer2.transform(tree)  # type: ignore
 
     def parse_and_transform(self, expression):
         return self.transform(self.parse(expression))
@@ -422,11 +422,11 @@ class QueryTreeToSQLListTransformer(QueryTreeToSQLTransformer):
         )
 
 
-def get_bit_and_str(a, b, use_bit_and_function):
+def get_bit_and_str(arg1, arg2, use_bit_and_function):
     if use_bit_and_function:
-        return f"BITAND({a}, {b})"
+        return f"BITAND({arg1}, {arg2})"
     else:
-        return f"({a} & {b})"
+        return f"({arg1} & {arg2})"
 
 
 class QueryTreeToSQLBitwiseTransformer(QueryTreeToSQLTransformer):
@@ -456,10 +456,10 @@ class QueryTreeToSQLBitwiseTransformer(QueryTreeToSQLTransformer):
 
     def ElementOfNode(self, arg):
         converted_token = self.token_converter(arg)
-        bit_op = get_bit_and_str(self.column_name, converted_token, 
+        bit_op = get_bit_and_str(self.column_name, converted_token,
                                  self.use_bit_and_function)
         return f"{bit_op} != 0"
-    
+
     def EqualsNode(self, arg):
         return self.column_name + " = " + self.token_converter(arg)
 
@@ -477,26 +477,6 @@ class QueryTreeToSQLBitwiseTransformer(QueryTreeToSQLTransformer):
     def OrNode(children):
         res = reduce(lambda x, y: f"({x}) OR ({y})", children)
         return res
-
-
-# class RegionsQueryToSQLTransformer(object):
-#
-#     def __init__(self):
-#         pass
-#
-#     def parse(self, regions):
-#         assert all([isinstance(r, Region) for r in regions])
-#         pass
-#
-#     def parse_region(self, region):
-#         assert isinstance(region, Region)
-#         return {
-#             'chrom': EqualsNode(region.chr),
-#             'position': AndNode([
-#                 GreaterThanEqNode(region.start),
-#                 LessThanEqNode(region.stop),
-#             ])
-#         }
 
 
 class StringQueryToTreeTransformerWrapper:
@@ -588,7 +568,7 @@ class QueryTransformerMatcher(BaseQueryTransformerMatcher):
         self.transformer2 = transformer2
 
     def transform_tree_to_matcher(self, tree):
-        matcher = self.transformer2.transform(tree)
+        matcher = self.transformer2.transform(tree)  # type: ignore
         return Matcher(tree, self.parser, matcher)
 
 

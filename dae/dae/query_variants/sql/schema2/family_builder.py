@@ -88,6 +88,7 @@ class FamilyQueryBuilder(BaseQueryBuilder):
     def _build_from(self):
         summary_table_name = self.dialect.build_table_name(
             self.summary_allele_table, self.db)
+        assert self.family_variant_table is not None
         family_table_name = self.dialect.build_table_name(
             self.family_variant_table, self.db)
         self._add_to_product(
