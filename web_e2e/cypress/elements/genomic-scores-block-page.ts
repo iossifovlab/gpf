@@ -30,7 +30,7 @@ export class GenomicScoresBlockPage extends BasePage {
   }
 
   public get addFilterButton(): element {
-    return cy.get('gpf-genomic-scores-block gpf-add-button');
+    return cy.get('#add-filter');
   }
 
   public get removeFilterButton(): element {
