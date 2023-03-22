@@ -5,12 +5,10 @@ import logging
 import argparse
 import pathlib
 import copy
+import yaml
 from typing import Dict, Union
 from urllib.parse import urlparse
 from dae.utils.helpers import convert_size
-
-import yaml
-
 from cerberus.schema import SchemaError
 
 from jinja2 import Template
@@ -18,7 +16,6 @@ from jinja2 import Template
 from dae.task_graph.cli_tools import TaskGraphCli
 from dae.utils.fs_utils import find_directory_with_a_file
 from dae.task_graph.graph import TaskGraph
-
 from dae.__version__ import VERSION, RELEASE
 from dae.genomic_resources.repository import \
     GR_CONF_FILE_NAME, \
@@ -30,14 +27,12 @@ from dae.genomic_resources.repository import \
     ManifestEntry, \
     parse_resource_id_version, \
     version_tuple_to_string
-from dae.genomic_resources.group_repository import \
-    GenomicResourceGroupRepo
 from dae.genomic_resources.cached_repository import \
     GenomicResourceCachedRepo
 
 from dae.utils.verbosity_configuration import VerbosityConfiguration
 
-from dae.genomic_resources.fsspec_protocol import FsspecReadWriteProtocol, build_fsspec_protocol
+from dae.genomic_resources.fsspec_protocol import build_fsspec_protocol
 from dae.genomic_resources.repository_factory import \
     build_genomic_resource_repository, \
     load_definition_file
@@ -131,10 +126,10 @@ def _run_list_command(
         res_size = sum(fs for _, fs in res.get_manifest().get_files())
 
         files = f"{len(list(res.get_manifest().get_files())):2d}"
-        if type(proto) is GenomicResourceCachedRepo:
+        if isinstance(proto, GenomicResourceCachedRepo):
             files = f"{len(proto.get_resource_cached_files(res.get_id())):2d}/{files}"
 
-        file_data = convert_size(res_size) if hasattr(args, 'hr') and args.hr == True else res_size
+        file_data = convert_size(res_size) if hasattr(args, 'hr') and args.hr is True else res_size
         print(
             f"{res.get_type():20} {res.get_version_str():7s} "
             f"{files} {file_data:12} "
@@ -748,7 +743,7 @@ def cli_browse(cli_args=None):
         "-g", "--grr", type=str,
         default=None,
         help="path to GRR definition file.")
-    
+
     parser.add_argument("--hr", default=False, action="store_true", help="Projects the size in human-readable format.")
 
     if cli_args is None:
