@@ -12,11 +12,11 @@ from dae.query_variants.attributes_query import (
 @pytest.mark.parametrize(
     "query,expected",
     [
-        ("mendelian", "(BITAND(col, 2) != 0)"),
-        ("not mendelian", "(NOT ((BITAND(col, 2) != 0)))"),
+        ("mendelian", "BITAND(col, 2) != 0"),
+        ("not mendelian", "(NOT (BITAND(col, 2) != 0))"),
         (
             "mendelian or denovo",
-            "((BITAND(col, 2) != 0)) OR ((BITAND(col, 4) != 0))",
+            "(BITAND(col, 2) != 0) OR (BITAND(col, 4) != 0)",
         ),
     ],
 )
