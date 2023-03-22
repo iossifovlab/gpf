@@ -50,17 +50,23 @@ class GeneScoreStatistics(ResourceStatistics):
         histograms = {}
         config = genomic_resource.get_config()
         if "histograms" not in config:
-            return None
-        for hist_config in config["histograms"]:
-            score_id = hist_config["score"]
-            histogram_filepath = os.path.join(
-                GeneScoreStatistics.get_statistics_folder(),
-                GeneScoreStatistics.get_histogram_file(score_id)
+            return GeneScoreStatistics(genomic_resource, {})
+        try:
+            for hist_config in config["histograms"]:
+                score_id = hist_config["score"]
+                histogram_filepath = os.path.join(
+                    GeneScoreStatistics.get_statistics_folder(),
+                    GeneScoreStatistics.get_histogram_file(score_id)
+                )
+                with genomic_resource.open_raw_file(
+                        histogram_filepath, mode="r") as infile:
+                    histogram = Histogram.deserialize(infile.read())
+                    histograms[score_id] = histogram
+        except FileNotFoundError:
+            logger.exception(
+                "Couldn't load statistics of %s", genomic_resource.resource_id
             )
-            with genomic_resource.open_raw_file(
-                    histogram_filepath, mode="r") as infile:
-                histogram = Histogram.deserialize(infile.read())
-                histograms[score_id] = histogram
+            return GeneScoreStatistics(genomic_resource, {})
         return GeneScoreStatistics(genomic_resource.resource_id, histograms)
 
 
