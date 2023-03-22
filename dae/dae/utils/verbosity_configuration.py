@@ -34,3 +34,5 @@ class VerbosityConfiguration:
         logging.getLogger("bokeh").setLevel(logging.ERROR)
         logging.getLogger("fsspec").setLevel(max(loglevel, logging.INFO))
         logging.getLogger("matplotlib").setLevel(max(loglevel, logging.INFO))
+        logging.getLogger("botocore").setLevel(max(loglevel, logging.INFO))
+        logging.getLogger("s3fs").setLevel(max(loglevel, logging.INFO))

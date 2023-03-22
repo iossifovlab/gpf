@@ -49,3 +49,20 @@ def test_tabix_index_filename_file_not_found(mocker):
         lambda tf: False)
     with pytest.raises(IOError, match="tabix file 'test' not found"):
         fs_utils.tabix_index_filename("test")
+
+
+@pytest.mark.parametrize("url, expected", [
+    ("/filename", "/filename"),
+    ("/dir/filename", "/dir/filename"),
+    ("file:///dir/filename", "file:///dir/filename"),
+    ("s3://bucket", "s3://bucket"),
+    ("s3://bucket/dir/filename", "s3://bucket/dir/filename"),
+    ("file", "/abs/path/file"),
+    ("./file", "/abs/path/file"),
+    ("/", "/"),
+    ("s3://", "s3://"),
+])
+def test_abspath(url, expected, mocker):
+    mocker.patch("os.getcwd", return_value="/abs/path")
+    res = fs_utils.abspath(url)
+    assert res == expected

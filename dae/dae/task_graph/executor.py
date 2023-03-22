@@ -1,5 +1,5 @@
 import sys
-import re
+import time
 import logging
 import traceback
 from abc import abstractmethod
@@ -8,10 +8,11 @@ from collections import deque
 from typing import Any, Iterator
 from typing import Optional
 
-from dae.utils import fs_utils
 from dae.utils.verbosity_configuration import VerbosityConfiguration
 from dae.task_graph.graph import TaskGraph, Task
 from dae.task_graph.cache import TaskCache, NoTaskCache, CacheRecordType
+from dae.task_graph.logging import configure_task_logging, ensure_log_dir, \
+    safe_task_id
 
 
 logger = logging.getLogger(__file__)
@@ -189,12 +190,9 @@ class DaskExecutor(AbstractTaskGraphExecutor):
         self._future_key2task = {}
         self._task2result = {}
         self._task_queue: deque[Task] = deque()
-        log_dir = kwargs.get("log_dir")
-        if log_dir is not None:
-            if not fs_utils.exists(log_dir):
-                fs, path = fs_utils.url_to_fs(log_dir)
-                fs.mkdir(path, exists_ok=True)
+        log_dir = ensure_log_dir(**kwargs)
         self._params = copy(kwargs)
+        self._params["log_dir"] = log_dir
 
     def _queue_task(self, task_node):
         self._task_queue.append(task_node)
@@ -217,8 +215,7 @@ class DaskExecutor(AbstractTaskGraphExecutor):
                 value = arg
             args.append(value)
         params = copy(self._params)
-        regex = re.compile(r"[\. /]")
-        params["task_id"] = regex.sub("_", task_node.task_id)
+        params["task_id"] = safe_task_id(task_node.task_id)
 
         future = self._client.submit(
             self._exec, task_node.func, args, deps, params, pure=False)
@@ -235,28 +232,22 @@ class DaskExecutor(AbstractTaskGraphExecutor):
         verbose = params.get("verbose", 0)
         VerbosityConfiguration.set_verbosity(verbose)
 
-        if verbose == 1:
-            loglevel = logging.INFO
-        elif verbose == 2:
-            loglevel = logging.DEBUG
-        else:
-            loglevel = logging.WARNING
         task_id = params["task_id"]
         log_dir = params.get("log_dir", ".")
-        logfile = fs_utils.join(log_dir, f"log_{task_id}.log")
 
         root_logger = logging.getLogger()
-        handler = logging.FileHandler(filename=logfile)
-        formatter = logging.Formatter(
-            f"{task_id}: %(asctime)s %(name)s %(levelname)s %(message)s")
-        handler.setFormatter(formatter)
-        handler.setLevel(loglevel)
+        handler = configure_task_logging(log_dir, task_id, verbose)
         root_logger.addHandler(handler)
+
         task_logger = logging.getLogger(task_id)
         task_logger.warning("Starting task: %s", task_id)
+        start = time.time()
         result = task_func(*args)
-        task_logger.warning("Finish task %s", task_id)
+        elapsed = time.time() - start
+        task_logger.warning("Finish task %s in %0.2fsec", task_id, elapsed)
+
         root_logger.removeHandler(handler)
+        handler.close()
         return result
 
     MIN_QUEUE_SIZE = 700
