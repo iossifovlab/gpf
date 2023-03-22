@@ -37,17 +37,43 @@ label {
   overflow: hidden;
 }
 
-#summary-alleles-count,
-#family-variants-count {
+#summary-alleles-count {
   display: inline-grid;
   min-width: 150px;
   text-align: center;
 }
 
-#summary-alleles-count span,
-#family-variants-count span {
+#summary-alleles-count span {
   margin-left: 8px;
   background-color: #eee;
   padding: 2px;
   border: 1px solid rgba(0, 0, 0, 12.5%);
+}
+
+#download-summary-variants-button {
+  margin-left: 10px;
+  font-size: 15px;
+  padding: 5px;
+  width: 35px;
+  height: 30px;
+}
+
+.loader {
+  border: 4px solid #f3f3f3;
+  border-radius: 50%;
+  border-top: 4px solid #2a6395;
+  width: 20px;
+  height: 20px;
+  animation: spin 2s linear infinite;
+  margin-left: 2px;
+  margin-top: -1px;
+}
+
+.loader:hover {
+  border-top-color: #173c5c;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }

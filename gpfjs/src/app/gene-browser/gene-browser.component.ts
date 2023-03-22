@@ -55,7 +55,7 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
   public legend: Array<PersonSet>;
   public geneSymbolSuggestions: string[] = [];
   public searchBoxInput$: Subject<string> = new Subject();
-  public isUniqueFamilyFitlerVisible = false;
+  public isUniqueFamilyFitlerEnable = false;
 
   private subscriptions: Subscription[] = [];
   private selectedDatasetId: string;
@@ -122,7 +122,7 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
     });
 
     if (this.selectedDataset.studies?.length > 1) {
-      this.isUniqueFamilyFitlerVisible = true;
+      this.isUniqueFamilyFitlerEnable = true;
     }
   }
 
