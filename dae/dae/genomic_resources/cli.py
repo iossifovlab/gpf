@@ -5,15 +5,16 @@ import logging
 import argparse
 import pathlib
 import copy
-from typing import Dict, Union
-from urllib.parse import urlparse
-from dae.utils.helpers import convert_size
 
 import yaml
 
+from typing import Dict, Union
+from urllib.parse import urlparse
 from cerberus.schema import SchemaError
 
 from jinja2 import Template
+
+from dae.utils.helpers import convert_size
 
 from dae.task_graph.cli_tools import TaskGraphCli
 from dae.utils.fs_utils import find_directory_with_a_file
