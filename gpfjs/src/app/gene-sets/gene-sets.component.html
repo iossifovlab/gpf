@@ -2,7 +2,12 @@
   <div class="row panel" id="gene-sets-panel" style="margin-left: 0px; margin-right: 0px">
     <div class="col-sm-3">
       <div class="select-wrapper">
-        <select class="row-sm-3 form-control" [(ngModel)]="selectedGeneSetsCollection" required style="width: 100%">
+        <select
+          class="row-sm-3 form-control"
+          title="{{ selectedGeneSetsCollection.desc }}"
+          [(ngModel)]="selectedGeneSetsCollection"
+          required
+          id="selected-collection">
           <option *ngFor="let collection of geneSetsCollections" [ngValue]="collection">{{ collection.desc }}</option>
         </select>
         <span class="select-dropdown-icon" [style.content]="'url(' + imgPathPrefix + 'dropdown_icon.png)'"> </span>

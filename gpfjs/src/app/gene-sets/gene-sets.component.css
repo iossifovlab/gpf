@@ -6,3 +6,10 @@
   display: block;
   margin-top: 15px;
 }
+
+#selected-collection {
+  width: 100%;
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
