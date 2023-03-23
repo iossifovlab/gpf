@@ -34,6 +34,7 @@ class GenotypeStorageRegistry:
         storage_factory = get_genotype_storage_factory(storage_type)
 
         genotype_storage = storage_factory(storage_config)
+        genotype_storage.start()
         return self.register_genotype_storage(genotype_storage)
 
     def register_genotype_storage(

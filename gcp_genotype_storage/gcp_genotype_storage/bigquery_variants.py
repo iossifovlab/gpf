@@ -35,6 +35,14 @@ class BigQueryDialect(Dialect):
     def float_type() -> str:
         return "FLOAT64"
 
+    @staticmethod
+    def array_item_suffix() -> str:
+        return ""
+
+    @staticmethod
+    def use_bit_and_function() -> bool:
+        return False
+
 
 class BigQueryVariants(SqlSchema2Variants):
     """Backend for BigQuery."""

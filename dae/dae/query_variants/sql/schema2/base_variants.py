@@ -119,8 +119,7 @@ class SqlSchema2Variants(abc.ABC):
             self.partition_descriptor.to_dict(),
             self.pedigree_schema,
             self.ped_df,
-            gene_models=self.gene_models,
-            do_join_affected=False,
+            gene_models=self.gene_models
         )
 
         query = query_builder.build_query(
@@ -140,7 +139,7 @@ class SqlSchema2Variants(abc.ABC):
             return_unknown=return_unknown,
             limit=limit,
         )
-        logger.debug("SUMMARY VARIANTS QUERY: %s", query)
+        logger.debug("SUMMARY VARIANTS QUERY:\n%s", query)
 
         # pylint: disable=protected-access
         runner = self.RUNNER_CLASS(
@@ -191,6 +190,7 @@ class SqlSchema2Variants(abc.ABC):
             pedigree_fields=None):
         """Build a query selecting the appropriate family variants."""
         do_join_pedigree = pedigree_fields is not None
+        do_join_allele_in_members = person_ids is not None
         query_builder = FamilyQueryBuilder(
             self.dialect,
             self.db,
@@ -204,6 +204,7 @@ class SqlSchema2Variants(abc.ABC):
             self.ped_df,
             gene_models=self.gene_models,
             do_join_pedigree=do_join_pedigree,
+            do_join_allele_in_members=do_join_allele_in_members
         )
 
         query = query_builder.build_query(
@@ -225,7 +226,7 @@ class SqlSchema2Variants(abc.ABC):
             pedigree_fields=pedigree_fields
         )
 
-        logger.debug("FAMILY VARIANTS QUERY: %s", query)
+        logger.debug("FAMILY VARIANTS QUERY:\n%s", query)
         deserialize_row = self._deserialize_family_variant
 
         # pylint: disable=protected-access

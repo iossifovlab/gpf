@@ -59,7 +59,7 @@ class ContinuousParquetFileWriter:
         else:
             dirname = os.path.dirname(filepath)
             if dirname and not os.path.exists(dirname):
-                os.makedirs(dirname)
+                os.makedirs(dirname, exist_ok=True)
             self.dirname = dirname
 
         filesystem, filepath = url_to_pyarrow_fs(filepath, filesystem)
@@ -362,6 +362,8 @@ class VariantsParquetWriter:
         """Write the variants, parittion description and schema."""
         filenames = self._write_internal()
 
+        # TODO: This should be move to a different place so that these are
+        # not written with every bucket.
         self.write_partition()
         self.write_schema()
 

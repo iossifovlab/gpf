@@ -25,6 +25,7 @@ class FamilyQueryBuilder(BaseQueryBuilder):
         pedigree_df: pd.DataFrame,
         gene_models=None,
         do_join_pedigree=False,
+        do_join_allele_in_members=False
     ):
         # pylint: disable=too-many-arguments
         self.family_variant_table = family_variant_table
@@ -45,6 +46,7 @@ class FamilyQueryBuilder(BaseQueryBuilder):
         )
 
         self.do_join_pedigree = do_join_pedigree
+        self.do_join_allele_in_members = do_join_allele_in_members
 
     def _query_columns(self):
         self.select_accessors = {
@@ -60,88 +62,46 @@ class FamilyQueryBuilder(BaseQueryBuilder):
         return columns
 
     def _build_join(self, genes=None, effect_types=None):
-        join_clause = ""
+
+        if self.do_join_allele_in_members or self.do_join_pedigree:
+            inner = "fa.allele_in_members"
+            if self.dialect.add_unnest_in_join():
+                inner = f"UNNEST({inner})"
+            self._add_to_product(f"\n    JOIN\n    {inner} AS pi")
 
         if self.do_join_pedigree:
-            pedigree_table = self.dialect.build_table_name(self.pedigree_table,
-                                                           self.db)
-            join_clause = f"JOIN {pedigree_table} as pedigree\n"
+            pedigree_table = self.dialect.build_table_name(
+                self.pedigree_table, self.db)
+            pi_ref = "pi" + self.dialect.array_item_suffix()
+            self._add_to_product(f"\n    JOIN"
+                                 f"\n    {pedigree_table} AS pedigree"
+                                 f"\n    ON ({pi_ref} = pedigree.person_id)")
 
         if genes is not None or effect_types is not None:
-            effect_gene_abs = self.where_accessors["effect_gene"]
             inner_clause = (
-                f"UNNEST({effect_gene_abs})"
+                "UNNEST(sa.effect_gene)"
                 if self.dialect.add_unnest_in_join()
-                else effect_gene_abs
+                else "sa.effect_gene"
             )
-            join_clause = join_clause + f"JOIN {inner_clause}  as eg\n"
-
-        self._add_to_product(join_clause)
+            self._add_to_product(f"\n    JOIN\n    {inner_clause} AS eg")
 
     def _build_from(self):
-        # implicit join on family_allele and summary variants table
-        from_clause = f"""FROM
-        {self.dialect.build_table_name(self.summary_allele_table, self.db)}
-            AS sa
-        JOIN
-        {self.dialect.build_table_name(self.family_variant_table, self.db)}
-            AS fa
-        ON (fa.summary_index = sa.summary_index AND
-        fa.bucket_index = sa.bucket_index AND
-        fa.allele_index = sa.allele_index)"""
-
-        self._add_to_product(from_clause)
+        summary_table_name = self.dialect.build_table_name(
+            self.summary_allele_table, self.db)
+        assert self.family_variant_table is not None
+        family_table_name = self.dialect.build_table_name(
+            self.family_variant_table, self.db)
+        self._add_to_product(
+            f"\n  FROM"
+            f"\n    {summary_table_name} AS sa"
+            f"\n    JOIN"
+            f"\n    {family_table_name} AS fa"
+            f"\n    ON (fa.summary_index = sa.summary_index AND"
+            f"\n        fa.bucket_index = sa.bucket_index AND"
+            f"\n        fa.allele_index = sa.allele_index)")
 
     def _build_group_by(self):
         pass
 
     def _build_having(self, **kwargs):
         pass
-
-    def _build_where(
-        self,
-        regions=None,
-        genes=None,
-        effect_types=None,
-        family_ids=None,
-        person_ids=None,
-        inheritance=None,
-        roles=None,
-        sexes=None,
-        variant_type=None,
-        real_attr_filter=None,
-        ultra_rare=None,
-        frequency_filter=None,
-        return_reference=None,
-        return_unknown=None,
-        **_kwargs,
-    ):
-        # pylint: disable=too-many-arguments,too-many-locals
-        if self.summary_allele_table:
-            inheritance = None
-        where_clause = self._build_where_string(
-            regions=regions,
-            genes=genes,
-            effect_types=effect_types,
-            family_ids=family_ids,
-            person_ids=person_ids,
-            inheritance=inheritance,
-            roles=roles,
-            sexes=sexes,
-            variant_type=variant_type,
-            real_attr_filter=real_attr_filter,
-            ultra_rare=ultra_rare,
-            frequency_filter=frequency_filter,
-            return_reference=return_reference,
-            return_unknown=return_unknown,
-        )
-        self._add_to_product(where_clause)
-
-        if self.summary_allele_table is not None:
-            return
-
-        if where_clause:
-            in_members = "AND fa.allele_in_members = pedigree.person_id"
-        else:
-            in_members = "WHERE fa.allele_in_members = pedigree.person_id"
-        self._add_to_product(in_members)

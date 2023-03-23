@@ -310,10 +310,11 @@ class FamiliesLoader(CLILoader):
              PEDIGREE_COLUMN_NAMES["not_sequenced"]),
             (kwargs.get("ped_sample_id"), PEDIGREE_COLUMN_NAMES["sample id"]),
         )
-        header = tuple(filter(lambda col: isinstance(col[0], int), header))
+        header = tuple(  # type: ignore
+            filter(lambda col: isinstance(col[0], int), header))
         for col in header:
             assert isinstance(col[0], int), col[0]
-        header = tuple(sorted(header, key=lambda col: col[0]))
+        header = tuple(sorted(header, key=lambda col: col[0]))  # type: ignore
 
         return zip(*header)
 
@@ -335,9 +336,9 @@ class FamiliesLoader(CLILoader):
         ped_generated="generated",
         ped_not_sequenced="not_sequenced",
         ped_sample_id="sampleId",
-        **kwargs,
+        **kwargs,  # pylint: disable=unused-argument
     ):
-
+        """Read a pedigree from file."""
         if isinstance(ped_no_role, str):
             ped_no_role = str2bool(ped_no_role)
         if isinstance(ped_no_header, str):
@@ -421,23 +422,24 @@ class FamiliesLoader(CLILoader):
                         return rec.sampleId
                     return rec.personId
 
-            sample_ids = ped_df.apply(
+            sample_ids = ped_df.apply(  # type: ignore
                 fill_sample_id, axis=1, result_type="reduce",
             )
-            ped_df[ped_sample_id] = sample_ids
+            ped_df[ped_sample_id] = sample_ids  # type: ignore
         else:
-            sample_ids = pd.Series(data=ped_df[ped_person].values)
-            ped_df[ped_sample_id] = sample_ids
+            sample_ids = pd.Series(
+                data=ped_df[ped_person].values)  # type: ignore
+            ped_df[ped_sample_id] = sample_ids  # type: ignore
         if ped_generated in ped_df:
-            ped_df[ped_generated] = ped_df[ped_generated].apply(
-                lambda v: v if v else None
-            )
+            ped_df[ped_generated] = ped_df[  # type: ignore
+                ped_generated].apply(  # type: ignore
+                    lambda v: v if v else None)
         if ped_not_sequenced in ped_df:
-            ped_df[ped_not_sequenced] = ped_df[ped_not_sequenced].apply(
-                lambda v: v if v else None
-            )
+            ped_df[ped_not_sequenced] = ped_df[  # type: ignore
+                ped_not_sequenced].apply(
+                    lambda v: v if v else None)  # type: ignore
 
-        ped_df = ped_df.rename(
+        ped_df = ped_df.rename(  # type: ignore
             columns={
                 ped_family: PEDIGREE_COLUMN_NAMES["family"],
                 ped_person: PEDIGREE_COLUMN_NAMES["person"],
@@ -451,14 +453,15 @@ class FamiliesLoader(CLILoader):
             }
         )
 
-        if not set(PED_COLUMNS_REQUIRED) <= set(ped_df.columns):
+        if not set(PED_COLUMNS_REQUIRED) <= set(
+                ped_df.columns):  # type: ignore
             missing_columns = set(PED_COLUMNS_REQUIRED).difference(
-                set(ped_df.columns)
+                set(ped_df.columns)  # type: ignore
             )
-            missing_columns = ", ".join(missing_columns)
-            print(f"pedigree file missing columns {missing_columns}")
+            message = ", ".join(missing_columns)
+            print(f"pedigree file missing columns {message}")
             raise ValueError(
-                f"pedigree file missing columns {missing_columns}"
+                f"pedigree file missing columns {message}"
             )
         return ped_df
 
@@ -544,9 +547,9 @@ class FamiliesLoader(CLILoader):
                 "sample_id": "sampleId",
             }
         )
-        df.sex = df.sex.apply(lambda v: v.name)
-        df.role = df.role.apply(lambda v: v.name)
-        df.status = df.status.apply(lambda v: v.name)
+        df.sex = df.sex.apply(lambda v: v.name)  # type: ignore
+        df.role = df.role.apply(lambda v: v.name)  # type: ignore
+        df.status = df.status.apply(lambda v: v.name)  # type: ignore
 
         df.to_csv(filename, index=False, sep="\t")
 

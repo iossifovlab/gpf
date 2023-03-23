@@ -4,6 +4,7 @@ import functools
 
 from lark import Lark, Transformer
 from dae.variants.attributes import Inheritance
+from .attributes_query import get_bit_and_str
 
 
 INHERITANCE_QUERY_GRAMMAR = r"""
@@ -77,9 +78,10 @@ class InheritanceTransformer(Transformer):
     """No idea what this class is supposed to do. If you know please edit."""
 
     # pylint: disable=no-self-use,unused-argument
-    def __init__(self, attr_name, *args, **kwargs):
+    def __init__(self, attr_name, use_bit_and_function=True, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.attr_name = attr_name
+        self.use_bit_and_function = use_bit_and_function
         self.inheritance_mask = 16383
 
     def denovo(self, items):
@@ -133,25 +135,30 @@ class InheritanceTransformer(Transformer):
         assert len(items) == 1
         assert isinstance(items[0], Primitive)
         mask = items[0].value
-        return Expression(
-            f"BITAND({mask}, {self.attr_name}) = {mask}")
+        bit_op = get_bit_and_str(mask, self.attr_name,
+                                 self.use_bit_and_function)
+        return Expression(f"{bit_op} = {mask}")
 
     def any(self, items):
         assert len(items) == 1
         assert isinstance(items[0], Primitive)
         mask = items[0].value
-        return Expression(
-            f"BITAND({mask}, {self.attr_name}) != 0")
+        bit_op = get_bit_and_str(mask, self.attr_name,
+                                 self.use_bit_and_function)
+        return Expression(f"{bit_op} != 0")
 
     def _process_list(self, items):
         expressions = []
         for atom in items:
+            bit_op = get_bit_and_str(atom.value, self.attr_name,
+                                     self.use_bit_and_function)
+
             if isinstance(atom, Primitive):
                 expressions.append(
-                    f"BITAND({atom.value}, {self.attr_name}) != 0")
+                    f"{bit_op} != 0")
             elif isinstance(atom, NegPrimitive):
                 expressions.append(
-                    f"BITAND({atom.value}, {self.attr_name}) = 0")
+                    f"{bit_op} = 0")
             elif isinstance(atom, Expression):
                 expressions.append(atom)
             else:
@@ -170,10 +177,14 @@ class InheritanceTransformer(Transformer):
         """Construct an Expression from items."""
         if len(items) == 1 and isinstance(items[0], Primitive):
             mask = items[0].value
-            return Expression(f"BITAND({mask}, {self.attr_name}) != 0")
+            bit_op = get_bit_and_str(mask, self.attr_name,
+                                     self.use_bit_and_function)
+            return Expression(f"{bit_op} != 0")
         if len(items) == 1 and isinstance(items[0], NegPrimitive):
             mask = items[0].value
-            return Expression(f"BITAND({mask}, {self.attr_name}) = 0")
+            bit_op = get_bit_and_str(mask, self.attr_name,
+                                     self.use_bit_and_function)
+            return Expression(f"{bit_op} = 0")
         if len(items) == 1 and isinstance(items[0], Expression):
             return items[0].expression
 

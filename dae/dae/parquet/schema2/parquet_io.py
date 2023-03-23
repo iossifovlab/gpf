@@ -55,13 +55,13 @@ class ContinuousParquetFileWriter:
 
         dirname = os.path.dirname(filepath)
         if dirname and not os.path.exists(dirname):
-            os.makedirs(dirname)
+            os.makedirs(dirname, exist_ok=True)
         self.dirname = dirname
 
         filesystem, filepath = url_to_pyarrow_fs(filepath, filesystem)
         self._writer = pq.ParquetWriter(
             filepath, self.schema, compression="snappy", filesystem=filesystem,
-            version="1.0"
+            version="1.0", use_compliant_nested_type=True
         )
         self.rows = rows
         self._data = None

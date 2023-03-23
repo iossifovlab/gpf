@@ -27,23 +27,18 @@ class AlleleParquetSerializer:
         "position": pa.int32(),
         "end_position": pa.int32(),
         "effect_gene": pa.list_(
-            pa.field(
-                "element",
-                pa.struct(
-                    [
-                        pa.field("effect_gene_symbols", pa.string()),
-                        pa.field("effect_types", pa.string()),
-                    ]
-                ),
-            )
+            pa.struct([
+                pa.field("effect_gene_symbols", pa.string()),
+                pa.field("effect_types", pa.string()),
+            ])
         ),
         "variant_type": pa.int8(),
         "transmission_type": pa.int8(),
         "reference": pa.string(),
         "af_allele_count": pa.int32(),
         "af_allele_freq": pa.float32(),
-        "af_parents_called": pa.int32(),
-        "af_parents_freq": pa.float32(),
+        "af_parents_called_count": pa.int32(),
+        "af_parents_called_percent": pa.float32(),
         "seen_as_denovo": pa.bool_(),
         "seen_in_status": pa.int8(),
         "family_variants_count": pa.int32(),
@@ -158,6 +153,10 @@ class AlleleParquetSerializer:
 
             family_header.append(spr)
             family_properties.append(prop_value)
+
+        # TODO: Clean the hack to clean in the Nones
+        assert family_header[-1] == "allele_in_members"
+        family_properties[-1] = [v for v in family_properties[-1] if v]
 
         allele_data: dict[str, list] = {
             name: [] for name in self.schema_family.names

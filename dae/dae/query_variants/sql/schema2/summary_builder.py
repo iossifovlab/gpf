@@ -21,27 +21,24 @@ class SummaryQueryBuilder(BaseQueryBuilder):
         pedigree_schema,
         pedigree_df,
         gene_models=None,
-        do_join_affected=False,
     ):
         # pylint: disable=too-many-arguments
-        self.family_variant_table = family_variant_table
-        self.summary_allele_table = summary_allele_table
+        # self.family_variant_table = family_variant_table
+        # self.summary_allele_table = summary_allele_table
 
         super().__init__(
             dialect,
             db,
-            family_variant_table,
+            None,                      # family_variant_table,
             summary_allele_table,
             pedigree_table,
-            family_variant_schema,
+            None,                      # family_variant_schema,
             summary_allele_schema,
             table_properties,
             pedigree_schema,
             pedigree_df,
             gene_models=gene_models,
         )
-
-        self.do_join_affected = do_join_affected
 
     def _query_columns(self):
         return [
@@ -51,15 +48,19 @@ class SummaryQueryBuilder(BaseQueryBuilder):
         ]
 
     def _build_from(self):
-        from_clause = f"""\n FROM
-        {self.dialect.build_table_name(self.summary_allele_table, self.db)}
-        AS sa
-        """
+        summary_table_name = self.dialect.build_table_name(
+            self.summary_allele_table, self.db)
+        from_clause = f"\n  FROM\n    {summary_table_name} AS sa"
         self._add_to_product(from_clause)
 
     def _build_join(self, genes=None, effect_types=None):
         if genes is not None or effect_types is not None:
-            self._add_to_product("\n JOIN sa.effect_gene as eg ")
+            inner_clause = (
+                "UNNEST(sa.effect_gene)"
+                if self.dialect.add_unnest_in_join()
+                else "sa.effect_gene"
+            )
+            self._add_to_product(f"\n    JOIN\n    {inner_clause} AS eg")
 
     def _build_group_by(self):
         pass

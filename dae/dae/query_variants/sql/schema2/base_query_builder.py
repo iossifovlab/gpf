@@ -30,12 +30,20 @@ class Dialect(ABC):
         self.namespace = namespace
 
     @staticmethod
+    def use_bit_and_function() -> bool:
+        return True
+
+    @staticmethod
     def add_unnest_in_join() -> bool:
         return False
 
     @staticmethod
     def float_type() -> str:
         return "float"
+
+    @staticmethod
+    def array_item_suffix() -> str:
+        return ".item"
 
     @staticmethod
     def int_type() -> str:
@@ -60,7 +68,7 @@ class BaseQueryBuilder(ABC):
 
     QUOTE = "'"
     WHERE = """
-    WHERE
+  WHERE
     {where}
     """
     GENE_REGIONS_HEURISTIC_CUTOFF = 20
@@ -72,10 +80,10 @@ class BaseQueryBuilder(ABC):
         self,
         dialect: Dialect,
         db: str,
-        family_variant_table: str,
+        family_variant_table: Optional[str],
         summary_allele_table: str,
         pedigree_table: str,
-        family_variant_schema: TableSchema,
+        family_variant_schema: Optional[TableSchema],
         summary_allele_schema: TableSchema,
         partition_descriptor: Optional[dict],
         pedigree_schema: TableSchema,
@@ -85,7 +93,6 @@ class BaseQueryBuilder(ABC):
         # pylint: disable=too-many-arguments
 
         assert summary_allele_table is not None
-        assert family_variant_table is not None
 
         self.dialect = dialect
         self.db = db
@@ -93,6 +100,9 @@ class BaseQueryBuilder(ABC):
         self.summary_allele_table = summary_allele_table
         self.pedigree_table = pedigree_table
         self.partition_descriptor = partition_descriptor
+
+        if not family_variant_schema:
+            family_variant_schema = {}
 
         self.family_columns = family_variant_schema.keys()
         self.summary_columns = summary_allele_schema.keys()
@@ -277,14 +287,14 @@ class BaseQueryBuilder(ABC):
             person_ids = set(person_ids)
             where.append(
                 self._build_iterable_string_attr_where(
-                    self.where_accessors["allele_in_members"], person_ids
-                )
+                    "pi" + self.dialect.array_item_suffix(), person_ids)
             )
 
         if inheritance is not None:
             where.extend(
                 self._build_inheritance_where(
-                    self.where_accessors["inheritance_in_members"], inheritance
+                    self.where_accessors["inheritance_in_members"],
+                    inheritance, self.dialect.use_bit_and_function()
                 )
             )
         if roles is not None:
@@ -491,12 +501,13 @@ class BaseQueryBuilder(ABC):
             )
 
         transformer = QueryTreeToSQLBitwiseTransformer(
-            column_name, self.dialect.add_unnest_in_join()
+            column_name, self.dialect.use_bit_and_function()
         )
         return transformer.transform(parsed)
 
     @staticmethod
-    def _build_inheritance_where(column_name, query_value):
+    def _build_inheritance_where(column_name, query_value, 
+                                 use_bit_and_function):
         trees = []
         if isinstance(query_value, str):
             tree = inheritance_parser.parse(query_value)
@@ -514,7 +525,8 @@ class BaseQueryBuilder(ABC):
 
         result = []
         for tree in trees:
-            transformer = InheritanceTransformer(column_name)
+            transformer = InheritanceTransformer(column_name,
+                                                 use_bit_and_function)
             res = transformer.transform(tree)
             result.append(res)
         return result
@@ -556,18 +568,31 @@ class BaseQueryBuilder(ABC):
 
         return regions
 
-    def _build_frequency_bin_heuristic(
-        self, inheritance, ultra_rare, real_attr_filter
-    ):
-        # pylint: disable=too-many-branches
-        assert self.partition_descriptor is not None
-        if "frequency_bin" not in self.combined_columns:
+    def _build_partition_bin_heuristic_where(self, bin_column, bins,
+                                             number_of_possible_bins=None,
+                                             str_bins=False):
+        if len(bins) == 0:
             return ""
+        if number_of_possible_bins is not None and \
+                len(bins) == number_of_possible_bins:
+            return ""
+        cols = []
+        if bin_column in self.family_columns:
+            cols.append("fa." + bin_column)
+        if bin_column in self.summary_columns:
+            cols.append("sa." + bin_column)
+        if str_bins:
+            bins_str = ",".join([f"'{rb}'" for rb in bins])
+        else:
+            bins_str = ",".join([f"{rb}" for rb in bins])
+        parts = [f"{col} IN ({bins_str})" for col in cols]
+        return " AND ".join(parts)
 
-        rare_boundary = self.partition_descriptor["rare_boundary"]
+    def _build_frequency_bin_heuristic_compute_bins(
+        self, inheritance, ultra_rare, real_attr_filter, rare_boundary
+    ):
+        frequency_bins: set[int] = set([])
 
-        frequency_bin = set()
-        frequency_bin_col = self.where_accessors["frequency_bin"]
         matchers = []
         if inheritance is not None:
             logger.debug(
@@ -585,7 +610,7 @@ class BaseQueryBuilder(ABC):
             ]
 
             if any(m.match([Inheritance.denovo]) for m in matchers):
-                frequency_bin.add(f"{frequency_bin_col} = 0")
+                frequency_bins.add(0)
 
         if inheritance is None or any(
             m.match(
@@ -597,50 +622,46 @@ class BaseQueryBuilder(ABC):
             )
             for m in matchers
         ):
-
             if ultra_rare:
-                frequency_bin.update(
-                    [
-                        f"{frequency_bin_col} = 0",
-                        f"{frequency_bin_col} = 1",
-                    ]
-                )
+                frequency_bins |= set([0, 1])
             elif real_attr_filter:
                 for name, (begin, end) in real_attr_filter:
                     if name == "af_allele_freq":
 
                         if end and end < rare_boundary:
-                            frequency_bin.update(
-                                [
-                                    f"{frequency_bin_col} = 0",
-                                    f"{frequency_bin_col} = 1",
-                                    f"{frequency_bin_col} = 2",
-                                ]
-                            )
+                            frequency_bins |= set([0, 1, 2])
                         elif begin and begin >= rare_boundary:
-                            frequency_bin.add(f"{frequency_bin_col} = 3")
+                            frequency_bins.add(3)
                         elif end is not None and end >= rare_boundary:
-                            frequency_bin.update(
-                                [
-                                    f"{frequency_bin_col} = 0",
-                                    f"{frequency_bin_col} = 1",
-                                    f"{frequency_bin_col} = 2",
-                                    f"{frequency_bin_col} = 3",
-                                ]
-                            )
-
+                            frequency_bins |= set([0, 1, 2, 3])
             elif inheritance is not None:
-                frequency_bin.update(
-                    [
-                        f"{frequency_bin_col} = 1",
-                        f"{frequency_bin_col} = 2",
-                        f"{frequency_bin_col} = 3",
-                    ]
-                )
+                frequency_bins |= set([1, 2, 3])
+        return frequency_bins
 
-        if len(frequency_bin) == 4:
+    def _build_frequency_bin_heuristic(
+        self, inheritance, ultra_rare, real_attr_filter
+    ):
+        # pylint: disable=too-many-branches
+        assert self.partition_descriptor is not None
+        if "frequency_bin" not in self.combined_columns:
             return ""
-        return " OR ".join(frequency_bin)
+
+        rare_boundary = self.partition_descriptor["rare_boundary"]
+
+        frequency_bins = self._build_frequency_bin_heuristic_compute_bins(
+            inheritance, ultra_rare, real_attr_filter, rare_boundary)
+
+        return self._build_partition_bin_heuristic_where(
+            "frequency_bin", frequency_bins, 4)
+
+        # cols = []
+        # if "frequency_bin" in self.family_columns:
+        #     cols.append("fa.frequency_bin")
+        # if "frequency_bin" in self.summary_columns:
+        #     cols.append("sa.frequency_bin")
+        # bins_str = ",".join([f"{rb}" for rb in frequency_bins])
+        # parts = [f"{col} IN ({bins_str})" for col in cols]
+        # return " AND ".join(parts)
 
     def _build_coding_heuristic(self, effect_types):
         assert self.partition_descriptor is not None
@@ -660,13 +681,15 @@ class BaseQueryBuilder(ABC):
             intersection == effect_types
         )
 
-        coding_bin_col = self.where_accessors["coding_bin"]
+        coding_bins = set([])
 
         if intersection == effect_types:
-            return f"{coding_bin_col} = 1"
-        if not intersection:
-            return f"{coding_bin_col} = 0"
-        return ""
+            coding_bins.add(1)
+        elif not intersection:
+            coding_bins.add(0)
+
+        return self._build_partition_bin_heuristic_where(
+            "coding_bin", coding_bins, 2)
 
     def _build_region_bin_heuristic(self, regions):
         assert self.partition_descriptor is not None
@@ -687,11 +710,21 @@ class BaseQueryBuilder(ABC):
             stop = region.stop // region_length
             for position_bin in range(start, stop + 1):
                 region_bins.append(f"{chrom_bin}_{position_bin}")
-        if not region_bins:
-            return ""
-        region_bin_col = self.where_accessors["region_bin"]
-        bins_str = ",".join([f"'{rb}'" for rb in region_bins])
-        return f"{region_bin_col} IN ({bins_str})"
+
+        return self._build_partition_bin_heuristic_where(
+            "region_bin", region_bins, str_bins=True)
+
+        # region_bin_col = self.where_accessors["region_bin"]
+        # cols = []
+        # if "region_bin" in self.family_columns:
+        #     cols.append("fa.region_bin")
+        # if "region_bin" in self.summary_columns:
+        #     cols.append("sa.region_bin")
+        # bins_str = ",".join([f"'{rb}'" for rb in region_bins])
+        # parts = [f"{col} IN ({bins_str})" for col in cols]
+        # return " AND ".join(parts)
+
+        # return f"{region_bin_col} IN ({bins_str})"
 
     def _build_family_bin_heuristic(self, family_ids, person_ids):
         assert self.partition_descriptor is not None
@@ -720,13 +753,9 @@ class BaseQueryBuilder(ABC):
                 )
             )
 
-        family_bin_col = self.where_accessors["family_bin"]
-
-        if 0 < len(family_bins) < self.partition_descriptor["family_bin_size"]:
-            family_bins_str = ", ".join(str(fb) for fb in family_bins)
-            return f"{family_bin_col} IN ({family_bins_str})"
-
-        return ""
+        return self._build_partition_bin_heuristic_where(
+            "family_bin", family_bins,
+            self.partition_descriptor["family_bin_size"])
 
     def _build_return_reference_and_return_unknown(
         self, return_reference=None, _return_unknown=None
