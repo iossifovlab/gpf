@@ -146,11 +146,11 @@ class GeneScore:
         return df[[self.genomic_values_col, self.score_id]].copy()
 
     @staticmethod
-    def load_gene_scores_from_collection(
-            gsc: Optional[GeneScoreCollection]) -> List[GeneScore]:
+    def load_gene_scores_from_resource(
+            resource: GenomicResource,
+            statistics: Optional[GeneScoreStatistics] = None
+    ) -> List[GeneScore]:
         """Create and return all of the gene scores described in a resource."""
-        assert gsc is not None
-        resource = gsc.resource
         if resource.get_type() != "gene_score":
             logger.error(
                 "invalid resource type for gene score %s",
@@ -167,7 +167,10 @@ class GeneScore:
                 f"missing histograms config {resource.resource_id}")
 
         scores = []
-        statistics = gsc.get_statistics()
+        if statistics is None:
+            statistics = GeneScoreStatistics.build_statistics(
+                resource)  # type: ignore
+        assert statistics is not None
         for gs_config in config["gene_scores"]:
             histogram = statistics.get_histogram(gs_config["id"])
             gene_score = GeneScore._load_gene_score(
@@ -305,7 +308,9 @@ class GeneScoreCollection(
         self.statistics = None
         self.scores = {
             score.score_id: score for score in
-            GeneScore.load_gene_scores_from_collection(self)
+            GeneScore.load_gene_scores_from_resource(
+                self.resource, self.get_statistics()
+            )
         }
 
     def get_statistics(self):
