@@ -202,6 +202,18 @@ class GenomicResourceCachedRepo(GenomicResourceRepo):
         version_constraint = f"={remote_resource.get_version_str()}"
         return cache_proto.get_resource(resource_id, version_constraint)
 
+    def get_resource_cached_files(self, resource_id: str) -> list[str]:
+        resource = self.child.get_resource(resource_id)
+        cache_proto = self._get_or_create_cache_proto(
+            resource.proto)
+        cached_files = set()
+        for filename in map(lambda entry: entry.name, resource.get_manifest()):
+            if filename == GR_CONF_FILE_NAME:
+                continue
+            if cache_proto.local_protocol.file_exists(resource, filename):
+                cached_files.add(filename)
+        return cached_files
+
     def cache_resources(
         self, workers=4,
         resource_ids: Optional[set[str]] = None,

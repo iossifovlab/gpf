@@ -5,19 +5,20 @@ import logging
 import argparse
 import pathlib
 import copy
-from typing import Dict, Union
-from urllib.parse import urlparse
 
 import yaml
 
+from typing import Dict, Union
+from urllib.parse import urlparse
 from cerberus.schema import SchemaError
 
 from jinja2 import Template
 
+from dae.utils.helpers import convert_size
+
 from dae.task_graph.cli_tools import TaskGraphCli
 from dae.utils.fs_utils import find_directory_with_a_file
 from dae.task_graph.graph import TaskGraph
-
 from dae.__version__ import VERSION, RELEASE
 from dae.genomic_resources.repository import \
     GR_CONF_FILE_NAME, \
@@ -29,6 +30,8 @@ from dae.genomic_resources.repository import \
     ManifestEntry, \
     parse_resource_id_version, \
     version_tuple_to_string
+from dae.genomic_resources.cached_repository import \
+    GenomicResourceCachedRepo
 
 from dae.utils.verbosity_configuration import VerbosityConfiguration
 
@@ -114,18 +117,27 @@ def _add_hist_parameters_group(parser):
 
 def _configure_list_subparser(subparsers):
     parser = subparsers.add_parser("list", help="List a GR Repo")
+    parser.add_argument("--hr", default=False, action="store_true", help="Projects the size in human-readable format.")
     _add_repository_resource_parameters_group(parser, use_resource=False)
     VerbosityConfiguration.set_argumnets(parser)
 
 
 def _run_list_command(
-        proto: Union[ReadOnlyRepositoryProtocol, GenomicResourceRepo], _args):
+        proto: Union[ReadOnlyRepositoryProtocol, GenomicResourceRepo], args):
+
     for res in proto.get_all_resources():
         res_size = sum(fs for _, fs in res.get_manifest().get_files())
+
+        files_msg = f"{len(list(res.get_manifest().get_files())):2d}"
+        if isinstance(proto, GenomicResourceCachedRepo):
+            files_msg = f"{len(proto.get_resource_cached_files(res.get_id())):2d}/{files_msg}"
+
+        res_size_msg = convert_size(res_size) if hasattr(args, 'hr') and args.hr is True else res_size
         print(
             f"{res.get_type():20} {res.get_version_str():7s} "
-            f"{len(list(res.get_manifest().get_files())):2d} {res_size:12d} "
-            f"{res.get_id()}", file=sys.stderr)
+            f"{files_msg} {res_size_msg:12} "
+            f"{proto.repo_id if isinstance(proto, GenomicResourceRepo) else proto.get_id()} "
+            f"{res.get_id()}")
 
 
 def _configure_repo_init_subparser(subparsers):
@@ -643,7 +655,7 @@ def cli_manage(cli_args=None):
                 "Can't find repository starting from: %s", os.getcwd())
             sys.exit(1)
         repo_url = str(repo_url)
-        print(f"working with repository: {repo_url}", file=sys.stderr)
+        print(f"working with repository: {repo_url}")
 
     local_grr_definition = {
         "id": "local",
@@ -735,6 +747,8 @@ def cli_browse(cli_args=None):
         default=None,
         help="path to GRR definition file.")
 
+    parser.add_argument("--hr", default=False, action="store_true", help="Projects the size in human-readable format.")
+
     if cli_args is None:
         cli_args = sys.argv[1:]
     args = parser.parse_args(cli_args)
@@ -745,6 +759,7 @@ def cli_browse(cli_args=None):
         sys.exit(0)
     repo = build_genomic_resource_repository(file_name=args.grr)
     _run_list_command(repo, args)
+
 
 
 repository_template = Template("""

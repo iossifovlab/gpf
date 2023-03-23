@@ -106,8 +106,8 @@ def test_repo_manifest_no_agruments(
     # Then
     out, err = capsys.readouterr()
 
-    assert out == ""
-    assert err == \
+    assert err == ""
+    assert out == \
         f"working with repository: {path}\n"
     assert caplog.record_tuples == [
         ("grr_manage",
@@ -304,8 +304,8 @@ def test_resource_manifest_no_agruments(
     # Then
     out, err = capsys.readouterr()
 
-    assert out == ""
-    assert err == f"working with repository: {path}\n"
+    assert err == ""
+    assert out == f"working with repository: {path}\n"
     assert caplog.record_tuples == [
         ("grr_manage", logging.INFO, "manifest of <one> is up to date")
     ]
