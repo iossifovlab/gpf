@@ -7,7 +7,7 @@ from typing import Any, Callable, Iterable, Optional
 
 @dataclass(eq=False, frozen=True)
 class Task:
-    """Represent one node in a TaskGraph together with its dependancies."""
+    """Represent one node in a TaskGraph together with its dependencies."""
 
     task_id: str
     func: Callable
