@@ -16,6 +16,10 @@ from dae.configuration.schemas.dae_conf import dae_conf_schema
 from dae.annotation.annotation_factory import AnnotationConfigParser, \
     build_annotation_pipeline
 
+from dae.genomic_resources.reference_genome import \
+    build_reference_genome_from_resource
+from dae.genomic_resources.gene_models import build_gene_models_from_resource
+
 
 logger = logging.getLogger("grr_cache_tool")
 
@@ -77,6 +81,18 @@ def cli_cache_repo(argv=None):
             instance_file, dae_conf_schema)
         resources.add(gpf_config.reference_genome.resource_id)
         resources.add(gpf_config.gene_models.resource_id)
+
+        gene_models = build_gene_models_from_resource(
+            repository.get_resource(gpf_config.gene_models.resource_id)
+        )
+        reference_genome = build_reference_genome_from_resource(
+            repository.get_resource(gpf_config.reference_genome.resource_id)
+        )
+        resource_files[gpf_config.reference_genome.resource_id] = \
+            reference_genome.files
+        resource_files[gpf_config.gene_models.resource_id] = \
+            gene_models.files
+
         if gpf_config.annotation is not None:
             annotation = gpf_config.annotation.conf_file
     elif args.annotation is not None:
