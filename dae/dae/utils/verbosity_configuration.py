@@ -29,6 +29,9 @@ class VerbosityConfiguration:
             loglevel = logging.WARNING
             logging.basicConfig(level=logging.WARNING)
 
+        logging.getLogger("dae.effect_annotation").setLevel(
+            max(loglevel, logging.INFO))
+
         logging.getLogger("impala").setLevel(logging.WARNING)
         logging.getLogger("distributed").setLevel(logging.WARNING)
         logging.getLogger("bokeh").setLevel(logging.ERROR)
