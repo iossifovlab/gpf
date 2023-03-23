@@ -506,7 +506,7 @@ class BaseQueryBuilder(ABC):
         return transformer.transform(parsed)
 
     @staticmethod
-    def _build_inheritance_where(column_name, query_value, 
+    def _build_inheritance_where(column_name, query_value,
                                  use_bit_and_function):
         trees = []
         if isinstance(query_value, str):
