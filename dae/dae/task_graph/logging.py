@@ -71,7 +71,7 @@ def configure_task_logging(log_dir, task_id, verbosity):
     return handler
 
 
-RE_TASK_ID = re.compile(r"[\. /]")
+RE_TASK_ID = re.compile(r"[\. /,()\-:]")
 
 
 def safe_task_id(task_id):
