@@ -560,29 +560,37 @@ class GenomicScore(
 
             return [save_task]
 
+    _REF_GENOME_CACHE: dict[str, Any] = {}
+
+    @staticmethod
+    def _get_reference_genome_cached(grr, genome_id):
+        if genome_id is None or grr is None:
+            return None
+        if genome_id in GenomicScore._REF_GENOME_CACHE:
+            return GenomicScore._REF_GENOME_CACHE[genome_id]
+        try:
+            ref_genome = build_reference_genome_from_resource(
+                grr.get_resource(genome_id)
+            )
+            logger.info(
+                "Using reference genome label <%s> ",
+                genome_id,
+            )
+        except FileNotFoundError:
+            logger.warning(
+                "Couldn't find reference genome %s",
+                genome_id,
+            )
+            return None
+        ref_genome.open()
+        GenomicScore._REF_GENOME_CACHE[genome_id] = ref_genome
+        return ref_genome
+
     def _get_chrom_regions(self, region_size, grr=None):
         ref_genome_id = self.get_label("reference_genome")
-        ref_genome = None
-        if ref_genome_id is not None or grr is not None:
-            try:
-                ref_genome = build_reference_genome_from_resource(
-                    grr.get_resource(ref_genome_id)
-                )
-                logger.info(
-                    "Using reference genome label <%s> "
-                    "for chromosome lengths of <%s>",
-                    ref_genome_id,
-                    self.resource.resource_id
-                )
-            except FileNotFoundError:
-                logger.warning(
-                    "Couldn't find reference genome %s for %s",
-                    ref_genome_id,
-                    self.resource.resource_id
-                )
+        ref_genome = self._get_reference_genome_cached(grr, ref_genome_id)
         if ref_genome is not None:
-            with ref_genome.open():
-                regions = self._split_into_regions(region_size, ref_genome)
+            regions = self._split_into_regions(region_size, ref_genome)
         else:
             regions = self._split_into_regions(region_size)
         return regions

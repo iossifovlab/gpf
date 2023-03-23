@@ -7,6 +7,13 @@ from typing import Optional, Union, cast
 from fsspec.core import url_to_fs
 
 
+def abspath(filename):
+    url = urlparse(filename)
+    if url.scheme:
+        return filename
+    return os.path.abspath(filename)
+
+
 def exists(filename):
     fs, relative_path = url_to_fs(filename)
     return fs.exists(relative_path)

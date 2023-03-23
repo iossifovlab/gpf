@@ -1,4 +1,5 @@
 import sys
+import time
 import logging
 import traceback
 from abc import abstractmethod
@@ -7,8 +8,11 @@ from collections import deque
 from typing import Any, Iterator
 from typing import Optional
 
+from dae.utils.verbosity_configuration import VerbosityConfiguration
 from dae.task_graph.graph import TaskGraph, Task
 from dae.task_graph.cache import TaskCache, NoTaskCache, CacheRecordType
+from dae.task_graph.logging import configure_task_logging, ensure_log_dir, \
+    safe_task_id
 
 
 logger = logging.getLogger(__file__)
@@ -179,18 +183,21 @@ class SequentialExecutor(AbstractTaskGraphExecutor):
 class DaskExecutor(AbstractTaskGraphExecutor):
     """Execute tasks in parallel using Dask to do the heavy lifting."""
 
-    def __init__(self, client, task_cache=NoTaskCache()):
+    def __init__(self, client, task_cache=NoTaskCache(), **kwargs):
         super().__init__(task_cache)
         self._client = client
         self._task2future = {}
         self._future_key2task = {}
         self._task2result = {}
         self._task_queue: deque[Task] = deque()
+        log_dir = ensure_log_dir(**kwargs)
+        self._params = copy(kwargs)
+        self._params["log_dir"] = log_dir
 
     def _queue_task(self, task_node):
         self._task_queue.append(task_node)
 
-    def _submit_task(self, task_node):
+    def _submit_task(self, task_node: Task):
         deps = []
         for dep in task_node.deps:
             future = self._task2future.get(dep)
@@ -207,9 +214,11 @@ class DaskExecutor(AbstractTaskGraphExecutor):
             else:
                 value = arg
             args.append(value)
+        params = copy(self._params)
+        params["task_id"] = safe_task_id(task_node.task_id)
 
-        future = self._client.submit(self._exec, task_node.func, args, deps,
-                                     pure=False)
+        future = self._client.submit(
+            self._exec, task_node.func, args, deps, params, pure=False)
         self._task2future[task_node] = future
         self._future_key2task[future.key] = task_node
         return future
@@ -219,8 +228,27 @@ class DaskExecutor(AbstractTaskGraphExecutor):
         return future if future else self._task2result[task]
 
     @staticmethod
-    def _exec(task_func, args, _deps):
-        return task_func(*args)
+    def _exec(task_func, args, _deps, params):
+        verbose = params.get("verbose", 0)
+        VerbosityConfiguration.set_verbosity(verbose)
+
+        task_id = params["task_id"]
+        log_dir = params.get("log_dir", ".")
+
+        root_logger = logging.getLogger()
+        handler = configure_task_logging(log_dir, task_id, verbose)
+        root_logger.addHandler(handler)
+
+        task_logger = logging.getLogger("task_executor")
+        task_logger.info("task <%s> started", task_id)
+        start = time.time()
+        result = task_func(*args)
+        elapsed = time.time() - start
+        task_logger.info("task <%s> finished in %0.2fsec", task_id, elapsed)
+
+        root_logger.removeHandler(handler)
+        handler.close()
+        return result
 
     MIN_QUEUE_SIZE = 700
 
