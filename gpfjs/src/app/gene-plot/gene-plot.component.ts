@@ -16,7 +16,7 @@ export class GenePlotComponent implements OnChanges {
   @Input() public readonly variantsArray: SummaryAllelesArray;
   @Input() public readonly frequencyDomain: [number, number];
   @Input() public readonly yAxisLabel: string;
-  @Input() public readonly summaryVariantsCounts: number;
+  @Input() public readonly summaryVariantsCount: number;
   @Input() public condenseIntrons: boolean;
 
   @Input() public downloadInProgressSummary: boolean;
@@ -163,9 +163,9 @@ export class GenePlotComponent implements OnChanges {
   }
 
   private get svgHeight(): number {
-    const transcriptsCount = (
+    const transcriptsCount =
       this.showTranscripts ?
-        this.genePlotModel.gene.transcripts.length : this.genePlotModel.gene.collapsedTranscripts.length);
+        this.genePlotModel.gene.transcripts.length : this.genePlotModel.gene.collapsedTranscripts.length;
     return this.frequencyPlotHeight
       + this.constants.frequencyPlotPadding
       + this.constants.margin.top

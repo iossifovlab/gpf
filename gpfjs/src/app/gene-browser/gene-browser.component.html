@@ -161,7 +161,7 @@
         [condenseIntrons]="summaryVariantsFilter.codingOnly"
         [frequencyDomain]="[geneBrowserConfig.domainMin, geneBrowserConfig.domainMax]"
         [yAxisLabel]="geneBrowserConfig.frequencyName || geneBrowserConfig.frequencyColumn"
-        [summaryVariantsCounts]="summaryVariantsArray.totalSummaryAllelesCount"
+        [summaryVariantsCount]="summaryVariantsArray.totalSummaryAllelesCount"
         (selectedRegion)="setSelectedRegion($event)"
         (selectedFrequencies)="setSelectedFrequencies($event)"
         [selectedGene]="selectedGene"
@@ -180,7 +180,7 @@
           <input
             id="unique-family-variants-checkbox"
             type="checkbox"
-            [disabled]="!isUniqueFamilyFitlerEnable"
+            [disabled]="!isUniqueFamilyFilterEnabled"
             (click)="checkUniqueFamilyVariantsFilter()" />
         </div>
         <div id="family-variants-wrapper">
