@@ -149,13 +149,16 @@ describe('GeneSetsComponent', () => {
   });
 
   it('should set and check if selectedGeneType has been set', () => {
+    jest.useFakeTimers();
+
     component.setSelectedGeneType('datasetId1', 'personSetCollectionId2', 'geneType3', true);
     component.setSelectedGeneType('datasetId4', 'personSetCollectionId5', 'geneType6', false);
-
+    jest.advanceTimersByTime(350);
     expect(component.isSelectedGeneType('datasetId1', 'personSetCollectionId2', 'geneType3')).toBe(true);
     expect(component.isSelectedGeneType('datasetId4', 'personSetCollectionId5', 'geneType6')).toBe(false);
 
     component.setSelectedGeneType('datasetId1', 'personSetCollectionId2', 'geneType3', false);
+    jest.advanceTimersByTime(350);
     expect(component.isSelectedGeneType('datasetId1', 'personSetCollectionId2', 'geneType3')).toBe(false);
   });
 

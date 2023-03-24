@@ -2,7 +2,12 @@
   <div class="row panel" id="gene-sets-panel" style="margin-left: 0px; margin-right: 0px">
     <div class="col-sm-3">
       <div class="select-wrapper">
-        <select class="row-sm-3 form-control" [(ngModel)]="selectedGeneSetsCollection" required style="width: 100%">
+        <select
+          class="row-sm-3 form-control"
+          title="{{ selectedGeneSetsCollection.desc }}"
+          [(ngModel)]="selectedGeneSetsCollection"
+          required
+          id="selected-collection">
           <option *ngFor="let collection of geneSetsCollections" [ngValue]="collection">{{ collection.desc }}</option>
         </select>
         <span class="select-dropdown-icon" [style.content]="'url(' + imgPathPrefix + 'dropdown_icon.png)'"> </span>
@@ -16,7 +21,7 @@
         <ngb-panel
           *ngFor="let type of selectedGeneSetsCollection.types"
           id="{{ type.datasetId }}-{{ type.personSetCollectionId }}-denovo-geneset">
-          <ng-template ngbPanelTitle *ngIf="selectedGeneSetsCollection?.types?.length > 0">
+          <ng-template ngbPanelTitle>
             <div style="text-align: left">
               <span style="display: block" class="btn-sm text-wrap"
                 >{{ type.datasetName }}: {{ type.personSetCollectionName }}</span
@@ -43,24 +48,31 @@
     </div>
 
     <div class="col-sm-9">
-      <gpf-searchable-select
-        (search)="onSearch($event)"
-        (selectItem)="onSelect($event)"
-        [data]="geneSets"
-        caption="{{
-          selectedGeneSet ? selectedGeneSet.name + ' (' + selectedGeneSet.count + '): ' + selectedGeneSet.desc : ''
-        }}">
-        <div *gpf-searchable-select-template="let element">
-          <span
-            data-toggle="tooltip"
-            data-placement="bottom"
-            title="{{ element.name }} ({{ element.count }}): {{ element.desc }}"
-            innerHtml="{{ element.name | boldMatching : searchQuery }} ({{ element.count }}): {{
-              element.desc | boldMatching : searchQuery
-            }}">
-          </span>
-        </div>
-      </gpf-searchable-select>
+      <fieldset
+        [disabled]="
+          selectedGeneSetsCollection?.types?.length > 0 && object.keys(geneSetsLocalState.geneSetsTypes).length === 0
+        ">
+        <gpf-searchable-select
+          [showLoadingSpinner]="isLoading"
+          (search)="onSearch($event)"
+          (selectItem)="onSelect($event)"
+          [data]="geneSets"
+          caption="{{
+            selectedGeneSet ? selectedGeneSet.name + ' (' + selectedGeneSet.count + '): ' + selectedGeneSet.desc : ''
+          }}">
+          <div *gpf-searchable-select-template="let element">
+            <span
+              data-toggle="tooltip"
+              data-placement="bottom"
+              title="{{ element.name }} ({{ element.count }}): {{ element.desc }}"
+              innerHtml="{{ element.name | boldMatching : searchQuery }} ({{ element.count }}): {{
+                element.desc | boldMatching : searchQuery
+              }}">
+            </span>
+          </div>
+        </gpf-searchable-select>
+      </fieldset>
+
       <div *ngIf="selectedGeneSet">
         <span style="margin-right: 5px">Count: {{ selectedGeneSet.count }}</span>
         <span>(<a class="download-link" (click)="onDownload()">Download</a>)</span>

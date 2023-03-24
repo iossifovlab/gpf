@@ -9,11 +9,13 @@ import { ActivatedRoute } from '@angular/router';
 @Component({
   selector: 'gpf-searchable-select',
   templateUrl: './searchable-select.component.html',
+  styleUrls: ['./searchable-select.css']
 })
 export class SearchableSelectComponent implements AfterViewInit, OnChanges {
   @Input() public data: Array<any>;
   @Input() public caption: string;
   @Input() public isInGeneBrowser = false;
+  @Input() public showLoadingSpinner: boolean;
   @Input() private hideDropdown: boolean;
   @Output() private search = new EventEmitter();
   @Output() private selectItem = new EventEmitter();
