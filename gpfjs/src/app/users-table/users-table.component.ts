@@ -15,6 +15,7 @@ import { Observable } from 'rxjs';
 export class UsersTableComponent {
   @Input() public users: User[];
   @Input() public currentUserEmail: string;
+  public currentUserEdit = -1;
 
   public constructor(
     private usersService: UsersService,
@@ -60,5 +61,16 @@ export class UsersTableComponent {
           .filter(group => !user.groups.includes(group.name))
           .map(group => new Item(group.id.toString(), group.name))
         ));
+  }
+
+  public edit(user: User, name: string): void {
+    user.name = name;
+    this.usersService.updateUser(user)
+      .pipe(take(1))
+      .subscribe(() => {
+        user.name = name;
+      });
+
+    this.currentUserEdit = -1;
   }
 }

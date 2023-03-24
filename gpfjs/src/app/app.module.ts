@@ -98,7 +98,6 @@ import { UserEditComponent } from './user-edit/user-edit.component';
 import { ManagementComponent } from './management/management.component';
 import { UsersGroupsService } from './users-groups/users-groups.service';
 import { ConfirmationPopoverModule } from 'angular-confirmation-popover';
-import { UserCreateComponent } from './user-create/user-create.component';
 import { UserGroupsSelectorComponent } from './user-groups-selector/user-groups-selector.component';
 import { DatasetsTableComponent } from './datasets-table/datasets-table.component';
 import { GenotypeBrowserSingleViewComponent } from './genotype-browser-single-view/genotype-browser-single-view.component';
@@ -239,10 +238,6 @@ const appRoutes: Routes = [
         component: UserManagementComponent
       },
       {
-        path: 'users/create',
-        component: UserCreateComponent
-      },
-      {
         path: 'users/:id',
         component: UserEditComponent
       }
@@ -326,7 +321,6 @@ const appRoutes: Routes = [
     GroupsTableComponent,
     UserEditComponent,
     ManagementComponent,
-    UserCreateComponent,
     UserGroupsSelectorComponent,
     DatasetsTableComponent,
     GenotypeBrowserSingleViewComponent,

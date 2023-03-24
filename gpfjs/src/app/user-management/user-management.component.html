@@ -6,33 +6,63 @@
       <li ngbNavItem id="users">
         <a ngbNavLink (click)="switchTableName('USERS')">Users</a>
         <ng-template ngbNavContent>
-          <div class="row justify-content-between">
-            <div class="col-7 btn-toolbar" style="padding-top: 15px; padding-left: 25px">
-              <div class="input-group" style="width: 55%">
-                <div class="search-input-wrapper">
-                  <input
-                    #searchBox
-                    placeholder="Search"
-                    autocomplete="off"
-                    (keyup)="search(searchBox.value)"
-                    id="search-field"
-                    class="search-input form-control my-0 py-1"
-                    type="text"
-                    aria-label="Search"
-                    [ngModel]="searchText"
-                    spellcheck="false" />
-                  <span
-                    class="search-clear-icon"
-                    [style.background-image]="'url(' + imgPathPrefix + 'search-clear-icon.png)'"
-                    *ngIf="searchBox.value !== ''"
-                    (click)="searchBox.value = ''; search(searchBox.value)">
-                  </span>
-                </div>
-              </div>
-              <div class="btn-toolbar" style="padding-left: 10px">
-                <a [routerLink]="['users', 'create']" class="btn btn-primary">Create user</a>
-              </div>
-            </div>
+          <div class="table-toolbar">
+            <ng-container *ngIf="!createMode">
+              <input
+                #searchBox
+                placeholder="Search"
+                autocomplete="off"
+                (keyup)="search(searchBox.value)"
+                id="search-field"
+                class="search-input form-control my-0 py-1"
+                type="text"
+                [ngModel]="searchText"
+                spellcheck="false" />
+              <span
+                class="search-clear-icon"
+                [style.background-image]="'url(' + imgPathPrefix + 'search-clear-icon.png)'"
+                *ngIf="searchBox.value !== ''"
+                (click)="searchBox.value = ''; search(searchBox.value)">
+              </span>
+            </ng-container>
+
+            <ng-container *ngIf="createMode">
+              <input
+                #nameBox
+                placeholder="Name"
+                autocomplete="off"
+                id="name-box"
+                class="search-input form-control my-0 py-1"
+                type="text"
+                pattern=".{2,}"
+                required
+                spellcheck="false" />
+              <input
+                #emailBox
+                placeholder="Email"
+                autocomplete="off"
+                id="email-box"
+                class="search-input form-control my-0 py-1"
+                type="email"
+                email="true"
+                pattern="^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$"
+                required
+                spellcheck="false" />
+              <button
+                id="create-user-button"
+                class="btn btn-primary"
+                (click)="createUser(nameBox.value, emailBox.value)"
+                >Create</button
+              >
+              <button id="cancel-user-creation-button" class="btn btn-danger" (click)="cancelCreation()">Cancel</button>
+            </ng-container>
+
+            <button *ngIf="!createMode" id="create-user-form-button" class="btn btn-primary" (click)="createMode = true"
+              >Create user</button
+            >
+          </div>
+          <div *ngIf="creationError" class="creation-error alert alert-danger">
+            {{ creationError }}
           </div>
           <gpf-users-table [users]="users" [currentUserEmail]="currentUserEmail"></gpf-users-table>
         </ng-template>
@@ -41,33 +71,55 @@
       <li ngbNavItem id="groups">
         <a ngbNavLink (click)="switchTableName('GROUPS')">Groups</a>
         <ng-template ngbNavContent>
-          <div class="row justify-content-between">
-            <div class="col-7 btn-toolbar" style="padding-top: 15px; padding-left: 25px">
-              <div class="input-group" style="width: 55%">
-                <div class="search-input-wrapper">
-                  <input
-                    #searchBox
-                    placeholder="Search"
-                    autocomplete="off"
-                    (keyup)="search(searchBox.value)"
-                    id="search-field"
-                    class="search-input form-control my-0 py-1"
-                    type="text"
-                    aria-label="Search"
-                    [ngModel]="searchText"
-                    spellcheck="false" />
-                  <span
-                    class="search-clear-icon"
-                    [style.background-image]="'url(' + imgPathPrefix + 'search-clear-icon.png)'"
-                    *ngIf="searchBox.value !== ''"
-                    (click)="searchBox.value = ''; search(searchBox.value)">
-                  </span>
-                </div>
-              </div>
-              <div class="btn-toolbar" style="padding-left: 10px">
-                <a [routerLink]="['users', 'create']" class="btn btn-primary">Create user</a>
-              </div>
-            </div>
+          <div class="table-toolbar">
+            <ng-container *ngIf="!createMode" class="search-input-wrapper">
+              <input
+                #searchBox
+                placeholder="Search"
+                autocomplete="off"
+                (keyup)="search(searchBox.value)"
+                id="search-field"
+                class="search-input form-control my-0 py-1"
+                type="text"
+                aria-label="Search"
+                [ngModel]="searchText"
+                spellcheck="false" />
+              <span
+                class="search-clear-icon"
+                [style.background-image]="'url(' + imgPathPrefix + 'search-clear-icon.png)'"
+                *ngIf="searchBox.value !== ''"
+                (click)="searchBox.value = ''; search(searchBox.value)">
+              </span>
+            </ng-container>
+            <ng-container *ngIf="createMode">
+              <input
+                #groupNameBox
+                placeholder="Group name"
+                autocomplete="off"
+                id="group-name-box"
+                class="search-input form-control my-0 py-1"
+                type="text"
+                pattern=".{2,}"
+                required
+                spellcheck="false" />
+              <button id="create-group-button" class="btn btn-primary" (click)="createGroup(groupNameBox.value)"
+                >Create</button
+              >
+              <button id="cancel-group-creation-button" class="btn btn-danger" (click)="cancelCreation()"
+                >Cancel</button
+              >
+            </ng-container>
+
+            <button
+              *ngIf="!createMode"
+              id="create-group-form-button"
+              class="btn btn-primary"
+              (click)="createMode = true"
+              >Create group</button
+            >
+          </div>
+          <div *ngIf="creationError" class="creation-error alert alert-danger">
+            {{ creationError }}
           </div>
           <gpf-groups-table [groups]="groups" [currentUserEmail]="currentUserEmail"></gpf-groups-table>
         </ng-template>

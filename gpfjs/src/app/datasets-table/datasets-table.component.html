@@ -14,8 +14,8 @@
             <div class="item-wrapper" *ngFor="let group of dataset.groups">
               <span class="item" [title]="group">{{ group }}</span>
               <gpf-confirm-button
+                *ngIf="!isDefaultGroup(dataset, group)"
                 (clicked)="removeGroup(dataset, group)"
-                [hide]="isDefaultGroup(dataset, group)"
                 confirmText="Remove"
                 title="Remove group"
                 message="Remove group?"
@@ -26,13 +26,6 @@
           <gpf-item-add-menu
             [getItems]="getGroupNamesFunction(dataset)"
             (addedItem)="addGroup(dataset, $event)"></gpf-item-add-menu>
-          <input
-            #newGroupName
-            placeholder="Create group"
-            class="create-group form-control"
-            type="text"
-            spellcheck="false"
-            (keydown.enter)="addGroup(dataset, { id: '', name: newGroupName.value }); newGroupName.value = ''" />
         </div>
 
         <div class="grid-cell list-cell">

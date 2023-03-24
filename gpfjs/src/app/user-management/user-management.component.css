@@ -1,3 +1,47 @@
 .card > ul {
   justify-content: flex-start;
 }
+
+.table-toolbar {
+  padding-top: 15px;
+  display: flex;
+  justify-content: start;
+}
+
+#search-field,
+#name-box,
+#email-box,
+#group-name-box {
+  width: 250px;
+  height: 38px;
+}
+
+#search-field,
+#name-box,
+#group-name-box,
+.creation-error {
+  margin-left: 15px;
+}
+
+#create-user-form-button,
+#create-group-form-button,
+#email-box,
+#create-user-button,
+#create-group-button,
+#cancel-group-creation-button,
+#cancel-user-creation-button {
+  margin-left: 10px;
+}
+
+.creation-error {
+  width: fit-content;
+  margin-top: 15px;
+  text-align: center;
+  padding: 10px;
+}
+
+input:invalid:focus {
+  outline: rgb(255, 0, 0);
+  border-color: rgb(255, 0, 0);
+  box-shadow: 0 0 0 4px rgba(244, 15, 15, 30%);
+}

@@ -8,8 +8,31 @@
       <div class="grid-header">Actions</div>
       <ng-container *ngFor="let user of users">
         <div class="grid-cell">
-          <a [routerLink]="['/management/users', user.id]">
-            <div>{{ user.name }}</div>
+          <a>
+            <div>
+              <span *ngIf="user.name === '' && currentUserEdit !== user.id" id="add-user-name">Add username</span>
+              <span *ngIf="user.name !== '' && currentUserEdit !== user.id" id="user-name">{{ user.name }}</span>
+              <i
+                *ngIf="currentUserEdit !== user.id"
+                (click)="currentUserEdit = user.id"
+                id="edit-icon"
+                class="fa fa-pencil fa-lg"
+                title="Edit"></i>
+              <div *ngIf="currentUserEdit === user.id" id="edit-wrapper">
+                <input
+                  #newNameBox
+                  type="text"
+                  [value]="user.name"
+                  class="search-input form-control my-0 py-1"
+                  id="name-field"
+                  spellcheck="false"
+                  autocomplete="off"
+                  (keydown.enter)="edit(user, newNameBox.value)" />
+                <button id="cancel-button" (click)="currentUserEdit = -1" title="Cancel">
+                  <i class="fa fa-thin fa-times" aria-hidden="true"></i
+                ></button>
+              </div>
+            </div>
             <div>{{ user.email }}</div>
           </a>
         </div>
@@ -25,8 +48,8 @@
             <div class="item-wrapper" *ngFor="let group of user.groups">
               <span class="item" [title]="group">{{ group }}</span>
               <gpf-confirm-button
+                *ngIf="!isDefaultGroup(user, group) && !(user.email === currentUserEmail && group === 'admin')"
                 (clicked)="removeGroup(user, group)"
-                [hide]="isDefaultGroup(user, group) || (user.email === currentUserEmail && group === 'admin')"
                 confirmText="Remove"
                 title="Remove group"
                 message="Remove group?"
