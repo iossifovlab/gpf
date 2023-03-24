@@ -161,41 +161,52 @@
         [condenseIntrons]="summaryVariantsFilter.codingOnly"
         [frequencyDomain]="[geneBrowserConfig.domainMin, geneBrowserConfig.domainMax]"
         [yAxisLabel]="geneBrowserConfig.frequencyName || geneBrowserConfig.frequencyColumn"
-        [allVariantsCounts]="[
-          summaryVariantsArray.totalSummaryAllelesCount,
-          summaryVariantsArray.totalFamilyVariantsCount
-        ]"
+        [summaryVariantsCount]="summaryVariantsArray.totalSummaryAllelesCount"
         (selectedRegion)="setSelectedRegion($event)"
-        (selectedFrequencies)="setSelectedFrequencies($event)">
+        (selectedFrequencies)="setSelectedFrequencies($event)"
+        [selectedGene]="selectedGene"
+        [downloadInProgressSummary]="downloadInProgressSummary"
+        (downloadSummaryVariants)="onDownloadSummary()">
       </gpf-gene-plot>
-      <div class="row" style="padding-top: 15px">
-        <div class="col-12" *ngIf="selectedGene">
-          <button class="btn btn-md btn-primary btn-right" id="download-summary-button" (click)="onDownloadSummary()">
-            <span *ngIf="downloadInProgressSummary">Downloading...</span>
-            <span *ngIf="!downloadInProgressSummary">Download Summary</span>
-          </button>
+
+      <fieldset id="family-variants-block" class="form-block">
+        <div id="unique-family-variants">
+          <label
+            for="unique-family-variants-checkbox"
+            class="nav-title-custom"
+            style="width: unset; margin-right: unset; padding-right: 10px"
+            >Unique family variants</label
+          >
+          <input
+            id="unique-family-variants-checkbox"
+            type="checkbox"
+            [disabled]="!isUniqueFamilyFilterEnabled"
+            (click)="checkUniqueFamilyVariantsFilter()" />
         </div>
-      </div>
-
-      <hr />
-
-      <div *ngIf="isUniqueFamilyFitlerVisible" id="unique-family-variants-block" class="form-block">
-        <div class="card">
-          <ul ngbNav class="navbar bg-light nav-pills" style="justify-content: flex-start">
-            <label
-              for="unique-family-variants-checkbox"
-              class="nav-title-custom"
-              style="width: unset; margin-right: unset; padding-right: 10px"
-              >Unique family variants</label
-            >
-            <li ngbNavItem style="display: flex">
-              <input id="unique-family-variants-checkbox" type="checkbox" (click)="checkUniqueFamilyVariantsFilter()" />
-            </li>
-          </ul>
+        <div id="family-variants-wrapper">
+          <span title="Family variants">
+            <span class="d-none d-xl-inline">Family variants:</span>
+            <span class="d-none d-md-inline d-xl-none d-xxl-none">FV:</span>
+            <span id="family-variants-count">
+              <span
+                >{{ this.summaryVariantsArrayFiltered?.totalFamilyVariantsCount }} /
+                {{ this.summaryVariantsArray.totalFamilyVariantsCount }}</span
+              >
+            </span>
+          </span>
+          <div *ngIf="selectedGene">
+            <button
+              class="btn btn-md btn-primary btn-right"
+              [disabled]="this.summaryVariantsArrayFiltered?.totalFamilyVariantsCount === 0"
+              id="download-family-variants-button"
+              (click)="onDownload()"
+              title="Download family variants">
+              <div *ngIf="downloadInProgress" class="loader"></div>
+              <span *ngIf="!downloadInProgress"><i class="fa fa-solid fa-download"></i></span>
+            </button>
+          </div>
         </div>
-      </div>
-
-      <hr />
+      </fieldset>
 
       <div class="row">
         <div class="col-6">
@@ -204,12 +215,6 @@
             [loadingFinished]="familyLoadingFinished"
             [count]="genotypePreviewVariantsArray?.getVariantsCount(maxFamilyVariants)">
           </gpf-loading-spinner>
-        </div>
-        <div class="col-6" *ngIf="selectedGene">
-          <button class="btn btn-md btn-primary btn-right" id="download-button" (click)="onDownload()">
-            <span *ngIf="downloadInProgress">Downloading...</span>
-            <span *ngIf="!downloadInProgress">Download</span>
-          </button>
         </div>
       </div>
 

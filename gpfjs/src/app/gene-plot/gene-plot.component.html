@@ -51,19 +51,21 @@
         <span class="d-none d-xl-inline">Summary alleles:</span>
         <span class="d-none d-md-inline d-xl-none d-xxl-none">SA:</span>
         <span id="summary-alleles-count">
-          <span>{{ this.variantsArray?.totalSummaryAllelesCount }} / {{ this.allVariantsCounts[0] }}</span>
+          <span>{{ this.variantsArray?.totalSummaryAllelesCount }} / {{ this.summaryVariantsCount }}</span>
         </span>
       </span>
 
-      <div style="padding-right: 24px"></div>
-
-      <span title="Family variants">
-        <span class="d-none d-xl-inline">Family variants:</span>
-        <span class="d-none d-md-inline d-xl-none d-xxl-none">FV:</span>
-        <span id="family-variants-count">
-          <span>{{ this.variantsArray?.totalFamilyVariantsCount }} / {{ this.allVariantsCounts[1] }}</span>
-        </span>
-      </span>
+      <div *ngIf="selectedGene">
+        <button
+          class="btn btn-md btn-primary btn-right"
+          [disabled]="this.variantsArray?.totalSummaryAllelesCount === 0"
+          id="download-summary-variants-button"
+          (click)="onDownload()"
+          title="Download summary variants">
+          <div *ngIf="downloadInProgressSummary" class="loader"></div>
+          <span *ngIf="!downloadInProgressSummary"><i class="fa fa-solid fa-download"></i></span>
+        </button>
+      </div>
     </span>
   </div>
   <div id="svg-container"></div>

@@ -16,8 +16,12 @@ export class GenePlotComponent implements OnChanges {
   @Input() public readonly variantsArray: SummaryAllelesArray;
   @Input() public readonly frequencyDomain: [number, number];
   @Input() public readonly yAxisLabel: string;
-  @Input() public readonly allVariantsCounts: [number, number];
+  @Input() public readonly summaryVariantsCount: number;
   @Input() public condenseIntrons: boolean;
+
+  @Input() public downloadInProgressSummary: boolean;
+  @Input() public selectedGene: Gene;
+  @Output() public downloadSummaryVariants: EventEmitter<any> = new EventEmitter();
 
   @Output() public selectedRegion = new EventEmitter<[number, number]>();
   @Output() public selectedFrequencies = new EventEmitter<[number, number]>();
@@ -148,6 +152,10 @@ export class GenePlotComponent implements OnChanges {
     this.redraw();
   }
 
+  public onDownload(): void {
+    this.downloadSummaryVariants.emit();
+  }
+
   private get plotWidth(): number {
     return this.svgWidth
       - this.constants.margin.left
@@ -155,9 +163,9 @@ export class GenePlotComponent implements OnChanges {
   }
 
   private get svgHeight(): number {
-    const transcriptsCount = (
+    const transcriptsCount =
       this.showTranscripts ?
-        this.genePlotModel.gene.transcripts.length : this.genePlotModel.gene.collapsedTranscripts.length);
+        this.genePlotModel.gene.transcripts.length : this.genePlotModel.gene.collapsedTranscripts.length;
     return this.frequencyPlotHeight
       + this.constants.frequencyPlotPadding
       + this.constants.margin.top
