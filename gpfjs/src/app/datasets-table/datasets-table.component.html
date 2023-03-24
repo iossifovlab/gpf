@@ -14,8 +14,8 @@
             <div class="item-wrapper" *ngFor="let group of dataset.groups">
               <span class="item" [title]="group">{{ group }}</span>
               <gpf-confirm-button
+                *ngIf="!isDefaultGroup(dataset, group)"
                 (clicked)="removeGroup(dataset, group)"
-                [hide]="isDefaultGroup(dataset, group)"
                 confirmText="Remove"
                 title="Remove group"
                 message="Remove group?"

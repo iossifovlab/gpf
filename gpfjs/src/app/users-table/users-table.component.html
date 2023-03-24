@@ -48,8 +48,8 @@
             <div class="item-wrapper" *ngFor="let group of user.groups">
               <span class="item" [title]="group">{{ group }}</span>
               <gpf-confirm-button
+                *ngIf="!isDefaultGroup(user, group) && !(user.email === currentUserEmail && group === 'admin')"
                 (clicked)="removeGroup(user, group)"
-                [hide]="isDefaultGroup(user, group) || (user.email === currentUserEmail && group === 'admin')"
                 confirmText="Remove"
                 title="Remove group"
                 message="Remove group?"

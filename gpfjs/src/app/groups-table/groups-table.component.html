@@ -21,6 +21,7 @@
             <div class="item-wrapper" *ngFor="let user of group.users">
               <span class="item" [title]="user">{{ user }}</span>
               <gpf-confirm-button
+                *ngIf="!(group.name === 'admin' && currentUserEmail === user)"
                 (clicked)="removeUser(group, user)"
                 confirmText="Remove"
                 title="Remove user"
@@ -40,6 +41,7 @@
             <div class="item-wrapper" *ngFor="let dataset of group.datasets">
               <span class="item" [title]="dataset.datasetName">{{ dataset.datasetName }}</span>
               <gpf-confirm-button
+                *ngIf="group.name !== 'any_dataset' || group.name === dataset.datasetId"
                 (clicked)="removeDataset(group, dataset.datasetId)"
                 confirmText="Remove"
                 title="Remove dataset"
@@ -56,6 +58,7 @@
 
         <div class="grid-cell">
           <gpf-confirm-button
+            *ngIf="group.name !== 'admin'"
             (clicked)="deleteGroup(group)"
             confirmText="Delete"
             title="Delete group"
