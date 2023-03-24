@@ -3,9 +3,9 @@ import os
 import contextlib
 import fcntl
 import threading
-from dae.genomic_resources.cli import _run_list_command
 import pytest
 
+from dae.genomic_resources.cli import _run_list_command
 from dae.genomic_resources.repository import GR_CONF_FILE_NAME
 from dae.genomic_resources.fsspec_protocol import FsspecReadWriteProtocol
 from dae.genomic_resources.cached_repository import GenomicResourceCachedRepo

@@ -6,10 +6,11 @@ import argparse
 import pathlib
 import copy
 
-import yaml
-
 from typing import Dict, Union
 from urllib.parse import urlparse
+
+import yaml
+
 from cerberus.schema import SchemaError
 
 from jinja2 import Template
