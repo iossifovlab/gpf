@@ -202,8 +202,8 @@ class GenomicResourceCachedRepo(GenomicResourceRepo):
         version_constraint = f"={remote_resource.get_version_str()}"
         return cache_proto.get_resource(resource_id, version_constraint)
 
-    def get_resource_cached_files(self, resource_id: str) -> set:
-        """Get cached files list."""
+    def get_resource_cached_files(self, resource_id: str) -> set[str]:
+        """Get a set of filenames of cached files for a given resource."""
         resource = self.child.get_resource(resource_id)
         cache_proto = self._get_or_create_cache_proto(
             resource.proto)

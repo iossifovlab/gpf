@@ -24,7 +24,7 @@ import logging
 import enum
 import hashlib
 
-from typing import Optional, Any, Generator, Union
+from typing import Optional, Any, Generator, Union, Iterator
 from dataclasses import dataclass, asdict
 
 import abc
@@ -206,7 +206,7 @@ class Manifest:
     def __contains__(self, name):
         return name in self.entries
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[ManifestEntry]:
         return iter(sorted(self.entries.values()))
 
     def __eq__(self, other):
