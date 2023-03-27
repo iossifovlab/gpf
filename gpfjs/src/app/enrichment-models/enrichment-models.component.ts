@@ -2,7 +2,7 @@ import { Component, OnInit, Input } from '@angular/core';
 import { EnrichmentModelsService } from './enrichment-models.service';
 import { IdDescription } from '../common/iddescription';
 import { combineLatest, of } from 'rxjs';
-import { IsNotEmpty } from 'class-validator';
+import { Allow } from 'class-validator';
 import { Store } from '@ngxs/store';
 import { SetEnrichmentModels, EnrichmentModelsState, EnrichmentModelsModel } from './enrichment-models.state';
 import { switchMap, take } from 'rxjs/operators';
@@ -14,14 +14,10 @@ import { environment } from 'environments/environment';
   templateUrl: './enrichment-models.component.html',
 })
 export class EnrichmentModelsComponent extends StatefulComponent implements OnInit {
-  @Input()
-  private selectedDatasetId: string;
+  @Input() private selectedDatasetId: string;
 
-  @IsNotEmpty()
-  public background: IdDescription;
-
-  @IsNotEmpty()
-  public counting: IdDescription;
+  @Allow() public background: IdDescription;
+  @Allow() public counting: IdDescription;
 
   public countings: Array<IdDescription>;
   public backgrounds: Array<IdDescription>;

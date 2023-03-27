@@ -2,6 +2,10 @@ button:disabled {
   cursor: not-allowed;
 }
 
+#save-button {
+  width: 74px;
+}
+
 #save-query-dropdown {
   width: 400px;
   padding: 12px;

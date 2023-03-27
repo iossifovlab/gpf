@@ -1,10 +1,10 @@
 <div ngbDropdown *ngIf="(userInfo$ | async)?.email" autoClose="outside">
   <button
-    (click)="focusNameInput(); openDropdown(true)"
+    (click)="focusNameInput(); toggleDropdown()"
     [disabled]="disabled"
     id="save-query-dropdown-button"
     class="btn btn-default"
-    ngbDropdownToggle
+    ngbDropdownAnchor
     >Share/save query</button
   >
 
