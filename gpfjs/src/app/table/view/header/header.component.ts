@@ -1,5 +1,4 @@
 import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy } from '@angular/core';
-import { GpfTableColumnComponent } from 'app/table/component/column.component';
 import { SortInfo } from '../../table.component';
 
 @Component({
