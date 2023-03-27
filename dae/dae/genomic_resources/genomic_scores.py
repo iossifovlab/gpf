@@ -1,6 +1,7 @@
 # pylint: disable=too-many-lines
 from __future__ import annotations
 
+import os
 import logging
 import textwrap
 import copy
@@ -10,22 +11,21 @@ from typing import Iterator, Optional, cast, Type, Any, Union
 
 from dataclasses import dataclass
 
-import yaml
-
 from jinja2 import Template
 from markdown2 import markdown
 
 from dae.task_graph.graph import TaskGraph
 from . import GenomicResource
-from .statistic import Statistic
 from .reference_genome import build_reference_genome_from_resource
 from .resource_implementation import GenomicResourceImplementation, \
+    ResourceStatistics, \
     get_base_resource_schema, \
     InfoImplementationMixin, \
     ResourceConfigValidationMixin
 from .genomic_position_table import build_genomic_position_table, Line, \
     TabixGenomicPositionTable, VCFGenomicPositionTable, VCFLine
-from .histogram import Histogram
+from .histogram import Histogram, HistogramStatisticMixin
+from .statistics.min_max import MinMaxValue, MinMaxValueStatisticMixin
 
 from .aggregators import build_aggregator, AGGREGATOR_SCHEMA
 
@@ -110,6 +110,55 @@ class ScoreLine:
         return tuple(self.score_defs.keys())
 
 
+class GenomicScoreStatistics(
+    ResourceStatistics,
+    HistogramStatisticMixin,
+    MinMaxValueStatisticMixin
+):
+    def __init__(self, resource_id, min_maxes, histograms):
+        super().__init__(resource_id)
+        self.score_min_maxes = min_maxes
+        self.score_histograms = histograms
+
+    @staticmethod
+    def get_min_max_file(score_id):
+        return f"min_max_{score_id}.yaml"
+
+    @staticmethod
+    def build_statistics(genomic_resource):
+        min_maxes = {}
+        histograms = {}
+        config = genomic_resource.get_config()
+        if "histograms" not in config:
+            return GenomicScoreStatistics(genomic_resource, {}, {})
+        try:
+            for hist_config in config["histograms"]:
+                score_id = hist_config["score"]
+                min_max_filepath = os.path.join(
+                    GenomicScoreStatistics.get_statistics_folder(),
+                    GenomicScoreStatistics.get_min_max_file(score_id)
+                )
+                with genomic_resource.open_raw_file(
+                        min_max_filepath, mode="r") as infile:
+                    min_max = MinMaxValue.deserialize(infile.read())
+                    min_maxes[score_id] = min_max
+
+                histogram_filepath = os.path.join(
+                    GenomicScoreStatistics.get_statistics_folder(),
+                    GenomicScoreStatistics.get_histogram_file(score_id)
+                )
+                with genomic_resource.open_raw_file(
+                        histogram_filepath, mode="r") as infile:
+                    histogram = Histogram.deserialize(infile.read())
+                    histograms[score_id] = histogram
+        except FileNotFoundError:
+            logger.exception(
+                "Couldn't load statistics of %s", genomic_resource.resource_id
+            )
+            return GenomicScoreStatistics(genomic_resource, {}, {})
+        return GenomicScoreStatistics(genomic_resource, min_maxes, histograms)
+
+
 class GenomicScore(
     GenomicResourceImplementation,
     ResourceConfigValidationMixin,
@@ -128,6 +177,9 @@ class GenomicScore(
             self.resource, self.config["table"]
         )
         self.score_definitions = self._generate_scoredefs()
+
+    def get_statistics(self):
+        return GenomicScoreStatistics.build_statistics(self.resource)
 
     @property
     def files(self):
@@ -468,7 +520,7 @@ class GenomicScore(
             {% for hist in data["histograms"] %}
             <div class="histogram">
             <h4>{{ hist["score"] }}</h4>
-            <img src="histograms/{{ hist["score"] }}.png"
+            <img src="{{ data["statistics_dir"] }}/{{ hist["img_file"] }}"
             alt={{ hist["score"] }}
             title={{ hist["score"] }}>
             </div>
@@ -479,7 +531,19 @@ class GenomicScore(
     def _get_template_data(self):
         info = copy.deepcopy(self.config)
         if "meta" in info:
-            info["meta"] = markdown(str(info["meta"]))
+            meta = info["meta"]
+            if "description" in meta:
+                meta["description"] = markdown(str(meta["description"]))
+
+        statistics = self.get_statistics()
+
+        info["statistics_dir"] = statistics.get_statistics_folder()
+
+        if "histograms" in info:
+            for hist_config in info["histograms"]:
+                hist_config["img_file"] = statistics.get_histogram_image_file(
+                    hist_config["score"]
+                )
         return info
 
     def get_info(self):
@@ -664,7 +728,8 @@ class GenomicScore(
                 continue
             with proto.open_raw_file(
                 resource,
-                f"{GenomicScore.STATISTICS_FOLDER}/min_max_{score_id}.yaml",
+                f"{GenomicScoreStatistics.get_statistics_folder()}"
+                f"/{GenomicScoreStatistics.get_min_max_file(score_id)}",
                 mode="wt"
             ) as outfile:
                 outfile.write(score_min_max.serialize())
@@ -749,14 +814,16 @@ class GenomicScore(
                 continue
             with proto.open_raw_file(
                 resource,
-                f"{GenomicScore.STATISTICS_FOLDER}/histogram_{score_id}.yaml",
+                f"{GenomicScoreStatistics.get_statistics_folder()}"
+                f"/{GenomicScoreStatistics.get_histogram_file(score_id)}",
                 mode="wt"
             ) as outfile:
                 outfile.write(score_histogram.serialize())
 
             with proto.open_raw_file(
                 resource,
-                f"{GenomicScore.STATISTICS_FOLDER}/histogram_{score_id}.png",
+                f"{GenomicScoreStatistics.get_statistics_folder()}/"
+                f"{GenomicScoreStatistics.get_histogram_image_file(score_id)}",
                 mode="wb"
             ) as outfile:
                 score_histogram.plot(outfile)
@@ -1129,56 +1196,3 @@ def build_score_from_resource(resource: GenomicResource) -> GenomicScore:
     if ctor is None:
         raise ValueError(f"Resource {resource.get_id()} is not of score type")
     return ctor(resource)
-
-
-class MinMaxValue(Statistic):
-    """Statistic that calculates Min and Max values in a genomic score."""
-
-    def __init__(self, score_id, min_value=None, max_value=None):
-        super().__init__("min_max", "Calculates Min and Max values")
-        self.score_id = score_id
-        self.min = min_value
-        self.max = max_value
-
-    def add_record(self, record):
-        value = record[self.score_id]
-        if value is None:
-            return
-        self.add_value(value)
-
-    def add_value(self, value):
-        if self.min is None or value < self.min:
-            self.min = value
-        if self.max is None or value > self.max:
-            self.max = value
-
-    def merge(self, other: MinMaxValue) -> None:
-        if not isinstance(other, MinMaxValue):
-            raise ValueError()
-        if self.score_id != other.score_id:
-            raise ValueError(
-                "Attempting to merge min max values of different scores!"
-            )
-        if self.min is None:
-            self.min = other.min
-        elif other.min is None:
-            pass
-        elif other.min < self.min:
-            self.min = other.min
-
-        if self.max is None:
-            self.max = other.max
-        elif other.max is None:
-            pass
-        elif other.max > self.max:
-            self.max = other.max
-
-    def serialize(self) -> str:
-        return cast(str, yaml.dump(
-            {"score_id": self.score_id, "min": self.min, "max": self.max})
-        )
-
-    @staticmethod
-    def deserialize(data) -> MinMaxValue:
-        res = yaml.load(data, yaml.Loader)
-        return MinMaxValue(res["score_id"], res.get("min"), res.get("max"))

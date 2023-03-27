@@ -1,4 +1,5 @@
 from __future__ import annotations
+import os
 import copy
 import itertools
 import logging
@@ -10,18 +11,63 @@ import numpy as np
 import pandas as pd
 from jinja2 import Template
 from cerberus import Validator
+from markdown2 import markdown
 
 from dae.utils.dae_utils import join_line
 from dae.genomic_resources.aggregators import build_aggregator
 from dae.genomic_resources.resource_implementation import \
     GenomicResourceImplementation, get_base_resource_schema, \
-    InfoImplementationMixin, ResourceConfigValidationMixin
+    InfoImplementationMixin, ResourceConfigValidationMixin, \
+    ResourceStatistics
 
 from dae.genomic_resources import GenomicResource
 from dae.genomic_resources.histogram import Histogram
 from dae.task_graph.graph import Task
 
 logger = logging.getLogger(__name__)
+
+
+class GeneScoreStatistics(ResourceStatistics):
+    def __init__(self, resource_id, histograms):
+        super().__init__(resource_id)
+        self.score_histograms = histograms
+
+    def get_histogram(self, score_id):
+        return self.score_histograms.get(score_id)
+
+    @staticmethod
+    def get_histogram_file(score_id):
+        return f"histogram_{score_id}.yaml"
+
+    @staticmethod
+    def get_histogram_image_file(score_id):
+        return f"histogram_{score_id}.png"
+
+    @staticmethod
+    def build_statistics(
+        genomic_resource: GenomicResource
+    ) -> ResourceStatistics:
+        histograms = {}
+        config = genomic_resource.get_config()
+        if "histograms" not in config:
+            return GeneScoreStatistics(genomic_resource, {})
+        try:
+            for hist_config in config["histograms"]:
+                score_id = hist_config["score"]
+                histogram_filepath = os.path.join(
+                    GeneScoreStatistics.get_statistics_folder(),
+                    GeneScoreStatistics.get_histogram_file(score_id)
+                )
+                with genomic_resource.open_raw_file(
+                        histogram_filepath, mode="r") as infile:
+                    histogram = Histogram.deserialize(infile.read())
+                    histograms[score_id] = histogram
+        except FileNotFoundError:
+            logger.exception(
+                "Couldn't load statistics of %s", genomic_resource.resource_id
+            )
+            return GeneScoreStatistics(genomic_resource, {})
+        return GeneScoreStatistics(genomic_resource.resource_id, histograms)
 
 
 class GeneScore:
@@ -101,9 +147,10 @@ class GeneScore:
 
     @staticmethod
     def load_gene_scores_from_resource(
-            resource: Optional[GenomicResource]) -> List[GeneScore]:
+            resource: GenomicResource,
+            statistics: Optional[GeneScoreStatistics] = None
+    ) -> List[GeneScore]:
         """Create and return all of the gene scores described in a resource."""
-        assert resource is not None
         if resource.get_type() != "gene_score":
             logger.error(
                 "invalid resource type for gene score %s",
@@ -120,8 +167,15 @@ class GeneScore:
                 f"missing histograms config {resource.resource_id}")
 
         scores = []
+        if statistics is None:
+            statistics = GeneScoreStatistics.build_statistics(
+                resource)  # type: ignore
+        assert statistics is not None
         for gs_config in config["gene_scores"]:
-            gene_score = GeneScore._load_gene_score(resource, gs_config)
+            histogram = statistics.get_histogram(gs_config["id"])
+            gene_score = GeneScore._load_gene_score(
+                resource, gs_config, histogram
+            )
             scores.append(gene_score)
 
         return scores
@@ -138,15 +192,19 @@ class GeneScore:
             raise ValueError(f"invalid resource type {resource.resource_id}")
 
         config = resource.get_config()
+        gsc = GeneScoreCollection(resource)
+        stats = gsc.get_statistics()
         for gs_config in config["gene_scores"]:
             if gs_config["id"] == score_id:
-                return GeneScore._load_gene_score(resource, gs_config)
+                histogram = stats.get_histogram(score_id)
+                return GeneScore._load_gene_score(
+                    resource, gs_config, histogram
+                )
 
         return None
 
     @staticmethod
-    def _load_gene_score(resource, gs_config):
-        proto = resource.proto
+    def _load_gene_score(resource, gs_config, histogram):
         resource_config = resource.get_config()
         gene_score_id = gs_config["id"]
         file = resource.open_raw_file(resource_config["filename"])
@@ -161,18 +219,6 @@ class GeneScore:
                 f"missing histogram config for score {gene_score_id} in "
                 f"resource {resource.resource_id}"
             )
-        histogram_filename = (
-            f"{GeneScoreCollection.STATISTICS_FOLDER}"
-            f"/histogram_{gene_score_id}.yaml"
-        )
-        histogram = None
-        if proto.file_exists(resource, histogram_filename):
-            with proto.open_raw_file(
-                resource,
-                histogram_filename,
-                mode="rt"
-            ) as infile:
-                histogram = Histogram.deserialize(infile.read())
 
         meta = resource_config.get("meta")
 
@@ -259,10 +305,20 @@ class GeneScoreCollection(
         self.config = self.validate_and_normalize_schema(
             self.config, resource
         )
+        self.statistics = None
         self.scores = {
             score.score_id: score for score in
-            GeneScore.load_gene_scores_from_resource(self.resource)
+            GeneScore.load_gene_scores_from_resource(
+                self.resource, self.get_statistics()
+            )
         }
+
+    def get_statistics(self):
+        if self.statistics is None:
+            self.statistics = GeneScoreStatistics.build_statistics(
+                self.resource
+            )
+        return self.statistics
 
     def get_template(self):
         return Template(textwrap.dedent("""
@@ -284,7 +340,7 @@ class GeneScoreCollection(
             {% for hist in data["histograms"] %}
             <div class="histogram">
             <h4>{{ hist["score"] }}</h1>
-            <img src="histograms/{{ hist["score"] }}.png"
+            <img src="{{ data["statistics_dir"] }}/{{ hist["img_file"] }}"
             alt={{ hist["score"] }}
             title={{ hist["score"] }}>
             </div>
@@ -295,6 +351,20 @@ class GeneScoreCollection(
 
     def _get_template_data(self):
         data = copy.deepcopy(self.config)
+
+        if "meta" in data:
+            meta = data["meta"]
+            if "description" in meta:
+                meta["description"] = markdown(str(meta["description"]))
+
+        statistics = self.get_statistics()
+        data["statistics_dir"] = statistics.get_statistics_folder()
+        if "histograms" in data:
+            for hist_config in data["histograms"]:
+                hist_config["img_file"] = statistics.get_histogram_image_file(
+                    hist_config["score"]
+                )
+
         return data
 
     @property
@@ -388,11 +458,18 @@ class GeneScoreCollection(
         score_id = histogram.score_id
         with proto.open_raw_file(
             resource,
-            f"{GeneScoreCollection.STATISTICS_FOLDER}"
-            f"/histogram_{score_id}.yaml",
+            f"{GeneScoreStatistics.get_statistics_folder()}"
+            f"/{GeneScoreStatistics.get_histogram_file(score_id)}",
             mode="wt"
         ) as outfile:
             outfile.write(histogram.serialize())
+        with proto.open_raw_file(
+            resource,
+            f"{GeneScoreStatistics.get_statistics_folder()}"
+            f"/{GeneScoreStatistics.get_histogram_image_file(score_id)}",
+            mode="wb"
+        ) as outfile:
+            histogram.write_image(outfile)
         return histogram
 
 
