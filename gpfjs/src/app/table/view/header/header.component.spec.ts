@@ -96,7 +96,7 @@ describe('GpfTableHeaderComponent', () => {
   });
 
   it('should give column width', () => {
-    expect(component.getWidth(testComponent)).toBe('50.0');
+    expect(testComponent.columnWidth).toBe('50.0');
     expect(component.getWidth(null)).toBeNull();
   });
 });

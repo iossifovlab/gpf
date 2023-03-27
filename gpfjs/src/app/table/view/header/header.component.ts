@@ -20,20 +20,4 @@ export class GpfTableHeaderComponent {
     }
     return [];
   }
-
-  public getMaxWidth(column): number {
-    if (column.columnMaxWidth) {
-      return column.columnMaxWidth;
-    }
-  }
-
-  public getWidth(column: GpfTableColumnComponent): string {
-    let width: string;
-    if (column === null) {
-      width = null;
-    } else if (column.columnWidth) {
-      width = column.columnWidth;
-    }
-    return width;
-  }
 }
