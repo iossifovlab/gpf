@@ -93,6 +93,10 @@ export class UserManagementPage extends BasePage {
     return cy.get('gpf-user-management input#search-field');
   }
 
+  public get userSearchFieldClear(): element {
+    return cy.get('gpf-user-management input.search-clear-icon');
+  }
+
   public get groupsButton(): element {
     return cy.get('li#groups a').contains('Groups');
   }

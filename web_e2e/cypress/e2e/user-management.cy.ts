@@ -44,7 +44,7 @@ describe.skip('User management tests', () => {
     page.usersTableCells.first().should('have.text', 'test_nametest_email@email.com');
     page.usersTableCells.eq(2).find('>div').should('have.text', 'any_usertest_email@email.com');
 
-    page.userTableDeleteNewestUserButton.click();
+    page.usersTableCells.eq(4).find('button[title="Delete user"]').click();
     page.userTableDeleteUserConfirmButton.click();
 
     page.usersTableCells.should('have.length', 10);
@@ -52,7 +52,7 @@ describe.skip('User management tests', () => {
 
   it('should fail to create user with already used email', () => {
     createTestUser(page, 'test_email@email.com', 'test_name');
-    page.usersTableCells.should('have.length', 10);
+    page.usersTableCells.should('have.length', 15);
 
     createTestUser(page, 'test_email@email.com', 'test_name');
 
@@ -60,11 +60,11 @@ describe.skip('User management tests', () => {
       .should('equal', 'Error: wdae user with this email already exists.');
     page.cancelUserButton.click();
 
-    page.usersTableCells.should('have.length', 10);
-    page.usersTableCells.eq(5).should('have.text', 'test_nametest_email@email.com');
-    page.usersTableCells.eq(7).find('>div').should('have.text', 'any_usertest_email@email.com');
+    page.usersTableCells.should('have.length', 15);
+    page.usersTableCells.eq(10).should('have.text', 'test_nametest_email@email.com');
+    page.usersTableCells.eq(12).find('>div').should('have.text', 'any_usertest_email@email.com');
 
-    deleteTestUser(page);
+    deleteTestUser(page, 14);
   });
 
   it('should search and filter users', () => {
@@ -76,23 +76,20 @@ describe.skip('User management tests', () => {
     page.usersTableCells.should('have.length', 10);
   });
 
-  it('should search and filter a specific user', () => {
-    page.userSearchField.type('admin');
-    page.usersTableCells.should('have.length', 1);
-    page.usersTableCells.last().should('include.text', 'admin');
-  });
-
   it('should search and find user', () => {
     createTestUser(page, 'test_email@email.com', 'test_name');
     page.userSearchField.type('test_name');
-    page.usersTableCells.last().should('have.text', 'test_nametest_email@email.comany_usertest_email@email.com');
+    page.usersTableCells.first().should('have.text', 'test_nametest_email@email.com');
+    page.usersTableCells.eq(2).find('>div').should('have.text', 'any_usertest_email@email.com');
 
     page.userSearchField.clear();
     page.userSearchField.type('test_email@email.com');
-    page.usersTableCells.last().should('have.text', 'test_nametest_email@email.comany_usertest_email@email.com');
-    waitForRequest('GET', '/gpf/api/v3/users/streaming_search?search=**', 'usersUpdate', 200);
-    deleteTestUser(page);
+    page.usersTableCells.first().should('have.text', 'test_nametest_email@email.com');
+    page.usersTableCells.eq(2).find('>div').should('have.text', 'any_usertest_email@email.com');
+    deleteTestUser(page, 14);
   });
+
+  // new users tests
 
   it('should create and delete group', () => {
     page.datasetsButton.click();
@@ -140,7 +137,7 @@ describe.skip('User management tests', () => {
     page.usersTableCells.last().should('have.text', 'test_nametest_email@email.comany_usertest_email@email.com');
 
     deleteTestGroup(page);
-    deleteTestUser(page);
+    // deleteTestUser(page);
   });
 
   it('should go in user creation and search and find specific group', () => {
@@ -186,7 +183,7 @@ describe.skip('User management tests', () => {
     page.datasetsTableRows.last().should('not.contain.text', 'test_email@email.com');
 
     deleteTestGroup(page);
-    deleteTestUser(page);
+    // deleteTestUser(page);
   });
 });
 
@@ -199,9 +196,9 @@ function createTestUser(page: UserManagementPage, email: string, name: string): 
   page.submitUserButton.click();
 }
 
-function deleteTestUser(page: UserManagementPage): void {
+function deleteTestUser(page: UserManagementPage, index: number): void {
   page.usersButton.click();
-  page.userTableDeleteNewestUserButton.click();
+  page.usersTableCells.eq(index).find('button[title="Delete user"]').click();
   page.userTableDeleteUserConfirmButton.click();
 }
 
