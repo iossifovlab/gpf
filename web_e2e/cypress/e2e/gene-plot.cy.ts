@@ -43,8 +43,8 @@ describe('Gene plot tests', () => {
     page.summaryAllelesCount.should('be.visible');
   });
 
-  it('should have family variants count field', () => {
-    page.familyVariantsCount.should('be.visible');
+  it('should have summary download button', () => {
+    page.downloadSummaryButton.should('be.visible');
   });
 });
 
@@ -127,5 +127,97 @@ describe('Gene plot summary alleles count tests', () => {
 
       geneBrowserPage.getVariantTypes(data.checkbox).click();
     });
+  });
+});
+
+describe('Gene plot download tests', () => {
+  const page = new GenePlotPage();
+  const geneBrowserPage = new GeneBrowserPage();
+
+  before(() => {
+    page.cleanup();
+    page.navigateToHome(false);
+    page.loginAdmin();
+  });
+
+  beforeEach(() => {
+    page.navigateToDatasetPage(datasetIds.iossifov2014, toolPageLinks.geneBrowser);
+    cy.deleteDownloadsFolder();
+  });
+
+  it('should go to chd8 gene page, filter out Affected only ' +
+    'summary variants and check if download button is disabled', () => {
+    geneBrowserPage.searchInputBox.type('chd8');
+    geneBrowserPage.pressGoButton();
+    geneBrowserPage.getAffectedStatusCheckbox('Affected only').click();
+    page.downloadSummaryButton.should('be.disabled');
+  });
+
+  [
+    {
+      gene: 'chd8',
+      filtersToUncheck: ['Other', 'ins'],
+      expectedPath: 'summary_variants1.tsv'
+    },
+    {
+      gene: 'pogz',
+      filtersToUncheck: ['missense', 'synonymous'],
+      expectedPath: 'summary_variants2.tsv'
+    }
+  ].forEach(data => {
+    it('should go to ' + data.gene + ' gene page, filter out ' + data.filtersToUncheck.toString() +
+      'summary variants and compare the files to the reference data', () => {
+      geneBrowserPage.searchInputBox.type(data.gene);
+      geneBrowserPage.pressGoButton();
+
+      data.filtersToUncheck.forEach(filter => {
+        geneBrowserPage.getAffectedStatusCheckbox(filter).click();
+      });
+
+      page.downloadSummaryButton.click();
+
+      const downloadedSummaryVariantsPath = Cypress.config('downloadsFolder') + '/summary_variants.tsv';
+      const expectedVariantsPath = 'cypress/fixtures/gene-browser/' + data.expectedPath;
+
+      cy.readFile(downloadedSummaryVariantsPath, { timeout: 10000 }).then((downloadedFile: string) => {
+        cy.readFile(expectedVariantsPath, { timeout: 10000 }).then((expectedFile: string) => {
+          const downloadedFileLines = downloadedFile.split(/\r\n|\r|\n/);
+          const expectedFileLines = expectedFile.split(/\r\n|\r|\n/);
+          expect(downloadedFileLines).to.deep.eq(expectedFileLines);
+        });
+      });
+    });
+  });
+});
+
+describe.skip('Gene plot visual tests', () => {
+  const page = new GenePlotPage();
+  const geneBrowserPage = new GeneBrowserPage();
+
+  before(() => {
+    page.cleanup();
+    page.navigateToHome(false);
+    page.loginAdmin();
+    geneBrowserPage.navigateToDatasetPage(datasetIds.iossifov2014, toolPageLinks.geneBrowser);
+  });
+
+  it('should condense introns', () => {
+    geneBrowserPage.searchInputBox.type('chd8');
+    geneBrowserPage.pressGoButton();
+    page.condenseIntronsCheckbox.click();
+    cy.get('g#plot').matchImageSnapshot('not-condensed-introns');
+
+    page.condenseIntronsCheckbox.click();
+    cy.get('g#plot').matchImageSnapshot('condensed-introns');
+  });
+
+  it('should compare visually TTN gene plot results', () => {
+    geneBrowserPage.searchInputBox.type('ttn');
+    geneBrowserPage.pressGoButton();
+    cy.get('g#plot').matchImageSnapshot('ttn-gene-plot-snapshot');
+
+    page.variantsCount.should('exist');
+    page.variantsCount.should('have.text', '19 variants selected');
+    cy.get('gpf-table').matchImageSnapshot('ttn-gene-table-snapshot');
   });
 });
