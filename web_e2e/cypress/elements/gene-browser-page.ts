@@ -61,12 +61,12 @@ export class GeneBrowserPage extends BasePage {
     return cy.get('.legend-div');
   }
 
-  public get downloadSummaryButton(): element {
-    return cy.get('button').contains('Download Summary');
+  public get familyAllelesCount(): element {
+    return cy.get('#family-variants-count span');
   }
 
-  public get downloadButton(): element {
-    return cy.get('#download-button');
+  public get downloadFamilyVariantsButton(): element {
+    return cy.get('#download-family-variants-button');
   }
 
   public pressGoButton(): void {
