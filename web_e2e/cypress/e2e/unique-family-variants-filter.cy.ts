@@ -18,28 +18,28 @@ describe('Unique family variants filter tests', () => {
     page.navigateToHome();
   });
 
-  it('should NOT display the unique family variants filter on a single study', () => {
+  it('should make unique family variants filter on a single study disabled', () => {
     page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
     page.block.should('not.exist');
 
     page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.geneBrowser);
     geneBrowserPage.searchInputBox.type('chd8');
     geneBrowserPage.pressGoButton();
-    page.block.should('not.exist');
+    page.UniqueFamilyVariantsCheckbox.should('be.disabled');
   });
 
-  it.skip('should NOT display the unique family variants filter on a dataset with only a single study', () => {
+  it.skip('should make the unique family variants filter on a dataset with only a single study disabled', () => {
     // ...
   });
 
-  it('should display the unique family variants filter on a dataset with at least 2 studies inside', () => {
+  it('should enable the unique family variants filter on a dataset with at least 2 studies inside', () => {
     page.navigateToDatasetPage(datasetIds.compGenotypes, toolPageLinks.genotypeBrowser);
     page.block.should('be.visible');
 
     page.navigateToDatasetPage(datasetIds.compGenotypes, toolPageLinks.geneBrowser);
     geneBrowserPage.searchInputBox.type('chd8');
     geneBrowserPage.pressGoButton();
-    page.block.should('be.visible');
+    page.UniqueFamilyVariantsCheckbox.should('be.enabled');
   });
 
   it.skip('should use the unique family variants filter to hide variants', () => {
