@@ -37,7 +37,7 @@ export class GenePlotPage extends BasePage {
     return cy.get('#summary-alleles-count span');
   }
 
-  public get familyVariantsCount(): element {
-    return cy.get('#family-variants-count span');
+  public get downloadSummaryButton(): element {
+    return cy.get('#download-summary-variants-button');
   }
 }
