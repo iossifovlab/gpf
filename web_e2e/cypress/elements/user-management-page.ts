@@ -14,23 +14,23 @@ export class UserManagementPage extends BasePage {
   }
 
   public get createUserButton(): element {
-    return cy.get('gpf-user-management a').contains('Create user');
+    return cy.get('#create-user-form-button');
   }
 
   public get emailInputField(): element {
-    return cy.get('gpf-users-create input#email');
+    return cy.get('#email-box');
   }
 
   public get nameInputField(): element {
-    return cy.get('gpf-users-create input#name');
+    return cy.get('#name-box');
   }
 
   public get submitUserButton(): element {
-    return cy.get('gpf-users-create button').contains('Submit');
+    return cy.get('#create-user-button');
   }
 
-  public get backUserButton(): element {
-    return cy.get('gpf-users-create button').contains('Back');
+  public get cancelUserButton(): element {
+    return cy.get('#cancel-user-creation-button');
   }
 
   public get backUserConfirmationButton(): element {
@@ -38,15 +38,15 @@ export class UserManagementPage extends BasePage {
   }
 
   public get alertElement(): element {
-    return cy.get('gpf-users-create div.alert.alert-danger');
+    return cy.get('.creation-error');
   }
 
-  public get usersTableRows(): element {
-    return cy.get('gpf-users-table .table-row');
+  public get usersTableCells(): element {
+    return cy.get('gpf-users-table .grid-cell');
   }
 
   public get userTableDeleteNewestUserButton(): element {
-    return cy.get('gpf-users-actions a').last();
+    return cy.get('button[title="Delete user"]');
   }
 
   public get userTableDeleteUserConfirmButton(): element {

@@ -25,71 +25,71 @@ describe.skip('User management tests', () => {
   });
 
   it('should create and delete user', () => {
-    page.usersTableRows.should('have.length', 2);
-
     page.createUserButton.click();
-    page.emailInputField.should('be.focused');
+    page.emailInputField.should('be.visible');
+    page.nameInputField.should('be.visible');
+    page.submitUserButton.should('be.visible');
+    page.cancelUserButton.should('be.visible');
 
     page.emailInputField.type('test_email@email.com');
     page.nameInputField.type('test_name');
     page.submitUserButton.click();
 
-    page.usersTableRows.should('have.length', 3);
-    page.usersTableRows.last().should('have.text', 'test_nametest_email@email.comany_usertest_email@email.com');
+    page.emailInputField.should('not.exist');
+    page.nameInputField.should('not.exist');
+    page.submitUserButton.should('not.exist');
+    page.cancelUserButton.should('not.exist');
+
+    page.usersTableCells.should('have.length', 15);
+    page.usersTableCells.first().should('have.text', 'test_nametest_email@email.com');
+    page.usersTableCells.eq(2).find('>div').should('have.text', 'any_usertest_email@email.com');
 
     page.userTableDeleteNewestUserButton.click();
     page.userTableDeleteUserConfirmButton.click();
 
-    page.usersTableRows.should('have.length', 2);
+    page.usersTableCells.should('have.length', 10);
   });
 
   it('should fail to create user with already used email', () => {
-    page.usersTableRows.should('have.length', 2);
+    createTestUser(page, 'test_email@email.com', 'test_name');
+    page.usersTableCells.should('have.length', 10);
 
     createTestUser(page, 'test_email@email.com', 'test_name');
-    page.usersTableRows.should('have.length', 3);
 
-    page.createUserButton.click();
-    page.emailInputField.should('be.focused');
+    page.alertElement.invoke('text').then((text) => text.trim())
+      .should('equal', 'Error: wdae user with this email already exists.');
+    page.cancelUserButton.click();
 
-    page.emailInputField.type('test_email@email.com');
-    page.nameInputField.type('other_test_name');
-    page.submitUserButton.click();
-
-    page.alertElement.should('have.text', 'Error: wdae user with this email already exists.');
-    page.backUserButton.click();
-    page.backUserConfirmationButton.click();
-
-    page.usersTableRows.should('have.length', 3);
-    page.usersTableRows.last().should('have.text', 'test_nametest_email@email.comany_usertest_email@email.com');
+    page.usersTableCells.should('have.length', 10);
+    page.usersTableCells.eq(5).should('have.text', 'test_nametest_email@email.com');
+    page.usersTableCells.eq(7).find('>div').should('have.text', 'any_usertest_email@email.com');
 
     deleteTestUser(page);
   });
 
   it('should search and filter users', () => {
-    page.usersTableRows.should('have.length', 2);
     page.userSearchField.type('admin');
-    page.usersTableRows.should('have.length', 1);
+    page.usersTableCells.should('have.length', 5);
     page.userSearchField.clear();
     // triggers search event
     page.userSearchField.type(' ');
-    page.usersTableRows.should('have.length', 2);
+    page.usersTableCells.should('have.length', 10);
   });
 
   it('should search and filter a specific user', () => {
     page.userSearchField.type('admin');
-    page.usersTableRows.should('have.length', 1);
-    page.usersTableRows.last().should('include.text', 'admin');
+    page.usersTableCells.should('have.length', 1);
+    page.usersTableCells.last().should('include.text', 'admin');
   });
 
   it('should search and find user', () => {
     createTestUser(page, 'test_email@email.com', 'test_name');
     page.userSearchField.type('test_name');
-    page.usersTableRows.last().should('have.text', 'test_nametest_email@email.comany_usertest_email@email.com');
+    page.usersTableCells.last().should('have.text', 'test_nametest_email@email.comany_usertest_email@email.com');
 
     page.userSearchField.clear();
     page.userSearchField.type('test_email@email.com');
-    page.usersTableRows.last().should('have.text', 'test_nametest_email@email.comany_usertest_email@email.com');
+    page.usersTableCells.last().should('have.text', 'test_nametest_email@email.comany_usertest_email@email.com');
     waitForRequest('GET', '/gpf/api/v3/users/streaming_search?search=**', 'usersUpdate', 200);
     deleteTestUser(page);
   });
@@ -125,7 +125,7 @@ describe.skip('User management tests', () => {
     page.userWindowGroupDropdownListCheckboxes.last().click();
     page.userWindowGroupDropDownMenuButton.click();
     page.userWindowSubmitButton.click();
-    page.usersTableRows.last().should(
+    page.usersTableCells.last().should(
       'have.text',
       'test_nametest_email@email.comany_usertest_email@email.comtest_group×multi'
     );
@@ -137,7 +137,7 @@ describe.skip('User management tests', () => {
     page.userTableRemoveUserGroupButton.click();
     page.userTableRemoveUserGroupConfirmButton.click();
     waitForRequest('GET', '/gpf/api/v3/users/streaming_search?search=', 'usersUpdate', 200);
-    page.usersTableRows.last().should('have.text', 'test_nametest_email@email.comany_usertest_email@email.com');
+    page.usersTableCells.last().should('have.text', 'test_nametest_email@email.comany_usertest_email@email.com');
 
     deleteTestGroup(page);
     deleteTestUser(page);
@@ -158,7 +158,7 @@ describe.skip('User management tests', () => {
     page.userWindowGroupDropdownListCheckboxes.should('have.length', 1);
     page.userWindowGroupDropdownListCheckboxes.last().should('have.text', 'test_group');
 
-    page.backUserButton.click();
+    page.cancelUserButton.click();
     page.backUserConfirmationButton.click();
 
     deleteTestGroup(page);
@@ -193,7 +193,6 @@ describe.skip('User management tests', () => {
 function createTestUser(page: UserManagementPage, email: string, name: string): void {
   page.usersButton.click();
   page.createUserButton.click();
-  page.emailInputField.should('be.focused');
 
   page.emailInputField.type(email);
   page.nameInputField.type(name);
