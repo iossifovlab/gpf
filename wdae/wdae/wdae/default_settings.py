@@ -325,35 +325,36 @@ LOGGING = {
             "class": "logging.StreamHandler",
             "formatter": "verbose_console",
         },
-        "logfile": {
+        "logdebug": {
+            "level": "DEBUG",
             "class": "logging.handlers.WatchedFileHandler",
-            "filename": f"{LOG_DIR}/wdae-api.log",
+            "filename": f"{LOG_DIR}/wdae-debug.log",
             "formatter": "verbose",
         },
     },
     "loggers": {
         "django": {
-            "handlers": ["logfile"],
+            "handlers": ["console", "logdebug"],
             "propagate": True,
             "level": "INFO",
         },
         "impala": {
-            "handlers": ["console", "logfile"],
+            "handlers": ["console", "logdebug"],
             "level": "WARNING",
             "propagate": True,
         },
         "fsspec": {
-            "handlers": ["console", "logfile"],
+            "handlers": ["console", "logdebug"],
             "level": "WARNING",
             "propagate": True,
         },
         "matplotlib": {
-            "handlers": ["console", "logfile"],
+            "handlers": ["console", "logdebug"],
             "level": "INFO",
             "propagate": True,
         },
         "": {
-            "handlers": ["console", "logfile"],
+            "handlers": ["console", "logdebug"],
             "level": "DEBUG",
             "propagate": True,
         },
