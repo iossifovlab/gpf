@@ -39,6 +39,8 @@ dae_named_cluster:
         memory: 2GB
         walltime: "72:00:00"
         log_directory: ./.sge_worker_logs
+        job_extra_directives:
+        - "-V"
     - name: sge_large
       type: sge
       adapt_params:
@@ -51,6 +53,8 @@ dae_named_cluster:
         memory: 10GB
         walltime: "72:00:00"
         log_directory: ./.sge_worker_logs
+        job_extra_directives:
+        - "-V"
     - name: kubernetes
       type: kubgernetes
       params:
