@@ -26,6 +26,13 @@ def get_base_resource_schema():
 
 
 class ResourceStatistics:
+    """
+    Base class for statistics.
+
+    Subclasses should be created using mixins defined for each statistic type
+    that the resource contains.
+    """
+
     def __init__(self, resource_id: str):
         self.resource_id = resource_id
 

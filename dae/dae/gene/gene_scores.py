@@ -28,6 +28,12 @@ logger = logging.getLogger(__name__)
 
 
 class GeneScoreStatistics(ResourceStatistics):
+    """
+    Class for gene score statistics.
+
+    Contains histograms mapped by score ID.
+    """
+
     def __init__(self, resource_id, histograms):
         super().__init__(resource_id)
         self.score_histograms = histograms

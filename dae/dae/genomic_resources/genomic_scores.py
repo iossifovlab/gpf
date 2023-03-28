@@ -115,6 +115,12 @@ class GenomicScoreStatistics(
     HistogramStatisticMixin,
     MinMaxValueStatisticMixin
 ):
+    """
+    Class for genomic score statistics.
+
+    Contains histograms and min max values mapped by score ID.
+    """
+
     def __init__(self, resource_id, min_maxes, histograms):
         super().__init__(resource_id)
         self.score_min_maxes = min_maxes

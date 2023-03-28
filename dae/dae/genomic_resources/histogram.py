@@ -10,8 +10,6 @@ from typing import cast
 import yaml
 import numpy as np
 
-import matplotlib.pyplot as plt  # type: ignore
-
 from dae.genomic_resources.statistics.base_statistic import Statistic
 
 logger = logging.getLogger(__name__)
@@ -166,23 +164,10 @@ class Histogram(Statistic):
             bars=np.array(res.get("bars"))
         )
 
-    def write_image(self, file):
-        width = self.bins[1:] - self.bins[:-1]
-        plt.bar(
-            x=self.bins[:-1], height=self.bars,
-            log=self.y_scale == "log",
-            width=width,
-            align="edge")
-
-        if self.x_scale == "log":
-            plt.xscale("log")
-        plt.grid(axis="y")
-        plt.grid(axis="x")
-        plt.savefig(file)
-        plt.clf()
-
 
 class HistogramStatisticMixin:
+    """Mixin for creating statistics classes with histograms."""
+
     @staticmethod
     def get_histogram_file(score_id):
         return f"histogram_{score_id}.yaml"
