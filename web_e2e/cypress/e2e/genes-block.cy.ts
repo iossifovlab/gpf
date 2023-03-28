@@ -343,25 +343,26 @@ describe('Genes block denovo gene set gene symbols tests', () => {
   ].forEach(data => {
     it('should download iossifov ' + data.peopleGroup + ' denovo gene sets ' +
        'and check whether they are equal to the reference data', () => {
-      const downloadedGeneSymbolsFilePath = Cypress.config('downloadsFolder') + '/geneset.csv';
+      const downloadedGeneSetFilePath = Cypress.config('downloadsFolder') + '/geneset.csv';
 
       genotypeBrowserController.setStudy(datasetIds.iossifov2014);
       page.geneSetsButton.click();
 
       for (let i = 0; i < data.expectedConditions.effectTypesSearchQueries.length; i++) {
         page.geneSetsCollectionSelectorDropdownMenu.select('Denovo', {force: true});
+        cy.wait(500); // fake loading spinner on frontend requires this wait, remove after fixing frontend
         if (data.peopleGroup === 'unaffected') {
           page.findDenovoGeneSetCollectionCheckbox('iossifov_2014', 'affected').click();
           page.findDenovoGeneSetCollectionCheckbox('iossifov_2014', 'unaffected').click();
         }
         page.geneSetsSearchbox.click({force: true});
         page.geneSetsSearchbox.type(data.expectedConditions.effectTypesSearchQueries[i]);
-        page.firstGeneSetFromDropdownMenu.click();
+        page.firstGeneSetFromDropdownMenu.click({force: true});
 
         cy.deleteDownloadsFolder();
         page.downloadButton.click();
 
-        cy.readFile(downloadedGeneSymbolsFilePath, { timeout: 10000 }).then((text: string) => {
+        cy.readFile(downloadedGeneSetFilePath, { timeout: 10000 }).then((text: string) => {
           const textLines = text.split(/\r\n|\r|\n/);
           cy.readFile(
             data.expectedConditions.expectedGeneSymbolsFiles[i], { timeout: 10000 }

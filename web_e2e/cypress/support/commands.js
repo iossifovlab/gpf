@@ -25,7 +25,7 @@
 // Cypress.Commands.overwrite('visit', (originalFn, url, options) => { ... })
 
 
-// add delay between each command
+// // add delay between each command
 
 // const COMMAND_DELAY = 500;
 
