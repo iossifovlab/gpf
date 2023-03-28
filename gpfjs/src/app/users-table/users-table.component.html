@@ -27,7 +27,8 @@
                   id="name-field"
                   spellcheck="false"
                   autocomplete="off"
-                  (keydown.enter)="edit(user, newNameBox.value)" />
+                  (keydown.enter)="edit(user, newNameBox.value)"
+                  (keydown.escape)="currentUserEdit = -1" />
                 <button id="cancel-button" (click)="currentUserEdit = -1" title="Cancel">
                   <i class="fa fa-thin fa-times" aria-hidden="true"></i
                 ></button>
