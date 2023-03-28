@@ -40,6 +40,10 @@
   padding: 10px;
 }
 
+.search-input {
+  padding-right: 8px;
+}
+
 input:invalid:focus {
   outline: rgb(255, 0, 0);
   border-color: rgb(255, 0, 0);
