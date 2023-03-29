@@ -6,7 +6,7 @@
       <div class="grid-header">Datasets</div>
       <div class="grid-header">Actions</div>
       <ng-container *ngFor="let group of groups">
-        <div class="grid-cell">
+        <div class="grid-cell" [attr.id]="group.name + '-group-cell'">
           <span>{{ group.name }}</span>
           <span
             id="group-deletion-warning"
@@ -16,9 +16,9 @@
           >
         </div>
 
-        <div class="grid-cell list-cell">
-          <div>
-            <div class="item-wrapper" *ngFor="let user of group.users">
+        <div class="grid-cell list-cell" [attr.id]="group.name + '-users-cell'">
+          <div [attr.id]="group.name + '-users-list'">
+            <div class="item-wrapper" *ngFor="let user of group.users" [attr.id]="user + '-list-item'">
               <span class="item" [title]="user">{{ user }}</span>
               <gpf-confirm-button
                 *ngIf="!(group.name === 'admin' && currentUserEmail === user)"
@@ -36,9 +36,12 @@
             (addedItem)="addUser(group, $event)"></gpf-item-add-menu>
         </div>
 
-        <div class="grid-cell list-cell">
-          <div>
-            <div class="item-wrapper" *ngFor="let dataset of group.datasets">
+        <div class="grid-cell list-cell" [attr.id]="group.name + '-datasets-cell'">
+          <div [attr.id]="group.name + '-datasets-list'">
+            <div
+              class="item-wrapper"
+              *ngFor="let dataset of group.datasets"
+              [attr.id]="dataset.datasetName + '-list-item'">
               <span class="item" [title]="dataset.datasetName">{{ dataset.datasetName }}</span>
               <gpf-confirm-button
                 *ngIf="group.name !== 'any_dataset' || group.name === dataset.datasetId"
@@ -56,8 +59,9 @@
             (addedItem)="addDataset(group, $event)"></gpf-item-add-menu>
         </div>
 
-        <div class="grid-cell">
+        <div class="grid-cell" [attr.id]="group.name + '-actions-cell'">
           <gpf-confirm-button
+            [attr.id]="group.name + '-delete-group-botton'"
             *ngIf="group.name !== 'admin'"
             (clicked)="deleteGroup(group)"
             confirmText="Delete"

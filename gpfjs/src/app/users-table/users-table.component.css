@@ -90,7 +90,7 @@ gpf-item-add-menu {
   padding: 0 5px;
 }
 
-#name-field {
+.name-field {
   width: 135px;
   font-size: 15px;
 }

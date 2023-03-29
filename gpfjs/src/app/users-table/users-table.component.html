@@ -7,7 +7,7 @@
       <div class="grid-header">Datasets</div>
       <div class="grid-header">Actions</div>
       <ng-container *ngFor="let user of users">
-        <div class="grid-cell">
+        <div class="grid-cell" [attr.id]="user.email + '-user-cell'">
           <a>
             <div>
               <span *ngIf="user.name === '' && currentUserEdit !== user.id" id="add-user-name">Add username</span>
@@ -23,8 +23,8 @@
                   #newNameBox
                   type="text"
                   [value]="user.name"
-                  class="search-input form-control my-0 py-1"
-                  id="name-field"
+                  class="name-field search-input form-control my-0 py-1"
+                  [attr.id]="user.email + '-new-name-input'"
                   spellcheck="false"
                   autocomplete="off"
                   (keydown.enter)="edit(user, newNameBox.value)"
@@ -38,15 +38,15 @@
           </a>
         </div>
 
-        <div class="grid-cell">
+        <div class="grid-cell" [attr.id]="user.email + '-password-cell'">
           <span *ngIf="user.hasPassword">
             <i class="fa fa-check" aria-hidden="true"></i>
           </span>
         </div>
 
-        <div class="grid-cell list-cell">
-          <div>
-            <div class="item-wrapper" *ngFor="let group of user.groups">
+        <div class="grid-cell list-cell" [attr.id]="user.email + '-groups-cell'">
+          <div [attr.id]="user.email + '-groups-list'">
+            <div class="item-wrapper" *ngFor="let group of user.groups" [attr.id]="group + '-list-item'">
               <span class="item" [title]="group">{{ group }}</span>
               <gpf-confirm-button
                 *ngIf="!isDefaultGroup(user, group) && !(user.email === currentUserEmail && group === 'admin')"
@@ -63,15 +63,22 @@
             (addedItem)="addGroup(user, $event)"></gpf-item-add-menu>
         </div>
 
-        <div class="grid-cell list-cell">
-          <div>
-            <div class="item" [title]="dataset.datasetName" *ngFor="let dataset of user.allowedDatasets">{{ dataset.datasetName }}</div>
+        <div class="grid-cell list-cell" [attr.id]="user.email + '-datasets-cell'">
+          <div [attr.id]="user.email + '-datasets-list'">
+            <div
+              class="item"
+              [title]="dataset.datasetName"
+              *ngFor="let dataset of user.allowedDatasets"
+              [attr.id]="dataset.datasetName + '-list-item'"
+              >{{ dataset.datasetName }}</div
+            >
           </div>
         </div>
 
-        <div class="grid-cell">
+        <div class="grid-cell" [attr.id]="user.email + '-actions-cell'">
           <span class="action-buttons">
             <gpf-confirm-button
+              [attr.id]="user.email + '-reset-password-button'"
               (clicked)="resetPassword(user)"
               confirmText="Reset"
               title="Reset password"
@@ -84,6 +91,7 @@
               [iconStyle]="['fa', 'fa-lg', 'fa-refresh']">
             </gpf-confirm-button>
             <gpf-confirm-button
+              [attr.id]="user.email + '-delete-user-button'"
               *ngIf="currentUserEmail !== user.email"
               (clicked)="deleteUser(user)"
               confirmText="Delete"
