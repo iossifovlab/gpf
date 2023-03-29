@@ -1,8 +1,9 @@
 import os
 import sys
 import argparse
-import logging
 import pathlib
+import logging
+import logging.config
 
 import django
 from django.conf import settings
@@ -152,7 +153,6 @@ def cli(argv=None):
     _configure_run_subparser(commands_parser)
 
     args = parser.parse_args(argv[1:])
-    VerbosityConfiguration.set(args)
 
     if args.version:
         print(f"GPF version: {VERSION} ({RELEASE})")
@@ -182,7 +182,8 @@ def cli(argv=None):
         wgpf_instance.dae_dir, "wdae")
     os.makedirs(settings.DEFAULT_WDAE_DIR, exist_ok=True)
 
-    settings.LOGGING["handlers"]["console"]["level"] = logging.DEBUG
+    if args.verbose > 0:
+        settings.LOGGING["handlers"]["console"]["level"] = logging.DEBUG
     logging.config.dictConfig(settings.LOGGING)
 
     logger.info("using wdae directory: %s", settings.DEFAULT_WDAE_DIR)
