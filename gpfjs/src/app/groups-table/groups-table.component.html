@@ -44,7 +44,7 @@
               [attr.id]="dataset.datasetName + '-list-item'">
               <span class="item" [title]="dataset.datasetName">{{ dataset.datasetName }}</span>
               <gpf-confirm-button
-                *ngIf="group.name !== 'any_dataset' || group.name === dataset.datasetId"
+                *ngIf="group.name !== 'any_dataset' && group.name !== dataset.datasetId"
                 (clicked)="removeDataset(group, dataset.datasetId)"
                 confirmText="Remove"
                 title="Remove dataset"
