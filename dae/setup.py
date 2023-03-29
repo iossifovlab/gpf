@@ -15,9 +15,11 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     url="https://github.com/IossifovLab/gpf",
     packages=setuptools.find_packages(
-        where=".", exclude=["dae.docs", "dae.tests", "*.tests.*", "*.tests", ],
+        where=".", exclude=[
+            "tests.*", "tests", "dae.docs", "dae.tests", "*.tests.*",
+            "*.tests"
+        ],
     ),
-    include_package_data=True,
     package_data={
         "dae": ["py.typed"],
         "dae.dask": ["named_cluster.yaml"],

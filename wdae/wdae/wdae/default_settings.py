@@ -221,21 +221,27 @@ INSTALLED_APPS = [
     # END OF FIRST-PARTY APPS
 ]
 
-if os.environ.get("SENTRY_API_URL", None):
+if os.environ.get("WDAE_SENTRY_DSN", None):
     # type: ignore
-    import raven  # pylint: disable=unused-import
+    import sentry_sdk
+    from sentry_sdk.integrations.django import DjangoIntegration
 
-    INSTALLED_APPS += [
-        'raven.contrib.django.raven_compat',
-    ]
+    dsn = os.environ.get("WDAE_SENTRY_DSN", None)
+    sentry_sdk.init(
+        dsn=dsn,
+        integrations=[
+            DjangoIntegration(),
+        ],
 
-    RAVEN_CONFIG = {
-        'dsn': os.environ.get("SENTRY_API_URL", None),
-        # If you are using git, you can also automatically configure the
-        # release based on the git info.
-        # 'release': raven.fetch_git_sha(os.path.dirname(__file__)),
-    }
+        # Set traces_sample_rate to 1.0 to capture 100%
+        # of transactions for performance monitoring.
+        # We recommend adjusting this value in production.
+        traces_sample_rate=1.0,
 
+        # If you wish to associate users to errors (assuming you are using
+        # django.contrib.auth) you may enable sending PII data.
+        send_default_pii=True
+    )
 
 AUTH_USER_MODEL = "users_api.WdaeUser"
 
@@ -325,35 +331,36 @@ LOGGING = {
             "class": "logging.StreamHandler",
             "formatter": "verbose_console",
         },
-        "logfile": {
+        "logdebug": {
+            "level": "DEBUG",
             "class": "logging.handlers.WatchedFileHandler",
-            "filename": f"{LOG_DIR}/wdae-api.log",
+            "filename": f"{LOG_DIR}/wdae-debug.log",
             "formatter": "verbose",
         },
     },
     "loggers": {
         "django": {
-            "handlers": ["logfile"],
+            "handlers": ["console", "logdebug"],
             "propagate": True,
             "level": "INFO",
         },
         "impala": {
-            "handlers": ["console", "logfile"],
+            "handlers": ["console", "logdebug"],
             "level": "WARNING",
             "propagate": True,
         },
         "fsspec": {
-            "handlers": ["console", "logfile"],
+            "handlers": ["console", "logdebug"],
             "level": "WARNING",
             "propagate": True,
         },
         "matplotlib": {
-            "handlers": ["console", "logfile"],
+            "handlers": ["console", "logdebug"],
             "level": "INFO",
             "propagate": True,
         },
         "": {
-            "handlers": ["console", "logfile"],
+            "handlers": ["console", "logdebug"],
             "level": "DEBUG",
             "propagate": True,
         },

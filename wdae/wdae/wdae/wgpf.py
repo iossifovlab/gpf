@@ -1,8 +1,9 @@
 import os
 import sys
 import argparse
-import logging
 import pathlib
+import logging
+import logging.config
 
 import django
 from django.conf import settings
@@ -152,7 +153,6 @@ def cli(argv=None):
     _configure_run_subparser(commands_parser)
 
     args = parser.parse_args(argv[1:])
-    VerbosityConfiguration.set(args)
 
     if args.version:
         print(f"GPF version: {VERSION} ({RELEASE})")
@@ -172,14 +172,20 @@ def cli(argv=None):
         logger.error("unknown subcommand %s used in `wgpf`", command)
         sys.exit(1)
 
-    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "wdae.settings")
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "wdae.gpfjs_settings")
 
     django.setup()
     settings.DISABLE_PERMISSIONS = True
     settings.STUDIES_EAGER_LOADING = True
+
     settings.DEFAULT_WDAE_DIR = os.path.join(
         wgpf_instance.dae_dir, "wdae")
     os.makedirs(settings.DEFAULT_WDAE_DIR, exist_ok=True)
+
+    if args.verbose > 0:
+        settings.LOGGING["handlers"]["console"]["level"] = logging.DEBUG
+    logging.config.dictConfig(settings.LOGGING)
+
     logger.info("using wdae directory: %s", settings.DEFAULT_WDAE_DIR)
 
     if command == "init":

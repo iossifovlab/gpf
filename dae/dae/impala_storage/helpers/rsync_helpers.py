@@ -153,8 +153,6 @@ class RsyncHelpers:
     def _cmd_execute(commands):
         for cmd in commands:
             logger.info("executing command: %s", cmd)
-            # argv = [c.strip() for c in cmd.split(" ")]
-            # argv = list(filter(lambda c: len(c) > 0, argv))
             logger.debug("executing command: %s", cmd)
 
             with subprocess.Popen(
@@ -164,6 +162,7 @@ class RsyncHelpers:
                     universal_newlines=True) as proc:
 
                 while True:
+                    assert proc.stdout is not None
                     line = proc.stdout.readline()
                     if not line:
                         break

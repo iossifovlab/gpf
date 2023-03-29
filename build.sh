@@ -460,6 +460,7 @@ EOT
           --exclude dask-worker-space \
           --exclude demo-scripts \
           --exclude TESTphastCons100way.bedGraph.gz.tbi \
+          --exclude test.txt.gz.tbi \
           --exclude conftest.py \
           --exclude gpf_wdae.egg-info \
           --exclude mypy.ini \
