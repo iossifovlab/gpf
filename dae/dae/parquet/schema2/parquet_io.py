@@ -3,17 +3,17 @@ import sys
 import time
 import logging
 import json
+from dataclasses import dataclass
 from functools import reduce
-from typing import Dict, Any
-
+from typing import Dict, Any, Tuple
 import toml
 
 import numpy as np
 import pyarrow as pa
 import pyarrow.parquet as pq
 
-from dae.parquet.helpers import url_to_pyarrow_fs
 from dae.utils import fs_utils
+from dae.parquet.helpers import url_to_pyarrow_fs
 from dae.utils.variant_utils import GenotypeType
 from dae.variants.attributes import Inheritance
 from dae.variants.family_variant import (
@@ -26,6 +26,33 @@ from dae.parquet.schema2.serializers import AlleleParquetSerializer
 from dae.parquet.partition_descriptor import PartitionDescriptor
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass(frozen=True)
+class Schema2Layout:
+    study_dir: str
+    pedigree: str
+    summary: str
+    family: str
+    meta: str
+
+
+def schema2_layout(work_dir: str, study_id: str) -> Schema2Layout:
+    study_dir = fs_utils.join(work_dir, study_id)
+    return Schema2Layout(
+        study_dir,
+        fs_utils.join(study_dir, "pedigree", "pedigree.parquet"),
+        fs_utils.join(study_dir, "summary"),
+        fs_utils.join(study_dir, "family"),
+        fs_utils.join(study_dir, "meta", "meta.parquet"))
+
+
+def schema2_variants_layout(work_dir: str, study_id: str) -> Tuple[str, str]:
+    study_dir = fs_utils.join(work_dir, study_id)
+    return (
+        fs_utils.join(study_dir, "summary"),
+        fs_utils.join(study_dir, "family"),
+    )
 
 
 class ContinuousParquetFileWriter:
@@ -425,9 +452,14 @@ class VariantsParquetWriter:
             },
             schema=pa.schema({"key": pa.string(), "value": pa.string()}),
         )
+        metapath = fs_utils.join(self.out_dir, "meta", "meta.parquet")
+        dirname = os.path.dirname(metapath)
+        if dirname and not os.path.exists(dirname):
+            os.makedirs(dirname, exist_ok=True)
 
         pq.write_table(
-            metadata_table, fs_utils.join(self.out_dir, "meta.parquet"),
+            metadata_table,
+            metapath,
             version="1.0"
         )
 

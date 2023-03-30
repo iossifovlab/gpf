@@ -2,6 +2,7 @@
 
 import os
 from glob import glob
+from typing import Any
 
 import yaml
 import pytest
@@ -41,15 +42,25 @@ def test_parquet_files_are_generated(tmpdir, gpf_instance, config_dir,
 
     files = os.listdir(tmpdir)
     assert len(files) != 0
-    assert "test_import_pedigree" in files
-    assert "test_import_variants" in files
+    assert "test_import" in files
 
-    ped_parquets = os.listdir(os.path.join(tmpdir, "test_import_pedigree"))
+    files = os.listdir(os.path.join(tmpdir, "test_import"))
+    assert "pedigree" in files
+    assert "family" in files
+    assert "summary" in files
+
+    ped_parquets = os.listdir(os.path.join(tmpdir, "test_import", "pedigree"))
     assert len(ped_parquets) != 0
 
-    parquet_fns = os.path.join(tmpdir, "test_import_variants", "**/*.parquet")
-    variants_bins = glob(parquet_fns, recursive=True)
-    assert len(variants_bins) != 0
+    parquet_fns = os.path.join(
+        tmpdir, "test_import", "family", "**/*.parquet")
+    family_bins = glob(parquet_fns, recursive=True)
+    assert len(family_bins) != 0
+
+    parquet_fns = os.path.join(
+        tmpdir, "test_import", "summary", "**/*.parquet")
+    summary_bins = glob(parquet_fns, recursive=True)
+    assert len(summary_bins) != 0
 
 
 def test_import_with_add_chrom_prefix(tmpdir, gpf_instance_grch38, mocker,
@@ -85,57 +96,58 @@ def test_add_chrom_prefix_is_propagated_to_the_loader(resources_dir, mocker,
 
 
 def test_row_group_size():
-    import_config = dict(
-        input={},
-        processing_config=dict(
-            work_dir="",
-            denovo={},
-        ),
-        parquet_row_group_size=dict(
-            denovo=10000,
-            dae="10k",
-        )
-    )
+    import_config = {
+        "input": {},
+        "processing_config": {
+            "work_dir": "",
+            "denovo": {},
+        },
+        "parquet_row_group_size": {
+            "denovo": 10000,
+            "dae": "10k",
+        }
+    }
     project = import_tools.ImportProject.build_from_config(import_config)
     assert project.get_row_group_size(
-        import_tools.Bucket("denovo", "", "", 0)) == 10_000
+        import_tools.Bucket("denovo", "", [""], 0)) == 10_000
     assert project.get_row_group_size(
-        import_tools.Bucket("dae", "", "", 0)) == 10_000
+        import_tools.Bucket("dae", "", [""], 0)) == 10_000
     # 20_000 is the default value
     assert project.get_row_group_size(
-        import_tools.Bucket("vcf", "", "", 0)) == 20_000
+        import_tools.Bucket("vcf", "", [""], 0)) == 20_000
 
 
 def test_row_group_size_short_config():
-    import_config = dict(
-        input={},
-        processing_config=dict(
-            work_dir="",
-            denovo="single_bucket",
-        ),
-    )
+    import_config = {
+        "input": {},
+        "processing_config": {
+            "work_dir": "",
+            "denovo": "single_bucket",
+        },
+    }
     project = import_tools.ImportProject.build_from_config(import_config)
     # 20_000 is the default value
     assert project.get_row_group_size(
-        import_tools.Bucket("denovo", "", "", 0)) == 20_000
+        import_tools.Bucket("denovo", "", [""], 0)) == 20_000
 
 
 def test_shorthand_for_large_integers():
-    config = dict(
-        id="test_import",
-        input={},
-        processing_config=dict(
-            denovo=dict(
-                region_length="300k"
-            )
-        ),
-        partition_description=dict(
-            region_bin=dict(
-                region_length="100M"
-            )
-        )
-    )
+    config: dict[str, Any] = {
+        "id": "test_import",
+        "input": {},
+        "processing_config": {
+            "denovo": {
+                "region_length": "300k"
+            }
+        },
+        "partition_description": {
+            "region_bin": {
+                "region_length": "100M"
+            }
+        }
+    }
     project = import_tools.ImportProject.build_from_config(config)
+
     config = project.import_config
     assert config["processing_config"]["denovo"]["region_length"] \
         == 300_000
@@ -144,22 +156,22 @@ def test_shorthand_for_large_integers():
 
 
 def test_shorthand_autosomes():
-    config = dict(
-        id="test_import",
-        input={},
-        processing_config=dict(
-            vcf=dict(
-                region_length=300,
-                chromosomes=["autosomes"],
-            )
-        ),
-        partition_description=dict(
-            region_bin=dict(
-                region_length=100,
-                chromosomes=["autosomesXY"]
-            )
-        )
-    )
+    config = {
+        "id": "test_import",
+        "input": {},
+        "processing_config": {
+            "vcf": {
+                "region_length": 300,
+                "chromosomes": ["autosomes"],
+            }
+        },
+        "partition_description": {
+            "region_bin": {
+                "region_length": 100,
+                "chromosomes": ["autosomesXY"]
+            }
+        }
+    }
     project = import_tools.ImportProject.build_from_config(config)
     loader_chromosomes = project._get_loader_target_chromosomes("vcf")
     assert len(loader_chromosomes) == 22 * 2
@@ -173,27 +185,27 @@ def test_shorthand_autosomes():
     for i in range(1, 23):
         assert str(i) in pd_chromosomes
         assert f"chr{i}" in pd_chromosomes
-    for i in ["X", "Y"]:
-        assert str(i) in pd_chromosomes
-        assert f"chr{i}" in pd_chromosomes
+    for j in ["X", "Y"]:
+        assert str(j) in pd_chromosomes
+        assert f"chr{j}" in pd_chromosomes
 
 
 def test_shorthand_chromosomes():
-    config = dict(
-        id="test_import",
-        input={},
-        processing_config=dict(
-            denovo=dict(
-                chromosomes="chr1, chr2"
-            )
-        ),
-        partition_description=dict(
-            region_bin=dict(
-                region_length=100,
-                chromosomes="autosomes,X"
-            )
-        )
-    )
+    config: dict[str, Any] = {
+        "id": "test_import",
+        "input": {},
+        "processing_config": {
+            "denovo": {
+                "chromosomes": "chr1, chr2",
+            }
+        },
+        "partition_description": {
+            "region_bin": {
+                "region_length": 100,
+                "chromosomes": "autosomes,X"
+            }
+        }
+    }
     project = import_tools.ImportProject.build_from_config(config)
     config = project.import_config
     assert config["processing_config"]["denovo"]["chromosomes"] \
@@ -204,34 +216,34 @@ def test_shorthand_chromosomes():
 
 
 def test_project_input_dir_default_value():
-    config = dict(
-        id="test_import",
-        input={},
-    )
+    config = {
+        "id": "test_import",
+        "input": {},
+    }
     project = import_tools.ImportProject.build_from_config(config, "")
     assert project.input_dir == ""
 
 
 @pytest.mark.parametrize("input_dir", ["/input-dir", "input-dir"])
 def test_project_input_dir(input_dir):
-    config = dict(
-        id="test_import",
-        input=dict(
-            input_dir=input_dir
-        ),
-    )
+    config = {
+        "id": "test_import",
+        "input": {
+            "input_dir": input_dir
+        },
+    }
     project = import_tools.ImportProject.build_from_config(config, "/dir")
     assert project.input_dir == os.path.join("/dir", input_dir)
 
 
 def test_get_genotype_storage_no_explicit_config(fixture_dirname):
-    config = dict(
-        id="test_import",
-        input={},
-        gpf_instance={
+    config = {
+        "id": "test_import",
+        "input": {},
+        "gpf_instance": {
             "path": fixture_dirname("")
         }
-    )
+    }
     project = import_tools.ImportProject.build_from_config(config)
     genotype_storage = project.get_genotype_storage()
     assert genotype_storage is not None
@@ -288,17 +300,17 @@ def test_input_in_external_file(resources_dir):
 
 
 def test_embedded_annotation_pipeline(fixture_dirname):
-    import_config = dict(
-        input={},
-        annotation=[
-            dict(np_score=dict(
-                resource_id="hg19/CADD",
-            ))
-        ],
-        gpf_instance={
+    import_config = {
+        "input": {},
+        "annotation": [{
+            "np_score": {
+                "resource_id": "hg19/CADD",
+            }
+        }],
+        "gpf_instance": {
             "path": fixture_dirname("")
         }
-    )
+    }
     project = import_tools.ImportProject.build_from_config(import_config)
     pipeline = project._build_annotation_pipeline(project.get_gpf_instance())
     assert pipeline is not None
@@ -308,24 +320,24 @@ def test_embedded_annotation_pipeline(fixture_dirname):
 
 
 def test_annotation_file(tmpdir, fixture_dirname):
-    annotation = [
-        dict(np_score=dict(
-            resource_id="hg19/CADD",
-        ))
-    ]
+    annotation = [{
+        "np_score": {
+            "resource_id": "hg19/CADD",
+        }
+    }]
     annotation_fn = str(tmpdir / "annotation.yaml")
     with open(annotation_fn, "wt") as out_file:
         yaml.safe_dump(annotation, out_file)
 
-    import_config = dict(
-        input={},
-        annotation=dict(
-            file="annotation.yaml"
-        ),
-        gpf_instance={
+    import_config = {
+        "input": {},
+        "annotation": {
+            "file": "annotation.yaml"
+        },
+        "gpf_instance": {
             "path": fixture_dirname("")
         }
-    )
+    }
     config_fn = str(tmpdir / "import_config.yaml")
     with open(config_fn, "wt") as out_file:
         yaml.safe_dump(import_config, out_file)
@@ -339,29 +351,29 @@ def test_annotation_file(tmpdir, fixture_dirname):
 
 
 def test_annotation_file_and_external_input_config(tmpdir, fixture_dirname):
-    annotation = [
-        dict(np_score=dict(
-            resource_id="hg19/CADD",
-        ))
-    ]
+    annotation = [{
+        "np_score": {
+            "resource_id": "hg19/CADD",
+        }
+    }]
     with open(str(tmpdir / "annotation.yaml"), "wt") as out_file:
         yaml.safe_dump(annotation, out_file)
 
-    input_config = {}
+    input_config: dict[str, Any] = {}
     with fsspec.open(str(tmpdir / "input" / "input.yaml"), "wt") as out_file:
         yaml.safe_dump(input_config, out_file)
 
-    import_config = dict(
-        input=dict(
-            file="input/input.yaml"
-        ),
-        annotation=dict(
-            file="annotation.yaml"
-        ),
-        gpf_instance={
+    import_config = {
+        "input": {
+            "file": "input/input.yaml"
+        },
+        "annotation": {
+            "file": "annotation.yaml"
+        },
+        "gpf_instance": {
             "path": fixture_dirname("")
         }
-    )
+    }
     config_fn = str(tmpdir / "import_config.yaml")
     with open(config_fn, "wt") as out_file:
         yaml.safe_dump(import_config, out_file)

@@ -451,11 +451,9 @@ def dae_transmitted(
         genome=gpf_instance_2013.reference_genome,
         regions=None,
     )
-    variants_loader = AnnotationPipelineDecorator(
+    return AnnotationPipelineDecorator(
         variants_loader, annotation_pipeline_internal
     )
-
-    return variants_loader
 
 
 @pytest.fixture
@@ -476,11 +474,9 @@ def iossifov2014_loader(
         gpf_instance_2013.reference_genome
     )
 
-    variants_loader = AnnotationPipelineDecorator(
+    return AnnotationPipelineDecorator(
         variants_loader, annotation_pipeline_internal
-    )
-
-    return variants_loader, families_loader
+    ), families_loader
 
 
 @pytest.fixture(scope="session")

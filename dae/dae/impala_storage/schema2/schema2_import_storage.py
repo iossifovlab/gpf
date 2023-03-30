@@ -9,7 +9,7 @@ from dae.task_graph.graph import TaskGraph
 from dae.impala_storage.schema2.schema2_genotype_storage import \
     Schema2GenotypeStorage
 from dae.parquet.parquet_writer import ParquetWriter
-from dae.parquet.schema2.parquet_io import \
+from dae.parquet.schema2.parquet_io import schema2_layout, \
     VariantsParquetWriter as S2VariantsWriter
 from dae.parquet.partition_descriptor import PartitionDescriptor
 
@@ -19,18 +19,6 @@ logger = logging.getLogger(__file__)
 
 class Schema2ImportStorage(ImportStorage):
     """Import logic for data in the Impala Schema 1 format."""
-
-    @staticmethod
-    def _pedigree_dir(project):
-        return fs_utils.join(project.work_dir, f"{project.study_id}_pedigree")
-
-    @staticmethod
-    def _variants_dir(project):
-        return fs_utils.join(project.work_dir, f"{project.study_id}_variants")
-
-    @classmethod
-    def _meta_dir(cls, project):
-        return cls._variants_dir(project)
 
     @staticmethod
     def _get_partition_description(project, out_dir=None):
@@ -43,17 +31,17 @@ class Schema2ImportStorage(ImportStorage):
 
     @classmethod
     def _do_write_pedigree(cls, project):
-        out_dir = cls._pedigree_dir(project)
+        layout = schema2_layout(project.work_dir, project.study_id)
         ParquetWriter.write_pedigree(
-            out_dir, project.get_pedigree(),
+            layout.pedigree, project.get_pedigree(),
             cls._get_partition_description(project))
 
     @classmethod
     def _do_write_variant(cls, project, bucket):
-        out_dir = cls._variants_dir(project)
+        layout = schema2_layout(project.work_dir, project.study_id)
         gpf_instance = project.get_gpf_instance()
         ParquetWriter.write_variants(
-            out_dir,
+            layout.study_dir,
             project.get_variant_loader(
                 bucket, gpf_instance.reference_genome),
             cls._get_partition_description(project),
@@ -76,7 +64,8 @@ class Schema2ImportStorage(ImportStorage):
 
     @classmethod
     def _merge_parquets(cls, project, out_dir, partitions):
-        full_out_dir = fs_utils.join(cls._variants_dir(project), out_dir)
+        layout = schema2_layout(project.work_dir, project.study_id)
+        full_out_dir = fs_utils.join(layout.study_dir, out_dir)
         ParquetWriter.merge_parquets(
             cls._get_partition_description(project), full_out_dir, partitions
         )
@@ -85,15 +74,12 @@ class Schema2ImportStorage(ImportStorage):
     def _do_load_in_hdfs(cls, project):
         genotype_storage = project.get_genotype_storage()
         assert isinstance(genotype_storage, Schema2GenotypeStorage)
-
-        pedigree_file = fs_utils.join(cls._pedigree_dir(project),
-                                      "pedigree.parquet")
-        meta_file = fs_utils.join(cls._meta_dir(project), "meta.parquet")
+        layout = schema2_layout(project.work_dir, project.study_id)
         return genotype_storage.hdfs_upload_dataset(
             project.study_id,
-            cls._variants_dir(project),
-            pedigree_file,
-            meta_file)
+            layout.study_dir,
+            layout.pedigree,
+            layout.meta)
 
     @classmethod
     def _do_load_in_impala(cls, project, hdfs_study_layout):

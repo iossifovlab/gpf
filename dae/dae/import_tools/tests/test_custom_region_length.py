@@ -30,20 +30,20 @@ def test_import_task_bin_size(gpf_instance_2019, tmpdir, mocker,
     # Assert the expected output files and dirs are created in the work_dir
     # (i.e. tmpdir)
     files = os.listdir(tmpdir)
-    assert "test_import_variants" in files
+    assert "test_import" in files
 
-    variants_dir = join(tmpdir, "test_import_variants")
-    assert set(os.listdir(variants_dir)) == {
+    study_dir = join(tmpdir, "test_import")
+    assert set(os.listdir(study_dir)) == {
         "_PARTITION_DESCRIPTION",
         "_VARIANTS_SCHEMA",
         "family", "summary",
-        "meta.parquet",
+        "meta", "pedigree",
     }
 
     # This is the first output directory. Assert it has the right files
     # with the right content
     out_dir = join(
-        variants_dir,
+        study_dir,
         "summary/region_bin=1_0/frequency_bin=0")
     parquet_files = [
         "merged_region_bin_1_0_frequency_bin_0.parquet",
@@ -65,7 +65,7 @@ def test_import_task_bin_size(gpf_instance_2019, tmpdir, mocker,
 
     # Same for the second directory
     out_dir = join(
-        variants_dir,
+        study_dir,
         "summary/region_bin=1_1/frequency_bin=0")
     parquet_files = [
         "merged_region_bin_1_1_frequency_bin_0.parquet",
@@ -92,34 +92,34 @@ def _assert_variants(parquet_fn, bucket_index, positions):
 
 
 def test_bucket_generation(gpf_instance_2019, mocker):
-    import_config = dict(
-        input=dict(
-            pedigree=dict(
-                file=join(_input_dir, "pedigree.ped"),
-            ),
-            denovo=dict(
-                files=[join(_input_dir, "single_chromosome_variants.tsv")],
-                person_id="spid",
-                chrom="chrom",
-                pos="pos",
-                ref="ref",
-                alt="alt",
-            )
-        ),
-        processing_config=dict(
-            work_dir="",
-            denovo=dict(
-                chromosomes=["1"],
-                region_length=70_000_000
-            )
-        ),
-        partition_description=dict(
-            region_bin=dict(
-                chromosomes=["1"],
-                region_length=100_000_000
-            )
-        )
-    )
+    import_config = {
+        "input": {
+            "pedigree": {
+                "file": join(_input_dir, "pedigree.ped"),
+            },
+            "denovo": {
+                "files": [join(_input_dir, "single_chromosome_variants.tsv")],
+                "person_id": "spid",
+                "chrom": "chrom",
+                "pos": "pos",
+                "ref": "ref",
+                "alt": "alt",
+            }
+        },
+        "processing_config": {
+            "work_dir": "",
+            "denovo": {
+                "chromosomes": ["1"],
+                "region_length": 70_000_000
+            }
+        },
+        "partition_description": {
+            "region_bin": {
+                "chromosomes": ["1"],
+                "region_length": 100_000_000
+            }
+        }
+    }
     mocker.patch.object(import_tools.ImportProject, "get_gpf_instance",
                         return_value=gpf_instance_2019)
     project = import_tools.ImportProject.build_from_config(import_config)
@@ -132,34 +132,34 @@ def test_bucket_generation(gpf_instance_2019, mocker):
 
 
 def test_bucket_generation_chrom_mismatch(gpf_instance_short, mocker):
-    import_config = dict(
-        input=dict(
-            pedigree=dict(
-                file=join(_input_dir, "pedigree.ped"),
-            ),
-            denovo=dict(
-                files=[join(_input_dir, "single_chromosome_variants.tsv")],
-                person_id="spid",
-                chrom="chrom",
-                pos="pos",
-                ref="ref",
-                alt="alt",
-            )
-        ),
-        processing_config=dict(
-            work_dir="",
-            denovo=dict(
-                chromosomes=["2"],
-                region_length=140_000
-            )
-        ),
-        partition_description=dict(
-            region_bin=dict(
-                chromosomes=["1"],
-                region_length=150_000
-            )
-        )
-    )
+    import_config = {
+        "input": {
+            "pedigree": {
+                "file": join(_input_dir, "pedigree.ped"),
+            },
+            "denovo": {
+                "files": [join(_input_dir, "single_chromosome_variants.tsv")],
+                "person_id": "spid",
+                "chrom": "chrom",
+                "pos": "pos",
+                "ref": "ref",
+                "alt": "alt",
+            }
+        },
+        "processing_config": {
+            "work_dir": "",
+            "denovo": {
+                "chromosomes": ["2"],
+                "region_length": 140_000
+            }
+        },
+        "partition_description": {
+            "region_bin": {
+                "chromosomes": ["1"],
+                "region_length": 150_000
+            }
+        }
+    }
     mocker.patch.object(import_tools.ImportProject, "get_gpf_instance",
                         return_value=gpf_instance_short)
     project = import_tools.ImportProject.build_from_config(import_config)
@@ -175,30 +175,30 @@ def test_bucket_generation_chrom_mismatch(gpf_instance_short, mocker):
 _input_dir = join(
     os.path.dirname(os.path.realpath(__file__)),
     "resources", "import_task_bin_size")
-_denovo_multi_chrom_config = dict(
-    input=dict(
-        pedigree=dict(
-            file=join(_input_dir, "pedigree.ped")
-        ),
-        denovo=dict(
-            files=[join(_input_dir, "multi_chromosome_variants.tsv")],
-            person_id="spid",
-            chrom="chrom",
-            pos="pos",
-            ref="ref",
-            alt="alt",
-        )
-    ),
-    processing_config=dict(
-        work_dir="",
-    ),
-    partition_description=dict(
-        region_bin=dict(
-            chromosomes=["chr1"],
-            region_length=100000000
-        )
-    )
-)
+_denovo_multi_chrom_config = {
+    "input": {
+        "pedigree": {
+            "file": join(_input_dir, "pedigree.ped")
+        },
+        "denovo": {
+            "files": [join(_input_dir, "multi_chromosome_variants.tsv")],
+            "person_id": "spid",
+            "chrom": "chrom",
+            "pos": "pos",
+            "ref": "ref",
+            "alt": "alt",
+        }
+    },
+    "processing_config": {
+        "work_dir": "",
+    },
+    "partition_description": {
+        "region_bin": {
+            "chromosomes": ["chr1"],
+            "region_length": 100000000
+        }
+    }
+}
 
 
 @pytest.mark.parametrize("add_chrom_prefix", [None, "chr"])

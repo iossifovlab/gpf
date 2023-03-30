@@ -59,8 +59,9 @@ class ImportProject():
     """
 
     # pylint: disable=too-many-public-methods
-    def __init__(self, import_config, base_input_dir, base_config_dir=None,
-                 gpf_instance=None, config_filenames=None):
+    def __init__(
+            self, import_config: dict[str, Any], base_input_dir,
+            base_config_dir=None, gpf_instance=None, config_filenames=None):
         """Create a new project from the provided config.
 
         It is best not to call this ctor directly but to use one of the
@@ -70,7 +71,7 @@ class ImportProject():
         the configuration and instead injecting our own instance. Ideal for
         testing.
         """
-        self.import_config = import_config
+        self.import_config: dict[str, Any] = import_config
         if "denovo" in import_config["input"]:
             len_files = len(import_config["input"]["denovo"]["files"])
             assert len_files == 1, "Support for multiple denovo files is NYI"

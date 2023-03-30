@@ -21,8 +21,10 @@ class ImpalaSchema1ImportStorage(ImportStorage):
     """Import logic for data in the Impala Schema 1 format."""
 
     @staticmethod
-    def _pedigree_dir(project):
-        return fs_utils.join(project.work_dir, f"{project.study_id}_pedigree")
+    def _pedigree_filename(project):
+        return fs_utils.join(
+            project.work_dir, f"{project.study_id}_pedigree",
+            "pedigree.parquet")
 
     @staticmethod
     def _variants_dir(project):
@@ -39,9 +41,9 @@ class ImpalaSchema1ImportStorage(ImportStorage):
     @classmethod
     def _do_write_pedigree(cls, project):
         start = time.time()
-        out_dir = cls._pedigree_dir(project)
+        ped_filename = cls._pedigree_filename(project)
         ParquetWriter.write_pedigree(
-            out_dir, project.get_pedigree(),
+            ped_filename, project.get_pedigree(),
             cls._get_partition_description(project))
         elapsed = time.time() - start
         logger.info("prepare pedigree elapsed %.2f sec", elapsed)
@@ -95,8 +97,7 @@ class ImpalaSchema1ImportStorage(ImportStorage):
 
         partition_description = cls._get_partition_description(project)
 
-        pedigree_file = fs_utils.join(cls._pedigree_dir(project),
-                                      "pedigree.parquet")
+        pedigree_file = cls._pedigree_filename(project)
         genotype_storage.hdfs_upload_dataset(
             project.study_id,
             cls._variants_dir(project),
