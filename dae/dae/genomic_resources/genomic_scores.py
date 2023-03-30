@@ -127,10 +127,6 @@ class GenomicScoreStatistics(
         self.score_histograms = histograms
 
     @staticmethod
-    def get_min_max_file(score_id):
-        return f"min_max_{score_id}.yaml"
-
-    @staticmethod
     def build_statistics(genomic_resource):
         min_maxes = {}
         histograms = {}

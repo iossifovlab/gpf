@@ -5,6 +5,8 @@ import os
 import logging
 import copy
 import textwrap
+import yaml
+import itertools
 
 from typing import Optional, Any, cast
 
@@ -15,7 +17,8 @@ from cerberus import Validator
 from dae.genomic_resources.fsspec_protocol import build_local_resource
 from dae.genomic_resources.resource_implementation import \
     GenomicResourceImplementation, get_base_resource_schema, \
-    InfoImplementationMixin, ResourceConfigValidationMixin
+    InfoImplementationMixin, ResourceConfigValidationMixin, ResourceStatistics
+from dae.genomic_resources.statistics.base_statistic import Statistic
 
 from dae.utils.regions import Region
 from dae.genomic_resources import GenomicResource
@@ -23,6 +26,210 @@ from dae.task_graph.graph import Task
 
 
 logger = logging.getLogger(__name__)
+
+
+class GenomeStatisticsMixin:
+    @staticmethod
+    def get_global_statistic_file():
+        return "reference_genome_statistic.yaml"
+
+    @staticmethod
+    def get_chrom_file(chrom):
+        return f"{chrom}_statistic.yaml"
+
+
+class ReferenceGenomeStatistics(
+    ResourceStatistics,
+    GenomeStatisticsMixin
+):
+    """Class for accessing reference genome statistics."""
+
+    def __init__(self, resource_id, global_statistic, chrom_statistics):
+        super().__init__(resource_id)
+        self.global_statistic = global_statistic
+        self.chrom_statistics = chrom_statistics
+
+    @staticmethod
+    def build_statistics(genomic_resource):
+        chrom_statistics = {}
+        try:
+            global_stat_filepath = os.path.join(
+                ReferenceGenomeStatistics.get_statistics_folder(),
+                ReferenceGenomeStatistics.get_global_statistic_file()
+            )
+            with genomic_resource.open_raw_file(
+                    global_stat_filepath, mode="r") as infile:
+                global_statistic = GenomeStatistic.deserialize(infile.read())
+            for chrom in global_statistic.chromosomes:
+                chrom_stat_filepath = os.path.join(
+                    ReferenceGenomeStatistics.get_statistics_folder(),
+                    ReferenceGenomeStatistics.get_chrom_file(chrom),
+                )
+                with genomic_resource.open_raw_file(
+                        chrom_stat_filepath, mode="r") as infile:
+                    chrom_statistics[chrom] = ChromosomeStatistic.deserialize(
+                        infile.read()
+                    )
+        except FileNotFoundError:
+            logger.exception(
+                "Couldn't load statistics of %s", genomic_resource.resource_id
+            )
+            return ReferenceGenomeStatistics(genomic_resource, None, {})
+        return ReferenceGenomeStatistics(
+            genomic_resource,
+            global_statistic,
+            chrom_statistics
+        )
+
+
+class ChromosomeStatistic(Statistic):
+    """Class for individual chromosome statistics."""
+
+    def __init__(self, chromosome, length=0, nucleotide_counts=None):
+        super().__init__(chromosome, None)
+        if nucleotide_counts is None:
+            self.nucleotide_counts = {
+                "A": 0,
+                "G": 0,
+                "C": 0,
+                "T": 0,
+                "N": 0
+            }
+        else:
+            assert set(
+                nucleotide_counts.keys
+            ) == set(
+                ["A", "G", "C", "T", "N"]
+            )
+            self.nucleotide_counts = nucleotide_counts
+
+        self.nucleotide_distribution = {}
+        self.length = length
+        self.test = ""
+
+    def add_value(self, value):
+        self.length += 1
+        assert value in self.nucleotide_counts, value
+        self.test += value
+        self.nucleotide_counts[value] += 1
+
+    def merge(self, other):
+        local_keys = set(self.nucleotide_counts.keys)
+        other_keys = set(other.nucleotide_counts.keys)
+        matching_keys = local_keys.intersection(other_keys)
+        missing_keys = other_keys.difference(local_keys)
+        for k in matching_keys:
+            self.nucleotide_counts[k] += other.nucleotide_counts[k]
+        for k in missing_keys:
+            self.nucleotide_counts[k] = other.nucleotide_counts[k]
+
+        self.length += other.length
+
+    def finish(self):
+        for nucleotide, count in self.nucleotide_counts.items():
+            self.nucleotide_distribution[nucleotide] = \
+                count / self.length * 100
+
+    def serialize(self):
+        return cast(str, yaml.dump(
+            {
+                "chrom": self.statistic_id,
+                "length": self.length,
+                "nucleotide_counts": self.nucleotide_counts
+            }
+        ))
+
+    @staticmethod
+    def deserialize(data):
+        res = yaml.load(data, yaml.Loader)
+        stat = ChromosomeStatistic(
+            res["chrom"], res.get("length"), res.get("nucleotide_counts")
+        )
+        stat.finish()
+        return stat
+
+
+class GenomeStatistic(ChromosomeStatistic):
+    """Class for the global reference genome statistic."""
+
+    def __init__(
+            self, chromosomes, length=0,
+            nucleotide_counts=None, nucleotide_pair_counts=None
+    ):
+        super().__init__("global", length, nucleotide_counts)
+        self.chromosomes = chromosomes
+        nucleotides = ["A", "G", "C", "T"]
+        pairs = map("".join, itertools.product(nucleotides, nucleotides))
+        if nucleotide_pair_counts is None:
+            self.nucleotide_pair_counts = {
+                k: 0 for k in pairs
+            }
+        else:
+            assert set(nucleotide_pair_counts.keys) == set(pairs)
+            self.nucleotide_pair_counts = nucleotide_pair_counts
+        self.bi_nucleotide_distribution = {}
+        self.last_chrom = ""
+
+    def _add_nucleotide_tuple(self, value1, value2):
+        if value1 is None or value2 is None:
+            return
+
+        pair = f"{value1}{value2}"
+        if pair not in self.nucleotide_pair_counts:
+            return
+        self.nucleotide_pair_counts[pair] += 1
+
+    @property
+    def chrom_count(self):
+        return len(self.chromosomes)
+
+    def add_value(self, value):
+        chrom, left, right = value
+        if self.last_chrom != chrom:
+            super().add_value(left)
+            self.last_chrom = chrom
+        super().add_value(right)
+        self._add_nucleotide_tuple(left, right)
+
+    def finish(self):
+        super().finish()
+
+        total_pairs = sum(self.nucleotide_pair_counts.values())
+        for pair, count in self.nucleotide_pair_counts.items():
+            self.bi_nucleotide_distribution[pair] = count / total_pairs * 100
+
+    def merge(self, other):
+        super().merge(other)
+        local_keys = set(self.nucleotide_pair_counts.keys)
+        other_keys = set(other.nucleotide_pair_counts.keys)
+        matching_keys = local_keys.intersection(other_keys)
+        missing_keys = other_keys.difference(local_keys)
+        for k in matching_keys:
+            self.nucleotide_pair_counts[k] += other.chrom_statistics[k]
+        for k in missing_keys:
+            self.nucleotide_pair_counts[k] = other.chrom_statistics[k]
+
+        self.length += other.length
+
+    def serialize(self):
+        return cast(str, yaml.dump({
+            "chromosomes": self.chromosomes,
+            "length": self.length,
+            "nucleotide_counts": self.nucleotide_counts,
+            "nucleotide_pair_counts": self.nucleotide_pair_counts
+        }))
+
+    @staticmethod
+    def deserialize(data):
+        res = yaml.load(data, yaml.Loader)
+        stat = GenomeStatistic(
+            res["chromosomes"],
+            res.get("length"),
+            res.get("nucleotide_counts"),
+            res.get("nucleotide_pair_counts")
+        )
+        stat.finish()
+        return stat
 
 
 class ReferenceGenome(
@@ -38,7 +245,7 @@ class ReferenceGenome(
         super().__init__(resource)
         if resource.get_type() != "genome":
             raise ValueError(
-                f"wront type of resource passed: {resource.get_type()}")
+                f"wrong type of resource passed: {resource.get_type()}")
         self._index: dict[str, Any] = {}
         self._chromosomes: list[str] = []
         self._sequence = None
@@ -158,19 +365,20 @@ class ReferenceGenome(
             (key, value["length"])
             for key, value in self._index.items()]
 
-    # def split_into_regions(self, region_size):
-    #     chromosome_lengths = self.get_all_chrom_lengths()
-    #     print(chromosome_lengths)
-    #     for chrom, chrom_len in chromosome_lengths:
-    #         print(chrom, chrom_len)
-    #         logger.debug(
-    #             "Chromosome '%s' has length %s",
-    #             chrom, chrom_len)
-    #         i = 1
-    #         while i < chrom_len - region_size:
-    #             yield chrom, i, i + region_size - 1
-    #             i += region_size
-    #         yield chrom, i, None
+    def split_into_regions(self, region_size, chrom=None):
+        if chrom is None:
+            chromosome_lengths = self.get_all_chrom_lengths()
+        else:
+            chromosome_lengths = [(chrom, self.get_chrom_length(chrom))]
+        for chrom, chrom_len in chromosome_lengths:
+            logger.debug(
+                "Chromosome '%s' has length %s",
+                chrom, chrom_len)
+            i = 1
+            while i < chrom_len - region_size:
+                yield chrom, i, i + region_size - 1
+                i += region_size
+            yield chrom, i, None
 
     def get_sequence(self, chrom, start, stop):
         """Return sequence of nucleotides from specified chromosome region."""
@@ -187,12 +395,38 @@ class ReferenceGenome(
             + (start - 1) // self._index[chrom]["seqLineLength"]
         )
 
-        length = stop - start + 1
+        if stop is None:
+            length = self._index[chrom]["length"] - start + 1
+        else:
+            length = stop - start + 1
         line_feeds = 1 + length // self._index[chrom]["seqLineLength"]
 
         sequence = self._sequence.read(length + line_feeds).decode("ascii")
         sequence = sequence.replace("\n", "")[:length]
         return sequence.upper()
+
+    def pair_iter(self, region_size=1_000_000):
+        """
+        Iterate and yield nucleotide pairs in the genome.
+
+        The return value is a triple of the chromosome, the left and the right
+        nucleotide.
+        """
+        self._sequence.seek(0)
+        last_chrom = None
+        last_nuc = None
+        for chrom, start, end in self.split_into_regions(region_size):
+            sequence = self.get_sequence(chrom, start, end)
+            if chrom != last_chrom:
+                last_chrom = chrom
+            else:
+                sequence = itertools.chain(
+                    last_nuc, sequence
+                )
+
+            for left, right in zip(sequence, sequence[1:]):
+                yield (chrom, left, right)
+            last_nuc = sequence[-1]
 
     def is_pseudoautosomal(self, chrom: str, pos: int) -> bool:
         """Return true if specified position is pseudoautosomal."""
@@ -271,7 +505,114 @@ class ReferenceGenome(
         return b"placeholder"
 
     def add_statistics_build_tasks(self, task_graph, **kwargs) -> list[Task]:
-        return []
+        tasks = []
+
+        region_size = kwargs.get("region_size", 1_000_000)
+
+        with self.open():
+            for chrom in self.chromosomes:
+                _, _, chrom_save_task = self._add_chrom_stats_tasks(
+                    task_graph, chrom, region_size
+                )
+                tasks.append(chrom_save_task)
+
+        # tasks.append(self._add_global_stat_task(task_graph))
+        return tasks
+
+    def _add_chrom_stats_tasks(self, task_graph, chrom, region_size):
+        chrom_tasks = []
+        regions = self.split_into_regions(region_size, chrom)
+        for _, start, end in regions:
+            chrom_tasks.append(task_graph.create_task(
+                f"{self.resource.resource_id}_count_nucleotides_"
+                f"{chrom}_{start}_{end}",
+                ReferenceGenome._do_chrom_statistic,
+                [self.resource, chrom, start, end],
+                []
+            ))
+        chroms = self.chromosomes
+        merge_task = task_graph.create_task(
+            f"{self.resource.resource_id}_merge_chrom_statistics_{chrom}",
+            ReferenceGenome._merge_chrom_statistics,
+            [chroms, *chrom_tasks],
+            chrom_tasks
+        )
+        save_task = task_graph.create_task(
+            f"{self.resource.resource_id}_save_chrom_statistics_{chrom}",
+            ReferenceGenome._save_chrom_statistics,
+            [self.resource, merge_task],
+            [merge_task]
+        )
+
+        return chrom_tasks, merge_task, save_task
+
+    def _add_global_stat_task(self, task_graph):
+        return task_graph.create_task(
+            f"{self.resource.resource_id}_save_chrom_statistics",
+            ReferenceGenome._do_global_statistic,
+            [self.resource],
+            []
+        )
+
+    @staticmethod
+    def _do_chrom_statistic(resource, chrom, start, end):
+        impl = build_reference_genome_from_resource(resource)
+        statistic = ChromosomeStatistic(chrom)
+        with impl.open():
+            for nuc in impl.get_sequence(chrom, start, end):
+                statistic.add_value(nuc)
+
+        statistic.finish()
+        return {
+            chrom: statistic
+        }
+
+    @staticmethod
+    def _merge_chrom_statistics(chroms, *chrom_tasks):
+        res: dict[str, Optional[ChromosomeStatistic]] = {
+            chrom: None for chrom in chroms}
+
+        for chrom_task_result in chrom_tasks:
+            for task_chrom, task_result in chrom_task_result.items():
+                if res[task_chrom] is None:
+                    res[task_chrom] = task_result
+                else:
+                    res[task_chrom].merge(task_result)
+        return res
+
+    @staticmethod
+    def _save_chrom_statistics(resource, merged_statistics):
+        proto = resource.proto
+        for chrom, chrom_statistic in merged_statistics.items():
+            if chrom_statistic is None:
+                logger.warning("Chrom statistic for %s is None", chrom)
+                continue
+            with proto.open_raw_file(
+                resource,
+                f"{ReferenceGenomeStatistics.get_statistics_folder()}"
+                f"/{ReferenceGenomeStatistics.get_chrom_file(chrom)}",
+                mode="wt"
+            ) as outfile:
+                outfile.write(chrom_statistic.serialize())
+        return merged_statistics
+
+    @staticmethod
+    def _do_global_statistic(resource):
+        impl = build_reference_genome_from_resource(resource)
+        with impl.open():
+            statistic = GenomeStatistic(impl.chromosomes)
+            for pair in impl.pair_iter():
+                statistic.add_value(pair)
+
+        proto = resource.proto
+        with proto.open_raw_file(
+            resource,
+            f"{ReferenceGenomeStatistics.get_statistics_folder()}"
+            f"/{ReferenceGenomeStatistics.get_global_statistic_file()}",
+            mode="wt"
+        ) as outfile:
+            outfile.write(statistic.serialize())
+        return statistic
 
 
 def build_reference_genome_from_file(filename) -> ReferenceGenome:
