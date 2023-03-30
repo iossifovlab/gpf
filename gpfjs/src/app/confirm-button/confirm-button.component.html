@@ -11,12 +11,14 @@
             [mwlFocus]="options.focusButton === 'confirm'"
             [class]="'btn btn-' + options.confirmButtonType"
             (click)="options.onConfirm({ clickEvent: $event })"
+            [attr.title]="options.confirmText"
             [innerHtml]="options.confirmText"></button>
           <button
             *ngIf="!options.hideCancelButton"
             [mwlFocus]="options.focusButton === 'cancel'"
             [class]="'btn btn-' + options.cancelButtonType"
             (click)="options.onCancel({ clickEvent: $event })"
+            [attr.title]="options.cancelText"
             [innerHtml]="options.cancelText"></button>
         </div>
       </div>
