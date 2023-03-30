@@ -1,9 +1,9 @@
 from __future__ import annotations
 
+import os
 import sys
 import argparse
 import logging
-import glob
 from typing import List, Optional
 
 from pysam import VariantFile, TabixFile  # pylint: disable=no-name-in-module
@@ -11,6 +11,7 @@ from pysam import VariantFile, TabixFile  # pylint: disable=no-name-in-module
 from dae.annotation.context import CLIAnnotationContext
 from dae.annotation.annotatable import VCFAllele
 from dae.utils.verbosity_configuration import VerbosityConfiguration
+from dae.utils.fs_utils import tabix_index_filename
 from dae.genomic_resources.genomic_context import get_genomic_context
 from dae.task_graph import TaskGraphCli
 from dae.task_graph.graph import TaskGraph
@@ -19,6 +20,10 @@ logger = logging.getLogger("annotate_vcf")
 
 
 # TODO Make unit test for multiallelic vcf input
+
+
+PART_FILENAME = "{in_file}_annotation_{chrom}_{pos_beg}_{pos_end}.vcf"
+COMBINED_FILENAME = "combined.vcf"
 
 
 def configure_argument_parser() -> argparse.ArgumentParser:
@@ -33,30 +38,34 @@ def configure_argument_parser() -> argparse.ArgumentParser:
                         help="The pipeline definition file. By default, or if "
                         "the value is gpf_instance, the annotation pipeline "
                         "from the configured gpf instance will be used.")
-    parser.add_argument("output", default="-", nargs="?",
-                        help="the output column file")
-    parser.add_argument("region_size", default=500,
+    parser.add_argument("-r", "--region-size", default=300_000_000,
                         type=int, help="region size to parallelize by")
-
+    parser.add_argument("-o", "--work-dir",
+                        help="Directory to store output files in",
+                        default="output")
     CLIAnnotationContext.add_context_arguments(parser)
     TaskGraphCli.add_arguments(parser)
     VerbosityConfiguration.set_argumnets(parser)
     return parser
 
 
-def annotate(input_file, region, pipeline):
-    # once again open the VCF file
-    # query variants from it for given region
-    # annotate them and yield them how?
-    # handling the variants
+def update_header(variant_file, pipeline):
+    """Update a variant file's header with annotation pipeline scores."""
+    header = variant_file.header
+    header.add_meta("pipeline_annotation_tool", "GPF variant annotation.")
+    header.add_meta("pipeline_annotation_tool", f"{' '.join(sys.argv)}")
+    for attribute in pipeline.annotation_schema.names:
+        description = pipeline.annotation_schema[attribute].description
+        description = description.replace("\n", " ")
+        header.info.add(attribute, "A", "String", description)
+
+
+def annotate(input_file, region, pipeline, out_filepath):
+    """Annotate a region from a given input VCF file using a pipeline."""
     in_file = VariantFile(input_file)
     update_header(in_file, pipeline)
+    out_file = VariantFile(out_filepath, "w", header=in_file.header)
     annotation_attributes = pipeline.annotation_schema.names
-    out_file = VariantFile(
-        f"output/{input_file}_annotation_{region[0]}_{region[1]}_{region[2]}",
-        "w",
-        header=in_file.header
-    )
     with pipeline.open():
         for vcf_var in in_file.fetch(*region):
             # pylint: disable=use-list-literal
@@ -67,9 +76,9 @@ def annotate(input_file, region, pipeline):
                 continue
 
             for alt in vcf_var.alts:
-                annotabale = VCFAllele(
-                    vcf_var.chrom, vcf_var.pos, vcf_var.ref, alt)
-                annotation = pipeline.annotate(annotabale)
+                annotation = pipeline.annotate(
+                    VCFAllele(vcf_var.chrom, vcf_var.pos, vcf_var.ref, alt)
+                )
                 for buff, attribute in zip(buffers, annotation_attributes):
                     # TODO Ask what value to use for missing attr
                     buff.append(str(annotation.get(attribute, "-")))
@@ -81,28 +90,44 @@ def annotate(input_file, region, pipeline):
     in_file.close()
 
 
-def combine(input_file, pipeline):
-    input_file = VariantFile(input_file)
+def combine(input_filepath, pipeline, regions, work_dir):
+    """Combine annotated regions into a single VCF file."""
+    input_file = VariantFile(input_filepath)
     update_header(input_file, pipeline)
-    with VariantFile("output/combined", "w", header=input_file.header) as out:
-        for part_filename in glob.glob("output/*_annotation_*"):
+    output_filepath = os.path.join(work_dir, COMBINED_FILENAME)
+    with VariantFile(output_filepath, "w", header=input_file.header) as out:
+        # we re-construct the filenames from the regions in order to
+        # preserve the ordering of the variants by position
+        for region in regions:
+            part_filename = os.path.join(work_dir, PART_FILENAME.format(
+                in_file=input_filepath,
+                chrom=region[0], pos_beg=region[1], pos_end=region[2]
+            ))
             part_file = VariantFile(part_filename)
             for rec in part_file.fetch():
                 out.write(rec)
     input_file.close()
 
 
-def update_header(variant_file, pipeline):
-    header = variant_file.header
-    header.add_meta(
-        "pipeline_annotation_tool", "GPF variant annotation."
-    )
-    header.add_meta(
-        "pipeline_annotation_tool", f"{' '.join(sys.argv)}")
-    for attribute in pipeline.annotation_schema.names:
-        description = pipeline.annotation_schema[attribute].description
-        description = description.replace("\n", " ")
-        header.info.add(attribute, "A", "String", description)
+def produce_regions(context, contigs, region_size):
+    """Given a region size, produce contig regions to annotate by."""
+    ref_genome = context.get_reference_genome()
+    assert ref_genome is not None
+    contig_lengths = {}
+    unknown_contigs = []
+    for contig in contigs:
+        try:
+            contig_lengths[contig] = ref_genome.get_chrom_length(contig)
+        except ValueError:
+            logger.warning(
+                "Could not find contig %s in reference genome", contig
+            )
+            unknown_contigs.append((contig,))
+    return [
+        (contig, start, start + region_size)
+        for contig, length in contig_lengths.items()
+        for start in range(1, length, region_size)
+    ] + unknown_contigs
 
 
 def cli(raw_args: Optional[list[str]] = None) -> None:
@@ -118,46 +143,40 @@ def cli(raw_args: Optional[list[str]] = None) -> None:
     context = get_genomic_context()
     pipeline = CLIAnnotationContext.get_pipeline(context)
 
-    if args.output == "-":
-        out_file = sys.stdout
-    else:
-        # pylint: disable=consider-using-with
-        out_file = open(args.output, "wt")
+    assert not os.path.exists(args.work_dir)
+    os.mkdir(args.work_dir)
 
-    with TabixFile(args.input) as pysam_file:
-        contigs = list(map(str, pysam_file.contigs))
+    def run_parallelized():
+        with TabixFile(args.input) as pysam_file:
+            contigs = list(map(str, pysam_file.contigs))
+        regions = produce_regions(context, contigs, args.region_size)
 
-    ref_genome = context.get_reference_genome()
-    assert ref_genome is not None
-    contig_lengths = {}
-    for contig in contigs:
-        try:
-            contig_lengths[contig] = ref_genome.get_chrom_length(contig)
-        except ValueError as exc:
-            # TODO Handle missing chromosomes by queueing them as an
-            # entire region by themselves
-            print(str(exc))
-    # TODO Use utils/regions and create func for building regions.
-    # genomic resources - genomic_scores.py _split_into_regions
-    # make it cover both use cases and extract as util
-    regions = [
-        (contig, start, start + args.region_size)
-        for contig, length in contig_lengths.items()
-        for start in range(1, length, args.region_size)
-    ]
-    task_graph = TaskGraph()
-    parts = [
+        task_graph = TaskGraph()
+        for index, region in enumerate(regions):
+            out_filepath = os.path.join(args.work_dir, PART_FILENAME.format(
+                in_file=args.input,
+                chrom=region[0], pos_beg=region[1], pos_end=region[2]
+            ))
+            task_graph.create_task(
+                f"part-{index}", annotate,
+                [args.input, region, pipeline, out_filepath], []
+            )
         task_graph.create_task(
-            f"part-{index}", annotate,
-            [args.input, region, pipeline], []
+            "combine", combine,
+            [args.input, pipeline, regions, args.work_dir], []
         )
-        for index, region in enumerate(regions)
-    ]
-    task_graph.create_task("combine", combine, [args.input, pipeline], [])
-    TaskGraphCli.process_graph(task_graph, **vars(args))
+        TaskGraphCli.process_graph(task_graph, **vars(args))
 
-    if args.output != "-":
-        out_file.close()
+    def run_sequentially():
+        annotate(
+            args.input, tuple(), pipeline,
+            os.path.join(args.work_dir, COMBINED_FILENAME)
+        )
+
+    if tabix_index_filename(args.input):
+        run_parallelized()
+    else:
+        run_sequentially()
 
 
 if __name__ == "__main__":
