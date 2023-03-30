@@ -318,6 +318,16 @@ class ImportProject():
     def study_id(self):
         return self.import_config["id"]
 
+    def get_parquet_dataset_dir(self) -> Optional[str]:
+        """Return parquet dataset direcotry if configured and exists."""
+        processing_config = self.import_config.get("processing_config", {})
+        parquet_dataset_dir = processing_config.get("parquet_dataset_dir")
+        if parquet_dataset_dir is None:
+            return None
+        if not fs_utils.exists(parquet_dataset_dir):
+            return None
+        return cast(str, parquet_dataset_dir)
+
     def has_genotype_storage(self):
         """Return if a genotype storage can be created."""
         if not self._has_destination():

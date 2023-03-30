@@ -63,7 +63,7 @@ embedded_input_schema = {
     "input_dir": {"type": "string"}
 }
 
-import_config_schema = {
+import_config_schema: dict[str, Any] = {
     "id": {"type": "string"},
     "input": {
         "type": "dict",
@@ -78,6 +78,7 @@ import_config_schema = {
         "type": "dict",
         "schema": {
             "work_dir": {"type": "string"},
+            "parquet_dataset_dir": {"type": "string"},
             "include_reference": {"type": "boolean", "default": False},
             "vcf": _loader_processing_schema,
             "denovo": _loader_processing_schema,

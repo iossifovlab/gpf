@@ -137,9 +137,7 @@ class Schema2ImportStorage(ImportStorage):
             project.study_id,
             config, force=True)
 
-    def generate_import_task_graph(self, project) -> TaskGraph:
-        graph = TaskGraph()
-
+    def _build_all_parquet_tasks(self, project, graph):
         pedigree_task = graph.create_task(
             "Generating Pedigree", self._do_write_pedigree, [project], [],
             input_files=[project.get_pedigree_filename()]
@@ -169,11 +167,18 @@ class Schema2ImportStorage(ImportStorage):
         all_parquet_task = graph.create_task(
             "Parquet Tasks", lambda: None, [], output_dir_tasks + [bucket_sync]
         )
+        return [pedigree_task, all_parquet_task]
+
+    def generate_import_task_graph(self, project) -> TaskGraph:
+        graph = TaskGraph()
+        all_parquet_tasks = []
+        if project.get_parquet_dataset_dir() is None:
+            all_parquet_tasks = self._build_all_parquet_tasks(project, graph)
 
         if project.has_genotype_storage():
             hdfs_task = graph.create_task(
                 "Copying to HDFS", self._do_load_in_hdfs,
-                [project], [pedigree_task, all_parquet_task])
+                [project], all_parquet_tasks)
 
             impala_task = graph.create_task(
                 "Importing into Impala", self._do_load_in_impala,
