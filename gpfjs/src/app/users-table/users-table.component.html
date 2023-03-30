@@ -27,6 +27,8 @@
                   [attr.id]="user.email + '-new-name-input'"
                   spellcheck="false"
                   autocomplete="off"
+                  pattern=".{3,}"
+                  required
                   (keydown.enter)="edit(user, newNameBox.value)"
                   (keydown.escape)="currentUserEdit = -1" />
                 <button id="cancel-button" (click)="currentUserEdit = -1" title="Cancel">
