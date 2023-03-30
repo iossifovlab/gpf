@@ -212,12 +212,12 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
       download: true
     };
 
-    this.queryService.downloadVariants(args).pipe(take(1)).subscribe((response) => {
-      this.downloadInProgress = false;
-      downloadBlobResponse(response, 'variants.tsv');
-    }, () => {
-      this.downloadInProgress = false;
-    });
+    // this.queryService.downloadVariants(args).pipe(take(1)).subscribe((response) => {
+    //   this.downloadInProgress = false;
+    //   downloadBlobResponse(response, 'variants.tsv');
+    // }, () => {
+    //   this.downloadInProgress = false;
+    // });
   }
 
   public onDownloadSummary(): void {

@@ -142,12 +142,15 @@ export class QueryService {
     return genotypePreviewVariantsArray;
   }
 
-  public downloadVariants(filter: object): Observable<HttpResponse<Blob>> {
-    return this.http.post(
-      `${environment.apiPath}${this.genotypePreviewVariantsUrl}`,
-      filter,
-      {observe: 'response', headers: this.headers, responseType: 'blob'}
-    );
+  public downloadVariants(filter: object): Promise<Response> {
+    const headers = {'Content-Type': 'application/json'};
+    headers['Authorization'] = `Bearer ${this.authService.getAccessToken()}`;
+    return fetch(`${environment.apiPath}${this.genotypePreviewVariantsUrl}`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: headers,
+      body: JSON.stringify(filter)
+    });
   }
 
   public downloadVariantsSummary(filter: object): Observable<HttpResponse<Blob>> {
