@@ -137,7 +137,7 @@ export class UserManagementComponent implements OnInit {
   }
 
   private isNameValid(name: string): boolean {
-    const re = new RegExp(/.{2,}/);
+    const re = new RegExp(/.{3,}/);
     return re.test(String(name).toLowerCase());
   }
 

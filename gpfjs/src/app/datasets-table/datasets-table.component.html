@@ -5,13 +5,13 @@
       <div class="grid-header">Groups</div>
       <div class="grid-header">Users</div>
       <ng-container *ngFor="let dataset of datasets">
-        <div class="grid-cell">
+        <div class="grid-cell" [attr.id]="dataset.name + '-dataset-cell'">
           <span>{{ dataset.name }}</span>
         </div>
 
-        <div class="grid-cell list-cell">
-          <div>
-            <div class="item-wrapper" *ngFor="let group of dataset.groups">
+        <div class="grid-cell list-cell" [attr.id]="dataset.name + '-groups-cell'">
+          <div [attr.id]="dataset.name + '-groups-list'">
+            <div class="item-wrapper" *ngFor="let group of dataset.groups" [attr.id]="group + '-list-item'">
               <span class="item" [title]="group">{{ group }}</span>
               <gpf-confirm-button
                 *ngIf="!isDefaultGroup(dataset, group)"
@@ -28,9 +28,15 @@
             (addedItem)="addGroup(dataset, $event)"></gpf-item-add-menu>
         </div>
 
-        <div class="grid-cell list-cell">
-          <div>
-            <div class="item" [title]="user.name + ' ' + user.email" *ngFor="let user of dataset.users">{{ user.name + ' ' + user.email }}</div>
+        <div class="grid-cell list-cell" [attr.id]="dataset.name + '-users-cell'">
+          <div [attr.id]="dataset.name + '-users-list-cell'">
+            <div
+              class="item"
+              [title]="user.name + ' ' + user.email"
+              *ngFor="let user of dataset.users"
+              [attr.id]="user.email + '-list-item'"
+              >{{ user.name + ' ' + user.email }}</div
+            >
           </div>
         </div>
       </ng-container>

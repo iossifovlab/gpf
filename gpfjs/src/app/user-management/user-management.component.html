@@ -13,17 +13,12 @@
                 placeholder="Search"
                 autocomplete="off"
                 (keyup)="search(searchBox.value)"
+                (search)="search(searchBox.value)"
                 id="search-field"
                 class="search-input form-control my-0 py-1"
-                type="text"
+                type="search"
                 [ngModel]="searchText"
                 spellcheck="false" />
-              <span
-                class="search-clear-icon"
-                [style.background-image]="'url(' + imgPathPrefix + 'search-clear-icon.png)'"
-                *ngIf="searchBox.value !== ''"
-                (click)="searchBox.value = ''; search(searchBox.value)">
-              </span>
             </ng-container>
 
             <ng-container *ngIf="createMode">
@@ -34,7 +29,7 @@
                 id="name-box"
                 class="search-input form-control my-0 py-1"
                 type="text"
-                pattern=".{2,}"
+                pattern=".{3,}"
                 required
                 spellcheck="false" />
               <input
@@ -78,18 +73,13 @@
                 placeholder="Search"
                 autocomplete="off"
                 (keyup)="search(searchBox.value)"
+                (search)="search(searchBox.value)"
                 id="search-field"
                 class="search-input form-control my-0 py-1"
-                type="text"
+                type="search"
                 aria-label="Search"
                 [ngModel]="searchText"
                 spellcheck="false" />
-              <span
-                class="search-clear-icon"
-                [style.background-image]="'url(' + imgPathPrefix + 'search-clear-icon.png)'"
-                *ngIf="searchBox.value !== ''"
-                (click)="searchBox.value = ''; search(searchBox.value)">
-              </span>
             </ng-container>
             <ng-container *ngIf="createMode">
               <input
@@ -99,7 +89,7 @@
                 id="group-name-box"
                 class="search-input form-control my-0 py-1"
                 type="text"
-                pattern=".{2,}"
+                pattern=".{3,}"
                 required
                 spellcheck="false" />
               <button id="create-group-button" class="btn btn-primary" (click)="createGroup(groupNameBox.value)"

@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, ElementRef, Input, ViewChild } from '@angular/core';
 import { User } from '../users/users';
 import { UsersService } from '../users/users.service';
 import { map, mergeMap, take } from 'rxjs/operators';
@@ -15,6 +15,8 @@ import { Observable } from 'rxjs';
 export class UsersTableComponent {
   @Input() public users: User[];
   @Input() public currentUserEmail: string;
+
+  @ViewChild('newNameBox') private nameBox: ElementRef;
   public currentUserEdit = -1;
 
   public constructor(
@@ -64,6 +66,11 @@ export class UsersTableComponent {
   }
 
   public edit(user: User, name: string): void {
+    if (!this.isNameValid(name)) {
+      (this.nameBox.nativeElement as HTMLInputElement).focus();
+      return;
+    }
+
     user.name = name;
     this.usersService.updateUser(user)
       .pipe(take(1))
@@ -72,5 +79,10 @@ export class UsersTableComponent {
       });
 
     this.currentUserEdit = -1;
+  }
+
+  private isNameValid(name: string): boolean {
+    const re = new RegExp(/.{3,}/);
+    return re.test(String(name).toLowerCase());
   }
 }
