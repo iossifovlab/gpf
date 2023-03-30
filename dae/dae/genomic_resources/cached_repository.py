@@ -239,9 +239,8 @@ class GenomicResourceCachedRepo(GenomicResourceRepo):
             resource_files = {}
             for resource in resources:
                 remote_manifest = resource.get_manifest()
-                resource_files[resource.get_id()] = set(
-                    remote_manifest.names()
-                )
+                resource_files[resource.get_id()] = \
+                    set(remote_manifest.names()) - {"genomic_resource.yaml"}
 
         for rem_resource in resources:
             files_to_cache = resource_files.get(rem_resource.get_id())
@@ -259,5 +258,6 @@ class GenomicResourceCachedRepo(GenomicResourceRepo):
                         {res_file, }
                     )
                 )
-            for future in as_completed(futures):
-                future.result()
+        for future in as_completed(futures):
+            future.result()
+        executor.shutdown()

@@ -357,6 +357,8 @@ class Mode(enum.Enum):
 class ReadOnlyRepositoryProtocol(abc.ABC):
     """Defines read only genomic resources repository protocol."""
 
+    CHUNK_SIZE = 32768
+
     def __init__(self, proto_id: str):
         self.proto_id = proto_id
 
@@ -470,7 +472,7 @@ class ReadOnlyRepositoryProtocol(abc.ABC):
 
         with self.open_raw_file(resource, filename, "rb") as infile:
             md5_hash = hashlib.md5()
-            while chunk := infile.read(8192):
+            while chunk := infile.read(self.CHUNK_SIZE):
                 md5_hash.update(chunk)
         return md5_hash.hexdigest()
 
@@ -511,17 +513,30 @@ class ReadWriteRepositoryProtocol(ReadOnlyRepositoryProtocol):
     def _update_manifest_entry_and_state(
             self, resource, entry, prebuild_entries):
         pre_state = self.load_resource_file_state(resource, entry.name)
-
         size = None
         md5 = None
         if entry.name in prebuild_entries:
             ready_entry = prebuild_entries[entry.name]
             size = ready_entry.size
             md5 = ready_entry.md5
-        state = self.build_resource_file_state(
-            resource, entry.name, size=size, md5=md5)
-        if state != pre_state:
+
+        if pre_state is None:
+            state = self.build_resource_file_state(
+                resource, entry.name, size=size, md5=md5)
             self.save_resource_file_state(resource, state)
+        elif entry.name in prebuild_entries:
+            state = self.build_resource_file_state(
+                resource, entry.name, size=size, md5=md5)
+        else:
+            timestamp = self.get_resource_file_timestamp(resource, entry.name)
+            size = self.get_resource_file_size(resource, entry.name)
+            if timestamp == pre_state.timestamp and size == pre_state.size:
+                state = pre_state
+            else:
+                state = self.build_resource_file_state(
+                    resource, entry.name, size=size, md5=md5)
+                self.save_resource_file_state(resource, state)
+
         entry.md5 = state.md5
         entry.size = state.size
 
@@ -570,6 +585,10 @@ class ReadWriteRepositoryProtocol(ReadOnlyRepositoryProtocol):
                     state.size != file_size:
                 entries_to_update.add(entry.name)
                 continue
+            if state.md5 != current_manifest[entry.name].md5:
+                entries_to_update.add(entry.name)
+                continue
+
             entry.md5 = state.md5
             entry.size = state.size
 
