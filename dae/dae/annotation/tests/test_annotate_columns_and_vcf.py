@@ -148,18 +148,19 @@ def test_basic_setup_vcf(tmp_path, annotate_directory_fixture):
     })
 
     in_file = tmp_path / "in.vcf"
-    out_file = tmp_path / "out.vcf"
+    workdir = f"{tmp_path}/output"
     annotation_file = tmp_path / "annotation.yaml"
     grr_file = tmp_path / "grr.yaml"
 
     cli_vcf([
         str(a) for a in [
-            in_file, annotation_file, out_file, "--grr", grr_file
+            in_file, annotation_file, "-o", workdir, "--grr", grr_file
         ]
     ])
 
     result = []
-    with pysam.VariantFile(out_file) as vcf_file:  # pylint: disable=no-member
+    # pylint: disable=no-member
+    with pysam.VariantFile(f"{workdir}/combined.vcf") as vcf_file:
         for vcf in vcf_file.fetch():
             result.append(vcf.info["score"][0])
     assert result == ["0.01", "0.2"]

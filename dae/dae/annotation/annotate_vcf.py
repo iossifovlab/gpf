@@ -41,7 +41,7 @@ def configure_argument_parser() -> argparse.ArgumentParser:
     parser.add_argument("-r", "--region-size", default=300_000_000,
                         type=int, help="region size to parallelize by")
     parser.add_argument("-o", "--work-dir",
-                        help="Directory to store output files in",
+                        help="Directory to store intermediate output files in",
                         default="output")
     CLIAnnotationContext.add_context_arguments(parser)
     TaskGraphCli.add_arguments(parser)
