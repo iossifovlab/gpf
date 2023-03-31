@@ -1,6 +1,4 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-import textwrap
-
 import pytest
 
 from dae.testing import setup_pedigree, setup_denovo, denovo_study
@@ -43,11 +41,12 @@ def trios2_study(tmp_path_factory):
         root_path,
         "trios2", ped_path, [vcf_path],
         gpf_instance,
-        study_config_update=textwrap.dedent("""
-        id: trios2
-        common_report:
-          enabled: True
-        """))
+        study_config_update={
+            "id": "trios2",
+            "common_report": {
+                "enabled": True
+            }
+        })
     return study
 
 

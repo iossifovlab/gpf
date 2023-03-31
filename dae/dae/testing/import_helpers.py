@@ -21,7 +21,9 @@ class StudyInputLayout:
     cnv: list[pathlib.Path]
 
 
-def update_study_config(gpf_instance, study_id: str, study_config_update: str):
+def update_study_config(
+        gpf_instance, study_id: str,
+        study_config_update: dict[str, Any]):
     """Update study configuration."""
     config_path = pathlib.Path(gpf_instance.dae_dir) / \
         "studies" / \
@@ -29,9 +31,7 @@ def update_study_config(gpf_instance, study_id: str, study_config_update: str):
         f"{study_id}.yaml"
     with open(config_path, "r", encoding="utf") as infile:
         config = yaml.safe_load(infile.read())
-    config_update = yaml.safe_load(study_config_update)
-    config.update(config_update)
-
+    config = recursive_dict_update(config, study_config_update)
     builder = StudyConfigBuilder(config)
     with open(config_path, "wt", encoding="utf8") as outfile:
         outfile.write(builder.build_config())
@@ -89,7 +89,7 @@ def setup_import_project(
 def data_import(
         root_path: pathlib.Path, study: StudyInputLayout, gpf_instance,
         project_config_update: Optional[dict[str, Any]] = None,
-        study_config_update: str = ""):
+        study_config_update: Optional[dict[str, Any]] = None):
     """Set up an import project for a study and imports it."""
     setup_import_project(
         root_path, study, gpf_instance,
@@ -115,7 +115,7 @@ def vcf_import(
         ped_path: pathlib.Path, vcf_paths: list[pathlib.Path],
         gpf_instance,
         project_config_update: Optional[dict[str, Any]] = None,
-        study_config_update: str = ""):
+        study_config_update: Optional[dict[str, Any]] = None):
     """Import a VCF study and return the import project."""
     study = StudyInputLayout(study_id, ped_path, vcf_paths, [], [], [])
     project = data_import(
@@ -131,7 +131,7 @@ def vcf_study(
         ped_path: pathlib.Path, vcf_paths: list[pathlib.Path],
         gpf_instance,
         project_config_update: Optional[dict[str, Any]] = None,
-        study_config_update: str = ""):
+        study_config_update: Optional[dict[str, Any]] = None):
     """Import a VCF study and return the imported study."""
     vcf_import(
         root_path, study_id, ped_path, vcf_paths, gpf_instance,
@@ -147,7 +147,7 @@ def denovo_import(
         ped_path: pathlib.Path, denovo_paths: list[pathlib.Path],
         gpf_instance,
         project_config_update: Optional[dict[str, Any]] = None,
-        study_config_update: str = ""):
+        study_config_update: Optional[dict[str, Any]] = None):
     """Import a de Novo study and return the import project."""
     study = StudyInputLayout(study_id, ped_path, [], denovo_paths, [], [])
     project = data_import(
@@ -163,7 +163,7 @@ def denovo_study(
         ped_path: pathlib.Path, denovo_paths: list[pathlib.Path],
         gpf_instance,
         project_config_update: Optional[dict[str, Any]] = None,
-        study_config_update: str = ""):
+        study_config_update: Optional[dict[str, Any]] = None):
     """Import a de Novo study and return the imported study."""
     denovo_import(
         root_path, study_id, ped_path, denovo_paths, gpf_instance,
@@ -196,7 +196,7 @@ def setup_dataset(
     return dataset
 
 
-def study_update(gpf_instance, study, study_config_update: str):
+def study_update(gpf_instance, study, study_config_update: dict[str, Any]):
     update_study_config(gpf_instance, study.study_id, study_config_update)
     gpf_instance.reload()
     return gpf_instance.get_genotype_data(study.study_id)
