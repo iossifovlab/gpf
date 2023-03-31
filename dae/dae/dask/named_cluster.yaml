@@ -29,6 +29,8 @@ dae_named_cluster:
         cores: 1
         memory: 1GB
         log_directory: ./.sge_worker_logs
+        job_extra_directives:
+        - "-V"
     - name: sge
       type: sge
       number_of_threads: 150
