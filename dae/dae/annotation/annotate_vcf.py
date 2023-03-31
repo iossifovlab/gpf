@@ -19,9 +19,6 @@ from dae.task_graph.graph import TaskGraph
 logger = logging.getLogger("annotate_vcf")
 
 
-# TODO Make unit test for multiallelic vcf input
-
-
 PART_FILENAME = "{in_file}_annotation_{chrom}_{pos_beg}_{pos_end}.vcf"
 COMBINED_FILENAME = "combined.vcf"
 
@@ -84,7 +81,7 @@ def annotate(input_file, region, pipeline, out_filepath):
                     buff.append(str(annotation.get(attribute, "-")))
 
             for attribute, buff in zip(annotation_attributes, buffers):
-                vcf_var.info[attribute] = ",".join(buff)
+                vcf_var.info[attribute] = buff
             out_file.write(vcf_var)
     out_file.close()
     in_file.close()

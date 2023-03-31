@@ -78,6 +78,9 @@ def annotate_directory_fixture(tmp_path):
         "annotation.yaml": """
             - position_score: one
             """,
+        "annotation_multiallelic.yaml": """
+            - allele_score: two
+            """,
         "grr.yaml": """
             id: mm
             type: embedded
@@ -98,6 +101,25 @@ def annotate_directory_fixture(tmp_path):
                         chrom  pos_begin  s1
                         chr1   23         0.01
                         chr1   24         0.2
+                two:
+                    genomic_resource.yaml: |
+                        type: allele_score
+                        table:
+                            filename: data.mem
+                            reference:
+                              name: reference
+                            alternative:
+                              name: alternative
+                        scores:
+                        - id: score
+                          type: float
+                          name: s1
+                    data.mem: |
+                        chrom  pos_begin  reference  alternative  s1
+                        chr1   23         C          T            0.1
+                        chr1   23         C          A            0.2
+                        chr1   24         C          A            0.3
+                        chr1   24         C          G            0.4
 
             """
     })
@@ -164,3 +186,35 @@ def test_basic_setup_vcf(tmp_path, annotate_directory_fixture):
         for vcf in vcf_file.fetch():
             result.append(vcf.info["score"][0])
     assert result == ["0.01", "0.2"]
+
+
+def test_multiallelic_setup_vcf(tmp_path, annotate_directory_fixture):
+    in_content = convert_to_tab_separated("""
+        ##fileformat=VCFv4.2
+        ##contig=<ID=chr1>
+        #CHROM POS ID REF ALT QUAL FILTER INFO
+        chr1   23  .  C   T,A   .    .      .
+        chr1   24  .  C   A,G   .    .      .
+        """)
+
+    setup_dir(tmp_path, {
+        "in.vcf": in_content
+    })
+
+    in_file = tmp_path / "in.vcf"
+    workdir = f"{tmp_path}/output"
+    annotation_file = tmp_path / "annotation_multiallelic.yaml"
+    grr_file = tmp_path / "grr.yaml"
+
+    cli_vcf([
+        str(a) for a in [
+            in_file, annotation_file, "-o", workdir, "--grr", grr_file
+        ]
+    ])
+
+    result = []
+    # pylint: disable=no-member
+    with pysam.VariantFile(f"{workdir}/combined.vcf") as vcf_file:
+        for vcf in vcf_file.fetch():
+            result.append(vcf.info["score"])
+    assert result == [("0.1", "0.2"), ("0.3", "0.4")]
