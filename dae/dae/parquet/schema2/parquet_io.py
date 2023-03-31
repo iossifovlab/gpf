@@ -37,8 +37,7 @@ class Schema2Layout:
     meta: str
 
 
-def schema2_layout(work_dir: str, study_id: str) -> Schema2Layout:
-    study_dir = fs_utils.join(work_dir, study_id)
+def schema2_layout(study_dir: str) -> Schema2Layout:
     return Schema2Layout(
         study_dir,
         fs_utils.join(study_dir, "pedigree", "pedigree.parquet"),

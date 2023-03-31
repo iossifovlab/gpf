@@ -9,6 +9,7 @@ import yaml
 from dae.utils.dict_utils import recursive_dict_update
 from dae.testing import setup_directories
 from dae.configuration.study_config_builder import StudyConfigBuilder
+from dae.import_tools.cli import run_with_project
 
 
 @dataclass
@@ -40,7 +41,8 @@ def update_study_config(
 def setup_import_project(
     root_path: pathlib.Path, study: StudyInputLayout,
     gpf_instance,
-    project_config_update: Optional[dict[str, Any]] = None
+    project_config_update: Optional[dict[str, Any]] = None,
+    project_config_overwrite: Optional[dict[str, Any]] = None
 ) -> pathlib.Path:
     """Set up import project config."""
     params = asdict(study)
@@ -77,6 +79,8 @@ def setup_import_project(
           storage_id: {{ storage_id}}
         """)).render(params)
     project_config = yaml.safe_load(content)
+    if project_config_overwrite:
+        project_config.update(project_config_overwrite)
     if project_config_update:
         project_config = recursive_dict_update(
             project_config, project_config_update)
@@ -89,23 +93,18 @@ def setup_import_project(
 def data_import(
         root_path: pathlib.Path, study: StudyInputLayout, gpf_instance,
         project_config_update: Optional[dict[str, Any]] = None,
-        study_config_update: Optional[dict[str, Any]] = None):
+        project_config_overwrite: Optional[dict[str, Any]] = None):
     """Set up an import project for a study and imports it."""
     setup_import_project(
         root_path, study, gpf_instance,
-        project_config_update=project_config_update)
+        project_config_update=project_config_update,
+        project_config_overwrite=project_config_overwrite)
 
     # pylint: disable=import-outside-toplevel
     from dae.import_tools.import_tools import ImportProject
-    from dae.import_tools.cli import run_with_project
     project = ImportProject.build_from_file(
         root_path / "import_project" / "import_config.yaml",
         gpf_instance=gpf_instance)
-    run_with_project(project)
-
-    if study_config_update:
-        update_study_config(gpf_instance, study.study_id, study_config_update)
-
     return project
 
 
@@ -115,13 +114,13 @@ def vcf_import(
         ped_path: pathlib.Path, vcf_paths: list[pathlib.Path],
         gpf_instance,
         project_config_update: Optional[dict[str, Any]] = None,
-        study_config_update: Optional[dict[str, Any]] = None):
+        project_config_overwrite: Optional[dict[str, Any]] = None):
     """Import a VCF study and return the import project."""
     study = StudyInputLayout(study_id, ped_path, vcf_paths, [], [], [])
     project = data_import(
         root_path, study, gpf_instance,
         project_config_update=project_config_update,
-        study_config_update=study_config_update)
+        project_config_overwrite=project_config_overwrite)
     return project
 
 
@@ -131,12 +130,18 @@ def vcf_study(
         ped_path: pathlib.Path, vcf_paths: list[pathlib.Path],
         gpf_instance,
         project_config_update: Optional[dict[str, Any]] = None,
+        project_config_overwrite: Optional[dict[str, Any]] = None,
         study_config_update: Optional[dict[str, Any]] = None):
     """Import a VCF study and return the imported study."""
-    vcf_import(
+    project = vcf_import(
         root_path, study_id, ped_path, vcf_paths, gpf_instance,
         project_config_update=project_config_update,
-        study_config_update=study_config_update)
+        project_config_overwrite=project_config_overwrite)
+    run_with_project(project)
+    if study_config_update:
+        update_study_config(
+            gpf_instance, study_id, study_config_update)
+
     gpf_instance.reload()
     return gpf_instance.get_genotype_data(study_id)
 
@@ -147,13 +152,13 @@ def denovo_import(
         ped_path: pathlib.Path, denovo_paths: list[pathlib.Path],
         gpf_instance,
         project_config_update: Optional[dict[str, Any]] = None,
-        study_config_update: Optional[dict[str, Any]] = None):
+        project_config_overwrite: Optional[dict[str, Any]] = None):
     """Import a de Novo study and return the import project."""
     study = StudyInputLayout(study_id, ped_path, [], denovo_paths, [], [])
     project = data_import(
         root_path, study, gpf_instance,
         project_config_update=project_config_update,
-        study_config_update=study_config_update)
+        project_config_overwrite=project_config_overwrite)
     return project
 
 
@@ -163,12 +168,18 @@ def denovo_study(
         ped_path: pathlib.Path, denovo_paths: list[pathlib.Path],
         gpf_instance,
         project_config_update: Optional[dict[str, Any]] = None,
+        project_config_overwrite: Optional[dict[str, Any]] = None,
         study_config_update: Optional[dict[str, Any]] = None):
     """Import a de Novo study and return the imported study."""
-    denovo_import(
+    project = denovo_import(
         root_path, study_id, ped_path, denovo_paths, gpf_instance,
         project_config_update=project_config_update,
-        study_config_update=study_config_update)
+        project_config_overwrite=project_config_overwrite)
+    run_with_project(project)
+    if study_config_update:
+        update_study_config(
+            gpf_instance, study_id, study_config_update)
+
     gpf_instance.reload()
     return gpf_instance.get_genotype_data(study_id)
 

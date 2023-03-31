@@ -31,14 +31,16 @@ class Schema2ImportStorage(ImportStorage):
 
     @classmethod
     def _do_write_pedigree(cls, project):
-        layout = schema2_layout(project.work_dir, project.study_id)
+        study_dir = fs_utils.join(project.work_dir, project.study_id)
+        layout = schema2_layout(study_dir)
         ParquetWriter.write_pedigree(
             layout.pedigree, project.get_pedigree(),
             cls._get_partition_description(project))
 
     @classmethod
     def _do_write_variant(cls, project, bucket):
-        layout = schema2_layout(project.work_dir, project.study_id)
+        study_dir = fs_utils.join(project.work_dir, project.study_id)
+        layout = schema2_layout(study_dir)
         gpf_instance = project.get_gpf_instance()
         ParquetWriter.write_variants(
             layout.study_dir,
@@ -64,7 +66,8 @@ class Schema2ImportStorage(ImportStorage):
 
     @classmethod
     def _merge_parquets(cls, project, out_dir, partitions):
-        layout = schema2_layout(project.work_dir, project.study_id)
+        study_dir = fs_utils.join(project.work_dir, project.study_id)
+        layout = schema2_layout(study_dir)
         full_out_dir = fs_utils.join(layout.study_dir, out_dir)
         ParquetWriter.merge_parquets(
             cls._get_partition_description(project), full_out_dir, partitions
@@ -74,7 +77,7 @@ class Schema2ImportStorage(ImportStorage):
     def _do_load_in_hdfs(cls, project):
         genotype_storage = project.get_genotype_storage()
         assert isinstance(genotype_storage, Schema2GenotypeStorage)
-        layout = schema2_layout(project.work_dir, project.study_id)
+        layout = schema2_layout(project.get_parquet_dataset_dir())
         return genotype_storage.hdfs_upload_dataset(
             project.study_id,
             layout.study_dir,
@@ -172,7 +175,7 @@ class Schema2ImportStorage(ImportStorage):
     def generate_import_task_graph(self, project) -> TaskGraph:
         graph = TaskGraph()
         all_parquet_tasks = []
-        if project.get_parquet_dataset_dir() is None:
+        if project.get_processing_parquet_dataset_dir() is None:
             all_parquet_tasks = self._build_all_parquet_tasks(project, graph)
 
         if project.has_genotype_storage():
