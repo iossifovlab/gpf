@@ -65,7 +65,7 @@ export class BasePage {
       key: 'refresh_token',
       value: ''
     }
-  }
+  };
 
   public preserveLogin(): void {
     Cypress.Cookies.preserveOnce('sessionid');
@@ -180,7 +180,7 @@ export class BasePage {
           cy.get('.row-cell').eq(0).should('be.visible');
           break;
         case sidenavPageLinks.management:
-          cy.get('gpf-table-view-cell').eq(0).should('be.visible');
+          cy.get('gpf-user-management').eq(0).should('be.visible');
           break;
       }
     } else {
