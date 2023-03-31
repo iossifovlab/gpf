@@ -25,6 +25,38 @@ export class UserManagementPage extends BasePage {
     return cy.get('#name-box');
   }
 
+  public userCell(userEmail: string): element {
+    return cy.get(`div[id="${userEmail}-user-cell"]`);
+  }
+
+  public userNameInput(userEmail: string): element {
+    return cy.get(`input[id="${userEmail}-new-name-input"]`);
+  }
+
+  public userGroupList(userEmail: string): element {
+    return cy.get(`div[id="${userEmail}-groups-list"]`);
+  }
+
+  public userGroupsCell(userEmail: string): element {
+    return cy.get(`div[id="${userEmail}-groups-cell"]`);
+  }
+
+  public userDatasetsCell(userEmail: string): element {
+    return cy.get(`div[id="${userEmail}-datasets-cell"]`);
+  }
+
+  public userActionsCell(userEmail: string): element {
+    return cy.get(`div[id="${userEmail}-actions-cell"]`);
+  }
+
+  public userActionsResetPassword(userEmail: string): element {
+    return cy.get(`gpf-confirm-button[id="${userEmail}-reset-password-button"]`);
+  }
+
+  public userActionsDeleteUser(userEmail: string): element {
+    return cy.get(`gpf-confirm-button[id="${userEmail}-delete-user-button"]`);
+  }
+
   public get submitUserButton(): element {
     return cy.get('#create-user-button');
   }
@@ -39,6 +71,26 @@ export class UserManagementPage extends BasePage {
 
   public get alertElement(): element {
     return cy.get('.creation-error');
+  }
+
+  public get groupsMenu(): element {
+    return cy.get('#menu');
+  }
+
+  public get groupsMenuSearch(): element {
+    return cy.get('.search');
+  }
+
+  public get groupsMenuSearchClear(): element {
+    return cy.get('.search-clear-icon');
+  }
+
+  public get userTableRemoveGroupConfirm(): element {
+    return cy.get('mwl-confirmation-popover-window button').contains('Remove');
+  }
+
+  public get userTableCancelRemoveGroupConfirm(): element {
+    return cy.get('mwl-confirmation-popover-window button').contains('Cancel');
   }
 
   public get usersTableCells(): element {
@@ -105,8 +157,64 @@ export class UserManagementPage extends BasePage {
     return cy.get('gpf-groups-table');
   }
 
-  public get groupsTableRows(): element {
-    return cy.get('gpf-groups-table .table-row');
+  public get groupsTableCells(): element {
+    return cy.get('gpf-groups-table .grid-cell');
+  }
+
+  public get createGroupButton(): element {
+    return cy.get('#create-group-form-button');
+  }
+
+  public get createGroupNameInput(): element {
+    return cy.get('#group-name-box');
+  }
+
+  public get createButton(): element {
+    return cy.get('#create-group-button');
+  }
+
+  public get createGroupCancel(): element {
+    return cy.get('#cancel-group-creation-button');
+  }
+
+  public get searchGroup(): element {
+    return cy.get('#search-field');
+  }
+
+  public groupCell(group: string): element {
+    return cy.get(`div[id="${group}-group-cell"]`);
+  }
+
+  public groupUsersCell(group: string): element {
+    return cy.get(`div[id="${group}-users-cell"]`);
+  }
+
+  public groupUsersList(group: string): element {
+    return cy.get(`div[id="${group}-users-list"]`);
+  }
+
+  public groupDatasetsCell(group: string): element {
+    return cy.get(`div[id="${group}-datasets-cell"]`);
+  }
+
+  public groupDatasetsList(group: string): element {
+    return cy.get(`div[id="${group}-datasets-list"]`);
+  }
+
+  public groupActionsCell(group: string): element {
+    return cy.get(`div[id="${group}-actions-cell"]`);
+  }
+
+  public get groupsWarningMessage(): element {
+    return cy.get('#group-deletion-warning');
+  }
+
+  public groupActionsDeleteGroup(group: string): element {
+    return cy.get(`gpf-confirm-button[id="${group}-delete-group-botton"]`);
+  }
+
+  public get removeGroupConfirmButton(): element {
+    return cy.get('gpf-groups-table mwl-confirmation-popover-window button').contains('Delete');
   }
 
   public get datasetsButton(): element {
