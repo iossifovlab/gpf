@@ -10,7 +10,6 @@ channels:
 dependencies:
   - dask-jobqueue=0.8.1
   - dask-kubernetes=2023.3
-  - raven=6.10.0
   - bump2version=1.0.1
   - sphinx=6.1
   - sphinx_rtd_theme=1.2
