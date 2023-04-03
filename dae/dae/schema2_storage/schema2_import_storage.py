@@ -1,5 +1,6 @@
 import logging
 from dataclasses import dataclass
+from typing import Optional
 
 from dae.utils import fs_utils
 from dae.import_tools.import_tools import ImportStorage
@@ -15,11 +16,11 @@ logger = logging.getLogger(__file__)
 
 @dataclass(frozen=True)
 class Schema2DatasetLayout:
-    study_dir: str
+    study: str
     pedigree: str
-    summary: str
-    family: str
-    meta: str
+    summary: Optional[str]
+    family: Optional[str]
+    meta: Optional[str]
 
 
 def schema2_dataset_layout(study_dir: str) -> Schema2DatasetLayout:
@@ -60,7 +61,7 @@ class Schema2ImportStorage(ImportStorage):
         layout = schema2_project_dataset_layout(project)
         gpf_instance = project.get_gpf_instance()
         ParquetWriter.write_variants(
-            layout.study_dir,
+            layout.study,
             project.get_variant_loader(
                 bucket, gpf_instance.reference_genome),
             cls._get_partition_description(project),
@@ -84,7 +85,7 @@ class Schema2ImportStorage(ImportStorage):
     @classmethod
     def _merge_parquets(cls, project, out_dir, partitions):
         layout = schema2_project_dataset_layout(project)
-        full_out_dir = fs_utils.join(layout.study_dir, out_dir)
+        full_out_dir = fs_utils.join(layout.study, out_dir)
         ParquetWriter.merge_parquets(
             cls._get_partition_description(project), full_out_dir, partitions
         )

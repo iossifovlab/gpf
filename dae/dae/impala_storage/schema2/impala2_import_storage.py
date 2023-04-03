@@ -4,8 +4,8 @@ from typing import cast
 from dae.configuration.study_config_builder import StudyConfigBuilder
 from dae.impala_storage.schema1.import_commons import save_study_config
 from dae.task_graph.graph import TaskGraph
-from dae.impala_storage.schema2.schema2_genotype_storage import \
-    Schema2GenotypeStorage
+from dae.impala_storage.schema2.impala2_genotype_storage import \
+    Impala2GenotypeStorage
 from dae.schema2_storage.schema2_import_storage import Schema2ImportStorage, \
     schema2_dataset_layout
 
@@ -19,18 +19,18 @@ class Impala2ImportStorage(Schema2ImportStorage):
     @classmethod
     def _do_load_in_hdfs(cls, project):
         genotype_storage = project.get_genotype_storage()
-        assert isinstance(genotype_storage, Schema2GenotypeStorage)
+        assert isinstance(genotype_storage, Impala2GenotypeStorage)
         layout = schema2_dataset_layout(project.get_parquet_dataset_dir())
         return genotype_storage.hdfs_upload_dataset(
             project.study_id,
-            layout.study_dir,
+            layout.study,
             layout.pedigree,
             layout.meta)
 
     @classmethod
     def _do_load_in_impala(cls, project, hdfs_study_layout):
         genotype_storage = project.get_genotype_storage()
-        assert isinstance(genotype_storage, Schema2GenotypeStorage)
+        assert isinstance(genotype_storage, Impala2GenotypeStorage)
 
         logger.info("HDFS study layout: %s", hdfs_study_layout)
 
@@ -43,8 +43,8 @@ class Impala2ImportStorage(Schema2ImportStorage):
 
     @classmethod
     def _do_study_config(cls, project):
-        genotype_storage: Schema2GenotypeStorage = \
-            cast(Schema2GenotypeStorage, project.get_genotype_storage())
+        genotype_storage: Impala2GenotypeStorage = \
+            cast(Impala2GenotypeStorage, project.get_genotype_storage())
         # pylint: disable=protected-access
         pedigree_table = genotype_storage\
             ._construct_pedigree_table(project.study_id)

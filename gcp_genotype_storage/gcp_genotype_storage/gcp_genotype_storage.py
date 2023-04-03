@@ -1,6 +1,5 @@
 import logging
 from typing import Dict, Any, cast, Optional
-from dataclasses import dataclass
 
 import pyarrow.parquet as pq
 from cerberus import Validator
@@ -10,20 +9,13 @@ from google.cloud import bigquery
 
 from dae.utils import fs_utils
 from dae.genotype_storage.genotype_storage import GenotypeStorage
+from dae.schema2_storage.schema2_import_storage import Schema2DatasetLayout
 from dae.parquet.partition_descriptor import PartitionDescriptor
 
 from gcp_genotype_storage.bigquery_variants import BigQueryVariants
 
 
 logger = logging.getLogger(__name__)
-
-
-@dataclass(frozen=True)
-class GcpStudyLayout:
-    pedigree: str
-    summary_variants: Optional[str]
-    family_variants: Optional[str]
-    meta: str
 
 
 class GcpGenotypeStorage(GenotypeStorage):
@@ -87,7 +79,7 @@ class GcpGenotypeStorage(GenotypeStorage):
         return self.storage_config["bigquery"]["db"]
 
     @staticmethod
-    def _study_tables(study_config) -> GcpStudyLayout:
+    def _study_tables(study_config) -> Schema2DatasetLayout:
         study_id = study_config["id"]
         storage_config = study_config.get("genotype_storage")
         has_tables = storage_config and storage_config.get("tables")
@@ -109,8 +101,8 @@ class GcpGenotypeStorage(GenotypeStorage):
         if has_tables and tables.get("meta"):
             meta_table = tables["meta"]
 
-        return GcpStudyLayout(
-            pedigree_table, summary_table, family_table, meta_table)
+        return Schema2DatasetLayout(
+            study_id, pedigree_table, summary_table, family_table, meta_table)
 
     def build_backend(self, study_config, genome, gene_models):
         assert study_config is not None
@@ -119,8 +111,8 @@ class GcpGenotypeStorage(GenotypeStorage):
         db = self.storage_config["bigquery"]["db"]
         backend = BigQueryVariants(
             project_id, db,
-            tables_layout.summary_variants,
-            tables_layout.family_variants,
+            tables_layout.summary,
+            tables_layout.family,
             tables_layout.pedigree,
             tables_layout.meta,
             gene_models=gene_models)
@@ -136,7 +128,7 @@ class GcpGenotypeStorage(GenotypeStorage):
 
     def _upload_dataset_into_import_bucket(
             self, study_id: str,
-            study_dataset: GcpStudyLayout) -> GcpStudyLayout:
+            study_dataset: Schema2DatasetLayout) -> Schema2DatasetLayout:
         """Upload a study dataset into import bucket."""
         assert self.fs is not None
         upload_path = fs_utils.join(
@@ -145,7 +137,8 @@ class GcpGenotypeStorage(GenotypeStorage):
             self.storage_config["bigquery"]["db"],
             study_id)
 
-        bucket_layout = GcpStudyLayout(
+        bucket_layout = Schema2DatasetLayout(
+            study_id,
             fs_utils.join(upload_path, "pedigree.parquet"),
             fs_utils.join(upload_path, "summary_variants"),
             fs_utils.join(upload_path, "family_variants"),
@@ -161,27 +154,28 @@ class GcpGenotypeStorage(GenotypeStorage):
             study_dataset.meta,
             bucket_layout.meta)
         self.fs.put(
-            study_dataset.summary_variants,
-            bucket_layout.summary_variants,
+            study_dataset.summary,
+            bucket_layout.summary,
             recursive=True)
         self.fs.put(
-            study_dataset.family_variants,
-            bucket_layout.family_variants,
+            study_dataset.family,
+            bucket_layout.family,
             recursive=True)
         return bucket_layout
 
     def _load_dataset_into_bigquery(
             self, study_id: str,
-            bucket_layout: GcpStudyLayout,
-            partition_descriptor: PartitionDescriptor) -> GcpStudyLayout:
+            bucket_layout: Schema2DatasetLayout,
+            partition_descriptor: PartitionDescriptor) -> Schema2DatasetLayout:
+        # pylint: disable=too-many-locals,too-many-statements
         client = bigquery.Client()
         dbname = self.storage_config["bigquery"]["db"]
         dataset = client.create_dataset(dbname, exists_ok=True)
         tables_layout = self._study_tables({"id": study_id})
         for table_name in [
                 tables_layout.pedigree, tables_layout.meta,
-                tables_layout.summary_variants,
-                tables_layout.family_variants]:
+                tables_layout.summary,
+                tables_layout.family]:
             sql = f"DROP TABLE IF EXISTS {dbname}.{table_name}"
             client.query(sql).result()
 
@@ -195,28 +189,30 @@ class GcpGenotypeStorage(GenotypeStorage):
             logger.error("pedigree not loaded into BigQuery")
             raise ValueError("pedigree not loaded into BigQuery")
 
+        assert tables_layout.meta is not None
         meta_table = dataset.table(tables_layout.meta)
         job_config = bigquery.LoadJobConfig()
         job_config.source_format = bigquery.SourceFormat.PARQUET
         job_config.autodetect = True
+        assert bucket_layout.meta is not None
         meta_job = client.load_table_from_uri(
             bucket_layout.meta, meta_table, job_config=job_config)
         if not meta_job.result().done():
             logger.error("metadata not loaded into BigQuery")
             raise ValueError("metadata not loaded into BigQuery")
 
-        if tables_layout.summary_variants is None:
-            assert tables_layout.family_variants is None
+        if tables_layout.summary is None:
+            assert tables_layout.family is None
             return tables_layout
 
-        assert tables_layout.summary_variants is not None
-        assert tables_layout.family_variants is not None
+        assert tables_layout.summary is not None
+        assert tables_layout.family is not None
 
         type_convertions = {
             "string": "STRING",
             "int8": "INTEGER",
         }
-        summary_table = dataset.table(tables_layout.summary_variants)
+        summary_table = dataset.table(tables_layout.summary)
         job_config = bigquery.LoadJobConfig()
         job_config.autodetect = True
 
@@ -237,17 +233,17 @@ class GcpGenotypeStorage(GenotypeStorage):
                 partition_descriptor.dataset_summary_partition()
             ])
             hive_partitioning.source_uri_prefix = \
-                f"{bucket_layout.summary_variants}/{summary_partition}"
+                f"{bucket_layout.summary}/{summary_partition}"
             job_config.hive_partitioning = hive_partitioning
 
         summary_job = client.load_table_from_uri(
-            f"{bucket_layout.summary_variants}/*.parquet", summary_table,
+            f"{bucket_layout.summary}/*.parquet", summary_table,
             job_config=job_config)
         if not summary_job.result().done():
             logger.error("summary variants not loaded into BigQuery")
             raise ValueError("summary variants not loaded into BigQuery")
 
-        family_table = dataset.table(tables_layout.family_variants)
+        family_table = dataset.table(tables_layout.family)
         job_config = bigquery.LoadJobConfig()
         job_config.source_format = bigquery.SourceFormat.PARQUET
         job_config.autodetect = True
@@ -266,11 +262,11 @@ class GcpGenotypeStorage(GenotypeStorage):
                 partition_descriptor.dataset_family_partition()
             ])
             hive_partitioning.source_uri_prefix = \
-                f"{bucket_layout.family_variants}/{family_partition}"
+                f"{bucket_layout.family}/{family_partition}"
             job_config.hive_partitioning = hive_partitioning
 
         family_job = client.load_table_from_uri(
-            f"{bucket_layout.family_variants}/*.parquet", family_table,
+            f"{bucket_layout.family}/*.parquet", family_table,
             job_config=job_config)
         if not family_job.result().done():
             logger.error("family variants not loaded into BigQuery")
@@ -280,7 +276,7 @@ class GcpGenotypeStorage(GenotypeStorage):
 
     def gcp_import_dataset(
             self, study_id: str,
-            study_layout: GcpStudyLayout):
+            study_layout: Schema2DatasetLayout):
         """Create pedigree and variant tables for a study."""
         partition_description = self._load_partition_description(
             study_layout.meta)

@@ -25,7 +25,7 @@ class HdfsStudyLayout:
     meta_file: str
 
 
-class Schema2GenotypeStorage(GenotypeStorage):
+class Impala2GenotypeStorage(GenotypeStorage):
     """A genotype storing implementing the new schema2."""
 
     def __init__(self, storage_config: Dict[str, Any]):

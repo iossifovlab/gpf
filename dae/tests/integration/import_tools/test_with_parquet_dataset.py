@@ -83,6 +83,7 @@ def vcf_project_from_parquet(
 
 
 @pytest.mark.impala2(reason="supported for impala schema2")
+@pytest.mark.gcp(reason="supported for gcp")
 def test_with_destination_storage_type(
         vcf_project_to_parquet, vcf_project_from_parquet, genotype_storage):
 

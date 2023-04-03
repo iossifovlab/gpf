@@ -5,8 +5,8 @@ from box import Box  # type: ignore
 import pytest
 import pandas as pd
 from fsspec.core import url_to_fs
-from dae.impala_storage.schema2.schema2_genotype_storage import \
-    Schema2GenotypeStorage
+from dae.impala_storage.schema2.impala2_genotype_storage import \
+    Impala2GenotypeStorage
 
 
 @dataclass(frozen=True)
@@ -60,7 +60,7 @@ def test_hdfs_upload_dataset(import_layout):
     if hdfs.exists(base_dir):
         hdfs.rm(base_dir, recursive=True)  # cleanup from previous tests
 
-    storage = Schema2GenotypeStorage(config)
+    storage = Impala2GenotypeStorage(config)
     hdfs_layout = storage.hdfs_upload_dataset(
         "study_id", import_layout.variant_dir, import_layout.pedigree_file,
         import_layout.meta_file)

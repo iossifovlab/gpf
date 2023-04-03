@@ -6,8 +6,8 @@ from box import Box
 from dae.variants_loaders.vcf.loader import VcfLoader
 from dae.variants_loaders.dae.loader import DenovoLoader
 from dae.pedigrees.loader import FamiliesLoader
-from dae.impala_storage.schema2.schema2_genotype_storage import \
-    Schema2GenotypeStorage
+from dae.impala_storage.schema2.impala2_genotype_storage import \
+    Impala2GenotypeStorage
 from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.parquet.parquet_writer import ParquetWriter
 from dae.parquet.schema2.parquet_io import \
@@ -37,7 +37,7 @@ def storage():
         },
     }
     config = Box(config)
-    return Schema2GenotypeStorage(config)
+    return Impala2GenotypeStorage(config)
 
 
 @pytest.fixture(scope="module")
