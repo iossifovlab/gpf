@@ -361,12 +361,11 @@ class VariantsParquetWriter:
     def write_dataset(self):
         """Write the variants, parittion description and schema."""
         filenames = self._write_internal()
+        self.variants_loader.close()
+        return filenames
 
+    def write_meta(self):
         # TODO: This should be move to a different place so that these are
         # not written with every bucket.
         self.write_partition()
         self.write_schema()
-
-        self.variants_loader.close()
-
-        return filenames

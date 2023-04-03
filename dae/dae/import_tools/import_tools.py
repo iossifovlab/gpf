@@ -170,6 +170,11 @@ class ImportProject():
                     buckets.append(bucket)
         return buckets
 
+    def get_variant_loader_types(self) -> list[str]:
+        return list(filter(
+            lambda lt: lt != "pedigree",
+            self.import_config["input"].keys()))
+
     def get_variant_loader(
             self,
             bucket: Optional[Bucket] = None, loader_type: Optional[str] = None,

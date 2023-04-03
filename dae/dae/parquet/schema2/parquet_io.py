@@ -437,7 +437,9 @@ class VariantsParquetWriter:
 
     def write_dataset(self):
         filenames = self._write_internal()
+        return filenames
+
+    def write_meta(self):
         self.write_metadata()
         self.write_schema()
         self.write_partition()
-        return filenames

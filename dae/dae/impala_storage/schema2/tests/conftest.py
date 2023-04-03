@@ -64,7 +64,6 @@ def import_test_study(resources_dir, gpf_instance_2013, storage):
                 gpf_instance_2013, partition_description,
                 loader_args=loader_args
             )
-
         # clean hdfs from prev test runs and copy resulting parquets in hdfs
         study_dir = f"/tests/test_schema2/studies/{study_id}"
         if storage.hdfs_helpers.exists(study_dir):
@@ -136,6 +135,12 @@ def run_vcf2schema2(out_dir, ped_file, vcf_file, gpf_instance,
         bucket_index=0,
         rows=20_000,
     )
+    ParquetWriter.write_meta(
+        out_dir,
+        variants_loader,
+        partition_description,
+        S2VariantsWriter,
+    )
 
 
 def run_denovo2schema2(out_dir, ped_file, denovo_file, gpf_instance,
@@ -160,6 +165,12 @@ def run_denovo2schema2(out_dir, ped_file, denovo_file, gpf_instance,
         S2VariantsWriter,
         bucket_index=100,
         rows=20_000,
+    )
+    ParquetWriter.write_meta(
+        out_dir,
+        variants_loader,
+        partition_description,
+        S2VariantsWriter,
     )
 
 

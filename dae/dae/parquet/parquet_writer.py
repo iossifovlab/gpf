@@ -118,7 +118,6 @@ class ParquetWriter:
         include_reference=False,
     ):
         """Read variants from variant_loader and store them in parquet."""
-        # assert variants_loader.get_attribute("annotation_schema") is not None
         variants_writer = variants_writer_class(
             out_dir,
             variants_loader,
@@ -161,6 +160,21 @@ class ParquetWriter:
             rows=rows,
             include_reference=project.include_reference,
         )
+
+    @staticmethod
+    def write_meta(
+            out_dir,
+            variants_loader,
+            partition_description: PartitionDescriptor,
+            variants_writer_class: Type[
+                Union[S1VariantsWriter, S2VariantsWriter]]):
+        """Write dataset metadata."""
+        variants_writer = variants_writer_class(
+            out_dir,
+            variants_loader,
+            partition_description,
+        )
+        variants_writer.write_meta()
 
     @staticmethod
     def write_pedigree(

@@ -57,6 +57,19 @@ class Schema2ImportStorage(ImportStorage):
             cls._get_partition_description(project))
 
     @classmethod
+    def _do_write_meta(cls, project):
+        layout = schema2_project_dataset_layout(project)
+        gpf_instance = project.get_gpf_instance()
+        loader_type = project.get_variant_loader_types()[0]
+        ParquetWriter.write_meta(
+            layout.study,
+            project.get_variant_loader(
+                loader_type=loader_type,
+                reference_genome=gpf_instance.reference_genome),
+            cls._get_partition_description(project),
+            S2VariantsWriter)
+
+    @classmethod
     def _do_write_variant(cls, project, bucket):
         layout = schema2_project_dataset_layout(project)
         gpf_instance = project.get_gpf_instance()
@@ -95,6 +108,8 @@ class Schema2ImportStorage(ImportStorage):
             "Generating Pedigree", self._do_write_pedigree, [project], [],
             input_files=[project.get_pedigree_filename()]
         )
+        meta_task = graph.create_task(
+            "Write Meta", self._do_write_meta, [project], [])
 
         bucket_tasks = []
         for bucket in project.get_import_variants_buckets():
@@ -120,7 +135,7 @@ class Schema2ImportStorage(ImportStorage):
         all_parquet_task = graph.create_task(
             "Parquet Tasks", lambda: None, [], output_dir_tasks + [bucket_sync]
         )
-        return [pedigree_task, all_parquet_task]
+        return [pedigree_task, meta_task, all_parquet_task]
 
     def generate_import_task_graph(self, project) -> TaskGraph:
         graph = TaskGraph()

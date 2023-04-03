@@ -1257,6 +1257,13 @@ class Variants2ParquetTool:
             rows=argv.rows,
         )
 
+        ParquetWriter.write_meta(
+            out_dir,
+            variants_loader,
+            partition_description,
+            S1VariantsWriter,
+        )
+
     @classmethod
     def _build_variants_loader_pipeline(
             cls, gpf_instance, argv, variants_loader):
