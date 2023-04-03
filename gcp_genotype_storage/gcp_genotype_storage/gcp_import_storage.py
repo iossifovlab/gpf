@@ -21,14 +21,15 @@ logger = logging.getLogger(__file__)
 class GcpImportStorage(ImportStorage):
     """Import logic for data in the GCP Schema 2."""
 
-    @staticmethod
-    def _pedigree_dir(project):
+    @classmethod
+    def _pedigree_dir(cls, project):
         return fs_utils.join(
-            project.work_dir, f"{project.study_id}_pedigree")
+            cls._study_dir(project),
+            "pedigree")
 
     @staticmethod
-    def _variants_dir(project):
-        return fs_utils.join(project.work_dir, f"{project.study_id}_variants")
+    def _study_dir(project):
+        return fs_utils.join(project.work_dir, f"{project.study_id}")
 
     @classmethod
     def _pedigree_path(cls, project):
@@ -37,15 +38,15 @@ class GcpImportStorage(ImportStorage):
 
     @classmethod
     def _summary_variants_path(cls, project):
-        return fs_utils.join(cls._variants_dir(project), "summary")
+        return fs_utils.join(cls._study_dir(project), "summary")
 
     @classmethod
     def _family_variants_path(cls, project):
-        return fs_utils.join(cls._variants_dir(project), "family")
+        return fs_utils.join(cls._study_dir(project), "family")
 
     @classmethod
     def _meta_path(cls, project):
-        return fs_utils.join(cls._variants_dir(project), "meta.parquet")
+        return fs_utils.join(cls._study_dir(project), "meta", "meta.parquet")
 
     @staticmethod
     def _get_partition_description(project):
@@ -56,14 +57,14 @@ class GcpImportStorage(ImportStorage):
 
     @classmethod
     def _do_write_pedigree(cls, project):
-        out_dir = cls._pedigree_dir(project)
+        pedigree_path = cls._pedigree_path(project)
         ParquetWriter.write_pedigree(
-            out_dir, project.get_pedigree(),
+            pedigree_path, project.get_pedigree(),
             cls._get_partition_description(project))
 
     @classmethod
     def _do_write_variant(cls, project, bucket):
-        out_dir = cls._variants_dir(project)
+        out_dir = cls._study_dir(project)
         gpf_instance = project.get_gpf_instance()
         ParquetWriter.write_variants(
             out_dir,
@@ -89,7 +90,7 @@ class GcpImportStorage(ImportStorage):
 
     @classmethod
     def _merge_parquets(cls, project, out_dir, partitions):
-        full_out_dir = fs_utils.join(cls._variants_dir(project), out_dir)
+        full_out_dir = fs_utils.join(cls._study_dir(project), out_dir)
         ParquetWriter.merge_parquets(
             cls._get_partition_description(project), full_out_dir, partitions
         )
