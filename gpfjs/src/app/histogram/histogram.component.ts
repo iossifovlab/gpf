@@ -248,8 +248,9 @@ export class HistogramComponent implements OnInit, OnChanges {
       .attr('x', (d: any) => this.xScale(d.index.toString()))
       .attr('width', this.xScale.bandwidth())
       .attr('y', (d: any) => d.bar === 0 ? height : this.scaleYAxis(d.bar))
-      .attr('height', (d: any) => d.bar === 0 ? 0 : height - this.scaleYAxis(d.bar));
+      .attr('height', (d: any) => (d.bar === 0 || d.bar === undefined) ? 0 : height - this.scaleYAxis(d.bar));
     this.svg = svg;
+
 
     this.colorBars();
     this.scaledBins = barsBinsArray.map(d => d.bin === 0 ? 0 : this.xScale(d.bin));
