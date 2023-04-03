@@ -20,7 +20,6 @@ logger = logging.getLogger("annotate_vcf")
 
 
 PART_FILENAME = "{in_file}_annotation_{chrom}_{pos_beg}_{pos_end}.vcf"
-COMBINED_FILENAME = "combined.vcf"
 
 
 def configure_argument_parser() -> argparse.ArgumentParser:
@@ -37,9 +36,12 @@ def configure_argument_parser() -> argparse.ArgumentParser:
                         "from the configured gpf instance will be used.")
     parser.add_argument("-r", "--region-size", default=300_000_000,
                         type=int, help="region size to parallelize by")
-    parser.add_argument("-o", "--work-dir",
+    parser.add_argument("-w", "--work-dir",
                         help="Directory to store intermediate output files in",
-                        default="output")
+                        default="annotate_vcf_output")
+    parser.add_argument("-o", "--output",
+                        help="Filename of the output VCF result",
+                        default=None)
     CLIAnnotationContext.add_context_arguments(parser)
     TaskGraphCli.add_arguments(parser)
     VerbosityConfiguration.set_argumnets(parser)
@@ -87,19 +89,12 @@ def annotate(input_file, region, pipeline, out_filepath):
     in_file.close()
 
 
-def combine(input_filepath, pipeline, regions, work_dir):
-    """Combine annotated regions into a single VCF file."""
+def combine(input_filepath, pipeline, part_filenames, output_filepath):
+    """Combine annotated region parts into a single VCF file."""
     input_file = VariantFile(input_filepath)
     update_header(input_file, pipeline)
-    output_filepath = os.path.join(work_dir, COMBINED_FILENAME)
     with VariantFile(output_filepath, "w", header=input_file.header) as out:
-        # we re-construct the filenames from the regions in order to
-        # preserve the ordering of the variants by position
-        for region in regions:
-            part_filename = os.path.join(work_dir, PART_FILENAME.format(
-                in_file=input_filepath,
-                chrom=region[0], pos_beg=region[1], pos_end=region[2]
-            ))
+        for part_filename in part_filenames:
             part_file = VariantFile(part_filename)
             for rec in part_file.fetch():
                 out.write(rec)
@@ -127,6 +122,17 @@ def produce_regions(context, contigs, region_size):
     ] + unknown_contigs
 
 
+def produce_part_filenames(input_filepath, regions, work_dir):
+    """Produce a list of filenames for output region part files."""
+    filenames = []
+    for region in regions:
+        filenames.append(os.path.join(work_dir, PART_FILENAME.format(
+            in_file=os.path.basename(input_filepath),
+            chrom=region[0], pos_beg=region[1], pos_end=region[2]
+        )))
+    return filenames
+
+
 def cli(raw_args: Optional[list[str]] = None) -> None:
     """Run command line interface for annotate_vcf tool."""
     if not raw_args:
@@ -140,35 +146,33 @@ def cli(raw_args: Optional[list[str]] = None) -> None:
     context = get_genomic_context()
     pipeline = CLIAnnotationContext.get_pipeline(context)
 
-    assert not os.path.exists(args.work_dir)
-    os.mkdir(args.work_dir)
+    if args.output:
+        output = args.output
+    else:
+        output = os.path.basename(args.input).split(".")[0] + "_annotated.vcf"
+
+    if not os.path.exists(args.work_dir):
+        os.mkdir(args.work_dir)
 
     def run_parallelized():
         with TabixFile(args.input) as pysam_file:
             contigs = list(map(str, pysam_file.contigs))
         regions = produce_regions(context, contigs, args.region_size)
-
+        filenames = produce_part_filenames(args.input, regions, args.work_dir)
         task_graph = TaskGraph()
-        for index, region in enumerate(regions):
-            out_filepath = os.path.join(args.work_dir, PART_FILENAME.format(
-                in_file=args.input,
-                chrom=region[0], pos_beg=region[1], pos_end=region[2]
-            ))
+        for index, (region, filepath) in enumerate(zip(regions, filenames)):
             task_graph.create_task(
                 f"part-{index}", annotate,
-                [args.input, region, pipeline, out_filepath], []
+                [args.input, region, pipeline, filepath], []
             )
         task_graph.create_task(
             "combine", combine,
-            [args.input, pipeline, regions, args.work_dir], []
+            [args.input, pipeline, filenames, output], []
         )
         TaskGraphCli.process_graph(task_graph, **vars(args))
 
     def run_sequentially():
-        annotate(
-            args.input, tuple(), pipeline,
-            os.path.join(args.work_dir, COMBINED_FILENAME)
-        )
+        annotate(args.input, tuple(), pipeline, output)
 
     if tabix_index_filename(args.input):
         run_parallelized()

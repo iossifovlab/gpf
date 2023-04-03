@@ -170,19 +170,21 @@ def test_basic_setup_vcf(tmp_path, annotate_directory_fixture):
     })
 
     in_file = tmp_path / "in.vcf"
-    workdir = f"{tmp_path}/output"
+    out_file = tmp_path / "out.vcf"
+    workdir = tmp_path / "output"
     annotation_file = tmp_path / "annotation.yaml"
     grr_file = tmp_path / "grr.yaml"
 
     cli_vcf([
         str(a) for a in [
-            in_file, annotation_file, "-o", workdir, "--grr", grr_file
+            in_file, annotation_file, "-o", workdir, "--grr", grr_file,
+            "-o", out_file
         ]
     ])
 
     result = []
     # pylint: disable=no-member
-    with pysam.VariantFile(f"{workdir}/combined.vcf") as vcf_file:
+    with pysam.VariantFile(out_file) as vcf_file:
         for vcf in vcf_file.fetch():
             result.append(vcf.info["score"][0])
     assert result == ["0.01", "0.2"]
@@ -202,19 +204,21 @@ def test_multiallelic_setup_vcf(tmp_path, annotate_directory_fixture):
     })
 
     in_file = tmp_path / "in.vcf"
-    workdir = f"{tmp_path}/output"
+    out_file = tmp_path / "out.vcf"
+    workdir = tmp_path / "output"
     annotation_file = tmp_path / "annotation_multiallelic.yaml"
     grr_file = tmp_path / "grr.yaml"
 
     cli_vcf([
         str(a) for a in [
-            in_file, annotation_file, "-o", workdir, "--grr", grr_file
+            in_file, annotation_file, "-w", workdir, "--grr", grr_file,
+            "-o", out_file
         ]
     ])
 
     result = []
     # pylint: disable=no-member
-    with pysam.VariantFile(f"{workdir}/combined.vcf") as vcf_file:
+    with pysam.VariantFile(out_file) as vcf_file:
         for vcf in vcf_file.fetch():
             result.append(vcf.info["score"])
     assert result == [("0.1", "0.2"), ("0.3", "0.4")]
