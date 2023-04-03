@@ -6,9 +6,9 @@
 
 name: gpf
 channels:
-  - bioconda
-  - conda-forge
   - defaults
+  - conda-forge
+  - bioconda
   - iossifovlab
 dependencies:
   - python=3.9

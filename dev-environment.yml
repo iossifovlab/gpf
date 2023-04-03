@@ -3,9 +3,9 @@
 # platform: linux-64
 # conda create -c conda-forge -c bioconda -n <env name> --file <this file>
 channels:
-  - bioconda
-  - conda-forge
   - defaults
+  - conda-forge
+  - bioconda
   - iossifovlab
 dependencies:
   - dask-jobqueue=0.8.1
