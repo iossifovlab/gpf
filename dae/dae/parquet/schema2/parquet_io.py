@@ -3,9 +3,8 @@ import sys
 import time
 import logging
 import json
-from dataclasses import dataclass
 from functools import reduce
-from typing import Dict, Any, Tuple
+from typing import Dict, Any
 import toml
 
 import numpy as np
@@ -26,32 +25,6 @@ from dae.parquet.schema2.serializers import AlleleParquetSerializer
 from dae.parquet.partition_descriptor import PartitionDescriptor
 
 logger = logging.getLogger(__name__)
-
-
-@dataclass(frozen=True)
-class Schema2Layout:
-    study_dir: str
-    pedigree: str
-    summary: str
-    family: str
-    meta: str
-
-
-def schema2_layout(study_dir: str) -> Schema2Layout:
-    return Schema2Layout(
-        study_dir,
-        fs_utils.join(study_dir, "pedigree", "pedigree.parquet"),
-        fs_utils.join(study_dir, "summary"),
-        fs_utils.join(study_dir, "family"),
-        fs_utils.join(study_dir, "meta", "meta.parquet"))
-
-
-def schema2_variants_layout(work_dir: str, study_id: str) -> Tuple[str, str]:
-    study_dir = fs_utils.join(work_dir, study_id)
-    return (
-        fs_utils.join(study_dir, "summary"),
-        fs_utils.join(study_dir, "family"),
-    )
 
 
 class ContinuousParquetFileWriter:

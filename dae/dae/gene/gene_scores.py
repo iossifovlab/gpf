@@ -268,11 +268,11 @@ class GeneScore:
 
     def min(self):
         """Return minimal score value."""
-        return self.df[self.score_id].min().item()
+        return self.df[self.score_id].min()
 
     def max(self):
         """Return maximal score value."""
-        return self.df[self.score_id].max().item()
+        return self.df[self.score_id].max()
 
     def get_genes(self, score_min=None, score_max=None):
         """

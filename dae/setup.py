@@ -70,7 +70,8 @@ setuptools.setup(
 
     [dae.import_tools.storages]
     impala=dae.impala_storage.schema1.impala_schema1:ImpalaSchema1ImportStorage
-    impala2=dae.impala_storage.schema2.schema2_import_storage:Schema2ImportStorage
+    impala2=dae.impala_storage.schema2.schema2_import_storage:Impala2ImportStorage
+    schema2=dae.schema2_storage.schema2_import_storage:Schema2ImportStorage
     inmemory=dae.inmemory_storage.inmemory_import_storage:InmemoryImportStorage
 
     [console_scripts]
