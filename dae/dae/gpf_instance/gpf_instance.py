@@ -370,8 +370,12 @@ class GPFInstance:
             return None
         if not study.config.common_report.enabled:
             return None
-        return CommonReport.load(
+        report = CommonReport.load(
             study.config.common_report.file_path)
+        if report is None:
+            report = CommonReport.build_report(study)
+            report.save(study.config.common_report.file_path)
+        return report
 
     def get_all_common_report_configs(self):
         """Return all common report configuration."""
