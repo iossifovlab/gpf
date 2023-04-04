@@ -5,15 +5,14 @@ import logging
 import json
 from functools import reduce
 from typing import Dict, Any
-
 import toml
 
 import numpy as np
 import pyarrow as pa
 import pyarrow.parquet as pq
 
-from dae.parquet.helpers import url_to_pyarrow_fs
 from dae.utils import fs_utils
+from dae.parquet.helpers import url_to_pyarrow_fs
 from dae.utils.variant_utils import GenotypeType
 from dae.variants.attributes import Inheritance
 from dae.variants.family_variant import (
@@ -425,15 +424,22 @@ class VariantsParquetWriter:
             },
             schema=pa.schema({"key": pa.string(), "value": pa.string()}),
         )
+        metapath = fs_utils.join(self.out_dir, "meta", "meta.parquet")
+        dirname = os.path.dirname(metapath)
+        if dirname and not os.path.exists(dirname):
+            os.makedirs(dirname, exist_ok=True)
 
         pq.write_table(
-            metadata_table, fs_utils.join(self.out_dir, "meta.parquet"),
+            metadata_table,
+            metapath,
             version="1.0"
         )
 
     def write_dataset(self):
         filenames = self._write_internal()
+        return filenames
+
+    def write_meta(self):
         self.write_metadata()
         self.write_schema()
         self.write_partition()
-        return filenames

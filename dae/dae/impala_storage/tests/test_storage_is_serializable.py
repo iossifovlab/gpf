@@ -3,13 +3,13 @@ import cloudpickle  # type: ignore
 import pytest
 from dae.impala_storage.schema1.impala_genotype_storage import \
     ImpalaGenotypeStorage
-from dae.impala_storage.schema2.schema2_genotype_storage import \
-    Schema2GenotypeStorage
+from dae.impala_storage.schema2.impala2_genotype_storage import \
+    Impala2GenotypeStorage
 
 
 @pytest.mark.parametrize("storage_cls, storage_type", [
     (ImpalaGenotypeStorage, "impala"),
-    (Schema2GenotypeStorage, "impala2"),
+    (Impala2GenotypeStorage, "impala2"),
 ])
 def test_genotype_storage_is_cpickle_serializable(storage_cls, storage_type):
     storage = storage_cls({

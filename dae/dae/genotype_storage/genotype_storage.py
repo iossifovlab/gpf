@@ -34,10 +34,11 @@ class GenotypeStorage(abc.ABC):
         """
         if config.get("id") is None:
             raise ValueError(
-                "genotype storage without ID; 'id' is required")
+                f"genotype storage without ID; 'id' is required: {config}")
         if config.get("storage_type") is None:
             raise ValueError(
-                "genotype storage without type; 'storage_type' is required")
+                f"genotype storage without type; 'storage_type' is required: "
+                f"{config}")
         if config["storage_type"] != cls.get_storage_type():
             raise ValueError(
                 f"storage configuration for <{config['storage_type']}> passed "

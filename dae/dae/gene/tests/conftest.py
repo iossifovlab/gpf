@@ -3,7 +3,6 @@
 import os
 import shutil
 
-import textwrap
 import pytest
 
 from dae.testing import setup_pedigree, setup_denovo, denovo_study
@@ -167,9 +166,10 @@ def trios2_study(tmp_path_factory):
         root_path,
         "trios2", ped_path, [vcf_path],
         gpf_instance,
-        study_config_update=textwrap.dedent("""
-        id: trios2
-        denovo_gene_sets:
-          enabled: True
-        """))
+        study_config_update={
+            "id": "trios2",
+            "denovo_gene_sets": {
+                "enabled": True
+            }
+        })
     return study

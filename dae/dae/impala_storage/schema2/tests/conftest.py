@@ -1,12 +1,13 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
+import os
 
 import pytest
 from box import Box
 from dae.variants_loaders.vcf.loader import VcfLoader
 from dae.variants_loaders.dae.loader import DenovoLoader
 from dae.pedigrees.loader import FamiliesLoader
-from dae.impala_storage.schema2.schema2_genotype_storage import \
-    Schema2GenotypeStorage
+from dae.impala_storage.schema2.impala2_genotype_storage import \
+    Impala2GenotypeStorage
 from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.parquet.parquet_writer import ParquetWriter
 from dae.parquet.schema2.parquet_io import \
@@ -36,7 +37,7 @@ def storage():
         },
     }
     config = Box(config)
-    return Schema2GenotypeStorage(config)
+    return Impala2GenotypeStorage(config)
 
 
 @pytest.fixture(scope="module")
@@ -48,9 +49,8 @@ def import_test_study(resources_dir, gpf_instance_2013, storage):
         partition_description.output = tmpdir
 
         # generate parquets
-        pedigree_parquet = f"{tmpdir}/pedigree.parquet"
-        run_ped2parquet(f"{resources_dir}/simple_variants.ped",
-                        pedigree_parquet)
+        pedigree_parquet = run_ped2parquet(
+            f"{resources_dir}/simple_variants.ped", tmpdir)
         for filename in variant_files:
             file_type = "vcf" if filename.endswith("vcf") else "denovo"
             to_parquet_func = {
@@ -64,13 +64,12 @@ def import_test_study(resources_dir, gpf_instance_2013, storage):
                 gpf_instance_2013, partition_description,
                 loader_args=loader_args
             )
-
         # clean hdfs from prev test runs and copy resulting parquets in hdfs
         study_dir = f"/tests/test_schema2/studies/{study_id}"
         if storage.hdfs_helpers.exists(study_dir):
             storage.hdfs_helpers.delete(study_dir, True)
         hdfs_study_layout = storage.hdfs_upload_dataset(
-            study_id, tmpdir, pedigree_parquet, f"{tmpdir}/meta.parquet")
+            study_id, tmpdir, pedigree_parquet, f"{tmpdir}/meta/meta.parquet")
 
         # load parquets in impala
         study_config = storage.import_dataset(
@@ -136,6 +135,12 @@ def run_vcf2schema2(out_dir, ped_file, vcf_file, gpf_instance,
         bucket_index=0,
         rows=20_000,
     )
+    ParquetWriter.write_meta(
+        out_dir,
+        variants_loader,
+        partition_description,
+        S2VariantsWriter,
+    )
 
 
 def run_denovo2schema2(out_dir, ped_file, denovo_file, gpf_instance,
@@ -161,11 +166,19 @@ def run_denovo2schema2(out_dir, ped_file, denovo_file, gpf_instance,
         bucket_index=100,
         rows=20_000,
     )
+    ParquetWriter.write_meta(
+        out_dir,
+        variants_loader,
+        partition_description,
+        S2VariantsWriter,
+    )
 
 
-def run_ped2parquet(ped_file, output_filename):
+def run_ped2parquet(ped_file, output_dir):
     pedigree = FamiliesLoader(ped_file).load()
+    output_filename = os.path.join(output_dir, "pedigree", "pedigree_parquet")
     ParquetWriter.families_to_parquet(pedigree, output_filename)
+    return output_filename
 
 
 def build_variants_loader_pipeline(variants_loader, gpf_instance):

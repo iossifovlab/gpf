@@ -118,8 +118,6 @@ class ParquetWriter:
         include_reference=False,
     ):
         """Read variants from variant_loader and store them in parquet."""
-        # assert variants_loader.get_attribute("annotation_schema") is not None
-
         variants_writer = variants_writer_class(
             out_dir,
             variants_loader,
@@ -164,14 +162,27 @@ class ParquetWriter:
         )
 
     @staticmethod
+    def write_meta(
+            out_dir,
+            variants_loader,
+            partition_description: PartitionDescriptor,
+            variants_writer_class: Type[
+                Union[S1VariantsWriter, S2VariantsWriter]]):
+        """Write dataset metadata."""
+        variants_writer = variants_writer_class(
+            out_dir,
+            variants_loader,
+            partition_description,
+        )
+        variants_writer.write_meta()
+
+    @staticmethod
     def write_pedigree(
-        out_dir: str,
+        output_filename: str,
         families: FamiliesData,
         partition_descriptor: PartitionDescriptor
     ) -> None:
         """Write FamiliesData to a pedigree parquet file."""
-        output_filename = os.path.join(out_dir, "pedigree.parquet")
-
         ParquetWriter.families_to_parquet(
             families, output_filename, partition_descriptor)
 

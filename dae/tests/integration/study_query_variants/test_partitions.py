@@ -70,28 +70,35 @@ def imported_study(tmp_path_factory, genotype_storage):
         bar    13  .  C   T   .    .      .    GT     0/0 1/0 1/0 1/0 0/1 0/0 0/0  # freq 2/8 = 25.0%, missense, g2
         """)  # noqa
 
-    partition_def = textwrap.dedent("""
-      partition_description:
-        region_bin:
-            chromosomes: ['foo', 'bar']
-            region_length: 100
-        family_bin:
-            family_bin_size: 2
-        frequency_bin:
-            rare_boundary: 30
-        coding_bin:
-            coding_effect_types: "splice-site,missense,synonymous"
-    """)
+    project_config_update = {
+        "partition_description": {
+            "region_bin": {
+                "chromosomes": ["foo", "bar"],
+                "region_length": 100
+            },
+            "family_bin": {
+                "family_bin_size": 2
+            },
+            "frequency_bin": {
+                "rare_boundary": 30,
+            },
+            "coding_bin": {
+                "coding_effect_types": "splice-site,missense,synonymous"
+            },
+        },
+        "processing_config": {
+            "vcf": {
+                "chromosomes": ["foo", "bar"],
+                "region_length": 8
+            }
+        }
+    }
 
-    processing_details = textwrap.dedent("""vcf:
-       chromosomes: ['foo', 'bar']
-       region_length: 8
-    """)
     study = vcf_study(
         root_path,
         "partitoned_vcf", ped_path, [vcf_path],
-        gpf_instance, partition_description=partition_def,
-        processing_details=processing_details)
+        gpf_instance,
+        project_config_update=project_config_update)
     return study
 
 

@@ -59,8 +59,9 @@ class ImportProject():
     """
 
     # pylint: disable=too-many-public-methods
-    def __init__(self, import_config, base_input_dir, base_config_dir=None,
-                 gpf_instance=None, config_filenames=None):
+    def __init__(
+            self, import_config: dict[str, Any], base_input_dir,
+            base_config_dir=None, gpf_instance=None, config_filenames=None):
         """Create a new project from the provided config.
 
         It is best not to call this ctor directly but to use one of the
@@ -70,7 +71,7 @@ class ImportProject():
         the configuration and instead injecting our own instance. Ideal for
         testing.
         """
-        self.import_config = import_config
+        self.import_config: dict[str, Any] = import_config
         if "denovo" in import_config["input"]:
             len_files = len(import_config["input"]["denovo"]["files"])
             assert len_files == 1, "Support for multiple denovo files is NYI"
@@ -168,6 +169,11 @@ class ImportProject():
                 for bucket in self._loader_region_bins(loader_type):
                     buckets.append(bucket)
         return buckets
+
+    def get_variant_loader_types(self) -> list[str]:
+        return list(filter(
+            lambda lt: lt != "pedigree",
+            self.import_config["input"].keys()))
 
     def get_variant_loader(
             self,
@@ -316,6 +322,28 @@ class ImportProject():
     @property
     def study_id(self):
         return self.import_config["id"]
+
+    def get_processing_parquet_dataset_dir(self) -> Optional[str]:
+        """Return processing parquet dataset dir if configured and exists."""
+        processing_config = self.import_config.get("processing_config", {})
+        parquet_dataset_dir = processing_config.get("parquet_dataset_dir")
+        if parquet_dataset_dir is None:
+            return None
+        if not fs_utils.exists(parquet_dataset_dir):
+            return None
+        return cast(str, parquet_dataset_dir)
+
+    def get_parquet_dataset_dir(self) -> Optional[str]:
+        """Return parquet dataset direcotry.
+
+        If processing parquet dataset dir is configured this method will
+        return it. Otherwise it will construct work dir parquet dataset
+        directory.
+        """
+        parquet_dataset_dir = self.get_processing_parquet_dataset_dir()
+        if parquet_dataset_dir is not None:
+            return parquet_dataset_dir
+        return fs_utils.join(self.work_dir, self.study_id)
 
     def has_genotype_storage(self):
         """Return if a genotype storage can be created."""

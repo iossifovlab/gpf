@@ -21,8 +21,10 @@ class ImpalaSchema1ImportStorage(ImportStorage):
     """Import logic for data in the Impala Schema 1 format."""
 
     @staticmethod
-    def _pedigree_dir(project):
-        return fs_utils.join(project.work_dir, f"{project.study_id}_pedigree")
+    def _pedigree_filename(project):
+        return fs_utils.join(
+            project.work_dir, f"{project.study_id}_pedigree",
+            "pedigree.parquet")
 
     @staticmethod
     def _variants_dir(project):
@@ -39,13 +41,26 @@ class ImpalaSchema1ImportStorage(ImportStorage):
     @classmethod
     def _do_write_pedigree(cls, project):
         start = time.time()
-        out_dir = cls._pedigree_dir(project)
+        ped_filename = cls._pedigree_filename(project)
         ParquetWriter.write_pedigree(
-            out_dir, project.get_pedigree(),
+            ped_filename, project.get_pedigree(),
             cls._get_partition_description(project))
         elapsed = time.time() - start
         logger.info("prepare pedigree elapsed %.2f sec", elapsed)
         project.stats[("elapsed", "pedigree")] = elapsed
+
+    @classmethod
+    def _do_write_meta(cls, project):
+        out_dir = cls._variants_dir(project)
+        gpf_instance = project.get_gpf_instance()
+        loader_type = project.get_variant_loader_types()[0]
+        ParquetWriter.write_meta(
+            out_dir,
+            project.get_variant_loader(
+                loader_type=loader_type,
+                reference_genome=gpf_instance.reference_genome),
+            cls._get_partition_description(project),
+            S1VariantsWriter)
 
     @classmethod
     def _do_write_variants(cls, project, bucket):
@@ -95,8 +110,7 @@ class ImpalaSchema1ImportStorage(ImportStorage):
 
         partition_description = cls._get_partition_description(project)
 
-        pedigree_file = fs_utils.join(cls._pedigree_dir(project),
-                                      "pedigree.parquet")
+        pedigree_file = cls._pedigree_filename(project)
         genotype_storage.hdfs_upload_dataset(
             project.study_id,
             cls._variants_dir(project),
@@ -192,6 +206,9 @@ class ImpalaSchema1ImportStorage(ImportStorage):
         pedigree_task = graph.create_task(
             "Generating Pedigree", self._do_write_pedigree, [project], []
         )
+        meta_task = graph.create_task(
+            "Write Meta", self._do_write_meta, [project], []
+        )
 
         bucket_tasks = []
         for bucket in project.get_import_variants_buckets():
@@ -220,7 +237,7 @@ class ImpalaSchema1ImportStorage(ImportStorage):
         if project.has_genotype_storage():
             hdfs_task = graph.create_task(
                 "Copying to HDFS", self._do_load_in_hdfs,
-                [project], [pedigree_task, all_parquet_task])
+                [project], [pedigree_task, meta_task, all_parquet_task])
 
             impala_task = graph.create_task(
                 "Importing into Impala", self._do_load_in_impala,

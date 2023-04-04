@@ -1,5 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import textwrap
+import yaml
 import pytest
 
 from dae.testing import setup_pedigree, setup_vcf, vcf_study
@@ -96,7 +97,7 @@ def partition_study(tmp_path_factory, gcp_storage_fixture):
     study = vcf_study(
         root_path,
         "partition_vcf", ped_path, [vcf_path],
-        gpf_instance, partition_description=textwrap.dedent("""
+        gpf_instance, project_config_update=yaml.safe_load(textwrap.dedent("""
           partition_description:
             region_bin:
               chromosomes: foo,bar
@@ -105,5 +106,5 @@ def partition_study(tmp_path_factory, gcp_storage_fixture):
               family_bin_size: 2
             frequency_bin:
               rare_boundary: 5
-        """))
+        """)))
     return study

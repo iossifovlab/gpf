@@ -457,7 +457,7 @@ class FsspecReadWriteProtocol(
                     uncompress=False) as outfile:
 
             md5_hash = hashlib.md5()
-            while chunk := infile.read(32768):
+            while chunk := infile.read(self.CHUNK_SIZE):
                 outfile.write(chunk)
                 md5_hash.update(chunk)
 
