@@ -27,7 +27,7 @@ class PersonSet:
             self, psid: str, name: str,
             values: List[str], color: str,
             persons: Dict[str, Person]):
-        self.id: str = psid
+        self.id: str = psid  # pylint: disable=invalid-name
         self.name: str = name
         self.values: List[str] = values
         self.color: str = color
@@ -86,7 +86,7 @@ class PersonSetCollection:
 
         assert config.get("default") is not None
 
-        self.id: str = pscid
+        self.id: str = pscid  # pylint: disable=invalid-name
         self.name: str = name
         self.config = config
         self.sources = sources
