@@ -3,7 +3,6 @@
 
 import os
 import logging
-import json
 from functools import cached_property
 from typing import Optional, Union
 from pathlib import Path
@@ -369,19 +368,10 @@ class GPFInstance:
         study = self.get_genotype_data(study_id)
         if study is None or study.is_remote:
             return None
-        try:
-            common_report_path = study.config.common_report.file_path
-            if not common_report_path or not os.path.exists(
-                common_report_path
-            ):
-                return None
-
-            with open(common_report_path, "r", encoding="utf-8") as crf:
-                cr_json = json.load(crf)
-
-            return CommonReport(cr_json)
-        except AssertionError:
+        if not study.config.common_report.enabled:
             return None
+        return CommonReport.load(
+            study.config.common_report.file_path)
 
     def get_all_common_report_configs(self):
         """Return all common report configuration."""

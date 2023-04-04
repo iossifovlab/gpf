@@ -65,5 +65,10 @@ rm -rf $DAE_DB_DIR/wdae/wdae_django_default.cache
     grr_cache_repo --definition /wd/integration/grr_definition.yaml\
         --instance $DAE_DB_DIR/gpf_instance.yaml
 
-/opt/conda/bin/conda run --no-capture-output -n gpf \
-    /wd/wdae/wdae/wdaemanage.py runserver 0.0.0.0:21010
+while true; do
+
+    /opt/conda/bin/conda run --no-capture-output -n gpf \
+        /wd/wdae/wdae/wdaemanage.py runserver 0.0.0.0:21010
+    sleep 10
+
+done

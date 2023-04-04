@@ -229,6 +229,9 @@ location_column = "variant.location"
 domain_min = 0.001
 domain_max = 100
 
+
+[common_report]
+enabled = true
 """  # noqa
 
 

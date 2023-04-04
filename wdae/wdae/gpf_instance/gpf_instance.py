@@ -154,7 +154,7 @@ class WGPFInstance(GPFInstance):
         genotype_data = super().get_genotype_data(genotype_data_id)
         if genotype_data is not None:
             return genotype_data
-
+        assert self._remote_study_db is not None
         genotype_data = self._remote_study_db\
             .get_genotype_data(genotype_data_id)
         return genotype_data
@@ -164,6 +164,7 @@ class WGPFInstance(GPFInstance):
             super().get_genotype_data_config(genotype_data_id)
         if genotype_data_config is not None:
             return genotype_data_config
+        assert self._remote_study_db is not None
         return self._remote_study_db\
             .get_genotype_data_config(genotype_data_id)
 
@@ -294,7 +295,7 @@ def get_wgpf_instance_path(config_filename=None):
     """Return the path to the GPF instance in use."""
     if _GPF_INSTANCE is not None:
         return pathlib.Path(_GPF_INSTANCE.dae_dir)
-
+    dae_dir: Optional[pathlib.Path]
     if config_filename is not None:
         dae_dir = pathlib.Path(config_filename).parent
         return dae_dir

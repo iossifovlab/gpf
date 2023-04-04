@@ -22,7 +22,7 @@ def trios2_study(tmp_path_factory):
         f2       d2       0      0      1   1      dad
         f2       p2       d2     m2     1   2      prb
         """)
-    vcf_path = setup_denovo(
+    denovo_path = setup_denovo(
         root_path / "trios2_data" / "in.tsv",
         """
           familyId  location  variant    bestState
@@ -39,14 +39,8 @@ def trios2_study(tmp_path_factory):
 
     study = denovo_study(
         root_path,
-        "trios2", ped_path, [vcf_path],
-        gpf_instance,
-        study_config_update={
-            "id": "trios2",
-            "common_report": {
-                "enabled": True
-            }
-        })
+        "trios2", ped_path, [denovo_path],
+        gpf_instance)
     return study
 
 

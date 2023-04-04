@@ -10,7 +10,7 @@ from os.path import basename, exists
 
 from abc import ABC, abstractmethod
 
-from typing import Dict, List, cast
+from typing import Dict, List, cast, Any
 
 from dae.query_variants.query_runners import QueryResult
 from dae.pedigrees.family import FamiliesData
@@ -475,7 +475,7 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
         try:
             started = time.time()
 
-            variants = {}
+            variants: dict[str, Any] = {}
             with closing(result) as result:
                 result.start()
 
