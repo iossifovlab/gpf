@@ -11,7 +11,6 @@ import numpy as np
 import pandas as pd
 from jinja2 import Template
 from cerberus import Validator
-from markdown2 import markdown
 
 from dae.utils.dae_utils import join_line
 from dae.genomic_resources.aggregators import build_aggregator
@@ -357,11 +356,6 @@ class GeneScoreCollection(
 
     def _get_template_data(self):
         data = copy.deepcopy(self.config)
-
-        if "meta" in data:
-            meta = data["meta"]
-            if "description" in meta:
-                meta["description"] = markdown(str(meta["description"]))
 
         statistics = self.get_statistics()
         data["statistics_dir"] = statistics.get_statistics_folder()

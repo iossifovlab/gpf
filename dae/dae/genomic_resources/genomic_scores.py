@@ -12,7 +12,6 @@ from typing import Iterator, Optional, cast, Type, Any, Union
 from dataclasses import dataclass
 
 from jinja2 import Template
-from markdown2 import markdown
 
 from dae.task_graph.graph import TaskGraph
 from . import GenomicResource
@@ -532,10 +531,6 @@ class GenomicScore(
 
     def _get_template_data(self):
         info = copy.deepcopy(self.config)
-        if "meta" in info:
-            meta = info["meta"]
-            if "description" in meta:
-                meta["description"] = markdown(str(meta["description"]))
 
         statistics = self.get_statistics()
 

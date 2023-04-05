@@ -4,6 +4,8 @@ from typing import Optional, Callable, cast, Any
 from abc import abstractmethod, ABC
 from jinja2 import Template
 from cerberus import Validator
+from markdown2 import markdown
+
 from dae.task_graph.graph import Task
 
 from .repository import GenomicResource
@@ -132,9 +134,23 @@ class InfoImplementationMixin:
     def _get_template_data(self):
         raise NotImplementedError()
 
+    def get_template_data(self):
+        template_data = self._get_template_data()
+
+        config = self.config
+        if "meta" in config:
+            meta = config["meta"]
+            if "description" in meta:
+                template_data["description"] = \
+                    markdown(str(meta["description"]))
+
+        template_data["resource_files"] = self.resource.get_manifest().entries
+
+        return template_data
+
     def get_info(self) -> str:
         """Construct the contents of the implementation's HTML info page."""
-        template_data = self._get_template_data()
+        template_data = self.get_template_data()
         return self.get_template().render(
             resource_id=self.resource.resource_id,  # type: ignore
             data=template_data,
@@ -181,6 +197,15 @@ h3,h4 {
 </head>
 <body>
 <h1>{{ resource_id }}</h3>
+<pLabels:</p>
+{% if data["meta"] and data["meta"]["labels"] %}
+<ul>
+{% for label, value in data["meta"]["labels"].items() %}
+    <li>{{ label }}: {{ value }}</li>
+{% endfor %}
+</ul>
+{% else %}
+{% endif %}
 
 {% block content %}
 N/A
@@ -188,9 +213,31 @@ N/A
 
 <div>
 <span class="description">
-{{ data["meta"] if data["meta"] else "N/A" }}
+{{
+    data["description"] if data["description"] else "N/A"
+}}
 </span>
 </div>
+<table>
+<thead>
+    <tr>
+        <th>Filename</th>
+        <th>Size</th>
+        <th>md5</th>
+    </tr>
+</thead>
+<tbody>
+    {%- for key, value in data["resource_files"].items() recursive%}
+    <tr>
+        <td class="nowrap">
+            <a href='{{key}}'>{{key}}</a>
+        </td>
+        <td class="nowrap">{{value['size']}}</td>
+        <td class="nowrap">{{value['md5']}}</td>
+    </tr>
+    {%- endfor %}
+</tbody>
+</table>
 
 
 </body>
