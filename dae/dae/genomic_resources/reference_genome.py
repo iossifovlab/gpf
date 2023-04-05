@@ -5,10 +5,11 @@ import os
 import logging
 import copy
 import textwrap
-import yaml
 import itertools
-
+import json
+import yaml
 from typing import Optional, Any, cast
+
 
 from jinja2 import Template
 from markdown2 import markdown
@@ -479,8 +480,6 @@ class ReferenceGenome(
 
     def _get_template_data(self):
         info = copy.deepcopy(self.config)
-        if "meta" in info:
-            info["meta"] = markdown(str(info["meta"]))
         return info
 
     @staticmethod
@@ -502,7 +501,12 @@ class ReferenceGenome(
         return "placeholder"
 
     def calc_statistics_hash(self) -> bytes:
-        return b"placeholder"
+        manifest = self.resource.get_manifest()
+        config = self.get_config()
+        genome_filename = config["filename"]
+        return json.dumps({
+            "score_file": manifest[genome_filename].md5
+        }, sort_keys=True, indent=2).encode()
 
     def add_statistics_build_tasks(self, task_graph, **kwargs) -> list[Task]:
         tasks = []
