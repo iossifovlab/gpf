@@ -4,6 +4,7 @@ import os
 import sys
 import argparse
 import logging
+from contextlib import closing
 from typing import List, Optional
 
 from pysam import VariantFile, TabixFile  # pylint: disable=no-name-in-module
@@ -59,46 +60,49 @@ def update_header(variant_file, pipeline):
         header.info.add(attribute, "A", "String", description)
 
 
-def annotate(input_file, region, pipeline, out_filepath):
+def annotate(input_file, region, pipeline, out_file_path):
     """Annotate a region from a given input VCF file using a pipeline."""
-    in_file = VariantFile(input_file)
-    update_header(in_file, pipeline)
-    out_file = VariantFile(out_filepath, "w", header=in_file.header)
-    annotation_attributes = pipeline.annotation_schema.names
-    with pipeline.open():
-        for vcf_var in in_file.fetch(*region):
-            # pylint: disable=use-list-literal
-            buffers: List[List] = [list() for _ in annotation_attributes]
+    with closing(VariantFile(input_file)) as in_file:
+        update_header(in_file, pipeline)
+        with pipeline.open(), closing(VariantFile(
+            out_file_path, "w", header=in_file.header
+        )) as out_file:
+            annotation_attributes = pipeline.annotation_schema.names
+            for vcf_var in in_file.fetch(*region):
+                # pylint: disable=use-list-literal
+                buffers: List[List] = [list() for _ in annotation_attributes]
 
-            if vcf_var.alts is None:
-                logger.info("vcf variant without alternatives: %s", vcf_var)
-                continue
+                if vcf_var.alts is None:
+                    logger.info(
+                        "vcf variant without alternatives: %s %s",
+                        vcf_var.chrom, vcf_var.pos
+                    )
+                    continue
 
-            for alt in vcf_var.alts:
-                annotation = pipeline.annotate(
-                    VCFAllele(vcf_var.chrom, vcf_var.pos, vcf_var.ref, alt)
-                )
-                for buff, attribute in zip(buffers, annotation_attributes):
-                    # TODO Ask what value to use for missing attr
-                    buff.append(str(annotation.get(attribute, "-")))
+                for alt in vcf_var.alts:
+                    annotation = pipeline.annotate(
+                        VCFAllele(vcf_var.chrom, vcf_var.pos, vcf_var.ref, alt)
+                    )
+                    for buff, attribute in zip(buffers, annotation_attributes):
+                        # TODO Ask what value to use for missing attr
+                        buff.append(str(annotation.get(attribute, "-")))
 
-            for attribute, buff in zip(annotation_attributes, buffers):
-                vcf_var.info[attribute] = buff
-            out_file.write(vcf_var)
-    out_file.close()
-    in_file.close()
+                for attribute, buff in zip(annotation_attributes, buffers):
+                    vcf_var.info[attribute] = buff
+                out_file.write(vcf_var)
 
 
-def combine(input_filepath, pipeline, part_filenames, output_filepath):
+def combine(input_file_path, pipeline, partfile_paths, output_file_path):
     """Combine annotated region parts into a single VCF file."""
-    input_file = VariantFile(input_filepath)
-    update_header(input_file, pipeline)
-    with VariantFile(output_filepath, "w", header=input_file.header) as out:
-        for part_filename in part_filenames:
-            part_file = VariantFile(part_filename)
-            for rec in part_file.fetch():
-                out.write(rec)
-    input_file.close()
+    with closing(VariantFile(input_file_path)) as input_file:
+        update_header(input_file, pipeline)
+        with closing(
+            VariantFile(output_file_path, "w", header=input_file.header)
+        ) as output_file:
+            for partfile_path in partfile_paths:
+                partfile = VariantFile(partfile_path)
+                for rec in partfile.fetch():
+                    output_file.write(rec)
 
 
 def produce_regions(context, contigs, region_size):
@@ -122,12 +126,12 @@ def produce_regions(context, contigs, region_size):
     ] + unknown_contigs
 
 
-def produce_part_filenames(input_filepath, regions, work_dir):
-    """Produce a list of filenames for output region part files."""
+def produce_partfile_paths(input_file_path, regions, work_dir):
+    """Produce a list of file paths for output region part files."""
     filenames = []
     for region in regions:
         filenames.append(os.path.join(work_dir, PART_FILENAME.format(
-            in_file=os.path.basename(input_filepath),
+            in_file=os.path.basename(input_file_path),
             chrom=region[0], pos_beg=region[1], pos_end=region[2]
         )))
     return filenames
@@ -155,19 +159,24 @@ def cli(raw_args: Optional[list[str]] = None) -> None:
         os.mkdir(args.work_dir)
 
     def run_parallelized():
-        with TabixFile(args.input) as pysam_file:
+        with closing(TabixFile(args.input)) as pysam_file:
             contigs = list(map(str, pysam_file.contigs))
         regions = produce_regions(context, contigs, args.region_size)
-        filenames = produce_part_filenames(args.input, regions, args.work_dir)
+        file_paths = produce_partfile_paths(args.input, regions, args.work_dir)
         task_graph = TaskGraph()
-        for index, (region, filepath) in enumerate(zip(regions, filenames)):
-            task_graph.create_task(
-                f"part-{index}", annotate,
-                [args.input, region, pipeline, filepath], []
-            )
+        region_tasks = []
+        for index, (region, file_path) in enumerate(zip(regions, file_paths)):
+            region_tasks.append(task_graph.create_task(
+                f"part-{index}",
+                annotate,
+                [args.input, region, pipeline, file_path],
+                []
+            ))
         task_graph.create_task(
-            "combine", combine,
-            [args.input, pipeline, filenames, output], []
+            "combine",
+            combine,
+            [args.input, pipeline, file_paths, output],
+            [region_tasks]
         )
         TaskGraphCli.process_graph(task_graph, **vars(args))
 
