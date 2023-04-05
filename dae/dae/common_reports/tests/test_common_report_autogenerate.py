@@ -59,6 +59,9 @@ def test_trios2_study_common_reports_enabled(trios2_fixture):
 def test_missing_common_report(trios2_fixture):
     gpf_instance, study = trios2_fixture
     report_filename = study.config.common_report.file_path
+    assert os.path.exists(report_filename)
+    os.remove(report_filename)
+
     assert not os.path.exists(report_filename)
 
     report = gpf_instance.get_common_report(study.study_id)

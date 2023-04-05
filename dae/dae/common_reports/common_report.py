@@ -175,7 +175,7 @@ class CommonReport:
     def load(report_filename: str) -> Optional[CommonReport]:
         """Load a common report from a file.
 
-        I file does not exists returns None.
+        If file does not exists returns None.
         """
         if not os.path.exists(report_filename):
             return None
@@ -183,3 +183,23 @@ class CommonReport:
             cr_json = json.load(crf)
 
         return CommonReport(cr_json)
+
+    @staticmethod
+    def build_and_save(study, force=False):
+        """Build a common report for a study, saves it and returns the report.
+
+        If the common reports are disabled for the study, the function skips
+        building the report and returns None.
+
+        If the report already exists the default behavior is to skip building
+        the report. You can force building the report by
+        passing `force=True` to the function.
+        """
+        if not study.config.common_report.enabled:
+            return None
+        report_filename = study.config.common_report.file_path
+        if os.path.exists(report_filename) and not force:
+            return CommonReport.load(report_filename)
+        report = CommonReport.build_report(study)
+        report.save(report_filename)
+        return report

@@ -373,8 +373,7 @@ class GPFInstance:
         report = CommonReport.load(
             study.config.common_report.file_path)
         if report is None:
-            report = CommonReport.build_report(study)
-            report.save(study.config.common_report.file_path)
+            report = CommonReport.build_and_save(study)
         return report
 
     def get_all_common_report_configs(self):
