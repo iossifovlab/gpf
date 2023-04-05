@@ -557,7 +557,9 @@ def _run_resource_stats_command(repo, proto, repo_url, **kwargs):
             return
         modified_kwargs = copy.copy(kwargs)
         modified_kwargs["command"] = "run"
-        TaskGraphCli.process_graph(graph, force_mode="always", **modified_kwargs)
+        TaskGraphCli.process_graph(
+            graph, force_mode="always", **modified_kwargs
+        )
 
 
 def _run_repo_repair_command(repo, proto, **kwargs):
@@ -568,7 +570,7 @@ def _run_resource_repair_command(repo, proto, repo_url, **kwargs):
     _run_resource_info_command(repo, proto, repo_url, **kwargs)
 
 
-def _run_repo_info_command(repo, proto, **kwargs):  # pylint: disable=unused-argument
+def _run_repo_info_command(repo, proto, **kwargs):
     _run_repo_stats_command(repo, proto, **kwargs)
     proto.build_index_info(repository_template)
 
