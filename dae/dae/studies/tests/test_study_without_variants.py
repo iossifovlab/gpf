@@ -42,10 +42,11 @@ def no_variants_study(gpf_instance_2013, tmp_path):
 
     default_config = GPFConfigParser.parse_and_interpolate_file(
         gpf_instance_2013.dae_config.default_study_config.conf_file)
-    content = GPFConfigParser.parse_and_interpolate(content, parser=toml.loads)
+    parsed_content = GPFConfigParser.parse_and_interpolate(
+        content, parser=toml.loads)
     tmp_path.mkdir(exist_ok=True)
     config = GPFConfigParser.process_config(
-        content, study_config_schema, default_config, tmp_path)
+        parsed_content, study_config_schema, default_config, tmp_path)
 
     genotype_storage = \
         gpf_instance_2013.genotype_storages.get_genotype_storage(
@@ -70,5 +71,5 @@ def test_study_simple(no_variants_study):
 
 def test_common_reports(no_variants_study):
     """Test building a common report from a study without variants."""
-    common_report = CommonReport.from_genotype_study(no_variants_study)
+    common_report = CommonReport.build_report(no_variants_study)
     assert common_report

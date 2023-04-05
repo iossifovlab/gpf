@@ -62,16 +62,16 @@ class PersonFilterRange(CriteriaFilter):
 
     def apply_to_df(self, df: pd.DataFrame) -> pd.DataFrame:
         if self.values_min is not None and self.values_max is not None:
-            return df[
+            return df[  # type: ignore
                 np.logical_and(
                     df[self.criteria] >= self.values_min,
                     df[self.criteria] <= self.values_max,
                 )
             ]
         if self.values_min is not None:
-            return df[df[self.criteria] >= self.values_min]
+            return df[df[self.criteria] >= self.values_min]  # type: ignore
         if self.values_max is not None:
-            return df[df[self.criteria] <= self.values_max]
+            return df[df[self.criteria] <= self.values_max]  # type: ignore
         return df[-np.isnan(df[self.criteria])]
 
 

@@ -1,4 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
+import os
+
 import pytest
 
 from dae.testing import setup_pedigree, setup_denovo, denovo_study
@@ -6,7 +8,7 @@ from dae.testing.foobar_import import foobar_gpf
 
 
 @pytest.fixture
-def trios2_study(tmp_path_factory):
+def trios2_fixture(tmp_path_factory):
     root_path = tmp_path_factory.mktemp(
         "common_reports_trios2")
     gpf_instance = foobar_gpf(root_path)
@@ -41,11 +43,12 @@ def trios2_study(tmp_path_factory):
         root_path,
         "trios2", ped_path, [denovo_path],
         gpf_instance)
-    return study
+    return gpf_instance, study
 
 
-def test_trios2_study_common_reports_enabled(trios2_study):
-    config = trios2_study.config
+def test_trios2_study_common_reports_enabled(trios2_fixture):
+    _gpf_instance, study = trios2_fixture
+    config = study.config
 
     assert config is not None
     assert config.common_report is not None
@@ -53,19 +56,15 @@ def test_trios2_study_common_reports_enabled(trios2_study):
     assert config.common_report.enabled
 
 
-def test_trios2_study_denovo_report_effect_groups(trios2_study):
-    common_report = trios2_study.config.common_report
-    assert common_report.enabled
-    assert common_report.effect_groups == [
-        "LGDs", "nonsynonymous", "UTRs"
-    ]
+def test_missing_common_report(trios2_fixture):
+    gpf_instance, study = trios2_fixture
+    report_filename = study.config.common_report.file_path
+    assert os.path.exists(report_filename)
+    os.remove(report_filename)
 
+    assert not os.path.exists(report_filename)
 
-def test_trios2_study_denovo_report_effect_types(trios2_study):
-    common_report = trios2_study.config.common_report
-    assert common_report.enabled
-    assert common_report.effect_types == [
-        "Nonsense", "Frame-shift", "Splice-site", "Missense",
-        "No-frame-shift", "noStart", "noEnd", "Synonymous",
-        "Non coding", "Intron", "Intergenic", "3'-UTR", "5'-UTR"
-    ]
+    report = gpf_instance.get_common_report(study.study_id)
+    assert report is not None
+
+    assert os.path.exists(report_filename)

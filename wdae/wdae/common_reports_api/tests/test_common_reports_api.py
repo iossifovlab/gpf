@@ -1,4 +1,5 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
+import os
 import json
 import pytest
 
@@ -147,14 +148,19 @@ def test_variant_reports_no_permissions(user_client):
     assert data
 
 
-@pytest.mark.xfail(reason="this test is flipping; should be investigated")
-def test_variant_reports_not_found(admin_client):
+def test_autogenerate_common_report(admin_client, wdae_gpf_instance):
+    study = wdae_gpf_instance.get_genotype_data("Study3")
+    assert study is not None
+    report_filename = study.config.common_report.file_path
+    assert not os.path.exists(report_filename)
+
     url = "/api/v3/common_reports/studies/Study3"
     response = admin_client.get(url)
 
-    assert response
-    assert response.data["error"] == "Common report Study3 not found"
-    assert response.status_code == status.HTTP_404_NOT_FOUND
+    assert response.status_code == status.HTTP_200_OK
+    assert response.data["id"] == "Study3"
+
+    assert os.path.exists(report_filename)
 
 
 def test_families_data_download(admin_client):
@@ -170,7 +176,7 @@ def test_families_data_download(admin_client):
     assert len(streaming_content) == 34
 
 
-@pytest.mark.xfail(reason="this test is flipping; should be investigated")
+# @pytest.mark.xfail(reason="this test is flipping; should be investigated")
 def test_families_data_download_no_permissions(user_client):
     url = "/api/v3/common_reports/families_data/study4"
     response = user_client.get(url)

@@ -70,7 +70,7 @@ person_filters_schema = {
     "filter_type": {"type": "string"},
 }
 
-family_filters_schema = dict(
+family_filters_schema = dict(  # pylint: disable=use-dict-literal
     **person_filters_schema,
     role={"type": "string"},
 )

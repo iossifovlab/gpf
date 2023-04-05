@@ -10,7 +10,10 @@ from dae.pedigrees.serializer import FamiliesTsvSerializer
 
 
 class VariantReportsView(QueryDatasetView):
-    def get(self, request, common_report_id):
+    """Variant reports view class."""
+
+    def get(self, _request, common_report_id):
+        """Return a variant report when requested."""
         assert common_report_id
 
         common_report = self.gpf_instance.get_common_report(
@@ -26,7 +29,10 @@ class VariantReportsView(QueryDatasetView):
 
 
 class VariantReportsFullView(QueryDatasetView):
-    def get(self, request, common_report_id):
+    """Variants report full view class."""
+
+    def get(self, _request, common_report_id):
+        """Return full variant report when requested."""
         assert common_report_id
 
         common_report = self.gpf_instance.get_common_report(
@@ -36,13 +42,16 @@ class VariantReportsFullView(QueryDatasetView):
         if common_report is not None:
             return Response(common_report.to_dict(full=True))
         return Response(
-            {"error": "Common report {} not found".format(common_report_id)},
+            {"error": f"Common report {common_report_id} not found"},
             status=status.HTTP_404_NOT_FOUND,
         )
 
 
 class FamilyCounterListView(QueryDatasetView):
+    """Family couters list view class."""
+
     def post(self, request):
+        """Return family counters for specified study and group name."""
         data = request.data
 
         common_report_id = data["study_id"]
@@ -69,7 +78,10 @@ class FamilyCounterListView(QueryDatasetView):
 
 
 class FamilyCounterDownloadView(QueryDatasetView):
+    """Family counters download view class."""
+
     def post(self, request):
+        """Return family couters for a specified study and group name."""
         data = request.data
 
         study_id = data["study_id"]
@@ -112,7 +124,10 @@ class FamilyCounterDownloadView(QueryDatasetView):
 
 
 class FamiliesDataDownloadView(QueryDatasetView):
+    """Families data download view class."""
+
     def get(self, request, dataset_id):
+        """Return full family data for a specified study and tags."""
         tags = request.GET.get("tags")
 
         if not dataset_id:

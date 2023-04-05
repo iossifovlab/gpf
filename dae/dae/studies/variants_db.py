@@ -229,6 +229,9 @@ location_column = "variant.location"
 domain_min = 0.001
 domain_max = 100
 
+
+[common_report]
+enabled = true
 """  # noqa
 
 
@@ -279,6 +282,10 @@ class VariantsDb:
 
         self._load_all_genotype_studies(genotype_study_configs)
         self._load_all_genotype_groups(genotype_group_configs)
+        for study in self.get_all_genotype_data():
+            # pylint: disable=import-outside-toplevel
+            from dae.common_reports.common_report import CommonReport
+            CommonReport.build_and_save(study)
 
     def _load_study_configs(self):
         logger.info("loading study configs: %s", self.dae_config.studies)

@@ -286,14 +286,15 @@ class DenovoReport:
         config = genotype_data.config.common_report
         effect_groups = config.effect_groups
         effect_types = config.effect_types
-        print(
-            f"DENOVO REPORTS: person set collections {person_set_collections}")
+        logger.info(
+            "DENOVO REPORTS: person set collections %s",
+            person_set_collections)
         start = time.time()
-        denovo_variants = genotype_data.query_variants(
-            limit=None, inheritance=["denovo"],
-        )
-
-        denovo_variants = list(denovo_variants)
+        denovo_variants = []
+        if genotype_data.config.has_denovo:
+            denovo_variants = list(genotype_data.query_variants(
+                limit=None, inheritance=["denovo"],
+            ))
 
         elapsed = time.time() - start
         logger.info(

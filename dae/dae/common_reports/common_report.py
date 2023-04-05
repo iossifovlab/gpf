@@ -1,5 +1,10 @@
+from __future__ import annotations
+
+import os
 import time
 import logging
+import json
+from typing import Optional
 
 from dae.variants.attributes import Role
 
@@ -11,31 +16,28 @@ from dae.common_reports.denovo_report import DenovoReport
 logger = logging.getLogger(__name__)
 
 
-# FIXME: Too many instance attributes, refactor?
-class CommonReport:  # pylint: disable=too-many-instance-attributes
+class CommonReport:
     """Class representing a common report JSON."""
 
-    def __init__(self, json):
-        self.study_id = json["id"]
-        self.people_report = PeopleReport(json["people_report"])
-        self.families_report = FamiliesReport(json["families_report"])
-        self.denovo_report = DenovoReport(json.get("denovo_report"))
-        self.study_name = json["study_name"]
-        self.phenotype = json["phenotype"]
-        self.study_type = json["study_type"]
-        self.study_year = json["study_year"]
-        self.pub_med = json["pub_med"]
-        self.families = json["families"]
-        self.number_of_probands = json["number_of_probands"]
-        self.number_of_siblings = json["number_of_siblings"]
-        self.denovo = json["denovo"]
-        self.transmitted = json["transmitted"]
-        self.study_description = json["study_description"]
+    def __init__(self, data):
+        self.study_id = data["id"]
+        self.people_report = PeopleReport(data["people_report"])
+        self.families_report = FamiliesReport(data["families_report"])
+        self.denovo_report = DenovoReport(data.get("denovo_report"))
+        self.study_name = data["study_name"]
+        self.phenotype = data["phenotype"]
+        self.study_type = data["study_type"]
+        self.study_year = data["study_year"]
+        self.pub_med = data["pub_med"]
+        self.families = data["families"]
+        self.number_of_probands = data["number_of_probands"]
+        self.number_of_siblings = data["number_of_siblings"]
+        self.denovo = data["denovo"]
+        self.transmitted = data["transmitted"]
+        self.study_description = data["study_description"]
 
-    # FIXME: Too many locals
     @staticmethod
-    def from_genotype_study(genotype_data_study):
-        # pylint: disable=too-many-locals
+    def build_report(genotype_data_study):
         """Generate common report JSON from genotpye data study."""
         config = genotype_data_study.config.common_report
 
@@ -161,3 +163,43 @@ class CommonReport:  # pylint: disable=too-many-instance-attributes
             "transmitted": self.transmitted,
             "study_description": self.study_description,
         }
+
+    def save(self, report_filename: str) -> None:
+        """Save common report into a file."""
+        if not os.path.exists(os.path.dirname(report_filename)):
+            os.makedirs(os.path.dirname(report_filename))
+        with open(report_filename, "w+", encoding="utf8") as crf:
+            json.dump(self.to_dict(full=True), crf)
+
+    @staticmethod
+    def load(report_filename: str) -> Optional[CommonReport]:
+        """Load a common report from a file.
+
+        If file does not exists returns None.
+        """
+        if not os.path.exists(report_filename):
+            return None
+        with open(report_filename, "r", encoding="utf-8") as crf:
+            cr_json = json.load(crf)
+
+        return CommonReport(cr_json)
+
+    @staticmethod
+    def build_and_save(study, force=False):
+        """Build a common report for a study, saves it and returns the report.
+
+        If the common reports are disabled for the study, the function skips
+        building the report and returns None.
+
+        If the report already exists the default behavior is to skip building
+        the report. You can force building the report by
+        passing `force=True` to the function.
+        """
+        if not study.config.common_report.enabled:
+            return None
+        report_filename = study.config.common_report.file_path
+        if os.path.exists(report_filename) and not force:
+            return CommonReport.load(report_filename)
+        report = CommonReport.build_report(study)
+        report.save(report_filename)
+        return report
