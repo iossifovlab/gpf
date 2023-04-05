@@ -176,7 +176,7 @@ def cli(raw_args: Optional[list[str]] = None) -> None:
             "combine",
             combine,
             [args.input, pipeline, file_paths, output],
-            [region_tasks]
+            region_tasks
         )
         TaskGraphCli.process_graph(task_graph, **vars(args))
 
