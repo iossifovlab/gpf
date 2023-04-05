@@ -122,7 +122,6 @@ def test_repo_repair_dry_run(proto_fixture):
     assert not (path / GR_CONTENTS_FILE_NAME).exists()
 
 
-@pytest.mark.skip()
 def test_resource_repair_need_update_message(
         proto_fixture, capsys, caplog, mocker):
     path, _proto = proto_fixture
@@ -136,19 +135,21 @@ def test_resource_repair_need_update_message(
     assert captured.out == ""
     assert captured.err == ""
     assert caplog.record_tuples == [
-        ("grr_manage",
-         logging.INFO,
+        ("dae.genomic_resources.repository_factory", logging.INFO,
+         "using default GRR definitions"),
+        ("grr_manage", logging.INFO,
          "manifest of <one> is up to date"),
-        ("grr_manage",
-         logging.INFO,
+        ("dae.genomic_resources.genomic_scores", logging.ERROR,
+         "Couldn't load statistics of one"),
+        ("grr_manage", logging.INFO,
          "No hash stored for <one>, need update"),
-        ("grr_manage",
-         logging.INFO,
+        ("grr_manage", logging.INFO,
          "Statistics of <one> need update"),
+        ("dae.genomic_resources.genomic_scores", logging.ERROR,
+         "Couldn't load statistics of one"),
     ]
 
 
-@pytest.mark.skip()
 def test_repo_repair_need_update_message(
         proto_fixture, capsys, caplog):
     path, proto_fixture = proto_fixture
@@ -161,19 +162,25 @@ def test_repo_repair_need_update_message(
     assert captured.out == ""
     assert captured.err == ""
     assert caplog.record_tuples == [
+        ("dae.genomic_resources.repository_factory", logging.INFO,
+         "using default GRR definitions"),
         ("grr_manage",
          logging.INFO,
          "manifest of <one> is up to date"),
+        ("dae.genomic_resources.genomic_scores", logging.ERROR,
+         "Couldn't load statistics of one"),
         ("grr_manage",
          logging.INFO,
          "No hash stored for <one>, need update"),
         ("grr_manage",
          logging.INFO,
          "Statistics of <one> need update"),
+        ("dae.genomic_resources.genomic_scores",
+         logging.ERROR,
+         "Couldn't load statistics of one"),
     ]
 
 
-@pytest.mark.skip()
 def test_resource_repair_no_update_message(
         proto_fixture, capsys, caplog):
     # Given
@@ -193,16 +200,17 @@ def test_resource_repair_no_update_message(
     assert out == ""
     assert err == ""
     assert caplog.record_tuples == [
-        ("grr_manage",
-         logging.INFO,
+        ("dae.genomic_resources.genomic_scores", logging.ERROR,
+         "Couldn't load statistics of one"),
+        ("dae.genomic_resources.repository_factory", logging.INFO,
+         "using default GRR definitions"),
+        ("grr_manage", logging.INFO,
          "manifest of <one> is up to date"),
-        ("grr_manage",
-         logging.INFO,
+        ("grr_manage", logging.INFO,
          "<one> statistics hash is up to date"),
     ]
 
 
-@pytest.mark.skip()
 def test_repo_repair_no_update_message(
         proto_fixture, capsys, caplog):
     # Given
@@ -221,16 +229,17 @@ def test_repo_repair_no_update_message(
     assert out == ""
     assert err == ""
     assert caplog.record_tuples == [
-        ("grr_manage",
-         logging.INFO,
+        ("dae.genomic_resources.genomic_scores", logging.ERROR,
+         "Couldn't load statistics of one"),
+        ("dae.genomic_resources.repository_factory", logging.INFO,
+         "using default GRR definitions"),
+        ("grr_manage", logging.INFO,
          "manifest of <one> is up to date"),
-        ("grr_manage",
-         logging.INFO,
+        ("grr_manage", logging.INFO,
          "<one> statistics hash is up to date"),
     ]
 
 
-@pytest.mark.skip()
 def test_resource_repair_dry_run_needs_manifest_update_message(
         proto_fixture, capsys, caplog):
     # Given
@@ -255,17 +264,18 @@ def test_resource_repair_dry_run_needs_manifest_update_message(
     assert captured.out == ""
     assert captured.err == ""
     assert caplog.record_tuples == [
-        ("grr_manage",
-         logging.INFO,
+        ("dae.genomic_resources.genomic_scores", logging.ERROR,
+         "Couldn't load statistics of one"),
+        ("dae.genomic_resources.repository_factory", logging.INFO,
+         "using default GRR definitions"),
+        ("grr_manage", logging.INFO,
          "manifest of <one> should be updated; entries to update in manifest "
          "['data.txt']"),
-        ("grr_manage",
-         logging.INFO,
+        ("grr_manage", logging.INFO,
          "Manifest of <one> needs update, cannot check statistics"),
     ]
 
 
-@pytest.mark.skip()
 def test_repo_repair_dry_run_needs_manifest_update_message(
         proto_fixture, capsys, caplog):
     # Given
@@ -287,17 +297,18 @@ def test_repo_repair_dry_run_needs_manifest_update_message(
     assert captured.out == ""
     assert captured.err == ""
     assert caplog.record_tuples == [
-        ("grr_manage",
-         logging.INFO,
+        ("dae.genomic_resources.genomic_scores", logging.ERROR,
+         "Couldn't load statistics of one"),
+        ("dae.genomic_resources.repository_factory", logging.INFO,
+         "using default GRR definitions"),
+        ("grr_manage", logging.INFO,
          "manifest of <one> should be updated; entries to update in manifest "
          "['data.txt']"),
-        ("grr_manage",
-         logging.INFO,
+        ("grr_manage", logging.INFO,
          "Manifest of <one> needs update, cannot check statistics"),
     ]
 
 
-@pytest.mark.skip()
 def test_resource_repair_dry_run_needs_manifest_and_histogram_update_message(
         proto_fixture, capsys, caplog):
     # Given
@@ -329,19 +340,21 @@ def test_resource_repair_dry_run_needs_manifest_and_histogram_update_message(
     assert captured.out == ""
     assert captured.err == ""
     assert caplog.record_tuples == [
-        ("grr_manage",
-         logging.INFO,
+        ("dae.genomic_resources.genomic_scores", logging.ERROR,
+         "Couldn't load statistics of one"),
+        ("dae.genomic_resources.repository_factory", logging.INFO,
+         "using default GRR definitions"),
+        ("grr_manage", logging.INFO,
          "manifest of <one> should be updated; entries to update in manifest "
          "['data.txt.gz', 'data.txt.gz.tbi']"),
-        ("grr_manage",
-         logging.INFO,
+        ("grr_manage", logging.INFO,
          "Manifest of <one> needs update, cannot check statistics"),
     ]
 
     # And after that::
     # Given
     cli_manage([
-        "resource-manifest", "-R", str(path), "-r", "one", "-j", "1"])
+        "resource-manifest", "-R", str(path), "-r", "one", ])
     _, _ = capsys.readouterr()
     caplog.clear()
 
@@ -357,19 +370,17 @@ def test_resource_repair_dry_run_needs_manifest_and_histogram_update_message(
     assert captured.out == ""
     assert captured.err == ""
     assert caplog.record_tuples == [
-        ("grr_manage",
-         logging.INFO,
+        ("dae.genomic_resources.repository_factory", logging.INFO,
+         "using default GRR definitions"),
+        ("grr_manage", logging.INFO,
          "manifest of <one> is up to date"),
-        ("grr_manage",
-         logging.INFO,
+        ("grr_manage", logging.INFO,
          "Stored hash for <one> is outdated, need update"),
-        ("grr_manage",
-         logging.INFO,
+        ("grr_manage", logging.INFO,
          "Statistics of <one> need update"),
     ]
 
 
-@pytest.mark.skip()
 def test_repo_repair_dry_run_needs_manifest_and_histogram_update_message(
         proto_fixture, capsys, caplog):
     # Given
@@ -399,19 +410,21 @@ def test_repo_repair_dry_run_needs_manifest_and_histogram_update_message(
     assert captured.out == ""
     assert captured.err == ""
     assert caplog.record_tuples == [
-        ("grr_manage",
-         logging.INFO,
+        ("dae.genomic_resources.genomic_scores", logging.ERROR,
+         "Couldn't load statistics of one"),
+        ("dae.genomic_resources.repository_factory", logging.INFO,
+         "using default GRR definitions"),
+        ("grr_manage", logging.INFO,
          "manifest of <one> should be updated; entries to update in manifest "
          "['data.txt.gz', 'data.txt.gz.tbi']"),
-        ("grr_manage",
-         logging.INFO,
+        ("grr_manage", logging.INFO,
          "Manifest of <one> needs update, cannot check statistics"),
     ]
 
     # And after that::
     # Given
     cli_manage([
-        "repo-manifest", "-R", str(path), "-j", "1"])
+        "repo-manifest", "-R", str(path), ])
     _, _ = capsys.readouterr()
     caplog.clear()
 
@@ -425,13 +438,12 @@ def test_repo_repair_dry_run_needs_manifest_and_histogram_update_message(
     assert captured.out == ""
     assert captured.err == ""
     assert caplog.record_tuples == [
-        ("grr_manage",
-         logging.INFO,
+        ("dae.genomic_resources.repository_factory", logging.INFO,
+         "using default GRR definitions"),
+        ("grr_manage", logging.INFO,
          "manifest of <one> is up to date"),
-        ("grr_manage",
-         logging.INFO,
+        ("grr_manage", logging.INFO,
          "Stored hash for <one> is outdated, need update"),
-        ("grr_manage",
-         logging.INFO,
+        ("grr_manage", logging.INFO,
          "Statistics of <one> need update"),
     ]

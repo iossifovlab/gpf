@@ -8,7 +8,7 @@ import logging
 
 from dae.utils.verbosity_configuration import VerbosityConfiguration
 from dae.genomic_resources.repository_factory import load_definition_file, \
-    get_configured_definition, \
+    get_default_grr_definition, \
     build_genomic_resource_repository
 from dae.genomic_resources.cached_repository import GenomicResourceCachedRepo
 from dae.configuration.gpf_config_parser import GPFConfigParser
@@ -57,7 +57,7 @@ def cli_cache_repo(argv=None):
     if args.definition is not None:
         definition = load_definition_file(args.definition)
     else:
-        definition = get_configured_definition()
+        definition = get_default_grr_definition()
 
     repository = build_genomic_resource_repository(definition=definition)
     if not isinstance(repository, GenomicResourceCachedRepo):

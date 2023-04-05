@@ -38,7 +38,7 @@ from dae.utils.verbosity_configuration import VerbosityConfiguration
 
 from dae.genomic_resources.fsspec_protocol import build_fsspec_protocol
 from dae.genomic_resources.repository_factory import \
-    build_genomic_resource_repository, \
+    build_genomic_resource_repository, get_default_grr_definition, \
     load_definition_file
 
 from dae.genomic_resources import get_resource_implementation_builder
@@ -59,7 +59,7 @@ def _add_repository_resource_parameters_group(parser, use_resource=True):
         "directory. If found the directory is assumed for root repository "
         "directory; otherwise error is reported.")
     group.add_argument(
-        "--definition", "--grr", "-g", type=str,
+        "--grr", "--definition", "-g", type=str,
         default=None,
         help="Path to an extra GRR definition file. This GRR will be loaded"
         "in a group alongside the local one.")
@@ -672,29 +672,27 @@ def cli_manage(cli_args=None):
         repo_url = str(repo_url)
         print(f"working with repository: {repo_url}")
 
-    local_grr_definition = {
-        "id": "local",
-        "type": "dir",
-        "directory": repo_url
-    }
-
-    extra_definition_path = args.definition
+    extra_definition_path = args.grr
     if extra_definition_path:
         if not os.path.exists(extra_definition_path):
             raise FileNotFoundError(
                 f"Definition {extra_definition_path} not found!"
             )
         extra_definition = load_definition_file(extra_definition_path)
-        grr_definition = {
-            "id": "cli_grr",
-            "type": "group",
-            "children": [
-                {**local_grr_definition},
-                {**extra_definition}
-            ]
-        }
     else:
-        grr_definition = local_grr_definition
+        extra_definition = get_default_grr_definition()
+    grr_definition = {
+        "id": "cli_grr",
+        "type": "group",
+        "children": [
+            {
+                "id": "local",
+                "type": "dir",
+                "directory": repo_url
+            },
+            extra_definition
+        ]
+    }
 
     repo = build_genomic_resource_repository(definition=grr_definition)
 
