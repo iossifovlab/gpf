@@ -15,6 +15,12 @@ import * as d3 from 'd3';
 import { Subject } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
 
+interface BinBar {
+  index: number;
+  bin: number;
+  bar: number;
+}
+
 @Component({
   selector: 'gpf-histogram',
   templateUrl: './histogram.component.html',
@@ -61,16 +67,16 @@ export class HistogramComponent implements OnInit, OnChanges {
   public xScale: d3.ScaleBand<string>;
   private barsTotalSum: number;
 
-  private svg;
+  private svg: d3.Selection<SVGElement, unknown, null, undefined>;
 
-  private scaledBins: Array<number>;
   private resetRange = false;
 
   @Input() public isInteractive = true;
   @Input() public singleScoreValue: number;
 
-  public scaleXAxis;
-  public scaleYAxis;
+  public scaleXAxis: d3.ScaleThreshold<number, number, never>;
+  public scaleYAxis: d3.ScaleLinear<number, number, never>
+                     | d3.ScaleLogarithmic<number, number, never>;
 
   public ngOnInit(): void {
     this.rangeStartSubject
@@ -184,7 +190,7 @@ export class HistogramComponent implements OnInit, OnChanges {
   }
 
   private colorBars(): void {
-    this.svg.selectAll('rect').style('fill', (d, index, objects) =>
+    this.svg.selectAll('rect').style('fill', (d: BinBar) =>
       d.index < this.selectedStartIndex || d.index > this.selectedEndIndex
         ? 'lightsteelblue' : 'steelblue');
   }
@@ -213,7 +219,7 @@ export class HistogramComponent implements OnInit, OnChanges {
   private redrawHistogram(): void {
     this.barsTotalSum = d3.sum(this.bars);
 
-    const barsBinsArray = [];
+    const barsBinsArray: BinBar[] = [];
     for (let i = 0; i < this.bars.length; i++) {
       barsBinsArray[i] = {
         index: i,
@@ -225,7 +231,9 @@ export class HistogramComponent implements OnInit, OnChanges {
     const width = 450.0;
     const height = 50;
 
-    const svg = d3.select(this.histogramContainer.nativeElement);
+    const svg = d3.select(
+      this.histogramContainer.nativeElement
+    ) as d3.Selection<SVGElement, unknown, null, undefined>;
 
     this.xScale = d3.scaleBand()
       .padding(0.1)
@@ -245,18 +253,19 @@ export class HistogramComponent implements OnInit, OnChanges {
       .data(barsBinsArray)
       .enter().append('rect')
       .style('fill', 'steelblue')
-      .attr('x', (d: any) => this.xScale(d.index.toString()))
+      .attr('x', (d: BinBar) => this.xScale(d.index.toString()))
       .attr('width', this.xScale.bandwidth())
-      .attr('y', (d: any) => d.bar === 0 ? height : this.scaleYAxis(d.bar))
-      .attr('height', (d: any) => (d.bar === 0 || d.bar === undefined) ? 0 : height - this.scaleYAxis(d.bar));
+      .attr('y', (d: BinBar) => d.bar === 0 ? height : this.scaleYAxis(d.bar))
+      .attr('height', (d: BinBar) => d.bar === 0 || d.bar === undefined ? 0 : height - this.scaleYAxis(d.bar));
     this.svg = svg;
-
-
     this.colorBars();
-    this.scaledBins = barsBinsArray.map(d => d.bin === 0 ? 0 : this.xScale(d.bin));
   }
 
-  private redrawXAxis(svg, width: number, height: number): void {
+  private redrawXAxis(
+    svg: d3.Selection<SVGElement, unknown, null, undefined>,
+    width: number,
+    height: number
+  ): void {
     const axisX = [0];
     const axisVals = [];
 
@@ -283,11 +292,11 @@ export class HistogramComponent implements OnInit, OnChanges {
     const formatter = this.createFormatterFunction(5);
 
     svg.append('g')
-      .attr('transform', 'translate(0,' + height + ')')
+      .attr('transform', `translate(0,${height})`)
       .call(
         d3.axisBottom(this.scaleXAxis)
-          .tickValues(this.xLabelsWithDefaultValue as any)
-          .tickFormat((d, i) => formatter(this.xLabelsWithDefaultValue[i]) as any)
+          .tickValues(this.xLabelsWithDefaultValue)
+          .tickFormat((_, i) => formatter(this.xLabelsWithDefaultValue[i]))
       ).style('font-size', '12px');
   }
 
@@ -335,7 +344,7 @@ export class HistogramComponent implements OnInit, OnChanges {
     this.rangeEndSubject.next(this.internalRangeEnd);
   }
 
-  public set rangeStartWithoutNull(rangeStart: any) {
+  public set rangeStartWithoutNull(rangeStart: string) {
     const rangeStartFloat = parseFloat(rangeStart);
     if (!isNaN(rangeStartFloat)) {
       this.setRangeStart(parseFloat(rangeStart));
@@ -344,11 +353,11 @@ export class HistogramComponent implements OnInit, OnChanges {
     }
   }
 
-  public get rangeStartWithoutNull(): number {
-    return this.internalRangeStartField;
+  public get rangeStartWithoutNull(): string {
+    return this.internalRangeStartField.toString();
   }
 
-  public set rangeEndWithoutNull(rangeEnd: any) {
+  public set rangeEndWithoutNull(rangeEnd: string) {
     const rangeEndFloat = parseFloat(rangeEnd);
     if (!isNaN(rangeEndFloat)) {
       this.setRangeEnd(parseFloat(rangeEnd));
@@ -357,8 +366,8 @@ export class HistogramComponent implements OnInit, OnChanges {
     }
   }
 
-  public get rangeEndWithoutNull(): number {
-    return this.internalRangeEndField;
+  public get rangeEndWithoutNull(): string {
+    return this.internalRangeEndField.toString();
   }
 
   public get minValue(): number {
@@ -415,7 +424,7 @@ export class HistogramComponent implements OnInit, OnChanges {
     return Math.max(0, this.getClosestIndexByValue(this.rangeEnd) - 1);
   }
 
-  private getClosestIndexByX(x): number {
+  private getClosestIndexByX(x: number): number {
     // Domain uses bins count which is larger than bars by 1 element
     const maxIndex = this.xScale.domain().length;
     for (let i = 1; i < maxIndex; i++) {
@@ -430,7 +439,7 @@ export class HistogramComponent implements OnInit, OnChanges {
     return maxIndex - 1;
   }
 
-  private getClosestIndexByValue(val): number {
+  private getClosestIndexByValue(val: number): number {
     for (let i = 1; i < this.bins.length - 1; i++) {
       if (this.bins[i] >= val) {
         const prev = Math.abs(val - this.bins[i - 1]);
@@ -477,27 +486,17 @@ export class HistogramComponent implements OnInit, OnChanges {
     }
   }
 
-  private createFormatterFunction(digitCount: number): (num: any) => any {
+  private createFormatterFunction(digitCount: number): (num: number) => string {
     // used to add e-6 scientific notation
-    const notations = [
-      { value: 1E-6, suffix: 'e-6' },
-    ];
-
     const rx = /\.0+$|(\.[0-9]*[1-9])0+$/;
-
-    return function(num) {
-      let notation;
-      for (let i = 0; i < notations.length; i++) {
-        notation = notations[i];
-        if (num === notation.value) {
-          let value = num / notation.value;
-          value = Number(value.toFixed(digitCount));
-          value = Number(String(value).replace(rx, '$1'));
-          return value + notation.suffix;
-        } else {
-          return num;
-        }
+    return (num) => {
+      if (num !== 1E-6) {
+        return num.toString();
       }
+      let value = num / 1E-6;
+      value = Number(value.toFixed(digitCount));
+      value = Number(String(value).replace(rx, '$1'));
+      return `${value}e-6`;
     };
   }
 }
