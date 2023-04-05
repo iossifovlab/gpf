@@ -131,7 +131,7 @@
                   <th *ngFor="let personSet of dataset.personSets" style="text-align: center; border-bottom: none">
                     <span
                       class="vertical-text"
-                      [attr.title]="'children with the specific phenotype: ' + personSet.childrenCount"
+                      [attr.title]="'children with this phenotype: ' + personSet.childrenCount"
                       >{{ personSet.displayName }} ({{ personSet.childrenCount }})</span
                     >
                   </th>
