@@ -61,7 +61,7 @@
 
         <div class="grid-cell" [attr.id]="group.name + '-actions-cell'">
           <gpf-confirm-button
-            [attr.id]="group.name + '-delete-group-botton'"
+            [attr.id]="group.name + '-delete-group-button'"
             *ngIf="group.name !== 'admin'"
             (clicked)="deleteGroup(group)"
             confirmText="Delete"
