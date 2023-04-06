@@ -158,7 +158,7 @@ class ImpalaVariants:
         )
 
         query = query_builder.product
-        logger.debug("SUMMARY VARIANTS QUERY: %s", query)
+        logger.info("SUMMARY VARIANTS QUERY: %s", query)
 
         runner = ImpalaQueryRunner(
             self.connection_pool, query, deserializer=deserialize_row)
@@ -287,7 +287,7 @@ class ImpalaVariants:
 
         query = query_builder.product
 
-        logger.debug("FAMILY VARIANTS QUERY: %s", query)
+        logger.info("FAMILY VARIANTS QUERY: %s", query)
         deserialize_row = query_builder.create_row_deserializer(
             self.serializer)
         assert deserialize_row is not None
