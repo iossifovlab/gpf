@@ -273,9 +273,9 @@ def test_vcf_multiple_chroms(tmp_path, annotate_directory_fixture):
 def test_produce_partfile_paths():
     regions = [("chr1", 0, 1000), ("chr1", 1000, 2000), ("chr1", 2000, 3000)]
     expected_output = [
-        "work_dir/output/input.vcf_annotation_chr1_0_1000.vcf",
-        "work_dir/output/input.vcf_annotation_chr1_1000_2000.vcf",
-        "work_dir/output/input.vcf_annotation_chr1_2000_3000.vcf",
+        "work_dir/output/input.vcf_annotation_chr1_0_1000.vcf.gz",
+        "work_dir/output/input.vcf_annotation_chr1_1000_2000.vcf.gz",
+        "work_dir/output/input.vcf_annotation_chr1_2000_3000.vcf.gz",
     ]
     # relative input file path
     assert produce_partfile_paths(
