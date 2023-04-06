@@ -92,6 +92,7 @@ class QueryResult:
         self.limit = limit
         self._counter = 0
         self.timestamp = time.time()
+        self._exceptions: list[Exception] = []
 
         self.runners = runners
         for runner in self.runners:
@@ -114,6 +115,9 @@ class QueryResult:
         while True:
             try:
                 item = self.result_queue.get(timeout=0.1)
+                if isinstance(item, Exception):
+                    self._exceptions.append(item)
+                    continue
                 self._counter += 1
                 return item
             except queue.Empty as exp:
@@ -129,6 +133,9 @@ class QueryResult:
         """
         try:
             row = self.result_queue.get(timeout=timeout)
+            if isinstance(row, Exception):
+                self._exceptions.append(row)
+                return None
             return row
         except queue.Empty as exp:
             if self.done():
@@ -156,3 +163,9 @@ class QueryResult:
         self.executor.shutdown(wait=True)
         elapsed = time.time() - self.timestamp
         logger.debug("result closed after %0.3f", elapsed)
+        if self._exceptions:
+            for error in self._exceptions:
+                logger.error(
+                    "unexpected exception in query result: %s", error,
+                    exc_info=True, stack_info=True)
+            raise IOError(self._exceptions[0])

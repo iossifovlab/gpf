@@ -6,7 +6,7 @@ import numpy as np
 from impala.util import as_pandas
 from dae.query_variants.query_runners import QueryRunner
 from dae.variants.attributes import Role, Status, Sex
-from dae.impala_storage.schema2.impala_query_runner import ImpalaQueryRunner
+from dae.impala_storage.helpers.impala_query_runner import ImpalaQueryRunner
 from dae.query_variants.sql.schema2.base_variants import SqlSchema2Variants
 from dae.query_variants.sql.schema2.base_query_builder import Dialect
 from dae.variants.variant import SummaryVariantFactory

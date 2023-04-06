@@ -91,9 +91,10 @@ class ImpalaQueryRunner(QueryRunner):
                             break
 
                 except Exception as ex:  # pylint: disable=broad-except
-                    logger.debug(
+                    logger.error(
                         "exception in runner (%s) run: %s",
                         self.study_id, type(ex), exc_info=True)
+                    self._put_value_in_result_queue(ex)
                 finally:
                     logger.debug(
                         "runner (%s) closing connection", self.study_id)

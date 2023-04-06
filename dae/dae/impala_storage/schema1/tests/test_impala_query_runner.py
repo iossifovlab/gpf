@@ -5,9 +5,10 @@ from concurrent.futures import ThreadPoolExecutor
 from queue import Queue
 
 import pytest
+
 from dae.query_variants.query_runners import QueryResult
 
-from dae.impala_storage.schema1.impala_variants import ImpalaQueryRunner
+from dae.impala_storage.helpers.impala_query_runner import ImpalaQueryRunner
 
 
 @pytest.fixture(scope="session")
@@ -26,7 +27,7 @@ def test_impala_runner_simple(impala_helpers):
     assert impala_helpers is not None
 
     query = "SELECT * FROM gpf_variant_db.test_study_impala_01_variants"
-    result_queue = Queue(maxsize=3)
+    result_queue: Queue = Queue(maxsize=3)
 
     runner = create_runner(impala_helpers, query)
     runner._set_result_queue(result_queue)
@@ -47,7 +48,7 @@ def test_impala_runner_simple(impala_helpers):
     executor.shutdown(wait=True)
 
 
-def test_impala_runner_result_simple(impala_helpers):
+def test_impala_runner_result_with_exception(impala_helpers):
     query = "SELECT * FROM gpf_variant_db.test_study_impala_01_variants"
 
     runner = create_runner(impala_helpers, query)
@@ -63,7 +64,10 @@ def test_impala_runner_result_simple(impala_helpers):
         print(row)
         break
 
-    result.close()
+    with pytest.raises(
+            IOError,
+            match="AnalysisException: Could not resolve table reference:"):
+        result.close()
     time.sleep(0.5)
 
     assert runner.closed()
@@ -86,7 +90,10 @@ def test_impala_runner_result_experimental_1(impala_helpers):
         print(row)
         time.sleep(0.5)
 
-    result.close()
+    with pytest.raises(
+            IOError,
+            match="AnalysisException: Could not resolve table reference:"):
+        result.close()
 
 
 def test_impala_runner_result_experimental_2(impala_helpers):
@@ -130,7 +137,10 @@ def test_impala_runner_result_experimental(impala_helpers):
         print(row)
         break
 
-    result.close()
+    with pytest.raises(
+            IOError,
+            match="AnalysisException: Could not resolve table reference:"):
+        result.close()
     time.sleep(0.5)
 
     assert runner.closed()
