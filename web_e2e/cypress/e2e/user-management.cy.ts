@@ -204,6 +204,30 @@ describe('User management tests for Users', () => {
     page.userCell('test_name').should('not.exist');
   });
 
+  it('should reset password', () => {
+    createTestUser(page, 'test_email@email.com', 'test_name');
+    page.userActionsResetPassword('test_email@email.com').click();
+    page.userTableResetPasswordConfirmButton.click();
+
+    cy.request('GET', 'http://localhost:8025/api/v2/search?kind=to&query=test_email@email.com').then(
+      (response) => {
+        const lines: string[] = (response.body.items[0].Content.Body as string).split('\r\n');
+        const url = lines[1].replace(' http://gpf/gpf/', '');
+        cy.visit(url);
+        page.newPasswordInput.type('XC^ZF*TZXuUChFsv');
+        page.repeatNewPasswordInput.type('XC^ZF*TZXuUChFsv');
+        page.newPasswordButton.click();
+      }
+    );
+    page.logout();
+    page.login('test_email@email.com', 'XC^ZF*TZXuUChFsv');
+
+    page.logout();
+    page.loginAdmin();
+    page.navigateToSidenavPage(sidenavPageLinks.management);
+    deleteTestUser(page, 'test_email@email.com');
+  });
+
   it('should add and remove groups', () => {
     createTestUser(page, 'test_email@email.com', 'test_name');
     page.userAddGroupButton('test_email@email.com').should('be.visible');
