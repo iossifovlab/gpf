@@ -157,7 +157,9 @@ class QueryResult:
                 logger.info(
                     "exception in result close: %s", type(ex), exc_info=True)
         while not self.result_queue.empty():
-            self.result_queue.get()
+            item = self.result_queue.get()
+            if isinstance(item, Exception):
+                self._exceptions.append(item)
 
         logger.debug("closing thread pool executor")
         self.executor.shutdown(wait=True)

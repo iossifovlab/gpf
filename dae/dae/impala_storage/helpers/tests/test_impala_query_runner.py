@@ -112,7 +112,10 @@ def test_impala_runner_result_experimental_2(impala_helpers):
 
     assert runner.started()
 
-    result.close()
+    with pytest.raises(
+            IOError,
+            match="AnalysisException: Could not resolve table reference:"):
+        result.close()
     time.sleep(0.1)
 
 
