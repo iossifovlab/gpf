@@ -30,7 +30,7 @@ class PlainTextParser(BaseParser):
 @api_view(["POST"])
 @parser_classes([PlainTextParser])
 def sentry(request):
-    dsn = os.environ.get("SENTRY_DSN")
+    dsn = os.environ.get("WDAE_SENTRY_DSN")
     fake_dsn = "https://0@0.ingest.sentry.io/0"  # gpfjs: main.ts
     project_id = urlparse(dsn).path.strip("/")
     sentry_host = dsn.split("@")[1].split("/")[0]
