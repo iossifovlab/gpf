@@ -1,4 +1,5 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
+import os
 import textwrap
 
 import pytest
@@ -241,7 +242,8 @@ def test_vcf_multiple_chroms(tmp_path, annotate_directory_fixture):
     """)
 
     in_file = tmp_path / "in.vcf.gz"
-    out_file = tmp_path / "out.vcf"
+    out_file = tmp_path / "out.vcf.gz"
+    out_file_tbi = tmp_path / "out.vcf.gz.tbi"
     workdir = tmp_path / "output"
     annotation_file = tmp_path / "annotation.yaml"
     grr_file = tmp_path / "grr.yaml"
@@ -268,6 +270,7 @@ def test_vcf_multiple_chroms(tmp_path, annotate_directory_fixture):
     assert result == ["0.1", "0.2",
                       "0.3", "0.4",
                       "0.5", "0.6"]
+    assert os.path.exists(out_file_tbi)
 
 
 def test_produce_partfile_paths():

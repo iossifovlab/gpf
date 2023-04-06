@@ -7,7 +7,8 @@ import logging
 from contextlib import closing
 from typing import List, Optional
 
-from pysam import VariantFile, TabixFile  # pylint: disable=no-name-in-module
+from pysam import VariantFile, TabixFile, \
+    tabix_index  # pylint: disable=no-name-in-module
 
 from dae.annotation.context import CLIAnnotationContext
 from dae.annotation.annotatable import VCFAllele
@@ -103,6 +104,7 @@ def combine(input_file_path, pipeline, partfile_paths, output_file_path):
                 partfile = VariantFile(partfile_path)
                 for rec in partfile.fetch():
                     output_file.write(rec)
+        tabix_index(output_file_path, preset="vcf")
 
 
 def produce_regions(context, contigs, region_size):
