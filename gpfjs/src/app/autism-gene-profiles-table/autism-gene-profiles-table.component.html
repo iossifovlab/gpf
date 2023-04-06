@@ -65,6 +65,9 @@
                       column.displayName.lastIndexOf('(') + 1,
                       column.displayName.lastIndexOf(')')
                     )
+                  : column.gridRow === '3'
+                  ? column.displayName +
+                    '\nnumber of events in children (rate of events per 1000 children as a percentage)'
                   : column.displayName
               "
               [ngClass]="{
