@@ -110,20 +110,17 @@ def test_repo_manifest_no_agruments(
     assert out == \
         f"working with repository: {path}\n"
     assert caplog.record_tuples == [
-        ("grr_manage",
-         logging.INFO,
+        ("dae.genomic_resources.repository_factory", logging.INFO,
+         "using default GRR definitions"),
+        ("grr_manage", logging.INFO,
          "manifest of <one> is up to date"),
-        ("grr_manage",
-         logging.INFO,
+        ("grr_manage", logging.INFO,
          "manifest of <sub/two> is up to date"),
-        ("grr_manage",
-         logging.INFO,
+        ("grr_manage", logging.INFO,
          "manifest of <sub/two(1.0)> is up to date"),
-        ("grr_manage",
-         logging.INFO,
+        ("grr_manage", logging.INFO,
          "manifest of <three(2.0)> is up to date"),
-        ("grr_manage",
-         logging.INFO,
+        ("grr_manage", logging.INFO,
          "manifest of <xxxxx-genome> is up to date"),
     ]
 
@@ -228,6 +225,8 @@ def test_resource_dry_run_manifest_needs_update_message(
     assert captured.err == ""
 
     assert caplog.record_tuples == [
+        ("dae.genomic_resources.repository_factory", logging.INFO,
+         "using default GRR definitions"),
         ("grr_manage", logging.INFO,
          "manifest of <one> should be updated; entries to update in manifest "
          "['data.txt']"),
@@ -253,6 +252,8 @@ def test_repo_dry_run_manifest_needs_update_message(
     assert captured.err == ""
 
     assert caplog.record_tuples == [
+        ("dae.genomic_resources.repository_factory", logging.INFO,
+         "using default GRR definitions"),
         ("grr_manage", logging.INFO,
          "manifest of <one> should be updated; entries to update in manifest "
          "['data.txt']"),
@@ -283,6 +284,8 @@ def test_resource_dry_run_manifest_no_update_message(
     assert captured.err == ""
 
     assert caplog.record_tuples == [
+        ("dae.genomic_resources.repository_factory", logging.INFO,
+         "using default GRR definitions"),
         ("grr_manage", logging.INFO, "manifest of <one> is up to date")
     ]
 
@@ -307,6 +310,8 @@ def test_resource_manifest_no_agruments(
     assert err == ""
     assert out == f"working with repository: {path}\n"
     assert caplog.record_tuples == [
+        ("dae.genomic_resources.repository_factory", logging.INFO,
+         "using default GRR definitions"),
         ("grr_manage", logging.INFO, "manifest of <one> is up to date")
     ]
 
@@ -325,6 +330,8 @@ def test_repo_dry_run_manifest_no_update_message(
     assert captured.out == ""
     assert captured.err == ""
     assert caplog.record_tuples == [
+        ("dae.genomic_resources.repository_factory", logging.INFO,
+         "using default GRR definitions"),
         ("grr_manage", logging.INFO,
          "manifest of <one> is up to date"),
         ("grr_manage", logging.INFO,

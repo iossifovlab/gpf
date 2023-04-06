@@ -56,7 +56,7 @@ def load_definition_file(filename):
 GRR_DEFINITION_FILE_ENV = "GRR_DEFINITION_FILE"
 
 
-def get_configured_definition():
+def get_default_grr_definition():
     """Return default genomic resources repository definition."""
     logger.info("using default GRR definitions")
     env_repo_definition_path = os.environ.get(GRR_DEFINITION_FILE_ENV)
@@ -178,7 +178,7 @@ def build_genomic_resource_repository(
         if file_name is not None:
             definition = load_definition_file(file_name)
         else:
-            definition = get_configured_definition()
+            definition = get_default_grr_definition()
     else:
         if file_name is not None:
             raise ValueError(
