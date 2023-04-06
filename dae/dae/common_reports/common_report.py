@@ -198,8 +198,13 @@ class CommonReport:
         if not study.config.common_report.enabled:
             return None
         report_filename = study.config.common_report.file_path
-        if os.path.exists(report_filename) and not force:
-            return CommonReport.load(report_filename)
+        try:
+            if os.path.exists(report_filename) and not force:
+                return CommonReport.load(report_filename)
+        except Exception:  # pylint: disable=broad-except
+            logger.warning(
+                "unable to load common report for %s", study.study_id,
+                exc_info=True)
         report = CommonReport.build_report(study)
         report.save(report_filename)
         return report
