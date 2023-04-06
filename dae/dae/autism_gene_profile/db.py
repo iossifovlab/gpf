@@ -124,7 +124,7 @@ class AutismGeneProfileDB:
                         f"{dataset_id}_{set_name}_{statistic_id}_rate"
                     ]
                     result[".".join([dataset_id, set_name, statistic_id])] = \
-                        f"{count} ({round(rate, 2)}%)" if count else None
+                        f"{count} ({round(rate, 2)})" if count else None
 
         return result
 
