@@ -113,6 +113,22 @@ export class UserManagementPage extends BasePage {
     return cy.get('mwl-confirmation-popover-window button').contains('Delete');
   }
 
+  public get userTableResetPasswordConfirmButton(): element {
+    return cy.get('mwl-confirmation-popover-window button').contains('Reset');
+  }
+
+  public get newPasswordInput(): element {
+    return cy.get('#id_new_password1');
+  }
+
+  public get repeatNewPasswordInput(): element {
+    return cy.get('#id_new_password2');
+  }
+
+  public get newPasswordButton(): element {
+    return cy.get('input[value="Reset password"]');
+  }
+
   public get userSearchField(): element {
     return cy.get('gpf-user-management input#search-field');
   }
