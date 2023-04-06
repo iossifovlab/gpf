@@ -130,9 +130,11 @@ def produce_partfile_paths(input_file_path, regions, work_dir):
     """Produce a list of file paths for output region part files."""
     filenames = []
     for region in regions:
+        pos_beg = region[1] if len(region) > 1 else "?"
+        pos_end = region[2] if len(region) > 2 else "?"
         filenames.append(os.path.join(work_dir, PART_FILENAME.format(
             in_file=os.path.basename(input_file_path),
-            chrom=region[0], pos_beg=region[1], pos_end=region[2]
+            chrom=region[0], pos_beg=pos_beg, pos_end=pos_end
         )))
     return filenames
 
