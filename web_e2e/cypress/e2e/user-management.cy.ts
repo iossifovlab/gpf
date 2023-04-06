@@ -125,15 +125,6 @@ describe('User management tests for Users', () => {
     page.cancelUserCreationButton.click();
   });
 
-  it('should search and filter users', () => {
-    page.userSearchField.type('admin');
-    page.usersTableCells.should('have.length', 5);
-    page.userSearchField.clear();
-    // triggers search event
-    page.userSearchField.type(' ');
-    page.usersTableCells.should('have.length', 10);
-  });
-
   it('should search and find user', () => {
     createTestUser(page, 'test_email@email.com', 'test_name');
     page.userSearchField.type('test_name');
@@ -144,10 +135,20 @@ describe('User management tests for Users', () => {
     page.userSearchField.type('test_email@email.com');
     page.userCell('test_email@email.com').should('have.text', 'test_nametest_email@email.com');
     page.userGroupList('test_email@email.com').should('have.text', 'any_usertest_email@email.com');
+
+    page.userSearchField.clear();
+    page.userSearchField.type('admin');
+    // 5 cells are 1 row
+    page.usersTableCells.should('have.length', 5);
+    page.userSearchField.clear();
+    // triggers search event
+    page.userSearchField.type(' ');
+    page.usersTableCells.should('have.length', 15);
+
     deleteTestUser(page, 'test_email@email.com');
   });
 
-  it('should search and do not find user', () => {
+  it('should search and not find user', () => {
     page.userSearchField.type('comp');
     page.usersTableCells.should('not.exist');
 
@@ -322,7 +323,7 @@ describe('User management tests for Users', () => {
     deleteTestGroup(page, 'test_group');
   });
 
-  it('should create group with no users or datasets', () => {
+  it('should not create group with no users or datasets', () => {
     page.groupsButton.click();
 
     page.createGroupButton.click();
@@ -524,7 +525,7 @@ describe('User management tests for Users', () => {
     page.groupUsersList('test_group').should('not.exist');
   });
 
-  it('should create user and check data in Datasets', () => {
+  it('should add group to user and check data in Datasets', () => {
     createTestUser(page, 'test_email@email.com', 'test_name');
     page.userAddGroupButton('test_email@email.com').click();
     page.groupsMenuSearch.type('comp_all');
