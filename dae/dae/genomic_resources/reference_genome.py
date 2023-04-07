@@ -471,7 +471,7 @@ class ReferenceGenome(
 
     def get_sequence(self, chrom, start, stop):
         """Return sequence of nucleotides from specified chromosome region."""
-        return list(self.fetch(chrom, start, stop))
+        return "".join(self.fetch(chrom, start, stop))
 
     def pair_iter(self, chrom, start, stop):
         """
