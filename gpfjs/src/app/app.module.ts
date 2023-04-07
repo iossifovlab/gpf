@@ -1,6 +1,6 @@
 /* eslint-disable max-len */
 import { BrowserModule } from '@angular/platform-browser';
-import { NgModule, ErrorHandler } from '@angular/core';
+import { NgModule, ErrorHandler, APP_INITIALIZER } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
@@ -55,7 +55,7 @@ import { EnrichmentTableRowComponent } from './enrichment-table/enrichment-table
 import { FullscreenLoadingComponent } from './fullscreen-loading/fullscreen-loading.component';
 import { FullscreenLoadingService } from './fullscreen-loading/fullscreen-loading.service';
 import { EncodeUriComponentPipe } from './utils/encode-uri-component.pipe';
-import { RouterModule, Routes, UrlSerializer } from '@angular/router';
+import { Router, RouterModule, Routes, UrlSerializer } from '@angular/router';
 import { PersonFiltersComponent } from './person-filters/person-filters.component';
 import { PersonFiltersState } from './person-filters/person-filters.state';
 import { FamilyFiltersBlockComponent } from './family-filters-block/family-filters-block.component';
@@ -175,6 +175,7 @@ import { BackgroundColorEnrichmentPipe } from './utils/background-color-enrichme
 import { ContrastAdjustPipe } from './utils/contrast-adjust.pipe';
 import { ItemAddMenuComponent } from './item-add-menu/item-add-menu.component';
 import { ConfirmButtonComponent } from './confirm-button/confirm-button.component';
+import * as Sentry from '@sentry/angular-ivy';
 
 const appRoutes: Routes = [
   {
@@ -438,7 +439,23 @@ const appRoutes: Routes = [
     {
       provide: UrlSerializer,
       useClass: CustomUrlSerializer
-    }
+    },
+    {
+      provide: ErrorHandler,
+      useValue: Sentry.createErrorHandler({
+        showDialog: false,
+      }),
+    },
+    {
+      provide: Sentry.TraceService,
+      deps: [Router],
+    },
+    {
+      provide: APP_INITIALIZER,
+      useFactory: () => () => {},
+      deps: [Sentry.TraceService],
+      multi: true,
+    },
   ],
 
   bootstrap: [AppComponent]
