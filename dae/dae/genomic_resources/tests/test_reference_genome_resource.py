@@ -94,41 +94,37 @@ def test_local_genomic_sequence(genome_fixture):
         assert ref.get_sequence("gosho", 11, 20) == "TTGGCCAANN"
 
 
-def test_global_statistic_basic(genome_fixture):
+def test_chromosome_statistic_basic(genome_fixture):
     res = build_filesystem_test_resource(genome_fixture)
-    stat = ReferenceGenome._do_global_statistic(res)
+    stat = ReferenceGenome._do_chrom_statistic(res, "pesho", 1, None)
 
-    assert stat.length == 44
+    assert stat.length == 24
 
-    assert len(stat.chromosomes) == 2
-    assert set(stat.chromosomes) == set(["pesho", "gosho"])
-
-    assert stat.nucleotide_counts["A"] == 9
-    assert stat.nucleotide_counts["C"] == 12
-    assert stat.nucleotide_counts["G"] == 7
-    assert stat.nucleotide_counts["T"] == 6
-    assert stat.nucleotide_counts["N"] == 10
+    assert stat.nucleotide_counts["A"] == 5
+    assert stat.nucleotide_counts["C"] == 8
+    assert stat.nucleotide_counts["G"] == 3
+    assert stat.nucleotide_counts["T"] == 2
+    assert stat.nucleotide_counts["N"] == 6
     total_nucleotides = stat.length
 
-    assert stat.nucleotide_pair_counts["AA"] == 4
+    assert stat.nucleotide_pair_counts["AA"] == 2
     assert stat.nucleotide_pair_counts["AG"] == 0
-    assert stat.nucleotide_pair_counts["AC"] == 3
+    assert stat.nucleotide_pair_counts["AC"] == 2
     assert stat.nucleotide_pair_counts["AT"] == 0
     assert stat.nucleotide_pair_counts["GA"] == 0
-    assert stat.nucleotide_pair_counts["GG"] == 4
-    assert stat.nucleotide_pair_counts["GC"] == 2
-    assert stat.nucleotide_pair_counts["GT"] == 1
-    assert stat.nucleotide_pair_counts["CA"] == 2
-    assert stat.nucleotide_pair_counts["CG"] == 2
-    assert stat.nucleotide_pair_counts["CC"] == 6
+    assert stat.nucleotide_pair_counts["GG"] == 2
+    assert stat.nucleotide_pair_counts["GC"] == 1
+    assert stat.nucleotide_pair_counts["GT"] == 0
+    assert stat.nucleotide_pair_counts["CA"] == 1
+    assert stat.nucleotide_pair_counts["CG"] == 1
+    assert stat.nucleotide_pair_counts["CC"] == 4
     assert stat.nucleotide_pair_counts["CT"] == 1
     assert stat.nucleotide_pair_counts["TA"] == 0
-    assert stat.nucleotide_pair_counts["TG"] == 1
+    assert stat.nucleotide_pair_counts["TG"] == 0
     assert stat.nucleotide_pair_counts["TC"] == 1
-    assert stat.nucleotide_pair_counts["TT"] == 4
+    assert stat.nucleotide_pair_counts["TT"] == 1
     total_pairs = sum(stat.nucleotide_pair_counts.values())
 
-    stat.finish()
     for pair, count in stat.nucleotide_pair_counts.items():
         assert stat.bi_nucleotide_distribution[pair] == \
             pytest.approx(count / total_pairs * 100)
@@ -141,8 +137,10 @@ def test_global_statistic_basic(genome_fixture):
     print(stat.bi_nucleotide_distribution)
     print(stat.nucleotide_distribution)
 
+    ReferenceGenome._save_chrom_statistic(res, "pesho", stat)
+
     assert os.path.exists(os.path.join(
         genome_fixture,
         "statistics",
-        "reference_genome_statistic.yaml"
+        "pesho_statistic.yaml"
     ))
