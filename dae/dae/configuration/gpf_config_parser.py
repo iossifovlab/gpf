@@ -136,7 +136,7 @@ class GPFConfigParser:
         try:
             interpolated_text = content % interpol_vars
         except KeyError as ex:
-            raise ValueError("interpolation problems") from ex
+            raise ValueError(f"interpolation problems: {ex}") from ex
 
         config = parser(interpolated_text) or {}
         config.pop("vars", None)
