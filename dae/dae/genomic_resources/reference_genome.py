@@ -149,7 +149,7 @@ class ReferenceGenome(
         """Return the length of a specified chromosome."""
         chrom_data = self._index.get(chrom)
         if chrom_data is None:
-            raise ValueError(f"can't fined chromosome {chrom}")
+            raise ValueError(f"can't find chromosome {chrom}")
         return cast(int, chrom_data["length"])
 
     def get_all_chrom_lengths(self):

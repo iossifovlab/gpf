@@ -1,13 +1,15 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
+import os
+import textwrap
 
 import pytest
 import pysam
 
 from dae.annotation.annotate_columns import build_record_to_annotatable
 from dae.annotation.annotatable import Position, VCFAllele, Region
-from dae.testing import convert_to_tab_separated
+from dae.testing import setup_directories, setup_vcf, setup_denovo
 from dae.annotation.annotate_columns import cli as cli_columns
-from dae.annotation.annotate_vcf import cli as cli_vcf
+from dae.annotation.annotate_vcf import cli as cli_vcf, produce_partfile_paths
 
 
 @pytest.mark.parametrize(
@@ -55,18 +57,6 @@ def test_build_record_to_annotable_failures():
         build_record_to_annotatable({"gosho": "pesho"}, set([]))
 
 
-def setup_dir(directory, files):
-    """Set up a directory with list of (file name, file content).
-
-    TODO: There must be a pytest tool like that.
-          If not, we should moved it to a more general location.
-          Also, it should be extended to recursivelly build directories.
-    """
-    for file_name, file_content in files.items():
-        with open(directory / file_name, "wt", encoding="utf8") as infile:
-            infile.write(file_content)
-
-
 def get_file_content_as_string(file):
     with open(file, "rt", encoding="utf8") as infile:
         return "".join(infile.readlines())
@@ -74,19 +64,26 @@ def get_file_content_as_string(file):
 
 @pytest.fixture
 def annotate_directory_fixture(tmp_path):
-    setup_dir(tmp_path, {
-        "annotation.yaml": """
-            - position_score: one
+    setup_directories(
+        tmp_path,
+        {
+            "annotation.yaml": """
+                - position_score: one
             """,
-        "grr.yaml": """
-            id: mm
-            type: embedded
-            content:
-                one:
-                    genomic_resource.yaml: |
+            "annotation_multiallelic.yaml": """
+                - allele_score: two
+            """,
+            "grr.yaml": f"""
+                id: mm
+                type: dir
+                directory: "{tmp_path}/grr"
+            """,
+            "grr": {
+                "one": {
+                    "genomic_resource.yaml": """
                         type: position_score
                         table:
-                            filename: data.mem
+                            filename: data.txt
                         scores:
                         - id: score
                           type: float
@@ -94,34 +91,64 @@ def annotate_directory_fixture(tmp_path):
                                 The phastCons computed over the tree of 100
                                 verterbarte species
                           name: s1
-                    data.mem: |
-                        chrom  pos_begin  s1
-                        chr1   23         0.01
-                        chr1   24         0.2
-
-            """
-    })
+                    """
+                },
+                "two": {
+                    "genomic_resource.yaml": """
+                        type: allele_score
+                        table:
+                            filename: data.txt
+                            reference:
+                              name: reference
+                            alternative:
+                              name: alternative
+                        scores:
+                        - id: score
+                          type: float
+                          name: s1
+                    """
+                }
+            }
+        }
+    )
+    one_content = textwrap.dedent("""
+        chrom  pos_begin  s1
+        chr1   23         0.1
+        chr1   24         0.2
+        chr2   33         0.3
+        chr2   34         0.4
+        chr3   43         0.5
+        chr3   44         0.6
+    """)
+    two_content = textwrap.dedent("""
+        chrom  pos_begin  reference  alternative  s1
+        chr1   23         C          T            0.1
+        chr1   23         C          A            0.2
+        chr1   24         C          A            0.3
+        chr1   24         C          G            0.4
+    """)
+    setup_denovo(tmp_path / "grr" / "one" / "data.txt", one_content)
+    setup_denovo(tmp_path / "grr" / "two" / "data.txt", two_content)
 
 
 def test_basic_setup(tmp_path, annotate_directory_fixture):
-    in_content = convert_to_tab_separated("""
-            chrom   pos
-            chr1    23
-            chr1    24
-        """)
-    out_expected_content = convert_to_tab_separated("""
-            chrom   pos score
-            chr1    23  0.01
-            chr1    24  0.2
-        """)
+    in_content = textwrap.dedent("""
+        chrom   pos
+        chr1    23
+        chr1    24
+    """)
+    out_expected_content = (
+        "chrom\tpos\tscore\n"
+        "chr1\t23\t0.1\n"
+        "chr1\t24\t0.2\n"
+    )
 
-    setup_dir(tmp_path, {
-        "in.txt": in_content,
-    })
     in_file = tmp_path / "in.txt"
     out_file = tmp_path / "out.txt"
     annotation_file = tmp_path / "annotation.yaml"
     grr_file = tmp_path / "grr.yaml"
+
+    setup_denovo(in_file, in_content)
 
     cli_columns([
         str(a) for a in [
@@ -133,33 +160,131 @@ def test_basic_setup(tmp_path, annotate_directory_fixture):
     assert out_file_content == out_expected_content
 
 
-def test_basic_setup_vcf(tmp_path, annotate_directory_fixture):
-    in_content = convert_to_tab_separated("""
+def test_basic_vcf(tmp_path, annotate_directory_fixture):
+    in_content = textwrap.dedent("""
         ##fileformat=VCFv4.2
         ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
         ##contig=<ID=chr1>
         #CHROM POS ID REF ALT QUAL FILTER INFO FORMAT m1  d1  c1
         chr1   23  .  C   T   .    .      .    GT     0/1 0/0 0/0
         chr1   24  .  C   A   .    .      .    GT     0/0 0/1 0/0
-        """)
-
-    setup_dir(tmp_path, {
-        "in.vcf": in_content
-    })
+    """)
 
     in_file = tmp_path / "in.vcf"
     out_file = tmp_path / "out.vcf"
+    workdir = tmp_path / "output"
     annotation_file = tmp_path / "annotation.yaml"
     grr_file = tmp_path / "grr.yaml"
 
+    setup_vcf(in_file, in_content)
+
     cli_vcf([
         str(a) for a in [
-            in_file, annotation_file, out_file, "--grr", grr_file
+            in_file, annotation_file, "-w", workdir, "--grr", grr_file,
+            "-o", out_file
         ]
     ])
 
     result = []
-    with pysam.VariantFile(out_file) as vcf_file:  # pylint: disable=no-member
+    # pylint: disable=no-member
+    with pysam.VariantFile(out_file) as vcf_file:
         for vcf in vcf_file.fetch():
             result.append(vcf.info["score"][0])
-    assert result == ["0.01", "0.2"]
+    assert result == ["0.1", "0.2"]
+
+
+def test_multiallelic_vcf(tmp_path, annotate_directory_fixture):
+    in_content = textwrap.dedent("""
+        ##fileformat=VCFv4.2
+        ##contig=<ID=chr1>
+        #CHROM POS ID REF ALT QUAL FILTER INFO
+        chr1   23  .  C   T,A   .    .      .
+        chr1   24  .  C   A,G   .    .      .
+    """)
+
+    in_file = tmp_path / "in.vcf"
+    out_file = tmp_path / "out.vcf"
+    workdir = tmp_path / "output"
+    annotation_file = tmp_path / "annotation_multiallelic.yaml"
+    grr_file = tmp_path / "grr.yaml"
+
+    setup_vcf(in_file, in_content)
+
+    cli_vcf([
+        str(a) for a in [
+            in_file, annotation_file, "-w", workdir, "--grr", grr_file,
+            "-o", out_file
+        ]
+    ])
+
+    result = []
+    # pylint: disable=no-member
+    with pysam.VariantFile(out_file) as vcf_file:
+        for vcf in vcf_file.fetch():
+            result.append(vcf.info["score"])
+    assert result == [("0.1", "0.2"), ("0.3", "0.4")]
+
+
+def test_vcf_multiple_chroms(tmp_path, annotate_directory_fixture):
+    in_content = textwrap.dedent("""
+        ##fileformat=VCFv4.2
+        ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+        ##contig=<ID=chr1>
+        ##contig=<ID=chr2>
+        ##contig=<ID=chr3>
+        #CHROM POS ID REF ALT QUAL FILTER INFO FORMAT m1  d1  c1
+        chr1   23  .  C   T   .    .      .    GT     0/1 0/0 0/0
+        chr1   24  .  C   A   .    .      .    GT     0/0 0/1 0/0
+        chr2   33  .  C   T   .    .      .    GT     0/1 0/0 0/0
+        chr2   34  .  C   A   .    .      .    GT     0/0 0/1 0/0
+        chr3   43  .  C   T   .    .      .    GT     0/1 0/0 0/0
+        chr3   44  .  C   A   .    .      .    GT     0/0 0/1 0/0
+    """)
+
+    in_file = tmp_path / "in.vcf.gz"
+    out_file = tmp_path / "out.vcf.gz"
+    out_file_tbi = tmp_path / "out.vcf.gz.tbi"
+    workdir = tmp_path / "output"
+    annotation_file = tmp_path / "annotation.yaml"
+    grr_file = tmp_path / "grr.yaml"
+
+    tasks_log_dir = tmp_path / "tld"
+    tasks_status_dir = tmp_path / "tsd"
+
+    setup_vcf(in_file, in_content)
+
+    cli_vcf([
+        str(a) for a in [
+            in_file, annotation_file, "-w", workdir, "--grr", grr_file,
+            "-o", out_file, "-j 1",
+            "--tasks-log-dir", tasks_log_dir,
+            "-d", tasks_status_dir
+        ]
+    ])
+
+    result = []
+    # pylint: disable=no-member
+    with pysam.VariantFile(out_file) as vcf_file:
+        for vcf in vcf_file.fetch():
+            result.append(vcf.info["score"][0])
+    assert result == ["0.1", "0.2",
+                      "0.3", "0.4",
+                      "0.5", "0.6"]
+    assert os.path.exists(out_file_tbi)
+
+
+def test_produce_partfile_paths():
+    regions = [("chr1", 0, 1000), ("chr1", 1000, 2000), ("chr1", 2000, 3000)]
+    expected_output = [
+        "work_dir/output/input.vcf_annotation_chr1_0_1000.vcf.gz",
+        "work_dir/output/input.vcf_annotation_chr1_1000_2000.vcf.gz",
+        "work_dir/output/input.vcf_annotation_chr1_2000_3000.vcf.gz",
+    ]
+    # relative input file path
+    assert produce_partfile_paths(
+        "src/input.vcf", regions, "work_dir/output"
+    ) == expected_output
+    # absolute input file path
+    assert produce_partfile_paths(
+        "/home/user/src/input.vcf", regions, "work_dir/output"
+    ) == expected_output
