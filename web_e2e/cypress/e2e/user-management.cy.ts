@@ -1,5 +1,88 @@
 import { UserManagementPage } from 'cypress/elements/user-management-page';
+import { UsersPage } from 'cypress/elements/users-page';
 import { sidenavPageLinks } from 'cypress/elements/utils';
+
+describe('User management tests for reset password in Users', () => {
+  const page = new UserManagementPage();
+
+  before(() => {
+    page.cleanup();
+    page.navigateToHome(false);
+  });
+
+  it('should reset password', () => {
+    page.loginAdmin();
+    page.navigateToSidenavPage(sidenavPageLinks.management);
+    createTestUser(page, 'test_email@email.com', 'test_name');
+    page.userHasPasswordCell('test_email@email.com').should('be.empty');
+    page.userActionsResetPassword('test_email@email.com').click();
+    page.userTableResetPasswordConfirmButton.click();
+
+    cy.request('GET', 'http://localhost:8025/api/v2/search?kind=to&query=test_email@email.com').then(
+      (response) => {
+        const lines: string[] = (response.body.items[0].Content.Body as string).split('\r\n');
+        const url = lines[1].replace(' http://gpf/gpf/', '');
+        cy.visit(url);
+        page.newPasswordInput.type('XC^ZF*TZXuUChFsv');
+        page.repeatNewPasswordInput.type('XC^ZF*TZXuUChFsv');
+        page.newPasswordButton.click();
+      }
+    );
+    page.logout();
+    page.login('test_email@email.com', 'XC^ZF*TZXuUChFsv');
+
+    page.logout();
+    page.loginAdmin();
+    page.navigateToHome();
+    page.navigateToSidenavPage(sidenavPageLinks.management);
+    page.userHasPasswordCell('test_email@email.com').find('.fa.fa-check').should('be.visible');
+    deleteTestUser(page, 'test_email@email.com');
+    page.logout();
+  });
+
+  it('should reset password when login', () => {
+    const usersPage = new UsersPage();
+
+    page.loginAdmin();
+    page.navigateToSidenavPage(sidenavPageLinks.management);
+    createTestUser(page, 'test_email@email.com', 'test_name');
+    page.logout();
+
+    cy.window().then((win) => {
+      cy.stub(win, 'open', (url: string) => {
+        win.location.href = `${Cypress.config().baseUrl}accounts/login/?next=/gpf/o/authorize/%3F${url}`;
+      }).as('popup');
+    });
+
+    usersPage.logInButton.click();
+
+    cy.get('@popup').url().then(url => {
+      cy.get('a').first().click();
+      cy.get('#id_email').type('test_email@email.com');
+      cy.get('input[value="Reset password"]').click();
+    });
+
+    cy.request('GET', 'http://localhost:8025/api/v2/search?kind=to&query=test_email@email.com').then(
+      (response) => {
+        const lines: string[] = (response.body.items[0].Content.Body as string).split('\r\n');
+        const url = lines[1].replace(' http://gpf/gpf/', '');
+        cy.visit(url);
+        page.newPasswordInput.type('XC^ZF*TZXuUChFsv');
+        page.repeatNewPasswordInput.type('XC^ZF*TZXuUChFsv');
+        page.newPasswordButton.click();
+      }
+    );
+
+    page.login('test_email@email.com', 'XC^ZF*TZXuUChFsv');
+    page.logout();
+
+    page.loginAdmin();
+    page.navigateToHome();
+    page.navigateToSidenavPage(sidenavPageLinks.management);
+    deleteTestUser(page, 'test_email@email.com');
+    page.logout();
+  });
+});
 
 describe('User management tests for Users', () => {
   const page = new UserManagementPage();
@@ -202,30 +285,6 @@ describe('User management tests for Users', () => {
     page.cancelUserCreationButton.click();
 
     page.userCell('test_name').should('not.exist');
-  });
-
-  it('should reset password', () => {
-    createTestUser(page, 'test_email@email.com', 'test_name');
-    page.userActionsResetPassword('test_email@email.com').click();
-    page.userTableResetPasswordConfirmButton.click();
-
-    cy.request('GET', 'http://localhost:8025/api/v2/search?kind=to&query=test_email@email.com').then(
-      (response) => {
-        const lines: string[] = (response.body.items[0].Content.Body as string).split('\r\n');
-        const url = lines[1].replace(' http://gpf/gpf/', '');
-        cy.visit(url);
-        page.newPasswordInput.type('XC^ZF*TZXuUChFsv');
-        page.repeatNewPasswordInput.type('XC^ZF*TZXuUChFsv');
-        page.newPasswordButton.click();
-      }
-    );
-    page.logout();
-    page.login('test_email@email.com', 'XC^ZF*TZXuUChFsv');
-
-    page.logout();
-    page.loginAdmin();
-    page.navigateToSidenavPage(sidenavPageLinks.management);
-    deleteTestUser(page, 'test_email@email.com');
   });
 
   it('should add and remove groups', () => {

@@ -49,6 +49,10 @@ export class UserManagementPage extends BasePage {
     return this.userGroupList(email).find(`div[id="${group}-list-item"] #confirm-button`);
   }
 
+  public userHasPasswordCell(userEmail: string): element {
+    return cy.get(`div[id="${userEmail}-password-cell"]`);
+  }
+
   public userGroupsCell(userEmail: string): element {
     return cy.get(`div[id="${userEmail}-groups-cell"]`);
   }
