@@ -31,7 +31,7 @@ class GcpImportStorage(Schema2ImportStorage):
         # pylint: disable=protected-access
         study_tables = genotype_storage._study_tables({"id": project.study_id})
 
-        variants_types = project.get_import_variants_types()
+        variants_types = project.get_variant_loader_types()
         study_config = {
             "id": project.study_id,
             "conf_dir": ".",

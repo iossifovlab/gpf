@@ -130,7 +130,6 @@ def test_impala_partition_import(
         with conn.cursor() as cursor:
             cursor.execute(f"DESCRIBE EXTENDED {db}.test_study_variants")
             rows = list(cursor)
-            # import pdb; pdb.set_trace()
             assert any(
                 row[1] == "gpf_partitioning_coding_bin_coding_effect_types"
                 and all([

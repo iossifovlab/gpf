@@ -53,7 +53,7 @@ class Impala2ImportStorage(Schema2ImportStorage):
         meta_table = genotype_storage\
             ._construct_metadata_table(project.study_id)
 
-        variants_types = project.get_import_variants_types()
+        variants_types = project.get_variant_loader_types()
         study_config = {
             "id": project.study_id,
             "conf_dir": ".",

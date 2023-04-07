@@ -38,7 +38,7 @@ def update_study_config(
         outfile.write(builder.build_config())
 
 
-def setup_import_project(
+def setup_import_project_config(
     root_path: pathlib.Path, study: StudyInputLayout,
     gpf_instance,
     project_config_update: Optional[dict[str, Any]] = None,
@@ -90,12 +90,12 @@ def setup_import_project(
     return root_path / "import_project" / "import_config.yaml"
 
 
-def data_import(
+def setup_import_project(
         root_path: pathlib.Path, study: StudyInputLayout, gpf_instance,
         project_config_update: Optional[dict[str, Any]] = None,
         project_config_overwrite: Optional[dict[str, Any]] = None):
     """Set up an import project for a study and imports it."""
-    setup_import_project(
+    project_config = setup_import_project_config(
         root_path, study, gpf_instance,
         project_config_update=project_config_update,
         project_config_overwrite=project_config_overwrite)
@@ -103,7 +103,7 @@ def data_import(
     # pylint: disable=import-outside-toplevel
     from dae.import_tools.import_tools import ImportProject
     project = ImportProject.build_from_file(
-        root_path / "import_project" / "import_config.yaml",
+        project_config,
         gpf_instance=gpf_instance)
     return project
 
@@ -117,7 +117,7 @@ def vcf_import(
         project_config_overwrite: Optional[dict[str, Any]] = None):
     """Import a VCF study and return the import project."""
     study = StudyInputLayout(study_id, ped_path, vcf_paths, [], [], [])
-    project = data_import(
+    project = setup_import_project(
         root_path, study, gpf_instance,
         project_config_update=project_config_update,
         project_config_overwrite=project_config_overwrite)
@@ -155,7 +155,7 @@ def denovo_import(
         project_config_overwrite: Optional[dict[str, Any]] = None):
     """Import a de Novo study and return the import project."""
     study = StudyInputLayout(study_id, ped_path, [], denovo_paths, [], [])
-    project = data_import(
+    project = setup_import_project(
         root_path, study, gpf_instance,
         project_config_update=project_config_update,
         project_config_overwrite=project_config_overwrite)

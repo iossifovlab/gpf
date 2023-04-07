@@ -65,7 +65,7 @@ class InmemoryImportStorage(ImportStorage):
             cls, project: ImportProject,
             loader_type=None) -> list[dict[str, Any]]:
         if loader_type is None:
-            loader_types = project.get_import_variants_types()
+            loader_types = project.get_variant_loader_types()
         else:
             loader_types = set([loader_type])
 
@@ -109,7 +109,7 @@ class InmemoryImportStorage(ImportStorage):
     def _do_study_import(cls, project: ImportProject) -> None:
         pedigree_config = cls._do_copy_pedigree(project)
         variants_config = cls._do_copy_variants(project)
-        variants_types = project.get_import_variants_types()
+        variants_types = project.get_variant_loader_types()
         config = {
             "id": project.study_id,
             "has_denovo": "denovo" in variants_types,

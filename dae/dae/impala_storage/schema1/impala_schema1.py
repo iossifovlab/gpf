@@ -53,7 +53,7 @@ class ImpalaSchema1ImportStorage(ImportStorage):
     def _do_write_meta(cls, project):
         out_dir = cls._variants_dir(project)
         gpf_instance = project.get_gpf_instance()
-        loader_type = project.get_variant_loader_types()[0]
+        loader_type = next(iter(project.get_variant_loader_types()))
         ParquetWriter.write_meta(
             out_dir,
             project.get_variant_loader(
@@ -84,9 +84,12 @@ class ImpalaSchema1ImportStorage(ImportStorage):
     @classmethod
     def _variant_partitions(cls, project):
         part_desc = cls._get_partition_description(project)
-        chromosome_lengths = dict(
-            project.get_gpf_instance().reference_genome.get_all_chrom_lengths()
-        )
+        chromosomes = project.get_variant_loader_chromosomes()
+        chromosome_lengths = dict(filter(
+            lambda cl: cl[0] in chromosomes,
+            project.get_gpf_instance()
+            .reference_genome
+            .get_all_chrom_lengths()))
         _, fam_parts = \
             part_desc.get_variant_partitions(chromosome_lengths)
         for part in fam_parts:
@@ -169,7 +172,7 @@ class ImpalaSchema1ImportStorage(ImportStorage):
     def _do_study_config(cls, project):
         start = time.time()
         pedigree_table = cls._construct_pedigree_table(project.study_id)
-        variants_types = project.get_import_variants_types()
+        variants_types = project.get_variant_loader_types()
         study_config = {
             "id": project.study_id,
             "conf_dir": ".",

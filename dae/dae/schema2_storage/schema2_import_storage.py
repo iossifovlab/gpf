@@ -60,7 +60,7 @@ class Schema2ImportStorage(ImportStorage):
     def _do_write_meta(cls, project):
         layout = schema2_project_dataset_layout(project)
         gpf_instance = project.get_gpf_instance()
-        loader_type = project.get_variant_loader_types()[0]
+        loader_type = next(iter(project.get_variant_loader_types()))
         ParquetWriter.write_meta(
             layout.study,
             project.get_variant_loader(
@@ -85,9 +85,12 @@ class Schema2ImportStorage(ImportStorage):
     @classmethod
     def _variant_partitions(cls, project):
         part_desc = cls._get_partition_description(project)
-        chromosome_lengths = dict(
-            project.get_gpf_instance().reference_genome.get_all_chrom_lengths()
-        )
+        chromosomes = project.get_variant_loader_chromosomes()
+        chromosome_lengths = dict(filter(
+            lambda cl: cl[0] in chromosomes,
+            project.get_gpf_instance()
+            .reference_genome
+            .get_all_chrom_lengths()))
         sum_parts, fam_parts = \
             part_desc.get_variant_partitions(chromosome_lengths)
         for part in sum_parts:
