@@ -84,9 +84,12 @@ class ImpalaSchema1ImportStorage(ImportStorage):
     @classmethod
     def _variant_partitions(cls, project):
         part_desc = cls._get_partition_description(project)
-        chromosome_lengths = dict(
-            project.get_gpf_instance().reference_genome.get_all_chrom_lengths()
-        )
+        chromosomes = project.get_variant_loader_chromosomes()
+        chromosome_lengths = dict(filter(
+            lambda cl: cl[0] in chromosomes,
+            project.get_gpf_instance()
+            .reference_genome
+            .get_all_chrom_lengths()))
         _, fam_parts = \
             part_desc.get_variant_partitions(chromosome_lengths)
         for part in fam_parts:

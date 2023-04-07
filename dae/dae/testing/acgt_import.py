@@ -11,6 +11,8 @@ def acgt_gpf(root_path, storage=None):
         {25 * "ACGT"}
         >chr2
         {25 * "ACGT"}
+        >chr3
+        {25 * "ACGT"}
         """
     )
 

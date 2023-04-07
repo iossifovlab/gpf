@@ -160,6 +160,25 @@ class ImportProject():
                 result.add(loader_type)
         return result
 
+    def get_variant_loader_chromosomes(
+            self, loader_type: Optional[str] = None) -> list[str]:
+        """Collect all chromosomes available in input files."""
+        if loader_type is None:
+            loader_types = self.get_variant_loader_types()
+        else:
+            if loader_type not in self.get_variant_loader_types():
+                return []
+            loader_types = {loader_type}
+        chromosomes = set()
+        for ltype in loader_types:
+            loader = self.get_variant_loader(loader_type=ltype)
+            chromosomes.update(loader.chromosomes)
+        result = []
+        for chrom in self.get_gpf_instance().reference_genome.chromosomes:
+            if chrom in chromosomes:
+                result.append(chrom)
+        return result
+
     def get_import_variants_buckets(self) -> list[Bucket]:
         """Split variant files into buckets enabling parallel processing."""
         buckets = []

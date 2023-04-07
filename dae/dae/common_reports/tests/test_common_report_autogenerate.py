@@ -28,7 +28,7 @@ def trios2_fixture(tmp_path_factory):
         root_path / "trios2_data" / "in.tsv",
         """
           familyId  location  variant    bestState
-          f1        foo:7     sub(A->G)  2||2||1||1/0||0||1||0
+          f1        foo:7     sub(A->G)  2||2||1||2/0||0||1||0
           f1        foo:10    sub(A->G)  2||2||1||1/0||0||1||1
           f2        foo:10    sub(A->G)  2||2||1/0||0||1
           f1        foo:11    sub(T->A)  2||2||1||2/0||0||1||0

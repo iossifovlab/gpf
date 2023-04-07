@@ -3,7 +3,8 @@ import yaml
 
 import pytest
 
-from dae.testing.import_helpers import StudyInputLayout, setup_import_project
+from dae.testing.import_helpers import StudyInputLayout, \
+    setup_import_project_config
 from dae.testing import acgt_gpf
 
 
@@ -25,7 +26,7 @@ def test_setup_import_project(
     study = StudyInputLayout(
         "test_id", root_path / "fam.ped", [root_path / "in.vcf"], [], [], [])
 
-    pathname = setup_import_project(
+    pathname = setup_import_project_config(
         root_path, study, gpf_instance, config_update)
 
     project_config = yaml.safe_load(pathname.read_text())
