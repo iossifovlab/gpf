@@ -53,7 +53,7 @@ class ImpalaSchema1ImportStorage(ImportStorage):
     def _do_write_meta(cls, project):
         out_dir = cls._variants_dir(project)
         gpf_instance = project.get_gpf_instance()
-        loader_type = project.get_variant_loader_types()[0]
+        loader_type = next(iter(project.get_variant_loader_types()))
         ParquetWriter.write_meta(
             out_dir,
             project.get_variant_loader(
@@ -169,7 +169,7 @@ class ImpalaSchema1ImportStorage(ImportStorage):
     def _do_study_config(cls, project):
         start = time.time()
         pedigree_table = cls._construct_pedigree_table(project.study_id)
-        variants_types = project.get_import_variants_types()
+        variants_types = project.get_variant_loader_types()
         study_config = {
             "id": project.study_id,
             "conf_dir": ".",

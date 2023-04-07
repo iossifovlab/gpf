@@ -151,7 +151,7 @@ class ImportProject():
         families_loader = self.get_pedigree_loader()
         return families_loader.load()
 
-    def get_import_variants_types(self) -> set[str]:
+    def get_variant_loader_types(self) -> set[str]:
         """Collect all variant import types used in the project."""
         result = set()
         for loader_type in ["denovo", "vcf", "cnv", "dae"]:
@@ -169,11 +169,6 @@ class ImportProject():
                 for bucket in self._loader_region_bins(loader_type):
                     buckets.append(bucket)
         return buckets
-
-    def get_variant_loader_types(self) -> list[str]:
-        return list(filter(
-            lambda lt: lt in {"vcf", "dae", "denovo", "cnv"},
-            self.import_config["input"].keys()))
 
     def get_variant_loader(
             self,

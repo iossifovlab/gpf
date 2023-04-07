@@ -60,7 +60,7 @@ class Schema2ImportStorage(ImportStorage):
     def _do_write_meta(cls, project):
         layout = schema2_project_dataset_layout(project)
         gpf_instance = project.get_gpf_instance()
-        loader_type = project.get_variant_loader_types()[0]
+        loader_type = next(iter(project.get_variant_loader_types()))
         ParquetWriter.write_meta(
             layout.study,
             project.get_variant_loader(

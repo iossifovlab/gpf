@@ -32,7 +32,7 @@ def test_simple_project_destination_study_dir(simple_project):
 
 
 def test_simple_project_get_loader_types(simple_project):
-    loader_types = simple_project.get_import_variants_types()
+    loader_types = simple_project.get_variant_loader_types()
     assert loader_types == {"denovo"}
 
 
