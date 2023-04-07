@@ -465,6 +465,7 @@ class ReferenceGenome(
             read_length = min(buffer_size, total_length - read_progress)
             sequence = self._sequence.read(read_length).decode("ascii")
             sequence = sequence.replace("\n", "").upper()
+            sequence = sequence[:read_length-line_feeds]
             for nuc in sequence:
                 yield nuc
             read_progress += read_length
