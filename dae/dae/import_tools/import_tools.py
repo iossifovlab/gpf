@@ -172,7 +172,7 @@ class ImportProject():
 
     def get_variant_loader_types(self) -> list[str]:
         return list(filter(
-            lambda lt: lt != "pedigree",
+            lambda lt: lt in {"vcf", "dae", "denovo", "cnv"},
             self.import_config["input"].keys()))
 
     def get_variant_loader(
