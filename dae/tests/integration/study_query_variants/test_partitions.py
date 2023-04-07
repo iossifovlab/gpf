@@ -62,7 +62,7 @@ def imported_study(tmp_path_factory, genotype_storage):
         ##fileformat=VCFv4.2
         ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
         ##contig=<ID=foo>
-        #CHROM POS ID REF ALT QUAL FILTER INFO FORMAT m1  d1  p1  s1  m2   d2 p2 
+        #CHROM POS ID REF ALT QUAL FILTER INFO FORMAT m1  d1  p1  s1  m2   d2 p2
         foo    7   .  A   C   .    .      .    GT     0/1 0/0 0/1 0/0 0/0 0/0 0/0  # freq 1/8 = 12.5%, splice-site, g1
         foo    10  .  C   G   .    .      .    GT     0/0 0/1 0/1 0/0 0/0 0/0 0/0  # freq 1/8 = 12.5%, intron, g1
         bar    11  .  C   G   .    .      .    GT     1/0 0/0 0/0 0/1 1/1 1/1 1/1  # freq 5/8 = 62.5%, missense, g2
@@ -197,7 +197,6 @@ def test_query_pedigree_fields(imported_study):
 
 def test_af_parent_count(imported_study):
     for v in imported_study.query_variants():
-        # import pdb; pdb.set_trace()
         assert v.get_attribute("af_parents_called_count") == [4]
 
 
