@@ -438,7 +438,7 @@ class ReferenceGenome(
                 i += region_size
             yield chrom, i, None
 
-    def fetch(self, chrom, start, stop, buffer_size=50):
+    def fetch(self, chrom, start, stop, buffer_size=512):
         if chrom not in self.chromosomes:
             logger.warning(
                 "chromosome %s not found in %s",
@@ -465,7 +465,7 @@ class ReferenceGenome(
             read_length = min(buffer_size, total_length - read_progress)
             sequence = self._sequence.read(read_length).decode("ascii")
             sequence = sequence.replace("\n", "").upper()
-            sequence = sequence[:read_length-line_feeds]
+            sequence = sequence[:read_length - line_feeds]
             for nuc in sequence:
                 yield nuc
             read_progress += read_length
