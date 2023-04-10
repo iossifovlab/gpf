@@ -139,20 +139,20 @@ def create_summary_table(study_id, impala_variants):
     schema = collect_summary_schema(impala_variants)
     partition_bins = []
 
-    schema_statement = []
-    partition_statement = []
+    schema_parts = []
+    partition_parts = []
     for field_name, field_type in schema.items():
         if field_name in PARTITIONS:
-            partition_statement.append(f"`{field_name}` {field_type}")
+            partition_parts.append(f"`{field_name}` {field_type}")
             partition_bins.append(field_name)
         else:
-            schema_statement.append(f"`{field_name}` {field_type}")
+            schema_parts.append(f"`{field_name}` {field_type}")
 
-    schema_statement = ", ".join(schema_statement)
-    if not partition_statement:
+    schema_statement = ", ".join(schema_parts)
+    if not partition_parts:
         partition_statement = ""
     else:
-        partition_statement = ", ".join(partition_statement)
+        partition_statement = ", ".join(partition_parts)
         partition_statement = f"PARTITIONED BY ({partition_statement}) "
 
     # pylint: disable=protected-access
@@ -267,24 +267,24 @@ def insert_into_summary_table(
         f"`{field}`" for field in family_summary_fields
     ])
 
-    insert_partition_statement = []
-    select_partition_statement = []
+    insert_partition_parts = []
+    select_partition_parts = []
     for bin_name, bin_value in parition.items():
         if bin_name == "region_bin":
-            insert_partition_statement.append(
+            insert_partition_parts.append(
                 f"`{bin_name}` = '{bin_value}'")
-            select_partition_statement.append(
+            select_partition_parts.append(
                 f"variants.`{bin_name}` = '{bin_value}'")
         else:
-            insert_partition_statement.append(
+            insert_partition_parts.append(
                 f"`{bin_name}` = {bin_value}")
-            select_partition_statement.append(
+            select_partition_parts.append(
                 f"variants.`{bin_name}` = {bin_value}")
-    insert_partition_statement = ", ".join(insert_partition_statement)
+    insert_partition_statement = ", ".join(insert_partition_parts)
 
     region_bin = parition["region_bin"]
     region = region_bins[region_bin]
-    select_partition_statement = " AND ".join(select_partition_statement)
+    select_partition_statement = " AND ".join(select_partition_parts)
 
     region_statements = []
     if region_split == 0:
