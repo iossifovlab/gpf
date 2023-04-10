@@ -3,7 +3,7 @@
     <gpf-table
       id="gpf-table"
       [dataSource]="genotypePreviewVariantsArray.genotypePreviews"
-      style="display: inline-block">
+      style="display: inline-block; min-width: 1200px">
       <gpf-table-column *ngFor="let column of columns" [columnWidth]="singleColumnWidth">
         <gpf-table-header caption="{{ column.name }}"></gpf-table-header>
         <gpf-table-header>
