@@ -162,11 +162,6 @@ label {
   outline: none;
 }
 
-.username-field {
-  font-size: 0.9em;
-  margin-right: 8px;
-}
-
 .modal-fullscreen .modal-dialog {
   max-width: 1200px;
 }
