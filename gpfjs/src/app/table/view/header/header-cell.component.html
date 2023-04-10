@@ -8,27 +8,26 @@
           <span *ngIf="columnInfo.caption">{{ columnInfo.caption }}</span>
         </div>
         <div (click)="onSortClick(columnInfo)" [class.clickable]="columnInfo.sortable" id="sorting-buttons">
-          <img
+          <i
             [hidden]="!(columnInfo.sortable && sortingInfo?.sortBySubcolumn !== columnInfo)"
-            src="{{ imgPathPrefix }}bg.gif"
-            id="bg" />
-          <img
+            id="bg"
+            class="clickable fa fa-sort"></i>
+          <i
             [hidden]="
               !(columnInfo.sortable && sortingInfo?.sortBySubcolumn === columnInfo && sortingInfo?.sortOrderAsc)
             "
-            src="{{ imgPathPrefix }}asc.gif"
-            id="asc" />
-          <img
+            id="asc"
+            class="clickable fa fa-sort-up"></i>
+          <i
             [hidden]="
               !(columnInfo.sortable && sortingInfo?.sortBySubcolumn === columnInfo && !sortingInfo?.sortOrderAsc)
             "
-            src="{{ imgPathPrefix }}desc.gif"
-            id="desc" />
+            id="desc"
+            class="clickable fa fa-sort-down"></i>
         </div>
       </div>
     </div>
   </div>
-
   <div style="float: right; clear: right; margin-right: 0px; height: 100%">
     <div style="height: 100%; display: table">
       <div *ngFor="let child of columnInfo.subcolumnsChildren" style="display: table-row">
@@ -37,18 +36,18 @@
           <span *ngIf="!child.contentTemplateRef">{{ child.caption }}</span>
         </div>
         <div (click)="onSortClick(child)" [class.clickable]="child.sortable" id="sorting-buttons">
-          <img
+          <i
             [hidden]="!(child.sortable && sortingInfo?.sortBySubcolumn !== child)"
-            src="{{ imgPathPrefix }}bg.gif"
-            id="bg" />
-          <img
+            id="bg"
+            class="clickable fa fa-sort"></i>
+          <i
             [hidden]="!(child.sortable && sortingInfo?.sortBySubcolumn === child && sortingInfo?.sortOrderAsc)"
-            src="{{ imgPathPrefix }}asc.gif"
-            id="asc" />
-          <img
+            id="asc"
+            class="clickable fa fa-sort-up"></i>
+          <i
             [hidden]="!(child.sortable && sortingInfo?.sortBySubcolumn === child && !sortingInfo?.sortOrderAsc)"
-            src="{{ imgPathPrefix }}desc.gif"
-            id="desc" />
+            id="desc"
+            class="clickable fa fa-sort-down"></i>
         </div>
       </div>
     </div>
