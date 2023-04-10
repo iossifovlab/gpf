@@ -5,6 +5,7 @@ import logging
 import argparse
 import pathlib
 import copy
+import pprint
 
 from typing import Dict, Union
 from urllib.parse import urlparse
@@ -39,7 +40,7 @@ from dae.utils.verbosity_configuration import VerbosityConfiguration
 from dae.genomic_resources.fsspec_protocol import build_fsspec_protocol
 from dae.genomic_resources.repository_factory import \
     build_genomic_resource_repository, get_default_grr_definition, \
-    load_definition_file
+    load_definition_file, get_default_grr_definition_path, DEFAULT_DEFINITION
 
 from dae.genomic_resources import get_resource_implementation_builder
 from dae.genomic_resources.resource_implementation import ResourceStatistics
@@ -133,7 +134,10 @@ def _run_list_command(
         if isinstance(proto, GenomicResourceCachedRepo):
             files_msg = f"{len(proto.get_resource_cached_files(res.get_id())):2d}/{files_msg}"
 
-        res_size_msg = convert_size(res_size) if hasattr(args, 'hr') and args.hr is True else res_size
+        res_size_msg = res_size \
+            if hasattr(args, 'bytes') and args.bytes is True \
+            else convert_size(res_size)
+
         print(
             f"{res.get_type():20} {res.get_version_str():7s} "
             f"{files_msg} {res_size_msg:12} "
@@ -753,7 +757,19 @@ def cli_browse(cli_args=None):
         default=None,
         help="path to GRR definition file.")
 
-    parser.add_argument("--hr", default=False, action="store_true", help="Projects the size in human-readable format.")
+    parser.add_argument(
+        "--bytes",
+        default=False,
+        action="store_true",
+        help="Print the resource size in bytes"
+    )
+
+    parser.add_argument(
+        "--print-grr",
+        default=False,
+        action="store_true",
+        help="Print the path and content of the GRR definition to be used"
+    )
 
     if cli_args is None:
         cli_args = sys.argv[1:]
@@ -763,7 +779,21 @@ def cli_browse(cli_args=None):
     if args.version:
         print(f"GPF version: {VERSION} ({RELEASE})")
         sys.exit(0)
-    repo = build_genomic_resource_repository(file_name=args.grr)
+
+    definition_path = args.grr if args.grr is not None \
+                      else get_default_grr_definition_path()
+    definition = load_definition_file(definition_path) \
+            if definition_path is not None \
+            else DEFAULT_DEFINITION
+
+    if args.print_grr:
+        if definition_path is not None:
+            print("Working with GRR definition:", definition_path)
+        else:
+            print("No GRR definition found, using the DEFAULT_DEFINITION")
+        pprint.pprint(definition)
+
+    repo = build_genomic_resource_repository(definition=definition)
     _run_list_command(repo, args)
 
 

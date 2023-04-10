@@ -56,25 +56,31 @@ def load_definition_file(filename):
 GRR_DEFINITION_FILE_ENV = "GRR_DEFINITION_FILE"
 
 
-def get_default_grr_definition():
-    """Return default genomic resources repository definition."""
-    logger.info("using default GRR definitions")
+def get_default_grr_definition_path() -> Optional[str]:
+    """Return a path to default genomic resources repository definition."""
     env_repo_definition_path = os.environ.get(GRR_DEFINITION_FILE_ENV)
     if env_repo_definition_path is not None:
         logger.debug(
-            "loading GRR definition from environment variable %s=%s",
+            "found GRR definition from environment variable %s=%s",
             GRR_DEFINITION_FILE_ENV, env_repo_definition_path)
-        return load_definition_file(env_repo_definition_path)
-
+        return env_repo_definition_path
     default_repo_definition_path = f"{os.environ['HOME']}/.grr_definition.yaml"
     logger.debug(
-        "checking default repo definition at %s",
+        "checking default GRR definition at %s",
         default_repo_definition_path)
     if pathlib.Path(default_repo_definition_path).exists():
         logger.debug(
-            "using repo definition at %s", default_repo_definition_path)
-        return load_definition_file(default_repo_definition_path)
+            "found GRR definition at %s", default_repo_definition_path)
+        return default_repo_definition_path
+    return None
 
+
+def get_default_grr_definition():
+    """Return default genomic resources repository definition."""
+    logger.info("using default GRR definitions")
+    definition_path = get_default_grr_definition_path()
+    if definition_path:
+        return load_definition_file(definition_path)
     return copy.deepcopy(DEFAULT_DEFINITION)
 
 
@@ -209,7 +215,6 @@ def build_genomic_resource_repository(
             raise ValueError(
                 "The children attribute in the definition of a group "
                 "repository must be a list")
-        # repo_id = definition.get("id")
 
         children = cast(List[dict], definition.pop("children"))
         repo: GenomicResourceRepo = \

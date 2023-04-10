@@ -427,7 +427,7 @@ def test_cached_repo_list_cli(cache_repository, capsys):
         print(out)
         assert err == ""
         assert out == \
-            "Basic                0        1/ 3           14 test_grr one\n"
+            "Basic                0        1/ 3 14.0 B       test_grr one\n"
 
 
 def test_cached_repo_nested_list_cli(cache_repository, capsys):
@@ -465,6 +465,6 @@ def test_cached_repo_nested_list_cli(cache_repository, capsys):
         print(out)
         assert err == ""
         assert out == \
-            "Basic                0        1/ 2            7 test_grr one\n" \
-            "gene_models          0        1/ 2           41 test_grr " \
+            "Basic                0        1/ 2 7.0 B        test_grr one\n" \
+            "gene_models          0        1/ 2 41.0 B       test_grr " \
             "sub/two\n"
