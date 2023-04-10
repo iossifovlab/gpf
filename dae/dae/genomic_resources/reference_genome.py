@@ -149,8 +149,8 @@ class ChromosomeStatistic(Statistic):
         self._add_nucleotide_tuple(prev, current)
 
     def merge(self, other):
-        local_keys = set(self.nucleotide_counts.keys)
-        other_keys = set(other.nucleotide_counts.keys)
+        local_keys = set(self.nucleotide_counts.keys())
+        other_keys = set(other.nucleotide_counts.keys())
         matching_keys = local_keys.intersection(other_keys)
         missing_keys = other_keys.difference(local_keys)
         for k in matching_keys:
@@ -158,14 +158,14 @@ class ChromosomeStatistic(Statistic):
         for k in missing_keys:
             self.nucleotide_counts[k] = other.nucleotide_counts[k]
 
-        local_keys = set(self.nucleotide_pair_counts.keys)
-        other_keys = set(other.nucleotide_pair_counts.keys)
+        local_keys = set(self.nucleotide_pair_counts.keys())
+        other_keys = set(other.nucleotide_pair_counts.keys())
         matching_keys = local_keys.intersection(other_keys)
         missing_keys = other_keys.difference(local_keys)
         for k in matching_keys:
-            self.nucleotide_pair_counts[k] += other.chrom_statistics[k]
+            self.nucleotide_pair_counts[k] += other.nucleotide_pair_counts[k]
         for k in missing_keys:
-            self.nucleotide_pair_counts[k] = other.chrom_statistics[k]
+            self.nucleotide_pair_counts[k] = other.nucleotide_pair_counts[k]
 
         self.length += other.length
 
@@ -210,8 +210,8 @@ class GenomeStatistic(Statistic):
         self.chromosome_statistics = chromosome_statistics
 
         if self.chromosome_statistics is not None:
-            self.nucleotide_distribution = {}
-            self.bi_nucleotide_distribution = {}
+            self.nucleotide_distribution: dict[str, Any] = {}
+            self.bi_nucleotide_distribution: dict[str, Any] = {}
             self.length = 0
             self.finish()
         else:
@@ -453,7 +453,7 @@ class ReferenceGenome(
         )
 
         if stop is None:
-            length = self._index[chrom]["length"] - start + 1
+            length = self.get_chrom_length(chrom) - start + 1
         else:
             length = stop - start + 1
         line_feeds = 1 + length // self._index[chrom]["seqLineLength"]
@@ -463,6 +463,7 @@ class ReferenceGenome(
 
         while read_progress < total_length:
             read_length = min(buffer_size, total_length - read_progress)
+            line_feeds = 1 + read_length // self._index[chrom]["seqLineLength"]
             sequence = self._sequence.read(read_length).decode("ascii")
             sequence = sequence.replace("\n", "").upper()
             sequence = sequence[:read_length - line_feeds]
