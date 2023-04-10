@@ -261,6 +261,27 @@ Lift-over annotator
 Gene score annotator
 ++++++++++++++++++++
 
+.. code:: yaml
+
+  - gene_score_annotator:
+    resource_id: <gene score resource ID>
+    input_gene_list: <Gene list to use to match annotatables (see below)>
+    attributes:
+    - source: <source score ID>
+      destination: <destination attribute name>
+
+
+.. note:: 
+
+    Input gene list is a list of genes that **must** be present in the annotation context.
+
+    Gene lists are provided by effect annotators and is mandatory to supply to a
+    gene score annotator, therefore, gene score annotation is dependent on
+    an effect annotator being present earlier in the pipeline.
+
+    Effect annotators currently provide 2 gene lists - ``gene_list`` and
+    ``LGD_gene_list``, making these 2 the possible options.
+
 
 Command Line Tools
 *******************
@@ -301,7 +322,75 @@ Run ``annotate_columns`` tool:
 
 .. code-block:: bash
 
-    annotate_columns -grr ./grr_definition.yaml \
+    annotate_columns --grr ./grr_definition.yaml \
         --col_pos POS --col_chrom CHROM --col_ref REF --col_alt ALT \
         denovo-variants.tsv clinvar_annotation.yaml
 
+
+Example: How to annotate using gene score annotators.
+*****************************************************
+
+Preparing a variants file
+#########################
+
+For this example we will reuse the ``denovo_variants.tsv`` in the previous example:
+
+.. code-block::
+
+    CHROM   POS       REF    ALT  person_ids
+    chr14   21403214  T      C    f1.p1
+    chr14   21431459  G      C    f1.p1
+    chr14   21391016  A      AT   f2.p1
+    chr14   21403019  G      A    f2.p1
+    chr14   21402010  G      A    f3.p1
+    chr14   21393484  TCTTC  T    f3.p1
+
+
+Setting up the Genomic Resource Repository
+##########################################
+
+We will be using the SFARI gene score along with a genome and gene models
+from the `public GRR <https://grr.seqpipe.org>`_. Create a ``grr_definition.yaml``
+that looks like this:
+
+  .. code-block:: yaml
+
+    type: group
+    children:
+    - id: "seqpipe"
+      type: "url"
+      directory: "https://grr.seqpipe.org"
+
+
+Setting up the annotation configuration
+#######################################
+
+Create a ``properties-annotation.yaml`` like this:
+
+  .. code-block:: yaml
+
+    - effect_annotator:
+        gene_models: hg38/gene_models/refSeq_v20200330
+        genome: hg38/genomes/GRCh38-hg38
+    - gene_score_annotator:
+        resource_id: gene_properties/gene_scores/SFARI_gene_score
+        input_gene_list: gene_list
+        attributes:
+        - source: "SFARI gene score"
+          destination: SFARI_gene_score
+
+When setting up gene score annotators, we need to have a gene list in the annotation context.
+Effect annotators provide 2 lists of genes: ``gene_list`` and ``LGD_gene_list``. Thus, effect
+annotators are a requirement when annotating with gene scores.
+
+
+Annotating the variants
+#######################
+
+Run ``annotate_columns`` tool:
+
+.. code-block:: bash
+
+    annotate_columns --grr ./grr_definition.yaml \
+        --col_pos POS --col_chrom CHROM --col_ref REF --col_alt ALT \
+        denovo-variants.tsv properties_annotation.yaml
