@@ -11,17 +11,17 @@
           </ng-template>
         </li>
 
-        <li ngbNavItem id="phenotool">
-          <a ngbNavLink>Phenotype tool</a>
-          <ng-template ngbNavContent>
-            <gpf-saved-queries-table [queries]="phenotoolQueries"></gpf-saved-queries-table>
-          </ng-template>
-        </li>
-
         <li ngbNavItem id="enrichment">
           <a ngbNavLink>Enrichment tool</a>
           <ng-template ngbNavContent>
             <gpf-saved-queries-table [queries]="enrichmentQueries"></gpf-saved-queries-table>
+          </ng-template>
+        </li>
+
+        <li ngbNavItem id="phenotool">
+          <a ngbNavLink>Phenotype tool</a>
+          <ng-template ngbNavContent>
+            <gpf-saved-queries-table [queries]="phenotoolQueries"></gpf-saved-queries-table>
           </ng-template>
         </li>
       </ul>
