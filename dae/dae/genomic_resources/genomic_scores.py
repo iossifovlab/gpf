@@ -429,94 +429,107 @@ class GenomicScore(
             File format: {{ data["table"]["format"] }}
             </p>
 
-            {% if data["table"]["chrom"] %}
-            {% if data["table"]["chrom"]["index"] is not none %}
+            {%- if data["table"]["chrom"] -%}
+            {%- if data["table"]["chrom"]["index"] is not none -%}
             <p>
             chrom column index in file:
             {{ data["table"]["chrom"]["index"] }}
             </p>
-            {% endif %}
-            {% if data["table"]["chrom"]["name"] %}
+            {%- endif %}
+            {%- if data["table"]["chrom"]["name"] -%}
             <p>
             chrom column name in header:
             {{ data["table"]["chrom"]["name"] }}
             </p>
-            {% endif %}
-            {% endif %}
+            {%- endif -%}
+            {%- endif %}
 
-            {% if data["table"]["pos_begin"] %}
-            {% if data["table"]["pos_begin"]["index"] is not none %}
+            {%- if data["table"]["pos_begin"] -%}
+            {%- if data["table"]["pos_begin"]["index"] is not none -%}
             <p>
             pos_begin column index in file:
             {{ data["table"]["pos_begin"]["index"] }}
             </p>
-            {% endif %}
-            {% if data["table"]["pos_begin"]["name"] %}
+            {%- endif %}
+            {%- if data["table"]["pos_begin"]["name"] -%}
             <p>
             pos_begin column name in header:
             {{ data["table"]["pos_begin"]["name"] }}
             </p>
-            {% endif %}
-            {% endif %}
+            {%- endif -%}
+            {%- endif %}
 
-            {% if data["table"]["pos_end"] %}
-            {% if data["table"]["pos_end"]["index"] is not none %}
+            {%- if data["table"]["pos_end"] -%}
+            {%- if data["table"]["pos_end"]["index"] is not none -%}
             <p>
             pos_end column index in file:
             {{ data["table"]["pos_end"]["index"] }}
             </p>
-            {% endif %}
-            {% if data["table"]["pos_end"]["name"] %}
+            {%- endif %}
+            {%- if data["table"]["pos_end"]["name"] -%}
             <p>
             pos_end column name in header:
             {{ data["table"]["pos_end"]["name"] }}
             </p>
-            {% endif %}
-            {% endif %}
+            {%- endif -%}
+            {%- endif %}
 
-            {% if data["table"]["reference"] %}
-            {% if data["table"]["reference"]["index"] is not none %}
+            {%- if data["table"]["reference"] -%}
+            {%- if data["table"]["reference"]["index"] is not none -%}
             <p>
             reference column index in file:
             {{ data["table"]["reference"]["index"] }}
             </p>
-            {% endif %}
-            {% if data["table"]["reference"]["name"] %}
+            {%- endif -%}
+            {%- if data["table"]["reference"]["name"] -%}
             <p>
             reference column name in header:
             {{ data["table"]["reference"]["name"] }}
             </p>
-            {% endif %}
-            {% endif %}
+            {%- endif -%}
+            {%- endif %}
 
-            {% if data["table"]["alternative"] %}
-            {% if data["table"]["alternative"]["index"] is not none %}
+            {%- if data["table"]["alternative"] -%}
+            {%- if data["table"]["alternative"]["index"] is not none -%}
             <p>
             alternative column index in file:
             {{ data["table"]["alternative"]["index"] }}
             </p>
-            {% endif %}
-            {% if data["table"]["alternative"]["name"] %}
+            {%- endif -%}
+            {%- if data["table"]["alternative"]["name"] -%}
             <p>
             alternative column name in header:
             {{ data["table"]["alternative"]["name"] }}
             </p>
-            {% endif %}
-            {% endif %}
+            {%- endif -%}
+            {%- endif %}
 
             <h3>Score definitions:</h3>
-            {% for score in data["table"]["scores"] %}
+            {%- for score in data["scores"] -%}
             <div class="score-definition">
             <p>Score ID: {{ score["id"] }}</p>
-            {% if "index" in score %}
+            {%- if "index" in score -%}
             <p>Column index in file: {{ score["index"] }}</p>
-            {% elif "name" in score %}
+            {%- elif "name" in score -%}
             <p>Column name in file header: {{ score["name"] }}
-            {% endif %}
+            {%- endif -%}
+            {%- if "destination" in score -%}
+            <p>Annotation destination: {{ score["destination"] }}
+            {%- endif -%}
             <p>Score data type: {{ score["type"] }}
             <p> Description: {{ score["desc"] }}
             </div>
-            {% endfor %}
+            {%- endfor %}
+
+            <h3>Min max values:</h3>
+            {%- for min_max in data["min_max"] %}
+            <div class="minmax">
+            <h4>{{ min_max["score_id"] }}</h4>
+            <p>Min: {{ min_max["min"] }}</p>
+            <p>Max: {{ min_max["max"] }}</p>
+            </div>
+            {%- endfor %}
+
             <h3>Histograms:</h3>
             {% for hist in data["histograms"] %}
             <div class="histogram">
@@ -526,6 +539,7 @@ class GenomicScore(
             title={{ hist["score"] }}>
             </div>
             {% endfor %}
+
             {% endblock %}
         """))
 
@@ -541,6 +555,24 @@ class GenomicScore(
                 hist_config["img_file"] = statistics.get_histogram_image_file(
                     hist_config["score"]
                 )
+
+        if "scores" in info:
+            for score_config in info["scores"]:
+                score_id = score_config["id"]
+                default_annotation = self.get_default_annotation()
+                for annotation_definition in default_annotation["attributes"]:
+                    if annotation_definition["source"] == score_id:
+                        score_config["destination"] = \
+                            annotation_definition["destination"]
+
+        info["min_max"] = []
+        for score_id, min_max in statistics.score_min_maxes.items():
+            info["min_max"].append({
+                "score_id": score_id,
+                "min": min_max.min,
+                "max": min_max.max
+            })
+
         return info
 
     def get_info(self):
