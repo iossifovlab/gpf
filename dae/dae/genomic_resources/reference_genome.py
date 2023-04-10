@@ -29,6 +29,8 @@ logger = logging.getLogger(__name__)
 
 
 class GenomeStatisticsMixin:
+    """Mixin for reference genome statistics access."""
+
     @staticmethod
     def get_global_statistic_file():
         return "reference_genome_statistic.yaml"
@@ -101,7 +103,7 @@ class ChromosomeStatistic(Statistic):
             }
         else:
             assert set(
-                nucleotide_counts.keys
+                nucleotide_counts.keys()
             ) == set(
                 ["A", "G", "C", "T", "N"]
             )
@@ -114,7 +116,7 @@ class ChromosomeStatistic(Statistic):
                 k: 0 for k in pairs
             }
         else:
-            assert set(nucleotide_pair_counts.keys) == set(pairs)
+            assert set(nucleotide_pair_counts.keys()) == set(pairs)
             self.nucleotide_pair_counts = nucleotide_pair_counts
 
         self.nucleotide_distribution = {}
@@ -175,6 +177,7 @@ class ChromosomeStatistic(Statistic):
                 count / self.length * 100
 
         total_pairs = sum(self.nucleotide_pair_counts.values())
+
         for pair, count in self.nucleotide_pair_counts.items():
             self.bi_nucleotide_distribution[pair] = count / total_pairs * 100
 
@@ -183,7 +186,8 @@ class ChromosomeStatistic(Statistic):
             {
                 "chrom": self.statistic_id,
                 "length": self.length,
-                "nucleotide_counts": self.nucleotide_counts
+                "nucleotide_counts": self.nucleotide_counts,
+                "nucleotide_pair_counts": self.nucleotide_pair_counts
             }
         ))
 
@@ -191,7 +195,10 @@ class ChromosomeStatistic(Statistic):
     def deserialize(data):
         res = yaml.load(data, yaml.Loader)
         stat = ChromosomeStatistic(
-            res["chrom"], res.get("length"), res.get("nucleotide_counts")
+            res["chrom"],
+            length=res.get("length"),
+            nucleotide_counts=res.get("nucleotide_counts"),
+            nucleotide_pair_counts=res.get("nucleotide_pair_counts")
         )
         stat.finish()
         return stat
@@ -205,6 +212,7 @@ class GenomeStatistic(Statistic):
             nucleotide_distribution=None, bi_nucleotide_distribution=None,
             chromosome_statistics=None
     ):
+        super().__init__("global", "")
         self.chromosomes = chromosomes
 
         self.chromosome_statistics = chromosome_statistics
@@ -423,11 +431,19 @@ class ReferenceGenome(
             (key, value["length"])
             for key, value in self._index.items()]
 
-    def split_into_regions(self, region_size, chrom=None):
-        if chrom is None:
+    def split_into_regions(self, region_size, chromosome=None):
+        """
+        Split the reference genome into regions and yield them.
+
+        Can specify a specific chromosome to limit the regions to be
+        in that chromosome only.
+        """
+        if chromosome is None:
             chromosome_lengths = self.get_all_chrom_lengths()
         else:
-            chromosome_lengths = [(chrom, self.get_chrom_length(chrom))]
+            chromosome_lengths = [
+                (chromosome, self.get_chrom_length(chromosome))
+            ]
         for chrom, chrom_len in chromosome_lengths:
             logger.debug(
                 "Chromosome '%s' has length %s",
@@ -439,6 +455,7 @@ class ReferenceGenome(
             yield chrom, i, None
 
     def fetch(self, chrom, start, stop, buffer_size=512):
+        """Yield the nucleotides in a specific region."""
         if chrom not in self.chromosomes:
             logger.warning(
                 "chromosome %s not found in %s",
@@ -497,9 +514,10 @@ class ReferenceGenome(
         nucs = self.fetch(chrom, start, stop)
 
         if yield_single:
-            current = next(nucs)
-            yield prev, current
-            prev = current
+            try:
+                prev = next(nucs)
+            except StopIteration:
+                yield None, None
 
         for current in nucs:
             yield prev, current
@@ -550,12 +568,43 @@ class ReferenceGenome(
             </ul>
             {% endif %}
 
+            <h3>Genome statistics:</h3>
+            {% if data["global_statistic"] %}
+                <h4>Length: {{ data["global_statistic"]["length"] }}</h4>
+
+                <h4>Nucleotide distribution:</h4>
+                {%
+                    for nucleotide, prc in
+                    data["global_statistic"]["nuc_distribution"].items()
+                %}
+                    <p>{{ nucleotide }}: {{ prc }}</p>
+                {% endfor %}
+
+                <h4>Bi-Nucleotide distribution:</h4>
+                {%
+                    for nucleotide_pair, prc in
+                    data["global_statistic"]["bi_nuc_distribution"].items()
+                %}
+                    <p>{{ nucleotide_pair }}: {{ prc }}</p>
+                {% endfor %}
+            {% endif %}
+
             {% endif %}
             {% endblock %}
         """))
 
     def _get_template_data(self):
         info = copy.deepcopy(self.config)
+        info["global_statistic"] = {}
+        statistics = self.get_statistics()
+        global_statistic = statistics.global_statistic
+
+        info["global_statistic"]["length"] = global_statistic.length
+        info["global_statistic"]["nuc_distribution"] = \
+            global_statistic.nucleotide_distribution
+        info["global_statistic"]["bi_nuc_distribution"] = \
+            global_statistic.bi_nucleotide_distribution
+
         return info
 
     @staticmethod
@@ -692,6 +741,9 @@ class ReferenceGenome(
         ) as outfile:
             outfile.write(statistic.serialize())
         return statistic
+
+    def get_statistics(self):
+        return ReferenceGenomeStatistics.build_statistics(self.resource)
 
 
 def build_reference_genome_from_file(filename) -> ReferenceGenome:
