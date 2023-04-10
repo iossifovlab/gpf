@@ -55,7 +55,7 @@ class HdfsHelpers:
         self.hdfs.mkdir(path)
 
     def makedirs(self, path):
-        """Make all dire alone the path."""
+        """Make all directories along the path."""
         if path[0] == os.sep:
             paths = path[1:].split(os.sep)
             paths[0] = "/" + paths[0]
@@ -86,10 +86,10 @@ class HdfsHelpers:
     def rename(self, path, new_path):
         self.hdfs.rename(path, new_path)
 
-    def put(self, local_filename, hdfs_filename):
+    def put(self, local_filename, hdfs_filename, recursive=False):
         assert os.path.exists(local_filename), local_filename
 
-        self.hdfs.upload(local_filename, hdfs_filename)
+        self.hdfs.put(local_filename, hdfs_filename, recursive=recursive)
 
     def put_in_directory(self, local_file, hdfs_dirname):
         basename = os.path.basename(local_file)

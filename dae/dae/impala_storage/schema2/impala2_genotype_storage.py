@@ -1,6 +1,5 @@
 from copy import copy
 import glob
-from itertools import chain
 import os
 import logging
 from dataclasses import dataclass
@@ -144,18 +143,21 @@ class Impala2GenotypeStorage(GenotypeStorage):
         src_summary_dir = os.path.join(variants_dir, "summary")
         src_family_dir = os.path.join(variants_dir, "family")
 
-        summary_files_to_copy = list(self._enum_parquet_files_to_copy(
+        sample_summary_file = next(self._enum_parquet_files_to_copy(
             src_summary_dir, hdfs_summary_dir))
-        family_files_to_copy = list(self._enum_parquet_files_to_copy(
+        sample_family_file = next(self._enum_parquet_files_to_copy(
             src_family_dir, hdfs_family_dir))
-        for src_file, hdfs_file in chain(summary_files_to_copy,
-                                         family_files_to_copy):
-            hdfs_dir = os.path.dirname(hdfs_file)
-            self.hdfs_helpers.makedirs(hdfs_dir)
-            self.hdfs_helpers.put_in_directory(src_file, hdfs_dir)
+
+        self._copy_directory(src_summary_dir, hdfs_summary_dir)
+        self._copy_directory(src_family_dir, hdfs_family_dir)
 
         # return the first parquet files in the list as sample files
-        return summary_files_to_copy[0][1], family_files_to_copy[0][1]
+        return sample_summary_file[1], sample_family_file[1]
+
+    def _copy_directory(self, local_dir, remote_dir):
+        logger.info("copying %s into %s", local_dir, remote_dir)
+        self.hdfs_helpers.makedirs(os.path.dirname(remote_dir))
+        self.hdfs_helpers.put(local_dir, remote_dir, recursive=True)
 
     @staticmethod
     def _enum_parquet_files_to_copy(src_variants_dir, dest_dir) \
