@@ -197,7 +197,12 @@ h3,h4 {
 </head>
 <body>
 <h1>{{ resource_id }}</h3>
-<pLabels:</p>
+{% block content %}
+N/A
+{% endblock %}
+
+<div>
+<h3>Labels:</h3>
 {% if data["meta"] and data["meta"]["labels"] %}
 <ul>
 {% for label, value in data["meta"]["labels"].items() %}
@@ -207,11 +212,7 @@ h3,h4 {
 {% else %}
 {% endif %}
 
-{% block content %}
-N/A
-{% endblock %}
-
-<div>
+<h3>Description:</h3>
 <span class="description">
 {{
     data["description"] if data["description"] else "N/A"
