@@ -59,7 +59,6 @@ class Impala2GenotypeStorage(GenotypeStorage):
             meta_table,
             gene_models,
         )
-        # TODO create a bigquery variants if so specified in the config
         return variants
 
     def hdfs_upload_dataset(
@@ -70,6 +69,7 @@ class Impala2GenotypeStorage(GenotypeStorage):
         base_dir = self.storage_config["hdfs"]["base_dir"]
         study_path = os.path.join(base_dir, study_id)
         if self.hdfs_helpers.exists(study_path):
+            logger.info("deleting %s directory", study_path)
             self.hdfs_helpers.delete(study_path, recursive=True)
 
         pedigree_hdfs_path = os.path.join(
@@ -220,6 +220,21 @@ class Impala2GenotypeStorage(GenotypeStorage):
             db, family_variant_table, hdfs_study_layout.family_variant_dir,
             partition_description,
             variants_sample=hdfs_study_layout.family_sample)
+
+        if not partition_description.has_region_bins():
+            self.impala_helpers.compute_table_stats(db, summary_variant_table)
+            self.impala_helpers.compute_table_stats(db, family_variant_table)
+        else:
+            region_bins = self.impala_helpers.collect_region_bins(
+                db, summary_variant_table)
+            for region_bin in region_bins:
+                self.impala_helpers.compute_table_stats(
+                    db, summary_variant_table, region_bin=region_bin)
+            region_bins = self.impala_helpers.collect_region_bins(
+                db, family_variant_table)
+            for region_bin in region_bins:
+                self.impala_helpers.compute_table_stats(
+                    db, family_variant_table, region_bin=region_bin)
 
         return self._generate_study_config(
             study_id, pedigree_table,
