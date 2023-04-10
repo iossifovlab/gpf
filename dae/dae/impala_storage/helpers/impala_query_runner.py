@@ -1,5 +1,4 @@
 import time
-import queue
 import logging
 from contextlib import closing
 from dae.query_variants.query_runners import QueryRunner
@@ -100,34 +99,6 @@ class ImpalaQueryRunner(QueryRunner):
                         "runner (%s) closing connection", self.study_id)
 
         self._finalize(started)
-
-    def _put_value_in_result_queue(self, val):
-        assert self._result_queue is not None
-
-        no_interest = 0
-        while True:
-            try:
-                self._result_queue.put(val, timeout=0.1)
-                break
-            except queue.Full:
-                logger.debug(
-                    "runner (%s) nobody interested",
-                    self.study_id)
-
-                if self.closed():
-                    break
-                no_interest += 1
-                if no_interest % 1_000 == 0:
-                    logger.warning(
-                        "runner (%s) nobody interested %s",
-                        self.study_id, no_interest)
-                if no_interest > 5_000:
-                    logger.warning(
-                        "runner (%s) nobody interested %s"
-                        "closing...",
-                        self.study_id, no_interest)
-                    self.close()
-                    break
 
     def _wait_cursor_executing(self, cursor):
         while True:
