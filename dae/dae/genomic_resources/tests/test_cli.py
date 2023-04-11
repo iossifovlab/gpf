@@ -77,8 +77,8 @@ def test_cli_list(repo_fixture, capsys):
 
     assert err == ""
     assert out == \
-        "Basic                0        2            7 manage one\n" \
-        "gene_models          1.0      2           50 manage sub/two\n"
+        "Basic                0        2 7.0 B        manage one\n" \
+        "gene_models          1.0      2 50.0 B       manage sub/two\n"
 
 
 def test_cli_list_without_repo_argument(repo_fixture, capsys, mocker):
@@ -96,8 +96,8 @@ def test_cli_list_without_repo_argument(repo_fixture, capsys, mocker):
     assert err == ""
     assert out == \
         f"working with repository: {str(path)}\n" \
-        "Basic                0        2            7 manage one\n" \
-        "gene_models          1.0      2           50 manage sub/two\n"
+        "Basic                0        2 7.0 B        manage one\n" \
+        "gene_models          1.0      2 50.0 B       manage sub/two\n"
 
 
 def test_find_repo_dir_simple(repo_fixture):
