@@ -133,6 +133,8 @@ def test_chromosome_statistic_basic(genome_fixture):
         assert stat.nucleotide_distribution[nuc] == \
             pytest.approx(count / total_nucleotides * 100)
 
+    stat.finish()
+
     print(stat.serialize())
     print(stat.bi_nucleotide_distribution)
     print(stat.nucleotide_distribution)
