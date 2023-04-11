@@ -283,6 +283,26 @@ Gene score annotator
     ``LGD_gene_list``, making these 2 the possible options.
 
 
+Example annotation with gene score annotator
+############################################
+
+.. code:: yaml
+
+    - effect_annotator:
+        gene_models: hg38/gene_models/refSeq_v20200330
+        genome: hg38/genomes/GRCh38-hg38       
+    
+    
+    - gene_score_annotator:
+        resource_id: gene_properties/gene_scores/pLI
+        input_gene_list: gene_list
+        attributes:
+        - source: pLI
+          gene_aggregator: max
+
+
+
+
 Command Line Tools
 *******************
 
