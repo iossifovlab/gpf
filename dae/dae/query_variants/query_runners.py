@@ -77,6 +77,34 @@ class QueryRunner(abc.ABC):
     def _set_result_queue(self, result_queue):
         self._result_queue = result_queue
 
+    def _put_value_in_result_queue(self, val):
+        assert self._result_queue is not None
+
+        no_interest = 0
+        while True:
+            try:
+                self._result_queue.put(val, timeout=0.1)
+                break
+            except queue.Full:
+                logger.debug(
+                    "runner (%s) nobody interested",
+                    self.study_id)
+
+                if self.closed():
+                    break
+                no_interest += 1
+                if no_interest % 1_000 == 0:
+                    logger.warning(
+                        "runner (%s) nobody interested %s",
+                        self.study_id, no_interest)
+                if no_interest > 5_000:
+                    logger.warning(
+                        "runner (%s) nobody interested %s"
+                        "closing...",
+                        self.study_id, no_interest)
+                    self.close()
+                    break
+
 
 class QueryResult:
     """Run a list of queries in the background.
@@ -92,6 +120,7 @@ class QueryResult:
         self.limit = limit
         self._counter = 0
         self.timestamp = time.time()
+        self._exceptions: list[Exception] = []
 
         self.runners = runners
         for runner in self.runners:
@@ -114,6 +143,9 @@ class QueryResult:
         while True:
             try:
                 item = self.result_queue.get(timeout=0.1)
+                if isinstance(item, Exception):
+                    self._exceptions.append(item)
+                    continue
                 self._counter += 1
                 return item
             except queue.Empty as exp:
@@ -129,6 +161,9 @@ class QueryResult:
         """
         try:
             row = self.result_queue.get(timeout=timeout)
+            if isinstance(row, Exception):
+                self._exceptions.append(row)
+                return None
             return row
         except queue.Empty as exp:
             if self.done():
@@ -150,9 +185,17 @@ class QueryResult:
                 logger.info(
                     "exception in result close: %s", type(ex), exc_info=True)
         while not self.result_queue.empty():
-            self.result_queue.get()
+            item = self.result_queue.get()
+            if isinstance(item, Exception):
+                self._exceptions.append(item)
 
         logger.debug("closing thread pool executor")
         self.executor.shutdown(wait=True)
         elapsed = time.time() - self.timestamp
         logger.debug("result closed after %0.3f", elapsed)
+        if self._exceptions:
+            for error in self._exceptions:
+                logger.error(
+                    "unexpected exception in query result: %s", error,
+                    exc_info=True, stack_info=True)
+            raise IOError(self._exceptions[0])

@@ -269,6 +269,33 @@ class ImpalaHelpers:
                     self._add_partition_properties(
                         cursor, db, variants_table, partition_description)
 
+    def compute_table_stats(self, db, table, region_bin=None):
+        """Compute impala table stats."""
+        with closing(self.connection()) as connection:
+            with connection.cursor() as cursor:
+                if region_bin is not None:
+                    query = f"COMPUTE INCREMENTAL STATS {db}.{table} " \
+                        f"PARTITION (region_bin='{region_bin}')"
+                else:
+                    query = f"COMPUTE STATS {db}.{table}"
+                logger.info("compute stats for impala table: %s", query)
+                cursor.execute(query)
+
+    def collect_region_bins(self, db, table):
+        """Collect region bins from table."""
+        region_bins = []
+        with closing(self.connection()) as connection:
+            with connection.cursor() as cursor:
+                query = f"SELECT DISTINCT(region_bin) FROM " \
+                    f"{db}.{table}"
+                logger.info("running %s", query)
+                cursor.execute(query)
+                for row in cursor:
+                    region_bins.append(row[0])
+        region_bins.sort()
+        logger.info("collected region bins: %s", region_bins)
+        return region_bins
+
     def get_table_create_statement(self, db, table):
         """Get the create statement for table."""
         with closing(self.connection()) as conn:

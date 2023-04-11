@@ -6,7 +6,7 @@ import time
 
 from contextlib import closing
 
-
+from dae.utils.verbosity_configuration import VerbosityConfiguration
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.impala_storage.schema1.impala_variants import ImpalaVariants
 
@@ -14,14 +14,14 @@ from dae.impala_storage.schema1.impala_variants import ImpalaVariants
 logger = logging.getLogger("impala_tables_stats")
 
 
-def parse_cli_arguments(argv, gpf_instance):
+def parse_cli_arguments(argv):
+    """Construct parser and parse CLI arguments."""
     parser = argparse.ArgumentParser(
         description="loading study parquet files in impala db",
         conflict_handler="resolve",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
-
-    parser.add_argument("--verbose", "-V", action="count", default=0)
+    VerbosityConfiguration.set_argumnets(parser)
 
     parser.add_argument(
         "--studies",
@@ -35,79 +35,76 @@ def parse_cli_arguments(argv, gpf_instance):
 
 
 def variants_region_bins(study_backend):
-    impala = study_backend._impala_helpers
+    """Collect region bins for a study."""
+    impala = study_backend._impala_helpers  # pylint: disable=protected-access
 
     region_bins = []
     with closing(impala.connection()) as connection:
         with connection.cursor() as cursor:
-            q = f"SELECT DISTINCT(region_bin) FROM " \
+            query = f"SELECT DISTINCT(region_bin) FROM " \
                 f"{study_backend.db}.{study_backend.variants_table}"
-            print(q)
-            cursor.execute(q)
+            logger.info("running %s", query)
+            cursor.execute(query)
             for row in cursor:
                 region_bins.append(row[0])
-    print(region_bins)
+    logger.info("collected region bins: %s", region_bins)
     return region_bins
 
 
 def variants_compute_stats(study_backend, region_bin=None):
-    impala = study_backend._impala_helpers
+    """Compute family variants tables statisticsfor specified region."""
+    impala = study_backend._impala_helpers  # pylint: disable=protected-access
     with closing(impala.connection()) as connection:
         with connection.cursor() as cursor:
             if region_bin is not None:
-                q = f"COMPUTE INCREMENTAL STATS " \
+                query = f"COMPUTE INCREMENTAL STATS " \
                     f"{study_backend.db}.{study_backend.variants_table} " \
                     f"PARTITION (region_bin='{region_bin}')"
             else:
-                q = f"COMPUTE STATS " \
+                query = f"COMPUTE STATS " \
                     f"{study_backend.db}.{study_backend.variants_table}"
-            logger.info(f"compute stats for variants table: {q}")
-            cursor.execute(q)
+            logger.info("compute stats for variants table: %s", query)
+            cursor.execute(query)
 
 
 def summary_variants_compute_stats(study_backend, region_bin=None):
-    impala = study_backend._impala_helpers
+    """Compute summary variants table statistics."""
+    impala = study_backend._impala_helpers  # pylint: disable=protected-access
     with closing(impala.connection()) as connection:
         with connection.cursor() as cursor:
             if region_bin is not None:
-                q = f"COMPUTE INCREMENTAL STATS " \
+                query = f"COMPUTE INCREMENTAL STATS " \
                     f"{study_backend.db}." \
                     f"{study_backend.summary_variants_table} " \
                     f"PARTITION (region_bin='{region_bin}')"
             else:
-                q = f"COMPUTE STATS " \
+                query = f"COMPUTE STATS " \
                     f"{study_backend.db}." \
                     f"{study_backend.summary_variants_table}"
-            logger.info(f"compute stats for variants table: {q}")
-            cursor.execute(q)
+            logger.info("compute stats for variants table: %s", query)
+            cursor.execute(query)
 
 
 def pedigree_compute_stats(study_backend):
-    impala = study_backend._impala_helpers
+    """Compute pedigree table statistics."""
+    impala = study_backend._impala_helpers  # pylint: disable=protected-access
     with closing(impala.connection()) as connection:
         with connection.cursor() as cursor:
-            q = f"COMPUTE STATS " \
+            query = f"COMPUTE STATS " \
                 f"{study_backend.db}.{study_backend.pedigree_table}"
-            logger.info(f"compute stats for pedigree table: {q}")
-            cursor.execute(q)
+            logger.info("compute stats for pedigree table: %s", query)
+            cursor.execute(query)
 
 
-def main(argv=sys.argv[1:], gpf_instance=None):
+def main(argv=None, gpf_instance=None):
+    """Run CLI for impala_table_stats.py tool."""
+    if argv is None:
+        argv = sys.argv[1:]
     if gpf_instance is None:
         gpf_instance = GPFInstance.build()
 
-    argv = parse_cli_arguments(argv, gpf_instance)
-
-    if argv.verbose == 1:
-        logging.basicConfig(level=logging.WARNING)
-    elif argv.verbose == 2:
-        logging.basicConfig(level=logging.INFO)
-    elif argv.verbose >= 3:
-        logging.basicConfig(level=logging.DEBUG)
-    else:
-        logging.basicConfig(level=logging.ERROR)
-
-    logging.getLogger("impala").setLevel(logging.WARNING)
+    argv = parse_cli_arguments(argv)
+    VerbosityConfiguration.set(argv)
 
     if argv.studies is None:
         study_ids = [
@@ -116,15 +113,15 @@ def main(argv=sys.argv[1:], gpf_instance=None):
     else:
         study_ids = [sid.strip() for sid in argv.studies.split(",")]
 
-    logger.info(f"computing table stats for studies: {study_ids}")
+    logger.info("computing table stats for studies: %s", study_ids)
 
     for study_id in study_ids:
         study = gpf_instance.get_genotype_data(study_id)
         assert study.study_id == study_id
 
-        study_backend = study._backend
+        study_backend = study._backend  # pylint: disable=protected-access
         if not isinstance(study_backend, ImpalaVariants):
-            logger.info(f"not an impala study: {study_id}; skipping...")
+            logger.info("not an impala study: %s; skipping...", study_id)
             continue
 
         pedigree_compute_stats(study_backend)
@@ -139,7 +136,8 @@ def main(argv=sys.argv[1:], gpf_instance=None):
             assert "region_bin" in study_backend.schema
             region_bins = variants_region_bins(study_backend)
             logger.info(
-                f"processing  {len(region_bins)} region bins; {region_bins}")
+                "processing  %s region bins; %s",
+                len(region_bins), region_bins)
 
             for index, region_bin in enumerate(region_bins):
                 start = time.time()
@@ -150,11 +148,10 @@ def main(argv=sys.argv[1:], gpf_instance=None):
 
                 elapsed = time.time() - start
                 logger.info(
-                    f"computing stats {index}/{len(region_bins)} "
-                    f"for {study_backend.db}.{study_backend.variants_table}; "
-                    f"{elapsed:.2f} secs")
+                    "computing stats %s/%s for %s.%s; %0.2fsec",
+                    index, len(region_bins),
+                    study_backend.db, study_backend.variants_table, elapsed)
 
 
 if __name__ == "__main__":
-
     main(sys.argv[1:])

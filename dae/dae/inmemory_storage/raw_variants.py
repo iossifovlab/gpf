@@ -48,7 +48,7 @@ class RawVariantsQueryRunner(QueryRunner):
 
                 while True:
                     try:
-                        self._result_queue.put(val, timeout=0.1)
+                        self._put_value_in_result_queue(val)
                         break
                     except queue.Full:
                         if self.closed():
@@ -61,8 +61,10 @@ class RawVariantsQueryRunner(QueryRunner):
             logger.debug("variants iterator done")
 
         except BaseException as ex:  # pylint: disable=broad-except
-            logger.warning(
+            logger.error(
                 "exception in runner run: %s", type(ex), exc_info=True)
+            self._put_value_in_result_queue(ex)
+
         finally:
             self.close()
 

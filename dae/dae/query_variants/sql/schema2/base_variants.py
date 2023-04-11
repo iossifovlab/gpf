@@ -139,7 +139,7 @@ class SqlSchema2Variants(abc.ABC):
             return_unknown=return_unknown,
             limit=limit,
         )
-        logger.debug("SUMMARY VARIANTS QUERY:\n%s", query)
+        logger.info("SUMMARY VARIANTS QUERY:\n%s", query)
 
         # pylint: disable=protected-access
         runner = self.RUNNER_CLASS(
@@ -226,7 +226,7 @@ class SqlSchema2Variants(abc.ABC):
             pedigree_fields=pedigree_fields
         )
 
-        logger.debug("FAMILY VARIANTS QUERY:\n%s", query)
+        logger.info("FAMILY VARIANTS QUERY:\n%s", query)
         deserialize_row = self._deserialize_family_variant
 
         # pylint: disable=protected-access

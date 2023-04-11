@@ -27,7 +27,7 @@ dae_named_cluster:
         scheduler_options:
           dashboard_address: :8898
         cores: 1
-        memory: 1GB
+        memory: 2GB
         log_directory: ./.sge_worker_logs
         job_extra_directives:
         - "-V"
@@ -38,8 +38,8 @@ dae_named_cluster:
         scheduler_options:
           dashboard_address: :8898
         cores: 1
-        memory: 2GB
-        walltime: "72:00:00"
+        memory: 4GB
+        walltime: "96:00:00"
         log_directory: ./.sge_worker_logs
         job_extra_directives:
         - "-V"
@@ -52,8 +52,8 @@ dae_named_cluster:
         scheduler_options:
           dashboard_address: :8898
         cores: 1
-        memory: 10GB
-        walltime: "72:00:00"
+        memory: 8GB
+        walltime: "96:00:00"
         log_directory: ./.sge_worker_logs
         job_extra_directives:
         - "-V"
@@ -70,6 +70,7 @@ dae_named_cluster:
       type: slurm
       number_of_threads: 10
       params:
+        walltime: "48:00:00"
         cores: 1
         memory: 1GB
         log_directory: ./slurm_worker_logs
