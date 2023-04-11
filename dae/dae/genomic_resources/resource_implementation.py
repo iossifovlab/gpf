@@ -135,6 +135,11 @@ class InfoImplementationMixin:
         raise NotImplementedError()
 
     def get_template_data(self):
+        """
+        Return a data dictionary to be used by the template.
+
+        Will transform the description in the meta section using markdown.
+        """
         template_data = self._get_template_data()
 
         config = self.config

@@ -35,20 +35,20 @@ class Statistic:
         Can also be used when creating more complex resources via
         deserialization.
         """
-        pass
+        return
 
     @abstractmethod
     def merge(self, other) -> None:
         """Merge the values from another statistic in place."""
-        pass
+        raise NotImplementedError()
 
     @abstractmethod
     def serialize(self) -> str:
         """Return a serialized version of this statistic."""
-        pass
+        raise NotImplementedError()
 
     @staticmethod
     @abstractmethod
     def deserialize(data) -> Statistic:
         """Create a statistic from serialized data."""
-        pass
+        raise NotImplementedError()
