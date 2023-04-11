@@ -216,23 +216,23 @@ def test_reference_genome_pair_iter(genome_fixture):
 
     with reference_genome.open():
         result = list(reference_genome.pair_iter("pesho", 1, 10))
-        print("TEST")
-        print(result)
-        print([
-            None, "N",
-            "N", "N",
-            "N", "A",
-            "A", "C",
-            "C", "C",
-            "C", "C",
-            "C", "A",
-            "A", "A",
-            "A", "A",
-            "A", "C"
-        ])
 
         assert result == [
             (None, "N"),
+            ("N", "N"),
+            ("N", "A"),
+            ("A", "C"),
+            ("C", "C"),
+            ("C", "C"),
+            ("C", "A"),
+            ("A", "A"),
+            ("A", "A"),
+            ("A", "C")
+        ]
+        result = list(reference_genome.pair_iter("pesho", 2, 10))
+
+        print(result)
+        assert result == [
             ("N", "N"),
             ("N", "A"),
             ("A", "C"),

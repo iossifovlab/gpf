@@ -519,13 +519,11 @@ class ReferenceGenome(
 
         nucs = self.fetch(chrom, start, stop)
 
-        if yield_single:
+        if not yield_single:
             try:
-                current = next(nucs)
+                prev = next(nucs)
             except StopIteration:
                 yield None, None
-            yield prev, current
-            prev = current
 
         for current in nucs:
             yield prev, current
