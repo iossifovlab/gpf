@@ -1,15 +1,6 @@
 GPF User Management
 ===================
 
-All options concerning Management can only be found by **admin** users
-in the *Management* tab from the upper left corner menu
-
-Users
------
-
-How to create a new user?
-+++++++++++++++++++++++++
-
 Open **sidebar** menu.
 
 .. warning::
@@ -27,6 +18,18 @@ Open **Management** page.
    :scale: 50
    :alt: User management menu
    :align: center
+
+All options concerning Management can only be found by **admin** users
+in the *Management* tab from the upper left corner menu
+
+Users
+-----
+
+Every user is represented by a row on the table shown in the **Users** category
+on the **Management** tab.
+
+How to create a new user?
++++++++++++++++++++++++++
 
 Above users management table click on **Create user**.
    
@@ -85,100 +88,55 @@ To now **remove it** click on the small **x** button to the right of the group a
    :alt: Interface for editing user groups
    :align: center
 
-Actions towards users
-+++++++++++++++++++++
-
-
-Every user is represented by a row on the table shown in the *Users* category
-on the *Management* tab. The delete user, remove/reset password actions can be
-seen in the *Actions* column for every user in question.
-
-.. figure:: imgs/user_management/u-img1.png
-   :width: 100px
-   :alt: Interface for actions on users
-   :align: center
-
-   Interface for actions on users
-
-.. _reset-password:
 
 Reset password
-^^^^^^^^^^^^^^
++++++++++++++++++++++++++
 
-Clicking on the middle icon in the *Actions* column, resets the password of the
+Clicking on the left icon in the **Actions** column, **resets the password** of the
 user shown on the current row. This button will send the user in question an
-email with a corresponding link, obligating them to choose a new password for
+**email with a corresponding link**, obligating them to choose a new password for
 their account.
 
-Remove password
-^^^^^^^^^^^^^^^
-
-Clicking on the utmost left icon in the *Actions* column, removes the password
-of the user shown on the current row. After completing this action, in order
-for the user in question to acquire a new password, clicking on the
-:ref:`reset-password` button will be necessary.
+.. figure:: imgs/user_management/reset-user-password.png
+   :scale: 50
+   :alt: Interface for editing user groups
+   :align: center
 
 Delete user
-^^^^^^^^^^^
++++++++++++++++++++++++++
 
-Clicking on the utmost right 'X' icon in the *Actions* column, deletes the user
+Clicking on the utmost right **X** button in the **Actions** column, **deletes the user**
 shown on the current row.
 
-Create user
-^^^^^^^^^^^
-
-Admins can create new users and associate them with groups.
-The Create user button is located on the top right corner of the Users page.
-
-.. figure:: imgs/user_management/u-img2.png
-   :width: 450px
-   :alt: Create user interface
+.. figure:: imgs/user_management/delete-user.png
+   :scale: 50
+   :alt: Interface for editing user groups
    :align: center
 
-   Create user interface
+Edit user name
++++++++++++++++++++++++++
 
-This button will open a page, where the new user's email, name or additional
-groups can be entered. After every mandatory field is filled, clicking the
-*Submit* button will create a new user.
+Clicking on the pencil icon in the **User** column, allows editing the name of the
+user shown on the current row.
 
-.. figure:: imgs/user_management/u-img3.png
-   :width: 400px
-   :alt: Create user dialog
+.. figure:: imgs/user_management/change-username-1.png
+   :scale: 50
+   :alt: Interface for editing user groups
    :align: center
 
-   Create user dialog
+**Input field** will show showing the **current user name**.
 
-After a new user is added, in order for them to log into their newly created
-account, an admin should reset the user’s password. See :ref:`reset-password`
-for more.
-
-.. figure:: imgs/user_management/u-img4.png
-   :scale: 70%
-   :alt: Has password checkbox
+.. figure:: imgs/user_management/change-username-2.png
+   :scale: 50
+   :alt: Interface for editing user groups
    :align: center
 
-   Has password checkbox
+**Change** it to something else (cannot use **empty names** or names that are **too short**) and **press enter**.
 
-
-Whether a user has a password or not can be seen in the 'Has password' column,
-where a tick symbol indicates 'yes' and empty cell 'no'.
-
-Edit user
-^^^^^^^^^
-
-Any user's email or default groups cannot be changed but the *Name* of the
-user can. Clicking on any user's email address will lead to a page, where their
-user name can be changed.
-
-.. figure:: imgs/user_management/u-img5.png
-   :width: 400px
-   :alt: Edit user dialog
+.. figure:: imgs/user_management/change-username-3.png
+   :scale: 50
+   :alt: Interface for editing user groups
    :align: center
-
-   Edit user dialog
-
-Clicking *Submit* will remember the new changes.
-
 
 Actions towards groups
 ++++++++++++++++++++++
