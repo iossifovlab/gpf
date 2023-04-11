@@ -9,7 +9,12 @@ Genomic Resource Repository (GRR) is a collection of genomic resources,
 like reference genomes, gene models, etc. One can use one or more GRRs at the 
 same time. By default (or without any configuration), you will use the 
 public GRR build by Iossifov lab and accessible through  
-https://www.iossifovlab.com/distribution/public/genomic-resources-repository/.
+https://storage.googleapis.com/iossifovlab-grr/.
+
+.. note::
+
+    To browse the conent of the default GRR follow this link:
+    https://storage.googleapis.com/iossifovlab-grr/index.html
 
 If you want to use additional genomic resources, you can build your own GRR 
 (see Management of GRR below) and add it to the GRRs you use. The set of GRR 
@@ -30,7 +35,7 @@ can be is:
 
     - id: "default"
       type: "url"
-      url: "https://www.iossifovlab.com/distribution/public/genomic-resources-repository"
+      url: "https://storage.googleapis.com/iossifovlab-grr/"
       cache_dir: "~/default_grr_cache"
 
 This configures a group of two repositories with ids the 'grr_local' and 
