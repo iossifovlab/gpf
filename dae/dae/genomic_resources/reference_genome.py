@@ -179,7 +179,11 @@ class ChromosomeStatistic(Statistic):
         total_pairs = sum(self.nucleotide_pair_counts.values())
 
         for pair, count in self.nucleotide_pair_counts.items():
-            self.bi_nucleotide_distribution[pair] = count / total_pairs * 100
+            if total_pairs == 0:
+                self.bi_nucleotide_distribution[pair] = 0.0
+            else:
+                self.bi_nucleotide_distribution[pair] = \
+                    count * 100.0 / total_pairs
 
     def serialize(self):
         return cast(str, yaml.dump(
