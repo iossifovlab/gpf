@@ -7,3 +7,14 @@
   justify-content: flex-end;
   flex-flow: row nowrap;
 }
+
+select {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+  box-shadow: none !important;
+}
+
+.clear-button {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
