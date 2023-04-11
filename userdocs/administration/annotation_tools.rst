@@ -269,6 +269,7 @@ Gene score annotator
     attributes:
     - source: <source score ID>
       destination: <destination attribute name>
+      gene_aggregator: <aggregator type>
 
 
 .. note:: 
@@ -281,25 +282,6 @@ Gene score annotator
 
     Effect annotators currently provide 2 gene lists - ``gene_list`` and
     ``LGD_gene_list``, making these 2 the possible options.
-
-
-Example annotation with gene score annotator
-############################################
-
-.. code:: yaml
-
-    - effect_annotator:
-        gene_models: hg38/gene_models/refSeq_v20200330
-        genome: hg38/genomes/GRCh38-hg38       
-    
-    
-    - gene_score_annotator:
-        resource_id: gene_properties/gene_scores/pLI
-        input_gene_list: gene_list
-        attributes:
-        - source: pLI
-          gene_aggregator: max
-
 
 
 
@@ -414,3 +396,22 @@ Run ``annotate_columns`` tool:
     annotate_columns --grr ./grr_definition.yaml \
         --col_pos POS --col_chrom CHROM --col_ref REF --col_alt ALT \
         denovo-variants.tsv properties_annotation.yaml
+
+
+Example annotation with gene score annotator and changed aggregator
+###################################################################
+
+.. code:: yaml
+
+    - effect_annotator:
+        gene_models: hg38/gene_models/refSeq_v20200330
+        genome: hg38/genomes/GRCh38-hg38       
+    
+    
+    - gene_score_annotator:
+        resource_id: gene_properties/gene_scores/pLI
+        input_gene_list: gene_list
+        attributes:
+        - source: pLI
+          gene_aggregator: max
+
