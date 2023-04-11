@@ -417,7 +417,7 @@ def _store_stats_hash(proto, resource):
     stats_dir = ResourceStatistics.get_statistics_folder()
     if stats_dir is None:
         logger.warning(
-            "Couldn't store stats hash for %s; unable to get stats dir", 
+            "Couldn't store stats hash for %s; unable to get stats dir",
             resource.resource_id)
         return False
     with proto.open_raw_file(

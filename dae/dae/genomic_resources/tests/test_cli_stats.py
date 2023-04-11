@@ -490,7 +490,6 @@ def test_reference_genome_usage(tmp_path, mocker):
         new=ref_genome_length_mock
     )
     assert ref_genome_length_mock.call_count == 0
-    resource_path = os.path.join(str(tmp_path), "one")
     cli_manage([
         "resource-stats", "-r", "one", "-R", str(tmp_path), "-j", "1"
     ])
