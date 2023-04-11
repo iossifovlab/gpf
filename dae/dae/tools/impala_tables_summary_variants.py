@@ -5,7 +5,7 @@ import logging
 import time
 import itertools
 import math
-
+from typing import Any
 from contextlib import closing
 
 from dae.gpf_instance.gpf_instance import GPFInstance
@@ -74,13 +74,18 @@ def collect_summary_schema(impala_variants):
         "family_bin",
         "extra_attributes",
     ])
-
+    TYPE_MAP: dict[Any, str] = {
+        int: "int",
+        float: "float",
+        str: "string",
+        bytes: "string",
+    }
     schema = {}
     for field_name in impala_variants.schema.names:
         if field_name in FAMILY_FIELDS:
             continue
         field_type = impala_variants.schema[field_name]
-        schema[field_name] = field_type.type_name
+        schema[field_name] = TYPE_MAP[field_type.type]
 
     schema["seen_in_status"] = "tinyint"
     schema["seen_as_denovo"] = "boolean"
@@ -180,10 +185,7 @@ class RegionBinsHelper:
         self.table_properties = table_properties
         self.chromosomes = self.table_properties["chromosomes"]
         self.region_length = self.table_properties["region_length"]
-
-        self.chromosome_lengths = dict(
-            genome.get_genomic_sequence().get_all_chrom_lengths())
-
+        self.chromosome_lengths = dict(genome.get_all_chrom_lengths())
         self.region_bins = {}
 
     # pylint: disable=inconsistent-return-statements
