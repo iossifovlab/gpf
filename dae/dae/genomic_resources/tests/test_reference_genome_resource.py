@@ -144,3 +144,100 @@ def test_chromosome_statistic_basic(genome_fixture):
         "statistics",
         "pesho_statistic.yaml"
     ))
+
+
+def test_reference_genome_fetch(genome_fixture):
+    res = build_filesystem_test_resource(genome_fixture)
+    reference_genome = build_reference_genome_from_resource(res)
+
+    with reference_genome.open():
+        result = list(reference_genome.fetch("pesho", 1, 10))
+
+        assert result == [
+            "N",
+            "N",
+            "A",
+            "C",
+            "C",
+            "C",
+            "A",
+            "A",
+            "A",
+            "C"
+        ]
+
+        result = list(reference_genome.fetch("pesho", 18, 36))
+
+        assert result == [
+            "C",
+            "C",
+            "N",
+            "N",
+            "N",
+            "N",
+            "A"
+        ]
+
+        result = list(reference_genome.fetch("pesho", 1, None))
+
+        assert result == [
+            "N",
+            "N",
+            "A",
+            "C",
+            "C",
+            "C",
+            "A",
+            "A",
+            "A",
+            "C",
+            "G",
+            "G",
+            "G",
+            "C",
+            "C",
+            "T",
+            "T",
+            "C",
+            "C",
+            "N",
+            "N",
+            "N",
+            "N",
+            "A"
+        ]
+
+
+def test_reference_genome_pair_iter(genome_fixture):
+    res = build_filesystem_test_resource(genome_fixture)
+    reference_genome = build_reference_genome_from_resource(res)
+
+    with reference_genome.open():
+        result = list(reference_genome.pair_iter("pesho", 1, 10))
+        print("TEST")
+        print(result)
+        print([
+            None, "N",
+            "N", "N",
+            "N", "A",
+            "A", "C",
+            "C", "C",
+            "C", "C",
+            "C", "A",
+            "A", "A",
+            "A", "A",
+            "A", "C"
+        ])
+
+        assert result == [
+            (None, "N"),
+            ("N", "N"),
+            ("N", "A"),
+            ("A", "C"),
+            ("C", "C"),
+            ("C", "C"),
+            ("C", "A"),
+            ("A", "A"),
+            ("A", "A"),
+            ("A", "C")
+        ]

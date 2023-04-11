@@ -473,10 +473,12 @@ class ReferenceGenome(
             + (start - 1) // self._index[chrom]["seqLineLength"]
         )
 
+        chrom_length = self.get_chrom_length(chrom)
+
         if stop is None:
-            length = self.get_chrom_length(chrom) - start + 1
+            length = chrom_length - start + 1
         else:
-            length = stop - start + 1
+            length = min(stop, chrom_length) - start + 1
         line_feeds = 1 + length // self._index[chrom]["seqLineLength"]
 
         total_length = length + line_feeds
@@ -519,9 +521,11 @@ class ReferenceGenome(
 
         if yield_single:
             try:
-                prev = next(nucs)
+                current = next(nucs)
             except StopIteration:
                 yield None, None
+            yield prev, current
+            prev = current
 
         for current in nucs:
             yield prev, current
