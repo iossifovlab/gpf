@@ -139,8 +139,6 @@ def test_resource_repair_need_update_message(
          "using default GRR definitions"),
         ("grr_manage", logging.INFO,
          "manifest of <one> is up to date"),
-        ("dae.genomic_resources.genomic_scores", logging.ERROR,
-         "Couldn't load statistics of one"),
         ("grr_manage", logging.INFO,
          "No hash stored for <one>, need update"),
         ("grr_manage", logging.INFO,
@@ -167,8 +165,6 @@ def test_repo_repair_need_update_message(
         ("grr_manage",
          logging.INFO,
          "manifest of <one> is up to date"),
-        ("dae.genomic_resources.genomic_scores", logging.ERROR,
-         "Couldn't load statistics of one"),
         ("grr_manage",
          logging.INFO,
          "No hash stored for <one>, need update"),
@@ -200,8 +196,6 @@ def test_resource_repair_no_update_message(
     assert out == ""
     assert err == ""
     assert caplog.record_tuples == [
-        ("dae.genomic_resources.genomic_scores", logging.ERROR,
-         "Couldn't load statistics of one"),
         ("dae.genomic_resources.repository_factory", logging.INFO,
          "using default GRR definitions"),
         ("grr_manage", logging.INFO,
@@ -229,8 +223,6 @@ def test_repo_repair_no_update_message(
     assert out == ""
     assert err == ""
     assert caplog.record_tuples == [
-        ("dae.genomic_resources.genomic_scores", logging.ERROR,
-         "Couldn't load statistics of one"),
         ("dae.genomic_resources.repository_factory", logging.INFO,
          "using default GRR definitions"),
         ("grr_manage", logging.INFO,
@@ -264,8 +256,6 @@ def test_resource_repair_dry_run_needs_manifest_update_message(
     assert captured.out == ""
     assert captured.err == ""
     assert caplog.record_tuples == [
-        ("dae.genomic_resources.genomic_scores", logging.ERROR,
-         "Couldn't load statistics of one"),
         ("dae.genomic_resources.repository_factory", logging.INFO,
          "using default GRR definitions"),
         ("grr_manage", logging.INFO,
@@ -297,8 +287,6 @@ def test_repo_repair_dry_run_needs_manifest_update_message(
     assert captured.out == ""
     assert captured.err == ""
     assert caplog.record_tuples == [
-        ("dae.genomic_resources.genomic_scores", logging.ERROR,
-         "Couldn't load statistics of one"),
         ("dae.genomic_resources.repository_factory", logging.INFO,
          "using default GRR definitions"),
         ("grr_manage", logging.INFO,
@@ -340,8 +328,6 @@ def test_resource_repair_dry_run_needs_manifest_and_histogram_update_message(
     assert captured.out == ""
     assert captured.err == ""
     assert caplog.record_tuples == [
-        ("dae.genomic_resources.genomic_scores", logging.ERROR,
-         "Couldn't load statistics of one"),
         ("dae.genomic_resources.repository_factory", logging.INFO,
          "using default GRR definitions"),
         ("grr_manage", logging.INFO,
@@ -410,8 +396,6 @@ def test_repo_repair_dry_run_needs_manifest_and_histogram_update_message(
     assert captured.out == ""
     assert captured.err == ""
     assert caplog.record_tuples == [
-        ("dae.genomic_resources.genomic_scores", logging.ERROR,
-         "Couldn't load statistics of one"),
         ("dae.genomic_resources.repository_factory", logging.INFO,
          "using default GRR definitions"),
         ("grr_manage", logging.INFO,
