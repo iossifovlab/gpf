@@ -29,7 +29,6 @@ td {
 }
 
 .link-external-page {
-  text-decoration: underline;
   padding-right: 25px;
 }
 
@@ -51,13 +50,8 @@ td {
 
 .link-genotype-browser,
 .link-genotype-browser:hover {
-  color: #2372c6;
   cursor: pointer;
   padding: 15px;
-}
-
-.link-genotype-browser:hover {
-  text-decoration: underline;
 }
 
 .vertical-text {
@@ -137,4 +131,14 @@ td {
 h2 {
   margin: 0;
   padding-left: 10px;
+}
+
+a {
+  color: #0645ad;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
 }
