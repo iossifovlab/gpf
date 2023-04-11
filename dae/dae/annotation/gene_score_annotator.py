@@ -7,6 +7,7 @@ from typing import cast, Any
 from dae.gene.gene_scores import GeneScore
 from dae.genomic_resources import GenomicResource
 from dae.genomic_resources.aggregators import AGGREGATOR_SCHEMA
+from dae.genomic_resources.aggregators import build_aggregator
 
 from .annotator_base import Annotator, ATTRIBUTES_SCHEMA
 from .annotatable import Annotatable
@@ -33,6 +34,8 @@ def build_gene_score_annotator(pipeline, config):
 
 class GeneScoreAnnotator(Annotator):
     """Annotator that annotates variants by using gene score resources."""
+
+    DEFAULT_AGGREGATOR_TYPE = "dict"
 
     def __init__(self, config: dict, resource: GenomicResource):
         super().__init__(config)
@@ -107,6 +110,18 @@ class GeneScoreAnnotator(Annotator):
             self.resource.get_id(): {self.resource.get_config()["filename"], }
         }
 
+    def aggregate_gene_values(
+            self, gene_score, gene_symbols, aggregator_type=None):
+        """Aggregate values for given symbols with given aggregator type."""
+        if aggregator_type is None:
+            aggregator_type = self.DEFAULT_AGGREGATOR_TYPE
+        aggregator = build_aggregator(aggregator_type)
+
+        for symbol in gene_symbols:
+            aggregator.add(gene_score.get_gene_value(symbol), key=symbol)
+
+        return aggregator.get_final()
+
     def _do_annotate(self, annotatable: Annotatable, _context: dict):
         attributes: dict = {}
 
@@ -118,8 +133,8 @@ class GeneScoreAnnotator(Annotator):
             aggregator_type = attr.get("gene_aggregator")
             gene_score = self.gene_scores[src]
 
-            attributes[src] = gene_score.aggregate_gene_values(
-                genes, aggregator_type
+            attributes[src] = self.aggregate_gene_values(
+                gene_score, genes, aggregator_type
             )
 
         return attributes

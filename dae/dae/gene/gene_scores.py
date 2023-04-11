@@ -13,7 +13,6 @@ from jinja2 import Template
 from cerberus import Validator
 
 from dae.utils.dae_utils import join_line
-from dae.genomic_resources.aggregators import build_aggregator
 from dae.genomic_resources.resource_implementation import \
     GenomicResourceImplementation, get_base_resource_schema, \
     InfoImplementationMixin, ResourceConfigValidationMixin, \
@@ -95,8 +94,6 @@ class GeneScore:
         y_scale: linear/log
     meta: (gene score metadata)
     """
-
-    DEFAULT_AGGREGATOR_TYPE = "dict"
 
     def __init__(
         self, score_id, file, desc, histogram_config, meta=None, histogram=None
@@ -239,17 +236,6 @@ class GeneScore:
         """Return the value for a given gene symbol."""
         symbol_values = self._to_dict()
         return symbol_values[gene_symbol]
-
-    def aggregate_gene_values(self, gene_symbols, aggregator_type=None):
-        """Aggregate values for given symbols with given aggregator type."""
-        if aggregator_type is None:
-            aggregator_type = self.DEFAULT_AGGREGATOR_TYPE
-        aggregator = build_aggregator(aggregator_type)
-
-        for symbol in gene_symbols:
-            aggregator.add(self.get_gene_value(symbol), key=symbol)
-
-        return aggregator.get_final()
 
     def _to_dict(self):
         """Return dictionary of all defined scores keyed by gene symbol."""
