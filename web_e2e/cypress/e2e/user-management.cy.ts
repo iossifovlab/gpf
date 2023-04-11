@@ -13,30 +13,31 @@ describe('User management tests for reset password in Users', () => {
   it('should reset password', () => {
     page.loginAdmin();
     page.navigateToSidenavPage(sidenavPageLinks.management);
-    createTestUser(page, 'test_email@email.com', 'test_name');
-    page.userHasPasswordCell('test_email@email.com').should('be.empty');
-    page.userActionsResetPassword('test_email@email.com').click();
+    createTestUser(page, 'user_reset_password@email.com', 'test_name');
+    page.userHasPasswordCell('user_reset_password@email.com').should('be.empty');
+    page.userActionsResetPassword('user_reset_password@email.com').click();
     page.userTableResetPasswordConfirmButton.click();
 
-    cy.request('GET', 'http://localhost:8025/api/v2/search?kind=to&query=test_email@email.com').then(
+    cy.request('GET', 'http://mailhog:8025/api/v2/search?kind=to&query=user_reset_password@email.com').then(
       (response) => {
         const lines: string[] = (response.body.items[0].Content.Body as string).split('\r\n');
-        const url = lines[1].replace(' http://gpf/gpf/', '');
-        cy.visit(url);
+        // const url = lines[1].replace(' http://gpf/gpf/', ''); // remove when commit ??
+        // cy.visit(url);
+        cy.visit(lines[1]);
         page.newPasswordInput.type('XC^ZF*TZXuUChFsv');
         page.repeatNewPasswordInput.type('XC^ZF*TZXuUChFsv');
         page.newPasswordButton.click();
       }
     );
     page.logout();
-    page.login('test_email@email.com', 'XC^ZF*TZXuUChFsv');
+    page.login('user_reset_password@email.com', 'XC^ZF*TZXuUChFsv');
 
     page.logout();
     page.loginAdmin();
     page.navigateToHome();
     page.navigateToSidenavPage(sidenavPageLinks.management);
-    page.userHasPasswordCell('test_email@email.com').find('.fa.fa-check').should('be.visible');
-    deleteTestUser(page, 'test_email@email.com');
+    page.userHasPasswordCell('user_reset_password@email.com').find('.fa.fa-check').should('be.visible');
+    deleteTestUser(page, 'user_reset_password@email.com');
     page.logout();
   });
 
@@ -45,7 +46,7 @@ describe('User management tests for reset password in Users', () => {
 
     page.loginAdmin();
     page.navigateToSidenavPage(sidenavPageLinks.management);
-    createTestUser(page, 'test_email@email.com', 'test_name');
+    createTestUser(page, 'forgotten_password@email.com', 'test_name');
     page.logout();
 
     cy.window().then((win) => {
@@ -58,28 +59,29 @@ describe('User management tests for reset password in Users', () => {
 
     cy.get('@popup').url().then(url => {
       cy.get('a').first().click();
-      cy.get('#id_email').type('test_email@email.com');
+      cy.get('#id_email').type('forgotten_password@email.com');
       cy.get('input[value="Reset password"]').click();
     });
 
-    cy.request('GET', 'http://localhost:8025/api/v2/search?kind=to&query=test_email@email.com').then(
+    cy.request('GET', 'http://mailhog:8025/api/v2/search?kind=to&query=forgotten_password@email.com').then(
       (response) => {
         const lines: string[] = (response.body.items[0].Content.Body as string).split('\r\n');
-        const url = lines[1].replace(' http://gpf/gpf/', '');
-        cy.visit(url);
+        // const url = lines[1].replace(' http://gpf/gpf/', 'http://172.20.0.6/gpf/'); // remove when commit
+        // cy.visit(url);
+        cy.visit(lines[1]);
         page.newPasswordInput.type('XC^ZF*TZXuUChFsv');
         page.repeatNewPasswordInput.type('XC^ZF*TZXuUChFsv');
         page.newPasswordButton.click();
       }
     );
 
-    page.login('test_email@email.com', 'XC^ZF*TZXuUChFsv');
+    page.login('forgotten_password@email.com', 'XC^ZF*TZXuUChFsv');
     page.logout();
 
     page.loginAdmin();
     page.navigateToHome();
     page.navigateToSidenavPage(sidenavPageLinks.management);
-    deleteTestUser(page, 'test_email@email.com');
+    deleteTestUser(page, 'forgotten_password@email.com');
     page.logout();
   });
 });
