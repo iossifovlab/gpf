@@ -1,8 +1,8 @@
 <div style="display: table" class="container">
   <div class="form-block">
-    <div class="card">
+    <div class="card" style="border: none">
       <ul ngbNav #nav="ngbNav" (navChange)="updateQueries()" class="navbar bg-light nav-pills" id="saved-queries-list">
-        <div class="nav-title-custom">Saved queries</div>
+        <div class="nav-title-custom" style="width: 120px">Saved queries</div>
 
         <li ngbNavItem id="genotype">
           <a ngbNavLink>Genotype browser</a>
@@ -11,17 +11,17 @@
           </ng-template>
         </li>
 
-        <li ngbNavItem id="phenotool">
-          <a ngbNavLink>Phenotype tool</a>
-          <ng-template ngbNavContent>
-            <gpf-saved-queries-table [queries]="phenotoolQueries"></gpf-saved-queries-table>
-          </ng-template>
-        </li>
-
         <li ngbNavItem id="enrichment">
           <a ngbNavLink>Enrichment tool</a>
           <ng-template ngbNavContent>
             <gpf-saved-queries-table [queries]="enrichmentQueries"></gpf-saved-queries-table>
+          </ng-template>
+        </li>
+
+        <li ngbNavItem id="phenotool">
+          <a ngbNavLink>Phenotype tool</a>
+          <ng-template ngbNavContent>
+            <gpf-saved-queries-table [queries]="phenotoolQueries"></gpf-saved-queries-table>
           </ng-template>
         </li>
       </ul>

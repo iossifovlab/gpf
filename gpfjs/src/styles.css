@@ -162,11 +162,6 @@ label {
   outline: none;
 }
 
-.username-field {
-  font-size: 0.9em;
-  margin-right: 8px;
-}
-
 .modal-fullscreen .modal-dialog {
   max-width: 1200px;
 }
@@ -414,4 +409,11 @@ gpf-genotype-preview-field gpf-pedigree gpf-pedigree-chart .svg-container {
 
 .pedigree-modal .modal-lg .svg-container {
   max-width: 100% !important;
+}
+
+#family-ids-panel textarea,
+#gene-symbols-panel textarea,
+#person-ids-panel textarea,
+#regions-filter-panel textarea {
+  min-height: 70px;
 }

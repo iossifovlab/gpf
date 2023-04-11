@@ -7,6 +7,6 @@
 </div>
 
 <div *ngIf="(userInfo$ | async)?.email as email" style="display: flex; justify-content: flex-end">
-  <span class="username-field" style="align-self: center">{{ email }}</span>
+  <span id="username-field" style="align-self: center">{{ email }}</span>
   <button class="btn btn-sm" id="log-out-button" (click)="logout()">Log Out</button>
 </div>

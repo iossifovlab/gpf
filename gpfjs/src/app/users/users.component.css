@@ -1,5 +1,15 @@
 #log-out-button {
   padding: 4px 8px;
-  border: 1px solid #ddd;
   white-space: nowrap;
+  border: 1px solid #ddd;
+  background: #fff;
+}
+
+#log-out-button:hover {
+  background: #f4f4f4d6;
+}
+
+#username-field {
+  font-size: 0.9em;
+  margin-right: 10px;
 }
