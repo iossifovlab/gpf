@@ -34,6 +34,8 @@ from dae.genomic_resources.repository import \
     version_tuple_to_string
 from dae.genomic_resources.cached_repository import \
     GenomicResourceCachedRepo
+from dae.genomic_resources.group_repository import \
+    GenomicResourceGroupRepo
 
 from dae.utils.verbosity_configuration import VerbosityConfiguration
 
@@ -126,23 +128,28 @@ def _configure_list_subparser(subparsers):
 
 def _run_list_command(
         proto: Union[ReadOnlyRepositoryProtocol, GenomicResourceRepo], args):
+    repos: list = [proto]
+    if isinstance(proto, GenomicResourceGroupRepo):
+        repos = proto.children
+    for repo in repos:
+        for res in repo.get_all_resources():
+            res_size = sum(fs for _, fs in res.get_manifest().get_files())
 
-    for res in proto.get_all_resources():
-        res_size = sum(fs for _, fs in res.get_manifest().get_files())
+            files_msg = f"{len(list(res.get_manifest().get_files())):2d}"
+            if isinstance(repo, GenomicResourceCachedRepo):
+                cached_files = repo.get_resource_cached_files(res.get_id())
+                files_msg = f"{len(cached_files):2d}/{files_msg}"
 
-        files_msg = f"{len(list(res.get_manifest().get_files())):2d}"
-        if isinstance(proto, GenomicResourceCachedRepo):
-            files_msg = f"{len(proto.get_resource_cached_files(res.get_id())):2d}/{files_msg}"
-
-        res_size_msg = res_size \
-            if hasattr(args, 'bytes') and args.bytes is True \
-            else convert_size(res_size)
-
-        print(
-            f"{res.get_type():20} {res.get_version_str():7s} "
-            f"{files_msg} {res_size_msg:12} "
-            f"{proto.repo_id if isinstance(proto, GenomicResourceRepo) else proto.get_id()} "
-            f"{res.get_id()}")
+            res_size_msg = res_size \
+                if hasattr(args, 'bytes') and args.bytes is True \
+                else convert_size(res_size)
+            repo_id = repo.repo_id if isinstance(repo, GenomicResourceRepo) \
+                                   else repo.get_id()
+            print(
+                f"{res.get_type():20} {res.get_version_str():7s} "
+                f"{files_msg} {res_size_msg:12} "
+                f"{repo_id} "
+                f"{res.get_id()}")
 
 
 def _configure_repo_init_subparser(subparsers):
