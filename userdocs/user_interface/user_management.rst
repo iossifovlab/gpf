@@ -4,8 +4,8 @@ GPF User Management
 All options concerning Management can only be found by **admin** users
 in the *Management* tab from the upper left corner menu
 
-Quick start guide
------------------
+Users
+-----
 
 How to create a new user?
 +++++++++++++++++++++++++
@@ -53,21 +53,37 @@ The **new user** will show on top of the users table **ready to be edited** furt
    :alt: User list table
    :align: center
 
+.. note::
+   To **login with the new user** a password must be set. This could be accomplished from:
+      * The **login interface** by clicking on **Forgotten password**.
+      * The **Users Management table** by clicking on a user's **Reset password** button.
+
 
 How to specify permissions for a given user?
 ++++++++++++++++++++++++++++++++++++++++++++
 
-.. figure:: imgs/user_management/add-remove-group-num.png
+Find the user then click on the **Add** button in the **Groups column**
+
+.. figure:: imgs/user_management/edit-user-1.png
    :scale: 50
    :alt: Interface for editing user groups
    :align: center
 
-   Interface for editing user groups
+A small menu will appear, that **lists all unadded** groups. **Search** the group and **click** on it.
+
+.. figure:: imgs/user_management/edit-user-2.png
+   :scale: 50
+   :alt: Interface for editing user groups
+   :align: center
 
 
-Users
------
+The group will now appear in the list of groups in the **Groups** column.
+To now **remove it** click on the small **x** button to the right of the group and then **confirm removal**. 
 
+.. figure:: imgs/user_management/edit-user-3.png
+   :scale: 50
+   :alt: Interface for editing user groups
+   :align: center
 
 Actions towards users
 +++++++++++++++++++++
