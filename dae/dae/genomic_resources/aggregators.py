@@ -1,7 +1,7 @@
 import re
 import math
 
-from typing import cast
+from typing import cast, Any
 
 
 class AbstractAggregator:
@@ -183,7 +183,7 @@ class ModeAggregator(AbstractAggregator):
         self.value_counts.clear()
 
     def get_final(self):
-        count_values = {}
+        count_values: dict[Any, Any] = {}
         current_max = None
         for value, count in self.value_counts.items():
             if count not in count_values:

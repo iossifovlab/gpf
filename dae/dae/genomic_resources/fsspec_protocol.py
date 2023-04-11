@@ -15,6 +15,8 @@ import fsspec  # type: ignore
 
 import yaml
 
+from markdown2 import markdown
+
 from dae.genomic_resources.repository import GR_CONF_FILE_NAME, \
     GR_INDEX_FILE_NAME, \
     Manifest, \
@@ -553,6 +555,15 @@ class FsspecReadWriteProtocol(
                 "res_files": len(list(res.get_manifest().get_files())),
                 "res_size": res_size
             }
+
+            description = None
+
+            if "meta" in res.config:
+                meta = res.config["meta"]
+                if "description" in meta:
+                    description = markdown(meta["description"])
+
+            result[res.resource_id]["meta"] = description
 
         content_filepath = os.path.join(self.url, GR_INDEX_FILE_NAME)
         with self.filesystem.open(

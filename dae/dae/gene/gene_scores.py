@@ -11,10 +11,8 @@ import numpy as np
 import pandas as pd
 from jinja2 import Template
 from cerberus import Validator
-from markdown2 import markdown
 
 from dae.utils.dae_utils import join_line
-from dae.genomic_resources.aggregators import build_aggregator
 from dae.genomic_resources.resource_implementation import \
     GenomicResourceImplementation, get_base_resource_schema, \
     InfoImplementationMixin, ResourceConfigValidationMixin, \
@@ -96,8 +94,6 @@ class GeneScore:
         y_scale: linear/log
     meta: (gene score metadata)
     """
-
-    DEFAULT_AGGREGATOR_TYPE = "dict"
 
     def __init__(
         self, score_id, file, desc, histogram_config, meta=None, histogram=None
@@ -241,17 +237,6 @@ class GeneScore:
         symbol_values = self._to_dict()
         return symbol_values[gene_symbol]
 
-    def aggregate_gene_values(self, gene_symbols, aggregator_type=None):
-        """Aggregate values for given symbols with given aggregator type."""
-        if aggregator_type is None:
-            aggregator_type = self.DEFAULT_AGGREGATOR_TYPE
-        aggregator = build_aggregator(aggregator_type)
-
-        for symbol in gene_symbols:
-            aggregator.add(self.get_gene_value(symbol), key=symbol)
-
-        return aggregator.get_final()
-
     def _to_dict(self):
         """Return dictionary of all defined scores keyed by gene symbol."""
         return self.df.set_index("gene")[self.score_id].to_dict()
@@ -342,6 +327,7 @@ class GeneScoreCollection(
             <p>Gene score ID: {{ score["id"] }}</p>
             <p>Description: {{ score["desc"] }}
             </div>
+            {% endfor %}
             <h3>Histograms:</h2>
             {% for hist in data["histograms"] %}
             <div class="histogram">
@@ -351,17 +337,11 @@ class GeneScoreCollection(
             title={{ hist["score"] }}>
             </div>
             {% endfor %}
-            {% endfor %}
             {% endblock %}
         """))
 
     def _get_template_data(self):
         data = copy.deepcopy(self.config)
-
-        if "meta" in data:
-            meta = data["meta"]
-            if "description" in meta:
-                meta["description"] = markdown(str(meta["description"]))
 
         statistics = self.get_statistics()
         data["statistics_dir"] = statistics.get_statistics_folder()
