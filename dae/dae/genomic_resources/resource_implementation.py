@@ -158,6 +158,7 @@ class InfoImplementationMixin:
         template_data = self.get_template_data()
         return self.get_template().render(
             resource_id=self.resource.resource_id,  # type: ignore
+            resource_type=self.resource.get_type(),
             data=template_data,
             base=resource_template
         )
@@ -201,29 +202,39 @@ h3,h4 {
 </style>
 </head>
 <body>
-<h1>{{ resource_id }}</h3>
+
+<h1>Resource</h1>
+<div>
+<table border="1">
+<tr><td><b>Id:</b></td><td>{{ resource_id }}</td></tr>
+<tr><td><b>Type:</b></td><td>{{ resource_type }}</td></tr>
+<tr><td><b>Description:</b></td>
+    <td>
+        {{
+            data["description"] if data["description"] else "N/A"
+        }}
+    </td></tr>
+<tr><td><b>Labels:</b></td>
+    <td>
+        {% if data["meta"] and data["meta"]["labels"] %}
+        <ul>
+        {% for label, value in data["meta"]["labels"].items() %}
+            <li>{{ label }}: {{ value }}</li>
+        {% endfor %}
+        </ul>
+        {% else %}
+        {% endif %}
+    </td></tr>
+</table>
+</div>
+
+
 {% block content %}
 N/A
 {% endblock %}
 
-<div>
-<h3>Labels:</h3>
-{% if data["meta"] and data["meta"]["labels"] %}
-<ul>
-{% for label, value in data["meta"]["labels"].items() %}
-    <li>{{ label }}: {{ value }}</li>
-{% endfor %}
-</ul>
-{% else %}
-{% endif %}
 
-<h3>Description:</h3>
-<span class="description">
-{{
-    data["description"] if data["description"] else "N/A"
-}}
-</span>
-</div>
+<h1>Files</h1>
 <table>
 <thead>
     <tr>

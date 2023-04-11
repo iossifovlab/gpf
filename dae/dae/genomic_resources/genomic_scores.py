@@ -420,165 +420,185 @@ class GenomicScore(
         return Template(textwrap.dedent("""
             {% extends base %}
             {% block content %}
-            <hr>
-            <h3>Score file:</h3>
-            <a href="{{ data["table"]["filename"] }}">
-            {{ data["table"]["filename"] }}
-            </a>
-            <p>
-            File format: {{ data["table"]["format"] }}
-            </p>
+            <h1>Scores</h1>
 
-            {%- if data["table"]["chrom"] -%}
-            {%- if data["table"]["chrom"]["index"] -%}
-            <p>
-            <em>chrom column index:</em>
-            {{ data["table"]["chrom"]["index"] }}
-            </p>
-            {%- endif %}
-            {%- if data["table"]["chrom"]["name"] -%}
-            <p>
-            <em>chrom column name:</em>
-            {{ data["table"]["chrom"]["name"] }}
-            </p>
-            {%- endif -%}
-            {%- endif %}
-
-            {%- if data["table"]["pos_begin"] -%}
-            {%- if data["table"]["pos_begin"]["index"] -%}
-            <p>
-            <em>pos_begin column index:</em>
-            {{ data["table"]["pos_begin"]["index"] }}
-            </p>
-            {%- endif %}
-            {%- if data["table"]["pos_begin"]["name"] -%}
-            <p>
-            <em>pos_begin column name:</em>
-            {{ data["table"]["pos_begin"]["name"] }}
-            </p>
-            {%- endif -%}
-            {%- endif %}
-
-            {%- if data["table"]["pos_end"] -%}
-            {%- if data["table"]["pos_end"]["index"] -%}
-            <p>
-            <em>pos_end column index:</em>
-            {{ data["table"]["pos_end"]["index"] }}
-            </p>
-            {%- endif %}
-            {%- if data["table"]["pos_end"]["name"] -%}
-            <p>
-            <em>pos_end column name:</em>
-            {{ data["table"]["pos_end"]["name"] }}
-            </p>
-            {%- endif -%}
-            {%- endif %}
-
-            {%- if data["table"]["reference"] -%}
-            {%- if data["table"]["reference"]["index"] -%}
-            <p>
-            <em>reference column index:</em>
-            {{ data["table"]["reference"]["index"] }}
-            </p>
-            {%- endif -%}
-            {%- if data["table"]["reference"]["name"] -%}
-            <p>
-            <em>reference column name:</em>
-            {{ data["table"]["reference"]["name"] }}
-            </p>
-            {%- endif -%}
-            {%- endif %}
-
-            {%- if data["table"]["alternative"] -%}
-            {%- if data["table"]["alternative"]["index"] -%}
-            <p>
-            <em>alternative column index:</em>
-            {{ data["table"]["alternative"]["index"] }}
-            </p>
-            {%- endif -%}
-            {%- if data["table"]["alternative"]["name"] -%}
-            <p>
-            <em>alternative column name:</em>
-            {{ data["table"]["alternative"]["name"] }}
-            </p>
-            {%- endif -%}
-            {%- endif %}
-
-            <h3>Score definitions:</h3>
-            {%- for score in data["scores"] -%}
+            {%- for score_id, score in data["scores"].items() -%}
             <div class="score-definition">
-            <h4>{{ score["id"] }}</h4>
-            {%- if "index" in score -%}
-            <p><em>Column index</em>: {{ score["index"] }}</p>
-            {%- elif "name" in score -%}
-            <p><em>Column name</em>: {{ score["name"] }}
-            {%- endif -%}
-            {%- if "destination" in score -%}
-            <p><em>Annotation destination</em>: {{ score["destination"] }}
-            {%- endif -%}
-            <p><em>Score data type</em>: {{ score["type"] }}
-            <p><em>Description</em>: {{ score["desc"] }}
+            <h4>{{ score_id }}</h4>
+            <p><em>data type</em>: {{ score.type }}
+            <p><em>description</em>: {{ score.desc }}
+
             </div>
             {%- endfor %}
-
-            <h3>Min max values:</h3>
-            {%- for min_max in data["min_max"] %}
-            <div class="minmax">
-            <h4>{{ min_max["score_id"] }}</h4>
-            <p>Min: {{ min_max["min"] }}</p>
-            <p>Max: {{ min_max["max"] }}</p>
-            </div>
-            {%- endfor %}
-
-            <h3>Histograms:</h3>
-            {% for hist in data["histograms"] %}
-            <div class="histogram">
-            <h4>{{ hist["score"] }}</h4>
-            <img src="{{ data["statistics_dir"] }}/{{ hist["img_file"] }}"
-            alt={{ hist["score"] }}
-            title={{ hist["score"] }}>
-            </div>
-            {% endfor %}
-
             {% endblock %}
-        """))
+            """))
+
+        #     """
+        #     <!--
+        #     <h1>TO REMOVE</h1>
+
+        #     <h3>Score file:</h3>
+        #     <a href="{{ data["table"]["filename"] }}">
+        #     {{ data["table"]["filename"] }}
+        #     </a>
+        #     <p>
+        #     File format: {{ data["table"]["format"] }}
+        #     </p>
+
+        #     {%- if data["table"]["chrom"] -%}
+        #     {%- if data["table"]["chrom"]["index"] -%}
+        #     <p>
+        #     <em>chrom column index:</em>
+        #     {{ data["table"]["chrom"]["index"] }}
+        #     </p>
+        #     {%- endif %}
+        #     {%- if data["table"]["chrom"]["name"] -%}
+        #     <p>
+        #     <em>chrom column name:</em>
+        #     {{ data["table"]["chrom"]["name"] }}
+        #     </p>
+        #     {%- endif -%}
+        #     {%- endif %}
+
+        #     {%- if data["table"]["pos_begin"] -%}
+        #     {%- if data["table"]["pos_begin"]["index"] -%}
+        #     <p>
+        #     <em>pos_begin column index:</em>
+        #     {{ data["table"]["pos_begin"]["index"] }}
+        #     </p>
+        #     {%- endif %}
+        #     {%- if data["table"]["pos_begin"]["name"] -%}
+        #     <p>
+        #     <em>pos_begin column name:</em>
+        #     {{ data["table"]["pos_begin"]["name"] }}
+        #     </p>
+        #     {%- endif -%}
+        #     {%- endif %}
+
+        #     {%- if data["table"]["pos_end"] -%}
+        #     {%- if data["table"]["pos_end"]["index"] -%}
+        #     <p>
+        #     <em>pos_end column index:</em>
+        #     {{ data["table"]["pos_end"]["index"] }}
+        #     </p>
+        #     {%- endif %}
+        #     {%- if data["table"]["pos_end"]["name"] -%}
+        #     <p>
+        #     <em>pos_end column name:</em>
+        #     {{ data["table"]["pos_end"]["name"] }}
+        #     </p>
+        #     {%- endif -%}
+        #     {%- endif %}
+
+        #     {%- if data["table"]["reference"] -%}
+        #     {%- if data["table"]["reference"]["index"] -%}
+        #     <p>
+        #     <em>reference column index:</em>
+        #     {{ data["table"]["reference"]["index"] }}
+        #     </p>
+        #     {%- endif -%}
+        #     {%- if data["table"]["reference"]["name"] -%}
+        #     <p>
+        #     <em>reference column name:</em>
+        #     {{ data["table"]["reference"]["name"] }}
+        #     </p>
+        #     {%- endif -%}
+        #     {%- endif %}
+
+        #     {%- if data["table"]["alternative"] -%}
+        #     {%- if data["table"]["alternative"]["index"] -%}
+        #     <p>
+        #     <em>alternative column index:</em>
+        #     {{ data["table"]["alternative"]["index"] }}
+        #     </p>
+        #     {%- endif -%}
+        #     {%- if data["table"]["alternative"]["name"] -%}
+        #     <p>
+        #     <em>alternative column name:</em>
+        #     {{ data["table"]["alternative"]["name"] }}
+        #     </p>
+        #     {%- endif -%}
+        #     {%- endif %}
+
+        #     <h3>Score definitions:</h3>
+        #     {%- for score in data["scores"] -%}
+        #     <div class="score-definition">
+        #     <h4>{{ score["id"] }}</h4>
+        #     {%- if "index" in score -%}
+        #     <p><em>Column index</em>: {{ score["index"] }}</p>
+        #     {%- elif "name" in score -%}
+        #     <p><em>Column name</em>: {{ score["name"] }}
+        #     {%- endif -%}
+        #     {%- if "destination" in score -%}
+        #     <p><em>Annotation destination</em>: {{ score["destination"] }}
+        #     {%- endif -%}
+        #     <p><em>Score data type</em>: {{ score["type"] }}
+        #     <p><em>Description</em>: {{ score["desc"] }}
+        #     </div>
+        #     {%- endfor %}
+
+        #     <h3>Min max values:</h3>
+        #     {%- for min_max in data["min_max"] %}
+        #     <div class="minmax">
+        #     <h4>{{ min_max["score_id"] }}</h4>
+        #     <p>Min: {{ min_max["min"] }}</p>
+        #     <p>Max: {{ min_max["max"] }}</p>
+        #     </div>
+        #     {%- endfor %}
+
+        #     <h3>Histograms:</h3>
+        #     {% for hist in data["histograms"] %}
+        #     <div class="histogram">
+        #     <h4>{{ hist["score"] }}</h4>
+        #     <img src="{{ data["statistics_dir"] }}/{{ hist["img_file"] }}"
+        #     alt={{ hist["score"] }}
+        #     title={{ hist["score"] }}>
+        #     </div>
+        #     {% endfor %}
+        #     -->
+
+        # """))
 
     def _get_template_data(self):
-        info = copy.deepcopy(self.config)
+        return {"scores": self.score_definitions,
+                "default_annotation": self.get_default_annotation()}
 
-        statistics = self.get_statistics()
+        # info = copy.deepcopy(self.config)
 
-        info["statistics_dir"] = statistics.get_statistics_folder()
+        # statistics = self.get_statistics()
 
-        if "histograms" in info:
-            for hist_config in info["histograms"]:
-                hist_config["img_file"] = statistics.get_histogram_image_file(
-                    hist_config["score"]
-                )
+        # info["statistics_dir"] = statistics.get_statistics_folder()
 
-        if "scores" in info:
-            for score_config in info["scores"]:
-                score_id = score_config["id"]
-                default_annotation = self.get_default_annotation()
-                for annotation_definition in default_annotation["attributes"]:
-                    if annotation_definition["source"] == score_id:
-                        score_config["destination"] = \
-                            annotation_definition["destination"]
+        # if "histograms" in info:
+        #     for hist_config in info["histograms"]:
+        #         hist_config["img_file"] = statistics.get_histogram_image_file(
+        #             hist_config["score"]
+        #         )
 
-        info["min_max"] = []
-        for score_id, min_max in statistics.score_min_maxes.items():
-            info["min_max"].append({
-                "score_id": score_id,
-                "min": min_max.min,
-                "max": min_max.max
-            })
+        # if "scores" in info:
+        #     for score_config in info["scores"]:
+        #         score_id = score_config["id"]
+        #         default_annotation = self.get_default_annotation()
+        #         for annotation_definition in default_annotation["attributes"]:
+        #             if annotation_definition["source"] == score_id:
+        #                 score_config["destination"] = \
+        #                     annotation_definition.get(
+        #                     "destination", annotation_definition["source"])
 
-        return info
+        # info["min_max"] = []
+        # for score_id, min_max in statistics.score_min_maxes.items():
+        #     info["min_max"].append({
+        #         "score_id": score_id,
+        #         "min": min_max.min,
+        #         "max": min_max.max
+        #     })
+
+        # return info
 
     def get_info(self):
         return InfoImplementationMixin.get_info(self)
 
-    @staticmethod
+    @ staticmethod
     def get_schema():
         scores_schema = {
             "type": "list", "schema": {
@@ -655,7 +675,7 @@ class GenomicScore(
 
     _REF_GENOME_CACHE: dict[str, Any] = {}
 
-    @staticmethod
+    @ staticmethod
     def _get_reference_genome_cached(grr, genome_id):
         if genome_id is None or grr is None:
             return None
@@ -719,7 +739,7 @@ class GenomicScore(
         )
         return min_max_tasks, merge_task, save_task
 
-    @staticmethod
+    @ staticmethod
     def _do_min_max(resource, chrom, start, end):
         impl = build_score_from_resource(resource)
         score_ids = impl.get_all_scores()
@@ -733,7 +753,7 @@ class GenomicScore(
                     res[scr_id].add_record(record)
         return res
 
-    @staticmethod
+    @ staticmethod
     def _merge_min_max(score_ids, *calculate_tasks):
 
         res: dict[str, Optional[MinMaxValue]] = {
@@ -748,7 +768,7 @@ class GenomicScore(
                         min_max_region[score_id])
         return res
 
-    @staticmethod
+    @ staticmethod
     def _save_min_max(resource, merged_min_max):
         proto = resource.proto
         for score_id, score_min_max in merged_min_max.items():
@@ -795,7 +815,7 @@ class GenomicScore(
         )
         return histogram_tasks, merge_task, save_task
 
-    @staticmethod
+    @ staticmethod
     def _do_histogram(resource, chrom, start, end, save_minmax_task):
         impl = build_score_from_resource(resource)
         if "histograms" not in impl.get_config():
@@ -816,7 +836,7 @@ class GenomicScore(
                     res[scr_id].add_record(record)
         return res
 
-    @staticmethod
+    @ staticmethod
     def _merge_histograms(resource, *calculated_histograms):
         if "histograms" not in resource.config:
             return {}
@@ -834,7 +854,7 @@ class GenomicScore(
                     res[score_id].merge(histogram_region[score_id])
         return res
 
-    @staticmethod
+    @ staticmethod
     def _save_histograms(resource, merged_histograms):
         proto = resource.proto
         for score_id, score_histogram in merged_histograms.items():
@@ -913,7 +933,7 @@ class GenomicScore(
 class PositionScore(GenomicScore):
     """Defines position genomic score."""
 
-    @staticmethod
+    @ staticmethod
     def get_schema():
         schema = copy.deepcopy(GenomicScore.get_schema())
         scores_schema = schema["scores"]["schema"]["schema"]
@@ -998,7 +1018,7 @@ class PositionScore(GenomicScore):
 class NPScore(GenomicScore):
     """Defines nucleotide-position genomic score."""
 
-    @staticmethod
+    @ staticmethod
     def get_schema():
         schema = copy.deepcopy(GenomicScore.get_schema())
         schema["table"]["schema"]["reference"] = {
@@ -1127,7 +1147,7 @@ class NPScore(GenomicScore):
 class AlleleScore(GenomicScore):
     """Defines allele genomic scores."""
 
-    @staticmethod
+    @ staticmethod
     def get_schema():
         schema = copy.deepcopy(GenomicScore.get_schema())
         schema["table"]["schema"]["reference"] = {
