@@ -10,29 +10,48 @@ Quick start guide
 How to create a new user?
 +++++++++++++++++++++++++
 
+Open **sidebar** menu.
+
+.. warning::
+   change screenshot
 .. figure:: imgs/user_management/01-management-menu.png
    :scale: 50
    :alt: Management menu
    :align: center
 
-   Management menu
+Open **Management** page.
 
-
+.. warning::
+   change screenshot
 .. figure:: imgs/user_management/02-user-management-menu.png
    :scale: 50
    :alt: User management menu
    :align: center
 
-   User management menu
-
-.. figure:: imgs/user_management/03-users-list.png
+Above users management table click on **Create user**.
+   
+.. figure:: imgs/user_management/create-user-1.png
    :scale: 50
    :alt: User list table
    :align: center
 
-   Users list: 1 - create new user button; 2 - the name of
-   the user if specified; 3 - user email; 4 - list of groups
-   the user belongs to; 5 -
+Enter **name** and **email** of the new user, then click **Create**.
+   
+.. figure:: imgs/user_management/create-user-2.png
+   :scale: 50
+   :alt: User list table
+   :align: center
+.. figure:: imgs/user_management/create-user-3.png
+   :scale: 50
+   :alt: User list table
+   :align: center
+
+The **new user** will show on top of the users table **ready to be edited** further.
+   
+.. figure:: imgs/user_management/create-user-4.png
+   :scale: 50
+   :alt: User list table
+   :align: center
 
 
 How to specify permissions for a given user?
