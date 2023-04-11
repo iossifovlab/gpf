@@ -583,7 +583,7 @@ class ReferenceGenome(
                     for nucleotide, prc in
                     data["global_statistic"]["nuc_distribution"].items()
                 %}
-                    <p>{{ nucleotide }}: {{ prc }}</p>
+                    <p>{{ nucleotide }}: {{ "%0.2f%%" % prc }}</p>
                 {% endfor %}
 
                 <h4>Bi-Nucleotide distribution:</h4>
@@ -591,7 +591,7 @@ class ReferenceGenome(
                     for nucleotide_pair, prc in
                     data["global_statistic"]["bi_nuc_distribution"].items()
                 %}
-                    <p>{{ nucleotide_pair }}: {{ prc }}</p>
+                    <p>{{ nucleotide_pair }}: {{ "%0.2f%%" % prc }}</p>
                 {% endfor %}
             {% endif %}
 

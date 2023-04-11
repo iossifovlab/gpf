@@ -430,75 +430,75 @@ class GenomicScore(
             </p>
 
             {%- if data["table"]["chrom"] -%}
-            {%- if data["table"]["chrom"]["index"] is not none -%}
+            {%- if data["table"]["chrom"]["index"] -%}
             <p>
-            chrom column index in file:
+            <em>chrom column index:</em>
             {{ data["table"]["chrom"]["index"] }}
             </p>
             {%- endif %}
             {%- if data["table"]["chrom"]["name"] -%}
             <p>
-            chrom column name in header:
+            <em>chrom column name:</em>
             {{ data["table"]["chrom"]["name"] }}
             </p>
             {%- endif -%}
             {%- endif %}
 
             {%- if data["table"]["pos_begin"] -%}
-            {%- if data["table"]["pos_begin"]["index"] is not none -%}
+            {%- if data["table"]["pos_begin"]["index"] -%}
             <p>
-            pos_begin column index in file:
+            <em>pos_begin column index:</em>
             {{ data["table"]["pos_begin"]["index"] }}
             </p>
             {%- endif %}
             {%- if data["table"]["pos_begin"]["name"] -%}
             <p>
-            pos_begin column name in header:
+            <em>pos_begin column name:</em>
             {{ data["table"]["pos_begin"]["name"] }}
             </p>
             {%- endif -%}
             {%- endif %}
 
             {%- if data["table"]["pos_end"] -%}
-            {%- if data["table"]["pos_end"]["index"] is not none -%}
+            {%- if data["table"]["pos_end"]["index"] -%}
             <p>
-            pos_end column index in file:
+            <em>pos_end column index:</em>
             {{ data["table"]["pos_end"]["index"] }}
             </p>
             {%- endif %}
             {%- if data["table"]["pos_end"]["name"] -%}
             <p>
-            pos_end column name in header:
+            <em>pos_end column name:</em>
             {{ data["table"]["pos_end"]["name"] }}
             </p>
             {%- endif -%}
             {%- endif %}
 
             {%- if data["table"]["reference"] -%}
-            {%- if data["table"]["reference"]["index"] is not none -%}
+            {%- if data["table"]["reference"]["index"] -%}
             <p>
-            reference column index in file:
+            <em>reference column index:</em>
             {{ data["table"]["reference"]["index"] }}
             </p>
             {%- endif -%}
             {%- if data["table"]["reference"]["name"] -%}
             <p>
-            reference column name in header:
+            <em>reference column name:</em>
             {{ data["table"]["reference"]["name"] }}
             </p>
             {%- endif -%}
             {%- endif %}
 
             {%- if data["table"]["alternative"] -%}
-            {%- if data["table"]["alternative"]["index"] is not none -%}
+            {%- if data["table"]["alternative"]["index"] -%}
             <p>
-            alternative column index in file:
+            <em>alternative column index:</em>
             {{ data["table"]["alternative"]["index"] }}
             </p>
             {%- endif -%}
             {%- if data["table"]["alternative"]["name"] -%}
             <p>
-            alternative column name in header:
+            <em>alternative column name:</em>
             {{ data["table"]["alternative"]["name"] }}
             </p>
             {%- endif -%}
@@ -507,17 +507,17 @@ class GenomicScore(
             <h3>Score definitions:</h3>
             {%- for score in data["scores"] -%}
             <div class="score-definition">
-            <p>Score ID: {{ score["id"] }}</p>
+            <h4>{{ score["id"] }}</h4>
             {%- if "index" in score -%}
-            <p>Column index in file: {{ score["index"] }}</p>
+            <p><em>Column index</em>: {{ score["index"] }}</p>
             {%- elif "name" in score -%}
-            <p>Column name in file header: {{ score["name"] }}
+            <p><em>Column name</em>: {{ score["name"] }}
             {%- endif -%}
             {%- if "destination" in score -%}
-            <p>Annotation destination: {{ score["destination"] }}
+            <p><em>Annotation destination</em>: {{ score["destination"] }}
             {%- endif -%}
-            <p>Score data type: {{ score["type"] }}
-            <p> Description: {{ score["desc"] }}
+            <p><em>Score data type</em>: {{ score["type"] }}
+            <p><em>Description</em>: {{ score["desc"] }}
             </div>
             {%- endfor %}
 

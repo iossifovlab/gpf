@@ -341,6 +341,7 @@ class GeneScoreCollection(
             <p>Gene score ID: {{ score["id"] }}</p>
             <p>Description: {{ score["desc"] }}
             </div>
+            {% endfor %}
             <h3>Histograms:</h2>
             {% for hist in data["histograms"] %}
             <div class="histogram">
@@ -349,7 +350,6 @@ class GeneScoreCollection(
             alt={{ hist["score"] }}
             title={{ hist["score"] }}>
             </div>
-            {% endfor %}
             {% endfor %}
             {% endblock %}
         """))
