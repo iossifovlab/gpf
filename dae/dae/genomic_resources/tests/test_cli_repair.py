@@ -150,7 +150,7 @@ def test_resource_repair_need_update_message(
         ("dae.genomic_resources.genomic_scores",
          logging.WARNING,
          "unable to load histogram file: "
-         "statistics/min_max_phastCons100way.yaml"),
+         "statistics/histogram_phastCons100way.yaml"),
     ]
 
 
@@ -184,7 +184,7 @@ def test_repo_repair_need_update_message(
         ("dae.genomic_resources.genomic_scores",
          logging.WARNING,
          "unable to load histogram file: "
-         "statistics/min_max_phastCons100way.yaml"),
+         "statistics/histogram_phastCons100way.yaml"),
 
     ]
 

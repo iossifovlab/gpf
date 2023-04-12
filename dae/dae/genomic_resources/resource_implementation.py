@@ -6,7 +6,6 @@ from dataclasses import dataclass
 
 from jinja2 import Template
 from cerberus import Validator
-from markdown2 import markdown
 
 from dae.task_graph.graph import Task
 from dae.utils.helpers import convert_size
@@ -145,13 +144,6 @@ class InfoImplementationMixin:
         """
         template_data = self._get_template_data()
 
-        config = self.config  # type: ignore
-        if "meta" in config:
-            meta = config["meta"]
-            if "description" in meta:
-                template_data["description"] = \
-                    markdown(str(meta["description"]))
-
         @dataclass
         class FileEntry:
             """Provides an entry into manifest object."""
@@ -170,10 +162,9 @@ class InfoImplementationMixin:
         """Construct the contents of the implementation's HTML info page."""
         template_data = self.get_template_data()
         return self.get_template().render(
-            resource_id=self.resource.resource_id,  # type: ignore
-            resource_type=self.resource.get_type(),  # type: ignore
+            resource=self.resource,  # type: ignore
             data=template_data,
-            base=resource_template
+            base=RESOURCE_TEMPLATE
         )
 
 
@@ -201,7 +192,7 @@ class ResourceConfigValidationMixin:
         return cast(dict, validator.document)
 
 
-resource_template = Template("""
+RESOURCE_TEMPLATE = Template("""
 <html>
 <head>
 <style>
@@ -219,24 +210,22 @@ h3,h4 {
 <h1>Resource</h1>
 <div>
 <table border="1">
-<tr><td><b>Id:</b></td><td>{{ resource_id }}</td></tr>
-<tr><td><b>Type:</b></td><td>{{ resource_type }}</td></tr>
+<tr><td><b>Id:</b></td><td>{{ resource.resource_id }}</td></tr>
+<tr><td><b>Type:</b></td><td>{{ resource.get_type() }}</td></tr>
 <tr><td><b>Description:</b></td>
     <td>
+        {% set description = resource.get_description() %}
         {{
-            data["description"] if data["description"] else "N/A"
+            description if description else "N/A"
         }}
     </td></tr>
 <tr><td><b>Labels:</b></td>
     <td>
-        {% if data["meta"] and data["meta"]["labels"] %}
         <ul>
-        {% for label, value in data["meta"]["labels"].items() %}
+        {% for label, value in resource.get_labels().items() %}
             <li>{{ label }}: {{ value }}</li>
         {% endfor %}
         </ul>
-        {% else %}
-        {% endif %}
     </td></tr>
 </table>
 </div>
@@ -257,7 +246,7 @@ N/A
     </tr>
 </thead>
 <tbody>
-    {%- for entry in data["resource_files"] recursive%}
+    {%- for entry in data["resource_files"] %}
     <tr>
         <td class="nowrap">
             <a href='{{entry.name}}'>{{entry.name}}</a>

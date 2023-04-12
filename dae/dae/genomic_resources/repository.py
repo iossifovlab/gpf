@@ -25,12 +25,13 @@ import enum
 import hashlib
 import copy
 
-from typing import Optional, Any, Generator, Union, Iterator
+from typing import Optional, Any, Generator, Union, Iterator, cast
 from dataclasses import dataclass, asdict
 
 import abc
 import yaml
 import pysam
+from markdown2 import markdown
 
 logger = logging.getLogger(__name__)
 
@@ -291,6 +292,22 @@ class GenomicResource:
     def get_config(self):
         """Return the resouce configuration."""
         return self.config
+
+    def get_description(self) -> Optional[str]:
+        config = self.get_config()
+        if "meta" in config:
+            meta = config["meta"]
+            if "description" in meta:
+                return cast(str, markdown(str(meta["description"])))
+        return None
+
+    def get_labels(self) -> Optional[dict]:
+        config: dict[str, Any] = self.get_config()
+        if config.get("meta"):
+            meta: dict[str, Any] = config["meta"]
+            if meta.get("labels"):
+                return cast(dict[str, Any], meta["labels"])
+        return {}
 
     def get_type(self):
         """Return resource type as defined in 'genomic_resource.yaml'."""
