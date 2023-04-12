@@ -462,6 +462,7 @@ class GenomicScore(
             {%- if data["histograms"][score_id] -%}
             <img
             src="{{data["statistics_dir"]}}/{{data["histograms"][score_id]}}"
+            width="200px"
             alt={{ score_id }}
             title={{ score_id }}>
             {%- else -%}

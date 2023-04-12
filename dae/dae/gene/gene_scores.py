@@ -333,6 +333,7 @@ class GeneScoreCollection(
             <div class="histogram">
             <h4>{{ hist["score"] }}</h1>
             <img src="{{ data["statistics_dir"] }}/{{ hist["img_file"] }}"
+            width="200px"
             alt={{ hist["score"] }}
             title={{ hist["score"] }}>
             </div>
