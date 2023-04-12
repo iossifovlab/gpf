@@ -2,7 +2,7 @@ import { ValidatorConstraint, ValidatorConstraintInterface } from 'class-validat
 
 @ValidatorConstraint({ name: 'customText', async: false })
 export class RegionsFilterValidator implements ValidatorConstraintInterface {
-  private static lineRegex = new RegExp('^[\\w\\d]+(:([0-9,]+)(?:\-([0-9,]+))?)?$', 'i');
+  private static lineRegex = new RegExp('chr([0-9]+):([0-9]+)(?:-([0-9]+))?', 'i');
 
   public validate(text: string): boolean {
     if (!text) {
@@ -10,7 +10,7 @@ export class RegionsFilterValidator implements ValidatorConstraintInterface {
     }
 
     let valid = true;
-    const lines = text.split('\n')
+    const lines = text.split(/[\n,]/)
       .map(t => t.trim())
       .filter(t => Boolean(t));
 
@@ -28,6 +28,10 @@ export class RegionsFilterValidator implements ValidatorConstraintInterface {
   private isValid(line: string): boolean {
     const match = line.match(RegionsFilterValidator.lineRegex);
     if (match === null) {
+      return false;
+    }
+
+    if (match[0] !== line) {
       return false;
     }
 
