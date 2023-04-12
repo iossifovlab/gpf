@@ -455,7 +455,7 @@ class GeneScoreCollection(
             f"/{GeneScoreStatistics.get_histogram_image_file(score_id)}",
             mode="wb"
         ) as outfile:
-            histogram.write_image(outfile)
+            histogram.plot(outfile)
         return histogram
 
 
