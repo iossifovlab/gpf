@@ -421,14 +421,46 @@ class GenomicScore(
             {% extends base %}
             {% block content %}
             <h1>Scores</h1>
+            <table border="1">
+            <tr>
+            <td>id</td>
+            <td>type</td>
+            <td>default annotation</td>
+            <td>description</td>
+            <td>histogram</td>
+            <td>range</td>
+            </tr>
 
             {%- for score_id, score in data["scores"].items() -%}
-            <div class="score-definition">
-            <h4>{{ score_id }}</h4>
-            <p><em>data type</em>: {{ score.type }}
-            <p><em>description</em>: {{ score.desc }}
-
-            </div>
+            <tr>
+            <td>{{ score_id }}</td>
+            <td>{{ score.type }}</td>
+            <td>
+            {%- if data["default_annotation"][score_id] -%}
+            {{ data["default_annotation"][score_id] }}
+            {%- else -%}
+            </br>
+            {%- endif -%}
+            </td>
+            <td>{{ score.desc}}</td>
+            <td>
+            {%- if data["histograms"][score_id] -%}
+            <img
+            src="{{data["statistics_dir"]}}/{{data["histograms"][score_id]}}"
+            alt={{ score_id }}
+            title={{ score_id }}>
+            {%- else -%}
+            NO HISTOGRAM
+            {%- endif -%}
+            </td>
+            <td>
+            {%- if data["ranges"][score_id] -%}
+            ({{data["ranges"][score_id].min}},{{data["ranges"][score_id].max}})
+            {%- else -%}
+            NO RANGE
+            {%- endif -%}
+            </td>
+            </tr>
             {%- endfor %}
             {% endblock %}
             """))
@@ -560,40 +592,38 @@ class GenomicScore(
         # """))
 
     def _get_template_data(self):
-        return {"scores": self.score_definitions,
-                "default_annotation": self.get_default_annotation()}
+        default_annotation = dict(
+            (score_id, None) for score_id in self.score_definitions)
+        histograms = dict(
+            (score_id, None) for score_id in self.score_definitions)
+        ranges = dict(
+            (score_id, None) for score_id in self.score_definitions)
 
-        # info = copy.deepcopy(self.config)
+        for attribute in self.get_default_annotation()["attributes"]:
+            score_id = attribute["source"]
+            destination = attribute.get("destination")
+            if destination:
+                default_annotation[score_id] = destination
+            else:
+                default_annotation[score_id] = score_id
 
-        # statistics = self.get_statistics()
+        statistics_dir = ResourceStatistics.get_statistics_folder()
 
-        # info["statistics_dir"] = statistics.get_statistics_folder()
+        statistics = self.get_statistics()
+        if statistics is not None:
+            for score_id in statistics.score_histograms:
+                hist_file = statistics.get_histogram_image_file(score_id)
+                histograms[score_id] = hist_file
+            for score_id, min_max in statistics.score_min_maxes.items():
+                ranges[score_id] = min_max
 
-        # if "histograms" in info:
-        #     for hist_config in info["histograms"]:
-        #         hist_config["img_file"] = statistics.get_histogram_image_file(
-        #             hist_config["score"]
-        #         )
-
-        # if "scores" in info:
-        #     for score_config in info["scores"]:
-        #         score_id = score_config["id"]
-        #         default_annotation = self.get_default_annotation()
-        #         for annotation_definition in default_annotation["attributes"]:
-        #             if annotation_definition["source"] == score_id:
-        #                 score_config["destination"] = \
-        #                     annotation_definition.get(
-        #                     "destination", annotation_definition["source"])
-
-        # info["min_max"] = []
-        # for score_id, min_max in statistics.score_min_maxes.items():
-        #     info["min_max"].append({
-        #         "score_id": score_id,
-        #         "min": min_max.min,
-        #         "max": min_max.max
-        #     })
-
-        # return info
+        return {
+            "scores": self.score_definitions,
+            "default_annotation": default_annotation,
+            "histograms": histograms,
+            "ranges": ranges,
+            "statistics_dir": statistics_dir,
+        }
 
     def get_info(self):
         return InfoImplementationMixin.get_info(self)

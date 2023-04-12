@@ -142,15 +142,15 @@ class InfoImplementationMixin:
         """
         template_data = self._get_template_data()
 
-        config = self.config
+        config = self.config  # type: ignore
         if "meta" in config:
             meta = config["meta"]
             if "description" in meta:
                 template_data["description"] = \
                     markdown(str(meta["description"]))
 
-        template_data["resource_files"] = self.resource.get_manifest().entries
-
+        template_data["resource_files"] = \
+            self.resource.get_manifest().entries  # type: ignore
         return template_data
 
     def get_info(self) -> str:
@@ -158,7 +158,7 @@ class InfoImplementationMixin:
         template_data = self.get_template_data()
         return self.get_template().render(
             resource_id=self.resource.resource_id,  # type: ignore
-            resource_type=self.resource.get_type(),
+            resource_type=self.resource.get_type(),  # type: ignore
             data=template_data,
             base=resource_template
         )
