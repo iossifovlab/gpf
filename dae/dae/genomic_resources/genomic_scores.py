@@ -130,7 +130,7 @@ class GenomicScoreStatistics(
         genomic_score = build_score_from_resource(genomic_resource)
         min_maxes = {}
         histograms = {}
-        for score_id in genomic_score.score_definitions:
+        for score_id in genomic_score.get_config_histograms():
             min_max_filepath = os.path.join(
                 GenomicScoreStatistics.get_statistics_folder(),
                 GenomicScoreStatistics.get_min_max_file(score_id)
@@ -144,7 +144,7 @@ class GenomicScoreStatistics(
                 logger.warning(
                     "unable to load min/max statistics file: %s",
                     min_max_filepath)
-        for hist_config in genomic_score.get_config_histograms():
+        for hist_config in genomic_score.get_config_histograms().values():
             score_id = hist_config["score"]
 
             histogram_filepath = os.path.join(
@@ -369,7 +369,7 @@ class GenomicScore(
         hist_config_overwrite = self.get_config().get("histograms", {})
         for hist_config in hist_config_overwrite:
             result[hist_config["score"]] = copy.deepcopy(hist_config)
-        return list(result.values())
+        return result
 
     def get_resource_id(self):
         return self.config["id"]
@@ -662,7 +662,7 @@ class GenomicScore(
     @ staticmethod
     def _do_min_max(resource, chrom, start, end):
         impl = build_score_from_resource(resource)
-        score_ids = impl.get_all_scores()
+        score_ids = list(impl.get_config_histograms())
         res = {
             scr_id: MinMaxValue(scr_id, None, None)
             for scr_id in score_ids
@@ -738,7 +738,7 @@ class GenomicScore(
     @ staticmethod
     def _do_histogram(resource, chrom, start, end, save_minmax_task):
         impl = build_score_from_resource(resource)
-        hist_configs = impl.get_config_histograms()
+        hist_configs = list(impl.get_config_histograms().values())
         if not hist_configs:
             return {}
         res = {}
@@ -762,7 +762,7 @@ class GenomicScore(
     @ staticmethod
     def _merge_histograms(resource, *calculated_histograms):
         impl = build_score_from_resource(resource)
-        hist_configs = impl.get_config_histograms()
+        hist_configs = list(impl.get_config_histograms().values())
         if not hist_configs:
             return {}
         res: dict = {}
@@ -854,7 +854,7 @@ class GenomicScore(
         return json.dumps({
             "config": {
                 "scores": config.get("scores", {}),
-                "histograms": self.get_config_histograms(),
+                "histograms": list(self.get_config_histograms().values()),
                 "table": config["table"]
             },
             "score_file": manifest[score_filename].md5
