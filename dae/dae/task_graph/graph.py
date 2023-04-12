@@ -1,8 +1,10 @@
 from __future__ import annotations
-
+import logging
 from copy import copy
 from dataclasses import dataclass
 from typing import Any, Callable, Iterable, Optional
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(eq=False, frozen=True)
@@ -41,6 +43,11 @@ class TaskGraph:
         :param input_files: Files that were used to build the graph itself
         :return TaskNode: The newly created task node in the graph
         """
+        if len(task_id) > 200:
+            logger.warning("task id is too long %s: %s", len(task_id), task_id)
+            logger.warning("truncating task id to 200 symbols")
+            task_id = task_id[:200]
+
         if task_id in self._task_ids:
             raise ValueError(f"Task with id='{task_id}' already in graph")
 

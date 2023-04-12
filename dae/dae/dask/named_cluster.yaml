@@ -39,10 +39,12 @@ dae_named_cluster:
           dashboard_address: :8898
         cores: 1
         memory: 4GB
-        walltime: "96:00:00"
+        walltime: "72:00:00"
         log_directory: ./.sge_worker_logs
         job_extra_directives:
         - "-V"
+        - "-l h_rss=4G"
+        # - "-l h_vmem=4G"
     - name: sge_large
       type: sge
       adapt_params:
@@ -53,10 +55,12 @@ dae_named_cluster:
           dashboard_address: :8898
         cores: 1
         memory: 8GB
-        walltime: "96:00:00"
+        walltime: "72:00:00"
         log_directory: ./.sge_worker_logs
         job_extra_directives:
         - "-V"
+        - "-l h_rss=8G"
+        # - "-l h_vmem=8G"
     - name: kubernetes
       type: kubgernetes
       params:
