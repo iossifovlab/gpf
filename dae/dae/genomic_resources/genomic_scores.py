@@ -477,6 +477,7 @@ class GenomicScore(
             </td>
             </tr>
             {%- endfor %}
+            </table>
             {% endblock %}
             """))
 
