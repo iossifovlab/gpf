@@ -21,7 +21,7 @@ describe('User management tests for reset password in Users', () => {
     cy.request('GET', 'http://mailhog:8025/api/v2/search?kind=to&query=user_reset_password@email.com').then(
       (response) => {
         const lines: string[] = (response.body.items[0].Content.Body as string).split('\r\n');
-        const url = lines[1].replace(' http://gpf/gpf/', ''); // remove when commit ??
+        const url = lines[1].replace(' http://gpf/gpf/', '');
         cy.visit(url);
         page.newPasswordInput.type('XC^ZF*TZXuUChFsv');
         page.repeatNewPasswordInput.type('XC^ZF*TZXuUChFsv');
@@ -65,7 +65,7 @@ describe('User management tests for reset password in Users', () => {
     cy.request('GET', 'http://mailhog:8025/api/v2/search?kind=to&query=forgotten_password@email.com').then(
       (response) => {
         const lines: string[] = (response.body.items[0].Content.Body as string).split('\r\n');
-        const url = lines[1].replace(' http://gpf/gpf/', 'http://172.20.0.6/gpf/'); // remove when commit
+        const url = lines[1].replace(' http://gpf/gpf/', '');
         cy.visit(url);
         page.newPasswordInput.type('XC^ZF*TZXuUChFsv');
         page.repeatNewPasswordInput.type('XC^ZF*TZXuUChFsv');
