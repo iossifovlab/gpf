@@ -470,10 +470,13 @@ class GenomicScore(
             {%- endif -%}
             </td>
             <td>
-            {%- if data["ranges"][score_id] -%}
-            ({{data["ranges"][score_id].min}},{{data["ranges"][score_id].max}})
+            {% set min_max = data["ranges"][score_id] %}
+            {%- if min_max is not none -%}
+            {%- if min_max.min is not none and min_max.max is not none -%}
+            ({{"%0.2f" % min_max.min}}, {{"%0.2f" % min_max.max}})
             {%- else -%}
             NO RANGE
+            {%- endif -%}
             {%- endif -%}
             </td>
             </tr>
