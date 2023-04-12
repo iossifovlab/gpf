@@ -143,8 +143,14 @@ def test_resource_repair_need_update_message(
          "No hash stored for <one>, need update"),
         ("grr_manage", logging.INFO,
          "Statistics of <one> need update"),
-        ("dae.genomic_resources.genomic_scores", logging.ERROR,
-         "Couldn't load statistics of one"),
+        ("dae.genomic_resources.genomic_scores",
+         logging.WARNING,
+         "unable to load min/max statistics file: "
+         "statistics/min_max_phastCons100way.yaml"),
+        ("dae.genomic_resources.genomic_scores",
+         logging.WARNING,
+         "unable to load histogram file: "
+         "statistics/min_max_phastCons100way.yaml"),
     ]
 
 
@@ -172,8 +178,14 @@ def test_repo_repair_need_update_message(
          logging.INFO,
          "Statistics of <one> need update"),
         ("dae.genomic_resources.genomic_scores",
-         logging.ERROR,
-         "Couldn't load statistics of one"),
+         logging.WARNING,
+         "unable to load min/max statistics file: "
+         "statistics/min_max_phastCons100way.yaml"),
+        ("dae.genomic_resources.genomic_scores",
+         logging.WARNING,
+         "unable to load histogram file: "
+         "statistics/min_max_phastCons100way.yaml"),
+
     ]
 
 

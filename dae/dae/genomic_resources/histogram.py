@@ -44,6 +44,13 @@ class Histogram(Statistic):
             raise ValueError(
                 "Invalid histogram configuration, missing x_min_log"
             )
+        if self.x_min is None or self.x_max is None:
+            logger.error(
+                "unexpected min/max value for %s: [%s, %s]",
+                self.score_id, self.x_min, self.x_max)
+            raise ValueError(
+                f"unexpected min/max value for {self.score_id}: "
+                f"[{self.x_min}, {self.x_max}]")
 
         if self.bins is None and self.bars is None:
             if self.x_scale == "linear":
@@ -72,6 +79,13 @@ class Histogram(Statistic):
 
         if self.y_scale not in ("linear", "log"):
             raise ValueError(f"unexpected yscale {self.y_scale}")
+
+    @staticmethod
+    def default_config(score_id: str):
+        return {
+            "score": score_id,
+            "bins": 100,
+        }
 
     def merge(self, other: Histogram) -> None:
         """Merge two histograms."""

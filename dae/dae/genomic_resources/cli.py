@@ -462,7 +462,6 @@ def _collect_impl_stats_tasks(  # pylint: disable=too-many-arguments
 def _stats_need_rebuild(proto, impl):
     """Check if an implementation's stats need rebuilding."""
     current_hash = impl.calc_statistics_hash()
-
     stored_hash = _read_stats_hash(proto, impl)
 
     if stored_hash is None:

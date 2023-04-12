@@ -127,36 +127,40 @@ class GenomicScoreStatistics(
 
     @staticmethod
     def build_statistics(genomic_resource):
+        genomic_score = build_score_from_resource(genomic_resource)
         min_maxes = {}
         histograms = {}
-        config = genomic_resource.get_config()
-        if "histograms" not in config:
-            return GenomicScoreStatistics(genomic_resource, {}, {})
-        try:
-            for hist_config in config["histograms"]:
-                score_id = hist_config["score"]
-                min_max_filepath = os.path.join(
-                    GenomicScoreStatistics.get_statistics_folder(),
-                    GenomicScoreStatistics.get_min_max_file(score_id)
-                )
+        for score_id in genomic_score.score_definitions:
+            min_max_filepath = os.path.join(
+                GenomicScoreStatistics.get_statistics_folder(),
+                GenomicScoreStatistics.get_min_max_file(score_id)
+            )
+            try:
                 with genomic_resource.open_raw_file(
                         min_max_filepath, mode="r") as infile:
                     min_max = MinMaxValue.deserialize(infile.read())
                     min_maxes[score_id] = min_max
+            except FileNotFoundError:
+                logger.warning(
+                    "unable to load min/max statistics file: %s",
+                    min_max_filepath)
+        for hist_config in genomic_score.get_config_histograms():
+            score_id = hist_config["score"]
 
-                histogram_filepath = os.path.join(
-                    GenomicScoreStatistics.get_statistics_folder(),
-                    GenomicScoreStatistics.get_histogram_file(score_id)
-                )
+            histogram_filepath = os.path.join(
+                GenomicScoreStatistics.get_statistics_folder(),
+                GenomicScoreStatistics.get_histogram_file(score_id)
+            )
+            try:
                 with genomic_resource.open_raw_file(
                         histogram_filepath, mode="r") as infile:
                     histogram = Histogram.deserialize(infile.read())
                     histograms[score_id] = histogram
-        except FileNotFoundError:
-            logger.exception(
-                "Couldn't load statistics of %s", genomic_resource.resource_id
-            )
-            return GenomicScoreStatistics(genomic_resource, {}, {})
+            except FileNotFoundError:
+                logger.warning(
+                    "unable to load histogram file: %s",
+                    min_max_filepath)
+
         return GenomicScoreStatistics(genomic_resource, min_maxes, histograms)
 
 
@@ -356,6 +360,17 @@ class GenomicScore(
         assert self.table is not None
         return self.table.header
 
+    def get_config_histograms(self):
+        """Collect all configurations of histograms for the genomic score."""
+        result = {}
+        for score_id, score in self.score_definitions.items():
+            if score.type in {"int", "float"}:
+                result[score_id] = Histogram.default_config(score_id)
+        hist_config_overwrite = self.get_config().get("histograms", {})
+        for hist_config in hist_config_overwrite:
+            result[hist_config["score"]] = copy.deepcopy(hist_config)
+        return list(result.values())
+
     def get_resource_id(self):
         return self.config["id"]
 
@@ -464,132 +479,6 @@ class GenomicScore(
             {%- endfor %}
             {% endblock %}
             """))
-
-        #     """
-        #     <!--
-        #     <h1>TO REMOVE</h1>
-
-        #     <h3>Score file:</h3>
-        #     <a href="{{ data["table"]["filename"] }}">
-        #     {{ data["table"]["filename"] }}
-        #     </a>
-        #     <p>
-        #     File format: {{ data["table"]["format"] }}
-        #     </p>
-
-        #     {%- if data["table"]["chrom"] -%}
-        #     {%- if data["table"]["chrom"]["index"] -%}
-        #     <p>
-        #     <em>chrom column index:</em>
-        #     {{ data["table"]["chrom"]["index"] }}
-        #     </p>
-        #     {%- endif %}
-        #     {%- if data["table"]["chrom"]["name"] -%}
-        #     <p>
-        #     <em>chrom column name:</em>
-        #     {{ data["table"]["chrom"]["name"] }}
-        #     </p>
-        #     {%- endif -%}
-        #     {%- endif %}
-
-        #     {%- if data["table"]["pos_begin"] -%}
-        #     {%- if data["table"]["pos_begin"]["index"] -%}
-        #     <p>
-        #     <em>pos_begin column index:</em>
-        #     {{ data["table"]["pos_begin"]["index"] }}
-        #     </p>
-        #     {%- endif %}
-        #     {%- if data["table"]["pos_begin"]["name"] -%}
-        #     <p>
-        #     <em>pos_begin column name:</em>
-        #     {{ data["table"]["pos_begin"]["name"] }}
-        #     </p>
-        #     {%- endif -%}
-        #     {%- endif %}
-
-        #     {%- if data["table"]["pos_end"] -%}
-        #     {%- if data["table"]["pos_end"]["index"] -%}
-        #     <p>
-        #     <em>pos_end column index:</em>
-        #     {{ data["table"]["pos_end"]["index"] }}
-        #     </p>
-        #     {%- endif %}
-        #     {%- if data["table"]["pos_end"]["name"] -%}
-        #     <p>
-        #     <em>pos_end column name:</em>
-        #     {{ data["table"]["pos_end"]["name"] }}
-        #     </p>
-        #     {%- endif -%}
-        #     {%- endif %}
-
-        #     {%- if data["table"]["reference"] -%}
-        #     {%- if data["table"]["reference"]["index"] -%}
-        #     <p>
-        #     <em>reference column index:</em>
-        #     {{ data["table"]["reference"]["index"] }}
-        #     </p>
-        #     {%- endif -%}
-        #     {%- if data["table"]["reference"]["name"] -%}
-        #     <p>
-        #     <em>reference column name:</em>
-        #     {{ data["table"]["reference"]["name"] }}
-        #     </p>
-        #     {%- endif -%}
-        #     {%- endif %}
-
-        #     {%- if data["table"]["alternative"] -%}
-        #     {%- if data["table"]["alternative"]["index"] -%}
-        #     <p>
-        #     <em>alternative column index:</em>
-        #     {{ data["table"]["alternative"]["index"] }}
-        #     </p>
-        #     {%- endif -%}
-        #     {%- if data["table"]["alternative"]["name"] -%}
-        #     <p>
-        #     <em>alternative column name:</em>
-        #     {{ data["table"]["alternative"]["name"] }}
-        #     </p>
-        #     {%- endif -%}
-        #     {%- endif %}
-
-        #     <h3>Score definitions:</h3>
-        #     {%- for score in data["scores"] -%}
-        #     <div class="score-definition">
-        #     <h4>{{ score["id"] }}</h4>
-        #     {%- if "index" in score -%}
-        #     <p><em>Column index</em>: {{ score["index"] }}</p>
-        #     {%- elif "name" in score -%}
-        #     <p><em>Column name</em>: {{ score["name"] }}
-        #     {%- endif -%}
-        #     {%- if "destination" in score -%}
-        #     <p><em>Annotation destination</em>: {{ score["destination"] }}
-        #     {%- endif -%}
-        #     <p><em>Score data type</em>: {{ score["type"] }}
-        #     <p><em>Description</em>: {{ score["desc"] }}
-        #     </div>
-        #     {%- endfor %}
-
-        #     <h3>Min max values:</h3>
-        #     {%- for min_max in data["min_max"] %}
-        #     <div class="minmax">
-        #     <h4>{{ min_max["score_id"] }}</h4>
-        #     <p>Min: {{ min_max["min"] }}</p>
-        #     <p>Max: {{ min_max["max"] }}</p>
-        #     </div>
-        #     {%- endfor %}
-
-        #     <h3>Histograms:</h3>
-        #     {% for hist in data["histograms"] %}
-        #     <div class="histogram">
-        #     <h4>{{ hist["score"] }}</h4>
-        #     <img src="{{ data["statistics_dir"] }}/{{ hist["img_file"] }}"
-        #     alt={{ hist["score"] }}
-        #     title={{ hist["score"] }}>
-        #     </div>
-        #     {% endfor %}
-        #     -->
-
-        # """))
 
     def _get_template_data(self):
         default_annotation = dict(
@@ -848,9 +737,9 @@ class GenomicScore(
     @ staticmethod
     def _do_histogram(resource, chrom, start, end, save_minmax_task):
         impl = build_score_from_resource(resource)
-        if "histograms" not in impl.get_config():
+        hist_configs = impl.get_config_histograms()
+        if not hist_configs:
             return {}
-        hist_configs = impl.get_config()["histograms"]
         res = {}
         for hist_config in hist_configs:
             score_id = hist_config["score"]
@@ -858,7 +747,10 @@ class GenomicScore(
                 hist_config["min"] = save_minmax_task[score_id].min
             if hist_config.get("max") is None:
                 hist_config["max"] = save_minmax_task[score_id].max
-            res[score_id] = Histogram(hist_config)
+            try:
+                res[score_id] = Histogram(hist_config)
+            except ValueError:
+                logger.warning("skipping histogram for %s", score_id)
         score_ids = list(res.keys())
         with impl.open():
             for record in impl.fetch_region(chrom, start, end, score_ids):
@@ -868,20 +760,28 @@ class GenomicScore(
 
     @ staticmethod
     def _merge_histograms(resource, *calculated_histograms):
-        if "histograms" not in resource.config:
+        impl = build_score_from_resource(resource)
+        hist_configs = impl.get_config_histograms()
+        if not hist_configs:
             return {}
-        hist_configs = resource.config["histograms"]
         res: dict = {}
         for hist_config in hist_configs:
             res[hist_config["score"]] = None
         score_ids = list(res.keys())
 
+        skipped_score_histograms = set()
         for score_id in score_ids:
             for histogram_region in calculated_histograms:
+                if score_id not in histogram_region:
+                    skipped_score_histograms.add(score_id)
+                    continue
                 if res[score_id] is None:
                     res[score_id] = histogram_region[score_id]
                 else:
                     res[score_id].merge(histogram_region[score_id])
+        if skipped_score_histograms:
+            logger.warning(
+                "skipped merging histograms: %s", skipped_score_histograms)
         return res
 
     @ staticmethod
@@ -953,7 +853,7 @@ class GenomicScore(
         return json.dumps({
             "config": {
                 "scores": config.get("scores", {}),
-                "histograms": config.get("histograms", {}),
+                "histograms": self.get_config_histograms(),
                 "table": config["table"]
             },
             "score_file": manifest[score_filename].md5
