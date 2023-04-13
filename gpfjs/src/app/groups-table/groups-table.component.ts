@@ -46,10 +46,10 @@ export class GroupsTableComponent {
   public addDataset(group: UserGroup, datasetEvent: Item): void {
     this.usersGroupsService.grantPermissionToDataset(group.name, datasetEvent.id).pipe(
       mergeMap(() => this.usersGroupsService.getGroup(group.name))
-    ).subscribe(newGroup => {
-      group.datasets = newGroup.datasets;
+    ).subscribe(updatedGroup => {
+      group.datasets = updatedGroup.datasets;
       // Helps with dataset deletion if the id is not yet set
-      group.id = newGroup.id;
+      group.id = updatedGroup.id;
     });
   }
 
