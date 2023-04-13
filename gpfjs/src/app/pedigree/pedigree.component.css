@@ -10,15 +10,17 @@
 
 #family-ids-list-wrapper {
   display: flex;
-  height: 100px;
+  height: 105px;
   justify-content: center;
   margin: auto;
+  padding: 0 5px 5px 0;
 }
 
 #family-ids-list {
   max-height: 100px;
   height: 100px;
   overflow: auto;
+  overflow-x: hidden;
   overflow-wrap: break-word;
   padding: 0 8px 24px;
   max-width: 520px;
