@@ -42,6 +42,15 @@ class UsersGroupsServiceMock {
   public grantPermissionToDataset(groupName: string, datasetID: string): Observable<null> {
     return of(null);
   }
+
+  public getGroup(name: string): Observable<UserGroup> {
+    return of(new UserGroup(
+      groupMock.id,
+      name,
+      groupMock.users,
+      groupMock.datasets.concat({datasetId: 'datasetId7', datasetName: 'dataset7'}),
+    ));
+  }
 }
 
 class UsersServiceMock {

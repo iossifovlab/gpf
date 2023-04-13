@@ -5,7 +5,7 @@ import { Item } from 'app/item-add-menu/item-add-menu';
 import { UsersGroupsService } from 'app/users-groups/users-groups.service';
 import { User } from 'app/users/users';
 import { UsersService } from 'app/users/users.service';
-import { map, Observable } from 'rxjs';
+import { map, mergeMap, Observable } from 'rxjs';
 
 import { UserGroup } from '../users-groups/users-groups';
 
@@ -44,11 +44,12 @@ export class GroupsTableComponent {
   }
 
   public addDataset(group: UserGroup, datasetEvent: Item): void {
-    this.usersGroupsService.grantPermissionToDataset(group.name, datasetEvent.id).subscribe(() => {
-      group.datasets.push({
-        datasetName: datasetEvent.name,
-        datasetId: datasetEvent.id
-      });
+    this.usersGroupsService.grantPermissionToDataset(group.name, datasetEvent.id).pipe(
+      mergeMap(() => this.usersGroupsService.getGroup(group.name))
+    ).subscribe(updatedGroup => {
+      group.datasets = updatedGroup.datasets;
+      // Helps with dataset deletion if the id is not yet set
+      group.id = updatedGroup.id;
     });
   }
 

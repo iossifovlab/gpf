@@ -32,10 +32,10 @@
           <div [attr.id]="dataset.name + '-users-list-cell'">
             <div
               class="item"
-              [title]="user.name + ' ' + user.email"
+              [title]="user.name ? user.name + ' ' + user.email : user.email"
               *ngFor="let user of dataset.users"
               [attr.id]="user.email + '-list-item'"
-              >{{ user.name + ' ' + user.email }}</div
+              >{{ user.name ? user.name + ' ' + user.email : user.email }}</div
             >
           </div>
         </div>
