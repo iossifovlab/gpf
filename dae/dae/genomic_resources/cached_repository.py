@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 import logging
 
-from typing import Optional, Generator, cast
+from typing import Optional, Generator, cast, Tuple
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from .repository import GenomicResource, \
@@ -72,13 +72,14 @@ class CachingProtocol(ReadOnlyRepositoryProtocol):
                 f"={remote_resource.get_version_str()}"),
             self)
 
-    def _refresh_resource_file(
-            self, resource: GenomicResource, filename: str) -> None:
+    def refresh_cached_resource_file(
+            self, resource: GenomicResource, filename: str) -> Tuple[str, str]:
+        """Refresh a resource file in cache if neccessary."""
         assert resource.proto == self
 
         if filename.endswith(".lockfile"):
             # Ignore lockfiles
-            return
+            return ("", "")
 
         remote_resource = self.remote_protocol.get_resource(
             resource.resource_id,
@@ -86,9 +87,9 @@ class CachingProtocol(ReadOnlyRepositoryProtocol):
 
         # Lock the resource file to avoid caching it simultaneously
         with self.local_protocol.obtain_resource_file_lock(resource, filename):
-            logger.info("Caching resource file: %s", filename)
             self.local_protocol.update_resource_file(
                 remote_resource, resource, filename)
+        return (resource.resource_id, filename)
 
     def open_raw_file(self, resource, filename, mode="rt", **kwargs):
         if "w" in mode:
@@ -96,40 +97,36 @@ class CachingProtocol(ReadOnlyRepositoryProtocol):
                 f"Read-Only caching protocol {self.get_id()} trying to open "
                 f"{filename} for writing")
 
-        self._refresh_resource_file(resource, filename)
+        self.refresh_cached_resource_file(resource, filename)
         return self.local_protocol.open_raw_file(
             resource, filename, mode, **kwargs)
 
     def open_tabix_file(self, resource, filename, index_filename=None):
-        self._refresh_resource_file(resource, filename)
+        self.refresh_cached_resource_file(resource, filename)
         if index_filename is None:
             index_filename = f"{filename}.tbi"
-        self._refresh_resource_file(resource, index_filename)
+        self.refresh_cached_resource_file(resource, index_filename)
 
         return self.local_protocol.open_tabix_file(
             resource, filename, index_filename)
 
     def open_vcf_file(self, resource, filename, index_filename=None):
-        self._refresh_resource_file(resource, filename)
+        self.refresh_cached_resource_file(resource, filename)
         if index_filename is None:
             index_filename = f"{filename}.tbi"
-        self._refresh_resource_file(resource, index_filename)
+        self.refresh_cached_resource_file(resource, index_filename)
 
         return self.local_protocol.open_vcf_file(
             resource, filename, index_filename)
 
     def file_exists(self, resource, filename) -> bool:
-        self._refresh_resource_file(resource, filename)
+        self.refresh_cached_resource_file(resource, filename)
 
         return self.local_protocol.file_exists(resource, filename)
 
     def load_manifest(self, resource: GenomicResource) -> Manifest:
-        self._refresh_resource_file(resource, GR_CONF_FILE_NAME)
+        self.refresh_cached_resource_file(resource, GR_CONF_FILE_NAME)
         return self.local_protocol.load_manifest(resource)
-
-    def cache_resource(self, resource, resource_files) -> None:
-        logger.info("Caching resource: %s", resource.get_id())
-        self.local_protocol.update_resource(resource, resource_files)
 
 
 class GenomicResourceCachedRepo(GenomicResourceRepo):
@@ -246,18 +243,29 @@ class GenomicResourceCachedRepo(GenomicResourceRepo):
             files_to_cache = resource_files.get(rem_resource.get_id())
             if files_to_cache is None:
                 continue
-            for index, res_file in enumerate(files_to_cache):
-                logger.info("Copying: %s, %d file of %d",
-                            res_file, index + 1, len(files_to_cache))
+            for res_file in files_to_cache:
+                logger.info(
+                    "request to cache resource file: (%s, %s)",
+                    rem_resource.resource_id, res_file)
                 cached_proto = self._get_or_create_cache_proto(
                     rem_resource.proto)
+                cached_resource = cached_proto.get_resource(
+                    rem_resource.resource_id)
                 futures.append(
                     executor.submit(
-                        cached_proto.cache_resource,
-                        rem_resource,
-                        {res_file, }
+                        cached_proto.refresh_cached_resource_file,
+                        cached_resource,
+                        res_file,
                     )
                 )
+        total_files = len(futures)
+        logger.info("caching %s files", total_files)
+        count = 0
         for future in as_completed(futures):
-            future.result()
+            resource_id, filename = future.result()
+            count += 1
+            logger.info(
+                "ready %s files of %s (%s: %s)", count, total_files,
+                resource_id, filename)
+
         executor.shutdown()

@@ -623,6 +623,10 @@ class ReadWriteRepositoryProtocol(ReadOnlyRepositoryProtocol):
 
     def save_manifest(self, resource, manifest: Manifest):
         """Save manifest into genomic resource's directory."""
+        logger.debug(
+            "save manifest of resource %s from %s", resource.resource_id,
+            self.proto_id)
+
         with self.open_raw_file(
                 resource, GR_MANIFEST_FILE_NAME, "wt") as outfile:
             yaml.dump(manifest.to_manifest_entries(), outfile)
@@ -791,8 +795,9 @@ class ReadWriteRepositoryProtocol(ReadOnlyRepositoryProtocol):
         for file in files_to_copy:
             self.update_resource_file(remote_resource, local_resource, file)
 
-        self.save_manifest(local_resource, remote_resource.get_manifest())
-        self.invalidate()
+        if local_manifest != remote_manifest:
+            self.save_manifest(local_resource, remote_resource.get_manifest())
+            self.invalidate()
 
         return self.get_resource(
             resource_id=remote_resource.resource_id,

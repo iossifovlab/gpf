@@ -433,7 +433,9 @@ class FsspecReadWriteProtocol(
             filename: str) -> Optional[ResourceFileState]:
         """Copy a resource file into repository."""
         assert dest_resource.resource_id == remote_resource.resource_id
-
+        logger.debug(
+            "copying resource file %s: %s from %s", filename,
+            remote_resource.resource_id, remote_resource.proto.proto_id)
         remote_manifest = remote_resource.get_manifest()
         if filename not in remote_manifest:
             self.delete_resource_file(dest_resource, filename)
@@ -514,7 +516,6 @@ class FsspecReadWriteProtocol(
         if filename not in remote_manifest:
             self.delete_resource_file(dest_resource, filename)
             return None
-
         manifest_entry = remote_manifest[filename]
         if local_state.md5 != manifest_entry.md5:
             return self.copy_resource_file(

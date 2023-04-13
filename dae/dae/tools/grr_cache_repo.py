@@ -34,18 +34,18 @@ def cli_cache_repo(argv=None):
 
     parser = argparse.ArgumentParser(description=description)
     parser.add_argument(
-        "--definition", default=None, help="Repository definition file"
+        "--grr", "-g", default=None, help="Repository definition file"
     )
     parser.add_argument(
         "--jobs", "-j", help="Number of jobs running in parallel",
         default=4, type=int,
     )
     parser.add_argument(
-        "--instance", default=None,
+        "--instance", "-i", default=None,
         help="gpf_instance.yaml to use for selective cache"
     )
     parser.add_argument(
-        "--annotation", default=None,
+        "--annotation", "-a", default=None,
         help="annotation.yaml to use for selective cache"
     )
     VerbosityConfiguration.set_argumnets(parser)
@@ -54,8 +54,8 @@ def cli_cache_repo(argv=None):
     VerbosityConfiguration.set(args)
 
     start = time.time()
-    if args.definition is not None:
-        definition = load_definition_file(args.definition)
+    if args.grr is not None:
+        definition = load_definition_file(args.grr)
     else:
         definition = get_default_grr_definition()
 

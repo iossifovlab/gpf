@@ -16,7 +16,7 @@ def test_cli_cache_instance(mocker, fixture_path, temp_cache_dir):
     mocked.return_value = definition
 
     cli_cache_repo([
-        "--definition",
+        "--grr",
         "blank",
         "--instance",
         fixture_path("gpf_instance.yaml")
@@ -59,7 +59,7 @@ def test_cli_cache_annotation(mocker, fixture_path, temp_cache_dir):
     mocked.return_value = definition
 
     cli_cache_repo([
-        "--definition",
+        "--grr",
         "blank",
         "--annotation",
         fixture_path("annotation.yaml")
