@@ -12,6 +12,8 @@ from pysam import VariantFile, TabixFile, \
 
 from dae.annotation.context import CLIAnnotationContext
 from dae.annotation.annotatable import VCFAllele
+from dae.annotation.annotation_factory import build_annotation_pipeline
+
 from dae.utils.verbosity_configuration import VerbosityConfiguration
 from dae.utils.fs_utils import tabix_index_filename
 from dae.genomic_resources.genomic_context import get_genomic_context
@@ -61,8 +63,12 @@ def update_header(variant_file, pipeline):
         header.info.add(attribute, "A", "String", description)
 
 
-def annotate(input_file, region, pipeline, out_file_path):
+def annotate(
+        input_file, region, pipeline_config, grr_definition, out_file_path):
     """Annotate a region from a given input VCF file using a pipeline."""
+    pipeline = build_annotation_pipeline(
+        pipeline_config=pipeline_config,
+        grr_repository_definition=grr_definition)
     with closing(VariantFile(input_file)) as in_file:
         update_header(in_file, pipeline)
         with pipeline.open(), closing(VariantFile(
@@ -93,8 +99,14 @@ def annotate(input_file, region, pipeline, out_file_path):
                 out_file.write(vcf_var)
 
 
-def combine(input_file_path, pipeline, partfile_paths, output_file_path):
+def combine(
+        input_file_path, pipeline_config, grr_definition,
+        partfile_paths, output_file_path):
     """Combine annotated region parts into a single VCF file."""
+    pipeline = build_annotation_pipeline(
+        pipeline_config=pipeline_config,
+        grr_repository_definition=grr_definition)
+
     with closing(VariantFile(input_file_path)) as input_file:
         update_header(input_file, pipeline)
         with closing(
@@ -132,8 +144,8 @@ def produce_partfile_paths(input_file_path, regions, work_dir):
     """Produce a list of file paths for output region part files."""
     filenames = []
     for region in regions:
-        pos_beg = region[1] if len(region) > 1 else "?"
-        pos_end = region[2] if len(region) > 2 else "?"
+        pos_beg = region[1] if len(region) > 1 else "_"
+        pos_end = region[2] if len(region) > 2 else "_"
         filenames.append(os.path.join(work_dir, PART_FILENAME.format(
             in_file=os.path.basename(input_file_path),
             chrom=region[0], pos_beg=pos_beg, pos_end=pos_end
@@ -153,6 +165,7 @@ def cli(raw_args: Optional[list[str]] = None) -> None:
 
     context = get_genomic_context()
     pipeline = CLIAnnotationContext.get_pipeline(context)
+    grr = CLIAnnotationContext.get_genomic_resources_repository(context)
 
     if args.output:
         output = args.output
@@ -170,22 +183,27 @@ def cli(raw_args: Optional[list[str]] = None) -> None:
         task_graph = TaskGraph()
         region_tasks = []
         for index, (region, file_path) in enumerate(zip(regions, file_paths)):
+            assert grr is not None
             region_tasks.append(task_graph.create_task(
                 f"part-{index}",
                 annotate,
-                [args.input, region, pipeline, file_path],
+                [args.input, region,
+                 pipeline.config, grr.definition, file_path],
                 []
             ))
+
+        assert grr is not None
         task_graph.create_task(
             "combine",
             combine,
-            [args.input, pipeline, file_paths, output],
+            [args.input, pipeline.config, grr.definition, file_paths, output],
             region_tasks
         )
         TaskGraphCli.process_graph(task_graph, **vars(args))
 
     def run_sequentially():
-        annotate(args.input, tuple(), pipeline, output)
+        assert grr is not None
+        annotate(args.input, tuple(), pipeline.config, grr.definition, output)
 
     if tabix_index_filename(args.input):
         run_parallelized()

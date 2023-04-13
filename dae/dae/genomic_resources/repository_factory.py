@@ -202,6 +202,8 @@ def build_genomic_resource_repository(
             f"The repository definition element {definition} "
             "has no type attiribute.")
 
+    orig_definition = copy.deepcopy(definition)
+
     repo_type = definition.pop("type")
     repo_id = definition.pop("id", None)
 
@@ -221,5 +223,6 @@ def build_genomic_resource_repository(
             _build_group_repository(repo_id, children, **definition)
     else:
         repo = _build_real_repository(repo_type, repo_id, **definition)
+    repo.definition = orig_definition
 
     return repo

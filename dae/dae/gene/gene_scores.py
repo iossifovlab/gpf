@@ -235,7 +235,7 @@ class GeneScore:
     def get_gene_value(self, gene_symbol):
         """Return the value for a given gene symbol."""
         symbol_values = self._to_dict()
-        return symbol_values[gene_symbol]
+        return symbol_values.get(gene_symbol)
 
     def _to_dict(self):
         """Return dictionary of all defined scores keyed by gene symbol."""

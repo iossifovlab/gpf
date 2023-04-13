@@ -82,7 +82,6 @@ class GenomicContextProvider(ABC):
 
     @abstractmethod
     def get_context_provider_priority(self) -> int:
-        # pylint: disable=no-self-use
         pass
 
     @abstractmethod

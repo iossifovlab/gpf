@@ -23,6 +23,7 @@ import re
 import logging
 import enum
 import hashlib
+import copy
 
 from typing import Optional, Any, Generator, Union, Iterator
 from dataclasses import dataclass, asdict
@@ -807,6 +808,17 @@ class GenomicResourceRepo(abc.ABC):
 
     def __init__(self, repo_id: str):
         self._repo_id: str = repo_id
+        self._definition: Optional[dict[str, Any]] = None
+
+    @property
+    def definition(self):
+        if self._definition:
+            return copy.deepcopy(self._definition)
+        return self._definition
+
+    @definition.setter
+    def definition(self, value):
+        self._definition = copy.deepcopy(value)
 
     @abc.abstractmethod
     def invalidate(self):

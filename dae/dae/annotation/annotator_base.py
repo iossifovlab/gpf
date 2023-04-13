@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 import abc
 
-from typing import Any
+from typing import Any, Optional
 from cerberus.validator import Validator  # type: ignore
 
 from .annotatable import Annotatable
@@ -34,7 +34,6 @@ class Annotator(abc.ABC):
     class ConfigValidator(Validator):
         """Cerberus validation for annotators configuration."""
 
-        # pylint: disable=no-self-use
         def _normalize_coerce_attributes(self, value):
             if isinstance(value, str):
                 return {
@@ -50,7 +49,7 @@ class Annotator(abc.ABC):
     def __init__(self, config: dict):
         self.config = self.validate_config(config)
         self.input_annotatable = self.config.get("input_annotatable")
-        self._annotation_schema = None
+        self._annotation_schema: Optional[Schema] = None
 
     @classmethod
     @abc.abstractmethod
@@ -93,6 +92,9 @@ class Annotator(abc.ABC):
         if self._annotation_schema is None:
             schema = Schema()
             for attribute in self.get_annotation_config():
+                if "destination" not in attribute:
+                    attribute["destination"] = attribute["source"]
+
                 annotation_attribute = self.get_annotation_attribute(
                     attribute["source"])
 
