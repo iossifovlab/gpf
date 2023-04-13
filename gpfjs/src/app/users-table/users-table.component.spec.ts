@@ -138,7 +138,7 @@ describe('UsersTableComponent', () => {
   it('should check if group is default for user', () => {
     const user = new User(1, 'fakeName', 'fakeEmail', [], true, []);
     expect(component.isDefaultGroup(user, 'any_user')).toBe(true);
-    expect(component.isDefaultGroup(user, 'fakeemail')).toBe(true);
+    expect(component.isDefaultGroup(user, 'fakeemail')).toBe(false);
     expect(component.isDefaultGroup(user, '')).toBe(false);
     expect(component.isDefaultGroup(user, undefined)).toBe(false);
     expect(component.isDefaultGroup(user, 'fakeEmail')).toBe(false);
