@@ -51,7 +51,8 @@ class GenomicScoresDb:
         score = build_score_from_resource(resource)
         default_annotation = score.get_default_annotation()
         attributes_mapping = {
-            attr["destination"]: attr["source"]
+            attr.get("destination")
+            if attr.get("destination") else attr["source"]: attr["source"]
             for attr in default_annotation.get("attributes", [])
         }
         logger.debug("default annotation: %s", default_annotation)

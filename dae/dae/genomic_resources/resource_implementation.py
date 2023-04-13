@@ -2,11 +2,14 @@ from __future__ import annotations
 import logging
 from typing import Optional, Callable, cast, Any
 from abc import abstractmethod, ABC
+from dataclasses import dataclass
+
 from jinja2 import Template
 from cerberus import Validator
 from markdown2 import markdown
 
 from dae.task_graph.graph import Task
+from dae.utils.helpers import convert_size
 
 from .repository import GenomicResource
 
@@ -142,15 +145,25 @@ class InfoImplementationMixin:
         """
         template_data = self._get_template_data()
 
-        config = self.config
+        config = self.config  # type: ignore
         if "meta" in config:
             meta = config["meta"]
             if "description" in meta:
                 template_data["description"] = \
                     markdown(str(meta["description"]))
 
-        template_data["resource_files"] = self.resource.get_manifest().entries
+        @dataclass
+        class FileEntry:
+            """Provides an entry into manifest object."""
 
+            name: str
+            size: str
+            md5: Optional[str]
+
+        template_data["resource_files"] = [
+            FileEntry(entry.name, convert_size(entry.size), entry.md5)
+            for entry in
+            self.resource.get_manifest().entries.values()]  # type: ignore
         return template_data
 
     def get_info(self) -> str:
@@ -158,6 +171,7 @@ class InfoImplementationMixin:
         template_data = self.get_template_data()
         return self.get_template().render(
             resource_id=self.resource.resource_id,  # type: ignore
+            resource_type=self.resource.get_type(),  # type: ignore
             data=template_data,
             base=resource_template
         )
@@ -201,29 +215,39 @@ h3,h4 {
 </style>
 </head>
 <body>
-<h1>{{ resource_id }}</h3>
+
+<h1>Resource</h1>
+<div>
+<table border="1">
+<tr><td><b>Id:</b></td><td>{{ resource_id }}</td></tr>
+<tr><td><b>Type:</b></td><td>{{ resource_type }}</td></tr>
+<tr><td><b>Description:</b></td>
+    <td>
+        {{
+            data["description"] if data["description"] else "N/A"
+        }}
+    </td></tr>
+<tr><td><b>Labels:</b></td>
+    <td>
+        {% if data["meta"] and data["meta"]["labels"] %}
+        <ul>
+        {% for label, value in data["meta"]["labels"].items() %}
+            <li>{{ label }}: {{ value }}</li>
+        {% endfor %}
+        </ul>
+        {% else %}
+        {% endif %}
+    </td></tr>
+</table>
+</div>
+
+
 {% block content %}
 N/A
 {% endblock %}
 
-<div>
-<h3>Labels:</h3>
-{% if data["meta"] and data["meta"]["labels"] %}
-<ul>
-{% for label, value in data["meta"]["labels"].items() %}
-    <li>{{ label }}: {{ value }}</li>
-{% endfor %}
-</ul>
-{% else %}
-{% endif %}
 
-<h3>Description:</h3>
-<span class="description">
-{{
-    data["description"] if data["description"] else "N/A"
-}}
-</span>
-</div>
+<h1>Files</h1>
 <table>
 <thead>
     <tr>
@@ -233,13 +257,13 @@ N/A
     </tr>
 </thead>
 <tbody>
-    {%- for key, value in data["resource_files"].items() recursive%}
+    {%- for entry in data["resource_files"] recursive%}
     <tr>
         <td class="nowrap">
-            <a href='{{key}}'>{{key}}</a>
+            <a href='{{entry.name}}'>{{entry.name}}</a>
         </td>
-        <td class="nowrap">{{value['size']}}</td>
-        <td class="nowrap">{{value['md5']}}</td>
+        <td class="nowrap">{{entry.size}}</td>
+        <td class="nowrap">{{entry.md5}}</td>
     </tr>
     {%- endfor %}
 </tbody>

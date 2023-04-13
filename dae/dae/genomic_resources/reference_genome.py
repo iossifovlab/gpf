@@ -354,7 +354,16 @@ class ReferenceGenome(
         """Return a list of all chromosomes of the reference genome."""
         return self._chromosomes
 
-    def _load_genome_index(self, index_content):
+    def _load_genome_index(self):
+        config = self.resource.get_config()
+        file_name = config["filename"]
+        index_file_name = config.get(
+            "index_file", f"{file_name}.fai")
+
+        index_content = self.resource.get_file_content(index_file_name)
+        self._parse_genome_index(index_content)
+
+    def _parse_genome_index(self, index_content):
         for line in index_content.split("\n"):
             line = line.strip()
             if not line:
@@ -393,13 +402,10 @@ class ReferenceGenome(
                 self.resource.resource_id)
             return self
 
+        self._load_genome_index()
+
         config = self.resource.get_config()
         file_name = config["filename"]
-        index_file_name = config.get(
-            "index_file", f"{file_name}.fai")
-
-        index_content = self.resource.get_file_content(index_file_name)
-        self._load_genome_index(index_content)
         self._sequence = self.resource.open_raw_file(
             file_name, "rb", uncompress=False, seekable=True)
 
@@ -424,6 +430,9 @@ class ReferenceGenome(
 
     def get_chrom_length(self, chrom: str) -> int:
         """Return the length of a specified chromosome."""
+        if not self._index:
+            logger.warning("genome index not loaded; loading")
+            self._load_genome_index()
         chrom_data = self._index.get(chrom)
         if chrom_data is None:
             raise ValueError(f"can't find chromosome {chrom}")
@@ -431,6 +440,9 @@ class ReferenceGenome(
 
     def get_all_chrom_lengths(self):
         """Return list of all chromosomes lengths."""
+        if not self._index:
+            logger.warning("genome index not loaded; loading")
+            self._load_genome_index()
         return [
             (key, value["length"])
             for key, value in self._index.items()]
@@ -546,14 +558,11 @@ class ReferenceGenome(
         return Template(textwrap.dedent("""
             {% extends base %}
             {% block content %}
-            <hr>
-            <h3>Genome file:</h3>
-            <a href="{{ data["filename"] }}">
-            {{ data["filename"] }}
-            </a>
+
             {% if data["chrom_prefix"] %}
             <p>chrom prefix: {{ data["chrom_prefix"] }}</p>
             {% endif %}
+
             {% if data["PARS"] %}
             <h3>Pseudoautosomal regions:</h6>
             {% if data["PARS"]["X"] %}
@@ -572,6 +581,7 @@ class ReferenceGenome(
             <li>{{region}}</li>
             {% endfor %}
             </ul>
+            {% endif %}
             {% endif %}
 
             <h3>Genome statistics:</h3>
@@ -595,7 +605,17 @@ class ReferenceGenome(
                 {% endfor %}
             {% endif %}
 
-            {% endif %}
+            <h3>Chromosomes:</h3>
+            <table>
+            <tr><td>Chrom</td><td>Length</td></tr>
+            {%- for chrom, length in data["chromosomes"] -%}
+            <tr>
+            <td>{{ chrom }}</td>
+            <td>{{ length }}</td>
+            </tr>
+            {%- endfor -%}
+            </table>
+
             {% endblock %}
         """))
 
@@ -610,6 +630,8 @@ class ReferenceGenome(
             global_statistic.nucleotide_distribution
         info["global_statistic"]["bi_nuc_distribution"] = \
             global_statistic.bi_nucleotide_distribution
+
+        info["chromosomes"] = self.get_all_chrom_lengths()
 
         return info
 
