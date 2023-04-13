@@ -648,7 +648,7 @@ class GenomicScore(
                 [self.resource, chrom, start, end],
                 []
             ))
-        score_ids = self.get_all_scores()
+        score_ids = list(self.get_config_histograms().keys())
         merge_task = graph.create_task(
             f"{self.score_id}_merge_min_max",
             GenomicScore._merge_min_max,
