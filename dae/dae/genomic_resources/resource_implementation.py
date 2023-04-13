@@ -2,11 +2,14 @@ from __future__ import annotations
 import logging
 from typing import Optional, Callable, cast, Any
 from abc import abstractmethod, ABC
+from dataclasses import dataclass
+
 from jinja2 import Template
 from cerberus import Validator
 from markdown2 import markdown
 
 from dae.task_graph.graph import Task
+from dae.utils.helpers import convert_size
 
 from .repository import GenomicResource
 
@@ -149,8 +152,18 @@ class InfoImplementationMixin:
                 template_data["description"] = \
                     markdown(str(meta["description"]))
 
-        template_data["resource_files"] = \
-            self.resource.get_manifest().entries  # type: ignore
+        @dataclass
+        class FileEntry:
+            """Provides an entry into manifest object."""
+
+            name: str
+            size: str
+            md5: Optional[str]
+
+        template_data["resource_files"] = [
+            FileEntry(entry.name, convert_size(entry.size), entry.md5)
+            for entry in
+            self.resource.get_manifest().entries.values()]  # type: ignore
         return template_data
 
     def get_info(self) -> str:
@@ -244,13 +257,13 @@ N/A
     </tr>
 </thead>
 <tbody>
-    {%- for key, value in data["resource_files"].items() recursive%}
+    {%- for entry in data["resource_files"] recursive%}
     <tr>
         <td class="nowrap">
-            <a href='{{key}}'>{{key}}</a>
+            <a href='{{entry.name}}'>{{entry.name}}</a>
         </td>
-        <td class="nowrap">{{value['size']}}</td>
-        <td class="nowrap">{{value['md5']}}</td>
+        <td class="nowrap">{{entry.size}}</td>
+        <td class="nowrap">{{entry.md5}}</td>
     </tr>
     {%- endfor %}
 </tbody>
