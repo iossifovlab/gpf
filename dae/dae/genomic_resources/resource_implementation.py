@@ -6,6 +6,7 @@ from dataclasses import dataclass
 
 from jinja2 import Template
 from cerberus import Validator
+from markdown2 import markdown
 
 from dae.task_graph.graph import Task
 from dae.utils.helpers import convert_size
@@ -104,18 +105,6 @@ class GenomicResourceImplementation(ABC):
         """Construct the contents of the implementation's HTML info page."""
         raise NotImplementedError()
 
-    def get_label(self, label):
-        """Return a metadata label value."""
-        metadata = self.config.get("meta")
-        if metadata is None:
-            return None
-
-        labels = metadata.get("labels")
-        if labels is None:
-            return None
-
-        return labels.get(label)
-
     def get_statistics(self) -> Optional[ResourceStatistics]:
         """Try and load resource statistics."""
         return None
@@ -163,6 +152,7 @@ class InfoImplementationMixin:
         template_data = self.get_template_data()
         return self.get_template().render(
             resource=self.resource,  # type: ignore
+            markdown=markdown,
             data=template_data,
             base=RESOURCE_TEMPLATE
         )
@@ -216,7 +206,7 @@ h3,h4 {
     <td>
         {% set description = resource.get_description() %}
         {{
-            description if description else "N/A"
+            markdown(description) if description else "N/A"
         }}
     </td></tr>
 <tr><td><b>Labels:</b></td>

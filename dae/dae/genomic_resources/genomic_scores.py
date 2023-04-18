@@ -633,7 +633,7 @@ class GenomicScore(
         return ref_genome
 
     def _get_chrom_regions(self, region_size, grr=None):
-        ref_genome_id = self.get_label("reference_genome")
+        ref_genome_id = self.resource.get_labels().get("reference_genome")
         ref_genome = self._get_reference_genome_cached(grr, ref_genome_id)
         if ref_genome is not None:
             regions = self._split_into_regions(region_size, ref_genome)

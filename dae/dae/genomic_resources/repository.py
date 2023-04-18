@@ -31,7 +31,6 @@ from dataclasses import dataclass, asdict
 import abc
 import yaml
 import pysam
-from markdown2 import markdown
 
 logger = logging.getLogger(__name__)
 
@@ -295,13 +294,13 @@ class GenomicResource:
 
     def get_description(self) -> Optional[str]:
         config = self.get_config()
-        if "meta" in config:
+        if config.get("meta"):
             meta = config["meta"]
-            if "description" in meta:
-                return cast(str, markdown(str(meta["description"])))
+            if meta.get("description"):
+                return str(meta["description"])
         return None
 
-    def get_labels(self) -> Optional[dict]:
+    def get_labels(self) -> dict[str, Any]:
         config: dict[str, Any] = self.get_config()
         if config.get("meta"):
             meta: dict[str, Any] = config["meta"]
