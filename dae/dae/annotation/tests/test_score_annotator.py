@@ -180,7 +180,7 @@ def test_np_score_annotator_indels(
                 assert result.get(score) == pytest.approx(value, rel=1e-3)
 
 
-def test_score_annotator_resource_files(grr_fixture):
+def test_score_annotator_resources(grr_fixture):
     resource = grr_fixture.get_resource("hg38/TESTphastCons100way")
     config = {
         "annotator_type": "position_score",
@@ -190,7 +190,6 @@ def test_score_annotator_resource_files(grr_fixture):
     score.open()
 
     annotator = PositionScoreAnnotator(config, score)
-    assert annotator.resource_files == {
-        "hg38/TESTphastCons100way": {"TESTphastCons100way.bedGraph.gz",
-                                     "TESTphastCons100way.bedGraph.gz.tbi"}
+    assert annotator.resources == {
+        "hg38/TESTphastCons100way"
     }

@@ -144,8 +144,8 @@ class Annotator(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def resource_files(self) -> dict[str, set[str]]:
-        """Genomic resources and their files needed by the annotator."""
+    def resources(self) -> set[str]:
+        """Genomic resources used by the annotator."""
 
     def _empty_result(self) -> dict[str, Any]:
         result: dict[str, Any] = {}

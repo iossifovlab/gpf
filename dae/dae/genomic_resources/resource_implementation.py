@@ -202,21 +202,26 @@ h3,h4 {
 <table border="1">
 <tr><td><b>Id:</b></td><td>{{ resource.resource_id }}</td></tr>
 <tr><td><b>Type:</b></td><td>{{ resource.get_type() }}</td></tr>
-<tr><td><b>Description:</b></td>
-    <td>
-        {% set description = resource.get_description() %}
-        {{
-            markdown(description) if description else "N/A"
-        }}
-    </td></tr>
-<tr><td><b>Labels:</b></td>
-    <td>
-        <ul>
-        {% for label, value in resource.get_labels().items() %}
-            <li>{{ label }}: {{ value }}</li>
-        {% endfor %}
-        </ul>
-    </td></tr>
+<tr>
+<td><b>Description:</b></td>
+<td>
+{%- set description = resource.get_description() -%}
+{{
+    markdown(description) if description else "N/A"
+}}</td>
+</tr>
+<tr>
+<td><b>Labels:</b></td>
+<td>
+{% if resource.get_labels() %}
+    <ul>
+    {% for label, value in resource.get_labels().items() %}
+        <li>{{ label }}: {{ value }}</li>
+    {% endfor %}
+    </ul>
+{% endif %}
+</td>
+</tr>
 </table>
 </div>
 

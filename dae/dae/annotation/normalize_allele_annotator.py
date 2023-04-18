@@ -93,8 +93,8 @@ class NormalizeAlleleAnnotator(Annotator):
         return True
 
     @property
-    def resource_files(self):
-        return {self.genome.resource_id: self.genome.files}
+    def resources(self):
+        return {self.genome.resource_id}
 
     @classmethod
     def validate_config(cls, config: dict) -> dict:

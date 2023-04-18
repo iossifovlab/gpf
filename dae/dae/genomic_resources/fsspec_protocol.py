@@ -434,8 +434,9 @@ class FsspecReadWriteProtocol(
         """Copy a resource file into repository."""
         assert dest_resource.resource_id == remote_resource.resource_id
         logger.debug(
-            "copying resource file %s: %s from %s", filename,
-            remote_resource.resource_id, remote_resource.proto.proto_id)
+            "copying resource file (%s: %s) from %s",
+            remote_resource.resource_id, filename,
+            remote_resource.proto.proto_id)
         remote_manifest = remote_resource.get_manifest()
         if filename not in remote_manifest:
             self.delete_resource_file(dest_resource, filename)
@@ -449,9 +450,6 @@ class FsspecReadWriteProtocol(
             self.filesystem.mkdir(
                 dest_parent, create_parents=True, exist_ok=True)
 
-        logger.debug(
-            "copying resource (%s) file: %s",
-            remote_resource.resource_id, filename)
         with remote_resource.open_raw_file(
                 filename, "rb",
                 uncompress=False) as infile, \

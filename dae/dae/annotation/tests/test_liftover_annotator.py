@@ -130,7 +130,7 @@ def test_liftover_annotator_denovo_db_examples(
     assert liftover_allele is None
 
 
-def test_liftover_annotator_resource_files(grr_fixture):
+def test_liftover_annotator_resources(grr_fixture):
     config = {
         "annotator_type": "liftover_annotator",
         "chain": "hg38/hg38tohg19",
@@ -156,9 +156,7 @@ def test_liftover_annotator_resource_files(grr_fixture):
     liftover_annotator = LiftOverAnnotator(
         config, lifover_chain, target_genome)
 
-    assert liftover_annotator.resource_files == {
-        "hg38/hg38tohg19": {"hg38ToHg19.over.chain.gz"},
-        "hg19/GATK_ResourceBundle_5777_b37_phiX174_short/genome": {
-            "chrAll.fa", "chrAll.fa.fai"
-        }
+    assert liftover_annotator.resources == {
+        "hg38/hg38tohg19",
+        "hg19/GATK_ResourceBundle_5777_b37_phiX174_short/genome"
     }

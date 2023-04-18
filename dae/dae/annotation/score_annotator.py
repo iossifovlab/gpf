@@ -87,8 +87,8 @@ class VariantScoreAnnotatorBase(Annotator):
         return []
 
     @property
-    def resource_files(self) -> dict[str, set[str]]:
-        return {self.score.resource.resource_id: self.score.files}
+    def resources(self) -> set[str]:
+        return {self.score.resource.resource_id}
 
     def _collect_non_default_aggregators(self):
         non_default_position_aggregators = {}

@@ -1,4 +1,4 @@
-from typing import Dict, Callable
+from typing import Dict, Callable, Optional
 from importlib_metadata import entry_points, EntryPoint
 
 from .repository_factory import build_genomic_resource_repository
@@ -15,7 +15,7 @@ _REGISTERED_RESOURCE_IMPLEMENTATIONS: Dict[
 
 __all__ = [
     "build_genomic_resource_repository", "GenomicResource",
-    "get_resource_implementation_builder"
+    "get_resource_implementation_builder",
 ]
 
 
@@ -25,7 +25,7 @@ _PLUGINS_LOADED = False
 
 def get_resource_implementation_builder(
     resource_type: str
-) -> Callable[[GenomicResource], GenomicResourceImplementation]:
+) -> Optional[Callable[[GenomicResource], GenomicResourceImplementation]]:
     """
     Return an implementation builder for a certain resource type.
 
@@ -35,9 +35,7 @@ def get_resource_implementation_builder(
     """
     if resource_type not in _REGISTERED_RESOURCE_IMPLEMENTATIONS:
         if resource_type not in _FOUND_RESOURCE_IMPLEMENTATIONS:
-            raise ValueError(
-                f"unsupported resource implementation type: {resource_type}"
-            )
+            return None
         entry_point = _FOUND_RESOURCE_IMPLEMENTATIONS[resource_type]
         loaded = entry_point.load()
         register_implementation(resource_type, loaded)

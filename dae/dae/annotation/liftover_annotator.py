@@ -93,10 +93,10 @@ class LiftOverAnnotator(Annotator):
         ]
 
     @property
-    def resource_files(self):
+    def resources(self):
         return {
-            self.chain.resource.resource_id: self.chain.files,
-            self.target_genome.resource_id: self.target_genome.files
+            self.chain.resource.resource_id,
+            self.target_genome.resource_id
         }
 
     @classmethod

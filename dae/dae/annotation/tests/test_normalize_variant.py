@@ -258,7 +258,7 @@ def test_normalize_novariant_allele(
         assert normalized.alt == nalt
 
 
-def test_normalize_allele_annotator_resource_files(grr_fixture):
+def test_normalize_allele_annotator_resources(grr_fixture):
     config = textwrap.dedent("""
         - normalize_allele_annotator:
             genome: hg19/GATK_ResourceBundle_5777_b37_phiX174_short/genome
@@ -273,8 +273,6 @@ def test_normalize_allele_annotator_resource_files(grr_fixture):
 
     with annotation_pipeline.open() as pipeline:
         annotator = pipeline.annotators[0]
-        assert annotator.resource_files == {
-            "hg19/GATK_ResourceBundle_5777_b37_phiX174_short/genome": {
-                "chrAll.fa", "chrAll.fa.fai",
-            }
+        assert annotator.resources == {
+            "hg19/GATK_ResourceBundle_5777_b37_phiX174_short/genome"
         }
