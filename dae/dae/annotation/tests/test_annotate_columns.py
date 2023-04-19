@@ -27,18 +27,27 @@ from dae.testing import setup_genome
 
         ({"chrom": "chr1", "pos_beg": "4", "pos_end": "30"},
          Region("chr1", 4, 30)),
-
-        # ({"location": "chr1:13", "variant": "sub(A->T)"},
-        #  VCFAllele("chr1", 13, "A", "T")),
-
-        # ({"location": "chr1:3-13", "variant": "duplication"},
-        #  CNVAllele("chr1", 3, 13, CNVAllele.Type.LARGE_DUPLICATION)),
     ]
 )
 def test_default_columns(record, expected):
     annotatable = build_record_to_annotatable(
         {}, set(record.keys())).build(record)
     assert str(annotatable) == str(expected)
+
+
+@pytest.mark.parametrize(
+    "record,expected", [
+        ({"location": "chr1:13", "variant": "sub(A->T)"},
+         VCFAllele("chr1", 13, "A", "T")),
+
+        ({"location": "chr1:3-13", "variant": "duplication"},
+         CNVAllele("chr1", 3, 13, CNVAllele.Type.LARGE_DUPLICATION)),
+    ]
+)
+def test_cshl_variants_without_context(record, expected):
+    with pytest.raises(ValueError):
+        build_record_to_annotatable(
+            {}, set(record.keys())).build(record)
 
 
 @pytest.fixture

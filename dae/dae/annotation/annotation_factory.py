@@ -97,7 +97,6 @@ def build_annotation_pipeline(
         pipeline_config = AnnotationConfigParser.parse(pipeline_config_str)
 
     assert pipeline_config is not None
-
     if not grr_repository:
         grr_repository = build_genomic_resource_repository(
             definition=grr_repository_definition,
