@@ -8,10 +8,10 @@ from typing import Optional, Dict, Type
 from dae.annotation.annotatable import Annotatable
 from dae.annotation.annotatable import Position
 from dae.annotation.annotatable import Region
-from dae.annotation.annotatable import VCFAllele
+from dae.annotation.annotatable import VCFAllele, CNVAllele
 
-
-from dae.tools.cshl2vcf import cshl2vcf
+from dae.utils.dae_utils import cshl2vcf_variant, cshl2cnv_variant
+# from dae.tools.cshl2vcf import cshl2vcf
 from dae.genomic_resources.genomic_context import GenomicContext
 
 
@@ -69,7 +69,7 @@ class VcfLikeRecordToVcfAllele(RecordToAnnotable):
         return VCFAllele(chrom, int(pos), ref, alt)
 
 
-class CSHLAlleleRecordToVcfAllele(RecordToAnnotable):
+class CSHLAlleleRecordToAnnotatable(RecordToAnnotable):
     """Transform a CSHL variant record into a VCF allele annotatable."""
 
     def __init__(self, columns: tuple, context: Optional[GenomicContext]):
@@ -88,7 +88,19 @@ class CSHLAlleleRecordToVcfAllele(RecordToAnnotable):
                 "without a referrence genome")
 
     def build(self, record: dict[str, str]) -> Annotatable:
-        return VCFAllele(*cshl2vcf(
+        variant = record[self.variant_col]
+        if variant.lower() in {
+                "cnv+", "cnv-", "duplication", "deletion",
+                "large_insertion", "large_deletion", "gain", "loss"}:
+            chrom, pos_begin, pos_end, variant_type = cshl2cnv_variant(
+                record[self.location_col],
+                record[self.variant_col],
+                self.reference_genome)
+            return CNVAllele(
+                chrom, pos_begin, pos_end,
+                CNVAllele.Type.from_string(variant_type))
+
+        return VCFAllele(*cshl2vcf_variant(
             record[self.location_col],
             record[self.variant_col],
             self.reference_genome))
@@ -99,7 +111,8 @@ RECORD_TO_ANNOTABALE_CONFIGUATION: Dict[tuple, Type[RecordToAnnotable]] = {
     ("chrom", "pos", "ref", "alt"): RecordToVcfAllele,
     ("vcf_like",): VcfLikeRecordToVcfAllele,
     ("chrom", "pos"): RecordToPosition,
-    ("location", "variant"): CSHLAlleleRecordToVcfAllele
+    ("location", "variant"): CSHLAlleleRecordToAnnotatable,
+    # ("chrom", "pos_beg", "pos_end"): RecordToRegion,
 }
 
 

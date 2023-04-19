@@ -5,19 +5,19 @@ INS_RE = re.compile(r"^ins\(([NACGT]+)\)$")
 DEL_RE = re.compile(r"^del\((\d+)\)$")
 
 
-def dae2vcf_variant(chrom, position, var, genome):
+def dae2vcf_variant(chrom, position, variant, genome):
     """Convert a given CSHL-style variant to the VCF format."""
-    match = SUB_COMPLEX_RE.match(var)
+    match = SUB_COMPLEX_RE.match(variant)
     if match:
         return position, match.group(2), match.group(3)
 
-    match = INS_RE.match(var)
+    match = INS_RE.match(variant)
     if match:
         alt_suffix = match.group(1)
         reference = genome.get_sequence(chrom, position - 1, position - 1)
         return position - 1, reference, reference + alt_suffix
 
-    match = DEL_RE.match(var)
+    match = DEL_RE.match(variant)
     if match:
         count = int(match.group(1))
         reference = genome.get_sequence(
@@ -26,7 +26,42 @@ def dae2vcf_variant(chrom, position, var, genome):
         assert len(reference) == count + 1, reference
         return position - 1, reference, reference[0]
 
-    raise NotImplementedError("weird variant: " + var)
+    raise NotImplementedError("weird variant: " + variant)
+
+
+def cshl2vcf_variant(location, variant, genome):
+    chrom, position = location.split(":")
+    return chrom, *dae2vcf_variant(chrom, int(position), variant, genome)
+
+
+def cnv_variant_type(variant):
+    variant = variant.lower()
+    if variant in {"cnv+", "duplication", "large_insertion", "gain"}:
+        return "LARGE_DUPLICATION"
+    if variant in {"cnv-", "deletion", "large_deletion", "loss"}:
+        return "LARGE_DELETION"
+    return None
+
+
+def cshl2cnv_variant(location, variant, *args):
+    # pylint: disable=unused-argument
+    """Parse location and variant into CNV variant."""
+    parts = location.split(":")
+    if len(parts) != 2:
+        raise ValueError(
+            f"unexpected location format: "
+            f"location={location}, variant=f{variant}")
+    chrom, pos_range = parts
+    parts = pos_range.split("-")
+    if len(parts) != 2:
+        raise ValueError(
+            f"unexpected location format: "
+            f"location={location}, variant=f{variant}")
+    pos_begin, pos_end = parts
+    variant_type = cnv_variant_type(variant)
+    if variant_type is None:
+        raise ValueError(f"unexpected CNV variant type: {variant}")
+    return chrom, int(pos_begin), int(pos_end), variant_type
 
 
 def split_iterable(iterable, max_chunk_length=50):
@@ -50,7 +85,8 @@ def split_iterable(iterable, max_chunk_length=50):
 def join_line(line, sep="\t"):
     """Join an iterable representing a line into a string."""
     flattened_line = map(
-        lambda v: "; ".join(v) if isinstance(v, list) else v, line)
+        lambda v: "; ".join(v) if isinstance(v, list) else v,  # type: ignore
+        line)
     none_as_str_line = map(
         lambda v: "" if v is None or v == "None" else str(v),
         flattened_line)
