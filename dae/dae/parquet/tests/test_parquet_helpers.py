@@ -99,3 +99,26 @@ def test_merge_parquets_broken_input_file(tmpdir):
 
     # assert no partial output file is left behind in case of error
     assert not os.path.exists(out_file)
+
+
+def test_merge_parquets_missing_input_file(tmpdir):
+    table = pa.table({
+        "n_legs": [2, 2, 4, 4, 5, 100],
+        "animal": [
+            "Flamingo", "Parrot", "Dog", "Horse", "Brittle stars", "Centipede"
+        ]
+    })
+    writer = pq.ParquetWriter(
+        str(tmpdir / "p1.parquet"), table.schema, version="1.0")
+    writer.write_table(table)
+    writer.close()
+
+    in_files = [
+        str(tmpdir / "p1.parquet"),
+        str(tmpdir / "p2.parquet"),
+        str(tmpdir / "p3.parquet")]
+    out_file = str(tmpdir / "merged.parquet")
+    merge_parquets(in_files, out_file)
+
+    # assert no partial output file is left behind in case of error
+    assert os.path.exists(out_file)
