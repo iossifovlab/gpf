@@ -23,15 +23,16 @@ form they consist of 3 sections:
    files and the configuration options required to read these files successfully.
  - Processing config: describing how the input is supposed to be handled and
    processed.
- - Destination: describing whre to store the imported data. This could be like
-   an impala table. This section also includes the partition_description.
+ - Destination: describing where to store the generated data. For example this
+   could be an impala table. This section also includes the
+   partition_description.
 
 Import Tools configuration format
 ---------------------------------
 .. code-block:: yaml
 
     vars:
-        input_dir: "..."
+        my_dir: "..."
 
     id: SFARI_SPARK_WES_2
 
@@ -41,7 +42,7 @@ Import Tools configuration format
         input_dir:
 
         pedigree:
-            file: %(input_dir)s/SFARI_SPARK_WES_2.ped
+            file: %(my_dir)s/SFARI_SPARK_WES_2.ped
 
         vcf:
             files:
@@ -71,10 +72,9 @@ Import Tools configuration format
         vcf:
             chromosomes: ['autosomes', 'chrX', 'chrM']
             region_length: 100M
-        vcf:
-            import_task_bin_size: 1000000
         work_dir: ""
 
+    (optional by default use default gpf_instance)
     gpf_instance:
         path: ...
 
@@ -89,6 +89,8 @@ Import Tools configuration format
     (optional by default use the default storage of the gpf instance)
     destination:
         storage_id: "id in gpf_instance"
+        (OR)
+        storage_type: impala
         (OR)
         storage_type: impala
         id: storage_id
@@ -120,15 +122,107 @@ Import Tools configuration format
         coding_bin:
             coding_effect_types: [splice-site,frame-shift,nonsense,no-frame-shift-newStop,noStart,noEnd,missense,no-frame-shift,CDS,synonymous,coding_unknown,regulatory,3'UTR,5'UTR]
 
-For any set of input files (denovo, vcf and so on) if the corresponding section
-in *processing_config* is missing then the default value for bucket generation
-is *single_bucket*.
-
-All files specified in the *input* section are relative to the *input_dir*. The
+*input* is the section where we describe the input files. It is devided into
+subsections for each input type (vcf, denovo and so on).
+All files are relative to the *input_dir*. The
 *input_dir* is itself relative to the directory where the config file is
 located. *input_dir* is options, if unspecified then every file would be
 relative to the config file's directory. If the input configuration is in an
 external file then input file paths will be relative to the external file.
+
+*processing_config* is where we describe how to split input files into smaller
+buckets for parallel processing. *single_bucket* means that the entire input
+will be processed in a single task without spliting it into smaller parts.
+*chromosome* or a list of chromosomes means that each chromosome will be
+processed in parallel. If *region_length* is specified then each chromosome
+will be split into regions with length *region_length* and all such regions will
+be processed in parallel. *work_dir* is the location where parquet files will
+be generated. If missing then the current working directory is used.
+
+For any set of input files (denovo, vcf and so on) if the corresponding section
+in *processing_config* is missing then the default value for bucket generation
+is *single_bucket*.
+
+*gpf_instance* is an optional section that allows you to specify a gpf instance
+configuration file.
+
+*annotation* is where the annotation pipeline is specified. It can either be the
+name of a pipeline described in the gpf config (using the gpf_pipeline argument),
+path to a file describing the pipeline or an embedded annotation pipeline.
+
+*destination* describes where generated parquet files will be imported. This
+section could be the name of a storage defined in the gpf instance or an
+embedded storage config. If only *storage_type* is specified then parquet files
+will be generated for the particular storage type but will NOT be imported
+anywhere. This is useful for just generating parquet files without actually
+importing them.
+
+
+Working with the Import Tools CLI
+---------------------------------
+To import a study first you would need the import configuration as described
+above. To run import tools with the config file execute:
+
+.. code-block:: bash
+
+    import_tools import_config.yaml
+
+To list the steps that will be executed without actually executing them:
+
+.. code-block:: bash
+
+    import_tools import_config.yaml list
+
+*import_tools* has a number of parameters. Run with --help to see them. One
+commonly used one is `-j` which specifies the number of tasks to run in parallel.
+
+
+Running on a SGE cluster
+-------------------------
+
+.. code-block:: bash
+
+    import_tools import_config.yaml run --sge -j 100
+
+This command will run import tools on a SGE cluster using 100 parallel workers.
+This assumes a preconfigured, working SGE cluster. The *import_config.yaml* file
+should be placed on a shared file system that can be accessed by all nodes in
+the cluster.
+
+
+Running on a Kubernetes cluster
+-------------------------------
+
+Running on kubernetes is a little bit more involved because typically nodes in
+the cluster don't share a common file system and the machine where we run
+*import_tools* is usually not part of the cluster. So the import process needs
+a common storage that can be access both by the nodes in the cluster and the
+machine where import tools is run from. The easiest way to achieve this is by
+using S3.
+
+The best setup is to place the import configuration on S3 together will the
+input data. Accessing S3 (and other AWS services) usually happends through an
+access and secret keys. Assuming these keys are already configured in the
+corresponding environment variables we can run import tools like that:
+
+.. code-block:: bash
+
+    import_tools s3://bucket/import_config.yaml run --kubernetes --envvars AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY --image-pull-secrets seqpipe-registry-cred -j 20
+
+The environment variables specified by --envvars will be propagated to the
+worker pods so that the workers can access S3. The --image-pull-secrets specifies
+a kubernetes secret that should contain the credentials used for accessing the
+seqpipe docker registry from which the images for the worker pods will be pulled
+from. And -j specifies that 20 workers should be started.
+
+If using a non-AWS S3 such as a ceph storage, the endpoint url can be specified
+using the *S3_ENDPOINT_URL* environment variable:
+
+
+.. code-block:: bash
+
+    S3_ENDPOINT_URL=http://s3.my-server.com:7480 import_tools s3://bucket/import_config.yaml run --kubernetes --envvars AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY --image-pull-secrets seqpipe-registry-cred -j 20
+
 
 
 Classes and Functions
