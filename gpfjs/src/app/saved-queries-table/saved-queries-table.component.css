@@ -1,7 +1,47 @@
-gpf-table {
-  width: 100%;
+.grid-container {
+  display: grid;
+  grid-template-columns: 33.33% 33.33% 33.33%;
+}
+
+.grid-header {
+  min-height: 2rem;
+  line-height: 2rem;
+  border: 1px solid #ddd;
+  background-color: #eee;
+  text-align: center;
+  font-weight: bold;
+}
+
+.grid-cell {
+  min-height: 6rem;
+  border: 1px solid #ddd;
+  text-align: center;
+  padding: 5px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+#actions-cell {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  column-gap: 5px;
+}
+
+#delete-button {
+  font-size: 1.4rem;
 }
 
 .action-button {
-  margin: 0 2px;
+  color: #2a6395;
+  font-size: 1.2rem;
+  padding: 5px;
+  border: none;
+  background-color: transparent;
+}
+
+.action-button :hover {
+  color: #68abe6;
 }

@@ -1,0 +1,36 @@
+.card {
+  border: none;
+}
+
+#user-profile-list {
+  justify-content: flex-start;
+}
+
+.profile-container {
+  margin: auto;
+  padding: 0 15px 30px;
+  width: 60%;
+  min-width: 1000px;
+  min-height: 1000px;
+}
+
+.table-wrapper {
+  margin: 0 2rem 1rem;
+}
+
+.table-wrapper:last-of-type {
+  margin: 0 2rem 2rem;
+}
+
+.table-title {
+  text-align: center;
+  padding-top: 1rem;
+  min-height: 2rem;
+  line-height: 2rem;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.form-block {
+  border: 1px solid #ddd;
+}

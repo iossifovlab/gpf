@@ -1,5 +1,5 @@
 import { Component, Input } from '@angular/core';
-import { UserSavedQuery } from '../saved-queries/saved-queries.component';
+import { UserSavedQuery } from '../user-profile/user-profile.component';
 import { QueryService } from '../query/query.service';
 
 @Component({

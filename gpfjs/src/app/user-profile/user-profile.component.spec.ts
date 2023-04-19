@@ -18,16 +18,16 @@ import { GpfTableHeaderComponent } from 'app/table/view/header/header.component'
 import { UsersService } from 'app/users/users.service';
 import { APP_BASE_HREF } from '@angular/common';
 
-import { SavedQueriesComponent } from './saved-queries.component';
+import { UserProfileComponent } from './user-profile.component';
 
 describe('SavedQueriesComponent', () => {
-  let component: SavedQueriesComponent;
-  let fixture: ComponentFixture<SavedQueriesComponent>;
+  let component: UserProfileComponent;
+  let fixture: ComponentFixture<UserProfileComponent>;
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [
-        SavedQueriesComponent,
+        UserProfileComponent,
         SavedQueriesTableComponent,
         GpfTableComponent,
         GpfTableContentComponent,
@@ -47,7 +47,7 @@ describe('SavedQueriesComponent', () => {
       ]
     }).compileComponents();
 
-    fixture = TestBed.createComponent(SavedQueriesComponent);
+    fixture = TestBed.createComponent(UserProfileComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   }));
