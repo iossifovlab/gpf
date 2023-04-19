@@ -87,7 +87,7 @@ def test_gene_score_annotator_default_aggregator(scores_repo):
     assert result == {"LGD_rank": {"LRP1": 1, "TRRAP": 3}}
 
 
-def test_gene_score_annotator_resource_files(scores_repo):
+def test_gene_score_annotator_resources(scores_repo):
     resource = scores_repo.get_resource("LGD_rank")
     config = {
         "annotator_type": "gene_score_annotator",
@@ -103,4 +103,4 @@ def test_gene_score_annotator_resource_files(scores_repo):
     }
 
     annotator = GeneScoreAnnotator(config, resource)
-    assert annotator.resource_files == {"LGD_rank": {"LGD.csv", }}
+    assert annotator.resources == {"LGD_rank"}

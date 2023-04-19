@@ -3,7 +3,7 @@
 import copy
 import logging
 
-from typing import cast
+from typing import cast, Optional
 
 from dae.effect_annotation.annotator import EffectAnnotator
 from dae.effect_annotation.effect import AlleleEffects, AnnotationEffect
@@ -95,7 +95,7 @@ class EffectAnnotatorAdapter(Annotator):
         self.gene_models = gene_models
 
         self._annotation_schema = None
-        self._annotation_config = None
+        self._annotation_config: Optional[list[dict[str, str]]] = None
 
         promoter_len = self.config.get("promoter_len", 0)
         self.effect_annotator = EffectAnnotator(
@@ -211,10 +211,10 @@ class EffectAnnotatorAdapter(Annotator):
         return self._annotation_config
 
     @property
-    def resource_files(self):
+    def resources(self):
         return {
-            self.gene_models.resource_id: self.gene_models.files,
-            self.genome.resource_id: self.genome.files
+            self.gene_models.resource_id,
+            self.genome.resource_id
         }
 
     def _do_annotate(

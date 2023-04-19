@@ -3,7 +3,7 @@ import textwrap
 from dae.annotation.annotation_factory import build_annotation_pipeline
 
 
-def test_effect_annotator_resource_files(grr_fixture):
+def test_effect_annotator_resources(grr_fixture):
     genome = "hg19/GATK_ResourceBundle_5777_b37_phiX174_short/genome"
     gene_models = "hg19/GATK_ResourceBundle_5777_b37_phiX174_short/" \
         "gene_models/refGene_201309"
@@ -18,7 +18,7 @@ def test_effect_annotator_resource_files(grr_fixture):
 
     with annotation_pipeline.open() as pipeline:
         annotator = pipeline.annotators[0]
-        assert annotator.resource_files == {
-            genome: {"chrAll.fa", "chrAll.fa.fai", },
-            gene_models: {"refGene201309.txt", }
+        assert annotator.resources == {
+            genome,
+            gene_models
         }

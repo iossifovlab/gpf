@@ -6,12 +6,11 @@ import logging
 from typing import Optional, Generator, cast, Tuple
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-from .repository import GenomicResource, \
+from dae.genomic_resources.fsspec_protocol import FsspecReadWriteProtocol
+from dae.genomic_resources.repository import GenomicResourceRepo, \
+    GenomicResourceProtocolRepo, \
+    GR_CONF_FILE_NAME, Manifest, GenomicResource, \
     ReadOnlyRepositoryProtocol
-from .fsspec_protocol import FsspecReadWriteProtocol
-
-from .repository import GenomicResourceRepo, GenomicResourceProtocolRepo, \
-    GR_CONF_FILE_NAME, Manifest
 from .fsspec_protocol import build_fsspec_protocol
 
 logger = logging.getLogger(__name__)
@@ -91,6 +90,27 @@ class CachingProtocol(ReadOnlyRepositoryProtocol):
                 remote_resource, resource, filename)
         return (resource.resource_id, filename)
 
+    def refresh_cached_resource(self, resource: GenomicResource):
+        """Refresh all resource files in cache if neccessary."""
+        assert resource.proto == self
+
+        for entry in resource.get_manifest():
+            filename = entry.name
+            if filename == "genomic_resource.yaml":
+                continue
+            if filename.endswith(".lockfile"):
+                continue
+            remote_resource = self.remote_protocol.get_resource(
+                resource.resource_id,
+                f"={resource.get_version_str()}")
+
+            # Lock the resource file to avoid caching it simultaneously
+            with self.local_protocol.obtain_resource_file_lock(
+                    resource, filename):
+                self.local_protocol.update_resource_file(
+                    remote_resource, resource, filename)
+        return (resource.resource_id, "<all>")
+
     def open_raw_file(self, resource, filename, mode="rt", **kwargs):
         if "w" in mode:
             raise IOError(
@@ -150,7 +170,12 @@ class GenomicResourceCachedRepo(GenomicResourceRepo):
             proto.invalidate()
 
     def get_all_resources(self):
-        yield from self.child.get_all_resources()
+        for remote_resource in self.child.get_all_resources():
+            cache_proto = self._get_or_create_cache_proto(
+                remote_resource.proto)
+            version_constraint = f"={remote_resource.get_version_str()}"
+            yield cache_proto.get_resource(
+                remote_resource.resource_id, version_constraint)
 
     def _get_or_create_cache_proto(
             self, proto: ReadOnlyRepositoryProtocol) -> CachingProtocol:
@@ -214,58 +239,66 @@ class GenomicResourceCachedRepo(GenomicResourceRepo):
                 cached_files.add(filename)
         return cached_files
 
-    def cache_resources(
-        self, workers=4,
-        resource_ids: Optional[set[str]] = None,
-        resource_files: Optional[dict[str, set[str]]] = None,
-    ):
-        """Cache resources from a list of remote resource IDs."""
-        executor = ThreadPoolExecutor(max_workers=workers)
-        futures = []
-        if resource_ids is None:
-            resources: list[GenomicResource] = \
-                list(self.child.get_all_resources())
-        else:
-            resources = []
-            for resource_id in resource_ids:
-                remote_res = self.child.get_resource(resource_id)
-                assert remote_res is not None, resource_id
-                resources.append(remote_res)
 
-        if not resource_files:
-            resource_files = {}
-            for resource in resources:
-                remote_manifest = resource.get_manifest()
-                resource_files[resource.get_id()] = \
-                    set(remote_manifest.names()) - {"genomic_resource.yaml"}
+def cache_resources(repository, resource_ids, workers=4):
+    """Cache resources from a list of remote resource IDs."""
+    # pylint: disable=import-outside-toplevel
+    from dae.genomic_resources.repository_factory import \
+        build_resource_implementation
+    from dae.genomic_resources import get_resource_implementation_builder
 
-        for rem_resource in resources:
-            files_to_cache = resource_files.get(rem_resource.get_id())
-            if files_to_cache is None:
-                continue
-            for res_file in files_to_cache:
-                logger.info(
-                    "request to cache resource file: (%s, %s)",
-                    rem_resource.resource_id, res_file)
-                cached_proto = self._get_or_create_cache_proto(
-                    rem_resource.proto)
-                cached_resource = cached_proto.get_resource(
-                    rem_resource.resource_id)
-                futures.append(
-                    executor.submit(
-                        cached_proto.refresh_cached_resource_file,
-                        cached_resource,
-                        res_file,
-                    )
-                )
-        total_files = len(futures)
-        logger.info("caching %s files", total_files)
-        count = 0
-        for future in as_completed(futures):
-            resource_id, filename = future.result()
-            count += 1
+    executor = ThreadPoolExecutor(max_workers=workers)
+    futures = []
+    if resource_ids is None:
+        resources: list[GenomicResource] = \
+            list(repository.get_all_resources())
+    else:
+        resources = []
+        for resource_id in resource_ids:
+            remote_res = repository.get_resource(resource_id)
+            assert remote_res is not None, resource_id
+            resources.append(remote_res)
+
+    for resource in resources:
+        if not isinstance(resource.proto, CachingProtocol):
+            continue
+
+        cached_proto = resource.proto
+        impl_builder = get_resource_implementation_builder(resource.get_type())
+        if impl_builder is None:
             logger.info(
-                "ready %s files of %s (%s: %s)", count, total_files,
-                resource_id, filename)
+                "unexpected resource type <%s> for resource %s; "
+                "updating resource", resource.get_type(), resource.resource_id)
+            futures.append(
+                executor.submit(
+                    cached_proto.refresh_cached_resource, resource
+                )
+            )
+            continue
+
+        impl = build_resource_implementation(resource)
+
+        for res_file in impl.files:
+            logger.info(
+                "request to cache resource file: (%s, %s) from %s",
+                resource.resource_id, res_file,
+                cached_proto.remote_protocol.proto_id)
+            futures.append(
+                executor.submit(
+                    cached_proto.refresh_cached_resource_file,
+                    resource,
+                    res_file,
+                )
+            )
+
+    total_files = len(futures)
+    logger.info("caching %s files", total_files)
+    count = 0
+    for future in as_completed(futures):
+        resource_id, filename = future.result()
+        count += 1
+        logger.info(
+            "finished %s/%s (%s: %s)", count, total_files,
+            resource_id, filename)
 
         executor.shutdown()

@@ -14,12 +14,12 @@ from urllib.parse import urlparse
 import yaml
 
 from .fsspec_protocol import build_fsspec_protocol
-from .repository import GenomicResourceRepo, GenomicResourceProtocolRepo
+from .repository import GenomicResourceRepo, GenomicResourceProtocolRepo, \
+    GenomicResource
 from .cached_repository import GenomicResourceCachedRepo
 from .testing import build_inmemory_protocol
 
 from .group_repository import GenomicResourceGroupRepo
-
 
 logger = logging.getLogger(__name__)
 
@@ -226,3 +226,18 @@ def build_genomic_resource_repository(
     repo.definition = orig_definition
 
     return repo
+
+
+def build_resource_implementation(res: GenomicResource):
+    """Build a resource implementation from a resource."""
+    # pylint: disable=import-outside-toplevel
+    from dae.genomic_resources import get_resource_implementation_builder
+
+    builder = get_resource_implementation_builder(res.get_type())
+    if builder is None:
+        raise ValueError(
+            f"unsupported resource implementation type <{res.get_type()}> "
+            f"for resource <{res.resource_id}>"
+        )
+
+    return builder(res)

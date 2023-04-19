@@ -495,11 +495,11 @@ def test_reference_genome_usage(tmp_path, mocker):
     ])
     assert ref_genome_length_mock.call_count == 6
 
-    label_mock = mocker.Mock(return_value=None)
+    labels_mock = mocker.Mock(return_value={})
     mocker.patch(
-        "dae.genomic_resources.resource_implementation."
-        "GenomicResourceImplementation.get_label",
-        new=label_mock
+        "dae.genomic_resources.repository."
+        "GenomicResource.get_labels",
+        new=labels_mock
     )
 
     genomic_table_length_mock = mocker.Mock(return_value=30)

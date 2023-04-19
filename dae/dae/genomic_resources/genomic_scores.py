@@ -10,6 +10,7 @@ import json
 from typing import Iterator, Optional, cast, Type, Any, Union
 
 from dataclasses import dataclass
+from functools import lru_cache
 
 from jinja2 import Template
 
@@ -159,7 +160,7 @@ class GenomicScoreStatistics(
             except FileNotFoundError:
                 logger.warning(
                     "unable to load histogram file: %s",
-                    min_max_filepath)
+                    histogram_filepath)
 
         return GenomicScoreStatistics(genomic_resource, min_maxes, histograms)
 
@@ -169,6 +170,7 @@ class GenomicScore(
     ResourceConfigValidationMixin,
     InfoImplementationMixin
 ):
+    # pylint: disable=too-many-public-methods
     """Genomic scores base class."""
 
     def __init__(self, resource):
@@ -183,6 +185,15 @@ class GenomicScore(
         )
         self.score_definitions = self._generate_scoredefs()
 
+    def get_score_histogram_image_file(self, score_id: str):
+        statistics = self.get_statistics()
+        if score_id not in statistics.score_histograms:
+            return None
+        return os.path.join(
+            GenomicScoreStatistics.get_statistics_folder(),
+            GenomicScoreStatistics.get_histogram_image_file(score_id))
+
+    @lru_cache(maxsize=64)
     def get_statistics(self):
         return GenomicScoreStatistics.build_statistics(self.resource)
 
@@ -314,6 +325,25 @@ class GenomicScore(
                 for score in self.score_definitions]
         }
 
+    def _get_default_annotation_attribute(self, score: str) -> Optional[str]:
+        """Return default annotation attribute for a score.
+
+        Returns None if the score is not included in the default annotation.
+        Returns the destination attribute if present or the score if not.
+        """
+        default_annotation = self.get_default_annotation()
+        atts = []
+        for att_conf in default_annotation.get("attributes", []):
+            if att_conf["source"] != score:
+                continue
+            dst = score
+            if "destination" in att_conf:
+                dst = att_conf["destination"]
+            atts.append(dst)
+        if atts:
+            return ",".join(atts)
+        return None
+
     def get_score_config(self, score_id):
         return self.score_definitions.get(score_id)
 
@@ -433,91 +463,70 @@ class GenomicScore(
 
     def get_template(self):
         return Template(textwrap.dedent("""
-            {% extends base %}
-            {% block content %}
-            <h1>Scores</h1>
-            <table border="1">
-            <tr>
-            <td>id</td>
-            <td>type</td>
-            <td>default annotation</td>
-            <td>description</td>
-            <td>histogram</td>
-            <td>range</td>
-            </tr>
+        {% extends base %}
+        {% block content %}
 
-            {%- for score_id, score in data["scores"].items() -%}
-            <tr>
-            <td>{{ score_id }}</td>
-            <td>{{ score.type }}</td>
-            <td>
-            {%- if data["default_annotation"][score_id] -%}
-            {{ data["default_annotation"][score_id] }}
-            {%- else -%}
-            </br>
-            {%- endif -%}
-            </td>
-            <td>{{ score.desc}}</td>
-            <td>
-            {%- if data["histograms"][score_id] -%}
-            <img
-            src="{{data["statistics_dir"]}}/{{data["histograms"][score_id]}}"
-            width="200px"
-            alt={{ score_id }}
-            title={{ score_id }}>
-            {%- else -%}
-            NO HISTOGRAM
-            {%- endif -%}
-            </td>
-            <td>
-            {% set min_max = data["ranges"][score_id] %}
-            {%- if min_max is not none -%}
-            {%- if min_max.min is not none and min_max.max is not none -%}
-            ({{"%0.2f" % min_max.min}}, {{"%0.2f" % min_max.max}})
-            {%- else -%}
-            NO RANGE
-            {%- endif -%}
-            {%- endif -%}
-            </td>
-            </tr>
-            {%- endfor %}
-            </table>
-            {% endblock %}
-            """))
+        {% set scores = data.genomic_scores %}
+
+        <h1>Scores</h1>
+
+        <table border="1">
+        <tr>
+        <th>id</th>
+        <th>type</th>
+        <th>default annotation</th>
+        <th>description</th>
+        <th>histogram</th>
+        <th>range</th>
+        </tr>
+
+        {%- for score_id, score in scores.score_definitions.items() -%}
+
+        <tr class="score-definition">
+
+        <td>{{ score_id }}</td>
+
+        <td>{{ score.type }}</td>
+
+        {% set attr = scores._get_default_annotation_attribute(score_id) %}
+        <td>{{ attr if attr else "" }}</td>
+
+        <td>{{ score.desc }}</td>
+
+        <td>
+        {% set hist_image_file =
+            scores.get_score_histogram_image_file(score_id) %}
+        {%- if hist_image_file %}
+        <img src="{{ hist_image_file }}"
+            alt="{{ "HISTOGRAM FOR " + score_id }}"
+            title={{ score_id }}
+            width="200">
+        {%- else -%}
+        NO HISTOGRAM
+        {%- endif -%}
+        </td>
+
+        <td>
+        {% set statistics = scores.get_statistics() %}
+        {% set min_max = statistics.score_min_maxes.get(score_id) %}
+        {%- if min_max is not none and
+                min_max.min is not none and min_max.max is not none -%}
+        ({{"%0.3f" % min_max.min}}, {{"%0.3f" % min_max.max}})
+        {%- else -%}
+        NO RANGE
+        {%- endif -%}
+        </td>
+
+        </tr>
+        {%- endfor %}
+
+        </table>
+
+        {% endblock %}
+        """))
 
     def _get_template_data(self):
-        default_annotation = dict(
-            (score_id, None) for score_id in self.score_definitions)
-        histograms = dict(
-            (score_id, None) for score_id in self.score_definitions)
-        ranges = dict(
-            (score_id, None) for score_id in self.score_definitions)
-
-        for attribute in self.get_default_annotation()["attributes"]:
-            score_id = attribute["source"]
-            destination = attribute.get("destination")
-            if destination:
-                default_annotation[score_id] = destination
-            else:
-                default_annotation[score_id] = score_id
-
-        statistics_dir = ResourceStatistics.get_statistics_folder()
-
-        statistics = self.get_statistics()
-        if statistics is not None:
-            for score_id in statistics.score_histograms:
-                hist_file = statistics.get_histogram_image_file(score_id)
-                histograms[score_id] = hist_file
-            for score_id, min_max in statistics.score_min_maxes.items():
-                ranges[score_id] = min_max
-
-        return {
-            "scores": self.score_definitions,
-            "default_annotation": default_annotation,
-            "histograms": histograms,
-            "ranges": ranges,
-            "statistics_dir": statistics_dir,
-        }
+        return {"genomic_scores": self}
 
     def get_info(self):
         return InfoImplementationMixin.get_info(self)
@@ -624,7 +633,7 @@ class GenomicScore(
         return ref_genome
 
     def _get_chrom_regions(self, region_size, grr=None):
-        ref_genome_id = self.get_label("reference_genome")
+        ref_genome_id = self.resource.get_labels().get("reference_genome")
         ref_genome = self._get_reference_genome_cached(grr, ref_genome_id)
         if ref_genome is not None:
             regions = self._split_into_regions(region_size, ref_genome)

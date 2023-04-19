@@ -8,7 +8,9 @@ import pytest
 from dae.genomic_resources.cli import _run_list_command
 from dae.genomic_resources.repository import GR_CONF_FILE_NAME
 from dae.genomic_resources.fsspec_protocol import FsspecReadWriteProtocol
-from dae.genomic_resources.cached_repository import GenomicResourceCachedRepo
+from dae.genomic_resources.cached_repository import \
+    GenomicResourceCachedRepo, \
+    cache_resources
 from dae.genomic_resources import build_genomic_resource_repository
 from dae.genomic_resources.testing import build_inmemory_test_repository, \
     build_s3_test_server
@@ -145,32 +147,37 @@ def test_cache_all(cache_repository, scheme):
     demo_gtf_content = "TP53\tchr3\t300\t200"
     with cache_repository(content={
             "one": {
-                GR_CONF_FILE_NAME: "",
-                "data.txt": "alabala"
+                GR_CONF_FILE_NAME: "type: gene_models\nfilename: genes.gtf",
+                "genes.gtf": demo_gtf_content
             },
             "sub": {
                 "two-unstable(1.0)": {
-                    GR_CONF_FILE_NAME: "type: gene_models\nfile: genes.gtf",
-                    "genes.txt": demo_gtf_content
+                    GR_CONF_FILE_NAME:
+                    "type: gene_models\nfilename: genes.gtf",
+                    "genes.gtf": demo_gtf_content
                 },
                 "two(1.0)": {
-                    GR_CONF_FILE_NAME: "type: gene_models\nfile: genes.gtf",
-                    "genes.txt": demo_gtf_content,
+                    GR_CONF_FILE_NAME:
+                    "type: gene_models\nfilename: genes.gtf",
+                    "genes.gtf": demo_gtf_content,
                 }
             }}, scheme=scheme) as cache_repo:
 
-        cache_repo.cache_resources()
+        cache_resources(cache_repo, None, workers=1)
 
-        cache_proto = cache_repo.get_resource("one").proto
+        resource = cache_repo.get_resource("one")
+        cache_proto = resource.proto
         filesystem = cache_proto.local_protocol.filesystem
         base_url = cache_proto.local_protocol.url
 
+        # import pdb; pdb.set_trace()
+
         assert filesystem.exists(
-            os.path.join(base_url, "one", "data.txt"))
+            os.path.join(base_url, "one", "genes.gtf"))
         assert filesystem.exists(
-            os.path.join(base_url, "sub/two-unstable(1.0)", "genes.txt"))
+            os.path.join(base_url, "sub/two-unstable(1.0)", "genes.gtf"))
         assert filesystem.exists(
-            os.path.join(base_url, "sub/two(1.0)", "genes.txt"))
+            os.path.join(base_url, "sub/two(1.0)", "genes.gtf"))
 
 
 @pytest.mark.parametrize("scheme", [
@@ -316,50 +323,6 @@ def test_cached_repository_locks_file_when_caching(cache_repository, scheme):
 
         x.join()
         y.join()
-
-
-@pytest.mark.parametrize("scheme", [
-    "file",
-    "s3",
-])
-def test_cached_repository_resource_selective_file_caching(
-    cache_repository, scheme
-):
-    with cache_repository(content={
-            "one": {
-                GR_CONF_FILE_NAME: "config",
-                "data.txt": "data",
-                "alabala.txt": "alabala",
-            }}, scheme=scheme) as cache_repo:
-
-        # we get the cache_proto without calling get_resource on the local
-        # resource so that it doesn't automatically grab the GR_CONF - we want
-        # to test that selective file caching will always grab the GR_CONF
-        # file even if it isn't explicitly given in the file list
-        cache_proto = cache_repo._get_or_create_cache_proto(
-            cache_repo.child.get_resource("one").proto
-        )
-        filesystem = cache_proto.local_protocol.filesystem
-        base_url = cache_proto.local_protocol.url
-
-        assert not filesystem.exists(
-            os.path.join(base_url, "one", GR_CONF_FILE_NAME))
-        assert not filesystem.exists(
-            os.path.join(base_url, "one", "data.txt"))
-        assert not filesystem.exists(
-            os.path.join(base_url, "one", "alabala.txt"))
-
-        cache_repo.cache_resources(
-            resource_ids={"one", },
-            resource_files={"one": {"data.txt", }}
-        )
-
-        assert filesystem.exists(
-            os.path.join(base_url, "one", GR_CONF_FILE_NAME))
-        assert filesystem.exists(
-            os.path.join(base_url, "one", "data.txt"))
-        assert not filesystem.exists(
-            os.path.join(base_url, "one", "alabala.txt"))
 
 
 @pytest.mark.parametrize("scheme", [

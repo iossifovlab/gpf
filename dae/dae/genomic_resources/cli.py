@@ -42,9 +42,10 @@ from dae.utils.verbosity_configuration import VerbosityConfiguration
 from dae.genomic_resources.fsspec_protocol import build_fsspec_protocol
 from dae.genomic_resources.repository_factory import \
     build_genomic_resource_repository, get_default_grr_definition, \
-    load_definition_file, get_default_grr_definition_path, DEFAULT_DEFINITION
+    load_definition_file, get_default_grr_definition_path, \
+    DEFAULT_DEFINITION, \
+    build_resource_implementation
 
-from dae.genomic_resources import get_resource_implementation_builder
 from dae.genomic_resources.resource_implementation import ResourceStatistics
 
 logger = logging.getLogger("grr_manage")
@@ -424,6 +425,7 @@ def _read_stats_hash(proto, implementation):
 
 
 def _store_stats_hash(proto, resource):
+
     impl = build_resource_implementation(resource)
     stats_dir = ResourceStatistics.get_statistics_folder()
     if stats_dir is None:
@@ -596,11 +598,6 @@ def _run_repo_info_command(repo, proto, **kwargs):
                 res.resource_id,
                 err
             )
-
-
-def build_resource_implementation(res):
-    builder = get_resource_implementation_builder(res.get_type())
-    return builder(res)
 
 
 def _do_resource_info_command(proto, res):
