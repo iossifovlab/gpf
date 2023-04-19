@@ -111,21 +111,32 @@ class AdjustImpalaStorageCommand(AdjustmentsCommand):
 class StudyConfigsAdjustmentCommand(AdjustmentsCommand):
     """Command to adjust study configs."""
 
-    def _execute_studies(self):
+    def _execute_studies(self, config_format="toml"):
         study_configs_dir = os.path.join(self.instance_dir, "studies")
-        pattern = os.path.join(study_configs_dir, "**/*.conf")
+        if config_format == "toml":
+            pattern = os.path.join(study_configs_dir, "**/*.conf")
+        elif config_format == "yaml":
+            pattern = os.path.join(study_configs_dir, "**/*.yaml")
+
         config_filenames = glob.glob(pattern, recursive=True)
 
         for config_filename in config_filenames:
             logger.info("processing study %s", config_filename)
             with open(config_filename, "rt", encoding="utf8") as infile:
-                study_config = toml.loads(infile.read())
+                if config_format == "toml":
+                    study_config = toml.loads(infile.read())
+                elif config_format == "yaml":
+                    study_config = yaml.safe_load(infile.read())
+
             study_id = study_config["id"]
 
             result_config = self.adjust_study(study_id, study_config)
 
             with open(config_filename, "w", encoding="utf8") as outfile:
-                outfile.write(toml.dumps(result_config))
+                if config_format == "toml":
+                    outfile.write(toml.dumps(result_config))
+                elif config_format == "yaml":
+                    outfile.write(yaml.safe_dump(result_config))
 
     def _execute_datasets(self):
         study_configs_dir = os.path.join(self.instance_dir, "datasets")
@@ -200,9 +211,17 @@ class EnableDisableStudies(StudyConfigsAdjustmentCommand):
         self.study_ids = study_ids
         self.enabled = enabled
 
+    def _msg(self):
+        msg = "disable"
+        if self.enabled:
+            msg = "enable"
+        return msg
+
     def execute(self):
-        logger.info("going to disable following studies: %s", self.study_ids)
-        self._execute_studies()
+        logger.info(
+            "going to %s following studies: %s", self._msg(), self.study_ids)
+        self._execute_studies(config_format="toml")
+        self._execute_studies(config_format="yaml")
         self._execute_datasets()
 
         gpfjs = self.config.get("gpfjs")
@@ -225,13 +244,13 @@ class EnableDisableStudies(StudyConfigsAdjustmentCommand):
 
     def adjust_study(self, study_id, study_config):
         if study_id in self.study_ids:
-            logger.info("study %s disabled", study_id)
+            logger.info("study %s %s", study_id, self._msg())
             study_config["enabled"] = self.enabled
         return study_config
 
     def adjust_dataset(self, dataset_id, dataset_config):
         if dataset_id in self.study_ids:
-            logger.info("dataset %s disabled", dataset_id)
+            logger.info("dataset %s %s", dataset_id, self._msg())
             dataset_config["enabled"] = self.enabled
         studies = dataset_config["studies"]
         result = []
