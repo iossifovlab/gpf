@@ -24,6 +24,9 @@
 
         <li ngbNavItem>
           <a ngbNavLink>Federation tokens</a>
+          <ng-template ngbNavContent>
+            <gpf-federation-credentials></gpf-federation-credentials>
+          </ng-template>
         </li>
       </ul>
       <div [ngbNavOutlet]="nav" class="card-block"></div>

@@ -176,6 +176,7 @@ import { ContrastAdjustPipe } from './utils/contrast-adjust.pipe';
 import { ItemAddMenuComponent } from './item-add-menu/item-add-menu.component';
 import { ConfirmButtonComponent } from './confirm-button/confirm-button.component';
 import * as Sentry from '@sentry/angular-ivy';
+import { FederationCredentialsComponent } from './federation-credentials/federation-credentials.component';
 
 const appRoutes: Routes = [
   {
@@ -376,6 +377,7 @@ const appRoutes: Routes = [
     LegendComponent,
     PedigreeComponent,
     ItemAddMenuComponent,
+    FederationCredentialsComponent,
   ],
   imports: [
     BrowserModule,
