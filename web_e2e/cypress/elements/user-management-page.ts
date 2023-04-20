@@ -226,7 +226,7 @@ export class UserManagementPage extends BasePage {
   }
 
   public groupActionsDeleteGroup(group: string): element {
-    return cy.get(`gpf-confirm-button[id="${group}-delete-group-botton"]`);
+    return cy.get(`gpf-confirm-button[id="${group}-delete-group-button"]`);
   }
 
   public get deleteGroupConfirmButton(): element {

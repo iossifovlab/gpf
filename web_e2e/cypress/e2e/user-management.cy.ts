@@ -20,9 +20,10 @@ describe('User management tests for reset password in Users', () => {
 
     cy.request('GET', 'http://mailhog:8025/api/v2/search?kind=to&query=user_reset_password@email.com').then(
       (response) => {
-        const lines: string[] = (response.body.items[0].Content.Body as string).split('\r\n');
-        const url = lines[1].replace(' http://gpf/gpf/', '');
-        cy.visit(url);
+        const regexUrl = new RegExp(/http(s)?:\/\/[\w_-]+((.[\w_-]))([\w.,@?^=%&:/~+#-]*[\w@?^=%&/~+#-])/gm, 'i');
+        const url = (response.body.items[0].Content.Body as string).match(regexUrl)[0];
+        const urlToVisit = url.replace('http://gpf/gpf/', '');
+        cy.visit(urlToVisit);
         page.newPasswordInput.type('XC^ZF*TZXuUChFsv');
         page.repeatNewPasswordInput.type('XC^ZF*TZXuUChFsv');
         page.newPasswordButton.click();
@@ -64,9 +65,10 @@ describe('User management tests for reset password in Users', () => {
 
     cy.request('GET', 'http://mailhog:8025/api/v2/search?kind=to&query=forgotten_password@email.com').then(
       (response) => {
-        const lines: string[] = (response.body.items[0].Content.Body as string).split('\r\n');
-        const url = lines[1].replace(' http://gpf/gpf/', '');
-        cy.visit(url);
+        const regexUrl = new RegExp(/http(s)?:\/\/[\w_-]+((.[\w_-]))([\w.,@?^=%&:/~+#-]*[\w@?^=%&/~+#-])/gm, 'i');
+        const url = (response.body.items[0].Content.Body as string).match(regexUrl)[0];
+        const urlToVisit = url.replace('http://gpf/gpf/', '');
+        cy.visit(urlToVisit);
         page.newPasswordInput.type('XC^ZF*TZXuUChFsv');
         page.repeatNewPasswordInput.type('XC^ZF*TZXuUChFsv');
         page.newPasswordButton.click();
@@ -618,13 +620,11 @@ describe('User management tests for Users', () => {
     page.userDatasetsCell('test_email@email.com').should('have.text', 'comp_all');
 
     page.datasetsButton.click();
-    // space before admin@iossifovlab.com
-    page.datasetUserList('comp_all').should('have.text', ' admin@iossifovlab.comtest_name test_email@email.com');
+    page.datasetUserList('comp_all').should('have.text', 'admin@iossifovlab.comtest_name test_email@email.com');
 
     deleteTestUser(page, 'test_email@email.com');
     page.datasetsButton.click();
-    // space before admin@iossifovlab.com
-    page.datasetUserList('comp_all').should('have.text', ' admin@iossifovlab.com');
+    page.datasetUserList('comp_all').should('have.text', 'admin@iossifovlab.com');
   });
 
   it('should create group, add datasets and check data in Datasets', () => {
@@ -643,8 +643,8 @@ describe('User management tests for Users', () => {
     deleteTestGroup(page, 'test_group');
 
     page.datasetsButton.click();
-    page.datasetUserList('iossifov_2014').should('have.text', ' admin@iossifovlab.com');
-    page.datasetUserList('comp_all').should('have.text', ' admin@iossifovlab.com');
+    page.datasetUserList('iossifov_2014').should('have.text', 'admin@iossifovlab.com');
+    page.datasetUserList('comp_all').should('have.text', 'admin@iossifovlab.com');
   });
 
   it('should create group, add dataset and users and check data in Datasets', () => {
@@ -673,7 +673,7 @@ describe('User management tests for Users', () => {
     // check in Datasets
     page.datasetsButton.click();
     page.datasetUserList('iossifov_2014').should('have.text',
-      ' admin@iossifovlab.comtest_name1 test_email1@email.comtest_name2 test_email2@email.com');
+      'admin@iossifovlab.comtest_name1 test_email1@email.comtest_name2 test_email2@email.com');
     page.datasetGroupList('iossifov_2014').should('have.text', 'any_datasetiossifov_2014test_group');
 
     // remove dataset in Groups
@@ -686,7 +686,7 @@ describe('User management tests for Users', () => {
 
     // check in Datasets
     page.datasetsButton.click();
-    page.datasetUserList('iossifov_2014').should('have.text', ' admin@iossifovlab.com');
+    page.datasetUserList('iossifov_2014').should('have.text', 'admin@iossifovlab.com');
     page.datasetGroupList('iossifov_2014').should('have.text', 'any_datasetiossifov_2014');
   });
 
@@ -709,7 +709,7 @@ describe('User management tests for Users', () => {
 
     page.datasetGroupList('comp_denovo').should('have.text', 'any_datasetcomp_denovotest_group');
     page.datasetUserList('comp_denovo').should('have.text',
-      ' admin@iossifovlab.comtest_name1 test_email1@email.comtest_name2 test_email2@email.com');
+      'admin@iossifovlab.comtest_name1 test_email1@email.comtest_name2 test_email2@email.com');
 
     page.datasetGroupRemoveButton('comp_denovo', 'test_group').click();
     page.datasetsRemoveGroupConfirmButton.click();
