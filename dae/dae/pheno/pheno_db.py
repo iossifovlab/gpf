@@ -896,11 +896,12 @@ class PhenotypeStudy(PhenotypeData):
             self.db.get_value_table(MeasureType.raw)
         ]
 
-        fieldnames = ["person_id"] + measure_ids
+        header = ["person_id"] + measure_ids
+        field_indexes = {field: index for index, field in enumerate(header)}
 
         buffer = StringIO()
-        writer = csv.DictWriter(buffer, fieldnames=fieldnames)
-        writer.writeheader()
+        writer = csv.writer(buffer, delimiter=",")
+        writer.writerow(header)
         yield buffer.getvalue()
         buffer.seek(0)
         buffer.truncate(0)
@@ -933,16 +934,19 @@ class PhenotypeStudy(PhenotypeData):
                 for row in results:
                     person_id = row["person_id"]
                     if person_id not in output:
-                        output[person_id] = {"person_id": person_id}
-                        for measure_id in measure_ids:
-                            output[person_id][measure_id] = "-"
-                    output[person_id][row["measure_id"]] = row["value"]
+                        output[person_id] = ["-"] * len(header)
+                        output[person_id][field_indexes["person_id"]] = \
+                            person_id
+                    output[person_id][field_indexes[row["measure_id"]]] = \
+                        row["value"]
 
         for value in output.values():
             writer.writerow(value)
             yield buffer.getvalue()
             buffer.seek(0)
             buffer.truncate(0)
+        buffer.close()
+        del output
 
     def get_regressions(self):
         return self.db.regression_display_names_with_ids
