@@ -39,14 +39,16 @@ export class MultiContinuousFilterComponent extends StatefulComponent implements
     }
     const filters = state['personFiltersState'][this.isFamilyFilter ? 'familyFilters' : 'personFilters'];
     filters.forEach(async(filter) => {
-      const selection = {
-        name: filter.source,
-        min: filter['selection']['min'],
-        max: filter['selection']['max']
-      };
-      this.selectedMeasure = selection;
-      await this.waitForSelectorComponent();
-      this.measureSelectorComponent.selectMeasure(this.selectedMeasure);
+      if (filter['sourceType'] === 'continuous') {
+        const selection = {
+          name: filter.source,
+          min: filter['selection']['min'],
+          max: filter['selection']['max']
+        };
+        this.selectedMeasure = selection;
+        await this.waitForSelectorComponent();
+        this.measureSelectorComponent.selectMeasure(this.selectedMeasure);
+      }
     });
   }
 
