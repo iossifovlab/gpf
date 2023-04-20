@@ -47,16 +47,19 @@ class PhenoMeasureHistogramView(QueryDatasetView):
         data = request.data
         dataset_id = data["datasetId"]
         dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
-
         assert dataset is not None
         assert dataset.phenotype_data is not None
-        assert "measure" in data
+        if "measures" in data \
+                and not dataset.phenotype_data.has_measure(data["measures"]):
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        assert "measures" in data
 
-        pheno_measure = data["measure"]
+        pheno_measure = data["measures"]
         assert dataset.phenotype_data.has_measure(pheno_measure)
 
         measure = dataset.phenotype_data.get_measure(pheno_measure)
-        assert measure.measure_type == MeasureType.continuous
+        if measure.measure_type is not MeasureType.continuous:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
 
         df = dataset.phenotype_data.get_measure_values_df(pheno_measure)
 
