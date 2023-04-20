@@ -1,15 +1,14 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-import os
 import textwrap
 
 import pytest
-import pysam
 
 from dae.annotation.annotate_columns import build_record_to_annotatable
-from dae.annotation.annotatable import Position, VCFAllele, Region
-from dae.testing import setup_directories, setup_vcf, setup_denovo
+from dae.annotation.annotatable import Position, VCFAllele, Region, CNVAllele
+from dae.testing import setup_directories, setup_denovo
 from dae.annotation.annotate_columns import cli as cli_columns
-from dae.annotation.annotate_vcf import cli as cli_vcf, produce_partfile_paths
+from dae.genomic_resources.genomic_context import SimpleGenomicContext
+from dae.testing import setup_genome
 
 
 @pytest.mark.parametrize(
@@ -25,11 +24,91 @@ from dae.annotation.annotate_vcf import cli as cli_vcf, produce_partfile_paths
 
         ({"chrom": "chr1", "pos_beg": "4", "pos_end": "30"},
          Region("chr1", 4, 30)),
+
+        ({"chrom": "chr1", "pos_beg": "4", "pos_end": "30"},
+         Region("chr1", 4, 30)),
     ]
 )
 def test_default_columns(record, expected):
     annotatable = build_record_to_annotatable(
         {}, set(record.keys())).build(record)
+    assert str(annotatable) == str(expected)
+
+
+@pytest.mark.parametrize(
+    "record,expected", [
+        ({"location": "chr1:13", "variant": "sub(A->T)"},
+         VCFAllele("chr1", 13, "A", "T")),
+
+        ({"location": "chr1:3-13", "variant": "duplication"},
+         CNVAllele("chr1", 3, 13, CNVAllele.Type.LARGE_DUPLICATION)),
+    ]
+)
+def test_cshl_variants_without_context(record, expected):
+    with pytest.raises(ValueError):
+        build_record_to_annotatable(
+            {}, set(record.keys())).build(record)
+
+
+@pytest.fixture
+def gc_fixture(tmp_path):
+    genome = setup_genome(
+        tmp_path / "acgt_gpf" / "genome" / "allChr.fa",
+        f"""
+        >chr1
+        {25 * "ACGT"}
+        >chr2
+        {25 * "ACGT"}
+        >chr3
+        {25 * "ACGT"}
+        """
+    )
+    return SimpleGenomicContext(
+        {"reference_genome": genome}, ("test", "gc_fixture"))
+
+
+@pytest.mark.parametrize(
+    "record,expected", [
+        ({"chrom": "chr1", "pos": "3"},
+         Position("chr1", 3)),
+
+        ({"chrom": "chr1", "pos": "4", "ref": "C", "alt": "CT"},
+         VCFAllele("chr1", 4, "C", "CT")),
+
+        ({"vcf_like": "chr1:4:C:CT"},
+         VCFAllele("chr1", 4, "C", "CT")),
+
+        ({"chrom": "chr1", "pos_beg": "4", "pos_end": "30"},
+         Region("chr1", 4, 30)),
+
+        ({"chrom": "chr1", "pos_beg": "4", "pos_end": "30"},
+         Region("chr1", 4, 30)),
+
+        ({"location": "chr1:13", "variant": "sub(A->T)"},
+         VCFAllele("chr1", 13, "A", "T")),
+
+        ({"location": "chr1:14", "variant": "ins(A)"},
+         VCFAllele("chr1", 13, "A", "AA")),
+
+        ({"location": "chr1:13", "variant": "del(1)"},
+         VCFAllele("chr1", 12, "TA", "T")),
+
+        ({"location": "chr1:3-13", "variant": "duplication"},
+         CNVAllele("chr1", 3, 13, CNVAllele.Type.LARGE_DUPLICATION)),
+
+        ({"location": "chr1:3-13", "variant": "CNV+"},
+         CNVAllele("chr1", 3, 13, CNVAllele.Type.LARGE_DUPLICATION)),
+
+        ({"location": "chr1:3-13", "variant": "deletion"},
+         CNVAllele("chr1", 3, 13, CNVAllele.Type.LARGE_DELETION)),
+
+        ({"location": "chr1:3-13", "variant": "CNV-"},
+         CNVAllele("chr1", 3, 13, CNVAllele.Type.LARGE_DELETION)),
+    ]
+)
+def test_build_record(record, expected, gc_fixture):
+    annotatable = build_record_to_annotatable(
+        {}, set(record.keys()), gc_fixture).build(record)
     assert str(annotatable) == str(expected)
 
 
@@ -158,133 +237,3 @@ def test_basic_setup(tmp_path, annotate_directory_fixture):
     out_file_content = get_file_content_as_string(out_file)
     print(out_file_content)
     assert out_file_content == out_expected_content
-
-
-def test_basic_vcf(tmp_path, annotate_directory_fixture):
-    in_content = textwrap.dedent("""
-        ##fileformat=VCFv4.2
-        ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
-        ##contig=<ID=chr1>
-        #CHROM POS ID REF ALT QUAL FILTER INFO FORMAT m1  d1  c1
-        chr1   23  .  C   T   .    .      .    GT     0/1 0/0 0/0
-        chr1   24  .  C   A   .    .      .    GT     0/0 0/1 0/0
-    """)
-
-    in_file = tmp_path / "in.vcf"
-    out_file = tmp_path / "out.vcf"
-    workdir = tmp_path / "output"
-    annotation_file = tmp_path / "annotation.yaml"
-    grr_file = tmp_path / "grr.yaml"
-
-    setup_vcf(in_file, in_content)
-
-    cli_vcf([
-        str(a) for a in [
-            in_file, annotation_file, "-w", workdir, "--grr", grr_file,
-            "-o", out_file
-        ]
-    ])
-
-    result = []
-    # pylint: disable=no-member
-    with pysam.VariantFile(out_file) as vcf_file:
-        for vcf in vcf_file.fetch():
-            result.append(vcf.info["score"][0])
-    assert result == ["0.1", "0.2"]
-
-
-def test_multiallelic_vcf(tmp_path, annotate_directory_fixture):
-    in_content = textwrap.dedent("""
-        ##fileformat=VCFv4.2
-        ##contig=<ID=chr1>
-        #CHROM POS ID REF ALT QUAL FILTER INFO
-        chr1   23  .  C   T,A   .    .      .
-        chr1   24  .  C   A,G   .    .      .
-    """)
-
-    in_file = tmp_path / "in.vcf"
-    out_file = tmp_path / "out.vcf"
-    workdir = tmp_path / "output"
-    annotation_file = tmp_path / "annotation_multiallelic.yaml"
-    grr_file = tmp_path / "grr.yaml"
-
-    setup_vcf(in_file, in_content)
-
-    cli_vcf([
-        str(a) for a in [
-            in_file, annotation_file, "-w", workdir, "--grr", grr_file,
-            "-o", out_file
-        ]
-    ])
-
-    result = []
-    # pylint: disable=no-member
-    with pysam.VariantFile(out_file) as vcf_file:
-        for vcf in vcf_file.fetch():
-            result.append(vcf.info["score"])
-    assert result == [("0.1", "0.2"), ("0.3", "0.4")]
-
-
-def test_vcf_multiple_chroms(tmp_path, annotate_directory_fixture):
-    in_content = textwrap.dedent("""
-        ##fileformat=VCFv4.2
-        ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
-        ##contig=<ID=chr1>
-        ##contig=<ID=chr2>
-        ##contig=<ID=chr3>
-        #CHROM POS ID REF ALT QUAL FILTER INFO FORMAT m1  d1  c1
-        chr1   23  .  C   T   .    .      .    GT     0/1 0/0 0/0
-        chr1   24  .  C   A   .    .      .    GT     0/0 0/1 0/0
-        chr2   33  .  C   T   .    .      .    GT     0/1 0/0 0/0
-        chr2   34  .  C   A   .    .      .    GT     0/0 0/1 0/0
-        chr3   43  .  C   T   .    .      .    GT     0/1 0/0 0/0
-        chr3   44  .  C   A   .    .      .    GT     0/0 0/1 0/0
-    """)
-
-    in_file = tmp_path / "in.vcf.gz"
-    out_file = tmp_path / "out.vcf.gz"
-    out_file_tbi = tmp_path / "out.vcf.gz.tbi"
-    workdir = tmp_path / "output"
-    annotation_file = tmp_path / "annotation.yaml"
-    grr_file = tmp_path / "grr.yaml"
-
-    tasks_log_dir = tmp_path / "tld"
-    tasks_status_dir = tmp_path / "tsd"
-
-    setup_vcf(in_file, in_content)
-
-    cli_vcf([
-        str(a) for a in [
-            in_file, annotation_file, "-w", workdir, "--grr", grr_file,
-            "-o", out_file, "-j 1",
-            "--tasks-log-dir", tasks_log_dir,
-            "-d", tasks_status_dir
-        ]
-    ])
-
-    result = []
-    # pylint: disable=no-member
-    with pysam.VariantFile(out_file) as vcf_file:
-        for vcf in vcf_file.fetch():
-            result.append(vcf.info["score"][0])
-    assert result == ["0.1", "0.2",
-                      "0.3", "0.4",
-                      "0.5", "0.6"]
-    assert os.path.exists(out_file_tbi)
-
-
-def test_produce_partfile_paths():
-    regions = [("chr1", 0, 1000), ("chr1", 1000, 2000), ("chr1", 2000, 3000)]
-    expected_output = [
-        "work_dir/output/input.vcf_annotation_chr1_0_1000.vcf.gz",
-        "work_dir/output/input.vcf_annotation_chr1_1000_2000.vcf.gz",
-        "work_dir/output/input.vcf_annotation_chr1_2000_3000.vcf.gz",
-    ]
-    # relative input file path
-    assert produce_partfile_paths(
-        "src/input.vcf", regions, "work_dir/output"
-    ) == expected_output
-    # absolute input file path
-    assert produce_partfile_paths(
-        "/home/user/src/input.vcf", regions, "work_dir/output"
-    ) == expected_output

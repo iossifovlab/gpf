@@ -12,7 +12,14 @@ g2        tx3  bar   -      3       20    3        18     1         3          1
 """  # noqa
 
 
-def foobar_gpf(root_path, storage=None):
+def foobar_genes(root_path):
+    genes = setup_gene_models(
+        root_path / "foobar_genes" / "genes.txt",
+        GMM_CONTENT, fileformat="refflat")
+    return genes
+
+
+def foobar_genome(root_path):
     genome = setup_genome(
         root_path / "foobar_genome" / "chrAll.fa",
         """
@@ -26,9 +33,12 @@ def foobar_gpf(root_path, storage=None):
             NN
         """
     )
-    genes = setup_gene_models(
-        root_path / "foobar_genes" / "genes.txt",
-        GMM_CONTENT, fileformat="refflat")
+    return genome
+
+
+def foobar_gpf(root_path, storage=None):
+    genome = foobar_genome(root_path)
+    genes = foobar_genes(root_path)
 
     gpf_instance = setup_gpf_instance(
         root_path / "gpf_instance",

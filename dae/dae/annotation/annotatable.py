@@ -1,3 +1,4 @@
+from __future__ import annotations
 import enum
 
 
@@ -17,6 +18,29 @@ class Annotatable:
 
         LARGE_DUPLICATION = 6
         LARGE_DELETION = 7
+
+        @staticmethod
+        def from_string(variant: str) -> Annotatable.Type:
+            """Construct annotatable type from string argument."""
+            # pylint: disable=too-many-return-statements
+            vtype = variant.lower()
+            if vtype == "position":
+                return Annotatable.Type.POSITION
+            if vtype == "region":
+                return Annotatable.Type.REGION
+            if vtype == "substitution":
+                return Annotatable.Type.SUBSTITUTION
+            if vtype == "small_insertion":
+                return Annotatable.Type.SMALL_INSERTION
+            if vtype == "small_deletion":
+                return Annotatable.Type.SMALL_DELETION
+            if vtype == "complex":
+                return Annotatable.Type.COMPLEX
+            if vtype == "large_duplication":
+                return Annotatable.Type.LARGE_DUPLICATION
+            if vtype == "large_deletion":
+                return Annotatable.Type.LARGE_DELETION
+            raise ValueError(f"unexpected annotatable type: {variant}")
 
     def __init__(self, chrom, pos, pos_end, annotatable_type):
         self._chrom = chrom
