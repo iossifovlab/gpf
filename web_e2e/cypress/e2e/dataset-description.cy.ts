@@ -135,25 +135,25 @@ describe('Dataset description access rights tests', () => {
     page.login(userData.normal.username, userData.normal.password, false);
 
     page.navigateToDatasetPage(datasetIds.allGenotypes, toolPageLinks.geneBrowser, false);
-    datasetsPage.datasetDescriptionButton.should('not.exist');
+    datasetsPage.datasetDescriptionButton.should('have.css', 'pointer-events', 'none');
 
     page.navigateToDatasetPage(datasetIds.compGenotypes, toolPageLinks.geneBrowser, false);
-    datasetsPage.datasetDescriptionButton.should('not.exist');
+    datasetsPage.datasetDescriptionButton.should('have.css', 'pointer-events', 'none');
 
     page.navigateToDatasetPage(datasetIds.compDenovo, toolPageLinks.datasetStatistics, false);
-    datasetsPage.datasetDescriptionButton.should('not.exist');
+    datasetsPage.datasetDescriptionButton.should('have.css', 'pointer-events', 'none');
 
     page.navigateToDatasetPage(datasetIds.compVcf, toolPageLinks.datasetStatistics, false);
-    datasetsPage.datasetDescriptionButton.should('not.exist');
+    datasetsPage.datasetDescriptionButton.should('have.css', 'pointer-events', 'none');
 
     page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.datasetStatistics, false);
-    datasetsPage.datasetDescriptionButton.should('not.exist');
+    datasetsPage.datasetDescriptionButton.should('have.css', 'pointer-events', 'none');
 
     page.navigateToDatasetPage(datasetIds.iossifov2014, toolPageLinks.datasetStatistics, false);
-    datasetsPage.datasetDescriptionButton.should('not.exist');
+    datasetsPage.datasetDescriptionButton.should('have.css', 'pointer-events', 'none');
 
     page.navigateToDatasetPage(datasetIds.multi, toolPageLinks.datasetStatistics, false);
-    datasetsPage.datasetDescriptionButton.should('not.exist');
+    datasetsPage.datasetDescriptionButton.should('have.css', 'pointer-events', 'none');
 
     page.logout();
   });

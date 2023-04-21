@@ -11,31 +11,31 @@ export class DatasetsPage extends BasePage {
 
   public get datasetDescriptionButton(): element {
     cy.get('.navbar-custom').should('be.visible');
-    return cy.get('a.nav-link').contains('Dataset Description');
+    return cy.get('li.nav-item').contains('Dataset Description');
   }
 
   public get datasetStatisticsButton(): element {
     cy.get('.navbar-custom').should('be.visible');
-    return cy.get('a.nav-link').contains('Dataset Statistics');
+    return cy.get('li.nav-item').contains('Dataset Statistics');
   }
 
   public get genotypeBrowserButton(): element {
     cy.get('.navbar-custom').should('be.visible');
-    return cy.get('a.nav-link').contains('Genotype Browser');
+    return cy.get('li.nav-item').contains('Genotype Browser');
   }
 
   public get phenotypeBrowserButton(): element {
     cy.get('.navbar-custom').should('be.visible');
-    return cy.get('a.nav-link').contains('Phenotype Browser');
+    return cy.get('li.nav-item').contains('Phenotype Browser');
   }
 
   public get phenotypeToolButton(): element {
     cy.get('.navbar-custom').should('be.visible');
-    return cy.get('a.nav-link').contains('Phenotype Tool');
+    return cy.get('li.nav-item').contains('Phenotype Tool');
   }
 
   public get geneBrowserButton(): element {
     cy.get('.navbar-custom').should('be.visible');
-    return cy.get('a.nav-link').contains('Gene Browser');
+    return cy.get('li.nav-item').contains('Gene Browser');
   }
 }
