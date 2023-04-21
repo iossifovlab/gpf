@@ -135,31 +135,31 @@ describe('Dataset description access rights tests', () => {
     page.login(userData.normal.username, userData.normal.password, false);
 
     page.navigateToDatasetPage(datasetIds.allGenotypes, toolPageLinks.geneBrowser, false);
-    datasetsPage.datasetDescriptionButton.should('not.exist');
+    datasetsPage.datasetDescriptionButton.should('have.css', 'pointer-events', 'none');
 
     page.navigateToDatasetPage(datasetIds.compGenotypes, toolPageLinks.geneBrowser, false);
-    datasetsPage.datasetDescriptionButton.should('not.exist');
+    datasetsPage.datasetDescriptionButton.should('have.css', 'pointer-events', 'none');
 
     page.navigateToDatasetPage(datasetIds.compDenovo, toolPageLinks.datasetStatistics, false);
-    datasetsPage.datasetDescriptionButton.should('not.exist');
+    datasetsPage.datasetDescriptionButton.should('have.css', 'pointer-events', 'none');
 
     page.navigateToDatasetPage(datasetIds.compVcf, toolPageLinks.datasetStatistics, false);
-    datasetsPage.datasetDescriptionButton.should('not.exist');
+    datasetsPage.datasetDescriptionButton.should('have.css', 'pointer-events', 'none');
 
     page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.datasetStatistics, false);
-    datasetsPage.datasetDescriptionButton.should('not.exist');
+    datasetsPage.datasetDescriptionButton.should('have.css', 'pointer-events', 'none');
 
     page.navigateToDatasetPage(datasetIds.iossifov2014, toolPageLinks.datasetStatistics, false);
-    datasetsPage.datasetDescriptionButton.should('not.exist');
+    datasetsPage.datasetDescriptionButton.should('have.css', 'pointer-events', 'none');
 
     page.navigateToDatasetPage(datasetIds.multi, toolPageLinks.datasetStatistics, false);
-    datasetsPage.datasetDescriptionButton.should('not.exist');
+    datasetsPage.datasetDescriptionButton.should('have.css', 'pointer-events', 'none');
 
     page.logout();
   });
 
 
-  it.skip('should log admin, give researcher user access rights for iossifov_2014,' +
+  it('should log admin, give researcher user access rights for iossifov_2014,' +
      'create dataset description for iossifov_2014, log researcher user and check' +
      'whether the newly created description exists and that it cannot be edited', () => {
     const userManagementPage = new UserManagementPage();
@@ -167,12 +167,9 @@ describe('Dataset description access rights tests', () => {
     // give researcher access for iossifov_2014
     page.loginAdmin();
     page.navigateToSidenavPage(sidenavPageLinks.management);
-    userManagementPage.getUserEditorButtonByEmail(userData.normal.username).click();
-    userManagementPage.userWindowGroupDropDownMenuButton.click();
-    userManagementPage.userWindowGroupDropdownSearch.type('iossifov');
-    userManagementPage.userWindowGroupDropdownListCheckboxes.first().click();
-    userManagementPage.userWindowGroupDropDownMenuButton.click();
-    userManagementPage.userWindowSubmitButton.click();
+    userManagementPage.userAddGroupButton(userData.normal.username).click();
+    userManagementPage.groupsMenuSearch.type('iossifov_2014');
+    userManagementPage.findButtonInComponentContainingText('.add-item-button', 'iossifov_2014').click();
 
     page.navigateToSidenavPage(sidenavPageLinks.datasets);
     page.navigateToDatasetPage(datasetIds.iossifov2014, toolPageLinks.datasetDescription);
@@ -190,16 +187,16 @@ describe('Dataset description access rights tests', () => {
     // state cleanup
     page.loginAdmin();
     page.navigateToSidenavPage(sidenavPageLinks.management);
-    userManagementPage.getUserEditorButtonByEmail(userData.normal.username).click();
-    userManagementPage.allUserEditGroupRemoveButtons.first().click();
-    userManagementPage.userWindowSubmitButton.click();
+    userManagementPage.userAddGroupButton(userData.normal.username).click();
+    userManagementPage.userGroupRemoveButton(userData.normal.username, 'iossifov_2014').click();
+    userManagementPage.userRemoveGroupConfirm.click();
     page.navigateToSidenavPage(sidenavPageLinks.datasets);
     page.navigateToDatasetPage(datasetIds.iossifov2014, toolPageLinks.datasetDescription);
     page.clearDescription();
     page.logout();
   });
 
-  it.skip('should login regular user, try to navgigate to a dataset description page without description via the url ' +
+  it('should login regular user, try to navigate to a dataset description page without description via the url ' +
      'and get redirected back to the home page', () => {
     const homePageUrl = `${Cypress.config().baseUrl}datasets/ALL_genotypes/${toolPageLinks.geneBrowser}`;
     const datasetDescriptionUrl =

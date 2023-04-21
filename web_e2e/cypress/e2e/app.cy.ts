@@ -69,7 +69,7 @@ describe('App tests', () => {
     page.logout();
   });
 
-  it.skip('should toggle sidenav, click on the "Management" button and navigate to "/management"', () => {
+  it('should toggle sidenav, click on the "Management" button and navigate to "/management"', () => {
     const baseUrl = Cypress.config().baseUrl;
     const managementUrl = `${baseUrl}management`;
 
@@ -190,17 +190,15 @@ describe('App user access rights tests', () => {
     page.logout();
   });
 
-  it.skip('should login admin and give researcher access rights for comp_vcf, ' +
+  it('should login admin and give researcher access rights for comp_vcf, ' +
      'then login researcher and verify his rights', () => {
     const userManagementPage = new UserManagementPage();
 
     page.loginAdmin();
     page.navigateToSidenavPage(sidenavPageLinks.management);
-    userManagementPage.getUserEditorButtonByEmail(userData.normal.username).click();
-    userManagementPage.userWindowGroupDropDownMenuButton.click();
-    userManagementPage.userWindowGroupDropdownSearch.type('comp_vcf');
-    userManagementPage.userWindowGroupDropdownListCheckboxes.last().click();
-    userManagementPage.userWindowSubmitButton.click();
+    userManagementPage.userAddGroupButton(userData.normal.username).click();
+    userManagementPage.groupsMenuSearch.type('comp_vcf');
+    userManagementPage.findButtonInComponentContainingText('.add-item-button', 'comp_vcf').click();
     userManagementPage.waitForPageToLoad(sidenavPageLinks.management);
     page.logout();
 
@@ -212,19 +210,16 @@ describe('App user access rights tests', () => {
     page.logout();
   });
 
-  it.skip('should login admin and give researcher access rights for COMP_genotypes, ' +
+  it('should login admin and give researcher access rights for COMP_genotypes, ' +
      'then login researcher and verify his rights', () => {
     const userManagementPage = new UserManagementPage();
     const genotypeBrowserPage = new GenotypeBrowserPage();
 
     page.loginAdmin();
     page.navigateToSidenavPage(sidenavPageLinks.management);
-    userManagementPage.getUserEditorButtonByEmail(userData.normal.username).click();
-    userManagementPage.allUserEditGroupRemoveButtons.click({multiple: true});
-    userManagementPage.userWindowGroupDropDownMenuButton.click();
-    userManagementPage.userWindowGroupDropdownSearch.type('COMP_genotypes');
-    userManagementPage.userWindowGroupDropdownListCheckboxes.last().click();
-    userManagementPage.userWindowSubmitButton.click();
+    userManagementPage.userAddGroupButton(userData.normal.username).click();
+    userManagementPage.groupsMenuSearch.type('COMP_genotypes');
+    userManagementPage.findButtonInComponentContainingText('.add-item-button', 'COMP_genotypes').click();
     userManagementPage.waitForPageToLoad(sidenavPageLinks.management);
     page.logout();
 
@@ -264,19 +259,16 @@ describe('App user access rights tests', () => {
     page.logout();
   });
 
-  it.skip('should login admin and give researcher access rights for ALL Genotypes, ' +
+  it('should login admin and give researcher access rights for ALL Genotypes, ' +
      'then login researcher and verify his rights', () => {
     const userManagementPage = new UserManagementPage();
     const genotypeBrowserPage = new GenotypeBrowserPage();
 
     page.loginAdmin();
     page.navigateToSidenavPage(sidenavPageLinks.management);
-    userManagementPage.getUserEditorButtonByEmail(userData.normal.username).click();
-    userManagementPage.allUserEditGroupRemoveButtons.click({multiple: true});
-    userManagementPage.userWindowGroupDropDownMenuButton.click();
-    userManagementPage.userWindowGroupDropdownSearch.type('ALL_Genotypes');
-    userManagementPage.userWindowGroupDropdownListCheckboxes.last().click();
-    userManagementPage.userWindowSubmitButton.click();
+    userManagementPage.userAddGroupButton(userData.normal.username).click();
+    userManagementPage.groupsMenuSearch.type('ALL_genotypes');
+    userManagementPage.findButtonInComponentContainingText('.add-item-button', 'ALL_genotypes').click();
     userManagementPage.waitForPageToLoad(sidenavPageLinks.management);
     page.logout();
 
@@ -312,16 +304,19 @@ describe('App user access rights tests', () => {
     page.logout();
   });
 
-  it.skip('should login admin and remove all researcher access rights,' +
+  it('should login admin and remove all researcher access rights,' +
   ' then login researcher and verify his rights', () => {
     const userManagementPage = new UserManagementPage();
     const genotypeBrowserPage = new GenotypeBrowserPage();
 
     page.loginAdmin();
     page.navigateToSidenavPage(sidenavPageLinks.management);
-    userManagementPage.getUserEditorButtonByEmail(userData.normal.username).click();
-    userManagementPage.allUserEditGroupRemoveButtons.click({multiple: true});
-    userManagementPage.userWindowSubmitButton.click();
+    userManagementPage.userGroupRemoveButton(userData.normal.username, 'ALL_genotypes').click();
+    userManagementPage.userRemoveGroupConfirm.click();
+    userManagementPage.userGroupRemoveButton(userData.normal.username, 'COMP_genotypes').click();
+    userManagementPage.userRemoveGroupConfirm.click();
+    userManagementPage.userGroupRemoveButton(userData.normal.username, 'comp_vcf').click();
+    userManagementPage.userRemoveGroupConfirm.click();
     userManagementPage.waitForPageToLoad(sidenavPageLinks.management);
     page.logout();
 

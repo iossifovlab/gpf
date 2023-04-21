@@ -37,6 +37,22 @@ export class UserManagementPage extends BasePage {
     return cy.get(`div[id="${userEmail}-groups-list"]`);
   }
 
+  public userGroupListItem(email: string, group: string): element {
+    return this.userGroupList(email).find(`div[id="${group}-list-item"]`);
+  }
+
+  public userAddGroupButton(email: string): element {
+    return this.userGroupsCell(email).find('.add-button');
+  }
+
+  public userGroupRemoveButton(email: string, group: string): element {
+    return this.userGroupList(email).find(`div[id="${group}-list-item"] #confirm-button`);
+  }
+
+  public userHasPasswordCell(userEmail: string): element {
+    return cy.get(`div[id="${userEmail}-password-cell"]`);
+  }
+
   public userGroupsCell(userEmail: string): element {
     return cy.get(`div[id="${userEmail}-groups-cell"]`);
   }
@@ -61,7 +77,7 @@ export class UserManagementPage extends BasePage {
     return cy.get('#create-user-button');
   }
 
-  public get cancelUserButton(): element {
+  public get cancelUserCreationButton(): element {
     return cy.get('#cancel-user-creation-button');
   }
 
@@ -78,18 +94,18 @@ export class UserManagementPage extends BasePage {
   }
 
   public get groupsMenuSearch(): element {
-    return cy.get('.search');
+    return cy.get('.search-input-wrapper > input');
   }
 
   public get groupsMenuSearchClear(): element {
     return cy.get('.search-clear-icon');
   }
 
-  public get userTableRemoveGroupConfirm(): element {
+  public get userRemoveGroupConfirm(): element {
     return cy.get('mwl-confirmation-popover-window button').contains('Remove');
   }
 
-  public get userTableCancelRemoveGroupConfirm(): element {
+  public get userCancelRemoveGroupConfirm(): element {
     return cy.get('mwl-confirmation-popover-window button').contains('Cancel');
   }
 
@@ -97,56 +113,28 @@ export class UserManagementPage extends BasePage {
     return cy.get('gpf-users-table .grid-cell');
   }
 
-  public get userTableDeleteNewestUserButton(): element {
-    return cy.get('button[title="Delete user"]');
-  }
-
   public get userTableDeleteUserConfirmButton(): element {
     return cy.get('mwl-confirmation-popover-window button').contains('Delete');
   }
 
-  public getUserEditorButtonByEmail(email: string): element {
-    return cy.get('gpf-table a').contains(email);
+  public get userTableResetPasswordConfirmButton(): element {
+    return cy.get('mwl-confirmation-popover-window button').contains('Reset');
   }
 
-  public get allUserEditGroupRemoveButtons(): element {
-    return cy.get('ng-multiselect-dropdown a');
+  public get newPasswordInput(): element {
+    return cy.get('#id_new_password1');
   }
 
-  public get userWindowGroupDropDownMenuButton(): element {
-    return cy.get('gpf-user-groups-selector .dropdown-btn');
+  public get repeatNewPasswordInput(): element {
+    return cy.get('#id_new_password2');
   }
 
-  public get userWindowGroupDropdownList(): element {
-    return cy.get('gpf-user-groups-selector div.dropdown-list');
-  }
-
-  public get userWindowGroupDropdownSearch(): element {
-    return cy.get('gpf-user-groups-selector input[aria-label=\'multiselect-search\']');
-  }
-
-  public get userWindowGroupDropdownListCheckboxes(): element {
-    return cy.get('gpf-user-groups-selector ul.item2 li');
-  }
-
-  public get userWindowSubmitButton(): element {
-    return cy.get('button').contains('Submit');
-  }
-
-  public get userTableRemoveUserGroupButton(): element {
-    return cy.get('gpf-users-table button[title=\'Remove group\']').last();
-  }
-
-  public get userTableRemoveUserGroupConfirmButton(): element {
-    return cy.get('gpf-users-table mwl-confirmation-popover-window button').contains('Remove group');
+  public get newPasswordButton(): element {
+    return cy.get('input[value="Reset password"]');
   }
 
   public get userSearchField(): element {
     return cy.get('gpf-user-management input#search-field');
-  }
-
-  public get userSearchFieldClear(): element {
-    return cy.get('gpf-user-management input.search-clear-icon');
   }
 
   public get groupsButton(): element {
@@ -173,7 +161,7 @@ export class UserManagementPage extends BasePage {
     return cy.get('#create-group-button');
   }
 
-  public get createGroupCancel(): element {
+  public get cancelGroupCreationButton(): element {
     return cy.get('#cancel-group-creation-button');
   }
 
@@ -193,12 +181,40 @@ export class UserManagementPage extends BasePage {
     return cy.get(`div[id="${group}-users-list"]`);
   }
 
+  public groupUsersListItem(group: string, email: string): element {
+    return this.groupUsersList(group).find(`div[id="${email}-list-item"]`);
+  }
+
+  public groupRemoveUserButton(group: string, email: string): element {
+    return this.groupUsersList(group).find(`div[id="${email}-list-item"] #confirm-button`);
+  }
+
+  public groupAddUserButton(group: string): element {
+    return this.groupUsersCell(group).find('.add-button');
+  }
+
   public groupDatasetsCell(group: string): element {
     return cy.get(`div[id="${group}-datasets-cell"]`);
   }
 
   public groupDatasetsList(group: string): element {
     return cy.get(`div[id="${group}-datasets-list"]`);
+  }
+
+  public groupDatasetsListItem(group: string, dataset: string): element {
+    return this.groupDatasetsList(group).find(`div[id="${dataset}-list-item"]`);
+  }
+
+  public groupAddDatasetButton(group: string): element {
+    return this.groupDatasetsCell(group).find('.add-button');
+  }
+
+  public groupRemoveDatasetButton(group: string, dataset: string): element {
+    return this.groupDatasetsList(group).find(`div[id="${dataset}-list-item"] #confirm-button`);
+  }
+
+  public get removeDatasetOrUserConfirmButton(): element {
+    return cy.get('gpf-groups-table mwl-confirmation-popover-window button').contains('Remove');
   }
 
   public groupActionsCell(group: string): element {
@@ -210,10 +226,10 @@ export class UserManagementPage extends BasePage {
   }
 
   public groupActionsDeleteGroup(group: string): element {
-    return cy.get(`gpf-confirm-button[id="${group}-delete-group-botton"]`);
+    return cy.get(`gpf-confirm-button[id="${group}-delete-group-button"]`);
   }
 
-  public get removeGroupConfirmButton(): element {
+  public get deleteGroupConfirmButton(): element {
     return cy.get('gpf-groups-table mwl-confirmation-popover-window button').contains('Delete');
   }
 
@@ -225,23 +241,43 @@ export class UserManagementPage extends BasePage {
     return cy.get('gpf-datasets-table');
   }
 
-  public get datasetsTableRows(): element {
-    return cy.get('gpf-datasets-table .table-row');
+  public datasetCell(dataset: string): element {
+    return cy.get(`div[id="${dataset}-dataset-cell"]`);
   }
 
-  public get datasetsTableAddGroupToLastDatasetInputField(): element {
-    return cy.get('gpf-datasets-table input.form-control').last();
+  public datasetGroupCell(dataset: string): element {
+    return cy.get(`div[id="${dataset}-groups-cell"]`);
   }
 
-  public get datasetsTableAddGroupToLastDatasetButton(): element {
-    return cy.get('gpf-datasets-table button').filter(':contains(\'Add\')').last();
+  public datasetGroupList(dataset: string): element {
+    return cy.get(`div[id="${dataset}-groups-list"]`);
   }
 
-  public get datasetsTableRemoveNewestGroupInLastDatasetButton(): element {
-    return cy.get('gpf-datasets-table button[title=\'Remove group\']').last();
+  public datasetGroupListItem(dataset: string, group: string): element {
+    return this.datasetGroupList(dataset).find(`div[id="${group}-list-item"]`);
   }
 
-  public get datasetsTableRemoveGroupConfirmButton(): element {
-    return cy.get('gpf-datasets-table mwl-confirmation-popover-window button').contains('Remove group');
+  public datasetGroupRemoveButton(dataset: string, group: string): element {
+    return this.datasetGroupList(dataset).find(`div[id="${group}-list-item"] #confirm-button`);
+  }
+
+  public datasetAddGroupButton(dataset: string): element {
+    return this.datasetGroupCell(dataset).find('.add-button');
+  }
+
+  public datasetUserCell(dataset: string): element {
+    return cy.get(`div[id="${dataset}-users-cell"]`);
+  }
+
+  public datasetUserList(dataset: string): element {
+    return cy.get(`div[id="${dataset}-users-list-cell"]`);
+  }
+
+  public datasetUserListItem(dataset: string, email: string): element {
+    return this.datasetUserList(dataset).find(`div[id="${email}-list-item"]`);
+  }
+
+  public get datasetsRemoveGroupConfirmButton(): element {
+    return cy.get('gpf-datasets-table mwl-confirmation-popover-window button').contains('Remove');
   }
 }

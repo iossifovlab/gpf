@@ -86,7 +86,7 @@ export class BasePage {
   }
 
   public navigateToHome(hasAccessRights = true): void {
-    cy.visit(`${Cypress.config().baseUrl}/datasets/ALL_genotypes/${toolPageLinks.geneBrowser}`);
+    cy.visit(`${Cypress.config().baseUrl}datasets/ALL_genotypes/${toolPageLinks.geneBrowser}`);
     this.waitForPageToLoad(toolPageLinks.geneBrowser, hasAccessRights);
   }
 

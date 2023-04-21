@@ -1,7 +1,92 @@
 import { UserManagementPage } from 'cypress/elements/user-management-page';
+import { UsersPage } from 'cypress/elements/users-page';
 import { sidenavPageLinks } from 'cypress/elements/utils';
 
-describe.skip('User management tests', () => {
+describe('User management tests for reset password in Users', () => {
+  const page = new UserManagementPage();
+
+  before(() => {
+    page.cleanup();
+    page.navigateToHome(false);
+  });
+
+  it('should reset password', () => {
+    page.loginAdmin();
+    page.navigateToSidenavPage(sidenavPageLinks.management);
+    createTestUser(page, 'user_reset_password@email.com', 'test_name');
+    page.userHasPasswordCell('user_reset_password@email.com').should('be.empty');
+    page.userActionsResetPassword('user_reset_password@email.com').click();
+    page.userTableResetPasswordConfirmButton.click();
+
+    cy.request('GET', 'http://mailhog:8025/api/v2/search?kind=to&query=user_reset_password@email.com').then(
+      (response) => {
+        const regexUrl = new RegExp(/http(s)?:\/\/[\w_-]+((.[\w_-]))([\w.,@?^=%&:/~+#-]*[\w@?^=%&/~+#-])/gm, 'i');
+        const url = (response.body.items[0].Content.Body as string).match(regexUrl)[0];
+        const urlToVisit = url.replace('http://gpf/gpf/', '');
+        cy.visit(urlToVisit);
+        page.newPasswordInput.type('XC^ZF*TZXuUChFsv');
+        page.repeatNewPasswordInput.type('XC^ZF*TZXuUChFsv');
+        page.newPasswordButton.click();
+      }
+    );
+    page.logout();
+    page.login('user_reset_password@email.com', 'XC^ZF*TZXuUChFsv');
+
+    page.logout();
+    page.loginAdmin();
+    page.navigateToHome();
+    page.navigateToSidenavPage(sidenavPageLinks.management);
+    page.userHasPasswordCell('user_reset_password@email.com').find('.fa.fa-check').should('be.visible');
+    deleteTestUser(page, 'user_reset_password@email.com');
+    page.logout();
+  });
+
+  it('should reset password when login', () => {
+    const usersPage = new UsersPage();
+
+    page.loginAdmin();
+    page.navigateToSidenavPage(sidenavPageLinks.management);
+    createTestUser(page, 'forgotten_password@email.com', 'test_name');
+    page.logout();
+
+    cy.window().then((win) => {
+      cy.stub(win, 'open', (url: string) => {
+        win.location.href = `${Cypress.config().baseUrl}accounts/login/?next=/gpf/o/authorize/%3F${url}`;
+      }).as('popup');
+    });
+
+    usersPage.logInButton.click();
+
+    cy.get('@popup').url().then(url => {
+      cy.get('a').first().click();
+      cy.get('#id_email').type('forgotten_password@email.com');
+      cy.get('input[value="Reset password"]').click();
+    });
+
+    cy.request('GET', 'http://mailhog:8025/api/v2/search?kind=to&query=forgotten_password@email.com').then(
+      (response) => {
+        const regexUrl = new RegExp(/http(s)?:\/\/[\w_-]+((.[\w_-]))([\w.,@?^=%&:/~+#-]*[\w@?^=%&/~+#-])/gm, 'i');
+        const url = (response.body.items[0].Content.Body as string).match(regexUrl)[0];
+        const urlToVisit = url.replace('http://gpf/gpf/', '');
+        cy.visit(urlToVisit);
+        page.newPasswordInput.type('XC^ZF*TZXuUChFsv');
+        page.repeatNewPasswordInput.type('XC^ZF*TZXuUChFsv');
+        page.newPasswordButton.click();
+      }
+    );
+
+    page.login('forgotten_password@email.com', 'XC^ZF*TZXuUChFsv');
+    page.logout();
+
+    page.loginAdmin();
+    page.navigateToHome();
+    page.navigateToSidenavPage(sidenavPageLinks.management);
+    deleteTestUser(page, 'forgotten_password@email.com');
+    page.logout();
+  });
+});
+
+describe('User management tests for Users', () => {
   const page = new UserManagementPage();
 
   before(() => {
@@ -16,7 +101,7 @@ describe.skip('User management tests', () => {
     page.navigateToSidenavPage(sidenavPageLinks.management);
   });
 
-  it.skip('should navigate through all user management tabs', () => {
+  it('should navigate through all user management tabs', () => {
     page.groupsButton.click();
     page.groupsTable.should('be.visible');
 
@@ -29,7 +114,7 @@ describe.skip('User management tests', () => {
     page.emailInputField.should('be.visible');
     page.nameInputField.should('be.visible');
     page.submitUserButton.should('be.visible');
-    page.cancelUserButton.should('be.visible');
+    page.cancelUserCreationButton.should('be.visible');
 
     page.emailInputField.type('test_email@email.com');
     page.nameInputField.type('test_name');
@@ -38,29 +123,31 @@ describe.skip('User management tests', () => {
     page.emailInputField.should('not.exist');
     page.nameInputField.should('not.exist');
     page.submitUserButton.should('not.exist');
-    page.cancelUserButton.should('not.exist');
+    page.cancelUserCreationButton.should('not.exist');
 
-    page.usersTableCells.should('have.length', 15);
+    page.userCell('test_email@email.com').should('exist');
     page.usersTableCells.first().should('have.text', 'test_nametest_email@email.com');
     page.userGroupList('test_email@email.com').should('have.text', 'any_usertest_email@email.com');
 
     page.userActionsDeleteUser('test_email@email.com').click();
     page.userTableDeleteUserConfirmButton.click();
 
-    page.usersTableCells.should('have.length', 10);
+    page.userCell('test_email@email.com').should('not.exist');
   });
 
   it('should fail to create user with already used email', () => {
     createTestUser(page, 'test_email@email.com', 'test_name');
-    page.usersTableCells.should('have.length', 15);
 
-    createTestUser(page, 'test_email@email.com', 'test_name');
+    page.createUserButton.click();
+    page.emailInputField.type('test_email@email.com');
+    page.nameInputField.type('test_name');
+    page.submitUserButton.click();
 
     page.alertElement.invoke('text').then((text) => text.trim())
       .should('equal', 'Error: wdae user with this email already exists.');
-    page.cancelUserButton.click();
+    page.cancelUserCreationButton.click();
 
-    page.usersTableCells.should('have.length', 15);
+    page.userCell('test_email@email.com').should('exist');
     page.userCell('test_email@email.com').should('have.text', 'test_nametest_email@email.com');
     page.userGroupList('test_email@email.com').should('have.text', 'any_usertest_email@email.com');
 
@@ -80,7 +167,7 @@ describe.skip('User management tests', () => {
     page.submitUserButton.click();
     page.emailInputField.should('be.focused');
 
-    page.cancelUserButton.click();
+    page.cancelUserCreationButton.click();
   });
 
   it('should not create user with invalid email or name', () => {
@@ -120,16 +207,7 @@ describe.skip('User management tests', () => {
     page.submitUserButton.click();
     page.nameInputField.should('be.focused');
 
-    page.cancelUserButton.click();
-  });
-
-  it('should search and filter users', () => {
-    page.userSearchField.type('admin');
-    page.usersTableCells.should('have.length', 5);
-    page.userSearchField.clear();
-    // triggers search event
-    page.userSearchField.type(' ');
-    page.usersTableCells.should('have.length', 10);
+    page.cancelUserCreationButton.click();
   });
 
   it('should search and find user', () => {
@@ -142,10 +220,20 @@ describe.skip('User management tests', () => {
     page.userSearchField.type('test_email@email.com');
     page.userCell('test_email@email.com').should('have.text', 'test_nametest_email@email.com');
     page.userGroupList('test_email@email.com').should('have.text', 'any_usertest_email@email.com');
+
+    page.userSearchField.clear();
+    page.userSearchField.type('admin');
+    // 5 cells are 1 row
+    page.usersTableCells.should('have.length', 5);
+    page.userSearchField.clear();
+    // triggers search event
+    page.userSearchField.type(' ');
+    page.usersTableCells.should('have.length', 15);
+
     deleteTestUser(page, 'test_email@email.com');
   });
 
-  it('should search and do not find user', () => {
+  it('should search and not find user', () => {
     page.userSearchField.type('comp');
     page.usersTableCells.should('not.exist');
 
@@ -190,13 +278,23 @@ describe.skip('User management tests', () => {
     page.userCell('admin@iossifovlab.com').find('#add-user-name').should('have.text', 'Add username');
   });
 
-  it.skip('should add and remove groups', () => {
+  it('should cancel the process of creating user', () => {
+    page.usersButton.click();
+    page.createUserButton.click();
+
+    page.nameInputField.type('test_name');
+    page.emailInputField.type('test_email@email.com');
+    page.cancelUserCreationButton.click();
+
+    page.userCell('test_name').should('not.exist');
+  });
+
+  it('should add and remove groups', () => {
     createTestUser(page, 'test_email@email.com', 'test_name');
-    page.usersTableCells.first().should('have.text', 'test_nametest_email@email.com');
-    page.userGroupsCell('test_email@email.com').find('.add-button').should('be.visible');
+    page.userAddGroupButton('test_email@email.com').should('be.visible');
 
     // add groups
-    page.userGroupsCell('test_email@email.com').find('.add-button').click();
+    page.userAddGroupButton('test_email@email.com').click();
     page.groupsMenu.should('be.visible');
     page.groupsMenuSearch.type('comp_all');
     page.findButtonInComponentContainingText('.add-item-button', 'comp_all').click();
@@ -208,23 +306,19 @@ describe.skip('User management tests', () => {
     page.userGroupList('test_email@email.com').should('have.text', 'iossifov_2014comp_allany_usertest_email@email.com');
     page.userDatasetsCell('test_email@email.com').should('have.text', 'iossifov_2014comp_all');
 
-
     //remove groups
-    page.userGroupList('test_email@email.com').find('#comp_all-list-item #confirm-button').click();
-    page.userTableRemoveGroupConfirm.click();
+    page.userGroupRemoveButton('test_email@email.com', 'comp_all').click();
+    page.userRemoveGroupConfirm.click();
     page.userGroupList('test_email@email.com').should('have.text', 'iossifov_2014any_usertest_email@email.com');
 
-    page.userGroupList('test_email@email.com').find('#iossifov_2014-list-item #confirm-button').click();
-    page.userTableCancelRemoveGroupConfirm.click();
+    page.userGroupRemoveButton('test_email@email.com', 'iossifov_2014').click();
+    page.userCancelRemoveGroupConfirm.click();
     page.userGroupList('test_email@email.com').should('have.text', 'iossifov_2014any_usertest_email@email.com');
 
     page.userDatasetsCell('test_email@email.com').should('have.text', 'iossifov_2014');
 
-    page.userGroupList('test_email@email.com').find(
-      '#any_user-list-item #confirm-button').should('not.exist');
-
-    // page.userGroupList('test_email@email.com').find(
-    //   '#test_email@email.com-list-item #confirm-button').should('not.exist');
+    page.userGroupRemoveButton('test_email@email.com', 'any_user').should('not.exist');
+    page.userGroupRemoveButton('test_email@email.com', '#test_email@email.com').should('not.exist');
     deleteTestUser(page, 'test_email@email.com');
   });
 
@@ -238,15 +332,13 @@ describe.skip('User management tests', () => {
     page.userActionsDeleteUser('admin@iossifovlab.com').should('not.exist');
   });
 
-  // groups ------------------------------------------------------------------------------------------
-
   it('should create and delete group with user and dataset', () => {
     page.groupsButton.click();
 
     page.createGroupButton.click();
     page.createGroupNameInput.should('be.visible');
     page.createButton.should('be.visible');
-    page.createGroupCancel.should('be.visible');
+    page.cancelGroupCreationButton.should('be.visible');
 
     page.createGroupNameInput.type('test_group');
     page.createButton.click();
@@ -256,29 +348,27 @@ describe.skip('User management tests', () => {
     // add user
     page.groupsTableCells.first().should('have.text',
       'test_groupEmpty groups with no users or datasets will be deleted!');
-    page.groupUsersCell('test_group').find('.add-button').click();
+    page.groupAddUserButton('test_group').click();
     page.groupsMenuSearch.type('research@iossifovlab.com');
     page.findButtonInComponentContainingText('.add-item-button', 'research@iossifovlab.com').click();
     page.groupsWarningMessage.should('not.exist');
     page.groupUsersList('test_group').should('have.text', 'research@iossifovlab.com');
 
     // add dataset
-    page.groupDatasetsCell('test_group').find('.add-button').click();
+    page.groupAddDatasetButton('test_group').click();
     page.groupsMenuSearch.type('iossifov_2014');
     page.findButtonInComponentContainingText('.add-item-button', 'iossifov_2014').click();
     page.groupDatasetsList('test_group').should('have.text', 'iossifov_2014');
 
     // check if the group is added
-    page.datasetsButton.click();
+    cy.reload();
     page.groupsButton.click();
-    page.groupsTableCells.should('have.length', 40);
     page.groupCell('test_group').should('exist');
 
     // delete the group
     page.groupsButton.click();
     page.groupActionsDeleteGroup('test_group').click();
-    page.removeGroupConfirmButton.click();
-    page.groupsTableCells.should('have.length', 36);
+    page.deleteGroupConfirmButton.click();
   });
 
   it('should create and delete group with user only', () => {
@@ -286,14 +376,14 @@ describe.skip('User management tests', () => {
     createTestGroup(page, 'test_group');
 
     // add user
-    page.groupUsersCell('test_group').find('.add-button').click();
+    page.groupAddUserButton('test_group').click();
     page.groupsMenuSearch.type('test_email@email.com');
     page.findButtonInComponentContainingText('.add-item-button', 'test_email@email.com').click();
     page.groupsWarningMessage.should('not.exist');
     page.groupUsersList('test_group').should('have.text', 'test_email@email.com');
 
     // check if the group is added
-    page.datasetsButton.click();
+    cy.reload();
     page.groupsButton.click();
     page.groupCell('test_group').should('exist');
 
@@ -304,26 +394,26 @@ describe.skip('User management tests', () => {
     createTestGroup(page, 'test_group');
 
     // add dataset
-    page.groupDatasetsCell('test_group').find('.add-button').click();
+    page.groupAddDatasetButton('test_group').click();
     page.groupsMenuSearch.type('iossifov_2014');
     page.findButtonInComponentContainingText('.add-item-button', 'iossifov_2014').click();
     page.groupsWarningMessage.should('not.exist');
     page.groupDatasetsList('test_group').should('have.text', 'iossifov_2014');
 
     // check if the group is added
-    page.datasetsButton.click();
+    cy.reload();
     page.groupsButton.click();
     page.groupCell('test_group').should('exist');
 
     deleteTestGroup(page, 'test_group');
   });
 
-  it('should create group with no users or datasets', () => {
+  it('should not create group with no users or datasets', () => {
     page.groupsButton.click();
 
     page.createGroupButton.click();
 
-    page.createGroupNameInput.type('test_group');
+    page.createGroupNameInput.type('createGroupNameInput');
     page.createButton.click();
     page.groupsWarningMessage.should('be.visible');
     page.groupsWarningMessage.should('have.text', 'Empty groups with no users or datasets will be deleted!');
@@ -333,43 +423,105 @@ describe.skip('User management tests', () => {
     page.groupCell('test_group').should('not.exist');
   });
 
-  it.skip('should add and remove user from group', () => {
-    createTestGroup(page, 'test_group');
-    createTestUser(page, 'test_email@email.com', 'test_name');
-
-    // check for error message
-    page.getUserEditorButtonByEmail('test_email@email.com').click();
-    page.userWindowGroupDropDownMenuButton.click();
-    page.userWindowGroupDropdownListCheckboxes.last().click();
-    page.userWindowGroupDropDownMenuButton.click();
-    page.userWindowSubmitButton.click();
-    page.usersTableCells.last().should(
-      'have.text',
-      'test_nametest_email@email.comany_usertest_email@email.comtest_group×multi'
-    );
-
+  it('should not create group with invalid name', () => {
     page.groupsButton.click();
-    page.groupsTableCells.last().should('contain.text', 'test_email@email.com');
+    page.createGroupButton.click();
 
-    page.usersButton.click();
-    page.userTableRemoveUserGroupButton.click();
-    page.userTableRemoveUserGroupConfirmButton.click();
-    waitForRequest('GET', '/gpf/api/v3/users/streaming_search?search=', 'usersUpdate', 200);
-    page.usersTableCells.last().should('have.text', 'test_nametest_email@email.comany_usertest_email@email.com');
+    page.createGroupNameInput.type('c');
+    page.createButton.click();
+    page.createGroupNameInput.should('be.focused');
 
-    // deleteTestGroup(page);
-    // deleteTestUser(page);
+    page.createGroupNameInput.clear();
+    page.createGroupNameInput.type('cc');
+    page.createButton.click();
+    page.createGroupNameInput.should('be.focused');
+
+    page.cancelGroupCreationButton.click();
   });
 
-  it('should check if the new groups are in Users', () => {
+  it('should cancel the process of creating group', () => {
+    page.groupsButton.click();
+    page.createGroupButton.click();
+
+    page.createGroupNameInput.type('test_group');
+    page.cancelGroupCreationButton.click();
+
+    page.groupCell('test_group').should('not.exist');
+  });
+
+  it('should fail to create group with already used name', () => {
+    createTestUser(page, 'test_email@email.com', 'test_user');
+    createTestGroup(page, 'test_group');
+    page.groupAddUserButton('test_group').click();
+    page.groupsMenuSearch.type('test_email@email.com');
+    page.findButtonInComponentContainingText('.add-item-button', 'test_email@email.com').click();
+
+    createTestGroup(page, 'test_group');
+
+    page.alertElement.invoke('text').then((text) => text.trim())
+      .should('equal', '\'test_group\' already exists choose another name!');
+    page.cancelGroupCreationButton.click();
+
+    deleteTestGroup(page, 'test_group');
+    deleteTestUser(page, 'test_email@email.com');
+  });
+
+  it('should add and remove users and datasets from group', () => {
+    createTestUser(page, 'test_email1@email.com', 'test_name1');
+    createTestGroup(page, 'test_group');
+
+    page.groupUsersCell('test_group').find('.add-button').click();
+    page.groupsMenuSearch.type('test_email1@email.com');
+    page.findButtonInComponentContainingText('.add-item-button', 'test_email1@email.com').click();
+
+    page.groupAddDatasetButton('test_group').click();
+    page.groupsMenuSearch.type('iossifov_2014');
+    page.findButtonInComponentContainingText('.add-item-button', 'iossifov_2014').click();
+
+    createTestUser(page, 'test_email2@email.com', 'test_name2');
+    createTestUser(page, 'test_email3@email.com', 'test_name3');
+
+    page.groupsButton.click();
+    page.groupAddUserButton('test_group').click();
+    page.groupsMenuSearch.type('test_email2@email.com');
+    page.findButtonInComponentContainingText('.add-item-button', 'test_email2@email.com').click();
+
+    page.groupsMenuSearch.clear();
+    page.groupsMenuSearch.type('test_email3@email.com');
+    page.findButtonInComponentContainingText('.add-item-button', 'test_email3@email.com').click();
+
+    // remove dataset
+    page.groupRemoveDatasetButton('test_group', 'iossifov_2014').click();
+    page.removeDatasetOrUserConfirmButton.click();
+
+    // remove users
+    page.groupRemoveUserButton('test_group', 'test_email1@email.com').click();
+    page.removeDatasetOrUserConfirmButton.click();
+    page.groupRemoveUserButton('test_group', 'test_email2@email.com').click();
+    page.removeDatasetOrUserConfirmButton.click();
+    page.groupRemoveUserButton('test_group', 'test_email3@email.com').click();
+    page.removeDatasetOrUserConfirmButton.click();
+
+    page.groupsWarningMessage.should('be.visible');
+
+    // check if the group is removed
+    cy.reload();
+    page.groupCell('test_group').should('not.exist');
+
+    deleteTestUser(page, 'test_email1@email.com');
+    deleteTestUser(page, 'test_email2@email.com');
+    deleteTestUser(page, 'test_email3@email.com');
+  });
+
+  it('should add and remove groups in Users and users in Groups', () => {
     createTestUser(page, 'test_email@email.com', 'test_name');
     createTestGroup(page, 'test_group1');
-    page.groupUsersCell('test_group1').find('.add-button').click();
+    page.groupAddUserButton('test_group1').click();
     page.groupsMenuSearch.type('test_email@email.com');
     page.findButtonInComponentContainingText('.add-item-button', 'test_email@email.com').click();
 
     createTestGroup(page, 'test_group2');
-    page.groupDatasetsCell('test_group2').find('.add-button').click();
+    page.groupAddDatasetButton('test_group2').click();
     page.groupsMenuSearch.type('iossifov_2014');
     page.findButtonInComponentContainingText('.add-item-button', 'iossifov_2014').click();
 
@@ -378,7 +530,7 @@ describe.skip('User management tests', () => {
     page.userGroupList('test_email@email.com').should('have.text', 'any_usertest_email@email.comtest_group1');
 
     // add group to user's group list
-    page.userGroupsCell('test_email@email.com').find('.add-button').click();
+    page.userAddGroupButton('test_email@email.com').click();
     page.groupsMenuSearch.type('test_group2');
     page.findButtonInComponentContainingText('.add-item-button', 'test_group2').click();
     page.userGroupList('test_email@email.com').should('have.text',
@@ -399,17 +551,39 @@ describe.skip('User management tests', () => {
     deleteTestUser(page, 'test_email@email.com');
   });
 
+  it('should check if new groups are added in Groups and the new users ' +
+  'are in group any_user when creating user', () => {
+    createTestUser(page, 'test_email1@email.com', 'test_name1');
+    createTestUser(page, 'test_email2@email.com', 'test_name2');
+    createTestUser(page, 'test_email3@email.com', 'test_name3');
+
+    page.groupsButton.click();
+    page.groupCell('test_email1@email.com').should('exist');
+    page.groupUsersList('test_email1@email.com').should('have.text', 'test_email1@email.com');
+    page.groupCell('test_email2@email.com').should('exist');
+    page.groupUsersList('test_email2@email.com').should('have.text', 'test_email2@email.com');
+    page.groupCell('test_email3@email.com').should('exist');
+    page.groupUsersList('test_email3@email.com').should('have.text', 'test_email3@email.com');
+
+    page.groupUsersList('any_user').should('have.text',
+      'test_email1@email.comtest_email2@email.comtest_email3@email.com');
+
+    deleteTestUser(page, 'test_email1@email.com');
+    deleteTestUser(page, 'test_email2@email.com');
+    deleteTestUser(page, 'test_email3@email.com');
+  });
+
   it('should check if the new group is deleted after removing it in Users', () => {
     createTestUser(page, 'test_email@email.com', 'test_name');
     createTestGroup(page, 'test_group');
-    page.groupUsersCell('test_group').find('.add-button').click();
+    page.groupAddUserButton('test_group').click();
     page.groupsMenuSearch.type('test_email@email.com');
     page.findButtonInComponentContainingText('.add-item-button', 'test_email@email.com').click();
 
     // remove the group from user's group list
     page.usersButton.click();
-    page.userGroupList('test_email@email.com').find('#test_group-list-item #confirm-button').click();
-    page.userTableRemoveGroupConfirm.click();
+    page.userGroupRemoveButton('test_email@email.com', 'test_group').click();
+    page.userRemoveGroupConfirm.click();
     page.userGroupList('test_email@email.com').should('have.text', 'any_usertest_email@email.com');
 
     // check if the group is deleted in Groups
@@ -423,7 +597,7 @@ describe.skip('User management tests', () => {
   it('should check if the new group is deleted after deleting the user', () => {
     createTestUser(page, 'test_email@email.com', 'test_name');
     createTestGroup(page, 'test_group');
-    page.groupUsersCell('test_group').find('.add-button').click();
+    page.groupAddUserButton('test_group').click();
     page.groupsMenuSearch.type('test_email@email.com');
     page.findButtonInComponentContainingText('.add-item-button', 'test_email@email.com').click();
 
@@ -436,29 +610,113 @@ describe.skip('User management tests', () => {
     page.groupUsersList('test_group').should('not.exist');
   });
 
-  it.skip('should give dataset access to user', () => {
-    createTestGroup(page, 'test_group');
+  it('should add group to user and check data in Datasets', () => {
     createTestUser(page, 'test_email@email.com', 'test_name');
+    page.userAddGroupButton('test_email@email.com').click();
+    page.groupsMenuSearch.type('comp_all');
+    page.findButtonInComponentContainingText('.add-item-button', 'comp_all').click();
 
-    page.getUserEditorButtonByEmail('test_email@email.com').click();
-
-    page.userWindowGroupDropDownMenuButton.click();
-    page.userWindowGroupDropdownListCheckboxes.last().click();
-    page.userWindowGroupDropDownMenuButton.click();
-    page.userWindowSubmitButton.click();
+    // check datasets
+    page.userDatasetsCell('test_email@email.com').should('have.text', 'comp_all');
 
     page.datasetsButton.click();
-    page.datasetsTableRows.last().should('contain.text', 'test_email@email.com');
+    page.datasetUserList('comp_all').should('have.text', 'admin@iossifovlab.comtest_name test_email@email.com');
 
+    deleteTestUser(page, 'test_email@email.com');
+    page.datasetsButton.click();
+    page.datasetUserList('comp_all').should('have.text', 'admin@iossifovlab.com');
+  });
+
+  it('should create group, add datasets and check data in Datasets', () => {
+    createTestGroup(page, 'test_group');
+    page.groupAddDatasetButton('test_group').click();
+    page.groupsMenuSearch.type('iossifov_2014');
+    page.findButtonInComponentContainingText('.add-item-button', 'iossifov_2014').click();
+    page.groupsMenuSearch.clear();
+    page.groupsMenuSearch.type('comp_all');
+    page.findButtonInComponentContainingText('.add-item-button', 'comp_all').click();
+
+    page.datasetsButton.click();
+    page.datasetGroupList('iossifov_2014').should('have.text', 'any_datasetiossifov_2014test_group');
+    page.datasetGroupList('comp_all').should('have.text', 'any_datasetcomp_alltest_group');
+
+    deleteTestGroup(page, 'test_group');
+
+    page.datasetsButton.click();
+    page.datasetUserList('iossifov_2014').should('have.text', 'admin@iossifovlab.com');
+    page.datasetUserList('comp_all').should('have.text', 'admin@iossifovlab.com');
+  });
+
+  it('should create group, add dataset and users and check data in Datasets', () => {
+    createTestUser(page, 'test_email1@email.com', 'test_name1');
+    createTestUser(page, 'test_email2@email.com', 'test_name2');
+    createTestGroup(page, 'test_group');
+
+    // add users
+    page.groupUsersCell('test_group').find('.add-button').click();
+    page.groupsMenuSearch.type('test_email1@email.com');
+    page.findButtonInComponentContainingText('.add-item-button', 'test_email1@email.com').click();
+    page.groupsMenuSearch.clear();
+    page.groupsMenuSearch.type('test_email2@email.com');
+    page.findButtonInComponentContainingText('.add-item-button', 'test_email2@email.com').click();
+
+    // add dataset
+    page.groupDatasetsCell('test_group').find('.add-button').click();
+    page.groupsMenuSearch.type('iossifov_2014');
+    page.findButtonInComponentContainingText('.add-item-button', 'iossifov_2014').click();
+
+    // check users dataset
     page.usersButton.click();
-    page.userTableRemoveUserGroupButton.click();
-    page.userTableRemoveUserGroupConfirmButton.click();
-    waitForRequest('GET', '/gpf/api/v3/users/streaming_search?search=**', 'usersUpdate', 200);
-    page.datasetsButton.click();
-    page.datasetsTableRows.last().should('not.contain.text', 'test_email@email.com');
+    page.userDatasetsCell('test_email1@email.com').should('have.text', 'iossifov_2014');
+    page.userDatasetsCell('test_email2@email.com').should('have.text', 'iossifov_2014');
 
-    // deleteTestGroup(page);
-    // deleteTestUser(page);
+    // check in Datasets
+    page.datasetsButton.click();
+    page.datasetUserList('iossifov_2014').should('have.text',
+      'admin@iossifovlab.comtest_name1 test_email1@email.comtest_name2 test_email2@email.com');
+    page.datasetGroupList('iossifov_2014').should('have.text', 'any_datasetiossifov_2014test_group');
+
+    // remove dataset in Groups
+    page.groupsButton.click();
+    page.groupDatasetsList('test_group').find('#iossifov_2014-list-item #confirm-button').click();
+    page.removeDatasetOrUserConfirmButton.click();
+
+    deleteTestUser(page, 'test_email1@email.com');
+    deleteTestUser(page, 'test_email2@email.com');
+
+    // check in Datasets
+    page.datasetsButton.click();
+    page.datasetUserList('iossifov_2014').should('have.text', 'admin@iossifovlab.com');
+    page.datasetGroupList('iossifov_2014').should('have.text', 'any_datasetiossifov_2014');
+  });
+
+  it('should add and remove groups in Datasets', () => {
+    createTestUser(page, 'test_email1@email.com', 'test_name1');
+    createTestUser(page, 'test_email2@email.com', 'test_name2');
+    createTestGroup(page, 'test_group');
+
+    page.groupUsersCell('test_group').find('.add-button').click();
+    page.groupsMenuSearch.type('test_email1@email.com');
+    page.findButtonInComponentContainingText('.add-item-button', 'test_email1@email.com').click();
+    page.groupsMenuSearch.clear();
+    page.groupsMenuSearch.type('test_email2@email.com');
+    page.findButtonInComponentContainingText('.add-item-button', 'test_email2@email.com').click();
+
+    page.datasetsButton.click();
+    page.datasetAddGroupButton('comp_denovo').click();
+    page.groupsMenuSearch.type('test_group');
+    page.findButtonInComponentContainingText('.add-item-button', 'test_group').click();
+
+    page.datasetGroupList('comp_denovo').should('have.text', 'any_datasetcomp_denovotest_group');
+    page.datasetUserList('comp_denovo').should('have.text',
+      'admin@iossifovlab.comtest_name1 test_email1@email.comtest_name2 test_email2@email.com');
+
+    page.datasetGroupRemoveButton('comp_denovo', 'test_group').click();
+    page.datasetsRemoveGroupConfirmButton.click();
+
+    deleteTestGroup(page, 'test_group');
+    deleteTestUser(page, 'test_email1@email.com');
+    deleteTestUser(page, 'test_email2@email.com');
   });
 });
 
@@ -487,10 +745,5 @@ function createTestGroup(page: UserManagementPage, groupName: string): void {
 function deleteTestGroup(page: UserManagementPage, groupName: string): void {
   page.groupsButton.click();
   page.groupActionsDeleteGroup(groupName).click();
-  page.removeGroupConfirmButton.click();
-}
-
-function waitForRequest(method: string, url: string, name: string, response: number): void {
-  cy.intercept({method: method, url: url}).as(name);
-  cy.wait('@' + name).its('response.statusCode').should('eq', response);
+  page.deleteGroupConfirmButton.click();
 }
