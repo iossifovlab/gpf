@@ -1,8 +1,9 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpResponse } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { GeneSetsCollection, GeneSet } from './gene-sets';
 import { ConfigService } from '../config/config.service';
+import { AuthService } from 'app/auth.service';
 import { map } from 'rxjs/operators';
 
 @Injectable()
@@ -12,7 +13,8 @@ export class GeneSetsService {
 
   public constructor(
     private http: HttpClient,
-    private config: ConfigService
+    private config: ConfigService,
+    private authService: AuthService
   ) {}
 
   public getGeneSetsCollections(): Observable<GeneSetsCollection[]> {
@@ -42,10 +44,12 @@ export class GeneSetsService {
       .pipe(map((res: any) => GeneSet.fromJsonArray(res)));
   }
 
-  public downloadGeneSet(geneSet: GeneSet): Observable<HttpResponse<Blob>> {
-    return this.http.get(
-      `${this.config.baseUrl}${geneSet.download}`,
-      {observe: 'response', responseType: 'blob'}
-    );
+  public downloadGeneSet(geneSet: GeneSet): Promise<Response> {
+    const headers = {'Content-Type': 'application/json'};
+    headers['Authorization'] = `Bearer ${this.authService.getAccessToken()}`;
+    return fetch(`${this.config.baseUrl}${geneSet.download}`, {
+      credentials: 'include',
+      headers: headers,
+    });
   }
 }

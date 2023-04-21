@@ -1,20 +1,21 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders, HttpResponse } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 // eslint-disable-next-line no-restricted-imports
 import { Observable } from 'rxjs';
 
 import { ConfigService } from '../config/config.service';
+import { AuthService } from 'app/auth.service';
 import { PhenoToolResults } from './pheno-tool-results';
 import { map } from 'rxjs/operators';
 
 @Injectable()
 export class PhenoToolService {
   private readonly phenoToolUrl = 'pheno_tool';
-  private readonly headers = new HttpHeaders({ 'Content-Type': 'application/json' });
 
   public constructor(
     private http: HttpClient,
-    private config: ConfigService
+    private config: ConfigService,
+    private authService: AuthService
   ) {}
 
   public getPhenoToolResults(filter: object): Observable<PhenoToolResults> {
@@ -25,11 +26,14 @@ export class PhenoToolService {
       .pipe(map(res => PhenoToolResults.fromJson(res)));
   }
 
-  public downloadPhenoToolResults(filter: object): Observable<HttpResponse<Blob>> {
-    return this.http.post(
-      this.config.baseUrl + this.phenoToolUrl + '/download',
-      filter,
-      {observe: 'response', headers: this.headers, responseType: 'blob'}
-    );
+  public downloadPhenoToolResults(filter: object): Promise<Response> {
+    const headers = {'Content-Type': 'application/json'};
+    headers['Authorization'] = `Bearer ${this.authService.getAccessToken()}`;
+    return fetch(`${this.config.baseUrl}${this.phenoToolUrl}/download`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: headers,
+      body: JSON.stringify(filter)
+    });
   }
 }

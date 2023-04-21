@@ -3,8 +3,8 @@ import { NgbModal, NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
 import { ConfigService } from 'app/config/config.service';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { PedigreeData } from 'app/genotype-preview-model/genotype-preview';
-import { downloadBlobResponse } from 'app/utils/blob-download';
 import { VariantReportsService } from 'app/variant-reports/variant-reports.service';
+import * as streamSaver from 'streamsaver';
 
 @Component({
   selector: 'gpf-pedigree',
@@ -68,9 +68,9 @@ export class PedigreeComponent {
       group_name: this.groupName,
       counter_id: this.counterId
     };
-    this.variantReportsService.downloadPedigreeCount(args).subscribe((response) => {
-      downloadBlobResponse(response, 'family.ped');
-    }, (err) => {
+    this.variantReportsService.downloadPedigreeCount(args).then((response) => {
+      const fileStream = streamSaver.createWriteStream('family.ped');
+      response.body.pipeTo(fileStream);
     });
   }
 }

@@ -10,7 +10,7 @@ import { environment } from 'environments/environment';
 import { Dictionary } from 'lodash';
 import * as _ from 'lodash';
 import { IDropdownSettings } from 'ng-multiselect-dropdown';
-import { downloadBlobResponse } from 'app/utils/blob-download';
+import * as streamSaver from 'streamsaver';
 
 @Pipe({ name: 'getPeopleCounterRow' })
 export class PeopleCounterRowPipe implements PipeTransform {
@@ -164,17 +164,23 @@ export class VariantReportsComponent implements OnInit {
 
   public onDownload(): void {
     this.downloadInProgress = true;
-    this.variantReportsService.downloadFamilies().pipe(take(1)).subscribe((response) => {
+    this.variantReportsService.downloadFamilies().then((response) => {
       this.downloadInProgress = false;
-      downloadBlobResponse(response, 'families.ped');
+      const fileStream = streamSaver.createWriteStream('families.ped');
+      response.body.pipeTo(fileStream);
     }, (err) => {
       this.downloadInProgress = false;
     });
   }
 
   public getDownloadLinkTags(): void {
+    const datasetId = this.datasetsService.getSelectedDataset().id;
     const tags = this.getSelectedTags().join(',');
-    this.variantReportsService.getDownloadLinkPedigreeTags(this.datasetsService.getSelectedDataset().id, tags);
+
+    this.variantReportsService.downloadPedigreeTags(datasetId, tags).then((response) => {
+      const fileStream = streamSaver.createWriteStream('families.ped');
+      response.body.pipeTo(fileStream);
+    });
   }
 
   private orderByColumnOrder(childrenCounters: DeNovoData[], columns: string[], strict = false): DeNovoData[] {
