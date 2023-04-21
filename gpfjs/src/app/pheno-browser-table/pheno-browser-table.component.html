@@ -3,7 +3,7 @@
     <gpf-table-header caption="Instrument" field="instrumentName"></gpf-table-header>
     <gpf-table-content>
       <span *gpfTableCellContent="let data">
-        <div ngbTooltip="{{ data.instrumentName }}">{{ data.instrumentName }}</div>
+        <div [attr.title]="data.instrumentName">{{ data.instrumentName }}</div>
       </span>
     </gpf-table-content>
   </gpf-table-column>
@@ -11,7 +11,7 @@
     <gpf-table-header caption="Proband Pheno Measure" field="measureName"></gpf-table-header>
     <gpf-table-content>
       <span *gpfTableCellContent="let data">
-        <div ngbTooltip="{{ data.measureName }}">{{ data.measureName }}</div>
+        <div [attr.title]="data.measureName">{{ data.measureName }}</div>
       </span>
     </gpf-table-content>
   </gpf-table-column>
@@ -19,7 +19,7 @@
     <gpf-table-header caption="Measure Description" field="description"></gpf-table-header>
     <gpf-table-content>
       <span *gpfTableCellContent="let data">
-        <div ngbTooltip="{{ data.description }}">{{ data.description }}</div>
+        <div [attr.title]="data.description">{{ data.description }}</div>
       </span>
     </gpf-table-content>
   </gpf-table-column>
@@ -43,22 +43,14 @@
       <gpf-table-subcontent>
         <span *gpfTableCellContent="let data">
           <ng-container *ngIf="data.measureType === 'continuous'">
-            <span
-              >[{{
-                +data.valuesDomain.slice(data.valuesDomain.indexOf('[') + 1, data.valuesDomain.indexOf(','))
-                  | numberWithExp : '1.3-3'
-              }},</span
-            >
-            <span
-              >{{
-                +data.valuesDomain.slice(data.valuesDomain.indexOf(',') + 1, data.valuesDomain.indexOf(']'))
-                  | numberWithExp : '1.3-3'
-              }}]</span
-            >
+            <div title="[{{+data.valuesDomain.slice(data.valuesDomain.indexOf('[') + 1, data.valuesDomain.indexOf(',')) | numberWithExp : '1.3-3' }},{{ +data.valuesDomain.slice(data.valuesDomain.indexOf(',') + 1, data.valuesDomain.indexOf(']')) | numberWithExp : '1.3-3' }}]">
+              <span>[{{+data.valuesDomain.slice(data.valuesDomain.indexOf('[') + 1, data.valuesDomain.indexOf(',')) | numberWithExp : '1.3-3' }},</span>
+              <span>{{ +data.valuesDomain.slice(data.valuesDomain.indexOf(',') + 1, data.valuesDomain.indexOf(']')) | numberWithExp : '1.3-3' }}]</span>
+            </div>
           </ng-container>
           <ng-container
             *ngIf="data.measureType === 'categorical' || data.measureType === 'raw' || data.measureType === 'ordinal'">
-            <ng-container *ngFor="let value of data.valuesDomain.split(', ')">[{{ value }}]</ng-container>
+            <span *ngFor="let value of data.valuesDomain.split(', ')" title="[{{ value }}]">[{{ value }}]</span>
           </ng-container>
         </span>
       </gpf-table-subcontent>
@@ -103,7 +95,9 @@
             class="expanded-span"
             *gpfTableCellContent="let data"
             [style.background-color]="data.regressions.getReg(regressionId).pvalueRegressionMale | getBackgroundColor">
-            <span>{{ data.regressions.getReg(regressionId).pvalueRegressionMale | numberWithExp : '1.2-4' }}</span>
+            <span [attr.title]="data.regressions.getReg(regressionId).pvalueRegressionMale | numberWithExp : '1.2-4'"
+              >{{data.regressions.getReg(regressionId).pvalueRegressionMale | numberWithExp : '1.2-4'}}</span
+            >
           </span>
         </gpf-table-subcontent>
         <gpf-table-subcontent>
@@ -113,7 +107,10 @@
             [style.background-color]="
               data.regressions.getReg(regressionId).pvalueRegressionFemale | getBackgroundColor
             ">
-            <span>{{ data.regressions.getReg(regressionId).pvalueRegressionFemale | numberWithExp : '1.2-4' }}</span>
+            <span
+              [attr.title]="data.regressions.getReg(regressionId).pvalueRegressionFemale | numberWithExp : '1.2-4'"
+              >{{ data.regressions.getReg(regressionId).pvalueRegressionFemale | numberWithExp : '1.2-4' }}</span
+            >
           </span>
         </gpf-table-subcontent>
       </gpf-table-content>

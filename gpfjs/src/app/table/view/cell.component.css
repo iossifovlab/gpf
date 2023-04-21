@@ -2,3 +2,7 @@
   max-height: 94px;
   overflow: auto;
 }
+
+span {
+  word-wrap: break-word;
+}
