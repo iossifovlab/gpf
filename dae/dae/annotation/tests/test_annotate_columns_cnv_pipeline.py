@@ -35,6 +35,12 @@ def annotate_cnv_fixture(tmp_path_factory):
                     foo    3        19       cnv+
                     bar    3        19       cnv-
                 """),
+                "bad_cnv.tsv": convert_to_tab_separated("""
+                    chrom  pos_beg  pos_end  cnv_type
+                    foo    3        19       bla
+                    bar    3        19       haha
+                    bla    3        19       cnv+
+                """),
             },
             "grr.yaml": textwrap.dedent(f"""
                 id: cnv_repo
@@ -183,3 +189,67 @@ def test_cnv_gene_score_annotation(infile: str, annotate_cnv_fixture):
     assert list(df.worst_effect.values) == ["CNV+", "CNV-"]
     assert list(df.gene_effects.values) == ["g1:CNV+", "g2:CNV-"]
     assert list(df.gene_score1.values) == [10.1, 20.2]
+
+
+@pytest.mark.parametrize(
+    "infile", [
+        "bad_cnv.tsv",
+    ]
+)
+def test_bad_cnv_effect_annotation(infile: str, annotate_cnv_fixture):
+    root_path = annotate_cnv_fixture
+    setup_directories(root_path, {
+        "effect_annotation.yaml": textwrap.dedent("""
+        - effect_annotator:
+            gene_models: gene_models/foobar_genes
+            genome: genome/foobar_genome
+            attributes:
+            - source: gene_list
+            - source: worst_effect
+            - source: gene_effects
+        """),
+    })
+    cli_columns([
+        str(root_path / "input" / infile),
+        str(root_path / "effect_annotation.yaml"),
+        str(root_path / "result.tsv"),
+        "--grr", str(root_path / "grr.yaml"),
+    ])
+
+    df = pd.read_csv(root_path / "result.tsv", sep="\t")
+    assert list(df.worst_effect.values) == ["CNV+"]
+    assert list(df.gene_effects.values) == ["None:CNV+"]
+    assert list(df.gene_list.values) == ["['None']"]
+
+
+@pytest.mark.parametrize(
+    "infile", [
+        "bad_cnv.tsv",
+    ]
+)
+def test_bad_cnv_gene_score_annotation(infile: str, annotate_cnv_fixture):
+    root_path = annotate_cnv_fixture
+    setup_directories(root_path, {
+        "gene_score_annotation.yaml": textwrap.dedent("""
+        - effect_annotator:
+            gene_models: gene_models/foobar_genes
+            genome: genome/foobar_genome
+        - gene_score_annotator:
+            resource_id: gene_score1
+            input_gene_list: gene_list
+            attributes:
+            - source: gene_score1
+              gene_aggregator: max
+        """),
+    })
+    cli_columns([
+        str(root_path / "input" / infile),
+        str(root_path / "gene_score_annotation.yaml"),
+        str(root_path / "result.tsv"),
+        "--grr", str(root_path / "grr.yaml"),
+    ])
+
+    df = pd.read_csv(root_path / "result.tsv", sep="\t")
+    assert list(df.worst_effect.values) == ["CNV+"]
+    assert list(df.gene_effects.values) == ["None:CNV+"]
+    assert list(df.gene_score1.values) == ["None"]

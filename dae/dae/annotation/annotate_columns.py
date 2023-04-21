@@ -1,5 +1,5 @@
 from __future__ import annotations
-
+import logging
 import sys
 import gzip
 import argparse
@@ -11,6 +11,8 @@ from dae.annotation.record_to_annotatable import \
     add_record_to_annotable_arguments
 from dae.genomic_resources.cli import VerbosityConfiguration
 from dae.genomic_resources.genomic_context import get_genomic_context
+
+logger = logging.getLogger("annotate_columns")
 
 
 def configure_argument_parser() -> argparse.ArgumentParser:
@@ -78,15 +80,20 @@ def cli(raw_args: Optional[list[str]] = None) -> None:
 
     with pipeline.open() as pipeline:
 
-        for line in in_file:
-            columns = line.strip("\n\r").split(args.input_separator)
-            record = dict(zip(hcs, columns))
-            annotabale = record_to_annotable.build(record)
-            annotation = pipeline.annotate(annotabale)
-            print(*(columns + [
-                str(annotation[attrib])
-                for attrib in annotation_attributes]),
-                sep=args.output_separator, file=out_file)
+        for lnum, line in enumerate(in_file):
+            try:
+                columns = line.strip("\n\r").split(args.input_separator)
+                record = dict(zip(hcs, columns))
+                annotabale = record_to_annotable.build(record)
+                annotation = pipeline.annotate(annotabale)
+                print(*(columns + [
+                    str(annotation[attrib])
+                    for attrib in annotation_attributes]),
+                    sep=args.output_separator, file=out_file)
+            except Exception:  # pylint: disable=broad-except
+                logger.warning(
+                    "unexpected input data format at line %s: %s",
+                    lnum, line, exc_info=True)
 
     if args.input != "-":
         in_file.close()
