@@ -10,8 +10,8 @@ from dae.annotation.annotatable import Position
 from dae.annotation.annotatable import Region
 from dae.annotation.annotatable import VCFAllele, CNVAllele
 
-from dae.utils.dae_utils import cshl2vcf_variant, cshl2cnv_variant
-# from dae.tools.cshl2vcf import cshl2vcf
+from dae.utils.dae_utils import cshl2vcf_variant
+from dae.utils.cnv_utils import cshl2cnv_variant, cnv_variant_type
 from dae.genomic_resources.genomic_context import GenomicContext
 
 
@@ -58,7 +58,7 @@ class RecordToVcfAllele(RecordToAnnotable):
 
 
 class VcfLikeRecordToVcfAllele(RecordToAnnotable):
-    """Transform a variant record into VCF allele annotatable."""
+    """Transform a columns record into VCF allele annotatable."""
 
     def __init__(self, columns: tuple, context: Optional[GenomicContext]):
         super().__init__(columns, context)
@@ -67,6 +67,26 @@ class VcfLikeRecordToVcfAllele(RecordToAnnotable):
     def build(self, record: dict[str, str]) -> Annotatable:
         chrom, pos, ref, alt = record[self.vcf_like_col].split(":")
         return VCFAllele(chrom, int(pos), ref, alt)
+
+
+class RecordToCNVAllele(RecordToAnnotable):
+    """Transform a columns record into a CNV allele annotatable."""
+
+    def __init__(self, columns: tuple, context: Optional[GenomicContext]):
+        super().__init__(columns, context)
+        self.chrom_col, self.pos_beg_col, self.pos_end_col, self.cnv_type_col \
+            = columns
+
+    def build(self, record: dict[str, str]) -> Annotatable:
+        cnv_type = cnv_variant_type(record[self.cnv_type_col])
+        if cnv_type is None:
+            raise ValueError(
+                f"unexpected CNV variant type: {record[self.cnv_type_col]}")
+        return CNVAllele(
+            record[self.chrom_col],
+            int(record[self.pos_beg_col]),
+            int(record[self.pos_end_col]),
+            CNVAllele.Type.from_string(cnv_type))
 
 
 class CSHLAlleleRecordToAnnotatable(RecordToAnnotable):
@@ -89,16 +109,14 @@ class CSHLAlleleRecordToAnnotatable(RecordToAnnotable):
 
     def build(self, record: dict[str, str]) -> Annotatable:
         variant = record[self.variant_col]
-        if variant.lower() in {
-                "cnv+", "cnv-", "duplication", "deletion",
-                "large_insertion", "large_deletion", "gain", "loss"}:
-            chrom, pos_begin, pos_end, variant_type = cshl2cnv_variant(
+        cnv_type = cnv_variant_type(variant)
+        if cnv_type is not None:
+            chrom, pos_begin, pos_end, cnv_type = cshl2cnv_variant(
                 record[self.location_col],
-                record[self.variant_col],
-                self.reference_genome)
+                record[self.variant_col])
             return CNVAllele(
                 chrom, pos_begin, pos_end,
-                CNVAllele.Type.from_string(variant_type))
+                CNVAllele.Type.from_string(cnv_type))
 
         return VCFAllele(*cshl2vcf_variant(
             record[self.location_col],
@@ -107,12 +125,12 @@ class CSHLAlleleRecordToAnnotatable(RecordToAnnotable):
 
 
 RECORD_TO_ANNOTABALE_CONFIGUATION: Dict[tuple, Type[RecordToAnnotable]] = {
+    ("chrom", "pos_beg", "pos_end", "cnv_type"): RecordToCNVAllele,
     ("chrom", "pos_beg", "pos_end"): RecordToRegion,
     ("chrom", "pos", "ref", "alt"): RecordToVcfAllele,
     ("vcf_like",): VcfLikeRecordToVcfAllele,
     ("chrom", "pos"): RecordToPosition,
     ("location", "variant"): CSHLAlleleRecordToAnnotatable,
-    # ("chrom", "pos_beg", "pos_end"): RecordToRegion,
 }
 
 

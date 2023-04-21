@@ -120,11 +120,21 @@ class GeneScoreAnnotator(Annotator):
 
         return aggregator.get_final()
 
+    def _not_found(self):
+        attributes: dict = {}
+        for attr in self.config["attributes"]:
+            src = attr["source"]
+            attributes[src] = None
+        return attributes
+
     def _do_annotate(self, annotatable: Annotatable, _context: dict):
         attributes: dict = {}
 
         input_gene_list = self.config["input_gene_list"]
         genes = _context.get(input_gene_list)
+        if genes is None:
+            return self._not_found()
+
         assert genes is not None
         for attr in self.config["attributes"]:
             src = attr["source"]
