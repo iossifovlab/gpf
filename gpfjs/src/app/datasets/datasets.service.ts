@@ -5,7 +5,7 @@ import { Observable, ReplaySubject, BehaviorSubject, zip, Subject } from 'rxjs';
 import { Dataset } from '../datasets/datasets';
 import { UsersService } from '../users/users.service';
 import { ConfigService } from '../config/config.service';
-import { distinctUntilChanged, map, take } from 'rxjs/operators';
+import { distinctUntilChanged, map, take, tap } from 'rxjs/operators';
 import { DatasetPermissions } from 'app/datasets-table/datasets-table';
 
 @Injectable()
@@ -21,6 +21,8 @@ export class DatasetsService {
   private selectedDataset$ = new BehaviorSubject<Dataset>(null);
   private datasetLoaded$ = new Subject<void>();
   public datasetsLoading = false;
+
+  public static currentGenome = '';
 
   public constructor(
     private http: HttpClient,
@@ -90,7 +92,12 @@ export class DatasetsService {
     if (!force && this.selectedDataset$.getValue()?.id === datasetId) {
       return;
     }
-    this.getDataset(datasetId).pipe(take(1)).subscribe(dataset => {
+    this.getDataset(datasetId).pipe(
+      take(1),
+      tap(dataset => {
+        DatasetsService.currentGenome = dataset.genome;
+      })
+    ).subscribe(dataset => {
       this.selectedDataset$.next(dataset);
       this.datasetLoaded$.next();
     });

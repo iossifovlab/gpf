@@ -1,9 +1,8 @@
+import { DatasetsService } from 'app/datasets/datasets.service';
 import { ValidatorConstraint, ValidatorConstraintInterface } from 'class-validator';
 
 @ValidatorConstraint({ name: 'customText', async: false })
 export class RegionsFilterValidator implements ValidatorConstraintInterface {
-  private static lineRegex = new RegExp('chr([0-9]+):([0-9]+)(?:-([0-9]+))?', 'i');
-
   public validate(text: string): boolean {
     if (!text) {
       return null;
@@ -26,7 +25,12 @@ export class RegionsFilterValidator implements ValidatorConstraintInterface {
   }
 
   private isValid(line: string): boolean {
-    const match = line.match(RegionsFilterValidator.lineRegex);
+    let lineRegex = '([0-9]+):([0-9]+)(?:-([0-9]+))?';
+    if (DatasetsService.currentGenome === 'hg38') {
+      lineRegex = 'chr([0-9]+):([0-9]+)(?:-([0-9]+))?';
+    }
+
+    const match = line.match(new RegExp(lineRegex, 'i'));
     if (match === null) {
       return false;
     }
