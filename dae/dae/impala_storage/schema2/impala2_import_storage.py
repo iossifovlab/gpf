@@ -14,7 +14,7 @@ logger = logging.getLogger(__file__)
 
 
 class Impala2ImportStorage(Schema2ImportStorage):
-    """Import logic for data in the Impala Schema 1 format."""
+    """Import logic for data in the Impala Schema 2 format."""
 
     @classmethod
     def _do_load_in_hdfs(cls, project):

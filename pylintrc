@@ -3,7 +3,7 @@
 # A comma-separated list of package or module names from where C extensions may
 # be loaded. Extensions are loading into the active Python interpreter and may
 # run arbitrary code.
-extension-pkg-allow-list=
+extension-pkg-allow-list=duckdb,pysam
 
 # A comma-separated list of package or module names from where C extensions may
 # be loaded. Extensions are loading into the active Python interpreter and may
@@ -86,7 +86,9 @@ disable=missing-module-docstring,
         fixme,
         unspecified-encoding,
         line-too-long,
-        duplicate-code
+        duplicate-code,
+        c-extension-no-member
+
 
 # Enable the message, report, category or checker with the given id(s). You can
 # either give multiple identifier separated by comma (,) or put this option
