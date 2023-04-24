@@ -257,6 +257,13 @@ class ImportProject():
         self._check_chrom_prefix(loader, variants_params)
         return loader
 
+    def get_partition_descriptor(self) -> PartitionDescriptor:
+        if "partition_description" not in self.import_config:
+            return PartitionDescriptor()
+
+        config_dict: dict = self.import_config["partition_description"]
+        return PartitionDescriptor.parse_dict(config_dict)
+
     def get_partition_description_dict(self) -> Optional[dict]:
         """Retrurn a dict describing the paritition description.
 

@@ -4,8 +4,10 @@ from typing import Any, cast, Optional
 import duckdb
 from cerberus import Validator
 
+from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.genotype_storage.genotype_storage import GenotypeStorage
 from dae.schema2_storage.schema2_import_storage import Schema2DatasetLayout
+from dae.duckdb_storage.duckdb_variants import DuckDbVariants
 
 logger = logging.getLogger(__name__)
 
@@ -45,7 +47,7 @@ class DuckDbGenotypeStorage(GenotypeStorage):
         return "duckdb"
 
     def start(self):
-        db_name = self.storage_config["project_id"]
+        db_name = self.storage_config["db"]
         self.connection = duckdb.connect(f"{db_name}")
         return self
 
@@ -75,15 +77,37 @@ class DuckDbGenotypeStorage(GenotypeStorage):
             f"SELECT * FROM parquet_scan('{parquet_path}')"
         self.connection.sql(query)
 
+    def _create_table_partitioned(
+            self, parquet_path, table_name, partition):
+        assert self.connection is not None
+        dataset_path = f"{parquet_path}/{ '*/' * len(partition)}*.parquet"
+        query = f"CREATE TABLE {table_name} AS " \
+            f"SELECT * FROM parquet_scan('{dataset_path}')"
+        self.connection.sql(query)
+
     def import_dataset(
             self,
             study_id: str,
-            layout: Schema2DatasetLayout) -> Schema2DatasetLayout:
+            layout: Schema2DatasetLayout, 
+            partition_descriptor: PartitionDescriptor) -> Schema2DatasetLayout:
+        """Import study parquet dataset into duckdb genotype storage."""
         tables_layout = self._create_table_layout(study_id)
         self._create_table(layout.meta, tables_layout.meta)
         self._create_table(layout.pedigree, tables_layout.pedigree)
-
+        self._create_table_partitioned(
+            layout.summary, tables_layout.summary,
+            partition_descriptor.dataset_summary_partition())
+        self._create_table_partitioned(
+            layout.family, tables_layout.family,
+            partition_descriptor.dataset_family_partition())
         return tables_layout
 
     def build_backend(self, study_config, genome, gene_models):
-        return None
+        tables_layout = self._create_table_layout(study_config.id)
+        return DuckDbVariants(
+            self.storage_config["db"],
+            tables_layout.family,
+            tables_layout.summary,
+            tables_layout.pedigree,
+            tables_layout.meta,
+            gene_models)
