@@ -1,6 +1,7 @@
 import time
 import json
 import logging
+import queue
 from typing import Optional, Any
 
 import duckdb
@@ -17,7 +18,83 @@ logger = logging.getLogger(__name__)
 
 
 class DuckDbRunner(QueryRunner):
-    pass
+    """Run a DuckDb query in a separate thread."""
+
+    def __init__(self, connection_factory, query, deserializer=None):
+        super().__init__(deserializer=deserializer)
+
+        self.client = connection_factory
+        self.query = query
+
+    def run(self):
+        """Execute the query and enqueue the resulting rows."""
+        started = time.time()
+        logger.debug(
+            "bigquery runner (%s) started", self.study_id)
+
+        try:
+            if self.closed():
+                logger.info(
+                    "runner (%s) closed before execution",
+                    self.study_id)
+                self._finalize(started)
+                return
+
+            for record in self.client.execute(self.query).fetchall():
+                val = self.deserializer(record)
+                if val is None:
+                    continue
+                self._put_value_in_result_queue(val)
+                if self.closed():
+                    logger.debug(
+                        "query runner (%s) closed while iterating",
+                        self.study_id)
+                    break
+
+        except Exception as ex:  # pylint: disable=broad-except
+            logger.error(
+                "exception in runner (%s) run: %s",
+                self.study_id, type(ex), exc_info=True)
+            self._put_value_in_result_queue(ex)
+        finally:
+            logger.debug(
+                "runner (%s) closing connection", self.study_id)
+
+        self._finalize(started)
+
+    def _put_value_in_result_queue(self, val):
+        assert self._result_queue is not None
+
+        no_interest = 0
+        while True:
+            try:
+                self._result_queue.put(val, timeout=0.1)
+                break
+            except queue.Full:
+                logger.debug(
+                    "runner (%s) nobody interested",
+                    self.study_id)
+
+                if self.closed():
+                    break
+                no_interest += 1
+                if no_interest % 1_000 == 0:
+                    logger.warning(
+                        "runner (%s) nobody interested %s",
+                        self.study_id, no_interest)
+                if no_interest > 5_000:
+                    logger.warning(
+                        "runner (%s) nobody interested %s"
+                        "closing...",
+                        self.study_id, no_interest)
+                    self.close()
+                    break
+
+    def _finalize(self, started):
+        with self._status_lock:
+            self._done = True
+        elapsed = time.time() - started
+        logger.debug("runner (%s) done in %0.3f sec", self.study_id, elapsed)
 
 
 class DuckDbQueryDialect(Dialect):
@@ -46,6 +123,9 @@ class DuckDbQueryDialect(Dialect):
     def use_bit_and_function() -> bool:
         return False
 
+    def build_table_name(self, table: str, db: str) -> str:
+        return table
+
 
 class DuckDbVariants(SqlSchema2Variants):
     """Backend for BigQuery."""
@@ -55,8 +135,8 @@ class DuckDbVariants(SqlSchema2Variants):
     def __init__(
         self,
         db,
-        summary_allele_table,
         family_variant_table,
+        summary_allele_table,
         pedigree_table,
         meta_table,
         gene_models=None,
@@ -73,7 +153,6 @@ class DuckDbVariants(SqlSchema2Variants):
             gene_models)
         assert db, db
         assert pedigree_table, pedigree_table
-
         self.start_time = time.time()
 
     def _fetch_tblproperties(self):
@@ -95,17 +174,6 @@ class DuckDbVariants(SqlSchema2Variants):
             col_name: col_type for (_, col_name, col_type) in records
         }
         return schema
-
-    # def _fetch_schema(self, table):
-    #     query = f"""
-    #         SELECT * FROM {self.db}.INFORMATION_SCHEMA.COLUMNS
-    #         WHERE table_name = '{table}'
-    #     """
-    #     df = self.connection.query(query).result().to_dataframe()
-
-    #     records = df[["column_name", "data_type"]].to_records()
-    #     schema = {col_name: col_type for (_, col_name, col_type) in records}
-    #     return schema
 
     def _fetch_pedigree(self):
         query = f"SELECT * FROM {self.pedigree_table}"
@@ -138,14 +206,14 @@ class DuckDbVariants(SqlSchema2Variants):
         return self.connection
 
     def _deserialize_summary_variant(self, record):
-        sv_record = json.loads(record.summary_variant_data)
+        sv_record = json.loads(record[2])
         return SummaryVariantFactory.summary_variant_from_records(
             sv_record
         )
 
     def _deserialize_family_variant(self, record):
-        sv_record = json.loads(record.summary_variant_data)
-        fv_record = json.loads(record.family_variant_data)
+        sv_record = json.loads(record[4])
+        fv_record = json.loads(record[5])
 
         return FamilyVariant(
             SummaryVariantFactory.summary_variant_from_records(

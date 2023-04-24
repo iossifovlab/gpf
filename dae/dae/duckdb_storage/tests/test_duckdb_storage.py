@@ -84,3 +84,15 @@ def imported_study(tmp_path_factory, duckdb_storage_fixture):
 
 def test_imported_study(imported_study):
     assert imported_study is not None
+
+
+def test_imported_study_family_variants(imported_study):
+    vs = list(imported_study.query_variants())
+
+    assert len(vs) == 2
+
+
+def test_imported_study_summary_variants(imported_study):
+    vs = list(imported_study.query_summary_variants())
+
+    assert len(vs) == 2
