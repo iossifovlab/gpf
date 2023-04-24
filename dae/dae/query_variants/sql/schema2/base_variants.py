@@ -225,7 +225,6 @@ class SqlSchema2Variants(abc.ABC):
             limit=limit,
             pedigree_fields=pedigree_fields
         )
-
         logger.info("FAMILY VARIANTS QUERY:\n%s", query)
         deserialize_row = self._deserialize_family_variant
 

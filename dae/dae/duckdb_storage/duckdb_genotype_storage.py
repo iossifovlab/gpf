@@ -1,5 +1,6 @@
 import logging
 from typing import Any, cast, Optional
+from contextlib import closing
 
 import duckdb
 from cerberus import Validator
@@ -59,6 +60,9 @@ class DuckDbGenotypeStorage(GenotypeStorage):
         self.connection.close()
         self.connection = None
 
+    def close(self):
+        self.shutdown()
+
     def get_db(self):
         return self.storage_config["bigquery"]["db"]
 
@@ -92,14 +96,16 @@ class DuckDbGenotypeStorage(GenotypeStorage):
             partition_descriptor: PartitionDescriptor) -> Schema2DatasetLayout:
         """Import study parquet dataset into duckdb genotype storage."""
         tables_layout = self._create_table_layout(study_id)
-        self._create_table(layout.meta, tables_layout.meta)
-        self._create_table(layout.pedigree, tables_layout.pedigree)
-        self._create_table_partitioned(
-            layout.summary, tables_layout.summary,
-            partition_descriptor.dataset_summary_partition())
-        self._create_table_partitioned(
-            layout.family, tables_layout.family,
-            partition_descriptor.dataset_family_partition())
+
+        with closing(self.start()) as storage:
+            storage._create_table(layout.meta, tables_layout.meta)
+            storage._create_table(layout.pedigree, tables_layout.pedigree)
+            storage._create_table_partitioned(
+                layout.summary, tables_layout.summary,
+                partition_descriptor.dataset_summary_partition())
+            storage._create_table_partitioned(
+                layout.family, tables_layout.family,
+                partition_descriptor.dataset_family_partition())
         return tables_layout
 
     def build_backend(self, study_config, genome, gene_models):

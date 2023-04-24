@@ -19,6 +19,10 @@ class ImpalaDialect(Dialect):
     def __init__(self):
         super().__init__()
 
+    @staticmethod
+    def escape_char() -> str:
+        return "`"
+
 
 class ImpalaVariants(SqlSchema2Variants):
     """A backend implementing an impala backend."""

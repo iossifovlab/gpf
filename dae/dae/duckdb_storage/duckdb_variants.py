@@ -126,6 +126,10 @@ class DuckDbQueryDialect(Dialect):
     def build_table_name(self, table: str, db: str) -> str:
         return table
 
+    def build_array_join(self, column: str, allias: str) -> str:
+        return f"\n    CROSS JOIN\n        " \
+            f"(SELECT UNNEST({column}) AS {allias})"
+
 
 class DuckDbVariants(SqlSchema2Variants):
     """Backend for BigQuery."""
@@ -141,7 +145,7 @@ class DuckDbVariants(SqlSchema2Variants):
         meta_table,
         gene_models=None,
     ):
-        self.connection = duckdb.connect(db)
+        self.connection = duckdb.connect(db, read_only=True)
 
         super().__init__(
             DuckDbQueryDialect(),
