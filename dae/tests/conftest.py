@@ -6,6 +6,13 @@ from dae.genotype_storage.genotype_storage_registry import \
 
 def default_genotype_storage_configs(root_path):
     return [
+        # DuckDb Storage
+        {
+            "id": "duckdb",
+            "storage_type": "duckdb",
+            "db": f"{root_path}/duckdb_storage/dev_storage.db",
+        },
+
         # Impala Schema 1
         {
             "id": "impala",
@@ -51,7 +58,8 @@ def default_genotype_storage_configs(root_path):
             "id": "inmemory",
             "storage_type": "inmemory",
             "dir": f"{root_path}/genotype_filesystem_data"
-        }
+        },
+
     ]
 
 

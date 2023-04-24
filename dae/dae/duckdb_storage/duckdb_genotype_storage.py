@@ -1,3 +1,4 @@
+import os
 import logging
 from typing import Any, cast, Optional
 from contextlib import closing
@@ -48,7 +49,16 @@ class DuckDbGenotypeStorage(GenotypeStorage):
         return "duckdb"
 
     def start(self):
-        db_name = self.storage_config["db"]
+        if self.connection:
+            logger.warning(
+                "starting already started DuckDb genotype storage: <%s>",
+                self.storage_id)
+            return self
+            # raise ValueError(
+            #     f"already started DuckDb storage <{self.storage_id}>")
+        db_name = self.get_db()
+        dirname = os.path.dirname(db_name)
+        os.makedirs(dirname, exist_ok=True)
         self.connection = duckdb.connect(f"{db_name}")
         return self
 
@@ -64,7 +74,7 @@ class DuckDbGenotypeStorage(GenotypeStorage):
         self.shutdown()
 
     def get_db(self):
-        return self.storage_config["bigquery"]["db"]
+        return self.storage_config["db"]
 
     @staticmethod
     def _create_table_layout(study_id: str) -> Schema2DatasetLayout:
@@ -76,6 +86,8 @@ class DuckDbGenotypeStorage(GenotypeStorage):
 
     def _create_table(self, parquet_path, table_name):
         assert self.connection is not None
+        query = f"DROP TABLE IF EXISTS {table_name}"
+        self.connection.sql(query)
 
         query = f"CREATE TABLE {table_name} AS " \
             f"SELECT * FROM parquet_scan('{parquet_path}')"
@@ -84,6 +96,9 @@ class DuckDbGenotypeStorage(GenotypeStorage):
     def _create_table_partitioned(
             self, parquet_path, table_name, partition):
         assert self.connection is not None
+        query = f"DROP TABLE IF EXISTS {table_name}"
+        self.connection.sql(query)
+
         dataset_path = f"{parquet_path}/{ '*/' * len(partition)}*.parquet"
         query = f"CREATE TABLE {table_name} AS " \
             f"SELECT * FROM parquet_scan('{dataset_path}')"
@@ -92,12 +107,13 @@ class DuckDbGenotypeStorage(GenotypeStorage):
     def import_dataset(
             self,
             study_id: str,
-            layout: Schema2DatasetLayout, 
+            layout: Schema2DatasetLayout,
             partition_descriptor: PartitionDescriptor) -> Schema2DatasetLayout:
         """Import study parquet dataset into duckdb genotype storage."""
         tables_layout = self._create_table_layout(study_id)
 
         with closing(self.start()) as storage:
+            # pylint: disable=protected-access
             storage._create_table(layout.meta, tables_layout.meta)
             storage._create_table(layout.pedigree, tables_layout.pedigree)
             storage._create_table_partitioned(

@@ -63,7 +63,6 @@ class ImpalaVariants(SqlSchema2Variants):
                 query = f"""DESCRIBE {self.db}.{table}"""
                 cursor.execute(query)
                 df = as_pandas(cursor)
-
             records = df[["name", "type"]].to_records()
             schema = {
                 col_name: col_type for (_, col_name, col_type) in records

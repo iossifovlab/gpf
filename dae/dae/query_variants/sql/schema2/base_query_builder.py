@@ -51,7 +51,7 @@ class Dialect(ABC):
 
     @staticmethod
     def escape_char() -> str:
-        return ""
+        return "`"
 
     def build_table_name(self, table: str, db: str) -> str:
         return f"`{self.namespace}`.{db}.{table}" if self.namespace else \
@@ -436,13 +436,15 @@ class BaseQueryBuilder(ABC):
         for region in regions:
             assert isinstance(region, Region)
             esc = self.dialect.escape_char()
-            end_position = f"COALESCE(sa.end_position, sa.{esc}position{esc})"
-            query = "(sa.chromosome = {q}{chrom}{q}"
+            end_position = f"COALESCE(sa.{esc}end_position{esc}, " \
+                f"sa.{esc}position{esc})"
+            query = "(sa.{esc}chromosome{esc} = {q}{chrom}{q}"
             if region.start is None and region.end is None:
                 query += ")"
                 query = query.format(
                     q=self.QUOTE,
-                    chrom=region.chrom
+                    chrom=region.chrom,
+                    esc=esc
                 )
             else:
                 query += (

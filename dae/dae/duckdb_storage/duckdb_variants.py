@@ -109,11 +109,11 @@ class DuckDbQueryDialect(Dialect):
 
     @staticmethod
     def int_type() -> str:
-        return "INT64"
+        return "INTEGER"
 
     @staticmethod
     def float_type() -> str:
-        return "FLOAT64"
+        return "FLOAT"
 
     @staticmethod
     def array_item_suffix() -> str:
@@ -122,6 +122,10 @@ class DuckDbQueryDialect(Dialect):
     @staticmethod
     def use_bit_and_function() -> bool:
         return False
+
+    @staticmethod
+    def escape_char() -> str:
+        return ""
 
     def build_table_name(self, table: str, db: str) -> str:
         return table
@@ -145,8 +149,6 @@ class DuckDbVariants(SqlSchema2Variants):
         meta_table,
         gene_models=None,
     ):
-        self.connection = duckdb.connect(db, read_only=True)
-
         super().__init__(
             DuckDbQueryDialect(),
             db,
@@ -165,49 +167,54 @@ class DuckDbVariants(SqlSchema2Variants):
                LIMIT 1
             """
 
-        result = self.connection.execute(query).fetchall()
-        for row in result:
-            return row[0]
-        return ""
+        with self._get_connection_factory() as connection:
+            result = connection.execute(query).fetchall()
+            for row in result:
+                return row[0]
+            return ""
 
     def _fetch_schema(self, table) -> dict[str, str]:
         query = f"""DESCRIBE {table}"""
-        df = self.connection.execute(query).df()
-        records = df[["column_name", "column_type"]].to_records()
-        schema = {
-            col_name: col_type for (_, col_name, col_type) in records
-        }
-        return schema
+        with self._get_connection_factory() as connection:
+            df = connection.execute(query).df()
+            records = df[["column_name", "column_type"]].to_records()
+            schema = {}
+            for _, col_name, col_type in records:
+                if col_type.endswith("[]"):
+                    col_type = f"ARRAY({col_type[:-2]})"
+                schema[col_name] = col_type
+            return schema
 
     def _fetch_pedigree(self):
         query = f"SELECT * FROM {self.pedigree_table}"
 
         # ped_df = pandas_gbq.read_gbq(q, project_id=self.gcp_project_id)
-        ped_df = self.connection.execute(query).df()
-        columns = {
-            "personId": "person_id",
-            "familyId": "family_id",
-            "momId": "mom_id",
-            "dadId": "dad_id",
-            "sampleId": "sample_id",
-            "sex": "sex",
-            "status": "status",
-            "role": "role",
-            "generated": "generated",
-            "layout": "layout",
-            "phenotype": "phenotype",
-        }
+        with self._get_connection_factory() as connection:
+            ped_df = connection.execute(query).df()
+            columns = {
+                "personId": "person_id",
+                "familyId": "family_id",
+                "momId": "mom_id",
+                "dadId": "dad_id",
+                "sampleId": "sample_id",
+                "sex": "sex",
+                "status": "status",
+                "role": "role",
+                "generated": "generated",
+                "layout": "layout",
+                "phenotype": "phenotype",
+            }
 
-        ped_df = ped_df.rename(columns=columns)
-        ped_df.role = ped_df.role.apply(Role)  # type: ignore
-        ped_df.sex = ped_df.sex.apply(Sex)  # type: ignore
-        ped_df.status = ped_df.status.apply(Status)  # type: ignore
+            ped_df = ped_df.rename(columns=columns)
+            ped_df.role = ped_df.role.apply(Role)  # type: ignore
+            ped_df.sex = ped_df.sex.apply(Sex)  # type: ignore
+            ped_df.status = ped_df.status.apply(Status)  # type: ignore
 
-        return ped_df
+            return ped_df
 
     def _get_connection_factory(self) -> Any:
         # pylint: disable=protected-access
-        return self.connection
+        return duckdb.connect(self.db, read_only=True)
 
     def _deserialize_summary_variant(self, record):
         sv_record = json.loads(record[2])

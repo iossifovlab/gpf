@@ -65,7 +65,7 @@ class FamilyQueryBuilder(BaseQueryBuilder):
 
         if self.do_join_allele_in_members or self.do_join_pedigree:
             self._add_to_product(
-                self.dialect.build_array_join("fa.allele_in_member", "pi"))
+                self.dialect.build_array_join("fa.allele_in_members", "pi"))
             # inner = "fa.allele_in_members"
             # if self.dialect.add_unnest_in_join():
             #     inner = f"UNNEST({inner})"
