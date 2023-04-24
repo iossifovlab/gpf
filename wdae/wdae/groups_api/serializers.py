@@ -39,7 +39,7 @@ class GroupRetrieveSerializer(GroupSerializer):
         model = Group
         fields = ("id", "name", "users", "datasets")
 
-    def get_datasets(self, group):  # pylint: disable=no-self-use
-        return [
+    def get_datasets(self, group):
+        return sorted([
             get_dataset_info(d.dataset_id) for d in group.dataset_set.all()
-        ]
+        ], key=lambda d: d["datasetName"].lower())

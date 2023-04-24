@@ -428,6 +428,25 @@ def test_group_retrieve(admin_client, hundred_groups):
     }]
 
 
+def test_group_retrieve_alphabetical_order(admin_client, hundred_groups):
+    url = "/api/v3/groups/any_dataset"
+    response = admin_client.get(url)
+    assert response.status_code == status.HTTP_200_OK
+    data = response.data
+
+    assert data["name"] == "any_dataset"
+    assert data["users"] == []
+    assert data["datasets"][0]["datasetName"] == "(TEST_REMOTE) iossifov_2014"
+    assert data["datasets"][1]["datasetName"] == "comp"
+    assert data["datasets"][3]["datasetName"] == "Dataset1"
+    assert data["datasets"][3]["datasetName"] == "Dataset1"
+    assert data["datasets"][7]["datasetName"] == "f1_group"
+    assert data["datasets"][8]["datasetName"] == "f1_study"
+    assert data["datasets"][9]["datasetName"] == "f1_trio"
+    assert data["datasets"][14]["datasetName"] == "FAKE_STUDY"
+    assert data["datasets"][-1]["datasetName"] == "TRIO"
+
+
 def test_group_retrieve_missing(admin_client):
     url = "/api/v3/groups/somegroupthatdoesnotexist"
     response = admin_client.get(url)
