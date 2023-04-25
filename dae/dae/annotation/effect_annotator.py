@@ -118,7 +118,7 @@ class EffectAnnotatorAdapter(Annotator):
 
     def _not_found(self, attributes):
         for attr in self.get_annotation_config():
-            attributes[attr.destination] = ""
+            attributes[attr["destination"]] = ""
 
     def get_all_annotation_attributes(self) -> list[dict]:
         result = [
