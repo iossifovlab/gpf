@@ -1,7 +1,7 @@
 dae_named_cluster:
   default: local
   clusters:
-    - name: local
+    - name: local_small
       type: local
       params:
         memory_limit: 2GB
@@ -19,6 +19,11 @@ dae_named_cluster:
       # params:
       #  threads_per_worker: 1
       #   dashboard_address: :8898
+    - name: local
+      type: local
+      params:
+        memory_limit: 4GB
+        threads_per_worker: 1
     - name: sge_small
       type: sge
       number_of_threads: 10

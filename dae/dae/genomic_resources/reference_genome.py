@@ -506,9 +506,31 @@ class ReferenceGenome(
                 yield nuc
             read_progress += read_length
 
-    def get_sequence(self, chrom, start, stop):
+    def get_sequence_new(self, chrom, start, stop):
         """Return sequence of nucleotides from specified chromosome region."""
         return "".join(self.fetch(chrom, start, stop))
+
+    def get_sequence(self, chrom, start, stop):
+        """Return sequence of nucleotides from specified chromosome region."""
+        if chrom not in self.chromosomes:
+            logger.warning(
+                "chromosome %s not found in %s",
+                chrom, self.resource.resource_id)
+            return None
+        assert self._sequence is not None
+        self._sequence.seek(
+            self._index[chrom]["startBit"]
+            + start
+            - 1
+            + (start - 1) // self._index[chrom]["seqLineLength"]
+        )
+
+        length = stop - start + 1
+        line_feeds = 1 + length // self._index[chrom]["seqLineLength"]
+
+        sequence = self._sequence.read(length + line_feeds).decode("ascii")
+        sequence = sequence.replace("\n", "")[:length]
+        return sequence.upper()
 
     def pair_iter(self, chrom, start, stop):
         """
