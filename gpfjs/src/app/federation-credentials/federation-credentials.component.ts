@@ -2,6 +2,7 @@ import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { UsersService } from 'app/users/users.service';
 import { FederationCredential } from './federation-credentials';
 import { NgbModal, NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
+import { concatMap, of, zip } from 'rxjs';
 
 @Component({
   selector: 'gpf-federation-credentials',
@@ -28,17 +29,24 @@ export class FederationCredentialsComponent implements OnInit {
   }
 
   public deleteCredential(name: string): void {
-    //hehe
+    this.usersService.deleteFederationCredentials(name).pipe(
+      concatMap(() => this.usersService.getFederationCredentials())
+    ).subscribe(res => {
+      this.credentials = res;
+    });
   }
 
   public createCredential(name: string): void {
-    if (!(new RegExp(/.{3,}/)).test(String(name).toLowerCase())) {
+    if (!new RegExp(/.{3,}/).test(String(name).toLowerCase())) {
       (this.newCredentialName.nativeElement as HTMLInputElement).focus();
       this.creationError = 'Credential names must be at least 3 symbols long.';
       return;
     }
-    this.usersService.createFederationCredentials(name).subscribe(credentials => {
-      this.temporaryShownCredentials = credentials;
+    this.usersService.createFederationCredentials(name).pipe(
+      concatMap((credential: string) => zip(of(credential), this.usersService.getFederationCredentials()))
+    ).subscribe(([credential, allCredentials]) => {
+      this.credentials = allCredentials;
+      this.temporaryShownCredentials = credential;
       this.openModal();
     });
   }

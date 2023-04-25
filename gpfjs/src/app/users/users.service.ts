@@ -211,4 +211,10 @@ export class UsersService {
         })
       );
   }
+
+  public deleteFederationCredentials(credentialName: string): Observable<object> {
+    const options = { withCredentials: true, body: { name: credentialName }};
+
+    return this.http.delete(this.config.baseUrl + 'users/federation_credentials', options);
+  }
 }
