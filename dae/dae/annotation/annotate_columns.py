@@ -40,6 +40,26 @@ def configure_argument_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def _handle_input(infile: str):
+    if infile == "-":
+        return sys.stdin
+    if infile.endswith(".gz"):
+        # pylint: disable=consider-using-with
+        return gzip.open(infile, "rt")
+    # pylint: disable=consider-using-with
+    return open(infile, "rt")
+
+
+def _handle_output(outfile: str):
+    if outfile == "-":
+        return sys.stdout
+    if outfile.endswith(".gz"):
+        # pylint: disable=consider-using-with
+        return gzip.open(outfile, "wt")
+    # pylint: disable=consider-using-with
+    return open(outfile, "wt")
+
+
 def cli(raw_args: Optional[list[str]] = None) -> None:
     """Run command line interface for annotate columns."""
     if raw_args is None:
@@ -54,23 +74,8 @@ def cli(raw_args: Optional[list[str]] = None) -> None:
     pipeline = CLIAnnotationContext.get_pipeline(context)
     annotation_attributes = pipeline.annotation_schema.public_fields
 
-    if args.input == "-":
-        in_file = sys.stdin
-    elif args.input.endswith(".gz"):
-        # pylint: disable=consider-using-with
-        in_file = gzip.open(args.input, "rt")
-    else:
-        # pylint: disable=consider-using-with
-        in_file = open(args.input, "rt")
-
-    if args.output == "-":
-        out_file = sys.stdout
-    elif args.output.endswith(".gz"):
-        # pylint: disable=consider-using-with
-        out_file = gzip.open(args.output, "wt")
-    else:
-        # pylint: disable=consider-using-with
-        out_file = open(args.output, "wt")
+    in_file = _handle_input(args.input)
+    out_file = _handle_output(args.output)
 
     hcs = in_file.readline().strip("\r\n").split(args.input_separator)
     record_to_annotable = build_record_to_annotatable(
@@ -79,7 +84,7 @@ def cli(raw_args: Optional[list[str]] = None) -> None:
           sep=args.output_separator, file=out_file)
 
     with pipeline.open() as pipeline:
-
+        errors = []
         for lnum, line in enumerate(in_file):
             try:
                 columns = line.strip("\n\r").split(args.input_separator)
@@ -90,16 +95,23 @@ def cli(raw_args: Optional[list[str]] = None) -> None:
                     str(annotation[attrib])
                     for attrib in annotation_attributes]),
                     sep=args.output_separator, file=out_file)
-            except Exception:  # pylint: disable=broad-except
+            except Exception as ex:  # pylint: disable=broad-except
                 logger.warning(
                     "unexpected input data format at line %s: %s",
                     lnum, line, exc_info=True)
+                errors.append((lnum, line, str(ex)))
 
     if args.input != "-":
         in_file.close()
 
     if args.output != "-":
         out_file.close()
+
+    if len(errors) > 0:
+        logger.error("there were errors during the import")
+        for lnum, line, error in errors:
+            logger.error("line %s: %s", lnum, line)
+            logger.error("\t%s", error)
 
 
 if __name__ == "__main__":
