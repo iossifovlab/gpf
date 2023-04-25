@@ -1,4 +1,5 @@
 """Provides CLI for management of genomic resources repositories."""
+import json
 import os
 import sys
 import logging
@@ -794,7 +795,7 @@ def cli_browse(cli_args=None):
             print("Working with GRR definition:", definition_path)
         else:
             print("No GRR definition found, using the DEFAULT_DEFINITION")
-        pprint.pprint(definition)
+        print(yaml.dump(definition))
 
     repo = build_genomic_resource_repository(definition=definition)
     _run_list_command(repo, args)
