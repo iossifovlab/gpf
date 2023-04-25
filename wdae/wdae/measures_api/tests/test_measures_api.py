@@ -51,3 +51,15 @@ def test_regressions(admin_client):
     assert response.status_code == 200
     assert "age" in response.data
     assert "iq" in response.data
+
+
+def test_measures_list_wrong_request(admin_client):
+    response = admin_client.post("/api/v3/measures/histogram", {
+        "datasetId": "comp", "measure": "i1.age"
+    })
+    assert response.status_code == 200
+
+    response = admin_client.post("/api/v3/measures/histogram", {
+        "datasetId": "comp", "measure": "asian"
+    })
+    assert response.status_code == 400
