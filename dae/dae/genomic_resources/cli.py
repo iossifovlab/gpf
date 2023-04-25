@@ -769,7 +769,7 @@ def cli_browse(cli_args=None):
 
     parser.add_argument(
         "--print-grr",
-        default=False,
+        default=True,
         action="store_true",
         help="Print the path and content of the GRR definition to be used"
     )
