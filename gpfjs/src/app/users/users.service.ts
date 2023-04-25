@@ -197,4 +197,18 @@ export class UsersService {
       map(res => FederationCredential.fromJsonArray(res))
     );
   }
+
+  public createFederationCredentials(credentialName: string): Observable<string> {
+    const options = { withCredentials: true };
+
+    return this.http.post(this.config.baseUrl + 'users/federation_credentials', {name: credentialName}, options)
+      .pipe(
+        map(res => {
+          if (typeof (res as {credentials: string}).credentials === 'string') {
+            return (res as {credentials: string}).credentials;
+          }
+          return 'Error showing created credentials';
+        })
+      );
+  }
 }

@@ -9,8 +9,7 @@ describe('FederationCredentialsComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       declarations: [ FederationCredentialsComponent ]
-    })
-    .compileComponents();
+    }).compileComponents();
 
     fixture = TestBed.createComponent(FederationCredentialsComponent);
     component = fixture.componentInstance;
