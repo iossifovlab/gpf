@@ -11,7 +11,7 @@ describe('User management tests for reset password in Users', () => {
     page.navigateToHome(false);
   });
 
-  afterEach(() => {
+  beforeEach(() => {
     page.loginAdmin();
     page.navigateToHome();
     page.navigateToSidenavPage(sidenavPageLinks.management);
@@ -96,11 +96,6 @@ describe('User management tests for Users', () => {
     page.preserveLogin();
     page.navigateToHome();
     page.navigateToSidenavPage(sidenavPageLinks.management);
-  });
-
-  afterEach(() => {
-    page.navigateToHome();
-    page.navigateToSidenavPage(sidenavPageLinks.management);
     page.usersButton.click();
     page.userCell('test_email@email.com').if('exist').then(
       () => deleteTestUser(page, 'test_email@email.com')
@@ -119,6 +114,9 @@ describe('User management tests for Users', () => {
     page.groupCell('test_group').if('exist').then(() => deleteTestGroup(page, 'test_group'));
     page.groupCell('test_group1').if('exist').then(() => deleteTestGroup(page, 'test_group1'));
     page.groupCell('test_group2').if('exist').then(() => deleteTestGroup(page, 'test_group2'));
+
+    page.navigateToHome();
+    page.navigateToSidenavPage(sidenavPageLinks.management);
   });
 
   it('should navigate through all user management tabs', () => {
