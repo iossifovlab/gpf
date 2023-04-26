@@ -149,6 +149,7 @@ def test_cnv_effect_annotation(infile: str, annotate_cnv_fixture):
         str(root_path / "effect_annotation.yaml"),
         str(root_path / "result.tsv"),
         "--grr", str(root_path / "grr.yaml"),
+        "-R", "genome/foobar_genome",
     ])
 
     df = pd.read_csv(root_path / "result.tsv", sep="\t")
@@ -183,6 +184,7 @@ def test_cnv_gene_score_annotation(infile: str, annotate_cnv_fixture):
         str(root_path / "gene_score_annotation.yaml"),
         str(root_path / "result.tsv"),
         "--grr", str(root_path / "grr.yaml"),
+        "-R", "genome/foobar_genome",
     ])
 
     df = pd.read_csv(root_path / "result.tsv", sep="\t")

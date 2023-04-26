@@ -3,14 +3,14 @@ from __future__ import annotations
 import os
 import logging
 
-from typing import Optional, Generator, cast, Tuple
+from typing import Optional, Generator, Tuple
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from dae.genomic_resources.fsspec_protocol import FsspecReadWriteProtocol
 from dae.genomic_resources.repository import GenomicResourceRepo, \
     GenomicResourceProtocolRepo, \
     GR_CONF_FILE_NAME, Manifest, GenomicResource, \
-    ReadOnlyRepositoryProtocol
+    ReadOnlyRepositoryProtocol, is_version_constraint_satisfied
 from .fsspec_protocol import build_fsspec_protocol
 
 logger = logging.getLogger(__name__)
@@ -27,10 +27,6 @@ class CacheResource(GenomicResource):
             config=resource.config,
             manifest=resource.get_manifest())
 
-    def get_manifest(self) -> Manifest:
-        return cast(CachingProtocol, self.proto)\
-            .remote_protocol.get_manifest(self)
-
 
 class CachingProtocol(ReadOnlyRepositoryProtocol):
     """Defines caching GRR repository protocol."""
@@ -43,32 +39,27 @@ class CachingProtocol(ReadOnlyRepositoryProtocol):
         super().__init__(local_protocol.proto_id)
         self.remote_protocol = remote_protocol
         self.local_protocol = local_protocol
+        self._all_resources: Optional[list[CacheResource]] = None
 
     def invalidate(self):
         self.remote_protocol.invalidate()
         self.local_protocol.invalidate()
+        self._all_resources = None
 
     def get_all_resources(self) -> Generator[GenomicResource, None, None]:
-        for remote_resource in self.remote_protocol.get_all_resources():
-            yield CacheResource(remote_resource, self)
+        if self._all_resources is None:
+            self._all_resources = []
+            for remote_resource in self.remote_protocol.get_all_resources():
+                self._all_resources.append(
+                    self._create_cache_resource(remote_resource))
+            self.local_protocol.invalidate()
+        yield from self._all_resources
 
-    def get_resource(
-            self, resource_id: str,
-            version_constraint: Optional[str] = None) -> GenomicResource:
-
-        remote_resource = self.remote_protocol.get_resource(
-            resource_id, version_constraint)
-        local_resource = self.local_protocol.get_or_create_resource(
-            remote_resource.resource_id, remote_resource.version)
-
-        self.local_protocol.update_resource_file(
-            remote_resource, local_resource, GR_CONF_FILE_NAME)
-        self.local_protocol.invalidate()
+    def _create_cache_resource(
+            self, remote_resource) -> CacheResource:
 
         return CacheResource(
-            self.local_protocol.get_resource(
-                remote_resource.resource_id,
-                f"={remote_resource.get_version_str()}"),
+            remote_resource,
             self)
 
     def refresh_cached_resource_file(
@@ -96,8 +87,6 @@ class CachingProtocol(ReadOnlyRepositoryProtocol):
 
         for entry in resource.get_manifest():
             filename = entry.name
-            if filename == "genomic_resource.yaml":
-                continue
             if filename.endswith(".lockfile"):
                 continue
             remote_resource = self.remote_protocol.get_resource(
@@ -158,7 +147,7 @@ class GenomicResourceCachedRepo(GenomicResourceRepo):
 
         logger.debug(
             "creating cached GRR with cache url: %s", cache_url)
-
+        self._all_resources = None
         self.child: GenomicResourceProtocolRepo = child
         self.cache_url = cache_url
         self.cache_protos: dict[str, CachingProtocol] = {}
@@ -170,12 +159,16 @@ class GenomicResourceCachedRepo(GenomicResourceRepo):
             proto.invalidate()
 
     def get_all_resources(self):
-        for remote_resource in self.child.get_all_resources():
-            cache_proto = self._get_or_create_cache_proto(
-                remote_resource.proto)
-            version_constraint = f"={remote_resource.get_version_str()}"
-            yield cache_proto.get_resource(
-                remote_resource.resource_id, version_constraint)
+        if self._all_resources is None:
+            self._all_resources = []
+            for remote_resource in self.child.get_all_resources():
+                cache_proto = self._get_or_create_cache_proto(
+                    remote_resource.proto)
+                version_constraint = f"={remote_resource.get_version_str()}"
+                self._all_resources.append(
+                    cache_proto.get_resource(
+                        remote_resource.resource_id, version_constraint))
+        yield from self._all_resources
 
     def _get_or_create_cache_proto(
             self, proto: ReadOnlyRepositoryProtocol) -> CachingProtocol:
@@ -202,18 +195,30 @@ class GenomicResourceCachedRepo(GenomicResourceRepo):
         return self.cache_protos[proto_id]
 
     def find_resource(
-            self, resource_id, version_constraint=None,
-            repository_id=None) -> Optional[GenomicResource]:
-
-        remote_resource = self.child.find_resource(
-            resource_id, version_constraint, repository_id)
-        if remote_resource is None:
+        self, resource_id: str,
+        version_constraint: Optional[str] = None,
+        repository_id: Optional[str] = None
+    ) -> Optional[GenomicResource]:
+        """Return requested resource or None if not found."""
+        matching_resources: list[GenomicResource] = []
+        for res in self.get_all_resources():
+            if res.resource_id != resource_id:
+                continue
+            if repository_id is not None and \
+                    res.proto.proto_id != repository_id:
+                continue
+            if is_version_constraint_satisfied(
+                    version_constraint, res.version):
+                matching_resources.append(res)
+        if not matching_resources:
             return None
 
-        cache_proto = self._get_or_create_cache_proto(
-            remote_resource.proto)
-        version_constraint = f"={remote_resource.get_version_str()}"
-        return cache_proto.get_resource(resource_id, version_constraint)
+        def get_resource_version(res: GenomicResource):
+            return res.version
+
+        return max(
+            matching_resources,
+            key=get_resource_version)
 
     def get_resource(self, resource_id, version_constraint=None,
                      repository_id=None) -> GenomicResource:
@@ -243,8 +248,6 @@ class GenomicResourceCachedRepo(GenomicResourceRepo):
 def cache_resources(repository, resource_ids, workers=4):
     """Cache resources from a list of remote resource IDs."""
     # pylint: disable=import-outside-toplevel
-    from dae.genomic_resources.repository_factory import \
-        build_resource_implementation
     from dae.genomic_resources import get_resource_implementation_builder
 
     executor = ThreadPoolExecutor(max_workers=workers)
@@ -276,7 +279,14 @@ def cache_resources(repository, resource_ids, workers=4):
             )
             continue
 
-        impl = build_resource_implementation(resource)
+        futures.append(
+            executor.submit(
+                cached_proto.refresh_cached_resource_file,
+                resource,
+                "genomic_resource.yaml",
+            )
+        )
+        impl = impl_builder(resource)
 
         for res_file in impl.files:
             logger.info(

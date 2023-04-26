@@ -96,6 +96,9 @@ def test_cached_repo_get_all_resources(cache_repository, scheme):
 
         assert len(list(cache_repo.get_all_resources())) == 3
 
+        resource = cache_repo.get_resource("sub/two")
+        assert resource is not None
+
 
 @pytest.mark.parametrize("scheme", [
     "file",
@@ -234,7 +237,7 @@ def test_cached_repository_file_level_cache(cache_repository, scheme):
         filesystem = cache_proto.local_protocol.filesystem
         base_url = cache_proto.local_protocol.url
 
-        assert filesystem.exists(
+        assert not filesystem.exists(
             os.path.join(base_url, "one", GR_CONF_FILE_NAME))
         assert not filesystem.exists(
             os.path.join(base_url, "one", "data.txt"))
