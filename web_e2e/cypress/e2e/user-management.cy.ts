@@ -12,14 +12,10 @@ describe('User management tests for reset password in Users', () => {
   });
 
   beforeEach(() => {
-    const usersPage = new UsersPage();
-    usersPage.logOutButton.if('exist').click();
     page.loginAdmin();
     page.navigateToHome();
     page.navigateToSidenavPage(sidenavPageLinks.management);
-    page.userCell('user_reset_password@email.com').if('exist').then(
-      () => deleteTestUser(page, 'user_reset_password@email.com')
-    );
+    deleteTestUser(page, 'user_reset_password@email.com');
     page.logout();
   });
 
