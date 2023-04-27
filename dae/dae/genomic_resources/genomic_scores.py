@@ -27,7 +27,7 @@ from .genomic_position_table import build_genomic_position_table, Line, \
 from .histogram import Histogram, HistogramStatisticMixin
 from .statistics.min_max import MinMaxValue, MinMaxValueStatisticMixin
 
-from .aggregators import build_aggregator, AGGREGATOR_SCHEMA
+from .aggregators import build_aggregator, AGGREGATOR_SCHEMA, Aggregator
 
 
 logger = logging.getLogger(__name__)
@@ -405,7 +405,8 @@ class GenomicScore(
         return self.config["id"]
 
     def _fetch_lines(
-        self, chrom: str, pos_begin: int, pos_end: int
+        self, chrom: str,
+        pos_begin: Optional[int], pos_end: Optional[int]
     ) -> Iterator[ScoreLine]:
         for line in self.table.get_records_in_region(
             chrom, pos_begin, pos_end
@@ -422,7 +423,8 @@ class GenomicScore(
         return list(self.score_definitions)
 
     def fetch_region(
-        self, chrom: str, pos_begin: int, pos_end: int, scores: list[str]
+        self, chrom: str,
+        pos_begin: Optional[int], pos_end: Optional[int], scores: list[str]
     ) -> Iterator[dict[str, ScoreValue]]:
         """Return score values in a region."""
         if not self.is_open():
@@ -874,6 +876,35 @@ class GenomicScore(
         }, sort_keys=True, indent=2).encode()
 
 
+@dataclass
+class PositionScoreQuery:
+    score: str
+    position_aggregator: Optional[str] = None
+
+
+@dataclass
+class NPScoreQuery:
+    score: str
+    position_aggregator: Optional[str] = None
+    nucleotide_aggregator: Optional[str] = None
+
+
+@dataclass
+class PositionScoreAggr:
+    score: str
+    position_aggregator: Aggregator
+
+
+@dataclass
+class NPScoreAggr:
+    score: str
+    position_aggregator: Aggregator
+    nucleotide_aggregator: Aggregator
+
+
+ScoreQuery = Union[PositionScoreQuery, NPScoreQuery]
+
+
 class PositionScore(GenomicScore):
     """Defines position genomic score."""
 
@@ -889,7 +920,7 @@ class PositionScore(GenomicScore):
 
     def fetch_scores(
             self, chrom: str, position: int,
-            scores: Optional[list[str]] = None):
+            scores: Optional[list[str]] = None) -> Optional[list[Any]]:
         """Fetch score values at specific genomic position."""
         if chrom not in self.get_all_chromosomes():
             raise ValueError(
@@ -907,12 +938,27 @@ class PositionScore(GenomicScore):
         line = lines[0]
 
         requested_scores = scores if scores else self.get_all_scores()
-        return {scr: line.get_score(scr) for scr in requested_scores}
+        return [line.get_score(scr) for scr in requested_scores]
+
+    def _build_scores_agg(self, scores: list[PositionScoreQuery]):
+        score_aggs = []
+        for score in scores:
+            if score.position_aggregator is not None:
+                aggregator_type = score.position_aggregator
+            else:
+                aggregator_type = \
+                    self.score_definitions[score.score].pos_aggregator
+
+            score_aggs.append(
+                PositionScoreAggr(
+                    score.score,
+                    build_aggregator(aggregator_type)))
+        return score_aggs
 
     def fetch_scores_agg(  # pylint: disable=too-many-arguments,too-many-locals
             self, chrom: str, pos_begin: int, pos_end: int,
-            scores: Optional[list[str]] = None,
-            non_default_pos_aggregators=None):
+            scores: Optional[list[PositionScoreQuery]] = None
+    ) -> Optional[list[Aggregator]]:
         """Fetch score values in a region and aggregates them.
 
         Case 1:
@@ -926,22 +972,17 @@ class PositionScore(GenomicScore):
         if chrom not in self.get_all_chromosomes():
             raise ValueError(
                 f"{chrom} is not among the available chromosomes.")
+        if scores is None:
+            scores = [
+                PositionScoreQuery(score_id)
+                for score_id in self.get_all_scores()]
 
-        requested_scores = scores if scores else self.get_all_scores()
-        aggregators = {}
-        if non_default_pos_aggregators is None:
-            non_default_pos_aggregators = {}
-
-        for scr_id in requested_scores:
-            aggregator_type = non_default_pos_aggregators.get(
-                scr_id, self.score_definitions[scr_id].pos_aggregator)
-            aggregators[scr_id] = build_aggregator(aggregator_type)
+        score_aggs = self._build_scores_agg(scores)
 
         for line in self._fetch_lines(chrom, pos_begin, pos_end):
             line_pos_begin, line_pos_end = self._line_to_begin_end(line)
-
-            for scr_id, aggregator in aggregators.items():
-                val = line.get_score(scr_id)
+            for sagg in score_aggs:
+                val = line.get_score(sagg.score)
 
                 left = (
                     pos_begin
@@ -954,9 +995,9 @@ class PositionScore(GenomicScore):
                     else line_pos_end
                 )
                 for _ in range(left, right + 1):
-                    aggregator.add(val)
+                    sagg.position_aggregator.add(val)
 
-        return aggregators
+        return [squery.position_aggregator for squery in score_aggs]
 
 
 class NPScore(GenomicScore):
@@ -988,7 +1029,7 @@ class NPScore(GenomicScore):
 
     def fetch_scores(
             self, chrom: str, position: int, reference: str, alternative: str,
-            scores: Optional[list[str]] = None):
+            scores: Optional[list[str]] = None) -> Optional[list[Any]]:
         """Fetch score values at specified genomic position and nucleotide."""
         if chrom not in self.get_all_chromosomes():
             raise ValueError(
@@ -1008,37 +1049,33 @@ class NPScore(GenomicScore):
         if not selected_line:
             return None
         requested_scores = scores if scores else self.get_all_scores()
-        return {
-            sc: selected_line.get_score(sc) for sc in requested_scores
-        }
+        return [selected_line.get_score(sc) for sc in requested_scores]
 
-    def _construct_aggregators(
-            self, scores,
-            non_default_pos_aggregators, non_default_nuc_aggregators):
+    def _build_scores_agg(
+            self, score_queries: list[NPScoreQuery]) -> list[NPScoreAggr]:
+        score_aggs = []
+        for squery in score_queries:
+            scr_def = self.score_definitions[squery.score]
+            if squery.position_aggregator is not None:
+                aggregator_type = squery.position_aggregator
+            else:
+                aggregator_type = scr_def.pos_aggregator
+            position_aggregator = build_aggregator(aggregator_type)
 
-        if non_default_pos_aggregators is None:
-            non_default_pos_aggregators = {}
-        if non_default_nuc_aggregators is None:
-            non_default_nuc_aggregators = {}
-        pos_aggregators = {}
-        nuc_aggregators = {}
-
-        for scr_id in scores:
-            scr_def = self.score_definitions[scr_id]
-            aggregator_type = non_default_pos_aggregators.get(
-                scr_id, scr_def.pos_aggregator)
-            pos_aggregators[scr_id] = build_aggregator(aggregator_type)
-
-            aggregator_type = non_default_nuc_aggregators.get(
-                scr_id, scr_def.nuc_aggregator)
-            nuc_aggregators[scr_id] = build_aggregator(aggregator_type)
-        return pos_aggregators, nuc_aggregators
+            if squery.nucleotide_aggregator is not None:
+                aggregator_type = squery.nucleotide_aggregator
+            else:
+                aggregator_type = scr_def.nuc_aggregator
+            nucleotide_aggregator = build_aggregator(aggregator_type)
+            score_aggs.append(
+                NPScoreAggr(
+                    squery.score, position_aggregator, nucleotide_aggregator))
+        return score_aggs
 
     def fetch_scores_agg(
             self, chrom: str, pos_begin: int, pos_end: int,
-            scores: Optional[list[str]] = None,
-            non_default_pos_aggregators=None,
-            non_default_nuc_aggregators=None):
+            scores: Optional[list[NPScoreQuery]] = None
+    ) -> Optional[list[Aggregator]]:
         """Fetch score values in a region and aggregates them."""
         # pylint: disable=too-many-locals
         # FIXME:
@@ -1051,25 +1088,26 @@ class NPScore(GenomicScore):
         if not score_lines:
             return None
 
-        scores = scores if scores else self.get_all_scores()
-        pos_aggregators, nuc_aggregators = self._construct_aggregators(
-            scores, non_default_pos_aggregators, non_default_nuc_aggregators
-        )
+        if scores is None:
+            scores = [
+                NPScoreQuery(score_id)
+                for score_id in self.get_all_scores()]
+
+        score_aggs = self._build_scores_agg(scores)
 
         def aggregate_nucleotides():
-            for col, nuc_agg in nuc_aggregators.items():
-                pos_aggregators[col].add(nuc_agg.get_final())
-                nuc_agg.clear()
+            for sagg in score_aggs:
+                sagg.position_aggregator.add(
+                    sagg.nucleotide_aggregator.get_final())
+                sagg.nucleotide_aggregator.clear()
 
         last_pos: int = score_lines[0].pos_begin
         for line in score_lines:
             if line.pos_begin != last_pos:
                 aggregate_nucleotides()
-            for col in line.get_available_scores():
-                val = line.get_score(col)
 
-                if col not in nuc_aggregators:
-                    continue
+            for sagg in score_aggs:
+                val = line.get_score(sagg.score)
                 left = (
                     pos_begin
                     if pos_begin >= line.pos_begin
@@ -1081,11 +1119,11 @@ class NPScore(GenomicScore):
                     else line.pos_end
                 )
                 for _ in range(left, right + 1):
-                    nuc_aggregators[col].add(val)
+                    sagg.nucleotide_aggregator.add(val)
             last_pos = line.pos_begin
         aggregate_nucleotides()
 
-        return pos_aggregators
+        return [sagg.position_aggregator for sagg in score_aggs]
 
 
 class AlleleScore(GenomicScore):
@@ -1119,7 +1157,7 @@ class AlleleScore(GenomicScore):
 
     def fetch_scores(
             self, chrom: str, position: int, reference: str, alternative: str,
-            scores: Optional[list[str]] = None):
+            scores: Optional[list[str]] = None) -> Optional[list[Any]]:
         """Fetch scores values for specific allele."""
         if chrom not in self.get_all_chromosomes():
             raise ValueError(
@@ -1140,9 +1178,9 @@ class AlleleScore(GenomicScore):
             return None
 
         requested_scores = scores if scores else self.get_all_scores()
-        return {
-            sc: selected_line.get_score(sc)
-            for sc in requested_scores}
+        return [
+            selected_line.get_score(sc)
+            for sc in requested_scores]
 
 
 def _build_genomic_score_from_resource(

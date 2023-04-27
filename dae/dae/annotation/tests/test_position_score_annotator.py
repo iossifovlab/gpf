@@ -262,7 +262,6 @@ def test_position_annotator_join_aggregation(position_score_repo):
     assert result.get("test100") == "0.1, 0.1, 0.2"
 
 
-@pytest.mark.skip(reason="not supported yet")
 def test_position_annotator_schema_one_source_two_dest_annotate(
         position_score_repo):
     pipeline_config = textwrap.dedent("""
@@ -270,7 +269,8 @@ def test_position_annotator_schema_one_source_two_dest_annotate(
                 resource_id: position_score1
                 attributes:
                 - source: test100way
-                  destination: test100
+                  destination: test100min
+                  position_aggregator: min
                 - source: test100way
                   destination: test100max
                   position_aggregator: max
@@ -280,11 +280,13 @@ def test_position_annotator_schema_one_source_two_dest_annotate(
         pipeline_config_str=pipeline_config,
         grr_repository=position_score_repo)
 
-    allele = VCFAllele("1", 14971, "C", "CAA")
-    result = pipeline.annotate(allele)
+    with pipeline.open() as work_pipeline:
+        allele = VCFAllele("1", 14971, "C", "CAA")
+        result = work_pipeline.annotate(allele)
 
-    assert "test100" in result
+    assert "test100min" in result
     assert "test100max" in result
     assert len(result) == 2
 
-    print(result)
+    assert result["test100min"] == 0.1
+    assert result["test100max"] == 0.2

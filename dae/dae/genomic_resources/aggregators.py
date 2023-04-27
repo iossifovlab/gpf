@@ -1,10 +1,10 @@
 import re
 import math
 
-from typing import cast, Any
+from typing import cast, Any, Callable, Type
 
 
-class AbstractAggregator:
+class Aggregator:
     """Base class for score aggregators."""
 
     def __init__(self):
@@ -42,7 +42,7 @@ class AbstractAggregator:
         return cast(bool, self.get_final() == obj)
 
 
-class MaxAggregator(AbstractAggregator):
+class MaxAggregator(Aggregator):
     """Maximum value aggregator for genomic scores."""
 
     def __init__(self):
@@ -66,7 +66,7 @@ class MaxAggregator(AbstractAggregator):
         return self.current_max
 
 
-class MinAggregator(AbstractAggregator):
+class MinAggregator(Aggregator):
     """Minimum value aggregator for genomic scores."""
 
     def __init__(self):
@@ -90,7 +90,7 @@ class MinAggregator(AbstractAggregator):
         return self.current_min
 
 
-class MeanAggregator(AbstractAggregator):
+class MeanAggregator(Aggregator):
     """Aggregator for genomic scores that calculates mean value."""
 
     def __init__(self):
@@ -113,7 +113,7 @@ class MeanAggregator(AbstractAggregator):
         return None
 
 
-class ConcatAggregator(AbstractAggregator):
+class ConcatAggregator(Aggregator):
     """Aggregator that concatenates all passed values."""
 
     def __init__(self):
@@ -135,7 +135,7 @@ class ConcatAggregator(AbstractAggregator):
         return self.out
 
 
-class MedianAggregator(AbstractAggregator):
+class MedianAggregator(Aggregator):
     """Aggregator for genomic scores that calculates median value."""
 
     def __init__(self):
@@ -165,7 +165,7 @@ class MedianAggregator(AbstractAggregator):
         return (first + second) / 2
 
 
-class ModeAggregator(AbstractAggregator):
+class ModeAggregator(Aggregator):
     """Aggregator for genomic scores that calculates mode value."""
 
     def __init__(self):
@@ -200,7 +200,7 @@ class ModeAggregator(AbstractAggregator):
         return modes[0]
 
 
-class JoinAggregator(AbstractAggregator):
+class JoinAggregator(Aggregator):
     """Aggregator that joins all passed values using a separator."""
 
     def __init__(self, separator):
@@ -220,7 +220,7 @@ class JoinAggregator(AbstractAggregator):
         return self.separator.join(self.values)
 
 
-class ListAggregator(AbstractAggregator):
+class ListAggregator(Aggregator):
     """Aggregator that builds a list of all passed values."""
 
     def __init__(self):
@@ -239,7 +239,7 @@ class ListAggregator(AbstractAggregator):
         return self.values
 
 
-class DictAggregator(AbstractAggregator):
+class DictAggregator(Aggregator):
     """Aggregator that builds a dictionary of all passed values."""
 
     def __init__(self):
@@ -258,7 +258,7 @@ class DictAggregator(AbstractAggregator):
         return self.values
 
 
-AGGREGATOR_CLASS_DICT = {
+AGGREGATOR_CLASS_DICT: dict[str, Type[Aggregator]] = {
     "max": MaxAggregator,
     "min": MinAggregator,
     "mean": MeanAggregator,
@@ -286,7 +286,7 @@ AGGREGATOR_SCHEMA = {
 }
 
 
-def get_aggregator_class(aggregator):
+def get_aggregator_class(aggregator) -> Callable[[], Aggregator]:
     return AGGREGATOR_CLASS_DICT[aggregator]
 
 
@@ -305,7 +305,7 @@ def create_aggregator_definition(aggregator_type):
     }
 
 
-def create_aggregator(aggregator_def):
+def create_aggregator(aggregator_def) -> Aggregator:
     """Create an aggregator by aggregator definition."""
     aggregator_name = aggregator_def["name"]
     aggregator_class = get_aggregator_class(aggregator_name)
@@ -315,6 +315,6 @@ def create_aggregator(aggregator_def):
     return aggregator_class()
 
 
-def build_aggregator(aggregator_type):
+def build_aggregator(aggregator_type) -> Aggregator:
     aggregator_def = create_aggregator_definition(aggregator_type)
     return create_aggregator(aggregator_def)

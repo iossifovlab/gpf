@@ -39,7 +39,7 @@ def test_the_simplest_allele_score():
     score.open()
 
     assert score.get_all_scores() == ["freq"]
-    assert score.fetch_scores("1", 10, "A", "C") == {"freq": 0.03}
+    assert score.fetch_scores("1", 10, "A", "C") == [0.03]
 
 
 def test_allele_score_fetch_region():
