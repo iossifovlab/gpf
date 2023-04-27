@@ -99,13 +99,13 @@ def test_get_resource_two(caching_proto, caching_scheme):
     "file",
     "s3",
 ])
-def test_get_resource_copies_only_resource_config_three(
+def test_get_resource_copies_nothing_three(
         caching_proto, caching_scheme):
     with caching_proto(caching_scheme) as proto:
         res = proto.get_resource("three")
 
         local_proto = proto.local_protocol
-        assert local_proto.file_exists(res, "genomic_resource.yaml")
+        assert not local_proto.file_exists(res, "genomic_resource.yaml")
         assert not local_proto.file_exists(res, "sub1/a.txt")
         assert not local_proto.file_exists(res, "sub2/b.txt")
 
@@ -114,13 +114,13 @@ def test_get_resource_copies_only_resource_config_three(
     "file",
     "s3",
 ])
-def test_get_resource_copies_only_resource_config_two(
+def test_get_resource_copies_nothing_two(
         caching_proto, caching_scheme):
     with caching_proto(caching_scheme) as proto:
         res = proto.get_resource("sub/two")
 
         local_proto = proto.local_protocol
-        assert local_proto.file_exists(res, "genomic_resource.yaml")
+        assert not local_proto.file_exists(res, "genomic_resource.yaml")
         assert not local_proto.file_exists(res, "genes.gtf")
 
 
@@ -138,8 +138,8 @@ def test_open_raw_file_copies_the_file_three_a(
         assert content == "a"
 
         local_proto = proto.local_protocol
-        assert local_proto.file_exists(res, "genomic_resource.yaml")
         assert local_proto.file_exists(res, "sub1/a.txt")
+        assert not local_proto.file_exists(res, "genomic_resource.yaml")
         assert not local_proto.file_exists(res, "sub2/b.txt")
 
 
@@ -156,8 +156,8 @@ def test_open_raw_file_copies_the_file_three_b(
         assert content == "b"
 
         local_proto = proto.local_protocol
-        assert local_proto.file_exists(res, "genomic_resource.yaml")
         assert local_proto.file_exists(res, "sub2/b.txt")
+        assert not local_proto.file_exists(res, "genomic_resource.yaml")
         assert not local_proto.file_exists(res, "sub1/a.txt")
 
 

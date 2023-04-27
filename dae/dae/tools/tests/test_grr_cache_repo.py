@@ -18,6 +18,7 @@ def test_cli_cache_instance(mocker, fixture_path, temp_cache_dir):
     cli_cache_repo([
         "--grr",
         "blank",
+        "-j", "1",
         "--instance",
         fixture_path("gpf_instance.yaml")
     ])
@@ -36,7 +37,7 @@ def test_cli_cache_instance(mocker, fixture_path, temp_cache_dir):
             *path,
             "genomic_resource.yaml"
         )
-        assert os.path.exists(full_path)
+        assert os.path.exists(full_path), full_path
 
     assert not os.path.exists(os.path.join(
         temp_cache_dir,
@@ -61,6 +62,7 @@ def test_cli_cache_annotation(mocker, fixture_path, temp_cache_dir):
     cli_cache_repo([
         "--grr",
         "blank",
+        "-j", "1",
         "--annotation",
         fixture_path("annotation.yaml")
     ])
