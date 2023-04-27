@@ -1,7 +1,6 @@
 import { UserManagementPage } from 'cypress/elements/user-management-page';
 import { UsersPage } from 'cypress/elements/users-page';
 import { sidenavPageLinks } from 'cypress/elements/utils';
-import 'cypress-if';
 
 describe('User management tests for reset password in Users', () => {
   const page = new UserManagementPage();
@@ -102,23 +101,33 @@ describe('User management tests for Users', () => {
     page.navigateToHome();
     page.navigateToSidenavPage(sidenavPageLinks.management);
     page.usersButton.click();
-    page.userCell('test_email@email.com').if('exist').then(
-      () => deleteTestUser(page, 'test_email@email.com')
-    );
-    page.userCell('test_email1@email.com').if('exist').then(
-      () => deleteTestUser(page, 'test_email1@email.com')
-    );
-    page.userCell('test_email2@email.com').if('exist').then(
-      () => deleteTestUser(page, 'test_email2@email.com')
-    );
-    page.userCell('test_email3@email.com').if('exist').then(
-      () => deleteTestUser(page, 'test_email3@email.com')
-    );
+    page.usersTable.then(el => {
+      if (el.find('div[id="test_email@email.com-user-cell"]').length) {
+        deleteTestUser(page, 'test_email@email.com');
+      }
+      if (el.find('div[id="test_email1@email.com-user-cell"]').length) {
+        deleteTestUser(page, 'test_email1@email.com');
+      }
+      if (el.find('div[id="test_email2@email.com-user-cell"]').length) {
+        deleteTestUser(page, 'test_email2@email.com');
+      }
+      if (el.find('div[id="test_email3@email.com-user-cell"]').length) {
+        deleteTestUser(page, 'test_email3@email.com');
+      }
+    });
 
     page.groupsButton.click();
-    page.groupCell('test_group').if('exist').then(() => deleteTestGroup(page, 'test_group'));
-    page.groupCell('test_group1').if('exist').then(() => deleteTestGroup(page, 'test_group1'));
-    page.groupCell('test_group2').if('exist').then(() => deleteTestGroup(page, 'test_group2'));
+    page.groupsTable.then(el => {
+      if (el.find('div[id="test_group-group-cell"]').length) {
+        deleteTestGroup(page, 'test_group');
+      }
+      if (el.find('div[id="test_group1-group-cell"]').length) {
+        deleteTestGroup(page, 'test_group1');
+      }
+      if (el.find('div[id="test_group-2group-cell"]').length) {
+        deleteTestGroup(page, 'test_group2');
+      }
+    });
   });
 
   it('should navigate through all user management tabs', () => {
