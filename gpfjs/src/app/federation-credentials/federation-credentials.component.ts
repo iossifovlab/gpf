@@ -1,4 +1,4 @@
-import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
+import { Component, ElementRef, HostListener, OnInit, ViewChild } from '@angular/core';
 import { UsersService } from 'app/users/users.service';
 import { FederationCredential } from './federation-credentials';
 import { NgbModal, NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
@@ -14,7 +14,7 @@ export class FederationCredentialsComponent implements OnInit {
   public creationError = '';
   public modal: NgbModalRef;
   public temporaryShownCredentials = '';
-  @ViewChild('credentialModal') public credentialModal;
+  @ViewChild('credentialModal') public credentialModal: ElementRef;
   @ViewChild('credentialNameBox') public newCredentialName: ElementRef;
 
   public constructor(
@@ -59,10 +59,5 @@ export class FederationCredentialsComponent implements OnInit {
       this.credentialModal,
       {animation: false, centered: true, size: 'lg', windowClass: 'credential-modal'}
     );
-  }
-
-  public closeModal(): void {
-    this.modal.close();
-    this.temporaryShownCredentials = '';
   }
 }
