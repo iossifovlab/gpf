@@ -7,6 +7,7 @@ import { switchMap } from 'rxjs/operators';
 import { NgbNavConfig } from '@ng-bootstrap/ng-bootstrap';
 import { AgpTableConfig } from './autism-gene-profiles-table/autism-gene-profiles-table';
 import { AgpTableService } from './autism-gene-profiles-table/autism-gene-profiles-table.service';
+import * as streamSaver from 'streamsaver';
 
 @Component({
   selector: 'gpf-root',
@@ -83,6 +84,7 @@ export class AppComponent implements OnInit {
     private ngbNavConfig: NgbNavConfig,
   ) {
     ngbNavConfig.animation = false;
+    streamSaver.mitm = environment.basePath + '/mitm';
   }
 
   public ngOnInit(): void {

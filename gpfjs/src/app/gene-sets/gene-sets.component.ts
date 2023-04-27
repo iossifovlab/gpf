@@ -1,4 +1,3 @@
-import { ConfigService } from '../config/config.service';
 import { GeneSetsLocalState } from './gene-sets-state';
 import { Component, OnInit } from '@angular/core';
 import { GeneSetsService } from './gene-sets.service';
@@ -8,11 +7,11 @@ import { DatasetsService } from 'app/datasets/datasets.service';
 import { ValidateNested } from 'class-validator';
 import { Store } from '@ngxs/store';
 import { SetGeneSetsValues, GeneSetsState } from './gene-sets.state';
-import { catchError, debounceTime, distinctUntilChanged, switchMap, take } from 'rxjs/operators';
+import { catchError, debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
 import { StatefulComponent } from 'app/common/stateful-component';
 import { environment } from 'environments/environment';
 import { PersonSet } from 'app/datasets/datasets';
-import { downloadBlobResponse } from 'app/utils/blob-download';
+import * as streamSaver from 'streamsaver';
 
 @Component({
   selector: 'gpf-gene-sets',
@@ -43,7 +42,6 @@ export class GeneSetsComponent extends StatefulComponent implements OnInit {
 
   public constructor(
     protected store: Store,
-    private config: ConfigService,
     private geneSetsService: GeneSetsService,
     private datasetService: DatasetsService,
   ) {
@@ -231,8 +229,9 @@ export class GeneSetsComponent extends StatefulComponent implements OnInit {
   }
 
   public onDownload(): void {
-    this.geneSetsService.downloadGeneSet(this.selectedGeneSet).pipe(take(1)).subscribe((response) => {
-      downloadBlobResponse(response, 'geneset.csv');
+    this.geneSetsService.downloadGeneSet(this.selectedGeneSet).then((response) => {
+      const fileStream = streamSaver.createWriteStream('geneset.csv');
+      response.body.pipeTo(fileStream);
     });
   }
 }

@@ -1,13 +1,13 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders, HttpParams, HttpResponse } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { ConfigService } from '../config/config.service';
-import { Observable, Subscription } from 'rxjs';
+import { Observable } from 'rxjs';
 import { VariantReport } from './variant-reports';
 import { environment } from '../../environments/environment';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { map } from 'rxjs/operators';
 import { CookieService } from 'ngx-cookie-service';
-import { downloadBlobResponse } from 'app/utils/blob-download';
+import { AuthService } from 'app/auth.service';
 
 @Injectable()
 export class VariantReportsService {
@@ -22,6 +22,7 @@ export class VariantReportsService {
     private config: ConfigService,
     private datasetsService: DatasetsService,
     private cookieService: CookieService,
+    private authService: AuthService,
   ) { }
 
   public getVariantReport(datasetId: string): Observable<VariantReport> {
@@ -35,8 +36,10 @@ export class VariantReportsService {
     return `${environment.apiPath}${this.downloadUrl}${selectedDatasetId}`;
   }
 
-  public downloadFamilies(): Observable<HttpResponse<Blob>> {
-    return this.http.get(this.getDownloadLink(), {observe: 'response', responseType: 'blob'});
+  public downloadFamilies(): Promise<Response> {
+    return fetch(this.getDownloadLink(), {
+      headers: {'Authorization': `Bearer ${this.authService.getAccessToken()}`}
+    });
   }
 
   public getFamilies(datasetId: string, groupName: string, counterId: number): Observable<string[]> {
@@ -52,29 +55,33 @@ export class VariantReportsService {
     return this.http.get(`${this.config.baseUrl}${this.tagsUrl}`, options);
   }
 
-  public downloadPedigreeCount(params): Observable<HttpResponse<Blob>> {
-    return this.http.post(`${environment.apiPath}${this.pedigreeDownloadUrl}`,
-      params, {
-        observe: 'response', headers: new HttpHeaders({ 'Content-Type': 'application/json'}), responseType: 'blob'
-      });
+  public downloadPedigreeCount(params): Promise<Response> {
+    const headers = {'Content-Type': 'application/json'};
+    headers['Authorization'] = `Bearer ${this.authService.getAccessToken()}`;
+    return fetch(`${environment.apiPath}${this.pedigreeDownloadUrl}`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: headers,
+      body: JSON.stringify(params)
+    });
   }
 
-  public async getDownloadLinkPedigreeTags(studyId: string, tags: string): Promise<Subscription> {
-    let searchParams: HttpParams;
+  public async downloadPedigreeTags(studyId: string, tags: string): Promise<Response> {
+    let url = `${this.config.baseUrl}${this.downloadUrl}${studyId}`;
 
     if (tags) {
-      searchParams = new HttpParams().set('tags', tags);
+      url = `${url}?${new URLSearchParams({'tags': tags})}`;
     }
 
     const headers = {
       'X-CSRFToken': this.cookieService.get('csrftoken'),
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${this.authService.getAccessToken()}`
     };
 
-    return this.http.get(`${this.config.baseUrl}${this.downloadUrl}${studyId}`,
-      { headers: headers, withCredentials: true, params: searchParams, observe: 'response', responseType: 'blob'})
-      .subscribe(res => {
-        downloadBlobResponse(res, 'families.ped');
-      });
+    return fetch(url, {
+      credentials: 'include',
+      headers: headers,
+    });
   }
 }

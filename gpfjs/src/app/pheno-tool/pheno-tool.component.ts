@@ -6,14 +6,13 @@ import { PhenoToolService } from './pheno-tool.service';
 import { PhenoToolResults } from './pheno-tool-results';
 import { ConfigService } from '../config/config.service';
 import { Observable, Subscription } from 'rxjs';
-import { take } from 'rxjs/operators';
 import { GenesBlockComponent } from 'app/genes-block/genes-block.component';
 import { PhenoToolGenotypeBlockComponent } from 'app/pheno-tool-genotype-block/pheno-tool-genotype-block.component';
 import { FamilyFiltersBlockComponent } from 'app/family-filters-block/family-filters-block.component';
 import { PhenoToolMeasureState } from 'app/pheno-tool-measure/pheno-tool-measure.state';
 import { Select, Selector } from '@ngxs/store';
 import { ErrorsState, ErrorsModel } from 'app/common/errors.state';
-import { downloadBlobResponse } from 'app/utils/blob-download';
+import * as streamSaver from 'streamsaver';
 
 @Component({
   selector: 'gpf-pheno-tool',
@@ -109,9 +108,10 @@ export class PhenoToolComponent implements OnInit, OnDestroy {
       datasetId: this.selectedDataset.id
     };
 
-    this.phenoToolService.downloadPhenoToolResults(args).pipe(take(1)).subscribe((response) => {
+    this.phenoToolService.downloadPhenoToolResults(args).then((response) => {
       this.downloadInProgress = false;
-      downloadBlobResponse(response, 'pheno_report.csv');
+      const fileStream = streamSaver.createWriteStream('pheno_report.csv');
+      response.body.pipeTo(fileStream);
     }, (err) => {
       this.downloadInProgress = false;
     });

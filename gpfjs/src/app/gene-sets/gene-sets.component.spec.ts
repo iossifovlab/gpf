@@ -9,7 +9,7 @@ import { GeneSetsComponent } from './gene-sets.component';
 import { GeneSetsService } from './gene-sets.service';
 import { NgbAccordionModule, NgbNavModule } from '@ng-bootstrap/ng-bootstrap';
 import { BrowserModule, By } from '@angular/platform-browser';
-import { CommonModule } from '@angular/common';
+import { CommonModule, APP_BASE_HREF } from '@angular/common';
 import { GeneSet, GeneSetsCollection, GeneSetType } from './gene-sets';
 import { Observable } from 'rxjs/internal/Observable';
 import { of } from 'rxjs';
@@ -86,7 +86,8 @@ describe('GeneSetsComponent', () => {
         BrowserModule
       ],
       providers: [
-        ConfigService, GeneSetsService, { provide: DatasetsService, useValue: datasetsServiceMock }, UsersService
+        ConfigService, GeneSetsService, { provide: DatasetsService, useValue: datasetsServiceMock }, UsersService,
+        { provide: APP_BASE_HREF, useValue: '' },
       ], schemas: [NO_ERRORS_SCHEMA]
     }).compileComponents();
 

@@ -17,7 +17,7 @@ import * as d3 from 'd3';
 import * as draw from 'app/utils/svg-drawing';
 import { NgbDropdown } from '@ng-bootstrap/ng-bootstrap';
 import { LGDS, CNV, OTHER, CODING } from 'app/effect-types/effect-types';
-import { downloadBlobResponse } from 'app/utils/blob-download';
+import * as streamSaver from 'streamsaver';
 
 @Component({
   selector: 'gpf-gene-browser',
@@ -212,10 +212,11 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
       download: true
     };
 
-    this.queryService.downloadVariants(args).pipe(take(1)).subscribe((response) => {
+    this.queryService.downloadVariants(args).then((response) => {
       this.downloadInProgress = false;
-      downloadBlobResponse(response, 'variants.tsv');
-    }, () => {
+      const fileStream = streamSaver.createWriteStream('variants.tsv');
+      response.body.pipeTo(fileStream);
+    }, (err) => {
       this.downloadInProgress = false;
     });
   }
@@ -230,10 +231,11 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
       ),
     };
 
-    this.queryService.downloadVariantsSummary(args).pipe(take(1)).subscribe((response) => {
+    this.queryService.downloadVariantsSummary(args).then((response) => {
       this.downloadInProgressSummary = false;
-      downloadBlobResponse(response, 'summary_variants.tsv');
-    }, () => {
+      const fileStream = streamSaver.createWriteStream('summary_variants.tsv');
+      response.body.pipeTo(fileStream);
+    }, (err) => {
       this.downloadInProgressSummary = false;
     });
   }

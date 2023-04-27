@@ -17,7 +17,7 @@ import { UniqueFamilyVariantsFilterState } from 'app/unique-family-variants-filt
 import { ErrorsState, ErrorsModel } from '../common/errors.state';
 import { take } from 'rxjs/operators';
 import { StudyFiltersBlockState } from 'app/study-filters-block/study-filters-block.state';
-import { downloadBlobResponse } from 'app/utils/blob-download';
+import * as streamSaver from 'streamsaver';
 
 @Component({
   selector: 'gpf-genotype-browser',
@@ -146,9 +146,10 @@ export class GenotypeBrowserComponent implements OnInit, OnDestroy {
       download: true
     };
 
-    this.queryService.downloadVariants(args).pipe(take(1)).subscribe((response) => {
+    this.queryService.downloadVariants(args).then((response) => {
       this.downloadInProgress = false;
-      downloadBlobResponse(response, 'variants.tsv');
+      const fileStream = streamSaver.createWriteStream('variants.tsv');
+      response.body.pipeTo(fileStream);
     }, (err) => {
       this.downloadInProgress = false;
     });
