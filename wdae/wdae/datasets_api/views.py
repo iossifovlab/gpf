@@ -275,14 +275,19 @@ class BaseDatasetPermissionsView(QueryBaseView):
 
         user_model = get_user_model()
         users_list = []
+        users_found = set()
         for group in groups:
             users = user_model.objects.filter(
                 groups__name=group.name
             ).all()
-            users_list += [
-                {"name": user.name, "email": user.email}
-                for user in users
-            ]
+            for user in users:
+                if user.email not in users_found:
+                    users_list += [
+                        {"name": user.name, "email": user.email}
+                    ]
+                else:
+                    users_found.add(user.email)
+        users_list = sorted(users_list, key=lambda d: d["email"])
 
         dataset_gd = self.gpf_instance.get_genotype_data(
             dataset.dataset_id
@@ -323,7 +328,8 @@ class DatasetPermissionsView(BaseDatasetPermissionsView):
         page = request.GET.get("page", 1)
         query = Dataset.objects
         if dataset_search is not None and dataset_search != "":
-            query = query.filter(dataset_id__icontains=dataset_search)
+            query = \
+                query.filter(dataset_id__icontains=dataset_search)
 
         if page is None:
             return Response(status.HTTP_400_BAD_REQUEST)
@@ -332,7 +338,7 @@ class DatasetPermissionsView(BaseDatasetPermissionsView):
 
         page_start = (page - 1) * self.page_size
         page_end = page * self.page_size
-        datasets = query.all()[page_start:page_end]
+        datasets = query.all().order_by("dataset_id")[page_start:page_end]
 
         dataset_details = []
         for dataset in datasets:
