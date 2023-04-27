@@ -787,7 +787,7 @@ def cli_browse(cli_args=None):
         print("Working with GRR definition:", definition_path)
     else:
         print("No GRR definition found, using the DEFAULT_DEFINITION")
-    print(yaml.dump(definition))
+    print(yaml.safe_dump(definition, sort_keys=False))
 
     repo = build_genomic_resource_repository(definition=definition)
     _run_list_command(repo, args)

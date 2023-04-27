@@ -55,10 +55,10 @@ def test_cli_browse_with_grr_argument(repo_fixture, repo_def, capsys):
 
     assert err == ""
     assert out == \
-        "Working with GRR definition: " + str(repo_def) + "\n" \
-        "directory: " + str(repo_fixture[0]) + "\n" \
+        f"Working with GRR definition: {str(repo_def)}\n" \
         "id: test_grr\n" \
-        "type: directory\n\n" \
+        "type: directory\n" \
+        f"directory: {str(repo_fixture[0])}\n\n" \
         "Basic                0        2 7.0 B        test_grr one\n" \
         "gene_models          1.0      2 50.0 B       test_grr sub/two\n"
 
@@ -73,10 +73,10 @@ def test_cli_browse_with_env_variable(repo_fixture, repo_def, capsys, mocker):
 
     assert err == ""
     assert out == \
-        "Working with GRR definition: " + str(repo_def) + "\n" \
-        "directory: " + str(repo_fixture[0]) + "\n" \
+        f"Working with GRR definition: {str(repo_def)}\n" \
         "id: test_grr\n" \
-        "type: directory\n\n" \
+        "type: directory\n" \
+        f"directory: {str(repo_fixture[0])}\n\n" \
         "Basic                0        2 7.0 B        test_grr one\n" \
         "gene_models          1.0      2 50.0 B       test_grr sub/two\n"
 
@@ -93,9 +93,9 @@ def test_cli_browse_default_defintion(repo_fixture, repo_def, capsys, mocker):
 
     assert err == ""
     assert out == \
-        "Working with GRR definition: " + str(repo_def) + "\n" \
-        "directory: " + str(repo_fixture[0]) + "\n" \
+        f"Working with GRR definition: {str(repo_def)}\n" \
         "id: test_grr\n" \
-        "type: directory\n\n" \
+        "type: directory\n" \
+        f"directory: {str(repo_fixture[0])}\n\n" \
         "Basic                0        2 7.0 B        test_grr one\n" \
         "gene_models          1.0      2 50.0 B       test_grr sub/two\n"
