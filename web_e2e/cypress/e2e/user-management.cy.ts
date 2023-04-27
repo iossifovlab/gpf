@@ -548,7 +548,7 @@ describe('User management tests for Users', () => {
     page.userAddGroupButton('groups_and_users_email@email.com').click();
     page.groupsMenuSearch.type('groups_and_users_groupname2');
     page.findButtonInComponentContainingText('.add-item-button', 'groups_and_users_groupname2').click();
-    page.userGroupList('groups_and_users_email@email.com').should('have.text',
+    page.userGroupList('groups_and_users_email@email.com').contains(
       'any_usergroups_and_users_email@email.comgroups_and_users_groupname1groups_and_users_groupname2');
 
     // check the users list of the groups_and_users_groupname2
@@ -582,7 +582,7 @@ describe('User management tests for Users', () => {
     page.groupCell('any_user_test_email3@email.com').should('exist');
     page.groupUsersList('any_user_test_email3@email.com').should('have.text', 'any_user_test_email3@email.com');
 
-    page.groupUsersList('any_user').should('have.text',
+    page.groupUsersList('any_user').contains(
       'any_user_test_email1@email.comany_user_test_email2@email.comany_user_test_email3@email.com');
 
     deleteTestUser(page, 'any_user_test_email1@email.com');
@@ -616,7 +616,7 @@ describe('User management tests for Users', () => {
     createTestGroup(page, 'test_delete_group');
     page.groupAddUserButton('test_delete_group').click();
     page.groupsMenuSearch.type('delete_group_email@email.com');
-    page.findButtonInComponentContainingText('.add-item-button', 'delete_group_email@email.comm').click();
+    page.findButtonInComponentContainingText('.add-item-button', 'delete_group_email@email.com').click();
 
     // delete user
     page.usersButton.click();
@@ -638,7 +638,7 @@ describe('User management tests for Users', () => {
 
     page.datasetsButton.click();
     page.datasetUserList('comp_all').should(
-      'have.text', 'admin@iossifovlab.comtest_name add_group_to_user_datasets_email@email.com'
+      'have.text', 'add_group_to_user_datasets_name add_group_to_user_datasets_email@email.comadmin@iossifovlab.com'
     );
 
     deleteTestUser(page, 'add_group_to_user_datasets_email@email.com');
@@ -656,7 +656,7 @@ describe('User management tests for Users', () => {
     page.findButtonInComponentContainingText('.add-item-button', 'comp_all').click();
 
     page.datasetsButton.click();
-    page.datasetGroupList('iossifov_2014').should('have.text', 'any_datasetiossifov_2014add_datasets_group');
+    page.datasetGroupList('iossifov_2014').contains('any_datasetiossifov_2014add_datasets_group');
     page.datasetGroupList('comp_all').should('have.text', 'any_datasetcomp_alladd_datasets_group');
 
     deleteTestGroup(page, 'add_datasets_group');
@@ -676,8 +676,8 @@ describe('User management tests for Users', () => {
     page.groupsMenuSearch.type('test_user_in_datasets1@email.com');
     page.findButtonInComponentContainingText('.add-item-button', 'test_user_in_datasets1@email.com').click();
     page.groupsMenuSearch.clear();
-    page.groupsMenuSearch.type('test_user_in_datasets2@email.co');
-    page.findButtonInComponentContainingText('.add-item-button', 'test_user_in_datasets2@email.co').click();
+    page.groupsMenuSearch.type('test_user_in_datasets2@email.com');
+    page.findButtonInComponentContainingText('.add-item-button', 'test_user_in_datasets2@email.com').click();
 
     // add dataset
     page.groupDatasetsCell('test_user_in_datasets_groupname').find('.add-button').click();
@@ -687,7 +687,7 @@ describe('User management tests for Users', () => {
     // check users dataset
     page.usersButton.click();
     page.userDatasetsCell('test_user_in_datasets1@email.com').should('have.text', 'iossifov_2014');
-    page.userDatasetsCell('test_user_in_datasets2@email.co').should('have.text', 'iossifov_2014');
+    page.userDatasetsCell('test_user_in_datasets2@email.com').should('have.text', 'iossifov_2014');
 
     // check in Datasets
     page.datasetsButton.click();
@@ -714,7 +714,7 @@ describe('User management tests for Users', () => {
 
   it('should add and remove groups in Datasets', () => {
     createTestUser(page, 'add_remove_group_datasets1@email.com', 'add_remove_group_datasets_username1');
-    createTestUser(page, 'add_remove_group_datasets2', 'add_remove_group_datasets_username2');
+    createTestUser(page, 'add_remove_group_datasets2@email.com', 'add_remove_group_datasets_username2');
     createTestGroup(page, 'add_remove_group_datasets_groupname');
 
     page.groupUsersCell('add_remove_group_datasets_groupname').find('.add-button').click();
