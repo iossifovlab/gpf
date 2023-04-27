@@ -6,21 +6,13 @@ import { NgxsModule } from '@ngxs/store';
 import { ConfigService } from 'app/config/config.service';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { QueryService } from 'app/query/query.service';
-import { SavedQueriesTableComponent } from 'app/saved-queries-table/saved-queries-table.component';
-import { GpfTableColumnComponent } from 'app/table/component/column.component';
-import { GpfTableContentComponent } from 'app/table/component/content.component';
-import { GpfTableContentHeaderComponent } from 'app/table/component/header.component';
 import { ResizeService } from 'app/table/resize.service';
-import { GpfTableComponent } from 'app/table/table.component';
-import { GpfTableEmptyCellComponent } from 'app/table/view/empty-cell.component';
-import { GpfTableHeaderCellComponent } from 'app/table/view/header/header-cell.component';
-import { GpfTableHeaderComponent } from 'app/table/view/header/header.component';
 import { UsersService } from 'app/users/users.service';
 import { APP_BASE_HREF } from '@angular/common';
 
 import { UserProfileComponent } from './user-profile.component';
 
-describe('SavedQueriesComponent', () => {
+describe('UserProfileComponent', () => {
   let component: UserProfileComponent;
   let fixture: ComponentFixture<UserProfileComponent>;
 
@@ -28,15 +20,6 @@ describe('SavedQueriesComponent', () => {
     TestBed.configureTestingModule({
       declarations: [
         UserProfileComponent,
-        SavedQueriesTableComponent,
-        GpfTableComponent,
-        GpfTableContentComponent,
-        GpfTableContentHeaderComponent,
-        GpfTableColumnComponent,
-        GpfTableHeaderCellComponent,
-        GpfTableEmptyCellComponent,
-        GpfTableHeaderCellComponent,
-        GpfTableHeaderComponent
       ],
       providers: [
         QueryService, ConfigService, UsersService, ResizeService, DatasetsService,
