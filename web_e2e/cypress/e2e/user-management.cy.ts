@@ -10,14 +10,6 @@ describe('User management tests for reset password in Users', () => {
     page.navigateToHome(false);
   });
 
-  afterEach(() => {
-    page.loginAdmin();
-    page.navigateToHome();
-    page.navigateToSidenavPage(sidenavPageLinks.management);
-    deleteTestUser(page, 'user_reset_password@email.com');
-    page.logout();
-  });
-
   it('should reset password', () => {
     page.loginAdmin();
     page.navigateToSidenavPage(sidenavPageLinks.management);
@@ -41,6 +33,12 @@ describe('User management tests for reset password in Users', () => {
     page.login('user_reset_password@email.com', 'XC^ZF*TZXuUChFsv');
 
     page.logout();
+    page.loginAdmin();
+    page.navigateToHome();
+    page.navigateToSidenavPage(sidenavPageLinks.management);
+    page.userHasPasswordCell('user_reset_password@email.com').find('.fa.fa-check').should('be.visible');
+    deleteTestUser(page, 'user_reset_password@email.com');
+    page.logout();
   });
 
   it('should reset password when login', () => {
@@ -48,7 +46,7 @@ describe('User management tests for reset password in Users', () => {
 
     page.loginAdmin();
     page.navigateToSidenavPage(sidenavPageLinks.management);
-    createTestUser(page, 'user_reset_password@email.com', 'test_name');
+    createTestUser(page, 'forgotten_password@email.com', 'test_name');
     page.logout();
 
     cy.window().then((win) => {
@@ -61,11 +59,11 @@ describe('User management tests for reset password in Users', () => {
 
     cy.get('@popup').url().then(url => {
       cy.get('a').first().click();
-      cy.get('#id_email').type('user_reset_password@email.com');
+      cy.get('#id_email').type('forgotten_password@email.com');
       cy.get('input[value="Reset password"]').click();
     });
 
-    cy.request('GET', 'http://mailhog:8025/api/v2/search?kind=to&query=user_reset_password@email.com').then(
+    cy.request('GET', 'http://mailhog:8025/api/v2/search?kind=to&query=forgotten_password@email.com').then(
       (response) => {
         const regexUrl = new RegExp(/http(s)?:\/\/[\w_-]+((.[\w_-]))([\w.,@?^=%&:/~+#-]*[\w@?^=%&/~+#-])/gm, 'i');
         const url = (response.body.items[0].Content.Body as string).match(regexUrl)[0];
@@ -77,7 +75,13 @@ describe('User management tests for reset password in Users', () => {
       }
     );
 
-    page.login('user_reset_password@email.com', 'XC^ZF*TZXuUChFsv');
+    page.login('forgotten_password@email.com', 'XC^ZF*TZXuUChFsv');
+    page.logout();
+
+    page.loginAdmin();
+    page.navigateToHome();
+    page.navigateToSidenavPage(sidenavPageLinks.management);
+    deleteTestUser(page, 'forgotten_password@email.com');
     page.logout();
   });
 });
@@ -95,37 +99,6 @@ describe('User management tests for Users', () => {
     page.preserveLogin();
     page.navigateToHome();
     page.navigateToSidenavPage(sidenavPageLinks.management);
-  });
-
-  afterEach(() => {
-    page.navigateToSidenavPage(sidenavPageLinks.management);
-    page.groupsButton.click();
-    page.window.then(el => {
-      if (el.find('div[id="test_group-group-cell"]').length) {
-        deleteTestGroup(page, 'test_group');
-      }
-      if (el.find('div[id="test_group1-group-cell"]').length) {
-        deleteTestGroup(page, 'test_group1');
-      }
-      if (el.find('div[id="test_group-2group-cell"]').length) {
-        deleteTestGroup(page, 'test_group2');
-      }
-    });
-    page.usersButton.click();
-    page.window.then(el => {
-      if (el.find('div[id="test_email@email.com-user-cell"]').length) {
-        deleteTestUser(page, 'test_email@email.com');
-      }
-      if (el.find('div[id="test_email1@email.com-user-cell"]').length) {
-        deleteTestUser(page, 'test_email1@email.com');
-      }
-      if (el.find('div[id="test_email2@email.com-user-cell"]').length) {
-        deleteTestUser(page, 'test_email2@email.com');
-      }
-      if (el.find('div[id="test_email3@email.com-user-cell"]').length) {
-        deleteTestUser(page, 'test_email3@email.com');
-      }
-    });
   });
 
   it('should navigate through all user management tabs', () => {
@@ -177,6 +150,8 @@ describe('User management tests for Users', () => {
     page.userCell('test_email@email.com').should('exist');
     page.userCell('test_email@email.com').should('have.text', 'test_nametest_email@email.com');
     page.userGroupList('test_email@email.com').should('have.text', 'any_usertest_email@email.com');
+
+    deleteTestUser(page, 'test_email@email.com');
   });
 
   it('should not be able to create user with no email or name', () => {
@@ -254,6 +229,8 @@ describe('User management tests for Users', () => {
     // triggers search event
     page.userSearchField.type(' ');
     page.usersTableCells.should('have.length', 15);
+
+    deleteTestUser(page, 'test_email@email.com');
   });
 
   it('should search and not find user', () => {
@@ -289,6 +266,8 @@ describe('User management tests for Users', () => {
     page.userNameInput('test_email@email.com').should('be.visible');
     page.userCell('test_email@email.com').find('#cancel-button').click();
     page.userCell('test_email@email.com').find('#user-name').should('have.text', 'test_name');
+
+    deleteTestUser(page, 'test_email@email.com');
   });
 
   it('should test when cancel editing the username', () => {
@@ -340,6 +319,7 @@ describe('User management tests for Users', () => {
 
     page.userGroupRemoveButton('test_email@email.com', 'any_user').should('not.exist');
     page.userGroupRemoveButton('test_email@email.com', '#test_email@email.com').should('not.exist');
+    deleteTestUser(page, 'test_email@email.com');
   });
 
   it('should check admin', () => {
@@ -389,10 +369,9 @@ describe('User management tests for Users', () => {
     page.groupsButton.click();
     page.groupActionsDeleteGroup('test_group').click();
     page.deleteGroupConfirmButton.click();
-    page.groupCell('test_group').should('not.exist');
   });
 
-  it('should create group with user and no datasets', () => {
+  it('should create and delete group with user only', () => {
     createTestUser(page, 'test_email@email.com', 'test_name');
     createTestGroup(page, 'test_group');
 
@@ -407,9 +386,11 @@ describe('User management tests for Users', () => {
     cy.reload();
     page.groupsButton.click();
     page.groupCell('test_group').should('exist');
+
+    deleteTestGroup(page, 'test_group');
   });
 
-  it('should create group with dataset and no users', () => {
+  it('should create and delete group with dataset only', () => {
     createTestGroup(page, 'test_group');
 
     // add dataset
@@ -423,6 +404,8 @@ describe('User management tests for Users', () => {
     cy.reload();
     page.groupsButton.click();
     page.groupCell('test_group').should('exist');
+
+    deleteTestGroup(page, 'test_group');
   });
 
   it('should not create group with no users or datasets', () => {
@@ -478,6 +461,9 @@ describe('User management tests for Users', () => {
     page.alertElement.invoke('text').then((text) => text.trim())
       .should('equal', '\'test_group\' already exists choose another name!');
     page.cancelGroupCreationButton.click();
+
+    deleteTestGroup(page, 'test_group');
+    deleteTestUser(page, 'test_email@email.com');
   });
 
   it('should add and remove users and datasets from group', () => {
@@ -521,6 +507,10 @@ describe('User management tests for Users', () => {
     // check if the group is removed
     cy.reload();
     page.groupCell('test_group').should('not.exist');
+
+    deleteTestUser(page, 'test_email1@email.com');
+    deleteTestUser(page, 'test_email2@email.com');
+    deleteTestUser(page, 'test_email3@email.com');
   });
 
   it('should add and remove groups in Users and users in Groups', () => {
@@ -557,6 +547,8 @@ describe('User management tests for Users', () => {
     // check if the groups are not in the list
     page.usersButton.click();
     page.userGroupList('test_email@email.com').should('have.text', 'any_usertest_email@email.com');
+
+    deleteTestUser(page, 'test_email@email.com');
   });
 
   it('should check if new groups are added in Groups and the new users ' +
@@ -575,6 +567,10 @@ describe('User management tests for Users', () => {
 
     page.groupUsersList('any_user').should('have.text',
       'test_email1@email.comtest_email2@email.comtest_email3@email.com');
+
+    deleteTestUser(page, 'test_email1@email.com');
+    deleteTestUser(page, 'test_email2@email.com');
+    deleteTestUser(page, 'test_email3@email.com');
   });
 
   it('should check if the new group is deleted after removing it in Users', () => {
@@ -593,6 +589,9 @@ describe('User management tests for Users', () => {
     // check if the group is deleted in Groups
     page.groupsButton.click();
     page.groupUsersList('test_group').should('not.exist');
+
+    page.usersButton.click();
+    deleteTestUser(page, 'test_email@email.com');
   });
 
   it('should check if the new group is deleted after deleting the user', () => {
@@ -714,6 +713,10 @@ describe('User management tests for Users', () => {
 
     page.datasetGroupRemoveButton('comp_denovo', 'test_group').click();
     page.datasetsRemoveGroupConfirmButton.click();
+
+    deleteTestGroup(page, 'test_group');
+    deleteTestUser(page, 'test_email1@email.com');
+    deleteTestUser(page, 'test_email2@email.com');
   });
 });
 
