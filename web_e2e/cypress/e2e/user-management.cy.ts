@@ -100,8 +100,20 @@ describe('User management tests for Users', () => {
   afterEach(() => {
     page.navigateToHome();
     page.navigateToSidenavPage(sidenavPageLinks.management);
+    page.groupsButton.click();
+    page.window.then(el => {
+      if (el.find('div[id="test_group-group-cell"]').length) {
+        deleteTestGroup(page, 'test_group');
+      }
+      if (el.find('div[id="test_group1-group-cell"]').length) {
+        deleteTestGroup(page, 'test_group1');
+      }
+      if (el.find('div[id="test_group-2group-cell"]').length) {
+        deleteTestGroup(page, 'test_group2');
+      }
+    });
     page.usersButton.click();
-    page.usersTable.then(el => {
+    page.window.then(el => {
       if (el.find('div[id="test_email@email.com-user-cell"]').length) {
         deleteTestUser(page, 'test_email@email.com');
       }
@@ -113,19 +125,6 @@ describe('User management tests for Users', () => {
       }
       if (el.find('div[id="test_email3@email.com-user-cell"]').length) {
         deleteTestUser(page, 'test_email3@email.com');
-      }
-    });
-
-    page.groupsButton.click();
-    page.groupsTable.then(el => {
-      if (el.find('div[id="test_group-group-cell"]').length) {
-        deleteTestGroup(page, 'test_group');
-      }
-      if (el.find('div[id="test_group1-group-cell"]').length) {
-        deleteTestGroup(page, 'test_group1');
-      }
-      if (el.find('div[id="test_group-2group-cell"]').length) {
-        deleteTestGroup(page, 'test_group2');
       }
     });
   });
