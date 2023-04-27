@@ -16,7 +16,9 @@ from dae.annotation.annotation_factory import build_annotation_pipeline
 
 from dae.utils.verbosity_configuration import VerbosityConfiguration
 from dae.utils.fs_utils import tabix_index_filename
+from dae.genomic_resources import build_genomic_resource_repository
 from dae.genomic_resources.genomic_context import get_genomic_context
+from dae.genomic_resources.cached_repository import cache_resources
 from dae.task_graph import TaskGraphCli
 from dae.task_graph.graph import TaskGraph
 
@@ -66,9 +68,18 @@ def update_header(variant_file, pipeline):
 def annotate(
         input_file, region, pipeline_config, grr_definition, out_file_path):
     """Annotate a region from a given input VCF file using a pipeline."""
+    grr = build_genomic_resource_repository(definition=grr_definition)
+
     pipeline = build_annotation_pipeline(
         pipeline_config=pipeline_config,
-        grr_repository_definition=grr_definition)
+        grr_repository=grr)
+
+    # cache pipeline
+    resources: set[str] = set()
+    for annotator in pipeline.annotators:
+        resources = resources | annotator.resources
+    cache_resources(grr, resources)
+
     with closing(VariantFile(input_file)) as in_file:
         update_header(in_file, pipeline)
         with pipeline.open(), closing(VariantFile(
@@ -118,26 +129,56 @@ def combine(
                     output_file.write(rec)
         tabix_index(output_file_path, preset="vcf")
 
+    for partfile_path in partfile_paths:
+        os.remove(partfile_path)
 
-def produce_regions(context, contigs, region_size):
-    """Given a region size, produce contig regions to annotate by."""
-    ref_genome = context.get_reference_genome()
-    assert ref_genome is not None
-    contig_lengths = {}
-    unknown_contigs = []
-    for contig in contigs:
+
+def get_chromosome_length(tabix_file, chrom, step=100_000_000):
+    # TODO Eventually this should be extracted as a util
+    """Return the length of a chromosome (or contig).
+
+    Returned value is guaranteed to be larger than the actual contig length.
+    """
+    def any_records(riter):
         try:
-            contig_lengths[contig] = ref_genome.get_chrom_length(contig)
-        except ValueError:
-            logger.warning(
-                "Could not find contig %s in reference genome", contig
-            )
-            unknown_contigs.append((contig,))
+            next(riter)
+        except StopIteration:
+            return False
+
+        return True
+
+    # First we find any region that includes the last record i.e.
+    # the length of the chromosome
+    left, right = None, None
+    pos = step
+    while left is None or right is None:
+        if any_records(tabix_file.fetch(chrom, pos, None)):
+            left = pos
+            pos = pos * 2
+        else:
+            right = pos
+            pos = pos // 2
+    # Second we use binary search to narrow the region until we find the
+    # index of the last element (in left) and the length (in right)
+    while (right - left) > 5_000_000:
+        pos = (left + right) // 2
+        if any_records(tabix_file.fetch(chrom, pos, None)):
+            left = pos
+        else:
+            right = pos
+    return right
+
+
+def produce_regions(pysam_file, region_size):
+    """Given a region size, produce contig regions to annotate by."""
+    contig_lengths = {}
+    for contig in map(str, pysam_file.contigs):
+        contig_lengths[contig] = get_chromosome_length(pysam_file, contig)
     return [
         (contig, start, start + region_size)
         for contig, length in contig_lengths.items()
         for start in range(1, length, region_size)
-    ] + unknown_contigs
+    ]
 
 
 def produce_partfile_paths(input_file_path, regions, work_dir):
@@ -177,8 +218,7 @@ def cli(raw_args: Optional[list[str]] = None) -> None:
 
     def run_parallelized():
         with closing(TabixFile(args.input)) as pysam_file:
-            contigs = list(map(str, pysam_file.contigs))
-        regions = produce_regions(context, contigs, args.region_size)
+            regions = produce_regions(pysam_file, args.region_size)
         file_paths = produce_partfile_paths(args.input, regions, args.work_dir)
         task_graph = TaskGraph()
         region_tasks = []
@@ -199,6 +239,10 @@ def cli(raw_args: Optional[list[str]] = None) -> None:
             [args.input, pipeline.config, grr.definition, file_paths, output],
             region_tasks
         )
+
+        args.task_status_dir = os.path.join(args.work_dir, "tasks-status")
+        args.log_dir = os.path.join(args.work_dir, "tasks-log")
+
         TaskGraphCli.process_graph(task_graph, **vars(args))
 
     def run_sequentially():

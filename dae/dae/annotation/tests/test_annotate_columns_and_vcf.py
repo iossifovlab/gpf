@@ -248,17 +248,12 @@ def test_vcf_multiple_chroms(tmp_path, annotate_directory_fixture):
     annotation_file = tmp_path / "annotation.yaml"
     grr_file = tmp_path / "grr.yaml"
 
-    tasks_log_dir = tmp_path / "tld"
-    tasks_status_dir = tmp_path / "tsd"
-
     setup_vcf(in_file, in_content)
 
     cli_vcf([
         str(a) for a in [
             in_file, annotation_file, "-w", workdir, "--grr", grr_file,
-            "-o", out_file, "-j 1",
-            "--tasks-log-dir", tasks_log_dir,
-            "-d", tasks_status_dir
+            "-o", out_file, "-j 1"
         ]
     ])
 
@@ -271,6 +266,10 @@ def test_vcf_multiple_chroms(tmp_path, annotate_directory_fixture):
                       "0.3", "0.4",
                       "0.5", "0.6"]
     assert os.path.exists(out_file_tbi)
+    assert os.listdir(workdir) == [
+        "tasks-status",  # default task status dir
+        # part files must be cleaned up
+    ]
 
 
 def test_produce_partfile_paths():
