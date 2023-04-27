@@ -98,7 +98,6 @@ describe('User management tests for Users', () => {
   });
 
   afterEach(() => {
-    page.navigateToHome();
     page.navigateToSidenavPage(sidenavPageLinks.management);
     page.groupsButton.click();
     page.window.then(el => {
