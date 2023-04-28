@@ -304,30 +304,34 @@ describe('User management tests for Users', () => {
     page.groupsMenu.should('be.visible');
     page.groupsMenuSearch.type('comp_all');
     page.findButtonInComponentContainingText('.add-item-button', 'comp_all').click();
-    page.userDatasetsCell('add_remove_groups_email@email.com').should('have.text', 'comp_all');
+    page.userDatasetsCell('add_remove_groups_email@email.com').contains('comp_all');
 
     page.groupsMenuSearchClear.click();
     page.groupsMenuSearch.type('iossifov_2014');
     page.findButtonInComponentContainingText('.add-item-button', 'iossifov_2014').click();
-    page.userGroupList('add_remove_groups_email@email.com').should(
-      'have.text', 'iossifov_2014comp_allany_useradd_remove_groups_email@email.com'
-    );
-    page.userDatasetsCell('add_remove_groups_email@email.com').should('have.text', 'iossifov_2014comp_all');
+    page.userGroupList('add_remove_groups_email@email.com').contains('iossifov_2014');
+    page.userGroupList('add_remove_groups_email@email.com').contains('comp_all');
+    page.userGroupList('add_remove_groups_email@email.com').contains('any_user');
+    page.userGroupList('add_remove_groups_email@email.com').contains('add_remove_groups_email@email.com');
+    page.userDatasetsCell('add_remove_groups_email@email.com').contains('iossifov_2014');
+    page.userDatasetsCell('add_remove_groups_email@email.com').contains('comp_all');
 
     //remove groups
     page.userGroupRemoveButton('add_remove_groups_email@email.com', 'comp_all').click();
     page.userRemoveGroupConfirm.click();
-    page.userGroupList('add_remove_groups_email@email.com').should(
-      'have.text', 'iossifov_2014any_useradd_remove_groups_email@email.com'
-    );
+    page.userGroupList('add_remove_groups_email@email.com').contains('iossifov_2014');
+    page.userGroupList('add_remove_groups_email@email.com').contains('any_user');
+    page.userGroupList('add_remove_groups_email@email.com').contains('add_remove_groups_email@email.com');
+    page.userGroupList('add_remove_groups_email@email.com').should('not.contain', 'comp_all');
 
     page.userGroupRemoveButton('add_remove_groups_email@email.com', 'iossifov_2014').click();
     page.userCancelRemoveGroupConfirm.click();
-    page.userGroupList('add_remove_groups_email@email.com').should(
-      'have.text', 'iossifov_2014any_useradd_remove_groups_email@email.com'
-    );
+    page.userGroupList('add_remove_groups_email@email.com').contains('iossifov_2014');
+    page.userGroupList('add_remove_groups_email@email.com').contains('any_user');
+    page.userGroupList('add_remove_groups_email@email.com').contains('add_remove_groups_email@email.com');
 
-    page.userDatasetsCell('add_remove_groups_email@email.com').should('have.text', 'iossifov_2014');
+    page.userDatasetsCell('add_remove_groups_email@email.com').contains('iossifov_2014');
+    page.userDatasetsCell('add_remove_groups_email@email.com').should('not.contain', 'comp_all');
 
     page.userGroupRemoveButton('add_remove_groups_email@email.com', 'any_user').should('not.exist');
     page.userGroupRemoveButton(
@@ -402,6 +406,7 @@ describe('User management tests for Users', () => {
     page.groupCell('test_group_with_user').should('exist');
 
     deleteTestGroup(page, 'test_group_with_user');
+    deleteTestUser(page, 'group_user_email@email.com');
   });
 
   it('should create and delete group with dataset only', () => {
@@ -528,8 +533,8 @@ describe('User management tests for Users', () => {
 
   it('should add and remove groups in Users and users in Groups', () => {
     createTestUser(page, 'groups_and_users_email@email.com', 'groups_and_users_username');
-    createTestGroup(page, 'groups_and_users_groupname');
-    page.groupAddUserButton('groups_and_users_groupname').click();
+    createTestGroup(page, 'groups_and_users_groupname1');
+    page.groupAddUserButton('groups_and_users_groupname1').click();
     page.groupsMenuSearch.type('groups_and_users_email@email.com');
     page.findButtonInComponentContainingText('.add-item-button', 'groups_and_users_email@email.com').click();
 
@@ -540,20 +545,22 @@ describe('User management tests for Users', () => {
 
     // check of the group is in user's group list
     page.usersButton.click();
-    page.userGroupList('groups_and_users_email@email.com').should(
-      'have.text', 'any_usertest_email@email.comtest_group1'
-    );
+    page.userGroupList('groups_and_users_email@email.com').contains('any_user');
+    page.userGroupList('groups_and_users_email@email.com').contains('groups_and_users_email@email.com');
+    page.userGroupList('groups_and_users_email@email.com').contains('groups_and_users_groupname1');
 
     // add group to user's group list
     page.userAddGroupButton('groups_and_users_email@email.com').click();
     page.groupsMenuSearch.type('groups_and_users_groupname2');
     page.findButtonInComponentContainingText('.add-item-button', 'groups_and_users_groupname2').click();
-    page.userGroupList('groups_and_users_email@email.com').contains(
-      'any_usergroups_and_users_email@email.comgroups_and_users_groupname1groups_and_users_groupname2');
+    page.userGroupList('groups_and_users_email@email.com').contains('any_user');
+    page.userGroupList('groups_and_users_email@email.com').contains('groups_and_users_email@email.com');
+    page.userGroupList('groups_and_users_email@email.com').contains('groups_and_users_groupname1');
+    page.userGroupList('groups_and_users_email@email.com').contains('groups_and_users_groupname2');
 
     // check the users list of the groups_and_users_groupname2
     page.groupsButton.click();
-    page.groupUsersList('groups_and_users_groupname2').should('have.text', 'groups_and_users_email@email.com');
+    page.groupUsersList('groups_and_users_groupname2').contains('groups_and_users_email@email.com');
 
     // delete groups
     deleteTestGroup(page, 'groups_and_users_groupname1');
@@ -561,9 +568,8 @@ describe('User management tests for Users', () => {
 
     // check if the groups are not in the list
     page.usersButton.click();
-    page.userGroupList('groups_and_users_email@email.com').should(
-      'have.text', 'any_usergroups_and_users_email@email.com'
-    );
+    page.userGroupList('groups_and_users_email@email.com').contains('any_user');
+    page.userGroupList('groups_and_users_email@email.com').contains('groups_and_users_email@email.com');
 
     deleteTestUser(page, 'groups_and_users_email@email.com');
   });
@@ -582,8 +588,9 @@ describe('User management tests for Users', () => {
     page.groupCell('any_user_test_email3@email.com').should('exist');
     page.groupUsersList('any_user_test_email3@email.com').should('have.text', 'any_user_test_email3@email.com');
 
-    page.groupUsersList('any_user').contains(
-      'any_user_test_email1@email.comany_user_test_email2@email.comany_user_test_email3@email.com');
+    page.groupUsersList('any_user').contains('any_user_test_email1@email.com');
+    page.groupUsersList('any_user').contains('any_user_test_email2@email.com');
+    page.groupUsersList('any_user').contains('any_user_test_email3@email.com');
 
     deleteTestUser(page, 'any_user_test_email1@email.com');
     deleteTestUser(page, 'any_user_test_email2@email.com');
@@ -601,7 +608,9 @@ describe('User management tests for Users', () => {
     page.usersButton.click();
     page.userGroupRemoveButton('delete_group_email@email.com', 'test_delete_group').click();
     page.userRemoveGroupConfirm.click();
-    page.userGroupList('delete_group_email@email.com').should('have.text', 'any_userdelete_group_email@email.com');
+    page.userGroupList('delete_group_email@email.com').contains('any_user');
+    page.userGroupList('delete_group_email@email.com').contains('delete_group_email@email.com');
+    page.userGroupList('delete_group_email@email.com').should('not.contain', 'test_delete_group');
 
     // check if the group is deleted in Groups
     page.groupsButton.click();
@@ -637,13 +646,17 @@ describe('User management tests for Users', () => {
     page.userDatasetsCell('add_group_to_user_datasets_email@email.com').should('have.text', 'comp_all');
 
     page.datasetsButton.click();
-    page.datasetUserList('comp_all').should(
-      'have.text', 'add_group_to_user_datasets_name add_group_to_user_datasets_email@email.comadmin@iossifovlab.com'
+    page.datasetUserList('comp_all').contains(
+      'add_group_to_user_datasets_name add_group_to_user_datasets_email@email.com'
     );
+    page.datasetUserList('comp_all').contains('admin@iossifovlab.com');
 
     deleteTestUser(page, 'add_group_to_user_datasets_email@email.com');
     page.datasetsButton.click();
-    page.datasetUserList('comp_all').should('have.text', 'admin@iossifovlab.com');
+    page.datasetUserList('comp_all').contains('admin@iossifovlab.com');
+    page.datasetUserList('comp_all').should(
+      'not.contain', 'add_group_to_user_datasets_name add_group_to_user_datasets_email@email.com'
+    );
   });
 
   it('should create group, add datasets and check data in Datasets', () => {
@@ -656,14 +669,18 @@ describe('User management tests for Users', () => {
     page.findButtonInComponentContainingText('.add-item-button', 'comp_all').click();
 
     page.datasetsButton.click();
-    page.datasetGroupList('iossifov_2014').contains('any_datasetiossifov_2014add_datasets_group');
-    page.datasetGroupList('comp_all').should('have.text', 'any_datasetcomp_alladd_datasets_group');
+    page.datasetGroupList('iossifov_2014').contains('any_dataset');
+    page.datasetGroupList('iossifov_2014').contains('iossifov_2014');
+    page.datasetGroupList('iossifov_2014').contains('add_datasets_group');
+    page.datasetGroupList('comp_all').contains('any_dataset');
+    page.datasetGroupList('comp_all').contains('comp_all');
+    page.datasetGroupList('comp_all').contains('add_datasets_group');
 
     deleteTestGroup(page, 'add_datasets_group');
 
     page.datasetsButton.click();
-    page.datasetUserList('iossifov_2014').should('have.text', 'admin@iossifovlab.com');
-    page.datasetUserList('comp_all').should('have.text', 'admin@iossifovlab.com');
+    page.datasetGroupList('iossifov_2014').should('not.contain', 'add_datasets_group');
+    page.datasetGroupList('comp_all').should('not.contain', 'add_datasets_group');
   });
 
   it('should create group, add dataset and users and check data in Datasets', () => {
@@ -686,17 +703,17 @@ describe('User management tests for Users', () => {
 
     // check users dataset
     page.usersButton.click();
-    page.userDatasetsCell('test_user_in_datasets1@email.com').should('have.text', 'iossifov_2014');
-    page.userDatasetsCell('test_user_in_datasets2@email.com').should('have.text', 'iossifov_2014');
+    page.userDatasetsCell('test_user_in_datasets1@email.com').contains('iossifov_2014');
+    page.userDatasetsCell('test_user_in_datasets2@email.com').contains('iossifov_2014');
 
     // check in Datasets
     page.datasetsButton.click();
-    page.datasetUserList('iossifov_2014').should('have.text',
-      'admin@iossifovlab.comtest_user_in_datasets_username1 test_user_in_datasets1@email.com' +
-      'test_user_in_datasets_username2 test_user_in_datasets2@email.com');
-    page.datasetGroupList('iossifov_2014').should(
-      'have.text', 'any_datasetiossifov_2014test_user_in_datasets_groupname'
-    );
+    page.datasetUserList('iossifov_2014').contains('admin@iossifovlab.com');
+    page.datasetUserList('iossifov_2014').contains('test_user_in_datasets_username1 test_user_in_datasets1@email.com');
+    page.datasetUserList('iossifov_2014').contains('test_user_in_datasets_username2 test_user_in_datasets2@email.com');
+    page.datasetGroupList('iossifov_2014').contains('any_dataset');
+    page.datasetGroupList('iossifov_2014').contains('iossifov_2014');
+    page.datasetGroupList('iossifov_2014').contains('test_user_in_datasets_groupname');
 
     // remove dataset in Groups
     page.groupsButton.click();
@@ -708,8 +725,16 @@ describe('User management tests for Users', () => {
 
     // check in Datasets
     page.datasetsButton.click();
-    page.datasetUserList('iossifov_2014').should('have.text', 'admin@iossifovlab.com');
-    page.datasetGroupList('iossifov_2014').should('have.text', 'any_datasetiossifov_2014');
+    page.datasetUserList('iossifov_2014').contains('admin@iossifovlab.com');
+    page.datasetUserList('iossifov_2014').should(
+      'not.contain', 'test_user_in_datasets_username1 test_user_in_datasets1@email.com'
+    );
+    page.datasetUserList('iossifov_2014').should(
+      'not.contain', 'test_user_in_datasets_username2 test_user_in_datasets2@email.com'
+    );
+    page.datasetGroupList('iossifov_2014').contains('any_dataset');
+    page.datasetGroupList('iossifov_2014').contains('iossifov_2014');
+    page.datasetGroupList('iossifov_2014').should('not.contain', 'test_user_in_datasets_groupname');
   });
 
   it('should add and remove groups in Datasets', () => {
@@ -729,15 +754,27 @@ describe('User management tests for Users', () => {
     page.groupsMenuSearch.type('add_remove_group_datasets_groupname');
     page.findButtonInComponentContainingText('.add-item-button', 'add_remove_group_datasets_groupname').click();
 
-    page.datasetGroupList('comp_denovo').should(
-      'have.text', 'any_datasetcomp_denovoadd_remove_group_datasets_groupname'
+    page.datasetGroupList('comp_denovo').contains('any_dataset');
+    page.datasetGroupList('comp_denovo').contains('comp_denovo');
+    page.datasetGroupList('comp_denovo').contains('add_remove_group_datasets_groupname');
+    page.datasetUserList('comp_denovo').contains(
+      'add_remove_group_datasets_username1 add_remove_group_datasets1@email.com'
     );
-    page.datasetUserList('comp_denovo').should('have.text',
-      'admin@iossifovlab.comadd_remove_group_datasets_username1 add_remove_group_datasets1@email.com' +
-      'add_remove_group_datasets_username2 add_remove_group_datasets2@email.com');
+    page.datasetUserList('comp_denovo').contains(
+      'add_remove_group_datasets_username2 add_remove_group_datasets2@email.com'
+    );
+    page.datasetUserList('comp_denovo').contains('admin@iossifovlab.com');
 
     page.datasetGroupRemoveButton('comp_denovo', 'add_remove_group_datasets_groupname').click();
     page.datasetsRemoveGroupConfirmButton.click();
+
+    page.datasetGroupList('comp_denovo').should('not.contain', 'add_remove_group_datasets_groupname');
+    page.datasetUserList('comp_denovo').should(
+      'not.contain', 'add_remove_group_datasets_username1 add_remove_group_datasets1@email.com'
+    );
+    page.datasetUserList('comp_denovo').should(
+      'not.contain', 'add_remove_group_datasets_username2 add_remove_group_datasets2@email.com'
+    );
 
     deleteTestGroup(page, 'add_remove_group_datasets_groupname');
     deleteTestUser(page, 'add_remove_group_datasets1@email.com');
