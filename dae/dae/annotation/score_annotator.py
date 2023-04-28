@@ -289,7 +289,7 @@ class NPScoreAnnotator(PositionScoreAnnotator):
         for attr in self.get_annotation_config():
             result.append(NPScoreQuery(
                 attr["source"], attr.get("position_aggregator"),
-                attr.get("nucleotidy_aggregator")))
+                attr.get("nucleotide_aggregator")))
         return result
 
 
