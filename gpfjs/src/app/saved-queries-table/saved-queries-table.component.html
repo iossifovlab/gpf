@@ -1,4 +1,4 @@
-<div class="grid-container" *ngIf="queries.length !== 0">
+<div class="grid-container" *ngIf="queries?.length !== 0">
   <div class="grid-header">Query name</div>
   <div class="grid-header">Query description</div>
   <div class="grid-header">Actions</div>
@@ -21,6 +21,6 @@
   </ng-container>
 </div>
 
-<div id="nothing-found" *ngIf="queries.length === 0">
+<div id="nothing-found" *ngIf="queries?.length === 0">
   <span id="nothing-found-message">No queries are saved.</span>
 </div>
