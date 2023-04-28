@@ -292,22 +292,6 @@ class NPScoreAnnotator(PositionScoreAnnotator):
                 attr.get("nucleotidy_aggregator")))
         return result
 
-    # def _fetch_aggregated_scores(self, chrom, pos_begin, pos_end):
-    #     scores_agg = self.score.fetch_scores_agg(
-    #         chrom,
-    #         pos_begin,
-    #         pos_end,
-    #         self.score_queries)
-
-    #     if scores_agg is None:
-    #         return None
-
-    #     scores = {
-    #         sc_name: sc_agg.get_final()
-    #         for sc_name, sc_agg in scores_agg.items()
-    #     }
-    #     return scores
-
 
 def build_allele_score_annotator(pipeline: AnnotationPipeline, config: dict):
     """Construct an Allele Score annotator."""
