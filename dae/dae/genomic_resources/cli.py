@@ -5,7 +5,6 @@ import logging
 import argparse
 import pathlib
 import copy
-import pprint
 
 from typing import Dict, Union
 from urllib.parse import urlparse
@@ -767,12 +766,6 @@ def cli_browse(cli_args=None):
         help="Print the resource size in bytes"
     )
 
-    parser.add_argument(
-        "--print-grr",
-        default=False,
-        action="store_true",
-        help="Print the path and content of the GRR definition to be used"
-    )
 
     if cli_args is None:
         cli_args = sys.argv[1:]
@@ -789,12 +782,12 @@ def cli_browse(cli_args=None):
             if definition_path is not None \
             else DEFAULT_DEFINITION
 
-    if args.print_grr:
-        if definition_path is not None:
-            print("Working with GRR definition:", definition_path)
-        else:
-            print("No GRR definition found, using the DEFAULT_DEFINITION")
-        pprint.pprint(definition)
+
+    if definition_path is not None:
+        print("Working with GRR definition:", definition_path)
+    else:
+        print("No GRR definition found, using the DEFAULT_DEFINITION")
+    print(yaml.safe_dump(definition, sort_keys=False))
 
     repo = build_genomic_resource_repository(definition=definition)
     _run_list_command(repo, args)
