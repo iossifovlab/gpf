@@ -8,6 +8,7 @@ from dae.genomic_resources.gene_models import GeneModels, \
     build_gene_models_from_resource
 
 from dae.genomic_resources.genomic_context import get_genomic_context
+from dae.utils.regions import Region
 
 logger = logging.getLogger(__name__)
 
@@ -119,13 +120,115 @@ class SimpleEffectAnnotator(Annotator):
             attributes[attr["destination"]] = ""
 
     # TODO
+    def CDS_intron_regions(self, tm):
+        r = []
+        if not tm.is_coding(): return r
+        for ei in range(len(tm.exons)-1):
+            bg = tm.exons[ei].stop + 1
+            en = tm.exons[ei+1].start + 1
+            if bg > tm.cds[0] and en < tm.cds[1]:
+                r.append(Region(tm.chrom, bg, en))
+        return r
+
+    def UTR_regions(self, tm):
+        r = []
+        if not tm.is_coding(): return r
+        utr5_regions=tm.UTR5_regions()
+        utr3_regions=tm.UTR3_regions()
+        utr3_regions.extend(utr3_regions)
+        return utr5_regions
+
+    def peripheral_regions(self, tm):
+        r = []
+        if not tm.is_coding(): return r
+        
+        if tm.cds[0] > tm.tx[0]:
+            r.append(Region(tm.chrom, tm.tx[0], tm.cds[0] - 1))
+        if tm.cds[1] < tm.tx[1]:
+            r.append(Region(tm.chrom, tm.cds[1] + 1, tm.tx[1]))
+        return r 
+
+    def noncoding_regions(self, tm):
+        r = []
+        if tm.is_coding(): return r
+        r.append(Region(tm.chrom, tm.tx[0], tm.tx[1]))
+        return r
 
     def run_annotate(self, chrom: str, beg: int, end: int) \
             -> Tuple[str, Set[str]]:
-        # self.gene_models should be used instead of gmDB
+        
+         # self.gene_models should be used instead of gmDB
         # from dae.utils.regions import Region  instead of RO.Region
+        # print(self.gene_models.gene_names())
+        effect_region = Region(chrom, beg, end)
+        for (start, stop), tms in self.gene_models.utr_models[chrom].items():
+            # if effect_region.intersection(Region(chrom, start, stop)):
+            if (beg <= stop and end >= start):
+                
+                ## test for coding 
+                genes = set()
+                for tm in tms:
+                    if tm.gene in genes: continue
+                    for r in tm.CDS_regions():
+                        assert r.chrom == chrom
 
-        return "gosho", set(["pesho"])
+                        if r.stop >= beg and r.start <= end:
+                            genes.add(tm.gene)
+                            break
+                if genes: 
+                    return 'coding', genes
+                    
+                ## test for UTR 
+                genes = set()
+                for tm in tms:
+                    if tm.gene in genes: continue
+                    for r in self.UTR_regions(tm):
+                        assert r.chrom == chrom
+                        
+                        if r.stop >= beg and r.start <= end:
+                            genes.add(tm.gene)
+                            break
+                if genes: 
+                    return 'peripheral', genes
+                
+                ## test for intercoding_intronic 
+                genes = set()
+                for tm in tms:
+                    for tm.gene in genes: continue
+                    for r in self.CDS_intron_regions(tm):
+                        assert r.chrom == chrom
+                        if r.start <= beg and end <= r.stop:
+                            genes.add(tm.gene)
+                            break
+                if genes:
+                    return 'inter-coding_intronic', genes
+                
+                ## test for peripheral
+                genes = set()
+                for tm in tms:
+                    for tm.gene in genes: continue
+                    for r in self.peripheral_regions(tm):
+                        assert r.chrom == chrom
+                        if r.stop >= beg and r.start <= end:
+                            genes.add(tm.gene)
+                            break
+                if genes:
+                    return 'peripheral', genes
+                
+                ## test for noncoding 
+                genes = set()
+                for tm in tms:
+                    if tm.gene in genes: continue
+                    for r in self.noncoding_regions(tm):
+                        assert r.chrom == chrom
+                        if r.stop >= beg and r.start <= end:
+                            genes.add(tm.gene)
+                            break
+                if genes:
+                    return 'noncoding', genes
+        
+        return 'intergenic', []
+        # return "gosho", set(["pesho"])
 
     def _do_annotate(
         self, annotatable: Annotatable, context: dict
@@ -136,7 +239,7 @@ class SimpleEffectAnnotator(Annotator):
             self._not_found(result)
             return result
 
-        effects, gene_list = self.run_annotate(
+        effect, gene_list = self.run_annotate(
             annotatable.chrom,
             annotatable.position,
             annotatable.end_position)
