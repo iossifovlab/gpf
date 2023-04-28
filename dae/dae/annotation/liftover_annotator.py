@@ -55,6 +55,14 @@ class LiftOverAnnotator(Annotator):
         self.chain: LiftoverChain = chain
         self.target_genome: ReferenceGenome = target_genome
         self._annotation_schema = None
+        self._liftover_annotatable_dest = self._configure_destination()
+
+    def _configure_destination(self):
+        for attr in self.get_annotation_config():
+            if attr["source"] == "liftover_annotatable":
+                return attr["destination"]
+        raise ValueError(
+            f"bad LiftOverAnnotator configuration: {self.config}")
 
     def annotator_type(self) -> str:
         return "liftover_annotator"
@@ -210,12 +218,12 @@ class LiftOverAnnotator(Annotator):
             logger.warning(
                 "%s not ready to annotate CNV variants: %s",
                 self.annotator_type(), annotatable)
-            return {"liftover_annotatable": None}
+            return {self._liftover_annotatable_dest: None}
 
         lo_allele = self.liftover_allele(cast(VCFAllele, annotatable))
         if lo_allele is None:
             logger.info(
                 "unable to liftover allele: %s", annotatable)
-            return {"liftover_annotatable": None}
+            return {self._liftover_annotatable_dest: None}
 
-        return {"liftover_annotatable": lo_allele}
+        return {self._liftover_annotatable_dest: lo_allele}

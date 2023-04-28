@@ -78,6 +78,14 @@ class NormalizeAlleleAnnotator(Annotator):
 
         self.genome = genome
         self._annotation_schema = None
+        self._destination = self._construct_destination()
+
+    def _construct_destination(self):
+        for attr in self.get_annotation_config():
+            if attr["source"] == "normalized_allele":
+                return attr["destination"]
+        raise ValueError(
+            f"bad NormalizeAlleleAnnotator configuration: {self.config}")
 
     def annotator_type(self) -> str:
         return "normalize_allele_annotator"
@@ -165,9 +173,9 @@ class NormalizeAlleleAnnotator(Annotator):
             logger.warning(
                 "%s not ready to annotate CNV variants: %s",
                 self.annotator_type(), annotatable)
-            return {"normalized_allele": None}
+            return {self._destination: None}
 
         assert isinstance(annotatable, VCFAllele), annotatable
 
         normalized_allele = normalize_allele(annotatable, self.genome)
-        return {"normalized_allele": normalized_allele}
+        return {self._destination: normalized_allele}
