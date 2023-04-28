@@ -32,7 +32,7 @@ class SqlSchema2Variants(abc.ABC):
             pedigree_table,
             meta_table,
             gene_models=None):
-        assert db
+        # assert db
         assert pedigree_table
 
         self.dialect = dialect
@@ -43,12 +43,8 @@ class SqlSchema2Variants(abc.ABC):
         self.meta_table = meta_table
         self.gene_models = gene_models
 
-        self.summary_allele_schema = self._fetch_schema(
-            self.summary_allele_table
-        )
-        self.family_variant_schema = self._fetch_schema(
-            self.family_variant_table
-        )
+        self.summary_allele_schema = self._fetch_summary_schema()
+        self.family_variant_schema = self._fetch_family_schema()
         self.combined_columns = {
             **self.family_variant_schema,
             **self.summary_allele_schema,
@@ -64,6 +60,12 @@ class SqlSchema2Variants(abc.ABC):
 
         self.partition_descriptor = PartitionDescriptor.parse_string(
             self._fetch_tblproperties())
+
+    def _fetch_summary_schema(self) -> dict[str, str]:
+        return self._fetch_schema(self.summary_allele_table)
+
+    def _fetch_family_schema(self) -> dict[str, str]:
+        return self._fetch_schema(self.family_variant_table)
 
     @abc.abstractmethod
     def _fetch_schema(self, table) -> dict[str, str]:

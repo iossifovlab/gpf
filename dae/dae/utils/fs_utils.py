@@ -1,10 +1,12 @@
 import datetime
 import os
+import shutil
 from pathlib import Path
 from urllib.parse import urlparse
 from typing import Optional, Union, cast
 
 from fsspec.core import url_to_fs
+# import fsspec
 
 
 def abspath(filename):
@@ -83,6 +85,14 @@ def sign(filename: str) -> str:
         return cast(str, fs.sign(relative_path))
     except NotImplementedError:
         return filename
+
+
+def copy(dest: str, src: str) -> None:
+    shutil.copytree(src, dest, dirs_exist_ok=True)
+    # src_mapper = fsspec.get_mapper(src)
+    # dest_mapper = fsspec.get_mapper(dest)
+    # for k in src_mapper:
+    #     dest_mapper[k] = src_mapper[k]
 
 
 def tabix_index_filename(tabix_filename: str) -> Optional[str]:

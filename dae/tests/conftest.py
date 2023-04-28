@@ -13,6 +13,13 @@ def default_genotype_storage_configs(root_path):
             "db": f"{root_path}/duckdb_storage/dev_storage.db",
         },
 
+        # DuckDb Parquet Storage
+        {
+            "id": "duckdb_parquet",
+            "storage_type": "duckdb",
+            "studies_path": f"{root_path}/duckdb_parquet",
+        },
+
         # Impala Schema 1
         {
             "id": "impala",

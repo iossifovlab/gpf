@@ -2,7 +2,9 @@ import time
 import json
 import logging
 import queue
+import contextlib
 from typing import Optional, Any
+import threading
 
 import duckdb
 import numpy as np
@@ -17,13 +19,22 @@ from dae.query_variants.query_runners import QueryRunner
 logger = logging.getLogger(__name__)
 
 
+_DUCKDB_LOCK = threading.Lock()
+
+
+@contextlib.contextmanager
+def _duckdb_connect():
+    with _DUCKDB_LOCK:
+        yield duckdb
+
+
 class DuckDbRunner(QueryRunner):
     """Run a DuckDb query in a separate thread."""
 
     def __init__(self, connection_factory, query, deserializer=None):
         super().__init__(deserializer=deserializer)
 
-        self.client = connection_factory
+        self.connection = connection_factory
         self.query = query
 
     def run(self):
@@ -40,16 +51,17 @@ class DuckDbRunner(QueryRunner):
                 self._finalize(started)
                 return
 
-            for record in self.client.execute(self.query).fetchall():
-                val = self.deserializer(record)
-                if val is None:
-                    continue
-                self._put_value_in_result_queue(val)
-                if self.closed():
-                    logger.debug(
-                        "query runner (%s) closed while iterating",
-                        self.study_id)
-                    break
+            with self.connection as connection:
+                for record in connection.execute(self.query).fetchall():
+                    val = self.deserializer(record)
+                    if val is None:
+                        continue
+                    self._put_value_in_result_queue(val)
+                    if self.closed():
+                        logger.debug(
+                            "query runner (%s) closed while iterating",
+                            self.study_id)
+                        break
 
         except Exception as ex:  # pylint: disable=broad-except
             logger.error(
@@ -109,11 +121,11 @@ class DuckDbQueryDialect(Dialect):
 
     @staticmethod
     def int_type() -> str:
-        return "INTEGER"
+        return "int"
 
     @staticmethod
     def float_type() -> str:
-        return "FLOAT"
+        return "float"
 
     @staticmethod
     def array_item_suffix() -> str:
@@ -157,7 +169,7 @@ class DuckDbVariants(SqlSchema2Variants):
             pedigree_table,
             meta_table,
             gene_models)
-        assert db, db
+        # assert db, db
         assert pedigree_table, pedigree_table
         self.start_time = time.time()
 
@@ -173,17 +185,34 @@ class DuckDbVariants(SqlSchema2Variants):
                 return row[0]
             return ""
 
-    def _fetch_schema(self, table) -> dict[str, str]:
-        query = f"""DESCRIBE {table}"""
+    def _fetch_summary_schema(self) -> dict[str, str]:
+        query = f"""SELECT value FROM {self.meta_table}
+               WHERE key = 'summary_schema'
+               LIMIT 1
+            """
+
+        schema_content = ""
         with self._get_connection_factory() as connection:
-            df = connection.execute(query).df()
-            records = df[["column_name", "column_type"]].to_records()
-            schema = {}
-            for _, col_name, col_type in records:
-                if col_type.endswith("[]"):
-                    col_type = f"ARRAY({col_type[:-2]})"
-                schema[col_name] = col_type
-            return schema
+            result = connection.execute(query).fetchall()
+            for row in result:
+                schema_content = row[0]
+        return dict(line.split("|") for line in schema_content.split("\n"))
+
+    def _fetch_family_schema(self) -> dict[str, str]:
+        query = f"""SELECT value FROM {self.meta_table}
+               WHERE key = 'family_schema'
+               LIMIT 1
+            """
+
+        schema_content = ""
+        with self._get_connection_factory() as connection:
+            rows = connection.execute(query).fetchall()
+            for row in rows:
+                schema_content = row[0]
+        return dict(line.split("|") for line in schema_content.split("\n"))
+
+    def _fetch_schema(self, table) -> dict[str, str]:
+        return {}
 
     def _fetch_pedigree(self):
         query = f"SELECT * FROM {self.pedigree_table}"
@@ -214,7 +243,9 @@ class DuckDbVariants(SqlSchema2Variants):
 
     def _get_connection_factory(self) -> Any:
         # pylint: disable=protected-access
-        return duckdb.connect(self.db, read_only=True)
+        if self.db is not None:
+            return duckdb.connect(self.db, read_only=True)
+        return _duckdb_connect()
 
     def _deserialize_summary_variant(self, record):
         sv_record = json.loads(record[2])

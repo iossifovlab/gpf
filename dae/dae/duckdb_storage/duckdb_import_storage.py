@@ -13,7 +13,7 @@ class DuckDbImportStorage(Schema2ImportStorage):
     """Import logic for data in the DuckDb Schema 2 format."""
 
     @classmethod
-    def _do_create_tables(cls, project):
+    def _do_import_dataset(cls, project):
         genotype_storage = project.get_genotype_storage()
         assert isinstance(genotype_storage, DuckDbGenotypeStorage)
         layout = schema2_dataset_layout(project.get_parquet_dataset_dir())
@@ -25,7 +25,7 @@ class DuckDbImportStorage(Schema2ImportStorage):
         genotype_storage: DuckDbGenotypeStorage = \
             cast(DuckDbGenotypeStorage, project.get_genotype_storage())
         # pylint: disable=protected-access
-        study_tables = genotype_storage._create_table_layout(project.study_id)
+        study_tables = genotype_storage.create_table_layout(project.study_id)
 
         variants_types = project.get_variant_loader_types()
         study_config = {
@@ -65,7 +65,7 @@ class DuckDbImportStorage(Schema2ImportStorage):
 
         if project.has_genotype_storage():
             tables_task = graph.create_task(
-                "Create DuckDb Tables", self._do_create_tables,
+                "Create DuckDb import dataset", self._do_import_dataset,
                 [project], all_parquet_tasks)
 
             graph.create_task(

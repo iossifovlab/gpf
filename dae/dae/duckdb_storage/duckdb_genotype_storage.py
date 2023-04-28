@@ -6,6 +6,7 @@ from contextlib import closing
 import duckdb
 from cerberus import Validator
 
+from dae.utils import fs_utils
 from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.genotype_storage.genotype_storage import GenotypeStorage
 from dae.schema2_storage.schema2_import_storage import Schema2DatasetLayout
@@ -23,7 +24,10 @@ class DuckDbGenotypeStorage(GenotypeStorage):
             "type": "string", "required": True
         },
         "db": {
-            "type": "string", "required": True
+            "type": "string",
+        },
+        "studies_path": {
+            "type": "string",
         },
     }
 
@@ -56,10 +60,14 @@ class DuckDbGenotypeStorage(GenotypeStorage):
             return self
             # raise ValueError(
             #     f"already started DuckDb storage <{self.storage_id}>")
-        db_name = self.get_db()
-        dirname = os.path.dirname(db_name)
-        os.makedirs(dirname, exist_ok=True)
-        self.connection = duckdb.connect(f"{db_name}")
+        if self.get_db() is not None:
+            db_name = self.get_db()
+            dirname = os.path.dirname(db_name)
+            os.makedirs(dirname, exist_ok=True)
+            self.connection = duckdb.connect(f"{db_name}")
+            return self
+
+        self.connection = duckdb.connect()
         return self
 
     def shutdown(self):
@@ -74,15 +82,45 @@ class DuckDbGenotypeStorage(GenotypeStorage):
         self.shutdown()
 
     def get_db(self):
-        return self.storage_config["db"]
+        return self.storage_config.get("db")
+
+    def get_studies_path(self):
+        return self.storage_config.get("studies_path")
 
     @staticmethod
-    def _create_table_layout(study_id: str) -> Schema2DatasetLayout:
+    def create_table_layout(study_id: str) -> Schema2DatasetLayout:
         return Schema2DatasetLayout(
             study_id,
             f"{study_id}_pedigree",
             f"{study_id}_summary", f"{study_id}_family",
             f"{study_id}_meta")
+
+    @staticmethod
+    def create_parquet_scans_layout(
+            study_id: str,
+            partition_descriptor: PartitionDescriptor,
+            base_dir: Optional[str] = "") -> Schema2DatasetLayout:
+        """Construct DuckDb parquet scans for all studies tables."""
+        study_dir = fs_utils.join(base_dir, study_id)
+        pedigree_path = fs_utils.join(study_dir, "pedigree")
+        meta_path = fs_utils.join(study_dir, "meta")
+        summary_path = fs_utils.join(study_dir, "summary")
+        summary_partition = partition_descriptor.dataset_summary_partition()
+        family_path = fs_utils.join(study_dir, "family")
+        family_partition = partition_descriptor.dataset_family_partition()
+
+        paths = Schema2DatasetLayout(
+            study_dir,
+            f"{pedigree_path}/pedigree.parquet",
+            f"{summary_path}/{'*/' * len(summary_partition)}*.parquet",
+            f"{family_path}/{'*/' * len(family_partition)}*.parquet",
+            f"{meta_path}/meta.parquet")
+        return Schema2DatasetLayout(
+            study_dir,
+            f"parquet_scan('{paths.pedigree}')",
+            f"parquet_scan('{paths.summary}')",
+            f"parquet_scan('{paths.family}')",
+            f"parquet_scan('{paths.meta}')")
 
     def _create_table(self, parquet_path, table_name):
         assert self.connection is not None
@@ -110,24 +148,58 @@ class DuckDbGenotypeStorage(GenotypeStorage):
             layout: Schema2DatasetLayout,
             partition_descriptor: PartitionDescriptor) -> Schema2DatasetLayout:
         """Import study parquet dataset into duckdb genotype storage."""
-        tables_layout = self._create_table_layout(study_id)
+        if self.get_db() is not None:
+            tables_layout = self.create_table_layout(study_id)
 
-        with closing(self.start()) as storage:
-            # pylint: disable=protected-access
-            storage._create_table(layout.meta, tables_layout.meta)
-            storage._create_table(layout.pedigree, tables_layout.pedigree)
-            storage._create_table_partitioned(
-                layout.summary, tables_layout.summary,
-                partition_descriptor.dataset_summary_partition())
-            storage._create_table_partitioned(
-                layout.family, tables_layout.family,
-                partition_descriptor.dataset_family_partition())
-        return tables_layout
+            with closing(self.start()) as storage:
+                # pylint: disable=protected-access
+                storage._create_table(layout.meta, tables_layout.meta)
+                storage._create_table(layout.pedigree, tables_layout.pedigree)
+                storage._create_table_partitioned(
+                    layout.summary, tables_layout.summary,
+                    partition_descriptor.dataset_summary_partition())
+                storage._create_table_partitioned(
+                    layout.family, tables_layout.family,
+                    partition_descriptor.dataset_family_partition())
+            return tables_layout
+
+        if self.get_studies_path() is not None:
+            # copy parquet files
+            dest_layout = self.create_parquet_scans_layout(
+                study_id, partition_descriptor,
+                base_dir=self.get_studies_path())
+            fs_utils.copy(dest_layout.study, layout.study)
+            return dest_layout
+
+        raise ValueError(
+            f"bad DuckDb genotype storage configuration: "
+            f"{self.storage_config}")
 
     def build_backend(self, study_config, genome, gene_models):
-        tables_layout = self._create_table_layout(study_config.id)
+        if self.get_db() is not None:
+            tables_layout = self.create_table_layout(study_config.id)
+        elif self.get_studies_path() is not None:
+
+            tables_layout = self.create_parquet_scans_layout(
+                study_config.id, PartitionDescriptor(),
+                base_dir=self.get_studies_path())
+
+            result = duckdb.sql(
+                f"SELECT value FROM {tables_layout.meta} "
+                f"WHERE key = 'partition_description'").fetchall()
+            if len(result) >= 0:
+                partition_descriptor = \
+                    PartitionDescriptor.parse_string(result[0][0])
+                tables_layout = self.create_parquet_scans_layout(
+                    study_config.id, partition_descriptor,
+                    base_dir=self.get_studies_path())
+        else:
+            raise ValueError(
+                f"wrong DuckDb genotype storage configuration: "
+                f"{self.storage_config}")
+
         return DuckDbVariants(
-            self.storage_config["db"],
+            self.get_db(),
             tables_layout.family,
             tables_layout.summary,
             tables_layout.pedigree,

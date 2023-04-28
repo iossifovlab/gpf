@@ -397,7 +397,8 @@ class BaseQueryBuilder(ABC):
             assert attr_name in self.combined_columns
             assert (
                 self.combined_columns[attr_name] == self.dialect.float_type()
-                or self.combined_columns[attr_name] == self.dialect.int_type()
+                or self.combined_columns[attr_name].startswith(
+                    self.dialect.int_type())
             ), f"{attr_name} - {self.combined_columns}"
 
             left, right = attr_range
