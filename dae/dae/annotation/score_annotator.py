@@ -7,7 +7,9 @@ from typing import cast, Any
 
 from dae.genomic_resources.genomic_scores import \
     build_allele_score_from_resource, build_position_score_from_resource, \
-    build_np_score_from_resource
+    build_np_score_from_resource, \
+    PositionScoreQuery, NPScoreQuery, ScoreQuery
+
 from dae.genomic_resources.aggregators import AGGREGATOR_SCHEMA
 
 from .annotatable import Annotatable, VCFAllele
@@ -49,6 +51,7 @@ class VariantScoreAnnotatorBase(Annotator):
         super().__init__(config)
 
         self.score = score
+        self.score_queries: list[ScoreQuery] = self._collect_score_queries()
         self._annotation_schema = None
 
         self.non_default_position_aggregators: dict = {}
@@ -108,12 +111,15 @@ class VariantScoreAnnotatorBase(Annotator):
             self.non_default_nucleotide_aggregators = \
                 non_default_nucleotide_aggregators
 
+    def _collect_score_queries(self) -> list[ScoreQuery]:
+        return []
+
     def get_scores(self):
         return [attr["source"] for attr in self.get_annotation_config()]
 
     def _scores_not_found(self, attributes):
         values = {
-            score_id: None for score_id in self.get_scores()
+            attr["destination"]: None for attr in self.get_annotation_config()
         }
         attributes.update(values)
 
@@ -173,6 +179,13 @@ class PositionScoreAnnotator(VariantScoreAnnotatorBase):
                 "nucleotide_aggregator is not allowed in position score")
         return cast(dict, validator.document)
 
+    def _collect_score_queries(self) -> list[ScoreQuery]:
+        result: list[ScoreQuery] = []
+        for attr in self.get_annotation_config():
+            result.append(PositionScoreQuery(
+                attr["source"], attr.get("position_aggregator")))
+        return result
+
     def _fetch_substitution_scores(self, allele):
         scores = self.score.fetch_scores(
             allele.chromosome, allele.position,
@@ -185,14 +198,9 @@ class PositionScoreAnnotator(VariantScoreAnnotatorBase):
             chrom,
             pos_begin,
             pos_end,
-            self.get_scores(),
-            self.non_default_position_aggregators
+            self.score_queries
         )
-        scores = {
-            sc_name: sc_agg.get_final()
-            for sc_name, sc_agg in scores_agg.items()
-        }
-        return scores
+        return [sagg.get_final() for sagg in scores_agg]
 
     def _do_annotate(
             self, annotatable: Annotatable, context):
@@ -220,10 +228,9 @@ class PositionScoreAnnotator(VariantScoreAnnotatorBase):
             self._scores_not_found(attributes)
             return attributes
 
-        for score in self.get_scores():
-            value = scores[score]
-            attributes[score] = value
-        return attributes
+        return dict(zip(
+            [attr["destination"] for attr in self.get_annotation_config()],
+            scores))
 
 
 def build_np_score_annotator(pipeline: AnnotationPipeline, config: dict):
@@ -277,23 +284,13 @@ class NPScoreAnnotator(PositionScoreAnnotator):
             self.get_scores()
         )
 
-    def _fetch_aggregated_scores(self, chrom, pos_begin, pos_end):
-        scores_agg = self.score.fetch_scores_agg(
-            chrom,
-            pos_begin,
-            pos_end,
-            self.get_scores(),
-            self.non_default_position_aggregators,
-            self.non_default_nucleotide_aggregators
-        )
-        if scores_agg is None:
-            return None
-
-        scores = {
-            sc_name: sc_agg.get_final()
-            for sc_name, sc_agg in scores_agg.items()
-        }
-        return scores
+    def _collect_score_queries(self) -> list[ScoreQuery]:
+        result: list[ScoreQuery] = []
+        for attr in self.get_annotation_config():
+            result.append(NPScoreQuery(
+                attr["source"], attr.get("position_aggregator"),
+                attr.get("nucleotide_aggregator")))
+        return result
 
 
 def build_allele_score_annotator(pipeline: AnnotationPipeline, config: dict):
@@ -373,7 +370,7 @@ class AlleleScoreAnnotator(VariantScoreAnnotatorBase):
             self._scores_not_found(attributes)
             return attributes
 
-        scores_dict = self.score.fetch_scores(
+        scores = self.score.fetch_scores(
             annotatable.chromosome,
             annotatable.position,
             annotatable.reference,
@@ -382,23 +379,22 @@ class AlleleScoreAnnotator(VariantScoreAnnotatorBase):
         )
         logger.debug(
             "allele score found for annotatable %s: %s",
-            annotatable, scores_dict)
+            annotatable, scores)
 
-        if scores_dict is None:
+        if scores is None:
             self._scores_not_found(attributes)
             return attributes
 
-        for score_id, score_value in scores_dict.items():
+        for attr, value in zip(self.get_annotation_config(), scores):
             try:
-                if score_value in ("", " "):
-                    attributes[score_id] = None
+                if value in ("", " "):
+                    attributes[attr["destination"]] = None
                 else:
-                    attributes[score_id] = score_value
+                    attributes[attr["destination"]] = value
             except ValueError as ex:
                 logger.error(
                     "problem with: %s: %s - %s",
-                    score_id, annotatable, score_value)
-                logger.error(ex)
+                    attr, annotatable, value, exc_info=True)
                 raise ex
 
         return attributes

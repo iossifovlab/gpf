@@ -1,7 +1,9 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 
 from dae.genomic_resources import GenomicResource
-from dae.genomic_resources.genomic_scores import build_np_score_from_resource
+from dae.genomic_resources.genomic_scores import \
+    build_np_score_from_resource, \
+    NPScoreQuery
 from dae.genomic_resources.testing import \
     build_inmemory_test_resource
 from dae.testing import convert_to_tab_separated
@@ -39,10 +41,10 @@ def test_the_simplest_np_score(tmp_path):
     score.open()
 
     assert score.get_all_scores() == ["cadd_raw"]
-    assert score.fetch_scores("1", 11, "A", "C") == {"cadd_raw": 0.03}
+    assert score.fetch_scores("1", 11, "A", "C") == [0.03]
 
-    assert score.fetch_scores_agg("1", 10, 11) == {"cadd_raw": 0.04}
-    assert score.fetch_scores_agg("1", 15, 16) == {"cadd_raw": 0.045}
+    assert score.fetch_scores_agg("1", 10, 11) == [0.04]
+    assert score.fetch_scores_agg("1", 15, 16) == [0.045]
 
 
 def test_np_score_aggregation():
@@ -88,27 +90,25 @@ def test_np_score_aggregation():
     assert score.table.pos_begin_key == "pos_begin"
     assert score.table.pos_end_key == "pos_end"
 
-    assert score.fetch_scores_agg("1", 14, 18, ["cadd_raw"]) == \
-        {"cadd_raw": (2 * 0.04 + 2 * 0.05) / 4.}
+    assert score.fetch_scores_agg(
+        "1", 14, 18, [NPScoreQuery("cadd_raw")]) == \
+        [(2 * 0.04 + 2 * 0.05) / 4.]
 
     assert score.fetch_scores_agg(
-        "1", 14, 18, ["cadd_raw"],
-        non_default_pos_aggregators={"cadd_raw": "max"}) == \
-        {"cadd_raw": 0.05}
-
-    assert score.fetch_scores_agg("1", 14, 18, ["cadd_test"]) == \
-        {"cadd_test": 3.0}
+        "1", 14, 18, [NPScoreQuery("cadd_raw", "max")]) == \
+        [0.05]
 
     assert score.fetch_scores_agg(
-        "1", 14, 18, ["cadd_test"],
-        non_default_pos_aggregators={"cadd_test": "min"}) == \
-        {"cadd_test": 1.5}
+        "1", 14, 18, [NPScoreQuery("cadd_test")]) == \
+        [3.0]
 
     assert score.fetch_scores_agg(
-        "1", 14, 18, ["cadd_test"],
-        non_default_pos_aggregators={"cadd_test": "min"},
-        non_default_nuc_aggregators={"cadd_test": "min"}) == \
-        {"cadd_test": 0}
+        "1", 14, 18, [NPScoreQuery("cadd_test", "min")]) == \
+        [1.5]
+
+    assert score.fetch_scores_agg(
+        "1", 14, 18, [NPScoreQuery("cadd_test", "min", "min")]) == \
+        [0]
 
 
 def test_np_score_fetch_region():

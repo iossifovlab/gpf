@@ -181,11 +181,4 @@ class Annotator(abc.ABC):
             annotatable = override
 
         attributes = self._do_annotate(annotatable, context)
-        attributes_list = self.get_annotation_config()
-        for attr in attributes_list:
-            if attr["destination"] == attr["source"]:
-                continue
-            attributes[attr["destination"]] = attributes[attr["source"]]
-            del attributes[attr["source"]]
-
         return attributes

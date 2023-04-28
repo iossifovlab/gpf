@@ -1,4 +1,5 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
+# type: ignore
 
 import yaml
 from dae.genomic_resources import build_genomic_resource_repository
@@ -144,4 +145,4 @@ def test_build_a_configuration_with_embedded():
 
     score = build_position_score_from_resource(res)
     score.open()
-    assert score.fetch_scores("chr1", 23) == {"score": 0.01}
+    assert score.fetch_scores("chr1", 23) == [0.01]

@@ -2,7 +2,7 @@
 
 from dae.genomic_resources import GenomicResource
 from dae.genomic_resources.genomic_scores import \
-    PositionScore,\
+    PositionScore, PositionScoreQuery, \
     build_position_score_from_resource
 from dae.genomic_resources.testing import build_inmemory_test_resource
 from dae.genomic_resources.repository import GR_CONF_FILE_NAME
@@ -33,16 +33,16 @@ def test_the_simplest_position_score():
     score.open()
 
     assert score.get_all_scores() == ["phastCons100way"]
-    assert score.fetch_scores("1", 11) == {"phastCons100way": 0.03}
-    assert score.fetch_scores("1", 15) == {"phastCons100way": 0.46}
-    assert score.fetch_scores("2", 8) == {"phastCons100way": 0.01}
-    assert score.fetch_scores("1", 10) == {"phastCons100way": 0.02}
+    assert score.fetch_scores("1", 11) == [0.03, ]
+    assert score.fetch_scores("1", 15) == [0.46, ]
+    assert score.fetch_scores("2", 8) == [0.01, ]
+    assert score.fetch_scores("1", 10) == [0.02, ]
     assert score.fetch_scores("1", 12) is None
 
-    assert score.fetch_scores_agg("1", 10, 11) == {"phastCons100way": 0.025}
+    assert score.fetch_scores_agg("1", 10, 11) == [0.025, ]
     assert score.fetch_scores_agg(
-        "1", 10, 11, non_default_pos_aggregators={"phastCons100way": "max"}) \
-        == {"phastCons100way": 0.03}
+        "1", 10, 11, [PositionScoreQuery("phastCons100way", "max")]) \
+        == [0.03, ]
 
 
 def test_region_score():
@@ -82,22 +82,19 @@ def test_region_score():
     assert score.table.pos_begin_key == "pos_begin"
     assert score.table.pos_end_key == "pos_end"
 
-    assert score.fetch_scores("1", 12) == {
-        "phastCons100way": 0.02, "phastCons5way": None}
+    assert score.fetch_scores("1", 12) == [0.02, None]
 
-    assert score.fetch_scores_agg("1", 13, 18, ["phastCons100way"]) == \
-        {"phastCons100way": (3 * 0.02 + 2 * 0.03) / 5.}
     assert score.fetch_scores_agg(
-        "1", 13, 18, ["phastCons100way"],
-        non_default_pos_aggregators={"phastCons100way": "max"}) == \
-        {"phastCons100way": 0.03}
+        "1", 13, 18, [PositionScoreQuery("phastCons100way")]) == \
+        [(3 * 0.02 + 2 * 0.03) / 5.]
+    assert score.fetch_scores_agg(
+        "1", 13, 18, [PositionScoreQuery("phastCons100way", "max")]) == [0.03]
 
-    assert score.fetch_scores_agg("1", 13, 18, ["phastCons5way"]) == \
-        {"phastCons5way": 0}
     assert score.fetch_scores_agg(
-        "1", 13, 18, ["phastCons5way"],
-        non_default_pos_aggregators={"phastCons5way": "mean"}) == \
-        {"phastCons5way": 0 / 2}
+        "1", 13, 18, [PositionScoreQuery("phastCons5way")]) == [0]
+    assert score.fetch_scores_agg(
+        "1", 13, 18, [PositionScoreQuery("phastCons5way", "mean")]) == \
+        [0 / 2]
 
 
 def test_phastcons100way():
@@ -131,8 +128,7 @@ def test_phastcons100way():
 
     assert score.get_all_scores() == ["phastCons100way"]
 
-    assert score.fetch_scores("1", 54773) == \
-        {"phastCons100way": 0}
+    assert score.fetch_scores("1", 54773) == [0]
 
     # chr1 54773 TTCCTCC->T
     #
@@ -140,8 +136,9 @@ def test_phastcons100way():
     # 0.000  0.001  0.000  0.000  0.001  0.001  0.001  0.001
     # T      T      C      C      T      C      C      T
     #        ^      ^      ^      ^      ^      ^
-    assert score.fetch_scores_agg("1", 54773, 54780, ["phastCons100way"]) == \
-        {"phastCons100way": 0.000625}
+    assert score.fetch_scores_agg(
+        "1", 54773, 54780, [PositionScoreQuery("phastCons100way")]) == \
+        [0.000625]
 
 
 def test_position_score_fetch_region():
