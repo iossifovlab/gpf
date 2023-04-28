@@ -32,32 +32,32 @@ def test_resource_paths(rw_fsspec_proto):
 
 def test_build_resource_file_state(rw_fsspec_proto):
     proto = rw_fsspec_proto
-    timestamp = time.time()
+    timestamp = 42
     res = proto.get_resource("one")
 
     state = proto.build_resource_file_state(
-        res, "data.txt")
+        res, "data.txt", timestamp=timestamp)
 
     assert state.filename == "data.txt"
-    assert state.timestamp == pytest.approx(timestamp, abs=5)
+    assert state.timestamp == pytest.approx(timestamp, abs=0.1)
     assert state.md5 == "c1cfdaf7e22865b29b8d62a564dc8f23"
 
     res = proto.get_resource("sub/two")
     state = proto.build_resource_file_state(
-        res, "genes.gtf")
+        res, "genes.gtf", timestamp=timestamp)
 
     assert state.filename == "genes.gtf"
-    assert state.timestamp == pytest.approx(timestamp, abs=5)
+    assert state.timestamp == pytest.approx(timestamp, abs=0.1)
     assert state.md5 == "d9636a8dca9e5626851471d1c0ea92b1"
 
 
 def test_save_load_resource_file_state(rw_fsspec_proto):
     proto = rw_fsspec_proto
-    timestamp = time.time()
+    timestamp = 42
 
     res = proto.get_resource("sub/two")
     state = proto.build_resource_file_state(
-        res, "genes.gtf")
+        res, "genes.gtf", timestamp=timestamp)
 
     proto.save_resource_file_state(res, state)
     state_path = proto._get_resource_file_state_path(res, "genes.gtf")
@@ -66,7 +66,7 @@ def test_save_load_resource_file_state(rw_fsspec_proto):
     loaded = proto.load_resource_file_state(res, "genes.gtf")
     assert loaded is not None
     assert loaded.filename == "genes.gtf"
-    assert loaded.timestamp == pytest.approx(timestamp, abs=5)
+    assert loaded.timestamp == pytest.approx(timestamp, abs=0.1)
     assert loaded.md5 == "d9636a8dca9e5626851471d1c0ea92b1"
 
 
