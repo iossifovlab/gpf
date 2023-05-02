@@ -31,9 +31,10 @@ th {
 }
 
 .selector-cell {
-  max-width: 100px;
+  max-width: fit-content;
   width: 100px;
   text-align: center;
+  padding: 0 10px;
 }
 
 .description {
