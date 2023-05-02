@@ -13,7 +13,7 @@ describe.only('User management tests for reset password in Users', () => {
   it('should reset password', () => {
     page.loginAdmin();
     page.navigateToSidenavPage(sidenavPageLinks.management);
-    createTestUser(page, 'user_reset_password@email.com', 'test_name');
+    createTestUser(page, 'user_reset_password@email.com', 'user_reset_password_name');
     page.userHasPasswordCell('user_reset_password@email.com').should('be.empty');
     page.userActionsResetPassword('user_reset_password@email.com').click();
     page.userTableResetPasswordConfirmButton.click();
@@ -46,7 +46,7 @@ describe.only('User management tests for reset password in Users', () => {
 
     page.loginAdmin();
     page.navigateToSidenavPage(sidenavPageLinks.management);
-    createTestUser(page, 'forgotten_password@email.com', 'test_name');
+    createTestUser(page, 'forgotten_password@email.com', 'forgotten_password_name');
     page.logout();
 
     cy.window().then((win) => {
