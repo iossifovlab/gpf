@@ -1,4 +1,4 @@
-import { Component, HostListener, OnInit } from '@angular/core';
+import { Component, HostListener, OnInit, Inject } from '@angular/core';
 import { trigger, transition, style, animate } from '@angular/animations';
 import { environment } from '../environments/environment';
 import { BnNgIdleService } from 'bn-ng-idle';
@@ -7,6 +7,7 @@ import { switchMap } from 'rxjs/operators';
 import { NgbNavConfig } from '@ng-bootstrap/ng-bootstrap';
 import { AgpTableConfig } from './autism-gene-profiles-table/autism-gene-profiles-table';
 import { AgpTableService } from './autism-gene-profiles-table/autism-gene-profiles-table.service';
+import { APP_BASE_HREF } from '@angular/common';
 import * as streamSaver from 'streamsaver';
 
 @Component({
@@ -82,9 +83,10 @@ export class AppComponent implements OnInit {
     private bnIdle: BnNgIdleService,
     private usersService: UsersService,
     private ngbNavConfig: NgbNavConfig,
+    @Inject(APP_BASE_HREF) private baseHref: string,
   ) {
     ngbNavConfig.animation = false;
-    streamSaver.mitm = environment.basePath + '/mitm';
+    streamSaver.mitm = environment.basePath + baseHref + 'mitm';
   }
 
   public ngOnInit(): void {
