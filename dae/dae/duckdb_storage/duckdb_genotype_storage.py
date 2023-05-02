@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 
 class DuckDbGenotypeStorage(GenotypeStorage):
-    """Defines Google Cloud Platform (GCP) genotype storage."""
+    """Defines DuckDb genotype storage."""
 
     VALIDATION_SCHEMA = {
         "storage_type": {"type": "string", "allowed": ["duckdb"]},
@@ -58,8 +58,7 @@ class DuckDbGenotypeStorage(GenotypeStorage):
                 "starting already started DuckDb genotype storage: <%s>",
                 self.storage_id)
             return self
-            # raise ValueError(
-            #     f"already started DuckDb storage <{self.storage_id}>")
+
         if self.get_db() is not None:
             db_name = self.get_db()
             dirname = os.path.dirname(db_name)

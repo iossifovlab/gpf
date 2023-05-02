@@ -66,10 +66,6 @@ class FamilyQueryBuilder(BaseQueryBuilder):
         if self.do_join_allele_in_members or self.do_join_pedigree:
             self._add_to_product(
                 self.dialect.build_array_join("fa.allele_in_members", "pi"))
-            # inner = "fa.allele_in_members"
-            # if self.dialect.add_unnest_in_join():
-            #     inner = f"UNNEST({inner})"
-            # self._add_to_product(f"\n    JOIN\n    {inner} AS pi")
 
         if self.do_join_pedigree:
             pedigree_table = self.dialect.build_table_name(
@@ -83,12 +79,6 @@ class FamilyQueryBuilder(BaseQueryBuilder):
             self._add_to_product(
                 self.dialect.build_array_join("sa.effect_gene", "eg")
             )
-            # inner_clause = (
-            #     "UNNEST(sa.effect_gene)"
-            #     if self.dialect.add_unnest_in_join()
-            #     else "sa.effect_gene"
-            # )
-            # self._add_to_product(f"\n    JOIN\n    {inner_clause} AS eg")
 
     def _build_from(self):
         summary_table_name = self.dialect.build_table_name(

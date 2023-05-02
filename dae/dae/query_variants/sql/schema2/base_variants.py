@@ -32,7 +32,6 @@ class SqlSchema2Variants(abc.ABC):
             pedigree_table,
             meta_table,
             gene_models=None):
-        # assert db
         assert pedigree_table
 
         self.dialect = dialect

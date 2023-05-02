@@ -169,7 +169,6 @@ class DuckDbVariants(SqlSchema2Variants):
             pedigree_table,
             meta_table,
             gene_models)
-        # assert db, db
         assert pedigree_table, pedigree_table
         self.start_time = time.time()
 
@@ -216,8 +215,6 @@ class DuckDbVariants(SqlSchema2Variants):
 
     def _fetch_pedigree(self):
         query = f"SELECT * FROM {self.pedigree_table}"
-
-        # ped_df = pandas_gbq.read_gbq(q, project_id=self.gcp_project_id)
         with self._get_connection_factory() as connection:
             ped_df = connection.execute(query).df()
             columns = {
