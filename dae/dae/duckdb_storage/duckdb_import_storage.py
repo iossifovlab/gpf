@@ -21,12 +21,10 @@ class DuckDbImportStorage(Schema2ImportStorage):
             project.study_id, layout, project.get_partition_descriptor())
 
     @classmethod
-    def _do_study_config(cls, project):
+    def _do_study_config(cls, project, study_tables):
         genotype_storage: DuckDbGenotypeStorage = \
             cast(DuckDbGenotypeStorage, project.get_genotype_storage())
         # pylint: disable=protected-access
-        study_tables = genotype_storage.create_table_layout(project.study_id)
-
         variants_types = project.get_variant_loader_types()
         study_config = {
             "id": project.study_id,
@@ -70,6 +68,6 @@ class DuckDbImportStorage(Schema2ImportStorage):
 
             graph.create_task(
                 "Creating a study config", self._do_study_config,
-                [project], [tables_task])
+                [project, tables_task], [tables_task])
 
         return graph
