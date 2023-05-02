@@ -153,6 +153,15 @@ class Annotator(abc.ABC):
             result[attr["destination"]] = None
         return result
 
+    def _remap_annotation_attributes(self, attributes):
+        attributes_config = self.get_annotation_config()
+        for attr in attributes_config:
+            if attr["destination"] == attr["source"]:
+                continue
+            attributes[attr["destination"]] = attributes[attr["source"]]
+            del attributes[attr["source"]]
+        return attributes
+
     def annotate(self, annotatable: Annotatable,
                  context: dict[str, Any]) -> dict[str, Any]:
         """Annotate and relabel attributes as configured."""

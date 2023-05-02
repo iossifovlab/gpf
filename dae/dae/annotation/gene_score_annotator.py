@@ -145,7 +145,7 @@ class GeneScoreAnnotator(Annotator):
                 gene_score, genes, aggregator_type
             )
 
-        return attributes
+        return self._remap_annotation_attributes(attributes)
 
     def close(self):
         pass

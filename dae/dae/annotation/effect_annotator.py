@@ -258,4 +258,4 @@ class EffectAnnotatorAdapter(Annotator):
             "lgd_gene_list": lgd_gene_list
         }
 
-        return result
+        return self._remap_annotation_attributes(result)
