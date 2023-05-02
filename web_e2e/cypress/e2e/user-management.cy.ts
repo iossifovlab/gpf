@@ -2,7 +2,7 @@ import { UserManagementPage } from 'cypress/elements/user-management-page';
 import { UsersPage } from 'cypress/elements/users-page';
 import { sidenavPageLinks } from 'cypress/elements/utils';
 
-describe('User management tests for reset password in Users', () => {
+describe.only('User management tests for reset password in Users', () => {
   const page = new UserManagementPage();
 
   before(() => {
@@ -19,9 +19,9 @@ describe('User management tests for reset password in Users', () => {
     page.userTableResetPasswordConfirmButton.click();
 
     cy.request('GET', 'http://mailhog:8025/api/v2/search?kind=to&query=user_reset_password@email.com').then(
-      (response) => {
+      (response: {body: {items: {Content: {Body: string}}[]}}) => {
         const regexUrl = new RegExp(/http(s)?:\/\/[\w_-]+((.[\w_-]))([\w.,@?^=%&:/~+#-]*[\w@?^=%&/~+#-])/gm, 'i');
-        const url = (response.body.items[0].Content.Body as string).match(regexUrl)[0];
+        const url = response.body.items[0].Content.Body.match(regexUrl)[0];
         const urlToVisit = url.replace('http://gpf/gpf/', '');
         cy.visit(urlToVisit);
         page.newPasswordInput.type('XC^ZF*TZXuUChFsv');
@@ -57,16 +57,16 @@ describe('User management tests for reset password in Users', () => {
 
     usersPage.logInButton.click();
 
-    cy.get('@popup').url().then(url => {
+    cy.get('@popup').url().then(() => {
       cy.get('a').first().click();
       cy.get('#id_email').type('forgotten_password@email.com');
       cy.get('input[value="Reset password"]').click();
     });
 
     cy.request('GET', 'http://mailhog:8025/api/v2/search?kind=to&query=forgotten_password@email.com').then(
-      (response) => {
+      (response: {body: {items: {Content: {Body: string}}[]}}) => {
         const regexUrl = new RegExp(/http(s)?:\/\/[\w_-]+((.[\w_-]))([\w.,@?^=%&:/~+#-]*[\w@?^=%&/~+#-])/gm, 'i');
-        const url = (response.body.items[0].Content.Body as string).match(regexUrl)[0];
+        const url = response.body.items[0].Content.Body.match(regexUrl)[0];
         const urlToVisit = url.replace('http://gpf/gpf/', '');
         cy.visit(urlToVisit);
         page.newPasswordInput.type('XC^ZF*TZXuUChFsv');
