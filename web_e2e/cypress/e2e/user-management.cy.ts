@@ -29,10 +29,13 @@ describe.only('User management tests for reset password in Users', () => {
         page.newPasswordButton.click();
       }
     );
+    cy.intercept('GET', '/gpf/api/v3/datasets').as('datasets');
     page.logout();
+    cy.wait('@datasets');
     page.login('user_reset_password@email.com', 'XC^ZF*TZXuUChFsv');
 
     page.logout();
+    cy.wait('@datasets');
     page.loginAdmin();
     page.navigateToHome();
     page.navigateToSidenavPage(sidenavPageLinks.management);
@@ -75,8 +78,12 @@ describe.only('User management tests for reset password in Users', () => {
       }
     );
 
+    cy.intercept('GET', '/gpf/api/v3/datasets').as('datasets');
+    cy.wait('@datasets');
     page.login('forgotten_password@email.com', 'XC^ZF*TZXuUChFsv');
+
     page.logout();
+    cy.wait('@datasets');
 
     page.loginAdmin();
     page.navigateToHome();
