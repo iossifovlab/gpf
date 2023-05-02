@@ -444,7 +444,6 @@ class VariantsDb:
             genotype_data_study if genotype_data_study else genotype_data_group
         )
 
-    @deprecated(details="start using GPFInstance methods")
     def get_all_genotype_data(self):
         group_studies = self.get_all_genotype_studies()
         genotype_data_groups = self.get_all_genotype_groups()

@@ -49,9 +49,16 @@ class Dialect(ABC):
     def int_type() -> str:
         return "int"
 
+    @staticmethod
+    def escape_char() -> str:
+        return "`"
+
     def build_table_name(self, table: str, db: str) -> str:
         return f"`{self.namespace}`.{db}.{table}" if self.namespace else \
                f"{db}.{table}"
+
+    def build_array_join(self, column: str, allias: str) -> str:
+        return f"\n    JOIN\n    {column} AS {allias}"
 
 
 # A type describing a schema as expected by the query builders
@@ -390,7 +397,8 @@ class BaseQueryBuilder(ABC):
             assert attr_name in self.combined_columns
             assert (
                 self.combined_columns[attr_name] == self.dialect.float_type()
-                or self.combined_columns[attr_name] == self.dialect.int_type()
+                or self.combined_columns[attr_name].startswith(
+                    self.dialect.int_type())
             ), f"{attr_name} - {self.combined_columns}"
 
             left, right = attr_range
@@ -428,18 +436,21 @@ class BaseQueryBuilder(ABC):
         where = []
         for region in regions:
             assert isinstance(region, Region)
-            end_position = "COALESCE(`end_position`, `position`)"
-            query = "(`chromosome` = {q}{chrom}{q}"
+            esc = self.dialect.escape_char()
+            end_position = f"COALESCE(sa.{esc}end_position{esc}, " \
+                f"sa.{esc}position{esc})"
+            query = "(sa.{esc}chromosome{esc} = {q}{chrom}{q}"
             if region.start is None and region.end is None:
                 query += ")"
                 query = query.format(
                     q=self.QUOTE,
-                    chrom=region.chrom
+                    chrom=region.chrom,
+                    esc=esc
                 )
             else:
                 query += (
                     " AND "
-                    "({start} <= `position`) AND "
+                    "({start} <= sa.{esc}position{esc}) AND "
                     "({stop} >= {end_position}))"
                 )
                 query = query.format(
@@ -448,6 +459,7 @@ class BaseQueryBuilder(ABC):
                     start=region.start,
                     stop=region.stop,
                     end_position=end_position,
+                    esc=esc
                 )
             where.append(query)
 

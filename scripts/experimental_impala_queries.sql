@@ -1,3 +1,24 @@
+SELECT sa.bucket_index, sa.summary_index, fa.family_index, fa.family_id, sa.summary_variant_data, fa.family_variant_data                                                                                             
+  FROM                                                                                                                                                                                                               
+    minimal_vcf_summary AS sa                                                                                                                                                                                                                                                                                                                                                                                                              
+    JOIN                                                                                                                                                                                                                                                                                                                                                                                                                                   
+    minimal_vcf_family AS fa                                                                                                                                                                                                                                                                                                                                                                                                               
+    ON (fa.summary_index = sa.summary_index AND                                                                                                                                                                      
+        fa.bucket_index = sa.bucket_index AND                                                                                                                                                                                                                                                                                                                                                                                              
+        fa.allele_index = sa.allele_index)                                                                                                                                                                           
+    CROSS JOIN                                                                                                                                                                                                       
+    (SELECT UNNEST(sa.effect_gene) AS eg)                                                                                                                                                                            
+  WHERE                                                                        
+    ( (  eg.effect_gene_symbols in (  'g1'  )  ) ) AND                                                                                                                                                               
+    ( (sa.chromosome = 'foo' AND (-19996 <= sa.position) AND (20015 >= COALESCE(sa.end_position, sa.position))) )
+
+
+
+select sa.summary_index, sa.allele_index, eg 
+from minimal_vcf_summary as sa 
+cross join (select unnest(sa.effect_gene) as eg) 
+where eg.effect_types = 'missense'
+
 SELECT bucket_index, summary_index, allele_index, chromosome, `position`, end_position, variant_type, transmission_type, reference, af_allele_count, af_allele_freq, af_parents_called, af_parents_freq, seen_as_denovo, seen_in_status, family_variants_count, family_alleles_count 
 FROM genotype_impala2_db.study_1_summary_alleles;
 

@@ -66,3 +66,18 @@ def test_abspath(url, expected, mocker):
     mocker.patch("os.getcwd", return_value="/abs/path")
     res = fs_utils.abspath(url)
     assert res == expected
+
+
+def test_copy_folder(tmp_path_factory):
+    dest_path = tmp_path_factory.mktemp("dest")
+
+    src_path = tmp_path_factory.mktemp("src")
+    (src_path / "a").mkdir(parents=True)
+    (src_path / "c").mkdir(parents=True)
+    (src_path / "a" / "b.txt").write_text("b")
+    (src_path / "c" / "d.txt").write_text("d")
+
+    fs_utils.copy(str(dest_path), str(src_path))
+
+    assert (dest_path / "a" / "b.txt").read_text() == "b"
+    assert (dest_path / "c" / "d.txt").read_text() == "d"

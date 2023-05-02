@@ -1,5 +1,6 @@
 import datetime
 import os
+import shutil
 from pathlib import Path
 from urllib.parse import urlparse
 from typing import Optional, Union, cast
@@ -83,6 +84,10 @@ def sign(filename: str) -> str:
         return cast(str, fs.sign(relative_path))
     except NotImplementedError:
         return filename
+
+
+def copy(dest: str, src: str) -> None:
+    shutil.copytree(src, dest, dirs_exist_ok=True)
 
 
 def tabix_index_filename(tabix_filename: str) -> Optional[str]:

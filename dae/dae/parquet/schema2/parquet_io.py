@@ -403,8 +403,12 @@ class VariantsParquetWriter:
 
     def write_metadata(self):
         """Write dataset metadata."""
-        schema_summary = self.serializer.schema_summary
-        schema_family = self.serializer.schema_family
+        schema_summary = "\n".join([
+            f"{f.name}|{f.type}" for f in self.serializer.schema_summary
+        ])
+        schema_family = "\n".join([
+            f"{f.name}|{f.type}" for f in self.serializer.schema_family
+        ])
         extra_attributes = self.serializer.extra_attributes
 
         metadata_table = pa.Table.from_pydict(

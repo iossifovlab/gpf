@@ -1,6 +1,5 @@
 import logging
 from dataclasses import dataclass
-from typing import Optional
 
 from dae.utils import fs_utils
 from dae.import_tools.import_tools import ImportStorage
@@ -18,9 +17,9 @@ logger = logging.getLogger(__file__)
 class Schema2DatasetLayout:
     study: str
     pedigree: str
-    summary: Optional[str]
-    family: Optional[str]
-    meta: Optional[str]
+    summary: str
+    family: str
+    meta: str
 
 
 def schema2_dataset_layout(study_dir: str) -> Schema2DatasetLayout:

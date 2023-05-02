@@ -122,9 +122,17 @@ class PartitionDescriptor:
         if "region_bin" in config_dict.keys():
             config["region_length"] = int(
                 config_dict["region_bin"]["region_length"])
-            config["chromosomes"] = [
-                c.strip()
-                for c in config_dict["region_bin"]["chromosomes"].split(",")]
+            chromosomes = config_dict["region_bin"]["chromosomes"]
+            if isinstance(chromosomes, str):
+                config["chromosomes"] = [
+                    c.strip()
+                    for c in chromosomes.split(",")]
+            elif isinstance(chromosomes, list):
+                config["chromosomes"] = chromosomes
+            else:
+                raise ValueError(
+                    f"unexpected chromosomes types: {type(chromosomes)} "
+                    f"{chromosomes}")
 
         if "family_bin" in config_dict.keys():
             config["family_bin_size"] = int(

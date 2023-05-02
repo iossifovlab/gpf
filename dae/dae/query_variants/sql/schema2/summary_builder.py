@@ -23,9 +23,6 @@ class SummaryQueryBuilder(BaseQueryBuilder):
         gene_models=None,
     ):
         # pylint: disable=too-many-arguments
-        # self.family_variant_table = family_variant_table
-        # self.summary_allele_table = summary_allele_table
-
         super().__init__(
             dialect,
             db,
@@ -55,12 +52,8 @@ class SummaryQueryBuilder(BaseQueryBuilder):
 
     def _build_join(self, genes=None, effect_types=None):
         if genes is not None or effect_types is not None:
-            inner_clause = (
-                "UNNEST(sa.effect_gene)"
-                if self.dialect.add_unnest_in_join()
-                else "sa.effect_gene"
-            )
-            self._add_to_product(f"\n    JOIN\n    {inner_clause} AS eg")
+            self._add_to_product(
+                self.dialect.build_array_join("sa.effect_gene", "eg"))
 
     def _build_group_by(self):
         pass

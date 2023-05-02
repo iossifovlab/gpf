@@ -67,12 +67,14 @@ setuptools.setup(
     impala=dae.impala_storage.schema1.impala_genotype_storage:ImpalaGenotypeStorage
     impala2=dae.impala_storage.schema2.impala2_genotype_storage:Impala2GenotypeStorage
     inmemory=dae.inmemory_storage.inmemory_genotype_storage:InmemoryGenotypeStorage
+    duckdb=dae.duckdb_storage.duckdb_genotype_storage:DuckDbGenotypeStorage
 
     [dae.import_tools.storages]
     impala=dae.impala_storage.schema1.impala_schema1:ImpalaSchema1ImportStorage
     impala2=dae.impala_storage.schema2.impala2_import_storage:Impala2ImportStorage
     schema2=dae.schema2_storage.schema2_import_storage:Schema2ImportStorage
     inmemory=dae.inmemory_storage.inmemory_import_storage:InmemoryImportStorage
+    duckdb=dae.duckdb_storage.duckdb_import_storage:DuckDbImportStorage
 
     [console_scripts]
     demo_graphs_cli=dae.task_graph.demo_graphs_cli:main

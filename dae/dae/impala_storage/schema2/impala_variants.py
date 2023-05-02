@@ -19,6 +19,10 @@ class ImpalaDialect(Dialect):
     def __init__(self):
         super().__init__()
 
+    @staticmethod
+    def escape_char() -> str:
+        return "`"
+
 
 class ImpalaVariants(SqlSchema2Variants):
     """A backend implementing an impala backend."""
@@ -59,7 +63,6 @@ class ImpalaVariants(SqlSchema2Variants):
                 query = f"""DESCRIBE {self.db}.{table}"""
                 cursor.execute(query)
                 df = as_pandas(cursor)
-
             records = df[["name", "type"]].to_records()
             schema = {
                 col_name: col_type for (_, col_name, col_type) in records
