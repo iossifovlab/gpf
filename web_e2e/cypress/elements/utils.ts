@@ -105,7 +105,6 @@ export class BasePage {
         }).as('popup');
       });
 
-      usersPage.logInButton.should('be.visible');
       usersPage.logInButton.click();
       cy.get('@popup').should('be.called');
       cy.get('#id_username').type(username);

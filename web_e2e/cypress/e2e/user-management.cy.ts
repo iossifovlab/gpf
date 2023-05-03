@@ -31,9 +31,11 @@ describe('User management tests for reset password in Users', () => {
     );
 
     page.logout();
+    cy.get('body').should('not.contain', 'Loading...');
     page.login('user_reset_password@email.com', 'XC^ZF*TZXuUChFsv');
 
     page.logout();
+    cy.get('body').should('not.contain', 'Loading...');
     page.loginAdmin();
     page.navigateToHome();
     page.navigateToSidenavPage(sidenavPageLinks.management);
@@ -79,6 +81,7 @@ describe('User management tests for reset password in Users', () => {
     page.login('forgotten_password@email.com', 'XC^ZF*TZXuUChFsv');
     page.logout();
 
+    cy.get('body').should('not.contain', 'Loading...');
     page.loginAdmin();
     page.navigateToHome();
     page.navigateToSidenavPage(sidenavPageLinks.management);
