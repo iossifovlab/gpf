@@ -2,7 +2,7 @@ import { UserManagementPage } from 'cypress/elements/user-management-page';
 import { UsersPage } from 'cypress/elements/users-page';
 import { sidenavPageLinks } from 'cypress/elements/utils';
 
-describe.only('User management tests for reset password in Users', () => {
+describe('User management tests for reset password in Users', () => {
   const page = new UserManagementPage();
 
   before(() => {
