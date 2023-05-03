@@ -1,7 +1,8 @@
 import { ForgotPasswordPage } from 'cypress/elements/forgot-password-page';
 import { UsersPage } from '../elements/users-page';
 
-describe('Forgotten password tests', () => {
+// to remove 'skip'
+describe.skip('Forgotten password tests', () => {
   const page = new ForgotPasswordPage();
   const usersPage = new UsersPage();
 

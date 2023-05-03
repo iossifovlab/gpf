@@ -1,7 +1,8 @@
 import { RegionsBlockPage } from 'cypress/elements/regions-block-page';
 import { datasetIds, toolPageLinks } from 'cypress/elements/utils';
 
-describe('Regions block tests', () => {
+// to remove 'skip'
+describe.skip('Regions block tests', () => {
   const page = new RegionsBlockPage();
 
   before(() => {

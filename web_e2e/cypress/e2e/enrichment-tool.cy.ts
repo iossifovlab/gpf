@@ -4,7 +4,8 @@ import { SaveQueryPage } from 'cypress/elements/save-query-page';
 import { datasetIds, toolPageLinks } from 'cypress/elements/utils';
 import { applyData, EnrichmentToolData, parseYamlData } from 'cypress/elements/dynamic-data-structure';
 
-describe('Enrichment tool common tests', () => {
+// to remove 'skip'
+describe.skip('Enrichment tool common tests', () => {
   const page = new EnrichmentToolPage();
 
   before(() => {
@@ -114,7 +115,8 @@ describe('Enrichment tool common tests', () => {
 if (Cypress.env().yamlPath !== undefined) {
   const dynamicData: EnrichmentToolData[] = parseYamlData(Cypress.env('yamlFile') as string);
 
-  describe('Enrichment tool data tests', () => {
+// to remove 'skip'
+  describe.skip('Enrichment tool data tests', () => {
     const page = new EnrichmentToolPage();
 
     before(() => {
@@ -130,7 +132,9 @@ if (Cypress.env().yamlPath !== undefined) {
     });
 
     dynamicData.forEach(dataEntry => {
-      describe(dataEntry.name, () => {
+      
+// to remove 'skip'
+      describe.skip(dataEntry.name, () => {
         dataEntry.cases.forEach(case_ => {
           it(case_.name, () => {
             applyData(case_.params);

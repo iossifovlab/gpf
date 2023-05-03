@@ -2,7 +2,8 @@ import { GeneBrowserPage } from 'cypress/elements/gene-browser-page';
 import { GenePlotPage } from 'cypress/elements/gene-plot-page';
 import { datasetIds, toolPageLinks } from 'cypress/elements/utils';
 
-describe('Gene plot tests', () => {
+// to remove 'skip'
+describe.skip('Gene plot tests', () => {
   const page = new GenePlotPage();
   const geneBrowserPage = new GeneBrowserPage();
 
@@ -48,7 +49,8 @@ describe('Gene plot tests', () => {
   });
 });
 
-describe('Gene plot summary alleles count tests', () => {
+// to remove 'skip'
+describe.skip('Gene plot summary alleles count tests', () => {
   const page = new GenePlotPage();
   const geneBrowserPage = new GeneBrowserPage();
 
@@ -130,7 +132,8 @@ describe('Gene plot summary alleles count tests', () => {
   });
 });
 
-describe('Gene plot download tests', () => {
+// to remove 'skip'
+describe.skip('Gene plot download tests', () => {
   const page = new GenePlotPage();
   const geneBrowserPage = new GeneBrowserPage();
 

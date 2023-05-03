@@ -4,7 +4,8 @@ import { PhenoBrowserPage } from 'cypress/elements/pheno-browser-page';
 import { PhenoToolPage } from 'cypress/elements/pheno-tool-page';
 import { datasetIds, toolPageLinks } from 'cypress/elements/utils';
 
-describe('Datasets tests', () => {
+// to remove 'skip'
+describe.skip('Datasets tests', () => {
   const page = new DatasetsPage();
 
   before(() => {

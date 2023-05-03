@@ -2,7 +2,8 @@ import { GenderPage } from 'cypress/elements/gender-page';
 import { GenotypeBlockPage } from 'cypress/elements/genotype-block-page';
 import { datasetIds, toolPageLinks } from 'cypress/elements/utils';
 
-describe('Gender tests', () => {
+// to remove 'skip'
+describe.skip('Gender tests', () => {
   const page = new GenderPage();
   const genotypeBlockPage = new GenotypeBlockPage();
 

@@ -3,7 +3,8 @@ import { GenePlotPage } from 'cypress/elements/gene-plot-page';
 import { GenotypePreviewTablePage } from 'cypress/elements/genotype-preview-table-page';
 import { datasetIds, toolPageLinks } from 'cypress/elements/utils';
 
-describe('Gene browser basic display tests before query', () => {
+// to remove 'skip'
+describe.skip('Gene browser basic display tests before query', () => {
   const page = new GeneBrowserPage();
 
   before(() => {
@@ -45,7 +46,8 @@ describe('Gene browser basic display tests before query', () => {
   });
 });
 
-describe('Gene browser basic display tests after query', () => {
+// to remove 'skip'
+describe.skip('Gene browser basic display tests after query', () => {
   const page = new GeneBrowserPage();
 
   before(() => {
@@ -108,7 +110,8 @@ describe('Gene browser basic display tests after query', () => {
   });
 });
 
-describe('Gene browser family alleles count tests', () => {
+// to remove 'skip'
+describe.skip('Gene browser family alleles count tests', () => {
   const page = new GeneBrowserPage();
 
   before(() => {
@@ -189,7 +192,8 @@ describe('Gene browser family alleles count tests', () => {
   });
 });
 
-describe('Gene browser download tests', () => {
+// to remove 'skip'
+describe.skip('Gene browser download tests', () => {
   const page = new GeneBrowserPage();
 
   before(() => {

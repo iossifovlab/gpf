@@ -105,6 +105,7 @@ export class BasePage {
         }).as('popup');
       });
 
+      cy.wait('@datasets');
       usersPage.logInButton.click();
       cy.get('@popup').should('be.called');
       cy.get('#id_username').type(username);

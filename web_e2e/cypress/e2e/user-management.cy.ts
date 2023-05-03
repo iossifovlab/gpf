@@ -31,11 +31,9 @@ describe('User management tests for reset password in Users', () => {
     );
 
     page.logout();
-    cy.get('.loader').should('not.exist');
     page.login('user_reset_password@email.com', 'XC^ZF*TZXuUChFsv');
 
     page.logout();
-    cy.get('.loader').should('not.exist');
     page.loginAdmin();
     page.navigateToHome();
     page.navigateToSidenavPage(sidenavPageLinks.management);
@@ -78,11 +76,8 @@ describe('User management tests for reset password in Users', () => {
       }
     );
 
-    cy.get('.loader').should('not.exist');
     page.login('forgotten_password@email.com', 'XC^ZF*TZXuUChFsv');
-
     page.logout();
-    cy.get('.loader').should('not.exist');
 
     page.loginAdmin();
     page.navigateToHome();

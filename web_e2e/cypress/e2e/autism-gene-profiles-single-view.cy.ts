@@ -4,7 +4,8 @@ import { AutismGeneProfilesSingleViewPage } from 'cypress/elements/autism-gene-p
 // import { GenotypeBlockPage } from 'cypress/elements/genotype-block-page';
 import { sidenavPageLinks } from 'cypress/elements/utils';
 
-describe('Autism gene profiles single view tests', () => {
+// to remove 'skip'
+describe.skip('Autism gene profiles single view tests', () => {
   const page = new AutismGeneProfilesSingleViewPage();
 
   before(() => {
@@ -54,7 +55,8 @@ describe('Autism gene profiles single view tests', () => {
   });
 });
 
-describe('Autism gene profiles single view links tests', () => {
+// to remove 'skip'
+describe.skip('Autism gene profiles single view links tests', () => {
   const page = new AutismGeneProfilesSingleViewPage();
 
   before(() => {

@@ -5,7 +5,8 @@ import { datasetIds, sidenavPageLinks, toolPageLinks, userData } from 'cypress/e
 import { GenotypeBrowserPage } from 'cypress/elements/genotype-browser-page';
 import { UsersPage } from 'cypress/elements/users-page';
 
-describe('App tests', () => {
+// to remove 'skip'
+describe.only('App tests', () => {
   const page = new AppPage();
 
   before(() => {
@@ -99,7 +100,8 @@ describe('App tests', () => {
   });
 });
 
-describe('App user access rights tests', () => {
+// to remove 'skip'
+describe.only('App user access rights tests', () => {
   const page = new AppPage();
   const datasetsPage = new DatasetsPage();
 

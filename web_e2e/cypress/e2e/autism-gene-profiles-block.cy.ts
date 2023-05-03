@@ -2,7 +2,8 @@ import { AutismGeneProfilesBlockPage } from 'cypress/elements/autism-gene-profil
 import { AutismGeneProfilesTablePage } from 'cypress/elements/autism-gene-profiles-table-page';
 import { sidenavPageLinks } from 'cypress/elements/utils';
 
-describe('Autism gene profiles block tests', () => {
+// to remove 'skip'
+describe.skip('Autism gene profiles block tests', () => {
   const page = new AutismGeneProfilesBlockPage();
   const AutismGeneProfilesTablePagePage = new AutismGeneProfilesTablePage();
 

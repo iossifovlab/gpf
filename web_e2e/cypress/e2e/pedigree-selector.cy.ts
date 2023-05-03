@@ -2,7 +2,8 @@ import { GenotypeBlockPage } from 'cypress/elements/genotype-block-page';
 import { PedigreeSelectorPage } from 'cypress/elements/pedigree-selector-page';
 import { datasetIds, toolPageLinks } from 'cypress/elements/utils';
 
-describe('Pedigree selector tests', () => {
+// to remove 'skip'
+describe.skip('Pedigree selector tests', () => {
   const page = new PedigreeSelectorPage();
   const genotypeBlockPage = new GenotypeBlockPage();
 

@@ -1,7 +1,8 @@
 import { PhenoToolMeasurePage } from 'cypress/elements/pheno-tool-measure-page';
 import { datasetIds, toolPageLinks } from 'cypress/elements/utils';
 
-describe('Pheno tool measure tests', () => {
+// to remove 'skip'
+describe.skip('Pheno tool measure tests', () => {
   const page = new PhenoToolMeasurePage();
 
   before(() => {

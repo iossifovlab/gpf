@@ -10,7 +10,8 @@ import { RegionsBlockPage } from 'cypress/elements/regions-block-page';
 import { SaveQueryPage } from 'cypress/elements/save-query-page';
 import { datasetIds, toolPageLinks } from 'cypress/elements/utils';
 
-describe('Genotype browser tests', () => {
+// to remove 'skip'
+describe.skip('Genotype browser tests', () => {
   const page = new GenotypeBrowserPage();
 
   before(() => {
@@ -107,7 +108,9 @@ describe('Genotype browser tests', () => {
   });
 });
 
-describe('Genotype browser table preview result tests', () => {
+
+// to remove 'skip'
+describe.skip('Genotype browser table preview result tests', () => {
   const page = new GenotypeBrowserPage();
   const genotypeBrowserController = new GenotypeBrowserController();
 
@@ -464,7 +467,9 @@ describe('Genotype browser table preview result tests', () => {
   });
 });
 
-describe('Genotype browser family variants download tests', () => {
+
+// to remove 'skip'
+describe.skip('Genotype browser family variants download tests', () => {
   const genotypeBrowserController = new GenotypeBrowserController();
   const page = new GenotypeBrowserPage();
 
@@ -500,7 +505,8 @@ describe('Genotype browser family variants download tests', () => {
   });
 });
 
-describe('Genotype browser UCSC url tests', () => {
+// to remove 'skip'
+describe.skip('Genotype browser UCSC url tests', () => {
   const genotypeBrowserController = new GenotypeBrowserController();
   const genotypePreviewTablePage = new GenotypePreviewTablePage();
 

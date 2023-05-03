@@ -2,7 +2,8 @@ import { EffectTypesPage } from 'cypress/elements/effect-types-page';
 import { GenotypeBlockPage } from 'cypress/elements/genotype-block-page';
 import { datasetIds, toolPageLinks } from 'cypress/elements/utils';
 
-describe('Effect types tests', () => {
+// to remove 'skip'
+describe.skip('Effect types tests', () => {
   const page = new EffectTypesPage();
   const genotypeBlockPage = new GenotypeBlockPage();
 

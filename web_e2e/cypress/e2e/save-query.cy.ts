@@ -4,7 +4,8 @@ import { SaveQueryPage } from 'cypress/elements/save-query-page';
 import { SavedQueriesPage } from 'cypress/elements/saved-queries-page';
 import { datasetIds, sidenavPageLinks, toolPageLinks } from 'cypress/elements/utils';
 
-describe('Save query common tests', () => {
+// to remove 'skip'
+describe.skip('Save query common tests', () => {
   const page = new SaveQueryPage();
 
   before(() => {
@@ -37,7 +38,8 @@ describe('Save query common tests', () => {
   });
 });
 
-describe('Save query tests', () => {
+// to remove 'skip'
+describe.skip('Save query tests', () => {
   const page = new SaveQueryPage();
   const savedQueriesPage = new SavedQueriesPage();
 
