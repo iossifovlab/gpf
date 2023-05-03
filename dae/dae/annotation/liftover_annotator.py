@@ -12,7 +12,7 @@ from dae.genomic_resources.liftover_resource import \
 from dae.utils.variant_utils import trim_str_left, reverse_complement
 
 from .annotatable import Annotatable, VCFAllele
-from .annotator_base import Annotator, ATTRIBUTES_SCHEMA
+from .annotator_base import AnnotatorBase, ATTRIBUTES_SCHEMA
 
 
 logger = logging.getLogger(__name__)
@@ -44,7 +44,7 @@ def build_liftover_annotator(pipeline, config):
     return LiftOverAnnotator(config, liftover_chain, target_genome)
 
 
-class LiftOverAnnotator(Annotator):
+class LiftOverAnnotator(AnnotatorBase):
     """Defines a Lift Over annotator."""
 
     def __init__(

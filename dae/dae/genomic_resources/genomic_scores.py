@@ -958,7 +958,7 @@ class PositionScore(GenomicScore):
     def fetch_scores_agg(  # pylint: disable=too-many-arguments,too-many-locals
             self, chrom: str, pos_begin: int, pos_end: int,
             scores: Optional[list[PositionScoreQuery]] = None
-    ) -> Optional[list[Aggregator]]:
+    ) -> list[Aggregator]:
         """Fetch score values in a region and aggregates them.
 
         Case 1:
@@ -1075,7 +1075,7 @@ class NPScore(GenomicScore):
     def fetch_scores_agg(
             self, chrom: str, pos_begin: int, pos_end: int,
             scores: Optional[list[NPScoreQuery]] = None
-    ) -> Optional[list[Aggregator]]:
+    ) -> list[Aggregator]:
         """Fetch score values in a region and aggregates them."""
         # pylint: disable=too-many-locals
         # FIXME:
@@ -1084,16 +1084,16 @@ class NPScore(GenomicScore):
                 f"{chrom} is not among the available chromosomes for "
                 f"NP Score resource {self.score_id}")
 
-        score_lines = list(self._fetch_lines(chrom, pos_begin, pos_end))
-        if not score_lines:
-            return None
-
         if scores is None:
             scores = [
                 NPScoreQuery(score_id)
                 for score_id in self.get_all_scores()]
 
         score_aggs = self._build_scores_agg(scores)
+
+        score_lines = list(self._fetch_lines(chrom, pos_begin, pos_end))
+        if not score_lines:
+            return [sagg.position_aggregator for sagg in score_aggs]
 
         def aggregate_nucleotides():
             for sagg in score_aggs:

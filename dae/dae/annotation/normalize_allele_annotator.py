@@ -8,7 +8,7 @@ from dae.genomic_resources.reference_genome import \
     build_reference_genome_from_resource
 
 from .annotatable import Annotatable, VCFAllele
-from .annotator_base import Annotator, ATTRIBUTES_SCHEMA
+from .annotator_base import AnnotatorBase, ATTRIBUTES_SCHEMA
 
 logger = logging.getLogger(__name__)
 
@@ -70,7 +70,7 @@ def build_normalize_allele_annotator(pipeline, config):
     return NormalizeAlleleAnnotator(config, genome)
 
 
-class NormalizeAlleleAnnotator(Annotator):
+class NormalizeAlleleAnnotator(AnnotatorBase):
     """Provides annotator for normalizing alleles."""
 
     def __init__(self, config, genome: ReferenceGenome):

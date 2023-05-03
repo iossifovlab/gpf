@@ -9,7 +9,7 @@ from dae.genomic_resources import GenomicResource
 from dae.genomic_resources.aggregators import AGGREGATOR_SCHEMA
 from dae.genomic_resources.aggregators import build_aggregator
 
-from .annotator_base import Annotator, ATTRIBUTES_SCHEMA
+from .annotator_base import AnnotatorBase, ATTRIBUTES_SCHEMA
 from .annotatable import Annotatable
 
 logger = logging.getLogger(__name__)
@@ -32,7 +32,7 @@ def build_gene_score_annotator(pipeline, config):
     return GeneScoreAnnotator(config, gene_score_resource)
 
 
-class GeneScoreAnnotator(Annotator):
+class GeneScoreAnnotator(AnnotatorBase):
     """Annotator that annotates variants by using gene score resources."""
 
     DEFAULT_AGGREGATOR_TYPE = "dict"

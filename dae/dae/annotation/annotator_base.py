@@ -118,17 +118,13 @@ class Annotator(abc.ABC):
         """Return annotator type."""
 
     @abc.abstractmethod
-    def _do_annotate(
-        self, annotatable: Annotatable, context: dict
-    ) -> dict:
-        """Annotate the annotatable.
-
-        Internal abstract method used for annotation.
-        """
-
-    @abc.abstractmethod
     def get_annotation_config(self) -> list[dict]:
         """Return annotation config."""
+
+    @abc.abstractmethod
+    def annotate(self, annotatable: Annotatable,
+                 context: dict[str, Any]) -> dict[str, Any]:
+        """Produce annotation attributes for an annotatable."""
 
     @abc.abstractmethod
     def close(self):
@@ -153,32 +149,80 @@ class Annotator(abc.ABC):
             result[attr["destination"]] = None
         return result
 
+    def _remap_annotation_attributes(
+            self, attributes: dict[str, Any]) -> dict[str, Any]:
+        """Remap the annotation attributes from source to destination.
+
+        The method uses the annotation configuration and renames
+        annotation attributes from their source name to destination.
+
+        This implementation is suitable for most annotators and is used in
+        the `AnnotatorBase` implementation.
+        """
+        attributes_config = self.get_annotation_config()
+        for attr in attributes_config:
+            if attr["destination"] == attr["source"]:
+                continue
+            attributes[attr["destination"]] = attributes[attr["source"]]
+            del attributes[attr["source"]]
+        return attributes
+
+    def _get_annotatable_override(
+            self, annotatable: Annotatable,
+            context: dict[str, Any]) -> Optional[Annotatable]:
+        """Find and return an annotatable override if configured.
+
+        Otherwise returns the default annotatable.
+        """
+        if self.input_annotatable is None:
+            return annotatable
+
+        if self.input_annotatable not in context:
+            raise ValueError(
+                f"can't find input annotatable {self.input_annotatable} "
+                f"in annotation context: {context}")
+        override = context[self.input_annotatable]
+        logger.debug(
+            "input annotatable %s found %s.",
+            self.input_annotatable, override)
+
+        if override is None:
+            logger.warning(
+                "can't find input annotatable %s "
+                "in annotation context: %s",
+                self.input_annotatable, context)
+            return None
+
+        if not isinstance(override, Annotatable):
+            raise ValueError(
+                f"The object with a key {self.input_annotatable} in the "
+                f"annotation context {context} is not an Annotabable.")
+
+        return override
+
+
+class AnnotatorBase(Annotator):
+    """Base implementation of the `Annotator` class."""
+
+    @abc.abstractmethod
+    def _do_annotate(
+        self, annotatable: Annotatable, context: dict
+    ) -> dict:
+        """Annotate the annotatable.
+
+        Internal abstract method used for annotation. It should produce
+        all source attributes defined for annotator.
+        """
+
     def annotate(self, annotatable: Annotatable,
                  context: dict[str, Any]) -> dict[str, Any]:
-        """Annotate and relabel attributes as configured."""
-        if self.input_annotatable is not None:
-            if self.input_annotatable not in context:
-                raise ValueError(
-                    f"can't find input annotatable {self.input_annotatable} "
-                    f"in annotation context: {context}")
-            override = context[self.input_annotatable]
-            logger.debug(
-                "input annotatable %s found %s.",
-                self.input_annotatable, override)
+        """Annotate and relabel attributes as configured.
 
-            if override is None:
-                logger.warning(
-                    "can't find input annotatable %s "
-                    "in annotation context: %s",
-                    self.input_annotatable, context)
-                return self._empty_result()
-
-            if not isinstance(override, Annotatable):
-                raise ValueError(
-                    f"The object with a key {self.input_annotatable} in the "
-                    f"annotation context {context} is not an Annotabable.")
-
-            annotatable = override
-
-        attributes = self._do_annotate(annotatable, context)
-        return attributes
+        Uses `_do_annotate` to produce the annotation attributes.
+        """
+        annotatable_override = self._get_annotatable_override(
+            annotatable, context)
+        if annotatable_override is None:
+            return self._empty_result()
+        attributes = self._do_annotate(annotatable_override, context)
+        return self._remap_annotation_attributes(attributes)
