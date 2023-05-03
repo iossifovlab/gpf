@@ -92,7 +92,7 @@ class GenotypeStorageRegistry:
         """
         for storage_config in genotype_storages_config["storages"]:
             self.register_storage_config(storage_config)
-        default_storage_id = genotype_storages_config.default
+        default_storage_id = genotype_storages_config.get("default")
         if default_storage_id is not None:
             storage = self.get_genotype_storage(default_storage_id)
             self.register_default_storage(storage)

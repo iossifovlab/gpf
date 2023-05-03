@@ -11,7 +11,8 @@ import copy
 import yaml
 
 from dae.impala_storage.helpers.rsync_helpers import RsyncHelpers
-
+from dae.genotype_storage.genotype_storage_registry import \
+    GenotypeStorageRegistry
 
 logger = logging.getLogger("remote_instance_mirror")
 
@@ -77,15 +78,16 @@ def load_mirror_config(filename):
     return config
 
 
-def update_mirror_config(rsync_helpers, work_dir, argv):
-    """Update mirrored GPF instance configuration."""
-    config_filename = os.path.join(work_dir, "gpf_instance.yaml")
-    config_dict = load_mirror_config(config_filename)
-
-    config_dict["mirror_of"] = rsync_helpers.remote
-
-    storage = copy.deepcopy(config_dict["storage"]["production_impala"])
-    assert storage["storage_type"] == "impala"
+def update_genotype_storage_config(config_dict, rsync_helpers, **kwargs):
+    """Update default genotype storage config."""
+    storage_registry = GenotypeStorageRegistry()
+    storage_registry.register_storages_configs(config_dict["genotype_storage"])
+    default_storage = storage_registry.get_default_genotype_storage()
+    if default_storage is None:
+        raise ValueError("default genotype storage not configured")
+    if default_storage.get_storage_type() != "impala":
+        raise ValueError("this works only for impala storage")
+    storage = copy.deepcopy(default_storage.storage_config)
 
     impala = storage["impala"]
     remote_impala_host = impala["hosts"][0]
@@ -93,9 +95,9 @@ def update_mirror_config(rsync_helpers, work_dir, argv):
     impala["hosts"] = ["localhost"]
 
     if "rsync" not in storage:
-        assert argv.hdfs2nfs is not None, \
+        assert kwargs.get("hdfs2nfs") is not None, \
             "Please supply HDFS-to-NFS mount point in CLI arguments"
-        hdfs2nfs = argv.hdfs2nfs
+        hdfs2nfs = kwargs.get("hdfs2nfs")
     else:
         hdfs2nfs = storage["rsync"]["location"]
 
@@ -103,11 +105,26 @@ def update_mirror_config(rsync_helpers, work_dir, argv):
     storage["rsync"]["location"] = \
         f"{rsync_helpers.hosturl()}{hdfs2nfs}"
 
-    config_dict["storage"]["genotype_impala"] = storage
-    config_dict["genotype_storage"]["default"] = "genotype_impala"
+    for index, storage_config in enumerate(
+            config_dict["genotype_storage"]["storages"]):
+        if storage_config["id"] == default_storage.storage_id:
+            config_dict["genotype_storage"]["storages"][index] = storage
+
+    return remote_impala_host
+
+
+def update_mirror_config(rsync_helpers, work_dir, argv):
+    """Update mirrored GPF instance configuration."""
+    config_filename = os.path.join(work_dir, "gpf_instance.yaml")
+    config_dict = load_mirror_config(config_filename)
+
+    config_dict["mirror_of"] = rsync_helpers.remote
+
+    remote_impala_host = update_genotype_storage_config(
+        config_dict, rsync_helpers, **vars(argv))
 
     with open(config_filename, "wt", encoding="utf8") as outfile:
-        content = yaml.dump(config_dict)
+        content = yaml.dump(config_dict, sort_keys=False)
         outfile.write(content)
 
     filename = os.path.join(work_dir, "remote_impala_port_mapping.txt")
