@@ -12,7 +12,7 @@ from dae.genomic_resources.liftover_resource import \
 from dae.utils.variant_utils import trim_str_left, reverse_complement
 
 from .annotatable import Annotatable, VCFAllele
-from .annotator_base import Annotator, ATTRIBUTES_SCHEMA
+from .annotator_base import AnnotatorBase, ATTRIBUTES_SCHEMA
 
 
 logger = logging.getLogger(__name__)
@@ -44,7 +44,7 @@ def build_liftover_annotator(pipeline, config):
     return LiftOverAnnotator(config, liftover_chain, target_genome)
 
 
-class LiftOverAnnotator(Annotator):
+class LiftOverAnnotator(AnnotatorBase):
     """Defines a Lift Over annotator."""
 
     def __init__(
@@ -55,14 +55,6 @@ class LiftOverAnnotator(Annotator):
         self.chain: LiftoverChain = chain
         self.target_genome: ReferenceGenome = target_genome
         self._annotation_schema = None
-        self._liftover_annotatable_dest = self._configure_destination()
-
-    def _configure_destination(self):
-        for attr in self.get_annotation_config():
-            if attr["source"] == "liftover_annotatable":
-                return attr["destination"]
-        raise ValueError(
-            f"bad LiftOverAnnotator configuration: {self.config}")
 
     def annotator_type(self) -> str:
         return "liftover_annotator"
@@ -218,12 +210,12 @@ class LiftOverAnnotator(Annotator):
             logger.warning(
                 "%s not ready to annotate CNV variants: %s",
                 self.annotator_type(), annotatable)
-            return {self._liftover_annotatable_dest: None}
+            return {"liftover_annotatable": None}
 
         lo_allele = self.liftover_allele(cast(VCFAllele, annotatable))
         if lo_allele is None:
             logger.info(
                 "unable to liftover allele: %s", annotatable)
-            return {self._liftover_annotatable_dest: None}
+            return {"liftover_annotatable": None}
 
-        return {self._liftover_annotatable_dest: lo_allele}
+        return {"liftover_annotatable": lo_allele}

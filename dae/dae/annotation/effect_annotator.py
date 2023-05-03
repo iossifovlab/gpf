@@ -18,7 +18,7 @@ from dae.genomic_resources.gene_models import \
 
 from .annotatable import Annotatable, CNVAllele, VCFAllele
 
-from .annotator_base import Annotator, ATTRIBUTES_SCHEMA
+from .annotator_base import AnnotatorBase, ATTRIBUTES_SCHEMA
 
 logger = logging.getLogger(__name__)
 
@@ -62,7 +62,7 @@ def build_effect_annotator(pipeline, config):
     return EffectAnnotatorAdapter(config, genome, gene_models)
 
 
-class EffectAnnotatorAdapter(Annotator):
+class EffectAnnotatorAdapter(AnnotatorBase):
     """Defines variant effect annotator."""
 
     DEFAULT_ANNOTATION = {
@@ -258,4 +258,4 @@ class EffectAnnotatorAdapter(Annotator):
             "lgd_gene_list": lgd_gene_list
         }
 
-        return self._remap_annotation_attributes(result)
+        return result
