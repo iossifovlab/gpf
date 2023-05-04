@@ -2,9 +2,11 @@ import { UserManagementPage } from 'cypress/elements/user-management-page';
 import { UsersPage } from 'cypress/elements/users-page';
 import { sidenavPageLinks } from 'cypress/elements/utils';
 import 'cypress-wait-until';
+import 'cypress-if';
 
 describe('User management tests for reset password in Users', () => {
   const page = new UserManagementPage();
+  const usersPage = new UsersPage();
 
   before(() => {
     page.cleanup();
@@ -12,7 +14,6 @@ describe('User management tests for reset password in Users', () => {
   });
 
   it('should reset password', () => {
-    const usersPage = new UsersPage();
     page.loginAdmin();
     page.navigateToSidenavPage(sidenavPageLinks.management);
     createTestUser(page, 'user_reset_password@email.com', 'user_reset_password_name');
@@ -33,11 +34,23 @@ describe('User management tests for reset password in Users', () => {
     );
 
     page.logout();
-    cy.waitUntil(() => usersPage.logInButton.should('be.visible').
-      then(() => page.login('user_reset_password@email.com', 'XC^ZF*TZXuUChFsv')));
+    usersPage.logInButton.if('visible').then(() => {
+      page.login('user_reset_password@email.com', 'XC^ZF*TZXuUChFsv');
+    }).else().then(() => {
+      cy.waitUntil(() => cy.get('html').should('not.exist')).then(() => {
+        page.login('user_reset_password@email.com', 'XC^ZF*TZXuUChFsv');
+      });
+    });
 
     page.logout();
-    cy.waitUntil(() => usersPage.logInButton.should('be.visible').then(() => page.loginAdmin()));
+    usersPage.logInButton.if('visible').then(() => {
+      page.loginAdmin();
+    }).else().then(() => {
+      cy.waitUntil(() => cy.get('html').should('not.exist')).then(() => {
+        page.loginAdmin();
+      });
+    });
+
 
     page.navigateToHome();
     page.navigateToSidenavPage(sidenavPageLinks.management);
@@ -47,8 +60,6 @@ describe('User management tests for reset password in Users', () => {
   });
 
   it('should reset password when login', () => {
-    const usersPage = new UsersPage();
-
     page.loginAdmin();
     page.navigateToSidenavPage(sidenavPageLinks.management);
     createTestUser(page, 'forgotten_password@email.com', 'forgotten_password_name');
@@ -60,7 +71,13 @@ describe('User management tests for reset password in Users', () => {
       }).as('popup');
     });
 
-    usersPage.logInButton.click();
+    usersPage.logInButton.if('visible').then(() => {
+      usersPage.logInButton.click();
+    }).else().then(() => {
+      cy.waitUntil(() => cy.get('html').should('not.exist')).then(() => {
+        usersPage.logInButton.click();
+      });
+    });
 
     cy.get('@popup').url().then(() => {
       cy.get('a').first().click();
@@ -80,9 +97,24 @@ describe('User management tests for reset password in Users', () => {
       }
     );
 
-    page.login('forgotten_password@email.com', 'XC^ZF*TZXuUChFsv');
+    usersPage.logInButton.if('visible').then(() => {
+      page.login('forgotten_password@email.com', 'XC^ZF*TZXuUChFsv');
+    }).else().then(() => {
+      cy.waitUntil(() => cy.get('html').should('not.exist')).then(() => {
+        page.login('forgotten_password@email.com', 'XC^ZF*TZXuUChFsv');
+      });
+    });
+
+
     page.logout();
-    cy.waitUntil(() => usersPage.logInButton.should('be.visible').then(() => page.loginAdmin()));
+    usersPage.logInButton.if('visible').then(() => {
+      page.loginAdmin();
+    }).else().then(() => {
+      cy.waitUntil(() => cy.get('html').should('not.exist')).then(() => {
+        page.loginAdmin();
+      });
+    });
+
     page.navigateToHome();
     page.navigateToSidenavPage(sidenavPageLinks.management);
     deleteTestUser(page, 'forgotten_password@email.com');
