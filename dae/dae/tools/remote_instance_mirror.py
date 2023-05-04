@@ -140,28 +140,35 @@ def update_mirror_config(rsync_helpers, work_dir, argv):
 
 
 def get_active_conda_environment():
-    """Detecst activate conda environment."""
-    result = subprocess.run(
-        ["conda", "env", "list"],
-        text=True, capture_output=True, check=True)
-    assert result.returncode == 0, result
+    """Detect activate conda environment."""
+    try:
+        result = subprocess.run(
+            ["conda", "env", "list"],
+            text=True, capture_output=True, check=True)
+        assert result.returncode == 0, result
 
-    stdout = result.stdout
+        stdout = result.stdout
 
-    regexp = re.compile(
-        "^(?P<env>.+?)\\s+(?P<active>\\*)\\s+(?P<path>\\/.+$)")
+        regexp = re.compile(
+            "^(?P<env>.+?)\\s+(?P<active>\\*)\\s+(?P<path>\\/.+$)")
 
-    lines = [ln.strip() for ln in stdout.split("\n")]
-    for line in lines:
-        match = regexp.match(line)
-        if match:
-            return match.groupdict()["env"]
+        lines = [ln.strip() for ln in stdout.split("\n")]
+        for line in lines:
+            match = regexp.match(line)
+            if match:
+                return match.groupdict()["env"]
+    except Exception:  # pylint: disable=broad-except
+        logger.warning("unable to detect conda environment", exc_info=True)
     return None
 
 
 def build_setenv(work_dir):
     """Prepare 'setenv.sh' script."""
     conda_environment = get_active_conda_environment()
+    conda_activate = ""
+    if conda_environment:
+        conda_activate = f"conda activate {conda_environment}"
+
     dirname = os.path.basename(work_dir)
 
     grr_definition = os.environ.get(
@@ -179,7 +186,7 @@ export DAE_PHENODB_DIR={work_dir}
 
 export GPF_PREFIX={gpf_prefix}
 
-conda activate {conda_environment}
+{conda_activate}
 
 PS1="({dirname}) $PS1"
 export PS1
