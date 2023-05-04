@@ -1,6 +1,7 @@
 import { UserManagementPage } from 'cypress/elements/user-management-page';
 import { UsersPage } from 'cypress/elements/users-page';
 import { sidenavPageLinks } from 'cypress/elements/utils';
+import 'cypress-wait-until';
 
 describe('User management tests for reset password in Users', () => {
   const page = new UserManagementPage();
@@ -11,6 +12,7 @@ describe('User management tests for reset password in Users', () => {
   });
 
   it('should reset password', () => {
+    const usersPage = new UsersPage();
     page.loginAdmin();
     page.navigateToSidenavPage(sidenavPageLinks.management);
     createTestUser(page, 'user_reset_password@email.com', 'user_reset_password_name');
@@ -31,12 +33,12 @@ describe('User management tests for reset password in Users', () => {
     );
 
     page.logout();
-    cy.get('body').should('not.contain', 'Loading...');
-    page.login('user_reset_password@email.com', 'XC^ZF*TZXuUChFsv');
+    cy.waitUntil(() => usersPage.logInButton.should('be.visible').
+      then(() => page.login('user_reset_password@email.com', 'XC^ZF*TZXuUChFsv')));
 
     page.logout();
-    cy.get('body').should('not.contain', 'Loading...');
-    page.loginAdmin();
+    cy.waitUntil(() => usersPage.logInButton.should('be.visible').then(() => page.loginAdmin()));
+
     page.navigateToHome();
     page.navigateToSidenavPage(sidenavPageLinks.management);
     page.userHasPasswordCell('user_reset_password@email.com').find('.fa.fa-check').should('be.visible');
@@ -80,9 +82,7 @@ describe('User management tests for reset password in Users', () => {
 
     page.login('forgotten_password@email.com', 'XC^ZF*TZXuUChFsv');
     page.logout();
-
-    cy.get('body').should('not.contain', 'Loading...');
-    page.loginAdmin();
+    cy.waitUntil(() => usersPage.logInButton.should('be.visible').then(() => page.loginAdmin()));
     page.navigateToHome();
     page.navigateToSidenavPage(sidenavPageLinks.management);
     deleteTestUser(page, 'forgotten_password@email.com');
