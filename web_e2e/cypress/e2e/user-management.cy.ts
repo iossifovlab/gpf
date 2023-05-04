@@ -630,19 +630,19 @@ describe('User management tests for Users', () => {
   });
 
   it('should check if the new group is deleted after deleting the user', () => {
-    createTestUser(page, 'delete_group_email@email.com', 'test_name');
-    createTestGroup(page, 'test_delete_group');
-    page.groupAddUserButton('test_delete_group').click();
-    page.groupsMenuSearch.type('delete_group_email@email.com');
-    page.findButtonInComponentContainingText('.add-item-button', 'delete_group_email@email.com').click();
+    createTestUser(page, 'delete_group_delete_user_email@email.com', 'delete_group_delete_user_name');
+    createTestGroup(page, 'delete_group_delete_user_group');
+    page.groupAddUserButton('delete_group_delete_user_group').click();
+    page.groupsMenuSearch.type('delete_group_delete_user_email@email.com');
+    page.findButtonInComponentContainingText('.add-item-button', 'delete_group_delete_user_email@email.com').click();
 
     // delete user
     page.usersButton.click();
-    deleteTestUser(page, 'delete_group_email@email.com');
+    deleteTestUser(page, 'delete_group_delete_user_email@email.com');
 
     // check if the group is deleted in Groups
     page.groupsButton.click();
-    page.groupUsersList('test_delete_group').should('not.exist');
+    page.groupUsersList('delete_group_delete_user_group').should('not.exist');
   });
 
   it('should add group to user and check data in Datasets', () => {
