@@ -34,23 +34,12 @@ describe('User management tests for reset password in Users', () => {
     );
 
     page.logout();
-    usersPage.logInButton.if('visible').then(() => {
-      page.login('user_reset_password@email.com', 'XC^ZF*TZXuUChFsv');
-    }).else().then(() => {
-      cy.waitUntil(() => cy.get('html').should('not.exist')).then(() => {
-        page.login('user_reset_password@email.com', 'XC^ZF*TZXuUChFsv');
-      });
-    });
+    cy.wait(2000);
+    page.login('user_reset_password@email.com', 'XC^ZF*TZXuUChFsv');
 
     page.logout();
-    usersPage.logInButton.if('visible').then(() => {
-      page.loginAdmin();
-    }).else().then(() => {
-      cy.waitUntil(() => cy.get('html').should('not.exist')).then(() => {
-        page.loginAdmin();
-      });
-    });
-
+    cy.wait(2000);
+    page.loginAdmin();
 
     page.navigateToHome();
     page.navigateToSidenavPage(sidenavPageLinks.management);
@@ -71,13 +60,8 @@ describe('User management tests for reset password in Users', () => {
       }).as('popup');
     });
 
-    usersPage.logInButton.if('visible').then(() => {
-      usersPage.logInButton.click();
-    }).else().then(() => {
-      cy.waitUntil(() => cy.get('html').should('not.exist')).then(() => {
-        usersPage.logInButton.click();
-      });
-    });
+    cy.wait(2000);
+    usersPage.logInButton.click();
 
     cy.get('@popup').url().then(() => {
       cy.get('a').first().click();
@@ -97,23 +81,12 @@ describe('User management tests for reset password in Users', () => {
       }
     );
 
-    usersPage.logInButton.if('visible').then(() => {
-      page.login('forgotten_password@email.com', 'XC^ZF*TZXuUChFsv');
-    }).else().then(() => {
-      cy.waitUntil(() => cy.get('html').should('not.exist')).then(() => {
-        page.login('forgotten_password@email.com', 'XC^ZF*TZXuUChFsv');
-      });
-    });
-
-
+    cy.wait(2000);
+    page.login('forgotten_password@email.com', 'XC^ZF*TZXuUChFsv');
     page.logout();
-    usersPage.logInButton.if('visible').then(() => {
-      page.loginAdmin();
-    }).else().then(() => {
-      cy.waitUntil(() => cy.get('html').should('not.exist')).then(() => {
-        page.loginAdmin();
-      });
-    });
+
+    cy.wait(2000);
+    page.loginAdmin();
 
     page.navigateToHome();
     page.navigateToSidenavPage(sidenavPageLinks.management);
