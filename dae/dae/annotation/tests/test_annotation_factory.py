@@ -4,7 +4,7 @@ import pytest
 from dae.genomic_resources import build_genomic_resource_repository
 from dae.genomic_resources.repository import GenomicResourceRepo
 from dae.annotation.annotation_factory import build_annotation_pipeline, \
-    build_np_score_annotator
+    get_annotator_factory
 
 
 @pytest.fixture(scope="session")
@@ -61,5 +61,5 @@ def test_annotation_factory_np_score(annotation_pipeline1):
         ],
     }
 
-    annotator = build_np_score_annotator(annotation_pipeline1, config)
+    annotator = get_annotator_factory("np_score")(annotation_pipeline1, config)
     assert annotator is not None
