@@ -43,6 +43,9 @@ Import Tools configuration format
 
         pedigree:
             file: %(my_dir)s/SFARI_SPARK_WES_2.ped
+            dad: fatherId
+            mom: motherId
+            status: affected
 
         vcf:
             files:
