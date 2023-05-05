@@ -1,7 +1,7 @@
 """Factory for creation of annotation pipeline."""
 
 import logging
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Callable, Any
 
 import yaml
 
@@ -9,27 +9,75 @@ from dae.genomic_resources import build_genomic_resource_repository
 from dae.genomic_resources.repository import GenomicResourceRepo
 
 from dae.annotation.annotation_pipeline import AnnotationPipeline
-
-from .score_annotator import build_allele_score_annotator, \
-    build_np_score_annotator, build_position_score_annotator
-from .effect_annotator import build_effect_annotator
-from .liftover_annotator import build_liftover_annotator
-from .normalize_allele_annotator import build_normalize_allele_annotator
-from .gene_score_annotator import build_gene_score_annotator
+from dae.annotation.annotator_base import Annotator
 
 
 logger = logging.getLogger(__name__)
 
 
-ANNOTATOR_BUILDER_REGISTRY = {
-    "position_score": build_position_score_annotator,
-    "np_score": build_np_score_annotator,
-    "allele_score": build_allele_score_annotator,
-    "effect_annotator": build_effect_annotator,
-    "liftover_annotator": build_liftover_annotator,
-    "normalize_allele_annotator": build_normalize_allele_annotator,
-    "gene_score_annotator": build_gene_score_annotator,
-}
+_ANNOTATOR_FACTORY_REGISTRY: dict[
+    str, Callable[[AnnotationPipeline, dict[str, Any]], Annotator]] = {}
+_EXTENTIONS_LOADED = False
+
+
+def _load_annotator_factory_plugins():
+    # pylint: disable=global-statement
+    global _EXTENTIONS_LOADED
+    if _EXTENTIONS_LOADED:
+        return
+    # pylint: disable=import-outside-toplevel
+    from importlib_metadata import entry_points
+    discovered_entries = entry_points(group="dae.annotation.annotators")
+    for entry in discovered_entries:
+        annotator_type = entry.name
+        factory = entry.load()
+        if annotator_type in _ANNOTATOR_FACTORY_REGISTRY:
+            logger.warning(
+                "overwriting annotator type: %s", annotator_type)
+        _ANNOTATOR_FACTORY_REGISTRY[annotator_type] = factory
+    _EXTENTIONS_LOADED = True
+
+
+def get_annotator_factory(
+    annotator_type: str
+) -> Callable[[AnnotationPipeline, dict[str, Any]], Annotator]:
+    """Find and return a factory function for creation of an annotator type.
+
+    If the specified annotator type is not found, this function raises
+    `ValueError` exception.
+
+    :return: the annotator factory for the specified annotator type.
+    :raises ValueError: when can't find an annotator  factory for the
+        specified annotator type.
+    """
+    _load_annotator_factory_plugins()
+    if annotator_type not in _ANNOTATOR_FACTORY_REGISTRY:
+        raise ValueError(f"unsupported annotator type: {annotator_type}")
+    return _ANNOTATOR_FACTORY_REGISTRY[annotator_type]
+
+
+def get_available_annotator_types() -> List[str]:
+    """Return the list of all registered annotator factory types."""
+    _load_annotator_factory_plugins()
+    return list(_ANNOTATOR_FACTORY_REGISTRY.keys())
+
+
+def register_annotator_factory(
+    annotator_type: str,
+    factory: Callable[[AnnotationPipeline, dict[str, Any]], Annotator]
+) -> None:
+    """Register additional annotator factory.
+
+    By default all genotype storage factories should be registered at
+    `[dae.genotype_storage.factories]` extenstion point. All registered
+    factories are loaded automatically. This function should be used if you
+    want to bypass extension point mechanism and register addition genotype
+    storage factory programatically.
+    """
+    _load_annotator_factory_plugins()
+    if annotator_type in _ANNOTATOR_FACTORY_REGISTRY:
+        logger.warning("overwriting genotype storage type: %s", annotator_type)
+    _ANNOTATOR_FACTORY_REGISTRY[annotator_type] = factory
 
 
 class AnnotationConfigParser:
@@ -113,11 +161,7 @@ def build_annotation_pipeline(
         except KeyError as ex:
             raise ValueError(
                 "The pipeline config element has no annotator_type!") from ex
-        try:
-            builder = ANNOTATOR_BUILDER_REGISTRY[annotator_type]
-        except KeyError as ex:
-            raise ValueError(f"Unknonwn annotator type {annotator_type}.") \
-                from ex
+        builder = get_annotator_factory(annotator_type)
         annotator = builder(pipeline, annotator_config)
         pipeline.add_annotator(annotator)
 
