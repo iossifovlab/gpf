@@ -89,15 +89,15 @@ export class UserManagementPage extends BasePage {
     return cy.get('.creation-error');
   }
 
-  public get groupsMenu(): element {
+  public get menu(): element {
     return cy.get('#menu');
   }
 
-  public get groupsMenuSearch(): element {
-    return cy.get('.search-input-wrapper > input');
+  public menuSearch(text: string): void {
+    cy.get('.search-input-wrapper > input').type(text);
   }
 
-  public get groupsMenuSearchClear(): element {
+  public get menuSearchClear(): element {
     return cy.get('.search-clear-icon');
   }
 
