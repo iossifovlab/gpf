@@ -1,3 +1,5 @@
+import 'cypress-if';
+
 export class UsersPage {
   private get window(): element {
     return cy.get('gpf-users');
@@ -33,5 +35,16 @@ export class UsersPage {
 
   public get registerButton(): element {
     return this.window.contains('Register');
+  }
+
+  public waitLoginAfterLogout(): void {
+    let done = false;
+    let retries = 12;
+    while (!(done || retries === 0)) {
+      this.window.get('#log-in-button').if('exist').then(() => {
+        done = true;
+      });
+      retries--;
+    }
   }
 }

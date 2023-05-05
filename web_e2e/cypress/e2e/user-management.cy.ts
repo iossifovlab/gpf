@@ -1,6 +1,7 @@
 import { UserManagementPage } from 'cypress/elements/user-management-page';
 import { UsersPage } from 'cypress/elements/users-page';
 import { sidenavPageLinks } from 'cypress/elements/utils';
+import 'cypress-if';
 
 describe('User management tests for reset password in Users', () => {
   const page = new UserManagementPage();
@@ -32,11 +33,11 @@ describe('User management tests for reset password in Users', () => {
     );
 
     page.logout();
-    cy.wait(2000);
+    usersPage.waitLoginAfterLogout();
     page.login('user_reset_password@email.com', 'XC^ZF*TZXuUChFsv');
 
     page.logout();
-    cy.wait(2000);
+    usersPage.waitLoginAfterLogout();
     page.loginAdmin();
 
     page.navigateToHome();
@@ -44,6 +45,7 @@ describe('User management tests for reset password in Users', () => {
     page.userHasPasswordCell('user_reset_password@email.com').find('.fa.fa-check').should('be.visible');
     deleteTestUser(page, 'user_reset_password@email.com');
     page.logout();
+    usersPage.waitLoginAfterLogout();
   });
 
   it('should reset password when login', () => {
@@ -58,7 +60,7 @@ describe('User management tests for reset password in Users', () => {
       }).as('popup');
     });
 
-    cy.wait(2000);
+    usersPage.waitLoginAfterLogout();
     usersPage.logInButton.click();
 
     cy.get('@popup').url().then(() => {
@@ -79,17 +81,18 @@ describe('User management tests for reset password in Users', () => {
       }
     );
 
-    cy.wait(2000);
+    usersPage.waitLoginAfterLogout();
     page.login('forgotten_password@email.com', 'XC^ZF*TZXuUChFsv');
     page.logout();
 
-    cy.wait(2000);
+    usersPage.waitLoginAfterLogout();
     page.loginAdmin();
 
     page.navigateToHome();
     page.navigateToSidenavPage(sidenavPageLinks.management);
     deleteTestUser(page, 'forgotten_password@email.com');
     page.logout();
+    usersPage.waitLoginAfterLogout();
   });
 });
 
