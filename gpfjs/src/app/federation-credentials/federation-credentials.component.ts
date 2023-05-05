@@ -42,6 +42,11 @@ export class FederationCredentialsComponent implements OnInit {
       this.creationError = 'Credential names must be at least 3 symbols long.';
       return;
     }
+    if (this.credentials.find(credential => credential.name === name) !== undefined) {
+      this.creationError = 'Credential with such name already exists!';
+      return;
+    }
+    this.creationError = '';
     this.usersService.createFederationCredentials(name).pipe(
       concatMap((credential: string) => zip(of(credential), this.usersService.getFederationCredentials()))
     ).subscribe(([credential, allCredentials]) => {
