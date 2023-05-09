@@ -4,6 +4,7 @@
 
 #edit-container {
   display: flex;
+  align-items: flex-end;
 }
 
 #edit-description {
