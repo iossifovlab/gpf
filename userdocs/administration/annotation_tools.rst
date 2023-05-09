@@ -1,11 +1,15 @@
-Annotation
-==========
-
+Annotation Infrastructure
+=========================
 
 Introduction
 ************
 
-   
+Annotation is an essential step in any genomic analysis. It is the process of 
+assigning attributes or properties to a set of objects that an analyst studies.
+For example, one can annotate the genetic variants identified in a group of 
+case and control individuals in a genetic study with a prediction of 
+pathogenicity of the variants and estimates for the conservation at the 
+loci of the variants.  
 
 Example 1
 #########
