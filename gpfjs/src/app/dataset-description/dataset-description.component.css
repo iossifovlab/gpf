@@ -18,10 +18,13 @@ markdown {
   width: 100%;
 }
 
+#empty-description {
+  width: 100%;
+}
+
 #empty-description > span {
   font-style: italic;
   opacity: 75%;
-  margin-right: 558px;
 }
 
 #edit-icon {
