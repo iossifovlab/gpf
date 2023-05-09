@@ -34,3 +34,7 @@
 .form-block {
   border: 1px solid #ddd;
 }
+
+ul {
+  border-bottom: 1px solid #ddd;
+}
