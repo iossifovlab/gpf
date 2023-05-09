@@ -356,7 +356,9 @@ class GeneScoreCollection(
 
     @property
     def files(self):
-        raise NotImplementedError
+        files = set()
+        files.add(self.resource.get_config().get("filename"))
+        return files
 
     @staticmethod
     def get_schema():

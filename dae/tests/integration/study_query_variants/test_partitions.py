@@ -203,3 +203,24 @@ def test_af_parent_count(imported_study):
 def test_query_denovo(imported_study):
     assert len(list(
         imported_study.query_variants(inheritance=["denovo"]))) == 0
+
+
+def test_wdae_get_all_from_genotype_browser(imported_study):
+    res = list(imported_study.query_variants(
+        effect_types=["3'UTR", "3'UTR-intron", "5'UTR", "5'UTR-intron",
+                      "frame-shift", "intergenic", "intron", "missense",
+                      "no-frame-shift", "no-frame-shift-newStop", "noEnd",
+                      "noStart", "non-coding", "non-coding-intron", "nonsense",
+                      "splice-site", "synonymous", "CDS", "CNV+", "CNV-"],
+        inheritance=["not possible_denovo and not possible_omission",
+                     "any(denovo,mendelian,missing,omission)"],
+        real_attr_filter=[],
+        study_filters={"partitoned_vcf"},
+        inheritanceTypeFilter=[],
+        studyTypes=["we", "wg", "tg"],
+        familyTypes=["trio", "quad", "multigenerational", "simplex",
+                     "multiplex", "other"],
+        studyFilters=[],
+        datasetId="partitoned_vcf",
+        unique_family_variants=False))
+    assert len(res) == 8

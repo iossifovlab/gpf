@@ -57,10 +57,6 @@ def cli_cache_repo(argv=None):
         definition = get_default_grr_definition()
 
     repository = build_genomic_resource_repository(definition=definition)
-    if not isinstance(repository, GenomicResourceCachedRepo):
-        raise ValueError(
-            "This tool works only if the top configured "
-            "repository is cached.")
 
     resources: set[str] = set()
     annotation = None

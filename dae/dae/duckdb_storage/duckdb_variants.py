@@ -139,6 +139,10 @@ class DuckDbQueryDialect(Dialect):
     def escape_char() -> str:
         return ""
 
+    @staticmethod
+    def escape_quote_char() -> str:
+        return "'"
+
     def build_table_name(self, table: str, db: str) -> str:
         return table
 

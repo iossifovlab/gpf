@@ -53,6 +53,10 @@ class Dialect(ABC):
     def escape_char() -> str:
         return "`"
 
+    @staticmethod
+    def escape_quote_char() -> str:
+        return "\\"
+
     def build_table_name(self, table: str, db: str) -> str:
         return f"`{self.namespace}`.{db}.{table}" if self.namespace else \
                f"{db}.{table}"
@@ -488,7 +492,8 @@ class BaseQueryBuilder(ABC):
 
         values = [
             " {q}{val}{q} ".format(
-                q=self.QUOTE, val=val.replace("'", "\\'")
+                q=self.QUOTE, 
+                val=val.replace("'", self.dialect.escape_quote_char() + "'")
             )
             for val in query_values
         ]
