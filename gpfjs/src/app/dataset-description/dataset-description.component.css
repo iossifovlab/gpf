@@ -11,6 +11,11 @@
   display: flex;
   position: relative;
   padding-top: 7px;
+  width: 100%;
+}
+
+markdown {
+  width: 100%;
 }
 
 #empty-description > span {
