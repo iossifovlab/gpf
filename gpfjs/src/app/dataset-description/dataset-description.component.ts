@@ -18,6 +18,7 @@ export class DatasetDescriptionComponent implements OnInit {
   public dataset$: Observable<Dataset>;
   public datasetId: string;
 
+  public loading = true;
   public editMode = false;
   public editorText: string;
   private initialDatasetDescription: string;
@@ -63,6 +64,7 @@ export class DatasetDescriptionComponent implements OnInit {
         this.editorText = dataset.description;
         this.initialDatasetDescription = dataset.description;
       }
+      this.loading = false;
     });
   }
 
@@ -71,6 +73,7 @@ export class DatasetDescriptionComponent implements OnInit {
   }
 
   public save(): void {
+    this.loading = true;
     this.editMode = false;
     if (this.editorText !== this.initialDatasetDescription) {
       this.datasetsService.writeDatasetDescription(this.datasetId, this.editorText).subscribe(() => {
