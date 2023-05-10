@@ -1,4 +1,4 @@
-import { Component, ElementRef, HostListener, OnInit, ViewChild } from '@angular/core';
+import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { UsersService } from 'app/users/users.service';
 import { FederationCredential } from './federation-credentials';
 import { NgbModal, NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
@@ -43,6 +43,7 @@ export class FederationCredentialsComponent implements OnInit {
       return;
     }
     if (this.credentials.find(credential => credential.name === name) !== undefined) {
+      (this.newCredentialName.nativeElement as HTMLInputElement).focus();
       this.creationError = 'Credential with such name already exists!';
       return;
     }
@@ -52,6 +53,7 @@ export class FederationCredentialsComponent implements OnInit {
     ).subscribe(([credential, allCredentials]) => {
       this.credentials = allCredentials;
       this.temporaryShownCredentials = credential;
+      (this.newCredentialName.nativeElement as HTMLInputElement).value = '';
       this.openModal();
     });
   }
