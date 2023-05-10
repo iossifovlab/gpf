@@ -769,6 +769,7 @@ function createTestUser(page: UserManagementPage, email: string, name: string): 
   page.emailInputField.type(email);
   page.nameInputField.type(name);
   page.submitUserButton.click();
+  page.userCell(email).should('exist');
 }
 
 function deleteTestUser(page: UserManagementPage, userEmail: string): void {
