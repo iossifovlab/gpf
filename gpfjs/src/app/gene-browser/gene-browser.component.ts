@@ -78,7 +78,7 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
     this.selectedDataset = this.datasetsService.getSelectedDataset();
     this.legend = this.selectedDataset.personSetCollections.getLegend(this.selectedDataset.defaultPersonSetCollection);
     this.geneBrowserConfig = this.selectedDataset.geneBrowser;
-    if (this.route.snapshot.params.gene) {
+    if (this.route.snapshot.params.gene && typeof this.route.snapshot.params.gene === 'string') {
       void this.submitGeneRequest(this.route.snapshot.params.gene);
     }
 
@@ -108,13 +108,14 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
         this.geneService
           .searchGenes(this.geneSymbol)
           .pipe(take(1))
+          // eslint-disable-next-line @typescript-eslint/naming-convention
           .subscribe((response: { 'gene_symbols': string[] }) => {
             this.geneSymbolSuggestions = response.gene_symbols;
           });
       })
     );
 
-    this.loadingService.interruptEvent.subscribe(_ => {
+    this.loadingService.interruptEvent.subscribe(() => {
       this.queryService.cancelStreamPost();
       this.queryService.cancelSummaryStreamPost();
       this.loadingService.setLoadingStop();
@@ -384,10 +385,12 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
 
   private drawEffectTypesIcons(): void {
     const effectIcons = {
+      /* eslint-disable  @typescript-eslint/naming-convention */
       '#LGDs': draw.star,
       '#missense': draw.triangle,
       '#synonymous': draw.circle,
       '#Other': draw.dot
+      // eslint-enable
     };
     let svgElement;
     for (const [effect, drawFunc] of Object.entries(effectIcons)) {

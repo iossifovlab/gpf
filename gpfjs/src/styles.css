@@ -396,7 +396,7 @@ ngb-modal-window {
   direction: rtl;
 }
 
-.pedigree-modal .modal-lg {
+.pedigree-modal .modal-lg .credential-modal {
   --bs-modal-width: fit-content;
 
   min-width: 620px;

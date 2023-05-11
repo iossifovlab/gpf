@@ -25,6 +25,7 @@ jest.mock('../utils/svg-drawing');
 
 class MockActivatedRoute {
   public static params = {dataset: 'testDatasetId', get: (): string => ''};
+  // eslint-disable-next-line @typescript-eslint/naming-convention
   public queryParams = of({coding_only: true});
   public parent = {params: of(MockActivatedRoute.params)};
   public queryParamMap = of(MockActivatedRoute.params);
@@ -169,14 +170,14 @@ describe('GeneBrowserComponent', () => {
     jest.spyOn<any, any>(component, 'updateVariants');
     component.setSelectedRegion([1, 2]);
     expect(component.summaryVariantsFilter.selectedRegion).toStrictEqual([1, 2]);
-    expect(component['updateVariants']).toHaveBeenCalled();
+    expect(component['updateVariants']).toHaveBeenCalledWith();
   });
 
   it('should set selected frequencies', () => {
     jest.spyOn<any, any>(component, 'updateVariants');
     component.setSelectedFrequencies([3, 4]);
     expect(component.summaryVariantsFilter.selectedFrequencies).toStrictEqual([3, 4]);
-    expect(component['updateVariants']).toHaveBeenCalled();
+    expect(component['updateVariants']).toHaveBeenCalledWith();
   });
 
   it('should not reset coding only on request and properly handle CNV and Other effect types', () => {
@@ -233,7 +234,5 @@ describe('GeneBrowserComponent', () => {
     });
   });
 
-  xit('should test download', () => {
-    // TODO
-  });
+  it.todo('should test download');
 });

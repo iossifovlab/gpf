@@ -31,16 +31,6 @@
             >Datasets</a
           >
         </li>
-        <li class="nav-item" *ngIf="('' | userInfo)?.loggedIn">
-          <a
-            class="nav-link"
-            routerLink="/saved-queries"
-            routerLinkActive="active"
-            [routerLinkActiveOptions]="{ exact: false }"
-            (click)="hideSidenav()"
-            >Saved queries</a
-          >
-        </li>
         <li class="nav-item" *ngIf="agpConfig">
           <a
             class="nav-link"
@@ -49,6 +39,16 @@
             [routerLinkActiveOptions]="{ exact: false }"
             (click)="hideSidenav()"
             >Autism gene profiles</a
+          >
+        </li>
+        <li class="nav-item" *ngIf="('' | userInfo)?.loggedIn">
+          <a
+            class="nav-link"
+            routerLink="/user-profile"
+            routerLinkActive="active"
+            [routerLinkActiveOptions]="{ exact: false }"
+            (click)="hideSidenav()"
+            >User profile</a
           >
         </li>
         <li class="nav-item" *ngIf="('' | userInfo)?.isAdministrator">

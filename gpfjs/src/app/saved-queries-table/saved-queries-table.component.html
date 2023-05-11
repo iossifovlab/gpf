@@ -1,20 +1,26 @@
-<gpf-table [noScrollOptimization]="true" [dataSource]="queries" style="display: inline-block">
-  <gpf-table-column columnWidth="255px">
-    <gpf-table-header caption=""></gpf-table-header>
-    <gpf-table-content>
-      <span *gpfTableCellContent="let data">
-        <a href="{{ data.url }}" class="btn btn-primary action-button">Load</a>
-        <a [cdkCopyToClipboard]="data.url" class="btn btn-secondary action-button">Copy link</a>
-        <button class="btn btn-danger action-button" (click)="deleteQuery(data.uuid)">Delete</button>
-      </span>
-    </gpf-table-content>
-  </gpf-table-column>
-  <gpf-table-column columnWidth="255px">
-    <gpf-table-header caption="Query name" field="name"></gpf-table-header>
-    <gpf-table-content field="name"></gpf-table-content>
-  </gpf-table-column>
-  <gpf-table-column columnWidth="255px">
-    <gpf-table-header caption="Query description" field="description"></gpf-table-header>
-    <gpf-table-content field="description"></gpf-table-content>
-  </gpf-table-column>
-</gpf-table>
+<div class="grid-container" *ngIf="queries?.length !== 0">
+  <div class="grid-header">Query name</div>
+  <div class="grid-header">Query description</div>
+  <div class="grid-header">Actions</div>
+  <ng-container *ngFor="let query of queries">
+    <div class="grid-cell" id="query-name-cell">{{ query.name }}</div>
+
+    <div class="grid-cell" id="query-description-cell">{{ query.description }}</div>
+
+    <div class="grid-cell" id="actions-cell">
+      <a href="{{ query.url }}" title="Load" id="load-button" class="action-button">
+        <i class="fa fa-external-link" aria-hidden="true"></i>
+      </a>
+      <button [cdkCopyToClipboard]="query.url" title="Copy link" id="copy-link-button" class="action-button">
+        <i class="fa fa-link" aria-hidden="true"></i>
+      </button>
+      <button (click)="deleteQuery(query.uuid)" title="Delete" id="delete-button" class="action-button">
+        <i aria-hidden="true" class="fa fa-thin fa-times"></i>
+      </button>
+    </div>
+  </ng-container>
+</div>
+
+<div id="nothing-found" *ngIf="queries?.length === 0">
+  <span id="nothing-found-message">Nothing found.</span>
+</div>

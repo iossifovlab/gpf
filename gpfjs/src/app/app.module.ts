@@ -115,7 +115,7 @@ import { RemoveButtonComponent } from './remove-button/remove-button.component';
 import { PopupComponent } from './popup/popup.component';
 import { SaveQueryComponent } from './save-query/save-query.component';
 import { SavedQueriesTableComponent } from './saved-queries-table/saved-queries-table.component';
-import { SavedQueriesComponent } from './saved-queries/saved-queries.component';
+import { UserProfileComponent } from './user-profile/user-profile.component';
 import { InheritancetypesComponent } from './inheritancetypes/inheritancetypes.component';
 import { InheritancetypesState } from './inheritancetypes/inheritancetypes.state';
 import { GeneBrowserComponent } from './gene-browser/gene-browser.component';
@@ -176,6 +176,7 @@ import { ContrastAdjustPipe } from './utils/contrast-adjust.pipe';
 import { ItemAddMenuComponent } from './item-add-menu/item-add-menu.component';
 import { ConfirmButtonComponent } from './confirm-button/confirm-button.component';
 import * as Sentry from '@sentry/angular-ivy';
+import { FederationCredentialsComponent } from './federation-credentials/federation-credentials.component';
 
 const appRoutes: Routes = [
   {
@@ -249,8 +250,8 @@ const appRoutes: Routes = [
     component: LoadQueryComponent
   },
   {
-    path: 'saved-queries',
-    component: SavedQueriesComponent
+    path: 'user-profile',
+    component: UserProfileComponent
   },
   {
     path: '**',
@@ -337,7 +338,7 @@ const appRoutes: Routes = [
     PopupComponent,
     SaveQueryComponent,
     SavedQueriesTableComponent,
-    SavedQueriesComponent,
+    UserProfileComponent,
     InheritancetypesComponent,
     GeneBrowserComponent,
     GlobalErrorDisplayComponent,
@@ -376,6 +377,7 @@ const appRoutes: Routes = [
     LegendComponent,
     PedigreeComponent,
     ItemAddMenuComponent,
+    FederationCredentialsComponent,
   ],
   imports: [
     BrowserModule,

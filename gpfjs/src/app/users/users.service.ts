@@ -10,6 +10,7 @@ import { Store } from '@ngxs/store';
 import { StateResetAll } from 'ngxs-reset-plugin';
 import { catchError, map, tap, take, switchMap } from 'rxjs/operators';
 import { AuthService } from '../auth.service';
+import { FederationCredential, FederationJson } from 'app/federation-credentials/federation-credentials';
 
 @Injectable()
 export class UsersService {
@@ -187,5 +188,33 @@ export class UsersService {
         });
       })
     );
+  }
+
+  public getFederationCredentials(): Observable<FederationCredential[]> {
+    const options = { withCredentials: true };
+
+    return this.http.get<FederationJson[]>(this.config.baseUrl + 'users/federation_credentials', options).pipe(
+      map(res => FederationCredential.fromJsonArray(res))
+    );
+  }
+
+  public createFederationCredentials(credentialName: string): Observable<string> {
+    const options = { withCredentials: true };
+
+    return this.http.post(this.config.baseUrl + 'users/federation_credentials', {name: credentialName}, options)
+      .pipe(
+        map(res => {
+          if (typeof (res as {credentials: string}).credentials === 'string') {
+            return (res as {credentials: string}).credentials;
+          }
+          return 'Error showing created credentials';
+        })
+      );
+  }
+
+  public deleteFederationCredentials(credentialName: string): Observable<object> {
+    const options = { withCredentials: true, body: { name: credentialName }};
+
+    return this.http.delete(this.config.baseUrl + 'users/federation_credentials', options);
   }
 }

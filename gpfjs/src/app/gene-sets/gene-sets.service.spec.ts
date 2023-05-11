@@ -32,17 +32,17 @@ describe('GeneSetsService', () => {
     httpGetSpy.mockReturnValue(of('fakeResponse'));
     service.getGeneSetsCollections();
 
+    // eslint-disable-next-line jest/prefer-strict-equal
     expect(httpGetSpy.mock.calls).toEqual(
       [
         [
           'testUrl/gene_sets/gene_sets_collections',
+          // eslint-disable-next-line @typescript-eslint/naming-convention
           { headers: {'Content-Type': 'application/json'}, withCredentials: true }
         ]
       ]
     );
   });
 
-  xit('should downloadGeneSet', () => {
-    // TODO
-  });
+  it.todo('should downloadGeneSet');
 });
