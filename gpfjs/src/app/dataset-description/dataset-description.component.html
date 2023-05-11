@@ -5,7 +5,7 @@
         <span>Empty description. Write a description using the pencil button to the right.</span>
       </div>
       <div id="edit-description">
-        <markdown [data]="dataset.description || ''"></markdown>
+        <markdown id="markdown-id" [data]="dataset.description || ''"></markdown>
         <div *ngIf="!editMode">
           <div style="position: relative">
             <i
