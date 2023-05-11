@@ -17,8 +17,6 @@ from rest_framework.decorators import action, api_view, authentication_classes
 from rest_framework import status, viewsets, permissions, filters, views
 from rest_framework.response import Response
 from rest_framework.authentication import SessionAuthentication
-from oauth2_provider.contrib.rest_framework \
-    import OAuth2Authentication  # type: ignore
 from oauth2_provider.models import get_application_model  # type: ignore
 
 from utils.logger import log_filter, LOGGER, request_logging, \
@@ -484,45 +482,71 @@ def check_verif_code(request):
         )
 
 
-@api_view(["GET"])
-@authentication_classes((OAuth2Authentication,))
-def get_federation_credentials(request):
-    """Create a new federation application and return its credentials."""
-    user = request.user
+class FederationCredentials(views.APIView):
+    """API for handling federation credentials/applications."""
 
-    if not user.is_authenticated:
-        return Response(status=status.HTTP_401_UNAUTHORIZED)
+    authentication_classes = (GPFOAuth2Authentication,)
 
-    application = get_application_model()
-    if application.objects.filter(name=request.GET.get("name")).exists():
-        return Response(status=status.HTTP_400_BAD_REQUEST)
+    @request_logging(LOGGER)
+    def get(self, request):
+        """List all federation apps for a user."""
+        user = request.user
+        if not user.is_authenticated:
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
+        apps = get_application_model().objects.filter(
+            user_id=user.id,
+            authorization_grant_type="client-credentials",
+            client_type="confidential"
+        )
+        res = []
+        for app in apps:
+            res.append({
+                "name": app.name,
+                "client_id": app.client_id,
+                "client_secret": app.client_secret,
+            })
+        return Response(res, status=status.HTTP_200_OK)
 
-    new_application = application(**{
-        "name": request.GET.get("name"),
-        "user_id": user.id,
-        "client_type": "confidential",
-        "authorization_grant_type": "client-credentials"
-    })
+    @request_logging(LOGGER)
+    def post(self, request):
+        """Create a new federation application and return its credentials."""
+        user = request.user
 
-    new_application.full_clean()
-    cleartext_secret = new_application.client_secret
-    new_application.save()
+        if not user.is_authenticated:
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
 
-    credentials = base64.b64encode(
-        f"{new_application.client_id}:{cleartext_secret}".encode("utf-8")
-    )
-    return Response({"credentials": credentials}, status=status.HTTP_200_OK)
+        application = get_application_model()
+        if application.objects.filter(name=request.data.get("name")).exists():
+            return Response(status=status.HTTP_400_BAD_REQUEST)
 
+        new_application = application(**{
+            "name": request.data.get("name"),
+            "user_id": user.id,
+            "client_type": "confidential",
+            "authorization_grant_type": "client-credentials"
+        })
 
-@api_view(["GET"])
-@authentication_classes((OAuth2Authentication,))
-def revoke_federation_credentials(request):
-    """Delete a given federation app."""
-    user = request.user
-    if not user.is_authenticated:
-        return Response(status=status.HTTP_401_UNAUTHORIZED)
-    app = get_application_model().objects.get(name=request.GET.get("name"))
-    if not user.id == app.user_id:
-        return Response(status=status.HTTP_401_UNAUTHORIZED)
-    app.delete()
-    return Response(status=status.HTTP_200_OK)
+        new_application.full_clean()
+        cleartext_secret = new_application.client_secret
+        new_application.save()
+
+        credentials = base64.b64encode(
+            f"{new_application.client_id}:{cleartext_secret}".encode("utf-8")
+        )
+        return Response(
+            {"credentials": credentials}, status=status.HTTP_200_OK
+        )
+
+    @request_logging(LOGGER)
+    def delete(self, request):
+        """Delete a given federation app."""
+        user = request.user
+        if not user.is_authenticated:
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
+        app = get_application_model().objects.get(
+            name=request.data.get("name")
+        )
+        if not user.id == app.user_id:
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
+        app.delete()
+        return Response(status=status.HTTP_200_OK)

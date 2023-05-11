@@ -28,11 +28,8 @@ urlpatterns = [
     ),
     re_path(r"^users/change_password/?$", views.change_password),
     re_path(
-        r"^users/get_federation_credentials/?$",
-        views.get_federation_credentials
-    ),
-    re_path(
-        r"^users/revoke_federation_credentials/?$",
-        views.revoke_federation_credentials
+        r"^users/federation_credentials/?$",
+        views.FederationCredentials.as_view(),
+        name="federation_credentials"
     ),
 ] + router.urls
