@@ -5,7 +5,7 @@
         <div (click)="onSortClick(columnInfo)" [class.clickable]="columnInfo.sortable" id="sort">
           <ng-template *ngIf="columnInfo.contentTemplateRef" [ngTemplateOutlet]="columnInfo.contentTemplateRef">
           </ng-template>
-          <span *ngIf="columnInfo.caption">{{ columnInfo.caption }}</span>
+          <span style="word-break: break-word" *ngIf="columnInfo.caption">{{ columnInfo.caption }}</span>
         </div>
         <div (click)="onSortClick(columnInfo)" [class.clickable]="columnInfo.sortable" id="sorting-buttons">
           <i
