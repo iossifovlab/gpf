@@ -1,13 +1,30 @@
+export interface GeneSetJson {
+  /* eslint-disable  @typescript-eslint/naming-convention */
+  name: string;
+  count: number;
+  desc: string;
+  download: string;
+  // eslint-enable
+}
+
+export interface GeneSetCollectionJson {
+  /* eslint-disable  @typescript-eslint/naming-convention */
+  name: string;
+  desc: string;
+  types: GeneSetType[];
+  // eslint-enable
+}
+
 export class GeneSetsCollection {
-  public static fromJson(json: any): GeneSetsCollection {
+  public static fromJson(json: GeneSetCollectionJson): GeneSetsCollection {
     return new GeneSetsCollection(
-      json['name'],
-      json['desc'],
-      GeneSetType.fromJsonArray(json['types'])
+      json.name,
+      json.desc,
+      GeneSetType.fromJsonArray(json.types)
     );
   }
 
-  public static fromJsonArray(jsonArray: Array<Object>): Array<GeneSetsCollection> {
+  public static fromJsonArray(jsonArray: GeneSetCollectionJson[]): Array<GeneSetsCollection> {
     return jsonArray.map((json) => GeneSetsCollection.fromJson(json));
   }
 
@@ -19,16 +36,16 @@ export class GeneSetsCollection {
 }
 
 export class GeneSet {
-  public static fromJson(json: object): GeneSet {
+  public static fromJson(json: GeneSetJson): GeneSet {
     return new GeneSet(
-      json['name'],
-      +json['count'],
-      json['desc'],
-      json['download']
+      json.name,
+      json.count,
+      json.desc,
+      json.download
     );
   }
 
-  public static fromJsonArray(jsonArray: Array<object>): Array<GeneSet> {
+  public static fromJsonArray(jsonArray: GeneSetJson[]): Array<GeneSet> {
     return jsonArray.map((json) => GeneSet.fromJson(json));
   }
 

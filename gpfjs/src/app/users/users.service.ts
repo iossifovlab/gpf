@@ -10,7 +10,7 @@ import { Store } from '@ngxs/store';
 import { StateResetAll } from 'ngxs-reset-plugin';
 import { catchError, map, tap, take, switchMap } from 'rxjs/operators';
 import { AuthService } from '../auth.service';
-import { FederationCredential } from 'app/federation-credentials/federation-credentials';
+import { FederationCredential, FederationJson } from 'app/federation-credentials/federation-credentials';
 
 @Injectable()
 export class UsersService {
@@ -193,7 +193,7 @@ export class UsersService {
   public getFederationCredentials(): Observable<FederationCredential[]> {
     const options = { withCredentials: true };
 
-    return this.http.get(this.config.baseUrl + 'users/federation_credentials', options).pipe(
+    return this.http.get<FederationJson[]>(this.config.baseUrl + 'users/federation_credentials', options).pipe(
       map(res => FederationCredential.fromJsonArray(res))
     );
   }

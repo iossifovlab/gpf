@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { GeneSetsCollection, GeneSet } from './gene-sets';
+import { GeneSetsCollection, GeneSet, GeneSetCollectionJson, GeneSetJson } from './gene-sets';
 import { ConfigService } from '../config/config.service';
 import { AuthService } from 'app/auth.service';
 import { map } from 'rxjs/operators';
@@ -18,12 +18,13 @@ export class GeneSetsService {
   ) {}
 
   public getGeneSetsCollections(): Observable<GeneSetsCollection[]> {
+    // eslint-disable-next-line @typescript-eslint/naming-convention
     const headers = { 'Content-Type': 'application/json' };
     const options = { headers: headers, withCredentials: true };
 
     return this.http
-      .get(this.config.baseUrl + this.geneSetsCollectionsUrl, options)
-      .pipe(map((res: any) => GeneSetsCollection.fromJsonArray(res)));
+      .get<GeneSetCollectionJson[]>(this.config.baseUrl + this.geneSetsCollectionsUrl, options)
+      .pipe(map(res => GeneSetsCollection.fromJsonArray(res)));
   }
 
   public getGeneSets(
@@ -31,20 +32,22 @@ export class GeneSetsService {
     searchTerm: string,
     geneSetsTypes: object
   ): Observable<GeneSet[]> {
+    // eslint-disable-next-line @typescript-eslint/naming-convention
     const headers = { 'Content-Type': 'application/json' };
     const options = { headers: headers, withCredentials: true };
 
     return this.http
-      .post(this.config.baseUrl + this.geneSetsSearchUrl, {
+      .post<GeneSetJson[]>(this.config.baseUrl + this.geneSetsSearchUrl, {
         geneSetsCollection: selectedGeneSetsCollection,
         filter: searchTerm,
         geneSetsTypes: geneSetsTypes,
         limit: 100
       }, options)
-      .pipe(map((res: any) => GeneSet.fromJsonArray(res)));
+      .pipe(map(res => GeneSet.fromJsonArray(res)));
   }
 
   public downloadGeneSet(geneSet: GeneSet): Promise<Response> {
+    // eslint-disable-next-line @typescript-eslint/naming-convention
     const headers = {'Content-Type': 'application/json'};
     headers['Authorization'] = `Bearer ${this.authService.getAccessToken()}`;
     return fetch(`${this.config.baseUrl}${geneSet.download}`, {

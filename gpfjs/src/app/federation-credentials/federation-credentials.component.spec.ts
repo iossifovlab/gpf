@@ -4,6 +4,7 @@ import { FederationCredentialsComponent } from './federation-credentials.compone
 import { Observable, of } from 'rxjs';
 import { FederationCredential } from './federation-credentials';
 import { UsersService } from 'app/users/users.service';
+import { NO_ERRORS_SCHEMA } from '@angular/core';
 
 class MockUsersService {
   private credentials = [
@@ -33,14 +34,15 @@ describe('FederationCredentialsComponent', () => {
   let component: FederationCredentialsComponent;
   let fixture: ComponentFixture<FederationCredentialsComponent>;
 
-  beforeEach(async () => {
-    await TestBed.configureTestingModule({
+  beforeEach(() => {
+    TestBed.configureTestingModule({
       declarations: [
         FederationCredentialsComponent
       ],
       providers: [
         {provide: UsersService, useValue: new MockUsersService()}
-      ]
+      ],
+      schemas: [NO_ERRORS_SCHEMA]
     }).compileComponents();
 
     fixture = TestBed.createComponent(FederationCredentialsComponent);
