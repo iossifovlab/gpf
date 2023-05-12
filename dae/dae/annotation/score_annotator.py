@@ -38,6 +38,11 @@ class VariantScoreAnnotatorBase(Annotator):
             "type": "string",
             "required": True,
         },
+        "region_length_cutoff": {
+            "type": "integer",
+            "nullable": True,
+            "default": 500_000,
+        },
         "attributes": {
             "type": "list",
             "nullable": True,
@@ -53,6 +58,8 @@ class VariantScoreAnnotatorBase(Annotator):
         self.score = score
         self.score_queries: list[ScoreQuery] = self._collect_score_queries()
         self._annotation_schema = None
+        self._region_length_cutoff = self.config.get(
+            "region_length_cutoff", 500_000)
 
     def open(self):
         self.score.open()
@@ -199,7 +206,7 @@ class PositionScoreAnnotator(VariantScoreAnnotatorBase):
         if annotatable_override.type == Annotatable.Type.SUBSTITUTION:
             scores = self._fetch_substitution_scores(annotatable_override)
         else:
-            if length > 500_000:
+            if length > self._region_length_cutoff:
                 scores = None
             else:
                 scores = self._fetch_aggregated_scores(

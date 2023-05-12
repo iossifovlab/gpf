@@ -164,7 +164,38 @@ def test_np_score_annotator(
         result = work_pipeline.annotate(annotatable)
 
     print(annotatable, result)
-    assert result.get("test") == pytest.approx(expected, rel=1e-2), annotatable
+    assert result["test"] == expected, annotatable
+
+
+@pytest.mark.parametrize("region,pos_aggregator,nuc_aggregator,expected", [
+    (("chr1", 10, 12), "max", "max", 0.004),
+    (("chr1", 10, 13), "min", "min", None),
+    (("chr1", 10, 14), "max", "min", None),
+])
+def test_np_score_annotator_region_length_cutoff(
+        region, pos_aggregator, nuc_aggregator, expected, fixture_repo):
+
+    annotatable = Region(*region)
+
+    pipeline_config = textwrap.dedent(f"""
+        - np_score:
+            resource_id: np_score1
+            region_length_cutoff: 3
+            attributes:
+            - source: test_raw
+              destination: test
+              position_aggregator: {pos_aggregator}
+              nucleotide_aggregator: {nuc_aggregator}
+        """)
+
+    pipeline = build_annotation_pipeline(
+        pipeline_config_str=pipeline_config, grr_repository=fixture_repo)
+
+    with pipeline.open() as work_pipeline:
+        result = work_pipeline.annotate(annotatable)
+
+    print(annotatable, result)
+    assert result["test"] == expected, annotatable
 
 
 @pytest.mark.xfail(reason="aggregators not supported in allele scores")
@@ -195,4 +226,4 @@ def test_allele_score_annotator(
         result = work_pipeline.annotate(annotatable)
 
     print(annotatable, result)
-    assert result.get("test") == pytest.approx(expected, rel=1e-2), annotatable
+    assert result.get("test") == expected, annotatable
