@@ -2,6 +2,8 @@ from __future__ import annotations
 from collections import defaultdict
 import copy
 
+import pysam
+
 
 def bedfile2regions(bed_filename):
     """Transform BED file into list of regions."""
@@ -23,6 +25,62 @@ def regions2bedfile(regions, bed_filename):
         for reg in regions:
             outfile.write(
                 f"{reg.chrom}\t{reg.start-1}\t{reg.stop}\n")
+
+
+def split_into_regions(
+        chrom: str, chrom_length: int,
+        region_size: int) -> list[Region]:
+    """Return a list of regions for a chrom with a given length."""
+    regions = []
+
+    current_start = 1
+    while current_start < chrom_length:
+        end = min(chrom_length, current_start + region_size)
+        regions.append(Region(chrom, current_start))
+        current_start = end
+
+    return regions
+
+
+def get_chromosome_length(
+    tabix_file: pysam.TabixFile, chrom: str,
+    step=100_000_000, precision=5_000_000
+):
+    """
+    Return the length of a chromosome (or contig).
+
+    Returned value is guarnteed to be larget than the actual contig length.
+    """
+    def any_records(riter):
+        try:
+            next(riter)
+        except StopIteration:
+            return False
+
+        return True
+
+    # First we find any region that includes the last record i.e.
+    # the length of the chromosome
+    left, right = None, None
+    pos = step
+    while left is None or right is None:
+        region = Region(chrom, pos, None)
+        if any_records(tabix_file.fetch(str(region))):
+            left = pos
+            pos = pos * 2
+        else:
+            right = pos
+            pos = pos // 2
+    # Second we use binary search to narrow the region until we find the
+    # index of the last element (in left) and the length (in right)
+    while (right - left) > precision:
+        pos = (left + right) // 2
+        region = Region(chrom, pos, None)
+        if any_records(tabix_file.fetch(str(region))):
+            left = pos
+        else:
+            right = pos
+    return right
 
 
 class Region:
