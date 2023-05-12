@@ -225,21 +225,27 @@ class EffectAnnotatorAdapter(AnnotatorBase):
             self._not_found(result)
             return result
 
-        if not isinstance(annotatable, VCFAllele) and  \
-                not isinstance(annotatable, CNVAllele):
+        length = len(annotatable)
+        if isinstance(annotatable, VCFAllele):
+            effects = self.effect_annotator.annotate_allele(
+                chrom=annotatable.chromosome,
+                pos=annotatable.position,
+                ref=annotatable.reference,
+                alt=annotatable.alternative,
+                variant_type=annotatable.type,
+                length=length
+            )
+        elif isinstance(annotatable, CNVAllele):
+            effects = self.effect_annotator.annotate_cnv(
+                annotatable.chrom,
+                annotatable.pos, annotatable.pos_end, annotatable.type)
+        elif isinstance(annotatable, Annotatable):
+            effects = self.effect_annotator.annotate_region(
+                annotatable.chrom,
+                annotatable.pos, annotatable.pos_end)
+        else:
             self._not_found(result)
             return result
-
-        length = len(annotatable)
-
-        effects = self.effect_annotator.do_annotate_variant(
-            chrom=annotatable.chromosome,
-            pos=annotatable.position,
-            ref=annotatable.reference,
-            alt=annotatable.alternative,
-            variant_type=annotatable.type,
-            length=length
-        )
 
         gene_list = list(set(
             AnnotationEffect.gene_effects(effects)[0]

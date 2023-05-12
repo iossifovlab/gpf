@@ -10,9 +10,9 @@ def bedfile2regions(bed_filename):
         for line in infile:
             if line[0] == "#":
                 continue
-            chrom, beg, end = line.strip().split("\t")
-            beg = int(beg)
-            end = int(end)
+            chrom, sbeg, send = line.strip().split("\t")
+            beg = int(sbeg)
+            end = int(send)
             regions.append(Region(chrom, beg + 1, end))
         return regions
 
@@ -87,7 +87,7 @@ class Region:
             return None
         start = max(self.start, other.start)
         stop = min(self.stop, other.stop)
-        if start >= stop:
+        if start > stop:
             return None
         return Region(self.chrom, start, stop)
 
@@ -179,7 +179,7 @@ def connected_component(regions):
         regions_by_chrom[reg.chrom].append(reg)
 
     for _chrom, nds in regions_by_chrom.items():
-        nds.sort(key=lambda x: x.stop)
+        nds.sort(key=lambda x: x.stop)  # type: ignore
         for k in range(1, len(nds)):
             for j in range(k - 1, -1, -1):
                 if nds[k].start <= nds[j].stop:
