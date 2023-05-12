@@ -1,8 +1,9 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
+import pytest
 
 from dae.genomic_resources import GenomicResource
 from dae.genomic_resources.genomic_scores import \
-    build_allele_score_from_resource
+    build_allele_score_from_resource, AlleleScoreQuery
 from dae.genomic_resources.testing import build_inmemory_test_resource
 from dae.genomic_resources.repository import GR_CONF_FILE_NAME
 
@@ -123,3 +124,50 @@ def test_allele_score_missing_alt():
     assert score.fetch_scores("1", 10, "A", "G", ["freq"]) is None
     assert score.fetch_scores("1", 10, "A", "T", ["freq"]) is None
     assert score.fetch_scores("1", 10, "A", "C", ["freq"]) is None
+
+
+@pytest.mark.parametrize("region,pos_aggregator,allele_aggregator,expected", [
+    (("1", 10, 13), "max", "max", 0.4),
+    (("1", 10, 13), "min", "min", 0.2),
+    (("1", 10, 16), "min", "min", 0.03),
+    (("1", 10, 16), None, None, (0.4 + 0.05) / 2.0)
+])
+def test_allele_score_fetch_agg(
+        region, pos_aggregator, allele_aggregator, expected):
+    res: GenomicResource = build_inmemory_test_resource({
+        GR_CONF_FILE_NAME: """
+            type: allele_score
+            table:
+                filename: data.mem
+                reference:
+                  name: reference
+                alternative:
+                  name: alternative
+            scores:
+                - id: freq
+                  type: float
+                  desc: ""
+                  name: freq
+        """,
+        "data.mem": """
+            chrom  pos_begin  reference  alternative  freq
+            1      10         A          C            0.2
+            1      10         A          G            0.3
+            1      10         A          T            0.4
+            1      16         C          A            0.03
+            1      16         C          AG           0.04
+            1      16         C          G            0.05
+            2      16         C          GA           0.06
+            2      16         C          T            0.07
+            2      16         C          TA           0.08
+        """
+    })
+    score = build_allele_score_from_resource(res)
+    score.open()
+
+    result = score.fetch_scores_agg(  # type: ignore
+        *region,
+        [AlleleScoreQuery("freq", pos_aggregator, allele_aggregator)])
+    assert result is not None
+    assert len(result) == 1
+    assert result[0].get_final() == expected

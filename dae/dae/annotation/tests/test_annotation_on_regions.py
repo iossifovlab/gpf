@@ -80,7 +80,7 @@ def fixture_repo():
                         reference:
                           name: reference
                         alternative:
-                          name: alt
+                          name: alternative
                     scores:
                     - id: score
                       name: score
@@ -198,7 +198,7 @@ def test_np_score_annotator_region_length_cutoff(
     assert result["test"] == expected, annotatable
 
 
-@pytest.mark.xfail(reason="aggregators not supported in allele scores")
+# @pytest.mark.xfail(reason="aggregators not supported in allele scores")
 @pytest.mark.parametrize("region,pos_aggregator,allele_aggregator,expected", [
     (("chr1", 10, 13), "max", "max", 0.02),
     (("chr1", 10, 13), "min", "min", 0.00001),

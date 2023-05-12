@@ -60,6 +60,7 @@ class ScoreDef:
     na_values: Any
     pos_aggregator: Any
     nuc_aggregator: Any
+    allele_aggregator: Any
 
 
 class ScoreLine:
@@ -224,6 +225,11 @@ class GenomicScore(
             "int": "max",
             "str": "concatenate"
         }
+        default_type_allele_aggregators = {
+            "float": "max",
+            "int": "max",
+            "str": "concatenate"
+        }
         for score_conf in config["scores"]:
             col_type = score_conf.get(
                 "type", config.get("default.score.type", "float"))
@@ -250,6 +256,11 @@ class GenomicScore(
                     config.get(
                         f"{col_type}.aggregator",
                         default_type_nuc_aggregators[col_type])),
+                score_conf.get(
+                    "allele_aggregator",
+                    config.get(
+                        f"{col_type}.aggregator",
+                        default_type_allele_aggregators[col_type])),
             )
             scores[score_conf["id"]] = col_def
         return scores
@@ -267,7 +278,7 @@ class GenomicScore(
                 value.description or "",
                 VCF_TYPE_CONVERSION_MAP[value.type],  # type: ignore
                 converter if value.number not in (1, "A", "R") else None,
-                tuple(), None, None
+                tuple(), None, None, None
             ) for key, value in vcf_header_info.items()
         }
 
@@ -890,6 +901,13 @@ class NPScoreQuery:
 
 
 @dataclass
+class AlleleScoreQuery:
+    score: str
+    position_aggregator: Optional[str] = None
+    allele_aggregator: Optional[str] = None
+
+
+@dataclass
 class PositionScoreAggr:
     score: str
     position_aggregator: Aggregator
@@ -902,7 +920,14 @@ class NPScoreAggr:
     nucleotide_aggregator: Aggregator
 
 
-ScoreQuery = Union[PositionScoreQuery, NPScoreQuery]
+@dataclass
+class AlleleScoreAggr:
+    score: str
+    position_aggregator: Aggregator
+    allele_aggregator: Aggregator
+
+
+ScoreQuery = Union[PositionScoreQuery, NPScoreQuery, AlleleScoreQuery]
 
 
 class PositionScore(GenomicScore):
@@ -1181,6 +1206,81 @@ class AlleleScore(GenomicScore):
         return [
             selected_line.get_score(sc)
             for sc in requested_scores]
+
+    def _build_scores_agg(
+        self, score_queries: list[AlleleScoreQuery]
+    ) -> list[AlleleScoreAggr]:
+        score_aggs = []
+        for squery in score_queries:
+            scr_def = self.score_definitions[squery.score]
+            if squery.position_aggregator is not None:
+                aggregator_type = squery.position_aggregator
+            else:
+                aggregator_type = scr_def.pos_aggregator
+            position_aggregator = build_aggregator(aggregator_type)
+
+            if squery.allele_aggregator is not None:
+                aggregator_type = squery.allele_aggregator
+            else:
+                aggregator_type = scr_def.allele_aggregator
+            allele_aggregator = build_aggregator(aggregator_type)
+            score_aggs.append(
+                AlleleScoreAggr(
+                    squery.score, position_aggregator, allele_aggregator))
+        return score_aggs
+
+    def fetch_scores_agg(
+            self, chrom: str, pos_begin: int, pos_end: int,
+            scores: Optional[list[AlleleScoreQuery]] = None
+    ) -> list[Aggregator]:
+        """Fetch score values in a region and aggregates them."""
+        # pylint: disable=too-many-locals
+        # FIXME:
+        if chrom not in self.get_all_chromosomes():
+            raise ValueError(
+                f"{chrom} is not among the available chromosomes for "
+                f"NP Score resource {self.score_id}")
+
+        if scores is None:
+            scores = [
+                AlleleScoreQuery(score_id)
+                for score_id in self.get_all_scores()]
+
+        score_aggs = self._build_scores_agg(scores)
+
+        score_lines = list(self._fetch_lines(chrom, pos_begin, pos_end))
+        if not score_lines:
+            return [sagg.position_aggregator for sagg in score_aggs]
+
+        def aggregate_alleles():
+            for sagg in score_aggs:
+                sagg.position_aggregator.add(
+                    sagg.allele_aggregator.get_final())
+                sagg.allele_aggregator.clear()
+
+        last_pos: int = score_lines[0].pos_begin
+        for line in score_lines:
+            if line.pos_begin != last_pos:
+                aggregate_alleles()
+
+            for sagg in score_aggs:
+                val = line.get_score(sagg.score)
+                left = (
+                    pos_begin
+                    if pos_begin >= line.pos_begin
+                    else line.pos_begin
+                )
+                right = (
+                    pos_end
+                    if pos_end <= line.pos_end
+                    else line.pos_end
+                )
+                for _ in range(left, right + 1):
+                    sagg.allele_aggregator.add(val)
+            last_pos = line.pos_begin
+        aggregate_alleles()
+
+        return [sagg.position_aggregator for sagg in score_aggs]
 
 
 def _build_genomic_score_from_resource(

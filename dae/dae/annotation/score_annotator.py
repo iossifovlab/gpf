@@ -8,7 +8,7 @@ from typing import cast, Any
 from dae.genomic_resources.genomic_scores import \
     build_allele_score_from_resource, build_position_score_from_resource, \
     build_np_score_from_resource, \
-    PositionScoreQuery, NPScoreQuery, ScoreQuery
+    PositionScoreQuery, NPScoreQuery, AlleleScoreQuery, ScoreQuery
 
 from dae.genomic_resources.aggregators import AGGREGATOR_SCHEMA
 
@@ -162,6 +162,14 @@ class PositionScoreAnnotator(VariantScoreAnnotatorBase):
                 result)
             raise ValueError(
                 "nucleotide_aggregator is not allowed in position score")
+        if result.get("attributes") and any(
+                "allele_aggregator" in attr
+                for attr in result.get("attributes")):
+            logger.error(
+                "allele aggregator found in position score config: %s",
+                result)
+            raise ValueError(
+                "allele_aggregator is not allowed in position score")
         return cast(dict, validator.document)
 
     def _collect_score_queries(self) -> list[ScoreQuery]:
@@ -260,6 +268,16 @@ class NPScoreAnnotator(PositionScoreAnnotator):
                 validator.errors)
             raise ValueError(f"wrong NP score config {validator.errors}")
 
+        result = validator.document
+        if result.get("attributes") and any(
+                "allele_aggregator" in attr
+                for attr in result.get("attributes")):
+            logger.error(
+                "allele aggregator found in NP score config: %s",
+                result)
+            raise ValueError(
+                "allele_aggregator is not allowed in NP score")
+
         return cast(dict, validator.document)
 
     def annotator_type(self) -> str:
@@ -326,30 +344,34 @@ class AlleleScoreAnnotator(VariantScoreAnnotatorBase):
                     result)
                 raise ValueError(
                     "nucleotide_aggregator is not allowed in position score")
-            if any("position_aggregator" in attr
-                    for attr in result["attributes"]):
-                logger.error(
-                    "position aggregator found in allele score config: %s",
-                    result)
-                raise ValueError(
-                    "position_aggregator is not allowed in allele score")
 
         return result
 
     def annotator_type(self) -> str:
         return "allele_score"
 
+    def _collect_score_queries(self) -> list[ScoreQuery]:
+        result: list[ScoreQuery] = []
+        for attr in self.get_annotation_config():
+            result.append(AlleleScoreQuery(
+                attr["source"], attr.get("position_aggregator"),
+                attr.get("allele_aggregator")))
+        return result
+
+    def _fetch_aggregated_scores(self, chrom, pos_begin, pos_end):
+        scores_agg = self.score.fetch_scores_agg(
+            chrom,
+            pos_begin,
+            pos_end,
+            self.score_queries
+        )
+        return [sagg.get_final() for sagg in scores_agg]
+
     def annotate(
             self, annotatable: Annotatable, context: dict):
         attributes: dict = {}
         annotatable_override = self._get_annotatable_override(
             annotatable, context)
-        if not isinstance(annotatable_override, VCFAllele):
-            logger.info(
-                "skip trying to add frequency for CNV variant %s",
-                annotatable_override)
-            self._scores_not_found(attributes)
-            return attributes
 
         if annotatable_override is None:
             logger.info("annotatable_override is None")
@@ -361,13 +383,24 @@ class AlleleScoreAnnotator(VariantScoreAnnotatorBase):
             self._scores_not_found(attributes)
             return attributes
 
-        scores = self.score.fetch_scores(
-            annotatable_override.chromosome,
-            annotatable_override.position,
-            annotatable_override.reference,
-            annotatable_override.alternative,
-            self.get_scores()
-        )
+        if isinstance(annotatable_override, VCFAllele):
+            scores = self.score.fetch_scores(
+                annotatable_override.chromosome,
+                annotatable_override.position,
+                annotatable_override.reference,
+                annotatable_override.alternative,
+                self.get_scores()
+            )
+        else:
+            length = len(annotatable_override)
+            if length > self._region_length_cutoff:
+                scores = None
+            else:
+                scores = self._fetch_aggregated_scores(
+                    annotatable_override.chrom,
+                    annotatable_override.pos,
+                    annotatable_override.pos_end)
+
         logger.debug(
             "allele score found for annotatable_override %s: %s",
             annotatable_override, scores)
