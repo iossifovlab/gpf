@@ -20,6 +20,7 @@ describe('User management tests for reset password in Users', () => {
     page.userActionsResetPassword('user_reset_password@email.com').click();
     page.userTableResetPasswordConfirmButton.click();
 
+    cy.wait(10000);
     cy.request('GET', 'http://mailhog:8025/api/v2/search?kind=to&query=user_reset_password@email.com').then(
       (response: {body: {items: {Content: {Body: string}}[]}}) => {
         const regexUrl = new RegExp(/http(s)?:\/\/[\w_-]+((.[\w_-]))([\w.,@?^=%&:/~+#-]*[\w@?^=%&/~+#-])/gm, 'i');
@@ -69,6 +70,7 @@ describe('User management tests for reset password in Users', () => {
       cy.get('input[value="Reset password"]').click();
     });
 
+    cy.wait(10000);
     cy.request('GET', 'http://mailhog:8025/api/v2/search?kind=to&query=forgotten_password@email.com').then(
       (response: {body: {items: {Content: {Body: string}}[]}}) => {
         const regexUrl = new RegExp(/http(s)?:\/\/[\w_-]+((.[\w_-]))([\w.,@?^=%&:/~+#-]*[\w@?^=%&/~+#-])/gm, 'i');
