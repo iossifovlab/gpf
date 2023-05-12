@@ -3,11 +3,11 @@
   <div class="grid-header">Query description</div>
   <div class="grid-header">Actions</div>
   <ng-container *ngFor="let query of queries">
-    <div class="grid-cell" id="query-name-cell">{{ query.name }}</div>
+    <div class="grid-cell" [attr.id]="'query-' + query.name + '-name-cell'">{{ query.name }}</div>
 
-    <div class="grid-cell" id="query-description-cell">{{ query.description }}</div>
+    <div class="grid-cell" [attr.id]="'query-' + query.name + '-description-cell'">{{ query.description }}</div>
 
-    <div class="grid-cell" id="actions-cell">
+    <div class="grid-cell" [attr.id]="'query-' + query.name + '-actions-cell'">
       <a href="{{ query.url }}" title="Load" id="load-button" class="action-button">
         <i class="fa fa-external-link" aria-hidden="true"></i>
       </a>

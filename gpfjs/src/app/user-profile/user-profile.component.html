@@ -5,25 +5,25 @@
         <div class="nav-title-custom">User profile</div>
 
         <li ngbNavItem>
-          <a ngbNavLink>Saved queries</a>
+          <a ngbNavLink id="saved-queries-button">Saved queries</a>
           <ng-template ngbNavContent>
-            <div class="table-wrapper">
+            <div class="table-wrapper" id="genotype-browser-table">
               <div class="table-title">Genotype Browser</div>
               <gpf-saved-queries-table [queries]="genotypeQueries"></gpf-saved-queries-table>
             </div>
-            <div class="table-wrapper">
+            <div class="table-wrapper" id="enrichment-tool-table">
               <div class="table-title">Enrichment Tool</div>
               <gpf-saved-queries-table [queries]="enrichmentQueries"></gpf-saved-queries-table>
             </div>
             <div class="table-wrapper">
-              <div class="table-title">Phenotool Tool</div>
+              <div class="table-title" id="phenotype-tool-table">Phenotype Tool</div>
               <gpf-saved-queries-table [queries]="phenotoolQueries"></gpf-saved-queries-table>
             </div>
           </ng-template>
         </li>
 
         <li ngbNavItem>
-          <a ngbNavLink>Federation tokens</a>
+          <a ngbNavLink id="federation-token-button">Federation tokens</a>
           <ng-template ngbNavContent>
             <gpf-federation-credentials></gpf-federation-credentials>
           </ng-template>
