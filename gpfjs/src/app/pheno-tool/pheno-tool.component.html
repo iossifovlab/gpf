@@ -24,14 +24,10 @@
         <gpf-save-query [disabled]="disableQueryButtons" queryType="phenotool"></gpf-save-query>
       </div>
       <div class="btn-group">
-        <button
-          class="btn btn-md btn-primary"
-          id="download-button"
-          (click)="onDownload()"
-          [disabled]="disableQueryButtons">
-          <span *ngIf="downloadInProgress">Downloading...</span>
-          <span *ngIf="!downloadInProgress">Download</span>
-        </button>
+        <form (ngSubmit)="onDownload($event)" action="{{ configService.baseUrl }}pheno_tool/download" method="post">
+            <input name="queryData" type="hidden" />
+            <button class="btn btn-md btn-primary" [disabled]="disableQueryButtons" type="submit">Download</button>
+        </form>
       </div>
     </div>
   </div>

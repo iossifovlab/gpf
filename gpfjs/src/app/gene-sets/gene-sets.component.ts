@@ -11,7 +11,6 @@ import { catchError, debounceTime, distinctUntilChanged, switchMap } from 'rxjs/
 import { StatefulComponent } from 'app/common/stateful-component';
 import { environment } from 'environments/environment';
 import { PersonSet } from 'app/datasets/datasets';
-import * as streamSaver from 'streamsaver';
 
 @Component({
   selector: 'gpf-gene-sets',
@@ -228,10 +227,7 @@ export class GeneSetsComponent extends StatefulComponent implements OnInit {
     this.store.dispatch(new SetGeneSetsValues(this.geneSetsLocalState));
   }
 
-  public onDownload(): void {
-    this.geneSetsService.downloadGeneSet(this.selectedGeneSet).then((response) => {
-      const fileStream = streamSaver.createWriteStream('geneset.csv');
-      response.body.pipeTo(fileStream);
-    });
+  public getDownloadLink(): string {
+    return this.geneSetsService.getGeneSetDownloadLink(this.selectedGeneSet);
   }
 }

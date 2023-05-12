@@ -3,7 +3,6 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { GeneSetsCollection, GeneSet, GeneSetCollectionJson, GeneSetJson } from './gene-sets';
 import { ConfigService } from '../config/config.service';
-import { AuthService } from 'app/auth.service';
 import { map } from 'rxjs/operators';
 
 @Injectable()
@@ -14,7 +13,6 @@ export class GeneSetsService {
   public constructor(
     private http: HttpClient,
     private config: ConfigService,
-    private authService: AuthService
   ) {}
 
   public getGeneSetsCollections(): Observable<GeneSetsCollection[]> {
@@ -46,13 +44,7 @@ export class GeneSetsService {
       .pipe(map(res => GeneSet.fromJsonArray(res)));
   }
 
-  public downloadGeneSet(geneSet: GeneSet): Promise<Response> {
-    // eslint-disable-next-line @typescript-eslint/naming-convention
-    const headers = {'Content-Type': 'application/json'};
-    headers['Authorization'] = `Bearer ${this.authService.getAccessToken()}`;
-    return fetch(`${this.config.baseUrl}${geneSet.download}`, {
-      credentials: 'include',
-      headers: headers,
-    });
+  public getGeneSetDownloadLink(geneSet: GeneSet): string {
+    return `${this.config.baseUrl}${geneSet.download}`;
   }
 }

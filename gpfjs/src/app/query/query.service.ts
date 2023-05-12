@@ -17,7 +17,6 @@ import { AuthService } from 'app/auth.service';
 export class QueryService {
   private readonly genotypePreviewVariantsUrl = 'genotype_browser/query';
   private readonly geneViewVariants = 'gene_view/query_summary_variants';
-  private readonly geneViewVariantsDownload = 'gene_view/download_summary_variants';
   private readonly saveQueryEndpoint = 'query_state/save';
   private readonly loadQueryEndpoint = 'query_state/load';
   private readonly deleteQueryEndpoint = 'query_state/delete';
@@ -140,28 +139,6 @@ export class QueryService {
     });
 
     return genotypePreviewVariantsArray;
-  }
-
-  public downloadVariants(filter: object): Promise<Response> {
-    const headers = {'Content-Type': 'application/json'};
-    headers['Authorization'] = `Bearer ${this.authService.getAccessToken()}`;
-    return fetch(`${environment.apiPath}${this.genotypePreviewVariantsUrl}`, {
-      method: 'POST',
-      credentials: 'include',
-      headers: headers,
-      body: JSON.stringify(filter)
-    });
-  }
-
-  public downloadVariantsSummary(filter: object): Promise<Response> {
-    const headers = {'Content-Type': 'application/json'};
-    headers['Authorization'] = `Bearer ${this.authService.getAccessToken()}`;
-    return fetch(`${environment.apiPath}${this.geneViewVariantsDownload}`, {
-      method: 'POST',
-      credentials: 'include',
-      headers: headers,
-      body: JSON.stringify(filter)
-    });
   }
 
   public getSummaryVariants(filter): SummaryAllelesArray {

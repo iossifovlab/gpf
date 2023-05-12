@@ -59,7 +59,6 @@
     "reflect-metadata": "0.1.13",
     "rxjs": "7.8.0",
     "sprintf-js": "1.1.2",
-    "streamsaver": "^2.0.6",
     "stylelint-checkstyle-formatter": "0.1.2",
     "tether": "^2.0.0",
     "zone.js": "0.12.0"

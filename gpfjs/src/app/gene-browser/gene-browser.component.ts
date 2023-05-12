@@ -17,7 +17,6 @@ import * as d3 from 'd3';
 import * as draw from 'app/utils/svg-drawing';
 import { NgbDropdown } from '@ng-bootstrap/ng-bootstrap';
 import { LGDS, CNV, OTHER, CODING } from 'app/effect-types/effect-types';
-import * as streamSaver from 'streamsaver';
 
 @Component({
   selector: 'gpf-gene-browser',
@@ -60,9 +59,6 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
   private subscriptions: Subscription[] = [];
   private selectedDatasetId: string;
   private variantUpdate$: Subject<void> = new Subject();
-
-  public downloadInProgress = false;
-  public downloadInProgressSummary = false;
 
   public constructor(
     public readonly configService: ConfigService,
@@ -205,40 +201,16 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
     this.updateShownTablePreviewVariantsArray();
   }
 
-  public onDownload(): void {
-    this.downloadInProgress = true;
-
-    const args = {
-      ...this.requestParams,
-      download: true
-    };
-
-    this.queryService.downloadVariants(args).then((response) => {
-      this.downloadInProgress = false;
-      const fileStream = streamSaver.createWriteStream('variants.tsv');
-      response.body.pipeTo(fileStream);
-    }, (err) => {
-      this.downloadInProgress = false;
-    });
+  public onSubmit(event: Event): void {
+    const target = event.target as HTMLFormElement;
+    target.queryData.value = JSON.stringify({...this.requestParams, download: true});
+    target.submit();
   }
 
-  public onDownloadSummary(): void {
-    this.downloadInProgressSummary = true;
-
-    const args = {
-      ...this.requestParamsSummary,
-      summaryVariantIds: this.summaryVariantsArrayFiltered.summaryAlleleIds.reduce(
-        (a: string[], b) => a.concat(b), []
-      ),
-    };
-
-    this.queryService.downloadVariantsSummary(args).then((response) => {
-      this.downloadInProgressSummary = false;
-      const fileStream = streamSaver.createWriteStream('summary_variants.tsv');
-      response.body.pipeTo(fileStream);
-    }, (err) => {
-      this.downloadInProgressSummary = false;
-    });
+  public onSubmitSummary(): void {
+    const target = document.getElementById('download-summary-form') as HTMLFormElement;
+    target.queryData.value = JSON.stringify({...this.requestParams, download: true});
+    target.submit();
   }
 
   public updateVariants(): void {

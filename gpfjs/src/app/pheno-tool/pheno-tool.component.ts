@@ -12,7 +12,6 @@ import { FamilyFiltersBlockComponent } from 'app/family-filters-block/family-fil
 import { PhenoToolMeasureState } from 'app/pheno-tool-measure/pheno-tool-measure.state';
 import { Select, Selector } from '@ngxs/store';
 import { ErrorsState, ErrorsModel } from 'app/common/errors.state';
-import * as streamSaver from 'streamsaver';
 
 @Component({
   selector: 'gpf-pheno-tool',
@@ -29,7 +28,6 @@ export class PhenoToolComponent implements OnInit, OnDestroy {
   public phenoToolState: object;
 
   public disableQueryButtons = false;
-  public downloadInProgress = false;
 
   private phenoToolSubscription: Subscription = null;
 
@@ -100,20 +98,10 @@ export class PhenoToolComponent implements OnInit, OnDestroy {
     });
   }
 
-  public onDownload(): void {
-    this.downloadInProgress = true;
-
-    const args = {
-      ...this.phenoToolState,
-      datasetId: this.selectedDataset.id
-    };
-
-    this.phenoToolService.downloadPhenoToolResults(args).then((response) => {
-      this.downloadInProgress = false;
-      const fileStream = streamSaver.createWriteStream('pheno_report.csv');
-      response.body.pipeTo(fileStream);
-    }, (err) => {
-      this.downloadInProgress = false;
-    });
+  public onDownload(event: Event): void {
+    if (event.target instanceof HTMLFormElement) {
+      event.target.queryData.value = JSON.stringify({...this.phenoToolState, datasetId: this.selectedDataset.id});
+      event.target.submit();
+    }
   }
 }

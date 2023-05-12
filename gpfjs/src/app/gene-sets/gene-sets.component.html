@@ -75,7 +75,7 @@
 
       <div *ngIf="selectedGeneSet">
         <span style="margin-right: 5px">Count: {{ selectedGeneSet.count }}</span>
-        <span>(<a class="download-link" (click)="onDownload()">Download</a>)</span>
+        <span>(<a class="download-link" [href]="getDownloadLink()">Download</a>)</span>
       </div>
       <gpf-errors-alert [errors]="errors"></gpf-errors-alert>
     </div>
