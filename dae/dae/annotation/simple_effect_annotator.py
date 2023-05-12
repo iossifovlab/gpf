@@ -119,119 +119,122 @@ class SimpleEffectAnnotator(AnnotatorBase):
         for attr in self.get_annotation_config():
             attributes[attr["destination"]] = ""
 
-    # TODO
-    def CDS_intron_regions(self, tm):
-        r = []
-        if not tm.is_coding():
-            return r
-        for ei in range(len(tm.exons) - 1):
-            bg = tm.exons[ei].stop + 1
-            en = tm.exons[ei + 1].start + 1
-            if bg > tm.cds[0] and en < tm.cds[1]:
-                r.append(Region(tm.chrom, bg, en))
-        return r
+    def cds_intron_regions(self, transcript):
+        """Return whether region is CDS intron."""
+        region: list[Region] = []
+        if not transcript.is_coding():
+            return region
+        for index in range(len(transcript.exons) - 1):
+            beg = transcript.exons[index].stop + 1
+            end = transcript.exons[index + 1].start + 1
+            if beg > transcript.cds[0] and end < transcript.cds[1]:
+                region.append(Region(transcript.chrom, beg, end))
+        return region
 
-    def UTR_regions(self, tm):
-        r = []
-        if not tm.is_coding():
-            return r
-        utr5_regions = tm.UTR5_regions()
-        utr3_regions = tm.UTR3_regions()
+    def utr_regions(self, transcript):
+        """Return whether the region is classified as UTR."""
+        region: list[Region] = []
+        if not transcript.is_coding():
+            return region
+
+        utr5_regions = transcript.UTR5_regions()
+        utr3_regions = transcript.UTR3_regions()
         utr3_regions.extend(utr3_regions)
         return utr5_regions
 
-    def peripheral_regions(self, tm):
-        r = []
-        if not tm.is_coding():
-            return r
+    def peripheral_regions(self, transcript):
+        """Return whether the region is peripheral."""
+        region: list[Region] = []
+        if not transcript.is_coding():
+            return region
 
-        if tm.cds[0] > tm.tx[0]:
-            r.append(Region(tm.chrom, tm.tx[0], tm.cds[0] - 1))
-        if tm.cds[1] < tm.tx[1]:
-            r.append(Region(tm.chrom, tm.cds[1] + 1, tm.tx[1]))
-        return r
+        if transcript.cds[0] > transcript.tx[0]:
+            region.append(
+                Region(transcript.chrom, transcript.tx[0],
+                       transcript.cds[0] - 1))
 
-    def noncoding_regions(self, tm):
-        r = []
-        if tm.is_coding():
-            return r
-        r.append(Region(tm.chrom, tm.tx[0], tm.tx[1]))
-        return r
+        if transcript.cds[1] < transcript.tx[1]:
+            region.append(
+                Region(transcript.chrom, transcript.cds[1] + 1,
+                       transcript.tx[1]))
 
-    def run_annotate(self, chrom: str, beg: int, end: int) \
-            -> Tuple[str, Set[str]]:
+        return region
+
+    def noncoding_regions(self, transcript):
+        """Return whether the region is noncoding."""
+        region: list[Region] = []
+        if transcript.is_coding():
+            return region
+
+        region.append(
+            Region(transcript.chrom, transcript.tx[0],
+                   transcript.tx[1]))
+        return region
+
+    def call_region(
+        self, chrom, beg, end, transcripts, func_name, classification
+    ) -> Optional[Tuple[str, Set[str]]]:
+        """Call a region with a specific classification."""
+        genes = set()
+        for transcript in transcripts:
+            if transcript.gene in genes:
+                continue
+
+            regions = []
+            if func_name == "CDS_regions":
+                regions = transcript.CDS_regions()
+            else:
+                regions = getattr(self, func_name)(transcript)
+
+            for region in regions:
+                assert region.chrom == chrom
+                if region.stop >= beg and region.start <= end:
+                    genes.add(transcript.gene)
+                    break
+        if genes:
+            return classification, genes
+        return None
+
+    def run_annotate(
+        self, chrom: str, beg: int, end: int
+    ) -> Tuple[str, Set[str]]:
+        """Return classification with a set of affected genes."""
+        assert self.gene_models.utr_models is not None
+        assert self.gene_models.utr_models[chrom] is not None
 
         for (start, stop), tms in self.gene_models.utr_models[chrom].items():
             if (beg <= stop and end >= start):
 
-                # test for coding
-                genes = set()
-                for tm in tms:
-                    if tm.gene in genes:
-                        continue
-                    for r in tm.CDS_regions():
-                        assert r.chrom == chrom
+                result = self.call_region(
+                    chrom, beg, end, tms, "CDS_regions", "coding")
 
-                        if r.stop >= beg and r.start <= end:
-                            genes.add(tm.gene)
-                            break
-                if genes:
-                    return "coding", genes
+                if not result:
+                    result = self.call_region(
+                        chrom, beg, end, tms, "utr_regions", "peripheral")
+                else:
+                    return result
 
-                # test for UTR
-                genes = set()
-                for tm in tms:
-                    if tm.gene in genes:
-                        continue
-                    for r in self.UTR_regions(tm):
-                        assert r.chrom == chrom
+                if not result:
+                    result = self.call_region(
+                        chrom, beg, end, tms, "cds_intron_regions",
+                        "inter-coding_intronic")
+                else:
+                    return result
 
-                        if r.stop >= beg and r.start <= end:
-                            genes.add(tm.gene)
-                            break
-                if genes:
-                    return "peripheral", genes
+                if not result:
+                    result = self.call_region(
+                        chrom, beg, end, tms, "peripheral_regions",
+                        "peripheral")
+                else:
+                    return result
 
-                # test for intercoding_intronic
-                genes = set()
-                for tm in tms:
-                    for tm.gene in genes:
-                        continue
-                    for r in self.CDS_intron_regions(tm):
-                        assert r.chrom == chrom
-                        if r.start <= beg and end <= r.stop:
-                            genes.add(tm.gene)
-                            break
-                if genes:
-                    return "inter-coding_intronic", genes
+                if not result:
+                    result = self.call_region(
+                        chrom, beg, end, tms, "noncoding_regions", "noncoding")
+                else:
+                    return result
 
-                # test for peripheral
-                genes = set()
-                for tm in tms:
-                    for tm.gene in genes:
-                        continue
-                    for r in self.peripheral_regions(tm):
-                        assert r.chrom == chrom
-                        if r.stop >= beg and r.start <= end:
-                            genes.add(tm.gene)
-                            break
-                if genes:
-                    return "peripheral", genes
-
-                # test for noncoding
-                genes = set()
-                for tm in tms:
-                    if tm.gene in genes:
-                        continue
-                    for r in self.noncoding_regions(tm):
-                        assert r.chrom == chrom
-                        if r.stop >= beg and r.start <= end:
-                            genes.add(tm.gene)
-                            break
-                if genes:
-                    return "noncoding", genes
-
-        return "intergenic", []
+        return "intergenic", set()
 
     def _do_annotate(
         self, annotatable: Annotatable, context: dict
@@ -259,7 +262,7 @@ class SimpleEffectAnnotator(AnnotatorBase):
     def annotator_type(self) -> str:
         return SimpleEffectAnnotator.ANNOTATOR_TYPE
 
-    def get_annotation_config(self) -> list[dict]:
+    def get_annotation_config(self):
         if self._annotation_config is None:
             if self.config.get("attributes"):
                 self._annotation_config = copy.deepcopy(
@@ -271,7 +274,6 @@ class SimpleEffectAnnotator(AnnotatorBase):
 
     def close(self):
         self._open = False
-        pass
 
     def open(self):
         self._open = True
