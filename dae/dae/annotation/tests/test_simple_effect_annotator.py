@@ -1,4 +1,7 @@
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
 import textwrap
+import pytest
+
 from dae.genomic_resources.repository import GenomicResourceRepo
 from dae.genomic_resources.testing import \
     build_inmemory_test_repository, convert_to_tab_separated
@@ -6,7 +9,6 @@ from dae.annotation.annotatable import Position
 from dae.annotation.annotatable import Region
 from dae.annotation.annotatable import VCFAllele
 from dae.annotation.annotation_factory import build_annotation_pipeline
-import pytest
 
 
 @pytest.fixture(scope="module")
@@ -24,8 +26,7 @@ def grr():
                 g1        tx1  foo   +      3       17    3        17     2         3,13       6,17
                 g1        tx2  foo   +      3       9     3        6      1         3          6
                 g2        tx3  bar   -      3       20    3        15     1         3          17
-                """  # noqa
-            )
+                """)  # noqa
         }
     })
 
