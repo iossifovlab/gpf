@@ -54,10 +54,6 @@ class VariantScoreAnnotatorBase(Annotator):
         self.score_queries: list[ScoreQuery] = self._collect_score_queries()
         self._annotation_schema = None
 
-        self.non_default_position_aggregators: dict = {}
-        self.non_default_nucleotide_aggregators: dict = {}
-        self._collect_non_default_aggregators()
-
     def open(self):
         self.score.open()
 
@@ -92,24 +88,6 @@ class VariantScoreAnnotatorBase(Annotator):
     @property
     def resources(self) -> set[str]:
         return {self.score.resource.resource_id}
-
-    def _collect_non_default_aggregators(self):
-        non_default_position_aggregators = {}
-        non_default_nucleotide_aggregators = {}
-        for attr in self.get_annotation_config():
-            if attr.get("position_aggregator") is not None:
-                non_default_position_aggregators[attr["source"]] = \
-                    attr.get("position_aggregator")
-            if attr.get("nucleotide_aggregator") is not None:
-                non_default_nucleotide_aggregators[attr["source"]] = \
-                    attr.get("nucleotide_aggregator")
-
-        if non_default_position_aggregators:
-            self.non_default_position_aggregators = \
-                non_default_position_aggregators
-        if non_default_nucleotide_aggregators:
-            self.non_default_nucleotide_aggregators = \
-                non_default_nucleotide_aggregators
 
     def _collect_score_queries(self) -> list[ScoreQuery]:
         return []
@@ -321,7 +299,7 @@ class AlleleScoreAnnotator(VariantScoreAnnotatorBase):
         attributes_schema = copy.deepcopy(ATTRIBUTES_SCHEMA)
 
         schema = copy.deepcopy(cls.VALIDATION_SCHEMA)
-        schema["annotator_type"]["allowed"] = ["allele_score", "vcf_info"]
+        schema["annotator_type"]["allowed"] = ["allele_score", ]
         schema["attributes"]["schema"] = attributes_schema
 
         validator = cls.ConfigValidator(schema)
@@ -337,17 +315,17 @@ class AlleleScoreAnnotator(VariantScoreAnnotatorBase):
             if any("nucleotide_aggregator" in attr
                     for attr in result["attributes"]):
                 logger.error(
-                    "nucleotide aggregator found in position score config: %s",
+                    "nucleotide aggregator found in allele score config: %s",
                     result)
                 raise ValueError(
                     "nucleotide_aggregator is not allowed in position score")
             if any("position_aggregator" in attr
                     for attr in result["attributes"]):
                 logger.error(
-                    "position aggregator found in position score config: %s",
+                    "position aggregator found in allele score config: %s",
                     result)
                 raise ValueError(
-                    "position_aggregator is not allowed in position score")
+                    "position_aggregator is not allowed in allele score")
 
         return result
 
