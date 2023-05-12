@@ -210,7 +210,6 @@ INSTALLED_APPS = [
     "common_reports_api",
     "pheno_tool_api",
     "users_api",
-    "streamsaver",
     # oauth2_provider is a THIRD-PARTY APP, but must be placed AFTER users_api
     # so that users_api app can override templates from oauth2_provider app
     "oauth2_provider",

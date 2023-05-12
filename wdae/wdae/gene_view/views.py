@@ -7,6 +7,7 @@ from query_base.query_base import QueryDatasetView
 
 from utils.logger import request_logging
 from utils.streaming_response_util import iterator_to_json
+from utils.query_params import parse_query_params
 from gene_sets.expand_gene_set_decorator import expand_gene_set
 
 from datasets_api.permissions import \
@@ -74,7 +75,7 @@ class DownloadSummaryVariantsView(QueryDatasetView):
     @expand_gene_set
     @request_logging(LOGGER)
     def post(self, request):
-        data = request.data
+        data = parse_query_params(request.data)
         dataset_id = data.pop("datasetId", None)
         if dataset_id is None:
             return Response(status=status.HTTP_400_BAD_REQUEST)

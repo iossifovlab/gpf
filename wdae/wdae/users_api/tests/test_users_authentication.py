@@ -331,3 +331,18 @@ def test_authentication_logging(user, client, tokens):
     # Give a tolerance of 5 seconds to prevent test from becoming flaky
     assert abs(login_time - expected_time) <= timedelta(seconds=5)
     assert last_login.failed_attempt == 1
+
+
+def test_authentication_with_sessionid_cookie(user, client, oauth_app):
+    data = {
+        "username": "user@example.com",
+        "password": "secret",
+    }
+    response = client.post(
+        "/api/v3/users/login", json.dumps(data),
+        content_type="application/json", format="json"
+    )
+    assert response.status_code == status.HTTP_302_FOUND
+    response = client.get("/api/v3/users/get_user_info")
+    assert response.data["loggedIn"] is True
+    assert response.data["email"] == "user@example.com"

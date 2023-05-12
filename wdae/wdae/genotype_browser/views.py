@@ -10,6 +10,7 @@ from rest_framework.response import Response  # type: ignore
 from utils.logger import LOGGER
 from utils.streaming_response_util import iterator_to_json
 from utils.logger import request_logging
+from utils.query_params import parse_query_params
 
 from query_base.query_base import QueryDatasetView
 
@@ -20,7 +21,6 @@ from studies.study_wrapper import StudyWrapperBase
 from datasets_api.permissions import handle_partial_permissions, \
     user_has_permission
 from dae.utils.dae_utils import join_line
-
 
 logger = logging.getLogger(__name__)
 
@@ -104,6 +104,9 @@ class GenotypeBrowserQueryView(QueryDatasetView):
 
         data = request.data
         user = request.user
+
+        if "queryData" in data:
+            data = parse_query_params(data)
 
         dataset_id = data.get("datasetId", None)
 
