@@ -471,7 +471,14 @@ class ReferenceGenome(
             yield chrom, i, None
 
     def fetch(self, chrom, start, stop, buffer_size=512):
-        """Yield the nucleotides in a specific region."""
+        """
+        Yield the nucleotides in a specific region.
+
+        While line feed calculation can be inaccurate because not every fetch
+        will start at the start of a line, line feeds add extra characters
+        to read and the output is limited by the amount of nucleotides
+        expected to be read.
+        """
         if chrom not in self.chromosomes:
             logger.warning(
                 "chromosome %s not found in %s",
@@ -496,41 +503,19 @@ class ReferenceGenome(
         total_length = length + line_feeds
         read_progress = 0
 
-        while read_progress < total_length:
+        while read_progress < length:
             read_length = min(buffer_size, total_length - read_progress)
-            line_feeds = 1 + read_length // self._index[chrom]["seqLineLength"]
             sequence = self._sequence.read(read_length).decode("ascii")
             sequence = sequence.replace("\n", "").upper()
-            sequence = sequence[:read_length - line_feeds]
+            end = min(read_progress + read_length, length - read_progress)
+            sequence = sequence[:end]
             for nuc in sequence:
                 yield nuc
-            read_progress += read_length
-
-    def get_sequence_new(self, chrom, start, stop):
-        """Return sequence of nucleotides from specified chromosome region."""
-        return "".join(self.fetch(chrom, start, stop))
+            read_progress += len(sequence)
 
     def get_sequence(self, chrom, start, stop):
         """Return sequence of nucleotides from specified chromosome region."""
-        if chrom not in self.chromosomes:
-            logger.warning(
-                "chromosome %s not found in %s",
-                chrom, self.resource.resource_id)
-            return None
-        assert self._sequence is not None
-        self._sequence.seek(
-            self._index[chrom]["startBit"]
-            + start
-            - 1
-            + (start - 1) // self._index[chrom]["seqLineLength"]
-        )
-
-        length = stop - start + 1
-        line_feeds = 1 + length // self._index[chrom]["seqLineLength"]
-
-        sequence = self._sequence.read(length + line_feeds).decode("ascii")
-        sequence = sequence.replace("\n", "")[:length]
-        return sequence.upper()
+        return "".join(self.fetch(chrom, start, stop))
 
     def pair_iter(self, chrom, start, stop):
         """
