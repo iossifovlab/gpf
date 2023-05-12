@@ -492,7 +492,7 @@ class BaseQueryBuilder(ABC):
 
         values = [
             " {q}{val}{q} ".format(
-                q=self.QUOTE, 
+                q=self.QUOTE,
                 val=val.replace("'", self.dialect.escape_quote_char() + "'")
             )
             for val in query_values

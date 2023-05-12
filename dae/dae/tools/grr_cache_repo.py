@@ -10,8 +10,7 @@ from dae.utils.verbosity_configuration import VerbosityConfiguration
 from dae.genomic_resources.repository_factory import load_definition_file, \
     get_default_grr_definition, \
     build_genomic_resource_repository
-from dae.genomic_resources.cached_repository import \
-    GenomicResourceCachedRepo, cache_resources
+from dae.genomic_resources.cached_repository import cache_resources
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.dae_conf import dae_conf_schema
 from dae.annotation.annotation_factory import AnnotationConfigParser, \
