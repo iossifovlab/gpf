@@ -9,7 +9,7 @@ from dae.genomic_resources.repository import GR_CONF_FILE_NAME
 from dae.genomic_resources.histogram import Histogram
 from dae.genomic_resources.testing import \
     setup_directories, convert_to_tab_separated, \
-    build_filesystem_test_repository
+    build_filesystem_test_repository, setup_tabix
 from dae.genomic_resources.resource_implementation import \
     GenomicResourceImplementation, ResourceStatistics
 
@@ -117,7 +117,8 @@ def test_stats_allele_score(tmp_path):
             GR_CONF_FILE_NAME: """
                 type: allele_score
                 table:
-                    filename: data.mem
+                    filename: data.txt.gz
+                    format: tabix
                 scores:
                     - id: freq
                       type: float
@@ -130,21 +131,23 @@ def test_stats_allele_score(tmp_path):
                       max: 1
                       x_scale: linear
                       y_scale: log
-                """,
-            "data.mem": convert_to_tab_separated("""
-                chrom  pos_begin  reference  alternative  freq
-                1      10         A          G            0.02
-                1      10         A          C            0.03
-                1      10         A          A            0.04
-                1      16         CA         G            0.03
-                1      16         C          T            0.04
-                1      16         C          A            0.05
-                2      16         CA         G            0.03
-                2      16         C          T            EMPTY
-                2      16         C          A            0.05
-            """)
+                """
         }
     })
+    setup_tabix(
+        tmp_path / "one" / "data.txt.gz",
+        """
+        #chrom  pos_begin  reference  alternative  freq
+        1      10         A          G            0.02
+        1      10         A          C            0.03
+        1      10         A          A            0.04
+        1      16         CA         G            0.03
+        1      16         C          T            0.04
+        1      16         C          A            0.05
+        2      16         CA         G            0.03
+        2      16         C          T            EMPTY
+        2      16         C          A            0.05
+        """, seq_col=0, start_col=1, end_col=1)
 
     repo = build_filesystem_test_repository(tmp_path)
 
@@ -182,7 +185,8 @@ def test_stats_position_score(tmp_path):
             GR_CONF_FILE_NAME: """
                 type: position_score
                 table:
-                    filename: data.mem
+                    filename: data.txt.gz
+                    format: tabix
                 scores:
                     - id: phastCons100way
                       type: float
@@ -209,17 +213,19 @@ def test_stats_position_score(tmp_path):
                       max: 4
                       x_scale: linear
                       y_scale: linear
-                """,
-            "data.mem": convert_to_tab_separated("""
-                chrom  pos_begin  pos_end  s1    s2
-                1      10         15       0.02  -1
-                1      17         19       0.03  0
-                1      22         25       0.46  EMPTY
-                2      5          80       0.01  3
-                2      10         11       0.02  3
-                """)
-        },
+                """
+        }
     })
+    setup_tabix(
+        tmp_path / "one" / "data.txt.gz",
+        """
+        #chrom  pos_begin  pos_end  s1    s2
+        1      10         15       0.02  -1
+        1      17         19       0.03  0
+        1      22         25       0.46  EMPTY
+        2      5          80       0.01  3
+        2      10         11       0.02  3
+        """, seq_col=0, start_col=1, end_col=1)
 
     repo = build_filesystem_test_repository(tmp_path)
 
@@ -277,7 +283,8 @@ def test_stats_np_score(tmp_path):
             GR_CONF_FILE_NAME: """
                 type: np_score
                 table:
-                    filename: data.mem
+                    filename: data.txt.gz
+                    format: tabix
                 scores:
                     - id: cadd_raw
                       type: float
@@ -303,21 +310,23 @@ def test_stats_np_score(tmp_path):
                       max: 4
                       x_scale: linear
                       y_scale: linear
-            """,
-            "data.mem": convert_to_tab_separated("""
-                chrom  pos_begin  pos_end  reference  alternative  s1    s2
-                1      10         15       A          G            0.02  2
-                1      10         15       A          C            0.03  -1
-                1      10         15       A          T            0.04  4
-                1      16         19       C          G            0.03  3
-                1      16         19       C          T            0.04  EMPTY
-                1      16         19       C          A            0.05  0
-                2      16         19       C          A            0.03  3
-                2      16         19       C          T            0.04  3
-                2      16         19       C          G            0.05  4
-            """)
+            """
         }
     })
+    setup_tabix(
+        tmp_path / "one" / "data.txt.gz",
+        """
+        #chrom  pos_begin  pos_end  reference  alternative  s1    s2
+        1      10         15       A          G            0.02  2
+        1      10         15       A          C            0.03  -1
+        1      10         15       A          T            0.04  4
+        1      16         19       C          G            0.03  3
+        1      16         19       C          T            0.04  EMPTY
+        1      16         19       C          A            0.05  0
+        2      16         19       C          A            0.03  3
+        2      16         19       C          T            0.04  3
+        2      16         19       C          G            0.05  4
+        """, seq_col=0, start_col=1, end_col=1)
 
     repo = build_filesystem_test_repository(tmp_path)
 
@@ -374,7 +383,8 @@ def test_minmax(tmp_path):
             GR_CONF_FILE_NAME: """
                 type: position_score
                 table:
-                    filename: data.mem
+                    filename: data.txt.gz
+                    format: tabix
                 scores:
                     - id: phastCons100way
                       type: float
@@ -386,19 +396,21 @@ def test_minmax(tmp_path):
                       bins: 100
                       x_scale: linear
                       y_scale: linear
-            """,
-            "data.mem": convert_to_tab_separated("""
-                chrom  pos_begin  pos_end  s1
-                1      10         15       0.0
-                1      17         19       0.03
-                1      22         25       0.46
-                2      5          80       0.01
-                2      10         11       1.0
-                3      5          17       1.0
-                3      18         20       0.01
-            """)
+            """
         }
     })
+    setup_tabix(
+        tmp_path / "one" / "data.txt.gz",
+        """
+        #chrom  pos_begin  pos_end  s1
+        1      10         15       0.0
+        1      17         19       0.03
+        1      22         25       0.46
+        2      5          80       0.01
+        2      10         11       1.0
+        3      5          17       1.0
+        3      18         20       0.01
+        """, seq_col=0, start_col=1, end_col=1)
 
     repo = build_filesystem_test_repository(tmp_path)
 
@@ -424,7 +436,8 @@ def test_reference_genome_usage(tmp_path, mocker):
             GR_CONF_FILE_NAME: """
                 type: position_score
                 table:
-                    filename: data.mem
+                    filename: data.txt.gz
+                    format: tabix
                 scores:
                     - id: phastCons100way
                       type: float
@@ -439,17 +452,7 @@ def test_reference_genome_usage(tmp_path, mocker):
                 meta:
                     labels:
                         reference_genome: genome
-            """,
-            "data.mem": convert_to_tab_separated("""
-                chrom  pos_begin  pos_end  s1
-                1      10         15       0.0
-                1      17         19       0.03
-                1      22         25       0.46
-                2      5          8        0.01
-                2      10         11       1.0
-                3      5          17       1.0
-                3      18         20       0.01
-            """)
+            """
         },
         "genome": {
             GR_CONF_FILE_NAME: """
@@ -478,6 +481,18 @@ def test_reference_genome_usage(tmp_path, mocker):
 
         }
     })
+    setup_tabix(
+        tmp_path / "one" / "data.txt.gz",
+        """
+        #chrom  pos_begin  pos_end  s1
+        1      10         15       0.0
+        1      17         19       0.03
+        1      22         25       0.46
+        2      5          8        0.01
+        2      10         11       1.0
+        3      5          17       1.0
+        3      18         20       0.01
+        """, seq_col=0, start_col=1, end_col=1)
 
     repo = build_filesystem_test_repository(tmp_path)
 
@@ -504,8 +519,7 @@ def test_reference_genome_usage(tmp_path, mocker):
 
     genomic_table_length_mock = mocker.Mock(return_value=30)
     mocker.patch(
-        "dae.genomic_resources.genomic_position_table.table"
-        ".GenomicPositionTable.get_chromosome_length",
+        "dae.genomic_resources.genomic_scores.get_chromosome_length",
         new=genomic_table_length_mock
     )
 

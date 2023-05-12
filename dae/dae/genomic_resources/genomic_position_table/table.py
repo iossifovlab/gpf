@@ -165,37 +165,3 @@ class GenomicPositionTable(abc.ABC):
         This is to be overwritten by the subclass. It should return a list of
         the chromomes in the file in the order determinted by the file.
         """
-
-    def get_chromosome_length(self, chrom, step=100_000_000):
-        """Return the length of a chromosome (or contig).
-
-        Returned value is guarnteed to be larget than the actual contig length.
-        """
-        def any_records(riter):
-            try:
-                next(riter)
-            except StopIteration:
-                return False
-
-            return True
-
-        # First we find any region that includes the last record i.e.
-        # the length of the chromosome
-        left, right = None, None
-        pos = step
-        while left is None or right is None:
-            if any_records(self.get_records_in_region(chrom, pos, None)):
-                left = pos
-                pos = pos * 2
-            else:
-                right = pos
-                pos = pos // 2
-        # Second we use binary search to narrow the region until we find the
-        # index of the last element (in left) and the length (in right)
-        while (right - left) > 5_000_000:
-            pos = (left + right) // 2
-            if any_records(self.get_records_in_region(chrom, pos, None)):
-                left = pos
-            else:
-                right = pos
-        return right
