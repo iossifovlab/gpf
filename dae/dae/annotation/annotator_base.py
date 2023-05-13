@@ -161,7 +161,8 @@ class Annotator(abc.ABC):
         """
         attributes_config = self.get_annotation_config()
         for attr in attributes_config:
-            if attr["destination"] == attr["source"]:
+            destination = attr.get("destination", attr["source"])
+            if destination == attr["source"]:
                 continue
             attributes[attr["destination"]] = attributes[attr["source"]]
             del attributes[attr["source"]]

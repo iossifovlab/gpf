@@ -11,7 +11,6 @@ from dae.genomic_resources.repository import GenomicResourceRepo
 from dae.annotation.annotation_pipeline import AnnotationPipeline
 from dae.annotation.annotator_base import Annotator
 
-
 logger = logging.getLogger(__name__)
 
 
