@@ -466,8 +466,8 @@ class AlleleEffects:
         self.worst_effect = worst_effect
         self.genes = gene_effects
         self.transcripts = effect_transcripts
-        self._effect_types = None
-        self.all_effects: Optional[List[AnnotationEffect]] = None
+        self._effect_types: Optional[list] = None
+        self.all_effects: Optional[list[AnnotationEffect]] = None
 
     @property
     def worst(self):

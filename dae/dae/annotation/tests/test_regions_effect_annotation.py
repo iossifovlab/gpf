@@ -6,7 +6,8 @@ import pytest
 from dae.genomic_resources.testing import \
     setup_directories, convert_to_tab_separated, setup_genome, \
     build_filesystem_test_repository
-from dae.annotation.annotatable import Region, Position
+from dae.annotation.annotatable import \
+    Region, Position, CNVAllele, Annotatable
 from dae.annotation.annotation_factory import build_annotation_pipeline
 
 
@@ -72,3 +73,32 @@ def test_effect_annotator(
 
     print(annotatable, result)
     assert sorted(result["gene_list"]) == expected
+
+
+@pytest.mark.parametrize("annotatable", [
+    Region("chr1", 1, 19),
+    CNVAllele("chr1", 1, 29, Annotatable.Type.LARGE_DELETION),
+])
+def test_effect_annotator_region_length_cutoff(
+        annotatable, fixture_repo):
+
+    pipeline_config = textwrap.dedent("""
+        - effect_annotator:
+            genome: genome
+            gene_models: gene_models
+            region_length_cutoff: 5
+    """)
+
+    pipeline = build_annotation_pipeline(
+        pipeline_config_str=pipeline_config,
+        grr_repository=fixture_repo)
+
+    with pipeline.open() as work_pipeline:
+        result = work_pipeline.annotate(annotatable)
+        print(annotatable, result)
+
+    print(annotatable, result)
+    assert result["worst_effect"] == "unknown"
+    assert result["gene_effects"] == "None:unknown"
+    assert result["effect_details"] == "None:None:unknown:None"
+    assert result.get("gene_list") == []

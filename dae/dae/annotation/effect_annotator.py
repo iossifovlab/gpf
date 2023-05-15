@@ -98,6 +98,8 @@ class EffectAnnotatorAdapter(AnnotatorBase):
         self._annotation_config: Optional[list[dict[str, str]]] = None
 
         promoter_len = self.config.get("promoter_len", 0)
+        self._region_length_cutoff = self.config.get(
+            "region_length_cutoff", 25_000_000)
         self.effect_annotator = EffectAnnotator(
             self.genome,
             self.gene_models,
@@ -117,8 +119,17 @@ class EffectAnnotatorAdapter(AnnotatorBase):
         return self.genome.is_open()
 
     def _not_found(self, attributes):
-        for attr in self.get_annotation_config():
-            attributes[attr["destination"]] = ""
+        effects = [AnnotationEffect("unknown")]
+        full_desc = AnnotationEffect.effects_description(effects)
+        attributes.update({
+            "worst_effect": full_desc[0],
+            "gene_effects": full_desc[1],
+            "effect_details": full_desc[2],
+            "allele_effects": AlleleEffects.from_effects(effects),
+            "gene_list": [],
+            "lgd_gene_list": []
+        })
+        return attributes
 
     def get_all_annotation_attributes(self) -> list[dict]:
         result = [
@@ -222,8 +233,7 @@ class EffectAnnotatorAdapter(AnnotatorBase):
 
         result: dict = {}
         if annotatable is None:
-            self._not_found(result)
-            return result
+            return self._not_found(result)
 
         length = len(annotatable)
         if isinstance(annotatable, VCFAllele):
@@ -235,6 +245,8 @@ class EffectAnnotatorAdapter(AnnotatorBase):
                 variant_type=annotatable.type,
                 length=length
             )
+        elif length > self._region_length_cutoff:
+            return self._not_found(result)
         elif isinstance(annotatable, CNVAllele):
             effects = self.effect_annotator.annotate_cnv(
                 annotatable.chrom,
@@ -244,8 +256,7 @@ class EffectAnnotatorAdapter(AnnotatorBase):
                 annotatable.chrom,
                 annotatable.pos, annotatable.pos_end)
         else:
-            self._not_found(result)
-            return result
+            return self._not_found(result)
 
         gene_list = list(set(
             AnnotationEffect.gene_effects(effects)[0]
@@ -253,7 +264,6 @@ class EffectAnnotatorAdapter(AnnotatorBase):
         lgd_gene_list = list(set(
             AnnotationEffect.lgd_gene_effects(effects)[0]
         ))
-        # r = AnnotationEffect.wrap_effects(effects)
         full_desc = AnnotationEffect.effects_description(effects)
         result = {
             "worst_effect": full_desc[0],
