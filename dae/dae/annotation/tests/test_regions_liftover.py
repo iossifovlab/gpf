@@ -9,19 +9,21 @@ from dae.genomic_resources.testing import \
 
 from dae.genomic_resources.liftover_resource import \
     build_liftover_chain_from_resource
+from dae.annotation.annotatable import Region, Position, CNVAllele
+from dae.annotation.annotation_factory import build_annotation_pipeline
 
 
 @pytest.fixture
 def fixture_repo(tmp_path_factory):
     root_path = tmp_path_factory.mktemp("regions_effect_annotation")
     setup_directories(root_path, {
-        "genome": {
+        "target_genome": {
             "genomic_resource.yaml": textwrap.dedent("""
                 type: genome
                 filename: genome.fa
             """),
         },
-        "target_genome": {
+        "source_genome": {
             "genomic_resource.yaml": textwrap.dedent("""
                 type: genome
                 filename: genome.fa
@@ -36,7 +38,7 @@ def fixture_repo(tmp_path_factory):
         }
     })
     setup_genome(
-        root_path / "genome" / "genome.fa",
+        root_path / "target_genome" / "genome.fa",
         textwrap.dedent(f"""
             >chr1
             {25 * 'AGCT'}
@@ -45,34 +47,74 @@ def fixture_repo(tmp_path_factory):
             """)
     )
     setup_genome(
-        root_path / "target_genome" / "genome.fa",
+        root_path / "source_genome" / "genome.fa",
         textwrap.dedent(f"""
             >1
-            NNNN{25 * 'AGCT'}
+            NNNN{12 * 'AGCT'}NNNN{12 * 'AGCT'}
             >2
-            NNNN{25 * 'AGCT'}
+            NNNN{12 * 'AGCT'}NNNN{12 * 'AGCT'}
             """)
     )
     setup_gzip(
         root_path / "liftover_chain" / "liftover.chain.gz",
         convert_to_tab_separated("""
-        chain||4900||1||100||+||4||104||chr1||100||+||1||101||1
-        100 0 0
+        chain||4900||1||48||+||4||52||chr1||48||+||1||49||1
+        48 0 0
+        0
+        chain||4900||1||48||+||55||103||chr1||48||+||48||96||2
+        48 0 0
         0
         """)
     )
     return build_filesystem_test_repository(root_path)
 
 
-def test_liftover_chain_fixture(fixture_repo):
+@pytest.mark.parametrize("spos, expected", [
+    (("1", 5), ("chr1", 1, "+", 4900)),
+    (("1", 14), ("chr1", 10, "+", 4900)),
+    (("1", 56), ("chr1", 48, "+", 4900)),
+    (("1", 80), ("chr1", 72, "+", 4900)),
+    (("1", 53), None),
+    (("2", 56), None),
+])
+def test_liftover_chain_fixture(spos, expected, fixture_repo):
     res = fixture_repo.get_resource("liftover_chain")
     liftover_chain = build_liftover_chain_from_resource(res)
 
     assert liftover_chain is not None
     liftover_chain.open()
 
-    lo_coordinates = liftover_chain.convert_coordinate("1", 14)
-    chrom, pos, strand, _ = lo_coordinates
-    assert chrom == "chr1"
-    assert pos == 10
-    assert strand == "+"
+    lo_coordinates = liftover_chain.convert_coordinate(spos[0], spos[1])
+    assert lo_coordinates == expected
+
+
+@pytest.mark.parametrize("annotatable, expected", [
+    (Position("1", 10), Position("chr1", 6)),
+    (Region("1", 5, 19), Region("chr1", 1, 15)),
+    (Region("1", 5, 53), None),
+    (Region("1", 5, 56), Region("chr1", 1, 48)),
+    (CNVAllele("1", 5, 56, CNVAllele.Type.LARGE_DELETION),
+     CNVAllele("chr1", 1, 48, CNVAllele.Type.LARGE_DELETION))
+])
+def test_liftover_annotator(
+        annotatable, expected, fixture_repo):
+
+    pipeline_config = textwrap.dedent("""
+        - liftover_annotator:
+            target_genome: target_genome
+            chain: liftover_chain
+            attributes:
+            - source: liftover_annotatable
+              internal: false
+    """)
+
+    pipeline = build_annotation_pipeline(
+        pipeline_config_str=pipeline_config,
+        grr_repository=fixture_repo)
+
+    with pipeline.open() as work_pipeline:
+        result = work_pipeline.annotate(annotatable)
+        print(annotatable, result)
+
+    print(annotatable, result)
+    assert result["liftover_annotatable"] == expected
