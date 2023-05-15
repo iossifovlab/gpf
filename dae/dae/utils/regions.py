@@ -36,7 +36,7 @@ def split_into_regions(
     current_start = 1
     while current_start < chrom_length:
         end = min(chrom_length, current_start + region_size)
-        regions.append(Region(chrom, current_start))
+        regions.append(Region(chrom, current_start, end))
         current_start = end
 
     return regions
