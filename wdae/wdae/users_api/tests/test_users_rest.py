@@ -42,7 +42,7 @@ def test_users_cant_get_all_users(user_client):
     assert response.status_code is status.HTTP_403_FORBIDDEN
 
 
-def test_unauthenticated_cant_get_all_users(client):
+def test_unauthenticated_cant_get_all_users(db, client):
     url = "/api/v3/users"
     response = client.get(url)
 

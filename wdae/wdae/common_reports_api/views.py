@@ -4,10 +4,10 @@ from rest_framework.response import Response
 
 from query_base.query_base import QueryDatasetView
 
+from utils.query_params import parse_query_params
 from dae.pedigrees.family import FamiliesData
 from dae.pedigrees.family_tag_builder import check_tag
 from dae.pedigrees.serializer import FamiliesTsvSerializer
-from utils.query_params import parse_query_params
 
 
 class VariantReportsView(QueryDatasetView):

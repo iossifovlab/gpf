@@ -90,9 +90,11 @@ def test_family_counters(admin_client):
 
 def test_family_counters_download(admin_client):
     data = {
-        "study_id": "study4",
-        "group_name": "Phenotype",
-        "counter_id": "0"
+        "queryData": json.dumps({
+            "study_id": "study4",
+            "group_name": "Phenotype",
+            "counter_id": "0"
+        })
     }
     url = "/api/v3/common_reports/family_counters/download"
     response = admin_client.post(
@@ -106,7 +108,6 @@ def test_family_counters_download(admin_client):
     print(b"".join(res).decode())
 
     assert len(res) == 13
-    # assert data == ["f2", "f4"]
 
 
 def test_families_tags_download(admin_client):
