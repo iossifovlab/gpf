@@ -43,3 +43,8 @@ class GroupRetrieveSerializer(GroupSerializer):
         return sorted([
             get_dataset_info(d.dataset_id) for d in group.dataset_set.all()
         ], key=lambda d: d["datasetName"].lower())
+
+    def to_representation(self, instance):
+        response = super().to_representation(instance)
+        response["users"] = sorted(response["users"])
+        return response

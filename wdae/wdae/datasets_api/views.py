@@ -271,7 +271,7 @@ class DatasetDescriptionView(QueryBaseView):
 class BaseDatasetPermissionsView(QueryBaseView):
     def _get_dataset_info(self, dataset):
         groups = dataset.groups.all()
-        group_names = [group.name for group in groups]
+        group_names = sorted([group.name for group in groups])
 
         user_model = get_user_model()
         users_list = []
