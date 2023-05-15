@@ -77,12 +77,13 @@ describe('Save query tests', () => {
 
     page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
     page.button.click();
-    page.nameInput.type('Test');
+    page.nameInput.type('TestLoadAndDeleteQuery');
     page.saveButton.click();
     cy.wait('@save');
 
-    page.navigateToSidenavPage(sidenavPageLinks.savedQueries);
-    savedQueriesPage.tableFirstLoadButton.click();
+    page.navigateToSidenavPage(sidenavPageLinks.userProfile);
+    savedQueriesPage.queryNameCell('genotype-browser', 'TestLoadAndDeleteQuery').should('be.visible');
+    savedQueriesPage.queryLoadButton('genotype-browser', 'TestLoadAndDeleteQuery').click();
 
     datasetsPage.datasetStatisticsButton.click();
     datasetsPage.waitForPageToLoad(toolPageLinks.datasetStatistics);
@@ -95,8 +96,9 @@ describe('Save query tests', () => {
     datasetsPage.geneBrowserButton.click();
     datasetsPage.waitForPageToLoad(toolPageLinks.geneBrowser);
 
-    page.navigateToSidenavPage(sidenavPageLinks.savedQueries);
-    savedQueriesPage.tableFirstDeleteButton.click();
+    page.navigateToSidenavPage(sidenavPageLinks.userProfile);
+    savedQueriesPage.queryDeleteButton('genotype-browser', 'TestLoadAndDeleteQuery').click();
+    savedQueriesPage.queryNameCell('genotype-browser', 'TestLoadAndDeleteQuery').should('not.exist');
   });
 
   it('should navigate to genotype browser, check all effect types checkboxes, save a query, ' +
@@ -107,19 +109,19 @@ describe('Save query tests', () => {
     page.navigateToDatasetPage(datasetIds.compAll, toolPageLinks.genotypeBrowser);
     genotypeBlockPage.findButtonInComponentContainingText('gpf-effect-types', 'All').click();
     page.button.click();
-    page.nameInput.type('Test');
+    page.nameInput.type('CheckSavedQuery');
     page.saveButton.click();
     cy.wait('@save');
 
-    page.navigateToSidenavPage(sidenavPageLinks.savedQueries);
-    savedQueriesPage.tableFirstLoadButton.click();
+    page.navigateToSidenavPage(sidenavPageLinks.userProfile);
+    savedQueriesPage.queryLoadButton('genotype-browser', 'CheckSavedQuery').click();
     genotypeBlockPage.findAllCheckboxesInComponent('gpf-effect-types').each(element => {
       cy.wrap(element).should('be.visible');
       cy.wrap(element).should('be.checked');
     });
 
-    page.navigateToSidenavPage(sidenavPageLinks.savedQueries);
-    savedQueriesPage.tableFirstDeleteButton.click();
+    page.navigateToSidenavPage(sidenavPageLinks.userProfile);
+    savedQueriesPage.queryDeleteButton('genotype-browser', 'CheckSavedQuery').click();
   });
 
   it('should navigate to genotype browser, check all effect types checkboxes, click on "Save/share query" button, ' +

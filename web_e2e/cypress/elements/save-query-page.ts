@@ -26,7 +26,7 @@ export class SaveQueryPage extends BasePage {
   }
 
   public get descriptionInput(): element {
-    return cy.get('gpf-save-query #description')
+    return cy.get('gpf-save-query #description');
   }
 
   public get saveButton(): element {
