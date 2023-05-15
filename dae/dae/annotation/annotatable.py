@@ -80,6 +80,12 @@ class Annotatable:
             f"{self.chrom}:{self.pos}-{self.pos_end} " \
             f"{self.type}"
 
+    def __eq__(self, other):
+        if not isinstance(other, Annotatable):
+            return False
+        return self.type == other.type and self.chrom == other.chrom and \
+            self.pos == other.pos and self.pos_end == other.pos_end
+
 
 class Position(Annotatable):
 
@@ -147,6 +153,13 @@ class VCFAllele(Annotatable):
             f"vcf({self.ref}->{self.alt}) " \
             f"{self.type}"
 
+    def __eq__(self, other):
+        if not super().__eq__(other):
+            return False
+        if not isinstance(other, VCFAllele):
+            return False
+        return self.ref == other.ref and self.alt == other.alt
+
 
 class CNVAllele(Annotatable):
     """Defines copy number variants annotatable."""
@@ -157,19 +170,3 @@ class CNVAllele(Annotatable):
             Annotatable.Type.LARGE_DUPLICATION}, cnv_type
 
         super().__init__(chrom, pos_begin, pos_end, cnv_type)
-
-    @property
-    def ref(self):
-        return None
-
-    @property
-    def reference(self):
-        return None
-
-    @property
-    def alt(self):
-        return None
-
-    @property
-    def alternative(self):
-        return None

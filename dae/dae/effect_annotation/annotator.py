@@ -56,33 +56,41 @@ class EffectAnnotator:
         )
 
         for effect_checker in self.effects_checkers:
-            effect = effect_checker.get_effect(request)
+            effect = effect_checker.get_effect(request)  # type: ignore
             if effect is not None:
                 return effect
         return None
 
-    def _do_annotate_cnv(self, variant) -> List[AnnotationEffect]:
-        if variant.variant_type == Annotatable.Type.LARGE_DUPLICATION:
-            effect_type = "CNV+"
-        elif variant.variant_type == Annotatable.Type.LARGE_DELETION:
-            effect_type = "CNV-"
-        else:
-            raise ValueError(
-                f"unexpected variant type: {variant.variant_type}")
-        assert effect_type is not None
-
-        effects: List[AnnotationEffect] = []
-        cnv_region = Region(
-            variant.chromosome,
-            variant.position,
-            variant.position + variant.length)
+    def annotate_cnv(
+        self, chrom, pos_start, pos_end, variant_type
+    ) -> List[AnnotationEffect]:
+        """Annotate a CNV variant."""
         if self.gene_models.utr_models is None:
             raise ValueError("bad gene models")
 
+        if variant_type == Annotatable.Type.LARGE_DUPLICATION:
+            effect_type = "CNV+"
+        elif variant_type == Annotatable.Type.LARGE_DELETION:
+            effect_type = "CNV-"
+        else:
+            raise ValueError(
+                f"unexpected variant type: {variant_type}")
+        assert effect_type is not None
+
+        return self.annotate_region(
+            chrom, pos_start, pos_end, effect_type=effect_type)
+
+    def annotate_region(
+            self, chrom, pos_start, pos_end, effect_type="unknown"):
+        """Annotate a region or position."""
+        if self.gene_models.utr_models is None:
+            raise ValueError("bad gene models")
+        region = Region(chrom, pos_start, pos_end)
+        effects = []
         for (start, stop), tms in \
-                self.gene_models.utr_models[variant.chromosome].items():
-            if cnv_region.intersection(
-                    Region(variant.chromosome, start, stop)):
+                self.gene_models.utr_models[chrom].items():
+            if region.intersection(
+                    Region(chrom, start, stop)):
                 for transcript_model in tms:
                     effects.append(
                         EffectFactory.create_effect_with_tm(
@@ -95,12 +103,16 @@ class EffectAnnotator:
 
     def annotate(self, variant) -> List[AnnotationEffect]:
         """Annotate effects for a variant."""
+        if self.gene_models.utr_models is None:
+            raise ValueError("bad gene models")
         if variant.variant_type in {
                 Annotatable.Type.LARGE_DUPLICATION,
                 Annotatable.Type.LARGE_DELETION}:
-            return self._do_annotate_cnv(variant)
-        if self.gene_models.utr_models is None:
-            raise ValueError("bad gene models")
+            return self.annotate_cnv(
+                variant.chromosome,
+                variant.position,
+                variant.position + variant.length,
+                variant.variant_type)
 
         effects = []
         if variant.chromosome not in self.gene_models.utr_models:
@@ -138,6 +150,21 @@ class EffectAnnotator:
         """Annotate effects for a variant."""
         variant = Variant(
             chrom, pos, location, variant, ref, alt, length, seq, variant_type
+        )
+        return self.annotate(variant)
+
+    def annotate_allele(
+            self,
+            chrom,
+            pos,
+            ref,
+            alt,
+            length=None,
+            seq=None,
+            variant_type=None):
+        """Annotate effects for a variant."""
+        variant = Variant(
+            chrom, pos, None, None, ref, alt, length, seq, variant_type
         )
         return self.annotate(variant)
 

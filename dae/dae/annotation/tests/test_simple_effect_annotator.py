@@ -31,7 +31,16 @@ def grr():
     })
 
 
-def test_basic(grr: GenomicResourceRepo):
+@pytest.mark.parametrize("annotatable, effect, genes", [
+    (Position("foo", 2), "intergenic", ""),
+    (Position("foo", 7), "inter-coding_intronic", "g1"),
+    (Position("foo", 14), "coding", "g1"),
+    (Position("bar", 16), "peripheral", "g2"),
+    (Region("bar", 14, 20), "coding", "g2"),
+    (Region("bar", 16, 20), "peripheral", "g2"),
+    (VCFAllele("bar", 16, "AACC", "A"), "peripheral", "g2"),
+])
+def test_basic(annotatable, effect, genes, grr: GenomicResourceRepo):
     pipeline = build_annotation_pipeline(
         pipeline_config_str=textwrap.dedent("""
             - simple_effect_annotator:
@@ -39,30 +48,6 @@ def test_basic(grr: GenomicResourceRepo):
             """),
         grr_repository=grr)
 
-    atts = pipeline.annotate(Position("foo", 2))
-    assert atts["effect"] == "intergenic"
-    assert atts["genes"] == ""
-
-    atts = pipeline.annotate(Position("foo", 7))
-    assert atts["effect"] == "inter-coding_intronic"
-    assert atts["genes"] == "g1"
-
-    atts = pipeline.annotate(Position("foo", 14))
-    assert atts["effect"] == "coding"
-    assert atts["genes"] == "g1"
-
-    atts = pipeline.annotate(Position("bar", 16))
-    assert atts["effect"] == "peripheral"
-    assert atts["genes"] == "g2"
-
-    atts = pipeline.annotate(Region("bar", 14, 20))
-    assert atts["effect"] == "coding"
-    assert atts["genes"] == "g2"
-
-    atts = pipeline.annotate(Region("bar", 16, 20))
-    assert atts["effect"] == "peripheral"
-    assert atts["genes"] == "g2"
-
-    atts = pipeline.annotate(VCFAllele("bar", 16, "AACC", "A"))
-    assert atts["effect"] == "peripheral"
-    assert atts["genes"] == "g2"
+    atts = pipeline.annotate(annotatable)
+    assert atts["effect"] == effect
+    assert atts["genes"] == genes

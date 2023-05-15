@@ -8,7 +8,7 @@ from typing import cast, Any
 from dae.genomic_resources.genomic_scores import \
     build_allele_score_from_resource, build_position_score_from_resource, \
     build_np_score_from_resource, \
-    PositionScoreQuery, NPScoreQuery, ScoreQuery
+    PositionScoreQuery, NPScoreQuery, AlleleScoreQuery, ScoreQuery
 
 from dae.genomic_resources.aggregators import AGGREGATOR_SCHEMA
 
@@ -38,6 +38,11 @@ class VariantScoreAnnotatorBase(Annotator):
             "type": "string",
             "required": True,
         },
+        "region_length_cutoff": {
+            "type": "integer",
+            "nullable": True,
+            "default": 25_000_000,
+        },
         "attributes": {
             "type": "list",
             "nullable": True,
@@ -53,10 +58,8 @@ class VariantScoreAnnotatorBase(Annotator):
         self.score = score
         self.score_queries: list[ScoreQuery] = self._collect_score_queries()
         self._annotation_schema = None
-
-        self.non_default_position_aggregators: dict = {}
-        self.non_default_nucleotide_aggregators: dict = {}
-        self._collect_non_default_aggregators()
+        self._region_length_cutoff = self.config.get(
+            "region_length_cutoff", 25_000_000)
 
     def open(self):
         self.score.open()
@@ -92,24 +95,6 @@ class VariantScoreAnnotatorBase(Annotator):
     @property
     def resources(self) -> set[str]:
         return {self.score.resource.resource_id}
-
-    def _collect_non_default_aggregators(self):
-        non_default_position_aggregators = {}
-        non_default_nucleotide_aggregators = {}
-        for attr in self.get_annotation_config():
-            if attr.get("position_aggregator") is not None:
-                non_default_position_aggregators[attr["source"]] = \
-                    attr.get("position_aggregator")
-            if attr.get("nucleotide_aggregator") is not None:
-                non_default_nucleotide_aggregators[attr["source"]] = \
-                    attr.get("nucleotide_aggregator")
-
-        if non_default_position_aggregators:
-            self.non_default_position_aggregators = \
-                non_default_position_aggregators
-        if non_default_nucleotide_aggregators:
-            self.non_default_nucleotide_aggregators = \
-                non_default_nucleotide_aggregators
 
     def _collect_score_queries(self) -> list[ScoreQuery]:
         return []
@@ -177,6 +162,14 @@ class PositionScoreAnnotator(VariantScoreAnnotatorBase):
                 result)
             raise ValueError(
                 "nucleotide_aggregator is not allowed in position score")
+        if result.get("attributes") and any(
+                "allele_aggregator" in attr
+                for attr in result.get("attributes")):
+            logger.error(
+                "allele aggregator found in position score config: %s",
+                result)
+            raise ValueError(
+                "allele_aggregator is not allowed in position score")
         return cast(dict, validator.document)
 
     def _collect_score_queries(self) -> list[ScoreQuery]:
@@ -221,7 +214,7 @@ class PositionScoreAnnotator(VariantScoreAnnotatorBase):
         if annotatable_override.type == Annotatable.Type.SUBSTITUTION:
             scores = self._fetch_substitution_scores(annotatable_override)
         else:
-            if length > 500_000:
+            if length > self._region_length_cutoff:
                 scores = None
             else:
                 scores = self._fetch_aggregated_scores(
@@ -275,6 +268,16 @@ class NPScoreAnnotator(PositionScoreAnnotator):
                 validator.errors)
             raise ValueError(f"wrong NP score config {validator.errors}")
 
+        result = validator.document
+        if result.get("attributes") and any(
+                "allele_aggregator" in attr
+                for attr in result.get("attributes")):
+            logger.error(
+                "allele aggregator found in NP score config: %s",
+                result)
+            raise ValueError(
+                "allele_aggregator is not allowed in NP score")
+
         return cast(dict, validator.document)
 
     def annotator_type(self) -> str:
@@ -321,7 +324,7 @@ class AlleleScoreAnnotator(VariantScoreAnnotatorBase):
         attributes_schema = copy.deepcopy(ATTRIBUTES_SCHEMA)
 
         schema = copy.deepcopy(cls.VALIDATION_SCHEMA)
-        schema["annotator_type"]["allowed"] = ["allele_score", "vcf_info"]
+        schema["annotator_type"]["allowed"] = ["allele_score", ]
         schema["attributes"]["schema"] = attributes_schema
 
         validator = cls.ConfigValidator(schema)
@@ -337,34 +340,38 @@ class AlleleScoreAnnotator(VariantScoreAnnotatorBase):
             if any("nucleotide_aggregator" in attr
                     for attr in result["attributes"]):
                 logger.error(
-                    "nucleotide aggregator found in position score config: %s",
+                    "nucleotide aggregator found in allele score config: %s",
                     result)
                 raise ValueError(
                     "nucleotide_aggregator is not allowed in position score")
-            if any("position_aggregator" in attr
-                    for attr in result["attributes"]):
-                logger.error(
-                    "position aggregator found in position score config: %s",
-                    result)
-                raise ValueError(
-                    "position_aggregator is not allowed in position score")
 
         return result
 
     def annotator_type(self) -> str:
         return "allele_score"
 
+    def _collect_score_queries(self) -> list[ScoreQuery]:
+        result: list[ScoreQuery] = []
+        for attr in self.get_annotation_config():
+            result.append(AlleleScoreQuery(
+                attr["source"], attr.get("position_aggregator"),
+                attr.get("allele_aggregator")))
+        return result
+
+    def _fetch_aggregated_scores(self, chrom, pos_begin, pos_end):
+        scores_agg = self.score.fetch_scores_agg(
+            chrom,
+            pos_begin,
+            pos_end,
+            self.score_queries
+        )
+        return [sagg.get_final() for sagg in scores_agg]
+
     def annotate(
             self, annotatable: Annotatable, context: dict):
         attributes: dict = {}
         annotatable_override = self._get_annotatable_override(
             annotatable, context)
-        if not isinstance(annotatable_override, VCFAllele):
-            logger.info(
-                "skip trying to add frequency for CNV variant %s",
-                annotatable_override)
-            self._scores_not_found(attributes)
-            return attributes
 
         if annotatable_override is None:
             logger.info("annotatable_override is None")
@@ -376,13 +383,24 @@ class AlleleScoreAnnotator(VariantScoreAnnotatorBase):
             self._scores_not_found(attributes)
             return attributes
 
-        scores = self.score.fetch_scores(
-            annotatable_override.chromosome,
-            annotatable_override.position,
-            annotatable_override.reference,
-            annotatable_override.alternative,
-            self.get_scores()
-        )
+        if isinstance(annotatable_override, VCFAllele):
+            scores = self.score.fetch_scores(
+                annotatable_override.chromosome,
+                annotatable_override.position,
+                annotatable_override.reference,
+                annotatable_override.alternative,
+                self.get_scores()
+            )
+        else:
+            length = len(annotatable_override)
+            if length > self._region_length_cutoff:
+                scores = None
+            else:
+                scores = self._fetch_aggregated_scores(
+                    annotatable_override.chrom,
+                    annotatable_override.pos,
+                    annotatable_override.pos_end)
+
         logger.debug(
             "allele score found for annotatable_override %s: %s",
             annotatable_override, scores)

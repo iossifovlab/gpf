@@ -11,7 +11,7 @@ from dae.genomic_resources.liftover_resource import \
 
 from dae.utils.variant_utils import trim_str_left, reverse_complement
 
-from .annotatable import Annotatable, VCFAllele
+from .annotatable import Annotatable, VCFAllele, Region, Position, CNVAllele
 from .annotator_base import AnnotatorBase, ATTRIBUTES_SCHEMA
 
 
@@ -201,20 +201,73 @@ class LiftOverAnnotator(AnnotatorBase):
                 allele, ex, exc_info=True)
             return None
 
+    def liftover_position(
+        self, position: Annotatable
+    ) -> Optional[Annotatable]:
+        """Liftover position annotatable."""
+        assert isinstance(position, Position)
+        lo_coord = self.chain.convert_coordinate(
+            position.chrom, position.position,
+        )
+        if lo_coord is None:
+            return None
+        return Position(lo_coord[0], lo_coord[1])
+
+    def _do_liftover_region(
+        self, region: Annotatable
+    ) -> Optional[Annotatable]:
+        """Liftover region annotatable."""
+        assert isinstance(region, (Region, CNVAllele))
+        lo_start = self.chain.convert_coordinate(
+            region.chrom, region.position,
+        )
+        lo_end = self.chain.convert_coordinate(
+            region.chrom, region.end_position,
+        )
+
+        if lo_start is None or lo_end is None:
+            return None
+        if lo_start[0] != lo_end[0]:
+            return None
+        result = Region(
+            lo_start[0],
+            min(lo_start[1], lo_end[1]),
+            max(lo_start[1], lo_end[1]))
+        return result
+
+    def liftover_region(self, region: Annotatable) -> Optional[Annotatable]:
+        """Liftover region annotatable."""
+        assert isinstance(region, Region)
+        return self._do_liftover_region(region)
+
+    def liftover_cnv(self, cnv_allele: Annotatable) -> Optional[Annotatable]:
+        """Liftover CNV allele annotatable."""
+        assert isinstance(cnv_allele, CNVAllele)
+        region = self._do_liftover_region(cnv_allele)
+        if region is None:
+            return None
+        return CNVAllele(
+            region.chrom, region.pos, region.pos_end, cnv_allele.type)
+
     def _do_annotate(self, annotatable: Annotatable, _context: dict):
         assert annotatable is not None
-
+        if annotatable.type == Annotatable.Type.POSITION:
+            return {
+                "liftover_annotatable": self.liftover_position(annotatable)
+            }
+        if annotatable.type == Annotatable.Type.REGION:
+            return {
+                "liftover_annotatable": self.liftover_region(annotatable)
+            }
         if annotatable.type in {
                 Annotatable.Type.LARGE_DELETION,
                 Annotatable.Type.LARGE_DUPLICATION}:
-            logger.warning(
-                "%s not ready to annotate CNV variants: %s",
-                self.annotator_type(), annotatable)
-            return {"liftover_annotatable": None}
+            return {
+                "liftover_annotatable": self.liftover_cnv(annotatable)}
 
         lo_allele = self.liftover_allele(cast(VCFAllele, annotatable))
         if lo_allele is None:
-            logger.info(
+            logger.debug(
                 "unable to liftover allele: %s", annotatable)
             return {"liftover_annotatable": None}
 
