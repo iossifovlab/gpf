@@ -285,7 +285,6 @@ class BaseDatasetPermissionsView(QueryBaseView):
                     users_list += [
                         {"name": user.name, "email": user.email}
                     ]
-                else:
                     users_found.add(user.email)
         users_list = sorted(users_list, key=lambda d: d["email"])
 
