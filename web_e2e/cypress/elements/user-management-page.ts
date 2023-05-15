@@ -41,6 +41,14 @@ export class UserManagementPage extends BasePage {
     return this.userGroupList(email).find(`div[id="${group}-list-item"]`);
   }
 
+  public userAddGroup(userEmail: string, group: string): void {
+    this.userAddGroupButton(userEmail).click();
+    cy.intercept('gpf/api/v3/groups/add-user').as('groups');
+    this.findButtonInComponentContainingText('.add-item-button', group).click();
+    cy.wait('@groups');
+    cy.get('body').click(0, 0);
+  }
+
   public userAddGroupButton(email: string): element {
     return this.userGroupsCell(email).find('.add-button');
   }
@@ -189,6 +197,14 @@ export class UserManagementPage extends BasePage {
     return this.groupUsersList(group).find(`div[id="${email}-list-item"] #confirm-button`);
   }
 
+  public groupAddUser(group: string, userEmail: string): void {
+    this.groupAddUserButton(group).click();
+    cy.intercept('gpf/api/v3/groups/add-user').as('users');
+    this.findButtonInComponentContainingText('.add-item-button', userEmail).click();
+    cy.wait('@users');
+    cy.get('body').click(0, 0);
+  }
+
   public groupAddUserButton(group: string): element {
     return this.groupUsersCell(group).find('.add-button');
   }
@@ -203,6 +219,14 @@ export class UserManagementPage extends BasePage {
 
   public groupDatasetsListItem(group: string, dataset: string): element {
     return this.groupDatasetsList(group).find(`div[id="${dataset}-list-item"]`);
+  }
+
+  public groupAddDataset(group: string, dataset: string): void {
+    this.groupAddDatasetButton(group).click();
+    cy.intercept('gpf/api/v3/groups/grant-permission').as('datasets');
+    this.findButtonInComponentContainingText('.add-item-button', dataset).click();
+    cy.wait('@datasets');
+    cy.get('body').click(0, 0);
   }
 
   public groupAddDatasetButton(group: string): element {
@@ -259,6 +283,14 @@ export class UserManagementPage extends BasePage {
 
   public datasetGroupRemoveButton(dataset: string, group: string): element {
     return this.datasetGroupList(dataset).find(`div[id="${group}-list-item"] #confirm-button`);
+  }
+
+  public datasetAddGroup(dataset: string, group: string): void {
+    this.datasetAddGroupButton(dataset).click();
+    cy.intercept('gpf/api/v3/groups/grant-permission').as('groups');
+    this.findButtonInComponentContainingText('.add-item-button', group).click();
+    cy.wait('@groups');
+    cy.get('body').click(0, 0);
   }
 
   public datasetAddGroupButton(dataset: string): element {

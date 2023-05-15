@@ -2,6 +2,7 @@ import { UserManagementPage } from 'cypress/elements/user-management-page';
 import { UsersPage } from 'cypress/elements/users-page';
 import { sidenavPageLinks } from 'cypress/elements/utils';
 import 'cypress-if';
+import { PedigreeSelectorPage } from 'cypress/elements/pedigree-selector-page';
 
 describe('User management tests for reset password in Users', () => {
   const page = new UserManagementPage();
@@ -312,12 +313,10 @@ describe('User management tests for Users', () => {
     page.userAddGroupButton('add_remove_groups_email@email.com').should('be.visible');
 
     // add groups
-    page.userAddGroupButton('add_remove_groups_email@email.com').click();
-    page.menu.should('be.visible');
-    page.findButtonInComponentContainingText('.add-item-button', 'comp_all').click();
+    page.userAddGroup('add_remove_groups_email@email.com', 'comp_all');
     page.userDatasetsCell('add_remove_groups_email@email.com').contains('comp_all');
+    page.userAddGroup('add_remove_groups_email@email.com', 'iossifov_2014');
 
-    page.findButtonInComponentContainingText('.add-item-button', 'iossifov_2014').click();
     page.userGroupList('add_remove_groups_email@email.com').contains('iossifov_2014');
     page.userGroupList('add_remove_groups_email@email.com').contains('comp_all');
     page.userGroupList('add_remove_groups_email@email.com').contains('any_user');
@@ -375,14 +374,12 @@ describe('User management tests for Users', () => {
     // add user
     page.groupsTableCells.first().should('have.text',
       'test_group_with_dataset_userEmpty groups with no users or datasets will be deleted!');
-    page.groupAddUserButton('test_group_with_dataset_user').click();
-    page.findButtonInComponentContainingText('.add-item-button', 'research@iossifovlab.com').click();
+    page.groupAddUser('test_group_with_dataset_user', 'research@iossifovlab.com');
     page.groupsWarningMessage.should('not.exist');
     page.groupUsersList('test_group_with_dataset_user').should('have.text', 'research@iossifovlab.com');
 
     // add dataset
-    page.groupAddDatasetButton('test_group_with_dataset_user').click();
-    page.findButtonInComponentContainingText('.add-item-button', 'iossifov_2014').click();
+    page.groupAddDataset('test_group_with_dataset_user', 'iossifov_2014');
     page.groupDatasetsList('test_group_with_dataset_user').should('have.text', 'iossifov_2014');
 
     // check if the group is added
@@ -401,8 +398,7 @@ describe('User management tests for Users', () => {
     createTestGroup(page, 'test_group_with_user');
 
     // add user
-    page.groupAddUserButton('test_group_with_user').click();
-    page.findButtonInComponentContainingText('.add-item-button', 'group_user_email@email.com').click();
+    page.groupAddUser('test_group_with_user', 'group_user_email@email.com');
     page.groupsWarningMessage.should('not.exist');
     page.groupUsersList('test_group_with_user').should('have.text', 'group_user_email@email.com');
 
@@ -419,8 +415,7 @@ describe('User management tests for Users', () => {
     createTestGroup(page, 'test_group_with_dataset');
 
     // add dataset
-    page.groupAddDatasetButton('test_group_with_dataset').click();
-    page.findButtonInComponentContainingText('.add-item-button', 'iossifov_2014').click();
+    page.groupAddDataset('test_group_with_dataset', 'iossifov_2014');
     page.groupsWarningMessage.should('not.exist');
     page.groupDatasetsList('test_group_with_dataset').should('have.text', 'iossifov_2014');
 
@@ -475,8 +470,7 @@ describe('User management tests for Users', () => {
   it('should fail to create group with already used name', () => {
     createTestUser(page, 'used_group_name_user_email@email.com', 'used_group_name_username');
     createTestGroup(page, 'used_group_name');
-    page.groupAddUserButton('used_group_name').click();
-    page.findButtonInComponentContainingText('.add-item-button', 'used_group_name_user_email@email.com').click();
+    page.groupAddUser('used_group_name', 'used_group_name_user_email@email.com');
 
     createTestGroup(page, 'used_group_name');
 
@@ -492,19 +486,15 @@ describe('User management tests for Users', () => {
     createTestUser(page, 'add_remove_user_email1@email.com', 'add_remove_username1');
     createTestGroup(page, 'add_remove_in_group');
 
-    page.groupUsersCell('add_remove_in_group').find('.add-button').click();
-    page.findButtonInComponentContainingText('.add-item-button', 'add_remove_user_email1@email.com').click();
-
-    page.groupAddDatasetButton('add_remove_in_group').click();
-    page.findButtonInComponentContainingText('.add-item-button', 'iossifov_2014').click();
+    page.groupAddUser('add_remove_in_group', 'add_remove_user_email1@email.com');
+    page.groupAddDataset('add_remove_in_group', 'iossifov_2014');
 
     createTestUser(page, 'add_remove_user_email2@email.com', 'add_remove_username2');
     createTestUser(page, 'add_remove_user_email3@email.com', 'add_remove_username3');
 
     page.groupsButton.click();
-    page.groupAddUserButton('add_remove_in_group').click();
-    page.findButtonInComponentContainingText('.add-item-button', 'add_remove_user_email2@email.com').click();
-    page.findButtonInComponentContainingText('.add-item-button', 'add_remove_user_email3@email.com').click();
+    page.groupAddUser('add_remove_in_group', 'add_remove_user_email2@email.com');
+    page.groupAddUser('add_remove_in_group', 'add_remove_user_email3@email.com');
 
     // remove dataset
     page.groupRemoveDatasetButton('add_remove_in_group', 'iossifov_2014').click();
@@ -532,12 +522,10 @@ describe('User management tests for Users', () => {
   it('should add and remove groups in Users and users in Groups', () => {
     createTestUser(page, 'groups_and_users_email@email.com', 'groups_and_users_username');
     createTestGroup(page, 'groups_and_users_groupname1');
-    page.groupAddUserButton('groups_and_users_groupname1').click();
-    page.findButtonInComponentContainingText('.add-item-button', 'groups_and_users_email@email.com').click();
+    page.groupAddUser('groups_and_users_groupname1', 'groups_and_users_email@email.com');
 
     createTestGroup(page, 'groups_and_users_groupname2');
-    page.groupAddDatasetButton('groups_and_users_groupname2').click();
-    page.findButtonInComponentContainingText('.add-item-button', 'iossifov_2014').click();
+    page.groupAddDataset('groups_and_users_groupname2', 'iossifov_2014');
 
     // check of the group is in user's group list
     page.usersButton.click();
@@ -546,8 +534,7 @@ describe('User management tests for Users', () => {
     page.userGroupList('groups_and_users_email@email.com').contains('groups_and_users_groupname1');
 
     // add group to user's group list
-    page.userAddGroupButton('groups_and_users_email@email.com').click();
-    page.findButtonInComponentContainingText('.add-item-button', 'groups_and_users_groupname2').click();
+    page.userAddGroup('groups_and_users_email@email.com', 'groups_and_users_groupname2');
     page.userGroupList('groups_and_users_email@email.com').contains('any_user');
     page.userGroupList('groups_and_users_email@email.com').contains('groups_and_users_email@email.com');
     page.userGroupList('groups_and_users_email@email.com').contains('groups_and_users_groupname1');
@@ -595,9 +582,8 @@ describe('User management tests for Users', () => {
   it('should check if the new group is deleted after removing it in Users', () => {
     createTestUser(page, 'delete_group_email@email.com', 'delete_group_username');
     createTestGroup(page, 'test_delete_group');
-    page.groupAddUserButton('test_delete_group').click();
 
-    page.findButtonInComponentContainingText('.add-item-button', 'delete_group_email@email.com').click();
+    page.groupAddUser('test_delete_group', 'delete_group_email@email.com');
 
     // remove the group from user's group list
     page.usersButton.click();
@@ -618,8 +604,7 @@ describe('User management tests for Users', () => {
   it('should check if the new group is deleted after deleting the user', () => {
     createTestUser(page, 'delete_group_delete_user_email@email.com', 'delete_group_delete_user_name');
     createTestGroup(page, 'delete_group_delete_user_group');
-    page.groupAddUserButton('delete_group_delete_user_group').click();
-    page.findButtonInComponentContainingText('.add-item-button', 'delete_group_delete_user_email@email.com').click();
+    page.groupAddUser('delete_group_delete_user_group', 'delete_group_delete_user_email@email.com');
 
     // delete user
     page.usersButton.click();
@@ -632,8 +617,7 @@ describe('User management tests for Users', () => {
 
   it('should add group to user and check data in Datasets', () => {
     createTestUser(page, 'add_group_to_user_datasets_email@email.com', 'add_group_to_user_datasets_name');
-    page.userAddGroupButton('add_group_to_user_datasets_email@email.com').click();
-    page.findButtonInComponentContainingText('.add-item-button', 'comp_all').click();
+    page.userAddGroup('add_group_to_user_datasets_email@email.com', 'comp_all');
 
     // check datasets
     page.userDatasetsCell('add_group_to_user_datasets_email@email.com').should('have.text', 'comp_all');
@@ -654,9 +638,8 @@ describe('User management tests for Users', () => {
 
   it('should create group, add datasets and check data in Datasets', () => {
     createTestGroup(page, 'add_datasets_group');
-    page.groupAddDatasetButton('add_datasets_group').click();
-    page.findButtonInComponentContainingText('.add-item-button', 'iossifov_2014').click();
-    page.findButtonInComponentContainingText('.add-item-button', 'comp_all').click();
+    page.groupAddDataset('add_datasets_group', 'iossifov_2014');
+    page.groupAddDataset('add_datasets_group', 'comp_all');
 
     page.datasetsButton.click();
     page.datasetGroupList('iossifov_2014').contains('any_dataset');
@@ -679,13 +662,11 @@ describe('User management tests for Users', () => {
     createTestGroup(page, 'test_user_in_datasets_groupname');
 
     // add users
-    page.groupUsersCell('test_user_in_datasets_groupname').find('.add-button').click();
-    page.findButtonInComponentContainingText('.add-item-button', 'test_user_in_datasets1@email.com').click();
-    page.findButtonInComponentContainingText('.add-item-button', 'test_user_in_datasets2@email.com').click();
+    page.groupAddUser('test_user_in_datasets_groupname', 'test_user_in_datasets1@email.com');
+    page.groupAddUser('test_user_in_datasets_groupname', 'test_user_in_datasets2@email.com');
 
     // add dataset
-    page.groupDatasetsCell('test_user_in_datasets_groupname').find('.add-button').click();
-    page.findButtonInComponentContainingText('.add-item-button', 'iossifov_2014').click();
+    page.groupAddDataset('test_user_in_datasets_groupname', 'iossifov_2014');
 
     // check users dataset
     page.usersButton.click();
@@ -728,13 +709,11 @@ describe('User management tests for Users', () => {
     createTestUser(page, 'add_remove_group_datasets2@email.com', 'add_remove_group_datasets_username2');
     createTestGroup(page, 'add_remove_group_datasets_groupname');
 
-    page.groupUsersCell('add_remove_group_datasets_groupname').find('.add-button').click();
-    page.findButtonInComponentContainingText('.add-item-button', 'add_remove_group_datasets1@email.com').click();
-    page.findButtonInComponentContainingText('.add-item-button', 'add_remove_group_datasets2@email.com').click();
+    page.groupAddUser('add_remove_group_datasets_groupname', 'add_remove_group_datasets1@email.com');
+    page.groupAddUser('add_remove_group_datasets_groupname', 'add_remove_group_datasets2@email.com');
 
     page.datasetsButton.click();
-    page.datasetAddGroupButton('comp_denovo').click();
-    page.findButtonInComponentContainingText('.add-item-button', 'add_remove_group_datasets_groupname').click();
+    page.datasetAddGroup('comp_denovo', 'add_remove_group_datasets_groupname');
 
     page.datasetGroupList('comp_denovo').contains('any_dataset');
     page.datasetGroupList('comp_denovo').contains('comp_denovo');
