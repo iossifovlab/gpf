@@ -2,8 +2,7 @@
 import pytest
 
 from dae.genomic_resources.genomic_scores import \
-    build_np_score_from_resource, \
-    build_position_score_from_resource
+    PositionScore, NPScore
 from dae.annotation.schema import Schema
 from dae.annotation.annotation_pipeline import AnnotationPipeline
 from dae.annotation.score_annotator import (
@@ -20,7 +19,7 @@ def test_position_score_annotator(
         "annotator_type": "position_score",
         "resource_id": "hg38/TESTphastCons100way"
     }
-    score = build_position_score_from_resource(resource)
+    score = PositionScore(resource)
     score.open()
 
     annotator = PositionScoreAnnotator(config, score)
@@ -39,7 +38,7 @@ def test_position_score_annotator_schema(grr_fixture):
         "annotator_type": "position_score",
         "resource_id": "hg38/TESTphastCons100way"
     }
-    score = build_position_score_from_resource(resource)
+    score = NPScore(resource)
     score.open()
 
     annotator = PositionScoreAnnotator(
@@ -57,7 +56,7 @@ def test_np_score_annotator(cadd_variants_expected, grr_fixture):
         "annotator_type": "np_score",
         "resource_id": "hg38/TESTCADD"
     }
-    score = build_np_score_from_resource(resource)
+    score = NPScore(resource)
     score.open()
     annotator = NPScoreAnnotator(config, score)
     pipeline = AnnotationPipeline([], grr_fixture)
@@ -76,7 +75,7 @@ def test_np_score_annotator_schema(grr_fixture):
         "annotator_type": "np_score",
         "resource_id": "hg38/TESTCADD"
     }
-    score = build_np_score_from_resource(resource)
+    score = NPScore(resource)
     score.open()
     annotator = NPScoreAnnotator(config, score)
 
@@ -110,7 +109,7 @@ def test_position_score_annotator_indels(
             "position_aggregator": "mean"
         }]
     }
-    score = build_position_score_from_resource(resource)
+    score = PositionScore(resource)
     score.open()
 
     annotator = PositionScoreAnnotator(config, score)
@@ -133,7 +132,7 @@ def test_position_score_annotator_mean_aggregate(
         "annotator_type": "position_score",
         "resource_id": "hg38/TESTPosAgg"
     }
-    score = build_position_score_from_resource(resource)
+    score = PositionScore(resource)
     score.open()
 
     annotator = PositionScoreAnnotator(config, score)
@@ -165,7 +164,7 @@ def test_np_score_annotator_indels(
             }
         ]
     }
-    score = build_np_score_from_resource(resource)
+    score = NPScore(resource)
     score.open()
     annotator = NPScoreAnnotator(config, score)
 
@@ -186,7 +185,7 @@ def test_score_annotator_resources(grr_fixture):
         "annotator_type": "position_score",
         "resource_id": "hg38/TESTphastCons100way"
     }
-    score = build_position_score_from_resource(resource)
+    score = PositionScore(resource)
     score.open()
 
     annotator = PositionScoreAnnotator(config, score)

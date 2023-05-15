@@ -10,7 +10,6 @@ from typing import Optional, List
 import numpy as np
 import pandas as pd
 from jinja2 import Template
-from cerberus import Validator
 
 from dae.utils.dae_utils import join_line
 from dae.genomic_resources.resource_implementation import \
@@ -288,8 +287,6 @@ class GeneScoreCollection(
     ResourceConfigValidationMixin
 ):
     """Class used to represent all gene scores in a resource."""
-
-    config_validator = Validator
 
     def __init__(self, resource):
         super().__init__(resource)

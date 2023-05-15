@@ -6,7 +6,7 @@ import pytest
 from dae.annotation.annotatable import VCFAllele
 from dae.genomic_resources import build_genomic_resource_repository
 from dae.genomic_resources.genomic_scores import \
-    build_position_score_from_resource
+    PositionScore
 from dae.annotation.annotation_factory import build_annotation_pipeline
 
 
@@ -64,7 +64,7 @@ def test_position_resource_default_annotation(position_score_repo):
 
     res = position_score_repo.get_resource("position_score1")
     assert res is not None
-    score = build_position_score_from_resource(res)
+    score = PositionScore(res)
 
     default_annotation = score.get_default_annotation()
     print(default_annotation)

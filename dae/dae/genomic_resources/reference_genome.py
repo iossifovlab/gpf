@@ -12,7 +12,6 @@ from typing import Optional, Any, cast
 import yaml
 
 from jinja2 import Template
-from cerberus import Validator
 
 from dae.genomic_resources.fsspec_protocol import build_local_resource
 from dae.genomic_resources.resource_implementation import \
@@ -308,8 +307,6 @@ class ReferenceGenome(
     ResourceConfigValidationMixin
 ):
     """Provides an interface for quering a reference genome."""
-
-    config_validator = Validator
 
     def __init__(self, resource: GenomicResource):
         super().__init__(resource)
