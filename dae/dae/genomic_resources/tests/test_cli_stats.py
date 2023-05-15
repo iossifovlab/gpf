@@ -225,7 +225,7 @@ def test_stats_position_score(tmp_path):
         1      22         25       0.46  EMPTY
         2      5          80       0.01  3
         2      10         11       0.02  3
-        """, seq_col=0, start_col=1, end_col=1)
+        """, seq_col=0, start_col=1, end_col=2)
 
     repo = build_filesystem_test_repository(tmp_path)
 
@@ -326,7 +326,7 @@ def test_stats_np_score(tmp_path):
         2      16         19       C          A            0.03  3
         2      16         19       C          T            0.04  3
         2      16         19       C          G            0.05  4
-        """, seq_col=0, start_col=1, end_col=1)
+        """, seq_col=0, start_col=1, end_col=2)
 
     repo = build_filesystem_test_repository(tmp_path)
 
@@ -410,7 +410,7 @@ def test_minmax(tmp_path):
         2      10         11       1.0
         3      5          17       1.0
         3      18         20       0.01
-        """, seq_col=0, start_col=1, end_col=1)
+        """, seq_col=0, start_col=1, end_col=2)
 
     repo = build_filesystem_test_repository(tmp_path)
 
@@ -492,7 +492,7 @@ def test_reference_genome_usage(tmp_path, mocker):
         2      10         11       1.0
         3      5          17       1.0
         3      18         20       0.01
-        """, seq_col=0, start_col=1, end_col=1)
+        """, seq_col=0, start_col=1, end_col=2)
 
     repo = build_filesystem_test_repository(tmp_path)
 
