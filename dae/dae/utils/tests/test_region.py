@@ -65,13 +65,13 @@ def test_collapse_no_chrom_simple(regions, expected):
 @pytest.mark.parametrize(
     "chrom,chrom_length,region_size,expected",
     [
-        ("1", 10, 5, [Region("1", 1, 6), Region("1", 6, 10)]),
+        ("1", 10, 5, [Region("1", 1, 5), Region("1", 6, 10)]),
         ("1", 10, 100, [Region("1", 1, 10)]),
         ("1", 4, 1, [
-            Region("1", 1, 2),
-            Region("1", 2, 3),
-            Region("1", 3, 4),
-            #Region("1", 4, 5)
+            Region("1", 1, 1),
+            Region("1", 2, 2),
+            Region("1", 3, 3),
+            Region("1", 4, 4)
         ]),
     ]
 )
