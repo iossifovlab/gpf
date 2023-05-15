@@ -272,6 +272,27 @@ class Inheritance(enum.Enum):
         return self.name
 
 
+def bitmask2inheritance(bitmask: int) -> set[Inheritance]:
+    """Convert a bitmask to set of inheritance."""
+    all_inheritance = set([
+        Inheritance.reference,
+        Inheritance.mendelian,
+        Inheritance.denovo,
+        Inheritance.omission,
+        Inheritance.possible_denovo,
+        Inheritance.possible_omission,
+        Inheritance.other,
+        Inheritance.missing,
+        Inheritance.unknown,
+    ])
+    result: set[Inheritance] = set()
+    for inh in all_inheritance:
+        if bitmask & inh.value:
+            result.add(inh)
+
+    return result
+
+
 class GeneticModel(enum.Enum):
     # pylint: disable=invalid-name
     autosomal = 1
