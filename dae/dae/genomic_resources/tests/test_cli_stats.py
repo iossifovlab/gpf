@@ -519,7 +519,7 @@ def test_reference_genome_usage(tmp_path, mocker):
 
     genomic_table_length_mock = mocker.Mock(return_value=30)
     mocker.patch(
-        "dae.genomic_resources.genomic_scores.get_chromosome_length",
+        "dae.genomic_resources.genomic_scores.get_chromosome_length_tabix",
         new=genomic_table_length_mock
     )
 
