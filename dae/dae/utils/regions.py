@@ -42,7 +42,7 @@ def split_into_regions(
     return regions
 
 
-def get_chromosome_length(
+def get_chromosome_length_tabix(
     tabix_file: pysam.TabixFile, chrom: str,
     step=100_000_000, precision=5_000_000
 ):

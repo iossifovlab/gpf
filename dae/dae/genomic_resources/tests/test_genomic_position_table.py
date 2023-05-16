@@ -11,7 +11,7 @@ from dae.genomic_resources.genomic_position_table import \
     VCFGenomicPositionTable, \
     build_genomic_position_table
 
-from dae.utils.regions import get_chromosome_length
+from dae.utils.regions import get_chromosome_length_tabix
 
 from dae.genomic_resources.testing import \
     build_inmemory_test_resource, build_filesystem_test_resource, \
@@ -1095,7 +1095,7 @@ def test_contig_length():
 
 
 def test_contig_length_tabix_table(tabix_table):
-    assert get_chromosome_length(tabix_table.pysam_file, "1") >= 13
+    assert get_chromosome_length_tabix(tabix_table.pysam_file, "1") >= 13
 
 
 def test_vcf_autodetect_format(vcf_res_autodetect_format):

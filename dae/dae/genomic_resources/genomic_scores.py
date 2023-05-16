@@ -15,7 +15,7 @@ from functools import lru_cache
 from jinja2 import Template
 
 from dae.task_graph.graph import TaskGraph
-from dae.utils.regions import split_into_regions, get_chromosome_length
+from dae.utils.regions import split_into_regions, get_chromosome_length_tabix
 from . import GenomicResource
 from .reference_genome import build_reference_genome_from_resource
 from .resource_implementation import GenomicResourceImplementation, \
@@ -657,7 +657,7 @@ class GenomicScore(
             else:
                 if isinstance(self.table, InmemoryGenomicPositionTable):
                     raise ValueError("In memory tables are not supported")
-                chrom_length = get_chromosome_length(
+                chrom_length = get_chromosome_length_tabix(
                     self.table.pysam_file, chrom
                 )
             regions.extend(

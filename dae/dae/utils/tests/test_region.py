@@ -1,7 +1,8 @@
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pytest
 import pysam
 from dae.utils.regions import Region, collapse, collapse_no_chrom, \
-    split_into_regions, get_chromosome_length
+    split_into_regions, get_chromosome_length_tabix
 
 from dae.genomic_resources.testing import setup_tabix
 
@@ -113,13 +114,13 @@ def sample_tabix(tmp_path):
     ]
 )
 def test_get_chrom_length(sample_tabix, precision):
-    one_length = get_chromosome_length(sample_tabix, "1", precision=precision)
+    one_length = get_chromosome_length_tabix(sample_tabix, "1", precision=precision)
     assert one_length > 14
     assert one_length - 14 <= precision
-    two_length = get_chromosome_length(sample_tabix, "2", precision=precision)
+    two_length = get_chromosome_length_tabix(sample_tabix, "2", precision=precision)
     assert two_length > 4
     assert two_length - 14 <= precision
-    three_length = get_chromosome_length(
+    three_length = get_chromosome_length_tabix(
         sample_tabix, "3", precision=precision
     )
     assert three_length > 500_010
