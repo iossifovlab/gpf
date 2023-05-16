@@ -22,7 +22,7 @@ class BigQueryQueryRunner(QueryRunner):
             "bigquery runner (%s) started", self.study_id)
 
         try:
-            if self.closed():
+            if self.is_closed():
                 logger.info(
                     "runner (%s) closed before execution",
                     self.study_id)
@@ -34,7 +34,7 @@ class BigQueryQueryRunner(QueryRunner):
                 if val is None:
                     continue
                 self._put_value_in_result_queue(val)
-                if self.closed():
+                if self.is_closed():
                     logger.debug(
                         "query runner (%s) closed while iterating",
                         self.study_id)
@@ -45,10 +45,10 @@ class BigQueryQueryRunner(QueryRunner):
                 "exception in runner (%s) run: %s",
                 self.study_id, type(ex), exc_info=True)
             self._put_value_in_result_queue(ex)
-        finally:
-            logger.debug(
-                "runner (%s) closing connection", self.study_id)
 
+        logger.debug(
+            "runner (%s) closing connection", self.study_id)
+        self.close()
         self._finalize(started)
 
     def _put_value_in_result_queue(self, val):
@@ -64,7 +64,7 @@ class BigQueryQueryRunner(QueryRunner):
                     "runner (%s) nobody interested",
                     self.study_id)
 
-                if self.closed():
+                if self.is_closed():
                     break
                 no_interest += 1
                 if no_interest % 1_000 == 0:

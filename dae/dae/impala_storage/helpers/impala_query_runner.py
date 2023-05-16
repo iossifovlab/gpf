@@ -27,7 +27,7 @@ class ImpalaQueryRunner(QueryRunner):
                 logger.debug(
                     "runner (%s) timeout in connect; elapsed %0.2fsec",
                     self.study_id, elapsed)
-                if self.closed():
+                if self.is_closed():
                     logger.info(
                         "runner (%s) closed before connection established "
                         "after %0.2fsec",
@@ -37,7 +37,7 @@ class ImpalaQueryRunner(QueryRunner):
     def run(self):
         """Execute the query and enqueue the resulting rows."""
         started = time.time()
-        if self.closed():
+        if self.is_closed():
             logger.info(
                 "impala runner (%s) closed before executing...",
                 self.study_id)
@@ -61,7 +61,7 @@ class ImpalaQueryRunner(QueryRunner):
                 self.study_id, elapsed)
             with connection.cursor() as cursor:
                 try:
-                    if self.closed():
+                    if self.is_closed():
                         logger.info(
                             "runner (%s) closed before execution "
                             "after %0.2fsec",
@@ -72,7 +72,7 @@ class ImpalaQueryRunner(QueryRunner):
                     cursor.execute_async(self.query)
                     self._wait_cursor_executing(cursor)
 
-                    while not self.closed():
+                    while not self.is_closed():
                         row = cursor.fetchone()
                         if row is None:
                             break
@@ -83,7 +83,7 @@ class ImpalaQueryRunner(QueryRunner):
 
                         self._put_value_in_result_queue(val)
 
-                        if self.closed():
+                        if self.is_closed():
                             logger.debug(
                                 "query runner (%s) closed while iterating",
                                 self.study_id)
@@ -94,15 +94,15 @@ class ImpalaQueryRunner(QueryRunner):
                         "exception in runner (%s) run: %s",
                         self.study_id, type(ex), exc_info=True)
                     self._put_value_in_result_queue(ex)
-                finally:
-                    logger.debug(
-                        "runner (%s) closing connection", self.study_id)
+        logger.debug(
+            "runner (%s) closing connection", self.study_id)
+        self.close()
 
         self._finalize(started)
 
     def _wait_cursor_executing(self, cursor):
         while True:
-            if self.closed():
+            if self.is_closed():
                 logger.debug(
                     "query runner (%s) closed while executing",
                     self.study_id)

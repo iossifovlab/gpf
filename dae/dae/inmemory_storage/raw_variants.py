@@ -35,7 +35,7 @@ class RawVariantsQueryRunner(QueryRunner):
     def run(self):
         assert self._result_queue is not None
         try:
-            if self.closed():
+            if self.is_closed():
                 return
 
             while True:
@@ -51,10 +51,10 @@ class RawVariantsQueryRunner(QueryRunner):
                         self._put_value_in_result_queue(val)
                         break
                     except queue.Full:
-                        if self.closed():
+                        if self.is_closed():
                             break
 
-                if self.closed():
+                if self.is_closed():
                     break
 
         except StopIteration:

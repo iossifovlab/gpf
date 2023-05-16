@@ -42,8 +42,8 @@ def test_impala_runner_simple(impala_helpers):
     runner.close()
     time.sleep(1)
 
-    assert runner.closed()
-    assert runner.done()
+    assert runner.is_closed()
+    assert runner.is_done()
 
     executor.shutdown(wait=True)
 
@@ -70,7 +70,7 @@ def test_impala_runner_result_with_exception(impala_helpers):
         result.close()
     time.sleep(0.5)
 
-    assert runner.closed()
+    assert runner.is_closed()
 
 
 def test_impala_runner_result_experimental_1(impala_helpers):
@@ -146,4 +146,4 @@ def test_impala_runner_result_experimental(impala_helpers):
         result.close()
     time.sleep(0.5)
 
-    assert runner.closed()
+    assert runner.is_closed()

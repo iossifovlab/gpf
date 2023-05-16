@@ -44,7 +44,7 @@ class DuckDbRunner(QueryRunner):
             "bigquery runner (%s) started", self.study_id)
 
         try:
-            if self.closed():
+            if self.is_closed():
                 logger.info(
                     "runner (%s) closed before execution",
                     self.study_id)
@@ -57,7 +57,7 @@ class DuckDbRunner(QueryRunner):
                     if val is None:
                         continue
                     self._put_value_in_result_queue(val)
-                    if self.closed():
+                    if self.is_closed():
                         logger.debug(
                             "query runner (%s) closed while iterating",
                             self.study_id)
@@ -87,7 +87,7 @@ class DuckDbRunner(QueryRunner):
                     "runner (%s) nobody interested",
                     self.study_id)
 
-                if self.closed():
+                if self.is_closed():
                     break
                 no_interest += 1
                 if no_interest % 1_000 == 0:
