@@ -81,7 +81,7 @@ def test_no_eager_loading(mocker, wgpf_fixture, wdae_django_server):
         assert not wgpf_fixture.get_all_genotype_data.called
 
 
-@pytest.mark.skip
+@pytest.mark.skip(reason="django live server fixture reloading problems")
 def test_example_request(mocker, wgpf_fixture, wdae_django_server):
 
     with wdae_django_server(
@@ -89,7 +89,8 @@ def test_example_request(mocker, wgpf_fixture, wdae_django_server):
             "wdae_tests.integration.test_wdae_config."
             "eager_loading_true_settings") as server:
 
-        response = requests.get(f"{server.url}/api/v3/datasets")
+        response = requests.get(
+            f"{server.url}/api/v3/datasets", timeout=0.5)
 
         assert response.status_code == 200
         assert "data" in response.json()
