@@ -239,6 +239,7 @@ class DuckDbVariants(SqlSchema2Variants):
             ped_df.role = ped_df.role.apply(Role)  # type: ignore
             ped_df.sex = ped_df.sex.apply(Sex)  # type: ignore
             ped_df.status = ped_df.status.apply(Status)  # type: ignore
+            ped_df.loc[ped_df.layout.isna(), "layout"] = None
 
             return ped_df
 
