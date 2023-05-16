@@ -3,7 +3,7 @@ import abc
 
 from collections import defaultdict
 from functools import reduce
-
+from typing import Any, cast
 import networkx as nx  # type: ignore
 
 from dae.pedigrees.interval_sandwich import SandwichInstance
@@ -12,6 +12,8 @@ from dae.pedigrees.family import Person, Family
 
 
 class FamilyConnections():
+    """Representation of connections between family members."""
+
     def __init__(self, family, id_to_individual, id_to_mating_unit):
         assert family is not None
         assert "0" not in id_to_individual
@@ -23,6 +25,7 @@ class FamilyConnections():
 
     @staticmethod
     def is_valid_family(family):
+        """Check if a family is valid."""
         if not family:
             return False
         for parents in family.keys():
@@ -36,6 +39,7 @@ class FamilyConnections():
         return True
 
     def get_graph(self):
+        """Build a family graph."""
         graph = nx.Graph()
         for individual_id in self.id_to_individual:
             graph.add_node(individual_id)
@@ -62,8 +66,9 @@ class FamilyConnections():
 
     @staticmethod
     def add_missing_members(family):
+        """Construct missing family members."""
         new_members = []
-        id_to_individual = defaultdict(Individual)
+        id_to_individual: dict[str, Any] = defaultdict(Individual)
 
         for member in family.full_members:
             individual = id_to_individual[member.person_id]
@@ -147,12 +152,13 @@ class FamilyConnections():
 
     @classmethod
     def from_family(cls, family, add_missing_members=True):
+        """Build family connections object from a family."""
         assert isinstance(family, Family)
 
         if add_missing_members:
             cls.add_missing_members(family)
 
-        id_to_individual = defaultdict(Individual)
+        id_to_individual: dict[str, Any] = defaultdict(Individual)
         id_to_mating_unit = {}
 
         for member in family.full_members:
@@ -216,7 +222,7 @@ class FamilyConnections():
             if len(i1.mating_units) > 2
         }
         same_rank_edges -= multiple_partners_edges
-        same_rank_edges = set(map(tuple, same_rank_edges))
+        same_rank_edges = set(map(tuple, same_rank_edges))  # type: ignore
 
         # Eb+: mating units and individuals in them should intersect
         mating_edges = {
@@ -281,19 +287,6 @@ class FamilyConnections():
             | intergenerational_edges
         )
 
-        # print("same_rank_edges", len(same_rank_edges), same_rank_edges)
-        # print("same_generation_not_mates",
-        #       len(same_generation_not_mates), same_generation_not_mates)
-        # print("same_generation_not_siblings",
-        #       len(same_generation_not_siblings),
-        #       same_generation_not_siblings)
-        # print("intergenerational_edges",
-        #       len(intergenerational_edges), intergenerational_edges)
-
-        # print("all vertices", len(all_vertices), all_vertices)
-        # print("required edges", len(required_set), required_set)
-        # print("forbidden edges", len(forbidden_set), forbidden_set)
-
         return SandwichInstance.from_sets(
             all_vertices, required_set, forbidden_set
         )
@@ -306,6 +299,7 @@ class FamilyConnections():
         return self.family.full_members
 
     def add_ranks(self):
+        """Calculate and add ranks to the family members."""
         if len(self.id_to_mating_unit) == 0:
             for member in self.id_to_individual.values():
                 member.rank = 0
@@ -328,7 +322,8 @@ class FamilyConnections():
 
     def max_rank(self):
         return reduce(
-            lambda acc, i: max(acc, i.rank), self.id_to_individual.values(), 0
+            lambda acc, i: max(acc, cast(int, i.rank)),
+            self.id_to_individual.values(), 0
         )
 
     def get_individual(self, person_id):
@@ -348,6 +343,8 @@ class FamilyConnections():
 
 
 class IndividualGroup(metaclass=abc.ABCMeta):
+    """Group of individuals connected to an individual."""
+
     @abc.abstractmethod
     def individual_set(self):
         return {}
@@ -375,6 +372,8 @@ class IndividualGroup(metaclass=abc.ABCMeta):
 
 
 class Individual(IndividualGroup):
+    """Represents an individual and all connected members."""
+
     NO_RANK = -3673473456
 
     def __init__(
@@ -396,6 +395,7 @@ class Individual(IndividualGroup):
         return {c for mu in self.mating_units for c in mu.children_set()}
 
     def add_rank(self, rank):
+        """Calculate and set generation rank for each individual in a group."""
         if self.rank != Individual.NO_RANK:
             return
 
@@ -434,6 +434,8 @@ class Individual(IndividualGroup):
 
 
 class SibshipUnit(IndividualGroup):
+    """Group of individuals connected as siblings."""
+
     def __init__(self, individuals=None):
         if individuals is None:
             individuals = set()
@@ -448,6 +450,8 @@ class SibshipUnit(IndividualGroup):
 
 
 class MatingUnit(IndividualGroup):
+    """Gropu of individuals connected in a mating unit."""
+
     def __init__(self, mother, father, children=None):
         if children is None:
             children = SibshipUnit()

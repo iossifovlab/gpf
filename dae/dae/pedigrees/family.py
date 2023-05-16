@@ -207,9 +207,9 @@ class Person:
 
     def has_missing_parent(self):
         return \
-            (self.has_dad()
+            (self.dad is not None
              and (self.dad.generated or self.dad.not_sequenced)) \
-            or (self.has_mom()
+            or (self.mom is not None
                 and (self.mom.generated or self.mom.not_sequenced))
 
     def has_attr(self, key):
@@ -331,7 +331,10 @@ class Family:
         }
 
     def get_columns(self):
-        column_names = set(self.members_in_order[0]._attributes.keys())
+        """Collect list of columns for representing a family as data frame."""
+        column_names = set(
+            self.members_in_order[0]  # pylint: disable=protected-access
+                ._attributes.keys())
         columns = [
             col
             for col in PEDIGREE_COLUMN_NAMES.values()
@@ -627,12 +630,14 @@ class FamiliesData(Mapping[str, Family]):
 
     @staticmethod
     def from_families(families: Dict[str, Family]) -> FamiliesData:
+        """Build families data from dictionary of families."""
         families_data = FamiliesData.from_family_persons(
             {fam.family_id: fam.full_members for fam in families.values()}
         )
         # FIXME: Avoid this workaround
         for family_id, family in families.items():
-            families_data[family_id]._tags = family.tags
+            families_data[family_id]\
+                ._tags = family.tags  # pylint: disable=protected-access
 
         return families_data
 
@@ -742,22 +747,13 @@ class FamiliesData(Mapping[str, Family]):
                     result.append(person)
         return result
 
-    # def person_ids_with_parents(self):
-    #     if self._person_ids_with_parents is None:
-    #         self._person_ids_with_parents = set()
-    #         for fam in list(self._families.values()):
-    #             for p in fam.members_in_order:
-    #                 if p.has_both_parents() and (not p.has_missing_parent()):
-    #                     self._person_ids_with_parents.add(p.person_id)
-    #     return self._person_ids_with_parents
-
     def persons_with_roles(self, roles=None, family_ids=None):
         """Return list of persons matching the specified roles."""
         if family_ids is None:
             persons = self.persons.values()
         else:
             family_ids = set(family_ids)
-            persons = filter(
+            persons = filter(  # type: ignore
                 lambda p: p.family_id in family_ids,
                 self.persons.values())
 

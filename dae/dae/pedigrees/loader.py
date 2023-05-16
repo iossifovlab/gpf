@@ -227,7 +227,7 @@ class FamiliesLoader(CLILoader):
         ))
         arguments.append(CLIArgument(
             "--ped-layout-mode",
-            default_value="load",
+            default_value="generate",
             help_text="Layout mode specifies how pedigrees "
             "drawing of each family is handled."
             " Available options are `generate` and `load`. When "
@@ -339,6 +339,7 @@ class FamiliesLoader(CLILoader):
         **kwargs,  # pylint: disable=unused-argument
     ):
         """Read a pedigree from file."""
+        # pylint: disable=too-many-arguments, too-many-locals
         if isinstance(ped_no_role, str):
             ped_no_role = str2bool(ped_no_role)
         if isinstance(ped_no_header, str):
