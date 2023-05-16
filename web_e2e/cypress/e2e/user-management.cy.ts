@@ -687,6 +687,10 @@ describe('User management tests for Users', () => {
     page.groupDatasetsList('test_user_in_datasets_groupname').find('#iossifov_2014-list-item #confirm-button').click();
     page.removeDatasetOrUserConfirmButton.click();
 
+    // check in Datasets
+    page.datasetsButton.click();
+    page.datasetGroupList('iossifov_2014').should('not.contain', 'test_user_in_datasets_groupname');
+
     deleteTestUser(page, 'test_user_in_datasets1@email.com');
     deleteTestUser(page, 'test_user_in_datasets2@email.com');
 
@@ -701,7 +705,6 @@ describe('User management tests for Users', () => {
     );
     page.datasetGroupList('iossifov_2014').contains('any_dataset');
     page.datasetGroupList('iossifov_2014').contains('iossifov_2014');
-    page.datasetGroupList('iossifov_2014').should('not.contain', 'test_user_in_datasets_groupname');
   });
 
   it('should add and remove groups in Datasets', () => {
