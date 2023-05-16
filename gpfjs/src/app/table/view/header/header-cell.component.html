@@ -33,7 +33,7 @@
       <div *ngFor="let child of columnInfo.subcolumnsChildren" style="display: table-row">
         <div (click)="onSortClick(child)" [class.clickable]="child.sortable" id="sort-child">
           <ng-template *ngIf="child.contentTemplateRef" [ngTemplateOutlet]="child.contentTemplateRef"></ng-template>
-          <span style="word-break: nowrap" *ngIf="!child.contentTemplateRef">{{ child.caption }}</span>
+          <span *ngIf="!child.contentTemplateRef" style="word-break: nowrap">{{ child.caption }}</span>
         </div>
         <div (click)="onSortClick(child)" [class.clickable]="child.sortable" id="sorting-buttons">
           <i

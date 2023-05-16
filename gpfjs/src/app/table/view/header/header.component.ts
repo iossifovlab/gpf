@@ -12,10 +12,6 @@ export class GpfTableHeaderComponent {
   @Output() public sortingInfoChange = new EventEmitter();
   @Input() public sortingInfo: SortInfo;
 
-  @HostListener('window:resize', ['$event'])
-  public onWindowResize(): void {
-  }
-
   public get subheadersCount(): number[] {
     if (this.columns.first) {
       const length: number = this.columns.first.headerChildren.length;

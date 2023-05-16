@@ -75,16 +75,7 @@ export class GpfTableComponent implements OnChanges, AfterViewChecked {
 
   @HostListener('window:resize', ['$event'])
   public onWindowResize(): void {
-    this.tableWidth = '0';
-    if (this.columnsChildren !== undefined && this.columnsChildren !== null) {
-      this.columnsChildren.forEach(column => {
-        this.tableWidth = String(parseFloat(this.tableWidth) + parseFloat(column.columnWidth));
-      });
-      this.tableWidth += 'px';
-      if (parseFloat(this.tableWidth) <= this.tableViewChild?.nativeElement.offsetWidth) {
-        this.tableWidth = this.tableViewChild?.nativeElement.offsetWidth;
-      }
-    }
+    this.tableWidth = String(this.calculateTableWidthFloat()) + 'px';
   }
 
 
@@ -139,17 +130,7 @@ export class GpfTableComponent implements OnChanges, AfterViewChecked {
   }
 
   public getVisibleData(): Array<any> {
-    this.tableWidth = '0';
-    if (this.columnsChildren !== undefined && this.columnsChildren !== null) {
-      this.columnsChildren.forEach(column => {
-        this.tableWidth = String(parseFloat(this.tableWidth) + parseFloat(column.columnWidth));
-      });
-      this.tableWidth += 'px';
-      if (parseFloat(this.tableWidth) <= this.tableViewChild?.nativeElement.offsetWidth) {
-        this.tableWidth = this.tableViewChild?.nativeElement.offsetWidth;
-      }
-    }
-    //this.tableWidth = this.tableViewChild?.nativeElement.offsetWidth;
+    this.tableWidth = String(this.calculateTableWidthFloat()) + 'px';
     if (!this.dataSource) {
       return [];
     }
@@ -158,5 +139,16 @@ export class GpfTableComponent implements OnChanges, AfterViewChecked {
     }
     const scrollIndices = this.getScrollIndices();
     return this.dataSource.slice(scrollIndices[0], scrollIndices[1]);
+  }
+
+  public calculateTableWidthFloat(): number {
+    let tableWidthFloat = 0;
+    if (this.columnsChildren !== undefined && this.columnsChildren !== null) {
+      this.columnsChildren.forEach(column => {
+        tableWidthFloat += parseFloat(column.columnWidth);
+      });
+      return tableWidthFloat;
+    }
+    return undefined;
   }
 }
