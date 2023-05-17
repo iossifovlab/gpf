@@ -81,8 +81,8 @@ def test_split_into_regions(chrom, chrom_length, region_size, expected):
 
     assert len(result) == len(expected)
 
-    for i in range(len(result)):
-        assert result[i] == expected[i], f"{result[i]} != {expected[i]}"
+    for i, res in enumerate(result):
+        assert res == expected[i], f"{res} != {expected[i]}"
 
 
 @pytest.fixture()
@@ -114,10 +114,12 @@ def sample_tabix(tmp_path):
     ]
 )
 def test_get_chrom_length(sample_tabix, precision):
-    one_length = get_chromosome_length_tabix(sample_tabix, "1", precision=precision)
+    one_length = get_chromosome_length_tabix(
+        sample_tabix, "1", precision=precision)
     assert one_length > 14
     assert one_length - 14 <= precision
-    two_length = get_chromosome_length_tabix(sample_tabix, "2", precision=precision)
+    two_length = get_chromosome_length_tabix(
+        sample_tabix, "2", precision=precision)
     assert two_length > 4
     assert two_length - 14 <= precision
     three_length = get_chromosome_length_tabix(
