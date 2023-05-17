@@ -2,7 +2,6 @@ import { UserManagementPage } from 'cypress/elements/user-management-page';
 import { UsersPage } from 'cypress/elements/users-page';
 import { sidenavPageLinks } from 'cypress/elements/utils';
 import 'cypress-if';
-import { PedigreeSelectorPage } from 'cypress/elements/pedigree-selector-page';
 
 describe('User management tests for reset password in Users', () => {
   const page = new UserManagementPage();
@@ -21,18 +20,15 @@ describe('User management tests for reset password in Users', () => {
     page.userActionsResetPassword('user_reset_password@email.com').click();
     page.userTableResetPasswordConfirmButton.click();
 
-    cy.wait(10000);
-    cy.request('GET', 'http://mailhog:8025/api/v2/search?kind=to&query=user_reset_password@email.com').then(
-      (response: {body: {items: {Content: {Body: string}}[]}}) => {
-        const regexUrl = new RegExp(/http(s)?:\/\/[\w_-]+((.[\w_-]))([\w.,@?^=%&:/~+#-]*[\w@?^=%&/~+#-])/gm, 'i');
-        const url = response.body.items[0].Content.Body.match(regexUrl)[0];
-        const urlToVisit = url.replace('http://gpf/gpf/', '');
-        cy.visit(urlToVisit);
-        page.newPasswordInput.type('XC^ZF*TZXuUChFsv');
-        page.repeatNewPasswordInput.type('XC^ZF*TZXuUChFsv');
-        page.newPasswordButton.click();
-      }
-    );
+    page.getLastEmail('user_reset_password@email.com').then(emailBody => {
+      const regexUrl = new RegExp(/http(s)?:\/\/[\w_-]+((.[\w_-]))([\w.,@?^=%&:/~+#-]*[\w@?^=%&/~+#-])/gm, 'i');
+      const url = emailBody.match(regexUrl)[0];
+      const urlToVisit = url.replace('http://gpf/gpf/', '');
+      cy.visit(urlToVisit);
+      page.newPasswordInput.type('XC^ZF*TZXuUChFsv');
+      page.repeatNewPasswordInput.type('XC^ZF*TZXuUChFsv');
+      page.newPasswordButton.click();
+    });
 
     page.logout();
     usersPage.waitLoginAfterLogout();
@@ -71,18 +67,15 @@ describe('User management tests for reset password in Users', () => {
       cy.get('input[value="Reset password"]').click();
     });
 
-    cy.wait(10000);
-    cy.request('GET', 'http://mailhog:8025/api/v2/search?kind=to&query=forgotten_password@email.com').then(
-      (response: {body: {items: {Content: {Body: string}}[]}}) => {
-        const regexUrl = new RegExp(/http(s)?:\/\/[\w_-]+((.[\w_-]))([\w.,@?^=%&:/~+#-]*[\w@?^=%&/~+#-])/gm, 'i');
-        const url = response.body.items[0].Content.Body.match(regexUrl)[0];
-        const urlToVisit = url.replace('http://gpf/gpf/', '');
-        cy.visit(urlToVisit);
-        page.newPasswordInput.type('XC^ZF*TZXuUChFsv');
-        page.repeatNewPasswordInput.type('XC^ZF*TZXuUChFsv');
-        page.newPasswordButton.click();
-      }
-    );
+    page.getLastEmail('forgotten_password@email.com').then(emailBody => {
+      const regexUrl = new RegExp(/http(s)?:\/\/[\w_-]+((.[\w_-]))([\w.,@?^=%&:/~+#-]*[\w@?^=%&/~+#-])/gm, 'i');
+      const url = emailBody.match(regexUrl)[0];
+      const urlToVisit = url.replace('http://gpf/gpf/', '');
+      cy.visit(urlToVisit);
+      page.newPasswordInput.type('XC^ZF*TZXuUChFsv');
+      page.repeatNewPasswordInput.type('XC^ZF*TZXuUChFsv');
+      page.newPasswordButton.click();
+    });
 
     usersPage.waitLoginAfterLogout();
     page.login('forgotten_password@email.com', 'XC^ZF*TZXuUChFsv');

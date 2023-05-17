@@ -312,4 +312,20 @@ export class UserManagementPage extends BasePage {
   public get datasetsRemoveGroupConfirmButton(): element {
     return cy.get('gpf-datasets-table mwl-confirmation-popover-window button').contains('Remove');
   }
+
+  public getLastEmail(email: string, retries = 10): Cypress.Chainable<string> {
+    if (retries === 0) {
+      throw new Error('Couldn\'t find email!');
+    }
+
+    return cy.request('GET', `http://mailhog:8025/api/v2/search?kind=to&query=${email}`).then(
+      (resp: {body: {items: {Content: {Body: string}}[]}}) => {
+        if (resp.body.items === undefined || resp.body.items.length === 0) {
+          cy.wait(3000);
+          this.getLastEmail(email, --retries);
+        } else {
+          return resp.body.items[0].Content.Body;
+        }
+      });
+  }
 }
