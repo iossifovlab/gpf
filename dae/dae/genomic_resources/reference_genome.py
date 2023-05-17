@@ -301,15 +301,231 @@ class GenomeStatistic(Statistic):
         return stat
 
 
-class ReferenceGenome(
+class ReferenceGenomeImplementation(
     GenomicResourceImplementation,
-    InfoImplementationMixin,
+    InfoImplementationMixin
+):
+    """Resource implementation for reference genome."""
+
+    def __init__(self, resource: GenomicResource):
+        super().__init__(resource)
+        self.reference_genome = build_reference_genome_from_resource(resource)
+
+    def get_template(self):
+        return Template(textwrap.dedent("""
+            {% extends base %}
+            {% block content %}
+
+            {% if data["chrom_prefix"] %}
+            <p>chrom prefix: {{ data["chrom_prefix"] }}</p>
+            {% endif %}
+
+            {% if data["PARS"] %}
+            <h3>Pseudoautosomal regions:</h6>
+            {% if data["PARS"]["X"] %}
+            <p>X chromosome:</p>
+            <ul>
+            {% for region in data["PARS"]["X"] %}
+            <li>{{region}}</li>
+            {% endfor %}
+            </ul>
+            {% endif %}
+
+            {% if data["PARS"]["Y"] %}
+            <p>Y chromosome: </p>
+            <ul>
+            {% for region in data["PARS"]["Y"] %}
+            <li>{{region}}</li>
+            {% endfor %}
+            </ul>
+            {% endif %}
+            {% endif %}
+
+            <h3>Genome statistics:</h3>
+            {% if data["global_statistic"] %}
+                <h4>Length: {{ data["global_statistic"]["length"] }}</h4>
+
+                <h4>Nucleotide distribution:</h4>
+                {%
+                    for nucleotide, prc in
+                    data["global_statistic"]["nuc_distribution"].items()
+                %}
+                    <p>{{ nucleotide }}: {{ "%0.2f%%" % prc }}</p>
+                {% endfor %}
+
+                <h4>Bi-Nucleotide distribution:</h4>
+                {%
+                    for nucleotide_pair, prc in
+                    data["global_statistic"]["bi_nuc_distribution"].items()
+                %}
+                    <p>{{ nucleotide_pair }}: {{ "%0.2f%%" % prc }}</p>
+                {% endfor %}
+            {% endif %}
+
+            <h3>Chromosomes:</h3>
+            <table>
+            <tr><td>Chrom</td><td>Length</td></tr>
+            {%- for chrom, length in data["chromosomes"] -%}
+            <tr>
+            <td>{{ chrom }}</td>
+            <td>{{ length }}</td>
+            </tr>
+            {%- endfor -%}
+            </table>
+
+            {% endblock %}
+        """))
+
+    def _get_template_data(self):
+        info = copy.deepcopy(self.config)
+        info["global_statistic"] = {}
+        statistics = self.get_statistics()
+        global_statistic = statistics.global_statistic
+
+        info["global_statistic"]["length"] = global_statistic.length
+        info["global_statistic"]["nuc_distribution"] = \
+            global_statistic.nucleotide_distribution
+        info["global_statistic"]["bi_nuc_distribution"] = \
+            global_statistic.bi_nucleotide_distribution
+
+        info["chromosomes"] = self.reference_genome.get_all_chrom_lengths()
+
+        return info
+
+    def get_info(self):
+        return InfoImplementationMixin.get_info(self)
+
+    def calc_info_hash(self):
+        return "placeholder"
+
+    def calc_statistics_hash(self) -> bytes:
+        manifest = self.resource.get_manifest()
+        config = self.get_config()
+        genome_filename = config["filename"]
+        return json.dumps({
+            "score_file": manifest[genome_filename].md5
+        }, sort_keys=True, indent=2).encode()
+
+    def add_statistics_build_tasks(self, task_graph, **kwargs) -> list[Task]:
+        tasks = []
+
+        region_size = kwargs.get("region_size", 1_000_000)
+
+        chrom_save_tasks = []
+        with self.reference_genome.open():
+            for chrom in self.reference_genome.chromosomes:
+                _, _, chrom_save_task = self._add_chrom_stats_tasks(
+                    task_graph, chrom, region_size
+                )
+                chrom_save_tasks.append(chrom_save_task)
+
+        tasks.extend(chrom_save_tasks)
+
+        tasks.append(self._add_global_stat_task(task_graph, chrom_save_tasks))
+        return tasks
+
+    def _add_chrom_stats_tasks(self, task_graph, chrom, region_size):
+        chrom_tasks = []
+        regions = self.reference_genome.split_into_regions(region_size, chrom)
+        for _, start, end in regions:
+            chrom_tasks.append(task_graph.create_task(
+                f"{self.resource.resource_id}_count_nucleotides_"
+                f"{chrom}_{start}_{end}",
+                ReferenceGenomeImplementation._do_chrom_statistic,
+                [self.resource, chrom, start, end],
+                []
+            ))
+
+        merge_task = task_graph.create_task(
+            f"{self.resource.resource_id}_merge_chrom_statistics_{chrom}",
+            ReferenceGenomeImplementation._merge_chrom_statistics,
+            [*chrom_tasks],
+            chrom_tasks
+        )
+        save_task = task_graph.create_task(
+            f"{self.resource.resource_id}_save_chrom_statistics_{chrom}",
+            ReferenceGenomeImplementation._save_chrom_statistic,
+            [self.resource, chrom, merge_task],
+            [merge_task]
+        )
+
+        return chrom_tasks, merge_task, save_task
+
+    def _add_global_stat_task(self, task_graph, chrom_stats_save_tasks):
+        return task_graph.create_task(
+            f"{self.resource.resource_id}_save_chrom_statistics",
+            ReferenceGenomeImplementation._do_global_statistic,
+            [self.resource, *chrom_stats_save_tasks],
+            chrom_stats_save_tasks
+        )
+
+    @staticmethod
+    def _do_chrom_statistic(resource, chrom, start, end):
+        impl = build_reference_genome_from_resource(resource)
+        statistic = ChromosomeStatistic(chrom)
+        with impl.open():
+            for pair in impl.pair_iter(chrom, start, end):
+                statistic.add_value(pair)
+
+        statistic.finish()
+        return statistic
+
+    @staticmethod
+    def _merge_chrom_statistics(*chrom_tasks):
+        final_statistic = None
+        for chrom_task_result in chrom_tasks:
+            if final_statistic is None:
+                final_statistic = chrom_task_result
+            else:
+                final_statistic.merge(chrom_task_result)
+        return final_statistic
+
+    @staticmethod
+    def _save_chrom_statistic(resource, chrom, merged_statistic):
+        proto = resource.proto
+        if merged_statistic is None:
+            logger.warning("Chrom statistic for %s is None", chrom)
+            return {chrom: None}
+        with proto.open_raw_file(
+            resource,
+            f"{ReferenceGenomeStatistics.get_statistics_folder()}"
+            f"/{ReferenceGenomeStatistics.get_chrom_file(chrom)}",
+            mode="wt"
+        ) as outfile:
+            outfile.write(merged_statistic.serialize())
+        return merged_statistic
+
+    @staticmethod
+    def _do_global_statistic(resource, *chrom_save_tasks):
+        impl = build_reference_genome_from_resource(resource)
+        with impl.open():
+            statistic = GenomeStatistic(impl.chromosomes)
+            for chrom_statistic in chrom_save_tasks:
+                statistic.add_value(chrom_statistic)
+
+            statistic.finish()
+
+        proto = resource.proto
+        with proto.open_raw_file(
+            resource,
+            f"{ReferenceGenomeStatistics.get_statistics_folder()}"
+            f"/{ReferenceGenomeStatistics.get_global_statistic_file()}",
+            mode="wt"
+        ) as outfile:
+            outfile.write(statistic.serialize())
+        return statistic
+
+    def get_statistics(self):
+        return ReferenceGenomeStatistics.build_statistics(self.resource)
+
+
+class ReferenceGenome(
     ResourceConfigValidationMixin
 ):
     """Provides an interface for quering a reference genome."""
 
     def __init__(self, resource: GenomicResource):
-        super().__init__(resource)
+        self.resource = resource
         if resource.get_type() != "genome":
             raise ValueError(
                 f"wrong type of resource passed: {resource.get_type()}")
@@ -558,87 +774,6 @@ class ReferenceGenome(
             )
         return False
 
-    def get_template(self):
-        return Template(textwrap.dedent("""
-            {% extends base %}
-            {% block content %}
-
-            {% if data["chrom_prefix"] %}
-            <p>chrom prefix: {{ data["chrom_prefix"] }}</p>
-            {% endif %}
-
-            {% if data["PARS"] %}
-            <h3>Pseudoautosomal regions:</h6>
-            {% if data["PARS"]["X"] %}
-            <p>X chromosome:</p>
-            <ul>
-            {% for region in data["PARS"]["X"] %}
-            <li>{{region}}</li>
-            {% endfor %}
-            </ul>
-            {% endif %}
-
-            {% if data["PARS"]["Y"] %}
-            <p>Y chromosome: </p>
-            <ul>
-            {% for region in data["PARS"]["Y"] %}
-            <li>{{region}}</li>
-            {% endfor %}
-            </ul>
-            {% endif %}
-            {% endif %}
-
-            <h3>Genome statistics:</h3>
-            {% if data["global_statistic"] %}
-                <h4>Length: {{ data["global_statistic"]["length"] }}</h4>
-
-                <h4>Nucleotide distribution:</h4>
-                {%
-                    for nucleotide, prc in
-                    data["global_statistic"]["nuc_distribution"].items()
-                %}
-                    <p>{{ nucleotide }}: {{ "%0.2f%%" % prc }}</p>
-                {% endfor %}
-
-                <h4>Bi-Nucleotide distribution:</h4>
-                {%
-                    for nucleotide_pair, prc in
-                    data["global_statistic"]["bi_nuc_distribution"].items()
-                %}
-                    <p>{{ nucleotide_pair }}: {{ "%0.2f%%" % prc }}</p>
-                {% endfor %}
-            {% endif %}
-
-            <h3>Chromosomes:</h3>
-            <table>
-            <tr><td>Chrom</td><td>Length</td></tr>
-            {%- for chrom, length in data["chromosomes"] -%}
-            <tr>
-            <td>{{ chrom }}</td>
-            <td>{{ length }}</td>
-            </tr>
-            {%- endfor -%}
-            </table>
-
-            {% endblock %}
-        """))
-
-    def _get_template_data(self):
-        info = copy.deepcopy(self.config)
-        info["global_statistic"] = {}
-        statistics = self.get_statistics()
-        global_statistic = statistics.global_statistic
-
-        info["global_statistic"]["length"] = global_statistic.length
-        info["global_statistic"]["nuc_distribution"] = \
-            global_statistic.nucleotide_distribution
-        info["global_statistic"]["bi_nuc_distribution"] = \
-            global_statistic.bi_nucleotide_distribution
-
-        info["chromosomes"] = self.get_all_chrom_lengths()
-
-        return info
-
     @staticmethod
     def get_schema():
         return {
@@ -650,132 +785,6 @@ class ReferenceGenome(
                 "Y": {"type": "list", "schema": {"type": "string"}},
             }}
         }
-
-    def get_info(self):
-        return InfoImplementationMixin.get_info(self)
-
-    def calc_info_hash(self):
-        return "placeholder"
-
-    def calc_statistics_hash(self) -> bytes:
-        manifest = self.resource.get_manifest()
-        config = self.get_config()
-        genome_filename = config["filename"]
-        return json.dumps({
-            "score_file": manifest[genome_filename].md5
-        }, sort_keys=True, indent=2).encode()
-
-    def add_statistics_build_tasks(self, task_graph, **kwargs) -> list[Task]:
-        tasks = []
-
-        region_size = kwargs.get("region_size", 1_000_000)
-
-        chrom_save_tasks = []
-        with self.open():
-            for chrom in self.chromosomes:
-                _, _, chrom_save_task = self._add_chrom_stats_tasks(
-                    task_graph, chrom, region_size
-                )
-                chrom_save_tasks.append(chrom_save_task)
-
-        tasks.extend(chrom_save_tasks)
-
-        tasks.append(self._add_global_stat_task(task_graph, chrom_save_tasks))
-        return tasks
-
-    def _add_chrom_stats_tasks(self, task_graph, chrom, region_size):
-        chrom_tasks = []
-        regions = self.split_into_regions(region_size, chrom)
-        for _, start, end in regions:
-            chrom_tasks.append(task_graph.create_task(
-                f"{self.resource.resource_id}_count_nucleotides_"
-                f"{chrom}_{start}_{end}",
-                ReferenceGenome._do_chrom_statistic,
-                [self.resource, chrom, start, end],
-                []
-            ))
-
-        merge_task = task_graph.create_task(
-            f"{self.resource.resource_id}_merge_chrom_statistics_{chrom}",
-            ReferenceGenome._merge_chrom_statistics,
-            [*chrom_tasks],
-            chrom_tasks
-        )
-        save_task = task_graph.create_task(
-            f"{self.resource.resource_id}_save_chrom_statistics_{chrom}",
-            ReferenceGenome._save_chrom_statistic,
-            [self.resource, chrom, merge_task],
-            [merge_task]
-        )
-
-        return chrom_tasks, merge_task, save_task
-
-    def _add_global_stat_task(self, task_graph, chrom_stats_save_tasks):
-        return task_graph.create_task(
-            f"{self.resource.resource_id}_save_chrom_statistics",
-            ReferenceGenome._do_global_statistic,
-            [self.resource, *chrom_stats_save_tasks],
-            chrom_stats_save_tasks
-        )
-
-    @staticmethod
-    def _do_chrom_statistic(resource, chrom, start, end):
-        impl = build_reference_genome_from_resource(resource)
-        statistic = ChromosomeStatistic(chrom)
-        with impl.open():
-            for pair in impl.pair_iter(chrom, start, end):
-                statistic.add_value(pair)
-
-        statistic.finish()
-        return statistic
-
-    @staticmethod
-    def _merge_chrom_statistics(*chrom_tasks):
-        final_statistic = None
-        for chrom_task_result in chrom_tasks:
-            if final_statistic is None:
-                final_statistic = chrom_task_result
-            else:
-                final_statistic.merge(chrom_task_result)
-        return final_statistic
-
-    @staticmethod
-    def _save_chrom_statistic(resource, chrom, merged_statistic):
-        proto = resource.proto
-        if merged_statistic is None:
-            logger.warning("Chrom statistic for %s is None", chrom)
-            return {chrom: None}
-        with proto.open_raw_file(
-            resource,
-            f"{ReferenceGenomeStatistics.get_statistics_folder()}"
-            f"/{ReferenceGenomeStatistics.get_chrom_file(chrom)}",
-            mode="wt"
-        ) as outfile:
-            outfile.write(merged_statistic.serialize())
-        return merged_statistic
-
-    @staticmethod
-    def _do_global_statistic(resource, *chrom_save_tasks):
-        impl = build_reference_genome_from_resource(resource)
-        with impl.open():
-            statistic = GenomeStatistic(impl.chromosomes)
-            for chrom_statistic in chrom_save_tasks:
-                statistic.add_value(chrom_statistic)
-
-            statistic.finish()
-
-        proto = resource.proto
-        with proto.open_raw_file(
-            resource,
-            f"{ReferenceGenomeStatistics.get_statistics_folder()}"
-            f"/{ReferenceGenomeStatistics.get_global_statistic_file()}",
-            mode="wt"
-        ) as outfile:
-            outfile.write(statistic.serialize())
-        return statistic
-
-    def get_statistics(self):
-        return ReferenceGenomeStatistics.build_statistics(self.resource)
 
 
 def build_reference_genome_from_file(filename) -> ReferenceGenome:
@@ -804,3 +813,16 @@ def build_reference_genome_from_resource(
 
     ref = ReferenceGenome(resource)
     return ref
+
+
+def build_reference_genome_implementation_from_file(
+        filename
+) -> ReferenceGenomeImplementation:
+    """Open a reference genome from a file."""
+    dirname = os.path.dirname(filename)
+    basename = os.path.basename(filename)
+    res = build_local_resource(dirname, {
+        "type": "genome",
+        "filename": basename,
+    })
+    return ReferenceGenomeImplementation(res)
