@@ -143,7 +143,9 @@ class GPFConfigParser:
         return cast(dict, config)
 
     @classmethod
-    def parse_and_interpolate_file(cls, filename: str) -> dict:
+    def parse_and_interpolate_file(
+        cls, filename: str, conf_dir: Optional[str] = None
+    ) -> dict:
         """Open a file and interpolate it's contents."""
         try:
             ext = os.path.splitext(filename)[1]
@@ -152,7 +154,8 @@ class GPFConfigParser:
             parser = cls.filetype_parsers[ext]
 
             file_contents = cls._get_file_contents(filename)
-            conf_dir = os.path.abspath(os.path.dirname(filename))
+            if conf_dir is None:
+                conf_dir = os.path.abspath(os.path.dirname(filename))
             return cls.parse_and_interpolate(
                 file_contents, parser, conf_dir=conf_dir)
 

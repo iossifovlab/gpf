@@ -6,7 +6,6 @@ from typing import Any, Tuple, Set
 import pandas as pd
 
 from dae.person_sets import PersonSetCollection
-from dae.pedigrees.family import FamiliesData
 from dae.pedigrees.loader import FamiliesLoader
 from dae.query_variants.query_runners import QueryResult, QueryRunner
 from dae.inmemory_storage.raw_variants import RawFamilyVariants
@@ -51,11 +50,8 @@ class SqlSchema2Variants(abc.ABC):
 
         self.pedigree_schema = self._fetch_schema(self.pedigree_table)
         self.ped_df = self._fetch_pedigree()
-        self.families = FamiliesData.from_pedigree_df(self.ped_df)
-        # Temporary workaround for studies that are imported without tags
-        FamiliesLoader._build_families_tags(
-            self.families, {"ped_tags": True}
-        )
+        self.families = FamiliesLoader\
+            .build_families_data_from_pedigree(self.ped_df)
 
         self.partition_descriptor = PartitionDescriptor.parse_string(
             self._fetch_tblproperties())

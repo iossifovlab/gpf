@@ -49,7 +49,7 @@ class QueryRunner(abc.ABC):
             self._started = True
             self.timestamp = time.time()
 
-    def closed(self):
+    def is_closed(self):
         with self._status_lock:
             return self._closed
 
@@ -58,12 +58,12 @@ class QueryRunner(abc.ABC):
         elapsed = time.time() - self.timestamp
         logger.debug("closing runner after %0.3f", elapsed)
         with self._status_lock:
-            if self._started:
+            if not self._closed and self._started:
                 assert self._future is not None
                 self._future.cancel()
             self._closed = True
 
-    def done(self):
+    def is_done(self):
         with self._status_lock:
             return self._done
 
@@ -90,7 +90,7 @@ class QueryRunner(abc.ABC):
                     "runner (%s) nobody interested",
                     self.study_id)
 
-                if self.closed():
+                if self.is_closed():
                     break
                 no_interest += 1
                 if no_interest % 1_000 == 0:
@@ -132,7 +132,7 @@ class QueryResult:
         if self.limit >= 0 and self._counter >= self.limit:
             logger.debug("limit done %d >= %d", self._counter, self.limit)
             return True
-        if all(r.done() for r in self.runners):
+        if all(r.is_done() for r in self.runners):
             return True
         return False
 

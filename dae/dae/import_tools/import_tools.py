@@ -91,8 +91,9 @@ class ImportProject():
         :param import_config: The config to use for the import.
         :base_input_dir: Default input dir. Use cwd by default.
         """
-        import_config = GPFConfigParser.validate_config(import_config,
-                                                        import_config_schema)
+        import_config = GPFConfigParser.validate_config(
+            import_config,
+            import_config_schema)
         normalizer = ImportConfigNormalizer()
         base_config_dir = base_input_dir
         import_config, base_input_dir, external_files = \
@@ -114,7 +115,7 @@ class ImportProject():
         """
         base_input_dir = fs_utils.containing_path(import_filename)
         import_config = GPFConfigParser.parse_and_interpolate_file(
-            import_filename)
+            import_filename, conf_dir=base_input_dir)
         project = ImportProject.build_from_config(
             import_config, base_input_dir, gpf_instance=gpf_instance)
         # the path to the import filename should be the first config file

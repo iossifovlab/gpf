@@ -293,12 +293,13 @@ class Layout:
                 )
             )
 
-        individual_positions = [[]] * len(layout_positions)
+        individual_positions: list[list] = [[]] * len(layout_positions)
         for level, iwc in layout_positions.items():
             individual_positions[level - 1] = iwc
 
         individual_positions = [
-            sorted(level, key=lambda x: x.x) for level in individual_positions
+            sorted(level, key=lambda x: x.x)  # type: ignore
+            for level in individual_positions
         ]
 
         layout = Layout()
@@ -468,7 +469,7 @@ class Layout:
                 i += 1
 
     def _align_left(self, x_offset=10):
-        min_x = min([i.x for i in list(self._id_to_position.values())])
+        min_x = min(i.x for i in list(self._id_to_position.values()))
 
         for individual in list(self._id_to_position.values()):
             individual.x = individual.x - min_x + x_offset
@@ -712,7 +713,7 @@ class Layout:
 
             if to_move != set():
                 to_move_offset = max(
-                    [new_end - i.x + min_gap * 2.0 + i.size for i in to_move]
+                    new_end - i.x + min_gap * 2.0 + i.size for i in to_move
                 )
         else:
             new_start = min_individual.x + offset
@@ -727,7 +728,7 @@ class Layout:
 
             if to_move != set():
                 to_move_offset = min(
-                    [new_start - i.x - min_gap * 2.0 - i.size for i in to_move]
+                    new_start - i.x - min_gap * 2.0 - i.size for i in to_move
                 )
 
         for individual in individuals:
@@ -750,7 +751,8 @@ class Layout:
     def _get_first_and_last_children_positions(self, mating_unit):
         children = mating_unit.children.individuals
         children_positions = [self._id_to_position[x] for x in children]
-        children_positions = sorted(children_positions, key=lambda x: x.x)
+        children_positions = sorted(
+            children_positions, key=lambda x: x.x)  # type: ignore
 
         return [
             children_positions[0],

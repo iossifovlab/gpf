@@ -41,35 +41,44 @@ class FamiliesLoader(CLILoader):
 
     @staticmethod
     def load_pedigree_file(
-            pedigree_filename, pedigree_format=None) -> FamiliesData:
+            pedigree_filename, pedigree_params=None) -> FamiliesData:
         """Load a pedigree files and return FamiliesData object."""
-        if pedigree_format is None:
-            pedigree_format = {}
-
-        pedigree_format["ped_no_role"] = str2bool(
-            pedigree_format.get("ped_no_role", False)
-        )
-        pedigree_format["ped_no_header"] = str2bool(
-            pedigree_format.get("ped_no_header", False)
-        )
-        pedigree_format["ped_tags"] = str2bool(
-            pedigree_format.get("ped_tags", False)
-        )
-
+        if pedigree_params is None:
+            pedigree_params = {}
         ped_df = FamiliesLoader.flexible_pedigree_read(
-            pedigree_filename, **pedigree_format
+            pedigree_filename, **pedigree_params
+        )
+        return FamiliesLoader.build_families_data_from_pedigree(
+            ped_df, pedigree_params)
+
+    @staticmethod
+    def build_families_data_from_pedigree(
+        ped_df, pedigree_params=None
+    ) -> FamiliesData:
+        """Build a families data object from a pedigree data frame."""
+        if pedigree_params is None:
+            pedigree_params = {}
+
+        pedigree_params["ped_no_role"] = str2bool(
+            pedigree_params.get("ped_no_role", False)
+        )
+        pedigree_params["ped_no_header"] = str2bool(
+            pedigree_params.get("ped_no_header", False)
+        )
+        pedigree_params["ped_tags"] = str2bool(
+            pedigree_params.get("ped_tags", False)
         )
         families = FamiliesData.from_pedigree_df(ped_df)
 
-        FamiliesLoader._build_families_layouts(families, pedigree_format)
-        FamiliesLoader._build_families_roles(families, pedigree_format)
-        FamiliesLoader._build_families_tags(families, pedigree_format)
+        FamiliesLoader._build_families_layouts(families, pedigree_params)
+        FamiliesLoader._build_families_roles(families, pedigree_params)
+        FamiliesLoader._build_families_tags(families, pedigree_params)
 
         return families
 
     @staticmethod
-    def _build_families_tags(families, pedigree_format):
-        ped_tags = pedigree_format.get("ped_tags", False)
+    def _build_families_tags(families, pedigree_params):
+        ped_tags = pedigree_params.get("ped_tags", False)
         if not ped_tags:
             return
 
@@ -77,8 +86,8 @@ class FamiliesLoader(CLILoader):
         tagger.tag_families_data(families)
 
     @staticmethod
-    def _build_families_layouts(families, pedigree_format):
-        ped_layout_mode = pedigree_format.get("ped_layout_mode", "load")
+    def _build_families_layouts(families, pedigree_params):
+        ped_layout_mode = pedigree_params.get("ped_layout_mode", "load")
         if ped_layout_mode == "generate":
             for family in families.values():
                 logger.debug(
@@ -108,17 +117,12 @@ class FamiliesLoader(CLILoader):
                 role_build.build_roles()
             families._ped_df = None  # pylint: disable=protected-access
 
-    # @staticmethod
-    # def load_simple_families_file(families_filename):
-    #     ped_df = FamiliesLoader.load_simple_family_file(families_filename)
-    #     return FamiliesData.from_pedigree_df(ped_df)
-
     def load(self) -> FamiliesData:
         if self.file_format == "simple":
             return self.load_simple_families_file(self.filename)
         assert self.file_format == "pedigree"
         return self.load_pedigree_file(
-            self.filename, pedigree_format=self.params
+            self.filename, pedigree_params=self.params
         )
 
     @classmethod
@@ -227,7 +231,7 @@ class FamiliesLoader(CLILoader):
         ))
         arguments.append(CLIArgument(
             "--ped-layout-mode",
-            default_value="load",
+            default_value="generate",
             help_text="Layout mode specifies how pedigrees "
             "drawing of each family is handled."
             " Available options are `generate` and `load`. When "
@@ -339,6 +343,7 @@ class FamiliesLoader(CLILoader):
         **kwargs,  # pylint: disable=unused-argument
     ):
         """Read a pedigree from file."""
+        # pylint: disable=too-many-arguments, too-many-locals
         if isinstance(ped_no_role, str):
             ped_no_role = str2bool(ped_no_role)
         if isinstance(ped_no_header, str):
