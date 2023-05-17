@@ -117,7 +117,8 @@ export class QueryService {
   }
 
   public getGenotypePreviewVariantsByFilter(
-    dataset: Dataset, filter, maxVariantsCount: number = 1001
+    dataset: Dataset, filter, maxVariantsCount: number = 1001,
+    callback?: () => void,
   ): GenotypePreviewVariantsArray {
     const genotypePreviewVariantsArray = new GenotypePreviewVariantsArray();
     const queryFilter = { ...filter };
@@ -128,6 +129,10 @@ export class QueryService {
         <Array<string>> variant,
         dataset.genotypeBrowserConfig.columnIds
       );
+
+      if (callback !== undefined) {
+        callback();
+      }
 
       if (variant) {
         // Attach the genome version to each variant
