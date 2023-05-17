@@ -37,14 +37,12 @@ export class UsersPage {
     return this.window.contains('Register');
   }
 
-  public waitLoginAfterLogout(): void {
-    let done = false;
-    let retries = 12;
-    while (!(done || retries === 0)) {
-      this.window.get('#log-in-button').if('exist').then(() => {
-        done = true;
-      });
-      retries--;
-    }
+  public waitLoginAfterLogout(retries = 10): Cypress.Chainable<void> {
+    return cy.get('#log-in-button').if('not.visible').then(() => {
+      if (retries === 0) {
+        throw new Error('Cannot find Login button after multiple checks.');
+      }
+      return this.waitLoginAfterLogout(--retries);
+    });
   }
 }
