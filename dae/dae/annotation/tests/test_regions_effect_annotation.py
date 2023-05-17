@@ -49,13 +49,24 @@ def fixture_repo(tmp_path_factory):
     return build_filesystem_test_repository(root_path)
 
 
-@pytest.mark.parametrize("annotatable, expected", [
-    (Region("chr1", 1, 19), ["g1"]),
-    (Region("chr1", 1, 29), ["g1", "g2"]),
-    (Position("chr1", 10), ["g1"]),
-])
+@pytest.mark.parametrize(
+    "annotatable, gene_list, effect_type, length, txs", [
+        (Region("chr1", 1, 19), ["g1"], "unknown", 19,
+         {"g1": ["tx1", "tx2"]}),
+        (Region("chr1", 1, 29), ["g1", "g2"], "unknown", 29,
+         {"g1": ["tx1", "tx2"], "g2": ["tx3"]}),
+        (Position("chr1", 10), ["g1"], "unknown", 1,
+         {"g1": ["tx1"]}),
+        (CNVAllele("chr1", 1, 29, Annotatable.Type.LARGE_DELETION),
+         ["g1", "g2"], "CNV-", 29,
+         {"g1": ["tx1", "tx2"], "g2": ["tx3"]}),
+        (CNVAllele("chr1", 1, 29, Annotatable.Type.LARGE_DUPLICATION),
+         ["g1", "g2"], "CNV+", 29,
+         {"g1": ["tx1", "tx2"], "g2": ["tx3"]}),
+    ]
+)
 def test_effect_annotator(
-        annotatable, expected, fixture_repo):
+        annotatable, gene_list, effect_type, length, txs, fixture_repo):
 
     pipeline_config = textwrap.dedent("""
         - effect_annotator:
@@ -72,15 +83,26 @@ def test_effect_annotator(
         print(annotatable, result)
 
     print(annotatable, result)
-    assert sorted(result["gene_list"]) == expected
+    assert sorted(result["gene_list"]) == gene_list
+    assert result["worst_effect"] == effect_type
+    assert result["gene_effects"] == "|".join([
+        f"{g}:{effect_type}" for g in gene_list])
+    assert result["effect_details"] == "|".join([
+        f"{t}:{g}:{effect_type}:{length}"
+        for g, ts in txs.items()
+        for t in ts
+    ])
 
 
-@pytest.mark.parametrize("annotatable", [
-    Region("chr1", 1, 19),
-    CNVAllele("chr1", 1, 29, Annotatable.Type.LARGE_DELETION),
+@pytest.mark.parametrize("annotatable, effect_type, length", [
+    (Region("chr1", 1, 19), "unknown", 19),
+    (CNVAllele("chr1", 1, 29, Annotatable.Type.LARGE_DELETION),
+     "CNV-", 29),
+    (CNVAllele("chr1", 1, 29, Annotatable.Type.LARGE_DUPLICATION),
+     "CNV+", 29),
 ])
 def test_effect_annotator_region_length_cutoff(
-        annotatable, fixture_repo):
+        annotatable, effect_type, length, fixture_repo):
 
     pipeline_config = textwrap.dedent("""
         - effect_annotator:
@@ -98,7 +120,7 @@ def test_effect_annotator_region_length_cutoff(
         print(annotatable, result)
 
     print(annotatable, result)
-    assert result["worst_effect"] == "unknown"
-    assert result["gene_effects"] == "None:unknown"
-    assert result["effect_details"] == "None:None:unknown:None"
+    assert result["worst_effect"] == effect_type
+    assert result["gene_effects"] == f"None:{effect_type}"
+    assert result["effect_details"] == f"None:None:{effect_type}:{length}"
     assert result.get("gene_list") == []
