@@ -4,6 +4,7 @@ from rest_framework.response import Response
 
 from query_base.query_base import QueryDatasetView
 
+from utils.query_params import parse_query_params
 from dae.pedigrees.family import FamiliesData
 from dae.pedigrees.family_tag_builder import check_tag
 from dae.pedigrees.serializer import FamiliesTsvSerializer
@@ -82,7 +83,7 @@ class FamilyCounterDownloadView(QueryDatasetView):
 
     def post(self, request):
         """Return family couters for a specified study and group name."""
-        data = request.data
+        data = parse_query_params(request.data)
 
         study_id = data["study_id"]
         group_name = data["group_name"]

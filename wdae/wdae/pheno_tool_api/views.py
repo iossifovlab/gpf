@@ -10,6 +10,7 @@ from gene_sets.expand_gene_set_decorator import expand_gene_set
 
 from query_base.query_base import QueryDatasetView
 from datasets_api.permissions import user_has_permission
+from utils.query_params import parse_query_params
 
 from dae.pheno_tool.tool import PhenoTool, PhenoToolHelper
 from dae.variants.attributes import Sex
@@ -107,7 +108,7 @@ class PhenoToolView(QueryDatasetView):
 class PhenoToolDownload(PhenoToolView):
     @expand_gene_set
     def post(self, request):
-        data = request.data
+        data = parse_query_params(request.data)
         adapter = self.prepare_pheno_tool_adapter(data)
         if not adapter:
             return Response(status=status.HTTP_404_NOT_FOUND)
