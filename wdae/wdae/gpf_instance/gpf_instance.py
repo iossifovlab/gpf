@@ -27,7 +27,7 @@ from dae.common_reports.common_report import CommonReport
 
 
 logger = logging.getLogger(__name__)
-__all__ = ["get_gpf_instance"]
+__all__ = ["get_wgpf_instance"]
 
 
 _GPF_INSTANCE: Optional[WGPFInstance] = None
@@ -283,8 +283,8 @@ class WGPFInstance(GPFInstance):
             gene_set_id, types, datasets, collection_id)
 
 
-def get_gpf_instance(config_filename=None) -> WGPFInstance:
-    build_wgpf_instance(config_filename)
+def get_wgpf_instance(config_filename=None, **kwargs) -> WGPFInstance:
+    build_wgpf_instance(config_filename, **kwargs)
     _recreated_dataset_perm()
     if _GPF_INSTANCE is None:
         raise ValueError("can't create an WGPFInstance")
@@ -319,7 +319,7 @@ def get_wgpf_instance_path(config_filename=None):
     return dae_dir
 
 
-def build_wgpf_instance(config_filename=None) -> WGPFInstance:
+def build_wgpf_instance(config_filename=None, **kwargs) -> WGPFInstance:
     """Load and return a WGPFInstance."""
     # pylint: disable=global-statement
     global _GPF_INSTANCE
@@ -327,7 +327,7 @@ def build_wgpf_instance(config_filename=None) -> WGPFInstance:
     if _GPF_INSTANCE is None:
         with _GPF_INSTANCE_LOCK:
             if _GPF_INSTANCE is None:
-                gpf_instance = WGPFInstance.build(config_filename)
+                gpf_instance = WGPFInstance.build(config_filename, **kwargs)
                 gpf_instance.load_remotes()
 
                 _GPF_INSTANCE = gpf_instance

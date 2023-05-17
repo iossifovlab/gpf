@@ -1,9 +1,10 @@
-from gpf_instance.gpf_instance import get_gpf_instance
+from gpf_instance.gpf_instance import get_wgpf_instance
 
 from datasets_api.permissions import IsDatasetAllowed
 
 
 def expand_gene_set(request_function):
+    """Expand gene set to list of gene symbols."""
     def decorated(self, request):
         if "geneSet" in request.data:
 
@@ -13,7 +14,7 @@ def expand_gene_set(request_function):
 
             query = request.data.get("geneSet", None)
             if query is None:
-                query = dict()
+                query = {}
             gene_sets_collection = query.get("geneSetsCollection", None)
             gene_set = query.get("geneSet", None)
 
@@ -22,8 +23,8 @@ def expand_gene_set(request_function):
                 gene_set_id = gene_set
                 denovo_gene_set_spec = query.get("geneSetsTypes", [])
 
-            gpf_instance = get_gpf_instance()
-
+            gpf_instance = get_wgpf_instance()
+            assert gene_sets_collection_id is not None
             if gene_sets_collection_id.endswith("denovo"):
                 denovo_gene_sets_db = gpf_instance.denovo_gene_sets_db
 

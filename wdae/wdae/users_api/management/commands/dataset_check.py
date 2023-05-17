@@ -2,13 +2,16 @@ import logging
 
 from django.core.management.base import BaseCommand
 
+from gpf_instance.gpf_instance import get_wgpf_instance
+
 from .dataset_mixin import DatasetBaseMixin
-from gpf_instance.gpf_instance import get_gpf_instance
 
 logger = logging.getLogger(__name__)
 
 
 class Command(BaseCommand, DatasetBaseMixin):
+    """Check dataset HDFS directories."""
+
     help = "Check an existing dataset"
 
     def add_arguments(self, parser):
@@ -22,14 +25,14 @@ class Command(BaseCommand, DatasetBaseMixin):
         dataset = self.get_dataset(dataset_id)
         assert dataset is not None
 
-        logger.debug(f"dataset found: {dataset.dataset_id}")
+        logger.debug("dataset found: %s", dataset.dataset_id)
 
         assert dataset is not None
 
-        config = get_gpf_instance().get_genotype_data_config(dataset_id)
+        config = get_wgpf_instance().get_genotype_data_config(dataset_id)
         assert config is not None
 
-        genotype_data = get_gpf_instance().get_genotype_data(dataset_id)
+        genotype_data = get_wgpf_instance().get_genotype_data(dataset_id)
         print(type(genotype_data), genotype_data)
 
         if genotype_data.is_group:
@@ -38,5 +41,5 @@ class Command(BaseCommand, DatasetBaseMixin):
             assert self.is_impala_genotype_storage(config), \
                 f"genotype storage {config.genotype_storage.id} is not Impala"
 
-            self.check_dataset_hdfs_directories(config)
+            self.check_dataset_hdfs_directories(config, dataset_id)
             self.check_dataset_impala_tables(config)

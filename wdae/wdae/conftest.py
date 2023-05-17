@@ -16,7 +16,7 @@ from datasets_api.models import Dataset
 
 from remote.rest_api_client import RESTClient
 
-from gpf_instance.gpf_instance import WGPFInstance, get_gpf_instance,\
+from gpf_instance.gpf_instance import WGPFInstance, get_wgpf_instance,\
     reload_datasets
 
 from users_api.models import WdaeUser
@@ -154,7 +154,7 @@ def admin_client(admin, tokens):
 
 @pytest.fixture
 def datasets(db):
-    reload_datasets(get_gpf_instance())
+    reload_datasets(get_wgpf_instance())
 
 
 @pytest.fixture(scope="session")
@@ -211,19 +211,19 @@ def wdae_gpf_instance(
 ):
     reload_datasets(fixtures_wgpf_instance)
     mocker.patch(
-        "query_base.query_base.get_gpf_instance",
+        "query_base.query_base.get_wgpf_instance",
         return_value=fixtures_wgpf_instance,
     )
     mocker.patch(
-        "gpf_instance.gpf_instance.get_gpf_instance",
+        "gpf_instance.gpf_instance.get_wgpf_instance",
         return_value=fixtures_wgpf_instance,
     )
     mocker.patch(
-        "gene_sets.expand_gene_set_decorator.get_gpf_instance",
+        "gene_sets.expand_gene_set_decorator.get_wgpf_instance",
         return_value=fixtures_wgpf_instance,
     )
     mocker.patch(
-        "datasets_api.permissions.get_gpf_instance",
+        "datasets_api.permissions.get_wgpf_instance",
         return_value=fixtures_wgpf_instance,
     )
     wdae_gpf_instance._autism_gene_profile_config = None
@@ -242,19 +242,19 @@ def wdae_gpf_instance_agp(  # pylint: disable=too-many-arguments
 
     reload_datasets(wdae_gpf_instance)
     mocker.patch(
-        "query_base.query_base.get_gpf_instance",
+        "query_base.query_base.get_wgpf_instance",
         return_value=wdae_gpf_instance,
     )
     mocker.patch(
-        "gpf_instance.gpf_instance.get_gpf_instance",
+        "gpf_instance.gpf_instance.get_wgpf_instance",
         return_value=wdae_gpf_instance,
     )
     mocker.patch(
-        "gene_sets.expand_gene_set_decorator.get_gpf_instance",
+        "gene_sets.expand_gene_set_decorator.get_wgpf_instance",
         return_value=wdae_gpf_instance,
     )
     mocker.patch(
-        "datasets_api.permissions.get_gpf_instance",
+        "datasets_api.permissions.get_wgpf_instance",
         return_value=wdae_gpf_instance,
     )
 

@@ -6,7 +6,7 @@ from django.conf import settings
 from django.contrib.auth.models import Group
 from django.utils.encoding import force_str
 
-from gpf_instance.gpf_instance import get_gpf_instance
+from gpf_instance.gpf_instance import get_wgpf_instance
 from utils.datasets import find_dataset_id_in_request
 from dae.studies.study import GenotypeData
 
@@ -35,7 +35,7 @@ class IsDatasetAllowed(permissions.BasePermission):
 
     @staticmethod
     def permitted_datasets(user):
-        dataset_ids = get_gpf_instance().get_genotype_data_ids()
+        dataset_ids = get_wgpf_instance().get_genotype_data_ids()
 
         return list(
             filter(
@@ -56,7 +56,7 @@ def get_wdae_dataset(dataset):
     """
     if isinstance(dataset, Dataset):
         return dataset
-    elif isinstance(dataset, GenotypeData):
+    if isinstance(dataset, GenotypeData):
         dataset_id = dataset.study_id
     else:
         dataset_id = force_str(dataset)
@@ -82,7 +82,7 @@ def get_genotype_data(dataset):
     else:
         dataset_id = force_str(dataset)
 
-    gpf_instance = get_gpf_instance()
+    gpf_instance = get_wgpf_instance()
     return gpf_instance.get_genotype_data(dataset_id)
 
 
@@ -239,17 +239,17 @@ def get_allowed_genotype_studies(user, dataset):
     allowed_datasets = _get_allowed_datasets_for_user(user, dataset)
 
     result = []
-    for dataset in allowed_datasets:
-        children = get_wdae_children(dataset, leaves=True)
+    for allowed_dataset in allowed_datasets:
+        children = get_wdae_children(allowed_dataset, leaves=True)
         if not children:
-            result.append(dataset)
+            result.append(allowed_dataset)
         result.extend([child.dataset_id for child in children])
     return set(result)
 
 
 def get_dataset_info(dataset_id):
     """Return a dictionary describing a Dataset object."""
-    gpf_instance = get_gpf_instance()
+    gpf_instance = get_wgpf_instance()
     study_wrapper = gpf_instance.get_wdae_wrapper(dataset_id)
     if study_wrapper is None:
         raise ValueError(f"Could not find study wrapper for {dataset_id}")
@@ -265,7 +265,7 @@ def get_dataset_info(dataset_id):
 
 def get_directly_allowed_genotype_data(user):
     """Return list of genotype data the user has direct permissions to."""
-    gpf_instance = get_gpf_instance()
+    gpf_instance = get_wgpf_instance()
     dataset_ids = gpf_instance.get_genotype_data_ids()
     user_groups = get_user_groups(user)
 

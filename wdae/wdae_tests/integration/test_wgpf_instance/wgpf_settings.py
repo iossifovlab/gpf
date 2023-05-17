@@ -2,5 +2,6 @@
 # flake8: noqa
 
 # pylint: disable=wildcard-import,unused-wildcard-import
+# type: ignore
 
 from wdae.test_settings import *
