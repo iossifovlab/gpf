@@ -60,7 +60,6 @@ def alla_wgpf(tmp_path_factory):
     return gpf
 
 
-@pytest.mark.skip(reason="django live server fixture reloading problems")
 def test_empty_wgpf_instance_study(alla_wgpf, wdae_django_server):
 
     with wdae_django_server(

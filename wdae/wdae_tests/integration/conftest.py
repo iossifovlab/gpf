@@ -125,7 +125,7 @@ def wdae_django_setup(mocker, tmp_path):
             "_GPF_INSTANCE",
             gpf)
         mocker.patch(
-            "gpf_instance.gpf_instance.build_wgpf_instance",
+            "gpf_instance.gpf_instance.get_wgpf_instance",
             return_value=gpf)
         mocker.patch.dict(
             os.environ, {
@@ -159,19 +159,17 @@ def wdae_django_setup(mocker, tmp_path):
                 "groups_api",
                 "gpfjs",
                 "query_state_save",
-                "user_queries", ]:
+                "user_queries",
+                "wdae.urls", ]:
             _module_cleaner(app_name)
 
-        _module_cleaner("django")
         _module_cleaner(test_settings)
-        _module_cleaner("wdae.test_settings")
-        _module_cleaner("wdae.settings")
-        _module_cleaner("wdae.default_settings")
         _module_cleaner("oauth2_provider")
         _module_cleaner("gpf_instance")
+        _module_cleaner("corsheaders")
+        _module_cleaner("rest_framework")
         _module_cleaner("django")
-        _module_cleaner("wdae_tests.integration")
-        _module_cleaner("pytest_django")
+
     return builder
 
 
