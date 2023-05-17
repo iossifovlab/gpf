@@ -8,7 +8,6 @@ import { NgbNavConfig } from '@ng-bootstrap/ng-bootstrap';
 import { AgpTableConfig } from './autism-gene-profiles-table/autism-gene-profiles-table';
 import { AgpTableService } from './autism-gene-profiles-table/autism-gene-profiles-table.service';
 import { APP_BASE_HREF } from '@angular/common';
-import * as streamSaver from 'streamsaver';
 
 @Component({
   selector: 'gpf-root',
@@ -86,7 +85,6 @@ export class AppComponent implements OnInit {
     @Inject(APP_BASE_HREF) private baseHref: string,
   ) {
     ngbNavConfig.animation = false;
-    streamSaver.mitm = environment.basePath + baseHref + 'mitm';
   }
 
   public ngOnInit(): void {

@@ -17,7 +17,7 @@ import { UniqueFamilyVariantsFilterState } from 'app/unique-family-variants-filt
 import { ErrorsState, ErrorsModel } from '../common/errors.state';
 import { take } from 'rxjs/operators';
 import { StudyFiltersBlockState } from 'app/study-filters-block/study-filters-block.state';
-import * as streamSaver from 'streamsaver';
+import { clone } from 'lodash';
 
 @Component({
   selector: 'gpf-genotype-browser',
@@ -36,8 +36,6 @@ export class GenotypeBrowserComponent implements OnInit, OnDestroy {
   public selectedDataset: Dataset;
   public genotypeBrowserState: object;
   public loadingFinished: boolean;
-
-  public downloadInProgress = false;
 
   @Select(GenotypeBrowserComponent.genotypeBrowserStateSelector) private state$: Observable<any[]>;
   @Select(ErrorsState) private errorsState$: Observable<ErrorsModel>;
@@ -136,23 +134,13 @@ export class GenotypeBrowserComponent implements OnInit, OnDestroy {
     );
   }
 
-  public onDownload(): void {
-    this.downloadInProgress = true;
+  public onSubmit(event): void {
     this.patchState();
-
-    const args = {
-      ...this.genotypeBrowserState,
-      datasetId: this.selectedDataset.id,
-      download: true
-    };
-
-    this.queryService.downloadVariants(args).then((response) => {
-      this.downloadInProgress = false;
-      const fileStream = streamSaver.createWriteStream('variants.tsv');
-      response.body.pipeTo(fileStream);
-    }, (err) => {
-      this.downloadInProgress = false;
-    });
+    this.genotypeBrowserState['datasetId'] = this.selectedDataset.id;
+    const args = clone(this.genotypeBrowserState);
+    args['download'] = true;
+    event.target.queryData.value = JSON.stringify(args);
+    event.target.submit();
   }
 
   private patchState(): void {

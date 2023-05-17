@@ -4,7 +4,6 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 import { ConfigService } from '../config/config.service';
-import { AuthService } from 'app/auth.service';
 import { PhenoToolResults } from './pheno-tool-results';
 import { map } from 'rxjs/operators';
 
@@ -14,8 +13,7 @@ export class PhenoToolService {
 
   public constructor(
     private http: HttpClient,
-    private config: ConfigService,
-    private authService: AuthService
+    private config: ConfigService
   ) {}
 
   public getPhenoToolResults(filter: object): Observable<PhenoToolResults> {
@@ -24,16 +22,5 @@ export class PhenoToolService {
 
     return this.http.post(this.config.baseUrl + this.phenoToolUrl, filter, options)
       .pipe(map(res => PhenoToolResults.fromJson(res)));
-  }
-
-  public downloadPhenoToolResults(filter: object): Promise<Response> {
-    const headers = {'Content-Type': 'application/json'};
-    headers['Authorization'] = `Bearer ${this.authService.getAccessToken()}`;
-    return fetch(`${this.config.baseUrl}${this.phenoToolUrl}/download`, {
-      method: 'POST',
-      credentials: 'include',
-      headers: headers,
-      body: JSON.stringify(filter)
-    });
   }
 }

@@ -10,7 +10,6 @@ import { environment } from 'environments/environment';
 import { Dictionary } from 'lodash';
 import * as _ from 'lodash';
 import { IDropdownSettings } from 'ng-multiselect-dropdown';
-import * as streamSaver from 'streamsaver';
 
 @Pipe({ name: 'getPeopleCounterRow' })
 export class PeopleCounterRowPipe implements PipeTransform {
@@ -45,7 +44,6 @@ export class VariantReportsComponent implements OnInit {
 
   public denovoVariantsTableWidth: number;
   private denovoVariantsTableColumnWidth = 140;
-  public downloadInProgress = false;
 
   public constructor(
     private variantReportsService: VariantReportsService,
@@ -162,25 +160,13 @@ export class VariantReportsComponent implements OnInit {
     return this.orderByColumnOrder(effectType.data, phenotypes);
   }
 
-  public onDownload(): void {
-    this.downloadInProgress = true;
-    this.variantReportsService.downloadFamilies().then((response) => {
-      this.downloadInProgress = false;
-      const fileStream = streamSaver.createWriteStream('families.ped');
-      response.body.pipeTo(fileStream);
-    }, (err) => {
-      this.downloadInProgress = false;
-    });
+  public getDownloadLink(): string {
+    return this.variantReportsService.getDownloadLink();
   }
 
-  public getDownloadLinkTags(): void {
-    const datasetId = this.datasetsService.getSelectedDataset().id;
+  public downloadTags(): void {
     const tags = this.getSelectedTags().join(',');
-
-    this.variantReportsService.downloadPedigreeTags(datasetId, tags).then((response) => {
-      const fileStream = streamSaver.createWriteStream('families.ped');
-      response.body.pipeTo(fileStream);
-    });
+    location.href = this.variantReportsService.getDownloadLinkTags(tags);
   }
 
   private orderByColumnOrder(childrenCounters: DeNovoData[], columns: string[], strict = false): DeNovoData[] {

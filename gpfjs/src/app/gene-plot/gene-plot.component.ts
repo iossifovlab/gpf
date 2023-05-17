@@ -19,7 +19,6 @@ export class GenePlotComponent implements OnChanges {
   @Input() public readonly summaryVariantsCount: number;
   @Input() public condenseIntrons: boolean;
 
-  @Input() public downloadInProgressSummary: boolean;
   @Input() public selectedGene: Gene;
   @Output() public downloadSummaryVariants: EventEmitter<any> = new EventEmitter();
 
