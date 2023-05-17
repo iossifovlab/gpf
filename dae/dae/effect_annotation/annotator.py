@@ -87,17 +87,21 @@ class EffectAnnotator:
             raise ValueError("bad gene models")
         region = Region(chrom, pos_start, pos_end)
         effects = []
+        length = pos_end - pos_start + 1
         for (start, stop), tms in \
                 self.gene_models.utr_models[chrom].items():
             if region.intersection(
                     Region(chrom, start, stop)):
                 for transcript_model in tms:
-                    effects.append(
-                        EffectFactory.create_effect_with_tm(
-                            effect_type, transcript_model))
+                    effect = EffectFactory.create_effect_with_tm(
+                        effect_type, transcript_model)
+                    effect.length = length
+                    effects.append(effect)
 
         if len(effects) == 0:
-            effects.append(EffectFactory.create_effect(effect_type))
+            effect = EffectFactory.create_effect(effect_type)
+            effect.length = pos_end - pos_start + 1
+            effects.append(effect)
 
         return effects
 

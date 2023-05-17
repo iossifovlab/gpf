@@ -99,7 +99,7 @@ class EffectAnnotatorAdapter(AnnotatorBase):
 
         promoter_len = self.config.get("promoter_len", 0)
         self._region_length_cutoff = self.config.get(
-            "region_length_cutoff", 25_000_000)
+            "region_length_cutoff", 500_000)
         self.effect_annotator = EffectAnnotator(
             self.genome,
             self.gene_models,
@@ -119,13 +119,36 @@ class EffectAnnotatorAdapter(AnnotatorBase):
         return self.genome.is_open()
 
     def _not_found(self, attributes):
-        effects = [AnnotationEffect("unknown")]
-        full_desc = AnnotationEffect.effects_description(effects)
+        effect_type = "unknown"
+        effect = AnnotationEffect(effect_type)
+        full_desc = AnnotationEffect.effects_description([effect])
         attributes.update({
             "worst_effect": full_desc[0],
             "gene_effects": full_desc[1],
             "effect_details": full_desc[2],
-            "allele_effects": AlleleEffects.from_effects(effects),
+            "allele_effects": AlleleEffects.from_effects([effect]),
+            "gene_list": [],
+            "lgd_gene_list": []
+        })
+        return attributes
+
+    def _region_length_cutoff_effect(
+        self, attributes, annotatable: Annotatable
+    ):
+        if annotatable.type == Annotatable.Type.LARGE_DELETION:
+            effect_type = "CNV-"
+        elif annotatable.type == Annotatable.Type.LARGE_DUPLICATION:
+            effect_type = "CNV+"
+        else:
+            effect_type = "unknown"
+        effect = AnnotationEffect(effect_type)
+        effect.length = len(annotatable)
+        full_desc = AnnotationEffect.effects_description([effect])
+        attributes.update({
+            "worst_effect": full_desc[0],
+            "gene_effects": full_desc[1],
+            "effect_details": full_desc[2],
+            "allele_effects": AlleleEffects.from_effects([effect]),
             "gene_list": [],
             "lgd_gene_list": []
         })
@@ -246,7 +269,7 @@ class EffectAnnotatorAdapter(AnnotatorBase):
                 length=length
             )
         elif length > self._region_length_cutoff:
-            return self._not_found(result)
+            return self._region_length_cutoff_effect(result, annotatable)
         elif isinstance(annotatable, CNVAllele):
             effects = self.effect_annotator.annotate_cnv(
                 annotatable.chrom,
@@ -256,7 +279,7 @@ class EffectAnnotatorAdapter(AnnotatorBase):
                 annotatable.chrom,
                 annotatable.pos, annotatable.pos_end)
         else:
-            return self._not_found(result)
+            raise ValueError(f"unexpected annotatable: {type(annotatable)}")
 
         gene_list = list(set(
             AnnotationEffect.gene_effects(effects)[0]

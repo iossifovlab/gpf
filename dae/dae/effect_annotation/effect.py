@@ -69,12 +69,28 @@ class AnnotationEffect:  # pylint: disable=too-many-instance-attributes
             f"Effect gene:{self.gene} trID:{self.transcript_id} " \
             f"strand:{self.strand} effect:{self.effect} " \
             f"protein pos:{self.prot_pos}/{self.prot_length} " \
-            f"aa: {self.aa_change}"
+            f"aa: {self.aa_change} " \
+            f"len: {self.length}"
 
     def create_effect_details(self):
         """Build effect details."""
         eff_data = [
-            (["noStart", "noEnd", "CDS", "all"], str(self.prot_length)),
+            (
+                [
+                    "CNV+",
+                    "CNV-",
+                ],
+                str(self.length)
+            ),
+            (
+                [
+                    "noStart",
+                    "noEnd",
+                    "CDS",
+                    "all"
+                ],
+                str(self.prot_length)
+            ),
             (
                 [
                     "intron",
@@ -118,7 +134,14 @@ class AnnotationEffect:  # pylint: disable=too-many-instance-attributes
             ),
             (["no-mutation"], "no-mutation"),
             (["5'UTR", "3'UTR"], str(self.dist_from_coding)),
-            (["non-coding", "unknown", "tRNA:ANTICODON"], str(self.length)),
+            (
+                [
+                    "non-coding",
+                    "unknown",
+                    "tRNA:ANTICODON"
+                ],
+                str(self.length)
+            ),
             (["promoter"], str(self.dist_from_5utr)),
         ]
 

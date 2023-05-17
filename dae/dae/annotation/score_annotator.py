@@ -41,7 +41,7 @@ class VariantScoreAnnotatorBase(Annotator):
         "region_length_cutoff": {
             "type": "integer",
             "nullable": True,
-            "default": 25_000_000,
+            "default": 500_000,
         },
         "attributes": {
             "type": "list",
@@ -59,7 +59,7 @@ class VariantScoreAnnotatorBase(Annotator):
         self.score_queries: list[ScoreQuery] = self._collect_score_queries()
         self._annotation_schema = None
         self._region_length_cutoff = self.config.get(
-            "region_length_cutoff", 25_000_000)
+            "region_length_cutoff", 500_000)
 
     def open(self):
         self.score.open()
