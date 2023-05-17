@@ -16,7 +16,7 @@ user = User.objects.get(id=1)  # Get admin user, should be the first one
 
 new_application = Application(**{
     "name": "gpfjs dev app",
-    "user_id": user.id,
+    "user_id": user.id,  # type: ignore
     "client_type": "public",
     "authorization_grant_type": "authorization-code",
     "redirect_uris": f"{gpfjs_url}/datasets",

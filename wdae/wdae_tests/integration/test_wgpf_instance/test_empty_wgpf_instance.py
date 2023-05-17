@@ -1,6 +1,8 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613,C0415,
 
 import textwrap
+import time
+
 import requests
 
 import pytest
@@ -58,6 +60,7 @@ def alla_wgpf(tmp_path_factory):
     return gpf
 
 
+@pytest.mark.skip(reason="django live server fixture reloading problems")
 def test_empty_wgpf_instance_study(alla_wgpf, wdae_django_server):
 
     with wdae_django_server(
@@ -66,7 +69,10 @@ def test_empty_wgpf_instance_study(alla_wgpf, wdae_django_server):
             "wgpf_settings") as server:
 
         assert server.url.startswith("http://localhost")
-        response = requests.get(f"{server.url}/api/v3/datasets")
+        time.sleep(0.5)
+
+        response = requests.get(
+            f"{server.url}/api/v3/datasets", timeout=0.5)
 
         assert response.status_code == 200
         assert "data" in response.json()
