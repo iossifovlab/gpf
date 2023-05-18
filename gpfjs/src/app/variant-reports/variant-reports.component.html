@@ -20,7 +20,7 @@
         </ng-template>
       </li>
 
-      <li ngbNavItem>
+      <li ngbNavItem [disabled]="!variantReport.denovoReport">
         <a ngbNavLink>De Novo variants</a>
         <ng-template ngbNavContent>
           <ng-container *ngTemplateOutlet="deNovoVariants"></ng-container>
@@ -138,85 +138,81 @@
 
   <ng-template #deNovoVariants>
     <div id="de-novo-variants">
-      <div *ngIf="variantReport.denovoReport">
-        <div
-          *ngIf="variantReport.peopleReport.peopleCounters.length > 1"
-          class="col-sm-3"
-          class="variants-report-selector">
-          <div class="select-wrapper">
-            <select
-              id="denovo-variants-select"
-              class="form-control"
-              [(ngModel)]="currentDenovoReport"
-              (change)="calculateDenovoVariantsTableWidth()">
-              <option *ngFor="let denovoReport of variantReport.denovoReport.tables" [ngValue]="denovoReport">
-                <span>{{ denovoReport.groupName }}</span>
-              </option>
-            </select>
-            <span class="select-dropdown-icon" [style.content]="'url(' + imgPathPrefix + 'dropdown_icon.png)'"></span>
-          </div>
+      <div
+        *ngIf="variantReport.peopleReport.peopleCounters.length > 1"
+        class="col-sm-3"
+        class="variants-report-selector">
+        <div class="select-wrapper">
+          <select
+            id="denovo-variants-select"
+            class="form-control"
+            [(ngModel)]="currentDenovoReport"
+            (change)="calculateDenovoVariantsTableWidth()">
+            <option *ngFor="let denovoReport of variantReport.denovoReport.tables" [ngValue]="denovoReport">
+              <span>{{ denovoReport.groupName }}</span>
+            </option>
+          </select>
+          <span class="select-dropdown-icon" [style.content]="'url(' + imgPathPrefix + 'dropdown_icon.png)'"></span>
         </div>
+      </div>
 
-        <h5 *ngIf="currentDenovoReport" id="de-novo-variants-legend-report">
-          <span>Legend:<br /></span>
-          <span style="padding-left: 6px">"number of observed events", "observed rate per individual"</span><br />
-          <span style="padding-left: 6px"
-            >("number of individuals with events", "percent of individuals with events")</span
-          >
-        </h5>
+      <h5 *ngIf="currentDenovoReport" id="de-novo-variants-legend-report">
+        <span>Legend:<br /></span>
+        <span style="padding-left: 6px">"number of observed events", "observed rate per individual"</span><br />
+        <span style="padding-left: 6px"
+          >("number of individuals with events", "percent of individuals with events")</span
+        >
+      </h5>
 
-        <div *ngIf="currentDenovoReport" id="denovo-variants-div" class="row">
-          <div class="col-12">
-            <table class="gpf-basic-table" [style.width.px]="denovoVariantsTableWidth">
-              <thead>
-                <th>Effect type</th>
-                <th class="rotate" *ngFor="let column of currentDenovoReport.columns">
-                  <div
-                    class="column-header"
-                    [attr.title]="
-                      'children with this ' +
-                      currentDenovoReport.groupName.toLowerCase() +
-                      ': ' +
-                      column.substring(column.lastIndexOf('(') + 1, column.lastIndexOf(')'))
-                    ">
-                    <span>{{ column }}</span>
-                  </div>
-                </th>
-              </thead>
-              <tbody>
-                <tr
+      <div *ngIf="currentDenovoReport" id="denovo-variants-div" class="row">
+        <div class="col-12">
+          <table class="gpf-basic-table" [style.width.px]="denovoVariantsTableWidth">
+            <thead>
+              <th>Effect type</th>
+              <th class="rotate" *ngFor="let column of currentDenovoReport.columns">
+                <div
+                  class="column-header"
+                  [attr.title]="
+                    'children with this ' +
+                    currentDenovoReport.groupName.toLowerCase() +
+                    ': ' +
+                    column.substring(column.lastIndexOf('(') + 1, column.lastIndexOf(')'))
+                  ">
+                  <span>{{ column }}</span>
+                </div>
+              </th>
+            </thead>
+            <tbody>
+              <tr
+                *ngFor="let effectType of currentDenovoReport.effectGroups | getRows : currentDenovoReport.effectTypes"
+                [ngClass]="{ 'effect-type-group-row': currentDenovoReport.effectGroups.indexOf(effectType) !== -1 }">
+                <th>{{ effectType }}</th>
+                <td
                   *ngFor="
-                    let effectType of currentDenovoReport.effectGroups | getRows : currentDenovoReport.effectTypes
-                  "
-                  [ngClass]="{ 'effect-type-group-row': currentDenovoReport.effectGroups.indexOf(effectType) !== -1 }">
-                  <th>{{ effectType }}</th>
-                  <td
-                    *ngFor="
-                      let effectTypeData of effectType
-                        | getEffectTypeOrderByColumOrder : currentDenovoReport : currentDenovoReport.columns
-                    ">
-                    <div
-                      class="effect-type-data-values"
-                      title="{{ effectType }}&#10;{{ effectTypeData.column }}&#10;number of observed events: {{
-                        effectTypeData.numberOfObservedEvents
-                      }}&#10;observed rate per individual: {{
-                        effectTypeData.observedRatePerChild | number
-                      }}&#10;number of individuals with events: {{
-                        effectTypeData.numberOfChildrenWithEvent
-                      }}&#10;percent of individuals with events: {{
-                        effectTypeData.percentOfChildrenWithEvents | percent
-                      }}">
-                      <span
-                        >{{ effectTypeData.numberOfObservedEvents }}, {{ effectTypeData.observedRatePerChild | number
-                        }}<br />({{ effectTypeData.numberOfChildrenWithEvent }},
-                        {{ effectTypeData.percentOfChildrenWithEvents | percent }})</span
-                      >
-                    </div>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+                    let effectTypeData of effectType
+                      | getEffectTypeOrderByColumOrder : currentDenovoReport : currentDenovoReport.columns
+                  ">
+                  <div
+                    class="effect-type-data-values"
+                    title="{{ effectType }}&#10;{{ effectTypeData.column }}&#10;number of observed events: {{
+                      effectTypeData.numberOfObservedEvents
+                    }}&#10;observed rate per individual: {{
+                      effectTypeData.observedRatePerChild | number
+                    }}&#10;number of individuals with events: {{
+                      effectTypeData.numberOfChildrenWithEvent
+                    }}&#10;percent of individuals with events: {{
+                      effectTypeData.percentOfChildrenWithEvents | percent
+                    }}">
+                    <span
+                      >{{ effectTypeData.numberOfObservedEvents }}, {{ effectTypeData.observedRatePerChild | number
+                      }}<br />({{ effectTypeData.numberOfChildrenWithEvent }},
+                      {{ effectTypeData.percentOfChildrenWithEvents | percent }})</span
+                    >
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
