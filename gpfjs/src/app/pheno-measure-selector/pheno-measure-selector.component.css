@@ -12,3 +12,10 @@
   border-top-left-radius: 0;
   border-bottom-left-radius: 0;
 }
+
+::ng-deep .ui-autocomplete {
+  max-height: 300px;
+  overflow-y: auto;
+  /* prevent horizontal scrollbar */
+  overflow-x: hidden;
+}

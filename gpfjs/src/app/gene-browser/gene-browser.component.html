@@ -5,28 +5,8 @@
     >
     <div class="card-block">
       <div ngbDropdown class="input-group panel" style="padding: 15px; align-items: baseline">
-        <input
-          ngbDropdownAnchor
-          #searchBox
-          id="search-box"
-          placeholder="Search gene"
-          autocomplete="off"
-          spellcheck="false"
-          [(ngModel)]="geneSymbol"
-          (keyup)="openDropdown(); searchBoxInput$.next(geneSymbol)"
-          (click)="reset(); geneSymbol = ''; showError = false"
-          (keydown.enter)="submitGeneRequest()"
-          (keydown.escape)="closeDropdown()" />
-
-        <div ngbDropdownMenu id="genes-dropdown">
-          <button
-            *ngFor="let suggestion of geneSymbolSuggestions"
-            class="dropdown-item"
-            type="button"
-            (click)="selectGeneSymbol(suggestion)"
-            (keydown.enter)="selectGeneSymbol(suggestion); submitGeneRequest()">
-            <span>{{ suggestion }}</span>
-          </button>
+        <div class="ui-widget">
+          <input id="tags">
         </div>
 
         <div style="padding-left: 16px">
@@ -52,7 +32,7 @@
   </div>
 
   <div style="margin-top: 15px">
-    <input type="button" style="width: 75px" class="btn btn-md btn-primary" value="Go" (click)="submitGeneRequest()" />
+    <input id="go-button" type="button" style="width: 75px" class="btn btn-md btn-primary" value="Go" (click)="submitGeneRequest()" />
   </div>
 
   <div *ngIf="showResults">

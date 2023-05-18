@@ -180,6 +180,7 @@ import { FederationCredentialsComponent } from './federation-credentials/federat
 import { StudyFiltersTreeComponent } from './treelist-checkbox/treelist-checkbox.component';
 import { LoginComponent } from './login/login.component';
 import { DatasetsTreeService } from './datasets/datasets-tree.service';
+import { DropdownSelectComponent } from './dropdown-select/dropdown-select.component';
 
 const appRoutes: Routes = [
   {
@@ -386,7 +387,8 @@ const appRoutes: Routes = [
     ItemAddMenuComponent,
     FederationCredentialsComponent,
     StudyFiltersTreeComponent,
-    LoginComponent
+    LoginComponent,
+    DropdownSelectComponent,
   ],
   imports: [
     BrowserModule,

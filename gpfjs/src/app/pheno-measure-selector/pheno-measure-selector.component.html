@@ -1,32 +1,5 @@
-<div ngbDropdown class="input-group" style="display: inline-flex; flex-wrap: nowrap">
-  <input
-    ngbDropdownAnchor
-    #searchBox
-    id="search-box"
-    placeholder="Select or start typing to search"
-    autocomplete="off"
-    spellcheck="false"
-    [(ngModel)]="searchString"
-    (keyup)="openDropdown(); loadDropdownData()"
-    (click)="clear(); openDropdown(); loadDropdownData()"
-    (keydown.escape)="closeDropdown()"
-    style="width: 100%" />
-  <div ngbDropdownMenu style="z-index: 3; width: 100%; max-height: 300px; overflow-y: scroll">
-    <ng-container *ngIf="filteredMeasures.length === 0">
-      <div id="loading-dropdown-text" *ngIf="loadingMeasures || loadingDropdown">Loading...</div>
-      <div id="loading-dropdown-text" *ngIf="!loadingDropdown">Nothing found</div>
-    </ng-container>
-
-    <button
-      *ngFor="let measure of filteredMeasures"
-      class="dropdown-item"
-      type="button"
-      (click)="selectMeasure(measure)"
-      (keydown.enter)="selectMeasure(measure)">
-      <span innerHtml="{{ measure.name | boldMatching : searchString }}"></span>
-    </button>
-  </div>
-  <div class="input-group-append">
-    <button (click)="clear()" class="btn btn-secondary" id="clear-measure-button">&times;</button>
+<div class="input-group" style="display: inline-flex; flex-wrap: nowrap">
+  <div class="ui-widget">
+    <input id="tags" style="width: 400px">
   </div>
 </div>
