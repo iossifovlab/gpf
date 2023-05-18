@@ -114,10 +114,13 @@ function main() {
   # run MailHog
   build_stage "Run MailHog"
   {
+      local docker_img_iossifovlab_mailhog
+      docker_img_iossifovlab_mailhog="$(e docker_img_iossifovlab_mailhog)"
+
       local -A ctx_mailhog
-      build_run_ctx_init ctx:ctx_mailhog "persistent" "container" "mailhog/mailhog" \
+      build_run_ctx_init ctx:ctx_mailhog "persistent" "container" "$docker_img_iossifovlab_mailhog" \
           "cmd-from-image" "no-def-mounts" \
-          ports:1025,8025 --hostname mailhog --network "${ctx_network["network_id"]}"
+          'ports:1025,8025' --hostname mailhog --network "${ctx_network["network_id"]}"
 
       defer_ret build_run_ctx_reset ctx:ctx_mailhog
       build_run_ctx_persist ctx:ctx_mailhog
