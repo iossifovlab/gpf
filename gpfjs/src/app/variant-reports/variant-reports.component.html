@@ -7,14 +7,14 @@
       style="justify-content: flex-start; margin-bottom: 16px"
       [destroyOnHide]="false">
       <li ngbNavItem>
-        <a ngbNavLink>Families by number</a>
+        <a ngbNavLink (click)="isFamiliesByNumberVisible = true">Families by number</a>
         <ng-template ngbNavContent>
           <ng-container *ngTemplateOutlet="familiesByNumber"></ng-container>
         </ng-template>
       </li>
 
       <li ngbNavItem>
-        <a ngbNavLink>Families by pedigree</a>
+        <a ngbNavLink (click)="isFamiliesByNumberVisible = false">Families by pedigree</a>
         <ng-template ngbNavContent>
           <ng-container *ngTemplateOutlet="familiesByPedigree"></ng-container>
         </ng-template>
@@ -29,7 +29,7 @@
     </ul>
     <div [ngbNavOutlet]="nav" class="card-block"></div>
 
-    <h5 id="total-number-of-families">
+    <h5 *ngIf="isFamiliesByNumberVisible" id="total-number-of-families">
       <span>Total number of families: {{ variantReport.familyReport.familiesTotal }}</span>
       <span style="padding-left: 5px">(<a class="download-link" [href]="getDownloadLink()" download>Download</a>)</span>
     </h5>

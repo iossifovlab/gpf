@@ -1,4 +1,4 @@
-import { Component, OnInit, HostListener, Pipe, PipeTransform } from '@angular/core';
+import { Component, OnInit, HostListener, Pipe, PipeTransform, Input } from '@angular/core';
 import { VariantReportsService } from './variant-reports.service';
 import {
   VariantReport, FamilyCounter, PedigreeCounter, EffectTypeTable, DeNovoData, PedigreeTable, PeopleCounter
@@ -30,6 +30,7 @@ export class VariantReportsComponent implements OnInit {
   public currentPeopleCounter: PeopleCounter;
   public currentPedigreeTable: PedigreeTable;
   public currentDenovoReport: EffectTypeTable;
+  @Input() public isFamiliesByNumberVisible = false;
 
   public variantReport: VariantReport;
   public familiesCounters: FamilyCounter[];
@@ -92,6 +93,7 @@ export class VariantReportsComponent implements OnInit {
       allowSearchFilter: true,
       maxHeight: 150
     };
+    this.isFamiliesByNumberVisible = true;
   }
 
   private copyOriginalPedigreeCounters(): Record<string, PedigreeCounter[]> {
