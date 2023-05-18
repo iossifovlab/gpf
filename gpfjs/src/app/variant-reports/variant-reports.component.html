@@ -89,18 +89,10 @@
           <span class="select-dropdown-icon" [style.content]="'url(' + imgPathPrefix + 'dropdown_icon.png)'"></span>
         </div>
       </div>
-      <div *ngIf="dropdownList.length !== 0 && currentPedigreeTable" id="tags-selector">
-        <div id="tags-dropdown-wrapper">
-          <ng-multiselect-dropdown
-            [placeholder]="'Select tags'"
-            [settings]="dropdownSettings"
-            [data]="dropdownList"
-            [(ngModel)]="selectedItems"
-            (onSelect)="updateTagFilters()"
-            (onDeSelect)="updateTagFilters()">
-          </ng-multiselect-dropdown>
-          <span class="select-dropdown-icon" [style.content]="'url(' + imgPathPrefix + 'dropdown_icon.png)'"></span>
-        </div>
+
+      <div id="pedigree-toolbar">
+        <button (click)="openModal()">Select tags</button>
+        <span [hidden]="!selectedTagsHeader" id="selectedTagsList">{{ selectedTagsHeader }}</span>
         <button
           [disabled]="currentPedigreeTable.pedigrees.length === 0"
           id="download-button"
@@ -109,30 +101,49 @@
           >Download</button
         >
       </div>
-
-      <div *ngIf="currentPedigreeTable" id="families-by-pedigree-div" class="row">
-        <div class="col-12">
-          <table class="gpf-basic-table">
-            <colgroup *ngIf="currentPedigreeTable.pedigrees.length !== 0">
-              <col />
-              <col />
-              <col />
-              <col />
-            </colgroup>
-            <tbody *ngIf="currentPedigreeTable.pedigrees.length !== 0">
-              <ng-template ngFor let-pedigreeGroup [ngForOf]="currentPedigreeTable.pedigrees">
-                <tr gpf-common-reports-row [pedigreeGroup]="pedigreeGroup"></tr>
-              </ng-template>
-            </tbody>
-            <th *ngIf="currentPedigreeTable.pedigrees.length === 0" id="nothing-found" class="table-row table-body-row">
-              <span>Nothing found</span>
-            </th>
-          </table>
+      <ng-template #tagsModal id="tags-modal">
+        <div id="modal-content">
+          <input
+            #searchTag
+            (search)="search(searchTag.value)"
+            (keyup)="search(searchTag.value)"
+            id="search-tags"
+            class="search-input form-control my-0 py-1"
+            type="search"
+            [ngModel]="searchTagText"
+            placeholder="Search tags"
+            autocomplete="off" />
+          <span *ngIf="!modalTagsList.length" id="nothing-found">Nothing found</span>
+          <div *ngFor="let tag of modalTagsList" id="tags">
+            <input type="checkbox" [checked]="selectedItems.includes(tag)" (change)="selectedTags(tag)" />
+            <span>{{ tag }}</span>
+          </div>
         </div>
+      </ng-template>
+    </div>
+
+    <div *ngIf="currentPedigreeTable" id="families-by-pedigree-div" class="row">
+      <div class="col-12">
+        <table class="gpf-basic-table">
+          <colgroup *ngIf="currentPedigreeTable.pedigrees.length !== 0">
+            <col />
+            <col />
+            <col />
+            <col />
+          </colgroup>
+          <tbody *ngIf="currentPedigreeTable.pedigrees.length !== 0">
+            <ng-template ngFor let-pedigreeGroup [ngForOf]="currentPedigreeTable.pedigrees">
+              <tr gpf-common-reports-row [pedigreeGroup]="pedigreeGroup"></tr>
+            </ng-template>
+          </tbody>
+          <th *ngIf="currentPedigreeTable.pedigrees.length === 0" id="nothing-found" class="table-row table-body-row">
+            <span>Nothing found</span>
+          </th>
+        </table>
       </div>
-      <div *ngIf="currentPedigreeTable" id="legend-wrapper">
-        <gpf-legend [legendItems]="currentPedigreeTable.legend.legendItems"></gpf-legend>
-      </div>
+    </div>
+    <div *ngIf="currentPedigreeTable" id="legend-wrapper">
+      <gpf-legend [legendItems]="currentPedigreeTable.legend.legendItems"></gpf-legend>
     </div>
   </ng-template>
 
