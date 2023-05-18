@@ -129,7 +129,7 @@ export class VariantReportsComponent implements OnInit {
 
   public search(searchValue: string): void {
     if (searchValue!==' ') {
-      this.modalTagsList = this.tags.filter(el => el.includes(searchValue));
+      this.modalTagsList = this.tags.filter(el => el.includes(searchValue.toLocaleLowerCase()));
     }
   }
 
