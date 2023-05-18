@@ -26,7 +26,8 @@ from .resource_implementation import GenomicResourceImplementation, \
 from .genomic_position_table import build_genomic_position_table, Line, \
     TabixGenomicPositionTable, VCFGenomicPositionTable, VCFLine
 from .genomic_position_table.table_inmemory import InmemoryGenomicPositionTable
-from .histogram import Histogram, HistogramStatisticMixin
+from .histogram import NumberHistogram, NumberHistogramConfig, \
+    CategoricalHistogramConfig, HistogramStatisticMixin
 from .statistics.min_max import MinMaxValue, MinMaxValueStatisticMixin
 
 from .aggregators import build_aggregator, AGGREGATOR_SCHEMA, Aggregator
@@ -55,14 +56,60 @@ class ScoreDef:
     """Score configuration definition."""
 
     # pylint: disable=too-many-instance-attributes
-    col_key: str
-    desc: str
-    type: str
-    value_parser: Any
-    na_values: Any
-    pos_aggregator: Any
-    nuc_aggregator: Any
-    allele_aggregator: Any
+    score_id: str
+    desc: str  # string that will be interpretted as md
+    value_type: str  # "str", "int", "float"
+    pos_aggregator: Optional[str]     # a valid aggregatory type
+    nuc_aggregator: Optional[str]     # a valid aggregatory type
+    allele_aggregator: Optional[str]  # a valid aggregatory type
+
+    small_values_desc: Optional[str]
+    large_values_desc: Optional[str]
+
+    # no more than one of these
+    hist_number_conf: Optional[NumberHistogramConfig]
+    hist_categorical_conf: Optional[CategoricalHistogramConfig]
+
+
+@dataclass
+class _ScoreDef:
+    """Private score configuration definition. Includes internals."""
+
+    # pylint: disable=too-many-instance-attributes
+    score_id: str
+    desc: str  # string that will be interpretted as md
+    value_type: str  # "str", "int", "float"
+    pos_aggregator: Optional[str]     # a valid aggregatory type
+    nuc_aggregator: Optional[str]     # a valid aggregatory type
+    allele_aggregator: Optional[str]  # a valid aggregatory type
+
+    small_values_desc: Optional[str]
+    large_values_desc: Optional[str]
+
+    # no more than one of these
+    hist_number_conf: Optional[NumberHistogramConfig]
+    hist_categorical_conf: Optional[CategoricalHistogramConfig]
+
+    col_key: str                                  # internal
+    value_parser: Any                             # internal
+    na_values: Any                                # internal
+    public_definition: Optional[ScoreDef] = None  # internal
+
+    def to_public(self):
+        if self.public_definition is None:
+            self.public_definition = ScoreDef(
+                self.score_id,
+                self.desc,
+                self.type,
+                self.pos_aggregator,
+                self.nuc_aggregator,
+                self.allele_aggregator,
+                self.small_values_desc,
+                self.large_values_desc,
+                self.hist_number_conf,
+                self.hist_categorical_conf
+            )
+        return self.public_definition
 
 
 class ScoreLine:
@@ -160,7 +207,7 @@ class GenomicScoreStatistics(
             try:
                 with genomic_resource.open_raw_file(
                         histogram_filepath, mode="r") as infile:
-                    histogram = Histogram.deserialize(infile.read())
+                    histogram = NumberHistogram.deserialize(infile.read())
                     histograms[score_id] = histogram
             except FileNotFoundError:
                 logger.warning(
@@ -198,7 +245,7 @@ class GenomicScoreImplementation(
         result = {}
         for score_id, score in self.score.score_definitions.items():
             if score.type in {"int", "float"}:
-                result[score_id] = Histogram.default_config(score_id)
+                result[score_id] = NumberHistogram.default_config(score_id)
         hist_config_overwrite = self.get_config().get("histograms", {})
         for hist_config in hist_config_overwrite:
             result[hist_config["score"]] = copy.deepcopy(hist_config)
@@ -467,7 +514,7 @@ class GenomicScoreImplementation(
             if hist_config.get("max") is None:
                 hist_config["max"] = save_minmax_task[score_id].max
             try:
-                res[score_id] = Histogram(hist_config)
+                res[score_id] = NumberHistogram(hist_config)
             except ValueError:
                 logger.warning("skipping histogram for %s", score_id)
         score_ids = list(res.keys())
@@ -726,54 +773,63 @@ class GenomicScore(ResourceConfigValidationMixin):
             "float": {"", "nan", ".", "NA"},
             "int": {"", "nan", ".", "NA"}
         }
-        default_type_pos_aggregators = {
+        default_pos_aggregators = {
             "float": "mean",
             "int": "mean",
             "str": "concatenate"
         }
-        default_type_nuc_aggregators = {
+        default_nuc_aggregators = {
             "float": "max",
             "int": "max",
             "str": "concatenate"
         }
-        default_type_allele_aggregators = {
+        default_allele_aggregators = {
             "float": "max",
             "int": "max",
             "str": "concatenate"
         }
         for score_conf in config["scores"]:
-            col_type = score_conf.get(
-                "type", config.get("default.score.type", "float"))
+            number_hist_conf = None
+            categorical_hist_conf = None
+            if score_conf.get("number_hist"):
+                number_hist_conf = NumberHistogramConfig(
+                    **score_conf.get("number_hist")
+                )
+            if score_conf.get("categorical_hist"):
+                categorical_hist_conf = CategoricalHistogramConfig(
+                    **score_conf.get("categorical_hist")
+                )
+            value_parser = SCORE_TYPE_PARSERS[score_conf.type]
 
             col_key = score_conf.get("name") or score_conf["index"]
 
-            col_def = ScoreDef(
-                col_key,
-                score_conf.get("desc", ""),
-                col_type,
-                SCORE_TYPE_PARSERS[col_type],
-                score_conf.get(
-                    "na_values",
-                    config.get(
-                        f"default_na_values.{col_type}",
-                        default_na_values[col_type])),
-                score_conf.get(
-                    "position_aggregator",
-                    config.get(
-                        f"{col_type}.aggregator",
-                        default_type_pos_aggregators[col_type])),
-                score_conf.get(
-                    "nucleotide_aggregator",
-                    config.get(
-                        f"{col_type}.aggregator",
-                        default_type_nuc_aggregators[col_type])),
-                score_conf.get(
-                    "allele_aggregator",
-                    config.get(
-                        f"{col_type}.aggregator",
-                        default_type_allele_aggregators[col_type])),
+            value_type = score_conf.get("type", "float")
+
+            score_def = _ScoreDef(
+                score_id=score_conf["score_id"],
+                desc=score_conf.get("desc", ""),
+                value_type=value_type,
+                pos_aggregator=score_conf.get(
+                    "pos_aggregator", default_pos_aggregators[value_type]
+                ),
+                nuc_aggregator=score_conf.get(
+                    "nuc_aggregator", default_nuc_aggregators[value_type]
+                ),
+                allele_aggregator=score_conf.get(
+                    "allele_aggregator", default_allele_aggregators[value_type]
+                ),
+                small_values_desc=score_conf.get("small_values_desc", None),
+                large_values_desc=score_conf.get("large_values_desc", None),
+                hist_number_conf=number_hist_conf,
+                hist_categorical_conf=categorical_hist_conf,
+                col_key=col_key,
+                value_parser=value_parser,
+                na_values=score_conf.get(
+                    "na_values", default_na_values[value_type]
+                )
             )
-            scores[score_conf["id"]] = col_def
+
+            scores[score_conf["score_id"]] = score_def
         return scores
 
     @staticmethod
