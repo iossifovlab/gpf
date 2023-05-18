@@ -8,8 +8,8 @@ import pytest
 from dae.genomic_resources.repository import GR_CONF_FILE_NAME
 from dae.genomic_resources.histogram import Histogram
 from dae.genomic_resources.testing import \
-    setup_directories, convert_to_tab_separated, \
-    build_filesystem_test_repository, setup_tabix
+    setup_directories, build_filesystem_test_repository, \
+    setup_tabix
 from dae.genomic_resources.resource_implementation import \
     GenomicResourceImplementation, ResourceStatistics
 
