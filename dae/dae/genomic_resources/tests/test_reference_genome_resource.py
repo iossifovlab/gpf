@@ -210,6 +210,44 @@ def test_reference_genome_fetch(genome_fixture):
         ]
 
 
+def test_reference_genome_fetch_corner_case(genome_fixture):
+    res = build_filesystem_test_resource(genome_fixture)
+    reference_genome = build_reference_genome_from_resource(res)
+
+    with reference_genome.open():
+        result = list(reference_genome.fetch("pesho", 1, 9))
+        assert result == [
+            "N",
+            "N",
+            "A",
+            "C",
+            "C",
+            "C",
+            "A",
+            "A",
+            "A",
+        ]
+
+
+def test_reference_genome_fetch_small_buffer(genome_fixture):
+    res = build_filesystem_test_resource(genome_fixture)
+    reference_genome = build_reference_genome_from_resource(res)
+
+    with reference_genome.open():
+        result = list(reference_genome.fetch("pesho", 1, 9, 1))
+        assert result == [
+            "N",
+            "N",
+            "A",
+            "C",
+            "C",
+            "C",
+            "A",
+            "A",
+            "A",
+        ]
+
+
 def test_reference_genome_pair_iter(genome_fixture):
     res = build_filesystem_test_resource(genome_fixture)
     reference_genome = build_reference_genome_from_resource(res)

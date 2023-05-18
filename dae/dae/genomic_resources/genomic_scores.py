@@ -15,6 +15,7 @@ from functools import lru_cache
 from jinja2 import Template
 
 from dae.task_graph.graph import TaskGraph
+from dae.utils.regions import split_into_regions, get_chromosome_length_tabix
 from . import GenomicResource
 from .reference_genome import build_reference_genome_from_resource
 from .resource_implementation import GenomicResourceImplementation, \
@@ -24,6 +25,7 @@ from .resource_implementation import GenomicResourceImplementation, \
     ResourceConfigValidationMixin
 from .genomic_position_table import build_genomic_position_table, Line, \
     TabixGenomicPositionTable, VCFGenomicPositionTable, VCFLine
+from .genomic_position_table.table_inmemory import InmemoryGenomicPositionTable
 from .histogram import Histogram, HistogramStatisticMixin
 from .statistics.min_max import MinMaxValue, MinMaxValueStatisticMixin
 
@@ -646,12 +648,21 @@ class GenomicScore(
         return ref_genome
 
     def _get_chrom_regions(self, region_size, grr=None):
+        regions = []
         ref_genome_id = self.resource.get_labels().get("reference_genome")
         ref_genome = self._get_reference_genome_cached(grr, ref_genome_id)
-        if ref_genome is not None:
-            regions = self._split_into_regions(region_size, ref_genome)
-        else:
-            regions = self._split_into_regions(region_size)
+        for chrom in self.get_all_chromosomes():
+            if ref_genome is not None:
+                chrom_length = ref_genome.get_chrom_length(chrom)
+            else:
+                if isinstance(self.table, InmemoryGenomicPositionTable):
+                    raise ValueError("In memory tables are not supported")
+                chrom_length = get_chromosome_length_tabix(
+                    self.table.pysam_file, chrom
+                )
+            regions.extend(
+                split_into_regions(chrom, chrom_length, region_size)
+            )
         return regions
 
     def _add_min_max_tasks(self, graph, region_size, grr=None):
@@ -663,7 +674,10 @@ class GenomicScore(
         """
         min_max_tasks = []
         regions = self._get_chrom_regions(region_size, grr)
-        for chrom, start, end in regions:
+        for region in regions:
+            chrom = region.chrom
+            start = region.start
+            end = region.stop
             min_max_tasks.append(graph.create_task(
                 f"{self.score_id}_calculate_min_max_{chrom}_{start}_{end}",
                 GenomicScore._do_min_max,
@@ -740,7 +754,10 @@ class GenomicScore(
         """
         histogram_tasks = []
         regions = self._get_chrom_regions(region_size, grr)
-        for chrom, start, end in regions:
+        for region in regions:
+            chrom = region.chrom
+            start = region.start
+            end = region.stop
             histogram_tasks.append(graph.create_task(
                 f"{self.score_id}_calculate_histogram_{chrom}_{start}_{end}",
                 GenomicScore._do_histogram,
@@ -834,34 +851,6 @@ class GenomicScore(
             ) as outfile:
                 score_histogram.plot(outfile)
         return merged_histograms
-
-    def _split_into_regions(self, region_size, reference_genome=None):
-        chromosomes = self.get_all_chromosomes()
-        for chrom in chromosomes:
-            if reference_genome is not None \
-                    and chrom in reference_genome.chromosomes:
-                chrom_len = reference_genome.get_chrom_length(chrom)
-            else:
-                if reference_genome is not None:
-                    logger.info(
-                        "chromosome %s of %s not found in reference genome %s",
-                        chrom, self.resource.resource_id,
-                        reference_genome.resource_id
-                    )
-                else:
-                    logger.info(
-                        "chromosome %s of %s using table, no reference genome",
-                        chrom, self.resource.resource_id
-                    )
-                chrom_len = self.table.get_chromosome_length(chrom)
-            logger.debug(
-                "Chromosome '%s' has length %s",
-                chrom, chrom_len)
-            i = 1
-            while i < chrom_len - region_size:
-                yield chrom, i, i + region_size - 1
-                i += region_size
-            yield chrom, i, None
 
     def calc_info_hash(self):
         """Compute and return the info hash."""
