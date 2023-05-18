@@ -15,6 +15,7 @@ from dae.genomic_resources.gene_models import GeneModels
 from dae.genomic_resources.genomic_context import get_genomic_context
 from dae.genomic_resources.gene_models import \
     build_gene_models_from_resource
+from dae.genomic_resources.repository import GenomicResource
 
 from .annotatable import Annotatable, CNVAllele, VCFAllele
 
@@ -245,11 +246,11 @@ class EffectAnnotatorAdapter(AnnotatorBase):
         return self._annotation_config
 
     @property
-    def resources(self):
-        return {
-            self.gene_models.resource_id,
-            self.genome.resource_id
-        }
+    def resources(self) -> list[GenomicResource]:
+        return [
+            self.gene_models.resource,
+            self.genome.resource
+        ]
 
     def _do_annotate(
             self, annotatable: Annotatable, _context: dict):

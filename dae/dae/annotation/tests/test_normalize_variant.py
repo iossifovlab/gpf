@@ -273,6 +273,6 @@ def test_normalize_allele_annotator_resources(grr_fixture):
 
     with annotation_pipeline.open() as pipeline:
         annotator = pipeline.annotators[0]
-        assert annotator.resources == {
+        assert {res.get_id() for res in annotator.resources} == {
             "hg19/GATK_ResourceBundle_5777_b37_phiX174_short/genome"
         }

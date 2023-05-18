@@ -8,6 +8,7 @@ from dae.genomic_resources.gene_models import GeneModels, \
     build_gene_models_from_resource
 
 from dae.genomic_resources.genomic_context import get_genomic_context
+from dae.genomic_resources.repository import GenomicResource
 from dae.utils.regions import Region
 
 logger = logging.getLogger(__name__)
@@ -284,7 +285,5 @@ class SimpleEffectAnnotator(AnnotatorBase):
         return self._open
 
     @property
-    def resources(self) -> set[str]:
-        return {
-            self.gene_models.resource_id
-        }
+    def resources(self) -> list[GenomicResource]:
+        return [self.gene_models.resource]

@@ -18,7 +18,7 @@ def test_effect_annotator_resources(grr_fixture):
 
     with annotation_pipeline.open() as pipeline:
         annotator = pipeline.annotators[0]
-        assert annotator.resources == {
+        assert {res.get_id() for res in annotator.resources} == {
             genome,
             gene_models
         }

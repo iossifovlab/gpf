@@ -8,6 +8,7 @@ from dae.genomic_resources.reference_genome import \
     ReferenceGenome, build_reference_genome_from_resource
 from dae.genomic_resources.liftover_resource import \
     LiftoverChain, build_liftover_chain_from_resource
+from dae.genomic_resources.repository import GenomicResource
 
 from dae.utils.variant_utils import trim_str_left, reverse_complement
 
@@ -93,11 +94,11 @@ class LiftOverAnnotator(AnnotatorBase):
         ]
 
     @property
-    def resources(self):
-        return {
-            self.chain.resource.resource_id,
-            self.target_genome.resource_id
-        }
+    def resources(self) -> list[GenomicResource]:
+        return [
+            self.chain.resource,
+            self.target_genome.resource
+        ]
 
     @classmethod
     def validate_config(cls, config: dict) -> dict:

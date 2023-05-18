@@ -105,8 +105,8 @@ class GeneScoreAnnotator(AnnotatorBase):
         return cast(dict, validator.document)
 
     @property
-    def resources(self):
-        return {self.resource.get_id()}
+    def resources(self) -> list[GenomicResource]:
+        return [self.resource]
 
     def aggregate_gene_values(
             self, gene_score, gene_symbols, aggregator_type=None):

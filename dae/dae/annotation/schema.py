@@ -1,10 +1,29 @@
 from __future__ import annotations
+from dataclasses import dataclass
 
 import logging
 
 from typing import Dict, Optional
 
+from dae.genomic_resources.repository import GenomicResource
+
 logger = logging.getLogger(__name__)
+
+
+@dataclass
+class AttributeInfo:
+    name: str
+    source: str
+    type: str         # str, int, float, or object
+    description: str  # interpreted as md
+    internal: bool
+
+
+@dataclass
+class AnnotatorInfo:
+    type: str
+    resrouces: list[GenomicResource]
+    attributes: list[AttributeInfo]
 
 
 class Schema:

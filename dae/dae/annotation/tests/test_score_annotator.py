@@ -190,6 +190,6 @@ def test_score_annotator_resources(grr_fixture):
     score.open()
 
     annotator = PositionScoreAnnotator(config, score)
-    assert annotator.resources == {
+    assert {res.get_id() for res in annotator.resources} == {
         "hg38/TESTphastCons100way"
     }

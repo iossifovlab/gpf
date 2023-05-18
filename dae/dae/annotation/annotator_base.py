@@ -5,10 +5,13 @@ import logging
 import abc
 
 from typing import Any, Optional
-from cerberus.validator import Validator  # type: ignore
+from cerberus.validator import Validator
+from dae.genomic_resources.repository import GenomicResource  # type: ignore
 
 from .annotatable import Annotatable
-from .schema import Schema
+from .schema import AttributeInfo, Schema
+from .schema import AnnotatorInfo
+
 
 logger = logging.getLogger(__name__)
 
@@ -87,7 +90,7 @@ class Annotator(abc.ABC):
         raise ValueError(message)
 
     @property
-    def annotation_schema(self):
+    def annotation_schema(self) -> Schema:
         """Return annotation schema."""
         if self._annotation_schema is None:
             schema = Schema()
@@ -140,8 +143,27 @@ class Annotator(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def resources(self) -> set[str]:
+    def resources(self) -> list[GenomicResource]:
         """Genomic resources used by the annotator."""
+
+    @property
+    # @abc.abstractmethod
+    def attributes(self) -> list[AttributeInfo]:
+        """Genomic resources used by the annotator."""
+        schema = self.annotation_schema
+
+        ret = []
+        for name, field in schema.fields.items():
+            source = "breh"
+            if field.source:
+                source = field.source.attribute_config.get('source', "tsts")
+            ret.append(AttributeInfo(name, source, field.type,
+                                     field.description, field.internal))
+        return ret
+
+    def get_info(self) -> AnnotatorInfo:
+        return AnnotatorInfo(self.annotator_type(),
+                             self.resources, self.attributes)
 
     def _empty_result(self) -> dict[str, Any]:
         result: dict[str, Any] = {}

@@ -103,4 +103,4 @@ def test_gene_score_annotator_resources(scores_repo):
     }
 
     annotator = GeneScoreAnnotator(config, resource)
-    assert annotator.resources == {"LGD_rank"}
+    assert {res.get_id() for res in annotator.resources} == {"LGD_rank"}

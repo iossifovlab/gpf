@@ -6,6 +6,7 @@ from typing import Optional, cast
 from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.genomic_resources.reference_genome import \
     build_reference_genome_from_resource
+from dae.genomic_resources.repository import GenomicResource
 
 from .annotatable import Annotatable, VCFAllele
 from .annotator_base import AnnotatorBase, ATTRIBUTES_SCHEMA
@@ -93,8 +94,8 @@ class NormalizeAlleleAnnotator(AnnotatorBase):
         return True
 
     @property
-    def resources(self):
-        return {self.genome.resource_id}
+    def resources(self) -> list[GenomicResource]:
+        return [self.genome.resource]
 
     @classmethod
     def validate_config(cls, config: dict) -> dict:

@@ -77,7 +77,7 @@ def annotate(
     # cache pipeline
     resources: set[str] = set()
     for annotator in pipeline.annotators:
-        resources = resources | annotator.resources
+        resources = resources | {res.get_id() for res in annotator.resources}
     cache_resources(grr, resources)
 
     with closing(VariantFile(input_file)) as in_file:

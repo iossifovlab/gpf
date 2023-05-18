@@ -11,6 +11,7 @@ from dae.genomic_resources.genomic_scores import \
     PositionScoreQuery, NPScoreQuery, AlleleScoreQuery, ScoreQuery
 
 from dae.genomic_resources.aggregators import AGGREGATOR_SCHEMA
+from dae.genomic_resources.repository import GenomicResource
 
 from .annotatable import Annotatable, VCFAllele
 from .annotator_base import Annotator, ATTRIBUTES_SCHEMA
@@ -93,8 +94,8 @@ class VariantScoreAnnotatorBase(Annotator):
         return []
 
     @property
-    def resources(self) -> set[str]:
-        return {self.score.resource.resource_id}
+    def resources(self) -> list[GenomicResource]:
+        return [self.score.resource]
 
     def _collect_score_queries(self) -> list[ScoreQuery]:
         return []

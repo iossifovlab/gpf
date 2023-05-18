@@ -156,7 +156,7 @@ def test_liftover_annotator_resources(grr_fixture):
     liftover_annotator = LiftOverAnnotator(
         config, lifover_chain, target_genome)
 
-    assert liftover_annotator.resources == {
+    assert {res.get_id() for res in liftover_annotator.resources} == {
         "hg38/hg38tohg19",
         "hg19/GATK_ResourceBundle_5777_b37_phiX174_short/genome"
     }

@@ -98,5 +98,6 @@ def extract_resource_ids_from_annotation(config, repository) -> set[str]:
     with build_annotation_pipeline(
             pipeline_config=config, grr_repository=repository) as pipeline:
         for annotator in pipeline.annotators:
-            resources = resources | annotator.resources
+            resources = resources | {resource.get_id()
+                                     for resource in annotator.resources}
     return resources
