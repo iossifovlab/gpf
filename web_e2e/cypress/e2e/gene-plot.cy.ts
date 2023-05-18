@@ -174,7 +174,12 @@ describe('Gene plot download tests', () => {
         geneBrowserPage.getAffectedStatusCheckbox(filter).click();
       });
 
-      page.downloadSummaryButton.click();
+      cy.window().document().then(doc => {
+        doc.addEventListener('click', () => {
+          setTimeout(() => doc.location?.reload(), 5000);
+        });
+        page.downloadSummaryButton.click();
+      });
 
       const downloadedSummaryVariantsPath = Cypress.config('downloadsFolder') + '/summary_variants.tsv';
       const expectedVariantsPath = 'cypress/fixtures/gene-browser/' + data.expectedPath;

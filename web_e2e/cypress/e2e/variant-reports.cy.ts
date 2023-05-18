@@ -329,7 +329,12 @@ describe('Variant reports tests', () => {
       const downloadedVariantsPath = Cypress.config('downloadsFolder') + '/family.ped';
       const expectedVariantsPath = `cypress/fixtures/variant-reports/family${cell.index}.ped`;
 
-      page.pedigreeModalDownloadBtn.click();
+      cy.window().document().then(doc => {
+        doc.addEventListener('click', () => {
+          setTimeout(() => doc.location?.reload(), 5000);
+        });
+        page.pedigreeModalDownloadBtn.click();
+      });
 
       cy.readFile(downloadedVariantsPath, { timeout: 10000 }).then((downloadedFile: string) => {
         cy.readFile(expectedVariantsPath, { timeout: 10000 }).then((expectedFile: string) => {

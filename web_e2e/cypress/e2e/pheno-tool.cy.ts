@@ -175,7 +175,12 @@ describe('Pheno tool download tests', () => {
     const downloadedVariantsPath = Cypress.config('downloadsFolder') + '/pheno_report.csv';
     const expectedVariantsPath = 'cypress/fixtures/pheno-tool/pheno_report1.csv';
 
-    page.downloadButton.click();
+    cy.window().document().then(doc => {
+      doc.addEventListener('click', () => {
+        setTimeout(() => doc.location?.reload(), 5000);
+      });
+      page.downloadButton.click();
+    });
 
     cy.readFile(downloadedVariantsPath, { timeout: 10000 }).then((downloadedFile: string) => {
       cy.readFile(expectedVariantsPath, { timeout: 10000 }).then((expectedFile: string) => {
@@ -198,7 +203,12 @@ describe('Pheno tool download tests', () => {
       const downloadedVariantsPath = Cypress.config('downloadsFolder') + '/pheno_report.csv';
       const expectedVariantsPath = `cypress/fixtures/pheno-tool/pheno_report${data.id}.csv`;
 
-      page.downloadButton.click();
+      cy.window().document().then(doc => {
+        doc.addEventListener('click', () => {
+          setTimeout(() => doc.location?.reload(), 5000);
+        });
+        page.downloadButton.click();
+      });
 
       cy.readFile(downloadedVariantsPath, { timeout: 10000 }).then((downloadedFile: string) => {
         cy.readFile(expectedVariantsPath, { timeout: 10000 }).then((expectedFile: string) => {
@@ -228,7 +238,12 @@ describe('Pheno tool download tests', () => {
       const downloadedVariantsPath = Cypress.config('downloadsFolder') + '/pheno_report.csv';
       const expectedVariantsPath = `cypress/fixtures/pheno-tool/pheno_report${data.id}.csv`;
 
-      page.downloadButton.click();
+      cy.window().document().then(doc => {
+        doc.addEventListener('click', () => {
+          setTimeout(() => doc.location?.reload(), 5000);
+        });
+        page.downloadButton.click();
+      });
 
       cy.readFile(downloadedVariantsPath, { timeout: 10000 }).then((downloadedFile: string) => {
         cy.readFile(expectedVariantsPath, { timeout: 10000 }).then((expectedFile: string) => {
@@ -256,7 +271,12 @@ describe('Pheno tool download tests', () => {
       const downloadedVariantsPath = Cypress.config('downloadsFolder') + '/pheno_report.csv';
       const expectedVariantsPath = `cypress/fixtures/pheno-tool/pheno_report${data.id}.csv`;
 
-      page.downloadButton.click();
+      cy.window().document().then(doc => {
+        doc.addEventListener('click', () => {
+          setTimeout(() => doc.location?.reload(), 5000);
+        });
+        page.downloadButton.click();
+      });
 
       cy.readFile(downloadedVariantsPath, { timeout: 10000 }).then((downloadedFile: string) => {
         cy.readFile(expectedVariantsPath, { timeout: 10000 }).then((expectedFile: string) => {
@@ -293,7 +313,12 @@ describe('Pheno tool download tests', () => {
       const expectedVariantsPath = `cypress/fixtures/pheno-tool/pheno_report${data.id}.csv`;
 
       cy.wait('@partitions');
-      page.downloadButton.click();
+      cy.window().document().then(doc => {
+        doc.addEventListener('click', () => {
+          setTimeout(() => doc.location?.reload(), 5000);
+        });
+        page.downloadButton.click();
+      });
 
       cy.readFile(downloadedVariantsPath, { timeout: 10000 }).then((downloadedFile: string) => {
         cy.readFile(expectedVariantsPath, { timeout: 10000 }).then((expectedFile: string) => {
@@ -321,7 +346,12 @@ describe('Pheno tool download tests', () => {
       const downloadedVariantsPath = Cypress.config('downloadsFolder') + '/pheno_report.csv';
       const expectedVariantsPath = `cypress/fixtures/pheno-tool/pheno_report${data.id}.csv`;
 
-      page.downloadButton.click();
+      cy.window().document().then(doc => {
+        doc.addEventListener('click', () => {
+          setTimeout(() => doc.location?.reload(), 5000);
+        });
+        page.downloadButton.click();
+      });
 
       cy.readFile(downloadedVariantsPath, { timeout: 10000 }).then((downloadedFile: string) => {
         cy.readFile(expectedVariantsPath, { timeout: 10000 }).then((expectedFile: string) => {
@@ -353,7 +383,12 @@ describe('Pheno tool download tests', () => {
       const downloadedVariantsPath = Cypress.config('downloadsFolder') + '/pheno_report.csv';
       const expectedVariantsPath = `cypress/fixtures/pheno-tool/pheno_report${data.id}.csv`;
 
-      page.downloadButton.click();
+      cy.window().document().then(doc => {
+        doc.addEventListener('click', () => {
+          setTimeout(() => doc.location?.reload(), 5000);
+        });
+        page.downloadButton.click();
+      });
 
       cy.readFile(downloadedVariantsPath, { timeout: 10000 }).then((downloadedFile: string) => {
         cy.readFile(expectedVariantsPath, { timeout: 10000 }).then((expectedFile: string) => {
@@ -400,7 +435,12 @@ describe('Pheno tool download tests', () => {
       const downloadedVariantsPath = Cypress.config('downloadsFolder') + '/pheno_report.csv';
       const expectedVariantsPath = `cypress/fixtures/pheno-tool/pheno_report${data.id}.csv`;
 
-      page.downloadButton.click();
+      cy.window().document().then(doc => {
+        doc.addEventListener('click', () => {
+          setTimeout(() => doc.location?.reload(), 5000);
+        });
+        page.downloadButton.click();
+      });
 
       cy.readFile(downloadedVariantsPath, { timeout: 10000 }).then((downloadedFile: string) => {
         cy.readFile(expectedVariantsPath, { timeout: 10000 }).then((expectedFile: string) => {
@@ -437,7 +477,12 @@ describe('Pheno tool download tests', () => {
       const expectedVariantsPath = `cypress/fixtures/pheno-tool/pheno_report${data.id}.csv`;
 
       cy.wait('@partitions');
-      page.downloadButton.click();
+      cy.window().document().then(doc => {
+        doc.addEventListener('click', () => {
+          setTimeout(() => doc.location?.reload(), 5000);
+        });
+        page.downloadButton.click();
+      });
 
       cy.readFile(downloadedVariantsPath, { timeout: 10000 }).then((downloadedFile: string) => {
         cy.readFile(expectedVariantsPath, { timeout: 10000 }).then((expectedFile: string) => {

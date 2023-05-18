@@ -288,7 +288,12 @@ describe('Genes block gene set file length tests', () => {
 
       genotypeBrowserController.filterGenesByGeneSets(data.collection, geneSetName);
       cy.deleteDownloadsFolder();
-      page.downloadButton.click();
+      cy.window().document().then(doc => {
+        doc.addEventListener('click', () => {
+          setTimeout(() => doc.location?.reload(), 5000);
+        });
+        page.downloadButton.click();
+      });
 
       cy.readFile(downloadFilePath, { timeout: 10000 }).then((text: string) => {
         const textLines = text.split(/\r\n|\r|\n/);
@@ -360,7 +365,12 @@ describe('Genes block denovo gene set gene symbols tests', () => {
         page.firstGeneSetFromDropdownMenu.click({force: true});
 
         cy.deleteDownloadsFolder();
-        page.downloadButton.click();
+        cy.window().document().then(doc => {
+          doc.addEventListener('click', () => {
+            setTimeout(() => doc.location?.reload(), 5000);
+          });
+          page.downloadButton.click();
+        });
 
         cy.readFile(downloadedGeneSetFilePath, { timeout: 10000 }).then((text: string) => {
           const textLines = text.split(/\r\n|\r|\n/);

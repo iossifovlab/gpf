@@ -232,7 +232,12 @@ describe('Gene browser download tests', () => {
         page.getAffectedStatusCheckbox(filter).click();
       });
 
-      page.downloadFamilyVariantsButton.click();
+      cy.window().document().then(doc => {
+        doc.addEventListener('click', () => {
+          setTimeout(() => doc.location?.reload(), 5000);
+        });
+        page.downloadFamilyVariantsButton.click();
+      });
 
       const downloadedFamilyVariantsPath = Cypress.config('downloadsFolder') + '/variants.tsv';
       const expectedVariantsPath = 'cypress/fixtures/gene-browser/' + data.expectedPath;
