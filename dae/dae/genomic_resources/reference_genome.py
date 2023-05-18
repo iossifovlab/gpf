@@ -813,16 +813,3 @@ def build_reference_genome_from_resource(
 
     ref = ReferenceGenome(resource)
     return ref
-
-
-def build_reference_genome_implementation_from_file(
-        filename
-) -> ReferenceGenomeImplementation:
-    """Open a reference genome from a file."""
-    dirname = os.path.dirname(filename)
-    basename = os.path.basename(filename)
-    res = build_local_resource(dirname, {
-        "type": "genome",
-        "filename": basename,
-    })
-    return ReferenceGenomeImplementation(res)
