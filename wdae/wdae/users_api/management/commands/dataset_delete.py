@@ -3,7 +3,7 @@ import logging
 
 from django.core.management.base import BaseCommand
 
-from gpf_instance.gpf_instance import get_gpf_instance
+from gpf_instance.gpf_instance import get_wgpf_instance
 from .dataset_mixin import DatasetBaseMixin
 
 
@@ -11,6 +11,8 @@ logger = logging.getLogger(__name__)
 
 
 class Command(BaseCommand, DatasetBaseMixin):
+    """Delete a dataset."""
+
     help = "Rename an existing dataset"
 
     def add_arguments(self, parser):
@@ -25,12 +27,12 @@ class Command(BaseCommand, DatasetBaseMixin):
         assert dataset is not None, \
             f"dataset {dataset_id} should exists"
 
-        logger.debug(f"dataset found: {dataset.dataset_id}")
+        logger.debug("dataset found: %s", dataset.dataset_id)
 
-        config = get_gpf_instance().get_genotype_data_config(dataset_id)
+        config = get_wgpf_instance().get_genotype_data_config(dataset_id)
         assert config is not None
 
-        genotype_data = get_gpf_instance().get_genotype_data(dataset_id)
+        genotype_data = get_wgpf_instance().get_genotype_data(dataset_id)
 
         if genotype_data.is_group:
             self.remove_study_config(dataset_id)

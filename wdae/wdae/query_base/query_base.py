@@ -1,7 +1,7 @@
 """Module containing the base view for data-related views."""
 from rest_framework import views  # type: ignore
 
-from gpf_instance.gpf_instance import get_gpf_instance
+from gpf_instance.gpf_instance import get_wgpf_instance, recreated_dataset_perm
 from datasets_api.permissions import IsDatasetAllowed
 
 from utils.authentication import GPFOAuth2Authentication
@@ -19,7 +19,8 @@ class QueryBaseView(views.APIView):
 
     def __init__(self):
         super().__init__()
-        self.gpf_instance = get_gpf_instance()
+        self.gpf_instance = get_wgpf_instance()
+        recreated_dataset_perm(self.gpf_instance)
         self.variants_db = self.gpf_instance._variants_db
         self.pheno_db = self.gpf_instance._pheno_db
 
@@ -29,7 +30,4 @@ class QueryBaseView(views.APIView):
 
 
 class QueryDatasetView(QueryBaseView):
-    permission_classes = (IsDatasetAllowed,)
-
-    def __init__(self):
-        super().__init__()
+    permission_classes = [IsDatasetAllowed]

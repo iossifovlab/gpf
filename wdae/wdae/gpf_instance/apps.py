@@ -5,7 +5,7 @@ import pathlib
 from django.apps import AppConfig
 from django.conf import settings
 
-from gpf_instance.gpf_instance import build_wgpf_instance
+from gpf_instance.gpf_instance import get_wgpf_instance
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +25,7 @@ class WDAEConfig(AppConfig):
 
             logger.error("GPF instance config: %s", config_filename)
 
-        gpf_instance = build_wgpf_instance(config_filename)
+        gpf_instance = get_wgpf_instance(config_filename)
 
         if not settings.STUDIES_EAGER_LOADING:
             logger.info("skip preloading gpf instance...")

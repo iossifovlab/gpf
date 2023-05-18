@@ -62,7 +62,7 @@ rm -rf $DAE_DB_DIR/wdae/wdae_django_default.cache
     /wd/wdae/wdae/wdae_create_dev_federation_app.sh
 
 /opt/conda/bin/conda run --no-capture-output -n gpf \
-    grr_cache_repo --definition /wd/integration/grr_definition.yaml\
+    grr_cache_repo --grr /wd/integration/grr_definition.yaml\
         --instance $DAE_DB_DIR/gpf_instance.yaml
 
 while true; do

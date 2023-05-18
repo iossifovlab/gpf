@@ -165,7 +165,7 @@ def cli(argv=None):
 
     # pylint: disable=import-outside-toplevel
     from gpf_instance import gpf_instance
-    wgpf_instance = gpf_instance.build_wgpf_instance(args.gpf_instance)
+    wgpf_instance = gpf_instance.get_wgpf_instance(args.gpf_instance)
     logger.info("using GPF instance at %s", wgpf_instance.dae_dir)
 
     if command not in {"init", "run"}:

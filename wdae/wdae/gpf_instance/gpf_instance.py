@@ -27,7 +27,7 @@ from dae.common_reports.common_report import CommonReport
 
 
 logger = logging.getLogger(__name__)
-__all__ = ["get_gpf_instance"]
+__all__ = ["get_wgpf_instance"]
 
 
 _GPF_INSTANCE: Optional[WGPFInstance] = None
@@ -283,14 +283,6 @@ class WGPFInstance(GPFInstance):
             gene_set_id, types, datasets, collection_id)
 
 
-def get_gpf_instance(config_filename=None) -> WGPFInstance:
-    build_wgpf_instance(config_filename)
-    _recreated_dataset_perm()
-    if _GPF_INSTANCE is None:
-        raise ValueError("can't create an WGPFInstance")
-    return _GPF_INSTANCE
-
-
 def get_wgpf_instance_path(config_filename=None):
     """Return the path to the GPF instance in use."""
     if _GPF_INSTANCE is not None:
@@ -319,7 +311,7 @@ def get_wgpf_instance_path(config_filename=None):
     return dae_dir
 
 
-def build_wgpf_instance(config_filename=None) -> WGPFInstance:
+def get_wgpf_instance(config_filename=None, **kwargs) -> WGPFInstance:
     """Load and return a WGPFInstance."""
     # pylint: disable=global-statement
     global _GPF_INSTANCE
@@ -327,10 +319,13 @@ def build_wgpf_instance(config_filename=None) -> WGPFInstance:
     if _GPF_INSTANCE is None:
         with _GPF_INSTANCE_LOCK:
             if _GPF_INSTANCE is None:
-                gpf_instance = WGPFInstance.build(config_filename)
+                gpf_instance = WGPFInstance.build(config_filename, **kwargs)
                 gpf_instance.load_remotes()
 
                 _GPF_INSTANCE = gpf_instance
+
+    if _GPF_INSTANCE is None:
+        raise ValueError("can't create the singleton WGPFInstance")
 
     return _GPF_INSTANCE
 
@@ -356,7 +351,8 @@ def reload_datasets(gpf_instance):
             Dataset.recreate_dataset_perm(study_id)
 
 
-def _recreated_dataset_perm():
+def recreated_dataset_perm(gpf_instance):
+    """Recreate dataset permisions for a GPF instance."""
     # pylint: disable=global-statement
     global _GPF_RECREATED_DATASET_PERM
 
@@ -367,5 +363,5 @@ def _recreated_dataset_perm():
         assert _GPF_INSTANCE is not None
 
         if not _GPF_RECREATED_DATASET_PERM:
-            reload_datasets(_GPF_INSTANCE)
+            reload_datasets(gpf_instance)
             _GPF_RECREATED_DATASET_PERM = True
