@@ -48,7 +48,7 @@ export const toolPageLinks = {
 
 export const sidenavPageLinks = {
   datasets: 'datasets',
-  savedQueries: 'saved-queries',
+  userProfile: 'user-profile',
   autismGeneProfiles: 'autism-gene-profiles',
   management: 'management'
 };
@@ -173,8 +173,8 @@ export class BasePage {
         case toolPageLinks.enrichmentTool:
           cy.get('gpf-enrichment-tool').should('be.visible');
           break;
-        case sidenavPageLinks.savedQueries:
-          cy.get('gpf-saved-queries').should('be.visible');
+        case sidenavPageLinks.userProfile:
+          cy.get('gpf-user-profile').should('be.visible');
           break;
         case sidenavPageLinks.autismGeneProfiles:
           cy.get('.row-cell').eq(0).should('be.visible');
