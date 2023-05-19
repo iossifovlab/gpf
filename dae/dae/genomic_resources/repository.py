@@ -298,7 +298,18 @@ class GenomicResource:
             meta = config["meta"]
             if meta.get("description"):
                 return str(meta["description"])
-        return None
+        return ""
+
+    def get_summary(self) -> Optional[str]:
+        config = self.get_config()
+        if config.get("meta"):
+            meta = config["meta"]
+            if meta.get("summary"):
+                return str(meta["summary"])
+        return self.get_description()
+
+    def get_url(self) -> str:
+        return self.proto.get_url() + self.get_id() + "/index.html"
 
     def get_labels(self) -> dict[str, Any]:
         config: dict[str, Any] = self.get_config()
@@ -386,6 +397,10 @@ class ReadOnlyRepositoryProtocol(abc.ABC):
     def get_id(self):
         """Return the repository ID."""
         return self.proto_id
+
+    @abc.abstractmethod
+    def get_url(self) -> str:
+        """Get url for the repo???"""
 
     @abc.abstractmethod
     def invalidate(self):

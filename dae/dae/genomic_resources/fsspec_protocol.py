@@ -95,6 +95,9 @@ class FsspecReadOnlyProtocol(ReadOnlyRepositoryProtocol):
 
         self._all_resources: Optional[List[GenomicResource]] = None
 
+    def get_url(self) -> str:
+        return self.url
+
     def invalidate(self):
         self._all_resources = None
 

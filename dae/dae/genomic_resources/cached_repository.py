@@ -41,6 +41,9 @@ class CachingProtocol(ReadOnlyRepositoryProtocol):
         self.local_protocol = local_protocol
         self._all_resources: Optional[list[CacheResource]] = None
 
+    def get_url(self) -> str:
+        return self.remote_protocol.get_url()
+    
     def invalidate(self):
         self.remote_protocol.invalidate()
         self.local_protocol.invalidate()
@@ -152,6 +155,9 @@ class GenomicResourceCachedRepo(GenomicResourceRepo):
         self.cache_url = cache_url
         self.cache_protos: dict[str, CachingProtocol] = {}
         self.additional_kwargs = kwargs
+
+    def get_url(self) -> str:
+        return self.child.proto.get_url()
 
     def invalidate(self):
         self.child.invalidate()

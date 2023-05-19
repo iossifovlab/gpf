@@ -166,14 +166,15 @@ class EffectAnnotatorAdapter(AnnotatorBase):
                 "name": "gene_effects",
                 "type": "str",
                 "desc": "Effects types for genes. "
-                        "Format: <gene_1>:<effect_1>|... "
+                        "Format: `<gene_1>:<effect_1>|...`"
                 "A gene can be repeated."
             },
             {
                 "name": "effect_details",
                 "type": "str",
                 "desc": "Effect details for each affected transcript. "
-                "Format: <transcript 1>:<gene 1>:<effect 1>:<details 1>|..."
+                "Format: `<transcript 1>:<gene 1>:<effect 1>:"
+                "<details 1>|...`"
             },
             {
                 "name": "allele_effects",

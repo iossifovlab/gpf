@@ -98,6 +98,8 @@ setuptools.setup(
 
     annotate_columns=dae.annotation.annotate_columns:cli
     annotate_vcf=dae.annotation.annotate_vcf:cli
+    annotate_doc=dae.annotation.annotate_doc:cli
+
 
     agp_exporter=dae.autism_gene_profile.exporter:cli_export
 

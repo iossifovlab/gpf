@@ -10,7 +10,7 @@ from dae.genomic_resources.repository import GenomicResourceRepo
 
 from dae.annotation.annotatable import Annotatable
 from dae.annotation.annotator_base import Annotator
-from dae.annotation.schema import Schema
+from dae.annotation.schema import AnnotatorInfo, Schema
 
 logger = logging.getLogger(__name__)
 
@@ -37,6 +37,9 @@ class AnnotationPipeline:
                     schema, annotator.annotation_schema)
             self._annotation_schema = schema
         return self._annotation_schema
+
+    def annotation_info(self) -> list[AnnotatorInfo]:
+        return [annotator.get_info() for annotator in self.annotators]
 
     def add_annotator(self, annotator: Annotator) -> None:
         assert isinstance(annotator, Annotator)
