@@ -14,3 +14,4 @@ cache/
 __pycache__
 *actual.png
 *diff.png
+wdae-debug.log
