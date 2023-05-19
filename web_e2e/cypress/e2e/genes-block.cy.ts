@@ -2,8 +2,7 @@ import { GenesBlockPage } from 'cypress/elements/genes-block-page';
 import { GenotypeBrowserController } from 'cypress/elements/genotype-browser-controller';
 import { datasetIds, toolPageLinks } from 'cypress/elements/utils';
 
-// to remove 'skip'
-describe.skip('Genes block tests', () => {
+describe('Genes block tests', () => {
   const page = new GenesBlockPage();
 
   before(() => {
@@ -63,8 +62,7 @@ describe.skip('Genes block tests', () => {
   });
 });
 
-// to remove 'skip'
-describe.skip('Genes block gene sets names and count tests', () => {
+describe('Genes block gene sets names and count tests', () => {
   const genotypeBrowserController = new GenotypeBrowserController();
   const page = new GenesBlockPage();
 
@@ -179,8 +177,7 @@ describe.skip('Genes block gene sets names and count tests', () => {
   });
 });
 
-// to remove 'skip'
-describe.skip('Genes block gene set file length tests', () => {
+describe('Genes block gene set file length tests', () => {
   const page = new GenesBlockPage();
   const genotypeBrowserController = new GenotypeBrowserController();
 
@@ -310,8 +307,7 @@ describe.skip('Genes block gene set file length tests', () => {
   });
 });
 
-// to remove 'skip'
-describe.skip('Genes block denovo gene set gene symbols tests', () => {
+describe('Genes block denovo gene set gene symbols tests', () => {
   const page = new GenesBlockPage();
   const genotypeBrowserController = new GenotypeBrowserController();
 

@@ -6,8 +6,7 @@ import { PhenoToolPage } from 'cypress/elements/pheno-tool-page';
 import { SaveQueryPage } from 'cypress/elements/save-query-page';
 import { datasetIds, toolPageLinks } from 'cypress/elements/utils';
 
-// to remove 'skip'
-describe.skip('Pheno tool tests', () => {
+describe('Pheno tool tests', () => {
   const page = new PhenoToolPage();
 
   before(() => {
@@ -152,9 +151,7 @@ describe.skip('Pheno tool tests', () => {
   });
 });
 
-
-// to remove 'skip'
-describe.skip('Pheno tool download tests', () => {
+describe('Pheno tool download tests', () => {
   const page = new PhenoToolPage();
   const phenoToolMeasurePage = new PhenoToolMeasurePage();
 

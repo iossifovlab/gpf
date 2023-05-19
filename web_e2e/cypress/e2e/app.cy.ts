@@ -5,8 +5,7 @@ import { datasetIds, sidenavPageLinks, toolPageLinks, userData } from 'cypress/e
 import { GenotypeBrowserPage } from 'cypress/elements/genotype-browser-page';
 import { UsersPage } from 'cypress/elements/users-page';
 
-// to remove 'skip'
-describe.skip('App tests', () => {
+describe('App tests', () => {
   const page = new AppPage();
 
   before(() => {
@@ -100,8 +99,7 @@ describe.skip('App tests', () => {
   });
 });
 
-// to remove 'skip'
-describe.skip('App user access rights tests', () => {
+describe('App user access rights tests', () => {
   const page = new AppPage();
   const datasetsPage = new DatasetsPage();
 
@@ -198,9 +196,7 @@ describe.skip('App user access rights tests', () => {
 
     page.loginAdmin();
     page.navigateToSidenavPage(sidenavPageLinks.management);
-    userManagementPage.userAddGroupButton(userData.normal.username).click();
-    userManagementPage.groupsMenuSearch.type('comp_vcf');
-    userManagementPage.findButtonInComponentContainingText('.add-item-button', 'comp_vcf').click();
+    userManagementPage.userAddGroup(userData.normal.username, 'comp_vcf');
     userManagementPage.waitForPageToLoad(sidenavPageLinks.management);
     page.logout();
 
@@ -219,9 +215,7 @@ describe.skip('App user access rights tests', () => {
 
     page.loginAdmin();
     page.navigateToSidenavPage(sidenavPageLinks.management);
-    userManagementPage.userAddGroupButton(userData.normal.username).click();
-    userManagementPage.groupsMenuSearch.type('COMP_genotypes');
-    userManagementPage.findButtonInComponentContainingText('.add-item-button', 'COMP_genotypes').click();
+    userManagementPage.userAddGroup(userData.normal.username, 'COMP_genotypes');
     userManagementPage.waitForPageToLoad(sidenavPageLinks.management);
     page.logout();
 
@@ -268,9 +262,7 @@ describe.skip('App user access rights tests', () => {
 
     page.loginAdmin();
     page.navigateToSidenavPage(sidenavPageLinks.management);
-    userManagementPage.userAddGroupButton(userData.normal.username).click();
-    userManagementPage.groupsMenuSearch.type('ALL_genotypes');
-    userManagementPage.findButtonInComponentContainingText('.add-item-button', 'ALL_genotypes').click();
+    userManagementPage.userAddGroup(userData.normal.username, 'ALL_genotypes');
     userManagementPage.waitForPageToLoad(sidenavPageLinks.management);
     page.logout();
 

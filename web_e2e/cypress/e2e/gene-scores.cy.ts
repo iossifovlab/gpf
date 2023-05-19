@@ -52,8 +52,7 @@ const geneScoresData = [
   }
 ];
 
-// to remove 'skip'
-describe.skip('Gene scores tests', () => {
+describe('Gene scores tests', () => {
   const page = new GeneScoresPage();
   const genesBlockPage = new GenesBlockPage();
 
@@ -169,8 +168,7 @@ describe.skip('Gene scores tests', () => {
   });
 });
 
-// to remove 'skip'
-describe.skip('Gene scores download tests', () => {
+describe('Gene scores download tests', () => {
   const page = new GeneScoresPage();
   const genesBlockPage = new GenesBlockPage();
 

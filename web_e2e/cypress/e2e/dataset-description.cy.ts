@@ -3,8 +3,7 @@ import { DatasetsPage } from 'cypress/elements/datasets-page';
 import { UserManagementPage } from 'cypress/elements/user-management-page';
 import { datasetIds, sidenavPageLinks, toolPageLinks, userData } from 'cypress/elements/utils';
 
-// to remove 'skip'
-describe.skip('Dataset description tests', () => {
+describe('Dataset description tests', () => {
   const page = new DatasetDescriptionPage();
 
   before(() => {
@@ -93,8 +92,7 @@ describe.skip('Dataset description tests', () => {
   });
 });
 
-// to remove 'skip'
-describe.skip('Dataset description access rights tests', () => {
+describe('Dataset description access rights tests', () => {
   const page = new DatasetDescriptionPage();
 
   before(() => {
@@ -169,9 +167,7 @@ describe.skip('Dataset description access rights tests', () => {
     // give researcher access for iossifov_2014
     page.loginAdmin();
     page.navigateToSidenavPage(sidenavPageLinks.management);
-    userManagementPage.userAddGroupButton(userData.normal.username).click();
-    userManagementPage.groupsMenuSearch.type('iossifov_2014');
-    userManagementPage.findButtonInComponentContainingText('.add-item-button', 'iossifov_2014').click();
+    userManagementPage.userAddGroup(userData.normal.username, 'iossifov_2014');
 
     page.navigateToSidenavPage(sidenavPageLinks.datasets);
     page.navigateToDatasetPage(datasetIds.iossifov2014, toolPageLinks.datasetDescription);
@@ -189,7 +185,6 @@ describe.skip('Dataset description access rights tests', () => {
     // state cleanup
     page.loginAdmin();
     page.navigateToSidenavPage(sidenavPageLinks.management);
-    userManagementPage.userAddGroupButton(userData.normal.username).click();
     userManagementPage.userGroupRemoveButton(userData.normal.username, 'iossifov_2014').click();
     userManagementPage.userRemoveGroupConfirm.click();
     page.navigateToSidenavPage(sidenavPageLinks.datasets);

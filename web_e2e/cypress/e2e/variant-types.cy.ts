@@ -2,8 +2,7 @@ import { GenotypeBlockPage } from 'cypress/elements/genotype-block-page';
 import { datasetIds, toolPageLinks } from 'cypress/elements/utils';
 import { VariantTypesPage } from 'cypress/elements/variant-types-page';
 
-// to remove 'skip'
-describe.skip('Variant types tests', () => {
+describe('Variant types tests', () => {
   const page = new VariantTypesPage();
   const genotypeBlockPage = new GenotypeBlockPage();
 

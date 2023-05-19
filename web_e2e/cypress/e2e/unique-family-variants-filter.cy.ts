@@ -3,8 +3,7 @@ import { GeneBrowserPage } from 'cypress/elements/gene-browser-page';
 import { UniqueFamilyVariantsFilterPage } from 'cypress/elements/unique-family-variants-filter-page';
 import { datasetIds, toolPageLinks } from 'cypress/elements/utils';
 
-// to remove 'skip'
-describe.skip('Unique family variants filter tests', () => {
+describe('Unique family variants filter tests', () => {
   const page = new UniqueFamilyVariantsFilterPage();
   const geneBrowserPage = new GeneBrowserPage();
 

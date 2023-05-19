@@ -1,8 +1,7 @@
 import { AutismGeneProfilesTablePage } from 'cypress/elements/autism-gene-profiles-table-page';
 import { sidenavPageLinks } from 'cypress/elements/utils';
 
-// to remove 'skip'
-describe.skip('Autism gene profiles table tests', () => {
+describe('Autism gene profiles table tests', () => {
   const page = new AutismGeneProfilesTablePage();
 
   before(() => {
@@ -29,8 +28,7 @@ describe.skip('Autism gene profiles table tests', () => {
   });
 });
 
-// to remove 'skip'
-describe.skip('Autism gene profiles table row data tests', () => {
+describe('Autism gene profiles table row data tests', () => {
   const page = new AutismGeneProfilesTablePage();
 
   before(() => {
@@ -58,8 +56,7 @@ describe.skip('Autism gene profiles table row data tests', () => {
   });
 });
 
-// to remove 'skip'
-describe.skip('Autism gene profiles table column filtering modal tests', {scrollBehavior: false}, () => {
+describe('Autism gene profiles table column filtering modal tests', {scrollBehavior: false}, () => {
   const page = new AutismGeneProfilesTablePage();
 
   beforeEach(() => {
@@ -111,8 +108,7 @@ describe.skip('Autism gene profiles table column filtering modal tests', {scroll
   });
 });
 
-// to remove 'skip'
-describe.skip('Autism gene profiles table row highlight tests', {scrollBehavior: false}, () => {
+describe('Autism gene profiles table row highlight tests', {scrollBehavior: false}, () => {
   const page = new AutismGeneProfilesTablePage();
   const oddHighlightColor = 'rgb(247, 247, 203)';
   const evenHighlightColor = 'rgb(255, 255, 214)';
@@ -173,8 +169,7 @@ describe.skip('Autism gene profiles table row highlight tests', {scrollBehavior:
   });
 });
 
-// to remove 'skip'
-describe.skip('Autism gene profiles table functionality tests', () => {
+describe('Autism gene profiles table functionality tests', () => {
   const page = new AutismGeneProfilesTablePage();
 
   before(() => {

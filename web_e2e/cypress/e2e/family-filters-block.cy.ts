@@ -1,8 +1,7 @@
 import { FamilyFilterBlockPage } from 'cypress/elements/family-filter-block-page';
 import { datasetIds, toolPageLinks } from 'cypress/elements/utils';
 
-// to remove 'skip'
-describe.skip('Family filters block tests', () => {
+describe('Family filters block tests', () => {
   const page = new FamilyFilterBlockPage();
 
   before(() => {

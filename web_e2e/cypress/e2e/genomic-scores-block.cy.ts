@@ -1,8 +1,7 @@
 import { GenomicScoresBlockPage } from 'cypress/elements/genomic-scores-block-page';
 import { datasetIds, toolPageLinks } from 'cypress/elements/utils';
 
-// to remove 'skip'
-describe.skip('Genomic scores panel tests', () => {
+describe('Genomic scores panel tests', () => {
   const page = new GenomicScoresBlockPage();
 
   before(() => {

@@ -22,8 +22,7 @@ const tags: string[] = [
   'tag_missing_dad_family'
 ];
 
-// to remove 'skip'
-describe.skip('Variant reports tests', () => {
+describe('Variant reports tests', () => {
   const page = new VariantReportsPage();
 
   before(() => {
@@ -349,8 +348,7 @@ describe.skip('Variant reports tests', () => {
   });
 });
 
-// to remove 'skip'
-describe.skip('Variant reports Iossifov count tests', () => {
+describe('Variant reports Iossifov count tests', () => {
   const page = new VariantReportsPage();
 
   before(() => {

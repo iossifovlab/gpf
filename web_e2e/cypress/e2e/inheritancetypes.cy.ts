@@ -2,8 +2,7 @@ import { GenotypeBlockPage } from 'cypress/elements/genotype-block-page';
 import { InheritancetypesPage } from 'cypress/elements/inheritancetypes-page';
 import { datasetIds, toolPageLinks } from 'cypress/elements/utils';
 
-// to remove 'skip'
-describe.skip('Inheritance tests', () => {
+describe('Inheritance tests', () => {
   const page = new InheritancetypesPage();
   const genotypeBlockPage = new GenotypeBlockPage();
 

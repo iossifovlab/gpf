@@ -1,8 +1,7 @@
 import { PhenoBrowserPage } from 'cypress/elements/pheno-browser-page';
 import { datasetIds, toolPageLinks } from 'cypress/elements/utils';
 
-// to remove 'skip'
-describe.skip('Pheno browser tests', () => {
+describe('Pheno browser tests', () => {
   const page = new PhenoBrowserPage();
 
   before(() => {
