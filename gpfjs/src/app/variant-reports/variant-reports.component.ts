@@ -1,4 +1,4 @@
-import { Component, OnInit, HostListener, Pipe, PipeTransform, Input, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, HostListener, Pipe, PipeTransform, ViewChild, ElementRef } from '@angular/core';
 import { VariantReportsService } from './variant-reports.service';
 import {
   VariantReport, FamilyCounter, PedigreeCounter, EffectTypeTable, DeNovoData, PedigreeTable, PeopleCounter
@@ -30,14 +30,16 @@ export class VariantReportsComponent implements OnInit {
   public currentPeopleCounter: PeopleCounter;
   public currentPedigreeTable: PedigreeTable;
   public currentDenovoReport: EffectTypeTable;
-  @Input() public isFamiliesByNumberVisible = false;
-  @Input() public selectedTagsHeader = '';
+  public isFamiliesByNumberVisible = false;
+  public selectedTagsHeader = '';
 
   public modal: NgbModalRef;
   @ViewChild('tagsModal') public tagsModal: ElementRef;
 
   @ViewChild('searchTag') private searchTag: ElementRef;
-  @Input() public searchTagText = '';
+
+  public tagsModalsNumberOfRows = 9;
+  public tagsModalsNumberOfCols = 2;
 
   public variantReport: VariantReport;
   public familiesCounters: FamilyCounter[];
@@ -47,7 +49,7 @@ export class VariantReportsComponent implements OnInit {
 
   public imgPathPrefix = environment.imgPathPrefix;
   public modalTagsList = [];
-  public selectedItems: Array<string> = new Array<string>();
+  public selectedItems: string[] = [];
 
   public denovoVariantsTableWidth: number;
   private denovoVariantsTableColumnWidth = 140;
@@ -86,8 +88,21 @@ export class VariantReportsComponent implements OnInit {
       this.variantReportsService.getTags().subscribe(data => {
         Object.values(data).forEach((tag: string) => {
           this.tags.push(tag);
+          this.tags.push(tag);
+          this.tags.push(tag);
+          this.modalTagsList.push(tag);
+          this.modalTagsList.push(tag);
+          this.modalTagsList.push(tag);
+          this.tags.push(tag);
+          this.tags.push(tag);
+          this.tags.push(tag);
+          this.modalTagsList.push(tag);
+          this.modalTagsList.push(tag);
           this.modalTagsList.push(tag);
         });
+        // Calculate square looking grid for the tags (1 column width === ~5 tags height)
+        this.tagsModalsNumberOfCols = Math.ceil(Math.sqrt(Math.ceil(this.tags.length / 5)));
+        this.tagsModalsNumberOfRows = Math.ceil(this.tags.length / this.tagsModalsNumberOfCols);
       });
     }
     this.isFamiliesByNumberVisible = true;
@@ -109,7 +124,7 @@ export class VariantReportsComponent implements OnInit {
       this.selectedItems.splice(index, 1);
     }
     if (this.selectedItems.length > 0) {
-      this.selectedTagsHeader = 'Selected tags: ' + this.selectedItems.join(',');
+      this.selectedTagsHeader = this.selectedItems.join(',');
     } else {
       this.selectedTagsHeader = '';
     }
@@ -123,14 +138,19 @@ export class VariantReportsComponent implements OnInit {
     }
     this.modal = this.modalService.open(
       this.tagsModal,
-      {animation: false, centered: true, size: 'lg', windowClass: 'tags-modal'}
+      {animation: false, centered: true, windowClass: 'tags-modal'}
     );
   }
 
   public search(searchValue: string): void {
-    if (searchValue!==' ') {
-      this.modalTagsList = this.tags.filter(el => el.includes(searchValue.toLocaleLowerCase()));
-    }
+    searchValue = searchValue.trim();
+    this.modalTagsList = this.tags.filter(el => el.toLocaleLowerCase().includes(searchValue.toLocaleLowerCase()));
+  }
+
+  public uncheckAll(): void {
+    this.selectedItems = [];
+    this.selectedTagsHeader = '';
+    this.updateTagFilters();
   }
 
   public updatePedigrees(newCounters: Dictionary<PedigreeCounter[]>): void {

@@ -91,8 +91,10 @@
       </div>
 
       <div id="pedigree-toolbar">
-        <button (click)="openModal()">Select tags</button>
-        <span [hidden]="!selectedTagsHeader" id="selectedTagsList">{{ selectedTagsHeader }}</span>
+        <button (click)="openModal()" id="open-modal-button">Select tags</button>
+        <span [hidden]="!selectedTagsHeader" id="selected-tags-list" [title]="selectedTagsHeader">{{
+          selectedTagsHeader
+        }}</span>
         <button
           [disabled]="currentPedigreeTable.pedigrees.length === 0"
           id="download-button"
@@ -102,21 +104,36 @@
         >
       </div>
       <ng-template #tagsModal id="tags-modal">
-        <div id="modal-content">
-          <input
-            #searchTag
-            (search)="search(searchTag.value)"
-            (keyup)="search(searchTag.value)"
-            id="search-tags"
-            class="search-input form-control my-0 py-1"
-            type="search"
-            [ngModel]="searchTagText"
-            placeholder="Search tags"
-            autocomplete="off" />
+        <div id="tags-modal-content">
+          <div id="tags-modal-header">
+            <input
+              #searchTag
+              (search)="search(searchTag.value)"
+              (keyup)="search(searchTag.value)"
+              id="search-tags"
+              class="search-input form-control my-0 py-1"
+              type="search"
+              placeholder="Search tags"
+              autocomplete="off" />
+            <a (click)="uncheckAll()" id="uncheck-button">Uncheck all</a>
+          </div>
           <span *ngIf="!modalTagsList.length" id="nothing-found">Nothing found</span>
-          <div *ngFor="let tag of modalTagsList" id="tags">
-            <input type="checkbox" [checked]="selectedItems.includes(tag)" (change)="selectedTags(tag)" />
-            <span>{{ tag }}</span>
+          <div
+            id="tag-list"
+            [ngStyle]="{
+              display: 'grid',
+              'grid-template-columns': 'repeat(' + tagsModalsNumberOfCols + ', max-content)',
+              'grid-template-rows': 'repeat(' + tagsModalsNumberOfRows + ', 30px)',
+              'column-gap': '16px'
+            }">
+            <div *ngFor="let tag of modalTagsList">
+              <input
+                type="checkbox"
+                [attr.id]="tag + '-tag'"
+                [checked]="selectedItems.includes(tag)"
+                (change)="selectedTags(tag)" />
+              <label [attr.for]="tag + '-tag'" id="tag-label">{{ tag }}</label>
+            </div>
           </div>
         </div>
       </ng-template>

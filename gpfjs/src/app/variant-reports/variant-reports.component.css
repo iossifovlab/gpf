@@ -139,7 +139,7 @@ table {
 }
 
 #families-by-pedigree {
-  padding-bottom: 102px;
+  padding-bottom: 20px;
 }
 
 h5 {
@@ -150,17 +150,6 @@ h5 {
   padding-bottom: 16px;
 }
 
-ng-multiselect-dropdown > span.selected-item {
-  display: block;
-  padding: 3px 26px 3px 5px;
-  width: auto;
-  border: 0;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  overflow: hidden;
-  max-width: 100%;
-}
-
 #tags-selector {
   padding-bottom: 16px;
   display: flex;
@@ -168,11 +157,50 @@ ng-multiselect-dropdown > span.selected-item {
   align-items: center;
 }
 
-#nothing-found {
-  height: 43px;
+#pedigree-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
 }
 
-#nothing-found span {
+#open-modal-button {
+  background-color: #eee;
+  border: 1px solid #ddd;
+  border-radius: 0.375rem;
+  padding: 6px 12px;
+  flex-shrink: 0;
+}
+
+#selected-tags-list {
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#tags-modal-content {
+  padding: 20px;
+  height: fit-content;
+  width: fit-content;
+}
+
+#tags-modal-header {
+  display: flex;
+  column-gap: 20px;
+  align-items: baseline;
+  margin-bottom: 10px;
+}
+
+#uncheck-button {
+  white-space: nowrap;
+}
+
+#tag-label {
+  margin-left: 5px;
+}
+
+#nothing-found {
+  height: 43px;
   line-height: 43px;
   font-style: italic;
   padding-left: 12px;
