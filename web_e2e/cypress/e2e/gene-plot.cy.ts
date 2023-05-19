@@ -62,16 +62,21 @@ describe('Gene plot summary alleles count tests', () => {
   });
 
   [
-    {checkbox: 'Affected only', expectedSummaryAllelesCount: '0 / 8'},
-    {checkbox: 'Unaffected only', expectedSummaryAllelesCount: '8 / 8'},
-    {checkbox: 'Affected and unaffected', expectedSummaryAllelesCount: '8 / 8'}
+    {checkbox: 'Affected only', expectedSummaryAllelesCount: '0 / 8', expectedVariantsCount: '0 variants selected'},
+    {checkbox: 'Unaffected only', expectedSummaryAllelesCount: '8 / 8', expectedVariantsCount: '8 variants selected'},
+    {
+      checkbox: 'Affected and unaffected', expectedSummaryAllelesCount: '8 / 8',
+      expectedVariantsCount: '8 variants selected'
+    }
   ].forEach(data => {
     it('should display the correct value when filtering with the "' + data.checkbox + '" checkbox', () => {
       geneBrowserPage.affectedStatusField.should('exist');
       page.summaryAllelesCount.should('have.text', '8 / 8');
+      page.variantsCount.should('have.text', '8 variants selected');
 
       geneBrowserPage.getAffectedStatusCheckbox(data.checkbox).click();
       page.summaryAllelesCount.should('have.text', data.expectedSummaryAllelesCount);
+      page.variantsCount.should('have.text', data.expectedVariantsCount);
 
       geneBrowserPage.getAffectedStatusCheckbox(data.checkbox).click();
     });

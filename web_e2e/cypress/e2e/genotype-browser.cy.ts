@@ -488,7 +488,12 @@ describe('Genotype browser family variants download tests', () => {
     genotypeBrowserController.setEffectTypesGroup('All');
     genotypeBrowserController.filterGenesByGeneSymbol('CHD8');
 
-    page.downloadButton.click();
+    cy.window().document().then(doc => {
+      doc.addEventListener('click', () => {
+        setTimeout(() => doc.location?.reload(), 5000);
+      });
+      page.downloadButton.click();
+    });
 
     cy.readFile(downloadedVariantsPath, { timeout: 10000 }).then((downloadedFile: string) => {
       cy.readFile(expectedVariantsPath, { timeout: 10000 }).then((expectedFile: string) => {

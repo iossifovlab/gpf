@@ -327,7 +327,7 @@ describe('Variant reports tests', () => {
       page.familiesByPedigreeTab.click();
       page.pedigreeCells.eq(cell.index).click({force: true});
 
-      const downloadedVariantsPath = Cypress.config('downloadsFolder') + '/family.ped';
+      const downloadedVariantsPath = Cypress.config('downloadsFolder') + '/families.ped';
       const expectedVariantsPath = `cypress/fixtures/variant-reports/family${cell.index}.ped`;
 
       cy.window().document().then(doc => {
