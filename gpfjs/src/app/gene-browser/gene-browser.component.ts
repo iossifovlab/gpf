@@ -285,20 +285,25 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
   }
 
   private get requestParams(): Record<string, unknown> {
-    return {
+    const params = {
       ...this.summaryVariantsFilter.queryParams,
       geneSymbols: [this.selectedGene.geneSymbol],
       datasetId: this.selectedDatasetId,
       regions: this.selectedGene.getRegionString(...this.summaryVariantsFilter.selectedRegion),
-      summaryVariantIds: this.summaryVariantsArrayFiltered.summaryAlleleIds.reduce(
-        (a: string[], b) => a.concat(b), []
-      ),
       genomicScores: [{
         metric: this.geneBrowserConfig.frequencyColumn,
         rangeStart: this.summaryVariantsFilter.minFreq,
         rangeEnd: this.summaryVariantsFilter.maxFreq,
       }],
     };
+
+    if (this.summaryVariantsArrayFiltered.summaryAlleleIds.length > 0) {
+      params['summaryVariantIds'] = this.summaryVariantsArrayFiltered.summaryAlleleIds.reduce(
+        (a: string[], b) => a.concat(b), []
+      );
+    }
+
+    return params;
   }
 
   private get requestParamsSummary(): Record<string, unknown> {
@@ -317,7 +322,6 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
   private updateShownTablePreviewVariantsArray(): void {
     this.familyLoadingFinished = false;
     const parameters = this.requestParams;
-    delete parameters['summaryVariantIds'];
     const requestParams = {
       ...parameters,
       maxVariantsCount: this.maxFamilyVariants,
