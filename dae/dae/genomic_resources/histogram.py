@@ -24,6 +24,23 @@ class NumberHistogramConfig:
     y_log_scale: bool = False
     x_min_log: Optional[float] = None
 
+    @staticmethod
+    def from_yaml(parsed):
+        yaml_range = parsed.get("view_range", {})
+        limits = np.iinfo(np.int64)
+        x_min = yaml_range.get("min", limits.min)
+        x_max = yaml_range.get("max", limits.max)
+        view_range = (x_min, x_max)
+        number_of_bins = parsed.get("number_of_bins", 30)
+        x_log_scale = parsed.get("x_log_scale", False)
+        y_log_scale = parsed.get("y_log_scale", False)
+        x_min_log = parsed.get("x_min_log", None)
+        return NumberHistogramConfig(
+            view_range, number_of_bins,
+            x_log_scale, y_log_scale,
+            x_min_log
+        )
+
 
 @dataclass
 class CategoricalHistogramConfig:
@@ -42,9 +59,9 @@ class NumberHistogram(Statistic):
         self.config = config
         self.bins = bins
         self.bars = bars
-        self.out_of_range_values = []
+        self.out_of_range_values: list[float] = []
 
-        if self.config.x_scale_log and self.config.x_min_log is None:
+        if self.config.x_log_scale and self.config.x_min_log is None:
             raise ValueError(
                 "Invalid histogram configuration, missing x_min_log"
             )

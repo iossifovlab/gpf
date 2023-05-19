@@ -100,7 +100,7 @@ class _ScoreDef:
             self.public_definition = ScoreDef(
                 self.score_id,
                 self.desc,
-                self.type,
+                self.value_type,
                 self.pos_aggregator,
                 self.nuc_aggregator,
                 self.allele_aggregator,
@@ -110,6 +110,39 @@ class _ScoreDef:
                 self.hist_categorical_conf
             )
         return self.public_definition
+
+    def __post_init__(self):
+        if self.value_type is None:
+            return
+        default_na_values = {
+            "str": {},
+            "float": {"", "nan", ".", "NA"},
+            "int": {"", "nan", ".", "NA"}
+        }
+        default_pos_aggregators = {
+            "float": "mean",
+            "int": "mean",
+            "str": "concatenate"
+        }
+        default_nuc_aggregators = {
+            "float": "max",
+            "int": "max",
+            "str": "concatenate"
+        }
+        default_allele_aggregators = {
+            "float": "max",
+            "int": "max",
+            "str": "concatenate"
+        }
+        if self.pos_aggregator is None:
+            self.pos_aggregator = default_pos_aggregators[self.value_type]
+        if self.nuc_aggregator is None:
+            self.nuc_aggregator = default_nuc_aggregators[self.value_type]
+        if self.allele_aggregator is None:
+            self.allele_aggregator = \
+                default_allele_aggregators[self.value_type]
+        if self.na_values is None:
+            self.na_values = default_na_values[self.value_type]
 
 
 class ScoreLine:
@@ -768,26 +801,7 @@ class GenomicScore(ResourceConfigValidationMixin):
     def _parse_scoredef_config(config):
         """Parse ScoreDef configuration."""
         scores = {}
-        default_na_values = {
-            "str": {},
-            "float": {"", "nan", ".", "NA"},
-            "int": {"", "nan", ".", "NA"}
-        }
-        default_pos_aggregators = {
-            "float": "mean",
-            "int": "mean",
-            "str": "concatenate"
-        }
-        default_nuc_aggregators = {
-            "float": "max",
-            "int": "max",
-            "str": "concatenate"
-        }
-        default_allele_aggregators = {
-            "float": "max",
-            "int": "max",
-            "str": "concatenate"
-        }
+
         for score_conf in config["scores"]:
             number_hist_conf = None
             categorical_hist_conf = None
@@ -799,37 +813,27 @@ class GenomicScore(ResourceConfigValidationMixin):
                 categorical_hist_conf = CategoricalHistogramConfig(
                     **score_conf.get("categorical_hist")
                 )
-            value_parser = SCORE_TYPE_PARSERS[score_conf.type]
+            value_parser = SCORE_TYPE_PARSERS[score_conf.get("type", "float")]
 
-            col_key = score_conf.get("name") or score_conf["index"]
-
-            value_type = score_conf.get("type", "float")
+            col_key = score_conf.get("name") or score_conf.get("index")
 
             score_def = _ScoreDef(
-                score_id=score_conf["score_id"],
+                score_id=score_conf["id"],
                 desc=score_conf.get("desc", ""),
-                value_type=value_type,
-                pos_aggregator=score_conf.get(
-                    "pos_aggregator", default_pos_aggregators[value_type]
-                ),
-                nuc_aggregator=score_conf.get(
-                    "nuc_aggregator", default_nuc_aggregators[value_type]
-                ),
-                allele_aggregator=score_conf.get(
-                    "allele_aggregator", default_allele_aggregators[value_type]
-                ),
-                small_values_desc=score_conf.get("small_values_desc", None),
-                large_values_desc=score_conf.get("large_values_desc", None),
+                value_type=score_conf.get("type"),
+                pos_aggregator=score_conf.get("pos_aggregator"),
+                nuc_aggregator=score_conf.get("nuc_aggregator"),
+                allele_aggregator=score_conf.get("allele_aggregator"),
+                small_values_desc=score_conf.get("small_values_desc"),
+                large_values_desc=score_conf.get("large_values_desc"),
                 hist_number_conf=number_hist_conf,
                 hist_categorical_conf=categorical_hist_conf,
                 col_key=col_key,
                 value_parser=value_parser,
-                na_values=score_conf.get(
-                    "na_values", default_na_values[value_type]
-                )
+                na_values=score_conf.get("na_values")
             )
 
-            scores[score_conf["score_id"]] = score_def
+            scores[score_conf["id"]] = score_def
         return scores
 
     @staticmethod
@@ -839,15 +843,31 @@ class GenomicScore(ResourceConfigValidationMixin):
                 return ",".join(map(str, val))
             except TypeError:
                 return val
-        return {
-            key: ScoreDef(
-                key,
-                value.description or "",
-                VCF_TYPE_CONVERSION_MAP[value.type],  # type: ignore
-                converter if value.number not in (1, "A", "R") else None,
-                tuple(), None, None, None
-            ) for key, value in vcf_header_info.items()
-        }
+
+        scoredefs = {}
+
+        for key, value in vcf_header_info.items():
+            value_parser = converter
+            if value.number in (1, "A", "R"):
+                value_parser = None
+
+            scoredefs[key] = _ScoreDef(
+                score_id=key,
+                col_key=key,
+                desc=value.description or "",
+                value_type=VCF_TYPE_CONVERSION_MAP[value.type],  # type: ignore
+                value_parser=value_parser,
+                na_values=tuple(),
+                pos_aggregator=None,
+                nuc_aggregator=None,
+                allele_aggregator=None,
+                small_values_desc=None,
+                large_values_desc=None,
+                hist_number_conf=None,
+                hist_categorical_conf=None
+            )
+
+        return scoredefs
 
     def _validate_scoredefs(self):
         assert "scores" in self.config
@@ -868,23 +888,36 @@ class GenomicScore(ResourceConfigValidationMixin):
                                          " be configured for scores!")
 
     def _generate_scoredefs(self):
+        config_scoredefs = None
+        if "scores" in self.config:
+            config_scoredefs = GenomicScore._parse_scoredef_config(self.config)
+
         if isinstance(self.table, VCFGenomicPositionTable):
             vcf_scoredefs = GenomicScore._get_vcf_scoredefs(self.table.header)
-            scoredefs = {}
-            if "scores" in self.config:
+            if config_scoredefs is not None:
                 # allow overriding of vcf-generated scoredefs
-                for over in self.config["scores"]:
-                    score = vcf_scoredefs[over["id"]]
-                    score.desc = over.get("desc", score.desc)
-                    score.type = over.get("type", score.type)
-                    score.value_parser = SCORE_TYPE_PARSERS[score.type]
-                    score.na_values = over.get("na_values", score.na_values)
-                    scoredefs[over["id"]] = score
+                scoredefs = {}
+                for score, config_scoredef in config_scoredefs.items():
+                    vcf_scoredef = vcf_scoredefs[score]
+
+                    if config_scoredef.desc:
+                        vcf_scoredef.desc = config_scoredef.desc
+                    if config_scoredef.value_type:
+                        vcf_scoredef.value_type = config_scoredef.value_type
+                    vcf_scoredef.value_parser = config_scoredef.value_parser
+                    vcf_scoredef.na_values = config_scoredef.na_values
+                    vcf_scoredef.hist_number_conf = \
+                        config_scoredef.hist_number_conf
+                    vcf_scoredef.hist_categorical_conf = \
+                        config_scoredef.hist_categorical_conf
+                    scoredefs[score] = vcf_scoredef
                 return scoredefs
             return vcf_scoredefs
-        if "scores" in self.config:
-            return GenomicScore._parse_scoredef_config(self.config)
-        raise ValueError("No scores configured and not using a VCF")
+
+        if config_scoredefs is None:
+            raise ValueError("No scores configured and not using a VCF")
+
+        return config_scoredefs
 
     def get_config(self):
         return self.config
