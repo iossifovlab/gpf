@@ -70,6 +70,8 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
     private loadingService: FullscreenLoadingService,
   ) { }
 
+  public variantsCountDisplay: string;
+
   public ngOnInit(): void {
     this.selectedDataset = this.datasetsService.getSelectedDataset();
     this.legend = this.selectedDataset.personSetCollections.getLegend(this.selectedDataset.defaultPersonSetCollection);
@@ -178,6 +180,7 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
     );
 
     this.showResults = false;
+    this.variantsCountDisplay = 'Loading variants...';
     this.loadingService.setLoadingStart();
     this.genotypePreviewVariantsArray = null;
 
@@ -329,7 +332,9 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
     };
 
     this.genotypePreviewVariantsArray = this.queryService.getGenotypePreviewVariantsByFilter(
-      this.selectedDataset, requestParams
+      this.selectedDataset, requestParams, this.maxFamilyVariants, () => {
+        this.variantsCountDisplay = this.genotypePreviewVariantsArray.getVariantsCount(this.maxFamilyVariants);
+      }
     );
   }
 

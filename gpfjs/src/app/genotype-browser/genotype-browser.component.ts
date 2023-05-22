@@ -37,6 +37,8 @@ export class GenotypeBrowserComponent implements OnInit, OnDestroy {
   public genotypeBrowserState: object;
   public loadingFinished: boolean;
 
+  public variantsCountDisplay: string;
+
   @Select(GenotypeBrowserComponent.genotypeBrowserStateSelector) private state$: Observable<any[]>;
   @Select(ErrorsState) private errorsState$: Observable<ErrorsModel>;
 
@@ -112,6 +114,7 @@ export class GenotypeBrowserComponent implements OnInit, OnDestroy {
   public submitQuery(): void {
     this.loadingFinished = false;
     this.showTable = false;
+    this.variantsCountDisplay = 'Loading variants...';
     this.loadingService.setLoadingStart();
 
     this.genotypePreviewVariantsArray = null;
@@ -130,7 +133,12 @@ export class GenotypeBrowserComponent implements OnInit, OnDestroy {
 
     this.patchState();
     this.genotypePreviewVariantsArray = this.queryService.getGenotypePreviewVariantsByFilter(
-      this.selectedDataset, this.genotypeBrowserState
+      this.selectedDataset, this.genotypeBrowserState,
+      this.selectedDataset?.genotypeBrowserConfig?.maxVariantsCount, () => {
+        this.variantsCountDisplay = this.genotypePreviewVariantsArray.getVariantsCount(
+          this.selectedDataset?.genotypeBrowserConfig?.maxVariantsCount
+        );
+      }
     );
   }
 

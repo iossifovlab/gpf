@@ -44,8 +44,9 @@
 <div class="genotype-browser-results" *ngIf="genotypePreviewVariantsArray">
   <hr />
   <gpf-loading-spinner
+    *ngIf="variantsCountDisplay"
     [loadingFinished]="loadingFinished"
-    [count]="genotypePreviewVariantsArray.getVariantsCount(selectedDataset?.genotypeBrowserConfig?.maxVariantsCount)"
+    [count]="variantsCountDisplay"
     [verboseMode]="true">
   </gpf-loading-spinner>
 
