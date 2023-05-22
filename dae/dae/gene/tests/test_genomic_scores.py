@@ -33,13 +33,13 @@ def scores_repo(tmp_path):
                     index: 3
                     type: float
                     desc: phastCons100 desc
-                histograms:
-                 - score: phastCons100
-                   bins: 100
-                   min: 1574474507.0
-                   max: 23092042.0
-                   x_scale: linear
-                   y_scale: linear
+                    number_hist:
+                        number_of_bins: 100
+                        view_range:
+                            x_min: 1574474507.0
+                            x_max: 23092042.0
+                        x_log_scale: False
+                        y_log_scale: False
                 default_annotation:
                   attributes:
                     - source: phastCons100

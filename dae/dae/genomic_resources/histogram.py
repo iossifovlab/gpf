@@ -18,14 +18,41 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class NumberHistogramConfig:
-    view_range: Optional[tuple[int, int]]
+    view_range: tuple[int, int]
     number_of_bins: int = 30
     x_log_scale: bool = False
     y_log_scale: bool = False
     x_min_log: Optional[float] = None
 
+    def to_dict(self):
+        return {
+            "view_range": {
+                "min": self.view_range[0],
+                "max": self.view_range[1]
+            },
+            "number_of_bins": self.number_of_bins,
+            "x_log_scale": self.x_log_scale,
+            "y_log_scale": self.y_log_scale,
+            "x_min_log": self.x_min_log
+        }
+
+    @staticmethod
+    def convert_legacy_config(config):
+        logger.warning("Converting legacy config")
+        limits = np.iinfo(np.int64)
+        return NumberHistogramConfig(
+            view_range=(
+                config.get("min", limits.min), config.get("max", limits.max)
+            ),
+            number_of_bins=config.get("bins_count", 30),
+            x_log_scale=config.get("x_scale", "linear") == "log",
+            y_log_scale=config.get("y_scale", "linear") == "log",
+            x_min_log=config.get("x_min_log")
+        )
+
     @staticmethod
     def from_yaml(parsed):
+        """Build a number histogram config from a parsed yaml file."""
         yaml_range = parsed.get("view_range", {})
         limits = np.iinfo(np.int64)
         x_min = yaml_range.get("min", limits.min)
@@ -76,7 +103,7 @@ class NumberHistogram(Statistic):
                 f"{self.config.view_range[1]}]")
 
         if self.bins is None and self.bars is None:
-            if self.config.x_scale_log:
+            if self.config.x_log_scale:
                 assert self.config.x_min_log is not None
                 self.bins = np.array([
                     self.config.view_range[0],
@@ -142,7 +169,7 @@ class NumberHistogram(Statistic):
     def serialize(self) -> str:
         return cast(str, yaml.dump(
             {
-                "config": self.config,
+                "config": self.config.to_dict(),
                 "bins": self.bins.tolist(),
                 "bars": self.bars.tolist()
             }
@@ -174,8 +201,9 @@ class NumberHistogram(Statistic):
     @staticmethod
     def deserialize(data) -> NumberHistogram:
         res = yaml.load(data, yaml.Loader)
+        config = NumberHistogramConfig.from_yaml(res.get("config"))
         return NumberHistogram(
-            res.get("config"),
+            config,
             bins=np.array(res.get("bins")),
             bars=np.array(res.get("bars"))
         )

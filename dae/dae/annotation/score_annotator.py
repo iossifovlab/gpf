@@ -71,7 +71,7 @@ class VariantScoreAnnotatorBase(Annotator):
         for score_id, score in self.score.score_definitions.items():
             result.append({
                 "name": score_id,
-                "type": score.type,
+                "type": score.value_type,
                 "desc": score.desc
             })
         return result

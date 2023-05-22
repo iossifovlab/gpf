@@ -5,7 +5,8 @@ from dataclasses import dataclass
 import pandas as pd
 
 from dae.genomic_resources.genomic_scores import build_score_from_resource
-from dae.genomic_resources.histogram import Histogram
+from dae.genomic_resources.histogram import NumberHistogram, \
+    NumberHistogramConfig
 
 
 logger = logging.getLogger(__name__)
@@ -16,7 +17,7 @@ class ScoreDesc:
     resource_id: str
     score_id: str
     destination: str
-    hist: Histogram
+    hist: NumberHistogram
     description: str
 
 
@@ -69,8 +70,10 @@ class GenomicScoresDb:
                     "description", selected_score_id)
         for histogram_config in conf["histograms"]:
             try:
-                hist = Histogram(
-                    histogram_config
+                hist = NumberHistogram(
+                    NumberHistogramConfig.convert_legacy_config(
+                        histogram_config
+                    )
                 )
                 score_id = histogram_config["score"]
                 if score_id != source_score_id:

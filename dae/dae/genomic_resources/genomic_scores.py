@@ -93,23 +93,20 @@ class _ScoreDef:
     col_key: str                                  # internal
     value_parser: Any                             # internal
     na_values: Any                                # internal
-    public_definition: Optional[ScoreDef] = None  # internal
 
     def to_public(self):
-        if self.public_definition is None:
-            self.public_definition = ScoreDef(
-                self.score_id,
-                self.desc,
-                self.value_type,
-                self.pos_aggregator,
-                self.nuc_aggregator,
-                self.allele_aggregator,
-                self.small_values_desc,
-                self.large_values_desc,
-                self.hist_number_conf,
-                self.hist_categorical_conf
-            )
-        return self.public_definition
+        return ScoreDef(
+            self.score_id,
+            self.desc,
+            self.value_type,
+            self.pos_aggregator,
+            self.nuc_aggregator,
+            self.allele_aggregator,
+            self.small_values_desc,
+            self.large_values_desc,
+            self.hist_number_conf,
+            self.hist_categorical_conf
+        )
 
     def __post_init__(self):
         if self.value_type is None:

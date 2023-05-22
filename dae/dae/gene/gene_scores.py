@@ -18,7 +18,8 @@ from dae.genomic_resources.resource_implementation import \
     ResourceStatistics
 
 from dae.genomic_resources import GenomicResource
-from dae.genomic_resources.histogram import Histogram
+from dae.genomic_resources.histogram import NumberHistogram, \
+    NumberHistogramConfig
 from dae.task_graph.graph import Task
 
 logger = logging.getLogger(__name__)
@@ -63,7 +64,7 @@ class GeneScoreStatistics(ResourceStatistics):
                 )
                 with genomic_resource.open_raw_file(
                         histogram_filepath, mode="r") as infile:
-                    histogram = Histogram.deserialize(infile.read())
+                    histogram = NumberHistogram.deserialize(infile.read())
                     histograms[score_id] = histogram
         except FileNotFoundError:
             logger.exception(
@@ -121,16 +122,20 @@ class GeneScore:
     @property
     def x_scale(self):
         """Return the scale type of the X axis."""
+        x_log_scale = self.histogram_config.get("x_log_scale")
         if self.histogram is not None:
-            return self.histogram.x_scale
-        return self.histogram_config.get("x_scale")
+            x_log_scale = self.histogram.x_log_scale
+
+        return "log" if x_log_scale else "linear"
 
     @property
     def y_scale(self):
         """Return the scale type of the Y axis."""
+        y_log_scale = self.histogram_config.get("y_log_scale")
         if self.histogram is not None:
-            return self.histogram.y_scale
-        return self.histogram_config.get("y_scale")
+            y_log_scale = self.histogram.y_log_scale
+
+        return "log" if y_log_scale else "linear"
 
     @property
     def range(self):
@@ -433,7 +438,8 @@ class GeneScoreCollection(
             histogram_config["min"] = score.min()
         if "max" not in histogram_config:
             histogram_config["max"] = score.max()
-        histogram = Histogram(score.histogram_config)
+        histogram_config = NumberHistogramConfig.from_yaml(histogram_config)
+        histogram = NumberHistogram(histogram_config)
         for value in score.values():
             histogram.add_value(value)
         return histogram
