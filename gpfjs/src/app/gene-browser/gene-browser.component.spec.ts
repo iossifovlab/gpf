@@ -60,8 +60,8 @@ class MockQueryService {
     return of([] as any);
   }
 
-  public getSummaryVariants(): SummaryAllelesArray {
-    return new SummaryAllelesArray();
+  public getSummaryVariants(): Observable<Object> {
+    return of([]);
   }
 
   public downloadVariants(filter: object): Observable<HttpResponse<Blob>> {
