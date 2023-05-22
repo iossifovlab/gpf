@@ -12,7 +12,6 @@ import { Dataset, GeneBrowser, PersonSet } from 'app/datasets/datasets';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { FullscreenLoadingService } from 'app/fullscreen-loading/fullscreen-loading.service';
 import { ConfigService } from 'app/config/config.service';
-import { clone } from 'lodash';
 import * as d3 from 'd3';
 import * as draw from 'app/utils/svg-drawing';
 import { NgbDropdown } from '@ng-bootstrap/ng-bootstrap';
@@ -89,10 +88,6 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
     this.subscriptions.push(
       this.queryService.streamingFinishedSubject.subscribe(() => {
         this.familyLoadingFinished = true;
-      }),
-      this.queryService.summaryStreamingFinishedSubject.subscribe(() => {
-        this.showResults = true;
-        this.loadingService.setLoadingStop();
       }),
       this.route.parent.params.subscribe((params: Params) => {
         this.selectedDatasetId = params['dataset'] as string;
@@ -184,24 +179,26 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
     this.loadingService.setLoadingStart();
     this.genotypePreviewVariantsArray = null;
 
-    this.summaryVariantsArray = this.queryService.getSummaryVariants(this.requestParamsSummary);
-    this.summaryVariantsArrayFiltered = clone(this.summaryVariantsArray);
+    this.summaryVariantsArray = new SummaryAllelesArray();
+    this.queryService.getSummaryVariants(this.requestParamsSummary).pipe(take(1)).subscribe(res => {
+      (res as object[]).forEach(row => this.summaryVariantsArray.addSummaryRow(row));
+      // reset summary variants filter, without the coding only field
+      this.summaryVariantsFilter = new SummaryAllelesFilter(true, true, this.summaryVariantsFilter.codingOnly);
+      this.effectTypeValues.forEach(eff => this.checkEffectType(eff, true));
+      this.affectedStatusValues.forEach(status => this.checkAffectedStatus(status, true));
+      this.variantTypeValues.forEach(vt => this.checkVariantType(vt, true));
 
-    // reset summary variants filter, without the coding only field
-    this.summaryVariantsFilter = new SummaryAllelesFilter(true, true, this.summaryVariantsFilter.codingOnly);
-    this.effectTypeValues.forEach(eff => this.checkEffectType(eff, true));
-    this.affectedStatusValues.forEach(status => this.checkAffectedStatus(status, true));
-    this.variantTypeValues.forEach(vt => this.checkVariantType(vt, true));
-
-    this.summaryVariantsFilter.selectedRegion = [
-      this.selectedGene.collapsedTranscripts[0].start,
-      this.selectedGene.collapsedTranscripts[this.selectedGene.collapsedTranscripts.length - 1].stop
-    ];
-    this.summaryVariantsFilter.selectedFrequencies = [
-      0, this.geneBrowserConfig.domainMax
-    ];
-
-    this.updateShownTablePreviewVariantsArray();
+      this.summaryVariantsFilter.selectedRegion = [
+        this.selectedGene.collapsedTranscripts[0].start,
+        this.selectedGene.collapsedTranscripts[this.selectedGene.collapsedTranscripts.length - 1].stop
+      ];
+      this.summaryVariantsFilter.selectedFrequencies = [
+        0, this.geneBrowserConfig.domainMax
+      ];
+      this.loadingService.setLoadingStop();
+      this.showResults = true;
+      this.updateVariants();
+    });
   }
 
   public onSubmit(event: Event): void {
@@ -288,51 +285,42 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
   }
 
   private get requestParams(): Record<string, unknown> {
-    const params = {
+    return {
       ...this.summaryVariantsFilter.queryParams,
       geneSymbols: [this.selectedGene.geneSymbol],
       datasetId: this.selectedDatasetId,
       regions: this.selectedGene.getRegionString(...this.summaryVariantsFilter.selectedRegion),
+      summaryVariantIds: this.summaryVariantsArrayFiltered.summaryAlleleIds,
       genomicScores: [{
         metric: this.geneBrowserConfig.frequencyColumn,
         rangeStart: this.summaryVariantsFilter.minFreq,
         rangeEnd: this.summaryVariantsFilter.maxFreq,
       }],
     };
-
-    if (this.summaryVariantsArrayFiltered.summaryAlleleIds.length > 0) {
-      params['summaryVariantIds'] = this.summaryVariantsArrayFiltered.summaryAlleleIds.reduce(
-        (a: string[], b) => a.concat(b), []
-      );
-    }
-
-    return params;
   }
 
   private get requestParamsSummary(): Record<string, unknown> {
-    const requestParams = {
+    const params = {
       datasetId: this.selectedDatasetId,
       geneSymbols: [this.geneSymbol.toUpperCase().trim()],
       maxVariantsCount: 10000,
       inheritanceTypeFilter: ['denovo', 'mendelian', 'omission', 'missing'],
     };
     if (this.summaryVariantsFilter.codingOnly) {
-      requestParams['effectTypes'] = [...LGDS, ...CODING, ...CNV, 'CDS'];
+      params['effectTypes'] = [...LGDS, ...CODING, ...CNV, 'CDS'];
     }
-    return requestParams;
+    return params;
   }
 
   private updateShownTablePreviewVariantsArray(): void {
     this.familyLoadingFinished = false;
-    const parameters = this.requestParams;
-    const requestParams = {
-      ...parameters,
+    const params = {
+      ...this.requestParams,
       maxVariantsCount: this.maxFamilyVariants,
       uniqueFamilyVariants: this.uniqueFamilyVariants,
     };
-
     this.genotypePreviewVariantsArray = this.queryService.getGenotypePreviewVariantsByFilter(
-      this.selectedDataset, requestParams, this.maxFamilyVariants, () => {
+      this.selectedDataset, params, this.maxFamilyVariants, () => {
         this.variantsCountDisplay = this.genotypePreviewVariantsArray.getVariantsCount(this.maxFamilyVariants);
       }
     );

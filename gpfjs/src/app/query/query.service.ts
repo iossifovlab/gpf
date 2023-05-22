@@ -4,19 +4,18 @@ import { Router } from '@angular/router';
 import { Location } from '@angular/common';
 // eslint-disable-next-line no-restricted-imports
 import { Observable, Subject } from 'rxjs';
-const oboe = require('oboe');
 import { environment } from 'environments/environment';
 import { ConfigService } from '../config/config.service';
 import { GenotypePreviewVariantsArray } from '../genotype-preview-model/genotype-preview';
-import { SummaryAllelesArray } from '../gene-browser/summary-variants';
 import { map } from 'rxjs/operators';
 import { Dataset } from 'app/datasets/datasets';
 import { AuthService } from 'app/auth.service';
+const oboe = require('oboe');
 
 @Injectable()
 export class QueryService {
   private readonly genotypePreviewVariantsUrl = 'genotype_browser/query';
-  private readonly geneViewVariants = 'gene_view/query_summary_variants';
+  private readonly geneViewVariantsUrl = 'gene_view/query_summary_variants';
   private readonly saveQueryEndpoint = 'query_state/save';
   private readonly loadQueryEndpoint = 'query_state/load';
   private readonly deleteQueryEndpoint = 'query_state/delete';
@@ -28,7 +27,7 @@ export class QueryService {
   private oboeInstance = null;
   private summaryOboeInstance = null;
   public streamingSubject = new Subject();
-  public summaryStreamingSubject = new Subject();
+  public summaryStreamingSubject = new Subject<object>();
   public streamingFinishedSubject = new Subject();
   public summaryStreamingFinishedSubject = new Subject();
 
@@ -84,7 +83,7 @@ export class QueryService {
     }
   }
 
-  public summaryStreamPost(url: string, filter): Subject<unknown> {
+  public summaryStreamPost(url: string, filter): Subject<object> {
     if (this.summaryOboeInstance) {
       this.summaryOboeInstance.abort();
       this.summaryOboeInstance = null;
@@ -146,12 +145,8 @@ export class QueryService {
     return genotypePreviewVariantsArray;
   }
 
-  public getSummaryVariants(filter): SummaryAllelesArray {
-    const summaryVariantsArray = new SummaryAllelesArray();
-    this.summaryStreamPost(this.geneViewVariants, filter).subscribe((variant: string[]) => {
-      summaryVariantsArray.addSummaryRow(variant);
-    });
-    return summaryVariantsArray;
+  public getSummaryVariants(filter: object): Observable<object> {
+    return this.http.post(this.config.baseUrl + this.geneViewVariantsUrl, filter);
   }
 
   public saveQuery(queryData: {}, page: string): Observable<object> {
