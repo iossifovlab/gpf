@@ -4,10 +4,11 @@ import logging
 import copy
 
 from typing import cast, Any
+from dae.annotation.schema import AttributeInfo
 
 from dae.genomic_resources.genomic_scores import \
-    build_allele_score_from_resource, build_position_score_from_resource, \
-    build_np_score_from_resource, \
+    GenomicScore, build_allele_score_from_resource, \
+    build_position_score_from_resource, build_np_score_from_resource, \
     PositionScoreQuery, NPScoreQuery, AlleleScoreQuery, ScoreQuery
 
 from dae.genomic_resources.aggregators import AGGREGATOR_SCHEMA
@@ -52,7 +53,7 @@ class VariantScoreAnnotatorBase(Annotator):
         }
     }
 
-    def __init__(self, config: dict, score):
+    def __init__(self, config: dict, score: GenomicScore):
 
         super().__init__(config)
 
@@ -97,6 +98,30 @@ class VariantScoreAnnotatorBase(Annotator):
     def resources(self) -> list[GenomicResource]:
         return [self.score.resource]
 
+    @property
+    def attributes(self) -> list[AttributeInfo]:
+        """Genomic resources used by the annotator."""
+        ret = []
+        for attribute_config in self.get_annotation_config():
+            name = attribute_config["destination"]
+            score = attribute_config.get("source", name)
+            score_config = self.score.get_score_config(score)
+            if score_config is None:
+                message = f"The score {score} is unknown in " + \
+                          f"{self.score.resource.get_id()} resource!"
+                logger.error(message)
+                raise Exception(message)
+            hist_url = f"{self.score.resource.get_url()}" + \
+                       f"/statistics/histogram_{score}.png"
+
+            desc = attribute_config.get("desc", "") + "\n\n" + \
+                score_config.desc + "\n\n" + \
+                f"![HISTOGRAM]({hist_url})"
+            internal = bool(attribute_config.get("internal", True))
+            ret.append(AttributeInfo(name, score, score_config.type,
+                                     desc, internal))
+        return ret
+  
     def _collect_score_queries(self) -> list[ScoreQuery]:
         return []
 

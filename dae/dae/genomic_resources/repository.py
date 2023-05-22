@@ -309,7 +309,7 @@ class GenomicResource:
         return self.get_description()
 
     def get_url(self) -> str:
-        return self.proto.get_url() + self.get_id() + "/index.html"
+        return self.proto.get_url() + self.get_id()
 
     def get_labels(self) -> dict[str, Any]:
         config: dict[str, Any] = self.get_config()
