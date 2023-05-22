@@ -1,12 +1,9 @@
 import logging
 from rest_framework import status
 from rest_framework.response import Response
-from django.http.response import StreamingHttpResponse, FileResponse
-
+from django.http.response import FileResponse
 from query_base.query_base import QueryDatasetView
-
 from utils.logger import request_logging
-from utils.streaming_response_util import iterator_to_json
 from utils.query_params import parse_query_params
 from gene_sets.expand_gene_set_decorator import expand_gene_set
 
@@ -57,16 +54,9 @@ class QueryVariantsView(QueryDatasetView):
         config = dataset.config.gene_browser
         freq_col = config.frequency_column
 
-        variants = dataset.get_gene_view_summary_variants(freq_col, **data)
-
-        response = StreamingHttpResponse(
-            iterator_to_json(variants),
-            status=status.HTTP_200_OK,
-            content_type="text/event-stream"
+        return Response(
+            list(dataset.get_gene_view_summary_variants(freq_col, **data))
         )
-        response["Cache-Control"] = "no-cache"
-
-        return response
 
 
 class DownloadSummaryVariantsView(QueryDatasetView):
