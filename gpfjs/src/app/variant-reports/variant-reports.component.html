@@ -103,7 +103,7 @@
           >Download</button
         >
       </div>
-      <ng-template #tagsModal id="tags-modal">
+      <ng-template #tagsModal class="tags-modal">
         <div id="tags-modal-content">
           <div id="tags-modal-header">
             <input
@@ -117,7 +117,7 @@
               autocomplete="off" />
             <a (click)="uncheckAll()" id="uncheck-button">Uncheck all</a>
           </div>
-          <span *ngIf="!modalTagsList.length" id="nothing-found">Nothing found</span>
+
           <div
             id="tag-list"
             [ngStyle]="{
@@ -126,13 +126,19 @@
               'grid-template-rows': 'repeat(' + tagsModalsNumberOfRows + ', 30px)',
               'column-gap': '16px'
             }">
-            <div *ngFor="let tag of modalTagsList">
+            <div *ngFor="let tag of orderedTagList">
               <input
+                [disabled]="!tag.toLocaleLowerCase().includes(searchValue.toLocaleLowerCase())"
                 type="checkbox"
-                [attr.id]="tag + '-tag'"
+                [id]="tag + '-tag'"
                 [checked]="selectedItems.includes(tag)"
                 (change)="selectedTags(tag)" />
-              <label [attr.for]="tag + '-tag'" id="tag-label">{{ tag }}</label>
+              <label
+                [attr.for]="tag + '-tag'"
+                id="tag-label"
+                [ngStyle]="!tag.toLocaleLowerCase().includes(searchValue.toLocaleLowerCase()) && { opacity: '30%' }"
+                >{{ tag }}</label
+              >
             </div>
           </div>
         </div>

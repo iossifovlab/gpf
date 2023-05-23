@@ -37,6 +37,7 @@ export class VariantReportsComponent implements OnInit {
   @ViewChild('tagsModal') public tagsModal: ElementRef;
 
   @ViewChild('searchTag') private searchTag: ElementRef;
+  public searchValue = '';
 
   public tagsModalsNumberOfRows = 9;
   public tagsModalsNumberOfCols = 2;
@@ -48,7 +49,7 @@ export class VariantReportsComponent implements OnInit {
   public selectedDataset: Dataset;
 
   public imgPathPrefix = environment.imgPathPrefix;
-  public modalTagsList = [];
+  public orderedTagList = [];
   public selectedItems: string[] = [];
 
   public denovoVariantsTableWidth: number;
@@ -88,17 +89,7 @@ export class VariantReportsComponent implements OnInit {
       this.variantReportsService.getTags().subscribe(data => {
         Object.values(data).forEach((tag: string) => {
           this.tags.push(tag);
-          this.tags.push(tag);
-          this.tags.push(tag);
-          this.modalTagsList.push(tag);
-          this.modalTagsList.push(tag);
-          this.modalTagsList.push(tag);
-          this.tags.push(tag);
-          this.tags.push(tag);
-          this.tags.push(tag);
-          this.modalTagsList.push(tag);
-          this.modalTagsList.push(tag);
-          this.modalTagsList.push(tag);
+          this.orderedTagList.push(tag);
         });
         // Calculate square looking grid for the tags (1 column width === ~5 tags height)
         this.tagsModalsNumberOfCols = Math.ceil(Math.sqrt(Math.ceil(this.tags.length / 5)));
@@ -132,7 +123,8 @@ export class VariantReportsComponent implements OnInit {
   }
 
   public openModal(): void {
-    this.modalTagsList = this.tags;
+    this.orderedTagList = this.tags;
+    this.searchValue = '';
     if (this.modalService.hasOpenModals()) {
       return;
     }
@@ -143,8 +135,13 @@ export class VariantReportsComponent implements OnInit {
   }
 
   public search(searchValue: string): void {
-    searchValue = searchValue.trim();
-    this.modalTagsList = this.tags.filter(el => el.toLocaleLowerCase().includes(searchValue.toLocaleLowerCase()));
+    this.searchValue = searchValue.trim();
+    this.orderedTagList = [
+      ...new Set(
+        this.tags.filter(el => el.toLocaleLowerCase().includes(searchValue.toLocaleLowerCase()))
+          .concat(this.tags)
+      )
+    ];
   }
 
   public uncheckAll(): void {
