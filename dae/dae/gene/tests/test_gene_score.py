@@ -242,6 +242,6 @@ def test_calculate_histogram(scores_repo):
 
     histogram = GeneScoreCollection._calc_histogram(res, "linear")
     assert histogram is not None
-    print(histogram.x_min)
-    print(type(histogram.x_min))
+    print(histogram.config.view_range[0])
+    print(type(histogram.config.view_range[0]))
     print(histogram.serialize())

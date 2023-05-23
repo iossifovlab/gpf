@@ -124,7 +124,7 @@ class GeneScore:
         """Return the scale type of the X axis."""
         x_log_scale = self.histogram_config.get("x_log_scale")
         if self.histogram is not None:
-            x_log_scale = self.histogram.x_log_scale
+            x_log_scale = self.histogram.config.x_log_scale
 
         return "log" if x_log_scale else "linear"
 
@@ -133,7 +133,7 @@ class GeneScore:
         """Return the scale type of the Y axis."""
         y_log_scale = self.histogram_config.get("y_log_scale")
         if self.histogram is not None:
-            y_log_scale = self.histogram.y_log_scale
+            y_log_scale = self.histogram.config.y_log_scale
 
         return "log" if y_log_scale else "linear"
 
