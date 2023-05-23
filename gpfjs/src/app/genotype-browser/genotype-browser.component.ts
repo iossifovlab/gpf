@@ -133,8 +133,12 @@ export class GenotypeBrowserComponent implements OnInit, OnDestroy {
 
     this.patchState();
     this.genotypePreviewVariantsArray = this.queryService.getGenotypePreviewVariantsByFilter(
-      this.selectedDataset, this.genotypeBrowserState,
-      this.selectedDataset?.genotypeBrowserConfig?.maxVariantsCount, () => {
+      this.selectedDataset,
+      this.genotypeBrowserState,
+      this.selectedDataset?.genotypeBrowserConfig?.maxVariantsCount !== undefined
+        ? this.selectedDataset?.genotypeBrowserConfig?.maxVariantsCount + 1
+        : undefined,
+      () => {
         this.variantsCountDisplay = this.genotypePreviewVariantsArray.getVariantsCount(
           this.selectedDataset?.genotypeBrowserConfig?.maxVariantsCount
         );
