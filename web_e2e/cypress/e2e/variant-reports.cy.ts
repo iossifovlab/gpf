@@ -21,6 +21,7 @@ const tags: string[] = [
   'tag_missing_mom_family',
   'tag_missing_dad_family'
 ];
+
 describe('Variant reports tests', () => {
   const page = new VariantReportsPage();
 

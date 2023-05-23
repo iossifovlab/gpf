@@ -1,3 +1,5 @@
+import 'cypress-if';
+
 export class UsersPage {
   private get window(): element {
     return cy.get('gpf-users');
@@ -33,5 +35,14 @@ export class UsersPage {
 
   public get registerButton(): element {
     return this.window.contains('Register');
+  }
+
+  public waitLoginAfterLogout(retries = 10): Cypress.Chainable<void> {
+    return cy.get('#log-in-button').if('not.visible').then(() => {
+      if (retries === 0) {
+        throw new Error('Cannot find Login button after multiple checks.');
+      }
+      return this.waitLoginAfterLogout(--retries);
+    });
   }
 }

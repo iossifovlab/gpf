@@ -196,9 +196,7 @@ describe('App user access rights tests', () => {
 
     page.loginAdmin();
     page.navigateToSidenavPage(sidenavPageLinks.management);
-    userManagementPage.userAddGroupButton(userData.normal.username).click();
-    userManagementPage.groupsMenuSearch.type('comp_vcf');
-    userManagementPage.findButtonInComponentContainingText('.add-item-button', 'comp_vcf').click();
+    userManagementPage.userAddGroup(userData.normal.username, 'comp_vcf');
     userManagementPage.waitForPageToLoad(sidenavPageLinks.management);
     page.logout();
 
@@ -217,9 +215,7 @@ describe('App user access rights tests', () => {
 
     page.loginAdmin();
     page.navigateToSidenavPage(sidenavPageLinks.management);
-    userManagementPage.userAddGroupButton(userData.normal.username).click();
-    userManagementPage.groupsMenuSearch.type('COMP_genotypes');
-    userManagementPage.findButtonInComponentContainingText('.add-item-button', 'COMP_genotypes').click();
+    userManagementPage.userAddGroup(userData.normal.username, 'COMP_genotypes');
     userManagementPage.waitForPageToLoad(sidenavPageLinks.management);
     page.logout();
 
@@ -266,9 +262,7 @@ describe('App user access rights tests', () => {
 
     page.loginAdmin();
     page.navigateToSidenavPage(sidenavPageLinks.management);
-    userManagementPage.userAddGroupButton(userData.normal.username).click();
-    userManagementPage.groupsMenuSearch.type('ALL_genotypes');
-    userManagementPage.findButtonInComponentContainingText('.add-item-button', 'ALL_genotypes').click();
+    userManagementPage.userAddGroup(userData.normal.username, 'ALL_genotypes');
     userManagementPage.waitForPageToLoad(sidenavPageLinks.management);
     page.logout();
 
