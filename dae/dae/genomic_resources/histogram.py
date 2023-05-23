@@ -44,7 +44,7 @@ class NumberHistogramConfig:
             view_range=(
                 config.get("min", limits.min), config.get("max", limits.max)
             ),
-            number_of_bins=config.get("bins_count", 30),
+            number_of_bins=config.get("bins", 30),
             x_log_scale=config.get("x_scale", "linear") == "log",
             y_log_scale=config.get("y_scale", "linear") == "log",
             x_min_log=config.get("x_min_log")
@@ -83,6 +83,7 @@ class NumberHistogram(Statistic):
     # FIXME:
     def __init__(self, config: NumberHistogramConfig, bins=None, bars=None):
         super().__init__("histogram", "Collects values for histogram.")
+        assert isinstance(config, NumberHistogramConfig)
         self.config = config
         self.bins = bins
         self.bars = bars
@@ -145,6 +146,8 @@ class NumberHistogram(Statistic):
 
     def add_value(self, value):
         """Add value to the histogram."""
+        if value is None:
+            return False
         if value < self.config.view_range[0] or \
                 value > self.config.view_range[1]:
             logger.warning(

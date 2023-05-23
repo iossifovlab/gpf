@@ -114,22 +114,26 @@ class _ScoreDef:
         default_na_values = {
             "str": {},
             "float": {"", "nan", ".", "NA"},
-            "int": {"", "nan", ".", "NA"}
+            "int": {"", "nan", ".", "NA"},
+            "bool": {}
         }
         default_pos_aggregators = {
             "float": "mean",
             "int": "mean",
-            "str": "concatenate"
+            "str": "concatenate",
+            "bool": None
         }
         default_nuc_aggregators = {
             "float": "max",
             "int": "max",
-            "str": "concatenate"
+            "str": "concatenate",
+            "bool": None
         }
         default_allele_aggregators = {
             "float": "max",
             "int": "max",
-            "str": "concatenate"
+            "str": "concatenate",
+            "bool": None
         }
         if self.pos_aggregator is None:
             self.pos_aggregator = default_pos_aggregators[self.value_type]
@@ -274,7 +278,7 @@ class GenomicScoreImplementation(
         """Collect all configurations of histograms for the genomic score."""
         result = {}
         for score_id, score in self.score.score_definitions.items():
-            if score.type in {"int", "float"}:
+            if score.value_type in {"int", "float"}:
                 result[score_id] = NumberHistogram.default_config(score_id)
         hist_config_overwrite = self.get_config().get("histograms", {})
         for hist_config in hist_config_overwrite:
@@ -310,7 +314,7 @@ class GenomicScoreImplementation(
 
         <td>{{ score_id }}</td>
 
-        <td>{{ score.type }}</td>
+        <td>{{ score.value_type }}</td>
 
         {% set attr = scores._get_default_annotation_attribute(score_id) %}
         <td>{{ attr if attr else "" }}</td>
@@ -543,6 +547,9 @@ class GenomicScoreImplementation(
                 hist_config["min"] = save_minmax_task[score_id].min
             if hist_config.get("max") is None:
                 hist_config["max"] = save_minmax_task[score_id].max
+            hist_config = NumberHistogramConfig.convert_legacy_config(
+                hist_config
+            )
             try:
                 res[score_id] = NumberHistogram(hist_config)
             except ValueError:
@@ -551,7 +558,7 @@ class GenomicScoreImplementation(
         with impl.score.open():
             for rec in impl.score.fetch_region(chrom, start, end, score_ids):
                 for scr_id in score_ids:
-                    res[scr_id].add_record(rec)
+                    res[scr_id].add_value(rec[scr_id])
         return res
 
     @staticmethod
@@ -601,7 +608,7 @@ class GenomicScoreImplementation(
                 f"{GenomicScoreStatistics.get_histogram_image_file(score_id)}",
                 mode="wb"
             ) as outfile:
-                score_histogram.plot(outfile)
+                score_histogram.plot(outfile, score_id)
         return merged_histograms
 
     def _split_into_regions(self, region_size, reference_genome=None):
@@ -818,8 +825,8 @@ class GenomicScore(ResourceConfigValidationMixin):
                 score_id=score_conf["id"],
                 desc=score_conf.get("desc", ""),
                 value_type=score_conf.get("type"),
-                pos_aggregator=score_conf.get("pos_aggregator"),
-                nuc_aggregator=score_conf.get("nuc_aggregator"),
+                pos_aggregator=score_conf.get("position_aggregator"),
+                nuc_aggregator=score_conf.get("nucleotide_aggregator"),
                 allele_aggregator=score_conf.get("allele_aggregator"),
                 small_values_desc=score_conf.get("small_values_desc"),
                 large_values_desc=score_conf.get("large_values_desc"),
