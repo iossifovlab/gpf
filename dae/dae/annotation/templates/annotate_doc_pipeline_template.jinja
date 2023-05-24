@@ -1,0 +1,87 @@
+<html>
+
+<head>
+    <style>
+        h3,
+        h4 {
+            margin-top: 0.5em;
+            margin-bottom: 0.5em;
+        }
+
+        .annotator_line {
+            font-size: 20px;
+            background-color: aquamarine;
+
+        }
+
+        .attribute_description {
+            font-size: 14px;
+        }
+
+        .resource {
+            font-size: 14px;
+            background-color: rgb(233, 151, 151);
+
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Pipeline Documentation</h1>
+    <table border="1">
+        <tr>
+            <th>Attribute</th>
+            <th>Type</th>
+            <th>Description</th>
+        </tr>
+        {%- for annotator_info in annotation_pipeline_info %}
+        <tr class="annotator_line">
+            <td>
+                <p>{{annotator_info.type}}</p>
+            </td>
+            <td colspan="2">
+                <table border="3">
+                    <tr>
+
+                        {%- for genomic_resource in annotator_info.resrouces %}
+                        <td class="resource">
+                            <p><b>Ressource</b></p>
+                            <p>
+                                {{genomic_resource.get_type()}}
+                                <a href="{{genomic_resource.get_url()}}/index.html">
+                                    {{genomic_resource.get_id()}}</a>
+                            </p>
+                            <p>{{markdown(genomic_resource.get_summary())}}</p>
+                        </td>
+                        {%- endfor %}
+                    </tr>
+                </table>
+            </td>
+        </tr>
+
+        {%- for attribute_info in annotator_info.attributes %}
+        <tr>
+            <td>
+                <div class="attribute">
+                    <p>{{attribute_info.name}}</p>
+                </div>
+            </td>
+            <td>
+                <div class="attribute">
+                    <p>{{attribute_info.type}}</p>
+                </div>
+            </td>
+            <td>
+                <div class="attribute_description">
+                    <p>source: {{attribute_info.source}}</p>
+                    {{markdown(attribute_info.description)}}
+                </div>
+            </td>
+        </tr>
+        {%- endfor %}
+
+
+        {%- endfor %}
+    </table>
+    <html>
+</body>
