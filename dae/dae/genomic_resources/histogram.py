@@ -204,7 +204,14 @@ class NumberHistogram(Statistic):
     @staticmethod
     def deserialize(data) -> NumberHistogram:
         res = yaml.load(data, yaml.Loader)
-        config = NumberHistogramConfig.from_yaml(res.get("config"))
+        # TODO: Remove this
+        legacy_keys = set(["x_scale", "y_scale", "bins", "min", "max"])
+        if len(legacy_keys.intersection(set(res.get("config").keys()))):
+            config = NumberHistogramConfig.convert_legacy_config(
+                res.get("config")
+            )
+        else:
+            config = NumberHistogramConfig.from_yaml(res.get("config"))
         return NumberHistogram(
             config,
             bins=np.array(res.get("bins")),
