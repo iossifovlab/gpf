@@ -107,7 +107,7 @@ export class VariantReportsComponent implements OnInit {
     );
   }
 
-  public selectedTags(tag: string): void {
+  public updateSelectedTags(tag: string): void {
     if (!this.selectedItems.includes(tag)) {
       this.selectedItems.push(tag);
     } else {
@@ -138,7 +138,7 @@ export class VariantReportsComponent implements OnInit {
     this.searchValue = searchValue.trim();
     this.orderedTagList = [
       ...new Set(
-        this.tags.filter(el => el.toLocaleLowerCase().includes(searchValue.toLocaleLowerCase()))
+        this.tags.filter(el => el.toLocaleLowerCase().includes(this.searchValue.toLocaleLowerCase()))
           .concat(this.tags)
       )
     ];

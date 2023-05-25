@@ -132,7 +132,7 @@
                 type="checkbox"
                 [id]="tag + '-tag'"
                 [checked]="selectedItems.includes(tag)"
-                (change)="selectedTags(tag)" />
+                (change)="updateSelectedTags(tag)" />
               <label
                 [attr.for]="tag + '-tag'"
                 id="tag-label"
