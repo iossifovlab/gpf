@@ -9,8 +9,8 @@ from typing import Dict, List, Optional
 from dae.genomic_resources.repository import GenomicResourceRepo
 
 from dae.annotation.annotatable import Annotatable
-from dae.annotation.annotator_base import Annotator
-from dae.annotation.schema import AnnotatorInfo, Schema
+from dae.annotation.annotator_base import Annotator, AnnotatorInfo
+from dae.annotation.schema import Schema
 
 logger = logging.getLogger(__name__)
 

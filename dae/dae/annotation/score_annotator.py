@@ -4,7 +4,7 @@ import logging
 import copy
 
 from typing import cast, Any
-from dae.annotation.schema import AttributeInfo
+from dae.annotation.annotator_base import AttributeInfo
 
 from dae.genomic_resources.genomic_scores import \
     GenomicScore, build_allele_score_from_resource, \

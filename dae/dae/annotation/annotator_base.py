@@ -1,5 +1,6 @@
 """Provides base class for annotators."""
 from __future__ import annotations
+from dataclasses import dataclass
 
 import logging
 import abc
@@ -9,8 +10,7 @@ from cerberus.validator import Validator
 from dae.genomic_resources.repository import GenomicResource  # type: ignore
 
 from .annotatable import Annotatable
-from .schema import AttributeInfo, Schema
-from .schema import AnnotatorInfo
+from .schema import Schema
 
 
 logger = logging.getLogger(__name__)
@@ -29,6 +29,63 @@ ATTRIBUTES_SCHEMA = {
         }
     }
 }
+
+
+def parse_raw_attribute_config(raw_attribute_config: dict[str, Any]) \
+                                -> AttributeInfo:
+    name = raw_attribute_config.get("destination")
+    source = raw_attribute_config.get("source")
+
+    if name is None and source is None:
+        message = f"The raw attribute configuraion {raw_attribute_config} " + \
+                  "has neigther destination nor source."
+        raise Exception(message)
+
+    name = name if name else source
+    source = source if source else name
+    internal = bool(raw_attribute_config.get("internal", False))
+
+    assert source is not None
+    if not isinstance(name, str):
+        message = "The destination for in an attribute " + \
+                  f"config {raw_attribute_config} should be a string"
+        raise Exception(message)
+
+    parameters = {k: v for k, v in raw_attribute_config.items()
+                  if k not in ["destination", "source", "internal"]}
+    return AttributeInfo(name, source, internal, parameters)
+
+
+def parse_raw_attributes(raw_attributes_config: Any) -> list[AttributeInfo]:
+    if not isinstance(raw_attributes_config, list):
+        message = "The attributes parameters should be a list."
+        raise Exception(message)
+    
+    attribute_config = []
+    for raw_attribute_config in raw_attributes_config:
+        if isinstance(raw_attribute_config, str):
+            raw_attribute_config = {"destination": raw_attribute_config}
+        attribute_config.append(
+            parse_raw_attribute_config(raw_attribute_config))
+    return attribute_config
+
+
+@dataclass
+class AttributeInfo:
+    name: str
+    source: str
+    internal: bool
+    parameters: dict[str, Any]
+    type: str = "str"        # str, int, float, or object
+    description: str = ""   # interpreted as md
+
+
+@dataclass
+class AnnotatorInfo:
+    type: str
+    parameters: dict[str, Any]
+    resrouces: list[GenomicResource]
+    attributes: list[AttributeInfo]
 
 
 class Annotator(abc.ABC):
@@ -155,14 +212,17 @@ class Annotator(abc.ABC):
         ret = []
         for name, field in schema.fields.items():
             source = "breh"
+            params = {}
             if field.source:
-                source = field.source.attribute_config.get('source', "tsts")
-            ret.append(AttributeInfo(name, source, field.type,
-                                     field.description, field.internal))
+                params = field.source.attribute_config
+                source = params['source']
+            ret.append(AttributeInfo(name, source, field.internal, 
+                                     params, field.type,
+                                     field.description))
         return ret
 
     def get_info(self) -> AnnotatorInfo:
-        return AnnotatorInfo(self.annotator_type(),
+        return AnnotatorInfo(self.annotator_type(), {}, 
                              self.resources, self.attributes)
 
     def _empty_result(self) -> dict[str, Any]:
